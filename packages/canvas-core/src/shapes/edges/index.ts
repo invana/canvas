@@ -1,0 +1,6 @@
+export { BaseEdgeShape } from './BaseEdgeShape.js';
+export { StraightEdge } from './StraightEdge.js';
+export { BezierEdge } from './BezierEdge.js';
+export { OrthogonalEdge } from './OrthogonalEdge.js';
+
+export type { EdgeShapeConfig, EdgeEndpoints } from './BaseEdgeShape.js';

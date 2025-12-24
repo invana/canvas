@@ -1,0 +1,30 @@
+{
+  "name": "storybook",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Storybook for canvas components",
+  "type": "module",
+  "scripts": {
+    "dev": "storybook dev -p 6006",
+    "build": "storybook build",
+    "lint": "eslint stories/",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aspect-ui/canvas-core": "workspace:*",
+    "@aspect-ui/canvas-utils": "workspace:*"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@storybook/addon-essentials": "^8.5.0",
+    "@storybook/addon-interactions": "^8.5.0",
+    "@storybook/addon-links": "^8.5.0",
+    "@storybook/blocks": "^8.5.0",
+    "@storybook/html": "^8.5.0",
+    "@storybook/html-vite": "^8.5.0",
+    "@storybook/test": "^8.5.0",
+    "storybook": "^8.5.0",
+    "typescript": "5.9.2",
+    "vite": "^6.0.0"
+  }
+}
