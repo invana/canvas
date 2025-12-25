@@ -97,6 +97,11 @@ export class Canvas {
     this._canvas.style.display = 'block';
     this._container.appendChild(this._canvas);
 
+    // Prevent browser context menu on canvas
+    this._canvas.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+    });
+
     // Initialize core systems
     this._events = new EventEmitter();
     this._graph = new Graph();

@@ -160,11 +160,12 @@ export class InteractionManager {
 
     if (node) {
       // Handle node interaction
-      if (this._config.click) {
+      if (this._config.click && event.button === 0) {
         this._handleClick(node, null, event);
       }
 
-      if (this._config.drag) {
+      // Only drag on left-click (button === 0)
+      if (this._config.drag && event.button === 0) {
         this._draggedNode = node;
         this._dragOffset = {
           x: worldPos.x - node.position.x,
@@ -177,7 +178,7 @@ export class InteractionManager {
       }
     } else if (edge) {
       // Handle edge interaction
-      if (this._config.click) {
+      if (this._config.click && event.button === 0) {
         this._handleClick(null, edge, event);
       }
     } else {
