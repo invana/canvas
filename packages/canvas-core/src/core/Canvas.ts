@@ -164,6 +164,12 @@ export class Canvas {
       this._interactions.configure(this._config.interactions);
     }
 
+    // Update connected edges when nodes are dragged
+    this._events.on(CanvasEvents.NODE_DRAG, (data) => {
+      const { node } = data as { node: { id: string } };
+      this._updateConnectedEdges(node.id);
+    });
+
     // Set canvas reference in plugin manager
     this._plugins.setCanvas(this);
 
