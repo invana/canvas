@@ -21,7 +21,7 @@ export class CircleNode extends BaseNodeShape {
       label: {
         visible: false,
         fontSize: 12,
-        fill: '#000000',
+        textColor: '#000000',
         position: 'center',
       },
     };

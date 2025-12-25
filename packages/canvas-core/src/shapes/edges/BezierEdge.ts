@@ -21,7 +21,7 @@ export class BezierEdge extends BaseEdgeShape {
       label: {
         visible: false,
         fontSize: 10,
-        fill: '#666666',
+        textColor: '#666666',
       },
     };
   }

@@ -28,7 +28,7 @@ export const lightTheme: Theme = {
       strokeWidth: 2,
       opacity: 1,
       label: {
-        fill: '#212121',
+        textColor: '#212121',
         fontSize: 12,
         visible: true,
         position: 'bottom',
@@ -67,7 +67,7 @@ export const lightTheme: Theme = {
       opacity: 1,
       targetArrow: { type: 'triangleFilled', size: 10 },
       label: {
-        fill: '#757575',
+        textColor: '#757575',
         fontSize: 10,
         visible: false,
       },

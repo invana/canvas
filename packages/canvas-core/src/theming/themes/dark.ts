@@ -28,7 +28,7 @@ export const darkTheme: Theme = {
       strokeWidth: 2,
       opacity: 1,
       label: {
-        fill: '#FAFAFA',
+        textColor: '#FAFAFA',
         fontSize: 12,
         visible: true,
         position: 'bottom',
@@ -67,7 +67,7 @@ export const darkTheme: Theme = {
       opacity: 1,
       targetArrow: { type: 'triangleFilled', size: 10 },
       label: {
-        fill: '#9E9E9E',
+        textColor: '#9E9E9E',
         fontSize: 10,
         visible: false,
       },

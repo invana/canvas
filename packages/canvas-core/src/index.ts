@@ -60,6 +60,25 @@ export {
 } from './shapes/edges/index.js';
 export type { EdgeShapeConfig, EdgeEndpoints } from './shapes/edges/index.js';
 
+// Labels
+export { Label, LabelRenderer, getLabelRenderer } from './labels/index.js';
+export type {
+  NodeLabelPosition,
+  EdgeLabelPosition,
+  LabelStyle as LabelDisplayStyle,
+  LabelTextStyle,
+  LabelBackgroundStyle,
+  NodeLabelConfig,
+  EdgeLabelConfig,
+  LabelBounds,
+  LabelMetrics,
+} from './labels/index.js';
+export {
+  DEFAULT_LABEL_STYLE,
+  DEFAULT_NODE_LABEL_STYLE,
+  DEFAULT_EDGE_LABEL_STYLE,
+} from './labels/index.js';
+
 // Types
 export type {
   // Geometry

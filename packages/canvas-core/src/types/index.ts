@@ -113,15 +113,21 @@ export interface LabelStyle {
   fontSize?: number;
   fontFamily?: string;
   fontWeight?: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
-  fill?: string;
+  textColor?: string;
   opacity?: number;
-  position?: 'center' | 'top' | 'bottom' | 'left' | 'right';
+  position?: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'start' | 'middle' | 'end';
   offsetX?: number;
   offsetY?: number;
   visible?: boolean;
-  background?: string;
-  padding?: number;
+  backgroundColor?: string | null;
+  padding?: number | { x: number; y: number };
   borderRadius?: number;
+  borderColor?: string | null;
+  borderWidth?: number;
+  maxWidth?: number | null;
+  resolution?: number;
+  truncate?: boolean;
+  truncateLength?: number;
 }
 
 export interface ShadowStyle {

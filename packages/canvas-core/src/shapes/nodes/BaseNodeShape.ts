@@ -2,7 +2,7 @@
  * Base Node Shape - Abstract class for all node shapes
  */
 
-import { Container, Graphics, Text } from 'pixi.js';
+import { Container, Graphics } from 'pixi.js';
 import type {
   AnimationConfig,
   Bounds,
@@ -11,6 +11,8 @@ import type {
   NodeState,
   NodeStyle,
 } from '../../types/index.js';
+import { Label, getLabelRenderer } from '../../labels/index.js';
+import type { NodeLabelPosition, LabelStyle } from '../../labels/index.js';
 
 export interface NodeShapeConfig {
   data: NodeData;
@@ -29,7 +31,12 @@ export abstract class BaseNodeShape<T = Record<string, unknown>> {
   // PixiJS display objects
   protected _container: Container;
   protected _graphics: Graphics;
-  protected _label: Text | null = null;
+  protected _label: Label | null = null;
+  protected _labelConfig: {
+    position: NodeLabelPosition;
+    offset: { x: number; y: number };
+    stateStyles: Record<string, Partial<LabelStyle> | undefined>;
+  } | null = null;
 
   // Animation
   protected _animation: AnimationConfig | null = null;
@@ -306,55 +313,149 @@ export abstract class BaseNodeShape<T = Record<string, unknown>> {
   protected _drawLabel(): void {
     const style = this.getComputedStyle();
     const labelStyle = style.label;
+    const labelRenderer = getLabelRenderer();
 
-    if (!labelStyle?.visible || !labelStyle.text) {
+    // Check if labels should be shown (zoom-based visibility)
+    const shouldShow = labelRenderer.shouldShowLabels();
+
+    if (!labelStyle?.visible || !labelStyle.text || !shouldShow) {
       if (this._label) {
-        this._container.removeChild(this._label);
-        this._label.destroy();
-        this._label = null;
+        this._label.visible = false;
       }
       return;
     }
 
+    // Helper to convert padding
+    const getPadding = (p: number | { x: number; y: number } | undefined): { x: number; y: number } => {
+      if (!p) return { x: 4, y: 2 };
+      if (typeof p === 'number') return { x: p, y: p };
+      return p;
+    };
+
+    // Create label if needed
     if (!this._label) {
-      this._label = new Text({
+      this._label = labelRenderer.createNodeLabel({
         text: labelStyle.text,
+        position: (labelStyle.position as NodeLabelPosition) ?? 'bottom',
         style: {
-          fontSize: labelStyle.fontSize ?? 12,
-          fontFamily: labelStyle.fontFamily ?? 'Arial',
+          fontSize: labelStyle.fontSize ?? 11,
+          fontFamily: labelStyle.fontFamily ?? 'Arial, sans-serif',
           fontWeight: labelStyle.fontWeight ?? 'normal',
-          fill: labelStyle.fill ?? '#000000',
+          textColor: labelStyle.textColor ?? '#333333',
+          visible: true,
+          // Background styling
+          backgroundColor: labelStyle.backgroundColor ?? null,
+          padding: getPadding(labelStyle.padding),
+          borderRadius: labelStyle.borderRadius ?? 3,
+          borderColor: labelStyle.borderColor ?? null,
+          borderWidth: labelStyle.borderWidth ?? 0,
+          resolution: labelStyle.resolution ?? 1,
+          truncate: labelStyle.truncate ?? false,
+          truncateLength: labelStyle.truncateLength ?? 20,
         },
       });
-      this._label.anchor.set(0.5);
-      this._container.addChild(this._label);
+      this._container.addChild(this._label.container);
+
+      // Store label config
+      this._labelConfig = {
+        position: (labelStyle.position as NodeLabelPosition) ?? 'bottom',
+        offset: {
+          x: labelStyle.offsetX ?? 0,
+          y: labelStyle.offsetY ?? 0,
+        },
+        stateStyles: {},
+      };
     } else {
-      this._label.text = labelStyle.text;
-      this._label.style.fontSize = labelStyle.fontSize ?? 12;
-      this._label.style.fill = labelStyle.fill ?? '#000000';
+      // Update label text
+      this._label.setText(labelStyle.text);
+      this._label.visible = true;
     }
 
-    this._label.alpha = labelStyle.opacity ?? 1;
+    // Get merged style based on current states
+    const activeStates = Array.from(this._states);
+    const baseLabelStyle: Partial<LabelStyle> = {
+      fontSize: labelStyle.fontSize ?? 11,
+      textColor: labelStyle.textColor ?? '#333333',
+    };
 
-    // Position label
-    const offsetX = labelStyle.offsetX ?? 0;
-    const offsetY = labelStyle.offsetY ?? 0;
+    // Build state styles for label
+    const labelStateStyles: Record<string, Partial<LabelStyle> | undefined> = {};
+    
+    // Check for state-specific label styling
+    for (const state of activeStates) {
+      const stateNodeStyle = this._stateStyles.get(state);
+      if (stateNodeStyle?.label) {
+        labelStateStyles[state] = {
+          fontSize: stateNodeStyle.label.fontSize,
+          textColor: stateNodeStyle.label.textColor,
+          fontWeight: stateNodeStyle.label.fontWeight,
+        };
+      }
+    }
 
-    switch (labelStyle.position) {
-      case 'top':
-        this._label.position.set(offsetX, -(style.size ?? 20) / 2 - 15 + offsetY);
-        break;
-      case 'bottom':
-        this._label.position.set(offsetX, (style.size ?? 20) / 2 + 15 + offsetY);
-        break;
-      case 'left':
-        this._label.position.set(-(style.size ?? 20) / 2 - 15 + offsetX, offsetY);
-        break;
-      case 'right':
-        this._label.position.set((style.size ?? 20) / 2 + 15 + offsetX, offsetY);
-        break;
-      default:
-        this._label.position.set(offsetX, offsetY);
+    // Apply merged styles
+    const mergedLabelStyle = labelRenderer.getMergedStyle(
+      baseLabelStyle,
+      labelStateStyles,
+      activeStates,
+    );
+    this._label.setStyle(mergedLabelStyle);
+
+    // Position the label
+    const bounds = this.getBounds();
+    const position = this._labelConfig?.position ?? 'bottom';
+    const offset = this._labelConfig?.offset ?? { x: 0, y: 0 };
+
+    labelRenderer.positionNodeLabel(
+      this._label,
+      {
+        x: 0, // Label is relative to container (which is at node position)
+        y: 0,
+        width: bounds.width,
+        height: bounds.height,
+      },
+      position,
+      offset,
+    );
+  }
+
+  /**
+   * Set label configuration
+   */
+  setLabel(
+    text: string,
+    position: NodeLabelPosition = 'bottom',
+    style?: Partial<LabelStyle>,
+  ): void {
+    this._style.label = {
+      ...this._style.label,
+      text,
+      position,
+      visible: true,
+      ...style,
+    };
+    this.draw();
+  }
+
+  /**
+   * Hide the label
+   */
+  hideLabel(): void {
+    if (this._label) {
+      this._label.visible = false;
+    }
+    if (this._style.label) {
+      this._style.label.visible = false;
+    }
+  }
+
+  /**
+   * Show the label
+   */
+  showLabel(): void {
+    if (this._style.label) {
+      this._style.label.visible = true;
+      this.draw();
     }
   }
 
@@ -407,6 +508,8 @@ export abstract class BaseNodeShape<T = Record<string, unknown>> {
 
   destroy(): void {
     this._label?.destroy();
+    this._label = null;
+    this._labelConfig = null;
     this._graphics.destroy();
     this._container.destroy({ children: true });
   }

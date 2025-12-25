@@ -2,7 +2,7 @@
  * Base Edge Shape - Abstract class for all edge shapes
  */
 
-import { Container, Graphics, Text } from 'pixi.js';
+import { Container, Graphics } from 'pixi.js';
 import type {
   AnimationConfig,
   ArrowHeadConfig,
@@ -12,6 +12,8 @@ import type {
   EdgeStyle,
   Point,
 } from '../../types/index.js';
+import { Label, getLabelRenderer } from '../../labels/index.js';
+import type { EdgeLabelPosition, LabelStyle } from '../../labels/index.js';
 
 export interface EdgeShapeConfig {
   data: EdgeData;
@@ -35,7 +37,12 @@ export abstract class BaseEdgeShape<T = Record<string, unknown>> {
   // PixiJS display objects
   protected _container: Container;
   protected _graphics: Graphics;
-  protected _label: Text | null = null;
+  protected _label: Label | null = null;
+  protected _labelConfig: {
+    position: EdgeLabelPosition;
+    offset: { x: number; y: number };
+    stateStyles: Record<string, Partial<LabelStyle> | undefined>;
+  } | null = null;
   protected _sourceArrow: Graphics | null = null;
   protected _targetArrow: Graphics | null = null;
 
@@ -44,6 +51,9 @@ export abstract class BaseEdgeShape<T = Record<string, unknown>> {
     source: { x: 0, y: 0 },
     target: { x: 100, y: 100 },
   };
+
+  // Control points for bezier curves (used for label positioning)
+  protected _controlPoints: Point[] = [];
 
   // Animation
   protected _animation: AnimationConfig | null = null;
@@ -325,49 +335,143 @@ export abstract class BaseEdgeShape<T = Record<string, unknown>> {
   protected _drawLabel(): void {
     const style = this.getComputedStyle();
     const labelStyle = style.label;
+    const labelRenderer = getLabelRenderer();
 
-    if (!labelStyle?.visible || !labelStyle.text) {
+    // Check if labels should be shown (zoom-based visibility)
+    const shouldShow = labelRenderer.shouldShowLabels();
+
+    if (!labelStyle?.visible || !labelStyle.text || !shouldShow) {
       if (this._label) {
-        this._container.removeChild(this._label);
-        this._label.destroy();
-        this._label = null;
+        this._label.visible = false;
       }
       return;
     }
 
+    // Helper to convert padding
+    const getPadding = (p: number | { x: number; y: number } | undefined): { x: number; y: number } => {
+      if (!p) return { x: 3, y: 1 };
+      if (typeof p === 'number') return { x: p, y: p };
+      return p;
+    };
+
+    // Create label if needed
     if (!this._label) {
-      this._label = new Text({
+      this._label = labelRenderer.createEdgeLabel({
         text: labelStyle.text,
+        position: (labelStyle.position as EdgeLabelPosition) ?? 'middle',
         style: {
           fontSize: labelStyle.fontSize ?? 10,
-          fontFamily: labelStyle.fontFamily ?? 'Arial',
+          fontFamily: labelStyle.fontFamily ?? 'Arial, sans-serif',
           fontWeight: labelStyle.fontWeight ?? 'normal',
-          fill: labelStyle.fill ?? '#666666',
+          textColor: labelStyle.textColor ?? '#666666',
+          visible: true,
+          backgroundColor: labelStyle.backgroundColor ?? null,
+          padding: getPadding(labelStyle.padding),
+          borderRadius: labelStyle.borderRadius ?? 2,
+          borderColor: labelStyle.borderColor ?? null,
+          borderWidth: labelStyle.borderWidth ?? 0,
+          resolution: labelStyle.resolution ?? 1,
         },
       });
-      this._label.anchor.set(0.5);
-      this._container.addChild(this._label);
+      this._container.addChild(this._label.container);
+
+      // Store label config
+      this._labelConfig = {
+        position: (labelStyle.position as EdgeLabelPosition) ?? 'middle',
+        offset: {
+          x: labelStyle.offsetX ?? 0,
+          y: labelStyle.offsetY ?? 0,
+        },
+        stateStyles: {},
+      };
     } else {
-      this._label.text = labelStyle.text;
-      this._label.style.fontSize = labelStyle.fontSize ?? 10;
-      this._label.style.fill = labelStyle.fill ?? '#666666';
+      // Update label text
+      this._label.setText(labelStyle.text);
+      this._label.visible = true;
     }
 
-    this._label.alpha = labelStyle.opacity ?? 1;
+    // Get merged style based on current states
+    const activeStates = Array.from(this._states);
+    const baseLabelStyle: Partial<LabelStyle> = {
+      fontSize: labelStyle.fontSize ?? 10,
+      textColor: labelStyle.textColor ?? '#666666',
+    };
 
-    // Position at midpoint
-    const midX =
-      (this._endpoints.source.x + this._endpoints.target.x) / 2 +
-      (labelStyle.offsetX ?? 0);
-    const midY =
-      (this._endpoints.source.y + this._endpoints.target.y) / 2 +
-      (labelStyle.offsetY ?? 0);
+    // Build state styles for label
+    const labelStateStyles: Record<string, Partial<LabelStyle> | undefined> = {};
+    
+    for (const state of activeStates) {
+      const stateEdgeStyle = this._stateStyles.get(state);
+      if (stateEdgeStyle?.label) {
+        labelStateStyles[state] = {
+          fontSize: stateEdgeStyle.label.fontSize,
+          textColor: stateEdgeStyle.label.textColor,
+          fontWeight: stateEdgeStyle.label.fontWeight,
+        };
+      }
+    }
 
-    this._label.position.set(midX, midY);
+    // Apply merged styles
+    const mergedLabelStyle = labelRenderer.getMergedStyle(
+      baseLabelStyle,
+      labelStateStyles,
+      activeStates,
+    );
+    this._label.setStyle(mergedLabelStyle);
 
-    // Draw background if specified
-    if (labelStyle.background) {
-      // Would need additional graphics for background
+    // Position the label on the edge path
+    const position = this._labelConfig?.position ?? 'middle';
+    const offset = this._labelConfig?.offset ?? { x: 0, y: 0 };
+
+    labelRenderer.positionEdgeLabel(
+      this._label,
+      {
+        source: this._endpoints.source,
+        target: this._endpoints.target,
+        controlPoints: this._controlPoints,
+      },
+      position,
+      offset,
+    );
+  }
+
+  /**
+   * Set label configuration
+   */
+  setLabel(
+    text: string,
+    position: EdgeLabelPosition = 'middle',
+    style?: Partial<LabelStyle>,
+  ): void {
+    this._style.label = {
+      ...this._style.label,
+      text,
+      position,
+      visible: true,
+      ...style,
+    };
+    this.draw();
+  }
+
+  /**
+   * Hide the label
+   */
+  hideLabel(): void {
+    if (this._label) {
+      this._label.visible = false;
+    }
+    if (this._style.label) {
+      this._style.label.visible = false;
+    }
+  }
+
+  /**
+   * Show the label
+   */
+  showLabel(): void {
+    if (this._style.label) {
+      this._style.label.visible = true;
+      this.draw();
     }
   }
 
@@ -497,6 +601,8 @@ export abstract class BaseEdgeShape<T = Record<string, unknown>> {
 
   destroy(): void {
     this._label?.destroy();
+    this._label = null;
+    this._labelConfig = null;
     this._sourceArrow?.destroy();
     this._targetArrow?.destroy();
     this._graphics.destroy();
