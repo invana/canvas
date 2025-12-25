@@ -76,4 +76,41 @@ export class RectangleNode extends BaseNodeShape {
       dy <= height / 2
     );
   }
+
+  getIntersectionPoint(angle: number, offset: number = 0): { x: number; y: number } {
+    const style = this.getComputedStyle();
+    const halfWidth = (style.width ?? 80) / 2 + offset;
+    const halfHeight = (style.height ?? 40) / 2 + offset;
+
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+
+    // Handle degenerate cases
+    if (Math.abs(cos) < 0.0001) {
+      // Vertical (top or bottom)
+      return {
+        x: this._container.x,
+        y: this._container.y + (sin > 0 ? halfHeight : -halfHeight),
+      };
+    }
+    if (Math.abs(sin) < 0.0001) {
+      // Horizontal (left or right)
+      return {
+        x: this._container.x + (cos > 0 ? halfWidth : -halfWidth),
+        y: this._container.y,
+      };
+    }
+
+    // Calculate intersection with rectangle boundary
+    // Check which edge the ray intersects first
+    const tx = halfWidth / Math.abs(cos); // Time to reach vertical edge
+    const ty = halfHeight / Math.abs(sin); // Time to reach horizontal edge
+
+    const t = Math.min(tx, ty);
+
+    return {
+      x: this._container.x + cos * t,
+      y: this._container.y + sin * t,
+    };
+  }
 }

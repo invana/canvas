@@ -65,7 +65,7 @@ export const darkTheme: Theme = {
       stroke: '#757575',
       strokeWidth: 2,
       opacity: 1,
-      targetArrow: { type: 'triangleFilled', size: 10 },
+      targetArrow: { type: 'triangle', size: 10 },
       label: {
         textColor: '#9E9E9E',
         fontSize: 10,

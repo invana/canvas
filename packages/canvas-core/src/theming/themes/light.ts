@@ -65,7 +65,7 @@ export const lightTheme: Theme = {
       stroke: '#9E9E9E',
       strokeWidth: 2,
       opacity: 1,
-      targetArrow: { type: 'triangleFilled', size: 10 },
+      targetArrow: { type: 'triangle', size: 10 },
       label: {
         textColor: '#757575',
         fontSize: 10,

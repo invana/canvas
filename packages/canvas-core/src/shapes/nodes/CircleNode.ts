@@ -68,4 +68,15 @@ export class CircleNode extends BaseNodeShape {
     const dy = y - this._container.y;
     return dx * dx + dy * dy <= radius * radius;
   }
+
+  getIntersectionPoint(angle: number, offset: number = 0): { x: number; y: number } {
+    const style = this.getComputedStyle();
+    const radius = (style.size ?? 40) / 2;
+    const effectiveRadius = radius + offset;
+
+    return {
+      x: this._container.x + Math.cos(angle) * effectiveRadius,
+      y: this._container.y + Math.sin(angle) * effectiveRadius,
+    };
+  }
 }

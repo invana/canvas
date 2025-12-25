@@ -112,6 +112,72 @@ export class PolygonNode extends BaseNodeShape {
     return dx * dx + dy * dy <= radius * radius;
   }
 
+  getIntersectionPoint(angle: number, offset: number = 0): { x: number; y: number } {
+    const style = this.getComputedStyle();
+    const radius = (style.size ?? 40) / 2 + offset;
+    const sides = style.sides ?? this._sides;
+
+    // Adjust angle for shape rotation
+    const totalRotation = (style.rotation ?? 0) + this._rotationOffset;
+    const adjustedAngle = angle - totalRotation;
+
+    // Normalize angle to [0, 2π)
+    let normAngle = adjustedAngle % (Math.PI * 2);
+    if (normAngle < 0) normAngle += Math.PI * 2;
+
+    // Calculate which segment the angle falls into
+    const angleStep = (Math.PI * 2) / sides;
+    const startAngle = -Math.PI / 2; // Start from top
+
+    // Find intersection with polygon edge
+    for (let i = 0; i < sides; i++) {
+      const a1 = startAngle + i * angleStep;
+      const a2 = startAngle + (i + 1) * angleStep;
+
+      // Get the two vertices of this edge
+      const p1x = Math.cos(a1) * radius;
+      const p1y = Math.sin(a1) * radius;
+      const p2x = Math.cos(a2) * radius;
+      const p2y = Math.sin(a2) * radius;
+
+      // Check if the ray intersects this edge
+      // Ray from origin at `adjustedAngle`
+      const rayDx = Math.cos(adjustedAngle);
+      const rayDy = Math.sin(adjustedAngle);
+
+      // Edge direction
+      const edgeDx = p2x - p1x;
+      const edgeDy = p2y - p1y;
+
+      // Calculate intersection using parametric form
+      const denom = rayDx * edgeDy - rayDy * edgeDx;
+      if (Math.abs(denom) < 0.0001) continue; // Parallel
+
+      const t1 = (p1x * edgeDy - p1y * edgeDx) / denom;
+      const t2 = (p1x * rayDy - p1y * rayDx) / denom;
+
+      if (t1 > 0 && t2 >= 0 && t2 <= 1) {
+        // Found intersection
+        const localX = rayDx * t1;
+        const localY = rayDy * t1;
+
+        // Rotate back and translate to world coordinates
+        const cos = Math.cos(totalRotation);
+        const sin = Math.sin(totalRotation);
+        return {
+          x: this._container.x + localX * cos - localY * sin,
+          y: this._container.y + localX * sin + localY * cos,
+        };
+      }
+    }
+
+    // Fallback: use circle approximation
+    return {
+      x: this._container.x + Math.cos(angle) * radius,
+      y: this._container.y + Math.sin(angle) * radius,
+    };
+  }
+
   // Factory methods for specific shapes
   static triangle(config: NodeShapeConfig): PolygonNode {
     return new PolygonNode({

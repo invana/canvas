@@ -14,6 +14,7 @@ import type {
 } from '../../types/index.js';
 import { Label, getLabelRenderer } from '../../labels/index.js';
 import type { EdgeLabelPosition, LabelStyle } from '../../labels/index.js';
+import { getArrowRenderer, normalizeArrowConfig } from './ArrowRenderer.js';
 
 export interface EdgeShapeConfig {
   data: EdgeData;
@@ -243,6 +244,115 @@ export abstract class BaseEdgeShape<T = Record<string, unknown>> {
   // Arrow Heads
   // ============================================================================
 
+  // Default gap between edge endpoints and node shapes
+  protected static readonly DEFAULT_ENDPOINT_OFFSET = 3;
+
+  /**
+   * Get the effective source offset (gap from node)
+   */
+  protected _getSourceOffset(): number {
+    const style = this.getComputedStyle();
+    return style.sourceOffset ?? BaseEdgeShape.DEFAULT_ENDPOINT_OFFSET;
+  }
+
+  /**
+   * Get the effective target offset (gap from node)
+   */
+  protected _getTargetOffset(): number {
+    const style = this.getComputedStyle();
+    return style.targetOffset ?? BaseEdgeShape.DEFAULT_ENDPOINT_OFFSET;
+  }
+
+  /**
+   * Draw source and target arrows using the ArrowRenderer
+   * Arrows are drawn at the original endpoints (node intersection points),
+   * offset by the endpoint offset. The line ends before the arrow.
+   * @param _path - The calculated path (unused, kept for API compatibility)
+   */
+  protected _drawArrows(_path: Point[]): void {
+    const style = this.getComputedStyle();
+    const arrowRenderer = getArrowRenderer();
+    const defaultFill = style.stroke ?? '#999999';
+
+    // Calculate angle from endpoints
+    const dx = this._endpoints.target.x - this._endpoints.source.x;
+    const dy = this._endpoints.target.y - this._endpoints.source.y;
+    const angleToTarget = Math.atan2(dy, dx);
+    const angleToSource = angleToTarget + Math.PI;
+
+    // Source arrow - draw at source endpoint, facing back toward source
+    if (style.sourceArrow) {
+      const sourceConfig = normalizeArrowConfig(style.sourceArrow, defaultFill);
+      if (sourceConfig && sourceConfig.type !== 'none') {
+        if (!this._sourceArrow) {
+          this._sourceArrow = new Graphics();
+          this._container.addChild(this._sourceArrow);
+        }
+        this._sourceArrow.clear();
+
+        // Arrow tip is at the source endpoint position offset toward target
+        const sourceOffset = this._getSourceOffset();
+        const arrowTipX = this._endpoints.source.x + Math.cos(angleToTarget) * sourceOffset;
+        const arrowTipY = this._endpoints.source.y + Math.sin(angleToTarget) * sourceOffset;
+
+        arrowRenderer.draw(this._sourceArrow, sourceConfig, {
+          x: arrowTipX,
+          y: arrowTipY,
+          angle: angleToSource, // Points back to source
+          size: sourceConfig.size ?? 10,
+          fill: sourceConfig.fill ?? defaultFill,
+          stroke: sourceConfig.stroke ?? defaultFill,
+          strokeWidth: sourceConfig.strokeWidth ?? 1,
+        });
+      }
+    } else if (this._sourceArrow) {
+      this._sourceArrow.clear();
+    }
+
+    // Target arrow - draw at target endpoint, facing toward target
+    if (style.targetArrow) {
+      const targetConfig = normalizeArrowConfig(style.targetArrow, defaultFill);
+      if (targetConfig && targetConfig.type !== 'none') {
+        if (!this._targetArrow) {
+          this._targetArrow = new Graphics();
+          this._container.addChild(this._targetArrow);
+        }
+        this._targetArrow.clear();
+
+        // Arrow tip is at the target endpoint position offset toward source
+        const targetOffset = this._getTargetOffset();
+        const arrowTipX = this._endpoints.target.x + Math.cos(angleToSource) * targetOffset;
+        const arrowTipY = this._endpoints.target.y + Math.sin(angleToSource) * targetOffset;
+
+        arrowRenderer.draw(this._targetArrow, targetConfig, {
+          x: arrowTipX,
+          y: arrowTipY,
+          angle: angleToTarget, // Points toward target
+          size: targetConfig.size ?? 10,
+          fill: targetConfig.fill ?? defaultFill,
+          stroke: targetConfig.stroke ?? defaultFill,
+          strokeWidth: targetConfig.strokeWidth ?? 1,
+        });
+      }
+    } else if (this._targetArrow) {
+      this._targetArrow.clear();
+    }
+  }
+
+  /**
+   * Get arrow offset (for calculating edge endpoint adjustments)
+   */
+  protected _getArrowOffset(arrowConfig: ArrowHeadConfig | null | undefined): number {
+    if (!arrowConfig) return 0;
+    const config = normalizeArrowConfig(arrowConfig);
+    if (!config || config.type === 'none') return 0;
+    return getArrowRenderer().getArrowLength(config) + (config.offset ?? 0);
+  }
+
+  /**
+   * @deprecated Use _drawArrows instead
+   * This method is kept for backward compatibility but delegates to ArrowRenderer
+   */
   protected _drawArrowHead(
     graphics: Graphics,
     position: Point,
@@ -251,81 +361,33 @@ export abstract class BaseEdgeShape<T = Record<string, unknown>> {
   ): void {
     if (config.type === 'none') return;
 
-    const size = config.size ?? 10;
-    const fill = config.fill ?? this.getComputedStyle().stroke ?? '#999999';
-    const stroke = config.stroke ?? fill;
-    const strokeWidth = config.strokeWidth ?? 1;
+    // Map legacy type names to new types
+    const typeMapping: Record<string, string> = {
+      'triangleFilled': 'triangle',
+      'circleFilled': 'circle',
+      'squareFilled': 'rect',
+      'diamondFilled': 'diamond',
+      'chevron': 'vee',
+    };
 
+    const mappedType = typeMapping[config.type] ?? config.type;
+    const normalizedConfig = {
+      ...config,
+      type: mappedType as ArrowHeadConfig['type'],
+    };
+
+    const arrowRenderer = getArrowRenderer();
     graphics.clear();
-
-    switch (config.type) {
-      case 'triangle':
-      case 'triangleFilled':
-        {
-          const points = [
-            0,
-            0,
-            -size,
-            -size / 2,
-            -size,
-            size / 2,
-          ];
-          graphics.poly(points);
-          if (config.type === 'triangleFilled') {
-            graphics.fill({ color: fill });
-          } else {
-            graphics.stroke({ color: stroke, width: strokeWidth });
-          }
-        }
-        break;
-
-      case 'circle':
-      case 'circleFilled':
-        graphics.circle(-size / 2, 0, size / 2);
-        if (config.type === 'circleFilled') {
-          graphics.fill({ color: fill });
-        } else {
-          graphics.stroke({ color: stroke, width: strokeWidth });
-        }
-        break;
-
-      case 'square':
-      case 'squareFilled':
-        graphics.rect(-size, -size / 2, size, size);
-        if (config.type === 'squareFilled') {
-          graphics.fill({ color: fill });
-        } else {
-          graphics.stroke({ color: stroke, width: strokeWidth });
-        }
-        break;
-
-      case 'diamond':
-      case 'diamondFilled':
-        {
-          const halfSize = size / 2;
-          const points = [0, 0, -halfSize, -halfSize, -size, 0, -halfSize, halfSize];
-          graphics.poly(points);
-          if (config.type === 'diamondFilled') {
-            graphics.fill({ color: fill });
-          } else {
-            graphics.stroke({ color: stroke, width: strokeWidth });
-          }
-        }
-        break;
-
-      case 'chevron':
-        {
-          const halfSize = size / 2;
-          graphics.moveTo(-size, -halfSize);
-          graphics.lineTo(0, 0);
-          graphics.lineTo(-size, halfSize);
-          graphics.stroke({ color: stroke, width: strokeWidth });
-        }
-        break;
-    }
-
-    graphics.position.set(position.x, position.y);
-    graphics.rotation = angle;
+    
+    arrowRenderer.draw(graphics, normalizedConfig, {
+      x: position.x,
+      y: position.y,
+      angle,
+      size: config.size ?? 10,
+      fill: config.fill ?? this.getComputedStyle().stroke ?? '#999999',
+      stroke: config.stroke ?? config.fill ?? this.getComputedStyle().stroke ?? '#999999',
+      strokeWidth: config.strokeWidth ?? 1,
+    });
   }
 
   // ============================================================================

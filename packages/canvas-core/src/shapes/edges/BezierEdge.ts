@@ -2,9 +2,9 @@
  * Bezier Edge Shape - Cubic bezier curve
  */
 
-import { Graphics } from 'pixi.js';
 import type { EdgeStyle, Point } from '../../types/index.js';
 import { BaseEdgeShape } from './BaseEdgeShape.js';
+import { normalizeArrowConfig } from './ArrowRenderer.js';
 
 export class BezierEdge extends BaseEdgeShape {
   protected _getDefaultStyle(): EdgeStyle {
@@ -15,7 +15,7 @@ export class BezierEdge extends BaseEdgeShape {
       strokeOpacity: 1,
       opacity: 1,
       targetArrow: {
-        type: 'triangleFilled',
+        type: 'triangle',
         size: 10,
       },
       label: {
@@ -90,7 +90,7 @@ export class BezierEdge extends BaseEdgeShape {
     p1: Point,
     p2: Point,
     p3: Point,
-  ): number {
+  ): { dx: number; dy: number } {
     const mt = 1 - t;
     const mt2 = mt * mt;
     const t2 = t * t;
@@ -104,19 +104,69 @@ export class BezierEdge extends BaseEdgeShape {
       6 * mt * t * (p2.y - p1.y) +
       3 * t2 * (p3.y - p2.y);
 
-    return Math.atan2(dy, dx);
+    return { dx, dy };
   }
 
-  draw(): void {
+  /**
+   * Get adjusted endpoints accounting for arrow offsets and gap
+   */
+  private _getAdjustedEndpoints(): { source: Point; target: Point } {
     const style = this.getComputedStyle();
     const { source, target } = this._endpoints;
     const { cp1, cp2 } = this._getControlPoints();
 
+    // Get arrow lengths and gap offsets
+    const sourceArrowLength = this._getArrowOffset(normalizeArrowConfig(style.sourceArrow));
+    const targetArrowLength = this._getArrowOffset(normalizeArrowConfig(style.targetArrow));
+    const sourceOffset = this._getSourceOffset();
+    const targetOffset = this._getTargetOffset();
+
+    // Total offset from original endpoint = gap + arrow length
+    const totalSourceOffset = sourceOffset + sourceArrowLength;
+    const totalTargetOffset = targetOffset + targetArrowLength;
+
+    // Adjust source point along the curve tangent
+    let adjustedSource = source;
+    if (totalSourceOffset > 0) {
+      const tangent = this._bezierTangent(0, source, cp1, cp2, target);
+      const len = Math.sqrt(tangent.dx * tangent.dx + tangent.dy * tangent.dy);
+      if (len > 0) {
+        adjustedSource = {
+          x: source.x + (tangent.dx / len) * totalSourceOffset,
+          y: source.y + (tangent.dy / len) * totalSourceOffset,
+        };
+      }
+    }
+
+    // Adjust target point along the curve tangent
+    let adjustedTarget = target;
+    if (totalTargetOffset > 0) {
+      const tangent = this._bezierTangent(1, source, cp1, cp2, target);
+      const len = Math.sqrt(tangent.dx * tangent.dx + tangent.dy * tangent.dy);
+      if (len > 0) {
+        adjustedTarget = {
+          x: target.x - (tangent.dx / len) * totalTargetOffset,
+          y: target.y - (tangent.dy / len) * totalTargetOffset,
+        };
+      }
+    }
+
+    return { source: adjustedSource, target: adjustedTarget };
+  }
+
+  draw(): void {
+    const style = this.getComputedStyle();
+    const adjusted = this._getAdjustedEndpoints();
+    const { cp1, cp2 } = this._getControlPoints();
+
+    // Store control points for label positioning
+    this._controlPoints = [cp1, cp2];
+
     this._graphics.clear();
 
-    // Draw bezier curve
-    this._graphics.moveTo(source.x, source.y);
-    this._graphics.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, target.x, target.y);
+    // Draw bezier curve with adjusted endpoints
+    this._graphics.moveTo(adjusted.source.x, adjusted.source.y);
+    this._graphics.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, adjusted.target.x, adjusted.target.y);
     this._graphics.stroke({
       color: style.stroke ?? '#999999',
       width: style.strokeWidth ?? 2,
@@ -126,29 +176,9 @@ export class BezierEdge extends BaseEdgeShape {
     // Apply container opacity
     this._container.alpha = style.opacity ?? 1;
 
-    // Draw arrow heads
-    if (style.sourceArrow && style.sourceArrow.type !== 'none') {
-      if (!this._sourceArrow) {
-        this._sourceArrow = new Graphics();
-        this._container.addChild(this._sourceArrow);
-      }
-      const angle = this._bezierTangent(0, source, cp1, cp2, target);
-      this._drawArrowHead(
-        this._sourceArrow,
-        source,
-        angle + Math.PI,
-        style.sourceArrow,
-      );
-    }
-
-    if (style.targetArrow && style.targetArrow.type !== 'none') {
-      if (!this._targetArrow) {
-        this._targetArrow = new Graphics();
-        this._container.addChild(this._targetArrow);
-      }
-      const angle = this._bezierTangent(1, source, cp1, cp2, target);
-      this._drawArrowHead(this._targetArrow, target, angle, style.targetArrow);
-    }
+    // Draw arrows
+    const path = this._calculatePath();
+    this._drawArrows([adjusted.source, ...path.slice(1, -1), adjusted.target]);
 
     // Draw label
     this._drawLabel();

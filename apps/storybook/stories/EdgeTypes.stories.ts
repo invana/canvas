@@ -79,7 +79,11 @@ const createEdgeTypes = (args: EdgeTypesArgs): HTMLElement => {
             type,
             stroke: colors[i],
             strokeWidth: 3,
-            arrowhead: true,
+            targetArrow: {
+              type: 'triangle',
+              size: 10,
+              fill: colors[i],
+            },
           },
         });
       });

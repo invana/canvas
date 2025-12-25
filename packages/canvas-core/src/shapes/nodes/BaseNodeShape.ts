@@ -98,6 +98,15 @@ export abstract class BaseNodeShape<T = Record<string, unknown>> {
    */
   abstract hitTest(x: number, y: number): boolean;
 
+  /**
+   * Get the intersection point on the node boundary for a given angle
+   * Used for calculating where edges connect to nodes
+   * @param angle - Angle in radians from node center
+   * @param offset - Optional offset from the boundary (positive = outward)
+   * @returns Point on the boundary
+   */
+  abstract getIntersectionPoint(angle: number, offset?: number): { x: number; y: number };
+
   // ============================================================================
   // Public API
   // ============================================================================

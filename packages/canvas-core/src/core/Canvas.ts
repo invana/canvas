@@ -540,7 +540,25 @@ export class Canvas {
     const targetNode = this._nodeShapes.get(data.target);
 
     if (sourceNode && targetNode) {
-      shape.setEndpoints(sourceNode.position, targetNode.position);
+      const sourcePos = sourceNode.position;
+      const targetPos = targetNode.position;
+
+      // Calculate angle from source to target
+      const dx = targetPos.x - sourcePos.x;
+      const dy = targetPos.y - sourcePos.y;
+      const angleToTarget = Math.atan2(dy, dx);
+      const angleToSource = angleToTarget + Math.PI;
+
+      // Get intersection points on node boundaries
+      // Add small offset for arrow heads
+      const edgeStyle = shape.style;
+      const sourceOffset = edgeStyle.sourceOffset ?? 0;
+      const targetOffset = edgeStyle.targetOffset ?? 0;
+
+      const sourcePoint = sourceNode.getIntersectionPoint(angleToTarget, sourceOffset);
+      const targetPoint = targetNode.getIntersectionPoint(angleToSource, targetOffset);
+
+      shape.setEndpoints(sourcePoint, targetPoint);
     }
   }
 

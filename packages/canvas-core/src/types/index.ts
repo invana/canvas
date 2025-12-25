@@ -93,8 +93,12 @@ export interface EdgeStyle {
   lineDash?: number[];
 
   // Arrow heads
-  sourceArrow?: ArrowHeadConfig;
-  targetArrow?: ArrowHeadConfig;
+  sourceArrow?: ArrowHeadConfig | ArrowHeadType | null;
+  targetArrow?: ArrowHeadConfig | ArrowHeadType | null;
+
+  // Edge endpoint offsets (distance from node intersection point)
+  sourceOffset?: number;   // Gap between source node and edge start
+  targetOffset?: number;   // Gap between target node and edge end (before arrow)
 
   // Effects
   opacity?: number;
@@ -172,21 +176,26 @@ export type EdgeShapeType =
 export type ArrowHeadType =
   | 'none'
   | 'triangle'
-  | 'triangleFilled'
+  | 'triangleOpen'
   | 'circle'
-  | 'circleFilled'
-  | 'square'
-  | 'squareFilled'
+  | 'circleOpen'
   | 'diamond'
-  | 'diamondFilled'
-  | 'chevron';
+  | 'diamondOpen'
+  | 'vee'
+  | 'rect'
+  | 'rectOpen'
+  | 'triangleRect'
+  | 'simple';
 
 export interface ArrowHeadConfig {
   type: ArrowHeadType;
-  size?: number;
-  fill?: string;
-  stroke?: string;
-  strokeWidth?: number;
+  size?: number;           // Overall size (default: 10)
+  width?: number;          // Width override
+  height?: number;         // Height override
+  fill?: string;           // Fill color (default: edge stroke color)
+  stroke?: string;         // Stroke color for open arrows
+  strokeWidth?: number;    // Stroke width for open arrows
+  offset?: number;         // Distance from node intersection point
 }
 
 // ============================================================================
