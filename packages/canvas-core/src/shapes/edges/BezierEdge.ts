@@ -2,9 +2,10 @@
  * Bezier Edge Shape - Cubic bezier curve
  */
 
+import { Graphics } from 'pixi.js';
 import type { EdgeStyle, Point } from '../../types/index.js';
 import { BaseEdgeShape } from './BaseEdgeShape.js';
-import { normalizeArrowConfig } from './ArrowRenderer.js';
+import { getArrowRenderer, normalizeArrowConfig } from './ArrowRenderer.js';
 
 export class BezierEdge extends BaseEdgeShape {
   protected _getDefaultStyle(): EdgeStyle {
@@ -53,16 +54,33 @@ export class BezierEdge extends BaseEdgeShape {
     const { source, target } = this._endpoints;
     const dx = target.x - source.x;
     const dy = target.y - source.y;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     // Control point offset based on distance
-    const offset = Math.min(distance * 0.4, 100);
+    const offset = Math.min(distance * 0.5, 150);
 
-    // Horizontal bezier
-    return {
-      cp1: { x: source.x + offset, y: source.y },
-      cp2: { x: target.x - offset, y: target.y },
-    };
+    // For bezier curves, extend control points horizontally from source and target
+    // This creates a nice smooth S-curve or C-curve depending on positions
+    // Control point 1: extends horizontally from source toward target
+    // Control point 2: extends horizontally from target toward source
+    
+    if (absDx >= absDy) {
+      // Horizontal dominant - use horizontal control points
+      const dirX = dx >= 0 ? 1 : -1;
+      return {
+        cp1: { x: source.x + offset * dirX, y: source.y },
+        cp2: { x: target.x - offset * dirX, y: target.y },
+      };
+    } else {
+      // Vertical dominant - use vertical control points
+      const dirY = dy >= 0 ? 1 : -1;
+      return {
+        cp1: { x: source.x, y: source.y + offset * dirY },
+        cp2: { x: target.x, y: target.y - offset * dirY },
+      };
+    }
   }
 
   private _bezierPoint(
@@ -176,11 +194,92 @@ export class BezierEdge extends BaseEdgeShape {
     // Apply container opacity
     this._container.alpha = style.opacity ?? 1;
 
-    // Draw arrows
-    const path = this._calculatePath();
-    this._drawArrows([adjusted.source, ...path.slice(1, -1), adjusted.target]);
+    // Draw arrows using bezier tangent for angle calculation
+    this._drawBezierArrows();
 
     // Draw label
     this._drawLabel();
+  }
+
+  /**
+   * Draw arrows using the bezier curve tangent for proper angle calculation
+   * This ensures arrows follow the curve direction, not a straight line
+   */
+  private _drawBezierArrows(): void {
+    const style = this.getComputedStyle();
+    const arrowRenderer = getArrowRenderer();
+    const defaultFill = style.stroke ?? '#999999';
+    const { source, target } = this._endpoints;
+    const { cp1, cp2 } = this._getControlPoints();
+
+    // Source arrow - use tangent at t=0
+    if (style.sourceArrow) {
+      const sourceConfig = normalizeArrowConfig(style.sourceArrow, defaultFill);
+      if (sourceConfig && sourceConfig.type !== 'none') {
+        if (!this._sourceArrow) {
+          this._sourceArrow = new Graphics();
+          this._container.addChild(this._sourceArrow);
+        }
+        this._sourceArrow.clear();
+
+        // Get tangent at start of curve (t=0)
+        const tangent = this._bezierTangent(0, source, cp1, cp2, target);
+        const tangentAngle = Math.atan2(tangent.dy, tangent.dx);
+        // Arrow points back along the tangent (opposite direction)
+        const arrowAngle = tangentAngle + Math.PI;
+
+        // Position arrow at source with offset
+        const sourceOffset = this._getSourceOffset();
+        const arrowTipX = source.x + Math.cos(tangentAngle) * sourceOffset;
+        const arrowTipY = source.y + Math.sin(tangentAngle) * sourceOffset;
+
+        arrowRenderer.draw(this._sourceArrow, sourceConfig, {
+          x: arrowTipX,
+          y: arrowTipY,
+          angle: arrowAngle,
+          size: sourceConfig.size ?? 10,
+          fill: sourceConfig.fill ?? defaultFill,
+          stroke: sourceConfig.stroke ?? defaultFill,
+          strokeWidth: sourceConfig.strokeWidth ?? 1,
+        });
+      }
+    } else if (this._sourceArrow) {
+      this._sourceArrow.clear();
+    }
+
+    // Target arrow - use tangent at t=1
+    if (style.targetArrow) {
+      const targetConfig = normalizeArrowConfig(style.targetArrow, defaultFill);
+      if (targetConfig && targetConfig.type !== 'none') {
+        if (!this._targetArrow) {
+          this._targetArrow = new Graphics();
+          this._container.addChild(this._targetArrow);
+        }
+        this._targetArrow.clear();
+
+        // Get tangent at end of curve (t=1)
+        const tangent = this._bezierTangent(1, source, cp1, cp2, target);
+        const tangentAngle = Math.atan2(tangent.dy, tangent.dx);
+        // Arrow points in the direction of the tangent (toward target)
+        const arrowAngle = tangentAngle;
+
+        // Position arrow at target with offset (offset goes opposite to tangent)
+        const targetOffset = this._getTargetOffset();
+        const arrowTipX = target.x - Math.cos(tangentAngle) * targetOffset;
+        const arrowTipY = target.y - Math.sin(tangentAngle) * targetOffset;
+
+        arrowRenderer.draw(this._targetArrow, targetConfig, {
+          x: arrowTipX,
+          y: arrowTipY,
+          angle: arrowAngle,
+          size: targetConfig.size ?? 10,
+          fill: targetConfig.fill ?? defaultFill,
+          stroke: targetConfig.stroke ?? defaultFill,
+          strokeWidth: targetConfig.strokeWidth ?? 1,
+        });
+      }
+    } else if (this._targetArrow) {
+      this._targetArrow.clear();
+    }
   }
 }

@@ -53,14 +53,22 @@ export class PixiRenderer implements IRenderer {
     const preferredType = config?.type ?? 'auto';
     const useWebGPU = preferredType === 'webgpu' || preferredType === 'auto';
 
+    // Get device pixel ratio for sharp rendering on high-DPI displays
+    const dpr = config?.resolution ?? window.devicePixelRatio ?? 1;
+
+    // Ensure dimensions are valid and even (WebGPU multisampling works better with even dimensions)
+    const width = Math.max(2, Math.floor((canvas.width || 800) / 2) * 2);
+    const height = Math.max(2, Math.floor((canvas.height || 600) / 2) * 2);
+
     this._app = new Application();
 
     await this._app.init({
       canvas,
-      width: canvas.width || 800,
-      height: canvas.height || 600,
+      width,
+      height,
       antialias: config?.antialias ?? true,
-      resolution: config?.resolution ?? window.devicePixelRatio,
+      // Use device pixel ratio for sharp rendering on Retina/high-DPI displays
+      resolution: dpr,
       autoDensity: true,
       backgroundColor: config?.backgroundColor ?? '#ffffff',
       backgroundAlpha: config?.backgroundAlpha ?? 1,
@@ -98,8 +106,12 @@ export class PixiRenderer implements IRenderer {
   resize(width: number, height: number): void {
     if (!this._initialized) return;
 
-    this._size = { width, height };
-    this.app.renderer.resize(width, height);
+    // Ensure dimensions are valid and even (WebGPU multisampling works better with even dimensions)
+    const w = Math.max(2, Math.floor(width / 2) * 2);
+    const h = Math.max(2, Math.floor(height / 2) * 2);
+
+    this._size = { width: w, height: h };
+    this.app.renderer.resize(w, h);
   }
 
   start(): void {

@@ -100,6 +100,11 @@ export interface EdgeStyle {
   sourceOffset?: number;   // Gap between source node and edge start
   targetOffset?: number;   // Gap between target node and edge end (before arrow)
 
+  // Edge direction hints (for orthogonal/bezier routing)
+  // When set, edge will exit/enter from this direction regardless of node positions
+  sourceDirection?: Direction | 'auto';
+  targetDirection?: Direction | 'auto';
+
   // Effects
   opacity?: number;
   shadow?: ShadowStyle;
@@ -172,6 +177,36 @@ export type EdgeShapeType =
   | 'orthogonal'
   | 'arc'
   | 'custom';
+
+// ============================================================================
+// Port & Direction Types
+// ============================================================================
+
+/**
+ * Direction for edge connections
+ * Used for determining where edges exit/enter nodes
+ */
+export type Direction = 'top' | 'bottom' | 'left' | 'right';
+
+/**
+ * Port definition for nodes
+ * Ports are specific connection points on a node
+ */
+export interface PortDefinition {
+  id: string;
+  direction: Direction;
+  offsetX?: number;  // Offset from center along the edge (default: 0)
+  offsetY?: number;  // Offset perpendicular to edge (default: 0)
+}
+
+/**
+ * Port configuration for a node
+ */
+export interface PortConfig {
+  ports?: PortDefinition[];
+  // Shorthand for common port layouts
+  layout?: 'none' | 'sides' | 'all';  // 'sides' = left/right, 'all' = top/bottom/left/right
+}
 
 export type ArrowHeadType =
   | 'none'
@@ -276,6 +311,7 @@ export interface NodeData<T = Record<string, unknown>> {
   y?: number;
   style?: Partial<NodeStyle>;
   states?: Partial<NodeStateStyles>;
+  ports?: PortConfig;  // Port configuration for this node
   data?: T;
 }
 
@@ -283,6 +319,8 @@ export interface EdgeData<T = Record<string, unknown>> {
   id: string;
   source: string;
   target: string;
+  sourcePort?: string;  // Port ID on source node (optional)
+  targetPort?: string;  // Port ID on target node (optional)
   type?: string;
   label?: string;
   style?: Partial<EdgeStyle>;

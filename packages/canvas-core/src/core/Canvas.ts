@@ -543,20 +543,67 @@ export class Canvas {
       const sourcePos = sourceNode.position;
       const targetPos = targetNode.position;
 
-      // Calculate angle from source to target
+      // Calculate relative positions
       const dx = targetPos.x - sourcePos.x;
       const dy = targetPos.y - sourcePos.y;
-      const angleToTarget = Math.atan2(dy, dx);
-      const angleToSource = angleToTarget + Math.PI;
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
 
-      // Get intersection points on node boundaries
-      // Add small offset for arrow heads
+      // Get edge type and style to determine intersection calculation method
+      const edgeType = shape.type;
       const edgeStyle = shape.style;
       const sourceOffset = edgeStyle.sourceOffset ?? 0;
       const targetOffset = edgeStyle.targetOffset ?? 0;
 
-      const sourcePoint = sourceNode.getIntersectionPoint(angleToTarget, sourceOffset);
-      const targetPoint = targetNode.getIntersectionPoint(angleToSource, targetOffset);
+      // Get direction hints from edge style (for layout engines like Dagre/ELK)
+      const sourceDirection = edgeStyle.sourceDirection ?? 'auto';
+      const targetDirection = edgeStyle.targetDirection ?? 'auto';
+
+      let sourceAngle: number;
+      let targetAngle: number;
+
+      // Helper to convert direction to angle
+      const directionToAngle = (dir: string): number => {
+        switch (dir) {
+          case 'right': return 0;
+          case 'bottom': return Math.PI / 2;
+          case 'left': return Math.PI;
+          case 'top': return -Math.PI / 2;
+          default: return 0;
+        }
+      };
+
+      // If explicit directions are set, use them (for layout engines)
+      if (sourceDirection !== 'auto') {
+        sourceAngle = directionToAngle(sourceDirection);
+      } else if (edgeType === 'orthogonal') {
+        // Auto direction for orthogonal: horizontal-first or vertical-first
+        if (absDx >= absDy) {
+          sourceAngle = dx >= 0 ? 0 : Math.PI;  // Exit right or left
+        } else {
+          sourceAngle = dy >= 0 ? Math.PI / 2 : -Math.PI / 2;  // Exit bottom or top
+        }
+      } else {
+        // For straight and bezier edges, use center-to-center angle
+        sourceAngle = Math.atan2(dy, dx);
+      }
+
+      if (targetDirection !== 'auto') {
+        targetAngle = directionToAngle(targetDirection);
+      } else if (edgeType === 'orthogonal') {
+        // Auto direction for orthogonal: opposite of source direction logic
+        if (absDx >= absDy) {
+          targetAngle = dx >= 0 ? Math.PI : 0;  // Enter from left or right
+        } else {
+          targetAngle = dy >= 0 ? -Math.PI / 2 : Math.PI / 2;  // Enter from top or bottom
+        }
+      } else {
+        // For straight and bezier edges, use center-to-center angle
+        targetAngle = Math.atan2(dy, dx) + Math.PI;
+      }
+
+      const sourcePoint = sourceNode.getIntersectionPoint(sourceAngle, sourceOffset);
+      const targetPoint = targetNode.getIntersectionPoint(targetAngle, targetOffset);
 
       shape.setEndpoints(sourcePoint, targetPoint);
     }
