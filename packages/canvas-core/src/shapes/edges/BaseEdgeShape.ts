@@ -92,6 +92,11 @@ export abstract class BaseEdgeShape<T = Record<string, unknown>> {
         }
       }
     }
+
+    // Initialize animation from style
+    if (this._style.animation && this._style.animation.type !== 'none') {
+      this._animation = this._style.animation;
+    }
   }
 
   // ============================================================================
@@ -160,6 +165,17 @@ export abstract class BaseEdgeShape<T = Record<string, unknown>> {
 
   setStyle(style: Partial<EdgeStyle>): void {
     Object.assign(this._style, style);
+
+    // Handle animation changes
+    if (style.animation !== undefined) {
+      if (style.animation && style.animation.type !== 'none') {
+        this._animation = style.animation;
+        this._animationTime = 0;
+      } else {
+        this.stopAnimation();
+      }
+    }
+
     this.draw();
   }
 

@@ -2,6 +2,7 @@
  * Circle Node Shape
  */
 
+import { Graphics } from 'pixi.js';
 import type { NodeStyle } from '../../types/index.js';
 import { BaseNodeShape } from './BaseNodeShape.js';
 
@@ -78,5 +79,11 @@ export class CircleNode extends BaseNodeShape {
       x: this._container.x + Math.cos(angle) * effectiveRadius,
       y: this._container.y + Math.sin(angle) * effectiveRadius,
     };
+  }
+
+  drawShapeOutline(graphics: Graphics, scale: number): void {
+    const style = this.getComputedStyle();
+    const radius = ((style.size ?? 40) / 2) * scale;
+    graphics.circle(0, 0, radius);
   }
 }

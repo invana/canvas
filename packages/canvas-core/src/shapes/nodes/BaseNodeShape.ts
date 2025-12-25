@@ -41,6 +41,8 @@ export abstract class BaseNodeShape<T = Record<string, unknown>> {
   // Animation
   protected _animation: AnimationConfig | null = null;
   protected _animationTime = 0;
+  protected _rippleGraphics: Graphics[] = [];
+  protected _rippleCount = 3; // Number of concurrent ripples
 
   constructor(config: NodeShapeConfig) {
     this._data = config.data as NodeData<T>;
@@ -77,6 +79,11 @@ export abstract class BaseNodeShape<T = Record<string, unknown>> {
         }
       }
     }
+
+    // Initialize animation from style
+    if (this._style.animation && this._style.animation.type !== 'none') {
+      this._animation = this._style.animation;
+    }
   }
 
   // ============================================================================
@@ -106,6 +113,14 @@ export abstract class BaseNodeShape<T = Record<string, unknown>> {
    * @returns Point on the boundary
    */
   abstract getIntersectionPoint(angle: number, offset?: number): { x: number; y: number };
+
+  /**
+   * Draw the shape outline on the given graphics object at a specific scale
+   * Used for shape-ripple animation
+   * @param graphics - The Graphics object to draw on
+   * @param scale - Scale factor (1.0 = normal size)
+   */
+  abstract drawShapeOutline(graphics: Graphics, scale: number): void;
 
   // ============================================================================
   // Public API
@@ -151,6 +166,17 @@ export abstract class BaseNodeShape<T = Record<string, unknown>> {
 
   setStyle(style: Partial<NodeStyle>): void {
     Object.assign(this._style, style);
+
+    // Handle animation changes
+    if (style.animation !== undefined) {
+      if (style.animation && style.animation.type !== 'none') {
+        this._animation = style.animation;
+        this._animationTime = 0;
+      } else {
+        this.stopAnimation();
+      }
+    }
+
     this.draw();
   }
 
@@ -247,6 +273,8 @@ export abstract class BaseNodeShape<T = Record<string, unknown>> {
     this._container.scale.set(this.getComputedStyle().scale ?? 1);
     this._container.alpha = this.getComputedStyle().opacity ?? 1;
     this._container.rotation = this.getComputedStyle().rotation ?? 0;
+    // Clean up ripple graphics
+    this._cleanupRipples();
   }
 
   updateAnimation(deltaTime: number): void {
@@ -294,8 +322,11 @@ export abstract class BaseNodeShape<T = Record<string, unknown>> {
         break;
 
       case 'ripple':
-        // Ripple would need additional graphics - simplified version
-        this._container.scale.set(baseScale + Math.sin(progress * Math.PI) * 0.15 * intensity);
+        this._updateRippleAnimation(progress, intensity);
+        break;
+
+      case 'shape-ripple':
+        this._updateShapeRippleAnimation(progress, intensity);
         break;
 
       case 'glow':
@@ -312,6 +343,107 @@ export abstract class BaseNodeShape<T = Record<string, unknown>> {
       this._animationTime >= duration * this._animation.loop
     ) {
       this.stopAnimation();
+    }
+  }
+
+  /**
+   * Update ripple animation - draws concentric expanding circles
+   */
+  protected _updateRippleAnimation(progress: number, intensity: number): void {
+    const style = this.getComputedStyle();
+    const baseSize = style.size ?? 40;
+    const strokeColor = style.stroke ?? style.fill ?? '#4CAF50';
+    const maxExpansion = baseSize * 1.5 * intensity; // How far ripples expand
+
+    // Create ripple graphics if needed
+    while (this._rippleGraphics.length < this._rippleCount) {
+      const ripple = new Graphics();
+      // Insert ripples behind the main graphics (at index 0)
+      this._container.addChildAt(ripple, 0);
+      this._rippleGraphics.push(ripple);
+    }
+
+    // Update each ripple with staggered timing
+    for (let i = 0; i < this._rippleCount; i++) {
+      const ripple = this._rippleGraphics[i];
+      if (!ripple) continue;
+
+      // Stagger ripples so they start at different times
+      const staggerOffset = i / this._rippleCount;
+      let rippleProgress = (progress + staggerOffset) % 1;
+
+      // Ripple expands from center outward
+      const currentSize = baseSize + rippleProgress * maxExpansion;
+      // Fade out as ripple expands
+      const alpha = (1 - rippleProgress) * 0.6;
+
+      ripple.clear();
+      
+      if (alpha > 0.01) {
+        // Draw the ripple circle (stroke only, no fill)
+        ripple.circle(0, 0, currentSize / 2);
+        ripple.stroke({
+          color: strokeColor,
+          width: 2 * (1 - rippleProgress * 0.5), // Thinner as it expands
+          alpha: alpha,
+        });
+      }
+    }
+  }
+
+  /**
+   * Clean up ripple graphics
+   */
+  protected _cleanupRipples(): void {
+    for (const ripple of this._rippleGraphics) {
+      ripple.clear();
+      this._container.removeChild(ripple);
+      ripple.destroy();
+    }
+    this._rippleGraphics = [];
+  }
+
+  /**
+   * Update shape-ripple animation - draws concentric expanding shapes matching the node shape
+   */
+  protected _updateShapeRippleAnimation(progress: number, intensity: number): void {
+    const style = this.getComputedStyle();
+    const strokeColor = style.stroke ?? style.fill ?? '#4CAF50';
+    const maxScale = 1 + (1.5 * intensity); // How much shapes expand (1.0 to 2.5x at full intensity)
+
+    // Create ripple graphics if needed
+    while (this._rippleGraphics.length < this._rippleCount) {
+      const ripple = new Graphics();
+      // Insert ripples behind the main graphics (at index 0)
+      this._container.addChildAt(ripple, 0);
+      this._rippleGraphics.push(ripple);
+    }
+
+    // Update each ripple with staggered timing
+    for (let i = 0; i < this._rippleCount; i++) {
+      const ripple = this._rippleGraphics[i];
+      if (!ripple) continue;
+
+      // Stagger ripples so they start at different times
+      const staggerOffset = i / this._rippleCount;
+      let rippleProgress = (progress + staggerOffset) % 1;
+
+      // Scale from 1.0 (at node boundary) to maxScale
+      const currentScale = 1 + rippleProgress * (maxScale - 1);
+      // Fade out as ripple expands
+      const alpha = (1 - rippleProgress) * 0.6;
+
+      ripple.clear();
+      
+      if (alpha > 0.01) {
+        // Draw the shape outline at the current scale
+        this.drawShapeOutline(ripple, currentScale);
+        ripple.stroke({
+          color: strokeColor,
+          width: 2 * (1 - rippleProgress * 0.5), // Thinner as it expands
+          alpha: alpha,
+        });
+      }
     }
   }
 
@@ -516,6 +648,7 @@ export abstract class BaseNodeShape<T = Record<string, unknown>> {
   // ============================================================================
 
   destroy(): void {
+    this._cleanupRipples();
     this._label?.destroy();
     this._label = null;
     this._labelConfig = null;

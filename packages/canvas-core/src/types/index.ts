@@ -246,6 +246,7 @@ export type AnimationType =
   | 'rotate'
   | 'blink'
   | 'ripple'
+  | 'shape-ripple'
   | 'glow';
 
 export type EasingType =

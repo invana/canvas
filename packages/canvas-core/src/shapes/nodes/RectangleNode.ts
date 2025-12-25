@@ -2,6 +2,7 @@
  * Rectangle Node Shape
  */
 
+import { Graphics } from 'pixi.js';
 import type { NodeStyle } from '../../types/index.js';
 import { BaseNodeShape } from './BaseNodeShape.js';
 
@@ -112,5 +113,12 @@ export class RectangleNode extends BaseNodeShape {
       x: this._container.x + cos * t,
       y: this._container.y + sin * t,
     };
+  }
+
+  drawShapeOutline(graphics: Graphics, scale: number): void {
+    const style = this.getComputedStyle();
+    const width = (style.width ?? 80) * scale;
+    const height = (style.height ?? 40) * scale;
+    graphics.rect(-width / 2, -height / 2, width, height);
   }
 }

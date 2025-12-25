@@ -2,6 +2,7 @@
  * Polygon Node Shape - Triangle, Pentagon, Hexagon, etc.
  */
 
+import { Graphics } from 'pixi.js';
 import type { NodeShapeType, NodeStyle } from '../../types/index.js';
 import { BaseNodeShape, type NodeShapeConfig } from './BaseNodeShape.js';
 
@@ -176,6 +177,14 @@ export class PolygonNode extends BaseNodeShape {
       x: this._container.x + Math.cos(angle) * radius,
       y: this._container.y + Math.sin(angle) * radius,
     };
+  }
+
+  drawShapeOutline(graphics: Graphics, scale: number): void {
+    const style = this.getComputedStyle();
+    const radius = ((style.size ?? 40) / 2) * scale;
+    const sides = style.sides ?? this._sides;
+    const points = this._getPolygonPoints(radius, sides);
+    graphics.poly(points);
   }
 
   // Factory methods for specific shapes
