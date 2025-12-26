@@ -210,8 +210,8 @@ export const GradientPatterns: Story = {
   },
 };
 
-// Story 2: Image Fills - showing image fills on all shapes
-export const ImageFills: Story = {
+// Story 2: SVG Data URI Images - inline SVG images as base64
+export const SVGDataURIImages: Story = {
   render: (args) => {
     const wrapper = document.createElement('div');
     wrapper.style.cssText = 'position: relative; width: 100%; height: 100%;';
@@ -219,14 +219,292 @@ export const ImageFills: Story = {
     const info = document.createElement('div');
     info.style.cssText = 'padding: 16px; color: #333; font-family: system-ui;';
     info.innerHTML = `
-      <h3 style="margin: 0 0 8px 0;">Image Fill Patterns</h3>
+      <h3 style="margin: 0 0 8px 0;">SVG Data URI Image Fills</h3>
       <p style="margin: 0; opacity: 0.8; font-size: 14px;">
-        Top row: Cover mode (image fills shape, crops if needed)<br/>
-        Middle row: Contain mode (image fits inside shape)<br/>
-        Bottom row: Fill mode (image stretches to fill shape)
+        Using inline SVG images encoded as base64 data URIs<br/>
+        <code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px;">data:image/svg+xml;base64,...</code>
       </p>
       <p style="margin: 8px 0 0 0; opacity: 0.6; font-size: 12px;">
-        Note: Using placeholder images. Replace with your own images for production.
+        Best for: Icons, logos, and vector graphics. No external dependencies.
+      </p>
+    `;
+
+    const container = document.createElement('div');
+    container.style.cssText = 'width: 1400px; height: 400px; border-radius: 8px; overflow: hidden;';
+    
+    wrapper.appendChild(info);
+    wrapper.appendChild(container);
+
+    setTimeout(async () => {
+      const canvas = new Canvas({
+        container,
+        width: 1400,
+        height: 400,
+        backgroundColor: args.backgroundColor,
+      });
+
+      await canvas.init();
+
+      const shapes = [
+        'circle', 'rect', 'roundedRect', 'ellipse', 
+        'triangle', 'diamond', 'pentagon', 'hexagon', 'octagon'
+      ] as const;
+
+      // SVG data URIs with different designs
+      const svgImages = [
+        'data:image/svg+xml;base64,' + btoa('<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#FF6B6B"/><stop offset="100%" style="stop-color:#C44569"/></linearGradient></defs><rect width="200" height="200" fill="url(#g1)"/><circle cx="100" cy="100" r="40" fill="white" opacity="0.3"/></svg>'),
+        'data:image/svg+xml;base64,' + btoa('<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#4ECDC4"/><path d="M 50 150 L 100 50 L 150 150 Z" fill="white" opacity="0.4"/></svg>'),
+        'data:image/svg+xml;base64,' + btoa('<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="r1"><stop offset="0%" style="stop-color:#A8E6CF"/><stop offset="100%" style="stop-color:#56ab2f"/></radialGradient></defs><rect width="200" height="200" fill="url(#r1)"/><rect x="60" y="60" width="80" height="80" fill="white" opacity="0.3"/></svg>'),
+        'data:image/svg+xml;base64,' + btoa('<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#FFD93D"/><polygon points="100,40 120,80 160,80 130,110 140,150 100,120 60,150 70,110 40,80 80,80" fill="#f39c12"/></svg>'),
+        'data:image/svg+xml;base64,' + btoa('<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#FF6B9D"/><circle cx="70" cy="70" r="30" fill="white" opacity="0.2"/><circle cx="130" cy="130" r="40" fill="white" opacity="0.3"/></svg>'),
+        'data:image/svg+xml;base64,' + btoa('<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#667EEA"/><path d="M 0 100 Q 50 50 100 100 T 200 100 L 200 200 L 0 200 Z" fill="white" opacity="0.3"/></svg>'),
+        'data:image/svg+xml;base64,' + btoa('<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#F093FB"/><rect x="20" y="20" width="160" height="160" fill="none" stroke="white" stroke-width="8" opacity="0.4"/></svg>'),
+        'data:image/svg+xml;base64,' + btoa('<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="p1" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="8" fill="white" opacity="0.3"/></pattern></defs><rect width="200" height="200" fill="#4FACFE"/><rect width="200" height="200" fill="url(#p1)"/></svg>'),
+        'data:image/svg+xml;base64,' + btoa('<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#FA8BFF"/><path d="M 100 50 L 150 100 L 100 150 L 50 100 Z" fill="white" opacity="0.4" transform="rotate(45 100 100)"/></svg>'),
+      ];
+
+      const nodes = shapes.map((shape, i) => ({
+        data: {
+          id: `svg-${i}`,
+          x: 150 + i * 140,
+          y: 200,
+          shape,
+          size: 70,
+          label: shape,
+        },
+        style: {
+          fill: {
+            type: 'image' as const,
+            src: svgImages[i],
+            fit: 'cover' as const,
+            alignX: 0.5,
+            alignY: 0.5,
+          },
+          stroke: '#333',
+          strokeWidth: 2,
+          labelStyle: {
+            fill: '#ffffff',
+            fontSize: 10,
+            fontWeight: 'bold',
+          },
+        },
+      }));
+
+      const data: CanvasData = {
+        nodes,
+        edges: [],
+      };
+
+      canvas.render(data);
+    }, 0);
+
+    return wrapper;
+  },
+};
+
+// Story 3: Base64 PNG Images - raster images as base64
+export const Base64PNGImages: Story = {
+  render: (args) => {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position: relative; width: 100%; height: 100%;';
+
+    const info = document.createElement('div');
+    info.style.cssText = 'padding: 16px; color: #333; font-family: system-ui;';
+    info.innerHTML = `
+      <h3 style="margin: 0 0 8px 0;">Base64 PNG Image Fills</h3>
+      <p style="margin: 0; opacity: 0.8; font-size: 14px;">
+        Using base64-encoded PNG images<br/>
+        <code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px;">data:image/png;base64,iVBORw0KG...</code>
+      </p>
+      <p style="margin: 8px 0 0 0; opacity: 0.6; font-size: 12px;">
+        Best for: Small raster images, pixel art. Increases bundle size.
+      </p>
+    `;
+
+    const container = document.createElement('div');
+    container.style.cssText = 'width: 1400px; height: 400px; border-radius: 8px; overflow: hidden;';
+    
+    wrapper.appendChild(info);
+    wrapper.appendChild(container);
+
+    setTimeout(async () => {
+      const canvas = new Canvas({
+        container,
+        width: 1400,
+        height: 400,
+        backgroundColor: args.backgroundColor,
+      });
+
+      await canvas.init();
+
+      const shapes = [
+        'circle', 'rect', 'roundedRect', 'ellipse', 
+        'triangle', 'diamond', 'pentagon', 'hexagon', 'octagon'
+      ] as const;
+
+      // Small 32x32 colored PNG images as base64 (these are tiny solid color PNGs)
+      const pngImages = [
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAKklEQVR42u3OMQ0AAAwCoP6/aE/AYCAkJycnJycnJycnJycnJycnJyfHAQBvAAG4AAAAAElFTkSuQmCC', // Red
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAKklEQVR42u3OIQ0AAAzD0P//6BAOBEJycnJycnJycnJycnJycnJycnJyHADmAAG4AAAAAElFTkSuQmCC', // Blue
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAKklEQVR42u3OQQ0AAAwCoP6/aE/AYGBISEhISEhISEhISEhISEhISEhIyAEAcgABuAAAAAElFTkSuQmCC', // Green
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAKklEQVR42u3OQQ0AAAwCoP6/6BUYDIyEhISEhISEhISEhISEhISEhISEhBwAvwABuAAAAAElFTkSuQmCC', // Yellow
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAKklEQVR42u3OIQ0AAAzE0L9/dAoMBkZCQkJCQkJCQkJCQkJCQkJCQkJCQg4AZwABuAAAAAElFTkSuQmCC', // Purple
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAKklEQVR42u3OIQ0AAAzE0M9/dAgHAiMhISEhISEhISEhISEhISEhISEhIQcAYgABuAAAAAElFTkSuQmCC', // Cyan
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAKklEQVR42u3OIQ0AAAzE0N9/dAgMBkZCQkJCQkJCQkJCQkJCQkJCQkJCQg4AYAABuAAAAAElFTkSuQmCC', // Pink
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAKklEQVR42u3OIQ0AAAzE0P+/aE/AYCAkJCQkJCQkJCQkJCQkJCQkJCQkJOQAcAABuAAAAAElFTkSuQmCC', // Orange
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAKklEQVR42u3OIQ0AAAwDoP+/6BAOBEJCQkJCQkJCQkJCQkJCQkJCQkJCQg4AZgABuAAAAAElFTkSuQmCC', // Gray
+      ];
+
+      const nodes = shapes.map((shape, i) => ({
+        data: {
+          id: `png-${i}`,
+          x: 150 + i * 140,
+          y: 200,
+          shape,
+          size: 70,
+          label: shape,
+        },
+        style: {
+          fill: {
+            type: 'image' as const,
+            src: pngImages[i],
+            fit: 'fill' as const,
+            alignX: 0.5,
+            alignY: 0.5,
+          },
+          stroke: '#333',
+          strokeWidth: 2,
+          labelStyle: {
+            fill: '#ffffff',
+            fontSize: 10,
+            fontWeight: 'bold',
+          },
+        },
+      }));
+
+      const data: CanvasData = {
+        nodes,
+        edges: [],
+      };
+
+      canvas.render(data);
+    }, 0);
+
+    return wrapper;
+  },
+};
+
+// Story 4: External URL Images - loading from CDN/external URLs
+export const ExternalURLImages: Story = {
+  render: (args) => {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position: relative; width: 100%; height: 100%;';
+
+    const info = document.createElement('div');
+    info.style.cssText = 'padding: 16px; color: #333; font-family: system-ui;';
+    info.innerHTML = `
+      <h3 style="margin: 0 0 8px 0;">External URL Image Fills</h3>
+      <p style="margin: 0; opacity: 0.8; font-size: 14px;">
+        Loading images from external URLs (CDN, API, etc.)<br/>
+        <code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px;">https://example.com/image.png</code>
+      </p>
+      <p style="margin: 8px 0 0 0; opacity: 0.6; font-size: 12px;">
+        Best for: User avatars, dynamic content. Requires network access and CORS configuration.
+      </p>
+      <p style="margin: 8px 0 0 0; color: #e74c3c; font-size: 12px;">
+        ⚠️ Using placeholder service - may show gray fallback if service is unavailable.
+      </p>
+    `;
+
+    const container = document.createElement('div');
+    container.style.cssText = 'width: 1400px; height: 400px; border-radius: 8px; overflow: hidden;';
+    
+    wrapper.appendChild(info);
+    wrapper.appendChild(container);
+
+    setTimeout(async () => {
+      const canvas = new Canvas({
+        container,
+        width: 1400,
+        height: 400,
+        backgroundColor: args.backgroundColor,
+      });
+
+      await canvas.init();
+
+      const shapes = [
+        'circle', 'rect', 'roundedRect', 'ellipse', 
+        'triangle', 'diamond', 'pentagon', 'hexagon', 'octagon'
+      ] as const;
+
+      // Using placeholder URLs with .png extension so PixiJS can detect the format
+      // Note: These URLs may fail due to CORS or service availability
+      const externalUrls = [
+        'https://via.placeholder.com/200/FF6B6B/FFFFFF.png?text=1',
+        'https://via.placeholder.com/200/4ECDC4/FFFFFF.png?text=2',
+        'https://via.placeholder.com/200/A8E6CF/FFFFFF.png?text=3',
+        'https://via.placeholder.com/200/FFD93D/000000.png?text=4',
+        'https://via.placeholder.com/200/FF6B9D/FFFFFF.png?text=5',
+        'https://via.placeholder.com/200/667EEA/FFFFFF.png?text=6',
+        'https://via.placeholder.com/200/F093FB/FFFFFF.png?text=7',
+        'https://via.placeholder.com/200/4FACFE/FFFFFF.png?text=8',
+        'https://via.placeholder.com/200/FA8BFF/FFFFFF.png?text=9',
+      ];
+
+      const nodes = shapes.map((shape, i) => ({
+        data: {
+          id: `url-${i}`,
+          x: 150 + i * 140,
+          y: 200,
+          shape,
+          size: 70,
+          label: shape,
+        },
+        style: {
+          fill: {
+            type: 'image' as const,
+            src: externalUrls[i],
+            fit: 'cover' as const,
+            alignX: 0.5,
+            alignY: 0.5,
+          },
+          stroke: '#333',
+          strokeWidth: 2,
+          labelStyle: {
+            fill: '#ffffff',
+            fontSize: 10,
+            fontWeight: 'bold',
+          },
+        },
+      }));
+
+      const data: CanvasData = {
+        nodes,
+        edges: [],
+      };
+
+      canvas.render(data);
+    }, 0);
+
+    return wrapper;
+  },
+};
+
+// Story 5: Image Fit Modes - comparing different fit modes
+export const ImageFitModes: Story = {
+  render: (args) => {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position: relative; width: 100%; height: 100%;';
+
+    const info = document.createElement('div');
+    info.style.cssText = 'padding: 16px; color: #333; font-family: system-ui;';
+    info.innerHTML = `
+      <h3 style="margin: 0 0 8px 0;">Image Fit Modes Comparison</h3>
+      <p style="margin: 0; opacity: 0.8; font-size: 14px;">
+        <strong>Cover:</strong> Image fills shape, crops if needed (maintains aspect ratio)<br/>
+        <strong>Contain:</strong> Image fits inside shape (maintains aspect ratio)<br/>
+        <strong>Fill:</strong> Image stretches to fill shape (may distort)<br/>
+        <strong>None:</strong> Image at original size, positioned by align values
       </p>
     `;
 
@@ -251,108 +529,40 @@ export const ImageFills: Story = {
         'triangle', 'diamond', 'pentagon', 'hexagon', 'octagon'
       ] as const;
 
-      // Using different placeholder image services for variety
-      const imageUrls = [
-        'https://dummyimage.com/200x200/FF6B6B/FFFFFF&text=Image+1',
-        'https://dummyimage.com/200x200/4ECDC4/FFFFFF&text=Image+2',
-        'https://dummyimage.com/200x200/A8E6CF/FFFFFF&text=Image+3',
-        'https://dummyimage.com/200x200/FFD93D/000000&text=Image+4',
-        'https://dummyimage.com/200x200/FF6B9D/FFFFFF&text=Image+5',
-        'https://dummyimage.com/200x200/667EEA/FFFFFF&text=Image+6',
-        'https://dummyimage.com/200x200/F093FB/FFFFFF&text=Image+7',
-        'https://dummyimage.com/200x200/4FACFE/FFFFFF&text=Image+8',
-        'https://dummyimage.com/200x200/FA8BFF/FFFFFF&text=Image+9',
-      ];
+      // SVG with clear aspect ratio for testing fit modes
+      const testImage = 'data:image/svg+xml;base64,' + btoa('<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="300" height="200" fill="#667EEA"/><rect x="10" y="10" width="280" height="180" fill="none" stroke="white" stroke-width="4"/><text x="150" y="100" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="32" font-family="Arial">300×200</text></svg>');
 
       const nodes = [];
+      const fitModes = ['cover', 'contain', 'fill', 'none'] as const;
 
-      // Top row - Cover mode (fills and crops)
-      shapes.forEach((shape, i) => {
-        nodes.push({
-          data: {
-            id: `cover-${i}`,
-            x: 150 + i * 140,
-            y: 150,
-            shape,
-            size: 70,
-            label: 'cover',
-          },
-          style: {
-            fill: {
-              type: 'image' as const,
-              src: imageUrls[i],
-              fit: 'cover' as const,
-              alignX: 0.5,
-              alignY: 0.5,
+      fitModes.forEach((mode, rowIndex) => {
+        shapes.forEach((shape, i) => {
+          nodes.push({
+            data: {
+              id: `${mode}-${i}`,
+              x: 150 + i * 140,
+              y: 150 + rowIndex * 180,
+              shape,
+              size: 70,
+              label: mode,
             },
-            stroke: '#333',
-            strokeWidth: 2,
-            labelStyle: {
-              fill: '#ffffff',
-              fontSize: 9,
-              fontWeight: 'bold',
+            style: {
+              fill: {
+                type: 'image' as const,
+                src: testImage,
+                fit: mode,
+                alignX: 0.5,
+                alignY: 0.5,
+              },
+              stroke: '#333',
+              strokeWidth: 2,
+              labelStyle: {
+                fill: rowIndex === 1 ? '#333333' : '#ffffff',
+                fontSize: 9,
+                fontWeight: 'bold',
+              },
             },
-          },
-        });
-      });
-
-      // Middle row - Contain mode (fits inside)
-      shapes.forEach((shape, i) => {
-        nodes.push({
-          data: {
-            id: `contain-${i}`,
-            x: 150 + i * 140,
-            y: 400,
-            shape,
-            size: 70,
-            label: 'contain',
-          },
-          style: {
-            fill: {
-              type: 'image' as const,
-              src: imageUrls[i],
-              fit: 'contain' as const,
-              alignX: 0.5,
-              alignY: 0.5,
-            },
-            stroke: '#333',
-            strokeWidth: 2,
-            labelStyle: {
-              fill: '#333333',
-              fontSize: 9,
-              fontWeight: 'bold',
-            },
-          },
-        });
-      });
-
-      // Bottom row - Fill mode (stretches)
-      shapes.forEach((shape, i) => {
-        nodes.push({
-          data: {
-            id: `fill-${i}`,
-            x: 150 + i * 140,
-            y: 650,
-            shape,
-            size: 70,
-            label: 'fill',
-          },
-          style: {
-            fill: {
-              type: 'image' as const,
-              src: imageUrls[i],
-              fit: 'fill' as const,
-              alignX: 0.5,
-              alignY: 0.5,
-            },
-            stroke: '#333',
-            strokeWidth: 2,
-            labelStyle: {
-              fill: '#ffffff',
-              fontSize: 9,
-              fontWeight: 'bold',
-            },
-          },
+          });
         });
       });
 
@@ -368,7 +578,7 @@ export const ImageFills: Story = {
   },
 };
 
-// Story 3: Icon/Avatar Style - centered icons in shapes with tinted backgrounds
+// Story 6: Icon/Avatar Style - centered icons in shapes with tinted backgrounds
 export const IconAvatars: Story = {
   render: (args) => {
     const wrapper = document.createElement('div');
@@ -410,15 +620,15 @@ export const IconAvatars: Story = {
       ];
 
       const iconUrls = [
-        'https://dummyimage.com/100x100/3498db/FFFFFF&text=A',
-        'https://dummyimage.com/100x100/2ecc71/FFFFFF&text=B',
-        'https://dummyimage.com/100x100/e74c3c/FFFFFF&text=C',
-        'https://dummyimage.com/100x100/f39c12/FFFFFF&text=D',
-        'https://dummyimage.com/100x100/9b59b6/FFFFFF&text=E',
-        'https://dummyimage.com/100x100/1abc9c/FFFFFF&text=F',
-        'https://dummyimage.com/100x100/34495e/FFFFFF&text=G',
-        'https://dummyimage.com/100x100/e67e22/FFFFFF&text=H',
-        'https://dummyimage.com/100x100/95a5a6/FFFFFF&text=I',
+        'data:image/svg+xml;base64,' + btoa('<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#3498db"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="48" font-family="Arial">A</text></svg>'),
+        'data:image/svg+xml;base64,' + btoa('<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#2ecc71"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="48" font-family="Arial">B</text></svg>'),
+        'data:image/svg+xml;base64,' + btoa('<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#e74c3c"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="48" font-family="Arial">C</text></svg>'),
+        'data:image/svg+xml;base64,' + btoa('<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#f39c12"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="48" font-family="Arial">D</text></svg>'),
+        'data:image/svg+xml;base64,' + btoa('<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#9b59b6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="48" font-family="Arial">E</text></svg>'),
+        'data:image/svg+xml;base64,' + btoa('<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#1abc9c"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="48" font-family="Arial">F</text></svg>'),
+        'data:image/svg+xml;base64,' + btoa('<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#34495e"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="48" font-family="Arial">G</text></svg>'),
+        'data:image/svg+xml;base64,' + btoa('<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#e67e22"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="48" font-family="Arial">H</text></svg>'),
+        'data:image/svg+xml;base64,' + btoa('<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#95a5a6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="48" font-family="Arial">I</text></svg>'),
       ];
 
       const nodes = shapes.map((shape, i) => ({
@@ -463,7 +673,7 @@ export const IconAvatars: Story = {
   },
 };
 
-// Story 4: Mixed Fills - combining different fill types
+// Story 7: Mixed Fills - combining different fill types
 export const MixedFills: Story = {
   render: (args) => {
     const wrapper = document.createElement('div');
@@ -550,7 +760,7 @@ export const MixedFills: Story = {
             style: {
               fill: {
                 type: 'image' as const,
-                src: 'https://dummyimage.com/150x150/FF6B6B/FFFFFF&text=User',
+                src: 'data:image/svg+xml;base64,' + btoa('<svg width="150" height="150" xmlns="http://www.w3.org/2000/svg"><rect width="150" height="150" fill="#FF6B6B"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="24" font-family="Arial">User</text></svg>'),
                 fit: 'cover' as const,
               },
               stroke: '#2C3E50',
@@ -595,7 +805,7 @@ export const MixedFills: Story = {
             style: {
               fill: {
                 type: 'image' as const,
-                src: 'https://dummyimage.com/150x150/4ECDC4/FFFFFF&text=Data',
+                src: 'data:image/svg+xml;base64,' + btoa('<svg width="150" height="150" xmlns="http://www.w3.org/2000/svg"><rect width="150" height="150" fill="#4ECDC4"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="24" font-family="Arial">Data</text></svg>'),
                 fit: 'cover' as const,
                 tint: 0xFF6B9D,
                 alpha: 0.85,

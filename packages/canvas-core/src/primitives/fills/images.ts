@@ -103,23 +103,27 @@ export function calculateImageMatrix(
  * Load an image texture from URL
  * 
  * @param url - Image URL
- * @returns Promise resolving to Texture
+ * @returns Promise resolving to Texture or null
  * 
  * @example
  * ```typescript
  * const texture = await loadImageTexture('https://example.com/image.png');
+ * if (texture) {
+ *   // use texture
+ * }
  * ```
  */
-export async function loadImageTexture(url: string): Promise<Texture> {
+export async function loadImageTexture(url: string): Promise<Texture | null> {
   try {
     const texture = await Assets.load(url);
-    if (!texture) {
-      throw new Error(`Failed to load texture from ${url}`);
+    if (!texture || !texture.width || !texture.height) {
+      console.warn(`Texture loaded but is invalid: ${url}`);
+      return null;
     }
     return texture;
   } catch (error) {
-    console.error(`Error loading image texture from ${url}:`, error);
-    throw error;
+    console.warn(`Failed to load image texture from ${url}:`, error);
+    return null;
   }
 }
 
@@ -209,6 +213,14 @@ export async function applyImageFillAsync(
       ? await loadImageTexture(fill.src)
       : fill.src;
 
+    // Check if texture loaded successfully
+    if (!texture || !texture.width || !texture.height) {
+      console.warn(`Image texture failed to load or is invalid: ${fill.src}`);
+      // Fallback to solid color
+      graphics.fill({ color: 0xcccccc, alpha: 0.5 });
+      return;
+    }
+
     applyImageFill(graphics, texture, bounds, {
       fit: fill.fit,
       alignX: fill.alignX,
@@ -219,6 +231,6 @@ export async function applyImageFillAsync(
   } catch (error) {
     console.error('Failed to load image fill:', error);
     // Fallback to solid color
-    graphics.fill({ color: '#cccccc', alpha: 0.5 });
+    graphics.fill({ color: 0xcccccc, alpha: 0.5 });
   }
 }
