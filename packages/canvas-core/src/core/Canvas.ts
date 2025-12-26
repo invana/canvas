@@ -33,11 +33,11 @@
  */
 
 import { Application, Container } from 'pixi.js';
-import { Viewport, type ViewportOptions } from './Viewport';
-import { Registry } from './Registry';
-import { Renderer, type NodeInput, type EdgeInput } from './Renderer';
-import type { NodeStyle } from '../ui-shapes/nodes';
-import type { EdgeStyle } from '../ui-shapes/edges';
+import { Viewport, type ViewportOptions } from '../viewport/Viewport';
+import { Registry } from '../rendering/Registry';
+import { Renderer, type NodeInput, type EdgeInput } from '../rendering/Renderer';
+import type { NodeStyle } from '../elements/nodes';
+import type { EdgeStyle } from '../elements/edges';
 
 // ============================================================================
 // TYPES
@@ -327,11 +327,20 @@ export class Canvas {
   /**
    * Render data (nodes and edges)
    * Clears existing content and renders from data
+   * If no data is provided, uses data from constructor (if any)
    */
-  render(data: CanvasData): void {
+  render(data?: CanvasData): void {
+    // Use provided data or pending data
+    const dataToRender = data || this._pendingData;
+    
+    if (!dataToRender) {
+      // No data to render (this is ok if data was already rendered during init)
+      return;
+    }
+
     if (!this._initialized || !this._renderer) {
       // Store for rendering after init
-      this._pendingData = data;
+      this._pendingData = dataToRender;
       return;
     }
 
@@ -340,10 +349,10 @@ export class Canvas {
     this._backgroundLayer?.removeChildren();
 
     // Add all nodes first
-    this._renderer.addNodes(data.nodes);
+    this._renderer.addNodes(dataToRender.nodes || []);
 
     // Add all edges (nodes must exist for ID resolution)
-    this._renderer.addEdges(data.edges);
+    this._renderer.addEdges(dataToRender.edges || []);
 
     // Fit content if enabled
     if (this._options.fitOnRender) {
@@ -428,6 +437,120 @@ export class Canvas {
   clear(): void {
     this._renderer?.clear();
     this._backgroundLayer?.removeChildren();
+  }
+
+  // =========================================================================
+  // CONVENIENCE METHODS - Delegate to Renderer
+  // =========================================================================
+
+  /**
+   * Add a node
+   */
+  addNode(input: NodeInput): void {
+    if (!this._renderer) {
+      throw new Error('Canvas not initialized. Call init() first.');
+    }
+    this._renderer.addNode(input);
+  }
+
+  /**
+   * Update a node
+   */
+  updateNode(id: string, updates: Partial<NodeInput>): void {
+    if (!this._renderer) {
+      throw new Error('Canvas not initialized. Call init() first.');
+    }
+    this._renderer.updateNode(id, updates);
+  }
+
+  /**
+   * Remove a node
+   */
+  removeNode(id: string): void {
+    if (!this._renderer) {
+      throw new Error('Canvas not initialized. Call init() first.');
+    }
+    this._renderer.removeNode(id);
+  }
+
+  /**
+   * Get a node by ID
+   */
+  getNode(id: string): any {
+    if (!this._renderer) {
+      throw new Error('Canvas not initialized. Call init() first.');
+    }
+    return this._renderer.getNode(id);
+  }
+
+  /**
+   * Get all nodes
+   */
+  getNodes(): any[] {
+    if (!this._renderer) {
+      throw new Error('Canvas not initialized. Call init() first.');
+    }
+    return this._renderer.getNodes();
+  }
+
+  /**
+   * Add an edge
+   */
+  addEdge(input: EdgeInput): void {
+    if (!this._renderer) {
+      throw new Error('Canvas not initialized. Call init() first.');
+    }
+    this._renderer.addEdge(input);
+  }
+
+  /**
+   * Update an edge
+   */
+  updateEdge(id: string, updates: Partial<EdgeInput>): void {
+    if (!this._renderer) {
+      throw new Error('Canvas not initialized. Call init() first.');
+    }
+    this._renderer.updateEdge(id, updates);
+  }
+
+  /**
+   * Remove an edge
+   */
+  removeEdge(id: string): void {
+    if (!this._renderer) {
+      throw new Error('Canvas not initialized. Call init() first.');
+    }
+    this._renderer.removeEdge(id);
+  }
+
+  /**
+   * Get an edge by ID
+   */
+  getEdge(id: string): any {
+    if (!this._renderer) {
+      throw new Error('Canvas not initialized. Call init() first.');
+    }
+    return this._renderer.getEdge(id);
+  }
+
+  /**
+   * Get all edges
+   */
+  getEdges(): any[] {
+    if (!this._renderer) {
+      throw new Error('Canvas not initialized. Call init() first.');
+    }
+    return this._renderer.getEdges();
+  }
+
+  /**
+   * Set background color
+   */
+  setBackgroundColor(color: string): void {
+    if (!this._app) {
+      throw new Error('Canvas not initialized. Call init() first.');
+    }
+    this._app.renderer.background.color = color;
   }
 
   // =========================================================================

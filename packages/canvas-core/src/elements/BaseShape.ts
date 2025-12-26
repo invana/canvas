@@ -15,7 +15,7 @@
  */
 
 import { Container, Graphics, Text } from 'pixi.js';
-import type { Registry } from '../canvas/Registry';
+import type { Registry } from '../rendering/Registry';
 import type { ShapeStyle } from '../primitives/shapes';
 
 /**

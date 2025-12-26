@@ -32,13 +32,13 @@ import {
   createNode, 
   type NodeData, 
   type NodeStyle 
-} from '../ui-shapes/nodes';
+} from '../elements/nodes';
 import { 
   EdgeShapeBase, 
   createEdge, 
   type EdgeData, 
   type EdgeStyle 
-} from '../ui-shapes/edges';
+} from '../elements/edges';
 
 // ============================================================================
 // TYPES

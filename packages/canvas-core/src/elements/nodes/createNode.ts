@@ -4,7 +4,7 @@
  * Factory function to create the appropriate node shape based on type.
  */
 
-import type { Registry } from '../../canvas/Registry';
+import type { Registry } from '../../rendering/Registry';
 import type { NodeData, NodeStyle } from './NodeShapeBase';
 import { NodeShapeBase } from './NodeShapeBase';
 import { CircleNode } from './CircleNode';

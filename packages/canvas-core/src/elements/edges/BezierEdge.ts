@@ -25,8 +25,8 @@ export class BezierEdge extends EdgeShapeBase {
     const curvature = this._data.curvature ?? 0.25;
     
     this._registry.drawPath(this._graphics, 'bezier', {
-      source,
-      target,
+      from: source,
+      to: target,
       curvature,
     }, style);
   }

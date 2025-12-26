@@ -23,8 +23,8 @@ export class LineEdge extends EdgeShapeBase {
 
   protected drawPath(source: Point, target: Point, style: PathStyle): void {
     this._registry.drawPath(this._graphics, 'line', {
-      source,
-      target,
+      from: source,
+      to: target,
     }, style);
   }
 

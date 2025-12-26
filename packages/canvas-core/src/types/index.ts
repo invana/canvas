@@ -1,0 +1,247 @@
+/**
+ * Core type definitions for canvas-core
+ */
+
+import type { Container, Graphics } from 'pixi.js';
+
+// =============================================================================
+// Node Types
+// =============================================================================
+
+export interface NodeData {
+  id: string;
+  label?: string;
+  type?: string;
+  x?: number;
+  y?: number;
+  properties?: Record<string, unknown>;
+  style?: NodeStyle;
+}
+
+export interface NodeStyle {
+  shape?: 'circle' | 'rect' | 'ellipse' | 'roundedRect' | 'polygon';
+  fill?: number;
+  fillAlpha?: number;
+  stroke?: number;
+  strokeWidth?: number;
+  strokeAlpha?: number;
+  radius?: number;
+  width?: number;
+  height?: number;
+  cornerRadius?: number;
+  sides?: number;
+  // Selection/hover states
+  selectedFill?: number;
+  selectedStroke?: number;
+  hoverFill?: number;
+  hoverStroke?: number;
+}
+
+// =============================================================================
+// Edge Types
+// =============================================================================
+
+export interface EdgeData {
+  id: string;
+  source: string;
+  target: string;
+  label?: string;
+  type?: string;
+  properties?: Record<string, unknown>;
+  style?: EdgeStyle;
+}
+
+export interface EdgeStyle {
+  path?: 'line' | 'bezier' | 'orthogonal';
+  stroke?: number;
+  strokeWidth?: number;
+  strokeAlpha?: number;
+  arrow?: 'none' | 'triangle' | 'circle' | 'diamond' | 'square';
+  arrowSize?: number;
+  // Selection/hover states
+  selectedStroke?: number;
+  hoverStroke?: number;
+}
+
+// =============================================================================
+// Point & Geometry Types
+// =============================================================================
+
+export interface Point {
+  x: number;
+  y: number;
+}
+
+export interface Bounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface Tangent {
+  angle: number;
+  point: Point;
+}
+
+// =============================================================================
+// Event Types
+// =============================================================================
+
+export type CanvasEventType =
+  | 'node:added'
+  | 'node:updated'
+  | 'node:removed'
+  | 'node:selected'
+  | 'node:deselected'
+  | 'node:clicked'
+  | 'node:dblclicked'
+  | 'node:dragstart'
+  | 'node:drag'
+  | 'node:dragend'
+  | 'node:hover'
+  | 'node:hoverend'
+  | 'edge:added'
+  | 'edge:updated'
+  | 'edge:removed'
+  | 'edge:selected'
+  | 'edge:deselected'
+  | 'edge:clicked'
+  | 'edge:dblclicked'
+  | 'edge:hover'
+  | 'edge:hoverend'
+  | 'viewport:changed'
+  | 'viewport:zoomed'
+  | 'viewport:panned'
+  | 'selection:changed'
+  | 'render:complete';
+
+export interface CanvasEvent<T = unknown> {
+  type: CanvasEventType;
+  target?: T;
+  data?: unknown;
+  originalEvent?: Event;
+  timestamp: number;
+}
+
+// =============================================================================
+// Layer Types
+// =============================================================================
+
+export type LayerType = 'background' | 'edges' | 'nodes' | 'labels' | 'overlay' | 'custom';
+
+export interface LayerConfig {
+  name: string;
+  type: LayerType;
+  zIndex: number;
+  visible?: boolean;
+  interactive?: boolean;
+}
+
+// =============================================================================
+// Processor Types
+// =============================================================================
+
+export interface ProcessorConfig {
+  type: string;
+  options?: Record<string, unknown>;
+  enabled?: boolean;
+  priority?: number;
+}
+
+export interface ProcessorContext {
+  canvas: unknown; // Will be Canvas type
+  sceneGraph: unknown; // Will be SceneGraph type
+  styleManager: unknown; // Will be StyleManager type
+  event?: CanvasEvent;
+}
+
+// =============================================================================
+// Style & Theme Types
+// =============================================================================
+
+export interface ThemeConfig {
+  name: string;
+  colors: {
+    nodeFill: number;
+    nodeStroke: number;
+    nodeSelectedFill: number;
+    nodeSelectedStroke: number;
+    nodeHoverFill: number;
+    nodeHoverStroke: number;
+    edgeStroke: number;
+    edgeSelectedStroke: number;
+    edgeHoverStroke: number;
+    background: number;
+    labelText: number;
+  };
+  sizes: {
+    nodeRadius: number;
+    nodeStrokeWidth: number;
+    edgeStrokeWidth: number;
+    arrowSize: number;
+    labelFontSize: number;
+  };
+}
+
+export interface StyleRule {
+  selector: string | ((data: NodeData | EdgeData) => boolean);
+  style: Partial<NodeStyle | EdgeStyle>;
+  priority?: number;
+}
+
+// =============================================================================
+// Canvas Options
+// =============================================================================
+
+export interface CanvasOptions {
+  container: HTMLElement;
+  width?: number;
+  height?: number;
+  backgroundColor?: number;
+  antialias?: boolean;
+  resolution?: number;
+  // Feature flags
+  enableDragging?: boolean;
+  enableSelection?: boolean;
+  enableHover?: boolean;
+  enableZoom?: boolean;
+  enablePan?: boolean;
+  // Limits
+  minZoom?: number;
+  maxZoom?: number;
+  // Theme
+  theme?: ThemeConfig | string;
+  // Processors
+  processors?: ProcessorConfig[];
+  // Layers
+  layers?: LayerConfig[];
+}
+
+// =============================================================================
+// Shape Instance Types
+// =============================================================================
+
+export interface ShapeInstance {
+  id: string;
+  container: Container;
+  graphics: Graphics;
+  data: NodeData | EdgeData;
+  update(data: Partial<NodeData | EdgeData>): void;
+  destroy(): void;
+}
+
+export interface NodeInstance extends ShapeInstance {
+  data: NodeData;
+  getBoundaryPoint(angle: number): Point;
+  setSelected(selected: boolean): void;
+  setHovered(hovered: boolean): void;
+}
+
+export interface EdgeInstance extends ShapeInstance {
+  data: EdgeData;
+  sourceNode: NodeInstance;
+  targetNode: NodeInstance;
+  setSelected(selected: boolean): void;
+  setHovered(hovered: boolean): void;
+}

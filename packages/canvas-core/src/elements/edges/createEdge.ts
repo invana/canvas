@@ -4,7 +4,7 @@
  * Factory function to create the appropriate edge shape based on path type.
  */
 
-import type { Registry } from '../../canvas/Registry';
+import type { Registry } from '../../rendering/Registry';
 import type { EdgeData, EdgeStyle } from './EdgeShapeBase';
 import { EdgeShapeBase } from './EdgeShapeBase';
 import { LineEdge } from './LineEdge';
