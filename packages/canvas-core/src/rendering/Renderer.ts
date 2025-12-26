@@ -198,6 +198,11 @@ export class Renderer {
     this._nodeEdges.set(node.id, new Set());
     this._nodeLayer.addChild(node);
     
+    // Initial render after node is in scene graph
+    node.forceRender();
+    node.updateLabel();
+    node.updateBadges();
+    
     // Set up drag handling
     this.setupNodeDragHandling(node);
     

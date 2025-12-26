@@ -201,7 +201,6 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
   constructor(options: NodeShapeOptions) {
     super(options as BaseShapeOptions<NodeData>);
     this._nodeStyle = options.style ?? {};
-    console.log('[NodeShapeBase constructor] ID:', options.data.id, 'shape:', options.data.shape, 'style:', options.style);
     this._draggable = options.draggable ?? true;
     this._selectable = options.selectable ?? true;
     this._onDrag = options.onDrag;
@@ -226,12 +225,7 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
     // Prevent context menu on right-click
     this.on('rightclick', this.onRightClick, this);
 
-    // Initial render - defer to next tick to ensure everything is initialized
-    queueMicrotask(() => {
-      this.forceRender();
-      this.updateLabel();
-      this.updateBadges();
-    });
+    // Note: Initial render will be called by Renderer after adding to scene
   }
 
   // =========================================================================
