@@ -18,14 +18,14 @@ export interface RectParams {
 /**
  * Draw a filled and/or stroked rectangle
  */
-export function drawRect(g: Graphics, params: RectParams, style: ShapeStyle): void {
+export async function drawRect(g: Graphics, params: RectParams, style: ShapeStyle): Promise<void> {
   const { width, height, centered = true } = params;
   const x = centered ? params.x - width / 2 : params.x;
   const y = centered ? params.y - height / 2 : params.y;
 
   if (style.fill) {
     g.rect(x, y, width, height);
-    applyShapeFill(g, style, { x, y, width, height });
+    await applyShapeFill(g, style, { x, y, width, height });
   }
 
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {

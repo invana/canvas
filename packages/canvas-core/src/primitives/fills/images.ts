@@ -30,6 +30,17 @@ export function calculateImageMatrix(
   offsetX: number;
   offsetY: number;
 } {
+  // Validate texture
+  if (!texture || !texture.width || !texture.height) {
+    console.error('Invalid texture provided to calculateImageMatrix');
+    return {
+      scaleX: 1,
+      scaleY: 1,
+      offsetX: bounds.x,
+      offsetY: bounds.y,
+    };
+  }
+
   const imgWidth = texture.width;
   const imgHeight = texture.height;
   const imgRatio = imgWidth / imgHeight;
@@ -100,7 +111,16 @@ export function calculateImageMatrix(
  * ```
  */
 export async function loadImageTexture(url: string): Promise<Texture> {
-  return await Assets.load(url);
+  try {
+    const texture = await Assets.load(url);
+    if (!texture) {
+      throw new Error(`Failed to load texture from ${url}`);
+    }
+    return texture;
+  } catch (error) {
+    console.error(`Error loading image texture from ${url}:`, error);
+    throw error;
+  }
 }
 
 /**

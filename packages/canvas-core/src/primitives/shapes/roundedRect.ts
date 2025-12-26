@@ -19,7 +19,7 @@ export interface RoundedRectParams {
 /**
  * Draw a filled and/or stroked rounded rectangle
  */
-export function drawRoundedRect(g: Graphics, params: RoundedRectParams, style: ShapeStyle): void {
+export async function drawRoundedRect(g: Graphics, params: RoundedRectParams, style: ShapeStyle): Promise<void> {
   const { width, height, radius, centered = true } = params;
   const x = centered ? params.x - width / 2 : params.x;
   const y = centered ? params.y - height / 2 : params.y;
@@ -28,7 +28,7 @@ export function drawRoundedRect(g: Graphics, params: RoundedRectParams, style: S
 
   if (style.fill) {
     g.roundRect(x, y, width, height, r);
-    applyShapeFill(g, style, { x, y, width, height });
+    await applyShapeFill(g, style, { x, y, width, height });
   }
 
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {

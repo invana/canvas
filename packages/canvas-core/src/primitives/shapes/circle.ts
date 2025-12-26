@@ -15,7 +15,7 @@ export interface CircleParams {
 /**
  * Draw a filled and/or stroked circle
  */
-export function drawCircle(g: Graphics, params: CircleParams, style: ShapeStyle): void {
+export async function drawCircle(g: Graphics, params: CircleParams, style: ShapeStyle): Promise<void> {
   const { x, y, radius } = params;
 
   if (style.fill) {
@@ -30,7 +30,7 @@ export function drawCircle(g: Graphics, params: CircleParams, style: ShapeStyle)
     };
     
     // Apply fill (handles solid colors, gradients, images, patterns)
-    applyShapeFill(g, style, bounds);
+    await applyShapeFill(g, style, bounds);
   }
 
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {

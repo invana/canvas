@@ -6,17 +6,18 @@
 
 import type { Graphics } from 'pixi.js';
 import type { ShapeStyle } from './types.js';
-import { normalizeFill, applyFillSync, type FillBounds } from '../fills/index.js';
+import { normalizeFill, applyFill, type FillBounds } from '../fills/index.js';
 
 /**
- * Apply fill from ShapeStyle to graphics
+ * Apply fill from ShapeStyle to graphics (async version)
  * This handles the conversion of legacy string/number fills to the new Fill system
+ * Supports async fills like images and patterns
  */
-export function applyShapeFill(
+export async function applyShapeFill(
   g: Graphics,
   style: ShapeStyle,
   bounds: FillBounds
-): boolean {
+): Promise<boolean> {
   if (!style.fill) return false;
 
   const fill = normalizeFill(style.fill);
@@ -27,6 +28,6 @@ export function applyShapeFill(
     fill.alpha = style.fillAlpha;
   }
 
-  applyFillSync(g, fill, bounds);
+  await applyFill(g, fill, bounds);
   return true;
 }

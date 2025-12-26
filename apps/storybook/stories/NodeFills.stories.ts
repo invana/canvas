@@ -253,15 +253,15 @@ export const ImageFills: Story = {
 
       // Using different placeholder image services for variety
       const imageUrls = [
-        'https://picsum.photos/200/200?random=1',
-        'https://picsum.photos/200/200?random=2',
-        'https://picsum.photos/200/200?random=3',
-        'https://picsum.photos/200/200?random=4',
-        'https://picsum.photos/200/200?random=5',
-        'https://picsum.photos/200/200?random=6',
-        'https://picsum.photos/200/200?random=7',
-        'https://picsum.photos/200/200?random=8',
-        'https://picsum.photos/200/200?random=9',
+        'https://dummyimage.com/200x200/FF6B6B/FFFFFF&text=Image+1',
+        'https://dummyimage.com/200x200/4ECDC4/FFFFFF&text=Image+2',
+        'https://dummyimage.com/200x200/A8E6CF/FFFFFF&text=Image+3',
+        'https://dummyimage.com/200x200/FFD93D/000000&text=Image+4',
+        'https://dummyimage.com/200x200/FF6B9D/FFFFFF&text=Image+5',
+        'https://dummyimage.com/200x200/667EEA/FFFFFF&text=Image+6',
+        'https://dummyimage.com/200x200/F093FB/FFFFFF&text=Image+7',
+        'https://dummyimage.com/200x200/4FACFE/FFFFFF&text=Image+8',
+        'https://dummyimage.com/200x200/FA8BFF/FFFFFF&text=Image+9',
       ];
 
       const nodes = [];
@@ -409,16 +409,16 @@ export const IconAvatars: Story = {
         0x667EEA, 0xFF6B9D, 0x4FACFE, 0xFA8BFF, 0xFEE140
       ];
 
-      const imageUrls = [
-        'https://picsum.photos/100/100?random=10',
-        'https://picsum.photos/100/100?random=11',
-        'https://picsum.photos/100/100?random=12',
-        'https://picsum.photos/100/100?random=13',
-        'https://picsum.photos/100/100?random=14',
-        'https://picsum.photos/100/100?random=15',
-        'https://picsum.photos/100/100?random=16',
-        'https://picsum.photos/100/100?random=17',
-        'https://picsum.photos/100/100?random=18',
+      const iconUrls = [
+        'https://dummyimage.com/100x100/3498db/FFFFFF&text=A',
+        'https://dummyimage.com/100x100/2ecc71/FFFFFF&text=B',
+        'https://dummyimage.com/100x100/e74c3c/FFFFFF&text=C',
+        'https://dummyimage.com/100x100/f39c12/FFFFFF&text=D',
+        'https://dummyimage.com/100x100/9b59b6/FFFFFF&text=E',
+        'https://dummyimage.com/100x100/1abc9c/FFFFFF&text=F',
+        'https://dummyimage.com/100x100/34495e/FFFFFF&text=G',
+        'https://dummyimage.com/100x100/e67e22/FFFFFF&text=H',
+        'https://dummyimage.com/100x100/95a5a6/FFFFFF&text=I',
       ];
 
       const nodes = shapes.map((shape, i) => ({
@@ -550,7 +550,7 @@ export const MixedFills: Story = {
             style: {
               fill: {
                 type: 'image' as const,
-                src: 'https://picsum.photos/150/150?random=20',
+                src: 'https://dummyimage.com/150x150/FF6B6B/FFFFFF&text=User',
                 fit: 'cover' as const,
               },
               stroke: '#2C3E50',
@@ -595,7 +595,7 @@ export const MixedFills: Story = {
             style: {
               fill: {
                 type: 'image' as const,
-                src: 'https://picsum.photos/150/150?random=21',
+                src: 'https://dummyimage.com/150x150/4ECDC4/FFFFFF&text=Data',
                 fit: 'cover' as const,
                 tint: 0xFF6B9D,
                 alpha: 0.85,

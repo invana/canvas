@@ -34,12 +34,12 @@ export function getPolygonPoints(params: PolygonParams): number[] {
 /**
  * Draw a filled and/or stroked regular polygon
  */
-export function drawPolygon(g: Graphics, params: PolygonParams, style: ShapeStyle): void {
+export async function drawPolygon(g: Graphics, params: PolygonParams, style: ShapeStyle): Promise<void> {
   const points = getPolygonPoints(params);
 
   if (style.fill) {
     g.poly(points);
-    applyShapeFill(g, style, {
+    await applyShapeFill(g, style, {
       x: params.x - params.radius,
       y: params.y - params.radius,
       width: params.radius * 2,

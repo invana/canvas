@@ -16,12 +16,12 @@ export interface EllipseParams {
 /**
  * Draw a filled and/or stroked ellipse
  */
-export function drawEllipse(g: Graphics, params: EllipseParams, style: ShapeStyle): void {
+export async function drawEllipse(g: Graphics, params: EllipseParams, style: ShapeStyle): Promise<void> {
   const { x, y, radiusX, radiusY } = params;
 
   if (style.fill) {
     g.ellipse(x, y, radiusX, radiusY);
-    applyShapeFill(g, style, {
+    await applyShapeFill(g, style, {
       x: x - radiusX,
       y: y - radiusY,
       width: radiusX * 2,
