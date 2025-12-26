@@ -6,7 +6,7 @@
  */
 
 import { getPolygonIntersection } from '../../primitives/shapes/polygon';
-import { NodeShapeBase, type NodeShapeOptions, type Point, type Bounds, type NodeShapeType } from './NodeShapeBase';
+import { NodeShapeBase, type NodeShapeOptions, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './NodeShapeBase';
 
 /**
  * Options specific to polygon nodes
@@ -68,15 +68,18 @@ export class PolygonNode extends NodeShapeBase {
     const shapeName = this.getRegistryShapeName();
     const drawer = this._registry.getShape(shapeName);
     
-    if (drawer) {
-      drawer(this._graphics, { 
-        x: 0, 
-        y: 0, 
-        radius, 
-        sides: this._polygonSides,
-        rotation: this._polygonRotation 
-      }, style);
+    if (!drawer) {
+      console.error('[PolygonNode.render] No drawer found for shape:', shapeName);
+      return;
     }
+    
+    drawer(this._graphics, { 
+      x: 0, 
+      y: 0, 
+      radius, 
+      sides: this._polygonSides,
+      rotation: this._polygonRotation 
+    }, style);
   }
 
   getBoundaryPoint(targetPoint: Point, offset: number = 0): Point {
@@ -101,6 +104,30 @@ export class PolygonNode extends NodeShapeBase {
       y: -radius,
       width: diameter,
       height: diameter,
+    };
+  }
+
+  protected getBadgeOffset(position: BadgePosition, badgeRadius: number): { x: number; y: number } {
+    const radius = this._data.size ?? 30;
+    const offset = badgeRadius * 0.5; // Good overlap for polygons
+    const distance = radius + badgeRadius - offset;
+
+    // Map positions to angles, accounting for polygon rotation
+    const angles: Record<BadgePosition, number> = {
+      'right': 0,
+      'bottom-right': Math.PI / 4,
+      'bottom': Math.PI / 2,
+      'bottom-left': (3 * Math.PI) / 4,
+      'left': Math.PI,
+      'top-left': (5 * Math.PI) / 4,
+      'top': (3 * Math.PI) / 2,
+      'top-right': (7 * Math.PI) / 4,
+    };
+
+    const angle = angles[position] + this._polygonRotation;
+    return {
+      x: Math.cos(angle) * distance,
+      y: Math.sin(angle) * distance,
     };
   }
 }

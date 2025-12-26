@@ -25,11 +25,9 @@ const generateArrowsData = (arrowSize: number, edgeColor: string): CanvasData =>
       y,
       shape: 'circle' as const,
       size: 20,
-      style: {
-        fill: '#e0e0e0',
-        stroke: '#666',
-        strokeWidth: 2,
-      },
+      fill: '#e0e0e0',
+      stroke: '#666',
+      strokeWidth: 2,
     });
 
     // Target node
@@ -39,11 +37,9 @@ const generateArrowsData = (arrowSize: number, edgeColor: string): CanvasData =>
       y,
       shape: 'circle' as const,
       size: 20,
-      style: {
-        fill: '#e0e0e0',
-        stroke: '#666',
-        strokeWidth: 2,
-      },
+      fill: '#e0e0e0',
+      stroke: '#666',
+      strokeWidth: 2,
     });
 
     // Label
@@ -57,12 +53,10 @@ const generateArrowsData = (arrowSize: number, edgeColor: string): CanvasData =>
       label: arrowType,
       interactive: false,
       draggable: false,
-      style: {
-        fill: '#f5f5f5',
-        stroke: '#ddd',
-        strokeWidth: 1,
-        labelStyle: { fill: '#333', fontSize: 11 },
-      },
+      fill: '#f5f5f5',
+      stroke: '#ddd',
+      strokeWidth: 1,
+      labelStyle: { fill: '#333', fontSize: 11 },
     });
 
     // Edge
@@ -73,10 +67,8 @@ const generateArrowsData = (arrowSize: number, edgeColor: string): CanvasData =>
       pathType: 'line' as const,
       arrowTarget: arrowType,
       arrowSize,
-      style: {
-        stroke: edgeColor,
-        strokeWidth: 2,
-      },
+      stroke: edgeColor,
+      strokeWidth: 2,
     });
   });
 
@@ -140,11 +132,9 @@ const generateBidirectionalData = (arrowSize: number, edgeColor: string): Canvas
       y,
       shape: 'circle' as const,
       size: 22,
-      style: {
-        fill: '#64b5f6',
-        stroke: '#1976d2',
-        strokeWidth: 2,
-      },
+      fill: '#64b5f6',
+      stroke: '#1976d2',
+      strokeWidth: 2,
     });
 
     nodes.push({
@@ -153,11 +143,9 @@ const generateBidirectionalData = (arrowSize: number, edgeColor: string): Canvas
       y,
       shape: 'circle' as const,
       size: 22,
-      style: {
-        fill: '#81c784',
-        stroke: '#388e3c',
-        strokeWidth: 2,
-      },
+      fill: '#81c784',
+      stroke: '#388e3c',
+      strokeWidth: 2,
     });
 
     nodes.push({
@@ -170,12 +158,10 @@ const generateBidirectionalData = (arrowSize: number, edgeColor: string): Canvas
       label: combo.label,
       interactive: false,
       draggable: false,
-      style: {
-        fill: '#fafafa',
-        stroke: '#e0e0e0',
-        strokeWidth: 1,
-        labelStyle: { fill: '#333', fontSize: 10 },
-      },
+      fill: '#fafafa',
+      stroke: '#e0e0e0',
+      strokeWidth: 1,
+      labelStyle: { fill: '#333', fontSize: 10 },
     });
 
     edges.push({
@@ -186,10 +172,8 @@ const generateBidirectionalData = (arrowSize: number, edgeColor: string): Canvas
       arrowSource: combo.source as any,
       arrowTarget: combo.target as any,
       arrowSize,
-      style: {
-        stroke: edgeColor,
-        strokeWidth: 2,
-      },
+      stroke: edgeColor,
+      strokeWidth: 2,
     });
   });
 

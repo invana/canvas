@@ -159,15 +159,33 @@ export class Renderer {
    * Add a node to the canvas
    */
   addNode(input: NodeInput): NodeShapeBase {
-    const { style, interactive, draggable, selectable, ...data } = input;
+    const { interactive, draggable, selectable, ...restData } = input;
+    
+    // Separate style properties from data properties
+    const styleProps: Partial<NodeStyle> = {};
+    const dataProps: Partial<NodeInput> = {};
+    const styleKeys: (keyof NodeStyle)[] = [
+      'fill', 'stroke', 'strokeWidth', 
+      'hoverFill', 'hoverStroke', 
+      'selectedFill', 'selectedStroke', 'selectedStrokeWidth',
+      'labelPosition', 'labelOffsetX', 'labelOffsetY', 'labelStyle', 'rippleColor'
+    ];
+    
+    for (const key in restData) {
+      if (styleKeys.includes(key as keyof NodeStyle)) {
+        styleProps[key as keyof NodeStyle] = (restData as any)[key];
+      } else {
+        (dataProps as any)[key] = (restData as any)[key];
+      }
+    }
     
     const mergedStyle: NodeStyle = {
       ...this._defaultNodeStyle,
-      ...style,
+      ...styleProps,
     };
     
     const node = createNode({
-      data: data as NodeData,
+      data: dataProps as NodeData,
       style: mergedStyle,
       interactive: interactive ?? true,
       draggable: draggable ?? true,
@@ -197,9 +215,24 @@ export class Renderer {
     if (updates.x !== undefined) node.x = updates.x;
     if (updates.y !== undefined) node.y = updates.y;
     
+    // Extract style properties from updates
+    const styleProps: Partial<NodeStyle> = {};
+    const styleKeys: (keyof NodeStyle)[] = [
+      'fill', 'stroke', 'strokeWidth', 
+      'hoverFill', 'hoverStroke', 
+      'selectedFill', 'selectedStroke', 'selectedStrokeWidth',
+      'labelPosition', 'labelOffsetX', 'labelOffsetY', 'labelStyle', 'rippleColor'
+    ];
+    
+    for (const key in updates) {
+      if (styleKeys.includes(key as keyof NodeStyle)) {
+        styleProps[key as keyof NodeStyle] = (updates as any)[key];
+      }
+    }
+    
     // Update style
-    if (updates.style) {
-      node.nodeStyle = { ...node.nodeStyle, ...updates.style };
+    if (Object.keys(styleProps).length > 0) {
+      node.nodeStyle = { ...node.nodeStyle, ...styleProps };
     }
     
     // Update label (updates the data then refreshes the label)
@@ -272,7 +305,24 @@ export class Renderer {
    * Add an edge to the canvas
    */
   addEdge(input: EdgeInput): EdgeShapeBase {
-    const { source, target, style, ...restData } = input;
+    const { source, target, ...restData } = input;
+    
+    // Extract style properties from input
+    const styleProps: Partial<EdgeStyle> = {};
+    const dataProps: Partial<EdgeInput> = { source, target };
+    const styleKeys: (keyof EdgeStyle)[] = [
+      'stroke', 'strokeWidth', 'strokeAlpha', 'lineCap', 'lineJoin',
+      'visible', 'alpha', 'cursor', 'arrowFill', 'arrowStroke'
+    ];
+    
+    // Separate style properties from data properties
+    for (const key in restData) {
+      if (styleKeys.includes(key as keyof EdgeStyle)) {
+        styleProps[key as keyof EdgeStyle] = (restData as any)[key];
+      } else {
+        (dataProps as any)[key] = (restData as any)[key];
+      }
+    }
     
     // Resolve source and target
     const { point: sourcePoint, nodeId: sourceNodeId, node: sourceNode } = 
@@ -290,11 +340,11 @@ export class Renderer {
     
     const mergedStyle: EdgeStyle = {
       ...this._defaultEdgeStyle,
-      ...style,
+      ...styleProps,
     };
     
     const edgeData: EdgeData = {
-      ...restData,
+      ...dataProps,
       source: adjustedPoints.source,
       target: adjustedPoints.target,
       x: 0,
@@ -339,9 +389,22 @@ export class Renderer {
     
     const { edge } = tracking;
     
+    // Extract style properties from updates
+    const styleProps: Partial<EdgeStyle> = {};
+    const styleKeys: (keyof EdgeStyle)[] = [
+      'stroke', 'strokeWidth', 'strokeAlpha', 'lineCap', 'lineJoin',
+      'visible', 'alpha', 'cursor', 'arrowFill', 'arrowStroke'
+    ];
+    
+    for (const key in updates) {
+      if (styleKeys.includes(key as keyof EdgeStyle)) {
+        styleProps[key as keyof EdgeStyle] = (updates as any)[key];
+      }
+    }
+    
     // Update style
-    if (updates.style) {
-      edge.updateEdgeStyle(updates.style);
+    if (Object.keys(styleProps).length > 0) {
+      edge.updateEdgeStyle(styleProps);
     }
     
     // Update endpoints if source/target changed

@@ -21,14 +21,12 @@ const generateGraphData = (nodeCount: number): CanvasData => {
       shape: shapes[i % shapes.length],
       size: 40,
       label: `Node ${i + 1}`,
-      style: {
-        fill: colors[i % colors.length],
-        stroke: '#333',
-        strokeWidth: 2,
-        labelPosition: 'bottom' as const,
-        labelOffsetY: 10,
-        labelStyle: { fill: '#333', fontSize: 11 },
-      },
+      fill: colors[i % colors.length],
+      stroke: '#333',
+      strokeWidth: 2,
+      labelPosition: 'bottom' as const,
+      labelOffsetY: 10,
+      labelStyle: { fill: '#333', fontSize: 11 },
     });
   }
 
@@ -40,10 +38,8 @@ const generateGraphData = (nodeCount: number): CanvasData => {
       target: `node-${i + 1}`,
       pathType: 'bezier' as const,
       arrowTarget: 'triangle' as const,
-      style: {
-        stroke: '#666',
-        strokeWidth: 2,
-      },
+      stroke: '#666',
+      strokeWidth: 2,
     });
   }
 
@@ -120,11 +116,9 @@ const createBasicCanvas = (args: CanvasArgs): HTMLElement => {
           shape: shapes[nodeCounter % shapes.length],
           size: 35,
           label: `New ${nodeCounter + 1}`,
-          style: {
-            fill: colors[nodeCounter % colors.length],
-            stroke: '#333',
-            strokeWidth: 2,
-          },
+          fill: colors[nodeCounter % colors.length],
+          stroke: '#333',
+          strokeWidth: 2,
         });
         canvas.setData(currentData);
         nodeCounter++;

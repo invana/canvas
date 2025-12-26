@@ -32,19 +32,17 @@ const generateInteractiveData = (args: InteractionsArgs): CanvasData => {
         label: `Node ${i + 1}`,
         draggable: args.enableDrag,
         selectable: args.enableSelection,
-        style: {
-          fill: nodeColor,
-          stroke: '#333',
-          strokeWidth: 2,
-          hoverFill: args.enableHover ? '#ffffff' : undefined,
-          hoverStroke: args.enableHover ? nodeColor : undefined,
-          selectedStroke: args.enableSelection ? '#0066ff' : undefined,
-          selectedStrokeWidth: args.enableSelection ? 4 : undefined,
-          labelStyle: {
-            fill: '#ffffff',
-            fontSize: 11,
-            fontWeight: 'bold',
-          },
+        fill: nodeColor,
+        stroke: '#333',
+        strokeWidth: 2,
+        hoverFill: args.enableHover ? '#ffffff' : undefined,
+        hoverStroke: args.enableHover ? nodeColor : undefined,
+        selectedStroke: args.enableSelection ? '#0066ff' : undefined,
+        selectedStrokeWidth: args.enableSelection ? 4 : undefined,
+        labelStyle: {
+          fill: '#ffffff',
+          fontSize: 11,
+          fontWeight: 'bold',
         },
       });
     }

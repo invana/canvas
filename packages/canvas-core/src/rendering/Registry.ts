@@ -56,6 +56,19 @@ import {
 
 import { drawArrow } from '../primitives/arrows';
 
+// Import node shape classes
+import type { NodeShapeBase, NodeShapeOptions } from '../elements/nodes/NodeShapeBase';
+import { CircleNode } from '../elements/nodes/CircleNode';
+import { RectNode } from '../elements/nodes/RectNode';
+import { RoundedRectNode } from '../elements/nodes/RoundedRectNode';
+import { EllipseNode } from '../elements/nodes/EllipseNode';
+import { TriangleNode, DiamondNode, PentagonNode, HexagonNode, OctagonNode, PolygonNode } from '../elements/nodes/PolygonNode';
+
+/**
+ * Node shape class constructor type
+ */
+export type NodeShapeConstructor = new (options: NodeShapeOptions) => NodeShapeBase;
+
 /**
  * Shape types that come built-in
  */
@@ -100,12 +113,14 @@ export class Registry {
   private shapes = new Map<string, ShapeDrawer>();
   private paths = new Map<string, PathDrawer>();
   private arrows = new Map<string, ArrowDrawFn>();
+  private nodeClasses = new Map<string, NodeShapeConstructor>();
 
   constructor(registerDefaults: boolean = true) {
     if (registerDefaults) {
       this.registerDefaultShapes();
       this.registerDefaultPaths();
       this.registerDefaultArrows();
+      this.registerDefaultNodeClasses();
     }
   }
 
@@ -306,23 +321,23 @@ export class Registry {
     });
 
     this.registerShape('triangle', (g, params: any, style) => {
-      drawTriangle(g, { x: params.x ?? 0, y: params.y ?? 0, radius: params.size ?? 30 }, style);
+      drawTriangle(g, { x: params.x ?? 0, y: params.y ?? 0, radius: params.radius ?? params.size ?? 30 }, style);
     });
 
     this.registerShape('diamond', (g, params: any, style) => {
-      drawDiamond(g, { x: params.x ?? 0, y: params.y ?? 0, radius: params.size ?? 30 }, style);
+      drawDiamond(g, { x: params.x ?? 0, y: params.y ?? 0, radius: params.radius ?? params.size ?? 30 }, style);
     });
 
     this.registerShape('pentagon', (g, params: any, style) => {
-      drawPentagon(g, { x: params.x ?? 0, y: params.y ?? 0, radius: params.size ?? 30 }, style);
+      drawPentagon(g, { x: params.x ?? 0, y: params.y ?? 0, radius: params.radius ?? params.size ?? 30 }, style);
     });
 
     this.registerShape('hexagon', (g, params: any, style) => {
-      drawHexagon(g, { x: params.x ?? 0, y: params.y ?? 0, radius: params.size ?? 30 }, style);
+      drawHexagon(g, { x: params.x ?? 0, y: params.y ?? 0, radius: params.radius ?? params.size ?? 30 }, style);
     });
 
     this.registerShape('octagon', (g, params: any, style) => {
-      drawOctagon(g, { x: params.x ?? 0, y: params.y ?? 0, radius: params.size ?? 30 }, style);
+      drawOctagon(g, { x: params.x ?? 0, y: params.y ?? 0, radius: params.radius ?? params.size ?? 30 }, style);
     });
   }
 
@@ -378,6 +393,67 @@ export class Registry {
     }
   }
 
+  /**
+   * Register default node shape classes
+   */
+  private registerDefaultNodeClasses(): void {
+    // Register circle
+    this.registerNodeClass('circle', CircleNode);
+    
+    // Register rectangles
+    this.registerNodeClass('rect', RectNode);
+    this.registerNodeClass('rectangle', RectNode);
+    this.registerNodeClass('square', RectNode);
+    
+    // Register rounded rectangles
+    this.registerNodeClass('roundedRect', RoundedRectNode);
+    this.registerNodeClass('rounded-rect', RoundedRectNode);
+    
+    // Register ellipse
+    this.registerNodeClass('ellipse', EllipseNode);
+    
+    // Register polygons
+    this.registerNodeClass('triangle', TriangleNode);
+    this.registerNodeClass('diamond', DiamondNode);
+    this.registerNodeClass('pentagon', PentagonNode);
+    this.registerNodeClass('hexagon', HexagonNode);
+    this.registerNodeClass('octagon', OctagonNode);
+    this.registerNodeClass('polygon', PolygonNode);
+  }
+
+  // =========================================================================
+  // NODE CLASSES
+  // =========================================================================
+
+  /**
+   * Register a node shape class
+   */
+  registerNodeClass(shapeName: string, nodeClass: NodeShapeConstructor): this {
+    this.nodeClasses.set(shapeName, nodeClass);
+    return this;
+  }
+
+  /**
+   * Get a registered node class
+   */
+  getNodeClass(shapeName: string): NodeShapeConstructor | undefined {
+    return this.nodeClasses.get(shapeName);
+  }
+
+  /**
+   * Check if a node class is registered
+   */
+  hasNodeClass(shapeName: string): boolean {
+    return this.nodeClasses.has(shapeName);
+  }
+
+  /**
+   * Get all registered node shape names
+   */
+  getNodeClassNames(): string[] {
+    return Array.from(this.nodeClasses.keys());
+  }
+
   // =========================================================================
   // UTILITY
   // =========================================================================
@@ -389,6 +465,7 @@ export class Registry {
     this.shapes.clear();
     this.paths.clear();
     this.arrows.clear();
+    this.nodeClasses.clear();
   }
 
   /**
@@ -399,6 +476,7 @@ export class Registry {
     this.shapes.forEach((v, k) => cloned.shapes.set(k, v));
     this.paths.forEach((v, k) => cloned.paths.set(k, v));
     this.arrows.forEach((v, k) => cloned.arrows.set(k, v));
+    this.nodeClasses.forEach((v, k) => cloned.nodeClasses.set(k, v));
     return cloned;
   }
 }

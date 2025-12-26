@@ -14,6 +14,8 @@ export {
   type RippleAnimationOptions,
   type Point,
   type Bounds,
+  type NodeBadge,
+  type BadgePosition,
 } from './NodeShapeBase';
 
 // Concrete implementations

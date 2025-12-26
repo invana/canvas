@@ -15,11 +15,9 @@ const generatePulseData = (): CanvasData => {
     y: 0,
     shape: 'circle' as const,
     size: 40,
-    style: {
-      fill: color,
-      stroke: '#333',
-      strokeWidth: 2,
-    },
+    fill: color,
+    stroke: '#333',
+    strokeWidth: 2,
   }));
 
   return { nodes, edges: [] };
@@ -87,12 +85,10 @@ const generateRippleData = (): CanvasData => {
     y: pos.y,
     shape: 'circle' as const,
     size: 50,
-    style: {
-      fill: pos.color,
-      stroke: '#333',
-      strokeWidth: 2,
-      rippleColor: pos.color,
-    },
+    fill: pos.color,
+    stroke: '#333',
+    strokeWidth: 2,
+    rippleColor: pos.color,
   }));
 
   return { nodes, edges: [] };
@@ -166,14 +162,12 @@ const generateGlowData = (): CanvasData => {
     shape: 'circle' as const,
     size: 45,
     label: color,
-    style: {
-      fill: color,
-      stroke: '#333',
-      strokeWidth: 2,
-      labelStyle: {
-        fill: '#ffffff',
-        fontSize: 10,
-      },
+    fill: color,
+    stroke: '#333',
+    strokeWidth: 2,
+    labelStyle: {
+      fill: '#ffffff',
+      fontSize: 10,
     },
   }));
 

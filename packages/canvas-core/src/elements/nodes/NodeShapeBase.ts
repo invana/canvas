@@ -49,6 +49,37 @@ export interface Bounds {
 }
 
 /**
+ * Badge position on a node (8 positions)
+ */
+export type BadgePosition =
+  | 'top'
+  | 'top-right'
+  | 'right'
+  | 'bottom-right'
+  | 'bottom'
+  | 'bottom-left'
+  | 'left'
+  | 'top-left';
+
+/**
+ * Badge configuration
+ */
+export interface NodeBadge {
+  /** Badge text or number */
+  text: string;
+  /** Position on the node */
+  position: BadgePosition;
+  /** Badge background color */
+  color?: string | number;
+  /** Badge text color */
+  textColor?: string | number;
+  /** Badge size (diameter) */
+  size?: number;
+  /** Badge text size */
+  fontSize?: number;
+}
+
+/**
  * Node shape types
  */
 export type NodeShapeType =
@@ -79,6 +110,8 @@ export interface NodeData extends BaseShapeData {
   height?: number;
   /** Corner radius (for roundedRect) */
   cornerRadius?: number;
+  /** Badges to display on the node */
+  badges?: NodeBadge[];
   /** Optional data payload */
   payload?: Record<string, unknown>;
 }
@@ -161,10 +194,14 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
   private _rippleOptions: RippleAnimationOptions = {};
   private _rippleTicker: Ticker | null = null;
   private _rippleTickerCallback: ((delta: { deltaMS: number }) => void) | null = null;
+  
+  // Badge containers
+  private _badgeContainers: Map<string, Graphics> = new Map();
 
   constructor(options: NodeShapeOptions) {
     super(options as BaseShapeOptions<NodeData>);
     this._nodeStyle = options.style ?? {};
+    console.log('[NodeShapeBase constructor] ID:', options.data.id, 'shape:', options.data.shape, 'style:', options.style);
     this._draggable = options.draggable ?? true;
     this._selectable = options.selectable ?? true;
     this._onDrag = options.onDrag;
@@ -189,9 +226,12 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
     // Prevent context menu on right-click
     this.on('rightclick', this.onRightClick, this);
 
-    // Initial render
-    this.forceRender();
-    this.updateLabel();
+    // Initial render - defer to next tick to ensure everything is initialized
+    queueMicrotask(() => {
+      this.forceRender();
+      this.updateLabel();
+      this.updateBadges();
+    });
   }
 
   // =========================================================================
@@ -210,6 +250,15 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
    * Get bounds for label positioning
    */
   protected abstract getShapeBounds(): Bounds;
+
+  /**
+   * Calculate badge position offset based on shape-specific geometry.
+   * Each shape should implement this to position badges correctly on its boundary.
+   * @param position - The badge position (top, top-right, right, etc.)
+   * @param badgeRadius - Half of the badge size
+   * @returns The x,y offset from the node center
+   */
+  protected abstract getBadgeOffset(position: BadgePosition, badgeRadius: number): { x: number; y: number };
 
   /**
    * Get the shape type identifier
@@ -333,6 +382,72 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
   }
 
   // =========================================================================
+  // BADGE MANAGEMENT
+  // =========================================================================
+
+  /**
+   * Update badges based on node data
+   */
+  updateBadges(): void {
+    // Remove all existing badges
+    this._badgeContainers.forEach((container) => {
+      this.removeChild(container);
+      container.destroy();
+    });
+    this._badgeContainers.clear();
+
+    const badges = this._data.badges;
+    if (!badges || badges.length === 0) return;
+
+    // Create new badges
+    badges.forEach((badge, index) => {
+      const badgeSize = badge.size ?? 24;
+      const fontSize = badge.fontSize ?? 12;
+      const color = this.normalizeColor(badge.color ?? '#ff4444');
+      const textColor = this.normalizeColor(badge.textColor ?? '#ffffff');
+
+      // Create badge graphics
+      const badgeContainer = new Graphics();
+      
+      // Draw circle
+      badgeContainer.circle(0, 0, badgeSize / 2);
+      badgeContainer.fill(color);
+      badgeContainer.stroke({ width: 2, color: 0xffffff });
+
+      // Position badge using shape-specific calculation
+      const badgeRadius = badgeSize / 2;
+      const offset = this.getBadgeOffset(badge.position, badgeRadius);
+      badgeContainer.x = offset.x;
+      badgeContainer.y = offset.y;
+
+      // Add to node
+      this.addChild(badgeContainer);
+      this._badgeContainers.set(`badge-${index}`, badgeContainer);
+
+      // Add text label using the label system
+      const badgeLabel = createPositionedLabel(
+        badge.text,
+        { x: offset.x, y: offset.y, width: badgeSize, height: badgeSize },
+        { position: 'center', offsetX: 0, offsetY: 0 },
+        { fill: typeof textColor === 'number' ? `#${textColor.toString(16).padStart(6, '0')}` : textColor, fontSize, fontWeight: 'bold' }
+      );
+      
+      this.addLabel(`badge-${index}`, badgeLabel);
+    });
+  }
+
+  /**
+   * Normalize color to number format for PixiJS
+   */
+  private normalizeColor(color: string | number): number {
+    if (typeof color === 'number') return color;
+    
+    // Remove # if present
+    const hex = color.replace('#', '');
+    return parseInt(hex, 16);
+  }
+
+  // =========================================================================
   // INTERACTION - Drag & Drop
   // =========================================================================
 
@@ -443,6 +558,9 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
     super.updateData(data);
     if (data.label !== undefined) {
       this.updateLabel();
+    }
+    if (data.badges !== undefined) {
+      this.updateBadges();
     }
   }
 

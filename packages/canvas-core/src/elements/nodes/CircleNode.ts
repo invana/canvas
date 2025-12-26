@@ -4,7 +4,7 @@
  * A circular node shape.
  */
 
-import { NodeShapeBase, type Point, type Bounds, type NodeShapeType } from './NodeShapeBase';
+import { NodeShapeBase, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './NodeShapeBase';
 
 export class CircleNode extends NodeShapeBase {
   
@@ -44,6 +44,29 @@ export class CircleNode extends NodeShapeBase {
       y: -size,
       width: diameter,
       height: diameter,
+    };
+  }
+
+  protected getBadgeOffset(position: BadgePosition, badgeRadius: number): { x: number; y: number } {
+    const radius = this._data.size ?? 30;
+    const distance = radius + badgeRadius * 0.5; // Position badge just outside circle edge
+
+    // Map positions to angles (0° = right, 90° = bottom, etc.)
+    const angles: Record<BadgePosition, number> = {
+      'right': 0,
+      'bottom-right': Math.PI / 4,
+      'bottom': Math.PI / 2,
+      'bottom-left': (3 * Math.PI) / 4,
+      'left': Math.PI,
+      'top-left': (5 * Math.PI) / 4,
+      'top': (3 * Math.PI) / 2,
+      'top-right': (7 * Math.PI) / 4,
+    };
+
+    const angle = angles[position];
+    return {
+      x: Math.cos(angle) * distance,
+      y: Math.sin(angle) * distance,
     };
   }
 }

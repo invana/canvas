@@ -27,15 +27,13 @@ const generateNodeLabelsData = (fontSize: number): CanvasData => {
     width: 80,
     height: 50,
     label: shapeConfig.label,
-    style: {
-      fill: colors[i],
-      stroke: '#333',
-      strokeWidth: 2,
-      labelStyle: {
-        fill: '#ffffff',
-        fontSize,
-        fontWeight: 'bold',
-      },
+    fill: colors[i],
+    stroke: '#333',
+    strokeWidth: 2,
+    labelStyle: {
+      fill: '#ffffff',
+      fontSize,
+      fontWeight: 'bold',
     },
   }));
 
@@ -98,11 +96,9 @@ const generateEdgeLabelsData = (): CanvasData => {
       y: edgeConfig.y,
       shape: 'circle' as const,
       size: 25,
-      style: {
-        fill: '#4a90d9',
-        stroke: '#333',
-        strokeWidth: 2,
-      },
+      fill: '#4a90d9',
+      stroke: '#333',
+      strokeWidth: 2,
     });
 
     nodes.push({
@@ -111,11 +107,9 @@ const generateEdgeLabelsData = (): CanvasData => {
       y: edgeConfig.y,
       shape: 'circle' as const,
       size: 25,
-      style: {
-        fill: '#50c878',
-        stroke: '#333',
-        strokeWidth: 2,
-      },
+      fill: '#50c878',
+      stroke: '#333',
+      strokeWidth: 2,
     });
 
     edges.push({
@@ -126,10 +120,8 @@ const generateEdgeLabelsData = (): CanvasData => {
       arrowTarget: 'triangle' as const,
       label: edgeConfig.label,
       curvature: 0.3,
-      style: {
-        stroke: '#666',
-        strokeWidth: 2,
-      },
+      stroke: '#666',
+      strokeWidth: 2,
     });
   });
 
@@ -183,18 +175,16 @@ const generateLabelPositionsData = (): CanvasData => {
     width: 100,
     height: 60,
     label: pos.charAt(0).toUpperCase() + pos.slice(1),
-    style: {
-      fill: colors[i % colors.length],
-      stroke: '#333',
-      strokeWidth: 2,
-      labelPosition: pos,
-      labelOffsetY: pos === 'bottom' ? 15 : pos === 'top' ? -15 : 0,
-      labelOffsetX: pos === 'left' ? -15 : pos === 'right' ? 15 : 0,
-      labelStyle: {
-        fill: pos === 'center' ? '#ffffff' : '#333333',
-        fontSize: 12,
-        fontWeight: 'bold',
-      },
+    fill: colors[i % colors.length],
+    stroke: '#333',
+    strokeWidth: 2,
+    labelPosition: pos,
+    labelOffsetY: pos === 'bottom' ? 15 : pos === 'top' ? -15 : 0,
+    labelOffsetX: pos === 'left' ? -15 : pos === 'right' ? 15 : 0,
+    labelStyle: {
+      fill: pos === 'center' ? '#ffffff' : '#333333',
+      fontSize: 12,
+      fontWeight: 'bold',
     },
   }));
 

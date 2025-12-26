@@ -42,15 +42,6 @@ const generateShapesData = (showLabels: boolean): CanvasData => {
       shape: shape.name,
       size: 45,
       label: showLabels ? shape.label : undefined,
-      style: {
-        fill: colors[i % colors.length],
-        stroke: '#333',
-        strokeWidth: 2,
-        hoverFill: colors[(i + 3) % colors.length],
-        labelPosition: 'bottom' as const,
-        labelOffsetY: 12,
-        labelStyle: { fill: '#333', fontSize: 12 },
-      },
     });
   });
 

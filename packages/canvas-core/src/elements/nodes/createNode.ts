@@ -8,10 +8,6 @@ import type { Registry } from '../../rendering/Registry';
 import type { NodeData, NodeStyle } from './NodeShapeBase';
 import { NodeShapeBase } from './NodeShapeBase';
 import { CircleNode } from './CircleNode';
-import { EllipseNode } from './EllipseNode';
-import { RectNode } from './RectNode';
-import { RoundedRectNode } from './RoundedRectNode';
-import { PolygonNode, TriangleNode, DiamondNode, PentagonNode, HexagonNode, OctagonNode } from './PolygonNode';
 
 /**
  * Options for creating a node via factory
@@ -34,46 +30,21 @@ export interface CreateNodeOptions {
 export function createNode(options: CreateNodeOptions): NodeShapeBase {
   const shapeType = options.data.shape ?? 'circle';
   
-  switch (shapeType) {
-    case 'circle':
-      return new CircleNode(options);
-    
-    case 'ellipse':
-      return new EllipseNode(options);
-    
-    case 'rect':
-    case 'rectangle':
-    case 'square':
-      return new RectNode(options);
-    
-    case 'roundedRect':
-    case 'rounded-rect':
-      return new RoundedRectNode(options);
-    
-    case 'triangle':
-      return new TriangleNode(options);
-    
-    case 'diamond':
-      return new DiamondNode(options);
-    
-    case 'pentagon':
-      return new PentagonNode(options);
-    
-    case 'hexagon':
-      return new HexagonNode(options);
-    
-    case 'octagon':
-      return new OctagonNode(options);
-    
-    case 'polygon':
-      return new PolygonNode({
-        ...options,
-        sides: (options.data as any).sides ?? 6,
-      });
-    
-    default:
-      // Default to circle for unknown types
-      console.warn(`Unknown node shape type: ${shapeType}, defaulting to circle`);
-      return new CircleNode(options);
+  // Try to get the node class from registry first
+  const NodeClass = options.registry.getNodeClass(shapeType);
+  
+  if (NodeClass) {
+    return new NodeClass(options);
   }
+  
+  // Fallback: warn and use circle as default
+  console.warn(`Unknown node shape type: ${shapeType}, defaulting to circle`);
+  const CircleClass = options.registry.getNodeClass('circle');
+  
+  if (CircleClass) {
+    return new CircleClass(options);
+  }
+  
+  // Last resort: create a CircleNode directly (should not happen if registry is properly initialized)
+  return new CircleNode(options);
 }

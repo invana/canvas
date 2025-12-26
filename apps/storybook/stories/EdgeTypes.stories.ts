@@ -25,11 +25,9 @@ const generateEdgeTypesData = (arrowSize: number): CanvasData => {
       y,
       shape: 'circle' as const,
       size: 25,
-      style: {
-        fill: colors[i],
-        stroke: '#333',
-        strokeWidth: 2,
-      },
+      fill: colors[i],
+      stroke: '#333',
+      strokeWidth: 2,
     });
 
     // Target node
@@ -39,11 +37,9 @@ const generateEdgeTypesData = (arrowSize: number): CanvasData => {
       y,
       shape: 'circle' as const,
       size: 25,
-      style: {
-        fill: colors[i],
-        stroke: '#333',
-        strokeWidth: 2,
-      },
+      fill: colors[i],
+      stroke: '#333',
+      strokeWidth: 2,
     });
 
     // Label node (non-interactive)
@@ -57,12 +53,10 @@ const generateEdgeTypesData = (arrowSize: number): CanvasData => {
       label: pathType,
       interactive: false,
       draggable: false,
-      style: {
-        fill: '#f0f0f0',
-        stroke: '#ccc',
-        strokeWidth: 1,
-        labelStyle: { fill: '#333', fontSize: 11 },
-      },
+      fill: '#f0f0f0',
+      stroke: '#ccc',
+      strokeWidth: 1,
+      labelStyle: { fill: '#333', fontSize: 11 },
     });
 
     // Edge
@@ -74,10 +68,8 @@ const generateEdgeTypesData = (arrowSize: number): CanvasData => {
       arrowTarget: 'triangle' as const,
       arrowSize,
       curvature: 0.4,
-      style: {
-        stroke: colors[i],
-        strokeWidth: 3,
-      },
+      stroke: colors[i],
+      strokeWidth: 3,
     });
   });
 
