@@ -545,3 +545,104 @@ export const IconOnlyNodes: Story = {
     return container;
   },
 };
+
+/**
+ * Icons filling the entire node shape
+ */
+export const FullSizeIcons: Story = {
+  render: () => {
+    const container = document.createElement('div');
+    container.style.width = '100%';
+    container.style.height = '600px';
+    container.style.backgroundColor = '#f5f5f5';
+
+    const canvas = new Canvas({
+      container,
+      width: 1200,
+      height: 600,
+      backgroundColor: '#ffffff',
+    });
+
+    canvas.init().then(() => {
+      const fullSizeIcons = [
+        // Row 1: Large icons with circles
+        { icon: '🎨', size: 100, color: '#e74c3c', x: 150, y: 150, shape: 'circle' as const },
+        { icon: '🚀', size: 100, color: '#3498db', x: 350, y: 150, shape: 'circle' as const },
+        { icon: '⚡', size: 100, color: '#f39c12', x: 550, y: 150, shape: 'circle' as const },
+        { icon: '🎯', size: 100, color: '#9b59b6', x: 750, y: 150, shape: 'circle' as const },
+        { icon: '💎', size: 100, color: '#1abc9c', x: 950, y: 150, shape: 'circle' as const },
+        
+        // Row 2: Large icons with rounded rectangles
+        { icon: '🔥', size: 100, color: '#e67e22', x: 150, y: 350, shape: 'roundedRect' as const },
+        { icon: '⭐', size: 100, color: '#f1c40f', x: 350, y: 350, shape: 'roundedRect' as const },
+        { icon: '💡', size: 100, color: '#27ae60', x: 550, y: 350, shape: 'roundedRect' as const },
+        { icon: '🎵', size: 100, color: '#8e44ad', x: 750, y: 350, shape: 'roundedRect' as const },
+        { icon: '🌟', size: 100, color: '#16a085', x: 950, y: 350, shape: 'roundedRect' as const },
+      ];
+
+      const nodes = fullSizeIcons.map((item, i) => ({
+        data: {
+          id: `full-size-${i}`,
+          x: item.x,
+          y: item.y,
+          shape: item.shape,
+          size: item.size,
+          label: item.icon,
+          labelPlacement: 'center' as const,
+        },
+        style: {
+          fill: '#ffffff',
+          stroke: item.color,
+          strokeWidth: 4,
+          labelStyle: {
+            fill: item.color,
+            fontSize: Math.floor(item.size * 0.75), // Icon is 75% of node - nearly fills it
+            fontWeight: 'normal' as const,
+          },
+        },
+      }));
+
+      canvas.render({ nodes, edges: [] });
+
+      // Add info panel
+      const info = document.createElement('div');
+      info.style.position = 'absolute';
+      info.style.top = '10px';
+      info.style.left = '10px';
+      info.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+      info.style.padding = '16px';
+      info.style.borderRadius = '8px';
+      info.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+      info.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+      info.style.fontSize = '14px';
+      info.style.zIndex = '1000';
+      info.innerHTML = `
+        <strong>Full-Size Icons</strong><br/>
+        <span style="color: #666;">Icons filling entire node shapes</span><br/>
+        <br/>
+        Configuration:<br/>
+        • Icon size: <strong>75% of node</strong><br/>
+        • Maximum visual impact<br/>
+        • Minimal padding<br/>
+        • No text labels<br/>
+        <br/>
+        Formula:<br/>
+        <code style="background: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+          fontSize = nodeSize * 0.75
+        </code><br/>
+        <br/>
+        Use cases:<br/>
+        • App launchers<br/>
+        • Navigation menus<br/>
+        • Status indicators<br/>
+        • Icon grids<br/>
+        <br/>
+        <em>Icons scale perfectly with nodes!</em>
+      `;
+      container.style.position = 'relative';
+      container.appendChild(info);
+    });
+
+    return container;
+  },
+};
