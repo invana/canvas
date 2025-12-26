@@ -12,8 +12,7 @@
   },
   "dependencies": {
     "@aspect-ui/canvas-core": "workspace:*",
-    "@aspect-ui/canvas-utils": "workspace:*",
-    "pixi.js": "^8.6.6"
+    "@aspect-ui/canvas-utils": "workspace:*"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

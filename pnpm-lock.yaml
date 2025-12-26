@@ -26,9 +26,6 @@ importers:
       '@aspect-ui/canvas-utils':
         specifier: workspace:*
         version: link:../../packages/canvas-utils
-      pixi.js:
-        specifier: ^8.6.6
-        version: 8.14.3
     devDependencies:
       '@repo/typescript-config':
         specifier: workspace:*
