@@ -115,7 +115,14 @@
 // ============================================================================
 
 export { Canvas } from './canvas';
-export type { CanvasOptions, CanvasState } from './canvas';
+export type { 
+  CanvasOptions, 
+  CanvasState, 
+  CanvasData, 
+  CanvasNodeData, 
+  CanvasEdgeData, 
+  CanvasStyles 
+} from './canvas';
 
 export { Viewport } from './canvas';
 export type { ViewportOptions, ViewportState } from './canvas';
@@ -127,7 +134,29 @@ export type { BuiltInShapeType, BuiltInPathType, ShapeDrawer, PathDrawer } from 
 // UI SHAPES
 // ============================================================================
 
-export { BaseShape, NodeShape, EdgeShape } from './ui-shapes';
+export {
+  BaseShape,
+  // Node shapes
+  NodeShapeBase,
+  CircleNode,
+  EllipseNode,
+  RectNode,
+  RoundedRectNode,
+  PolygonNode,
+  TriangleNode,
+  DiamondNode,
+  PentagonNode,
+  HexagonNode,
+  OctagonNode,
+  createNode,
+  // Edge shapes
+  EdgeShapeBase,
+  LineEdge,
+  BezierEdge,
+  OrthogonalEdge,
+  OrthogonalRoundedEdge,
+  createEdge,
+} from './ui-shapes';
 export type {
   BaseShapeData,
   BaseShapeStyle,
@@ -136,10 +165,12 @@ export type {
   NodeStyle,
   NodeShapeOptions,
   NodeShapeType,
+  CreateNodeOptions,
   EdgeData,
   EdgeStyle,
   EdgeShapeOptions,
   EdgePathType,
+  CreateEdgeOptions,
 } from './ui-shapes';
 
 // ============================================================================

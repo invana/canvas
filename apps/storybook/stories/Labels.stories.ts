@@ -1,10 +1,46 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, NodeShape, EdgeShape } from '@aspect-ui/canvas-core';
+import { Canvas, type CanvasData } from '@aspect-ui/canvas-core';
 
 interface LabelsArgs {
   backgroundColor: string;
   fontSize: number;
 }
+
+const colors = ['#4a90d9', '#50c878', '#ff6b6b', '#ffd93d', '#9b59b6', '#e67e22'];
+
+const generateNodeLabelsData = (fontSize: number): CanvasData => {
+  const shapes = [
+    { shape: 'circle', label: 'Circle', x: -200, y: -100 },
+    { shape: 'rect', label: 'Rectangle', x: 0, y: -100 },
+    { shape: 'roundedRect', label: 'Rounded', x: 200, y: -100 },
+    { shape: 'ellipse', label: 'Ellipse', x: -200, y: 100 },
+    { shape: 'hexagon', label: 'Hexagon', x: 0, y: 100 },
+    { shape: 'pentagon', label: 'Pentagon', x: 200, y: 100 },
+  ];
+
+  const nodes = shapes.map((shapeConfig, i) => ({
+    id: `node-${i}`,
+    x: shapeConfig.x,
+    y: shapeConfig.y,
+    shape: shapeConfig.shape,
+    size: 40,
+    width: 80,
+    height: 50,
+    label: shapeConfig.label,
+    style: {
+      fill: colors[i],
+      stroke: '#333',
+      strokeWidth: 2,
+      labelStyle: {
+        fill: '#ffffff',
+        fontSize,
+        fontWeight: 'bold',
+      },
+    },
+  }));
+
+  return { nodes, edges: [] };
+};
 
 const createNodeLabels = (args: LabelsArgs): HTMLElement => {
   const wrapper = document.createElement('div');
@@ -31,54 +67,73 @@ const createNodeLabels = (args: LabelsArgs): HTMLElement => {
       width: container.clientWidth || 800,
       height: container.clientHeight || 400,
       backgroundColor: args.backgroundColor,
+      data: generateNodeLabelsData(args.fontSize),
+      fitPadding: 50,
     });
 
     await canvas.init();
-
-    const shapes = [
-      { shape: 'circle', label: 'Circle', x: -200, y: -100 },
-      { shape: 'rect', label: 'Rectangle', x: 0, y: -100 },
-      { shape: 'roundedRect', label: 'Rounded', x: 200, y: -100 },
-      { shape: 'ellipse', label: 'Ellipse', x: -200, y: 100 },
-      { shape: 'polygon', label: 'Hexagon', x: 0, y: 100, sides: 6 },
-      { shape: 'polygon', label: 'Pentagon', x: 200, y: 100, sides: 5 },
-    ];
-
-    const colors = ['#4a90d9', '#50c878', '#ff6b6b', '#ffd93d', '#9b59b6', '#e67e22'];
-
-    shapes.forEach((shapeConfig, i) => {
-      const node = new NodeShape({
-        data: {
-          id: `node-${i}`,
-          x: shapeConfig.x,
-          y: shapeConfig.y,
-          shape: shapeConfig.shape,
-          size: 40,
-          width: 80,
-          height: 50,
-          sides: shapeConfig.sides,
-          label: shapeConfig.label,
-        },
-        style: {
-          fill: colors[i],
-          stroke: '#333',
-          strokeWidth: 2,
-          labelStyle: {
-            fill: '#ffffff',
-            fontSize: args.fontSize,
-            fontWeight: 'bold',
-          },
-        },
-        registry: canvas.registry,
-      });
-
-      canvas.addToNodeLayer(node);
-    });
-
-    setTimeout(() => canvas.fitContent(50), 100);
+    canvas.render();
   });
 
   return wrapper;
+};
+
+const generateEdgeLabelsData = (): CanvasData => {
+  const edgeConfigs = [
+    { pathType: 'line', label: 'Line Edge', y: -100 },
+    { pathType: 'bezier', label: 'Bezier Edge', y: 0 },
+    { pathType: 'orthogonal', label: 'Orthogonal Edge', y: 100 },
+  ];
+
+  const nodes = [];
+  const edges = [];
+
+  edgeConfigs.forEach((edgeConfig, i) => {
+    const sourceX = -180;
+    const targetX = 180;
+
+    nodes.push({
+      id: `source-label-${i}`,
+      x: sourceX,
+      y: edgeConfig.y,
+      shape: 'circle' as const,
+      size: 25,
+      style: {
+        fill: '#4a90d9',
+        stroke: '#333',
+        strokeWidth: 2,
+      },
+    });
+
+    nodes.push({
+      id: `target-label-${i}`,
+      x: targetX,
+      y: edgeConfig.y,
+      shape: 'circle' as const,
+      size: 25,
+      style: {
+        fill: '#50c878',
+        stroke: '#333',
+        strokeWidth: 2,
+      },
+    });
+
+    edges.push({
+      id: `edge-label-${i}`,
+      source: `source-label-${i}`,
+      target: `target-label-${i}`,
+      pathType: edgeConfig.pathType as any,
+      arrowTarget: 'triangle' as const,
+      label: edgeConfig.label,
+      curvature: 0.3,
+      style: {
+        stroke: '#666',
+        strokeWidth: 2,
+      },
+    });
+  });
+
+  return { nodes, edges };
 };
 
 const createEdgeLabels = (args: LabelsArgs): HTMLElement => {
@@ -106,84 +161,47 @@ const createEdgeLabels = (args: LabelsArgs): HTMLElement => {
       width: container.clientWidth || 800,
       height: container.clientHeight || 400,
       backgroundColor: args.backgroundColor,
+      data: generateEdgeLabelsData(),
+      fitPadding: 50,
     });
 
     await canvas.init();
-
-    const edges = [
-      { pathType: 'line', label: 'Line Edge', y: -100 },
-      { pathType: 'bezier', label: 'Bezier Edge', y: 0 },
-      { pathType: 'orthogonal', label: 'Orthogonal Edge', y: 100 },
-    ];
-
-    edges.forEach((edgeConfig, i) => {
-      const sourceX = -180;
-      const targetX = 180;
-
-      // Source node
-      const sourceNode = new NodeShape({
-        data: {
-          id: `source-label-${i}`,
-          x: sourceX,
-          y: edgeConfig.y,
-          shape: 'circle',
-          size: 25,
-        },
-        style: {
-          fill: '#4a90d9',
-          stroke: '#333',
-          strokeWidth: 2,
-        },
-        registry: canvas.registry,
-      });
-
-      // Target node
-      const targetNode = new NodeShape({
-        data: {
-          id: `target-label-${i}`,
-          x: targetX,
-          y: edgeConfig.y,
-          shape: 'circle',
-          size: 25,
-        },
-        style: {
-          fill: '#50c878',
-          stroke: '#333',
-          strokeWidth: 2,
-        },
-        registry: canvas.registry,
-      });
-
-      // Edge with label
-      const edge = new EdgeShape({
-        data: {
-          id: `edge-label-${i}`,
-          source: { x: sourceX + 25, y: edgeConfig.y },
-          target: { x: targetX - 25, y: edgeConfig.y },
-          pathType: edgeConfig.pathType,
-          arrowTarget: 'triangle',
-          label: edgeConfig.label,
-          curvature: 0.3,
-        },
-        style: {
-          stroke: '#666',
-          strokeWidth: 2,
-        },
-        registry: canvas.registry,
-      });
-
-      canvas.addToNodeLayer(sourceNode);
-      canvas.addToNodeLayer(targetNode);
-      canvas.addToEdgeLayer(edge, sourceNode.id, targetNode.id);
-    });
-
-    setTimeout(() => canvas.fitContent(50), 100);
+    canvas.render();
   });
 
   return wrapper;
 };
 
-const createMultilineLabels = (args: LabelsArgs): HTMLElement => {
+const generateLabelPositionsData = (): CanvasData => {
+  const positions = ['center', 'top', 'bottom', 'left', 'right'] as const;
+
+  const nodes = positions.map((pos, i) => ({
+    id: `pos-${pos}`,
+    x: (i - 2) * 150,
+    y: 0,
+    shape: 'roundedRect' as const,
+    width: 100,
+    height: 60,
+    label: pos.charAt(0).toUpperCase() + pos.slice(1),
+    style: {
+      fill: colors[i % colors.length],
+      stroke: '#333',
+      strokeWidth: 2,
+      labelPosition: pos,
+      labelOffsetY: pos === 'bottom' ? 15 : pos === 'top' ? -15 : 0,
+      labelOffsetX: pos === 'left' ? -15 : pos === 'right' ? 15 : 0,
+      labelStyle: {
+        fill: pos === 'center' ? '#ffffff' : '#333333',
+        fontSize: 12,
+        fontWeight: 'bold',
+      },
+    },
+  }));
+
+  return { nodes, edges: [] };
+};
+
+const createLabelPositions = (args: LabelsArgs): HTMLElement => {
   const wrapper = document.createElement('div');
   wrapper.style.width = '100%';
   wrapper.style.height = '400px';
@@ -193,7 +211,7 @@ const createMultilineLabels = (args: LabelsArgs): HTMLElement => {
   const info = document.createElement('div');
   info.style.padding = '10px';
   info.style.fontFamily = 'sans-serif';
-  info.innerHTML = '<strong>Multiline Labels</strong> - Labels with multiple lines';
+  info.innerHTML = '<strong>Label Positions</strong> - Different label placement options';
   wrapper.appendChild(info);
 
   const container = document.createElement('div');
@@ -208,70 +226,12 @@ const createMultilineLabels = (args: LabelsArgs): HTMLElement => {
       width: container.clientWidth || 800,
       height: container.clientHeight || 300,
       backgroundColor: args.backgroundColor,
+      data: generateLabelPositionsData(),
+      fitPadding: 60,
     });
 
     await canvas.init();
-
-    const nodes = [
-      { label: 'User\nService', x: -200, fill: '#4a90d9' },
-      { label: 'Auth\nMiddleware', x: 0, fill: '#50c878' },
-      { label: 'Database\nConnection', x: 200, fill: '#ff6b6b' },
-    ];
-
-    nodes.forEach((nodeConfig, i) => {
-      const node = new NodeShape({
-        data: {
-          id: `multiline-${i}`,
-          x: nodeConfig.x,
-          y: 0,
-          shape: 'roundedRect',
-          width: 100,
-          height: 60,
-          label: nodeConfig.label,
-        },
-        style: {
-          fill: nodeConfig.fill,
-          stroke: '#333',
-          strokeWidth: 2,
-          labelStyle: {
-            fill: '#ffffff',
-            fontSize: args.fontSize,
-            fontWeight: 'bold',
-            lineHeight: 1.4,
-          },
-        },
-        registry: canvas.registry,
-      });
-
-      canvas.addToNodeLayer(node);
-    });
-
-    // Add edges between nodes
-    const edgeData = [
-      { source: -150, target: -50 },
-      { source: 50, target: 150 },
-    ];
-
-    edgeData.forEach((e, i) => {
-      const edge = new EdgeShape({
-        data: {
-          id: `multiline-edge-${i}`,
-          source: { x: e.source, y: 0 },
-          target: { x: e.target, y: 0 },
-          pathType: 'line',
-          arrowTarget: 'triangle',
-        },
-        style: {
-          stroke: '#999',
-          strokeWidth: 2,
-        },
-        registry: canvas.registry,
-      });
-
-      canvas.addToEdgeLayer(edge);
-    });
-
-    setTimeout(() => canvas.fitContent(50), 100);
+    canvas.render();
   });
 
   return wrapper;
@@ -279,10 +239,9 @@ const createMultilineLabels = (args: LabelsArgs): HTMLElement => {
 
 const meta: Meta<LabelsArgs> = {
   title: 'Canvas/Labels',
-  render: (args) => createNodeLabels(args),
   argTypes: {
     backgroundColor: { control: 'color' },
-    fontSize: { control: { type: 'range', min: 8, max: 20, step: 1 } },
+    fontSize: { control: { type: 'range', min: 8, max: 24, step: 1 } },
   },
   args: {
     backgroundColor: '#ffffff',
@@ -294,18 +253,21 @@ export default meta;
 
 type Story = StoryObj<LabelsArgs>;
 
-export const NodeLabels: Story = {};
+export const NodeLabels: Story = {
+  render: (args) => createNodeLabels(args),
+};
 
 export const EdgeLabels: Story = {
   render: (args) => createEdgeLabels(args),
 };
 
-export const MultilineLabels: Story = {
-  render: (args) => createMultilineLabels(args),
+export const LabelPositions: Story = {
+  render: (args) => createLabelPositions(args),
 };
 
 export const LargeFontSize: Story = {
+  render: (args) => createNodeLabels(args),
   args: {
-    fontSize: 16,
+    fontSize: 18,
   },
 };

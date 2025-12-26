@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, NodeShape } from '@aspect-ui/canvas-core';
+import { Canvas, type CanvasData } from '@aspect-ui/canvas-core';
 
 interface NodeShapesArgs {
   backgroundColor: string;
   showLabels: boolean;
 }
 
-const shapes = [
+const shapeConfigs = [
   { name: 'circle', label: 'Circle' },
   { name: 'rect', label: 'Rectangle' },
   { name: 'roundedRect', label: 'Rounded Rect' },
@@ -22,6 +22,40 @@ const colors = [
   '#4a90d9', '#50c878', '#ff6b6b', '#ffd93d', 
   '#6c5ce7', '#00cec9', '#fd79a8', '#e17055', '#00b894'
 ];
+
+const generateShapesData = (showLabels: boolean): CanvasData => {
+  const nodes = [];
+  const cols = 5;
+  const spacingX = 160;
+  const spacingY = 140;
+
+  shapeConfigs.forEach((shape, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const x = col * spacingX - (cols - 1) * spacingX / 2;
+    const y = row * spacingY - spacingY / 2;
+
+    nodes.push({
+      id: `shape-${shape.name}`,
+      x,
+      y,
+      shape: shape.name,
+      size: 45,
+      label: showLabels ? shape.label : undefined,
+      style: {
+        fill: colors[i % colors.length],
+        stroke: '#333',
+        strokeWidth: 2,
+        hoverFill: colors[(i + 3) % colors.length],
+        labelPosition: 'bottom' as const,
+        labelOffsetY: 12,
+        labelStyle: { fill: '#333', fontSize: 12 },
+      },
+    });
+  });
+
+  return { nodes, edges: [] };
+};
 
 const createNodeShapes = (args: NodeShapesArgs): HTMLElement => {
   const wrapper = document.createElement('div');
@@ -48,53 +82,25 @@ const createNodeShapes = (args: NodeShapesArgs): HTMLElement => {
       width: container.clientWidth || 800,
       height: container.clientHeight || 400,
       backgroundColor: args.backgroundColor,
+      data: generateShapesData(args.showLabels),
+      fitPadding: 60,
     });
 
     await canvas.init();
+    canvas.render();
 
-    // Create a grid of shapes
-    const cols = 5;
-    const spacingX = 160;
-    const spacingY = 140;
-
-    shapes.forEach((shape, i) => {
-      const col = i % cols;
-      const row = Math.floor(i / cols);
-      const x = col * spacingX - (cols - 1) * spacingX / 2;
-      const y = row * spacingY - spacingY / 2;
-
-      const node = new NodeShape({
-        data: {
-          id: `shape-${shape.name}`,
-          x,
-          y,
-          shape: shape.name,
-          size: 45,
-          label: args.showLabels ? shape.label : undefined,
-        },
-        style: {
-          fill: colors[i % colors.length],
-          stroke: '#333',
-          strokeWidth: 2,
-          hoverFill: colors[(i + 3) % colors.length],
-          labelPosition: 'bottom',
-          labelOffsetY: 12,
-          labelStyle: { fill: '#333', fontSize: 12 },
-        },
-        registry: canvas.registry,
-      });
-
+    // Add hover handlers after render
+    canvas.getNodes().forEach((node) => {
       node.on('pointerover', () => {
-        info.innerHTML = `<strong>Hovering:</strong> ${shape.label} (${shape.name})`;
+        const shapeConfig = shapeConfigs.find(s => `shape-${s.name}` === node.id);
+        if (shapeConfig) {
+          info.innerHTML = `<strong>Hovering:</strong> ${shapeConfig.label} (${shapeConfig.name})`;
+        }
       });
       node.on('pointerout', () => {
         info.innerHTML = '<strong>Node Shapes</strong> - Hover over shapes to see their names';
       });
-
-      canvas.addToNodeLayer(node);
     });
-
-    setTimeout(() => canvas.fitContent(60), 100);
   });
 
   return wrapper;

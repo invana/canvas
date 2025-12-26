@@ -19,25 +19,79 @@
  * 
  * @example
  * ```typescript
+ * // Data-driven approach (recommended)
  * const canvas = new Canvas({
  *   container: document.getElementById('canvas')!,
  *   width: 800,
  *   height: 600,
+ *   data: {
+ *     nodes: [
+ *       { id: '1', x: 100, y: 100, shape: 'circle', label: 'Node 1' },
+ *       { id: '2', x: 300, y: 200, shape: 'roundedRect', label: 'Node 2' },
+ *     ],
+ *     edges: [
+ *       { id: 'e1', source: '1', target: '2', pathType: 'bezier' },
+ *     ],
+ *   },
  * });
  * 
  * await canvas.init();
- * 
- * // Add nodes and edges
- * canvas.addNode({ id: '1', x: 100, y: 100, shape: 'circle' });
- * canvas.addEdge({ id: 'e1', source: '1', target: '2' });
+ * canvas.render();
  * ```
  */
 
 import { Application, Container } from 'pixi.js';
 import { Viewport, type ViewportOptions } from './Viewport';
 import { Registry } from './Registry';
-import type { NodeShape } from '../ui-shapes/NodeShape';
-import type { EdgeShape } from '../ui-shapes/EdgeShape';
+import { NodeShapeBase, createNode, type NodeData, type NodeStyle } from '../ui-shapes/nodes';
+import { EdgeShapeBase, createEdge, type EdgeData, type EdgeStyle } from '../ui-shapes/edges';
+
+/**
+ * Node configuration in CanvasData
+ */
+export interface CanvasNodeData extends NodeData {
+  /** Node style */
+  style?: Partial<NodeStyle>;
+  /** Whether node is interactive */
+  interactive?: boolean;
+  /** Whether node is draggable */
+  draggable?: boolean;
+  /** Whether node is selectable */
+  selectable?: boolean;
+}
+
+/**
+ * Edge configuration in CanvasData
+ * Source and target can be node IDs (strings) for automatic position resolution
+ */
+export interface CanvasEdgeData extends Omit<EdgeData, 'source' | 'target'> {
+  /** Source node ID or point */
+  source: string | { x: number; y: number };
+  /** Target node ID or point */
+  target: string | { x: number; y: number };
+  /** Edge style */
+  style?: Partial<EdgeStyle>;
+}
+
+/**
+ * Data structure for Canvas
+ */
+export interface CanvasData {
+  /** Array of node configurations */
+  nodes: CanvasNodeData[];
+  /** Array of edge configurations */
+  edges: CanvasEdgeData[];
+}
+
+/**
+ * Default styles for nodes and edges
+ */
+export interface CanvasStyles {
+  /** Default node style */
+  node?: Partial<NodeStyle>;
+  /** Default edge style */
+  edge?: Partial<EdgeStyle>;
+}
 
 export interface CanvasOptions {
   /** Container element to mount the canvas */
@@ -58,6 +112,14 @@ export interface CanvasOptions {
   registry?: Registry;
   /** Enable antialiasing */
   antialias?: boolean;
+  /** Data to render (nodes and edges) */
+  data?: CanvasData;
+  /** Default styles for nodes and edges */
+  styles?: CanvasStyles;
+  /** Fit content to view after rendering */
+  fitOnRender?: boolean;
+  /** Padding for fit content */
+  fitPadding?: number;
 }
 
 export interface CanvasState {
@@ -83,17 +145,23 @@ export class Canvas {
   private _nodeLayer: Container | null = null;
 
   // Graph tracking
-  private _nodes: Map<string, NodeShape> = new Map();
-  private _edges: Map<string, EdgeShape> = new Map();
+  private _nodes: Map<string, NodeShapeBase> = new Map();
+  private _edges: Map<string, EdgeShapeBase> = new Map();
   // Maps node ID to edges connected to it (both source and target)
   private _nodeEdges: Map<string, Set<string>> = new Map();
 
+  // Data
+  private _data: CanvasData | null = null;
+  private _styles: CanvasStyles = {};
+
   // Options
-  private _options: Required<CanvasOptions>;
+  private _options: Required<Omit<CanvasOptions, 'data' | 'styles'>>;
 
   constructor(options: CanvasOptions) {
     this._container = options.container;
     this._registry = options.registry ?? new Registry();
+    this._data = options.data ?? null;
+    this._styles = options.styles ?? {};
 
     this._options = {
       container: options.container,
@@ -105,6 +173,8 @@ export class Canvas {
       viewport: options.viewport ?? {},
       registry: this._registry,
       antialias: options.antialias ?? true,
+      fitOnRender: options.fitOnRender ?? true,
+      fitPadding: options.fitPadding ?? 50,
     };
   }
 
@@ -235,6 +305,193 @@ export class Canvas {
   }
 
   /**
+   * Set new data and optionally re-render
+   */
+  setData(data: CanvasData, render: boolean = true): void {
+    this._data = data;
+    if (render) {
+      this.render();
+    }
+  }
+
+  /**
+   * Get current data
+   */
+  getData(): CanvasData | null {
+    return this._data;
+  }
+
+  /**
+   * Set default styles
+   */
+  setStyles(styles: CanvasStyles): void {
+    this._styles = styles;
+  }
+
+  // =========================================================================
+  // EDGE BOUNDARY CALCULATION
+  // =========================================================================
+
+  /**
+   * Calculate the source and target boundary points for an edge between two nodes.
+   * Delegates to each node's getBoundaryPoint() method for shape-specific calculations.
+   */
+  private calculateEdgeBoundaryPoints(
+    sourceNode: NodeShapeBase | null,
+    targetNode: NodeShapeBase | null,
+    sourcePoint: { x: number; y: number },
+    targetPoint: { x: number; y: number },
+    offset: number = 2
+  ): { source: { x: number; y: number }; target: { x: number; y: number } } {
+    const adjustedSource = sourceNode 
+      ? sourceNode.getBoundaryPoint(targetPoint, offset)
+      : sourcePoint;
+
+    const adjustedTarget = targetNode 
+      ? targetNode.getBoundaryPoint(sourcePoint, offset)
+      : targetPoint;
+
+    return { source: adjustedSource, target: adjustedTarget };
+  }
+
+  /**
+   * Render the canvas data (nodes and edges)
+   * Clears existing content and re-renders from data
+   */
+  render(): void {
+    if (!this._initialized || !this._data) return;
+
+    // Clear existing content
+    this.clear();
+
+    const defaultNodeStyle: Partial<NodeStyle> = {
+      fill: '#4a90d9',
+      stroke: '#333',
+      strokeWidth: 2,
+      labelPosition: 'center',
+      labelStyle: { fill: '#ffffff', fontSize: 12 },
+      ...this._styles.node,
+    };
+
+    const defaultEdgeStyle: Partial<EdgeStyle> = {
+      stroke: '#666',
+      strokeWidth: 2,
+      ...this._styles.edge,
+    };
+
+    // First pass: create all nodes
+    for (const nodeData of this._data.nodes) {
+      const style: NodeStyle = {
+        ...defaultNodeStyle,
+        ...nodeData.style,
+      } as NodeStyle;
+
+      const node = createNode({
+        data: {
+          id: nodeData.id,
+          x: nodeData.x,
+          y: nodeData.y,
+          shape: nodeData.shape ?? 'circle',
+          size: nodeData.size ?? 30,
+          width: nodeData.width,
+          height: nodeData.height,
+          cornerRadius: nodeData.cornerRadius,
+          label: nodeData.label,
+          payload: nodeData.payload,
+        },
+        style,
+        interactive: nodeData.interactive ?? true,
+        draggable: nodeData.draggable ?? true,
+        selectable: nodeData.selectable ?? true,
+        registry: this._registry,
+      });
+
+      this.addNode(node);
+    }
+
+    // Second pass: create all edges (after nodes exist for position lookup)
+    for (const edgeData of this._data.edges) {
+      // Resolve source position and node
+      let sourcePoint: { x: number; y: number };
+      let sourceNodeId: string | undefined;
+      let sourceNode: NodeShapeBase | null = null;
+      
+      if (typeof edgeData.source === 'string') {
+        sourceNode = this._nodes.get(edgeData.source) ?? null;
+        if (!sourceNode) {
+          console.warn(`Edge ${edgeData.id}: source node "${edgeData.source}" not found`);
+          continue;
+        }
+        sourcePoint = { x: sourceNode.x, y: sourceNode.y };
+        sourceNodeId = edgeData.source;
+      } else {
+        sourcePoint = edgeData.source;
+      }
+
+      // Resolve target position and node
+      let targetPoint: { x: number; y: number };
+      let targetNodeId: string | undefined;
+      let targetNode: NodeShapeBase | null = null;
+      
+      if (typeof edgeData.target === 'string') {
+        targetNode = this._nodes.get(edgeData.target) ?? null;
+        if (!targetNode) {
+          console.warn(`Edge ${edgeData.id}: target node "${edgeData.target}" not found`);
+          continue;
+        }
+        targetPoint = { x: targetNode.x, y: targetNode.y };
+        targetNodeId = edgeData.target;
+      } else {
+        targetPoint = edgeData.target;
+      }
+
+      // Calculate boundary points (edges should stop at node boundary, not center)
+      // Add small offset (2px) for stroke width
+      const boundaryPoints = this.calculateEdgeBoundaryPoints(
+        sourceNode,
+        targetNode,
+        sourcePoint,
+        targetPoint,
+        2
+      );
+
+      const style: EdgeStyle = {
+        ...defaultEdgeStyle,
+        ...edgeData.style,
+      } as EdgeStyle;
+
+      const edge = createEdge({
+        data: {
+          id: edgeData.id,
+          source: boundaryPoints.source,
+          target: boundaryPoints.target,
+          pathType: edgeData.pathType ?? 'bezier',
+          curvature: edgeData.curvature,
+          sourceDirection: edgeData.sourceDirection,
+          targetDirection: edgeData.targetDirection,
+          arrowSource: edgeData.arrowSource,
+          arrowTarget: edgeData.arrowTarget ?? 'triangle',
+          arrowSize: edgeData.arrowSize,
+          label: edgeData.label,
+          payload: edgeData.payload,
+        },
+        style,
+        registry: this._registry,
+      });
+
+      this.addEdge(edge, sourceNodeId, targetNodeId);
+    }
+
+    // Fit content if enabled
+    if (this._options.fitOnRender) {
+      // Use setTimeout to ensure layout is complete
+      setTimeout(() => {
+        this.fitContent(this._options.fitPadding);
+      }, 0);
+    }
+  }
+
+  /**
    * Add a child to the node layer (legacy - use addNode for graph tracking)
    */
   addToNodeLayer(child: Container): void {
@@ -242,13 +499,13 @@ export class Canvas {
     
     // If it's a NodeShape, register it for graph tracking
     if ('id' in child && 'data' in child) {
-      const node = child as unknown as NodeShape;
+      const node = child as unknown as NodeShapeBase;
       this._nodes.set(node.id, node);
       this._nodeEdges.set(node.id, new Set());
       
       // Set up drag callback to update connected edges
-      node.onDrag = (draggedNode: NodeShape, x: number, y: number) => {
-        this.handleNodeDrag(draggedNode, x, y);
+      node.onDrag = (draggedNode, x, y) => {
+        this.handleNodeDrag(draggedNode as NodeShapeBase, x, y);
       };
       
       // Also listen for drag events (for external listeners)
@@ -264,7 +521,7 @@ export class Canvas {
     
     // If it's an EdgeShape, register it for graph tracking
     if ('id' in child && 'source' in child && 'target' in child) {
-      const edge = child as unknown as EdgeShape;
+      const edge = child as unknown as EdgeShapeBase;
       this._edges.set(edge.id, edge);
       
       // Track node-edge relationships if IDs provided
@@ -289,14 +546,14 @@ export class Canvas {
   /**
    * Add a node with graph tracking
    */
-  addNode(node: NodeShape): void {
+  addNode(node: NodeShapeBase): void {
     this._nodeLayer?.addChild(node);
     this._nodes.set(node.id, node);
     this._nodeEdges.set(node.id, new Set());
     
     // Set up drag callback to update connected edges
-    node.onDrag = (draggedNode: NodeShape, x: number, y: number) => {
-      this.handleNodeDrag(draggedNode, x, y);
+    node.onDrag = (draggedNode, x, y) => {
+      this.handleNodeDrag(draggedNode as NodeShapeBase, x, y);
     };
     
     // Also listen for drag events (for external listeners)
@@ -306,7 +563,7 @@ export class Canvas {
   /**
    * Add an edge with graph tracking
    */
-  addEdge(edge: EdgeShape, sourceNodeId?: string, targetNodeId?: string): void {
+  addEdge(edge: EdgeShapeBase, sourceNodeId?: string, targetNodeId?: string): void {
     this._edgeLayer?.addChild(edge);
     this._edges.set(edge.id, edge);
     
@@ -333,7 +590,7 @@ export class Canvas {
   /**
    * Handle node drag via callback - update connected edges
    */
-  private handleNodeDrag(node: NodeShape, x: number, y: number): void {
+  private handleNodeDrag(node: NodeShapeBase, x: number, y: number): void {
     const nodeId = node.id;
     const edgeIds = this._nodeEdges.get(nodeId);
     
@@ -350,14 +607,30 @@ export class Canvas {
       const isTarget = (edge as any)._targetNodeId === nodeId;
       
       if (isSource || isTarget) {
-        const newSource = isSource 
-          ? { x, y }
-          : edge.source;
-        const newTarget = isTarget 
-          ? { x, y }
-          : edge.target;
+        // Get the other node to calculate proper boundary points
+        const sourceNodeId = (edge as any)._sourceNodeId;
+        const targetNodeId = (edge as any)._targetNodeId;
+        const sourceNode = sourceNodeId ? this._nodes.get(sourceNodeId) ?? null : null;
+        const targetNode = targetNodeId ? this._nodes.get(targetNodeId) ?? null : null;
         
-        edge.updateEndpoints(newSource, newTarget);
+        // Get center points (for nodes, use current position; for the dragged node, use new position)
+        const sourceCenter = isSource 
+          ? { x, y }
+          : sourceNode ? { x: sourceNode.x, y: sourceNode.y } : edge.source;
+        const targetCenter = isTarget 
+          ? { x, y }
+          : targetNode ? { x: targetNode.x, y: targetNode.y } : edge.target;
+        
+        // Calculate boundary-adjusted points
+        const boundaryPoints = this.calculateEdgeBoundaryPoints(
+          sourceNode,
+          targetNode,
+          sourceCenter,
+          targetCenter,
+          2
+        );
+        
+        edge.updateEndpoints(boundaryPoints.source, boundaryPoints.target);
       }
     });
   }
@@ -365,7 +638,7 @@ export class Canvas {
   /**
    * Handle node drag event - update connected edges
    */
-  private onNodeDrag(event: { node: NodeShape; x: number; y: number }): void {
+  private onNodeDrag(event: { node: NodeShapeBase; x: number; y: number }): void {
     const nodeId = event.node.id;
     const edgeIds = this._nodeEdges.get(nodeId);
     
@@ -382,14 +655,30 @@ export class Canvas {
       const isTarget = (edge as any)._targetNodeId === nodeId;
       
       if (isSource || isTarget) {
-        const newSource = isSource 
-          ? { x: event.x, y: event.y }
-          : edge.source;
-        const newTarget = isTarget 
-          ? { x: event.x, y: event.y }
-          : edge.target;
+        // Get the other node to calculate proper boundary points
+        const sourceNodeId = (edge as any)._sourceNodeId;
+        const targetNodeId = (edge as any)._targetNodeId;
+        const sourceNode = sourceNodeId ? this._nodes.get(sourceNodeId) ?? null : null;
+        const targetNode = targetNodeId ? this._nodes.get(targetNodeId) ?? null : null;
         
-        edge.updateEndpoints(newSource, newTarget);
+        // Get center points (for nodes, use current position; for the dragged node, use new position)
+        const sourceCenter = isSource 
+          ? { x: event.x, y: event.y }
+          : sourceNode ? { x: sourceNode.x, y: sourceNode.y } : edge.source;
+        const targetCenter = isTarget 
+          ? { x: event.x, y: event.y }
+          : targetNode ? { x: targetNode.x, y: targetNode.y } : edge.target;
+        
+        // Calculate boundary-adjusted points
+        const boundaryPoints = this.calculateEdgeBoundaryPoints(
+          sourceNode,
+          targetNode,
+          sourceCenter,
+          targetCenter,
+          2
+        );
+        
+        edge.updateEndpoints(boundaryPoints.source, boundaryPoints.target);
       }
     });
   }
@@ -397,40 +686,40 @@ export class Canvas {
   /**
    * Get a node by ID
    */
-  getNode(id: string): NodeShape | undefined {
+  getNode(id: string): NodeShapeBase | undefined {
     return this._nodes.get(id);
   }
 
   /**
    * Get an edge by ID
    */
-  getEdge(id: string): EdgeShape | undefined {
+  getEdge(id: string): EdgeShapeBase | undefined {
     return this._edges.get(id);
   }
 
   /**
    * Get all nodes
    */
-  getNodes(): NodeShape[] {
+  getNodes(): NodeShapeBase[] {
     return Array.from(this._nodes.values());
   }
 
   /**
    * Get all edges
    */
-  getEdges(): EdgeShape[] {
+  getEdges(): EdgeShapeBase[] {
     return Array.from(this._edges.values());
   }
 
   /**
    * Get edges connected to a node
    */
-  getNodeEdges(nodeId: string): EdgeShape[] {
+  getNodeEdges(nodeId: string): EdgeShapeBase[] {
     const edgeIds = this._nodeEdges.get(nodeId);
     if (!edgeIds) return [];
     return Array.from(edgeIds)
       .map((id) => this._edges.get(id))
-      .filter((e): e is EdgeShape => e !== undefined);
+      .filter((e): e is EdgeShapeBase => e !== undefined);
   }
 
   /**

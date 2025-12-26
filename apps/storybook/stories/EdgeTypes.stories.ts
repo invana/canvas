@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, NodeShape, EdgeShape } from '@aspect-ui/canvas-core';
+import { Canvas, type CanvasData } from '@aspect-ui/canvas-core';
 
 interface EdgeTypesArgs {
   backgroundColor: string;
@@ -7,6 +7,82 @@ interface EdgeTypesArgs {
 }
 
 const pathTypes = ['line', 'bezier', 'orthogonal', 'orthogonal-rounded'] as const;
+const colors = ['#4a90d9', '#50c878', '#ff6b6b', '#ffd93d'];
+
+const generateEdgeTypesData = (arrowSize: number): CanvasData => {
+  const nodes = [];
+  const edges = [];
+
+  pathTypes.forEach((pathType, i) => {
+    const y = i * 90 - 135;
+    const sourceX = -200;
+    const targetX = 200;
+
+    // Source node
+    nodes.push({
+      id: `source-${pathType}`,
+      x: sourceX,
+      y,
+      shape: 'circle' as const,
+      size: 25,
+      style: {
+        fill: colors[i],
+        stroke: '#333',
+        strokeWidth: 2,
+      },
+    });
+
+    // Target node
+    nodes.push({
+      id: `target-${pathType}`,
+      x: targetX,
+      y,
+      shape: 'circle' as const,
+      size: 25,
+      style: {
+        fill: colors[i],
+        stroke: '#333',
+        strokeWidth: 2,
+      },
+    });
+
+    // Label node (non-interactive)
+    nodes.push({
+      id: `label-${pathType}`,
+      x: -320,
+      y,
+      shape: 'roundedRect' as const,
+      width: 100,
+      height: 30,
+      label: pathType,
+      interactive: false,
+      draggable: false,
+      style: {
+        fill: '#f0f0f0',
+        stroke: '#ccc',
+        strokeWidth: 1,
+        labelStyle: { fill: '#333', fontSize: 11 },
+      },
+    });
+
+    // Edge
+    edges.push({
+      id: `edge-${pathType}`,
+      source: `source-${pathType}`,
+      target: `target-${pathType}`,
+      pathType,
+      arrowTarget: 'triangle' as const,
+      arrowSize,
+      curvature: 0.4,
+      style: {
+        stroke: colors[i],
+        strokeWidth: 3,
+      },
+    });
+  });
+
+  return { nodes, edges };
+};
 
 const createEdgeTypes = (args: EdgeTypesArgs): HTMLElement => {
   const wrapper = document.createElement('div');
@@ -33,99 +109,12 @@ const createEdgeTypes = (args: EdgeTypesArgs): HTMLElement => {
       width: container.clientWidth || 800,
       height: container.clientHeight || 400,
       backgroundColor: args.backgroundColor,
+      data: generateEdgeTypesData(args.arrowSize),
+      fitPadding: 40,
     });
 
     await canvas.init();
-
-    const colors = ['#4a90d9', '#50c878', '#ff6b6b', '#ffd93d'];
-
-    // Create pairs of nodes with different edge types
-    pathTypes.forEach((pathType, i) => {
-      const y = i * 90 - 135;
-      const sourceX = -200;
-      const targetX = 200;
-
-      // Source node
-      const sourceNode = new NodeShape({
-        data: {
-          id: `source-${pathType}`,
-          x: sourceX,
-          y,
-          shape: 'circle',
-          size: 25,
-        },
-        style: {
-          fill: colors[i],
-          stroke: '#333',
-          strokeWidth: 2,
-        },
-        registry: canvas.registry,
-      });
-
-      // Target node
-      const targetNode = new NodeShape({
-        data: {
-          id: `target-${pathType}`,
-          x: targetX,
-          y,
-          shape: 'circle',
-          size: 25,
-        },
-        style: {
-          fill: colors[i],
-          stroke: '#333',
-          strokeWidth: 2,
-        },
-        registry: canvas.registry,
-      });
-
-      // Edge
-      const color = colors[i] ?? '#666';
-      const edge = new EdgeShape({
-        data: {
-          id: `edge-${pathType}`,
-          source: { x: sourceX + 25, y },
-          target: { x: targetX - 25, y },
-          pathType,
-          arrowTarget: 'triangle',
-          arrowSize: args.arrowSize,
-          curvature: 0.4,
-        },
-        style: {
-          stroke: color,
-          strokeWidth: 3,
-        },
-        registry: canvas.registry,
-      });
-
-      // Label
-      const label = new NodeShape({
-        data: {
-          id: `label-${pathType}`,
-          x: -320,
-          y,
-          shape: 'roundedRect',
-          width: 100,
-          height: 30,
-          label: pathType,
-        },
-        style: {
-          fill: '#f0f0f0',
-          stroke: '#ccc',
-          strokeWidth: 1,
-          labelStyle: { fill: '#333', fontSize: 11 },
-        },
-        registry: canvas.registry,
-        interactive: false,
-      });
-
-      canvas.addToNodeLayer(sourceNode);
-      canvas.addToNodeLayer(targetNode);
-      canvas.addToNodeLayer(label);
-      canvas.addToEdgeLayer(edge, sourceNode.id, targetNode.id);
-    });
-
-    setTimeout(() => canvas.fitContent(40), 100);
+    canvas.render();
   });
 
   return wrapper;

@@ -25,7 +25,14 @@
  */
 
 export { Canvas } from './Canvas';
-export type { CanvasOptions, CanvasState } from './Canvas';
+export type { 
+  CanvasOptions, 
+  CanvasState, 
+  CanvasData, 
+  CanvasNodeData, 
+  CanvasEdgeData, 
+  CanvasStyles 
+} from './Canvas';
 
 export { Viewport } from './Viewport';
 export type { ViewportOptions, ViewportState } from './Viewport';

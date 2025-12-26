@@ -1,10 +1,29 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, NodeShape, EdgeShape } from '@aspect-ui/canvas-core';
+import { Canvas, type CanvasData, NodeShape } from '@aspect-ui/canvas-core';
 
 interface AnimationsArgs {
   backgroundColor: string;
   animationDuration: number;
 }
+
+const generatePulseData = (): CanvasData => {
+  const colors = ['#e91e63', '#9c27b0', '#3f51b5', '#2196f3', '#00bcd4'];
+
+  const nodes = colors.map((color, i) => ({
+    id: `pulse-${i}`,
+    x: (i - 2) * 130,
+    y: 0,
+    shape: 'circle' as const,
+    size: 40,
+    style: {
+      fill: color,
+      stroke: '#333',
+      strokeWidth: 2,
+    },
+  }));
+
+  return { nodes, edges: [] };
+};
 
 const createPulseAnimation = (args: AnimationsArgs): HTMLElement => {
   const wrapper = document.createElement('div');
@@ -16,7 +35,7 @@ const createPulseAnimation = (args: AnimationsArgs): HTMLElement => {
   const info = document.createElement('div');
   info.style.padding = '10px';
   info.style.fontFamily = 'sans-serif';
-  info.innerHTML = '<strong>Pulse Animation</strong> - Nodes with pulsing effect';
+  info.innerHTML = '<strong>Pulse Animation</strong> - Nodes with pulsing effect (via custom animation)';
   wrapper.appendChild(info);
 
   const container = document.createElement('div');
@@ -31,43 +50,52 @@ const createPulseAnimation = (args: AnimationsArgs): HTMLElement => {
       width: container.clientWidth || 800,
       height: container.clientHeight || 300,
       backgroundColor: args.backgroundColor,
+      data: generatePulseData(),
+      fitPadding: 50,
     });
 
     await canvas.init();
+    canvas.render();
 
-    const colors = ['#e91e63', '#9c27b0', '#3f51b5', '#2196f3', '#00bcd4'];
-
-    colors.forEach((color, i) => {
-      const x = (i - 2) * 130;
-
-      const node = new NodeShape({
-        data: {
-          id: `pulse-${i}`,
-          x,
-          y: 0,
-          shape: 'circle',
-          size: 40,
-          animation: {
-            type: 'pulse',
-            duration: args.animationDuration + i * 200,
-            easing: 'easeInOut',
-          },
-        },
-        style: {
-          fill: color,
-          stroke: '#333',
-          strokeWidth: 2,
-        },
-        registry: canvas.registry,
-      });
-
-      canvas.addToNodeLayer(node);
+    // Add simple scale animation to nodes
+    const nodes = canvas.getNodes();
+    nodes.forEach((node, i) => {
+      const baseScale = 1;
+      const animateScale = () => {
+        const time = Date.now() / (args.animationDuration + i * 200);
+        const scale = baseScale + Math.sin(time) * 0.1;
+        node.scale.set(scale);
+        requestAnimationFrame(animateScale);
+      };
+      animateScale();
     });
-
-    setTimeout(() => canvas.fitContent(50), 100);
   });
 
   return wrapper;
+};
+
+const generateRippleData = (): CanvasData => {
+  const positions = [
+    { x: -150, y: -50, color: '#e91e63' },
+    { x: 0, y: 50, color: '#4caf50' },
+    { x: 150, y: -50, color: '#2196f3' },
+  ];
+
+  const nodes = positions.map((pos, i) => ({
+    id: `ripple-${i}`,
+    x: pos.x,
+    y: pos.y,
+    shape: 'circle' as const,
+    size: 50,
+    style: {
+      fill: pos.color,
+      stroke: '#333',
+      strokeWidth: 2,
+      rippleColor: pos.color,
+    },
+  }));
+
+  return { nodes, edges: [] };
 };
 
 const createRippleEffect = (args: AnimationsArgs): HTMLElement => {
@@ -80,7 +108,7 @@ const createRippleEffect = (args: AnimationsArgs): HTMLElement => {
   const info = document.createElement('div');
   info.style.padding = '10px';
   info.style.fontFamily = 'sans-serif';
-  info.innerHTML = '<strong>Ripple Effect</strong> - Click on nodes to trigger ripple, or they auto-ripple';
+  info.innerHTML = '<strong>Ripple Effect</strong> - Click on nodes to trigger ripple';
   wrapper.appendChild(info);
 
   const container = document.createElement('div');
@@ -95,44 +123,25 @@ const createRippleEffect = (args: AnimationsArgs): HTMLElement => {
       width: container.clientWidth || 800,
       height: container.clientHeight || 300,
       backgroundColor: args.backgroundColor,
+      data: generateRippleData(),
+      fitPadding: 50,
     });
 
     await canvas.init();
+    canvas.render();
 
-    const positions = [
-      { x: -150, y: -50, color: '#e91e63' },
-      { x: 0, y: 50, color: '#4caf50' },
-      { x: 150, y: -50, color: '#2196f3' },
-    ];
-
-    positions.forEach((pos, i) => {
-      const node = new NodeShape({
-        data: {
-          id: `ripple-${i}`,
-          x: pos.x,
-          y: pos.y,
-          shape: 'circle',
-          size: 50,
-        },
-        style: {
-          fill: pos.color,
-          stroke: '#333',
-          strokeWidth: 2,
-          rippleColor: pos.color,
-        },
-        interactive: true,
-        registry: canvas.registry,
-      });
-      
-      // Start continuous ripple animation
+    // Add ripple animations
+    const colors = ['#e91e63', '#4caf50', '#2196f3'];
+    canvas.getNodes().forEach((node, i) => {
+      // Start continuous ripple
       node.startRipple({
         duration: args.animationDuration + i * 300,
-        color: pos.color,
+        color: colors[i],
         ringCount: 3,
         loop: true,
       });
-      
-      // Also trigger single ripple on click
+
+      // Trigger single ripple on click
       node.on('pointertap', () => {
         node.stopRipple();
         node.triggerRipple({
@@ -141,14 +150,34 @@ const createRippleEffect = (args: AnimationsArgs): HTMLElement => {
           ringCount: 2,
         });
       });
-
-      canvas.addToNodeLayer(node);
     });
-
-    setTimeout(() => canvas.fitContent(50), 100);
   });
 
   return wrapper;
+};
+
+const generateGlowData = (): CanvasData => {
+  const glowColors = ['#00ff88', '#ff00ff', '#00ffff', '#ffff00'];
+
+  const nodes = glowColors.map((color, i) => ({
+    id: `glow-${i}`,
+    x: (i - 1.5) * 160,
+    y: 0,
+    shape: 'circle' as const,
+    size: 45,
+    label: color,
+    style: {
+      fill: color,
+      stroke: '#333',
+      strokeWidth: 2,
+      labelStyle: {
+        fill: '#ffffff',
+        fontSize: 10,
+      },
+    },
+  }));
+
+  return { nodes, edges: [] };
 };
 
 const createGlowEffect = (args: AnimationsArgs): HTMLElement => {
@@ -161,13 +190,12 @@ const createGlowEffect = (args: AnimationsArgs): HTMLElement => {
   const info = document.createElement('div');
   info.style.padding = '10px';
   info.style.fontFamily = 'sans-serif';
-  info.innerHTML = '<strong>Glow Effect</strong> - Nodes with animated glow';
+  info.innerHTML = '<strong>Glow Effect</strong> - Nodes with animated glow (via opacity animation)';
   wrapper.appendChild(info);
 
   const container = document.createElement('div');
   container.style.flex = '1';
   container.style.minHeight = '300px';
-  container.style.border = '#1a1a2e';
   container.style.backgroundColor = '#1a1a2e';
   wrapper.appendChild(container);
 
@@ -177,143 +205,24 @@ const createGlowEffect = (args: AnimationsArgs): HTMLElement => {
       width: container.clientWidth || 800,
       height: container.clientHeight || 300,
       backgroundColor: '#1a1a2e',
+      data: generateGlowData(),
+      fitPadding: 50,
     });
 
     await canvas.init();
+    canvas.render();
 
-    const glowColors = ['#00ff88', '#ff00ff', '#00ffff', '#ffff00'];
-
-    glowColors.forEach((color, i) => {
-      const x = (i - 1.5) * 160;
-
-      const node = new NodeShape({
-        data: {
-          id: `glow-${i}`,
-          x,
-          y: 0,
-          shape: 'circle',
-          size: 45,
-          effects: {
-            glow: {
-              enabled: true,
-              color,
-              blur: 20,
-              animated: true,
-              duration: args.animationDuration,
-            },
-          },
-        },
-        style: {
-          fill: color,
-          stroke: 'rgba(255,255,255,0.3)',
-          strokeWidth: 2,
-        },
-        registry: canvas.registry,
-      });
-
-      canvas.addToNodeLayer(node);
+    // Add glow effect via alpha animation
+    const nodes = canvas.getNodes();
+    nodes.forEach((node, i) => {
+      const animateGlow = () => {
+        const time = Date.now() / (args.animationDuration + i * 200);
+        const alpha = 0.7 + Math.sin(time) * 0.3;
+        node.alpha = alpha;
+        requestAnimationFrame(animateGlow);
+      };
+      animateGlow();
     });
-
-    setTimeout(() => canvas.fitContent(50), 100);
-  });
-
-  return wrapper;
-};
-
-const createEdgeAnimation = (args: AnimationsArgs): HTMLElement => {
-  const wrapper = document.createElement('div');
-  wrapper.style.width = '100%';
-  wrapper.style.height = '400px';
-  wrapper.style.display = 'flex';
-  wrapper.style.flexDirection = 'column';
-
-  const info = document.createElement('div');
-  info.style.padding = '10px';
-  info.style.fontFamily = 'sans-serif';
-  info.innerHTML = '<strong>Edge Animation</strong> - Animated data flow on edges';
-  wrapper.appendChild(info);
-
-  const container = document.createElement('div');
-  container.style.flex = '1';
-  container.style.minHeight = '300px';
-  container.style.border = '1px solid #ccc';
-  wrapper.appendChild(container);
-
-  requestAnimationFrame(async () => {
-    const canvas = new Canvas({
-      container,
-      width: container.clientWidth || 800,
-      height: container.clientHeight || 300,
-      backgroundColor: args.backgroundColor,
-    });
-
-    await canvas.init();
-
-    // Create nodes
-    const nodePositions = [
-      { id: 'server', x: -200, y: 0, label: 'Server', fill: '#4caf50' },
-      { id: 'process', x: 0, y: 0, label: 'Process', fill: '#2196f3' },
-      { id: 'client', x: 200, y: 0, label: 'Client', fill: '#ff9800' },
-    ];
-
-    nodePositions.forEach((pos) => {
-      const node = new NodeShape({
-        data: {
-          id: pos.id,
-          x: pos.x,
-          y: pos.y,
-          shape: 'roundedRect',
-          width: 80,
-          height: 50,
-          label: pos.label,
-        },
-        style: {
-          fill: pos.fill,
-          stroke: '#333',
-          strokeWidth: 2,
-          labelStyle: {
-            fill: '#ffffff',
-            fontSize: 12,
-            fontWeight: 'bold',
-          },
-        },
-        registry: canvas.registry,
-      });
-
-      canvas.addToNodeLayer(node);
-    });
-
-    // Create animated edges
-    const edges = [
-      { source: { x: -160, y: 0 }, target: { x: -40, y: 0 } },
-      { source: { x: 40, y: 0 }, target: { x: 160, y: 0 } },
-    ];
-
-    edges.forEach((e, i) => {
-      const edge = new EdgeShape({
-        data: {
-          id: `flow-edge-${i}`,
-          source: e.source,
-          target: e.target,
-          pathType: 'line',
-          arrowTarget: 'triangle',
-          animation: {
-            type: 'dash',
-            duration: args.animationDuration,
-            direction: 'forward',
-          },
-        },
-        style: {
-          stroke: '#666',
-          strokeWidth: 3,
-        },
-        registry: canvas.registry,
-      });
-
-      canvas.addToEdgeLayer(edge);
-    });
-
-    setTimeout(() => canvas.fitContent(50), 100);
   });
 
   return wrapper;
@@ -321,7 +230,6 @@ const createEdgeAnimation = (args: AnimationsArgs): HTMLElement => {
 
 const meta: Meta<AnimationsArgs> = {
   title: 'Canvas/Animations',
-  render: (args) => createPulseAnimation(args),
   argTypes: {
     backgroundColor: { control: 'color' },
     animationDuration: { control: { type: 'range', min: 500, max: 3000, step: 100 } },
@@ -336,7 +244,9 @@ export default meta;
 
 type Story = StoryObj<AnimationsArgs>;
 
-export const PulseAnimation: Story = {};
+export const PulseAnimation: Story = {
+  render: (args) => createPulseAnimation(args),
+};
 
 export const RippleEffect: Story = {
   render: (args) => createRippleEffect(args),
@@ -344,19 +254,20 @@ export const RippleEffect: Story = {
 
 export const GlowEffect: Story = {
   render: (args) => createGlowEffect(args),
-};
-
-export const EdgeAnimation: Story = {
-  render: (args) => createEdgeAnimation(args),
+  args: {
+    backgroundColor: '#1a1a2e',
+  },
 };
 
 export const FastAnimations: Story = {
+  render: (args) => createPulseAnimation(args),
   args: {
     animationDuration: 500,
   },
 };
 
 export const SlowAnimations: Story = {
+  render: (args) => createPulseAnimation(args),
   args: {
     animationDuration: 2500,
   },

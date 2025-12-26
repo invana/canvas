@@ -1,10 +1,54 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, NodeShape, EdgeShape } from '@aspect-ui/canvas-core';
+import { Canvas, type CanvasData } from '@aspect-ui/canvas-core';
 
 interface CanvasArgs {
   backgroundColor: string;
   nodeCount: number;
 }
+
+const shapes = ['circle', 'roundedRect', 'hexagon', 'triangle', 'diamond'] as const;
+const colors = ['#4a90d9', '#50c878', '#ff6b6b', '#ffd93d', '#6c5ce7'];
+
+const generateGraphData = (nodeCount: number): CanvasData => {
+  const nodes = [];
+  const edges = [];
+
+  for (let i = 0; i < nodeCount; i++) {
+    nodes.push({
+      id: `node-${i}`,
+      x: (i % 5) * 150 - 300,
+      y: Math.floor(i / 5) * 120 - 150,
+      shape: shapes[i % shapes.length],
+      size: 40,
+      label: `Node ${i + 1}`,
+      style: {
+        fill: colors[i % colors.length],
+        stroke: '#333',
+        strokeWidth: 2,
+        labelPosition: 'bottom' as const,
+        labelOffsetY: 10,
+        labelStyle: { fill: '#333', fontSize: 11 },
+      },
+    });
+  }
+
+  // Create edges connecting adjacent nodes
+  for (let i = 0; i < Math.min(nodeCount - 1, 5); i++) {
+    edges.push({
+      id: `edge-${i}`,
+      source: `node-${i}`,
+      target: `node-${i + 1}`,
+      pathType: 'bezier' as const,
+      arrowTarget: 'triangle' as const,
+      style: {
+        stroke: '#666',
+        strokeWidth: 2,
+      },
+    });
+  }
+
+  return { nodes, edges };
+};
 
 const createBasicCanvas = (args: CanvasArgs): HTMLElement => {
   const wrapper = document.createElement('div');
@@ -46,65 +90,15 @@ const createBasicCanvas = (args: CanvasArgs): HTMLElement => {
       width: container.clientWidth || 800,
       height: container.clientHeight || 500,
       backgroundColor: args.backgroundColor,
+      data: generateGraphData(args.nodeCount),
+      fitPadding: 50,
     });
 
     await canvas.init();
+    canvas.render();
 
     const rendererType = canvas.getRendererType();
     info.innerHTML = `Renderer: <strong>${rendererType}</strong> | Viewport: ${canvas.width}x${canvas.height}`;
-
-    // Create nodes
-    const shapes = ['circle', 'roundedRect', 'hexagon', 'triangle', 'diamond'] as const;
-    const colors = ['#4a90d9', '#50c878', '#ff6b6b', '#ffd93d', '#6c5ce7'];
-
-    for (let i = 0; i < args.nodeCount; i++) {
-      const node = new NodeShape({
-        data: {
-          id: `node-${i}`,
-          x: (i % 5) * 150 - 300,
-          y: Math.floor(i / 5) * 120 - 150,
-          shape: shapes[i % shapes.length],
-          size: 40,
-          label: `Node ${i + 1}`,
-        },
-        style: {
-          fill: colors[i % colors.length],
-          stroke: '#333',
-          strokeWidth: 2,
-          labelPosition: 'bottom',
-          labelOffsetY: 10,
-          labelStyle: { fill: '#333', fontSize: 11 },
-        },
-        registry: canvas.registry,
-      });
-      canvas.addToNodeLayer(node);
-    }
-
-    // Create some edges
-    if (args.nodeCount > 1) {
-      for (let i = 0; i < Math.min(args.nodeCount - 1, 5); i++) {
-        const sourceNode = canvas.nodeLayer?.children[i] as NodeShape | undefined;
-        const targetNode = canvas.nodeLayer?.children[i + 1] as NodeShape | undefined;
-        
-        if (sourceNode && targetNode) {
-          const edge = new EdgeShape({
-            data: {
-              id: `edge-${i}`,
-              source: { x: sourceNode.x, y: sourceNode.y },
-              target: { x: targetNode.x, y: targetNode.y },
-              pathType: 'bezier',
-              arrowTarget: 'triangle',
-            },
-            style: {
-              stroke: '#666',
-              strokeWidth: 2,
-            },
-            registry: canvas.registry,
-          });
-          canvas.addToEdgeLayer(edge, sourceNode.id, targetNode.id);
-        }
-      }
-    }
 
     // Button handlers
     document.getElementById('fit-btn')?.addEventListener('click', () => {
@@ -117,25 +111,25 @@ const createBasicCanvas = (args: CanvasArgs): HTMLElement => {
 
     let nodeCounter = args.nodeCount;
     document.getElementById('add-node-btn')?.addEventListener('click', () => {
-      const node = new NodeShape({
-        data: {
+      const currentData = canvas.getData();
+      if (currentData) {
+        currentData.nodes.push({
           id: `node-${nodeCounter}`,
           x: Math.random() * 400 - 200,
           y: Math.random() * 300 - 150,
           shape: shapes[nodeCounter % shapes.length],
           size: 35,
           label: `New ${nodeCounter + 1}`,
-        },
-        style: {
-          fill: colors[nodeCounter % colors.length],
-          stroke: '#333',
-          strokeWidth: 2,
-        },
-        registry: canvas.registry,
-      });
-      canvas.addToNodeLayer(node);
-      nodeCounter++;
-      info.innerHTML = `Added node ${nodeCounter}. Total: ${canvas.nodeLayer?.children.length ?? 0}`;
+          style: {
+            fill: colors[nodeCounter % colors.length],
+            stroke: '#333',
+            strokeWidth: 2,
+          },
+        });
+        canvas.setData(currentData);
+        nodeCounter++;
+        info.innerHTML = `Added node ${nodeCounter}. Total: ${currentData.nodes.length}`;
+      }
     });
   });
 

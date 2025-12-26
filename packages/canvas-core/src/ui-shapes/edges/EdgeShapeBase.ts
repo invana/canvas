@@ -1,44 +1,45 @@
 /**
- * EdgeShape
+ * EdgeShapeBase
  * 
- * Visual representation of an edge (connection) between nodes.
- * Uses path and arrow primitives from the Registry for rendering.
+ * Abstract base class for all edge shapes.
+ * Provides common functionality: hover, selection, arrows, and style management.
+ * Subclasses must implement: drawPath(), calculateTangents()
  * 
  * @example
  * ```typescript
- * const edge = new EdgeShape({
- *   data: {
- *     id: 'edge1',
- *     source: { x: 100, y: 100 },
- *     target: { x: 300, y: 200 },
- *     pathType: 'bezier',
- *     arrowTarget: 'triangle',
- *   },
- *   style: { stroke: '#666', strokeWidth: 2 },
- *   registry,
- * });
- * 
- * canvas.edgeLayer.addChild(edge);
+ * class CustomEdge extends EdgeShapeBase {
+ *   get pathType() { return 'custom'; }
+ *   
+ *   protected drawPath(source: Point, target: Point, style: PathStyle): void {
+ *     // Custom path rendering
+ *   }
+ *   
+ *   protected calculateTangents(source: Point, target: Point): Tangents {
+ *     // Calculate path tangents for arrow placement
+ *   }
+ * }
  * ```
  */
 
-import type { PathStyle, Point, Direction } from '../primitives/paths';
-import type { ArrowType, ArrowStyle } from '../primitives/arrows';
-import { getArrowOffset } from '../primitives/arrows';
-import {
-  getLineTangentAtEnd,
-  getQuadraticTangentAtEnd,
-  getQuadraticTangentAtStart,
-  calculateQuadraticControl,
-  getOrthogonalTangentAtEnd,
-  getOrthogonalTangentAtStart,
-} from '../primitives/paths';
-import { BaseShape, type BaseShapeData, type BaseShapeOptions } from './BaseShape';
+import type { PathStyle, Point, Direction } from '../../primitives/paths';
+import type { ArrowType, ArrowStyle } from '../../primitives/arrows';
+import { getArrowOffset } from '../../primitives/arrows';
+import { BaseShape, type BaseShapeData, type BaseShapeOptions } from '../BaseShape';
 
 /**
  * Edge path types
  */
 export type EdgePathType = 'line' | 'bezier' | 'orthogonal' | 'orthogonal-rounded' | string;
+
+/**
+ * Tangent information for arrow placement
+ */
+export interface EdgeTangents {
+  /** Angle at source point (radians) */
+  sourceTangent: number;
+  /** Angle at target point (radians) */
+  targetTangent: number;
+}
 
 /**
  * Data for an edge
@@ -109,9 +110,9 @@ export interface EdgeShapeOptions extends Omit<BaseShapeOptions<EdgeData>, 'styl
 }
 
 /**
- * Edge shape class
+ * Abstract base class for edge shapes
  */
-export class EdgeShape extends BaseShape<EdgeData> {
+export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
   protected _edgeStyle: EdgeStyle;
   private _selected: boolean = false;
   private _hovered: boolean = false;
@@ -134,6 +135,30 @@ export class EdgeShape extends BaseShape<EdgeData> {
     // Initial render
     this.forceRender();
   }
+
+  // =========================================================================
+  // ABSTRACT METHODS - Must be implemented by subclasses
+  // =========================================================================
+
+  /**
+   * Get the path type identifier
+   */
+  abstract get pathType(): EdgePathType;
+
+  /**
+   * Draw the path between source and target points
+   * @param source - Adjusted source point (after arrow offset)
+   * @param target - Adjusted target point (after arrow offset)
+   * @param style - Path style to use
+   */
+  protected abstract drawPath(source: Point, target: Point, style: PathStyle): void;
+
+  /**
+   * Calculate tangent angles at source and target for arrow placement
+   * @param source - Source point
+   * @param target - Target point
+   */
+  protected abstract calculateTangents(source: Point, target: Point): EdgeTangents;
 
   // =========================================================================
   // PROPERTIES
@@ -173,10 +198,6 @@ export class EdgeShape extends BaseShape<EdgeData> {
     return this._data.target;
   }
 
-  get pathType(): EdgePathType {
-    return this._data.pathType ?? 'line';
-  }
-
   // =========================================================================
   // RENDERING
   // =========================================================================
@@ -192,9 +213,12 @@ export class EdgeShape extends BaseShape<EdgeData> {
     const sourceOffset = getArrowOffset(sourceArrow as ArrowType, arrowSize);
     const targetOffset = getArrowOffset(targetArrow as ArrowType, arrowSize);
 
-    // Get adjusted endpoints for arrow positioning
-    const { adjustedSource, adjustedTarget, sourceTangent, targetTangent } =
-      this.calculateAdjustedEndpoints(source, target, sourceOffset, targetOffset);
+    // Get tangents for arrow placement
+    const { sourceTangent, targetTangent } = this.calculateTangents(source, target);
+
+    // Calculate adjusted endpoints
+    const adjustedSource = this.adjustPointForArrow(source, sourceTangent, sourceOffset);
+    const adjustedTarget = this.adjustPointForArrow(target, targetTangent + Math.PI, targetOffset);
 
     // Draw path
     this.drawPath(adjustedSource, adjustedTarget, style);
@@ -207,7 +231,6 @@ export class EdgeShape extends BaseShape<EdgeData> {
     };
 
     if (sourceArrow !== 'none') {
-      // Source arrow points back toward source
       this.drawArrowAtPoint(source, sourceTangent + Math.PI, arrowSize, sourceArrow as ArrowType, arrowStyle);
     }
 
@@ -217,36 +240,19 @@ export class EdgeShape extends BaseShape<EdgeData> {
   }
 
   /**
-   * Draw the path between source and target
+   * Adjust a point along a tangent for arrow offset
    */
-  private drawPath(source: Point, target: Point, style: PathStyle): void {
-    const pathType = this.pathType;
-    const pathDrawer = this._registry.getPath(pathType);
-
-    const params: Record<string, unknown> = {
-      from: source,
-      to: target,
-      curvature: this._data.curvature ?? 0.3,
-      sourceDirection: this._data.sourceDirection,
-      targetDirection: this._data.targetDirection,
-      cornerRadius: 8,
+  protected adjustPointForArrow(point: Point, tangent: number, offset: number): Point {
+    return {
+      x: point.x + Math.cos(tangent) * offset,
+      y: point.y + Math.sin(tangent) * offset,
     };
-
-    if (pathDrawer) {
-      pathDrawer(this._graphics, params, style);
-    } else {
-      // Fallback to line
-      const lineDrawer = this._registry.getPath('line');
-      if (lineDrawer) {
-        lineDrawer(this._graphics, { from: source, to: target }, style);
-      }
-    }
   }
 
   /**
    * Draw arrow at a specific point
    */
-  private drawArrowAtPoint(
+  protected drawArrowAtPoint(
     point: Point,
     angle: number,
     size: number,
@@ -262,90 +268,9 @@ export class EdgeShape extends BaseShape<EdgeData> {
   }
 
   /**
-   * Calculate adjusted endpoints considering arrow offsets
-   */
-  private calculateAdjustedEndpoints(
-    source: Point,
-    target: Point,
-    sourceOffset: number,
-    targetOffset: number
-  ): {
-    adjustedSource: Point;
-    adjustedTarget: Point;
-    sourceTangent: number;
-    targetTangent: number;
-  } {
-    const pathType = this.pathType;
-
-    switch (pathType) {
-      case 'bezier': {
-        const control = calculateQuadraticControl(source, target, this._data.curvature ?? 0.3);
-        const sourceTangent = getQuadraticTangentAtStart(source, control);
-        const targetTangent = getQuadraticTangentAtEnd(control, target);
-
-        return {
-          adjustedSource: {
-            x: source.x + Math.cos(sourceTangent) * sourceOffset,
-            y: source.y + Math.sin(sourceTangent) * sourceOffset,
-          },
-          adjustedTarget: {
-            x: target.x - Math.cos(targetTangent) * targetOffset,
-            y: target.y - Math.sin(targetTangent) * targetOffset,
-          },
-          sourceTangent,
-          targetTangent,
-        };
-      }
-
-      case 'orthogonal':
-      case 'orthogonal-rounded': {
-        const params = {
-          from: source,
-          to: target,
-          sourceDirection: this._data.sourceDirection,
-          targetDirection: this._data.targetDirection,
-        };
-        const sourceTangent = getOrthogonalTangentAtStart(params);
-        const targetTangent = getOrthogonalTangentAtEnd(params);
-
-        return {
-          adjustedSource: {
-            x: source.x + Math.cos(sourceTangent) * sourceOffset,
-            y: source.y + Math.sin(sourceTangent) * sourceOffset,
-          },
-          adjustedTarget: {
-            x: target.x - Math.cos(targetTangent) * targetOffset,
-            y: target.y - Math.sin(targetTangent) * targetOffset,
-          },
-          sourceTangent,
-          targetTangent,
-        };
-      }
-
-      case 'line':
-      default: {
-        const tangent = getLineTangentAtEnd(source, target);
-
-        return {
-          adjustedSource: {
-            x: source.x + Math.cos(tangent) * sourceOffset,
-            y: source.y + Math.sin(tangent) * sourceOffset,
-          },
-          adjustedTarget: {
-            x: target.x - Math.cos(tangent) * targetOffset,
-            y: target.y - Math.sin(tangent) * targetOffset,
-          },
-          sourceTangent: tangent,
-          targetTangent: tangent,
-        };
-      }
-    }
-  }
-
-  /**
    * Get the active style based on state (selected, hovered)
    */
-  private getActiveStyle(): PathStyle {
+  protected getActiveStyle(): PathStyle {
     const base = this._edgeStyle;
     let stroke = base.stroke;
     let strokeWidth = base.strokeWidth;
@@ -393,7 +318,6 @@ export class EdgeShape extends BaseShape<EdgeData> {
   updateEndpoints(source: Point, target: Point): void {
     this._data.source = source;
     this._data.target = target;
-    // Use forceRender to ensure immediate redraw
     this.forceRender();
   }
 

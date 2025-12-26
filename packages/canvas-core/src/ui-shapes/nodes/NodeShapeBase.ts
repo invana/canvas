@@ -1,29 +1,52 @@
 /**
- * NodeShape
+ * NodeShapeBase
  * 
- * Visual representation of a node on the canvas.
- * Uses primitives from the Registry for rendering.
+ * Abstract base class for all node shapes.
+ * Provides common functionality: dragging, selection, hover, ripple animations, and labels.
+ * Subclasses must implement: render(), getBoundaryPoint(), getShapeBounds()
  * 
  * @example
  * ```typescript
- * const node = new NodeShape({
- *   data: { id: 'node1', x: 100, y: 100, shape: 'circle', size: 40 },
- *   style: { fill: '#4a90d9', stroke: '#2d5a87', strokeWidth: 2 },
- *   registry,
- * });
- * 
- * canvas.nodeLayer.addChild(node);
+ * class CustomNode extends NodeShapeBase {
+ *   protected renderShape(graphics: Graphics, style: ShapeStyle): void {
+ *     // Custom shape rendering
+ *   }
+ *   
+ *   getBoundaryPoint(targetPoint: Point, offset: number): Point {
+ *     // Custom boundary calculation
+ *   }
+ *   
+ *   protected getShapeBounds(): Bounds {
+ *     // Return shape bounds for label positioning
+ *   }
+ * }
  * ```
  */
 
-import type { ShapeStyle } from '../primitives/shapes';
-import type { LabelStyle } from '../primitives/labels';
-import { createPositionedLabel, type LabelPosition } from '../primitives/labels';
-import { BaseShape, type BaseShapeData, type BaseShapeStyle, type BaseShapeOptions } from './BaseShape';
+import type { ShapeStyle } from '../../primitives/shapes';
+import type { LabelStyle } from '../../primitives/labels';
+import { createPositionedLabel, type LabelPosition } from '../../primitives/labels';
+import { BaseShape, type BaseShapeData, type BaseShapeStyle, type BaseShapeOptions } from '../BaseShape';
 import { FederatedPointerEvent, Graphics, Ticker } from 'pixi.js';
-import { drawRippleEffect, calculateRippleRadius, calculateRippleAlpha } from '../primitives/effects';
-import { getRectIntersection } from '../primitives/shapes/rect';
-import { getPolygonIntersection } from '../primitives/shapes/polygon';
+import { drawRippleEffect, calculateRippleRadius, calculateRippleAlpha } from '../../primitives/effects';
+
+/**
+ * Point interface for coordinates
+ */
+export interface Point {
+  x: number;
+  y: number;
+}
+
+/**
+ * Bounds interface for shape dimensions
+ */
+export interface Bounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 /**
  * Node shape types
@@ -108,13 +131,13 @@ export interface NodeShapeOptions extends Omit<BaseShapeOptions<NodeData>, 'styl
   /** Enable node selection */
   selectable?: boolean;
   /** Callback when node is dragged */
-  onDrag?: (node: NodeShape, x: number, y: number) => void;
+  onDrag?: (node: NodeShapeBase, x: number, y: number) => void;
 }
 
 /**
- * Node shape class
+ * Abstract base class for node shapes
  */
-export class NodeShape extends BaseShape<NodeData> {
+export abstract class NodeShapeBase extends BaseShape<NodeData> {
   protected _nodeStyle: NodeStyle;
   private _selected: boolean = false;
   private _hovered: boolean = false;
@@ -122,7 +145,7 @@ export class NodeShape extends BaseShape<NodeData> {
   private _selectable: boolean;
   
   // Drag callback
-  private _onDrag?: (node: NodeShape, x: number, y: number) => void;
+  private _onDrag?: (node: NodeShapeBase, x: number, y: number) => void;
   
   // Drag state
   private _isDragging: boolean = false;
@@ -172,6 +195,28 @@ export class NodeShape extends BaseShape<NodeData> {
   }
 
   // =========================================================================
+  // ABSTRACT METHODS - Must be implemented by subclasses
+  // =========================================================================
+
+  /**
+   * Calculate the boundary point of this node for an edge connection.
+   * @param targetPoint - The point the edge connects to
+   * @param offset - Additional offset from boundary
+   * @returns The point on the node boundary facing the target point
+   */
+  abstract getBoundaryPoint(targetPoint: Point, offset?: number): Point;
+
+  /**
+   * Get bounds for label positioning
+   */
+  protected abstract getShapeBounds(): Bounds;
+
+  /**
+   * Get the shape type identifier
+   */
+  abstract get shapeType(): NodeShapeType;
+
+  // =========================================================================
   // PROPERTIES
   // =========================================================================
 
@@ -201,45 +246,39 @@ export class NodeShape extends BaseShape<NodeData> {
     return this._hovered;
   }
 
-  get shapeType(): NodeShapeType {
-    return this._data.shape ?? 'circle';
-  }
-
   /**
    * Set drag callback
    */
-  set onDrag(callback: ((node: NodeShape, x: number, y: number) => void) | undefined) {
+  set onDrag(callback: ((node: NodeShapeBase, x: number, y: number) => void) | undefined) {
     this._onDrag = callback;
   }
 
-  // =========================================================================
-  // RENDERING
-  // =========================================================================
-
-  protected render(): void {
-    const shapeType = this.shapeType;
-    const style = this.getActiveStyle();
-
-    // Get shape dimensions
-    const params = this.getShapeParams();
-
-    // Draw using registry
-    const drawer = this._registry.getShape(shapeType);
-    if (drawer) {
-      drawer(this._graphics, params, style);
-    } else {
-      // Fallback to circle
-      const circleDrawer = this._registry.getShape('circle');
-      if (circleDrawer) {
-        circleDrawer(this._graphics, { x: 0, y: 0, radius: params.size ?? 30 }, style);
-      }
-    }
+  /**
+   * Check if node is currently being dragged
+   */
+  get isDragging(): boolean {
+    return this._isDragging;
   }
+  
+  /**
+   * Check if node is draggable
+   */
+  get draggable(): boolean {
+    return this._draggable;
+  }
+  
+  set draggable(value: boolean) {
+    this._draggable = value;
+  }
+
+  // =========================================================================
+  // STYLE HELPERS
+  // =========================================================================
 
   /**
    * Get the active style based on state (selected, hovered)
    */
-  private getActiveStyle(): ShapeStyle {
+  protected getActiveStyle(): ShapeStyle {
     const base = this._nodeStyle;
     let fill = base.fill;
     let stroke = base.stroke;
@@ -260,25 +299,6 @@ export class NodeShape extends BaseShape<NodeData> {
       stroke,
       strokeWidth,
       strokeAlpha: base.strokeAlpha,
-    };
-  }
-
-  /**
-   * Get parameters for the shape drawer
-   */
-  private getShapeParams(): Record<string, unknown> {
-    const data = this._data;
-    return {
-      x: 0,
-      y: 0,
-      size: data.size ?? 30,
-      radius: data.size ?? data.cornerRadius ?? 30,
-      width: data.width ?? data.size ?? 60,
-      height: data.height ?? data.size ?? 40,
-      cornerRadius: data.cornerRadius ?? 8,
-      radiusX: data.width ?? 40,
-      radiusY: data.height ?? 25,
-      centered: true,
     };
   }
 
@@ -312,24 +332,8 @@ export class NodeShape extends BaseShape<NodeData> {
     this.addLabel('main', label);
   }
 
-  /**
-   * Get bounds for label positioning
-   */
-  private getShapeBounds(): { x: number; y: number; width: number; height: number } {
-    const size = this._data.size ?? 30;
-    const width = this._data.width ?? size * 2;
-    const height = this._data.height ?? size * 2;
-
-    return {
-      x: -width / 2,
-      y: -height / 2,
-      width,
-      height,
-    };
-  }
-
   // =========================================================================
-  // INTERACTION
+  // INTERACTION - Drag & Drop
   // =========================================================================
 
   private onPointerOver(): void {
@@ -453,149 +457,6 @@ export class NodeShape extends BaseShape<NodeData> {
 
     if (style.labelPosition !== undefined || style.labelStyle !== undefined) {
       this.updateLabel();
-    }
-  }
-  
-  /**
-   * Check if node is currently being dragged
-   */
-  get isDragging(): boolean {
-    return this._isDragging;
-  }
-  
-  /**
-   * Check if node is draggable
-   */
-  get draggable(): boolean {
-    return this._draggable;
-  }
-  
-  set draggable(value: boolean) {
-    this._draggable = value;
-  }
-
-  // =========================================================================
-  // BOUNDARY CALCULATION
-  // =========================================================================
-
-  /**
-   * Calculate the boundary point of this node for an edge connection.
-   * This method can be overridden in custom node shapes for precise boundary calculation.
-   * 
-   * @param targetPoint - The point the edge connects to (other node center or point)
-   * @param offset - Additional offset from boundary (for stroke width, hover effects, etc.)
-   * @returns The point on the node boundary facing the target point
-   */
-  getBoundaryPoint(
-    targetPoint: { x: number; y: number },
-    offset: number = 0
-  ): { x: number; y: number } {
-    const nodeX = this.x;
-    const nodeY = this.y;
-    
-    // Calculate angle from node center to the target point
-    const angle = Math.atan2(targetPoint.y - nodeY, targetPoint.x - nodeX);
-    
-    // Get node shape properties
-    const shapeType = this.shapeType;
-    const data = this._data;
-    const size = data.size ?? 30;
-    const width = data.width ?? size * 2;
-    const height = data.height ?? size * 2;
-    
-    // Calculate boundary based on shape type
-    return this.calculateBoundaryForShape(shapeType, angle, size, width, height, offset);
-  }
-
-  /**
-   * Calculate boundary point for a specific shape type.
-   * Override this method to add support for custom shapes.
-   */
-  protected calculateBoundaryForShape(
-    shapeType: string,
-    angle: number,
-    size: number,
-    width: number,
-    height: number,
-    offset: number
-  ): { x: number; y: number } {
-    const nodeX = this.x;
-    const nodeY = this.y;
-
-    switch (shapeType) {
-      case 'circle': {
-        const radius = size + offset;
-        return {
-          x: nodeX + Math.cos(angle) * radius,
-          y: nodeY + Math.sin(angle) * radius,
-        };
-      }
-
-      case 'ellipse': {
-        const radiusX = (this._data.width ?? size * 2) / 2 + offset;
-        const radiusY = (this._data.height ?? size) / 2 + offset;
-        const cos = Math.cos(angle);
-        const sin = Math.sin(angle);
-        const denominator = Math.sqrt((radiusY * cos) ** 2 + (radiusX * sin) ** 2);
-        const r = (radiusX * radiusY) / denominator;
-        return {
-          x: nodeX + cos * r,
-          y: nodeY + sin * r,
-        };
-      }
-
-      case 'rect':
-      case 'roundedRect': {
-        return getRectIntersection(
-          { x: nodeX, y: nodeY, width, height },
-          angle,
-          offset
-        );
-      }
-
-      case 'triangle':
-        return getPolygonIntersection(
-          { x: nodeX, y: nodeY, radius: size, sides: 3 },
-          angle,
-          offset
-        );
-
-      case 'diamond':
-        return getPolygonIntersection(
-          { x: nodeX, y: nodeY, radius: size, sides: 4, rotation: 0 },
-          angle,
-          offset
-        );
-
-      case 'pentagon':
-        return getPolygonIntersection(
-          { x: nodeX, y: nodeY, radius: size, sides: 5 },
-          angle,
-          offset
-        );
-
-      case 'hexagon':
-        return getPolygonIntersection(
-          { x: nodeX, y: nodeY, radius: size, sides: 6 },
-          angle,
-          offset
-        );
-
-      case 'octagon':
-        return getPolygonIntersection(
-          { x: nodeX, y: nodeY, radius: size, sides: 8 },
-          angle,
-          offset
-        );
-
-      default: {
-        // Default to circle for unknown shapes
-        const radius = size + offset;
-        return {
-          x: nodeX + Math.cos(angle) * radius,
-          y: nodeY + Math.sin(angle) * radius,
-        };
-      }
     }
   }
 
