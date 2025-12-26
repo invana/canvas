@@ -36,8 +36,13 @@ import { Application, Container } from 'pixi.js';
 import { Viewport, type ViewportOptions } from '../viewport/Viewport';
 import { Registry } from '../rendering/Registry';
 import { Renderer, type NodeInput, type EdgeInput } from '../rendering/Renderer';
+import { SceneGraph } from '../scene/SceneGraph';
+import { QueryEngine, type QueryFilter, type QueryResult } from '../scene/QueryEngine';
+import { Relationships, type RelationshipInfo, type PathResult } from '../scene/Relationships';
+import type { Bounds } from '../scene/SpatialIndex';
 import type { NodeStyle } from '../elements/nodes';
 import type { EdgeStyle } from '../elements/edges';
+import type { NodeData, EdgeData } from '../types';
 
 // ============================================================================
 // TYPES
@@ -132,6 +137,7 @@ export class Canvas {
   private _viewport: Viewport | null = null;
   private _registry: Registry;
   private _renderer: Renderer | null = null;
+  private _scene: SceneGraph;
   private _initialized: boolean = false;
 
   // Layers
@@ -147,6 +153,7 @@ export class Canvas {
     this._container = options.container;
     this._registry = options.registry ?? new Registry();
     this._styles = options.styles ?? {};
+    this._scene = new SceneGraph();
 
     this._options = {
       container: options.container,
@@ -279,6 +286,11 @@ export class Canvas {
     return this._renderer;
   }
 
+  /** The SceneGraph for data management and queries */
+  get scene(): SceneGraph {
+    return this._scene;
+  }
+
   /** Background layer container */
   get backgroundLayer(): Container | null {
     return this._backgroundLayer;
@@ -347,12 +359,34 @@ export class Canvas {
     // Clear existing content
     this._renderer.clear();
     this._backgroundLayer?.removeChildren();
+    this._scene.clear();
 
     // Add all nodes first
     this._renderer.addNodes(dataToRender.nodes || []);
+    
+    // Register nodes in scene graph
+    (dataToRender.nodes || []).forEach(node => {
+      this._scene.addNode({
+        id: node.id as string,
+        x: node.x,
+        y: node.y,
+      });
+    });
 
     // Add all edges (nodes must exist for ID resolution)
     this._renderer.addEdges(dataToRender.edges || []);
+    
+    // Register edges in scene graph
+    (dataToRender.edges || []).forEach(edge => {
+      // Only add edges with string IDs (not points)
+      if (typeof edge.source === 'string' && typeof edge.target === 'string') {
+        this._scene.addEdge({
+          id: edge.id as string,
+          source: edge.source,
+          target: edge.target,
+        });
+      }
+    });
 
     // Fit content if enabled
     if (this._options.fitOnRender) {
@@ -554,6 +588,88 @@ export class Canvas {
   }
 
   // =========================================================================
+  // SCENE GRAPH QUERIES
+  // =========================================================================
+
+  /**
+   * Query nodes with filters
+   */
+  queryNodes(filter: QueryFilter): QueryResult<NodeData> {
+    return QueryEngine.queryNodes(this._scene.getNodeMap(), filter);
+  }
+
+  /**
+   * Query edges with filters
+   */
+  queryEdges(filter: QueryFilter): QueryResult<EdgeData> {
+    return QueryEngine.queryEdges(this._scene.getEdgeMap(), filter);
+  }
+
+  /**
+   * Query nodes within rectangular bounds
+   */
+  queryNodesByBounds(bounds: Bounds): any[] {
+    return this._scene.queryNodesByBounds(bounds);
+  }
+
+  /**
+   * Query nodes within radius of a point
+   */
+  queryNodesByRadius(center: { x: number; y: number }, radius: number): any[] {
+    return this._scene.queryNodesByRadius(center, radius);
+  }
+
+  /**
+   * Find nearest node to a point
+   */
+  findNearestNode(point: { x: number; y: number }, maxDistance?: number): any {
+    return this._scene.findNearestNode(point, maxDistance);
+  }
+
+  /**
+   * Get relationship information for a node
+   */
+  getNodeRelationships(nodeId: string): RelationshipInfo {
+    return Relationships.getNodeRelationships(
+      nodeId,
+      this._scene.getEdgeMap(),
+      this._scene.getNodeEdgesMap()
+    );
+  }
+
+  /**
+   * Get neighbors of a node
+   */
+  getNeighbors(
+    nodeId: string,
+    options?: { direction?: 'incoming' | 'outgoing' | 'both' }
+  ): string[] {
+    return Relationships.getNeighbors(
+      nodeId,
+      this._scene.getEdgeMap(),
+      this._scene.getNodeEdgesMap(),
+      options
+    );
+  }
+
+  /**
+   * Find path between two nodes
+   */
+  findPath(
+    startId: string,
+    endId: string,
+    options?: { maxDepth?: number; direction?: 'incoming' | 'outgoing' | 'both' }
+  ): PathResult {
+    return Relationships.findPath(
+      startId,
+      endId,
+      this._scene.getEdgeMap(),
+      this._scene.getNodeEdgesMap(),
+      options
+    );
+  }
+
+  // =========================================================================
   // CLEANUP
   // =========================================================================
 
@@ -563,6 +679,7 @@ export class Canvas {
   destroy(): void {
     this._renderer?.destroy();
     this._renderer = null;
+    this._scene.destroy();
 
     this._viewport?.destroy();
     this._app?.destroy(true, { children: true });

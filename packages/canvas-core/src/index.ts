@@ -113,8 +113,44 @@ export type { LayerConfig, LayerType } from './types';
 // SCENE
 // ============================================================================
 
-export { SceneGraph } from './scene';
-export type { SceneGraphEventType, SceneGraphEventCallback } from './scene';
+export { SceneGraph, QueryEngine, Relationships, SpatialIndex } from './scene';
+export type { 
+  SceneGraphEventType, 
+  SceneGraphEventCallback,
+  QueryFilter,
+  QueryResult,
+  RelationshipInfo,
+  PathResult,
+  SpatialIndexOptions,
+} from './scene';
+export type { Bounds as SceneBounds } from './scene';
+
+// ============================================================================
+// INTERACTION
+// ============================================================================
+
+export { 
+  InteractionManager,
+  SelectionManager,
+  DragManager,
+  HoverManager,
+} from './interaction';
+export type {
+  InteractionConfig,
+  InteractionEventType,
+  InteractionEventCallback,
+  SelectableElement,
+  SelectionConfig,
+  SelectionEventCallback,
+  DragConfig,
+  DragData,
+  DragEventType,
+  DragEventCallback,
+  HoverableElement,
+  HoverConfig,
+  HoverEventType,
+  HoverEventCallback,
+} from './interaction';
 
 // ============================================================================
 // STYLE

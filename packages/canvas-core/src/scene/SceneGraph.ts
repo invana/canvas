@@ -10,9 +10,11 @@
  * - Provide lookup by ID
  * - Emit events when elements are added/removed
  * - Query relationships (edges connected to a node)
+ * - Spatial indexing for fast proximity queries
  */
 
 import type { NodeData, EdgeData } from '../types';
+import { SpatialIndex, type Bounds } from './SpatialIndex';
 
 export type SceneGraphEventType = 
   | 'nodeAdded'
@@ -49,6 +51,7 @@ export class SceneGraph {
   private readonly edges: Map<string, EdgeEntry> = new Map();
   private readonly nodeEdges: Map<string, Set<string>> = new Map(); // nodeId -> edgeIds
   private readonly listeners: Map<SceneGraphEventType, Set<SceneGraphEventCallback>> = new Map();
+  private readonly spatialIndex: SpatialIndex = new SpatialIndex();
 
   // ===========================================================================
   // Event System
@@ -91,9 +94,9 @@ export class SceneGraph {
     
     this.nodes.set(data.id, { id: data.id, data });
     this.nodeEdges.set(data.id, new Set());
+    this.spatialIndex.insert(data);
     this.emit('nodeAdded', data.id);
   }
-
   /**
    * Remove a node from the scene
    */
@@ -102,6 +105,7 @@ export class SceneGraph {
     
     this.nodes.delete(id);
     this.nodeEdges.delete(id);
+    this.spatialIndex.remove(id);
     this.emit('nodeRemoved', id);
   }
 
@@ -229,6 +233,62 @@ export class SceneGraph {
   // ===========================================================================
   // Bulk Operations
   // ===========================================================================
+  // ===========================================================================
+  // Spatial Queries
+  // ===========================================================================
+
+  /**
+   * Query nodes within a rectangular bounds
+   */
+  queryNodesByBounds(bounds: Bounds): NodeData[] {
+    const nodeIds = this.spatialIndex.queryBounds(bounds);
+    return Array.from(nodeIds)
+      .map(id => this.nodes.get(id)?.data)
+      .filter((n): n is NodeData => n !== undefined);
+  }
+
+  /**
+   * Query nodes within a radius of a point
+   */
+  queryNodesByRadius(center: { x: number; y: number }, radius: number): NodeData[] {
+    const nodeIds = this.spatialIndex.queryRadius(center, radius);
+    return Array.from(nodeIds)
+      .map(id => this.nodes.get(id)?.data)
+      .filter((n): n is NodeData => n !== undefined);
+  }
+
+  /**
+   * Find nearest node to a point
+   */
+  findNearestNode(point: { x: number; y: number }, maxDistance?: number): NodeData | null {
+    const nodeId = this.spatialIndex.findNearest(point, maxDistance);
+    return nodeId ? this.nodes.get(nodeId)?.data ?? null : null;
+  }
+
+  /**
+   * Get internal node map (for QueryEngine)
+   */
+  getNodeMap(): Map<string, NodeEntry> {
+    return this.nodes;
+  }
+
+  /**
+   * Get internal edge map (for QueryEngine)
+   */
+  getEdgeMap(): Map<string, EdgeEntry> {
+    return this.edges;
+  }
+
+  /**
+   * Get node-edges relationship map (for Relationships)
+   */
+  getNodeEdgesMap(): Map<string, Set<string>> {
+    return this.nodeEdges;
+  }
+
+  // ===========================================================================
+  // Bulk Operations
+  // ===========================================================================
 
   /**
    * Clear all nodes and edges
@@ -237,6 +297,7 @@ export class SceneGraph {
     this.nodes.clear();
     this.edges.clear();
     this.nodeEdges.clear();
+    this.spatialIndex.clear();
     this.emit('cleared', '');
   }
 

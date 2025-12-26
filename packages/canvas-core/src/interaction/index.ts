@@ -16,4 +16,14 @@
 // TODO: DragManager - handle drag operations with constraints
 // TODO: HoverManager - manage hover states across elements
 
-export {};
+export { InteractionManager } from './InteractionManager';
+export type { InteractionConfig, InteractionEventType, InteractionEventCallback } from './InteractionManager';
+
+export { SelectionManager } from './SelectionManager';
+export type { SelectableElement, SelectionConfig, SelectionEventCallback } from './SelectionManager';
+
+export { DragManager } from './DragManager';
+export type { DragConfig, DragData, DragEventType, DragEventCallback } from './DragManager';
+
+export { HoverManager } from './HoverManager';
+export type { HoverableElement, HoverConfig, HoverEventType, HoverEventCallback } from './HoverManager';
