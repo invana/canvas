@@ -4,6 +4,7 @@
 
 import type { Graphics } from 'pixi.js';
 import type { ShapeStyle } from './types.js';
+import { applyShapeFill } from './fillHelper.js';
 
 export interface RectParams {
   x: number;
@@ -24,7 +25,7 @@ export function drawRect(g: Graphics, params: RectParams, style: ShapeStyle): vo
 
   if (style.fill) {
     g.rect(x, y, width, height);
-    g.fill({ color: style.fill, alpha: style.fillAlpha ?? 1 });
+    applyShapeFill(g, style, { x, y, width, height });
   }
 
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {

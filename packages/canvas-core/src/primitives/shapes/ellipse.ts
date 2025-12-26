@@ -4,6 +4,7 @@
 
 import type { Graphics } from 'pixi.js';
 import type { ShapeStyle } from './types.js';
+import { applyShapeFill } from './fillHelper.js';
 
 export interface EllipseParams {
   x: number;
@@ -20,7 +21,12 @@ export function drawEllipse(g: Graphics, params: EllipseParams, style: ShapeStyl
 
   if (style.fill) {
     g.ellipse(x, y, radiusX, radiusY);
-    g.fill({ color: style.fill, alpha: style.fillAlpha ?? 1 });
+    applyShapeFill(g, style, {
+      x: x - radiusX,
+      y: y - radiusY,
+      width: radiusX * 2,
+      height: radiusY * 2,
+    });
   }
 
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {

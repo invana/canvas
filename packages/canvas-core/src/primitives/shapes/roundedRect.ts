@@ -4,6 +4,7 @@
 
 import type { Graphics } from 'pixi.js';
 import type { ShapeStyle } from './types.js';
+import { applyShapeFill } from './fillHelper.js';
 
 export interface RoundedRectParams {
   x: number;
@@ -27,7 +28,7 @@ export function drawRoundedRect(g: Graphics, params: RoundedRectParams, style: S
 
   if (style.fill) {
     g.roundRect(x, y, width, height, r);
-    g.fill({ color: style.fill, alpha: style.fillAlpha ?? 1 });
+    applyShapeFill(g, style, { x, y, width, height });
   }
 
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {

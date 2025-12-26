@@ -4,6 +4,7 @@
 
 import type { Graphics } from 'pixi.js';
 import type { ShapeStyle } from './types.js';
+import { applyShapeFill } from './fillHelper.js';
 
 export interface CircleParams {
   x: number;
@@ -19,7 +20,17 @@ export function drawCircle(g: Graphics, params: CircleParams, style: ShapeStyle)
 
   if (style.fill) {
     g.circle(x, y, radius);
-    g.fill({ color: style.fill, alpha: style.fillAlpha ?? 1 });
+    
+    // Calculate bounds for fill
+    const bounds = {
+      x: x - radius,
+      y: y - radius,
+      width: radius * 2,
+      height: radius * 2,
+    };
+    
+    // Apply fill (handles solid colors, gradients, images, patterns)
+    applyShapeFill(g, style, bounds);
   }
 
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {

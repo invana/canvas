@@ -18,6 +18,7 @@
  * ## Modules
  * 
  * - **shapes**: Basic shapes (circle, rect, polygon, etc.)
+ * - **fills**: Fill system (solid, gradients, images, patterns)
  * - **paths**: Edge paths (line, bezier, orthogonal)
  * - **arrows**: Arrow heads (triangle, circle, diamond, etc.)
  * - **effects**: Visual effects (ripple, glow, etc.)
@@ -41,6 +42,31 @@
  * drawArrow(graphics, 'triangle', { x: 100, y: 100, angle: Math.PI / 4, size: 10 }, { fill: '#666' });
  * ```
  */
+
+// ============================================================================
+// FILLS
+// ============================================================================
+
+export type {
+  Fill,
+  SolidFill,
+  LinearGradientFill,
+  RadialGradientFill,
+  ImageFill,
+  PatternFill,
+  FillBounds,
+} from './fills';
+
+export {
+  isSolidFill,
+  isLinearGradientFill,
+  isRadialGradientFill,
+  isImageFill,
+  isPatternFill,
+  normalizeFill,
+  applyFill,
+  applyFillSync,
+} from './fills';
 
 // ============================================================================
 // SHAPES

@@ -4,6 +4,7 @@
 
 import type { Graphics } from 'pixi.js';
 import type { ShapeStyle } from './types.js';
+import { applyShapeFill } from './fillHelper.js';
 
 export interface PolygonParams {
   x: number;
@@ -38,7 +39,12 @@ export function drawPolygon(g: Graphics, params: PolygonParams, style: ShapeStyl
 
   if (style.fill) {
     g.poly(points);
-    g.fill({ color: style.fill, alpha: style.fillAlpha ?? 1 });
+    applyShapeFill(g, style, {
+      x: params.x - params.radius,
+      y: params.y - params.radius,
+      width: params.radius * 2,
+      height: params.radius * 2,
+    });
   }
 
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {
@@ -74,7 +80,24 @@ export function drawPolygonOutline(
 export function drawPolygonFromPoints(g: Graphics, points: number[], style: ShapeStyle): void {
   if (style.fill) {
     g.poly(points);
-    g.fill({ color: style.fill, alpha: style.fillAlpha ?? 1 });
+    // Calculate bounds from points
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (let i = 0; i < points.length; i += 2) {
+      const x = points[i];
+      const y = points[i + 1];
+      if (x !== undefined && y !== undefined) {
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+      }
+    }
+    applyShapeFill(g, style, {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY,
+    });
   }
 
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {

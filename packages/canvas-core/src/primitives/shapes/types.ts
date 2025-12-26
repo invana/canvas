@@ -4,15 +4,21 @@
  */
 
 import type { Graphics } from 'pixi.js';
+import type { Fill } from '../fills/types.js';
 
 /**
  * Style options for shape fill and stroke
  */
 export interface ShapeStyle {
-  fill?: string;
+  /** Fill style - supports solid colors, gradients, images, and patterns */
+  fill?: string | number | Fill;
+  /** Fill alpha (legacy, prefer using Fill.alpha) */
   fillAlpha?: number;
+  /** Stroke color */
   stroke?: string;
+  /** Stroke width */
   strokeWidth?: number;
+  /** Stroke alpha */
   strokeAlpha?: number;
 }
 
