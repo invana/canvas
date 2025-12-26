@@ -58,6 +58,7 @@ import { drawArrow } from '../primitives/arrows';
 
 // Import node shape classes
 import type { NodeShapeBase, NodeShapeOptions } from '../elements/nodes/NodeShapeBase';
+import type { EdgeShapeBase, EdgeShapeOptions } from '../elements/edges/EdgeShapeBase';
 import { CircleNode } from '../elements/nodes/CircleNode';
 import { RectNode } from '../elements/nodes/RectNode';
 import { RoundedRectNode } from '../elements/nodes/RoundedRectNode';
@@ -68,6 +69,11 @@ import { TriangleNode, DiamondNode, PentagonNode, HexagonNode, OctagonNode, Poly
  * Node shape class constructor type
  */
 export type NodeShapeConstructor = new (options: NodeShapeOptions) => NodeShapeBase;
+
+/**
+ * Edge shape class constructor type
+ */
+export type EdgeShapeConstructor = new (options: EdgeShapeOptions) => EdgeShapeBase;
 
 /**
  * Shape types that come built-in
@@ -114,6 +120,7 @@ export class Registry {
   private paths = new Map<string, PathDrawer>();
   private arrows = new Map<string, ArrowDrawFn>();
   private nodeClasses = new Map<string, NodeShapeConstructor>();
+  private edgeClasses = new Map<string, EdgeShapeConstructor>();
 
   constructor(registerDefaults: boolean = true) {
     if (registerDefaults) {
@@ -121,6 +128,7 @@ export class Registry {
       this.registerDefaultPaths();
       this.registerDefaultArrows();
       this.registerDefaultNodeClasses();
+      this.registerDefaultEdgeClasses();
     }
   }
 
@@ -455,6 +463,57 @@ export class Registry {
   }
 
   // =========================================================================
+  // EDGE CLASSES
+  // =========================================================================
+
+  /**
+   * Register an edge shape class
+   */
+  registerEdgeClass(pathType: string, edgeClass: EdgeShapeConstructor): this {
+    this.edgeClasses.set(pathType, edgeClass);
+    return this;
+  }
+
+  /**
+   * Get a registered edge class
+   */
+  getEdgeClass(pathType: string): EdgeShapeConstructor | undefined {
+    return this.edgeClasses.get(pathType);
+  }
+
+  /**
+   * Check if an edge class is registered
+   */
+  hasEdgeClass(pathType: string): boolean {
+    return this.edgeClasses.has(pathType);
+  }
+
+  /**
+   * Get all registered edge path type names
+   */
+  getEdgeClassNames(): string[] {
+    return Array.from(this.edgeClasses.keys());
+  }
+
+  /**
+   * Register default edge shape classes
+   */
+  private registerDefaultEdgeClasses(): void {
+    // Import edge classes
+    import('../elements/edges/LineEdge').then(({ LineEdge }) => {
+      this.registerEdgeClass('line', LineEdge);
+      this.registerEdgeClass('straight', LineEdge);
+    });
+    import('../elements/edges/BezierEdge').then(({ BezierEdge }) => {
+      this.registerEdgeClass('bezier', BezierEdge);
+      this.registerEdgeClass('curve', BezierEdge);
+    });
+    import('../elements/edges/OrthogonalEdge').then(({ OrthogonalEdge }) => {
+      this.registerEdgeClass('orthogonal', OrthogonalEdge);
+    });
+  }
+
+  // =========================================================================
   // UTILITY
   // =========================================================================
 
@@ -466,6 +525,7 @@ export class Registry {
     this.paths.clear();
     this.arrows.clear();
     this.nodeClasses.clear();
+    this.edgeClasses.clear();
   }
 
   /**
@@ -477,6 +537,7 @@ export class Registry {
     this.paths.forEach((v, k) => cloned.paths.set(k, v));
     this.arrows.forEach((v, k) => cloned.arrows.set(k, v));
     this.nodeClasses.forEach((v, k) => cloned.nodeClasses.set(k, v));
+    this.edgeClasses.forEach((v, k) => cloned.edgeClasses.set(k, v));
     return cloned;
   }
 }

@@ -196,14 +196,12 @@ export {
   PentagonNode,
   HexagonNode,
   OctagonNode,
-  createNode,
   // Edge shapes
   EdgeShapeBase,
   LineEdge,
   BezierEdge,
   OrthogonalEdge,
   OrthogonalRoundedEdge,
-  createEdge,
 } from './elements';
 
 export type {
@@ -214,12 +212,10 @@ export type {
   NodeStyle as ElementNodeStyle,
   NodeShapeOptions,
   NodeShapeType,
-  CreateNodeOptions,
   EdgeData as ElementEdgeData,
   EdgeStyle as ElementEdgeStyle,
   EdgeShapeOptions,
   EdgePathType,
-  CreateEdgeOptions,
 } from './elements';
 
 // ============================================================================

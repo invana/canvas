@@ -2,6 +2,9 @@
  * Node Shapes
  * 
  * Exports all node shape classes and types.
+ * 
+ * Note: Node creation is now handled by the Renderer.
+ * Use renderer.addNode() instead of createNode().
  */
 
 // Base class
@@ -32,6 +35,3 @@ export {
   OctagonNode,
   type PolygonNodeOptions,
 } from './PolygonNode';
-
-// Factory function
-export { createNode, type CreateNodeOptions } from './createNode';

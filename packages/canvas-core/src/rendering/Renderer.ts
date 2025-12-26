@@ -29,16 +29,16 @@ import { Container } from 'pixi.js';
 import { Registry } from './Registry';
 import { 
   NodeShapeBase, 
-  createNode, 
   type NodeData, 
   type NodeStyle 
 } from '../elements/nodes';
 import { 
   EdgeShapeBase, 
-  createEdge, 
   type EdgeData, 
   type EdgeStyle 
 } from '../elements/edges';
+import { CircleNode } from '../elements/nodes/CircleNode';
+import { LineEdge } from '../elements/edges/LineEdge';
 
 // ============================================================================
 // TYPES
@@ -184,7 +184,15 @@ export class Renderer {
       ...styleProps,
     };
     
-    const node = createNode({
+    // Create node using registry
+    const shapeType = (dataProps as any).shape ?? 'circle';
+    const NodeClass = this._registry.getNodeClass(shapeType);
+    
+    if (!NodeClass) {
+      console.warn(`Unknown node shape type: ${shapeType}, defaulting to circle`);
+    }
+    
+    const node = new (NodeClass ?? CircleNode)({
       data: dataProps as NodeData,
       style: mergedStyle,
       interactive: interactive ?? true,
@@ -356,7 +364,15 @@ export class Renderer {
       y: 0,
     } as EdgeData;
     
-    const edge = createEdge({
+    // Create edge using registry  
+    const pathType = (edgeData as any).pathType ?? 'line';
+    const EdgeClass = this._registry.getEdgeClass?.(pathType);
+    
+    if (!EdgeClass) {
+      console.warn(`Unknown edge path type: ${pathType}, defaulting to straight line`);
+    }
+    
+    const edge = new (EdgeClass ?? LineEdge)({
       data: edgeData,
       style: mergedStyle,
       registry: this._registry,

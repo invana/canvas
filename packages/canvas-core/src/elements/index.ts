@@ -56,7 +56,6 @@ export {
   PentagonNode,
   HexagonNode,
   OctagonNode,
-  createNode,
 } from './nodes';
 export type { 
   NodeData, 
@@ -67,7 +66,6 @@ export type {
   Point,
   Bounds,
   PolygonNodeOptions,
-  CreateNodeOptions,
 } from './nodes';
 
 // Edge shapes
@@ -77,7 +75,6 @@ export {
   BezierEdge,
   OrthogonalEdge,
   OrthogonalRoundedEdge,
-  createEdge,
 } from './edges';
 export type {
   EdgeData,
@@ -88,5 +85,4 @@ export type {
   LineEdgeOptions,
   BezierEdgeOptions,
   OrthogonalEdgeOptions,
-  CreateEdgeOptions,
 } from './edges';

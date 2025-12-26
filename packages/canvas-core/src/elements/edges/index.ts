@@ -9,6 +9,9 @@
  * - BezierEdge: Quadratic bezier curve implementation
  * - OrthogonalEdge: Right-angle path implementation
  * - OrthogonalRoundedEdge: Orthogonal with rounded corners
+ * 
+ * Note: Edge creation is now handled by the Renderer.
+ * Use renderer.addEdge() instead of createEdge().
  */
 
 // Base class
@@ -25,6 +28,3 @@ export {
 export { LineEdge, type LineEdgeOptions } from './LineEdge';
 export { BezierEdge, type BezierEdgeOptions } from './BezierEdge';
 export { OrthogonalEdge, OrthogonalRoundedEdge, type OrthogonalEdgeOptions } from './OrthogonalEdge';
-
-// Factory function
-export { createEdge, type CreateEdgeOptions } from './createEdge';
