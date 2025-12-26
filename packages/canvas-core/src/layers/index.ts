@@ -3,4 +3,5 @@
  */
 
 export { Layer } from './Layer';
+export { LayerGroup } from './LayerGroup';
 export { LayerManager } from './LayerManager';

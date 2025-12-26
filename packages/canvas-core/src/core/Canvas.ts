@@ -39,6 +39,8 @@ import { Renderer, type NodeData as RendererNodeData, type EdgeData as RendererE
 import { SceneGraph } from '../scene/SceneGraph';
 import { QueryEngine, type QueryFilter, type QueryResult } from '../scene/QueryEngine';
 import { Relationships, type RelationshipInfo, type PathResult } from '../scene/Relationships';
+import { LayerManager } from '../layers/LayerManager';
+import type { CanvasPlugin, PluginRegistrationOptions } from '../plugins/types';
 import type { Bounds } from '../scene/SpatialIndex';
 import type { NodeStyle } from '../elements/nodes';
 import type { EdgeStyle } from '../elements/edges';
@@ -141,9 +143,13 @@ export class Canvas {
   private _initialized: boolean = false;
 
   // Layers
+  private _layerManager: LayerManager | null = null;
   private _backgroundLayer: Container | null = null;
   private _edgeLayer: Container | null = null;
   private _nodeLayer: Container | null = null;
+
+  // Plugins
+  private _plugins: Map<string, CanvasPlugin> = new Map();
 
   // Configuration
   private _styles: CanvasStyles = {};
@@ -212,18 +218,21 @@ export class Canvas {
     });
     this._app.stage.addChild(this._viewport);
 
-    // Create layers
+    // Create layer manager
+    this._layerManager = new LayerManager(this._viewport.content);
+
+    // Get core layers (for backward compatibility, we use shapes layer)
+    const edgeGroup = this._layerManager.getGroup('core-edges')!;
+    const nodeGroup = this._layerManager.getGroup('core-nodes')!;
+
+    this._edgeLayer = edgeGroup.getLayer('shapes')!.container;
+    this._nodeLayer = nodeGroup.getLayer('shapes')!.container;
+
+    // Background layer
     this._backgroundLayer = new Container();
     this._backgroundLayer.label = 'background';
+    this._backgroundLayer.zIndex = 0;
     this._viewport.content.addChild(this._backgroundLayer);
-
-    this._edgeLayer = new Container();
-    this._edgeLayer.label = 'edges';
-    this._viewport.content.addChild(this._edgeLayer);
-
-    this._nodeLayer = new Container();
-    this._nodeLayer.label = 'nodes';
-    this._viewport.content.addChild(this._nodeLayer);
 
     // Create renderer
     this._renderer = new Renderer({
@@ -304,6 +313,14 @@ export class Canvas {
   /** Node layer container */
   get nodeLayer(): Container | null {
     return this._nodeLayer;
+  }
+
+  /** Layer manager for plugin system */
+  get layerManager(): LayerManager {
+    if (!this._layerManager) {
+      throw new Error('Canvas not initialized. Call init() first.');
+    }
+    return this._layerManager;
   }
 
   /** Canvas width */
@@ -471,6 +488,85 @@ export class Canvas {
   clear(): void {
     this._renderer?.clear();
     this._backgroundLayer?.removeChildren();
+  }
+
+  // =========================================================================
+  // PLUGIN SYSTEM
+  // =========================================================================
+
+  /**
+   * Register a plugin
+   */
+  async registerPlugin(
+    plugin: CanvasPlugin,
+    options: PluginRegistrationOptions = {}
+  ): Promise<void> {
+    if (!this._initialized) {
+      throw new Error('Canvas must be initialized before registering plugins. Call init() first.');
+    }
+
+    if (this._plugins.has(plugin.id)) {
+      throw new Error(`Plugin '${plugin.id}' is already registered`);
+    }
+
+    // Register plugin layer groups
+    for (const groupConfig of plugin.layerGroups) {
+      this._layerManager!.registerGroup(groupConfig);
+    }
+
+    // Store plugin
+    this._plugins.set(plugin.id, plugin);
+
+    // Initialize plugin if autoInit is true (default)
+    if (options.autoInit !== false) {
+      await plugin.init(this);
+    }
+  }
+
+  /**
+   * Register multiple plugins
+   */
+  async registerPlugins(
+    plugins: CanvasPlugin[],
+    options: PluginRegistrationOptions = {}
+  ): Promise<void> {
+    for (const plugin of plugins) {
+      await this.registerPlugin(plugin, options);
+    }
+  }
+
+  /**
+   * Get a registered plugin
+   */
+  getPlugin<T extends CanvasPlugin = CanvasPlugin>(id: string): T | undefined {
+    return this._plugins.get(id) as T | undefined;
+  }
+
+  /**
+   * Check if a plugin is registered
+   */
+  hasPlugin(id: string): boolean {
+    return this._plugins.has(id);
+  }
+
+  /**
+   * Unregister a plugin
+   */
+  unregisterPlugin(id: string): void {
+    const plugin = this._plugins.get(id);
+    if (plugin) {
+      // Call destroy if available
+      if (plugin.destroy) {
+        plugin.destroy();
+      }
+
+      // Unregister layer groups
+      for (const groupConfig of plugin.layerGroups) {
+        this._layerManager?.unregisterGroup(groupConfig.id);
+      }
+
+      this._plugins.delete(id);
+    }
   }
 
   // =========================================================================
@@ -677,10 +773,24 @@ export class Canvas {
    * Destroy the canvas and clean up resources
    */
   destroy(): void {
+    // Destroy plugins
+    this._plugins.forEach(plugin => {
+      if (plugin.destroy) {
+        plugin.destroy();
+      }
+    });
+    this._plugins.clear();
+
+    // Destroy layer manager
+    this._layerManager?.destroy();
+    this._layerManager = null;
+
+    // Destroy renderer and scene
     this._renderer?.destroy();
     this._renderer = null;
     this._scene.destroy();
 
+    // Destroy viewport and app
     this._viewport?.destroy();
     this._app?.destroy(true, { children: true });
     

@@ -1,188 +1,144 @@
 /**
- * LayerManager - Manages multiple layers with z-index ordering
+ * LayerManager - Manages all layers in the canvas with plugin support
+ * Plugins can register layer groups dynamically
  */
 
 import { Container } from 'pixi.js';
-import { Layer } from './Layer';
-import type { LayerConfig, LayerType } from '../types';
-
-const DEFAULT_LAYERS: LayerConfig[] = [
-  { name: 'background', type: 'background', zIndex: 0, visible: true, interactive: false },
-  { name: 'edges', type: 'edges', zIndex: 100, visible: true, interactive: true },
-  { name: 'nodes', type: 'nodes', zIndex: 200, visible: true, interactive: true },
-  { name: 'labels', type: 'labels', zIndex: 300, visible: true, interactive: false },
-  { name: 'overlay', type: 'overlay', zIndex: 400, visible: true, interactive: true },
-];
+import { LayerGroup } from './LayerGroup';
+import type { LayerGroupConfig } from '../plugins/types';
+import type { Layer } from './Layer';
 
 export class LayerManager {
-  private readonly layers: Map<string, Layer> = new Map();
-  private readonly root: Container;
+  private _scene: Container;
+  private _groups: Map<string, LayerGroup> = new Map();
+  private _nextZIndex: number = 300; // Start for plugins
 
-  constructor(rootContainer: Container, configs?: LayerConfig[]) {
-    this.root = rootContainer;
-    this.root.sortableChildren = true;
-
-    // Initialize with default or custom layers
-    const layerConfigs = configs ?? DEFAULT_LAYERS;
-    for (const config of layerConfigs) {
-      this.createLayer(config);
-    }
-  }
-
-  /**
-   * Create a new layer
-   */
-  createLayer(config: LayerConfig): Layer {
-    if (this.layers.has(config.name)) {
-      throw new Error(`Layer "${config.name}" already exists`);
-    }
-
-    const layer = new Layer(config);
-    this.layers.set(config.name, layer);
-    this.root.addChild(layer.container);
+  constructor(scene: Container) {
+    this._scene = scene;
+    this._scene.sortableChildren = true;
     
-    return layer;
+    // Register core layers
+    this.registerGroup({
+      id: 'core-edges',
+      baseZIndex: 100,
+      layers: ['shapes', 'labels']
+    });
+    
+    this.registerGroup({
+      id: 'core-nodes',
+      baseZIndex: 200,
+      layers: ['shapes', 'labels']
+    });
   }
 
   /**
-   * Get a layer by name
+   * Register a new layer group (used by core and plugins)
+   * @returns LayerGroup instance for use
    */
-  getLayer(name: string): Layer | undefined {
-    return this.layers.get(name);
-  }
-
-  /**
-   * Get a layer by type (returns first match)
-   */
-  getLayerByType(type: LayerType): Layer | undefined {
-    for (const layer of this.layers.values()) {
-      if (layer.type === type) {
-        return layer;
-      }
+  registerGroup(config: LayerGroupConfig): LayerGroup {
+    if (this._groups.has(config.id)) {
+      throw new Error(`Layer group '${config.id}' already registered`);
     }
-    return undefined;
+
+    const baseZIndex = config.baseZIndex ?? this.allocateZIndex();
+    const group = new LayerGroup(config.id, baseZIndex);
+    
+    // Create layers
+    config.layers.forEach((layerName, index) => {
+      const layer = group.createLayer(layerName, baseZIndex + index);
+      this._scene.addChild(layer.container);
+    });
+    
+    this._groups.set(config.id, group);
+    return group;
   }
 
   /**
-   * Get all layers of a specific type
+   * Get a layer group by ID
    */
-  getLayersByType(type: LayerType): Layer[] {
-    const result: Layer[] = [];
-    for (const layer of this.layers.values()) {
-      if (layer.type === type) {
-        result.push(layer);
-      }
-    }
-    return result;
+  getGroup(groupId: string): LayerGroup | undefined {
+    return this._groups.get(groupId);
   }
 
   /**
-   * Get the node layer (convenience method)
+   * Get a specific layer by group and layer name
    */
-  getNodeLayer(): Layer {
-    const layer = this.getLayerByType('nodes');
-    if (!layer) {
-      throw new Error('Node layer not found');
-    }
-    return layer;
+  getLayer(groupId: string, layerName: string): Layer | undefined {
+    return this._groups.get(groupId)?.getLayer(layerName);
   }
 
   /**
-   * Get the edge layer (convenience method)
+   * Allocate z-index block for plugin
    */
-  getEdgeLayer(): Layer {
-    const layer = this.getLayerByType('edges');
-    if (!layer) {
-      throw new Error('Edge layer not found');
-    }
-    return layer;
+  private allocateZIndex(): number {
+    const zIndex = this._nextZIndex;
+    this._nextZIndex += 100; // Allocate in blocks of 100
+    return zIndex;
   }
 
   /**
-   * Get the overlay layer (convenience method)
+   * Show/hide entire layer group
    */
-  getOverlayLayer(): Layer {
-    const layer = this.getLayerByType('overlay');
-    if (!layer) {
-      throw new Error('Overlay layer not found');
-    }
-    return layer;
-  }
-
-  /**
-   * Remove a layer
-   */
-  removeLayer(name: string): boolean {
-    const layer = this.layers.get(name);
-    if (layer) {
-      this.root.removeChild(layer.container);
-      layer.destroy();
-      this.layers.delete(name);
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Show/hide a layer
-   */
-  setLayerVisibility(name: string, visible: boolean): void {
-    const layer = this.layers.get(name);
-    if (layer) {
-      layer.visible = visible;
+  setGroupVisibility(groupId: string, visible: boolean): void {
+    const group = this._groups.get(groupId);
+    if (group) {
+      group.setVisible(visible);
     }
   }
 
   /**
-   * Set layer interactivity
+   * Set interactive state for entire layer group
    */
-  setLayerInteractive(name: string, interactive: boolean): void {
-    const layer = this.layers.get(name);
-    if (layer) {
-      layer.interactive = interactive;
+  setGroupInteractive(groupId: string, interactive: boolean): void {
+    const group = this._groups.get(groupId);
+    if (group) {
+      group.setInteractive(interactive);
     }
   }
 
   /**
-   * Reorder a layer
+   * Get all groups (for debugging/inspection)
    */
-  setLayerZIndex(name: string, zIndex: number): void {
-    const layer = this.layers.get(name);
-    if (layer) {
-      layer.zIndex = zIndex;
+  getAllGroups(): Map<string, LayerGroup> {
+    return new Map(this._groups);
+  }
+
+  /**
+   * Clear all content from a layer group
+   */
+  clearGroup(groupId: string): void {
+    const group = this._groups.get(groupId);
+    if (group) {
+      group.clear();
     }
   }
 
   /**
-   * Get all layer names
+   * Unregister and destroy a layer group
    */
-  getLayerNames(): string[] {
-    return Array.from(this.layers.keys());
-  }
-
-  /**
-   * Get all layers sorted by z-index
-   */
-  getAllLayers(): Layer[] {
-    return Array.from(this.layers.values()).sort((a, b) => a.zIndex - b.zIndex);
-  }
-
-  /**
-   * Clear all layers (remove children but keep layers)
-   */
-  clearAll(): void {
-    for (const layer of this.layers.values()) {
-      layer.clear();
+  unregisterGroup(groupId: string): void {
+    const group = this._groups.get(groupId);
+    if (group) {
+      // Remove all layer containers from scene
+      group.getAllLayers().forEach(layer => {
+        this._scene.removeChild(layer.container);
+      });
+      
+      group.destroy();
+      this._groups.delete(groupId);
     }
   }
 
   /**
-   * Destroy all layers
+   * Destroy all groups and cleanup
    */
   destroy(): void {
-    for (const layer of this.layers.values()) {
-      layer.destroy();
-    }
-    this.layers.clear();
+    this._groups.forEach(group => {
+      group.getAllLayers().forEach(layer => {
+        this._scene.removeChild(layer.container);
+      });
+      group.destroy();
+    });
+    this._groups.clear();
   }
 }

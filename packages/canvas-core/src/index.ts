@@ -106,8 +106,16 @@ export type {
 // LAYERS
 // ============================================================================
 
-export { Layer, LayerManager } from './layers';
+export { Layer, LayerManager, LayerGroup } from './layers';
 export type { LayerConfig, LayerType } from './types';
+
+// ============================================================================
+// PLUGINS
+// ============================================================================
+
+export type { CanvasPlugin, LayerGroupConfig, PluginRegistrationOptions } from './plugins/types';
+export { GroupsPlugin } from './plugins/GroupsPlugin';
+export type { GroupConfig } from './plugins/GroupsPlugin';
 
 // ============================================================================
 // SCENE
