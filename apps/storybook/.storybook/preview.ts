@@ -19,6 +19,15 @@ const preview: Preview = {
         { name: 'gray', value: '#f5f5f5' },
       ],
     },
+    docs: {
+      // Enable Code panel to show story source code
+      codePanel: true,
+      source: {
+        // Use 'code' to show static story source
+        type: 'code',
+        language: 'typescript',
+      },
+    },
   },
 };
 

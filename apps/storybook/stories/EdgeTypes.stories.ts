@@ -1,9 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas } from '@aspect-ui/canvas-core';
+import { Canvas, NodeShape, EdgeShape } from '@aspect-ui/canvas-core';
 
 interface EdgeTypesArgs {
-  theme: 'light' | 'dark';
+  backgroundColor: string;
+  arrowSize: number;
 }
+
+const pathTypes = ['line', 'bezier', 'orthogonal', 'orthogonal-rounded'] as const;
 
 const createEdgeTypes = (args: EdgeTypesArgs): HTMLElement => {
   const wrapper = document.createElement('div');
@@ -15,101 +18,114 @@ const createEdgeTypes = (args: EdgeTypesArgs): HTMLElement => {
   const info = document.createElement('div');
   info.style.padding = '10px';
   info.style.fontFamily = 'sans-serif';
-  info.innerHTML = '<strong>Edge Types Demo</strong> - Straight, Bezier, and Orthogonal edges';
+  info.innerHTML = '<strong>Edge Types</strong> - Different path styles for edges';
   wrapper.appendChild(info);
 
   const container = document.createElement('div');
-  container.id = `canvas-edges-${Date.now()}`;
   container.style.flex = '1';
   container.style.minHeight = '400px';
   container.style.border = '1px solid #ccc';
   wrapper.appendChild(container);
 
   requestAnimationFrame(async () => {
-    if (container.clientWidth === 0) {
-      container.style.width = '800px';
-      container.style.height = '400px';
-    }
-
-    const canvas = new Canvas(container, {
-      theme: args.theme,
-      autoResize: true,
+    const canvas = new Canvas({
+      container,
+      width: container.clientWidth || 800,
+      height: container.clientHeight || 400,
+      backgroundColor: args.backgroundColor,
     });
 
-    try {
-      await canvas.initialize();
+    await canvas.init();
 
-      // Create node pairs for each edge type
-      const edgeTypes = ['straight', 'bezier', 'orthogonal'] as const;
-      const colors = ['#4CAF50', '#2196F3', '#FF9800'];
+    const colors = ['#4a90d9', '#50c878', '#ff6b6b', '#ffd93d'];
 
-      edgeTypes.forEach((type, i) => {
-        const y = (i - 1) * 120;
-        
-        // Source node
-        canvas.addNode({
-          id: `${type}-source`,
-          x: -200,
+    // Create pairs of nodes with different edge types
+    pathTypes.forEach((pathType, i) => {
+      const y = i * 90 - 135;
+      const sourceX = -200;
+      const targetX = 200;
+
+      // Source node
+      const sourceNode = new NodeShape({
+        data: {
+          id: `source-${pathType}`,
+          x: sourceX,
           y,
-          style: {
-            shape: 'circle',
-            size: 30,
-            fill: colors[i],
-          },
-        });
+          shape: 'circle',
+          size: 25,
+        },
+        style: {
+          fill: colors[i],
+          stroke: '#333',
+          strokeWidth: 2,
+        },
+        registry: canvas.registry,
+      });
 
-        // Target node
-        canvas.addNode({
-          id: `${type}-target`,
-          x: 200,
+      // Target node
+      const targetNode = new NodeShape({
+        data: {
+          id: `target-${pathType}`,
+          x: targetX,
           y,
-          style: {
-            shape: 'circle',
-            size: 30,
-            fill: colors[i],
-          },
-        });
-
-        // Edge
-        canvas.addEdge({
-          id: `edge-${type}`,
-          source: `${type}-source`,
-          target: `${type}-target`,
-          style: {
-            type,
-            stroke: colors[i],
-            strokeWidth: 3,
-            targetArrow: {
-              type: 'triangle',
-              size: 10,
-              fill: colors[i],
-            },
-          },
-        });
+          shape: 'circle',
+          size: 25,
+        },
+        style: {
+          fill: colors[i],
+          stroke: '#333',
+          strokeWidth: 2,
+        },
+        registry: canvas.registry,
       });
 
-      // Add labels
-      canvas.addNode({
-        id: 'label-straight',
-        x: 0,
-        y: -120,
-        style: { shape: 'rectangle', size: 10, fill: 'transparent' },
+      // Edge
+      const color = colors[i] ?? '#666';
+      const edge = new EdgeShape({
+        data: {
+          id: `edge-${pathType}`,
+          source: { x: sourceX + 25, y },
+          target: { x: targetX - 25, y },
+          pathType,
+          arrowTarget: 'triangle',
+          arrowSize: args.arrowSize,
+          curvature: 0.4,
+        },
+        style: {
+          stroke: color,
+          strokeWidth: 3,
+        },
+        registry: canvas.registry,
       });
 
-      setTimeout(() => canvas.fitToContent(60), 100);
-
-      canvas.on('edge:hover', (data: unknown) => {
-        const { edge } = data as { edge: { id: string } };
-        info.innerHTML = `<strong>Hovering:</strong> ${edge.id.replace('edge-', '')} edge`;
+      // Label
+      const label = new NodeShape({
+        data: {
+          id: `label-${pathType}`,
+          x: -320,
+          y,
+          shape: 'roundedRect',
+          width: 100,
+          height: 30,
+          label: pathType,
+        },
+        style: {
+          fill: '#f0f0f0',
+          stroke: '#ccc',
+          strokeWidth: 1,
+          labelStyle: { fill: '#333', fontSize: 11 },
+        },
+        registry: canvas.registry,
+        interactive: false,
       });
 
-      canvas.on('edge:hoverEnd', () => {
-        info.innerHTML = '<strong>Edge Types Demo</strong> - Straight, Bezier, and Orthogonal edges';
-      });
+      canvas.addToNodeLayer(sourceNode);
+      canvas.addToNodeLayer(targetNode);
+      canvas.addToNodeLayer(label);
+      canvas.addToEdgeLayer(edge, sourceNode.id, targetNode.id);
+    });
 
-    } catch (error) {
-      console.error('Error:', error);
-    }
+    setTimeout(() => canvas.fitContent(40), 100);
   });
 
   return wrapper;
@@ -119,13 +135,12 @@ const meta: Meta<EdgeTypesArgs> = {
   title: 'Canvas/Edge Types',
   render: (args) => createEdgeTypes(args),
   argTypes: {
-    theme: {
-      control: 'select',
-      options: ['light', 'dark'],
-    },
+    backgroundColor: { control: 'color' },
+    arrowSize: { control: { type: 'range', min: 5, max: 20, step: 1 } },
   },
   args: {
-    theme: 'light',
+    backgroundColor: '#ffffff',
+    arrowSize: 12,
   },
 };
 
@@ -133,8 +148,10 @@ export default meta;
 
 type Story = StoryObj<EdgeTypesArgs>;
 
-export const AllEdgeTypes: Story = {};
+export const AllTypes: Story = {};
 
-export const DarkTheme: Story = {
-  args: { theme: 'dark' },
+export const LargeArrows: Story = {
+  args: {
+    arrowSize: 18,
+  },
 };

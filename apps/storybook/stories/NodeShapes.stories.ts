@@ -1,19 +1,27 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas } from '@aspect-ui/canvas-core';
+import { Canvas, NodeShape } from '@aspect-ui/canvas-core';
 
 interface NodeShapesArgs {
-  theme: 'light' | 'dark';
+  backgroundColor: string;
+  showLabels: boolean;
 }
 
 const shapes = [
-  { name: 'circle', x: -300, y: -100 },
-  { name: 'rectangle', x: -100, y: -100 },
-  { name: 'hexagon', x: 100, y: -100 },
-  { name: 'triangle', x: 300, y: -100 },
-  { name: 'diamond', x: -200, y: 100 },
-  { name: 'pentagon', x: 0, y: 100 },
-  { name: 'octagon', x: 200, y: 100 },
+  { name: 'circle', label: 'Circle' },
+  { name: 'rect', label: 'Rectangle' },
+  { name: 'roundedRect', label: 'Rounded Rect' },
+  { name: 'ellipse', label: 'Ellipse' },
+  { name: 'triangle', label: 'Triangle' },
+  { name: 'diamond', label: 'Diamond' },
+  { name: 'pentagon', label: 'Pentagon' },
+  { name: 'hexagon', label: 'Hexagon' },
+  { name: 'octagon', label: 'Octagon' },
 ] as const;
+
+const colors = [
+  '#4a90d9', '#50c878', '#ff6b6b', '#ffd93d', 
+  '#6c5ce7', '#00cec9', '#fd79a8', '#e17055', '#00b894'
+];
 
 const createNodeShapes = (args: NodeShapesArgs): HTMLElement => {
   const wrapper = document.createElement('div');
@@ -25,59 +33,68 @@ const createNodeShapes = (args: NodeShapesArgs): HTMLElement => {
   const info = document.createElement('div');
   info.style.padding = '10px';
   info.style.fontFamily = 'sans-serif';
-  info.innerHTML = '<strong>Node Shapes Demo</strong> - All available primitive shapes';
+  info.innerHTML = '<strong>Node Shapes</strong> - All available primitive shapes';
   wrapper.appendChild(info);
 
   const container = document.createElement('div');
-  container.id = `canvas-shapes-${Date.now()}`;
   container.style.flex = '1';
   container.style.minHeight = '400px';
   container.style.border = '1px solid #ccc';
   wrapper.appendChild(container);
 
   requestAnimationFrame(async () => {
-    if (container.clientWidth === 0) {
-      container.style.width = '800px';
-      container.style.height = '400px';
-    }
-
-    const canvas = new Canvas(container, {
-      theme: args.theme,
-      autoResize: true,
+    const canvas = new Canvas({
+      container,
+      width: container.clientWidth || 800,
+      height: container.clientHeight || 400,
+      backgroundColor: args.backgroundColor,
     });
 
-    try {
-      await canvas.initialize();
+    await canvas.init();
 
-      const colors = ['#4CAF50', '#2196F3', '#FF9800', '#E91E63', '#9C27B0', '#00BCD4', '#795548'];
+    // Create a grid of shapes
+    const cols = 5;
+    const spacingX = 160;
+    const spacingY = 140;
 
-      shapes.forEach((shape, i) => {
-        canvas.addNode({
+    shapes.forEach((shape, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = col * spacingX - (cols - 1) * spacingX / 2;
+      const y = row * spacingY - spacingY / 2;
+
+      const node = new NodeShape({
+        data: {
           id: `shape-${shape.name}`,
-          x: shape.x,
-          y: shape.y,
-          style: {
-            shape: shape.name,
-            size: 50,
-            fill: colors[i % colors.length],
-          },
-        });
+          x,
+          y,
+          shape: shape.name,
+          size: 45,
+          label: args.showLabels ? shape.label : undefined,
+        },
+        style: {
+          fill: colors[i % colors.length],
+          stroke: '#333',
+          strokeWidth: 2,
+          hoverFill: colors[(i + 3) % colors.length],
+          labelPosition: 'bottom',
+          labelOffsetY: 12,
+          labelStyle: { fill: '#333', fontSize: 12 },
+        },
+        registry: canvas.registry,
       });
 
-      setTimeout(() => canvas.fitToContent(80), 100);
-
-      canvas.on('node:hover', (data: unknown) => {
-        const { node } = data as { node: { id: string } };
-        info.innerHTML = `<strong>Hovering:</strong> ${node.id.replace('shape-', '')}`;
+      node.on('pointerover', () => {
+        info.innerHTML = `<strong>Hovering:</strong> ${shape.label} (${shape.name})`;
+      });
+      node.on('pointerout', () => {
+        info.innerHTML = '<strong>Node Shapes</strong> - Hover over shapes to see their names';
       });
 
-      canvas.on('node:hoverEnd', () => {
-        info.innerHTML = '<strong>Node Shapes Demo</strong> - Hover over shapes to see their names';
-      });
+      canvas.addToNodeLayer(node);
+    });
 
-    } catch (error) {
-      console.error('Error:', error);
-    }
+    setTimeout(() => canvas.fitContent(60), 100);
   });
 
   return wrapper;
@@ -87,13 +104,12 @@ const meta: Meta<NodeShapesArgs> = {
   title: 'Canvas/Node Shapes',
   render: (args) => createNodeShapes(args),
   argTypes: {
-    theme: {
-      control: 'select',
-      options: ['light', 'dark'],
-    },
+    backgroundColor: { control: 'color' },
+    showLabels: { control: 'boolean' },
   },
   args: {
-    theme: 'light',
+    backgroundColor: '#ffffff',
+    showLabels: true,
   },
 };
 
@@ -103,6 +119,14 @@ type Story = StoryObj<NodeShapesArgs>;
 
 export const AllShapes: Story = {};
 
+export const WithoutLabels: Story = {
+  args: {
+    showLabels: false,
+  },
+};
+
 export const DarkTheme: Story = {
-  args: { theme: 'dark' },
+  args: {
+    backgroundColor: '#1a1a2e',
+  },
 };

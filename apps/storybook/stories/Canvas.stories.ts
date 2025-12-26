@@ -1,36 +1,31 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas } from '@aspect-ui/canvas-core';
+import { Canvas, NodeShape, EdgeShape } from '@aspect-ui/canvas-core';
 
 interface CanvasArgs {
-  theme: 'light' | 'dark';
+  backgroundColor: string;
   nodeCount: number;
-  edgeCount: number;
 }
 
-const createCanvas = (args: CanvasArgs): HTMLElement => {
+const createBasicCanvas = (args: CanvasArgs): HTMLElement => {
   const wrapper = document.createElement('div');
   wrapper.style.width = '100%';
   wrapper.style.height = '600px';
   wrapper.style.display = 'flex';
   wrapper.style.flexDirection = 'column';
 
-  // Create controls
+  // Controls
   const controls = document.createElement('div');
   controls.style.padding = '10px';
   controls.style.display = 'flex';
   controls.style.gap = '8px';
-  controls.style.flexWrap = 'wrap';
   controls.innerHTML = `
     <button id="fit-btn">Fit to Content</button>
     <button id="reset-btn">Reset View</button>
-    <button id="zoom-in-btn">Zoom In</button>
-    <button id="zoom-out-btn">Zoom Out</button>
-    <button id="toggle-theme-btn">Toggle Theme</button>
     <button id="add-node-btn">Add Node</button>
   `;
   wrapper.appendChild(controls);
 
-  // Create info panel
+  // Info panel
   const info = document.createElement('div');
   info.style.padding = '10px';
   info.style.fontSize = '12px';
@@ -38,141 +33,110 @@ const createCanvas = (args: CanvasArgs): HTMLElement => {
   info.innerHTML = 'Initializing...';
   wrapper.appendChild(info);
 
-  // Create canvas container with explicit size
+  // Canvas container
   const container = document.createElement('div');
-  container.id = `canvas-${Date.now()}`;
   container.style.flex = '1';
   container.style.minHeight = '400px';
   container.style.border = '1px solid #ccc';
-  container.style.position = 'relative';
   wrapper.appendChild(container);
 
-  // Initialize canvas after container is attached to DOM
   requestAnimationFrame(async () => {
-    // Ensure container has size
-    if (container.clientWidth === 0 || container.clientHeight === 0) {
-      container.style.width = '800px';
-      container.style.height = '500px';
-    }
-
-    const canvas = new Canvas(container, {
-      theme: args.theme,
-      autoResize: true,
+    const canvas = new Canvas({
+      container,
+      width: container.clientWidth || 800,
+      height: container.clientHeight || 500,
+      backgroundColor: args.backgroundColor,
     });
 
-    try {
-      await canvas.initialize();
+    await canvas.init();
 
-      // Generate random nodes
-      const nodes = [];
-      const shapes = ['circle', 'rectangle', 'hexagon', 'triangle', 'diamond'] as const;
-      for (let i = 0; i < args.nodeCount; i++) {
-        nodes.push({
+    const rendererType = canvas.getRendererType();
+    info.innerHTML = `Renderer: <strong>${rendererType}</strong> | Viewport: ${canvas.width}x${canvas.height}`;
+
+    // Create nodes
+    const shapes = ['circle', 'roundedRect', 'hexagon', 'triangle', 'diamond'] as const;
+    const colors = ['#4a90d9', '#50c878', '#ff6b6b', '#ffd93d', '#6c5ce7'];
+
+    for (let i = 0; i < args.nodeCount; i++) {
+      const node = new NodeShape({
+        data: {
           id: `node-${i}`,
-          label: `Node ${i}`,
-          x: Math.random() * 600 - 300,
-          y: Math.random() * 400 - 200,
-          type: `type-${i % 5}`,
-          style: {
-            shape: shapes[i % shapes.length],
-            size: 30 + Math.random() * 20,
-          },
-        });
-      }
+          x: (i % 5) * 150 - 300,
+          y: Math.floor(i / 5) * 120 - 150,
+          shape: shapes[i % shapes.length],
+          size: 40,
+          label: `Node ${i + 1}`,
+        },
+        style: {
+          fill: colors[i % colors.length],
+          stroke: '#333',
+          strokeWidth: 2,
+          labelPosition: 'bottom',
+          labelOffsetY: 10,
+          labelStyle: { fill: '#333', fontSize: 11 },
+        },
+        registry: canvas.registry,
+      });
+      canvas.addToNodeLayer(node);
+    }
 
-      // Generate random edges
-      const edges = [];
-      const edgeTypes = ['straight', 'bezier', 'orthogonal'] as const;
-      for (let i = 0; i < args.edgeCount && args.nodeCount > 1; i++) {
-        const source = `node-${Math.floor(Math.random() * args.nodeCount)}`;
-        let target = `node-${Math.floor(Math.random() * args.nodeCount)}`;
-        while (target === source) {
-          target = `node-${Math.floor(Math.random() * args.nodeCount)}`;
+    // Create some edges
+    if (args.nodeCount > 1) {
+      for (let i = 0; i < Math.min(args.nodeCount - 1, 5); i++) {
+        const sourceNode = canvas.nodeLayer?.children[i] as NodeShape | undefined;
+        const targetNode = canvas.nodeLayer?.children[i + 1] as NodeShape | undefined;
+        
+        if (sourceNode && targetNode) {
+          const edge = new EdgeShape({
+            data: {
+              id: `edge-${i}`,
+              source: { x: sourceNode.x, y: sourceNode.y },
+              target: { x: targetNode.x, y: targetNode.y },
+              pathType: 'bezier',
+              arrowTarget: 'triangle',
+            },
+            style: {
+              stroke: '#666',
+              strokeWidth: 2,
+            },
+            registry: canvas.registry,
+          });
+          canvas.addToEdgeLayer(edge, sourceNode.id, targetNode.id);
         }
-        edges.push({
-          id: `edge-${i}`,
-          source,
-          target,
-          style: {
-            type: edgeTypes[i % edgeTypes.length],
-          },
-        });
       }
+    }
 
-      canvas.import({ nodes, edges });
+    // Button handlers
+    document.getElementById('fit-btn')?.addEventListener('click', () => {
+      canvas.fitContent(50);
+    });
 
-      // Short delay to let shapes render, then fit
-      setTimeout(() => {
-        canvas.fitToContent(50);
-      }, 100);
+    document.getElementById('reset-btn')?.addEventListener('click', () => {
+      canvas.resetViewport();
+    });
 
-      // Update info
-      const updateInfo = () => {
-        const viewport = canvas.getViewportState();
-        info.innerHTML = `
-          <strong>Renderer:</strong> ${canvas.isWebGPU ? 'WebGPU ✓' : 'WebGL'} |
-          <strong>Nodes:</strong> ${canvas.getNodes().length} |
-          <strong>Edges:</strong> ${canvas.getEdges().length} |
-          <strong>Zoom:</strong> ${viewport.zoom.toFixed(2)} |
-          <strong>Selected:</strong> ${canvas.selection.selectedNodes.length}
-        `;
-      };
-
-      canvas.on('viewport:changed', updateInfo);
-      canvas.on('selection:changed', updateInfo);
-      updateInfo();
-
-      // Wire up controls
-      wrapper.querySelector('#fit-btn')?.addEventListener('click', () => {
-        canvas.fitToContent(50);
-      });
-
-      wrapper.querySelector('#reset-btn')?.addEventListener('click', () => {
-        canvas.resetView();
-      });
-
-      wrapper.querySelector('#zoom-in-btn')?.addEventListener('click', () => {
-        canvas.zoomIn();
-      });
-
-      wrapper.querySelector('#zoom-out-btn')?.addEventListener('click', () => {
-        canvas.zoomOut();
-      });
-
-      let currentTheme: 'light' | 'dark' = args.theme;
-      wrapper.querySelector('#toggle-theme-btn')?.addEventListener('click', () => {
-        currentTheme = currentTheme === 'light' ? 'dark' : 'light';
-        canvas.setTheme(currentTheme);
-      });
-
-      let nodeCounter = args.nodeCount;
-      wrapper.querySelector('#add-node-btn')?.addEventListener('click', () => {
-        canvas.addNode({
-          id: `node-${nodeCounter++}`,
+    let nodeCounter = args.nodeCount;
+    document.getElementById('add-node-btn')?.addEventListener('click', () => {
+      const node = new NodeShape({
+        data: {
+          id: `node-${nodeCounter}`,
           x: Math.random() * 400 - 200,
           y: Math.random() * 300 - 150,
-          style: {
-            shape: shapes[nodeCounter % shapes.length],
-            size: 30,
-          },
-        });
-        updateInfo();
+          shape: shapes[nodeCounter % shapes.length],
+          size: 35,
+          label: `New ${nodeCounter + 1}`,
+        },
+        style: {
+          fill: colors[nodeCounter % colors.length],
+          stroke: '#333',
+          strokeWidth: 2,
+        },
+        registry: canvas.registry,
       });
-
-      // Handle node events
-      canvas.on('node:click', (data: unknown) => {
-        const { node } = data as { node: { id: string } };
-        canvas.selectNode(node.id);
-      });
-
-      canvas.on('canvas:click', () => {
-        canvas.clearSelection();
-      });
-
-    } catch (error) {
-      info.innerHTML = `<span style="color: red">Error: ${error}</span>`;
-      console.error('Canvas initialization error:', error);
-    }
+      canvas.addToNodeLayer(node);
+      nodeCounter++;
+      info.innerHTML = `Added node ${nodeCounter}. Total: ${canvas.nodeLayer?.children.length ?? 0}`;
+    });
   });
 
   return wrapper;
@@ -180,26 +144,14 @@ const createCanvas = (args: CanvasArgs): HTMLElement => {
 
 const meta: Meta<CanvasArgs> = {
   title: 'Canvas/Basic',
-  render: (args) => createCanvas(args),
+  render: (args) => createBasicCanvas(args),
   argTypes: {
-    theme: {
-      control: 'select',
-      options: ['light', 'dark'],
-      description: 'Canvas theme',
-    },
-    nodeCount: {
-      control: { type: 'range', min: 1, max: 100, step: 1 },
-      description: 'Number of nodes to generate',
-    },
-    edgeCount: {
-      control: { type: 'range', min: 0, max: 50, step: 1 },
-      description: 'Number of edges to generate',
-    },
+    backgroundColor: { control: 'color' },
+    nodeCount: { control: { type: 'range', min: 1, max: 20, step: 1 } },
   },
   args: {
-    theme: 'light',
-    nodeCount: 10,
-    edgeCount: 8,
+    backgroundColor: '#f5f5f5',
+    nodeCount: 6,
   },
 };
 
@@ -209,22 +161,15 @@ type Story = StoryObj<CanvasArgs>;
 
 export const Default: Story = {};
 
-export const DarkTheme: Story = {
+export const DarkBackground: Story = {
   args: {
-    theme: 'dark',
+    backgroundColor: '#1a1a2e',
+    nodeCount: 8,
   },
 };
 
-export const LargeGraph: Story = {
+export const ManyNodes: Story = {
   args: {
-    nodeCount: 50,
-    edgeCount: 40,
-  },
-};
-
-export const NoEdges: Story = {
-  args: {
-    nodeCount: 20,
-    edgeCount: 0,
+    nodeCount: 15,
   },
 };
