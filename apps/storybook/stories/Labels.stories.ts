@@ -19,21 +19,25 @@ const generateNodeLabelsData = (fontSize: number): CanvasData => {
   ];
 
   const nodes = shapes.map((shapeConfig, i) => ({
-    id: `node-${i}`,
-    x: shapeConfig.x,
-    y: shapeConfig.y,
-    shape: shapeConfig.shape,
-    size: 40,
-    width: 80,
-    height: 50,
-    label: shapeConfig.label,
-    fill: colors[i],
-    stroke: '#333',
-    strokeWidth: 2,
-    labelStyle: {
-      fill: '#ffffff',
-      fontSize,
-      fontWeight: 'bold',
+    data: {
+      id: `node-${i}`,
+      x: shapeConfig.x,
+      y: shapeConfig.y,
+      shape: shapeConfig.shape,
+      size: 40,
+      width: 80,
+      height: 50,
+      label: shapeConfig.label,
+    },
+    style: {
+      fill: colors[i],
+      stroke: '#333',
+      strokeWidth: 2,
+      labelStyle: {
+        fill: '#ffffff',
+        fontSize,
+        fontWeight: 'bold',
+      },
     },
   }));
 
@@ -91,37 +95,49 @@ const generateEdgeLabelsData = (): CanvasData => {
     const targetX = 180;
 
     nodes.push({
-      id: `source-label-${i}`,
-      x: sourceX,
-      y: edgeConfig.y,
-      shape: 'circle' as const,
-      size: 25,
-      fill: '#4a90d9',
-      stroke: '#333',
-      strokeWidth: 2,
+      data: {
+        id: `source-label-${i}`,
+        x: sourceX,
+        y: edgeConfig.y,
+        shape: 'circle' as const,
+        size: 25,
+      },
+      style: {
+        fill: '#4a90d9',
+        stroke: '#333',
+        strokeWidth: 2,
+      },
     });
 
     nodes.push({
-      id: `target-label-${i}`,
-      x: targetX,
-      y: edgeConfig.y,
-      shape: 'circle' as const,
-      size: 25,
-      fill: '#50c878',
-      stroke: '#333',
-      strokeWidth: 2,
+      data: {
+        id: `target-label-${i}`,
+        x: targetX,
+        y: edgeConfig.y,
+        shape: 'circle' as const,
+        size: 25,
+      },
+      style: {
+        fill: '#50c878',
+        stroke: '#333',
+        strokeWidth: 2,
+      },
     });
 
     edges.push({
-      id: `edge-label-${i}`,
-      source: `source-label-${i}`,
-      target: `target-label-${i}`,
-      pathType: edgeConfig.pathType as any,
-      arrowTarget: 'triangle' as const,
-      label: edgeConfig.label,
-      curvature: 0.3,
-      stroke: '#666',
-      strokeWidth: 2,
+      data: {
+        id: `edge-label-${i}`,
+        source: `source-label-${i}`,
+        target: `target-label-${i}`,
+        pathType: edgeConfig.pathType as any,
+        arrowTarget: 'triangle' as const,
+        label: edgeConfig.label,
+        curvature: 0.3,
+      },
+      style: {
+        stroke: '#666',
+        strokeWidth: 2,
+      },
     });
   });
 

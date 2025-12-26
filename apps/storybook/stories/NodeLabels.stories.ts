@@ -13,21 +13,25 @@ const generateLabelData = (position: string): CanvasData => {
   
   return {
     nodes: shapes.map((shape, i) => ({
-      id: `node-${i}`,
-      x: 150 + (i % 3) * 250,
-      y: 150 + Math.floor(i / 3) * 200,
-      shape,
-      size: 70,
-      label: `${shape}`,
-      labelPlacement: position as any,
-      labelStyle: {
-        fontSize: 14,
-        fill: '#ffffff',
-        fontWeight: '500',
+      data: {
+        id: `node-${i}`,
+        x: 150 + (i % 3) * 250,
+        y: 150 + Math.floor(i / 3) * 200,
+        shape,
+        size: 70,
+        label: `${shape}`,
+        labelPlacement: position as any,
       },
-      fill: '#4a90e2',
-      stroke: '#2d5a8c',
-      strokeWidth: 2,
+      style: {
+        labelStyle: {
+          fontSize: 14,
+          fill: '#ffffff',
+          fontWeight: '500',
+        },
+        fill: '#4a90e2',
+        stroke: '#2d5a8c',
+        strokeWidth: 2,
+      },
     })),
     edges: [],
   };
@@ -239,19 +243,23 @@ export const StatusBadges: Story = {
 
       const data: CanvasData = {
         nodes: statuses.map((status, i) => ({
-          id: `status-${i}`,
-          x: 150 + i * 140,
-          y: 200,
-          shape: 'circle' as const,
-          size: 60,
-          label: status.emoji,
-          labelStyle: {
-            fontSize: 24,
-            fill: '#ffffff',
+          data: {
+            id: `status-${i}`,
+            x: 150 + i * 140,
+            y: 200,
+            shape: 'circle' as const,
+            size: 60,
+            label: status.emoji,
           },
-          fill: status.fill,
-          stroke: '#ffffff',
-          strokeWidth: 2,
+          style: {
+            labelStyle: {
+              fontSize: 24,
+              fill: '#ffffff',
+            },
+            fill: status.fill,
+            stroke: '#ffffff',
+            strokeWidth: 2,
+          },
         })),
         edges: [],
       };
@@ -302,20 +310,24 @@ export const NotificationCounts: Story = {
 
       const data: CanvasData = {
         nodes: counts.map((count, i) => ({
-          id: `notif-${i}`,
-          x: 150 + i * 140,
-          y: 200,
-          shape: 'roundedRect' as const,
-          size: 70,
-          label: String(count),
-          labelStyle: {
-            fontSize: count > 9 ? 18 : 24,
-            fill: '#ffffff',
-            fontWeight: 'bold',
+          data: {
+            id: `notif-${i}`,
+            x: 150 + i * 140,
+            y: 200,
+            shape: 'roundedRect' as const,
+            size: 70,
+            label: String(count),
           },
-          fill: count > 9 ? '#e74c3c' : '#3498db',
-          stroke: '#ffffff',
-          strokeWidth: 2,
+          style: {
+            labelStyle: {
+              fontSize: count > 9 ? 18 : 24,
+              fill: '#ffffff',
+              fontWeight: 'bold',
+            },
+            fill: count > 9 ? '#e74c3c' : '#3498db',
+            stroke: '#ffffff',
+            strokeWidth: 2,
+          },
         })),
         edges: [],
       };

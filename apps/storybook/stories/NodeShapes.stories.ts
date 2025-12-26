@@ -36,12 +36,14 @@ const generateShapesData = (showLabels: boolean): CanvasData => {
     const y = row * spacingY - spacingY / 2;
 
     nodes.push({
-      id: `shape-${shape.name}`,
-      x,
-      y,
-      shape: shape.name,
-      size: 45,
-      label: showLabels ? shape.label : undefined,
+      data: {
+        id: `shape-${shape.name}`,
+        x,
+        y,
+        shape: shape.name,
+        size: 45,
+        label: showLabels ? shape.label : undefined,
+      },
     });
   });
 

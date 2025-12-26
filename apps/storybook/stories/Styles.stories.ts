@@ -7,18 +7,18 @@ interface StylesArgs {
 
 const generateGraphData = (): CanvasData => ({
   nodes: [
-    { id: 'n1', x: -150, y: -50, shape: 'circle', size: 40, label: 'Node 1', fill: '#4a90d9', stroke: '#2d5f8a', strokeWidth: 2 },
-    { id: 'n2', x: 150, y: -50, shape: 'circle', size: 40, label: 'Node 2', fill: '#50c878', stroke: '#3d9d5c', strokeWidth: 2 },
-    { id: 'n3', x: 0, y: 80, shape: 'hexagon', size: 45, label: 'Node 3', fill: '#ff6b6b', stroke: '#cc5555', strokeWidth: 2 },
-    { id: 'n4', x: -150, y: 80, shape: 'roundedRect', width: 80, height: 50, label: 'Node 4', fill: '#ffd93d', stroke: '#ccae30', strokeWidth: 2 },
-    { id: 'n5', x: 150, y: 80, shape: 'diamond', size: 40, label: 'Node 5', fill: '#9b59b6', stroke: '#7d478f', strokeWidth: 2 },
+    { data: { id: 'n1', x: -150, y: -50, shape: 'circle', size: 40, label: 'Node 1' }, style: { fill: '#4a90d9', stroke: '#2d5f8a', strokeWidth: 2 } },
+    { data: { id: 'n2', x: 150, y: -50, shape: 'circle', size: 40, label: 'Node 2' }, style: { fill: '#50c878', stroke: '#3d9d5c', strokeWidth: 2 } },
+    { data: { id: 'n3', x: 0, y: 80, shape: 'hexagon', size: 45, label: 'Node 3' }, style: { fill: '#ff6b6b', stroke: '#cc5555', strokeWidth: 2 } },
+    { data: { id: 'n4', x: -150, y: 80, shape: 'roundedRect', width: 80, height: 50, label: 'Node 4' }, style: { fill: '#ffd93d', stroke: '#ccae30', strokeWidth: 2 } },
+    { data: { id: 'n5', x: 150, y: 80, shape: 'diamond', size: 40, label: 'Node 5' }, style: { fill: '#9b59b6', stroke: '#7d478f', strokeWidth: 2 } },
   ],
   edges: [
-    { id: 'e1', source: 'n1', target: 'n2', pathType: 'bezier', arrowTarget: 'triangle', stroke: '#666', strokeWidth: 2 },
-    { id: 'e2', source: 'n1', target: 'n3', pathType: 'bezier', arrowTarget: 'triangle', stroke: '#666', strokeWidth: 2 },
-    { id: 'e3', source: 'n2', target: 'n3', pathType: 'bezier', arrowTarget: 'triangle', stroke: '#666', strokeWidth: 2 },
-    { id: 'e4', source: 'n4', target: 'n3', pathType: 'line', arrowTarget: 'triangle', stroke: '#666', strokeWidth: 2 },
-    { id: 'e5', source: 'n5', target: 'n3', pathType: 'line', arrowTarget: 'triangle', stroke: '#666', strokeWidth: 2 },
+    { data: { id: 'e1', source: 'n1', target: 'n2', pathType: 'bezier', arrowTarget: 'triangle' }, style: { stroke: '#666', strokeWidth: 2 } },
+    { data: { id: 'e2', source: 'n1', target: 'n3', pathType: 'bezier', arrowTarget: 'triangle' }, style: { stroke: '#666', strokeWidth: 2 } },
+    { data: { id: 'e3', source: 'n2', target: 'n3', pathType: 'bezier', arrowTarget: 'triangle' }, style: { stroke: '#666', strokeWidth: 2 } },
+    { data: { id: 'e4', source: 'n4', target: 'n3', pathType: 'line', arrowTarget: 'triangle' }, style: { stroke: '#666', strokeWidth: 2 } },
+    { data: { id: 'e5', source: 'n5', target: 'n3', pathType: 'line', arrowTarget: 'triangle' }, style: { stroke: '#666', strokeWidth: 2 } },
   ],
 });
 
@@ -123,18 +123,18 @@ const createDynamicStylesDemo = (): HTMLElement => {
       backgroundColor: '#ffffff',
       data: {
         nodes: [
-          { id: 'a1', x: -200, y: -50, shape: 'circle', size: 35, label: 'A1', fill: '#4a90d9', stroke: '#333', strokeWidth: 2 },
-          { id: 'a2', x: -100, y: -50, shape: 'circle', size: 35, label: 'A2', fill: '#4a90d9', stroke: '#333', strokeWidth: 2 },
-          { id: 'b1', x: 100, y: -50, shape: 'roundedRect', width: 70, height: 45, label: 'B1', fill: '#50c878', stroke: '#333', strokeWidth: 2 },
-          { id: 'b2', x: 200, y: -50, shape: 'roundedRect', width: 70, height: 45, label: 'B2', fill: '#50c878', stroke: '#333', strokeWidth: 2 },
-          { id: 'imp1', x: -50, y: 60, shape: 'hexagon', size: 40, label: 'IMP', fill: '#ff6b6b', stroke: '#333', strokeWidth: 2 },
-          { id: 'imp2', x: 50, y: 60, shape: 'hexagon', size: 40, label: 'IMP', fill: '#ff6b6b', stroke: '#333', strokeWidth: 2 },
+          { data: { id: 'a1', x: -200, y: -50, shape: 'circle', size: 35, label: 'A1' }, style: { fill: '#4a90d9', stroke: '#333', strokeWidth: 2 } },
+          { data: { id: 'a2', x: -100, y: -50, shape: 'circle', size: 35, label: 'A2' }, style: { fill: '#4a90d9', stroke: '#333', strokeWidth: 2 } },
+          { data: { id: 'b1', x: 100, y: -50, shape: 'roundedRect', width: 70, height: 45, label: 'B1' }, style: { fill: '#50c878', stroke: '#333', strokeWidth: 2 } },
+          { data: { id: 'b2', x: 200, y: -50, shape: 'roundedRect', width: 70, height: 45, label: 'B2' }, style: { fill: '#50c878', stroke: '#333', strokeWidth: 2 } },
+          { data: { id: 'imp1', x: -50, y: 60, shape: 'hexagon', size: 40, label: 'IMP' }, style: { fill: '#ff6b6b', stroke: '#333', strokeWidth: 2 } },
+          { data: { id: 'imp2', x: 50, y: 60, shape: 'hexagon', size: 40, label: 'IMP' }, style: { fill: '#ff6b6b', stroke: '#333', strokeWidth: 2 } },
         ],
         edges: [
-          { id: 'e1', source: 'a1', target: 'a2', pathType: 'line', stroke: '#888', strokeWidth: 2 },
-          { id: 'e2', source: 'b1', target: 'b2', pathType: 'line', stroke: '#888', strokeWidth: 2 },
-          { id: 'e3', source: 'a2', target: 'imp1', pathType: 'bezier', arrowTarget: 'triangle', stroke: '#888', strokeWidth: 2 },
-          { id: 'e4', source: 'b1', target: 'imp2', pathType: 'bezier', arrowTarget: 'triangle', stroke: '#888', strokeWidth: 2 },
+          { data: { id: 'e1', source: 'a1', target: 'a2', pathType: 'line' }, style: { stroke: '#888', strokeWidth: 2 } },
+          { data: { id: 'e2', source: 'b1', target: 'b2', pathType: 'line' }, style: { stroke: '#888', strokeWidth: 2 } },
+          { data: { id: 'e3', source: 'a2', target: 'imp1', pathType: 'bezier', arrowTarget: 'triangle' }, style: { stroke: '#888', strokeWidth: 2 } },
+          { data: { id: 'e4', source: 'b1', target: 'imp2', pathType: 'bezier', arrowTarget: 'triangle' }, style: { stroke: '#888', strokeWidth: 2 } },
         ],
       },
     });

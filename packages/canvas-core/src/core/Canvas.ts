@@ -35,7 +35,7 @@
 import { Application, Container } from 'pixi.js';
 import { Viewport, type ViewportOptions } from '../viewport/Viewport';
 import { Registry } from '../rendering/Registry';
-import { Renderer, type NodeInput, type EdgeInput } from '../rendering/Renderer';
+import { Renderer, type NodeData as RendererNodeData, type EdgeData as RendererEdgeData } from '../rendering/Renderer';
 import { SceneGraph } from '../scene/SceneGraph';
 import { QueryEngine, type QueryFilter, type QueryResult } from '../scene/QueryEngine';
 import { Relationships, type RelationshipInfo, type PathResult } from '../scene/Relationships';
@@ -51,12 +51,12 @@ import type { NodeData, EdgeData } from '../types';
 /**
  * Node configuration in CanvasData
  */
-export interface CanvasNodeData extends NodeInput {}
+export interface CanvasNodeData extends RendererNodeData {}
 
 /**
  * Edge configuration in CanvasData
  */
-export interface CanvasEdgeData extends EdgeInput {}
+export interface CanvasEdgeData extends RendererEdgeData {}
 
 /**
  * Data structure for Canvas
@@ -367,9 +367,9 @@ export class Canvas {
     // Register nodes in scene graph
     (dataToRender.nodes || []).forEach(node => {
       this._scene.addNode({
-        id: node.id as string,
-        x: node.x,
-        y: node.y,
+        id: node.data.id as string,
+        x: node.data.x,
+        y: node.data.y,
       });
     });
 
@@ -379,11 +379,11 @@ export class Canvas {
     // Register edges in scene graph
     (dataToRender.edges || []).forEach(edge => {
       // Only add edges with string IDs (not points)
-      if (typeof edge.source === 'string' && typeof edge.target === 'string') {
+      if (typeof edge.data.source === 'string' && typeof edge.data.target === 'string') {
         this._scene.addEdge({
-          id: edge.id as string,
-          source: edge.source,
-          target: edge.target,
+          id: edge.data.id as string,
+          source: edge.data.source,
+          target: edge.data.target,
         });
       }
     });
@@ -480,7 +480,7 @@ export class Canvas {
   /**
    * Add a node
    */
-  addNode(input: NodeInput): void {
+  addNode(input: RendererNodeData): void {
     if (!this._renderer) {
       throw new Error('Canvas not initialized. Call init() first.');
     }
@@ -490,7 +490,7 @@ export class Canvas {
   /**
    * Update a node
    */
-  updateNode(id: string, updates: Partial<NodeInput>): void {
+  updateNode(id: string, updates: Partial<RendererNodeData>): void {
     if (!this._renderer) {
       throw new Error('Canvas not initialized. Call init() first.');
     }
@@ -530,7 +530,7 @@ export class Canvas {
   /**
    * Add an edge
    */
-  addEdge(input: EdgeInput): void {
+  addEdge(input: RendererEdgeData): void {
     if (!this._renderer) {
       throw new Error('Canvas not initialized. Call init() first.');
     }
@@ -540,7 +540,7 @@ export class Canvas {
   /**
    * Update an edge
    */
-  updateEdge(id: string, updates: Partial<EdgeInput>): void {
+  updateEdge(id: string, updates: Partial<RendererEdgeData>): void {
     if (!this._renderer) {
       throw new Error('Canvas not initialized. Call init() first.');
     }

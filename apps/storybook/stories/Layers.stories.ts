@@ -9,14 +9,14 @@ interface LayersArgs {
 
 const generateGraphData = (): CanvasData => ({
   nodes: [
-    { id: 'n1', x: -100, y: 0, shape: 'circle', size: 40, label: 'Node 1', fill: '#4a90d9', stroke: '#333', strokeWidth: 2 },
-    { id: 'n2', x: 100, y: 0, shape: 'circle', size: 40, label: 'Node 2', fill: '#50c878', stroke: '#333', strokeWidth: 2 },
-    { id: 'n3', x: 0, y: -80, shape: 'hexagon', size: 35, label: 'Node 3', fill: '#ff6b6b', stroke: '#333', strokeWidth: 2 },
+    { data: { id: 'n1', x: -100, y: 0, shape: 'circle', size: 40, label: 'Node 1' }, style: { fill: '#4a90d9', stroke: '#333', strokeWidth: 2 } },
+    { data: { id: 'n2', x: 100, y: 0, shape: 'circle', size: 40, label: 'Node 2' }, style: { fill: '#50c878', stroke: '#333', strokeWidth: 2 } },
+    { data: { id: 'n3', x: 0, y: -80, shape: 'hexagon', size: 35, label: 'Node 3' }, style: { fill: '#ff6b6b', stroke: '#333', strokeWidth: 2 } },
   ],
   edges: [
-    { id: 'e1', source: 'n1', target: 'n2', pathType: 'bezier', arrowTarget: 'triangle', stroke: '#666', strokeWidth: 2 },
-    { id: 'e2', source: 'n1', target: 'n3', pathType: 'bezier', arrowTarget: 'triangle', stroke: '#666', strokeWidth: 2 },
-    { id: 'e3', source: 'n2', target: 'n3', pathType: 'bezier', arrowTarget: 'triangle', stroke: '#666', strokeWidth: 2 },
+    { data: { id: 'e1', source: 'n1', target: 'n2', pathType: 'bezier', arrowTarget: 'triangle' }, style: { stroke: '#666', strokeWidth: 2 } },
+    { data: { id: 'e2', source: 'n1', target: 'n3', pathType: 'bezier', arrowTarget: 'triangle' }, style: { stroke: '#666', strokeWidth: 2 } },
+    { data: { id: 'e3', source: 'n2', target: 'n3', pathType: 'bezier', arrowTarget: 'triangle' }, style: { stroke: '#666', strokeWidth: 2 } },
   ],
 });
 
@@ -127,18 +127,18 @@ const createOpacityDemo = (): HTMLElement => {
       backgroundColor: '#f5f5f5',
       data: {
         nodes: [
-          { id: 'n1', x: -120, y: 0, shape: 'circle', size: 50, label: 'A', fill: '#4a90d9', stroke: '#2d5a87', strokeWidth: 3 },
-          { id: 'n2', x: 120, y: 0, shape: 'circle', size: 50, label: 'B', fill: '#50c878', stroke: '#3d9d5c', strokeWidth: 3 },
-          { id: 'n3', x: 0, y: 100, shape: 'circle', size: 50, label: 'C', fill: '#ff6b6b', stroke: '#cc5555', strokeWidth: 3 },
-          { id: 'n4', x: 0, y: -100, shape: 'hexagon', size: 45, label: 'Hub', fill: '#9b59b6', stroke: '#7d478f', strokeWidth: 3 },
+          { data: { id: 'n1', x: -120, y: 0, shape: 'circle', size: 50, label: 'A' }, style: { fill: '#4a90d9', stroke: '#2d5a87', strokeWidth: 3 } },
+          { data: { id: 'n2', x: 120, y: 0, shape: 'circle', size: 50, label: 'B' }, style: { fill: '#50c878', stroke: '#3d9d5c', strokeWidth: 3 } },
+          { data: { id: 'n3', x: 0, y: 100, shape: 'circle', size: 50, label: 'C' }, style: { fill: '#ff6b6b', stroke: '#cc5555', strokeWidth: 3 } },
+          { data: { id: 'n4', x: 0, y: -100, shape: 'hexagon', size: 45, label: 'Hub' }, style: { fill: '#9b59b6', stroke: '#7d478f', strokeWidth: 3 } },
         ],
         edges: [
-          { id: 'e1', source: 'n1', target: 'n4', pathType: 'bezier', arrowTarget: 'triangle', stroke: '#888', strokeWidth: 3 },
-          { id: 'e2', source: 'n2', target: 'n4', pathType: 'bezier', arrowTarget: 'triangle', stroke: '#888', strokeWidth: 3 },
-          { id: 'e3', source: 'n3', target: 'n4', pathType: 'bezier', arrowTarget: 'triangle', stroke: '#888', strokeWidth: 3 },
-          { id: 'e4', source: 'n1', target: 'n2', pathType: 'line', arrowTarget: 'triangle', stroke: '#666', strokeWidth: 2 },
-          { id: 'e5', source: 'n2', target: 'n3', pathType: 'line', arrowTarget: 'triangle', stroke: '#666', strokeWidth: 2 },
-          { id: 'e6', source: 'n3', target: 'n1', pathType: 'line', arrowTarget: 'triangle', stroke: '#666', strokeWidth: 2 },
+          { data: { id: 'e1', source: 'n1', target: 'n4', pathType: 'bezier', arrowTarget: 'triangle' }, style: { stroke: '#888', strokeWidth: 3 } },
+          { data: { id: 'e2', source: 'n2', target: 'n4', pathType: 'bezier', arrowTarget: 'triangle' }, style: { stroke: '#888', strokeWidth: 3 } },
+          { data: { id: 'e3', source: 'n3', target: 'n4', pathType: 'bezier', arrowTarget: 'triangle' }, style: { stroke: '#888', strokeWidth: 3 } },
+          { data: { id: 'e4', source: 'n1', target: 'n2', pathType: 'line', arrowTarget: 'triangle' }, style: { stroke: '#666', strokeWidth: 2 } },
+          { data: { id: 'e5', source: 'n2', target: 'n3', pathType: 'line', arrowTarget: 'triangle' }, style: { stroke: '#666', strokeWidth: 2 } },
+          { data: { id: 'e6', source: 'n3', target: 'n1', pathType: 'line', arrowTarget: 'triangle' }, style: { stroke: '#666', strokeWidth: 2 } },
         ],
       },
     });

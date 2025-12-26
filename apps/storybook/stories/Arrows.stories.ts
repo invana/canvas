@@ -20,55 +20,71 @@ const generateArrowsData = (arrowSize: number, edgeColor: string): CanvasData =>
 
     // Source node
     nodes.push({
-      id: `source-${arrowType}`,
-      x: sourceX,
-      y,
-      shape: 'circle' as const,
-      size: 20,
-      fill: '#e0e0e0',
-      stroke: '#666',
-      strokeWidth: 2,
+      data: {
+        id: `source-${arrowType}`,
+        x: sourceX,
+        y,
+        shape: 'circle' as const,
+        size: 20,
+      },
+      style: {
+        fill: '#e0e0e0',
+        stroke: '#666',
+        strokeWidth: 2,
+      },
     });
 
     // Target node
     nodes.push({
-      id: `target-${arrowType}`,
-      x: targetX,
-      y,
-      shape: 'circle' as const,
-      size: 20,
-      fill: '#e0e0e0',
-      stroke: '#666',
-      strokeWidth: 2,
+      data: {
+        id: `target-${arrowType}`,
+        x: targetX,
+        y,
+        shape: 'circle' as const,
+        size: 20,
+      },
+      style: {
+        fill: '#e0e0e0',
+        stroke: '#666',
+        strokeWidth: 2,
+      },
     });
 
     // Label
     nodes.push({
-      id: `label-${arrowType}`,
-      x: -280,
-      y,
-      shape: 'roundedRect' as const,
-      width: 80,
-      height: 24,
-      label: arrowType,
+      data: {
+        id: `label-${arrowType}`,
+        x: -280,
+        y,
+        shape: 'roundedRect' as const,
+        width: 80,
+        height: 24,
+        label: arrowType,
+      },
+      style: {
+        fill: '#f5f5f5',
+        stroke: '#ddd',
+        strokeWidth: 1,
+        labelStyle: { fill: '#333', fontSize: 11 },
+      },
       interactive: false,
       draggable: false,
-      fill: '#f5f5f5',
-      stroke: '#ddd',
-      strokeWidth: 1,
-      labelStyle: { fill: '#333', fontSize: 11 },
     });
 
     // Edge
     edges.push({
-      id: `edge-${arrowType}`,
-      source: `source-${arrowType}`,
-      target: `target-${arrowType}`,
-      pathType: 'line' as const,
-      arrowTarget: arrowType,
-      arrowSize,
-      stroke: edgeColor,
-      strokeWidth: 2,
+      data: {
+        id: `edge-${arrowType}`,
+        source: `source-${arrowType}`,
+        target: `target-${arrowType}`,
+        pathType: 'line' as const,
+        arrowTarget: arrowType,
+        arrowSize,
+      },
+      style: {
+        stroke: edgeColor,
+        strokeWidth: 2,
+      },
     });
   });
 
@@ -127,53 +143,69 @@ const generateBidirectionalData = (arrowSize: number, edgeColor: string): Canvas
     const targetX = 150;
 
     nodes.push({
-      id: `source-bi-${i}`,
-      x: sourceX,
-      y,
-      shape: 'circle' as const,
-      size: 22,
-      fill: '#64b5f6',
-      stroke: '#1976d2',
-      strokeWidth: 2,
+      data: {
+        id: `source-bi-${i}`,
+        x: sourceX,
+        y,
+        shape: 'circle' as const,
+        size: 22,
+      },
+      style: {
+        fill: '#64b5f6',
+        stroke: '#1976d2',
+        strokeWidth: 2,
+      },
     });
 
     nodes.push({
-      id: `target-bi-${i}`,
-      x: targetX,
-      y,
-      shape: 'circle' as const,
-      size: 22,
-      fill: '#81c784',
-      stroke: '#388e3c',
-      strokeWidth: 2,
+      data: {
+        id: `target-bi-${i}`,
+        x: targetX,
+        y,
+        shape: 'circle' as const,
+        size: 22,
+      },
+      style: {
+        fill: '#81c784',
+        stroke: '#388e3c',
+        strokeWidth: 2,
+      },
     });
 
     nodes.push({
-      id: `label-bi-${i}`,
-      x: -310,
-      y,
-      shape: 'roundedRect' as const,
-      width: 130,
-      height: 24,
-      label: combo.label,
+      data: {
+        id: `label-bi-${i}`,
+        x: -310,
+        y,
+        shape: 'roundedRect' as const,
+        width: 130,
+        height: 24,
+        label: combo.label,
+      },
+      style: {
+        fill: '#fafafa',
+        stroke: '#e0e0e0',
+        strokeWidth: 1,
+        labelStyle: { fill: '#333', fontSize: 10 },
+      },
       interactive: false,
       draggable: false,
-      fill: '#fafafa',
-      stroke: '#e0e0e0',
-      strokeWidth: 1,
-      labelStyle: { fill: '#333', fontSize: 10 },
     });
 
     edges.push({
-      id: `edge-bi-${i}`,
-      source: `source-bi-${i}`,
-      target: `target-bi-${i}`,
-      pathType: 'line' as const,
-      arrowSource: combo.source as any,
-      arrowTarget: combo.target as any,
-      arrowSize,
-      stroke: edgeColor,
-      strokeWidth: 2,
+      data: {
+        id: `edge-bi-${i}`,
+        source: `source-bi-${i}`,
+        target: `target-bi-${i}`,
+        pathType: 'line' as const,
+        arrowSource: combo.source as any,
+        arrowTarget: combo.target as any,
+        arrowSize,
+      },
+      style: {
+        stroke: edgeColor,
+        strokeWidth: 2,
+      },
     });
   });
 

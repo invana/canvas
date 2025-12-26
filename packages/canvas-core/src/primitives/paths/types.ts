@@ -23,6 +23,7 @@ export interface PathStyle {
   lineDash?: number[];
   lineCap?: 'butt' | 'round' | 'square';
   lineJoin?: 'miter' | 'round' | 'bevel';
+  cornerRadius?: number;
 }
 
 /**

@@ -92,7 +92,7 @@ export type BuiltInShapeType =
 /**
  * Path types that come built-in
  */
-export type BuiltInPathType = 'line' | 'bezier' | 'orthogonal' | 'orthogonal-rounded';
+export type BuiltInPathType = 'line' | 'bezier' | 'orthogonal';
 
 /**
  * Generic shape drawer function type
@@ -363,24 +363,21 @@ export class Registry {
     });
 
     this.registerPath('orthogonal', (g, params: any, style) => {
-      drawOrthogonalPath(g, {
+      const orthogonalParams = {
         from: params.from,
         to: params.to,
         sourceDirection: params.sourceDirection,
         targetDirection: params.targetDirection,
         minSegmentLength: params.minSegmentLength,
-      }, style);
-    });
-
-    this.registerPath('orthogonal-rounded', (g, params: any, style) => {
-      drawRoundedOrthogonalPath(g, {
-        from: params.from,
-        to: params.to,
-        sourceDirection: params.sourceDirection,
-        targetDirection: params.targetDirection,
-        minSegmentLength: params.minSegmentLength,
-        cornerRadius: params.cornerRadius ?? 8,
-      }, style);
+        cornerRadius: params.cornerRadius ?? style.cornerRadius ?? 0,
+      };
+      
+      // Use rounded version if cornerRadius is specified
+      if (orthogonalParams.cornerRadius > 0) {
+        drawRoundedOrthogonalPath(g, orthogonalParams, style);
+      } else {
+        drawOrthogonalPath(g, orthogonalParams, style);
+      }
     });
   }
 
@@ -507,9 +504,12 @@ export class Registry {
     import('../elements/edges/BezierEdge').then(({ BezierEdge }) => {
       this.registerEdgeClass('bezier', BezierEdge);
       this.registerEdgeClass('curve', BezierEdge);
+      this.registerEdgeClass('curved', BezierEdge);
+      this.registerEdgeClass('quadratic', BezierEdge);
     });
     import('../elements/edges/OrthogonalEdge').then(({ OrthogonalEdge }) => {
       this.registerEdgeClass('orthogonal', OrthogonalEdge);
+      this.registerEdgeClass('orthogonal-rounded', OrthogonalEdge); // Backward compatibility - use cornerRadius in style
     });
   }
 

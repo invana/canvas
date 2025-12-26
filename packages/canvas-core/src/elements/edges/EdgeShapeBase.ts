@@ -29,7 +29,7 @@ import { BaseShape, type BaseShapeData, type BaseShapeOptions } from '../BaseSha
 /**
  * Edge path types
  */
-export type EdgePathType = 'line' | 'bezier' | 'orthogonal' | 'orthogonal-rounded' | string;
+export type EdgePathType = 'line' | 'bezier' | 'orthogonal' | string;
 
 /**
  * Tangent information for arrow placement
@@ -83,6 +83,8 @@ export interface EdgeStyle {
   lineCap?: 'butt' | 'round' | 'square';
   /** Line join style */
   lineJoin?: 'miter' | 'round' | 'bevel';
+  /** Corner radius for orthogonal edges (0 = sharp corners) */
+  cornerRadius?: number;
   /** Visibility */
   visible?: boolean;
   /** Overall alpha */

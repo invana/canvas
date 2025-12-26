@@ -26,10 +26,11 @@ export class OrthogonalEdge extends EdgeShapeBase {
     const targetDir = this._data.targetDirection ?? this.inferDirection(source, target, 'target');
     
     this._registry.drawPath(this._graphics, 'orthogonal', {
-      source,
-      target,
+      from: source,
+      to: target,
       sourceDirection: sourceDir,
       targetDirection: targetDir,
+      cornerRadius: style.cornerRadius,
     }, style);
   }
 
@@ -81,24 +82,4 @@ export class OrthogonalEdge extends EdgeShapeBase {
   }
 }
 
-/**
- * Orthogonal edge with rounded corners
- */
-export class OrthogonalRoundedEdge extends OrthogonalEdge {
-  override get pathType(): EdgePathType {
-    return 'orthogonal-rounded';
-  }
 
-  protected override drawPath(source: Point, target: Point, style: PathStyle): void {
-    const sourceDir = this._data.sourceDirection ?? this.inferDirection(source, target, 'source');
-    const targetDir = this._data.targetDirection ?? this.inferDirection(source, target, 'target');
-    
-    this._registry.drawPath(this._graphics, 'orthogonal-rounded', {
-      source,
-      target,
-      sourceDirection: sourceDir,
-      targetDirection: targetDir,
-      cornerRadius: 10, // Default corner radius
-    }, style);
-  }
-}

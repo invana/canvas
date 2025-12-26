@@ -74,7 +74,6 @@ export {
   LineEdge,
   BezierEdge,
   OrthogonalEdge,
-  OrthogonalRoundedEdge,
 } from './edges';
 export type {
   EdgeData,

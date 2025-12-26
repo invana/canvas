@@ -29,12 +29,12 @@ import { Container } from 'pixi.js';
 import { Registry } from './Registry';
 import { 
   NodeShapeBase, 
-  type NodeData, 
+  type NodeData as NodeShapeData, 
   type NodeStyle 
 } from '../elements/nodes';
 import { 
   EdgeShapeBase, 
-  type EdgeData, 
+  type EdgeData as EdgeShapeData, 
   type EdgeStyle 
 } from '../elements/edges';
 import { CircleNode } from '../elements/nodes/CircleNode';
@@ -53,25 +53,33 @@ export interface Point {
 }
 
 /**
- * Node input data (can reference source/target by ID or point)
+ * Node input for renderer - separates data from styling
  */
-export interface NodeInput extends Omit<NodeData, 'x' | 'y'> {
-  x: number;
-  y: number;
+export interface NodeData {
+  /** Core node data (id, position, label, properties) */
+  data: NodeShapeData;
+  /** Visual styling */
   style?: Partial<NodeStyle>;
+  /** Enable interactivity */
   interactive?: boolean;
+  /** Enable dragging */
   draggable?: boolean;
+  /** Enable selection */
   selectable?: boolean;
 }
 
 /**
- * Edge input data (can reference source/target by ID or point)
+ * Edge input for renderer - separates data from styling
  */
-export interface EdgeInput extends Omit<EdgeData, 'source' | 'target' | 'x' | 'y'> {
-  /** Source node ID or point */
-  source: string | Point;
-  /** Target node ID or point */
-  target: string | Point;
+export interface EdgeData {
+  /** Core edge data */
+  data: Omit<EdgeShapeData, 'source' | 'target'> & {
+    /** Source node ID or point */
+    source: string | Point;
+    /** Target node ID or point */
+    target: string | Point;
+  };
+  /** Visual styling */
   style?: Partial<EdgeStyle>;
 }
 
@@ -158,34 +166,16 @@ export class Renderer {
   /**
    * Add a node to the canvas
    */
-  addNode(input: NodeInput): NodeShapeBase {
-    const { interactive, draggable, selectable, ...restData } = input;
-    
-    // Separate style properties from data properties
-    const styleProps: Partial<NodeStyle> = {};
-    const dataProps: Partial<NodeInput> = {};
-    const styleKeys: (keyof NodeStyle)[] = [
-      'fill', 'stroke', 'strokeWidth', 
-      'hoverFill', 'hoverStroke', 
-      'selectedFill', 'selectedStroke', 'selectedStrokeWidth',
-      'labelPosition', 'labelOffsetX', 'labelOffsetY', 'labelStyle', 'rippleColor'
-    ];
-    
-    for (const key in restData) {
-      if (styleKeys.includes(key as keyof NodeStyle)) {
-        styleProps[key as keyof NodeStyle] = (restData as any)[key];
-      } else {
-        (dataProps as any)[key] = (restData as any)[key];
-      }
-    }
+  addNode(input: NodeData): NodeShapeBase {
+    const { data, style, interactive, draggable, selectable } = input;
     
     const mergedStyle: NodeStyle = {
       ...this._defaultNodeStyle,
-      ...styleProps,
+      ...style,
     };
     
     // Create node using registry
-    const shapeType = (dataProps as any).shape ?? 'circle';
+    const shapeType = data.shape ?? 'circle';
     const NodeClass = this._registry.getNodeClass(shapeType);
     
     if (!NodeClass) {
@@ -193,7 +183,7 @@ export class Renderer {
     }
     
     const node = new (NodeClass ?? CircleNode)({
-      data: dataProps as NodeData,
+      data,
       style: mergedStyle,
       interactive: interactive ?? true,
       draggable: draggable ?? true,
@@ -220,43 +210,30 @@ export class Renderer {
   /**
    * Update a node's properties
    */
-  updateNode(id: string, updates: Partial<NodeInput>): NodeShapeBase | undefined {
+  updateNode(id: string, updates: Partial<NodeData>): NodeShapeBase | undefined {
     const node = this._nodes.get(id);
     if (!node) return undefined;
     
-    // Update position
-    if (updates.x !== undefined) node.x = updates.x;
-    if (updates.y !== undefined) node.y = updates.y;
-    
-    // Extract style properties from updates
-    const styleProps: Partial<NodeStyle> = {};
-    const styleKeys: (keyof NodeStyle)[] = [
-      'fill', 'stroke', 'strokeWidth', 
-      'hoverFill', 'hoverStroke', 
-      'selectedFill', 'selectedStroke', 'selectedStrokeWidth',
-      'labelPosition', 'labelOffsetX', 'labelOffsetY', 'labelStyle', 'rippleColor'
-    ];
-    
-    for (const key in updates) {
-      if (styleKeys.includes(key as keyof NodeStyle)) {
-        styleProps[key as keyof NodeStyle] = (updates as any)[key];
+    // Update data properties
+    if (updates.data) {
+      if (updates.data.x !== undefined) node.x = updates.data.x;
+      if (updates.data.y !== undefined) node.y = updates.data.y;
+      
+      // Update label
+      if (updates.data.label !== undefined) {
+        (node as any)._data.label = updates.data.label;
+        node.updateLabel();
+      }
+      
+      // Update connected edges if position changed
+      if (updates.data.x !== undefined || updates.data.y !== undefined) {
+        this.updateConnectedEdges(id, node.x, node.y);
       }
     }
     
     // Update style
-    if (Object.keys(styleProps).length > 0) {
-      node.nodeStyle = { ...node.nodeStyle, ...styleProps };
-    }
-    
-    // Update label (updates the data then refreshes the label)
-    if (updates.label !== undefined) {
-      (node as any)._data.label = updates.label;
-      node.updateLabel();
-    }
-    
-    // Update connected edges if position changed
-    if (updates.x !== undefined || updates.y !== undefined) {
-      this.updateConnectedEdges(id, node.x, node.y);
+    if (updates.style) {
+      node.nodeStyle = { ...node.nodeStyle, ...updates.style };
     }
     
     return node;
@@ -317,25 +294,9 @@ export class Renderer {
   /**
    * Add an edge to the canvas
    */
-  addEdge(input: EdgeInput): EdgeShapeBase {
-    const { source, target, ...restData } = input;
-    
-    // Extract style properties from input
-    const styleProps: Partial<EdgeStyle> = {};
-    const dataProps: Partial<EdgeInput> = { source, target };
-    const styleKeys: (keyof EdgeStyle)[] = [
-      'stroke', 'strokeWidth', 'strokeAlpha', 'lineCap', 'lineJoin',
-      'visible', 'alpha', 'cursor', 'arrowFill', 'arrowStroke'
-    ];
-    
-    // Separate style properties from data properties
-    for (const key in restData) {
-      if (styleKeys.includes(key as keyof EdgeStyle)) {
-        styleProps[key as keyof EdgeStyle] = (restData as any)[key];
-      } else {
-        (dataProps as any)[key] = (restData as any)[key];
-      }
-    }
+  addEdge(input: EdgeData): EdgeShapeBase {
+    const { data, style } = input;
+    const { source, target } = data;
     
     // Resolve source and target
     const { point: sourcePoint, nodeId: sourceNodeId, node: sourceNode } = 
@@ -353,19 +314,29 @@ export class Renderer {
     
     const mergedStyle: EdgeStyle = {
       ...this._defaultEdgeStyle,
-      ...styleProps,
+      ...style,
     };
     
-    const edgeData: EdgeData = {
-      ...dataProps,
+    // Create edge data with resolved points
+    const edgeData: EdgeShapeData = {
+      id: data.id,
       source: adjustedPoints.source,
       target: adjustedPoints.target,
       x: 0,
       y: 0,
-    } as EdgeData;
+      pathType: data.pathType,
+      curvature: data.curvature,
+      sourceDirection: data.sourceDirection,
+      targetDirection: data.targetDirection,
+      arrowSource: data.arrowSource,
+      arrowTarget: data.arrowTarget,
+      arrowSize: data.arrowSize,
+      label: data.label,
+      payload: data.payload,
+    } as EdgeShapeData;
     
     // Create edge using registry  
-    const pathType = (edgeData as any).pathType ?? 'line';
+    const pathType = (data.pathType as string) ?? 'line';
     const EdgeClass = this._registry.getEdgeClass?.(pathType);
     
     if (!EdgeClass) {
@@ -404,36 +375,23 @@ export class Renderer {
   /**
    * Update an edge's properties
    */
-  updateEdge(id: string, updates: Partial<EdgeInput>): EdgeShapeBase | undefined {
+  updateEdge(id: string, updates: Partial<EdgeData>): EdgeShapeBase | undefined {
     const tracking = this._edges.get(id);
     if (!tracking) return undefined;
     
     const { edge } = tracking;
     
-    // Extract style properties from updates
-    const styleProps: Partial<EdgeStyle> = {};
-    const styleKeys: (keyof EdgeStyle)[] = [
-      'stroke', 'strokeWidth', 'strokeAlpha', 'lineCap', 'lineJoin',
-      'visible', 'alpha', 'cursor', 'arrowFill', 'arrowStroke'
-    ];
-    
-    for (const key in updates) {
-      if (styleKeys.includes(key as keyof EdgeStyle)) {
-        styleProps[key as keyof EdgeStyle] = (updates as any)[key];
-      }
-    }
-    
     // Update style
-    if (Object.keys(styleProps).length > 0) {
-      edge.updateEdgeStyle(styleProps);
+    if (updates.style) {
+      edge.updateEdgeStyle(updates.style);
     }
     
     // Update endpoints if source/target changed
-    if (updates.source !== undefined || updates.target !== undefined) {
+    if (updates.data?.source !== undefined || updates.data?.target !== undefined) {
       // Resolve new endpoints
-      const newSource = updates.source ?? 
+      const newSource = updates.data.source ?? 
         (tracking.sourceNodeId ? tracking.sourceNodeId : tracking.sourcePoint!);
-      const newTarget = updates.target ?? 
+      const newTarget = updates.data.target ?? 
         (tracking.targetNodeId ? tracking.targetNodeId : tracking.targetPoint!);
       
       const { point: sourcePoint, nodeId: sourceNodeId, node: sourceNode } = 
@@ -526,14 +484,14 @@ export class Renderer {
   /**
    * Add multiple nodes at once
    */
-  addNodes(inputs: NodeInput[]): NodeShapeBase[] {
+  addNodes(inputs: NodeData[]): NodeShapeBase[] {
     return inputs.map(input => this.addNode(input));
   }
 
   /**
    * Add multiple edges at once
    */
-  addEdges(inputs: EdgeInput[]): EdgeShapeBase[] {
+  addEdges(inputs: EdgeData[]): EdgeShapeBase[] {
     return inputs.map(input => this.addEdge(input));
   }
 

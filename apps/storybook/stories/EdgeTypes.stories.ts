@@ -6,7 +6,8 @@ interface EdgeTypesArgs {
   arrowSize: number;
 }
 
-const pathTypes = ['line', 'bezier', 'orthogonal', 'orthogonal-rounded'] as const;
+const pathTypes = ['line', 'bezier', 'orthogonal', 'orthogonal'] as const;
+const pathLabels = ['line', 'bezier', 'orthogonal', 'orthogonal-rounded'];
 const colors = ['#4a90d9', '#50c878', '#ff6b6b', '#ffd93d'];
 
 const generateEdgeTypesData = (arrowSize: number): CanvasData => {
@@ -17,59 +18,77 @@ const generateEdgeTypesData = (arrowSize: number): CanvasData => {
     const y = i * 90 - 135;
     const sourceX = -200;
     const targetX = 200;
+    const idSuffix = pathLabels[i]; // Use label for unique IDs
 
     // Source node
     nodes.push({
-      id: `source-${pathType}`,
-      x: sourceX,
-      y,
-      shape: 'circle' as const,
-      size: 25,
-      fill: colors[i],
-      stroke: '#333',
-      strokeWidth: 2,
+      data: {
+        id: `source-${idSuffix}`,
+        x: sourceX,
+        y,
+        shape: 'circle' as const,
+        size: 25,
+      },
+      style: {
+        fill: colors[i],
+        stroke: '#333',
+        strokeWidth: 2,
+      },
     });
 
     // Target node
     nodes.push({
-      id: `target-${pathType}`,
-      x: targetX,
-      y,
-      shape: 'circle' as const,
-      size: 25,
-      fill: colors[i],
-      stroke: '#333',
-      strokeWidth: 2,
+      data: {
+        id: `target-${idSuffix}`,
+        x: targetX,
+        y,
+        shape: 'circle' as const,
+        size: 25,
+      },
+      style: {
+        fill: colors[i],
+        stroke: '#333',
+        strokeWidth: 2,
+      },
     });
 
     // Label node (non-interactive)
     nodes.push({
-      id: `label-${pathType}`,
-      x: -320,
-      y,
-      shape: 'roundedRect' as const,
-      width: 100,
-      height: 30,
-      label: pathType,
+      data: {
+        id: `label-${idSuffix}`,
+        x: -320,
+        y,
+        shape: 'roundedRect' as const,
+        width: 100,
+        height: 30,
+        label: pathLabels[i],
+      },
+      style: {
+        fill: '#f0f0f0',
+        stroke: '#ccc',
+        strokeWidth: 1,
+        labelStyle: { fill: '#333', fontSize: 11 },
+      },
       interactive: false,
       draggable: false,
-      fill: '#f0f0f0',
-      stroke: '#ccc',
-      strokeWidth: 1,
-      labelStyle: { fill: '#333', fontSize: 11 },
     });
 
     // Edge
     edges.push({
-      id: `edge-${pathType}`,
-      source: `source-${pathType}`,
-      target: `target-${pathType}`,
-      pathType,
-      arrowTarget: 'triangle' as const,
-      arrowSize,
-      curvature: 0.4,
-      stroke: colors[i],
-      strokeWidth: 3,
+      data: {
+        id: `edge-${idSuffix}`,
+        source: `source-${idSuffix}`,
+        target: `target-${idSuffix}`,
+        pathType,
+        arrowTarget: 'triangle' as const,
+        arrowSize,
+        curvature: 0.4,
+      },
+      style: {
+        stroke: colors[i],
+        strokeWidth: 3,
+        cornerRadius: i === 3 ? 12 : 0, // Rounded corners for the 4th edge
+      },
     });
   });
 

@@ -97,8 +97,8 @@ export type {
   ShapeDrawer, 
   PathDrawer,
   RendererOptions, 
-  NodeInput, 
-  EdgeInput, 
+  NodeData as RendererNodeData, 
+  EdgeData as RendererEdgeData, 
   Point as RendererPoint 
 } from './rendering';
 
@@ -201,7 +201,6 @@ export {
   LineEdge,
   BezierEdge,
   OrthogonalEdge,
-  OrthogonalRoundedEdge,
 } from './elements';
 
 export type {

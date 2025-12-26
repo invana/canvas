@@ -10,14 +10,18 @@ const generatePulseData = (): CanvasData => {
   const colors = ['#e91e63', '#9c27b0', '#3f51b5', '#2196f3', '#00bcd4'];
 
   const nodes = colors.map((color, i) => ({
-    id: `pulse-${i}`,
-    x: (i - 2) * 130,
-    y: 0,
-    shape: 'circle' as const,
-    size: 40,
-    fill: color,
-    stroke: '#333',
-    strokeWidth: 2,
+    data: {
+      id: `pulse-${i}`,
+      x: (i - 2) * 130,
+      y: 0,
+      shape: 'circle' as const,
+      size: 40,
+    },
+    style: {
+      fill: color,
+      stroke: '#333',
+      strokeWidth: 2,
+    },
   }));
 
   return { nodes, edges: [] };
@@ -80,15 +84,19 @@ const generateRippleData = (): CanvasData => {
   ];
 
   const nodes = positions.map((pos, i) => ({
-    id: `ripple-${i}`,
-    x: pos.x,
-    y: pos.y,
-    shape: 'circle' as const,
-    size: 50,
-    fill: pos.color,
-    stroke: '#333',
-    strokeWidth: 2,
-    rippleColor: pos.color,
+    data: {
+      id: `ripple-${i}`,
+      x: pos.x,
+      y: pos.y,
+      shape: 'circle' as const,
+      size: 50,
+    },
+    style: {
+      fill: pos.color,
+      stroke: '#333',
+      strokeWidth: 2,
+      rippleColor: pos.color,
+    },
   }));
 
   return { nodes, edges: [] };
@@ -156,18 +164,22 @@ const generateGlowData = (): CanvasData => {
   const glowColors = ['#00ff88', '#ff00ff', '#00ffff', '#ffff00'];
 
   const nodes = glowColors.map((color, i) => ({
-    id: `glow-${i}`,
-    x: (i - 1.5) * 160,
-    y: 0,
-    shape: 'circle' as const,
-    size: 45,
-    label: color,
-    fill: color,
-    stroke: '#333',
-    strokeWidth: 2,
-    labelStyle: {
-      fill: '#ffffff',
-      fontSize: 10,
+    data: {
+      id: `glow-${i}`,
+      x: (i - 1.5) * 160,
+      y: 0,
+      shape: 'circle' as const,
+      size: 45,
+      label: color,
+    },
+    style: {
+      fill: color,
+      stroke: '#333',
+      strokeWidth: 2,
+      labelStyle: {
+        fill: '#ffffff',
+        fontSize: 10,
+      },
     },
   }));
 

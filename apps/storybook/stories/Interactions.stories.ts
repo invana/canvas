@@ -23,27 +23,31 @@ const generateInteractiveData = (args: InteractionsArgs): CanvasData => {
       const nodeColor = colors[i] ?? '#666';
 
       nodes.push({
-        id: `interactive-${i}`,
-        x,
-        y,
-        shape: 'roundedRect' as const,
-        width: 80,
-        height: 50,
-        label: `Node ${i + 1}`,
+        data: {
+          id: `interactive-${i}`,
+          x,
+          y,
+          shape: 'roundedRect' as const,
+          width: 80,
+          height: 50,
+          label: `Node ${i + 1}`,
+        },
+        style: {
+          fill: nodeColor,
+          stroke: '#333',
+          strokeWidth: 2,
+          hoverFill: args.enableHover ? '#ffffff' : undefined,
+          hoverStroke: args.enableHover ? nodeColor : undefined,
+          selectedStroke: args.enableSelection ? '#0066ff' : undefined,
+          selectedStrokeWidth: args.enableSelection ? 4 : undefined,
+          labelStyle: {
+            fill: '#ffffff',
+            fontSize: 11,
+            fontWeight: 'bold',
+          },
+        },
         draggable: args.enableDrag,
         selectable: args.enableSelection,
-        fill: nodeColor,
-        stroke: '#333',
-        strokeWidth: 2,
-        hoverFill: args.enableHover ? '#ffffff' : undefined,
-        hoverStroke: args.enableHover ? nodeColor : undefined,
-        selectedStroke: args.enableSelection ? '#0066ff' : undefined,
-        selectedStrokeWidth: args.enableSelection ? 4 : undefined,
-        labelStyle: {
-          fill: '#ffffff',
-          fontSize: 11,
-          fontWeight: 'bold',
-        },
       });
     }
   }
@@ -189,16 +193,16 @@ const generateFlowData = (): CanvasData => {
   ];
 
   const nodes = flowNodes.map((nodeConfig) => ({
-    id: nodeConfig.id,
-    x: nodeConfig.x,
-    y: nodeConfig.y,
-    shape: nodeConfig.shape,
-    size: 30,
-    width: 80,
-    height: 40,
-    label: nodeConfig.label,
-    selectable: true,
-    draggable: true,
+    data: {
+      id: nodeConfig.id,
+      x: nodeConfig.x,
+      y: nodeConfig.y,
+      shape: nodeConfig.shape,
+      size: 30,
+      width: 80,
+      height: 40,
+      label: nodeConfig.label,
+    },
     style: {
       fill: nodeConfig.fill,
       stroke: '#333',
@@ -211,6 +215,8 @@ const generateFlowData = (): CanvasData => {
         fontWeight: 'bold',
       },
     },
+    selectable: true,
+    draggable: true,
   }));
 
   const edges = [
@@ -220,9 +226,11 @@ const generateFlowData = (): CanvasData => {
     { id: 'e4', source: 'process2', target: 'merge' },
     { id: 'e5', source: 'merge', target: 'end' },
   ].map((e) => ({
-    ...e,
-    pathType: 'bezier' as const,
-    arrowTarget: 'triangle' as const,
+    data: {
+      ...e,
+      pathType: 'bezier' as const,
+      arrowTarget: 'triangle' as const,
+    },
     style: {
       stroke: '#888',
       strokeWidth: 2,
