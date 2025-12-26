@@ -124,6 +124,14 @@ export type {
   CanvasStyles 
 } from './canvas';
 
+export { Renderer } from './canvas';
+export type { 
+  RendererOptions, 
+  NodeInput, 
+  EdgeInput, 
+  Point as RendererPoint 
+} from './canvas';
+
 export { Viewport } from './canvas';
 export type { ViewportOptions, ViewportState } from './canvas';
 

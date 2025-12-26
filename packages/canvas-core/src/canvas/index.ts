@@ -34,6 +34,14 @@ export type {
   CanvasStyles 
 } from './Canvas';
 
+export { Renderer } from './Renderer';
+export type { 
+  RendererOptions, 
+  NodeInput, 
+  EdgeInput, 
+  Point 
+} from './Renderer';
+
 export { Viewport } from './Viewport';
 export type { ViewportOptions, ViewportState } from './Viewport';
 
