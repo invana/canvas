@@ -342,6 +342,9 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
       stroke,
       strokeWidth,
       strokeAlpha: base.strokeAlpha,
+      strokeStyle: base.strokeStyle,
+      strokeDashPattern: base.strokeDashPattern,
+      strokeDashOffset: base.strokeDashOffset,
     };
   }
 

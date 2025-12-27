@@ -79,6 +79,12 @@ export interface EdgeStyle {
   strokeWidth: number;
   /** Stroke alpha */
   strokeAlpha?: number;
+  /** Stroke style */
+  strokeStyle?: 'solid' | 'dashed' | 'dotted';
+  /** Custom dash pattern [dash, gap] */
+  strokeDashPattern?: number[];
+  /** Dash pattern offset for animation or alignment */
+  strokeDashOffset?: number;
   /** Line cap style */
   lineCap?: 'butt' | 'round' | 'square';
   /** Line join style */
@@ -289,6 +295,9 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
       stroke: stroke ?? '#666666',
       strokeWidth: strokeWidth ?? 2,
       strokeAlpha: base.strokeAlpha,
+      strokeStyle: base.strokeStyle,
+      strokeDashPattern: base.strokeDashPattern,
+      strokeDashOffset: base.strokeDashOffset,
       lineCap: base.lineCap,
       lineJoin: base.lineJoin,
     };

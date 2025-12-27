@@ -5,6 +5,8 @@
 import type { Graphics } from 'pixi.js';
 import type { ShapeStyle } from './types.js';
 import { applyShapeFill } from './fillHelper.js';
+import { getStrokeOptions, getStrokeDashPattern } from './strokeHelper.js';
+import { drawDashedPolygon, drawDottedPolygon, drawPatternPolygon } from './dashedStrokes.js';
 
 export interface PolygonParams {
   x: number;
@@ -48,12 +50,21 @@ export async function drawPolygon(g: Graphics, params: PolygonParams, style: Sha
   }
 
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {
-    g.poly(points);
-    g.stroke({
-      color: style.stroke,
-      width: style.strokeWidth ?? 1,
-      alpha: style.strokeAlpha ?? 1,
-    });
+    const dashPattern = getStrokeDashPattern(style);
+    
+    if (dashPattern && dashPattern.length >= 2) {
+      const offset = style.strokeDashOffset ?? 0;
+      if (style.strokeStyle === 'dotted') {
+        drawDottedPolygon(g, points, dashPattern[0]! + dashPattern[1]!, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+      } else if (dashPattern.length > 2) {
+        drawPatternPolygon(g, points, dashPattern, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+      } else {
+        drawDashedPolygon(g, points, dashPattern[0]!, dashPattern[1]!, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+      }
+    } else {
+      g.poly(points);
+      g.stroke(getStrokeOptions(style));
+    }
   }
 }
 
@@ -63,15 +74,24 @@ export async function drawPolygon(g: Graphics, params: PolygonParams, style: Sha
 export function drawPolygonOutline(
   g: Graphics,
   params: PolygonParams,
-  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha'>
+  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha' | 'strokeStyle' | 'strokeDashPattern' | 'strokeDashOffset'>
 ): void {
   const points = getPolygonPoints(params);
-  g.poly(points);
-  g.stroke({
-    color: style.stroke ?? '#000000',
-    width: style.strokeWidth ?? 1,
-    alpha: style.strokeAlpha ?? 1,
-  });
+  const dashPattern = getStrokeDashPattern(style);
+  
+  if (dashPattern && dashPattern.length >= 2) {
+    const offset = style.strokeDashOffset ?? 0;
+    if (style.strokeStyle === 'dotted') {
+      drawDottedPolygon(g, points, dashPattern[0]! + dashPattern[1]!, style.stroke ?? '#000000', style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+    } else if (dashPattern.length > 2) {
+      drawPatternPolygon(g, points, dashPattern, style.stroke ?? '#000000', style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+    } else {
+      drawDashedPolygon(g, points, dashPattern[0]!, dashPattern[1]!, style.stroke ?? '#000000', style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+    }
+  } else {
+    g.poly(points);
+    g.stroke(getStrokeOptions(style));
+  }
 }
 
 /**
@@ -101,12 +121,21 @@ export function drawPolygonFromPoints(g: Graphics, points: number[], style: Shap
   }
 
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {
-    g.poly(points);
-    g.stroke({
-      color: style.stroke,
-      width: style.strokeWidth ?? 1,
-      alpha: style.strokeAlpha ?? 1,
-    });
+    const dashPattern = getStrokeDashPattern(style);
+    
+    if (dashPattern && dashPattern.length >= 2) {
+      const offset = style.strokeDashOffset ?? 0;
+      if (style.strokeStyle === 'dotted') {
+        drawDottedPolygon(g, points, dashPattern[0]! + dashPattern[1]!, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+      } else if (dashPattern.length > 2) {
+        drawPatternPolygon(g, points, dashPattern, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+      } else {
+        drawDashedPolygon(g, points, dashPattern[0]!, dashPattern[1]!, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+      }
+    } else {
+      g.poly(points);
+      g.stroke(getStrokeOptions(style));
+    }
   }
 }
 
@@ -116,14 +145,10 @@ export function drawPolygonFromPoints(g: Graphics, points: number[], style: Shap
 export function drawPolygonOutlineFromPoints(
   g: Graphics,
   points: number[],
-  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha'>
+  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha' | 'strokeStyle' | 'strokeDashPattern' | 'strokeDashOffset'>
 ): void {
   g.poly(points);
-  g.stroke({
-    color: style.stroke ?? '#000000',
-    width: style.strokeWidth ?? 1,
-    alpha: style.strokeAlpha ?? 1,
-  });
+  g.stroke(getStrokeOptions(style));
 }
 
 /**
@@ -274,7 +299,7 @@ export function drawOctagon(
 export function drawTriangleOutline(
   g: Graphics,
   params: Omit<PolygonParams, 'sides'>,
-  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha'>
+  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha' | 'strokeStyle' | 'strokeDashPattern' | 'strokeDashOffset'>
 ): void {
   drawPolygonOutline(g, { ...params, sides: 3 }, style);
 }
@@ -282,7 +307,7 @@ export function drawTriangleOutline(
 export function drawDiamondOutline(
   g: Graphics,
   params: Omit<PolygonParams, 'sides' | 'rotation'>,
-  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha'>
+  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha' | 'strokeStyle' | 'strokeDashPattern' | 'strokeDashOffset'>
 ): void {
   drawPolygonOutline(g, { ...params, sides: 4, rotation: -Math.PI / 2 }, style);
 }
@@ -290,7 +315,7 @@ export function drawDiamondOutline(
 export function drawHexagonOutline(
   g: Graphics,
   params: Omit<PolygonParams, 'sides'>,
-  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha'>
+  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha' | 'strokeStyle' | 'strokeDashPattern' | 'strokeDashOffset'>
 ): void {
   drawPolygonOutline(g, { ...params, sides: 6 }, style);
 }

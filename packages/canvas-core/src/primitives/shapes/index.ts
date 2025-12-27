@@ -20,6 +20,12 @@
 // Types
 export * from './types.js';
 
+// Stroke helpers
+export { getStrokeDashPattern, getStrokeOptions } from './strokeHelper.js';
+
+// Dashed and dotted stroke implementations
+export * from './dashedStrokes.js';
+
 // Circle
 export {
   drawCircle,

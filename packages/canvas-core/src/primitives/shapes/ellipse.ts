@@ -5,6 +5,8 @@
 import type { Graphics } from 'pixi.js';
 import type { ShapeStyle } from './types.js';
 import { applyShapeFill } from './fillHelper.js';
+import { getStrokeOptions, getStrokeDashPattern } from './strokeHelper.js';
+import { drawDashedEllipse, drawDottedEllipse, drawPatternEllipse } from './dashedStrokes.js';
 
 export interface EllipseParams {
   x: number;
@@ -30,12 +32,21 @@ export async function drawEllipse(g: Graphics, params: EllipseParams, style: Sha
   }
 
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {
-    g.ellipse(x, y, radiusX, radiusY);
-    g.stroke({
-      color: style.stroke,
-      width: style.strokeWidth ?? 1,
-      alpha: style.strokeAlpha ?? 1,
-    });
+    const dashPattern = getStrokeDashPattern(style);
+    
+    if (dashPattern && dashPattern.length >= 2) {
+      const offset = style.strokeDashOffset ?? 0;
+      if (style.strokeStyle === 'dotted') {
+        drawDottedEllipse(g, x, y, radiusX, radiusY, dashPattern[0]! + dashPattern[1]!, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+      } else if (dashPattern.length > 2) {
+        drawPatternEllipse(g, x, y, radiusX, radiusY, dashPattern, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+      } else {
+        drawDashedEllipse(g, x, y, radiusX, radiusY, dashPattern[0]!, dashPattern[1]!, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+      }
+    } else {
+      g.ellipse(x, y, radiusX, radiusY);
+      g.stroke(getStrokeOptions(style));
+    }
   }
 }
 
@@ -45,15 +56,22 @@ export async function drawEllipse(g: Graphics, params: EllipseParams, style: Sha
 export function drawEllipseOutline(
   g: Graphics,
   params: EllipseParams,
-  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha'>
+  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha' | 'strokeStyle' | 'strokeDashPattern' | 'strokeDashOffset'>
 ): void {
   const { x, y, radiusX, radiusY } = params;
-  g.ellipse(x, y, radiusX, radiusY);
-  g.stroke({
-    color: style.stroke ?? '#000000',
-    width: style.strokeWidth ?? 1,
-    alpha: style.strokeAlpha ?? 1,
-  });
+  const dashPattern = getStrokeDashPattern(style);
+  
+  if (dashPattern && dashPattern.length >= 2) {
+    const offset = style.strokeDashOffset ?? 0;
+    if (style.strokeStyle === 'dotted') {
+      drawDottedEllipse(g, x, y, radiusX, radiusY, dashPattern[0]! + dashPattern[1]!, style.stroke ?? '#000000', style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+    } else {
+      drawDashedEllipse(g, x, y, radiusX, radiusY, dashPattern[0]!, dashPattern[1]!, style.stroke ?? '#000000', style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+    }
+  } else {
+    g.ellipse(x, y, radiusX, radiusY);
+    g.stroke(getStrokeOptions(style));
+  }
 }
 
 /**

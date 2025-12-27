@@ -20,6 +20,9 @@ export interface PathStyle {
   stroke: string;
   strokeWidth: number;
   strokeAlpha?: number;
+  strokeStyle?: 'solid' | 'dashed' | 'dotted';
+  strokeDashPattern?: number[];
+  strokeDashOffset?: number;
   lineDash?: number[];
   lineCap?: 'butt' | 'round' | 'square';
   lineJoin?: 'miter' | 'round' | 'bevel';

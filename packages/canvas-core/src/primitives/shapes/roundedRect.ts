@@ -5,6 +5,8 @@
 import type { Graphics } from 'pixi.js';
 import type { ShapeStyle } from './types.js';
 import { applyShapeFill } from './fillHelper.js';
+import { getStrokeOptions, getStrokeDashPattern } from './strokeHelper.js';
+import { drawDashedRoundedRect, drawPatternRoundedRect } from './dashedStrokes.js';
 
 export interface RoundedRectParams {
   x: number;
@@ -32,12 +34,19 @@ export async function drawRoundedRect(g: Graphics, params: RoundedRectParams, st
   }
 
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {
-    g.roundRect(x, y, width, height, r);
-    g.stroke({
-      color: style.stroke,
-      width: style.strokeWidth ?? 1,
-      alpha: style.strokeAlpha ?? 1,
-    });
+    const dashPattern = getStrokeDashPattern(style);
+    
+    if (dashPattern && dashPattern.length >= 2 && style.strokeStyle !== 'solid') {
+      const offset = style.strokeDashOffset ?? 0;
+      if (dashPattern.length > 2) {
+        drawPatternRoundedRect(g, x, y, width, height, radius, dashPattern, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+      } else {
+        drawDashedRoundedRect(g, x, y, width, height, radius, dashPattern[0]!, dashPattern[1]!, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+      }
+    } else {
+      g.roundRect(x, y, width, height, radius);
+      g.stroke(getStrokeOptions(style));
+    }
   }
 }
 
@@ -47,19 +56,22 @@ export async function drawRoundedRect(g: Graphics, params: RoundedRectParams, st
 export function drawRoundedRectOutline(
   g: Graphics,
   params: RoundedRectParams,
-  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha'>
+  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha' | 'strokeStyle' | 'strokeDashPattern' | 'strokeDashOffset'>
 ): void {
   const { width, height, radius, centered = true } = params;
   const x = centered ? params.x - width / 2 : params.x;
   const y = centered ? params.y - height / 2 : params.y;
   const r = Math.min(radius, width / 2, height / 2);
 
-  g.roundRect(x, y, width, height, r);
-  g.stroke({
-    color: style.stroke ?? '#000000',
-    width: style.strokeWidth ?? 1,
-    alpha: style.strokeAlpha ?? 1,
-  });
+  const dashPattern = getStrokeDashPattern(style);
+  
+  if (dashPattern && dashPattern.length >= 2 && style.strokeStyle !== 'solid') {
+    const offset = style.strokeDashOffset ?? 0;
+    drawDashedRoundedRect(g, x, y, width, height, r, dashPattern[0]!, dashPattern[1]!, style.stroke ?? '#000000', style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+  } else {
+    g.roundRect(x, y, width, height, r);
+    g.stroke(getStrokeOptions(style));
+  }
 }
 
 /**

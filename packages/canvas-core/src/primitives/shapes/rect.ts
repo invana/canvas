@@ -5,6 +5,8 @@
 import type { Graphics } from 'pixi.js';
 import type { ShapeStyle } from './types.js';
 import { applyShapeFill } from './fillHelper.js';
+import { getStrokeOptions, getStrokeDashPattern } from './strokeHelper.js';
+import { drawDashedRect, drawDottedRect, drawPatternRect } from './dashedStrokes.js';
 
 export interface RectParams {
   x: number;
@@ -29,12 +31,22 @@ export async function drawRect(g: Graphics, params: RectParams, style: ShapeStyl
   }
 
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {
-    g.rect(x, y, width, height);
-    g.stroke({
-      color: style.stroke,
-      width: style.strokeWidth ?? 1,
-      alpha: style.strokeAlpha ?? 1,
-    });
+    const dashPattern = getStrokeDashPattern(style);
+    
+    if (dashPattern && dashPattern.length >= 2) {
+      const offset = style.strokeDashOffset ?? 0;
+      if (style.strokeStyle === 'dotted') {
+        drawDottedRect(g, x, y, width, height, dashPattern[0]! + dashPattern[1]!, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+      } else if (dashPattern.length > 2) {
+        // Use pattern-based drawing for complex patterns
+        drawPatternRect(g, x, y, width, height, dashPattern, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+      } else {
+        drawDashedRect(g, x, y, width, height, dashPattern[0]!, dashPattern[1]!, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+      }
+    } else {
+      g.rect(x, y, width, height);
+      g.stroke(getStrokeOptions(style));
+    }
   }
 }
 
@@ -44,18 +56,28 @@ export async function drawRect(g: Graphics, params: RectParams, style: ShapeStyl
 export function drawRectOutline(
   g: Graphics,
   params: RectParams,
-  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha'>
+  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha' | 'strokeStyle' | 'strokeDashPattern' | 'strokeDashOffset'>
 ): void {
   const { width, height, centered = true } = params;
   const x = centered ? params.x - width / 2 : params.x;
   const y = centered ? params.y - height / 2 : params.y;
 
-  g.rect(x, y, width, height);
-  g.stroke({
-    color: style.stroke ?? '#000000',
-    width: style.strokeWidth ?? 1,
-    alpha: style.strokeAlpha ?? 1,
-  });
+  const dashPattern = getStrokeDashPattern(style);
+  
+  if (dashPattern && dashPattern.length >= 2) {
+    const offset = style.strokeDashOffset ?? 0;
+    if (style.strokeStyle === 'dotted') {
+      drawDottedRect(g, x, y, width, height, dashPattern[0]! + dashPattern[1]!, style.stroke ?? '#000000', style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+    } else if (dashPattern.length > 2) {
+      // Use pattern-based drawing for complex patterns
+      drawPatternRect(g, x, y, width, height, dashPattern, style.stroke ?? '#000000', style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+    } else {
+      drawDashedRect(g, x, y, width, height, dashPattern[0]!, dashPattern[1]!, style.stroke ?? '#000000', style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+    }
+  } else {
+    g.rect(x, y, width, height);
+    g.stroke(getStrokeOptions(style));
+  }
 }
 
 /**

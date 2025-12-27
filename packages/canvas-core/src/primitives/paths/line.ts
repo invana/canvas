@@ -5,6 +5,7 @@
 
 import type { Graphics } from 'pixi.js';
 import type { Point, PathStyle } from './types';
+import { drawDashedLine, drawDottedLine, drawPatternLine } from '../shapes/dashedStrokes';
 
 /**
  * Parameters for drawing a line
@@ -17,20 +18,68 @@ export interface LineParams {
 }
 
 /**
+ * Get stroke dash pattern from style
+ */
+function getStrokeDashPattern(style: PathStyle): number[] | null {
+  // If custom pattern provided, use it
+  if (style.strokeDashPattern && style.strokeDashPattern.length >= 2) {
+    return style.strokeDashPattern;
+  }
+
+  // Check strokeStyle for predefined patterns
+  if (style.strokeStyle === 'dashed') {
+    return [8, 4];
+  } else if (style.strokeStyle === 'dotted') {
+    return [2, 3];
+  }
+
+  // Default: solid (no dash)
+  return null;
+}
+
+/**
  * Draw a straight line between two points
  */
 export function drawLine(g: Graphics, params: LineParams, style: PathStyle): void {
   const { from, to } = params;
+  const dashPattern = getStrokeDashPattern(style);
+  const offset = style.strokeDashOffset ?? 0;
   
-  g.moveTo(from.x, from.y);
-  g.lineTo(to.x, to.y);
-  g.stroke({
-    color: style.stroke,
-    width: style.strokeWidth,
-    alpha: style.strokeAlpha ?? 1,
-    cap: style.lineCap ?? 'round',
-    join: style.lineJoin ?? 'round',
-  });
+  if (dashPattern && dashPattern.length >= 2) {
+    if (style.strokeStyle === 'dotted') {
+      drawDottedLine(g, from.x, from.y, to.x, to.y, 
+        dashPattern[0]! + dashPattern[1]!, 
+        style.stroke, 
+        style.strokeWidth, 
+        style.strokeAlpha ?? 1,
+        offset);
+    } else if (dashPattern.length > 2) {
+      drawPatternLine(g, from.x, from.y, to.x, to.y, 
+        dashPattern, 
+        style.stroke, 
+        style.strokeWidth, 
+        style.strokeAlpha ?? 1,
+        offset);
+    } else {
+      drawDashedLine(g, from.x, from.y, to.x, to.y, 
+        dashPattern[0]!, 
+        dashPattern[1]!, 
+        style.stroke, 
+        style.strokeWidth, 
+        style.strokeAlpha ?? 1,
+        offset);
+    }
+  } else {
+    g.moveTo(from.x, from.y);
+    g.lineTo(to.x, to.y);
+    g.stroke({
+      color: style.stroke,
+      width: style.strokeWidth,
+      alpha: style.strokeAlpha ?? 1,
+      cap: style.lineCap ?? 'round',
+      join: style.lineJoin ?? 'round',
+    });
+  }
 }
 
 /**
@@ -44,19 +93,55 @@ export function drawPolyline(g: Graphics, params: PolylineParams, style: PathSty
   const { points } = params;
   if (points.length < 2) return;
 
-  const first = points[0]!;
-  g.moveTo(first.x, first.y);
-  for (let i = 1; i < points.length; i++) {
-    const p = points[i]!;
-    g.lineTo(p.x, p.y);
+  const dashPattern = getStrokeDashPattern(style);
+  const offset = style.strokeDashOffset ?? 0;
+  
+  // If dashed/dotted, draw each segment individually
+  if (dashPattern && dashPattern.length >= 2) {
+    for (let i = 0; i < points.length - 1; i++) {
+      const from = points[i]!;
+      const to = points[i + 1]!;
+      
+      if (style.strokeStyle === 'dotted') {
+        drawDottedLine(g, from.x, from.y, to.x, to.y,
+          dashPattern[0]! + dashPattern[1]!,
+          style.stroke,
+          style.strokeWidth,
+          style.strokeAlpha ?? 1,
+          offset);
+      } else if (dashPattern.length > 2) {
+        drawPatternLine(g, from.x, from.y, to.x, to.y,
+          dashPattern,
+          style.stroke,
+          style.strokeWidth,
+          style.strokeAlpha ?? 1,
+          offset);
+      } else {
+        drawDashedLine(g, from.x, from.y, to.x, to.y,
+          dashPattern[0]!,
+          dashPattern[1]!,
+          style.stroke,
+          style.strokeWidth,
+          style.strokeAlpha ?? 1,
+          offset);
+      }
+    }
+  } else {
+    // Solid line - use regular path
+    const first = points[0]!;
+    g.moveTo(first.x, first.y);
+    for (let i = 1; i < points.length; i++) {
+      const p = points[i]!;
+      g.lineTo(p.x, p.y);
+    }
+    g.stroke({
+      color: style.stroke,
+      width: style.strokeWidth,
+      alpha: style.strokeAlpha ?? 1,
+      cap: style.lineCap ?? 'round',
+      join: style.lineJoin ?? 'round',
+    });
   }
-  g.stroke({
-    color: style.stroke,
-    width: style.strokeWidth,
-    alpha: style.strokeAlpha ?? 1,
-    cap: style.lineCap ?? 'round',
-    join: style.lineJoin ?? 'round',
-  });
 }
 
 /**

@@ -7,6 +7,11 @@ import type { Graphics } from 'pixi.js';
 import type { Fill } from '../fills/types.js';
 
 /**
+ * Stroke style type - controls line appearance
+ */
+export type StrokeStyle = 'solid' | 'dashed' | 'dotted';
+
+/**
  * Style options for shape fill and stroke
  */
 export interface ShapeStyle {
@@ -20,6 +25,12 @@ export interface ShapeStyle {
   strokeWidth?: number;
   /** Stroke alpha */
   strokeAlpha?: number;
+  /** Stroke style - solid, dashed, or dotted */
+  strokeStyle?: StrokeStyle;
+  /** Custom dash pattern (overrides strokeStyle) - array of [dash, gap] lengths */
+  strokeDashPattern?: number[];
+  /** Dash pattern offset for animation or alignment */
+  strokeDashOffset?: number;
 }
 
 /**
@@ -38,7 +49,7 @@ export type ShapeDrawFn<TParams = unknown> = (
 export type OutlineDrawFn<TParams = unknown> = (
   g: Graphics,
   params: TParams,
-  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha'>
+  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha' | 'strokeStyle' | 'strokeDashPattern' | 'strokeDashOffset'>
 ) => void;
 
 /**
