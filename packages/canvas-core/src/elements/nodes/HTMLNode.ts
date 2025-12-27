@@ -5,6 +5,7 @@
  * Uses PixiJS HTMLText or ForeignObject to embed HTML.
  */
 
+import type { ShapeStyle } from '../../primitives/shapes';
 import { NodeShapeBase, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './NodeShapeBase';
 import { HTMLText } from 'pixi.js';
 import { getRectIntersection } from '../../primitives/shapes/rect';
@@ -16,6 +17,41 @@ export class HTMLNode extends NodeShapeBase {
 
   get shapeType(): NodeShapeType {
     return 'htmlNode';
+  }
+
+  protected drawHalo(style: ShapeStyle): void {
+    if (!style.halo) return;
+
+    const size = this._data.size ?? 30;
+    const width = this._data.width ?? size * 4;
+    const height = this._data.height ?? size * 2;
+    const cornerRadius = this._data.cornerRadius ?? 8;
+    const haloWidth = style.haloStrokeWidth ?? 3;
+    const haloColor = this.getHaloColor(style);
+    const haloOpacity = style.haloStrokeOpacity ?? 0.25;
+
+    if (cornerRadius > 0) {
+      this._graphics.roundRect(
+        -width / 2 - haloWidth,
+        -height / 2 - haloWidth,
+        width + haloWidth * 2,
+        height + haloWidth * 2,
+        cornerRadius + haloWidth
+      );
+    } else {
+      this._graphics.rect(
+        -width / 2 - haloWidth,
+        -height / 2 - haloWidth,
+        width + haloWidth * 2,
+        height + haloWidth * 2
+      );
+    }
+    this._graphics.stroke({
+      color: haloColor,
+      width: haloWidth * 2,
+      alpha: haloOpacity,
+      alignment: 1,
+    });
   }
 
   protected render(): void {

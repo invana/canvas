@@ -299,6 +299,13 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
   protected abstract getBadgeOffset(position: BadgePosition, badgeRadius: number): { x: number; y: number };
 
   /**
+   * Draw halo effect for this shape
+   * Each shape must implement its own halo rendering based on its geometry
+   * @param style - Active style with halo properties
+   */
+  protected abstract drawHalo(style: ShapeStyle): void;
+
+  /**
    * Get the shape type identifier
    */
   abstract get shapeType(): NodeShapeType;
@@ -699,77 +706,17 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
   }
 
   /**
-   * Draw halo effect if enabled in style
-   * Should be called before drawing the main shape
-   * 
-   * @param style - Active style with halo properties
-   * @param shapeParams - Shape-specific parameters for halo rendering
+   * Helper to get halo color from style
    */
-  protected drawHalo(style: ShapeStyle, shapeParams: { type: string; [key: string]: any }): void {
-    if (!style.halo) return;
-    
-    const haloWidth = style.haloStrokeWidth ?? 3;
-    // Convert haloStroke to simple color (string or number)
-    let haloColor: string | number = DEFAULT_NODE_LABEL.style.fill ?? '#000000';
+  protected getHaloColor(style: ShapeStyle): string | number {
     if (style.haloStroke) {
-      haloColor = typeof style.haloStroke === 'object' ? DEFAULT_NODE_LABEL.style.fill ?? '#000000' : style.haloStroke;
+      return typeof style.haloStroke === 'object' ? DEFAULT_NODE_LABEL.style.fill ?? '#000000' : style.haloStroke;
     } else if (style.fill) {
-      haloColor = typeof style.fill === 'object' ? DEFAULT_NODE_LABEL.style.fill ?? '#000000' : style.fill;
+      return typeof style.fill === 'object' ? DEFAULT_NODE_LABEL.style.fill ?? '#000000' : style.fill;
     } else if (style.stroke) {
-      haloColor = style.stroke;
+      return style.stroke;
     }
-    const haloOpacity = style.haloStrokeOpacity ?? 0.25;
-    
-    // Draw halo based on shape type
-    if (shapeParams.type === 'circle' && shapeParams.radius) {
-      const haloRadius = shapeParams.radius + haloWidth;
-      this._graphics.circle(0, 0, haloRadius);
-      this._graphics.stroke({
-        color: haloColor,
-        width: haloWidth * 2, // Double width for softer appearance
-        alpha: haloOpacity,
-        alignment: 1, // Draw outside
-      });
-    } else if (shapeParams.type === 'rect' && shapeParams.width && shapeParams.height) {
-      const hw = haloWidth;
-      this._graphics.rect(
-        -shapeParams.width / 2 - hw,
-        -shapeParams.height / 2 - hw,
-        shapeParams.width + hw * 2,
-        shapeParams.height + hw * 2
-      );
-      this._graphics.stroke({
-        color: haloColor,
-        width: haloWidth * 2,
-        alpha: haloOpacity,
-        alignment: 1,
-      });
-    } else if (shapeParams.type === 'roundedRect' && shapeParams.width && shapeParams.height) {
-      const hw = haloWidth;
-      const radius = shapeParams.cornerRadius ?? 0;
-      this._graphics.roundRect(
-        -shapeParams.width / 2 - hw,
-        -shapeParams.height / 2 - hw,
-        shapeParams.width + hw * 2,
-        shapeParams.height + hw * 2,
-        radius + hw
-      );
-      this._graphics.stroke({
-        color: haloColor,
-        width: haloWidth * 2,
-        alpha: haloOpacity,
-        alignment: 1,
-      });
-    } else if (shapeParams.type === 'ellipse' && shapeParams.radiusX && shapeParams.radiusY) {
-      const hw = haloWidth;
-      this._graphics.ellipse(0, 0, shapeParams.radiusX + hw, shapeParams.radiusY + hw);
-      this._graphics.stroke({
-        color: haloColor,
-        width: haloWidth * 2,
-        alpha: haloOpacity,
-        alignment: 1,
-      });
-    }
+    return DEFAULT_NODE_LABEL.style.fill ?? '#000000';
   }
 
   // =========================================================================

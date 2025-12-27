@@ -4,6 +4,7 @@
  * An elliptical node shape.
  */
 
+import type { ShapeStyle } from '../../primitives/shapes';
 import { NodeShapeBase, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './NodeShapeBase';
 
 export class EllipseNode extends NodeShapeBase {
@@ -19,13 +20,32 @@ export class EllipseNode extends NodeShapeBase {
     const radiusY = (this._data.height ?? size) / 2;
 
     // Draw halo first (underneath main shape)
-    this.drawHalo(style, { type: 'ellipse', radiusX, radiusY });
+    this.drawHalo(style);
 
     // Draw ellipse using registry
     const drawer = this._registry.getShape('ellipse');
     if (drawer) {
       drawer(this._graphics, { x: 0, y: 0, radiusX, radiusY }, style);
     }
+  }
+
+  protected drawHalo(style: ShapeStyle): void {
+    if (!style.halo) return;
+
+    const size = this._data.size ?? 30;
+    const radiusX = (this._data.width ?? size * 2) / 2;
+    const radiusY = (this._data.height ?? size) / 2;
+    const haloWidth = style.haloStrokeWidth ?? 3;
+    const haloColor = this.getHaloColor(style);
+    const haloOpacity = style.haloStrokeOpacity ?? 0.25;
+
+    this._graphics.ellipse(0, 0, radiusX + haloWidth, radiusY + haloWidth);
+    this._graphics.stroke({
+      color: haloColor,
+      width: haloWidth * 2,
+      alpha: haloOpacity,
+      alignment: 1,
+    });
   }
 
   getBoundaryPoint(targetPoint: Point, offset: number = 0): Point {

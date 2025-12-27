@@ -4,6 +4,7 @@
  * A circular node shape.
  */
 
+import type { ShapeStyle } from '../../primitives/shapes';
 import { NodeShapeBase, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './NodeShapeBase';
 
 export class CircleNode extends NodeShapeBase {
@@ -17,13 +18,31 @@ export class CircleNode extends NodeShapeBase {
     const radius = this._data.size ?? 30;
 
     // Draw halo first (underneath main shape)
-    this.drawHalo(style, { type: 'circle', radius });
+    this.drawHalo(style);
 
     // Draw circle using registry
     const drawer = this._registry.getShape('circle');
     if (drawer) {
       drawer(this._graphics, { x: 0, y: 0, radius }, style);
     }
+  }
+
+  protected drawHalo(style: ShapeStyle): void {
+    if (!style.halo) return;
+
+    const radius = this._data.size ?? 30;
+    const haloWidth = style.haloStrokeWidth ?? 3;
+    const haloColor = this.getHaloColor(style);
+    const haloOpacity = style.haloStrokeOpacity ?? 0.25;
+
+    const haloRadius = radius + haloWidth;
+    this._graphics.circle(0, 0, haloRadius);
+    this._graphics.stroke({
+      color: haloColor,
+      width: haloWidth * 2,
+      alpha: haloOpacity,
+      alignment: 1,
+    });
   }
 
   getBoundaryPoint(targetPoint: Point, offset: number = 0): Point {

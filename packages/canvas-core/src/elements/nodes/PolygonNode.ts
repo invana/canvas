@@ -5,6 +5,7 @@
  * Serves as base for triangle, diamond, pentagon, hexagon, octagon, etc.
  */
 
+import type { ShapeStyle } from '../../primitives/shapes';
 import { getPolygonIntersection } from '../../primitives/shapes/polygon';
 import { NodeShapeBase, type NodeShapeOptions, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './NodeShapeBase';
 
@@ -65,6 +66,9 @@ export class PolygonNode extends NodeShapeBase {
     const radius = this._data.size ?? 30;
     const cornerRadius = this._data.cornerRadius ?? 0;
 
+    // Draw halo first (underneath main shape)
+    this.drawHalo(style);
+
     // Draw polygon using registry
     const shapeName = this.getRegistryShapeName();
     const drawer = this._registry.getShape(shapeName);
@@ -82,6 +86,33 @@ export class PolygonNode extends NodeShapeBase {
       rotation: this._polygonRotation,
       cornerRadius
     }, style);
+  }
+
+  protected drawHalo(style: ShapeStyle): void {
+    if (!style.halo) return;
+
+    const radius = this._data.size ?? 30;
+    const haloWidth = style.haloStrokeWidth ?? 3;
+    const haloColor = this.getHaloColor(style);
+    const haloOpacity = style.haloStrokeOpacity ?? 0.25;
+
+    const haloRadius = radius + haloWidth;
+    
+    // Generate polygon points with larger radius for halo
+    const points: number[] = [];
+    for (let i = 0; i < this._polygonSides; i++) {
+      const angle = this._polygonRotation + (i / this._polygonSides) * Math.PI * 2;
+      points.push(Math.cos(angle) * haloRadius);
+      points.push(Math.sin(angle) * haloRadius);
+    }
+    
+    this._graphics.poly(points);
+    this._graphics.stroke({
+      color: haloColor,
+      width: haloWidth * 2,
+      alpha: haloOpacity,
+      alignment: 1,
+    });
   }
 
   getBoundaryPoint(targetPoint: Point, offset: number = 0): Point {
