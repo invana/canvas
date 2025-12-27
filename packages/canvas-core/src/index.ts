@@ -116,6 +116,15 @@ export type { LayerConfig, LayerType } from './types';
 export type { CanvasPlugin, LayerGroupConfig, PluginRegistrationOptions } from './plugins/types';
 export { GroupsPlugin } from './plugins/GroupsPlugin';
 export type { GroupConfig } from './plugins/GroupsPlugin';
+export { BackgroundPlugin } from './plugins/BackgroundPlugin';
+export type {
+  BackgroundConfig,
+  BackgroundFillType,
+  BackgroundPatternType,
+  GradientStop,
+  LinearGradientConfig,
+  RadialGradientConfig,
+} from './plugins/BackgroundPlugin';
 
 // ============================================================================
 // SCENE
