@@ -245,3 +245,60 @@ export interface EdgeInstance extends ShapeInstance {
   setSelected(selected: boolean): void;
   setHovered(hovered: boolean): void;
 }
+
+// =============================================================================
+// Background Types
+// =============================================================================
+
+export type BackgroundType = 'solid' | 'gradient' | 'pattern';
+export type PatternType = 'dots' | 'grid' | 'cross' | 'lines';
+export type GradientType = 'linear' | 'radial';
+
+export interface SolidBackground {
+  type: 'solid';
+  color: string | number;
+  alpha?: number;
+}
+
+export interface GradientBackground {
+  type: 'gradient';
+  gradientType: GradientType;
+  colors: Array<{ color: string | number; offset: number }>;
+  /** For linear gradient: angle in degrees (0 = horizontal right, 90 = vertical down) */
+  angle?: number;
+  /** For linear gradient: start and end points (overrides angle) */
+  start?: Point;
+  end?: Point;
+  /** For radial gradient: center point (defaults to canvas center) */
+  center?: Point;
+  /** For radial gradient: radius (defaults to canvas diagonal) */
+  radius?: number;
+  alpha?: number;
+}
+
+export interface PatternBackground {
+  type: 'pattern';
+  patternType: PatternType;
+  /** Primary color for the pattern */
+  color: string | number;
+  /** Background color (defaults to transparent) */
+  backgroundColor?: string | number;
+  /** Size of pattern elements (e.g., dot radius, grid spacing) */
+  size?: number;
+  /** Spacing between pattern elements */
+  spacing?: number;
+  /** Line width for grid/cross/lines patterns */
+  lineWidth?: number;
+  /** Opacity of the pattern */
+  alpha?: number;
+  /** Opacity of the background */
+  backgroundAlpha?: number;
+  /** 
+   * Whether the pattern should follow viewport pan/zoom.
+   * - true: Pattern moves with viewport (nodes stay relative to pattern - "camera moves")
+   * - false: Pattern stays fixed to screen (default)
+   */
+  follow?: boolean;
+}
+
+export type BackgroundStyle = SolidBackground | GradientBackground | PatternBackground;

@@ -144,7 +144,6 @@ export class Canvas {
 
   // Layers
   private _layerManager: LayerManager | null = null;
-  private _backgroundLayer: Container | null = null;
   private _edgeLayer: Container | null = null;
   private _nodeLayer: Container | null = null;
 
@@ -228,12 +227,6 @@ export class Canvas {
     this._edgeLayer = edgeGroup.getLayer('shapes')!.container;
     this._nodeLayer = nodeGroup.getLayer('shapes')!.container;
 
-    // Background layer
-    this._backgroundLayer = new Container();
-    this._backgroundLayer.label = 'background';
-    this._backgroundLayer.zIndex = 0;
-    this._viewport.content.addChild(this._backgroundLayer);
-
     // Create renderer
     this._renderer = new Renderer({
       registry: this._registry,
@@ -298,11 +291,6 @@ export class Canvas {
   /** The SceneGraph for data management and queries */
   get scene(): SceneGraph {
     return this._scene;
-  }
-
-  /** Background layer container */
-  get backgroundLayer(): Container | null {
-    return this._backgroundLayer;
   }
 
   /** Edge layer container */
@@ -375,7 +363,6 @@ export class Canvas {
 
     // Clear existing content
     this._renderer.clear();
-    this._backgroundLayer?.removeChildren();
     this._scene.clear();
 
     // Add all nodes first
@@ -476,18 +463,10 @@ export class Canvas {
   }
 
   /**
-   * Add a child to the background layer
-   */
-  addToBackgroundLayer(child: Container): void {
-    this._backgroundLayer?.addChild(child);
-  }
-
-  /**
    * Clear all content
    */
   clear(): void {
     this._renderer?.clear();
-    this._backgroundLayer?.removeChildren();
   }
 
   // =========================================================================
@@ -683,6 +662,8 @@ export class Canvas {
     this._app.renderer.background.color = color;
   }
 
+
+
   // =========================================================================
   // SCENE GRAPH QUERIES
   // =========================================================================
@@ -796,7 +777,6 @@ export class Canvas {
     
     this._app = null;
     this._viewport = null;
-    this._backgroundLayer = null;
     this._edgeLayer = null;
     this._nodeLayer = null;
     this._initialized = false;

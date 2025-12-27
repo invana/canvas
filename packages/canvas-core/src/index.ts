@@ -117,14 +117,6 @@ export type { CanvasPlugin, LayerGroupConfig, PluginRegistrationOptions } from '
 export { GroupsPlugin } from './plugins/GroupsPlugin';
 export type { GroupConfig } from './plugins/GroupsPlugin';
 export { BackgroundPlugin } from './plugins/BackgroundPlugin';
-export type {
-  BackgroundConfig,
-  BackgroundFillType,
-  BackgroundPatternType,
-  GradientStop,
-  LinearGradientConfig,
-  RadialGradientConfig,
-} from './plugins/BackgroundPlugin';
 
 // ============================================================================
 // SCENE
@@ -249,6 +241,13 @@ export type {
   NodeInstance,
   EdgeInstance,
   ShapeInstance,
+  BackgroundStyle,
+  SolidBackground,
+  GradientBackground,
+  PatternBackground,
+  BackgroundType,
+  PatternType,
+  GradientType,
 } from './types';
 
 // ============================================================================

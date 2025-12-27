@@ -6,11 +6,3 @@ export type { CanvasPlugin, LayerGroupConfig, PluginRegistrationOptions } from '
 export { GroupsPlugin } from './GroupsPlugin';
 export type { GroupConfig } from './GroupsPlugin';
 export { BackgroundPlugin } from './BackgroundPlugin';
-export type {
-  BackgroundConfig,
-  BackgroundFillType,
-  BackgroundPatternType,
-  GradientStop,
-  LinearGradientConfig,
-  RadialGradientConfig,
-} from './BackgroundPlugin';
