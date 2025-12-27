@@ -186,10 +186,8 @@ export interface NodeStyle extends BaseNodeStyleProps {
  */
 export interface NodeShapeOptions extends Omit<BaseShapeOptions<NodeData>, 'style'> {
   style?: Partial<NodeStyle>;
-  /** Enable node dragging */
+  /** Enable node dragging (deprecated - use DragElementPlugin) */
   draggable?: boolean;
-  /** Enable node selection */
-  selectable?: boolean;
   /** Initial states to activate (e.g., ['selected', 'highlighted']) */
   states?: string[];
   /** Callback when node is dragged */
@@ -202,7 +200,6 @@ export interface NodeShapeOptions extends Omit<BaseShapeOptions<NodeData>, 'styl
 export abstract class NodeShapeBase extends BaseShape<NodeData> {
   protected _nodeStyle: Partial<NodeStyle>;
   private _draggable: boolean;
-  private _selectable: boolean;
   
   // State management
   private _activeStates = new Set<string>([NodeStates.DEFAULT]);
@@ -247,8 +244,8 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
     // Merge user-provided state styles with defaults
     this._nodeStyle.states = mergeNodeStateStyles(this._nodeStyle.states);
     
-    this._draggable = options.draggable ?? true;
-    this._selectable = options.selectable ?? true;
+    // Interaction defaults changed to false - plugins enable interactions
+    this._draggable = options.draggable ?? false;
     this._onDrag = options.onDrag;
     
     // Assign unique style ID for caching
@@ -268,25 +265,9 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
     // Update interaction mode based on disabled state
     this.updateInteractionMode();
 
-    // Set up hover events
-    this.on('pointerover', this.onPointerOver, this);
-    this.on('pointerout', this.onPointerOut, this);
-    
-    // Set up drag events
-    if (this._draggable) {
-      this.on('pointerdown', this.onDragStart, this);
-      this.on('globalpointermove', this.onDragMove, this);
-      this.on('pointerup', this.onDragEnd, this);
-      this.on('pointerupoutside', this.onDragEnd, this);
-    }
-    
-    // Set up click/selection events
-    if (this._selectable) {
-      this.on('pointertap', this.onTap, this);
-    }
-    
-    // Prevent context menu on right-click
-    this.on('rightclick', this.onRightClick, this);
+    // NOTE: All interaction event handlers (drag, hover, selection) are now
+    // managed by plugins. This keeps nodes pure rendering components.
+    // Plugins will attach their own event listeners when enabled.
 
     // Note: Initial render will be called by Renderer after adding to scene
   }
@@ -352,7 +333,8 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
   }
   
   /**
-   * Check if node is draggable
+   * Check if node is draggable (used for cursor styling)
+   * Note: Actual drag behavior is handled by DragElementPlugin
    */
   get draggable(): boolean {
     return this._draggable;

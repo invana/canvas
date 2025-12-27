@@ -113,10 +113,31 @@ export type { LayerConfig, LayerType } from './types';
 // PLUGINS
 // ============================================================================
 
-export type { CanvasPlugin, LayerGroupConfig, PluginRegistrationOptions } from './plugins/types';
+export type { 
+  CanvasPlugin, 
+  LayerGroupConfig, 
+  PluginRegistrationOptions, 
+  PluginConfig, 
+  PluginConfigWithOptions,
+  BehaviorPreset 
+} from './plugins/types';
+export { PluginRegistry, BEHAVIOR_PRESETS, type PluginConstructor } from './plugins/registry';
+
+// Core plugins
 export { GroupsPlugin } from './plugins/GroupsPlugin';
 export type { GroupConfig } from './plugins/GroupsPlugin';
 export { BackgroundPlugin } from './plugins/BackgroundPlugin';
+
+// Interaction plugins
+export { DragElementPlugin, type DragElementOptions } from './plugins/DragElementPlugin';
+export { DragCanvasPlugin, type DragCanvasOptions } from './plugins/DragCanvasPlugin';
+export { ZoomControlPlugin, type ZoomControlOptions } from './plugins/ZoomControlPlugin';
+export { ClickSelectPlugin, type ClickSelectOptions } from './plugins/ClickSelectPlugin';
+export type { SelectableElement } from './plugins/ClickSelectPlugin';
+export { HoverActivatePlugin, type HoverActivateOptions } from './plugins/HoverActivatePlugin';
+export type { HoverableElement } from './plugins/HoverActivatePlugin';
+export { FocusElementPlugin, type FocusElementOptions } from './plugins/FocusElementPlugin';
+export type { FocusableElement } from './plugins/FocusElementPlugin';
 
 // ============================================================================
 // SCENE
@@ -135,31 +156,10 @@ export type {
 export type { Bounds as SceneBounds } from './scene';
 
 // ============================================================================
-// INTERACTION
+// INTERACTION (DEPRECATED - Use plugins instead)
 // ============================================================================
-
-export { 
-  InteractionManager,
-  SelectionManager,
-  DragManager,
-  HoverManager,
-} from './interaction';
-export type {
-  InteractionConfig,
-  InteractionEventType,
-  InteractionEventCallback,
-  SelectableElement,
-  SelectionConfig,
-  SelectionEventCallback,
-  DragConfig,
-  DragData,
-  DragEventType,
-  DragEventCallback,
-  HoverableElement,
-  HoverConfig,
-  HoverEventType,
-  HoverEventCallback,
-} from './interaction';
+// Note: The interaction/ directory will be removed in a future release.
+// Please migrate to the plugin-based interaction system.
 
 // ============================================================================
 // STYLE

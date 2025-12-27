@@ -6,6 +6,7 @@
 import type { Canvas } from '../core/Canvas';
 import type { CanvasPlugin } from './types';
 import { Container, Graphics } from 'pixi.js';
+import { PluginRegistry } from './registry';
 
 export interface GroupConfig {
   id: string;
@@ -126,3 +127,7 @@ export class GroupsPlugin implements CanvasPlugin {
     this._labelLayer = null;
   }
 }
+
+// Auto-register plugin
+PluginRegistry.register('groups', GroupsPlugin);
+

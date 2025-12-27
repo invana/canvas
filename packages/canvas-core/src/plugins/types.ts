@@ -49,3 +49,41 @@ export interface PluginRegistrationOptions {
   /** Whether to initialize plugin immediately */
   autoInit?: boolean;
 }
+
+/**
+ * Plugin configuration with options (serializable)
+ */
+export interface PluginConfigWithOptions<T = any> {
+  /** Plugin ID (registered name) */
+  plugin: string;
+  /** Plugin options */
+  options?: T;
+}
+
+/**
+ * Plugin configuration - fully serializable
+ * 
+ * @example
+ * ```typescript
+ * // Simple string
+ * 'drag-element'
+ * 
+ * // With options
+ * {
+ *   plugin: 'drag-element',
+ *   options: { threshold: 5 }
+ * }
+ * 
+ * // Direct instance (not serializable)
+ * new DragElementPlugin()
+ * ```
+ */
+export type PluginConfig =
+  | string  // Simple: 'drag-element'
+  | PluginConfigWithOptions  // With options
+  | CanvasPlugin;  // Direct instance (not serializable)
+
+/**
+ * Behavior presets for common plugin combinations
+ */
+export type BehaviorPreset = 'default' | 'minimal' | 'full' | false;

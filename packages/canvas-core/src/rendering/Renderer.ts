@@ -80,10 +80,9 @@ export interface NodeInput {
   // Visual styling
   style?: Partial<NodeStyle>;
   
-  // Behavior
+  // Behavior (deprecated - use plugins)
   interactive?: boolean;
   draggable?: boolean;
-  selectable?: boolean;
   
   // Initial states
   states?: string[];
@@ -204,7 +203,7 @@ export class Renderer {
   addNode(input: NodeInput): NodeShapeBase {
     const { 
       id, x, y, label, shape, size, width, height, cornerRadius, payload, badges,
-      style, interactive, draggable, selectable, states 
+      style, interactive, draggable, states 
     } = input;
     
     const mergedStyle: Partial<NodeStyle> = {
@@ -238,9 +237,8 @@ export class Renderer {
     const node = new (NodeClass ?? CircleNode)({
       data: nodeData,
       style: mergedStyle,
-      interactive: interactive ?? true,
-      draggable: draggable ?? true,
-      selectable: selectable ?? true,
+      interactive: interactive ?? false,
+      draggable: draggable ?? false,
       states,
       registry: this._registry,
     });

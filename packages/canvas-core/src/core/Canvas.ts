@@ -40,7 +40,8 @@ import { SceneGraph } from '../scene/SceneGraph';
 import { QueryEngine, type QueryFilter, type QueryResult } from '../scene/QueryEngine';
 import { Relationships, type RelationshipInfo, type PathResult } from '../scene/Relationships';
 import { LayerManager } from '../layers/LayerManager';
-import type { CanvasPlugin, PluginRegistrationOptions } from '../plugins/types';
+import type { CanvasPlugin, PluginRegistrationOptions, PluginConfig, BehaviorPreset } from '../plugins/types';
+import { PluginRegistry } from '../plugins/registry';
 import type { Bounds } from '../scene/SpatialIndex';
 import type { NodeStyle } from '../elements/nodes';
 import type { EdgeStyle } from '../elements/edges';
@@ -112,6 +113,10 @@ export interface CanvasOptions {
   fitPadding?: number;
   /** Offset from node boundary for edges */
   edgeBoundaryOffset?: number;
+  /** Behavior preset for common plugin combinations */
+  behavior?: BehaviorPreset;
+  /** Additional plugins to load (serializable) */
+  plugins?: PluginConfig[];
 }
 
 /**
@@ -152,13 +157,19 @@ export class Canvas {
 
   // Configuration
   private _styles: CanvasStyles = {};
-  private _options: Required<Omit<CanvasOptions, 'data' | 'styles'>>;
+  private _options: Required<Omit<CanvasOptions, 'data' | 'styles' | 'plugins' | 'behavior'>>;
 
   constructor(options: CanvasOptions) {
     this._container = options.container;
     this._registry = options.registry ?? new Registry();
     this._styles = options.styles ?? {};
     this._scene = new SceneGraph();
+
+    // Store plugin configuration for later initialization
+    this._pluginConfigs = {
+      behavior: options.behavior,
+      plugins: options.plugins,
+    };
 
     // Get container dimensions, fallback to reasonable defaults if container not yet in DOM
     let containerWidth = 800;
@@ -192,6 +203,10 @@ export class Canvas {
   }
 
   private _pendingData: CanvasData | null = null;
+  private _pluginConfigs: {
+    behavior?: BehaviorPreset;
+    plugins?: PluginConfig[];
+  } = {};
 
   // =========================================================================
   // INITIALIZATION
@@ -263,6 +278,40 @@ export class Canvas {
     if (this._pendingData) {
       this.render(this._pendingData);
       this._pendingData = null;
+    }
+
+    // Initialize plugins AFTER initial data render so they can setup existing nodes
+    await this.initializePlugins();
+  }
+
+  /**
+   * Initialize plugins from options
+   * Pattern 4: Behavior preset + custom plugins
+   */
+  private async initializePlugins(): Promise<void> {
+    const pluginConfigs: PluginConfig[] = [];
+
+    // 1. Add behavior preset plugins (if specified)
+    const behavior = this._pluginConfigs.behavior;
+    if (behavior && typeof behavior === 'string') {
+      const presetIds = PluginRegistry.getBehaviorPreset(behavior);
+      pluginConfigs.push(...presetIds);
+    }
+
+    // 2. Add custom plugins (override or additional)
+    if (this._pluginConfigs.plugins) {
+      pluginConfigs.push(...this._pluginConfigs.plugins);
+    }
+
+    // 3. Create and register all plugins
+    for (const config of pluginConfigs) {
+      try {
+        const plugin = PluginRegistry.create(config);
+        await this.registerPlugin(plugin);
+      } catch (error) {
+        console.error('Failed to initialize plugin:', config, error);
+        // Continue with other plugins even if one fails
+      }
     }
   }
 

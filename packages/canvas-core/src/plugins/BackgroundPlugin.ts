@@ -30,6 +30,7 @@ import { Container, Graphics } from 'pixi.js';
 import type { Canvas } from '../core/Canvas';
 import type { CanvasPlugin } from './types';
 import type { BackgroundStyle } from '../types';
+import { PluginRegistry } from './registry';
 
 export class BackgroundPlugin implements CanvasPlugin {
   readonly id = 'background';
@@ -523,3 +524,7 @@ export class BackgroundPlugin implements CanvasPlugin {
     this._currentStyle = null;
   }
 }
+
+// Auto-register plugin
+PluginRegistry.register('background', BackgroundPlugin);
+
