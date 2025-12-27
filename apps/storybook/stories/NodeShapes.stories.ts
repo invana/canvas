@@ -9,7 +9,7 @@ interface NodeShapesArgs {
 const shapeConfigs = [
   { name: 'circle', label: 'Circle' },
   { name: 'rect', label: 'Rectangle' },
-  { name: 'roundedRect', label: 'Rounded Rect' },
+  { name: 'rect', label: 'Rect (with cornerRadius)' },
   { name: 'ellipse', label: 'Ellipse' },
   { name: 'triangle', label: 'Triangle' },
   { name: 'diamond', label: 'Diamond' },

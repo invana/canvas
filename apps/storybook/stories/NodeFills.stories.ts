@@ -54,8 +54,8 @@ export const GradientPatterns: Story = {
       await canvas.init();
 
       const shapes = [
-        'circle', 'rect', 'roundedRect', 'ellipse', 
-        'triangle', 'diamond', 'pentagon', 'hexagon', 'octagon'
+        'circle', 'rect', 'hexagon', 'ellipse',
+        'triangle', 'diamond', 'pentagon', 'octagon'
       ] as const;
 
       const gradients = [
@@ -246,8 +246,8 @@ export const SVGDataURIImages: Story = {
       await canvas.init();
 
       const shapes = [
-        'circle', 'rect', 'roundedRect', 'ellipse', 
-        'triangle', 'diamond', 'pentagon', 'hexagon', 'octagon'
+        'circle', 'rect', 'hexagon', 'ellipse', 
+        'triangle', 'diamond', 'pentagon', 'octagon'
       ] as const;
 
       // SVG data URIs with different designs
@@ -338,8 +338,8 @@ export const Base64PNGImages: Story = {
       await canvas.init();
 
       const shapes = [
-        'circle', 'rect', 'roundedRect', 'ellipse', 
-        'triangle', 'diamond', 'pentagon', 'hexagon', 'octagon'
+        'circle', 'rect', 'hexagon', 'ellipse', 
+        'triangle', 'diamond', 'pentagon', 'octagon'
       ] as const;
 
       // Small 32x32 colored PNG images as base64 (these are tiny solid color PNGs)
@@ -433,8 +433,8 @@ export const ExternalURLImages: Story = {
       await canvas.init();
 
       const shapes = [
-        'circle', 'rect', 'roundedRect', 'ellipse', 
-        'triangle', 'diamond', 'pentagon', 'hexagon', 'octagon'
+        'circle', 'rect', 'hexagon', 'ellipse', 
+        'triangle', 'diamond', 'pentagon', 'octagon'
       ] as const;
 
       // Using placeholder URLs with .png extension so PixiJS can detect the format
@@ -525,8 +525,8 @@ export const ImageFitModes: Story = {
       await canvas.init();
 
       const shapes = [
-        'circle', 'rect', 'roundedRect', 'ellipse', 
-        'triangle', 'diamond', 'pentagon', 'hexagon', 'octagon'
+        'circle', 'rect', 'hexagon', 'ellipse', 
+        'triangle', 'diamond', 'pentagon', 'octagon'
       ] as const;
 
       // SVG with clear aspect ratio for testing fit modes
@@ -610,8 +610,8 @@ export const IconAvatars: Story = {
       await canvas.init();
 
       const shapes = [
-        'circle', 'rect', 'roundedRect', 'ellipse', 
-        'triangle', 'diamond', 'pentagon', 'hexagon', 'octagon'
+        'circle', 'rect', 'hexagon', 'ellipse', 
+        'triangle', 'diamond', 'pentagon', 'octagon'
       ] as const;
 
       const tints = [
@@ -729,7 +729,8 @@ export const MixedFills: Story = {
               id: 'gradient-1',
               x: 500,
               y: 150,
-              shape: 'roundedRect',
+              shape: 'rect',
+              cornerRadius: 8,
               size: 60,
               label: 'Gradient',
             },

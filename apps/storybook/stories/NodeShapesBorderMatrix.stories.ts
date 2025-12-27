@@ -43,7 +43,7 @@ export const AllShapesAllBorders: Story = {
       const shapes = [
         { type: 'circle', label: 'Circle', size: 70 },
         { type: 'rect', label: 'Rectangle', width: 120, height: 60 },
-        { type: 'roundedRect', label: 'Rounded Rect', width: 120, height: 60 },
+        { type: 'rect', label: 'Rounded Rect', width: 120, height: 60, cornerRadius: 8 },
         { type: 'ellipse', label: 'Ellipse', width: 130, height: 65 },
         { type: 'hexagon', label: 'Hexagon', size: 70 },
         { type: 'triangle', label: 'Triangle', size: 70 },

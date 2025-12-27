@@ -85,13 +85,13 @@ export interface NodeBadge {
 export type NodeShapeType =
   | 'circle'
   | 'rect'
-  | 'roundedRect'
   | 'ellipse'
   | 'triangle'
   | 'diamond'
   | 'pentagon'
   | 'hexagon'
   | 'octagon'
+  | 'htmlNode'
   | string; // Allow custom shapes
 
 /**

@@ -26,7 +26,7 @@ const generateGraphData = () => ({
       style: { fill: '#4a90d9', stroke: '#333', strokeWidth: 2 }
     },
     { 
-      data: { id: 'n2', x: 200, y: -100, shape: 'roundedRect' as const, width: 80, height: 60, label: 'Node 2' },
+      data: { id: 'n2', x: 200, y: -100, shape: 'rect' as const, width: 80, height: 60, cornerRadius: 8, label: 'Node 2' },
       style: { fill: '#50c878', stroke: '#333', strokeWidth: 2 }
     },
     { 

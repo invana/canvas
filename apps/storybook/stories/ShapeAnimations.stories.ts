@@ -12,7 +12,7 @@ const generateAllShapes = (): CanvasData => {
   const shapes = [
     { shape: 'circle', label: 'Circle', size: 50 },
     { shape: 'rect', label: 'Rect', width: 70, height: 50 },
-    { shape: 'roundedRect', label: 'Rounded', width: 70, height: 50, cornerRadius: 10 },
+    { shape: 'rect', label: 'Rounded', width: 70, height: 50, cornerRadius: 10 },
     { shape: 'ellipse', label: 'Ellipse', width: 80, height: 50 },
     { shape: 'triangle', label: 'Triangle', size: 55 },
     { shape: 'diamond', label: 'Diamond', size: 55 },
@@ -280,7 +280,7 @@ const createGlowAllShapes = (args: ShapeAnimationsArgs): HTMLElement => {
         id: `glow-${i}`,
         x: (i - 4) * 140,
         y: 0,
-        shape: ['circle', 'rect', 'roundedRect', 'ellipse', 'triangle', 'diamond', 'pentagon', 'hexagon', 'octagon'][i] as any,
+        shape: ['circle', 'rect', 'rect', 'ellipse', 'triangle', 'diamond', 'pentagon', 'hexagon', 'octagon'][i] as any,
         size: 50,
         width: 70,
         height: 50,

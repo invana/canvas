@@ -18,11 +18,12 @@ export class RectNode extends NodeShapeBase {
     const size = this._data.size ?? 30;
     const width = this._data.width ?? size * 2;
     const height = this._data.height ?? size * 2;
+    const cornerRadius = this._data.cornerRadius ?? 0;
 
-    // Draw rectangle using registry
+    // Draw rectangle using registry (supports rounded corners via cornerRadius)
     const drawer = this._registry.getShape('rect');
     if (drawer) {
-      drawer(this._graphics, { x: 0, y: 0, width, height, centered: true }, style);
+      drawer(this._graphics, { x: 0, y: 0, width, height, cornerRadius, centered: true }, style);
     }
   }
 

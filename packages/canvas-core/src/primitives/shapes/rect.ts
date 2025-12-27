@@ -6,27 +6,41 @@ import type { Graphics } from 'pixi.js';
 import type { ShapeStyle } from './types.js';
 import { applyShapeFill } from './fillHelper.js';
 import { getStrokeOptions, getStrokeDashPattern } from './strokeHelper.js';
-import { drawDashedRect, drawDottedRect, drawPatternRect } from './dashedStrokes.js';
+import { 
+  drawDashedRect, 
+  drawDottedRect, 
+  drawPatternRect,
+  drawDashedRoundedRect,
+  drawDottedRoundedRect,
+  drawPatternRoundedRect 
+} from './dashedStrokes.js';
 
 export interface RectParams {
   x: number;
   y: number;
   width: number;
   height: number;
+  /** Corner radius for rounded corners. Default: 0 */
+  cornerRadius?: number;
   /** If true, x/y is center. If false, x/y is top-left. Default: true */
   centered?: boolean;
 }
 
 /**
- * Draw a filled and/or stroked rectangle
+ * Draw a filled and/or stroked rectangle (with optional rounded corners)
  */
 export async function drawRect(g: Graphics, params: RectParams, style: ShapeStyle): Promise<void> {
-  const { width, height, centered = true } = params;
+  const { width, height, cornerRadius = 0, centered = true } = params;
   const x = centered ? params.x - width / 2 : params.x;
   const y = centered ? params.y - height / 2 : params.y;
+  const radius = Math.min(cornerRadius, width / 2, height / 2);
 
   if (style.fill) {
-    g.rect(x, y, width, height);
+    if (radius > 0) {
+      g.roundRect(x, y, width, height, radius);
+    } else {
+      g.rect(x, y, width, height);
+    }
     await applyShapeFill(g, style, { x, y, width, height });
   }
 
@@ -35,16 +49,30 @@ export async function drawRect(g: Graphics, params: RectParams, style: ShapeStyl
     
     if (dashPattern && dashPattern.length >= 2) {
       const offset = style.strokeDashOffset ?? 0;
-      if (style.strokeStyle === 'dotted') {
-        drawDottedRect(g, x, y, width, height, dashPattern[0]! + dashPattern[1]!, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
-      } else if (dashPattern.length > 2) {
-        // Use pattern-based drawing for complex patterns
-        drawPatternRect(g, x, y, width, height, dashPattern, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+      if (radius > 0) {
+        // Handle different stroke styles for rounded rectangles
+        if (style.strokeStyle === 'dotted') {
+          drawDottedRoundedRect(g, x, y, width, height, radius, dashPattern[0]! + dashPattern[1]!, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+        } else if (dashPattern.length > 2) {
+          drawPatternRoundedRect(g, x, y, width, height, radius, dashPattern, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+        } else {
+          drawDashedRoundedRect(g, x, y, width, height, radius, dashPattern[0]!, dashPattern[1]!, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+        }
       } else {
-        drawDashedRect(g, x, y, width, height, dashPattern[0]!, dashPattern[1]!, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+        if (style.strokeStyle === 'dotted') {
+          drawDottedRect(g, x, y, width, height, dashPattern[0]! + dashPattern[1]!, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+        } else if (dashPattern.length > 2) {
+          drawPatternRect(g, x, y, width, height, dashPattern, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+        } else {
+          drawDashedRect(g, x, y, width, height, dashPattern[0]!, dashPattern[1]!, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+        }
       }
     } else {
-      g.rect(x, y, width, height);
+      if (radius > 0) {
+        g.roundRect(x, y, width, height, radius);
+      } else {
+        g.rect(x, y, width, height);
+      }
       g.stroke(getStrokeOptions(style));
     }
   }

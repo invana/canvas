@@ -9,7 +9,7 @@ interface NodeLabelsArgs {
 
 // Generate node data with labels in different positions
 const generateLabelData = (position: string): CanvasData => {
-  const shapes = ['circle', 'rect', 'roundedRect', 'ellipse', 'triangle', 'diamond', 'hexagon', 'pentagon', 'octagon'] as const;
+  const shapes = ['circle', 'rect', 'rect', 'ellipse', 'triangle', 'diamond', 'hexagon', 'pentagon', 'octagon'] as const;
   
   return {
     nodes: shapes.map((shape, i) => ({
@@ -314,8 +314,9 @@ export const NotificationCounts: Story = {
             id: `notif-${i}`,
             x: 150 + i * 140,
             y: 200,
-            shape: 'roundedRect' as const,
+            shape: 'rect' as const,
             size: 70,
+            cornerRadius: 8,
             label: String(count),
           },
           style: {

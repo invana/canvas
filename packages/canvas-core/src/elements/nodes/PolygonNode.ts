@@ -63,6 +63,7 @@ export class PolygonNode extends NodeShapeBase {
   protected render(): void {
     const style = this.getActiveStyle();
     const radius = this._data.size ?? 30;
+    const cornerRadius = this._data.cornerRadius ?? 0;
 
     // Draw polygon using registry
     const shapeName = this.getRegistryShapeName();
@@ -78,7 +79,8 @@ export class PolygonNode extends NodeShapeBase {
       y: 0, 
       radius, 
       sides: this._polygonSides,
-      rotation: this._polygonRotation 
+      rotation: this._polygonRotation,
+      cornerRadius
     }, style);
   }
 

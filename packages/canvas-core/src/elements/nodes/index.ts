@@ -25,7 +25,7 @@ export {
 export { CircleNode } from './CircleNode';
 export { EllipseNode } from './EllipseNode';
 export { RectNode } from './RectNode';
-export { RoundedRectNode } from './RoundedRectNode';
+export { HTMLNode } from './HTMLNode';
 export { 
   PolygonNode, 
   TriangleNode, 

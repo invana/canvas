@@ -10,7 +10,7 @@ const generateGraphData = (): CanvasData => ({
     { data: { id: 'n1', x: -150, y: -50, shape: 'circle', size: 40, label: 'Node 1' }, style: { fill: '#4a90d9', stroke: '#2d5f8a', strokeWidth: 2 } },
     { data: { id: 'n2', x: 150, y: -50, shape: 'circle', size: 40, label: 'Node 2' }, style: { fill: '#50c878', stroke: '#3d9d5c', strokeWidth: 2 } },
     { data: { id: 'n3', x: 0, y: 80, shape: 'hexagon', size: 45, label: 'Node 3' }, style: { fill: '#ff6b6b', stroke: '#cc5555', strokeWidth: 2 } },
-    { data: { id: 'n4', x: -150, y: 80, shape: 'roundedRect', width: 80, height: 50, label: 'Node 4' }, style: { fill: '#ffd93d', stroke: '#ccae30', strokeWidth: 2 } },
+    { data: { id: 'n4', x: -150, y: 80, shape: 'rect', width: 80, height: 50, cornerRadius: 8, label: 'Node 4' }, style: { fill: '#ffd93d', stroke: '#ccae30', strokeWidth: 2 } },
     { data: { id: 'n5', x: 150, y: 80, shape: 'diamond', size: 40, label: 'Node 5' }, style: { fill: '#9b59b6', stroke: '#7d478f', strokeWidth: 2 } },
   ],
   edges: [
@@ -125,8 +125,8 @@ const createDynamicStylesDemo = (): HTMLElement => {
         nodes: [
           { data: { id: 'a1', x: -200, y: -50, shape: 'circle', size: 35, label: 'A1' }, style: { fill: '#4a90d9', stroke: '#333', strokeWidth: 2 } },
           { data: { id: 'a2', x: -100, y: -50, shape: 'circle', size: 35, label: 'A2' }, style: { fill: '#4a90d9', stroke: '#333', strokeWidth: 2 } },
-          { data: { id: 'b1', x: 100, y: -50, shape: 'roundedRect', width: 70, height: 45, label: 'B1' }, style: { fill: '#50c878', stroke: '#333', strokeWidth: 2 } },
-          { data: { id: 'b2', x: 200, y: -50, shape: 'roundedRect', width: 70, height: 45, label: 'B2' }, style: { fill: '#50c878', stroke: '#333', strokeWidth: 2 } },
+          { data: { id: 'b1', x: 100, y: -50, shape: 'rect', width: 70, height: 45, cornerRadius: 8, label: 'B1' }, style: { fill: '#50c878', stroke: '#333', strokeWidth: 2 } },
+          { data: { id: 'b2', x: 200, y: -50, shape: 'rect', width: 70, height: 45, cornerRadius: 8, label: 'B2' }, style: { fill: '#50c878', stroke: '#333', strokeWidth: 2 } },
           { data: { id: 'imp1', x: -50, y: 60, shape: 'hexagon', size: 40, label: 'IMP' }, style: { fill: '#ff6b6b', stroke: '#333', strokeWidth: 2 } },
           { data: { id: 'imp2', x: 50, y: 60, shape: 'hexagon', size: 40, label: 'IMP' }, style: { fill: '#ff6b6b', stroke: '#333', strokeWidth: 2 } },
         ],

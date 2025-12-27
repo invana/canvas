@@ -49,9 +49,9 @@ export const PluginLayerSystem: Story = {
           { id: 'n6', x: 450, y: 250, shape: 'rect', label: 'Frank', style: { fill: '#f4a261' } },
 
           // Team C nodes
-          { id: 'n7', x: 750, y: 100, shape: 'roundedRect', label: 'Grace', style: { fill: '#2a9d8f' } },
-          { id: 'n8', x: 850, y: 100, shape: 'roundedRect', label: 'Heidi', style: { fill: '#2a9d8f' } },
-          { id: 'n9', x: 800, y: 200, shape: 'roundedRect', label: 'Ivan', style: { fill: '#2a9d8f' } },
+          { id: 'n7', x: 750, y: 100, shape: 'rect', cornerRadius: 8, label: 'Grace', style: { fill: '#2a9d8f' } },
+          { id: 'n8', x: 850, y: 100, shape: 'rect', cornerRadius: 8, label: 'Heidi', style: { fill: '#2a9d8f' } },
+          { id: 'n9', x: 800, y: 200, shape: 'rect', cornerRadius: 8, label: 'Ivan', style: { fill: '#2a9d8f' } },
         ],
         edges: [
           // Team A connections

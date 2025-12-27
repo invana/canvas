@@ -49,7 +49,7 @@ export {
   CircleNode,
   EllipseNode,
   RectNode,
-  RoundedRectNode,
+  HTMLNode,
   PolygonNode,
   TriangleNode,
   DiamondNode,

@@ -360,24 +360,99 @@ export function drawDashedRoundedRect(
   offset: number = 0
 ): void {
   const r = Math.min(radius, width / 2, height / 2);
+  let cumulativeOffset = offset;
   
   // Top edge
-  drawDashedLine(g, x + r, y, x + width - r, y, dashLength, gapLength, color, strokeWidth, alpha, offset);
+  const topLength = width - 2 * r;
+  drawDashedLine(g, x + r, y, x + width - r, y, dashLength, gapLength, color, strokeWidth, alpha, cumulativeOffset);
+  cumulativeOffset += topLength;
+  
+  // Top-right corner arc
+  const arcLength = (Math.PI / 2) * r;
+  drawDashedArc(g, x + width - r, y + r, r, -Math.PI / 2, 0, dashLength, gapLength, color, strokeWidth, alpha, cumulativeOffset);
+  cumulativeOffset += arcLength;
   
   // Right edge  
-  drawDashedLine(g, x + width, y + r, x + width, y + height - r, dashLength, gapLength, color, strokeWidth, alpha, offset);
+  const rightLength = height - 2 * r;
+  drawDashedLine(g, x + width, y + r, x + width, y + height - r, dashLength, gapLength, color, strokeWidth, alpha, cumulativeOffset);
+  cumulativeOffset += rightLength;
+  
+  // Bottom-right corner arc
+  drawDashedArc(g, x + width - r, y + height - r, r, 0, Math.PI / 2, dashLength, gapLength, color, strokeWidth, alpha, cumulativeOffset);
+  cumulativeOffset += arcLength;
   
   // Bottom edge
-  drawDashedLine(g, x + width - r, y + height, x + r, y + height, dashLength, gapLength, color, strokeWidth, alpha, offset);
+  const bottomLength = width - 2 * r;
+  drawDashedLine(g, x + width - r, y + height, x + r, y + height, dashLength, gapLength, color, strokeWidth, alpha, cumulativeOffset);
+  cumulativeOffset += bottomLength;
+  
+  // Bottom-left corner arc
+  drawDashedArc(g, x + r, y + height - r, r, Math.PI / 2, Math.PI, dashLength, gapLength, color, strokeWidth, alpha, cumulativeOffset);
+  cumulativeOffset += arcLength;
   
   // Left edge
-  drawDashedLine(g, x, y + height - r, x, y + r, dashLength, gapLength, color, strokeWidth, alpha, offset);
+  const leftLength = height - 2 * r;
+  drawDashedLine(g, x, y + height - r, x, y + r, dashLength, gapLength, color, strokeWidth, alpha, cumulativeOffset);
+  cumulativeOffset += leftLength;
   
-  // Corners (approximate with short dashes)
-  drawDashedArc(g, x + width - r, y + r, r, 0, Math.PI / 2, dashLength / 2, gapLength / 2, color, strokeWidth, alpha, offset);
-  drawDashedArc(g, x + width - r, y + height - r, r, Math.PI / 2, Math.PI, dashLength / 2, gapLength / 2, color, strokeWidth, alpha, offset);
-  drawDashedArc(g, x + r, y + height - r, r, Math.PI, 3 * Math.PI / 2, dashLength / 2, gapLength / 2, color, strokeWidth, alpha, offset);
-  drawDashedArc(g, x + r, y + r, r, 3 * Math.PI / 2, 2 * Math.PI, dashLength / 2, gapLength / 2, color, strokeWidth, alpha, offset);
+  // Top-left corner arc
+  drawDashedArc(g, x + r, y + r, r, Math.PI, 3 * Math.PI / 2, dashLength, gapLength, color, strokeWidth, alpha, cumulativeOffset);
+}
+
+/**
+ * Draw a dotted rounded rectangle
+ */
+export function drawDottedRoundedRect(
+  g: Graphics,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+  dotSpacing: number,
+  color: string | number,
+  strokeWidth: number,
+  alpha: number = 1,
+  offset: number = 0
+): void {
+  const r = Math.min(radius, width / 2, height / 2);
+  let cumulativeOffset = offset;
+  
+  // Top edge
+  const topLength = width - 2 * r;
+  drawDottedLine(g, x + r, y, x + width - r, y, dotSpacing, color, strokeWidth, alpha, cumulativeOffset);
+  cumulativeOffset += topLength;
+  
+  // Top-right corner arc
+  const arcLength = (Math.PI / 2) * r;
+  drawDottedArc(g, x + width - r, y + r, r, -Math.PI / 2, 0, dotSpacing, color, strokeWidth, alpha, cumulativeOffset);
+  cumulativeOffset += arcLength;
+  
+  // Right edge  
+  const rightLength = height - 2 * r;
+  drawDottedLine(g, x + width, y + r, x + width, y + height - r, dotSpacing, color, strokeWidth, alpha, cumulativeOffset);
+  cumulativeOffset += rightLength;
+  
+  // Bottom-right corner arc
+  drawDottedArc(g, x + width - r, y + height - r, r, 0, Math.PI / 2, dotSpacing, color, strokeWidth, alpha, cumulativeOffset);
+  cumulativeOffset += arcLength;
+  
+  // Bottom edge
+  const bottomLength = width - 2 * r;
+  drawDottedLine(g, x + width - r, y + height, x + r, y + height, dotSpacing, color, strokeWidth, alpha, cumulativeOffset);
+  cumulativeOffset += bottomLength;
+  
+  // Bottom-left corner arc
+  drawDottedArc(g, x + r, y + height - r, r, Math.PI / 2, Math.PI, dotSpacing, color, strokeWidth, alpha, cumulativeOffset);
+  cumulativeOffset += arcLength;
+  
+  // Left edge
+  const leftLength = height - 2 * r;
+  drawDottedLine(g, x, y + height - r, x, y + r, dotSpacing, color, strokeWidth, alpha, cumulativeOffset);
+  cumulativeOffset += leftLength;
+  
+  // Top-left corner arc
+  drawDottedArc(g, x + r, y + r, r, Math.PI, 3 * Math.PI / 2, dotSpacing, color, strokeWidth, alpha, cumulativeOffset);
 }
 
 /**
@@ -399,23 +474,74 @@ function drawDashedArc(
 ): void {
   const arcLength = radius * Math.abs(endAngle - startAngle);
   const pattern = dashLength + gapLength;
-  const segmentCount = Math.floor(arcLength / pattern);
-  const angleOffset = (offset / arcLength) * Math.abs(endAngle - startAngle);
+  const normalizedOffset = offset % pattern;
   
-  for (let i = 0; i < segmentCount; i++) {
-    const startA = startAngle + (i * (endAngle - startAngle)) / segmentCount + angleOffset;
-    const endA = startAngle + ((i + 0.5) * (endAngle - startAngle)) / segmentCount + angleOffset;
-    
-    const x1 = cx + radius * Math.cos(startA);
-    const y1 = cy + radius * Math.sin(startA);
-    const x2 = cx + radius * Math.cos(endA);
-    const y2 = cy + radius * Math.sin(endA);
-    
-    g.moveTo(x1, y1);
-    g.lineTo(x2, y2);
+  let currentDist = -normalizedOffset;
+  let isDash = true;
+  
+  // Determine if we start with a dash or gap based on offset
+  if (normalizedOffset > dashLength) {
+    isDash = false;
+    currentDist = -(normalizedOffset - dashLength);
   }
   
-  g.stroke({ color, width, alpha, cap: 'butt' });
+  while (currentDist < arcLength) {
+    const segmentLength = isDash ? dashLength : gapLength;
+    const segmentEnd = Math.min(currentDist + segmentLength, arcLength);
+    
+    if (isDash && currentDist >= 0 && segmentEnd > 0) {
+      const startA = startAngle + (Math.max(0, currentDist) / arcLength) * (endAngle - startAngle);
+      const endA = startAngle + (segmentEnd / arcLength) * (endAngle - startAngle);
+      
+      // Draw arc segment as small line segments for smooth curve
+      const steps = Math.max(2, Math.ceil(Math.abs(endA - startA) * radius / 2));
+      for (let i = 0; i < steps; i++) {
+        const a1 = startA + (i / steps) * (endA - startA);
+        const a2 = startA + ((i + 1) / steps) * (endA - startA);
+        
+        g.moveTo(cx + radius * Math.cos(a1), cy + radius * Math.sin(a1));
+        g.lineTo(cx + radius * Math.cos(a2), cy + radius * Math.sin(a2));
+      }
+      g.stroke({ color, width, alpha, cap: 'round' });
+    }
+    
+    currentDist += segmentLength;
+    isDash = !isDash;
+  }
+}
+
+/**
+ * Draw a dotted arc
+ */
+function drawDottedArc(
+  g: Graphics,
+  cx: number,
+  cy: number,
+  radius: number,
+  startAngle: number,
+  endAngle: number,
+  dotSpacing: number,
+  color: string | number,
+  width: number,
+  alpha: number,
+  offset: number = 0
+): void {
+  const arcLength = radius * Math.abs(endAngle - startAngle);
+  const normalizedOffset = offset % dotSpacing;
+  const dotCount = Math.ceil((arcLength + normalizedOffset) / dotSpacing);
+  
+  for (let i = 0; i <= dotCount; i++) {
+    const dist = i * dotSpacing - normalizedOffset;
+    if (dist < 0) continue;
+    if (dist > arcLength) break;
+    
+    const angle = startAngle + (dist / arcLength) * (endAngle - startAngle);
+    const dotX = cx + radius * Math.cos(angle);
+    const dotY = cy + radius * Math.sin(angle);
+    
+    g.circle(dotX, dotY, width * 0.6);
+    g.fill({ color, alpha });
+  }
 }
 
 /**

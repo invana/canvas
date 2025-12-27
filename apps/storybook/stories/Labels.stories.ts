@@ -12,7 +12,7 @@ const generateNodeLabelsData = (fontSize: number): CanvasData => {
   const shapes = [
     { shape: 'circle', label: 'Circle', x: -200, y: -100 },
     { shape: 'rect', label: 'Rectangle', x: 0, y: -100 },
-    { shape: 'roundedRect', label: 'Rounded', x: 200, y: -100 },
+    { shape: 'rect', label: 'Rounded', cornerRadius: 8, x: 200, y: -100 },
     { shape: 'ellipse', label: 'Ellipse', x: -200, y: 100 },
     { shape: 'hexagon', label: 'Hexagon', x: 0, y: 100 },
     { shape: 'pentagon', label: 'Pentagon', x: 200, y: 100 },
@@ -187,7 +187,8 @@ const generateLabelPositionsData = (): CanvasData => {
     id: `pos-${pos}`,
     x: (i - 2) * 150,
     y: 0,
-    shape: 'roundedRect' as const,
+    shape: 'rect' as const,
+    cornerRadius: 10,
     width: 100,
     height: 60,
     label: pos.charAt(0).toUpperCase() + pos.slice(1),

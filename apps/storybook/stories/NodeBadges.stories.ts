@@ -58,7 +58,7 @@ export const AllPositions: Story = {
 
       await canvas.init();
 
-      const shapes = ['circle', 'rect', 'roundedRect', 'ellipse', 'triangle', 'diamond', 'pentagon', 'hexagon', 'octagon'] as const;
+      const shapes = ['circle', 'rect', 'rect', 'ellipse', 'triangle', 'diamond', 'pentagon', 'hexagon', 'octagon'] as const;
       const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22', '#95a5a6'];
       
       const badges = args.showBadges ? [
@@ -200,7 +200,7 @@ export const NotificationBadges: Story = {
 
       await canvas.init();
 
-      const shapes = ['circle', 'rect', 'roundedRect', 'ellipse', 'triangle', 'diamond', 'hexagon', 'pentagon', 'octagon'] as const;
+      const shapes = ['circle', 'rect', 'rect', 'ellipse', 'triangle', 'diamond', 'hexagon', 'pentagon', 'octagon'] as const;
       const counts = [3, 7, 12, 25, 99, 5, 15, 8, 42];
 
       const data: CanvasData = {
@@ -346,8 +346,9 @@ export const MultipleBadges: Story = {
               id: 'node-1',
               x: 200,
               y: 250,
-              shape: 'roundedRect',
+              shape: 'rect',
               size: 80,
+              cornerRadius: 8,
               label: 'Server',
               badges: args.showBadges ? [
                 { text: '5', position: 'top-right', color: '#e74c3c' },

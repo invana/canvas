@@ -161,11 +161,11 @@ export const MixedIconTypes: Story = {
         { id: 'u5', icon: '⭐', label: 'Star', x: 1000, y: 150, shape: 'circle' as const, color: '#f1c40f' },
         
         // Row 2: Rounded Rectangles
-        { id: 'r1', icon: '📊', label: 'Analytics', x: 200, y: 350, shape: 'roundedRect' as const, color: '#3498db' },
-        { id: 'r2', icon: '🎨', label: 'Design', x: 400, y: 350, shape: 'roundedRect' as const, color: '#e74c3c' },
-        { id: 'r3', icon: '🔧', label: 'Tools', x: 600, y: 350, shape: 'roundedRect' as const, color: '#95a5a6' },
-        { id: 'r4', icon: '📱', label: 'Mobile', x: 800, y: 350, shape: 'roundedRect' as const, color: '#16a085' },
-        { id: 'r5', icon: '💻', label: 'Desktop', x: 1000, y: 350, shape: 'roundedRect' as const, color: '#34495e' },
+        { id: 'r1', icon: '📊', label: 'Analytics', x: 200, y: 350, shape: 'rect' as const, cornerRadius: 8, color: '#3498db' },
+        { id: 'r2', icon: '🎨', label: 'Design', x: 400, y: 350, shape: 'rect' as const, cornerRadius: 8, color: '#e74c3c' },
+        { id: 'r3', icon: '🔧', label: 'Tools', x: 600, y: 350, shape: 'rect' as const, cornerRadius: 8, color: '#95a5a6' },
+        { id: 'r4', icon: '📱', label: 'Mobile', x: 800, y: 350, shape: 'rect' as const, cornerRadius: 8, color: '#16a085' },
+        { id: 'r5', icon: '💻', label: 'Desktop', x: 1000, y: 350, shape: 'rect' as const, cornerRadius: 8, color: '#34495e' },
         
         // Row 3: Hexagons
         { id: 'h1', icon: '⚙️', label: 'Process', x: 200, y: 550, shape: 'hexagon' as const, color: '#16a085' },
@@ -573,11 +573,11 @@ export const FullSizeIcons: Story = {
         { icon: '💎', size: 100, color: '#1abc9c', x: 950, y: 150, shape: 'circle' as const },
         
         // Row 2: Large icons with rounded rectangles
-        { icon: '🔥', size: 100, color: '#e67e22', x: 150, y: 350, shape: 'roundedRect' as const },
-        { icon: '⭐', size: 100, color: '#f1c40f', x: 350, y: 350, shape: 'roundedRect' as const },
-        { icon: '💡', size: 100, color: '#27ae60', x: 550, y: 350, shape: 'roundedRect' as const },
-        { icon: '🎵', size: 100, color: '#8e44ad', x: 750, y: 350, shape: 'roundedRect' as const },
-        { icon: '🌟', size: 100, color: '#16a085', x: 950, y: 350, shape: 'roundedRect' as const },
+        { icon: '🔥', size: 100, color: '#e67e22', x: 150, y: 350, shape: 'rect' as const, cornerRadius: 8 },
+        { icon: '⭐', size: 100, color: '#f1c40f', x: 350, y: 350, shape: 'rect' as const, cornerRadius: 8 },
+        { icon: '💡', size: 100, color: '#27ae60', x: 550, y: 350, shape: 'rect' as const, cornerRadius: 8 },
+        { icon: '🎵', size: 100, color: '#8e44ad', x: 750, y: 350, shape: 'rect' as const, cornerRadius: 8 },
+        { icon: '🌟', size: 100, color: '#16a085', x: 950, y: 350, shape: 'rect' as const, cornerRadius: 8 },
       ];
 
       const nodes = fullSizeIcons.map((item, i) => ({

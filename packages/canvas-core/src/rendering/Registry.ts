@@ -38,7 +38,6 @@ import type { ArrowStyle, ArrowDrawFn, ArrowParams, ArrowType } from '../primiti
 import {
   drawCircle,
   drawRect,
-  drawRoundedRect,
   drawEllipse,
   drawTriangle,
   drawDiamond,
@@ -61,8 +60,8 @@ import type { NodeShapeBase, NodeShapeOptions } from '../elements/nodes/NodeShap
 import type { EdgeShapeBase, EdgeShapeOptions } from '../elements/edges/EdgeShapeBase';
 import { CircleNode } from '../elements/nodes/CircleNode';
 import { RectNode } from '../elements/nodes/RectNode';
-import { RoundedRectNode } from '../elements/nodes/RoundedRectNode';
 import { EllipseNode } from '../elements/nodes/EllipseNode';
+import { HTMLNode } from '../elements/nodes/HTMLNode';
 import { TriangleNode, DiamondNode, PentagonNode, HexagonNode, OctagonNode, PolygonNode } from '../elements/nodes/PolygonNode';
 
 /**
@@ -81,13 +80,13 @@ export type EdgeShapeConstructor = new (options: EdgeShapeOptions) => EdgeShapeB
 export type BuiltInShapeType =
   | 'circle'
   | 'rect'
-  | 'roundedRect'
   | 'ellipse'
   | 'triangle'
   | 'diamond'
   | 'pentagon'
   | 'hexagon'
-  | 'octagon';
+  | 'octagon'
+  | 'htmlNode';
 
 /**
  * Path types that come built-in
@@ -304,17 +303,7 @@ export class Registry {
         y: params.y ?? 0,
         width: params.width ?? params.size ?? 60,
         height: params.height ?? params.size ?? 40,
-        centered: params.centered ?? true,
-      }, style);
-    });
-
-    this.registerShape('roundedRect', (g, params: any, style) => {
-      drawRoundedRect(g, {
-        x: params.x ?? 0,
-        y: params.y ?? 0,
-        width: params.width ?? params.size ?? 60,
-        height: params.height ?? params.size ?? 40,
-        radius: params.radius ?? 8,
+        cornerRadius: params.cornerRadius ?? params.radius ?? 0,
         centered: params.centered ?? true,
       }, style);
     });
@@ -329,23 +318,48 @@ export class Registry {
     });
 
     this.registerShape('triangle', (g, params: any, style) => {
-      drawTriangle(g, { x: params.x ?? 0, y: params.y ?? 0, radius: params.radius ?? params.size ?? 30 }, style);
+      drawTriangle(g, { 
+        x: params.x ?? 0, 
+        y: params.y ?? 0, 
+        radius: params.radius ?? params.size ?? 30,
+        cornerRadius: params.cornerRadius ?? 0
+      }, style);
     });
 
     this.registerShape('diamond', (g, params: any, style) => {
-      drawDiamond(g, { x: params.x ?? 0, y: params.y ?? 0, radius: params.radius ?? params.size ?? 30 }, style);
+      drawDiamond(g, { 
+        x: params.x ?? 0, 
+        y: params.y ?? 0, 
+        radius: params.radius ?? params.size ?? 30,
+        cornerRadius: params.cornerRadius ?? 0
+      }, style);
     });
 
     this.registerShape('pentagon', (g, params: any, style) => {
-      drawPentagon(g, { x: params.x ?? 0, y: params.y ?? 0, radius: params.radius ?? params.size ?? 30 }, style);
+      drawPentagon(g, { 
+        x: params.x ?? 0, 
+        y: params.y ?? 0, 
+        radius: params.radius ?? params.size ?? 30,
+        cornerRadius: params.cornerRadius ?? 0
+      }, style);
     });
 
     this.registerShape('hexagon', (g, params: any, style) => {
-      drawHexagon(g, { x: params.x ?? 0, y: params.y ?? 0, radius: params.radius ?? params.size ?? 30 }, style);
+      drawHexagon(g, { 
+        x: params.x ?? 0, 
+        y: params.y ?? 0, 
+        radius: params.radius ?? params.size ?? 30,
+        cornerRadius: params.cornerRadius ?? 0
+      }, style);
     });
 
     this.registerShape('octagon', (g, params: any, style) => {
-      drawOctagon(g, { x: params.x ?? 0, y: params.y ?? 0, radius: params.radius ?? params.size ?? 30 }, style);
+      drawOctagon(g, { 
+        x: params.x ?? 0, 
+        y: params.y ?? 0, 
+        radius: params.radius ?? params.size ?? 30,
+        cornerRadius: params.cornerRadius ?? 0
+      }, style);
     });
   }
 
@@ -399,23 +413,24 @@ export class Registry {
   }
 
   /**
+  /**
    * Register default node shape classes
    */
   private registerDefaultNodeClasses(): void {
     // Register circle
     this.registerNodeClass('circle', CircleNode);
     
-    // Register rectangles
+    // Register rectangles (now supports cornerRadius for rounded corners)
     this.registerNodeClass('rect', RectNode);
     this.registerNodeClass('rectangle', RectNode);
     this.registerNodeClass('square', RectNode);
     
-    // Register rounded rectangles
-    this.registerNodeClass('roundedRect', RoundedRectNode);
-    this.registerNodeClass('rounded-rect', RoundedRectNode);
-    
     // Register ellipse
     this.registerNodeClass('ellipse', EllipseNode);
+    
+    // Register HTML node
+    this.registerNodeClass('htmlNode', HTMLNode);
+    this.registerNodeClass('html', HTMLNode);
     
     // Register polygons
     this.registerNodeClass('triangle', TriangleNode);
@@ -425,7 +440,6 @@ export class Registry {
     this.registerNodeClass('octagon', OctagonNode);
     this.registerNodeClass('polygon', PolygonNode);
   }
-
   // =========================================================================
   // NODE CLASSES
   // =========================================================================

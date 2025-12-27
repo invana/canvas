@@ -6,7 +6,7 @@ interface CanvasArgs {
   nodeCount: number;
 }
 
-const shapes = ['circle', 'roundedRect', 'hexagon', 'triangle', 'diamond'] as const;
+const shapes = ['circle', 'rect', 'hexagon', 'triangle', 'diamond'] as const;
 const colors = ['#4a90d9', '#50c878', '#ff6b6b', '#ffd93d', '#6c5ce7'];
 
 const generateGraphData = (nodeCount: number): CanvasData => {

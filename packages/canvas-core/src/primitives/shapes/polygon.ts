@@ -15,19 +15,84 @@ export interface PolygonParams {
   sides: number;
   /** Rotation offset in radians. Default: -Math.PI/2 (point up) */
   rotation?: number;
+  /** Corner radius for rounded corners. Default: 0 */
+  cornerRadius?: number;
 }
 
 /**
- * Generate polygon vertex points
+ * Generate polygon vertex points with optional rounded corners
  */
 export function getPolygonPoints(params: PolygonParams): number[] {
-  const { x, y, radius, sides, rotation = -Math.PI / 2 } = params;
+  const { x, y, radius, sides, rotation = -Math.PI / 2, cornerRadius = 0 } = params;
+  
+  if (cornerRadius <= 0 || sides < 3) {
+    // No rounding, use regular polygon
+    const points: number[] = [];
+    const angleStep = (Math.PI * 2) / sides;
+
+    for (let i = 0; i < sides; i++) {
+      const angle = i * angleStep + rotation;
+      points.push(x + Math.cos(angle) * radius, y + Math.sin(angle) * radius);
+    }
+    return points;
+  }
+
+  // Rounded corners - need to create arc segments at each vertex
   const points: number[] = [];
   const angleStep = (Math.PI * 2) / sides;
-
+  
+  // Calculate the maximum corner radius to prevent overlap
+  const sideLength = 2 * radius * Math.sin(Math.PI / sides);
+  const maxRadius = sideLength / 2 * 0.9; // Use 90% to ensure no overlap
+  const effectiveRadius = Math.min(cornerRadius, maxRadius);
+  
   for (let i = 0; i < sides; i++) {
     const angle = i * angleStep + rotation;
-    points.push(x + Math.cos(angle) * radius, y + Math.sin(angle) * radius);
+    const nextAngle = ((i + 1) % sides) * angleStep + rotation;
+    
+    // Current vertex position
+    const vx = x + Math.cos(angle) * radius;
+    const vy = y + Math.sin(angle) * radius;
+    
+    // Next vertex position
+    const nvx = x + Math.cos(nextAngle) * radius;
+    const nvy = y + Math.sin(nextAngle) * radius;
+    
+    // Direction vectors along edges
+    const toNextX = nvx - vx;
+    const toNextY = nvy - vy;
+    const toNextLen = Math.sqrt(toNextX * toNextX + toNextY * toNextY);
+    
+    // Calculate point before corner (along the edge from previous vertex)
+    const prevAngle = ((i - 1 + sides) % sides) * angleStep + rotation;
+    const pvx = x + Math.cos(prevAngle) * radius;
+    const pvy = y + Math.sin(prevAngle) * radius;
+    
+    const fromPrevX = vx - pvx;
+    const fromPrevY = vy - pvy;
+    const fromPrevLen = Math.sqrt(fromPrevX * fromPrevX + fromPrevY * fromPrevY);
+    
+    // Points for the rounded corner
+    const ratio = effectiveRadius / fromPrevLen;
+    const p1x = vx - fromPrevX * ratio;
+    const p1y = vy - fromPrevY * ratio;
+    
+    const ratio2 = effectiveRadius / toNextLen;
+    const p2x = vx + toNextX * ratio2;
+    const p2y = vy + toNextY * ratio2;
+    
+    // Add the start point of the arc
+    points.push(p1x, p1y);
+    
+    // Add intermediate arc points for smoother curves (4 points per arc)
+    const arcSegments = 4;
+    for (let j = 1; j <= arcSegments; j++) {
+      const t = j / (arcSegments + 1);
+      // Quadratic bezier curve with control point at the vertex
+      const arcX = (1 - t) * (1 - t) * p1x + 2 * (1 - t) * t * vx + t * t * p2x;
+      const arcY = (1 - t) * (1 - t) * p1y + 2 * (1 - t) * t * vy + t * t * p2y;
+      points.push(arcX, arcY);
+    }
   }
 
   return points;

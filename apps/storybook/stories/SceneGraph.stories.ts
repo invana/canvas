@@ -285,8 +285,8 @@ export const NodeQueries: Story = {
           nodes: [
             { data: { id: 'user-1', x: -150, y: 0, label: 'Alice', shape: 'circle', size: 40 }, style: { fill: '#e74c3c', stroke: '#333', strokeWidth: 2 } },
             { data: { id: 'user-2', x: 150, y: 0, label: 'Bob', shape: 'circle', size: 40 }, style: { fill: '#3498db', stroke: '#333', strokeWidth: 2 } },
-            { data: { id: 'doc-1', x: 0, y: -100, label: 'Doc A', shape: 'roundedRect', width: 80, height: 50 }, style: { fill: '#f39c12', stroke: '#333', strokeWidth: 2 } },
-            { data: { id: 'doc-2', x: 0, y: 100, label: 'Doc B', shape: 'roundedRect', width: 80, height: 50 }, style: { fill: '#f39c12', stroke: '#333', strokeWidth: 2 } },
+            { data: { id: 'doc-1', x: 0, y: -100, label: 'Doc A', shape: 'rect', width: 80, height: 50, cornerRadius: 8 }, style: { fill: '#f39c12', stroke: '#333', strokeWidth: 2 } },
+            { data: { id: 'doc-2', x: 0, y: 100, label: 'Doc B', shape: 'rect', width: 80, height: 50, cornerRadius: 8 }, style: { fill: '#f39c12', stroke: '#333', strokeWidth: 2 } },
           ],
           edges: [
             { data: { id: 'owns-1', source: 'user-1', target: 'doc-1', pathType: 'line', arrowTarget: 'triangle' }, style: { stroke: '#666', strokeWidth: 2 } },

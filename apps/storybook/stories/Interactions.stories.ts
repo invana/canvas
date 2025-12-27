@@ -27,7 +27,8 @@ const generateInteractiveData = (args: InteractionsArgs): CanvasData => {
           id: `interactive-${i}`,
           x,
           y,
-          shape: 'roundedRect' as const,
+          shape: 'rect' as const,
+          cornerRadius: 8,
           width: 80,
           height: 50,
           label: `Node ${i + 1}`,
@@ -186,8 +187,8 @@ const createDragAndConnect = (args: InteractionsArgs): HTMLElement => {
 const generateFlowData = (): CanvasData => {
   const flowNodes = [
     { id: 'start', x: -250, y: 0, label: 'Start', shape: 'circle' as const, fill: '#4caf50' },
-    { id: 'process1', x: -100, y: -80, label: 'Process A', shape: 'roundedRect' as const, fill: '#2196f3' },
-    { id: 'process2', x: -100, y: 80, label: 'Process B', shape: 'roundedRect' as const, fill: '#2196f3' },
+    { id: 'process1', x: -100, y: -80, label: 'Process A', shape: 'rect' as const, cornerRadius: 8, fill: '#2196f3' },
+    { id: 'process2', x: -100, y: 80, label: 'Process B', shape: 'rect' as const, cornerRadius: 8, fill: '#2196f3' },
     { id: 'merge', x: 50, y: 0, label: 'Merge', shape: 'diamond' as const, fill: '#ff9800' },
     { id: 'end', x: 200, y: 0, label: 'End', shape: 'circle' as const, fill: '#f44336' },
   ];

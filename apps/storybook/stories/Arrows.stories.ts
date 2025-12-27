@@ -56,9 +56,10 @@ const generateArrowsData = (arrowSize: number, edgeColor: string): CanvasData =>
         id: `label-${arrowType}`,
         x: -280,
         y,
-        shape: 'roundedRect' as const,
+        shape: 'rect' as const,
         width: 80,
         height: 24,
+        cornerRadius: 8,
         label: arrowType,
       },
       style: {
@@ -177,9 +178,10 @@ const generateBidirectionalData = (arrowSize: number, edgeColor: string): Canvas
         id: `label-bi-${i}`,
         x: -310,
         y,
-        shape: 'roundedRect' as const,
+        shape: 'rect' as const,
         width: 130,
         height: 24,
+        cornerRadius: 8,
         label: combo.label,
       },
       style: {
