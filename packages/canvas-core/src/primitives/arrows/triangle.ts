@@ -83,6 +83,7 @@ export function drawTriangleOutlineArrow(
       color: style.stroke,
       width: style.strokeWidth ?? 1,
       alpha: style.strokeAlpha ?? 1,
+      alignment: 0.5,
     });
   }
 }
@@ -161,6 +162,7 @@ export function drawVeeArrow(
       alpha: style.strokeAlpha ?? 1,
       cap: 'round',
       join: 'round',
+      alignment: 0.5,
     });
   }
 }

@@ -108,5 +108,6 @@ export function drawSelectionHighlight(
     color: style.color,
     width: style.strokeWidth ?? 2,
     alpha: style.alpha ?? 1,
+    alignment: 0.5,
   });
 }

@@ -76,8 +76,9 @@ export function drawLine(g: Graphics, params: LineParams, style: PathStyle): voi
       color: style.stroke,
       width: style.strokeWidth,
       alpha: style.strokeAlpha ?? 1,
-      cap: style.lineCap ?? 'round',
+      cap: style.strokeCap ?? style.lineCap ?? 'round',
       join: style.lineJoin ?? 'round',
+      alignment: style.strokeAlignment,
     });
   }
 }
@@ -138,8 +139,9 @@ export function drawPolyline(g: Graphics, params: PolylineParams, style: PathSty
       color: style.stroke,
       width: style.strokeWidth,
       alpha: style.strokeAlpha ?? 1,
-      cap: style.lineCap ?? 'round',
+      cap: style.strokeCap ?? style.lineCap ?? 'round',
       join: style.lineJoin ?? 'round',
+      alignment: style.strokeAlignment,
     });
   }
 }

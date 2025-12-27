@@ -18,6 +18,9 @@ export class EllipseNode extends NodeShapeBase {
     const radiusX = (this._data.width ?? size * 2) / 2;
     const radiusY = (this._data.height ?? size) / 2;
 
+    // Draw halo first (underneath main shape)
+    this.drawHalo(style, { type: 'ellipse', radiusX, radiusY });
+
     // Draw ellipse using registry
     const drawer = this._registry.getShape('ellipse');
     if (drawer) {

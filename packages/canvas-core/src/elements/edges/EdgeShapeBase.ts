@@ -103,6 +103,10 @@ export interface EdgeStyle {
   arrowFill?: string;
   /** Arrow stroke color */
   arrowStroke?: string;
+  /** Stroke alignment: 0 = outside, 0.5 = centered (default), 1 = inside */
+  strokeAlignment?: number;
+  /** Stroke cap style: 'butt' (default), 'round', 'square' (alias for lineCap) */
+  strokeCap?: 'butt' | 'round' | 'square';
   /** State-based style overrides */
   states?: {
     [stateName: string]: Partial<EdgeStyle>;
@@ -131,6 +135,10 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
   private _styleDirty = true;
   private _styleHash = '';
   private static _globalStyleCache = new Map<string, PathStyle>();
+  
+  // Batch mode for bulk operations (set to true to defer rendering)
+  private static _batchMode = false;
+  private static _batchedEdges = new Set<EdgeShapeBase>();
 
   constructor(options: EdgeShapeOptions) {
     // Edges don't use x/y positioning - they draw from source to target
@@ -229,7 +237,13 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
       }
       
       this.markDirty();
-      this.update();
+      
+      // If in batch mode, defer update; otherwise update immediately
+      if (EdgeShapeBase._batchMode) {
+        EdgeShapeBase._batchedEdges.add(this);
+      } else {
+        this.update();
+      }
     } else if (!active && hasState && name !== EdgeStates.DEFAULT) {
       this._activeStates.delete(name);
       this._styleDirty = true;
@@ -240,7 +254,13 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
       }
       
       this.markDirty();
-      this.update();
+      
+      // If in batch mode, defer update; otherwise update immediately
+      if (EdgeShapeBase._batchMode) {
+        EdgeShapeBase._batchedEdges.add(this);
+      } else {
+        this.update();
+      }
     }
   }
 
@@ -266,6 +286,46 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
    */
   isDisabled(): boolean {
     return this._activeStates.has(EdgeStates.DISABLED) || this._activeStates.has('muted');
+  }
+
+  /**
+   * Start batch mode - defers all rendering until endBatch() is called
+   * Use this when updating state on many edges at once for better performance
+   * 
+   * @example
+   * ```typescript
+   * EdgeShapeBase.startBatch();
+   * edges.forEach(edge => edge.setState(EdgeStates.HIGHLIGHTED, true));
+   * EdgeShapeBase.endBatch();
+   * ```
+   */
+  static startBatch(): void {
+    EdgeShapeBase._batchMode = true;
+    EdgeShapeBase._batchedEdges.clear();
+  }
+
+  /**
+   * End batch mode and render all edges that were modified
+   * @returns Number of edges that were updated
+   */
+  static endBatch(): number {
+    EdgeShapeBase._batchMode = false;
+    const count = EdgeShapeBase._batchedEdges.size;
+    
+    // Update all batched edges
+    for (const edge of EdgeShapeBase._batchedEdges) {
+      edge.update();
+    }
+    
+    EdgeShapeBase._batchedEdges.clear();
+    return count;
+  }
+
+  /**
+   * Check if batch mode is active
+   */
+  static isBatchMode(): boolean {
+    return EdgeShapeBase._batchMode;
   }
 
   /**

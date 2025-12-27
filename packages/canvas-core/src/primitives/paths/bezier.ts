@@ -51,8 +51,9 @@ export function drawQuadraticBezier(
     color: style.stroke,
     width: style.strokeWidth,
     alpha: style.strokeAlpha ?? 1,
-    cap: style.lineCap ?? 'round',
+    cap: style.strokeCap ?? style.lineCap ?? 'round',
     join: style.lineJoin ?? 'round',
+    alignment: style.strokeAlignment,
   });
 }
 
@@ -72,8 +73,9 @@ export function drawCubicBezier(
     color: style.stroke,
     width: style.strokeWidth,
     alpha: style.strokeAlpha ?? 1,
-    cap: style.lineCap ?? 'round',
+    cap: style.strokeCap ?? style.lineCap ?? 'round',
     join: style.lineJoin ?? 'round',
+    alignment: style.strokeAlignment,
   });
 }
 

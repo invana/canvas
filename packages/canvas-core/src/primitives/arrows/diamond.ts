@@ -93,6 +93,7 @@ export function drawDiamondOutlineArrow(
       color: style.stroke,
       width: style.strokeWidth ?? 1,
       alpha: style.strokeAlpha ?? 1,
+      alignment: 0.5,
     });
   }
 }

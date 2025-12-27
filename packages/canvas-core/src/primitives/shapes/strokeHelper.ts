@@ -46,7 +46,7 @@ export function getStrokeDashPattern(
  * @returns Stroke options object for PixiJS Graphics.stroke()
  */
 export function getStrokeOptions(
-  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha' | 'strokeStyle' | 'strokeDashPattern' | 'strokeDashOffset'>
+  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha' | 'strokeStyle' | 'strokeDashPattern' | 'strokeDashOffset' | 'strokeAlignment' | 'strokeCap'>
 ): any {
   const strokeOptions: any = {
     color: style.stroke ?? '#000000',
@@ -54,12 +54,24 @@ export function getStrokeOptions(
     alpha: style.strokeAlpha ?? 1,
   };
   
+  // Add stroke alignment (0 = outside, 0.5 = centered, 1 = inside)
+  if (style.strokeAlignment !== undefined) {
+    strokeOptions.alignment = style.strokeAlignment;
+  }
+  
+  // Add stroke cap (butt, round, square)
+  if (style.strokeCap) {
+    strokeOptions.cap = style.strokeCap;
+  }
+  
   // Check if dash pattern should be applied
   const dashPattern = getStrokeDashPattern(style);
   if (dashPattern) {
     // Future: When PixiJS supports dash arrays, they would be applied here
     // For now, we just adjust the cap style for better visual appearance
-    strokeOptions.cap = 'butt';
+    if (!style.strokeCap) {
+      strokeOptions.cap = 'butt';
+    }
     strokeOptions.join = 'miter';
   }
   

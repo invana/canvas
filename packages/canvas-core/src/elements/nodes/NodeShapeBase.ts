@@ -30,7 +30,7 @@ import { BaseShape, type BaseShapeData, type BaseShapeStyle, type BaseShapeOptio
 import { FederatedPointerEvent, Graphics, Ticker } from 'pixi.js';
 import { drawRippleEffect, calculateRippleRadius, calculateRippleAlpha } from '../../primitives/effects';
 import { NodeStates, KNOWN_NODE_STATES, type NodeStateName } from '../../types/states';
-import { mergeNodeStateStyles } from '../../defaults/nodes';
+import { mergeNodeStateStyles, DEFAULT_NODE_LABEL, DEFAULT_NODE_BADGE } from '../../defaults/nodes';
 
 /**
  * Point interface for coordinates
@@ -214,6 +214,10 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
   private static _globalStyleCache = new Map<string, ShapeStyle>();
   private static _styleIdCounter = 0;
   private _styleId: number = 0;
+  
+  // Batch mode for bulk operations (set to true to defer rendering)
+  private static _batchMode = false;
+  private static _batchedNodes = new Set<NodeShapeBase>();
   
   // Drag callback
   private _onDrag?: (node: NodeShapeBase, x: number, y: number) => void;
@@ -408,7 +412,13 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
     }
     
     this.markDirty();
-    this.update();
+    
+    // If in batch mode, defer update; otherwise update immediately
+    if (NodeShapeBase._batchMode) {
+      NodeShapeBase._batchedNodes.add(this);
+    } else {
+      this.update();
+    }
   }
 
   /**
@@ -437,6 +447,46 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
    */
   isDisabled(): boolean {
     return this._activeStates.has(NodeStates.DISABLED) || this._activeStates.has('muted');
+  }
+
+  /**
+   * Start batch mode - defers all rendering until endBatch() is called
+   * Use this when updating state on many nodes at once for better performance
+   * 
+   * @example
+   * ```typescript
+   * NodeShapeBase.startBatch();
+   * nodes.forEach(node => node.setState(NodeStates.HIGHLIGHTED, true));
+   * NodeShapeBase.endBatch();
+   * ```
+   */
+  static startBatch(): void {
+    NodeShapeBase._batchMode = true;
+    NodeShapeBase._batchedNodes.clear();
+  }
+
+  /**
+   * End batch mode and render all nodes that were modified
+   * @returns Number of nodes that were updated
+   */
+  static endBatch(): number {
+    NodeShapeBase._batchMode = false;
+    const count = NodeShapeBase._batchedNodes.size;
+    
+    // Update all batched nodes
+    for (const node of NodeShapeBase._batchedNodes) {
+      node.update();
+    }
+    
+    NodeShapeBase._batchedNodes.clear();
+    return count;
+  }
+
+  /**
+   * Check if batch mode is active
+   */
+  static isBatchMode(): boolean {
+    return NodeShapeBase._batchMode;
   }
 
   /**
@@ -503,8 +553,8 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
     // Compute new style
     const result = this.computeActiveStyle();
     
-    // Cache globally (limit cache size)
-    if (NodeShapeBase._globalStyleCache.size < 1000) {
+    // Cache globally (limit cache size to prevent memory issues)
+    if (NodeShapeBase._globalStyleCache.size < 10000) {
       NodeShapeBase._globalStyleCache.set(hashCode, result);
     }
     
@@ -530,19 +580,26 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
   private computeActiveStyle(): ShapeStyle {
     const base = this._nodeStyle;
     
-    // Start with base properties (may be undefined - states will override)
-    const result: ShapeStyle = {
-      fill: base.fill,
-      stroke: base.stroke,
-      strokeWidth: base.strokeWidth,
-      fillAlpha: base.fillAlpha,
-      strokeAlpha: base.strokeAlpha,
-      strokeStyle: base.strokeStyle,
-      strokeDashPattern: base.strokeDashPattern,
-      strokeDashOffset: base.strokeDashOffset,
-    };
+    // Start with top-level base style properties (applied first as fallback)
+    const result: Partial<ShapeStyle> = {};
     
-    // Apply states in priority order (DEFAULT state provides base colors)
+    // Apply top-level style properties first (these act as base/fallback)
+    if (base.fill !== undefined) result.fill = base.fill;
+    if (base.stroke !== undefined) result.stroke = base.stroke;
+    if (base.strokeWidth !== undefined) result.strokeWidth = base.strokeWidth;
+    if (base.fillAlpha !== undefined) result.fillAlpha = base.fillAlpha;
+    if (base.strokeAlpha !== undefined) result.strokeAlpha = base.strokeAlpha;
+    if (base.strokeStyle !== undefined) result.strokeStyle = base.strokeStyle;
+    if (base.strokeDashPattern !== undefined) result.strokeDashPattern = base.strokeDashPattern;
+    if (base.strokeDashOffset !== undefined) result.strokeDashOffset = base.strokeDashOffset;
+    if (base.strokeAlignment !== undefined) result.strokeAlignment = base.strokeAlignment;
+    if (base.strokeCap !== undefined) result.strokeCap = base.strokeCap;
+    if (base.halo !== undefined) result.halo = base.halo;
+    if (base.haloStrokeWidth !== undefined) result.haloStrokeWidth = base.haloStrokeWidth;
+    if (base.haloStroke !== undefined) result.haloStroke = base.haloStroke;
+    if (base.haloStrokeOpacity !== undefined) result.haloStrokeOpacity = base.haloStrokeOpacity;
+    
+    // Apply states in priority order (override top-level base)
     const priority = base.statePriority ?? [NodeStates.DEFAULT, NodeStates.ACTIVE, NodeStates.SELECTED];
     
     if (base.states) {
@@ -561,6 +618,12 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
         if (stateStyle.strokeStyle !== undefined) result.strokeStyle = stateStyle.strokeStyle;
         if (stateStyle.strokeDashPattern !== undefined) result.strokeDashPattern = stateStyle.strokeDashPattern;
         if (stateStyle.strokeDashOffset !== undefined) result.strokeDashOffset = stateStyle.strokeDashOffset;
+        if (stateStyle.strokeAlignment !== undefined) result.strokeAlignment = stateStyle.strokeAlignment;
+        if (stateStyle.strokeCap !== undefined) result.strokeCap = stateStyle.strokeCap;
+        if (stateStyle.halo !== undefined) result.halo = stateStyle.halo;
+        if (stateStyle.haloStrokeWidth !== undefined) result.haloStrokeWidth = stateStyle.haloStrokeWidth;
+        if (stateStyle.haloStroke !== undefined) result.haloStroke = stateStyle.haloStroke;
+        if (stateStyle.haloStrokeOpacity !== undefined) result.haloStrokeOpacity = stateStyle.haloStrokeOpacity;
       }
       
       // Apply any custom states not in priority list
@@ -578,10 +641,153 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
         if (stateStyle.strokeStyle !== undefined) result.strokeStyle = stateStyle.strokeStyle;
         if (stateStyle.strokeDashPattern !== undefined) result.strokeDashPattern = stateStyle.strokeDashPattern;
         if (stateStyle.strokeDashOffset !== undefined) result.strokeDashOffset = stateStyle.strokeDashOffset;
+        if (stateStyle.strokeAlignment !== undefined) result.strokeAlignment = stateStyle.strokeAlignment;
+        if (stateStyle.strokeCap !== undefined) result.strokeCap = stateStyle.strokeCap;
+        if (stateStyle.halo !== undefined) result.halo = stateStyle.halo;
+        if (stateStyle.haloStrokeWidth !== undefined) result.haloStrokeWidth = stateStyle.haloStrokeWidth;
+        if (stateStyle.haloStroke !== undefined) result.haloStroke = stateStyle.haloStroke;
+        if (stateStyle.haloStrokeOpacity !== undefined) result.haloStrokeOpacity = stateStyle.haloStrokeOpacity;
+      }
+    }
+    
+    // Ensure all required properties are defined
+    return result as ShapeStyle;
+  }
+
+  /**
+   * Compute style for a specific state (not merging with other active states)
+   * Useful for getting isolated state styles
+   * 
+   * @param stateName - The state name to compute style for
+   * @returns Style for the specified state only
+   */
+  computeStyleForState(stateName: string): Partial<ShapeStyle> {
+    const base = this._nodeStyle;
+    
+    if (!base.states || !base.states[stateName]) {
+      return {};
+    }
+    
+    // Start with DEFAULT state as base
+    const result: Partial<ShapeStyle> = {};
+    const defaultStyle = base.states[NodeStates.DEFAULT];
+    
+    if (defaultStyle) {
+      Object.assign(result, defaultStyle);
+    }
+    
+    // Apply the specific state
+    const stateStyle = base.states[stateName];
+    if (stateStyle) {
+      Object.assign(result, stateStyle);
+    }
+    
+    return result;
+  }
+
+  /**
+   * Get merged style for multiple specific states
+   * Applies states in the order provided
+   * 
+   * @param stateNames - Array of state names to merge
+   * @returns Merged style
+   */
+  computeStyleForStates(stateNames: string[]): Partial<ShapeStyle> {
+    const base = this._nodeStyle;
+    const result: Partial<ShapeStyle> = {};
+    
+    if (!base.states) {
+      return result;
+    }
+    
+    // Always start with DEFAULT
+    if (!stateNames.includes(NodeStates.DEFAULT)) {
+      stateNames = [NodeStates.DEFAULT, ...stateNames];
+    }
+    
+    // Apply each state in order
+    for (const stateName of stateNames) {
+      const stateStyle = base.states[stateName];
+      if (stateStyle) {
+        Object.assign(result, stateStyle);
       }
     }
     
     return result;
+  }
+
+  /**
+   * Draw halo effect if enabled in style
+   * Should be called before drawing the main shape
+   * 
+   * @param style - Active style with halo properties
+   * @param shapeParams - Shape-specific parameters for halo rendering
+   */
+  protected drawHalo(style: ShapeStyle, shapeParams: { type: string; [key: string]: any }): void {
+    if (!style.halo) return;
+    
+    const haloWidth = style.haloStrokeWidth ?? 3;
+    // Convert haloStroke to simple color (string or number)
+    let haloColor: string | number = DEFAULT_NODE_LABEL.style.fill ?? '#000000';
+    if (style.haloStroke) {
+      haloColor = typeof style.haloStroke === 'object' ? DEFAULT_NODE_LABEL.style.fill ?? '#000000' : style.haloStroke;
+    } else if (style.fill) {
+      haloColor = typeof style.fill === 'object' ? DEFAULT_NODE_LABEL.style.fill ?? '#000000' : style.fill;
+    } else if (style.stroke) {
+      haloColor = style.stroke;
+    }
+    const haloOpacity = style.haloStrokeOpacity ?? 0.25;
+    
+    // Draw halo based on shape type
+    if (shapeParams.type === 'circle' && shapeParams.radius) {
+      const haloRadius = shapeParams.radius + haloWidth;
+      this._graphics.circle(0, 0, haloRadius);
+      this._graphics.stroke({
+        color: haloColor,
+        width: haloWidth * 2, // Double width for softer appearance
+        alpha: haloOpacity,
+        alignment: 1, // Draw outside
+      });
+    } else if (shapeParams.type === 'rect' && shapeParams.width && shapeParams.height) {
+      const hw = haloWidth;
+      this._graphics.rect(
+        -shapeParams.width / 2 - hw,
+        -shapeParams.height / 2 - hw,
+        shapeParams.width + hw * 2,
+        shapeParams.height + hw * 2
+      );
+      this._graphics.stroke({
+        color: haloColor,
+        width: haloWidth * 2,
+        alpha: haloOpacity,
+        alignment: 1,
+      });
+    } else if (shapeParams.type === 'roundedRect' && shapeParams.width && shapeParams.height) {
+      const hw = haloWidth;
+      const radius = shapeParams.cornerRadius ?? 0;
+      this._graphics.roundRect(
+        -shapeParams.width / 2 - hw,
+        -shapeParams.height / 2 - hw,
+        shapeParams.width + hw * 2,
+        shapeParams.height + hw * 2,
+        radius + hw
+      );
+      this._graphics.stroke({
+        color: haloColor,
+        width: haloWidth * 2,
+        alpha: haloOpacity,
+        alignment: 1,
+      });
+    } else if (shapeParams.type === 'ellipse' && shapeParams.radiusX && shapeParams.radiusY) {
+      const hw = haloWidth;
+      this._graphics.ellipse(0, 0, shapeParams.radiusX + hw, shapeParams.radiusY + hw);
+      this._graphics.stroke({
+        color: haloColor,
+        width: haloWidth * 2,
+        alpha: haloOpacity,
+        alignment: 1,
+      });
+    }
   }
 
   // =========================================================================
@@ -604,11 +810,11 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
       labelText,
       bounds,
       {
-        position: this._nodeStyle.labelPosition ?? 'center',
-        offsetX: this._nodeStyle.labelOffsetX ?? 0,
-        offsetY: this._nodeStyle.labelOffsetY ?? 0,
+        position: this._nodeStyle.labelPosition ?? DEFAULT_NODE_LABEL.position,
+        offsetX: this._nodeStyle.labelOffsetX ?? DEFAULT_NODE_LABEL.offsetX,
+        offsetY: this._nodeStyle.labelOffsetY ?? DEFAULT_NODE_LABEL.offsetY,
       },
-      this._nodeStyle.labelStyle ?? { fill: '#000000', fontSize: 12 }
+      this._nodeStyle.labelStyle ?? DEFAULT_NODE_LABEL.style
     );
 
     this.addLabel('main', label);
@@ -635,9 +841,9 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
     // Create new badges
     badges.forEach((badge, index) => {
       const badgeSize = badge.size ?? 24;
-      const fontSize = badge.fontSize ?? 12;
-      const color = this.normalizeColor(badge.color ?? '#ff4444');
-      const textColor = this.normalizeColor(badge.textColor ?? '#ffffff');
+      const fontSize = badge.fontSize ?? DEFAULT_NODE_BADGE.fontSize;
+      const color = this.normalizeColor(badge.color ?? DEFAULT_NODE_BADGE.background);
+      const textColor = this.normalizeColor(badge.textColor ?? DEFAULT_NODE_BADGE.fill);
 
       // Create badge graphics
       const badgeContainer = new Graphics();
@@ -645,7 +851,7 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
       // Draw circle
       badgeContainer.circle(0, 0, badgeSize / 2);
       badgeContainer.fill(color);
-      badgeContainer.stroke({ width: 2, color: 0xffffff });
+      badgeContainer.stroke({ width: DEFAULT_NODE_BADGE.strokeWidth, color: DEFAULT_NODE_BADGE.strokeColor });
 
       // Position badge using shape-specific calculation
       const badgeRadius = badgeSize / 2;

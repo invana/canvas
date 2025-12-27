@@ -31,6 +31,20 @@ export interface ShapeStyle {
   strokeDashPattern?: number[];
   /** Dash pattern offset for animation or alignment */
   strokeDashOffset?: number;
+  /** Stroke alignment: 0 = outside, 0.5 = centered (default), 1 = inside */
+  strokeAlignment?: number;
+  /** Stroke cap style: 'butt' (default), 'round', 'square' */
+  strokeCap?: 'butt' | 'round' | 'square';
+  
+  // Halo effect properties
+  /** Whether to display node halo */
+  halo?: boolean;
+  /** Node halo stroke width */
+  haloStrokeWidth?: number;
+  /** Node halo stroke color (defaults to fill color) */
+  haloStroke?: string | number | Fill;
+  /** Node halo stroke opacity */
+  haloStrokeOpacity?: number;
 }
 
 /**
@@ -49,7 +63,7 @@ export type ShapeDrawFn<TParams = unknown> = (
 export type OutlineDrawFn<TParams = unknown> = (
   g: Graphics,
   params: TParams,
-  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha' | 'strokeStyle' | 'strokeDashPattern' | 'strokeDashOffset'>
+  style: Pick<ShapeStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha' | 'strokeStyle' | 'strokeDashPattern' | 'strokeDashOffset' | 'strokeAlignment' | 'strokeCap'>
 ) => void;
 
 /**

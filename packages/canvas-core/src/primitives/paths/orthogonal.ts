@@ -187,8 +187,9 @@ export function drawOrthogonalPath(
     color: style.stroke,
     width: style.strokeWidth,
     alpha: style.strokeAlpha ?? 1,
-    cap: style.lineCap ?? 'square',
+    cap: style.strokeCap ?? style.lineCap ?? 'square',
     join: style.lineJoin ?? 'miter',
+    alignment: style.strokeAlignment,
   });
 }
 
@@ -245,8 +246,9 @@ export function drawRoundedOrthogonalPath(
     color: style.stroke,
     width: style.strokeWidth,
     alpha: style.strokeAlpha ?? 1,
-    cap: style.lineCap ?? 'round',
+    cap: style.strokeCap ?? style.lineCap ?? 'round',
     join: style.lineJoin ?? 'round',
+    alignment: style.strokeAlignment,
   });
 }
 

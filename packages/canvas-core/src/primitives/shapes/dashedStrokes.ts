@@ -41,7 +41,7 @@ export function drawDashedCircle(
     
     g.moveTo(x1, y1);
     g.arcTo(x1, y1, x2, y2, radius);
-    g.stroke({ color, width, alpha });
+    g.stroke({ color, width, alpha, alignment: 0.5 });
   }
 }
 
@@ -173,7 +173,7 @@ export function drawDashedLine(
     
     g.moveTo(sx, sy);
     g.lineTo(ex, ey);
-    g.stroke({ color, width, alpha, cap: 'round' });
+    g.stroke({ color, width, alpha, cap: 'round', alignment: 0.5 });
   }
 }
 
@@ -253,7 +253,7 @@ export function drawDashedEllipse(
     g.lineTo(x2, y2);
   }
   
-  g.stroke({ color, width, alpha, cap: 'butt' });
+  g.stroke({ color, width, alpha, cap: 'butt', alignment: 0.5 });
 }
 
 /**
@@ -502,7 +502,7 @@ function drawDashedArc(
         g.moveTo(cx + radius * Math.cos(a1), cy + radius * Math.sin(a1));
         g.lineTo(cx + radius * Math.cos(a2), cy + radius * Math.sin(a2));
       }
-      g.stroke({ color, width, alpha, cap: 'round' });
+      g.stroke({ color, width, alpha, cap: 'round', alignment: 0.5 });
     }
     
     currentDist += segmentLength;
@@ -590,7 +590,7 @@ export function drawPatternLine(
         
         g.moveTo(sx, sy);
         g.lineTo(ex, ey);
-        g.stroke({ color, width, alpha, cap: 'round' });
+        g.stroke({ color, width, alpha, cap: 'round', alignment: 0.5 });
       }
     }
     
@@ -672,7 +672,7 @@ export function drawPatternCircle(
         
         g.moveTo(x1, y1);
         g.arcTo(x1, y1, x2, y2, radius);
-        g.stroke({ color, width, alpha });
+        g.stroke({ color, width, alpha, alignment: 0.5 });
       }
     }
     
@@ -733,7 +733,7 @@ export function drawPatternEllipse(
           if (i === 0) g.moveTo(x1, y1);
           g.lineTo(x2, y2);
         }
-        g.stroke({ color, width, alpha, cap: 'round' });
+        g.stroke({ color, width, alpha, cap: 'round', alignment: 0.5 });
       }
     }
     

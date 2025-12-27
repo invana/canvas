@@ -20,6 +20,9 @@ export class RectNode extends NodeShapeBase {
     const height = this._data.height ?? size * 2;
     const cornerRadius = this._data.cornerRadius ?? 0;
 
+    // Draw halo first (underneath main shape)
+    this.drawHalo(style, { type: 'rect', width, height, cornerRadius });
+
     // Draw rectangle using registry (supports rounded corners via cornerRadius)
     const drawer = this._registry.getShape('rect');
     if (drawer) {

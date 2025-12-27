@@ -27,6 +27,20 @@ export interface PathStyle {
   lineCap?: 'butt' | 'round' | 'square';
   lineJoin?: 'miter' | 'round' | 'bevel';
   cornerRadius?: number;
+  /** Stroke alignment: 0 = outside, 0.5 = centered (default), 1 = inside */
+  strokeAlignment?: number;
+  /** Stroke cap style: 'butt' (default), 'round', 'square' (alias for lineCap) */
+  strokeCap?: 'butt' | 'round' | 'square';
+  
+  // Halo effect properties
+  /** Whether to display edge halo */
+  halo?: boolean;
+  /** Edge halo stroke width */
+  haloStrokeWidth?: number;
+  /** Edge halo stroke color (defaults to stroke color) */
+  haloStroke?: string;
+  /** Edge halo stroke opacity */
+  haloStrokeOpacity?: number;
 }
 
 /**

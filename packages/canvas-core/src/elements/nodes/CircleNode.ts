@@ -16,6 +16,9 @@ export class CircleNode extends NodeShapeBase {
     const style = this.getActiveStyle();
     const radius = this._data.size ?? 30;
 
+    // Draw halo first (underneath main shape)
+    this.drawHalo(style, { type: 'circle', radius });
+
     // Draw circle using registry
     const drawer = this._registry.getShape('circle');
     if (drawer) {

@@ -8,6 +8,7 @@
 import { NodeShapeBase, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './NodeShapeBase';
 import { HTMLText } from 'pixi.js';
 import { getRectIntersection } from '../../primitives/shapes/rect';
+import { DEFAULT_NODE_LABEL } from '../../defaults/nodes';
 
 export class HTMLNode extends NodeShapeBase {
   private _htmlText?: HTMLText;
@@ -61,9 +62,9 @@ export class HTMLNode extends NodeShapeBase {
       this._htmlText = new HTMLText({
         text: this._htmlContent,
         style: {
-          fontSize: 14,
-          fill: '#000000',
-          fontFamily: 'Arial, sans-serif',
+          fontSize: DEFAULT_NODE_LABEL.style.fontSize ?? 14,
+          fill: DEFAULT_NODE_LABEL.style.fill ?? '#000000',
+          fontFamily: DEFAULT_NODE_LABEL.style.fontFamily ?? 'Arial, sans-serif',
         },
       });
       this._htmlText.anchor.set(0.5);

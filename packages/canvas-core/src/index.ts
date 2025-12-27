@@ -283,3 +283,43 @@ export type { EventCallback } from './utils';
 
 // Re-export primitives for advanced usage
 export * from './primitives';
+
+// ============================================================================
+// DEFAULTS
+// ============================================================================
+
+// Re-export default configurations
+export {
+  // Node defaults
+  DEFAULT_NODE_DIMENSIONS,
+  DEFAULT_NODE_SHAPE_STYLE,
+  DEFAULT_NODE_LABEL,
+  DEFAULT_NODE_BADGE,
+  DEFAULT_NODE_RIPPLE,
+  // DEFAULT_NODE_STATE_STYLES, // Already exported above
+  DEFAULT_NODE_STATE_PRIORITY,
+  DEFAULT_NODE_STYLE,
+  DEFAULT_NODE_BEHAVIOR,
+  // mergeNodeStateStyles, // Already exported above
+  mergeNodeStyle,
+  
+  // Edge defaults
+  DEFAULT_EDGE_PATH_STYLE,
+  DEFAULT_EDGE_ARROW,
+  DEFAULT_EDGE_ROUTING,
+  DEFAULT_EDGE_LABEL,
+  // DEFAULT_EDGE_STATE_STYLES, // Already exported above
+  DEFAULT_EDGE_STATE_PRIORITY,
+  DEFAULT_EDGE_STYLE,
+  DEFAULT_EDGE_BEHAVIOR,
+  EDGE_STROKE_PRESETS,
+  // mergeEdgeStateStyles, // Already exported above
+  mergeEdgeStyle,
+  
+  // Label defaults
+  DEFAULT_LABEL_STYLE,
+  DEFAULT_LABEL_POSITION,
+  DEFAULT_LABEL_OFFSET,
+  LABEL_VARIANTS,
+  mergeLabelStyle,
+} from './defaults';

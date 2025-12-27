@@ -86,6 +86,7 @@ export function drawSquareOutlineArrow(
       color: style.stroke,
       width: style.strokeWidth ?? 1,
       alpha: style.strokeAlpha ?? 1,
+      alignment: 0.5,
     });
   }
 }
@@ -120,6 +121,7 @@ export function drawTeeArrow(
       width: style.strokeWidth ?? 2,
       alpha: style.strokeAlpha ?? 1,
       cap: 'round',
+      alignment: 0.5,
     });
   }
 }
@@ -154,6 +156,7 @@ export function drawBarArrow(
       width: style.strokeWidth ?? 2,
       alpha: style.strokeAlpha ?? 1,
       cap: 'square',
+      alignment: 0.5,
     });
   }
 }

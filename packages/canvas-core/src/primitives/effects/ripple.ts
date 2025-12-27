@@ -35,6 +35,7 @@ export function drawRippleRing(
     color: style.color,
     width: style.strokeWidth ?? 2,
     alpha: style.alpha ?? 0.5,
+    alignment: 0.5,
   });
 }
 
@@ -65,6 +66,7 @@ export function drawRippleEffect(
         color: style.color,
         width: style.strokeWidth ?? 2,
         alpha,
+        alignment: 0.5,
       });
     }
   }
