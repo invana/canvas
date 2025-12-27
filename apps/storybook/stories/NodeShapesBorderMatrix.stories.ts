@@ -71,44 +71,43 @@ export const AllShapesAllBorders: Story = {
           const col = borderIdx;
           const row = shapeIdx;
 
-          const nodeData: any = {
+          const node: any = {
             id: `${shape.type}-${border.style}`,
             x: startX + col * colSpacing,
             y: startY + row * rowSpacing,
             shape: shape.type,
+            style: {
+              fill: '#ffffff',
+              stroke: colors[shapeIdx],
+              strokeWidth: 3,
+              strokeAlpha: 1,
+            },
           };
 
           // Add shape-specific dimensions
           if ('size' in shape) {
-            nodeData.size = shape.size;
+            node.size = shape.size;
           }
           if ('width' in shape && 'height' in shape) {
-            nodeData.width = shape.width;
-            nodeData.height = shape.height;
+            node.width = shape.width;
+            node.height = shape.height;
           }
-
-          const nodeStyle: any = {
-            fill: '#ffffff',
-            stroke: colors[shapeIdx],
-            strokeWidth: 3,
-            strokeAlpha: 1,
-          };
+          if ('cornerRadius' in shape) {
+            node.cornerRadius = shape.cornerRadius;
+          }
 
           // Apply border style
           if (border.style === 'solid') {
-            nodeStyle.strokeStyle = 'solid';
+            node.style.strokeStyle = 'solid';
           } else if (border.style === 'dashed') {
-            nodeStyle.strokeStyle = 'dashed';
+            node.style.strokeStyle = 'dashed';
           } else if (border.style === 'dotted') {
-            nodeStyle.strokeStyle = 'dotted';
+            node.style.strokeStyle = 'dotted';
           } else if (border.pattern) {
-            nodeStyle.strokeDashPattern = border.pattern;
+            node.style.strokeDashPattern = border.pattern;
           }
 
-          return {
-            data: nodeData,
-            style: nodeStyle,
-          };
+          return node;
         });
       });
 

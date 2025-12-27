@@ -147,14 +147,12 @@ export const GradientPatterns: Story = {
       // Top row - Linear gradients
       shapes.forEach((shape, i) => {
         nodes.push({
-          data: {
-            id: `linear-${i}`,
-            x: 150 + i * 140,
-            y: 150,
-            shape,
-            size: 60,
-            label: shape,
-          },
+          id: `linear-${i}`,
+          x: 150 + i * 140,
+          y: 150,
+          shape,
+          size: 60,
+          label: shape,
           style: {
             fill: {
               type: 'linear' as const,
@@ -174,14 +172,12 @@ export const GradientPatterns: Story = {
       // Bottom row - Radial gradients
       shapes.forEach((shape, i) => {
         nodes.push({
-          data: {
-            id: `radial-${i}`,
-            x: 150 + i * 140,
-            y: 400,
-            shape,
-            size: 60,
-            label: shape,
-          },
+          id: `radial-${i}`,
+          x: 150 + i * 140,
+          y: 400,
+          shape,
+          size: 60,
+          label: shape,
           style: {
             fill: {
               type: 'radial' as const,
@@ -264,14 +260,12 @@ export const SVGDataURIImages: Story = {
       ];
 
       const nodes = shapes.map((shape, i) => ({
-        data: {
-          id: `svg-${i}`,
-          x: 150 + i * 140,
-          y: 200,
-          shape,
-          size: 70,
-          label: shape,
-        },
+        id: `svg-${i}`,
+        x: 150 + i * 140,
+        y: 200,
+        shape,
+        size: 70,
+        label: shape,
         style: {
           fill: {
             type: 'image' as const,
@@ -356,14 +350,12 @@ export const Base64PNGImages: Story = {
       ];
 
       const nodes = shapes.map((shape, i) => ({
-        data: {
-          id: `png-${i}`,
-          x: 150 + i * 140,
-          y: 200,
-          shape,
-          size: 70,
-          label: shape,
-        },
+        id: `png-${i}`,
+        x: 150 + i * 140,
+        y: 200,
+        shape,
+        size: 70,
+        label: shape,
         style: {
           fill: {
             type: 'image' as const,
@@ -452,14 +444,12 @@ export const ExternalURLImages: Story = {
       ];
 
       const nodes = shapes.map((shape, i) => ({
-        data: {
-          id: `url-${i}`,
-          x: 150 + i * 140,
-          y: 200,
-          shape,
-          size: 70,
-          label: shape,
-        },
+        id: `url-${i}`,
+        x: 150 + i * 140,
+        y: 200,
+        shape,
+        size: 70,
+        label: shape,
         style: {
           fill: {
             type: 'image' as const,
@@ -538,14 +528,12 @@ export const ImageFitModes: Story = {
       fitModes.forEach((mode, rowIndex) => {
         shapes.forEach((shape, i) => {
           nodes.push({
-            data: {
-              id: `${mode}-${i}`,
-              x: 150 + i * 140,
-              y: 150 + rowIndex * 180,
-              shape,
-              size: 70,
-              label: mode,
-            },
+            id: `${mode}-${i}`,
+            x: 150 + i * 140,
+            y: 150 + rowIndex * 180,
+            shape,
+            size: 70,
+            label: mode,
             style: {
               fill: {
                 type: 'image' as const,
@@ -632,15 +620,13 @@ export const IconAvatars: Story = {
       ];
 
       const nodes = shapes.map((shape, i) => ({
-        data: {
-          id: `icon-${i}`,
-          x: 150 + i * 140,
-          y: 200,
-          shape,
-          size: 80,
-          label: shape,
-          labelPlacement: 'bottom' as const,
-        },
+        id: `icon-${i}`,
+        x: 150 + i * 140,
+        y: 200,
+        shape,
+        size: 80,
+        label: shape,
+        labelPlacement: 'bottom' as const,
         style: {
           fill: {
             type: 'image' as const,
@@ -708,14 +694,12 @@ export const MixedFills: Story = {
         nodes: [
           // Solid color
           {
-            data: {
-              id: 'solid-1',
-              x: 200,
-              y: 150,
-              shape: 'circle',
-              size: 60,
-              label: 'Solid',
-            },
+            id: 'solid-1',
+            x: 200,
+            y: 150,
+            shape: 'circle',
+            size: 60,
+            label: 'Solid',
             style: {
               fill: '#4ECDC4',
               stroke: '#2C3E50',
@@ -725,15 +709,13 @@ export const MixedFills: Story = {
           },
           // Linear gradient
           {
-            data: {
-              id: 'gradient-1',
-              x: 500,
-              y: 150,
-              shape: 'rect',
-              cornerRadius: 8,
-              size: 60,
-              label: 'Gradient',
-            },
+            id: 'gradient-1',
+            x: 500,
+            y: 150,
+            shape: 'rect',
+            cornerRadius: 8,
+            size: 60,
+            label: 'Gradient',
             style: {
               fill: {
                 type: 'linear' as const,
@@ -750,14 +732,12 @@ export const MixedFills: Story = {
           },
           // Image fill
           {
-            data: {
-              id: 'image-1',
-              x: 800,
-              y: 150,
-              shape: 'hexagon',
-              size: 60,
-              label: 'Image',
-            },
+            id: 'image-1',
+            x: 800,
+            y: 150,
+            shape: 'hexagon',
+            size: 60,
+            label: 'Image',
             style: {
               fill: {
                 type: 'image' as const,
@@ -771,14 +751,12 @@ export const MixedFills: Story = {
           },
           // Radial gradient
           {
-            data: {
-              id: 'radial-1',
-              x: 350,
-              y: 400,
-              shape: 'diamond',
-              size: 60,
-              label: 'Radial',
-            },
+            id: 'radial-1',
+            x: 350,
+            y: 400,
+            shape: 'diamond',
+            size: 60,
+            label: 'Radial',
             style: {
               fill: {
                 type: 'radial' as const,
@@ -795,14 +773,12 @@ export const MixedFills: Story = {
           },
           // Image with tint
           {
-            data: {
-              id: 'tinted-1',
-              x: 650,
-              y: 400,
-              shape: 'octagon',
-              size: 60,
-              label: 'Tinted',
-            },
+            id: 'tinted-1',
+            x: 650,
+            y: 400,
+            shape: 'octagon',
+            size: 60,
+            label: 'Tinted',
             style: {
               fill: {
                 type: 'image' as const,
@@ -819,72 +795,60 @@ export const MixedFills: Story = {
         ],
         edges: [
           {
-            data: {
-              id: 'edge-1',
-              source: 'solid-1',
-              target: 'gradient-1',
-              pathType: 'bezier' as const,
-            },
+            id: 'edge-1',
+            source: 'solid-1',
+            target: 'gradient-1',
+            pathType: 'bezier' as const,
             style: {
               stroke: '#95a5a6',
               strokeWidth: 2,
             },
           },
           {
-            data: {
-              id: 'edge-2',
-              source: 'gradient-1',
-              target: 'image-1',
-              pathType: 'bezier' as const,
-            },
+            id: 'edge-2',
+            source: 'gradient-1',
+            target: 'image-1',
+            pathType: 'bezier' as const,
             style: {
               stroke: '#95a5a6',
               strokeWidth: 2,
             },
           },
           {
-            data: {
-              id: 'edge-3',
-              source: 'solid-1',
-              target: 'radial-1',
-              pathType: 'line' as const,
-            },
+            id: 'edge-3',
+            source: 'solid-1',
+            target: 'radial-1',
+            pathType: 'line' as const,
             style: {
               stroke: '#95a5a6',
               strokeWidth: 2,
             },
           },
           {
-            data: {
-              id: 'edge-4',
-              source: 'gradient-1',
-              target: 'radial-1',
-              pathType: 'line' as const,
-            },
+            id: 'edge-4',
+            source: 'gradient-1',
+            target: 'radial-1',
+            pathType: 'line' as const,
             style: {
               stroke: '#95a5a6',
               strokeWidth: 2,
             },
           },
           {
-            data: {
-              id: 'edge-5',
-              source: 'radial-1',
-              target: 'tinted-1',
-              pathType: 'bezier' as const,
-            },
+            id: 'edge-5',
+            source: 'radial-1',
+            target: 'tinted-1',
+            pathType: 'bezier' as const,
             style: {
               stroke: '#95a5a6',
               strokeWidth: 2,
             },
           },
           {
-            data: {
-              id: 'edge-6',
-              source: 'image-1',
-              target: 'tinted-1',
-              pathType: 'line' as const,
-            },
+            id: 'edge-6',
+            source: 'image-1',
+            target: 'tinted-1',
+            pathType: 'line' as const,
             style: {
               stroke: '#95a5a6',
               strokeWidth: 2,

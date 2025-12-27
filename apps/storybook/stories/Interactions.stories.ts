@@ -23,16 +23,14 @@ const generateInteractiveData = (args: InteractionsArgs): CanvasData => {
       const nodeColor = colors[i] ?? '#666';
 
       nodes.push({
-        data: {
-          id: `interactive-${i}`,
-          x,
-          y,
-          shape: 'rect' as const,
-          cornerRadius: 8,
-          width: 80,
-          height: 50,
-          label: `Node ${i + 1}`,
-        },
+        id: `interactive-${i}`,
+        x,
+        y,
+        shape: 'rect' as const,
+        cornerRadius: 8,
+        width: 80,
+        height: 50,
+        label: `Node ${i + 1}`,
         style: {
           fill: nodeColor,
           stroke: '#333',
@@ -194,16 +192,14 @@ const generateFlowData = (): CanvasData => {
   ];
 
   const nodes = flowNodes.map((nodeConfig) => ({
-    data: {
-      id: nodeConfig.id,
-      x: nodeConfig.x,
-      y: nodeConfig.y,
-      shape: nodeConfig.shape,
-      size: 30,
-      width: 80,
-      height: 40,
-      label: nodeConfig.label,
-    },
+    id: nodeConfig.id,
+    x: nodeConfig.x,
+    y: nodeConfig.y,
+    shape: nodeConfig.shape,
+    size: 30,
+    width: 80,
+    height: 40,
+    label: nodeConfig.label,
     style: {
       fill: nodeConfig.fill,
       stroke: '#333',
@@ -227,11 +223,9 @@ const generateFlowData = (): CanvasData => {
     { id: 'e4', source: 'process2', target: 'merge' },
     { id: 'e5', source: 'merge', target: 'end' },
   ].map((e) => ({
-    data: {
-      ...e,
-      pathType: 'bezier' as const,
-      arrowTarget: 'triangle' as const,
-    },
+    ...e,
+    pathType: 'bezier' as const,
+    arrowTarget: 'triangle' as const,
     style: {
       stroke: '#888',
       strokeWidth: 2,

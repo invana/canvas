@@ -51,13 +51,13 @@ export const ElementTracking: Story = {
     setTimeout(async () => {
       const initialData: CanvasData = {
         nodes: [
-          { data: { id: 'n1', x: -100, y: -50, shape: 'circle', size: 40, label: 'Node 1' }, style: { fill: '#4a90d9', stroke: '#333', strokeWidth: 2 } },
-          { data: { id: 'n2', x: 100, y: -50, shape: 'circle', size: 40, label: 'Node 2' }, style: { fill: '#50c878', stroke: '#333', strokeWidth: 2 } },
-          { data: { id: 'n3', x: 0, y: 80, shape: 'hexagon', size: 35, label: 'Node 3' }, style: { fill: '#ff6b6b', stroke: '#333', strokeWidth: 2 } },
+          { id: 'n1', x: -100, y: -50, shape: 'circle', size: 40, label: 'Node 1', style: { fill: '#4a90d9', stroke: '#333', strokeWidth: 2 } },
+          { id: 'n2', x: 100, y: -50, shape: 'circle', size: 40, label: 'Node 2', style: { fill: '#50c878', stroke: '#333', strokeWidth: 2 } },
+          { id: 'n3', x: 0, y: 80, shape: 'hexagon', size: 35, label: 'Node 3', style: { fill: '#ff6b6b', stroke: '#333', strokeWidth: 2 } },
         ],
         edges: [
-          { data: { id: 'e1', source: 'n1', target: 'n2', pathType: 'line' }, style: { stroke: '#666', strokeWidth: 2 } },
-          { data: { id: 'e2', source: 'n1', target: 'n3', pathType: 'bezier', arrowTarget: 'triangle' }, style: { stroke: '#666', strokeWidth: 2 } },
+          { id: 'e1', source: 'n1', target: 'n2', pathType: 'line', style: { stroke: '#666', strokeWidth: 2 } },
+          { id: 'e2', source: 'n1', target: 'n3', pathType: 'bezier', arrowTarget: 'triangle', style: { stroke: '#666', strokeWidth: 2 } },
         ],
       };
 
@@ -178,7 +178,7 @@ export const DynamicUpdates: Story = {
           label: `N${nodeCounter}`, 
           shape: 'circle', 
           size: 30,
-          fill: '#4a90d9', stroke: '#333', strokeWidth: 2
+          style: { fill: '#4a90d9', stroke: '#333', strokeWidth: 2 }
         });
         updateStats();
       };
@@ -207,7 +207,7 @@ export const DynamicUpdates: Story = {
           target: nodes[targetIdx]!.id,
           pathType: 'bezier',
           arrowTarget: 'triangle',
-          stroke: '#666', strokeWidth: 2
+          style: { stroke: '#666', strokeWidth: 2 }
         });
         updateStats();
       };
@@ -283,15 +283,15 @@ export const NodeQueries: Story = {
         backgroundColor: '#1a1a2e',
         data: {
           nodes: [
-            { data: { id: 'user-1', x: -150, y: 0, label: 'Alice', shape: 'circle', size: 40 }, style: { fill: '#e74c3c', stroke: '#333', strokeWidth: 2 } },
-            { data: { id: 'user-2', x: 150, y: 0, label: 'Bob', shape: 'circle', size: 40 }, style: { fill: '#3498db', stroke: '#333', strokeWidth: 2 } },
-            { data: { id: 'doc-1', x: 0, y: -100, label: 'Doc A', shape: 'rect', width: 80, height: 50, cornerRadius: 8 }, style: { fill: '#f39c12', stroke: '#333', strokeWidth: 2 } },
-            { data: { id: 'doc-2', x: 0, y: 100, label: 'Doc B', shape: 'rect', width: 80, height: 50, cornerRadius: 8 }, style: { fill: '#f39c12', stroke: '#333', strokeWidth: 2 } },
+            { id: 'user-1', x: -150, y: 0, label: 'Alice', shape: 'circle', size: 40, style: { fill: '#e74c3c', stroke: '#333', strokeWidth: 2 } },
+            { id: 'user-2', x: 150, y: 0, label: 'Bob', shape: 'circle', size: 40, style: { fill: '#3498db', stroke: '#333', strokeWidth: 2 } },
+            { id: 'doc-1', x: 0, y: -100, label: 'Doc A', shape: 'rect', width: 80, height: 50, cornerRadius: 8, style: { fill: '#f39c12', stroke: '#333', strokeWidth: 2 } },
+            { id: 'doc-2', x: 0, y: 100, label: 'Doc B', shape: 'rect', width: 80, height: 50, cornerRadius: 8, style: { fill: '#f39c12', stroke: '#333', strokeWidth: 2 } },
           ],
           edges: [
-            { data: { id: 'owns-1', source: 'user-1', target: 'doc-1', pathType: 'line', arrowTarget: 'triangle' }, style: { stroke: '#666', strokeWidth: 2 } },
-            { data: { id: 'owns-2', source: 'user-2', target: 'doc-1', pathType: 'line', arrowTarget: 'triangle' }, style: { stroke: '#666', strokeWidth: 2 } },
-            { data: { id: 'owns-3', source: 'user-1', target: 'doc-2', pathType: 'line', arrowTarget: 'triangle' }, style: { stroke: '#666', strokeWidth: 2 } },
+            { id: 'owns-1', source: 'user-1', target: 'doc-1', pathType: 'line', arrowTarget: 'triangle', style: { stroke: '#666', strokeWidth: 2 } },
+            { id: 'owns-2', source: 'user-2', target: 'doc-1', pathType: 'line', arrowTarget: 'triangle', style: { stroke: '#666', strokeWidth: 2 } },
+            { id: 'owns-3', source: 'user-1', target: 'doc-2', pathType: 'line', arrowTarget: 'triangle', style: { stroke: '#666', strokeWidth: 2 } },
           ],
         },
       });

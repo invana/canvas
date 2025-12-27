@@ -35,7 +35,7 @@
 import { Application, Container } from 'pixi.js';
 import { Viewport, type ViewportOptions } from '../viewport/Viewport';
 import { Registry } from '../rendering/Registry';
-import { Renderer, type NodeData as RendererNodeData, type EdgeData as RendererEdgeData } from '../rendering/Renderer';
+import { Renderer, type NodeInput as RendererNodeData, type EdgeInput as RendererEdgeData } from '../rendering/Renderer';
 import { SceneGraph } from '../scene/SceneGraph';
 import { QueryEngine, type QueryFilter, type QueryResult } from '../scene/QueryEngine';
 import { Relationships, type RelationshipInfo, type PathResult } from '../scene/Relationships';
@@ -44,7 +44,7 @@ import type { CanvasPlugin, PluginRegistrationOptions } from '../plugins/types';
 import type { Bounds } from '../scene/SpatialIndex';
 import type { NodeStyle } from '../elements/nodes';
 import type { EdgeStyle } from '../elements/edges';
-import type { NodeData, EdgeData } from '../types';
+import type { NodeData as SceneNodeData, EdgeData as SceneEdgeData } from '../types';
 
 // ============================================================================
 // TYPES
@@ -160,10 +160,20 @@ export class Canvas {
     this._styles = options.styles ?? {};
     this._scene = new SceneGraph();
 
+    // Get container dimensions, fallback to reasonable defaults if container not yet in DOM
+    let containerWidth = 800;
+    let containerHeight = 600;
+    
+    if (options.container) {
+      const rect = options.container.getBoundingClientRect();
+      if (rect.width > 0) containerWidth = rect.width;
+      if (rect.height > 0) containerHeight = rect.height;
+    }
+
     this._options = {
       container: options.container,
-      width: options.width ?? options.container.clientWidth ?? 800,
-      height: options.height ?? options.container.clientHeight ?? 600,
+      width: options.width ?? containerWidth,
+      height: options.height ?? containerHeight,
       backgroundColor: options.backgroundColor ?? '#ffffff',
       resolution: options.resolution ?? window.devicePixelRatio ?? 1,
       preferWebGPU: options.preferWebGPU ?? true,
@@ -233,16 +243,11 @@ export class Canvas {
       nodeLayer: this._nodeLayer,
       edgeLayer: this._edgeLayer,
       defaultNodeStyle: {
-        fill: '#4a90d9',
-        stroke: '#333',
-        strokeWidth: 2,
         labelPosition: 'center',
         labelStyle: { fill: '#ffffff', fontSize: 12 },
         ...this._styles.node,
       },
       defaultEdgeStyle: {
-        stroke: '#666',
-        strokeWidth: 2,
         ...this._styles.edge,
       },
       edgeBoundaryOffset: this._options.edgeBoundaryOffset,
@@ -371,9 +376,9 @@ export class Canvas {
     // Register nodes in scene graph
     (dataToRender.nodes || []).forEach(node => {
       this._scene.addNode({
-        id: node.data.id as string,
-        x: node.data.x,
-        y: node.data.y,
+        id: node.id as string,
+        x: node.x,
+        y: node.y,
       });
     });
 
@@ -383,11 +388,11 @@ export class Canvas {
     // Register edges in scene graph
     (dataToRender.edges || []).forEach(edge => {
       // Only add edges with string IDs (not points)
-      if (typeof edge.data.source === 'string' && typeof edge.data.target === 'string') {
+      if (typeof edge.source === 'string' && typeof edge.target === 'string') {
         this._scene.addEdge({
-          id: edge.data.id as string,
-          source: edge.data.source,
-          target: edge.data.target,
+          id: edge.id as string,
+          source: edge.source,
+          target: edge.target,
         });
       }
     });
@@ -671,14 +676,14 @@ export class Canvas {
   /**
    * Query nodes with filters
    */
-  queryNodes(filter: QueryFilter): QueryResult<NodeData> {
+  queryNodes(filter: QueryFilter): QueryResult<SceneNodeData> {
     return QueryEngine.queryNodes(this._scene.getNodeMap(), filter);
   }
 
   /**
    * Query edges with filters
    */
-  queryEdges(filter: QueryFilter): QueryResult<EdgeData> {
+  queryEdges(filter: QueryFilter): QueryResult<SceneEdgeData> {
     return QueryEngine.queryEdges(this._scene.getEdgeMap(), filter);
   }
 

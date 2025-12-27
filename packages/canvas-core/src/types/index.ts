@@ -4,6 +4,9 @@
 
 import type { Container, Graphics } from 'pixi.js';
 
+// Export state management types
+export * from './states';
+
 // =============================================================================
 // Node Types
 // =============================================================================

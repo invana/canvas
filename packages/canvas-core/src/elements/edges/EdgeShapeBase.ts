@@ -25,6 +25,8 @@ import type { PathStyle, Point, Direction } from '../../primitives/paths';
 import type { ArrowType, ArrowStyle } from '../../primitives/arrows';
 import { getArrowOffset } from '../../primitives/arrows';
 import { BaseShape, type BaseShapeData, type BaseShapeOptions } from '../BaseShape';
+import { EdgeStates, type EdgeStateName } from '../../types/states';
+import { mergeEdgeStateStyles } from '../../defaults/edges';
 
 /**
  * Edge path types
@@ -101,12 +103,10 @@ export interface EdgeStyle {
   arrowFill?: string;
   /** Arrow stroke color */
   arrowStroke?: string;
-  /** Selected state style overrides */
-  selectedStroke?: string;
-  selectedStrokeWidth?: number;
-  /** Hover state style overrides */
-  hoverStroke?: string;
-  hoverStrokeWidth?: number;
+  /** State-based style overrides */
+  states?: {
+    [stateName: string]: Partial<EdgeStyle>;
+  };
 }
 
 /**
@@ -114,16 +114,23 @@ export interface EdgeStyle {
  */
 export interface EdgeShapeOptions extends Omit<BaseShapeOptions<EdgeData>, 'style' | 'data'> {
   data: Omit<EdgeData, 'x' | 'y'> & { x?: number; y?: number };
-  style?: EdgeStyle;
+  style?: Partial<EdgeStyle>;
+  /** Initial states to activate (e.g., ['selected', 'highlighted']) */
+  states?: string[];
 }
 
 /**
  * Abstract base class for edge shapes
  */
 export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
-  protected _edgeStyle: EdgeStyle;
-  private _selected: boolean = false;
-  private _hovered: boolean = false;
+  protected _edgeStyle: Partial<EdgeStyle>;
+  private _activeStates = new Set<string>([EdgeStates.DEFAULT]);
+  
+  // Style caching for performance
+  private _cachedStyle: PathStyle | null = null;
+  private _styleDirty = true;
+  private _styleHash = '';
+  private static _globalStyleCache = new Map<string, PathStyle>();
 
   constructor(options: EdgeShapeOptions) {
     // Edges don't use x/y positioning - they draw from source to target
@@ -135,6 +142,23 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
 
     super({ ...options, data } as BaseShapeOptions<EdgeData>);
     this._edgeStyle = options.style ?? { stroke: '#666666', strokeWidth: 2 };
+    
+    // Merge user-provided state styles with defaults
+    this._edgeStyle.states = mergeEdgeStateStyles(this._edgeStyle.states);
+
+    // Always activate DEFAULT state
+    this._activeStates.add(EdgeStates.DEFAULT);
+
+    // Activate initial states if provided
+    if (options.states && options.states.length > 0) {
+      for (const state of options.states) {
+        this._activeStates.add(state);
+      }
+      this._styleDirty = true;
+    }
+
+    // Update interaction mode based on disabled state
+    this.updateInteractionMode();
 
     // Set up hover events
     this.on('pointerover', this.onPointerOver, this);
@@ -172,30 +196,111 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
   // PROPERTIES
   // =========================================================================
 
-  get edgeStyle(): EdgeStyle {
+  get edgeStyle(): Partial<EdgeStyle> {
     return this._edgeStyle;
   }
 
-  set edgeStyle(value: EdgeStyle) {
+  set edgeStyle(value: Partial<EdgeStyle>) {
     this._edgeStyle = value;
     this._style = value;
+    this._styleDirty = true;
     this.markDirty();
   }
 
-  get selected(): boolean {
-    return this._selected;
-  }
+  // =========================================================================
+  // STATE MANAGEMENT
+  // =========================================================================
 
-  set selected(value: boolean) {
-    if (this._selected !== value) {
-      this._selected = value;
+  /**
+   * Set a state on the edge
+   * @param name - State name (use EdgeStates constants or custom string)
+   * @param active - Whether the state is active
+   */
+  setState(name: EdgeStateName, active: boolean): void {
+    const hasState = this._activeStates.has(name);
+    
+    if (active && !hasState) {
+      this._activeStates.add(name);
+      this._styleDirty = true;
+      
+      // Update interaction mode if disabled/muted state changed
+      if (name === EdgeStates.DISABLED || name === 'muted') {
+        this.updateInteractionMode();
+      }
+      
+      this.markDirty();
+      this.update();
+    } else if (!active && hasState && name !== EdgeStates.DEFAULT) {
+      this._activeStates.delete(name);
+      this._styleDirty = true;
+      
+      // Update interaction mode if disabled/muted state changed
+      if (name === EdgeStates.DISABLED || name === 'muted') {
+        this.updateInteractionMode();
+      }
+      
       this.markDirty();
       this.update();
     }
   }
 
-  get hovered(): boolean {
-    return this._hovered;
+  /**
+   * Get the current value of a state
+   * @param name - State name to check
+   */
+  getState(name: EdgeStateName): boolean {
+    return this._activeStates.has(name);
+  }
+
+  /**
+   * Get all currently active states
+   */
+  getActiveStates(): string[] {
+    return Array.from(this._activeStates);
+  }
+
+  /**
+   * Check if the edge is disabled (should not respond to interactions)
+   * 
+   * @returns true if the edge is in disabled or muted state
+   */
+  isDisabled(): boolean {
+    return this._activeStates.has(EdgeStates.DISABLED) || this._activeStates.has('muted');
+  }
+
+  /**
+   * Update interaction mode based on disabled state
+   * Disabled edges are not interactive (no hover, click)
+   * @internal
+   */
+  private updateInteractionMode(): void {
+    if (this.isDisabled()) {
+      this.eventMode = 'none';
+      this.cursor = 'default';
+    } else {
+      this.eventMode = 'static';
+      this.cursor = 'pointer';
+    }
+  }
+
+  /**
+   * Clear specific states or all states (except default)
+   * @param names - Optional array of state names to clear. If not provided, clears all except default.
+   */
+  clearStates(names?: string[]): void {
+    if (names) {
+      for (const name of names) {
+        if (name !== EdgeStates.DEFAULT) {
+          this._activeStates.delete(name);
+        }
+      }
+    } else {
+      this._activeStates.clear();
+      this._activeStates.add(EdgeStates.DEFAULT);
+    }
+    this._styleDirty = true;
+    this.markDirty();
+    this.update();
   }
 
   get source(): Point {
@@ -276,24 +381,53 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
   }
 
   /**
-   * Get the active style based on state (selected, hovered)
+   * Get the active style based on current states
+   * Uses 3-tier caching: clean check → instance cache → global cache
    */
   protected getActiveStyle(): PathStyle {
-    const base = this._edgeStyle;
-    let stroke = base.stroke;
-    let strokeWidth = base.strokeWidth;
-
-    if (this._selected) {
-      stroke = base.selectedStroke ?? stroke;
-      strokeWidth = base.selectedStrokeWidth ?? strokeWidth;
-    } else if (this._hovered) {
-      stroke = base.hoverStroke ?? stroke;
-      strokeWidth = base.hoverStrokeWidth ?? strokeWidth;
+    // Tier 1: If style is clean and only default state is active, return base style directly
+    if (!this._styleDirty && this._activeStates.size === 1 && this._activeStates.has(EdgeStates.DEFAULT)) {
+      return this.getBaseStyle();
     }
 
+    // Create hash of active states for cache key
+    const stateHash = Array.from(this._activeStates).sort().join(',');
+    
+    // Tier 2: Check if style is clean and hash matches (instance cache hit)
+    if (!this._styleDirty && this._styleHash === stateHash && this._cachedStyle) {
+      return this._cachedStyle;
+    }
+
+    // Tier 3: Check global cache
+    const cacheKey = `${JSON.stringify(this._edgeStyle)}_${stateHash}`;
+    const globalCached = EdgeShapeBase._globalStyleCache.get(cacheKey);
+    if (globalCached) {
+      this._cachedStyle = globalCached;
+      this._styleHash = stateHash;
+      this._styleDirty = false;
+      return globalCached;
+    }
+
+    // Cache miss: compute style
+    const computed = this.computeStateStyle();
+    
+    // Update caches
+    this._cachedStyle = computed;
+    this._styleHash = stateHash;
+    this._styleDirty = false;
+    EdgeShapeBase._globalStyleCache.set(cacheKey, computed);
+    
+    return computed;
+  }
+
+  /**
+   * Get base style without any state overrides
+   */
+  private getBaseStyle(): PathStyle {
+    const base = this._edgeStyle;
     return {
-      stroke: stroke ?? '#666666',
-      strokeWidth: strokeWidth ?? 2,
+      stroke: base.stroke ?? '#666666',
+      strokeWidth: base.strokeWidth ?? 2,
       strokeAlpha: base.strokeAlpha,
       strokeStyle: base.strokeStyle,
       strokeDashPattern: base.strokeDashPattern,
@@ -303,20 +437,46 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
     };
   }
 
+  /**
+   * Compute style by merging base style with active state styles
+   */
+  private computeStateStyle(): PathStyle {
+    const base = this._edgeStyle;
+    let result: Partial<EdgeStyle> = { ...base };
+
+    // Apply state-based styles in order of state activation
+    if (base.states) {
+      for (const state of this._activeStates) {
+        if (base.states[state]) {
+          result = { ...result, ...base.states[state] };
+        }
+      }
+    }
+
+    return {
+      stroke: result.stroke ?? '#666666',
+      strokeWidth: result.strokeWidth ?? 2,
+      strokeAlpha: result.strokeAlpha,
+      strokeStyle: result.strokeStyle,
+      strokeDashPattern: result.strokeDashPattern,
+      strokeDashOffset: result.strokeDashOffset,
+      lineCap: result.lineCap,
+      lineJoin: result.lineJoin,
+    };
+  }
+
   // =========================================================================
   // INTERACTION
   // =========================================================================
 
   private onPointerOver(): void {
-    this._hovered = true;
-    this.markDirty();
-    this.update();
+    if (this.isDisabled()) return;
+    this.setState(EdgeStates.ACTIVE, true);
   }
 
   private onPointerOut(): void {
-    this._hovered = false;
-    this.markDirty();
-    this.update();
+    if (this.isDisabled()) return;
+    this.setState(EdgeStates.ACTIVE, false);
   }
 
   // =========================================================================

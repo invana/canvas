@@ -13,15 +13,13 @@ const generateLabelData = (position: string): CanvasData => {
   
   return {
     nodes: shapes.map((shape, i) => ({
-      data: {
-        id: `node-${i}`,
-        x: 150 + (i % 3) * 250,
-        y: 150 + Math.floor(i / 3) * 200,
-        shape,
-        size: 70,
-        label: `${shape}`,
-        labelPlacement: position as any,
-      },
+      id: `node-${i}`,
+      x: 150 + (i % 3) * 250,
+      y: 150 + Math.floor(i / 3) * 200,
+      shape,
+      size: 70,
+      label: `${shape}`,
+      labelPlacement: position as any,
       style: {
         labelStyle: {
           fontSize: 14,
@@ -243,14 +241,12 @@ export const StatusBadges: Story = {
 
       const data: CanvasData = {
         nodes: statuses.map((status, i) => ({
-          data: {
-            id: `status-${i}`,
-            x: 150 + i * 140,
-            y: 200,
-            shape: 'circle' as const,
-            size: 60,
-            label: status.emoji,
-          },
+          id: `status-${i}`,
+          x: 150 + i * 140,
+          y: 200,
+          shape: 'circle' as const,
+          size: 60,
+          label: status.emoji,
           style: {
             labelStyle: {
               fontSize: 24,
@@ -310,15 +306,13 @@ export const NotificationCounts: Story = {
 
       const data: CanvasData = {
         nodes: counts.map((count, i) => ({
-          data: {
-            id: `notif-${i}`,
-            x: 150 + i * 140,
-            y: 200,
-            shape: 'rect' as const,
-            size: 70,
-            cornerRadius: 8,
-            label: String(count),
-          },
+          id: `notif-${i}`,
+          x: 150 + i * 140,
+          y: 200,
+          shape: 'rect' as const,
+          size: 70,
+          cornerRadius: 8,
+          label: String(count),
           style: {
             labelStyle: {
               fontSize: count > 9 ? 18 : 24,

@@ -1,5 +1,5 @@
 {
-  "name": "storybook",
+  "name": "@canvas/storybook",
   "version": "0.0.1",
   "private": true,
   "description": "Storybook for canvas components",

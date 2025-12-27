@@ -97,8 +97,8 @@ export type {
   ShapeDrawer, 
   PathDrawer,
   RendererOptions, 
-  NodeData as RendererNodeData, 
-  EdgeData as RendererEdgeData, 
+  NodeInput as RendererNodeData, 
+  EdgeInput as RendererEdgeData, 
   Point as RendererPoint 
 } from './rendering';
 
@@ -167,6 +167,26 @@ export type {
 
 export { StyleManager, StyleResolver, ThemeManager } from './style';
 export type { ThemeConfig, StyleRule, NodeStyle, EdgeStyle } from './types';
+
+// State management constants
+export { NodeStates, EdgeStates, KNOWN_NODE_STATES, KNOWN_EDGE_STATES } from './types/states';
+export type { NodeStateName, EdgeStateName } from './types/states';
+
+// Default styling
+export {
+  DEFAULT_NODE_STATE_STYLES,
+  mergeNodeStateStyles,
+} from './defaults/nodes';
+export {
+  DEFAULT_EDGE_STATE_STYLES,
+  mergeEdgeStateStyles,
+} from './defaults/edges';
+export {
+  DEFAULT_CANVAS_BACKGROUND,
+  DEFAULT_CANVAS_GRID,
+  DEFAULT_CANVAS_VIEWPORT,
+  DEFAULT_CANVAS_INTERACTION,
+} from './defaults/canvas';
 
 // ============================================================================
 // PROCESSORS

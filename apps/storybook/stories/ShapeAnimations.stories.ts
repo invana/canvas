@@ -22,17 +22,15 @@ const generateAllShapes = (): CanvasData => {
   ];
 
   const nodes = shapes.map((config, i) => ({
-    data: {
-      id: `shape-${i}`,
-      x: (i - 4) * 140,
-      y: 0,
-      shape: config.shape as any,
-      size: config.size,
-      width: config.width,
-      height: config.height,
-      cornerRadius: config.cornerRadius,
-      label: config.label,
-    },
+    id: `shape-${i}`,
+    x: (i - 4) * 140,
+    y: 0,
+    shape: config.shape as any,
+    size: config.size,
+    width: config.width,
+    height: config.height,
+    cornerRadius: config.cornerRadius,
+    label: config.label,
     style: {
       fill: 0x4a90d9,
       stroke: 0x333333,
@@ -276,16 +274,14 @@ const createGlowAllShapes = (args: ShapeAnimationsArgs): HTMLElement => {
     ];
 
     const nodes = glowColors.map((color, i) => ({
-      data: {
-        id: `glow-${i}`,
-        x: (i - 4) * 140,
-        y: 0,
-        shape: ['circle', 'rect', 'rect', 'ellipse', 'triangle', 'diamond', 'pentagon', 'hexagon', 'octagon'][i] as any,
-        size: 50,
-        width: 70,
-        height: 50,
-        cornerRadius: 10,
-      },
+      id: `glow-${i}`,
+      x: (i - 4) * 140,
+      y: 0,
+      shape: ['circle', 'rect', 'rect', 'ellipse', 'triangle', 'diamond', 'pentagon', 'hexagon', 'octagon'][i] as any,
+      size: 50,
+      width: 70,
+      height: 50,
+      cornerRadius: 10,
       style: {
         fill: color,
         stroke: 0x333333,

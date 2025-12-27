@@ -74,16 +74,14 @@ export const AllPositions: Story = {
 
       const data: CanvasData = {
         nodes: shapes.map((shape, i) => ({
-          data: {
-            id: `node-${i}`,
-            x: 240 + (i % 3) * 400,
-            y: 200 + Math.floor(i / 3) * 300,
-            shape,
-            size: 60,
-            label: shape,
-            labelPlacement: 'center' as const,
-            badges,
-          },
+          id: `node-${i}`,
+          x: 240 + (i % 3) * 400,
+          y: 200 + Math.floor(i / 3) * 300,
+          shape,
+          size: 60,
+          label: shape,
+          labelPlacement: 'center' as const,
+          badges,
           style: {
             fill: '#4a90e2',
             stroke: '#2d5a8c',
@@ -135,24 +133,22 @@ export const SingleNodeAllBadges: Story = {
 
       const data: CanvasData = {
         nodes: [{
-          data: {
-            id: 'center-node',
-            x: 300,
-            y: 250,
-            shape: 'circle',
-            size: 80,
-            label: 'Circle',
-            badges: args.showBadges ? [
-              { text: '1', position: 'top', color: colors[0] },
-              { text: '2', position: 'top-right', color: colors[1] },
-              { text: '3', position: 'right', color: colors[2] },
-              { text: '4', position: 'bottom-right', color: colors[3] },
-              { text: '5', position: 'bottom', color: colors[4] },
-              { text: '6', position: 'bottom-left', color: colors[5] },
-              { text: '7', position: 'left', color: colors[6] },
-              { text: '8', position: 'top-left', color: colors[7] },
-            ] : [],
-          },
+          id: 'center-node',
+          x: 300,
+          y: 250,
+          shape: 'circle',
+          size: 80,
+          label: 'Circle',
+          badges: args.showBadges ? [
+            { text: '1', position: 'top', color: colors[0] },
+            { text: '2', position: 'top-right', color: colors[1] },
+            { text: '3', position: 'right', color: colors[2] },
+            { text: '4', position: 'bottom-right', color: colors[3] },
+            { text: '5', position: 'bottom', color: colors[4] },
+            { text: '6', position: 'bottom-left', color: colors[5] },
+            { text: '7', position: 'left', color: colors[6] },
+            { text: '8', position: 'top-left', color: colors[7] },
+          ] : [],
           style: {
             fill: '#4a90e2',
             stroke: '#2d5a8c',
@@ -205,20 +201,18 @@ export const NotificationBadges: Story = {
 
       const data: CanvasData = {
         nodes: shapes.map((shape, i) => ({
-          data: {
-            id: `node-${i}`,
-            x: 150 + (i % 3) * 280,
-            y: 150 + Math.floor(i / 3) * 200,
-            shape,
-            size: 70,
-            label: shape,
-            badges: args.showBadges ? [{
-              text: String(counts[i]),
-              position: 'top-right',
-              color: counts[i] > 20 ? '#e74c3c' : '#3498db',
-              size: counts[i] > 20 ? 28 : 24,
-            }] : [],
-          },
+          id: `node-${i}`,
+          x: 150 + (i % 3) * 280,
+          y: 150 + Math.floor(i / 3) * 200,
+          shape,
+          size: 70,
+          label: shape,
+          badges: args.showBadges ? [{
+            text: String(counts[i]),
+            position: 'top-right',
+            color: counts[i]! > 20 ? '#e74c3c' : '#3498db',
+            size: counts[i]! > 20 ? 28 : 24,
+          }] : [],
           style: {
             fill: '#4a90e2',
             stroke: '#2d5a8c',
@@ -276,22 +270,20 @@ export const StatusBadges: Story = {
 
       const data: CanvasData = {
         nodes: statuses.map((status, i) => ({
-          data: {
-            id: `status-${i}`,
-            x: 150 + i * 140,
-            y: 200,
-            shape: 'circle',
-            size: 60,
-            label: status.label,
-            labelPlacement: 'bottom',
-            badges: args.showBadges ? [{
-              text: status.icon,
-              position: 'top-right',
-              color: status.color,
-              fontSize: 16,
-              size: 26,
-            }] : [],
-          },
+          id: `status-${i}`,
+          x: 150 + i * 140,
+          y: 200,
+          shape: 'circle',
+          size: 60,
+          label: status.label,
+          labelPlacement: 'bottom',
+          badges: args.showBadges ? [{
+            text: status.icon,
+            position: 'top-right',
+            color: status.color,
+            fontSize: 16,
+            size: 26,
+          }] : [],
           style: {
             fill: '#34495e',
             stroke: '#2c3e50',
@@ -342,19 +334,17 @@ export const MultipleBadges: Story = {
       const data: CanvasData = {
         nodes: [
           {
-            data: {
-              id: 'node-1',
-              x: 200,
-              y: 250,
-              shape: 'rect',
-              size: 80,
-              cornerRadius: 8,
-              label: 'Server',
-              badges: args.showBadges ? [
-                { text: '5', position: 'top-right', color: '#e74c3c' },
-                { text: '✓', position: 'top-left', color: '#2ecc71', fontSize: 14 },
-              ] : [],
-            },
+            id: 'node-1',
+            x: 200,
+            y: 250,
+            shape: 'rect',
+            size: 80,
+            cornerRadius: 8,
+            label: 'Server',
+            badges: args.showBadges ? [
+              { text: '5', position: 'top-right', color: '#e74c3c' },
+              { text: '✓', position: 'top-left', color: '#2ecc71', fontSize: 14 },
+            ] : [],
             style: {
               fill: '#3498db',
               stroke: '#2980b9',
@@ -362,19 +352,17 @@ export const MultipleBadges: Story = {
             },
           },
           {
-            data: {
-              id: 'node-2',
-              x: 450,
-              y: 250,
-              shape: 'hexagon',
-              size: 80,
-              label: 'Database',
-              badges: args.showBadges ? [
-                { text: '12', position: 'top-right', color: '#f39c12' },
-                { text: '●', position: 'bottom-right', color: '#27ae60', fontSize: 14 },
-                { text: '⚠', position: 'left', color: '#e67e22', fontSize: 14 },
-              ] : [],
-            },
+            id: 'node-2',
+            x: 450,
+            y: 250,
+            shape: 'hexagon',
+            size: 80,
+            label: 'Database',
+            badges: args.showBadges ? [
+              { text: '12', position: 'top-right', color: '#f39c12' },
+              { text: '●', position: 'bottom-right', color: '#27ae60', fontSize: 14 },
+              { text: '⚠', position: 'left', color: '#e67e22', fontSize: 14 },
+            ] : [],
             style: {
               fill: '#9b59b6',
               stroke: '#8e44ad',
@@ -382,20 +370,18 @@ export const MultipleBadges: Story = {
             },
           },
           {
-            data: {
-              id: 'node-3',
-              x: 700,
-              y: 250,
-              shape: 'diamond',
-              size: 80,
-              label: 'Gateway',
-              badges: args.showBadges ? [
-                { text: '3', position: 'top', color: '#3498db' },
-                { text: '✓', position: 'right', color: '#2ecc71', fontSize: 14 },
-                { text: '✖', position: 'bottom', color: '#e74c3c', fontSize: 14 },
-                { text: '○', position: 'left', color: '#95a5a6', fontSize: 14 },
-              ] : [],
-            },
+            id: 'node-3',
+            x: 700,
+            y: 250,
+            shape: 'diamond',
+            size: 80,
+            label: 'Gateway',
+            badges: args.showBadges ? [
+              { text: '3', position: 'top', color: '#3498db' },
+              { text: '✓', position: 'right', color: '#2ecc71', fontSize: 14 },
+              { text: '✖', position: 'bottom', color: '#e74c3c', fontSize: 14 },
+              { text: '○', position: 'left', color: '#95a5a6', fontSize: 14 },
+            ] : [],
             style: {
               fill: '#1abc9c',
               stroke: '#16a085',
@@ -453,22 +439,20 @@ export const BadgeSizes: Story = {
 
       const data: CanvasData = {
         nodes: sizes.map((config, i) => ({
-          data: {
-            id: `size-${i}`,
-            x: 150 + i * 180,
-            y: 200,
-            shape: 'circle',
-            size: 70,
-            label: config.label,
-            labelPlacement: 'bottom',
-            badges: args.showBadges ? [{
-              text: '99',
-              position: 'top-right',
-              color: '#e74c3c',
-              size: config.size,
-              fontSize: config.fontSize,
-            }] : [],
-          },
+          id: `size-${i}`,
+          x: 150 + i * 180,
+          y: 200,
+          shape: 'circle',
+          size: 70,
+          label: config.label,
+          labelPlacement: 'bottom',
+          badges: args.showBadges ? [{
+            text: '99',
+            position: 'top-right',
+            color: '#e74c3c',
+            size: config.size,
+            fontSize: config.fontSize,
+          }] : [],
           style: {
             fill: '#4a90e2',
             stroke: '#2d5a8c',

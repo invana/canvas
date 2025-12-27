@@ -15,14 +15,12 @@ const generateGraphData = (nodeCount: number): CanvasData => {
 
   for (let i = 0; i < nodeCount; i++) {
     nodes.push({
-      data: {
-        id: `node-${i}`,
-        x: (i % 5) * 150 - 300,
-        y: Math.floor(i / 5) * 120 - 150,
-        shape: shapes[i % shapes.length],
-        size: 40,
-        label: `Node ${i + 1}`,
-      },
+      id: `node-${i}`,
+      x: (i % 5) * 150 - 300,
+      y: Math.floor(i / 5) * 120 - 150,
+      shape: shapes[i % shapes.length],
+      size: 40,
+      label: `Node ${i + 1}`,
       style: {
         fill: colors[i % colors.length],
         stroke: '#333',
@@ -37,13 +35,11 @@ const generateGraphData = (nodeCount: number): CanvasData => {
   // Create edges connecting adjacent nodes
   for (let i = 0; i < Math.min(nodeCount - 1, 5); i++) {
     edges.push({
-      data: {
-        id: `edge-${i}`,
-        source: `node-${i}`,
-        target: `node-${i + 1}`,
-        pathType: 'bezier' as const,
-        arrowTarget: 'triangle' as const,
-      },
+      id: `edge-${i}`,
+      source: `node-${i}`,
+      target: `node-${i + 1}`,
+      pathType: 'bezier' as const,
+      arrowTarget: 'triangle' as const,
       style: {
         stroke: '#666',
         strokeWidth: 2,

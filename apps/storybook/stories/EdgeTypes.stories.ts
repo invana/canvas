@@ -22,13 +22,11 @@ const generateEdgeTypesData = (arrowSize: number): CanvasData => {
 
     // Source node
     nodes.push({
-      data: {
-        id: `source-${idSuffix}`,
-        x: sourceX,
-        y,
-        shape: 'circle' as const,
-        size: 25,
-      },
+      id: `source-${idSuffix}`,
+      x: sourceX,
+      y,
+      shape: 'circle' as const,
+      size: 25,
       style: {
         fill: colors[i],
         stroke: '#333',
@@ -38,13 +36,11 @@ const generateEdgeTypesData = (arrowSize: number): CanvasData => {
 
     // Target node
     nodes.push({
-      data: {
-        id: `target-${idSuffix}`,
-        x: targetX,
-        y,
-        shape: 'circle' as const,
-        size: 25,
-      },
+      id: `target-${idSuffix}`,
+      x: targetX,
+      y,
+      shape: 'circle' as const,
+      size: 25,
       style: {
         fill: colors[i],
         stroke: '#333',
@@ -54,16 +50,14 @@ const generateEdgeTypesData = (arrowSize: number): CanvasData => {
 
     // Label node (non-interactive)
     nodes.push({
-      data: {
-        id: `label-${idSuffix}`,
-        x: -320,
-        y,
-        shape: 'rect' as const,
-        cornerRadius: 8,
-        width: 100,
-        height: 30,
-        label: pathLabels[i],
-      },
+      id: `label-${idSuffix}`,
+      x: -320,
+      y,
+      shape: 'rect' as const,
+      cornerRadius: 8,
+      width: 100,
+      height: 30,
+      label: pathLabels[i],
       style: {
         fill: '#f0f0f0',
         stroke: '#ccc',
@@ -76,15 +70,13 @@ const generateEdgeTypesData = (arrowSize: number): CanvasData => {
 
     // Edge
     edges.push({
-      data: {
-        id: `edge-${idSuffix}`,
-        source: `source-${idSuffix}`,
-        target: `target-${idSuffix}`,
-        pathType,
-        arrowTarget: 'triangle' as const,
-        arrowSize,
-        curvature: 0.4,
-      },
+      id: `edge-${idSuffix}`,
+      source: `source-${idSuffix}`,
+      target: `target-${idSuffix}`,
+      pathType,
+      arrowTarget: 'triangle' as const,
+      arrowSize,
+      curvature: 0.4,
       style: {
         stroke: colors[i],
         strokeWidth: 3,

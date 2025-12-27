@@ -20,13 +20,11 @@ const generateArrowsData = (arrowSize: number, edgeColor: string): CanvasData =>
 
     // Source node
     nodes.push({
-      data: {
-        id: `source-${arrowType}`,
-        x: sourceX,
-        y,
-        shape: 'circle' as const,
-        size: 20,
-      },
+      id: `source-${arrowType}`,
+      x: sourceX,
+      y,
+      shape: 'circle' as const,
+      size: 20,
       style: {
         fill: '#e0e0e0',
         stroke: '#666',
@@ -36,13 +34,11 @@ const generateArrowsData = (arrowSize: number, edgeColor: string): CanvasData =>
 
     // Target node
     nodes.push({
-      data: {
-        id: `target-${arrowType}`,
-        x: targetX,
-        y,
-        shape: 'circle' as const,
-        size: 20,
-      },
+      id: `target-${arrowType}`,
+      x: targetX,
+      y,
+      shape: 'circle' as const,
+      size: 20,
       style: {
         fill: '#e0e0e0',
         stroke: '#666',
@@ -52,16 +48,14 @@ const generateArrowsData = (arrowSize: number, edgeColor: string): CanvasData =>
 
     // Label
     nodes.push({
-      data: {
-        id: `label-${arrowType}`,
-        x: -280,
-        y,
-        shape: 'rect' as const,
-        width: 80,
-        height: 24,
-        cornerRadius: 8,
-        label: arrowType,
-      },
+      id: `label-${arrowType}`,
+      x: -280,
+      y,
+      shape: 'rect' as const,
+      width: 80,
+      height: 24,
+      cornerRadius: 8,
+      label: arrowType,
       style: {
         fill: '#f5f5f5',
         stroke: '#ddd',
@@ -74,14 +68,12 @@ const generateArrowsData = (arrowSize: number, edgeColor: string): CanvasData =>
 
     // Edge
     edges.push({
-      data: {
-        id: `edge-${arrowType}`,
-        source: `source-${arrowType}`,
-        target: `target-${arrowType}`,
-        pathType: 'line' as const,
-        arrowTarget: arrowType,
-        arrowSize,
-      },
+      id: `edge-${arrowType}`,
+      source: `source-${arrowType}`,
+      target: `target-${arrowType}`,
+      pathType: 'line' as const,
+      arrowTarget: arrowType,
+      arrowSize,
       style: {
         stroke: edgeColor,
         strokeWidth: 2,
@@ -144,13 +136,11 @@ const generateBidirectionalData = (arrowSize: number, edgeColor: string): Canvas
     const targetX = 150;
 
     nodes.push({
-      data: {
-        id: `source-bi-${i}`,
-        x: sourceX,
-        y,
-        shape: 'circle' as const,
-        size: 22,
-      },
+      id: `source-bi-${i}`,
+      x: sourceX,
+      y,
+      shape: 'circle' as const,
+      size: 22,
       style: {
         fill: '#64b5f6',
         stroke: '#1976d2',
@@ -159,13 +149,11 @@ const generateBidirectionalData = (arrowSize: number, edgeColor: string): Canvas
     });
 
     nodes.push({
-      data: {
-        id: `target-bi-${i}`,
-        x: targetX,
-        y,
-        shape: 'circle' as const,
-        size: 22,
-      },
+      id: `target-bi-${i}`,
+      x: targetX,
+      y,
+      shape: 'circle' as const,
+      size: 22,
       style: {
         fill: '#81c784',
         stroke: '#388e3c',
@@ -174,16 +162,14 @@ const generateBidirectionalData = (arrowSize: number, edgeColor: string): Canvas
     });
 
     nodes.push({
-      data: {
-        id: `label-bi-${i}`,
-        x: -310,
-        y,
-        shape: 'rect' as const,
-        width: 130,
-        height: 24,
-        cornerRadius: 8,
-        label: combo.label,
-      },
+      id: `label-bi-${i}`,
+      x: -310,
+      y,
+      shape: 'rect' as const,
+      width: 130,
+      height: 24,
+      cornerRadius: 8,
+      label: combo.label,
       style: {
         fill: '#fafafa',
         stroke: '#e0e0e0',
@@ -195,15 +181,13 @@ const generateBidirectionalData = (arrowSize: number, edgeColor: string): Canvas
     });
 
     edges.push({
-      data: {
-        id: `edge-bi-${i}`,
-        source: `source-bi-${i}`,
-        target: `target-bi-${i}`,
-        pathType: 'line' as const,
-        arrowSource: combo.source as any,
-        arrowTarget: combo.target as any,
-        arrowSize,
-      },
+      id: `edge-bi-${i}`,
+      source: `source-bi-${i}`,
+      target: `target-bi-${i}`,
+      pathType: 'line' as const,
+      arrowSource: combo.source as any,
+      arrowTarget: combo.target as any,
+      arrowSize,
       style: {
         stroke: edgeColor,
         strokeWidth: 2,

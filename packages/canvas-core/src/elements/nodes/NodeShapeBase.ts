@@ -29,6 +29,8 @@ import { createPositionedLabel, type LabelPosition } from '../../primitives/labe
 import { BaseShape, type BaseShapeData, type BaseShapeStyle, type BaseShapeOptions } from '../BaseShape';
 import { FederatedPointerEvent, Graphics, Ticker } from 'pixi.js';
 import { drawRippleEffect, calculateRippleRadius, calculateRippleAlpha } from '../../primitives/effects';
+import { NodeStates, KNOWN_NODE_STATES, type NodeStateName } from '../../types/states';
+import { mergeNodeStateStyles } from '../../defaults/nodes';
 
 /**
  * Point interface for coordinates
@@ -133,9 +135,9 @@ export interface RippleAnimationOptions {
 }
 
 /**
- * Style for a node
+ * Base style properties for nodes (without state-specific overrides)
  */
-export interface NodeStyle extends BaseShapeStyle {
+export interface BaseNodeStyleProps extends BaseShapeStyle {
   /** Label position relative to shape */
   labelPosition?: LabelPosition;
   /** Label offset from position */
@@ -143,26 +145,53 @@ export interface NodeStyle extends BaseShapeStyle {
   labelOffsetY?: number;
   /** Label text style */
   labelStyle?: LabelStyle;
-  /** Selected state style overrides */
-  selectedFill?: string;
-  selectedStroke?: string;
-  selectedStrokeWidth?: number;
-  /** Hover state style overrides */
-  hoverFill?: string;
-  hoverStroke?: string;
   /** Ripple effect style */
   rippleColor?: string;
+}
+
+/**
+ * Style for a node with state-based styling
+ */
+export interface NodeStyle extends BaseNodeStyleProps {
+  /** 
+   * State-based style overrides
+   * Define styles for different states (selected, active, custom states)
+   * 
+   * @example
+   * ```typescript
+   * {
+   *   fill: '#1890ff',
+   *   states: {
+   *     selected: { stroke: '#ff4d4f', strokeWidth: 4 },
+   *     active: { fill: '#40a9ff', opacity: 0.9 },
+   *     loading: { opacity: 0.5 },
+   *     error: { stroke: '#ff0000', strokeWidth: 3 },
+   *   }
+   * }
+   * ```
+   */
+  states?: {
+    [stateName: string]: Partial<BaseNodeStyleProps>;
+  };
+  
+  /**
+   * State priority order (default: ['default', 'active', 'selected'])
+   * States are applied in this order, later states override earlier ones
+   */
+  statePriority?: string[];
 }
 
 /**
  * Node shape options
  */
 export interface NodeShapeOptions extends Omit<BaseShapeOptions<NodeData>, 'style'> {
-  style?: NodeStyle;
+  style?: Partial<NodeStyle>;
   /** Enable node dragging */
   draggable?: boolean;
   /** Enable node selection */
   selectable?: boolean;
+  /** Initial states to activate (e.g., ['selected', 'highlighted']) */
+  states?: string[];
   /** Callback when node is dragged */
   onDrag?: (node: NodeShapeBase, x: number, y: number) => void;
 }
@@ -171,11 +200,20 @@ export interface NodeShapeOptions extends Omit<BaseShapeOptions<NodeData>, 'styl
  * Abstract base class for node shapes
  */
 export abstract class NodeShapeBase extends BaseShape<NodeData> {
-  protected _nodeStyle: NodeStyle;
-  private _selected: boolean = false;
-  private _hovered: boolean = false;
+  protected _nodeStyle: Partial<NodeStyle>;
   private _draggable: boolean;
   private _selectable: boolean;
+  
+  // State management
+  private _activeStates = new Set<string>([NodeStates.DEFAULT]);
+  private _cachedStyle: ShapeStyle | null = null;
+  private _styleDirty = true;
+  private _styleHash = '';
+  
+  // Global style cache (shared across all node instances)
+  private static _globalStyleCache = new Map<string, ShapeStyle>();
+  private static _styleIdCounter = 0;
+  private _styleId: number = 0;
   
   // Drag callback
   private _onDrag?: (node: NodeShapeBase, x: number, y: number) => void;
@@ -201,9 +239,30 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
   constructor(options: NodeShapeOptions) {
     super(options as BaseShapeOptions<NodeData>);
     this._nodeStyle = options.style ?? {};
+    
+    // Merge user-provided state styles with defaults
+    this._nodeStyle.states = mergeNodeStateStyles(this._nodeStyle.states);
+    
     this._draggable = options.draggable ?? true;
     this._selectable = options.selectable ?? true;
     this._onDrag = options.onDrag;
+    
+    // Assign unique style ID for caching
+    this._styleId = ++NodeShapeBase._styleIdCounter;
+
+    // Always activate DEFAULT state
+    this._activeStates.add(NodeStates.DEFAULT);
+
+    // Activate initial states if provided
+    if (options.states && options.states.length > 0) {
+      for (const state of options.states) {
+        this._activeStates.add(state);
+      }
+      this._styleDirty = true;
+    }
+
+    // Update interaction mode based on disabled state
+    this.updateInteractionMode();
 
     // Set up hover events
     this.on('pointerover', this.onPointerOver, this);
@@ -263,30 +322,15 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
   // PROPERTIES
   // =========================================================================
 
-  get nodeStyle(): NodeStyle {
+  get nodeStyle(): Partial<NodeStyle> {
     return this._nodeStyle;
   }
 
-  set nodeStyle(value: NodeStyle) {
+  set nodeStyle(value: Partial<NodeStyle>) {
     this._nodeStyle = value;
     this._style = value;
+    this._styleDirty = true;
     this.markDirty();
-  }
-
-  get selected(): boolean {
-    return this._selected;
-  }
-
-  set selected(value: boolean) {
-    if (this._selected !== value) {
-      this._selected = value;
-      this.markDirty();
-      this.update();
-    }
-  }
-
-  get hovered(): boolean {
-    return this._hovered;
   }
 
   /**
@@ -315,37 +359,229 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
   }
 
   // =========================================================================
+  // STATE MANAGEMENT
+  // =========================================================================
+
+  /**
+   * Set a state on the node
+   * 
+   * @example
+   * ```typescript
+   * node.setState(NodeStates.SELECTED, true);
+   * node.setState(NodeStates.LOADING, true);
+   * node.setState('custom-state', true);
+   * ```
+   * 
+   * @param name - State name (use NodeStates constants for type safety)
+   * @param active - Whether to activate or deactivate the state
+   */
+  setState(name: NodeStateName, active: boolean): void {
+    const changed = active 
+      ? !this._activeStates.has(name)
+      : this._activeStates.has(name);
+    
+    if (!changed) return; // Skip if no change
+    
+    // Dev mode validation (only in development)
+    // @ts-ignore - process.env check for dev validation
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development' && name !== NodeStates.DEFAULT) {
+      // Type assertion needed because name is NodeStateName (union with string)
+      if (!KNOWN_NODE_STATES.has(name as any) && !this._nodeStyle.states?.[name]) {
+        console.warn(
+          `[Node ${this.id}] Unknown state "${name}". ` +
+          `Consider using NodeStates constants or defining it in style.states.`
+        );
+      }
+    }
+    
+    if (active) {
+      this._activeStates.add(name);
+    } else {
+      this._activeStates.delete(name);
+    }
+    
+    this._styleDirty = true;
+    
+    // Update interaction mode if disabled/muted state changed
+    if (name === NodeStates.DISABLED || name === 'muted') {
+      this.updateInteractionMode();
+    }
+    
+    this.markDirty();
+    this.update();
+  }
+
+  /**
+   * Check if a state is active
+   * 
+   * @param name - State name to check
+   * @returns true if the state is active
+   */
+  getState(name: NodeStateName): boolean {
+    return this._activeStates.has(name);
+  }
+
+  /**
+   * Get all active states
+   * 
+   * @returns Array of active state names
+   */
+  getActiveStates(): string[] {
+    return Array.from(this._activeStates);
+  }
+
+  /**
+   * Check if the node is disabled (should not respond to interactions)
+   * 
+   * @returns true if the node is in disabled or muted state
+   */
+  isDisabled(): boolean {
+    return this._activeStates.has(NodeStates.DISABLED) || this._activeStates.has('muted');
+  }
+
+  /**
+   * Update interaction mode based on disabled state
+   * Disabled nodes are not interactive (no hover, click, drag)
+   * @internal
+   */
+  private updateInteractionMode(): void {
+    if (this.isDisabled()) {
+      this.eventMode = 'none';
+      this.cursor = 'default';
+    } else {
+      this.eventMode = 'static';
+      this.cursor = this._draggable ? 'pointer' : 'default';
+    }
+  }
+
+  /**
+   * Clear specific states or all custom states
+   * 
+   * @param names - Optional array of state names to clear. If not provided, clears all except default
+   */
+  clearStates(names?: string[]): void {
+    if (names) {
+      names.forEach(n => this._activeStates.delete(n));
+    } else {
+      this._activeStates.clear();
+      this._activeStates.add(NodeStates.DEFAULT);
+    }
+    
+    this._styleDirty = true;
+    this.markDirty();
+    this.update();
+  }
+
+  // =========================================================================
   // STYLE HELPERS
   // =========================================================================
 
   /**
-   * Get the active style based on state (selected, hovered)
+   * Get the active style based on current states
+   * Optimized with caching for performance
    */
   protected getActiveStyle(): ShapeStyle {
-    const base = this._nodeStyle;
-    let fill = base.fill;
-    let stroke = base.stroke;
-    let strokeWidth = base.strokeWidth;
-
-    if (this._selected) {
-      fill = base.selectedFill ?? fill;
-      stroke = base.selectedStroke ?? stroke;
-      strokeWidth = base.selectedStrokeWidth ?? strokeWidth;
-    } else if (this._hovered) {
-      fill = base.hoverFill ?? fill;
-      stroke = base.hoverStroke ?? stroke;
+    // OPTIMIZATION: Return cached style if not dirty
+    if (!this._styleDirty && this._cachedStyle) {
+      return this._cachedStyle;
     }
+    
+    // OPTIMIZATION: Check global cache (shared between nodes with same states)
+    const hashCode = this.computeStyleHash();
+    if (hashCode === this._styleHash && this._cachedStyle) {
+      return this._cachedStyle;
+    }
+    
+    const cached = NodeShapeBase._globalStyleCache.get(hashCode);
+    if (cached) {
+      this._cachedStyle = cached;
+      this._styleHash = hashCode;
+      this._styleDirty = false;
+      return cached;
+    }
+    
+    // Compute new style
+    const result = this.computeActiveStyle();
+    
+    // Cache globally (limit cache size)
+    if (NodeShapeBase._globalStyleCache.size < 1000) {
+      NodeShapeBase._globalStyleCache.set(hashCode, result);
+    }
+    
+    this._cachedStyle = result;
+    this._styleHash = hashCode;
+    this._styleDirty = false;
+    return result;
+  }
 
-    return {
-      fill,
+  /**
+   * Compute hash code for current style + states combination
+   * @internal
+   */
+  private computeStyleHash(): string {
+    const stateStr = Array.from(this._activeStates).sort().join(',');
+    return `${this._styleId}:${stateStr}`;
+  }
+
+  /**
+   * Compute the active style by merging state styles
+   * @internal
+   */
+  private computeActiveStyle(): ShapeStyle {
+    const base = this._nodeStyle;
+    
+    // Start with base properties (may be undefined - states will override)
+    const result: ShapeStyle = {
+      fill: base.fill,
+      stroke: base.stroke,
+      strokeWidth: base.strokeWidth,
       fillAlpha: base.fillAlpha,
-      stroke,
-      strokeWidth,
       strokeAlpha: base.strokeAlpha,
       strokeStyle: base.strokeStyle,
       strokeDashPattern: base.strokeDashPattern,
       strokeDashOffset: base.strokeDashOffset,
     };
+    
+    // Apply states in priority order (DEFAULT state provides base colors)
+    const priority = base.statePriority ?? [NodeStates.DEFAULT, NodeStates.ACTIVE, NodeStates.SELECTED];
+    
+    if (base.states) {
+      for (const stateName of priority) {
+        if (!this._activeStates.has(stateName)) continue;
+        
+        const stateStyle = base.states[stateName];
+        if (!stateStyle) continue;
+        
+        // Direct property assignment (faster than Object.assign)
+        if (stateStyle.fill !== undefined) result.fill = stateStyle.fill;
+        if (stateStyle.stroke !== undefined) result.stroke = stateStyle.stroke;
+        if (stateStyle.strokeWidth !== undefined) result.strokeWidth = stateStyle.strokeWidth;
+        if (stateStyle.fillAlpha !== undefined) result.fillAlpha = stateStyle.fillAlpha;
+        if (stateStyle.strokeAlpha !== undefined) result.strokeAlpha = stateStyle.strokeAlpha;
+        if (stateStyle.strokeStyle !== undefined) result.strokeStyle = stateStyle.strokeStyle;
+        if (stateStyle.strokeDashPattern !== undefined) result.strokeDashPattern = stateStyle.strokeDashPattern;
+        if (stateStyle.strokeDashOffset !== undefined) result.strokeDashOffset = stateStyle.strokeDashOffset;
+      }
+      
+      // Apply any custom states not in priority list
+      for (const stateName of this._activeStates) {
+        if (priority.includes(stateName)) continue;
+        
+        const stateStyle = base.states[stateName];
+        if (!stateStyle) continue;
+        
+        if (stateStyle.fill !== undefined) result.fill = stateStyle.fill;
+        if (stateStyle.stroke !== undefined) result.stroke = stateStyle.stroke;
+        if (stateStyle.strokeWidth !== undefined) result.strokeWidth = stateStyle.strokeWidth;
+        if (stateStyle.fillAlpha !== undefined) result.fillAlpha = stateStyle.fillAlpha;
+        if (stateStyle.strokeAlpha !== undefined) result.strokeAlpha = stateStyle.strokeAlpha;
+        if (stateStyle.strokeStyle !== undefined) result.strokeStyle = stateStyle.strokeStyle;
+        if (stateStyle.strokeDashPattern !== undefined) result.strokeDashPattern = stateStyle.strokeDashPattern;
+        if (stateStyle.strokeDashOffset !== undefined) result.strokeDashOffset = stateStyle.strokeDashOffset;
+      }
+    }
+    
+    return result;
   }
 
   // =========================================================================
@@ -449,18 +685,18 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
   // =========================================================================
 
   private onPointerOver(): void {
-    this._hovered = true;
-    this.markDirty();
-    this.update();
+    if (this.isDisabled()) return;
+    this.setState(NodeStates.ACTIVE, true);
   }
 
   private onPointerOut(): void {
-    this._hovered = false;
-    this.markDirty();
-    this.update();
+    if (this.isDisabled()) return;
+    this.setState(NodeStates.ACTIVE, false);
   }
   
   private onDragStart(e: FederatedPointerEvent): void {
+    if (this.isDisabled()) return;
+    
     // Only left-click drag
     if (e.button !== 0) return;
     
@@ -475,6 +711,9 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
     
     this.cursor = 'grabbing';
     this.alpha = 0.8;
+    
+    // Set dragging state
+    this.setState(NodeStates.DRAGGING, true);
     
     // Emit drag start event
     this.emit('dragstart', { node: this, event: e });
@@ -514,11 +753,16 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
     this.cursor = 'pointer';
     this.alpha = this._style.alpha ?? 1;
     
+    // Clear dragging state
+    this.setState(NodeStates.DRAGGING, false);
+    
     // Emit drag end event
     this.emit('dragend', { node: this, event: e, x: this.x, y: this.y });
   }
   
   private onTap(e: FederatedPointerEvent): void {
+    if (this.isDisabled()) return;
+    
     // Skip if we just finished dragging (click after drag)
     if (this._isDragging) return;
     
@@ -527,13 +771,13 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
     
     // Toggle or set selection based on modifier key
     if (e.shiftKey) {
-      this.selected = !this.selected;
+      this.setState(NodeStates.SELECTED, !this.getState(NodeStates.SELECTED));
     } else {
-      this.selected = true;
+      this.setState(NodeStates.SELECTED, true);
     }
     
     // Emit selection event
-    this.emit('select', { node: this, selected: this._selected, event: e });
+    this.emit('select', { node: this, selected: this.getState(NodeStates.SELECTED), event: e });
   }
   
   private onRightClick(e: FederatedPointerEvent): void {

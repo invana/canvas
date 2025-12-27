@@ -71,15 +71,13 @@ export const UnicodeIcons: Story = {
         const col = i % 8;
         const row = Math.floor(i / 8);
         return {
-          data: {
-            id: `unicode-${i}`,
-            x: 120 + col * 160,
-            y: 100 + row * 200,
-            shape: 'circle' as const,
-            size: 80,
-            label: `${item.icon}\n${item.label}`, // Icon embedded in label
-            labelPlacement: 'center' as const,
-          },
+          id: `unicode-${i}`,
+          x: 120 + col * 160,
+          y: 100 + row * 200,
+          shape: 'circle' as const,
+          size: 80,
+          label: `${item.icon}\n${item.label}`, // Icon embedded in label
+          labelPlacement: 'center' as const,
           style: {
             fill: '#ffffff',
             stroke: '#3498db',
@@ -176,15 +174,13 @@ export const MixedIconTypes: Story = {
       ];
 
       const nodes = mixedNodes.map(item => ({
-        data: {
-          id: item.id,
-          x: item.x,
-          y: item.y,
-          shape: item.shape,
-          size: 90,
-          label: `${item.icon}\n${item.label}`,
-          labelPlacement: 'center' as const,
-        },
+        id: item.id,
+        x: item.x,
+        y: item.y,
+        shape: item.shape,
+        size: 90,
+        label: `${item.icon}\n${item.label}`,
+        labelPlacement: 'center' as const,
         style: {
           fill: '#ffffff',
           stroke: item.color,
@@ -265,15 +261,13 @@ export const IconSizes: Story = {
       ];
 
       const nodes = sizes.map((s, i) => ({
-        data: {
-          id: `size-${i}`,
-          x: s.x,
-          y: 250,
-          shape: 'circle' as const,
-          size: s.size,
-          label: `⚙️\n${s.label}`,
-          labelPlacement: 'center' as const,
-        },
+        id: `size-${i}`,
+        x: s.x,
+        y: 250,
+        shape: 'circle' as const,
+        size: s.size,
+        label: `⚙️\n${s.label}`,
+        labelPlacement: 'center' as const,
         style: {
           fill: '#ffffff',
           stroke: '#3498db',
@@ -372,15 +366,13 @@ export const CustomIconSizing: Story = {
         let displayIcon = item.icon;
         
         return {
-          data: {
-            id: item.id,
-            x: 220 + col * 280,
-            y: 120 + row * 160,
-            shape: 'circle' as const,
-            size: item.size,
-            label: `${displayIcon}\n${item.label}`,
-            labelPlacement: 'center' as const,
-          },
+          id: item.id,
+          x: 220 + col * 280,
+          y: 120 + row * 160,
+          shape: 'circle' as const,
+          size: item.size,
+          label: `${displayIcon}\n${item.label}`,
+          labelPlacement: 'center' as const,
           style: {
             fill: '#ffffff',
             stroke: item.color,
@@ -486,15 +478,13 @@ export const IconOnlyNodes: Story = {
       ];
 
       const nodes = iconNodes.map((item, i) => ({
-        data: {
-          id: `icon-only-${i}`,
-          x: item.x,
-          y: item.y,
-          shape: 'circle' as const,
-          size: item.size,
-          label: item.icon, // Just the icon, no text
-          labelPlacement: 'center' as const,
-        },
+        id: `icon-only-${i}`,
+        x: item.x,
+        y: item.y,
+        shape: 'circle' as const,
+        size: item.size,
+        label: item.icon, // Just the icon, no text
+        labelPlacement: 'center' as const,
         style: {
           fill: '#ffffff',
           stroke: item.color,
@@ -581,15 +571,13 @@ export const FullSizeIcons: Story = {
       ];
 
       const nodes = fullSizeIcons.map((item, i) => ({
-        data: {
-          id: `full-size-${i}`,
-          x: item.x,
-          y: item.y,
-          shape: item.shape,
-          size: item.size,
-          label: item.icon,
-          labelPlacement: 'center' as const,
-        },
+        id: `full-size-${i}`,
+        x: item.x,
+        y: item.y,
+        shape: item.shape,
+        size: item.size,
+        label: item.icon,
+        labelPlacement: 'center' as const,
         style: {
           fill: '#ffffff',
           stroke: item.color,

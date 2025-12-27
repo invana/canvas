@@ -30,15 +30,20 @@ import { Registry } from './Registry';
 import { 
   NodeShapeBase, 
   type NodeData as NodeShapeData, 
-  type NodeStyle 
+  type NodeStyle,
+  type NodeShapeType,
+  type NodeBadge
 } from '../elements/nodes';
 import { 
   EdgeShapeBase, 
   type EdgeData as EdgeShapeData, 
-  type EdgeStyle 
+  type EdgeStyle,
+  type EdgePathType
 } from '../elements/edges';
+import { type ArrowType } from '../primitives/arrows/types';
 import { CircleNode } from '../elements/nodes/CircleNode';
 import { LineEdge } from '../elements/edges/LineEdge';
+import { NodeStates, EdgeStates } from '../types/states';
 
 // ============================================================================
 // TYPES
@@ -53,34 +58,69 @@ export interface Point {
 }
 
 /**
- * Node input for renderer - separates data from styling
+ * Node input for renderer - flat structure for easy use
  */
-export interface NodeData {
-  /** Core node data (id, position, label, properties) */
-  data: NodeShapeData;
-  /** Visual styling */
+export interface NodeInput {
+  // Core properties
+  id: string;
+  x: number;
+  y: number;
+  label?: string;
+  shape?: NodeShapeType;
+  
+  // Size properties
+  size?: number;
+  width?: number;
+  height?: number;
+  cornerRadius?: number;
+  
+  // User data
+  payload?: Record<string, unknown>;
+  
+  // Visual styling
   style?: Partial<NodeStyle>;
-  /** Enable interactivity */
+  
+  // Behavior
   interactive?: boolean;
-  /** Enable dragging */
   draggable?: boolean;
-  /** Enable selection */
   selectable?: boolean;
+  
+  // Initial states
+  states?: string[];
+  
+  // Badges
+  badges?: NodeBadge[];
 }
 
 /**
- * Edge input for renderer - separates data from styling
+ * Edge input for renderer - flat structure for easy use
  */
-export interface EdgeData {
-  /** Core edge data */
-  data: Omit<EdgeShapeData, 'source' | 'target'> & {
-    /** Source node ID or point */
-    source: string | Point;
-    /** Target node ID or point */
-    target: string | Point;
-  };
-  /** Visual styling */
+export interface EdgeInput {
+  // Core properties
+  id: string;
+  source: string | Point;
+  target: string | Point;
+  
+  // Path properties
+  pathType?: EdgePathType;
+  curvature?: number;
+  label?: string;
+  sourceDirection?: 'top' | 'bottom' | 'left' | 'right';
+  targetDirection?: 'top' | 'bottom' | 'left' | 'right';
+  
+  // Arrows
+  arrowSource?: ArrowType | 'none';
+  arrowTarget?: ArrowType | 'none';
+  arrowSize?: number;
+  
+  // User data
+  payload?: Record<string, unknown>;
+  
+  // Visual styling
   style?: Partial<EdgeStyle>;
+  
+  // Initial states
+  states?: string[];
 }
 
 /**
@@ -131,8 +171,8 @@ export class Renderer {
   private _nodeEdges: Map<string, Set<string>> = new Map();
   
   // Styles
-  private _defaultNodeStyle: NodeStyle;
-  private _defaultEdgeStyle: EdgeStyle;
+  private _defaultNodeStyle: Partial<NodeStyle>;
+  private _defaultEdgeStyle: Partial<EdgeStyle>;
   private _edgeBoundaryOffset: number;
   
   // Callbacks
@@ -146,15 +186,10 @@ export class Renderer {
     this._onNodeDrag = options.onNodeDrag;
     
     this._defaultNodeStyle = {
-      fill: '#4a90d9',
-      stroke: '#2d5a87',
-      strokeWidth: 2,
       ...options.defaultNodeStyle,
     };
     
     this._defaultEdgeStyle = {
-      stroke: '#666666',
-      strokeWidth: 2,
       ...options.defaultEdgeStyle,
     };
   }
@@ -166,16 +201,34 @@ export class Renderer {
   /**
    * Add a node to the canvas
    */
-  addNode(input: NodeData): NodeShapeBase {
-    const { data, style, interactive, draggable, selectable } = input;
+  addNode(input: NodeInput): NodeShapeBase {
+    const { 
+      id, x, y, label, shape, size, width, height, cornerRadius, payload, badges,
+      style, interactive, draggable, selectable, states 
+    } = input;
     
-    const mergedStyle: NodeStyle = {
+    const mergedStyle: Partial<NodeStyle> = {
       ...this._defaultNodeStyle,
       ...style,
     };
     
+    // Create node data structure
+    const nodeData: NodeShapeData = {
+      id,
+      x,
+      y,
+      label,
+      shape,
+      size,
+      width,
+      height,
+      cornerRadius,
+      payload,
+      badges,
+    };
+    
     // Create node using registry
-    const shapeType = data.shape ?? 'circle';
+    const shapeType = shape ?? 'circle';
     const NodeClass = this._registry.getNodeClass(shapeType);
     
     if (!NodeClass) {
@@ -183,11 +236,12 @@ export class Renderer {
     }
     
     const node = new (NodeClass ?? CircleNode)({
-      data,
+      data: nodeData,
       style: mergedStyle,
       interactive: interactive ?? true,
       draggable: draggable ?? true,
       selectable: selectable ?? true,
+      states,
       registry: this._registry,
     });
     
@@ -210,25 +264,23 @@ export class Renderer {
   /**
    * Update a node's properties
    */
-  updateNode(id: string, updates: Partial<NodeData>): NodeShapeBase | undefined {
+  updateNode(id: string, updates: Partial<NodeInput>): NodeShapeBase | undefined {
     const node = this._nodes.get(id);
     if (!node) return undefined;
     
-    // Update data properties
-    if (updates.data) {
-      if (updates.data.x !== undefined) node.x = updates.data.x;
-      if (updates.data.y !== undefined) node.y = updates.data.y;
-      
-      // Update label
-      if (updates.data.label !== undefined) {
-        (node as any)._data.label = updates.data.label;
-        node.updateLabel();
-      }
-      
-      // Update connected edges if position changed
-      if (updates.data.x !== undefined || updates.data.y !== undefined) {
-        this.updateConnectedEdges(id, node.x, node.y);
-      }
+    // Update position
+    if (updates.x !== undefined) node.x = updates.x;
+    if (updates.y !== undefined) node.y = updates.y;
+    
+    // Update label
+    if (updates.label !== undefined) {
+      (node as any)._data.label = updates.label;
+      node.updateLabel();
+    }
+    
+    // Update connected edges if position changed
+    if (updates.x !== undefined || updates.y !== undefined) {
+      this.updateConnectedEdges(id, node.x, node.y);
     }
     
     // Update style
@@ -294,9 +346,11 @@ export class Renderer {
   /**
    * Add an edge to the canvas
    */
-  addEdge(input: EdgeData): EdgeShapeBase {
-    const { data, style } = input;
-    const { source, target } = data;
+  addEdge(input: EdgeInput): EdgeShapeBase {
+    const { 
+      id, source, target, pathType, curvature, sourceDirection, targetDirection,
+      arrowSource, arrowTarget, arrowSize, label, payload, style, states 
+    } = input;
     
     // Resolve source and target
     const { point: sourcePoint, nodeId: sourceNodeId, node: sourceNode } = 
@@ -312,40 +366,41 @@ export class Renderer {
       targetPoint
     );
     
-    const mergedStyle: EdgeStyle = {
+    const mergedStyle: Partial<EdgeStyle> = {
       ...this._defaultEdgeStyle,
       ...style,
     };
     
     // Create edge data with resolved points
     const edgeData: EdgeShapeData = {
-      id: data.id,
+      id,
       source: adjustedPoints.source,
       target: adjustedPoints.target,
       x: 0,
       y: 0,
-      pathType: data.pathType,
-      curvature: data.curvature,
-      sourceDirection: data.sourceDirection,
-      targetDirection: data.targetDirection,
-      arrowSource: data.arrowSource,
-      arrowTarget: data.arrowTarget,
-      arrowSize: data.arrowSize,
-      label: data.label,
-      payload: data.payload,
+      pathType,
+      curvature,
+      sourceDirection,
+      targetDirection,
+      arrowSource,
+      arrowTarget,
+      arrowSize,
+      label,
+      payload,
     } as EdgeShapeData;
     
     // Create edge using registry  
-    const pathType = (data.pathType as string) ?? 'line';
-    const EdgeClass = this._registry.getEdgeClass?.(pathType);
+    const edgePathType = (pathType as string) ?? 'line';
+    const EdgeClass = this._registry.getEdgeClass?.(edgePathType);
     
     if (!EdgeClass) {
-      console.warn(`Unknown edge path type: ${pathType}, defaulting to straight line`);
+      console.warn(`Unknown edge path type: ${edgePathType}, defaulting to straight line`);
     }
     
     const edge = new (EdgeClass ?? LineEdge)({
       data: edgeData,
       style: mergedStyle,
+      states,
       registry: this._registry,
     });
     
@@ -375,7 +430,7 @@ export class Renderer {
   /**
    * Update an edge's properties
    */
-  updateEdge(id: string, updates: Partial<EdgeData>): EdgeShapeBase | undefined {
+  updateEdge(id: string, updates: Partial<EdgeInput>): EdgeShapeBase | undefined {
     const tracking = this._edges.get(id);
     if (!tracking) return undefined;
     
@@ -387,11 +442,11 @@ export class Renderer {
     }
     
     // Update endpoints if source/target changed
-    if (updates.data?.source !== undefined || updates.data?.target !== undefined) {
+    if (updates.source !== undefined || updates.target !== undefined) {
       // Resolve new endpoints
-      const newSource = updates.data.source ?? 
+      const newSource = updates.source ?? 
         (tracking.sourceNodeId ? tracking.sourceNodeId : tracking.sourcePoint!);
-      const newTarget = updates.data.target ?? 
+      const newTarget = updates.target ?? 
         (tracking.targetNodeId ? tracking.targetNodeId : tracking.targetPoint!);
       
       const { point: sourcePoint, nodeId: sourceNodeId, node: sourceNode } = 
@@ -484,14 +539,14 @@ export class Renderer {
   /**
    * Add multiple nodes at once
    */
-  addNodes(inputs: NodeData[]): NodeShapeBase[] {
+  addNodes(inputs: NodeInput[]): NodeShapeBase[] {
     return inputs.map(input => this.addNode(input));
   }
 
   /**
    * Add multiple edges at once
    */
-  addEdges(inputs: EdgeData[]): EdgeShapeBase[] {
+  addEdges(inputs: EdgeInput[]): EdgeShapeBase[] {
     return inputs.map(input => this.addEdge(input));
   }
 
@@ -520,7 +575,7 @@ export class Renderer {
   selectNode(id: string): void {
     const node = this._nodes.get(id);
     if (node) {
-      node.selected = true;
+      node.setState(NodeStates.SELECTED, true);
     }
   }
 
@@ -530,7 +585,7 @@ export class Renderer {
   deselectNode(id: string): void {
     const node = this._nodes.get(id);
     if (node) {
-      node.selected = false;
+      node.setState(NodeStates.SELECTED, false);
     }
   }
 
@@ -540,7 +595,7 @@ export class Renderer {
   selectEdge(id: string): void {
     const tracking = this._edges.get(id);
     if (tracking) {
-      tracking.edge.selected = true;
+      tracking.edge.setState(EdgeStates.SELECTED, true);
     }
   }
 
@@ -550,7 +605,7 @@ export class Renderer {
   deselectEdge(id: string): void {
     const tracking = this._edges.get(id);
     if (tracking) {
-      tracking.edge.selected = false;
+      tracking.edge.setState(EdgeStates.SELECTED, false);
     }
   }
 
@@ -559,10 +614,10 @@ export class Renderer {
    */
   clearSelection(): void {
     for (const node of this._nodes.values()) {
-      node.selected = false;
+      node.setState(NodeStates.SELECTED, false);
     }
     for (const tracking of this._edges.values()) {
-      tracking.edge.selected = false;
+      tracking.edge.setState(EdgeStates.SELECTED, false);
     }
   }
 
