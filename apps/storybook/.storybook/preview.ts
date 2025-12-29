@@ -21,11 +21,7 @@ const preview: Preview = {
     },
     docs: {
       source: {
-        type: 'dynamic',
-        transform: (code: string) => {
-          // Prevent Storybook from discarding the panel
-          return code || '<!-- rendered via DOM -->';
-        },
+        type: 'code',
       },
     },
   },

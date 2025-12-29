@@ -6,6 +6,9 @@ const config: StorybookConfig = {
     "@storybook/addon-links",
     "@storybook/addon-docs"
   ],
+  docs: {
+    defaultName: 'Docs',
+  },
   framework: {
     name: '@storybook/html-vite',
     options: {},
