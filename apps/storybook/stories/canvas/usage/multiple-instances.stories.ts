@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { Canvas, type CanvasNodeData,
    CanvasOptions, NodeStates } from '@invana/canvas-core';
-import { createContainer } from '../../../src/div-utils';
+import { createContainer, createCanvasSection } from '../../../src/div-utils';
 
 const meta: Meta = {
   title: 'Canvas/usage',
@@ -19,13 +19,18 @@ export const MultipleInstances: Story = {
   },
   render: () => {
     const container = createContainer({ height: "600px", id: 'big-container' });
-    container.style.display = "flex";
-    container.style.flexDirection = "grid";
+    container.style.display = "grid";
+    container.style.gridTemplateColumns = "1fr 1fr";
+    container.style.gridTemplateRows = "1fr 1fr";
+    container.style.gap = "20px";
+    container.style.padding = "20px";
+    container.style.backgroundColor = "#f5f5f5";
 
-    const container1 = createContainer({ height: "600px", width: "50%", id: 'canvas-example-1', title: "Canvas 1" });
-    container.appendChild(container1);
-    const container2 = createContainer({ height: "600px", width: "50%", id: 'canvas-example-2', title: "Canvas 2" });
-    container.appendChild(container2);
+    const container1 = createCanvasSection(container, 'canvas-example-1', 'Canvas 1', 'First canvas instance');
+    const container2 = createCanvasSection(container, 'canvas-example-2', 'Canvas 2', 'Second canvas instance');
+
+    if (container1) container1.style.height = "600px";
+    if (container2) container2.style.height = "600px";
 
     // const container3 = createContainer({ height: "600px", width: "50%", id: 'canvas-example-3', title: "Canvas 3" });
     // container.appendChild(container3);
