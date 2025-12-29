@@ -204,7 +204,7 @@ const nodeLayer = nodeGroup.getLayer('shapes');
 **New capability!** You can now extend Canvas:
 
 ```typescript
-import type { Canvas, CanvasPlugin } from '@aspect-ui/canvas-core';
+import type { Canvas, CanvasPlugin } from '@invana/canvas-core';
 
 export class MyPlugin implements CanvasPlugin {
   readonly id = 'my-plugin';
@@ -249,7 +249,7 @@ await canvas.registerPlugin(new MyPlugin());
 ### Basic Usage
 
 ```typescript
-import { Canvas } from '@aspect-ui/canvas-core';
+import { Canvas } from '@invana/canvas-core';
 
 const canvas = new Canvas({ container });
 await canvas.init();
@@ -271,7 +271,7 @@ canvas.layerManager.setGroupVisibility('core-edges', false);
 ### With Groups Plugin
 
 ```typescript
-import { Canvas, GroupsPlugin } from '@aspect-ui/canvas-core';
+import { Canvas, GroupsPlugin } from '@invana/canvas-core';
 
 const canvas = new Canvas({ container });
 await canvas.init();
@@ -299,7 +299,7 @@ groupsPlugin.addGroup({
 ### Multiple Plugins
 
 ```typescript
-import { Canvas, GroupsPlugin } from '@aspect-ui/canvas-core';
+import { Canvas, GroupsPlugin } from '@invana/canvas-core';
 import { AnnotationsPlugin } from '@my-org/annotations';
 import { MiniMapPlugin } from '@my-org/minimap';
 
@@ -323,7 +323,7 @@ await canvas.registerPlugins([
 ### Build Status ✅
 ```bash
 pnpm build
-# ✓ @aspect-ui/canvas-core built successfully
+# ✓ @invana/canvas-core built successfully
 # ✓ storybook built successfully
 # ✓ All TypeScript errors resolved
 ```

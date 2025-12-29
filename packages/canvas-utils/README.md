@@ -1,4 +1,4 @@
-# @aspect-ui/canvas-utils
+# @invana/canvas-utils
 
 Shared utilities for canvas packages.
 
@@ -11,7 +11,7 @@ Shared utilities for canvas packages.
 ## Installation
 
 ```bash
-pnpm add @aspect-ui/canvas-utils
+pnpm add @invana/canvas-utils
 ```
 
 ## Usage
@@ -19,7 +19,7 @@ pnpm add @aspect-ui/canvas-utils
 ### Vector Operations
 
 ```typescript
-import { vec2 } from '@aspect-ui/canvas-utils';
+import { vec2 } from '@invana/canvas-utils';
 
 const a = vec2.create(10, 20);
 const b = vec2.create(30, 40);
@@ -33,7 +33,7 @@ const midpoint = vec2.midpoint(a, b); // { x: 20, y: 30 }
 ### Math Utilities
 
 ```typescript
-import { math } from '@aspect-ui/canvas-utils';
+import { math } from '@invana/canvas-utils';
 
 math.clamp(15, 0, 10);         // 10
 math.lerp(0, 100, 0.5);        // 50
@@ -45,7 +45,7 @@ math.random(10, 20);           // random between 10-20
 ### Color Utilities
 
 ```typescript
-import { color } from '@aspect-ui/canvas-utils';
+import { color } from '@invana/canvas-utils';
 
 color.hexToRgb('#ff0000');     // { r: 255, g: 0, b: 0 }
 color.rgbToHex(255, 0, 0);     // '#ff0000'

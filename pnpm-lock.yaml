@@ -20,10 +20,10 @@ importers:
 
   apps/storybook:
     dependencies:
-      '@aspect-ui/canvas-core':
+      '@invana/canvas-core':
         specifier: workspace:*
         version: link:../../packages/canvas-core
-      '@aspect-ui/canvas-utils':
+      '@invana/canvas-utils':
         specifier: workspace:*
         version: link:../../packages/canvas-utils
     devDependencies:

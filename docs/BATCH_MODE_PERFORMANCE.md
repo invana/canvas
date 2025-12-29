@@ -15,7 +15,7 @@ Batch mode defers all rendering until you're done making changes, then renders e
 #### For Nodes
 
 ```typescript
-import { NodeShapeBase } from '@aspect-ui/canvas-core';
+import { NodeShapeBase } from '@invana/canvas-core';
 
 // Highlight 1000+ neighbors
 const neighbors = getNeighborNodes(selectedNode);
@@ -37,7 +37,7 @@ console.log(`Updated ${updatedCount} nodes`);
 #### For Edges
 
 ```typescript
-import { EdgeShapeBase } from '@aspect-ui/canvas-core';
+import { EdgeShapeBase } from '@invana/canvas-core';
 
 // Highlight edges connected to selected nodes
 const edges = getConnectedEdges(selectedNodes);

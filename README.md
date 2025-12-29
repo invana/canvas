@@ -1,4 +1,4 @@
-# @aspect-ui/canvas
+# @invana/canvas
 
 High-performance WebGPU-first canvas rendering engine and visualization toolkit.
 
@@ -6,8 +6,8 @@ High-performance WebGPU-first canvas rendering engine and visualization toolkit.
 
 | Package | Description |
 |---------|-------------|
-| [@aspect-ui/canvas-core](./packages/canvas-core) | Core rendering engine with WebGPU/WebGL support |
-| [@aspect-ui/canvas-utils](./packages/canvas-utils) | Shared utilities (math, color, etc.) |
+| [@invana/canvas-core](./packages/canvas-core) | Core rendering engine with WebGPU/WebGL support |
+| [@invana/canvas-utils](./packages/canvas-utils) | Shared utilities (math, color, etc.) |
 
 ## Quick Start
 

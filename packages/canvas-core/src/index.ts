@@ -1,5 +1,5 @@
 /**
- * @aspect-ui/canvas-core
+ * @invana/canvas-core
  * 
  * High-performance canvas rendering engine with WebGPU-first design.
  * 
@@ -43,7 +43,7 @@
  * ## Quick Start
  * 
  * ```typescript
- * import { Canvas } from '@aspect-ui/canvas-core';
+ * import { Canvas } from '@invana/canvas-core';
  * 
  * const canvas = new Canvas({
  *   container: document.getElementById('app')!,

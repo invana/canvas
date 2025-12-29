@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, NodeStates, EdgeStates } from '@aspect-ui/canvas-core';
+import { Canvas, NodeStates, EdgeStates } from '@invana/canvas-core';
 
 const meta: Meta = {
   title: 'State Management/Beautiful Examples',

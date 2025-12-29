@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas } from '@aspect-ui/canvas-core';
+import { Canvas } from '@invana/canvas-core';
 
 interface CornerRadiusArgs {
   backgroundColor: string;

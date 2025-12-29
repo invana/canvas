@@ -11,8 +11,8 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@aspect-ui/canvas-core": "workspace:*",
-    "@aspect-ui/canvas-utils": "workspace:*"
+    "@invana/canvas-core": "workspace:*",
+    "@invana/canvas-utils": "workspace:*"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

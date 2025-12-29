@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, type CanvasData, NodeShape } from '@aspect-ui/canvas-core';
+import { Canvas, type CanvasData, NodeShape } from '@invana/canvas-core';
 
 interface AnimationsArgs {
   backgroundColor: string;

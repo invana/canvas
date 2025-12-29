@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas } from '@aspect-ui/canvas-core';
+import { Canvas } from '@invana/canvas-core';
 import {
   DEFAULT_NODE_STYLE,
   DEFAULT_EDGE_STYLE,
@@ -8,7 +8,7 @@ import {
   EDGE_STROKE_PRESETS,
   mergeNodeStyle,
   mergeEdgeStyle,
-} from '@aspect-ui/canvas-core';
+} from '@invana/canvas-core';
 
 const meta: Meta = {
   title: 'Core/Centralized Defaults',
@@ -323,7 +323,7 @@ export const DefaultsReference: Story = {
           <h2>🛠️ Utility Functions</h2>
           
           <h3>mergeNodeStyle(userStyle)</h3>
-          <pre><code>import { mergeNodeStyle } from '@aspect-ui/canvas-core';
+          <pre><code>import { mergeNodeStyle } from '@invana/canvas-core';
 
 const style = mergeNodeStyle({
   fill: 0x1890ff,
@@ -332,7 +332,7 @@ const style = mergeNodeStyle({
 });</code></pre>
 
           <h3>mergeEdgeStyle(userStyle)</h3>
-          <pre><code>import { mergeEdgeStyle } from '@aspect-ui/canvas-core';
+          <pre><code>import { mergeEdgeStyle } from '@invana/canvas-core';
 
 const style = mergeEdgeStyle({
   stroke: '#ff4d4f',
@@ -340,7 +340,7 @@ const style = mergeEdgeStyle({
 });</code></pre>
 
           <h3>mergeNodeStateStyles(userStates)</h3>
-          <pre><code>import { mergeNodeStateStyles } from '@aspect-ui/canvas-core';
+          <pre><code>import { mergeNodeStateStyles } from '@invana/canvas-core';
 
 const states = mergeNodeStateStyles({
   selected: { strokeWidth: 12 },

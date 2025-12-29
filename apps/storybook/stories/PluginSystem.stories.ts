@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, GroupsPlugin } from '@aspect-ui/canvas-core';
+import { Canvas, GroupsPlugin } from '@invana/canvas-core';
 
 const meta: Meta = {
   title: 'Core/Plugin System',

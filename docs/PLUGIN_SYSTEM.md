@@ -118,7 +118,7 @@ interface LayerGroupConfig {
 ### Creating a Plugin
 
 ```typescript
-import type { Canvas, CanvasPlugin } from '@aspect-ui/canvas-core';
+import type { Canvas, CanvasPlugin } from '@invana/canvas-core';
 import { Container, Graphics } from 'pixi.js';
 
 export class MyPlugin implements CanvasPlugin {
@@ -150,7 +150,7 @@ export class MyPlugin implements CanvasPlugin {
 ### Using Plugins
 
 ```typescript
-import { Canvas, GroupsPlugin } from '@aspect-ui/canvas-core';
+import { Canvas, GroupsPlugin } from '@invana/canvas-core';
 
 const canvas = new Canvas({
   container: document.getElementById('app')!,
@@ -205,7 +205,7 @@ canvas.unregisterPlugin('my-plugin');
 The `GroupsPlugin` demonstrates the plugin system by adding group/cluster functionality.
 
 ```typescript
-import { Canvas, GroupsPlugin } from '@aspect-ui/canvas-core';
+import { Canvas, GroupsPlugin } from '@invana/canvas-core';
 
 const canvas = new Canvas({ container });
 await canvas.init();
@@ -344,20 +344,20 @@ export type {
   CanvasPlugin,
   LayerGroupConfig,
   PluginRegistrationOptions
-} from '@aspect-ui/canvas-core';
+} from '@invana/canvas-core';
 
 // Layer types
 export {
   Layer,
   LayerGroup,
   LayerManager
-} from '@aspect-ui/canvas-core';
+} from '@invana/canvas-core';
 
 // Example plugin
 export {
   GroupsPlugin,
   type GroupConfig
-} from '@aspect-ui/canvas-core';
+} from '@invana/canvas-core';
 ```
 
 ## Examples
@@ -422,4 +422,4 @@ export class MyPlugin implements CanvasPlugin {
 
 ## License
 
-Part of @aspect-ui/canvas-core package.
+Part of @invana/canvas-core package.

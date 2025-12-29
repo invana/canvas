@@ -1,5 +1,5 @@
 /**
- * @aspect-ui/canvas-utils
+ * @invana/canvas-utils
  *
  * Shared utilities for canvas packages
  */

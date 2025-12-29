@@ -171,14 +171,14 @@ const node = new NodeShape({
 
 ### After (Centralized Defaults)
 ```typescript
-import { DEFAULT_NODE_STYLE } from '@aspect-ui/canvas-core';
+import { DEFAULT_NODE_STYLE } from '@invana/canvas-core';
 
 const node = new NodeShape({
   style: DEFAULT_NODE_STYLE,
 });
 
 // Or customize specific properties
-import { mergeNodeStyle } from '@aspect-ui/canvas-core';
+import { mergeNodeStyle } from '@invana/canvas-core';
 
 const node = new NodeShape({
   style: mergeNodeStyle({ 

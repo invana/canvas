@@ -1,4 +1,4 @@
-# @aspect-ui/canvas-core
+# @invana/canvas-core
 
 High-performance WebGPU-first canvas rendering engine for graph visualization.
 
@@ -17,13 +17,13 @@ High-performance WebGPU-first canvas rendering engine for graph visualization.
 ## Installation
 
 ```bash
-pnpm add @aspect-ui/canvas-core
+pnpm add @invana/canvas-core
 ```
 
 ## Quick Start
 
 ```typescript
-import { Canvas } from '@aspect-ui/canvas-core';
+import { Canvas } from '@invana/canvas-core';
 
 // Create canvas
 const canvas = new Canvas('#container', {

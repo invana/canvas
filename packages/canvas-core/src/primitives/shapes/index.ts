@@ -6,7 +6,7 @@
  * 
  * Usage:
  * ```typescript
- * import { drawCircle, drawRect, drawPolygon } from '@aspect-ui/canvas-core/primitives';
+ * import { drawCircle, drawRect, drawPolygon } from '@invana/canvas-core/primitives';
  * 
  * // Draw a circle
  * drawCircle(graphics, { x: 0, y: 0, radius: 20 }, { fill: '#4CAF50', stroke: '#2E7D32' });

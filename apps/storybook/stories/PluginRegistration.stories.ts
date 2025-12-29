@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, type CanvasNodeData, type CanvasOptions } from '@aspect-ui/canvas-core';
+import { Canvas, type CanvasNodeData, type CanvasOptions } from '@invana/canvas-core';
 import { getFullHeightContainer } from '../src/div-utils';
 
 const meta: Meta = {

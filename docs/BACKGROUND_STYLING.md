@@ -15,7 +15,7 @@ The canvas now supports rich background styling options including:
 ### Basic Usage
 
 ```typescript
-import { Canvas } from '@aspect-ui/canvas-core';
+import { Canvas } from '@invana/canvas-core';
 
 const canvas = new Canvas({
   container: document.getElementById('app'),

@@ -17,7 +17,7 @@ The fill system provides low-level primitives that can be used directly by nodes
 ### High-Level API (Shapes)
 ```typescript
 // Used by shape drawing functions
-import { applyShapeFill } from '@aspect-ui/canvas-core/primitives/fills';
+import { applyShapeFill } from '@invana/canvas-core/primitives/fills';
 
 // Automatically handles fill from ShapeStyle
 applyShapeFill(graphics, style, bounds);
@@ -33,7 +33,7 @@ import {
   createRadialGradient,
   createLineGradient,
   createPointGradient,
-} from '@aspect-ui/canvas-core/primitives/fills';
+} from '@invana/canvas-core/primitives/fills';
 
 // Linear gradient for a node
 const gradient = createLinearGradient(
@@ -75,7 +75,7 @@ import {
   loadImageTexture,
   applyImageFillPrimitive,
   calculateImageMatrix,
-} from '@aspect-ui/canvas-core/primitives/fills';
+} from '@invana/canvas-core/primitives/fills';
 
 // Pre-load texture
 const texture = await loadImageTexture('https://example.com/image.png');
@@ -95,7 +95,7 @@ applyImageFillPrimitive(graphics, texture, bounds, {
 ### Node with Linear Gradient
 
 ```typescript
-import { createLinearGradient } from '@aspect-ui/canvas-core/primitives/fills';
+import { createLinearGradient } from '@invana/canvas-core/primitives/fills';
 
 class CustomNode extends NodeShapeBase {
   protected render(): void {
@@ -125,7 +125,7 @@ class CustomNode extends NodeShapeBase {
 ### Edge with Gradient
 
 ```typescript
-import { createLineGradient } from '@aspect-ui/canvas-core/primitives/fills';
+import { createLineGradient } from '@invana/canvas-core/primitives/fills';
 
 class GradientEdge extends EdgeShapeBase {
   protected drawPath(source: Point, target: Point, style: EdgeStyle): void {
@@ -151,7 +151,7 @@ class GradientEdge extends EdgeShapeBase {
 ### Node with Image Fill
 
 ```typescript
-import { loadImageTexture, applyImageFillPrimitive } from '@aspect-ui/canvas-core/primitives/fills';
+import { loadImageTexture, applyImageFillPrimitive } from '@invana/canvas-core/primitives/fills';
 
 class AvatarNode extends NodeShapeBase {
   private texture?: Texture;
@@ -185,7 +185,7 @@ class AvatarNode extends NodeShapeBase {
 ### Node with Radial Gradient
 
 ```typescript
-import { createRadialGradient } from '@aspect-ui/canvas-core/primitives/fills';
+import { createRadialGradient } from '@invana/canvas-core/primitives/fills';
 
 class GlowNode extends NodeShapeBase {
   protected render(): void {

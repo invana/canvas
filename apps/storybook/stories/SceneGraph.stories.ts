@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, type CanvasData } from '@aspect-ui/canvas-core';
+import { Canvas, type CanvasData } from '@invana/canvas-core';
 
 const meta: Meta = {
   title: 'Core/State',

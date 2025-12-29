@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, NodeStates } from '@aspect-ui/canvas-core';
+import { Canvas, NodeStates } from '@invana/canvas-core';
 
 const meta: Meta = {
   title: 'Visual Gallery/Halo Effect',

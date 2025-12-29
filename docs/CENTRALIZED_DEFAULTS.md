@@ -94,7 +94,7 @@ Per-state style overrides:
 #### 6. Complete Node Style (`DEFAULT_NODE_STYLE`)
 All configurations combined - use this as your base:
 ```typescript
-import { DEFAULT_NODE_STYLE } from '@aspect-ui/canvas-core';
+import { DEFAULT_NODE_STYLE } from '@invana/canvas-core';
 
 const node = new NodeShape({
   data: { id: 'node1', x: 100, y: 100 },
@@ -229,7 +229,7 @@ Pre-configured label styles for different use cases:
 
 ### Example 1: Using Complete Defaults
 ```typescript
-import { Canvas, DEFAULT_NODE_STYLE, DEFAULT_EDGE_STYLE } from '@aspect-ui/canvas-core';
+import { Canvas, DEFAULT_NODE_STYLE, DEFAULT_EDGE_STYLE } from '@invana/canvas-core';
 
 const canvas = new Canvas({
   container: document.getElementById('app')!,
@@ -254,7 +254,7 @@ const edge = canvas.addEdge({
 
 ### Example 2: Customizing Specific Properties
 ```typescript
-import { mergeNodeStyle, DEFAULT_NODE_STYLE } from '@aspect-ui/canvas-core';
+import { mergeNodeStyle, DEFAULT_NODE_STYLE } from '@invana/canvas-core';
 
 // Override only what you need
 const customStyle = mergeNodeStyle({
@@ -277,7 +277,7 @@ const node = canvas.addNode({
 
 ### Example 3: Custom State Styling
 ```typescript
-import { mergeNodeStateStyles } from '@aspect-ui/canvas-core';
+import { mergeNodeStateStyles } from '@invana/canvas-core';
 
 const customStates = mergeNodeStateStyles({
   // Override selected state
@@ -304,7 +304,7 @@ const node = canvas.addNode({
 
 ### Example 4: Using Label Variants
 ```typescript
-import { LABEL_VARIANTS } from '@aspect-ui/canvas-core';
+import { LABEL_VARIANTS } from '@invana/canvas-core';
 
 // Use pre-configured label styles
 const node = canvas.addNode({
@@ -320,7 +320,7 @@ const node = canvas.addNode({
 
 ### Example 5: Using Edge Stroke Presets
 ```typescript
-import { EDGE_STROKE_PRESETS } from '@aspect-ui/canvas-core';
+import { EDGE_STROKE_PRESETS } from '@invana/canvas-core';
 
 const edge = canvas.addEdge({
   id: 'edge1',
@@ -399,14 +399,14 @@ const node = new NodeShape({
 ### After
 ```typescript
 // Use centralized defaults
-import { DEFAULT_NODE_STYLE } from '@aspect-ui/canvas-core';
+import { DEFAULT_NODE_STYLE } from '@invana/canvas-core';
 
 const node = new NodeShape({
   style: DEFAULT_NODE_STYLE,
 });
 
 // Or customize specific properties
-import { mergeNodeStyle } from '@aspect-ui/canvas-core';
+import { mergeNodeStyle } from '@invana/canvas-core';
 
 const node = new NodeShape({
   style: mergeNodeStyle({ fill: 0x1890ff }),

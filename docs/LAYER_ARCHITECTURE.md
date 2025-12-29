@@ -494,7 +494,7 @@ canvas.layerManager.getLayer('core-nodes', 'labels')!.visible = false; // Hide o
 ### With Groups Plugin
 
 ```typescript
-import { GroupsPlugin } from '@aspect-ui/canvas-groups';
+import { GroupsPlugin } from '@invana/canvas-groups';
 
 const canvas = new Canvas({ container: document.getElementById('app')! });
 const groupsPlugin = new GroupsPlugin();
@@ -521,7 +521,7 @@ const group1 = groupsPlugin.addGroup({
 ### With Annotations Plugin
 
 ```typescript
-import { AnnotationsPlugin } from '@aspect-ui/canvas-annotations';
+import { AnnotationsPlugin } from '@invana/canvas-annotations';
 
 const canvas = new Canvas({ container: document.getElementById('app')! });
 const annotPlugin = new AnnotationsPlugin();
@@ -650,8 +650,8 @@ node.updateStyle(); // Only modifies shape layer
 - [ ] Tests for plugin registration
 
 ### Phase 4: Example Plugins (3-4 days)
-- [ ] Create `@aspect-ui/canvas-groups` package
-- [ ] Create `@aspect-ui/canvas-annotations` package
+- [ ] Create `@invana/canvas-groups` package
+- [ ] Create `@invana/canvas-annotations` package
 - [ ] Documentation for plugin development
 - [ ] Example plugin templates
 
