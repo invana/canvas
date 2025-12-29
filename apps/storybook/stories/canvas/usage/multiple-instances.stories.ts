@@ -19,12 +19,19 @@ export const MultipleInstances: Story = {
   },
   render: () => {
     const container = createContainer({ height: "600px", id: 'big-container' });
+    container.style.display = "flex";
+    container.style.flexDirection = "grid";
+
     const container1 = createContainer({ height: "600px", width: "50%", id: 'canvas-example-1', title: "Canvas 1" });
     container.appendChild(container1);
     const container2 = createContainer({ height: "600px", width: "50%", id: 'canvas-example-2', title: "Canvas 2" });
     container.appendChild(container2);
 
+    // const container3 = createContainer({ height: "600px", width: "50%", id: 'canvas-example-3', title: "Canvas 3" });
+    // container.appendChild(container3);
 
+    // const container4 = createContainer({ height: "600px", width: "50%", id: 'canvas-example-4', title: "Canvas 4" });
+    //   container.appendChild(container4);
 
     return container;
   },
@@ -34,6 +41,8 @@ export const MultipleInstances: Story = {
     
     const container1 = document.getElementById('canvas-example-1');
     const container2 = document.getElementById('canvas-example-2');
+    // const container3 = document.getElementById('canvas-example-3');
+    // const container4 = document.getElementById('canvas-example-4');
     if (!container1 || !container2) return;
     console.log('Containers found, initializing canvases');
 

@@ -28,7 +28,7 @@ export const createContainer = ({
     container.style.height = height;
     container.style.overflow = 'hidden';
     container.style.border = "2px solid #CCC";
-    container.style.display = "flex";
+
     if (title) {
         const titleElement = document.createElement('h3');
         titleElement.innerText = title;

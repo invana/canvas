@@ -47,6 +47,7 @@ export const SimpleUsage: Story = {
 
     const options: CanvasOptions = {
       container,
+      behavior: 'full',
       data: { nodes: nodes, edges: [] },
     };
     const canvas = new Canvas(options);
