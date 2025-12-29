@@ -106,7 +106,7 @@ export class Viewport extends PixiViewport {
     if (options.wheelZoom !== false) {
       this.wheel({
         smooth: 3,
-        percent: options.zoomSensitivity ?? 0.1,
+        percent: options.zoomSensitivity ?? 0.02,
       });
     }
 
@@ -116,13 +116,11 @@ export class Viewport extends PixiViewport {
     // Add decelerate for smooth panning
     this.decelerate();
 
-    // Set zoom constraints
-    if (options.minZoom !== undefined || options.maxZoom !== undefined) {
-      this.clampZoom({
-        minScale: options.minZoom ?? 0.1,
-        maxScale: options.maxZoom ?? 10,
-      });
-    }
+    // Always set zoom constraints to prevent losing nodes
+    this.clampZoom({
+      minScale: options.minZoom ?? 0.02,
+      maxScale: options.maxZoom ?? 5,
+    });
 
     // Set initial position and zoom
     if (options.initialZoom !== undefined) {

@@ -42,8 +42,8 @@ export const SimpleMiniMapTest: Story = {
         {
           plugin: 'minimap',
           options: {
-            width: 80,
-            height: 60,
+            width: 160,
+            height: 120,
             position: 'bottom-right',
             backgroundColor: '#1a1a1a',
             viewportFill: 0x6096ff,

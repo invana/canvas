@@ -1,18 +1,13 @@
 /**
  * MiniMap Plugin
  * 
- * Bird's eye view navigator for the canvas, inspired by Cytoscape.js Navigator.
+ * Simple bird's eye view of the entire world with viewport indicator.
  * 
- * Key concepts:
- * - The minimap shows a THUMBNAIL of ALL content (nodes) in the world
- * - The VIEW INDICATOR shows what portion of the world is currently visible in the main canvas
- * - Dragging the view indicator pans the main canvas
- * - Clicking outside the view indicator jumps to that location
- * 
- * Coordinate system:
- * - World coordinates: Where nodes actually exist
- * - Thumbnail coordinates: Scaled world coords to fit in minimap panel
- * - View coordinates: The viewport indicator position/size in thumbnail coords
+ * Design:
+ * - Shows ALL nodes in the world, scaled to fit the minimap
+ * - Viewport indicator shows what portion is currently visible on main canvas
+ * - Dragging the indicator pans the main canvas
+ * - Clicking anywhere jumps to that location
  */
 
 import { Application, Graphics, FederatedPointerEvent } from 'pixi.js';
@@ -36,7 +31,7 @@ export interface MiniMapOptions {
   viewportFillAlpha?: number;
   /** Viewport indicator stroke width */
   viewportStrokeWidth?: number;
-  /** Padding around content (as fraction of size) */
+  /** Padding around world content */
   padding?: number;
   /** Enable viewport dragging */
   enableDrag?: boolean;
@@ -44,17 +39,8 @@ export interface MiniMapOptions {
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 }
 
-interface BoundingBox {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  w: number;
-  h: number;
-}
-
 /**
- * MiniMap Plugin - Cytoscape-style navigator
+ * MiniMap Plugin - Simple world overview with viewport indicator
  */
 export class MiniMapPlugin implements CanvasPlugin {
   readonly id = 'minimap';
@@ -67,23 +53,20 @@ export class MiniMapPlugin implements CanvasPlugin {
   
   private _minimapApp: Application | null = null;
   private _minimapContainer: HTMLElement | null = null;
-  private _thumbnailGraphics: Graphics | null = null;
-  private _viewGraphics: Graphics | null = null;
+  private _worldGraphics: Graphics | null = null;
+  private _viewportGraphics: Graphics | null = null;
   
-  // Cached values (like Cytoscape navigator)
-  private _boundingBox: BoundingBox = { x1: 0, y1: 0, x2: 100, y2: 100, w: 100, h: 100 };
-  private _thumbnailZoom: number = 1;
-  private _thumbnailPan: { x: number; y: number } = { x: 0, y: 0 };
+  // World bounds (fixed based on node positions)
+  private _worldBounds = { x: 0, y: 0, width: 1000, height: 1000 };
   
-  // View indicator values
-  private _viewW: number = 0;
-  private _viewH: number = 0;
-  private _viewX: number = 0;
-  private _viewY: number = 0;
+  // Scale factor to fit world into minimap
+  private _scale: number = 1;
+  private _offsetX: number = 0;
+  private _offsetY: number = 0;
   
   // Interaction state
   private _isDragging = false;
-  private _hookPoint: { x: number; y: number } = { x: 0, y: 0 };
+  private _dragOffset = { x: 0, y: 0 };
 
   constructor(options: MiniMapOptions = {}) {
     this._options = {
@@ -92,9 +75,9 @@ export class MiniMapPlugin implements CanvasPlugin {
       backgroundColor: options.backgroundColor ?? 0x1a1a2e,
       viewportFill: options.viewportFill ?? 0x4a90d9,
       viewportStroke: options.viewportStroke ?? 0x2a70b9,
-      viewportFillAlpha: options.viewportFillAlpha ?? 0.25,
+      viewportFillAlpha: options.viewportFillAlpha ?? 0.3,
       viewportStrokeWidth: options.viewportStrokeWidth ?? 2,
-      padding: options.padding ?? 0.1, // 10% padding
+      padding: options.padding ?? 20,
       enableDrag: options.enableDrag ?? true,
       position: options.position ?? 'bottom-right',
     };
@@ -108,27 +91,34 @@ export class MiniMapPlugin implements CanvasPlugin {
       throw new Error('Viewport is required for MiniMapPlugin');
     }
 
-    // Create container
+    // Create container element
     this._minimapContainer = this.createContainer();
     
     // Initialize PixiJS application for minimap
     this._minimapApp = new Application();
+    const resolution = window.devicePixelRatio || 1;
     await this._minimapApp.init({
       width: this._options.width,
       height: this._options.height,
       backgroundColor: this._options.backgroundColor,
       antialias: true,
-      resolution: window.devicePixelRatio || 1,
+      resolution: resolution,
+      autoDensity: true, // Automatically adjusts CSS size for resolution
     });
 
-    this._minimapContainer.appendChild(this._minimapApp.canvas);
+    // Ensure canvas has correct CSS dimensions
+    const minimapCanvas = this._minimapApp.canvas as HTMLCanvasElement;
+    minimapCanvas.style.width = `${this._options.width}px`;
+    minimapCanvas.style.height = `${this._options.height}px`;
+
+    this._minimapContainer.appendChild(minimapCanvas);
 
     // Create graphics layers
-    this._thumbnailGraphics = new Graphics();
-    this._viewGraphics = new Graphics();
+    this._worldGraphics = new Graphics();
+    this._viewportGraphics = new Graphics();
     
-    this._minimapApp.stage.addChild(this._thumbnailGraphics);
-    this._minimapApp.stage.addChild(this._viewGraphics);
+    this._minimapApp.stage.addChild(this._worldGraphics);
+    this._minimapApp.stage.addChild(this._viewportGraphics);
 
     // Setup interactions
     if (this._options.enableDrag) {
@@ -140,12 +130,11 @@ export class MiniMapPlugin implements CanvasPlugin {
       this._minimapApp.stage.on('pointerupoutside', this.onPointerUp);
     }
 
-    // Use ticker for reactive updates
-    this._minimapApp.ticker.add(this.update, this);
+    // Calculate initial world bounds
+    this.calculateWorldBounds();
 
-    // Initial setup
-    this.setupThumbnail();
-    this.renderThumbnail();
+    // Start render loop
+    this._minimapApp.ticker.add(this.render, this);
   }
 
   /**
@@ -189,96 +178,88 @@ export class MiniMapPlugin implements CanvasPlugin {
   }
 
   /**
-   * Get bounding box of all nodes in world coordinates
-   * Similar to Cytoscape's cy.elements().boundingBox()
-   * 
-   * We calculate a fixed world bounds based on node positions,
-   * NOT including the viewport. The viewport indicator shows what
-   * portion of this world is currently visible.
+   * Calculate the world bounds from viewport's world dimensions
+   * This shows the ENTIRE world, not just where nodes are
    */
-  private getBoundingBox(): BoundingBox {
-    const nodes = this._canvas?.renderer.getNodes() ?? [];
-    
-    if (nodes.length === 0) {
-      // Default bounds if no nodes
-      return { x1: -500, y1: -500, x2: 500, y2: 500, w: 1000, h: 1000 };
+  private calculateWorldBounds(): void {
+    if (!this._viewport) {
+      this._worldBounds = { x: -500, y: -500, width: 1000, height: 1000 };
+      this.calculateScale();
+      return;
     }
 
-    let x1 = Infinity;
-    let y1 = Infinity;
-    let x2 = -Infinity;
-    let y2 = -Infinity;
-
-    // Include all nodes
-    nodes.forEach(node => {
-      const size = (node.data.size ?? 30) / 2;
-      x1 = Math.min(x1, node.x - size);
-      y1 = Math.min(y1, node.y - size);
-      x2 = Math.max(x2, node.x + size);
-      y2 = Math.max(y2, node.y + size);
-    });
-
-    // Add significant padding (50% on each side) so there's always
-    // room around the content for panning
-    const w = x2 - x1;
-    const h = y2 - y1;
-    const padX = Math.max(w * 0.5, 200); // At least 200px padding
-    const padY = Math.max(h * 0.5, 200);
+    // Use the viewport's world dimensions - this is the entire navigable world
+    const worldWidth = this._viewport.worldWidth;
+    const worldHeight = this._viewport.worldHeight;
     
-    x1 -= padX;
-    y1 -= padY;
-    x2 += padX;
-    y2 += padY;
+    // Center the world at origin (0,0)
+    this._worldBounds = {
+      x: -worldWidth / 2,
+      y: -worldHeight / 2,
+      width: worldWidth,
+      height: worldHeight,
+    };
 
+    this.calculateScale();
+  }
+
+  /**
+   * Calculate scale and offset to fit world into minimap
+   */
+  private calculateScale(): void {
+    const { width, height } = this._options;
+    const world = this._worldBounds;
+
+    // Calculate scale to fit world in minimap (maintain aspect ratio)
+    const scaleX = width / world.width;
+    const scaleY = height / world.height;
+    this._scale = Math.min(scaleX, scaleY) * 0.9; // 90% to leave margin
+
+    // Calculate offset to center the world in minimap
+    const scaledWidth = world.width * this._scale;
+    const scaledHeight = world.height * this._scale;
+    this._offsetX = (width - scaledWidth) / 2;
+    this._offsetY = (height - scaledHeight) / 2;
+  }
+
+  /**
+   * Convert world coordinates to minimap coordinates
+   */
+  private worldToMinimap(worldX: number, worldY: number): { x: number; y: number } {
     return {
-      x1, y1, x2, y2,
-      w: x2 - x1,
-      h: y2 - y1,
+      x: (worldX - this._worldBounds.x) * this._scale + this._offsetX,
+      y: (worldY - this._worldBounds.y) * this._scale + this._offsetY,
     };
   }
 
   /**
-   * Setup thumbnail zoom and pan to fit all content
-   * Like Cytoscape's _setupThumbnailSizes
+   * Convert minimap coordinates to world coordinates
    */
-  private setupThumbnail(): void {
-    // Update bounding box
-    this._boundingBox = this.getBoundingBox();
-
-    // Calculate zoom to fit content in panel
-    this._thumbnailZoom = Math.min(
-      this._options.height / this._boundingBox.h,
-      this._options.width / this._boundingBox.w
-    );
-
-    // Calculate pan to center content
-    this._thumbnailPan = {
-      x: (this._options.width - this._thumbnailZoom * (this._boundingBox.x1 + this._boundingBox.x2)) / 2,
-      y: (this._options.height - this._thumbnailZoom * (this._boundingBox.y1 + this._boundingBox.y2)) / 2,
-    };
-  }
-
-  /**
-   * Convert world coordinates to thumbnail coordinates
-   */
-  private worldToThumbnail(worldX: number, worldY: number): { x: number; y: number } {
+  private minimapToWorld(minimapX: number, minimapY: number): { x: number; y: number } {
     return {
-      x: worldX * this._thumbnailZoom + this._thumbnailPan.x,
-      y: worldY * this._thumbnailZoom + this._thumbnailPan.y,
+      x: (minimapX - this._offsetX) / this._scale + this._worldBounds.x,
+      y: (minimapY - this._offsetY) / this._scale + this._worldBounds.y,
     };
   }
 
   /**
-   * Render all nodes and edges to the thumbnail
+   * Render loop - draws world and viewport indicator
    */
-  private renderThumbnail(): void {
-    if (!this._canvas || !this._thumbnailGraphics) return;
+  private render = (): void => {
+    this.renderWorld();
+    this.renderViewportIndicator();
+  };
+
+  /**
+   * Render all nodes and edges in the world
+   */
+  private renderWorld(): void {
+    if (!this._worldGraphics || !this._canvas) return;
 
     const nodes = this._canvas.renderer.getNodes();
     const edges = this._canvas.renderer.getEdges();
 
-    // Clear and redraw
-    this._thumbnailGraphics.clear();
+    this._worldGraphics.clear();
 
     // Draw edges
     edges.forEach(edge => {
@@ -286,23 +267,24 @@ export class MiniMapPlugin implements CanvasPlugin {
       const target = nodes.find(n => n.id === edge.data.target?.toString());
       
       if (source && target) {
-        const p1 = this.worldToThumbnail(source.x, source.y);
-        const p2 = this.worldToThumbnail(target.x, target.y);
+        const p1 = this.worldToMinimap(source.x, source.y);
+        const p2 = this.worldToMinimap(target.x, target.y);
         
-        this._thumbnailGraphics!.moveTo(p1.x, p1.y);
-        this._thumbnailGraphics!.lineTo(p2.x, p2.y);
-        this._thumbnailGraphics!.stroke({ width: 1, color: 0x555555 });
+        this._worldGraphics!.moveTo(p1.x, p1.y);
+        this._worldGraphics!.lineTo(p2.x, p2.y);
+        this._worldGraphics!.stroke({ width: 1, color: 0x555555 });
       }
     });
 
     // Draw nodes
     nodes.forEach(node => {
-      const pos = this.worldToThumbnail(node.x, node.y);
-      // Use a small fixed size for minimap nodes (3-6px radius)
-      const radius = Math.max(3, Math.min(6, ((node.data.size ?? 30) / 2) * this._thumbnailZoom * 0.3));
+      const pos = this.worldToMinimap(node.x, node.y);
+      // Use a minimum visible size for nodes (at least 3px, up to 8px)
+      const scaledSize = ((node.data.size ?? 30) / 2) * this._scale;
+      const radius = Math.max(3, Math.min(8, scaledSize * 3)); // Boost visibility
       
       // Get node color
-      let color = 0x4CAF50; // Default green
+      let color = 0x4CAF50;
       if (node.nodeStyle?.fill) {
         const fill = node.nodeStyle.fill;
         if (typeof fill === 'string' && fill.startsWith('#')) {
@@ -312,165 +294,111 @@ export class MiniMapPlugin implements CanvasPlugin {
         }
       }
       
-      this._thumbnailGraphics!.circle(pos.x, pos.y, radius);
-      this._thumbnailGraphics!.fill(color);
+      this._worldGraphics!.circle(pos.x, pos.y, radius);
+      this._worldGraphics!.fill(color);
     });
   }
 
   /**
-   * Setup view indicator position and size
-   * Uses pixi-viewport's getVisibleBounds() for accurate positioning
+   * Render the viewport indicator (shows what's visible on main canvas)
    */
-  private setupView(): void {
-    if (!this._viewport) return;
+  private renderViewportIndicator(): void {
+    if (!this._viewportGraphics || !this._viewport) return;
 
-    // Get the visible world bounds from pixi-viewport
-    // This tells us exactly what part of the world is visible
+    this._viewportGraphics.clear();
+
+    // Get the visible world bounds from viewport
     const visibleBounds = this._viewport.getVisibleBounds();
-    
-    // Convert visible bounds to thumbnail coordinates
-    const topLeft = this.worldToThumbnail(visibleBounds.x, visibleBounds.y);
-    const bottomRight = this.worldToThumbnail(
-      visibleBounds.x + visibleBounds.width, 
+
+    // Convert to minimap coordinates
+    const topLeft = this.worldToMinimap(visibleBounds.x, visibleBounds.y);
+    const bottomRight = this.worldToMinimap(
+      visibleBounds.x + visibleBounds.width,
       visibleBounds.y + visibleBounds.height
     );
-    
-    this._viewX = topLeft.x;
-    this._viewY = topLeft.y;
-    this._viewW = bottomRight.x - topLeft.x;
-    this._viewH = bottomRight.y - topLeft.y;
+
+    const x = topLeft.x;
+    const y = topLeft.y;
+    const w = bottomRight.x - topLeft.x;
+    const h = bottomRight.y - topLeft.y;
+
+    // Draw viewport indicator
+    this._viewportGraphics.rect(x, y, w, h);
+    this._viewportGraphics.fill({
+      color: this._options.viewportFill,
+      alpha: this._options.viewportFillAlpha,
+    });
+    this._viewportGraphics.rect(x, y, w, h);
+    this._viewportGraphics.stroke({
+      width: this._options.viewportStrokeWidth,
+      color: this._options.viewportStroke,
+    });
   }
 
   /**
-   * Render the view indicator
-   */
-  private renderView(): void {
-    if (!this._viewGraphics) return;
-
-    this._viewGraphics.clear();
-    
-    // Clamp view indicator to minimap bounds
-    const x = Math.max(0, Math.min(this._viewX, this._options.width - 2));
-    const y = Math.max(0, Math.min(this._viewY, this._options.height - 2));
-    const w = Math.min(this._viewW, this._options.width - x);
-    const h = Math.min(this._viewH, this._options.height - y);
-    
-    // Only draw if there's something visible
-    if (w > 0 && h > 0) {
-      // Fill
-      this._viewGraphics.rect(x, y, w, h);
-      this._viewGraphics.fill({
-        color: this._options.viewportFill,
-        alpha: this._options.viewportFillAlpha,
-      });
-      
-      // Stroke
-      this._viewGraphics.rect(x, y, w, h);
-      this._viewGraphics.stroke({
-        width: this._options.viewportStrokeWidth,
-        color: this._options.viewportStroke,
-      });
-    }
-  }
-
-  /**
-   * Main update loop - called every frame
-   * Updates both the thumbnail (for node movements) and view indicator
-   */
-  private update = (): void => {
-    // Re-render thumbnail to reflect node position changes
-    this.renderThumbnail();
-    // Update view indicator
-    this.setupView();
-    this.renderView();
-  };
-
-  /**
-   * Move the main canvas viewport based on view indicator position
-   * Converts thumbnail coordinates back to world coordinates and moves viewport
-   */
-  private moveViewport(): void {
-    if (!this._viewport) return;
-
-    // Convert thumbnail position to world coordinates
-    // We want to move the viewport so that this world position is at the top-left of the visible area
-    const worldX = (this._viewX - this._thumbnailPan.x) / this._thumbnailZoom;
-    const worldY = (this._viewY - this._thumbnailPan.y) / this._thumbnailZoom;
-    
-    // Use pixi-viewport's moveCorner to position the viewport's top-left corner at the world position
-    this._viewport.moveCorner(worldX, worldY);
-  }
-
-  /**
-   * Check if point is inside view indicator
-   */
-  private isInsideView(x: number, y: number): boolean {
-    return x >= this._viewX && x <= this._viewX + this._viewW &&
-           y >= this._viewY && y <= this._viewY + this._viewH;
-  }
-
-  /**
-   * Handle pointer down
+   * Handle pointer down - start dragging or jump to location
    */
   private onPointerDown = (event: FederatedPointerEvent): void => {
-    // Get local position within the minimap (event.global is relative to minimap stage)
+    if (!this._viewport) return;
+
     const localPos = event.getLocalPosition(this._minimapApp!.stage);
-    const x = localPos.x;
-    const y = localPos.y;
+    const worldPos = this.minimapToWorld(localPos.x, localPos.y);
+
+    // Get current viewport center
+    const visibleBounds = this._viewport.getVisibleBounds();
+    const viewCenterX = visibleBounds.x + visibleBounds.width / 2;
+    const viewCenterY = visibleBounds.y + visibleBounds.height / 2;
+
+    // Check if clicking inside the viewport indicator
+    const isInsideViewport = 
+      worldPos.x >= visibleBounds.x && 
+      worldPos.x <= visibleBounds.x + visibleBounds.width &&
+      worldPos.y >= visibleBounds.y && 
+      worldPos.y <= visibleBounds.y + visibleBounds.height;
 
     this._isDragging = true;
 
-    if (this.isInsideView(x, y)) {
-      // Started inside view - drag from current position
-      this._hookPoint = {
-        x: x - this._viewX,
-        y: y - this._viewY,
+    if (isInsideViewport) {
+      // Drag from current position
+      this._dragOffset = {
+        x: worldPos.x - viewCenterX,
+        y: worldPos.y - viewCenterY,
       };
     } else {
-      // Started outside view - center view on click point
-      this._hookPoint = {
-        x: this._viewW / 2,
-        y: this._viewH / 2,
-      };
-      // Immediately move view to click position
-      this._viewX = x - this._hookPoint.x;
-      this._viewY = y - this._hookPoint.y;
-      this.moveViewport();
+      // Jump to clicked position
+      this._dragOffset = { x: 0, y: 0 };
+      this._viewport.moveCenter(worldPos.x, worldPos.y);
     }
   };
 
   /**
-   * Handle pointer move
+   * Handle pointer move - drag viewport
    */
   private onPointerMove = (event: FederatedPointerEvent): void => {
-    if (!this._isDragging) return;
+    if (!this._isDragging || !this._viewport) return;
 
-    // Get local position within the minimap
     const localPos = event.getLocalPosition(this._minimapApp!.stage);
-    const x = localPos.x;
-    const y = localPos.y;
+    const worldPos = this.minimapToWorld(localPos.x, localPos.y);
 
-    // Update view position
-    this._viewX = x - this._hookPoint.x;
-    this._viewY = y - this._hookPoint.y;
-
-    // Move viewport
-    this.moveViewport();
+    // Move viewport center to new position (accounting for drag offset)
+    this._viewport.moveCenter(
+      worldPos.x - this._dragOffset.x,
+      worldPos.y - this._dragOffset.y
+    );
   };
 
   /**
-   * Handle pointer up
+   * Handle pointer up - stop dragging
    */
   private onPointerUp = (): void => {
     this._isDragging = false;
   };
 
   /**
-   * Refresh minimap content (call after adding/removing nodes)
+   * Refresh minimap (call after adding/removing nodes)
    */
   refresh(): void {
-    this.setupThumbnail();
-    this.renderThumbnail();
+    this.calculateWorldBounds();
   }
 
   show(): void {
@@ -487,7 +415,7 @@ export class MiniMapPlugin implements CanvasPlugin {
 
   destroy(): void {
     if (this._minimapApp) {
-      this._minimapApp.ticker.remove(this.update, this);
+      this._minimapApp.ticker.remove(this.render, this);
       this._minimapApp.destroy(true);
       this._minimapApp = null;
     }
@@ -498,8 +426,8 @@ export class MiniMapPlugin implements CanvasPlugin {
 
     this._canvas = null;
     this._viewport = null;
-    this._thumbnailGraphics = null;
-    this._viewGraphics = null;
+    this._worldGraphics = null;
+    this._viewportGraphics = null;
     this._minimapContainer = null;
   }
 }
