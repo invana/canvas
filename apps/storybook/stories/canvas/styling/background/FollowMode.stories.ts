@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { Canvas, BackgroundPlugin } from '@invana/canvas-core';
-import type { BackgroundStyle } from '@invana/canvas-core';
 
 const meta: Meta = {
   title: 'Canvas/Styling/Background/FollowMode',
