@@ -28,3 +28,6 @@ export type { HoverActivateOptions, HoverableElement } from './HoverActivatePlug
 
 export { FocusElementPlugin } from './FocusElementPlugin';
 export type { FocusElementOptions, FocusableElement } from './FocusElementPlugin';
+
+export { MiniMapPlugin } from './MiniMapPlugin';
+export type { MiniMapOptions } from './MiniMapPlugin';

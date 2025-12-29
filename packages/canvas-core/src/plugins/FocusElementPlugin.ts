@@ -187,7 +187,7 @@ export class FocusElementPlugin implements CanvasPlugin {
     const startTime = performance.now();
     const startX = this._viewport.content.x;
     const startY = this._viewport.content.y;
-    const startZoom = this._viewport.zoom;
+    const startZoom = this._viewport.scaled;
 
     const animate = (currentTime: number) => {
       if (!this._viewport) return;

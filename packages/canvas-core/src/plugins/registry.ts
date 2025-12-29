@@ -26,31 +26,35 @@ export type PluginConstructor = new (options?: any) => CanvasPlugin;
 
 /**
  * Behavior preset definitions
+ * 
+ * Note: drag-canvas and zoom-control are now handled natively by pixi-viewport,
+ * so they are not included in presets. Use them only if you need custom behavior.
  */
 export const BEHAVIOR_PRESETS: Record<string, string[]> = {
   /**
-   * Minimal - Only viewport interactions
+   * Minimal - Only hover effects
    * Good for: Read-only visualizations, dashboards
+   * Note: Pan/zoom are handled by pixi-viewport natively
    */
-  minimal: ['drag-canvas', 'zoom-control'],
+  minimal: ['hover-activate'],
   
   /**
    * Default - Common interactions
    * Good for: Most graph visualizations
+   * Note: Pan/zoom are handled by pixi-viewport natively
    */
-  default: ['drag-element', 'drag-canvas', 'hover-activate', 'click-select', 'zoom-control'],
+  default: ['drag-element', 'hover-activate', 'click-select'],
   
   /**
    * Full - All interaction features
    * Good for: Graph editors, interactive applications
+   * Note: Pan/zoom are handled by pixi-viewport natively
    */
   full: [
     'drag-element',
-    'drag-canvas',
     'click-select',
     'hover-activate',
     'focus-element',
-    'zoom-control',
   ],
 };
 

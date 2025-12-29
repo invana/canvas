@@ -86,7 +86,7 @@ export class ZoomControlPlugin implements CanvasPlugin {
     event.preventDefault();
 
     const delta = -event.deltaY;
-    const currentZoom = this._viewport!.zoom;
+    const currentZoom = this._viewport!.scaled;
 
     // Calculate new zoom level
     const zoomFactor = 1 + delta * this._options.wheelSensitivity;
@@ -125,7 +125,7 @@ export class ZoomControlPlugin implements CanvasPlugin {
   zoomBy(factor: number, centerX?: number, centerY?: number): void {
     if (!this._viewport) return;
 
-    const currentZoom = this._viewport.zoom;
+    const currentZoom = this._viewport.scaled;
     this.zoomTo(currentZoom * factor, centerX, centerY);
   }
 
@@ -153,8 +153,8 @@ export class ZoomControlPlugin implements CanvasPlugin {
   /**
    * Get current zoom level
    */
-  get zoom(): number {
-    return this._viewport?.zoom ?? 1;
+  get currentZoom(): number {
+    return this._viewport?.scaled ?? 1;
   }
 
   /**

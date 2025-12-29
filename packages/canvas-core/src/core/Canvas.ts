@@ -234,10 +234,11 @@ export class Canvas {
     // Append canvas to container
     this._container.appendChild(this._app.canvas as HTMLCanvasElement);
 
-    // Create viewport
+    // Create viewport with pixi-viewport
     this._viewport = new Viewport({
       width: this._options.width,
       height: this._options.height,
+      events: this._app.renderer.events,
       ...this._options.viewport,
     });
     this._app.stage.addChild(this._viewport);

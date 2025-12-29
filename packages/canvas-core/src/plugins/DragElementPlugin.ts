@@ -162,7 +162,11 @@ export class DragElementPlugin implements CanvasPlugin {
     // Change cursor immediately
     node.cursor = this._options.dragCursor;
     
-    // Don't stop propagation - other plugins (like ClickSelectPlugin) need events too
+    // Pause viewport's drag plugin to prevent canvas panning while dragging a node
+    this._viewport!.plugins.pause('drag');
+    
+    // Stop event propagation to prevent viewport from starting a drag
+    event.stopPropagation();
   };
 
   /**
@@ -223,6 +227,10 @@ export class DragElementPlugin implements CanvasPlugin {
    * Handle pointer up (end drag)
    */
   private onPointerUp = (): void => {
+    // Always resume viewport drag plugin, even if we weren't dragging
+    // This ensures it's resumed after any node click
+    this._viewport?.plugins.resume('drag');
+    
     if (!this._dragData) return;
 
     const { node } = this._dragData;

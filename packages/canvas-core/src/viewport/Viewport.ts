@@ -1,16 +1,17 @@
 /**
  * Viewport
  * 
- * Manages pan and zoom for the canvas.
- * Wraps content in a container that handles transformations.
+ * Manages pan and zoom for the canvas using pixi-viewport.
+ * Provides a wrapper around pixi-viewport with a consistent API.
  * 
  * ## Features
  * 
  * - Mouse wheel zoom with configurable sensitivity
- * - Pan via mouse drag
- * - Keyboard shortcuts (fit, reset, etc.)
+ * - Pan via mouse drag with momentum (decelerate)
+ * - Pinch-to-zoom on touch devices
  * - Zoom constraints (min/max)
- * - Smooth animations
+ * - World/screen coordinate conversion
+ * - Visible bounds calculation
  * 
  * @example
  * ```typescript
@@ -19,6 +20,7 @@
  *   height: 600,
  *   minZoom: 0.1,
  *   maxZoom: 5,
+ *   events: app.renderer.events,
  * });
  * 
  * // Add content to the viewport
@@ -31,7 +33,8 @@
  * ```
  */
 
-import { Container, FederatedPointerEvent } from 'pixi.js';
+import { Viewport as PixiViewport } from 'pixi-viewport';
+import type { EventSystem, Rectangle } from 'pixi.js';
 
 export interface ViewportOptions {
   /** Viewport width in pixels */
@@ -54,6 +57,12 @@ export interface ViewportOptions {
   dragPan?: boolean;
   /** Zoom sensitivity (higher = faster zoom) */
   zoomSensitivity?: number;
+  /** World width (for clamping) */
+  worldWidth?: number;
+  /** World height (for clamping) */
+  worldHeight?: number;
+  /** PixiJS event system - required for pixi-viewport */
+  events: EventSystem;
 }
 
 export interface ViewportState {
@@ -62,82 +71,119 @@ export interface ViewportState {
   zoom: number;
 }
 
-export class Viewport extends Container {
+/**
+ * Viewport class wrapping pixi-viewport for pan/zoom functionality.
+ * 
+ * This extends pixi-viewport directly to provide seamless integration
+ * while adding convenience methods matching our API.
+ */
+export class Viewport extends PixiViewport {
   private _viewWidth: number;
   private _viewHeight: number;
-  private _minZoom: number;
-  private _maxZoom: number;
-  private _zoomSensitivity: number;
-  private _wheelZoomEnabled: boolean;
-  private _dragPanEnabled: boolean;
-
-  private _isDragging: boolean = false;
-  private _dragStartX: number = 0;
-  private _dragStartY: number = 0;
-  private _dragStartPosX: number = 0;
-  private _dragStartPosY: number = 0;
-
-  /** The content container - add children here */
-  public readonly content: Container;
 
   constructor(options: ViewportOptions) {
-    super();
+    super({
+      screenWidth: options.width,
+      screenHeight: options.height,
+      worldWidth: options.worldWidth ?? options.width * 10,
+      worldHeight: options.worldHeight ?? options.height * 10,
+      events: options.events,
+      passiveWheel: false,
+      stopPropagation: true,
+    });
 
     this._viewWidth = options.width;
     this._viewHeight = options.height;
-    this._minZoom = options.minZoom ?? 0.1;
-    this._maxZoom = options.maxZoom ?? 10;
-    this._zoomSensitivity = options.zoomSensitivity ?? 0.001;
-    this._wheelZoomEnabled = options.wheelZoom ?? true;
-    this._dragPanEnabled = options.dragPan ?? true;
 
-    // Create content container
-    this.content = new Container();
-    this.content.x = options.initialX ?? this._viewWidth / 2;
-    this.content.y = options.initialY ?? this._viewHeight / 2;
-    this.content.scale.set(options.initialZoom ?? 1);
-    this.addChild(this.content);
+    // Enable plugins based on options
+    if (options.dragPan !== false) {
+      this.drag({
+        mouseButtons: 'left',
+        pressDrag: true,
+      });
+    }
 
-    // Make viewport interactive
-    this.eventMode = 'static';
-    this.hitArea = { contains: () => true }; // Catch all events
+    if (options.wheelZoom !== false) {
+      this.wheel({
+        smooth: 3,
+        percent: options.zoomSensitivity ?? 0.1,
+      });
+    }
 
-    this.setupEventListeners();
+    // Enable pinch-to-zoom on touch devices
+    this.pinch();
+
+    // Add decelerate for smooth panning
+    this.decelerate();
+
+    // Set zoom constraints
+    if (options.minZoom !== undefined || options.maxZoom !== undefined) {
+      this.clampZoom({
+        minScale: options.minZoom ?? 0.1,
+        maxScale: options.maxZoom ?? 10,
+      });
+    }
+
+    // Set initial position and zoom
+    if (options.initialZoom !== undefined) {
+      this.setZoom(options.initialZoom, true);
+    }
+
+    if (options.initialX !== undefined || options.initialY !== undefined) {
+      this.moveCenter(
+        options.initialX ?? this._viewWidth / 2,
+        options.initialY ?? this._viewHeight / 2
+      );
+    }
   }
 
   // =========================================================================
-  // PROPERTIES
+  // PROPERTIES (Compatibility layer)
   // =========================================================================
 
+  /** View width in screen pixels */
   get viewWidth(): number {
     return this._viewWidth;
   }
 
+  /** View height in screen pixels */
   get viewHeight(): number {
     return this._viewHeight;
   }
 
-  get zoom(): number {
-    return this.content.scale.x;
+  /** Current zoom level - use `scaled` property from pixi-viewport or this alias */
+  get zoomLevel(): number {
+    return this.scaled;
   }
 
-  set zoom(value: number) {
-    this.zoomTo(value);
+  set zoomLevel(value: number) {
+    this.setZoom(value, true);
   }
 
+  /** Pan X position (content x) - for backward compatibility */
   get panX(): number {
-    return this.content.x;
+    return this.x;
   }
 
+  /** Pan Y position (content y) - for backward compatibility */
   get panY(): number {
-    return this.content.y;
+    return this.y;
   }
 
+  /** 
+   * Content accessor - for backward compatibility.
+   * With pixi-viewport, the viewport itself is the content container.
+   */
+  get content(): this {
+    return this;
+  }
+
+  /** Get current viewport state */
   get state(): ViewportState {
     return {
-      x: this.content.x,
-      y: this.content.y,
-      zoom: this.zoom,
+      x: this.x,
+      y: this.y,
+      zoom: this.scaled,
     };
   }
 
@@ -148,46 +194,41 @@ export class Viewport extends Container {
   /**
    * Resize the viewport
    */
-  resize(width: number, height: number): void {
+  resize(width: number, height: number, worldWidth?: number, worldHeight?: number): void {
     this._viewWidth = width;
     this._viewHeight = height;
+    super.resize(width, height, worldWidth, worldHeight);
   }
 
   /**
-   * Pan to a specific position (content container position)
+   * Pan to a specific position
    */
   panTo(x: number, y: number): void {
-    this.content.x = x;
-    this.content.y = y;
+    this.moveCorner(-x / this.scaled, -y / this.scaled);
   }
 
   /**
    * Pan by a delta
    */
   panBy(dx: number, dy: number): void {
-    this.content.x += dx;
-    this.content.y += dy;
+    this.x += dx;
+    this.y += dy;
   }
 
   /**
-   * Zoom to a specific level
+   * Zoom to a specific level, optionally centered on a point
    */
   zoomTo(level: number, centerX?: number, centerY?: number): void {
-    const clampedZoom = Math.max(this._minZoom, Math.min(this._maxZoom, level));
-    
     if (centerX !== undefined && centerY !== undefined) {
-      // Zoom toward the specified point
-      const oldZoom = this.zoom;
-      const worldX = (centerX - this.content.x) / oldZoom;
-      const worldY = (centerY - this.content.y) / oldZoom;
-
-      this.content.scale.set(clampedZoom);
-
-      this.content.x = centerX - worldX * clampedZoom;
-      this.content.y = centerY - worldY * clampedZoom;
+      // Zoom toward the specified screen point
+      const worldPoint = this.toWorld(centerX, centerY);
+      this.setZoom(level, true);
+      // Re-center on the same world point
+      const newScreenPoint = this.toScreen(worldPoint.x, worldPoint.y);
+      this.x += centerX - newScreenPoint.x;
+      this.y += centerY - newScreenPoint.y;
     } else {
-      // Zoom toward viewport center
-      this.zoomTo(clampedZoom, this._viewWidth / 2, this._viewHeight / 2);
+      this.setZoom(level, true);
     }
   }
 
@@ -195,150 +236,71 @@ export class Viewport extends Container {
    * Zoom by a factor
    */
   zoomBy(factor: number, centerX?: number, centerY?: number): void {
-    this.zoomTo(this.zoom * factor, centerX, centerY);
+    this.zoomTo(this.scaled * factor, centerX, centerY);
   }
 
   /**
    * Reset to initial view (center, zoom 1)
    */
   reset(): void {
-    this.content.x = this._viewWidth / 2;
-    this.content.y = this._viewHeight / 2;
-    this.content.scale.set(1);
+    this.setZoom(1, true);
+    this.moveCenter(0, 0);
   }
 
   /**
    * Center the viewport on a world position
    */
   centerOn(worldX: number, worldY: number): void {
-    this.content.x = this._viewWidth / 2 - worldX * this.zoom;
-    this.content.y = this._viewHeight / 2 - worldY * this.zoom;
+    this.moveCenter(worldX, worldY);
   }
 
   /**
    * Fit content within the viewport
    */
   fitContent(padding: number = 50): void {
-    const bounds = this.content.getLocalBounds();
+    const bounds = this.getLocalBounds();
     if (bounds.width === 0 || bounds.height === 0) return;
 
-    const scaleX = (this._viewWidth - padding * 2) / bounds.width;
-    const scaleY = (this._viewHeight - padding * 2) / bounds.height;
-    const newZoom = Math.max(this._minZoom, Math.min(this._maxZoom, Math.min(scaleX, scaleY)));
+    const availableWidth = this._viewWidth - padding * 2;
+    const availableHeight = this._viewHeight - padding * 2;
 
-    this.content.scale.set(newZoom);
+    const scaleX = availableWidth / bounds.width;
+    const scaleY = availableHeight / bounds.height;
+    const newZoom = Math.min(scaleX, scaleY);
 
-    // Center content
+    this.setZoom(newZoom, true);
+
+    // Center on content
     const centerX = bounds.x + bounds.width / 2;
     const centerY = bounds.y + bounds.height / 2;
-    this.centerOn(centerX, centerY);
+    this.moveCenter(centerX, centerY);
   }
+
+  /**
+   * Get the visible world bounds (what's currently on screen)
+   */
+  getVisibleWorldBounds(): Rectangle {
+    return this.getVisibleBounds();
+  }
+
+  // =========================================================================
+  // COORDINATE CONVERSION
+  // These override pixi-viewport methods to return simple objects
+  // =========================================================================
 
   /**
    * Convert screen coordinates to world coordinates
    */
-  toWorld(screenX: number, screenY: number): { x: number; y: number } {
-    return {
-      x: (screenX - this.content.x) / this.zoom,
-      y: (screenY - this.content.y) / this.zoom,
-    };
+  screenToWorld(screenX: number, screenY: number): { x: number; y: number } {
+    const point = super.toWorld(screenX, screenY);
+    return { x: point.x, y: point.y };
   }
 
   /**
    * Convert world coordinates to screen coordinates
    */
-  toScreen(worldX: number, worldY: number): { x: number; y: number } {
-    return {
-      x: worldX * this.zoom + this.content.x,
-      y: worldY * this.zoom + this.content.y,
-    };
-  }
-
-  // =========================================================================
-  // EVENT HANDLING
-  // =========================================================================
-
-  private setupEventListeners(): void {
-    // Mouse wheel zoom
-    this.on('wheel', this.onWheel, this);
-
-    // Drag to pan
-    this.on('pointerdown', this.onDragStart, this);
-    this.on('pointermove', this.onDragMove, this);
-    this.on('pointerup', this.onDragEnd, this);
-    this.on('pointerupoutside', this.onDragEnd, this);
-  }
-
-  private onWheel(e: WheelEvent): void {
-    if (!this._wheelZoomEnabled) return;
-
-    e.preventDefault();
-
-    const delta = -e.deltaY * this._zoomSensitivity;
-    const factor = 1 + delta;
-
-    // Get mouse position relative to viewport
-    const rect = (e.target as HTMLElement)?.getBoundingClientRect?.() ?? { left: 0, top: 0 };
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    this.zoomBy(factor, mouseX, mouseY);
-  }
-
-  private onDragStart(e: FederatedPointerEvent): void {
-    if (!this._dragPanEnabled) return;
-
-    // Don't pan if the event was already handled by a child (node/edge)
-    if (e.defaultPrevented) return;
-
-    // Only pan on middle mouse button or when left-click on empty space
-    const isPanButton = e.button === 1 || (e.button === 0 && !e.shiftKey);
-    if (!isPanButton) return;
-    
-    // Check if the target is the viewport itself (not a node/edge)
-    // If target is not this viewport or its content, skip pan
-    const target = e.target;
-    if (target !== this && target !== this.content) {
-      return;
-    }
-
-    this._isDragging = true;
-    this._dragStartX = e.globalX;
-    this._dragStartY = e.globalY;
-    this._dragStartPosX = this.content.x;
-    this._dragStartPosY = this.content.y;
-
-    this.cursor = 'grabbing';
-  }
-
-  private onDragMove(e: FederatedPointerEvent): void {
-    if (!this._isDragging) return;
-
-    const dx = e.globalX - this._dragStartX;
-    const dy = e.globalY - this._dragStartY;
-
-    this.content.x = this._dragStartPosX + dx;
-    this.content.y = this._dragStartPosY + dy;
-  }
-
-  private onDragEnd(_e: FederatedPointerEvent): void {
-    this._isDragging = false;
-    this.cursor = 'default';
-  }
-
-  // =========================================================================
-  // CLEANUP
-  // =========================================================================
-
-  /**
-   * Remove all event listeners
-   */
-  destroy(): void {
-    this.off('wheel', this.onWheel, this);
-    this.off('pointerdown', this.onDragStart, this);
-    this.off('pointermove', this.onDragMove, this);
-    this.off('pointerup', this.onDragEnd, this);
-    this.off('pointerupoutside', this.onDragEnd, this);
-    super.destroy({ children: true });
+  worldToScreen(worldX: number, worldY: number): { x: number; y: number } {
+    const point = super.toScreen(worldX, worldY);
+    return { x: point.x, y: point.y };
   }
 }

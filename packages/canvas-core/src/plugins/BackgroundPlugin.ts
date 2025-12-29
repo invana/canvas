@@ -75,7 +75,7 @@ export class BackgroundPlugin implements CanvasPlugin {
     if (canvas.viewport) {
       this._lastViewportX = -canvas.viewport.content.x;
       this._lastViewportY = -canvas.viewport.content.y;
-      this._lastViewportZoom = canvas.viewport.zoom;
+      this._lastViewportZoom = canvas.viewport.scaled;
     }
 
     canvas.app!.ticker.add(this.onTick, this);
@@ -91,7 +91,7 @@ export class BackgroundPlugin implements CanvasPlugin {
     const viewport = this._canvas.viewport;
     const currentX = -viewport.content.x;
     const currentY = -viewport.content.y;
-    const currentZoom = viewport.zoom;
+    const currentZoom = viewport.scaled;
 
     // Only re-render if viewport changed
     if (
@@ -335,7 +335,7 @@ export class BackgroundPlugin implements CanvasPlugin {
         // Use content position (which is negative when panned)
         offsetX = -viewport.content.x;
         offsetY = -viewport.content.y;
-        scale = viewport.zoom;
+        scale = viewport.scaled;
       }
     }
 
