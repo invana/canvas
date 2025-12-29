@@ -15,18 +15,16 @@ export const DefaultStates: Story = {
   parameters: {
     layout: 'fullscreen',
   },
+
   render: () => {
     const container = getFullHeightContainer();
     container.id = 'canvas-container';
-    return container;
-  },
-  play: async () => {
-    const container = document.getElementById('canvas-container');
-    if (!container) return;
 
-    const nodeStats = ["default", "active", "selected", "highlighted", "muted", "disabled"];
-    const nodes: CanvasNodeData[] = nodeStats.map((state:string, index:number) => 
-      ({
+    // Schedule canvas init AFTER Storybook captures DOM
+    queueMicrotask(async () => {
+      const nodeStats = ["default", "active", "selected", "highlighted", "muted", "disabled"];
+
+      const nodes: CanvasNodeData[] = nodeStats.map((state, index) => ({
         id: `node-${state}`,
         x: 100 + (index % 4) * 200,
         y: 150 + Math.floor(index / 4) * 200,
@@ -39,13 +37,17 @@ export const DefaultStates: Story = {
         shape: 'circle',
         size: 20,
         states: [state],
-      })
-    );
-    const options: CanvasOptions = {
-      container,
-      data: { nodes: nodes, edges: []}
-    }
-    const canvas = new Canvas(options);
-    await canvas.init();
+      }));
+
+      const options: CanvasOptions = {
+        container,
+        data: { nodes, edges: [] },
+      };
+
+      const canvas = new Canvas(options);
+      await canvas.init();
+    });
+
+    return container;
   },
 };

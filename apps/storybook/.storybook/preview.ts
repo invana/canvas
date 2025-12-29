@@ -20,12 +20,12 @@ const preview: Preview = {
       ],
     },
     docs: {
-      // Enable Code panel to show story source code
-      codePanel: true,
       source: {
-        // Use 'code' to show static story source
-        type: 'code',
-        language: 'typescript',
+        type: 'dynamic',
+        transform: (code: string) => {
+          // Prevent Storybook from discarding the panel
+          return code || '<!-- rendered via DOM -->';
+        },
       },
     },
   },

@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
+    "@storybook/addon-docs": "^10",
     "@storybook/addon-links": "^10.1.10",
     "@storybook/html": "^10.1.10",
     "@storybook/html-vite": "^10.1.10",
