@@ -185,8 +185,8 @@ export class FocusElementPlugin implements CanvasPlugin {
     }
 
     const startTime = performance.now();
-    const startX = this._viewport.content.x;
-    const startY = this._viewport.content.y;
+    const startX = this._viewport.x;
+    const startY = this._viewport.y;
     const startZoom = this._viewport.scaled;
 
     const animate = (currentTime: number) => {
@@ -204,9 +204,9 @@ export class FocusElementPlugin implements CanvasPlugin {
       const currentZoom = startZoom + (targetZoom - startZoom) * easedProgress;
 
       // Update viewport
-      this._viewport.content.x = currentX;
-      this._viewport.content.y = currentY;
-      this._viewport.content.scale.set(currentZoom);
+      this._viewport.x = currentX;
+      this._viewport.y = currentY;
+      this._viewport.scale.set(currentZoom);
 
       // Continue animation
       if (progress < 1) {

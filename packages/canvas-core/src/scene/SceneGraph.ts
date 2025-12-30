@@ -13,7 +13,7 @@
  * - Spatial indexing for fast proximity queries
  */
 
-// LEGACY: Old RendererNode/EdgeShapeData types removed, needs refactoring
+// Type aliases for scene graph
 type RendererNode = any;
 type RendererEdge = any;
 import { SpatialIndex, type Bounds } from './SpatialIndex';

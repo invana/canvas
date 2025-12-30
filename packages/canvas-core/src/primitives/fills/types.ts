@@ -155,7 +155,7 @@ export function isPatternFill(fill: Fill): fill is PatternFill {
 }
 
 /**
- * Helper to normalize fill input (backward compatibility)
+ * Helper to normalize fill input
  * Converts simple color strings/numbers to SolidFill
  */
 export function normalizeFill(fill: string | number | Fill | undefined): Fill | undefined {

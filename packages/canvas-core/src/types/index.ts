@@ -8,20 +8,6 @@ import type { Container, Graphics } from 'pixi.js';
 export * from './states';
 
 // =============================================================================
-// LEGACY TYPES - REMOVED
-// =============================================================================
-// 
-// RendererNode, NodeStyle, EdgeData, EdgeStyle have been removed.
-// Use proper types from ./elements instead:
-//   - RendererNode -> ElementNodeData
-//   - NodeStyle -> ElementNodeStyle  
-//   - EdgeData -> ElementEdgeData
-//   - EdgeStyle -> ElementEdgeStyle
-//
-// Old types had legacy selectedFill/hoverFill properties.
-// New types use proper state-based styling with states.selected, etc.
-
-// =============================================================================
 // Point & Geometry Types
 // =============================================================================
 
@@ -114,10 +100,6 @@ export interface ProcessorContext {
 }
 
 // =============================================================================
-// Style & Theme Types (Legacy - not used in new function-based styling)
-// =============================================================================
-
-// =============================================================================
 // Canvas Options
 // =============================================================================
 
@@ -147,28 +129,27 @@ export interface CanvasOptions {
 // Shape Instance Types  
 // =============================================================================
 // 
-// LEGACY: These interfaces reference old RendererNode/EdgeData which have been removed.
-// TODO: Refactor to use ElementNodeData/ElementEdgeData from ./elements
-// For now, using 'any' to unblock the build
+// Shape Instance Interfaces
+// These use 'any' for data types to allow flexibility across different shape implementations
 
 export interface ShapeInstance {
   id: string;
   container: Container;
   graphics: Graphics;
-  data: any; // LEGACY: was RendererNode | EdgeData
-  update(data: any): void; // LEGACY: was Partial<NodeData | EdgeData>
+  data: any;
+  update(data: any): void;
   destroy(): void;
 }
 
 export interface NodeInstance extends ShapeInstance {
-  data: any; // LEGACY: was RendererNode
+  data: any;
   getBoundaryPoint(angle: number): Point;
   setSelected(selected: boolean): void;
   setHovered(hovered: boolean): void;
 }
 
 export interface EdgeInstance extends ShapeInstance {
-  data: any; // LEGACY: was EdgeData
+  data: any;
   sourceNode: NodeInstance;
   targetNode: NodeInstance;
   setSelected(selected: boolean): void;

@@ -44,7 +44,6 @@ export function drawDiamondArrow(
   g.closePath();
 
   if (style.fill) {
-    g.fill({ color: style.fill, alpha: style.fillAlpha ?? 1 });
   }
 }
 
@@ -86,7 +85,6 @@ export function drawDiamondOutlineArrow(
   g.closePath();
 
   if (style.fill) {
-    g.fill({ color: style.fill, alpha: style.fillAlpha ?? 1 });
   }
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {
     g.stroke({

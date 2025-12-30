@@ -157,12 +157,6 @@ export type {
 export type { Bounds as SceneBounds } from './scene';
 
 // ============================================================================
-// INTERACTION (DEPRECATED - Use plugins instead)
-// ============================================================================
-// Note: The interaction/ directory will be removed in a future release.
-// Please migrate to the plugin-based interaction system.
-
-// ============================================================================
 // STYLE
 // ============================================================================
 
@@ -174,9 +168,6 @@ export {
   type FunctionBasedEdgeStyle,
   type StyleValue
 } from './style/FunctionBasedStyle';
-
-// REMOVED: Old NodeStyle/EdgeStyle exports from './types' - use ElementNodeStyle/ElementEdgeStyle instead
-// export type { NodeStyle, EdgeStyle } from './types';
 
 // State management constants
 export { NodeStates, EdgeStates, KNOWN_NODE_STATES, KNOWN_EDGE_STATES } from './types/states';
@@ -260,11 +251,7 @@ export type {
 // TYPES
 // ============================================================================
 
-// REMOVED: RendererNode, EdgeData from './types' - these are legacy types with selectedFill/hoverFill
-// Use ElementNodeData, ElementEdgeData from './elements' instead
 export type {
-  // RendererNode,  // LEGACY - use ElementNodeData
-  // EdgeData,  // LEGACY - use ElementEdgeData
   Bounds,
   Tangent,
   CanvasEventType,

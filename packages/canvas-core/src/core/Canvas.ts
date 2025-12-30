@@ -45,9 +45,8 @@ import { LayerManager } from '../layers/LayerManager';
 import type { CanvasPlugin, PluginRegistrationOptions, PluginConfig, BehaviorPreset } from '../plugins/types';
 import { PluginRegistry } from '../plugins/registry';
 import type { Bounds } from '../scene/SpatialIndex';
-// LEGACY: These old types were removed. SceneGraph uses different EdgeData shape than ElementEdgeData
-// For now using 'any' to unblock - needs proper type refactoring
-// import type { RendererNode as SceneNodeData, EdgeData as SceneEdgeData } from '../types';
+
+// Type aliases for scene graph integration
 type SceneNodeData = any;
 type SceneEdgeShapeData = any;
 
@@ -237,10 +236,10 @@ export class Canvas {
     });
     this._app.stage.addChild(this._viewport);
 
-    // Create layer manager
-    this._layerManager = new LayerManager(this._viewport.content);
+    // Create layer manager (viewport itself is the content container)
+    this._layerManager = new LayerManager(this._viewport);
 
-    // Get core layers (for backward compatibility, we use shapes layer)
+    // Get core layers
     const edgeGroup = this._layerManager.getGroup('core-edges')!;
     const nodeGroup = this._layerManager.getGroup('core-nodes')!;
 

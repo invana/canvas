@@ -10,7 +10,7 @@ import { normalizeFill, applyFill, type FillBounds } from '../fills/index.js';
 
 /**
  * Apply fill from ShapeStyle to graphics (async version)
- * This handles the conversion of legacy string/number fills to the new Fill system
+ * Converts various fill formats (string, number, Fill object) to the standard Fill system
  * Supports async fills like images and patterns
  */
 export async function applyShapeFill(
@@ -22,11 +22,6 @@ export async function applyShapeFill(
 
   const fill = normalizeFill(style.fill);
   if (!fill) return false;
-
-  // Override alpha if fillAlpha is specified (legacy support)
-  if (style.fillAlpha !== undefined && fill.type === 'solid') {
-    fill.alpha = style.fillAlpha;
-  }
 
   await applyFill(g, fill, bounds);
   return true;

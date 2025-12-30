@@ -23,7 +23,6 @@ export function drawCircleArrow(
   g.circle(centerX, centerY, radius);
 
   if (style.fill) {
-    g.fill({ color: style.fill, alpha: style.fillAlpha ?? 1 });
   }
 }
 
@@ -44,7 +43,6 @@ export function drawCircleOutlineArrow(
   g.circle(centerX, centerY, radius);
 
   if (style.fill) {
-    g.fill({ color: style.fill, alpha: style.fillAlpha ?? 1 });
   }
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {
     g.circle(centerX, centerY, radius);

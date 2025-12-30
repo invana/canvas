@@ -4,7 +4,7 @@
  * Provides graph traversal, neighbor queries, and path finding
  */
 
-// LEGACY: Old EdgeData type removed, needs refactoring
+// Type alias for relationships
 type RendererEdge = any;
 
 export interface RelationshipInfo {

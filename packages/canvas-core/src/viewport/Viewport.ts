@@ -136,7 +136,7 @@ export class Viewport extends PixiViewport {
   }
 
   // =========================================================================
-  // PROPERTIES (Compatibility layer)
+  // PROPERTIES
   // =========================================================================
 
   /** View width in screen pixels */
@@ -156,24 +156,6 @@ export class Viewport extends PixiViewport {
 
   set zoomLevel(value: number) {
     this.setZoom(value, true);
-  }
-
-  /** Pan X position (content x) - for backward compatibility */
-  get panX(): number {
-    return this.x;
-  }
-
-  /** Pan Y position (content y) - for backward compatibility */
-  get panY(): number {
-    return this.y;
-  }
-
-  /** 
-   * Content accessor - for backward compatibility.
-   * With pixi-viewport, the viewport itself is the content container.
-   */
-  get content(): this {
-    return this;
   }
 
   /** Get current viewport state */

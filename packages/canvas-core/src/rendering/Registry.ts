@@ -523,7 +523,6 @@ export class Registry {
     });
     import('../elements/edges/OrthogonalEdge').then(({ OrthogonalEdge }) => {
       this.registerEdgeClass('orthogonal', OrthogonalEdge);
-      this.registerEdgeClass('orthogonal-rounded', OrthogonalEdge); // Backward compatibility - use cornerRadius in style
     });
   }
 

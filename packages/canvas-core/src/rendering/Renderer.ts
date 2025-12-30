@@ -87,10 +87,6 @@ export interface CanvasNode {
   // Visual styling
   style?: Partial<NodeStyle>;
   
-  // Behavior (deprecated - use plugins)
-  interactive?: boolean;
-  draggable?: boolean;
-  
   // Initial states
   states?: string[];
   
@@ -186,14 +182,12 @@ export class Renderer {
   private _edgeBoundaryOffset: number;
   
   // Callbacks
-  private _onNodeDrag?: (node: RendererNodeBase, x: number, y: number) => void;
 
   constructor(options: RendererOptions) {
     this._registry = options.registry;
     this._nodeLayer = options.nodeLayer;
     this._edgeLayer = options.edgeLayer;
     this._edgeBoundaryOffset = options.edgeBoundaryOffset ?? 2;
-    this._onNodeDrag = options.onNodeDrag;
     
     this._defaultNodeStyle = options.defaultNodeStyle ?? {};
     this._userNodeStyle = options.userNodeStyle ?? {};
@@ -210,7 +204,7 @@ export class Renderer {
   addNode(input: CanvasNode): RendererNodeBase {
     const { 
       id, x, y, label, shape, size, width, height, cornerRadius, payload, badges,
-      style, interactive, draggable, states 
+      style, states 
     } = input;
     
     // Create node data structure first (needed for function evaluation)
@@ -247,8 +241,6 @@ export class Renderer {
     const node = new (NodeClass ?? CircleNode)({
       data: nodeData,
       style: mergedStyle,
-      interactive: interactive ?? false,
-      draggable: draggable ?? false,
       states,
       registry: this._registry,
     });
@@ -639,11 +631,6 @@ export class Renderer {
    * Set up drag handling for a node
    */
   private setupNodeDragHandling(node: RendererNodeBase): void {
-    node.onDrag = (draggedNode, x, y) => {
-      this.updateConnectedEdges(draggedNode.id, x, y);
-      this._onNodeDrag?.(draggedNode, x, y);
-    };
-    
     node.on('drag', this.handleNodeDragEvent, this);
   }
 

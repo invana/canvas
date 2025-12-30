@@ -2,7 +2,7 @@
  * Fill System - Index
  * 
  * Comprehensive fill system for shapes supporting:
- * - Solid colors (backward compatible with existing string/number fills)
+ * - Solid colors (supports string/number/Fill object formats)
  * - Linear gradients
  * - Radial gradients
  * - Image/texture fills (clipped to shape)
@@ -10,10 +10,10 @@
  * 
  * ## Usage Examples
  * 
- * ### Solid Color (backward compatible)
+ * ### Solid Color
  * ```typescript
- * { fill: '#4CAF50' }  // Old way - still works
- * { fill: { type: 'solid', color: '#4CAF50', alpha: 0.8 } }  // New way
+ * { fill: '#4CAF50' }  // String format
+ * { fill: { type: 'solid', color: '#4CAF50', alpha: 0.8 } }  // Object format
  * ```
  * 
  * ### Linear Gradient
@@ -97,7 +97,7 @@ export {
 } from './types.js';
 
 // High-level fill resolver (used by shapes)
-export { applyFill, applyFillSync } from './fillResolver.js';
+export { applyFill } from './fillResolver.js';
 
 // Shape fill helper (located in shapes directory)
 export { applyShapeFill } from '../shapes/fillHelper.js';

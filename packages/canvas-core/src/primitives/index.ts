@@ -65,7 +65,6 @@ export {
   isPatternFill,
   normalizeFill,
   applyFill,
-  applyFillSync,
 } from './fills';
 
 // ============================================================================

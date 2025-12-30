@@ -103,7 +103,6 @@ export type NodeShapeType =
  * Differences from CanvasNode (public API):
  * - No `style` field (stored separately in _nodeStyle)
  * - No `states` field (managed by _activeStates Set)
- * - No `interactive`/`draggable` (deprecated, handled by plugins)
  * - Has index signature from RendererBaseData for extensibility
  */
 export interface RendererNode extends RendererBaseData {
@@ -218,12 +217,8 @@ export interface NodeStyle extends BaseNodeStyleProps {
  */
 export interface NodeShapeOptions extends Omit<RendererBaseOptions<RendererNode>, 'style'> {
   style?: Partial<NodeStyle>;
-  /** Enable node dragging (deprecated - use DragElementPlugin) */
-  draggable?: boolean;
   /** Initial states to activate (e.g., ['selected', 'highlighted']) */
   states?: string[];
-  /** Callback when node is dragged */
-  onDrag?: (node: RendererNodeBase, x: number, y: number) => void;
 }
 
 /**
@@ -231,7 +226,6 @@ export interface NodeShapeOptions extends Omit<RendererBaseOptions<RendererNode>
  */
 export abstract class RendererNodeBase extends RendererBase<RendererNode> {
   protected _nodeStyle: Partial<NodeStyle>;
-  private _draggable: boolean;
   
   // State management
   private _activeStates = new Set<string>([NodeStates.DEFAULT]);
@@ -249,7 +243,6 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
   private static _batchedNodes = new Set<RendererNodeBase>();
   
   // Drag callback
-  private _onDrag?: (node: RendererNodeBase, x: number, y: number) => void;
   
   // Drag state
   private _isDragging: boolean = false;
@@ -272,10 +265,6 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
   constructor(options: NodeShapeOptions) {
     super(options as RendererBaseOptions<RendererNode>);
     this._nodeStyle = options.style ?? {};
-    
-    // Interaction defaults changed to false - plugins enable interactions
-    this._draggable = options.draggable ?? false;
-    this._onDrag = options.onDrag;
     
     // Assign unique style ID for caching
     this._styleId = ++RendererNodeBase._styleIdCounter;
@@ -360,29 +349,10 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
   }
 
   /**
-   * Set drag callback
-   */
-  set onDrag(callback: ((node: RendererNodeBase, x: number, y: number) => void) | undefined) {
-    this._onDrag = callback;
-  }
-
-  /**
    * Check if node is currently being dragged
    */
   get isDragging(): boolean {
     return this._isDragging;
-  }
-  
-  /**
-   * Check if node is draggable (used for cursor styling)
-   * Note: Actual drag behavior is handled by DragElementPlugin
-   */
-  get draggable(): boolean {
-    return this._draggable;
-  }
-  
-  set draggable(value: boolean) {
-    this._draggable = value;
   }
 
   // =========================================================================
@@ -525,7 +495,6 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
       this.cursor = 'default';
     } else {
       this.eventMode = 'static';
-      this.cursor = this._draggable ? 'pointer' : 'default';
     }
   }
 
@@ -612,7 +581,6 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
     if (base.fill !== undefined) result.fill = base.fill;
     if (base.stroke !== undefined) result.stroke = base.stroke;
     if (base.strokeWidth !== undefined) result.strokeWidth = base.strokeWidth;
-    if (base.fillAlpha !== undefined) result.fillAlpha = base.fillAlpha;
     if (base.strokeAlpha !== undefined) result.strokeAlpha = base.strokeAlpha;
     if (base.strokeStyle !== undefined) result.strokeStyle = base.strokeStyle;
     if (base.strokeDashPattern !== undefined) result.strokeDashPattern = base.strokeDashPattern;
@@ -638,7 +606,6 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
         if (stateStyle.fill !== undefined) result.fill = stateStyle.fill;
         if (stateStyle.stroke !== undefined) result.stroke = stateStyle.stroke;
         if (stateStyle.strokeWidth !== undefined) result.strokeWidth = stateStyle.strokeWidth;
-        if (stateStyle.fillAlpha !== undefined) result.fillAlpha = stateStyle.fillAlpha;
         if (stateStyle.strokeAlpha !== undefined) result.strokeAlpha = stateStyle.strokeAlpha;
         if (stateStyle.strokeStyle !== undefined) result.strokeStyle = stateStyle.strokeStyle;
         if (stateStyle.strokeDashPattern !== undefined) result.strokeDashPattern = stateStyle.strokeDashPattern;
@@ -661,7 +628,6 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
         if (stateStyle.fill !== undefined) result.fill = stateStyle.fill;
         if (stateStyle.stroke !== undefined) result.stroke = stateStyle.stroke;
         if (stateStyle.strokeWidth !== undefined) result.strokeWidth = stateStyle.strokeWidth;
-        if (stateStyle.fillAlpha !== undefined) result.fillAlpha = stateStyle.fillAlpha;
         if (stateStyle.strokeAlpha !== undefined) result.strokeAlpha = stateStyle.strokeAlpha;
         if (stateStyle.strokeStyle !== undefined) result.strokeStyle = stateStyle.strokeStyle;
         if (stateStyle.strokeDashPattern !== undefined) result.strokeDashPattern = stateStyle.strokeDashPattern;
@@ -928,11 +894,6 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
     this.y = newY;
     this._data.x = newX;
     this._data.y = newY;
-    
-    // Call drag callback if provided
-    if (this._onDrag) {
-      this._onDrag(this, newX, newY);
-    }
     
     // Emit drag event
     this.emit('drag', { node: this, event: e, x: newX, y: newY });

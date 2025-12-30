@@ -5,7 +5,8 @@
  */
 
 import type { ProcessorConfig, ProcessorContext, CanvasEvent } from '../types';
-// LEGACY: Old RendererNode type removed, needs refactoring
+
+// Type alias for processors
 type RendererNode = any;
 import { BaseProcessor } from './BaseProcessor';
 

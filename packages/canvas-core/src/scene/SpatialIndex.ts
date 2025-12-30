@@ -5,7 +5,7 @@
  * For very large datasets, consider using R-tree or Quadtree.
  */
 
-// LEGACY: Old RendererNode type removed, needs refactoring
+// Type alias for spatial indexing
 type RendererNode = any;
 
 export interface Bounds {

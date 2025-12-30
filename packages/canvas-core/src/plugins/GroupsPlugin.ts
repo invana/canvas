@@ -18,7 +18,6 @@ export interface GroupConfig {
   label?: string;
   style?: {
     fill?: string;
-    fillAlpha?: number;
     stroke?: string;
     strokeWidth?: number;
     cornerRadius?: number;
@@ -68,8 +67,6 @@ export class GroupsPlugin implements CanvasPlugin {
     const graphics = new Graphics();
     
     const style = config.style ?? {};
-    const fill = style.fill ?? '#e3f2fd';
-    const fillAlpha = style.fillAlpha ?? 0.3;
     const stroke = style.stroke ?? '#2196f3';
     const strokeWidth = style.strokeWidth ?? 2;
 
@@ -78,7 +75,6 @@ export class GroupsPlugin implements CanvasPlugin {
 
     // Draw rounded rectangle
     graphics.rect(0, 0, width, height);
-    graphics.fill({ color: fill, alpha: fillAlpha });
     graphics.stroke({ color: stroke, width: strokeWidth });
 
     // Position

@@ -73,8 +73,8 @@ export class BackgroundPlugin implements CanvasPlugin {
     // Listen to PixiJS ticker for viewport changes when in follow mode
     // This way the plugin listens directly to the render loop, no custom events needed
     if (canvas.viewport) {
-      this._lastViewportX = -canvas.viewport.content.x;
-      this._lastViewportY = -canvas.viewport.content.y;
+      this._lastViewportX = -canvas.viewport.x;
+      this._lastViewportY = -canvas.viewport.y;
       this._lastViewportZoom = canvas.viewport.scaled;
     }
 
@@ -89,8 +89,8 @@ export class BackgroundPlugin implements CanvasPlugin {
     if (this._currentStyle.type !== 'pattern' || !this._currentStyle.follow) return;
 
     const viewport = this._canvas.viewport;
-    const currentX = -viewport.content.x;
-    const currentY = -viewport.content.y;
+    const currentX = -viewport.x;
+    const currentY = -viewport.y;
     const currentZoom = viewport.scaled;
 
     // Only re-render if viewport changed
@@ -333,8 +333,8 @@ export class BackgroundPlugin implements CanvasPlugin {
       const viewport = this._canvas.viewport;
       if (viewport) {
         // Use content position (which is negative when panned)
-        offsetX = -viewport.content.x;
-        offsetY = -viewport.content.y;
+        offsetX = -viewport.x;
+        offsetY = -viewport.y;
         scale = viewport.scaled;
       }
     }

@@ -43,13 +43,11 @@ export const DEFAULT_NODE_STATE_STYLES: Record<string, Partial<ShapeStyle>> = {
     fill: 0xd9d9d9,
     stroke: '#bfbfbf',
     strokeWidth: 1,
-    fillAlpha: 1,
   },
   
   [NodeStates.MUTED]: {
     strokeWidth: 5,
     strokeAlpha: 0.5,
-    fillAlpha: 0.5,
   },
 };
 
@@ -78,7 +76,6 @@ export const DEFAULT_NODE_STATE_PRIORITY = [
 export const DEFAULT_NODE_STYLE: NodeStyle = {
   // Shape styling
   fill: 0x27c554,
-  fillAlpha: 1,
   stroke: '#525252',
   strokeWidth: 5,
   strokeAlpha: 1,

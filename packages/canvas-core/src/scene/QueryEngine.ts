@@ -4,7 +4,7 @@
  * Provides filtering, searching, and spatial queries
  */
 
-// LEGACY: Old RendererNode/EdgeData types removed, needs refactoring
+// Type aliases for scene graph queries
 type RendererNode = any;
 type RendererEdge = any;
 

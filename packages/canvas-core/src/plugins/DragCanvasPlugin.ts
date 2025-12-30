@@ -138,8 +138,8 @@ export class DragCanvasPlugin implements CanvasPlugin {
     this._isDragging = true;
     this._dragStartX = event.global.x;
     this._dragStartY = event.global.y;
-    this._viewportStartX = this._viewport!.content.x;
-    this._viewportStartY = this._viewport!.content.y;
+    this._viewportStartX = this._viewport!.x;
+    this._viewportStartY = this._viewport!.y;
 
     // Change cursor
     (this._viewport as any).cursor = this._options.dragCursor;
@@ -158,8 +158,8 @@ export class DragCanvasPlugin implements CanvasPlugin {
     const dy = event.global.y - this._dragStartY;
 
     // Update viewport position
-    this._viewport!.content.x = this._viewportStartX + dx;
-    this._viewport!.content.y = this._viewportStartY + dy;
+    this._viewport!.x = this._viewportStartX + dx;
+    this._viewport!.y = this._viewportStartY + dy;
   };
 
   /**
