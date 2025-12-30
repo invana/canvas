@@ -44,6 +44,7 @@ import {
   drawPentagon,
   drawHexagon,
   drawOctagon,
+  drawPolygon,
 } from '../primitives/shapes';
 
 import {
@@ -318,46 +319,118 @@ export class Registry {
     });
 
     this.registerShape('triangle', (g, params: any, style) => {
-      drawTriangle(g, { 
-        x: params.x ?? 0, 
-        y: params.y ?? 0, 
-        radius: params.radius ?? params.size ?? 30,
-        cornerRadius: params.cornerRadius ?? 0
-      }, style);
+      // Use drawPolygon directly if sides/rotation are provided (from PolygonNode)
+      if (params.sides !== undefined || params.rotation !== undefined) {
+        drawPolygon(g, { 
+          x: params.x ?? 0, 
+          y: params.y ?? 0, 
+          radius: params.radius ?? params.size ?? 30,
+          sides: params.sides ?? 3,
+          rotation: params.rotation ?? -Math.PI / 2,
+          cornerRadius: params.cornerRadius ?? 0
+        }, style);
+      } else {
+        drawTriangle(g, { 
+          x: params.x ?? 0, 
+          y: params.y ?? 0, 
+          radius: params.radius ?? params.size ?? 30,
+          cornerRadius: params.cornerRadius ?? 0
+        }, style);
+      }
     });
 
     this.registerShape('diamond', (g, params: any, style) => {
-      drawDiamond(g, { 
-        x: params.x ?? 0, 
-        y: params.y ?? 0, 
-        radius: params.radius ?? params.size ?? 30,
-        cornerRadius: params.cornerRadius ?? 0
-      }, style);
+      // Use drawPolygon directly if sides/rotation are provided (from PolygonNode)
+      if (params.sides !== undefined || params.rotation !== undefined) {
+        drawPolygon(g, { 
+          x: params.x ?? 0, 
+          y: params.y ?? 0, 
+          radius: params.radius ?? params.size ?? 30,
+          sides: params.sides ?? 4,
+          rotation: params.rotation ?? 0,
+          cornerRadius: params.cornerRadius ?? 0
+        }, style);
+      } else {
+        drawDiamond(g, { 
+          x: params.x ?? 0, 
+          y: params.y ?? 0, 
+          radius: params.radius ?? params.size ?? 30,
+          cornerRadius: params.cornerRadius ?? 0
+        }, style);
+      }
     });
 
     this.registerShape('pentagon', (g, params: any, style) => {
-      drawPentagon(g, { 
-        x: params.x ?? 0, 
-        y: params.y ?? 0, 
-        radius: params.radius ?? params.size ?? 30,
-        cornerRadius: params.cornerRadius ?? 0
-      }, style);
+      // Use drawPolygon directly if sides/rotation are provided (from PolygonNode)
+      if (params.sides !== undefined || params.rotation !== undefined) {
+        drawPolygon(g, { 
+          x: params.x ?? 0, 
+          y: params.y ?? 0, 
+          radius: params.radius ?? params.size ?? 30,
+          sides: params.sides ?? 5,
+          rotation: params.rotation ?? -Math.PI / 2,
+          cornerRadius: params.cornerRadius ?? 0
+        }, style);
+      } else {
+        drawPentagon(g, { 
+          x: params.x ?? 0, 
+          y: params.y ?? 0, 
+          radius: params.radius ?? params.size ?? 30,
+          cornerRadius: params.cornerRadius ?? 0
+        }, style);
+      }
     });
 
     this.registerShape('hexagon', (g, params: any, style) => {
-      drawHexagon(g, { 
-        x: params.x ?? 0, 
-        y: params.y ?? 0, 
-        radius: params.radius ?? params.size ?? 30,
-        cornerRadius: params.cornerRadius ?? 0
-      }, style);
+      // Use drawPolygon directly if sides/rotation are provided (from PolygonNode)
+      if (params.sides !== undefined || params.rotation !== undefined) {
+        drawPolygon(g, { 
+          x: params.x ?? 0, 
+          y: params.y ?? 0, 
+          radius: params.radius ?? params.size ?? 30,
+          sides: params.sides ?? 6,
+          rotation: params.rotation ?? 0,
+          cornerRadius: params.cornerRadius ?? 0
+        }, style);
+      } else {
+        drawHexagon(g, { 
+          x: params.x ?? 0, 
+          y: params.y ?? 0, 
+          radius: params.radius ?? params.size ?? 30,
+          cornerRadius: params.cornerRadius ?? 0
+        }, style);
+      }
     });
 
     this.registerShape('octagon', (g, params: any, style) => {
-      drawOctagon(g, { 
+      // Use drawPolygon directly if sides/rotation are provided (from PolygonNode)
+      if (params.sides !== undefined || params.rotation !== undefined) {
+        drawPolygon(g, { 
+          x: params.x ?? 0, 
+          y: params.y ?? 0, 
+          radius: params.radius ?? params.size ?? 30,
+          sides: params.sides ?? 8,
+          rotation: params.rotation ?? Math.PI / 8,
+          cornerRadius: params.cornerRadius ?? 0
+        }, style);
+      } else {
+        drawOctagon(g, { 
+          x: params.x ?? 0, 
+          y: params.y ?? 0, 
+          radius: params.radius ?? params.size ?? 30,
+          cornerRadius: params.cornerRadius ?? 0
+        }, style);
+      }
+    });
+
+    // Generic polygon drawer for any number of sides
+    this.registerShape('polygon', (g, params: any, style) => {
+      drawPolygon(g, { 
         x: params.x ?? 0, 
         y: params.y ?? 0, 
         radius: params.radius ?? params.size ?? 30,
+        sides: params.sides ?? 6,
+        rotation: params.rotation ?? -Math.PI / 2,
         cornerRadius: params.cornerRadius ?? 0
       }, style);
     });

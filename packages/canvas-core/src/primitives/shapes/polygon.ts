@@ -103,31 +103,48 @@ export function getPolygonPoints(params: PolygonParams): number[] {
  */
 export async function drawPolygon(g: Graphics, params: PolygonParams, style: ShapeStyle): Promise<void> {
   const points = getPolygonPoints(params);
+  const hasFill = !!style.fill;
+  const hasStroke = !!style.stroke && (style.strokeWidth ?? 0) > 0;
+  const dashPattern = hasStroke ? getStrokeDashPattern(style) : null;
+  const hasDashedStroke = dashPattern && dashPattern.length >= 2;
 
-  if (style.fill) {
-    g.poly(points);
-    await applyShapeFill(g, style, {
-      x: params.x - params.radius,
-      y: params.y - params.radius,
-      width: params.radius * 2,
-      height: params.radius * 2,
-    });
+  // For dashed strokes, handle separately
+  if (hasStroke && hasDashedStroke) {
+    if (hasFill) {
+      g.poly(points);
+      await applyShapeFill(g, style, {
+        x: params.x - params.radius,
+        y: params.y - params.radius,
+        width: params.radius * 2,
+        height: params.radius * 2,
+      });
+    }
+    
+    const offset = style.strokeDashOffset ?? 0;
+    if (style.strokeStyle === 'dotted') {
+      drawDottedPolygon(g, points, dashPattern[0]! + dashPattern[1]!, style.stroke!, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+    } else if (dashPattern.length > 2) {
+      drawPatternPolygon(g, points, dashPattern, style.stroke!, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+    } else {
+      drawDashedPolygon(g, points, dashPattern[0]!, dashPattern[1]!, style.stroke!, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
+    }
+    return;
   }
 
-  if (style.stroke && (style.strokeWidth ?? 0) > 0) {
-    const dashPattern = getStrokeDashPattern(style);
+  // For regular fill/stroke, use single path
+  if (hasFill || hasStroke) {
+    g.poly(points);
     
-    if (dashPattern && dashPattern.length >= 2) {
-      const offset = style.strokeDashOffset ?? 0;
-      if (style.strokeStyle === 'dotted') {
-        drawDottedPolygon(g, points, dashPattern[0]! + dashPattern[1]!, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
-      } else if (dashPattern.length > 2) {
-        drawPatternPolygon(g, points, dashPattern, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
-      } else {
-        drawDashedPolygon(g, points, dashPattern[0]!, dashPattern[1]!, style.stroke, style.strokeWidth ?? 1, style.strokeAlpha ?? 1, offset);
-      }
-    } else {
-      g.poly(points);
+    if (hasFill) {
+      await applyShapeFill(g, style, {
+        x: params.x - params.radius,
+        y: params.y - params.radius,
+        width: params.radius * 2,
+        height: params.radius * 2,
+      });
+    }
+    
+    if (hasStroke) {
       g.stroke(getStrokeOptions(style));
     }
   }

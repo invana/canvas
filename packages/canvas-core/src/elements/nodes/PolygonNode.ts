@@ -106,7 +106,9 @@ export class PolygonNode extends RendererNodeBase {
       points.push(Math.sin(angle) * haloRadius);
     }
     
+    // Draw halo as stroke-only outline
     this._graphics.poly(points);
+    this._graphics.fill({ color: 0x000000, alpha: 0 }); // Transparent fill to complete the path
     this._graphics.stroke({
       color: haloColor,
       width: haloWidth * 2,
