@@ -462,6 +462,18 @@ export class Canvas {
     // Note: styles only apply to new elements, existing elements are not updated
   }
 
+  /**
+   * Update canvas options dynamically
+   */
+  setOptions(options: Partial<Pick<CanvasOptions, 'edgeBoundaryOffset' | 'fitPadding'>>): void {
+    if (options.edgeBoundaryOffset !== undefined) {
+      this._options.edgeBoundaryOffset = options.edgeBoundaryOffset;
+    }
+    if (options.fitPadding !== undefined) {
+      this._options.fitPadding = options.fitPadding;
+    }
+  }
+
   // =========================================================================
   // VIEWPORT CONTROLS
   // =========================================================================

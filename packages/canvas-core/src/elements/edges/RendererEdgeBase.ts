@@ -156,6 +156,10 @@ export abstract class RendererEdgeBase extends RendererBase<RendererEdge> {
 
     super({ ...options, data } as RendererBaseOptions<RendererEdge>);
     this._edgeStyle = options.style ?? {};
+    
+    // CRITICAL: Edges draw using absolute coordinates, so container must be at origin
+    // Override any position set by parent constructor
+    this.position.set(0, 0);
 
     // Always activate DEFAULT state
     this._activeStates.add(EdgeStates.DEFAULT);
@@ -198,10 +202,34 @@ export abstract class RendererEdgeBase extends RendererBase<RendererEdge> {
 
   /**
    * Calculate tangent angles at source and target for arrow placement
-   * @param source - Source point
-   * @param target - Target point
+   * Also returns the direction vectors for boundary intersection
+   * @param source - Source point (node center)
+   * @param target - Target point (node center)
    */
   protected abstract calculateTangents(source: Point, target: Point): EdgeTangents;
+
+  /**
+   * Calculate the direction vector at which the edge leaves/enters a node
+   * Used for accurate boundary intersection calculation
+   * By default, uses a straight line direction, but bezier/orthogonal edges should override
+   * @param source - Source point (node center)
+   * @param target - Target point (node center)
+   * @param isSource - true for source node, false for target node
+   * @public - Renderer needs to call this when updating edge endpoints
+   */
+  public calculateBoundaryDirection(source: Point, target: Point, isSource: boolean): Point {
+    // Default: straight line direction
+    const dx = target.x - source.x;
+    const dy = target.y - source.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    
+    if (dist === 0) return { x: 1, y: 0 };
+    
+    return {
+      x: (isSource ? dx : -dx) / dist,
+      y: (isSource ? dy : -dy) / dist,
+    };
+  }
 
   // =========================================================================
   // PROPERTIES
@@ -381,6 +409,9 @@ export abstract class RendererEdgeBase extends RendererBase<RendererEdge> {
   protected render(): void {
     const style = this.getActiveStyle();
     const { source, target } = this._data;
+    console.log(`[Edge ${this.id}] render() using:`, { source, target });
+    console.log(`[Edge ${this.id}] Container position:`, { x: this.x, y: this.y, position: this.position });
+    console.log(`[Edge ${this.id}] Graphics position:`, { x: this._graphics.x, y: this._graphics.y, position: this._graphics.position });
     const arrowSize = this._data.arrowSize ?? 10;
 
     // Calculate arrow offsets
@@ -389,14 +420,14 @@ export abstract class RendererEdgeBase extends RendererBase<RendererEdge> {
     const sourceOffset = getArrowOffset(sourceArrow as ArrowType, arrowSize);
     const targetOffset = getArrowOffset(targetArrow as ArrowType, arrowSize);
 
-    // Get tangents for arrow placement
+    // Get tangents for arrow placement based on the actual path direction
     const { sourceTangent, targetTangent } = this.calculateTangents(source, target);
 
-    // Calculate adjusted endpoints
+    // Calculate adjusted endpoints for the path (shortening the path to make room for arrows)
     const adjustedSource = this.adjustPointForArrow(source, sourceTangent, sourceOffset);
     const adjustedTarget = this.adjustPointForArrow(target, targetTangent + Math.PI, targetOffset);
 
-    // Draw path
+    // Draw path between adjusted points
     this.drawPath(adjustedSource, adjustedTarget, style);
 
     // Draw arrows
@@ -407,10 +438,12 @@ export abstract class RendererEdgeBase extends RendererBase<RendererEdge> {
     };
 
     if (sourceArrow !== 'none') {
-      this.drawArrowAtPoint(source, sourceTangent + Math.PI, arrowSize, sourceArrow as ArrowType, arrowStyle);
+      // Source arrow: tip at source node boundary, pointing away from source (in direction of path)
+      this.drawArrowAtPoint(source, sourceTangent, arrowSize, sourceArrow as ArrowType, arrowStyle);
     }
 
     if (targetArrow !== 'none') {
+      // Target arrow: tip at target node boundary, pointing toward target (in direction of path)
       this.drawArrowAtPoint(target, targetTangent, arrowSize, targetArrow as ArrowType, arrowStyle);
     }
   }
@@ -550,8 +583,15 @@ export abstract class RendererEdgeBase extends RendererBase<RendererEdge> {
    * Update edge endpoints
    */
   updateEndpoints(source: Point, target: Point): void {
+    console.log(`[Edge ${this.id}] updateEndpoints called:`, { source, target });
     this._data.source = source;
     this._data.target = target;
+    console.log(`[Edge ${this.id}] _data updated:`, { source: this._data.source, target: this._data.target });
+    
+    // CRITICAL: Edges draw using absolute coordinates, so container must stay at origin
+    // This ensures the rendered path matches the calculated source/target coordinates
+    this.position.set(0, 0);
+    
     this.forceRender();
   }
 

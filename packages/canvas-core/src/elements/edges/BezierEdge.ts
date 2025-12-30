@@ -49,6 +49,10 @@ export class BezierEdge extends RendererEdgeBase {
     const controlX = midX + perpX * offset;
     const controlY = midY + perpY * offset;
 
+    console.log(`[BezierEdge ${this.id}] calculateTangents:`, {
+      source, target, curvature, control: { x: controlX, y: controlY }
+    });
+
     // Tangent at source: direction from source to control point
     const sourceTangent = Math.atan2(controlY - source.y, controlX - source.x);
     
@@ -58,6 +62,20 @@ export class BezierEdge extends RendererEdgeBase {
     return {
       sourceTangent,
       targetTangent,
+    };
+  }
+
+  /**
+   * Override boundary direction to match the bezier curve tangent
+   * This ensures edges connect to nodes at the correct angle
+   */
+  public calculateBoundaryDirection(source: Point, target: Point, isSource: boolean): Point {
+    const tangents = this.calculateTangents(source, target);
+    const angle = isSource ? tangents.sourceTangent : tangents.targetTangent;
+    
+    return {
+      x: Math.cos(angle),
+      y: Math.sin(angle),
     };
   }
 }

@@ -357,20 +357,45 @@ export class Renderer {
     } = input;
     
     // Resolve source and target
-    const { point: sourcePoint, nodeId: sourceNodeId, node: sourceNode } = 
+    const { point: sourcePoint, nodeId: sourceNodeId, node: sourceNode} = 
       this.resolveEdgeEndpoint(source);
     const { point: targetPoint, nodeId: targetNodeId, node: targetNode } = 
       this.resolveEdgeEndpoint(target);
     
-    // Calculate boundary-adjusted points
-    const adjustedPoints = this.calculateBoundaryPoints(
+    // Create edge using registry  
+    const edgePathType = (pathType as string) ?? 'line';
+    const EdgeClass = this._registry.getEdgeClass?.(edgePathType);
+    
+    if (!EdgeClass) {
+      console.warn(`Unknown edge path type: ${edgePathType}, defaulting to straight line`);
+    }
+    
+    // Create temporary edge to calculate proper boundary intersection
+    const tempEdge = new (EdgeClass ?? LineEdge)({
+      data: {
+        id: id + '_temp',
+        source: sourcePoint,
+        target: targetPoint,
+        x: 0,
+        y: 0,
+      } as any,
+      style: {},
+      registry: this._registry,
+    });
+    
+    // Calculate boundary-adjusted points using edge's direction calculation
+    const adjustedPoints = this.calculateBoundaryPointsForEdge(
+      tempEdge,
       sourceNode,
       targetNode,
       sourcePoint,
       targetPoint
     );
     
-    // Create edge shape data
+    // Clean up temp edge
+    tempEdge.destroy();
+    
+    // Create edge shape data with adjusted points
     const edgeShapeData: RendererEdge = {
       id,
       source: adjustedPoints.source,
@@ -396,15 +421,7 @@ export class Renderer {
       style as Partial<FunctionBasedEdgeStyle>
     );
     
-    // Create edge using registry  
-    const edgePathType = (pathType as string) ?? 'line';
-    
-    const EdgeClass = this._registry.getEdgeClass?.(edgePathType);
-    
-    if (!EdgeClass) {
-      console.warn(`Unknown edge path type: ${edgePathType}, defaulting to straight line`);
-    }
-    
+    // Create the actual edge
     const edge = new (EdgeClass ?? LineEdge)({
       data: edgeShapeData,
       style: mergedStyle,
@@ -680,8 +697,9 @@ export class Renderer {
           ? { x: targetNode.x, y: targetNode.y }
           : tracking.targetPoint!;
       
-      // Recalculate boundary points
-      const adjustedPoints = this.calculateBoundaryPoints(
+      // Recalculate boundary points using edge's own direction calculation
+      const adjustedPoints = this.calculateBoundaryPointsForEdge(
+        edge,
         sourceNode ?? null,
         targetNode ?? null,
         sourceCenter,
@@ -753,6 +771,38 @@ export class Renderer {
           this._edgeBoundaryOffset
         );
       }
+    }
+    
+    return { source, target };
+  }
+
+  /**
+   * Calculate boundary points using edge's specific direction calculation
+   * This ensures bezier and orthogonal edges connect at the correct angle
+   */
+  private calculateBoundaryPointsForEdge(
+    edge: RendererEdgeBase,
+    sourceNode: RendererNodeBase | null,
+    targetNode: RendererNodeBase | null,
+    sourceCenter: Point,
+    targetCenter: Point
+  ): { source: Point; target: Point } {
+    let source = sourceCenter;
+    let target = targetCenter;
+    
+    // Use edge's boundary direction calculation (accounts for bezier curves, etc.)
+    if (sourceNode) {
+      const dir = edge.calculateBoundaryDirection(sourceCenter, targetCenter, true);
+      console.log(`[Boundary] Edge ${edge.id} source direction:`, dir, 'from', sourceCenter, 'to', targetCenter);
+      source = sourceNode.getBoundaryPoint(dir, this._edgeBoundaryOffset);
+      console.log(`[Boundary] Edge ${edge.id} source boundary point:`, source);
+    }
+    
+    if (targetNode) {
+      const dir = edge.calculateBoundaryDirection(sourceCenter, targetCenter, false);
+      console.log(`[Boundary] Edge ${edge.id} target direction:`, dir);
+      target = targetNode.getBoundaryPoint(dir, this._edgeBoundaryOffset);
+      console.log(`[Boundary] Edge ${edge.id} target boundary point:`, target);
     }
     
     return { source, target };
