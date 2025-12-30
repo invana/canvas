@@ -446,6 +446,17 @@ export class Canvas {
    */
   setStyles(styles: CanvasStyles): void {
     this._styles = styles;
+    
+    // Update renderer's user styles so new nodes/edges use the new theme
+    if (this._renderer) {
+      if (styles.node) {
+        this._renderer.setUserNodeStyle(styles.node);
+      }
+      if (styles.edge) {
+        this._renderer.setUserEdgeStyle(styles.edge);
+      }
+    }
+    
     // Note: styles only apply to new elements, existing elements are not updated
   }
 

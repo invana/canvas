@@ -753,6 +753,26 @@ export class Renderer {
   }
 
   // =========================================================================
+  // STYLE UPDATES
+  // =========================================================================
+
+  /**
+   * Update user-defined node styles
+   * Used when changing themes or global style configurations
+   */
+  setUserNodeStyle(style: Partial<FunctionBasedNodeStyle>): void {
+    this._userNodeStyle = style;
+  }
+
+  /**
+   * Update user-defined edge styles
+   * Used when changing themes or global style configurations
+   */
+  setUserEdgeStyle(style: Partial<FunctionBasedEdgeStyle>): void {
+    this._userEdgeStyle = style;
+  }
+
+  // =========================================================================
   // CLEANUP
   // =========================================================================
 
