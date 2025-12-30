@@ -43,7 +43,8 @@ const themes = {
       backgroundColor: '#0b2f66',
       spacing: 25,
       lineWidth: 0.5,
-      alpha: 0.8
+      alpha: 0.8,
+      follow: true
     }
   },
   light: {
@@ -151,6 +152,7 @@ export const Theming: Story = {
         width: container.clientWidth || 800,
         height: container.clientHeight || 600,
         data: generateGraphData(),
+        behavior: 'default',
         styles: themes.blueprint.styles,
       });
 
@@ -177,6 +179,9 @@ export const Theming: Story = {
           // currentTheme = value;
           const theme = themes[value as keyof typeof themes];
           
+          console.log('Switching to theme:', value);
+          console.log('Theme styles:', theme.styles);
+          
           // Update default styles for new elements
           canvas.setStyles(theme.styles);
           
@@ -185,7 +190,12 @@ export const Theming: Story = {
           
           // Recreate the entire graph with new theme
           canvas.clear();
-          canvas.render(generateGraphData());
+          const data = generateGraphData();
+          console.log('Rendering data:', data);
+          console.log('Nodes:', data.nodes.length, 'Edges:', data.edges.length);
+          canvas.render(data);
+          
+          console.log('Canvas state after render:', canvas.state);
         });
   }
 };

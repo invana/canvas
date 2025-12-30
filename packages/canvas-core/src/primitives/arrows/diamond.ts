@@ -4,6 +4,7 @@
 
 import type { Graphics } from 'pixi.js';
 import type { ArrowParams, ArrowStyle } from './types';
+import { getStrokeOptions } from '../shapes/strokeHelper';
 
 /**
  * Draw a filled diamond arrow head
@@ -44,6 +45,7 @@ export function drawDiamondArrow(
   g.closePath();
 
   if (style.fill) {
+    g.fill({ color: style.fill, alpha: style.fillAlpha ?? 1 });
   }
 }
 
@@ -85,13 +87,14 @@ export function drawDiamondOutlineArrow(
   g.closePath();
 
   if (style.fill) {
+    g.fill({ color: style.fill, alpha: style.fillAlpha ?? 1 });
   }
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {
-    g.stroke({
-      color: style.stroke,
-      width: style.strokeWidth ?? 1,
-      alpha: style.strokeAlpha ?? 1,
-      alignment: 0.5,
-    });
+    g.stroke(getStrokeOptions({
+      stroke: style.stroke,
+      strokeWidth: style.strokeWidth ?? 1,
+      strokeAlpha: style.strokeAlpha ?? 1,
+      strokeAlignment: 0.5,
+    } as any));
   }
 }

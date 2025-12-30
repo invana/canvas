@@ -140,6 +140,8 @@ export interface RendererOptions {
   defaultNodeStyle?: Partial<FunctionBasedNodeStyle>;
   /** User-provided node style (supports function-based properties) */
   userNodeStyle?: Partial<FunctionBasedNodeStyle>;
+  /** Default edge style (supports function-based properties) */
+  defaultEdgeStyle?: Partial<FunctionBasedEdgeStyle>;
   /** User-provided edge style (supports function-based properties) */
   userEdgeStyle?: Partial<FunctionBasedEdgeStyle>;
   /** Offset from node boundary for edges */
@@ -178,6 +180,7 @@ export class Renderer {
   // Styles (may contain function-based properties)
   private _defaultNodeStyle: Partial<FunctionBasedNodeStyle>;
   private _userNodeStyle: Partial<FunctionBasedNodeStyle>;
+  private _defaultEdgeStyle: Partial<FunctionBasedEdgeStyle>;
   private _userEdgeStyle: Partial<FunctionBasedEdgeStyle>;
   private _edgeBoundaryOffset: number;
   
@@ -191,6 +194,7 @@ export class Renderer {
     
     this._defaultNodeStyle = options.defaultNodeStyle ?? {};
     this._userNodeStyle = options.userNodeStyle ?? {};
+    this._defaultEdgeStyle = options.defaultEdgeStyle ?? {};
     this._userEdgeStyle = options.userEdgeStyle ?? {};
   }
 
@@ -387,12 +391,14 @@ export class Renderer {
     // Resolve edge styles with function-based property evaluation
     const mergedStyle = resolveEdgeStyle(
       edgeShapeData,
+      this._defaultEdgeStyle,
       this._userEdgeStyle,
       style as Partial<FunctionBasedEdgeStyle>
     );
     
     // Create edge using registry  
     const edgePathType = (pathType as string) ?? 'line';
+    
     const EdgeClass = this._registry.getEdgeClass?.(edgePathType);
     
     if (!EdgeClass) {

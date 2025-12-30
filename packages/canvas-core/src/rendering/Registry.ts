@@ -65,7 +65,13 @@ import { RectNode } from '../elements/nodes/RectNode';
 import { EllipseNode } from '../elements/nodes/EllipseNode';
 import { HTMLNode } from '../elements/nodes/HTMLNode';
 import { StarNode } from '../elements/nodes/StarNode';
-import { TriangleNode, DiamondNode, PentagonNode, HexagonNode, OctagonNode, PolygonNode } from '../elements/nodes/PolygonNode';
+import { TriangleNode, DiamondNode, PentagonNode, 
+  HexagonNode, OctagonNode, PolygonNode } from '../elements/nodes/PolygonNode';
+
+// Import edge shape classes
+import { LineEdge } from '../elements/edges/LineEdge';
+import { BezierEdge } from '../elements/edges/BezierEdge';
+import { OrthogonalEdge } from '../elements/edges/OrthogonalEdge';
 
 /**
  * Node shape class constructor type
@@ -450,6 +456,7 @@ export class Registry {
   }
 
   private registerDefaultPaths(): void {
+    console.log('Registering default paths...');
     this.registerPath('line', (g, params: any, style) => {
       drawLine(g, { from: params.from, to: params.to }, style);
     });
@@ -599,20 +606,18 @@ export class Registry {
    * Register default edge shape classes
    */
   private registerDefaultEdgeClasses(): void {
-    // Import edge classes
-    import('../elements/edges/LineEdge').then(({ LineEdge }) => {
-      this.registerEdgeClass('line', LineEdge);
-      this.registerEdgeClass('straight', LineEdge);
-    });
-    import('../elements/edges/BezierEdge').then(({ BezierEdge }) => {
-      this.registerEdgeClass('bezier', BezierEdge);
-      this.registerEdgeClass('curve', BezierEdge);
-      this.registerEdgeClass('curved', BezierEdge);
-      this.registerEdgeClass('quadratic', BezierEdge);
-    });
-    import('../elements/edges/OrthogonalEdge').then(({ OrthogonalEdge }) => {
-      this.registerEdgeClass('orthogonal', OrthogonalEdge);
-    });
+    // Register line edge
+    this.registerEdgeClass('line', LineEdge);
+    this.registerEdgeClass('straight', LineEdge);
+    
+    // Register bezier edge
+    this.registerEdgeClass('bezier', BezierEdge);
+    this.registerEdgeClass('curve', BezierEdge);
+    this.registerEdgeClass('curved', BezierEdge);
+    this.registerEdgeClass('quadratic', BezierEdge);
+    
+    // Register orthogonal edge
+    this.registerEdgeClass('orthogonal', OrthogonalEdge);
   }
 
   // =========================================================================

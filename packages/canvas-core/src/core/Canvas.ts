@@ -38,6 +38,7 @@ import { Registry } from '../rendering/Registry';
 import { Renderer, type CanvasNode, type CanvasEdge } from '../rendering/Renderer';
 import { type FunctionBasedNodeStyle, type FunctionBasedEdgeStyle } from '../style/FunctionBasedStyle';
 import { DEFAULT_NODE_STYLE } from '../defaults/nodes';
+import { DEFAULT_EDGE_STYLE } from '../defaults/edges';
 import { SceneGraph } from '../scene/SceneGraph';
 import { QueryEngine, type QueryFilter, type QueryResult } from '../scene/QueryEngine';
 import { Relationships, type RelationshipInfo, type PathResult } from '../scene/Relationships';
@@ -160,7 +161,7 @@ export class Canvas {
 
     // Store plugin configuration for later initialization
     this._pluginConfigs = {
-      behavior: options.behavior,
+      behavior: options.behavior ?? 'default',
       plugins: options.plugins,
     };
 
@@ -253,6 +254,7 @@ export class Canvas {
       edgeLayer: this._edgeLayer,
       defaultNodeStyle: DEFAULT_NODE_STYLE,
       userNodeStyle: this._styles.node,
+      defaultEdgeStyle: DEFAULT_EDGE_STYLE,
       userEdgeStyle: this._styles.edge,
       edgeBoundaryOffset: this._options.edgeBoundaryOffset,
     });

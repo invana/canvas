@@ -4,6 +4,7 @@
 
 import type { Graphics } from 'pixi.js';
 import type { ArrowParams, ArrowStyle } from './types';
+import { getStrokeOptions } from '../shapes/strokeHelper';
 
 /**
  * Draw a filled square arrow head
@@ -41,6 +42,7 @@ export function drawSquareArrow(
   g.closePath();
 
   if (style.fill) {
+    g.fill({ color: style.fill, alpha: style.fillAlpha ?? 1 });
   }
 }
 
@@ -78,14 +80,15 @@ export function drawSquareOutlineArrow(
   g.closePath();
 
   if (style.fill) {
+    g.fill({ color: style.fill, alpha: style.fillAlpha ?? 1 });
   }
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {
-    g.stroke({
-      color: style.stroke,
-      width: style.strokeWidth ?? 1,
-      alpha: style.strokeAlpha ?? 1,
-      alignment: 0.5,
-    });
+    g.stroke(getStrokeOptions({
+      stroke: style.stroke,
+      strokeWidth: style.strokeWidth ?? 1,
+      strokeAlpha: style.strokeAlpha ?? 1,
+      strokeAlignment: 0.5,
+    } as any));
   }
 }
 
@@ -114,13 +117,13 @@ export function drawTeeArrow(
   g.lineTo(right.x, right.y);
 
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {
-    g.stroke({
-      color: style.stroke,
-      width: style.strokeWidth ?? 2,
-      alpha: style.strokeAlpha ?? 1,
-      cap: 'round',
-      alignment: 0.5,
-    });
+    g.stroke(getStrokeOptions({
+      stroke: style.stroke,
+      strokeWidth: style.strokeWidth ?? 2,
+      strokeAlpha: style.strokeAlpha ?? 1,
+      strokeCap: 'round',
+      strokeAlignment: 0.5,
+    } as any));
   }
 }
 
@@ -149,12 +152,12 @@ export function drawBarArrow(
   g.lineTo(right.x, right.y);
 
   if (style.stroke && (style.strokeWidth ?? 0) > 0) {
-    g.stroke({
-      color: style.stroke,
-      width: style.strokeWidth ?? 2,
-      alpha: style.strokeAlpha ?? 1,
-      cap: 'square',
-      alignment: 0.5,
-    });
+    g.stroke(getStrokeOptions({
+      stroke: style.stroke,
+      strokeWidth: style.strokeWidth ?? 2,
+      strokeAlpha: style.strokeAlpha ?? 1,
+      strokeCap: 'square',
+      strokeAlignment: 0.5,
+    } as any));
   }
 }

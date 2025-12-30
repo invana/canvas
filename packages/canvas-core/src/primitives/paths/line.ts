@@ -6,6 +6,7 @@
 import type { Graphics } from 'pixi.js';
 import type { Point, PathStyle } from './types';
 import { drawDashedLine, drawDottedLine, drawPatternLine } from '../shapes/dashedStrokes';
+import { getStrokeOptions } from '../shapes/strokeHelper';
 
 /**
  * Parameters for drawing a line
@@ -70,16 +71,10 @@ export function drawLine(g: Graphics, params: LineParams, style: PathStyle): voi
         offset);
     }
   } else {
+    // Solid stroke - use same pattern as shapes
     g.moveTo(from.x, from.y);
     g.lineTo(to.x, to.y);
-    g.stroke({
-      color: style.stroke,
-      width: style.strokeWidth,
-      alpha: style.strokeAlpha ?? 1,
-      cap: style.strokeCap ?? style.lineCap ?? 'round',
-      join: style.lineJoin ?? 'round',
-      alignment: style.strokeAlignment,
-    });
+    g.stroke(getStrokeOptions(style));
   }
 }
 

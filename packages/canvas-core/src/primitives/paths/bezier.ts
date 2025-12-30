@@ -5,6 +5,7 @@
 
 import type { Graphics } from 'pixi.js';
 import type { Point, PathStyle } from './types';
+import { getStrokeOptions } from '../shapes/strokeHelper';
 
 /**
  * Parameters for a quadratic bezier curve
@@ -47,14 +48,7 @@ export function drawQuadraticBezier(
 
   g.moveTo(from.x, from.y);
   g.quadraticCurveTo(control.x, control.y, to.x, to.y);
-  g.stroke({
-    color: style.stroke,
-    width: style.strokeWidth,
-    alpha: style.strokeAlpha ?? 1,
-    cap: style.strokeCap ?? style.lineCap ?? 'round',
-    join: style.lineJoin ?? 'round',
-    alignment: style.strokeAlignment,
-  });
+  g.stroke(getStrokeOptions(style));
 }
 
 /**
@@ -69,14 +63,7 @@ export function drawCubicBezier(
 
   g.moveTo(from.x, from.y);
   g.bezierCurveTo(control1.x, control1.y, control2.x, control2.y, to.x, to.y);
-  g.stroke({
-    color: style.stroke,
-    width: style.strokeWidth,
-    alpha: style.strokeAlpha ?? 1,
-    cap: style.strokeCap ?? style.lineCap ?? 'round',
-    join: style.lineJoin ?? 'round',
-    alignment: style.strokeAlignment,
-  });
+  g.stroke(getStrokeOptions(style));
 }
 
 /**

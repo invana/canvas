@@ -10,6 +10,7 @@ import type { Graphics } from 'pixi.js';
  */
 export interface ArrowStyle {
   fill?: string;
+  fillAlpha?: number;
   stroke?: string;
   strokeWidth?: number;
   strokeAlpha?: number;

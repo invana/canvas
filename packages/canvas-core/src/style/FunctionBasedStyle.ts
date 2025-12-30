@@ -92,14 +92,18 @@ export function resolveNodeStyle(
 
 /**
  * Evaluate function-based edge style properties
+ * Merges default, user global, and individual edge styles
+ * Priority: defaultStyle → userGlobalStyle → individualStyle (later overrides earlier)
  */
 export function resolveEdgeStyle(
   edgeData: RendererEdge,
-  globalStyle?: Partial<FunctionBasedEdgeStyle>,
+  defaultStyle?: Partial<FunctionBasedEdgeStyle>,
+  userGlobalStyle?: Partial<FunctionBasedEdgeStyle>,
   individualStyle?: Partial<FunctionBasedEdgeStyle>
 ): Partial<EdgeStyle> {
   const merged: Partial<FunctionBasedEdgeStyle> = {
-    ...globalStyle,
+    ...defaultStyle,
+    ...userGlobalStyle,
     ...individualStyle,
   };
 
