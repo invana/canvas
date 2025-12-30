@@ -18,6 +18,13 @@ export interface SelectionConfig {
   };
 }
 
+/** Default selection styling */
+const DEFAULT_SELECTION_STYLE = {
+  stroke: '#4A90E2',
+  strokeWidth: 3,
+  alpha: 1,
+} as const;
+
 export type SelectionEventCallback = (selected: SelectableElement[]) => void;
 
 export class SelectionManager {
@@ -28,11 +35,7 @@ export class SelectionManager {
   constructor(config: SelectionConfig = {}) {
     this.config = {
       multiSelect: config.multiSelect ?? true,
-      selectionStyle: config.selectionStyle ?? {
-        stroke: '#4A90E2',
-        strokeWidth: 3,
-        alpha: 1,
-      },
+      selectionStyle: config.selectionStyle ?? DEFAULT_SELECTION_STYLE,
     };
   }
 

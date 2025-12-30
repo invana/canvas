@@ -28,6 +28,12 @@
 import { Container } from 'pixi.js';
 import { Registry } from './Registry';
 import { 
+  resolveNodeStyle,
+  resolveEdgeStyle,
+  type FunctionBasedNodeStyle, 
+  type FunctionBasedEdgeStyle 
+} from '../style/FunctionBasedStyle';
+import { 
   NodeShapeBase, 
   type NodeData as NodeShapeData, 
   type NodeStyle,
@@ -132,10 +138,10 @@ export interface RendererOptions {
   nodeLayer: Container;
   /** The edge layer container */
   edgeLayer: Container;
-  /** Default node style */
-  defaultNodeStyle?: Partial<NodeStyle>;
-  /** Default edge style */
-  defaultEdgeStyle?: Partial<EdgeStyle>;
+  /** Default node style (supports function-based properties) */
+  defaultNodeStyle?: Partial<FunctionBasedNodeStyle>;
+  /** Default edge style (supports function-based properties) */
+  defaultEdgeStyle?: Partial<FunctionBasedEdgeStyle>;
   /** Offset from node boundary for edges */
   edgeBoundaryOffset?: number;
   /** Callback when a node is dragged */
@@ -169,9 +175,9 @@ export class Renderer {
   // Node-edge relationships (node ID → set of edge IDs)
   private _nodeEdges: Map<string, Set<string>> = new Map();
   
-  // Styles
-  private _defaultNodeStyle: Partial<NodeStyle>;
-  private _defaultEdgeStyle: Partial<EdgeStyle>;
+  // Styles (may contain function-based properties)
+  private _defaultNodeStyle: Partial<FunctionBasedNodeStyle>;
+  private _defaultEdgeStyle: Partial<FunctionBasedEdgeStyle>;
   private _edgeBoundaryOffset: number;
   
   // Callbacks
@@ -206,12 +212,7 @@ export class Renderer {
       style, interactive, draggable, states 
     } = input;
     
-    const mergedStyle: Partial<NodeStyle> = {
-      ...this._defaultNodeStyle,
-      ...style,
-    };
-    
-    // Create node data structure
+    // Create node data structure first (needed for function evaluation)
     const nodeData: NodeShapeData = {
       id,
       x,
@@ -225,6 +226,13 @@ export class Renderer {
       payload,
       badges,
     };
+    
+    // Resolve styles with function-based property evaluation
+    const mergedStyle = resolveNodeStyle(
+      nodeData,
+      this._defaultNodeStyle,
+      style as Partial<FunctionBasedNodeStyle>
+    );
     
     // Create node using registry
     const shapeType = shape ?? 'circle';
@@ -364,13 +372,8 @@ export class Renderer {
       targetPoint
     );
     
-    const mergedStyle: Partial<EdgeStyle> = {
-      ...this._defaultEdgeStyle,
-      ...style,
-    };
-    
-    // Create edge data with resolved points
-    const edgeData: EdgeShapeData = {
+    // Create edge shape data
+    const edgeShapeData: EdgeShapeData = {
       id,
       source: adjustedPoints.source,
       target: adjustedPoints.target,
@@ -387,6 +390,13 @@ export class Renderer {
       payload,
     } as EdgeShapeData;
     
+    // Resolve edge styles with function-based property evaluation
+    const mergedStyle = resolveEdgeStyle(
+      edgeShapeData,
+      this._defaultEdgeStyle,
+      style as Partial<FunctionBasedEdgeStyle>
+    );
+    
     // Create edge using registry  
     const edgePathType = (pathType as string) ?? 'line';
     const EdgeClass = this._registry.getEdgeClass?.(edgePathType);
@@ -396,7 +406,7 @@ export class Renderer {
     }
     
     const edge = new (EdgeClass ?? LineEdge)({
-      data: edgeData,
+      data: edgeShapeData,
       style: mergedStyle,
       states,
       registry: this._registry,

@@ -24,7 +24,7 @@ import { FederatedPointerEvent, Graphics, Ticker } from 'pixi.js';
 import { drawRippleEffect, calculateRippleRadius, calculateRippleAlpha } from '../primitives/effects';
 import { getRectIntersection } from '../primitives/shapes/rect';
 import { getPolygonIntersection } from '../primitives/shapes/polygon';
-import { DEFAULT_NODE_LABEL } from '../defaults/nodes';
+import { DEFAULT_NODE_STYLE } from '../defaults/nodes';
 
 /**
  * Node shape types
@@ -303,11 +303,11 @@ export class NodeShape extends BaseShape<NodeData> {
       labelText,
       bounds,
       {
-        position: this._nodeStyle.labelPosition ?? DEFAULT_NODE_LABEL.position,
-        offsetX: this._nodeStyle.labelOffsetX ?? DEFAULT_NODE_LABEL.offsetX,
-        offsetY: this._nodeStyle.labelOffsetY ?? DEFAULT_NODE_LABEL.offsetY,
+        position: this._nodeStyle.labelPosition ?? DEFAULT_NODE_STYLE.labelPosition,
+        offsetX: this._nodeStyle.labelOffsetX ?? DEFAULT_NODE_STYLE.labelOffsetX,
+        offsetY: this._nodeStyle.labelOffsetY ?? DEFAULT_NODE_STYLE.labelOffsetY,
       },
-      this._nodeStyle.labelStyle ?? DEFAULT_NODE_LABEL.style
+      this._nodeStyle.labelStyle ?? DEFAULT_NODE_STYLE.labelStyle
     );
 
     this.addLabel('main', label);

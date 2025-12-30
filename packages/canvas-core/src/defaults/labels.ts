@@ -39,6 +39,7 @@ export const DEFAULT_LABEL_OFFSET = {
 
 /**
  * Label style variants for different use cases
+ * These provide consistent styling patterns across the application
  */
 export const LABEL_VARIANTS = {
   /** Standard node label */
@@ -77,6 +78,7 @@ export const LABEL_VARIANTS = {
     fill: '#666666',
   },
 } as const;
+
 
 /**
  * Merge user label style with defaults

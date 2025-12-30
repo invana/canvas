@@ -30,7 +30,7 @@ import { BaseShape, type BaseShapeData, type BaseShapeStyle, type BaseShapeOptio
 import { FederatedPointerEvent, Graphics, Ticker } from 'pixi.js';
 import { drawRippleEffect, calculateRippleRadius, calculateRippleAlpha } from '../../primitives/effects';
 import { NodeStates, KNOWN_NODE_STATES, type NodeStateName } from '../../types/states';
-import { mergeNodeStateStyles, DEFAULT_NODE_LABEL, DEFAULT_NODE_BADGE } from '../../defaults/nodes';
+import { DEFAULT_NODE_STYLE } from '../../defaults/nodes';
 
 /**
  * Point interface for coordinates
@@ -240,9 +240,6 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
   constructor(options: NodeShapeOptions) {
     super(options as BaseShapeOptions<NodeData>);
     this._nodeStyle = options.style ?? {};
-    
-    // Merge user-provided state styles with defaults
-    this._nodeStyle.states = mergeNodeStateStyles(this._nodeStyle.states);
     
     // Interaction defaults changed to false - plugins enable interactions
     this._draggable = options.draggable ?? false;
@@ -710,13 +707,13 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
    */
   protected getHaloColor(style: ShapeStyle): string | number {
     if (style.haloStroke) {
-      return typeof style.haloStroke === 'object' ? DEFAULT_NODE_LABEL.style.fill ?? '#000000' : style.haloStroke;
+      return typeof style.haloStroke === 'object' ? DEFAULT_NODE_STYLE.labelStyle?.fill ?? '#000000' : style.haloStroke;
     } else if (style.fill) {
-      return typeof style.fill === 'object' ? DEFAULT_NODE_LABEL.style.fill ?? '#000000' : style.fill;
+      return typeof style.fill === 'object' ? DEFAULT_NODE_STYLE.labelStyle?.fill ?? '#000000' : style.fill;
     } else if (style.stroke) {
       return style.stroke;
     }
-    return DEFAULT_NODE_LABEL.style.fill ?? '#000000';
+    return DEFAULT_NODE_STYLE.labelStyle?.fill ?? '#000000';
   }
 
   // =========================================================================
@@ -739,11 +736,11 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
       labelText,
       bounds,
       {
-        position: this._nodeStyle.labelPosition ?? DEFAULT_NODE_LABEL.position,
-        offsetX: this._nodeStyle.labelOffsetX ?? DEFAULT_NODE_LABEL.offsetX,
-        offsetY: this._nodeStyle.labelOffsetY ?? DEFAULT_NODE_LABEL.offsetY,
+        position: this._nodeStyle.labelPosition ?? DEFAULT_NODE_STYLE.labelPosition,
+        offsetX: this._nodeStyle.labelOffsetX ?? DEFAULT_NODE_STYLE.labelOffsetX,
+        offsetY: this._nodeStyle.labelOffsetY ?? DEFAULT_NODE_STYLE.labelOffsetY,
       },
-      this._nodeStyle.labelStyle ?? DEFAULT_NODE_LABEL.style
+      this._nodeStyle.labelStyle ?? DEFAULT_NODE_STYLE.labelStyle
     );
 
     this.addLabel('main', label);
@@ -770,9 +767,9 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
     // Create new badges
     badges.forEach((badge, index) => {
       const badgeSize = badge.size ?? 24;
-      const fontSize = badge.fontSize ?? DEFAULT_NODE_BADGE.fontSize;
-      const color = this.normalizeColor(badge.color ?? DEFAULT_NODE_BADGE.background);
-      const textColor = this.normalizeColor(badge.textColor ?? DEFAULT_NODE_BADGE.fill);
+      const fontSize = badge.fontSize ?? 10;
+      const color = this.normalizeColor(badge.color ?? 0xff4d4f);
+      const textColor = this.normalizeColor(badge.textColor ?? '#ffffff');
 
       // Create badge graphics
       const badgeContainer = new Graphics();
@@ -780,7 +777,7 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
       // Draw circle
       badgeContainer.circle(0, 0, badgeSize / 2);
       badgeContainer.fill(color);
-      badgeContainer.stroke({ width: DEFAULT_NODE_BADGE.strokeWidth, color: DEFAULT_NODE_BADGE.strokeColor });
+      badgeContainer.stroke({ width: 2, color: 0xffffff });
 
       // Position badge using shape-specific calculation
       const badgeRadius = badgeSize / 2;

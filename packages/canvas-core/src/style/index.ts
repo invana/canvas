@@ -1,7 +1,11 @@
 /**
- * Style module - Theme and style management
+ * Style module - Function-based styling utilities
  */
 
-export { StyleManager } from './StyleManager';
-export { StyleResolver } from './StyleResolver';
-export { ThemeManager } from './ThemeManager';
+export { 
+  resolveNodeStyle,
+  resolveEdgeStyle,
+  type FunctionBasedNodeStyle,
+  type FunctionBasedEdgeStyle,
+  type StyleValue
+} from './FunctionBasedStyle';

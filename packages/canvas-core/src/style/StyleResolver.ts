@@ -1,168 +1,108 @@
 /**
- * StyleResolver - Resolves styles for nodes and edges
+ * StyleResolver - Function-based styling evaluator (AntV G6 style)
  * 
- * Combines theme defaults, style rules, and inline styles
+ * Evaluates style properties that can be functions receiving node/edge data
  */
 
-import type { NodeData, EdgeData, NodeStyle, EdgeStyle, StyleRule } from '../types';
-import { ThemeManager } from './ThemeManager';
+import type { NodeData as NodeShapeData, NodeStyle } from '../elements/nodes';
+import type { EdgeData as EdgeShapeData, EdgeStyle } from '../elements/edges';
 
-export class StyleResolver {
-  private readonly themeManager: ThemeManager;
-  private readonly rules: StyleRule[] = [];
+/**
+ * Type for style properties that can be static values or functions
+ */
+export type StyleValue<T, D = any> = T | ((data: D) => T);
 
-  constructor(themeManager: ThemeManager) {
-    this.themeManager = themeManager;
-  }
+/**
+ * Style configuration with function-based properties (AntV G6 style)
+ * Regular style properties can be functions that receive node data
+ * Special properties like states, statePriority, labelStyle are kept as-is
+ */
+export type FunctionBasedNodeStyle<D = NodeShapeData> = {
+  [K in keyof Omit<NodeStyle, 'states' | 'statePriority' | 'labelStyle'>]?: 
+    NodeStyle[K] extends infer V ? (V | ((data: D) => V)) : never;
+} & Pick<NodeStyle, 'states' | 'statePriority' | 'labelStyle'>;
 
-  /**
-   * Add a style rule
-   */
-  addRule(rule: StyleRule): void {
-    this.rules.push(rule);
-    // Sort by priority (higher priority = later in array = applied last)
-    this.rules.sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
-  }
+export type FunctionBasedEdgeStyle<D = EdgeShapeData> = {
+  [K in keyof EdgeStyle]?: StyleValue<EdgeStyle[K], D>;
+};
 
-  /**
-   * Remove a style rule
-   */
-  removeRule(rule: StyleRule): void {
-    const index = this.rules.indexOf(rule);
-    if (index !== -1) {
-      this.rules.splice(index, 1);
+/**
+ * Evaluate function-based node styles
+ * 
+ * @param nodeData - The node shape data (id, x, y, label, payload, etc.)
+ * @param globalStyle - Global default style (may contain functions)
+ * @param individualStyle - Individual node style (may contain functions)
+ * @returns Resolved style with all functions evaluated
+ */
+export function evaluateNodeStyle(
+  nodeData: NodeShapeData,
+  globalStyle?: Partial<FunctionBasedNodeStyle>,
+  individualStyle?: Partial<FunctionBasedNodeStyle>
+): Partial<NodeStyle> {
+  // Merge styles in order: global → individual
+  const mergedStyle: Partial<FunctionBasedNodeStyle> = {
+    ...globalStyle,
+    ...individualStyle,
+  };
+
+  // Evaluate all function-based properties
+  const resolvedStyle: any = {};
+
+  for (const [key, value] of Object.entries(mergedStyle)) {
+    if (key === 'states') {
+      // States object is not evaluated - merge as-is
+      resolvedStyle.states = {
+        ...globalStyle?.states,
+        ...individualStyle?.states,
+      };
+    } else if (key === 'statePriority') {
+      // Priority array is not evaluated
+      resolvedStyle.statePriority = value;
+    } else if (key === 'labelStyle') {
+      // Label style - merge as-is (can be enhanced later to support functions)
+      resolvedStyle.labelStyle = {
+        ...globalStyle?.labelStyle,
+        ...individualStyle?.labelStyle,
+      };
+    } else if (typeof value === 'function') {
+      // Evaluate function with node data
+      resolvedStyle[key] = value(nodeData);
+    } else {
+      // Static value
+      resolvedStyle[key] = value;
     }
   }
 
-  /**
-   * Clear all rules
-   */
-  clearRules(): void {
-    this.rules.length = 0;
+  return resolvedStyle as Partial<NodeStyle>;
+}
+
+/**
+ * Evaluate function-based edge styles
+ * 
+ * @param edgeData - The edge shape data
+ * @param globalStyle - Global default style (may contain functions)
+ * @param individualStyle - Individual edge style (may contain functions)
+ * @returns Resolved style with all functions evaluated
+ */
+export function evaluateEdgeStyle(
+  edgeData: EdgeShapeData,
+  globalStyle?: Partial<FunctionBasedEdgeStyle>,
+  individualStyle?: Partial<FunctionBasedEdgeStyle>
+): Partial<EdgeStyle> {
+  const mergedStyle: Partial<FunctionBasedEdgeStyle> = {
+    ...globalStyle,
+    ...individualStyle,
+  };
+
+  const resolvedStyle: any = {};
+
+  for (const [key, value] of Object.entries(mergedStyle)) {
+    if (typeof value === 'function') {
+      resolvedStyle[key] = value(edgeData);
+    } else {
+      resolvedStyle[key] = value;
+    }
   }
 
-  /**
-   * Resolve the final style for a node
-   */
-  resolveNodeStyle(data: NodeData): NodeStyle {
-    const theme = this.themeManager.current;
-    
-    // Start with theme defaults
-    const baseStyle: NodeStyle = {
-      shape: 'circle',
-      fill: theme.colors.nodeFill,
-      fillAlpha: 1,
-      stroke: theme.colors.nodeStroke,
-      strokeWidth: theme.sizes.nodeStrokeWidth,
-      strokeAlpha: 1,
-      radius: theme.sizes.nodeRadius,
-      selectedFill: theme.colors.nodeSelectedFill,
-      selectedStroke: theme.colors.nodeSelectedStroke,
-      hoverFill: theme.colors.nodeHoverFill,
-      hoverStroke: theme.colors.nodeHoverStroke,
-    };
-
-    // Apply matching rules
-    const mergedStyle = this.applyRules(data, baseStyle);
-
-    // Apply inline styles (highest priority)
-    if (data.style) {
-      Object.assign(mergedStyle, data.style);
-    }
-
-    return mergedStyle as NodeStyle;
-  }
-
-  /**
-   * Resolve the final style for an edge
-   */
-  resolveEdgeStyle(data: EdgeData): EdgeStyle {
-    const theme = this.themeManager.current;
-    
-    // Start with theme defaults
-    const baseStyle: EdgeStyle = {
-      path: 'line',
-      stroke: theme.colors.edgeStroke,
-      strokeWidth: theme.sizes.edgeStrokeWidth,
-      strokeAlpha: 1,
-      arrow: 'triangle',
-      arrowSize: theme.sizes.arrowSize,
-      selectedStroke: theme.colors.edgeSelectedStroke,
-      hoverStroke: theme.colors.edgeHoverStroke,
-    };
-
-    // Apply matching rules
-    const mergedStyle = this.applyRules(data, baseStyle);
-
-    // Apply inline styles (highest priority)
-    if (data.style) {
-      Object.assign(mergedStyle, data.style);
-    }
-
-    return mergedStyle as EdgeStyle;
-  }
-
-  /**
-   * Apply matching rules to a base style
-   */
-  private applyRules<T extends NodeStyle | EdgeStyle>(
-    data: NodeData | EdgeData,
-    baseStyle: T
-  ): T {
-    const result = { ...baseStyle };
-
-    for (const rule of this.rules) {
-      if (this.matchesRule(data, rule)) {
-        Object.assign(result, rule.style);
-      }
-    }
-
-    return result;
-  }
-
-  /**
-   * Check if data matches a rule's selector
-   */
-  private matchesRule(data: NodeData | EdgeData, rule: StyleRule): boolean {
-    const { selector } = rule;
-
-    if (typeof selector === 'function') {
-      return selector(data);
-    }
-
-    // String selector - support simple patterns
-    // e.g., "type:person" or "label:*" or ".className"
-    if (selector.startsWith('type:')) {
-      const type = selector.slice(5);
-      return data.type === type;
-    }
-
-    if (selector.startsWith('id:')) {
-      const id = selector.slice(3);
-      return data.id === id;
-    }
-
-    if (selector.startsWith('label:')) {
-      const label = selector.slice(6);
-      if (label === '*') {
-        return !!data.label;
-      }
-      return data.label === label;
-    }
-
-    // Property selector: "prop:key=value"
-    if (selector.startsWith('prop:')) {
-      const propPart = selector.slice(5);
-      const [key, value] = propPart.split('=');
-      if (key && data.properties) {
-        if (value === undefined) {
-          return key in data.properties;
-        }
-        return String(data.properties[key]) === value;
-      }
-    }
-
-    // Default: no match
-    return false;
-  }
+  return resolvedStyle as Partial<EdgeStyle>;
 }

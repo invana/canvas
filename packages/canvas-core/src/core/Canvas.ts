@@ -36,6 +36,8 @@ import { Application, Container } from 'pixi.js';
 import { Viewport, type ViewportOptions } from '../viewport/Viewport';
 import { Registry } from '../rendering/Registry';
 import { Renderer, type NodeInput as RendererNodeData, type EdgeInput as RendererEdgeData } from '../rendering/Renderer';
+import { type FunctionBasedNodeStyle, type FunctionBasedEdgeStyle } from '../style/FunctionBasedStyle';
+import { DEFAULT_NODE_STYLE } from '../defaults/nodes';
 import { SceneGraph } from '../scene/SceneGraph';
 import { QueryEngine, type QueryFilter, type QueryResult } from '../scene/QueryEngine';
 import { Relationships, type RelationshipInfo, type PathResult } from '../scene/Relationships';
@@ -43,8 +45,6 @@ import { LayerManager } from '../layers/LayerManager';
 import type { CanvasPlugin, PluginRegistrationOptions, PluginConfig, BehaviorPreset } from '../plugins/types';
 import { PluginRegistry } from '../plugins/registry';
 import type { Bounds } from '../scene/SpatialIndex';
-import type { NodeStyle } from '../elements/nodes';
-import type { EdgeStyle } from '../elements/edges';
 import type { NodeData as SceneNodeData, EdgeData as SceneEdgeData } from '../types';
 
 // ============================================================================
@@ -72,13 +72,13 @@ export interface CanvasData {
 }
 
 /**
- * Default styles for nodes and edges
+ * Default styles for nodes and edges (supports function-based properties)
  */
 export interface CanvasStyles {
-  /** Default node style */
-  node?: Partial<NodeStyle>;
-  /** Default edge style */
-  edge?: Partial<EdgeStyle>;
+  /** Default node style (can include function-based properties) */
+  node?: Partial<FunctionBasedNodeStyle>;
+  /** Default edge style (can include function-based properties) */
+  edge?: Partial<FunctionBasedEdgeStyle>;
 }
 
 /**
@@ -253,14 +253,15 @@ export class Canvas {
     this._edgeLayer = edgeGroup.getLayer('shapes')!.container;
     this._nodeLayer = nodeGroup.getLayer('shapes')!.container;
 
-    // Create renderer
+    // Create renderer with function-based styling support
     this._renderer = new Renderer({
       registry: this._registry,
       nodeLayer: this._nodeLayer,
       edgeLayer: this._edgeLayer,
       defaultNodeStyle: {
-        labelPosition: 'center',
-        labelStyle: { fill: '#ffffff', fontSize: 12 },
+        // All built-in defaults in one place
+        ...DEFAULT_NODE_STYLE,
+        // User-defined styles override everything
         ...this._styles.node,
       },
       defaultEdgeStyle: {

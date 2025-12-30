@@ -26,7 +26,7 @@ import type { ArrowType, ArrowStyle } from '../../primitives/arrows';
 import { getArrowOffset } from '../../primitives/arrows';
 import { BaseShape, type BaseShapeData, type BaseShapeOptions } from '../BaseShape';
 import { EdgeStates, type EdgeStateName } from '../../types/states';
-import { mergeEdgeStateStyles } from '../../defaults/edges';
+
 
 /**
  * Edge path types
@@ -149,10 +149,7 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
     } as EdgeData;
 
     super({ ...options, data } as BaseShapeOptions<EdgeData>);
-    this._edgeStyle = options.style ?? { stroke: '#666666', strokeWidth: 2 };
-    
-    // Merge user-provided state styles with defaults
-    this._edgeStyle.states = mergeEdgeStateStyles(this._edgeStyle.states);
+    this._edgeStyle = options.style ?? {};
 
     // Always activate DEFAULT state
     this._activeStates.add(EdgeStates.DEFAULT);

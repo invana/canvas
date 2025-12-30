@@ -155,43 +155,12 @@ export interface ProcessorConfig {
 export interface ProcessorContext {
   canvas: unknown; // Will be Canvas type
   sceneGraph: unknown; // Will be SceneGraph type
-  styleManager: unknown; // Will be StyleManager type
   event?: CanvasEvent;
 }
 
 // =============================================================================
-// Style & Theme Types
+// Style & Theme Types (Legacy - not used in new function-based styling)
 // =============================================================================
-
-export interface ThemeConfig {
-  name: string;
-  colors: {
-    nodeFill: number;
-    nodeStroke: number;
-    nodeSelectedFill: number;
-    nodeSelectedStroke: number;
-    nodeHoverFill: number;
-    nodeHoverStroke: number;
-    edgeStroke: number;
-    edgeSelectedStroke: number;
-    edgeHoverStroke: number;
-    background: number;
-    labelText: number;
-  };
-  sizes: {
-    nodeRadius: number;
-    nodeStrokeWidth: number;
-    edgeStrokeWidth: number;
-    arrowSize: number;
-    labelFontSize: number;
-  };
-}
-
-export interface StyleRule {
-  selector: string | ((data: NodeData | EdgeData) => boolean);
-  style: Partial<NodeStyle | EdgeStyle>;
-  priority?: number;
-}
 
 // =============================================================================
 // Canvas Options
@@ -213,8 +182,6 @@ export interface CanvasOptions {
   // Limits
   minZoom?: number;
   maxZoom?: number;
-  // Theme
-  theme?: ThemeConfig | string;
   // Processors
   processors?: ProcessorConfig[];
   // Layers

@@ -16,8 +16,8 @@
  * │                 ┌────┴─────────────┴──────────────┘              │
  * │                 ▼                                                │
  * │         ┌───────────────────┐    ┌─────────────┐                │
- * │         │   StyleManager    │    │  Rendering  │                │
- * │         │  (themes/rules)   │    │  (Registry) │                │
+ * │         │ Function-Based    │    │  Rendering  │                │
+ * │         │    Styling        │    │  (Registry) │                │
  * │         └───────────────────┘    └─────────────┘                │
  * └─────────────────────────────────────────────────────────────────┘
  *                            │
@@ -166,8 +166,17 @@ export type { Bounds as SceneBounds } from './scene';
 // STYLE
 // ============================================================================
 
-export { StyleManager, StyleResolver, ThemeManager } from './style';
-export type { ThemeConfig, StyleRule, NodeStyle, EdgeStyle } from './types';
+// Function-based styling (AntV G6 style) - RECOMMENDED
+export { 
+  resolveNodeStyle,
+  resolveEdgeStyle,
+  type FunctionBasedNodeStyle,
+  type FunctionBasedEdgeStyle,
+  type StyleValue
+} from './style/FunctionBasedStyle';
+
+// Style types for nodes and edges
+export type { NodeStyle, EdgeStyle } from './types';
 
 // State management constants
 export { NodeStates, EdgeStates, KNOWN_NODE_STATES, KNOWN_EDGE_STATES } from './types/states';
@@ -176,11 +185,11 @@ export type { NodeStateName, EdgeStateName } from './types/states';
 // Default styling
 export {
   DEFAULT_NODE_STATE_STYLES,
-  mergeNodeStateStyles,
+  DEFAULT_NODE_STATE_PRIORITY,
 } from './defaults/nodes';
 export {
   DEFAULT_EDGE_STATE_STYLES,
-  mergeEdgeStateStyles,
+  DEFAULT_EDGE_STATE_PRIORITY,
 } from './defaults/edges';
 export {
   DEFAULT_CANVAS_BACKGROUND,
@@ -291,36 +300,15 @@ export * from './primitives';
 
 // Re-export default configurations
 export {
-  // Node defaults
-  DEFAULT_NODE_DIMENSIONS,
-  DEFAULT_NODE_SHAPE_STYLE,
-  DEFAULT_NODE_LABEL,
-  DEFAULT_NODE_BADGE,
-  DEFAULT_NODE_RIPPLE,
-  // DEFAULT_NODE_STATE_STYLES, // Already exported above
-  DEFAULT_NODE_STATE_PRIORITY,
+  // Node defaults (single source of truth)
   DEFAULT_NODE_STYLE,
-  DEFAULT_NODE_BEHAVIOR,
-  // mergeNodeStateStyles, // Already exported above
-  mergeNodeStyle,
   
-  // Edge defaults
-  DEFAULT_EDGE_PATH_STYLE,
-  DEFAULT_EDGE_ARROW,
-  DEFAULT_EDGE_ROUTING,
-  DEFAULT_EDGE_LABEL,
-  // DEFAULT_EDGE_STATE_STYLES, // Already exported above
-  DEFAULT_EDGE_STATE_PRIORITY,
+  // Edge defaults (single source of truth)
   DEFAULT_EDGE_STYLE,
-  DEFAULT_EDGE_BEHAVIOR,
-  EDGE_STROKE_PRESETS,
-  // mergeEdgeStateStyles, // Already exported above
-  mergeEdgeStyle,
   
   // Label defaults
   DEFAULT_LABEL_STYLE,
   DEFAULT_LABEL_POSITION,
   DEFAULT_LABEL_OFFSET,
   LABEL_VARIANTS,
-  mergeLabelStyle,
 } from './defaults';
