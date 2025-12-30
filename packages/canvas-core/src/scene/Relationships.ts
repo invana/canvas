@@ -4,7 +4,8 @@
  * Provides graph traversal, neighbor queries, and path finding
  */
 
-import type { EdgeData } from '../types';
+// LEGACY: Old EdgeData type removed, needs refactoring
+type EdgeData = any;
 
 export interface RelationshipInfo {
   neighbors: string[]; // Connected node IDs

@@ -4,7 +4,9 @@
  * Example processors that ship with canvas-core
  */
 
-import type { ProcessorConfig, ProcessorContext, CanvasEvent, NodeData } from '../types';
+import type { ProcessorConfig, ProcessorContext, CanvasEvent } from '../types';
+// LEGACY: Old NodeData type removed, needs refactoring
+type NodeData = any;
 import { BaseProcessor } from './BaseProcessor';
 
 // =============================================================================

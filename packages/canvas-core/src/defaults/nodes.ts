@@ -94,11 +94,22 @@ export const DEFAULT_NODE_STYLE: NodeStyle = {
   haloStroke: '#127dc5',
   haloStrokeOpacity: 0.25,
   
-  // Label configuration
+  // Label configuration (flattened from LABEL_VARIANTS.node)
   labelPosition: 'center',
   labelOffsetX: 0,
   labelOffsetY: 0,
-  labelStyle: { ...LABEL_VARIANTS.node },
+  labelFontFamily: LABEL_VARIANTS.node.fontFamily,
+  labelFontSize: LABEL_VARIANTS.node.fontSize,
+  labelFontWeight: LABEL_VARIANTS.node.fontWeight,
+  labelFontStyle: LABEL_VARIANTS.node.fontStyle,
+  labelFill: LABEL_VARIANTS.node.fill,
+  labelStroke: LABEL_VARIANTS.node.stroke,
+  labelStrokeWidth: LABEL_VARIANTS.node.strokeWidth,
+  labelLetterSpacing: LABEL_VARIANTS.node.letterSpacing,
+  labelLineHeight: LABEL_VARIANTS.node.lineHeight,
+  labelWordWrap: LABEL_VARIANTS.node.wordWrap,
+  labelWordWrapWidth: LABEL_VARIANTS.node.wordWrapWidth,
+  labelAlign: LABEL_VARIANTS.node.align,
   
   // Ripple effect
   rippleColor: '#1890ff',

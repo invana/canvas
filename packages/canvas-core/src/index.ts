@@ -25,7 +25,7 @@
  * ┌─────────────────────────────────────────────────────────────────┐
  * │                     Elements (elements/)                         │
  * │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐          │
- * │  │ NodeShape   │  │  EdgeShape  │  │    BaseShape    │          │
+ * │  │NodeShapeBase│  │EdgeShapeBase│  │    BaseShape    │          │
  * │  │  (nodes/)   │  │  (edges/)   │  │                 │          │
  * │  └─────────────┘  └─────────────┘  └─────────────────┘          │
  * └─────────────────────────────────────────────────────────────────┘
@@ -175,8 +175,8 @@ export {
   type StyleValue
 } from './style/FunctionBasedStyle';
 
-// Style types for nodes and edges
-export type { NodeStyle, EdgeStyle } from './types';
+// REMOVED: Old NodeStyle/EdgeStyle exports from './types' - use ElementNodeStyle/ElementEdgeStyle instead
+// export type { NodeStyle, EdgeStyle } from './types';
 
 // State management constants
 export { NodeStates, EdgeStates, KNOWN_NODE_STATES, KNOWN_EDGE_STATES } from './types/states';
@@ -260,9 +260,11 @@ export type {
 // TYPES
 // ============================================================================
 
+// REMOVED: NodeData, EdgeData from './types' - these are legacy types with selectedFill/hoverFill
+// Use ElementNodeData, ElementEdgeData from './elements' instead
 export type {
-  NodeData,
-  EdgeData,
+  // NodeData,  // LEGACY - use ElementNodeData
+  // EdgeData,  // LEGACY - use ElementEdgeData
   Point,
   Bounds,
   Tangent,

@@ -98,9 +98,9 @@ export class HTMLNode extends NodeShapeBase {
       this._htmlText = new HTMLText({
         text: this._htmlContent,
         style: {
-          fontSize: DEFAULT_NODE_STYLE.labelStyle?.fontSize ?? 14,
-          fill: DEFAULT_NODE_STYLE.labelStyle?.fill ?? '#000000',
-          fontFamily: DEFAULT_NODE_STYLE.labelStyle?.fontFamily ?? 'Arial, sans-serif',
+          fontSize: DEFAULT_NODE_STYLE.labelFontSize ?? 14,
+          fill: DEFAULT_NODE_STYLE.labelFill ?? '#000000',
+          fontFamily: DEFAULT_NODE_STYLE.labelFontFamily ?? 'Arial, sans-serif',
         },
       });
       this._htmlText.anchor.set(0.5);

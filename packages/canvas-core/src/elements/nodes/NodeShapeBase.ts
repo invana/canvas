@@ -24,7 +24,7 @@
  */
 
 import type { ShapeStyle } from '../../primitives/shapes';
-import type { LabelStyle } from '../../primitives/labels';
+import type { LabelAlign } from '../../primitives/labels';
 import { createPositionedLabel, type LabelPosition } from '../../primitives/labels';
 import { BaseShape, type BaseShapeData, type BaseShapeStyle, type BaseShapeOptions } from '../BaseShape';
 import { FederatedPointerEvent, Graphics, Ticker } from 'pixi.js';
@@ -143,8 +143,33 @@ export interface BaseNodeStyleProps extends BaseShapeStyle {
   /** Label offset from position */
   labelOffsetX?: number;
   labelOffsetY?: number;
-  /** Label text style */
-  labelStyle?: LabelStyle;
+  
+  // Flattened label style properties
+  /** Label font family */
+  labelFontFamily?: string;
+  /** Label font size */
+  labelFontSize?: number;
+  /** Label font weight */
+  labelFontWeight?: 'normal' | 'bold' | 'lighter' | 'bolder';
+  /** Label font style */
+  labelFontStyle?: 'normal' | 'italic' | 'oblique';
+  /** Label text fill color */
+  labelFill?: string;
+  /** Label text stroke color */
+  labelStroke?: string;
+  /** Label text stroke width */
+  labelStrokeWidth?: number;
+  /** Label letter spacing */
+  labelLetterSpacing?: number;
+  /** Label line height */
+  labelLineHeight?: number;
+  /** Label word wrap */
+  labelWordWrap?: boolean;
+  /** Label word wrap width */
+  labelWordWrapWidth?: number;
+  /** Label text alignment */
+  labelAlign?: LabelAlign;
+  
   /** Ripple effect style */
   rippleColor?: string;
 }
@@ -266,7 +291,12 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
     // managed by plugins. This keeps nodes pure rendering components.
     // Plugins will attach their own event listeners when enabled.
 
-    // Note: Initial render will be called by Renderer after adding to scene
+    // Initial render
+    this.forceRender();
+    this.updateLabel();
+    if (this._data.badges) {
+      this.updateBadges();
+    }
   }
 
   // =========================================================================
@@ -404,6 +434,8 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
       NodeShapeBase._batchedNodes.add(this);
     } else {
       this.update();
+      // Emit state change event to trigger canvas re-render
+      this.emit('statechange', { node: this, state: name, active });
     }
   }
 
@@ -707,18 +739,39 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
    */
   protected getHaloColor(style: ShapeStyle): string | number {
     if (style.haloStroke) {
-      return typeof style.haloStroke === 'object' ? DEFAULT_NODE_STYLE.labelStyle?.fill ?? '#000000' : style.haloStroke;
+      return typeof style.haloStroke === 'object' ? DEFAULT_NODE_STYLE.labelFill ?? '#000000' : style.haloStroke;
     } else if (style.fill) {
-      return typeof style.fill === 'object' ? DEFAULT_NODE_STYLE.labelStyle?.fill ?? '#000000' : style.fill;
+      return typeof style.fill === 'object' ? DEFAULT_NODE_STYLE.labelFill ?? '#000000' : style.fill;
     } else if (style.stroke) {
       return style.stroke;
     }
-    return DEFAULT_NODE_STYLE.labelStyle?.fill ?? '#000000';
+    return DEFAULT_NODE_STYLE.labelFill ?? '#000000';
   }
 
   // =========================================================================
   // LABEL MANAGEMENT
   // =========================================================================
+
+  /**
+   * Collect flattened label* properties into a LabelStyle object
+   * @internal
+   */
+  private collectLabelStyle(): import('../../primitives/labels').LabelStyle {
+    return {
+      fontFamily: this._nodeStyle.labelFontFamily,
+      fontSize: this._nodeStyle.labelFontSize,
+      fontWeight: this._nodeStyle.labelFontWeight,
+      fontStyle: this._nodeStyle.labelFontStyle,
+      fill: this._nodeStyle.labelFill,
+      stroke: this._nodeStyle.labelStroke,
+      strokeWidth: this._nodeStyle.labelStrokeWidth,
+      letterSpacing: this._nodeStyle.labelLetterSpacing,
+      lineHeight: this._nodeStyle.labelLineHeight,
+      wordWrap: this._nodeStyle.labelWordWrap,
+      wordWrapWidth: this._nodeStyle.labelWordWrapWidth,
+      align: this._nodeStyle.labelAlign,
+    };
+  }
 
   /**
    * Update the main label
@@ -740,7 +793,7 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
         offsetX: this._nodeStyle.labelOffsetX ?? DEFAULT_NODE_STYLE.labelOffsetX,
         offsetY: this._nodeStyle.labelOffsetY ?? DEFAULT_NODE_STYLE.labelOffsetY,
       },
-      this._nodeStyle.labelStyle ?? DEFAULT_NODE_STYLE.labelStyle
+      this.collectLabelStyle()
     );
 
     this.addLabel('main', label);
@@ -946,7 +999,9 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
     this.markDirty();
     this.update();
 
-    if (style.labelPosition !== undefined || style.labelStyle !== undefined) {
+    if (style.labelPosition !== undefined || 
+        style.labelFontSize !== undefined || 
+        style.labelFill !== undefined) {
       this.updateLabel();
     }
   }

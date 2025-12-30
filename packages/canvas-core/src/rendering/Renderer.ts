@@ -140,8 +140,10 @@ export interface RendererOptions {
   edgeLayer: Container;
   /** Default node style (supports function-based properties) */
   defaultNodeStyle?: Partial<FunctionBasedNodeStyle>;
-  /** Default edge style (supports function-based properties) */
-  defaultEdgeStyle?: Partial<FunctionBasedEdgeStyle>;
+  /** User-provided node style (supports function-based properties) */
+  userNodeStyle?: Partial<FunctionBasedNodeStyle>;
+  /** User-provided edge style (supports function-based properties) */
+  userEdgeStyle?: Partial<FunctionBasedEdgeStyle>;
   /** Offset from node boundary for edges */
   edgeBoundaryOffset?: number;
   /** Callback when a node is dragged */
@@ -177,7 +179,8 @@ export class Renderer {
   
   // Styles (may contain function-based properties)
   private _defaultNodeStyle: Partial<FunctionBasedNodeStyle>;
-  private _defaultEdgeStyle: Partial<FunctionBasedEdgeStyle>;
+  private _userNodeStyle: Partial<FunctionBasedNodeStyle>;
+  private _userEdgeStyle: Partial<FunctionBasedEdgeStyle>;
   private _edgeBoundaryOffset: number;
   
   // Callbacks
@@ -190,13 +193,9 @@ export class Renderer {
     this._edgeBoundaryOffset = options.edgeBoundaryOffset ?? 2;
     this._onNodeDrag = options.onNodeDrag;
     
-    this._defaultNodeStyle = {
-      ...options.defaultNodeStyle,
-    };
-    
-    this._defaultEdgeStyle = {
-      ...options.defaultEdgeStyle,
-    };
+    this._defaultNodeStyle = options.defaultNodeStyle ?? {};
+    this._userNodeStyle = options.userNodeStyle ?? {};
+    this._userEdgeStyle = options.userEdgeStyle ?? {};
   }
 
   // =========================================================================
@@ -231,6 +230,7 @@ export class Renderer {
     const mergedStyle = resolveNodeStyle(
       nodeData,
       this._defaultNodeStyle,
+      this._userNodeStyle,
       style as Partial<FunctionBasedNodeStyle>
     );
     
@@ -393,7 +393,7 @@ export class Renderer {
     // Resolve edge styles with function-based property evaluation
     const mergedStyle = resolveEdgeStyle(
       edgeShapeData,
-      this._defaultEdgeStyle,
+      this._userEdgeStyle,
       style as Partial<FunctionBasedEdgeStyle>
     );
     

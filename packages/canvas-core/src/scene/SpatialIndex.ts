@@ -5,7 +5,8 @@
  * For very large datasets, consider using R-tree or Quadtree.
  */
 
-import type { NodeData } from '../types';
+// LEGACY: Old NodeData type removed, needs refactoring
+type NodeData = any;
 
 export interface Bounds {
   x: number;

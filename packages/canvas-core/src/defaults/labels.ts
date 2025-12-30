@@ -78,16 +78,3 @@ export const LABEL_VARIANTS = {
     fill: '#666666',
   },
 } as const;
-
-
-/**
- * Merge user label style with defaults
- */
-export function mergeLabelStyle(
-  userStyle?: Partial<LabelStyle>
-): LabelStyle {
-  if (!userStyle) {
-    return { ...DEFAULT_LABEL_STYLE };
-  }
-  return { ...DEFAULT_LABEL_STYLE, ...userStyle };
-}

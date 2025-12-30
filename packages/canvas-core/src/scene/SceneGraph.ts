@@ -13,7 +13,9 @@
  * - Spatial indexing for fast proximity queries
  */
 
-import type { NodeData, EdgeData } from '../types';
+// LEGACY: Old NodeData/EdgeData types removed, needs refactoring
+type NodeData = any;
+type EdgeData = any;
 import { SpatialIndex, type Bounds } from './SpatialIndex';
 
 export type SceneGraphEventType = 

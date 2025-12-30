@@ -45,7 +45,11 @@ import { LayerManager } from '../layers/LayerManager';
 import type { CanvasPlugin, PluginRegistrationOptions, PluginConfig, BehaviorPreset } from '../plugins/types';
 import { PluginRegistry } from '../plugins/registry';
 import type { Bounds } from '../scene/SpatialIndex';
-import type { NodeData as SceneNodeData, EdgeData as SceneEdgeData } from '../types';
+// LEGACY: These old types were removed. SceneGraph uses different EdgeData shape than ElementEdgeData
+// For now using 'any' to unblock - needs proper type refactoring
+// import type { NodeData as SceneNodeData, EdgeData as SceneEdgeData } from '../types';
+type SceneNodeData = any;
+type SceneEdgeData = any;
 
 // ============================================================================
 // TYPES
@@ -258,15 +262,9 @@ export class Canvas {
       registry: this._registry,
       nodeLayer: this._nodeLayer,
       edgeLayer: this._edgeLayer,
-      defaultNodeStyle: {
-        // All built-in defaults in one place
-        ...DEFAULT_NODE_STYLE,
-        // User-defined styles override everything
-        ...this._styles.node,
-      },
-      defaultEdgeStyle: {
-        ...this._styles.edge,
-      },
+      defaultNodeStyle: DEFAULT_NODE_STYLE,
+      userNodeStyle: this._styles.node,
+      userEdgeStyle: this._styles.edge,
       edgeBoundaryOffset: this._options.edgeBoundaryOffset,
     });
 

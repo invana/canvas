@@ -8,63 +8,18 @@ import type { Container, Graphics } from 'pixi.js';
 export * from './states';
 
 // =============================================================================
-// Node Types
+// LEGACY TYPES - REMOVED
 // =============================================================================
-
-export interface NodeData {
-  id: string;
-  label?: string;
-  type?: string;
-  x?: number;
-  y?: number;
-  properties?: Record<string, unknown>;
-  style?: NodeStyle;
-}
-
-export interface NodeStyle {
-  shape?: 'circle' | 'rect' | 'ellipse' | 'roundedRect' | 'polygon';
-  fill?: number;
-  fillAlpha?: number;
-  stroke?: number;
-  strokeWidth?: number;
-  strokeAlpha?: number;
-  radius?: number;
-  width?: number;
-  height?: number;
-  cornerRadius?: number;
-  sides?: number;
-  // Selection/hover states
-  selectedFill?: number;
-  selectedStroke?: number;
-  hoverFill?: number;
-  hoverStroke?: number;
-}
-
-// =============================================================================
-// Edge Types
-// =============================================================================
-
-export interface EdgeData {
-  id: string;
-  source: string;
-  target: string;
-  label?: string;
-  type?: string;
-  properties?: Record<string, unknown>;
-  style?: EdgeStyle;
-}
-
-export interface EdgeStyle {
-  path?: 'line' | 'bezier' | 'orthogonal';
-  stroke?: number;
-  strokeWidth?: number;
-  strokeAlpha?: number;
-  arrow?: 'none' | 'triangle' | 'circle' | 'diamond' | 'square';
-  arrowSize?: number;
-  // Selection/hover states
-  selectedStroke?: number;
-  hoverStroke?: number;
-}
+// 
+// NodeData, NodeStyle, EdgeData, EdgeStyle have been removed.
+// Use proper types from ./elements instead:
+//   - NodeData -> ElementNodeData
+//   - NodeStyle -> ElementNodeStyle  
+//   - EdgeData -> ElementEdgeData
+//   - EdgeStyle -> ElementEdgeStyle
+//
+// Old types had legacy selectedFill/hoverFill properties.
+// New types use proper state-based styling with states.selected, etc.
 
 // =============================================================================
 // Point & Geometry Types
@@ -189,27 +144,31 @@ export interface CanvasOptions {
 }
 
 // =============================================================================
-// Shape Instance Types
+// Shape Instance Types  
 // =============================================================================
+// 
+// LEGACY: These interfaces reference old NodeData/EdgeData which have been removed.
+// TODO: Refactor to use ElementNodeData/ElementEdgeData from ./elements
+// For now, using 'any' to unblock the build
 
 export interface ShapeInstance {
   id: string;
   container: Container;
   graphics: Graphics;
-  data: NodeData | EdgeData;
-  update(data: Partial<NodeData | EdgeData>): void;
+  data: any; // LEGACY: was NodeData | EdgeData
+  update(data: any): void; // LEGACY: was Partial<NodeData | EdgeData>
   destroy(): void;
 }
 
 export interface NodeInstance extends ShapeInstance {
-  data: NodeData;
+  data: any; // LEGACY: was NodeData
   getBoundaryPoint(angle: number): Point;
   setSelected(selected: boolean): void;
   setHovered(hovered: boolean): void;
 }
 
 export interface EdgeInstance extends ShapeInstance {
-  data: EdgeData;
+  data: any; // LEGACY: was EdgeData
   sourceNode: NodeInstance;
   targetNode: NodeInstance;
   setSelected(selected: boolean): void;

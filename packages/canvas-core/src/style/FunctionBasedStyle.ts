@@ -30,24 +30,55 @@ export type FunctionBasedEdgeStyle<D = EdgeData> = {
 
 /**
  * Evaluate function-based node style properties
- * Merges global defaults with individual node styles and evaluates any functions
+ * Merges default, user global, and individual node styles with deep merge for states
+ * Priority: defaultStyle → userGlobalStyle → individualStyle (later overrides earlier)
  */
 export function resolveNodeStyle(
   nodeData: NodeData,
-  globalStyle?: Partial<FunctionBasedNodeStyle>,
+  defaultStyle?: Partial<FunctionBasedNodeStyle>,
+  userGlobalStyle?: Partial<FunctionBasedNodeStyle>,
   individualStyle?: Partial<FunctionBasedNodeStyle>
 ): Partial<NodeStyle> {
-  // Merge styles: global → individual (individual takes precedence)
+  // Deep merge: default → user → individual
   const merged: Partial<FunctionBasedNodeStyle> = {
-    ...globalStyle,
+    ...defaultStyle,
+    ...userGlobalStyle,
     ...individualStyle,
   };
+
+  // Deep merge states specifically (nested object)
+  if (defaultStyle?.states || userGlobalStyle?.states || individualStyle?.states) {
+    merged.states = {
+      ...defaultStyle?.states,
+      ...userGlobalStyle?.states,
+      ...individualStyle?.states,
+    };
+  }
+
+  // Deep merge statePriority
+  if (!merged.statePriority && defaultStyle?.statePriority) {
+    merged.statePriority = defaultStyle.statePriority;
+  }
 
   // Evaluate all properties - simple and consistent
   const resolved: any = {};
 
   for (const [key, value] of Object.entries(merged)) {
-    if (typeof value === 'function') {
+    if (key === 'states') {
+      // Handle nested states object - evaluate each state's properties
+      const statesObj: any = {};
+      for (const [stateName, stateStyle] of Object.entries(value as any)) {
+        statesObj[stateName] = {};
+        for (const [stateKey, stateValue] of Object.entries(stateStyle as any)) {
+          if (typeof stateValue === 'function') {
+            statesObj[stateName][stateKey] = stateValue(nodeData);
+          } else {
+            statesObj[stateName][stateKey] = stateValue;
+          }
+        }
+      }
+      resolved[key] = statesObj;
+    } else if (typeof value === 'function') {
       // Evaluate function with node data
       resolved[key] = value(nodeData);
     } else {
