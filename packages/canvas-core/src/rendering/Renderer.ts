@@ -64,9 +64,10 @@ export interface Point {
 }
 
 /**
- * Node input for renderer - flat structure for easy use
+ * Public API: Node configuration for canvas
+ * This is what users provide when adding nodes to the canvas
  */
-export interface NodeInput {
+export interface CanvasNode {
   // Core properties
   id: string;
   x: number;
@@ -98,9 +99,10 @@ export interface NodeInput {
 }
 
 /**
- * Edge input for renderer - flat structure for easy use
+ * Public API: Edge configuration for canvas
+ * This is what users provide when adding edges to the canvas
  */
-export interface EdgeInput {
+export interface CanvasEdge {
   // Core properties
   id: string;
   source: string | Point;
@@ -205,7 +207,7 @@ export class Renderer {
   /**
    * Add a node to the canvas
    */
-  addNode(input: NodeInput): NodeShapeBase {
+  addNode(input: CanvasNode): NodeShapeBase {
     const { 
       id, x, y, label, shape, size, width, height, cornerRadius, payload, badges,
       style, interactive, draggable, states 
@@ -270,7 +272,7 @@ export class Renderer {
   /**
    * Update a node's properties
    */
-  updateNode(id: string, updates: Partial<NodeInput>): NodeShapeBase | undefined {
+  updateNode(id: string, updates: Partial<CanvasNode>): NodeShapeBase | undefined {
     const node = this._nodes.get(id);
     if (!node) return undefined;
     
@@ -352,7 +354,7 @@ export class Renderer {
   /**
    * Add an edge to the canvas
    */
-  addEdge(input: EdgeInput): EdgeShapeBase {
+  addEdge(input: CanvasEdge): EdgeShapeBase {
     const { 
       id, source, target, pathType, curvature, sourceDirection, targetDirection,
       arrowSource, arrowTarget, arrowSize, label, payload, style, states 
@@ -438,7 +440,7 @@ export class Renderer {
   /**
    * Update an edge's properties
    */
-  updateEdge(id: string, updates: Partial<EdgeInput>): EdgeShapeBase | undefined {
+  updateEdge(id: string, updates: Partial<CanvasEdge>): EdgeShapeBase | undefined {
     const tracking = this._edges.get(id);
     if (!tracking) return undefined;
     
@@ -547,14 +549,14 @@ export class Renderer {
   /**
    * Add multiple nodes at once
    */
-  addNodes(inputs: NodeInput[]): NodeShapeBase[] {
+  addNodes(inputs: CanvasNode[]): NodeShapeBase[] {
     return inputs.map(input => this.addNode(input));
   }
 
   /**
    * Add multiple edges at once
    */
-  addEdges(inputs: EdgeInput[]): EdgeShapeBase[] {
+  addEdges(inputs: CanvasEdge[]): EdgeShapeBase[] {
     return inputs.map(input => this.addEdge(input));
   }
 

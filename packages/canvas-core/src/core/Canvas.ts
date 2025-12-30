@@ -35,7 +35,7 @@
 import { Application, Container } from 'pixi.js';
 import { Viewport, type ViewportOptions } from '../viewport/Viewport';
 import { Registry } from '../rendering/Registry';
-import { Renderer, type NodeInput as RendererNodeData, type EdgeInput as RendererEdgeData } from '../rendering/Renderer';
+import { Renderer, type CanvasNode as RendererNodeData, type CanvasEdge as RendererEdgeData } from '../rendering/Renderer';
 import { type FunctionBasedNodeStyle, type FunctionBasedEdgeStyle } from '../style/FunctionBasedStyle';
 import { DEFAULT_NODE_STYLE } from '../defaults/nodes';
 import { SceneGraph } from '../scene/SceneGraph';
@@ -56,23 +56,13 @@ type SceneEdgeData = any;
 // ============================================================================
 
 /**
- * Node configuration in CanvasData
- */
-export interface CanvasNodeData extends RendererNodeData {}
-
-/**
- * Edge configuration in CanvasData
- */
-export interface CanvasEdgeData extends RendererEdgeData {}
-
-/**
  * Data structure for Canvas
  */
 export interface CanvasData {
   /** Array of node configurations */
-  nodes: CanvasNodeData[];
+  nodes: RendererNodeData[];
   /** Array of edge configurations */
-  edges: CanvasEdgeData[];
+  edges: RendererEdgeData[];
 }
 
 /**

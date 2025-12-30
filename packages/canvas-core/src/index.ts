@@ -74,8 +74,7 @@ export { Canvas } from './core';
 export type { 
   CanvasOptions, 
   CanvasData, 
-  CanvasNodeData, 
-  CanvasEdgeData, 
+ 
   CanvasStyles 
 } from './core';
 
@@ -96,9 +95,13 @@ export type {
   BuiltInPathType, 
   ShapeDrawer, 
   PathDrawer,
-  RendererOptions, 
-  NodeInput as RendererNodeData, 
-  EdgeInput as RendererEdgeData, 
+  RendererOptions,
+  // Public API types (preferred names)
+  CanvasNode,
+  CanvasEdge,
+  // Legacy aliases (for backward compatibility)
+  CanvasNode as RendererNodeData, 
+  CanvasEdge as RendererEdgeData, 
   Point as RendererPoint 
 } from './rendering';
 

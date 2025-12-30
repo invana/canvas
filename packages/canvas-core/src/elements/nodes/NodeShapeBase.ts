@@ -97,7 +97,14 @@ export type NodeShapeType =
   | string; // Allow custom shapes
 
 /**
- * Data for a node
+ * Internal: Runtime node data stored by node instances
+ * This is NOT the public API - users should use CanvasNode instead
+ * 
+ * Differences from CanvasNode (public API):
+ * - No `style` field (stored separately in _nodeStyle)
+ * - No `states` field (managed by _activeStates Set)
+ * - No `interactive`/`draggable` (deprecated, handled by plugins)
+ * - Has index signature from BaseShapeData for extensibility
  */
 export interface NodeData extends BaseShapeData {
   /** Node label text */

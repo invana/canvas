@@ -44,7 +44,13 @@ export interface EdgeTangents {
 }
 
 /**
- * Data for an edge
+ * Internal: Runtime edge data stored by edge instances
+ * This is NOT the public API - users should use CanvasEdge instead
+ * 
+ * Differences from CanvasEdge (public API):
+ * - No `style` field (stored separately in _edgeStyle)
+ * - No `states` field (managed by state system)
+ * - source/target are always Point objects (resolved from string IDs)
  */
 export interface EdgeData extends BaseShapeData {
   /** Source point */
