@@ -5,8 +5,8 @@
  * For very large datasets, consider using R-tree or Quadtree.
  */
 
-// LEGACY: Old NodeData type removed, needs refactoring
-type NodeData = any;
+// LEGACY: Old RendererNode type removed, needs refactoring
+type RendererNode = any;
 
 export interface Bounds {
   x: number;
@@ -35,7 +35,7 @@ export class SpatialIndex {
   /**
    * Insert or update a node in the spatial index
    */
-  insert(node: NodeData): void {
+  insert(node: RendererNode): void {
     const x = node.x ?? 0;
     const y = node.y ?? 0;
 

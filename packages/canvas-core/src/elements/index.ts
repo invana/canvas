@@ -40,12 +40,12 @@
  */
 
 // Base
-export { BaseShape } from './BaseShape';
-export type { BaseShapeData, BaseShapeStyle, BaseShapeOptions } from './BaseShape';
+export { RendererBase } from './RendererBase';
+export type { RendererBaseData, RendererBaseStyle, RendererBaseOptions } from './RendererBase';
 
 // Node shapes
 export {
-  NodeShapeBase,
+  RendererNodeBase,
   CircleNode,
   EllipseNode,
   RectNode,
@@ -58,7 +58,7 @@ export {
   OctagonNode,
 } from './nodes';
 export type { 
-  NodeData, 
+  RendererNode, 
   NodeStyle, 
   NodeShapeOptions, 
   NodeShapeType, 
@@ -70,13 +70,13 @@ export type {
 
 // Edge shapes
 export {
-  EdgeShapeBase,
+  RendererEdgeBase,
   LineEdge,
   BezierEdge,
   OrthogonalEdge,
 } from './edges';
 export type {
-  EdgeData,
+  RendererEdge,
   EdgeStyle,
   EdgeShapeOptions,
   EdgePathType,

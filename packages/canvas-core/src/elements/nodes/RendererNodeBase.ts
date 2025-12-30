@@ -1,5 +1,5 @@
 /**
- * NodeShapeBase
+ * RendererNodeBase
  * 
  * Abstract base class for all node shapes.
  * Provides common functionality: dragging, selection, hover, ripple animations, and labels.
@@ -7,7 +7,7 @@
  * 
  * @example
  * ```typescript
- * class CustomNode extends NodeShapeBase {
+ * class CustomNode extends RendererNodeBase {
  *   protected renderShape(graphics: Graphics, style: ShapeStyle): void {
  *     // Custom shape rendering
  *   }
@@ -26,7 +26,7 @@
 import type { ShapeStyle } from '../../primitives/shapes';
 import type { LabelAlign } from '../../primitives/labels';
 import { createPositionedLabel, type LabelPosition } from '../../primitives/labels';
-import { BaseShape, type BaseShapeData, type BaseShapeStyle, type BaseShapeOptions } from '../BaseShape';
+import { RendererBase, type RendererBaseData, type RendererBaseStyle, type RendererBaseOptions } from '../RendererBase';
 import { FederatedPointerEvent, Graphics, Ticker } from 'pixi.js';
 import { drawRippleEffect, calculateRippleRadius, calculateRippleAlpha } from '../../primitives/effects';
 import { NodeStates, KNOWN_NODE_STATES, type NodeStateName } from '../../types/states';
@@ -66,7 +66,7 @@ export type BadgePosition =
 /**
  * Badge configuration
  */
-export interface NodeBadge {
+export interface RendererBadge {
   /** Badge text or number */
   text: string;
   /** Position on the node */
@@ -97,16 +97,16 @@ export type NodeShapeType =
   | string; // Allow custom shapes
 
 /**
- * Internal: Runtime node data stored by node instances
+ * Internal: Runtime node data stored by node shape instances
  * This is NOT the public API - users should use CanvasNode instead
  * 
  * Differences from CanvasNode (public API):
  * - No `style` field (stored separately in _nodeStyle)
  * - No `states` field (managed by _activeStates Set)
  * - No `interactive`/`draggable` (deprecated, handled by plugins)
- * - Has index signature from BaseShapeData for extensibility
+ * - Has index signature from RendererBaseData for extensibility
  */
-export interface NodeData extends BaseShapeData {
+export interface RendererNode extends RendererBaseData {
   /** Node label text */
   label?: string;
   /** Shape type */
@@ -120,7 +120,7 @@ export interface NodeData extends BaseShapeData {
   /** Corner radius (for roundedRect) */
   cornerRadius?: number;
   /** Badges to display on the node */
-  badges?: NodeBadge[];
+  badges?: RendererBadge[];
   /** Optional data payload */
   payload?: Record<string, unknown>;
 }
@@ -144,7 +144,7 @@ export interface RippleAnimationOptions {
 /**
  * Base style properties for nodes (without state-specific overrides)
  */
-export interface BaseNodeStyleProps extends BaseShapeStyle {
+export interface BaseNodeStyleProps extends RendererBaseStyle {
   /** Label position relative to shape */
   labelPosition?: LabelPosition;
   /** Label offset from position */
@@ -216,20 +216,20 @@ export interface NodeStyle extends BaseNodeStyleProps {
 /**
  * Node shape options
  */
-export interface NodeShapeOptions extends Omit<BaseShapeOptions<NodeData>, 'style'> {
+export interface NodeShapeOptions extends Omit<RendererBaseOptions<RendererNode>, 'style'> {
   style?: Partial<NodeStyle>;
   /** Enable node dragging (deprecated - use DragElementPlugin) */
   draggable?: boolean;
   /** Initial states to activate (e.g., ['selected', 'highlighted']) */
   states?: string[];
   /** Callback when node is dragged */
-  onDrag?: (node: NodeShapeBase, x: number, y: number) => void;
+  onDrag?: (node: RendererNodeBase, x: number, y: number) => void;
 }
 
 /**
  * Abstract base class for node shapes
  */
-export abstract class NodeShapeBase extends BaseShape<NodeData> {
+export abstract class RendererNodeBase extends RendererBase<RendererNode> {
   protected _nodeStyle: Partial<NodeStyle>;
   private _draggable: boolean;
   
@@ -246,10 +246,10 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
   
   // Batch mode for bulk operations (set to true to defer rendering)
   private static _batchMode = false;
-  private static _batchedNodes = new Set<NodeShapeBase>();
+  private static _batchedNodes = new Set<RendererNodeBase>();
   
   // Drag callback
-  private _onDrag?: (node: NodeShapeBase, x: number, y: number) => void;
+  private _onDrag?: (node: RendererNodeBase, x: number, y: number) => void;
   
   // Drag state
   private _isDragging: boolean = false;
@@ -270,7 +270,7 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
   private _badgeContainers: Map<string, Graphics> = new Map();
 
   constructor(options: NodeShapeOptions) {
-    super(options as BaseShapeOptions<NodeData>);
+    super(options as RendererBaseOptions<RendererNode>);
     this._nodeStyle = options.style ?? {};
     
     // Interaction defaults changed to false - plugins enable interactions
@@ -278,7 +278,7 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
     this._onDrag = options.onDrag;
     
     // Assign unique style ID for caching
-    this._styleId = ++NodeShapeBase._styleIdCounter;
+    this._styleId = ++RendererNodeBase._styleIdCounter;
 
     // Always activate DEFAULT state
     this._activeStates.add(NodeStates.DEFAULT);
@@ -362,7 +362,7 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
   /**
    * Set drag callback
    */
-  set onDrag(callback: ((node: NodeShapeBase, x: number, y: number) => void) | undefined) {
+  set onDrag(callback: ((node: RendererNodeBase, x: number, y: number) => void) | undefined) {
     this._onDrag = callback;
   }
 
@@ -437,8 +437,8 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
     this.markDirty();
     
     // If in batch mode, defer update; otherwise update immediately
-    if (NodeShapeBase._batchMode) {
-      NodeShapeBase._batchedNodes.add(this);
+    if (RendererNodeBase._batchMode) {
+      RendererNodeBase._batchedNodes.add(this);
     } else {
       this.update();
       // Emit state change event to trigger canvas re-render
@@ -480,14 +480,14 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
    * 
    * @example
    * ```typescript
-   * NodeShapeBase.startBatch();
+   * RendererNodeBase.startBatch();
    * nodes.forEach(node => node.setState(NodeStates.HIGHLIGHTED, true));
-   * NodeShapeBase.endBatch();
+   * RendererNodeBase.endBatch();
    * ```
    */
   static startBatch(): void {
-    NodeShapeBase._batchMode = true;
-    NodeShapeBase._batchedNodes.clear();
+    RendererNodeBase._batchMode = true;
+    RendererNodeBase._batchedNodes.clear();
   }
 
   /**
@@ -495,15 +495,15 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
    * @returns Number of nodes that were updated
    */
   static endBatch(): number {
-    NodeShapeBase._batchMode = false;
-    const count = NodeShapeBase._batchedNodes.size;
+    RendererNodeBase._batchMode = false;
+    const count = RendererNodeBase._batchedNodes.size;
     
     // Update all batched nodes
-    for (const node of NodeShapeBase._batchedNodes) {
+    for (const node of RendererNodeBase._batchedNodes) {
       node.update();
     }
     
-    NodeShapeBase._batchedNodes.clear();
+    RendererNodeBase._batchedNodes.clear();
     return count;
   }
 
@@ -511,7 +511,7 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
    * Check if batch mode is active
    */
   static isBatchMode(): boolean {
-    return NodeShapeBase._batchMode;
+    return RendererNodeBase._batchMode;
   }
 
   /**
@@ -567,7 +567,7 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
       return this._cachedStyle;
     }
     
-    const cached = NodeShapeBase._globalStyleCache.get(hashCode);
+    const cached = RendererNodeBase._globalStyleCache.get(hashCode);
     if (cached) {
       this._cachedStyle = cached;
       this._styleHash = hashCode;
@@ -579,8 +579,8 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
     const result = this.computeActiveStyle();
     
     // Cache globally (limit cache size to prevent memory issues)
-    if (NodeShapeBase._globalStyleCache.size < 10000) {
-      NodeShapeBase._globalStyleCache.set(hashCode, result);
+    if (RendererNodeBase._globalStyleCache.size < 10000) {
+      RendererNodeBase._globalStyleCache.set(hashCode, result);
     }
     
     this._cachedStyle = result;
@@ -987,7 +987,7 @@ export abstract class NodeShapeBase extends BaseShape<NodeData> {
   /**
    * Update node data
    */
-  updateData(data: Partial<NodeData>): void {
+  updateData(data: Partial<RendererNode>): void {
     super.updateData(data);
     if (data.label !== undefined) {
       this.updateLabel();

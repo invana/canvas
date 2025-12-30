@@ -5,9 +5,9 @@
  */
 
 import type { ShapeStyle } from '../../primitives/shapes';
-import { NodeShapeBase, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './NodeShapeBase';
+import { RendererNodeBase, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './RendererNodeBase';
 
-export class EllipseNode extends NodeShapeBase {
+export class EllipseNode extends RendererNodeBase {
   
   get shapeType(): NodeShapeType {
     return 'ellipse';

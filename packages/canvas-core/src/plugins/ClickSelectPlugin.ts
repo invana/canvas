@@ -24,11 +24,11 @@
 import { FederatedPointerEvent } from 'pixi.js';
 import type { Canvas } from '../core/Canvas';
 import type { CanvasPlugin } from './types';
-import { NodeShapeBase } from '../elements/nodes/NodeShapeBase';
-import { EdgeShapeBase } from '../elements/edges/EdgeShapeBase';
+import { RendererNodeBase } from '../elements/nodes/RendererNodeBase';
+import { RendererEdgeBase } from '../elements/edges/RendererEdgeBase';
 import { PluginRegistry } from './registry';
 
-export type SelectableElement = NodeShapeBase | EdgeShapeBase;
+export type SelectableElement = RendererNodeBase | RendererEdgeBase;
 
 export interface ClickSelectOptions {
   /** Enable multi-select with modifier keys */
@@ -224,19 +224,19 @@ export class ClickSelectPlugin implements CanvasPlugin {
   /**
    * Get selected nodes only
    */
-  getSelectedNodes(): NodeShapeBase[] {
+  getSelectedNodes(): RendererNodeBase[] {
     return Array.from(this._selected).filter(
-      el => el instanceof NodeShapeBase
-    ) as NodeShapeBase[];
+      el => el instanceof RendererNodeBase
+    ) as RendererNodeBase[];
   }
 
   /**
    * Get selected edges only
    */
-  getSelectedEdges(): EdgeShapeBase[] {
+  getSelectedEdges(): RendererEdgeBase[] {
     return Array.from(this._selected).filter(
-      el => el instanceof EdgeShapeBase
-    ) as EdgeShapeBase[];
+      el => el instanceof RendererEdgeBase
+    ) as RendererEdgeBase[];
   }
 
   /**

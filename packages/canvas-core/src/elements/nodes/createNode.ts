@@ -5,15 +5,15 @@
  */
 
 import type { Registry } from '../../rendering/Registry';
-import type { NodeData, NodeStyle } from './NodeShapeBase';
-import { NodeShapeBase } from './NodeShapeBase';
+import type { RendererNode, NodeStyle } from './RendererNodeBase';
+import { RendererNodeBase } from './RendererNodeBase';
 import { CircleNode } from './CircleNode';
 
 /**
  * Options for creating a node via factory
  */
 export interface CreateNodeOptions {
-  data: NodeData;
+  data: RendererNode;
   style?: NodeStyle;
   interactive?: boolean;
   draggable?: boolean;
@@ -27,7 +27,7 @@ export interface CreateNodeOptions {
  * @param options - Node creation options
  * @returns The appropriate node shape instance
  */
-export function createNode(options: CreateNodeOptions): NodeShapeBase {
+export function createNode(options: CreateNodeOptions): RendererNodeBase {
   const shapeType = options.data.shape ?? 'circle';
   
   // Try to get the node class from registry first

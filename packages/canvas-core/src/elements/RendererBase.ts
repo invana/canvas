@@ -1,12 +1,12 @@
 /**
- * BaseShape
+ * RendererBase
  * 
  * Abstract base class for all visual shapes on the canvas.
  * Provides common functionality for rendering, interaction, and updates.
  * 
  * ## Architecture
  * 
- * All shapes extend BaseShape and implement:
+ * All shapes extend RendererBase and implement:
  * - `render()`: Draw the shape using primitives
  * - `update()`: Handle state changes
  * 
@@ -21,7 +21,7 @@ import type { ShapeStyle } from '../primitives/shapes';
 /**
  * Base data for any shape
  */
-export interface BaseShapeData {
+export interface RendererBaseData {
   id: string;
   x: number;
   y: number;
@@ -31,7 +31,7 @@ export interface BaseShapeData {
 /**
  * Base style for any shape
  */
-export interface BaseShapeStyle extends ShapeStyle {
+export interface RendererBaseStyle extends ShapeStyle {
   visible?: boolean;
   alpha?: number;
   cursor?: string;
@@ -40,9 +40,9 @@ export interface BaseShapeStyle extends ShapeStyle {
 /**
  * Options for creating a shape
  */
-export interface BaseShapeOptions<TData extends BaseShapeData = BaseShapeData> {
+export interface RendererBaseOptions<TData extends RendererBaseData = RendererBaseData> {
   data: TData;
-  style?: BaseShapeStyle;
+  style?: RendererBaseStyle;
   registry: Registry;
   interactive?: boolean;
 }
@@ -50,15 +50,15 @@ export interface BaseShapeOptions<TData extends BaseShapeData = BaseShapeData> {
 /**
  * Abstract base class for visual shapes
  */
-export abstract class BaseShape<TData extends BaseShapeData = BaseShapeData> extends Container {
+export abstract class RendererBase<TData extends RendererBaseData = RendererBaseData> extends Container {
   protected _data: TData;
-  protected _style: BaseShapeStyle;
+  protected _style: RendererBaseStyle;
   protected _registry: Registry;
   protected _graphics: Graphics;
   protected _labels: Map<string, Text> = new Map();
   protected _dirty: boolean = true;
 
-  constructor(options: BaseShapeOptions<TData>) {
+  constructor(options: RendererBaseOptions<TData>) {
     super();
 
     this._data = options.data;
@@ -110,11 +110,11 @@ export abstract class BaseShape<TData extends BaseShapeData = BaseShapeData> ext
     this.markDirty();
   }
 
-  get style(): BaseShapeStyle {
+  get style(): RendererBaseStyle {
     return this._style;
   }
 
-  set style(value: BaseShapeStyle) {
+  set style(value: RendererBaseStyle) {
     this._style = value;
     this.markDirty();
   }
@@ -147,7 +147,7 @@ export abstract class BaseShape<TData extends BaseShapeData = BaseShapeData> ext
   /**
    * Update the shape style
    */
-  updateStyle(style: Partial<BaseShapeStyle>): void {
+  updateStyle(style: Partial<RendererBaseStyle>): void {
     this._style = { ...this._style, ...style };
     
     if (style.visible !== undefined) this.visible = style.visible;

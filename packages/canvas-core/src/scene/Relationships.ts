@@ -5,7 +5,7 @@
  */
 
 // LEGACY: Old EdgeData type removed, needs refactoring
-type EdgeData = any;
+type RendererEdge = any;
 
 export interface RelationshipInfo {
   neighbors: string[]; // Connected node IDs
@@ -28,7 +28,7 @@ export class Relationships {
    */
   static getNodeRelationships(
     nodeId: string,
-    edges: Map<string, { id: string; source: string; target: string; data: EdgeData }>,
+    edges: Map<string, { id: string; source: string; target: string; data: RendererEdge }>,
     nodeEdges: Map<string, Set<string>>
   ): RelationshipInfo {
     const edgeIds = nodeEdges.get(nodeId) || new Set<string>();
@@ -66,7 +66,7 @@ export class Relationships {
    */
   static getNeighbors(
     nodeId: string,
-    edges: Map<string, { id: string; source: string; target: string; data: EdgeData }>,
+    edges: Map<string, { id: string; source: string; target: string; data: RendererEdge }>,
     nodeEdges: Map<string, Set<string>>,
     options: {
       direction?: 'incoming' | 'outgoing' | 'both';
@@ -101,15 +101,15 @@ export class Relationships {
    */
   static getConnectedEdges(
     nodeId: string,
-    edges: Map<string, { id: string; source: string; target: string; data: EdgeData }>,
+    edges: Map<string, { id: string; source: string; target: string; data: RendererEdge }>,
     nodeEdges: Map<string, Set<string>>,
     options: {
       direction?: 'incoming' | 'outgoing' | 'both';
     } = {}
-  ): EdgeData[] {
+  ): RendererEdge[] {
     const direction = options.direction || 'both';
     const edgeIds = nodeEdges.get(nodeId) || new Set<string>();
-    const result: EdgeData[] = [];
+    const result: RendererEdge[] = [];
     
     for (const edgeId of edgeIds) {
       const entry = edges.get(edgeId);
@@ -136,7 +136,7 @@ export class Relationships {
   static findPath(
     startId: string,
     endId: string,
-    edges: Map<string, { id: string; source: string; target: string; data: EdgeData }>,
+    edges: Map<string, { id: string; source: string; target: string; data: RendererEdge }>,
     nodeEdges: Map<string, Set<string>>,
     options: {
       directed?: boolean;
@@ -202,7 +202,7 @@ export class Relationships {
   static getNodesWithinHops(
     nodeId: string,
     hops: number,
-    edges: Map<string, { id: string; source: string; target: string; data: EdgeData }>,
+    edges: Map<string, { id: string; source: string; target: string; data: RendererEdge }>,
     nodeEdges: Map<string, Set<string>>,
     options: {
       direction?: 'incoming' | 'outgoing' | 'both';
@@ -259,7 +259,7 @@ export class Relationships {
   static isConnected(
     startId: string,
     endId: string,
-    edges: Map<string, { id: string; source: string; target: string; data: EdgeData }>,
+    edges: Map<string, { id: string; source: string; target: string; data: RendererEdge }>,
     nodeEdges: Map<string, Set<string>>,
     options: {
       directed?: boolean;
@@ -275,7 +275,7 @@ export class Relationships {
   static getCommonNeighbors(
     nodeId1: string,
     nodeId2: string,
-    edges: Map<string, { id: string; source: string; target: string; data: EdgeData }>,
+    edges: Map<string, { id: string; source: string; target: string; data: RendererEdge }>,
     nodeEdges: Map<string, Set<string>>
   ): string[] {
     const neighbors1 = new Set(this.getNeighbors(nodeId1, edges, nodeEdges));

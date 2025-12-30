@@ -4,10 +4,10 @@
  * Handles pointer enter/leave with visual feedback
  */
 
-import type { NodeShapeBase } from '../elements/nodes/NodeShapeBase';
-import type { EdgeShapeBase } from '../elements/edges/EdgeShapeBase';
+import type { RendererNodeBase } from '../elements/nodes/RendererNodeBase';
+import type { RendererEdgeBase } from '../elements/edges/RendererEdgeBase';
 
-export type HoverableElement = NodeShapeBase | EdgeShapeBase;
+export type HoverableElement = RendererNodeBase | RendererEdgeBase;
 
 export interface HoverConfig {
   hoverStyle?: {

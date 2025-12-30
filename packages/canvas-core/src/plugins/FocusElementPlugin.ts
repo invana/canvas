@@ -27,12 +27,12 @@
 
 import type { Canvas } from '../core/Canvas';
 import type { CanvasPlugin } from './types';
-import type { NodeShapeBase } from '../elements/nodes/NodeShapeBase';
-import type { EdgeShapeBase } from '../elements/edges/EdgeShapeBase';
+import type { RendererNodeBase } from '../elements/nodes/RendererNodeBase';
+import type { RendererEdgeBase } from '../elements/edges/RendererEdgeBase';
 import type { Viewport } from '../viewport/Viewport';
 import { PluginRegistry } from './registry';
 
-export type FocusableElement = NodeShapeBase | EdgeShapeBase;
+export type FocusableElement = RendererNodeBase | RendererEdgeBase;
 
 export interface FocusElementOptions {
   /** Animation duration in milliseconds */

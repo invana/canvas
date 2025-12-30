@@ -6,9 +6,9 @@
 
 import type { ShapeStyle } from '../../primitives/shapes';
 import { getRectIntersection } from '../../primitives/shapes/rect';
-import { NodeShapeBase, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './NodeShapeBase';
+import { RendererNodeBase, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './RendererNodeBase';
 
-export class RectNode extends NodeShapeBase {
+export class RectNode extends RendererNodeBase {
   
   get shapeType(): NodeShapeType {
     return 'rect';

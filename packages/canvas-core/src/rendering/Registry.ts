@@ -56,8 +56,8 @@ import {
 import { drawArrow } from '../primitives/arrows';
 
 // Import node shape classes
-import type { NodeShapeBase, NodeShapeOptions } from '../elements/nodes/NodeShapeBase';
-import type { EdgeShapeBase, EdgeShapeOptions } from '../elements/edges/EdgeShapeBase';
+import type { RendererNodeBase, NodeShapeOptions } from '../elements/nodes/RendererNodeBase';
+import type { RendererEdgeBase, EdgeShapeOptions } from '../elements/edges/RendererEdgeBase';
 import { CircleNode } from '../elements/nodes/CircleNode';
 import { RectNode } from '../elements/nodes/RectNode';
 import { EllipseNode } from '../elements/nodes/EllipseNode';
@@ -67,12 +67,12 @@ import { TriangleNode, DiamondNode, PentagonNode, HexagonNode, OctagonNode, Poly
 /**
  * Node shape class constructor type
  */
-export type NodeShapeConstructor = new (options: NodeShapeOptions) => NodeShapeBase;
+export type NodeShapeConstructor = new (options: NodeShapeOptions) => RendererNodeBase;
 
 /**
  * Edge shape class constructor type
  */
-export type EdgeShapeConstructor = new (options: EdgeShapeOptions) => EdgeShapeBase;
+export type EdgeShapeConstructor = new (options: EdgeShapeOptions) => RendererEdgeBase;
 
 /**
  * Shape types that come built-in

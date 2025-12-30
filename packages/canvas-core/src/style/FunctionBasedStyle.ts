@@ -5,8 +5,8 @@
  * where style values can be static or functions that receive node/edge data
  */
 
-import type { NodeData, NodeStyle } from '../elements/nodes';
-import type { EdgeData, EdgeStyle } from '../elements/edges';
+import type { RendererNode, NodeStyle } from '../elements/nodes';
+import type { RendererEdge, EdgeStyle } from '../elements/edges';
 
 /**
  * Type for style properties that can be static values or functions
@@ -17,14 +17,14 @@ export type StyleValue<T, D = any> = T | ((data: D) => T);
  * Node style with function-based properties
  * ANY property can be a static value or a function(nodeData) => value
  */
-export type FunctionBasedNodeStyle<D = NodeData> = {
+export type FunctionBasedNodeStyle<D = RendererNode> = {
   [K in keyof NodeStyle]?: NodeStyle[K] extends infer V ? (V | ((data: D) => V)) : never;
 };
 
 /**
  * Edge style with function-based properties
  */
-export type FunctionBasedEdgeStyle<D = EdgeData> = {
+export type FunctionBasedEdgeStyle<D = RendererEdge> = {
   [K in keyof EdgeStyle]?: StyleValue<EdgeStyle[K], D>;
 };
 
@@ -34,7 +34,7 @@ export type FunctionBasedEdgeStyle<D = EdgeData> = {
  * Priority: defaultStyle → userGlobalStyle → individualStyle (later overrides earlier)
  */
 export function resolveNodeStyle(
-  nodeData: NodeData,
+  nodeData: RendererNode,
   defaultStyle?: Partial<FunctionBasedNodeStyle>,
   userGlobalStyle?: Partial<FunctionBasedNodeStyle>,
   individualStyle?: Partial<FunctionBasedNodeStyle>
@@ -94,7 +94,7 @@ export function resolveNodeStyle(
  * Evaluate function-based edge style properties
  */
 export function resolveEdgeStyle(
-  edgeData: EdgeData,
+  edgeData: RendererEdge,
   globalStyle?: Partial<FunctionBasedEdgeStyle>,
   individualStyle?: Partial<FunctionBasedEdgeStyle>
 ): Partial<EdgeStyle> {

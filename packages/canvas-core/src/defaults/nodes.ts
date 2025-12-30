@@ -6,7 +6,7 @@
 import type { ShapeStyle } from '../primitives/shapes';
 import { NodeStates } from '../types/states';
 import { LABEL_VARIANTS } from './labels';
-import type { NodeStyle } from '../elements/nodes/NodeShapeBase';
+import type { NodeStyle } from '../elements/nodes/RendererNodeBase';
 
 // ============================================================================
 // State-Based Styling

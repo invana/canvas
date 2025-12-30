@@ -47,9 +47,9 @@ import { PluginRegistry } from '../plugins/registry';
 import type { Bounds } from '../scene/SpatialIndex';
 // LEGACY: These old types were removed. SceneGraph uses different EdgeData shape than ElementEdgeData
 // For now using 'any' to unblock - needs proper type refactoring
-// import type { NodeData as SceneNodeData, EdgeData as SceneEdgeData } from '../types';
+// import type { RendererNode as SceneNodeData, EdgeData as SceneEdgeData } from '../types';
 type SceneNodeData = any;
-type SceneEdgeData = any;
+type SceneEdgeShapeData = any;
 
 // ============================================================================
 // TYPES
@@ -722,7 +722,7 @@ export class Canvas {
   /**
    * Query edges with filters
    */
-  queryEdges(filter: QueryFilter): QueryResult<SceneEdgeData> {
+  queryEdges(filter: QueryFilter): QueryResult<SceneEdgeShapeData> {
     return QueryEngine.queryEdges(this._scene.getEdgeMap(), filter);
   }
 

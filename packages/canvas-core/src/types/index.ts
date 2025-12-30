@@ -11,9 +11,9 @@ export * from './states';
 // LEGACY TYPES - REMOVED
 // =============================================================================
 // 
-// NodeData, NodeStyle, EdgeData, EdgeStyle have been removed.
+// RendererNode, NodeStyle, EdgeData, EdgeStyle have been removed.
 // Use proper types from ./elements instead:
-//   - NodeData -> ElementNodeData
+//   - RendererNode -> ElementNodeData
 //   - NodeStyle -> ElementNodeStyle  
 //   - EdgeData -> ElementEdgeData
 //   - EdgeStyle -> ElementEdgeStyle
@@ -147,7 +147,7 @@ export interface CanvasOptions {
 // Shape Instance Types  
 // =============================================================================
 // 
-// LEGACY: These interfaces reference old NodeData/EdgeData which have been removed.
+// LEGACY: These interfaces reference old RendererNode/EdgeData which have been removed.
 // TODO: Refactor to use ElementNodeData/ElementEdgeData from ./elements
 // For now, using 'any' to unblock the build
 
@@ -155,13 +155,13 @@ export interface ShapeInstance {
   id: string;
   container: Container;
   graphics: Graphics;
-  data: any; // LEGACY: was NodeData | EdgeData
+  data: any; // LEGACY: was RendererNode | EdgeData
   update(data: any): void; // LEGACY: was Partial<NodeData | EdgeData>
   destroy(): void;
 }
 
 export interface NodeInstance extends ShapeInstance {
-  data: any; // LEGACY: was NodeData
+  data: any; // LEGACY: was RendererNode
   getBoundaryPoint(angle: number): Point;
   setSelected(selected: boolean): void;
   setHovered(hovered: boolean): void;

@@ -7,7 +7,7 @@
 
 import type { ShapeStyle } from '../../primitives/shapes';
 import { getPolygonIntersection } from '../../primitives/shapes/polygon';
-import { NodeShapeBase, type NodeShapeOptions, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './NodeShapeBase';
+import { RendererNodeBase, type NodeShapeOptions, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './RendererNodeBase';
 
 /**
  * Options specific to polygon nodes
@@ -19,7 +19,7 @@ export interface PolygonNodeOptions extends NodeShapeOptions {
   rotation?: number;
 }
 
-export class PolygonNode extends NodeShapeBase {
+export class PolygonNode extends RendererNodeBase {
   protected _polygonSides: number;
   protected _polygonRotation: number;
 

@@ -1,5 +1,5 @@
 /**
- * EdgeShapeBase
+ * RendererEdgeBase
  * 
  * Abstract base class for all edge shapes.
  * Provides common functionality: hover, selection, arrows, and style management.
@@ -7,7 +7,7 @@
  * 
  * @example
  * ```typescript
- * class CustomEdge extends EdgeShapeBase {
+ * class CustomEdge extends RendererEdgeBase {
  *   get pathType() { return 'custom'; }
  *   
  *   protected drawPath(source: Point, target: Point, style: PathStyle): void {
@@ -24,7 +24,7 @@
 import type { PathStyle, Point, Direction } from '../../primitives/paths';
 import type { ArrowType, ArrowStyle } from '../../primitives/arrows';
 import { getArrowOffset } from '../../primitives/arrows';
-import { BaseShape, type BaseShapeData, type BaseShapeOptions } from '../BaseShape';
+import { RendererBase, type RendererBaseData, type RendererBaseOptions } from '../RendererBase';
 import { EdgeStates, type EdgeStateName } from '../../types/states';
 
 
@@ -44,7 +44,7 @@ export interface EdgeTangents {
 }
 
 /**
- * Internal: Runtime edge data stored by edge instances
+ * Internal: Runtime edge data stored by edge shape instances
  * This is NOT the public API - users should use CanvasEdge instead
  * 
  * Differences from CanvasEdge (public API):
@@ -52,7 +52,7 @@ export interface EdgeTangents {
  * - No `states` field (managed by state system)
  * - source/target are always Point objects (resolved from string IDs)
  */
-export interface EdgeData extends BaseShapeData {
+export interface RendererEdge extends RendererBaseData {
   /** Source point */
   source: Point;
   /** Target point */
@@ -122,8 +122,8 @@ export interface EdgeStyle {
 /**
  * Edge shape options
  */
-export interface EdgeShapeOptions extends Omit<BaseShapeOptions<EdgeData>, 'style' | 'data'> {
-  data: Omit<EdgeData, 'x' | 'y'> & { x?: number; y?: number };
+export interface EdgeShapeOptions extends Omit<RendererBaseOptions<RendererEdge>, 'style' | 'data'> {
+  data: Omit<RendererEdge, 'x' | 'y'> & { x?: number; y?: number };
   style?: Partial<EdgeStyle>;
   /** Initial states to activate (e.g., ['selected', 'highlighted']) */
   states?: string[];
@@ -132,7 +132,7 @@ export interface EdgeShapeOptions extends Omit<BaseShapeOptions<EdgeData>, 'styl
 /**
  * Abstract base class for edge shapes
  */
-export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
+export abstract class RendererEdgeBase extends RendererBase<RendererEdge> {
   protected _edgeStyle: Partial<EdgeStyle>;
   private _activeStates = new Set<string>([EdgeStates.DEFAULT]);
   
@@ -144,7 +144,7 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
   
   // Batch mode for bulk operations (set to true to defer rendering)
   private static _batchMode = false;
-  private static _batchedEdges = new Set<EdgeShapeBase>();
+  private static _batchedEdges = new Set<RendererEdgeBase>();
 
   constructor(options: EdgeShapeOptions) {
     // Edges don't use x/y positioning - they draw from source to target
@@ -152,9 +152,9 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
       ...options.data,
       x: options.data.x ?? 0,
       y: options.data.y ?? 0,
-    } as EdgeData;
+    } as RendererEdge;
 
-    super({ ...options, data } as BaseShapeOptions<EdgeData>);
+    super({ ...options, data } as RendererBaseOptions<RendererEdge>);
     this._edgeStyle = options.style ?? {};
 
     // Always activate DEFAULT state
@@ -242,8 +242,8 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
       this.markDirty();
       
       // If in batch mode, defer update; otherwise update immediately
-      if (EdgeShapeBase._batchMode) {
-        EdgeShapeBase._batchedEdges.add(this);
+      if (RendererEdgeBase._batchMode) {
+        RendererEdgeBase._batchedEdges.add(this);
       } else {
         this.update();
       }
@@ -259,8 +259,8 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
       this.markDirty();
       
       // If in batch mode, defer update; otherwise update immediately
-      if (EdgeShapeBase._batchMode) {
-        EdgeShapeBase._batchedEdges.add(this);
+      if (RendererEdgeBase._batchMode) {
+        RendererEdgeBase._batchedEdges.add(this);
       } else {
         this.update();
       }
@@ -297,14 +297,14 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
    * 
    * @example
    * ```typescript
-   * EdgeShapeBase.startBatch();
+   * RendererEdgeBase.startBatch();
    * edges.forEach(edge => edge.setState(EdgeStates.HIGHLIGHTED, true));
-   * EdgeShapeBase.endBatch();
+   * RendererEdgeBase.endBatch();
    * ```
    */
   static startBatch(): void {
-    EdgeShapeBase._batchMode = true;
-    EdgeShapeBase._batchedEdges.clear();
+    RendererEdgeBase._batchMode = true;
+    RendererEdgeBase._batchedEdges.clear();
   }
 
   /**
@@ -312,15 +312,15 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
    * @returns Number of edges that were updated
    */
   static endBatch(): number {
-    EdgeShapeBase._batchMode = false;
-    const count = EdgeShapeBase._batchedEdges.size;
+    RendererEdgeBase._batchMode = false;
+    const count = RendererEdgeBase._batchedEdges.size;
     
     // Update all batched edges
-    for (const edge of EdgeShapeBase._batchedEdges) {
+    for (const edge of RendererEdgeBase._batchedEdges) {
       edge.update();
     }
     
-    EdgeShapeBase._batchedEdges.clear();
+    RendererEdgeBase._batchedEdges.clear();
     return count;
   }
 
@@ -328,7 +328,7 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
    * Check if batch mode is active
    */
   static isBatchMode(): boolean {
-    return EdgeShapeBase._batchMode;
+    return RendererEdgeBase._batchMode;
   }
 
   /**
@@ -463,7 +463,7 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
 
     // Tier 3: Check global cache
     const cacheKey = `${JSON.stringify(this._edgeStyle)}_${stateHash}`;
-    const globalCached = EdgeShapeBase._globalStyleCache.get(cacheKey);
+    const globalCached = RendererEdgeBase._globalStyleCache.get(cacheKey);
     if (globalCached) {
       this._cachedStyle = globalCached;
       this._styleHash = stateHash;
@@ -478,7 +478,7 @@ export abstract class EdgeShapeBase extends BaseShape<EdgeData> {
     this._cachedStyle = computed;
     this._styleHash = stateHash;
     this._styleDirty = false;
-    EdgeShapeBase._globalStyleCache.set(cacheKey, computed);
+    RendererEdgeBase._globalStyleCache.set(cacheKey, computed);
     
     return computed;
   }

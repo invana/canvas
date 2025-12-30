@@ -8,8 +8,8 @@
 import { SelectionManager } from './SelectionManager';
 import { DragManager } from './DragManager';
 import { HoverManager } from './HoverManager';
-import type { NodeShapeBase } from '../elements/nodes/NodeShapeBase';
-import type { EdgeShapeBase } from '../elements/edges/EdgeShapeBase';
+import type { RendererNodeBase } from '../elements/nodes/RendererNodeBase';
+import type { RendererEdgeBase } from '../elements/edges/RendererEdgeBase';
 import type { Viewport } from '../viewport/Viewport';
 
 export interface InteractionConfig {
@@ -32,8 +32,8 @@ export type InteractionEventType =
 
 export type InteractionEventCallback = (event: {
   type: InteractionEventType;
-  target?: NodeShapeBase | EdgeShapeBase;
-  targets?: Array<NodeShapeBase | EdgeShapeBase>;
+  target?: RendererNodeBase | RendererEdgeBase;
+  targets?: Array<RendererNodeBase | RendererEdgeBase>;
   data?: any;
 }) => void;
 
@@ -127,7 +127,7 @@ export class InteractionManager {
   /**
    * Register a node for interactions
    */
-  registerNode(node: NodeShapeBase): void {
+  registerNode(node: RendererNodeBase): void {
     if (this.config.enableSelection) {
       this.selection.registerElement(node);
     }
@@ -144,7 +144,7 @@ export class InteractionManager {
   /**
    * Register an edge for interactions
    */
-  registerEdge(edge: EdgeShapeBase): void {
+  registerEdge(edge: RendererEdgeBase): void {
     if (this.config.enableSelection) {
       this.selection.registerElement(edge);
     }
@@ -157,7 +157,7 @@ export class InteractionManager {
   /**
    * Unregister a node
    */
-  unregisterNode(node: NodeShapeBase): void {
+  unregisterNode(node: RendererNodeBase): void {
     this.selection.unregisterElement(node);
     this.drag.unregisterNode(node);
     this.hover.unregisterElement(node);
@@ -166,7 +166,7 @@ export class InteractionManager {
   /**
    * Unregister an edge
    */
-  unregisterEdge(edge: EdgeShapeBase): void {
+  unregisterEdge(edge: RendererEdgeBase): void {
     this.selection.unregisterElement(edge);
     this.hover.unregisterElement(edge);
   }

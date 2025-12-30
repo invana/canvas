@@ -6,12 +6,12 @@
  */
 
 import type { ShapeStyle } from '../../primitives/shapes';
-import { NodeShapeBase, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './NodeShapeBase';
+import { RendererNodeBase, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './RendererNodeBase';
 import { HTMLText } from 'pixi.js';
 import { getRectIntersection } from '../../primitives/shapes/rect';
 import { DEFAULT_NODE_STYLE } from '../../defaults/nodes';
 
-export class HTMLNode extends NodeShapeBase {
+export class HTMLNode extends RendererNodeBase {
   private _htmlText?: HTMLText;
   private _htmlContent: string = '';
 

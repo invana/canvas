@@ -13,9 +13,9 @@
  * - Spatial indexing for fast proximity queries
  */
 
-// LEGACY: Old NodeData/EdgeData types removed, needs refactoring
-type NodeData = any;
-type EdgeData = any;
+// LEGACY: Old RendererNode/EdgeShapeData types removed, needs refactoring
+type RendererNode = any;
+type RendererEdge = any;
 import { SpatialIndex, type Bounds } from './SpatialIndex';
 
 export type SceneGraphEventType = 
@@ -35,7 +35,7 @@ export type SceneGraphEventCallback = (event: {
  */
 interface NodeEntry {
   id: string;
-  data: NodeData;
+  data: RendererNode;
 }
 
 /**
@@ -45,7 +45,7 @@ interface EdgeEntry {
   id: string;
   source: string;
   target: string;
-  data: EdgeData;
+  data: RendererEdge;
 }
 
 export class SceneGraph {
@@ -88,7 +88,7 @@ export class SceneGraph {
   /**
    * Register a node in the scene
    */
-  addNode(data: NodeData): void {
+  addNode(data: RendererNode): void {
     if (this.nodes.has(data.id)) {
       console.warn(`Node "${data.id}" already exists in scene`);
       return;
@@ -114,7 +114,7 @@ export class SceneGraph {
   /**
    * Get a node's data
    */
-  getNode(id: string): NodeData | undefined {
+  getNode(id: string): RendererNode | undefined {
     return this.nodes.get(id)?.data;
   }
 
@@ -146,7 +146,7 @@ export class SceneGraph {
   /**
    * Register an edge in the scene
    */
-  addEdge(data: EdgeData): void {
+  addEdge(data: RendererEdge): void {
     if (this.edges.has(data.id)) {
       console.warn(`Edge "${data.id}" already exists in scene`);
       return;
@@ -184,7 +184,7 @@ export class SceneGraph {
   /**
    * Get an edge's data
    */
-  getEdge(id: string): EdgeData | undefined {
+  getEdge(id: string): RendererEdge | undefined {
     return this.edges.get(id)?.data;
   }
 
@@ -223,13 +223,13 @@ export class SceneGraph {
   /**
    * Get edges connected to a node
    */
-  getNodeEdges(nodeId: string): EdgeData[] {
+  getNodeEdges(nodeId: string): RendererEdge[] {
     const edgeIds = this.nodeEdges.get(nodeId);
     if (!edgeIds) return [];
     
     return Array.from(edgeIds)
       .map(id => this.edges.get(id)?.data)
-      .filter((e): e is EdgeData => e !== undefined);
+      .filter((e): e is RendererEdge => e !== undefined);
   }
 
   // ===========================================================================
@@ -242,27 +242,27 @@ export class SceneGraph {
   /**
    * Query nodes within a rectangular bounds
    */
-  queryNodesByBounds(bounds: Bounds): NodeData[] {
+  queryNodesByBounds(bounds: Bounds): RendererNode[] {
     const nodeIds = this.spatialIndex.queryBounds(bounds);
     return Array.from(nodeIds)
       .map(id => this.nodes.get(id)?.data)
-      .filter((n): n is NodeData => n !== undefined);
+      .filter((n): n is RendererNode => n !== undefined);
   }
 
   /**
    * Query nodes within a radius of a point
    */
-  queryNodesByRadius(center: { x: number; y: number }, radius: number): NodeData[] {
+  queryNodesByRadius(center: { x: number; y: number }, radius: number): RendererNode[] {
     const nodeIds = this.spatialIndex.queryRadius(center, radius);
     return Array.from(nodeIds)
       .map(id => this.nodes.get(id)?.data)
-      .filter((n): n is NodeData => n !== undefined);
+      .filter((n): n is RendererNode => n !== undefined);
   }
 
   /**
    * Find nearest node to a point
    */
-  findNearestNode(point: { x: number; y: number }, maxDistance?: number): NodeData | null {
+  findNearestNode(point: { x: number; y: number }, maxDistance?: number): RendererNode | null {
     const nodeId = this.spatialIndex.findNearest(point, maxDistance);
     return nodeId ? this.nodes.get(nodeId)?.data ?? null : null;
   }

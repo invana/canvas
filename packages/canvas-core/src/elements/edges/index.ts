@@ -4,7 +4,7 @@
  * Exports all edge shape implementations for different path types.
  * 
  * Architecture:
- * - EdgeShapeBase: Abstract base class with common edge functionality
+ * - RendererEdgeBase: Abstract base class with common edge functionality
  * - LineEdge: Straight line implementation
  * - BezierEdge: Quadratic bezier curve implementation
  * - OrthogonalEdge: Right-angle path implementation (use cornerRadius in style for rounded corners)
@@ -15,13 +15,13 @@
 
 // Base class
 export { 
-  EdgeShapeBase,
+  RendererEdgeBase,
   type EdgePathType,
   type EdgeTangents,
-  type EdgeData,
+  type RendererEdge,
   type EdgeStyle,
   type EdgeShapeOptions,
-} from './EdgeShapeBase';
+} from './RendererEdgeBase';
 
 // Concrete implementations
 export { LineEdge, type LineEdgeOptions } from './LineEdge';

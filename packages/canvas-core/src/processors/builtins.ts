@@ -5,8 +5,8 @@
  */
 
 import type { ProcessorConfig, ProcessorContext, CanvasEvent } from '../types';
-// LEGACY: Old NodeData type removed, needs refactoring
-type NodeData = any;
+// LEGACY: Old RendererNode type removed, needs refactoring
+type RendererNode = any;
 import { BaseProcessor } from './BaseProcessor';
 
 // =============================================================================
@@ -67,7 +67,7 @@ export class SelectionProcessor extends BaseProcessor {
   }
 
   private handleNodeClick(event: CanvasEvent, _context: ProcessorContext): void {
-    const nodeId = (event.target as NodeData)?.id;
+    const nodeId = (event.target as RendererNode)?.id;
     if (!nodeId) return;
 
     const multiSelect = this.options.multiSelect as boolean ?? false;

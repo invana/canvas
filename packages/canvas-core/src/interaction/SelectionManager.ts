@@ -4,10 +4,10 @@
  * Handles single and multi-select with keyboard modifiers
  */
 
-import type { NodeShapeBase } from '../elements/nodes/NodeShapeBase';
-import type { EdgeShapeBase } from '../elements/edges/EdgeShapeBase';
+import type { RendererNodeBase } from '../elements/nodes/RendererNodeBase';
+import type { RendererEdgeBase } from '../elements/edges/RendererEdgeBase';
 
-export type SelectableElement = NodeShapeBase | EdgeShapeBase;
+export type SelectableElement = RendererNodeBase | RendererEdgeBase;
 
 export interface SelectionConfig {
   multiSelect?: boolean;

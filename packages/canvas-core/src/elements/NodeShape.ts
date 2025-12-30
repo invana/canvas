@@ -19,7 +19,7 @@
 import type { ShapeStyle } from '../primitives/shapes';
 import type { LabelAlign } from '../primitives/labels';
 import { createPositionedLabel, type LabelPosition } from '../primitives/labels';
-import { BaseShape, type BaseShapeData, type BaseShapeStyle, type BaseShapeOptions } from './BaseShape';
+import { RendererBase, type RendererBaseData, type RendererBaseStyle, type RendererBaseOptions } from './RendererBase';
 import { FederatedPointerEvent, Graphics, Ticker } from 'pixi.js';
 import { drawRippleEffect, calculateRippleRadius, calculateRippleAlpha } from '../primitives/effects';
 import { getRectIntersection } from '../primitives/shapes/rect';
@@ -45,7 +45,7 @@ export type NodeShapeType =
 /**
  * Data for a node
  */
-export interface NodeData extends BaseShapeData {
+export interface RendererNode extends RendererBaseData {
   /** Node label text */
   label?: string;
   /** Shape type */
@@ -81,7 +81,7 @@ export interface RippleAnimationOptions {
 /**
  * Style for a node
  */
-export interface NodeStyle extends BaseShapeStyle {
+export interface NodeStyle extends RendererBaseStyle {
   /** Label position relative to shape */
   labelPosition?: LabelPosition;
   /** Label offset from position */
@@ -116,7 +116,7 @@ export interface NodeStyle extends BaseShapeStyle {
 /**
  * Node shape options
  */
-export interface NodeShapeOptions extends Omit<BaseShapeOptions<NodeData>, 'style'> {
+export interface NodeShapeOptions extends Omit<RendererBaseOptions<RendererNode>, 'style'> {
   style?: NodeStyle;
   /** Enable node dragging */
   draggable?: boolean;
@@ -131,7 +131,7 @@ export interface NodeShapeOptions extends Omit<BaseShapeOptions<NodeData>, 'styl
 /**
  * Node shape class
  */
-export class NodeShape extends BaseShape<NodeData> {
+export class NodeShape extends RendererBase<RendererNode> {
   protected _nodeStyle: NodeStyle;
   private _activeStates = new Set<string>([NodeStates.DEFAULT]);
   private _draggable: boolean;
@@ -156,7 +156,7 @@ export class NodeShape extends BaseShape<NodeData> {
   private _rippleTickerCallback: ((delta: { deltaMS: number }) => void) | null = null;
 
   constructor(options: NodeShapeOptions) {
-    super(options as BaseShapeOptions<NodeData>);
+    super(options as RendererBaseOptions<RendererNode>);
     this._nodeStyle = options.style ?? {};
     this._draggable = options.draggable ?? true;
     this._selectable = options.selectable ?? true;
@@ -535,7 +535,7 @@ export class NodeShape extends BaseShape<NodeData> {
   /**
    * Update node data
    */
-  updateData(data: Partial<NodeData>): void {
+  updateData(data: Partial<RendererNode>): void {
     super.updateData(data);
     if (data.label !== undefined) {
       this.updateLabel();

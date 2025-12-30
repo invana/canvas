@@ -25,7 +25,7 @@
  * ┌─────────────────────────────────────────────────────────────────┐
  * │                     Elements (elements/)                         │
  * │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐          │
- * │  │NodeShapeBase│  │EdgeShapeBase│  │    BaseShape    │          │
+ * │  │RendererNodeBase│  │RendererEdgeBase│  │    RendererBase    │          │
  * │  │  (nodes/)   │  │  (edges/)   │  │                 │          │
  * │  └─────────────┘  └─────────────┘  └─────────────────┘          │
  * └─────────────────────────────────────────────────────────────────┘
@@ -222,9 +222,9 @@ export type { ProcessorConfig, ProcessorContext } from './types';
 // ============================================================================
 
 export {
-  BaseShape,
+  RendererBase,
   // Node shapes
-  NodeShapeBase,
+  RendererNodeBase,
   CircleNode,
   EllipseNode,
   RectNode,
@@ -236,21 +236,21 @@ export {
   HexagonNode,
   OctagonNode,
   // Edge shapes
-  EdgeShapeBase,
+  RendererEdgeBase,
   LineEdge,
   BezierEdge,
   OrthogonalEdge,
 } from './elements';
 
 export type {
-  BaseShapeData,
-  BaseShapeStyle,
-  BaseShapeOptions,
-  NodeData as ElementNodeData,
+  RendererBaseData,
+  RendererBaseStyle,
+  RendererBaseOptions,
+  RendererNode as ElementNodeData,
   NodeStyle as ElementNodeStyle,
   NodeShapeOptions,
   NodeShapeType,
-  EdgeData as ElementEdgeData,
+  RendererEdge as ElementEdgeData,
   EdgeStyle as ElementEdgeStyle,
   EdgeShapeOptions,
   EdgePathType,
@@ -260,10 +260,10 @@ export type {
 // TYPES
 // ============================================================================
 
-// REMOVED: NodeData, EdgeData from './types' - these are legacy types with selectedFill/hoverFill
+// REMOVED: RendererNode, EdgeData from './types' - these are legacy types with selectedFill/hoverFill
 // Use ElementNodeData, ElementEdgeData from './elements' instead
 export type {
-  // NodeData,  // LEGACY - use ElementNodeData
+  // RendererNode,  // LEGACY - use ElementNodeData
   // EdgeData,  // LEGACY - use ElementEdgeData
   Bounds,
   Tangent,

@@ -6,7 +6,7 @@
  */
 
 import type { PathStyle, Point } from '../../primitives/paths';
-import { EdgeShapeBase, type EdgeShapeOptions, type EdgeTangents, type EdgePathType } from './EdgeShapeBase';
+import { RendererEdgeBase, type EdgeShapeOptions, type EdgeTangents, type EdgePathType } from './RendererEdgeBase';
 
 /**
  * Bezier edge options (same as base edge options)
@@ -16,7 +16,7 @@ export type BezierEdgeOptions = EdgeShapeOptions;
 /**
  * Quadratic bezier edge
  */
-export class BezierEdge extends EdgeShapeBase {
+export class BezierEdge extends RendererEdgeBase {
   get pathType(): EdgePathType {
     return 'bezier';
   }

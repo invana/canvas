@@ -5,9 +5,9 @@
  */
 
 import { getRectIntersection } from '../../primitives/shapes/rect';
-import { NodeShapeBase, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './NodeShapeBase';
+import { RendererNodeBase, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './RendererNodeBase';
 
-export class RoundedRectNode extends NodeShapeBase {
+export class RoundedRectNode extends RendererNodeBase {
   
   get shapeType(): NodeShapeType {
     return 'roundedRect';

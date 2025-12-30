@@ -23,11 +23,11 @@
 
 import type { Canvas } from '../core/Canvas';
 import type { CanvasPlugin } from './types';
-import { NodeShapeBase } from '../elements/nodes/NodeShapeBase';
-import type { EdgeShapeBase } from '../elements/edges/EdgeShapeBase';
+import { RendererNodeBase } from '../elements/nodes/RendererNodeBase';
+import type { RendererEdgeBase } from '../elements/edges/RendererEdgeBase';
 import { PluginRegistry } from './registry';
 
-export type HoverableElement = NodeShapeBase | EdgeShapeBase;
+export type HoverableElement = RendererNodeBase | RendererEdgeBase;
 
 export interface HoverActivateOptions {
   /** Hover state name to apply */
@@ -140,7 +140,7 @@ export class HoverActivatePlugin implements CanvasPlugin {
     element.setState(this._options.hoverState, true);
 
     // Highlight neighbors if enabled and element is a node
-    if (this._options.highlightNeighbors && element instanceof NodeShapeBase) {
+    if (this._options.highlightNeighbors && element instanceof RendererNodeBase) {
       this.highlightNeighbors(element);
     }
   }
@@ -165,7 +165,7 @@ export class HoverActivatePlugin implements CanvasPlugin {
    * Highlight neighbors of a node
    * TODO: Implement when SceneGraph relationship API is available
    */
-  private highlightNeighbors(_node: NodeShapeBase): void {
+  private highlightNeighbors(_node: RendererNodeBase): void {
     // Temporarily disabled - requires SceneGraph.relationships API
   }
 

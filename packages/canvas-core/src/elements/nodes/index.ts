@@ -9,17 +9,17 @@
 
 // Base class
 export {
-  NodeShapeBase,
-  type NodeData,
+  RendererNodeBase,
+  type RendererNode,
   type NodeStyle,
   type NodeShapeOptions,
   type NodeShapeType,
   type RippleAnimationOptions,
   type Point,
   type Bounds,
-  type NodeBadge,
+  type RendererBadge,
   type BadgePosition,
-} from './NodeShapeBase';
+} from './RendererNodeBase';
 
 // Concrete implementations
 export { CircleNode } from './CircleNode';

@@ -5,7 +5,7 @@
  */
 
 import type { FederatedPointerEvent } from 'pixi.js';
-import type { NodeShapeBase } from '../elements/nodes/NodeShapeBase';
+import type { RendererNodeBase } from '../elements/nodes/RendererNodeBase';
 import type { Viewport } from '../viewport/Viewport';
 
 export interface DragConfig {
@@ -23,14 +23,14 @@ export interface DragData {
 }
 
 export type DragEventType = 'start' | 'move' | 'end';
-export type DragEventCallback = (node: NodeShapeBase, data: DragData) => void;
+export type DragEventCallback = (node: RendererNodeBase, data: DragData) => void;
 
 export class DragManager {
   private readonly viewport: Viewport;
   private readonly config: Required<DragConfig>;
   private readonly listeners: Map<DragEventType, Set<DragEventCallback>> = new Map();
   
-  private dragTarget: NodeShapeBase | null = null;
+  private dragTarget: RendererNodeBase | null = null;
   private dragData: DragData | null = null;
   private isDragging = false;
 
@@ -45,7 +45,7 @@ export class DragManager {
   /**
    * Register a node for dragging
    */
-  registerNode(node: NodeShapeBase): void {
+  registerNode(node: RendererNodeBase): void {
     node.eventMode = 'static';
     node.cursor = 'grab';
 
@@ -57,7 +57,7 @@ export class DragManager {
   /**
    * Unregister a node
    */
-  unregisterNode(node: NodeShapeBase): void {
+  unregisterNode(node: RendererNodeBase): void {
     node.off('pointerdown');
     node.off('pointermove');
     node.off('pointerup');
@@ -67,7 +67,7 @@ export class DragManager {
   /**
    * Handle drag start
    */
-  private onDragStart(node: NodeShapeBase, event: FederatedPointerEvent): void {
+  private onDragStart(node: RendererNodeBase, event: FederatedPointerEvent): void {
     // Don't start drag if already dragging or if disabled
     if (this.isDragging) return;
 
@@ -171,7 +171,7 @@ export class DragManager {
   /**
    * Get current drag target
    */
-  getDragTarget(): NodeShapeBase | null {
+  getDragTarget(): RendererNodeBase | null {
     return this.dragTarget;
   }
 
@@ -226,7 +226,7 @@ export class DragManager {
   /**
    * Emit drag event
    */
-  private emit(event: DragEventType, node: NodeShapeBase, data: DragData): void {
+  private emit(event: DragEventType, node: RendererNodeBase, data: DragData): void {
     const callbacks = this.listeners.get(event);
     if (callbacks) {
       callbacks.forEach((cb) => cb(node, data));

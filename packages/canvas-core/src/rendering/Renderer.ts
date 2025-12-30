@@ -34,15 +34,15 @@ import {
   type FunctionBasedEdgeStyle 
 } from '../style/FunctionBasedStyle';
 import { 
-  NodeShapeBase, 
-  type NodeData as NodeShapeData, 
+  RendererNodeBase, 
+  type RendererNode, 
   type NodeStyle,
   type NodeShapeType,
-  type NodeBadge
+  type RendererBadge
 } from '../elements/nodes';
 import { 
-  EdgeShapeBase, 
-  type EdgeData as EdgeShapeData, 
+  RendererEdgeBase, 
+  type RendererEdge, 
   type EdgeStyle,
   type EdgePathType
 } from '../elements/edges';
@@ -95,7 +95,7 @@ export interface CanvasNode {
   states?: string[];
   
   // Badges
-  badges?: NodeBadge[];
+  badges?: RendererBadge[];
 }
 
 /**
@@ -149,14 +149,14 @@ export interface RendererOptions {
   /** Offset from node boundary for edges */
   edgeBoundaryOffset?: number;
   /** Callback when a node is dragged */
-  onNodeDrag?: (node: NodeShapeBase, x: number, y: number) => void;
+  onNodeDrag?: (node: RendererNodeBase, x: number, y: number) => void;
 }
 
 /**
  * Internal edge tracking with source/target node references
  */
 interface EdgeTracking {
-  edge: EdgeShapeBase;
+  edge: RendererEdgeBase;
   sourceNodeId?: string;
   targetNodeId?: string;
   sourcePoint?: Point;
@@ -173,7 +173,7 @@ export class Renderer {
   private _edgeLayer: Container;
   
   // Graphics storage
-  private _nodes: Map<string, NodeShapeBase> = new Map();
+  private _nodes: Map<string, RendererNodeBase> = new Map();
   private _edges: Map<string, EdgeTracking> = new Map();
   
   // Node-edge relationships (node ID → set of edge IDs)
@@ -186,7 +186,7 @@ export class Renderer {
   private _edgeBoundaryOffset: number;
   
   // Callbacks
-  private _onNodeDrag?: (node: NodeShapeBase, x: number, y: number) => void;
+  private _onNodeDrag?: (node: RendererNodeBase, x: number, y: number) => void;
 
   constructor(options: RendererOptions) {
     this._registry = options.registry;
@@ -207,14 +207,14 @@ export class Renderer {
   /**
    * Add a node to the canvas
    */
-  addNode(input: CanvasNode): NodeShapeBase {
+  addNode(input: CanvasNode): RendererNodeBase {
     const { 
       id, x, y, label, shape, size, width, height, cornerRadius, payload, badges,
       style, interactive, draggable, states 
     } = input;
     
     // Create node data structure first (needed for function evaluation)
-    const nodeData: NodeShapeData = {
+    const nodeData: RendererNode = {
       id,
       x,
       y,
@@ -272,7 +272,7 @@ export class Renderer {
   /**
    * Update a node's properties
    */
-  updateNode(id: string, updates: Partial<CanvasNode>): NodeShapeBase | undefined {
+  updateNode(id: string, updates: Partial<CanvasNode>): RendererNodeBase | undefined {
     const node = this._nodes.get(id);
     if (!node) return undefined;
     
@@ -329,14 +329,14 @@ export class Renderer {
   /**
    * Get a node by ID
    */
-  getNode(id: string): NodeShapeBase | undefined {
+  getNode(id: string): RendererNodeBase | undefined {
     return this._nodes.get(id);
   }
 
   /**
    * Get all nodes
    */
-  getNodes(): NodeShapeBase[] {
+  getNodes(): RendererNodeBase[] {
     return Array.from(this._nodes.values());
   }
 
@@ -354,7 +354,7 @@ export class Renderer {
   /**
    * Add an edge to the canvas
    */
-  addEdge(input: CanvasEdge): EdgeShapeBase {
+  addEdge(input: CanvasEdge): RendererEdgeBase {
     const { 
       id, source, target, pathType, curvature, sourceDirection, targetDirection,
       arrowSource, arrowTarget, arrowSize, label, payload, style, states 
@@ -375,7 +375,7 @@ export class Renderer {
     );
     
     // Create edge shape data
-    const edgeShapeData: EdgeShapeData = {
+    const edgeShapeData: RendererEdge = {
       id,
       source: adjustedPoints.source,
       target: adjustedPoints.target,
@@ -390,7 +390,7 @@ export class Renderer {
       arrowSize,
       label,
       payload,
-    } as EdgeShapeData;
+    } as RendererEdge;
     
     // Resolve edge styles with function-based property evaluation
     const mergedStyle = resolveEdgeStyle(
@@ -440,7 +440,7 @@ export class Renderer {
   /**
    * Update an edge's properties
    */
-  updateEdge(id: string, updates: Partial<CanvasEdge>): EdgeShapeBase | undefined {
+  updateEdge(id: string, updates: Partial<CanvasEdge>): RendererEdgeBase | undefined {
     const tracking = this._edges.get(id);
     if (!tracking) return undefined;
     
@@ -512,27 +512,27 @@ export class Renderer {
   /**
    * Get an edge by ID
    */
-  getEdge(id: string): EdgeShapeBase | undefined {
+  getEdge(id: string): RendererEdgeBase | undefined {
     return this._edges.get(id)?.edge;
   }
 
   /**
    * Get all edges
    */
-  getEdges(): EdgeShapeBase[] {
+  getEdges(): RendererEdgeBase[] {
     return Array.from(this._edges.values()).map(t => t.edge);
   }
 
   /**
    * Get edges connected to a node
    */
-  getNodeEdges(nodeId: string): EdgeShapeBase[] {
+  getNodeEdges(nodeId: string): RendererEdgeBase[] {
     const edgeIds = this._nodeEdges.get(nodeId);
     if (!edgeIds) return [];
     
     return Array.from(edgeIds)
       .map(id => this._edges.get(id)?.edge)
-      .filter((e): e is EdgeShapeBase => e !== undefined);
+      .filter((e): e is RendererEdgeBase => e !== undefined);
   }
 
   /**
@@ -549,14 +549,14 @@ export class Renderer {
   /**
    * Add multiple nodes at once
    */
-  addNodes(inputs: CanvasNode[]): NodeShapeBase[] {
+  addNodes(inputs: CanvasNode[]): RendererNodeBase[] {
     return inputs.map(input => this.addNode(input));
   }
 
   /**
    * Add multiple edges at once
    */
-  addEdges(inputs: CanvasEdge[]): EdgeShapeBase[] {
+  addEdges(inputs: CanvasEdge[]): RendererEdgeBase[] {
     return inputs.map(input => this.addEdge(input));
   }
 
@@ -638,7 +638,7 @@ export class Renderer {
   /**
    * Set up drag handling for a node
    */
-  private setupNodeDragHandling(node: NodeShapeBase): void {
+  private setupNodeDragHandling(node: RendererNodeBase): void {
     node.onDrag = (draggedNode, x, y) => {
       this.updateConnectedEdges(draggedNode.id, x, y);
       this._onNodeDrag?.(draggedNode, x, y);
@@ -650,7 +650,7 @@ export class Renderer {
   /**
    * Handle node drag event
    */
-  private handleNodeDragEvent(event: { node: NodeShapeBase; x: number; y: number }): void {
+  private handleNodeDragEvent(event: { node: RendererNodeBase; x: number; y: number }): void {
     this.updateConnectedEdges(event.node.id, event.x, event.y);
   }
 
@@ -705,7 +705,7 @@ export class Renderer {
   private resolveEdgeEndpoint(endpoint: string | Point): {
     point: Point;
     nodeId?: string;
-    node: NodeShapeBase | null;
+    node: RendererNodeBase | null;
   } {
     if (typeof endpoint === 'string') {
       const node = this._nodes.get(endpoint);
@@ -728,8 +728,8 @@ export class Renderer {
    * Calculate boundary-adjusted edge endpoints
    */
   private calculateBoundaryPoints(
-    sourceNode: NodeShapeBase | null,
-    targetNode: NodeShapeBase | null,
+    sourceNode: RendererNodeBase | null,
+    targetNode: RendererNodeBase | null,
     sourceCenter: Point,
     targetCenter: Point
   ): { source: Point; target: Point } {

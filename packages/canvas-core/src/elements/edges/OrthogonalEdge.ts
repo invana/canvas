@@ -6,7 +6,7 @@
  */
 
 import type { PathStyle, Point, Direction } from '../../primitives/paths';
-import { EdgeShapeBase, type EdgeShapeOptions, type EdgeTangents, type EdgePathType } from './EdgeShapeBase';
+import { RendererEdgeBase, type EdgeShapeOptions, type EdgeTangents, type EdgePathType } from './RendererEdgeBase';
 
 /**
  * Orthogonal edge options (same as base edge options)
@@ -16,7 +16,7 @@ export type OrthogonalEdgeOptions = EdgeShapeOptions;
 /**
  * Orthogonal edge with right-angle corners
  */
-export class OrthogonalEdge extends EdgeShapeBase {
+export class OrthogonalEdge extends RendererEdgeBase {
   get pathType(): EdgePathType {
     return 'orthogonal';
   }

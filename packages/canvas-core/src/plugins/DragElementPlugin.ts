@@ -24,7 +24,7 @@
 import { FederatedPointerEvent } from 'pixi.js';
 import type { Canvas } from '../core/Canvas';
 import type { CanvasPlugin } from './types';
-import { NodeShapeBase } from '../elements/nodes/NodeShapeBase';
+import { RendererNodeBase } from '../elements/nodes/RendererNodeBase';
 import type { Viewport } from '../viewport/Viewport';
 import { PluginRegistry } from './registry';
 
@@ -42,7 +42,7 @@ export interface DragElementOptions {
 }
 
 interface DragData {
-  node: NodeShapeBase;
+  node: RendererNodeBase;
   startX: number;
   startY: number;
   startNodeX: number;
@@ -68,7 +68,7 @@ export class DragElementPlugin implements CanvasPlugin {
   private _isDragging = false;
   
   // Store original cursors
-  private _originalCursors = new WeakMap<NodeShapeBase, string>();
+  private _originalCursors = new WeakMap<RendererNodeBase, string>();
 
   constructor(options: DragElementOptions = {}) {
     this._options = {
@@ -113,7 +113,7 @@ export class DragElementPlugin implements CanvasPlugin {
   /**
    * Make a node draggable
    */
-  private makeNodeDraggable(node: NodeShapeBase): void {
+  private makeNodeDraggable(node: RendererNodeBase): void {
     node.eventMode = 'static';
     
     // Store original cursor
@@ -141,11 +141,11 @@ export class DragElementPlugin implements CanvasPlugin {
   private onPointerDown = (event: FederatedPointerEvent): void => {
     // Check if target is a node
     const target = event.target;
-    if (!target || !(target instanceof NodeShapeBase)) {
+    if (!target || !(target instanceof RendererNodeBase)) {
       return;
     }
 
-    const node = target as NodeShapeBase;
+    const node = target as RendererNodeBase;
 
     // Get world coordinates
     const worldPos = this._viewport!.toWorld(event.global.x, event.global.y);
@@ -252,7 +252,7 @@ export class DragElementPlugin implements CanvasPlugin {
   /**
    * Update connected edges for a node
    */
-  private updateConnectedEdges(node: NodeShapeBase): void {
+  private updateConnectedEdges(node: RendererNodeBase): void {
     if (!this._canvas) return;
 
     // Use renderer's update method which handles edge updates

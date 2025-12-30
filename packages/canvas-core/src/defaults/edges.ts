@@ -3,7 +3,7 @@
  * Centralized defaults for all edge-related styles, dimensions, and behavior
  */
 
-import type { EdgeStyle } from '../elements/edges/EdgeShapeBase';
+import type { EdgeStyle } from '../elements/edges/RendererEdgeBase';
 import { EdgeStates } from '../types/states';
 
 // ============================================================================

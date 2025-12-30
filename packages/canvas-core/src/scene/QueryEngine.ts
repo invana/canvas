@@ -4,9 +4,9 @@
  * Provides filtering, searching, and spatial queries
  */
 
-// LEGACY: Old NodeData/EdgeData types removed, needs refactoring
-type NodeData = any;
-type EdgeData = any;
+// LEGACY: Old RendererNode/EdgeData types removed, needs refactoring
+type RendererNode = any;
+type RendererEdge = any;
 
 export interface QueryFilter {
   // Property-based filters
@@ -19,7 +19,7 @@ export interface QueryFilter {
   near?: { x: number; y: number; radius: number };
   
   // Custom filter function
-  filter?: (element: NodeData | EdgeData) => boolean;
+  filter?: (element: RendererNode | RendererEdge) => boolean;
 }
 
 export interface QueryResult<T> {
@@ -32,10 +32,10 @@ export class QueryEngine {
    * Query nodes with filters
    */
   static queryNodes(
-    nodes: Map<string, { id: string; data: NodeData }>,
+    nodes: Map<string, { id: string; data: RendererNode }>,
     filter: QueryFilter
-  ): QueryResult<NodeData> {
-    const results: NodeData[] = [];
+  ): QueryResult<RendererNode> {
+    const results: RendererNode[] = [];
     
     for (const entry of nodes.values()) {
       if (this.matchesFilter(entry.data, filter)) {
@@ -53,10 +53,10 @@ export class QueryEngine {
    * Query edges with filters
    */
   static queryEdges(
-    edges: Map<string, { id: string; source: string; target: string; data: EdgeData }>,
+    edges: Map<string, { id: string; source: string; target: string; data: RendererEdge }>,
     filter: QueryFilter
-  ): QueryResult<EdgeData> {
-    const results: EdgeData[] = [];
+  ): QueryResult<RendererEdge> {
+    const results: RendererEdge[] = [];
     
     for (const entry of edges.values()) {
       if (this.matchesFilter(entry.data, filter)) {
@@ -74,10 +74,10 @@ export class QueryEngine {
    * Find nodes within a rectangular bounds
    */
   static queryNodesByBounds(
-    nodes: Map<string, { id: string; data: NodeData }>,
+    nodes: Map<string, { id: string; data: RendererNode }>,
     bounds: { x: number; y: number; width: number; height: number }
-  ): NodeData[] {
-    const results: NodeData[] = [];
+  ): RendererNode[] {
+    const results: RendererNode[] = [];
     
     for (const entry of nodes.values()) {
       const node = entry.data;
@@ -101,11 +101,11 @@ export class QueryEngine {
    * Find nodes within a radius of a point
    */
   static queryNodesByRadius(
-    nodes: Map<string, { id: string; data: NodeData }>,
+    nodes: Map<string, { id: string; data: RendererNode }>,
     center: { x: number; y: number },
     radius: number
-  ): NodeData[] {
-    const results: NodeData[] = [];
+  ): RendererNode[] {
+    const results: RendererNode[] = [];
     const radiusSq = radius * radius;
     
     for (const entry of nodes.values()) {
@@ -128,10 +128,10 @@ export class QueryEngine {
    * Find closest node to a point
    */
   static findClosestNode(
-    nodes: Map<string, { id: string; data: NodeData }>,
+    nodes: Map<string, { id: string; data: RendererNode }>,
     point: { x: number; y: number }
-  ): NodeData | null {
-    let closest: NodeData | null = null;
+  ): RendererNode | null {
+    let closest: RendererNode | null = null;
     let minDistSq = Infinity;
     
     for (const entry of nodes.values()) {
@@ -155,7 +155,7 @@ export class QueryEngine {
    * Check if element matches filter
    */
   private static matchesFilter(
-    element: NodeData | EdgeData,
+    element: RendererNode | RendererEdge,
     filter: QueryFilter
   ): boolean {
     // ID filter
@@ -185,7 +185,7 @@ export class QueryEngine {
     
     // Bounds filter (only for nodes)
     if (filter.bounds && 'x' in element && 'y' in element) {
-      const node = element as NodeData;
+      const node = element as RendererNode;
       const x = node.x ?? 0;
       const y = node.y ?? 0;
       
@@ -201,7 +201,7 @@ export class QueryEngine {
     
     // Near filter (only for nodes)
     if (filter.near && 'x' in element && 'y' in element) {
-      const node = element as NodeData;
+      const node = element as RendererNode;
       const x = node.x ?? 0;
       const y = node.y ?? 0;
       const dx = x - filter.near.x;

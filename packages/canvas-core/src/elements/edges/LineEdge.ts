@@ -6,7 +6,7 @@
  */
 
 import type { PathStyle, Point } from '../../primitives/paths';
-import { EdgeShapeBase, type EdgeShapeOptions, type EdgeTangents, type EdgePathType } from './EdgeShapeBase';
+import { RendererEdgeBase, type EdgeShapeOptions, type EdgeTangents, type EdgePathType } from './RendererEdgeBase';
 
 /**
  * Line edge options (same as base edge options)
@@ -16,7 +16,7 @@ export type LineEdgeOptions = EdgeShapeOptions;
 /**
  * Straight line edge
  */
-export class LineEdge extends EdgeShapeBase {
+export class LineEdge extends RendererEdgeBase {
   get pathType(): EdgePathType {
     return 'line';
   }
