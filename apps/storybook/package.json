@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@invana/canvas-core": "workspace:*",
-    "@invana/canvas-utils": "workspace:*"
+    "@invana/canvas-utils": "workspace:*",
+    "lil-gui": "^0.21.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
