@@ -26,6 +26,7 @@ export { CircleNode } from './CircleNode';
 export { EllipseNode } from './EllipseNode';
 export { RectNode } from './RectNode';
 export { HTMLNode } from './HTMLNode';
+export { StarNode, type StarNodeOptions } from './StarNode';
 export { 
   PolygonNode, 
   TriangleNode, 

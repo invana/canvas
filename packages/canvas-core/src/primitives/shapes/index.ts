@@ -81,3 +81,11 @@ export {
   getEllipseOutline,
   type EllipseParams,
 } from './ellipse.js';
+
+// Star
+export {
+  drawStar,
+  getStarPoints,
+  getStarIntersection,
+  type StarParams,
+} from './star.js';

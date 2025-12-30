@@ -45,6 +45,7 @@ import {
   drawHexagon,
   drawOctagon,
   drawPolygon,
+  drawStar,
 } from '../primitives/shapes';
 
 import {
@@ -63,6 +64,7 @@ import { CircleNode } from '../elements/nodes/CircleNode';
 import { RectNode } from '../elements/nodes/RectNode';
 import { EllipseNode } from '../elements/nodes/EllipseNode';
 import { HTMLNode } from '../elements/nodes/HTMLNode';
+import { StarNode } from '../elements/nodes/StarNode';
 import { TriangleNode, DiamondNode, PentagonNode, HexagonNode, OctagonNode, PolygonNode } from '../elements/nodes/PolygonNode';
 
 /**
@@ -423,6 +425,17 @@ export class Registry {
       }
     });
 
+    this.registerShape('star', (g, params: any, style) => {
+      drawStar(g, {
+        x: params.x ?? 0,
+        y: params.y ?? 0,
+        radius: params.radius ?? params.size ?? 30,
+        points: params.points ?? 5,
+        innerRadiusRatio: params.innerRadiusRatio ?? 0.5,
+        rotation: params.rotation ?? -Math.PI / 2,
+      }, style);
+    });
+
     // Generic polygon drawer for any number of sides
     this.registerShape('polygon', (g, params: any, style) => {
       drawPolygon(g, { 
@@ -504,6 +517,9 @@ export class Registry {
     // Register HTML node
     this.registerNodeClass('htmlNode', HTMLNode);
     this.registerNodeClass('html', HTMLNode);
+    
+    // Register star
+    this.registerNodeClass('star', StarNode);
     
     // Register polygons
     this.registerNodeClass('triangle', TriangleNode);

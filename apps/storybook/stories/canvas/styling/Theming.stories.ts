@@ -22,43 +22,43 @@ type Story = StoryObj;
 const generateGraphData = () => ({
   nodes: [
     { 
-      id: 'n1', x: -200, y: -100, shape: 'circle' as const, size: 40, label: 'Node 1',
+      id: 'n1', x: -300, y: -150, shape: 'circle' as const, size: 40, label: 'Circle',
       style: { fill: '#4a90d9', stroke: '#333', strokeWidth: 2 }
     },
     { 
-      id: 'n2', x: 200, y: -100, shape: 'rect' as const, width: 80, height: 60, cornerRadius: 8, label: 'Node 2',
+      id: 'n2', x: -100, y: -150, shape: 'rect' as const, width: 80, height: 60, cornerRadius: 8, label: 'Rect',
       style: { fill: '#50c878', stroke: '#333', strokeWidth: 2 }
     },
     { 
-      id: 'n3', x: -200, y: 100, shape: 'diamond' as const, size: 50, label: 'Node 3',
+      id: 'n3', x: 100, y: -150, shape: 'diamond' as const, size: 50, label: 'Diamond',
       style: { fill: '#ff6b6b', stroke: '#333', strokeWidth: 2 }
     },
     { 
-      id: 'n4', x: 200, y: 100, shape: 'hexagon' as const, size: 45, label: 'Node 4',
+      id: 'n4', x: 300, y: -150, shape: 'hexagon' as const, size: 45, label: 'Hexagon',
       style: { fill: '#ffd93d', stroke: '#333', strokeWidth: 2 }
     },
     { 
-      id: 'n5', x: 0, y: 0, shape: 'ellipse' as const, width: 100, height: 60, label: 'Center',
+      id: 'n5', x: -300, y: 0, shape: 'ellipse' as const, width: 100, height: 60, label: 'Ellipse',
       style: { fill: '#6c5ce7', stroke: '#333', strokeWidth: 2 }
     },
+    { 
+      id: 'n6', x: -100, y: 0, shape: 'triangle' as const, size: 50, label: 'Triangle',
+      style: { fill: '#ff85a2', stroke: '#333', strokeWidth: 2 }
+    },
+    { 
+      id: 'n7', x: 100, y: 0, shape: 'star' as const, size: 50, label: 'Star',
+      style: { fill: '#a29bfe', stroke: '#333', strokeWidth: 2 }
+    },
+    { 
+      id: 'n8', x: 300, y: 0, shape: 'pentagon' as const, size: 45, label: 'Pentagon',
+      style: { fill: '#fd79a8', stroke: '#333', strokeWidth: 2 }
+    },
+    { 
+      id: 'n9', x: -200, y: 150, shape: 'octagon' as const, size: 45, label: 'Octagon',
+      style: { fill: '#74b9ff', stroke: '#333', strokeWidth: 2 }
+    }
   ],
   edges: [
-    { 
-      id: 'e1', source: 'n1', target: 'n5', pathType: 'bezier' as const,
-      style: { stroke: '#666', strokeWidth: 2 }
-    },
-    { 
-      id: 'e2', source: 'n2', target: 'n5', pathType: 'bezier' as const,
-      style: { stroke: '#666', strokeWidth: 2 }
-    },
-    { 
-      id: 'e3', source: 'n3', target: 'n5', pathType: 'bezier' as const,
-      style: { stroke: '#666', strokeWidth: 2 }
-    },
-    { 
-      id: 'e4', source: 'n4', target: 'n5', pathType: 'bezier' as const,
-      style: { stroke: '#666', strokeWidth: 2 }
-    },
   ],
 });
 
