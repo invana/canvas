@@ -35,7 +35,7 @@
 import { Application, Container } from 'pixi.js';
 import { Viewport, type ViewportOptions } from '../viewport/Viewport';
 import { Registry } from '../rendering/Registry';
-import { Renderer, type CanvasNode as RendererNodeData, type CanvasEdge as RendererEdgeData } from '../rendering/Renderer';
+import { Renderer, type CanvasNode, type CanvasEdge } from '../rendering/Renderer';
 import { type FunctionBasedNodeStyle, type FunctionBasedEdgeStyle } from '../style/FunctionBasedStyle';
 import { DEFAULT_NODE_STYLE } from '../defaults/nodes';
 import { SceneGraph } from '../scene/SceneGraph';
@@ -60,9 +60,9 @@ type SceneEdgeData = any;
  */
 export interface CanvasData {
   /** Array of node configurations */
-  nodes: RendererNodeData[];
+  nodes: CanvasNode[];
   /** Array of edge configurations */
-  edges: RendererEdgeData[];
+  edges: CanvasEdge[];
 }
 
 /**
@@ -599,7 +599,7 @@ export class Canvas {
   /**
    * Add a node
    */
-  addNode(input: RendererNodeData): void {
+  addNode(input: CanvasNode): void {
     if (!this._renderer) {
       throw new Error('Canvas not initialized. Call init() first.');
     }
@@ -609,7 +609,7 @@ export class Canvas {
   /**
    * Update a node
    */
-  updateNode(id: string, updates: Partial<RendererNodeData>): void {
+  updateNode(id: string, updates: Partial<CanvasNode>): void {
     if (!this._renderer) {
       throw new Error('Canvas not initialized. Call init() first.');
     }
@@ -649,7 +649,7 @@ export class Canvas {
   /**
    * Add an edge
    */
-  addEdge(input: RendererEdgeData): void {
+  addEdge(input: CanvasEdge): void {
     if (!this._renderer) {
       throw new Error('Canvas not initialized. Call init() first.');
     }
@@ -659,7 +659,7 @@ export class Canvas {
   /**
    * Update an edge
    */
-  updateEdge(id: string, updates: Partial<RendererEdgeData>): void {
+  updateEdge(id: string, updates: Partial<CanvasEdge>): void {
     if (!this._renderer) {
       throw new Error('Canvas not initialized. Call init() first.');
     }

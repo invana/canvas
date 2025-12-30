@@ -96,13 +96,10 @@ export type {
   ShapeDrawer, 
   PathDrawer,
   RendererOptions,
-  // Public API types (preferred names)
+  // Public API types
   CanvasNode,
   CanvasEdge,
-  // Legacy aliases (for backward compatibility)
-  CanvasNode as RendererNodeData, 
-  CanvasEdge as RendererEdgeData, 
-  Point as RendererPoint 
+  Point
 } from './rendering';
 
 // ============================================================================
@@ -268,7 +265,6 @@ export type {
 export type {
   // NodeData,  // LEGACY - use ElementNodeData
   // EdgeData,  // LEGACY - use ElementEdgeData
-  Point,
   Bounds,
   Tangent,
   CanvasEventType,

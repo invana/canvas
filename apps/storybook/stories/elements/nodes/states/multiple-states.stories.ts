@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, type CanvasNodeData,
+import { Canvas, type CanvasNode,
    CanvasOptions, NodeStates } from '@invana/canvas-core';
 import { getFullHeightContainer } from '../../../../src/div-utils';
 
@@ -28,7 +28,7 @@ export const MultipleStates: Story = {
     if (!container) return;
     container.style.height = "500px";
 
-     const nodes: CanvasNodeData = [{
+     const nodes: CanvasNode[] = [{
       id: 'multi',
       x: 400,
       y: 200,

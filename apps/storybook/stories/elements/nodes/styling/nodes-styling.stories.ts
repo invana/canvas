@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, CanvasNodeData, CanvasOptions } from '@invana/canvas-core';
+import { Canvas, CanvasNode, CanvasOptions } from '@invana/canvas-core';
 import { getFullHeightContainer } from '../../../../src/div-utils';
 const meta: Meta = {
   title: 'Nodes/Styling',
@@ -25,7 +25,7 @@ export const IndividualNodeStyling: Story = {
     const container = document.getElementById('canvas-individual-styling');
     if (!container) return;
 
-    const nodes: CanvasNodeData = [
+    const nodes: CanvasNode[] = [
       { 
         id: 'n1', 
         x: -200, 
@@ -155,7 +155,7 @@ export const ConditionalStyling: Story = {
       }
     };
 
-    const nodes: CanvasNodeData = [
+    const nodes: CanvasNode[] = [
       { 
         id: 'primary-1', 
         x: -250, 
@@ -232,7 +232,7 @@ export const GlobalStylesWithStates: Story = {
     const container = document.getElementById('canvas-global-styles');
     if (!container) return;
 
-    const nodes: CanvasNodeData = [
+    const nodes: CanvasNode[] = [
       { id: 'n1', x: -200, y: -100, shape: 'circle', size: 40, label: 'Node 1' },
       { id: 'n2', x: 200, y: -100, shape: 'rect', width: 80, height: 60, label: 'Node 2' },
       { id: 'n3', x: -200, y: 100, shape: 'hexagon', size: 45, label: 'Node 3' },
@@ -314,7 +314,7 @@ export const MixedStyling: Story = {
     const container = document.getElementById('canvas-mixed-styling');
     if (!container) return;
 
-    const nodes: CanvasNodeData = [
+    const nodes: CanvasNode[] = [
       { 
         id: 'n1', 
         x: -200, 

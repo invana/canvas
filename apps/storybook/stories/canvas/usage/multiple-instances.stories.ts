@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, type CanvasNodeData,
+import { Canvas, type CanvasNode,
    CanvasOptions, NodeStates } from '@invana/canvas-core';
 import { createContainer, createCanvasSection } from '../../../src/div-utils';
 
@@ -51,7 +51,7 @@ export const MultipleInstances: Story = {
     if (!container1 || !container2) return;
     console.log('Containers found, initializing canvases');
 
-    const nodes: CanvasNodeData[] = [
+    const nodes: CanvasNode[] = [
       {
         id: 'default',
         x: 150,
@@ -81,7 +81,7 @@ export const MultipleInstances: Story = {
  
 
 
-    const nodes2: CanvasNodeData[] = [
+    const nodes2: CanvasNode[] = [
       {
         id: 'default',
         x: 150,

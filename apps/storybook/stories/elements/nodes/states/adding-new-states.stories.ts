@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, type CanvasNodeData,
+import { Canvas, type CanvasNode,
    CanvasOptions, NodeStates } from '@invana/canvas-core';
 import { getFullHeightContainer } from '../../../../src/div-utils';
 
@@ -27,7 +27,7 @@ export const CreateYourOwnStates: Story = {
     const container = document.getElementById('canvas-custom-states');
     if (!container) return;
 
-    const nodes: CanvasNodeData[] = [
+    const nodes: CanvasNode[] = [
       {
         id: 'default',
         x: 150,

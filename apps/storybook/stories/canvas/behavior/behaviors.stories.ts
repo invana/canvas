@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, type CanvasNodeData, CanvasOptions } from '@invana/canvas-core';
+import { Canvas, type CanvasNode, CanvasOptions } from '@invana/canvas-core';
 import { createContainer, createCanvasSection } from '../../../src/div-utils';
 
 const meta: Meta = {
@@ -12,7 +12,7 @@ type Story = StoryObj;
 /**
  * Helper function to create sample nodes
  */
-function createSampleNodes(): CanvasNodeData[] {
+function createSampleNodes(): CanvasNode[] {
   return [
     { id: 'node1', x: 100, y: 80, label: 'Node 1', shape: 'rect', width: 80, height: 50 },
     { id: 'node2', x: 250, y: 80, label: 'Node 2', shape: 'circle', width: 60, height: 60 },

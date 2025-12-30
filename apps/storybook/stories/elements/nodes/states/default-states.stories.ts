@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, CanvasNodeData, CanvasOptions } from '@invana/canvas-core';
+import { Canvas, CanvasNode, CanvasOptions } from '@invana/canvas-core';
 import { getFullHeightContainer } from '../../../../src/div-utils';
 const meta: Meta = {
   title: 'Elements/Nodes/States',
@@ -25,7 +25,7 @@ export const DefaultStates: Story = {
     if (!container) return;
 
     const nodeStats = ["default", "active", "selected", "highlighted", "muted", "disabled"];
-    const nodes: CanvasNodeData[] = nodeStats.map((state:string, index:number) => 
+    const nodes: CanvasNode[] = nodeStats.map((state:string, index:number) => 
       ({
         id: `node-${state}`,
         x: 100 + (index % 4) * 200,

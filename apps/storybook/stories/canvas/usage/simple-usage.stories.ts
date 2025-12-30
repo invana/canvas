@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, type CanvasNodeData,
+import { Canvas, type CanvasNode,
    CanvasOptions, NodeStates } from '@invana/canvas-core';
 import { createContainer } from '../../../src/div-utils';
 
@@ -25,7 +25,7 @@ export const SimpleUsage: Story = {
     const container = document.getElementById('canvas-example');
     if (!container) return;
 
-    const nodes: CanvasNodeData[] = [
+    const nodes: CanvasNode[] = [
       {
         id: 'default',
         x: 150,
