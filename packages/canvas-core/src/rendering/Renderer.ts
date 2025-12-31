@@ -362,6 +362,13 @@ export class Renderer {
     const { point: targetPoint, nodeId: targetNodeId, node: targetNode } = 
       this.resolveEdgeEndpoint(target);
     
+    // Validate endpoints
+    if (!sourcePoint || !targetPoint) {
+      const error = `Invalid edge endpoints for edge ${id}: source=${JSON.stringify(source)}, target=${JSON.stringify(target)}`;
+      console.error(error);
+      throw new Error(error);
+    }
+    
     // Create edge using registry  
     const edgePathType = (pathType as string) ?? 'line';
     const EdgeClass = this._registry.getEdgeClass?.(edgePathType);
@@ -395,13 +402,15 @@ export class Renderer {
     // Clean up temp edge
     tempEdge.destroy();
     
-    // Create edge shape data with adjusted points
+    // Create edge shape data with adjusted points AND centers for tangent calculation
     const edgeShapeData: RendererEdge = {
       id,
-      source: adjustedPoints.source,
-      target: adjustedPoints.target,
-      x: 0,
-      y: 0,
+      source: adjustedPoints.source,      // Boundary points
+      target: adjustedPoints.target,      // Boundary points  
+      sourceCenter: sourcePoint,          // Node centers for tangent calculation
+      targetCenter: targetPoint,          // Node centers for tangent calculation
+      x: sourcePoint.x,                   // Position at source center
+      y: sourcePoint.y,                   // Position at source center
       pathType,
       curvature,
       sourceDirection,
@@ -412,6 +421,15 @@ export class Renderer {
       label,
       payload,
     } as RendererEdge;
+    
+    console.log(`[Renderer] Creating edge ${id}:`, {
+      sourceNode: sourceNode ? { id: source, x: sourceNode.x, y: sourceNode.y } : null,
+      targetNode: targetNode ? { id: target, x: targetNode.x, y: targetNode.y } : null,
+      sourcePoint, 
+      targetPoint,
+      boundary: adjustedPoints,
+      edgeData: edgeShapeData
+    });
     
     // Resolve edge styles with function-based property evaluation
     const mergedStyle = resolveEdgeStyle(
@@ -493,7 +511,7 @@ export class Renderer {
         targetPoint
       );
       
-      edge.updateEndpoints(adjustedPoints.source, adjustedPoints.target);
+      edge.updateEndpoints(adjustedPoints.source, adjustedPoints.target, sourcePoint, targetPoint);
     }
     
     return edge;
@@ -667,9 +685,11 @@ export class Renderer {
   /**
    * Update all edges connected to a node when it moves
    */
-  private updateConnectedEdges(nodeId: string, x: number, y: number): void {
+  private updateConnectedEdges(nodeId: string, _x: number, _y: number): void {
     const edgeIds = this._nodeEdges.get(nodeId);
     if (!edgeIds || edgeIds.size === 0) return;
+    
+    console.log(`[updateConnectedEdges] Node ${nodeId} moved to (${_x}, ${_y}), updating ${edgeIds.size} edges`);
     
     for (const edgeId of edgeIds) {
       const tracking = this._edges.get(edgeId);
@@ -681,22 +701,26 @@ export class Renderer {
       
       if (!isSource && !isTarget) continue;
       
-      // Get source and target positions
+      // Get source and target nodes
       const sourceNode = sourceNodeId ? this._nodes.get(sourceNodeId) : null;
       const targetNode = targetNodeId ? this._nodes.get(targetNodeId) : null;
       
-      const sourceCenter = isSource 
-        ? { x, y }
-        : sourceNode 
-          ? { x: sourceNode.x, y: sourceNode.y }
-          : tracking.sourcePoint!;
+      // Use node centers directly
+      const sourceCenter = sourceNode 
+        ? { x: sourceNode.x, y: sourceNode.y }
+        : tracking.sourcePoint!;
       
-      const targetCenter = isTarget
-        ? { x, y }
-        : targetNode
-          ? { x: targetNode.x, y: targetNode.y }
-          : tracking.targetPoint!;
+      const targetCenter = targetNode
+        ? { x: targetNode.x, y: targetNode.y }
+        : tracking.targetPoint!;
       
+      console.log(`[updateConnectedEdges] Edge ${edgeId}:`, {
+        sourceNodeId, targetNodeId,
+        sourceCenter, targetCenter,
+        sourceNode: sourceNode ? { x: sourceNode.x, y: sourceNode.y } : null,
+        targetNode: targetNode ? { x: targetNode.x, y: targetNode.y } : null
+      });
+        
       // Recalculate boundary points using edge's own direction calculation
       const adjustedPoints = this.calculateBoundaryPointsForEdge(
         edge,
@@ -706,7 +730,9 @@ export class Renderer {
         targetCenter
       );
       
-      edge.updateEndpoints(adjustedPoints.source, adjustedPoints.target);
+      console.log(`[updateConnectedEdges] Edge ${edgeId} adjusted points:`, adjustedPoints);
+      
+      edge.updateEndpoints(adjustedPoints.source, adjustedPoints.target, sourceCenter, targetCenter);
     }
   }
 
@@ -790,18 +816,17 @@ export class Renderer {
     let source = sourceCenter;
     let target = targetCenter;
     
-    // Use edge's boundary direction calculation (accounts for bezier curves, etc.)
+    // Calculate boundary points by passing target centers (not direction vectors)
+    // getBoundaryPoint expects a world coordinate to calculate the angle from
     if (sourceNode) {
-      const dir = edge.calculateBoundaryDirection(sourceCenter, targetCenter, true);
-      console.log(`[Boundary] Edge ${edge.id} source direction:`, dir, 'from', sourceCenter, 'to', targetCenter);
-      source = sourceNode.getBoundaryPoint(dir, this._edgeBoundaryOffset);
+      console.log(`[Boundary] Edge ${edge.id} calculating source boundary from`, sourceCenter, 'towards', targetCenter);
+      source = sourceNode.getBoundaryPoint(targetCenter, this._edgeBoundaryOffset);
       console.log(`[Boundary] Edge ${edge.id} source boundary point:`, source);
     }
     
     if (targetNode) {
-      const dir = edge.calculateBoundaryDirection(sourceCenter, targetCenter, false);
-      console.log(`[Boundary] Edge ${edge.id} target direction:`, dir);
-      target = targetNode.getBoundaryPoint(dir, this._edgeBoundaryOffset);
+      console.log(`[Boundary] Edge ${edge.id} calculating target boundary from`, targetCenter, 'towards', sourceCenter);
+      target = targetNode.getBoundaryPoint(sourceCenter, this._edgeBoundaryOffset);
       console.log(`[Boundary] Edge ${edge.id} target boundary point:`, target);
     }
     

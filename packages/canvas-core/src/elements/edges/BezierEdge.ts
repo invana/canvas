@@ -24,9 +24,12 @@ export class BezierEdge extends RendererEdgeBase {
   protected drawPath(source: Point, target: Point, style: PathStyle): void {
     const curvature = this._data.curvature ?? 0.25;
     
+    // Container is positioned at sourceCenter, so convert to relative coordinates
+    const containerPos = this._data.sourceCenter;
+    
     this._registry.drawPath(this._graphics, 'bezier', {
-      from: source,
-      to: target,
+      from: { x: source.x - containerPos.x, y: source.y - containerPos.y },
+      to: { x: target.x - containerPos.x, y: target.y - containerPos.y },
       curvature,
     }, style);
   }
@@ -48,10 +51,6 @@ export class BezierEdge extends RendererEdgeBase {
     
     const controlX = midX + perpX * offset;
     const controlY = midY + perpY * offset;
-
-    console.log(`[BezierEdge ${this.id}] calculateTangents:`, {
-      source, target, curvature, control: { x: controlX, y: controlY }
-    });
 
     // Tangent at source: direction from source to control point
     const sourceTangent = Math.atan2(controlY - source.y, controlX - source.x);

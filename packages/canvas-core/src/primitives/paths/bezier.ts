@@ -46,7 +46,6 @@ export function drawQuadraticBezier(
 ): void {
   const { from, to, control } = params;
 
-  console.log('[drawQuadraticBezier] Drawing path:', { from, to, control });
   g.moveTo(from.x, from.y);
   g.quadraticCurveTo(control.x, control.y, to.x, to.y);
   g.stroke(getStrokeOptions(style));

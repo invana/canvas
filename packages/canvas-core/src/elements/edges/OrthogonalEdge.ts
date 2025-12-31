@@ -25,9 +25,12 @@ export class OrthogonalEdge extends RendererEdgeBase {
     const sourceDir = this._data.sourceDirection ?? this.inferDirection(source, target, 'source');
     const targetDir = this._data.targetDirection ?? this.inferDirection(source, target, 'target');
     
+    // Container is positioned at sourceCenter, so convert to relative coordinates
+    const containerPos = this._data.sourceCenter;
+    
     this._registry.drawPath(this._graphics, 'orthogonal', {
-      from: source,
-      to: target,
+      from: { x: source.x - containerPos.x, y: source.y - containerPos.y },
+      to: { x: target.x - containerPos.x, y: target.y - containerPos.y },
       sourceDirection: sourceDir,
       targetDirection: targetDir,
       cornerRadius: style.cornerRadius,

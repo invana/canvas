@@ -22,9 +22,12 @@ export class LineEdge extends RendererEdgeBase {
   }
 
   protected drawPath(source: Point, target: Point, style: PathStyle): void {
+    // Container is positioned at sourceCenter, so convert to relative coordinates
+    const containerPos = this._data.sourceCenter;
+    
     this._registry.drawPath(this._graphics, 'line', {
-      from: source,
-      to: target,
+      from: { x: source.x - containerPos.x, y: source.y - containerPos.y },
+      to: { x: target.x - containerPos.x, y: target.y - containerPos.y },
     }, style);
   }
 
