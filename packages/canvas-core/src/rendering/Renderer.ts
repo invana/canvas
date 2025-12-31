@@ -182,7 +182,6 @@ export class Renderer {
   private _userNodeStyle: Partial<FunctionBasedNodeStyle>;
   private _defaultEdgeStyle: Partial<FunctionBasedEdgeStyle>;
   private _userEdgeStyle: Partial<FunctionBasedEdgeStyle>;
-  private _edgeBoundaryOffset: number;
   
   // Callbacks
 
@@ -190,7 +189,6 @@ export class Renderer {
     this._registry = options.registry;
     this._nodeLayer = options.nodeLayer;
     this._edgeLayer = options.edgeLayer;
-    this._edgeBoundaryOffset = options.edgeBoundaryOffset ?? 2;
     
     this._defaultNodeStyle = options.defaultNodeStyle ?? {};
     this._userNodeStyle = options.userNodeStyle ?? {};
@@ -377,40 +375,16 @@ export class Renderer {
       console.warn(`Unknown edge path type: ${edgePathType}, defaulting to straight line`);
     }
     
-    // Create temporary edge to calculate proper boundary intersection
-    const tempEdge = new (EdgeClass ?? LineEdge)({
-      data: {
-        id: id + '_temp',
-        source: sourcePoint,
-        target: targetPoint,
-        x: 0,
-        y: 0,
-      } as any,
-      style: {},
-      registry: this._registry,
-    });
-    
-    // Calculate boundary-adjusted points using edge's direction calculation
-    const adjustedPoints = this.calculateBoundaryPointsForEdge(
-      tempEdge,
-      sourceNode,
-      targetNode,
-      sourcePoint,
-      targetPoint
-    );
-    
-    // Clean up temp edge
-    tempEdge.destroy();
-    
-    // Create edge shape data with adjusted points AND centers for tangent calculation
+    // Create edge shape data - NO pre-calculated boundaries!
+    // Following invana-studio-mvp: edges calculate boundaries during render
     const edgeShapeData: RendererEdge = {
       id,
-      source: adjustedPoints.source,      // Boundary points
-      target: adjustedPoints.target,      // Boundary points  
-      sourceCenter: sourcePoint,          // Node centers for tangent calculation
-      targetCenter: targetPoint,          // Node centers for tangent calculation
-      x: sourcePoint.x,                   // Position at source center
-      y: sourcePoint.y,                   // Position at source center
+      source: sourcePoint,          // Will be used as sourceCenter
+      target: targetPoint,           // Will be used as targetCenter
+      sourceCenter: sourcePoint,     // Node center
+      targetCenter: targetPoint,     // Node center  
+      x: sourcePoint.x,              // Position container at source center
+      y: sourcePoint.y,
       pathType,
       curvature,
       sourceDirection,
@@ -421,15 +395,6 @@ export class Renderer {
       label,
       payload,
     } as RendererEdge;
-    
-    console.log(`[Renderer] Creating edge ${id}:`, {
-      sourceNode: sourceNode ? { id: source, x: sourceNode.x, y: sourceNode.y } : null,
-      targetNode: targetNode ? { id: target, x: targetNode.x, y: targetNode.y } : null,
-      sourcePoint, 
-      targetPoint,
-      boundary: adjustedPoints,
-      edgeData: edgeShapeData
-    });
     
     // Resolve edge styles with function-based property evaluation
     const mergedStyle = resolveEdgeStyle(
@@ -446,6 +411,14 @@ export class Renderer {
       states,
       registry: this._registry,
     });
+    
+    // CRITICAL: Store node references BEFORE rendering
+    // Must be set before forceRender() is called
+    (edge as any)._sourceNode = sourceNode;
+    (edge as any)._targetNode = targetNode;
+    
+    // Now trigger initial render with node references in place
+    edge.forceRender();
     
     // Store tracking info
     const tracking: EdgeTracking = {
@@ -503,15 +476,12 @@ export class Renderer {
       tracking.sourcePoint = sourceNodeId ? undefined : sourcePoint;
       tracking.targetPoint = targetNodeId ? undefined : targetPoint;
       
-      // Calculate new boundary points
-      const adjustedPoints = this.calculateBoundaryPoints(
-        sourceNode,
-        targetNode,
-        sourcePoint,
-        targetPoint
-      );
+      // No pre-calculation! Just pass centers and update node references
+      edge.updateEndpoints(sourcePoint, sourcePoint, sourcePoint, targetPoint);
       
-      edge.updateEndpoints(adjustedPoints.source, adjustedPoints.target, sourcePoint, targetPoint);
+      // Update node references
+      (edge as any)._sourceNode = sourceNode;
+      (edge as any)._targetNode = targetNode;
     }
     
     return edge;
@@ -689,8 +659,6 @@ export class Renderer {
     const edgeIds = this._nodeEdges.get(nodeId);
     if (!edgeIds || edgeIds.size === 0) return;
     
-    console.log(`[updateConnectedEdges] Node ${nodeId} moved to (${_x}, ${_y}), updating ${edgeIds.size} edges`);
-    
     for (const edgeId of edgeIds) {
       const tracking = this._edges.get(edgeId);
       if (!tracking) continue;
@@ -705,7 +673,7 @@ export class Renderer {
       const sourceNode = sourceNodeId ? this._nodes.get(sourceNodeId) : null;
       const targetNode = targetNodeId ? this._nodes.get(targetNodeId) : null;
       
-      // Use node centers directly
+      // Use node centers
       const sourceCenter = sourceNode 
         ? { x: sourceNode.x, y: sourceNode.y }
         : tracking.sourcePoint!;
@@ -713,26 +681,14 @@ export class Renderer {
       const targetCenter = targetNode
         ? { x: targetNode.x, y: targetNode.y }
         : tracking.targetPoint!;
-      
-      console.log(`[updateConnectedEdges] Edge ${edgeId}:`, {
-        sourceNodeId, targetNodeId,
-        sourceCenter, targetCenter,
-        sourceNode: sourceNode ? { x: sourceNode.x, y: sourceNode.y } : null,
-        targetNode: targetNode ? { x: targetNode.x, y: targetNode.y } : null
-      });
         
-      // Recalculate boundary points using edge's own direction calculation
-      const adjustedPoints = this.calculateBoundaryPointsForEdge(
-        edge,
-        sourceNode ?? null,
-        targetNode ?? null,
-        sourceCenter,
-        targetCenter
-      );
+      // No pre-calculation! Edge calculates boundaries during render
+      // Just pass centers and let edge handle it
+      edge.updateEndpoints(sourceCenter, sourceCenter, sourceCenter, targetCenter);
       
-      console.log(`[updateConnectedEdges] Edge ${edgeId} adjusted points:`, adjustedPoints);
-      
-      edge.updateEndpoints(adjustedPoints.source, adjustedPoints.target, sourceCenter, targetCenter);
+      // Update node references in case they changed
+      (edge as any)._sourceNode = sourceNode;
+      (edge as any)._targetNode = targetNode;
     }
   }
 
@@ -762,77 +718,7 @@ export class Renderer {
   }
 
   /**
-   * Calculate boundary-adjusted edge endpoints
-   */
-  private calculateBoundaryPoints(
-    sourceNode: RendererNodeBase | null,
-    targetNode: RendererNodeBase | null,
-    sourceCenter: Point,
-    targetCenter: Point
-  ): { source: Point; target: Point } {
-    let source = sourceCenter;
-    let target = targetCenter;
-    
-    // Calculate direction
-    const dx = targetCenter.x - sourceCenter.x;
-    const dy = targetCenter.y - sourceCenter.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    if (distance > 0) {
-      const dirX = dx / distance;
-      const dirY = dy / distance;
-      
-      // Adjust source point to node boundary
-      if (sourceNode) {
-        source = sourceNode.getBoundaryPoint(
-          { x: dirX, y: dirY },
-          this._edgeBoundaryOffset
-        );
-      }
-      
-      // Adjust target point to node boundary
-      if (targetNode) {
-        target = targetNode.getBoundaryPoint(
-          { x: -dirX, y: -dirY },
-          this._edgeBoundaryOffset
-        );
-      }
-    }
-    
-    return { source, target };
-  }
-
-  /**
    * Calculate boundary points using edge's specific direction calculation
-   * This ensures bezier and orthogonal edges connect at the correct angle
-   */
-  private calculateBoundaryPointsForEdge(
-    edge: RendererEdgeBase,
-    sourceNode: RendererNodeBase | null,
-    targetNode: RendererNodeBase | null,
-    sourceCenter: Point,
-    targetCenter: Point
-  ): { source: Point; target: Point } {
-    let source = sourceCenter;
-    let target = targetCenter;
-    
-    // Calculate boundary points by passing target centers (not direction vectors)
-    // getBoundaryPoint expects a world coordinate to calculate the angle from
-    if (sourceNode) {
-      console.log(`[Boundary] Edge ${edge.id} calculating source boundary from`, sourceCenter, 'towards', targetCenter);
-      source = sourceNode.getBoundaryPoint(targetCenter, this._edgeBoundaryOffset);
-      console.log(`[Boundary] Edge ${edge.id} source boundary point:`, source);
-    }
-    
-    if (targetNode) {
-      console.log(`[Boundary] Edge ${edge.id} calculating target boundary from`, targetCenter, 'towards', sourceCenter);
-      target = targetNode.getBoundaryPoint(sourceCenter, this._edgeBoundaryOffset);
-      console.log(`[Boundary] Edge ${edge.id} target boundary point:`, target);
-    }
-    
-    return { source, target };
-  }
-
   // =========================================================================
   // STYLE UPDATES
   // =========================================================================

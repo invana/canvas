@@ -86,6 +86,8 @@ export const AngledConnections: Story = {
         shape,
         size: 50,
         label: shape,
+        width: shape === 'rect' ? 120 : undefined,
+        height: shape === 'rect' ? 60 : undefined,
       });
       
       // Connect with different edge types

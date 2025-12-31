@@ -22,8 +22,7 @@
  */
 
 import type { PathStyle, Point, Direction } from '../../primitives/paths';
-import type { ArrowType, ArrowStyle } from '../../primitives/arrows';
-import { getArrowOffset } from '../../primitives/arrows';
+import type { ArrowType } from '../../primitives/arrows';
 import { RendererBase, type RendererBaseData, type RendererBaseOptions } from '../RendererBase';
 import { EdgeStates, type EdgeStateName } from '../../types/states';
 
@@ -188,8 +187,8 @@ export abstract class RendererEdgeBase extends RendererBase<RendererEdge> {
     this.on('pointerover', this.onPointerOver, this);
     this.on('pointerout', this.onPointerOut, this);
 
-    // Initial render
-    this.forceRender();
+    // Don't call forceRender() here - let Renderer call it after setting node references
+    // This avoids "Cannot render - missing node references" errors
   }
 
   // =========================================================================
@@ -201,63 +200,36 @@ export abstract class RendererEdgeBase extends RendererBase<RendererEdge> {
    */
   abstract get pathType(): EdgePathType;
 
-  /**
-   * Draw the path between source and target points
-   * @param source - Adjusted source point (after arrow offset)
-   * @param target - Adjusted target point (after arrow offset)
-   * @param style - Path style to use
-   */
-  protected abstract drawPath(source: Point, target: Point, style: PathStyle): void;
-
-  /**
-   * Calculate tangent angles at source and target for arrow placement
-   * Also returns the direction vectors for boundary intersection
-   * @param source - Source point (node center)
-   * @param target - Target point (node center)
-   */
-  protected abstract calculateTangents(source: Point, target: Point): EdgeTangents;
-
-  /**
-   * Calculate the direction vector at which the edge leaves/enters a node
-   * Used for accurate boundary intersection calculation
-   * By default, uses a straight line direction, but bezier/orthogonal edges should override
-   * @param source - Source point (node center)
-   * @param target - Target point (node center)
-   * @param isSource - true for source node, false for target node
-   * @public - Renderer needs to call this when updating edge endpoints
-   */
-  public calculateBoundaryDirection(source: Point, target: Point, isSource: boolean): Point {
-    // Default: straight line direction
-    const dx = target.x - source.x;
-    const dy = target.y - source.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    
-    if (dist === 0) return { x: 1, y: 0 };
-    
-    return {
-      x: (isSource ? dx : -dx) / dist,
-      y: (isSource ? dy : -dy) / dist,
-    };
-  }
-
   // =========================================================================
-  // PROPERTIES
+  // ABSTRACT METHODS - Subclasses must implement
   // =========================================================================
 
-  get edgeStyle(): Partial<EdgeStyle> {
-    return this._edgeStyle;
-  }
+  /**
+   * Main render method - calculates geometry and draws edge
+   * Following invana-studio-mvp pattern where edges handle all their own geometry
+   */
+  protected abstract renderEdge(
+    sourceNode: any,
+    targetNode: any,
+    style: PathStyle
+  ): void;
 
-  set edgeStyle(value: Partial<EdgeStyle>) {
-    this._edgeStyle = value;
-    this._style = value;
-    this._styleDirty = true;
+  /**
+   * Update edge endpoints and centers
+   */
+  public updateEndpoints(source: Point, target: Point, sourceCenter: Point, targetCenter: Point): void {
+    this._data.source = source;
+    this._data.target = target;
+    this._data.sourceCenter = sourceCenter;
+    this._data.targetCenter = targetCenter;
+    
+    // Update container position to source center
+    this.x = sourceCenter.x;
+    this.y = sourceCenter.y;
+    
     this.markDirty();
+    this.update();
   }
-
-  // =========================================================================
-  // STATE MANAGEMENT
-  // =========================================================================
 
   /**
    * Set a state on the edge
@@ -417,78 +389,97 @@ export abstract class RendererEdgeBase extends RendererBase<RendererEdge> {
 
   protected render(): void {
     const style = this.getActiveStyle();
-    // sourceCenter/targetCenter are node centers (for tangent calculation)
-    // source/target are boundary points (for drawing)
-    const { source: sourceBoundary, target: targetBoundary, sourceCenter, targetCenter } = this._data;
     
-    console.log(`[Edge ${this.id}] render() - container at (${this.x}, ${this.y}), data:`, {
-      sourceBoundary, targetBoundary, sourceCenter, targetCenter
-    });
+    // Get source and target NODE objects (not just points)
+    // In invana-studio-mvp, edges receive node references during render
+    // We'll get them from parent or store them
+    const sourceNode = this.getSourceNode();
+    const targetNode = this.getTargetNode();
     
-    const arrowSize = this._data.arrowSize ?? 10;
-    const sourceArrow = this._data.arrowSource ?? 'none';
-    const targetArrow = this._data.arrowTarget ?? 'triangle';
-
-    // Calculate tangents from NODE CENTERS (not boundary points)
-    const { sourceTangent, targetTangent } = this.calculateTangents(sourceCenter, targetCenter);
-
-    // Apply arrow offsets to boundary points
-    const sourceOffset = getArrowOffset(sourceArrow as ArrowType, arrowSize);
-    const targetOffset = getArrowOffset(targetArrow as ArrowType, arrowSize);
-    
-    const adjustedSource = this.adjustPointForArrow(sourceBoundary, sourceTangent, sourceOffset);
-    const adjustedTarget = this.adjustPointForArrow(targetBoundary, targetTangent, targetOffset);
-
-    // Draw path
-    this.drawPath(adjustedSource, adjustedTarget, style);
-
-    // Draw arrows at the ACTUAL path endpoints (not boundary - path is already adjusted)
-    const arrowStyle: ArrowStyle = {
-      fill: this._edgeStyle.arrowFill ?? style.stroke,
-      stroke: this._edgeStyle.arrowStroke,
-      strokeWidth: style.strokeWidth,
-    };
-
-    if (sourceArrow !== 'none') {
-      // Arrow at path start (adjustedSource)
-      this.drawArrowAtPoint(adjustedSource, sourceTangent, arrowSize, sourceArrow as ArrowType, arrowStyle);
+    if (!sourceNode || !targetNode) {
+      console.warn(`[Edge ${this.id}] Cannot render - missing node references`);
+      return;
     }
-
-    if (targetArrow !== 'none') {
-      // Arrow at path end (adjustedTarget), pointing in direction of travel
-      this.drawArrowAtPoint(adjustedTarget, targetTangent, arrowSize, targetArrow as ArrowType, arrowStyle);
-    }
+    
+    // Render the edge path - subclass calculates geometry and boundaries
+    this.renderEdge(sourceNode, targetNode, style);
   }
 
   /**
-   * Adjust a point along a tangent for arrow offset
+   * Get source node reference
+   * Override if nodes are stored differently
    */
-  protected adjustPointForArrow(point: Point, tangent: number, offset: number): Point {
+  protected getSourceNode(): any {
+    // This should be set by the renderer when edge is created
+    return (this as any)._sourceNode;
+  }
+
+  /**
+   * Get target node reference
+   * Override if nodes are stored differently
+   */
+  protected getTargetNode(): any {
+    // This should be set by the renderer when edge is created
+    return (this as any)._targetNode;
+  }
+
+  /**
+   * Helper: Get edge endpoint at node boundary
+   * Calculates where line from node center to target point intersects node boundary
+   */
+  protected getEdgeEndpoint(
+    node: any,
+    targetNode: any,
+    offset: number = 0
+  ): Point {
+    return node.getBoundaryPoint(
+      { x: targetNode.x, y: targetNode.y },
+      offset
+    );
+  }
+
+  /**
+   * Helper: Get edge endpoint by angle
+   * Used when we know the angle at which edge should leave/enter node
+   */
+  protected getEdgeEndpointByAngle(
+    node: any,
+    angle: number,
+    offset: number = 0
+  ): Point {
+    const radius = (node._data.size ?? 30) / 2 + offset;
     return {
-      x: point.x + Math.cos(tangent) * offset,
-      y: point.y + Math.sin(tangent) * offset,
+      x: node.x + radius * Math.cos(angle),
+      y: node.y + radius * Math.sin(angle)
     };
   }
 
   /**
-   * Draw arrow at a specific point
+   * Calculate angle between two points
+   */
+  protected calculateAngle(x1: number, y1: number, x2: number, y2: number): number {
+    return Math.atan2(y2 - y1, x2 - x1);
+  }
+
+  /**
+   * Draw arrow at endpoint
    */
   protected drawArrowAtPoint(
     point: Point,
     angle: number,
+    type: string,
     size: number,
-    type: ArrowType,
-    style: ArrowStyle
+    color: number
   ): void {
-    // Container is positioned at sourceCenter, so convert to relative coordinates
-    const containerPos = this._data.sourceCenter;
-    
+    // Point is already in container-relative coordinates
+    // Convert color number to hex string
+    const colorHex = `#${color.toString(16).padStart(6, '0')}`;
     this._registry.drawArrowByName(this._graphics, type, {
-      x: point.x - containerPos.x,
-      y: point.y - containerPos.y,
+      x: point.x,
+      y: point.y,
       angle,
       size,
-    }, style);
+    }, { fill: colorHex, strokeWidth: 1 });
   }
 
   /**
@@ -593,21 +584,6 @@ export abstract class RendererEdgeBase extends RendererBase<RendererEdge> {
   // =========================================================================
   // PUBLIC METHODS
   // =========================================================================
-
-  /**
-   * Update edge endpoints
-   */
-  updateEndpoints(sourceBoundary: Point, targetBoundary: Point, sourceCenter: Point, targetCenter: Point): void {
-    this._data.source = sourceBoundary;
-    this._data.target = targetBoundary;
-    this._data.sourceCenter = sourceCenter;
-    this._data.targetCenter = targetCenter;
-    
-    // Update container position to source node center
-    this.position.set(sourceCenter.x, sourceCenter.y);
-    
-    this.forceRender();
-  }
 
   /**
    * Update edge style

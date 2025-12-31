@@ -1,12 +1,12 @@
 /**
  * BezierEdge
  * 
- * Curved bezier edge implementation.
- * Draws a quadratic bezier curve from source to target.
+ * Curved bezier edge implementation following invana-studio-mvp architecture.
+ * Calculates control points FIRST, then boundaries based on curve direction.
  */
 
-import type { PathStyle, Point } from '../../primitives/paths';
-import { RendererEdgeBase, type EdgeShapeOptions, type EdgeTangents, type EdgePathType } from './RendererEdgeBase';
+import type { PathStyle } from '../../primitives/paths';
+import { RendererEdgeBase, type EdgeShapeOptions, type EdgePathType } from './RendererEdgeBase';
 
 /**
  * Bezier edge options (same as base edge options)
@@ -14,67 +14,121 @@ import { RendererEdgeBase, type EdgeShapeOptions, type EdgeTangents, type EdgePa
 export type BezierEdgeOptions = EdgeShapeOptions;
 
 /**
- * Quadratic bezier edge
+ * Quadratic bezier edge - following invana-studio-mvp BezierEdgeRenderer pattern
  */
 export class BezierEdge extends RendererEdgeBase {
   get pathType(): EdgePathType {
     return 'bezier';
   }
 
-  protected drawPath(source: Point, target: Point, style: PathStyle): void {
-    const curvature = this._data.curvature ?? 0.25;
-    
-    // Container is positioned at sourceCenter, so convert to relative coordinates
-    const containerPos = this._data.sourceCenter;
-    
-    this._registry.drawPath(this._graphics, 'bezier', {
-      from: { x: source.x - containerPos.x, y: source.y - containerPos.y },
-      to: { x: target.x - containerPos.x, y: target.y - containerPos.y },
-      curvature,
-    }, style);
-  }
-
-  protected calculateTangents(source: Point, target: Point): EdgeTangents {
-    const curvature = this._data.curvature ?? 0.25;
-    
-    // Calculate control point
-    const midX = (source.x + target.x) / 2;
-    const midY = (source.y + target.y) / 2;
-    const dx = target.x - source.x;
-    const dy = target.y - source.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    
-    // Perpendicular offset for control point
-    const perpX = -dy / dist;
-    const perpY = dx / dist;
-    const offset = dist * curvature;
-    
-    const controlX = midX + perpX * offset;
-    const controlY = midY + perpY * offset;
-
-    // Tangent at source: direction from source to control point
-    const sourceTangent = Math.atan2(controlY - source.y, controlX - source.x);
-    
-    // Tangent at target: direction from control point to target
-    const targetTangent = Math.atan2(target.y - controlY, target.x - controlX);
-
-    return {
-      sourceTangent,
-      targetTangent,
-    };
-  }
-
   /**
-   * Override boundary direction to match the bezier curve tangent
-   * This ensures edges connect to nodes at the correct angle
+   * Render bezier edge - calculate control point first, then boundaries based on curve
+   * Following invana-studio-mvp: BezierEdgeRenderer.ts
    */
-  public calculateBoundaryDirection(source: Point, target: Point, isSource: boolean): Point {
-    const tangents = this.calculateTangents(source, target);
-    const angle = isSource ? tangents.sourceTangent : tangents.targetTangent;
-    
-    return {
-      x: Math.cos(angle),
-      y: Math.sin(angle),
+  protected renderEdge(sourceNode: any, targetNode: any, style: PathStyle): void {
+    if (!sourceNode || !targetNode) {
+      console.warn('BezierEdge: Missing source or target node');
+      return;
+    }
+
+    const curvature = this._data.curvature ?? 0.25;
+    const targetArrow = this._data.arrowTarget ?? 'triangle';
+    const arrowSize = this._data.arrowSize ?? 10;
+
+    // Calculate vector between node centers
+    const dx = targetNode.x - sourceNode.x;
+    const dy = targetNode.y - sourceNode.y;
+    const length = Math.sqrt(dx * dx + dy * dy);
+
+    if (length < 0.001) {
+      return; // Avoid division by zero
+    }
+
+    // Perpendicular vector for curve offset
+    const vectorNormInverse = {
+      x: -dy / length,
+      y: dx / length
     };
+
+    // Get node radii for midpoint calculation
+    const sourceRadius = (sourceNode._data?.size ?? 30) / 2;
+    const targetRadius = (targetNode._data?.size ?? 30) / 2;
+
+    // Calculate midpoint between intersection points (not centers!)
+    // This matches invana-studio-mvp exactly
+    const midptPts = {
+      x1: sourceNode.x + (dx / length) * sourceRadius,
+      y1: sourceNode.y + (dy / length) * sourceRadius,
+      x2: targetNode.x - (dx / length) * targetRadius,
+      y2: targetNode.y - (dy / length) * targetRadius
+    };
+
+    const adjustedMidpt = {
+      x: (midptPts.x1 + midptPts.x2) / 2,
+      y: (midptPts.y1 + midptPts.y2) / 2
+    };
+
+    // Calculate control point perpendicular to line
+    const curveOffset = length * curvature;
+    const cpX = adjustedMidpt.x + vectorNormInverse.x * curveOffset;
+    const cpY = adjustedMidpt.y + vectorNormInverse.y * curveOffset;
+
+    // NOW calculate boundaries based on control point direction
+    // Source: angle from source to control point
+    const sourceAngle = Math.atan2(cpY - sourceNode.y, cpX - sourceNode.x);
+    const start = this.getEdgeEndpointByAngle(sourceNode, sourceAngle, 0);
+
+    // Target: angle from control point to target
+    const targetAngle = Math.atan2(targetNode.y - cpY, targetNode.x - cpX);
+    
+    // Calculate target offset for arrow
+    let targetOffset = 0;
+    if (targetArrow !== 'none') {
+      const arrowBackDistance = arrowSize * Math.cos(Math.PI / 6); // 30 degrees
+      targetOffset = arrowBackDistance;
+    }
+    
+    const end = this.getEdgeEndpointByAngle(targetNode, targetAngle + Math.PI, targetOffset);
+
+    // Convert to container-relative coordinates (container is at sourceNode)
+    const relStart = {
+      x: start.x - sourceNode.x,
+      y: start.y - sourceNode.y
+    };
+    const relCP = {
+      x: cpX - sourceNode.x,
+      y: cpY - sourceNode.y
+    };
+    const relEnd = {
+      x: end.x - sourceNode.x,
+      y: end.y - sourceNode.y
+    };
+
+    // Draw the bezier curve
+    this._graphics.clear();
+    this._graphics.moveTo(relStart.x, relStart.y);
+    this._graphics.quadraticCurveTo(relCP.x, relCP.y, relEnd.x, relEnd.y);
+    this._graphics.stroke({ 
+      width: style.strokeWidth ?? 2, 
+      color: style.stroke ?? '#000000' 
+    });
+
+    // Draw arrows - convert hex string to number for arrows
+    const strokeColor = typeof style.stroke === 'string' 
+      ? parseInt(style.stroke.replace('#', ''), 16)
+      : 0x000000;
+    
+    if (targetArrow !== 'none') {
+      // Calculate tangent at end point (from control point to end)
+      const tangentAngle = Math.atan2(end.y - cpY, end.x - cpX);
+      this.drawArrowAtPoint(relEnd, tangentAngle, targetArrow, arrowSize, strokeColor);
+    }
+
+    const sourceArrow = this._data.arrowSource ?? 'none';
+    if (sourceArrow !== 'none') {
+      // Calculate tangent at start point (from start to control point)  
+      const tangentAngle = Math.atan2(cpY - start.y, cpX - start.x);
+      this.drawArrowAtPoint(relStart, tangentAngle + Math.PI, sourceArrow, arrowSize, strokeColor);
+    }
   }
 }
