@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { Canvas, type CanvasNode, CanvasOptions } from '@invana/canvas-core';
 import { createContainer, createCanvasSection } from '../../../src/div-utils';
+import GUI from 'lil-gui';
 
 const meta: Meta = {
   title: 'Canvas/Options',
@@ -14,108 +15,153 @@ type Story = StoryObj;
  */
 function createSampleNodes(): CanvasNode[] {
   return [
-    { id: 'node1', x: 100, y: 80, label: 'Node 1', shape: 'rect', width: 80, height: 50 },
-    { id: 'node2', x: 250, y: 80, label: 'Node 2', shape: 'circle', width: 60, height: 60 },
-    { id: 'node3', x: 175, y: 180, label: 'Node 3', shape: 'rect', width: 80, height: 50 },
+    { id: 'node1', x: -100, y: -80, label: 'Node 1', shape: 'rect', width: 80, height: 50 },
+    { id: 'node2', x: 100, y: -80, label: 'Node 2', shape: 'circle', width: 60, height: 60 },
+    { id: 'node3', x: 0, y: 50, label: 'Node 3', shape: 'diamond', width: 70, height: 70 },
+    { id: 'node4', x: -150, y: 150, label: 'Node 4', shape: 'hexagon', size: 45 },
+    { id: 'node5', x: 150, y: 150, label: 'Node 5', shape: 'triangle', size: 50 },
   ];
 }
 
 /**
- * Comparison of different behavior presets showing 4 canvas instances with different interaction capabilities:
- * 
- * - **No Behavior (false)**: Completely static - no interactions, pan, or zoom. Read-only visualization.
- * - **Minimal**: Only hover effects enabled. Good for tooltips and highlighting. Pan/zoom work via viewport.
- * - **Default**: Common interactions - drag nodes, hover effects, click selection. Pan/zoom work via viewport.
- * - **Full**: All features - drag, hover, select, focus, multi-select. Pan/zoom work via viewport.
+ * Behavior configuration descriptions
  */
-export const BehaviorPresets: Story = {
+const behaviorDescriptions = {
+  'false': 'No interactions - completely static visualization. Pan/zoom via viewport only.',
+  'minimal': 'Hover effects only - good for tooltips and highlighting. Pan/zoom via viewport.',
+  'default': 'Common interactions - drag nodes, hover effects, click to select. Pan/zoom via viewport.',
+  'full': 'All features - drag, hover, select, focus, multi-select (Shift+click). Pan/zoom via viewport.',
+};
+
+/**
+ * Interactive behavior switcher using lil-gui controls.
+ * 
+ * This story demonstrates all behavior options in a single canvas:
+ * - **No Behavior (false)**: Completely static - no interactions
+ * - **Minimal**: Only hover effects enabled
+ * - **Default**: Common interactions - drag nodes, hover, click to select
+ * - **Full**: All features - drag, hover, select, focus, multi-select (Shift+click)
+ * 
+ * Use the GUI panel to switch between different behavior modes and see the changes in real-time.
+ */
+export const InteractiveBehaviorSwitcher: Story = {
   parameters: {
     layout: 'fullscreen',
   },
   render: () => {
-    const container = createContainer({ height: "900px", id: 'behavior-comparison-container' });
-    container.style.display = "grid";
-    container.style.gridTemplateColumns = "1fr 1fr";
-    container.style.gridTemplateRows = "1fr 1fr";
-    container.style.gap = "20px";
-    container.style.padding = "20px";
+    const container = createContainer({ height: "800px", id: 'behavior-switcher-container' });
     container.style.backgroundColor = "#f5f5f5";
-
-    // Create 4 canvas containers with headers
-    createCanvasSection(container, 'canvas-no-behavior', '1. No Behavior (false)', 'Static visualization - no interactions, pan, or zoom');
-    createCanvasSection(container, 'canvas-minimal', '2. Minimal Behavior', 'Hover effects only - try hovering over nodes');
-    createCanvasSection(container, 'canvas-default', '3. Default Behavior', 'Drag nodes, hover, click to select - most common setup');
-    createCanvasSection(container, 'canvas-full', '4. Full Behavior', 'All interactions: drag, hover, select, focus, multi-select(using shift + click)');
-
+    
     return container;
   },
   play: async () => {
-    const container1 = document.getElementById('canvas-no-behavior');
-    const container2 = document.getElementById('canvas-minimal');
-    const container3 = document.getElementById('canvas-default');
-    const container4 = document.getElementById('canvas-full');
-    
-    if (!container1 || !container2 || !container3 || !container4) return;
+    const container = document.getElementById('behavior-switcher-container');
+    if (!container) return;
 
-    // 1. No Behavior (false) - Green theme
-    const canvas1 = new Canvas({
-      container: container1,
-      behavior: false,
-      data: { nodes: createSampleNodes(), edges: [] },
-      styles: {
-        node: {
-          fill: 0x95de64,
-          stroke: '#52c41a',
-          strokeWidth: 2,
-        },
-      },
-    });
-    await canvas1.init();
+    // Create info panel
+    const infoPanel = document.createElement('div');
+    infoPanel.id = 'info-panel';
+    infoPanel.style.position = 'absolute';
+    infoPanel.style.top = '10px';
+    infoPanel.style.left = '10px';
+    infoPanel.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+    infoPanel.style.padding = '15px';
+    infoPanel.style.borderRadius = '8px';
+    infoPanel.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+    infoPanel.style.fontSize = '14px';
+    infoPanel.style.maxWidth = '350px';
+    infoPanel.style.zIndex = '1000';
+    infoPanel.innerHTML = `
+      <strong style="display: block; margin-bottom: 8px; color: #1890ff;">Current Behavior: Default</strong>
+      <div id="behavior-description" style="color: #666; line-height: 1.5;">
+        ${behaviorDescriptions.default}
+      </div>
+    `;
+    container.appendChild(infoPanel);
 
-    // 2. Minimal Behavior - Blue theme
-    const canvas2 = new Canvas({
-      container: container2,
-      behavior: 'minimal',
-      data: { nodes: createSampleNodes(), edges: [] },
-      styles: {
-        node: {
-          fill: 0x69c0ff,
-          stroke: '#1890ff',
-          strokeWidth: 2,
-        },
-      },
-    });
-    await canvas2.init();
+    // Color themes for each behavior type
+    const colorThemes = {
+      'false': { fill: 0x95de64, stroke: '#52c41a', name: 'No Behavior' },
+      'minimal': { fill: 0x69c0ff, stroke: '#1890ff', name: 'Minimal' },
+      'default': { fill: 0xffd666, stroke: '#faad14', name: 'Default' },
+      'full': { fill: 0xff9c6e, stroke: '#ff7a45', name: 'Full' },
+    };
 
-    // 3. Default Behavior - Yellow theme
-    const canvas3 = new Canvas({
-      container: container3,
+    // Create canvas with default behavior
+    const canvas = new Canvas({
+      container: container,
       behavior: 'default',
       data: { nodes: createSampleNodes(), edges: [] },
       styles: {
         node: {
-          fill: 0xffd666,
-          stroke: '#faad14',
+          fill: colorThemes.default.fill,
+          stroke: colorThemes.default.stroke,
           strokeWidth: 2,
         },
       },
     });
-    await canvas3.init();
+    await canvas.init();
 
-    // 4. Full Behavior - Orange theme
-    const canvas4 = new Canvas({
-      container: container4,
-      behavior: 'full',
-      data: { nodes: createSampleNodes(), edges: [] },
-      styles: {
-        node: {
-          fill: 0xff9c6e,
-          stroke: '#ff7a45',
-          strokeWidth: 2,
-        },
-      },
-    });
-    await canvas4.init();
+    // Create GUI controls
+    const gui = new GUI({ title: 'Behavior Controls' });
+    gui.domElement.style.position = 'absolute';
+    gui.domElement.style.top = '10px';
+    gui.domElement.style.right = '10px';
+    gui.domElement.style.zIndex = '1000';
+    container.appendChild(gui.domElement);
+
+    const settings = { 
+      behavior: 'default',
+    };
+
+    gui.add(settings, 'behavior', ['false', 'minimal', 'default', 'full'])
+      .name('Behavior Mode')
+      .onChange((value: string) => {
+        console.log('Switching to behavior:', value);
+        
+        const behaviorValue = value === 'false' ? false : value as 'minimal' | 'default' | 'full';
+        const theme = colorThemes[value as keyof typeof colorThemes];
+        
+        // Update behavior and styles using setOptions - smooth transition without recreating canvas
+        canvas.setOptions({ 
+          behavior: behaviorValue,
+          styles: {
+            node: {
+              fill: theme.fill,
+              stroke: theme.stroke,
+              strokeWidth: 2,
+            },
+          }
+        });
+        
+        // Update info panel
+        const infoTitle = container.querySelector('#info-panel strong');
+        const infoDesc = container.querySelector('#behavior-description');
+        if (infoTitle) {
+          infoTitle.textContent = `Current Behavior: ${theme.name}`;
+        }
+        if (infoDesc) {
+          infoDesc.textContent = behaviorDescriptions[value as keyof typeof behaviorDescriptions];
+        }
+      });
+
+    // Add instructions
+    const instructions = gui.addFolder('Instructions');
+    instructions.close();
+    
+    const instructionsEl = document.createElement('div');
+    instructionsEl.style.padding = '10px';
+    instructionsEl.style.fontSize = '12px';
+    instructionsEl.style.lineHeight = '1.6';
+    instructionsEl.style.color = '#666';
+    instructionsEl.innerHTML = `
+      <strong>Try these interactions:</strong><br>
+      • <strong>No Behavior:</strong> Nothing works<br>
+      • <strong>Minimal:</strong> Hover over nodes<br>
+      • <strong>Default:</strong> Drag nodes, click to select<br>
+      • <strong>Full:</strong> All of the above + Shift+click for multi-select
+    `;
+    instructions.$children.appendChild(instructionsEl);
   },
 };
 

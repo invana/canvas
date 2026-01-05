@@ -109,7 +109,7 @@ export class BackgroundPlugin implements CanvasPlugin {
   /**
    * Set background style
    */
-  setBackground(style: BackgroundStyle): void {
+  setOptions(style: BackgroundStyle): void {
     if (!this._canvas || !this._graphics) {
       throw new Error('BackgroundPlugin not initialized');
     }

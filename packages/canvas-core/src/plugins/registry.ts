@@ -17,7 +17,7 @@
  * ```
  */
 
-import type { CanvasPlugin, PluginConfig, PluginConfigWithOptions } from './types';
+import type { CanvasPlugin, PluginConfig } from './types';
 
 /**
  * Plugin constructor type
@@ -105,10 +105,10 @@ export class PluginRegistry {
   /**
    * Create plugin instance from configuration
    * 
-   * @param config - Plugin configuration (string ID, object with options, or instance)
-   * @returns Plugin instance
+   * @param config - Plugin configuration (string ID, G6-style object, or instance)
+   * @returns Plugin instance with metadata
    */
-  static create(config: PluginConfig): CanvasPlugin {
+  static create(config: PluginConfig): { plugin: CanvasPlugin; key?: string; options?: any } {
     // Case 1: Simple string ID
     if (typeof config === 'string') {
       const PluginClass = this.get(config);
@@ -117,23 +117,31 @@ export class PluginRegistry {
           `Plugin '${config}' not registered. Available plugins: ${this.getRegisteredPlugins().join(', ')}`
         );
       }
-      return new PluginClass();
+      return { plugin: new PluginClass() };
     }
 
-    // Case 2: Configuration object with string plugin ID
+    // Case 2: Wrapper pattern with plugin/key/options
     if ('plugin' in config && typeof config.plugin === 'string') {
-      const PluginClass = this.get(config.plugin);
+      const pluginType = config.plugin;
+      const PluginClass = this.get(pluginType);
       if (!PluginClass) {
         throw new Error(
-          `Plugin '${config.plugin}' not registered. Available plugins: ${this.getRegisteredPlugins().join(', ')}`
+          `Plugin '${pluginType}' not registered. Available plugins: ${this.getRegisteredPlugins().join(', ')}`
         );
       }
-      return new PluginClass((config as PluginConfigWithOptions).options);
+      
+      const { plugin: _, key, options = {} } = config;
+      
+      return { 
+        plugin: new PluginClass(options), 
+        key,
+        options 
+      };
     }
 
     // Case 3: Direct plugin instance (not serializable, but supported)
     if ('init' in config && typeof config.init === 'function') {
-      return config as CanvasPlugin;
+      return { plugin: config as CanvasPlugin };
     }
 
     throw new Error('Invalid plugin configuration');
@@ -142,7 +150,7 @@ export class PluginRegistry {
   /**
    * Create multiple plugins from configurations
    */
-  static createMany(configs: PluginConfig[]): CanvasPlugin[] {
+  static createMany(configs: PluginConfig[]): Array<{ plugin: CanvasPlugin; key?: string; options?: any }> {
     return configs.map((config) => this.create(config));
   }
 

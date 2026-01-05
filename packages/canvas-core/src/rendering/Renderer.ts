@@ -739,6 +739,46 @@ export class Renderer {
     this._userEdgeStyle = style;
   }
 
+  /**
+   * Re-apply styles to all existing nodes and edges
+   * Used when theme/global styles change and need to be propagated to existing elements
+   */
+  reapplyStylesToAll(): void {
+    // Re-resolve and apply styles to all nodes
+    for (const node of this._nodes.values()) {
+      const nodeData = node.data as RendererNode;
+      
+      // Re-resolve styles with updated user styles
+      const mergedStyle = resolveNodeStyle(
+        nodeData,
+        this._defaultNodeStyle,
+        this._userNodeStyle,
+        node.nodeStyle as Partial<FunctionBasedNodeStyle>
+      );
+      
+      // Update node style and force re-render
+      node.nodeStyle = mergedStyle;
+      node.forceRender();
+    }
+    
+    // Re-resolve and apply styles to all edges
+    for (const { edge } of this._edges.values()) {
+      const edgeData = edge.data as RendererEdge;
+      
+      // Re-resolve styles with updated user styles
+      const mergedStyle = resolveEdgeStyle(
+        edgeData,
+        this._defaultEdgeStyle,
+        this._userEdgeStyle,
+        edge.edgeStyle as Partial<FunctionBasedEdgeStyle>
+      );
+      
+      // Update edge style and force re-render
+      edge.edgeStyle = mergedStyle;
+      edge.forceRender();
+    }
+  }
+
   // =========================================================================
   // CLEANUP
   // =========================================================================

@@ -46,6 +46,7 @@ import { LayerManager } from '../layers/LayerManager';
 import type { CanvasPlugin, PluginRegistrationOptions, PluginConfig, BehaviorPreset } from '../plugins/types';
 import { PluginRegistry } from '../plugins/registry';
 import type { Bounds } from '../scene/SpatialIndex';
+import type { BackgroundStyle } from '../types';
 
 // Type aliases for scene graph integration
 type SceneNodeData = any;
@@ -146,24 +147,16 @@ export class Canvas {
   private _edgeLayer: Container | null = null;
   private _nodeLayer: Container | null = null;
 
-  // Plugins
-  private _plugins: Map<string, CanvasPlugin> = new Map();
+  // Plugins with metadata (including user-defined keys)
+  private _plugins: Map<string, { plugin: CanvasPlugin; userKey?: string }> = new Map();
 
-  // Configuration
-  private _styles: CanvasStyles = {};
-  private _options: Required<Omit<CanvasOptions, 'data' | 'styles' | 'plugins' | 'behavior'>>;
+  // Complete internal state for all options
+  private _options: CanvasOptions;
 
   constructor(options: CanvasOptions) {
     this._container = options.container;
     this._registry = options.registry ?? new Registry();
-    this._styles = options.styles ?? {};
     this._scene = new SceneGraph();
-
-    // Store plugin configuration for later initialization
-    this._pluginConfigs = {
-      behavior: options.behavior ?? 'default',
-      plugins: options.plugins,
-    };
 
     // Get container dimensions, fallback to reasonable defaults if container not yet in DOM
     let containerWidth = 800;
@@ -175,6 +168,7 @@ export class Canvas {
       if (rect.height > 0) containerHeight = rect.height;
     }
 
+    // Initialize complete internal state with all options
     this._options = {
       container: options.container,
       width: options.width ?? containerWidth,
@@ -188,6 +182,10 @@ export class Canvas {
       fitOnRender: options.fitOnRender ?? true,
       fitPadding: options.fitPadding ?? 50,
       edgeBoundaryOffset: options.edgeBoundaryOffset ?? 2,
+      behavior: options.behavior ?? 'default',
+      styles: options.styles ?? {},
+      data: options.data,
+      plugins: options.plugins,
     };
 
     // If data provided, store for rendering after init
@@ -253,9 +251,9 @@ export class Canvas {
       nodeLayer: this._nodeLayer,
       edgeLayer: this._edgeLayer,
       defaultNodeStyle: DEFAULT_NODE_STYLE,
-      userNodeStyle: this._styles.node,
+      userNodeStyle: this._options.styles.node,
       defaultEdgeStyle: DEFAULT_EDGE_STYLE,
-      userEdgeStyle: this._styles.edge,
+      userEdgeStyle: this._options.styles.edge,
       edgeBoundaryOffset: this._options.edgeBoundaryOffset,
     });
 
@@ -277,28 +275,40 @@ export class Canvas {
 
   /**
    * Initialize plugins from options
-   * Pattern 4: Behavior preset + custom plugins
+   * Handles both behavior presets and G6-style plugin configurations
    */
   private async initializePlugins(): Promise<void> {
     const pluginConfigs: PluginConfig[] = [];
 
     // 1. Add behavior preset plugins (if specified)
-    const behavior = this._pluginConfigs.behavior;
+    const behavior = this._options.behavior;
     if (behavior && typeof behavior === 'string') {
       const presetIds = PluginRegistry.getBehaviorPreset(behavior);
       pluginConfigs.push(...presetIds);
     }
 
-    // 2. Add custom plugins (override or additional)
+    // 3. Add G6-style plugins from options
+    if (this._options.plugins) {
+      pluginConfigs.push(...this._options.plugins);
+    }
+
+    // 4. Add legacy plugins from _pluginConfigs (for backwards compatibility)
     if (this._pluginConfigs.plugins) {
       pluginConfigs.push(...this._pluginConfigs.plugins);
     }
 
-    // 3. Create and register all plugins
+    // 5. Create and register all plugins
     for (const config of pluginConfigs) {
       try {
-        const plugin = PluginRegistry.create(config);
-        await this.registerPlugin(plugin);
+        const { plugin, key, options } = PluginRegistry.create(config);
+        await this.registerPlugin(plugin, { userKey: key });
+        
+        // Apply initial options if plugin has setOptions method
+        if (options && Object.keys(options).length > 0) {
+          if ('setOptions' in plugin && typeof (plugin as any).setOptions === 'function') {
+            (plugin as any).setOptions(options);
+          }
+        }
       } catch (error) {
         console.error('Failed to initialize plugin:', config, error);
         // Continue with other plugins even if one fails
@@ -447,7 +457,7 @@ export class Canvas {
    * Set default styles
    */
   setStyles(styles: CanvasStyles): void {
-    this._styles = styles;
+    this._options.styles = styles;
     
     // Update renderer's user styles so new nodes/edges use the new theme
     if (this._renderer) {
@@ -465,13 +475,87 @@ export class Canvas {
   /**
    * Update canvas options dynamically
    */
-  setOptions(options: Partial<Pick<CanvasOptions, 'edgeBoundaryOffset' | 'fitPadding'>>): void {
+  setOptions(options: Partial<CanvasOptions>): void {
     if (options.edgeBoundaryOffset !== undefined) {
       this._options.edgeBoundaryOffset = options.edgeBoundaryOffset;
     }
     if (options.fitPadding !== undefined) {
       this._options.fitPadding = options.fitPadding;
     }
+    if (options.behavior !== undefined) {
+      this.updateBehavior(options.behavior);
+    }
+    if (options.styles !== undefined) {
+      this.setStyles(options.styles);
+      
+      // Re-apply styles to all existing nodes and edges
+      if (this._renderer) {
+        this._renderer.reapplyStylesToAll();
+      }
+    }
+    
+    // Handle plugin updates with wrapper pattern
+    if (options.plugins !== undefined) {
+      console.log('setOptions: Processing plugins update', options.plugins);
+      for (const pluginConfig of options.plugins) {
+        // Handle wrapper pattern: { plugin, key, options }
+        if (typeof pluginConfig === 'object' && 'key' in pluginConfig && pluginConfig.key) {
+          const { key, options: pluginOptions = {} } = pluginConfig as any;
+          console.log('setOptions: Updating plugin', { key, options: pluginOptions });
+          this.updatePlugin(key, pluginOptions);
+        }
+      }
+    }
+  }
+
+  /**
+   * Update behavior by dynamically changing plugins
+   */
+  private updateBehavior(behavior: BehaviorPreset): void {
+    // Get the new behavior preset plugins
+    const newPluginIds = behavior === false ? [] : PluginRegistry.getBehaviorPreset(behavior as string);
+    
+    // Get current behavior plugins
+    const currentPluginIds = this._options.behavior === false 
+      ? [] 
+      : PluginRegistry.getBehaviorPreset(this._options.behavior as string);
+    
+    // Find plugins to remove (in current but not in new)
+    const toRemove = currentPluginIds.filter(id => !newPluginIds.includes(id));
+    
+    // Find plugins to add (in new but not in current)
+    const toAdd = newPluginIds.filter(id => !currentPluginIds.includes(id));
+    
+    console.log('Behavior change:', {
+      from: this._options.behavior,
+      to: behavior,
+      currentPlugins: currentPluginIds,
+      newPlugins: newPluginIds,
+      toRemove,
+      toAdd,
+      registeredPlugins: Array.from(this._plugins.keys())
+    });
+    
+    // Remove old behavior plugins
+    for (const pluginId of toRemove) {
+      console.log('Unregistering plugin:', pluginId);
+      this.unregisterPlugin(pluginId);
+    }
+    
+    // Add new behavior plugins
+    for (const pluginId of toAdd) {
+      try {
+        console.log('Registering plugin:', pluginId);
+        const { plugin, key } = PluginRegistry.create(pluginId);
+        // Plugin init is async but doesn't actually await anything, so we can fire-and-forget
+        this.registerPlugin(plugin, { userKey: key });
+      } catch (error) {
+        console.error('Failed to register plugin:', pluginId, error);
+      }
+    }
+    
+    // Update stored behavior in options
+    this._options.behavior = behavior;
   }
 
   // =========================================================================
@@ -561,8 +645,8 @@ export class Canvas {
       this._layerManager!.registerGroup(groupConfig);
     }
 
-    // Store plugin
-    this._plugins.set(plugin.id, plugin);
+    // Store plugin with metadata
+    this._plugins.set(plugin.id, { plugin, userKey: options.userKey });
 
     // Initialize plugin if autoInit is true (default)
     if (options.autoInit !== false) {
@@ -586,7 +670,59 @@ export class Canvas {
    * Get a registered plugin
    */
   getPlugin<T extends CanvasPlugin = CanvasPlugin>(id: string): T | undefined {
-    return this._plugins.get(id) as T | undefined;
+    return this._plugins.get(id)?.plugin as T | undefined;
+  }
+
+  /**
+   * Get a plugin by its user-defined key (G6-style)
+   */
+  getPluginByKey<T extends CanvasPlugin = CanvasPlugin>(key: string): T | undefined {
+    for (const metadata of this._plugins.values()) {
+      if (metadata.userKey === key) {
+        return metadata.plugin as T;
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Update plugin options
+   * @example
+   * canvas.updatePlugin('my-background', {
+   *   type: 'solid',
+   *   color: '#e6f7ff',
+   * });
+   */
+  updatePlugin(key: string, options: Record<string, any>): void {
+    console.log('updatePlugin called:', { key, options });
+    const plugin = this.getPluginByKey(key);
+    
+    if (!plugin) {
+      console.warn(`Plugin with key '${key}' not found`);
+      console.log('Available plugins:', Array.from(this._plugins.entries()).map(([id, meta]) => ({ id, userKey: meta.userKey })));
+      return;
+    }
+    
+    console.log('updatePlugin: Found plugin', plugin);
+    
+    // Try to call updateOptions or setOptions if plugin supports it
+    if ('updateOptions' in plugin && typeof (plugin as any).updateOptions === 'function') {
+      console.log('updatePlugin: Calling updateOptions');
+      (plugin as any).updateOptions(options);
+    } else if ('setOptions' in plugin && typeof (plugin as any).setOptions === 'function') {
+      console.log('updatePlugin: Calling setOptions');
+      (plugin as any).setOptions(options);
+    } else {
+      console.log('updatePlugin: Using setter methods');
+      // For plugins with specific setter methods
+      // Try common update method names for each property
+      for (const [optionKey, value] of Object.entries(options)) {
+        const setterName = `set${optionKey.charAt(0).toUpperCase()}${optionKey.slice(1)}`;
+        if (typeof (plugin as any)[setterName] === 'function') {
+          (plugin as any)[setterName](value);
+        }
+      }
+    }
   }
 
   /**
@@ -600,15 +736,15 @@ export class Canvas {
    * Unregister a plugin
    */
   unregisterPlugin(id: string): void {
-    const plugin = this._plugins.get(id);
-    if (plugin) {
+    const metadata = this._plugins.get(id);
+    if (metadata) {
       // Call destroy if available
-      if (plugin.destroy) {
-        plugin.destroy();
+      if (metadata.plugin.destroy) {
+        metadata.plugin.destroy();
       }
 
       // Unregister layer groups
-      for (const groupConfig of plugin.layerGroups) {
+      for (const groupConfig of metadata.plugin.layerGroups) {
         this._layerManager?.unregisterGroup(groupConfig.id);
       }
 
@@ -823,9 +959,9 @@ export class Canvas {
    */
   destroy(): void {
     // Destroy plugins
-    this._plugins.forEach(plugin => {
-      if (plugin.destroy) {
-        plugin.destroy();
+    this._plugins.forEach(metadata => {
+      if (metadata.plugin.destroy) {
+        metadata.plugin.destroy();
       }
     });
     this._plugins.clear();

@@ -7,10 +7,11 @@
  * - Dark theme (dark gray with dots)
  * 
  * Uses lil-gui for interactive theme switching
+ * Now uses G6-style plugin configuration pattern
  */
 
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, BackgroundPlugin } from '@invana/canvas-core';
+import { Canvas } from '@invana/canvas-core';
 import GUI from 'lil-gui';
 import { createContainer } from '../../../src/div-utils';
 
@@ -37,14 +38,18 @@ const themes = {
       }
     },
     background: {
-      type: 'pattern' as const,
-      patternType: 'grid' as const,
-      color: '#b3e7ff',
-      backgroundColor: '#0b2f66',
-      spacing: 25,
-      lineWidth: 0.5,
-      alpha: 0.8,
-      follow: true
+      plugin: 'background',
+      key: 'theme-background',
+      options: {
+        type: 'pattern' as const,
+        patternType: 'grid' as const,
+        color: '#b3e7ff',
+        backgroundColor: '#0b2f66',
+        spacing: 25,
+        lineWidth: 0.5,
+        alpha: 0.8,
+        follow: true
+      }
     }
   },
   light: {
@@ -61,13 +66,17 @@ const themes = {
       }
     },
     background: {
-      type: 'pattern' as const,
-      patternType: 'dots' as const,
-      color: '#b0b0b0',
-      backgroundColor: '#fafafa',
-      size: 1.5,
-      spacing: 30,
-      alpha: 0.6
+      plugin: 'background',
+      key: 'theme-background',
+      options: {
+        type: 'pattern' as const,
+        patternType: 'dots' as const,
+        color: '#b0b0b0',
+        backgroundColor: '#fafafa',
+        size: 1.5,
+        spacing: 30,
+        alpha: 0.6
+      }
     }
   },
   dark: {
@@ -84,13 +93,17 @@ const themes = {
       }
     },
     background: {
-      type: 'pattern' as const,
-      patternType: 'dots' as const,
-      color: '#595959',
-      backgroundColor: '#212121',
-      size: 1.5,
-      spacing: 30,
-      alpha: 0.6
+      plugin: 'background',
+      key: 'theme-background',
+      options: {
+        type: 'pattern' as const,
+        patternType: 'dots' as const,
+        color: '#595959',
+        backgroundColor: '#212121',
+        size: 1.5,
+        spacing: 30,
+        alpha: 0.6
+      }
     }
   }
 };
@@ -154,15 +167,13 @@ export const Theming: Story = {
         data: generateGraphData(),
         behavior: 'default',
         styles: themes.blueprint.styles,
+        // Wrapper pattern plugin configuration
+        plugins: [
+          themes.blueprint.background
+        ]
       });
 
       await canvas.init();
-
-      // Register background plugin
-      const bgPlugin = new BackgroundPlugin();
-      canvas.registerPlugin(bgPlugin);
-      bgPlugin.setBackground(themes.blueprint.background);
-
       canvas.render();
 
       // Create GUI for theme switching - positioned at top-right
@@ -176,26 +187,17 @@ export const Theming: Story = {
       gui.add(settings, 'theme', ['blueprint', 'light', 'dark'])
         .name('Theme')
         .onChange((value: string) => {
-          // currentTheme = value;
           const theme = themes[value as keyof typeof themes];
           
           console.log('Switching to theme:', value);
-          console.log('Theme styles:', theme.styles);
           
-          // Update default styles for new elements
-          canvas.setStyles(theme.styles);
-          
-          // Update background
-          bgPlugin.setBackground(theme.background);
-          
-          // Recreate the entire graph with new theme
-          canvas.clear();
-          const data = generateGraphData();
-          console.log('Rendering data:', data);
-          console.log('Nodes:', data.nodes.length, 'Edges:', data.edges.length);
-          canvas.render(data);
-          
-          console.log('Canvas state after render:', canvas.state);
+          // Update using wrapper pattern with setOptions
+          canvas.setOptions({
+            styles: theme.styles,
+            plugins: [
+              theme.background
+            ]
+          } as any);
         });
   }
 };

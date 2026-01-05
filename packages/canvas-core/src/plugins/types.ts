@@ -48,16 +48,20 @@ export interface CanvasPlugin {
 export interface PluginRegistrationOptions {
   /** Whether to initialize plugin immediately */
   autoInit?: boolean;
+  /** User-defined key for G6-style updates */
+  userKey?: string;
 }
 
 /**
- * Plugin configuration with options (serializable)
+ * Plugin configuration with options (Wrapper pattern)
  */
-export interface PluginConfigWithOptions<T = any> {
-  /** Plugin ID (registered name) */
+export interface PluginConfigWithOptions {
+  /** Plugin identifier (registered name like 'background', 'minimap', etc.) */
   plugin: string;
-  /** Plugin options */
-  options?: T;
+  /** Optional user-defined key for this plugin instance (for lookups/updates) */
+  key?: string;
+  /** Plugin-specific options (fully serializable, no field collisions) */
+  options?: Record<string, any>;
 }
 
 /**
@@ -68,10 +72,15 @@ export interface PluginConfigWithOptions<T = any> {
  * // Simple string
  * 'drag-element'
  * 
- * // With options
+ * // Wrapper pattern with plugin/key/options
  * {
- *   plugin: 'drag-element',
- *   options: { threshold: 5 }
+ *   plugin: 'background',
+ *   key: 'my-background',
+ *   options: {
+ *     type: 'pattern',
+ *     patternType: 'grid',
+ *     backgroundColor: '#f0f2f5'
+ *   }
  * }
  * 
  * // Direct instance (not serializable)
@@ -80,7 +89,7 @@ export interface PluginConfigWithOptions<T = any> {
  */
 export type PluginConfig =
   | string  // Simple: 'drag-element'
-  | PluginConfigWithOptions  // With options
+  | PluginConfigWithOptions  // Wrapper pattern with plugin/key/options
   | CanvasPlugin;  // Direct instance (not serializable)
 
 /**
