@@ -375,6 +375,16 @@ export abstract class RendererEdgeBase extends RendererBase<RendererEdge> {
     this.update();
   }
 
+  /**
+   * Mark style as dirty to force re-computation on next getActiveStyle() call
+   * Useful when programmatically updating edgeStyle and need to invalidate cache
+   */
+  markStyleDirty(): void {
+    this._styleDirty = true;
+    this._cachedStyle = null;
+    this._styleHash = '';
+  }
+
   get source(): Point {
     return this._data.source;
   }

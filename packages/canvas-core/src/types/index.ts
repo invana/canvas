@@ -99,31 +99,7 @@ export interface ProcessorContext {
   event?: CanvasEvent;
 }
 
-// =============================================================================
-// Canvas Options
-// =============================================================================
-
-export interface CanvasOptions {
-  container: HTMLElement;
-  width?: number;
-  height?: number;
-  backgroundColor?: number;
-  antialias?: boolean;
-  resolution?: number;
-  // Feature flags
-  enableDragging?: boolean;
-  enableSelection?: boolean;
-  enableHover?: boolean;
-  enableZoom?: boolean;
-  enablePan?: boolean;
-  // Limits
-  minZoom?: number;
-  maxZoom?: number;
-  // Processors
-  processors?: ProcessorConfig[];
-  // Layers
-  layers?: LayerConfig[];
-}
+// Note: CanvasOptions is now exported from Canvas.ts
 
 // =============================================================================
 // Shape Instance Types  

@@ -28,12 +28,6 @@
 import { Container } from 'pixi.js';
 import { Registry } from './Registry';
 import { 
-  resolveNodeStyle,
-  resolveEdgeStyle,
-  type FunctionBasedNodeStyle, 
-  type FunctionBasedEdgeStyle 
-} from '../style/FunctionBasedStyle';
-import { 
   RendererNodeBase, 
   type RendererNode, 
   type NodeStyle,
@@ -130,20 +124,14 @@ export interface CanvasEdge {
  * Renderer options
  */
 export interface RendererOptions {
+  /** Reference to Canvas for data queries */
+  canvas: any; // Will be properly typed later
   /** The registry for drawing primitives */
   registry: Registry;
   /** The node layer container */
   nodeLayer: Container;
   /** The edge layer container */
   edgeLayer: Container;
-  /** Default node style (supports function-based properties) */
-  defaultNodeStyle?: Partial<FunctionBasedNodeStyle>;
-  /** User-provided node style (supports function-based properties) */
-  userNodeStyle?: Partial<FunctionBasedNodeStyle>;
-  /** Default edge style (supports function-based properties) */
-  defaultEdgeStyle?: Partial<FunctionBasedEdgeStyle>;
-  /** User-provided edge style (supports function-based properties) */
-  userEdgeStyle?: Partial<FunctionBasedEdgeStyle>;
   /** Offset from node boundary for edges */
   edgeBoundaryOffset?: number;
   /** Callback when a node is dragged */
@@ -166,34 +154,23 @@ interface EdgeTracking {
 // ============================================================================
 
 export class Renderer {
+  private _canvas: any; // Reference to Canvas for data queries
   private _registry: Registry;
   private _nodeLayer: Container;
   private _edgeLayer: Container;
   
-  // Graphics storage
+  // Graphics storage ONLY - no data storage
   private _nodes: Map<string, RendererNodeBase> = new Map();
   private _edges: Map<string, EdgeTracking> = new Map();
   
   // Node-edge relationships (node ID → set of edge IDs)
   private _nodeEdges: Map<string, Set<string>> = new Map();
-  
-  // Styles (may contain function-based properties)
-  private _defaultNodeStyle: Partial<FunctionBasedNodeStyle>;
-  private _userNodeStyle: Partial<FunctionBasedNodeStyle>;
-  private _defaultEdgeStyle: Partial<FunctionBasedEdgeStyle>;
-  private _userEdgeStyle: Partial<FunctionBasedEdgeStyle>;
-  
-  // Callbacks
 
   constructor(options: RendererOptions) {
+    this._canvas = options.canvas;
     this._registry = options.registry;
     this._nodeLayer = options.nodeLayer;
     this._edgeLayer = options.edgeLayer;
-    
-    this._defaultNodeStyle = options.defaultNodeStyle ?? {};
-    this._userNodeStyle = options.userNodeStyle ?? {};
-    this._defaultEdgeStyle = options.defaultEdgeStyle ?? {};
-    this._userEdgeStyle = options.userEdgeStyle ?? {};
   }
 
   // =========================================================================
@@ -206,7 +183,7 @@ export class Renderer {
   addNode(input: CanvasNode): RendererNodeBase {
     const { 
       id, x, y, label, shape, size, width, height, cornerRadius, payload, badges,
-      style, states 
+      states 
     } = input;
     
     // Create node data structure first (needed for function evaluation)
@@ -224,13 +201,8 @@ export class Renderer {
       badges,
     };
     
-    // Resolve styles with function-based property evaluation
-    const mergedStyle = resolveNodeStyle(
-      nodeData,
-      this._defaultNodeStyle,
-      this._userNodeStyle,
-      style as Partial<FunctionBasedNodeStyle>
-    );
+    // Get resolved style from Canvas (single source of truth)
+    const mergedStyle = this._canvas.resolveNodeStyle(id);
     
     // Create node using registry
     const shapeType = shape ?? 'circle';
@@ -351,7 +323,7 @@ export class Renderer {
   addEdge(input: CanvasEdge): RendererEdgeBase {
     const { 
       id, source, target, pathType, curvature, sourceDirection, targetDirection,
-      arrowSource, arrowTarget, arrowSize, label, payload, style, states 
+      arrowSource, arrowTarget, arrowSize, label, payload, states 
     } = input;
     
     // Resolve source and target
@@ -396,13 +368,8 @@ export class Renderer {
       payload,
     } as RendererEdge;
     
-    // Resolve edge styles with function-based property evaluation
-    const mergedStyle = resolveEdgeStyle(
-      edgeShapeData,
-      this._defaultEdgeStyle,
-      this._userEdgeStyle,
-      style as Partial<FunctionBasedEdgeStyle>
-    );
+    // Get resolved style from Canvas (single source of truth)
+    const mergedStyle = this._canvas.resolveEdgeStyle(id);
     
     // Create the actual edge
     const edge = new (EdgeClass ?? LineEdge)({
@@ -724,57 +691,33 @@ export class Renderer {
   // =========================================================================
 
   /**
-   * Update user-defined node styles
-   * Used when changing themes or global style configurations
-   */
-  setUserNodeStyle(style: Partial<FunctionBasedNodeStyle>): void {
-    this._userNodeStyle = style;
-  }
-
-  /**
-   * Update user-defined edge styles
-   * Used when changing themes or global style configurations
-   */
-  setUserEdgeStyle(style: Partial<FunctionBasedEdgeStyle>): void {
-    this._userEdgeStyle = style;
-  }
-
-  /**
    * Re-apply styles to all existing nodes and edges
-   * Used when theme/global styles change and need to be propagated to existing elements
+   * Query Canvas for fresh resolved styles
    */
   reapplyStylesToAll(): void {
+    // Clear global style cache to force recomputation with new theme
+    RendererNodeBase.clearGlobalStyleCache();
+    
     // Re-resolve and apply styles to all nodes
     for (const node of this._nodes.values()) {
-      const nodeData = node.data as RendererNode;
+      // Get fresh resolved style from Canvas (single source of truth)
+      const mergedStyle = this._canvas.resolveNodeStyle(node.id);
       
-      // Re-resolve styles with updated user styles
-      const mergedStyle = resolveNodeStyle(
-        nodeData,
-        this._defaultNodeStyle,
-        this._userNodeStyle,
-        node.nodeStyle as Partial<FunctionBasedNodeStyle>
-      );
-      
-      // Update node style and force re-render
+      // Update node style and trigger re-render
       node.nodeStyle = mergedStyle;
+      node.markStyleDirty();
       node.forceRender();
     }
     
     // Re-resolve and apply styles to all edges
     for (const { edge } of this._edges.values()) {
-      const edgeData = edge.data as RendererEdge;
+      // Get fresh resolved style from Canvas (single source of truth)
+      const mergedStyle = this._canvas.resolveEdgeStyle(edge.id);
       
-      // Re-resolve styles with updated user styles
-      const mergedStyle = resolveEdgeStyle(
-        edgeData,
-        this._defaultEdgeStyle,
-        this._userEdgeStyle,
-        edge.edgeStyle as Partial<FunctionBasedEdgeStyle>
-      );
-      
-      // Update edge style and force re-render
-      edge.edgeStyle = mergedStyle;
+      // Update edge style and trigger re-render
+      (edge as any)._edgeStyle = mergedStyle;
+      (edge as any)._style = mergedStyle;
+      edge.markStyleDirty();
       edge.forceRender();
     }
   }

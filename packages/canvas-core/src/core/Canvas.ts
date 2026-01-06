@@ -36,7 +36,9 @@ import { Application, Container } from 'pixi.js';
 import { Viewport, type ViewportOptions } from '../viewport/Viewport';
 import { Registry } from '../rendering/Registry';
 import { Renderer, type CanvasNode, type CanvasEdge } from '../rendering/Renderer';
-import { type FunctionBasedNodeStyle, type FunctionBasedEdgeStyle } from '../style/FunctionBasedStyle';
+import { type FunctionBasedNodeStyle, type FunctionBasedEdgeStyle, resolveNodeStyle, resolveEdgeStyle } from '../style/FunctionBasedStyle';
+import { type NodeStyle } from '../elements/nodes';
+import { type EdgeStyle } from '../elements/edges';
 import { DEFAULT_NODE_STYLE } from '../defaults/nodes';
 import { DEFAULT_EDGE_STYLE } from '../defaults/edges';
 import { SceneGraph } from '../scene/SceneGraph';
@@ -46,7 +48,6 @@ import { LayerManager } from '../layers/LayerManager';
 import type { CanvasPlugin, PluginRegistrationOptions, PluginConfig, BehaviorPreset } from '../plugins/types';
 import { PluginRegistry } from '../plugins/registry';
 import type { Bounds } from '../scene/SpatialIndex';
-import type { BackgroundStyle } from '../types';
 
 // Type aliases for scene graph integration
 type SceneNodeData = any;
@@ -150,6 +151,10 @@ export class Canvas {
   // Plugins with metadata (including user-defined keys)
   private _plugins: Map<string, { plugin: CanvasPlugin; userKey?: string }> = new Map();
 
+  // Data storage - Single source of truth
+  private _nodeData: Map<string, CanvasNode> = new Map();
+  private _edgeData: Map<string, CanvasEdge> = new Map();
+
   // Complete internal state for all options
   private _options: CanvasOptions;
 
@@ -228,8 +233,8 @@ export class Canvas {
 
     // Create viewport with pixi-viewport
     this._viewport = new Viewport({
-      width: this._options.width,
-      height: this._options.height,
+      width: this._options.width ?? 800,
+      height: this._options.height ?? 600,
       events: this._app.renderer.events,
       ...this._options.viewport,
     });
@@ -245,15 +250,12 @@ export class Canvas {
     this._edgeLayer = edgeGroup.getLayer('shapes')!.container;
     this._nodeLayer = nodeGroup.getLayer('shapes')!.container;
 
-    // Create renderer with function-based styling support
+    // Create renderer with reference to Canvas for data queries
     this._renderer = new Renderer({
+      canvas: this,  // Pass Canvas reference
       registry: this._registry,
       nodeLayer: this._nodeLayer,
       edgeLayer: this._edgeLayer,
-      defaultNodeStyle: DEFAULT_NODE_STYLE,
-      userNodeStyle: this._options.styles.node,
-      defaultEdgeStyle: DEFAULT_EDGE_STYLE,
-      userEdgeStyle: this._options.styles.edge,
       edgeBoundaryOffset: this._options.edgeBoundaryOffset,
     });
 
@@ -368,12 +370,12 @@ export class Canvas {
 
   /** Canvas width */
   get width(): number {
-    return this._options.width;
+    return this._options.width ?? 800;
   }
 
   /** Canvas height */
   get height(): number {
-    return this._options.height;
+    return this._options.height ?? 600;
   }
 
   /** Whether canvas is initialized */
@@ -384,8 +386,8 @@ export class Canvas {
   /** Current canvas state */
   get state(): CanvasState {
     return {
-      width: this._options.width,
-      height: this._options.height,
+      width: this._options.width ?? 800,
+      height: this._options.height ?? 600,
       viewport: this._viewport?.state ?? { x: 0, y: 0, zoom: 1 },
       nodeCount: this._renderer?.nodeCount ?? 0,
       edgeCount: this._renderer?.edgeCount ?? 0,
@@ -419,8 +421,20 @@ export class Canvas {
     // Clear existing content
     this._renderer.clear();
     this._scene.clear();
+    this._nodeData.clear();
+    this._edgeData.clear();
 
-    // Add all nodes first
+    // Store node data in Canvas
+    (dataToRender.nodes || []).forEach(node => {
+      this._nodeData.set(node.id as string, node);
+    });
+
+    // Store edge data in Canvas
+    (dataToRender.edges || []).forEach(edge => {
+      this._edgeData.set(edge.id as string, edge);
+    });
+
+    // Add all nodes to renderer (renderer will query Canvas for data)
     this._renderer.addNodes(dataToRender.nodes || []);
     
     // Register nodes in scene graph
@@ -459,17 +473,48 @@ export class Canvas {
   setStyles(styles: CanvasStyles): void {
     this._options.styles = styles;
     
-    // Update renderer's user styles so new nodes/edges use the new theme
+    // Trigger re-render of all existing nodes/edges with new styles
     if (this._renderer) {
-      if (styles.node) {
-        this._renderer.setUserNodeStyle(styles.node);
-      }
-      if (styles.edge) {
-        this._renderer.setUserEdgeStyle(styles.edge);
-      }
+      this._renderer.reapplyStylesToAll();
     }
-    
-    // Note: styles only apply to new elements, existing elements are not updated
+  }
+
+  /**
+   * Resolve node style: merges default + global + individual styles
+   * Single source of truth for node styling
+   */
+  resolveNodeStyle(nodeId: string): Partial<NodeStyle> {
+    const nodeData = this._nodeData.get(nodeId);
+    if (!nodeData) {
+      throw new Error(`Node ${nodeId} not found`);
+    }
+
+    // Cast CanvasNode to RendererNode (compatible structure)
+    return resolveNodeStyle(
+      nodeData as any,
+      DEFAULT_NODE_STYLE,
+      this._options.styles?.node,
+      nodeData.style as any
+    );
+  }
+
+  /**
+   * Resolve edge style: merges default + global + individual styles
+   * Single source of truth for edge styling
+   */
+  resolveEdgeStyle(edgeId: string): Partial<EdgeStyle> {
+    const edgeData = this._edgeData.get(edgeId);
+    if (!edgeData) {
+      throw new Error(`Edge ${edgeId} not found`);
+    }
+
+    // Cast CanvasEdge to RendererEdge (compatible structure)
+    return resolveEdgeStyle(
+      edgeData as any,
+      DEFAULT_EDGE_STYLE,
+      this._options.styles?.edge,
+      edgeData.style as any
+    );
   }
 
   /**

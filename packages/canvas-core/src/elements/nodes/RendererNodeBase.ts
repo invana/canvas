@@ -344,6 +344,7 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
   set nodeStyle(value: Partial<NodeStyle>) {
     this._nodeStyle = value;
     this._style = value;
+    this._styleId = ++RendererNodeBase._styleIdCounter; // Generate new ID for new style
     this._styleDirty = true;
     this.markDirty();
   }
@@ -516,6 +517,24 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
     this.update();
   }
 
+  /**
+   * Mark style as dirty to force re-computation on next getActiveStyle() call
+   * Useful when programmatically updating nodeStyle and need to invalidate cache
+   */
+  markStyleDirty(): void {
+    this._styleDirty = true;
+    this._cachedStyle = null;
+    this._styleHash = '';
+  }
+
+  /**
+   * Clear the global style cache (used when theme changes)
+   * @internal
+   */
+  static clearGlobalStyleCache(): void {
+    RendererNodeBase._globalStyleCache.clear();
+  }
+
   // =========================================================================
   // STYLE HELPERS
   // =========================================================================
@@ -527,8 +546,11 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
   protected getActiveStyle(): ShapeStyle {
     // OPTIMIZATION: Return cached style if not dirty
     if (!this._styleDirty && this._cachedStyle) {
+      console.log('getActiveStyle: Using cached (not dirty)', { id: this.id });
       return this._cachedStyle;
     }
+    
+    console.log('getActiveStyle: Recomputing (_styleDirty=' + this._styleDirty + ')', { id: this.id });
     
     // OPTIMIZATION: Check global cache (shared between nodes with same states)
     const hashCode = this.computeStyleHash();

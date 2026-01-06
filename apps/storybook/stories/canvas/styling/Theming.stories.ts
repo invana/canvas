@@ -197,7 +197,7 @@ export const Theming: Story = {
             plugins: [
               theme.background
             ]
-          } as any);
+          });
         });
   }
 };
