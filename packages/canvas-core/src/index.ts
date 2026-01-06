@@ -43,7 +43,7 @@
  * ## Quick Start
  * 
  * ```typescript
- * import { Canvas } from '@invana/canvas-core';
+ * import { Canvas, GraphDataPlugin } from '@invana/canvas-core';
  * 
  * const canvas = new Canvas({
  *   container: document.getElementById('app')!,
@@ -53,8 +53,12 @@
  * 
  * await canvas.init();
  * 
+ * // Add graph visualization plugin
+ * const graphPlugin = new GraphDataPlugin();
+ * await canvas.registerPlugin(graphPlugin);
+ * 
  * // Render nodes and edges
- * canvas.render({
+ * graphPlugin.setData({
  *   nodes: [
  *     { id: 'n1', x: 100, y: 200, shape: 'circle', label: 'Node 1' },
  *     { id: 'n2', x: 400, y: 200, shape: 'roundedRect', label: 'Node 2' },
@@ -72,10 +76,8 @@
 
 export { Canvas } from './core';
 export type { 
-  CanvasOptions, 
-  CanvasData, 
- 
-  CanvasStyles 
+  CanvasOptions,
+  CanvasState
 } from './core';
 
 // ============================================================================
@@ -107,14 +109,15 @@ export type {
 // ============================================================================
 
 export { Layer, LayerManager, LayerGroup } from './layers';
-export type { LayerConfig, LayerType } from './types';
 
 // ============================================================================
 // PLUGINS
 // ============================================================================
 
 export type { 
-  CanvasPlugin, 
+  CanvasPlugin,
+  LayerType,
+  LayerConfig,
   LayerGroupConfig, 
   PluginRegistrationOptions, 
   PluginConfig, 
@@ -124,6 +127,9 @@ export type {
 export { PluginRegistry, BEHAVIOR_PRESETS, type PluginConstructor } from './plugins/registry';
 
 // Core plugins
+export { GraphDataPlugin } from './plugins/GraphDataPlugin';
+export type { GraphData, GraphStyles, GraphDataPluginOptions } from './plugins/GraphDataPlugin';
+
 export { GroupsPlugin } from './plugins/GroupsPlugin';
 export type { GroupConfig } from './plugins/GroupsPlugin';
 export { BackgroundPlugin } from './plugins/BackgroundPlugin';

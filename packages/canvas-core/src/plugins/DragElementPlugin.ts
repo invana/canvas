@@ -57,7 +57,9 @@ interface DragData {
 export class DragElementPlugin implements CanvasPlugin {
   readonly id = 'drag-element';
   readonly name = 'Drag Element';
-  readonly layerGroups = [];
+  getLayers() {
+    return [];
+  }
 
   private _canvas: Canvas | null = null;
   private _viewport: Viewport | null = null;
@@ -104,8 +106,11 @@ export class DragElementPlugin implements CanvasPlugin {
   private setupExistingNodes(): void {
     if (!this._canvas) return;
 
-    const nodes = this._canvas.renderer.getNodes();
-    nodes.forEach(node => {
+    const graphPlugin = this._canvas.getPlugin('graph-data') as any;
+    if (!graphPlugin?.renderer) return;
+    
+    const nodes = graphPlugin.renderer.getNodes();
+    nodes.forEach((node: any) => {
       this.makeNodeDraggable(node);
     });
   }
@@ -255,8 +260,11 @@ export class DragElementPlugin implements CanvasPlugin {
   private updateConnectedEdges(node: RendererNodeBase): void {
     if (!this._canvas) return;
 
+    const graphPlugin = this._canvas.getPlugin('graph-data') as any;
+    if (!graphPlugin?.renderer) return;
+
     // Use renderer's update method which handles edge updates
-    this._canvas.renderer.updateNode(node.id, {
+    graphPlugin.renderer.updateNode(node.id, {
       x: node.x,
       y: node.y,
     });
@@ -289,13 +297,16 @@ export class DragElementPlugin implements CanvasPlugin {
 
     // Clean up node cursors
     if (this._canvas) {
-      const nodes = this._canvas.renderer.getNodes();
-      nodes.forEach(node => {
-        const original = this._originalCursors.get(node) || 'default';
-        node.cursor = original;
-        node.off('pointerover');
-        node.off('pointerout');
-      });
+      const graphPlugin = this._canvas.getPlugin('graph-data') as any;
+      if (graphPlugin?.renderer) {
+        const nodes = graphPlugin.renderer.getNodes();
+        nodes.forEach((node: any) => {
+          const original = this._originalCursors.get(node) || 'default';
+          node.cursor = original;
+          node.off('pointerover');
+          node.off('pointerout');
+        });
+      }
     }
 
     this._canvas = null;

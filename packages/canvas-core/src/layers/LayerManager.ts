@@ -5,30 +5,19 @@
 
 import { Container } from 'pixi.js';
 import { LayerGroup } from './LayerGroup';
-import type { LayerGroupConfig } from '../plugins/types';
+import type { LayerGroupConfig, LayerConfig } from '../plugins/types';
 import type { Layer } from './Layer';
 
 export class LayerManager {
   private _scene: Container;
   private _groups: Map<string, LayerGroup> = new Map();
-  private _nextZIndex: number = 300; // Start for plugins
 
   constructor(scene: Container) {
     this._scene = scene;
     this._scene.sortableChildren = true;
     
-    // Register core layers
-    this.registerGroup({
-      id: 'core-edges',
-      baseZIndex: 100,
-      layers: ['shapes', 'labels']
-    });
-    
-    this.registerGroup({
-      id: 'core-nodes',
-      baseZIndex: 200,
-      layers: ['shapes', 'labels']
-    });
+    // LayerManager is now a pure orchestrator
+    // Layers are registered by plugins (e.g., GraphDataPlugin registers graph layers)
   }
 
   /**
@@ -40,12 +29,12 @@ export class LayerManager {
       throw new Error(`Layer group '${config.id}' already registered`);
     }
 
-    const baseZIndex = config.baseZIndex ?? this.allocateZIndex();
+    const baseZIndex = config.zIndex;
     const group = new LayerGroup(config.id, baseZIndex);
     
     // Create layers
-    config.layers.forEach((layerName, index) => {
-      const layer = group.createLayer(layerName, baseZIndex + index);
+    config.layers.forEach((layerConfig: LayerConfig, index: number) => {
+      const layer = group.createLayer(layerConfig.id, baseZIndex + index);
       this._scene.addChild(layer.container);
     });
     
@@ -65,15 +54,6 @@ export class LayerManager {
    */
   getLayer(groupId: string, layerName: string): Layer | undefined {
     return this._groups.get(groupId)?.getLayer(layerName);
-  }
-
-  /**
-   * Allocate z-index block for plugin
-   */
-  private allocateZIndex(): number {
-    const zIndex = this._nextZIndex;
-    this._nextZIndex += 100; // Allocate in blocks of 100
-    return zIndex;
   }
 
   /**

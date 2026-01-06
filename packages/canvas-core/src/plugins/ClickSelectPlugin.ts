@@ -46,7 +46,9 @@ export interface ClickSelectOptions {
 export class ClickSelectPlugin implements CanvasPlugin {
   readonly id = 'click-select';
   readonly name = 'Click Select';
-  readonly layerGroups = [];
+  getLayers() {
+    return [];
+  }
 
   private _canvas: Canvas | null = null;
   private _options: Required<ClickSelectOptions>;
@@ -82,15 +84,18 @@ export class ClickSelectPlugin implements CanvasPlugin {
   private setupExistingElements(): void {
     if (!this._canvas) return;
 
+    const graphPlugin = this._canvas.getPlugin('graph-data') as any;
+    if (!graphPlugin?.renderer) return;
+
     // Make all nodes selectable
-    const nodes = this._canvas.renderer.getNodes();
-    nodes.forEach(node => {
+    const nodes = graphPlugin.renderer.getNodes();
+    nodes.forEach((node: any) => {
       this.makeElementSelectable(node);
     });
 
     // Make all edges selectable
-    const edges = this._canvas.renderer.getEdges();
-    edges.forEach(edge => {
+    const edges = graphPlugin.renderer.getEdges();
+    edges.forEach((edge: any) => {
       this.makeElementSelectable(edge);
     });
   }
@@ -278,15 +283,18 @@ export class ClickSelectPlugin implements CanvasPlugin {
     if (this._canvas) {
       this._canvas.viewport?.off('pointerdown', this.onBackgroundClick);
 
-      const nodes = this._canvas.renderer.getNodes();
-      nodes.forEach(node => {
-        node.off('pointerdown');
-      });
+      const graphPlugin = this._canvas.getPlugin('graph-data') as any;
+      if (graphPlugin?.renderer) {
+        const nodes = graphPlugin.renderer.getNodes();
+        nodes.forEach((node: any) => {
+          node.off('pointerdown');
+        });
 
-      const edges = this._canvas.renderer.getEdges();
-      edges.forEach(edge => {
-        edge.off('pointerdown');
-      });
+        const edges = graphPlugin.renderer.getEdges();
+        edges.forEach((edge: any) => {
+          edge.off('pointerdown');
+        });
+      }
     }
 
     this._canvas = null;

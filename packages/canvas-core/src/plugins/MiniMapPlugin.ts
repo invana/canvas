@@ -45,7 +45,9 @@ export interface MiniMapOptions {
 export class MiniMapPlugin implements CanvasPlugin {
   readonly id = 'minimap';
   readonly name = 'MiniMap';
-  readonly layerGroups = [];
+  getLayers() {
+    return [];
+  }
 
   private _canvas: Canvas | null = null;
   private _viewport: Viewport | null = null;
@@ -256,15 +258,18 @@ export class MiniMapPlugin implements CanvasPlugin {
   private renderWorld(): void {
     if (!this._worldGraphics || !this._canvas) return;
 
-    const nodes = this._canvas.renderer.getNodes();
-    const edges = this._canvas.renderer.getEdges();
+    const graphPlugin = this._canvas.getPlugin('graph-data') as any;
+    if (!graphPlugin?.renderer) return;
+    
+    const nodes = graphPlugin.renderer.getNodes();
+    const edges = graphPlugin.renderer.getEdges();
 
     this._worldGraphics.clear();
 
     // Draw edges
-    edges.forEach(edge => {
-      const source = nodes.find(n => n.id === edge.data.source?.toString());
-      const target = nodes.find(n => n.id === edge.data.target?.toString());
+    edges.forEach((edge: any) => {
+      const source = nodes.find((n: any) => n.id === edge.data.source?.toString());
+      const target = nodes.find((n: any) => n.id === edge.data.target?.toString());
       
       if (source && target) {
         const p1 = this.worldToMinimap(source.x, source.y);
@@ -277,7 +282,7 @@ export class MiniMapPlugin implements CanvasPlugin {
     });
 
     // Draw nodes
-    nodes.forEach(node => {
+    nodes.forEach((node: any) => {
       const pos = this.worldToMinimap(node.x, node.y);
       // Use a minimum visible size for nodes (at least 3px, up to 8px)
       const scaledSize = ((node.data.size ?? 30) / 2) * this._scale;

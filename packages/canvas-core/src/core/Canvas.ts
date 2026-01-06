@@ -2,7 +2,8 @@
  * Canvas
  * 
  * The main entry point for creating high-performance canvas visualizations.
- * Orchestrates the PixiJS Application, Viewport, Registry, and Renderer.
+ * A lightweight orchestrator that manages viewport (pan/zoom) and layers.
+ * All rendering is done via plugins (e.g., GraphDataPlugin for graph visualization).
  * 
  * @example
  * ```typescript
@@ -14,13 +15,12 @@
  * 
  * await canvas.init();
  * 
- * // Add graphics via renderer
- * canvas.renderer.addNode({ id: 'n1', x: 100, y: 100, shape: 'circle' });
- * canvas.renderer.addNode({ id: 'n2', x: 300, y: 200, shape: 'rect' });
- * canvas.renderer.addEdge({ id: 'e1', source: 'n1', target: 'n2', pathType: 'bezier' });
+ * // Add graph visualization plugin
+ * const graphPlugin = new GraphDataPlugin();
+ * await canvas.registerPlugin(graphPlugin);
  * 
- * // Or render from data
- * canvas.render({
+ * // Render graph data via plugin
+ * graphPlugin.setData({
  *   nodes: [
  *     { id: 'n1', x: 100, y: 100, shape: 'circle' },
  *     { id: 'n2', x: 300, y: 200, shape: 'rect' },
@@ -32,15 +32,9 @@
  * ```
  */
 
-import { Application, Container } from 'pixi.js';
+import { Application } from 'pixi.js';
 import { Viewport, type ViewportOptions } from '../viewport/Viewport';
 import { Registry } from '../rendering/Registry';
-import { Renderer, type CanvasNode, type CanvasEdge } from '../rendering/Renderer';
-import { type FunctionBasedNodeStyle, type FunctionBasedEdgeStyle, resolveNodeStyle, resolveEdgeStyle } from '../style/FunctionBasedStyle';
-import { type NodeStyle } from '../elements/nodes';
-import { type EdgeStyle } from '../elements/edges';
-import { DEFAULT_NODE_STYLE } from '../defaults/nodes';
-import { DEFAULT_EDGE_STYLE } from '../defaults/edges';
 import { LayerManager } from '../layers/LayerManager';
 import type { CanvasPlugin, PluginRegistrationOptions, PluginConfig, BehaviorPreset } from '../plugins/types';
 import { PluginRegistry } from '../plugins/registry';
@@ -48,26 +42,6 @@ import { PluginRegistry } from '../plugins/registry';
 // ============================================================================
 // TYPES
 // ============================================================================
-
-/**
- * Data structure for Canvas
- */
-export interface CanvasData {
-  /** Array of node configurations */
-  nodes: CanvasNode[];
-  /** Array of edge configurations */
-  edges: CanvasEdge[];
-}
-
-/**
- * Default styles for nodes and edges (supports function-based properties)
- */
-export interface CanvasStyles {
-  /** Default node style (can include function-based properties) */
-  node?: Partial<FunctionBasedNodeStyle>;
-  /** Default edge style (can include function-based properties) */
-  edge?: Partial<FunctionBasedEdgeStyle>;
-}
 
 /**
  * Canvas configuration options
@@ -91,16 +65,6 @@ export interface CanvasOptions {
   registry?: Registry;
   /** Enable antialiasing */
   antialias?: boolean;
-  /** Data to render (nodes and edges) */
-  data?: CanvasData;
-  /** Default styles for nodes and edges */
-  styles?: CanvasStyles;
-  /** Fit content to view after rendering */
-  fitOnRender?: boolean;
-  /** Padding for fit content */
-  fitPadding?: number;
-  /** Offset from node boundary for edges */
-  edgeBoundaryOffset?: number;
   /** Behavior preset for common plugin combinations */
   behavior?: BehaviorPreset;
   /** Additional plugins to load (serializable) */
@@ -118,8 +82,6 @@ export interface CanvasState {
     y: number;
     zoom: number;
   };
-  nodeCount: number;
-  edgeCount: number;
 }
 
 // ============================================================================
@@ -131,20 +93,13 @@ export class Canvas {
   private _app: Application | null = null;
   private _viewport: Viewport | null = null;
   private _registry: Registry;
-  private _renderer: Renderer | null = null;
   private _initialized: boolean = false;
 
   // Layers
   private _layerManager: LayerManager | null = null;
-  private _edgeLayer: Container | null = null;
-  private _nodeLayer: Container | null = null;
 
   // Plugins with metadata (including user-defined keys)
   private _plugins: Map<string, { plugin: CanvasPlugin; userKey?: string }> = new Map();
-
-  // Data storage - Single source of truth
-  private _nodeData: Map<string, CanvasNode> = new Map();
-  private _edgeData: Map<string, CanvasEdge> = new Map();
 
   // Complete internal state for all options
   private _options: CanvasOptions;
@@ -174,26 +129,10 @@ export class Canvas {
       viewport: options.viewport ?? {},
       registry: this._registry,
       antialias: options.antialias ?? true,
-      fitOnRender: options.fitOnRender ?? true,
-      fitPadding: options.fitPadding ?? 50,
-      edgeBoundaryOffset: options.edgeBoundaryOffset ?? 2,
       behavior: options.behavior ?? 'default',
-      styles: options.styles ?? {},
-      data: options.data,
       plugins: options.plugins,
     };
-
-    // If data provided, store for rendering after init
-    if (options.data) {
-      this._pendingData = options.data;
-    }
   }
-
-  private _pendingData: CanvasData | null = null;
-  private _pluginConfigs: {
-    behavior?: BehaviorPreset;
-    plugins?: PluginConfig[];
-  } = {};
 
   // =========================================================================
   // INITIALIZATION
@@ -233,35 +172,13 @@ export class Canvas {
     // Create layer manager (viewport itself is the content container)
     this._layerManager = new LayerManager(this._viewport);
 
-    // Get core layers
-    const edgeGroup = this._layerManager.getGroup('core-edges')!;
-    const nodeGroup = this._layerManager.getGroup('core-nodes')!;
-
-    this._edgeLayer = edgeGroup.getLayer('shapes')!.container;
-    this._nodeLayer = nodeGroup.getLayer('shapes')!.container;
-
-    // Create renderer with reference to Canvas for data queries
-    this._renderer = new Renderer({
-      canvas: this,  // Pass Canvas reference
-      registry: this._registry,
-      nodeLayer: this._nodeLayer,
-      edgeLayer: this._edgeLayer,
-      edgeBoundaryOffset: this._options.edgeBoundaryOffset,
-    });
-
     // Prevent browser context menu on canvas
     const canvasEl = this._app.canvas as HTMLCanvasElement;
     canvasEl.addEventListener('contextmenu', (e) => e.preventDefault());
 
     this._initialized = true;
 
-    // Render pending data if provided in constructor
-    if (this._pendingData) {
-      this.render(this._pendingData);
-      this._pendingData = null;
-    }
-
-    // Initialize plugins AFTER initial data render so they can setup existing nodes
+    // Initialize plugins
     await this.initializePlugins();
   }
 
@@ -279,17 +196,12 @@ export class Canvas {
       pluginConfigs.push(...presetIds);
     }
 
-    // 3. Add G6-style plugins from options
+    // 2. Add plugins from options
     if (this._options.plugins) {
       pluginConfigs.push(...this._options.plugins);
     }
 
-    // 4. Add legacy plugins from _pluginConfigs (for backwards compatibility)
-    if (this._pluginConfigs.plugins) {
-      pluginConfigs.push(...this._pluginConfigs.plugins);
-    }
-
-    // 5. Create and register all plugins
+    // 3. Create and register all plugins
     for (const config of pluginConfigs) {
       try {
         const { plugin, key, options } = PluginRegistry.create(config);
@@ -327,24 +239,6 @@ export class Canvas {
     return this._registry;
   }
 
-  /** The Renderer for graphics management */
-  get renderer(): Renderer {
-    if (!this._renderer) {
-      throw new Error('Canvas not initialized. Call init() first.');
-    }
-    return this._renderer;
-  }
-
-  /** Edge layer container */
-  get edgeLayer(): Container | null {
-    return this._edgeLayer;
-  }
-
-  /** Node layer container */
-  get nodeLayer(): Container | null {
-    return this._nodeLayer;
-  }
-
   /** Layer manager for plugin system */
   get layerManager(): LayerManager {
     if (!this._layerManager) {
@@ -374,132 +268,19 @@ export class Canvas {
       width: this._options.width ?? 800,
       height: this._options.height ?? 600,
       viewport: this._viewport?.state ?? { x: 0, y: 0, zoom: 1 },
-      nodeCount: this._renderer?.nodeCount ?? 0,
-      edgeCount: this._renderer?.edgeCount ?? 0,
     };
   }
 
   // =========================================================================
-  // RENDERING
+  // OPTIONS
   // =========================================================================
-
-  /**
-   * Render data (nodes and edges)
-   * Clears existing content and renders from data
-   * If no data is provided, uses data from constructor (if any)
-   */
-  render(data?: CanvasData): void {
-    // Use provided data or pending data
-    const dataToRender = data || this._pendingData;
-    
-    if (!dataToRender) {
-      // No data to render (this is ok if data was already rendered during init)
-      return;
-    }
-
-    if (!this._initialized || !this._renderer) {
-      // Store for rendering after init
-      this._pendingData = dataToRender;
-      return;
-    }
-
-    // Clear existing content
-    this._renderer.clear();
-    this._nodeData.clear();
-    this._edgeData.clear();
-
-    // Store node data in Canvas
-    (dataToRender.nodes || []).forEach(node => {
-      this._nodeData.set(node.id as string, node);
-    });
-
-    // Store edge data in Canvas
-    (dataToRender.edges || []).forEach(edge => {
-      this._edgeData.set(edge.id as string, edge);
-    });
-
-    // Add all nodes to renderer (renderer will query Canvas for data)
-    this._renderer.addNodes(dataToRender.nodes || []);
-
-    // Add all edges (nodes must exist for ID resolution)
-    this._renderer.addEdges(dataToRender.edges || []);
-
-    // Fit content if enabled
-    if (this._options.fitOnRender) {
-      setTimeout(() => this.fitContent(this._options.fitPadding), 0);
-    }
-  }
-
-  /**
-   * Set default styles
-   */
-  setStyles(styles: CanvasStyles): void {
-    this._options.styles = styles;
-    
-    // Trigger re-render of all existing nodes/edges with new styles
-    if (this._renderer) {
-      this._renderer.reapplyStylesToAll();
-    }
-  }
-
-  /**
-   * Resolve node style: merges default + global + individual styles
-   * Single source of truth for node styling
-   */
-  resolveNodeStyle(nodeId: string): Partial<NodeStyle> {
-    const nodeData = this._nodeData.get(nodeId);
-    if (!nodeData) {
-      throw new Error(`Node ${nodeId} not found`);
-    }
-
-    // Cast CanvasNode to RendererNode (compatible structure)
-    return resolveNodeStyle(
-      nodeData as any,
-      DEFAULT_NODE_STYLE,
-      this._options.styles?.node,
-      nodeData.style as any
-    );
-  }
-
-  /**
-   * Resolve edge style: merges default + global + individual styles
-   * Single source of truth for edge styling
-   */
-  resolveEdgeStyle(edgeId: string): Partial<EdgeStyle> {
-    const edgeData = this._edgeData.get(edgeId);
-    if (!edgeData) {
-      throw new Error(`Edge ${edgeId} not found`);
-    }
-
-    // Cast CanvasEdge to RendererEdge (compatible structure)
-    return resolveEdgeStyle(
-      edgeData as any,
-      DEFAULT_EDGE_STYLE,
-      this._options.styles?.edge,
-      edgeData.style as any
-    );
-  }
 
   /**
    * Update canvas options dynamically
    */
   setOptions(options: Partial<CanvasOptions>): void {
-    if (options.edgeBoundaryOffset !== undefined) {
-      this._options.edgeBoundaryOffset = options.edgeBoundaryOffset;
-    }
-    if (options.fitPadding !== undefined) {
-      this._options.fitPadding = options.fitPadding;
-    }
     if (options.behavior !== undefined) {
       this.updateBehavior(options.behavior);
-    }
-    if (options.styles !== undefined) {
-      this.setStyles(options.styles);
-      
-      // Re-apply styles to all existing nodes and edges
-      if (this._renderer) {
-        this._renderer.reapplyStylesToAll();
-      }
     }
     
     // Handle plugin updates with wrapper pattern
@@ -597,25 +378,6 @@ export class Canvas {
   }
 
   // =========================================================================
-  // UTILITY
-  // =========================================================================
-
-  /**
-   * Get the renderer type (webgpu or webgl)
-   */
-  getRendererType(): string {
-    if (!this._app) return 'unknown';
-    return this._app.renderer.type === 0x0001 ? 'webgl' : 'webgpu';
-  }
-
-  /**
-   * Clear all content
-   */
-  clear(): void {
-    this._renderer?.clear();
-  }
-
-  // =========================================================================
   // PLUGIN SYSTEM
   // =========================================================================
 
@@ -634,8 +396,11 @@ export class Canvas {
       throw new Error(`Plugin '${plugin.id}' is already registered`);
     }
 
+    // Get layer groups from plugin
+    const layerGroups = plugin.getLayers();
+
     // Register plugin layer groups
-    for (const groupConfig of plugin.layerGroups) {
+    for (const groupConfig of layerGroups) {
       this._layerManager!.registerGroup(groupConfig);
     }
 
@@ -730,8 +495,9 @@ export class Canvas {
         metadata.plugin.destroy();
       }
 
-      // Unregister layer groups
-      for (const groupConfig of metadata.plugin.layerGroups) {
+      // Get layer groups and unregister them
+      const layerGroups = metadata.plugin.getLayers();
+      for (const groupConfig of layerGroups) {
         this._layerManager?.unregisterGroup(groupConfig.id);
       }
 
@@ -740,107 +506,15 @@ export class Canvas {
   }
 
   // =========================================================================
-  // CONVENIENCE METHODS - Delegate to Renderer
+  // UTILITY
   // =========================================================================
 
   /**
-   * Add a node
+   * Get the renderer type (webgpu or webgl)
    */
-  addNode(input: CanvasNode): void {
-    if (!this._renderer) {
-      throw new Error('Canvas not initialized. Call init() first.');
-    }
-    this._renderer.addNode(input);
-  }
-
-  /**
-   * Update a node
-   */
-  updateNode(id: string, updates: Partial<CanvasNode>): void {
-    if (!this._renderer) {
-      throw new Error('Canvas not initialized. Call init() first.');
-    }
-    this._renderer.updateNode(id, updates);
-  }
-
-  /**
-   * Remove a node
-   */
-  removeNode(id: string): void {
-    if (!this._renderer) {
-      throw new Error('Canvas not initialized. Call init() first.');
-    }
-    this._renderer.removeNode(id);
-  }
-
-  /**
-   * Get a node by ID
-   */
-  getNode(id: string): any {
-    if (!this._renderer) {
-      throw new Error('Canvas not initialized. Call init() first.');
-    }
-    return this._renderer.getNode(id);
-  }
-
-  /**
-   * Get all nodes
-   */
-  getNodes(): any[] {
-    if (!this._renderer) {
-      throw new Error('Canvas not initialized. Call init() first.');
-    }
-    return this._renderer.getNodes();
-  }
-
-  /**
-   * Add an edge
-   */
-  addEdge(input: CanvasEdge): void {
-    if (!this._renderer) {
-      throw new Error('Canvas not initialized. Call init() first.');
-    }
-    this._renderer.addEdge(input);
-  }
-
-  /**
-   * Update an edge
-   */
-  updateEdge(id: string, updates: Partial<CanvasEdge>): void {
-    if (!this._renderer) {
-      throw new Error('Canvas not initialized. Call init() first.');
-    }
-    this._renderer.updateEdge(id, updates);
-  }
-
-  /**
-   * Remove an edge
-   */
-  removeEdge(id: string): void {
-    if (!this._renderer) {
-      throw new Error('Canvas not initialized. Call init() first.');
-    }
-    this._renderer.removeEdge(id);
-  }
-
-  /**
-   * Get an edge by ID
-   */
-  getEdge(id: string): any {
-    if (!this._renderer) {
-      throw new Error('Canvas not initialized. Call init() first.');
-    }
-    return this._renderer.getEdge(id);
-  }
-
-  /**
-   * Get all edges
-   */
-  getEdges(): any[] {
-    if (!this._renderer) {
-      throw new Error('Canvas not initialized. Call init() first.');
-    }
-    return this._renderer.getEdges();
+  getRendererType(): string {
+    if (!this._app) return 'unknown';
+    return this._app.renderer.type === 0x0001 ? 'webgl' : 'webgpu';
   }
 
   /**
@@ -852,8 +526,6 @@ export class Canvas {
     }
     this._app.renderer.background.color = color;
   }
-
-
 
   // =========================================================================
   // CLEANUP
@@ -875,18 +547,12 @@ export class Canvas {
     this._layerManager?.destroy();
     this._layerManager = null;
 
-    // Destroy renderer and scene
-    this._renderer?.destroy();
-    this._renderer = null;
-
     // Destroy viewport and app
     this._viewport?.destroy();
     this._app?.destroy(true, { children: true });
     
     this._app = null;
     this._viewport = null;
-    this._edgeLayer = null;
-    this._nodeLayer = null;
     this._initialized = false;
   }
 }

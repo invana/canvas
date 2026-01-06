@@ -48,7 +48,9 @@ export interface ZoomControlOptions {
 export class ZoomControlPlugin implements CanvasPlugin {
   readonly id = 'zoom-control';
   readonly name = 'Zoom Control';
-  readonly layerGroups = [];
+  getLayers() {
+    return [];
+  }
 
   private _viewport: Viewport | null = null;
   private _options: Required<ZoomControlOptions>;

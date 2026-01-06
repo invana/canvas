@@ -5,17 +5,34 @@
 import type { Canvas } from '../core/Canvas';
 
 /**
- * Layer group configuration
+ * Layer type for different purposes
+ */
+export type LayerType = 'shapes' | 'labels' | 'badges' | 'annotations' | 'background' | 'custom';
+
+/**
+ * Individual layer configuration
+ */
+export interface LayerConfig {
+  /** Layer ID within the group */
+  id: string;
+  /** Layer type */
+  type: LayerType;
+  /** Optional visibility control */
+  visible?: boolean;
+}
+
+/**
+ * Layer group configuration with z-index
  */
 export interface LayerGroupConfig {
-  /** Group ID (e.g., 'plugin-groups', 'core-nodes') */
+  /** Group ID (e.g., 'graph-edges', 'graph-nodes') */
   id: string;
   
-  /** Optional base z-index (auto-allocated if not provided) */
-  baseZIndex?: number;
+  /** z-index for this layer group */
+  zIndex: number;
   
-  /** Layer names (e.g., ['shapes', 'labels']) */
-  layers: string[];
+  /** Layers in this group */
+  layers: LayerConfig[];
 }
 
 /**
@@ -25,11 +42,11 @@ export interface CanvasPlugin {
   /** Unique plugin ID */
   readonly id: string;
   
-  /** Plugin name */
-  readonly name: string;
-  
-  /** Layer groups this plugin needs */
-  readonly layerGroups: LayerGroupConfig[];
+  /**
+   * Define layer groups this plugin needs
+   * Called once during initialization
+   */
+  getLayers(): LayerGroupConfig[];
   
   /**
    * Initialize plugin with canvas instance

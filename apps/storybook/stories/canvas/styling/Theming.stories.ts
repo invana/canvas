@@ -11,7 +11,7 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas } from '@invana/canvas-core';
+import { Canvas, GraphDataPlugin } from '@invana/canvas-core';
 import GUI from 'lil-gui';
 import { createContainer } from '../../../src/div-utils';
 
@@ -159,22 +159,29 @@ export const Theming: Story = {
 
     if (!container) return;
 
-      // let currentTheme = "blueprint";
+      // Create canvas with v2.0 API
       const canvas = new Canvas({
         container,
         width: container.clientWidth || 800,
         height: container.clientHeight || 600,
-        data: generateGraphData(),
         behavior: 'default',
-        styles: themes.blueprint.styles,
-        // Wrapper pattern plugin configuration
         plugins: [
           themes.blueprint.background
         ]
       });
 
       await canvas.init();
-      canvas.render();
+
+      // Create and register GraphDataPlugin
+      const graphPlugin = new GraphDataPlugin({
+        fitOnRender: true,
+        fitPadding: 50
+      });
+      await canvas.registerPlugin(graphPlugin);
+
+      // Set initial data and styles
+      graphPlugin.setData(generateGraphData());
+      graphPlugin.setStyles(themes.blueprint.styles);
 
       // Create GUI for theme switching - positioned at top-right
       const gui = new GUI({ container });
@@ -191,9 +198,11 @@ export const Theming: Story = {
           
           console.log('Switching to theme:', value);
           
-          // Update using wrapper pattern with setOptions
+          // Update graph styles via GraphDataPlugin
+          graphPlugin.setStyles(theme.styles);
+          
+          // Update background via canvas options
           canvas.setOptions({
-            styles: theme.styles,
             plugins: [
               theme.background
             ]

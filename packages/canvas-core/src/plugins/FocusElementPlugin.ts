@@ -50,7 +50,9 @@ export interface FocusElementOptions {
 export class FocusElementPlugin implements CanvasPlugin {
   readonly id = 'focus-element';
   readonly name = 'Focus Element';
-  readonly layerGroups = [];
+  getLayers() {
+    return [];
+  }
 
   private _canvas: Canvas | null = null;
   private _viewport: Viewport | null = null;
@@ -242,14 +244,13 @@ export class FocusElementPlugin implements CanvasPlugin {
 
   /**
    * Fit all content in viewport
+   * @deprecated Use viewport.fitContent() instead
    */
   fitContent(): void {
     if (!this._canvas) return;
-
-    const nodes = this._canvas.renderer.getNodes();
-    if (nodes.length > 0) {
-      this.focusElements(nodes);
-    }
+    // TODO: Plugins need to communicate with GraphDataPlugin to get nodes
+    // For now, just use viewport fitContent
+    this._canvas.viewport?.fitContent(50);
   }
 
   /**

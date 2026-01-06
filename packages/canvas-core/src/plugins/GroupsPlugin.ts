@@ -29,13 +29,19 @@ export interface GroupConfig {
  */
 export class GroupsPlugin implements CanvasPlugin {
   readonly id = 'groups';
-  readonly name = 'Node Groups';
-  readonly layerGroups = [
-    {
-      id: 'plugin-groups',
-      layers: ['shapes', 'labels']
-    }
-  ];
+
+  getLayers() {
+    return [
+      {
+        id: 'plugin-groups',
+        zIndex: 15,
+        layers: [
+          { id: 'shapes', type: 'shapes' as const },
+          { id: 'labels', type: 'labels' as const }
+        ]
+      }
+    ];
+  }
 
   private _shapeLayer: Container | null = null;
   private _labelLayer: Container | null = null;

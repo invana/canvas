@@ -45,7 +45,9 @@ export interface DragCanvasOptions {
 export class DragCanvasPlugin implements CanvasPlugin {
   readonly id = 'drag-canvas';
   readonly name = 'Drag Canvas';
-  readonly layerGroups = [];
+  getLayers() {
+    return [];
+  }
 
   private _viewport: Viewport | null = null;
   private _options: Required<DragCanvasOptions>;

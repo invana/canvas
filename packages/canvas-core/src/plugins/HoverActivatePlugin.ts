@@ -47,7 +47,9 @@ export interface HoverActivateOptions {
 export class HoverActivatePlugin implements CanvasPlugin {
   readonly id = 'hover-activate';
   readonly name = 'Hover Activate';
-  readonly layerGroups = [];
+  getLayers() {
+    return [];
+  }
 
   private _canvas: Canvas | null = null;
   private _options: Required<HoverActivateOptions>;
@@ -78,13 +80,16 @@ export class HoverActivatePlugin implements CanvasPlugin {
   private setupExistingElements(): void {
     if (!this._canvas) return;
 
-    const nodes = this._canvas.renderer.getNodes();
-    nodes.forEach(node => {
+    const graphPlugin = this._canvas.getPlugin('graph-data') as any;
+    if (!graphPlugin?.renderer) return;
+
+    const nodes = graphPlugin.renderer.getNodes();
+    nodes.forEach((node: any) => {
       this.makeElementHoverable(node);
     });
 
-    const edges = this._canvas.renderer.getEdges();
-    edges.forEach(edge => {
+    const edges = graphPlugin.renderer.getEdges();
+    edges.forEach((edge: any) => {
       this.makeElementHoverable(edge);
     });
   }
@@ -221,17 +226,20 @@ export class HoverActivatePlugin implements CanvasPlugin {
 
     // Remove event listeners
     if (this._canvas) {
-      const nodes = this._canvas.renderer.getNodes();
-      nodes.forEach(node => {
-        node.off('pointerover');
-        node.off('pointerout');
-      });
+      const graphPlugin = this._canvas.getPlugin('graph-data') as any;
+      if (graphPlugin?.renderer) {
+        const nodes = graphPlugin.renderer.getNodes();
+        nodes.forEach((node: any) => {
+          node.off('pointerover');
+          node.off('pointerout');
+        });
 
-      const edges = this._canvas.renderer.getEdges();
-      edges.forEach(edge => {
-        edge.off('pointerover');
-        edge.off('pointerout');
-      });
+        const edges = graphPlugin.renderer.getEdges();
+        edges.forEach((edge: any) => {
+          edge.off('pointerover');
+          edge.off('pointerout');
+        });
+      }
     }
 
     this._canvas = null;

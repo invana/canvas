@@ -34,10 +34,11 @@ import { PluginRegistry } from './registry';
 
 export class BackgroundPlugin implements CanvasPlugin {
   readonly id = 'background';
-  readonly name = 'Background Styling';
-  readonly layerGroups = [
-    // Note: We'll manually attach to stage in init() instead of using LayerManager
-  ];
+
+  getLayers() {
+    // Note: We manually attach to stage in init() instead of using LayerManager
+    return [];
+  }
 
   private _canvas: Canvas | null = null;
   private _backgroundLayer: Container | null = null;
