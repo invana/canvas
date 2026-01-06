@@ -546,11 +546,8 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
   protected getActiveStyle(): ShapeStyle {
     // OPTIMIZATION: Return cached style if not dirty
     if (!this._styleDirty && this._cachedStyle) {
-      console.log('getActiveStyle: Using cached (not dirty)', { id: this.id });
       return this._cachedStyle;
     }
-    
-    console.log('getActiveStyle: Recomputing (_styleDirty=' + this._styleDirty + ')', { id: this.id });
     
     // OPTIMIZATION: Check global cache (shared between nodes with same states)
     const hashCode = this.computeStyleHash();

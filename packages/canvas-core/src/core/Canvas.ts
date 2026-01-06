@@ -41,17 +41,9 @@ import { type NodeStyle } from '../elements/nodes';
 import { type EdgeStyle } from '../elements/edges';
 import { DEFAULT_NODE_STYLE } from '../defaults/nodes';
 import { DEFAULT_EDGE_STYLE } from '../defaults/edges';
-import { SceneGraph } from '../scene/SceneGraph';
-import { QueryEngine, type QueryFilter, type QueryResult } from '../scene/QueryEngine';
-import { Relationships, type RelationshipInfo, type PathResult } from '../scene/Relationships';
 import { LayerManager } from '../layers/LayerManager';
 import type { CanvasPlugin, PluginRegistrationOptions, PluginConfig, BehaviorPreset } from '../plugins/types';
 import { PluginRegistry } from '../plugins/registry';
-import type { Bounds } from '../scene/SpatialIndex';
-
-// Type aliases for scene graph integration
-type SceneNodeData = any;
-type SceneEdgeShapeData = any;
 
 // ============================================================================
 // TYPES
@@ -140,7 +132,6 @@ export class Canvas {
   private _viewport: Viewport | null = null;
   private _registry: Registry;
   private _renderer: Renderer | null = null;
-  private _scene: SceneGraph;
   private _initialized: boolean = false;
 
   // Layers
@@ -161,7 +152,6 @@ export class Canvas {
   constructor(options: CanvasOptions) {
     this._container = options.container;
     this._registry = options.registry ?? new Registry();
-    this._scene = new SceneGraph();
 
     // Get container dimensions, fallback to reasonable defaults if container not yet in DOM
     let containerWidth = 800;
@@ -345,11 +335,6 @@ export class Canvas {
     return this._renderer;
   }
 
-  /** The SceneGraph for data management and queries */
-  get scene(): SceneGraph {
-    return this._scene;
-  }
-
   /** Edge layer container */
   get edgeLayer(): Container | null {
     return this._edgeLayer;
@@ -420,7 +405,6 @@ export class Canvas {
 
     // Clear existing content
     this._renderer.clear();
-    this._scene.clear();
     this._nodeData.clear();
     this._edgeData.clear();
 
@@ -436,30 +420,9 @@ export class Canvas {
 
     // Add all nodes to renderer (renderer will query Canvas for data)
     this._renderer.addNodes(dataToRender.nodes || []);
-    
-    // Register nodes in scene graph
-    (dataToRender.nodes || []).forEach(node => {
-      this._scene.addNode({
-        id: node.id as string,
-        x: node.x,
-        y: node.y,
-      });
-    });
 
     // Add all edges (nodes must exist for ID resolution)
     this._renderer.addEdges(dataToRender.edges || []);
-    
-    // Register edges in scene graph
-    (dataToRender.edges || []).forEach(edge => {
-      // Only add edges with string IDs (not points)
-      if (typeof edge.source === 'string' && typeof edge.target === 'string') {
-        this._scene.addEdge({
-          id: edge.id as string,
-          source: edge.source,
-          target: edge.target,
-        });
-      }
-    });
 
     // Fit content if enabled
     if (this._options.fitOnRender) {
@@ -541,12 +504,10 @@ export class Canvas {
     
     // Handle plugin updates with wrapper pattern
     if (options.plugins !== undefined) {
-      console.log('setOptions: Processing plugins update', options.plugins);
       for (const pluginConfig of options.plugins) {
         // Handle wrapper pattern: { plugin, key, options }
         if (typeof pluginConfig === 'object' && 'key' in pluginConfig && pluginConfig.key) {
           const { key, options: pluginOptions = {} } = pluginConfig as any;
-          console.log('setOptions: Updating plugin', { key, options: pluginOptions });
           this.updatePlugin(key, pluginOptions);
         }
       }
@@ -571,26 +532,14 @@ export class Canvas {
     // Find plugins to add (in new but not in current)
     const toAdd = newPluginIds.filter(id => !currentPluginIds.includes(id));
     
-    console.log('Behavior change:', {
-      from: this._options.behavior,
-      to: behavior,
-      currentPlugins: currentPluginIds,
-      newPlugins: newPluginIds,
-      toRemove,
-      toAdd,
-      registeredPlugins: Array.from(this._plugins.keys())
-    });
-    
     // Remove old behavior plugins
     for (const pluginId of toRemove) {
-      console.log('Unregistering plugin:', pluginId);
       this.unregisterPlugin(pluginId);
     }
     
     // Add new behavior plugins
     for (const pluginId of toAdd) {
       try {
-        console.log('Registering plugin:', pluginId);
         const { plugin, key } = PluginRegistry.create(pluginId);
         // Plugin init is async but doesn't actually await anything, so we can fire-and-forget
         this.registerPlugin(plugin, { userKey: key });
@@ -739,26 +688,19 @@ export class Canvas {
    * });
    */
   updatePlugin(key: string, options: Record<string, any>): void {
-    console.log('updatePlugin called:', { key, options });
     const plugin = this.getPluginByKey(key);
     
     if (!plugin) {
       console.warn(`Plugin with key '${key}' not found`);
-      console.log('Available plugins:', Array.from(this._plugins.entries()).map(([id, meta]) => ({ id, userKey: meta.userKey })));
       return;
     }
     
-    console.log('updatePlugin: Found plugin', plugin);
-    
     // Try to call updateOptions or setOptions if plugin supports it
     if ('updateOptions' in plugin && typeof (plugin as any).updateOptions === 'function') {
-      console.log('updatePlugin: Calling updateOptions');
       (plugin as any).updateOptions(options);
     } else if ('setOptions' in plugin && typeof (plugin as any).setOptions === 'function') {
-      console.log('updatePlugin: Calling setOptions');
       (plugin as any).setOptions(options);
     } else {
-      console.log('updatePlugin: Using setter methods');
       // For plugins with specific setter methods
       // Try common update method names for each property
       for (const [optionKey, value] of Object.entries(options)) {
@@ -914,88 +856,6 @@ export class Canvas {
 
 
   // =========================================================================
-  // SCENE GRAPH QUERIES
-  // =========================================================================
-
-  /**
-   * Query nodes with filters
-   */
-  queryNodes(filter: QueryFilter): QueryResult<SceneNodeData> {
-    return QueryEngine.queryNodes(this._scene.getNodeMap(), filter);
-  }
-
-  /**
-   * Query edges with filters
-   */
-  queryEdges(filter: QueryFilter): QueryResult<SceneEdgeShapeData> {
-    return QueryEngine.queryEdges(this._scene.getEdgeMap(), filter);
-  }
-
-  /**
-   * Query nodes within rectangular bounds
-   */
-  queryNodesByBounds(bounds: Bounds): any[] {
-    return this._scene.queryNodesByBounds(bounds);
-  }
-
-  /**
-   * Query nodes within radius of a point
-   */
-  queryNodesByRadius(center: { x: number; y: number }, radius: number): any[] {
-    return this._scene.queryNodesByRadius(center, radius);
-  }
-
-  /**
-   * Find nearest node to a point
-   */
-  findNearestNode(point: { x: number; y: number }, maxDistance?: number): any {
-    return this._scene.findNearestNode(point, maxDistance);
-  }
-
-  /**
-   * Get relationship information for a node
-   */
-  getNodeRelationships(nodeId: string): RelationshipInfo {
-    return Relationships.getNodeRelationships(
-      nodeId,
-      this._scene.getEdgeMap(),
-      this._scene.getNodeEdgesMap()
-    );
-  }
-
-  /**
-   * Get neighbors of a node
-   */
-  getNeighbors(
-    nodeId: string,
-    options?: { direction?: 'incoming' | 'outgoing' | 'both' }
-  ): string[] {
-    return Relationships.getNeighbors(
-      nodeId,
-      this._scene.getEdgeMap(),
-      this._scene.getNodeEdgesMap(),
-      options
-    );
-  }
-
-  /**
-   * Find path between two nodes
-   */
-  findPath(
-    startId: string,
-    endId: string,
-    options?: { maxDepth?: number; direction?: 'incoming' | 'outgoing' | 'both' }
-  ): PathResult {
-    return Relationships.findPath(
-      startId,
-      endId,
-      this._scene.getEdgeMap(),
-      this._scene.getNodeEdgesMap(),
-      options
-    );
-  }
-
-  // =========================================================================
   // CLEANUP
   // =========================================================================
 
@@ -1018,7 +878,6 @@ export class Canvas {
     // Destroy renderer and scene
     this._renderer?.destroy();
     this._renderer = null;
-    this._scene.destroy();
 
     // Destroy viewport and app
     this._viewport?.destroy();

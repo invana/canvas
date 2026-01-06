@@ -128,8 +128,8 @@ export class HighlightNeighborsProcessor extends BaseProcessor {
 
   process(event: CanvasEvent, _context: ProcessorContext): void {
     if (event.type === 'node:hover') {
-      // Could add logic to highlight neighbors using sceneGraph
-      // _context.sceneGraph.getNeighbors(nodeId)
+      // Could add logic to highlight neighbors using edge data
+      // const edges = canvas.getEdges(); neighbors = findNeighbors(nodeId, edges)
     } else if (event.type === 'node:hoverend') {
       // Remove highlights
     }

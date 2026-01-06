@@ -15,7 +15,6 @@ export class CircleNode extends RendererNodeBase {
 
   protected render(): void {
     const style = this.getActiveStyle();
-    console.log('CircleNode render called:', { id: this.id, fill: style.fill, stroke: style.stroke });
     const radius = this._data.size ?? 30;
 
     // Draw halo first (underneath main shape)

@@ -456,7 +456,6 @@ export class Registry {
   }
 
   private registerDefaultPaths(): void {
-    console.log('Registering default paths...');
     this.registerPath('line', (g, params: any, style) => {
       drawLine(g, { from: params.from, to: params.to }, style);
     });

@@ -141,22 +141,6 @@ export type { FocusableElement } from './plugins/FocusElementPlugin';
 export { MiniMapPlugin, type MiniMapOptions } from './plugins/MiniMapPlugin';
 
 // ============================================================================
-// SCENE
-// ============================================================================
-
-export { SceneGraph, QueryEngine, Relationships, SpatialIndex } from './scene';
-export type { 
-  SceneGraphEventType, 
-  SceneGraphEventCallback,
-  QueryFilter,
-  QueryResult,
-  RelationshipInfo,
-  PathResult,
-  SpatialIndexOptions,
-} from './scene';
-export type { Bounds as SceneBounds } from './scene';
-
-// ============================================================================
 // STYLE
 // ============================================================================
 
