@@ -15,7 +15,7 @@
  * canvas.registerPlugin(bgPlugin);
  * 
  * // Set background
- * bgPlugin.setBackground({
+ * bgPlugin.setOptions({
  *   type: 'pattern',
  *   patternType: 'dots',
  *   color: '#cccccc',
