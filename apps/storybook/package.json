@@ -13,6 +13,8 @@
   "dependencies": {
     "@invana/canvas-core": "workspace:*",
     "@invana/canvas-utils": "workspace:*",
+    "@invana/example-datasets": "workspace:*",
+    "@invana/layouts-d3-force": "workspace:*",
     "lil-gui": "^0.21.0"
   },
   "devDependencies": {
