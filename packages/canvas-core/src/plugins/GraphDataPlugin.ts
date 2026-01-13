@@ -262,6 +262,54 @@ export class GraphDataPlugin implements CanvasPlugin {
   }
 
   /**
+   * Update node position
+   * @param nodeId - Node ID to update
+   * @param x - New x coordinate
+   * @param y - New y coordinate
+   */
+  updateNodePosition(nodeId: string, x: number, y: number): void {
+    if (!this._renderer) {
+      throw new Error('GraphDataPlugin not initialized');
+    }
+
+    // Update the underlying data (source of truth)
+    const node = this._nodeData.get(nodeId);
+    if (node) {
+      node.x = x;
+      node.y = y;
+    }
+
+    // Update renderer - this handles position update and connected edge redrawing
+    this._renderer.updateNode(nodeId, { x, y });
+  }
+
+  /**
+   * Update multiple node positions in batch
+   * @param updates - Array of {id, x, y} updates
+   */
+  updateNodePositions(updates: Array<{ id: string; x: number; y: number }>): void {
+    if (!this._renderer) {
+      throw new Error('GraphDataPlugin not initialized');
+    }
+
+    // Update all node positions
+    for (const { id, x, y } of updates) {
+      // Update the underlying data (source of truth)
+      const node = this._nodeData.get(id);
+      if (node) {
+        node.x = x;
+        node.y = y;
+      }
+
+      // Update renderer - this automatically handles position and connected edges
+      const rendererNode = this._renderer.updateNode(id, { x, y });
+      if (!rendererNode) {
+        console.warn(`[GraphDataPlugin] Failed to update node ${id}`);
+      }
+    }
+  }
+
+  /**
    * Cleanup
    */
   destroy(): void {

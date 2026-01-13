@@ -266,7 +266,7 @@ export class D3ForceLayoutPlugin implements CanvasPlugin {
   }
 
   /**
-   * Update node positions in the renderer
+   * Update node positions using GraphDataPlugin's method
    */
   private updateNodePositions(d3Nodes: D3Node[], renderer: any, tickCount?: number, alpha?: number): void {
     // Debug: Log available methods on first tick
@@ -275,47 +275,42 @@ export class D3ForceLayoutPlugin implements CanvasPlugin {
       const graphPlugin = this._canvas?.getPlugin('graph-data') as any;
       if (graphPlugin) {
         console.log('[D3ForceLayout] GraphPlugin methods:', Object.keys(graphPlugin).filter(k => typeof graphPlugin[k] === 'function'));
+        console.log('[D3ForceLayout] GraphPlugin exists:', !!graphPlugin);
+        console.log('[D3ForceLayout] updateNodePositions exists:', typeof graphPlugin.updateNodePositions);
       }
     }
     
-    // Get the GraphDataPlugin to update underlying data
+    // Get the GraphDataPlugin
     const graphPlugin = this._canvas?.getPlugin('graph-data') as any;
     if (!graphPlugin) {
       console.error('[D3ForceLayout] GraphDataPlugin not found!');
       return;
     }
     
-    // Get the node data storage from GraphDataPlugin
-    const nodeData = graphPlugin.getNodeData?.();
+    // Prepare batch updates
+    const updates = d3Nodes
+      .filter(node => node.x !== undefined && node.y !== undefined)
+      .map(node => ({
+        id: node.id,
+        x: node.x!,
+        y: node.y!,
+      }));
     
-    // Update node positions in both the data and the renderer
-    for (const d3Node of d3Nodes) {
-      // Update the underlying node data (source of truth)
-      if (nodeData && nodeData.has(d3Node.id)) {
-        const node = nodeData.get(d3Node.id);
-        if (node) {
-          node.x = d3Node.x ?? node.x;
-          node.y = d3Node.y ?? node.y;
-        }
-      }
-      
-      // Update the renderer's internal state
-      renderer.updateNode(d3Node.id, {
-        x: d3Node.x,
-        y: d3Node.y,
-      });
-      
-      // Redraw the node visual (this is key!)
-      if (renderer.redrawNode && typeof renderer.redrawNode === 'function') {
-        renderer.redrawNode(d3Node.id);
-      }
+    if (tickCount === 1) {
+      console.log('[D3ForceLayout] First tick - sample updates:', updates.slice(0, 3));
     }
     
-    // After updating all nodes, redraw edges to update their positions
-    if (renderer.redrawAllEdges && typeof renderer.redrawAllEdges === 'function') {
-      renderer.redrawAllEdges();
-    } else if (renderer.updateAllEdges && typeof renderer.updateAllEdges === 'function') {
-      renderer.updateAllEdges();
+    // Use GraphDataPlugin's batch update method
+    if (graphPlugin.updateNodePositions && typeof graphPlugin.updateNodePositions === 'function') {
+      graphPlugin.updateNodePositions(updates);
+    } else {
+      console.error('[D3ForceLayout] updateNodePositions method not found on GraphPlugin!');
+      // Fallback: update one by one
+      for (const update of updates) {
+        if (graphPlugin.updateNodePosition && typeof graphPlugin.updateNodePosition === 'function') {
+          graphPlugin.updateNodePosition(update.id, update.x, update.y);
+        }
+      }
     }
     
     // Log sample positions periodically
