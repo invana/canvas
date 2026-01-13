@@ -8,7 +8,7 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, BackgroundPlugin } from '@invana/canvas-core';
+import { Canvas, BackgroundPlugin, GraphDataPlugin } from '@invana/canvas-core';
 import type { BackgroundStyle } from '@invana/canvas-core';
 
 const meta: Meta = {
@@ -98,15 +98,19 @@ export const DotPattern: Story = {
         container,
         width: container.clientWidth || 800,
         height: container.clientHeight || 500,
-        data: generateGraphData(),
       });
 
       await canvas.init();
 
+      // Register graph data plugin
+      const graphPlugin = new GraphDataPlugin();
+      await canvas.registerPlugin(graphPlugin);
+      graphPlugin.setData(generateGraphData());
+
       // Register background plugin
       const bgPlugin = new BackgroundPlugin();
-      canvas.registerPlugin(bgPlugin);
-      bgPlugin.setBackground({
+      await canvas.registerPlugin(bgPlugin);
+      bgPlugin.setOptions({
         type: 'pattern',
         patternType: 'dots',
         color: '#cccccc',
@@ -115,11 +119,10 @@ export const DotPattern: Story = {
         spacing: 20
       });
 
-      canvas.render();
 
       // Button handlers
       document.getElementById('small-dots')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'dots',
           color: '#cccccc',
@@ -130,7 +133,7 @@ export const DotPattern: Story = {
       });
 
       document.getElementById('medium-dots')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'dots',
           color: '#999999',
@@ -141,7 +144,7 @@ export const DotPattern: Story = {
       });
 
       document.getElementById('large-dots')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'dots',
           color: '#666666',
@@ -152,7 +155,7 @@ export const DotPattern: Story = {
       });
 
       document.getElementById('dense-dots')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'dots',
           color: '#aaaaaa',
@@ -163,7 +166,7 @@ export const DotPattern: Story = {
       });
 
       document.getElementById('sparse-dots')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'dots',
           color: '#dddddd',
@@ -213,15 +216,19 @@ export const GridPattern: Story = {
         container,
         width: container.clientWidth || 800,
         height: container.clientHeight || 500,
-        data: generateGraphData(),
       });
 
       await canvas.init();
 
+      // Register graph data plugin
+      const graphPlugin = new GraphDataPlugin();
+      await canvas.registerPlugin(graphPlugin);
+      graphPlugin.setData(generateGraphData());
+
       // Register background plugin
       const bgPlugin = new BackgroundPlugin();
-      canvas.registerPlugin(bgPlugin);
-      bgPlugin.setBackground({
+      await canvas.registerPlugin(bgPlugin);
+      bgPlugin.setOptions({
         type: 'pattern',
         patternType: 'grid',
         color: '#e0e0e0',
@@ -230,11 +237,10 @@ export const GridPattern: Story = {
         lineWidth: 1
       });
 
-      canvas.render();
 
       // Button handlers
       document.getElementById('fine-grid')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'grid',
           color: '#e8e8e8',
@@ -245,7 +251,7 @@ export const GridPattern: Story = {
       });
 
       document.getElementById('medium-grid')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'grid',
           color: '#d0d0d0',
@@ -256,7 +262,7 @@ export const GridPattern: Story = {
       });
 
       document.getElementById('large-grid')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'grid',
           color: '#c0c0c0',
@@ -267,7 +273,7 @@ export const GridPattern: Story = {
       });
 
       document.getElementById('blueprint-grid')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'grid',
           color: '#4a90e2',
@@ -279,7 +285,7 @@ export const GridPattern: Story = {
       });
 
       document.getElementById('dark-grid')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'grid',
           color: '#333333',
@@ -328,15 +334,19 @@ export const CrossPattern: Story = {
         container,
         width: container.clientWidth || 800,
         height: container.clientHeight || 500,
-        data: generateGraphData(),
       });
 
       await canvas.init();
 
+      // Register graph data plugin
+      const graphPlugin = new GraphDataPlugin();
+      await canvas.registerPlugin(graphPlugin);
+      graphPlugin.setData(generateGraphData());
+
       // Register background plugin
       const bgPlugin = new BackgroundPlugin();
-      canvas.registerPlugin(bgPlugin);
-      bgPlugin.setBackground({
+      await canvas.registerPlugin(bgPlugin);
+      bgPlugin.setOptions({
         type: 'pattern',
         patternType: 'cross',
         color: '#cccccc',
@@ -346,11 +356,10 @@ export const CrossPattern: Story = {
         lineWidth: 1
       });
 
-      canvas.render();
 
       // Button handlers
       document.getElementById('small-cross')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'cross',
           color: '#d0d0d0',
@@ -362,7 +371,7 @@ export const CrossPattern: Story = {
       });
 
       document.getElementById('medium-cross')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'cross',
           color: '#aaaaaa',
@@ -374,7 +383,7 @@ export const CrossPattern: Story = {
       });
 
       document.getElementById('large-cross')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'cross',
           color: '#888888',
@@ -386,7 +395,7 @@ export const CrossPattern: Story = {
       });
 
       document.getElementById('colored-cross')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'cross',
           color: '#4a90e2',
@@ -436,15 +445,19 @@ export const LinesPattern: Story = {
         container,
         width: container.clientWidth || 800,
         height: container.clientHeight || 500,
-        data: generateGraphData(),
       });
 
       await canvas.init();
 
+      // Register graph data plugin
+      const graphPlugin = new GraphDataPlugin();
+      await canvas.registerPlugin(graphPlugin);
+      graphPlugin.setData(generateGraphData());
+
       // Register background plugin
       const bgPlugin = new BackgroundPlugin();
-      canvas.registerPlugin(bgPlugin);
-      bgPlugin.setBackground({
+      await canvas.registerPlugin(bgPlugin);
+      bgPlugin.setOptions({
         type: 'pattern',
         patternType: 'lines',
         color: '#e0e0e0',
@@ -453,11 +466,10 @@ export const LinesPattern: Story = {
         lineWidth: 1
       });
 
-      canvas.render();
 
       // Button handlers
       document.getElementById('fine-lines')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'lines',
           color: '#e8e8e8',
@@ -468,7 +480,7 @@ export const LinesPattern: Story = {
       });
 
       document.getElementById('medium-lines')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'lines',
           color: '#cccccc',
@@ -479,7 +491,7 @@ export const LinesPattern: Story = {
       });
 
       document.getElementById('bold-lines')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'lines',
           color: '#999999',
@@ -490,7 +502,7 @@ export const LinesPattern: Story = {
       });
 
       document.getElementById('colored-lines')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'lines',
           color: '#9b59b6',

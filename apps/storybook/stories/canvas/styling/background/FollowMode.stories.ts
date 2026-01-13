@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, BackgroundPlugin } from '@invana/canvas-core';
+import { Canvas, BackgroundPlugin, GraphDataPlugin } from '@invana/canvas-core';
 
 const meta: Meta = {
   title: 'Canvas/Styling/Background/FollowMode',
@@ -87,17 +87,22 @@ export const FollowModeDemo: Story = {
         container,
         width: container.clientWidth || 800,
         height: container.clientHeight || 500,
-        data: generateGraphData(),
       });
 
       await canvas.init();
 
+
+      // Register graph data plugin
+      const graphPlugin = new GraphDataPlugin();
+      await canvas.registerPlugin(graphPlugin);
+      graphPlugin.setData(generateGraphData());
+
       // Register background plugin
       const bgPlugin = new BackgroundPlugin();
-      canvas.registerPlugin(bgPlugin);
+      await canvas.registerPlugin(bgPlugin);
       
       const updateBackground = (follow: boolean) => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'pattern',
           patternType: 'grid',
           color: '#d0d0d0',
@@ -109,7 +114,6 @@ export const FollowModeDemo: Story = {
       };
 
       updateBackground(true); // Start with follow enabled
-      canvas.render();
 
       // Toggle handler
       document.getElementById('follow-toggle')?.addEventListener('change', (e) => {

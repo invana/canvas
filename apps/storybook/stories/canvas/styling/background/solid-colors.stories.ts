@@ -8,7 +8,7 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, BackgroundPlugin } from '@invana/canvas-core';
+import { Canvas, BackgroundPlugin, GraphDataPlugin } from '@invana/canvas-core';
 import type { BackgroundStyle } from '@invana/canvas-core';
 
 const meta: Meta = {
@@ -96,33 +96,37 @@ export const SolidColor: Story = {
         container,
         width: container.clientWidth || 800,
         height: container.clientHeight || 500,
-        data: generateGraphData(),
       });
 
       await canvas.init();
 
+      // Register graph data plugin
+      const graphPlugin = new GraphDataPlugin();
+      await canvas.registerPlugin(graphPlugin);
+      graphPlugin.setData(generateGraphData());
+
+
       // Register background plugin
       const bgPlugin = new BackgroundPlugin();
-      canvas.registerPlugin(bgPlugin);
-      bgPlugin.setBackground({ type: 'solid', color: '#ffffff' });
+      await canvas.registerPlugin(bgPlugin);
+      bgPlugin.setOptions({ type: 'solid', color: '#ffffff' });
 
-      canvas.render();
 
       // Button handlers
       document.getElementById('white-bg')?.addEventListener('click', () => {
-        bgPlugin.setBackground({ type: 'solid', color: '#ffffff' });
+        bgPlugin.setOptions({ type: 'solid', color: '#ffffff' });
       });
 
       document.getElementById('light-bg')?.addEventListener('click', () => {
-        bgPlugin.setBackground({ type: 'solid', color: '#f5f5f5' });
+        bgPlugin.setOptions({ type: 'solid', color: '#f5f5f5' });
       });
 
       document.getElementById('dark-bg')?.addEventListener('click', () => {
-        bgPlugin.setBackground({ type: 'solid', color: '#1a1a2e' });
+        bgPlugin.setOptions({ type: 'solid', color: '#1a1a2e' });
       });
 
       document.getElementById('colored-bg')?.addEventListener('click', () => {
-        bgPlugin.setBackground({ type: 'solid', color: '#e3f2fd' });
+        bgPlugin.setOptions({ type: 'solid', color: '#e3f2fd' });
       });
     });
 
@@ -165,15 +169,15 @@ export const LinearGradients: Story = {
         container,
         width: container.clientWidth || 800,
         height: container.clientHeight || 500,
-        data: generateGraphData(),
       });
 
       await canvas.init();
 
+
       // Register background plugin
       const bgPlugin = new BackgroundPlugin();
-      canvas.registerPlugin(bgPlugin);
-      bgPlugin.setBackground({
+      await canvas.registerPlugin(bgPlugin);
+      bgPlugin.setOptions({
         type: 'gradient',
         gradientType: 'linear',
         angle: 0,
@@ -183,11 +187,10 @@ export const LinearGradients: Story = {
         ]
       });
 
-      canvas.render();
 
       // Button handlers
       document.getElementById('horizontal-gradient')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'gradient',
           gradientType: 'linear',
           angle: 0,
@@ -199,7 +202,7 @@ export const LinearGradients: Story = {
       });
 
       document.getElementById('vertical-gradient')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'gradient',
           gradientType: 'linear',
           angle: 90,
@@ -211,7 +214,7 @@ export const LinearGradients: Story = {
       });
 
       document.getElementById('diagonal-gradient')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'gradient',
           gradientType: 'linear',
           angle: 45,
@@ -223,7 +226,7 @@ export const LinearGradients: Story = {
       });
 
       document.getElementById('sunset-gradient')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'gradient',
           gradientType: 'linear',
           angle: 90,
@@ -236,7 +239,7 @@ export const LinearGradients: Story = {
       });
 
       document.getElementById('ocean-gradient')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'gradient',
           gradientType: 'linear',
           angle: 180,
@@ -285,15 +288,14 @@ export const RadialGradients: Story = {
         container,
         width: container.clientWidth || 800,
         height: container.clientHeight || 500,
-        data: generateGraphData(),
       });
 
       await canvas.init();
 
       // Register background plugin
       const bgPlugin = new BackgroundPlugin();
-      canvas.registerPlugin(bgPlugin);
-      bgPlugin.setBackground({
+      await canvas.registerPlugin(bgPlugin);
+      bgPlugin.setOptions({
         type: 'gradient',
         gradientType: 'radial',
         colors: [
@@ -302,11 +304,10 @@ export const RadialGradients: Story = {
         ]
       });
 
-      canvas.render();
 
       // Button handlers
       document.getElementById('center-gradient')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'gradient',
           gradientType: 'radial',
           colors: [
@@ -317,7 +318,7 @@ export const RadialGradients: Story = {
       });
 
       document.getElementById('spotlight-gradient')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'gradient',
           gradientType: 'radial',
           colors: [
@@ -329,7 +330,7 @@ export const RadialGradients: Story = {
       });
 
       document.getElementById('cosmic-gradient')?.addEventListener('click', () => {
-        bgPlugin.setBackground({
+        bgPlugin.setOptions({
           type: 'gradient',
           gradientType: 'radial',
           colors: [
