@@ -9,7 +9,7 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, GraphDataPlugin, PluginRegistry } from '@invana/canvas-core';
+import { Canvas, DEFAULT_LABEL_POSITION, GraphDataPlugin, PluginRegistry } from '@invana/canvas-core';
 import { D3ForceLayoutPlugin } from '@invana/layouts-d3-force';
 import { lesMiserablesDataRaw } from '@invana/example-datasets';
 import { createContainer } from '../../../src/div-utils';
@@ -38,10 +38,12 @@ const convertLesMiserablesData = () => {
   return {
     nodes: lesMiserablesDataRaw.nodes.map((node: any) => ({
       id: node.id,
-      // x: 0, // D3 force layout will compute positions
-      // y: 0,
+      // x: 400,  // Start all nodes at center - D3 will spread them out
+      // y: 300,
+      // x: node._data?.x || undefined,
+      // y: node._data?.y || undefined,
       shape: 'circle' as const,
-      size: 25,
+      size: 10,
       label: node.id,
     })),
     edges: lesMiserablesDataRaw.edges.map((edge: any, idx: number) => ({
@@ -80,7 +82,7 @@ export const LesMiserables: Story = {
           key: 'bg',
           options: {
             type: 'solid',
-            color: '#1a1a1a',
+            color: '#ffffff',  // White background like Observable
           },
         },
         {
@@ -92,20 +94,22 @@ export const LesMiserables: Story = {
               node: {
                 fill: (node: any) => {
                   const rawNode = lesMiserablesDataRaw.nodes.find((n: any) => n.id === node.id);
-                  return groupColors[rawNode?.group % groupColors.length] || '#8dd3c7';
+                  const group = rawNode?.group ?? 0;
+                  return groupColors[group % groupColors.length] || '#8dd3c7';
                 },
-                stroke: () => '#ffffff',
-                strokeWidth: () => 2,
+                stroke: () => '#484848',  // Gray stroke for light background
+                strokeWidth: () => 1.5,
                 labelFontSize: () => 10,
-                labelFill: () => '#ffffff',
+                labelFill: () => '#595959',  // Black text for light background
+                labelPosition: () => "top-right",
               },
               edge: {
-                stroke: () => '#444444',
+                stroke: () => '#999999',  // Gray edges for light background
                 strokeWidth: () => 1,
                 strokeAlpha: () => 0.6,
               },
             },
-            fitOnRender: true,
+            fitOnRender: false,  // Don't fit - let D3 handle positioning
             fitPadding: 80,
           },
         },
@@ -113,18 +117,25 @@ export const LesMiserables: Story = {
           plugin: 'layout-d3-force',
           key: 'layout',
           options: {
-            // charge: -400,         // Stronger repulsion for better spread
-            // linkDistance: 100,    // More space between connected nodes
-            // collisionRadius: 30,  // Prevent overlap
-            // animate: true,
+            // Use D3 defaults - no custom forces
+            // This creates natural clustering based on link connections
+            animate: true,
+            iterations: 600  // More iterations for better clustering
           },
         },
       ],
     });
 
     await canvas.init();
+    console.log('Canvas initialized');
 
-    // Start force layout (use getPluginByKey for declarative config)
+    // Verify graph data was rendered (use the key from config: 'graph')
+    // const graphDataPlugin = canvas.getPluginByKey('graph') as GraphDataPlugin;
+    // console.log('GraphDataPlugin:', graphDataPlugin);
+    // console.log('Renderer nodes count:', graphDataPlugin.renderer?.getNodes().length);
+
+    // Graph is already rendered via declarative config (data passed in options)
+    // Now start the force layout to position the nodes
     const layoutPlugin = canvas.getPluginByKey('layout') as D3ForceLayoutPlugin;
     
     if (!layoutPlugin) {

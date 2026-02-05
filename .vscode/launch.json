@@ -16,5 +16,19 @@
         ],
         "console": "integratedTerminal",
         },
+        {
+            "name": "layouts-d3-force watch",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "pnpm",
+            "runtimeArgs": [
+            "--filter",
+            "@invana/layouts-d3-force",
+            "build",
+            "--watch"
+            ],
+            "console": "integratedTerminal"
+        }
     ]
 }

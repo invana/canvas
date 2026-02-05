@@ -273,11 +273,11 @@ export class GraphDataPlugin implements CanvasPlugin {
     }
 
     // Update the underlying data (source of truth)
-    const node = this._nodeData.get(nodeId);
-    if (node) {
-      node.x = x;
-      node.y = y;
-    }
+    // const node = this._nodeData.get(nodeId);
+    // if (node) {
+    //   node.x = x;
+    //   node.y = y;
+    // }
 
     // Update renderer - this handles position update and connected edge redrawing
     this._renderer.updateNode(nodeId, { x, y });

@@ -73,6 +73,7 @@ export interface D3ForceLayoutOptions {
  */
 interface D3Node extends SimulationNodeDatum {
   id: string;
+  size: number;  // Node size for collision and charge calculations
   x?: number;
   y?: number;
   vx?: number;
@@ -97,26 +98,24 @@ export class D3ForceLayoutPlugin implements CanvasPlugin {
   readonly id = 'layout-d3-force';
 
   private _canvas: Canvas | null = null;
+  private _graphPlugin: any = null;  // Reference to GraphDataPlugin
   private _simulation: Simulation<D3Node, D3Link> | null = null;
   private _options: Required<D3ForceLayoutOptions>;
   private _isRunning: boolean = false;
   private _animationFrameId: number | null = null;
+  private _d3Nodes: D3Node[] = [];  // Store D3 nodes for drag handling
 
   constructor(options: D3ForceLayoutOptions = {}) {
-    console.log('[D3ForceLayout] Constructor - User options:', options);
-    
     this._options = {
-      charge: options.charge ?? -30,       // D3 default charge for natural clustering
-      linkDistance: options.linkDistance ?? undefined as any,  // undefined = D3 uses adaptive distance
-      collisionRadius: options.collisionRadius ?? 8, // Collision based on visual node radius
-      centerStrength: options.centerStrength ?? 0.1,
-      alphaDecay: options.alphaDecay ?? 0.0228,  // Standard D3 alpha decay
-      velocityDecay: options.velocityDecay ?? 0.4, // Standard D3 velocity decay  
+      charge: options.charge ?? undefined as any,  // Use D3 default
+      linkDistance: options.linkDistance ?? undefined as any,  // Use D3 default
+      collisionRadius: options.collisionRadius ?? undefined as any, // No collision by default
+      centerStrength: options.centerStrength ?? undefined as any, // Use D3 default
+      alphaDecay: options.alphaDecay ?? undefined as any,  // Use D3 default
+      velocityDecay: options.velocityDecay ?? undefined as any, // Use D3 default
       animate: options.animate ?? true,
       iterations: options.iterations ?? 300,
     };
-    
-    console.log('[D3ForceLayout] Constructor - Final options:', this._options);
   }
 
   /**
@@ -131,6 +130,21 @@ export class D3ForceLayoutPlugin implements CanvasPlugin {
    */
   async init(canvas: Canvas): Promise<void> {
     this._canvas = canvas;
+    
+    // Find GraphDataPlugin - check by ID first, then try all plugins
+    this._graphPlugin = canvas.getPlugin('graph-data');
+    if (!this._graphPlugin) {
+      // Search through all registered plugins
+      const plugins = (canvas as any)._plugins;
+      if (plugins) {
+        for (const plugin of plugins.values()) {
+          if (plugin.id === 'graph-data') {
+            this._graphPlugin = plugin;
+            break;
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -143,112 +157,121 @@ export class D3ForceLayoutPlugin implements CanvasPlugin {
       throw new Error('D3ForceLayoutPlugin not initialized');
     }
 
-    // Get graph data plugin
-    const graphPlugin = this._canvas.getPlugin('graph-data') as any;
-    if (!graphPlugin) {
+    if (!this._graphPlugin) {
       throw new Error('GraphDataPlugin not found. D3ForceLayoutPlugin requires GraphDataPlugin.');
     }
 
     // Get nodes and edges from renderer
-    const renderer = graphPlugin.renderer;
+    const renderer = this._graphPlugin.renderer;
     if (!renderer) {
       throw new Error('GraphDataPlugin has no renderer');
     }
 
-    const nodes = renderer.getNodes();
-    const edges = renderer.getEdges();
+  // The force simulation mutates links and nodes, so create a copy
+  // so that re-evaluating this cell produces the same result.
+    const nodes = renderer.getNodes().map((d: any) => ({...d}));
+    const edges = renderer.getEdges().map((d: any) => ({...d}));
 
     if (nodes.length === 0) {
       console.warn('[D3ForceLayout] No nodes to layout');
       return;
     }
 
-    console.log(`[D3ForceLayout] Starting layout for ${nodes.length} nodes and ${edges.length} edges`);
-    console.log('[D3ForceLayout] Options:', this._options);
+    console.log('[D3ForceLayout] Sample renderer node (keys):', Object.keys(nodes[0]));
+    console.log('[D3ForceLayout] Node has _data?:', '_data' in nodes[0]);
+    console.log('[D3ForceLayout] Node has id?:', 'id' in nodes[0]);
+    if (nodes[0]._data) {
+      console.log('[D3ForceLayout] Node._data keys:', Object.keys(nodes[0]._data));
+      console.log('[D3ForceLayout] Node._data.id:', nodes[0]._data.id);
+    }
 
     // Get canvas dimensions for centering
-    const canvasWidth = (this._canvas as any).width || 800;
-    const canvasHeight = (this._canvas as any).height || 600;
-    const centerX = canvasWidth / 2;
-    const centerY = canvasHeight / 2;
-    
-    console.log(`[D3ForceLayout] Canvas dimensions: ${canvasWidth}x${canvasHeight}, center: (${centerX}, ${centerY})`);
+    const canvasWidth = this._canvas.width;
+    const canvasHeight = this._canvas.height;
 
-    // Prepare D3 nodes - let D3 initialize positions naturally
-    // When x/y are undefined, D3 randomly initializes them with good spread
-    const d3Nodes: D3Node[] = nodes.map((node: any) => ({
-      id: node.id as string,
-      // x and y intentionally undefined - D3 will initialize them
-    }));
+    console.log('[D3ForceLayout] Canvas size:', { width: canvasWidth, height: canvasHeight });
 
-    // Prepare D3 links
+    // Prepare D3 nodes - extract ID from renderer node structure
+    const d3Nodes: D3Node[] = nodes.map((node: any, idx: number) => {
+      // Renderer nodes have their data in _data property
+      const nodeId = node._data?.id || node.id;
+      const nodeSize = node._data?.size ?? 25;
+      
+      if (idx === 0) {
+        console.log('[D3ForceLayout] First node mapping:', { 
+          nodeId, 
+          nodeSize,
+          hasData: !!node._data,
+          dataId: node._data?.id,
+          directId: node.id
+        });
+      }
+      
+      return {
+        id: nodeId as string,
+        size: nodeSize,
+          x: node._data?.x,
+        y: node._data?.y,
+        // Don't pass x,y - let D3 initialize them for better layout
+      };
+    });
+
+    // Prepare D3 links - extract source/target from renderer edge structure
     const d3Links: D3Link[] = edges.map((edge: any) => ({
-      source: edge.source as string,
-      target: edge.target as string,
+      source: (edge._data?.source || edge.source) as string,
+      target: (edge._data?.target || edge.target) as string,
     }));
 
-    // Create simulation - following classic D3 force-directed layout pattern
-    // See: https://blocks.roadtolarissa.com/mbostock/4062045 and https://observablehq.com/@d3/force-directed-graph/2
-    const linkForce = forceLink<D3Node, D3Link>(d3Links).id((d) => d.id);
-    
-    // Only set distance if specified, otherwise D3 uses adaptive distance
-    if (this._options.linkDistance !== undefined) {
-      console.log(`[D3ForceLayout] Setting link distance: ${this._options.linkDistance}`);
-      linkForce.distance(this._options.linkDistance);
-    } else {
-      console.log('[D3ForceLayout] Using D3 adaptive link distance');
-    }
-    
-    console.log('[D3ForceLayout] Creating simulation with forces:');
-    console.log(`  - charge: ${this._options.charge}`);
-    console.log(`  - linkDistance: ${this._options.linkDistance ?? 'adaptive'}`);
-    console.log(`  - collisionRadius: ${this._options.collisionRadius}`);
-    console.log(`  - centerStrength: ${this._options.centerStrength}`);
-    console.log(`  - alphaDecay: ${this._options.alphaDecay}`);
-    console.log(`  - velocityDecay: ${this._options.velocityDecay}`);
-    console.log(`  - animate: ${this._options.animate}`);
-    
-    this._simulation = forceSimulation<D3Node, D3Link>(d3Nodes)
-      .force('charge', forceManyBody().strength(this._options.charge))
-      .force('link', linkForce)
-      .force('center', forceCenter(centerX, centerY))
-      .force('collide', forceCollide<D3Node>(this._options.collisionRadius))
-      .alphaDecay(this._options.alphaDecay)
-      .velocityDecay(this._options.velocityDecay);
+    console.log('[D3ForceLayout] Creating simulation with options:', {
+      animate: this._options.animate,
+      charge: this._options.charge,
+      linkDistance: this._options.linkDistance,
+      iterations: this._options.iterations
+    });
 
+    // Store d3Nodes for drag handling
+    this._d3Nodes = d3Nodes;
+    
+    // Setup drag event listeners on nodes after they're rendered
+    this.setupDragListeners();
+
+    // Create simulation - EXACTLY like Observable example
+    const simulation = forceSimulation<D3Node, D3Link>(d3Nodes)
+      .force('link', forceLink<D3Node, D3Link>(d3Links).id(d => d.id))
+      .force('charge', forceManyBody())
+      .force('center', forceCenter(canvasWidth / 2, canvasHeight / 2))
+      // .alphaDecay(0);  // Slower decay = forces stay strong longer
+
+    let tickCount = 0;
+    const maxIterations = this._options.iterations;
+    
+    simulation.on('tick', () => {
+      tickCount++;
+      if (tickCount % 10 === 0) {
+        console.log(`[D3ForceLayout] Tick ${tickCount}/${maxIterations}, alpha: ${simulation.alpha().toFixed(4)}`);
+      }
+      // Only update positions on each tick if animating
+      if (this._options.animate) {
+        this.updateNodePositions(d3Nodes);
+      }      
+      // Stop after max iterations if specified
+      if (tickCount >= maxIterations) {
+        console.log(`[D3ForceLayout] Reached max iterations (${maxIterations}), stopping simulation`);
+        simulation.stop();
+      }
+    });
+
+    this._simulation = simulation;
     this._isRunning = true;
 
-    if (this._options.animate) {
-      // Animate in real-time
-      console.log('[D3ForceLayout] Starting animated simulation...');
-      let tickCount = 0;
-      return new Promise((resolve) => {
-        this._simulation!.on('tick', () => {
-          tickCount++;
-          const alpha = this._simulation!.alpha();
-          if (tickCount % 10 === 0 || alpha < 0.05) {
-            console.log(`[D3ForceLayout] Tick ${tickCount}, alpha: ${alpha.toFixed(4)}`);
-          }
-          this.updateNodePositions(d3Nodes, renderer, tickCount, alpha);
-        });
-
-        this._simulation!.on('end', () => {
-          console.log(`[D3ForceLayout] Simulation ended after ${tickCount} ticks`);
-          this._isRunning = false;
-          resolve();
-        });
-      });
-    } else {
-      // Run synchronously for N iterations
-      console.log(`[D3ForceLayout] Running ${this._options.iterations} iterations synchronously...`);
-      for (let i = 0; i < this._options.iterations; i++) {
-        this._simulation.tick();
-      }
-      this.updateNodePositions(d3Nodes, renderer, this._options.iterations, this._simulation.alpha());
-      this._simulation.stop();
+    this._simulation.on('end', () => {
+      console.log(`[D3ForceLayout] Simulation ended after ${tickCount} ticks`);
       this._isRunning = false;
-      console.log('[D3ForceLayout] Synchronous layout complete');
-    }
+      this.updateNodePositions(d3Nodes);
+    });
+    
+    console.log('[D3ForceLayout] Simulation started');
+    return;
   }
 
   /**
@@ -266,59 +289,32 @@ export class D3ForceLayoutPlugin implements CanvasPlugin {
   }
 
   /**
-   * Update node positions using GraphDataPlugin's method
+   * Update node positions using GraphDataPlugin's batch method
    */
-  private updateNodePositions(d3Nodes: D3Node[], renderer: any, tickCount?: number, alpha?: number): void {
-    // Debug: Log available methods on first tick
-    if (tickCount === 1) {
-      console.log('[D3ForceLayout] Renderer methods:', Object.keys(renderer).filter(k => typeof renderer[k] === 'function'));
-      const graphPlugin = this._canvas?.getPlugin('graph-data') as any;
-      if (graphPlugin) {
-        console.log('[D3ForceLayout] GraphPlugin methods:', Object.keys(graphPlugin).filter(k => typeof graphPlugin[k] === 'function'));
-        console.log('[D3ForceLayout] GraphPlugin exists:', !!graphPlugin);
-        console.log('[D3ForceLayout] updateNodePositions exists:', typeof graphPlugin.updateNodePositions);
-      }
-    }
-    
-    // Get the GraphDataPlugin
-    const graphPlugin = this._canvas?.getPlugin('graph-data') as any;
-    if (!graphPlugin) {
+  private updateNodePositions(d3Nodes: D3Node[]): void {
+    if (!this._graphPlugin) {
       console.error('[D3ForceLayout] GraphDataPlugin not found!');
       return;
     }
     
-    // Prepare batch updates
+    // Use batch update for better performance
     const updates = d3Nodes
       .filter(node => node.x !== undefined && node.y !== undefined)
-      .map(node => ({
-        id: node.id,
-        x: node.x!,
-        y: node.y!,
-      }));
+      .map(node => ({ id: node.id, x: node.x!, y: node.y! }));
     
-    if (tickCount === 1) {
-      console.log('[D3ForceLayout] First tick - sample updates:', updates.slice(0, 3));
+    // Debug: Log first update to verify it's being called
+    if (updates.length > 0 && !this._hasLoggedFirstUpdate) {
+      console.log('[D3ForceLayout] First position update:', {
+        totalNodes: updates.length,
+        sample: updates.slice(0, 2)
+      });
+      this._hasLoggedFirstUpdate = true;
     }
     
-    // Use GraphDataPlugin's batch update method
-    if (graphPlugin.updateNodePositions && typeof graphPlugin.updateNodePositions === 'function') {
-      graphPlugin.updateNodePositions(updates);
-    } else {
-      console.error('[D3ForceLayout] updateNodePositions method not found on GraphPlugin!');
-      // Fallback: update one by one
-      for (const update of updates) {
-        if (graphPlugin.updateNodePosition && typeof graphPlugin.updateNodePosition === 'function') {
-          graphPlugin.updateNodePosition(update.id, update.x, update.y);
-        }
-      }
-    }
-    
-    // Log sample positions periodically
-    if (tickCount && tickCount % 50 === 0 && d3Nodes.length > 0) {
-      const sample = d3Nodes[0]!;
-      console.log(`[D3ForceLayout] Tick ${tickCount}: Sample node '${sample.id}' at (${sample.x?.toFixed(1) ?? '?'}, ${sample.y?.toFixed(1) ?? '?'}), alpha: ${alpha?.toFixed(4)}`);
-    }
+    this._graphPlugin.updateNodePositions(updates);
   }
+  
+  private _hasLoggedFirstUpdate = false;
 
   /**
    * Update layout options
@@ -373,11 +369,82 @@ export class D3ForceLayoutPlugin implements CanvasPlugin {
   }
 
   /**
+   * Setup drag event listeners on renderer nodes
+   */
+  private setupDragListeners(): void {
+    if (!this._graphPlugin?.renderer) return;
+    
+    const nodes = this._graphPlugin.renderer.getNodes();
+    nodes.forEach((node: any) => {
+      node.on('dragstart', this._handleDragStart.bind(this));
+      node.on('drag', this._handleDrag.bind(this));
+      node.on('dragend', this._handleDragEnd.bind(this));
+    });
+  }
+
+  /**
+   * Handle node drag start - keep simulation hot during drag
+   */
+  private _handleDragStart(): void {
+    if (!this._simulation || !this._isRunning) return;
+    
+    // Reheat simulation during drag, but don't fix position
+    // This allows forces to still influence the node
+    // this._simulation.alphaTarget(0.3).restart();
+  }
+
+  /**
+   * Handle node drag - update position but let forces apply
+   */
+  private _handleDrag(event: any): void {
+    const node = event.node || event.target;
+    const nodeId = node?._data?.id || node?.data?.id || node?.id;
+    const x = event.x ?? node?.x;
+    const y = event.y ?? node?.y;
+    
+    if (!nodeId || x === undefined || y === undefined) return;
+    
+    const d3Node = this._d3Nodes.find(n => n.id === nodeId);
+    if (d3Node) {
+      // Update position directly without fixing (no fx/fy)
+      // Node can still be influenced by forces
+      d3Node.x = x;
+      d3Node.y = y;
+      // Dampen velocity so it doesn't fly away when released
+      if (d3Node.vx) d3Node.vx *= 0.5;
+      if (d3Node.vy) d3Node.vy *= 0.5;
+    }
+  }
+
+  /**
+   * Handle drag end - let simulation cool back down
+   */
+  private _handleDragEnd(): void {
+    if (!this._simulation || !this._isRunning) return;
+    
+    // Cool simulation back down after drag
+    this._simulation.alphaTarget(0);
+  }
+
+  /**
    * Cleanup
    */
   destroy(): void {
     this.stop();
+    
+    // Remove event listeners from nodes
+    if (this._graphPlugin?.renderer) {
+      const nodes = this._graphPlugin.renderer.getNodes();
+      nodes.forEach((node: any) => {
+        node.off('dragstart', this._handleDragStart.bind(this));
+        node.off('dragstart', this._handleDragStart.bind(this));
+        node.off('drag', this._handleDrag.bind(this));
+        node.off('dragend', this._handleDragEnd.bind(this));
+      });
+    }
+    
     this._simulation = null;
     this._canvas = null;
+    this._d3Nodes = [];
   }
 }

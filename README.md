@@ -17,6 +17,12 @@ pnpm build
 pnpm storybook
 ```
 
+
+```bash
+pnpm --filter @invana/canvas-core build 
+pnpm --filter @invana/layouts-d3-force build
+```
+
 ## Features
 
 - WebGPU-first with WebGL2 fallback
