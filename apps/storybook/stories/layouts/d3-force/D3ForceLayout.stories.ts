@@ -50,7 +50,7 @@ const convertLesMiserablesData = () => {
       id: `e${idx}`,
       source: edge.source,
       target: edge.target,
-      pathType: 'bezier' as const,
+      pathType: 'straight' as const,
     })),
   };
 };
@@ -82,7 +82,7 @@ export const LesMiserables: Story = {
           key: 'bg',
           options: {
             type: 'solid',
-            color: '#ffffff',  // White background like Observable
+            color: '#202020',  // White background like Observable
           },
         },
         {
@@ -97,14 +97,14 @@ export const LesMiserables: Story = {
                   const group = rawNode?.group ?? 0;
                   return groupColors[group % groupColors.length] || '#8dd3c7';
                 },
-                stroke: () => '#484848',  // Gray stroke for light background
+                stroke: () => '#86d971',  // Gray stroke for light background
                 strokeWidth: () => 1.5,
                 labelFontSize: () => 10,
-                labelFill: () => '#595959',  // Black text for light background
+                labelFill: () => '#ffffff',  // Black text for light background
                 labelPosition: () => "top-right",
               },
               edge: {
-                stroke: () => '#999999',  // Gray edges for light background
+                stroke: () => '#767676',  // Gray edges for light background
                 strokeWidth: () => 1,
                 strokeAlpha: () => 0.6,
               },
@@ -117,10 +117,7 @@ export const LesMiserables: Story = {
           plugin: 'layout-d3-force',
           key: 'layout',
           options: {
-            // Use D3 defaults - no custom forces
-            // This creates natural clustering based on link connections
-            animate: true,
-            iterations: 600  // More iterations for better clustering
+            // Use D3 defaults like Observable example
           },
         },
       ],
