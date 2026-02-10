@@ -58,7 +58,7 @@ export class OrthogonalEdge extends RendererEdgeBase {
     }, style);
     
     // Draw arrows if needed
-    const arrowSize = this._data.arrowSize ?? 10;
+    const arrowSize = this._data.arrowSize ?? 5;
     const strokeColor = typeof style.stroke === 'string' 
       ? parseInt(style.stroke.replace('#', ''), 16)
       : 0x000000;

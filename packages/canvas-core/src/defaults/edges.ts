@@ -72,7 +72,7 @@ export const DEFAULT_EDGE_STATE_PRIORITY = [
 export const DEFAULT_EDGE_STYLE: EdgeStyle = {
   // Path styling
   stroke: '#8c8c8c',
-  strokeWidth: 2,
+  strokeWidth: 1,
   strokeAlpha: 1,
   strokeStyle: 'solid',
   strokeDashPattern: undefined,

@@ -22,7 +22,7 @@ export class LineEdge extends RendererEdgeBase {
     const start = this.getEdgeEndpoint(sourceNode, targetNode, 0);
     
     // Target offset includes space for arrow
-    const arrowSize = this._data.arrowSize ?? 10;
+    const arrowSize = this._data.arrowSize ?? 5;
     const targetArrow = this._data.arrowTarget ?? 'triangle';
     const targetOffset = targetArrow !== 'none' ? 5 : 0;
     const targetIntersection = this.getEdgeEndpoint(targetNode, sourceNode, targetOffset);

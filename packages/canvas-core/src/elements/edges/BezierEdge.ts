@@ -33,7 +33,7 @@ export class BezierEdge extends RendererEdgeBase {
 
     const curvature = this._data.curvature ?? 0.25;
     const targetArrow = this._data.arrowTarget ?? 'triangle';
-    const arrowSize = this._data.arrowSize ?? 10;
+    const arrowSize = this._data.arrowSize ?? 5;
 
     // Calculate vector between node centers
     const dx = targetNode.x - sourceNode.x;
