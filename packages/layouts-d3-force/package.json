@@ -41,6 +41,9 @@
     "canvas",
     "layout",
     "d3",
+    "d3-force",
+    "network",
+    "network-layout",
     "force-directed",
     "graph-visualization"
   ],
