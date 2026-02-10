@@ -1,7 +1,7 @@
 /**
  * Function-Based Styling Utilities
  * 
- * Simple utility for AntV G6-style function-based properties
+ * Simple utility for function-based properties
  * where style values can be static or functions that receive node/edge data
  */
 

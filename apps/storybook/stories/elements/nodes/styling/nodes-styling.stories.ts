@@ -10,7 +10,7 @@ type Story = StoryObj;
 
 /**
  * 1. Individual Node Styling - Style each node separately with the `style` property
- * Similar to AntV's per-node styling approach
+ * Similar to   per-node styling approach
  */
 export const IndividualNodeStyling: Story = {
   parameters: {

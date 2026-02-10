@@ -63,7 +63,7 @@ Canvas
 1. **Simplicity**: One file, two functions instead of 3 classes with complex inheritance
 2. **No Dependencies**: No ThemeManager, no rule system, no legacy code
 3. **Pure Functions**: Easier to test, no state management
-4. **AntV G6 Pattern**: Direct support for function-based properties
+4. **. Pattern**: Direct support for function-based properties
 5. **Less Code**: ~400 lines removed, keeping only ~100 essential lines
 
 ## Migration (None Required)

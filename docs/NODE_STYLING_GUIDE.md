@@ -1,6 +1,6 @@
 # Node Styling Guide
 
-This guide shows how to customize node styling in Invana Canvas, similar to AntV's flexible styling approach.
+This guide shows how to customize node styling in Invana Canvas, similar to   flexible styling approach.
 
 ## Overview
 
@@ -12,7 +12,7 @@ Invana Canvas provides three levels of styling control:
 
 ## 1. Individual Node Styling
 
-Style each node individually using the `style` property. This is similar to AntV's per-node styling approach.
+Style each node individually using the `style` property. This is similar to   per-node styling approach.
 
 ```typescript
 const nodes: CanvasNodeData = [
@@ -142,9 +142,9 @@ const nodes: CanvasNodeData = [
 ];
 ```
 
-### Approach B: Function-Based Styling While Iterating (AntV G6 Style)
+### Approach B: Function-Based Styling While Iterating (. Style)
 
-This approach is most similar to AntV G6, where you apply styles using inline functions/conditions while mapping through your data:
+This approach is most similar to ., where you apply styles using inline functions/conditions while mapping through your data:
 
 ```typescript
 // Raw data (from API, database, etc.)
@@ -154,7 +154,7 @@ const rawData = [
   { id: 'db-1', name: 'Database', type: 'database', importance: 0.85 },
 ];
 
-// Apply styles conditionally while mapping - like AntV G6
+// Apply styles conditionally while mapping  
 const nodes: CanvasNodeData = rawData.map(d => ({
   id: d.id,
   x: Math.random() * 400,
@@ -168,7 +168,7 @@ const nodes: CanvasNodeData = rawData.map(d => ({
   // Size based on importance
   size: 30 + (d.importance * 20),
   
-  // Inline conditional styling (AntV style)
+  // Inline conditional styling 
   style: {
     // Fill color: (d) => d.type === 'user' ? 'blue' : 'red'
     fill: d.type === 'user' ? '#1890ff' :

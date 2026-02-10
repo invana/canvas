@@ -10,7 +10,7 @@ type Story = StoryObj;
 
 /**
  * 1. Individual Node Styling - Style each node separately with the `style` property
- * Similar to AntV's per-node styling approach
+ * Similar to   per-node styling approach
  */
 export const IndividualNodeStyling: Story = {
   parameters: {
@@ -406,9 +406,9 @@ export const MixedStyling: Story = {
 };
 
 /**
- * 5. Function-Based Styling (AntV G6 Style)
+ * 5. Function-Based Styling (. Style)
  * Apply styles using functions while iterating through data
- * This mimics AntV's approach: style: { fill: (d) => d.type === 'x' ? 'red' : 'blue' }
+ * This mimics   approach: style: { fill: (d) => d.type === 'x' ? 'red' : 'blue' }
  */
 export const FunctionBasedStyling: Story = {
   parameters: {
@@ -448,7 +448,7 @@ export const FunctionBasedStyling: Story = {
       // Size based on importance
       size: 30 + (d.importance * 20),
       
-      // Conditional styling - like AntV's function-based approach
+      // Conditional styling - like   function-based approach
       style: {
         // Fill color based on type
         fill: d.type === 'user' ? '#1890ff' :

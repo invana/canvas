@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/html';
 import { Canvas } from '@invana/canvas-core';
 
 /**
- * # AntV G6 Style Function-Based Styling
+ * # . Style Function-Based Styling
  * 
- * This example demonstrates the AntV G6-style function-based styling pattern where style properties
+ * This example demonstrates the .-style function-based styling pattern where style properties
  * can be functions that receive the node data and return computed values.
  * 
  * ## Key Features:
@@ -15,7 +15,7 @@ import { Canvas } from '@invana/canvas-core';
  * 
  * ## Pattern Comparison:
  * 
- * ### AntV G6:
+ * ### .:
  * ```typescript
  * {
  *   node: {
@@ -43,7 +43,7 @@ import { Canvas } from '@invana/canvas-core';
  */
 
 const meta: Meta = {
-  title: 'Canvas/Styling/Nodes/AntV Function-Based Styling',
+  title: 'Canvas/Styling/Nodes  Function-Based Styling',
   tags: ['autodocs'],
 };
 

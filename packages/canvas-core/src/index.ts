@@ -150,7 +150,7 @@ export { MiniMapPlugin, type MiniMapOptions } from './plugins/MiniMapPlugin';
 // STYLE
 // ============================================================================
 
-// Function-based styling (AntV G6 style) - RECOMMENDED
+// Function-based styling - RECOMMENDED
 export { 
   resolveNodeStyle,
   resolveEdgeStyle,

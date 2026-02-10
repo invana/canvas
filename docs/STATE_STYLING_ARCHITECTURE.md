@@ -79,10 +79,11 @@ getActiveStyle() {
 
 ---
 
-## G6/AntV Architecture
+## Architecture
 
 ### Overview
-G6 uses a **state-based styling system with style mappings**:
+
+**state-based styling system with style mappings**:
 
 ```typescript
 // Define styles per state
@@ -542,20 +543,7 @@ setState(name: string, active: boolean): void {
 
 ---
 
-## Comparison Table
-
-| Aspect | Invana Canvas (Current) | G6/AntV |
-|--------|------------------------|---------|
-| **State Definition** | Hard-coded properties | Dynamic string-based |
-| **Extensibility** | Limited (selected, hovered) | Unlimited custom states |
-| **Type Safety** | Strong (TypeScript) | Weak (string keys) |
-| **Performance** | Fast (direct access) | Good (lookup overhead) |
-| **API Complexity** | Simple | Moderate |
-| **Multiple States** | Poor (if-else chain) | Excellent (composable) |
-| **Style Composition** | Manual per-property | Automatic merge |
-| **Learning Curve** | Easy | Moderate |
-| **Debugging** | Straightforward | Complex |
-
+ 
 ---
 
 ## Recommendations
