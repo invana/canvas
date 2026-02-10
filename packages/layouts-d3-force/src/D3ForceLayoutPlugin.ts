@@ -213,7 +213,7 @@ export class D3ForceLayoutPlugin implements CanvasPlugin {
       .force("y", forceY(d => d.y ?? 0))
       .force('charge', forceManyBody().strength(-350)) //.distanceMin(100))
       .force('collide', forceCollide<D3Node>()
-        .radius(d => d.size)  // Use half size (radius) + padding
+        .radius(d => d.size * 2)  // Use half size (radius) + padding
         // .iterations(3)  // More iterations = stronger collision
         // .strength(0.9)
       )  // How strongly to enforce separation
