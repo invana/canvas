@@ -24,6 +24,26 @@
  *   spacing: 20
  * });
  * ```
+ * 
+ * @example
+ * ```typescript
+ * const canvas = new Canvas({
+ *   container,
+ *   width: container.clientWidth || 800,
+ *   height: container.clientHeight || 600,
+ *   behavior: 'default',
+ *   plugins: [
+ *     {
+ *       plugin: 'background',
+ *       key: 'bg',
+ *       options: {
+ *         type: 'solid',
+ *         color: '#202020',
+ *       },
+ *     }
+ *   ],  
+ * });
+ * ```
  */
 
 import { Container, Graphics } from 'pixi.js';

@@ -30,7 +30,21 @@ pnpm --filter @invana/layouts-d3-force build
 - Plugin architecture for extensibility
 - Multiple node shapes and edge types
 - Rich interactions - pan, zoom, drag, select
-- Built-in animations
+- Support for animations
+
+## Usage
+
+```typescript
+
+
+```
+
+## Documentation
+
+1. [Architecture](./docs/architecture.md)
+2. Plugins
+    - [Usage Patterns](./docs/plugins/usage-patterns.md)
+    - [How to create a plugin](./docs/plugins/how-to-create-plugin.md)
 
 ## License
 
