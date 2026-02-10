@@ -34,4 +34,3 @@ pnpm --filter @invana/layouts-d3-force build
 
 ## License
 
-MIT
