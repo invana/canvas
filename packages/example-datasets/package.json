@@ -3,18 +3,8 @@
   "version": "0.0.1",
   "description": "Example graph datasets for @invana/canvas-core",
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
-  },
-  "files": [
-    "dist"
-  ],
+  "main": "./src/index.js",
+  "types": "./src/index.ts",
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
