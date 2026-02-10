@@ -187,59 +187,21 @@ export class D3ForceLayoutPlugin implements CanvasPlugin {
     const nodesDataMap = this._graphPlugin.getNodeData();
     const nodesDataList = Array.from(nodesDataMap.values()) as D3Node[];
     const edgesData = this._graphPlugin.getEdgeData();
-    const edgesDataList = Array.from(edgesData.values());
+    const edgesDataList = Array.from(edgesData.values())
 
-
-    console.log("Data: Node", nodesDataList)
-    console.log("Data: Edge", edgesData)
-    if (nodesDataList.length === 0) {
-      console.warn('[D3ForceLayout] No nodes to layout');
-      return;
-    }
-
-    // console.log('[D3ForceLayout] Sample renderer node (keys):', Object.keys(nodesDataList[0]));
-    // console.log('[D3ForceLayout] Node has _data?:', '_data' in nodesDataList[0]);
-    // console.log('[D3ForceLayout] Node has id?:', 'id' in nodesDataList[0]);
-    // if (nodesDataList[0]._data) {
-    //   console.log('[D3ForceLayout] Node._data keys:', Object.keys(nodesDataList[0]._data));
-    //   console.log('[D3ForceLayout] Node._data.id:', nodesDataList[0]._data.id);
-    // }
 
     // Get canvas dimensions for centering
     const canvasWidth = this._canvas.width;
     const canvasHeight = this._canvas.height;
 
     console.log('[D3ForceLayout] Canvas size:', { width: canvasWidth, height: canvasHeight });
-
-    // Renderer nodes are PixiJS objects with read-only properties, so we can't augment them
-    // Instead, use their existing properties directly (id, x, y, size are already present)
-    // nodesDataList.forEach((node: any, idx: number) => {
-    //   if (idx === 0) {
-    //     console.log('[D3ForceLayout] First node:', { 
-    //       id: node.id,
-    //       x: node.x,
-    //       y: node.y,
-    //       size: node.size
-    //     });
-    //   }
-    //   // D3 will add vx, vy, fx, fy as needed to these objects
-    // });
-
     // Prepare D3 links - extract source/target from renderer edge structure
     const d3Links: D3Link[] = edgesDataList.map((edge: any) => ({
-      source: (edge._data?.source || edge.source) as string,
-      target: (edge._data?.target || edge.target) as string,
+      source:  edge.source as string,
+      target:  edge.target as string,
     }));
 
-    console.log('[D3ForceLayout] Creating simulation with options:', {
-      animate: this._options.animate,
-      charge: this._options.charge,
-      linkDistance: this._options.linkDistance,
-      iterations: this._options.iterations
-    });
-
-    console.log("d3Links", d3Links)
-    
+    console.log('[D3ForceLayout] Creating simulation with options:', this._options);
 
     // Setup drag event listeners on nodes after they're rendered
     this.setupDragListeners();
@@ -247,33 +209,16 @@ export class D3ForceLayoutPlugin implements CanvasPlugin {
     // Create simulation using renderer nodes directly
     const simulation = forceSimulation<D3Node, D3Link>(nodesDataList)
       .force('link', forceLink<D3Node, D3Link>(d3Links).id(d => d.id))
-
-       .force(
-        "x",
-        forceX(d => d.x ?? 0)
-      )
-      .force(
-        "y",
-        forceY(d => d.y ?? 0)
-      )
+      .force("x",forceX(d => d.x ?? 0))
+      .force("y", forceY(d => d.y ?? 0))
       .force('charge', forceManyBody().strength(-350)) //.distanceMin(100))
       .force('collide', forceCollide<D3Node>()
         .radius(d => d.size)  // Use half size (radius) + padding
         // .iterations(3)  // More iterations = stronger collision
         // .strength(0.9)
       )  // How strongly to enforce separation
-      .force('center', forceCenter(canvasWidth / 2, canvasHeight / 2)) // Very weak centering to prevent drift
-      // .force('x', forceX(canvasWidth / 2))
-      // .force('y', forceY(canvasHeight / 2));
-      // .stop()
+      .force('center', forceCenter(canvasWidth / 2, canvasHeight / 2)) 
       // .tick(this._options.iterations);
-
-
-    // simulation.nodes(nodesData);
-    // const linkForce = simulation.force("link");
-    // if (linkForce) {
-    //   linkForce.links(d3Links);
-    // }
 
     let tickCount = 0;
     
@@ -351,36 +296,36 @@ export class D3ForceLayoutPlugin implements CanvasPlugin {
   setOptions(options: Partial<D3ForceLayoutOptions>): void {
     Object.assign(this._options, options);
 
-    // // Update simulation forces if running
-    // if (this._simulation) {
-    //   if (options.charge !== undefined) {
-    //     this._simulation.force('charge', forceManyBody().strength(options.charge));
-    //   }
-    //   if (options.linkDistance !== undefined) {
-    //     const linkForce = this._simulation.force('link') as any;
-    //     if (linkForce) {
-    //       linkForce.distance(options.linkDistance);
-    //     }
-    //   }
-    //   if (options.collisionRadius !== undefined) {
-    //     this._simulation.force('collide', forceCollide<D3Node>(options.collisionRadius));
-    //   }
-    //   if (options.centerStrength !== undefined) {
-    //     const centerForce = this._simulation.force('center') as any;
-    //     if (centerForce) {
-    //       centerForce.strength(options.centerStrength);
-    //     }
-    //   }
-    //   if (options.alphaDecay !== undefined) {
-    //     this._simulation.alphaDecay(options.alphaDecay);
-    //   }
-    //   if (options.velocityDecay !== undefined) {
-    //     this._simulation.velocityDecay(options.velocityDecay);
-    //   }
+    // Update simulation forces if running
+    if (this._simulation) {
+      if (options.charge !== undefined) {
+        this._simulation.force('charge', forceManyBody().strength(options.charge));
+      }
+      if (options.linkDistance !== undefined) {
+        const linkForce = this._simulation.force('link') as any;
+        if (linkForce) {
+          linkForce.distance(options.linkDistance);
+        }
+      }
+      if (options.collisionRadius !== undefined) {
+        this._simulation.force('collide', forceCollide<D3Node>(options.collisionRadius));
+      }
+      if (options.centerStrength !== undefined) {
+        const centerForce = this._simulation.force('center') as any;
+        if (centerForce) {
+          centerForce.strength(options.centerStrength);
+        }
+      }
+      if (options.alphaDecay !== undefined) {
+        this._simulation.alphaDecay(options.alphaDecay);
+      }
+      if (options.velocityDecay !== undefined) {
+        this._simulation.velocityDecay(options.velocityDecay);
+      }
 
-    //   // Reheat simulation to apply changes
-    //   this._simulation.alpha(0.3).restart();
-    // }
+      // Reheat simulation to apply changes
+      this._simulation.alpha(0.3).restart();
+    }
   }
 
   /**
@@ -451,10 +396,10 @@ export class D3ForceLayoutPlugin implements CanvasPlugin {
     if (node) {
       // Update FIXED position - this keeps node under cursor while
       // collision forces push other nodes out of the way
-      // node.fx = x;
-      // node.fy = y;
-      // node.x = x;  // Also update actual position for immediate feedback
-      // node.y = y;
+      node.fx = x;
+      node.fy = y;
+      node.x = x;  // Also update actual position for immediate feedback
+      node.y = y;
       
       // Immediately update visual position - don't wait for next tick
       if (this._graphPlugin) {
