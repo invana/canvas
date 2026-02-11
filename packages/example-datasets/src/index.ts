@@ -5,3 +5,4 @@
  */
 
 export { lesMiserablesDataRaw } from './datasets/lesMiserables';
+export { generateRandomTree } from './datasets/randomTree';
