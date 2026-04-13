@@ -25,6 +25,11 @@ import type { PathStyle, Point, Direction } from '../../primitives/paths';
 import type { ArrowType } from '../../primitives/arrows';
 import { RendererBase, type RendererBaseData, type RendererBaseOptions } from '../RendererBase';
 import { EdgeStates, type EdgeStateName } from '../../types/states';
+import { FederatedPointerEvent } from 'pixi.js';
+import type { EventEmitter } from '../../utils/EventEmitter';
+import type { CanvasEventMap } from '../../types';
+import type { Viewport } from '../../viewport/Viewport';
+import { resolvePointerPosition } from '../../utils/eventHelpers';
 
 
 /**
@@ -130,6 +135,10 @@ export interface EdgeShapeOptions extends Omit<RendererBaseOptions<RendererEdge>
   style?: Partial<EdgeStyle>;
   /** Initial states to activate (e.g., ['selected', 'highlighted']) */
   states?: string[];
+  /** Canvas event bus — injected by Renderer to wire core pointer events */
+  events?: EventEmitter<CanvasEventMap>;
+  /** Viewport — injected by Renderer for world-coordinate resolution */
+  viewport?: Viewport;
 }
 
 /**
@@ -183,9 +192,41 @@ export abstract class RendererEdgeBase extends RendererBase<RendererEdge> {
     // Update interaction mode based on disabled state
     this.updateInteractionMode();
 
-    // Set up hover events
-    this.on('pointerover', this.onPointerOver, this);
-    this.on('pointerout', this.onPointerOut, this);
+    // Wire core pointer events into canvas.events
+    if (options.events && options.viewport) {
+      const bus = options.events;
+      const vp = options.viewport;
+
+      this.eventMode = 'static';
+
+      let _lastTapMs = 0;
+      const DBLCLICK_MS = 300;
+      this.on('pointertap', (e: FederatedPointerEvent) => {
+        if (this.isDisabled()) return;
+        const now = Date.now();
+        if (now - _lastTapMs < DBLCLICK_MS) {
+          _lastTapMs = 0;
+          bus.emit('edge:dblclicked', { edge: this, position: resolvePointerPosition(e, vp), originalEvent: e });
+        } else {
+          _lastTapMs = now;
+          bus.emit('edge:clicked', { edge: this, position: resolvePointerPosition(e, vp), originalEvent: e });
+        }
+      });
+
+      this.on('pointerover', (e: FederatedPointerEvent) => {
+        if (this.isDisabled()) return;
+        bus.emit('edge:hover', { edge: this, position: resolvePointerPosition(e, vp), originalEvent: e });
+      });
+
+      this.on('pointerout', (e: FederatedPointerEvent) => {
+        if (this.isDisabled()) return;
+        bus.emit('edge:hoverend', { edge: this, position: resolvePointerPosition(e, vp), originalEvent: e });
+      });
+    } else {
+      // Fallback: bare hover state without event bus (e.g. when constructed outside Renderer)
+      this.on('pointerover', this.onPointerOver, this);
+      this.on('pointerout', this.onPointerOut, this);
+    }
 
     // Don't call forceRender() here - let Renderer call it after setting node references
     // This avoids "Cannot render - missing node references" errors

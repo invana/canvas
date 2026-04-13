@@ -50,6 +50,7 @@ export class DragCanvasPlugin implements CanvasPlugin {
   }
 
   private _viewport: Viewport | null = null;
+  private _canvas: Canvas | null = null;
   private _options: Required<DragCanvasOptions>;
   
   private _isDragging = false;
@@ -69,6 +70,7 @@ export class DragCanvasPlugin implements CanvasPlugin {
   }
 
   async init(canvas: Canvas): Promise<void> {
+    this._canvas = canvas;
     this._viewport = canvas.viewport;
 
     if (!this._viewport) {
@@ -162,6 +164,8 @@ export class DragCanvasPlugin implements CanvasPlugin {
     // Update viewport position
     this._viewport!.x = this._viewportStartX + dx;
     this._viewport!.y = this._viewportStartY + dy;
+
+    this._canvas?.events.emit('viewport:panned', { x: this._viewport!.x, y: this._viewport!.y });
   };
 
   /**
@@ -205,6 +209,7 @@ export class DragCanvasPlugin implements CanvasPlugin {
     }
 
     this._viewport = null;
+    this._canvas = null;
     this._isDragging = false;
   }
 }

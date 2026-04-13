@@ -53,6 +53,7 @@ export class ZoomControlPlugin implements CanvasPlugin {
   }
 
   private _viewport: Viewport | null = null;
+  private _canvas: Canvas | null = null;
   private _options: Required<ZoomControlOptions>;
 
   constructor(options: ZoomControlOptions = {}) {
@@ -66,6 +67,7 @@ export class ZoomControlPlugin implements CanvasPlugin {
   }
 
   async init(canvas: Canvas): Promise<void> {
+    this._canvas = canvas;
     this._viewport = canvas.viewport;
 
     if (!this._viewport) {
@@ -105,6 +107,8 @@ export class ZoomControlPlugin implements CanvasPlugin {
       // Zoom toward center
       this._viewport!.zoomTo(newZoom);
     }
+
+    this._canvas?.events.emit('viewport:zoomed', { scale: this._viewport!.scaled });
   };
 
   /**
@@ -182,6 +186,7 @@ export class ZoomControlPlugin implements CanvasPlugin {
     }
 
     this._viewport = null;
+    this._canvas = null;
   }
 }
 

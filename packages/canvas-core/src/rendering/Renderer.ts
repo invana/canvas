@@ -217,6 +217,8 @@ export class Renderer {
       style: mergedStyle,
       states,
       registry: this._registry,
+      events: this._canvas?.events,
+      viewport: this._canvas?.viewport,
     });
     
     // Store and add to layer
@@ -377,6 +379,8 @@ export class Renderer {
       style: mergedStyle,
       states,
       registry: this._registry,
+      events: this._canvas?.events,
+      viewport: this._canvas?.viewport,
     });
     
     // CRITICAL: Store node references BEFORE rendering

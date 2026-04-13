@@ -4,7 +4,7 @@
 
 export type EventCallback<T = unknown> = (data: T) => void;
 
-export class EventEmitter<TEvents extends Record<string, unknown>> {
+export class EventEmitter<TEvents extends object> {
   private readonly listeners: Map<keyof TEvents, Set<EventCallback<unknown>>> = new Map();
 
   /**

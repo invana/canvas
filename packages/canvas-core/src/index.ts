@@ -197,6 +197,19 @@ export type {
   ProcessorConstructor 
 } from './processors';
 export type { ProcessorConfig, ProcessorContext } from './types';
+export type {
+  CanvasEventMap,
+  CanvasPointerPosition,
+  NodePointerEvent,
+  NodeDragEvent,
+  NodeSelectionEvent,
+  EdgePointerEvent,
+  EdgeSelectionEvent,
+  SelectionChangedEvent,
+  CanvasBgPointerEvent,
+  ViewportZoomEvent,
+  ViewportPanEvent,
+} from './types';
 
 // ============================================================================
 // ELEMENTS

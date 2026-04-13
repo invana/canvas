@@ -40,6 +40,7 @@ export type CanvasEventType =
   | 'node:deselected'
   | 'node:clicked'
   | 'node:dblclicked'
+  | 'node:contextmenu'
   | 'node:dragstart'
   | 'node:drag'
   | 'node:dragend'
@@ -54,6 +55,9 @@ export type CanvasEventType =
   | 'edge:dblclicked'
   | 'edge:hover'
   | 'edge:hoverend'
+  | 'canvas:clicked'
+  | 'canvas:dblclicked'
+  | 'canvas:contextmenu'
   | 'viewport:changed'
   | 'viewport:zoomed'
   | 'viewport:panned'
@@ -66,6 +70,95 @@ export interface CanvasEvent<T = unknown> {
   data?: unknown;
   originalEvent?: Event;
   timestamp: number;
+}
+
+// =============================================================================
+// Typed Event Map — used by Canvas.events (EventEmitter<CanvasEventMap>)
+// Forward-declare element types to avoid circular imports at runtime.
+// =============================================================================
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyRendererNodeBase = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyRendererEdgeBase = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyFederatedPointerEvent = any;
+
+export interface CanvasPointerPosition {
+  /** Screen (pixel) coordinates relative to the canvas element */
+  screen: { x: number; y: number };
+  /** World (canvas) coordinates */
+  world: { x: number; y: number };
+}
+
+export interface NodePointerEvent {
+  node: AnyRendererNodeBase;
+  position: CanvasPointerPosition;
+  originalEvent: AnyFederatedPointerEvent;
+}
+
+export interface NodeDragEvent {
+  node: AnyRendererNodeBase;
+  x: number;
+  y: number;
+}
+
+export interface NodeSelectionEvent {
+  node: AnyRendererNodeBase;
+}
+
+export interface EdgePointerEvent {
+  edge: AnyRendererEdgeBase;
+  position: CanvasPointerPosition;
+  originalEvent: AnyFederatedPointerEvent;
+}
+
+export interface EdgeSelectionEvent {
+  edge: AnyRendererEdgeBase;
+}
+
+export interface SelectionChangedEvent {
+  nodes: AnyRendererNodeBase[];
+  edges: AnyRendererEdgeBase[];
+}
+
+export interface CanvasBgPointerEvent {
+  position: CanvasPointerPosition;
+  originalEvent: AnyFederatedPointerEvent | Event;
+}
+
+export interface ViewportZoomEvent {
+  scale: number;
+}
+
+export interface ViewportPanEvent {
+  x: number;
+  y: number;
+}
+
+export interface CanvasEventMap {
+  'node:clicked':        NodePointerEvent;
+  'node:dblclicked':     NodePointerEvent;
+  'node:contextmenu':    NodePointerEvent;
+  'node:hover':          NodePointerEvent;
+  'node:hoverend':       NodePointerEvent;
+  'node:dragstart':      NodeDragEvent;
+  'node:drag':           NodeDragEvent;
+  'node:dragend':        NodeDragEvent;
+  'node:selected':       NodeSelectionEvent;
+  'node:deselected':     NodeSelectionEvent;
+  'edge:clicked':        EdgePointerEvent;
+  'edge:dblclicked':     EdgePointerEvent;
+  'edge:hover':          EdgePointerEvent;
+  'edge:hoverend':       EdgePointerEvent;
+  'edge:selected':       EdgeSelectionEvent;
+  'edge:deselected':     EdgeSelectionEvent;
+  'canvas:clicked':      CanvasBgPointerEvent;
+  'canvas:dblclicked':   CanvasBgPointerEvent;
+  'canvas:contextmenu':  CanvasBgPointerEvent;
+  'selection:changed':   SelectionChangedEvent;
+  'viewport:zoomed':     ViewportZoomEvent;
+  'viewport:panned':     ViewportPanEvent;
 }
 
 // =============================================================================
