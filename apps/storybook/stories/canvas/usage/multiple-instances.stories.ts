@@ -3,7 +3,7 @@ import { Canvas, GraphDataPlugin } from '@invana/canvas-core';
 import { createContainer, createCanvasSection } from '../../../src/div-utils';
 
 const meta: Meta = {
-  title: 'Canvas/usage',
+  title: 'Canvas/Usage/Multiple Instances',
 };
 
 export default meta;

@@ -140,7 +140,7 @@ export { DragCanvasPlugin, type DragCanvasOptions } from './plugins/DragCanvasPl
 export { ZoomControlPlugin, type ZoomControlOptions } from './plugins/ZoomControlPlugin';
 export { ClickSelectPlugin, type ClickSelectOptions } from './plugins/ClickSelectPlugin';
 export type { SelectableElement } from './plugins/ClickSelectPlugin';
-export { HoverActivatePlugin, type HoverActivateOptions } from './plugins/HoverActivatePlugin';
+export { HoverActivatePlugin, type HoverActivateOptions, type HoverDirection } from './plugins/HoverActivatePlugin';
 export type { HoverableElement } from './plugins/HoverActivatePlugin';
 export { FocusElementPlugin, type FocusElementOptions } from './plugins/FocusElementPlugin';
 export type { FocusableElement } from './plugins/FocusElementPlugin';

@@ -32,7 +32,7 @@ export const DEFAULT_EDGE_STATE_STYLES: Record<string, Partial<EdgeStyle>> = {
   },
   
   [EdgeStates.HIGHLIGHTED]: {
-    stroke: '#faad14',
+    stroke: '#e3f45f',
     strokeWidth: 4,
     strokeAlpha: 1,
   },

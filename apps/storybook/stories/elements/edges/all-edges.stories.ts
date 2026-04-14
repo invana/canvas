@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { Canvas, type CanvasData } from '@invana/canvas-core';
-import { createDescriptionPanel } from '../../../../src/div-utils';
+import { createDescriptionPanel } from '../../../src/div-utils';
 
 const meta: Meta = {
   title: 'Elements/Edges/All Edge Combinations',

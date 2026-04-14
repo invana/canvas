@@ -45,14 +45,14 @@ export const LABEL_VARIANTS = {
   /** Standard node label */
   node: {
     ...DEFAULT_LABEL_STYLE,
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 'normal',
   },
   
   /** Badge label (smaller, bold) */
   badge: {
     ...DEFAULT_LABEL_STYLE,
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: 'bold',
     fill: '#ffffff',
   },
