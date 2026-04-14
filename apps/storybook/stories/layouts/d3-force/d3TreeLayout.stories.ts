@@ -1,11 +1,7 @@
 /**
- * D3 Force Layout Story
+ * Force Layout Tree Story
  * 
- * Demonstrates force-directed graph layout using the D3ForceLayoutPlugin
- * from @invana/layouts-d3-force package (separate from canvas-core).
- * 
- * Uses the Les Misérables dataset - character co-occurrence network from
- * Victor Hugo's novel (77 nodes, 254 edges).
+ * Demonstrates a large tree rendered with the force layout plugin.
  */
 
 import type { Meta, StoryObj } from '@storybook/html';
@@ -19,7 +15,7 @@ PluginRegistry.register('graph-data', GraphDataPlugin);
 PluginRegistry.register('layout-d3-force', D3ForceLayoutPlugin);
 
 const meta: Meta = {
-  title: 'Layouts/d3-force',
+  title: 'Layouts/d3-force Trees',
 };
 
 export default meta;
@@ -30,7 +26,7 @@ type Story = StoryObj;
 const rawTreeData = generateRandomTree(5000)
 console.log('Generated random tree data:', rawTreeData);
 /**
- * Convert Les Misérables raw data to canvas format
+ * Convert generated tree data to canvas format
  */
 const convertRandomTreeData = () => {
   return {
@@ -70,7 +66,7 @@ export const RawTree: Story = {
           key: 'bg',
           options: {
             type: 'solid',
-            color: '#202020',  // White background like Observable
+            color: '#202020',
           },
         },
         {
@@ -93,7 +89,7 @@ export const RawTree: Story = {
                 strokeAlpha: () => 0.6,
               },
             },
-            fitOnRender: false,  // Don't fit - let D3 handle positioning
+            fitOnRender: false,
             fitPadding: 80,
           },
         },
@@ -101,7 +97,7 @@ export const RawTree: Story = {
           plugin: 'layout-d3-force',
           key: 'layout',
           options: {
-            // Use D3 defaults like Observable example
+            // Use the layout plugin defaults
             animate: false
           },
         },

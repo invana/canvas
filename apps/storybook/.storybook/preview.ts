@@ -2,6 +2,39 @@ import type { Preview } from '@storybook/html';
 
 import './global.css';
 
+/**
+ * Extracts only the play() function body from a story source string.
+ * This removes the Storybook boilerplate (name/render/play wrappers) so the
+ * Code panel shows only the canvas implementation code.
+ */
+function extractPlayBody(src: string): string {
+  const playIdx = src.indexOf('play: async () =>');
+  if (playIdx === -1) return src;
+
+  const braceStart = src.indexOf('{', playIdx);
+  if (braceStart === -1) return src;
+
+  // Walk forward counting braces to find the matching closing brace
+  let depth = 1;
+  let i = braceStart + 1;
+  while (i < src.length && depth > 0) {
+    if (src[i] === '{') depth++;
+    else if (src[i] === '}') depth--;
+    i++;
+  }
+
+  const body = src.slice(braceStart + 1, i - 1);
+
+  // Normalise indentation
+  const lines = body.split('\n');
+  const nonEmpty = lines.filter(l => l.trim().length > 0);
+  const minIndent = nonEmpty.length > 0
+    ? nonEmpty.reduce((min, l) => Math.min(min, l.match(/^(\s*)/)?.[1].length ?? 0), Infinity)
+    : 0;
+
+  return lines.map(l => l.slice(Math.max(0, minIndent))).join('\n').trim();
+}
+
 const preview: Preview = {
   parameters: {
     controls: {
@@ -20,8 +53,10 @@ const preview: Preview = {
       ],
     },
     docs: {
+      codePanel: true,
       source: {
-        type: 'code',
+        type: 'auto',
+        transform: (src: string) => extractPlayBody(src),
       },
     },
   },

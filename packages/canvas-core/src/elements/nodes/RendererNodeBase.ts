@@ -31,6 +31,10 @@ import { FederatedPointerEvent, Graphics, Ticker } from 'pixi.js';
 import { drawRippleEffect, calculateRippleRadius, calculateRippleAlpha } from '../../primitives/effects';
 import { NodeStates, KNOWN_NODE_STATES, type NodeStateName } from '../../types/states';
 import { DEFAULT_NODE_STYLE } from '../../defaults/nodes';
+import type { EventEmitter } from '../../utils/EventEmitter';
+import type { CanvasEventMap } from '../../types';
+import type { Viewport } from '../../viewport/Viewport';
+import { resolvePointerPosition } from '../../utils/eventHelpers';
 
 /**
  * Point interface for coordinates
@@ -219,6 +223,10 @@ export interface NodeShapeOptions extends Omit<RendererBaseOptions<RendererNode>
   style?: Partial<NodeStyle>;
   /** Initial states to activate (e.g., ['selected', 'highlighted']) */
   states?: string[];
+  /** Canvas event bus — injected by Renderer to wire core pointer events */
+  events?: EventEmitter<CanvasEventMap>;
+  /** Viewport — injected by Renderer for world-coordinate resolution */
+  viewport?: Viewport;
 }
 
 /**
@@ -283,9 +291,43 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
     // Update interaction mode based on disabled state
     this.updateInteractionMode();
 
-    // NOTE: All interaction event handlers (drag, hover, selection) are now
-    // managed by plugins. This keeps nodes pure rendering components.
-    // Plugins will attach their own event listeners when enabled.
+    // Wire core pointer events into canvas.events so plugins and developers
+    // can subscribe without needing direct PixiJS element access.
+    if (options.events && options.viewport) {
+      const bus = options.events;
+      const vp = options.viewport;
+
+      this.eventMode = 'static';
+
+      let _lastTapMs = 0;
+      const DBLCLICK_MS = 300;
+      this.on('pointertap', (e: FederatedPointerEvent) => {
+        if (this.isDisabled()) return;
+        const now = Date.now();
+        if (now - _lastTapMs < DBLCLICK_MS) {
+          _lastTapMs = 0;
+          bus.emit('node:dblclicked', { node: this, position: resolvePointerPosition(e, vp), originalEvent: e });
+        } else {
+          _lastTapMs = now;
+          bus.emit('node:clicked', { node: this, position: resolvePointerPosition(e, vp), originalEvent: e });
+        }
+      });
+
+      this.on('pointerover', (e: FederatedPointerEvent) => {
+        if (this.isDisabled()) return;
+        bus.emit('node:hover', { node: this, position: resolvePointerPosition(e, vp), originalEvent: e });
+      });
+
+      this.on('pointerout', (e: FederatedPointerEvent) => {
+        if (this.isDisabled()) return;
+        bus.emit('node:hoverend', { node: this, position: resolvePointerPosition(e, vp), originalEvent: e });
+      });
+
+      this.on('rightclick', (e: FederatedPointerEvent) => {
+        e.stopPropagation();
+        bus.emit('node:contextmenu', { node: this, position: resolvePointerPosition(e, vp), originalEvent: e });
+      });
+    }
 
     // Initial render
     this.forceRender();

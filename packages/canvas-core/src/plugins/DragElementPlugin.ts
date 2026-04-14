@@ -67,7 +67,6 @@ export class DragElementPlugin implements CanvasPlugin {
   
   // Event delegation - single listener instead of per-node
   private _dragData: DragData | null = null;
-  private _isDragging = false;
   
   // Store original cursors
   private _originalCursors = new WeakMap<RendererNodeBase, string>();
@@ -90,54 +89,11 @@ export class DragElementPlugin implements CanvasPlugin {
       throw new Error('Viewport is required for DragElementPlugin');
     }
 
-    // Setup draggable state for existing nodes
-    this.setupExistingNodes();
-
     // Event delegation - attach to viewport, not individual nodes
     this._viewport.on('pointerdown', this.onPointerDown);
     this._viewport.on('globalpointermove', this.onPointerMove);
     this._viewport.on('pointerup', this.onPointerUp);
     this._viewport.on('pointerupoutside', this.onPointerUp);
-  }
-
-  /**
-   * Setup existing nodes as draggable
-   */
-  private setupExistingNodes(): void {
-    if (!this._canvas) return;
-
-    const graphPlugin = this._canvas.getPlugin('graph-data') as any;
-    if (!graphPlugin?.renderer) return;
-    
-    const nodes = graphPlugin.renderer.getNodes();
-    nodes.forEach((node: any) => {
-      this.makeNodeDraggable(node);
-    });
-  }
-
-  /**
-   * Make a node draggable
-   */
-  private makeNodeDraggable(node: RendererNodeBase): void {
-    node.eventMode = 'static';
-    
-    // Store original cursor
-    this._originalCursors.set(node, node.cursor as string);
-    node.cursor = this._options.hoverCursor;
-
-    // Add hover effects
-    node.on('pointerover', () => {
-      if (!this._isDragging) {
-        node.cursor = this._options.hoverCursor;
-      }
-    });
-
-    node.on('pointerout', () => {
-      if (!this._isDragging) {
-        const original = this._originalCursors.get(node) || 'default';
-        node.cursor = original;
-      }
-    });
   }
 
   /**
@@ -197,10 +153,10 @@ export class DragElementPlugin implements CanvasPlugin {
     // Mark as dragging
     if (!this._dragData.hasMoved) {
       this._dragData.hasMoved = true;
-      this._isDragging = true;
       
-      // Emit drag start event
+      // Emit drag start on element (legacy) and via canvas bus
       node.emit('dragstart', { node, x: startNodeX, y: startNodeY });
+      this._canvas?.events.emit('node:dragstart', { node, x: startNodeX, y: startNodeY });
     }
 
     // Calculate new position
@@ -226,6 +182,7 @@ export class DragElementPlugin implements CanvasPlugin {
 
     // Emit drag move event
     node.emit('drag', { node, x: newX, y: newY });
+    this._canvas?.events.emit('node:drag', { node, x: newX, y: newY });
   };
 
   /**
@@ -247,11 +204,11 @@ export class DragElementPlugin implements CanvasPlugin {
     // Emit drag end event if we actually dragged
     if (this._dragData.hasMoved) {
       node.emit('dragend', { node, x: node.x, y: node.y });
+      this._canvas?.events.emit('node:dragend', { node, x: node.x, y: node.y });
     }
 
     // Reset drag state
     this._dragData = null;
-    this._isDragging = false;
   };
 
   /**
@@ -293,20 +250,6 @@ export class DragElementPlugin implements CanvasPlugin {
       this._viewport.off('globalpointermove', this.onPointerMove);
       this._viewport.off('pointerup', this.onPointerUp);
       this._viewport.off('pointerupoutside', this.onPointerUp);
-    }
-
-    // Clean up node cursors
-    if (this._canvas) {
-      const graphPlugin = this._canvas.getPlugin('graph-data') as any;
-      if (graphPlugin?.renderer) {
-        const nodes = graphPlugin.renderer.getNodes();
-        nodes.forEach((node: any) => {
-          const original = this._originalCursors.get(node) || 'default';
-          node.cursor = original;
-          node.off('pointerover');
-          node.off('pointerout');
-        });
-      }
     }
 
     this._canvas = null;

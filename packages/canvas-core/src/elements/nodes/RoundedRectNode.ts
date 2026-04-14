@@ -4,6 +4,7 @@
  * A rounded rectangle node shape.
  */
 
+import type { ShapeStyle } from '../../primitives/shapes';
 import { getRectIntersection } from '../../primitives/shapes/rect';
 import { RendererNodeBase, type Point, type Bounds, type NodeShapeType, type BadgePosition } from './RendererNodeBase';
 
@@ -21,13 +22,39 @@ export class RoundedRectNode extends RendererNodeBase {
     const cornerRadius = this._data.cornerRadius ?? 8;
 
     // Draw halo first (underneath main shape)
-    this.drawHalo(style, { type: 'roundedRect', width, height, cornerRadius });
+    this.drawHalo(style);
 
     // Draw rounded rectangle using registry
     const drawer = this._registry.getShape('roundedRect');
     if (drawer) {
       drawer(this._graphics, { x: 0, y: 0, width, height, radius: cornerRadius, centered: true }, style);
     }
+  }
+
+  protected drawHalo(style: ShapeStyle): void {
+    if (!style.halo) return;
+
+    const size = this._data.size ?? 30;
+    const width = this._data.width ?? size * 2;
+    const height = this._data.height ?? size * 2;
+    const cornerRadius = this._data.cornerRadius ?? 8;
+    const haloWidth = style.haloStrokeWidth ?? 3;
+    const haloColor = this.getHaloColor(style);
+    const haloOpacity = style.haloStrokeOpacity ?? 0.25;
+
+    this._graphics.roundRect(
+      -width / 2 - haloWidth,
+      -height / 2 - haloWidth,
+      width + haloWidth * 2,
+      height + haloWidth * 2,
+      cornerRadius + haloWidth
+    );
+    this._graphics.stroke({
+      color: haloColor,
+      width: haloWidth * 2,
+      alpha: haloOpacity,
+      alignment: 1,
+    });
   }
 
   getBoundaryPoint(targetPoint: Point, offset: number = 0): Point {

@@ -67,87 +67,33 @@ export class ClickSelectPlugin implements CanvasPlugin {
   async init(canvas: Canvas): Promise<void> {
     this._canvas = canvas;
 
-    if (!canvas.viewport) {
-      throw new Error('Viewport is required for ClickSelectPlugin');
-    }
-
-    // Setup existing nodes and edges as selectable
-    this.setupExistingElements();
-
-    // Listen to viewport for background clicks
-    canvas.viewport.on('pointerdown', this.onBackgroundClick);
-  }
-
-  /**
-   * Setup existing elements as selectable
-   */
-  private setupExistingElements(): void {
-    if (!this._canvas) return;
-
-    const graphPlugin = this._canvas.getPlugin('graph-data') as any;
-    if (!graphPlugin?.renderer) return;
-
-    // Make all nodes selectable
-    const nodes = graphPlugin.renderer.getNodes();
-    nodes.forEach((node: any) => {
-      this.makeElementSelectable(node);
-    });
-
-    // Make all edges selectable
-    const edges = graphPlugin.renderer.getEdges();
-    edges.forEach((edge: any) => {
-      this.makeElementSelectable(edge);
+    // Subscribe to canvas event bus — no per-element setup needed
+    canvas.on('node:clicked', (e) => this.onElementClick(e.node, e.originalEvent));
+    canvas.on('edge:clicked', (e) => this.onElementClick(e.edge, e.originalEvent));
+    canvas.on('canvas:clicked', () => {
+      if (this._options.clearOnBackground) this.clearSelection();
     });
   }
 
   /**
-   * Make an element selectable
+   * Handle element click — wired from canvas event bus
    */
-  private makeElementSelectable(element: SelectableElement): void {
-    element.eventMode = 'static';
-    element.cursor = 'pointer';
-
-    // Use pointertap instead of pointerdown to avoid selecting during drag
-    element.on('pointertap', (event: FederatedPointerEvent) => {
-      this.onElementClick(element, event);
-    });
-  }
-
-  /**
-   * Handle element click
-   */
-  private onElementClick = (element: SelectableElement, event: FederatedPointerEvent): void => {
-    // Check for multi-select modifier
-    const isMultiSelect = this._options.multiSelect && 
+  private onElementClick(element: SelectableElement, event: FederatedPointerEvent): void {
+    const isMultiSelect = this._options.multiSelect &&
       (event.shiftKey || event.ctrlKey || event.metaKey);
 
     if (this.isSelected(element)) {
-      // Toggle off if already selected
       if (isMultiSelect) {
         this.deselect(element);
       }
     } else {
-      // Select element
       if (isMultiSelect) {
         this.addToSelection(element);
       } else {
         this.select(element);
       }
     }
-
-    // Don't stop propagation - let DragElementPlugin also receive events
-    // DragCanvasPlugin already checks event.target to avoid dragging when clicking nodes
-  };
-
-  /**
-   * Handle background click
-   */
-  private onBackgroundClick = (event: FederatedPointerEvent): void => {
-    // Only clear if clicking on viewport (not on any element)
-    if (event.target === this._canvas?.viewport && this._options.clearOnBackground) {
-      this.clearSelection();
-    }
-  };
+  }
 
   /**
    * Select a single element (clears previous selection)
@@ -166,6 +112,12 @@ export class ClickSelectPlugin implements CanvasPlugin {
     this._selected.add(element);
     element.setState(this._options.selectedState, true);
 
+    if (element instanceof RendererNodeBase) {
+      this._canvas?.events.emit('node:selected', { node: element });
+    } else {
+      this._canvas?.events.emit('edge:selected', { edge: element as RendererEdgeBase });
+    }
+
     this.emitSelectionChange();
   }
 
@@ -177,6 +129,12 @@ export class ClickSelectPlugin implements CanvasPlugin {
 
     this._selected.delete(element);
     element.setState(this._options.selectedState, false);
+
+    if (element instanceof RendererNodeBase) {
+      this._canvas?.events.emit('node:deselected', { node: element });
+    } else {
+      this._canvas?.events.emit('edge:deselected', { edge: element as RendererEdgeBase });
+    }
 
     this.emitSelectionChange();
   }
@@ -250,9 +208,7 @@ export class ClickSelectPlugin implements CanvasPlugin {
   private emitSelectionChange(): void {
     if (!this._canvas) return;
 
-    // Emit custom event through canvas
-    (this._canvas as any).emit?.('selectionChanged', {
-      selected: this.getSelected(),
+    this._canvas.events.emit('selection:changed', {
       nodes: this.getSelectedNodes(),
       edges: this.getSelectedEdges(),
     });
@@ -276,27 +232,7 @@ export class ClickSelectPlugin implements CanvasPlugin {
   }
 
   destroy(): void {
-    // Clear all selections
     this.clearSelection();
-
-    // Remove event listeners
-    if (this._canvas) {
-      this._canvas.viewport?.off('pointerdown', this.onBackgroundClick);
-
-      const graphPlugin = this._canvas.getPlugin('graph-data') as any;
-      if (graphPlugin?.renderer) {
-        const nodes = graphPlugin.renderer.getNodes();
-        nodes.forEach((node: any) => {
-          node.off('pointerdown');
-        });
-
-        const edges = graphPlugin.renderer.getEdges();
-        edges.forEach((edge: any) => {
-          edge.off('pointerdown');
-        });
-      }
-    }
-
     this._canvas = null;
     this._selected.clear();
   }

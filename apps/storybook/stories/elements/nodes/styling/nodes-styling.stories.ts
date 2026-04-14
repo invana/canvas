@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { Canvas, CanvasNode, CanvasOptions } from '@invana/canvas-core';
-import { getFullHeightContainer } from '../../../../src/div-utils';
+import { getFullHeightContainer, createDescriptionPanel } from '../../../../src/div-utils';
 const meta: Meta = {
   title: 'Nodes/Styling',
 };
@@ -277,22 +277,21 @@ export const GlobalStylesWithStates: Story = {
     await canvas.init();
     
     // Add info box
-    const info = document.createElement('div');
-    info.style.position = 'absolute';
-    info.style.top = '20px';
-    info.style.left = '20px';
-    info.style.padding = '15px';
-    info.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-    info.style.borderRadius = '8px';
-    info.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-    info.innerHTML = `
-      <div style="font-size: 14px; color: #333;">
-        <strong>Interaction:</strong><br/>
-        • Click nodes to select them<br/>
-        • Hover to see active state<br/>
-        • All nodes use the same global style
-      </div>
-    `;
+    const info = createDescriptionPanel({
+      text: `<div style="font-size: 14px; color: #333;">
+               <strong>Interaction:</strong><br/>
+               • Click nodes to select them<br/>
+               • Hover to see active state<br/>
+               • All nodes use the same global style
+             </div>`,
+      position: 'top-left',
+      top: '20px',
+      left: '20px',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      textColor: '#333',
+      padding: '15px',
+      maxWidth: 'none',
+    });
     container.appendChild(info);
   },
 };
@@ -386,21 +385,21 @@ export const MixedStyling: Story = {
     await canvas.init();
     
     // Add info box
-    const info = document.createElement('div');
-    info.style.position = 'absolute';
-    info.style.top = '20px';
-    info.style.left = '20px';
-    info.style.padding = '15px';
-    info.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-    info.style.borderRadius = '8px';
-    info.innerHTML = `
-      <div style="font-size: 14px; color: #333;">
-        <strong>Styling Priority:</strong><br/>
-        1. Individual node.style (highest)<br/>
-        2. Global styles.node<br/>
-        3. Built-in defaults (lowest)
-      </div>
-    `;
+    const info = createDescriptionPanel({
+      text: `<div style="font-size: 14px; color: #333;">
+               <strong>Styling Priority:</strong><br/>
+               1. Individual node.style (highest)<br/>
+               2. Global styles.node<br/>
+               3. Built-in defaults (lowest)
+             </div>`,
+      position: 'top-left',
+      top: '20px',
+      left: '20px',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      textColor: '#333',
+      padding: '15px',
+      maxWidth: 'none',
+    });
     container.appendChild(info);
   },
 };

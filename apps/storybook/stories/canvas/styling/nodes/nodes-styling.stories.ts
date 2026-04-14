@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { Canvas, CanvasNode, CanvasOptions } from '@invana/canvas-core';
-import { getFullHeightContainer } from '../../../../src/div-utils';
+import { getFullHeightContainer, createDescriptionPanel } from '../../../../src/div-utils';
 const meta: Meta = {
   title: 'Canvas/Styling/Nodes',
 };
@@ -277,22 +277,21 @@ export const GlobalStylesWithStates: Story = {
     await canvas.init();
     
     // Add info box
-    const info = document.createElement('div');
-    info.style.position = 'absolute';
-    info.style.top = '20px';
-    info.style.left = '20px';
-    info.style.padding = '15px';
-    info.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-    info.style.borderRadius = '8px';
-    info.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-    info.innerHTML = `
-      <div style="font-size: 14px; color: #333;">
-        <strong>Interaction:</strong><br/>
-        • Click nodes to select them<br/>
-        • Hover to see active state<br/>
-        • All nodes use the same global style
-      </div>
-    `;
+    const info = createDescriptionPanel({
+      text: `<div style="font-size: 14px; color: #333;">
+               <strong>Interaction:</strong><br/>
+               • Click nodes to select them<br/>
+               • Hover to see active state<br/>
+               • All nodes use the same global style
+             </div>`,
+      position: 'top-left',
+      top: '20px',
+      left: '20px',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      textColor: '#333',
+      padding: '15px',
+      maxWidth: 'none',
+    });
     container.appendChild(info);
   },
 };
@@ -386,21 +385,21 @@ export const MixedStyling: Story = {
     await canvas.init();
     
     // Add info box
-    const info = document.createElement('div');
-    info.style.position = 'absolute';
-    info.style.top = '20px';
-    info.style.left = '20px';
-    info.style.padding = '15px';
-    info.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-    info.style.borderRadius = '8px';
-    info.innerHTML = `
-      <div style="font-size: 14px; color: #333;">
-        <strong>Styling Priority:</strong><br/>
-        1. Individual node.style (highest)<br/>
-        2. Global styles.node<br/>
-        3. Built-in defaults (lowest)
-      </div>
-    `;
+    const info = createDescriptionPanel({
+      text: `<div style="font-size: 14px; color: #333;">
+               <strong>Styling Priority:</strong><br/>
+               1. Individual node.style (highest)<br/>
+               2. Global styles.node<br/>
+               3. Built-in defaults (lowest)
+             </div>`,
+      position: 'top-left',
+      top: '20px',
+      left: '20px',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      textColor: '#333',
+      padding: '15px',
+      maxWidth: 'none',
+    });
     container.appendChild(info);
   },
 };
@@ -500,46 +499,46 @@ export const FunctionBasedStyling: Story = {
     await canvas.init();
     
     // Add legend
-    const legend = document.createElement('div');
-    legend.style.position = 'absolute';
-    legend.style.top = '20px';
-    legend.style.left = '20px';
-    legend.style.padding = '15px';
-    legend.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-    legend.style.borderRadius = '8px';
-    legend.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-    legend.innerHTML = `
-      <div style="font-size: 13px; color: #333; font-family: monospace;">
-        <strong>Function-Based Styling:</strong><br/><br/>
-        <div style="display: flex; align-items: center; margin: 5px 0;">
-          <div style="width: 12px; height: 12px; background: #1890ff; border-radius: 50%; margin-right: 8px;"></div>
-          User (circle)
-        </div>
-        <div style="display: flex; align-items: center; margin: 5px 0;">
-          <div style="width: 12px; height: 12px; background: #52c41a; margin-right: 8px;"></div>
-          Server (hexagon)
-        </div>
-        <div style="display: flex; align-items: center; margin: 5px 0;">
-          <div style="width: 12px; height: 12px; background: #ff4d4f; margin-right: 8px;"></div>
-          Database (rect)
-        </div>
-        <div style="display: flex; align-items: center; margin: 5px 0;">
-          <div style="width: 12px; height: 12px; background: #fa8c16; margin-right: 8px; border: 2px dashed #d46b08;"></div>
-          Cache (diamond, dashed)
-        </div>
-        <div style="display: flex; align-items: center; margin: 5px 0;">
-          <div style="width: 12px; height: 12px; background: #722ed1; border-radius: 50%; margin-right: 8px;"></div>
-          Queue (circle)
-        </div>
-        <br/>
-        <div style="color: #666; font-size: 11px;">
-          • Size = importance<br/>
-          • Border width = importance > 0.8 ? 4 : 2<br/>
-          • Halo = importance > 0.8<br/>
-          • Badge = importance > 0.85
-        </div>
-      </div>
-    `;
+    const legend = createDescriptionPanel({
+      text: `<div style="font-size: 13px; color: #333; font-family: monospace;">
+               <strong>Function-Based Styling:</strong><br/><br/>
+               <div style="display: flex; align-items: center; margin: 5px 0;">
+                 <div style="width: 12px; height: 12px; background: #1890ff; border-radius: 50%; margin-right: 8px;"></div>
+                 User (circle)
+               </div>
+               <div style="display: flex; align-items: center; margin: 5px 0;">
+                 <div style="width: 12px; height: 12px; background: #52c41a; margin-right: 8px;"></div>
+                 Server (hexagon)
+               </div>
+               <div style="display: flex; align-items: center; margin: 5px 0;">
+                 <div style="width: 12px; height: 12px; background: #ff4d4f; margin-right: 8px;"></div>
+                 Database (rect)
+               </div>
+               <div style="display: flex; align-items: center; margin: 5px 0;">
+                 <div style="width: 12px; height: 12px; background: #fa8c16; margin-right: 8px; border: 2px dashed #d46b08;"></div>
+                 Cache (diamond, dashed)
+               </div>
+               <div style="display: flex; align-items: center; margin: 5px 0;">
+                 <div style="width: 12px; height: 12px; background: #722ed1; border-radius: 50%; margin-right: 8px;"></div>
+                 Queue (circle)
+               </div>
+               <br/>
+               <div style="color: #666; font-size: 11px;">
+                 • Size = importance<br/>
+                 • Border width = importance > 0.8 ? 4 : 2<br/>
+                 • Halo = importance > 0.8<br/>
+                 • Badge = importance > 0.85
+               </div>
+             </div>`,
+      position: 'top-left',
+      top: '20px',
+      left: '20px',
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      textColor: '#333',
+      padding: '15px',
+      fontSize: '13px',
+      maxWidth: '320px',
+    });
     container.appendChild(legend);
   },
 };
@@ -632,17 +631,18 @@ export const AdvancedConditionalStyling: Story = {
     await canvas.init();
     
     // Add status panel
-    const panel = document.createElement('div');
-    panel.style.position = 'absolute';
-    panel.style.top = '20px';
-    panel.style.right = '20px';
-    panel.style.padding = '15px';
-    panel.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-    panel.style.borderRadius = '8px';
-    panel.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-    panel.style.fontSize = '12px';
-    panel.style.fontFamily = 'monospace';
-    
+    const panel = createDescriptionPanel({
+      text: '<div style="color: #333;">Service Status Dashboard</div>',
+      position: 'top-right',
+      top: '20px',
+      right: '20px',
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      textColor: '#333',
+      padding: '15px',
+      fontSize: '12px',
+      maxWidth: '280px',
+    });
+
     const updatePanel = () => {
       const statusCounts = services.reduce((acc, s) => {
         acc[s.status] = (acc[s.status] || 0) + 1;
@@ -650,7 +650,7 @@ export const AdvancedConditionalStyling: Story = {
       }, {} as Record<string, number>);
       
       panel.innerHTML = `
-        <div style="color: #333;">
+        <div style="color: #333; font-family: monospace;">
           <strong>Service Status Dashboard</strong><br/><br/>
           <div style="color: #52c41a;">● Online: ${statusCounts.online || 0}</div>
           <div style="color: #faad14;">● Warning: ${statusCounts.warning || 0}</div>

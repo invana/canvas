@@ -248,6 +248,20 @@ export class GraphDataPlugin implements CanvasPlugin {
   }
 
   /**
+   * Delegate events bus to the real Canvas — required by Renderer to wire node/edge interaction events
+   */
+  get events() {
+    return this._canvas?.events;
+  }
+
+  /**
+   * Delegate viewport to the real Canvas — required by Renderer to resolve pointer positions
+   */
+  get viewport() {
+    return this._canvas?.viewport;
+  }
+
+  /**
    * Get node data
    */
   getNodeData(): Map<string, CanvasNode> {

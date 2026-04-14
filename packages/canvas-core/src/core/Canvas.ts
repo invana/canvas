@@ -38,6 +38,8 @@ import { Registry } from '../rendering/Registry';
 import { LayerManager } from '../layers/LayerManager';
 import type { CanvasPlugin, PluginRegistrationOptions, PluginConfig, BehaviorPreset } from '../plugins/types';
 import { PluginRegistry } from '../plugins/registry';
+import { EventEmitter } from '../utils/EventEmitter';
+import type { CanvasEventMap } from '../types';
 
 // ============================================================================
 // TYPES
@@ -103,6 +105,44 @@ export class Canvas {
 
   // Complete internal state for all options
   private _options: CanvasOptions;
+
+  /**
+   * Typed event bus. All interaction events from nodes, edges, and the
+   * canvas background are emitted here. Use canvas.on() to subscribe.
+   */
+  readonly events: EventEmitter<CanvasEventMap> = new EventEmitter<CanvasEventMap>();
+
+  /**
+   * Subscribe to a canvas interaction event.
+   * Returns a disposer function that removes the listener when called.
+   */
+  on<K extends keyof CanvasEventMap>(
+    event: K,
+    callback: (data: CanvasEventMap[K]) => void,
+  ): () => void {
+    return this.events.on(event, callback);
+  }
+
+  /**
+   * Unsubscribe from a canvas interaction event.
+   */
+  off<K extends keyof CanvasEventMap>(
+    event: K,
+    callback: (data: CanvasEventMap[K]) => void,
+  ): void {
+    this.events.off(event, callback);
+  }
+
+  /**
+   * Subscribe to a canvas interaction event (fires once then auto-unsubscribes).
+   * Returns a disposer function.
+   */
+  once<K extends keyof CanvasEventMap>(
+    event: K,
+    callback: (data: CanvasEventMap[K]) => void,
+  ): () => void {
+    return this.events.once(event, callback);
+  }
 
   constructor(options: CanvasOptions) {
     this._container = options.container;
@@ -172,9 +212,49 @@ export class Canvas {
     // Create layer manager (viewport itself is the content container)
     this._layerManager = new LayerManager(this._viewport);
 
-    // Prevent browser context menu on canvas
+    // Prevent browser context menu on canvas; also emit canvas:contextmenu into the event bus
     const canvasEl = this._app.canvas as HTMLCanvasElement;
-    canvasEl.addEventListener('contextmenu', (e) => e.preventDefault());
+    canvasEl.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      if (this._viewport) {
+        const rect = this._container.getBoundingClientRect();
+        const screenX = (e as MouseEvent).clientX - rect.left;
+        const screenY = (e as MouseEvent).clientY - rect.top;
+        const world = this._viewport.toWorld(screenX, screenY);
+        this.events.emit('canvas:contextmenu', {
+          position: { screen: { x: screenX, y: screenY }, world: { x: world.x, y: world.y } },
+          originalEvent: e,
+        });
+      }
+    });
+
+    // Wire canvas background click/dblclick — only fires when clicking empty viewport area
+    {
+      let _lastBgTap = 0;
+      const DBLCLICK_MS = 300;
+      this._viewport.on('pointertap', (e) => {
+        if (e.target !== this._viewport) return;
+        const screen = { x: e.global.x, y: e.global.y };
+        const w = this._viewport!.toWorld(screen.x, screen.y);
+        const world = { x: w.x, y: w.y };
+        const now = Date.now();
+        if (now - _lastBgTap < DBLCLICK_MS) {
+          _lastBgTap = 0;
+          this.events.emit('canvas:dblclicked', { position: { screen, world }, originalEvent: e });
+        } else {
+          _lastBgTap = now;
+          this.events.emit('canvas:clicked', { position: { screen, world }, originalEvent: e });
+        }
+      });
+    }
+
+    // Bridge pixi-viewport native events → canvas event bus
+    this._viewport.on('zoomed', () => {
+      this.events.emit('viewport:zoomed', { scale: this._viewport!.scaled });
+    });
+    this._viewport.on('moved', () => {
+      this.events.emit('viewport:panned', { x: this._viewport!.x, y: this._viewport!.y });
+    });
 
     this._initialized = true;
 

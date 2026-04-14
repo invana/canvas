@@ -51,7 +51,6 @@ export class HoverActivatePlugin implements CanvasPlugin {
     return [];
   }
 
-  private _canvas: Canvas | null = null;
   private _options: Required<HoverActivateOptions>;
   
   private _currentHover: HoverableElement | null = null;
@@ -68,45 +67,11 @@ export class HoverActivatePlugin implements CanvasPlugin {
   }
 
   async init(canvas: Canvas): Promise<void> {
-    this._canvas = canvas;
-
-    // Setup existing elements
-    this.setupExistingElements();
-  }
-
-  /**
-   * Setup existing elements for hover
-   */
-  private setupExistingElements(): void {
-    if (!this._canvas) return;
-
-    const graphPlugin = this._canvas.getPlugin('graph-data') as any;
-    if (!graphPlugin?.renderer) return;
-
-    const nodes = graphPlugin.renderer.getNodes();
-    nodes.forEach((node: any) => {
-      this.makeElementHoverable(node);
-    });
-
-    const edges = graphPlugin.renderer.getEdges();
-    edges.forEach((edge: any) => {
-      this.makeElementHoverable(edge);
-    });
-  }
-
-  /**
-   * Make an element hoverable
-   */
-  private makeElementHoverable(element: HoverableElement): void {
-    element.eventMode = 'static';
-
-    element.on('pointerover', () => {
-      this.onHoverStart(element);
-    });
-
-    element.on('pointerout', () => {
-      this.onHoverEnd(element);
-    });
+    // Subscribe to canvas event bus — no per-element setup needed
+    canvas.on('node:hover',    (e) => this.onHoverStart(e.node));
+    canvas.on('node:hoverend', (e) => this.onHoverEnd(e.node));
+    canvas.on('edge:hover',    (e) => this.onHoverStart(e.edge));
+    canvas.on('edge:hoverend', (e) => this.onHoverEnd(e.edge));
   }
 
   /**
@@ -215,34 +180,13 @@ export class HoverActivatePlugin implements CanvasPlugin {
   }
 
   destroy(): void {
-    // Clear hover state
     this.clearHover();
 
-    // Clear timeout
     if (this._hoverTimeout) {
       clearTimeout(this._hoverTimeout);
       this._hoverTimeout = null;
     }
 
-    // Remove event listeners
-    if (this._canvas) {
-      const graphPlugin = this._canvas.getPlugin('graph-data') as any;
-      if (graphPlugin?.renderer) {
-        const nodes = graphPlugin.renderer.getNodes();
-        nodes.forEach((node: any) => {
-          node.off('pointerover');
-          node.off('pointerout');
-        });
-
-        const edges = graphPlugin.renderer.getEdges();
-        edges.forEach((edge: any) => {
-          edge.off('pointerover');
-          edge.off('pointerout');
-        });
-      }
-    }
-
-    this._canvas = null;
     this._currentHover = null;
     this._highlightedElements.clear();
   }
