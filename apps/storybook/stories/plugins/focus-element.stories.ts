@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import GUI from 'lil-gui';
-import { Canvas, GraphDataPlugin, type FocusElementPlugin } from '@invana/canvas-core';
+import { Canvas, GraphDataPlugin, FocusElementPlugin } from '@invana/canvas-core';
 import { createContainer } from '../../src/div-utils';
 
 const GRAPH_DATA = {
@@ -32,8 +32,14 @@ export default meta;
 type Story = StoryObj;
 
 /**
- * Click-select nodes then use "Focus Selected" to zoom and centre the viewport
- * on the selection.
+ * Click any node or edge to center the viewport on it with a smooth animation.
+ *
+ * Options:
+ * - **enable** — toggle click-to-focus on/off
+ * - **duration** — animation duration in ms
+ * - **easing** — animation easing curve
+ * - **Focus Selected** — programmatically focus currently selected elements
+ * - **Reset View** — fit all content back in viewport
  */
 export const FocusElement: Story = {
   render: () => createContainer({ id: 'plugin-focus-element' }),
@@ -41,31 +47,54 @@ export const FocusElement: Story = {
     const container = document.getElementById('plugin-focus-element');
     if (!container) return;
 
+    const focusPlugin = new FocusElementPlugin({
+      animation: { duration: 500, easing: 'ease-in' },
+      enable: true,
+    });
+
     const canvas = new Canvas({
       container,
       width: container.clientWidth || 1000,
       height: container.clientHeight || 600,
       behavior: false,
       plugins: [
-        { plugin: 'click-select',  key: 'click-select' },
-        { plugin: 'focus-element', key: 'focus-element' },
+        { plugin: 'click-select', key: 'click-select' },
       ],
     });
     await canvas.init();
+    await canvas.registerPlugin(focusPlugin);
 
     const graphPlugin = new GraphDataPlugin({ fitOnRender: true, fitPadding: 80 });
     await canvas.registerPlugin(graphPlugin);
     graphPlugin.setData(GRAPH_DATA as any);
 
-    const gui = new GUI({ container, title: 'Focus' });
+    // GUI state
+    const guiState = {
+      enable: true,
+      duration: 500,
+      easing: 'ease-in' as 'ease-in' | 'ease-in-out' | 'ease-out' | 'linear',
+    };
+
+    const applyOptions = () => {
+      focusPlugin.setOptions({
+        enable: guiState.enable,
+        animation: { duration: guiState.duration, easing: guiState.easing },
+      });
+    };
+
+    const actions = {
+      focusSelected: () => focusPlugin.focusSelected(),
+      resetView:     () => canvas.viewport?.fitContent(80),
+    };
+
+    const gui = new GUI({ container, title: 'Focus Element' });
     gui.domElement.style.position = 'absolute';
     gui.domElement.style.top = '10px';
     gui.domElement.style.right = '10px';
 
-    const actions = {
-      focusSelected: () => canvas.getPlugin<FocusElementPlugin>('focus-element')?.focusSelected(),
-      resetView:     () => canvas.viewport?.fitWorld(),
-    };
+    gui.add(guiState, 'enable').name('Enable').onChange(applyOptions);
+    gui.add(guiState, 'duration', 0, 2000, 50).name('Duration (ms)').onChange(applyOptions);
+    gui.add(guiState, 'easing', ['ease-in', 'ease-in-out', 'ease-out', 'linear']).name('Easing').onChange(applyOptions);
     gui.add(actions, 'focusSelected').name('Focus Selected');
     gui.add(actions, 'resetView').name('Reset View');
   },

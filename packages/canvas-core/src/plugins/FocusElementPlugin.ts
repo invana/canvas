@@ -1,8 +1,8 @@
 /**
  * Focus Element Plugin
  * 
- * Enables focusing the camera on selected elements with smooth animation.
- * Automatically fits selected elements in viewport.
+ * Enables focusing the camera on elements by clicking on them, centering them
+ * in the viewport with smooth animation. Also exposes programmatic focus methods.
  * 
  * @example
  * ```typescript
@@ -12,14 +12,14 @@
  *     {
  *       plugin: 'focus-element',
  *       options: {
- *         duration: 500,
- *         padding: 50
+ *         animation: { duration: 500, easing: 'ease-in' },
+ *         enable: true,
  *       }
  *     }
  *   ]
  * });
  * 
- * // Focus on element
+ * // Focus on element programmatically
  * const focusPlugin = canvas.getPlugin<FocusElementPlugin>('focus-element');
  * focusPlugin?.focusElement(node);
  * ```
@@ -30,42 +30,43 @@ import type { CanvasPlugin } from './types';
 import type { RendererNodeBase } from '../elements/nodes/RendererNodeBase';
 import type { RendererEdgeBase } from '../elements/edges/RendererEdgeBase';
 import type { Viewport } from '../viewport/Viewport';
+import { type ViewportAnimationEffectTiming } from '../viewport/Viewport';
 import { PluginRegistry } from './registry';
 
 export type FocusableElement = RendererNodeBase | RendererEdgeBase;
+export type { ViewportAnimationEffectTiming };
 
 export interface FocusElementOptions {
-  /** Animation duration in milliseconds */
-  duration?: number;
-  /** Padding around focused element(s) */
+  /**
+   * Animation settings for viewport transitions.
+   * Default: `{ duration: 500, easing: 'ease-in' }`
+   */
+  animation?: ViewportAnimationEffectTiming;
+  /**
+   * Whether to enable click-to-focus behavior.
+   * Can be a function receiving the click event for conditional logic.
+   * Default: `true`
+   */
+  enable?: boolean | ((event: { element: FocusableElement; originalEvent: PointerEvent }) => boolean);
+  /** Padding around focused element(s) when fitting multiple elements */
   padding?: number;
-  /** Easing function for animation */
-  easing?: 'linear' | 'easeInOut' | 'easeOut';
 }
 
 /**
  * Focus Element Plugin
- * Handles camera focus on elements with smooth animation
+ * Centers the viewport on an element when clicked, with smooth animation.
  */
 export class FocusElementPlugin implements CanvasPlugin {
   readonly id = 'focus-element';
   readonly name = 'Focus Element';
-  getLayers() {
-    return [];
-  }
+  getLayers() { return []; }
 
   private _canvas: Canvas | null = null;
   private _viewport: Viewport | null = null;
-  private _options: Required<FocusElementOptions>;
-  
-  private _animationFrame: number | null = null;
+  private _options: FocusElementOptions;
 
   constructor(options: FocusElementOptions = {}) {
-    this._options = {
-      duration: options.duration ?? 500,
-      padding: options.padding ?? 50,
-      easing: options.easing ?? 'easeInOut',
-    };
+    this._options = options;
   }
 
   async init(canvas: Canvas): Promise<void> {
@@ -75,210 +76,95 @@ export class FocusElementPlugin implements CanvasPlugin {
     if (!this._viewport) {
       throw new Error('Viewport is required for FocusElementPlugin');
     }
+
+    canvas.on('node:clicked', (e) => {
+      const event = { element: e.node as FocusableElement, originalEvent: e.originalEvent };
+      if (this._isEnabled(event)) this._centerOnElement(e.node as FocusableElement);
+    });
+
+    canvas.on('edge:clicked', (e) => {
+      const event = { element: e.edge as FocusableElement, originalEvent: e.originalEvent };
+      if (this._isEnabled(event)) this._centerOnElement(e.edge as FocusableElement);
+    });
+  }
+
+  private _isEnabled(event: { element: FocusableElement; originalEvent: PointerEvent }): boolean {
+    const { enable = true } = this._options;
+    return typeof enable === 'function' ? enable(event) : enable;
   }
 
   /**
-   * Focus on a single element
+   * Center the viewport on a single element at the current zoom level.
    */
   focusElement(element: FocusableElement): void {
-    this.focusElements([element]);
+    this._centerOnElement(element);
   }
 
   /**
-   * Focus on multiple elements
+   * Fit the viewport to display all given elements with padding.
    */
   focusElements(elements: FocusableElement[]): void {
-    if (elements.length === 0) return;
-
-    // Calculate bounding box of all elements
-    const bounds = this.calculateBounds(elements);
-    
-    // Fit to bounds
-    this.fitToBounds(bounds);
+    if (!this._viewport || elements.length === 0) return;
+    const bounds = this._worldBoundsOf(elements);
+    this._viewport.fitBounds(bounds, this._options.padding ?? 50, this._options.animation);
   }
 
   /**
-   * Focus on selected elements (requires ClickSelectPlugin)
+   * Focus on currently selected elements (requires ClickSelectPlugin).
    */
   focusSelected(): void {
     if (!this._canvas) return;
-
-    // Try to get ClickSelectPlugin
     const selectPlugin = this._canvas.getPlugin('click-select') as any;
     if (!selectPlugin) {
       console.warn('ClickSelectPlugin not found. Cannot focus on selected elements.');
       return;
     }
-
     const selected = selectPlugin.getSelected?.();
-    if (selected && selected.length > 0) {
-      this.focusElements(selected);
-    }
+    if (selected && selected.length > 0) this.focusElements(selected);
   }
 
-  /**
-   * Calculate bounding box for elements
-   */
-  private calculateBounds(elements: FocusableElement[]): {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  } {
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
-    elements.forEach(element => {
-      // Get element bounds
-      const bounds = element.getBounds();
-      
-      minX = Math.min(minX, bounds.x);
-      minY = Math.min(minY, bounds.y);
-      maxX = Math.max(maxX, bounds.x + bounds.width);
-      maxY = Math.max(maxY, bounds.y + bounds.height);
-    });
-
-    return {
-      x: minX,
-      y: minY,
-      width: maxX - minX,
-      height: maxY - minY,
-    };
-  }
-
-  /**
-   * Fit viewport to bounds with animation
-   */
-  private fitToBounds(bounds: { x: number; y: number; width: number; height: number }): void {
-    if (!this._viewport) return;
-
-    const viewportWidth = this._viewport.viewWidth;
-    const viewportHeight = this._viewport.viewHeight;
-
-    // Calculate zoom to fit bounds
-    const padding = this._options.padding * 2;
-    const scaleX = viewportWidth / (bounds.width + padding);
-    const scaleY = viewportHeight / (bounds.height + padding);
-    const targetZoom = Math.min(scaleX, scaleY);
-
-    // Calculate center position
-    const centerX = bounds.x + bounds.width / 2;
-    const centerY = bounds.y + bounds.height / 2;
-
-    // Calculate target viewport position
-    const targetX = viewportWidth / 2 - centerX * targetZoom;
-    const targetY = viewportHeight / 2 - centerY * targetZoom;
-
-    // Animate to target
-    this.animateToPosition(targetX, targetY, targetZoom);
-  }
-
-  /**
-   * Animate viewport to position and zoom
-   */
-  private animateToPosition(targetX: number, targetY: number, targetZoom: number): void {
-    if (!this._viewport) return;
-
-    // Cancel any existing animation
-    if (this._animationFrame !== null) {
-      cancelAnimationFrame(this._animationFrame);
-    }
-
-    const startTime = performance.now();
-    const startX = this._viewport.x;
-    const startY = this._viewport.y;
-    const startZoom = this._viewport.scaled;
-
-    const animate = (currentTime: number) => {
-      if (!this._viewport) return;
-
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / this._options.duration, 1);
-      
-      // Apply easing
-      const easedProgress = this.applyEasing(progress);
-
-      // Interpolate values
-      const currentX = startX + (targetX - startX) * easedProgress;
-      const currentY = startY + (targetY - startY) * easedProgress;
-      const currentZoom = startZoom + (targetZoom - startZoom) * easedProgress;
-
-      // Update viewport
-      this._viewport.x = currentX;
-      this._viewport.y = currentY;
-      this._viewport.scale.set(currentZoom);
-
-      // Continue animation
-      if (progress < 1) {
-        this._animationFrame = requestAnimationFrame(animate);
-      } else {
-        this._animationFrame = null;
-      }
-    };
-
-    this._animationFrame = requestAnimationFrame(animate);
-  }
-
-  /**
-   * Apply easing function
-   */
-  private applyEasing(t: number): number {
-    switch (this._options.easing) {
-      case 'linear':
-        return t;
-      
-      case 'easeOut':
-        return 1 - Math.pow(1 - t, 3);
-      
-      case 'easeInOut':
-        return t < 0.5
-          ? 4 * t * t * t
-          : 1 - Math.pow(-2 * t + 2, 3) / 2;
-      
-      default:
-        return t;
-    }
-  }
-
-  /**
-   * Fit all content in viewport
-   * @deprecated Use viewport.fitContent() instead
-   */
+  /** Fit all content in viewport. @deprecated Use viewport.fitContent() instead. */
   fitContent(): void {
-    if (!this._canvas) return;
-    // TODO: Plugins need to communicate with GraphDataPlugin to get nodes
-    // For now, just use viewport fitContent
-    this._canvas.viewport?.fitContent(50);
+    this._canvas?.viewport?.fitContent(50);
   }
 
-  /**
-   * Get current options
-   */
-  get options(): Readonly<Required<FocusElementOptions>> {
-    return this._options;
-  }
+  get options(): Readonly<FocusElementOptions> { return this._options; }
 
-  /**
-   * Update plugin options
-   */
   setOptions(options: Partial<FocusElementOptions>): void {
-    this._options = {
-      ...this._options,
-      ...options,
-    };
+    this._options = { ...this._options, ...options };
   }
 
   destroy(): void {
-    // Cancel any ongoing animation
-    if (this._animationFrame !== null) {
-      cancelAnimationFrame(this._animationFrame);
-      this._animationFrame = null;
-    }
-
     this._canvas = null;
     this._viewport = null;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Private helpers
+  // ---------------------------------------------------------------------------
+
+  /** Center viewport on element's world position at the current zoom. */
+  private _centerOnElement(element: FocusableElement): void {
+    // element.x / element.y are world-space coordinates inside the viewport container.
+    this._viewport?.centerOnWorld(element.x, element.y, this._options.animation);
+  }
+
+  /**
+   * Calculate the world-space axis-aligned bounding box for a set of elements.
+   * getBounds() returns screen-space coords, so we convert via screenToWorld().
+   */
+  private _worldBoundsOf(elements: FocusableElement[]): {
+    x: number; y: number; width: number; height: number;
+  } {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const el of elements) {
+      const s  = el.getBounds();
+      const tl = this._viewport!.screenToWorld(s.x, s.y);
+      const br = this._viewport!.screenToWorld(s.x + s.width, s.y + s.height);
+      minX = Math.min(minX, tl.x);  minY = Math.min(minY, tl.y);
+      maxX = Math.max(maxX, br.x);  maxY = Math.max(maxY, br.y);
+    }
+    return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
   }
 }
 

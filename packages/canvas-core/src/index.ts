@@ -85,7 +85,7 @@ export type {
 // ============================================================================
 
 export { Viewport } from './viewport';
-export type { ViewportOptions, ViewportState } from './viewport';
+export type { ViewportOptions, ViewportState, ViewportAnimationEffectTiming } from './viewport';
 
 // ============================================================================
 // RENDERING
