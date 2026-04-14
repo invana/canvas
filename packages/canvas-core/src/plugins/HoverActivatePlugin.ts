@@ -2,7 +2,7 @@
  * Hover Activate Plugin
  *
  * Activates a state on hovered nodes/edges with optional neighbor traversal
- * and inactive state dimming. API matches antv/g6 HoverActivate behavior.
+ * and inactive state dimming.
  *
  * @example
  * ```typescript
