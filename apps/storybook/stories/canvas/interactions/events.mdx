@@ -1,0 +1,242 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Canvas/Interactions/Events Reference" />
+
+# Canvas Events Reference
+
+`@invana/canvas-core` exposes a unified event system via `canvas.on(eventName, handler)`.
+All events flow through a single typed bus — no direct access to PixiJS internals needed.
+
+---
+
+## How Events Work
+
+### Listen to an event
+
+```typescript
+canvas.on('node:clicked', ({ node, position }) => {
+  console.log(node.data.id, position.world);
+});
+```
+
+### Remove a listener
+
+```typescript
+const handler = ({ node }) => console.log(node.data.id);
+canvas.on('node:clicked', handler);
+canvas.off('node:clicked', handler);
+```
+
+### One-time listener
+
+```typescript
+canvas.once('node:clicked', ({ node }) => {
+  console.log('fired once:', node.data.id);
+});
+```
+
+### Emit programmatically
+
+```typescript
+canvas.events.emit('selection:changed', { nodes: [], edges: [] });
+```
+
+---
+
+## Enabling Interactions
+
+Events are only emitted when the relevant interaction plugin is active.
+Use a `behavior` preset or register plugins manually.
+
+### Behavior presets
+
+| Preset | Plugins included |
+|---|---|
+| `'minimal'` | `hover-activate` |
+| `'default'` | `drag-element`, `hover-activate`, `click-select` |
+| `'full'` | `drag-element`, `click-select`, `hover-activate`, `focus-element` |
+
+```typescript
+const canvas = new Canvas({ container, behavior: 'default' });
+```
+
+### Manual plugin registration
+
+```typescript
+import { Canvas, DragElementPlugin, ClickSelectPlugin, HoverActivatePlugin } from '@invana/canvas-core';
+
+const canvas = new Canvas({ container, behavior: false });
+await canvas.init();
+
+await canvas.registerPlugin(new DragElementPlugin());
+await canvas.registerPlugin(new ClickSelectPlugin());
+await canvas.registerPlugin(new HoverActivatePlugin());
+```
+
+---
+
+## Node Events
+
+All node events include `node.data` (your original node data) and a `position` with `screen` and `world` coordinates.
+
+### `node:clicked` — requires `click-select`
+
+```typescript
+canvas.on('node:clicked', ({ node, position }) => {
+  console.log(node.data.id, position.screen, position.world);
+});
+```
+
+### `node:dblclicked` — requires `click-select`
+
+```typescript
+canvas.on('node:dblclicked', ({ node, position }) => {
+  openNodeEditor(node.data.id);
+});
+```
+
+### `node:contextmenu` — requires `click-select`
+
+Browser context menu is suppressed automatically.
+
+```typescript
+canvas.on('node:contextmenu', ({ node, position }) => {
+  showContextMenu(node.data.id, position.screen);
+});
+```
+
+### `node:hover` / `node:hoverend` — requires `hover-activate`
+
+```typescript
+canvas.on('node:hover', ({ node, position }) => {
+  showTooltip(node.data.label, position.screen);
+});
+canvas.on('node:hoverend', ({ node }) => {
+  hideTooltip();
+});
+```
+
+### `node:dragstart` / `node:drag` / `node:dragend` — requires `drag-element`
+
+```typescript
+canvas.on('node:dragstart', ({ node, x, y }) => { console.log('started', node.data.id); });
+canvas.on('node:drag',      ({ node, x, y }) => { updatePanel(x, y); });
+canvas.on('node:dragend',   ({ node, x, y }) => { savePosition(node.data.id, x, y); });
+```
+
+### `node:selected` / `node:deselected` — requires `click-select`
+
+```typescript
+canvas.on('node:selected',   ({ node }) => { highlightPanel(node.data.id); });
+canvas.on('node:deselected', ({ node }) => { clearPanel(); });
+```
+
+---
+
+## Edge Events
+
+### `edge:clicked` / `edge:dblclicked` — requires `click-select`
+
+```typescript
+canvas.on('edge:clicked', ({ edge, position }) => {
+  console.log(edge.data.id, edge.data.source, edge.data.target);
+});
+canvas.on('edge:dblclicked', ({ edge }) => { openEdgeEditor(edge.data.id); });
+```
+
+### `edge:hover` / `edge:hoverend` — requires `hover-activate`
+
+```typescript
+canvas.on('edge:hover',    ({ edge }) => { showEdgeTooltip(edge.data); });
+canvas.on('edge:hoverend', ({ edge }) => { hideEdgeTooltip(); });
+```
+
+### `edge:selected` / `edge:deselected` — requires `click-select`
+
+```typescript
+canvas.on('edge:selected',   ({ edge }) => { console.log('selected:', edge.data.id); });
+canvas.on('edge:deselected', ({ edge }) => { console.log('deselected:', edge.data.id); });
+```
+
+---
+
+## Canvas Background Events
+
+Fired when clicking on empty canvas space (not on a node or edge). **No plugin required.**
+
+```typescript
+canvas.on('canvas:clicked',     ({ position }) => { createNodeAt(position.world); });
+canvas.on('canvas:dblclicked',  ({ position }) => { zoomToPoint(position.world); });
+canvas.on('canvas:contextmenu', ({ position }) => { showCanvasMenu(position.screen); });
+```
+
+---
+
+## Viewport Events
+
+Always active — **no plugin required.**
+
+```typescript
+canvas.on('viewport:zoomed', ({ scale }) => {
+  console.log('zoom:', scale); // 1.0 = 100%, 0.5 = 50%
+});
+
+canvas.on('viewport:panned', ({ x, y }) => {
+  console.log('position:', x, y);
+});
+```
+
+---
+
+## Selection Events
+
+### `selection:changed` — requires `click-select`
+
+```typescript
+canvas.on('selection:changed', ({ nodes, edges }) => {
+  console.log(
+    'nodes:', nodes.map(n => n.data.id),
+    'edges:', edges.map(e => e.data.id),
+  );
+});
+```
+
+---
+
+## Event Payload Reference
+
+| Event | Payload |
+|---|---|
+| `node:clicked` | `{ node, position: { screen, world }, originalEvent }` |
+| `node:dblclicked` | `{ node, position: { screen, world }, originalEvent }` |
+| `node:contextmenu` | `{ node, position: { screen, world }, originalEvent }` |
+| `node:hover` | `{ node, position: { screen, world }, originalEvent }` |
+| `node:hoverend` | `{ node, position: { screen, world }, originalEvent }` |
+| `node:dragstart` | `{ node, x, y }` |
+| `node:drag` | `{ node, x, y }` |
+| `node:dragend` | `{ node, x, y }` |
+| `node:selected` | `{ node }` |
+| `node:deselected` | `{ node }` |
+| `edge:clicked` | `{ edge, position: { screen, world }, originalEvent }` |
+| `edge:dblclicked` | `{ edge, position: { screen, world }, originalEvent }` |
+| `edge:hover` | `{ edge, position: { screen, world }, originalEvent }` |
+| `edge:hoverend` | `{ edge, position: { screen, world }, originalEvent }` |
+| `edge:selected` | `{ edge }` |
+| `edge:deselected` | `{ edge }` |
+| `canvas:clicked` | `{ position: { screen, world }, originalEvent }` |
+| `canvas:dblclicked` | `{ position: { screen, world }, originalEvent }` |
+| `canvas:contextmenu` | `{ position: { screen, world }, originalEvent }` |
+| `selection:changed` | `{ nodes[], edges[] }` |
+| `viewport:zoomed` | `{ scale }` |
+| `viewport:panned` | `{ x, y }` |
+
+---
+
+## Plugin → Event Matrix
+
+| Plugin | Events emitted |
+|---|---|
+| `hover-activate` | `node:hover`, `node:hoverend`, `edge:hover`, `edge:hoverend` |
+| `click-select` | `node:clicked`, `node:dblclicked`, `node:contextmenu`, `node:selected`, `node:deselected`, `edge:clicked`, `edge:dblclicked`, `edge:selected`, `edge:deselected`, `selection:changed` |
+| `drag-element` | `node:dragstart`, `node:drag`, `node:dragend` |
+| *(canvas core)* | `canvas:clicked`, `canvas:dblclicked`, `canvas:contextmenu`, `viewport:zoomed`, `viewport:panned` |
