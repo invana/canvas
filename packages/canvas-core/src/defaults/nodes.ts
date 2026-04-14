@@ -46,8 +46,10 @@ export const DEFAULT_NODE_STATE_STYLES: Record<string, Partial<ShapeStyle>> = {
   },
   
   [NodeStates.MUTED]: {
-    strokeWidth: 5,
-    strokeAlpha: 0.5,
+    fillAlpha: 0.2,
+    // fill: 0xefefef,
+    // strokeWidth: 5,
+    strokeAlpha: 0.2,
   },
 };
 

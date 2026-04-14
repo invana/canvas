@@ -285,6 +285,19 @@ export class Canvas {
     for (const config of pluginConfigs) {
       try {
         const { plugin, key, options } = PluginRegistry.create(config);
+
+        if (this._plugins.has(plugin.id)) {
+          // Plugin already registered (e.g. behavior preset registered it first).
+          // Apply options to the existing instance instead of throwing.
+          if (options && Object.keys(options).length > 0) {
+            const existing = this._plugins.get(plugin.id)!.plugin;
+            if ('setOptions' in existing && typeof (existing as any).setOptions === 'function') {
+              (existing as any).setOptions(options);
+            }
+          }
+          continue;
+        }
+
         await this.registerPlugin(plugin, { userKey: key });
         
         // Apply initial options if plugin has setOptions method

@@ -17,6 +17,8 @@ export type StrokeStyle = 'solid' | 'dashed' | 'dotted';
 export interface ShapeStyle {
   /** Fill style - supports solid colors, gradients, images, and patterns */
   fill?: string | number | Fill;
+  /** Fill alpha/opacity (0–1). Overrides any alpha embedded in the fill value */
+  fillAlpha?: number;
   /** Stroke color */
   stroke?: string;
   /** Stroke width */

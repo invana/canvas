@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, type CanvasNode,
-   CanvasOptions, NodeStates } from '@invana/canvas-core';
-import { getFullHeightContainer } from '../../../../src/div-utils';
+import { Canvas, GraphDataPlugin, NodeStates, type CanvasNode } from '@invana/canvas-core';
+import GUI from 'lil-gui';
+import { createContainer } from '../../../../src/div-utils';
 
 const meta: Meta = {
   title: 'Elements/Nodes/States',
@@ -10,118 +10,85 @@ const meta: Meta = {
 export default meta;
 type Story = StoryObj;
 
-
 /**
- * Example showing multiple states active simultaneously with proper priority
+ * Shows multiple states active simultaneously with priority ordering.
+ * Toggle checkboxes to combine built-in and custom states.
  */
 export const MultipleStates: Story = {
-  parameters: {
-    layout: 'fullscreen',
-  },
-  render: () => {
-    const container = getFullHeightContainer();
-    container.id = 'canvas-multiple-states';
-    return container;
-  },
+  name: 'Multiple States',
+  parameters: { layout: 'fullscreen' },
+  render: () => createContainer({ id: 'nodes-multiple-states', height: '70vh' }),
   play: async () => {
-    const container = document.getElementById('canvas-multiple-states');
+    const container = document.getElementById('nodes-multiple-states');
     if (!container) return;
-    container.style.height = "500px";
 
-     const nodes: CanvasNode[] = [{
-      id: 'multi',
-      x: 400,
-      y: 200,
-      label: 'Multi-State Node',
-      shape: 'rect',
-      width: 140,
-      height: 80,
-      cornerRadius: 8,
-    }]
-
-    const options: CanvasOptions = {
+    const canvas = new Canvas({
       container,
-      styles: {
-        node: {
-          fill: 0x1890ff,
-          stroke: '#0050b3',
-          strokeWidth: 2,
-          states: {
-            loading: {
-              fill: 0x8c8c8c,
-            },
-            error: {
-              fill: 0xff4d4f,
-              stroke: '#cf1322',
-              strokeWidth: 3,
-            },
-            warning: {
-              fill: 0xfaad14,
-              stroke: '#d48806',
-              strokeWidth: 3,
-            }
-          },
-        },
-      },
-      data: { nodes: nodes, edges: [] },
-    };
-    const canvas = new Canvas(options);
+      width: container.clientWidth || 800,
+      height: container.clientHeight || 500,
+      behavior: 'default',
+    });
     await canvas.init();
 
-    
-    // Get node reference
-    const node = canvas.getNode('multi');
+    const graphPlugin = new GraphDataPlugin({ fitOnRender: true, fitPadding: 100 });
+    await canvas.registerPlugin(graphPlugin);
 
-    const info = document.createElement('div');
-    info.style.marginTop = '20px';
-    info.style.padding = '15px';
-    info.style.backgroundColor = '#f0f0f0';
-    info.style.borderRadius = '4px';
+    graphPlugin.setStyles({
+      node: {
+        fill: 0x1890ff,
+        stroke: '#0050b3',
+        strokeWidth: 2,
+        states: {
+          loading: { fill: 0x8c8c8c, stroke: '#595959' },
+          error:   { fill: 0xff4d4f, stroke: '#cf1322', strokeWidth: 3 },
+        },
+      },
+    });
 
-    info.innerHTML = `
-      <h4 style="margin-top: 0">Combine multiple states:</h4>
-      <div>
-        <label><input type="checkbox" id="cb-selected"> Selected</label>
-        <label><input type="checkbox" id="cb-highlighted" style="margin-left: 15px"> highlighted</label>
-        <label><input type="checkbox" id="cb-loading" style="margin-left: 15px"> Loading</label>
-        <label><input type="checkbox" id="cb-error" style="margin-left: 15px"> Error</label>
-      </div>
-      <div id="multi-state-info" style="margin-top: 10px; font-family: monospace; font-size: 12px;"></div>
-      <div style="margin-top: 10px; color: #666; font-size: 13px;">
-        <strong>Priority:</strong> default → highlighted → selected → error → loading<br>
-        Later states override earlier ones. Try selecting + loading + error to see how they combine.
-      </div>
-    `;
+    const nodes: CanvasNode[] = [
+      {
+        id: 'multi',
+        x: 0,
+        y: 0,
+        shape: 'circle' as const,
+        size: 50,
+        label: 'Node',
+      },
+    ];
+    graphPlugin.setData({ nodes, edges: [] });
 
-    const updateInfo = () => {
-      const states = node.getActiveStates();
-      const infoEl = document.getElementById('multi-state-info');
-      if (infoEl) {
-        infoEl.textContent = `Active states: [${states.join(', ')}]`;
-      }
+    const node = graphPlugin.renderer?.getNode('multi');
+    if (!node) return;
+
+    // ── lil-gui controls ────────────────────────────────────────────
+    const params = {
+      selected:    false,
+      highlighted: false,
+      muted:       false,
+      disabled:    false,
+      loading:     false,
+      error:       false,
     };
 
-    info.querySelector('#cb-highlighted')?.addEventListener('change', (e) => {
-      node.setState(NodeStates.HIGHLIGHTED, (e.target as HTMLInputElement).checked);
-      updateInfo();
-    });
+    type ParamKey = keyof typeof params;
+    const stateMap: Record<ParamKey, string> = {
+      selected:    NodeStates.SELECTED,
+      highlighted: NodeStates.HIGHLIGHTED,
+      muted:       NodeStates.MUTED,
+      disabled:    NodeStates.DISABLED,
+      loading:     'loading',
+      error:       'error',
+    };
 
-    info.querySelector('#cb-selected')?.addEventListener('change', (e) => {
-      node.setState(NodeStates.SELECTED, (e.target as HTMLInputElement).checked);
-      updateInfo();
-    });
+    const gui = new GUI({ container, title: 'Toggle States' });
+    gui.domElement.style.position = 'absolute';
+    gui.domElement.style.top = '10px';
+    gui.domElement.style.right = '10px';
 
-    info.querySelector('#cb-loading')?.addEventListener('change', (e) => {
-      node.setState("loading", (e.target as HTMLInputElement).checked);
-      updateInfo();
+    (Object.keys(params) as ParamKey[]).forEach((key) => {
+      gui.add(params, key).name(key).onChange((v: boolean) => {
+        node.setState(stateMap[key], v);
+      });
     });
-
-    info.querySelector('#cb-error')?.addEventListener('change', (e) => {
-      node.setState("error", (e.target as HTMLInputElement).checked);
-      updateInfo();
-    });
-
-    updateInfo();
-    container.appendChild(info);
   },
 };

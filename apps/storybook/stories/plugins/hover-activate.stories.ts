@@ -55,7 +55,7 @@ export const HoverActivate: Story = {
       container,
       width: container.clientWidth || 1000,
       height: container.clientHeight || 600,
-      behavior: false,
+      behavior: "default",
       plugins: [
         {
           plugin: 'hover-activate',
@@ -64,8 +64,6 @@ export const HoverActivate: Story = {
             state: 'active',
             degree: 1,
             direction: 'both' as HoverDirection,
-            neighborState: 'highlighted',
-            hoverDelay: 0,
             enable: true,
             animation: true,
             onHover: (el: HoverableElement) => console.log('[hover-activate] hover:', el.id),
@@ -99,8 +97,6 @@ export const HoverActivate: Story = {
       inactiveState: 'none',
       degree:        1,
       direction:     'both',
-      neighborState: 'highlighted',
-      hoverDelay:    0,
       animation:     true,
     };
 
@@ -115,20 +111,14 @@ export const HoverActivate: Story = {
     gui.add(params, 'state', ['active', 'selected', 'highlighted']).name('state')
       .onChange((v: string) => hoverPlugin.setOptions({ state: v }));
 
-    gui.add(params, 'inactiveState', ['none', 'muted', 'highlighted']).name('inactiveState')
+    gui.add(params, 'inactiveState', ['none', 'inactive', 'muted']).name('inactiveState')
       .onChange((v: string) => hoverPlugin.setOptions({ inactiveState: v === 'none' ? undefined : v }));
-
-    gui.add(params, 'neighborState', ['highlighted', 'active', 'selected']).name('neighborState')
-      .onChange((v: string) => hoverPlugin.setOptions({ neighborState: v }));
 
     gui.add(params, 'degree', 0, 3, 1).name('degree')
       .onChange((v: number) => hoverPlugin.setOptions({ degree: v }));
 
     gui.add(params, 'direction', ['both', 'in', 'out']).name('direction')
       .onChange((v: string) => hoverPlugin.setOptions({ direction: v as HoverDirection }));
-
-    gui.add(params, 'hoverDelay', 0, 500, 25).name('hoverDelay (ms)')
-      .onChange((v: number) => hoverPlugin.setOptions({ hoverDelay: v }));
 
     gui.add(params, 'animation').name('animation (reserved)')
       .onChange((v: boolean) => hoverPlugin.setOptions({ animation: v }));

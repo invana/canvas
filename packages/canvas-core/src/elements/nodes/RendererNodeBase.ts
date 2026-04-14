@@ -640,6 +640,7 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
     
     // Apply top-level style properties first (these act as base/fallback)
     if (base.fill !== undefined) result.fill = base.fill;
+    if (base.fillAlpha !== undefined) result.fillAlpha = base.fillAlpha;
     if (base.stroke !== undefined) result.stroke = base.stroke;
     if (base.strokeWidth !== undefined) result.strokeWidth = base.strokeWidth;
     if (base.strokeAlpha !== undefined) result.strokeAlpha = base.strokeAlpha;
@@ -665,6 +666,7 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
         
         // Direct property assignment (faster than Object.assign)
         if (stateStyle.fill !== undefined) result.fill = stateStyle.fill;
+        if (stateStyle.fillAlpha !== undefined) result.fillAlpha = stateStyle.fillAlpha;
         if (stateStyle.stroke !== undefined) result.stroke = stateStyle.stroke;
         if (stateStyle.strokeWidth !== undefined) result.strokeWidth = stateStyle.strokeWidth;
         if (stateStyle.strokeAlpha !== undefined) result.strokeAlpha = stateStyle.strokeAlpha;
@@ -687,6 +689,7 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
         if (!stateStyle) continue;
         
         if (stateStyle.fill !== undefined) result.fill = stateStyle.fill;
+        if (stateStyle.fillAlpha !== undefined) result.fillAlpha = stateStyle.fillAlpha;
         if (stateStyle.stroke !== undefined) result.stroke = stateStyle.stroke;
         if (stateStyle.strokeWidth !== undefined) result.strokeWidth = stateStyle.strokeWidth;
         if (stateStyle.strokeAlpha !== undefined) result.strokeAlpha = stateStyle.strokeAlpha;
