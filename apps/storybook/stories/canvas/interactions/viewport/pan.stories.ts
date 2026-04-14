@@ -47,7 +47,7 @@ export const ViewportPan: Story = {
     graphPlugin.setData(GRAPH_DATA as any);
 
     const log = action('viewport:panned');
-    canvas.viewport.on('moved', ({ viewport }) => {
+    canvas.viewport!.on('moved', ({ viewport }) => {
       log({ x: Math.round(viewport.x), y: Math.round(viewport.y) });
     });
   },
