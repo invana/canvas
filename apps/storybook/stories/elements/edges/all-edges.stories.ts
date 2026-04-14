@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { Canvas, type CanvasData } from '@invana/canvas-core';
+import { createDescriptionPanel } from '../../../../src/div-utils';
 
 const meta: Meta = {
   title: 'Elements/Edges/All Edge Combinations',
@@ -131,31 +132,25 @@ export const AllArrowCombinations: Story = {
     canvas.render();
 
     // Info panel
-    const info = document.createElement('div');
-    info.style.cssText = `
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 15px;
-      border-radius: 8px;
-      font-family: monospace;
-      font-size: 12px;
-      max-width: 300px;
-      z-index: 1000;
-    `;
-    info.innerHTML = `
-      <strong>All Arrow Combinations</strong><br/>
-      <br/>
-      Total: ${arrowTypes.length * arrowTypes.length} combinations<br/>
-      Arrow types: ${arrowTypes.length}<br/>
-      <br/>
-      Blue nodes (left): Source<br/>
-      Red nodes (right): Target<br/>
-      <br/>
-      Scroll to see all combinations
-    `;
+    const info = createDescriptionPanel({
+      text: `<strong>All Arrow Combinations</strong><br/>
+             <br/>
+             Total: ${arrowTypes.length * arrowTypes.length} combinations<br/>
+             Arrow types: ${arrowTypes.length}<br/>
+             <br/>
+             Blue nodes (left): Source<br/>
+             Red nodes (right): Target<br/>
+             <br/>
+             Scroll to see all combinations`,
+      position: 'top-left',
+      top: '20px',
+      left: '20px',
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      textColor: '#fff',
+      padding: '15px',
+      fontSize: '12px',
+      maxWidth: '300px',
+    });
     container.appendChild(info);
   },
 };

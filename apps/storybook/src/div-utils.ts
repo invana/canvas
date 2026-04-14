@@ -88,3 +88,105 @@ export const createCanvasSection = (
     parentContainer.appendChild(section);
     return canvasContainer
 };
+
+export type DescriptionPanelOptions = {
+    text: string;
+    position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center' | 'bottom-center';
+    top?: string;
+    right?: string;
+    bottom?: string;
+    left?: string;
+    backgroundColor?: string;
+    textColor?: string;
+    padding?: string;
+    fontSize?: string;
+    borderRadius?: string;
+    border?: string;
+    maxWidth?: string;
+    maxHeight?: string;
+    zIndex?: number;
+    opacity?: number;
+};
+
+/**
+ * Creates a styled description panel overlay for stories.
+ * Avoids bloating story code with inline HTML styling.
+ * 
+ * @example
+ * const desc = createDescriptionPanel({
+ *   text: 'Click on nodes to select them',
+ *   position: 'top-right',
+ *   backgroundColor: 'rgba(0, 0, 0, 0.8)',
+ *   textColor: '#fff'
+ * });
+ * container.appendChild(desc);
+ */
+export const createDescriptionPanel = ({
+    text,
+    position = 'top-right',
+    top,
+    right,
+    bottom,
+    left,
+    backgroundColor = 'rgba(0, 0, 0, 0.85)',
+    textColor = '#ffffff',
+    padding = '12px 16px',
+    fontSize = '13px',
+    borderRadius = '6px',
+    border = 'none',
+    maxWidth = '320px',
+    maxHeight,
+    zIndex = 1000,
+    opacity = 0.95,
+}: DescriptionPanelOptions): HTMLElement => {
+    const panel = document.createElement('div');
+    panel.style.position = 'absolute';
+    panel.style.backgroundColor = backgroundColor;
+    panel.style.color = textColor;
+    panel.style.padding = padding;
+    panel.style.fontSize = fontSize;
+    panel.style.borderRadius = borderRadius;
+    panel.style.border = border;
+    panel.style.maxWidth = maxWidth;
+    panel.style.zIndex = String(zIndex);
+    panel.style.opacity = String(opacity);
+    panel.style.lineHeight = '1.4';
+    panel.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
+    panel.innerHTML = text;
+
+    if (maxHeight) {
+        panel.style.maxHeight = maxHeight;
+        panel.style.overflowY = 'auto';
+    }
+
+    // Apply explicit position values if provided
+    if (top !== undefined) panel.style.top = top;
+    if (right !== undefined) panel.style.right = right;
+    if (bottom !== undefined) panel.style.bottom = bottom;
+    if (left !== undefined) panel.style.left = left;
+
+    // Apply preset positions if no explicit values given
+    if (!top && !right && !bottom && !left) {
+        const positions: Record<string, { top: string; right: string; bottom: string; left: string }> = {
+            'top-left': { top: '10px', right: 'auto', bottom: 'auto', left: '10px' },
+            'top-right': { top: '10px', right: '10px', bottom: 'auto', left: 'auto' },
+            'bottom-left': { top: 'auto', right: 'auto', bottom: '10px', left: '10px' },
+            'bottom-right': { top: 'auto', right: '10px', bottom: '10px', left: 'auto' },
+            'top-center': { top: '10px', right: 'auto', bottom: 'auto', left: '50%', transform: 'translateX(-50%)' },
+            'bottom-center': { top: 'auto', right: 'auto', bottom: '10px', left: '50%', transform: 'translateX(-50%)' },
+        };
+
+        const pos = positions[position];
+        if (pos) {
+            panel.style.top = pos.top;
+            panel.style.right = pos.right;
+            panel.style.bottom = pos.bottom;
+            panel.style.left = pos.left;
+            if ((pos as any).transform) {
+                panel.style.transform = (pos as any).transform;
+            }
+        }
+    }
+
+    return panel;
+};

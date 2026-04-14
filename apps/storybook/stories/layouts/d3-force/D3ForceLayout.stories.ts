@@ -1,15 +1,13 @@
 /**
- * D3 Force Layout Story
+ * Force-Directed Layout Story
  * 
- * Demonstrates force-directed graph layout using the D3ForceLayoutPlugin
- * from @invana/layouts-d3-force package (separate from canvas-core).
+ * Demonstrates force-directed graph layout using the force layout plugin.
  * 
- * Uses the Les Misérables dataset - character co-occurrence network from
- * Victor Hugo's novel (77 nodes, 254 edges).
+ * Uses the Les Miserables character co-occurrence dataset (77 nodes, 254 edges).
  */
 
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, DEFAULT_LABEL_POSITION, GraphDataPlugin, PluginRegistry } from '@invana/canvas-core';
+import { Canvas, GraphDataPlugin, PluginRegistry } from '@invana/canvas-core';
 import { D3ForceLayoutPlugin } from '@invana/layouts-d3-force';
 import { lesMiserablesDataRaw } from '@invana/example-datasets';
 import { createContainer } from '../../../src/div-utils';
@@ -38,7 +36,7 @@ const convertLesMiserablesData = () => {
   return {
     nodes: lesMiserablesDataRaw.nodes.map((node: any) => ({
       id: node.id,
-      // x: 400,  // Start all nodes at center - D3 will spread them out
+      // x: 400,  // Start all nodes at center and let the layout distribute them
       // y: 300,
       // x: node._data?.x || undefined,
       // y: node._data?.y || undefined,
@@ -82,7 +80,7 @@ export const LesMiserables: Story = {
           key: 'bg',
           options: {
             type: 'solid',
-            color: '#202020',  // White background like Observable
+            color: '#202020',
           },
         },
         {
@@ -109,7 +107,7 @@ export const LesMiserables: Story = {
                 strokeAlpha: () => 0.6,
               },
             },
-            fitOnRender: false,  // Don't fit - let D3 handle positioning
+            fitOnRender: false,
             fitPadding: 80,
           },
         },
@@ -117,7 +115,7 @@ export const LesMiserables: Story = {
           plugin: 'layout-d3-force',
           key: 'layout',
           options: {
-            // Use D3 defaults like Observable example
+            // Use the layout plugin defaults
           },
         },
       ],

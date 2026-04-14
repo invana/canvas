@@ -1,7 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, type CanvasNode, CanvasOptions } from '@invana/canvas-core';
-import { createContainer, createCanvasSection } from '../../../src/div-utils';
+import { Canvas, GraphDataPlugin, PluginRegistry, type CanvasNode } from '@invana/canvas-core';
 import GUI from 'lil-gui';
+import { createContainer, createDescriptionPanel } from '../../../src/div-utils';
+
+if (!PluginRegistry.has('graph-data')) {
+  PluginRegistry.register('graph-data', GraphDataPlugin);
+}
 
 const meta: Meta = {
   title: 'Canvas/Options',
@@ -34,7 +38,7 @@ const behaviorDescriptions = {
 };
 
 /**
- * Interactive behavior switcher using lil-gui controls.
+ * Interactive behavior switcher with a live control panel.
  * 
  * This story demonstrates all behavior options in a single canvas:
  * - **No Behavior (false)**: Completely static - no interactions
@@ -59,24 +63,17 @@ export const InteractiveBehaviorSwitcher: Story = {
     if (!container) return;
 
     // Create info panel
-    const infoPanel = document.createElement('div');
+    let infoPanel = createDescriptionPanel({
+      text: `<strong style="display: block; margin-bottom: 8px; color: #1890ff;">Current Behavior: Default</strong>
+             <div id="behavior-description" style="color: #666; line-height: 1.5;">${behaviorDescriptions.default}</div>`,
+      position: 'top-left',
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      textColor: '#333',
+      padding: '15px',
+      fontSize: '14px',
+      maxWidth: '350px',
+    });
     infoPanel.id = 'info-panel';
-    infoPanel.style.position = 'absolute';
-    infoPanel.style.top = '10px';
-    infoPanel.style.left = '10px';
-    infoPanel.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-    infoPanel.style.padding = '15px';
-    infoPanel.style.borderRadius = '8px';
-    infoPanel.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-    infoPanel.style.fontSize = '14px';
-    infoPanel.style.maxWidth = '350px';
-    infoPanel.style.zIndex = '1000';
-    infoPanel.innerHTML = `
-      <strong style="display: block; margin-bottom: 8px; color: #1890ff;">Current Behavior: Default</strong>
-      <div id="behavior-description" style="color: #666; line-height: 1.5;">
-        ${behaviorDescriptions.default}
-      </div>
-    `;
     container.appendChild(infoPanel);
 
     // Color themes for each behavior type
@@ -91,14 +88,24 @@ export const InteractiveBehaviorSwitcher: Story = {
     const canvas = new Canvas({
       container: container,
       behavior: 'default',
-      data: { nodes: createSampleNodes(), edges: [] },
-      styles: {
-        node: {
-          fill: colorThemes.default.fill,
-          stroke: colorThemes.default.stroke,
-          strokeWidth: 2,
+      plugins: [
+        {
+          plugin: 'graph-data',
+          key: 'graph',
+          options: {
+            data: { nodes: createSampleNodes(), edges: [] },
+            styles: {
+              node: {
+                fill: colorThemes.default.fill,
+                stroke: colorThemes.default.stroke,
+                strokeWidth: 2,
+              },
+            },
+            fitOnRender: true,
+            fitPadding: 80,
+          },
         },
-      },
+      ],
     });
     await canvas.init();
 
@@ -125,13 +132,21 @@ export const InteractiveBehaviorSwitcher: Story = {
         // Update behavior and styles using setOptions - smooth transition without recreating canvas
         canvas.setOptions({ 
           behavior: behaviorValue,
-          styles: {
-            node: {
-              fill: theme.fill,
-              stroke: theme.stroke,
-              strokeWidth: 2,
+          plugins: [
+            {
+              plugin: 'graph-data',
+              key: 'graph',
+              options: {
+                styles: {
+                  node: {
+                    fill: theme.fill,
+                    stroke: theme.stroke,
+                    strokeWidth: 2,
+                  },
+                },
+              },
             },
-          }
+          ],
         });
         
         // Update info panel

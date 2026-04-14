@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, type CanvasNode,
-   CanvasOptions, NodeStates } from '@invana/canvas-core';
+import { Canvas, GraphDataPlugin } from '@invana/canvas-core';
 import { createContainer, createCanvasSection } from '../../../src/div-utils';
 
 const meta: Meta = {
@@ -46,69 +45,38 @@ export const MultipleInstances: Story = {
     
     const container1 = document.getElementById('canvas-example-1');
     const container2 = document.getElementById('canvas-example-2');
-    // const container3 = document.getElementById('canvas-example-3');
-    // const container4 = document.getElementById('canvas-example-4');
     if (!container1 || !container2) return;
     console.log('Containers found, initializing canvases');
 
-    const nodes: CanvasNode[] = [
-      {
-        id: 'default',
-        x: 150,
-        y: 150,
-        label: 'Hello',
-        shape: 'circle',
-        states: ['default'],
-      },
-          {
-        id: 'default-1',
-        x: 300,
-        y: 150,
-        label: 'World',
-        shape: 'circle',
-        states: ['default'],
-      }
-
+    const sharedNodes = [
+      { id: 'n1', x: -80, y: 0, label: 'Hello', shape: 'circle' as const, size: 50 },
+      { id: 'n2', x:  80, y: 0, label: 'World', shape: 'circle' as const, size: 50 },
+    ];
+    const sharedEdges = [
+      { id: 'e1', source: 'n1', target: 'n2', pathType: 'bezier' as const },
     ];
 
-    const options: CanvasOptions = {
-      container:container1,
-        behavior: "full",
-      data: { nodes: nodes, edges: [] },
-    };
-    const canvas = new Canvas(options);
+    const canvas = new Canvas({
+      container: container1,
+      width: container1.clientWidth || 400,
+      height: container1.clientHeight || 300,
+      behavior: 'full',
+    });
     await canvas.init();
- 
+    const graphPlugin1 = new GraphDataPlugin({ fitOnRender: true, fitPadding: 60 });
+    await canvas.registerPlugin(graphPlugin1);
+    graphPlugin1.setData({ nodes: sharedNodes, edges: sharedEdges });
 
-
-    const nodes2: CanvasNode[] = [
-      {
-        id: 'default',
-        x: 150,
-        y: 150,
-        label: 'Hello',
-        shape: 'circle',
-        states: ['default'],
-      },
-          {
-        id: 'default-1',
-        x: 300,
-        y: 150,
-        label: 'World',
-        shape: 'circle',
-        states: ['default'],
-      }
-
-    ];
-
-    const options2: CanvasOptions = {
+    const canvas2 = new Canvas({
       container: container2,
-      behavior: "full",
-      data: { nodes: nodes2, edges: [] },
-    };
-    const canvas2 = new Canvas(options2);
+      width: container2.clientWidth || 400,
+      height: container2.clientHeight || 300,
+      behavior: 'full',
+    });
     await canvas2.init();
- 
+    const graphPlugin2 = new GraphDataPlugin({ fitOnRender: true, fitPadding: 60 });
+    await canvas2.registerPlugin(graphPlugin2);
+    graphPlugin2.setData({ nodes: sharedNodes, edges: sharedEdges });
   },
 };
 

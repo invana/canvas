@@ -14,7 +14,9 @@ import { Canvas, GraphDataPlugin, BackgroundPlugin, PluginRegistry } from '@inva
 import { createContainer } from '../../src/div-utils';
 
 // Register GraphDataPlugin before using it declaratively
-PluginRegistry.register('graph-data', GraphDataPlugin);
+if (!PluginRegistry.has('graph-data')) {
+  PluginRegistry.register('graph-data', GraphDataPlugin);
+}
 
 const meta: Meta = {
   title: 'Canvas/Plugin Configuration',
@@ -111,8 +113,8 @@ export const DeclarativePlugins: Story = {
     await canvas.init();
 
     console.log('Canvas initialized with declarative plugin configuration');
-    console.log('Graph plugin:', canvas.getPlugin('graph'));
-    console.log('Background plugin:', canvas.getPlugin('bg'));
+    console.log('Graph plugin:', canvas.getPluginByKey('graph'));
+    console.log('Background plugin:', canvas.getPluginByKey('bg'));
   },
 };
 
@@ -179,8 +181,8 @@ export const ImperativePlugins: Story = {
     });
 
     console.log('Canvas initialized with imperative plugin configuration');
-    console.log('Graph plugin:', canvas.getPlugin('graph'));
-    console.log('Background plugin:', canvas.getPlugin('bg'));
+    console.log('Graph plugin:', canvas.getPluginByKey('graph'));
+    console.log('Background plugin:', canvas.getPluginByKey('bg'));
   },
 };
 

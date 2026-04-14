@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, type CanvasNode,
-   CanvasOptions, NodeStates } from '@invana/canvas-core';
+import { Canvas, GraphDataPlugin } from '@invana/canvas-core';
 import { createContainer } from '../../../src/div-utils';
 
 const meta: Meta = {
@@ -11,7 +10,7 @@ export default meta;
 type Story = StoryObj;
 
 /**
- * Example showing custom states like loading, error, and warning
+ * Simple canvas usage with two nodes
  */
 export const SimpleUsage: Story = {
   parameters: {
@@ -25,34 +24,26 @@ export const SimpleUsage: Story = {
     const container = document.getElementById('canvas-example');
     if (!container) return;
 
-    const nodes: CanvasNode[] = [
-      {
-        id: 'default',
-        x: 150,
-        y: 150,
-        label: 'Hello',
-        shape: 'circle',
-        states: ['default'],
-      },
-          {
-        id: 'default-1',
-        x: 300,
-        y: 150,
-        label: 'World',
-        shape: 'circle',
-        states: ['default'],
-      }
-
-    ];
-
-    const options: CanvasOptions = {
+    const canvas = new Canvas({
       container,
+      width: container.clientWidth || 800,
+      height: container.clientHeight || 500,
       behavior: 'full',
-      data: { nodes: nodes, edges: [] },
-    };
-    const canvas = new Canvas(options);
+    });
     await canvas.init();
- 
+
+    const graphPlugin = new GraphDataPlugin({ fitOnRender: true, fitPadding: 80 });
+    await canvas.registerPlugin(graphPlugin);
+
+    graphPlugin.setData({
+      nodes: [
+        { id: 'n1', x: -80, y: 0, label: 'Hello', shape: 'circle', size: 50 },
+        { id: 'n2', x:  80, y: 0, label: 'World', shape: 'circle', size: 50 },
+      ],
+      edges: [
+        { id: 'e1', source: 'n1', target: 'n2', pathType: 'bezier' },
+      ],
+    });
   },
 };
 
