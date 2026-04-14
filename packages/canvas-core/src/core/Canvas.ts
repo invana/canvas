@@ -248,6 +248,14 @@ export class Canvas {
       });
     }
 
+    // Bridge pixi-viewport native events → canvas event bus
+    this._viewport.on('zoomed', () => {
+      this.events.emit('viewport:zoomed', { scale: this._viewport!.scaled });
+    });
+    this._viewport.on('moved', () => {
+      this.events.emit('viewport:panned', { x: this._viewport!.x, y: this._viewport!.y });
+    });
+
     this._initialized = true;
 
     // Initialize plugins

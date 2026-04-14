@@ -47,8 +47,7 @@ export const ViewportZoom: Story = {
     graphPlugin.setData(GRAPH_DATA as any);
 
     const log = action('viewport:zoomed');
-    canvas.viewport!.on('zoomed', () => {
-      const scale = canvas.viewport!.scaled;
+    canvas.on('viewport:zoomed', ({ scale }) => {
       log({ scale: parseFloat(scale.toFixed(4)), percent: `${(scale * 100).toFixed(1)}%` });
     });
   },
