@@ -1,3 +1,38 @@
+# Canvas Background Pointer Events
+
+## New Supported Events
+
+The Canvas event system now emits the following events for pointer interactions on the background (viewport):
+
+- `canvas:pointerdown`
+- `canvas:pointermove`
+- `canvas:pointerup`
+- `canvas:pointerupoutside`
+- `canvas:globalpointermove`
+
+These events are only fired when the pointer event target is the viewport (background), not nodes or edges.
+
+**Event payload:**
+
+```
+{
+  position: {
+    screen: { x, y },
+    world: { x, y }
+  },
+  originalEvent: <Pixi FederatedPointerEvent>
+}
+```
+
+## Usage Example
+
+```typescript
+canvas.on('canvas:pointerdown', (e) => {
+  // e.position.screen, e.position.world, e.originalEvent
+});
+```
+
+This enables plugins like brush-select to implement drag-to-select using only the Canvas event bus.
 # API Refactoring: Flat Structure
 
 ## Summary

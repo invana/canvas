@@ -145,6 +145,7 @@ export type { HoverableElement } from './plugins/HoverActivatePlugin';
 export { FocusElementPlugin, type FocusElementOptions } from './plugins/FocusElementPlugin';
 export type { FocusableElement } from './plugins/FocusElementPlugin';
 export { MiniMapPlugin, type MiniMapOptions } from './plugins/MiniMapPlugin';
+export { BrushSelectPlugin, type BrushSelectOptions, type BrushSelectElementType, type BrushSelectStyle } from './plugins/BrushSelectPlugin';
 
 // ============================================================================
 // STYLE

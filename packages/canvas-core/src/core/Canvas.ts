@@ -228,10 +228,23 @@ export class Canvas {
       }
     });
 
-    // Wire canvas background click/dblclick — only fires when clicking empty viewport area
+    // Wire canvas background pointer and click/dblclick events
     {
       let _lastBgTap = 0;
       const DBLCLICK_MS = 300;
+      // Helper to emit all bg pointer events
+      const emitBgPointer = (type: keyof CanvasEventMap, e: any) => {
+        if (e.target !== this._viewport) return;
+        const screen = { x: e.global.x, y: e.global.y };
+        const w = this._viewport!.toWorld(screen.x, screen.y);
+        const world = { x: w.x, y: w.y };
+        this.events.emit(type, { position: { screen, world }, originalEvent: e });
+      };
+      this._viewport.on('pointerdown', (e) => emitBgPointer('canvas:pointerdown', e));
+      this._viewport.on('pointermove', (e) => emitBgPointer('canvas:pointermove', e));
+      this._viewport.on('pointerup', (e) => emitBgPointer('canvas:pointerup', e));
+      this._viewport.on('pointerupoutside', (e) => emitBgPointer('canvas:pointerupoutside', e));
+      this._viewport.on('globalpointermove', (e) => emitBgPointer('canvas:globalpointermove', e));
       this._viewport.on('pointertap', (e) => {
         if (e.target !== this._viewport) return;
         const screen = { x: e.global.x, y: e.global.y };

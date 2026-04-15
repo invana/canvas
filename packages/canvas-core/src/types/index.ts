@@ -156,6 +156,12 @@ export interface CanvasEventMap {
   'canvas:clicked':      CanvasBgPointerEvent;
   'canvas:dblclicked':   CanvasBgPointerEvent;
   'canvas:contextmenu':  CanvasBgPointerEvent;
+  // New: background pointer events
+  'canvas:pointerdown':  CanvasBgPointerEvent;
+  'canvas:pointermove':  CanvasBgPointerEvent;
+  'canvas:pointerup':    CanvasBgPointerEvent;
+  'canvas:pointerupoutside': CanvasBgPointerEvent;
+  'canvas:globalpointermove': CanvasBgPointerEvent;
   'selection:changed':   SelectionChangedEvent;
   'viewport:zoomed':     ViewportZoomEvent;
   'viewport:panned':     ViewportPanEvent;

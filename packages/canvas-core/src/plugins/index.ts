@@ -31,3 +31,6 @@ export type { FocusElementOptions, FocusableElement } from './FocusElementPlugin
 
 export { MiniMapPlugin } from './MiniMapPlugin';
 export type { MiniMapOptions } from './MiniMapPlugin';
+
+export { BrushSelectPlugin } from './BrushSelectPlugin';
+export type { BrushSelectOptions, BrushSelectElementType, BrushSelectStyle } from './BrushSelectPlugin';
