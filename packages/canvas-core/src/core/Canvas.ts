@@ -32,7 +32,7 @@
  * ```
  */
 
-import { Application } from 'pixi.js';
+import { Application, Container, Graphics, type Ticker } from 'pixi.js';
 import { Viewport, type ViewportOptions } from '../viewport/Viewport';
 import { Registry } from '../rendering/Registry';
 import { LayerManager } from '../layers/LayerManager';
@@ -631,6 +631,90 @@ export class Canvas {
       throw new Error('Canvas not initialized. Call init() first.');
     }
     this._app.renderer.background.color = color;
+  }
+
+  /**
+   * Set renderer background color and optional alpha.
+   * Prefer this over accessing `canvas.app.renderer.background` directly.
+   */
+  setRendererBackground(color: string | number, alpha?: number): void {
+    if (!this._app) return;
+    this._app.renderer.background.color = color as string;
+    if (alpha !== undefined) {
+      this._app.renderer.background.alpha = alpha;
+    }
+  }
+
+  /**
+   * Get the underlying HTMLCanvasElement.
+   * Prefer this over accessing `canvas.app.canvas` directly.
+   */
+  getCanvasElement(): HTMLCanvasElement {
+    if (!this._app) throw new Error('Canvas not initialized. Call init() first.');
+    return this._app.canvas as HTMLCanvasElement;
+  }
+
+  /**
+   * Add a callback to the PixiJS render ticker.
+   * Prefer this over accessing `canvas.app.ticker` directly.
+   */
+  addTicker(fn: (ticker: Ticker) => void, context?: unknown): void {
+    this._app?.ticker.add(fn, context);
+  }
+
+  /**
+   * Remove a previously added ticker callback.
+   */
+  removeTicker(fn: (ticker: Ticker) => void, context?: unknown): void {
+    this._app?.ticker.remove(fn, context);
+  }
+
+  /**
+   * Add a display object to the stage at a given insertion index (default 0).
+   * Use index 0 to insert below the viewport, so the child does not pan/zoom.
+   * Prefer this over accessing `canvas.app.stage` directly.
+   */
+  addBelowViewport(child: Container, index: number = 0): void {
+    this._app?.stage.addChildAt(child, index);
+  }
+
+  /**
+   * Remove a display object that was previously added via addBelowViewport().
+   */
+  removeFromStage(child: Container): void {
+    this._app?.stage.removeChild(child);
+  }
+
+  /**
+   * Create a screen-space (stage-level) drawing surface that does NOT pan/zoom with the viewport.
+   * Internally creates a Container+Graphics, attaches to the stage, and returns:
+   *   - `graphics` — the PixiJS Graphics surface to draw on
+   *   - `remove()` — cleanup function; removes the Container from the stage
+   *
+   * Use `import type { Graphics } from 'pixi.js'` in the calling plugin to type the returned graphics
+   * without introducing a runtime pixi.js dependency.
+   */
+  createStageSurface(
+    label: string,
+    zIndex = 0,
+  ): { graphics: Graphics; remove: () => void } {
+    if (!this._app) throw new Error('Canvas not initialized. Call init() first.');
+    const container = new Container();
+    container.label = label;
+    container.zIndex = zIndex;
+    container.eventMode = 'none';
+    const graphics = new Graphics();
+    graphics.label = `${label}-graphics`;
+    graphics.eventMode = 'none';
+    container.addChild(graphics);
+    this._app.stage.addChildAt(container, 0);
+    return {
+      graphics,
+      remove: () => {
+        this._app?.stage.removeChild(container);
+        container.destroy({ children: true });
+      },
+    };
   }
 
   // =========================================================================

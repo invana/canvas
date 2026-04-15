@@ -10,7 +10,8 @@
  * - Clicking anywhere jumps to that location
  */
 
-import { Application, Graphics, FederatedPointerEvent } from 'pixi.js';
+import { Application, Graphics } from 'pixi.js';
+import type { FederatedPointerEvent } from 'pixi.js';
 import type { Canvas } from '../core/Canvas';
 import type { CanvasPlugin } from './types';
 import type { Viewport } from '../viewport/Viewport';
@@ -172,8 +173,8 @@ export class MiniMapPlugin implements CanvasPlugin {
         break;
     }
 
-    if (this._canvas?.app?.canvas?.parentElement) {
-      this._canvas.app.canvas.parentElement.appendChild(container);
+    if (this._canvas?.getCanvasElement().parentElement) {
+      this._canvas.getCanvasElement().parentElement!.appendChild(container);
     }
 
     return container;
@@ -259,10 +260,10 @@ export class MiniMapPlugin implements CanvasPlugin {
     if (!this._worldGraphics || !this._canvas) return;
 
     const graphPlugin = this._canvas.getPlugin('graph-data') as any;
-    if (!graphPlugin?.renderer) return;
+    if (!graphPlugin) return;
     
-    const nodes = graphPlugin.renderer.getNodes();
-    const edges = graphPlugin.renderer.getEdges();
+    const nodes = graphPlugin.getRenderedNodes();
+    const edges = graphPlugin.getRenderedEdges();
 
     this._worldGraphics.clear();
 

@@ -21,7 +21,7 @@
  * ```
  */
 
-import { FederatedPointerEvent } from 'pixi.js';
+import type { ICanvasPointerEvent } from '../types';
 import type { Canvas } from '../core/Canvas';
 import type { CanvasPlugin } from './types';
 import { RendererNodeBase } from '../elements/nodes/RendererNodeBase';
@@ -104,7 +104,7 @@ export class DragElementPlugin implements CanvasPlugin {
   /**
    * Handle pointer down (start potential drag)
    */
-  private onPointerDown = (event: FederatedPointerEvent): void => {
+  private onPointerDown = (event: ICanvasPointerEvent): void => {
     // Check if target is a node
     const target = event.target;
     if (!target || !(target instanceof RendererNodeBase)) {
@@ -131,7 +131,7 @@ export class DragElementPlugin implements CanvasPlugin {
     node.cursor = this._options.dragCursor;
     
     // Pause viewport's drag plugin to prevent canvas panning while dragging a node
-    this._viewport!.plugins.pause('drag');
+    this._viewport!.pauseDrag();
     
     // Stop event propagation to prevent viewport from starting a drag
     event.stopPropagation();
@@ -140,7 +140,7 @@ export class DragElementPlugin implements CanvasPlugin {
   /**
    * Handle pointer move (dragging)
    */
-  private onPointerMove = (event: FederatedPointerEvent): void => {
+  private onPointerMove = (event: ICanvasPointerEvent): void => {
     if (!this._dragData) return;
 
     const { node, startScreenX, startScreenY, startWorldX, startWorldY, startNodeX, startNodeY } = this._dragData;
@@ -193,7 +193,7 @@ export class DragElementPlugin implements CanvasPlugin {
   private onPointerUp = (): void => {
     // Always resume viewport drag plugin, even if we weren't dragging
     // This ensures it's resumed after any node click
-    this._viewport?.plugins.resume('drag');
+    this._viewport?.resumeDrag();
     
     if (!this._dragData) return;
 
@@ -220,13 +220,10 @@ export class DragElementPlugin implements CanvasPlugin {
     if (!this._canvas) return;
 
     const graphPlugin = this._canvas.getPlugin('graph-data') as any;
-    if (!graphPlugin?.renderer) return;
+    if (!graphPlugin) return;
 
-    // Use renderer's update method which handles edge updates
-    graphPlugin.renderer.updateNode(node.id, {
-      x: node.x,
-      y: node.y,
-    });
+    // Use the public updateNodePosition method which handles edge updates
+    graphPlugin.updateNodePosition(node.id, node.x, node.y);
   }
 
   /**

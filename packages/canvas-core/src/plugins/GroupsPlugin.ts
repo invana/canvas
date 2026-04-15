@@ -5,7 +5,8 @@
 
 import type { Canvas } from '../core/Canvas';
 import type { CanvasPlugin } from './types';
-import { Container, Graphics } from 'pixi.js';
+import type { Graphics } from 'pixi.js';
+import type { Layer } from '../layers/Layer';
 import { PluginRegistry } from './registry';
 
 export interface GroupConfig {
@@ -43,8 +44,8 @@ export class GroupsPlugin implements CanvasPlugin {
     ];
   }
 
-  private _shapeLayer: Container | null = null;
-  private _labelLayer: Container | null = null;
+  private _shapeLayer: Layer | null = null;
+  private _labelLayer: Layer | null = null;
   private _groups: Map<string, Graphics> = new Map();
 
   async init(canvas: Canvas): Promise<void> {
@@ -54,8 +55,8 @@ export class GroupsPlugin implements CanvasPlugin {
       throw new Error('Failed to get plugin-groups layer group');
     }
 
-    this._shapeLayer = group.getLayer('shapes')?.container ?? null;
-    this._labelLayer = group.getLayer('labels')?.container ?? null;
+    this._shapeLayer = group.getLayer('shapes') ?? null;
+    this._labelLayer = group.getLayer('labels') ?? null;
 
     if (!this._shapeLayer || !this._labelLayer) {
       throw new Error('Failed to get group layers');
@@ -70,7 +71,8 @@ export class GroupsPlugin implements CanvasPlugin {
       throw new Error('Plugin not initialized');
     }
 
-    const graphics = new Graphics();
+    // Use layer factory so no direct pixi.js Graphics import is needed at runtime.
+    const graphics = this._shapeLayer.createGraphicsSurface(`group-${config.id}`);
     
     const style = config.style ?? {};
     const stroke = style.stroke ?? '#2196f3';
@@ -87,7 +89,6 @@ export class GroupsPlugin implements CanvasPlugin {
     graphics.x = config.x ?? 0;
     graphics.y = config.y ?? 0;
 
-    this._shapeLayer.addChild(graphics);
     this._groups.set(config.id, graphics);
 
     return graphics;
@@ -99,7 +100,7 @@ export class GroupsPlugin implements CanvasPlugin {
   removeGroup(id: string): void {
     const graphics = this._groups.get(id);
     if (graphics) {
-      this._shapeLayer?.removeChild(graphics);
+      this._shapeLayer?.remove(graphics);
       graphics.destroy();
       this._groups.delete(id);
     }
@@ -117,7 +118,7 @@ export class GroupsPlugin implements CanvasPlugin {
    */
   clearAll(): void {
     this._groups.forEach(graphics => {
-      this._shapeLayer?.removeChild(graphics);
+      this._shapeLayer?.remove(graphics);
       graphics.destroy();
     });
     this._groups.clear();

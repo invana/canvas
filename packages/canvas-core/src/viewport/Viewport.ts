@@ -473,4 +473,43 @@ export class Viewport extends PixiViewport {
     const point = super.toScreen(worldX, worldY);
     return { x: point.x, y: point.y };
   }
+
+  // =========================================================================
+  // DRAG CONTROL
+  // =========================================================================
+
+  /**
+   * Pause the viewport's built-in drag plugin.
+   * Call this to prevent canvas panning while dragging elements or drawing overlays.
+   */
+  pauseDrag(): void {
+    this.plugins.pause('drag');
+  }
+
+  /**
+   * Resume the viewport's built-in drag plugin after a previous pauseDrag() call.
+   */
+  resumeDrag(): void {
+    this.plugins.resume('drag');
+  }
+
+  // =========================================================================
+  // CURSOR CONTROL
+  // =========================================================================
+
+  /**
+   * Set the CSS cursor style on the viewport container.
+   */
+  setCursor(cursor: string): void {
+    // cursor is a valid PixiJS Container property; cast required because
+    // pixi-viewport's TypeScript types don't re-export it on the subclass.
+    (this as unknown as { cursor: string }).cursor = cursor;
+  }
+
+  /**
+   * Get the current CSS cursor style of the viewport container.
+   */
+  getCursor(): string {
+    return (this as unknown as { cursor?: string }).cursor ?? 'default';
+  }
 }

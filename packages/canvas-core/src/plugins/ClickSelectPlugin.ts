@@ -24,7 +24,7 @@
  * ```
  */
 
-import { FederatedPointerEvent } from 'pixi.js';
+import type { ICanvasPointerEvent } from '../types';
 import type { Canvas } from '../core/Canvas';
 import type { CanvasPlugin } from './types';
 import type { TraversalDirection } from './GraphDataPlugin';
@@ -42,7 +42,7 @@ export interface ClickSelectOptions {
    * Whether the plugin is active. Accepts a boolean or a predicate function
    * receiving the raw pointer event.
    */
-  enable?: boolean | ((event: FederatedPointerEvent) => boolean);
+  enable?: boolean | ((event: ICanvasPointerEvent) => boolean);
 
   /**
    * Number of hops to expand from each clicked element.
@@ -77,7 +77,7 @@ export interface ClickSelectOptions {
   trigger?: string[];
 
   /** Callback fired on every element click (after the enable guard). Set to `null` to disable. */
-  onClick?: ((event: FederatedPointerEvent) => void) | null;
+  onClick?: ((event: ICanvasPointerEvent) => void) | null;
 
   /** Clear the selection when clicking the empty canvas background. */
   clearOnBackground?: boolean;
@@ -135,7 +135,7 @@ export class ClickSelectPlugin implements CanvasPlugin {
   // ---------------------------------------------------------------------------
   // Internal click handler
 
-  private _onElementClick(element: SelectableElement, event: FederatedPointerEvent): void {
+  private _onElementClick(element: SelectableElement, event: ICanvasPointerEvent): void {
     const { enable, multiple, trigger, onClick } = this._options;
 
     const isEnabled = typeof enable === 'function' ? enable(event) : enable;
@@ -161,7 +161,7 @@ export class ClickSelectPlugin implements CanvasPlugin {
     }
   }
 
-  private _activeModifiers(event: FederatedPointerEvent): Set<string> {
+  private _activeModifiers(event: ICanvasPointerEvent): Set<string> {
     // Pixi's synthetic 'pointertap' does not reliably copy modifier keys onto
     // the FederatedPointerEvent itself — read from the underlying native event.
     const src = (event.nativeEvent as PointerEvent | MouseEvent | undefined) ?? event;
@@ -184,7 +184,7 @@ export class ClickSelectPlugin implements CanvasPlugin {
    */
   private _applySelection(
     seeds: Set<SelectableElement>,
-    _event: FederatedPointerEvent | null,
+    _event: ICanvasPointerEvent | null,
   ): void {
     // 0. Expand seeds by degree — iterative hop-by-hop from seeds only.
     const { degree, direction } = this._options;

@@ -29,7 +29,7 @@
  * ```
  */
 
-import type { Graphics } from 'pixi.js';
+import type { CanvasGraphicsSurface } from '../types';
 import type { Canvas } from '../core/Canvas';
 import type { Viewport } from '../viewport/Viewport';
 import type { CanvasPlugin, LayerGroupConfig } from './types';
@@ -173,7 +173,7 @@ export class LassoSelectPlugin implements CanvasPlugin {
 
   // Drawing surface — created once, reused every frame.
   // Passed to primitive functions; never drawn to directly in this file.
-  private _graphics: Graphics | null = null;
+  private _graphics: CanvasGraphicsSurface | null = null;
 
   // HTMLCanvasElement for getBoundingClientRect() in native pointer handlers
   private _canvasEl: HTMLCanvasElement | null = null;
@@ -222,7 +222,7 @@ export class LassoSelectPlugin implements CanvasPlugin {
     // Graphics surface created via the layer — keeps pixi.js out of this file at runtime.
     this._graphics = overlayLayer.createGraphicsSurface('lasso-select-graphics');
 
-    this._canvasEl = canvas.app!.canvas as HTMLCanvasElement;
+    this._canvasEl = canvas.getCanvasElement();
 
     this._unsubscribers.push(
       canvas.events.on('canvas:pointerdown', (e) => this._onPointerDown(e)),
@@ -277,7 +277,7 @@ export class LassoSelectPlugin implements CanvasPlugin {
     if (!this._triggerActive(native)) return;
 
     // Pause viewport's built-in drag so canvas doesn't pan while lasso-ing
-    this._viewport!.plugins.pause('drag');
+    this._viewport!.pauseDrag();
 
     this._dragActive = true;
     this._lassoPoints = [{ x: e.position.world.x, y: e.position.world.y }];
@@ -343,7 +343,7 @@ export class LassoSelectPlugin implements CanvasPlugin {
       this._clearSelection();
     }
 
-    this._viewport?.plugins.resume('drag');
+    this._viewport?.resumeDrag();
     this._dragActive = false;
     this._lassoPoints = [];
   }

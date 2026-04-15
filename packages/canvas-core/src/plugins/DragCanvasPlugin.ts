@@ -21,7 +21,7 @@
  * ```
  */
 
-import { FederatedPointerEvent } from 'pixi.js';
+import type { ICanvasPointerEvent } from '../types';
 import type { Canvas } from '../core/Canvas';
 import type { CanvasPlugin } from './types';
 import type { Viewport } from '../viewport/Viewport';
@@ -78,7 +78,7 @@ export class DragCanvasPlugin implements CanvasPlugin {
     }
 
     // Store original cursor
-    this._originalCursor = (this._viewport as any).cursor || 'default';
+    this._originalCursor = this._viewport.getCursor();
 
     // Attach event listeners
     this._viewport.eventMode = 'static';
@@ -89,14 +89,14 @@ export class DragCanvasPlugin implements CanvasPlugin {
 
     // Set hover cursor
     if (this._options.mouseButton !== 'left' || !this._options.requireModifier) {
-      (this._viewport as any).cursor = this._options.hoverCursor;
+      this._viewport.setCursor(this._options.hoverCursor);
     }
   }
 
   /**
    * Check if the pointer event should trigger canvas drag
    */
-  private shouldStartDrag(event: FederatedPointerEvent): boolean {
+  private shouldStartDrag(event: ICanvasPointerEvent): boolean {
     // Check mouse button
     switch (this._options.mouseButton) {
       case 'left':
@@ -124,7 +124,7 @@ export class DragCanvasPlugin implements CanvasPlugin {
   /**
    * Handle pointer down (start canvas drag)
    */
-  private onPointerDown = (event: FederatedPointerEvent): void => {
+  private onPointerDown = (event: ICanvasPointerEvent): void => {
     // Don't drag if clicking on a node or other interactive element
     if (event.target !== this._viewport) {
       return;
@@ -146,7 +146,7 @@ export class DragCanvasPlugin implements CanvasPlugin {
     this._viewportStartY = this._viewport!.y;
 
     // Change cursor
-    (this._viewport as any).cursor = this._options.dragCursor;
+    this._viewport!.setCursor(this._options.dragCursor);
 
     // Stop propagation
     event.stopPropagation();
@@ -155,7 +155,7 @@ export class DragCanvasPlugin implements CanvasPlugin {
   /**
    * Handle pointer move (dragging canvas)
    */
-  private onPointerMove = (event: FederatedPointerEvent): void => {
+  private onPointerMove = (event: ICanvasPointerEvent): void => {
     if (!this._isDragging) return;
 
     const dx = event.global.x - this._dragStartX;
@@ -177,7 +177,7 @@ export class DragCanvasPlugin implements CanvasPlugin {
     this._isDragging = false;
 
     // Restore cursor
-    (this._viewport as any).cursor = this._options.hoverCursor;
+    this._viewport!.setCursor(this._options.hoverCursor);
   };
 
   /**
@@ -205,7 +205,7 @@ export class DragCanvasPlugin implements CanvasPlugin {
       this._viewport.off('pointerupoutside', this.onPointerUp);
       
       // Restore original cursor
-      (this._viewport as any).cursor = this._originalCursor;
+      this._viewport.setCursor(this._originalCursor);
     }
 
     this._viewport = null;

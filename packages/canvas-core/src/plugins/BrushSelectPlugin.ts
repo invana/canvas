@@ -29,7 +29,13 @@
  * ```
  */
 
-import { Container, Graphics } from 'pixi.js';
+import type { ICanvasPointerEvent, CanvasGraphicsSurface } from '../types';
+import type { Canvas } from '../core/Canvas';
+import type { Viewport } from '../viewport/Viewport';
+import type { CanvasPlugin } from './types';
+import { RendererNodeBase } from '../elements/nodes/RendererNodeBase';
+import { RendererEdgeBase } from '../elements/edges/RendererEdgeBase';
+import { ClickSelectPlugin, type SelectableElement } from './ClickSelectPlugin';
 import { PluginRegistry } from './registry';
 // ---------------------------------------------------------------------------
 // Types
@@ -56,7 +62,7 @@ export interface BrushSelectOptions {
    * Whether the plugin is active.
    * Accepts a boolean or a predicate that receives the raw pointerdown event.
    */
-  enable?: boolean | ((event: FederatedPointerEvent) => boolean);
+  enable?: boolean | ((event: ICanvasPointerEvent) => boolean);
 
   /**
    * Element types that can be selected.
@@ -135,13 +141,10 @@ export class BrushSelectPlugin implements CanvasPlugin {
   private _viewport: Viewport | null = null;
   private _options: Required<BrushSelectOptions>;
 
-  // PixiJS overlay (lives on stage, not viewport — so it stays fixed on screen)
-  private _overlayContainer: Container | null = null;
-  private _rectGraphics: Graphics | null = null;
-
-  // No persistent brush state; use local variables during drag
-
-  // No longer needed: _lastPointerDown
+  // Screen-space drawing surface (does not pan/zoom with viewport)
+  private _rectGraphics: CanvasGraphicsSurface | null = null;
+  private _removeStageSurface: (() => void) | null = null;
+  private _unsubscribers: Array<() => void> = [];
 
   // Minimum drag distance in screen-pixels before brush activates
   private static readonly DRAG_THRESHOLD = 3;
@@ -162,57 +165,34 @@ export class BrushSelectPlugin implements CanvasPlugin {
     this._canvas = canvas;
     this._viewport = canvas.viewport;
 
-    if (!this._viewport || !canvas.app) {
-      throw new Error('BrushSelectPlugin: canvas must have viewport and app initialised');
+    if (!this._viewport) {
+      throw new Error('BrushSelectPlugin: canvas must have viewport initialised');
     }
 
-    // Create an overlay container attached to the *stage*, not the viewport.
-    // This means the rectangle is drawn in screen space and does not move with pan/zoom.
-    this._overlayContainer = new Container();
-    this._overlayContainer.label = 'brush-select-overlay';
-    this._overlayContainer.zIndex = 9999;
-    this._overlayContainer.eventMode = 'none'; // transparent to pointer events
-    canvas.app.stage.addChild(this._overlayContainer);
-
-    this._rectGraphics = new Graphics();
-    this._rectGraphics.eventMode = 'none'; // must be set on child too — parent 'none' does not propagate in PixiJS
-    this._overlayContainer.addChild(this._rectGraphics);
+    // Create a screen-space overlay via the canvas factory (not viewport — doesn't pan/zoom).
+    const surface = canvas.createStageSurface('brush-select-overlay', 9999);
+    this._rectGraphics = surface.graphics;
+    this._removeStageSurface = surface.remove;
 
     // Use Canvas event bus for pointer events (background only)
-    canvas.events.on('canvas:pointerdown', (e) => {
-      console.log('[BrushSelect] pointerdown', e.originalEvent);
-      this._onPointerDown(e.originalEvent);
-    });
-    canvas.events.on('canvas:pointermove', (e) => this._onPointerMove(e.originalEvent));
-    canvas.events.on('canvas:pointerup', () => {
-      console.log('[BrushSelect] pointerup');
-      this._onPointerUp();
-    });
-    canvas.events.on('canvas:pointerupoutside', () => this._onPointerUp());
-    // Optionally, handle globalpointermove for advanced use cases
-    // canvas.events.on('canvas:globalpointermove', (e) => ...);
-
-    // Listen for canvas:clicked event to clear selection on background click
-    canvas.events.on('canvas:clicked', () => {
-      if (!this._options.clearOnBackground || this._dragActive) return;
-      this._clearSelection();
-    });
+    this._unsubscribers.push(
+      canvas.events.on('canvas:pointerdown', (e) => this._onPointerDown(e.originalEvent as ICanvasPointerEvent)),
+      canvas.events.on('canvas:pointermove', (e) => this._onPointerMove(e.originalEvent as ICanvasPointerEvent)),
+      canvas.events.on('canvas:pointerup', () => this._onPointerUp()),
+      canvas.events.on('canvas:pointerupoutside', () => this._onPointerUp()),
+      canvas.events.on('canvas:clicked', () => {
+        if (!this._options.clearOnBackground || this._dragActive) return;
+        this._clearSelection();
+      }),
+    );
   }
 
   destroy(): void {
-    // Remove all event listeners from Canvas event bus
-    if (this._canvas) {
-      this._canvas.events.off('canvas:pointerdown', this._onPointerDown);
-      this._canvas.events.off('canvas:pointermove', this._onPointerMove);
-      this._canvas.events.off('canvas:pointerup', this._onPointerUp);
-      this._canvas.events.off('canvas:pointerupoutside', this._onPointerUp);
-      this._canvas.events.off('canvas:clicked');
-    }
-    if (this._overlayContainer) {
-      this._overlayContainer.destroy({ children: true });
-      this._overlayContainer = null;
-      this._rectGraphics = null;
-    }
+    for (const unsub of this._unsubscribers) unsub();
+    this._unsubscribers = [];
+    this._removeStageSurface?.();
+    this._removeStageSurface = null;
+    this._rectGraphics = null;
     this._dragActive = false;
     this._dragStart = null;
     this._dragCurrent = null;
@@ -227,7 +207,7 @@ export class BrushSelectPlugin implements CanvasPlugin {
   private _dragStart: { x: number; y: number } | null = null;
   private _dragCurrent: { x: number; y: number } | null = null;
 
-  private _onPointerDown = (event: FederatedPointerEvent): void => {
+  private _onPointerDown = (event: ICanvasPointerEvent): void => {
     // Reset all drag state unconditionally — no stale state from previous drags
     this._clearRect();
     this._dragActive = false;
@@ -246,7 +226,7 @@ export class BrushSelectPlugin implements CanvasPlugin {
     if (!this._triggerActive(event)) return;
 
     // Pause the viewport's built-in drag plugin so canvas doesn't pan
-    this._viewport!.plugins.pause('drag');
+    this._viewport!.pauseDrag();
 
     this._dragActive = true;
     this._dragStart = { x: event.global.x, y: event.global.y };
@@ -254,7 +234,7 @@ export class BrushSelectPlugin implements CanvasPlugin {
     console.log('[BrushSelect] brush started', this._dragStart);
   };
 
-  private _onPointerMove = (event: FederatedPointerEvent): void => {
+  private _onPointerMove = (event: ICanvasPointerEvent): void => {
     if (!this._dragActive || !this._dragStart) return;
 
     // If the mouse button was released outside the canvas (missed pointerup), clean up
@@ -305,7 +285,7 @@ export class BrushSelectPlugin implements CanvasPlugin {
     }
 
     // Always resume viewport drag
-    this._viewport?.plugins.resume('drag');
+    this._viewport?.resumeDrag();
     this._dragActive = false;
     this._dragStart = null;
     this._dragCurrent = null;
@@ -387,7 +367,7 @@ export class BrushSelectPlugin implements CanvasPlugin {
 
   /** Manually draw a dashed rectangle outline using individual dashed line segments. */
   private _drawDashedRect(
-    g: Graphics,
+    g: CanvasGraphicsSurface,
     x: number,
     y: number,
     w: number,
@@ -552,7 +532,7 @@ export class BrushSelectPlugin implements CanvasPlugin {
   // ---------------------------------------------------------------------------
   // Modifier key helpers
 
-  private _triggerActive(event: FederatedPointerEvent): boolean {
+  private _triggerActive(event: ICanvasPointerEvent): boolean {
     const { trigger } = this._options;
     // Empty trigger = activate on any drag (no modifier required)
     if (trigger.length === 0) return true;
