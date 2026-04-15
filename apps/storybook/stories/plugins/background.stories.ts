@@ -1,22 +1,24 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { Canvas, GraphDataPlugin } from '@invana/canvas-core';
 import GUI from 'lil-gui';
+import { D3ForceLayoutPlugin } from '@invana/layouts-d3-force';
+import { generateRandomTree } from '@invana/example-datasets';
 import { createContainer } from '../../src/div-utils';
 
+const rawTree = generateRandomTree(16);
 const GRAPH_DATA = {
-  nodes: [
-    { id: 'n1', x: -200, y: -100, shape: 'circle'  as const, size: 44,           label: 'Node A' },
-    { id: 'n2', x:  200, y: -100, shape: 'rect'    as const, width: 90, height: 54, label: 'Node B' },
-    { id: 'n3', x: -200, y:  100, shape: 'diamond' as const, size: 50,           label: 'Node C' },
-    { id: 'n4', x:  200, y:  100, shape: 'hexagon' as const, size: 46,           label: 'Node D' },
-    { id: 'n5', x:    0, y:    0, shape: 'ellipse' as const, width: 90, height: 54, label: 'Center' },
-  ],
-  edges: [
-    { id: 'e1', source: 'n1', target: 'n5', pathType: 'bezier' as const },
-    { id: 'e2', source: 'n2', target: 'n5', pathType: 'bezier' as const },
-    { id: 'e3', source: 'n3', target: 'n5', pathType: 'bezier' as const },
-    { id: 'e4', source: 'n4', target: 'n5', pathType: 'bezier' as const },
-  ],
+  nodes: rawTree.nodes.map((n: any) => ({
+    id: String(n.index),
+    shape: 'circle' as const,
+    size: 10,
+    label: `N${n.index}`,
+  })),
+  edges: rawTree.edges.map((e: any, i: number) => ({
+    id: `e${i}`,
+    source: String(e.source),
+    target: String(e.target),
+    pathType: 'straight' as const,
+  })),
 };
 
 const GRAPH_STYLES = {
@@ -69,10 +71,13 @@ export const Patterns: Story = {
     });
     await canvas.init();
 
-    const graphPlugin = new GraphDataPlugin({ fitOnRender: true, fitPadding: 80 });
+    const graphPlugin = new GraphDataPlugin({ fitOnRender: false, fitPadding: 80 });
     await canvas.registerPlugin(graphPlugin);
     graphPlugin.setData(GRAPH_DATA as any);
     graphPlugin.setStyles(GRAPH_STYLES as any);
+    const layout = new D3ForceLayoutPlugin({ charge: -200, collisionRadius: 25, animate: true, iterations: 300 });
+    await canvas.registerPlugin(layout);
+    await layout.start();
 
     const gui = new GUI({ container, title: 'Background' });
     gui.domElement.style.position = 'absolute';
@@ -128,10 +133,13 @@ export const SolidColor: Story = {
     });
     await canvas.init();
 
-    const graphPlugin = new GraphDataPlugin({ fitOnRender: true, fitPadding: 80 });
+    const graphPlugin = new GraphDataPlugin({ fitOnRender: false, fitPadding: 80 });
     await canvas.registerPlugin(graphPlugin);
     graphPlugin.setData(GRAPH_DATA as any);
     graphPlugin.setStyles(GRAPH_STYLES as any);
+    const layout = new D3ForceLayoutPlugin({ charge: -200, collisionRadius: 25, animate: true, iterations: 300 });
+    await canvas.registerPlugin(layout);
+    await layout.start();
 
     const gui = new GUI({ container, title: 'Solid Color' });
     gui.domElement.style.position = 'absolute';
@@ -177,13 +185,16 @@ export const FollowMode: Story = {
     });
     await canvas.init();
 
-    const graphPlugin = new GraphDataPlugin({ fitOnRender: true, fitPadding: 80 });
+    const graphPlugin = new GraphDataPlugin({ fitOnRender: false, fitPadding: 80 });
     await canvas.registerPlugin(graphPlugin);
     graphPlugin.setData(GRAPH_DATA as any);
     graphPlugin.setStyles({
       node: { fill: '#4cc9f0', stroke: '#333', strokeWidth: 2, labelFill: '#333' },
       edge: { stroke: '#666', strokeWidth: 2 },
     } as any);
+    const layout = new D3ForceLayoutPlugin({ charge: -200, collisionRadius: 25, animate: true, iterations: 300 });
+    await canvas.registerPlugin(layout);
+    await layout.start();
 
     const gui = new GUI({ container, title: 'Follow Mode' });
     gui.domElement.style.position = 'absolute';

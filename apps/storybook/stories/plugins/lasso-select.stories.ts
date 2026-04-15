@@ -1,32 +1,24 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import GUI from 'lil-gui';
 import { Canvas, GraphDataPlugin, LassoSelectPlugin } from '@invana/canvas-core';
+import { D3ForceLayoutPlugin } from '@invana/layouts-d3-force';
+import { generateRandomTree } from '@invana/example-datasets';
 import { createContainer } from '../../src/div-utils';
 
+const rawTree = generateRandomTree(16);
 const GRAPH_DATA = {
-  nodes: [
-    { id: 'n1', x: -280, y: -140, shape: 'circle'   as const, size: 44, label: 'Alpha'   },
-    { id: 'n2', x: -100, y: -140, shape: 'rect'     as const, width: 88, height: 54, label: 'Beta'    },
-    { id: 'n3', x:   80, y: -140, shape: 'diamond'  as const, size: 50, label: 'Gamma'   },
-    { id: 'n4', x:  260, y: -140, shape: 'hexagon'  as const, size: 44, label: 'Delta'   },
-    { id: 'n5', x: -200, y:   80, shape: 'star'     as const, size: 44, label: 'Epsilon' },
-    { id: 'n6', x:    0, y:   80, shape: 'ellipse'  as const, width: 88, height: 54, label: 'Zeta'    },
-    { id: 'n7', x:  200, y:   80, shape: 'triangle' as const, size: 44, label: 'Eta'     },
-    { id: 'n8', x: -280, y:  220, shape: 'circle'   as const, size: 40, label: 'Theta'   },
-    { id: 'n9', x:  -80, y:  220, shape: 'rect'     as const, width: 80, height: 50, label: 'Iota'    },
-  ],
-  edges: [
-    { id: 'e1',  source: 'n1', target: 'n2', pathType: 'bezier' as const },
-    { id: 'e2',  source: 'n2', target: 'n3', pathType: 'bezier' as const },
-    { id: 'e3',  source: 'n3', target: 'n4', pathType: 'bezier' as const },
-    { id: 'e4',  source: 'n1', target: 'n5', pathType: 'bezier' as const },
-    { id: 'e5',  source: 'n2', target: 'n6', pathType: 'bezier' as const },
-    { id: 'e6',  source: 'n4', target: 'n7', pathType: 'bezier' as const },
-    { id: 'e7',  source: 'n5', target: 'n6', pathType: 'bezier' as const },
-    { id: 'e8',  source: 'n6', target: 'n7', pathType: 'bezier' as const },
-    { id: 'e9',  source: 'n5', target: 'n8', pathType: 'bezier' as const },
-    { id: 'e10', source: 'n8', target: 'n9', pathType: 'bezier' as const },
-  ],
+  nodes: rawTree.nodes.map((n: any) => ({
+    id: String(n.index),
+    shape: 'circle' as const,
+    size: 10,
+    label: `N${n.index}`,
+  })),
+  edges: rawTree.edges.map((e: any, i: number) => ({
+    id: `e${i}`,
+    source: String(e.source),
+    target: String(e.target),
+    pathType: 'straight' as const,
+  })),
 };
 
 const meta: Meta = {
@@ -71,13 +63,16 @@ export const LassoSelect: Story = {
     });
     await canvas.init();
 
-    const graphPlugin = new GraphDataPlugin({ fitOnRender: true, fitPadding: 70 });
+    const graphPlugin = new GraphDataPlugin({ fitOnRender: false, fitPadding: 70 });
     await canvas.registerPlugin(graphPlugin);
     graphPlugin.setData(GRAPH_DATA as any);
     graphPlugin.setStyles({
       node: { fill: '#3fcbeb', stroke: '#ffffff', strokeWidth: 2 },
       edge: { stroke: '#58a6ff', strokeWidth: 2 },
     });
+    const layout = new D3ForceLayoutPlugin({ charge: -200, collisionRadius: 25, animate: true, iterations: 300 });
+    await canvas.registerPlugin(layout);
+    await layout.start();
 
     const lassoPlugin = new LassoSelectPlugin({
       trigger: ['shift'],
