@@ -216,23 +216,6 @@ export interface LayerConfig {
   interactive?: boolean;
 }
 
-// =============================================================================
-// Processor Types
-// =============================================================================
-
-export interface ProcessorConfig {
-  type: string;
-  options?: Record<string, unknown>;
-  enabled?: boolean;
-  priority?: number;
-}
-
-export interface ProcessorContext {
-  canvas: unknown; // Will be Canvas type
-  sceneGraph: unknown; // Will be SceneGraph type
-  event?: CanvasEvent;
-}
-
 // Note: CanvasOptions is now exported from Canvas.ts
 
 // =============================================================================

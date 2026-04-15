@@ -8,12 +8,12 @@
  * ```
  * ┌─────────────────────────────────────────────────────────────────┐
  * │                     Canvas (core/)                              │
- * │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌───────────────┐   │
- * │  │ Viewport │  │  Layers  │  │  Scene   │  │  Processors   │   │
- * │  │(pan/zoom)│  │ Manager  │  │  Graph   │  │   Pipeline    │   │
- * │  └──────────┘  └──────────┘  └──────────┘  └───────────────┘   │
- * │                      │             │              │              │
- * │                 ┌────┴─────────────┴──────────────┘              │
+ * │  ┌──────────┐  ┌──────────┐  ┌──────────┐                        │
+ * │  │ Viewport │  │  Layers  │  │  Plugins │                        │
+ * │  │(pan/zoom)│  │ Manager  │  │ Registry │                        │
+ * │  └──────────┘  └──────────┘  └──────────┘                        │
+ * │                      │             │                              │
+ * │                 ┌────┴─────────────┘                              │
  * │                 ▼                                                │
  * │         ┌───────────────────┐    ┌─────────────┐                │
  * │         │ Function-Based    │    │  Rendering  │                │
@@ -181,24 +181,6 @@ export {
   DEFAULT_CANVAS_INTERACTION,
 } from './defaults/canvas';
 
-// ============================================================================
-// PROCESSORS
-// ============================================================================
-
-export { 
-  BaseProcessor, 
-  ProcessorPipeline, 
-  ProcessorRegistry,
-  LoggingProcessor,
-  SelectionProcessor,
-  HighlightNeighborsProcessor,
-  ZoomLevelProcessor,
-} from './processors';
-export type { 
-  FunctionalProcessor, 
-  ProcessorConstructor 
-} from './processors';
-export type { ProcessorConfig, ProcessorContext } from './types';
 export type {
   CanvasEventMap,
   CanvasPointerPosition,
