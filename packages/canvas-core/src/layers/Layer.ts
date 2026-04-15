@@ -2,7 +2,7 @@
  * Layer - A container for organizing graphics at a specific z-index
  */
 
-import { Container } from 'pixi.js';
+import { Container, Graphics } from 'pixi.js';
 import type { LayerConfig, LayerType } from '../types';
 
 export class Layer {
@@ -84,6 +84,18 @@ export class Layer {
    */
   getChildren(): Container[] {
     return this.container.children as Container[];
+  }
+
+  /**
+   * Create a Graphics drawing surface, add it to this layer, and return it.
+   * Use this instead of importing Graphics directly from pixi.js in plugin code.
+   */
+  createGraphicsSurface(label?: string): Graphics {
+    const g = new Graphics();
+    g.label = label ?? `${this.name}-graphics`;
+    g.eventMode = 'none';
+    this.container.addChild(g);
+    return g;
   }
 
   /**

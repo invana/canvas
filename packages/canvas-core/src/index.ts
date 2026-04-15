@@ -146,6 +146,7 @@ export { FocusElementPlugin, type FocusElementOptions } from './plugins/FocusEle
 export type { FocusableElement } from './plugins/FocusElementPlugin';
 export { MiniMapPlugin, type MiniMapOptions } from './plugins/MiniMapPlugin';
 export { BrushSelectPlugin, type BrushSelectOptions, type BrushSelectElementType, type BrushSelectStyle } from './plugins/BrushSelectPlugin';
+export { LassoSelectPlugin, type LassoSelectOptions, type LassoSelectElementType, type LassoSelectStyle } from './plugins/LassoSelectPlugin';
 
 // ============================================================================
 // STYLE
