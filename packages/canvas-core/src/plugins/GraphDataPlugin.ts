@@ -33,6 +33,11 @@ import type { Canvas } from '../core/Canvas';
 import type { CanvasPlugin } from './types';
 import { Renderer, type CanvasNode, type CanvasEdge } from '../rendering/Renderer';
 import type { LayerGroupConfig } from './types';
+import type { RendererNodeBase } from '../elements/nodes/RendererNodeBase';
+import type { RendererEdgeBase } from '../elements/edges/RendererEdgeBase';
+
+/** Edge direction filter for neighbor traversal */
+export type TraversalDirection = 'both' | 'in' | 'out';
 import { type FunctionBasedNodeStyle, type FunctionBasedEdgeStyle, resolveNodeStyle, resolveEdgeStyle } from '../style/FunctionBasedStyle';
 import { type NodeStyle } from '../elements/nodes';
 import { type EdgeStyle } from '../elements/edges';
@@ -321,6 +326,128 @@ export class GraphDataPlugin implements CanvasPlugin {
         console.warn(`[GraphDataPlugin] Failed to update node ${id}`);
       }
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Rendered element accessors
+
+  /** Get a rendered node by ID. */
+  getRenderedNode(id: string): RendererNodeBase | undefined {
+    return this._renderer?.getNode(id);
+  }
+
+  /** Get all rendered nodes. */
+  getRenderedNodes(): RendererNodeBase[] {
+    return this._renderer?.getNodes() ?? [];
+  }
+
+  /** Get a rendered edge by ID. */
+  getRenderedEdge(id: string): RendererEdgeBase | undefined {
+    return this._renderer?.getEdge(id);
+  }
+
+  /** Get all rendered edges. */
+  getRenderedEdges(): RendererEdgeBase[] {
+    return this._renderer?.getEdges() ?? [];
+  }
+
+  /** Get all rendered edges connected to a node. */
+  getNodeEdges(nodeId: string): RendererEdgeBase[] {
+    return this._renderer?.getNodeEdges(nodeId) ?? [];
+  }
+
+  // ---------------------------------------------------------------------------
+  // Graph traversal
+
+  /**
+   * BFS traversal returning all nodes and edges within `degree` hops of
+   * `source`. The source element itself is excluded from the result.
+   *
+   * @param source  - Starting node or edge (renderer instance).
+   * @param degree  - Number of hops to expand (0 returns an empty result).
+   * @param direction - Edge direction filter ('both' | 'in' | 'out').
+   */
+  getNeighborElements(
+    source: RendererNodeBase | RendererEdgeBase,
+    degree: number,
+    direction: TraversalDirection = 'both',
+  ): { nodes: RendererNodeBase[]; edges: RendererEdgeBase[] } {
+    if (!this._renderer || degree === 0) {
+      return { nodes: [], edges: [] };
+    }
+
+    const resultNodes = new Set<RendererNodeBase>();
+    const resultEdges = new Set<RendererEdgeBase>();
+    const visitedNodes = new Set<string>();
+    const visitedEdges = new Set<string>();
+
+    // Seed the BFS frontier from the source element
+    let frontier: RendererNodeBase[] = [];
+    const addNodeToFrontier = (n: RendererNodeBase) => {
+      if (!visitedNodes.has(n.id)) {
+        visitedNodes.add(n.id);
+        frontier.push(n);
+      }
+    };
+
+    const isNode = (el: RendererNodeBase | RendererEdgeBase): el is RendererNodeBase =>
+      (el as RendererNodeBase).getBoundaryPoint !== undefined;
+
+    if (isNode(source)) {
+      addNodeToFrontier(source as RendererNodeBase);
+    } else {
+      // Edge source: seed from both endpoint nodes using raw edge data
+      const edgeData = this._edgeData.get((source as RendererEdgeBase).id);
+      visitedEdges.add((source as RendererEdgeBase).id);
+      if (edgeData) {
+        const srcId = typeof edgeData.source === 'string' ? edgeData.source : undefined;
+        const tgtId = typeof edgeData.target === 'string' ? edgeData.target : undefined;
+        for (const nodeId of [srcId, tgtId]) {
+          if (nodeId) {
+            const node = this._renderer.getNode(nodeId);
+            if (node) addNodeToFrontier(node);
+          }
+        }
+      }
+    }
+
+    for (let hop = 0; hop < degree; hop++) {
+      const nextFrontier: RendererNodeBase[] = [];
+
+      for (const node of frontier) {
+        for (const edge of this._renderer.getNodeEdges(node.id)) {
+          const edgeData = this._edgeData.get(edge.id);
+          if (!edgeData) continue;
+
+          const srcId = typeof edgeData.source === 'string' ? edgeData.source : undefined;
+          const tgtId = typeof edgeData.target === 'string' ? edgeData.target : undefined;
+          const isSource = srcId === node.id;
+
+          if (direction === 'out' && !isSource) continue;
+          if (direction === 'in'  &&  isSource) continue;
+
+          if (!visitedEdges.has(edge.id)) {
+            visitedEdges.add(edge.id);
+            resultEdges.add(edge);
+          }
+
+          const neighborId = isSource ? tgtId : srcId;
+          if (neighborId && !visitedNodes.has(neighborId)) {
+            const neighborNode = this._renderer.getNode(neighborId);
+            if (neighborNode) {
+              visitedNodes.add(neighborId);
+              resultNodes.add(neighborNode);
+              nextFrontier.push(neighborNode);
+            }
+          }
+        }
+      }
+
+      frontier = nextFrontier;
+      if (frontier.length === 0) break;
+    }
+
+    return { nodes: Array.from(resultNodes), edges: Array.from(resultEdges) };
   }
 
   /**

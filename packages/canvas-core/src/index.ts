@@ -128,7 +128,7 @@ export { PluginRegistry, BEHAVIOR_PRESETS, type PluginConstructor } from './plug
 
 // Core plugins
 export { GraphDataPlugin } from './plugins/GraphDataPlugin';
-export type { GraphData, GraphStyles, GraphDataPluginOptions } from './plugins/GraphDataPlugin';
+export type { GraphData, GraphStyles, GraphDataPluginOptions, TraversalDirection } from './plugins/GraphDataPlugin';
 
 export { GroupsPlugin } from './plugins/GroupsPlugin';
 export type { GroupConfig } from './plugins/GroupsPlugin';
@@ -138,7 +138,7 @@ export { BackgroundPlugin } from './plugins/BackgroundPlugin';
 export { DragElementPlugin, type DragElementOptions } from './plugins/DragElementPlugin';
 export { DragCanvasPlugin, type DragCanvasOptions } from './plugins/DragCanvasPlugin';
 export { ZoomControlPlugin, type ZoomControlOptions } from './plugins/ZoomControlPlugin';
-export { ClickSelectPlugin, type ClickSelectOptions } from './plugins/ClickSelectPlugin';
+export { ClickSelectPlugin, type ClickSelectOptions, type SelectDirection } from './plugins/ClickSelectPlugin';
 export type { SelectableElement } from './plugins/ClickSelectPlugin';
 export { HoverActivatePlugin, type HoverActivateOptions, type HoverDirection } from './plugins/HoverActivatePlugin';
 export type { HoverableElement } from './plugins/HoverActivatePlugin';

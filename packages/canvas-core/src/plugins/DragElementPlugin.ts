@@ -43,8 +43,13 @@ export interface DragElementOptions {
 
 interface DragData {
   node: RendererNodeBase;
-  startX: number;
-  startY: number;
+  // Screen-space start position — used for the drag threshold check so our
+  // detection stays in sync with PixiJS's own tap detection (also screen-space).
+  startScreenX: number;
+  startScreenY: number;
+  // World-space start positions — used only to compute the node's new position.
+  startWorldX: number;
+  startWorldY: number;
   startNodeX: number;
   startNodeY: number;
   hasMoved: boolean;
@@ -113,8 +118,10 @@ export class DragElementPlugin implements CanvasPlugin {
 
     this._dragData = {
       node,
-      startX: worldPos.x,
-      startY: worldPos.y,
+      startScreenX: event.global.x,
+      startScreenY: event.global.y,
+      startWorldX: worldPos.x,
+      startWorldY: worldPos.y,
       startNodeX: node.x,
       startNodeY: node.y,
       hasMoved: false,
@@ -136,32 +143,27 @@ export class DragElementPlugin implements CanvasPlugin {
   private onPointerMove = (event: FederatedPointerEvent): void => {
     if (!this._dragData) return;
 
-    const { node, startX, startY, startNodeX, startNodeY } = this._dragData;
+    const { node, startScreenX, startScreenY, startWorldX, startWorldY, startNodeX, startNodeY } = this._dragData;
     
-    // Get current world position
-    const worldPos = this._viewport!.toWorld(event.global.x, event.global.y);
-    
-    const dx = worldPos.x - startX;
-    const dy = worldPos.y - startY;
-
-    // Check if we've moved enough to start dragging
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    if (!this._dragData.hasMoved && distance < this._options.threshold) {
+    // Threshold check in screen space — matches PixiJS's tap detection coordinate
+    // system, so a gesture is either a drag OR a tap in both systems, never split.
+    const sdx = event.global.x - startScreenX;
+    const sdy = event.global.y - startScreenY;
+    if (!this._dragData.hasMoved && Math.sqrt(sdx * sdx + sdy * sdy) < this._options.threshold) {
       return;
     }
 
     // Mark as dragging
     if (!this._dragData.hasMoved) {
       this._dragData.hasMoved = true;
-      
-      // Emit drag start on element (legacy) and via canvas bus
       node.emit('dragstart', { node, x: startNodeX, y: startNodeY });
       this._canvas?.events.emit('node:dragstart', { node, x: startNodeX, y: startNodeY });
     }
 
-    // Calculate new position
-    let newX = startNodeX + dx;
-    let newY = startNodeY + dy;
+    // Compute new position in world space
+    const worldPos = this._viewport!.toWorld(event.global.x, event.global.y);
+    let newX = startNodeX + (worldPos.x - startWorldX);
+    let newY = startNodeY + (worldPos.y - startWorldY);
 
     // Constrain to viewport if needed
     if (this._options.constrainToViewport) {

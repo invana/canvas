@@ -30,12 +30,12 @@ import type { CanvasPlugin } from './types';
 import { RendererNodeBase } from '../elements/nodes/RendererNodeBase';
 import type { RendererEdgeBase } from '../elements/edges/RendererEdgeBase';
 import { PluginRegistry } from './registry';
-import type { GraphDataPlugin } from './GraphDataPlugin';
+import type { GraphDataPlugin, TraversalDirection } from './GraphDataPlugin';
 
 export type HoverableElement = RendererNodeBase | RendererEdgeBase;
 
-/** Edge direction filter for neighbor traversal */
-export type HoverDirection = 'both' | 'in' | 'out';
+/** Edge direction filter for neighbor traversal. Alias for TraversalDirection. */
+export type HoverDirection = TraversalDirection;
 
 export interface HoverActivateOptions {
   /** Whether to enable hover. Accepts a boolean or a predicate. @default true */
@@ -152,63 +152,44 @@ export class HoverActivatePlugin implements CanvasPlugin {
     this._options.onHover?.(element);
   }
 
-  /** BFS neighbor traversal. Applies `state` to all reachable nodes/edges. */
+  /** Expand and apply `state` to all elements within `degree` hops of `startNode`. */
   private traverseNeighbors(startNode: RendererNodeBase, maxDegree: number): void {
-    if (!this._canvas) return;
-    const renderer = this._canvas.getPlugin<GraphDataPlugin>('graph-data')?.renderer;
-    if (!renderer) return;
+    const graphPlugin = this._canvas?.getPlugin<GraphDataPlugin>('graph-data');
+    if (!graphPlugin) return;
 
-    const visited = new Set<string>([startNode.id]);
-    let frontier: RendererNodeBase[] = [startNode];
+    const { nodes, edges } = graphPlugin.getNeighborElements(
+      startNode,
+      maxDegree,
+      this._options.direction,
+    );
 
-    for (let hop = 0; hop < maxDegree; hop++) {
-      const nextFrontier: RendererNodeBase[] = [];
-
-      for (const node of frontier) {
-        for (const edge of renderer.getNodeEdges(node.id)) {
-          const sourceNode: RendererNodeBase | null = (edge as any)._sourceNode ?? null;
-          const targetNode: RendererNodeBase | null = (edge as any)._targetNode ?? null;
-          const isSource = sourceNode?.id === node.id;
-
-          const { direction } = this._options;
-          if (direction === 'out' && !isSource) continue;
-          if (direction === 'in'  &&  isSource) continue;
-
-          edge.setState(this._options.state, true);
-          this._activeElements.add(edge);
-
-          const neighbor = isSource ? targetNode : sourceNode;
-          if (neighbor && !visited.has(neighbor.id)) {
-            visited.add(neighbor.id);
-            neighbor.setState(this._options.state, true);
-            this._activeElements.add(neighbor);
-            nextFrontier.push(neighbor);
-          }
-        }
-      }
-
-      frontier = nextFrontier;
-      if (frontier.length === 0) break;
+    for (const node of nodes) {
+      node.setState(this._options.state, true);
+      this._activeElements.add(node);
+    }
+    for (const edge of edges) {
+      edge.setState(this._options.state, true);
+      this._activeElements.add(edge);
     }
   }
 
   /** Apply `inactiveState` to all elements outside the active set. */
   private applyInactiveState(): void {
     if (!this._canvas || !this._options.inactiveState) return;
-    const renderer = this._canvas.getPlugin<GraphDataPlugin>('graph-data')?.renderer;
-    if (!renderer) return;
+    const graphPlugin = this._canvas.getPlugin<GraphDataPlugin>('graph-data');
+    if (!graphPlugin) return;
 
     const activeIds = new Set<string>();
     if (this._currentHover) activeIds.add(this._currentHover.id);
     this._activeElements.forEach(el => activeIds.add(el.id));
 
-    for (const node of renderer.getNodes()) {
+    for (const node of graphPlugin.getRenderedNodes()) {
       if (!activeIds.has(node.id)) {
         node.setState(this._options.inactiveState!, true);
         this._inactiveElements.add(node);
       }
     }
-    for (const edge of renderer.getEdges()) {
+    for (const edge of graphPlugin.getRenderedEdges()) {
       if (!activeIds.has(edge.id)) {
         edge.setState(this._options.inactiveState!, true);
         this._inactiveElements.add(edge);

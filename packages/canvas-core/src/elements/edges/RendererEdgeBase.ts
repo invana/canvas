@@ -284,8 +284,8 @@ export abstract class RendererEdgeBase extends RendererBase<RendererEdge> {
       this._activeStates.add(name);
       this._styleDirty = true;
       
-      // Update interaction mode if disabled/muted state changed
-      if (name === EdgeStates.DISABLED || name === 'muted') {
+      // Update interaction mode if disabled state changed
+      if (name === EdgeStates.DISABLED) {
         this.updateInteractionMode();
       }
       
@@ -301,8 +301,8 @@ export abstract class RendererEdgeBase extends RendererBase<RendererEdge> {
       this._activeStates.delete(name);
       this._styleDirty = true;
       
-      // Update interaction mode if disabled/muted state changed
-      if (name === EdgeStates.DISABLED || name === 'muted') {
+      // Update interaction mode if disabled state changed
+      if (name === EdgeStates.DISABLED) {
         this.updateInteractionMode();
       }
       
@@ -335,10 +335,10 @@ export abstract class RendererEdgeBase extends RendererBase<RendererEdge> {
   /**
    * Check if the edge is disabled (should not respond to interactions)
    * 
-   * @returns true if the edge is in disabled or muted state
+   * @returns true if the edge is in disabled state
    */
   isDisabled(): boolean {
-    return this._activeStates.has(EdgeStates.DISABLED) || this._activeStates.has('muted');
+    return this._activeStates.has(EdgeStates.DISABLED);
   }
 
   /**

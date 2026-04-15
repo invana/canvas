@@ -442,8 +442,8 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
     
     this._styleDirty = true;
     
-    // Update interaction mode if disabled/muted state changed
-    if (name === NodeStates.DISABLED || name === 'muted') {
+    // Update interaction mode if disabled state changed
+    if (name === NodeStates.DISABLED) {
       this.updateInteractionMode();
     }
     
@@ -481,10 +481,10 @@ export abstract class RendererNodeBase extends RendererBase<RendererNode> {
   /**
    * Check if the node is disabled (should not respond to interactions)
    * 
-   * @returns true if the node is in disabled or muted state
+   * @returns true if the node is in disabled state
    */
   isDisabled(): boolean {
-    return this._activeStates.has(NodeStates.DISABLED) || this._activeStates.has('muted');
+    return this._activeStates.has(NodeStates.DISABLED);
   }
 
   /**
