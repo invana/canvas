@@ -17,6 +17,18 @@
         "console": "integratedTerminal",
         },
         {
+            "name": "storybook-new",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/apps/storybook-new",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "dev"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "layouts-d3-force watch",
             "type": "node",
             "request": "launch",
