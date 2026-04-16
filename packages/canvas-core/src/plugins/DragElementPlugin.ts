@@ -21,7 +21,7 @@
  * ```
  */
 
-import { FederatedPointerEvent } from 'pixi.js';
+import type { ICanvasPointerEvent } from '../types';
 import type { Canvas } from '../core/Canvas';
 import type { CanvasPlugin } from './types';
 import { RendererNodeBase } from '../elements/nodes/RendererNodeBase';
@@ -43,8 +43,13 @@ export interface DragElementOptions {
 
 interface DragData {
   node: RendererNodeBase;
-  startX: number;
-  startY: number;
+  // Screen-space start position — used for the drag threshold check so our
+  // detection stays in sync with PixiJS's own tap detection (also screen-space).
+  startScreenX: number;
+  startScreenY: number;
+  // World-space start positions — used only to compute the node's new position.
+  startWorldX: number;
+  startWorldY: number;
   startNodeX: number;
   startNodeY: number;
   hasMoved: boolean;
@@ -99,7 +104,7 @@ export class DragElementPlugin implements CanvasPlugin {
   /**
    * Handle pointer down (start potential drag)
    */
-  private onPointerDown = (event: FederatedPointerEvent): void => {
+  private onPointerDown = (event: ICanvasPointerEvent): void => {
     // Check if target is a node
     const target = event.target;
     if (!target || !(target instanceof RendererNodeBase)) {
@@ -113,8 +118,10 @@ export class DragElementPlugin implements CanvasPlugin {
 
     this._dragData = {
       node,
-      startX: worldPos.x,
-      startY: worldPos.y,
+      startScreenX: event.global.x,
+      startScreenY: event.global.y,
+      startWorldX: worldPos.x,
+      startWorldY: worldPos.y,
       startNodeX: node.x,
       startNodeY: node.y,
       hasMoved: false,
@@ -124,7 +131,7 @@ export class DragElementPlugin implements CanvasPlugin {
     node.cursor = this._options.dragCursor;
     
     // Pause viewport's drag plugin to prevent canvas panning while dragging a node
-    this._viewport!.plugins.pause('drag');
+    this._viewport!.pauseDrag();
     
     // Stop event propagation to prevent viewport from starting a drag
     event.stopPropagation();
@@ -133,35 +140,30 @@ export class DragElementPlugin implements CanvasPlugin {
   /**
    * Handle pointer move (dragging)
    */
-  private onPointerMove = (event: FederatedPointerEvent): void => {
+  private onPointerMove = (event: ICanvasPointerEvent): void => {
     if (!this._dragData) return;
 
-    const { node, startX, startY, startNodeX, startNodeY } = this._dragData;
+    const { node, startScreenX, startScreenY, startWorldX, startWorldY, startNodeX, startNodeY } = this._dragData;
     
-    // Get current world position
-    const worldPos = this._viewport!.toWorld(event.global.x, event.global.y);
-    
-    const dx = worldPos.x - startX;
-    const dy = worldPos.y - startY;
-
-    // Check if we've moved enough to start dragging
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    if (!this._dragData.hasMoved && distance < this._options.threshold) {
+    // Threshold check in screen space — matches PixiJS's tap detection coordinate
+    // system, so a gesture is either a drag OR a tap in both systems, never split.
+    const sdx = event.global.x - startScreenX;
+    const sdy = event.global.y - startScreenY;
+    if (!this._dragData.hasMoved && Math.sqrt(sdx * sdx + sdy * sdy) < this._options.threshold) {
       return;
     }
 
     // Mark as dragging
     if (!this._dragData.hasMoved) {
       this._dragData.hasMoved = true;
-      
-      // Emit drag start on element (legacy) and via canvas bus
       node.emit('dragstart', { node, x: startNodeX, y: startNodeY });
       this._canvas?.events.emit('node:dragstart', { node, x: startNodeX, y: startNodeY });
     }
 
-    // Calculate new position
-    let newX = startNodeX + dx;
-    let newY = startNodeY + dy;
+    // Compute new position in world space
+    const worldPos = this._viewport!.toWorld(event.global.x, event.global.y);
+    let newX = startNodeX + (worldPos.x - startWorldX);
+    let newY = startNodeY + (worldPos.y - startWorldY);
 
     // Constrain to viewport if needed
     if (this._options.constrainToViewport) {
@@ -191,7 +193,7 @@ export class DragElementPlugin implements CanvasPlugin {
   private onPointerUp = (): void => {
     // Always resume viewport drag plugin, even if we weren't dragging
     // This ensures it's resumed after any node click
-    this._viewport?.plugins.resume('drag');
+    this._viewport?.resumeDrag();
     
     if (!this._dragData) return;
 
@@ -218,13 +220,10 @@ export class DragElementPlugin implements CanvasPlugin {
     if (!this._canvas) return;
 
     const graphPlugin = this._canvas.getPlugin('graph-data') as any;
-    if (!graphPlugin?.renderer) return;
+    if (!graphPlugin) return;
 
-    // Use renderer's update method which handles edge updates
-    graphPlugin.renderer.updateNode(node.id, {
-      x: node.x,
-      y: node.y,
-    });
+    // Use the public updateNodePosition method which handles edge updates
+    graphPlugin.updateNodePosition(node.id, node.x, node.y);
   }
 
   /**

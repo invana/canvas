@@ -3,7 +3,7 @@ import { Canvas, GraphDataPlugin } from '@invana/canvas-core';
 import { createContainer } from '../../../src/div-utils';
 
 const meta: Meta = {
-  title: 'Canvas/usage',
+  title: 'Canvas/Usage/Simple Usage',
 };
 
 export default meta;

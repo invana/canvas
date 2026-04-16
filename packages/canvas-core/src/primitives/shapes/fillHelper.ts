@@ -23,6 +23,10 @@ export async function applyShapeFill(
   const fill = normalizeFill(style.fill);
   if (!fill) return false;
 
+  if (style.fillAlpha !== undefined) {
+    fill.alpha = style.fillAlpha;
+  }
+
   await applyFill(g, fill, bounds);
   return true;
 }

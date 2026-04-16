@@ -84,6 +84,41 @@ type AnyRendererEdgeBase = any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyFederatedPointerEvent = any;
 
+/**
+ * Minimal structural interface covering the pointer event properties used across canvas plugins.
+ * A structural subset of PixiJS FederatedPointerEvent — eliminates direct pixi.js type
+ * dependencies in plugin code so plugins can live in a separate package.
+ */
+export interface ICanvasPointerEvent {
+  button: number;
+  buttons: number;
+  /** Screen-space position of the pointer (PixiJS Point: { x, y }). */
+  global: { readonly x: number; readonly y: number };
+  target: unknown;
+  shiftKey: boolean;
+  ctrlKey: boolean;
+  metaKey: boolean;
+  altKey: boolean;
+  /** The underlying native event. May be a DOM Event, PointerEvent, or a touch-specific object. */
+  nativeEvent?: unknown;
+  stopPropagation(): void;
+  preventDefault(): void;
+}
+
+/**
+ * Minimal structural interface for wheel events (used by ZoomControlPlugin).
+ */
+export interface ICanvasWheelEvent extends ICanvasPointerEvent {
+  deltaY: number;
+}
+
+/**
+ * Type alias for the PixiJS Graphics surface returned by Layer.createGraphicsSurface().
+ * Re-exported from canvas-core so that plugins in separate packages avoid a direct pixi.js
+ * type dependency.
+ */
+export type { Graphics as CanvasGraphicsSurface } from 'pixi.js';
+
 export interface CanvasPointerPosition {
   /** Screen (pixel) coordinates relative to the canvas element */
   screen: { x: number; y: number };
@@ -156,6 +191,12 @@ export interface CanvasEventMap {
   'canvas:clicked':      CanvasBgPointerEvent;
   'canvas:dblclicked':   CanvasBgPointerEvent;
   'canvas:contextmenu':  CanvasBgPointerEvent;
+  // New: background pointer events
+  'canvas:pointerdown':  CanvasBgPointerEvent;
+  'canvas:pointermove':  CanvasBgPointerEvent;
+  'canvas:pointerup':    CanvasBgPointerEvent;
+  'canvas:pointerupoutside': CanvasBgPointerEvent;
+  'canvas:globalpointermove': CanvasBgPointerEvent;
   'selection:changed':   SelectionChangedEvent;
   'viewport:zoomed':     ViewportZoomEvent;
   'viewport:panned':     ViewportPanEvent;
@@ -173,23 +214,6 @@ export interface LayerConfig {
   zIndex: number;
   visible?: boolean;
   interactive?: boolean;
-}
-
-// =============================================================================
-// Processor Types
-// =============================================================================
-
-export interface ProcessorConfig {
-  type: string;
-  options?: Record<string, unknown>;
-  enabled?: boolean;
-  priority?: number;
-}
-
-export interface ProcessorContext {
-  canvas: unknown; // Will be Canvas type
-  sceneGraph: unknown; // Will be SceneGraph type
-  event?: CanvasEvent;
 }
 
 // Note: CanvasOptions is now exported from Canvas.ts

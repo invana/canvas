@@ -17,7 +17,7 @@ PluginRegistry.register('graph-data', GraphDataPlugin);
 PluginRegistry.register('layout-d3-force', D3ForceLayoutPlugin);
 
 const meta: Meta = {
-  title: 'Layouts/d3-force',
+  title: 'Layouts/D3 Force',
 };
 
 export default meta;

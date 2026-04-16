@@ -307,3 +307,8 @@ export const MyStory: Story = {
   }
 };
 ```
+
+## instructions
+
+1. Always use public api exposed by canvas for events, avoid accessing events from `this._viewport` or `shapes` directly
+2. for drawing any new graphics, always using primitives/, so dont call Container or Graphics of pixi.js

@@ -46,7 +46,7 @@
  * ```
  */
 
-import { Container, Graphics } from 'pixi.js';
+import type { Graphics } from 'pixi.js';
 import type { Canvas } from '../core/Canvas';
 import type { CanvasPlugin } from './types';
 import type { BackgroundStyle } from '../types';
@@ -61,7 +61,7 @@ export class BackgroundPlugin implements CanvasPlugin {
   }
 
   private _canvas: Canvas | null = null;
-  private _backgroundLayer: Container | null = null;
+  private _removeStageSurface: (() => void) | null = null;
   private _graphics: Graphics | null = null;
   private _currentStyle: BackgroundStyle | null = null;
   private _width: number = 0;
@@ -78,18 +78,12 @@ export class BackgroundPlugin implements CanvasPlugin {
     this._width = canvas.width;
     this._height = canvas.height;
 
-    // Create background layer and attach directly to stage (not viewport)
-    // This ensures it doesn't pan/zoom with content by default
-    this._backgroundLayer = new Container();
-    this._backgroundLayer.label = 'background';
-    this._backgroundLayer.zIndex = -1000; // Behind everything
-    
-    // Add to stage, not viewport.content
-    canvas.app!.stage.addChildAt(this._backgroundLayer, 0);
-
-    this._graphics = new Graphics();
-    this._graphics.label = 'background-graphics';
-    this._backgroundLayer.addChild(this._graphics);
+    // Create background layer attached directly to stage (not viewport)
+    // This ensures it doesn't pan/zoom with content.
+    // canvas.createStageSurface() handles Container+Graphics creation internally.
+    const surface = canvas.createStageSurface('background', -1000);
+    this._graphics = surface.graphics;
+    this._removeStageSurface = surface.remove;
 
     // Listen to PixiJS ticker for viewport changes when in follow mode
     // This way the plugin listens directly to the render loop, no custom events needed
@@ -99,7 +93,7 @@ export class BackgroundPlugin implements CanvasPlugin {
       this._lastViewportZoom = canvas.viewport.scaled;
     }
 
-    canvas.app!.ticker.add(this.onTick, this);
+    canvas.addTicker(this.onTick, this);
   }
 
   /**
@@ -142,15 +136,13 @@ export class BackgroundPlugin implements CanvasPlugin {
       const color = typeof style.color === 'string' 
         ? parseInt(style.color.replace('#', ''), 16) 
         : style.color;
-      this._canvas.app!.renderer.background.color = color;
-      this._canvas.app!.renderer.background.alpha = style.alpha ?? 1;
+      this._canvas.setRendererBackground(color, style.alpha ?? 1);
       this._graphics.clear();
       return;
     }
 
     // For gradients and patterns, draw on layer
-    this._canvas.app!.renderer.background.color = 0x000000;
-    this._canvas.app!.renderer.background.alpha = 0;
+    this._canvas.setRendererBackground(0x000000, 0);
     
     this.render(style);
   }
@@ -165,10 +157,7 @@ export class BackgroundPlugin implements CanvasPlugin {
     this._currentStyle = null;
     
     // Restore default background
-    if (this._canvas.app) {
-      this._canvas.app.renderer.background.color = '#ffffff';
-      this._canvas.app.renderer.background.alpha = 1;
-    }
+    this._canvas.setRendererBackground('#ffffff', 1);
   }
 
   /**
@@ -530,17 +519,12 @@ export class BackgroundPlugin implements CanvasPlugin {
    */
   destroy(): void {
     // Remove ticker listener
-    if (this._canvas?.app) {
-      this._canvas.app.ticker.remove(this.onTick, this);
-    }
+    this._canvas?.removeTicker(this.onTick, this);
 
-    if (this._backgroundLayer && this._canvas?.app) {
-      this._canvas.app.stage.removeChild(this._backgroundLayer);
-    }
-    this._graphics?.destroy();
-    this._backgroundLayer?.destroy();
+    // Remove stage surface (Container + Graphics)
+    this._removeStageSurface?.();
+    this._removeStageSurface = null;
     this._graphics = null;
-    this._backgroundLayer = null;
     this._canvas = null;
     this._currentStyle = null;
   }

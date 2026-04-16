@@ -22,7 +22,7 @@
  * ```
  */
 
-import { FederatedWheelEvent } from 'pixi.js';
+import type { ICanvasWheelEvent } from '../types';
 import type { Canvas } from '../core/Canvas';
 import type { CanvasPlugin } from './types';
 import type { Viewport } from '../viewport/Viewport';
@@ -86,7 +86,7 @@ export class ZoomControlPlugin implements CanvasPlugin {
   /**
    * Handle mouse wheel zoom
    */
-  private onWheel = (event: FederatedWheelEvent): void => {
+  private onWheel = (event: ICanvasWheelEvent): void => {
     event.preventDefault();
 
     const delta = -event.deltaY;

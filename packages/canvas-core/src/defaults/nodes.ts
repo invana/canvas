@@ -34,7 +34,7 @@ export const DEFAULT_NODE_STATE_STYLES: Record<string, Partial<ShapeStyle>> = {
   },
   
   [NodeStates.HIGHLIGHTED]: {
-    stroke: '#98f45f',
+    stroke: '#e3f45f',
     strokeWidth: 6,
     strokeAlpha: 0.5,
   },
@@ -46,8 +46,10 @@ export const DEFAULT_NODE_STATE_STYLES: Record<string, Partial<ShapeStyle>> = {
   },
   
   [NodeStates.MUTED]: {
-    strokeWidth: 5,
-    strokeAlpha: 0.5,
+    fillAlpha: 0.2,
+    // fill: 0xefefef,
+    // strokeWidth: 5,
+    strokeAlpha: 0.2,
   },
 };
 
@@ -76,8 +78,8 @@ export const DEFAULT_NODE_STATE_PRIORITY = [
 export const DEFAULT_NODE_STYLE: NodeStyle = {
   // Shape styling
   fill: 0x27c554,
-  stroke: '#525252',
-  strokeWidth: 5,
+  stroke: '#b1b1b1',
+  strokeWidth: 3,
   strokeAlpha: 1,
   strokeStyle: 'solid',
   strokeDashPattern: undefined,

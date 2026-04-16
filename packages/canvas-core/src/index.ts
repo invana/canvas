@@ -8,12 +8,12 @@
  * ```
  * ┌─────────────────────────────────────────────────────────────────┐
  * │                     Canvas (core/)                              │
- * │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌───────────────┐   │
- * │  │ Viewport │  │  Layers  │  │  Scene   │  │  Processors   │   │
- * │  │(pan/zoom)│  │ Manager  │  │  Graph   │  │   Pipeline    │   │
- * │  └──────────┘  └──────────┘  └──────────┘  └───────────────┘   │
- * │                      │             │              │              │
- * │                 ┌────┴─────────────┴──────────────┘              │
+ * │  ┌──────────┐  ┌──────────┐  ┌──────────┐                        │
+ * │  │ Viewport │  │  Layers  │  │  Plugins │                        │
+ * │  │(pan/zoom)│  │ Manager  │  │ Registry │                        │
+ * │  └──────────┘  └──────────┘  └──────────┘                        │
+ * │                      │             │                              │
+ * │                 ┌────┴─────────────┘                              │
  * │                 ▼                                                │
  * │         ┌───────────────────┐    ┌─────────────┐                │
  * │         │ Function-Based    │    │  Rendering  │                │
@@ -85,7 +85,7 @@ export type {
 // ============================================================================
 
 export { Viewport } from './viewport';
-export type { ViewportOptions, ViewportState } from './viewport';
+export type { ViewportOptions, ViewportState, ViewportAnimationEffectTiming } from './viewport';
 
 // ============================================================================
 // RENDERING
@@ -128,7 +128,7 @@ export { PluginRegistry, BEHAVIOR_PRESETS, type PluginConstructor } from './plug
 
 // Core plugins
 export { GraphDataPlugin } from './plugins/GraphDataPlugin';
-export type { GraphData, GraphStyles, GraphDataPluginOptions } from './plugins/GraphDataPlugin';
+export type { GraphData, GraphStyles, GraphDataPluginOptions, TraversalDirection } from './plugins/GraphDataPlugin';
 
 export { GroupsPlugin } from './plugins/GroupsPlugin';
 export type { GroupConfig } from './plugins/GroupsPlugin';
@@ -138,13 +138,15 @@ export { BackgroundPlugin } from './plugins/BackgroundPlugin';
 export { DragElementPlugin, type DragElementOptions } from './plugins/DragElementPlugin';
 export { DragCanvasPlugin, type DragCanvasOptions } from './plugins/DragCanvasPlugin';
 export { ZoomControlPlugin, type ZoomControlOptions } from './plugins/ZoomControlPlugin';
-export { ClickSelectPlugin, type ClickSelectOptions } from './plugins/ClickSelectPlugin';
+export { ClickSelectPlugin, type ClickSelectOptions, type SelectDirection } from './plugins/ClickSelectPlugin';
 export type { SelectableElement } from './plugins/ClickSelectPlugin';
-export { HoverActivatePlugin, type HoverActivateOptions } from './plugins/HoverActivatePlugin';
+export { HoverActivatePlugin, type HoverActivateOptions, type HoverDirection } from './plugins/HoverActivatePlugin';
 export type { HoverableElement } from './plugins/HoverActivatePlugin';
 export { FocusElementPlugin, type FocusElementOptions } from './plugins/FocusElementPlugin';
 export type { FocusableElement } from './plugins/FocusElementPlugin';
 export { MiniMapPlugin, type MiniMapOptions } from './plugins/MiniMapPlugin';
+export { BrushSelectPlugin, type BrushSelectOptions, type BrushSelectElementType, type BrushSelectStyle } from './plugins/BrushSelectPlugin';
+export { LassoSelectPlugin, type LassoSelectOptions, type LassoSelectElementType, type LassoSelectStyle } from './plugins/LassoSelectPlugin';
 
 // ============================================================================
 // STYLE
@@ -179,24 +181,6 @@ export {
   DEFAULT_CANVAS_INTERACTION,
 } from './defaults/canvas';
 
-// ============================================================================
-// PROCESSORS
-// ============================================================================
-
-export { 
-  BaseProcessor, 
-  ProcessorPipeline, 
-  ProcessorRegistry,
-  LoggingProcessor,
-  SelectionProcessor,
-  HighlightNeighborsProcessor,
-  ZoomLevelProcessor,
-} from './processors';
-export type { 
-  FunctionalProcessor, 
-  ProcessorConstructor 
-} from './processors';
-export type { ProcessorConfig, ProcessorContext } from './types';
 export type {
   CanvasEventMap,
   CanvasPointerPosition,
