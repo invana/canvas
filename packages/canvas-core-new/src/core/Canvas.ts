@@ -40,6 +40,18 @@ export class Canvas {
     this.plugins = new PluginSystem();
   }
 
+  /**
+   * Initialise the canvas — creates the WebGPU/WebGL renderer, camera, layer manager,
+   * and registers any plugins passed in `CanvasOptions.plugins`.
+   *
+   * Must be awaited before calling any other method.
+   *
+   * @example
+   * ```ts
+   * const canvas = new Canvas({ container, width: 800, height: 600 });
+   * await canvas.init();
+   * ```
+   */
   async init(): Promise<void> {
     const {
       container,
@@ -138,23 +150,63 @@ export class Canvas {
     return this._renderer.getRendererType();
   }
 
+  /**
+   * Resize the canvas to new dimensions.
+   * Call this when the container element changes size.
+   * @param width - New width in pixels
+   * @param height - New height in pixels
+   */
   resize(width: number, height: number): void {
     this._renderer.resize(width, height);
   }
 
+  /**
+   * Add a function to the render loop. Called every frame.
+   * Use this for animations that need to update per-frame state.
+   * @param fn - Callback invoked once per frame
+   */
   addTicker(fn: () => void): void {
     this._renderer.addTicker(fn);
   }
 
+  /**
+   * Remove a previously registered ticker function.
+   * @param fn - The same function reference passed to `addTicker`
+   */
   removeTicker(fn: () => void): void {
     this._renderer.removeTicker(fn);
   }
 
-  // Convenience passthrough to camera
+  /**
+   * Convert screen-space coordinates to world-space coordinates.
+   * Useful for mapping mouse/pointer events to canvas positions.
+   * @param screenX - X position relative to the canvas element
+   * @param screenY - Y position relative to the canvas element
+   * @returns World-space `{ x, y }` point
+   */
   toWorld(screenX: number, screenY: number) { return this._camera.toWorld(screenX, screenY); }
+
+  /**
+   * Convert world-space coordinates to screen-space coordinates.
+   * Useful for positioning DOM overlays over canvas elements.
+   * @param worldX - X position in world space
+   * @param worldY - Y position in world space
+   * @returns Screen-space `{ x, y }` point
+   */
   toScreen(worldX: number, worldY: number) { return this._camera.toScreen(worldX, worldY); }
+
+  /**
+   * Fit all visible content into the viewport.
+   * Equivalent to "zoom to fit" — pans and zooms the camera so all content is visible.
+   * @param padding - Extra padding in world-space pixels around the content bounds (default: 20)
+   */
   fitContent(padding?: number) { return this._camera.fitContent(padding); }
 
+  /**
+   * Destroy the canvas and all registered plugins.
+   * Releases all PixiJS resources, event listeners, and plugin state.
+   * After calling this, the instance should not be reused.
+   */
   destroy(): void {
     this.plugins.destroyAll();
     this._layerManager.destroy();

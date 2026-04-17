@@ -17,6 +17,7 @@ export type { CanvasPlugin, PluginContext } from './plugins/index.js';
 
 // Built-in plugins
 export { BackgroundPlugin, DrawingPlugin } from './plugins/builtin/index.js';
+export type { CustomShapeFn } from './plugins/builtin/DrawingPlugin.js';
 export type { BackgroundOptions, BackgroundType, PatternType, DrawStyle, PathStyle, BezierPoint, DashStyle, OrthogonalStyle, OrthogonalParams, ArrowStyle, ArrowParams, ArrowType, EffectStyle, CircleGlowParams, RectGlowParams, RippleParams } from './plugins/builtin/index.js';
 
 // Event bus + event map types

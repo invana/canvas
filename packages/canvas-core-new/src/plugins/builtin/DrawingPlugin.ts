@@ -49,6 +49,16 @@ export interface DrawingPluginOptions {
 }
 
 /**
+ * Signature for a custom shape registered via DrawingPlugin.register().
+ * The Graphics instance is passed as the first argument, followed by any
+ * caller-supplied arguments.
+ *
+ * Example:
+ *   DrawingPlugin.register('node:computer', (g, x, y, size, fill) => { ... });
+ */
+export type CustomShapeFn = (g: Graphics, ...args: unknown[]) => void;
+
+/**
  * DrawingPlugin — a canvas plugin that exposes a clean drawing API.
  * Stories and demos use this to draw shapes without touching PixiJS directly.
  *
@@ -56,12 +66,40 @@ export interface DrawingPluginOptions {
  *   const draw = new DrawingPlugin();
  *   await canvas.plugins.register(draw);
  *   draw.circle(100, 100, 40, { fill: '#3fcbeb', stroke: '#fff', strokeWidth: 2 });
+ *
+ * Custom shapes (project-level extension):
+ *   DrawingPlugin.register('node:computer', (g, x, y, size, fill) => { ... });
+ *   draw.shape('node:computer', 100, 200, 40, '#4fc3f7');
  */
 export class DrawingPlugin implements CanvasPlugin {
   readonly id: string;
   private _zIndex: number;
   private _layer!: Container;
   private _g!: Graphics;
+
+  // -----------------------------------------------------------------------
+  // Static shape registry — global, shared across all DrawingPlugin instances
+  // -----------------------------------------------------------------------
+  private static _registry = new Map<string, CustomShapeFn>();
+
+  /**
+   * Register a custom shape under a namespaced key (e.g. 'node:computer').
+   * The registered function receives the raw Graphics instance followed by
+   * any arguments passed to draw.shape(). Call once at package/app init.
+   */
+  static register(name: string, fn: CustomShapeFn): void {
+    DrawingPlugin._registry.set(name, fn);
+  }
+
+  /** Returns true if a custom shape with the given name has been registered. */
+  static hasShape(name: string): boolean {
+    return DrawingPlugin._registry.has(name);
+  }
+
+  /** Remove a previously registered custom shape. */
+  static unregister(name: string): void {
+    DrawingPlugin._registry.delete(name);
+  }
 
   constructor(options: DrawingPluginOptions = {}) {
     this.id = options.key ?? 'drawing';
@@ -293,6 +331,29 @@ export class DrawingPlugin implements CanvasPlugin {
     t.anchor.set(align === 'center' ? 0.5 : 0, 0);
     t.position.set(x, y);
     this._layer.addChild(t);
+    return this;
+  }
+
+  // -----------------------------------------------------------------------
+  // Custom / registered shapes
+  // -----------------------------------------------------------------------
+
+  /**
+   * Draw a custom shape registered via DrawingPlugin.register().
+   *
+   * @param name  The namespaced key the shape was registered under (e.g. 'node:computer')
+   * @param args  Arguments forwarded verbatim to the registered function
+   *
+   * Example:
+   *   draw.shape('node:computer', x, y, size, fill, stroke);
+   */
+  shape(name: string, ...args: unknown[]): this {
+    const fn = DrawingPlugin._registry.get(name);
+    if (!fn) {
+      console.warn(`DrawingPlugin: no shape registered for "${name}"`);
+      return this;
+    }
+    fn(this._g, ...args);
     return this;
   }
 

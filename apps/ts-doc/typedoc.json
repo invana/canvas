@@ -1,0 +1,18 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPointStrategy": "packages",
+  "entryPoints": [
+    "../../packages/canvas-core-new",
+    "../../packages/layouts-d3-force"
+  ],
+  "out": "dist",
+  "name": "@invana/canvas — API Reference",
+  "includeVersion": true,
+  "readme": "../../README.md",
+  "navigationLinks": {
+    "GitHub": "https://github.com/invana/canvas"
+  },
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "searchInComments": true
+}

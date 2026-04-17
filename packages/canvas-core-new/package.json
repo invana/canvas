@@ -5,6 +5,9 @@
   "type": "module",
   "main": "./src/index.js",
   "types": "./src/index.ts",
+  "typedocOptions": {
+    "entryPoints": ["src/index.ts"]
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",

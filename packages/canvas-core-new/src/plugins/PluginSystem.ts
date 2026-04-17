@@ -13,6 +13,15 @@ export class PluginSystem {
     this._ctx = ctx;
   }
 
+  /**
+   * Register a plugin with the canvas.
+   * Calls `plugin.register(ctx)` and emits `plugin:registered`.
+   * @throws If the plugin id is already registered or the canvas hasn't been initialised.
+   * @example
+   * ```ts
+   * await canvas.plugins.register(new BackgroundPlugin({ type: 'pattern' }));
+   * ```
+   */
   async register(plugin: CanvasPlugin): Promise<void> {
     if (this._plugins.has(plugin.id)) {
       throw new Error(`Plugin "${plugin.id}" is already registered.`);
@@ -25,18 +34,30 @@ export class PluginSystem {
     this._ctx.events.emit('plugin:registered', { pluginId: plugin.id });
   }
 
+  /**
+   * Retrieve a registered plugin by id.
+   * @param id - The plugin's `id` property
+   * @returns The plugin instance cast to `T`, or `undefined` if not found
+   */
   get<T extends CanvasPlugin = CanvasPlugin>(id: string): T | undefined {
     return this._plugins.get(id) as T | undefined;
   }
 
+  /** Returns `true` if a plugin with the given id is registered */
   has(id: string): boolean {
     return this._plugins.has(id);
   }
 
+  /** Returns all registered plugin instances */
   list(): CanvasPlugin[] {
     return [...this._plugins.values()];
   }
 
+  /**
+   * Unregister and destroy a plugin by id.
+   * Calls `plugin.destroy()` and emits `plugin:destroyed`.
+   * Does nothing if the plugin is not registered.
+   */
   async unregister(id: string): Promise<void> {
     const plugin = this._plugins.get(id);
     if (!plugin) return;
@@ -45,6 +66,7 @@ export class PluginSystem {
     this._ctx?.events.emit('plugin:destroyed', { pluginId: id });
   }
 
+  /** Destroy and unregister all plugins. Called automatically by `Canvas.destroy()`. */
   destroyAll(): void {
     for (const plugin of this._plugins.values()) {
       plugin.destroy();

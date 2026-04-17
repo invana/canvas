@@ -1,10 +1,12 @@
 // Core public types — no PixiJS types exposed
 
+/** A 2D point in world or screen space */
 export interface Point {
   x: number;
   y: number;
 }
 
+/** An axis-aligned bounding rectangle */
 export interface Bounds {
   x: number;
   y: number;
@@ -12,6 +14,7 @@ export interface Bounds {
   height: number;
 }
 
+/** Width and height dimensions */
 export interface Size {
   width: number;
   height: number;

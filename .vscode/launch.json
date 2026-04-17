@@ -29,6 +29,30 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "ts-doc build",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/apps/ts-doc",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "build"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "ts-doc watch",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/apps/ts-doc",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "dev"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "layouts-d3-force watch",
             "type": "node",
             "request": "launch",
