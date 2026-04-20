@@ -35,7 +35,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build packages
-        run: pnpm build --filter=!storybook
+        run: pnpm build --filter=!@canvas/storybook
 
       - name: Build Storybook
         run: pnpm --filter storybook build
