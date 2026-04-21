@@ -1,5 +1,5 @@
 import type { Graphics } from 'pixi.js';
-import type { DrawStyle } from '../types.js';
+import { type DrawStyle, resolveFillArg } from '../types.js';
 
 /**
  * Draw a regular polygon (triangle=3, diamond=4, pentagon=5, hexagon=6, …).
@@ -17,8 +17,10 @@ export function drawPolygon(
 
   const points = buildPolygonPoints(x, y, radius, sides, rotation);
 
-  if (fill !== undefined) {
-    g.poly(points).fill({ color: fill, alpha: fillAlpha });
+  const fillArg = resolveFillArg(fill, fillAlpha);
+  if (fillArg !== undefined) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    g.poly(points).fill(fillArg as any);
   }
   if (stroke !== undefined) {
     g.poly(points).stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha });

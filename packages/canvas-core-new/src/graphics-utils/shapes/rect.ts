@@ -1,5 +1,5 @@
 import type { Graphics } from 'pixi.js';
-import type { DrawStyle } from '../types.js';
+import { type DrawStyle, resolveFillArg } from '../types.js';
 
 /** Draw a filled/stroked rectangle. x,y = top-left corner. */
 export function drawRect(
@@ -15,6 +15,8 @@ export function drawRect(
   const draw = r > 0
     ? (gr: Graphics) => gr.roundRect(x, y, width, height, r)
     : (gr: Graphics) => gr.rect(x, y, width, height);
-  if (fill !== undefined) draw(g).fill({ color: fill, alpha: fillAlpha });
+  const fillArg = resolveFillArg(fill, fillAlpha);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (fillArg !== undefined) draw(g).fill(fillArg as any);
   if (stroke !== undefined) draw(g).stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha });
 }

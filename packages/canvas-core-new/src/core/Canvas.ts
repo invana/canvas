@@ -196,13 +196,6 @@ export class Canvas {
   toScreen(worldX: number, worldY: number) { return this._camera.toScreen(worldX, worldY); }
 
   /**
-   * Fit all visible content into the viewport.
-   * Equivalent to "zoom to fit" — pans and zooms the camera so all content is visible.
-   * @param padding - Extra padding in world-space pixels around the content bounds (default: 20)
-   */
-  fitContent(padding?: number) { return this._camera.fitContent(padding); }
-
-  /**
    * Destroy the canvas and all registered plugins.
    * Releases all PixiJS resources, event listeners, and plugin state.
    * After calling this, the instance should not be reused.

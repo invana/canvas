@@ -8,3 +8,4 @@ export * from './arrows/index.js';
 export * from './effects/index.js';
 export * from './fills/index.js';
 export type { DrawStyle, PathStyle } from './types.js';
+export { resolveFillArg } from './types.js';

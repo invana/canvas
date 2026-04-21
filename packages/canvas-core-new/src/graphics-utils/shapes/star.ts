@@ -1,5 +1,5 @@
 import type { Graphics } from 'pixi.js';
-import type { DrawStyle } from '../types.js';
+import { type DrawStyle, resolveFillArg } from '../types.js';
 
 /**
  * Draw a star shape.
@@ -26,8 +26,10 @@ export function drawStar(
 
   const verts = buildStarPoints(x, y, radius, points, innerRatio, rotation);
 
-  if (fill !== undefined) {
-    g.poly(verts).fill({ color: fill, alpha: fillAlpha });
+  const fillArg = resolveFillArg(fill, fillAlpha);
+  if (fillArg !== undefined) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    g.poly(verts).fill(fillArg as any);
   }
   if (stroke !== undefined) {
     g.poly(verts).stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha });

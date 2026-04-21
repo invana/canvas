@@ -70,17 +70,22 @@ export class Camera implements CameraAPI {
     this._viewport.scale.set(scale);
   }
 
-  zoomTo(scale: number, center?: Point): void {
-    if (center) {
-      this._viewport.setZoom(scale, true);
-    } else {
-      this._viewport.setZoom(scale, true);
-    }
+  zoomTo(scale: number, _center?: Point): void {
+    this._viewport.setZoom(scale, true);
   }
 
-  fitContent(_padding = 50): void {
-    this._viewport.fit(true, this._viewport.worldWidth, this._viewport.worldHeight);
-    this._events.emit('camera:fit', { bounds: this.getBounds() });
+  fitTo(bounds: Bounds, padding = 60): void {
+    const sw = this._viewport.screenWidth;
+    const sh = this._viewport.screenHeight;
+    const cx = bounds.x + bounds.width  / 2;
+    const cy = bounds.y + bounds.height / 2;
+    const scale = Math.min(
+      sw / (bounds.width  + padding * 2),
+      sh / (bounds.height + padding * 2),
+    );
+    // pixi-viewport fires 'moved' + 'zoomed' → camera:pan + camera:zoom automatically
+    this._viewport.moveCenter(cx, cy);
+    this._viewport.setZoom(Math.max(scale, 0.001), true);
   }
 
   toWorld(screenX: number, screenY: number): Point {

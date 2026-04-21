@@ -66,10 +66,19 @@ export interface CameraAPI {
   zoomTo(scale: number, center?: Point): void;
 
   /**
-   * Fit all visible content into the viewport.
-   * @param padding - Extra padding around the content bounds in world-space pixels
+   * Fit the camera to a world-space bounding box.
+   * Computes the correct pan + zoom so the box is fully visible with the given padding.
+   *
+   * @param bounds  - World-space bounding box `{ x, y, width, height }`
+   * @param padding - Extra world-space pixels of breathing room around the box (default: 60)
+   *
+   * @example
+   * ```ts
+   * // Fit all shapes (plugin computes its own bbox and delegates here)
+   * canvas.camera.fitTo({ x: -200, y: -150, width: 400, height: 300 }, 50);
+   * ```
    */
-  fitContent(padding?: number): void;
+  fitTo(bounds: Bounds, padding?: number): void;
 
   /**
    * Convert screen-space coordinates to world-space coordinates.

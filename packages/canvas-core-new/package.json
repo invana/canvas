@@ -6,7 +6,9 @@
   "main": "./src/index.js",
   "types": "./src/index.ts",
   "typedocOptions": {
-    "entryPoints": ["src/index.ts"]
+    "entryPoints": [
+      "src/index.ts"
+    ]
   },
   "scripts": {
     "build": "tsup",
@@ -18,10 +20,12 @@
   },
   "dependencies": {
     "pixi-viewport": "^6.0.3",
-    "pixi.js": "^8.18.1"
+    "pixi.js": "^8.18.1",
+    "rbush": "^4.0.1"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
+    "@types/rbush": "^4.0.0",
     "tsup": "^8.3.5",
     "typescript": "5.9.2",
     "vitest": "^2.1.8"
