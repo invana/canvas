@@ -9,7 +9,7 @@
  * Use the lil-gui panel to tweak colors live.
  */
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, BackgroundPlugin, ShapePlugin } from '@invana/canvas-core-new';
+import { Canvas, BackgroundPlugin, ShapePlugin, DevInfoPlugin } from '@invana/canvas-core-new';
 import { createContainer } from '../../../../../src/div-utils.js';
 import GUI from 'lil-gui';
 
@@ -29,6 +29,9 @@ export const FillStyles: Story = {
     await canvas.plugins.register(new BackgroundPlugin({
       key: 'bg', type: 'solid', backgroundColor: '#1a1a2e',
     }));
+
+    const devInfo = new DevInfoPlugin({ key: 'dev-info' });
+    await canvas.plugins.register(devInfo);
 
     const shapes = new ShapePlugin({ key: 'shapes', zIndex: 10, fitOnRender: true });
     await canvas.plugins.register(shapes);
@@ -84,8 +87,9 @@ export const FillStyles: Story = {
     const gui = new GUI({ title: 'Fill Styles', container });
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;';
 
-    const params = { solidColor: '#4fc3f7', gradStart: '#f06292', gradEnd: '#ce93d8' };
+    const params = { devInfo: true, solidColor: '#4fc3f7', gradStart: '#f06292', gradEnd: '#ce93d8' };
 
+    gui.add(params, 'devInfo').name('DevInfo overlay').onChange((v: boolean) => devInfo.setEnabled(v));
     gui.addColor(params, 'solidColor').name('Solid color').onChange((v: string) => {
       shapes.update('solid-c', { fill: { type: 'solid', color: v } });
       shapes.update('solid-r', { fill: { type: 'solid', color: v } });

@@ -54,6 +54,24 @@ export class PluginSystem {
   }
 
   /**
+   * Enable or disable a plugin by id.
+   * Calls `plugin.enable()` / `plugin.disable()` if implemented,
+   * then emits `plugin:enabled` or `plugin:disabled`.
+   * Does nothing if the plugin is not registered.
+   */
+  setEnabled(id: string, enabled: boolean): void {
+    const plugin = this._plugins.get(id);
+    if (!plugin) return;
+    if (enabled) {
+      plugin.enable?.();
+      this._ctx?.events.emit('plugin:enabled', { pluginId: id });
+    } else {
+      plugin.disable?.();
+      this._ctx?.events.emit('plugin:disabled', { pluginId: id });
+    }
+  }
+
+  /**
    * Unregister and destroy a plugin by id.
    * Calls `plugin.destroy()` and emits `plugin:destroyed`.
    * Does nothing if the plugin is not registered.

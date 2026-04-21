@@ -17,6 +17,8 @@ export type ShapeEventType =
   | 'dragend';
 
 export interface ShapeEventPayload {
+  /** The event type that was triggered */
+  type: ShapeEventType;
   /** The ShapeObject that was interacted with */
   shape: ShapeObject;
   /** X in world space */

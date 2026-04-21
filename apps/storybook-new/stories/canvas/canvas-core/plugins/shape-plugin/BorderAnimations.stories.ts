@@ -9,7 +9,7 @@
  * Use the GUI to play/pause each animation independently.
  */
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, BackgroundPlugin, ShapePlugin } from '@invana/canvas-core-new';
+import { Canvas, BackgroundPlugin, ShapePlugin, DevInfoPlugin } from '@invana/canvas-core-new';
 import { createContainer } from '../../../../../src/div-utils.js';
 import GUI from 'lil-gui';
 
@@ -30,6 +30,9 @@ export const BorderAnimations: Story = {
       key: 'bg', type: 'pattern', patternType: 'dots',
       color: '#333333', backgroundColor: '#121212', size: 1.5, spacing: 28,
     }));
+
+    const devInfo = new DevInfoPlugin({ key: 'dev-info' });
+    await canvas.plugins.register(devInfo);
 
     const shapes = new ShapePlugin({ key: 'shapes', zIndex: 10, fitOnRender: true });
     await canvas.plugins.register(shapes);
@@ -65,6 +68,7 @@ export const BorderAnimations: Story = {
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;';
 
     const params = {
+      devInfo: true,
       marchingAnts: true,
       dashedFlow: true,
       borderGlow: true,
@@ -72,6 +76,8 @@ export const BorderAnimations: Story = {
       flowSpeed: 2,
       glowSpeed: 2,
     };
+
+    gui.add(params, 'devInfo').name('DevInfo overlay').onChange((v: boolean) => devInfo.setEnabled(v));
 
     const antsFolder = gui.addFolder('marchingAnts');
     antsFolder.add(params, 'marchingAnts').name('active').onChange((v: boolean) => {

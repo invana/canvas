@@ -39,6 +39,32 @@ export interface CameraAnimateStartEvent {
 // Canvas background pointer events
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Shape events (also emitted on the global EventBus with shape: prefix)
+// ---------------------------------------------------------------------------
+
+/** Emitted on the EventBus for any per-shape pointer interaction */
+export interface ShapeBusEvent {
+  /** The id of the shape that was interacted with */
+  shapeId: string;
+  /** X coordinate in world space */
+  worldX: number;
+  /** Y coordinate in world space */
+  worldY: number;
+  /** The original browser PointerEvent */
+  originalEvent: PointerEvent;
+}
+
+/** Extended ShapeBusEvent for drag events */
+export interface ShapeDragBusEvent extends ShapeBusEvent {
+  /** World-space X delta from the previous dragmove (or dragstart) */
+  dx: number;
+  /** World-space Y delta from the previous dragmove (or dragstart) */
+  dy: number;
+}
+
+// ---------------------------------------------------------------------------
+
 /** Emitted on pointer interactions with the canvas background (not with any element) */
 export interface CanvasBgPointerEvent {
   /** X coordinate in world space */
@@ -123,9 +149,23 @@ export interface CanvasEventMap {
   'canvas:dblclicked':     CanvasBgPointerEvent;
   'canvas:contextmenu':    CanvasBgPointerEvent;
 
+  // Shape events (global bus — fired for any shape interaction)
+  'shape:click':        ShapeBusEvent;
+  'shape:dblclick':     ShapeBusEvent;
+  'shape:pointerover':  ShapeBusEvent;
+  'shape:pointerout':   ShapeBusEvent;
+  'shape:pointermove':  ShapeBusEvent;
+  'shape:pointerdown':  ShapeBusEvent;
+  'shape:pointerup':    ShapeBusEvent;
+  'shape:dragstart':    ShapeDragBusEvent;
+  'shape:dragmove':     ShapeDragBusEvent;
+  'shape:dragend':      ShapeDragBusEvent;
+
   // Plugin lifecycle
   'plugin:registered':     PluginLifecycleEvent;
   'plugin:destroyed':      PluginLifecycleEvent;
+  'plugin:enabled':        PluginLifecycleEvent;
+  'plugin:disabled':       PluginLifecycleEvent;
 
   // Layer
   'layer:visibility-changed': LayerVisibilityEvent;

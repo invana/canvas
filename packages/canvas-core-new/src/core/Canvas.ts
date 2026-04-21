@@ -85,6 +85,9 @@ export class Canvas {
     this._layerManager = new LayerManagerImpl(this.events);
     this._camera._viewport.addChild(this._layerManager._root);
 
+    // 3b. Bridge viewport pointer events → canvas:* on the EventBus
+    this._wirePointerEvents();
+
     // 4. Build plugin context and wire PluginSystem
     const ctx = {
       camera: this._camera as CameraAPI,
@@ -110,6 +113,55 @@ export class Canvas {
 
     // 5. Register plugins from options
     await this._registerOptionsPlugins();
+  }
+
+  private _wirePointerEvents(): void {
+    const vp = this._camera._viewport;
+    const events = this.events;
+
+    // 'clicked' fires only when no drag occurred — ideal for click vs pan distinction
+    vp.on('clicked', (data) => {
+      const native = (data.event as unknown as { nativeEvent?: PointerEvent }).nativeEvent
+        ?? data.event as unknown as PointerEvent;
+      events.emit('canvas:clicked', {
+        worldX: data.world.x, worldY: data.world.y,
+        screenX: data.screen.x, screenY: data.screen.y,
+        originalEvent: native,
+      });
+    });
+
+    vp.on('pointermove', (e) => {
+      const world = vp.toWorld(e.global.x, e.global.y);
+      const native = (e as unknown as { nativeEvent?: PointerEvent }).nativeEvent
+        ?? e as unknown as PointerEvent;
+      events.emit('canvas:pointermove', {
+        worldX: world.x, worldY: world.y,
+        screenX: e.global.x, screenY: e.global.y,
+        originalEvent: native,
+      });
+    });
+
+    vp.on('pointerdown', (e) => {
+      const world = vp.toWorld(e.global.x, e.global.y);
+      const native = (e as unknown as { nativeEvent?: PointerEvent }).nativeEvent
+        ?? e as unknown as PointerEvent;
+      events.emit('canvas:pointerdown', {
+        worldX: world.x, worldY: world.y,
+        screenX: e.global.x, screenY: e.global.y,
+        originalEvent: native,
+      });
+    });
+
+    vp.on('pointerup', (e) => {
+      const world = vp.toWorld(e.global.x, e.global.y);
+      const native = (e as unknown as { nativeEvent?: PointerEvent }).nativeEvent
+        ?? e as unknown as PointerEvent;
+      events.emit('canvas:pointerup', {
+        worldX: world.x, worldY: world.y,
+        screenX: e.global.x, screenY: e.global.y,
+        originalEvent: native,
+      });
+    });
   }
 
   private async _registerOptionsPlugins(): Promise<void> {

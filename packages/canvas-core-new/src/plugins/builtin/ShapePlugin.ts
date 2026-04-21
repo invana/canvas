@@ -298,16 +298,28 @@ export class ShapePlugin implements CanvasPlugin {
     if (hit) this._emit(hit, 'click', { shape: hit, worldX, worldY, originalEvent });
   }
 
-  private _emit(obj: ShapeObject, event: ShapeEventType, payload: ShapeEventPayload | DragPayload): void {
+  // Call sites omit `type` — we stamp it here so the public payload is always self-describing.
+  private _emit(obj: ShapeObject, event: ShapeEventType, payload: Omit<ShapeEventPayload, 'type'> | Omit<DragPayload, 'type'>): void {
+    const stamped = Object.assign(payload, { type: event }) as ShapeEventPayload | DragPayload;
     // Shape-specific listeners
     const byShape = this._listeners.get(obj.id);
     if (byShape) {
-      byShape.get(event)?.forEach(h => (h as AnyHandler)(payload as never));
+      byShape.get(event)?.forEach(h => (h as AnyHandler)(stamped as never));
     }
     // Wildcard listeners
     const wildcard = this._listeners.get('*');
     if (wildcard) {
-      wildcard.get(event)?.forEach(h => (h as AnyHandler)(payload as never));
+      wildcard.get(event)?.forEach(h => (h as AnyHandler)(stamped as never));
+    }
+    // Global EventBus — shape:* namespace
+    if (this._ctx) {
+      const busPayload = { shapeId: obj.id, worldX: stamped.worldX, worldY: stamped.worldY, originalEvent: stamped.originalEvent };
+      const dragPayload = stamped as DragPayload;
+      const isDrag = event === 'dragstart' || event === 'dragmove' || event === 'dragend';
+      this._ctx.events.emit(
+        `shape:${event}` as `shape:${ShapeEventType}`,
+        isDrag ? { ...busPayload, dx: dragPayload.dx, dy: dragPayload.dy } : busPayload as never,
+      );
     }
   }
 }

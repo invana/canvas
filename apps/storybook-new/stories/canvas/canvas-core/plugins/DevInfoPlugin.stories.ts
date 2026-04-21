@@ -145,14 +145,12 @@ export const DevInfoOverlay: Story = {
       fitAll: () => canvas.camera.fitTo({ x: 0, y: 0, width: WORLD_W, height: WORLD_H }, 60),
       zoomIn: () => canvas.camera.zoom(1.3),
       zoomOut: () => canvas.camera.zoom(0.77),
-      reset: () => canvas.camera.reset(),
     };
 
     const camFolder = gui.addFolder('Camera');
-    camFolder.add(cameraActions, 'fitAll').name('Fit All');
+    camFolder.add(cameraActions, 'fitAll').name('Fit All (center content)');
     camFolder.add(cameraActions, 'zoomIn').name('Zoom In ×1.3');
     camFolder.add(cameraActions, 'zoomOut').name('Zoom Out ×0.77');
-    camFolder.add(cameraActions, 'reset').name('Reset');
     camFolder.open();
   },
 };

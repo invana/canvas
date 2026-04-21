@@ -36,4 +36,16 @@ export interface CanvasPlugin {
    * Called when the plugin is removed or the canvas is destroyed.
    */
   destroy(): void;
+
+  /**
+   * Optional. Called by `canvas.plugins.setEnabled(id, true)`.
+   * Implement to show/resume plugin behaviour without full re-registration.
+   */
+  enable?(): void;
+
+  /**
+   * Optional. Called by `canvas.plugins.setEnabled(id, false)`.
+   * Implement to hide/pause plugin behaviour without destroying it.
+   */
+  disable?(): void;
 }

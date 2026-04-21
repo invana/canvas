@@ -7,8 +7,9 @@
  * Row 3: paths and curves
  */
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, BackgroundPlugin, ShapePlugin } from '@invana/canvas-core-new';
+import { Canvas, BackgroundPlugin, ShapePlugin, DevInfoPlugin } from '@invana/canvas-core-new';
 import { createContainer } from '../../../../../src/div-utils.js';
+import GUI from 'lil-gui';
 
 const meta: Meta = { title: 'Canvas/canvas-core/Plugins/ShapePlugin' };
 export default meta;
@@ -30,6 +31,9 @@ export const ShapeSampler: Story = {
       key: 'bg', type: 'pattern', patternType: 'dots',
       color: '#333355', backgroundColor: '#1a1a2e', size: 1.5, spacing: 30,
     }));
+
+    const devInfo = new DevInfoPlugin({ key: 'dev-info' });
+    await canvas.plugins.register(devInfo);
 
     const shapes = new ShapePlugin({ key: 'shapes', zIndex: 10, fitOnRender: true });
     await canvas.plugins.register(shapes);
@@ -86,5 +90,11 @@ export const ShapeSampler: Story = {
         to:   { x: ox + G * 4 + 50, y: G * 2 },
         border: { color: col(4), width: 3 } },
     ] as never[]);
+
+    // GUI
+    const gui = new GUI({ title: 'Shape Sampler', container });
+    gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;';
+    const params = { devInfo: true };
+    gui.add(params, 'devInfo').name('DevInfo overlay').onChange((v: boolean) => devInfo.setEnabled(v));
   },
 };

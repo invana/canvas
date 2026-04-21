@@ -10,7 +10,7 @@
  * Use the GUI to enable/disable each animation type.
  */
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, BackgroundPlugin, ShapePlugin } from '@invana/canvas-core-new';
+import { Canvas, BackgroundPlugin, ShapePlugin, DevInfoPlugin } from '@invana/canvas-core-new';
 import { createContainer } from '../../../../../src/div-utils.js';
 import GUI from 'lil-gui';
 
@@ -31,6 +31,9 @@ export const BodyAnimations: Story = {
       key: 'bg', type: 'pattern', patternType: 'dots',
       color: '#1f2937', backgroundColor: '#111827', size: 1.5, spacing: 30,
     }));
+
+    const devInfo = new DevInfoPlugin({ key: 'dev-info' });
+    await canvas.plugins.register(devInfo);
 
     const shapes = new ShapePlugin({ key: 'shapes', zIndex: 10, fitOnRender: true });
     await canvas.plugins.register(shapes);
@@ -76,10 +79,13 @@ export const BodyAnimations: Story = {
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;';
 
     const params = {
+      devInfo: true,
       breathe: true, breatheSpeed: 1.2,
       colorCycle: true, cycleSpeed: 1,
       pulse: true, pulseSpeed: 1.5,
     };
+
+    gui.add(params, 'devInfo').name('DevInfo overlay').onChange((v: boolean) => devInfo.setEnabled(v));
 
     const breatheF = gui.addFolder('breathe');
     breatheF.add(params, 'breathe').name('active').onChange((v: boolean) => {

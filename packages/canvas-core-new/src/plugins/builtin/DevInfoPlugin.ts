@@ -102,15 +102,18 @@ export class DevInfoPlugin implements CanvasPlugin {
 
   /** Show or hide the overlay at runtime without destroying the plugin. */
   setEnabled(enabled: boolean): void {
-    this._options.enabled = enabled;
-    if (!this._ctx) return;
+    if (enabled) this.enable(); else this.disable();
+  }
 
-    if (enabled && !this._overlay) {
-      this._mount(this._ctx);
-    } else if (!enabled && this._overlay) {
-      this._stopFpsTicker();
-      this._unmount();
-    }
+  enable(): void {
+    this._options.enabled = true;
+    if (this._ctx && !this._overlay) this._mount(this._ctx);
+  }
+
+  disable(): void {
+    this._options.enabled = false;
+    this._stopFpsTicker();
+    this._unmount();
   }
 
   /** Update display options (corner, colors, font size, …) at runtime. */
