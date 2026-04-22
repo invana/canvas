@@ -9,7 +9,6 @@ import type { ShapeObject } from './ShapeObject.js';
 import { drawCircleGlow } from '../../../graphics-utils/index.js';
 import { buildStarPoints } from '../../../graphics-utils/shapes/star.js';
 import { buildPolygonPoints } from '../../../graphics-utils/shapes/polygon.js';
-import type { FillSpec } from './spec/fills.js';
 
 /**
  * `HaloPool` is a fixed-size pool of pre-allocated `PIXI.Graphics` objects used
@@ -85,9 +84,11 @@ export class HaloPool {
 
   /**
    * Redraw the currently-rented halo for a shape.
-   * For pulse body animations, draws animated expanding rings driven by
-   * `_animState.pulseProgress`. For static halos, redraws the glow from spec.
-   * Called by {@link AnimationTicker} on each frame for animated halos.
+   * For static halos driven by `spec.halo`, redraws the glow from spec.
+   * For `spec.halo.animated` halos, called by {@link AnimationTicker} each frame.
+   *
+   * @remarks
+   * For pulse animation rings use {@link redrawPulse} instead.
    *
    * @param shape - The {@link ShapeObject} whose halo should be redrawn.
    */
@@ -95,38 +96,41 @@ export class HaloPool {
     const g = this._rented.get(shape.id);
     if (!g) return;
     g.clear();
-
-    // Pulse animation — draw expanding ripple rings driven by pulseProgress
-    if (shape.animations.body?.type === 'pulse') {
-      const pulse = shape.animations.body;
-      const cx = 'x' in shape.spec ? (shape.spec as { x: number }).x
-        : shape.bbox.minX + (shape.bbox.maxX - shape.bbox.minX) / 2;
-      const cy = 'y' in shape.spec ? (shape.spec as { y: number }).y
-        : shape.bbox.minY + (shape.bbox.maxY - shape.bbox.minY) / 2;
-      const baseRadius = 'radius' in shape.spec
-        ? (shape.spec as { radius: number }).radius
-        : Math.max(shape.bbox.maxX - shape.bbox.minX, shape.bbox.maxY - shape.bbox.minY) / 2;
-      const maxRadius = baseRadius + (pulse.maxRadius ?? 40);
-      const fillColor = (shape.spec.fill as FillSpec & { color?: string })?.color;
-      const color = pulse.color ?? fillColor ?? '#ffffff';
-      const progress = shape._animState.pulseProgress;
-      const ringCount = 3;
-      const baseAlpha = 0.6;
-
-      const spec = shape.spec;
-
-      for (let i = 0; i < ringCount; i++) {
-        const phase = (progress + i / ringCount) % 1;
-        const r = baseRadius + phase * (maxRadius - baseRadius);
-        const alpha = baseAlpha * (1 - phase);
-        if (alpha <= 0.01 || r <= 0) continue;
-
-        this._strokeRingForShape(g, spec, cx, cy, baseRadius, r, color, alpha);
-      }
-      return;
-    }
-
     this._drawHalo(g, shape);
+  }
+
+  /**
+   * Redraw expanding ripple rings for a pulse animation.
+   * Called by {@link PulseHandler.apply} each frame with the current progress.
+   *
+   * @param shape      - The {@link ShapeObject} to draw rings around.
+   * @param progress   - Current cycle progress (0–1).
+   * @param maxRadius  - Maximum ring radius beyond the shape's base radius in px.
+   * @param color      - Ring stroke color.
+   */
+  redrawPulse(shape: ShapeObject, progress: number, maxRadius: number, color: string): void {
+    const g = this._rented.get(shape.id);
+    if (!g) return;
+    g.clear();
+
+    const cx = 'x' in shape.spec ? (shape.spec as { x: number }).x
+      : shape.bbox.minX + (shape.bbox.maxX - shape.bbox.minX) / 2;
+    const cy = 'y' in shape.spec ? (shape.spec as { y: number }).y
+      : shape.bbox.minY + (shape.bbox.maxY - shape.bbox.minY) / 2;
+    const baseRadius = 'radius' in shape.spec
+      ? (shape.spec as { radius: number }).radius
+      : Math.max(shape.bbox.maxX - shape.bbox.minX, shape.bbox.maxY - shape.bbox.minY) / 2;
+    const expandedMax = baseRadius + maxRadius;
+    const ringCount = 3;
+    const baseAlpha = 0.6;
+
+    for (let i = 0; i < ringCount; i++) {
+      const phase = (progress + i / ringCount) % 1;
+      const r = baseRadius + phase * (expandedMax - baseRadius);
+      const alpha = baseAlpha * (1 - phase);
+      if (alpha <= 0.01 || r <= 0) continue;
+      this._strokeRingForShape(g, shape.spec, cx, cy, baseRadius, r, color, alpha);
+    }
   }
 
   /** Return all currently rented halos to the pool. */

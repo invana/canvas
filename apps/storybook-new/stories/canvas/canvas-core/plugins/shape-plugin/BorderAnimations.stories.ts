@@ -3,9 +3,10 @@
  *
  * Demonstrates border/outline animation types:
  *   - marchingAnts  — animated dashes marching around the border
- *   - dashedFlow    — flow-direction dashes along the border
- *   - borderGlow    — pulsing glow around the border
+ *   - dashedFlow    — flow-direction dashes along the border (supports direction: -1 for reverse)
+ *   - borderGlow    — pulsing stroke width around the border
  *
+ * Each animation is addressed by its type name as the key in the animations map.
  * Use the GUI to play/pause each animation independently.
  */
 import type { Meta, StoryObj } from '@storybook/html';
@@ -58,10 +59,10 @@ export const BorderAnimations: Story = {
       },
     ] as never[]);
 
-    // Start animations
+    // Each animation key IS the type name
     shapes.animate('ants', { marchingAnts: { speed: 1.5 } });
-    shapes.animate('flow', { dashedFlow: { speed: 2, direction: 1 } });
-    shapes.animate('glow', { borderGlowPulse: { minAlpha: 0.3, maxAlpha: 1.0, speed: 2 } });
+    shapes.animate('flow', { dashedFlow:   { speed: 2, direction: 1 } });
+    shapes.animate('glow', { borderGlow:   { minWidth: 1, maxWidth: 6, duration: 1000 } });
 
     // GUI
     const gui = new GUI({ title: 'Border Animations', container });
@@ -74,7 +75,7 @@ export const BorderAnimations: Story = {
       borderGlow: true,
       antsSpeed: 1.5,
       flowSpeed: 2,
-      glowSpeed: 2,
+      glowDuration: 1000,
     };
 
     gui.add(params, 'devInfo').name('DevInfo overlay').onChange((v: boolean) => devInfo.setEnabled(v));
@@ -82,7 +83,7 @@ export const BorderAnimations: Story = {
     const antsFolder = gui.addFolder('marchingAnts');
     antsFolder.add(params, 'marchingAnts').name('active').onChange((v: boolean) => {
       if (v) shapes.animate('ants', { marchingAnts: { speed: params.antsSpeed } });
-      else shapes.stopAnimation('ants');
+      else    shapes.stopAnimation('ants', 'marchingAnts');
     });
     antsFolder.add(params, 'antsSpeed', 0.1, 5, 0.1).name('speed').onChange((v: number) => {
       if (params.marchingAnts) shapes.animate('ants', { marchingAnts: { speed: v } });
@@ -91,7 +92,7 @@ export const BorderAnimations: Story = {
     const flowFolder = gui.addFolder('dashedFlow');
     flowFolder.add(params, 'dashedFlow').name('active').onChange((v: boolean) => {
       if (v) shapes.animate('flow', { dashedFlow: { speed: params.flowSpeed, direction: 1 } });
-      else shapes.stopAnimation('flow');
+      else    shapes.stopAnimation('flow', 'dashedFlow');
     });
     flowFolder.add(params, 'flowSpeed', 0.1, 5, 0.1).name('speed').onChange((v: number) => {
       if (params.dashedFlow) shapes.animate('flow', { dashedFlow: { speed: v, direction: 1 } });
@@ -99,11 +100,12 @@ export const BorderAnimations: Story = {
 
     const glowFolder = gui.addFolder('borderGlow');
     glowFolder.add(params, 'borderGlow').name('active').onChange((v: boolean) => {
-      if (v) shapes.animate('glow', { borderGlowPulse: { minAlpha: 0.3, maxAlpha: 1.0, speed: params.glowSpeed } });
-      else shapes.stopAnimation('glow');
+      if (v) shapes.animate('glow', { borderGlow: { minWidth: 1, maxWidth: 6, duration: params.glowDuration } });
+      else    shapes.stopAnimation('glow', 'borderGlow');
     });
-    glowFolder.add(params, 'glowSpeed', 0.1, 5, 0.1).name('speed').onChange((v: number) => {
-      if (params.borderGlow) shapes.animate('glow', { borderGlowPulse: { minAlpha: 0.3, maxAlpha: 1.0, speed: v } });
+    glowFolder.add(params, 'glowDuration', 200, 3000, 100).name('duration (ms)').onChange((v: number) => {
+      if (params.borderGlow) shapes.animate('glow', { borderGlow: { minWidth: 1, maxWidth: 6, duration: v } });
     });
   },
 };
+

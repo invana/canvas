@@ -8,6 +8,7 @@
  *   - fadeIn        — fade in from transparent on mount
  *
  * Use the GUI to enable/disable each animation type.
+ * Animations are addressed by type name, not by a 'body'/'border' layer key.
  */
 import type { Meta, StoryObj } from '@storybook/html';
 import { Canvas, BackgroundPlugin, ShapePlugin, DevInfoPlugin } from '@invana/canvas-core-new';
@@ -78,11 +79,11 @@ export const BodyAnimations: Story = {
       },
     ] as ShapeSpec[]);
 
-    // Start animations using the correct { body: { type, ...options } } API
-    shapes.animate('breathe',    { body: { type: 'breathe',    amplitude: 0.12, duration: 1667 } });
-    shapes.animate('colorCycle', { body: { type: 'colorCycle', colors: ['#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'], duration: 800 } });
-    shapes.animate('pulse',      { body: { type: 'pulse',      maxRadius: 90, duration: 1200, repeat: -1 } });
-    shapes.animate('fadeIn',     { body: { type: 'fadeIn',     duration: 1500, from: 0 } });
+    // Each animation type is now the key — no wrapping 'body'/'border' layer
+    shapes.animate('breathe',    { breathe:    { amplitude: 0.12, duration: 1667 } });
+    shapes.animate('colorCycle', { colorCycle: { colors: ['#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'], duration: 800 } });
+    shapes.animate('pulse',      { pulse:      { maxRadius: 90, duration: 1200, repeat: -1 } });
+    shapes.animate('fadeIn',     { fadeIn:     { duration: 1500, from: 0 } });
 
     // GUI
     const gui = new GUI({ title: 'Body Animations', container });
@@ -100,43 +101,43 @@ export const BodyAnimations: Story = {
 
     const breatheF = gui.addFolder('breathe');
     breatheF.add(params.breathe, 'active').onChange((v: boolean) => {
-      if (v) shapes.animate('breathe', { body: { type: 'breathe', amplitude: 0.12, duration: params.breathe.duration, repeat: params.breathe.repeat } });
-      else shapes.stopAnimation('breathe', 'body');
+      if (v) shapes.animate('breathe', { breathe: { amplitude: 0.12, duration: params.breathe.duration, repeat: params.breathe.repeat } });
+      else    shapes.stopAnimation('breathe', 'breathe');
     });
     breatheF.add(params.breathe, 'duration', 200, 5000, 100).onChange((v: number) => {
-      if (params.breathe.active) shapes.animate('breathe', { body: { type: 'breathe', amplitude: 0.12, duration: v, repeat: params.breathe.repeat } });
+      if (params.breathe.active) shapes.animate('breathe', { breathe: { amplitude: 0.12, duration: v, repeat: params.breathe.repeat } });
     });
     breatheF.add(params.breathe, 'repeat', -1, 20, 1).name('repeat (-1=∞)').onChange((v: number) => {
-      if (params.breathe.active) shapes.animate('breathe', { body: { type: 'breathe', amplitude: 0.12, duration: params.breathe.duration, repeat: v } });
+      if (params.breathe.active) shapes.animate('breathe', { breathe: { amplitude: 0.12, duration: params.breathe.duration, repeat: v } });
     });
 
     const cycleF = gui.addFolder('colorCycle');
     cycleF.add(params.colorCycle, 'active').onChange((v: boolean) => {
-      if (v) shapes.animate('colorCycle', { body: { type: 'colorCycle', colors: ['#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'], duration: params.colorCycle.duration, repeat: params.colorCycle.repeat } });
-      else shapes.stopAnimation('colorCycle', 'body');
+      if (v) shapes.animate('colorCycle', { colorCycle: { colors: ['#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'], duration: params.colorCycle.duration, repeat: params.colorCycle.repeat } });
+      else    shapes.stopAnimation('colorCycle', 'colorCycle');
     });
     cycleF.add(params.colorCycle, 'duration', 100, 3000, 100).onChange((v: number) => {
-      if (params.colorCycle.active) shapes.animate('colorCycle', { body: { type: 'colorCycle', colors: ['#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'], duration: v, repeat: params.colorCycle.repeat } });
+      if (params.colorCycle.active) shapes.animate('colorCycle', { colorCycle: { colors: ['#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'], duration: v, repeat: params.colorCycle.repeat } });
     });
     cycleF.add(params.colorCycle, 'repeat', -1, 20, 1).name('repeat (-1=∞)').onChange((v: number) => {
-      if (params.colorCycle.active) shapes.animate('colorCycle', { body: { type: 'colorCycle', colors: ['#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'], duration: params.colorCycle.duration, repeat: v } });
+      if (params.colorCycle.active) shapes.animate('colorCycle', { colorCycle: { colors: ['#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'], duration: params.colorCycle.duration, repeat: v } });
     });
 
     const pulseF = gui.addFolder('pulse');
     pulseF.add(params.pulse, 'active').onChange((v: boolean) => {
-      if (v) shapes.animate('pulse', { body: { type: 'pulse', maxRadius: 90, duration: params.pulse.duration, repeat: params.pulse.repeat } });
-      else shapes.stopAnimation('pulse', 'body');
+      if (v) shapes.animate('pulse', { pulse: { maxRadius: 90, duration: params.pulse.duration, repeat: params.pulse.repeat } });
+      else    shapes.stopAnimation('pulse', 'pulse');
     });
     pulseF.add(params.pulse, 'duration', 200, 5000, 100).onChange((v: number) => {
-      if (params.pulse.active) shapes.animate('pulse', { body: { type: 'pulse', maxRadius: 90, duration: v, repeat: params.pulse.repeat } });
+      if (params.pulse.active) shapes.animate('pulse', { pulse: { maxRadius: 90, duration: v, repeat: params.pulse.repeat } });
     });
     pulseF.add(params.pulse, 'repeat', -1, 20, 1).name('repeat (-1=∞)').onChange((v: number) => {
-      if (params.pulse.active) shapes.animate('pulse', { body: { type: 'pulse', maxRadius: 90, duration: params.pulse.duration, repeat: v } });
+      if (params.pulse.active) shapes.animate('pulse', { pulse: { maxRadius: 90, duration: params.pulse.duration, repeat: v } });
     });
 
     const replayFadeIn = () => {
-      shapes.stopAnimation('fadeIn', 'body');
-      shapes.animate('fadeIn', { body: { type: 'fadeIn', duration: params.fadeIn.duration, from: 0, repeat: params.fadeIn.repeat } });
+      shapes.stopAnimation('fadeIn', 'fadeIn');
+      shapes.animate('fadeIn', { fadeIn: { duration: params.fadeIn.duration, from: 0, repeat: params.fadeIn.repeat } });
     };
 
     const fadeF = gui.addFolder('fadeIn');

@@ -3,8 +3,8 @@ export type { FillSpec, SolidFill, LinearFill, RadialFill, TextureFill, IconFill
 export type { BorderSpec, HaloSpec } from './border-halo.js';
 export type {
   ShapeAnimations,
-  BorderAnimation, MarchingAntsAnimation, DashedFlowAnimation, BorderGlowPulseAnimation,
-  BodyAnimation, PulseAnimation, BreatheAnimation, ColorCycleAnimation, FadeInAnimation,
+  BreatheOptions, ColorCycleOptions, FadeInOptions, PulseOptions,
+  MarchingAntsOptions, DashedFlowOptions, BorderGlowOptions,
 } from './animations.js';
 export type { ShapeEventType, ShapeEventPayload, DragPayload, ShapeHandler, DragHandler } from './events.js';
 export type {

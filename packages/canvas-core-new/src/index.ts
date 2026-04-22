@@ -20,6 +20,9 @@ export { BackgroundPlugin, DrawingPlugin, ShapePlugin, DevInfoPlugin } from './p
 export type { CustomShapeFn } from './plugins/builtin/DrawingPlugin.js';
 export type { BackgroundOptions, BackgroundType, PatternType, DrawStyle, PathStyle, BezierPoint, DashStyle, OrthogonalStyle, OrthogonalParams, ArrowStyle, ArrowParams, ArrowType, EffectStyle, CircleGlowParams, RectGlowParams, RippleParams } from './plugins/builtin/index.js';
 export type { ShapePluginOptions, ShapeSpec, ShapeType, ShapeAnimations } from './plugins/builtin/index.js';
+export type { BreatheOptions, ColorCycleOptions, FadeInOptions, PulseOptions, MarchingAntsOptions, DashedFlowOptions, BorderGlowOptions } from './plugins/builtin/index.js';
+export type { AnimationHandler, AnimSlot } from './plugins/builtin/index.js';
+export { AnimationRegistry, defaultRegistry } from './plugins/builtin/index.js';
 export type { DevInfoPluginOptions, DevInfoCorner } from './plugins/builtin/index.js';
 
 // Event bus

@@ -8,7 +8,7 @@ import type { ShapeSpec, ShapeBBox } from './spec/shapes.js';
 import { computeBBox } from './spec/shapes.js';
 import type { FillSpec } from './spec/fills.js';
 import type { BorderSpec } from './spec/border-halo.js';
-import type { ShapeAnimations } from './spec/animations.js';
+import type { AnimSlot } from './AnimationRegistry.js';
 import { RenderDetail } from './LODController.js';
 import { TextureRegistry } from './TextureRegistry.js';
 import {
@@ -39,46 +39,45 @@ import type { EffectStyle } from '../../../graphics-utils/effects/types.js';
  * - Shape geometry dispatch for all {@link ShapeType} variants
  * - Border drawing (solid, dashed, marching-ants)
  * - LOD-driven rendering (`DOT` → `FILL_BORDER` → `FULL` → `DETAIL`)
- * - Animation state storage (`_animState`) read by {@link AnimationTicker}
+ * - Animation override values (`_animOverrides`) written by animation handlers
+ *   and read during each draw call
  */
 export class ShapeObject {
   readonly id: string;
   spec: ShapeSpec;
   bbox: ShapeBBox;
 
-  /** Mutable animation declarations — set by {@link AnimationTicker.start} */
-  animations: ShapeAnimations = {};
-
   /**
-   * Per-frame numeric animation state advanced by {@link AnimationTicker._tick}.
-   * Fields are reset to their defaults in `ShapeObject` constructor and written
-   * directly by the ticker for zero-allocation updates.
+   * Active animation slots keyed by animation type name (e.g. `'breathe'`, `'pulse'`).
+   * Populated by {@link AnimationTicker.start} and cleared by {@link AnimationTicker.stop}.
+   * Each slot holds the handler-owned state object — opaque at this level.
    *
    * @internal
    */
-  _animState: {
+  _animSlots = new Map<string, AnimSlot>();
+
+  /**
+   * Rendering overrides written by animation handlers each frame via
+   * `handler.apply()`. `ShapeObject.draw()` reads these values in place of
+   * the raw spec values so that animations are visible even on forced redraws
+   * (LOD changes, viewport entry, spec updates).
+   *
+   * @internal
+   */
+  _animOverrides: {
+    /** Scale factor for the shape container (breathe). Default 1. */
+    scale: number;
+    /** Alpha for the shape container (fadeIn). Default 1. */
+    alpha: number;
+    /** Fill color override (colorCycle). Undefined = use spec fill. */
+    colorOverride?: string;
+    /** Dash offset for border dash animations (marchingAnts, dashedFlow). Default 0. */
     dashOffset: number;
-    pulseProgress: number;
-    breathePhase: number;
-    colorCyclePhase: number;
-    fadeAlpha: number;
-    borderGlowPhase: number;
-    startTime: number;
-    /** Completed cycle count for body animation (breathe/colorCycle/pulse/fadeIn) */
-    bodyRepeatCount: number;
-    /** Completed cycle count for border animation */
-    borderRepeatCount: number;
-  } = {
-    dashOffset: 0,
-    pulseProgress: 0,
-    breathePhase: 0,
-    colorCyclePhase: 0,
-    fadeAlpha: 1,
-    borderGlowPhase: 0,
-    startTime: 0,
-    bodyRepeatCount: 0,
-    borderRepeatCount: 0,
-  };
+    /** Border color override (marchingAnts, dashedFlow, borderGlow). Undefined = use spec border color. */
+    borderColor?: string;
+    /** Border stroke width override (borderGlow). Undefined = use spec border width. */
+    borderWidth?: number;
+  } = { scale: 1, alpha: 1, dashOffset: 0 };
 
   // PixiJS objects — created lazily, never destroyed on viewport exit
   private _container: Container;
@@ -99,9 +98,29 @@ export class ShapeObject {
     }
   }
 
-  /** The PixiJS Container to add/remove from the scene */
+  /** The PixiJS Container to add/remove from the scene. */
   get container(): Container {
     return this._container;
+  }
+
+  /**
+   * The shape's logical x anchor — used by animation handlers to set the
+   * container pivot for centred scale transforms.
+   *
+   * @internal
+   */
+  get cx(): number {
+    return this._cx();
+  }
+
+  /**
+   * The shape's logical y anchor — used by animation handlers to set the
+   * container pivot for centred scale transforms.
+   *
+   * @internal
+   */
+  get cy(): number {
+    return this._cy();
   }
 
   /**
@@ -123,28 +142,21 @@ export class ShapeObject {
       return;
     }
 
-    // ── Apply breathe scale (scale transform, no redraw needed) ──────────────
-    if (this.animations.body?.type === 'breathe') {
-      const amp = this.animations.body.amplitude ?? 0.1;
-      const scale = 1 + Math.sin(this._animState.breathePhase) * amp;
+    // ── Apply scale (breathe animation) ──────────────────────────────────────
+    const sc = this._animOverrides.scale;
+    if (sc !== 1) {
       const cx = this._cx();
       const cy = this._cy();
-      // Set pivot to shape center so scaling orbits around the shape, not world origin
       this._container.pivot.set(cx, cy);
       this._container.position.set(cx, cy);
-      this._container.scale.set(scale);
     } else {
       this._container.pivot.set(0, 0);
       this._container.position.set(0, 0);
-      this._container.scale.set(1);
     }
+    this._container.scale.set(sc);
 
-    // ── Apply fade alpha ──────────────────────────────────────────────────────
-    if (this.animations.body?.type === 'fadeIn') {
-      this._container.alpha = this._animState.fadeAlpha;
-    } else {
-      this._container.alpha = 1;
-    }
+    // ── Apply alpha (fadeIn animation) ───────────────────────────────────────
+    this._container.alpha = this._animOverrides.alpha;
 
     // ── Draw fill + shape geometry ────────────────────────────────────────────
     this._drawFillAndShape(spec, detail);
@@ -247,23 +259,19 @@ export class ShapeObject {
     const fillAlpha = spec.fill && 'alpha' in spec.fill ? (spec.fill as { alpha?: number }).alpha ?? 1 : 1;
     const solidStyle = fillValue !== undefined ? { fill: fillValue, fillAlpha } : {};
 
-    // ColorCycle overrides fill color
-    if (this.animations.body?.type === 'colorCycle') {
-      const colors = this.animations.body.colors;
-      if (colors.length > 0) {
-        const idx = Math.floor(this._animState.colorCyclePhase) % colors.length;
-        (solidStyle as Record<string, unknown>).fill = colors[idx] as string;
-      }
+    // colorCycle animation overrides fill color
+    if (this._animOverrides.colorOverride) {
+      (solidStyle as Record<string, unknown>).fill = this._animOverrides.colorOverride;
     }
 
     // Style for dashed/dotted shapes — driven by spec.border
     const dashStyle: DashStyle = {
-      color: spec.border?.color ?? '#ffffff',
-      strokeWidth: spec.border?.width ?? 1,
+      color: this._animOverrides.borderColor ?? spec.border?.color ?? '#ffffff',
+      strokeWidth: this._animOverrides.borderWidth ?? spec.border?.width ?? 1,
       alpha: spec.border?.alpha ?? 1,
       dashLength: spec.border?.dash?.length,
       gapLength: spec.border?.dash?.gap,
-      offset: this._animState.dashOffset,
+      offset: this._animOverrides.dashOffset,
     };
 
     // Style for path shapes (line, bezier, etc.) — driven by spec.border
@@ -308,18 +316,9 @@ export class ShapeObject {
   }
 
   private _drawBorder(border: BorderSpec): void {
-    let dashOffset = 0;
-    if (border.dash?.animated && this.animations.border?.type === 'marchingAnts') {
-      dashOffset = this._animState.dashOffset;
-    }
-
-    const strokeWidth = this.animations.border?.type === 'borderGlow'
-      ? this._computeGlowWidth()
-      : border.width;
-
-    const color = (this.animations.border && 'color' in this.animations.border && this.animations.border.color)
-      ? this.animations.border.color
-      : border.color;
+    const dashOffset = this._animOverrides.dashOffset;
+    const strokeWidth = this._animOverrides.borderWidth ?? border.width;
+    const color = this._animOverrides.borderColor ?? border.color;
 
     if (border.dash) {
       drawDashedLine(this._g, this._cx(), this._cy(), this._cx(), this._cy(), {
@@ -329,14 +328,6 @@ export class ShapeObject {
       // Re-apply stroke over the already-drawn shape path
       this._g.stroke({ color, width: strokeWidth, alpha: border.alpha ?? 1 });
     }
-  }
-
-  private _computeGlowWidth(): number {
-    const anim = this.animations.border;
-    if (anim?.type !== 'borderGlow') return this.spec.border?.width ?? 1;
-    const min = anim.minWidth ?? 1;
-    const max = anim.maxWidth ?? 6;
-    return min + (Math.sin(this._animState.borderGlowPhase) * 0.5 + 0.5) * (max - min);
   }
 
   private _drawArrow(spec: import('./spec/shapes.js').ArrowSpec): void {

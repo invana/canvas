@@ -7,6 +7,9 @@ export { SceneContainer } from './SceneContainer.js';
 export { HaloPool } from './HaloPool.js';
 export { TextureRegistry } from './TextureRegistry.js';
 export { AnimationTicker } from './AnimationTicker.js';
+export { AnimationRegistry } from './AnimationRegistry.js';
+export type { AnimationHandler, AnimSlot } from './AnimationRegistry.js';
+export { defaultRegistry } from './handlers/index.js';
 export { LODController, RenderDetail } from './LODController.js';
 export type { LODThresholds } from './LODController.js';
 

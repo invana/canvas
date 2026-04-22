@@ -297,11 +297,13 @@ export class ShapePlugin implements CanvasPlugin {
    * Start one or more animations on a shape.
    *
    * @remarks
-   * Registers the shape with {@link AnimationTicker} so it receives per-frame updates.
-   * Multiple animation targets (`body`, `border`) can be active simultaneously.
+   * Each key in `animations` is an animation type name; its value is the
+   * options for that type. Multiple animations can run simultaneously on the
+   * same shape — calling `animate` again with the same type hot-swaps the
+   * options without stopping other running animations.
    *
-   * @param id - Id of the shape to animate.
-   * @param animations - Animation spec (e.g. `{ body: { type: 'breathe' } }`).
+   * @param id         - Id of the shape to animate.
+   * @param animations - Map of type → options (e.g. `{ breathe: { amplitude: 0.12 } }`).
    */
   animate(id: string, animations: ShapeAnimations): void {
     const obj = this._pool.get(id);
@@ -312,13 +314,14 @@ export class ShapePlugin implements CanvasPlugin {
   /**
    * Stop an active animation on a shape.
    *
-   * @param id - Id of the shape.
-   * @param layer - Optionally target only `'border'` or `'body'`. Omit to stop all.
+   * @param id        - Id of the shape.
+   * @param animType  - Animation type to stop (e.g. `'breathe'`, `'marchingAnts'`).
+   *                    Omit to stop all animations on the shape.
    */
-  stopAnimation(id: string, layer?: 'border' | 'body'): void {
-    this._ticker?.stop(id, layer);
-    // If halo was animated, return it
-    if (!layer || layer === 'body') this._halos.return(id);
+  stopAnimation(id: string, animType?: string): void {
+    this._ticker?.stop(id, animType);
+    // Return pulse halo if pulse was stopped (or all animations cleared)
+    if (!animType || animType === 'pulse') this._halos.return(id);
   }
 
   /**
