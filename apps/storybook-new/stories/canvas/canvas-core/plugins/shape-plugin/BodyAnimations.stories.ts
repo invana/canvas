@@ -11,6 +11,7 @@
  */
 import type { Meta, StoryObj } from '@storybook/html';
 import { Canvas, BackgroundPlugin, ShapePlugin, DevInfoPlugin } from '@invana/canvas-core-new';
+import type { ShapeSpec } from '@invana/canvas-core-new';
 import { createContainer } from '../../../../../src/div-utils.js';
 import GUI from 'lil-gui';
 
@@ -43,36 +44,45 @@ export const BodyAnimations: Story = {
         id: 'breathe', type: 'circle', x: -240, y: 0, radius: 60,
         fill: { type: 'solid', color: '#0ea5e9' },
         border: { color: '#7dd3fc', width: 2 },
-        label: { text: 'breathe' },
+      },
+      {
+        id: 'label-breathe', type: 'label', x: -240, y: 80,
+        text: 'breathe', style: { fill: '#e2e8f0', fontSize: 14 },
       },
       {
         id: 'colorCycle', type: 'polygon', x: 0, y: 0, radius: 60, sides: 6,
         fill: { type: 'solid', color: '#8b5cf6' },
         border: { color: '#c4b5fd', width: 2 },
-        label: { text: 'colorCycle' },
+      },
+      {
+        id: 'label-colorCycle', type: 'label', x: 0, y: 80,
+        text: 'colorCycle', style: { fill: '#e2e8f0', fontSize: 14 },
       },
       {
         id: 'pulse', type: 'star', x: 240, y: 0, radius: 55,
         fill: { type: 'solid', color: '#f59e0b' },
         border: { color: '#fcd34d', width: 2 },
-        label: { text: 'pulse' },
       },
       {
-        id: 'fadeIn', type: 'rect', x: -55, y: 140, width: 130, height: 90,
+        id: 'label-pulse', type: 'label', x: 240, y: 80,
+        text: 'pulse', style: { fill: '#e2e8f0', fontSize: 14 },
+      },
+      {
+        id: 'fadeIn', type: 'rect', x: -55, y: 180, width: 130, height: 90,
         fill: { type: 'solid', color: '#10b981' },
         border: { color: '#6ee7b7', width: 2 },
-        label: { text: 'fadeIn (replay)' },
       },
-    ] as never[]);
+      {
+        id: 'label-fadeIn', type: 'label', x: -55, y: 280,
+        text: 'fadeIn (replay)', style: { fill: '#e2e8f0', fontSize: 14 },
+      },
+    ] as ShapeSpec[]);
 
-    // Start animations
-    shapes.animate('breathe', { breathe: { minScale: 0.88, maxScale: 1.12, speed: 1.2 } });
-    shapes.animate('colorCycle', { colorCycle: {
-      colors: ['#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'],
-      speed: 1,
-    }});
-    shapes.animate('pulse', { pulse: { ringCount: 3, speed: 1.5, maxRadius: 90 } });
-    shapes.animate('fadeIn', { fadeIn: { duration: 1.5 } });
+    // Start animations using the correct { body: { type, ...options } } API
+    shapes.animate('breathe',    { body: { type: 'breathe',    amplitude: 0.12, duration: 1667 } });
+    shapes.animate('colorCycle', { body: { type: 'colorCycle', colors: ['#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'], duration: 800 } });
+    shapes.animate('pulse',      { body: { type: 'pulse',      maxRadius: 90, duration: 1200, repeat: -1 } });
+    shapes.animate('fadeIn',     { body: { type: 'fadeIn',     duration: 1500, from: 0 } });
 
     // GUI
     const gui = new GUI({ title: 'Body Animations', container });
@@ -80,48 +90,58 @@ export const BodyAnimations: Story = {
 
     const params = {
       devInfo: true,
-      breathe: true, breatheSpeed: 1.2,
-      colorCycle: true, cycleSpeed: 1,
-      pulse: true, pulseSpeed: 1.5,
+      breathe:    { active: true,  duration: 1667, repeat: -1 },
+      colorCycle: { active: true,  duration: 800,  repeat: -1 },
+      pulse:      { active: true,  duration: 1200, repeat: -1 },
+      fadeIn:     {                duration: 1500, repeat:  1 },
     };
 
     gui.add(params, 'devInfo').name('DevInfo overlay').onChange((v: boolean) => devInfo.setEnabled(v));
 
     const breatheF = gui.addFolder('breathe');
-    breatheF.add(params, 'breathe').name('active').onChange((v: boolean) => {
-      if (v) shapes.animate('breathe', { breathe: { minScale: 0.88, maxScale: 1.12, speed: params.breatheSpeed } });
-      else shapes.stopAnimation('breathe');
+    breatheF.add(params.breathe, 'active').onChange((v: boolean) => {
+      if (v) shapes.animate('breathe', { body: { type: 'breathe', amplitude: 0.12, duration: params.breathe.duration, repeat: params.breathe.repeat } });
+      else shapes.stopAnimation('breathe', 'body');
     });
-    breatheF.add(params, 'breatheSpeed', 0.1, 4, 0.1).name('speed').onChange((v: number) => {
-      if (params.breathe) shapes.animate('breathe', { breathe: { minScale: 0.88, maxScale: 1.12, speed: v } });
+    breatheF.add(params.breathe, 'duration', 200, 5000, 100).onChange((v: number) => {
+      if (params.breathe.active) shapes.animate('breathe', { body: { type: 'breathe', amplitude: 0.12, duration: v, repeat: params.breathe.repeat } });
+    });
+    breatheF.add(params.breathe, 'repeat', -1, 20, 1).name('repeat (-1=∞)').onChange((v: number) => {
+      if (params.breathe.active) shapes.animate('breathe', { body: { type: 'breathe', amplitude: 0.12, duration: params.breathe.duration, repeat: v } });
     });
 
     const cycleF = gui.addFolder('colorCycle');
-    cycleF.add(params, 'colorCycle').name('active').onChange((v: boolean) => {
-      if (v) shapes.animate('colorCycle', { colorCycle: {
-        colors: ['#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'], speed: params.cycleSpeed,
-      }});
-      else shapes.stopAnimation('colorCycle');
+    cycleF.add(params.colorCycle, 'active').onChange((v: boolean) => {
+      if (v) shapes.animate('colorCycle', { body: { type: 'colorCycle', colors: ['#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'], duration: params.colorCycle.duration, repeat: params.colorCycle.repeat } });
+      else shapes.stopAnimation('colorCycle', 'body');
     });
-    cycleF.add(params, 'cycleSpeed', 0.1, 4, 0.1).name('speed').onChange((v: number) => {
-      if (params.colorCycle) shapes.animate('colorCycle', { colorCycle: {
-        colors: ['#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'], speed: v,
-      }});
+    cycleF.add(params.colorCycle, 'duration', 100, 3000, 100).onChange((v: number) => {
+      if (params.colorCycle.active) shapes.animate('colorCycle', { body: { type: 'colorCycle', colors: ['#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'], duration: v, repeat: params.colorCycle.repeat } });
+    });
+    cycleF.add(params.colorCycle, 'repeat', -1, 20, 1).name('repeat (-1=∞)').onChange((v: number) => {
+      if (params.colorCycle.active) shapes.animate('colorCycle', { body: { type: 'colorCycle', colors: ['#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'], duration: params.colorCycle.duration, repeat: v } });
     });
 
     const pulseF = gui.addFolder('pulse');
-    pulseF.add(params, 'pulse').name('active').onChange((v: boolean) => {
-      if (v) shapes.animate('pulse', { pulse: { ringCount: 3, speed: params.pulseSpeed, maxRadius: 90 } });
-      else shapes.stopAnimation('pulse');
+    pulseF.add(params.pulse, 'active').onChange((v: boolean) => {
+      if (v) shapes.animate('pulse', { body: { type: 'pulse', maxRadius: 90, duration: params.pulse.duration, repeat: params.pulse.repeat } });
+      else shapes.stopAnimation('pulse', 'body');
     });
-    pulseF.add(params, 'pulseSpeed', 0.1, 4, 0.1).name('speed').onChange((v: number) => {
-      if (params.pulse) shapes.animate('pulse', { pulse: { ringCount: 3, speed: v, maxRadius: 90 } });
+    pulseF.add(params.pulse, 'duration', 200, 5000, 100).onChange((v: number) => {
+      if (params.pulse.active) shapes.animate('pulse', { body: { type: 'pulse', maxRadius: 90, duration: v, repeat: params.pulse.repeat } });
+    });
+    pulseF.add(params.pulse, 'repeat', -1, 20, 1).name('repeat (-1=∞)').onChange((v: number) => {
+      if (params.pulse.active) shapes.animate('pulse', { body: { type: 'pulse', maxRadius: 90, duration: params.pulse.duration, repeat: v } });
     });
 
-    gui.add({ replayFade: () => {
-      shapes.stopAnimation('fadeIn');
-      shapes.update('fadeIn', {});   // force redraw at alpha=1
-      shapes.animate('fadeIn', { fadeIn: { duration: 1.5 } });
-    }}, 'replayFade').name('▶ Replay fadeIn');
+    const replayFadeIn = () => {
+      shapes.stopAnimation('fadeIn', 'body');
+      shapes.animate('fadeIn', { body: { type: 'fadeIn', duration: params.fadeIn.duration, from: 0, repeat: params.fadeIn.repeat } });
+    };
+
+    const fadeF = gui.addFolder('fadeIn');
+    fadeF.add(params.fadeIn, 'duration', 200, 5000, 100).onChange(replayFadeIn);
+    fadeF.add(params.fadeIn, 'repeat', -1, 20, 1).name('repeat (-1=∞)').onChange(replayFadeIn);
+    fadeF.add({ replay: replayFadeIn }, 'replay').name('▶ Replay');
   },
 };

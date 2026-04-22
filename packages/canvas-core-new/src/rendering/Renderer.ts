@@ -73,6 +73,11 @@ export class Renderer {
     this._app.ticker.remove(fn);
   }
 
+  /** Expose the raw PixiJS Ticker for internal plugin use (e.g. AnimationTicker). */
+  getTicker() {
+    return this._app.ticker;
+  }
+
   mountCamera(camera: Camera): void {
     // Viewport must be AFTER screenStage so shapes render in front of background.
     // stage[0] = screenStage (background, rendered first / behind)

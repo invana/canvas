@@ -100,6 +100,7 @@ export class Canvas {
       layers: this._layerManager as LayerManager,
       events: this.events,
       canvasElement: this._renderer.getCanvasElement(),
+      _ticker: this._renderer.getTicker(),
       createLayer: (opts: { id: string; zIndex: number; label?: string }) =>
         this._layerManager.createLayer(opts),
       createScreenLayer: (opts: { id: string; zIndex: number }) => {

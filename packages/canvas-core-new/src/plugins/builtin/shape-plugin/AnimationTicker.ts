@@ -46,6 +46,23 @@ export class AnimationTicker {
   start(obj: ShapeObject, animations: ShapeAnimations): void {
     obj.animations = animations;
     obj._animState.startTime = performance.now();
+    obj._animState.bodyRepeatCount = 0;
+    obj._animState.borderRepeatCount = 0;
+
+    // Pulse: rent a halo Graphics so redraw() has something to draw on
+    if (animations.body?.type === 'pulse') {
+      this._halos.rentForPulse(obj);
+    }
+
+    // fadeIn: immediately apply the starting alpha so there is no 1-frame flash
+    // at full opacity before the animation begins
+    if (animations.body?.type === 'fadeIn') {
+      obj._animState.fadeAlpha = animations.body.from ?? 0;
+      if (this._scene.isVisible(obj.id)) {
+        this._scene.redraw(obj.id);
+      }
+    }
+
     this._animated.set(obj.id, obj);
   }
 
@@ -100,13 +117,34 @@ export class AnimationTicker {
         switch (ba.type) {
           case 'marchingAnts':
           case 'dashedFlow': {
+            // For dash animations a "cycle" is arbitrary — we use every 360 offset units
+            // as one repeat unit so the count is meaningful at default speed.
+            const prevOffset = obj._animState.dashOffset;
             obj._animState.dashOffset += (ba.speed ?? 1);
+            const cycleSize = 360;
+            if (Math.floor(obj._animState.dashOffset / cycleSize) > Math.floor(prevOffset / cycleSize)) {
+              obj._animState.borderRepeatCount++;
+              const rep = ba.repeat ?? -1;
+              if (rep !== -1 && obj._animState.borderRepeatCount >= rep) {
+                this.stop(obj.id, 'border');
+                break;
+              }
+            }
             dirty = true;
             break;
           }
           case 'borderGlow': {
             const dur = ba.duration ?? 1000;
+            const prevPhase = obj._animState.borderGlowPhase;
             obj._animState.borderGlowPhase += (dt / dur) * Math.PI * 2;
+            if (Math.floor(obj._animState.borderGlowPhase / (Math.PI * 2)) > Math.floor(prevPhase / (Math.PI * 2))) {
+              obj._animState.borderRepeatCount++;
+              const rep = ba.repeat ?? -1;
+              if (rep !== -1 && obj._animState.borderRepeatCount >= rep) {
+                this.stop(obj.id, 'border');
+                break;
+              }
+            }
             dirty = true;
             break;
           }
@@ -119,28 +157,78 @@ export class AnimationTicker {
         switch (body.type) {
           case 'breathe': {
             const dur = body.duration ?? 2000;
+            const prevPhase = obj._animState.breathePhase;
             obj._animState.breathePhase += (dt / dur) * Math.PI * 2;
+            // One cycle = phase crosses a 2π boundary
+            if (Math.floor(obj._animState.breathePhase / (Math.PI * 2)) > Math.floor(prevPhase / (Math.PI * 2))) {
+              obj._animState.bodyRepeatCount++;
+              const rep = body.repeat ?? -1;
+              if (rep !== -1 && obj._animState.bodyRepeatCount >= rep) {
+                this.stop(obj.id, 'body');
+                break;
+              }
+            }
             dirty = true;
             break;
           }
           case 'colorCycle': {
             const dur = body.duration ?? 800;
+            const colors = body.colors;
+            const prevPhase = obj._animState.colorCyclePhase;
             obj._animState.colorCyclePhase += dt / dur;
+            // One cycle = phase crosses colors.length
+            if (Math.floor(obj._animState.colorCyclePhase / colors.length) > Math.floor(prevPhase / colors.length)) {
+              obj._animState.bodyRepeatCount++;
+              const rep = body.repeat ?? -1;
+              if (rep !== -1 && obj._animState.bodyRepeatCount >= rep) {
+                this.stop(obj.id, 'body');
+                break;
+              }
+            }
             dirty = true;
             break;
           }
           case 'fadeIn': {
             const dur = body.duration ?? 400;
             const from = body.from ?? 0;
+            const rep = body.repeat ?? 1;
             const elapsed = performance.now() - obj._animState.startTime;
-            obj._animState.fadeAlpha = Math.min(1, from + (1 - from) * (elapsed / dur));
-            dirty = true;
-            if (obj._animState.fadeAlpha >= 1) this.stop(obj.id, 'body');
+            const rawAlpha = from + (1 - from) * (elapsed / dur);
+            if (rawAlpha >= 1) {
+              obj._animState.bodyRepeatCount++;
+              if (rep === -1 || obj._animState.bodyRepeatCount < rep) {
+                // Cycle completed — restart immediately from 'from'
+                obj._animState.startTime = performance.now();
+                obj._animState.fadeAlpha = from;
+                dirty = true;
+              } else {
+                // Final cycle — hold at full opacity then stop
+                obj._animState.fadeAlpha = 1;
+                dirty = true;
+                this.stop(obj.id, 'body');
+              }
+            } else {
+              obj._animState.fadeAlpha = rawAlpha;
+              dirty = true;
+            }
             break;
           }
           case 'pulse': {
             const dur = body.duration ?? 1200;
-            obj._animState.pulseProgress = (obj._animState.pulseProgress + dt / dur) % 1;
+            const prevProgress = obj._animState.pulseProgress;
+            const next = prevProgress + dt / dur;
+            // One cycle = progress crosses 1.0
+            if (Math.floor(next) > Math.floor(prevProgress)) {
+              obj._animState.bodyRepeatCount++;
+              const rep = body.repeat ?? 'infinite';
+              if (rep !== 'infinite' && obj._animState.bodyRepeatCount >= (rep as number)) {
+                obj._animState.pulseProgress = 0;
+                this.stop(obj.id, 'body');
+                this._halos.return(obj.id);
+                break;
+              }
+            }
+            obj._animState.pulseProgress = next % 1;
             // Pulse is drawn on HaloPool, not on the shape's own Graphics
             this._halos.redraw(obj);
             break;

@@ -64,6 +64,10 @@ export class ShapeObject {
     fadeAlpha: number;
     borderGlowPhase: number;
     startTime: number;
+    /** Completed cycle count for body animation (breathe/colorCycle/pulse/fadeIn) */
+    bodyRepeatCount: number;
+    /** Completed cycle count for border animation */
+    borderRepeatCount: number;
   } = {
     dashOffset: 0,
     pulseProgress: 0,
@@ -72,6 +76,8 @@ export class ShapeObject {
     fadeAlpha: 1,
     borderGlowPhase: 0,
     startTime: 0,
+    bodyRepeatCount: 0,
+    borderRepeatCount: 0,
   };
 
   // PixiJS objects — created lazily, never destroyed on viewport exit
@@ -121,8 +127,15 @@ export class ShapeObject {
     if (this.animations.body?.type === 'breathe') {
       const amp = this.animations.body.amplitude ?? 0.1;
       const scale = 1 + Math.sin(this._animState.breathePhase) * amp;
+      const cx = this._cx();
+      const cy = this._cy();
+      // Set pivot to shape center so scaling orbits around the shape, not world origin
+      this._container.pivot.set(cx, cy);
+      this._container.position.set(cx, cy);
       this._container.scale.set(scale);
     } else {
+      this._container.pivot.set(0, 0);
+      this._container.position.set(0, 0);
       this._container.scale.set(1);
     }
 

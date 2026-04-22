@@ -16,6 +16,8 @@ export interface MarchingAntsAnimation {
   gapLength?: number;
   /** Override border color. Defaults to BorderSpec.color */
   color?: string;
+  /** Number of full perimeter loops before stopping. Use `-1` for infinite (default: -1) */
+  repeat?: number;
 }
 
 /** Dashes flow in one direction only (not reversing at the end) */
@@ -23,6 +25,8 @@ export interface DashedFlowAnimation {
   type: 'dashedFlow';
   speed?: number;
   color?: string;
+  /** Number of full loops before stopping. Use `-1` for infinite (default: -1) */
+  repeat?: number;
 }
 
 /** Border stroke width oscillates between minWidth and maxWidth */
@@ -33,6 +37,8 @@ export interface BorderGlowPulseAnimation {
   maxWidth?: number;
   /** Duration of one oscillation cycle in ms (default: 1000) */
   duration?: number;
+  /** Number of oscillation cycles before stopping. Use `-1` for infinite (default: -1) */
+  repeat?: number;
 }
 
 export type BorderAnimation =
@@ -54,7 +60,8 @@ export interface PulseAnimation {
   maxRadius?: number;
   /** Duration of one pulse in ms (default: 1200) */
   duration?: number;
-  repeat?: number | 'infinite';
+  /** Number of pulse cycles before stopping. Use `-1` for infinite (default: -1) */
+  repeat?: number;
 }
 
 /**
@@ -67,6 +74,8 @@ export interface BreatheAnimation {
   amplitude?: number;
   /** Duration of one full breathe cycle in ms (default: 2000) */
   duration?: number;
+  /** Number of full breathe cycles before stopping. Use `-1` for infinite (default: -1) */
+  repeat?: number;
 }
 
 /** Fill color transitions through a list of colors over time */
@@ -75,6 +84,8 @@ export interface ColorCycleAnimation {
   colors: string[];
   /** Duration per color transition in ms (default: 800) */
   duration?: number;
+  /** Number of full color cycles before stopping. Use `-1` for infinite (default: -1) */
+  repeat?: number;
 }
 
 /** Shape fades in from alpha 0 (or `from`) to full opacity */
@@ -84,6 +95,8 @@ export interface FadeInAnimation {
   duration?: number;
   /** Starting alpha 0–1 (default: 0) */
   from?: number;
+  /** Number of times to replay the fade-in before stopping. Use `-1` for infinite (default: 1) */
+  repeat?: number;
 }
 
 export type BodyAnimation =
