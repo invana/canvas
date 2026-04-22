@@ -26,15 +26,36 @@ import type { DashStyle } from '../../../graphics-utils/shapes/dashed.js';
 import type { PathStyle } from '../../../graphics-utils/types.js';
 import type { EffectStyle } from '../../../graphics-utils/effects/types.js';
 
+/**
+ * `ShapeObject` wraps one PixiJS `Container` + `Graphics` pair per shape.
+ *
+ * @remarks
+ * Created by {@link ShapePool.add} and reused for the lifetime of a shape.
+ * The container is **attached** to the scene layer when the shape enters the
+ * viewport and **detached** (not destroyed) when it leaves, making re-entry cheap.
+ *
+ * Internally this class handles:
+ * - Fill resolution (solid, linear/radial gradient, texture/icon)
+ * - Shape geometry dispatch for all {@link ShapeType} variants
+ * - Border drawing (solid, dashed, marching-ants)
+ * - LOD-driven rendering (`DOT` → `FILL_BORDER` → `FULL` → `DETAIL`)
+ * - Animation state storage (`_animState`) read by {@link AnimationTicker}
+ */
 export class ShapeObject {
   readonly id: string;
   spec: ShapeSpec;
   bbox: ShapeBBox;
 
-  /** Mutable animation state — set by AnimationTicker */
+  /** Mutable animation declarations — set by {@link AnimationTicker.start} */
   animations: ShapeAnimations = {};
 
-  /** Ticker-driven animation state (internal) */
+  /**
+   * Per-frame numeric animation state advanced by {@link AnimationTicker._tick}.
+   * Fields are reset to their defaults in `ShapeObject` constructor and written
+   * directly by the ticker for zero-allocation updates.
+   *
+   * @internal
+   */
   _animState: {
     dashOffset: number;
     pulseProgress: number;

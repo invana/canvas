@@ -9,6 +9,19 @@ import type { ShapePool } from './ShapePool.js';
 import type { CameraBounds } from './CameraTracker.js';
 import { RenderDetail } from './LODController.js';
 
+/**
+ * `SceneContainer` manages the PixiJS scene graph slice for {@link ShapePlugin}.
+ *
+ * @remarks
+ * Only **visible** shapes are attached to the layer as `Container` children.
+ * On every camera change, the visible set is diffed against the incoming
+ * RBush search result:
+ * - Shapes that **entered** the viewport are drawn then attached.
+ * - Shapes that **left** the viewport are detached (not destroyed) so
+ *   re-entry is allocation-free.
+ *
+ * This class is internal to {@link ShapePlugin}.
+ */
 export class SceneContainer {
   private _layer: Container;
   private _pool: ShapePool;
@@ -20,7 +33,13 @@ export class SceneContainer {
     this._pool = pool;
   }
 
-  /** Called by CameraTracker whenever the camera moves */
+  /**
+   * Called by {@link CameraTracker} whenever the camera moves or zooms.
+   * Diffs the current visible set against the new viewport AABB and
+   * attaches/detaches shapes accordingly.
+   *
+   * @param bounds - New world-space viewport AABB (with padding).
+   */
   onCameraChanged(bounds: CameraBounds): void {
     const incoming = new Set(
       this._pool.search(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY).map(o => o.id)
@@ -48,7 +67,12 @@ export class SceneContainer {
     }
   }
 
-  /** Called by LODController when zoom level changes — redraws all visible shapes */
+  /**
+   * Called by {@link LODController} when the zoom level crosses a threshold.
+   * Redraws every currently-visible shape at the new detail level.
+   *
+   * @param detail - The new {@link RenderDetail} level.
+   */
   onDetailChanged(detail: RenderDetail): void {
     this._detail = detail;
     for (const id of this._visible) {
@@ -56,27 +80,40 @@ export class SceneContainer {
     }
   }
 
-  /** Force-redraw a single shape (used by update() and AnimationTicker) */
+  /**
+   * Force-redraw a single shape if it is currently in the visible set.
+   * Called by {@link ShapePlugin.update} and {@link AnimationTicker}.
+   *
+   * @param id - Shape id.
+   */
   redraw(id: string): void {
     if (!this._visible.has(id)) return;
     this._pool.get(id)?.draw(this._detail);
   }
 
+  /** Returns `true` if the shape with the given id is currently in the visible set. */
   isVisible(id: string): boolean {
     return this._visible.has(id);
   }
 
+  /** The current {@link RenderDetail} level applied to all visible shapes. */
   get detail(): RenderDetail {
     return this._detail;
   }
 
-  /** Remove a shape from scene and visible set (called before ShapePool.remove) */
+  /**
+   * Detach a shape from the scene and remove it from the visible set.
+   * Called by {@link ShapePlugin.remove} **before** `ShapePool.remove`.
+   *
+   * @param id - Shape id.
+   */
   evict(id: string): void {
     const obj = this._pool.get(id);
     if (obj) this._layer.removeChild(obj.container);
     this._visible.delete(id);
   }
 
+  /** Detach all visible shapes from the layer and clear the visible set. */
   clear(): void {
     for (const id of this._visible) {
       const obj = this._pool.get(id);

@@ -4,6 +4,23 @@
 
 import { Assets, Texture } from 'pixi.js';
 
+/**
+ * `TextureRegistry` is a shared, static GPU texture store.
+ *
+ * @remarks
+ * All shapes that use `fill: { type: 'texture', src: key }` or
+ * `fill: { type: 'icon', src: key }` read from this registry.
+ * Textures are loaded via PixiJS `Assets.load` and stored by a
+ * developer-chosen string key.
+ *
+ * Populate the registry **before** calling `ShapePlugin.setData()` for
+ * any shapes that reference textures:
+ *
+ * ```ts
+ * await ShapePlugin.registerTexture('avatar:user', '/icons/user.png');
+ * shapes.setData([{ id: 'n1', type: 'circle', fill: { type: 'icon', src: 'avatar:user' } }]);
+ * ```
+ */
 export class TextureRegistry {
   private static _map = new Map<string, Texture>();
   private static _pending = new Map<string, Promise<Texture>>();

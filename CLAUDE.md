@@ -297,3 +297,4 @@ export const MyStory: Story = {
 5. **Events go through `canvas.events`** (`EventBus`) — never subscribe to raw PixiJS events from outside the core.
 6. **Plugins implement `CanvasPlugin`** interface: `id`, `register(ctx)`, `destroy()`.
 7. **`graphics-utils/` is internal only** — it is not re-exported from `index.ts`.
+8. Write doc strings for any code - classes, methods, variables, so that TSDoc can use it for API documentation

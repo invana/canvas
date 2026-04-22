@@ -42,7 +42,11 @@ import type { EffectStyle, CircleGlowParams, RectGlowParams, RippleParams } from
 
 export type { DrawStyle, PathStyle, BezierPoint, DashStyle, OrthogonalStyle, OrthogonalParams, ArrowStyle, ArrowParams, ArrowType, EffectStyle, CircleGlowParams, RectGlowParams, RippleParams };
 
+/**
+ * Construction options for {@link DrawingPlugin}.
+ */
 export interface DrawingPluginOptions {
+  /** Plugin instance key — used as the layer id prefix. Defaults to `'drawing'`. */
   key?: string;
   /** z-index for the drawing layer (default: 10) */
   zIndex?: number;
@@ -106,13 +110,22 @@ export class DrawingPlugin implements CanvasPlugin {
     this._zIndex = options.zIndex ?? 10;
   }
 
+  /**
+   * Called by {@link PluginSystem} when the plugin is registered on a canvas.
+   * Creates the internal drawing layer and the shared `PIXI.Graphics` instance.
+   *
+   * @param ctx - The plugin context provided by the canvas.
+   */
   register(ctx: PluginContext): void {
     this._layer = ctx.createLayer({ id: `${this.id}-layer`, zIndex: this._zIndex, label: 'Drawing' });
     this._g = new Graphics();
     this._layer.addChild(this._g);
   }
 
-  /** Remove all drawn content. */
+  /**
+   * Erase all drawn content from the plugin's layer.
+   * Wipes the single shared `PIXI.Graphics` object in one call.
+   */
   clear(): void {
     this._g.clear();
   }
@@ -121,11 +134,30 @@ export class DrawingPlugin implements CanvasPlugin {
   // Shapes
   // -----------------------------------------------------------------------
 
+  /**
+   * Draw a filled/stroked circle.
+   *
+   * @param x - Centre X in world space.
+   * @param y - Centre Y in world space.
+   * @param radius - Radius in world-space pixels.
+   * @param style - Fill and stroke style.
+   * @returns `this` for fluent chaining.
+   */
   circle(x: number, y: number, radius: number, style: DrawStyle = {}): this {
     drawCircle(this._g, x, y, radius, style);
     return this;
   }
 
+  /**
+   * Draw a filled/stroked rectangle.
+   *
+   * @param x - Top-left X in world space.
+   * @param y - Top-left Y in world space.
+   * @param width - Width in world-space pixels.
+   * @param height - Height in world-space pixels.
+   * @param style - Fill, stroke, and optional `cornerRadius` for rounded corners.
+   * @returns `this` for fluent chaining.
+   */
   rect(
     x: number,
     y: number,
@@ -137,14 +169,30 @@ export class DrawingPlugin implements CanvasPlugin {
     return this;
   }
 
+  /**
+   * Draw a filled/stroked ellipse.
+   *
+   * @param x - Centre X in world space.
+   * @param y - Centre Y in world space.
+   * @param radiusX - Horizontal radius.
+   * @param radiusY - Vertical radius.
+   * @param style - Fill and stroke style.
+   * @returns `this` for fluent chaining.
+   */
   ellipse(x: number, y: number, radiusX: number, radiusY: number, style: DrawStyle = {}): this {
     drawEllipse(this._g, x, y, radiusX, radiusY, style);
     return this;
   }
 
   /**
-   * Regular polygon. sides: 3=triangle, 4=diamond, 5=pentagon, 6=hexagon …
-   * x,y = center.
+   * Draw a regular polygon.
+   *
+   * @param x - Centre X in world space.
+   * @param y - Centre Y in world space.
+   * @param radius - Circumradius (distance from centre to vertices).
+   * @param sides - Number of sides: 3 = triangle, 4 = diamond, 5 = pentagon, 6 = hexagon, …
+   * @param style - Fill, stroke, and optional `rotation` in radians.
+   * @returns `this` for fluent chaining.
    */
   polygon(
     x: number,
@@ -158,7 +206,15 @@ export class DrawingPlugin implements CanvasPlugin {
   }
 
   /**
-   * Star shape. x,y = center. points = number of star tips.
+   * Draw a star shape.
+   *
+   * @param x - Centre X in world space.
+   * @param y - Centre Y in world space.
+   * @param radius - Outer radius (tip to centre).
+   * @param style - Fill, stroke, `points` (number of tips, default 5),
+   *   `innerRatio` (inner radius as a fraction of outer, default 0.4),
+   *   and optional `rotation` in radians.
+   * @returns `this` for fluent chaining.
    */
   star(
     x: number,
@@ -174,11 +230,31 @@ export class DrawingPlugin implements CanvasPlugin {
   // Paths
   // -----------------------------------------------------------------------
 
+  /**
+   * Draw a straight line between two world-space points.
+   *
+   * @param x1 - Start X.
+   * @param y1 - Start Y.
+   * @param x2 - End X.
+   * @param y2 - End Y.
+   * @param style - Stroke style (color, width, alpha).
+   * @returns `this` for fluent chaining.
+   */
   line(x1: number, y1: number, x2: number, y2: number, style: PathStyle = {}): this {
     drawLine(this._g, x1, y1, x2, y2, style);
     return this;
   }
 
+  /**
+   * Draw a cubic (or quadratic) Bézier curve.
+   *
+   * @param from - Start anchor point `{ x, y }`.
+   * @param cp1 - First control point.
+   * @param to - End anchor point.
+   * @param style - Stroke style.
+   * @param cp2 - Optional second control point. When omitted a quadratic curve is drawn.
+   * @returns `this` for fluent chaining.
+   */
   bezier(
     from: BezierPoint,
     cp1: BezierPoint,
@@ -190,6 +266,15 @@ export class DrawingPlugin implements CanvasPlugin {
     return this;
   }
 
+  /**
+   * Draw a Bézier curve with automatically computed control points.
+   *
+   * @param from - Start point.
+   * @param to - End point.
+   * @param style - Stroke style.
+   * @param curvature - Tangent offset used to generate control points (default: 80).
+   * @returns `this` for fluent chaining.
+   */
   autoBezier(
     from: BezierPoint,
     to: BezierPoint,
@@ -204,31 +289,89 @@ export class DrawingPlugin implements CanvasPlugin {
   // Dashed / dotted strokes
   // -----------------------------------------------------------------------
 
+  /**
+   * Draw a circle outline using a dashed stroke.
+   *
+   * @param x - Centre X.
+   * @param y - Centre Y.
+   * @param radius - Radius in world-space pixels.
+   * @param style - Dash style (color, strokeWidth, dashLength, gapLength).
+   * @returns `this` for fluent chaining.
+   */
   dashedCircle(x: number, y: number, radius: number, style: DashStyle = {}): this {
     drawDashedCircle(this._g, x, y, radius, style);
     return this;
   }
 
+  /**
+   * Draw a circle outline using a dotted stroke.
+   *
+   * @param x - Centre X.
+   * @param y - Centre Y.
+   * @param radius - Radius in world-space pixels.
+   * @param style - Dot style (color, strokeWidth, gapLength).
+   * @returns `this` for fluent chaining.
+   */
   dottedCircle(x: number, y: number, radius: number, style: DashStyle = {}): this {
     drawDottedCircle(this._g, x, y, radius, style);
     return this;
   }
 
+  /**
+   * Draw a rectangle outline using a dashed stroke.
+   *
+   * @param x - Top-left X.
+   * @param y - Top-left Y.
+   * @param width - Width in world-space pixels.
+   * @param height - Height in world-space pixels.
+   * @param style - Dash style.
+   * @returns `this` for fluent chaining.
+   */
   dashedRect(x: number, y: number, width: number, height: number, style: DashStyle = {}): this {
     drawDashedRect(this._g, x, y, width, height, style);
     return this;
   }
 
+  /**
+   * Draw a rectangle outline using a dotted stroke.
+   *
+   * @param x - Top-left X.
+   * @param y - Top-left Y.
+   * @param width - Width in world-space pixels.
+   * @param height - Height in world-space pixels.
+   * @param style - Dot style.
+   * @returns `this` for fluent chaining.
+   */
   dottedRect(x: number, y: number, width: number, height: number, style: DashStyle = {}): this {
     drawDottedRect(this._g, x, y, width, height, style);
     return this;
   }
 
+  /**
+   * Draw a straight line with a dashed stroke.
+   *
+   * @param x1 - Start X.
+   * @param y1 - Start Y.
+   * @param x2 - End X.
+   * @param y2 - End Y.
+   * @param style - Dash style.
+   * @returns `this` for fluent chaining.
+   */
   dashedLine(x1: number, y1: number, x2: number, y2: number, style: DashStyle = {}): this {
     drawDashedLine(this._g, x1, y1, x2, y2, style);
     return this;
   }
 
+  /**
+   * Draw a straight line with a dotted stroke.
+   *
+   * @param x1 - Start X.
+   * @param y1 - Start Y.
+   * @param x2 - End X.
+   * @param y2 - End Y.
+   * @param style - Dot style.
+   * @returns `this` for fluent chaining.
+   */
   dottedLine(x1: number, y1: number, x2: number, y2: number, style: DashStyle = {}): this {
     drawDottedLine(this._g, x1, y1, x2, y2, style);
     return this;
@@ -238,11 +381,25 @@ export class DrawingPlugin implements CanvasPlugin {
   // Orthogonal paths (right-angle routing)
   // -----------------------------------------------------------------------
 
+  /**
+   * Draw a right-angle (orthogonal / Manhattan) routed path.
+   *
+   * @param params - Source, target, and routing direction.
+   * @param style - Stroke style.
+   * @returns `this` for fluent chaining.
+   */
   orthogonal(params: OrthogonalParams, style: OrthogonalStyle = {}): this {
     drawOrthogonalPath(this._g, params, style);
     return this;
   }
 
+  /**
+   * Draw a right-angle routed path with rounded corners.
+   *
+   * @param params - Source, target, and routing direction.
+   * @param style - Stroke style (includes optional `cornerRadius`).
+   * @returns `this` for fluent chaining.
+   */
   roundedOrthogonal(params: OrthogonalParams, style: OrthogonalStyle = {}): this {
     drawRoundedOrthogonalPath(this._g, params, style);
     return this;
@@ -275,16 +432,41 @@ export class DrawingPlugin implements CanvasPlugin {
   // Effects — glow & ripple
   // -----------------------------------------------------------------------
 
+  /**
+   * Draw a multi-layer circular glow effect.
+   *
+   * @param params - Centre, radius, glow size, and optional layer count.
+   * @param style - Color and alpha.
+   * @returns `this` for fluent chaining.
+   */
   circleGlow(params: CircleGlowParams, style: EffectStyle): this {
     drawCircleGlow(this._g, params, style);
     return this;
   }
 
+  /**
+   * Draw a multi-layer rectangular glow effect.
+   *
+   * @param params - Position, size, glow size, and optional layer count.
+   * @param style - Color and alpha.
+   * @returns `this` for fluent chaining.
+   */
   rectGlow(params: RectGlowParams, style: EffectStyle): this {
     drawRectGlow(this._g, params, style);
     return this;
   }
 
+  /**
+   * Draw a selection highlight rectangle (dashed or solid outline glow).
+   *
+   * @param x - Top-left X.
+   * @param y - Top-left Y.
+   * @param width - Width.
+   * @param height - Height.
+   * @param style - Color and alpha.
+   * @param cornerRadius - Border radius in pixels (default: 0).
+   * @returns `this` for fluent chaining.
+   */
   selectionHighlight(
     x: number,
     y: number,
@@ -297,11 +479,27 @@ export class DrawingPlugin implements CanvasPlugin {
     return this;
   }
 
+  /**
+   * Draw a single ripple ring (static snapshot of one ripple frame).
+   *
+   * @param x - Centre X.
+   * @param y - Centre Y.
+   * @param radius - Ring radius.
+   * @param style - Color and alpha.
+   * @returns `this` for fluent chaining.
+   */
   rippleRing(x: number, y: number, radius: number, style: EffectStyle): this {
     drawRippleRing(this._g, x, y, radius, style);
     return this;
   }
 
+  /**
+   * Draw a full animated-style ripple effect (multiple concentric rings).
+   *
+   * @param params - Centre, inner radius, ring count, and progress (0–1).
+   * @param style - Color and alpha.
+   * @returns `this` for fluent chaining.
+   */
   ripple(params: RippleParams, style: EffectStyle): this {
     drawRippleEffect(this._g, params, style);
     return this;
@@ -311,6 +509,20 @@ export class DrawingPlugin implements CanvasPlugin {
   // Text label
   // -----------------------------------------------------------------------
 
+  /**
+   * Draw a text label at a world-space position.
+   *
+   * @remarks
+   * Each call creates a separate `PIXI.Text` instance added to the plugin layer.
+   * For large numbers of labels prefer {@link ShapePlugin} which manages text
+   * lifecycle through LOD and viewport culling.
+   *
+   * @param text - The string to render.
+   * @param x - X position (left edge for `'left'` / `'right'` align; centre for `'center'`).
+   * @param y - Y position (top of the text baseline).
+   * @param style - Optional `color`, `fontSize`, and `align`.
+   * @returns `this` for fluent chaining.
+   */
   label(
     text: string,
     x: number,
@@ -357,6 +569,10 @@ export class DrawingPlugin implements CanvasPlugin {
     return this;
   }
 
+  /**
+   * Destroy the plugin, releasing the underlying `PIXI.Graphics` object.
+   * Called automatically by {@link PluginSystem.unregister}.
+   */
   destroy(): void {
     this._g.destroy();
   }

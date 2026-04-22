@@ -31,7 +31,11 @@ import {
 export type { ShapeSpec, ShapeType };
 export type { ShapeAnimations };
 
+/**
+ * Construction options for {@link ShapePlugin}.
+ */
 export interface ShapePluginOptions {
+  /** Plugin instance key — used as the layer id prefix. Defaults to `'shapes'`. */
   key?: string;
   /** z-index for the shape layer (default: 10) */
   zIndex?: number;
@@ -45,6 +49,36 @@ export interface ShapePluginOptions {
   fitPadding?: number;
 }
 
+/**
+ * `ShapePlugin` — a high-performance canvas plugin for rendering large numbers of interactive,
+ * animated shapes.
+ *
+ * @remarks
+ * Unlike {@link DrawingPlugin} (which uses a single shared `PIXI.Graphics`), each shape managed
+ * by `ShapePlugin` owns its own `PIXI.Graphics` + `Container` pair ({@link ShapeObject}).
+ * This enables five layered performance systems:
+ *
+ * 1. **Viewport culling** — RBush R-tree spatial index; only shapes inside the viewport AABB
+ *    are attached to the PixiJS scene graph.
+ * 2. **LOD (Level of Detail)** — at low zoom shapes degrade to 2 px dots; labels only appear
+ *    above zoom 1.5.
+ * 3. **Animated-only ticker** — only shapes with active animations receive per-frame updates.
+ * 4. **Dirty-flag redraws** — `ShapeObject.draw()` is only called when something actually changed.
+ * 5. **Halo object pool** — pre-allocated `PIXI.Graphics` instances rented/returned on hover.
+ *
+ * @example
+ * ```ts
+ * const shapes = new ShapePlugin({ fitOnRender: true });
+ * await canvas.plugins.register(shapes);
+ *
+ * shapes.setData([
+ *   { id: 'n1', type: 'circle', x: 0, y: 0, radius: 30,
+ *     fill: { type: 'solid', color: '#3fcbeb' } },
+ * ]);
+ *
+ * canvas.events.on('shape:click', ({ shapeId }) => console.log('clicked', shapeId));
+ * ```
+ */
 export class ShapePlugin implements CanvasPlugin {
   readonly id: string;
 
@@ -66,6 +100,17 @@ export class ShapePlugin implements CanvasPlugin {
   private _dragState: { id: string; lastX: number; lastY: number } | null = null;
 
   // ── Static texture registry ───────────────────────────────────────────────
+  /**
+   * Pre-load and register a GPU texture under a key so that shapes can reference
+   * it via `fill: { type: 'texture', src: key }` or `fill: { type: 'icon', src: key }`.
+   *
+   * @remarks
+   * Safe to call multiple times with the same key — the asset is only fetched once.
+   * Must be called **before** `setData()` for shapes that use the texture.
+   *
+   * @param key - The lookup key used in `ShapeSpec.fill.src`.
+   * @param url - Remote or local asset URL.
+   */
   static registerTexture(key: string, url: string): Promise<void> {
     return TextureRegistry.register(key, url);
   }
@@ -79,6 +124,12 @@ export class ShapePlugin implements CanvasPlugin {
     this._fitPadding = options.fitPadding ?? 60;
   }
 
+  /**
+   * Called by {@link PluginSystem} when the plugin is registered on a canvas.
+   * Wires all sub-systems: pool, scene, LOD, halo pool, camera tracker, and animation ticker.
+   *
+   * @param ctx - The plugin context provided by the canvas.
+   */
   register(ctx: PluginContext): void {
     this._ctx = ctx;
     const layer = ctx.createLayer({ id: `${this.id}-layer`, zIndex: this._zIndex, label: 'Shapes' });
@@ -137,6 +188,15 @@ export class ShapePlugin implements CanvasPlugin {
 
   // ── Data API ──────────────────────────────────────────────────────────────
 
+  /**
+   * Replace all current shapes with `specs`.
+   *
+   * @remarks
+   * Clears existing shapes, adds each spec, optionally fits the camera, then
+   * flushes the camera tracker to resolve initial visibility.
+   *
+   * @param specs - Array of shape specifications to render.
+   */
   setData(specs: ShapeSpec[]): void {
     this.clear();
     for (const spec of specs) {
@@ -147,11 +207,26 @@ export class ShapePlugin implements CanvasPlugin {
     this._cameraTracker.flush();
   }
 
+  /**
+   * Add a single shape to the scene.
+   *
+   * @param spec - The shape specification to add.
+   */
   add(spec: ShapeSpec): void {
     this._add(spec);
     this._cameraTracker.flush();
   }
 
+  /**
+   * Partially update a shape’s spec by id.
+   *
+   * @remarks
+   * Merges `partial` into the existing spec, recomputes the spatial bbox,
+   * and triggers a redraw if the shape is currently visible.
+   *
+   * @param id - Id of the shape to update.
+   * @param partial - Key–value pairs to merge into the shape’s spec.
+   */
   update(id: string, partial: Record<string, unknown>): void {
     const obj = this._pool.get(id);
     if (!obj) return;
@@ -161,6 +236,11 @@ export class ShapePlugin implements CanvasPlugin {
     this._pool.updateBBox(obj);
   }
 
+  /**
+   * Remove a shape from the scene and free its resources.
+   *
+   * @param id - Id of the shape to remove.
+   */
   remove(id: string): void {
     this._scene.evict(id);
     this._ticker?.stop(id);
@@ -169,10 +249,19 @@ export class ShapePlugin implements CanvasPlugin {
     this._pool.remove(id);
   }
 
+  /**
+   * Retrieve the internal {@link ShapeObject} for a shape by id.
+   *
+   * @param id - Shape id.
+   * @returns The `ShapeObject`, or `undefined` if not found.
+   */
   get(id: string): ShapeObject | undefined {
     return this._pool.get(id);
   }
 
+  /**
+   * Remove all shapes, stop all animations, and release all halo objects.
+   */
   clear(): void {
     this._scene.clear();
     this._ticker?.stopAll();
@@ -204,18 +293,39 @@ export class ShapePlugin implements CanvasPlugin {
 
   // ── Animation API ─────────────────────────────────────────────────────────
 
+  /**
+   * Start one or more animations on a shape.
+   *
+   * @remarks
+   * Registers the shape with {@link AnimationTicker} so it receives per-frame updates.
+   * Multiple animation targets (`body`, `border`) can be active simultaneously.
+   *
+   * @param id - Id of the shape to animate.
+   * @param animations - Animation spec (e.g. `{ body: { type: 'breathe' } }`).
+   */
   animate(id: string, animations: ShapeAnimations): void {
     const obj = this._pool.get(id);
     if (!obj || !this._ticker) return;
     this._ticker.start(obj, animations);
   }
 
+  /**
+   * Stop an active animation on a shape.
+   *
+   * @param id - Id of the shape.
+   * @param layer - Optionally target only `'border'` or `'body'`. Omit to stop all.
+   */
   stopAnimation(id: string, layer?: 'border' | 'body'): void {
     this._ticker?.stop(id, layer);
     // If halo was animated, return it
     if (!layer || layer === 'body') this._halos.return(id);
   }
 
+  /**
+   * Destroy the plugin. Stops the animation ticker, returns all halos,
+   * and clears the shape pool.
+   * Called automatically by {@link PluginSystem.unregister}.
+   */
   destroy(): void {
     this._ticker?.destroy();
     this._halos.destroy();

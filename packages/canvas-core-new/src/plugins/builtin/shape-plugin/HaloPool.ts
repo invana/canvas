@@ -8,6 +8,18 @@ import type { Container } from 'pixi.js';
 import type { ShapeObject } from './ShapeObject.js';
 import { drawCircleGlow } from '../../../graphics-utils/index.js';
 
+/**
+ * `HaloPool` is a fixed-size pool of pre-allocated `PIXI.Graphics` objects used
+ * to render hover/selection halos without allocating at runtime.
+ *
+ * @remarks
+ * Graphics instances are **rented** when a shape is hovered and **returned** on
+ * pointer-out. The pool size caps the number of simultaneous halos (default 40).
+ * When the pool is exhausted, additional halos are silently skipped rather than
+ * allocating new objects.
+ *
+ * This class is internal to {@link ShapePlugin}.
+ */
 export class HaloPool {
   private _pool: Graphics[] = [];
   private _rented = new Map<string, Graphics>();
@@ -20,7 +32,13 @@ export class HaloPool {
     }
   }
 
-  /** Rent a halo Graphics for a shape. Draws the halo immediately. */
+  /**
+   * Rent a halo `Graphics` for a shape and attach it to the scene layer.
+   * Draws the halo immediately using the shape’s `halo` spec.
+   * No-op if the shape already has a rented halo.
+   *
+   * @param shape - The {@link ShapeObject} to render a halo for.
+   */
   rent(shape: ShapeObject): void {
     if (this._rented.has(shape.id)) return; // already rented
     const g = this._pool.pop();
@@ -31,7 +49,12 @@ export class HaloPool {
     this._rented.set(shape.id, g);
   }
 
-  /** Return the halo for a shape back to the pool. */
+  /**
+   * Return the halo for a shape back to the pool.
+   * Removes it from the scene layer and clears the `Graphics` for reuse.
+   *
+   * @param shapeId - Id of the shape whose halo should be returned.
+   */
   return(shapeId: string): void {
     const g = this._rented.get(shapeId);
     if (!g) return;
@@ -41,7 +64,12 @@ export class HaloPool {
     this._rented.delete(shapeId);
   }
 
-  /** Redraw a currently-rented halo (called by AnimationTicker for animated halos) */
+  /**
+   * Redraw the currently-rented halo for a shape.
+   * Called by {@link AnimationTicker} on each frame for animated halos.
+   *
+   * @param shape - The {@link ShapeObject} whose halo should be redrawn.
+   */
   redraw(shape: ShapeObject): void {
     const g = this._rented.get(shape.id);
     if (!g) return;
@@ -49,12 +77,17 @@ export class HaloPool {
     this._drawHalo(g, shape);
   }
 
+  /** Return all currently rented halos to the pool. */
   returnAll(): void {
     for (const [id] of this._rented) {
       this.return(id);
     }
   }
 
+  /**
+   * Return all halos and destroy all `Graphics` instances.
+   * Called by {@link ShapePlugin.destroy}.
+   */
   destroy(): void {
     this.returnAll();
     for (const g of this._pool) g.destroy();

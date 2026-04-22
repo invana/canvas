@@ -12,6 +12,18 @@ export interface CameraBounds {
   maxY: number;
 }
 
+/**
+ * `CameraTracker` computes the world-space AABB of the current viewport and
+ * notifies {@link SceneContainer} whenever the camera moves or zooms so that
+ * the visible shape set can be updated.
+ *
+ * @remarks
+ * The computed bounds include a 10% padding on each side for smooth edge entry
+ * (shapes slightly outside the visible area are pre-attached before the user
+ * actually pans to them).
+ *
+ * This class is internal to {@link ShapePlugin}.
+ */
 export class CameraTracker {
   private _camera: CameraAPI;
   private _onChange: (bounds: CameraBounds) => void;
@@ -30,12 +42,16 @@ export class CameraTracker {
     events.on('camera:reset', () => this._emit());
   }
 
-  /** Current world-space viewport AABB with a small padding for smooth edge entry */
+  /** Current world-space viewport AABB with a 10% padding for smooth edge entry. */
   get bounds(): CameraBounds {
     return this._compute();
   }
 
-  /** Notify the scene container of an initial cull after setup */
+  /**
+   * Immediately compute the current viewport bounds and notify the scene
+   * container. Call once after `setData()` and `fit()` to apply an initial
+   * visibility pass.
+   */
   flush(): void {
     this._emit();
   }

@@ -261,6 +261,6 @@ export const AllShapes: Story = {
     const totalW = COL_COUNT * CELL_W;
     const totalH = 7 * CELL_H + PAD_TOP + 40;
     canvas.camera.panTo(totalW / 2, totalH / 2);
-    canvas.camera.zoom(0.85);
+    canvas.camera.fitContent(40);
   },
 };

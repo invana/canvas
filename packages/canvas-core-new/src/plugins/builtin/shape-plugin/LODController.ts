@@ -32,6 +32,21 @@ const DEFAULTS: LODThresholds = {
   full: 0.4,
 };
 
+/**
+ * `LODController` maps the current camera zoom level to a {@link RenderDetail}
+ * enum value and notifies callers when the level changes.
+ *
+ * @remarks
+ * The four detail levels drive `ShapeObject.draw()`:
+ * - `DOT` — 2 px dot only (for very low zoom or massive graphs)
+ * - `FILL_BORDER` — fill + border, no labels or halos
+ * - `FULL` — fill + border + halos on hover
+ * - `DETAIL` — everything including text labels
+ *
+ * Thresholds can be overridden via {@link ShapePluginOptions.lod}.
+ *
+ * This class is internal to {@link ShapePlugin}.
+ */
 export class LODController {
   private _thresholds: LODThresholds;
   /** Start at DETAIL so labels show at startup (synced from camera.scale in ShapePlugin.register) */
@@ -41,7 +56,12 @@ export class LODController {
     this._thresholds = { ...DEFAULTS, ...thresholds };
   }
 
-  /** Call whenever camera zoom changes. Returns true if detail level changed. */
+  /**
+   * Re-evaluate the detail level for a new zoom scale.
+   *
+   * @param zoom - The current camera scale (1 = 100%).
+   * @returns `true` if the detail level changed, `false` if it stayed the same.
+   */
   update(zoom: number): boolean {
     const next = this._compute(zoom);
     if (next === this._current) return false;
@@ -49,6 +69,7 @@ export class LODController {
     return true;
   }
 
+  /** The current {@link RenderDetail} level. */
   get current(): RenderDetail {
     return this._current;
   }

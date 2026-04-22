@@ -9,6 +9,19 @@ import type { SceneContainer } from './SceneContainer.js';
 import type { HaloPool } from './HaloPool.js';
 import type { ShapeAnimations } from './spec/animations.js';
 
+/**
+ * `AnimationTicker` drives per-frame updates for animated shapes.
+ *
+ * @remarks
+ * Only shapes with active animations are stored in the internal `_animated` map,
+ * so the per-frame cost is **O(animated)**, not O(total shapes).
+ *
+ * Each tick advances numeric fields in `ShapeObject._animState` and sets a
+ * `dirty` flag. Only dirty shapes that are currently visible trigger a
+ * `SceneContainer.redraw()` call, keeping GPU command submissions minimal.
+ *
+ * This class is internal to {@link ShapePlugin}.
+ */
 export class AnimationTicker {
   private _animated = new Map<string, ShapeObject>();
   private _scene: SceneContainer;
@@ -24,14 +37,24 @@ export class AnimationTicker {
     this._ticker.add(this._bound);
   }
 
-  /** Register a shape for per-frame animation */
+  /**
+   * Register a shape for per-frame animation.
+   *
+   * @param obj - The {@link ShapeObject} to animate.
+   * @param animations - Animation declarations for `body` and/or `border`.
+   */
   start(obj: ShapeObject, animations: ShapeAnimations): void {
     obj.animations = animations;
     obj._animState.startTime = performance.now();
     this._animated.set(obj.id, obj);
   }
 
-  /** Stop all or specific layer animation for a shape */
+  /**
+   * Stop all or a specific layer’s animation for a shape.
+   *
+   * @param id - Shape id.
+   * @param layer - Target layer (`'border'` or `'body'`). Omit to stop all animations.
+   */
   stop(id: string, layer?: 'border' | 'body'): void {
     const obj = this._animated.get(id);
     if (!obj) return;
@@ -48,6 +71,7 @@ export class AnimationTicker {
     }
   }
 
+  /** Stop all animations and remove all shapes from the animated set. */
   stopAll(): void {
     for (const obj of this._animated.values()) {
       obj.animations = {};
@@ -55,6 +79,10 @@ export class AnimationTicker {
     this._animated.clear();
   }
 
+  /**
+   * Remove the ticker listener and release all animated shape references.
+   * Called by {@link ShapePlugin.destroy}.
+   */
   destroy(): void {
     this._ticker.remove(this._bound);
     this._animated.clear();
