@@ -7,6 +7,7 @@ import type { ShapeObject } from '../ShapeObject.js';
 export type ShapeEventType =
   | 'click'
   | 'dblclick'
+  | 'contextmenu'
   | 'pointerover'
   | 'pointerout'
   | 'pointermove'

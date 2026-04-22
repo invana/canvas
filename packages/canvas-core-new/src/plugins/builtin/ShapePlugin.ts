@@ -15,6 +15,7 @@ import type { LODThresholds } from './shape-plugin/LODController.js';
 import {
   ShapeClickEvent,
   ShapeDblClickEvent,
+  ShapeContextMenuEvent,
   ShapePointerOverEvent,
   ShapePointerOutEvent,
   ShapePointerMoveEvent,
@@ -111,6 +112,12 @@ export class ShapePlugin implements CanvasPlugin {
     });
     ctx.events.on('canvas:clicked', (e) => {
       this._onPointerClick(e.worldX, e.worldY, e.nativeEvent);
+    });
+    ctx.events.on('canvas:dblclicked', (e) => {
+      this._onPointerDblClick(e.worldX, e.worldY, e.nativeEvent);
+    });
+    ctx.events.on('canvas:contextmenu', (e) => {
+      this._onPointerContextMenu(e.worldX, e.worldY, e.nativeEvent);
     });
 
     // CameraTracker — initial flush + camera-driven culling
@@ -289,6 +296,16 @@ export class ShapePlugin implements CanvasPlugin {
     if (hit) this._emitBus(hit, 'click', worldX, worldY, originalEvent);
   }
 
+  private _onPointerDblClick(worldX: number, worldY: number, originalEvent: PointerEvent): void {
+    const hit = this._pool.hitTest(worldX, worldY);
+    if (hit) this._emitBus(hit, 'dblclick', worldX, worldY, originalEvent);
+  }
+
+  private _onPointerContextMenu(worldX: number, worldY: number, originalEvent: PointerEvent): void {
+    const hit = this._pool.hitTest(worldX, worldY);
+    if (hit) this._emitBus(hit, 'contextmenu', worldX, worldY, originalEvent);
+  }
+
   // Emit a shape interaction onto the global EventBus (shape:* namespace).
   // All consumers listen via canvas.events.on('shape:click', ...) etc.
   private _emitBus(
@@ -305,6 +322,7 @@ export class ShapePlugin implements CanvasPlugin {
     switch (event) {
       case 'click':       return this._ctx.events.emit('shape:click',       new ShapeClickEvent(base));
       case 'dblclick':    return this._ctx.events.emit('shape:dblclick',    new ShapeDblClickEvent(base));
+      case 'contextmenu': return this._ctx.events.emit('shape:contextmenu', new ShapeContextMenuEvent(base));
       case 'pointerover': return this._ctx.events.emit('shape:pointerover', new ShapePointerOverEvent(base));
       case 'pointerout':  return this._ctx.events.emit('shape:pointerout',  new ShapePointerOutEvent(base));
       case 'pointermove': return this._ctx.events.emit('shape:pointermove', new ShapePointerMoveEvent(base));

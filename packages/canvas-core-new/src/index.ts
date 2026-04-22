@@ -70,6 +70,7 @@ export {
   ShapeDragBaseEvent,
   ShapeClickEvent,
   ShapeDblClickEvent,
+  ShapeContextMenuEvent,
   ShapePointerOverEvent,
   ShapePointerOutEvent,
   ShapePointerMoveEvent,

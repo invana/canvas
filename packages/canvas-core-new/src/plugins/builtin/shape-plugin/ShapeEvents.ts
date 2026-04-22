@@ -125,3 +125,8 @@ export class ShapeDragEndEvent extends ShapeDragBaseEvent {
   declare readonly type: 'shape:dragend';
   constructor(f: ShapeDragEventFields) { super('shape:dragend', f); }
 }
+
+export class ShapeContextMenuEvent extends ShapeBaseEvent {
+  declare readonly type: 'shape:contextmenu';
+  constructor(f: ShapeEventFields) { super('shape:contextmenu', f); }
+}

@@ -44,6 +44,7 @@ export {
   ShapeDragBaseEvent,
   ShapeClickEvent,
   ShapeDblClickEvent,
+  ShapeContextMenuEvent,
   ShapePointerOverEvent,
   ShapePointerOutEvent,
   ShapePointerMoveEvent,
@@ -86,6 +87,7 @@ import type {
 import type {
   ShapeClickEvent,
   ShapeDblClickEvent,
+  ShapeContextMenuEvent,
   ShapePointerOverEvent,
   ShapePointerOutEvent,
   ShapePointerMoveEvent,
@@ -153,6 +155,7 @@ export interface CanvasEventMap {
   // ── Shape events ──────────────────────────────────────────────────────────
   'shape:click':           ShapeClickEvent;
   'shape:dblclick':        ShapeDblClickEvent;
+  'shape:contextmenu':     ShapeContextMenuEvent;
   'shape:pointerover':     ShapePointerOverEvent;
   'shape:pointerout':      ShapePointerOutEvent;
   'shape:pointermove':     ShapePointerMoveEvent;
