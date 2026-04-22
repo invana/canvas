@@ -29,7 +29,7 @@
 
 import type { Meta, StoryObj } from '@storybook/html';
 import { Canvas, DrawingPlugin } from '@invana/canvas-core-new';
-import { createContainer } from '../../../../src/div-utils.js';
+import { createContainer } from '../../../../../src/div-utils.js';
 
 const meta: Meta = {
   title: 'Canvas/canvas-core/Plugins/DrawingPlugin',

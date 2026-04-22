@@ -6,8 +6,8 @@
  */
 import type { Meta, StoryObj } from '@storybook/html';
 import { Canvas, BackgroundPlugin, DrawingPlugin } from '@invana/canvas-core-new';
-import { createContainer } from '../../../../src/div-utils.js';
-import { drawScatter } from './_utils.js';
+import { createContainer } from '../../../../../src/div-utils.js';
+import { drawScatter } from '../_utils.js';
 import GUI from 'lil-gui';
 
 const meta: Meta = { title: 'Canvas/canvas-core/Plugins/BackgroundPlugin' };

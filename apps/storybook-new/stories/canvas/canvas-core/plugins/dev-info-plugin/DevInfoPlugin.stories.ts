@@ -15,7 +15,7 @@ import type { Meta, StoryObj } from '@storybook/html';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin, DrawingPlugin, DevInfoPlugin } from '@invana/canvas-core-new';
 import type { DevInfoCorner } from '@invana/canvas-core-new';
-import { createContainer } from '../../../../src/div-utils.js';
+import { createContainer } from '../../../../../src/div-utils.js';
 
 const meta: Meta = {
   title: 'Canvas/canvas-core/plugins/DevInfoPlugin',

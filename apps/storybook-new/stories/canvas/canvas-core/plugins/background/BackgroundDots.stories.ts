@@ -1,22 +1,21 @@
 /**
- * Background — Interactive
+ * Background — Dots
  *
- * All options in one place. Switch type, pattern, colours, and toggle
- * followCamera to compare fixed vs world-tracking background.
+ * Tiled dot pattern.
+ * Toggle followCamera to see the dots scroll & scale with the camera.
  */
 import type { Meta, StoryObj } from '@storybook/html';
 import { Canvas, BackgroundPlugin, DrawingPlugin } from '@invana/canvas-core-new';
-import type { BackgroundType, PatternType } from '@invana/canvas-core-new';
-import { createContainer } from '../../../../src/div-utils.js';
-import { drawScatter } from './_utils.js';
+import { createContainer } from '../../../../../src/div-utils.js';
+import { drawScatter } from '../_utils.js';
 import GUI from 'lil-gui';
 
 const meta: Meta = { title: 'Canvas/canvas-core/Plugins/BackgroundPlugin' };
 export default meta;
 type Story = StoryObj;
 
-export const Interactive: Story = {
-  name: 'Interactive',
+export const Dots: Story = {
+  name: 'Dots',
   render: () => createContainer(),
   play: async () => {
     const container = document.getElementById('canvas-example');
@@ -26,11 +25,11 @@ export const Interactive: Story = {
       key: 'bg',
       type: 'pattern',
       patternType: 'dots',
-      color: '#595959',
+      color: '#4a4a6a',
       backgroundColor: '#1a1a2e',
-      size: 1.5,
-      spacing: 30,
-      alpha: 0.6,
+      size: 2,
+      spacing: 28,
+      alpha: 0.8,
       followCamera: false,
     });
 
@@ -42,27 +41,21 @@ export const Interactive: Story = {
     await canvas.plugins.register(draw);
     drawScatter(draw, container.clientWidth || 800, container.clientHeight || 600);
 
-    const gui = new GUI({ title: 'Background — Interactive', container });
+    const gui = new GUI({ title: 'Background — Dots', container });
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;';
-
     const params = {
-      type: 'pattern' as BackgroundType,
-      patternType: 'dots' as PatternType,
       followCamera: false,
       backgroundColor: '#1a1a2e',
-      color: '#595959',
-      size: 1.5,
-      spacing: 30,
-      alpha: 0.6,
+      color: '#4a4a6a',
+      size: 2,
+      spacing: 28,
+      alpha: 0.8,
     };
-
-    gui.add(params, 'type', ['solid', 'pattern']).name('Type').onChange((v: BackgroundType) => bg.setOptions({ type: v }));
-    gui.add(params, 'patternType', ['dots', 'grid', 'lines']).name('Pattern').onChange((v: PatternType) => bg.setOptions({ patternType: v }));
     gui.add(params, 'followCamera').name('Follow camera').onChange((v: boolean) => bg.setOptions({ followCamera: v }));
     gui.addColor(params, 'backgroundColor').name('Background').onChange((v: string) => bg.setOptions({ backgroundColor: v }));
-    gui.addColor(params, 'color').name('Pattern colour').onChange((v: string) => bg.setOptions({ color: v }));
-    gui.add(params, 'size', 0.5, 8, 0.5).name('Size').onChange((v: number) => bg.setOptions({ size: v }));
-    gui.add(params, 'spacing', 5, 100, 2).name('Spacing').onChange((v: number) => bg.setOptions({ spacing: v }));
+    gui.addColor(params, 'color').name('Dot colour').onChange((v: string) => bg.setOptions({ color: v }));
+    gui.add(params, 'size', 0.5, 8, 0.5).name('Dot size').onChange((v: number) => bg.setOptions({ size: v }));
+    gui.add(params, 'spacing', 10, 80, 2).name('Spacing').onChange((v: number) => bg.setOptions({ spacing: v }));
     gui.add(params, 'alpha', 0, 1, 0.05).name('Alpha').onChange((v: number) => bg.setOptions({ alpha: v }));
   },
 };
