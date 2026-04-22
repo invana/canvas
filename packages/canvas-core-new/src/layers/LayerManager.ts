@@ -1,6 +1,7 @@
 import { Container } from 'pixi.js';
 import type { Layer, LayerManager, LayerOptions } from './types.js';
 import type { EventBus } from '../events/EventBus.js';
+import { LayerAddedEvent, LayerRemovedEvent, LayerVisibilityChangedEvent } from '../events/layer-events.js';
 
 class LayerImpl implements Layer {
   readonly id: string;
@@ -47,7 +48,7 @@ export class LayerManagerImpl implements LayerManager {
     const layer = new LayerImpl(options);
     this._layers.set(options.id, layer);
     this._root.addChild(layer._container);
-    this._events.emit('layer:added', { layerId: options.id });
+    this._events.emit('layer:added', new LayerAddedEvent({ layerId: options.id }));
     return layer._container;
   }
 
@@ -63,7 +64,7 @@ export class LayerManagerImpl implements LayerManager {
     const layer = this._layers.get(id);
     if (layer) {
       layer.visible = true;
-      this._events.emit('layer:visibility-changed', { layerId: id, visible: true });
+      this._events.emit('layer:visibility-changed', new LayerVisibilityChangedEvent({ layerId: id, visible: true }));
     }
   }
 
@@ -71,7 +72,7 @@ export class LayerManagerImpl implements LayerManager {
     const layer = this._layers.get(id);
     if (layer) {
       layer.visible = false;
-      this._events.emit('layer:visibility-changed', { layerId: id, visible: false });
+      this._events.emit('layer:visibility-changed', new LayerVisibilityChangedEvent({ layerId: id, visible: false }));
     }
   }
 
@@ -93,7 +94,7 @@ export class LayerManagerImpl implements LayerManager {
       this._root.removeChild(layer._container);
       layer._container.destroy({ children: true });
       this._layers.delete(id);
-      this._events.emit('layer:removed', { layerId: id });
+      this._events.emit('layer:removed', new LayerRemovedEvent({ layerId: id }));
     }
   }
 

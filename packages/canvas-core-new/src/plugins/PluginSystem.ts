@@ -1,4 +1,5 @@
 import type { CanvasPlugin, PluginContext } from './types.js';
+import { PluginRegisteredEvent, PluginDestroyedEvent, PluginEnabledEvent, PluginDisabledEvent } from '../events/plugin-events.js';
 
 /**
  * PluginSystem — manages plugin registration and lifecycle.
@@ -31,7 +32,7 @@ export class PluginSystem {
     }
     await plugin.register(this._ctx);
     this._plugins.set(plugin.id, plugin);
-    this._ctx.events.emit('plugin:registered', { pluginId: plugin.id });
+    this._ctx.events.emit('plugin:registered', new PluginRegisteredEvent({ pluginId: plugin.id }));
   }
 
   /**
@@ -64,10 +65,10 @@ export class PluginSystem {
     if (!plugin) return;
     if (enabled) {
       plugin.enable?.();
-      this._ctx?.events.emit('plugin:enabled', { pluginId: id });
+      this._ctx?.events.emit('plugin:enabled', new PluginEnabledEvent({ pluginId: id }));
     } else {
       plugin.disable?.();
-      this._ctx?.events.emit('plugin:disabled', { pluginId: id });
+      this._ctx?.events.emit('plugin:disabled', new PluginDisabledEvent({ pluginId: id }));
     }
   }
 
@@ -81,7 +82,7 @@ export class PluginSystem {
     if (!plugin) return;
     plugin.destroy();
     this._plugins.delete(id);
-    this._ctx?.events.emit('plugin:destroyed', { pluginId: id });
+    this._ctx?.events.emit('plugin:destroyed', new PluginDestroyedEvent({ pluginId: id }));
   }
 
   /** Destroy and unregister all plugins. Called automatically by `Canvas.destroy()`. */

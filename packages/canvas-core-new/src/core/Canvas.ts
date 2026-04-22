@@ -4,6 +4,12 @@ import { Camera } from '../camera/Camera.js';
 import { LayerManagerImpl } from '../layers/LayerManager.js';
 import { PluginSystem } from '../plugins/PluginSystem.js';
 import { EventBus } from '../events/EventBus.js';
+import {
+  CanvasPointerDownEvent,
+  CanvasPointerMoveEvent,
+  CanvasPointerUpEvent,
+  CanvasClickedEvent,
+} from '../events/canvas-events.js';
 import type { CameraAPI } from '../camera/CameraAPI.js';
 import type { LayerManager } from '../layers/types.js';
 import type { CanvasPlugin } from '../plugins/types.js';
@@ -123,44 +129,44 @@ export class Canvas {
     vp.on('clicked', (data) => {
       const native = (data.event as unknown as { nativeEvent?: PointerEvent }).nativeEvent
         ?? data.event as unknown as PointerEvent;
-      events.emit('canvas:clicked', {
+      events.emit('canvas:clicked', new CanvasClickedEvent({
         worldX: data.world.x, worldY: data.world.y,
         screenX: data.screen.x, screenY: data.screen.y,
-        originalEvent: native,
-      });
+        nativeEvent: native,
+      }));
     });
 
     vp.on('pointermove', (e) => {
       const world = vp.toWorld(e.global.x, e.global.y);
       const native = (e as unknown as { nativeEvent?: PointerEvent }).nativeEvent
         ?? e as unknown as PointerEvent;
-      events.emit('canvas:pointermove', {
+      events.emit('canvas:pointermove', new CanvasPointerMoveEvent({
         worldX: world.x, worldY: world.y,
         screenX: e.global.x, screenY: e.global.y,
-        originalEvent: native,
-      });
+        nativeEvent: native,
+      }));
     });
 
     vp.on('pointerdown', (e) => {
       const world = vp.toWorld(e.global.x, e.global.y);
       const native = (e as unknown as { nativeEvent?: PointerEvent }).nativeEvent
         ?? e as unknown as PointerEvent;
-      events.emit('canvas:pointerdown', {
+      events.emit('canvas:pointerdown', new CanvasPointerDownEvent({
         worldX: world.x, worldY: world.y,
         screenX: e.global.x, screenY: e.global.y,
-        originalEvent: native,
-      });
+        nativeEvent: native,
+      }));
     });
 
     vp.on('pointerup', (e) => {
       const world = vp.toWorld(e.global.x, e.global.y);
       const native = (e as unknown as { nativeEvent?: PointerEvent }).nativeEvent
         ?? e as unknown as PointerEvent;
-      events.emit('canvas:pointerup', {
+      events.emit('canvas:pointerup', new CanvasPointerUpEvent({
         worldX: world.x, worldY: world.y,
         screenX: e.global.x, screenY: e.global.y,
-        originalEvent: native,
-      });
+        nativeEvent: native,
+      }));
     });
   }
 

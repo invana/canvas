@@ -1,111 +1,100 @@
-// Well-typed canvas event map — no PixiJS types in payloads
+// Canvas event map — each event key maps to a concrete event class instance.
+// No plain object interfaces: use the class types directly.
 
-import type { Point, Bounds } from './canvas.js';
+// Re-export base classes for plugin authors
+export { CanvasEvent } from '../events/base/CanvasEvent.js';
+export { CanvasPointerEvent } from '../events/base/CanvasPointerEvent.js';
+export type { CanvasPointerEventFields } from '../events/base/CanvasPointerEvent.js';
 
-// ---------------------------------------------------------------------------
-// Camera events
-// ---------------------------------------------------------------------------
+// Re-export concrete canvas / camera / plugin / layer event classes
+export {
+  CanvasPointerDownEvent,
+  CanvasPointerMoveEvent,
+  CanvasPointerUpEvent,
+  CanvasClickedEvent,
+  CanvasDblClickedEvent,
+  CanvasContextMenuEvent,
+} from '../events/canvas-events.js';
 
-/** Emitted when the zoom level changes */
-export interface CameraZoomEvent {
-  /** New absolute scale (1.0 = 100%) */
-  scale: number;
-  /** Screen-space point the zoom was centered on */
-  center: Point;
-}
+export {
+  CameraZoomEvent,
+  CameraPanEvent,
+  CameraFitEvent,
+  CameraResetEvent,
+  CameraAnimateStartEvent,
+  CameraAnimateEndEvent,
+} from '../events/camera-events.js';
 
-/** Emitted when the camera pans */
-export interface CameraPanEvent {
-  /** New camera world-space X position */
-  x: number;
-  /** New camera world-space Y position */
-  y: number;
-}
+export {
+  PluginRegisteredEvent,
+  PluginDestroyedEvent,
+  PluginEnabledEvent,
+  PluginDisabledEvent,
+} from '../events/plugin-events.js';
 
-/** Emitted after `fitContent()` completes */
-export interface CameraFitEvent {
-  /** World-space bounds that were fitted into the viewport */
-  bounds: Bounds;
-}
+export {
+  LayerAddedEvent,
+  LayerRemovedEvent,
+  LayerVisibilityChangedEvent,
+} from '../events/layer-events.js';
 
-/** Emitted at the start of an animated camera transition */
-export interface CameraAnimateStartEvent {
-  targetScale: number;
-  targetX: number;
-  targetY: number;
-}
+// Re-export shape event classes (base + concrete)
+export {
+  ShapeBaseEvent,
+  ShapeDragBaseEvent,
+  ShapeClickEvent,
+  ShapeDblClickEvent,
+  ShapePointerOverEvent,
+  ShapePointerOutEvent,
+  ShapePointerMoveEvent,
+  ShapePointerDownEvent,
+  ShapePointerUpEvent,
+  ShapeDragStartEvent,
+  ShapeDragMoveEvent,
+  ShapeDragEndEvent,
+} from '../plugins/builtin/shape-plugin/ShapeEvents.js';
+export type { ShapeEventFields, ShapeDragEventFields } from '../plugins/builtin/shape-plugin/ShapeEvents.js';
 
-// ---------------------------------------------------------------------------
-// Canvas background pointer events
-// ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
-// Shape events (also emitted on the global EventBus with shape: prefix)
-// ---------------------------------------------------------------------------
-
-/** Emitted on the EventBus for any per-shape pointer interaction */
-export interface ShapeBusEvent {
-  /** The id of the shape that was interacted with */
-  shapeId: string;
-  /** X coordinate in world space */
-  worldX: number;
-  /** Y coordinate in world space */
-  worldY: number;
-  /** The original browser PointerEvent */
-  originalEvent: PointerEvent;
-}
-
-/** Extended ShapeBusEvent for drag events */
-export interface ShapeDragBusEvent extends ShapeBusEvent {
-  /** World-space X delta from the previous dragmove (or dragstart) */
-  dx: number;
-  /** World-space Y delta from the previous dragmove (or dragstart) */
-  dy: number;
-}
-
-// ---------------------------------------------------------------------------
-
-/** Emitted on pointer interactions with the canvas background (not with any element) */
-export interface CanvasBgPointerEvent {
-  /** X coordinate in world space */
-  worldX: number;
-  /** Y coordinate in world space */
-  worldY: number;
-  /** X coordinate relative to the canvas element */
-  screenX: number;
-  /** Y coordinate relative to the canvas element */
-  screenY: number;
-  /** The original browser PointerEvent */
-  originalEvent: PointerEvent;
-}
-
-// ---------------------------------------------------------------------------
-// Plugin lifecycle events
-// ---------------------------------------------------------------------------
-
-/** Emitted when a plugin is registered or destroyed */
-export interface PluginLifecycleEvent {
-  /** The `id` of the affected plugin */
-  pluginId: string;
-}
-
-// ---------------------------------------------------------------------------
-// Layer events
-// ---------------------------------------------------------------------------
-
-/** Emitted when a layer's visibility changes */
-export interface LayerVisibilityEvent {
-  /** The id of the affected layer */
-  layerId: string;
-  /** New visibility state */
-  visible: boolean;
-}
-
-/** Emitted when a layer is added or removed */
-export interface LayerEvent {
-  /** The id of the affected layer */
-  layerId: string;
-}
+// Import concrete classes for the map
+import type {
+  CanvasPointerDownEvent,
+  CanvasPointerMoveEvent,
+  CanvasPointerUpEvent,
+  CanvasClickedEvent,
+  CanvasDblClickedEvent,
+  CanvasContextMenuEvent,
+} from '../events/canvas-events.js';
+import type {
+  CameraZoomEvent,
+  CameraPanEvent,
+  CameraFitEvent,
+  CameraResetEvent,
+  CameraAnimateStartEvent,
+  CameraAnimateEndEvent,
+} from '../events/camera-events.js';
+import type {
+  PluginRegisteredEvent,
+  PluginDestroyedEvent,
+  PluginEnabledEvent,
+  PluginDisabledEvent,
+} from '../events/plugin-events.js';
+import type {
+  LayerAddedEvent,
+  LayerRemovedEvent,
+  LayerVisibilityChangedEvent,
+} from '../events/layer-events.js';
+import type {
+  ShapeClickEvent,
+  ShapeDblClickEvent,
+  ShapePointerOverEvent,
+  ShapePointerOutEvent,
+  ShapePointerMoveEvent,
+  ShapePointerDownEvent,
+  ShapePointerUpEvent,
+  ShapeDragStartEvent,
+  ShapeDragMoveEvent,
+  ShapeDragEndEvent,
+} from '../plugins/builtin/shape-plugin/ShapeEvents.js';
 
 // ---------------------------------------------------------------------------
 // Master event map
@@ -113,17 +102,27 @@ export interface LayerEvent {
 
 /**
  * Full map of all events emitted by the canvas and its subsystems.
- * Use with `canvas.events.on(eventName, handler)`.
+ * Each key maps to a **concrete event class** — no plain object payloads.
+ *
+ * Downstream packages can extend this map via module augmentation:
+ * ```ts
+ * declare module '@invana/canvas-core-new' {
+ *   interface CanvasEventMap {
+ *     'graph:node:click': GraphNodeClickEvent;
+ *   }
+ * }
+ * ```
  *
  * @example
  * ```ts
- * canvas.events.on('camera:zoom', ({ scale }) => console.log('zoom:', scale));
- * canvas.events.on('canvas:clicked', ({ worldX, worldY }) => console.log(worldX, worldY));
- * canvas.events.on('plugin:registered', ({ pluginId }) => console.log('plugin added:', pluginId));
+ * canvas.events.on('camera:zoom', (e) => console.log(e.scale));
+ * canvas.events.on('canvas:clicked', (e) => console.log(e.worldX, e.worldY));
+ * canvas.events.on('shape:click', (e) => console.log(e.shapeId, e.nativeEvent.ctrlKey));
+ * canvas.events.on('shape:dragmove', (e) => console.log(e.dx, e.dy));
  * ```
  */
 export interface CanvasEventMap {
-  // Camera
+  // ── Camera ────────────────────────────────────────────────────────────────
   /** Fired when zoom level changes */
   'camera:zoom':           CameraZoomEvent;
   /** Fired when the camera pans */
@@ -131,44 +130,46 @@ export interface CanvasEventMap {
   /** Fired after fitContent() completes */
   'camera:fit':            CameraFitEvent;
   /** Fired when camera is reset to origin */
-  'camera:reset':          Record<string, never>;
+  'camera:reset':          CameraResetEvent;
   /** Fired at the start of an animated camera transition */
   'camera:animate-start':  CameraAnimateStartEvent;
   /** Fired when an animated camera transition completes */
-  'camera:animate-end':    Record<string, never>;
+  'camera:animate-end':    CameraAnimateEndEvent;
 
-  // Canvas background
-  /** Fired on pointerdown on the canvas background */
-  'canvas:pointerdown':    CanvasBgPointerEvent;
+  // ── Canvas background pointer events ─────────────────────────────────────
+  /** Fired on pointerdown on the canvas background (not a shape) */
+  'canvas:pointerdown':    CanvasPointerDownEvent;
   /** Fired on pointermove over the canvas background */
-  'canvas:pointermove':    CanvasBgPointerEvent;
+  'canvas:pointermove':    CanvasPointerMoveEvent;
   /** Fired on pointerup on the canvas background */
-  'canvas:pointerup':      CanvasBgPointerEvent;
+  'canvas:pointerup':      CanvasPointerUpEvent;
   /** Fired on a single click/tap on the canvas background */
-  'canvas:clicked':        CanvasBgPointerEvent;
-  'canvas:dblclicked':     CanvasBgPointerEvent;
-  'canvas:contextmenu':    CanvasBgPointerEvent;
+  'canvas:clicked':        CanvasClickedEvent;
+  /** Fired on a double-click on the canvas background */
+  'canvas:dblclicked':     CanvasDblClickedEvent;
+  /** Fired on right-click / context-menu on the canvas background */
+  'canvas:contextmenu':    CanvasContextMenuEvent;
 
-  // Shape events (global bus — fired for any shape interaction)
-  'shape:click':        ShapeBusEvent;
-  'shape:dblclick':     ShapeBusEvent;
-  'shape:pointerover':  ShapeBusEvent;
-  'shape:pointerout':   ShapeBusEvent;
-  'shape:pointermove':  ShapeBusEvent;
-  'shape:pointerdown':  ShapeBusEvent;
-  'shape:pointerup':    ShapeBusEvent;
-  'shape:dragstart':    ShapeDragBusEvent;
-  'shape:dragmove':     ShapeDragBusEvent;
-  'shape:dragend':      ShapeDragBusEvent;
+  // ── Shape events ──────────────────────────────────────────────────────────
+  'shape:click':           ShapeClickEvent;
+  'shape:dblclick':        ShapeDblClickEvent;
+  'shape:pointerover':     ShapePointerOverEvent;
+  'shape:pointerout':      ShapePointerOutEvent;
+  'shape:pointermove':     ShapePointerMoveEvent;
+  'shape:pointerdown':     ShapePointerDownEvent;
+  'shape:pointerup':       ShapePointerUpEvent;
+  'shape:dragstart':       ShapeDragStartEvent;
+  'shape:dragmove':        ShapeDragMoveEvent;
+  'shape:dragend':         ShapeDragEndEvent;
 
-  // Plugin lifecycle
-  'plugin:registered':     PluginLifecycleEvent;
-  'plugin:destroyed':      PluginLifecycleEvent;
-  'plugin:enabled':        PluginLifecycleEvent;
-  'plugin:disabled':       PluginLifecycleEvent;
+  // ── Plugin lifecycle ──────────────────────────────────────────────────────
+  'plugin:registered':     PluginRegisteredEvent;
+  'plugin:destroyed':      PluginDestroyedEvent;
+  'plugin:enabled':        PluginEnabledEvent;
+  'plugin:disabled':       PluginDisabledEvent;
 
-  // Layer
-  'layer:visibility-changed': LayerVisibilityEvent;
-  'layer:added':           LayerEvent;
-  'layer:removed':         LayerEvent;
+  // ── Layer ─────────────────────────────────────────────────────────────────
+  'layer:added':              LayerAddedEvent;
+  'layer:removed':            LayerRemovedEvent;
+  'layer:visibility-changed': LayerVisibilityChangedEvent;
 }

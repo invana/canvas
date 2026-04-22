@@ -1,16 +1,30 @@
 /**
  * ShapePlugin — Events: Interactive
  *
- * Demonstrates the ShapePlugin event system:
- *   - click / dblclick → update fill color, log event
- *   - pointerenter / pointerleave → hover highlight
- *   - dragstart / drag / dragend → move shape, log event
- *   - wildcard listener → borderGlow animation on any click
+ * Demonstrates shape events routed through the unified canvas.events bus.
+ * Each handler receives a typed event class instance:
  *
- * Events are logged to the Storybook Actions tab.
+ *   shape:click       → ShapeClickEvent       (shapeId, worldX/Y, nativeEvent, type, timestamp)
+ *   shape:dblclick    → ShapeDblClickEvent
+ *   shape:pointerover → ShapePointerOverEvent
+ *   shape:pointerout  → ShapePointerOutEvent
+ *   shape:dragstart   → ShapeDragStartEvent   (+ dx, dy)
+ *   shape:dragmove    → ShapeDragMoveEvent    (+ dx, dy)
+ *   shape:dragend     → ShapeDragEndEvent     (+ dx, dy)
+ *
+ * All events are logged to the Storybook Actions tab.
  */
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, BackgroundPlugin, ShapePlugin, DevInfoPlugin } from '@invana/canvas-core-new';
+import {
+  Canvas, BackgroundPlugin, ShapePlugin, DevInfoPlugin,
+  type ShapeClickEvent,
+  type ShapeDblClickEvent,
+  type ShapePointerOverEvent,
+  type ShapePointerOutEvent,
+  type ShapeDragStartEvent,
+  type ShapeDragMoveEvent,
+  type ShapeDragEndEvent,
+} from '@invana/canvas-core-new';
 import GUI from 'lil-gui';
 import { action } from 'storybook/actions';
 
@@ -69,65 +83,17 @@ export const EventsInteractive: Story = {
       },
     ] as never[]);
 
-    // ── Per-shape listeners ─────────────────────────────────────────────────
-    const clickColors = ['#1d4ed8', '#7c3aed', '#db2777', '#b45309', '#065f46'];
-    let clickIdx = 0;
+    // ── Typed event listeners via canvas.events ────────────────────────────
+    // Each handler receives a concrete event class instance, not a plain object.
+    // e.type, e.timestamp, e.nativeEvent, e.stopPropagation() are all available.
 
-    shapes.on('clicker', 'click', (e) => {
-      clickIdx = (clickIdx + 1) % clickColors.length;
-      shapes.update('clicker', { fill: { type: 'solid', color: clickColors[clickIdx] } });
-      action('clicker:click')(e);
-    });
-
-    shapes.on('clicker', 'dblclick', (e) => {
-      shapes.update('clicker', { fill: { type: 'solid', color: '#1d4ed8' } });
-      clickIdx = 0;
-      action('clicker:dblclick')(e);
-    });
-
-    shapes.on('hoverer', 'pointerover', (e) => {
-      shapes.update('hoverer', {
-        fill: { type: 'solid', color: '#059669' },
-        border: { color: '#34d399', width: 3 },
-      });
-      action('hoverer:pointerover')(e);
-    });
-    shapes.on('hoverer', 'pointerout', (e) => {
-      shapes.update('hoverer', {
-        fill: { type: 'solid', color: '#065f46' },
-        border: { color: '#6ee7b7', width: 2 },
-      });
-      action('hoverer:pointerout')(e);
-    });
-
-    let isDragging = false;
-    shapes.on('dragger', 'dragstart', (e) => {
-      isDragging = true;
-      shapes.update('dragger', { border: { color: '#fca5a5', width: 3.5 } });
-      action('dragger:dragstart')(e);
-    });
-    shapes.on('dragger', 'dragmove', (e) => {
-      if (!isDragging) return;
-      const spec = shapes.get('dragger') as { x: number; y: number } | undefined;
-      if (!spec) return;
-      shapes.update('dragger', { x: spec.x + e.dx, y: spec.y + e.dy });
-      action('dragger:dragmove')(e);
-    });
-    shapes.on('dragger', 'dragend', (e) => {
-      isDragging = false;
-      shapes.update('dragger', { border: { color: '#fca5a5', width: 2 } });
-      action('dragger:dragend')(e);
-    });
-
-    // ── Wildcard: borderGlow on any click ──────────────────────────────────
-    shapes.on('*', 'click', (e) => {
-      const id = e.shape.id;
-      shapes.animate(id, {
-        borderGlowPulse: { minAlpha: 0.2, maxAlpha: 1.0, speed: 3 },
-      });
-      setTimeout(() => shapes.stopAnimation(id), 1800);
-      action('*:click')(e);
-    });
+    canvas.events.on('shape:click',       (e: ShapeClickEvent)       => action('shape:click')(e));
+    canvas.events.on('shape:dblclick',    (e: ShapeDblClickEvent)    => action('shape:dblclick')(e));
+    canvas.events.on('shape:pointerover', (e: ShapePointerOverEvent) => action('shape:pointerover')(e));
+    canvas.events.on('shape:pointerout',  (e: ShapePointerOutEvent)  => action('shape:pointerout')(e));
+    canvas.events.on('shape:dragstart',   (e: ShapeDragStartEvent)   => action('shape:dragstart')(e));
+    canvas.events.on('shape:dragmove',    (e: ShapeDragMoveEvent)    => action('shape:dragmove')(e));
+    canvas.events.on('shape:dragend',     (e: ShapeDragEndEvent)     => action('shape:dragend')(e));
 
     // GUI
     const gui = new GUI({ title: 'Events', container: canvasDiv });

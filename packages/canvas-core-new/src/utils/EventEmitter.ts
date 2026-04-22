@@ -14,7 +14,7 @@ type EventHandler<T> = (payload: T) => void;
  * bus.emit('click', { x: 10, y: 20 });
  * ```
  */
-export class EventEmitter<TMap extends Record<string, unknown>> {
+export class EventEmitter<TMap extends object> {
   private _listeners: {
     [K in keyof TMap]?: Set<EventHandler<TMap[K]>>;
   } = {};

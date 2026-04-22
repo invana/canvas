@@ -19,11 +19,69 @@ export type { CanvasPlugin, PluginContext } from './plugins/index.js';
 export { BackgroundPlugin, DrawingPlugin, ShapePlugin, DevInfoPlugin } from './plugins/builtin/index.js';
 export type { CustomShapeFn } from './plugins/builtin/DrawingPlugin.js';
 export type { BackgroundOptions, BackgroundType, PatternType, DrawStyle, PathStyle, BezierPoint, DashStyle, OrthogonalStyle, OrthogonalParams, ArrowStyle, ArrowParams, ArrowType, EffectStyle, CircleGlowParams, RectGlowParams, RippleParams } from './plugins/builtin/index.js';
-export type { ShapePluginOptions, ShapeSpec, ShapeType, ShapeAnimations, ShapeEventType, ShapeEventPayload, DragPayload } from './plugins/builtin/index.js';
+export type { ShapePluginOptions, ShapeSpec, ShapeType, ShapeAnimations } from './plugins/builtin/index.js';
 export type { DevInfoPluginOptions, DevInfoCorner } from './plugins/builtin/index.js';
 
-// Event bus + event map types
+// Event bus
 export { EventBus } from './events/index.js';
+
+// Base event classes (for plugin authors extending the event system)
+export { CanvasEvent, CanvasPointerEvent } from './events/index.js';
+export type { CanvasPointerEventFields } from './events/index.js';
+
+// Concrete canvas event classes
+export {
+  CanvasPointerDownEvent,
+  CanvasPointerMoveEvent,
+  CanvasPointerUpEvent,
+  CanvasClickedEvent,
+  CanvasDblClickedEvent,
+  CanvasContextMenuEvent,
+} from './events/index.js';
+
+// Concrete camera event classes
+export {
+  CameraZoomEvent,
+  CameraPanEvent,
+  CameraFitEvent,
+  CameraResetEvent,
+  CameraAnimateStartEvent,
+  CameraAnimateEndEvent,
+} from './events/index.js';
+
+// Concrete plugin lifecycle event classes
+export {
+  PluginRegisteredEvent,
+  PluginDestroyedEvent,
+  PluginEnabledEvent,
+  PluginDisabledEvent,
+} from './events/index.js';
+
+// Concrete layer event classes
+export {
+  LayerAddedEvent,
+  LayerRemovedEvent,
+  LayerVisibilityChangedEvent,
+} from './events/index.js';
+
+// Shape event classes (base + concrete — for extending and type annotations)
+export {
+  ShapeBaseEvent,
+  ShapeDragBaseEvent,
+  ShapeClickEvent,
+  ShapeDblClickEvent,
+  ShapePointerOverEvent,
+  ShapePointerOutEvent,
+  ShapePointerMoveEvent,
+  ShapePointerDownEvent,
+  ShapePointerUpEvent,
+  ShapeDragStartEvent,
+  ShapeDragMoveEvent,
+  ShapeDragEndEvent,
+} from './plugins/builtin/shape-plugin/ShapeEvents.js';
+export type { ShapeEventFields, ShapeDragEventFields } from './plugins/builtin/shape-plugin/ShapeEvents.js';
+
+// Event map type (augmentable interface)
 export type { CanvasEventMap } from './types/events.js';
 
 // Shared types

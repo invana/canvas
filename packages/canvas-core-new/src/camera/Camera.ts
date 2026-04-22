@@ -3,6 +3,13 @@ import type { EventSystem } from 'pixi.js';
 import type { CameraAPI, CameraAnimationOptions } from './CameraAPI.js';
 import type { Point, Bounds } from '../types/canvas.js';
 import type { EventBus } from '../events/EventBus.js';
+import {
+  CameraZoomEvent,
+  CameraPanEvent,
+  CameraResetEvent,
+  CameraAnimateStartEvent,
+  CameraAnimateEndEvent,
+} from '../events/camera-events.js';
 
 /**
  * Camera — internal implementation of CameraAPI.
@@ -43,13 +50,13 @@ export class Camera implements CameraAPI {
 
   private _wireEvents(): void {
     this._viewport.on('moved', () => {
-      this._events.emit('camera:pan', { x: this._viewport.x, y: this._viewport.y });
+      this._events.emit('camera:pan', new CameraPanEvent({ x: this._viewport.x, y: this._viewport.y }));
     });
     this._viewport.on('zoomed', () => {
-      this._events.emit('camera:zoom', {
+      this._events.emit('camera:zoom', new CameraZoomEvent({
         scale: this._viewport.scale.x,
         center: { x: this._viewport.x, y: this._viewport.y },
-      });
+      }));
     });
   }
 
@@ -101,16 +108,16 @@ export class Camera implements CameraAPI {
   reset(): void {
     this._viewport.setZoom(1, true);
     this._viewport.moveCenter(0, 0);
-    this._events.emit('camera:reset', {});
+    this._events.emit('camera:reset', new CameraResetEvent());
   }
 
   animate(options: CameraAnimationOptions): void {
     const { x = this._viewport.x, y = this._viewport.y, scale = this._viewport.scale.x, duration = 500 } = options;
-    this._events.emit('camera:animate-start', { targetScale: scale, targetX: x, targetY: y });
+    this._events.emit('camera:animate-start', new CameraAnimateStartEvent({ targetScale: scale, targetX: x, targetY: y }));
     this._viewport.animate({ position: { x, y }, scale, time: duration, removeOnInterrupt: true });
     // animate-end fired after duration — use a simple timeout
     setTimeout(() => {
-      this._events.emit('camera:animate-end', {});
+      this._events.emit('camera:animate-end', new CameraAnimateEndEvent());
     }, duration);
   }
 
