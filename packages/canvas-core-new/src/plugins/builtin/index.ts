@@ -9,3 +9,25 @@ export type { AnimationHandler, AnimSlot } from './shape-plugin/index.js';
 export type { BreatheOptions, ColorCycleOptions, FadeInOptions, PulseOptions, MarchingAntsOptions, DashedFlowOptions, BorderGlowOptions } from './shape-plugin/index.js';
 export { DevInfoPlugin } from './DevInfoPlugin.js';
 export type { DevInfoPluginOptions, DevInfoCorner } from './DevInfoPlugin.js';
+
+// ── ElementPlugin ─────────────────────────────────────────────────────────────
+export { ElementPlugin } from './element-plugin/index.js';
+export type { ElementPluginOptions, SolidCtor, ConnectorCtor } from './element-plugin/index.js';
+export { BaseSolid, BaseConnector, RenderDetail as ElementRenderDetail } from './element-plugin/index.js';
+export type { DrawContext, Point as ElementPoint, BBox as ElementBBox, PathCommand } from './element-plugin/index.js';
+export type { BaseSolidSpec, BaseConnectorSpec, ArrowSpec, DrawStyle as ElementDrawStyle, PathStyle as ElementPathStyle } from './element-plugin/index.js';
+export { CircleElement, RectElement, EllipseElement, PolygonElement, DiamondElement, StarElement } from './element-plugin/index.js';
+export type { CircleElementSpec, RectElementSpec, EllipseElementSpec, PolygonElementSpec, DiamondElementSpec, StarElementSpec } from './element-plugin/index.js';
+export { StraightConnector, BezierConnector, OrthogonalConnector } from './element-plugin/index.js';
+export type { BezierConnectorSpec, OrthogonalConnectorSpec, OrthogonalRouteDirection } from './element-plugin/index.js';
+export {
+  ElementBaseEvent, ElementDragBaseEvent,
+  ElementClickEvent, ElementDblClickEvent, ElementContextMenuEvent,
+  ElementPointerOverEvent, ElementPointerOutEvent, ElementPointerMoveEvent,
+  ElementPointerDownEvent, ElementPointerUpEvent,
+  ElementDragStartEvent, ElementDragMoveEvent, ElementDragEndEvent,
+  ElementStateChangeEvent, ElementAddedEvent, ElementRemovedEvent,
+} from './element-plugin/index.js';
+export type { ElementEventFields, ElementDragEventFields, ElementStateChangeFields, ElementLifecycleFields } from './element-plugin/index.js';
+export { ElementObject } from './element-plugin/index.js';
+export type { AnyElement } from './element-plugin/index.js';

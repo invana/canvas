@@ -23,9 +23,17 @@
   │     RectElement, PolygonElement, EllipseElement,
   │     StarElement, DiamondElement, HexagonElement
   ├── extends BaseConnector:
-  │     StraightConnector, BezierConnector, OrthogonalConnector, QuadraticConnector
+  │     StraightConnector, BezierConnector, QuadraticConnector,
+  │     OrthogonalConnector, RoundedConnector, SmoothConnector, JumpoverConnector
+  ├── Routers (pure fns):
+  │     NormalRouter, OrthRouter, OneSideRouter,
+  │     ErRouter, ManhattanRouter, MetroRouter
+  ├── Markers (pure fns):
+  │     triangle, triangle-outline, block, classic, diamond, diamond-outline,
+  │     circle, circle-plus, ellipse, cross, async, square, path
   └── ElementPlugin (CanvasPlugin)
-        registry, CRUD, states, LOD, spatial index (RBush), event routing
+        registry, CRUD, states, LOD, spatial index (RBush), event routing,
+        port system, edge label positioning, router/connector/marker registries
 
 @invana/plugin-graph                — Layer 3: graph domain semantics
   └── depends on ElementPlugin for all rendering
@@ -170,14 +178,245 @@ StyleResolver.resolve<TStyle>(
 | `HexagonElement` | `PolygonElement` with `sides: 6` | |
 | `StarElement` | nearest outer/inner edge | `points`, `innerRadius` |
 
-### 3.2 Connector shapes (extend BaseConnector)
+### 3.2 Two-Stage Edge Pipeline
 
-| Class | `route()` output | `waypoints` role |
+Edge rendering is split into two composable stages, matching the X6 / AntV model:
+
+```
+vertices (user-supplied waypoints)
+      │
+      ▼
+  ┌─────────┐
+  │ Router  │  — adds/reshapes intermediate points (geometry only, no drawing)
+  └─────────┘
+      │  processed point list (start, routed points, end)
+      ▼
+  ┌───────────┐
+  │ Connector │  — converts point list into a rendered path (stroke style, curves, etc.)
+  └───────────┘
+      │
+      ▼
+   PathCommand[] → DrawContext.strokePath()
+```
+
+- **Router** is responsible for geometry: it takes `(from, to, vertices)` and returns an augmented list of `Point[]`, adding extra bend/segment points as needed.
+- **Connector** is responsible for rendering: it takes the router's `Point[]` and produces a `PathCommand[]` (straight lines, cubic curves, rounded corners, etc.).
+- The two can be combined freely: `orth` router + `rounded` connector = orthogonal path with rounded corners.
+
+---
+
+### 3.3 Built-in Routers
+
+Routers are pure functions: `(from: Point, to: Point, vertices: Point[], args: RouterArgs, context: RouterContext) => Point[]`.
+
+| Key | Class / fn | Description |
 |---|---|---|
-| `StraightConnector` | Two-point line | — |
-| `BezierConnector` | Cubic bezier | `[0]` = cp1, `[1]` = cp2 |
-| `QuadraticConnector` | Quadratic bezier | `[0]` = cp |
-| `OrthogonalConnector` | Right-angle segments | User-defined bend points; rest auto-routed |
+| `normal` | `NormalRouter` | Default — passes `vertices` through unchanged; no extra points added |
+| `orth` | `OrthRouter` | All segments made horizontal or vertical; inserts extra points at corners |
+| `oneSide` | `OneSideRouter` | Constrained orthogonal; always exactly 3 segments; path exits the source node from one side only |
+| `er` | `ErRouter` | Entity-Relationship style; Z-shaped diagonal segments |
+| `manhattan` | `ManhattanRouter` | Smart orthogonal; auto-avoids other node bounding boxes (A\* pathfinding) |
+| `metro` | `MetroRouter` | Like `manhattan` but allows 45° diagonal sections (metro-map style) |
+| custom | `RouterRegistry` | Register any function via `elementPlugin.registerRouter(name, fn)` |
+
+**Router args examples:**
+
+```ts
+// orth router with padding
+{ name: 'orth', args: { padding: 20 } }
+
+// oneSide — exit direction
+{ name: 'oneSide', args: { side: 'bottom' } }
+
+// er router — direction of exit/enter
+{ name: 'er', args: { offset: 32, direction: 'H' } }
+
+// manhattan — grid step and obstacle margin
+{ name: 'manhattan', args: { step: 10, padding: 20 } }
+
+// shorthand (no args)
+router: 'orth'
+```
+
+**RouterContext** gives routers read-only access to all solid bounding boxes (needed for obstacle avoidance in `manhattan` / `metro`):
+
+```ts
+interface RouterContext {
+  getSolidBBox(id: string): BBox | undefined;
+  getAllSolidBBoxes(): Map<string, BBox>;
+}
+```
+
+---
+
+### 3.4 Built-in Connectors
+
+Connectors are pure functions: `(points: Point[], args: ConnectorArgs) => PathCommand[]`.
+
+| Key | Class / fn | Description |
+|---|---|---|
+| `straight` | `StraightConnector` | Straight lines through all routed points (`M … L … L`) |
+| `smooth` | `SmoothConnector` | Cubic Bézier curves through all routed points (Catmull-Rom to Bézier conversion) |
+| `bezier` | `BezierConnector` | Single cubic Bézier; auto-computes cp1/cp2 from `curvature` or uses first two waypoints as explicit control points |
+| `quadratic` | `QuadraticConnector` | Single quadratic Bézier; first waypoint is cp |
+| `rounded` | `RoundedConnector` | Straight segments with circular arcs at joints (radius configurable) |
+| `jumpover` | `JumpoverConnector` | Straight segments; draws a jump-over arc symbol wherever two connectors cross |
+| custom | `ConnectorRegistry` | Register any function via `elementPlugin.registerConnector(name, fn)` |
+
+**Connector args examples:**
+
+```ts
+// smooth — tension controls how tight curves are
+{ name: 'smooth', args: { tension: 0.5 } }
+
+// bezier — auto-curvature
+{ name: 'bezier', args: { curvature: 80 } }
+
+// rounded — corner radius
+{ name: 'rounded', args: { radius: 10 } }
+
+// jumpover — jump size
+{ name: 'jumpover', args: { size: 8, type: 'arc' } }  // type: 'arc' | 'gap' | 'cubic'
+
+// shorthand (no args)
+connector: 'rounded'
+```
+
+---
+
+### 3.5 Markers (Arrows)
+
+Markers are drawn at the `start` and/or `end` of every connector. They are independent of connector type.
+
+**Built-in marker types:**
+
+| Key | Shape | Notes |
+|---|---|---|
+| `none` | — | No marker |
+| `triangle` | Filled triangle | Default end marker |
+| `triangle-outline` | Outlined triangle | |
+| `block` | Wide filled block arrow | |
+| `classic` | Classic open arrowhead | |
+| `diamond` | Filled diamond | |
+| `diamond-outline` | Outlined diamond | |
+| `circle` | Filled circle | |
+| `circle-plus` | Circle with `+` | |
+| `ellipse` | Filled ellipse | `rx`, `ry` configurable |
+| `cross` | × cross | |
+| `async` | Half-open arrowhead (async-style) | |
+| `square` | Filled square | |
+| `path` | Arbitrary SVG-style path | Provide `d: string` |
+| custom | Any fn | Register via `elementPlugin.registerMarker(name, fn)` |
+
+**MarkerSpec:**
+
+```ts
+interface MarkerSpec {
+  type: string;                   // built-in key or registered custom name
+  size?: number;                  // width in world-space units (default: 8)
+  fill?: string;                  // fill color (defaults to connector stroke color)
+  stroke?: string;                // stroke color
+  strokeWidth?: number;
+  // type-specific args
+  rx?: number;                    // for 'ellipse'
+  ry?: number;                    // for 'ellipse'
+  d?: string;                     // for 'path'
+  open?: boolean;                 // for 'triangle', 'block' — outline only
+}
+```
+
+**Usage in `BaseConnectorSpec`:**
+
+```ts
+{
+  startMarker: { type: 'circle', size: 6 },
+  endMarker:   { type: 'triangle', size: 10, fill: '#58a6ff' },
+}
+// or shorthand
+{
+  startMarker: 'none',
+  endMarker:   'triangle',
+}
+```
+
+---
+
+### 3.6 Edge Labels
+
+Multiple labels are supported per connector. Each label has a `position` that describes where along the path it sits.
+
+```ts
+interface EdgeLabelSpec {
+  text: string;
+  position?: number | EdgeLabelPosition;  // 0.0–1.0 along path, default: 0.5 (midpoint)
+  style?: TextStyle;
+  background?: FillSpec;                  // optional pill/rect behind text
+  offset?: { x?: number; y?: number };   // pixel offset from path at position
+  keepUpright?: boolean;                  // flip label if path goes right-to-left (default: true)
+}
+
+type EdgeLabelPosition =
+  | number                  // 0.0 = start, 0.5 = midpoint, 1.0 = end
+  | 'start'                 // alias for 0.0
+  | 'mid'                   // alias for 0.5
+  | 'end';                  // alias for 1.0
+```
+
+**LOD rule:** labels render only at `DETAIL` zoom level (> 1.5×) by default. Configurable per `ElementPlugin` instance.
+
+---
+
+### 3.7 Port System
+
+Ports are named connection points on a solid. Connectors may target a port instead of the solid's auto-computed perimeter point.
+
+```ts
+interface PortSpec {
+  id: string;
+  position: PortPosition;     // where on the solid the port sits
+  style?: PortStyle;          // visual appearance (dot, diamond, square, etc.)
+  interactive?: boolean;      // whether the port responds to pointer events
+}
+
+type PortPosition =
+  | { side: 'top' | 'bottom' | 'left' | 'right'; offset?: number }
+  | { x: number; y: number }    // absolute world-space position
+  | { rel: { x: number; y: number } };  // 0–1 relative to solid bbox
+
+// Example solid spec with ports
+const node: RectSolidSpec = {
+  id: 'n1',
+  x: 100, y: 100,
+  width: 120, height: 60,
+  ports: [
+    { id: 'out', position: { side: 'right' } },
+    { id: 'in',  position: { side: 'left'  } },
+    { id: 'top', position: { side: 'top'   } },
+  ],
+};
+
+// Connector targeting a named port
+const connector: BaseConnectorSpec = {
+  id: 'e1',
+  from: { solidId: 'n1', portId: 'out' },   // ← port reference
+  to:   { solidId: 'n2', portId: 'in'  },
+};
+```
+
+`ElementPlugin` resolves `{ solidId, portId }` to world-space `Point` before passing to the router. Port positions update automatically when a solid is moved.
+
+---
+
+### 3.8 Connector shapes summary
+
+| Class | Router default | Connector | Waypoints role |
+|---|---|---|---|
+| `StraightConnector` | `normal` | `straight` | — |
+| `BezierConnector` | `normal` | `bezier` | `[0]` = cp1, `[1]` = cp2 |
+| `QuadraticConnector` | `normal` | `quadratic` | `[0]` = cp |
+| `OrthogonalConnector` | `orth` | `straight` | User bend points; rest auto-routed |
+| `RoundedConnector` | `orth` | `rounded` | User bend points; corners rounded |
+| `SmoothConnector` | `normal` | `smooth` | Passed as Catmull-Rom spline knots |
 
 ---
 
@@ -203,18 +442,45 @@ interface BaseSolidSpec {
 
 interface BaseConnectorSpec {
   id: string;
-  from: Point;                          // source position (world-space)
-  to: Point;                            // target position (world-space)
-  waypoints?: Point[];                  // intermediate control/bend points
+
+  // Source / target — can be a world-space point, a solid id, or a solid + port reference
+  from: ConnectorTerminal;
+  to: ConnectorTerminal;
+
+  // Intermediate waypoints fed to the router before path generation
+  vertices?: Point[];
+
+  // Two-stage pipeline overrides (falls back to connector class defaults)
+  router?: string | { name: string; args?: Record<string, unknown> };
+  connector?: string | { name: string; args?: Record<string, unknown> };
+
+  // Visual
   stroke?: StrokeSpec;
+  startMarker?: string | MarkerSpec;    // default: none
+  endMarker?: string | MarkerSpec;      // default: 'triangle'
   opacity?: number;
   zIndex?: number;
+
+  // Labels (multiple supported, positioned along path)
+  labels?: EdgeLabelSpec[];
+
+  // Interaction
   interactive?: boolean;
   cursor?: string;
+
+  // States + animations
   states?: Partial<Record<string, ConnectorStateStyle>>;
   animations?: ConnectorAnimations;
+
+  // Arbitrary consumer data (not used by plugin-elements)
   data?: Record<string, unknown>;
 }
+
+// Terminal can be an explicit world-space point, a solid id, or a solid + port reference
+type ConnectorTerminal =
+  | Point                                        // { x, y } — fixed world-space point
+  | { solidId: string }                          // auto-computes perimeter connection point
+  | { solidId: string; portId: string };         // connects to a named port
 ```
 
 ---
@@ -244,6 +510,8 @@ elementPlugin.getConnector(id: string): BaseConnector | undefined
 elementPlugin.getCenter(id: string): Point
 elementPlugin.getBBox(id: string): BBox
 elementPlugin.getConnectionPoint(id: string, toX: number, toY: number): Point
+elementPlugin.getPortPosition(solidId: string, portId: string): Point | undefined
+elementPlugin.resolveTerminal(terminal: ConnectorTerminal): Point
 
 // States
 elementPlugin.setState(id: string, state: string, active: boolean): void
@@ -255,9 +523,12 @@ elementPlugin.getStates(id: string): string[]
 elementPlugin.animate(id: string, animations: SolidAnimations | ConnectorAnimations): void
 elementPlugin.stopAnimation(id: string, type?: string): void
 
-// Registry — extend with custom shapes
+// Registry — extend with custom shapes and pipeline functions
 elementPlugin.registerElement(type: string, cls: typeof BaseSolid): void
 elementPlugin.registerConnector(type: string, cls: typeof BaseConnector): void
+elementPlugin.registerRouter(name: string, fn: RouterFn): void
+elementPlugin.registerConnectorFn(name: string, fn: ConnectorFn): void
+elementPlugin.registerMarker(name: string, fn: MarkerFn): void
 
 // Misc
 elementPlugin.clear(): void

@@ -16,7 +16,7 @@ export { PluginSystem } from './plugins/index.js';
 export type { CanvasPlugin, PluginContext } from './plugins/index.js';
 
 // Built-in plugins
-export { BackgroundPlugin, DrawingPlugin, ShapePlugin, DevInfoPlugin } from './plugins/builtin/index.js';
+export { BackgroundPlugin, DrawingPlugin, ShapePlugin, DevInfoPlugin, ElementPlugin } from './plugins/builtin/index.js';
 export type { CustomShapeFn } from './plugins/builtin/DrawingPlugin.js';
 export type { BackgroundOptions, BackgroundType, PatternType, DrawStyle, PathStyle, BezierPoint, DashStyle, OrthogonalStyle, OrthogonalParams, ArrowStyle, ArrowParams, ArrowType, EffectStyle, CircleGlowParams, RectGlowParams, RippleParams } from './plugins/builtin/index.js';
 export type { ShapePluginOptions, ShapeSpec, ShapeType, ShapeAnimations } from './plugins/builtin/index.js';
@@ -24,6 +24,26 @@ export type { BreatheOptions, ColorCycleOptions, FadeInOptions, PulseOptions, Ma
 export type { AnimationHandler, AnimSlot } from './plugins/builtin/index.js';
 export { AnimationRegistry, defaultRegistry } from './plugins/builtin/index.js';
 export type { DevInfoPluginOptions, DevInfoCorner } from './plugins/builtin/index.js';
+
+// ElementPlugin public API
+export type { ElementPluginOptions, SolidCtor, ConnectorCtor } from './plugins/builtin/index.js';
+export { BaseSolid, BaseConnector, ElementRenderDetail } from './plugins/builtin/index.js';
+export type { DrawContext, BaseSolidSpec, BaseConnectorSpec, ElementPoint, ElementBBox, PathCommand, ArrowSpec as ElementArrowSpec, ElementDrawStyle, ElementPathStyle } from './plugins/builtin/index.js';
+export { CircleElement, RectElement, EllipseElement, PolygonElement, DiamondElement, StarElement } from './plugins/builtin/index.js';
+export type { CircleElementSpec, RectElementSpec, EllipseElementSpec, PolygonElementSpec, DiamondElementSpec, StarElementSpec } from './plugins/builtin/index.js';
+export { StraightConnector, BezierConnector, OrthogonalConnector } from './plugins/builtin/index.js';
+export type { BezierConnectorSpec, OrthogonalConnectorSpec, OrthogonalRouteDirection } from './plugins/builtin/index.js';
+export {
+  ElementBaseEvent, ElementDragBaseEvent,
+  ElementClickEvent, ElementDblClickEvent, ElementContextMenuEvent,
+  ElementPointerOverEvent, ElementPointerOutEvent, ElementPointerMoveEvent,
+  ElementPointerDownEvent, ElementPointerUpEvent,
+  ElementDragStartEvent, ElementDragMoveEvent, ElementDragEndEvent,
+  ElementStateChangeEvent, ElementAddedEvent, ElementRemovedEvent,
+} from './plugins/builtin/index.js';
+export type { ElementEventFields, ElementDragEventFields, ElementStateChangeFields, ElementLifecycleFields } from './plugins/builtin/index.js';
+export { ElementObject } from './plugins/builtin/index.js';
+export type { AnyElement } from './plugins/builtin/index.js';
 
 // Event bus
 export { EventBus } from './events/index.js';

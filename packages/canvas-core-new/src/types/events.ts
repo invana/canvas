@@ -97,6 +97,22 @@ import type {
   ShapeDragMoveEvent,
   ShapeDragEndEvent,
 } from '../plugins/builtin/shape-plugin/ShapeEvents.js';
+import type {
+  ElementClickEvent,
+  ElementDblClickEvent,
+  ElementContextMenuEvent,
+  ElementPointerOverEvent,
+  ElementPointerOutEvent,
+  ElementPointerMoveEvent,
+  ElementPointerDownEvent,
+  ElementPointerUpEvent,
+  ElementDragStartEvent,
+  ElementDragMoveEvent,
+  ElementDragEndEvent,
+  ElementStateChangeEvent,
+  ElementAddedEvent,
+  ElementRemovedEvent,
+} from '../plugins/builtin/element-plugin/ElementEvents.js';
 
 // ---------------------------------------------------------------------------
 // Master event map
@@ -164,6 +180,22 @@ export interface CanvasEventMap {
   'shape:dragstart':       ShapeDragStartEvent;
   'shape:dragmove':        ShapeDragMoveEvent;
   'shape:dragend':         ShapeDragEndEvent;
+
+  // ── Element events (ElementPlugin) ─────────────────────────────────────────
+  'element:click':         ElementClickEvent;
+  'element:dblclick':      ElementDblClickEvent;
+  'element:contextmenu':   ElementContextMenuEvent;
+  'element:pointerover':   ElementPointerOverEvent;
+  'element:pointerout':    ElementPointerOutEvent;
+  'element:pointermove':   ElementPointerMoveEvent;
+  'element:pointerdown':   ElementPointerDownEvent;
+  'element:pointerup':     ElementPointerUpEvent;
+  'element:dragstart':     ElementDragStartEvent;
+  'element:dragmove':      ElementDragMoveEvent;
+  'element:dragend':       ElementDragEndEvent;
+  'element:statechange':   ElementStateChangeEvent;
+  'element:added':         ElementAddedEvent;
+  'element:removed':       ElementRemovedEvent;
 
   // ── Plugin lifecycle ──────────────────────────────────────────────────────
   'plugin:registered':     PluginRegisteredEvent;
