@@ -25,9 +25,48 @@ A parallel new architecture is being built without disturbing anything that alre
 2. **Rename `primitives/` → `graphics-utils/`** — internal only, not exported.
 3. **Full typed event system** — `EventBus<CanvasEventMap>`, all payloads typed, no `any`; `camera:*` replaces `viewport:*`.
 4. **Lean Canvas orchestrator** (~150 lines) delegates to: `Renderer` (internal), `Camera`, `LayerManager`, `PluginSystem`, `EventBus`.
-5. **Split graph viz into `packages/graph-canvas`** (`@invana/graph-canvas`) — `GraphDataPlugin`, all node/edge elements, interaction plugins live there. `canvas-core-new` stays generic.
+5. **Split graph viz into `packages/plugin-graph`** (`@invana/plugin-graph`) — `GraphPlugin`, all node/edge elements, interaction plugins, and layout adapters live there. `canvas-core-new` stays a generic engine.
 6. **pixi.js upgraded to `^8.18.1`**.
 7. Performance (implemented progressively): `cullable`, `cacheAsTexture`, `renderGroup`, dirty-flag batching, RBush culling, LOD by zoom, RenderTexture pooling, WebWorker layout, GPU instancing.
+
+---
+
+## Package Naming Convention
+
+This project follows a **`@invana/plugin-*` convention** for all canvas plugins. This is intentional:
+
+- `@invana/canvas` is the **engine** — a standalone, generic WebGL/WebGPU canvas
+- Everything else is a **plugin** that requires the engine as a host
+- The `plugin-` prefix signals to the community: *this is an extension, not a standalone library*
+- Community developers publishing their own plugins should use the unscoped `invana-plugin-*` convention (e.g. `invana-plugin-heatmap`) to avoid requiring npm org access
+
+**Official package lineup:**
+
+| Package | Purpose |
+|---|---|
+| `@invana/canvas` | The engine (canvas-core-new) — WebGL/WebGPU renderer, Camera, LayerManager, PluginSystem, EventBus |
+| `@invana/plugin-graph` | Graph visualization — NodePlugin, EdgePlugin, routing, layouts, selection |
+| `@invana/plugin-maps` | Geographic map layer (future) |
+| `@invana/plugin-annotations` | Annotations overlay — sticky notes, highlights, freehand (future) |
+| `@invana/plugin-layout-force` | D3 force layout adapter (layouts-d3-force → rename) |
+| `@invana/plugin-layout-dagre` | Hierarchical/tree layout adapter (future) |
+| `@invana/canvas-utils` | Math, color, geometry utilities — not a plugin, no engine dependency |
+| `@invana/example-datasets` | Sample graph datasets for demos/tests |
+
+**Community plugin convention:**
+```
+@invana/plugin-*       — official Invana plugins (this repo)
+invana-plugin-*        — community plugins (unscoped npm package)
+```
+
+**Current in-repo names vs target names** (rename happens when packages are published):
+
+| Current | Target |
+|---|---|
+| `@invana/canvas-core-new` | `@invana/canvas` |
+| `@invana/canvas-core` | deprecated (legacy, do not rename) |
+| `@invana/layouts-d3-force` | `@invana/plugin-layout-force` |
+| _(does not exist yet)_ | `@invana/plugin-graph` |
 
 ---
 
@@ -35,16 +74,17 @@ A parallel new architecture is being built without disturbing anything that alre
 
 ```
 packages/
-  canvas-core/         @invana/canvas-core      — legacy engine (stable, do not touch)
-  canvas-core-new/     @invana/canvas-core-new  — NEW architecture (active)
-  canvas-utils/        @invana/canvas-utils      — math, color, geometry utilities
-  layouts-d3-force/    @invana/layouts-d3-force  — D3 force layout plugin
-  example-datasets/    @invana/example-datasets  — sample graph datasets
-  typescript-config/   @repo/typescript-config   — shared tsconfig
-  eslint-config/       @repo/eslint-config       — shared ESLint config
+  canvas-core/         @invana/canvas-core          — legacy engine (stable, do not touch)
+  canvas-core-new/     @invana/canvas               — NEW architecture (active) [target name]
+  canvas-utils/        @invana/canvas-utils          — math, color, geometry utilities
+  layouts-d3-force/    @invana/plugin-layout-force   — D3 force layout plugin [target name]
+  plugin-graph/        @invana/plugin-graph          — graph visualization plugin (to be created)
+  example-datasets/    @invana/example-datasets      — sample graph datasets
+  typescript-config/   @repo/typescript-config       — shared tsconfig
+  eslint-config/       @repo/eslint-config           — shared ESLint config
 apps/
-  storybook/           @canvas/storybook         — legacy stories (port 6006, stable)
-  storybook-new/       @canvas/storybook-new     — NEW stories (port 6007, active)
+  storybook/           @canvas/storybook             — legacy stories (port 6006, stable)
+  storybook-new/       @canvas/storybook-new         — NEW stories (port 6007, active)
 ```
 
 ---
