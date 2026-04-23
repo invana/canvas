@@ -21,11 +21,22 @@ export interface ArrowParams {
 
 export type ArrowType =
   | 'triangle'
+  | 'triangle-outline'
   | 'triangleOutline'
   | 'thinTriangle'
   | 'diamond'
+  | 'diamond-outline'
   | 'diamondOutline'
   | 'square'
+  | 'square-outline'
   | 'squareOutline'
   | 'circle'
-  | 'circleOutline';
+  | 'circle-outline'
+  | 'circleOutline'
+  | 'block'
+  | 'classic'
+  | 'ellipse'
+  | 'cross'
+  | 'async'
+  | 'circle-plus'
+  | 'none';

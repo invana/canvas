@@ -16,8 +16,17 @@ import {
   drawTriangleArrow,
   drawTriangleOutlineArrow,
   drawDiamondArrow,
+  drawDiamondOutlineArrow,
   drawCircleArrow,
+  drawCircleOutlineArrow,
   drawSquareArrow,
+  drawSquareOutlineArrow,
+  drawClassicArrow,
+  drawBlockArrow,
+  drawEllipseArrow,
+  drawCrossArrow,
+  drawAsyncArrow,
+  drawCirclePlusArrow,
 } from '../../../graphics-utils/arrows/index.js';
 import type { DrawStyle, PathStyle } from '../../../graphics-utils/types.js';
 import type { PathCommand, Point } from './spec/index.js';
@@ -121,13 +130,20 @@ export interface DrawContext {
    * @param color  - Arrow fill / stroke color.
    * @param alpha  - Opacity (0–1).
    */
+  /**
+   * Draw an arrowhead at `tip` pointing in `angle` direction (radians).
+   * Expanded type set covers all built-in marker shapes.
+   * Custom marker types (registered via `ElementPlugin.registerMarker`) are
+   * dispatched through the marker registry and will not reach this method directly.
+   */
   drawArrow(
     tip: Point,
     angle: number,
-    type: 'triangle' | 'triangle-outline' | 'diamond' | 'circle' | 'square',
+    type: string,
     size: number,
     color: string,
     alpha?: number,
+    extraArgs?: Record<string, unknown>,
   ): void;
 }
 
@@ -241,19 +257,37 @@ export class PixiDrawContext implements DrawContext {
   drawArrow(
     tip: Point,
     angle: number,
-    type: 'triangle' | 'triangle-outline' | 'diamond' | 'circle' | 'square',
+    type: string,
     size: number,
     color: string,
     alpha = 1,
+    extraArgs?: Record<string, unknown>,
   ): void {
     const params = { x: tip.x, y: tip.y, angle, size };
-    const style  = { fill: color, fillAlpha: alpha };
+    const style  = { fill: color, fillAlpha: alpha, stroke: color, strokeAlpha: alpha };
     switch (type) {
       case 'triangle':         drawTriangleArrow(this._g, params, style); break;
       case 'triangle-outline': drawTriangleOutlineArrow(this._g, params, style); break;
       case 'diamond':          drawDiamondArrow(this._g, params, style); break;
+      case 'diamond-outline':  drawDiamondOutlineArrow(this._g, params, style); break;
       case 'circle':           drawCircleArrow(this._g, params, style); break;
+      case 'circle-outline':   drawCircleOutlineArrow(this._g, params, style); break;
       case 'square':           drawSquareArrow(this._g, params, style); break;
+      case 'square-outline':   drawSquareOutlineArrow(this._g, params, style); break;
+      case 'block':            drawBlockArrow(this._g, params, style); break;
+      case 'classic':          drawClassicArrow(this._g, params, style); break;
+      case 'cross':            drawCrossArrow(this._g, params, style); break;
+      case 'async':            drawAsyncArrow(this._g, params, style); break;
+      case 'circle-plus':      drawCirclePlusArrow(this._g, params, style); break;
+      case 'ellipse': {
+        const rx = extraArgs?.rx as number | undefined;
+        const ry = extraArgs?.ry as number | undefined;
+        drawEllipseArrow(this._g, params, style, rx, ry);
+        break;
+      }
+      case 'none':             break;
+      // custom types are dispatched by BaseConnector via the marker registry
+      default:                 break;
     }
   }
 

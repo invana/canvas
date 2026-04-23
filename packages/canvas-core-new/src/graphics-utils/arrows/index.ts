@@ -3,3 +3,9 @@ export { drawTriangleArrow, drawTriangleOutlineArrow, drawThinTriangleArrow } fr
 export { drawDiamondArrow, drawDiamondOutlineArrow } from './diamond.js';
 export { drawSquareArrow, drawSquareOutlineArrow } from './square.js';
 export { drawCircleArrow, drawCircleOutlineArrow } from './circle.js';
+export { drawClassicArrow } from './classic.js';
+export { drawBlockArrow } from './block.js';
+export { drawEllipseArrow } from './ellipse.js';
+export { drawCrossArrow } from './cross.js';
+export { drawAsyncArrow } from './async.js';
+export { drawCirclePlusArrow } from './circle-plus.js';

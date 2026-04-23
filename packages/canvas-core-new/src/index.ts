@@ -29,10 +29,12 @@ export type { DevInfoPluginOptions, DevInfoCorner } from './plugins/builtin/inde
 export type { ElementPluginOptions, SolidCtor, ConnectorCtor } from './plugins/builtin/index.js';
 export { BaseSolid, BaseConnector, ElementRenderDetail } from './plugins/builtin/index.js';
 export type { DrawContext, BaseSolidSpec, BaseConnectorSpec, ElementPoint, ElementBBox, PathCommand, ArrowSpec as ElementArrowSpec, ElementDrawStyle, ElementPathStyle } from './plugins/builtin/index.js';
-export { CircleElement, RectElement, EllipseElement, PolygonElement, DiamondElement, StarElement } from './plugins/builtin/index.js';
-export type { CircleElementSpec, RectElementSpec, EllipseElementSpec, PolygonElementSpec, DiamondElementSpec, StarElementSpec } from './plugins/builtin/index.js';
-export { StraightConnector, BezierConnector, OrthogonalConnector } from './plugins/builtin/index.js';
-export type { BezierConnectorSpec, OrthogonalConnectorSpec, OrthogonalRouteDirection } from './plugins/builtin/index.js';
+export { CircleElement, RectElement, EllipseElement, PolygonElement, DiamondElement, StarElement, HexagonElement } from './plugins/builtin/index.js';
+export type { CircleElementSpec, RectElementSpec, EllipseElementSpec, PolygonElementSpec, DiamondElementSpec, StarElementSpec, HexagonElementSpec } from './plugins/builtin/index.js';
+export { StraightConnector, BezierConnector, OrthogonalConnector, QuadraticConnector, RoundedConnector, SmoothConnector } from './plugins/builtin/index.js';
+export type { BezierConnectorSpec, OrthogonalConnectorSpec, OrthogonalRouteDirection, QuadraticConnectorSpec, RoundedConnectorSpec, SmoothConnectorSpec } from './plugins/builtin/index.js';
+export { normalRouter, orthRouter, oneSideRouter, erRouter, BUILTIN_ROUTERS } from './plugins/builtin/index.js';
+export type { RouterFn, RouterContext, OrthRouterArgs, OneSideRouterArgs, ErRouterArgs } from './plugins/builtin/index.js';
 export {
   ElementBaseEvent, ElementDragBaseEvent,
   ElementClickEvent, ElementDblClickEvent, ElementContextMenuEvent,

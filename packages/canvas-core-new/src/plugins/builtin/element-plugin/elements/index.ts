@@ -15,3 +15,6 @@ export type { DiamondElementSpec } from './DiamondElement.js';
 
 export { StarElement } from './StarElement.js';
 export type { StarElementSpec } from './StarElement.js';
+
+export { HexagonElement } from './HexagonElement.js';
+export type { HexagonElementSpec } from './HexagonElement.js';

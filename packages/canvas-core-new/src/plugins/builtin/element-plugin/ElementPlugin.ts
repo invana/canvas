@@ -9,7 +9,7 @@ import { ElementScene } from './ElementScene.js';
 import { ElementObject } from './ElementObject.js';
 import { BaseSolid } from './BaseSolid.js';
 import { BaseConnector } from './BaseConnector.js';
-import type { BaseSolidSpec, BaseConnectorSpec, BBox, Point } from './spec/index.js';
+import type { BaseSolidSpec, BaseConnectorSpec, BBox, Point, RouterFn, ArrowSpec } from './spec/index.js';
 import { CameraTracker } from '../shape-plugin/CameraTracker.js';
 import { LODController } from '../shape-plugin/LODController.js';
 import type { LODThresholds } from '../shape-plugin/LODController.js';
@@ -37,10 +37,17 @@ import { EllipseElement } from './elements/EllipseElement.js';
 import { PolygonElement } from './elements/PolygonElement.js';
 import { DiamondElement } from './elements/DiamondElement.js';
 import { StarElement } from './elements/StarElement.js';
+import { HexagonElement } from './elements/HexagonElement.js';
 // Built-in connector types
 import { StraightConnector } from './connectors/StraightConnector.js';
 import { BezierConnector } from './connectors/BezierConnector.js';
 import { OrthogonalConnector } from './connectors/OrthogonalConnector.js';
+import { QuadraticConnector } from './connectors/QuadraticConnector.js';
+import { RoundedConnector } from './connectors/RoundedConnector.js';
+import { SmoothConnector } from './connectors/SmoothConnector.js';
+// Built-in routers
+import { BUILTIN_ROUTERS } from './routers/builtins.js';
+import type { DrawContext } from './DrawContext.js';
 
 // ── Options ───────────────────────────────────────────────────────────────────
 
@@ -136,6 +143,15 @@ export class ElementPlugin implements CanvasPlugin {
 
   // ── Registries ────────────────────────────────────────────────────────────
 
+  /** @internal — type alias for custom marker functions. */
+  private _markerRegistry = new Map<
+    string,
+    (ctx: DrawContext, tip: Point, angle: number, spec: ArrowSpec) => void
+  >();
+
+  /** @internal — router function registry (built-ins + user-registered). */
+  private _routerRegistry = new Map<string, RouterFn>(BUILTIN_ROUTERS);
+
   private _solidRegistry = new Map<string, SolidCtor>([
     ['circle',   CircleElement   as unknown as SolidCtor],
     ['rect',     RectElement     as unknown as SolidCtor],
@@ -143,12 +159,16 @@ export class ElementPlugin implements CanvasPlugin {
     ['polygon',  PolygonElement  as unknown as SolidCtor],
     ['diamond',  DiamondElement  as unknown as SolidCtor],
     ['star',     StarElement     as unknown as SolidCtor],
+    ['hexagon',  HexagonElement  as unknown as SolidCtor],
   ]);
 
   private _connRegistry = new Map<string, ConnectorCtor>([
     ['straight',    StraightConnector   as unknown as ConnectorCtor],
     ['bezier',      BezierConnector     as unknown as ConnectorCtor],
     ['orthogonal',  OrthogonalConnector as unknown as ConnectorCtor],
+    ['quadratic',   QuadraticConnector  as unknown as ConnectorCtor],
+    ['rounded',     RoundedConnector    as unknown as ConnectorCtor],
+    ['smooth',      SmoothConnector     as unknown as ConnectorCtor],
   ]);
 
   constructor(options: ElementPluginOptions = {}) {
@@ -252,6 +272,27 @@ export class ElementPlugin implements CanvasPlugin {
     this._connRegistry.set(type, cls);
   }
 
+  /**
+   * Register a custom router function under `name`.
+   * After registration, connectors can use it via `router: name` or
+   * `router: { name, args: { ... } }`.
+   */
+  registerRouter(name: string, fn: RouterFn): void {
+    this._routerRegistry.set(name, fn);
+  }
+
+  /**
+   * Register a custom marker (arrowhead) drawing function under `name`.
+   * The function is called with the `DrawContext`, the tip `Point`, the
+   * approach angle (radians), and the full `ArrowSpec`.
+   */
+  registerMarker(
+    name: string,
+    fn: (ctx: DrawContext, tip: Point, angle: number, spec: ArrowSpec) => void,
+  ): void {
+    this._markerRegistry.set(name, fn);
+  }
+
   // ── Solid CRUD ────────────────────────────────────────────────────────────
 
   /**
@@ -320,6 +361,9 @@ export class ElementPlugin implements CanvasPlugin {
       return;
     }
     const element = new Ctor(spec);
+    // Inject router and marker registries so the connector's draw() can use them
+    (element as BaseConnector)._routerRegistry = this._routerRegistry;
+    (element as BaseConnector)._markerRegistry = this._markerRegistry;
     const obj     = new ElementObject(element);
     this._connPool.add(obj);
     this._ctx.events.emit('element:added', new ElementAddedEvent({ elementId: spec.id, elementType: 'connector' }));

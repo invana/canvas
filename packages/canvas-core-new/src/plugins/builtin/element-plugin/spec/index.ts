@@ -37,17 +37,83 @@ export type PathCommand =
  * Use `type: 'none'` to suppress the arrowhead explicitly.
  */
 export interface ArrowSpec {
-  /** Arrow shape. Defaults to `'triangle'`. */
-  type: 'triangle' | 'triangle-outline' | 'diamond' | 'circle' | 'square' | 'none';
+  /**
+   * Arrow shape. Defaults to `'triangle'` on the end, `'none'` on the start.
+   */
+  type:
+    | 'triangle'
+    | 'triangle-outline'
+    | 'diamond'
+    | 'diamond-outline'
+    | 'circle'
+    | 'circle-outline'
+    | 'circle-plus'
+    | 'square'
+    | 'square-outline'
+    | 'block'
+    | 'classic'
+    | 'ellipse'
+    | 'cross'
+    | 'async'
+    | 'none';
   /** Arrow fill/stroke color. Defaults to the connector stroke color. */
   color?: string;
   /** Arrow size in world-space pixels. Defaults to 10. */
   size?: number;
+  /** x-radius for `'ellipse'` markers. Defaults to `size * 0.5`. */
+  rx?: number;
+  /** y-radius for `'ellipse'` markers. Defaults to `size * 0.35`. */
+  ry?: number;
 }
+
+// ── Router / Connector pipeline types ────────────────────────────────────────
+
+/**
+ * Context passed to router functions so they can read other elements' bounding
+ * boxes for obstacle-avoidance routing (manhattan / metro).
+ */
+export interface RouterContext {
+  /** Get the BBox of a solid element by id. Returns `undefined` if not found. */
+  getSolidBBox(id: string): BBox | undefined;
+  /** Get all solid BBoxes keyed by element id. */
+  getAllSolidBBoxes(): Map<string, BBox>;
+}
+
+/**
+ * A router function.  Takes the raw source/target positions and user-defined
+ * vertices, and returns an augmented list of waypoints (without source/target).
+ * The connector class then converts these waypoints (plus source + target) into
+ * `PathCommand[]` for rendering.
+ *
+ * @param from     - Source endpoint (world space).
+ * @param to       - Target endpoint (world space).
+ * @param vertices - User-supplied intermediate waypoints.
+ * @param args     - Router-specific parameters.
+ * @param ctx      - Read-only access to other element bboxes (for obstacle avoidance).
+ */
+export type RouterFn = (
+  from: Point,
+  to: Point,
+  vertices: Point[],
+  args?: Record<string, unknown>,
+  ctx?: RouterContext,
+) => Point[];
+
+/**
+ * A connector function.  Takes a fully-routed list of points (source first,
+ * target last) and returns `PathCommand[]` for rendering.
+ *
+ * @param points - Ordered point list starting at source and ending at target.
+ * @param args   - Connector-specific parameters.
+ */
+export type ConnectorFn = (points: Point[], args?: Record<string, unknown>) => PathCommand[];
 
 // ── Shared re-exports for element authors ─────────────────────────────────────
 
 export type { DrawStyle, PathStyle };
+
+// ── Router / Connector pipeline types ─────────────────────────────────────────
+// (RouterFn, ConnectorFn, RouterContext defined above alongside ArrowSpec)
 
 // ── Base specs ────────────────────────────────────────────────────────────────
 
@@ -105,6 +171,10 @@ export interface BaseSolidSpec {
  * `style` maps directly to {@link PathStyle} from `graphics-utils`.
  * `from` / `to` are world-space endpoint positions. When used by `plugin-graph`
  * these will be the `getConnectionPoint()` results from the source/target nodes.
+ *
+ * The optional `router` and `connector` fields select named pipeline stages
+ * registered on `ElementPlugin`.  If omitted, the connector class's built-in
+ * `route()` method is used as a combined router+connector.
  */
 export interface BaseConnectorSpec {
   /** Unique element id. */
@@ -113,15 +183,42 @@ export interface BaseConnectorSpec {
   from: Point;
   /** Target endpoint in world space. */
   to: Point;
-  /** Intermediate control / bend points. Interpretation depends on the connector class. */
+  /**
+   * Intermediate waypoints.  Fed to the router before path generation.
+   * `vertices` and `waypoints` are interchangeable; `vertices` takes precedence.
+   */
+  vertices?: Point[];
+  /** @deprecated Use `vertices`. */
   waypoints?: Point[];
   /** Optional midpoint label shown at {@link RenderDetail.DETAIL} zoom level. */
   label?: string;
   /** Stroke style. */
   style?: PathStyle;
-  /** Arrowhead at the source end. `undefined` = no arrow. */
+  /**
+   * Named router to run before the connector.
+   * Short form: `router: 'orth'`.
+   * Long form: `router: { name: 'orth', args: { padding: 20 } }`.
+   * When omitted, the connector's own `route()` handles geometry.
+   */
+  router?: string | { name: string; args?: Record<string, unknown> };
+  /**
+   * Named connector fn to use instead of this class's built-in `route()`.
+   * Rarely needed — most callers use different connector *classes* instead.
+   */
+  connector?: string | { name: string; args?: Record<string, unknown> };
+  /**
+   * Arrowhead at the source end.
+   * `undefined` = no arrow.  Shorthand: `startMarker: 'circle'`.
+   */
+  startMarker?: string | ArrowSpec;
+  /** @deprecated Use `startMarker`. */
   startArrow?: ArrowSpec;
-  /** Arrowhead at the target end. Defaults to a small triangle when unset. */
+  /**
+   * Arrowhead at the target end.
+   * Defaults to a small triangle when unset.  Shorthand: `endMarker: 'none'`.
+   */
+  endMarker?: string | ArrowSpec;
+  /** @deprecated Use `endMarker`. */
   endArrow?: ArrowSpec;
   /** Container alpha (0–1). */
   opacity?: number;

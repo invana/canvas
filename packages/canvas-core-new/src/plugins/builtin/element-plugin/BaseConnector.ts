@@ -4,7 +4,15 @@
 
 import type { DrawContext } from './DrawContext.js';
 import { RenderDetail } from '../shape-plugin/LODController.js';
-import type { BaseConnectorSpec, BBox, PathCommand, PathStyle, Point } from './spec/index.js';
+import type {
+  BaseConnectorSpec,
+  ArrowSpec,
+  BBox,
+  PathCommand,
+  PathStyle,
+  Point,
+  RouterFn,
+} from './spec/index.js';
 
 /**
  * Abstract base class for all connector (path/routing) elements managed by
@@ -44,10 +52,18 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
   readonly activeStates: Set<string> = new Set();
 
   /**
-   * Called by {@link ElementObject} when a redraw is needed.
+   * Called by {@link ElementPlugin} to inject the router registry so that
+   * connectors with a `spec.router` field can resolve the named router.
    * @internal
    */
-  _onDirty?: () => void;
+  _routerRegistry?: Map<string, RouterFn>;
+
+  /**
+   * Called by {@link ElementPlugin} to inject the marker registry so that
+   * connectors with custom marker type names can resolve drawing functions.
+   * @internal
+   */
+  _markerRegistry?: Map<string, (ctx: DrawContext, tip: Point, angle: number, spec: ArrowSpec) => void>;
 
   /**
    * Cached route from the last `draw()` call.
@@ -56,6 +72,13 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
    * @internal
    */
   _cachedRoute: PathCommand[] | null = null;
+
+  /**
+   * Called by {@link ElementObject} to trigger a redraw when this element is
+   * marked dirty.  Injected by the pool/scene system; do not set manually.
+   * @internal
+   */
+  _onDirty?: () => void;
 
   constructor(spec: S) {
     this.spec = spec;
@@ -93,34 +116,98 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
    * the base behaviour.
    */
   draw(ctx: DrawContext, detail: RenderDetail): void {
-    const { from, to, waypoints = [], label } = this.spec;
+    const { from, to, label } = this.spec;
     const style = this.resolveStyle();
 
-    this._cachedRoute = this.route(from, to, waypoints);
+    // Resolve waypoints — `vertices` takes precedence over deprecated `waypoints`
+    const rawWaypoints = this.spec.vertices ?? this.spec.waypoints ?? [];
+
+    // Two-stage pipeline: run router if specified, otherwise pass waypoints through
+    const routedWaypoints = this._runRouter(from, to, rawWaypoints);
+
+    this._cachedRoute = this.route(from, to, routedWaypoints);
     ctx.strokePath(this._cachedRoute, style);
 
-    // Default end arrow (triangle)
-    const endArrow = this.spec.endArrow;
-    if (!endArrow || endArrow.type !== 'none') {
+    // Resolve end marker (startMarker > startArrow; endMarker > endArrow)
+    const endMarkerSpec  = this._resolveMarkerSpec(this.spec.endMarker  ?? this.spec.endArrow);
+    const startMarkerSpec = this._resolveMarkerSpec(this.spec.startMarker ?? this.spec.startArrow);
+
+    // Draw end marker (default: triangle)
+    if (!endMarkerSpec || endMarkerSpec.type !== 'none') {
       const angle = this._endTangentAngle(this._cachedRoute, to);
-      const arrowColor = endArrow?.color ?? (style.stroke as string | undefined) ?? '#999999';
-      const arrowType = (endArrow?.type ?? 'triangle') as 'triangle' | 'triangle-outline' | 'diamond' | 'circle' | 'square';
-      ctx.drawArrow(to, angle, arrowType, endArrow?.size ?? 10, arrowColor, style.strokeAlpha ?? 1);
+      const markerType  = endMarkerSpec?.type  ?? 'triangle';
+      const markerColor = endMarkerSpec?.color  ?? (style.stroke as string | undefined) ?? '#999999';
+      const markerSize  = endMarkerSpec?.size   ?? 10;
+      const markerAlpha = style.strokeAlpha ?? 1;
+      this._drawMarker(ctx, to, angle, markerType, markerSize, markerColor, markerAlpha, endMarkerSpec);
     }
 
-    // Optional start arrow
-    const startArrow = this.spec.startArrow;
-    if (startArrow && startArrow.type !== 'none') {
+    // Draw start marker (default: none)
+    if (startMarkerSpec && startMarkerSpec.type !== 'none') {
       const angle = this._startTangentAngle(this._cachedRoute, from);
-      const arrowColor = startArrow.color ?? (style.stroke as string | undefined) ?? '#999999';
-      const arrowType = startArrow.type as 'triangle' | 'triangle-outline' | 'diamond' | 'circle' | 'square';
-      ctx.drawArrow(from, angle, arrowType, startArrow.size ?? 10, arrowColor, style.strokeAlpha ?? 1);
+      const markerColor = startMarkerSpec.color ?? (style.stroke as string | undefined) ?? '#999999';
+      this._drawMarker(ctx, from, angle, startMarkerSpec.type, startMarkerSpec.size ?? 10, markerColor, style.strokeAlpha ?? 1, startMarkerSpec);
     }
 
     if (detail >= RenderDetail.DETAIL && label) {
       const mid = this._getMidpoint();
       ctx.drawLabel(label, mid.x, mid.y - 12);
     }
+  }
+
+  /**
+   * Run the router specified in `spec.router` (if any) to augment waypoints.
+   * If no router is specified, the raw waypoints are returned unchanged.
+   */
+  private _runRouter(from: Point, to: Point, vertices: Point[]): Point[] {
+    const routerField = this.spec.router;
+    if (!routerField || !this._routerRegistry) return vertices;
+
+    const name = typeof routerField === 'string' ? routerField : routerField.name;
+    const args = typeof routerField === 'object' ? routerField.args : undefined;
+    const fn   = this._routerRegistry.get(name);
+    if (!fn) {
+      console.warn(`[BaseConnector] Unknown router: "${name}". Falling back to passthrough.`);
+      return vertices;
+    }
+    return fn(from, to, vertices, args);
+  }
+
+  /**
+   * Normalise a `startMarker` / `endMarker` spec field.
+   * Accepts a string shorthand (e.g. `'triangle'`) or a full {@link ArrowSpec}.
+   */
+  private _resolveMarkerSpec(
+    marker: string | ArrowSpec | undefined,
+  ): ArrowSpec | undefined {
+    if (!marker) return undefined;
+    if (typeof marker === 'string') return { type: marker as ArrowSpec['type'] };
+    return marker;
+  }
+
+  /**
+   * Draw a single arrow marker — dispatches to the custom marker registry for
+   * unknown types, falls through to `DrawContext.drawArrow` for built-in types.
+   */
+  private _drawMarker(
+    ctx: DrawContext,
+    tip: Point,
+    angle: number,
+    type: string,
+    size: number,
+    color: string,
+    alpha: number,
+    spec: ArrowSpec | undefined,
+  ): void {
+    const customFn = this._markerRegistry?.get(type);
+    if (customFn && spec) {
+      customFn(ctx, tip, angle, spec);
+      return;
+    }
+    const extraArgs: Record<string, unknown> = {};
+    if (spec?.rx !== undefined) extraArgs['rx'] = spec.rx;
+    if (spec?.ry !== undefined) extraArgs['ry'] = spec.ry;
+    ctx.drawArrow(tip, angle, type, size, color, alpha, Object.keys(extraArgs).length ? extraArgs : undefined);
   }
 
   /**
@@ -168,8 +255,9 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
    * Falls back to a straight line bbox if no route has been computed yet.
    */
   getBBox(): BBox {
+    const wps = this.spec.vertices ?? this.spec.waypoints ?? [];
     const route = this._cachedRoute
-      ?? this.route(this.spec.from, this.spec.to, this.spec.waypoints ?? []);
+      ?? this.route(this.spec.from, this.spec.to, wps);
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const cmd of route) {
       for (const p of this._cmdPoints(cmd)) {
@@ -254,8 +342,9 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
   // ── Private helpers ───────────────────────────────────────────────────────────
 
   private _getMidpoint(): Point {
+    const wps = this.spec.vertices ?? this.spec.waypoints ?? [];
     const route = this._cachedRoute
-      ?? this.route(this.spec.from, this.spec.to, this.spec.waypoints ?? []);
+      ?? this.route(this.spec.from, this.spec.to, wps);
     const pts: Point[] = [];
     for (const cmd of route) {
       pts.push(...this._cmdPoints(cmd));

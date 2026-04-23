@@ -16,10 +16,12 @@ export type { ElementPluginOptions, SolidCtor, ConnectorCtor } from './element-p
 export { BaseSolid, BaseConnector, RenderDetail as ElementRenderDetail } from './element-plugin/index.js';
 export type { DrawContext, Point as ElementPoint, BBox as ElementBBox, PathCommand } from './element-plugin/index.js';
 export type { BaseSolidSpec, BaseConnectorSpec, ArrowSpec, DrawStyle as ElementDrawStyle, PathStyle as ElementPathStyle } from './element-plugin/index.js';
-export { CircleElement, RectElement, EllipseElement, PolygonElement, DiamondElement, StarElement } from './element-plugin/index.js';
-export type { CircleElementSpec, RectElementSpec, EllipseElementSpec, PolygonElementSpec, DiamondElementSpec, StarElementSpec } from './element-plugin/index.js';
-export { StraightConnector, BezierConnector, OrthogonalConnector } from './element-plugin/index.js';
-export type { BezierConnectorSpec, OrthogonalConnectorSpec, OrthogonalRouteDirection } from './element-plugin/index.js';
+export { CircleElement, RectElement, EllipseElement, PolygonElement, DiamondElement, StarElement, HexagonElement } from './element-plugin/index.js';
+export type { CircleElementSpec, RectElementSpec, EllipseElementSpec, PolygonElementSpec, DiamondElementSpec, StarElementSpec, HexagonElementSpec } from './element-plugin/index.js';
+export { StraightConnector, BezierConnector, OrthogonalConnector, QuadraticConnector, RoundedConnector, SmoothConnector } from './element-plugin/index.js';
+export type { BezierConnectorSpec, OrthogonalConnectorSpec, OrthogonalRouteDirection, QuadraticConnectorSpec, RoundedConnectorSpec, SmoothConnectorSpec } from './element-plugin/index.js';
+export { normalRouter, orthRouter, oneSideRouter, erRouter, BUILTIN_ROUTERS } from './element-plugin/index.js';
+export type { RouterFn, RouterContext, OrthRouterArgs, OneSideRouterArgs, ErRouterArgs } from './element-plugin/index.js';
 export {
   ElementBaseEvent, ElementDragBaseEvent,
   ElementClickEvent, ElementDblClickEvent, ElementContextMenuEvent,
