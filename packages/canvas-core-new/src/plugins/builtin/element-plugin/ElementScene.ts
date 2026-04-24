@@ -5,8 +5,8 @@
 
 import type { Container } from 'pixi.js';
 import type { ElementPool } from './ElementPool.js';
-import type { CameraBounds } from '../shape-plugin/CameraTracker.js';
-import { RenderDetail } from '../shape-plugin/LODController.js';
+import type { CameraBounds } from './CameraTracker.js';
+import { LOD } from './LODController.js';
 
 /**
  * `ElementScene` manages one PixiJS layer for {@link ElementPlugin}.
@@ -23,7 +23,7 @@ export class ElementScene {
   private _layer:   Container;
   private _pool:    ElementPool;
   private _visible = new Set<string>();
-  private _detail:  RenderDetail = RenderDetail.DETAIL;
+  private _detail:  LOD = LOD.DETAIL;
 
   constructor(layer: Container, pool: ElementPool) {
     this._layer = layer;
@@ -69,7 +69,7 @@ export class ElementScene {
    * Called by {@link LODController} when zoom crosses a threshold.
    * Redraws all currently-visible elements at the new detail level.
    */
-  onDetailChanged(detail: RenderDetail): void {
+  onDetailChanged(detail: LOD): void {
     this._detail = detail;
     for (const id of this._visible) {
       this._pool.get(id)?.draw(detail);
@@ -113,8 +113,8 @@ export class ElementScene {
     return this._visible.has(id);
   }
 
-  /** The active {@link RenderDetail} level. */
-  get detail(): RenderDetail {
+  /** The active {@link LOD} level. */
+  get detail(): LOD {
     return this._detail;
   }
 }

@@ -67,18 +67,22 @@ export class Camera implements CameraAPI {
   pan(deltaX: number, deltaY: number): void {
     this._viewport.x += deltaX;
     this._viewport.y += deltaY;
+    this._emitPan();
   }
 
   panTo(worldX: number, worldY: number): void {
     this._viewport.moveCenter(worldX, worldY);
+    this._emitPan();
   }
 
   zoom(scale: number): void {
     this._viewport.scale.set(scale);
+    this._emitZoom();
   }
 
   zoomTo(scale: number, _center?: Point): void {
     this._viewport.setZoom(scale, true);
+    this._emitZoom();
   }
 
   fitTo(bounds: Bounds, padding = 60): void {
@@ -90,9 +94,11 @@ export class Camera implements CameraAPI {
       sw / (bounds.width  + padding * 2),
       sh / (bounds.height + padding * 2),
     );
-    // pixi-viewport fires 'moved' + 'zoomed' → camera:pan + camera:zoom automatically
+    // pixi-viewport's moveCenter/setZoom do NOT fire 'moved'/'zoomed' when called
+    // programmatically — only user-interaction plugins do. Emit manually.
     this._viewport.moveCenter(cx, cy);
     this._viewport.setZoom(Math.max(scale, 0.001), true);
+    this._emitZoom();
   }
 
   toWorld(screenX: number, screenY: number): Point {
@@ -109,6 +115,17 @@ export class Camera implements CameraAPI {
     this._viewport.setZoom(1, true);
     this._viewport.moveCenter(0, 0);
     this._events.emit('camera:reset', new CameraResetEvent());
+  }
+
+  private _emitPan(): void {
+    this._events.emit('camera:pan', new CameraPanEvent({ x: this._viewport.x, y: this._viewport.y }));
+  }
+
+  private _emitZoom(): void {
+    this._events.emit('camera:zoom', new CameraZoomEvent({
+      scale: this._viewport.scale.x,
+      center: { x: this._viewport.x, y: this._viewport.y },
+    }));
   }
 
   animate(options: CameraAnimationOptions): void {

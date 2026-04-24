@@ -1,6 +1,6 @@
 // ── CircleElement ─────────────────────────────────────────────────────────────
 
-import { BaseSolid, RenderDetail } from '../BaseSolid.js';
+import { BaseSolid, LOD } from '../BaseSolid.js';
 import type { DrawContext } from '../DrawContext.js';
 import type { BaseSolidSpec, BBox, Point } from '../spec/index.js';
 
@@ -32,18 +32,18 @@ export interface CircleElementSpec extends BaseSolidSpec {
  * ```
  */
 export class CircleElement extends BaseSolid<CircleElementSpec> {
-  draw(ctx: DrawContext, detail: RenderDetail): void {
+  draw(ctx: DrawContext, detail: LOD): void {
     const { x, y, radius, label } = this.spec;
     const style = this.resolveStyle();
 
-    if (detail === RenderDetail.DOT) {
+    if (detail === LOD.DOT) {
       ctx.fillCircle(x, y, 2, { fill: style.fill ?? '#888888' });
       return;
     }
 
     ctx.fillCircle(x, y, radius, style);
 
-    if (detail >= RenderDetail.DETAIL && label) {
+    if (detail >= LOD.DETAIL && label) {
       ctx.drawLabel(label, x, y);
     }
   }

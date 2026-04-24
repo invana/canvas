@@ -1,7 +1,6 @@
-// ── DrawContext ───────────────────────────────────────────────────────────────
-// The draw context is passed to BaseSolid.draw() and BaseConnector.draw() on
-// every redraw.  It wraps a PixiJS Graphics object and exposes only the typed
-// helpers that element authors need — no raw pixi.js imports required.
+// ── DrawContext (element-plugin) ───────────────────────────────────────────────
+// Re-exports the DrawContext interface from the shared drawing module and
+// provides the PixiJS-backed PixiDrawContext implementation (internal only).
 
 import { Graphics, Text, TextStyle } from 'pixi.js';
 import type { Container } from 'pixi.js';
@@ -29,123 +28,11 @@ import {
   drawCirclePlusArrow,
 } from '../../../graphics-utils/arrows/index.js';
 import type { DrawStyle, PathStyle } from '../../../graphics-utils/types.js';
-import type { PathCommand, Point } from './spec/index.js';
+import type { DrawContext, PathCommand } from '../../../drawing/DrawContext.js';
+import type { Point } from './spec/index.js';
 
-// ── Public interface (element authors only see this) ──────────────────────────
-
-/**
- * Drawing abstraction passed to every element's `draw()` method.
- *
- * @remarks
- * Hides PixiJS entirely from element implementations.  Every method maps to
- * a `graphics-utils/` drawing utility so the underlying GPU draw calls remain
- * consistent across all built-in and community elements.
- *
- * Element classes inside this package (and community elements) should **only**
- * interact with PixiJS through this interface.
- */
-export interface DrawContext {
-  // ── Solid fills ─────────────────────────────────────────────────────────────
-
-  /** Draw a filled / stroked circle centred at (cx, cy). */
-  fillCircle(cx: number, cy: number, r: number, style: DrawStyle): void;
-
-  /** Draw a filled / stroked rectangle.  x, y = top-left corner. */
-  fillRect(
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    style: DrawStyle & { cornerRadius?: number },
-  ): void;
-
-  /** Draw a filled / stroked ellipse centred at (cx, cy). */
-  fillEllipse(cx: number, cy: number, rx: number, ry: number, style: DrawStyle): void;
-
-  /**
-   * Draw a regular polygon (triangle=3, diamond=4, hexagon=6, …).
-   * x, y = centre.  `rotation` is in the style object (radians, default –π/2 = point up).
-   */
-  fillPolygon(
-    cx: number,
-    cy: number,
-    radius: number,
-    sides: number,
-    style: DrawStyle & { rotation?: number },
-  ): void;
-
-  /**
-   * Draw a star shape.  x, y = centre.
-   * `points`, `innerRatio`, and `rotation` are in the style object.
-   */
-  fillStar(
-    cx: number,
-    cy: number,
-    radius: number,
-    style: DrawStyle & { points?: number; innerRatio?: number; rotation?: number },
-  ): void;
-
-  // ── Path strokes ─────────────────────────────────────────────────────────────
-
-  /**
-   * Stroke an arbitrary path described by an array of {@link PathCommand}s.
-   * Used by connectors to render their routed geometry.
-   */
-  strokePath(commands: PathCommand[], style: PathStyle): void;
-
-  // ── Labels ────────────────────────────────────────────────────────────────────
-
-  /**
-   * Draw a centred text label at (x, y).
-   * Internally creates a PixiJS `Text` object as a child of the element container.
-   * Existing labels from the previous draw call are removed automatically by
-   * {@link PixiDrawContext.reset}.
-   *
-   * @param text  - Label string.
-   * @param x     - World-space x.
-   * @param y     - World-space y.
-   * @param style - Optional partial PixiJS text style overrides.
-   */
-  drawLabel(
-    text: string,
-    x: number,
-    y: number,
-    style?: {
-      fontSize?: number;
-      fill?: string;
-      fontFamily?: string;
-      fontWeight?: string;
-      align?: 'left' | 'center' | 'right';
-    },
-  ): void;
-
-  /**
-   * Draw an arrowhead at `tip` pointing in `angle` direction (radians).
-   * Used by the default {@link BaseConnector.draw} implementation for connector endpoints.
-   *
-   * @param tip    - World-space tip of the arrow.
-   * @param angle  - Direction the arrow points, in radians.
-   * @param type   - Arrow shape.  Defaults to `'triangle'`.
-   * @param size   - Arrow size in world-space pixels.
-   * @param color  - Arrow fill / stroke color.
-   * @param alpha  - Opacity (0–1).
-   */
-  /**
-   * Draw an arrowhead at `tip` pointing in `angle` direction (radians).
-   * Expanded type set covers all built-in marker shapes.
-   * Custom marker types (registered via `ElementPlugin.registerMarker`) are
-   * dispatched through the marker registry and will not reach this method directly.
-   */
-  drawArrow(
-    tip: Point,
-    angle: number,
-    type: string,
-    size: number,
-    color: string,
-    alpha?: number,
-    extraArgs?: Record<string, unknown>,
-  ): void;
-}
+// Re-export so element files can keep their existing import path.
+export type { DrawContext };
 
 // ── PixiJS-backed implementation ──────────────────────────────────────────────
 

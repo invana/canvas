@@ -1,6 +1,6 @@
 // ── RectElement ───────────────────────────────────────────────────────────────
 
-import { BaseSolid, RenderDetail } from '../BaseSolid.js';
+import { BaseSolid, LOD } from '../BaseSolid.js';
 import type { DrawContext } from '../DrawContext.js';
 import type { BaseSolidSpec, BBox, Point } from '../spec/index.js';
 
@@ -25,11 +25,11 @@ export interface RectElementSpec extends BaseSolidSpec {
  * centre to the target with the nearest edge.
  */
 export class RectElement extends BaseSolid<RectElementSpec> {
-  draw(ctx: DrawContext, detail: RenderDetail): void {
+  draw(ctx: DrawContext, detail: LOD): void {
     const { x, y, width, height, cornerRadius = 0, label } = this.spec;
     const style = this.resolveStyle();
 
-    if (detail === RenderDetail.DOT) {
+    if (detail === LOD.DOT) {
       const cx = x + width / 2, cy = y + height / 2;
       ctx.fillCircle(cx, cy, 2, { fill: style.fill ?? '#888888' });
       return;
@@ -37,7 +37,7 @@ export class RectElement extends BaseSolid<RectElementSpec> {
 
     ctx.fillRect(x, y, width, height, { ...style, cornerRadius });
 
-    if (detail >= RenderDetail.DETAIL && label) {
+    if (detail >= LOD.DETAIL && label) {
       ctx.drawLabel(label, x + width / 2, y + height / 2);
     }
   }

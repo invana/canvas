@@ -5,7 +5,7 @@ export { ElementPlugin } from './ElementPlugin.js';
 export type { ElementPluginOptions, SolidCtor, ConnectorCtor } from './ElementPlugin.js';
 
 // Base classes
-export { BaseSolid, RenderDetail } from './BaseSolid.js';
+export { BaseSolid, LOD } from './BaseSolid.js';
 export { BaseConnector } from './BaseConnector.js';
 
 // DrawContext (interface only — PixiDrawContext is internal)

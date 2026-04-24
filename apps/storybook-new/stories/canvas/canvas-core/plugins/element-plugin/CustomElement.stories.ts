@@ -19,7 +19,7 @@ import {
   BackgroundPlugin,
   ElementPlugin,
   BaseSolid,
-  ElementRenderDetail as RenderDetail,
+  LOD,
   type DrawContext,
   type ElementBBox as BBox,
   type ElementPoint as Point,
@@ -27,7 +27,7 @@ import {
 } from '@invana/canvas-core-new';
 import { createContainer } from '../../../../../src/div-utils.js';
 
-const meta: Meta = { title: 'Canvas/canvas-core/Plugins/ElementPlugin' };
+const meta: Meta = { title: 'Canvas/canvas-core/Plugins/ElementPlugin/Elements' };
 export default meta;
 type Story = StoryObj;
 
@@ -45,7 +45,7 @@ interface DatabaseNodeSpec extends BaseSolidSpec {
  * x,y is the top-left corner of the bounding box.
  */
 class DatabaseNode extends BaseSolid<DatabaseNodeSpec> {
-  draw(ctx: DrawContext, detail: RenderDetail): void {
+  draw(ctx: DrawContext, detail: LOD): void {
     const { x, y, width: w, height: h, label } = this.spec;
     const style   = this.resolveStyle();
     const rx      = w / 2;
@@ -62,7 +62,7 @@ class DatabaseNode extends BaseSolid<DatabaseNodeSpec> {
     ctx.fillEllipse(x + rx, bodyTop, rx, capRy, style);
 
     // Label
-    if (detail === RenderDetail.DETAIL && label) {
+    if (detail === LOD.DETAIL && label) {
       ctx.drawLabel(label, x + rx, y + h / 2, { fill: '#ffffff', fontSize: 13 });
     }
   }
@@ -99,11 +99,11 @@ interface HexBadgeSpec extends BaseSolidSpec {
 
 /** Small hexagon with an overlaid badge text. */
 class HexBadge extends BaseSolid<HexBadgeSpec> {
-  draw(ctx: DrawContext, detail: RenderDetail): void {
+  draw(ctx: DrawContext, detail: LOD): void {
     const { x, y, radius: r, badge, label } = this.spec;
     const style = this.resolveStyle();
     ctx.fillPolygon(x, y, r, 6, style);
-    if (detail === RenderDetail.DETAIL) {
+    if (detail === LOD.DETAIL) {
       ctx.drawLabel(badge, x, y, { fill: '#ffffff', fontSize: r * 0.65, fontWeight: 'bold' });
       if (label) ctx.drawLabel(label, x, y + r + 14, { fill: '#94a3b8', fontSize: 11 });
     }

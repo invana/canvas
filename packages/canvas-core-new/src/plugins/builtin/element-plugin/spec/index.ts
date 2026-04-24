@@ -23,12 +23,8 @@ export interface BBox {
 
 // ── Path commands (subset of SVG path spec) ───────────────────────────────────
 
-export type PathCommand =
-  | { cmd: 'M'; x: number; y: number }
-  | { cmd: 'L'; x: number; y: number }
-  | { cmd: 'C'; cp1x: number; cp1y: number; cp2x: number; cp2y: number; x: number; y: number }
-  | { cmd: 'Q'; cpx: number; cpy: number; x: number; y: number }
-  | { cmd: 'Z' };
+import type { PathCommand } from '../../../../drawing/DrawContext.js';
+export type { PathCommand };
 
 // ── Arrow marker ──────────────────────────────────────────────────────────────
 
@@ -132,7 +128,7 @@ export interface BaseSolidSpec {
   x: number;
   /** World-space y coordinate of the element's anchor. */
   y: number;
-  /** Optional label shown at {@link RenderDetail.DETAIL} zoom level. */
+  /** Optional label shown at {@link LOD.DETAIL} zoom level. */
   label?: string;
   /** Fill and stroke style. */
   style?: DrawStyle;
@@ -190,7 +186,7 @@ export interface BaseConnectorSpec {
   vertices?: Point[];
   /** @deprecated Use `vertices`. */
   waypoints?: Point[];
-  /** Optional midpoint label shown at {@link RenderDetail.DETAIL} zoom level. */
+  /** Optional midpoint label shown at {@link LOD.DETAIL} zoom level. */
   label?: string;
   /** Stroke style. */
   style?: PathStyle;
@@ -237,4 +233,18 @@ export interface BaseConnectorSpec {
   states?: Record<string, PathStyle>;
   /** Arbitrary consumer data — forwarded in event payloads unchanged. */
   data?: Record<string, unknown>;
+  /**
+   * Distance (world pixels) to trim from the **start** of the path.
+   * Set `from` to the source element's centre and `sourceRadius` to its radius
+   * so the path stroke and start marker begin at the element boundary and the
+   * marker points toward the centre.
+   */
+  sourceRadius?: number;
+  /**
+   * Distance (world pixels) to trim from the **end** of the path.
+   * Set `to` to the target element's centre and `targetRadius` to its radius
+   * so the path stroke and end marker end at the element boundary and the
+   * marker points toward the centre.
+   */
+  targetRadius?: number;
 }

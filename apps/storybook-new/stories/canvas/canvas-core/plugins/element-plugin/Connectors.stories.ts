@@ -25,7 +25,7 @@ import {
 } from '@invana/canvas-core-new';
 import { createContainer } from '../../../../../src/div-utils.js';
 
-const meta: Meta = { title: 'Canvas/canvas-core/Plugins/ElementPlugin' };
+const meta: Meta = { title: 'Canvas/canvas-core/Plugins/ElementPlugin/Connectors' };
 export default meta;
 type Story = StoryObj;
 
@@ -95,12 +95,14 @@ export const Connectors: Story = {
       const verts = row.wverts?.map(v => ({ x: midX + v.xOff, y: rowY + v.yOff }));
 
       const spec: Record<string, unknown> = {
-        id:        row.id,
-        from:      { x: lx + NODE_R, y: rowY },
-        to:        { x: rx - NODE_R, y: rowY + row.dy },
-        label:     row.label,
-        endMarker: { type: 'triangle', size: 11 },
-        style:     { stroke: row.color, strokeWidth: 2.5 },
+        id:           row.id,
+        from:         { x: lx, y: rowY },
+        to:           { x: rx, y: rowY + row.dy },
+        sourceRadius: NODE_R,
+        targetRadius: NODE_R,
+        label:        row.label,
+        endMarker:    { type: 'triangle', size: 11 },
+        style:        { stroke: row.color, strokeWidth: 2.5 },
       };
       if (verts?.length) spec['vertices'] = verts;
       if (row.router)    spec['router']   = row.router;

@@ -10,9 +10,8 @@ import { ElementObject } from './ElementObject.js';
 import { BaseSolid } from './BaseSolid.js';
 import { BaseConnector } from './BaseConnector.js';
 import type { BaseSolidSpec, BaseConnectorSpec, BBox, Point, RouterFn, ArrowSpec } from './spec/index.js';
-import { CameraTracker } from '../shape-plugin/CameraTracker.js';
-import { LODController } from '../shape-plugin/LODController.js';
-import type { LODThresholds } from '../shape-plugin/LODController.js';
+import { CameraTracker } from './CameraTracker.js';
+import { LODController, type LODThresholds } from './LODController.js';
 import {
   ElementClickEvent,
   ElementDblClickEvent,
@@ -140,6 +139,9 @@ export class ElementPlugin implements CanvasPlugin {
   // Pointer state
   private _lastHoverId:    string | null = null;
   private _dragState: { id: string; lastX: number; lastY: number } | null = null;
+
+  // Batch flag — suppresses per-element flush during setData()
+  private _batchingAdd = false;
 
   // ── Registries ────────────────────────────────────────────────────────────
 
@@ -312,7 +314,7 @@ export class ElementPlugin implements CanvasPlugin {
     this._solidPool.add(obj);
     this._ctx.events.emit('element:added', new ElementAddedEvent({ elementId: spec.id, elementType: 'solid' }));
     if (element.onAnimationTick) this._animSet.add(spec.id);
-    this._cameraTracker.flush();
+    if (!this._batchingAdd) this._cameraTracker.flush();
   }
 
   /**
@@ -368,7 +370,7 @@ export class ElementPlugin implements CanvasPlugin {
     this._connPool.add(obj);
     this._ctx.events.emit('element:added', new ElementAddedEvent({ elementId: spec.id, elementType: 'connector' }));
     if (element.onAnimationTick) this._animSet.add(spec.id);
-    this._cameraTracker.flush();
+    if (!this._batchingAdd) this._cameraTracker.flush();
   }
 
   /**
@@ -486,8 +488,13 @@ export class ElementPlugin implements CanvasPlugin {
     connectors: Array<{ type: string; spec: BaseConnectorSpec }> = [],
   ): void {
     this.clear();
-    for (const { type, spec } of solids)     this.addSolid(type, spec);
-    for (const { type, spec } of connectors) this.addConnector(type, spec);
+    this._batchingAdd = true;
+    try {
+      for (const { type, spec } of solids)     this.addSolid(type, spec);
+      for (const { type, spec } of connectors) this.addConnector(type, spec);
+    } finally {
+      this._batchingAdd = false;
+    }
     if (this._fitOnRender) this.fit(this._fitPadding);
     this._cameraTracker.flush();
   }

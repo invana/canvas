@@ -3,7 +3,7 @@
 // Subclasses implement route(); draw() has a shared default implementation.
 
 import type { DrawContext } from './DrawContext.js';
-import { RenderDetail } from '../shape-plugin/LODController.js';
+import { LOD } from './LODController.js';
 import type {
   BaseConnectorSpec,
   ArrowSpec,
@@ -22,14 +22,14 @@ import type {
  * Only `route()` is abstract — it returns the sequence of {@link PathCommand}s
  * that define the connector's path from `from` to `to`.  The default `draw()`
  * implementation strokes that path, draws arrowheads, and renders a midpoint
- * label at {@link RenderDetail.DETAIL} zoom.
+ * label at {@link LOD.DETAIL} zoom.
  *
  * Override `draw()` for entirely custom appearance (e.g. animated flow lines).
  *
  * @example
  * ```ts
  * class CurvedConnector extends BezierConnector {
- *   draw(ctx: DrawContext, detail: RenderDetail) {
+ *   draw(ctx: DrawContext, detail: LOD) {
  *     super.draw(ctx, detail);    // stroke + arrows + label
  *   }
  * }
@@ -110,12 +110,12 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
    * 1. Routes the path via `this.route()`.
    * 2. Strokes the path with the resolved style.
    * 3. Draws a triangle arrowhead at `to` (unless `endArrow.type === 'none'`).
-   * 4. Draws a midpoint label at {@link RenderDetail.DETAIL}.
+   * 4. Draws a midpoint label at {@link LOD.DETAIL}.
    *
    * Override to customise appearance while still calling `super.draw()` for
    * the base behaviour.
    */
-  draw(ctx: DrawContext, detail: RenderDetail): void {
+  draw(ctx: DrawContext, detail: LOD): void {
     const { from, to, label } = this.spec;
     const style = this.resolveStyle();
 
@@ -126,30 +126,57 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
     const routedWaypoints = this._runRouter(from, to, rawWaypoints);
 
     this._cachedRoute = this.route(from, to, routedWaypoints);
-    ctx.strokePath(this._cachedRoute, style);
+
+    // Compute tangent angles before any trimming (they reference the full route)
+    const endAngle   = this._endTangentAngle(this._cachedRoute, to);
+    const startAngle = this._startTangentAngle(this._cachedRoute, from);
+
+    // Trim path endpoints so strokes begin/end at element boundaries.
+    // `from`/`to` are element centres; sourceRadius/targetRadius are the radii.
+    let drawRoute = this._cachedRoute;
+    let arrowTip  = to;
+    let arrowTail = from;
+
+    if (this.spec.targetRadius && this.spec.targetRadius > 0) {
+      arrowTip  = {
+        x: to.x - this.spec.targetRadius * Math.cos(endAngle),
+        y: to.y - this.spec.targetRadius * Math.sin(endAngle),
+      };
+      drawRoute = this._trimRouteEnd(drawRoute, arrowTip);
+    }
+
+    if (this.spec.sourceRadius && this.spec.sourceRadius > 0) {
+      // startAngle points from cp1 back toward `from`; negate to get forward direction
+      const fwdAngle = startAngle + Math.PI;
+      arrowTail = {
+        x: from.x + this.spec.sourceRadius * Math.cos(fwdAngle),
+        y: from.y + this.spec.sourceRadius * Math.sin(fwdAngle),
+      };
+      drawRoute = this._trimRouteStart(drawRoute, arrowTail);
+    }
+
+    ctx.strokePath(drawRoute, style);
 
     // Resolve end marker (startMarker > startArrow; endMarker > endArrow)
-    const endMarkerSpec  = this._resolveMarkerSpec(this.spec.endMarker  ?? this.spec.endArrow);
+    const endMarkerSpec   = this._resolveMarkerSpec(this.spec.endMarker  ?? this.spec.endArrow);
     const startMarkerSpec = this._resolveMarkerSpec(this.spec.startMarker ?? this.spec.startArrow);
 
-    // Draw end marker (default: triangle)
+    // Draw end marker (default: triangle) at the trimmed tip
     if (!endMarkerSpec || endMarkerSpec.type !== 'none') {
-      const angle = this._endTangentAngle(this._cachedRoute, to);
       const markerType  = endMarkerSpec?.type  ?? 'triangle';
       const markerColor = endMarkerSpec?.color  ?? (style.stroke as string | undefined) ?? '#999999';
       const markerSize  = endMarkerSpec?.size   ?? 10;
       const markerAlpha = style.strokeAlpha ?? 1;
-      this._drawMarker(ctx, to, angle, markerType, markerSize, markerColor, markerAlpha, endMarkerSpec);
+      this._drawMarker(ctx, arrowTip, endAngle, markerType, markerSize, markerColor, markerAlpha, endMarkerSpec);
     }
 
-    // Draw start marker (default: none)
+    // Draw start marker (default: none) at the trimmed tail
     if (startMarkerSpec && startMarkerSpec.type !== 'none') {
-      const angle = this._startTangentAngle(this._cachedRoute, from);
       const markerColor = startMarkerSpec.color ?? (style.stroke as string | undefined) ?? '#999999';
-      this._drawMarker(ctx, from, angle, startMarkerSpec.type, startMarkerSpec.size ?? 10, markerColor, style.strokeAlpha ?? 1, startMarkerSpec);
+      this._drawMarker(ctx, arrowTail, startAngle, startMarkerSpec.type, startMarkerSpec.size ?? 10, markerColor, style.strokeAlpha ?? 1, startMarkerSpec);
     }
 
-    if (detail >= RenderDetail.DETAIL && label) {
+    if (detail >= LOD.DETAIL && label) {
       const mid = this._getMidpoint();
       ctx.drawLabel(label, mid.x, mid.y - 12);
     }
@@ -353,6 +380,38 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
     return pts[Math.floor(pts.length / 2)]!;
   }
 
+  /**
+   * Return a copy of `route` with the final command's endpoint replaced by
+   * `newEnd`.  For cubic/quadratic curves the control points are kept so the
+   * curve still approaches `newEnd` from the same direction — this is an exact
+   * retraction along the final tangent for small trim distances.
+   */
+  private _trimRouteEnd(route: PathCommand[], newEnd: Point): PathCommand[] {
+    if (route.length < 2) return route;
+    const result = [...route];
+    const last = result[result.length - 1]!;
+    if (last.cmd === 'C') {
+      result[result.length - 1] = { ...last, x: newEnd.x, y: newEnd.y };
+    } else if (last.cmd === 'Q') {
+      result[result.length - 1] = { ...last, x: newEnd.x, y: newEnd.y };
+    } else if (last.cmd === 'L') {
+      result[result.length - 1] = { cmd: 'L', x: newEnd.x, y: newEnd.y };
+    }
+    return result;
+  }
+
+  /**
+   * Return a copy of `route` with the M command's position replaced by
+   * `newStart`.  For cubic/quadratic curves the first control point is kept so
+   * the path still exits `newStart` in the same direction.
+   */
+  private _trimRouteStart(route: PathCommand[], newStart: Point): PathCommand[] {
+    if (route.length < 1) return route;
+    const result = [...route];
+    result[0] = { cmd: 'M', x: newStart.x, y: newStart.y };
+    return result;
+  }
+
   private _cmdPoints(cmd: PathCommand): Point[] {
     switch (cmd.cmd) {
       case 'M': return [{ x: cmd.x, y: cmd.y }];
@@ -368,5 +427,5 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
   }
 }
 
-// Re-export RenderDetail for convenience.
-export { RenderDetail };
+// Re-export LOD for convenience.
+export { LOD };

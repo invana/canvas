@@ -1,6 +1,6 @@
 // ── StarElement ───────────────────────────────────────────────────────────────
 
-import { BaseSolid, RenderDetail } from '../BaseSolid.js';
+import { BaseSolid, LOD } from '../BaseSolid.js';
 import type { DrawContext } from '../DrawContext.js';
 import type { BaseSolidSpec, BBox, Point } from '../spec/index.js';
 
@@ -25,18 +25,18 @@ export interface StarElementSpec extends BaseSolidSpec {
  * circumscribed-circle approach — suitable for most use cases.
  */
 export class StarElement extends BaseSolid<StarElementSpec> {
-  draw(ctx: DrawContext, detail: RenderDetail): void {
+  draw(ctx: DrawContext, detail: LOD): void {
     const { x, y, radius, points = 5, innerRatio = 0.42, rotation, label } = this.spec;
     const style = this.resolveStyle();
 
-    if (detail === RenderDetail.DOT) {
+    if (detail === LOD.DOT) {
       ctx.fillCircle(x, y, 2, { fill: style.fill ?? '#888888' });
       return;
     }
 
     ctx.fillStar(x, y, radius, { ...style, points, innerRatio, rotation });
 
-    if (detail >= RenderDetail.DETAIL && label) {
+    if (detail >= LOD.DETAIL && label) {
       ctx.drawLabel(label, x, y);
     }
   }

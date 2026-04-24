@@ -3,7 +3,7 @@
 // Subclasses must implement draw(), getBBox(), getCenter(), and getConnectionPoint().
 
 import type { DrawContext } from './DrawContext.js';
-import { RenderDetail } from '../shape-plugin/LODController.js';
+import { LOD } from './LODController.js';
 import type { BaseSolidSpec, BBox, DrawStyle, Point } from './spec/index.js';
 
 /**
@@ -23,9 +23,9 @@ import type { BaseSolidSpec, BBox, DrawStyle, Point } from './spec/index.js';
  * @example
  * ```ts
  * class DatabaseNode extends RectElement {
- *   draw(ctx: DrawContext, detail: RenderDetail) {
+ *   draw(ctx: DrawContext, detail: LOD) {
  *     super.draw(ctx, detail);          // rect + label
- *     if (detail >= RenderDetail.FULL) {
+ *     if (detail >= LOD.FULL) {
  *       ctx.fillEllipse(this.spec.x + this.spec.width / 2, this.spec.y + 8, 20, 8, { fill: '#1f6feb' });
  *     }
  *   }
@@ -74,7 +74,7 @@ export abstract class BaseSolid<S extends BaseSolidSpec = BaseSolidSpec> {
    * @param ctx    - Drawing context.  No PixiJS imports needed.
    * @param detail - Current LOD level.  Typically only draw labels at `DETAIL`.
    */
-  abstract draw(ctx: DrawContext, detail: RenderDetail): void;
+  abstract draw(ctx: DrawContext, detail: LOD): void;
 
   /**
    * Axis-aligned bounding box for this element.
@@ -192,5 +192,5 @@ export abstract class BaseSolid<S extends BaseSolidSpec = BaseSolidSpec> {
   onAnimationTick?(dt: number): void;
 }
 
-// Re-export RenderDetail so element authors can import it from one place.
-export { RenderDetail };
+// Re-export LOD so element authors can import it from one place.
+export { LOD };

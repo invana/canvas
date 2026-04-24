@@ -6,7 +6,7 @@
 import { Container, Graphics } from 'pixi.js';
 import type { BaseSolid } from './BaseSolid.js';
 import type { BaseConnector } from './BaseConnector.js';
-import type { RenderDetail } from '../shape-plugin/LODController.js';
+import type { LOD } from './LODController.js';
 import type { BBox } from './spec/index.js';
 import { PixiDrawContext } from './DrawContext.js';
 
@@ -75,9 +75,9 @@ export class ElementObject {
    * Redraw the element at the given detail level.
    * Clears the Graphics, calls `element.draw(ctx, detail)`, then resets dirty flag.
    *
-   * @param detail - Current {@link RenderDetail} level.
+   * @param detail - Current {@link LOD} level.
    */
-  draw(detail: RenderDetail): void {
+  draw(detail: LOD): void {
     this._ctx.reset();
     this.element.draw(this._ctx, detail);
     this._dirty = false;

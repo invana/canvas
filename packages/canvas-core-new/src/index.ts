@@ -27,7 +27,7 @@ export type { DevInfoPluginOptions, DevInfoCorner } from './plugins/builtin/inde
 
 // ElementPlugin public API
 export type { ElementPluginOptions, SolidCtor, ConnectorCtor } from './plugins/builtin/index.js';
-export { BaseSolid, BaseConnector, ElementRenderDetail } from './plugins/builtin/index.js';
+export { BaseSolid, BaseConnector, LOD } from './plugins/builtin/index.js';
 export type { DrawContext, BaseSolidSpec, BaseConnectorSpec, ElementPoint, ElementBBox, PathCommand, ArrowSpec as ElementArrowSpec, ElementDrawStyle, ElementPathStyle } from './plugins/builtin/index.js';
 export { CircleElement, RectElement, EllipseElement, PolygonElement, DiamondElement, StarElement, HexagonElement } from './plugins/builtin/index.js';
 export type { CircleElementSpec, RectElementSpec, EllipseElementSpec, PolygonElementSpec, DiamondElementSpec, StarElementSpec, HexagonElementSpec } from './plugins/builtin/index.js';

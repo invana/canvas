@@ -1,6 +1,6 @@
 // ── PolygonElement ────────────────────────────────────────────────────────────
 
-import { BaseSolid, RenderDetail } from '../BaseSolid.js';
+import { BaseSolid, LOD } from '../BaseSolid.js';
 import { buildPolygonPoints } from '../../../../graphics-utils/shapes/polygon.js';
 import type { DrawContext } from '../DrawContext.js';
 import type { BaseSolidSpec, BBox, Point } from '../spec/index.js';
@@ -26,18 +26,18 @@ export interface PolygonElementSpec extends BaseSolidSpec {
  * For diamond (4-sided, rotated 45°) use {@link DiamondElement} instead.
  */
 export class PolygonElement extends BaseSolid<PolygonElementSpec> {
-  draw(ctx: DrawContext, detail: RenderDetail): void {
+  draw(ctx: DrawContext, detail: LOD): void {
     const { x, y, radius, sides, rotation, label } = this.spec;
     const style = this.resolveStyle();
 
-    if (detail === RenderDetail.DOT) {
+    if (detail === LOD.DOT) {
       ctx.fillCircle(x, y, 2, { fill: style.fill ?? '#888888' });
       return;
     }
 
     ctx.fillPolygon(x, y, radius, sides, { ...style, rotation });
 
-    if (detail >= RenderDetail.DETAIL && label) {
+    if (detail >= LOD.DETAIL && label) {
       ctx.drawLabel(label, x, y);
     }
   }

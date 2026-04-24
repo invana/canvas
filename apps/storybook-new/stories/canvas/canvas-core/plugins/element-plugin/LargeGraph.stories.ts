@@ -24,11 +24,11 @@ import {
 } from '@invana/canvas-core-new';
 import { createContainer } from '../../../../../src/div-utils.js';
 
-const meta: Meta = { title: 'Canvas/canvas-core/Plugins/ElementPlugin' };
+const meta: Meta = { title: 'Canvas/canvas-core/Plugins/ElementPlugin/Interactions' };
 export default meta;
 type Story = StoryObj;
 
-const NODE_R     = 18;
+const NODE_R     = 5;
 const CELL_SIZE  = 80;
 
 const PALETTE = [
@@ -108,7 +108,12 @@ export const LargeGraph: Story = {
     const container = document.getElementById('canvas-example');
     if (!container) return;
 
-    const canvas = new Canvas({ container, backgroundColor: '#0a0f1e' });
+    const canvas = new Canvas({
+      container,
+      width: container.clientWidth || 1200,
+      height: container.clientHeight || 800,
+      backgroundColor: '#0a0f1e',
+    });
     await canvas.init();
 
     await canvas.plugins.register(new BackgroundPlugin({
@@ -121,16 +126,18 @@ export const LargeGraph: Story = {
 
     const elements = new ElementPlugin({
       key: 'elements',
-      fitOnRender: true,
+      fitOnRender: false,
       fitPadding: 60,
     });
     await canvas.plugins.register(elements);
 
-    const params = { cols: 10, rows: 10 };
+    const params = { cols: 50, rows: 50 };
 
     function rebuild(): void {
       const { solids, connectors } = generateGrid(params.cols, params.rows);
       elements.setData(solids, connectors);
+      // Defer fit one frame so camera bounds/culling run after initial layout.
+      requestAnimationFrame(() => elements.fit(60));
     }
 
     rebuild();
