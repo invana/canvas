@@ -41,7 +41,12 @@ const DEFAULTS: LODThresholds = {
    */
   dot: 0,
   fillBorder: 0.15,
-  full: 0.4,
+  /**
+   * Labels are unreadable below ~65 % zoom and each Text object is expensive
+   * to render.  Only promote to DETAIL (text on) once the user is zoomed in
+   * enough to actually benefit from labels.
+   */
+  full: 0.65,
 };
 
 /**
@@ -79,9 +84,20 @@ export class LODController {
   }
 
   private _compute(zoom: number): LOD {
-    if (zoom < this._thresholds.dot)        return LOD.DOT;
-    if (zoom < this._thresholds.fillBorder) return LOD.FILL_BORDER;
-    if (zoom < this._thresholds.full)       return LOD.FULL;
+    const { dot, fillBorder, full } = this._thresholds;
+    // Hysteresis: elements at a higher-detail LOD must drop further before
+    // transitioning down, and vice-versa for rising. This prevents oscillation
+    // when the user zooms near a boundary (e.g. hovering around 0.4).
+    const h = 0.02;
+    const dotT  = dot > 0
+      ? (this._current <= LOD.DOT        ? dot        + h : dot        - h)
+      : 0;
+    const fbT   = this._current <= LOD.FILL_BORDER ? fillBorder + h : fillBorder - h;
+    const fullT = this._current <= LOD.FULL        ? full        + h : full        - h;
+
+    if (dot > 0 && zoom < dotT) return LOD.DOT;
+    if (zoom < fbT)              return LOD.FILL_BORDER;
+    if (zoom < fullT)            return LOD.FULL;
     return LOD.DETAIL;
   }
 }

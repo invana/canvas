@@ -105,4 +105,17 @@ export interface CameraAPI {
 
   /** Get the current world-space bounding box visible in the viewport */
   getBounds(): Bounds;
+
+  /**
+   * Suspend the camera's pan/drag behaviour.
+   * Called by `ElementPlugin` when an element drag begins so the viewport
+   * does not pan simultaneously.
+   */
+  lockPan(): void;
+
+  /**
+   * Resume the camera's pan/drag behaviour.
+   * Called by `ElementPlugin` when an element drag ends.
+   */
+  unlockPan(): void;
 }

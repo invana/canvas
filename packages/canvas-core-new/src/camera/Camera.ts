@@ -143,6 +143,16 @@ export class Camera implements CameraAPI {
     return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
   }
 
+  lockPan(): void {
+    this._viewport.plugins.pause('drag');
+    this._viewport.plugins.pause('decelerate');
+  }
+
+  unlockPan(): void {
+    this._viewport.plugins.resume('drag');
+    this._viewport.plugins.resume('decelerate');
+  }
+
   destroy(): void {
     this._viewport.destroy();
   }

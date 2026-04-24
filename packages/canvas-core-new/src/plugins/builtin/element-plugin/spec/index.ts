@@ -247,4 +247,18 @@ export interface BaseConnectorSpec {
    * marker points toward the centre.
    */
   targetRadius?: number;
+  /**
+   * Id of the source solid element.
+   * When set, `from` is automatically computed via `getConnectionPoint()` at
+   * add-time and kept in sync when the source element is dragged.
+   * `from` in the spec is ignored when `sourceId` is present.
+   */
+  sourceId?: string;
+  /**
+   * Id of the target solid element.
+   * When set, `to` is automatically computed via `getConnectionPoint()` at
+   * add-time and kept in sync when the target element is dragged.
+   * `to` in the spec is ignored when `targetId` is present.
+   */
+  targetId?: string;
 }

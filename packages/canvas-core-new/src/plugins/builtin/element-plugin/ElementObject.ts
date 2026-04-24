@@ -38,6 +38,8 @@ export class ElementObject {
   private _ctx: PixiDrawContext;
   private _dirty = true;
   private _mounted = false;
+  /** LOD level used during the last completed draw. `null` = never drawn. */
+  private _lastDrawnLOD: LOD | null = null;
 
   constructor(element: AnyElement) {
     this.id      = element.spec.id;
@@ -78,9 +80,15 @@ export class ElementObject {
    * @param detail - Current {@link LOD} level.
    */
   draw(detail: LOD): void {
+    // Skip redraw when the element is clean and was last drawn at the same LOD.
+    // The PixiJS Graphics already hold the correct rendering — just re-attaching
+    // the Container is enough (happens in ElementScene.onCameraChanged).
+    if (!this._dirty && this._lastDrawnLOD === detail) return;
+
     this._ctx.reset();
     this.element.draw(this._ctx, detail);
     this._dirty = false;
+    this._lastDrawnLOD = detail;
 
     if (!this._mounted) {
       this._mounted = true;

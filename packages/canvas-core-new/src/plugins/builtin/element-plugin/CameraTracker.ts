@@ -28,6 +28,8 @@ export interface CameraBounds {
 export class CameraTracker {
   private _camera: CameraAPI;
   private _onChange: (bounds: CameraBounds) => void;
+  /** Pending RAF id — ensures at most one `onCameraChanged` call per frame. */
+  private _rafId: number | null = null;
 
   constructor(
     camera: CameraAPI,
@@ -37,9 +39,9 @@ export class CameraTracker {
     this._camera = camera;
     this._onChange = onChange;
 
-    events.on('camera:pan',   () => this._emit());
-    events.on('camera:zoom',  () => this._emit());
-    events.on('camera:reset', () => this._emit());
+    events.on('camera:pan',   () => this._scheduleEmit());
+    events.on('camera:zoom',  () => this._scheduleEmit());
+    events.on('camera:reset', () => this._scheduleEmit());
   }
 
   /** Current world-space viewport AABB with 10% padding for smooth edge entry. */
@@ -53,11 +55,25 @@ export class CameraTracker {
    * visibility pass.
    */
   flush(): void {
-    this._emit();
+    // Cancel any pending RAF so we emit synchronously right now.
+    if (this._rafId !== null) {
+      cancelAnimationFrame(this._rafId);
+      this._rafId = null;
+    }
+    this._onChange(this._compute());
   }
 
-  private _emit(): void {
-    this._onChange(this._compute());
+  /**
+   * Schedule a single `onCameraChanged` call for the next animation frame.
+   * If one is already pending, the duplicate is dropped — at most one
+   * RBush search + addChild/removeChild pass per rendered frame.
+   */
+  private _scheduleEmit(): void {
+    if (this._rafId !== null) return;
+    this._rafId = requestAnimationFrame(() => {
+      this._rafId = null;
+      this._onChange(this._compute());
+    });
   }
 
   private _compute(): CameraBounds {

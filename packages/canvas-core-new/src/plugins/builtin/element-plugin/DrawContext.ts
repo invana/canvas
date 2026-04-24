@@ -51,8 +51,15 @@ export type { DrawContext };
 export class PixiDrawContext implements DrawContext {
   private _g: Graphics;
   private _container: Container;
-  /** Text nodes added during the current draw cycle. Cleared by reset(). */
+  /**
+   * Pool of Text objects kept alive between draw cycles.
+   * Reusing them avoids the per-frame canvas texture allocation that
+   * `new Text()` triggers, which is the dominant cost when many labelled
+   * elements are redrawn during a LOD sweep.
+   */
   private _texts: Text[] = [];
+  /** How many texts from _texts have been claimed in the current draw cycle. */
+  private _textIdx = 0;
 
   constructor(g: Graphics, container: Container) {
     this._g = g;
@@ -60,16 +67,15 @@ export class PixiDrawContext implements DrawContext {
   }
 
   /**
-   * Clear Graphics geometry and remove all Text children from the container.
+   * Clear Graphics geometry and hide all pooled Text objects.
+   * Text objects are NOT destroyed — they are reused on the next draw cycle.
    * Must be called at the start of every `draw()` invocation.
    */
   reset(): void {
     this._g.clear();
-    for (const t of this._texts) {
-      this._container.removeChild(t);
-      t.destroy();
-    }
-    this._texts = [];
+    // Hide all pooled texts; drawLabel() will make them visible again as needed.
+    for (const t of this._texts) t.visible = false;
+    this._textIdx = 0;
   }
 
   fillCircle(cx: number, cy: number, r: number, style: DrawStyle): void {
@@ -190,19 +196,36 @@ export class PixiDrawContext implements DrawContext {
       align?: 'left' | 'center' | 'right';
     } = {},
   ): void {
-    const t = new Text({
-      text,
-      style: new TextStyle({
-        fontSize:   style.fontSize   ?? 12,
-        fill:       style.fill       ?? '#ffffff',
-        fontFamily: style.fontFamily ?? 'sans-serif',
-        fontWeight: (style.fontWeight ?? 'normal') as TextStyle['fontWeight'],
-        align:      style.align      ?? 'center',
-      }),
-    });
-    t.anchor.set(0.5, 0.5);
+    const fontSize   = style.fontSize   ?? 12;
+    const fill       = style.fill       ?? '#ffffff';
+    const fontFamily = style.fontFamily ?? 'sans-serif';
+    const fontWeight = (style.fontWeight ?? 'normal') as TextStyle['fontWeight'];
+    const align      = style.align      ?? 'center';
+
+    let t: Text;
+    if (this._textIdx < this._texts.length) {
+      // Reuse a pooled Text object — avoids canvas texture reallocation.
+      t = this._texts[this._textIdx]!;
+      // Only assign if changed; PixiJS rebuilds the canvas texture on text mutation.
+      if (t.text !== text) t.text = text;
+      const ts = t.style as TextStyle;
+      ts.fontSize   = fontSize;
+      ts.fill       = fill;
+      ts.fontFamily = fontFamily;
+      ts.fontWeight = fontWeight;
+      ts.align      = align;
+      t.visible = true;
+    } else {
+      t = new Text({
+        text,
+        style: new TextStyle({ fontSize, fill, fontFamily, fontWeight, align }),
+      });
+      t.anchor.set(0.5, 0.5);
+      this._container.addChild(t);
+      this._texts.push(t);
+      t.visible = true;
+    }
     t.position.set(x, y);
-    this._container.addChild(t);
-    this._texts.push(t);
+    this._textIdx++;
   }
 }

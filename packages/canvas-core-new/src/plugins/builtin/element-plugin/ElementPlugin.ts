@@ -138,10 +138,16 @@ export class ElementPlugin implements CanvasPlugin {
 
   // Pointer state
   private _lastHoverId:    string | null = null;
-  private _dragState: { id: string; lastX: number; lastY: number } | null = null;
+  // grabOffsetX/Y = pointer world position minus element center at the moment of pointerdown.
+  // Used to compute absolute element position each frame so the click point stays under the pointer.
+  private _dragState: { id: string; lastX: number; lastY: number; grabOffsetX: number; grabOffsetY: number } | null = null;
 
   // Batch flag — suppresses per-element flush during setData()
   private _batchingAdd = false;
+
+  // Reverse index: solidId → Set of connectorIds that have sourceId or targetId pointing to it.
+  // Used to efficiently update connector endpoints when a solid is dragged.
+  private _solidToConns = new Map<string, Set<string>>();
 
   // ── Registries ────────────────────────────────────────────────────────────
 
@@ -335,6 +341,7 @@ export class ElementPlugin implements CanvasPlugin {
 
   /** Remove a solid element by id. */
   removeSolid(id: string): void {
+    this._solidToConns.delete(id);
     this._solidScene.evict(id);
     this._animSet.delete(id);
     const obj = this._solidPool.get(id);
@@ -362,12 +369,17 @@ export class ElementPlugin implements CanvasPlugin {
       console.warn(`[ElementPlugin] Unknown connector type: "${type}". Register it via registerConnector().`);
       return;
     }
-    const element = new Ctor(spec);
+    // Resolve from/to via getConnectionPoint when sourceId/targetId are provided
+    const resolved = this._resolveConnEndpoints(spec);
+    const resolvedSpec = { ...spec, from: resolved.from, to: resolved.to };
+    const element = new Ctor(resolvedSpec);
     // Inject router and marker registries so the connector's draw() can use them
     (element as BaseConnector)._routerRegistry = this._routerRegistry;
     (element as BaseConnector)._markerRegistry = this._markerRegistry;
     const obj     = new ElementObject(element);
     this._connPool.add(obj);
+    // Register in reverse index so drag updates keep this connector in sync
+    this._registerConnAttachment(resolvedSpec);
     this._ctx.events.emit('element:added', new ElementAddedEvent({ elementId: spec.id, elementType: 'connector' }));
     if (element.onAnimationTick) this._animSet.add(spec.id);
     if (!this._batchingAdd) this._cameraTracker.flush();
@@ -390,6 +402,7 @@ export class ElementPlugin implements CanvasPlugin {
 
   /** Remove a connector element by id. */
   removeConnector(id: string): void {
+    this._unregisterConn(id);
     this._connScene.evict(id);
     this._animSet.delete(id);
     const obj = this._connPool.get(id);
@@ -553,6 +566,80 @@ export class ElementPlugin implements CanvasPlugin {
     }
   }
 
+  // ── Connector attachment helpers ──────────────────────────────────────────
+
+  /**
+   * Register a connector in the reverse solid→connector index.
+   * Called by {@link addConnector} when the spec has `sourceId` or `targetId`.
+   */
+  private _registerConnAttachment(spec: BaseConnectorSpec): void {
+    for (const solidId of [spec.sourceId, spec.targetId]) {
+      if (!solidId) continue;
+      if (!this._solidToConns.has(solidId)) this._solidToConns.set(solidId, new Set());
+      this._solidToConns.get(solidId)!.add(spec.id);
+    }
+  }
+
+  /**
+   * Remove a connector from the reverse index.
+   * Called by {@link removeConnector}.
+   */
+  private _unregisterConn(connId: string): void {
+    for (const set of this._solidToConns.values()) set.delete(connId);
+  }
+
+  /**
+   * Compute `from`/`to` endpoints for a connector spec that carries
+   * `sourceId`/`targetId`, using each solid's `getConnectionPoint()`.
+   * Falls back to the raw `spec.from`/`spec.to` when an id is not found.
+   */
+  private _resolveConnEndpoints(spec: BaseConnectorSpec): { from: Point; to: Point } {
+    let from = spec.from;
+    let to   = spec.to;
+    if (spec.sourceId && spec.targetId) {
+      const srcCenter = this.getCenter(spec.sourceId);
+      const tgtCenter = this.getCenter(spec.targetId);
+      if (srcCenter && tgtCenter) {
+        from = this.getConnectionPoint(spec.sourceId, tgtCenter.x, tgtCenter.y) ?? from;
+        to   = this.getConnectionPoint(spec.targetId, srcCenter.x, srcCenter.y) ?? to;
+      }
+    } else if (spec.sourceId) {
+      from = this.getConnectionPoint(spec.sourceId, to.x, to.y) ?? from;
+    } else if (spec.targetId) {
+      to = this.getConnectionPoint(spec.targetId, from.x, from.y) ?? to;
+    }
+    return { from, to };
+  }
+
+  /**
+   * Recompute `from`/`to` for every connector attached to `movedSolidId`.
+   * Called automatically after a solid is repositioned during drag.
+   */
+  private _updateAttachedConnectors(movedSolidId: string): void {
+    const connIds = this._solidToConns.get(movedSolidId);
+    if (!connIds) return;
+    for (const connId of connIds) {
+      const connObj = this._connPool.get(connId);
+      if (!connObj) continue;
+      const spec   = connObj.element.spec as BaseConnectorSpec;
+      const patch: Partial<BaseConnectorSpec> = {};
+
+      if (spec.sourceId) {
+        const tgtCenter = spec.targetId ? this.getCenter(spec.targetId) : spec.to;
+        const dir = tgtCenter ?? spec.to;
+        const cp = this.getConnectionPoint(spec.sourceId, dir.x, dir.y);
+        if (cp) patch.from = cp;
+      }
+      if (spec.targetId) {
+        const srcCenter = spec.sourceId ? this.getCenter(spec.sourceId) : spec.from;
+        const dir = srcCenter ?? spec.from;
+        const cp = this.getConnectionPoint(spec.targetId, dir.x, dir.y);
+        if (cp) patch.to = cp;
+      }
+      if (patch.from || patch.to) this.updateConnector(connId, patch);
+    }
+  }
+
   // ── Pointer event handlers ────────────────────────────────────────────────
 
   private _hitTest(wx: number, wy: number): { id: string; type: 'solid' | 'connector' } | null {
@@ -622,8 +709,8 @@ export class ElementPlugin implements CanvasPlugin {
     // Drag move
     if (this._dragState) {
       const { id, lastX, lastY } = this._dragState;
-      const pool = this._solidPool.has(id) ? this._solidPool : this._connPool;
-      const type: 'solid' | 'connector' = this._solidPool.has(id) ? 'solid' : 'connector';
+      const isSolid = this._solidPool.has(id);
+      const type: 'solid' | 'connector' = isSolid ? 'solid' : 'connector';
       const dx = wx - lastX, dy = wy - lastY;
       this._dragState.lastX = wx;
       this._dragState.lastY = wy;
@@ -631,7 +718,13 @@ export class ElementPlugin implements CanvasPlugin {
         'element:dragmove',
         new ElementDragMoveEvent({ ...this._fields(id, type, wx, wy, e), dx, dy }),
       );
-      void pool; // accessed via hitTest; pool reference kept for clarity
+      // Move the solid using absolute pointer position minus grab offset so the
+      // clicked point stays under the pointer regardless of per-frame floating-point drift.
+      if (isSolid) {
+        const { grabOffsetX, grabOffsetY } = this._dragState!;
+        this.updateSolid(id, { x: wx - grabOffsetX, y: wy - grabOffsetY });
+        this._updateAttachedConnectors(id);
+      }
     }
   }
 
@@ -644,7 +737,14 @@ export class ElementPlugin implements CanvasPlugin {
     );
     const obj = this._solidPool.get(hit.id) ?? this._connPool.get(hit.id);
     if (obj?.element.spec.draggable) {
-      this._dragState = { id: hit.id, lastX: wx, lastY: wy };
+      // Record the offset from pointer to element center so the clicked point
+      // stays under the pointer throughout the drag (absolute positioning each frame).
+      const center = this._solidPool.has(hit.id)
+        ? (obj.element as BaseSolid).getCenter()
+        : { x: (obj.element.spec as BaseConnectorSpec).from.x, y: (obj.element.spec as BaseConnectorSpec).from.y };
+      this._dragState = { id: hit.id, lastX: wx, lastY: wy, grabOffsetX: wx - center.x, grabOffsetY: wy - center.y };
+      // Suspend viewport pan so it doesn't fight the element drag
+      this._ctx.camera.lockPan();
       this._ctx.events.emit(
         'element:dragstart',
         new ElementDragStartEvent({ ...this._fields(hit.id, hit.type, wx, wy, e), dx: 0, dy: 0 }),
@@ -656,11 +756,13 @@ export class ElementPlugin implements CanvasPlugin {
     if (this._dragState) {
       const { id } = this._dragState;
       const type: 'solid' | 'connector' = this._solidPool.has(id) ? 'solid' : 'connector';
+      this._dragState = null;
+      // Resume viewport pan now that element drag is done
+      this._ctx.camera.unlockPan();
       this._ctx.events.emit(
         'element:dragend',
         new ElementDragEndEvent({ ...this._fields(id, type, wx, wy, e), dx: 0, dy: 0 }),
       );
-      this._dragState = null;
     }
     const hit = this._hitTest(wx, wy);
     if (!hit) return;

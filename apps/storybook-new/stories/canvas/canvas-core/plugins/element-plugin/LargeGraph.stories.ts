@@ -62,6 +62,8 @@ function generateGrid(
           label: id,
           style: { fill: PALETTE[(r * cols + c) % PALETTE.length]!, stroke: '#0f172a', strokeWidth: 1 },
           interactive: true,
+          draggable: true,
+          cursor: 'grab',
           states: { hovered: { strokeWidth: 3, stroke: '#ffffff' } },
         } as CircleElementSpec,
       });
@@ -131,7 +133,7 @@ export const LargeGraph: Story = {
     });
     await canvas.plugins.register(elements);
 
-    const params = { cols: 50, rows: 50 };
+    const params = { cols: 20, rows: 20 };
 
     function rebuild(): void {
       const { solids, connectors } = generateGrid(params.cols, params.rows);
