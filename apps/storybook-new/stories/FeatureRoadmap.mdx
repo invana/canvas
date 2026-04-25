@@ -1,0 +1,607 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Feature Roadmap" />
+
+# @invana/canvas — Feature Roadmap
+
+**Status:** In Progress &nbsp;|&nbsp; **Updated:** 2026-04-25
+
+Progress tracker mapped to `docs/rfc-feature-roadmap.md`.
+A feature is ✅ when it has a working story. ⬜ = not yet implemented / no story.
+
+---
+
+## 1. Graph Operations
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>Load graph</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Read nodes and edges</td><td>✅</td><td>ElementPlugin / Elements / Element Lifecycle — getSolid, getConnector</td></tr>
+    <tr><td>Count nodes and edges</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Add node</td><td>✅</td><td>ElementPlugin / Elements / Element Lifecycle — addSolid</td></tr>
+    <tr><td>Add edge</td><td>✅</td><td>ElementPlugin / Elements / Element Lifecycle — addConnector</td></tr>
+    <tr><td>Remove node</td><td>✅</td><td>ElementPlugin / Elements / Element Lifecycle — removeSolid</td></tr>
+    <tr><td>Remove edge</td><td>✅</td><td>ElementPlugin / Elements / Element Lifecycle — removeConnector</td></tr>
+    <tr><td>Set data</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Clear</td><td>✅</td><td>ElementPlugin / Elements / Element Lifecycle — clear()</td></tr>
+    <tr><td>Undo / Redo</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 2. Node Styles
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>Radius</td><td>✅</td><td>ShapePlugin / Shape Sampler</td></tr>
+    <tr><td>Color (solid, data-driven)</td><td>✅</td><td>ShapePlugin / Fill Styles</td></tr>
+    <tr><td>Color pie</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Shape (circle, square, diamond, triangle, star, polygon…)</td><td>✅</td><td>ShapePlugin / Shape Sampler</td></tr>
+    <tr><td>Text / Label</td><td>✅</td><td>ElementPlugin / Elements / Element Lifecycle, States</td></tr>
+    <tr><td>Stroke</td><td>✅</td><td>ShapePlugin / Shape Sampler</td></tr>
+    <tr><td>Outline</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Icon</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Image (texture fill)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Badge</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Halo</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Pulse</td><td>✅</td><td>ShapePlugin / Animations / Pulse</td></tr>
+    <tr><td>Custom charts</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Theme presets</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Zoom-dependent styles (LOD)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Z-index override</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+### Ports
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>Port groups</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Port layouts (absolute, left/right/top/bottom, line, ellipse, ellipseSpread, custom)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Port label layouts</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Port visibility (always / hover / never)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Port styling</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Dynamic ports (add/remove at runtime)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Connection constraints per port</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Connection validation</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Port position compensation on resize</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Port snapping during drag-connect</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Port hover / click events</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Port tooltip</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 3. Edge Styles
+
+### Basic Styles
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>Width</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
+    <tr><td>Color</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
+    <tr><td>Text / Label</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
+    <tr><td>Badge</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Outline</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Halo</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Pulse (animated flow)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Parallel edges</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Arrow size</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
+    <tr><td>Zoom-dependent text</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Offset (source / target)</td><td>✅</td><td>ElementPlugin / Connectors / Connector Offset</td></tr>
+  </tbody>
+</table>
+
+### Routers
+
+<table>
+  <thead><tr><th>Router</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>normal</td><td>✅</td><td>ElementPlugin / Connectors / Routers</td></tr>
+    <tr><td>orth</td><td>✅</td><td>ElementPlugin / Connectors / Routers</td></tr>
+    <tr><td>oneSide</td><td>✅</td><td>ElementPlugin / Connectors / Routers</td></tr>
+    <tr><td>er</td><td>✅</td><td>ElementPlugin / Connectors / Routers</td></tr>
+    <tr><td>manhattan</td><td>⬜</td><td>—</td></tr>
+    <tr><td>metro</td><td>⬜</td><td>—</td></tr>
+    <tr><td>custom (registerRouter)</td><td>✅</td><td>ElementPlugin / Connectors / Custom Router</td></tr>
+  </tbody>
+</table>
+
+### Connectors
+
+<table>
+  <thead><tr><th>Connector</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>straight</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
+    <tr><td>bezier</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
+    <tr><td>quadratic</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
+    <tr><td>smooth (Catmull-Rom)</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
+    <tr><td>orthogonal</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
+    <tr><td>rounded</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
+    <tr><td>jumpover</td><td>⬜</td><td>—</td></tr>
+    <tr><td>custom (registerConnector)</td><td>✅</td><td>ElementPlugin / Connectors / Custom Connector</td></tr>
+  </tbody>
+</table>
+
+### Markers
+
+<table>
+  <thead><tr><th>Marker</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>triangle / triangle-outline</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
+    <tr><td>block</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
+    <tr><td>classic</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
+    <tr><td>diamond / diamond-outline</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
+    <tr><td>cross</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
+    <tr><td>async</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
+    <tr><td>circle / circle-outline</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
+    <tr><td>circle-plus</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
+    <tr><td>square / square-outline</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
+    <tr><td>ellipse</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
+    <tr><td>path (arbitrary SVG path)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>custom SVG element</td><td>⬜</td><td>—</td></tr>
+    <tr><td>custom registered (registerMarker)</td><td>✅</td><td>ElementPlugin / Connectors / Markers — star5 example</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 4. Text Styles
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>Font family</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Font style (bold, italic)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Color</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Size</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Centered text</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Position (top, bottom, left, right, center, custom offset)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Multiline</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Background (pill / rect behind label)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Secondary label</td><td>⬜</td><td>—</td></tr>
+    <tr><td>RTL support</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 5. Layers & Overlays
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>Background color</td><td>✅</td><td>BackgroundPlugin / Background Solid</td></tr>
+    <tr><td>Background dots pattern</td><td>✅</td><td>BackgroundPlugin / Background Dots</td></tr>
+    <tr><td>Background grid pattern</td><td>✅</td><td>BackgroundPlugin / Background Grid</td></tr>
+    <tr><td>Background lines pattern</td><td>✅</td><td>BackgroundPlugin / Background Lines</td></tr>
+    <tr><td>Interactive background</td><td>✅</td><td>BackgroundPlugin / Background Interactive</td></tr>
+    <tr><td>Free drawing (freehand layer)</td><td>✅</td><td>DrawingPlugin / Circuit Board, Constellation Map, Kids Art, Masterpiece</td></tr>
+    <tr><td>Category annotation</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Distance annotation</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Overlays + annotations</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Context menu (layer)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Editable notes</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Text on edge extremities</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Edge badges (layer)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Flowlines</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Diagram shapes</td><td>⬜</td><td>—</td></tr>
+    <tr><td>D3 integration</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Density contours</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Konva.js integration</td><td>⬜</td><td>—</td></tr>
+    <tr><td>PixiJS integration</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Cluster annotation</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Blueprint overlay</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Animated edges (layer)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Async node metadata</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Identity card nodes</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Org-chart DOM nodes</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Annotations plugin</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 6. Interaction
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>Hover</td><td>✅</td><td>ElementPlugin / Elements / Events Interactive, States</td></tr>
+    <tr><td>Click</td><td>✅</td><td>ElementPlugin / Elements / Events Interactive</td></tr>
+    <tr><td>Select</td><td>✅</td><td>ElementPlugin / Elements / States</td></tr>
+    <tr><td>Custom selection style</td><td>✅</td><td>ElementPlugin / Elements / States</td></tr>
+    <tr><td>Disabled state</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Panning</td><td>✅</td><td>Camera / Camera Controls</td></tr>
+    <tr><td>Rectangle selection</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Lasso selection</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Selection API (get/set/clear)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Drag nodes</td><td>✅</td><td>ElementPlugin / Elements / Drag With Connectors</td></tr>
+    <tr><td>Badge interactions</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Node resizing</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Container resizing</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Edge rewiring</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Group selection</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Connect nodes interactively</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Keyboard interactions</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Draggable / non-draggable lock</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Node snapping</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Port snapping</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Halo masking</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Fast highlight (GPU hover)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Hold-space-to-drag</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Scroll to pan</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 7. Animations
+
+### Shape / Node / Edge
+
+<table>
+  <thead><tr><th>Animation</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>breathe</td><td>✅</td><td>ShapePlugin / Animations / Breathe</td></tr>
+    <tr><td>pulse</td><td>✅</td><td>ShapePlugin / Animations / Pulse</td></tr>
+    <tr><td>fadeIn</td><td>✅</td><td>ShapePlugin / Animations / Fade In</td></tr>
+    <tr><td>colorCycle</td><td>✅</td><td>ShapePlugin / Animations / Color Cycle</td></tr>
+    <tr><td>marchingAnts</td><td>✅</td><td>ShapePlugin / Animations / Marching Ants</td></tr>
+    <tr><td>dashedFlow</td><td>✅</td><td>ShapePlugin / Animations / Dashed Flow</td></tr>
+    <tr><td>borderGlow</td><td>✅</td><td>ShapePlugin / Animations / Border Glow</td></tr>
+    <tr><td>Animated halo (spec-driven)</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+### Camera
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>Camera pan / zoom animate</td><td>✅</td><td>Camera / Camera Controls</td></tr>
+    <tr><td>Animate to bounds (fitContent)</td><td>✅</td><td>Camera / Camera Controls</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 8. Layouts
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>Force layout (CPU)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Force layout (GPU)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Force layout GPU vs CPU benchmark</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Force layout (large graph)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Force layout auto-stop</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Force layout with masses / weights</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Force layout automatic settings</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Grid layout</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Concentric layout</td><td>⬜</td><td>—</td></tr>
+    <tr><td>ForceLink layout</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Continuous ForceLink</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Hierarchical layout</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Hierarchical advanced</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Hierarchical sort siblings</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Hierarchical pack siblings</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Hierarchical pack sitemap</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Sequential layout</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Radial layout</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Local grid</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Local ForceLink</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Local force</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Local concentric</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Local radial</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Incremental ungrouping</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Incremental expand</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Expand with pinning</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Remove node overlap</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Circular layout</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Circle-packing layout</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Expand/collapse in place</td><td>⬜</td><td>—</td></tr>
+    <tr><td>In-place resize</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 9. Transformations & Grouping
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>Filter nodes</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Filter edges</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Group nodes</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Group edges</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Visual grouping</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Visual grouping clustering</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Visual grouping manual</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Visual grouping highlight</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Visual grouping expand/collapse</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Group on zoom</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Onion decomposition</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Clustering middleware</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Node collapsing</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Neighbor merging</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Neighbor generation</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Virtual properties</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Transformation pipeline</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Multilevel grouping</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Visual grouping geo</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Drilldown API</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Group layout optimization</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Easy grouping</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 10. Analysis
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>Data-driven styles</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Shortest path</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Cycle detection</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Weakly connected components</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Data lineage</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Minimum spanning tree</td><td>⬜</td><td>—</td></tr>
+    <tr><td>BFS / DFS traversal</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Betweenness centrality</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Other centrality (degree, closeness, eigenvector, PageRank)</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 11. Geo Mode
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>Geographical mode</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Dynamic geo base maps</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Geo clustering</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Indoor maps</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Vector layers / GeoJSON</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Vector tiles</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Native map provider layers</td><td>⬜</td><td>—</td></tr>
+    <tr><td>ESRI / ArcGIS basemap</td><td>⬜</td><td>—</td></tr>
+    <tr><td>ESRI vector tiles</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Geo mode + heatmap</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Geo mode + marker clustering</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Transport network (geo)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Show overlapping nodes</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Visual grouping (geo)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Geo mode + layouts</td><td>⬜</td><td>—</td></tr>
+    <tr><td>PNG export with geo map</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 12. Timeline
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>Timeline control</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Time layout</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Timeline animation</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Node lifespans</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 13. Data Import / Export
+
+### Import
+
+<table>
+  <thead><tr><th>Format</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>JSON</td><td>⬜</td><td>—</td></tr>
+    <tr><td>GEXF</td><td>⬜</td><td>—</td></tr>
+    <tr><td>GraphML</td><td>⬜</td><td>—</td></tr>
+    <tr><td>MTX</td><td>⬜</td><td>—</td></tr>
+    <tr><td>CSV</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Excel (.xlsx)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Custom JSON mapping</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Neo4j Cypher</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Google Spanner</td><td>⬜</td><td>—</td></tr>
+    <tr><td>SPARQL to JSON</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+### Export
+
+<table>
+  <thead><tr><th>Format</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>JSON</td><td>⬜</td><td>—</td></tr>
+    <tr><td>CSV</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Excel (.xlsx)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Excel (advanced, multi-sheet)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>GEXF</td><td>⬜</td><td>—</td></tr>
+    <tr><td>GraphML</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 14. Image Export
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>PNG export</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Export selection only</td><td>⬜</td><td>—</td></tr>
+    <tr><td>PNG with watermark</td><td>⬜</td><td>—</td></tr>
+    <tr><td>SVG export</td><td>⬜</td><td>—</td></tr>
+    <tr><td>PNG with geographical map</td><td>⬜</td><td>—</td></tr>
+    <tr><td>PNG with geo map + vector layers</td><td>⬜</td><td>—</td></tr>
+    <tr><td>PDF export</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Canvas layer export</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 15. UI & Controls
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>Background color</td><td>✅</td><td>BackgroundPlugin / Background Solid</td></tr>
+    <tr><td>Background patterns</td><td>✅</td><td>BackgroundPlugin / Background Dots/Grid/Lines</td></tr>
+    <tr><td>Dark mode</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Cursor style</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Fullscreen</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Settings panel</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Tooltip</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Tooltip (template-based)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Legend</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Branding / watermark</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Scrollable page</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Fuzzy search</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Import progress bar</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Context menu</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Node label editing</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Minimap / Overview</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Drag and drop (file import)</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 16. Performance
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>Large graph rendering (100k+ nodes)</td><td>✅</td><td>ElementPlugin / Elements / Large Graph</td></tr>
+    <tr><td>GPU-accelerated layout</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Filtering performance</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Fast highlight (GPU hover)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Force layout auto-stop</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Culling (RBush spatial index)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>LOD (zoom-dependent styles)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>cacheAsTexture</td><td>⬜</td><td>—</td></tr>
+    <tr><td>renderGroup</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Dirty-flag batching</td><td>⬜</td><td>—</td></tr>
+    <tr><td>RenderTexture pooling</td><td>⬜</td><td>—</td></tr>
+    <tr><td>WebWorker layout</td><td>⬜</td><td>—</td></tr>
+    <tr><td>GPU instancing</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 17. Integrations
+
+<table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>React component wrapper</td><td>⬜</td><td>—</td></tr>
+    <tr><td>React + Minimap</td><td>⬜</td><td>—</td></tr>
+    <tr><td>D3.js interop</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Konva.js overlay</td><td>⬜</td><td>—</td></tr>
+    <tr><td>PixiJS overlay</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Mapbox / MapLibre</td><td>⬜</td><td>—</td></tr>
+    <tr><td>ESRI / ArcGIS</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 18. Graph Generators
+
+<table>
+  <thead><tr><th>Generator</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>Random (Erdős–Rényi)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Grid</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Tree</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Small world (Watts–Strogatz)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Power law (Barabási–Albert)</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+---
+
+## 19. Gallery / Complex Demos
+
+<table>
+  <thead><tr><th>Demo</th><th>Status</th><th>Story</th></tr></thead>
+  <tbody>
+    <tr><td>Transport network analysis</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Fraud detection</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Supply chain</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Cyber security log analysis</td><td>⬜</td><td>—</td></tr>
+    <tr><td>IT management</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Anti-money laundering</td><td>⬜</td><td>—</td></tr>
+    <tr><td>iPhone parts origin</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Draw your graph</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Parallel view (two canvas instances)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Real-time collaboration</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Annotations demo</td><td>⬜</td><td>—</td></tr>
+    <tr><td>AI classification</td><td>⬜</td><td>—</td></tr>
+    <tr><td>AI recommendation</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Accessibility</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Neighborhood highlight</td><td>⬜</td><td>—</td></tr>
+    <tr><td>US Airlines (geo map)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Visual grouping of large web</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Radial layout on transport network</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Multiple canvas instances</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Flowchart / diagram editor</td><td>⬜</td><td>—</td></tr>
+    <tr><td>ER diagram</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Pipeline editor</td><td>⬜</td><td>—</td></tr>
+  </tbody>
+</table>
+
+---
+
+## Summary
+
+<table>
+  <thead><tr><th>Section</th><th>Implemented</th><th>Total</th></tr></thead>
+  <tbody>
+    <tr><td>1. Graph Operations</td><td>5</td><td>10</td></tr>
+    <tr><td>2. Node Styles</td><td>6</td><td>16</td></tr>
+    <tr><td>2a. Ports</td><td>0</td><td>12</td></tr>
+    <tr><td>3. Edge Styles — Basic</td><td>5</td><td>11</td></tr>
+    <tr><td>3a. Routers</td><td>5</td><td>7</td></tr>
+    <tr><td>3b. Connectors</td><td>7</td><td>8</td></tr>
+    <tr><td>3c. Markers</td><td>11</td><td>13</td></tr>
+    <tr><td>4. Text Styles</td><td>0</td><td>10</td></tr>
+    <tr><td>5. Layers &amp; Overlays</td><td>6</td><td>26</td></tr>
+    <tr><td>6. Interaction</td><td>6</td><td>26</td></tr>
+    <tr><td>7. Shape Animations</td><td>7</td><td>8</td></tr>
+    <tr><td>7a. Camera Animations</td><td>2</td><td>2</td></tr>
+    <tr><td>8. Layouts</td><td>0</td><td>31</td></tr>
+    <tr><td>9. Transformations &amp; Grouping</td><td>0</td><td>22</td></tr>
+    <tr><td>10. Analysis</td><td>0</td><td>9</td></tr>
+    <tr><td>11. Geo Mode</td><td>0</td><td>16</td></tr>
+    <tr><td>12. Timeline</td><td>0</td><td>4</td></tr>
+    <tr><td>13. Data Import</td><td>0</td><td>10</td></tr>
+    <tr><td>13a. Data Export</td><td>0</td><td>6</td></tr>
+    <tr><td>14. Image Export</td><td>0</td><td>8</td></tr>
+    <tr><td>15. UI &amp; Controls</td><td>2</td><td>17</td></tr>
+    <tr><td>16. Performance</td><td>1</td><td>13</td></tr>
+    <tr><td>17. Integrations</td><td>0</td><td>7</td></tr>
+    <tr><td>18. Graph Generators</td><td>0</td><td>5</td></tr>
+    <tr><td>19. Gallery / Complex Demos</td><td>0</td><td>22</td></tr>
+    <tr><td><strong>Total</strong></td><td><strong>63</strong></td><td><strong>359</strong></td></tr>
+  </tbody>
+</table>

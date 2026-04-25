@@ -22,6 +22,7 @@
     "@storybook/addon-links": "^10.1.10",
     "@storybook/html": "^10.1.10",
     "@storybook/html-vite": "^10.1.10",
+    "remark-gfm": "^4.0.1",
     "storybook": "^10.1.10",
     "typescript": "5.9.2",
     "vite": "^7.3.0"
