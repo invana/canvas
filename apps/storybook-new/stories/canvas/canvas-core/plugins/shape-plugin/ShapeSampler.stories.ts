@@ -11,7 +11,7 @@ import { Canvas, BackgroundPlugin, ShapePlugin, DevInfoPlugin } from '@invana/ca
 import { createContainer } from '../../../../../src/div-utils.js';
 import GUI from 'lil-gui';
 
-const meta: Meta = { title: 'Canvas/canvas-core/Plugins/ShapePlugin' };
+const meta: Meta = { title: '2. Node Styles' };
 export default meta;
 type Story = StoryObj;
 

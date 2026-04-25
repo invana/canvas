@@ -19,7 +19,7 @@ import { Canvas, BackgroundPlugin, DrawingPlugin } from '@invana/canvas-core-new
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = {
-  title: 'Canvas/canvas-core/Shapes',
+  title: '2. Node Styles',
 };
 export default meta;
 type Story = StoryObj;

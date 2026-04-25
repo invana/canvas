@@ -22,7 +22,7 @@ import {
 } from '@invana/canvas-core-new';
 import { createContainer } from '../../../../../src/div-utils.js';
 
-const meta: Meta = { title: 'Canvas/canvas-core/Plugins/ElementPlugin/Elements' };
+const meta: Meta = { title: '2. Node Styles' };
 export default meta;
 type Story = StoryObj;
 

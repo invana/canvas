@@ -21,7 +21,7 @@ import { Canvas, BackgroundPlugin, DrawingPlugin } from '@invana/canvas-core-new
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = {
-  title: 'Canvas/canvas-core/Camera',
+  title: '7. Animations/Camera',
 };
 export default meta;
 type Story = StoryObj;
@@ -82,7 +82,7 @@ function renderScene(draw: DrawingPlugin, items: SceneItem[]): void {
 }
 
 // ─── story ───────────────────────────────────────────────────────────────────
-export const CameraShowcase: Story = {
+export const CameraControls: Story = {
   name: 'Camera Controls',
   render: () => createContainer(),
   play: async () => {

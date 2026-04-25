@@ -17,7 +17,7 @@ import { Canvas, BackgroundPlugin, ShapePlugin } from '@invana/canvas-core-new';
 import { createContainer } from '../../../../../../src/div-utils.js';
 import GUI from 'lil-gui';
 
-const meta: Meta = { title: 'Canvas/canvas-core/Plugins/ShapePlugin/Animations' };
+const meta: Meta = { title: '7. Animations/Nodes & Edges' };
 export default meta;
 type Story = StoryObj;
 

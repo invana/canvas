@@ -18,7 +18,7 @@ import type { DevInfoCorner } from '@invana/canvas-core-new';
 import { createContainer } from '../../../../../src/div-utils.js';
 
 const meta: Meta = {
-  title: 'Canvas/canvas-core/plugins/DevInfoPlugin',
+  title: '15. UI & Controls',
 };
 export default meta;
 type Story = StoryObj;

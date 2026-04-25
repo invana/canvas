@@ -23,7 +23,7 @@ import { Canvas, DrawingPlugin } from '@invana/canvas-core-new';
 import { createContainer } from '../../../../../src/div-utils.js';
 
 const meta: Meta = {
-  title: 'Canvas/canvas-core/Plugins/DrawingPlugin',
+  title: '5. Layers & Overlays/Drawing',
 };
 export default meta;
 type Story = StoryObj;

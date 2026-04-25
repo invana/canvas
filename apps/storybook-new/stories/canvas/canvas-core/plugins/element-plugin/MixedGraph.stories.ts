@@ -33,7 +33,7 @@ import type { BaseSolidSpec, BaseConnectorSpec, CircleElementSpec } from '@invan
 // BaseSolidSpec and BaseConnectorSpec are re-exported from the element-plugin
 import { createContainer } from '../../../../../src/div-utils.js';
 
-const meta: Meta = { title: 'Canvas/canvas-core/Plugins/ElementPlugin/Interactions' };
+const meta: Meta = { title: '1. Graph Operations' };
 export default meta;
 type Story = StoryObj;
 

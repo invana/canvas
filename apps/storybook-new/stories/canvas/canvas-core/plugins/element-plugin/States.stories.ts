@@ -25,7 +25,7 @@ import {
 } from '@invana/canvas-core-new';
 import { createContainer } from '../../../../../src/div-utils.js';
 
-const meta: Meta = { title: 'Canvas/canvas-core/Plugins/ElementPlugin/Elements' };
+const meta: Meta = { title: '6. Interaction' };
 export default meta;
 type Story = StoryObj;
 

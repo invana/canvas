@@ -15,7 +15,7 @@ import {
 } from '@invana/canvas-core-new';
 import { createContainer } from '../../../../../src/div-utils.js';
 
-const meta: Meta = { title: 'Canvas/canvas-core/Plugins/ElementPlugin/Connectors' };
+const meta: Meta = { title: '3. Edge Styles/Connectors' };
 export default meta;
 type Story = StoryObj;
 

@@ -11,11 +11,11 @@ import { createContainer } from '../../../../../src/div-utils.js';
 import { drawScatter } from '../_utils.js';
 import GUI from 'lil-gui';
 
-const meta: Meta = { title: 'Canvas/canvas-core/Plugins/BackgroundPlugin' };
+const meta: Meta = { title: '5. Layers & Overlays/Background' };
 export default meta;
 type Story = StoryObj;
 
-export const Grid: Story = {
+export const BackgroundGrid: Story = {
   name: 'Grid',
   render: () => createContainer(),
   play: async () => {

@@ -17,14 +17,14 @@ A feature is ✅ when it has a working story. ⬜ = not yet implemented / no sto
   <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
   <tbody>
     <tr><td>Load graph</td><td>⬜</td><td>—</td></tr>
-    <tr><td>Read nodes and edges</td><td>✅</td><td>ElementPlugin / Elements / Element Lifecycle — getSolid, getConnector</td></tr>
+    <tr><td>Read nodes and edges</td><td>✅</td><td>1. Graph Operations / Element Lifecycle</td></tr>
     <tr><td>Count nodes and edges</td><td>⬜</td><td>—</td></tr>
-    <tr><td>Add node</td><td>✅</td><td>ElementPlugin / Elements / Element Lifecycle — addSolid</td></tr>
-    <tr><td>Add edge</td><td>✅</td><td>ElementPlugin / Elements / Element Lifecycle — addConnector</td></tr>
-    <tr><td>Remove node</td><td>✅</td><td>ElementPlugin / Elements / Element Lifecycle — removeSolid</td></tr>
-    <tr><td>Remove edge</td><td>✅</td><td>ElementPlugin / Elements / Element Lifecycle — removeConnector</td></tr>
-    <tr><td>Set data</td><td>⬜</td><td>—</td></tr>
-    <tr><td>Clear</td><td>✅</td><td>ElementPlugin / Elements / Element Lifecycle — clear()</td></tr>
+    <tr><td>Add node</td><td>✅</td><td>1. Graph Operations / Element Lifecycle</td></tr>
+    <tr><td>Add edge</td><td>✅</td><td>1. Graph Operations / Element Lifecycle</td></tr>
+    <tr><td>Remove node</td><td>✅</td><td>1. Graph Operations / Element Lifecycle</td></tr>
+    <tr><td>Remove edge</td><td>✅</td><td>1. Graph Operations / Element Lifecycle</td></tr>
+    <tr><td>Set data</td><td>✅</td><td>1. Graph Operations / Mixed Graph</td></tr>
+    <tr><td>Clear</td><td>✅</td><td>1. Graph Operations / Element Lifecycle</td></tr>
     <tr><td>Undo / Redo</td><td>⬜</td><td>—</td></tr>
   </tbody>
 </table>
@@ -36,22 +36,23 @@ A feature is ✅ when it has a working story. ⬜ = not yet implemented / no sto
 <table>
   <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
   <tbody>
-    <tr><td>Radius</td><td>✅</td><td>ShapePlugin / Shape Sampler</td></tr>
-    <tr><td>Color (solid, data-driven)</td><td>✅</td><td>ShapePlugin / Fill Styles</td></tr>
+    <tr><td>Radius</td><td>✅</td><td>2. Node Styles / Shape Sampler</td></tr>
+    <tr><td>Color (solid, data-driven)</td><td>✅</td><td>2. Node Styles / Fill Styles · Node Fill Styles</td></tr>
     <tr><td>Color pie</td><td>⬜</td><td>—</td></tr>
-    <tr><td>Shape (circle, square, diamond, triangle, star, polygon…)</td><td>✅</td><td>ShapePlugin / Shape Sampler</td></tr>
-    <tr><td>Text / Label</td><td>✅</td><td>ElementPlugin / Elements / Element Lifecycle, States</td></tr>
-    <tr><td>Stroke</td><td>✅</td><td>ShapePlugin / Shape Sampler</td></tr>
+    <tr><td>Shape (circle, square, diamond, triangle, star, polygon…)</td><td>✅</td><td>2. Node Styles / Shape Sampler · All Shapes · Solid Elements</td></tr>
+    <tr><td>Text / Label</td><td>✅</td><td>2. Node Styles / Solid Elements</td></tr>
+    <tr><td>Stroke</td><td>✅</td><td>2. Node Styles / Shape Sampler</td></tr>
     <tr><td>Outline</td><td>⬜</td><td>—</td></tr>
     <tr><td>Icon</td><td>⬜</td><td>—</td></tr>
     <tr><td>Image (texture fill)</td><td>⬜</td><td>—</td></tr>
     <tr><td>Badge</td><td>⬜</td><td>—</td></tr>
     <tr><td>Halo</td><td>⬜</td><td>—</td></tr>
-    <tr><td>Pulse</td><td>✅</td><td>ShapePlugin / Animations / Pulse</td></tr>
+    <tr><td>Pulse</td><td>✅</td><td>7. Animations / Nodes & Edges / Pulse</td></tr>
     <tr><td>Custom charts</td><td>⬜</td><td>—</td></tr>
     <tr><td>Theme presets</td><td>⬜</td><td>—</td></tr>
     <tr><td>Zoom-dependent styles (LOD)</td><td>⬜</td><td>—</td></tr>
     <tr><td>Z-index override</td><td>⬜</td><td>—</td></tr>
+    <tr><td>Custom element type</td><td>✅</td><td>2. Node Styles / Custom Element</td></tr>
   </tbody>
 </table>
 
@@ -84,17 +85,18 @@ A feature is ✅ when it has a working story. ⬜ = not yet implemented / no sto
 <table>
   <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
   <tbody>
-    <tr><td>Width</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
-    <tr><td>Color</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
-    <tr><td>Text / Label</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
+    <tr><td>Width</td><td>✅</td><td>3. Edge Styles / Connectors / Connectors</td></tr>
+    <tr><td>Color</td><td>✅</td><td>3. Edge Styles / Connectors / Connectors</td></tr>
+    <tr><td>Text / Label</td><td>✅</td><td>3. Edge Styles / Connectors / Connectors</td></tr>
     <tr><td>Badge</td><td>⬜</td><td>—</td></tr>
     <tr><td>Outline</td><td>⬜</td><td>—</td></tr>
     <tr><td>Halo</td><td>⬜</td><td>—</td></tr>
     <tr><td>Pulse (animated flow)</td><td>⬜</td><td>—</td></tr>
     <tr><td>Parallel edges</td><td>⬜</td><td>—</td></tr>
-    <tr><td>Arrow size</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
+    <tr><td>Arrow size</td><td>✅</td><td>3. Edge Styles / Markers / Markers</td></tr>
     <tr><td>Zoom-dependent text</td><td>⬜</td><td>—</td></tr>
-    <tr><td>Offset (source / target)</td><td>✅</td><td>ElementPlugin / Connectors / Connector Offset</td></tr>
+    <tr><td>Offset (source / target)</td><td>✅</td><td>3. Edge Styles / Connectors / Connector Offset</td></tr>
+    <tr><td>Vertices / waypoints</td><td>✅</td><td>3. Edge Styles / Connectors / Connector Vertices</td></tr>
   </tbody>
 </table>
 
@@ -103,13 +105,13 @@ A feature is ✅ when it has a working story. ⬜ = not yet implemented / no sto
 <table>
   <thead><tr><th>Router</th><th>Status</th><th>Story</th></tr></thead>
   <tbody>
-    <tr><td>normal</td><td>✅</td><td>ElementPlugin / Connectors / Routers</td></tr>
-    <tr><td>orth</td><td>✅</td><td>ElementPlugin / Connectors / Routers</td></tr>
-    <tr><td>oneSide</td><td>✅</td><td>ElementPlugin / Connectors / Routers</td></tr>
-    <tr><td>er</td><td>✅</td><td>ElementPlugin / Connectors / Routers</td></tr>
+    <tr><td>normal</td><td>✅</td><td>3. Edge Styles / Routers / Routers</td></tr>
+    <tr><td>orth</td><td>✅</td><td>3. Edge Styles / Routers / Routers</td></tr>
+    <tr><td>oneSide</td><td>✅</td><td>3. Edge Styles / Routers / Routers</td></tr>
+    <tr><td>er</td><td>✅</td><td>3. Edge Styles / Routers / Routers</td></tr>
     <tr><td>manhattan</td><td>⬜</td><td>—</td></tr>
     <tr><td>metro</td><td>⬜</td><td>—</td></tr>
-    <tr><td>custom (registerRouter)</td><td>✅</td><td>ElementPlugin / Connectors / Custom Router</td></tr>
+    <tr><td>custom (registerRouter)</td><td>✅</td><td>3. Edge Styles / Routers / Custom Router</td></tr>
   </tbody>
 </table>
 
@@ -118,14 +120,14 @@ A feature is ✅ when it has a working story. ⬜ = not yet implemented / no sto
 <table>
   <thead><tr><th>Connector</th><th>Status</th><th>Story</th></tr></thead>
   <tbody>
-    <tr><td>straight</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
-    <tr><td>bezier</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
-    <tr><td>quadratic</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
-    <tr><td>smooth (Catmull-Rom)</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
-    <tr><td>orthogonal</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
-    <tr><td>rounded</td><td>✅</td><td>ElementPlugin / Connectors / Connectors</td></tr>
+    <tr><td>straight</td><td>✅</td><td>3. Edge Styles / Connectors / Connectors</td></tr>
+    <tr><td>bezier</td><td>✅</td><td>3. Edge Styles / Connectors / Connectors</td></tr>
+    <tr><td>quadratic</td><td>✅</td><td>3. Edge Styles / Connectors / Connectors</td></tr>
+    <tr><td>smooth (Catmull-Rom)</td><td>✅</td><td>3. Edge Styles / Connectors / Connectors</td></tr>
+    <tr><td>orthogonal</td><td>✅</td><td>3. Edge Styles / Connectors / Connectors</td></tr>
+    <tr><td>rounded</td><td>✅</td><td>3. Edge Styles / Connectors / Connectors</td></tr>
     <tr><td>jumpover</td><td>⬜</td><td>—</td></tr>
-    <tr><td>custom (registerConnector)</td><td>✅</td><td>ElementPlugin / Connectors / Custom Connector</td></tr>
+    <tr><td>custom (registerConnector)</td><td>✅</td><td>3. Edge Styles / Connectors / Custom Connector</td></tr>
   </tbody>
 </table>
 
@@ -134,19 +136,19 @@ A feature is ✅ when it has a working story. ⬜ = not yet implemented / no sto
 <table>
   <thead><tr><th>Marker</th><th>Status</th><th>Story</th></tr></thead>
   <tbody>
-    <tr><td>triangle / triangle-outline</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
-    <tr><td>block</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
-    <tr><td>classic</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
-    <tr><td>diamond / diamond-outline</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
-    <tr><td>cross</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
-    <tr><td>async</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
-    <tr><td>circle / circle-outline</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
-    <tr><td>circle-plus</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
-    <tr><td>square / square-outline</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
-    <tr><td>ellipse</td><td>✅</td><td>ElementPlugin / Connectors / Markers</td></tr>
+    <tr><td>triangle / triangle-outline</td><td>✅</td><td>3. Edge Styles / Markers / Markers</td></tr>
+    <tr><td>block</td><td>✅</td><td>3. Edge Styles / Markers / Markers</td></tr>
+    <tr><td>classic</td><td>✅</td><td>3. Edge Styles / Markers / Markers</td></tr>
+    <tr><td>diamond / diamond-outline</td><td>✅</td><td>3. Edge Styles / Markers / Markers</td></tr>
+    <tr><td>cross</td><td>✅</td><td>3. Edge Styles / Markers / Markers</td></tr>
+    <tr><td>async</td><td>✅</td><td>3. Edge Styles / Markers / Markers</td></tr>
+    <tr><td>circle / circle-outline</td><td>✅</td><td>3. Edge Styles / Markers / Markers</td></tr>
+    <tr><td>circle-plus</td><td>✅</td><td>3. Edge Styles / Markers / Markers</td></tr>
+    <tr><td>square / square-outline</td><td>✅</td><td>3. Edge Styles / Markers / Markers</td></tr>
+    <tr><td>ellipse</td><td>✅</td><td>3. Edge Styles / Markers / Markers</td></tr>
     <tr><td>path (arbitrary SVG path)</td><td>⬜</td><td>—</td></tr>
     <tr><td>custom SVG element</td><td>⬜</td><td>—</td></tr>
-    <tr><td>custom registered (registerMarker)</td><td>✅</td><td>ElementPlugin / Connectors / Markers — star5 example</td></tr>
+    <tr><td>custom registered (registerMarker)</td><td>✅</td><td>3. Edge Styles / Markers / Markers — star5 example</td></tr>
   </tbody>
 </table>
 
@@ -177,12 +179,12 @@ A feature is ✅ when it has a working story. ⬜ = not yet implemented / no sto
 <table>
   <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
   <tbody>
-    <tr><td>Background color</td><td>✅</td><td>BackgroundPlugin / Background Solid</td></tr>
-    <tr><td>Background dots pattern</td><td>✅</td><td>BackgroundPlugin / Background Dots</td></tr>
-    <tr><td>Background grid pattern</td><td>✅</td><td>BackgroundPlugin / Background Grid</td></tr>
-    <tr><td>Background lines pattern</td><td>✅</td><td>BackgroundPlugin / Background Lines</td></tr>
-    <tr><td>Interactive background</td><td>✅</td><td>BackgroundPlugin / Background Interactive</td></tr>
-    <tr><td>Free drawing (freehand layer)</td><td>✅</td><td>DrawingPlugin / Circuit Board, Constellation Map, Kids Art, Masterpiece</td></tr>
+    <tr><td>Background color</td><td>✅</td><td>5. Layers & Overlays / Backgrounds / Background Solid</td></tr>
+    <tr><td>Background dots pattern</td><td>✅</td><td>5. Layers & Overlays / Backgrounds / Background Dots</td></tr>
+    <tr><td>Background grid pattern</td><td>✅</td><td>5. Layers & Overlays / Backgrounds / Background Grid</td></tr>
+    <tr><td>Background lines pattern</td><td>✅</td><td>5. Layers & Overlays / Backgrounds / Background Lines</td></tr>
+    <tr><td>Interactive background</td><td>✅</td><td>5. Layers & Overlays / Backgrounds / Background Interactive</td></tr>
+    <tr><td>Free drawing (freehand layer)</td><td>✅</td><td>5. Layers & Overlays / Free Drawing / Circuit Board · Constellation Map · Kids Art · Masterpiece</td></tr>
     <tr><td>Category annotation</td><td>⬜</td><td>—</td></tr>
     <tr><td>Distance annotation</td><td>⬜</td><td>—</td></tr>
     <tr><td>Overlays + annotations</td><td>⬜</td><td>—</td></tr>
@@ -213,16 +215,16 @@ A feature is ✅ when it has a working story. ⬜ = not yet implemented / no sto
 <table>
   <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
   <tbody>
-    <tr><td>Hover</td><td>✅</td><td>ElementPlugin / Elements / Events Interactive, States</td></tr>
-    <tr><td>Click</td><td>✅</td><td>ElementPlugin / Elements / Events Interactive</td></tr>
-    <tr><td>Select</td><td>✅</td><td>ElementPlugin / Elements / States</td></tr>
-    <tr><td>Custom selection style</td><td>✅</td><td>ElementPlugin / Elements / States</td></tr>
+    <tr><td>Hover</td><td>✅</td><td>6. Interaction / Events — Interactive · Shape Events — Interactive</td></tr>
+    <tr><td>Click</td><td>✅</td><td>6. Interaction / Events — Interactive · Shape Events — Interactive</td></tr>
+    <tr><td>Select</td><td>✅</td><td>6. Interaction / States</td></tr>
+    <tr><td>Custom selection style</td><td>✅</td><td>6. Interaction / States</td></tr>
     <tr><td>Disabled state</td><td>⬜</td><td>—</td></tr>
-    <tr><td>Panning</td><td>✅</td><td>Camera / Camera Controls</td></tr>
+    <tr><td>Panning</td><td>✅</td><td>7. Animations / Camera / Camera Controls</td></tr>
     <tr><td>Rectangle selection</td><td>⬜</td><td>—</td></tr>
     <tr><td>Lasso selection</td><td>⬜</td><td>—</td></tr>
     <tr><td>Selection API (get/set/clear)</td><td>⬜</td><td>—</td></tr>
-    <tr><td>Drag nodes</td><td>✅</td><td>ElementPlugin / Elements / Drag With Connectors</td></tr>
+    <tr><td>Drag nodes</td><td>✅</td><td>6. Interaction / Drag With Connectors</td></tr>
     <tr><td>Badge interactions</td><td>⬜</td><td>—</td></tr>
     <tr><td>Node resizing</td><td>⬜</td><td>—</td></tr>
     <tr><td>Container resizing</td><td>⬜</td><td>—</td></tr>
@@ -244,19 +246,21 @@ A feature is ✅ when it has a working story. ⬜ = not yet implemented / no sto
 
 ## 7. Animations
 
-### Shape / Node / Edge
+### Nodes & Edges
 
 <table>
-  <thead><tr><th>Animation</th><th>Status</th><th>Story</th></tr></thead>
+  <thead><tr><th>Animation</th><th>Target</th><th>Status</th><th>Story</th></tr></thead>
   <tbody>
-    <tr><td>breathe</td><td>✅</td><td>ShapePlugin / Animations / Breathe</td></tr>
-    <tr><td>pulse</td><td>✅</td><td>ShapePlugin / Animations / Pulse</td></tr>
-    <tr><td>fadeIn</td><td>✅</td><td>ShapePlugin / Animations / Fade In</td></tr>
-    <tr><td>colorCycle</td><td>✅</td><td>ShapePlugin / Animations / Color Cycle</td></tr>
-    <tr><td>marchingAnts</td><td>✅</td><td>ShapePlugin / Animations / Marching Ants</td></tr>
-    <tr><td>dashedFlow</td><td>✅</td><td>ShapePlugin / Animations / Dashed Flow</td></tr>
-    <tr><td>borderGlow</td><td>✅</td><td>ShapePlugin / Animations / Border Glow</td></tr>
-    <tr><td>Animated halo (spec-driven)</td><td>⬜</td><td>—</td></tr>
+    <tr><td>breathe</td><td>scale (sine-wave oscillation ±amplitude)</td><td>✅</td><td>7. Animations / Nodes & Edges / Breathe</td></tr>
+    <tr><td>pulse</td><td>3 staggered halo rings expanding + fading</td><td>✅</td><td>7. Animations / Nodes & Edges / Pulse</td></tr>
+    <tr><td>fadeIn</td><td>alpha — linear interpolation from `from` → 1.0</td><td>✅</td><td>7. Animations / Nodes & Edges / Fade In</td></tr>
+    <tr><td>colorCycle</td><td>fill color — discrete steps through palette</td><td>✅</td><td>7. Animations / Nodes & Edges / Color Cycle</td></tr>
+    <tr><td>marchingAnts</td><td>dashOffset — bidirectional dash march around border</td><td>✅</td><td>7. Animations / Nodes & Edges / Marching Ants</td></tr>
+    <tr><td>dashedFlow</td><td>dashOffset — unidirectional flow (forward or reverse)</td><td>✅</td><td>7. Animations / Nodes & Edges / Dashed Flow</td></tr>
+    <tr><td>borderGlow</td><td>strokeWidth — sine-wave between minWidth and maxWidth</td><td>✅</td><td>7. Animations / Nodes & Edges / Border Glow</td></tr>
+    <tr><td>Body animations overview</td><td>breathe · pulse · fadeIn · colorCycle combined</td><td>✅</td><td>7. Animations / Nodes & Edges / Body Animations</td></tr>
+    <tr><td>Border animations overview</td><td>marchingAnts · dashedFlow · borderGlow combined</td><td>✅</td><td>7. Animations / Nodes & Edges / Border Animations</td></tr>
+    <tr><td>Animated halo (spec-driven)</td><td>halo rings — declarative `halo.animated: true`</td><td>⬜</td><td>—</td></tr>
   </tbody>
 </table>
 
@@ -265,8 +269,8 @@ A feature is ✅ when it has a working story. ⬜ = not yet implemented / no sto
 <table>
   <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
   <tbody>
-    <tr><td>Camera pan / zoom animate</td><td>✅</td><td>Camera / Camera Controls</td></tr>
-    <tr><td>Animate to bounds (fitContent)</td><td>✅</td><td>Camera / Camera Controls</td></tr>
+    <tr><td>Camera pan / zoom animate</td><td>✅</td><td>7. Animations / Camera / Camera Controls</td></tr>
+    <tr><td>Animate to bounds (fitContent)</td><td>✅</td><td>7. Animations / Camera / Camera Controls</td></tr>
   </tbody>
 </table>
 
@@ -463,8 +467,9 @@ A feature is ✅ when it has a working story. ⬜ = not yet implemented / no sto
 <table>
   <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
   <tbody>
-    <tr><td>Background color</td><td>✅</td><td>BackgroundPlugin / Background Solid</td></tr>
-    <tr><td>Background patterns</td><td>✅</td><td>BackgroundPlugin / Background Dots/Grid/Lines</td></tr>
+    <tr><td>Background color</td><td>✅</td><td>5. Layers & Overlays / Backgrounds / Background Solid</td></tr>
+    <tr><td>Background patterns</td><td>✅</td><td>5. Layers & Overlays / Backgrounds / Background Dots · Grid · Lines</td></tr>
+    <tr><td>Dev info overlay (FPS + element count)</td><td>✅</td><td>15. UI & Controls / DevInfo Overlay</td></tr>
     <tr><td>Dark mode</td><td>⬜</td><td>—</td></tr>
     <tr><td>Cursor style</td><td>⬜</td><td>—</td></tr>
     <tr><td>Fullscreen</td><td>⬜</td><td>—</td></tr>
@@ -490,7 +495,7 @@ A feature is ✅ when it has a working story. ⬜ = not yet implemented / no sto
 <table>
   <thead><tr><th>Feature</th><th>Status</th><th>Story</th></tr></thead>
   <tbody>
-    <tr><td>Large graph rendering (100k+ nodes)</td><td>✅</td><td>ElementPlugin / Elements / Large Graph</td></tr>
+    <tr><td>Large graph rendering (100k+ nodes)</td><td>✅</td><td>16. Performance / Large Graph</td></tr>
     <tr><td>GPU-accelerated layout</td><td>⬜</td><td>—</td></tr>
     <tr><td>Filtering performance</td><td>⬜</td><td>—</td></tr>
     <tr><td>Fast highlight (GPU hover)</td><td>⬜</td><td>—</td></tr>

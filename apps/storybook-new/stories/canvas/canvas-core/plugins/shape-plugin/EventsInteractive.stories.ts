@@ -28,12 +28,12 @@ import {
 import GUI from 'lil-gui';
 import { action } from 'storybook/actions';
 
-const meta: Meta = { title: 'Canvas/canvas-core/Plugins/ShapePlugin' };
+const meta: Meta = { title: '6. Interaction' };
 export default meta;
 type Story = StoryObj;
 
-export const EventsInteractive: Story = {
-  name: 'Events — Interactive',
+export const ShapeEventsInteractive: Story = {
+  name: 'Shape Events — Interactive',
   render: () => {
     const container = document.createElement('div');
     container.id = 'canvas-example';
