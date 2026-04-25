@@ -137,20 +137,22 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
     let arrowTip  = to;
     let arrowTail = from;
 
-    if (this.spec.targetRadius && this.spec.targetRadius > 0) {
+    const effectiveTargetTrim = (this.spec.targetRadius ?? 0) + (this.spec.targetOffset ?? 0);
+    if (effectiveTargetTrim > 0) {
       arrowTip  = {
-        x: to.x - this.spec.targetRadius * Math.cos(endAngle),
-        y: to.y - this.spec.targetRadius * Math.sin(endAngle),
+        x: to.x - effectiveTargetTrim * Math.cos(endAngle),
+        y: to.y - effectiveTargetTrim * Math.sin(endAngle),
       };
       drawRoute = this._trimRouteEnd(drawRoute, arrowTip);
     }
 
-    if (this.spec.sourceRadius && this.spec.sourceRadius > 0) {
+    const effectiveSourceTrim = (this.spec.sourceRadius ?? 0) + (this.spec.sourceOffset ?? 0);
+    if (effectiveSourceTrim > 0) {
       // startAngle points from cp1 back toward `from`; negate to get forward direction
       const fwdAngle = startAngle + Math.PI;
       arrowTail = {
-        x: from.x + this.spec.sourceRadius * Math.cos(fwdAngle),
-        y: from.y + this.spec.sourceRadius * Math.sin(fwdAngle),
+        x: from.x + effectiveSourceTrim * Math.cos(fwdAngle),
+        y: from.y + effectiveSourceTrim * Math.sin(fwdAngle),
       };
       drawRoute = this._trimRouteStart(drawRoute, arrowTail);
     }

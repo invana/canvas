@@ -248,6 +248,18 @@ export interface BaseConnectorSpec {
    */
   targetRadius?: number;
   /**
+   * Additional gap (world pixels) added beyond `sourceRadius`.
+   * Use this to leave breathing room between the connector start and the source
+   * element boundary without changing `sourceRadius`.  Defaults to `0`.
+   */
+  sourceOffset?: number;
+  /**
+   * Additional gap (world pixels) added beyond `targetRadius`.
+   * Use this to leave breathing room between the connector end and the target
+   * element boundary without changing `targetRadius`.  Defaults to `0`.
+   */
+  targetOffset?: number;
+  /**
    * Id of the source solid element.
    * When set, `from` is automatically computed via `getConnectionPoint()` at
    * add-time and kept in sync when the source element is dragged.
