@@ -68,5 +68,5 @@ export interface ShapeAnimations {
   /** Border width glow pulse — see {@link BorderGlowOptions}. */
   borderGlow?: BorderGlowOptions;
   /** Custom animation types registered on the {@link AnimationRegistry}. */
-  [key: string]: Record<string, unknown> | undefined;
+  [key: string]: unknown;
 }

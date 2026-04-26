@@ -19,7 +19,7 @@ pnpm storybook
 
 
 ```bash
-pnpm --filter @invana/canvas-core build 
+pnpm --filter @invana/canvas build 
 pnpm --filter @invana/layouts-d3-force build
 ```
 
@@ -31,20 +31,7 @@ pnpm --filter @invana/layouts-d3-force build
 - Multiple node shapes and edge types
 - Rich interactions - pan, zoom, drag, select
 - Support for animations
-
-## Usage
-
-```typescript
-
-
-```
-
-## Documentation
-
-1. [Architecture](./docs/architecture.md)
-2. Plugins
-    - [Usage Patterns](./docs/plugins/usage-patterns.md)
-    - [How to create a plugin](./docs/plugins/how-to-create-plugin.md)
+ 
 
 ## License
 
