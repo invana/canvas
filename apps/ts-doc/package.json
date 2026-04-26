@@ -19,7 +19,7 @@
     "typescript": "5.9.2"
   },
   "peerDependencies": {
-    "@invana/canvas-core-new": "workspace:*",
+    "@invana/canvas": "workspace:*",
     "@invana/layouts-d3-force": "workspace:*"
   }
 }

@@ -17,18 +17,6 @@
         "console": "integratedTerminal",
         },
         {
-            "name": "storybook-new",
-            "type": "node",
-            "request": "launch",
-            "cwd": "${workspaceFolder}/apps/storybook-new",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": [
-                "run",
-                "dev"
-            ],
-            "console": "integratedTerminal"
-        },
-        {
             "name": "ts-doc build",
             "type": "node",
             "request": "launch",

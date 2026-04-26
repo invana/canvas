@@ -1,0 +1,30 @@
+{
+  "name": "@canvas/storybook",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Storybook for @invana/canvas",
+  "type": "module",
+  "scripts": {
+    "dev": "storybook dev -p 6006",
+    "build": "storybook build",
+    "lint": "eslint stories/",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@invana/canvas": "workspace:*",
+    "@invana/canvas-utils": "workspace:*",
+    "@invana/example-datasets": "workspace:*",
+    "lil-gui": "^0.21.0"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@storybook/addon-docs": "^10",
+    "@storybook/addon-links": "^10.1.10",
+    "@storybook/html": "^10.1.10",
+    "@storybook/html-vite": "^10.1.10",
+    "remark-gfm": "^4.0.1",
+    "storybook": "^10.1.10",
+    "typescript": "5.9.2",
+    "vite": "^7.3.0"
+  }
+}

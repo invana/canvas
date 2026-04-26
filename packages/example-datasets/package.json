@@ -1,7 +1,7 @@
 {
   "name": "@invana/example-datasets",
   "version": "0.0.1",
-  "description": "Example graph datasets for @invana/canvas-core",
+  "description": "Example graph datasets for @invana/canvas",
   "type": "module",
   "main": "./src/index.js",
   "types": "./src/index.ts",
@@ -13,11 +13,7 @@
     "clean": "rm -rf dist",
     "test": "vitest run"
   },
-  "peerDependencies": {
-    "@invana/canvas-core": "workspace:*"
-  },
   "devDependencies": {
-    "@invana/canvas-core": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "tsup": "^8.3.5",
     "typescript": "5.9.2",

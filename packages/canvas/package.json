@@ -1,12 +1,14 @@
 {
-  "name": "@invana/layouts-d3-force",
+  "name": "@invana/canvas",
   "version": "0.0.1",
-  "description": "D3 force-directed layout plugin for @invana/canvas",
+  "description": "Core rendering engine — refactored architecture (PixiJS hidden, lean Canvas, Camera, LayerManager, EventBus)",
   "type": "module",
   "main": "./src/index.js",
   "types": "./src/index.ts",
   "typedocOptions": {
-    "entryPoints": ["src/index.ts"]
+    "entryPoints": [
+      "src/index.ts"
+    ]
   },
   "scripts": {
     "build": "tsup",
@@ -17,28 +19,27 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "d3-force": "^3.0.0"
-  },
-  "peerDependencies": {
-    "@invana/canvas": "workspace:*"
+    "pixi-viewport": "^6.0.3",
+    "pixi.js": "^8.18.1",
+    "rbush": "^4.0.1"
   },
   "devDependencies": {
-    "@invana/canvas": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/d3-force": "^3.0.10",
+    "@types/rbush": "^4.0.0",
     "tsup": "^8.3.5",
     "typescript": "5.9.2",
     "vitest": "^2.1.8"
   },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
   "keywords": [
     "canvas",
-    "layout",
-    "d3",
-    "d3-force",
-    "network",
-    "network-layout",
-    "force-directed",
-    "graph-visualization"
+    "webgpu",
+    "webgl",
+    "visualization",
+    "graph",
+    "rendering"
   ],
   "license": "Apache-2.0"
 }

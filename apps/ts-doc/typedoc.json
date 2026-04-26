@@ -2,7 +2,7 @@
   "$schema": "https://typedoc.org/schema.json",
   "entryPointStrategy": "packages",
   "entryPoints": [
-    "../../packages/canvas-core-new",
+    "../../packages/canvas",
     "../../packages/layouts-d3-force"
   ],
   "out": "dist",

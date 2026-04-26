@@ -15,7 +15,7 @@ A parallel new architecture is being built without disturbing anything that alre
 | `packages/canvas-core` | `@invana/canvas-core` | Legacy engine (do not break) | Stable |
 | `packages/canvas-core-new` | `@invana/canvas-core-new` | New architecture (active development) | In progress |
 | `apps/storybook` | `@canvas/storybook` | Legacy stories (port 6006) | Stable |
-| `apps/storybook-new` | `@canvas/storybook-new` | New-arch stories (port 6007) | In progress |
+| `apps/storybook-new` | `@canvas/storybook-new` | New-arch stories (port 6006) | In progress |
 
 **All new work goes into `canvas-core-new` + `storybook-new`. Do not modify `canvas-core` or `storybook`.**
 
@@ -84,7 +84,7 @@ packages/
   eslint-config/       @repo/eslint-config           — shared ESLint config
 apps/
   storybook/           @canvas/storybook             — legacy stories (port 6006, stable)
-  storybook-new/       @canvas/storybook-new         — NEW stories (port 6007, active)
+  storybook-new/       @canvas/storybook-new         — NEW stories (port 6006, active)
 ```
 
 ---
@@ -105,7 +105,7 @@ pnpm dev
 pnpm --filter @canvas/storybook dev      # → http://localhost:6006
 
 # Run new storybook
-pnpm --filter @canvas/storybook-new dev  # → http://localhost:6007
+pnpm --filter @canvas/storybook-new dev  # → http://localhost:6006
 
 # Type-check
 pnpm check-types
@@ -306,7 +306,7 @@ canvas/
 plugins/          — plugin demos
 ```
 
-Dev server: `pnpm --filter @canvas/storybook-new dev` → http://localhost:6007
+Dev server: `pnpm --filter @canvas/storybook-new dev` → http://localhost:6006
 
 Story pattern — use `createContainer()` from `src/div-utils.ts`:
 
