@@ -13,8 +13,10 @@ import { RenderDetail } from './LODController.js';
 import { TextureRegistry } from './TextureRegistry.js';
 import {
   drawCircle, drawEllipse, drawRect, drawPolygon, drawStar,
-  drawLine, drawBezier, drawAutoBezier, drawDashedLine, drawDottedLine,
-  drawDashedCircle, drawDottedCircle, drawDashedRect, drawDottedRect,
+  buildPolygonPoints, buildStarPoints,
+  drawLine, drawBezier, drawAutoBezier, drawDashedLine,
+  drawDashedCircle, drawDashedRect,
+  drawDashedEllipse, drawDashedPolyline,
   drawOrthogonalPath, drawRoundedOrthogonalPath,
   drawCircleGlow, drawRippleRing,
   drawTriangleArrow, drawTriangleOutlineArrow, drawThinTriangleArrow,
@@ -298,12 +300,12 @@ export class ShapeObject {
       case 'polygon':       drawPolygon(this._g, spec.x, spec.y, spec.radius, spec.sides, { ...solidStyle, rotation: spec.rotation }); break;
       case 'star':          drawStar(this._g, spec.x, spec.y, spec.radius, { ...solidStyle, points: spec.points, innerRatio: spec.innerRatio, rotation: spec.rotation }); break;
       case 'dashedCircle':  drawDashedCircle(this._g, spec.x, spec.y, spec.radius, dashStyle); break;
-      case 'dottedCircle':  drawDottedCircle(this._g, spec.x, spec.y, spec.radius, dashStyle); break;
+      case 'dottedCircle':  drawDashedCircle(this._g, spec.x, spec.y, spec.radius, { ...dashStyle, dashLength: dashStyle.strokeWidth ?? 2 }); break;
       case 'dashedRect':    drawDashedRect(this._g, spec.x, spec.y, spec.width, spec.height, dashStyle); break;
-      case 'dottedRect':    drawDottedRect(this._g, spec.x, spec.y, spec.width, spec.height, dashStyle); break;
+      case 'dottedRect':    drawDashedRect(this._g, spec.x, spec.y, spec.width, spec.height, { ...dashStyle, dashLength: dashStyle.strokeWidth ?? 2 }); break;
       case 'line':          drawLine(this._g, spec.x1, spec.y1, spec.x2, spec.y2, pathStyle); break;
       case 'dashedLine':    drawDashedLine(this._g, spec.x1, spec.y1, spec.x2, spec.y2, dashStyle); break;
-      case 'dottedLine':    drawDottedLine(this._g, spec.x1, spec.y1, spec.x2, spec.y2, dashStyle); break;
+      case 'dottedLine':    drawDashedLine(this._g, spec.x1, spec.y1, spec.x2, spec.y2, { ...dashStyle, dashLength: dashStyle.strokeWidth ?? 2 }); break;
       case 'bezier':        drawBezier(this._g, spec.from, spec.cp1, spec.to, pathStyle, spec.cp2); break;
       case 'autoBezier':    drawAutoBezier(this._g, spec.from, spec.to, pathStyle, spec.curvature); break;
       case 'orthogonal':    drawOrthogonalPath(this._g, spec.params, orthStyle); break;
@@ -319,11 +321,43 @@ export class ShapeObject {
     const dashOffset = this._animOverrides.dashOffset;
     const strokeWidth = this._animOverrides.borderWidth ?? border.width;
     const color = this._animOverrides.borderColor ?? border.color;
+    const spec = this.spec;
 
     if (border.dash) {
-      drawDashedLine(this._g, this._cx(), this._cy(), this._cx(), this._cy(), {
-        color, strokeWidth, dashLength: border.dash.length, gapLength: border.dash.gap, offset: dashOffset,
-      });
+      const dashStyle: import('../../../graphics-utils/shapes/dashed.js').DashStyle = {
+        color,
+        strokeWidth,
+        alpha: border.alpha ?? 1,
+        dashLength: border.dash.length,
+        gapLength: border.dash.gap,
+        offset: dashOffset,
+      };
+      switch (spec.type) {
+        case 'circle':
+          drawDashedCircle(this._g, spec.x, spec.y, spec.radius, dashStyle);
+          break;
+        case 'ellipse':
+          drawDashedEllipse(this._g, spec.x, spec.y, spec.radiusX, spec.radiusY, dashStyle);
+          break;
+        case 'rect': {
+          drawDashedRect(this._g, spec.x, spec.y, spec.width, spec.height, dashStyle);
+          break;
+        }
+        case 'polygon': {
+          const verts = buildPolygonPoints(spec.x, spec.y, spec.radius, spec.sides, spec.rotation ?? -Math.PI / 2);
+          drawDashedPolyline(this._g, verts, dashStyle);
+          break;
+        }
+        case 'star': {
+          const verts = buildStarPoints(spec.x, spec.y, spec.radius, spec.points ?? 5, spec.innerRatio ?? 0.42, spec.rotation ?? -Math.PI / 2);
+          drawDashedPolyline(this._g, verts, dashStyle);
+          break;
+        }
+        default:
+          // For path/line shapes dashed borders are not applicable — fall back to solid
+          this._g.stroke({ color, width: strokeWidth, alpha: border.alpha ?? 1 });
+          break;
+      }
     } else {
       // Re-apply stroke over the already-drawn shape path
       this._g.stroke({ color, width: strokeWidth, alpha: border.alpha ?? 1 });

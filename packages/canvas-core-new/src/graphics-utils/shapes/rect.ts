@@ -1,5 +1,6 @@
 import type { Graphics } from 'pixi.js';
 import { type DrawStyle, resolveFillArg } from '../types.js';
+import { type DashStyle, drawDashedLine } from './dashed.js';
 
 /** Draw a filled/stroked rectangle. x,y = top-left corner. */
 export function drawRect(
@@ -20,3 +21,20 @@ export function drawRect(
   if (fillArg !== undefined) draw(g).fill(fillArg as any);
   if (stroke !== undefined) draw(g).stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha });
 }
+
+/** Draw a dashed rectangle border. x,y = top-left corner. */
+export function drawDashedRect(
+  g: Graphics,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  style: DashStyle = {},
+): void {
+  drawDashedLine(g, x, y, x + width, y, style);
+  drawDashedLine(g, x + width, y, x + width, y + height, style);
+  drawDashedLine(g, x + width, y + height, x, y + height, style);
+  drawDashedLine(g, x, y + height, x, y, style);
+}
+
+export type { DashStyle };

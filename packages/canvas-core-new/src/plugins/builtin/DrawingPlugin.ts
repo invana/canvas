@@ -11,11 +11,8 @@ import {
   drawBezier,
   drawAutoBezier,
   drawDashedCircle,
-  drawDottedCircle,
   drawDashedRect,
-  drawDottedRect,
   drawDashedLine,
-  drawDottedLine,
   drawOrthogonalPath,
   drawRoundedOrthogonalPath,
   drawTriangleArrow,
@@ -313,7 +310,7 @@ export class DrawingPlugin implements CanvasPlugin {
    * @returns `this` for fluent chaining.
    */
   dottedCircle(x: number, y: number, radius: number, style: DashStyle = {}): this {
-    drawDottedCircle(this._g, x, y, radius, style);
+    drawDashedCircle(this._g, x, y, radius, { ...style, dashLength: style.strokeWidth ?? 2 });
     return this;
   }
 
@@ -343,7 +340,7 @@ export class DrawingPlugin implements CanvasPlugin {
    * @returns `this` for fluent chaining.
    */
   dottedRect(x: number, y: number, width: number, height: number, style: DashStyle = {}): this {
-    drawDottedRect(this._g, x, y, width, height, style);
+    drawDashedRect(this._g, x, y, width, height, { ...style, dashLength: style.strokeWidth ?? 2 });
     return this;
   }
 
@@ -373,7 +370,7 @@ export class DrawingPlugin implements CanvasPlugin {
    * @returns `this` for fluent chaining.
    */
   dottedLine(x1: number, y1: number, x2: number, y2: number, style: DashStyle = {}): this {
-    drawDottedLine(this._g, x1, y1, x2, y2, style);
+    drawDashedLine(this._g, x1, y1, x2, y2, { ...style, dashLength: style.strokeWidth ?? 2 });
     return this;
   }
 

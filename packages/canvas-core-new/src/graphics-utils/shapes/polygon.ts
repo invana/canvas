@@ -1,5 +1,6 @@
 import type { Graphics } from 'pixi.js';
 import { type DrawStyle, resolveFillArg } from '../types.js';
+import { type DashStyle, drawDashedLine } from './dashed.js';
 
 /**
  * Draw a regular polygon (triangle=3, diamond=4, pentagon=5, hexagon=6, …).
@@ -26,6 +27,36 @@ export function drawPolygon(
     g.poly(points).stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha });
   }
 }
+
+/**
+ * Draw dashes along a closed polyline (polygon or star outline).
+ * `points` is a flat [x0,y0, x1,y1, …] array of vertices. The dash pattern
+ * is carried across edges so it appears continuous.
+ */
+export function drawDashedPolyline(
+  g: Graphics,
+  points: number[],
+  style: DashStyle = {},
+): void {
+  const dashLen = style.dashLength ?? 8;
+  const gapLen = style.gapLength ?? 4;
+  const pattern = dashLen + gapLen;
+  let offset = style.offset ?? 0;
+  const n = points.length / 2;
+
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    const x1 = points[i * 2]!;
+    const y1 = points[i * 2 + 1]!;
+    const x2 = points[j * 2]!;
+    const y2 = points[j * 2 + 1]!;
+    const segLen = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+    drawDashedLine(g, x1, y1, x2, y2, { ...style, offset });
+    offset = (offset + segLen) % pattern;
+  }
+}
+
+export type { DashStyle };
 
 /** Returns flat [x0,y0, x1,y1, …] array of polygon vertices. */
 export function buildPolygonPoints(
