@@ -99,9 +99,12 @@ export const NodeImages: Story = {
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;';
 
     const state = {
-      alpha: 1.0,
+      textureAlpha: 1.0,
       borderWidth: 1.5,
       borderAlpha: 0.7,
+      dashed: false,
+      dashLength: 8,
+      dashGap: 4,
       devInfo: true,
     };
 
@@ -109,17 +112,26 @@ export const NodeImages: Story = {
       TEXTURE_KEYS.forEach(textureKey => {
         shapeIds(textureKey).forEach((id, si) => {
           shapes.update(id, {
-            fill: { type: 'texture', src: textureKey, alpha: state.alpha },
-            border: { color: SHAPE_COLORS[si]!, width: state.borderWidth, alpha: state.borderAlpha },
+            fill: { type: 'texture', src: textureKey, alpha: state.textureAlpha },
+            border: {
+              color: SHAPE_COLORS[si]!,
+              width: state.borderWidth,
+              alpha: state.borderAlpha,
+              ...(state.dashed ? { dash: { length: state.dashLength, gap: state.dashGap } } : {}),
+            },
           });
         });
       });
     };
 
-    const lf = gui.addFolder('Live Controls (all textures)');
-    lf.add(state, 'alpha', 0, 1, 0.05).name('Texture alpha').onChange(applyToAll);
-    lf.add(state, 'borderWidth', 0, 8, 0.5).name('Border width').onChange(applyToAll);
-    lf.add(state, 'borderAlpha', 0, 1, 0.05).name('Border alpha').onChange(applyToAll);
+    const tf = gui.addFolder('Texture');
+    tf.add(state, 'textureAlpha', 0, 1, 0.05).name('Alpha').onChange(applyToAll);
+    const bf = gui.addFolder('Border');
+    bf.add(state, 'borderWidth', 0, 8, 0.5).name('Width').onChange(applyToAll);
+    bf.add(state, 'borderAlpha', 0, 1, 0.05).name('Alpha').onChange(applyToAll);
+    bf.add(state, 'dashed').name('Dashed').onChange(applyToAll);
+    bf.add(state, 'dashLength', 1, 30, 1).name('Dash length').onChange(applyToAll);
+    bf.add(state, 'dashGap', 1, 20, 1).name('Dash gap').onChange(applyToAll);
     gui.add(state, 'devInfo').name('DevInfo overlay').onChange((v: boolean) => devInfo.setEnabled(v));
   },
 };

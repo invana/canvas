@@ -134,7 +134,53 @@ export const AllShapes: Story = {
 
     const gui = new GUI({ title: 'Node Shapes', container });
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;';
-    const params = { devInfo: true };
-    gui.add(params, 'devInfo').name('DevInfo overlay').onChange((v: boolean) => devInfo.setEnabled(v));
+
+    // All solid shape IDs (rows 1–5, excluding label nodes and dashed/dotted variants)
+    const solidIds: string[] = [
+      'circle', 'ellipse', 'rect', 'hex', 'star5', 'tri', 'oct',
+      ...corners.map((_, i) => `cr-${i}`),
+      ...sides.map(s => `poly-${s}`),
+      ...starVariants.map((_, i) => `star-${i}`),
+      ...rotations.map((_, i) => `rot-${i}`),
+    ];
+
+    const state = {
+      fillColor: '#0ea5e9',
+      fillAlpha: 1.0,
+      borderColor: '#ffffff',
+      borderWidth: 1.5,
+      borderAlpha: 0.5,
+      dashed: false,
+      dashLength: 8,
+      dashGap: 4,
+      devInfo: true,
+    };
+
+    const applyToAll = () => {
+      const border: ShapeSpec['border'] = {
+        color: state.borderColor,
+        width: state.borderWidth,
+        alpha: state.borderAlpha,
+        ...(state.dashed ? { dash: { length: state.dashLength, gap: state.dashGap } } : {}),
+      };
+      solidIds.forEach(id => shapes.update(id, {
+        fill: { type: 'solid', color: state.fillColor, alpha: state.fillAlpha },
+        border,
+      }));
+    };
+
+    const fillF = gui.addFolder('Fill');
+    fillF.addColor(state, 'fillColor').name('Color').onChange(applyToAll);
+    fillF.add(state, 'fillAlpha', 0, 1, 0.05).name('Alpha').onChange(applyToAll);
+
+    const borderF = gui.addFolder('Border');
+    borderF.addColor(state, 'borderColor').name('Color').onChange(applyToAll);
+    borderF.add(state, 'borderWidth', 0.5, 16, 0.5).name('Width').onChange(applyToAll);
+    borderF.add(state, 'borderAlpha', 0, 1, 0.05).name('Alpha').onChange(applyToAll);
+    borderF.add(state, 'dashed').name('Dashed').onChange(applyToAll);
+    borderF.add(state, 'dashLength', 1, 30, 1).name('Dash length').onChange(applyToAll);
+    borderF.add(state, 'dashGap', 1, 20, 1).name('Dash gap').onChange(applyToAll);
+
+    gui.add(state, 'devInfo').name('DevInfo overlay').onChange((v: boolean) => devInfo.setEnabled(v));
   },
 };

@@ -99,25 +99,38 @@ export const NodeIcons: Story = {
 
     const state = {
       tint: '#ffffff',
-      iconKey: ICON_KEYS[0]!,
+      borderWidth: 1.5,
+      borderAlpha: 0.6,
+      dashed: false,
+      dashLength: 8,
+      dashGap: 4,
       devInfo: true,
     };
 
     const applyToAll = () => {
-      ICON_KEYS.forEach((iconKey, ri) => {
-        shapeIds(`${iconKey}-${0}`).concat(
-          ...ICON_KEYS.map(k => shapeIds(`${k}-0`))
-        );
+      ICON_KEYS.forEach((iconKey) => {
         for (let si = 0; si < N; si++) {
+          const border = {
+            color: SHAPE_COLORS[si]!,
+            width: state.borderWidth,
+            alpha: state.borderAlpha,
+            ...(state.dashed ? { dash: { length: state.dashLength, gap: state.dashGap } } : {}),
+          };
           shapeIds(`${iconKey}-${si}`).forEach(id => {
-            shapes.update(id, { fill: { type: 'icon', src: iconKey, tint: state.tint } });
+            shapes.update(id, { fill: { type: 'icon', src: iconKey, tint: state.tint }, border });
           });
         }
       });
     };
 
-    const lf = gui.addFolder('Live Controls (all icons)');
+    const lf = gui.addFolder('Fill');
     lf.addColor(state, 'tint').name('Tint color').onChange(applyToAll);
+    const bf = gui.addFolder('Border');
+    bf.add(state, 'borderWidth', 0, 8, 0.5).name('Width').onChange(applyToAll);
+    bf.add(state, 'borderAlpha', 0, 1, 0.05).name('Alpha').onChange(applyToAll);
+    bf.add(state, 'dashed').name('Dashed').onChange(applyToAll);
+    bf.add(state, 'dashLength', 1, 30, 1).name('Dash length').onChange(applyToAll);
+    bf.add(state, 'dashGap', 1, 20, 1).name('Dash gap').onChange(applyToAll);
     gui.add(state, 'devInfo').name('DevInfo overlay').onChange((v: boolean) => devInfo.setEnabled(v));
   },
 };
