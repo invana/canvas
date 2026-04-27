@@ -65,7 +65,7 @@ export const NodeSizes: Story = {
       key: 'bg', type: 'pattern', patternType: 'grid',
       color: '#2a2a3e', backgroundColor: '#1a1a2e', size: 3, spacing: 40,
     }));
-    const devInfo = new DevInfoPlugin({ key: 'dev-info' });
+    const devInfo = new DevInfoPlugin({ key: 'dev-info', enabled: false });
     await canvas.plugins.register(devInfo);
     const shapes = new ShapePlugin({ key: 'shapes', zIndex: 10, fitOnRender: true });
     await canvas.plugins.register(shapes);
@@ -85,13 +85,14 @@ export const NodeSizes: Story = {
     const gui = new GUI({ title: 'Node Sizes', container });
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;';
 
-    const state = { sizeMultiplier: 1.0, showBorder: true, devInfo: true };
+    const state = { sizeMultiplier: 1.0, showBorder: true, devInfo: false };
 
     const applyToAll = () => {
       const allNodes = buildAllNodes(state.sizeMultiplier);
       allNodes.forEach(n => {
         const border = state.showBorder ? wb : undefined;
-        shapes.update(n.id, { ...(n as Record<string, unknown>), border });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        shapes.update(n.id, Object.assign({}, n, { border }) as any);
       });
     };
 

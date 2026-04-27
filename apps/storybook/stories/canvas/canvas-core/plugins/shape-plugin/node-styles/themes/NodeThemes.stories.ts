@@ -67,7 +67,7 @@ export const NodeThemes: Story = {
       key: 'bg', type: 'pattern', patternType: 'dots',
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
-    const devInfo = new DevInfoPlugin({ key: 'dev-info' });
+    const devInfo = new DevInfoPlugin({ key: 'dev-info', enabled: false });
     await canvas.plugins.register(devInfo);
     const shapes = new ShapePlugin({ key: 'shapes', zIndex: 10, fitOnRender: true });
     await canvas.plugins.register(shapes);
@@ -99,7 +99,7 @@ export const NodeThemes: Story = {
     const params = {
       applyTheme: 'material',
       haloHighlight: false,
-      devInfo: true,
+      devInfo: false,
     };
 
     gui.add(params, 'applyTheme', themeKeys).name('Apply theme to all').onChange((key: string) => {

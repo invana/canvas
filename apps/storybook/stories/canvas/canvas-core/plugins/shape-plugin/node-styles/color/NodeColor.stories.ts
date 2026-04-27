@@ -67,7 +67,7 @@ async function initCanvas(container: HTMLElement) {
     key: 'bg', type: 'pattern', patternType: 'dots',
     color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
   }));
-  const devInfo = new DevInfoPlugin({ key: 'dev-info' });
+  const devInfo = new DevInfoPlugin({ key: 'dev-info', enabled: false });
   await canvas.plugins.register(devInfo);
   const shapes = new ShapePlugin({ key: 'shapes', zIndex: 10, fitOnRender: true });
   await canvas.plugins.register(shapes);
@@ -110,7 +110,7 @@ export const SolidFill: Story = {
     const gui = new GUI({ title: 'Solid Fill', container });
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;';
 
-    const state = { color: '#0ea5e9', alpha: 1.0, devInfo: true };
+    const state = { color: '#0ea5e9', alpha: 1.0, devInfo: false };
 
     const applyToAll = () => {
       const fill: FillSpec = { type: 'solid', color: state.color, alpha: state.alpha };
@@ -146,7 +146,7 @@ export const LinearGradientFill: Story = {
     const totalRows = LINEAR_ROWS.length;
     const startRowY = -(totalRows - 1) / 2 * ROW_GAP;
 
-    const state = { colorA: '#0ea5e9', colorB: '#8b5cf6', mid: '#10b981', devInfo: true };
+    const state = { colorA: '#0ea5e9', colorB: '#8b5cf6', mid: '#10b981', devInfo: false };
 
     const getLinearFill = (row: LinearRowDef): FillSpec =>
       row.multiStop
@@ -210,7 +210,7 @@ export const RadialGradientFill: Story = {
     const totalRows = RADIAL_ROWS.length;
     const startRowY = -(totalRows - 1) / 2 * ROW_GAP;
 
-    const state = { inner: '#ffffff', outer: '#0ea5e9', mid: '#8b5cf6', cx: 0.25, cy: 0.25, devInfo: true };
+    const state = { inner: '#ffffff', outer: '#0ea5e9', mid: '#8b5cf6', cx: 0.25, cy: 0.25, devInfo: false };
 
     const getRadialFill = (row: RadialRowDef): FillSpec => {
       if (row.multiStop) {

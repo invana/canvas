@@ -44,7 +44,7 @@ function buildLayerShape(shapeType: string, si: number, x: number, y: number, la
 }
 
 /** Build 3-node overlapping cluster for one shape type */
-function buildCluster(si: number, y: number, zOrder: [number,number,number]): ShapeSpec[] {
+function buildCluster(si: number, y: number, zOrder: number[]): ShapeSpec[] {
   const shapeType = SHAPE_TYPES[si]!;
   const x = startX + si * GAP;
   return [0, 1, 2].map(layer => buildLayerShape(shapeType, si, x, y, layer, zOrder[layer]));
@@ -63,7 +63,7 @@ export const NodeZIndex: Story = {
       key: 'bg', type: 'pattern', patternType: 'dots',
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
-    const devInfo = new DevInfoPlugin({ key: 'dev-info' });
+    const devInfo = new DevInfoPlugin({ key: 'dev-info', enabled: false });
     await canvas.plugins.register(devInfo);
     const shapes = new ShapePlugin({ key: 'shapes', zIndex: 10, fitOnRender: true });
     await canvas.plugins.register(shapes);
@@ -98,10 +98,10 @@ export const NodeZIndex: Story = {
     const gui = new GUI({ title: 'Node Z-Index', container });
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;';
 
-    const state = { zRed: 1, zAmber: 2, zGreen: 3, devInfo: true };
+    const state = { zRed: 1, zAmber: 2, zGreen: 3, devInfo: false };
 
     const applyZOrder = () => {
-      const zOrder: [number,number,number] = [state.zRed, state.zAmber, state.zGreen];
+      const zOrder: number[] = [state.zRed, state.zAmber, state.zGreen];
       // Update all rows
       [ROW_Y[0]!, ROW_Y[1]!, ROW_Y[2]!].forEach(y => {
         SHAPE_TYPES.forEach((shapeType, si) => {

@@ -54,7 +54,7 @@ export const NodeLabels: Story = {
       key: 'bg', type: 'pattern', patternType: 'dots',
       color: '#2a2a3e', backgroundColor: '#1a1a2e', size: 1.5, spacing: 30,
     }));
-    const devInfo = new DevInfoPlugin({ key: 'dev-info' });
+    const devInfo = new DevInfoPlugin({ key: 'dev-info', enabled: false });
     await canvas.plugins.register(devInfo);
     const shapes = new ShapePlugin({ key: 'shapes', zIndex: 10, fitOnRender: true });
     await canvas.plugins.register(shapes);
@@ -123,7 +123,7 @@ export const NodeLabels: Story = {
       fontSize: 11,
       labelColor: '#cccccc',
       labelText: 'Node',
-      devInfo: true,
+      devInfo: false,
     };
 
     const applyToAll = () => {

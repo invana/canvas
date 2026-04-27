@@ -57,7 +57,7 @@ export const NodeHalos: Story = {
       key: 'bg', type: 'pattern', patternType: 'dots',
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
-    const devInfo = new DevInfoPlugin({ key: 'dev-info' });
+    const devInfo = new DevInfoPlugin({ key: 'dev-info', enabled: false });
     await canvas.plugins.register(devInfo);
     const shapes = new ShapePlugin({ key: 'shapes', zIndex: 10, fitOnRender: true });
     await canvas.plugins.register(shapes);
@@ -96,7 +96,7 @@ export const NodeHalos: Story = {
       haloAlpha: 0.55,
       animated: false,
       duration: 1200,
-      devInfo: true,
+      devInfo: false,
     };
 
     const applyToAll = () => {

@@ -54,13 +54,14 @@ Convention: `@invana/plugin-*` for official plugins, `invana-plugin-*` for commu
 ## Global Coding Rules
 
 1. Dont write code unless we discuss and I give a go ahead.
-1. All new code goes in `packages/canvas` and `apps/storybook`. Never touch legacy packages.
-2. No `pixi.js` imports outside `packages/canvas` internals.
-3. No direct `this._viewport`, `this._renderer`, `new Graphics()`, `new Container()` outside `packages/canvas/src`.
-4. Events go through `canvas.events` (EventBus) — never raw PixiJS events from outside the core.
-5. Plugins implement `CanvasPlugin`: `id`, `register(ctx)`, `destroy()`.
-6. `graphics-utils/` is internal only — not re-exported from `packages/canvas/src/index.ts`.
-7. Write TSDoc on all classes, public methods, and non-obvious variables.
+2. Ask me questions before coding.
+3. All new code goes in `packages/canvas` and `apps/storybook`. Never touch legacy packages.
+4. No `pixi.js` imports outside `packages/canvas` internals.
+5. No direct `this._viewport`, `this._renderer`, `new Graphics()`, `new Container()` outside `packages/canvas/src`.
+6. Events go through `canvas.events` (EventBus) — never raw PixiJS events from outside the core.
+7. Plugins implement `CanvasPlugin`: `id`, `register(ctx)`, `destroy()`.
+8. `graphics-utils/` is internal only — not re-exported from `packages/canvas/src/index.ts`.
+9. Write TSDoc on all classes, public methods, and non-obvious variables.
 
 
 ---
