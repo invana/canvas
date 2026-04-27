@@ -1,5 +1,5 @@
 {
-  "name": "@invana/layouts-d3-force",
+  "name": "@invana/plugin-layouts-d3-force",
   "version": "0.0.1",
   "description": "D3 force-directed layout plugin for @invana/canvas",
   "type": "module",

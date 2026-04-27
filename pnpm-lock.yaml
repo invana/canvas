@@ -26,9 +26,9 @@ importers:
       '@invana/canvas-utils':
         specifier: workspace:*
         version: link:../../packages/canvas-utils
-      '@invana/example-datasets':
+      '@invana/plugin-example-datasets':
         specifier: workspace:*
-        version: link:../../packages/example-datasets
+        version: link:../../packages/plugins-example-datasets
       lil-gui:
         specifier: ^0.21.0
         version: 0.21.0
@@ -66,9 +66,9 @@ importers:
       '@invana/canvas':
         specifier: workspace:*
         version: link:../../packages/canvas
-      '@invana/layouts-d3-force':
+      '@invana/plugin-layouts-d3-force':
         specifier: workspace:*
-        version: link:../../packages/layouts-d3-force
+        version: link:../../packages/plugins-layouts-d3-force
     devDependencies:
       '@repo/typescript-config':
         specifier: workspace:*
@@ -168,7 +168,7 @@ importers:
         specifier: ^8.50.0
         version: 8.50.0(eslint@9.39.1)(typescript@5.9.2)
 
-  packages/example-datasets:
+  packages/plugins-example-datasets:
     devDependencies:
       '@repo/typescript-config':
         specifier: workspace:*
@@ -183,7 +183,7 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.15.3)
 
-  packages/layouts-d3-force:
+  packages/plugins-layouts-d3-force:
     dependencies:
       d3-force:
         specifier: ^3.0.0

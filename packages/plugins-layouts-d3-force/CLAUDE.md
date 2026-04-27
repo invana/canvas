@@ -1,6 +1,6 @@
-# CLAUDE.md — packages/layouts-d3-force (@invana/layouts-d3-force)
+# CLAUDE.md — packages/plugins-layouts-d3-force (@invana/plugin-layouts-d3-force)
 
-D3 force-directed layout plugin for `@invana/canvas`. Future publish name: `@invana/plugin-layout-force`.
+D3 force-directed layout plugin for `@invana/canvas`.
 
 - Peer/dev dep on `@invana/canvas` (workspace).
 - Wraps `d3-force`; exposes a `CanvasPlugin`-compatible interface.

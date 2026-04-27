@@ -10,8 +10,8 @@ WebGPU-first canvas rendering engine + graph visualization toolkit. WebGL2 fallb
 packages/
   canvas/              @invana/canvas          — engine (active, all new work here)
   canvas-utils/        @invana/canvas-utils    — math/color/geometry helpers
-  layouts-d3-force/    @invana/layouts-d3-force — D3 force layout plugin
-  example-datasets/    @invana/example-datasets — sample graph data
+  plugins-layouts-d3-force/    @invana/plugin-layouts-d3-force — D3 force layout plugin
+  plugins-example-datasets/    @invana/plugin-example-datasets — sample graph data
   typescript-config/   @repo/typescript-config — shared tsconfig
   eslint-config/       @repo/eslint-config     — shared ESLint
 apps/
@@ -45,7 +45,8 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
 | Package | npm name |
 |---|---|
 | `packages/canvas` | `@invana/canvas` — the engine |
-| `packages/layouts-d3-force` | `@invana/layouts-d3-force` → future: `@invana/plugin-layout-force` |
+| `packages/plugins-layouts-d3-force` | `@invana/plugin-layouts-d3-force` |
+| `packages/plugins-example-datasets` | `@invana/plugin-example-datasets` |
 | future `packages/plugin-graph` | `@invana/plugin-graph` |
 
 Convention: `@invana/plugin-*` for official plugins, `invana-plugin-*` for community.

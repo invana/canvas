@@ -1,5 +1,5 @@
 {
-  "name": "@invana/example-datasets",
+  "name": "@invana/plugin-example-datasets",
   "version": "0.0.1",
   "description": "Example graph datasets for @invana/canvas",
   "type": "module",
