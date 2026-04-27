@@ -39,3 +39,7 @@ yarn-error.log*
 
 
 storybook-static/
+
+# Graphify output
+graphify-out/
+.graphify/
