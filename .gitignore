@@ -43,3 +43,6 @@ storybook-static/
 # Graphify output
 graphify-out/
 .graphify/
+
+
+debug-storybook.log
