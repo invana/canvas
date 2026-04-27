@@ -17,9 +17,9 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin, ElementPlugin } from '@invana/canvas';
-import { createContainer } from '../../../src/div-utils.js';
+import { createContainer } from '../../../../src/div-utils.js';
 
-const meta: Meta = { title: 'Canvas/Node Styles/Animations' };
+const meta: Meta = { title: 'Canvas/Animations/Nodes' };
 export default meta;
 type Story = StoryObj;
 
