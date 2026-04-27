@@ -24,11 +24,10 @@ import {
 } from '@invana/canvas';
 import { createContainer } from '../../../../../src/div-utils.js';
 
-const meta: Meta = { title: '16. Performance' };
+const meta: Meta = { title: 'Canvas/Performance' };
 export default meta;
 type Story = StoryObj;
 
-const NODE_R     = 5;
 const CELL_SIZE  = 80;
 
 const PALETTE = [
@@ -40,6 +39,7 @@ const EDGE_STYLE = { stroke: '#334155', strokeWidth: 1.5 };
 function generateGrid(
   cols: number,
   rows: number,
+  nodeRadius: number,
 ): { solids: Array<{ type: string; spec: BaseSolidSpec }>;
     connectors: Array<{ type: string; spec: BaseConnectorSpec }>; } {
   const solids: Array<{ type: string; spec: BaseSolidSpec }> = [];
@@ -58,7 +58,7 @@ function generateGrid(
       solids.push({
         type: 'circle',
         spec: {
-          id, x, y, radius: NODE_R,
+          id, x, y, radius: nodeRadius,
           label: id,
           style: { fill: PALETTE[(r * cols + c) % PALETTE.length]!, stroke: '#0f172a', strokeWidth: 1 },
           interactive: true,
@@ -75,8 +75,8 @@ function generateGrid(
           type: 'straight',
           spec: {
             id: `e-${r}-${c}-r`,
-            from:      { x: x  + NODE_R, y },
-            to:        { x: rx - NODE_R, y },
+            from:      { x: x  + nodeRadius, y },
+            to:        { x: rx - nodeRadius, y },
             endMarker: { type: 'none'    },
             style: EDGE_STYLE,
           },
@@ -90,8 +90,8 @@ function generateGrid(
           type: 'straight',
           spec: {
             id: `e-${r}-${c}-d`,
-            from:      { x, y:  y + NODE_R },
-            to:        { x, y: by - NODE_R },
+            from:      { x, y:  y + nodeRadius },
+            to:        { x, y: by - nodeRadius },
             endMarker: { type: 'none'    },
             style: EDGE_STYLE,
           },
@@ -103,8 +103,8 @@ function generateGrid(
   return { solids, connectors };
 }
 
-export const LargeGraph: Story = {
-  name: 'Large Graph',
+export const LargeGridGraph: Story = {
+  name: 'Large Grid Graph',
   render: () => createContainer(),
   play: async () => {
     const container = document.getElementById('canvas-example');
@@ -133,10 +133,12 @@ export const LargeGraph: Story = {
     });
     await canvas.plugins.register(elements);
 
-    const params = { cols: 20, rows: 20 };
+    const params = { cols: 20, rows: 20, nodeSize: 5, nodeCount: 0, edgeCount: 0 };
 
     function rebuild(): void {
-      const { solids, connectors } = generateGrid(params.cols, params.rows);
+      const { solids, connectors } = generateGrid(params.cols, params.rows, params.nodeSize);
+      params.nodeCount = solids.length;
+      params.edgeCount = connectors.length;
       elements.setData(solids, connectors);
       // Defer fit one frame so camera bounds/culling run after initial layout.
       requestAnimationFrame(() => elements.fit(60));
@@ -148,10 +150,12 @@ export const LargeGraph: Story = {
     const gui = new GUI({ title: 'Large Graph', container });
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;';
 
-    gui.add(params, 'cols', 2, 20, 1).name('Columns');
-    gui.add(params, 'rows', 2, 20, 1).name('Rows');
+    gui.add(params, 'cols', 2, 500, 1).name('Columns');
+    gui.add(params, 'rows', 2, 500, 1).name('Rows');
+    gui.add(params, 'nodeSize', 1, 20, 0.5).name('Node size');
     gui.add({ rebuild }, 'rebuild').name('Regenerate');
     gui.add({ fit: () => elements.fit(60) }, 'fit').name('Fit camera');
-    gui.add(params, 'cols').name('').disable().listen(); // spacer
+    gui.add(params, 'nodeCount').name('Nodes loaded').disable().listen();
+    gui.add(params, 'edgeCount').name('Edges loaded').disable().listen();
   },
 };
