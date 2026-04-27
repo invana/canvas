@@ -6,6 +6,5 @@ export * from './shapes/index.js';
 export * from './paths/index.js';
 export * from './arrows/index.js';
 export * from './effects/index.js';
-export * from './fills/index.js';
 export type { DrawStyle, PathStyle } from './types.js';
 export { resolveFillArg } from './types.js';
