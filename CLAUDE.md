@@ -6,18 +6,15 @@ WebGPU-first canvas rendering engine + graph visualization toolkit. WebGL2 fallb
 
 ## Workspace
 
-```
-packages/
-  canvas/              @invana/canvas          — engine (active, all new work here)
-  canvas-utils/        @invana/canvas-utils    — math/color/geometry helpers
-  plugins-layouts-d3-force/    @invana/plugin-layouts-d3-force — D3 force layout plugin
-  plugins-example-datasets/    @invana/plugin-example-datasets — sample graph data
-  typescript-config/   @repo/typescript-config — shared tsconfig
-  eslint-config/       @repo/eslint-config     — shared ESLint
-apps/
-  storybook/           @canvas/storybook       — stories (port 6006)
-  ts-doc/              @canvas/ts-doc          — TypeDoc API docs (port 7000)
-```
+| Path | Package | Description |
+|---|---|---|
+| `packages/canvas` | `@invana/canvas` | engine (active, all new work here) |
+| `packages/plugins-layouts-d3-force` | `@invana/plugin-layouts-d3-force` | D3 force layout plugin |
+| `packages/plugins-example-datasets` | `@invana/plugin-example-datasets` | sample graph data |
+| `packages/typescript-config` | `@repo/typescript-config` | shared tsconfig |
+| `packages/eslint-config` | `@repo/eslint-config` | shared ESLint |
+| `apps/storybook` | `@canvas/storybook` | stories (port 6006) |
+| `apps/ts-doc` | `@canvas/ts-doc` | TypeDoc API docs (port 7000) |
 
 Per-package coding rules → see each package's own `CLAUDE.md`.
 
@@ -55,6 +52,7 @@ Convention: `@invana/plugin-*` for official plugins, `invana-plugin-*` for commu
 
 ## Global Coding Rules
 
+1. Dont write code unless we discuss and I give a go ahead.
 1. All new code goes in `packages/canvas` and `apps/storybook`. Never touch legacy packages.
 2. No `pixi.js` imports outside `packages/canvas` internals.
 3. No direct `this._viewport`, `this._renderer`, `new Graphics()`, `new Container()` outside `packages/canvas/src`.
@@ -62,6 +60,7 @@ Convention: `@invana/plugin-*` for official plugins, `invana-plugin-*` for commu
 5. Plugins implement `CanvasPlugin`: `id`, `register(ctx)`, `destroy()`.
 6. `graphics-utils/` is internal only — not re-exported from `packages/canvas/src/index.ts`.
 7. Write TSDoc on all classes, public methods, and non-obvious variables.
+
 
 ---
 

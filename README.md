@@ -7,7 +7,6 @@ High-performance WebGPU-first canvas rendering engine and visualization toolkit.
 | Package | Description |
 |---------|-------------|
 | [@invana/canvas-core](./packages/canvas-core) | Core rendering engine with WebGPU/WebGL support |
-| [@invana/canvas-utils](./packages/canvas-utils) | Shared utilities (math, color, etc.) |
 
 ## Quick Start
 
