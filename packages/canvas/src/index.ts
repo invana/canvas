@@ -16,18 +16,15 @@ export { PluginSystem } from './plugins/index.js';
 export type { CanvasPlugin, PluginContext } from './plugins/index.js';
 
 // Built-in plugins
-export { BackgroundPlugin, DrawingPlugin, ShapePlugin, DevInfoPlugin, ElementPlugin } from './plugins/builtin/index.js';
+export { BackgroundPlugin, DrawingPlugin, DevInfoPlugin, ElementPlugin } from './plugins/builtin/index.js';
 export type { CustomShapeFn } from './plugins/builtin/DrawingPlugin.js';
 export type { BackgroundOptions, BackgroundType, PatternType, DrawStyle, PathStyle, BezierPoint, DashStyle, OrthogonalStyle, OrthogonalParams, ArrowStyle, ArrowParams, ArrowType, EffectStyle, CircleGlowParams, RectGlowParams, RippleParams } from './plugins/builtin/index.js';
-export type { ShapePluginOptions, ShapeSpec, ShapeType, ShapeAnimations } from './plugins/builtin/index.js';
-export type { BreatheOptions, ColorCycleOptions, FadeInOptions, PulseOptions, MarchingAntsOptions, DashedFlowOptions, BorderGlowOptions } from './plugins/builtin/index.js';
-export type { AnimationHandler, AnimSlot } from './plugins/builtin/index.js';
-export { AnimationRegistry, defaultRegistry } from './plugins/builtin/index.js';
 export type { DevInfoPluginOptions, DevInfoCorner } from './plugins/builtin/index.js';
 
 // ElementPlugin public API
 export type { ElementPluginOptions, SolidCtor, ConnectorCtor } from './plugins/builtin/index.js';
 export { BaseSolid, BaseConnector, LOD } from './plugins/builtin/index.js';
+export type { AnimSlot } from './plugins/builtin/index.js';
 export type { DrawContext, BaseSolidSpec, BaseConnectorSpec, ElementPoint, ElementBBox, PathCommand, ArrowSpec as ElementArrowSpec, ElementDrawStyle, ElementPathStyle } from './plugins/builtin/index.js';
 export { CircleElement, RectElement, EllipseElement, PolygonElement, DiamondElement, StarElement, HexagonElement } from './plugins/builtin/index.js';
 export type { CircleElementSpec, RectElementSpec, EllipseElementSpec, PolygonElementSpec, DiamondElementSpec, StarElementSpec, HexagonElementSpec } from './plugins/builtin/index.js';
@@ -35,6 +32,10 @@ export { StraightConnector, BezierConnector, OrthogonalConnector, QuadraticConne
 export type { BezierConnectorSpec, OrthogonalConnectorSpec, OrthogonalRouteDirection, QuadraticConnectorSpec, RoundedConnectorSpec, SmoothConnectorSpec } from './plugins/builtin/index.js';
 export { normalRouter, orthRouter, oneSideRouter, erRouter, BUILTIN_ROUTERS } from './plugins/builtin/index.js';
 export type { RouterFn, RouterContext, OrthRouterArgs, OneSideRouterArgs, ErRouterArgs } from './plugins/builtin/index.js';
+// Animation system
+export { AnimationRegistry, defaultRegistry } from './plugins/builtin/index.js';
+export type { AnimationHandler, ElementAnimations } from './plugins/builtin/index.js';
+export type { BreatheOptions, ColorCycleOptions, FadeInOptions, PulseOptions, MarchingAntsOptions, DashedFlowOptions, BorderGlowOptions } from './plugins/builtin/index.js';
 export {
   ElementBaseEvent, ElementDragBaseEvent,
   ElementClickEvent, ElementDblClickEvent, ElementContextMenuEvent,
@@ -89,24 +90,6 @@ export {
   LayerRemovedEvent,
   LayerVisibilityChangedEvent,
 } from './events/index.js';
-
-// Shape event classes (base + concrete — for extending and type annotations)
-export {
-  ShapeBaseEvent,
-  ShapeDragBaseEvent,
-  ShapeClickEvent,
-  ShapeDblClickEvent,
-  ShapeContextMenuEvent,
-  ShapePointerOverEvent,
-  ShapePointerOutEvent,
-  ShapePointerMoveEvent,
-  ShapePointerDownEvent,
-  ShapePointerUpEvent,
-  ShapeDragStartEvent,
-  ShapeDragMoveEvent,
-  ShapeDragEndEvent,
-} from './plugins/builtin/shape-plugin/ShapeEvents.js';
-export type { ShapeEventFields, ShapeDragEventFields } from './plugins/builtin/shape-plugin/ShapeEvents.js';
 
 // Event map type (augmentable interface)
 export type { CanvasEventMap } from './types/events.js';

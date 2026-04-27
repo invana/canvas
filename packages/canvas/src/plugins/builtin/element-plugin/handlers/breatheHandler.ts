@@ -1,10 +1,11 @@
-// ── breatheHandler ────────────────────────────────────────────────────────────
-// Oscillates the shape's scale to create a living "breathing" effect.
-// Uses Container.scale — no Graphics redraw needed.
+// ── breatheHandler (element-plugin) ───────────────────────────────────────────
+// Oscillates the element's scale to create a living "breathing" effect.
+// Writes to BaseSolid._animOverrides.scale; ElementPlugin._tick() applies it
+// to Container.scale with correct pivot centering.
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
-import type { ShapeObject } from '../ShapeObject.js';
-import type { HaloPool } from '../HaloPool.js';
+import type { BaseSolid } from '../BaseSolid.js';
+import type { ElementHaloPool } from '../ElementHaloPool.js';
 
 /** Options for the `breathe` animation. */
 export interface BreatheOptions {
@@ -17,9 +18,7 @@ export interface BreatheOptions {
 }
 
 interface BreatheState {
-  /** Current phase in radians (0 – 2π per cycle). */
   phase: number;
-  /** Number of completed full cycles. */
   repeatCount: number;
 }
 
@@ -27,17 +26,14 @@ interface BreatheState {
  * `breatheHandler` — scale oscillation animation.
  *
  * @remarks
- * Sets the shape container's pivot to the shape anchor point on `init` so the
- * scale effect is centred on the shape rather than the world origin.
- * Cleans up by resetting scale, pivot, and position.
+ * Writes the scale to `obj._animOverrides.scale`.
+ * {@link ElementPlugin._applyContainerOverrides} centres the pivot on the
+ * element's geometric centre before applying the scale.
  */
 export const breatheHandler: AnimationHandler<BreatheOptions, BreatheState> = {
   type: 'breathe',
 
-  init(_spec, obj: ShapeObject, _halos: HaloPool): BreatheState {
-    // Set pivot to the shape's anchor so scaling orbits around it
-    obj.container.pivot.set(obj.cx, obj.cy);
-    obj.container.position.set(obj.cx, obj.cy);
+  init(_spec: BreatheOptions, _obj: BaseSolid, _halos: ElementHaloPool): BreatheState {
     return { phase: 0, repeatCount: 0 };
   },
 
@@ -45,7 +41,6 @@ export const breatheHandler: AnimationHandler<BreatheOptions, BreatheState> = {
     const dur = spec.duration ?? 2000;
     const prev = state.phase;
     state.phase += (deltaMS / dur) * Math.PI * 2;
-    // Detect cycle crossing
     if (Math.floor(state.phase / (Math.PI * 2)) > Math.floor(prev / (Math.PI * 2))) {
       state.repeatCount++;
       const rep = spec.repeat ?? -1;
@@ -54,14 +49,11 @@ export const breatheHandler: AnimationHandler<BreatheOptions, BreatheState> = {
     return { dirty: true, stop: false };
   },
 
-  apply(state: BreatheState, spec: BreatheOptions, obj: ShapeObject, _halos: HaloPool) {
+  apply(state: BreatheState, spec: BreatheOptions, obj: BaseSolid, _halos: ElementHaloPool) {
     obj._animOverrides.scale = 1 + Math.sin(state.phase) * (spec.amplitude ?? 0.1);
   },
 
-  cleanup(_state: BreatheState, obj: ShapeObject, _halos: HaloPool) {
+  cleanup(_state: BreatheState, obj: BaseSolid, _halos: ElementHaloPool) {
     obj._animOverrides.scale = 1;
-    obj.container.pivot.set(0, 0);
-    obj.container.position.set(0, 0);
-    obj.container.scale.set(1);
   },
 };

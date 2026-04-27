@@ -1,4 +1,4 @@
-// ── handlers/index.ts ─────────────────────────────────────────────────────────
+// ── handlers/index.ts (element-plugin) ────────────────────────────────────────
 // Builds and exports the default AnimationRegistry pre-loaded with all
 // built-in animation handlers. External code registers custom handlers here:
 //
@@ -34,9 +34,6 @@ export type { BorderGlowOptions } from './borderGlowHandler.js';
  * Default {@link AnimationRegistry} instance pre-loaded with all built-in handlers.
  *
  * @remarks
- * Pass this registry to {@link AnimationTicker} (the default) or create a new
- * `AnimationRegistry` and populate it for isolated use cases.
- *
  * Register custom animations globally:
  * ```ts
  * import { defaultRegistry } from '@invana/canvas';

@@ -6,7 +6,23 @@ export type { ElementPluginOptions, SolidCtor, ConnectorCtor } from './ElementPl
 
 // Base classes
 export { BaseSolid, LOD } from './BaseSolid.js';
+export type { AnimSlot } from './BaseSolid.js';
 export { BaseConnector } from './BaseConnector.js';
+
+// Animation registry + default instance
+export { AnimationRegistry } from './AnimationRegistry.js';
+export type { AnimationHandler } from './AnimationRegistry.js';
+export { defaultRegistry } from './handlers/index.js';
+export type {
+  BreatheOptions,
+  ColorCycleOptions,
+  FadeInOptions,
+  PulseOptions,
+  MarchingAntsOptions,
+  DashedFlowOptions,
+  BorderGlowOptions,
+} from './handlers/index.js';
+export type { ElementAnimations } from './spec/animations.js';
 
 // DrawContext (interface only — PixiDrawContext is internal)
 export type { DrawContext } from './DrawContext.js';

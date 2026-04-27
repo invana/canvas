@@ -12,6 +12,11 @@ import { BaseConnector } from './BaseConnector.js';
 import type { BaseSolidSpec, BaseConnectorSpec, BBox, Point, RouterFn, ArrowSpec } from './spec/index.js';
 import { CameraTracker } from './CameraTracker.js';
 import { LODController, type LODThresholds } from './LODController.js';
+import { AnimationRegistry } from './AnimationRegistry.js';
+import type { AnimationHandler } from './AnimationRegistry.js';
+import { ElementHaloPool } from './ElementHaloPool.js';
+import { defaultRegistry } from './handlers/index.js';
+import type { ElementAnimations } from './spec/animations.js';
 import {
   ElementClickEvent,
   ElementDblClickEvent,
@@ -67,6 +72,12 @@ export interface ElementPluginOptions {
   fitOnRender?: boolean;
   /** World-space padding used by `fit()` (default: 60). */
   fitPadding?: number;
+  /**
+   * Custom animation registry.  Defaults to {@link defaultRegistry} which is
+   * pre-loaded with all built-in handlers.  Pass a new `AnimationRegistry` for
+   * fully isolated animation type sets.
+   */
+  animationRegistry?: AnimationRegistry;
 }
 
 // ── Element constructor types ─────────────────────────────────────────────────
@@ -131,10 +142,12 @@ export class ElementPlugin implements CanvasPlugin {
   private _cameraTracker!: CameraTracker;
   private _ctx!:           PluginContext;
 
-  // Animation frame ticker (for elements with onAnimationTick)
+  // Animation frame ticker
   private _ticker: Ticker | null = null;
-  private _animSet = new Set<string>(); // ids of elements with onAnimationTick
+  private _animSet = new Set<string>(); // ids of elements with active animations
   private _boundTick: ((t: Ticker) => void) | null = null;
+  private _animRegistry: AnimationRegistry;
+  private _halos!: ElementHaloPool;
 
   // Pointer state
   private _lastHoverId:    string | null = null;
@@ -180,11 +193,12 @@ export class ElementPlugin implements CanvasPlugin {
   ]);
 
   constructor(options: ElementPluginOptions = {}) {
-    this.id            = options.key       ?? 'elements';
-    this._zIndex       = options.zIndex    ?? 5;
-    this._lodOptions   = options.lod       ?? {};
-    this._fitOnRender  = options.fitOnRender ?? false;
-    this._fitPadding   = options.fitPadding  ?? 60;
+    this.id              = options.key               ?? 'elements';
+    this._zIndex         = options.zIndex            ?? 5;
+    this._lodOptions     = options.lod               ?? {};
+    this._fitOnRender    = options.fitOnRender        ?? false;
+    this._fitPadding     = options.fitPadding         ?? 60;
+    this._animRegistry   = options.animationRegistry ?? defaultRegistry;
   }
 
   // ── CanvasPlugin lifecycle ────────────────────────────────────────────────
@@ -196,9 +210,11 @@ export class ElementPlugin implements CanvasPlugin {
   register(ctx: PluginContext): void {
     this._ctx = ctx;
 
-    // Two layers: connectors below solids
+    // Three layers: connectors → solids → halos
     const connLayer  = ctx.createLayer({ id: `${this.id}-conn`,  zIndex: this._zIndex,     label: 'Connectors' });
     const solidLayer = ctx.createLayer({ id: `${this.id}-solid`, zIndex: this._zIndex + 1, label: 'Solids'     });
+    const haloLayer  = ctx.createLayer({ id: `${this.id}-halos`, zIndex: this._zIndex + 2, label: 'Halos'      });
+    this._halos = new ElementHaloPool(haloLayer);
 
     this._solidPool  = new ElementPool();
     this._connPool   = new ElementPool();
@@ -256,6 +272,7 @@ export class ElementPlugin implements CanvasPlugin {
     for (const obj of this._connPool?.values() ?? []) obj.destroy();
     this._solidPool?.clear();
     this._connPool?.clear();
+    this._halos?.destroy();
   }
 
   // ── Element type registry ─────────────────────────────────────────────────
@@ -341,6 +358,7 @@ export class ElementPlugin implements CanvasPlugin {
 
   /** Remove a solid element by id. */
   removeSolid(id: string): void {
+    this.clearAnimation(id); // stop all animations and return halo graphics
     this._solidToConns.delete(id);
     this._solidScene.evict(id);
     this._animSet.delete(id);
@@ -516,6 +534,7 @@ export class ElementPlugin implements CanvasPlugin {
    * Remove all solids and connectors, stop animations, and reset state.
    */
   clear(): void {
+    this._halos?.returnAll();
     this._solidScene.clear();
     this._connScene.clear();
     for (const obj of this._solidPool.values()) obj.destroy();
@@ -558,11 +577,153 @@ export class ElementPlugin implements CanvasPlugin {
     for (const id of this._animSet) {
       const obj = this._solidPool.get(id) ?? this._connPool.get(id);
       if (!obj) { this._animSet.delete(id); continue; }
-      obj.element.onAnimationTick?.(dt);
-      if (obj.isDirty) {
+
+      const element = obj.element;
+      let dirty = false;
+
+      // Registry-based animations (BaseSolid only)
+      if (element instanceof BaseSolid && element._animSlots.size > 0) {
+        const toStop: string[] = [];
+
+        for (const [type, slot] of element._animSlots) {
+          const handler = this._animRegistry.get(type) as AnimationHandler | undefined;
+          if (!handler) continue;
+          const result = handler.tick(slot.state, slot.spec, dt);
+          handler.apply(slot.state, slot.spec, element, this._halos);
+          if (result.dirty) dirty = true;
+          if (result.stop)  toStop.push(type);
+        }
+
+        for (const type of toStop) {
+          const slot = element._animSlots.get(type);
+          if (slot) {
+            const handler = this._animRegistry.get(type) as AnimationHandler | undefined;
+            handler?.cleanup?.(slot.state, element, this._halos);
+          }
+          element._animSlots.delete(type);
+        }
+
+        this._applyContainerOverrides(obj, element);
+      }
+
+      // Legacy per-element callback (both solids and connectors)
+      element.onAnimationTick?.(dt);
+      dirty = dirty || obj.isDirty;
+
+      if (dirty) {
+        obj.markDirty();
         const scene = this._solidPool.has(id) ? this._solidScene : this._connScene;
         scene.redraw(id);
       }
+
+      // Remove from animSet when no more work to do
+      if (
+        element instanceof BaseSolid &&
+        element._animSlots.size === 0 &&
+        !element.onAnimationTick
+      ) {
+        this._animSet.delete(id);
+      }
+    }
+  }
+
+  /**
+   * Start one or more animations on a solid element.
+   *
+   * @remarks
+   * Multiple animations can run simultaneously. Calling `animate()` for a type
+   * that is already running stops the current instance and restarts it.
+   *
+   * @param id   - Solid element id.
+   * @param spec - Map of animation type → options.
+   *
+   * @example
+   * ```ts
+   * elements.animate('n1', { breathe: { amplitude: 0.12 } });
+   * elements.animate('n1', { fadeIn: { duration: 500 }, colorCycle: { colors: ['#f00', '#0f0'] } });
+   * ```
+   */
+  animate(id: string, spec: ElementAnimations): void {
+    const obj = this._solidPool.get(id);
+    if (!obj) {
+      console.warn(`[ElementPlugin] animate(): solid element "${id}" not found.`);
+      return;
+    }
+    const element = obj.element as BaseSolid;
+
+    for (const [type, opts] of Object.entries(spec)) {
+      if (opts === undefined || opts === null) continue;
+      const handler = this._animRegistry.get(type) as AnimationHandler | undefined;
+      if (!handler) {
+        console.warn(`[ElementPlugin] animate(): no handler registered for type "${type}".`);
+        continue;
+      }
+      // Stop existing slot for this type before restarting
+      const existing = element._animSlots.get(type);
+      if (existing) {
+        handler.cleanup?.(existing.state, element, this._halos);
+        element._animSlots.delete(type);
+      }
+      const state = handler.init(opts as Record<string, unknown>, element, this._halos);
+      element._animSlots.set(type, { spec: opts as Record<string, unknown>, state });
+    }
+
+    this._animSet.add(id);
+  }
+
+  /**
+   * Stop one or all animations on a solid element.
+   *
+   * @param id   - Solid element id.
+   * @param type - Animation type to stop.  Omit to stop all animations.
+   */
+  clearAnimation(id: string, type?: string): void {
+    const obj = this._solidPool.get(id);
+    if (!obj) return;
+    const element = obj.element as BaseSolid;
+    if (!element._animSlots) return;
+
+    if (type) {
+      const slot = element._animSlots.get(type);
+      if (slot) {
+        const handler = this._animRegistry.get(type) as AnimationHandler | undefined;
+        handler?.cleanup?.(slot.state, element, this._halos);
+        element._animSlots.delete(type);
+      }
+    } else {
+      for (const [t, slot] of element._animSlots) {
+        const handler = this._animRegistry.get(t) as AnimationHandler | undefined;
+        handler?.cleanup?.(slot.state, element, this._halos);
+      }
+      element._animSlots.clear();
+    }
+
+    // Apply resets to the container immediately
+    this._applyContainerOverrides(obj, element);
+
+    if (element._animSlots.size === 0 && !element.onAnimationTick) {
+      this._animSet.delete(id);
+    }
+  }
+
+  /**
+   * Apply `_animOverrides` scale and alpha to the PixiJS Container.
+   * Called after all handlers have run for a frame, and immediately after
+   * {@link clearAnimation} to flush resets.
+   * @internal
+   */
+  private _applyContainerOverrides(obj: ElementObject, element: BaseSolid): void {
+    const o = element._animOverrides;
+    obj.container.alpha = o.alpha;
+    if (o.scale !== 1) {
+      const c = element.getCenter();
+      obj.container.pivot.set(c.x, c.y);
+      obj.container.position.set(c.x, c.y);
+      obj.container.scale.set(o.scale);
+    } else {
+      obj.container.pivot.set(0, 0);
+      obj.container.position.set(0, 0);
+      obj.container.scale.set(1);
     }
   }
 

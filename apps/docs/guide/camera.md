@@ -48,7 +48,7 @@ camera.zoomTo(2.0, { x: 400, y: 300 }); // zoom centered on screen point
 camera.fitTo({ x: -200, y: -150, width: 400, height: 300 }, 50);
 ```
 
-Plugins that manage collections of shapes (e.g. `ShapePlugin`, `ElementPlugin`) have a `fit()` helper that computes the bounding box for you and delegates to `camera.fitTo`.
+`ElementPlugin` has a `fit()` helper that computes the bounding box for you and delegates to `camera.fitTo`.
 
 ## Reset
 

@@ -1,10 +1,6 @@
-// ── Animation option types ────────────────────────────────────────────────────
+// ── Animation option types (element-plugin) ───────────────────────────────────
 // Each interface describes the user-facing options for one animation type.
-// There is no `type` discriminant field — the key in ShapeAnimations IS the type.
-// All animations are driven by AnimationTicker (app.ticker), never CSS.
-//
-// Option types are re-exported from their handler files via handlers/index.ts
-// so this file only holds the top-level ShapeAnimations aggregate type.
+// There is no `type` discriminant field — the key in ElementAnimations IS the type.
 
 export type {
   BreatheOptions,
@@ -27,32 +23,27 @@ import type {
 } from '../handlers/index.js';
 
 /**
- * Animations to apply to a shape.
+ * Animations to apply to a solid element via {@link ElementPlugin.animate}.
  *
  * @remarks
  * Each key is the animation **type name**; its value is the options for that
- * animation. Multiple animations can run simultaneously on the same shape and
- * are each independently stoppable via {@link ShapePlugin.stopAnimation}.
- *
- * The index signature allows custom animation types registered on the
- * {@link AnimationRegistry} to be passed without casting.
+ * animation. Multiple animations can run simultaneously on the same element.
  *
  * @example
  * ```ts
- * // Single animation
- * shapes.animate('n1', { breathe: { amplitude: 0.12, duration: 1667 } });
+ * elements.animate('n1', { breathe: { amplitude: 0.12, duration: 1667 } });
  *
- * // Multiple animations simultaneously
- * shapes.animate('n1', {
- *   breathe:     { amplitude: 0.12 },
- *   marchingAnts: { speed: 1.5 },
+ * // Multiple simultaneous animations
+ * elements.animate('n1', {
+ *   breathe:      { amplitude: 0.12 },
+ *   colorCycle:   { colors: ['#ff0000', '#00ff00', '#0000ff'] },
  * });
  *
  * // Stop one animation, keep the other
- * shapes.stopAnimation('n1', 'breathe');
+ * elements.clearAnimation('n1', 'breathe');
  * ```
  */
-export interface ShapeAnimations {
+export interface ElementAnimations {
   /** Scale oscillation — see {@link BreatheOptions}. */
   breathe?: BreatheOptions;
   /** Fill color palette cycling — see {@link ColorCycleOptions}. */
@@ -67,6 +58,6 @@ export interface ShapeAnimations {
   dashedFlow?: DashedFlowOptions;
   /** Border width glow pulse — see {@link BorderGlowOptions}. */
   borderGlow?: BorderGlowOptions;
-  /** Custom animation types registered on the {@link AnimationRegistry}. */
+  /** Custom animation types registered on {@link AnimationRegistry}. */
   [key: string]: unknown;
 }

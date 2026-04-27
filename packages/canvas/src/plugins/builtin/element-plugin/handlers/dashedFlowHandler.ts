@@ -1,11 +1,10 @@
-// ── dashedFlowHandler ─────────────────────────────────────────────────────────
+// ── dashedFlowHandler (element-plugin) ────────────────────────────────────────
 // Flows dashes along the border in one direction by advancing dashOffset.
-// Supports forward and reverse flow via the `direction` option.
-// Writes to ShapeObject._animOverrides.dashOffset (and optionally borderColor).
+// Writes to BaseSolid._animOverrides.dashOffset (and optionally borderColor).
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
-import type { ShapeObject } from '../ShapeObject.js';
-import type { HaloPool } from '../HaloPool.js';
+import type { BaseSolid } from '../BaseSolid.js';
+import type { ElementHaloPool } from '../ElementHaloPool.js';
 
 /** Options for the `dashedFlow` animation. */
 export interface DashedFlowOptions {
@@ -13,34 +12,31 @@ export interface DashedFlowOptions {
   speed?: number;
   /** Flow direction: `1` = forward along path, `-1` = reverse. (default: 1) */
   direction?: number;
-  /** Override border color. Defaults to the shape border color. */
+  /** Override border color. Defaults to the element stroke color. */
   color?: string;
   /** Loop count before auto-stop. Use `-1` for infinite. (default: -1) */
   repeat?: number;
 }
 
 interface DashedFlowState {
-  /** Accumulated dash offset (may be negative for reverse direction). */
   offset: number;
-  /** Number of completed 360-unit loops. */
   repeatCount: number;
 }
 
-/** Offset units considered one full loop for repeat counting. */
 const CYCLE_SIZE = 360;
 
 /**
  * `dashedFlowHandler` — one-direction dash flow animation.
  *
  * @remarks
- * Unlike `marchingAnts` which reverses direction naturally, `dashedFlow`
- * keeps dashes moving in a single direction, giving a "current" or
- * "data-flow" visual metaphor. Supports reverse via `direction: -1`.
+ * Unlike `marchingAnts` which reverses naturally, `dashedFlow` keeps dashes
+ * moving in a single direction, giving a "current" or "data-flow" metaphor.
+ * Supports reverse via `direction: -1`.
  */
 export const dashedFlowHandler: AnimationHandler<DashedFlowOptions, DashedFlowState> = {
   type: 'dashedFlow',
 
-  init(_spec: DashedFlowOptions, _obj: ShapeObject, _halos: HaloPool): DashedFlowState {
+  init(_spec: DashedFlowOptions, _obj: BaseSolid, _halos: ElementHaloPool): DashedFlowState {
     return { offset: 0, repeatCount: 0 };
   },
 
@@ -57,12 +53,12 @@ export const dashedFlowHandler: AnimationHandler<DashedFlowOptions, DashedFlowSt
     return { dirty: true, stop: false };
   },
 
-  apply(state: DashedFlowState, spec: DashedFlowOptions, obj: ShapeObject, _halos: HaloPool) {
+  apply(state: DashedFlowState, spec: DashedFlowOptions, obj: BaseSolid, _halos: ElementHaloPool) {
     obj._animOverrides.dashOffset = state.offset;
     if (spec.color) obj._animOverrides.borderColor = spec.color;
   },
 
-  cleanup(_state: DashedFlowState, obj: ShapeObject, _halos: HaloPool) {
+  cleanup(_state: DashedFlowState, obj: BaseSolid, _halos: ElementHaloPool) {
     obj._animOverrides.dashOffset = 0;
     obj._animOverrides.borderColor = undefined;
   },

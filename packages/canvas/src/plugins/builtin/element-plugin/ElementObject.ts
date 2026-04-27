@@ -69,6 +69,11 @@ export class ElementObject {
 
     // Wire the element's dirty-flag callback back to this object
     element._onDirty = () => { this._dirty = true; };
+
+    // Wire the container reference for animation handlers (scale, alpha transforms)
+    if ('_container' in element) {
+      (element as import('./BaseSolid.js').BaseSolid)._container = this.container;
+    }
   }
 
   // ── Rendering ─────────────────────────────────────────────────────────────

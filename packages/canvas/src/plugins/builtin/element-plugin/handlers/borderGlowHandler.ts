@@ -1,15 +1,15 @@
-// ── borderGlowHandler ─────────────────────────────────────────────────────────
+// ── borderGlowHandler (element-plugin) ────────────────────────────────────────
 // Oscillates the border stroke width between minWidth and maxWidth using a sine
-// wave, creating a pulsing glow effect. Writes to
-// ShapeObject._animOverrides.borderWidth (and optionally borderColor).
+// wave. Writes to BaseSolid._animOverrides.borderWidth / borderColor, which
+// resolveStyle() picks up automatically.
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
-import type { ShapeObject } from '../ShapeObject.js';
-import type { HaloPool } from '../HaloPool.js';
+import type { BaseSolid } from '../BaseSolid.js';
+import type { ElementHaloPool } from '../ElementHaloPool.js';
 
 /** Options for the `borderGlow` animation. */
 export interface BorderGlowOptions {
-  /** Override border color. Defaults to the shape border color. */
+  /** Override border color. Defaults to the element stroke color. */
   color?: string;
   /** Minimum stroke width in px. (default: 1) */
   minWidth?: number;
@@ -22,9 +22,7 @@ export interface BorderGlowOptions {
 }
 
 interface BorderGlowState {
-  /** Current oscillation phase in radians (0 – 2π per cycle). */
   phase: number;
-  /** Number of completed full cycles. */
   repeatCount: number;
 }
 
@@ -32,13 +30,15 @@ interface BorderGlowState {
  * `borderGlowHandler` — border stroke-width pulse animation.
  *
  * @remarks
- * The computed width is written to `obj._animOverrides.borderWidth`.
- * `ShapeObject._drawBorder` reads this in place of `spec.border.width`.
+ * Writes the computed width to `obj._animOverrides.borderWidth`.
+ * {@link BaseSolid.resolveStyle} returns this as `strokeWidth` so any element
+ * that renders a border via its `draw()` will pick up the animated width
+ * automatically.
  */
 export const borderGlowHandler: AnimationHandler<BorderGlowOptions, BorderGlowState> = {
   type: 'borderGlow',
 
-  init(_spec: BorderGlowOptions, _obj: ShapeObject, _halos: HaloPool): BorderGlowState {
+  init(_spec: BorderGlowOptions, _obj: BaseSolid, _halos: ElementHaloPool): BorderGlowState {
     return { phase: 0, repeatCount: 0 };
   },
 
@@ -54,14 +54,14 @@ export const borderGlowHandler: AnimationHandler<BorderGlowOptions, BorderGlowSt
     return { dirty: true, stop: false };
   },
 
-  apply(state: BorderGlowState, spec: BorderGlowOptions, obj: ShapeObject, _halos: HaloPool) {
+  apply(state: BorderGlowState, spec: BorderGlowOptions, obj: BaseSolid, _halos: ElementHaloPool) {
     const min = spec.minWidth ?? 1;
     const max = spec.maxWidth ?? 6;
     obj._animOverrides.borderWidth = min + (Math.sin(state.phase) * 0.5 + 0.5) * (max - min);
     if (spec.color) obj._animOverrides.borderColor = spec.color;
   },
 
-  cleanup(_state: BorderGlowState, obj: ShapeObject, _halos: HaloPool) {
+  cleanup(_state: BorderGlowState, obj: BaseSolid, _halos: ElementHaloPool) {
     obj._animOverrides.borderWidth = undefined;
     obj._animOverrides.borderColor = undefined;
   },

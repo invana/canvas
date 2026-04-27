@@ -48,7 +48,7 @@ await canvas.init();
 
 // Register at any time after init
 await canvas.plugins.register(new BackgroundPlugin({ type: 'solid', color: '#212121' }));
-await canvas.plugins.register(new ShapePlugin());
+await canvas.plugins.register(new ElementPlugin());
 ```
 
 ## Passing plugins at construction time

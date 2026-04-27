@@ -57,24 +57,6 @@ All canvas pointer events carry `worldX`, `worldY` (world-space coordinates) and
 | `plugin:enabled` | `pluginId` | `setEnabled(id, true)` called |
 | `plugin:disabled` | `pluginId` | `setEnabled(id, false)` called |
 
-## Shape events
-
-Fired by `ShapePlugin`. All carry `shapeId` and the original pointer event data:
-
-| Event | Fires when |
-|---|---|
-| `shape:click` | Shape clicked |
-| `shape:dblclick` | Shape double-clicked |
-| `shape:contextmenu` | Right-click on shape |
-| `shape:pointerover` | Pointer enters shape |
-| `shape:pointerout` | Pointer leaves shape |
-| `shape:pointermove` | Pointer moves over shape |
-| `shape:pointerdown` | Pointer pressed on shape |
-| `shape:pointerup` | Pointer released on shape |
-| `shape:dragstart` | Drag begins on a draggable shape |
-| `shape:dragmove` | Shape is being dragged |
-| `shape:dragend` | Drag ends |
-
 ## Element events
 
 Fired by `ElementPlugin`. All carry `elementId`, `elementType` (`'solid'` or `'connector'`), and pointer fields:

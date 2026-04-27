@@ -63,7 +63,6 @@ export default defineConfig({
           text: 'Built-in Plugins',
           items: [
             { text: 'BackgroundPlugin', link: '/plugins/background' },
-            { text: 'ShapePlugin', link: '/plugins/shape' },
             { text: 'ElementPlugin', link: '/plugins/element' },
             { text: 'DrawingPlugin', link: '/plugins/drawing' },
             { text: 'DevInfoPlugin', link: '/plugins/dev-info' },

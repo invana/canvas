@@ -1,43 +1,43 @@
-// ── marchingAntsHandler ───────────────────────────────────────────────────────
-// Animates dashes marching around the shape border by incrementing dashOffset
-// each frame. Writes to ShapeObject._animOverrides.dashOffset (and optionally
-// borderColor), which ShapeObject.draw() feeds into the dash drawing functions.
+// ── marchingAntsHandler (element-plugin) ──────────────────────────────────────
+// Animates dashes marching around the element border by incrementing dashOffset.
+// Writes to BaseSolid._animOverrides.dashOffset (and optionally borderColor).
+// Visual effect requires elements whose draw() reads _animOverrides.dashOffset
+// for dashed border rendering.
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
-import type { ShapeObject } from '../ShapeObject.js';
-import type { HaloPool } from '../HaloPool.js';
+import type { BaseSolid } from '../BaseSolid.js';
+import type { ElementHaloPool } from '../ElementHaloPool.js';
 
 /** Options for the `marchingAnts` animation. */
 export interface MarchingAntsOptions {
   /** Dash offset increment per frame. (default: 1) */
   speed?: number;
-  /** Override border color. Defaults to the shape border color. */
+  /** Override border color. Defaults to the element stroke color. */
   color?: string;
   /** Perimeter-loop count before auto-stop. Use `-1` for infinite. (default: -1) */
   repeat?: number;
 }
 
 interface MarchingAntsState {
-  /** Accumulated dash offset. */
   offset: number;
-  /** Number of completed 360-unit loops. */
   repeatCount: number;
 }
 
-/** Offset units considered one perimeter loop for repeat counting. */
 const CYCLE_SIZE = 360;
 
 /**
  * `marchingAntsHandler` — border dash march animation.
  *
  * @remarks
- * The offset value is unitless; the dash drawing functions (`drawDashedCircle`,
- * `drawDashedRect`, etc.) interpret it as a pixel offset along the path.
+ * Writes `dashOffset` and optionally `borderColor` to `_animOverrides`.
+ * Element `draw()` implementations that support dashed borders should read
+ * `this._animOverrides.dashOffset` when rendering their border stroke.
+ * The resolved style (via `resolveStyle()`) already picks up `borderColor`.
  */
 export const marchingAntsHandler: AnimationHandler<MarchingAntsOptions, MarchingAntsState> = {
   type: 'marchingAnts',
 
-  init(_spec: MarchingAntsOptions, _obj: ShapeObject, _halos: HaloPool): MarchingAntsState {
+  init(_spec: MarchingAntsOptions, _obj: BaseSolid, _halos: ElementHaloPool): MarchingAntsState {
     return { offset: 0, repeatCount: 0 };
   },
 
@@ -53,12 +53,12 @@ export const marchingAntsHandler: AnimationHandler<MarchingAntsOptions, Marching
     return { dirty: true, stop: false };
   },
 
-  apply(state: MarchingAntsState, spec: MarchingAntsOptions, obj: ShapeObject, _halos: HaloPool) {
+  apply(state: MarchingAntsState, spec: MarchingAntsOptions, obj: BaseSolid, _halos: ElementHaloPool) {
     obj._animOverrides.dashOffset = state.offset;
     if (spec.color) obj._animOverrides.borderColor = spec.color;
   },
 
-  cleanup(_state: MarchingAntsState, obj: ShapeObject, _halos: HaloPool) {
+  cleanup(_state: MarchingAntsState, obj: BaseSolid, _halos: ElementHaloPool) {
     obj._animOverrides.dashOffset = 0;
     obj._animOverrides.borderColor = undefined;
   },

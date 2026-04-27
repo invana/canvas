@@ -1,11 +1,11 @@
-// ── fadeInHandler ─────────────────────────────────────────────────────────────
-// Fades the shape from a starting alpha up to full opacity.
+// ── fadeInHandler (element-plugin) ────────────────────────────────────────────
+// Fades the element from a starting alpha up to full opacity.
 // Uses performance.now() for wall-clock elapsed time so it is unaffected by
-// frame-rate spikes. Writes to ShapeObject._animOverrides.alpha.
+// frame-rate spikes. Writes to BaseSolid._animOverrides.alpha.
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
-import type { ShapeObject } from '../ShapeObject.js';
-import type { HaloPool } from '../HaloPool.js';
+import type { BaseSolid } from '../BaseSolid.js';
+import type { ElementHaloPool } from '../ElementHaloPool.js';
 
 /** Options for the `fadeIn` animation. */
 export interface FadeInOptions {
@@ -18,9 +18,7 @@ export interface FadeInOptions {
 }
 
 interface FadeInState {
-  /** Wall-clock start of the current fade cycle (performance.now). */
   startTime: number;
-  /** Number of completed fade cycles. */
   repeatCount: number;
 }
 
@@ -28,15 +26,15 @@ interface FadeInState {
  * `fadeInHandler` — opacity fade-in animation.
  *
  * @remarks
- * Applies the alpha to `obj._animOverrides.alpha`, which `ShapeObject.draw()`
- * sets on `container.alpha`. The starting alpha is applied immediately in `init`
- * so there is no single-frame flash at full opacity before the first tick.
+ * Applies the alpha to `obj._animOverrides.alpha`, which
+ * {@link ElementPlugin._applyContainerOverrides} sets on `container.alpha`.
+ * The starting alpha is applied immediately in `init` to avoid a one-frame
+ * flash at full opacity before the first tick.
  */
 export const fadeInHandler: AnimationHandler<FadeInOptions, FadeInState> = {
   type: 'fadeIn',
 
-  init(spec: FadeInOptions, obj: ShapeObject, _halos: HaloPool): FadeInState {
-    // Apply starting alpha immediately so there is no 1-frame flash
+  init(spec: FadeInOptions, obj: BaseSolid, _halos: ElementHaloPool): FadeInState {
     obj._animOverrides.alpha = spec.from ?? 0;
     return { startTime: performance.now(), repeatCount: 0 };
   },
@@ -50,7 +48,6 @@ export const fadeInHandler: AnimationHandler<FadeInOptions, FadeInState> = {
     if (raw >= 1) {
       state.repeatCount++;
       if (rep === -1 || state.repeatCount < rep) {
-        // Restart cycle
         state.startTime = performance.now();
         return { dirty: true, stop: false };
       }
@@ -59,14 +56,14 @@ export const fadeInHandler: AnimationHandler<FadeInOptions, FadeInState> = {
     return { dirty: true, stop: false };
   },
 
-  apply(state: FadeInState, spec: FadeInOptions, obj: ShapeObject, _halos: HaloPool) {
+  apply(state: FadeInState, spec: FadeInOptions, obj: BaseSolid, _halos: ElementHaloPool) {
     const dur = spec.duration ?? 400;
     const from = spec.from ?? 0;
     const elapsed = performance.now() - state.startTime;
     obj._animOverrides.alpha = Math.min(1, from + (1 - from) * (elapsed / dur));
   },
 
-  cleanup(_state: FadeInState, obj: ShapeObject, _halos: HaloPool) {
+  cleanup(_state: FadeInState, obj: BaseSolid, _halos: ElementHaloPool) {
     obj._animOverrides.alpha = 1;
   },
 };

@@ -39,23 +39,7 @@ export {
   LayerVisibilityChangedEvent,
 } from '../events/layer-events.js';
 
-// Re-export shape event classes (base + concrete)
-export {
-  ShapeBaseEvent,
-  ShapeDragBaseEvent,
-  ShapeClickEvent,
-  ShapeDblClickEvent,
-  ShapeContextMenuEvent,
-  ShapePointerOverEvent,
-  ShapePointerOutEvent,
-  ShapePointerMoveEvent,
-  ShapePointerDownEvent,
-  ShapePointerUpEvent,
-  ShapeDragStartEvent,
-  ShapeDragMoveEvent,
-  ShapeDragEndEvent,
-} from '../plugins/builtin/shape-plugin/ShapeEvents.js';
-export type { ShapeEventFields, ShapeDragEventFields } from '../plugins/builtin/shape-plugin/ShapeEvents.js';
+// Re-export shape event classes (shape-plugin removed — kept for element-plugin only)
 
 // Import concrete classes for the map
 import type {
@@ -86,19 +70,6 @@ import type {
   LayerRemovedEvent,
   LayerVisibilityChangedEvent,
 } from '../events/layer-events.js';
-import type {
-  ShapeClickEvent,
-  ShapeDblClickEvent,
-  ShapeContextMenuEvent,
-  ShapePointerOverEvent,
-  ShapePointerOutEvent,
-  ShapePointerMoveEvent,
-  ShapePointerDownEvent,
-  ShapePointerUpEvent,
-  ShapeDragStartEvent,
-  ShapeDragMoveEvent,
-  ShapeDragEndEvent,
-} from '../plugins/builtin/shape-plugin/ShapeEvents.js';
 import type {
   ElementClickEvent,
   ElementDblClickEvent,
@@ -171,19 +142,6 @@ export interface CanvasEventMap {
   'canvas:contextmenu':    CanvasContextMenuEvent;
   /** Fired when the canvas is resized (manually or via autoResize) */
   'canvas:resize':         CanvasResizeEvent;
-
-  // ── Shape events ──────────────────────────────────────────────────────────
-  'shape:click':           ShapeClickEvent;
-  'shape:dblclick':        ShapeDblClickEvent;
-  'shape:contextmenu':     ShapeContextMenuEvent;
-  'shape:pointerover':     ShapePointerOverEvent;
-  'shape:pointerout':      ShapePointerOutEvent;
-  'shape:pointermove':     ShapePointerMoveEvent;
-  'shape:pointerdown':     ShapePointerDownEvent;
-  'shape:pointerup':       ShapePointerUpEvent;
-  'shape:dragstart':       ShapeDragStartEvent;
-  'shape:dragmove':        ShapeDragMoveEvent;
-  'shape:dragend':         ShapeDragEndEvent;
 
   // ── Element events (ElementPlugin) ─────────────────────────────────────────
   'element:click':         ElementClickEvent;

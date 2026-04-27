@@ -49,33 +49,29 @@ await canvas.plugins.register(
 );
 ```
 
-## Adding shapes
+## Adding elements
 
 ```ts
-import { Canvas, ShapePlugin } from '@invana/canvas';
+import { Canvas, ElementPlugin } from '@invana/canvas';
 
 const canvas = new Canvas({ container, width: 800, height: 600 });
 await canvas.init();
 
-const shapes = new ShapePlugin({ fitOnRender: true });
-await canvas.plugins.register(shapes);
+const elements = new ElementPlugin({ fitOnRender: true });
+await canvas.plugins.register(elements);
 
-shapes.setData([
-  {
-    id: 'n1',
-    type: 'circle',
-    x: 0,
-    y: 0,
-    radius: 30,
-    fill: { type: 'solid', color: '#3fcbeb' },
-    border: { color: '#ffffff', width: 2 },
-    interactive: true,
-    draggable: true,
-  },
-]);
+elements.addSolid('circle', {
+  id: 'n1',
+  x: 0,
+  y: 0,
+  radius: 30,
+  style: { fill: '#3fcbeb', stroke: '#ffffff', strokeWidth: 2 },
+  interactive: true,
+  draggable: true,
+});
 
-canvas.events.on('shape:click', ({ shapeId }) => {
-  console.log('clicked', shapeId);
+canvas.events.on('element:click', ({ elementId }) => {
+  console.log('clicked', elementId);
 });
 ```
 

@@ -1,11 +1,11 @@
-// ── colorCycleHandler ─────────────────────────────────────────────────────────
-// Transitions the shape fill through a palette of colors over time.
-// Writes to ShapeObject._animOverrides.colorOverride, which ShapeObject.draw()
-// uses in place of the spec fill color.
+// ── colorCycleHandler (element-plugin) ────────────────────────────────────────
+// Transitions the element fill through a palette of colors over time.
+// Writes to BaseSolid._animOverrides.colorOverride, which resolveStyle()
+// merges in place of the spec fill color.
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
-import type { ShapeObject } from '../ShapeObject.js';
-import type { HaloPool } from '../HaloPool.js';
+import type { BaseSolid } from '../BaseSolid.js';
+import type { ElementHaloPool } from '../ElementHaloPool.js';
 
 /** Options for the `colorCycle` animation. */
 export interface ColorCycleOptions {
@@ -18,9 +18,7 @@ export interface ColorCycleOptions {
 }
 
 interface ColorCycleState {
-  /** Continuous phase; integer part = current color index. */
   phase: number;
-  /** Number of completed full palette cycles. */
   repeatCount: number;
 }
 
@@ -29,13 +27,13 @@ interface ColorCycleState {
  *
  * @remarks
  * Writes the active color to `obj._animOverrides.colorOverride`.
- * The standard `ShapeObject.draw()` picks this up automatically via the
- * `solidStyle` resolution path — no extra draw logic required.
+ * {@link BaseSolid.resolveStyle} picks this up automatically — no extra
+ * draw logic required in element subclasses.
  */
 export const colorCycleHandler: AnimationHandler<ColorCycleOptions, ColorCycleState> = {
   type: 'colorCycle',
 
-  init(_spec: ColorCycleOptions, _obj: ShapeObject, _halos: HaloPool): ColorCycleState {
+  init(_spec: ColorCycleOptions, _obj: BaseSolid, _halos: ElementHaloPool): ColorCycleState {
     return { phase: 0, repeatCount: 0 };
   },
 
@@ -44,7 +42,6 @@ export const colorCycleHandler: AnimationHandler<ColorCycleOptions, ColorCycleSt
     const len = spec.colors.length || 1;
     const prev = state.phase;
     state.phase += deltaMS / dur;
-    // One full cycle = phase crosses colors.length
     if (Math.floor(state.phase / len) > Math.floor(prev / len)) {
       state.repeatCount++;
       const rep = spec.repeat ?? -1;
@@ -53,7 +50,7 @@ export const colorCycleHandler: AnimationHandler<ColorCycleOptions, ColorCycleSt
     return { dirty: true, stop: false };
   },
 
-  apply(state: ColorCycleState, spec: ColorCycleOptions, obj: ShapeObject, _halos: HaloPool) {
+  apply(state: ColorCycleState, spec: ColorCycleOptions, obj: BaseSolid, _halos: ElementHaloPool) {
     const colors = spec.colors;
     if (colors.length > 0) {
       const idx = Math.floor(state.phase) % colors.length;
@@ -61,7 +58,7 @@ export const colorCycleHandler: AnimationHandler<ColorCycleOptions, ColorCycleSt
     }
   },
 
-  cleanup(_state: ColorCycleState, obj: ShapeObject, _halos: HaloPool) {
+  cleanup(_state: ColorCycleState, obj: BaseSolid, _halos: ElementHaloPool) {
     obj._animOverrides.colorOverride = undefined;
   },
 };

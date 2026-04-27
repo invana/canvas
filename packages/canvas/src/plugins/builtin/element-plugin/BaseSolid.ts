@@ -2,9 +2,22 @@
 // Abstract base class for all closed/filled elements.
 // Subclasses must implement draw(), getBBox(), getCenter(), and getConnectionPoint().
 
+import type { Container } from 'pixi.js';
 import type { DrawContext } from './DrawContext.js';
 import { LOD } from './LODController.js';
 import type { BaseSolidSpec, BBox, DrawStyle, Point } from './spec/index.js';
+
+/**
+ * A per-element active animation slot.
+ * Stored in {@link BaseSolid._animSlots}, keyed by animation type name.
+ * @internal
+ */
+export interface AnimSlot {
+  /** User-supplied options for this animation (immutable after start). */
+  spec: Record<string, unknown>;
+  /** Handler-owned mutable state — opaque at this level. */
+  state: unknown;
+}
 
 /**
  * Abstract base class for all solid (closed/filled) elements managed by
@@ -57,6 +70,41 @@ export abstract class BaseSolid<S extends BaseSolidSpec = BaseSolidSpec> {
    * @internal
    */
   _onDirty?: () => void;
+
+  /**
+   * Reference to the owning `ElementObject`'s PixiJS `Container`.
+   * Set by {@link ElementObject} constructor — do not set manually.
+   * @internal
+   */
+  _container: Container | null = null;
+
+  /**
+   * Active animation slots keyed by type name (e.g. `'breathe'`, `'fadeIn'`).
+   * Populated by {@link ElementPlugin.animate}; cleared by {@link ElementPlugin.clearAnimation}.
+   * @internal
+   */
+  _animSlots = new Map<string, AnimSlot>();
+
+  /**
+   * Per-frame rendering overrides written by animation handlers each tick.
+   * Read by {@link resolveStyle} for fill/stroke overrides and by
+   * {@link ElementPlugin._applyContainerOverrides} for transform overrides.
+   * @internal
+   */
+  _animOverrides: {
+    /** Container scale factor (1 = no scale). Applied by `ElementPlugin._tick()`. */
+    scale: number;
+    /** Container alpha (1 = fully opaque). Applied by `ElementPlugin._tick()`. */
+    alpha: number;
+    /** Fill color override written by `colorCycleHandler`. */
+    colorOverride?: string;
+    /** Accumulated dash offset for animated borders (marchingAnts / dashedFlow). */
+    dashOffset: number;
+    /** Border stroke color override written by `marchingAntsHandler` / `borderGlowHandler`. */
+    borderColor?: string;
+    /** Border stroke width override written by `borderGlowHandler`. */
+    borderWidth?: number;
+  } = { scale: 1, alpha: 1, dashOffset: 0 };
 
   constructor(spec: S) {
     this.spec = spec;
@@ -152,6 +200,10 @@ export abstract class BaseSolid<S extends BaseSolidSpec = BaseSolidSpec> {
       const override = this.spec.states?.[state];
       if (override) style = { ...style, ...override };
     }
+    // Apply animation overrides (written by animation handlers each tick)
+    if (this._animOverrides.colorOverride !== undefined) style = { ...style, fill: this._animOverrides.colorOverride };
+    if (this._animOverrides.borderColor !== undefined) style = { ...style, stroke: this._animOverrides.borderColor };
+    if (this._animOverrides.borderWidth !== undefined) style = { ...style, strokeWidth: this._animOverrides.borderWidth };
     return style;
   }
 
