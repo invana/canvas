@@ -21,7 +21,7 @@
  *   - Using `ctx.strokePath()` via the default `draw()` in BaseConnector
  *   - lil-gui controls to adjust connector parameters at runtime
  */
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import {
   Canvas, BackgroundPlugin, ElementPlugin,

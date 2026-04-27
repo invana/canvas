@@ -1,4 +1,4 @@
-import type { Preview } from '@storybook/html';
+import type { Preview } from '@storybook/html-vite';
 
 import './global.css';
 
@@ -47,12 +47,11 @@ const preview: Preview = {
     },
     layout: 'fullscreen',
     backgrounds: {
-      default: 'dark',
-      values: [
-        { name: 'light', value: '#ffffff' },
-        { name: 'dark', value: '#1a1a2e' },
-        { name: 'gray', value: '#f5f5f5' },
-      ],
+      options: {
+        light: { name: 'light', value: '#ffffff' },
+        dark: { name: 'dark', value: '#1a1a2e' },
+        gray: { name: 'gray', value: '#f5f5f5' }
+      }
     },
     docs: {
       codePanel: true,
@@ -62,6 +61,12 @@ const preview: Preview = {
       },
     },
   },
+
+  initialGlobals: {
+    backgrounds: {
+      value: 'dark'
+    }
+  }
 };
 
 export default preview;

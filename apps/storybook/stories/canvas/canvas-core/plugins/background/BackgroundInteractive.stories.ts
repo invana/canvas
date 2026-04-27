@@ -4,7 +4,7 @@
  * All options in one place. Switch type, pattern, colours, and toggle
  * followCamera to compare fixed vs world-tracking background.
  */
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin, DrawingPlugin } from '@invana/canvas';
 import type { BackgroundType, PatternType } from '@invana/canvas';
 import { createContainer } from '../../../../../src/div-utils.js';

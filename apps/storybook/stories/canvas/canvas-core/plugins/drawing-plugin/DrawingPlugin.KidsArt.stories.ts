@@ -16,7 +16,7 @@
  *   bezier, dottedCircle, dashedLine, circleGlow, label
  */
 
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DrawingPlugin } from '@invana/canvas';
 import { createContainer } from '../../../../../src/div-utils.js';
 

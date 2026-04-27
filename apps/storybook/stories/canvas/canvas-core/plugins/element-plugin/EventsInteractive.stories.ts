@@ -21,7 +21,7 @@
  *
  * All events are logged to the Storybook Actions tab.
  */
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import { action } from 'storybook/actions';
 import GUI from 'lil-gui';
 import {

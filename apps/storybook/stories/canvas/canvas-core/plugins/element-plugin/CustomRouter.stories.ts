@@ -34,7 +34,7 @@
  *   `router: { name, args }` spec field — use a named router on a connector
  *   `updateConnector(id, partial)`      — live-update router args
  */
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import {
   Canvas, BackgroundPlugin, ElementPlugin,

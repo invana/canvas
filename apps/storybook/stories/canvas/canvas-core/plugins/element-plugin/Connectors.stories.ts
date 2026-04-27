@@ -7,7 +7,7 @@
  *   Connectors        — all six types with labels
  *   Connector Offset  — interactive sourceOffset / targetOffset controls via lil-gui
  */
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import {
   Canvas, BackgroundPlugin, ElementPlugin,

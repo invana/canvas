@@ -12,7 +12,7 @@
  *   - color      — ring color (defaults to shape fill color)
  *   - repeat     — cycle count before stopping (-1 = infinite)
  */
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin, ShapePlugin } from '@invana/canvas';
 import { createContainer } from '../../../../../../src/div-utils.js';
 import GUI from 'lil-gui';

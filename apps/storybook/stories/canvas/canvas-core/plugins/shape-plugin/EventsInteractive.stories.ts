@@ -14,7 +14,7 @@
  *
  * All events are logged to the Storybook Actions tab.
  */
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import {
   Canvas, BackgroundPlugin, ShapePlugin, DevInfoPlugin,
   type ShapeClickEvent,

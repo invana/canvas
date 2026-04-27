@@ -19,7 +19,7 @@
  *   `sourceRadius` / `targetRadius` — trims path to node boundary
  *   `curvature`    — BezierConnectorSpec arc strength
  */
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import {
   Canvas, BackgroundPlugin, ElementPlugin,

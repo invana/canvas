@@ -26,7 +26,7 @@
  *   - `fit()` after render
  *   - lil-gui to toggle node highlight
  */
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin, ElementPlugin } from '@invana/canvas';
 import type { BaseSolidSpec, BaseConnectorSpec, CircleElementSpec } from '@invana/canvas';

@@ -10,7 +10,7 @@
  * Use the GUI to enable/disable each animation type.
  * Animations are addressed by type name, not by a 'body'/'border' layer key.
  */
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin, ShapePlugin, DevInfoPlugin } from '@invana/canvas';
 import type { ShapeSpec } from '@invana/canvas';
 import { createContainer } from '../../../../../src/div-utils.js';

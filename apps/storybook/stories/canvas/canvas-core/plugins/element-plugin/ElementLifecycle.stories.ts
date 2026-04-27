@@ -24,7 +24,7 @@
  *   element:added   — logged to the action tab
  *   element:removed — logged to the action tab
  */
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import { action } from 'storybook/actions';
 import GUI from 'lil-gui';
 import {

@@ -7,7 +7,7 @@
  *
  * Group A: z 1→2→3  |  Group B: z 3→2→1  |  Group C: Mixed
  */
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin, ShapePlugin, DevInfoPlugin } from '@invana/canvas';
 import type { ShapeSpec } from '@invana/canvas';
 import { createContainer } from '../../../../../../../src/div-utils.js';

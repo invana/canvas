@@ -13,7 +13,7 @@
  * Also shows a `HexBadge` custom element — a small hexagon with a text label
  * rendered as a status badge.
  */
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import {
   Canvas,
   BackgroundPlugin,

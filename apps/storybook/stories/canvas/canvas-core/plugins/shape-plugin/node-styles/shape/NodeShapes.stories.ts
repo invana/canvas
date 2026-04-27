@@ -10,7 +10,7 @@
  *   - Dashed / dotted variants
  *   - Effect shapes (circleGlow, rippleRing)
  */
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin, ShapePlugin, DevInfoPlugin } from '@invana/canvas';
 import type { ShapeSpec } from '@invana/canvas';
 import { createContainer } from '../../../../../../../src/div-utils.js';

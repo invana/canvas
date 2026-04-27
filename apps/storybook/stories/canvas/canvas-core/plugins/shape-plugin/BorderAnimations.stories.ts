@@ -9,7 +9,7 @@
  * Each animation is addressed by its type name as the key in the animations map.
  * Use the GUI to play/pause each animation independently.
  */
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin, ShapePlugin, DevInfoPlugin } from '@invana/canvas';
 import { createContainer } from '../../../../../src/div-utils.js';
 import GUI from 'lil-gui';

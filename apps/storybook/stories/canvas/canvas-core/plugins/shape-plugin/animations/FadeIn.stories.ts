@@ -12,7 +12,7 @@
  *
  * Use the "▶ Replay all" button to restart the animation at any time.
  */
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin, ShapePlugin } from '@invana/canvas';
 import { createContainer } from '../../../../../../src/div-utils.js';
 import GUI from 'lil-gui';

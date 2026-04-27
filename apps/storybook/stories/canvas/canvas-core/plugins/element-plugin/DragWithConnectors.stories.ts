@@ -26,7 +26,7 @@
  *   updateConnector(id, { from, to })
  *   element:dragmove event           — dx, dy deltas
  */
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import {
   Canvas, BackgroundPlugin, ElementPlugin,
   type CircleElementSpec,

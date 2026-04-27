@@ -14,7 +14,7 @@
  * All shapes drawn using only the public @invana/canvas API.
  */
 
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin, DrawingPlugin } from '@invana/canvas';
 import { createContainer } from '../../../src/div-utils.js';
 

@@ -17,12 +17,11 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@storybook/addon-docs": "^10",
-    "@storybook/addon-links": "^10.1.10",
-    "@storybook/html": "^10.1.10",
-    "@storybook/html-vite": "^10.1.10",
+    "@storybook/addon-docs": "^10.3.5",
+    "@storybook/addon-links": "^10.3.5",
+    "@storybook/html-vite": "^10.3.5",
     "remark-gfm": "^4.0.1",
-    "storybook": "^10.1.10",
+    "storybook": "^10.3.5",
     "typescript": "5.9.2",
     "vite": "^7.3.0"
   }
