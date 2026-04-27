@@ -25,8 +25,6 @@ export interface CanvasOptions {
   container: HTMLElement;
   width?: number;
   height?: number;
-  /** Behaviour preset — registers a curated set of interaction plugins */
-  behavior?: 'default' | 'minimal' | 'full' | false;
   /** Plugins to register at init time */
   plugins?: PluginConfig[];
   /** Background color for the renderer */

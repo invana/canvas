@@ -17,7 +17,6 @@ new Canvas(options: CanvasOptions)
 | `height` | `number` | `container.clientHeight \| 600` | Canvas height in pixels |
 | `backgroundColor` | `string \| number` | `0x1a1a2e` | Renderer clear color |
 | `antialias` | `boolean` | `true` | Enable antialiasing |
-| `behavior` | `'default' \| 'minimal' \| 'full' \| false` | — | Interaction preset (registers curated plugins) |
 | `plugins` | `PluginConfig[]` | — | Plugins to register at init time |
 
 ## Lifecycle

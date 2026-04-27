@@ -78,7 +78,6 @@ export const Theming: Story = {
         container,
         width: container.clientWidth || 800,
         height: container.clientHeight || 600,
-        behavior: 'default',
         plugins: [
           styles.background
         ]
