@@ -14,7 +14,7 @@ WebGPU-first canvas rendering engine + graph visualization toolkit. WebGL2 fallb
 | `packages/typescript-config` | `@repo/typescript-config` | shared tsconfig |
 | `packages/eslint-config` | `@repo/eslint-config` | shared ESLint |
 | `apps/storybook` | `@canvas/storybook` | stories (port 6006) |
-| `apps/ts-doc` | `@canvas/ts-doc` | TypeDoc API docs (port 7000) |
+| `apps/docs` | `@canvas/docs` | VitePress docs + TypeDoc API reference |
 
 Per-package coding rules → see each package's own `CLAUDE.md`.
 
@@ -30,7 +30,8 @@ pnpm check-types                                # turbo tsc --noEmit
 pnpm lint / pnpm format
 pnpm --filter @invana/canvas build              # single package
 pnpm --filter @canvas/storybook dev            # → http://localhost:6006
-pnpm --filter @canvas/ts-doc build             # → http://localhost:7000
+pnpm --filter @canvas/docs dev                 # → http://localhost:5173
+pnpm --filter @canvas/docs build               # build docs site
 ```
 
 Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use **tsup** → ESM + `.d.ts` + sourcemaps, `pixi.js` external.

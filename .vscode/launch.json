@@ -17,10 +17,10 @@
         "console": "integratedTerminal",
         },
         {
-            "name": "ts-doc build",
+            "name": "docs build",
             "type": "node",
             "request": "launch",
-            "cwd": "${workspaceFolder}/apps/ts-doc",
+            "cwd": "${workspaceFolder}/apps/docs",
             "runtimeExecutable": "npm",
             "runtimeArgs": [
                 "run",
@@ -29,10 +29,10 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "ts-doc watch",
+            "name": "docs dev",
             "type": "node",
             "request": "launch",
-            "cwd": "${workspaceFolder}/apps/ts-doc",
+            "cwd": "${workspaceFolder}/apps/docs",
             "runtimeExecutable": "npm",
             "runtimeArgs": [
                 "run",

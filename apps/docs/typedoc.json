@@ -1,0 +1,20 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "plugin": ["typedoc-plugin-markdown"],
+  "tsconfig": "../../packages/canvas/tsconfig.json",
+  "entryPoints": ["../../packages/canvas/src/index.ts"],
+  "out": "api",
+  "name": "@invana/canvas — API Reference",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "searchInComments": true,
+  "readme": "none",
+  "entryFileName": "index",
+  "outputFileStrategy": "members",
+  "useCodeBlocks": true,
+  "expandObjects": false,
+  "navigationLinks": {
+    "GitHub": "https://github.com/invana/canvas"
+  }
+}
