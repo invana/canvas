@@ -153,6 +153,15 @@ export class Camera implements CameraAPI {
     this._viewport.plugins.resume('decelerate');
   }
 
+  /**
+   * Update the camera's screen dimensions after the canvas container is resized.
+   * @param screenWidth - New screen width in CSS pixels
+   * @param screenHeight - New screen height in CSS pixels
+   */
+  resize(screenWidth: number, screenHeight: number): void {
+    this._viewport.resize(screenWidth, screenHeight);
+  }
+
   destroy(): void {
     this._viewport.destroy();
   }

@@ -9,6 +9,7 @@ export {
   CanvasClickedEvent,
   CanvasDblClickedEvent,
   CanvasContextMenuEvent,
+  CanvasResizeEvent,
 } from './canvas-events.js';
 export {
   CameraZoomEvent,

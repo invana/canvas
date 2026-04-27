@@ -9,6 +9,7 @@ import {
   CanvasPointerMoveEvent,
   CanvasPointerUpEvent,
   CanvasClickedEvent,
+  CanvasResizeEvent,
 } from '../events/canvas-events.js';
 import type { CameraAPI } from '../camera/CameraAPI.js';
 import type { LayerManager } from '../layers/types.js';
@@ -36,6 +37,7 @@ export class Canvas {
   private _camera!: Camera;
   private _layerManager!: LayerManagerImpl;
   private _options: CanvasOptions;
+  private _resizeObserver?: ResizeObserver;
 
   readonly plugins: PluginSystem;
   readonly events: EventBus;
@@ -120,6 +122,17 @@ export class Canvas {
 
     // 5. Register plugins from options
     await this._registerOptionsPlugins();
+
+    // 6. Auto-resize: keep Camera in sync when the container changes size
+    if (this._options.autoResize !== false) {
+      this._resizeObserver = new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        const { width, height } = entry.contentRect;
+        this.resize(width, height);
+      });
+      this._resizeObserver.observe(container);
+    }
   }
 
   private _wirePointerEvents(): void {
@@ -211,12 +224,15 @@ export class Canvas {
 
   /**
    * Resize the canvas to new dimensions.
-   * Call this when the container element changes size.
-   * @param width - New width in pixels
-   * @param height - New height in pixels
+   * Updates both the renderer and the camera viewport.
+   * Called automatically when `autoResize` is enabled (default).
+   * @param width - New width in CSS pixels
+   * @param height - New height in CSS pixels
    */
   resize(width: number, height: number): void {
     this._renderer.resize(width, height);
+    this._camera.resize(width, height);
+    this.events.emit('canvas:resize', new CanvasResizeEvent({ width, height }));
   }
 
   /**
@@ -260,6 +276,8 @@ export class Canvas {
    * After calling this, the instance should not be reused.
    */
   destroy(): void {
+    this._resizeObserver?.disconnect();
+    this._resizeObserver = undefined;
     this.plugins.destroyAll();
     this._layerManager.destroy();
     this._camera.destroy();

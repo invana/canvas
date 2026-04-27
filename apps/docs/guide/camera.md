@@ -102,3 +102,9 @@ canvas.events.on('camera:zoom', ({ scale }) => {
 ## Pan lock
 
 `ElementPlugin` calls `camera.lockPan()` / `camera.unlockPan()` automatically during element drags so the viewport does not pan simultaneously. You can call these manually if needed.
+
+## Resize
+
+When the canvas container changes size, the camera's internal screen dimensions are updated automatically (via `autoResize`, which is enabled by default). This keeps methods like `fitTo()`, `getBounds()`, and zoom clamp calculations accurate after a resize.
+
+If you have disabled `autoResize` and are calling `canvas.resize()` manually, the camera is still updated on every `canvas.resize()` call — no separate camera resize call is needed.

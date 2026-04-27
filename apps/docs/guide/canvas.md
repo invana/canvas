@@ -13,8 +13,9 @@ new Canvas(options: CanvasOptions)
 | Property | Type | Default | Description |
 |---|---|---|---|
 | `container` | `HTMLElement` | required | DOM element the canvas is mounted into |
-| `width` | `number` | `container.clientWidth \| 800` | Canvas width in pixels |
-| `height` | `number` | `container.clientHeight \| 600` | Canvas height in pixels |
+| `width` | `number` | `container.clientWidth \| 800` | Initial canvas width in pixels |
+| `height` | `number` | `container.clientHeight \| 600` | Initial canvas height in pixels |
+| `autoResize` | `boolean` | `true` | Automatically resize when the container changes size |
 | `backgroundColor` | `string \| number` | `0x1a1a2e` | Renderer clear color |
 | `antialias` | `boolean` | `true` | Enable antialiasing |
 | `plugins` | `PluginConfig[]` | — | Plugins to register at init time |
@@ -61,4 +62,35 @@ const canvas = new Canvas({
 });
 await canvas.init();
 // BackgroundPlugin is already registered when init() resolves
+```
+
+## Resize
+
+By default (`autoResize: true`) the canvas observes the container element with a `ResizeObserver` and automatically keeps the renderer and camera in sync when the container changes size — no extra code needed.
+
+```ts
+// autoResize is true by default — nothing to do
+const canvas = new Canvas({ container });
+await canvas.init();
+```
+
+To manage resizing manually, opt out and call `canvas.resize()` yourself:
+
+```ts
+const canvas = new Canvas({ container, autoResize: false });
+await canvas.init();
+
+window.addEventListener('resize', () => {
+  canvas.resize(container.clientWidth, container.clientHeight);
+});
+```
+
+### `canvas:resize` event
+
+Fired whenever the canvas is resized — whether by `autoResize` or a manual `canvas.resize()` call.
+
+```ts
+canvas.events.on('canvas:resize', ({ width, height }) => {
+  console.log('canvas resized to', width, height);
+});
 ```

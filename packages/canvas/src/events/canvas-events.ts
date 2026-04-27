@@ -1,3 +1,4 @@
+import { CanvasEvent } from './base/CanvasEvent.js';
 import { CanvasPointerEvent, type CanvasPointerEventFields } from './base/CanvasPointerEvent.js';
 
 // ── canvas:pointerdown ────────────────────────────────────────────────────────
@@ -43,4 +44,20 @@ export class CanvasDblClickedEvent extends CanvasPointerEvent {
 export class CanvasContextMenuEvent extends CanvasPointerEvent {
   declare readonly type: 'canvas:contextmenu';
   constructor(fields: CanvasPointerEventFields) { super('canvas:contextmenu', fields); }
+}
+
+// ── canvas:resize ─────────────────────────────────────────────────────────────
+
+/** Fired when the canvas is resized (manually or via autoResize) */
+export class CanvasResizeEvent extends CanvasEvent {
+  declare readonly type: 'canvas:resize';
+  /** New canvas width in CSS pixels */
+  readonly width: number;
+  /** New canvas height in CSS pixels */
+  readonly height: number;
+  constructor(fields: { width: number; height: number }) {
+    super('canvas:resize');
+    this.width = fields.width;
+    this.height = fields.height;
+  }
 }

@@ -62,6 +62,7 @@ export {
   CanvasClickedEvent,
   CanvasDblClickedEvent,
   CanvasContextMenuEvent,
+  CanvasResizeEvent,
 } from './events/index.js';
 
 // Concrete camera event classes

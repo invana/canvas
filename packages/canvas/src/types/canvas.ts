@@ -25,6 +25,12 @@ export interface CanvasOptions {
   container: HTMLElement;
   width?: number;
   height?: number;
+  /**
+   * Automatically resize the canvas when the container element changes size.
+   * Uses `ResizeObserver` to keep the renderer and camera in sync.
+   * Defaults to `true`. Pass `false` to manage resizing manually via `canvas.resize()`.
+   */
+  autoResize?: boolean;
   /** Plugins to register at init time */
   plugins?: PluginConfig[];
   /** Background color for the renderer */

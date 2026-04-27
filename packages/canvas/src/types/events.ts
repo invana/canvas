@@ -14,6 +14,7 @@ export {
   CanvasClickedEvent,
   CanvasDblClickedEvent,
   CanvasContextMenuEvent,
+  CanvasResizeEvent,
 } from '../events/canvas-events.js';
 
 export {
@@ -64,6 +65,7 @@ import type {
   CanvasClickedEvent,
   CanvasDblClickedEvent,
   CanvasContextMenuEvent,
+  CanvasResizeEvent,
 } from '../events/canvas-events.js';
 import type {
   CameraZoomEvent,
@@ -167,6 +169,8 @@ export interface CanvasEventMap {
   'canvas:dblclicked':     CanvasDblClickedEvent;
   /** Fired on right-click / context-menu on the canvas background */
   'canvas:contextmenu':    CanvasContextMenuEvent;
+  /** Fired when the canvas is resized (manually or via autoResize) */
+  'canvas:resize':         CanvasResizeEvent;
 
   // ── Shape events ──────────────────────────────────────────────────────────
   'shape:click':           ShapeClickEvent;
