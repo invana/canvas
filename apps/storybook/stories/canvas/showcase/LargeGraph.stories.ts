@@ -22,9 +22,9 @@ import {
   Canvas, BackgroundPlugin, ElementPlugin, DevInfoPlugin,
   type BaseSolidSpec, type BaseConnectorSpec, type CircleElementSpec,
 } from '@invana/canvas';
-import { createContainer } from '../../../../src/div-utils.js';
+import { createContainer } from '../../../src/div-utils.js';
 
-const meta: Meta = { title: 'Canvas/Performance' };
+const meta: Meta = { title: '1. Showcase/Performance/Large Graph' };
 export default meta;
 type Story = StoryObj;
 

@@ -35,9 +35,9 @@ import {
   type ElementDragStartEvent,
   type ElementDragEndEvent,
 } from '@invana/canvas';
-import { createContainer } from '../../../../src/div-utils.js';
+import { createContainer } from '../../../src/div-utils.js';
 
-const meta: Meta = { title: '6. Interaction' };
+const meta: Meta = { title: 'Canvas/Edge Styles/Drag With Connectors' };
 export default meta;
 type Story = StoryObj;
 

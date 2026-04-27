@@ -25,9 +25,9 @@ import {
   type ElementPoint as Point,
   type BaseSolidSpec,
 } from '@invana/canvas';
-import { createContainer } from '../../../../src/div-utils.js';
+import { createContainer } from '../../../src/div-utils.js';
 
-const meta: Meta = { title: '2. Node Styles' };
+const meta: Meta = { title: 'Canvas/Node Styles/Custom Element' };
 export default meta;
 type Story = StoryObj;
 

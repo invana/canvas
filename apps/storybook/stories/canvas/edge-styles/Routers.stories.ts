@@ -25,9 +25,9 @@ import {
   type OneSideRouterArgs,
   type ErRouterArgs,
 } from '@invana/canvas';
-import { createContainer } from '../../../../src/div-utils.js';
+import { createContainer } from '../../../src/div-utils.js';
 
-const meta: Meta = { title: '3. Edge Styles/Routers' };
+const meta: Meta = { title: 'Canvas/Edge Styles/Routers' };
 export default meta;
 type Story = StoryObj;
 

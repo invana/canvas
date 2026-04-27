@@ -33,9 +33,9 @@ import {
   type ElementAddedEvent,
   type ElementRemovedEvent,
 } from '@invana/canvas';
-import { createContainer } from '../../../../src/div-utils.js';
+import { createContainer } from '../../../src/div-utils.js';
 
-const meta: Meta = { title: '1. Graph Operations' };
+const meta: Meta = { title: 'Canvas/Node Styles/Element Lifecycle' };
 export default meta;
 type Story = StoryObj;
 

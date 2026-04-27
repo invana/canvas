@@ -7,9 +7,9 @@ import {
   type DrawContext,
   type ElementPoint as Point,
 } from '@invana/canvas';
-import { createContainer } from '../../../../src/div-utils.js';
+import { createContainer } from '../../../src/div-utils.js';
 
-const meta: Meta = { title: '3. Edge Styles/Markers' };
+const meta: Meta = { title: 'Canvas/Edge Styles/Markers' };
 export default meta;
 type Story = StoryObj;
 

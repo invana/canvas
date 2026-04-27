@@ -42,9 +42,9 @@ import {
   type ElementDragEndEvent,
   type ElementStateChangeEvent,
 } from '@invana/canvas';
-import { createContainer } from '../../../../src/div-utils.js';
+import { createContainer } from '../../../src/div-utils.js';
 
-const meta: Meta = { title: '6. Interaction' };
+const meta: Meta = { title: 'Canvas/Node Styles/Events Interactive' };
 export default meta;
 type Story = StoryObj;
 
