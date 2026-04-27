@@ -1,12 +1,13 @@
 /**
- * Background — Lines
+ * Background — Grid
  *
- * Horizontal rule pattern.
- * Toggle followCamera to see lines scroll with the camera.
+ * Tiled grid lines.
+ * Toggle followCamera so the grid shifts and zooms with the camera —
+ * great for a blueprint / CAD feel.
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin, DrawingPlugin } from '@invana/canvas';
-import { createContainer } from '../../../../../src/div-utils.js';
+import { createContainer } from '../../../../src/div-utils.js';
 import { drawScatter } from '../_utils.js';
 import GUI from 'lil-gui';
 
@@ -14,8 +15,8 @@ const meta: Meta = { title: 'canvas/Plugins/Background' };
 export default meta;
 type Story = StoryObj;
 
-export const BackgroundLines: Story = {
-  name: 'Lines',
+export const BackgroundGrid: Story = {
+  name: 'Grid',
   render: () => createContainer(),
   play: async () => {
     const container = document.getElementById('canvas-example');
@@ -24,16 +25,16 @@ export const BackgroundLines: Story = {
     const bg = new BackgroundPlugin({
       key: 'bg',
       type: 'pattern',
-      patternType: 'lines',
-      color: '#333355',
-      backgroundColor: '#0d0d1a',
+      patternType: 'grid',
+      color: '#2a2a50',
+      backgroundColor: '#12121e',
       size: 1,
-      spacing: 20,
-      alpha: 0.7,
+      spacing: 40,
+      alpha: 0.9,
       followCamera: false,
     });
 
-    const canvas = new Canvas({ container, backgroundColor: '#0d0d1a' });
+    const canvas = new Canvas({ container, backgroundColor: '#12121e' });
     await canvas.init();
     await canvas.plugins.register(bg);
 
@@ -41,19 +42,19 @@ export const BackgroundLines: Story = {
     await canvas.plugins.register(draw);
     drawScatter(draw, container.clientWidth || 800, container.clientHeight || 600);
 
-    const gui = new GUI({ title: 'Background — Lines', container });
+    const gui = new GUI({ title: 'Background — Grid', container });
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;';
     const params = {
       followCamera: false,
-      backgroundColor: '#0d0d1a',
-      color: '#333355',
-      spacing: 20,
-      alpha: 0.7,
+      backgroundColor: '#12121e',
+      color: '#2a2a50',
+      spacing: 40,
+      alpha: 0.9,
     };
     gui.add(params, 'followCamera').name('Follow camera').onChange((v: boolean) => bg.setOptions({ followCamera: v }));
     gui.addColor(params, 'backgroundColor').name('Background').onChange((v: string) => bg.setOptions({ backgroundColor: v }));
     gui.addColor(params, 'color').name('Line colour').onChange((v: string) => bg.setOptions({ color: v }));
-    gui.add(params, 'spacing', 5, 80, 5).name('Spacing').onChange((v: number) => bg.setOptions({ spacing: v }));
+    gui.add(params, 'spacing', 10, 100, 5).name('Cell size').onChange((v: number) => bg.setOptions({ spacing: v }));
     gui.add(params, 'alpha', 0, 1, 0.05).name('Alpha').onChange((v: number) => bg.setOptions({ alpha: v }));
   },
 };

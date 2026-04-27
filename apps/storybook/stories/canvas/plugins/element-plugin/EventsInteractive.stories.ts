@@ -42,7 +42,7 @@ import {
   type ElementDragEndEvent,
   type ElementStateChangeEvent,
 } from '@invana/canvas';
-import { createContainer } from '../../../../../src/div-utils.js';
+import { createContainer } from '../../../../src/div-utils.js';
 
 const meta: Meta = { title: '6. Interaction' };
 export default meta;

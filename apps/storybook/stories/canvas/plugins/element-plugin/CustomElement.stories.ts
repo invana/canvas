@@ -25,7 +25,7 @@ import {
   type ElementPoint as Point,
   type BaseSolidSpec,
 } from '@invana/canvas';
-import { createContainer } from '../../../../../src/div-utils.js';
+import { createContainer } from '../../../../src/div-utils.js';
 
 const meta: Meta = { title: '2. Node Styles' };
 export default meta;

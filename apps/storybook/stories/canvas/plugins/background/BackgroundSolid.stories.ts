@@ -6,7 +6,7 @@
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin, DrawingPlugin } from '@invana/canvas';
-import { createContainer } from '../../../../../src/div-utils.js';
+import { createContainer } from '../../../../src/div-utils.js';
 import { drawScatter } from '../_utils.js';
 import GUI from 'lil-gui';
 

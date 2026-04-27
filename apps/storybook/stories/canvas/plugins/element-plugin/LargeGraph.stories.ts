@@ -22,7 +22,7 @@ import {
   Canvas, BackgroundPlugin, ElementPlugin, DevInfoPlugin,
   type BaseSolidSpec, type BaseConnectorSpec, type CircleElementSpec,
 } from '@invana/canvas';
-import { createContainer } from '../../../../../src/div-utils.js';
+import { createContainer } from '../../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Performance' };
 export default meta;

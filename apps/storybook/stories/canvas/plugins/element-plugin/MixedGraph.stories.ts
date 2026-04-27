@@ -31,7 +31,7 @@ import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin, ElementPlugin } from '@invana/canvas';
 import type { BaseSolidSpec, BaseConnectorSpec, CircleElementSpec } from '@invana/canvas';
 // BaseSolidSpec and BaseConnectorSpec are re-exported from the element-plugin
-import { createContainer } from '../../../../../src/div-utils.js';
+import { createContainer } from '../../../../src/div-utils.js';
 
 const meta: Meta = { title: '1. Graph Operations' };
 export default meta;
