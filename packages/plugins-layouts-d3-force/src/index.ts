@@ -1,7 +1,7 @@
 /**
  * @invana/layouts-d3-force
  * 
- * D3 force-directed layout plugin for @invana/canvas-core
+ * D3 force-directed layout plugin for @invana/canvas
  * 
  * @packageDocumentation
  */

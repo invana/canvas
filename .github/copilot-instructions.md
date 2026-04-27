@@ -18,7 +18,7 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, GraphDataPlugin } from '@invana/canvas-core';
+import { Canvas, GraphDataPlugin } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer } from '@/div-utils';
 

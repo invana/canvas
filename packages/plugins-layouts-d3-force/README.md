@@ -1,6 +1,6 @@
 # @invana/layouts-d3-force
 
-D3 force-directed graph layout plugin for `@invana/canvas-core`.
+D3 force-directed graph layout plugin for `@invana/canvas`.
 
 ## Installation
 
@@ -13,7 +13,7 @@ pnpm add @invana/layouts-d3-force
 ### Basic Example
 
 ```typescript
-import { Canvas, GraphDataPlugin, PluginRegistry } from '@invana/canvas-core';
+import { Canvas, GraphDataPlugin, PluginRegistry } from '@invana/canvas';
 import { D3ForceLayoutPlugin } from '@invana/layouts-d3-force';
 
 // Register plugins
@@ -64,7 +64,7 @@ await layoutPlugin.start();
 ### Imperative Example
 
 ```typescript
-import { Canvas, GraphDataPlugin } from '@invana/canvas-core';
+import { Canvas, GraphDataPlugin } from '@invana/canvas';
 import { D3ForceLayoutPlugin } from '@invana/layouts-d3-force';
 
 const canvas = new Canvas({ container: document.getElementById('app') });

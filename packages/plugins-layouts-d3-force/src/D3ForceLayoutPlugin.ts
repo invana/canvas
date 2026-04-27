@@ -6,7 +6,7 @@
  * 
  * @example
  * ```typescript
- * import { Canvas, GraphDataPlugin } from '@invana/canvas-core';
+ * import { Canvas, GraphDataPlugin } from '@invana/canvas';
  * import { D3ForceLayoutPlugin } from '@invana/layouts-d3-force';
  * 
  * const canvas = new Canvas({ container });
@@ -47,7 +47,7 @@ import {
   // forceX,
   // forceCenter,
 } from 'd3-force';
-import type { Canvas, CanvasPlugin } from '@invana/canvas-core';
+import type { Canvas, CanvasPlugin } from '@invana/canvas';
 
 // ============================================================================
 // TYPES

@@ -1,6 +1,6 @@
 # @invana/example-datasets
 
-Example graph datasets for @invana/canvas-core visualizations.
+Example graph datasets for @invana/canvas visualizations.
 
 ## Features
 
