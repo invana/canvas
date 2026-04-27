@@ -18,7 +18,7 @@ import type { DevInfoCorner } from '@invana/canvas';
 import { createContainer } from '../../../../../src/div-utils.js';
 
 const meta: Meta = {
-  title: '15. UI & Controls',
+  title: 'Canvas/Plugins',
 };
 export default meta;
 type Story = StoryObj;
@@ -33,7 +33,7 @@ const pick = <T>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)]!;
 
 // ─── story ───────────────────────────────────────────────────────────────────
 export const DevInfoOverlay: Story = {
-  name: 'DevInfo Overlay',
+  name: 'DevInfoOverlay',
   render: () => createContainer(),
   play: async () => {
     const container = document.getElementById('canvas-example');
