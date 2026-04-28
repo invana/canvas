@@ -143,7 +143,7 @@ export const CustomElement: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements', fitOnRender: true });
+    const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // Register custom types
@@ -197,6 +197,6 @@ export const CustomElement: Story = {
       style: { stroke: '#60a5fa', strokeWidth: 2 },
     });
 
-    elements.fit();
+    elements.fitContent();
   },
 };

@@ -68,10 +68,6 @@ export interface ElementPluginOptions {
   zIndex?: number;
   /** Override LOD zoom thresholds. */
   lod?: Partial<LODThresholds>;
-  /** Automatically fit the camera after `setData()` (default: false). */
-  fitOnRender?: boolean;
-  /** World-space padding used by `fit()` (default: 60). */
-  fitPadding?: number;
   /**
    * Custom animation registry.  Defaults to {@link defaultRegistry} which is
    * pre-loaded with all built-in handlers.  Pass a new `AnimationRegistry` for
@@ -106,7 +102,7 @@ export type ConnectorCtor = new (spec: BaseConnectorSpec) => BaseConnector;
  *
  * @example
  * ```ts
- * const elements = new ElementPlugin({ fitOnRender: true });
+ * const elements = new ElementPlugin();
  * await canvas.plugins.register(elements);
  *
  * elements.addSolid('circle', {
@@ -130,8 +126,6 @@ export class ElementPlugin implements CanvasPlugin {
 
   private _zIndex:      number;
   private _lodOptions:  Partial<LODThresholds>;
-  private _fitOnRender: boolean;
-  private _fitPadding:  number;
 
   // Sub-systems (initialised in register())
   private _solidPool!:     ElementPool;
@@ -196,8 +190,6 @@ export class ElementPlugin implements CanvasPlugin {
     this.id              = options.key               ?? 'elements';
     this._zIndex         = options.zIndex            ?? 5;
     this._lodOptions     = options.lod               ?? {};
-    this._fitOnRender    = options.fitOnRender        ?? false;
-    this._fitPadding     = options.fitPadding         ?? 60;
     this._animRegistry   = options.animationRegistry ?? defaultRegistry;
   }
 
@@ -526,7 +518,6 @@ export class ElementPlugin implements CanvasPlugin {
     } finally {
       this._batchingAdd = false;
     }
-    if (this._fitOnRender) this.fit(this._fitPadding);
     this._cameraTracker.flush();
   }
 
@@ -547,10 +538,10 @@ export class ElementPlugin implements CanvasPlugin {
   }
 
   /**
-   * Fit the camera to the bounding box of all solid elements.
+   * Fit the camera to the bounding box of all elements.
    * @param padding - Extra world-space padding (default: 60).
    */
-  fit(padding = 60): void {
+  fitContent(padding = 60): void {
     const boxes = [
       ...this._solidPool.allBBoxes(),
       ...this._connPool.allBBoxes(),

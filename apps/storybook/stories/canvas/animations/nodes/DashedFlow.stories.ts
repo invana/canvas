@@ -30,7 +30,7 @@ export const DashedFlow: Story = {
       color: '#1e293b', backgroundColor: DARK_BG, size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements', fitOnRender: true });
+    const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     elements.addSolid('circle', {
@@ -42,7 +42,7 @@ export const DashedFlow: Story = {
       style: { fill: '#1e3a5f', stroke: '#f472b6', strokeWidth: 3, dashArray: [8, 6] },
     });
 
-    elements.fit();
+    elements.fitContent();
 
     elements.animate('df1', { dashedFlow: { speed: 0.4, direction: 1 } });
     elements.animate('df2', { dashedFlow: { speed: 0.4, direction: -1 } });

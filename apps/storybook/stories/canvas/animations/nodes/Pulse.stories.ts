@@ -30,7 +30,7 @@ export const Pulse: Story = {
       color: '#1e293b', backgroundColor: DARK_BG, size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements', fitOnRender: true });
+    const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     elements.addSolid('circle', {
@@ -46,7 +46,7 @@ export const Pulse: Story = {
       style: { fill: '#450a0a', stroke: '#ef4444', strokeWidth: 2 },
     });
 
-    elements.fit();
+    elements.fitContent();
 
     elements.animate('p1', { pulse: { period: 3000, color: '#3b82f6', maxRadius: 90 } });
     elements.animate('p2', { pulse: { period: 1500, color: '#a855f7', maxRadius: 80 } });

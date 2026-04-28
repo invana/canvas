@@ -30,7 +30,7 @@ export const ColorCycle: Story = {
       color: '#1e293b', backgroundColor: DARK_BG, size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements', fitOnRender: true });
+    const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     elements.addSolid('circle', {
@@ -46,7 +46,7 @@ export const ColorCycle: Story = {
       style: { fill: '#1a1a2e', stroke: '#a78bfa', strokeWidth: 2 },
     });
 
-    elements.fit();
+    elements.fitContent();
 
     elements.animate('cc1', { colorCycle: { colors: ['#dc2626', '#f97316', '#fbbf24'], period: 1200 } });
     elements.animate('cc2', { colorCycle: { colors: ['#0284c7', '#06b6d4', '#0891b2'], period: 2000 } });

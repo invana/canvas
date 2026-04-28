@@ -30,7 +30,7 @@ export const FadeIn: Story = {
       color: '#1e293b', backgroundColor: DARK_BG, size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements', fitOnRender: true });
+    const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     const addAll = () => {
@@ -43,11 +43,11 @@ export const FadeIn: Story = {
     };
 
     addAll();
-    elements.fit();
+    elements.fitContent();
 
     const gui = new GUI({ container });
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px';
-    const params = { replay: () => { elements.clear(); addAll(); elements.fit(); } };
+    const params = { replay: () => { elements.clear(); addAll(); elements.fitContent(); } };
     gui.add(params, 'replay').name('Replay fade-in');
   },
 };

@@ -114,11 +114,11 @@ export const Connectors: Story = {
     await canvas.init();
     await canvas.plugins.register(new BackgroundPlugin(BG_OPTS));
 
-    const elements = new ElementPlugin({ key: 'elements', fitOnRender: true, fitPadding: 80 });
+    const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     buildScene(elements, '', 0, 0);
-    elements.fit();
+    elements.fitContent();
   },
 };
 
@@ -135,12 +135,12 @@ export const ConnectorOffset: Story = {
     await canvas.init();
     await canvas.plugins.register(new BackgroundPlugin(BG_OPTS));
 
-    const elements = new ElementPlugin({ key: 'elements', fitOnRender: true, fitPadding: 80 });
+    const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     const params = { sourceOffset: 8, targetOffset: 8 };
     const ids = buildScene(elements, 'off-', params.sourceOffset, params.targetOffset);
-    elements.fit();
+    elements.fitContent();
 
     const gui = new GUI({ title: 'Connector Offset', container });
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;';

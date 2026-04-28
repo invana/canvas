@@ -44,7 +44,7 @@ export const States: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements', fitOnRender: true });
+    const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     const G = 200;
@@ -112,7 +112,7 @@ export const States: Story = {
     } as CircleElementSpec);
     elements.setState('n-warning', 'warning', true);
 
-    elements.fit();
+    elements.fitContent();
 
     // ── GUI ───────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'States', container });

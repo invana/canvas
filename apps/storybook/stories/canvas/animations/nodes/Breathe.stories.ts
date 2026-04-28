@@ -30,7 +30,7 @@ export const Breathe: Story = {
       color: '#1e293b', backgroundColor: DARK_BG, size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements', fitOnRender: true });
+    const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     elements.addSolid('circle', {
@@ -46,7 +46,7 @@ export const Breathe: Story = {
       style: { fill: '#1e3a5f', stroke: '#f472b6', strokeWidth: 2 },
     });
 
-    elements.fit();
+    elements.fitContent();
 
     elements.animate('n1', { breathe: { period: 3000, amplitude: 0.08 } });
     elements.animate('n2', { breathe: { period: 1500, amplitude: 0.15 } });

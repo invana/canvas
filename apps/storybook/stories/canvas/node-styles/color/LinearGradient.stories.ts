@@ -105,7 +105,7 @@ export const LinearGradient: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements', fitOnRender: true });
+    const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     const BORDER = { stroke: '#ffffff', strokeWidth: 2 };
@@ -209,6 +209,6 @@ export const LinearGradient: Story = {
       interactive: true,
     } as StarElementSpec);
 
-    elements.fit();
+    elements.fitContent();
   },
 };

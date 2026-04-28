@@ -30,7 +30,7 @@ export const MarchingAnts: Story = {
       color: '#1e293b', backgroundColor: DARK_BG, size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements', fitOnRender: true });
+    const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     elements.addSolid('circle', {
@@ -46,7 +46,7 @@ export const MarchingAnts: Story = {
       style: { fill: '#1a0033', stroke: '#a78bfa', strokeWidth: 3, dashArray: [8, 5] },
     });
 
-    elements.fit();
+    elements.fitContent();
 
     elements.animate('ma1', { marchingAnts: { speed: 0.3 } });
     elements.animate('ma2', { marchingAnts: { speed: 0.5, borderColor: '#fbbf24' } });

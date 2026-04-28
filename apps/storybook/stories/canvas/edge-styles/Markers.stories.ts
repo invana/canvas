@@ -92,7 +92,7 @@ export const Markers: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.2, spacing: 28,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements', fitOnRender: true, fitPadding: 60 });
+    const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // Register the custom star5 marker before adding any connectors
@@ -130,7 +130,7 @@ export const Markers: Story = {
       } as never);
     });
 
-    elements.fit();
+    elements.fitContent();
 
     // ── lil-gui ────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'Marker options', container });

@@ -190,6 +190,6 @@ export const ElementLifecycle: Story = {
       },
     }, 'clearAll').name('Clear all elements');
 
-    gui.add({ fit: () => elements.fit(60) }, 'fit').name('Fit camera');
+    gui.add({ fit: () => elements.fitContent(60) }, 'fit').name('Fit camera');
   },
 };

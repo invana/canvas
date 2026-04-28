@@ -30,7 +30,7 @@ export const BorderGlow: Story = {
       color: '#1e293b', backgroundColor: DARK_BG, size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements', fitOnRender: true });
+    const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     elements.addSolid('circle', {
@@ -46,7 +46,7 @@ export const BorderGlow: Story = {
       style: { fill: '#1a0033', stroke: '#a78bfa', strokeWidth: 2 },
     });
 
-    elements.fit();
+    elements.fitContent();
 
     elements.animate('bg1', { borderGlow: { minWidth: 1, maxWidth: 6, period: 1200 } });
     elements.animate('bg2', { borderGlow: { minWidth: 1, maxWidth: 5, period: 900, color: '#fbbf24' } });

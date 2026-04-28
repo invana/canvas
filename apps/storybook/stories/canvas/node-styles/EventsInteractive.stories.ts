@@ -66,7 +66,7 @@ export const EventsInteractive: Story = {
     const devInfo = new DevInfoPlugin({ key: 'dev-info' });
     await canvas.plugins.register(devInfo);
 
-    const elements = new ElementPlugin({ key: 'elements', fitOnRender: true });
+    const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // ── Elements ──────────────────────────────────────────────────────────
@@ -103,7 +103,7 @@ export const EventsInteractive: Story = {
       cursor: 'grab',
     } as StarElementSpec);
 
-    elements.fit();
+    elements.fitContent();
 
     // ── Typed event listeners ─────────────────────────────────────────────
     canvas.events.on('element:click',

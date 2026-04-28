@@ -105,7 +105,7 @@ export const ConnectorVertices: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 28,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements', fitOnRender: true, fitPadding: 80 });
+    const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     const totalH = (ROWS.length - 1) * ROW_GAP;
@@ -156,7 +156,7 @@ export const ConnectorVertices: Story = {
       elements.addConnector(row.connType, spec as never);
     });
 
-    elements.fit();
+    elements.fitContent();
 
     // ── lil-gui: curvature slider for the auto-bezier row ─────────────────
     const params = { curvature: 80 };

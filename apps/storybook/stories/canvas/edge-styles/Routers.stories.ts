@@ -86,7 +86,7 @@ export const Routers: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements', fitOnRender: true, fitPadding: 100 });
+    const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     const totalWidth = (COLS - 1) * COL_GAP;
@@ -121,7 +121,7 @@ export const Routers: Story = {
       elements.addConnector('straight', spec as never);
     });
 
-    elements.fit();
+    elements.fitContent();
 
     // ── lil-gui ────────────────────────────────────────────────────────────
     const params = {

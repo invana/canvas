@@ -11,8 +11,7 @@
  *   - LOD: elements render as dots when zoomed far out
  *   - Viewport culling: off-screen elements are skipped
  *   - DevInfoPlugin: shows fps + element count
- *   - `fit()` on load
- *   - `fitPadding` option on ElementPlugin
+ *   - `fitContent()` on load
  *
  * lil-gui lets you regenerate the graph with different sizes.
  */
@@ -128,8 +127,6 @@ export const LargeGridGraph: Story = {
 
     const elements = new ElementPlugin({
       key: 'elements',
-      fitOnRender: false,
-      fitPadding: 60,
     });
     await canvas.plugins.register(elements);
 
@@ -141,7 +138,7 @@ export const LargeGridGraph: Story = {
       params.edgeCount = connectors.length;
       elements.setData(solids, connectors);
       // Defer fit one frame so camera bounds/culling run after initial layout.
-      requestAnimationFrame(() => elements.fit(60));
+      requestAnimationFrame(() => elements.fitContent(60));
     }
 
     rebuild();
@@ -154,7 +151,7 @@ export const LargeGridGraph: Story = {
     gui.add(params, 'rows', 2, 500, 1).name('Rows');
     gui.add(params, 'nodeSize', 1, 20, 0.5).name('Node size');
     gui.add({ rebuild }, 'rebuild').name('Regenerate');
-    gui.add({ fit: () => elements.fit(60) }, 'fit').name('Fit camera');
+    gui.add({ fit: () => elements.fitContent(60) }, 'fit').name('Fit camera');
     gui.add(params, 'nodeCount').name('Nodes loaded').disable().listen();
     gui.add(params, 'edgeCount').name('Edges loaded').disable().listen();
   },
