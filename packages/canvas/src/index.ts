@@ -19,6 +19,9 @@ export type { CanvasPlugin, PluginContext } from './plugins/index.js';
 export { BackgroundPlugin, DrawingPlugin, DevInfoPlugin, ElementPlugin } from './plugins/builtin/index.js';
 export type { CustomShapeFn } from './plugins/builtin/DrawingPlugin.js';
 export type { BackgroundOptions, BackgroundType, PatternType, DrawStyle, PathStyle, BezierPoint, DashStyle, OrthogonalStyle, OrthogonalParams, ArrowStyle, ArrowParams, ArrowType, EffectStyle, CircleGlowParams, RectGlowParams, RippleParams } from './plugins/builtin/index.js';
+
+// PixiJS re-exports needed by consumers (e.g. gradient fills)
+export { FillGradient } from 'pixi.js';
 export type { DevInfoPluginOptions, DevInfoCorner } from './plugins/builtin/index.js';
 
 // ElementPlugin public API
