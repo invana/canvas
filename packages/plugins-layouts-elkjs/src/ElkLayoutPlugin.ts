@@ -94,12 +94,14 @@ export class ElkLayoutPlugin implements CanvasPlugin {
     const nodeStore = gp.getNodeStore();
     const edgeStore = gp.getEdgeStore();
 
-    const elkChildren: ElkNode[] = Array.from(nodeStore.values()).map((n) => ({
-      id:     n.id,
-      // width/height can be stored in node.data for per-node overrides
-      width:  (n.data?.['width']  as number | undefined) ?? defaultNodeWidth,
-      height: (n.data?.['height'] as number | undefined) ?? defaultNodeHeight,
-    }));
+    const elkChildren: ElkNode[] = Array.from(nodeStore.values()).map((n) => {
+      const el = gp.getNodeElement(n.id);
+      return {
+        id:     n.id,
+        width:  el?.width  ?? defaultNodeWidth,
+        height: el?.height ?? defaultNodeHeight,
+      };
+    });
 
     const elkEdges: ElkExtendedEdge[] = Array.from(edgeStore.values()).map((e) => ({
       id:      e.id,
@@ -128,6 +130,7 @@ export class ElkLayoutPlugin implements CanvasPlugin {
         positions.set(child.id, { x: child.x + w / 2, y: child.y + h / 2 });
       }
     }
+
 
     gp.updateNodePositions(positions);
   }

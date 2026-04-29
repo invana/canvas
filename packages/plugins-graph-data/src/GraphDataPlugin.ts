@@ -5,6 +5,7 @@
 import type { CanvasPlugin, PluginContext } from '@invana/canvas';
 import { ElementPlugin } from './ElementPlugin.js';
 import type { NodeCtor, EdgeCtor, RouterFn } from './ElementPlugin.js';
+import type { BaseNode } from './BaseSolid.js';
 import type { DrawContext } from './DrawContext.js';
 import type { ArrowSpec as ArrowSpec, Point, BaseNodeSpec, BaseEdgeSpec } from './spec/index.js';
 import type {
@@ -147,6 +148,16 @@ export class GraphDataPlugin implements CanvasPlugin {
   /** Returns the internal node store directly (for in-place layout mutation). */
   getNodeStore(): Map<string, INodeData> {
     return this._nodeStore;
+  }
+
+  /**
+   * Returns the live rendered node element for a given id, or `undefined` if
+   * the node has not been added yet. Use `.width` / `.height` on the returned
+   * element to get the actual shape dimensions for layout plugins.
+   */
+  getNodeElement(id: string): BaseNode | undefined {
+    const obj = this._elements.getNode(id);
+    return obj ? (obj.element as BaseNode) : undefined;
   }
 
   // ── Edge CRUD ─────────────────────────────────────────────────────────────

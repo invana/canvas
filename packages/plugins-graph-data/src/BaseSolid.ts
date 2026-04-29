@@ -146,6 +146,28 @@ export abstract class BaseNode<S extends BaseNodeSpec = BaseNodeSpec> {
    */
   abstract getConnectionPoint(toX: number, toY: number): Point;
 
+  // ── Computed geometry ────────────────────────────────────────────────────────
+
+  /**
+   * Computed width of this element derived from its bounding box.
+   * Correct for all shape types (circle, ellipse, rect, etc.) without
+   * requiring callers to know shape-specific spec fields.
+   */
+  get width(): number {
+    const b = this.getBBox();
+    return b.maxX - b.minX;
+  }
+
+  /**
+   * Computed height of this element derived from its bounding box.
+   * Correct for all shape types (circle, ellipse, rect, etc.) without
+   * requiring callers to know shape-specific spec fields.
+   */
+  get height(): number {
+    const b = this.getBBox();
+    return b.maxY - b.minY;
+  }
+
   // ── Built-in methods ─────────────────────────────────────────────────────────
 
   /**
