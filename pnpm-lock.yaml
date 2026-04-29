@@ -41,6 +41,9 @@ importers:
       '@invana/plugin-layouts-d3-force':
         specifier: workspace:*
         version: link:../../packages/plugins-layouts-d3-force
+      '@invana/plugin-layouts-elkjs':
+        specifier: workspace:*
+        version: link:../../packages/plugins-layouts-elkjs
       '@invana/plugins-graph-data':
         specifier: workspace:*
         version: link:../../packages/plugins-graph-data
@@ -195,6 +198,31 @@ importers:
       '@types/d3-force':
         specifier: ^3.0.10
         version: 3.0.10
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(postcss@8.5.12)(typescript@5.9.2)(yaml@2.8.3)
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.15.3)
+
+  packages/plugins-layouts-elkjs:
+    dependencies:
+      elkjs:
+        specifier: ^0.9.3
+        version: 0.9.3
+    devDependencies:
+      '@invana/canvas':
+        specifier: workspace:*
+        version: link:../canvas
+      '@invana/plugins-graph-data':
+        specifier: workspace:*
+        version: link:../plugins-graph-data
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
       tsup:
         specifier: ^8.3.5
         version: 8.5.1(postcss@8.5.12)(typescript@5.9.2)(yaml@2.8.3)
@@ -1529,6 +1557,9 @@ packages:
 
   earcut@3.0.2:
     resolution: {integrity: sha512-X7hshQbLyMJ/3RPhyObLARM2sNxxmRALLKx1+NVFFnQ9gKzmCrxm9+uLIAdBcvc8FNLpctqlQ2V6AE92Ol9UDQ==}
+
+  elkjs@0.9.3:
+    resolution: {integrity: sha512-f/ZeWvW/BCXbhGEf1Ujp29EASo/lk1FDnETgNKwJrsVvGZhUWCZyg3xLJjAsxfOmt8KjswHmI5EwCQcPMpOYhQ==}
 
   emoji-regex-xs@1.0.0:
     resolution: {integrity: sha512-LRlerrMYoIDrT6jgpeZ2YYl/L8EulRTt5hQcYjy5AInh7HWXKimpqx68aknBFpGL2+/IcogTcaydJEgaTmOpDg==}
@@ -4353,6 +4384,8 @@ snapshots:
       gopd: 1.2.0
 
   earcut@3.0.2: {}
+
+  elkjs@0.9.3: {}
 
   emoji-regex-xs@1.0.0: {}
 

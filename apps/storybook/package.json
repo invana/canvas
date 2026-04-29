@@ -14,6 +14,7 @@
     "@invana/canvas": "workspace:*",
     "@invana/plugin-example-datasets": "workspace:*",
     "@invana/plugin-layouts-d3-force": "workspace:*",
+    "@invana/plugin-layouts-elkjs": "workspace:*",
     "@invana/plugins-graph-data": "workspace:*",
     "lil-gui": "^0.21.0"
   },
