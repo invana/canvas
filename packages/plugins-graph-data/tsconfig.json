@@ -4,6 +4,10 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/index.ts",
+    "src/GraphDataPlugin.ts",
+    "src/graph-types.ts"
+  ],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

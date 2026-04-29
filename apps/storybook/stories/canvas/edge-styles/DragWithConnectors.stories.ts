@@ -29,13 +29,13 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  GraphPlugin,
-  type CircleNodeSpec,
-  type RectNodeSpec,
+  ShapesPlugin,
+  type CircleShapeSpec,
+  type RectShapeSpec,
   type GraphDragMoveEvent,
   type GraphDragStartEvent,
   type GraphDragEndEvent,
-} from '@invana/plugins-graph-data';
+} from '@invana/plugins-shapes';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Edge Styles/Drag With Connectors' };
@@ -92,7 +92,7 @@ export const DragWithConnectors: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new GraphPlugin({ key: 'elements' });
+    const elements = new ShapesPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // ── Add nodes ─────────────────────────────────────────────────────────
@@ -106,14 +106,14 @@ export const DragWithConnectors: Story = {
       };
 
       if (node.type === 'circle') {
-        elements.addNode('circle', {
+        elements.addShape('circle', {
           id: node.id, x: node.x, y: node.y, radius: R,
           label: node.label,
           style: commonStyle, states,
           interactive: true, draggable: true, cursor: 'grab',
-        } as CircleNodeSpec);
+        } as CircleShapeSpec);
       } else {
-        elements.addNode('rect', {
+        elements.addShape('rect', {
           id: node.id,
           x: node.x - R, y: node.y - R * 0.65,
           width: R * 2,  height: R * 1.3,
@@ -121,7 +121,7 @@ export const DragWithConnectors: Story = {
           label: node.label,
           style: commonStyle, states,
           interactive: true, draggable: true, cursor: 'grab',
-        } as RectNodeSpec);
+        } as RectShapeSpec);
       }
     }
 
@@ -131,7 +131,7 @@ export const DragWithConnectors: Story = {
       const tgtC = elements.getCenter(edge.to)!;
       const from = elements.getConnectionPoint(edge.from, tgtC.x, tgtC.y) ?? srcC;
       const to   = elements.getConnectionPoint(edge.to,   srcC.x, srcC.y) ?? tgtC;
-      elements.addEdge(edge.connType, {
+      elements.addConnector(edge.connType, {
         id: edge.id,
         from, to,
         endMarker: { type: 'triangle', size: 10, color: edge.color },
@@ -150,39 +150,39 @@ export const DragWithConnectors: Story = {
         if (!srcC || !tgtC) continue;
         const from = elements.getConnectionPoint(edge.from, tgtC.x, tgtC.y) ?? srcC;
         const to   = elements.getConnectionPoint(edge.to,   srcC.x, srcC.y) ?? tgtC;
-        elements.updateEdge(edge.id, { from, to });
+        elements.updateConnector(edge.id, { from, to });
       }
     }
 
     // ── Drag handling ─────────────────────────────────────────────────────
-    canvas.events.on('graph:dragstart', (e: GraphDragStartEvent) => {
+    canvas.events.on('shape:dragstart', (e: GraphDragStartEvent) => {
       elements.setState(e.elementId, 'dragging', true);
     });
 
-    canvas.events.on('graph:dragmove', (e: GraphDragMoveEvent) => {
+    canvas.events.on('shape:dragmove', (e: GraphDragMoveEvent) => {
       const nodeId = e.elementId;
       // Move the node by the drag delta
-      const obj = elements.getNode(nodeId);
+      const obj = elements.getShape(nodeId);
       if (!obj) return;
       const nodeDef = NODES.find(n => n.id === nodeId);
       if (!nodeDef) return;
       if (nodeDef.type === 'circle') {
-        const spec = obj.element.spec as CircleNodeSpec;
-        elements.updateNode(nodeId, {
+        const spec = obj.element.spec as CircleShapeSpec;
+        elements.updateShape(nodeId, {
           x: spec.x + e.dx,
           y: spec.y + e.dy,
-        } as Partial<CircleNodeSpec>);
+        } as Partial<CircleShapeSpec>);
       } else {
-        const spec = obj.element.spec as RectNodeSpec;
-        elements.updateNode(nodeId, {
+        const spec = obj.element.spec as RectShapeSpec;
+        elements.updateShape(nodeId, {
           x: spec.x + e.dx,
           y: spec.y + e.dy,
-        } as Partial<RectNodeSpec>);
+        } as Partial<RectShapeSpec>);
       }
       refreshEdges(nodeId);
     });
 
-    canvas.events.on('graph:dragend', (e: GraphDragEndEvent) => {
+    canvas.events.on('shape:dragend', (e: GraphDragEndEvent) => {
       elements.clearState(e.elementId, 'dragging');
     });
   },

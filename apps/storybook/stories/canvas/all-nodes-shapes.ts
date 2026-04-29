@@ -1,7 +1,7 @@
 /**
  * All Node Shapes
  *
- * Exports `allNodeShapes` — low-level BaseNodeSpec entries, and
+ * Exports `allNodeShapes` — low-level BaseShapeSpec entries, and
  * `allNodeShapeData` — INodeData entries for use with GraphDataPlugin.
  *
  * Grid layout: COLS columns, each cell spaced CELL_SIZE apart.
@@ -9,7 +9,8 @@
  *              polygon (pentagon), star
  */
 
-import type { BaseNodeSpec, INodeData } from '@invana/plugins-graph-data';
+import type { BaseShapeSpec } from '@invana/plugins-shapes';
+import type { INodeData } from '@invana/plugins-graph-data';
 
 // ── Grid settings ─────────────────────────────────────────────────────────────
 const COLS      = 4;
@@ -39,7 +40,7 @@ const STATE_STYLES = {
 };
 
 // ── Shape definitions ─────────────────────────────────────────────────────────
-export const allNodeShapes: Array<{ type: string; spec: BaseNodeSpec }> = [
+export const allNodeShapes: Array<{ type: string; spec: BaseShapeSpec }> = [
   {
     type: 'circle',
     spec: {
@@ -50,7 +51,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseNodeSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseNodeSpec & { radius: number },
+    } as BaseShapeSpec & { radius: number },
   },
   {
     type: 'ellipse',
@@ -63,7 +64,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseNodeSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseNodeSpec & { radiusX: number; radiusY: number },
+    } as BaseShapeSpec & { radiusX: number; radiusY: number },
   },
   {
     type: 'rect',
@@ -78,7 +79,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseNodeSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseNodeSpec & { width: number; height: number; cornerRadius: number },
+    } as BaseShapeSpec & { width: number; height: number; cornerRadius: number },
   },
   {
     type: 'rect',
@@ -93,7 +94,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseNodeSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseNodeSpec & { width: number; height: number; cornerRadius: number },
+    } as BaseShapeSpec & { width: number; height: number; cornerRadius: number },
   },
   {
     type: 'diamond',
@@ -105,7 +106,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseNodeSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseNodeSpec & { radius: number },
+    } as BaseShapeSpec & { radius: number },
   },
   {
     type: 'hexagon',
@@ -117,7 +118,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseNodeSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseNodeSpec & { radius: number },
+    } as BaseShapeSpec & { radius: number },
   },
   {
     type: 'polygon',
@@ -130,7 +131,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseNodeSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseNodeSpec & { radius: number; sides: number },
+    } as BaseShapeSpec & { radius: number; sides: number },
   },
   {
     type: 'polygon',
@@ -143,7 +144,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseNodeSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseNodeSpec & { radius: number; sides: number },
+    } as BaseShapeSpec & { radius: number; sides: number },
   },
   {
     type: 'star',
@@ -156,7 +157,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseNodeSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseNodeSpec & { radius: number; points: number },
+    } as BaseShapeSpec & { radius: number; points: number },
   },
   {
     type: 'star',
@@ -169,7 +170,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseNodeSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseNodeSpec & { radius: number; points: number },
+    } as BaseShapeSpec & { radius: number; points: number },
   },
 ];
 

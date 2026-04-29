@@ -16,7 +16,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "rbush": "^4.0.1"
+    "@invana/plugins-shapes": "workspace:*"
   },
   "peerDependencies": {
     "@invana/canvas": "workspace:*",
@@ -24,8 +24,8 @@
   },
   "devDependencies": {
     "@invana/canvas": "workspace:*",
+    "@invana/plugins-shapes": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/rbush": "^4.0.0",
     "pixi.js": "^8.18.1",
     "tsup": "^8.3.5",
     "typescript": "5.9.2"

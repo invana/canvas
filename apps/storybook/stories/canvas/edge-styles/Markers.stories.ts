@@ -2,12 +2,12 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  GraphPlugin,
+  ShapesPlugin,
   type ArrowSpec,
-  type CircleNodeSpec,
+  type CircleShapeSpec,
   type DrawContext,
   type Point,
-} from '@invana/plugins-graph-data';
+} from '@invana/plugins-shapes';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Edge Styles/Markers' };
@@ -93,7 +93,7 @@ export const Markers: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.2, spacing: 28,
     }));
 
-    const elements = new GraphPlugin({ key: 'elements' });
+    const elements = new ShapesPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // Register the custom star5 marker before adding any connectors
@@ -108,19 +108,19 @@ export const Markers: Story = {
       const rx  =   CONN_LEN / 2 + NODE_R;
       const tid = m.type.replace(/[^a-zA-Z0-9]/g, '-');
 
-      elements.addNode('circle', {
+      elements.addShape('circle', {
         id: `${tid}-l`, x: lx, y,
         radius: NODE_R, style: ANCHOR,
-      } as CircleNodeSpec);
+      } as CircleShapeSpec);
 
-      elements.addNode('circle', {
+      elements.addShape('circle', {
         id: `${tid}-r`, x: rx, y,
         radius: NODE_R, style: ANCHOR,
-      } as CircleNodeSpec);
+      } as CircleShapeSpec);
 
       // startMarker — at the source end (mirror / approach angle)
       // endMarker   — at the target end
-      elements.addEdge('straight', {
+      elements.addConnector('straight', {
         id:          `${tid}-conn`,
         from:        { x: lx + NODE_R, y },
         to:          { x: rx - NODE_R, y },
@@ -142,7 +142,7 @@ export const Markers: Story = {
       .onChange((size: number) => {
         ALL_ROWS.forEach(m => {
           const tid = m.type.replace(/[^a-zA-Z0-9]/g, '-');
-          elements.updateEdge(`${tid}-conn`, {
+          elements.updateConnector(`${tid}-conn`, {
             startMarker: { type: m.type, size, color: m.color } as ArrowSpec,
             endMarker:   { type: m.type, size, color: m.color } as ArrowSpec,
           } as never);

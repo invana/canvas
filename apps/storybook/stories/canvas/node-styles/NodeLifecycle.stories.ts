@@ -29,11 +29,11 @@ import { action } from 'storybook/actions';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin, DevInfoPlugin } from '@invana/canvas';
 import {
-  GraphPlugin,
-  type CircleNodeSpec,
+  ShapesPlugin,
+  type CircleShapeSpec,
   type GraphAddedEvent,
   type GraphRemovedEvent,
-} from '@invana/plugins-graph-data';
+} from '@invana/plugins-shapes';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Node Styles/Node Lifecycle' };
@@ -75,14 +75,14 @@ export const ElementLifecycle: Story = {
     const devInfo = new DevInfoPlugin({ key: 'dev-info' });
     await canvas.plugins.register(devInfo);
 
-    const elements = new GraphPlugin({ key: 'elements' });
+    const elements = new ShapesPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // ── Event logging ─────────────────────────────────────────────────────
-    canvas.events.on('graph:added',
-      (e: GraphAddedEvent) => action('graph:added')({ id: e.elementId, type: e.elementType }));
-    canvas.events.on('graph:removed',
-      (e: GraphRemovedEvent) => action('graph:removed')({ id: e.elementId, type: e.elementType }));
+    canvas.events.on('shape:added',
+      (e: GraphAddedEvent) => action('shape:added')({ id: e.elementId, type: e.elementType }));
+    canvas.events.on('shape:removed',
+      (e: GraphRemovedEvent) => action('shape:removed')({ id: e.elementId, type: e.elementType }));
 
     // ── GUI ───────────────────────────────────────────────────────────────
     const params = {
@@ -106,7 +106,7 @@ export const ElementLifecycle: Story = {
         const color = COLORS[nodeCounter % COLORS.length]!;
         const x     = randBetween(-300, 300);
         const y     = randBetween(-200, 200);
-        elements.addNode('circle', {
+        elements.addShape('circle', {
           id, x, y, radius: 30,
           label: id,
           style: { fill: color, stroke: '#ffffff', strokeWidth: 2 },
@@ -115,7 +115,7 @@ export const ElementLifecycle: Story = {
             hovered:  { stroke: '#fbbf24', strokeWidth: 3 },
             selected: { stroke: '#ffffff', strokeWidth: 4, fill: color },
           },
-        } as CircleNodeSpec);
+        } as CircleShapeSpec);
         nodeHistory.push(id);
         params.nodeCount = nodeHistory.length;
         nodeCtrl.updateDisplay();
@@ -132,7 +132,7 @@ export const ElementLifecycle: Story = {
         if (!src || !tgt) return;
 
         const connId = `edge-${++edgeCounter}`;
-        elements.addEdge('bezier', {
+        elements.addConnector('bezier', {
           id: connId,
           from:      elements.getConnectionPoint(srcId, tgt.x, tgt.y) ?? src,
           to:        elements.getConnectionPoint(tgtId, src.x, src.y) ?? tgt,
@@ -150,9 +150,9 @@ export const ElementLifecycle: Story = {
       updateLast: () => {
         const id = nodeHistory[nodeHistory.length - 1];
         if (!id) return;
-        elements.updateNode(id, {
+        elements.updateShape(id, {
           style: { fill: params.newFill, stroke: '#ffffff', strokeWidth: 2 },
-        } as Partial<CircleNodeSpec>);
+        } as Partial<CircleShapeSpec>);
       },
     }, 'updateLast').name('Update last node color');
 
@@ -160,10 +160,10 @@ export const ElementLifecycle: Story = {
       growLast: () => {
         const id = nodeHistory[nodeHistory.length - 1];
         if (!id) return;
-        const obj = elements.getNode(id);
+        const obj = elements.getShape(id);
         if (!obj) return;
-        const spec = obj.element.spec as CircleNodeSpec;
-        elements.updateNode(id, { radius: (spec.radius ?? 30) + 10 } as Partial<CircleNodeSpec>);
+        const spec = obj.element.spec as CircleShapeSpec;
+        elements.updateShape(id, { radius: (spec.radius ?? 30) + 10 } as Partial<CircleShapeSpec>);
       },
     }, 'growLast').name('Grow last node radius');
 
@@ -172,7 +172,7 @@ export const ElementLifecycle: Story = {
       removeLast: () => {
         const id = nodeHistory.pop();
         if (!id) return;
-        elements.removeNode(id);
+        elements.removeShape(id);
         params.nodeCount = nodeHistory.length;
         nodeCtrl.updateDisplay();
       },

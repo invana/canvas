@@ -29,8 +29,8 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
-import { GraphPlugin, type BaseNodeSpec, type BaseEdgeSpec, type CircleNodeSpec } from '@invana/plugins-graph-data';
-// BaseNodeSpec and BaseEdgeSpec are re-exported from the element-plugin
+import { ShapesPlugin, type BaseShapeSpec, type BaseConnectorSpec, type CircleShapeSpec } from '@invana/plugins-shapes';
+// BaseShapeSpec and BaseConnectorSpec are re-exported from the element-plugin
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Node Styles/Mixed Graph' };
@@ -67,7 +67,7 @@ export const MixedGraph: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new GraphPlugin({ key: 'elements' });
+    const elements = new ShapesPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // ── Nodes ─────────────────────────────────────────────────────────────
@@ -83,7 +83,7 @@ export const MixedGraph: Story = {
       active:   { stroke: '#fbbf24', strokeWidth: 3, fill: '#1c1917' },
     };
 
-    const solids: Array<{ type: string; spec: BaseNodeSpec }> = [
+    const solids: Array<{ type: string; spec: BaseShapeSpec }> = [
       {
         type: 'circle',
         spec: {
@@ -92,7 +92,7 @@ export const MixedGraph: Story = {
           style: solidStyles.gateway,
           states: stateStyles,
           interactive: true,
-        } as CircleNodeSpec,
+        } as CircleShapeSpec,
       },
       {
         type: 'rect',
@@ -102,7 +102,7 @@ export const MixedGraph: Story = {
           style: solidStyles.service,
           states: stateStyles,
           interactive: true,
-        } as BaseNodeSpec & { width: number; height: number; cornerRadius: number },
+        } as BaseShapeSpec & { width: number; height: number; cornerRadius: number },
       },
       {
         type: 'rect',
@@ -112,7 +112,7 @@ export const MixedGraph: Story = {
           style: solidStyles.service,
           states: stateStyles,
           interactive: true,
-        } as BaseNodeSpec & { width: number; height: number; cornerRadius: number },
+        } as BaseShapeSpec & { width: number; height: number; cornerRadius: number },
       },
       {
         type: 'ellipse',
@@ -122,7 +122,7 @@ export const MixedGraph: Story = {
           style: solidStyles.db,
           states: stateStyles,
           interactive: true,
-        } as BaseNodeSpec & { radiusX: number; radiusY: number },
+        } as BaseShapeSpec & { radiusX: number; radiusY: number },
       },
       {
         type: 'ellipse',
@@ -132,7 +132,7 @@ export const MixedGraph: Story = {
           style: solidStyles.db,
           states: stateStyles,
           interactive: true,
-        } as BaseNodeSpec & { radiusX: number; radiusY: number },
+        } as BaseShapeSpec & { radiusX: number; radiusY: number },
       },
     ];
 
@@ -140,7 +140,7 @@ export const MixedGraph: Story = {
     const edgeStyle = { stroke: '#475569', strokeWidth: 2 };
     const arrow     = { type: 'triangle' as const, size: 12 };
 
-    const connectors: Array<{ type: string; spec: BaseEdgeSpec }> = [
+    const connectors: Array<{ type: string; spec: BaseConnectorSpec }> = [
       {
         type: 'bezier',
         spec: {

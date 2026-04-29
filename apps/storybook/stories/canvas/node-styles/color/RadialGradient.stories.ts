@@ -16,7 +16,7 @@
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin, FillGradient } from '@invana/canvas';
-import { GraphPlugin } from '@invana/plugins-graph-data';
+import { ShapesPlugin } from '@invana/plugins-shapes';
 import { createContainer } from '../../../../src/div-utils.js';
 import { allNodeShapes } from '../../all-nodes-shapes.js';
 
@@ -118,7 +118,7 @@ export const RadialGradient: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new GraphPlugin({ key: 'elements' });
+    const elements = new ShapesPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     elements.setData(nodes);

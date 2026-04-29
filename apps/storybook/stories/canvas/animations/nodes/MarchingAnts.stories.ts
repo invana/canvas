@@ -7,7 +7,7 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
-import { GraphPlugin, type CircleNodeSpec, type RectNodeSpec, type DiamondNodeSpec } from '@invana/plugins-graph-data';
+import { ShapesPlugin, type CircleShapeSpec, type RectShapeSpec, type DiamondShapeSpec } from '@invana/plugins-shapes';
 import { createContainer } from '../../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Animations/Nodes' };
@@ -31,21 +31,21 @@ export const MarchingAnts: Story = {
       color: '#1e293b', backgroundColor: DARK_BG, size: 1.5, spacing: 30,
     }));
 
-    const elements = new GraphPlugin({ key: 'elements' });
+    const elements = new ShapesPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
-    elements.addNode('circle', {
+    elements.addShape('circle', {
       id: 'ma1', x: -GAP, y: 0, radius: 50, label: 'circle',
       style: { fill: '#1e3a5f', stroke: '#60a5fa', strokeWidth: 3, dashArray: [8, 6] },
-    } as CircleNodeSpec);
-    elements.addNode('rect', {
+    } as CircleShapeSpec);
+    elements.addShape('rect', {
       id: 'ma2', x: 0, y: 0, width: 100, height: 80, label: 'rect',
       style: { fill: '#1f2937', stroke: '#f59e0b', strokeWidth: 3, dashArray: [10, 6] },
-    } as RectNodeSpec);
-    elements.addNode('diamond', {
+    } as RectShapeSpec);
+    elements.addShape('diamond', {
       id: 'ma3', x: GAP, y: 0, radius: 55, label: 'diamond',
       style: { fill: '#1a0033', stroke: '#a78bfa', strokeWidth: 3, dashArray: [8, 5] },
-    } as DiamondNodeSpec);
+    } as DiamondShapeSpec);
 
     elements.fitContent();
 

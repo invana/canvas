@@ -11,9 +11,9 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  GraphPlugin,
-  type CircleNodeSpec,
-} from '@invana/plugins-graph-data';
+  ShapesPlugin,
+  type CircleShapeSpec,
+} from '@invana/plugins-shapes';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Edge Styles/Connectors' };
@@ -53,7 +53,7 @@ const ROWS: RowDef[] = [
 
 /** Build the shared element grid and return the connector id list for later updates. */
 function buildScene(
-  elements: GraphPlugin,
+  elements: ShapesPlugin,
   prefix: string,
   sourceOffset: number,
   targetOffset: number,
@@ -66,15 +66,15 @@ function buildScene(
     const lx   = -COL_GAP / 2;
     const rx   =  COL_GAP / 2;
 
-    elements.addNode('circle', {
+    elements.addShape('circle', {
       id: `${prefix}${row.id}-l`, x: lx, y: rowY,
       radius: NODE_R, style: ANCHOR_STYLE,
-    } as CircleNodeSpec);
+    } as CircleShapeSpec);
 
-    elements.addNode('circle', {
+    elements.addShape('circle', {
       id: `${prefix}${row.id}-r`, x: rx, y: rowY + row.dy,
       radius: NODE_R, style: ANCHOR_STYLE,
-    } as CircleNodeSpec);
+    } as CircleShapeSpec);
 
     const midX  = (lx + rx) / 2;
     const verts = row.wverts?.map(v => ({ x: midX + v.xOff, y: rowY + v.yOff }));
@@ -95,7 +95,7 @@ function buildScene(
     if (verts?.length) spec['vertices'] = verts;
     if (row.router)    spec['router']   = row.router;
 
-    elements.addEdge(row.connType, spec as never);
+    elements.addConnector(row.connType, spec as never);
     ids.push(connId);
   });
 
@@ -115,7 +115,7 @@ export const Connectors: Story = {
     await canvas.init();
     await canvas.plugins.register(new BackgroundPlugin(BG_OPTS));
 
-    const elements = new GraphPlugin({ key: 'elements' });
+    const elements = new ShapesPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     buildScene(elements, '', 0, 0);
@@ -136,7 +136,7 @@ export const ConnectorOffset: Story = {
     await canvas.init();
     await canvas.plugins.register(new BackgroundPlugin(BG_OPTS));
 
-    const elements = new GraphPlugin({ key: 'elements' });
+    const elements = new ShapesPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     const params = { sourceOffset: 8, targetOffset: 8 };
@@ -148,7 +148,7 @@ export const ConnectorOffset: Story = {
 
     const applyOffsets = () => {
       for (const id of ids) {
-        elements.updateEdge(id, {
+        elements.updateConnector(id, {
           sourceOffset: params.sourceOffset,
           targetOffset: params.targetOffset,
         } as never);

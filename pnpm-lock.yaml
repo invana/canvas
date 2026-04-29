@@ -47,6 +47,9 @@ importers:
       '@invana/plugins-graph-data':
         specifier: workspace:*
         version: link:../../packages/plugins-graph-data
+      '@invana/plugins-shapes':
+        specifier: workspace:*
+        version: link:../../packages/plugins-shapes
       lil-gui:
         specifier: ^0.21.0
         version: 0.21.0
@@ -157,9 +160,9 @@ importers:
 
   packages/plugins-graph-data:
     dependencies:
-      rbush:
-        specifier: ^4.0.1
-        version: 4.0.1
+      '@invana/plugins-shapes':
+        specifier: workspace:*
+        version: link:../plugins-shapes
     devDependencies:
       '@invana/canvas':
         specifier: workspace:*
@@ -167,9 +170,6 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
-      '@types/rbush':
-        specifier: ^4.0.0
-        version: 4.0.0
       pixi.js:
         specifier: ^8.18.1
         version: 8.18.1
@@ -232,6 +232,31 @@ importers:
       vitest:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.15.3)
+
+  packages/plugins-shapes:
+    dependencies:
+      rbush:
+        specifier: ^4.0.1
+        version: 4.0.1
+    devDependencies:
+      '@invana/canvas':
+        specifier: workspace:*
+        version: link:../canvas
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/rbush':
+        specifier: ^4.0.0
+        version: 4.0.0
+      pixi.js:
+        specifier: ^8.18.1
+        version: 8.18.1
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(postcss@8.5.12)(typescript@5.9.2)(yaml@2.8.3)
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
 
   packages/typescript-config: {}
 

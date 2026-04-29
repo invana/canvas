@@ -104,7 +104,7 @@ export class D3ForceLayoutPlugin implements CanvasPlugin {
     }
 
     // Listen to drag events so simulation reheats during drags
-    ctx.events.on('graph:dragmove', (e) => {
+    ctx.events.on('shape:dragmove', (e) => {
       if (!this._simulation) return;
       const node = this._simulation.nodes().find(n => n.id === e.elementId);
       if (node) {
@@ -116,7 +116,7 @@ export class D3ForceLayoutPlugin implements CanvasPlugin {
       }
     });
 
-    ctx.events.on('graph:dragend', (e) => {
+    ctx.events.on('shape:dragend', (e) => {
       if (!this._simulation) return;
       const node = this._simulation.nodes().find(n => n.id === e.elementId);
       if (node) {

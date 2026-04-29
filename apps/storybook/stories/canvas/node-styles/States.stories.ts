@@ -21,9 +21,9 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  GraphPlugin,
-  type CircleNodeSpec,
-} from '@invana/plugins-graph-data';
+  ShapesPlugin,
+  type CircleShapeSpec,
+} from '@invana/plugins-shapes';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Node Styles/States' };
@@ -45,13 +45,13 @@ export const States: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new GraphPlugin({ key: 'elements' });
+    const elements = new ShapesPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     const G = 200;
 
     // ── Node 1 — default ──────────────────────────────────────────────────
-    elements.addNode('circle', {
+    elements.addShape('circle', {
       id: 'n-default', x: -G, y: 0, radius: 50,
       label: 'Default',
       style: { fill: '#1e3a5f', stroke: '#60a5fa', strokeWidth: 2 },
@@ -60,10 +60,10 @@ export const States: Story = {
         selected: { fill: '#1d4ed8', stroke: '#ffffff', strokeWidth: 3 },
       },
       interactive: true,
-    } as CircleNodeSpec);
+    } as CircleShapeSpec);
 
     // ── Node 2 — hovered ──────────────────────────────────────────────────
-    elements.addNode('circle', {
+    elements.addShape('circle', {
       id: 'n-hovered', x: 0, y: 0, radius: 50,
       label: 'Hovered',
       style: { fill: '#1e3a5f', stroke: '#60a5fa', strokeWidth: 2 },
@@ -72,11 +72,11 @@ export const States: Story = {
         selected: { fill: '#1d4ed8', stroke: '#ffffff', strokeWidth: 3 },
       },
       interactive: true,
-    } as CircleNodeSpec);
+    } as CircleShapeSpec);
     elements.setState('n-hovered', 'hovered', true);
 
     // ── Node 3 — selected ─────────────────────────────────────────────────
-    elements.addNode('circle', {
+    elements.addShape('circle', {
       id: 'n-selected', x: G, y: 0, radius: 50,
       label: 'Selected',
       style: { fill: '#1e3a5f', stroke: '#60a5fa', strokeWidth: 2 },
@@ -85,11 +85,11 @@ export const States: Story = {
         selected: { fill: '#1d4ed8', stroke: '#ffffff', strokeWidth: 3 },
       },
       interactive: true,
-    } as CircleNodeSpec);
+    } as CircleShapeSpec);
     elements.setState('n-selected', 'selected', true);
 
     // ── Custom state: 'error' ─────────────────────────────────────────────
-    elements.addNode('circle', {
+    elements.addShape('circle', {
       id: 'n-error', x: -G * 0.5, y: G * 1.2, radius: 50,
       label: 'Error state',
       style: { fill: '#1e3a5f', stroke: '#60a5fa', strokeWidth: 2 },
@@ -98,10 +98,10 @@ export const States: Story = {
         warning:{ fill: '#78350f', stroke: '#fcd34d', strokeWidth: 3 },
       },
       interactive: true,
-    } as CircleNodeSpec);
+    } as CircleShapeSpec);
     elements.setState('n-error', 'error', true);
 
-    elements.addNode('circle', {
+    elements.addShape('circle', {
       id: 'n-warning', x: G * 0.5, y: G * 1.2, radius: 50,
       label: 'Warning state',
       style: { fill: '#1e3a5f', stroke: '#60a5fa', strokeWidth: 2 },
@@ -110,7 +110,7 @@ export const States: Story = {
         warning:{ fill: '#78350f', stroke: '#fcd34d', strokeWidth: 3 },
       },
       interactive: true,
-    } as CircleNodeSpec);
+    } as CircleShapeSpec);
     elements.setState('n-warning', 'warning', true);
 
     elements.fitContent();

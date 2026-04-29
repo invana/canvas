@@ -26,11 +26,11 @@ import { action } from 'storybook/actions';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin, DevInfoPlugin } from '@invana/canvas';
 import {
-  GraphPlugin,
-  type BaseNodeSpec,
-  type CircleNodeSpec,
-  type PolygonNodeSpec,
-  type StarNodeSpec,
+  ShapesPlugin,
+  type BaseShapeSpec,
+  type CircleShapeSpec,
+  type PolygonShapeSpec,
+  type StarShapeSpec,
   type GraphClickEvent,
   type GraphDblClickEvent,
   type GraphPointerOverEvent,
@@ -39,7 +39,7 @@ import {
   type GraphDragMoveEvent,
   type GraphDragEndEvent,
   type GraphStateChangeEvent,
-} from '@invana/plugins-graph-data';
+} from '@invana/plugins-shapes';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Node Styles/Events Interactive' };
@@ -64,11 +64,11 @@ export const EventsInteractive: Story = {
     const devInfo = new DevInfoPlugin({ key: 'dev-info' });
     await canvas.plugins.register(devInfo);
 
-    const elements = new GraphPlugin({ key: 'elements' });
+    const elements = new ShapesPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // ── Elements ──────────────────────────────────────────────────────────
-    elements.addNode('circle', {
+    elements.addShape('circle', {
       id: 'clicker', x: -200, y: 0, radius: 60,
       label: 'click / dblclick',
       style: { fill: '#1d4ed8', stroke: '#93c5fd', strokeWidth: 2 },
@@ -77,9 +77,9 @@ export const EventsInteractive: Story = {
         selected: { fill: '#1e40af', stroke: '#ffffff', strokeWidth: 3 },
       },
       interactive: true,
-    } as CircleNodeSpec);
+    } as CircleShapeSpec);
 
-    elements.addNode('polygon', {
+    elements.addShape('polygon', {
       id: 'hoverer', x: 60, y: 0, radius: 60, sides: 6,
       label: 'hover me',
       style: { fill: '#065f46', stroke: '#6ee7b7', strokeWidth: 2 },
@@ -87,9 +87,9 @@ export const EventsInteractive: Story = {
         hovered: { fill: '#047857', stroke: '#a7f3d0', strokeWidth: 3 },
       },
       interactive: true,
-    } as PolygonNodeSpec);
+    } as PolygonShapeSpec);
 
-    elements.addNode('star', {
+    elements.addShape('star', {
       id: 'dragger', x: 320, y: 0, radius: 60,
       label: 'drag me',
       style: { fill: '#7c2d12', stroke: '#fca5a5', strokeWidth: 2 },
@@ -99,44 +99,44 @@ export const EventsInteractive: Story = {
       interactive: true,
       draggable: true,
       cursor: 'grab',
-    } as StarNodeSpec);
+    } as StarShapeSpec);
 
     elements.fitContent();
 
     // ── Typed event listeners ─────────────────────────────────────────────
-    canvas.events.on('graph:click',
-      (e: GraphClickEvent) => action('graph:click')({ id: e.elementId, type: e.elementType, x: e.worldX, y: e.worldY }));
+    canvas.events.on('shape:click',
+      (e: GraphClickEvent) => action('shape:click')({ id: e.elementId, type: e.elementType, x: e.worldX, y: e.worldY }));
 
-    canvas.events.on('graph:dblclick',
-      (e: GraphDblClickEvent) => action('graph:dblclick')({ id: e.elementId }));
+    canvas.events.on('shape:dblclick',
+      (e: GraphDblClickEvent) => action('shape:dblclick')({ id: e.elementId }));
 
-    canvas.events.on('graph:pointerover',
-      (e: GraphPointerOverEvent) => action('graph:pointerover')({ id: e.elementId, type: e.elementType }));
+    canvas.events.on('shape:pointerover',
+      (e: GraphPointerOverEvent) => action('shape:pointerover')({ id: e.elementId, type: e.elementType }));
 
-    canvas.events.on('graph:pointerout',
-      (e: GraphPointerOutEvent) => action('graph:pointerout')({ id: e.elementId }));
+    canvas.events.on('shape:pointerout',
+      (e: GraphPointerOutEvent) => action('shape:pointerout')({ id: e.elementId }));
 
-    canvas.events.on('graph:dragstart',
-      (e: GraphDragStartEvent) => action('graph:dragstart')({ id: e.elementId, x: e.worldX, y: e.worldY }));
+    canvas.events.on('shape:dragstart',
+      (e: GraphDragStartEvent) => action('shape:dragstart')({ id: e.elementId, x: e.worldX, y: e.worldY }));
 
-    canvas.events.on('graph:dragmove',
+    canvas.events.on('shape:dragmove',
       (e: GraphDragMoveEvent) => {
         // Move the star as it's dragged
-        const cur = elements.getNode('dragger');
+        const cur = elements.getShape('dragger');
         if (!cur) return;
-        const spec = cur.element.spec as BaseNodeSpec;
-        elements.updateNode('dragger', { x: spec.x + e.dx, y: spec.y + e.dy } as StarNodeSpec);
-        action('graph:dragmove')({ id: e.elementId, dx: e.dx, dy: e.dy });
+        const spec = cur.element.spec as BaseShapeSpec;
+        elements.updateShape('dragger', { x: spec.x + e.dx, y: spec.y + e.dy } as StarShapeSpec);
+        action('shape:dragmove')({ id: e.elementId, dx: e.dx, dy: e.dy });
       });
 
-    canvas.events.on('graph:dragend',
-      (e: GraphDragEndEvent) => action('graph:dragend')({ id: e.elementId }));
+    canvas.events.on('shape:dragend',
+      (e: GraphDragEndEvent) => action('shape:dragend')({ id: e.elementId }));
 
-    canvas.events.on('graph:statechange',
-      (e: GraphStateChangeEvent) => action('graph:statechange')({ id: e.elementId, state: e.state, active: e.active }));
+    canvas.events.on('shape:statechange',
+      (e: GraphStateChangeEvent) => action('shape:statechange')({ id: e.elementId, state: e.state, active: e.active }));
 
     // Toggle 'selected' on click
-    canvas.events.on('graph:click', (e: GraphClickEvent) => {
+    canvas.events.on('shape:click', (e: GraphClickEvent) => {
       const states = elements.getStates(e.elementId);
       if (states.includes('selected')) {
         elements.clearState(e.elementId, 'selected');

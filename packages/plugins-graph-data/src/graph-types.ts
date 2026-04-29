@@ -1,6 +1,6 @@
 // ── GraphDataPlugin types ──────────────────────────────────────────────────────
 
-import type { BaseEdgeSpec, DrawStyle } from './spec/index.js';
+import type { BaseEdgeSpec, DrawStyle } from '@invana/plugins-shapes';
 
 // ── Node / Edge data ──────────────────────────────────────────────────────────
 

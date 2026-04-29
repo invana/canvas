@@ -16,7 +16,7 @@
  *
  * Demonstrates:
  *   - Extending `BaseEdge` — only `route()` must be implemented
- *   - Custom spec interfaces extending `BaseEdgeSpec`
+ *   - Custom spec interfaces extending `BaseConnectorSpec`
  *   - `registerEdge(name, cls)` API
  *   - Using `ctx.strokePath()` via the default `draw()` in BaseEdge
  *   - lil-gui controls to adjust connector parameters at runtime
@@ -25,13 +25,13 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  GraphPlugin,
+  ShapesPlugin,
   BaseEdge,
-  type CircleNodeSpec,
-  type BaseEdgeSpec,
+  type CircleShapeSpec,
+  type BaseConnectorSpec,
   type PathCommand,
   type Point,
-} from '@invana/plugins-graph-data';
+} from '@invana/plugins-shapes';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Edge Styles/Custom Connector' };
@@ -40,7 +40,7 @@ type Story = StoryObj;
 
 // ── ZigZagConnector ───────────────────────────────────────────────────────────
 
-interface ZigZagSpec extends BaseEdgeSpec {
+interface ZigZagSpec extends BaseConnectorSpec {
   /** Number of zig-zag teeth (segments). Default: 4. */
   steps?: number;
 }
@@ -71,7 +71,7 @@ class ZigZagConnector extends BaseEdge<ZigZagSpec> {
 
 // ── RippleConnector ───────────────────────────────────────────────────────────
 
-interface RippleSpec extends BaseEdgeSpec {
+interface RippleSpec extends BaseConnectorSpec {
   /** Wave amplitude in world pixels. Default: 30. */
   amplitude?: number;
   /** Number of complete wave cycles. Default: 3. */
@@ -127,7 +127,7 @@ export const CustomConnector: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new GraphPlugin({ key: 'elements' });
+    const elements = new ShapesPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // Register custom connector types
@@ -136,9 +136,9 @@ export const CustomConnector: Story = {
 
     // ── ZigZag row ────────────────────────────────────────────────────────
     const ZZ_Y = -100;
-    elements.addNode('circle', { id: 'zz-l', x: -200, y: ZZ_Y, radius: NODE_R, style: ANCHOR } as CircleNodeSpec);
-    elements.addNode('circle', { id: 'zz-r', x:  200, y: ZZ_Y, radius: NODE_R, style: ANCHOR } as CircleNodeSpec);
-    elements.addEdge('zigzag', {
+    elements.addShape('circle', { id: 'zz-l', x: -200, y: ZZ_Y, radius: NODE_R, style: ANCHOR } as CircleShapeSpec);
+    elements.addShape('circle', { id: 'zz-r', x:  200, y: ZZ_Y, radius: NODE_R, style: ANCHOR } as CircleShapeSpec);
+    elements.addConnector('zigzag', {
       id: 'zz-conn',
       from:      { x: -200 + NODE_R, y: ZZ_Y },
       to:        { x:  200 - NODE_R, y: ZZ_Y },
@@ -150,9 +150,9 @@ export const CustomConnector: Story = {
 
     // ── Ripple row ────────────────────────────────────────────────────────
     const RP_Y = 100;
-    elements.addNode('circle', { id: 'rp-l', x: -200, y: RP_Y, radius: NODE_R, style: ANCHOR } as CircleNodeSpec);
-    elements.addNode('circle', { id: 'rp-r', x:  200, y: RP_Y, radius: NODE_R, style: ANCHOR } as CircleNodeSpec);
-    elements.addEdge('ripple', {
+    elements.addShape('circle', { id: 'rp-l', x: -200, y: RP_Y, radius: NODE_R, style: ANCHOR } as CircleShapeSpec);
+    elements.addShape('circle', { id: 'rp-r', x:  200, y: RP_Y, radius: NODE_R, style: ANCHOR } as CircleShapeSpec);
+    elements.addConnector('ripple', {
       id: 'rp-conn',
       from:      { x: -200 + NODE_R, y: RP_Y },
       to:        { x:  200 - NODE_R, y: RP_Y },
@@ -172,16 +172,16 @@ export const CustomConnector: Story = {
     const zzParams = { steps: 6 };
     const zzFolder = gui.addFolder('ZigZag').open();
     zzFolder.add(zzParams, 'steps', 2, 16, 1).onChange((v: number) => {
-      elements.updateEdge('zz-conn', { steps: v } as Partial<ZigZagSpec>);
+      elements.updateConnector('zz-conn', { steps: v } as Partial<ZigZagSpec>);
     });
 
     const rpParams = { amplitude: 30, frequency: 3 };
     const rpFolder = gui.addFolder('Ripple').open();
     rpFolder.add(rpParams, 'amplitude', 5, 80, 1).onChange((v: number) => {
-      elements.updateEdge('rp-conn', { amplitude: v } as Partial<RippleSpec>);
+      elements.updateConnector('rp-conn', { amplitude: v } as Partial<RippleSpec>);
     });
     rpFolder.add(rpParams, 'frequency', 1, 10, 0.5).onChange((v: number) => {
-      elements.updateEdge('rp-conn', { frequency: v } as Partial<RippleSpec>);
+      elements.updateConnector('rp-conn', { frequency: v } as Partial<RippleSpec>);
     });
   },
 };

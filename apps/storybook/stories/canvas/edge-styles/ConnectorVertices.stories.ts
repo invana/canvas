@@ -23,10 +23,10 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  GraphPlugin,
-  type CircleNodeSpec,
+  ShapesPlugin,
+  type CircleShapeSpec,
   type BezierConnectorSpec,
-} from '@invana/plugins-graph-data';
+} from '@invana/plugins-shapes';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Edge Styles/Connector Vertices' };
@@ -106,7 +106,7 @@ export const ConnectorVertices: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 28,
     }));
 
-    const elements = new GraphPlugin({ key: 'elements' });
+    const elements = new ShapesPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     const totalH = (ROWS.length - 1) * ROW_GAP;
@@ -121,23 +121,23 @@ export const ConnectorVertices: Story = {
       const shiftedVertices  = row.vertices?.map(v => ({ x: v.x, y: rowY + v.y }));
       const shiftedWaypoints = row.waypoints?.map(v => ({ x: v.x, y: rowY + v.y }));
 
-      elements.addNode('circle', {
+      elements.addShape('circle', {
         id: `${row.id}-l`, x: lx, y: rowY,
         radius: NODE_R, style: ANCHOR,
-      } as CircleNodeSpec);
+      } as CircleShapeSpec);
 
-      elements.addNode('circle', {
+      elements.addShape('circle', {
         id: `${row.id}-r`, x: rx, y: rowY,
         radius: NODE_R, style: ANCHOR,
-      } as CircleNodeSpec);
+      } as CircleShapeSpec);
 
       // Small dot markers at each vertex position
       shiftedVertices?.forEach((v, vi) => {
-        elements.addNode('circle', {
+        elements.addShape('circle', {
           id: `${row.id}-vrt-${vi}`, x: v.x, y: v.y,
           radius: 5,
           style: { fill: row.color, fillAlpha: 0.5, stroke: row.color, strokeWidth: 1 },
-        } as CircleNodeSpec);
+        } as CircleShapeSpec);
       });
 
       const spec: Record<string, unknown> = {
@@ -154,7 +154,7 @@ export const ConnectorVertices: Story = {
       if (shiftedVertices)  spec['vertices']  = shiftedVertices;
       if (shiftedWaypoints) spec['waypoints'] = shiftedWaypoints;
 
-      elements.addEdge(row.connType, spec as never);
+      elements.addConnector(row.connType, spec as never);
     });
 
     elements.fitContent();
@@ -164,7 +164,7 @@ export const ConnectorVertices: Story = {
     const gui = new GUI({ title: 'Bezier options', container });
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;';
     gui.add(params, 'curvature', 0, 300, 5).onChange((v: number) => {
-      elements.updateEdge('auto-conn', { curvature: v } as Partial<BezierConnectorSpec>);
+      elements.updateConnector('auto-conn', { curvature: v } as Partial<BezierConnectorSpec>);
     });
   },
 };

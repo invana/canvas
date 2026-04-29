@@ -16,6 +16,7 @@
     "@invana/plugin-layouts-d3-force": "workspace:*",
     "@invana/plugin-layouts-elkjs": "workspace:*",
     "@invana/plugins-graph-data": "workspace:*",
+    "@invana/plugins-shapes": "workspace:*",
     "lil-gui": "^0.21.0"
   },
   "devDependencies": {

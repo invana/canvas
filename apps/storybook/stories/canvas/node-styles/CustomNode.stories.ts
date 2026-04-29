@@ -16,14 +16,14 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  GraphPlugin,
+  ShapesPlugin,
   BaseNode,
   LOD,
   type DrawContext,
   type BBox,
   type Point,
-  type BaseNodeSpec,
-} from '@invana/plugins-graph-data';
+  type BaseShapeSpec,
+} from '@invana/plugins-shapes';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Node Styles/Custom Node' };
@@ -32,7 +32,7 @@ type Story = StoryObj;
 
 // ─── DatabaseNode ─────────────────────────────────────────────────────────────
 
-interface DatabaseNodeSpec extends BaseNodeSpec {
+interface DatabaseNodeSpec extends BaseShapeSpec {
   /** Total width of the cylinder in world px. */
   width: number;
   /** Total height of the cylinder body in world px. */
@@ -89,7 +89,7 @@ class DatabaseNode extends BaseNode<DatabaseNodeSpec> {
 
 // ─── HexBadge ─────────────────────────────────────────────────────────────────
 
-interface HexBadgeSpec extends BaseNodeSpec {
+interface HexBadgeSpec extends BaseShapeSpec {
   /** Circumscribed radius. */
   radius: number;
   /** Badge text (short — 1–3 chars). */
@@ -142,7 +142,7 @@ export const CustomElement: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new GraphPlugin({ key: 'elements' });
+    const elements = new ShapesPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // Register custom types
@@ -152,14 +152,14 @@ export const CustomElement: Story = {
     // ── Database nodes ────────────────────────────────────────────────────
     const dbStyle = { fill: '#1e3a5f', stroke: '#60a5fa', strokeWidth: 2 };
 
-    elements.addNode('database', {
+    elements.addShape('database', {
       id: 'db-primary', x: -220, y: -70, width: 100, height: 140,
       label: 'Primary DB',
       style: dbStyle,
       interactive: true,
     } as DatabaseNodeSpec);
 
-    elements.addNode('database', {
+    elements.addShape('database', {
       id: 'db-replica', x: 120, y: -70, width: 100, height: 140,
       label: 'Replica DB',
       style: { fill: '#1e3a2f', stroke: '#34d399', strokeWidth: 2 },
@@ -167,26 +167,26 @@ export const CustomElement: Story = {
     } as DatabaseNodeSpec);
 
     // ── HexBadge status indicators ────────────────────────────────────────
-    elements.addNode('hex-badge', {
+    elements.addShape('hex-badge', {
       id: 'badge-ok',   x: -170, y: 120, radius: 34, badge: '✓', label: 'Healthy',
       style: { fill: '#14532d', stroke: '#4ade80', strokeWidth: 2 },
       interactive: true,
     } as HexBadgeSpec);
 
-    elements.addNode('hex-badge', {
+    elements.addShape('hex-badge', {
       id: 'badge-warn', x: 0, y: 120, radius: 34, badge: '!', label: 'Warning',
       style: { fill: '#78350f', stroke: '#fcd34d', strokeWidth: 2 },
       interactive: true,
     } as HexBadgeSpec);
 
-    elements.addNode('hex-badge', {
+    elements.addShape('hex-badge', {
       id: 'badge-err',  x: 170, y: 120, radius: 34, badge: '✕', label: 'Error',
       style: { fill: '#7f1d1d', stroke: '#fca5a5', strokeWidth: 2 },
       interactive: true,
     } as HexBadgeSpec);
 
     // ── Connectors ────────────────────────────────────────────────────────
-    elements.addEdge('bezier', {
+    elements.addConnector('bezier', {
       id: 'replication',
       from: { x: -120, y: 0 },
       to:   { x:  120, y: 0 },

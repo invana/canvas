@@ -19,9 +19,9 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin, DevInfoPlugin } from '@invana/canvas';
 import {
-  GraphPlugin,
-  type BaseNodeSpec, type BaseEdgeSpec, type CircleNodeSpec,
-} from '@invana/plugins-graph-data';
+  ShapesPlugin,
+  type BaseShapeSpec, type BaseConnectorSpec, type CircleShapeSpec,
+} from '@invana/plugins-shapes';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: '1. Showcase/Performance/Large Graph' };
@@ -40,10 +40,10 @@ function generateGrid(
   cols: number,
   rows: number,
   nodeRadius: number,
-): { solids: Array<{ type: string; spec: BaseNodeSpec }>;
-    connectors: Array<{ type: string; spec: BaseEdgeSpec }>; } {
-  const solids: Array<{ type: string; spec: BaseNodeSpec }> = [];
-  const connectors: Array<{ type: string; spec: BaseEdgeSpec }> = [];
+): { solids: Array<{ type: string; spec: BaseShapeSpec }>;
+    connectors: Array<{ type: string; spec: BaseConnectorSpec }>; } {
+  const solids: Array<{ type: string; spec: BaseShapeSpec }> = [];
+  const connectors: Array<{ type: string; spec: BaseConnectorSpec }> = [];
 
   const totalW = (cols - 1) * CELL_SIZE;
   const totalH = (rows - 1) * CELL_SIZE;
@@ -65,7 +65,7 @@ function generateGrid(
           draggable: true,
           cursor: 'grab',
           states: { hovered: { strokeWidth: 3, stroke: '#ffffff' } },
-        } as CircleNodeSpec,
+        } as CircleShapeSpec,
       });
 
       // Right neighbour
@@ -126,7 +126,7 @@ export const LargeGridGraph: Story = {
     const devInfo = new DevInfoPlugin({ key: 'dev-info' });
     await canvas.plugins.register(devInfo);
 
-    const elements = new GraphPlugin({
+    const elements = new ShapesPlugin({
       key: 'elements',
     });
     await canvas.plugins.register(elements);

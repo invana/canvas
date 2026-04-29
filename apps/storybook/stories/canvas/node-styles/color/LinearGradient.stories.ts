@@ -17,15 +17,15 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin, FillGradient } from '@invana/canvas';
 import {
-  GraphPlugin,
-  type CircleNodeSpec,
-  type EllipseNodeSpec,
-  type RectNodeSpec,
-  type DiamondNodeSpec,
-  type HexagonNodeSpec,
-  type PolygonNodeSpec,
-  type StarNodeSpec,
-} from '@invana/plugins-graph-data';
+  ShapesPlugin,
+  type CircleShapeSpec,
+  type EllipseShapeSpec,
+  type RectShapeSpec,
+  type DiamondShapeSpec,
+  type HexagonShapeSpec,
+  type PolygonShapeSpec,
+  type StarShapeSpec,
+} from '@invana/plugins-shapes';
 import { createContainer } from '../../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Nodes/Styling/Color/Linear Gradient' };
@@ -106,7 +106,7 @@ export const LinearGradient: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new GraphPlugin({ key: 'elements' });
+    const elements = new ShapesPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     const BORDER = { stroke: '#ffffff', strokeWidth: 2 };
@@ -114,26 +114,26 @@ export const LinearGradient: Story = {
     const SEL    = { stroke: '#ffffff', strokeWidth: 4 };
 
     // 0 — circle  — cyan → blue (horizontal)
-    elements.addNode('circle', {
+    elements.addShape('circle', {
       id: 'lg-circle', ...pos(0), radius: RADIUS,
       label: 'Circle',
       style:  { fill: hGrad('#3fcbeb', '#2563eb'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as CircleNodeSpec);
+    } as CircleShapeSpec);
 
     // 1 — ellipse — purple → pink (horizontal)
-    elements.addNode('ellipse', {
+    elements.addShape('ellipse', {
       id: 'lg-ellipse', ...pos(1),
       radiusX: RADIUS * 1.4, radiusY: RADIUS * 0.65,
       label: 'Ellipse',
       style:  { fill: hGrad('#a78bfa', '#ec4899'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as EllipseNodeSpec);
+    } as EllipseShapeSpec);
 
     // 2 — rect — orange → yellow (top → bottom)
-    elements.addNode('rect', {
+    elements.addShape('rect', {
       id: 'lg-rect',
       x: pos(2).x - RADIUS, y: pos(2).y - RADIUS * 0.7,
       width: RADIUS * 2, height: RADIUS * 1.4,
@@ -142,10 +142,10 @@ export const LinearGradient: Story = {
       style:  { fill: vGrad('#fb923c', '#fde68a'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as RectNodeSpec);
+    } as RectShapeSpec);
 
     // 3 — rounded rect — green → teal (top → bottom)
-    elements.addNode('rect', {
+    elements.addShape('rect', {
       id: 'lg-rounded-rect',
       x: pos(3).x - RADIUS, y: pos(3).y - RADIUS * 0.7,
       width: RADIUS * 2, height: RADIUS * 1.4,
@@ -154,61 +154,61 @@ export const LinearGradient: Story = {
       style:  { fill: vGrad('#34d399', '#0d9488'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as RectNodeSpec);
+    } as RectShapeSpec);
 
     // 4 — diamond — red → orange → yellow (diagonal)
-    elements.addNode('diamond', {
+    elements.addShape('diamond', {
       id: 'lg-diamond', ...pos(4), radius: RADIUS,
       label: 'Diamond',
       style:  { fill: dGrad('#ef4444', '#f97316', '#fbbf24'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as DiamondNodeSpec);
+    } as DiamondShapeSpec);
 
     // 5 — hexagon — indigo → cyan (diagonal)
-    elements.addNode('hexagon', {
+    elements.addShape('hexagon', {
       id: 'lg-hexagon', ...pos(5), radius: RADIUS,
       label: 'Hexagon',
       style:  { fill: dGrad('#6366f1', '#3fcbeb', '#06b6d4'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as HexagonNodeSpec);
+    } as HexagonShapeSpec);
 
     // 6 — triangle — rose → violet (horizontal)
-    elements.addNode('polygon', {
+    elements.addShape('polygon', {
       id: 'lg-triangle', ...pos(6), radius: RADIUS, sides: 3,
       label: 'Triangle',
       style:  { fill: hGrad('#fb7185', '#7c3aed'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as PolygonNodeSpec);
+    } as PolygonShapeSpec);
 
     // 7 — pentagon — sky → emerald (top → bottom)
-    elements.addNode('polygon', {
+    elements.addShape('polygon', {
       id: 'lg-pentagon', ...pos(7), radius: RADIUS, sides: 5,
       label: 'Pentagon',
       style:  { fill: vGrad('#38bdf8', '#10b981'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as PolygonNodeSpec);
+    } as PolygonShapeSpec);
 
     // 8 — star 5-point — amber → pink (diagonal)
-    elements.addNode('star', {
+    elements.addShape('star', {
       id: 'lg-star5', ...pos(8), radius: RADIUS, points: 5,
       label: 'Star (5pt)',
       style:  { fill: dGrad('#fbbf24', '#f472b6', '#818cf8'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as StarNodeSpec);
+    } as StarShapeSpec);
 
     // 9 — star 6-point — teal → purple (horizontal)
-    elements.addNode('star', {
+    elements.addShape('star', {
       id: 'lg-star6', ...pos(9), radius: RADIUS, points: 6,
       label: 'Star (6pt)',
       style:  { fill: hGrad('#2dd4bf', '#7c3aed'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as StarNodeSpec);
+    } as StarShapeSpec);
 
     elements.fitContent();
   },

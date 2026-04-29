@@ -1,14 +1,21 @@
 // ── GraphDataPlugin ────────────────────────────────────────────────────────────
 // High-level graph data management plugin for @invana/canvas.
-// Wraps an owned GraphPlugin instance and exposes a clean data-oriented API.
+// Wraps an owned ShapesPlugin instance and exposes a clean data-oriented API.
 
 import type { CanvasPlugin, PluginContext } from '@invana/canvas';
-import { GraphPlugin } from './GraphPlugin.js';
-import type { NodeCtor, EdgeCtor, RouterFn } from './GraphPlugin.js';
-import type { BaseNode } from './BaseNode.js';
-import type { DrawContext } from './DrawContext.js';
-import type { ArrowSpec as ArrowSpec, Point, BaseNodeSpec, BaseEdgeSpec } from './spec/index.js';
-import { GraphObject } from './GraphObject.js';
+import {
+  ShapesPlugin,
+  type ShapeCtor,
+  type ConnectorCtor,
+  type RouterFn,
+  type BaseShape,
+  type DrawContext,
+  type ArrowSpec,
+  type Point,
+  type BaseShapeSpec,
+  type BaseConnectorSpec,
+  ShapeObject,
+} from '@invana/plugins-shapes';
 import type {
   INodeData,
   IEdgeData,
@@ -19,11 +26,17 @@ import type {
   EdgePathType,
 } from './graph-types.js';
 
+// Backward-compat type aliases for public API
+/** @deprecated Use {@link ShapeCtor} from @invana/plugins-shapes. */
+export type NodeCtor = ShapeCtor;
+/** @deprecated Use {@link ConnectorCtor} from @invana/plugins-shapes. */
+export type EdgeCtor = ConnectorCtor;
+
 /**
  * `GraphDataPlugin` — high-level graph data management plugin.
  *
  * @remarks
- * Wraps an internal {@link GraphPlugin} instance to provide a data-centric API.
+ * Wraps an internal {@link ShapesPlugin} instance to provide a data-centric API.
  * Call {@link setData} with `ICanvasData` to render a full graph. Use CRUD methods
  * for incremental updates. Supports style overrides via {@link setStyles}.
  *
@@ -41,8 +54,8 @@ import type {
 export class GraphDataPlugin implements CanvasPlugin {
   readonly id: string;
 
-  /** @internal Owned GraphPlugin — not exposed publicly. */
-  private _elements: GraphPlugin;
+  /** @internal Owned ShapesPlugin — not exposed publicly. */
+  private _elements: ShapesPlugin;
 
   /** @internal Stored node data. D3 layout plugin mutates x/y in-place. */
   private _nodeStore = new Map<string, INodeData>();
@@ -60,7 +73,7 @@ export class GraphDataPlugin implements CanvasPlugin {
     this._fitOnRender  = options.fitOnRender ?? false;
     this._fitPadding   = options.fitPadding  ?? 40;
 
-    this._elements = new GraphPlugin({ key: `${this.id}-elements` });
+    this._elements = new ShapesPlugin({ key: `${this.id}-elements` });
   }
 
   // ── CanvasPlugin lifecycle ────────────────────────────────────────────────
@@ -79,7 +92,6 @@ export class GraphDataPlugin implements CanvasPlugin {
 
   /**
    * Replace the entire graph dataset.
-   * Clears all existing nodes/edges then renders the new data.
    */
   setData(data: ICanvasData): void {
     this._clearAll();
@@ -112,7 +124,7 @@ export class GraphDataPlugin implements CanvasPlugin {
     }
     this._nodeStore.set(node.id, node);
     const shape = node.shape ?? 'circle';
-    this._elements.addNode(shape, this._buildNodeSpec(node));
+    this._elements.addShape(shape, this._buildNodeSpec(node));
   }
 
   /** Merge partial update into an existing node. */
@@ -124,19 +136,19 @@ export class GraphDataPlugin implements CanvasPlugin {
     }
     const updated = { ...existing, ...partial };
     this._nodeStore.set(id, updated);
-    this._elements.updateNode(id, this._buildNodeSpec(updated));
+    this._elements.updateShape(id, this._buildNodeSpec(updated));
   }
 
   /** Remove a node and all its connected edges. */
   removeNode(id: string): void {
     if (!this._nodeStore.has(id)) return;
     this._nodeStore.delete(id);
-    this._elements.removeNode(id);
+    this._elements.removeShape(id);
     // Remove connected edges
     for (const [eid, edge] of this._edgeStore) {
       if (edge.source === id || edge.target === id) {
         this._edgeStore.delete(eid);
-        this._elements.removeEdge(eid);
+        this._elements.removeConnector(eid);
       }
     }
   }
@@ -152,13 +164,11 @@ export class GraphDataPlugin implements CanvasPlugin {
   }
 
   /**
-   * Returns the live rendered node element for a given id, or `undefined` if
-   * the node has not been added yet. Use `.width` / `.height` on the returned
-   * element to get the actual shape dimensions for layout plugins.
+   * Returns the live rendered shape element for a given id.
    */
-  getNodeElement(id: string): BaseNode | undefined {
-    const obj = this._elements.getNode(id);
-    return obj ? (obj.element as BaseNode) : undefined;
+  getNodeElement(id: string): BaseShape | undefined {
+    const obj = this._elements.getShape(id);
+    return obj ? (obj.element as BaseShape) : undefined;
   }
 
   // ── Edge CRUD ─────────────────────────────────────────────────────────────
@@ -171,7 +181,7 @@ export class GraphDataPlugin implements CanvasPlugin {
     }
     this._edgeStore.set(edge.id, edge);
     const pathType = edge.pathType ?? 'bezier';
-    this._elements.addEdge(pathType, this._buildEdgeSpec(edge));
+    this._elements.addConnector(pathType, this._buildEdgeSpec(edge));
   }
 
   /** Merge partial update into an existing edge. */
@@ -183,14 +193,14 @@ export class GraphDataPlugin implements CanvasPlugin {
     }
     const updated = { ...existing, ...partial };
     this._edgeStore.set(id, updated);
-    this._elements.updateEdge(id, this._buildEdgeSpec(updated));
+    this._elements.updateConnector(id, this._buildEdgeSpec(updated));
   }
 
   /** Remove an edge by id. */
   removeEdge(id: string): void {
     if (!this._edgeStore.has(id)) return;
     this._edgeStore.delete(id);
-    this._elements.removeEdge(id);
+    this._elements.removeConnector(id);
   }
 
   /** Get stored edge data by id. */
@@ -207,7 +217,6 @@ export class GraphDataPlugin implements CanvasPlugin {
 
   /**
    * Bulk-update node positions (used by layout plugins like D3Force).
-   * Accepts a plain object map of `id → { x, y }`.
    */
   updateNodePositions(positions: Map<string, { x: number; y: number }>): void {
     for (const [id, pos] of positions) {
@@ -215,7 +224,7 @@ export class GraphDataPlugin implements CanvasPlugin {
       if (!node) continue;
       node.x = pos.x;
       node.y = pos.y;
-      this._elements.updateNode(id, { x: pos.x, y: pos.y });
+      this._elements.updateShape(id, { x: pos.x, y: pos.y });
     }
   }
 
@@ -258,13 +267,13 @@ export class GraphDataPlugin implements CanvasPlugin {
   // ── Registry delegation ───────────────────────────────────────────────────
 
   /** Register a custom node class. */
-  registerNode(type: string, cls: NodeCtor): void {
-    this._elements.registerNode(type, cls);
+  registerNode(type: string, cls: ShapeCtor): void {
+    this._elements.registerShape(type, cls);
   }
 
   /** Register a custom edge class. */
-  registerEdge(type: string, cls: EdgeCtor): void {
-    this._elements.registerEdge(type, cls);
+  registerEdge(type: string, cls: ConnectorCtor): void {
+    this._elements.registerConnector(type, cls);
   }
 
   /** Register a custom edge router function. */
@@ -280,51 +289,49 @@ export class GraphDataPlugin implements CanvasPlugin {
   // ── Internal helpers ──────────────────────────────────────────────────────
 
   private _clearAll(): void {
-    for (const id of this._nodeStore.keys()) this._elements.removeNode(id);
-    for (const id of this._edgeStore.keys()) this._elements.removeEdge(id);
+    for (const id of this._nodeStore.keys()) this._elements.removeShape(id);
+    for (const id of this._edgeStore.keys()) this._elements.removeConnector(id);
   }
 
   private _renderAll(): void {
-    // Add nodes first so edges can resolve sourceId/targetId
     for (const node of this._nodeStore.values()) {
       const shape: NodeShape = node.shape ?? 'circle';
-      this._elements.addNode(shape, this._buildNodeSpec(node));
+      this._elements.addShape(shape, this._buildNodeSpec(node));
     }
     for (const edge of this._edgeStore.values()) {
       const pathType: EdgePathType = edge.pathType ?? 'bezier';
-      this._elements.addEdge(pathType, this._buildEdgeSpec(edge));
+      this._elements.addConnector(pathType, this._buildEdgeSpec(edge));
     }
   }
 
   // ── Low-level spec API ────────────────────────────────────────────────────
 
   /** Add a node by type and raw spec. For the data-centric API use {@link addNode}. */
-  addNodeSpec(type: string, spec: BaseNodeSpec): void {
-    this._elements.addNode(type, spec);
+  addNodeSpec(type: string, spec: BaseShapeSpec): void {
+    this._elements.addShape(type, spec);
   }
 
   /** Add an edge by type and raw spec. For the data-centric API use {@link addEdge}. */
-  addEdgeSpec(type: string, spec: BaseEdgeSpec): void {
-    this._elements.addEdge(type, spec);
+  addEdgeSpec(type: string, spec: BaseConnectorSpec): void {
+    this._elements.addConnector(type, spec);
   }
 
   /** Merge a raw spec patch into an existing node. */
-  updateNodeSpec(id: string, spec: Partial<BaseNodeSpec>): void {
-    this._elements.updateNode(id, spec);
+  updateNodeSpec(id: string, spec: Partial<BaseShapeSpec>): void {
+    this._elements.updateShape(id, spec);
   }
 
   /** Merge a raw spec patch into an existing edge. */
-  updateEdgeSpec(id: string, spec: Partial<BaseEdgeSpec>): void {
-    this._elements.updateEdge(id, spec);
+  updateEdgeSpec(id: string, spec: Partial<BaseConnectorSpec>): void {
+    this._elements.updateConnector(id, spec);
   }
 
   /**
    * Bulk-load raw spec arrays, replacing all current elements.
-   * Equivalent to the former `GraphPlugin.setData()`.
    */
   setDataSpec(
-    solids: Array<{ type: string; spec: BaseNodeSpec }>,
-    connectors: Array<{ type: string; spec: BaseEdgeSpec }> = [],
+    solids: Array<{ type: string; spec: BaseShapeSpec }>,
+    connectors: Array<{ type: string; spec: BaseConnectorSpec }> = [],
   ): void {
     this._elements.setData(solids, connectors);
   }
@@ -353,14 +360,14 @@ export class GraphDataPlugin implements CanvasPlugin {
     return this._elements.getConnectionPoint(id, toX, toY);
   }
 
-  /** Get the raw {@link GraphObject} for a node (for advanced use). */
-  getNode(id: string): GraphObject | undefined {
-    return this._elements.getNode(id);
+  /** Get the raw {@link ShapeObject} for a node (for advanced use). */
+  getNode(id: string): ShapeObject | undefined {
+    return this._elements.getShape(id);
   }
 
-  /** Get the raw {@link GraphObject} for an edge (for advanced use). */
-  getEdge(id: string): GraphObject | undefined {
-    return this._elements.getEdge(id);
+  /** Get the raw {@link ShapeObject} for an edge (for advanced use). */
+  getEdge(id: string): ShapeObject | undefined {
+    return this._elements.getConnector(id);
   }
 
   /** Remove all nodes and edges, stop animations, and reset state. */
@@ -370,13 +377,12 @@ export class GraphDataPlugin implements CanvasPlugin {
     this._edgeStore.clear();
   }
 
-  /** Build a node spec from INodeData + current styles. */
-  private _buildNodeSpec(node: INodeData): BaseNodeSpec {
+  /** Build a shape spec from INodeData + current styles. */
+  private _buildNodeSpec(node: INodeData): BaseShapeSpec {
     const ns = this._styles.node ?? {};
     const size = node.size ?? 40;
     const shape: NodeShape = node.shape ?? 'circle';
 
-    // Geometry based on shape
     let geometry: Record<string, number> = {};
     switch (shape) {
       case 'circle':
@@ -419,11 +425,11 @@ export class GraphDataPlugin implements CanvasPlugin {
         ...(sw     !== undefined ? { strokeWidth: sw } : {}),
       },
       ...geometry,
-    } as BaseNodeSpec;
+    } as BaseShapeSpec;
   }
 
-  /** Build an GraphPlugin edge spec from IEdgeData + current styles. */
-  private _buildEdgeSpec(edge: IEdgeData): BaseEdgeSpec {
+  /** Build a connector spec from IEdgeData + current styles. */
+  private _buildEdgeSpec(edge: IEdgeData): BaseConnectorSpec {
     const es = this._styles.edge ?? {};
     const stroke  = typeof es.stroke      === 'function' ? es.stroke(edge)      : es.stroke;
     const sw      = typeof es.strokeWidth === 'function' ? es.strokeWidth(edge) : es.strokeWidth;
@@ -453,6 +459,8 @@ export class GraphDataPlugin implements CanvasPlugin {
         ...(stroke !== undefined ? { stroke }              : {}),
         ...(sw     !== undefined ? { strokeWidth: sw }     : {}),
       },
-    } as BaseEdgeSpec;
+      from: { x: 0, y: 0 },
+      to:   { x: 0, y: 0 },
+    } as BaseConnectorSpec;
   }
 }
