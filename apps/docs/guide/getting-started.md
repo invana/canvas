@@ -10,6 +10,14 @@ npm install @invana/canvas pixi.js
 pnpm add @invana/canvas pixi.js
 ```
 
+For graph visualization (nodes, edges, layouts) install the graph data plugin too:
+
+```bash
+npm install @invana/plugins-graph-data
+# or
+pnpm add @invana/plugins-graph-data
+```
+
 ## Basic setup
 
 ```ts
@@ -49,28 +57,29 @@ await canvas.plugins.register(
 );
 ```
 
-## Adding elements
+## Adding graph elements
 
 ```ts
-import { Canvas, ElementPlugin } from '@invana/canvas';
+import { Canvas } from '@invana/canvas';
+import { GraphDataPlugin } from '@invana/plugins-graph-data';
 
 const canvas = new Canvas({ container, width: 800, height: 600 });
 await canvas.init();
 
-const elements = new ElementPlugin({ fitOnRender: true });
-await canvas.plugins.register(elements);
+const graph = new GraphDataPlugin({ fitOnRender: true });
+await canvas.plugins.register(graph);
 
-elements.addSolid('circle', {
-  id: 'n1',
-  x: 0,
-  y: 0,
-  radius: 30,
-  style: { fill: '#3fcbeb', stroke: '#ffffff', strokeWidth: 2 },
-  interactive: true,
-  draggable: true,
+graph.setData({
+  nodes: [
+    { id: 'n1', x: 0,   y: 0,   shape: 'circle', size: 40, label: 'A' },
+    { id: 'n2', x: 200, y: 0,   shape: 'circle', size: 40, label: 'B' },
+  ],
+  edges: [
+    { id: 'e1', source: 'n1', target: 'n2', pathType: 'bezier' },
+  ],
 });
 
-canvas.events.on('element:click', ({ elementId }) => {
+canvas.events.on('graph:click', ({ elementId }) => {
   console.log('clicked', elementId);
 });
 ```

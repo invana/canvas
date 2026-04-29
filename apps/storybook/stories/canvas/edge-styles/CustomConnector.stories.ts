@@ -2,7 +2,7 @@
  * ElementPlugin — Custom Connector
  *
  * Shows how to create and register a custom connector type via
- * `elementPlugin.registerConnector(name, class)`.
+ * `elementPlugin.registerEdge(name, class)`.
  *
  * Two custom connector types are demonstrated:
  *
@@ -15,22 +15,23 @@
  *   Spec options: `amplitude` (wave height, default 30), `frequency` (cycles, default 3).
  *
  * Demonstrates:
- *   - Extending `BaseConnector` — only `route()` must be implemented
- *   - Custom spec interfaces extending `BaseConnectorSpec`
- *   - `registerConnector(name, cls)` API
- *   - Using `ctx.strokePath()` via the default `draw()` in BaseConnector
+ *   - Extending `BaseEdge` — only `route()` must be implemented
+ *   - Custom spec interfaces extending `BaseEdgeSpec`
+ *   - `registerEdge(name, cls)` API
+ *   - Using `ctx.strokePath()` via the default `draw()` in BaseEdge
  *   - lil-gui controls to adjust connector parameters at runtime
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
+import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  Canvas, BackgroundPlugin, ElementPlugin,
-  BaseConnector,
+  ElementPlugin,
+  BaseEdge,
   type CircleElementSpec,
-  type BaseConnectorSpec,
+  type BaseEdgeSpec,
   type PathCommand,
   type ElementPoint as Point,
-} from '@invana/canvas';
+} from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Edge Styles/Custom Connector' };
@@ -39,13 +40,13 @@ type Story = StoryObj;
 
 // ── ZigZagConnector ───────────────────────────────────────────────────────────
 
-interface ZigZagSpec extends BaseConnectorSpec {
+interface ZigZagSpec extends BaseEdgeSpec {
   /** Number of zig-zag teeth (segments). Default: 4. */
   steps?: number;
 }
 
 /** Produces a staircase path between `from` and `to`. */
-class ZigZagConnector extends BaseConnector<ZigZagSpec> {
+class ZigZagConnector extends BaseEdge<ZigZagSpec> {
   route(from: Point, to: Point): PathCommand[] {
     const steps = Math.max(2, this.spec.steps ?? 4);
     const cmds: PathCommand[] = [{ cmd: 'M', x: from.x, y: from.y }];
@@ -70,7 +71,7 @@ class ZigZagConnector extends BaseConnector<ZigZagSpec> {
 
 // ── RippleConnector ───────────────────────────────────────────────────────────
 
-interface RippleSpec extends BaseConnectorSpec {
+interface RippleSpec extends BaseEdgeSpec {
   /** Wave amplitude in world pixels. Default: 30. */
   amplitude?: number;
   /** Number of complete wave cycles. Default: 3. */
@@ -78,7 +79,7 @@ interface RippleSpec extends BaseConnectorSpec {
 }
 
 /** Approximates a sine wave along the chord from `from` to `to`. */
-class RippleConnector extends BaseConnector<RippleSpec> {
+class RippleConnector extends BaseEdge<RippleSpec> {
   route(from: Point, to: Point): PathCommand[] {
     const amplitude = this.spec.amplitude ?? 30;
     const frequency = this.spec.frequency ?? 3;
@@ -130,14 +131,14 @@ export const CustomConnector: Story = {
     await canvas.plugins.register(elements);
 
     // Register custom connector types
-    elements.registerConnector('zigzag', ZigZagConnector as never);
-    elements.registerConnector('ripple', RippleConnector as never);
+    elements.registerEdge('zigzag', ZigZagConnector as never);
+    elements.registerEdge('ripple', RippleConnector as never);
 
     // ── ZigZag row ────────────────────────────────────────────────────────
     const ZZ_Y = -100;
-    elements.addSolid('circle', { id: 'zz-l', x: -200, y: ZZ_Y, radius: NODE_R, style: ANCHOR } as CircleElementSpec);
-    elements.addSolid('circle', { id: 'zz-r', x:  200, y: ZZ_Y, radius: NODE_R, style: ANCHOR } as CircleElementSpec);
-    elements.addConnector('zigzag', {
+    elements.addNode('circle', { id: 'zz-l', x: -200, y: ZZ_Y, radius: NODE_R, style: ANCHOR } as CircleElementSpec);
+    elements.addNode('circle', { id: 'zz-r', x:  200, y: ZZ_Y, radius: NODE_R, style: ANCHOR } as CircleElementSpec);
+    elements.addEdge('zigzag', {
       id: 'zz-conn',
       from:      { x: -200 + NODE_R, y: ZZ_Y },
       to:        { x:  200 - NODE_R, y: ZZ_Y },
@@ -149,9 +150,9 @@ export const CustomConnector: Story = {
 
     // ── Ripple row ────────────────────────────────────────────────────────
     const RP_Y = 100;
-    elements.addSolid('circle', { id: 'rp-l', x: -200, y: RP_Y, radius: NODE_R, style: ANCHOR } as CircleElementSpec);
-    elements.addSolid('circle', { id: 'rp-r', x:  200, y: RP_Y, radius: NODE_R, style: ANCHOR } as CircleElementSpec);
-    elements.addConnector('ripple', {
+    elements.addNode('circle', { id: 'rp-l', x: -200, y: RP_Y, radius: NODE_R, style: ANCHOR } as CircleElementSpec);
+    elements.addNode('circle', { id: 'rp-r', x:  200, y: RP_Y, radius: NODE_R, style: ANCHOR } as CircleElementSpec);
+    elements.addEdge('ripple', {
       id: 'rp-conn',
       from:      { x: -200 + NODE_R, y: RP_Y },
       to:        { x:  200 - NODE_R, y: RP_Y },
@@ -171,16 +172,16 @@ export const CustomConnector: Story = {
     const zzParams = { steps: 6 };
     const zzFolder = gui.addFolder('ZigZag').open();
     zzFolder.add(zzParams, 'steps', 2, 16, 1).onChange((v: number) => {
-      elements.updateConnector('zz-conn', { steps: v } as Partial<ZigZagSpec>);
+      elements.updateEdge('zz-conn', { steps: v } as Partial<ZigZagSpec>);
     });
 
     const rpParams = { amplitude: 30, frequency: 3 };
     const rpFolder = gui.addFolder('Ripple').open();
     rpFolder.add(rpParams, 'amplitude', 5, 80, 1).onChange((v: number) => {
-      elements.updateConnector('rp-conn', { amplitude: v } as Partial<RippleSpec>);
+      elements.updateEdge('rp-conn', { amplitude: v } as Partial<RippleSpec>);
     });
     rpFolder.add(rpParams, 'frequency', 1, 10, 0.5).onChange((v: number) => {
-      elements.updateConnector('rp-conn', { frequency: v } as Partial<RippleSpec>);
+      elements.updateEdge('rp-conn', { frequency: v } as Partial<RippleSpec>);
     });
   },
 };

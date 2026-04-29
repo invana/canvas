@@ -1,8 +1,8 @@
 /**
  * ElementPlugin — Custom Element
  *
- * Shows how to extend BaseSolid to create a fully custom element type
- * and register it with ElementPlugin via `registerElement()`.
+ * Shows how to extend BaseNode to create a fully custom element type
+ * and register it with ElementPlugin via `registerNode()`.
  *
  * The `DatabaseNode` custom element:
  *   - Draws a cylinder shape (top ellipse + body rect + bottom ellipse)
@@ -14,17 +14,16 @@
  * rendered as a status badge.
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
+import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  Canvas,
-  BackgroundPlugin,
   ElementPlugin,
-  BaseSolid,
+  BaseNode,
   LOD,
   type DrawContext,
   type ElementBBox as BBox,
   type ElementPoint as Point,
-  type BaseSolidSpec,
-} from '@invana/canvas';
+  type BaseNodeSpec,
+} from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Node Styles/Custom Element' };
@@ -33,7 +32,7 @@ type Story = StoryObj;
 
 // ─── DatabaseNode ─────────────────────────────────────────────────────────────
 
-interface DatabaseNodeSpec extends BaseSolidSpec {
+interface DatabaseNodeSpec extends BaseNodeSpec {
   /** Total width of the cylinder in world px. */
   width: number;
   /** Total height of the cylinder body in world px. */
@@ -44,7 +43,7 @@ interface DatabaseNodeSpec extends BaseSolidSpec {
  * Cylindrical database node drawn with three DrawContext primitives.
  * x,y is the top-left corner of the bounding box.
  */
-class DatabaseNode extends BaseSolid<DatabaseNodeSpec> {
+class DatabaseNode extends BaseNode<DatabaseNodeSpec> {
   draw(ctx: DrawContext, detail: LOD): void {
     const { x, y, width: w, height: h, label } = this.spec;
     const style   = this.resolveStyle();
@@ -90,7 +89,7 @@ class DatabaseNode extends BaseSolid<DatabaseNodeSpec> {
 
 // ─── HexBadge ─────────────────────────────────────────────────────────────────
 
-interface HexBadgeSpec extends BaseSolidSpec {
+interface HexBadgeSpec extends BaseNodeSpec {
   /** Circumscribed radius. */
   radius: number;
   /** Badge text (short — 1–3 chars). */
@@ -98,7 +97,7 @@ interface HexBadgeSpec extends BaseSolidSpec {
 }
 
 /** Small hexagon with an overlaid badge text. */
-class HexBadge extends BaseSolid<HexBadgeSpec> {
+class HexBadge extends BaseNode<HexBadgeSpec> {
   draw(ctx: DrawContext, detail: LOD): void {
     const { x, y, radius: r, badge, label } = this.spec;
     const style = this.resolveStyle();
@@ -147,20 +146,20 @@ export const CustomElement: Story = {
     await canvas.plugins.register(elements);
 
     // Register custom types
-    elements.registerElement('database', DatabaseNode as never);
-    elements.registerElement('hex-badge', HexBadge as never);
+    elements.registerNode('database', DatabaseNode as never);
+    elements.registerNode('hex-badge', HexBadge as never);
 
     // ── Database nodes ────────────────────────────────────────────────────
     const dbStyle = { fill: '#1e3a5f', stroke: '#60a5fa', strokeWidth: 2 };
 
-    elements.addSolid('database', {
+    elements.addNode('database', {
       id: 'db-primary', x: -220, y: -70, width: 100, height: 140,
       label: 'Primary DB',
       style: dbStyle,
       interactive: true,
     } as DatabaseNodeSpec);
 
-    elements.addSolid('database', {
+    elements.addNode('database', {
       id: 'db-replica', x: 120, y: -70, width: 100, height: 140,
       label: 'Replica DB',
       style: { fill: '#1e3a2f', stroke: '#34d399', strokeWidth: 2 },
@@ -168,26 +167,26 @@ export const CustomElement: Story = {
     } as DatabaseNodeSpec);
 
     // ── HexBadge status indicators ────────────────────────────────────────
-    elements.addSolid('hex-badge', {
+    elements.addNode('hex-badge', {
       id: 'badge-ok',   x: -170, y: 120, radius: 34, badge: '✓', label: 'Healthy',
       style: { fill: '#14532d', stroke: '#4ade80', strokeWidth: 2 },
       interactive: true,
     } as HexBadgeSpec);
 
-    elements.addSolid('hex-badge', {
+    elements.addNode('hex-badge', {
       id: 'badge-warn', x: 0, y: 120, radius: 34, badge: '!', label: 'Warning',
       style: { fill: '#78350f', stroke: '#fcd34d', strokeWidth: 2 },
       interactive: true,
     } as HexBadgeSpec);
 
-    elements.addSolid('hex-badge', {
+    elements.addNode('hex-badge', {
       id: 'badge-err',  x: 170, y: 120, radius: 34, badge: '✕', label: 'Error',
       style: { fill: '#7f1d1d', stroke: '#fca5a5', strokeWidth: 2 },
       interactive: true,
     } as HexBadgeSpec);
 
     // ── Connectors ────────────────────────────────────────────────────────
-    elements.addConnector('bezier', {
+    elements.addEdge('bezier', {
       id: 'replication',
       from: { x: -120, y: 0 },
       to:   { x:  120, y: 0 },

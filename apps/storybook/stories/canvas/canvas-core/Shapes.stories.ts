@@ -260,7 +260,6 @@ export const AllShapes: Story = {
     // ── camera ────────────────────────────────────────────────────────────
     const totalW = COL_COUNT * CELL_W;
     const totalH = 7 * CELL_H + PAD_TOP + 40;
-    canvas.camera.panTo(totalW / 2, totalH / 2);
-    canvas.camera.fitContent(40);
+    canvas.camera.fitTo({ x: 0, y: 0, width: totalW, height: totalH }, 40);
   },
 };

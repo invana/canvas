@@ -5,14 +5,14 @@
  * Every handler receives a typed event class instance.
  *
  * Events shown:
- *   element:click        → ElementClickEvent       (elementId, elementType, worldX/Y, nativeEvent)
- *   element:dblclick     → ElementDblClickEvent
- *   element:pointerover  → ElementPointerOverEvent
- *   element:pointerout   → ElementPointerOutEvent
- *   element:dragstart    → ElementDragStartEvent   (+ dx, dy)
- *   element:dragmove     → ElementDragMoveEvent    (+ dx, dy)
- *   element:dragend      → ElementDragEndEvent     (+ dx, dy)
- *   element:statechange  → ElementStateChangeEvent (state, active)
+ *   element:click        → GraphClickEvent       (elementId, elementType, worldX/Y, nativeEvent)
+ *   element:dblclick     → GraphDblClickEvent
+ *   element:pointerover  → GraphPointerOverEvent
+ *   element:pointerout   → GraphPointerOutEvent
+ *   element:dragstart    → GraphDragStartEvent   (+ dx, dy)
+ *   element:dragmove     → GraphDragMoveEvent    (+ dx, dy)
+ *   element:dragend      → GraphDragEndEvent     (+ dx, dy)
+ *   element:statechange  → GraphStateChangeEvent (state, active)
  *
  * Three elements:
  *   - Circle  → click / dblclick
@@ -24,24 +24,22 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { action } from 'storybook/actions';
 import GUI from 'lil-gui';
+import { Canvas, BackgroundPlugin, DevInfoPlugin } from '@invana/canvas';
 import {
-  Canvas,
-  BackgroundPlugin,
   ElementPlugin,
-  DevInfoPlugin,
-  type BaseSolidSpec,
+  type BaseNodeSpec,
   type CircleElementSpec,
   type PolygonElementSpec,
   type StarElementSpec,
-  type ElementClickEvent,
-  type ElementDblClickEvent,
-  type ElementPointerOverEvent,
-  type ElementPointerOutEvent,
-  type ElementDragStartEvent,
-  type ElementDragMoveEvent,
-  type ElementDragEndEvent,
-  type ElementStateChangeEvent,
-} from '@invana/canvas';
+  type GraphClickEvent,
+  type GraphDblClickEvent,
+  type GraphPointerOverEvent,
+  type GraphPointerOutEvent,
+  type GraphDragStartEvent,
+  type GraphDragMoveEvent,
+  type GraphDragEndEvent,
+  type GraphStateChangeEvent,
+} from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Node Styles/Events Interactive' };
@@ -70,7 +68,7 @@ export const EventsInteractive: Story = {
     await canvas.plugins.register(elements);
 
     // ── Elements ──────────────────────────────────────────────────────────
-    elements.addSolid('circle', {
+    elements.addNode('circle', {
       id: 'clicker', x: -200, y: 0, radius: 60,
       label: 'click / dblclick',
       style: { fill: '#1d4ed8', stroke: '#93c5fd', strokeWidth: 2 },
@@ -81,7 +79,7 @@ export const EventsInteractive: Story = {
       interactive: true,
     } as CircleElementSpec);
 
-    elements.addSolid('polygon', {
+    elements.addNode('polygon', {
       id: 'hoverer', x: 60, y: 0, radius: 60, sides: 6,
       label: 'hover me',
       style: { fill: '#065f46', stroke: '#6ee7b7', strokeWidth: 2 },
@@ -91,7 +89,7 @@ export const EventsInteractive: Story = {
       interactive: true,
     } as PolygonElementSpec);
 
-    elements.addSolid('star', {
+    elements.addNode('star', {
       id: 'dragger', x: 320, y: 0, radius: 60,
       label: 'drag me',
       style: { fill: '#7c2d12', stroke: '#fca5a5', strokeWidth: 2 },
@@ -106,39 +104,39 @@ export const EventsInteractive: Story = {
     elements.fitContent();
 
     // ── Typed event listeners ─────────────────────────────────────────────
-    canvas.events.on('element:click',
-      (e: ElementClickEvent) => action('element:click')({ id: e.elementId, type: e.elementType, x: e.worldX, y: e.worldY }));
+    canvas.events.on('graph:click',
+      (e: GraphClickEvent) => action('graph:click')({ id: e.elementId, type: e.elementType, x: e.worldX, y: e.worldY }));
 
-    canvas.events.on('element:dblclick',
-      (e: ElementDblClickEvent) => action('element:dblclick')({ id: e.elementId }));
+    canvas.events.on('graph:dblclick',
+      (e: GraphDblClickEvent) => action('graph:dblclick')({ id: e.elementId }));
 
-    canvas.events.on('element:pointerover',
-      (e: ElementPointerOverEvent) => action('element:pointerover')({ id: e.elementId, type: e.elementType }));
+    canvas.events.on('graph:pointerover',
+      (e: GraphPointerOverEvent) => action('graph:pointerover')({ id: e.elementId, type: e.elementType }));
 
-    canvas.events.on('element:pointerout',
-      (e: ElementPointerOutEvent) => action('element:pointerout')({ id: e.elementId }));
+    canvas.events.on('graph:pointerout',
+      (e: GraphPointerOutEvent) => action('graph:pointerout')({ id: e.elementId }));
 
-    canvas.events.on('element:dragstart',
-      (e: ElementDragStartEvent) => action('element:dragstart')({ id: e.elementId, x: e.worldX, y: e.worldY }));
+    canvas.events.on('graph:dragstart',
+      (e: GraphDragStartEvent) => action('graph:dragstart')({ id: e.elementId, x: e.worldX, y: e.worldY }));
 
-    canvas.events.on('element:dragmove',
-      (e: ElementDragMoveEvent) => {
+    canvas.events.on('graph:dragmove',
+      (e: GraphDragMoveEvent) => {
         // Move the star as it's dragged
-        const cur = elements.getSolid('dragger');
+        const cur = elements.getNode('dragger');
         if (!cur) return;
-        const spec = cur.element.spec as BaseSolidSpec;
-        elements.updateSolid('dragger', { x: spec.x + e.dx, y: spec.y + e.dy } as StarElementSpec);
-        action('element:dragmove')({ id: e.elementId, dx: e.dx, dy: e.dy });
+        const spec = cur.element.spec as BaseNodeSpec;
+        elements.updateNode('dragger', { x: spec.x + e.dx, y: spec.y + e.dy } as StarElementSpec);
+        action('graph:dragmove')({ id: e.elementId, dx: e.dx, dy: e.dy });
       });
 
-    canvas.events.on('element:dragend',
-      (e: ElementDragEndEvent) => action('element:dragend')({ id: e.elementId }));
+    canvas.events.on('graph:dragend',
+      (e: GraphDragEndEvent) => action('graph:dragend')({ id: e.elementId }));
 
-    canvas.events.on('element:statechange',
-      (e: ElementStateChangeEvent) => action('element:statechange')({ id: e.elementId, state: e.state, active: e.active }));
+    canvas.events.on('graph:statechange',
+      (e: GraphStateChangeEvent) => action('graph:statechange')({ id: e.elementId, state: e.state, active: e.active }));
 
     // Toggle 'selected' on click
-    canvas.events.on('element:click', (e: ElementClickEvent) => {
+    canvas.events.on('graph:click', (e: GraphClickEvent) => {
       const states = elements.getStates(e.elementId);
       if (states.includes('selected')) {
         elements.clearState(e.elementId, 'selected');

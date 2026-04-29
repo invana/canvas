@@ -17,6 +17,8 @@ export interface PluginContext {
   createLayer(options: { id: string; zIndex: number; label?: string }): Container;
   /** Create a screen-space layer (fixed, unaffected by camera pan/zoom). */
   createScreenLayer(options: { id: string; zIndex: number }): Container;
+  /** Look up a registered plugin by id. Returns `undefined` if not found. */
+  getPlugin<T extends CanvasPlugin>(id: string): T | undefined;
 }
 
 /**

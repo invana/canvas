@@ -16,40 +16,13 @@ export { PluginSystem } from './plugins/index.js';
 export type { CanvasPlugin, PluginContext } from './plugins/index.js';
 
 // Built-in plugins
-export { BackgroundPlugin, DrawingPlugin, DevInfoPlugin, ElementPlugin } from './plugins/builtin/index.js';
+export { BackgroundPlugin, DrawingPlugin, DevInfoPlugin } from './plugins/builtin/index.js';
 export type { CustomShapeFn } from './plugins/builtin/DrawingPlugin.js';
 export type { BackgroundOptions, BackgroundType, PatternType, DrawStyle, PathStyle, BezierPoint, DashStyle, OrthogonalStyle, OrthogonalParams, ArrowStyle, ArrowParams, ArrowType, EffectStyle, CircleGlowParams, RectGlowParams, RippleParams } from './plugins/builtin/index.js';
+export type { DevInfoPluginOptions, DevInfoCorner } from './plugins/builtin/index.js';
 
 // PixiJS re-exports needed by consumers (e.g. gradient fills)
 export { FillGradient } from 'pixi.js';
-export type { DevInfoPluginOptions, DevInfoCorner } from './plugins/builtin/index.js';
-
-// ElementPlugin public API
-export type { ElementPluginOptions, SolidCtor, ConnectorCtor } from './plugins/builtin/index.js';
-export { BaseSolid, BaseConnector, LOD } from './plugins/builtin/index.js';
-export type { AnimSlot } from './plugins/builtin/index.js';
-export type { DrawContext, BaseSolidSpec, BaseConnectorSpec, ElementPoint, ElementBBox, PathCommand, ArrowSpec as ElementArrowSpec, ElementDrawStyle, ElementPathStyle } from './plugins/builtin/index.js';
-export { CircleElement, RectElement, EllipseElement, PolygonElement, DiamondElement, StarElement, HexagonElement } from './plugins/builtin/index.js';
-export type { CircleElementSpec, RectElementSpec, EllipseElementSpec, PolygonElementSpec, DiamondElementSpec, StarElementSpec, HexagonElementSpec } from './plugins/builtin/index.js';
-export { StraightConnector, BezierConnector, OrthogonalConnector, QuadraticConnector, RoundedConnector, SmoothConnector } from './plugins/builtin/index.js';
-export type { BezierConnectorSpec, OrthogonalConnectorSpec, OrthogonalRouteDirection, QuadraticConnectorSpec, RoundedConnectorSpec, SmoothConnectorSpec } from './plugins/builtin/index.js';
-export { normalRouter, orthRouter, oneSideRouter, erRouter, BUILTIN_ROUTERS } from './plugins/builtin/index.js';
-export type { RouterFn, RouterContext, OrthRouterArgs, OneSideRouterArgs, ErRouterArgs } from './plugins/builtin/index.js';
-// Animation system
-export { AnimationRegistry, defaultRegistry } from './plugins/builtin/index.js';
-export type { AnimationHandler, ElementAnimations } from './plugins/builtin/index.js';
-export type { BreatheOptions, ColorCycleOptions, FadeInOptions, PulseOptions, MarchingAntsOptions, DashedFlowOptions, BorderGlowOptions } from './plugins/builtin/index.js';
-export {
-  ElementBaseEvent, ElementDragBaseEvent,
-  ElementClickEvent, ElementDblClickEvent, ElementContextMenuEvent,
-  ElementPointerOverEvent, ElementPointerOutEvent, ElementPointerMoveEvent,
-  ElementPointerDownEvent, ElementPointerUpEvent,
-  ElementDragStartEvent, ElementDragMoveEvent, ElementDragEndEvent,
-  ElementStateChangeEvent, ElementAddedEvent, ElementRemovedEvent,
-} from './plugins/builtin/index.js';
-export type { ElementEventFields, ElementDragEventFields, ElementStateChangeFields, ElementLifecycleFields } from './plugins/builtin/index.js';
-export { ElementObject } from './plugins/builtin/index.js';
-export type { AnyElement } from './plugins/builtin/index.js';
 
 // Event bus
 export { EventBus } from './events/index.js';
@@ -102,3 +75,20 @@ export type { Point, Bounds, Size, CanvasOptions, PluginConfig } from './types/i
 
 // EventEmitter utility (for plugin authors)
 export { EventEmitter } from './utils/index.js';
+
+// Graphics utilities (for advanced plugin authors / plugins-graph-data internal use)
+export {
+  drawCircle, drawRect, drawEllipse, drawPolygon, drawStar, buildPolygonPoints,
+} from './graphics-utils/shapes/index.js';
+export {
+  drawTriangleArrow, drawTriangleOutlineArrow,
+  drawDiamondArrow, drawDiamondOutlineArrow,
+  drawCircleArrow, drawCircleOutlineArrow,
+  drawSquareArrow, drawSquareOutlineArrow,
+  drawClassicArrow, drawBlockArrow,
+  drawEllipseArrow, drawCrossArrow,
+  drawAsyncArrow, drawCirclePlusArrow,
+} from './graphics-utils/arrows/index.js';
+export { resolveFillArg } from './graphics-utils/types.js';
+export type { DrawContext as GraphicsDrawContext, PathCommand as GraphicsPathCommand } from './drawing/DrawContext.js';
+export type { BezierPoint as GraphicsBezierPoint } from './graphics-utils/paths/index.js';

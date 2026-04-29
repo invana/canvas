@@ -19,10 +19,11 @@
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
+import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  Canvas, BackgroundPlugin, ElementPlugin,
+  ElementPlugin,
   type CircleElementSpec,
-} from '@invana/canvas';
+} from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Node Styles/States' };
@@ -50,7 +51,7 @@ export const States: Story = {
     const G = 200;
 
     // ── Node 1 — default ──────────────────────────────────────────────────
-    elements.addSolid('circle', {
+    elements.addNode('circle', {
       id: 'n-default', x: -G, y: 0, radius: 50,
       label: 'Default',
       style: { fill: '#1e3a5f', stroke: '#60a5fa', strokeWidth: 2 },
@@ -62,7 +63,7 @@ export const States: Story = {
     } as CircleElementSpec);
 
     // ── Node 2 — hovered ──────────────────────────────────────────────────
-    elements.addSolid('circle', {
+    elements.addNode('circle', {
       id: 'n-hovered', x: 0, y: 0, radius: 50,
       label: 'Hovered',
       style: { fill: '#1e3a5f', stroke: '#60a5fa', strokeWidth: 2 },
@@ -75,7 +76,7 @@ export const States: Story = {
     elements.setState('n-hovered', 'hovered', true);
 
     // ── Node 3 — selected ─────────────────────────────────────────────────
-    elements.addSolid('circle', {
+    elements.addNode('circle', {
       id: 'n-selected', x: G, y: 0, radius: 50,
       label: 'Selected',
       style: { fill: '#1e3a5f', stroke: '#60a5fa', strokeWidth: 2 },
@@ -88,7 +89,7 @@ export const States: Story = {
     elements.setState('n-selected', 'selected', true);
 
     // ── Custom state: 'error' ─────────────────────────────────────────────
-    elements.addSolid('circle', {
+    elements.addNode('circle', {
       id: 'n-error', x: -G * 0.5, y: G * 1.2, radius: 50,
       label: 'Error state',
       style: { fill: '#1e3a5f', stroke: '#60a5fa', strokeWidth: 2 },
@@ -100,7 +101,7 @@ export const States: Story = {
     } as CircleElementSpec);
     elements.setState('n-error', 'error', true);
 
-    elements.addSolid('circle', {
+    elements.addNode('circle', {
       id: 'n-warning', x: G * 0.5, y: G * 1.2, radius: 50,
       label: 'Warning state',
       style: { fill: '#1e3a5f', stroke: '#60a5fa', strokeWidth: 2 },

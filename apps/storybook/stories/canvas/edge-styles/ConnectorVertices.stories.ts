@@ -21,11 +21,12 @@
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
+import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  Canvas, BackgroundPlugin, ElementPlugin,
+  ElementPlugin,
   type CircleElementSpec,
   type BezierConnectorSpec,
-} from '@invana/canvas';
+} from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Edge Styles/Connector Vertices' };
@@ -120,19 +121,19 @@ export const ConnectorVertices: Story = {
       const shiftedVertices  = row.vertices?.map(v => ({ x: v.x, y: rowY + v.y }));
       const shiftedWaypoints = row.waypoints?.map(v => ({ x: v.x, y: rowY + v.y }));
 
-      elements.addSolid('circle', {
+      elements.addNode('circle', {
         id: `${row.id}-l`, x: lx, y: rowY,
         radius: NODE_R, style: ANCHOR,
       } as CircleElementSpec);
 
-      elements.addSolid('circle', {
+      elements.addNode('circle', {
         id: `${row.id}-r`, x: rx, y: rowY,
         radius: NODE_R, style: ANCHOR,
       } as CircleElementSpec);
 
       // Small dot markers at each vertex position
       shiftedVertices?.forEach((v, vi) => {
-        elements.addSolid('circle', {
+        elements.addNode('circle', {
           id: `${row.id}-vrt-${vi}`, x: v.x, y: v.y,
           radius: 5,
           style: { fill: row.color, fillAlpha: 0.5, stroke: row.color, strokeWidth: 1 },
@@ -153,7 +154,7 @@ export const ConnectorVertices: Story = {
       if (shiftedVertices)  spec['vertices']  = shiftedVertices;
       if (shiftedWaypoints) spec['waypoints'] = shiftedWaypoints;
 
-      elements.addConnector(row.connType, spec as never);
+      elements.addEdge(row.connType, spec as never);
     });
 
     elements.fitContent();
@@ -163,7 +164,7 @@ export const ConnectorVertices: Story = {
     const gui = new GUI({ title: 'Bezier options', container });
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;';
     gui.add(params, 'curvature', 0, 300, 5).onChange((v: number) => {
-      elements.updateConnector('auto-conn', { curvature: v } as Partial<BezierConnectorSpec>);
+      elements.updateEdge('auto-conn', { curvature: v } as Partial<BezierConnectorSpec>);
     });
   },
 };

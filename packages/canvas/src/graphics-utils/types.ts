@@ -7,6 +7,8 @@ export interface DrawStyle {
   stroke?: string | number;
   strokeWidth?: number;
   strokeAlpha?: number;
+  /** Dash pattern as [dashLength, gapLength]. Used by dashed-border animations. */
+  dashArray?: [number, number];
 }
 
 /** Minimal style for path-only drawing functions */

@@ -1,15 +1,15 @@
 /**
  * All Node Shapes
  *
- * Exports `allNodeShapes` — one entry per shape type supported by ElementPlugin,
- * laid out in a grid so they can be re-used across node-style stories.
+ * Exports `allNodeShapes` — low-level BaseNodeSpec entries, and
+ * `allNodeShapeData` — INodeData entries for use with GraphDataPlugin.
  *
  * Grid layout: COLS columns, each cell spaced CELL_SIZE apart.
  * Shape types: circle, rect, ellipse, diamond, hexagon, polygon (triangle),
  *              polygon (pentagon), star
  */
 
-import type { BaseSolidSpec } from '@invana/canvas';
+import type { BaseNodeSpec, INodeData } from '@invana/plugins-graph-data';
 
 // ── Grid settings ─────────────────────────────────────────────────────────────
 const COLS      = 4;
@@ -39,7 +39,7 @@ const STATE_STYLES = {
 };
 
 // ── Shape definitions ─────────────────────────────────────────────────────────
-export const allNodeShapes: Array<{ type: string; spec: BaseSolidSpec }> = [
+export const allNodeShapes: Array<{ type: string; spec: BaseNodeSpec }> = [
   {
     type: 'circle',
     spec: {
@@ -50,7 +50,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseSolidSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseSolidSpec & { radius: number },
+    } as BaseNodeSpec & { radius: number },
   },
   {
     type: 'ellipse',
@@ -63,7 +63,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseSolidSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseSolidSpec & { radiusX: number; radiusY: number },
+    } as BaseNodeSpec & { radiusX: number; radiusY: number },
   },
   {
     type: 'rect',
@@ -78,7 +78,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseSolidSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseSolidSpec & { width: number; height: number; cornerRadius: number },
+    } as BaseNodeSpec & { width: number; height: number; cornerRadius: number },
   },
   {
     type: 'rect',
@@ -93,7 +93,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseSolidSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseSolidSpec & { width: number; height: number; cornerRadius: number },
+    } as BaseNodeSpec & { width: number; height: number; cornerRadius: number },
   },
   {
     type: 'diamond',
@@ -105,7 +105,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseSolidSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseSolidSpec & { radius: number },
+    } as BaseNodeSpec & { radius: number },
   },
   {
     type: 'hexagon',
@@ -117,7 +117,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseSolidSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseSolidSpec & { radius: number },
+    } as BaseNodeSpec & { radius: number },
   },
   {
     type: 'polygon',
@@ -130,7 +130,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseSolidSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseSolidSpec & { radius: number; sides: number },
+    } as BaseNodeSpec & { radius: number; sides: number },
   },
   {
     type: 'polygon',
@@ -143,7 +143,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseSolidSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseSolidSpec & { radius: number; sides: number },
+    } as BaseNodeSpec & { radius: number; sides: number },
   },
   {
     type: 'star',
@@ -156,7 +156,7 @@ export const allNodeShapes: Array<{ type: string; spec: BaseSolidSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseSolidSpec & { radius: number; points: number },
+    } as BaseNodeSpec & { radius: number; points: number },
   },
   {
     type: 'star',
@@ -169,6 +169,20 @@ export const allNodeShapes: Array<{ type: string; spec: BaseSolidSpec }> = [
       style: DEFAULT_STYLE,
       states: STATE_STYLES,
       interactive: true,
-    } as BaseSolidSpec & { radius: number; points: number },
+    } as BaseNodeSpec & { radius: number; points: number },
   },
+];
+
+// ── INodeData variant for GraphDataPlugin ─────────────────────────────────────
+export const allNodeShapeData: INodeData[] = [
+  { id: 'shape-circle',       ...pos(0), shape: 'circle',  size: RADIUS * 2,   label: 'Circle'       },
+  { id: 'shape-ellipse',      ...pos(1), shape: 'ellipse', size: RADIUS * 2,   label: 'Ellipse'      },
+  { id: 'shape-rect',         ...pos(2), shape: 'rect',    size: RADIUS * 2,   label: 'Rect'         },
+  { id: 'shape-rounded-rect', ...pos(3), shape: 'rect',    size: RADIUS * 2,   label: 'Rounded Rect' },
+  { id: 'shape-diamond',      ...pos(4), shape: 'diamond', size: RADIUS * 2,   label: 'Diamond'      },
+  { id: 'shape-hexagon',      ...pos(5), shape: 'hexagon', size: RADIUS * 2,   label: 'Hexagon'      },
+  { id: 'shape-triangle',     ...pos(6), shape: 'polygon', size: RADIUS * 2,   label: 'Triangle'     },
+  { id: 'shape-pentagon',     ...pos(7), shape: 'polygon', size: RADIUS * 2,   label: 'Pentagon'     },
+  { id: 'shape-star5',        ...pos(8), shape: 'star',    size: RADIUS * 2,   label: 'Star (5pt)'   },
+  { id: 'shape-star6',        ...pos(9), shape: 'star',    size: RADIUS * 2,   label: 'Star (6pt)'   },
 ];

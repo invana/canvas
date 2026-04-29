@@ -6,7 +6,8 @@
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
-import { Canvas, BackgroundPlugin, ElementPlugin } from '@invana/canvas';
+import { Canvas, BackgroundPlugin } from '@invana/canvas';
+import { ElementPlugin, type CircleElementSpec } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Animations/Nodes' };
@@ -33,14 +34,14 @@ export const DashedFlow: Story = {
     const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
-    elements.addSolid('circle', {
+    elements.addNode('circle', {
       id: 'df1', x: -GAP, y: 0, radius: 50, label: 'forward',
       style: { fill: '#1e3a5f', stroke: '#60a5fa', strokeWidth: 3, dashArray: [8, 6] },
-    });
-    elements.addSolid('circle', {
+    } as CircleElementSpec);
+    elements.addNode('circle', {
       id: 'df2', x: GAP, y: 0, radius: 50, label: 'reverse',
       style: { fill: '#1e3a5f', stroke: '#f472b6', strokeWidth: 3, dashArray: [8, 6] },
-    });
+    } as CircleElementSpec);
 
     elements.fitContent();
 

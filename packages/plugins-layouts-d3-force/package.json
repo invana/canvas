@@ -20,10 +20,12 @@
     "d3-force": "^3.0.0"
   },
   "peerDependencies": {
-    "@invana/canvas": "workspace:*"
+    "@invana/canvas": "workspace:*",
+    "@invana/plugins-graph-data": "workspace:*"
   },
   "devDependencies": {
     "@invana/canvas": "workspace:*",
+    "@invana/plugins-graph-data": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/d3-force": "^3.0.10",
     "tsup": "^8.3.5",

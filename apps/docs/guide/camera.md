@@ -48,7 +48,7 @@ camera.zoomTo(2.0, { x: 400, y: 300 }); // zoom centered on screen point
 camera.fitTo({ x: -200, y: -150, width: 400, height: 300 }, 50);
 ```
 
-`ElementPlugin` has a `fit()` helper that computes the bounding box for you and delegates to `camera.fitTo`.
+`GraphDataPlugin` has a `fitContent()` helper that computes the bounding box for you and delegates to `camera.fitTo`.
 
 ## Reset
 
@@ -101,7 +101,7 @@ canvas.events.on('camera:zoom', ({ scale }) => {
 
 ## Pan lock
 
-`ElementPlugin` calls `camera.lockPan()` / `camera.unlockPan()` automatically during element drags so the viewport does not pan simultaneously. You can call these manually if needed.
+`GraphDataPlugin` calls `camera.lockPan()` / `camera.unlockPan()` automatically during element drags so the viewport does not pan simultaneously. You can call these manually if needed.
 
 ## Resize
 

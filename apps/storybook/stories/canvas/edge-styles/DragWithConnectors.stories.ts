@@ -6,9 +6,9 @@
  *
  *   1. Listen to `element:dragmove` on the event bus.
  *   2. Recalculate the node's new position from the drag delta.
- *   3. Call `updateSolid(id, { x, y })` to move the node.
+ *   3. Call `updateNode(id, { x, y })` to move the node.
  *   4. Re-derive `from` / `to` via `getConnectionPoint()` and call
- *      `updateConnector(id, { from, to })` to reattach the edge.
+ *      `updateEdge(id, { from, to })` to reattach the edge.
  *
  * Layout:
  *
@@ -20,21 +20,22 @@
  *
  * API used:
  *   addSolid / addConnector
- *   updateSolid(id, { x, y })
+ *   updateNode(id, { x, y })
  *   getCenter(id)                    — current node centre
  *   getConnectionPoint(id, tx, ty)   — perimeter attachment point
- *   updateConnector(id, { from, to })
+ *   updateEdge(id, { from, to })
  *   element:dragmove event           — dx, dy deltas
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
+import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  Canvas, BackgroundPlugin, ElementPlugin,
+  ElementPlugin,
   type CircleElementSpec,
   type RectElementSpec,
-  type ElementDragMoveEvent,
-  type ElementDragStartEvent,
-  type ElementDragEndEvent,
-} from '@invana/canvas';
+  type GraphDragMoveEvent,
+  type GraphDragStartEvent,
+  type GraphDragEndEvent,
+} from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Edge Styles/Drag With Connectors' };
@@ -105,14 +106,14 @@ export const DragWithConnectors: Story = {
       };
 
       if (node.type === 'circle') {
-        elements.addSolid('circle', {
+        elements.addNode('circle', {
           id: node.id, x: node.x, y: node.y, radius: R,
           label: node.label,
           style: commonStyle, states,
           interactive: true, draggable: true, cursor: 'grab',
         } as CircleElementSpec);
       } else {
-        elements.addSolid('rect', {
+        elements.addNode('rect', {
           id: node.id,
           x: node.x - R, y: node.y - R * 0.65,
           width: R * 2,  height: R * 1.3,
@@ -130,7 +131,7 @@ export const DragWithConnectors: Story = {
       const tgtC = elements.getCenter(edge.to)!;
       const from = elements.getConnectionPoint(edge.from, tgtC.x, tgtC.y) ?? srcC;
       const to   = elements.getConnectionPoint(edge.to,   srcC.x, srcC.y) ?? tgtC;
-      elements.addConnector(edge.connType, {
+      elements.addEdge(edge.connType, {
         id: edge.id,
         from, to,
         endMarker: { type: 'triangle', size: 10, color: edge.color },
@@ -149,31 +150,31 @@ export const DragWithConnectors: Story = {
         if (!srcC || !tgtC) continue;
         const from = elements.getConnectionPoint(edge.from, tgtC.x, tgtC.y) ?? srcC;
         const to   = elements.getConnectionPoint(edge.to,   srcC.x, srcC.y) ?? tgtC;
-        elements.updateConnector(edge.id, { from, to });
+        elements.updateEdge(edge.id, { from, to });
       }
     }
 
     // ── Drag handling ─────────────────────────────────────────────────────
-    canvas.events.on('element:dragstart', (e: ElementDragStartEvent) => {
+    canvas.events.on('graph:dragstart', (e: GraphDragStartEvent) => {
       elements.setState(e.elementId, 'dragging', true);
     });
 
-    canvas.events.on('element:dragmove', (e: ElementDragMoveEvent) => {
+    canvas.events.on('graph:dragmove', (e: GraphDragMoveEvent) => {
       const nodeId = e.elementId;
       // Move the node by the drag delta
-      const obj = elements.getSolid(nodeId);
+      const obj = elements.getNode(nodeId);
       if (!obj) return;
       const nodeDef = NODES.find(n => n.id === nodeId);
       if (!nodeDef) return;
       if (nodeDef.type === 'circle') {
         const spec = obj.element.spec as CircleElementSpec;
-        elements.updateSolid(nodeId, {
+        elements.updateNode(nodeId, {
           x: spec.x + e.dx,
           y: spec.y + e.dy,
         } as Partial<CircleElementSpec>);
       } else {
         const spec = obj.element.spec as RectElementSpec;
-        elements.updateSolid(nodeId, {
+        elements.updateNode(nodeId, {
           x: spec.x + e.dx,
           y: spec.y + e.dy,
         } as Partial<RectElementSpec>);
@@ -181,7 +182,7 @@ export const DragWithConnectors: Story = {
       refreshEdges(nodeId);
     });
 
-    canvas.events.on('element:dragend', (e: ElementDragEndEvent) => {
+    canvas.events.on('graph:dragend', (e: GraphDragEndEvent) => {
       elements.clearState(e.elementId, 'dragging');
     });
   },

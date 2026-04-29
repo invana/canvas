@@ -33,7 +33,7 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: 'Guide', link: '/guide/getting-started' },
-      { text: 'Plugins', link: '/plugins/background' },
+      { text: 'Plugins', link: '/plugins/graph-data' },
       { text: 'API Reference', link: '/api/' },
       { text: 'Storybook', link: 'http://localhost:6006', target: '_blank' },
       { text: 'GitHub', link: 'https://github.com/invana/canvas', target: '_blank' },
@@ -63,9 +63,14 @@ export default defineConfig({
           text: 'Built-in Plugins',
           items: [
             { text: 'BackgroundPlugin', link: '/plugins/background' },
-            { text: 'ElementPlugin', link: '/plugins/element' },
             { text: 'DrawingPlugin', link: '/plugins/drawing' },
             { text: 'DevInfoPlugin', link: '/plugins/dev-info' },
+          ],
+        },
+        {
+          text: '@invana/plugins-graph-data',
+          items: [
+            { text: 'GraphDataPlugin', link: '/plugins/graph-data' },
           ],
         },
       ],

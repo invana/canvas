@@ -6,7 +6,8 @@
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
-import { Canvas, BackgroundPlugin, ElementPlugin } from '@invana/canvas';
+import { Canvas, BackgroundPlugin } from '@invana/canvas';
+import { ElementPlugin, type CircleElementSpec } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Animations/Nodes' };
@@ -33,31 +34,31 @@ export const Pulse: Story = {
     const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
-    elements.addSolid('circle', {
+    elements.addNode('circle', {
       id: 'p1', x: -GAP, y: 0, radius: 40, label: 'slow',
       style: { fill: '#1e3a5f', stroke: '#3b82f6', strokeWidth: 2 },
-    });
-    elements.addSolid('circle', {
+    } as CircleElementSpec);
+    elements.addNode('circle', {
       id: 'p2', x: 0, y: 0, radius: 40, label: 'default',
       style: { fill: '#3b0764', stroke: '#a855f7', strokeWidth: 2 },
-    });
-    elements.addSolid('circle', {
+    } as CircleElementSpec);
+    elements.addNode('circle', {
       id: 'p3', x: GAP, y: 0, radius: 40, label: 'fast',
       style: { fill: '#450a0a', stroke: '#ef4444', strokeWidth: 2 },
-    });
+    } as CircleElementSpec);
 
     elements.fitContent();
 
-    elements.animate('p1', { pulse: { period: 3000, color: '#3b82f6', maxRadius: 90 } });
-    elements.animate('p2', { pulse: { period: 1500, color: '#a855f7', maxRadius: 80 } });
-    elements.animate('p3', { pulse: { period: 800,  color: '#ef4444', maxRadius: 75 } });
+    elements.animate('p1', { pulse: { duration: 3000, color: '#3b82f6', maxRadius: 90 } });
+    elements.animate('p2', { pulse: { duration: 1500, color: '#a855f7', maxRadius: 80 } });
+    elements.animate('p3', { pulse: { duration: 800,  color: '#ef4444', maxRadius: 75 } });
 
     const gui = new GUI({ container });
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px';
     const params = { running: true };
     gui.add(params, 'running').name('Running').onChange((v: boolean) => {
       ['p1', 'p2', 'p3'].forEach(id => {
-        if (v) elements.animate(id, { pulse: { period: 1500, color: '#a855f7', maxRadius: 80 } });
+        if (v) elements.animate(id, { pulse: { duration: 1500, color: '#a855f7', maxRadius: 80 } });
         else elements.clearAnimation(id, 'pulse');
       });
     });

@@ -15,8 +15,9 @@
  *   star-5pt · star-6pt
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
+import { Canvas, BackgroundPlugin, FillGradient } from '@invana/canvas';
 import {
-  Canvas, BackgroundPlugin, ElementPlugin, FillGradient,
+  ElementPlugin,
   type CircleElementSpec,
   type EllipseElementSpec,
   type RectElementSpec,
@@ -24,7 +25,7 @@ import {
   type HexagonElementSpec,
   type PolygonElementSpec,
   type StarElementSpec,
-} from '@invana/canvas';
+} from '@invana/plugins-graph-data';
 import { createContainer } from '../../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Nodes/Styling/Color/Linear Gradient' };
@@ -113,7 +114,7 @@ export const LinearGradient: Story = {
     const SEL    = { stroke: '#ffffff', strokeWidth: 4 };
 
     // 0 — circle  — cyan → blue (horizontal)
-    elements.addSolid('circle', {
+    elements.addNode('circle', {
       id: 'lg-circle', ...pos(0), radius: RADIUS,
       label: 'Circle',
       style:  { fill: hGrad('#3fcbeb', '#2563eb'), ...BORDER },
@@ -122,7 +123,7 @@ export const LinearGradient: Story = {
     } as CircleElementSpec);
 
     // 1 — ellipse — purple → pink (horizontal)
-    elements.addSolid('ellipse', {
+    elements.addNode('ellipse', {
       id: 'lg-ellipse', ...pos(1),
       radiusX: RADIUS * 1.4, radiusY: RADIUS * 0.65,
       label: 'Ellipse',
@@ -132,7 +133,7 @@ export const LinearGradient: Story = {
     } as EllipseElementSpec);
 
     // 2 — rect — orange → yellow (top → bottom)
-    elements.addSolid('rect', {
+    elements.addNode('rect', {
       id: 'lg-rect',
       x: pos(2).x - RADIUS, y: pos(2).y - RADIUS * 0.7,
       width: RADIUS * 2, height: RADIUS * 1.4,
@@ -144,7 +145,7 @@ export const LinearGradient: Story = {
     } as RectElementSpec);
 
     // 3 — rounded rect — green → teal (top → bottom)
-    elements.addSolid('rect', {
+    elements.addNode('rect', {
       id: 'lg-rounded-rect',
       x: pos(3).x - RADIUS, y: pos(3).y - RADIUS * 0.7,
       width: RADIUS * 2, height: RADIUS * 1.4,
@@ -156,7 +157,7 @@ export const LinearGradient: Story = {
     } as RectElementSpec);
 
     // 4 — diamond — red → orange → yellow (diagonal)
-    elements.addSolid('diamond', {
+    elements.addNode('diamond', {
       id: 'lg-diamond', ...pos(4), radius: RADIUS,
       label: 'Diamond',
       style:  { fill: dGrad('#ef4444', '#f97316', '#fbbf24'), ...BORDER },
@@ -165,7 +166,7 @@ export const LinearGradient: Story = {
     } as DiamondElementSpec);
 
     // 5 — hexagon — indigo → cyan (diagonal)
-    elements.addSolid('hexagon', {
+    elements.addNode('hexagon', {
       id: 'lg-hexagon', ...pos(5), radius: RADIUS,
       label: 'Hexagon',
       style:  { fill: dGrad('#6366f1', '#3fcbeb', '#06b6d4'), ...BORDER },
@@ -174,7 +175,7 @@ export const LinearGradient: Story = {
     } as HexagonElementSpec);
 
     // 6 — triangle — rose → violet (horizontal)
-    elements.addSolid('polygon', {
+    elements.addNode('polygon', {
       id: 'lg-triangle', ...pos(6), radius: RADIUS, sides: 3,
       label: 'Triangle',
       style:  { fill: hGrad('#fb7185', '#7c3aed'), ...BORDER },
@@ -183,7 +184,7 @@ export const LinearGradient: Story = {
     } as PolygonElementSpec);
 
     // 7 — pentagon — sky → emerald (top → bottom)
-    elements.addSolid('polygon', {
+    elements.addNode('polygon', {
       id: 'lg-pentagon', ...pos(7), radius: RADIUS, sides: 5,
       label: 'Pentagon',
       style:  { fill: vGrad('#38bdf8', '#10b981'), ...BORDER },
@@ -192,7 +193,7 @@ export const LinearGradient: Story = {
     } as PolygonElementSpec);
 
     // 8 — star 5-point — amber → pink (diagonal)
-    elements.addSolid('star', {
+    elements.addNode('star', {
       id: 'lg-star5', ...pos(8), radius: RADIUS, points: 5,
       label: 'Star (5pt)',
       style:  { fill: dGrad('#fbbf24', '#f472b6', '#818cf8'), ...BORDER },
@@ -201,7 +202,7 @@ export const LinearGradient: Story = {
     } as StarElementSpec);
 
     // 9 — star 6-point — teal → purple (horizontal)
-    elements.addSolid('star', {
+    elements.addNode('star', {
       id: 'lg-star6', ...pos(9), radius: RADIUS, points: 6,
       label: 'Star (6pt)',
       style:  { fill: hGrad('#2dd4bf', '#7c3aed'), ...BORDER },

@@ -117,6 +117,8 @@ export class Canvas {
         this._renderer.screenStage.sortChildren();
         return layer;
       },
+      getPlugin: <T extends import('../plugins/types.js').CanvasPlugin>(id: string): T | undefined =>
+        this.plugins.get<T>(id),
     };
     this.plugins._setContext(ctx);
 

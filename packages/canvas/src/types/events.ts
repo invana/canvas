@@ -39,8 +39,6 @@ export {
   LayerVisibilityChangedEvent,
 } from '../events/layer-events.js';
 
-// Re-export shape event classes (shape-plugin removed — kept for element-plugin only)
-
 // Import concrete classes for the map
 import type {
   CanvasPointerDownEvent,
@@ -70,22 +68,6 @@ import type {
   LayerRemovedEvent,
   LayerVisibilityChangedEvent,
 } from '../events/layer-events.js';
-import type {
-  ElementClickEvent,
-  ElementDblClickEvent,
-  ElementContextMenuEvent,
-  ElementPointerOverEvent,
-  ElementPointerOutEvent,
-  ElementPointerMoveEvent,
-  ElementPointerDownEvent,
-  ElementPointerUpEvent,
-  ElementDragStartEvent,
-  ElementDragMoveEvent,
-  ElementDragEndEvent,
-  ElementStateChangeEvent,
-  ElementAddedEvent,
-  ElementRemovedEvent,
-} from '../plugins/builtin/element-plugin/ElementEvents.js';
 
 // ---------------------------------------------------------------------------
 // Master event map
@@ -143,21 +125,11 @@ export interface CanvasEventMap {
   /** Fired when the canvas is resized (manually or via autoResize) */
   'canvas:resize':         CanvasResizeEvent;
 
-  // ── Element events (ElementPlugin) ─────────────────────────────────────────
-  'element:click':         ElementClickEvent;
-  'element:dblclick':      ElementDblClickEvent;
-  'element:contextmenu':   ElementContextMenuEvent;
-  'element:pointerover':   ElementPointerOverEvent;
-  'element:pointerout':    ElementPointerOutEvent;
-  'element:pointermove':   ElementPointerMoveEvent;
-  'element:pointerdown':   ElementPointerDownEvent;
-  'element:pointerup':     ElementPointerUpEvent;
-  'element:dragstart':     ElementDragStartEvent;
-  'element:dragmove':      ElementDragMoveEvent;
-  'element:dragend':       ElementDragEndEvent;
-  'element:statechange':   ElementStateChangeEvent;
-  'element:added':         ElementAddedEvent;
-  'element:removed':       ElementRemovedEvent;
+  // ── Graph events (ElementPlugin) ─────────────────────────────────────────
+  // Graph event types are added via module augmentation from @invana/plugins-graph-data.
+  // See: https://www.typescriptlang.org/docs/handbook/declaration-merging.html
+  // Example:
+  //   import '@invana/plugins-graph-data';  // auto-augments this map
 
   // ── Plugin lifecycle ──────────────────────────────────────────────────────
   'plugin:registered':     PluginRegisteredEvent;

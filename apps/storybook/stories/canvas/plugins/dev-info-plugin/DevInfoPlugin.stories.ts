@@ -29,7 +29,7 @@ const PALETTE = [
   '#ce93d8', '#4dd0e1', '#aed581', '#ff8a65',
 ];
 const rng = (min: number, max: number) => Math.random() * (max - min) + min;
-const pick = <T>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)]!;
+const pick = <T>(arr: readonly T[]) => arr[Math.floor(Math.random() * arr.length)]!;
 
 // ─── story ───────────────────────────────────────────────────────────────────
 export const DevInfoOverlay: Story = {

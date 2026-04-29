@@ -32,16 +32,17 @@
  * API used:
  *   `registerRouter(name, fn)`          — install a custom router
  *   `router: { name, args }` spec field — use a named router on a connector
- *   `updateConnector(id, partial)`      — live-update router args
+ *   `updateEdge(id, partial)`      — live-update router args
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
+import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  Canvas, BackgroundPlugin, ElementPlugin,
+  ElementPlugin,
   type CircleElementSpec,
   type RouterFn,
   type ElementPoint as Point,
-} from '@invana/canvas';
+} from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Edge Styles/Custom Router' };
@@ -150,17 +151,17 @@ export const CustomRouter: Story = {
     rows.forEach((row, i) => {
       const rowY = startY + i * ROW_GAP;
 
-      elements.addSolid('circle', {
+      elements.addNode('circle', {
         id: `${row.id}-l`, x: -HALF_W, y: rowY,
         radius: NODE_R, style: ANCHOR,
       } as CircleElementSpec);
 
-      elements.addSolid('circle', {
+      elements.addNode('circle', {
         id: `${row.id}-r`, x: HALF_W, y: rowY,
         radius: NODE_R, style: ANCHOR,
       } as CircleElementSpec);
 
-      elements.addConnector('straight', {
+      elements.addEdge('straight', {
         id:        `${row.id}-conn`,
         from:      { x: -HALF_W + NODE_R, y: rowY },
         to:        { x:  HALF_W - NODE_R, y: rowY },
@@ -181,7 +182,7 @@ export const CustomRouter: Story = {
     const arcParams = { arcHeight: 60 };
     const arcF = gui.addFolder('arcRouter').open();
     arcF.add(arcParams, 'arcHeight', -200, 200, 5).onChange((v: number) => {
-      elements.updateConnector('arc-conn', {
+      elements.updateEdge('arc-conn', {
         router: { name: 'arc', args: { arcHeight: v } },
       } as never);
     });
@@ -190,7 +191,7 @@ export const CustomRouter: Story = {
     const bounceParams = { depth: 80 };
     const bounceF = gui.addFolder('bounceRouter').open();
     bounceF.add(bounceParams, 'depth', 20, 200, 5).onChange((v: number) => {
-      elements.updateConnector('bounce-conn', {
+      elements.updateEdge('bounce-conn', {
         router: { name: 'bounce', args: { depth: v } },
       } as never);
     });
@@ -199,12 +200,12 @@ export const CustomRouter: Story = {
     const zzrParams = { teeth: 4, amplitude: 40 };
     const zzrF = gui.addFolder('zigzagRouter').open();
     zzrF.add(zzrParams, 'teeth', 2, 12, 1).onChange((v: number) => {
-      elements.updateConnector('zigzag-r-conn', {
+      elements.updateEdge('zigzag-r-conn', {
         router: { name: 'zigzag-r', args: { teeth: v, amplitude: zzrParams.amplitude } },
       } as never);
     });
     zzrF.add(zzrParams, 'amplitude', 5, 100, 5).onChange((v: number) => {
-      elements.updateConnector('zigzag-r-conn', {
+      elements.updateEdge('zigzag-r-conn', {
         router: { name: 'zigzag-r', args: { teeth: zzrParams.teeth, amplitude: v } },
       } as never);
     });

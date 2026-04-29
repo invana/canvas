@@ -17,10 +17,11 @@
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
+import { Canvas, BackgroundPlugin, DevInfoPlugin } from '@invana/canvas';
 import {
-  Canvas, BackgroundPlugin, ElementPlugin, DevInfoPlugin,
-  type BaseSolidSpec, type BaseConnectorSpec, type CircleElementSpec,
-} from '@invana/canvas';
+  ElementPlugin,
+  type BaseNodeSpec, type BaseEdgeSpec, type CircleElementSpec,
+} from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: '1. Showcase/Performance/Large Graph' };
@@ -39,10 +40,10 @@ function generateGrid(
   cols: number,
   rows: number,
   nodeRadius: number,
-): { solids: Array<{ type: string; spec: BaseSolidSpec }>;
-    connectors: Array<{ type: string; spec: BaseConnectorSpec }>; } {
-  const solids: Array<{ type: string; spec: BaseSolidSpec }> = [];
-  const connectors: Array<{ type: string; spec: BaseConnectorSpec }> = [];
+): { solids: Array<{ type: string; spec: BaseNodeSpec }>;
+    connectors: Array<{ type: string; spec: BaseEdgeSpec }>; } {
+  const solids: Array<{ type: string; spec: BaseNodeSpec }> = [];
+  const connectors: Array<{ type: string; spec: BaseEdgeSpec }> = [];
 
   const totalW = (cols - 1) * CELL_SIZE;
   const totalH = (rows - 1) * CELL_SIZE;

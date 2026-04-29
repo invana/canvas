@@ -9,6 +9,7 @@ WebGPU-first canvas rendering engine + graph visualization toolkit. WebGL2 fallb
 | Path | Package | Description |
 |---|---|---|
 | `packages/canvas` | `@invana/canvas` | engine (active, all new work here) |
+| `packages/plugins-graph-data` | `@invana/plugins-graph-data` | ElementPlugin, GraphDataPlugin, nodes/edges, connectors, routers, animations |
 | `packages/plugins-layouts-d3-force` | `@invana/plugin-layouts-d3-force` | D3 force layout plugin |
 | `packages/plugins-example-datasets` | `@invana/plugin-example-datasets` | sample graph data |
 | `packages/typescript-config` | `@repo/typescript-config` | shared tsconfig |
@@ -43,9 +44,9 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
 | Package | npm name |
 |---|---|
 | `packages/canvas` | `@invana/canvas` — the engine |
+| `packages/plugins-graph-data` | `@invana/plugins-graph-data` — ElementPlugin + GraphDataPlugin |
 | `packages/plugins-layouts-d3-force` | `@invana/plugin-layouts-d3-force` |
 | `packages/plugins-example-datasets` | `@invana/plugin-example-datasets` |
-| future `packages/plugin-graph` | `@invana/plugin-graph` |
 
 Convention: `@invana/plugin-*` for official plugins, `invana-plugin-*` for community.
 
@@ -55,7 +56,7 @@ Convention: `@invana/plugin-*` for official plugins, `invana-plugin-*` for commu
 
 1. Dont write code unless we discuss and I give a go ahead.
 2. Ask me questions before coding.
-3. All new code goes in `packages/canvas` and `apps/storybook`. Never touch legacy packages.
+3. All new code goes in `packages/canvas`, `packages/plugins-graph-data`, or `apps/storybook`. Never touch legacy packages.
 4. No `pixi.js` imports outside `packages/canvas` internals.
 5. No direct `this._viewport`, `this._renderer`, `new Graphics()`, `new Container()` outside `packages/canvas/src`.
 6. Events go through `canvas.events` (EventBus) — never raw PixiJS events from outside the core.

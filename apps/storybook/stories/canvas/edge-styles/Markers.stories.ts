@@ -1,12 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
+import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  Canvas, BackgroundPlugin, ElementPlugin,
-  type ElementArrowSpec as ArrowSpec,
+  ElementPlugin,
+  type ArrowSpec,
   type CircleElementSpec,
   type DrawContext,
   type ElementPoint as Point,
-} from '@invana/canvas';
+} from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Edge Styles/Markers' };
@@ -107,19 +108,19 @@ export const Markers: Story = {
       const rx  =   CONN_LEN / 2 + NODE_R;
       const tid = m.type.replace(/[^a-zA-Z0-9]/g, '-');
 
-      elements.addSolid('circle', {
+      elements.addNode('circle', {
         id: `${tid}-l`, x: lx, y,
         radius: NODE_R, style: ANCHOR,
       } as CircleElementSpec);
 
-      elements.addSolid('circle', {
+      elements.addNode('circle', {
         id: `${tid}-r`, x: rx, y,
         radius: NODE_R, style: ANCHOR,
       } as CircleElementSpec);
 
       // startMarker — at the source end (mirror / approach angle)
       // endMarker   — at the target end
-      elements.addConnector('straight', {
+      elements.addEdge('straight', {
         id:          `${tid}-conn`,
         from:        { x: lx + NODE_R, y },
         to:          { x: rx - NODE_R, y },
@@ -141,7 +142,7 @@ export const Markers: Story = {
       .onChange((size: number) => {
         ALL_ROWS.forEach(m => {
           const tid = m.type.replace(/[^a-zA-Z0-9]/g, '-');
-          elements.updateConnector(`${tid}-conn`, {
+          elements.updateEdge(`${tid}-conn`, {
             startMarker: { type: m.type, size, color: m.color } as ArrowSpec,
             endMarker:   { type: m.type, size, color: m.color } as ArrowSpec,
           } as never);

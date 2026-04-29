@@ -2,20 +2,15 @@
  * Node Styles — Solid Colors
  *
  * Demonstrates every built-in node shape filled with a solid color.
- * Imports `allNodeShapes` as the base node set and passes the array directly
- * to `ElementPlugin.setData()`. A single lil-gui panel lets you change
+ * Uses GraphDataPlugin to manage nodes. A lil-gui panel lets you change
  * the fill color and opacity across all shapes at once.
- *
- * Shapes shown (grid, 4 columns):
- *   circle · ellipse · rect · rounded-rect
- *   diamond · hexagon · triangle · pentagon
- *   star-5pt · star-6pt
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
-import { Canvas, BackgroundPlugin, ElementPlugin } from '@invana/canvas';
+import { Canvas, BackgroundPlugin } from '@invana/canvas';
+import { GraphDataPlugin } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../../src/div-utils.js';
-import { allNodeShapes } from '../../all-nodes-shapes.js';
+import { allNodeShapeData } from '../../all-nodes-shapes.js';
 
 const meta: Meta = { title: 'Canvas/Nodes/Styling/Color/Solid Colors' };
 export default meta;
@@ -36,36 +31,23 @@ export const SolidColors: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements' });
-    await canvas.plugins.register(elements);
+    const graph = new GraphDataPlugin({ fitOnRender: true, fitPadding: 60 });
+    await canvas.plugins.register(graph);
 
-    // Build node list from allNodeShapes, applying initial style
     const params = { fill: '#3fcbeb', opacity: 1 };
 
-    const nodes = allNodeShapes.map(entry => ({
-      ...entry,
-      spec: {
-        ...entry.spec,
-        style:  { ...entry.spec.style, fill: params.fill, fillAlpha: params.opacity },
-        states: {
-          hovered:  { strokeWidth: 3.5, fillAlpha: 0.8 },
-          selected: { stroke: '#ffffff', strokeWidth: 4 },
-        },
-      },
-    }));
-
-    elements.setData(nodes);
-    elements.fitContent();
+    graph.setData({ nodes: allNodeShapeData, edges: [] });
+    graph.setStyles({
+      node: { fill: params.fill, opacity: params.opacity, stroke: '#ffffff', strokeWidth: 2 },
+    });
 
     // ── lil-gui ──────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'Node style', container });
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;';
 
     function applyStyle(): void {
-      allNodeShapes.forEach(entry => {
-        elements.updateSolid(entry.spec.id!, {
-          style: { fill: params.fill, fillAlpha: params.opacity },
-        } as never);
+      graph.setStyles({
+        node: { fill: params.fill, opacity: params.opacity },
       });
     }
 

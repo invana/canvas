@@ -9,10 +9,11 @@
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
+import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  Canvas, BackgroundPlugin, ElementPlugin,
+  ElementPlugin,
   type CircleElementSpec,
-} from '@invana/canvas';
+} from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Edge Styles/Connectors' };
@@ -65,12 +66,12 @@ function buildScene(
     const lx   = -COL_GAP / 2;
     const rx   =  COL_GAP / 2;
 
-    elements.addSolid('circle', {
+    elements.addNode('circle', {
       id: `${prefix}${row.id}-l`, x: lx, y: rowY,
       radius: NODE_R, style: ANCHOR_STYLE,
     } as CircleElementSpec);
 
-    elements.addSolid('circle', {
+    elements.addNode('circle', {
       id: `${prefix}${row.id}-r`, x: rx, y: rowY + row.dy,
       radius: NODE_R, style: ANCHOR_STYLE,
     } as CircleElementSpec);
@@ -94,7 +95,7 @@ function buildScene(
     if (verts?.length) spec['vertices'] = verts;
     if (row.router)    spec['router']   = row.router;
 
-    elements.addConnector(row.connType, spec as never);
+    elements.addEdge(row.connType, spec as never);
     ids.push(connId);
   });
 
@@ -147,7 +148,7 @@ export const ConnectorOffset: Story = {
 
     const applyOffsets = () => {
       for (const id of ids) {
-        elements.updateConnector(id, {
+        elements.updateEdge(id, {
           sourceOffset: params.sourceOffset,
           targetOffset: params.targetOffset,
         } as never);

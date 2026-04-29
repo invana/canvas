@@ -6,7 +6,8 @@
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
-import { Canvas, BackgroundPlugin, ElementPlugin } from '@invana/canvas';
+import { Canvas, BackgroundPlugin } from '@invana/canvas';
+import { ElementPlugin, type CircleElementSpec } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Animations/Nodes' };
@@ -33,33 +34,33 @@ export const Breathe: Story = {
     const elements = new ElementPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
-    elements.addSolid('circle', {
+    elements.addNode('circle', {
       id: 'n1', x: -GAP, y: 0, radius: 50, label: 'slow',
       style: { fill: '#1e3a5f', stroke: '#60a5fa', strokeWidth: 2 },
-    });
-    elements.addSolid('circle', {
+    } as CircleElementSpec);
+    elements.addNode('circle', {
       id: 'n2', x: 0, y: 0, radius: 50, label: 'default',
       style: { fill: '#1e3a5f', stroke: '#a78bfa', strokeWidth: 2 },
-    });
-    elements.addSolid('circle', {
+    } as CircleElementSpec);
+    elements.addNode('circle', {
       id: 'n3', x: GAP, y: 0, radius: 50, label: 'fast',
       style: { fill: '#1e3a5f', stroke: '#f472b6', strokeWidth: 2 },
-    });
+    } as CircleElementSpec);
 
     elements.fitContent();
 
-    elements.animate('n1', { breathe: { period: 3000, amplitude: 0.08 } });
-    elements.animate('n2', { breathe: { period: 1500, amplitude: 0.15 } });
-    elements.animate('n3', { breathe: { period: 600,  amplitude: 0.20 } });
+    elements.animate('n1', { breathe: { duration: 3000, amplitude: 0.08 } });
+    elements.animate('n2', { breathe: { duration: 1500, amplitude: 0.15 } });
+    elements.animate('n3', { breathe: { duration: 600,  amplitude: 0.20 } });
 
     const gui = new GUI({ container });
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px';
     const params = { running: true };
     gui.add(params, 'running').name('Breathe running').onChange((v: boolean) => {
       if (v) {
-        elements.animate('n1', { breathe: { period: 3000, amplitude: 0.08 } });
-        elements.animate('n2', { breathe: { period: 1500, amplitude: 0.15 } });
-        elements.animate('n3', { breathe: { period: 600,  amplitude: 0.20 } });
+        elements.animate('n1', { breathe: { duration: 3000, amplitude: 0.08 } });
+        elements.animate('n2', { breathe: { duration: 1500, amplitude: 0.15 } });
+        elements.animate('n3', { breathe: { duration: 600,  amplitude: 0.20 } });
       } else {
         elements.clearAnimation('n1', 'breathe');
         elements.clearAnimation('n2', 'breathe');

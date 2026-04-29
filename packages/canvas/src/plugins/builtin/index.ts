@@ -5,32 +5,3 @@ export type { DrawStyle, PathStyle, BezierPoint, DashStyle, OrthogonalStyle, Ort
 export { DevInfoPlugin } from './DevInfoPlugin.js';
 export type { DevInfoPluginOptions, DevInfoCorner } from './DevInfoPlugin.js';
 
-// ── ElementPlugin ─────────────────────────────────────────────────────────────
-export { ElementPlugin } from './element-plugin/index.js';
-export type { ElementPluginOptions, SolidCtor, ConnectorCtor } from './element-plugin/index.js';
-export { BaseSolid, BaseConnector, LOD } from './element-plugin/index.js';
-export type { AnimSlot } from './element-plugin/index.js';
-export type { DrawContext, Point as ElementPoint, BBox as ElementBBox, PathCommand } from './element-plugin/index.js';
-export type { BaseSolidSpec, BaseConnectorSpec, ArrowSpec, DrawStyle as ElementDrawStyle, PathStyle as ElementPathStyle } from './element-plugin/index.js';
-export { CircleElement, RectElement, EllipseElement, PolygonElement, DiamondElement, StarElement, HexagonElement } from './element-plugin/index.js';
-export type { CircleElementSpec, RectElementSpec, EllipseElementSpec, PolygonElementSpec, DiamondElementSpec, StarElementSpec, HexagonElementSpec } from './element-plugin/index.js';
-export { StraightConnector, BezierConnector, OrthogonalConnector, QuadraticConnector, RoundedConnector, SmoothConnector } from './element-plugin/index.js';
-export type { BezierConnectorSpec, OrthogonalConnectorSpec, OrthogonalRouteDirection, QuadraticConnectorSpec, RoundedConnectorSpec, SmoothConnectorSpec } from './element-plugin/index.js';
-export { normalRouter, orthRouter, oneSideRouter, erRouter, BUILTIN_ROUTERS } from './element-plugin/index.js';
-export type { RouterFn, RouterContext, OrthRouterArgs, OneSideRouterArgs, ErRouterArgs } from './element-plugin/index.js';
-export {
-  ElementBaseEvent, ElementDragBaseEvent,
-  ElementClickEvent, ElementDblClickEvent, ElementContextMenuEvent,
-  ElementPointerOverEvent, ElementPointerOutEvent, ElementPointerMoveEvent,
-  ElementPointerDownEvent, ElementPointerUpEvent,
-  ElementDragStartEvent, ElementDragMoveEvent, ElementDragEndEvent,
-  ElementStateChangeEvent, ElementAddedEvent, ElementRemovedEvent,
-} from './element-plugin/index.js';
-export type { ElementEventFields, ElementDragEventFields, ElementStateChangeFields, ElementLifecycleFields } from './element-plugin/index.js';
-export { ElementObject } from './element-plugin/index.js';
-export type { AnyElement } from './element-plugin/index.js';
-// Animation system (re-exported for element-plugin consumers)
-export { AnimationRegistry, defaultRegistry } from './element-plugin/index.js';
-export type { AnimationHandler, ElementAnimations } from './element-plugin/index.js';
-export type { BreatheOptions, ColorCycleOptions, FadeInOptions, PulseOptions, MarchingAntsOptions, DashedFlowOptions, BorderGlowOptions } from './element-plugin/index.js';
-

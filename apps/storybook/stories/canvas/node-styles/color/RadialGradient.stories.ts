@@ -15,7 +15,8 @@
  *   star-5pt · star-6pt
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
-import { Canvas, BackgroundPlugin, ElementPlugin, FillGradient } from '@invana/canvas';
+import { Canvas, BackgroundPlugin, FillGradient } from '@invana/canvas';
+import { ElementPlugin } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../../src/div-utils.js';
 import { allNodeShapes } from '../../all-nodes-shapes.js';
 

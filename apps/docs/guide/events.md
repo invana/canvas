@@ -57,26 +57,26 @@ All canvas pointer events carry `worldX`, `worldY` (world-space coordinates) and
 | `plugin:enabled` | `pluginId` | `setEnabled(id, true)` called |
 | `plugin:disabled` | `pluginId` | `setEnabled(id, false)` called |
 
-## Element events
+## Graph events
 
-Fired by `ElementPlugin`. All carry `elementId`, `elementType` (`'solid'` or `'connector'`), and pointer fields:
+Fired by `GraphDataPlugin`. All carry `elementId`, `elementType` (`'node'` or `'edge'`), and pointer fields:
 
 | Event | Fires when |
 |---|---|
-| `element:click` | Element clicked |
-| `element:dblclick` | Element double-clicked |
-| `element:contextmenu` | Right-click on element |
-| `element:pointerover` | Pointer enters element |
-| `element:pointerout` | Pointer leaves element |
-| `element:pointermove` | Pointer moves over element |
-| `element:pointerdown` | Pointer pressed on element |
-| `element:pointerup` | Pointer released on element |
-| `element:dragstart` | Drag begins on a draggable element |
-| `element:dragmove` | Element is being dragged |
-| `element:dragend` | Drag ends |
-| `element:state-change` | Element state changed |
-| `element:added` | Element added to the plugin |
-| `element:removed` | Element removed from the plugin |
+| `graph:click` | Element clicked |
+| `graph:dblclick` | Element double-clicked |
+| `graph:contextmenu` | Right-click on element |
+| `graph:pointerover` | Pointer enters element |
+| `graph:pointerout` | Pointer leaves element |
+| `graph:pointermove` | Pointer moves over element |
+| `graph:pointerdown` | Pointer pressed on element |
+| `graph:pointerup` | Pointer released on element |
+| `graph:dragstart` | Drag begins on a draggable element |
+| `graph:dragmove` | Element is being dragged |
+| `graph:dragend` | Drag ends |
+| `graph:state-change` | Element state changed |
+| `graph:added` | Element added to the plugin |
+| `graph:removed` | Element removed from the plugin |
 
 ## Extending the event map
 
