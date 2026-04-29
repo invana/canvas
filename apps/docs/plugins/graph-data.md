@@ -4,6 +4,8 @@ A graph data management plugin that exposes a data-centric API for rendering nod
 
 > **Package:** `@invana/plugins-graph-data`
 
+`GraphDataPlugin` is a high-level wrapper around [`ShapesPlugin`](./shapes.md). It handles data mapping, style resolution, and lifecycle management so you don't need to interact with shapes directly.
+
 ## Installation
 
 ```bash

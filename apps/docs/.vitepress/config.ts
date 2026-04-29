@@ -68,9 +68,22 @@ export default defineConfig({
           ],
         },
         {
+          text: '@invana/plugins-shapes',
+          items: [
+            { text: 'ShapesPlugin', link: '/plugins/shapes' },
+          ],
+        },
+        {
           text: '@invana/plugins-graph-data',
           items: [
             { text: 'GraphDataPlugin', link: '/plugins/graph-data' },
+          ],
+        },
+        {
+          text: 'Layout Plugins',
+          items: [
+            { text: 'D3ForceLayoutPlugin', link: '/plugins/d3-force-layout' },
+            { text: 'ElkLayoutPlugin', link: '/plugins/elkjs-layout' },
           ],
         },
       ],

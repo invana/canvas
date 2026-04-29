@@ -2,12 +2,12 @@
 
 ## Installation
 
-`@invana/canvas` is an ES module package. Install it alongside its peer dependency:
+`@invana/canvas` is an ES module package. Install it with your preferred package manager:
 
 ```bash
-npm install @invana/canvas pixi.js
+npm install @invana/canvas
 # or
-pnpm add @invana/canvas pixi.js
+pnpm add @invana/canvas
 ```
 
 For graph visualization (nodes, edges, layouts) install the graph data plugin too:

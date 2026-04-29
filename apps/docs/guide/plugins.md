@@ -2,6 +2,18 @@
 
 Every feature in `@invana/canvas` is a plugin. The `PluginSystem` (exposed as `canvas.plugins`) manages registration, lifecycle, and retrieval.
 
+## Official plugins
+
+| Plugin | Package | Description |
+|---|---|---|
+| `BackgroundPlugin` | `@invana/canvas` | Solid color / pattern background |
+| `DevInfoPlugin` | `@invana/canvas` | Debug overlay (FPS, camera, pointer) |
+| `DrawingPlugin` | `@invana/canvas` | Fluent drawing API for static diagrams |
+| `ShapesPlugin` | `@invana/plugins-shapes` | Low-level shape and connector rendering engine |
+| `GraphDataPlugin` | `@invana/plugins-graph-data` | High-level graph data API (nodes, edges, styles) |
+| `D3ForceLayoutPlugin` | `@invana/plugin-layouts-d3-force` | D3 force-directed layout |
+| `ElkLayoutPlugin` | `@invana/plugin-layouts-elkjs` | ELK.js hierarchical / layered layout |
+
 ## The `CanvasPlugin` interface
 
 Every plugin must implement this interface:
