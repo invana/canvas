@@ -38,6 +38,9 @@ importers:
       '@invana/plugin-example-datasets':
         specifier: workspace:*
         version: link:../../packages/plugins-example-datasets
+      '@invana/plugin-layouts-d3-force':
+        specifier: workspace:*
+        version: link:../../packages/plugins-layouts-d3-force
       '@invana/plugins-graph-data':
         specifier: workspace:*
         version: link:../../packages/plugins-graph-data

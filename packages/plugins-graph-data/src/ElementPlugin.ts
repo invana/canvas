@@ -343,6 +343,9 @@ export class ElementPlugin implements CanvasPlugin {
     this._solidPool.updateBBox(obj);
     obj.markDirty();
     this._solidScene.redraw(id);
+    if (partial.x !== undefined || partial.y !== undefined) {
+      this._updateAttachedConnectors(id);
+    }
   }
 
   /** Remove a node element by id. */

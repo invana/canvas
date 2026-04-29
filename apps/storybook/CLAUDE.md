@@ -16,7 +16,11 @@ stories/canvas/canvas-core/
     element-plugin/ — Connectors, Routers, SolidElements, MixedGraph, LargeGraph, States, Markers, ...
     drawing-plugin/ — DrawingPlugin.* constellation/masterpiece/kids/circuit stories
     dev-info-plugin/
+stories/layouts/
+  d3-force/         — D3 force-directed layout stories (e.g. LesMiserables.stories.ts)
 ```
+
+**Layout stories always go under `stories/layouts/`, never under `stories/canvas/layouts/`.**
 
 ## Story pattern
 
