@@ -1,5 +1,5 @@
 /**
- * ElementPlugin — Element Lifecycle
+ * GraphPlugin — Element Lifecycle
  *
  * Demonstrates the full CRUD API for elements:
  *
@@ -10,8 +10,8 @@
  *   updateEdge(id, partial)  — merge update
  *   removeEdge(id)           — remove connector
  *   clear()                       — remove everything
- *   getNode(id)                  — retrieve the ElementObject wrapper
- *   getEdge(id)              — retrieve the ElementObject wrapper
+ *   getNode(id)                  — retrieve the GraphObject wrapper
+ *   getEdge(id)              — retrieve the GraphObject wrapper
  *
  * The lil-gui panel lets you:
  *   - Spawn random circles at random world positions
@@ -29,14 +29,14 @@ import { action } from 'storybook/actions';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin, DevInfoPlugin } from '@invana/canvas';
 import {
-  ElementPlugin,
-  type CircleElementSpec,
+  GraphPlugin,
+  type CircleNodeSpec,
   type GraphAddedEvent,
   type GraphRemovedEvent,
 } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
-const meta: Meta = { title: 'Canvas/Node Styles/Element Lifecycle' };
+const meta: Meta = { title: 'Canvas/Node Styles/Node Lifecycle' };
 export default meta;
 type Story = StoryObj;
 
@@ -54,7 +54,7 @@ function randBetween(a: number, b: number): number {
 }
 
 export const ElementLifecycle: Story = {
-  name: 'Element Lifecycle',
+  name: 'Node Lifecycle',
   render: () => createContainer(),
   play: async () => {
     const container = document.getElementById('canvas-example');
@@ -75,7 +75,7 @@ export const ElementLifecycle: Story = {
     const devInfo = new DevInfoPlugin({ key: 'dev-info' });
     await canvas.plugins.register(devInfo);
 
-    const elements = new ElementPlugin({ key: 'elements' });
+    const elements = new GraphPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // ── Event logging ─────────────────────────────────────────────────────
@@ -115,7 +115,7 @@ export const ElementLifecycle: Story = {
             hovered:  { stroke: '#fbbf24', strokeWidth: 3 },
             selected: { stroke: '#ffffff', strokeWidth: 4, fill: color },
           },
-        } as CircleElementSpec);
+        } as CircleNodeSpec);
         nodeHistory.push(id);
         params.nodeCount = nodeHistory.length;
         nodeCtrl.updateDisplay();
@@ -152,7 +152,7 @@ export const ElementLifecycle: Story = {
         if (!id) return;
         elements.updateNode(id, {
           style: { fill: params.newFill, stroke: '#ffffff', strokeWidth: 2 },
-        } as Partial<CircleElementSpec>);
+        } as Partial<CircleNodeSpec>);
       },
     }, 'updateLast').name('Update last node color');
 
@@ -162,8 +162,8 @@ export const ElementLifecycle: Story = {
         if (!id) return;
         const obj = elements.getNode(id);
         if (!obj) return;
-        const spec = obj.element.spec as CircleElementSpec;
-        elements.updateNode(id, { radius: (spec.radius ?? 30) + 10 } as Partial<CircleElementSpec>);
+        const spec = obj.element.spec as CircleNodeSpec;
+        elements.updateNode(id, { radius: (spec.radius ?? 30) + 10 } as Partial<CircleNodeSpec>);
       },
     }, 'growLast').name('Grow last node radius');
 

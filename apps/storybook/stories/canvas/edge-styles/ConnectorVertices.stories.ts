@@ -1,5 +1,5 @@
 /**
- * ElementPlugin — Connector Vertices (Waypoints)
+ * GraphPlugin — Connector Vertices (Waypoints)
  *
  * Demonstrates intermediate waypoints on connector specs using the `vertices`
  * field (preferred over the deprecated `waypoints` alias).
@@ -23,8 +23,8 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  ElementPlugin,
-  type CircleElementSpec,
+  GraphPlugin,
+  type CircleNodeSpec,
   type BezierConnectorSpec,
 } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
@@ -106,7 +106,7 @@ export const ConnectorVertices: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 28,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements' });
+    const elements = new GraphPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     const totalH = (ROWS.length - 1) * ROW_GAP;
@@ -124,12 +124,12 @@ export const ConnectorVertices: Story = {
       elements.addNode('circle', {
         id: `${row.id}-l`, x: lx, y: rowY,
         radius: NODE_R, style: ANCHOR,
-      } as CircleElementSpec);
+      } as CircleNodeSpec);
 
       elements.addNode('circle', {
         id: `${row.id}-r`, x: rx, y: rowY,
         radius: NODE_R, style: ANCHOR,
-      } as CircleElementSpec);
+      } as CircleNodeSpec);
 
       // Small dot markers at each vertex position
       shiftedVertices?.forEach((v, vi) => {
@@ -137,7 +137,7 @@ export const ConnectorVertices: Story = {
           id: `${row.id}-vrt-${vi}`, x: v.x, y: v.y,
           radius: 5,
           style: { fill: row.color, fillAlpha: 0.5, stroke: row.color, strokeWidth: 1 },
-        } as CircleElementSpec);
+        } as CircleNodeSpec);
       });
 
       const spec: Record<string, unknown> = {

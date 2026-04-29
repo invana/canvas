@@ -1,12 +1,12 @@
-// ── PolygonElement ────────────────────────────────────────────────────────────
+// ── PolygonNode ───────────────────────────────────────────────────────────────
 
 import { BaseNode, LOD } from '../BaseNode.js';
 import { buildPolygonPoints } from '@invana/canvas';
 import type { DrawContext } from '../DrawContext.js';
 import type { BaseNodeSpec, BBox, Point } from '../spec/index.js';
 
-/** Spec for a regular polygon element. */
-export interface PolygonElementSpec extends BaseNodeSpec {
+/** Spec for a regular polygon node. */
+export interface PolygonNodeSpec extends BaseNodeSpec {
   /** Circumscribed radius in world-space pixels. */
   radius: number;
   /** Number of sides (3 = triangle, 4 = diamond/square, 6 = hexagon, …). */
@@ -16,16 +16,16 @@ export interface PolygonElementSpec extends BaseNodeSpec {
 }
 
 /**
- * A regular polygon element (triangle, pentagon, hexagon, etc.).
+ * A regular polygon node (triangle, pentagon, hexagon, etc.).
  *
  * @remarks
  * `x`, `y` refer to the **centre** of the polygon.
  * `getConnectionPoint()` finds the nearest polygon edge and returns the
  * intersection of the edge with the line from centre to target.
  *
- * For diamond (4-sided, rotated 45°) use {@link DiamondElement} instead.
+ * For diamond (4-sided, rotated 45°) use {@link DiamondNode} instead.
  */
-export class PolygonElement extends BaseNode<PolygonElementSpec> {
+export class PolygonNode extends BaseNode<PolygonNodeSpec> {
   draw(ctx: DrawContext, detail: LOD): void {
     const { x, y, radius, sides, rotation, label } = this.spec;
     const style = this.resolveStyle();
@@ -44,7 +44,6 @@ export class PolygonElement extends BaseNode<PolygonElementSpec> {
 
   getBBox(): BBox {
     const { x, y, radius } = this.spec;
-    // Circumscribed circle bbox is always safe for culling
     return { minX: x - radius, minY: y - radius, maxX: x + radius, maxY: y + radius };
   }
 
@@ -57,7 +56,6 @@ export class PolygonElement extends BaseNode<PolygonElementSpec> {
     const verts = buildPolygonPoints(x, y, radius, sides, rotation);
     const angle = Math.atan2(toY - y, toX - x);
 
-    // Find the edge that the ray from centre in `angle` crosses
     const n = verts.length / 2;
     for (let i = 0; i < n; i++) {
       const ax = verts[i * 2]!, ay = verts[i * 2 + 1]!;
@@ -65,7 +63,6 @@ export class PolygonElement extends BaseNode<PolygonElementSpec> {
       const pt = this._rayEdgeIntersect(x, y, angle, ax, ay, bx, by);
       if (pt) return pt;
     }
-    // Fallback: circumscribed circle point
     return { x: x + Math.cos(angle) * radius, y: y + Math.sin(angle) * radius };
   }
 

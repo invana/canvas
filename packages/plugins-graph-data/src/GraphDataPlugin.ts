@@ -1,13 +1,14 @@
 // ── GraphDataPlugin ────────────────────────────────────────────────────────────
 // High-level graph data management plugin for @invana/canvas.
-// Wraps an owned ElementPlugin instance and exposes a clean data-oriented API.
+// Wraps an owned GraphPlugin instance and exposes a clean data-oriented API.
 
 import type { CanvasPlugin, PluginContext } from '@invana/canvas';
-import { ElementPlugin } from './ElementPlugin.js';
-import type { NodeCtor, EdgeCtor, RouterFn } from './ElementPlugin.js';
-import type { BaseNode } from './BaseSolid.js';
+import { GraphPlugin } from './GraphPlugin.js';
+import type { NodeCtor, EdgeCtor, RouterFn } from './GraphPlugin.js';
+import type { BaseNode } from './BaseNode.js';
 import type { DrawContext } from './DrawContext.js';
 import type { ArrowSpec as ArrowSpec, Point, BaseNodeSpec, BaseEdgeSpec } from './spec/index.js';
+import { GraphObject } from './GraphObject.js';
 import type {
   INodeData,
   IEdgeData,
@@ -22,7 +23,7 @@ import type {
  * `GraphDataPlugin` — high-level graph data management plugin.
  *
  * @remarks
- * Wraps an internal {@link ElementPlugin} instance to provide a data-centric API.
+ * Wraps an internal {@link GraphPlugin} instance to provide a data-centric API.
  * Call {@link setData} with `ICanvasData` to render a full graph. Use CRUD methods
  * for incremental updates. Supports style overrides via {@link setStyles}.
  *
@@ -40,8 +41,8 @@ import type {
 export class GraphDataPlugin implements CanvasPlugin {
   readonly id: string;
 
-  /** @internal Owned ElementPlugin — not exposed publicly. */
-  private _elements: ElementPlugin;
+  /** @internal Owned GraphPlugin — not exposed publicly. */
+  private _elements: GraphPlugin;
 
   /** @internal Stored node data. D3 layout plugin mutates x/y in-place. */
   private _nodeStore = new Map<string, INodeData>();
@@ -59,13 +60,13 @@ export class GraphDataPlugin implements CanvasPlugin {
     this._fitOnRender  = options.fitOnRender ?? false;
     this._fitPadding   = options.fitPadding  ?? 40;
 
-    this._elements = new ElementPlugin({ key: `${this.id}-elements` });
+    this._elements = new GraphPlugin({ key: `${this.id}-elements` });
   }
 
   // ── CanvasPlugin lifecycle ────────────────────────────────────────────────
 
-  async register(ctx: PluginContext): Promise<void> {
-    await this._elements.register(ctx);
+  register(ctx: PluginContext): void {
+    return this._elements.register(ctx);
   }
 
   destroy(): void {
@@ -295,7 +296,81 @@ export class GraphDataPlugin implements CanvasPlugin {
     }
   }
 
-  /** Build an ElementPlugin node spec from INodeData + current styles. */
+  // ── Low-level spec API ────────────────────────────────────────────────────
+
+  /** Add a node by type and raw spec. For the data-centric API use {@link addNode}. */
+  addNodeSpec(type: string, spec: BaseNodeSpec): void {
+    this._elements.addNode(type, spec);
+  }
+
+  /** Add an edge by type and raw spec. For the data-centric API use {@link addEdge}. */
+  addEdgeSpec(type: string, spec: BaseEdgeSpec): void {
+    this._elements.addEdge(type, spec);
+  }
+
+  /** Merge a raw spec patch into an existing node. */
+  updateNodeSpec(id: string, spec: Partial<BaseNodeSpec>): void {
+    this._elements.updateNode(id, spec);
+  }
+
+  /** Merge a raw spec patch into an existing edge. */
+  updateEdgeSpec(id: string, spec: Partial<BaseEdgeSpec>): void {
+    this._elements.updateEdge(id, spec);
+  }
+
+  /**
+   * Bulk-load raw spec arrays, replacing all current elements.
+   * Equivalent to the former `GraphPlugin.setData()`.
+   */
+  setDataSpec(
+    solids: Array<{ type: string; spec: BaseNodeSpec }>,
+    connectors: Array<{ type: string; spec: BaseEdgeSpec }> = [],
+  ): void {
+    this._elements.setData(solids, connectors);
+  }
+
+  // ── Convenience state helpers ─────────────────────────────────────────────
+
+  /** Activate or deactivate a named state on a node or edge. */
+  setState(id: string, state: string, active: boolean): void {
+    this._elements.setState(id, state, active);
+  }
+
+  /** Deactivate a named state. Equivalent to `setState(id, state, false)`. */
+  clearState(id: string, state: string): void {
+    this._elements.setState(id, state, false);
+  }
+
+  // ── Element access ────────────────────────────────────────────────────────
+
+  /** Get the world-space centre of a node element. */
+  getCenter(id: string): Point | null {
+    return this._elements.getCenter(id);
+  }
+
+  /** Get the perimeter attachment point on a node closest to `(toX, toY)`. */
+  getConnectionPoint(id: string, toX: number, toY: number): Point | null {
+    return this._elements.getConnectionPoint(id, toX, toY);
+  }
+
+  /** Get the raw {@link GraphObject} for a node (for advanced use). */
+  getNode(id: string): GraphObject | undefined {
+    return this._elements.getNode(id);
+  }
+
+  /** Get the raw {@link GraphObject} for an edge (for advanced use). */
+  getEdge(id: string): GraphObject | undefined {
+    return this._elements.getEdge(id);
+  }
+
+  /** Remove all nodes and edges, stop animations, and reset state. */
+  clear(): void {
+    this._elements.clear();
+    this._nodeStore.clear();
+    this._edgeStore.clear();
+  }
+
+  /** Build a node spec from INodeData + current styles. */
   private _buildNodeSpec(node: INodeData): BaseNodeSpec {
     const ns = this._styles.node ?? {};
     const size = node.size ?? 40;
@@ -347,7 +422,7 @@ export class GraphDataPlugin implements CanvasPlugin {
     } as BaseNodeSpec;
   }
 
-  /** Build an ElementPlugin edge spec from IEdgeData + current styles. */
+  /** Build an GraphPlugin edge spec from IEdgeData + current styles. */
   private _buildEdgeSpec(edge: IEdgeData): BaseEdgeSpec {
     const es = this._styles.edge ?? {};
     const stroke  = typeof es.stroke      === 'function' ? es.stroke(edge)      : es.stroke;

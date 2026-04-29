@@ -169,7 +169,7 @@ export interface BaseNodeSpec {
  * these will be the `getConnectionPoint()` results from the source/target nodes.
  *
  * The optional `router` and `connector` fields select named pipeline stages
- * registered on `ElementPlugin`.  If omitted, the connector class's built-in
+ * registered on `GraphPlugin`.  If omitted, the connector class's built-in
  * `route()` method is used as a combined router+connector.
  */
 export interface BaseEdgeSpec {

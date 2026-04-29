@@ -1,5 +1,5 @@
 /**
- * ElementPlugin — Drag With Connectors
+ * GraphPlugin — Drag With Connectors
  *
  * Shows how to keep connectors attached to their source/target nodes
  * when a node is dragged.  The technique is:
@@ -29,9 +29,9 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  ElementPlugin,
-  type CircleElementSpec,
-  type RectElementSpec,
+  GraphPlugin,
+  type CircleNodeSpec,
+  type RectNodeSpec,
   type GraphDragMoveEvent,
   type GraphDragStartEvent,
   type GraphDragEndEvent,
@@ -92,7 +92,7 @@ export const DragWithConnectors: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements' });
+    const elements = new GraphPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // ── Add nodes ─────────────────────────────────────────────────────────
@@ -111,7 +111,7 @@ export const DragWithConnectors: Story = {
           label: node.label,
           style: commonStyle, states,
           interactive: true, draggable: true, cursor: 'grab',
-        } as CircleElementSpec);
+        } as CircleNodeSpec);
       } else {
         elements.addNode('rect', {
           id: node.id,
@@ -121,7 +121,7 @@ export const DragWithConnectors: Story = {
           label: node.label,
           style: commonStyle, states,
           interactive: true, draggable: true, cursor: 'grab',
-        } as RectElementSpec);
+        } as RectNodeSpec);
       }
     }
 
@@ -167,17 +167,17 @@ export const DragWithConnectors: Story = {
       const nodeDef = NODES.find(n => n.id === nodeId);
       if (!nodeDef) return;
       if (nodeDef.type === 'circle') {
-        const spec = obj.element.spec as CircleElementSpec;
+        const spec = obj.element.spec as CircleNodeSpec;
         elements.updateNode(nodeId, {
           x: spec.x + e.dx,
           y: spec.y + e.dy,
-        } as Partial<CircleElementSpec>);
+        } as Partial<CircleNodeSpec>);
       } else {
-        const spec = obj.element.spec as RectElementSpec;
+        const spec = obj.element.spec as RectNodeSpec;
         elements.updateNode(nodeId, {
           x: spec.x + e.dx,
           y: spec.y + e.dy,
-        } as Partial<RectElementSpec>);
+        } as Partial<RectNodeSpec>);
       }
       refreshEdges(nodeId);
     });

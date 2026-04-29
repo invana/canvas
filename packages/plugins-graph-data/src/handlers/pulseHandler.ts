@@ -1,11 +1,11 @@
 // ── pulseHandler (element-plugin) ─────────────────────────────────────────────
 // Draws expanding ripple rings radiating out from the element.
-// Rings are rendered on a rented ElementHaloPool Graphics — the element's own
+// Rings are rendered on a rented HaloPool Graphics — the element's own
 // Graphics is not touched, so dirty is always false.
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
-import type { BaseNode as BaseSolid } from '../BaseSolid.js';
-import type { ElementHaloPool } from '../ElementHaloPool.js';
+import type { BaseNode } from '../BaseNode.js';
+import type { HaloPool } from '../HaloPool.js';
 
 /** Options for the `pulse` animation. */
 export interface PulseOptions {
@@ -28,15 +28,15 @@ interface PulseState {
  * `pulseHandler` — radiating ring animation.
  *
  * @remarks
- * Rents an `ElementHaloPool` `Graphics` instance on `init` and returns it on
- * `cleanup`. All drawing is delegated to {@link ElementHaloPool.redrawPulse}
+ * Rents an `HaloPool` `Graphics` instance on `init` and returns it on
+ * `cleanup`. All drawing is delegated to {@link HaloPool.redrawPulse}
  * each frame. The element's own `Graphics` is never touched, so `dirty` is
  * always `false`.
  */
 export const pulseHandler: AnimationHandler<PulseOptions, PulseState> = {
   type: 'pulse',
 
-  init(_spec: PulseOptions, obj: BaseSolid, halos: ElementHaloPool): PulseState {
+  init(_spec: PulseOptions, obj: BaseNode, halos: HaloPool): PulseState {
     halos.rentForPulse(obj);
     return { progress: 0, repeatCount: 0 };
   },
@@ -57,13 +57,13 @@ export const pulseHandler: AnimationHandler<PulseOptions, PulseState> = {
     return { dirty: false, stop: false };
   },
 
-  apply(state: PulseState, spec: PulseOptions, obj: BaseSolid, halos: ElementHaloPool) {
+  apply(state: PulseState, spec: PulseOptions, obj: BaseNode, halos: HaloPool) {
     const fillStyle = obj.spec.style?.fill;
     const color = spec.color ?? (typeof fillStyle === 'string' ? fillStyle : undefined) ?? '#ffffff';
     halos.redrawPulse(obj, state.progress, spec.maxRadius ?? 40, color);
   },
 
-  cleanup(_state: PulseState, obj: BaseSolid, halos: ElementHaloPool) {
+  cleanup(_state: PulseState, obj: BaseNode, halos: HaloPool) {
     halos.return(obj.spec.id);
   },
 };

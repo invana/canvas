@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  ElementPlugin,
+  GraphPlugin,
   type ArrowSpec,
-  type CircleElementSpec,
+  type CircleNodeSpec,
   type DrawContext,
-  type ElementPoint as Point,
+  type Point,
 } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
@@ -93,7 +93,7 @@ export const Markers: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.2, spacing: 28,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements' });
+    const elements = new GraphPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // Register the custom star5 marker before adding any connectors
@@ -111,12 +111,12 @@ export const Markers: Story = {
       elements.addNode('circle', {
         id: `${tid}-l`, x: lx, y,
         radius: NODE_R, style: ANCHOR,
-      } as CircleElementSpec);
+      } as CircleNodeSpec);
 
       elements.addNode('circle', {
         id: `${tid}-r`, x: rx, y,
         radius: NODE_R, style: ANCHOR,
-      } as CircleElementSpec);
+      } as CircleNodeSpec);
 
       // startMarker — at the source end (mirror / approach angle)
       // endMarker   — at the target end
@@ -151,7 +151,7 @@ export const Markers: Story = {
   },
 };
 /**
- * ElementPlugin - Markers
+ * GraphPlugin - Markers
  *
  * Demonstrates all 14 built-in arrowhead marker types available for
  * connector endpoints via `endMarker` / `startMarker`, plus:

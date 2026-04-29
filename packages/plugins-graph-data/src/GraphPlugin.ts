@@ -1,21 +1,21 @@
-// ── ElementPlugin ─────────────────────────────────────────────────────────────
-// High-level canvas plugin for solid elements and connector elements.
-// Designed to eventually replace ShapePlugin when the feature set is complete.
+// ── GraphPlugin ───────────────────────────────────────────────────────────────
+// Internal rendering engine for graph nodes and edges.
+// Used by GraphDataPlugin as its rendering backend.
 
 import type { Ticker } from 'pixi.js';
 import type { CanvasPlugin, PluginContext } from '@invana/canvas';
-import { ElementPool } from './ElementPool.js';
-import { ElementScene } from './ElementScene.js';
-import { ElementObject } from './ElementObject.js';
-import { BaseNode } from './BaseSolid.js';
-import { BaseEdge } from './BaseConnector.js';
+import { GraphPool } from './GraphPool.js';
+import { GraphScene } from './GraphScene.js';
+import { GraphObject } from './GraphObject.js';
+import { BaseNode } from './BaseNode.js';
+import { BaseEdge } from './BaseEdge.js';
 import type { BaseNodeSpec, BaseEdgeSpec, BBox, Point, RouterFn, ArrowSpec } from './spec/index.js';
 export type { RouterFn };
 import { CameraTracker } from './CameraTracker.js';
 import { LODController, type LODThresholds } from './LODController.js';
 import { AnimationRegistry } from './AnimationRegistry.js';
 import type { AnimationHandler } from './AnimationRegistry.js';
-import { ElementHaloPool } from './ElementHaloPool.js';
+import { HaloPool } from './HaloPool.js';
 import { defaultRegistry } from './handlers/index.js';
 import type { ElementAnimations } from './spec/animations.js';
 import {
@@ -33,16 +33,16 @@ import {
   GraphStateChangeEvent,
   GraphAddedEvent,
   GraphRemovedEvent,
-} from './ElementEvents.js';
+} from './GraphEvents.js';
 
 // Built-in node types
-import { CircleElement } from './elements/CircleElement.js';
-import { RectElement } from './elements/RectElement.js';
-import { EllipseElement } from './elements/EllipseElement.js';
-import { PolygonElement } from './elements/PolygonElement.js';
-import { DiamondElement } from './elements/DiamondElement.js';
-import { StarElement } from './elements/StarElement.js';
-import { HexagonElement } from './elements/HexagonElement.js';
+import { CircleNode } from './nodes/CircleNode.js';
+import { RectNode } from './nodes/RectNode.js';
+import { EllipseNode } from './nodes/EllipseNode.js';
+import { PolygonNode } from './nodes/PolygonNode.js';
+import { DiamondNode } from './nodes/DiamondNode.js';
+import { StarNode } from './nodes/StarNode.js';
+import { HexagonNode } from './nodes/HexagonNode.js';
 // Built-in edge types
 import { StraightConnector } from './connectors/StraightConnector.js';
 import { BezierConnector } from './connectors/BezierConnector.js';
@@ -57,12 +57,12 @@ import type { DrawContext } from './DrawContext.js';
 // ── Options ───────────────────────────────────────────────────────────────────
 
 /**
- * Construction options for {@link ElementPlugin}.
+ * Construction options for {@link GraphPlugin}.
  */
 export interface GraphPluginOptions {
   /**
    * Plugin instance key.  Must be unique if multiple instances are registered.
-   * Used as the layer id prefix and the plugin id.  Defaults to `'elements'`.
+   * Defaults to `'graph'`.
    */
   key?: string;
   /** z-index for the edge layer (default: 5). Node layer = zIndex + 1. */
@@ -70,24 +70,22 @@ export interface GraphPluginOptions {
   /** Override LOD zoom thresholds. */
   lod?: Partial<LODThresholds>;
   /**
-   * Custom animation registry.  Defaults to {@link defaultRegistry} which is
-   * pre-loaded with all built-in handlers.  Pass a new `AnimationRegistry` for
-   * fully isolated animation type sets.
+   * Custom animation registry.  Defaults to {@link defaultRegistry}.
    */
   animationRegistry?: AnimationRegistry;
 }
 
-// ── Element constructor types ─────────────────────────────────────────────────
+// ── Node/Edge constructor types ───────────────────────────────────────────────
 
 /** Constructor signature for node element classes. */
 export type NodeCtor = new (spec: BaseNodeSpec) => BaseNode;
 /** Constructor signature for edge element classes. */
 export type EdgeCtor = new (spec: BaseEdgeSpec) => BaseEdge;
 
-// ── ElementPlugin ─────────────────────────────────────────────────────────────
+// ── GraphPlugin ───────────────────────────────────────────────────────────────
 
 /**
- * `ElementPlugin` — internal rendering engine for graph nodes and edges.
+ * `GraphPlugin` — internal rendering engine for graph nodes and edges.
  * Used by `GraphDataPlugin` as its rendering backend.
  *
  * @remarks
@@ -99,16 +97,16 @@ export type EdgeCtor = new (spec: BaseEdgeSpec) => BaseEdge;
  *
  * @example
  * ```ts
- * const elements = new ElementPlugin();
- * await canvas.plugins.register(elements);
+ * const graph = new GraphPlugin();
+ * await canvas.plugins.register(graph);
  *
- * elements.addNode('circle', {
+ * graph.addNode('circle', {
  *   id: 'n1', x: 0, y: 0, radius: 30,
  *   style: { fill: '#3fcbeb', stroke: '#ffffff', strokeWidth: 2 },
  *   label: 'Node', interactive: true,
  * });
  *
- * elements.addEdge('bezier', {
+ * graph.addEdge('bezier', {
  *   id: 'e1', from: { x: 30, y: 0 }, to: { x: 170, y: 0 },
  *   style: { stroke: '#58a6ff', strokeWidth: 2 },
  * });
@@ -118,63 +116,54 @@ export type EdgeCtor = new (spec: BaseEdgeSpec) => BaseEdge;
  * });
  * ```
  */
-export class ElementPlugin implements CanvasPlugin {
+export class GraphPlugin implements CanvasPlugin {
   readonly id: string;
 
   private _zIndex:      number;
   private _lodOptions:  Partial<LODThresholds>;
 
-  // Sub-systems (initialised in register())
-  private _solidPool!:     ElementPool;
-  private _connPool!:      ElementPool;
-  private _solidScene!:    ElementScene;
-  private _connScene!:     ElementScene;
+  private _nodePool!:      GraphPool;
+  private _edgePool!:      GraphPool;
+  private _nodeScene!:     GraphScene;
+  private _edgeScene!:     GraphScene;
   private _lod!:           LODController;
   private _cameraTracker!: CameraTracker;
   private _ctx!:           PluginContext;
 
-  // Animation frame ticker
   private _ticker: Ticker | null = null;
-  private _animSet = new Set<string>(); // ids of elements with active animations
+  private _animSet = new Set<string>();
   private _boundTick: ((t: Ticker) => void) | null = null;
   private _animRegistry: AnimationRegistry;
-  private _halos!: ElementHaloPool;
+  private _halos!: HaloPool;
 
-  // Pointer state
   private _lastHoverId:    string | null = null;
-  // grabOffsetX/Y = pointer world position minus element center at the moment of pointerdown.
-  // Used to compute absolute element position each frame so the click point stays under the pointer.
   private _dragState: { id: string; lastX: number; lastY: number; grabOffsetX: number; grabOffsetY: number } | null = null;
 
-  // Batch flag — suppresses per-element flush during setData()
   private _batchingAdd = false;
 
-  // Reverse index: nodeId → Set of edgeIds that have sourceId or targetId pointing to it.
-  // Used to efficiently update edge endpoints when a node is dragged.
-  private _solidToConns = new Map<string, Set<string>>();
+  // Reverse index: nodeId → Set of edgeIds attached to it.
+  private _nodeToEdges = new Map<string, Set<string>>();
 
   // ── Registries ────────────────────────────────────────────────────────────
 
-  /** @internal — type alias for custom marker functions. */
   private _markerRegistry = new Map<
     string,
     (ctx: DrawContext, tip: Point, angle: number, spec: ArrowSpec) => void
   >();
 
-  /** @internal — router function registry (built-ins + user-registered). */
   private _routerRegistry = new Map<string, RouterFn>(BUILTIN_ROUTERS);
 
-  private _solidRegistry = new Map<string, NodeCtor>([
-    ['circle',   CircleElement   as unknown as NodeCtor],
-    ['rect',     RectElement     as unknown as NodeCtor],
-    ['ellipse',  EllipseElement  as unknown as NodeCtor],
-    ['polygon',  PolygonElement  as unknown as NodeCtor],
-    ['diamond',  DiamondElement  as unknown as NodeCtor],
-    ['star',     StarElement     as unknown as NodeCtor],
-    ['hexagon',  HexagonElement  as unknown as NodeCtor],
+  private _nodeRegistry = new Map<string, NodeCtor>([
+    ['circle',   CircleNode   as unknown as NodeCtor],
+    ['rect',     RectNode     as unknown as NodeCtor],
+    ['ellipse',  EllipseNode  as unknown as NodeCtor],
+    ['polygon',  PolygonNode  as unknown as NodeCtor],
+    ['diamond',  DiamondNode  as unknown as NodeCtor],
+    ['star',     StarNode     as unknown as NodeCtor],
+    ['hexagon',  HexagonNode  as unknown as NodeCtor],
   ]);
 
-  private _connRegistry = new Map<string, EdgeCtor>([
+  private _edgeRegistry = new Map<string, EdgeCtor>([
     ['straight',    StraightConnector   as unknown as EdgeCtor],
     ['bezier',      BezierConnector     as unknown as EdgeCtor],
     ['orthogonal',  OrthogonalConnector as unknown as EdgeCtor],
@@ -184,7 +173,7 @@ export class ElementPlugin implements CanvasPlugin {
   ]);
 
   constructor(options: GraphPluginOptions = {}) {
-    this.id              = options.key               ?? 'elements';
+    this.id              = options.key               ?? 'graph';
     this._zIndex         = options.zIndex            ?? 5;
     this._lodOptions     = options.lod               ?? {};
     this._animRegistry   = options.animationRegistry ?? defaultRegistry;
@@ -192,49 +181,40 @@ export class ElementPlugin implements CanvasPlugin {
 
   // ── CanvasPlugin lifecycle ────────────────────────────────────────────────
 
-  /**
-   * Called by {@link PluginSystem} when the plugin is registered on the canvas.
-   * Wires all sub-systems and starts listening to canvas pointer events.
-   */
   register(ctx: PluginContext): void {
     this._ctx = ctx;
 
-    // Three layers: edges → nodes → halos
-    const connLayer  = ctx.createLayer({ id: `${this.id}-conn`,  zIndex: this._zIndex,     label: 'Edges' });
-    const solidLayer = ctx.createLayer({ id: `${this.id}-solid`, zIndex: this._zIndex + 1, label: 'Nodes' });
-    const haloLayer  = ctx.createLayer({ id: `${this.id}-halos`, zIndex: this._zIndex + 2, label: 'Halos' });
-    this._halos = new ElementHaloPool(haloLayer);
+    const edgeLayer = ctx.createLayer({ id: `${this.id}-edges`, zIndex: this._zIndex,     label: 'Edges' });
+    const nodeLayer = ctx.createLayer({ id: `${this.id}-nodes`, zIndex: this._zIndex + 1, label: 'Nodes' });
+    const haloLayer = ctx.createLayer({ id: `${this.id}-halos`, zIndex: this._zIndex + 2, label: 'Halos' });
+    this._halos = new HaloPool(haloLayer);
 
-    this._solidPool  = new ElementPool();
-    this._connPool   = new ElementPool();
-    this._lod        = new LODController(this._lodOptions);
-    this._solidScene = new ElementScene(solidLayer, this._solidPool);
-    this._connScene  = new ElementScene(connLayer,  this._connPool);
+    this._nodePool  = new GraphPool();
+    this._edgePool  = new GraphPool();
+    this._lod       = new LODController(this._lodOptions);
+    this._nodeScene = new GraphScene(nodeLayer, this._nodePool);
+    this._edgeScene = new GraphScene(edgeLayer, this._edgePool);
 
-    // Sync LOD to camera scale at startup
     this._lod.update(ctx.camera.scale);
-    this._solidScene.onDetailChanged(this._lod.current);
-    this._connScene.onDetailChanged(this._lod.current);
+    this._nodeScene.onDetailChanged(this._lod.current);
+    this._edgeScene.onDetailChanged(this._lod.current);
 
-    // LOD tracking
     ctx.events.on('camera:zoom', ({ scale }) => {
       if (this._lod.update(scale)) {
-        this._solidScene.onDetailChanged(this._lod.current);
-        this._connScene.onDetailChanged(this._lod.current);
+        this._nodeScene.onDetailChanged(this._lod.current);
+        this._edgeScene.onDetailChanged(this._lod.current);
       }
     });
 
-    // Viewport culling
     this._cameraTracker = new CameraTracker(
       ctx.camera,
       ctx.events,
       (bounds) => {
-        this._solidScene.onCameraChanged(bounds);
-        this._connScene.onCameraChanged(bounds);
+        this._nodeScene.onCameraChanged(bounds);
+        this._edgeScene.onCameraChanged(bounds);
       },
     );
 
-    // Pointer events → element:* events
     ctx.events.on('canvas:pointermove',  (e) => this._onPointerMove(e.worldX, e.worldY, e.nativeEvent));
     ctx.events.on('canvas:pointerdown',  (e) => this._onPointerDown(e.worldX, e.worldY, e.nativeEvent));
     ctx.events.on('canvas:pointerup',    (e) => this._onPointerUp(e.worldX, e.worldY, e.nativeEvent));
@@ -242,7 +222,6 @@ export class ElementPlugin implements CanvasPlugin {
     ctx.events.on('canvas:dblclicked',   (e) => this._onPointerDblClick(e.worldX, e.worldY, e.nativeEvent));
     ctx.events.on('canvas:contextmenu',  (e) => this._onPointerContextMenu(e.worldX, e.worldY, e.nativeEvent));
 
-    // PixiJS ticker for onAnimationTick
     const ticker = (ctx as unknown as { _ticker?: Ticker })._ticker;
     if (ticker) {
       this._ticker = ticker;
@@ -255,51 +234,41 @@ export class ElementPlugin implements CanvasPlugin {
     if (this._ticker && this._boundTick) {
       this._ticker.remove(this._boundTick);
     }
-    this._solidScene?.clear();
-    this._connScene?.clear();
-    for (const obj of this._solidPool?.values() ?? []) obj.destroy();
-    for (const obj of this._connPool?.values() ?? []) obj.destroy();
-    this._solidPool?.clear();
-    this._connPool?.clear();
+    this._nodeScene?.clear();
+    this._edgeScene?.clear();
+    for (const obj of this._nodePool?.values() ?? []) obj.destroy();
+    for (const obj of this._edgePool?.values() ?? []) obj.destroy();
+    this._nodePool?.clear();
+    this._edgePool?.clear();
     this._halos?.destroy();
   }
 
-  // ── Element type registry ─────────────────────────────────────────────────
+  // ── Type registry ─────────────────────────────────────────────────────────
 
   /**
-   * Register a custom node element type.
+   * Register a custom node type.
    *
    * @example
    * ```ts
-   * elementPlugin.registerNode('database', DatabaseNode);
-   * elementPlugin.addNode('database', { id: 'db1', x: 0, y: 0, ... });
+   * graphPlugin.registerNode('database', DatabaseNode);
+   * graphPlugin.addNode('database', { id: 'db1', x: 0, y: 0, ... });
    * ```
    */
   registerNode(type: string, cls: NodeCtor): void {
-    this._solidRegistry.set(type, cls);
+    this._nodeRegistry.set(type, cls);
   }
 
-  /**
-   * Register a custom edge type.
-   */
+  /** Register a custom edge type. */
   registerEdge(type: string, cls: EdgeCtor): void {
-    this._connRegistry.set(type, cls);
+    this._edgeRegistry.set(type, cls);
   }
 
-  /**
-   * Register a custom router function under `name`.
-   * After registration, connectors can use it via `router: name` or
-   * `router: { name, args: { ... } }`.
-   */
+  /** Register a custom router function under `name`. */
   registerRouter(name: string, fn: RouterFn): void {
     this._routerRegistry.set(name, fn);
   }
 
-  /**
-   * Register a custom marker (arrowhead) drawing function under `name`.
-   * The function is called with the `DrawContext`, the tip `Point`, the
-   * approach angle (radians), and the full `ArrowSpec`.
-   */
+  /** Register a custom marker (arrowhead) drawing function under `name`. */
   registerMarker(
     name: string,
     fn: (ctx: DrawContext, tip: Point, angle: number, spec: ArrowSpec) => void,
@@ -307,168 +276,136 @@ export class ElementPlugin implements CanvasPlugin {
     this._markerRegistry.set(name, fn);
   }
 
-  // ── Solid CRUD ────────────────────────────────────────────────────────────
+  // ── Node CRUD ─────────────────────────────────────────────────────────────
 
-  /**
-   * Add a node element of the given type.
-   *
-   * @param type - Registered node type (e.g. `'circle'`, `'rect'`).
-   * @param spec - Spec for the element.
-   */
+  /** Add a node of the given type. */
   addNode(type: string, spec: BaseNodeSpec): void {
-    const Ctor = this._solidRegistry.get(type);
+    const Ctor = this._nodeRegistry.get(type);
     if (!Ctor) {
-      console.warn(`[ElementPlugin] Unknown node type: "${type}". Register it via registerNode().`);
+      console.warn(`[GraphPlugin] Unknown node type: "${type}". Register it via registerNode().`);
       return;
     }
-    const element = new Ctor(spec);
-    const obj     = new ElementObject(element);
-    this._solidPool.add(obj);
+    const node = new Ctor(spec);
+    const obj  = new GraphObject(node);
+    this._nodePool.add(obj);
     this._ctx.events.emit('graph:added', new GraphAddedEvent({ elementId: spec.id, elementType: 'node' }));
-    if (element.onAnimationTick) this._animSet.add(spec.id);
+    if (node.onAnimationTick) this._animSet.add(spec.id);
     if (!this._batchingAdd) this._cameraTracker.flush();
   }
 
-  /**
-   * Partially update a node element's spec by id.
-   * Merges the partial spec, recomputes the bbox, and triggers a redraw.
-   */
+  /** Partially update a node's spec by id. */
   updateNode(id: string, partial: Partial<BaseNodeSpec>): void {
-    const obj = this._solidPool.get(id);
+    const obj = this._nodePool.get(id);
     if (!obj) return;
     const prev = { ...obj.element.spec };
     const next = { ...obj.element.spec, ...partial } as BaseNodeSpec;
     obj.element.spec = next;
     (obj.element as BaseNode).onUpdate?.(prev as never, next as never);
-    this._solidPool.updateBBox(obj);
+    this._nodePool.updateBBox(obj);
     obj.markDirty();
-    this._solidScene.redraw(id);
+    this._nodeScene.redraw(id);
     if (partial.x !== undefined || partial.y !== undefined) {
-      this._updateAttachedConnectors(id);
+      this._updateAttachedEdges(id);
     }
   }
 
-  /** Remove a node element by id. */
+  /** Remove a node by id. */
   removeNode(id: string): void {
-    this.clearAnimation(id); // stop all animations and return halo graphics
-    this._solidToConns.delete(id);
-    this._solidScene.evict(id);
+    this.clearAnimation(id);
+    this._nodeToEdges.delete(id);
+    this._nodeScene.evict(id);
     this._animSet.delete(id);
-    const obj = this._solidPool.get(id);
-    this._solidPool.remove(id);
+    const obj = this._nodePool.get(id);
+    this._nodePool.remove(id);
     obj?.destroy();
     this._ctx.events.emit('graph:removed', new GraphRemovedEvent({ elementId: id, elementType: 'node' }));
   }
 
-  /** Get the raw `ElementObject` wrapper for a node by id. */
-  getNode(id: string): ElementObject | undefined {
-    return this._solidPool.get(id);
+  /** Get the raw `GraphObject` wrapper for a node by id. */
+  getNode(id: string): GraphObject | undefined {
+    return this._nodePool.get(id);
   }
 
-  // ── Connector CRUD ────────────────────────────────────────────────────────
+  // ── Edge CRUD ─────────────────────────────────────────────────────────────
 
-  /**
-   * Add an edge element of the given type.
-   *
-   * @param type - Registered edge type (e.g. `'straight'`, `'bezier'`).
-   * @param spec - Spec for the connector.
-   */
+  /** Add an edge of the given type. */
   addEdge(type: string, spec: BaseEdgeSpec): void {
-    const Ctor = this._connRegistry.get(type);
+    const Ctor = this._edgeRegistry.get(type);
     if (!Ctor) {
-      console.warn(`[ElementPlugin] Unknown edge type: "${type}". Register it via registerEdge().`);
+      console.warn(`[GraphPlugin] Unknown edge type: "${type}". Register it via registerEdge().`);
       return;
     }
-    // Resolve from/to via getConnectionPoint when sourceId/targetId are provided
-    const resolved = this._resolveConnEndpoints(spec);
+    const resolved = this._resolveEdgeEndpoints(spec);
     const resolvedSpec = { ...spec, from: resolved.from, to: resolved.to };
-    const element = new Ctor(resolvedSpec);
-    // Inject router and marker registries so the connector's draw() can use them
-    (element as BaseEdge)._routerRegistry = this._routerRegistry;
-    (element as BaseEdge)._markerRegistry = this._markerRegistry;
-    const obj     = new ElementObject(element);
-    this._connPool.add(obj);
-    // Register in reverse index so drag updates keep this connector in sync
-    this._registerConnAttachment(resolvedSpec);
+    const edge = new Ctor(resolvedSpec);
+    (edge as BaseEdge)._routerRegistry = this._routerRegistry;
+    (edge as BaseEdge)._markerRegistry = this._markerRegistry;
+    const obj  = new GraphObject(edge);
+    this._edgePool.add(obj);
+    this._registerEdgeAttachment(resolvedSpec);
     this._ctx.events.emit('graph:added', new GraphAddedEvent({ elementId: spec.id, elementType: 'edge' }));
-    if (element.onAnimationTick) this._animSet.add(spec.id);
+    if (edge.onAnimationTick) this._animSet.add(spec.id);
     if (!this._batchingAdd) this._cameraTracker.flush();
   }
 
-  /**
-   * Partially update an edge element's spec by id.
-   */
+  /** Partially update an edge's spec by id. */
   updateEdge(id: string, partial: Partial<BaseEdgeSpec>): void {
-    const obj = this._connPool.get(id);
+    const obj = this._edgePool.get(id);
     if (!obj) return;
     const prev = { ...obj.element.spec };
     const next = { ...obj.element.spec, ...partial } as BaseEdgeSpec;
     obj.element.spec = next;
     (obj.element as BaseEdge).onUpdate?.(prev as never, next as never);
-    this._connPool.updateBBox(obj);
+    this._edgePool.updateBBox(obj);
     obj.markDirty();
-    this._connScene.redraw(id);
+    this._edgeScene.redraw(id);
   }
 
-  /** Remove an edge element by id. */
+  /** Remove an edge by id. */
   removeEdge(id: string): void {
-    this._unregisterConn(id);
-    this._connScene.evict(id);
+    this._unregisterEdge(id);
+    this._edgeScene.evict(id);
     this._animSet.delete(id);
-    const obj = this._connPool.get(id);
-    this._connPool.remove(id);
+    const obj = this._edgePool.get(id);
+    this._edgePool.remove(id);
     obj?.destroy();
     this._ctx.events.emit('graph:removed', new GraphRemovedEvent({ elementId: id, elementType: 'edge' }));
   }
 
-  /** Get the raw `ElementObject` wrapper for an edge by id. */
-  getEdge(id: string): ElementObject | undefined {
-    return this._connPool.get(id);
+  /** Get the raw `GraphObject` wrapper for an edge by id. */
+  getEdge(id: string): GraphObject | undefined {
+    return this._edgePool.get(id);
   }
 
   // ── Geometry queries ──────────────────────────────────────────────────────
 
-  /**
-   * Bounding box for a solid element.  Returns `null` if not found.
-   */
+  /** Bounding box for a node or edge.  Returns `null` if not found. */
   getBBox(id: string): BBox | null {
-    return this._solidPool.get(id)?.getBBox()
-        ?? this._connPool.get(id)?.getBBox()
+    return this._nodePool.get(id)?.getBBox()
+        ?? this._edgePool.get(id)?.getBBox()
         ?? null;
   }
 
-  /**
-   * World-space centre of a solid element.
-   * Used by `plugin-graph` for initial connector routing.
-   */
+  /** World-space centre of a node. */
   getCenter(id: string): Point | null {
-    const obj = this._solidPool.get(id);
+    const obj = this._nodePool.get(id);
     if (!obj) return null;
     return (obj.element as BaseNode).getCenter();
   }
 
-  /**
-   * Perimeter connection point for a solid element in the direction of `(toX, toY)`.
-   * Used by `plugin-graph` to produce clean connector attachment positions.
-   */
+  /** Perimeter connection point for a node in the direction of `(toX, toY)`. */
   getConnectionPoint(id: string, toX: number, toY: number): Point | null {
-    const obj = this._solidPool.get(id);
+    const obj = this._nodePool.get(id);
     if (!obj) return null;
     return (obj.element as BaseNode).getConnectionPoint(toX, toY);
   }
 
   // ── State API ─────────────────────────────────────────────────────────────
 
-  /**
-   * Set a named state on a solid or connector element.
-   *
-   * @remarks
-   * Triggers style re-resolve, a redraw, and an `element:statechange` event.
-   * Built-in states used by `ElementPlugin` automatically: `'hovered'`, `'selected'`.
-   */
+  /** Set a named state on a node or edge. */
   setState(id: string, state: string, active: boolean): void {
-    const pool = this._solidPool.has(id) ? this._solidPool : this._connPool;
-    const scene = this._solidPool.has(id) ? this._solidScene : this._connScene;
+    const pool  = this._nodePool.has(id) ? this._nodePool  : this._edgePool;
+    const scene = this._nodePool.has(id) ? this._nodeScene : this._edgeScene;
     const obj = pool.get(id);
     if (!obj) return;
     obj.element.setState(state, active);
@@ -486,7 +423,7 @@ export class ElementPlugin implements CanvasPlugin {
 
   /** Deactivate all active states on an element. */
   clearAllStates(id: string): void {
-    const obj = this._solidPool.get(id) ?? this._connPool.get(id);
+    const obj = this._nodePool.get(id) ?? this._edgePool.get(id);
     if (!obj) return;
     for (const state of [...obj.element.activeStates]) {
       this.setState(id, state, false);
@@ -495,7 +432,7 @@ export class ElementPlugin implements CanvasPlugin {
 
   /** Return the list of currently active state names for an element. */
   getStates(id: string): string[] {
-    const obj = this._solidPool.get(id) ?? this._connPool.get(id);
+    const obj = this._nodePool.get(id) ?? this._edgePool.get(id);
     return obj ? [...obj.element.activeStates] : [];
   }
 
@@ -503,35 +440,31 @@ export class ElementPlugin implements CanvasPlugin {
 
   /**
    * Replace all current elements with the provided sets.
-   * Clears all existing elements, adds each spec, optionally fits the camera,
-   * then flushes the camera tracker.
    */
   setData(
-    solids:     Array<{ type: string; spec: BaseNodeSpec }>,
-    connectors: Array<{ type: string; spec: BaseEdgeSpec }> = [],
+    nodes:     Array<{ type: string; spec: BaseNodeSpec }>,
+    edges: Array<{ type: string; spec: BaseEdgeSpec }> = [],
   ): void {
     this.clear();
     this._batchingAdd = true;
     try {
-      for (const { type, spec } of solids)     this.addNode(type, spec);
-      for (const { type, spec } of connectors) this.addEdge(type, spec);
+      for (const { type, spec } of nodes) this.addNode(type, spec);
+      for (const { type, spec } of edges) this.addEdge(type, spec);
     } finally {
       this._batchingAdd = false;
     }
     this._cameraTracker.flush();
   }
 
-  /**
-   * Remove all solids and connectors, stop animations, and reset state.
-   */
+  /** Remove all nodes and edges, stop animations, and reset state. */
   clear(): void {
     this._halos?.returnAll();
-    this._solidScene.clear();
-    this._connScene.clear();
-    for (const obj of this._solidPool.values()) obj.destroy();
-    for (const obj of this._connPool.values())  obj.destroy();
-    this._solidPool.clear();
-    this._connPool.clear();
+    this._nodeScene.clear();
+    this._edgeScene.clear();
+    for (const obj of this._nodePool.values()) obj.destroy();
+    for (const obj of this._edgePool.values())  obj.destroy();
+    this._nodePool.clear();
+    this._edgePool.clear();
     this._animSet.clear();
     this._lastHoverId = null;
     this._dragState   = null;
@@ -543,8 +476,8 @@ export class ElementPlugin implements CanvasPlugin {
    */
   fitContent(padding = 60): void {
     const boxes = [
-      ...this._solidPool.allBBoxes(),
-      ...this._connPool.allBBoxes(),
+      ...this._nodePool.allBBoxes(),
+      ...this._edgePool.allBBoxes(),
     ];
     if (boxes.length === 0) return;
 
@@ -566,13 +499,12 @@ export class ElementPlugin implements CanvasPlugin {
   private _tick(ticker: Ticker): void {
     const dt = ticker.deltaMS;
     for (const id of this._animSet) {
-      const obj = this._solidPool.get(id) ?? this._connPool.get(id);
+      const obj = this._nodePool.get(id) ?? this._edgePool.get(id);
       if (!obj) { this._animSet.delete(id); continue; }
 
       const element = obj.element;
       let dirty = false;
 
-      // Registry-based animations (BaseSolid only)
       if (element instanceof BaseNode && element._animSlots.size > 0) {
         const toStop: string[] = [];
 
@@ -597,17 +529,15 @@ export class ElementPlugin implements CanvasPlugin {
         this._applyContainerOverrides(obj, element);
       }
 
-      // Legacy per-element callback (both solids and connectors)
       element.onAnimationTick?.(dt);
       dirty = dirty || obj.isDirty;
 
       if (dirty) {
         obj.markDirty();
-        const scene = this._solidPool.has(id) ? this._solidScene : this._connScene;
+        const scene = this._nodePool.has(id) ? this._nodeScene : this._edgeScene;
         scene.redraw(id);
       }
 
-      // Remove from animSet when no more work to do
       if (
         element instanceof BaseNode &&
         element._animSlots.size === 0 &&
@@ -619,25 +549,17 @@ export class ElementPlugin implements CanvasPlugin {
   }
 
   /**
-   * Start one or more animations on a solid element.
-   *
-   * @remarks
-   * Multiple animations can run simultaneously. Calling `animate()` for a type
-   * that is already running stops the current instance and restarts it.
-   *
-   * @param id   - Solid element id.
-   * @param spec - Map of animation type → options.
+   * Start one or more animations on a node.
    *
    * @example
    * ```ts
-   * elements.animate('n1', { breathe: { amplitude: 0.12 } });
-   * elements.animate('n1', { fadeIn: { duration: 500 }, colorCycle: { colors: ['#f00', '#0f0'] } });
+   * graphPlugin.animate('n1', { breathe: { amplitude: 0.12 } });
    * ```
    */
   animate(id: string, spec: ElementAnimations): void {
-    const obj = this._solidPool.get(id);
+    const obj = this._nodePool.get(id);
     if (!obj) {
-      console.warn(`[ElementPlugin] animate(): solid element "${id}" not found.`);
+      console.warn(`[GraphPlugin] animate(): node "${id}" not found.`);
       return;
     }
     const element = obj.element as BaseNode;
@@ -646,10 +568,9 @@ export class ElementPlugin implements CanvasPlugin {
       if (opts === undefined || opts === null) continue;
       const handler = this._animRegistry.get(type) as AnimationHandler | undefined;
       if (!handler) {
-        console.warn(`[ElementPlugin] animate(): no handler registered for type "${type}".`);
+        console.warn(`[GraphPlugin] animate(): no handler registered for type "${type}".`);
         continue;
       }
-      // Stop existing slot for this type before restarting
       const existing = element._animSlots.get(type);
       if (existing) {
         handler.cleanup?.(existing.state, element, this._halos);
@@ -663,13 +584,13 @@ export class ElementPlugin implements CanvasPlugin {
   }
 
   /**
-   * Stop one or all animations on a solid element.
+   * Stop one or all animations on a node.
    *
-   * @param id   - Solid element id.
+   * @param id   - Node id.
    * @param type - Animation type to stop.  Omit to stop all animations.
    */
   clearAnimation(id: string, type?: string): void {
-    const obj = this._solidPool.get(id);
+    const obj = this._nodePool.get(id);
     if (!obj) return;
     const element = obj.element as BaseNode;
     if (!element._animSlots) return;
@@ -689,7 +610,6 @@ export class ElementPlugin implements CanvasPlugin {
       element._animSlots.clear();
     }
 
-    // Apply resets to the container immediately
     this._applyContainerOverrides(obj, element);
 
     if (element._animSlots.size === 0 && !element.onAnimationTick) {
@@ -697,13 +617,7 @@ export class ElementPlugin implements CanvasPlugin {
     }
   }
 
-  /**
-   * Apply `_animOverrides` scale and alpha to the PixiJS Container.
-   * Called after all handlers have run for a frame, and immediately after
-   * {@link clearAnimation} to flush resets.
-   * @internal
-   */
-  private _applyContainerOverrides(obj: ElementObject, element: BaseNode): void {
+  private _applyContainerOverrides(obj: GraphObject, element: BaseNode): void {
     const o = element._animOverrides;
     obj.container.alpha = o.alpha;
     if (o.scale !== 1) {
@@ -718,34 +632,21 @@ export class ElementPlugin implements CanvasPlugin {
     }
   }
 
-  // ── Connector attachment helpers ──────────────────────────────────────────
+  // ── Edge attachment helpers ───────────────────────────────────────────────
 
-  /**
-   * Register a connector in the reverse solid→connector index.
-   * Called by {@link addConnector} when the spec has `sourceId` or `targetId`.
-   */
-  private _registerConnAttachment(spec: BaseEdgeSpec): void {
-    for (const solidId of [spec.sourceId, spec.targetId]) {
-      if (!solidId) continue;
-      if (!this._solidToConns.has(solidId)) this._solidToConns.set(solidId, new Set());
-      this._solidToConns.get(solidId)!.add(spec.id);
+  private _registerEdgeAttachment(spec: BaseEdgeSpec): void {
+    for (const nodeId of [spec.sourceId, spec.targetId]) {
+      if (!nodeId) continue;
+      if (!this._nodeToEdges.has(nodeId)) this._nodeToEdges.set(nodeId, new Set());
+      this._nodeToEdges.get(nodeId)!.add(spec.id);
     }
   }
 
-  /**
-   * Remove a connector from the reverse index.
-   * Called by {@link removeConnector}.
-   */
-  private _unregisterConn(connId: string): void {
-    for (const set of this._solidToConns.values()) set.delete(connId);
+  private _unregisterEdge(edgeId: string): void {
+    for (const set of this._nodeToEdges.values()) set.delete(edgeId);
   }
 
-  /**
-   * Compute `from`/`to` endpoints for a connector spec that carries
-   * `sourceId`/`targetId`, using each solid's `getConnectionPoint()`.
-   * Falls back to the raw `spec.from`/`spec.to` when an id is not found.
-   */
-  private _resolveConnEndpoints(spec: BaseEdgeSpec): { from: Point; to: Point } {
+  private _resolveEdgeEndpoints(spec: BaseEdgeSpec): { from: Point; to: Point } {
     let from = spec.from;
     let to   = spec.to;
     if (spec.sourceId && spec.targetId) {
@@ -763,17 +664,13 @@ export class ElementPlugin implements CanvasPlugin {
     return { from, to };
   }
 
-  /**
-   * Recompute `from`/`to` for every connector attached to `movedSolidId`.
-   * Called automatically after a solid is repositioned during drag.
-   */
-  private _updateAttachedConnectors(movedSolidId: string): void {
-    const connIds = this._solidToConns.get(movedSolidId);
-    if (!connIds) return;
-    for (const connId of connIds) {
-      const connObj = this._connPool.get(connId);
-      if (!connObj) continue;
-      const spec   = connObj.element.spec as BaseEdgeSpec;
+  private _updateAttachedEdges(movedNodeId: string): void {
+    const edgeIds = this._nodeToEdges.get(movedNodeId);
+    if (!edgeIds) return;
+    for (const edgeId of edgeIds) {
+      const edgeObj = this._edgePool.get(edgeId);
+      if (!edgeObj) continue;
+      const spec   = edgeObj.element.spec as BaseEdgeSpec;
       const patch: Partial<BaseEdgeSpec> = {};
 
       if (spec.sourceId) {
@@ -788,17 +685,17 @@ export class ElementPlugin implements CanvasPlugin {
         const cp = this.getConnectionPoint(spec.targetId, dir.x, dir.y);
         if (cp) patch.to = cp;
       }
-      if (patch.from || patch.to) this.updateEdge(connId, patch);
+      if (patch.from || patch.to) this.updateEdge(edgeId, patch);
     }
   }
 
   // ── Pointer event handlers ────────────────────────────────────────────────
 
   private _hitTest(wx: number, wy: number): { id: string; type: 'node' | 'edge' } | null {
-    const solid = this._solidPool.hitTest(wx, wy);
-    if (solid) return { id: solid.id, type: 'node' };
-    const conn = this._connPool.hitTest(wx, wy);
-    if (conn)  return { id: conn.id,  type: 'edge' };
+    const node = this._nodePool.hitTest(wx, wy);
+    if (node) return { id: node.id, type: 'node' };
+    const edge = this._edgePool.hitTest(wx, wy);
+    if (edge) return { id: edge.id, type: 'edge' };
     return null;
   }
 
@@ -809,7 +706,7 @@ export class ElementPlugin implements CanvasPlugin {
     wy: number,
     nativeEvent: PointerEvent,
   ) {
-    const obj = type === 'node' ? this._solidPool.get(id) : this._connPool.get(id);
+    const obj = type === 'node' ? this._nodePool.get(id) : this._edgePool.get(id);
     return {
       elementId:   id,
       elementType: type,
@@ -823,12 +720,11 @@ export class ElementPlugin implements CanvasPlugin {
   private _onPointerMove(wx: number, wy: number, e: PointerEvent): void {
     const hit = this._hitTest(wx, wy);
 
-    // Hover leave
     if (this._lastHoverId && (!hit || hit.id !== this._lastHoverId)) {
-      const prevObj  = this._solidPool.get(this._lastHoverId) ?? this._connPool.get(this._lastHoverId);
-      const prevType = this._solidPool.has(this._lastHoverId) ? 'node' : 'edge' as const;
+      const prevObj  = this._nodePool.get(this._lastHoverId) ?? this._edgePool.get(this._lastHoverId);
+      const prevType = this._nodePool.has(this._lastHoverId) ? 'node' : 'edge' as const;
       prevObj?.element.setState('hovered', false);
-      const scene = this._solidPool.has(this._lastHoverId) ? this._solidScene : this._connScene;
+      const scene = this._nodePool.has(this._lastHoverId) ? this._nodeScene : this._edgeScene;
       scene.redraw(this._lastHoverId);
       this._ctx.events.emit(
         'graph:pointerout',
@@ -837,11 +733,10 @@ export class ElementPlugin implements CanvasPlugin {
       this._lastHoverId = null;
     }
 
-    // Hover enter
     if (hit && hit.id !== this._lastHoverId) {
-      const obj = this._solidPool.get(hit.id) ?? this._connPool.get(hit.id);
+      const obj = this._nodePool.get(hit.id) ?? this._edgePool.get(hit.id);
       obj?.element.setState('hovered', true);
-      const scene = hit.type === 'node' ? this._solidScene : this._connScene;
+      const scene = hit.type === 'node' ? this._nodeScene : this._edgeScene;
       scene.redraw(hit.id);
       this._ctx.events.emit(
         'graph:pointerover',
@@ -850,7 +745,6 @@ export class ElementPlugin implements CanvasPlugin {
       this._lastHoverId = hit.id;
     }
 
-    // Pointermove on hovered element
     if (hit) {
       this._ctx.events.emit(
         'graph:pointermove',
@@ -858,11 +752,10 @@ export class ElementPlugin implements CanvasPlugin {
       );
     }
 
-    // Drag move
     if (this._dragState) {
       const { id, lastX, lastY } = this._dragState;
-      const isSolid = this._solidPool.has(id);
-      const type: 'node' | 'edge' = isSolid ? 'node' : 'edge';
+      const isNode = this._nodePool.has(id);
+      const type: 'node' | 'edge' = isNode ? 'node' : 'edge';
       const dx = wx - lastX, dy = wy - lastY;
       this._dragState.lastX = wx;
       this._dragState.lastY = wy;
@@ -870,12 +763,10 @@ export class ElementPlugin implements CanvasPlugin {
         'graph:dragmove',
         new GraphDragMoveEvent({ ...this._fields(id, type, wx, wy, e), dx, dy }),
       );
-      // Move the solid using absolute pointer position minus grab offset so the
-      // clicked point stays under the pointer regardless of per-frame floating-point drift.
-      if (isSolid) {
+      if (isNode) {
         const { grabOffsetX, grabOffsetY } = this._dragState!;
         this.updateNode(id, { x: wx - grabOffsetX, y: wy - grabOffsetY });
-        this._updateAttachedConnectors(id);
+        this._updateAttachedEdges(id);
       }
     }
   }
@@ -887,15 +778,12 @@ export class ElementPlugin implements CanvasPlugin {
       'graph:pointerdown',
       new GraphPointerDownEvent(this._fields(hit.id, hit.type, wx, wy, e)),
     );
-    const obj = this._solidPool.get(hit.id) ?? this._connPool.get(hit.id);
+    const obj = this._nodePool.get(hit.id) ?? this._edgePool.get(hit.id);
     if (obj?.element.spec.draggable) {
-      // Record the offset from pointer to element center so the clicked point
-      // stays under the pointer throughout the drag (absolute positioning each frame).
-      const center = this._solidPool.has(hit.id)
+      const center = this._nodePool.has(hit.id)
         ? (obj.element as BaseNode).getCenter()
         : { x: (obj.element.spec as BaseEdgeSpec).from.x, y: (obj.element.spec as BaseEdgeSpec).from.y };
       this._dragState = { id: hit.id, lastX: wx, lastY: wy, grabOffsetX: wx - center.x, grabOffsetY: wy - center.y };
-      // Suspend viewport pan so it doesn't fight the element drag
       this._ctx.camera.lockPan();
       this._ctx.events.emit(
         'graph:dragstart',
@@ -907,9 +795,8 @@ export class ElementPlugin implements CanvasPlugin {
   private _onPointerUp(wx: number, wy: number, e: PointerEvent): void {
     if (this._dragState) {
       const { id } = this._dragState;
-      const type: 'node' | 'edge' = this._solidPool.has(id) ? 'node' : 'edge';
+      const type: 'node' | 'edge' = this._nodePool.has(id) ? 'node' : 'edge';
       this._dragState = null;
-      // Resume viewport pan now that element drag is done
       this._ctx.camera.unlockPan();
       this._ctx.events.emit(
         'graph:dragend',
@@ -927,27 +814,18 @@ export class ElementPlugin implements CanvasPlugin {
   private _onPointerClick(wx: number, wy: number, e: PointerEvent): void {
     const hit = this._hitTest(wx, wy);
     if (!hit) return;
-    this._ctx.events.emit(
-      'graph:click',
-      new GraphClickEvent(this._fields(hit.id, hit.type, wx, wy, e)),
-    );
+    this._ctx.events.emit('graph:click', new GraphClickEvent(this._fields(hit.id, hit.type, wx, wy, e)));
   }
 
   private _onPointerDblClick(wx: number, wy: number, e: PointerEvent): void {
     const hit = this._hitTest(wx, wy);
     if (!hit) return;
-    this._ctx.events.emit(
-      'graph:dblclick',
-      new GraphDblClickEvent(this._fields(hit.id, hit.type, wx, wy, e)),
-    );
+    this._ctx.events.emit('graph:dblclick', new GraphDblClickEvent(this._fields(hit.id, hit.type, wx, wy, e)));
   }
 
   private _onPointerContextMenu(wx: number, wy: number, e: PointerEvent): void {
     const hit = this._hitTest(wx, wy);
     if (!hit) return;
-    this._ctx.events.emit(
-      'graph:contextmenu',
-      new GraphContextMenuEvent(this._fields(hit.id, hit.type, wx, wy, e)),
-    );
+    this._ctx.events.emit('graph:contextmenu', new GraphContextMenuEvent(this._fields(hit.id, hit.type, wx, wy, e)));
   }
 }

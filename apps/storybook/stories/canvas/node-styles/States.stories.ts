@@ -1,5 +1,5 @@
 /**
- * ElementPlugin — States
+ * GraphPlugin — States
  *
  * Demonstrates the named-state system built into every element.
  * States overlay DrawStyle overrides on top of the base style —
@@ -21,8 +21,8 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  ElementPlugin,
-  type CircleElementSpec,
+  GraphPlugin,
+  type CircleNodeSpec,
 } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
@@ -45,7 +45,7 @@ export const States: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements' });
+    const elements = new GraphPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     const G = 200;
@@ -60,7 +60,7 @@ export const States: Story = {
         selected: { fill: '#1d4ed8', stroke: '#ffffff', strokeWidth: 3 },
       },
       interactive: true,
-    } as CircleElementSpec);
+    } as CircleNodeSpec);
 
     // ── Node 2 — hovered ──────────────────────────────────────────────────
     elements.addNode('circle', {
@@ -72,7 +72,7 @@ export const States: Story = {
         selected: { fill: '#1d4ed8', stroke: '#ffffff', strokeWidth: 3 },
       },
       interactive: true,
-    } as CircleElementSpec);
+    } as CircleNodeSpec);
     elements.setState('n-hovered', 'hovered', true);
 
     // ── Node 3 — selected ─────────────────────────────────────────────────
@@ -85,7 +85,7 @@ export const States: Story = {
         selected: { fill: '#1d4ed8', stroke: '#ffffff', strokeWidth: 3 },
       },
       interactive: true,
-    } as CircleElementSpec);
+    } as CircleNodeSpec);
     elements.setState('n-selected', 'selected', true);
 
     // ── Custom state: 'error' ─────────────────────────────────────────────
@@ -98,7 +98,7 @@ export const States: Story = {
         warning:{ fill: '#78350f', stroke: '#fcd34d', strokeWidth: 3 },
       },
       interactive: true,
-    } as CircleElementSpec);
+    } as CircleNodeSpec);
     elements.setState('n-error', 'error', true);
 
     elements.addNode('circle', {
@@ -110,7 +110,7 @@ export const States: Story = {
         warning:{ fill: '#78350f', stroke: '#fcd34d', strokeWidth: 3 },
       },
       interactive: true,
-    } as CircleElementSpec);
+    } as CircleNodeSpec);
     elements.setState('n-warning', 'warning', true);
 
     elements.fitContent();

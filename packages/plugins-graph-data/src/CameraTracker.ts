@@ -1,6 +1,6 @@
 // ── CameraTracker ─────────────────────────────────────────────────────────────
 // Computes the world-space AABB of the current viewport and notifies
-// ElementScene whenever the camera moves or zooms.
+// GraphScene whenever the camera moves or zooms.
 
 import type { CameraAPI } from '@invana/canvas';
 import type { EventBus } from '@invana/canvas';
@@ -15,7 +15,7 @@ export interface CameraBounds {
 
 /**
  * `CameraTracker` computes the world-space AABB of the viewport and notifies
- * {@link ElementScene} whenever the camera moves or zooms so the visible element
+ * {@link GraphScene} whenever the camera moves or zooms so the visible element
  * set can be updated.
  *
  * @remarks
@@ -23,7 +23,7 @@ export interface CameraBounds {
  * elements slightly outside the visible area are pre-attached before the user
  * pans to them.
  *
- * This class is internal to {@link ElementPlugin}.
+ * This class is internal to {@link GraphPlugin}.
  */
 export class CameraTracker {
   private _camera: CameraAPI;

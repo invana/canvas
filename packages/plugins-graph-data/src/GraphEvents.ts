@@ -1,26 +1,25 @@
-// ── ElementEvents ─────────────────────────────────────────────────────────────
-// Concrete event classes for graph:* events emitted by ElementPlugin.
+// ── GraphEvents ───────────────────────────────────────────────────────────────
+// Concrete event classes for graph:* events emitted by GraphPlugin.
 
 import { CanvasEvent } from '@invana/canvas';
 
 // ── Field interfaces ──────────────────────────────────────────────────────────
 
 /**
- * Shared fields for all non-drag element pointer events.
+ * Shared fields for all non-drag graph pointer events.
  */
-export interface ElementEventFields {
-  /** Id of the element that was interacted with. */
+export interface GraphEventFields {
+  /** Id of the graph element that was interacted with. */
   elementId: string;
   /**
    * Element type: `'node'` for node shapes, `'edge'` for path connectors.
-   * Allows consumers to filter without maintaining their own id sets.
    */
   elementType: 'node' | 'edge';
   /** X coordinate in world space. */
   worldX: number;
   /** Y coordinate in world space. */
   worldY: number;
-  /** The raw browser PointerEvent. Exposes pointerId, ctrlKey, button, etc. */
+  /** The raw browser PointerEvent. */
   nativeEvent: PointerEvent;
   /** Arbitrary data from the element spec — forwarded unchanged. */
   data?: Record<string, unknown>;
@@ -29,7 +28,7 @@ export interface ElementEventFields {
 /**
  * Extra fields for drag events.
  */
-export interface ElementDragEventFields extends ElementEventFields {
+export interface GraphDragEventFields extends GraphEventFields {
   /** World-space X delta from the previous `dragmove` (or `dragstart`). */
   dx: number;
   /** World-space Y delta from the previous `dragmove` (or `dragstart`). */
@@ -39,7 +38,7 @@ export interface ElementDragEventFields extends ElementEventFields {
 /**
  * Fields for state change events.
  */
-export interface ElementStateChangeFields {
+export interface GraphStateChangeFields {
   /** Id of the element whose state changed. */
   elementId: string;
   /** The state that changed (e.g. `'hovered'`, `'selected'`). */
@@ -51,7 +50,7 @@ export interface ElementStateChangeFields {
 /**
  * Fields for add / remove lifecycle events.
  */
-export interface ElementLifecycleFields {
+export interface GraphLifecycleFields {
   /** Id of the element that was added or removed. */
   elementId: string;
   /** Element type. */
@@ -61,10 +60,9 @@ export interface ElementLifecycleFields {
 // ── Base classes ──────────────────────────────────────────────────────────────
 
 /**
- * Base class for all non-drag element pointer events.
- * Extend this when creating domain-level events in `plugin-graph-data`.
+ * Base class for all non-drag graph pointer events.
  */
-export class ElementBaseEvent extends CanvasEvent {
+export class GraphBaseEvent extends CanvasEvent {
   readonly elementId:   string;
   readonly elementType: 'node' | 'edge';
   readonly worldX:      number;
@@ -72,7 +70,7 @@ export class ElementBaseEvent extends CanvasEvent {
   readonly nativeEvent: PointerEvent;
   readonly data?:       Record<string, unknown>;
 
-  constructor(type: string, f: ElementEventFields) {
+  constructor(type: string, f: GraphEventFields) {
     super(type);
     this.elementId   = f.elementId;
     this.elementType = f.elementType;
@@ -83,12 +81,12 @@ export class ElementBaseEvent extends CanvasEvent {
   }
 }
 
-/** Base class for all drag element events. */
-export class ElementDragBaseEvent extends ElementBaseEvent {
+/** Base class for all drag graph events. */
+export class GraphDragBaseEvent extends GraphBaseEvent {
   readonly dx: number;
   readonly dy: number;
 
-  constructor(type: string, f: ElementDragEventFields) {
+  constructor(type: string, f: GraphDragEventFields) {
     super(type, f);
     this.dx = f.dx;
     this.dy = f.dy;
@@ -97,59 +95,59 @@ export class ElementDragBaseEvent extends ElementBaseEvent {
 
 // ── Concrete event classes ────────────────────────────────────────────────────
 
-export class GraphClickEvent extends ElementBaseEvent {
+export class GraphClickEvent extends GraphBaseEvent {
   declare readonly type: 'graph:click';
-  constructor(f: ElementEventFields) { super('graph:click', f); }
+  constructor(f: GraphEventFields) { super('graph:click', f); }
 }
 
-export class GraphDblClickEvent extends ElementBaseEvent {
+export class GraphDblClickEvent extends GraphBaseEvent {
   declare readonly type: 'graph:dblclick';
-  constructor(f: ElementEventFields) { super('graph:dblclick', f); }
+  constructor(f: GraphEventFields) { super('graph:dblclick', f); }
 }
 
-export class GraphContextMenuEvent extends ElementBaseEvent {
+export class GraphContextMenuEvent extends GraphBaseEvent {
   declare readonly type: 'graph:contextmenu';
-  constructor(f: ElementEventFields) { super('graph:contextmenu', f); }
+  constructor(f: GraphEventFields) { super('graph:contextmenu', f); }
 }
 
-export class GraphPointerOverEvent extends ElementBaseEvent {
+export class GraphPointerOverEvent extends GraphBaseEvent {
   declare readonly type: 'graph:pointerover';
-  constructor(f: ElementEventFields) { super('graph:pointerover', f); }
+  constructor(f: GraphEventFields) { super('graph:pointerover', f); }
 }
 
-export class GraphPointerOutEvent extends ElementBaseEvent {
+export class GraphPointerOutEvent extends GraphBaseEvent {
   declare readonly type: 'graph:pointerout';
-  constructor(f: ElementEventFields) { super('graph:pointerout', f); }
+  constructor(f: GraphEventFields) { super('graph:pointerout', f); }
 }
 
-export class GraphPointerMoveEvent extends ElementBaseEvent {
+export class GraphPointerMoveEvent extends GraphBaseEvent {
   declare readonly type: 'graph:pointermove';
-  constructor(f: ElementEventFields) { super('graph:pointermove', f); }
+  constructor(f: GraphEventFields) { super('graph:pointermove', f); }
 }
 
-export class GraphPointerDownEvent extends ElementBaseEvent {
+export class GraphPointerDownEvent extends GraphBaseEvent {
   declare readonly type: 'graph:pointerdown';
-  constructor(f: ElementEventFields) { super('graph:pointerdown', f); }
+  constructor(f: GraphEventFields) { super('graph:pointerdown', f); }
 }
 
-export class GraphPointerUpEvent extends ElementBaseEvent {
+export class GraphPointerUpEvent extends GraphBaseEvent {
   declare readonly type: 'graph:pointerup';
-  constructor(f: ElementEventFields) { super('graph:pointerup', f); }
+  constructor(f: GraphEventFields) { super('graph:pointerup', f); }
 }
 
-export class GraphDragStartEvent extends ElementDragBaseEvent {
+export class GraphDragStartEvent extends GraphDragBaseEvent {
   declare readonly type: 'graph:dragstart';
-  constructor(f: ElementDragEventFields) { super('graph:dragstart', f); }
+  constructor(f: GraphDragEventFields) { super('graph:dragstart', f); }
 }
 
-export class GraphDragMoveEvent extends ElementDragBaseEvent {
+export class GraphDragMoveEvent extends GraphDragBaseEvent {
   declare readonly type: 'graph:dragmove';
-  constructor(f: ElementDragEventFields) { super('graph:dragmove', f); }
+  constructor(f: GraphDragEventFields) { super('graph:dragmove', f); }
 }
 
-export class GraphDragEndEvent extends ElementDragBaseEvent {
+export class GraphDragEndEvent extends GraphDragBaseEvent {
   declare readonly type: 'graph:dragend';
-  constructor(f: ElementDragEventFields) { super('graph:dragend', f); }
+  constructor(f: GraphDragEventFields) { super('graph:dragend', f); }
 }
 
 // ── State / lifecycle events ──────────────────────────────────────────────────
@@ -160,7 +158,7 @@ export class GraphStateChangeEvent extends CanvasEvent {
   readonly state:     string;
   readonly active:    boolean;
 
-  constructor(f: ElementStateChangeFields) {
+  constructor(f: GraphStateChangeFields) {
     super('graph:statechange');
     this.elementId = f.elementId;
     this.state     = f.state;
@@ -173,7 +171,7 @@ export class GraphAddedEvent extends CanvasEvent {
   readonly elementId:   string;
   readonly elementType: 'node' | 'edge';
 
-  constructor(f: ElementLifecycleFields) {
+  constructor(f: GraphLifecycleFields) {
     super('graph:added');
     this.elementId   = f.elementId;
     this.elementType = f.elementType;
@@ -185,10 +183,9 @@ export class GraphRemovedEvent extends CanvasEvent {
   readonly elementId:   string;
   readonly elementType: 'node' | 'edge';
 
-  constructor(f: ElementLifecycleFields) {
+  constructor(f: GraphLifecycleFields) {
     super('graph:removed');
     this.elementId   = f.elementId;
     this.elementType = f.elementType;
   }
 }
-

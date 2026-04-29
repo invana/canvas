@@ -1,5 +1,5 @@
 /**
- * ElementPlugin — Custom Connector
+ * GraphPlugin — Custom Connector
  *
  * Shows how to create and register a custom connector type via
  * `elementPlugin.registerEdge(name, class)`.
@@ -25,12 +25,12 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  ElementPlugin,
+  GraphPlugin,
   BaseEdge,
-  type CircleElementSpec,
+  type CircleNodeSpec,
   type BaseEdgeSpec,
   type PathCommand,
-  type ElementPoint as Point,
+  type Point,
 } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
@@ -127,7 +127,7 @@ export const CustomConnector: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements' });
+    const elements = new GraphPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // Register custom connector types
@@ -136,8 +136,8 @@ export const CustomConnector: Story = {
 
     // ── ZigZag row ────────────────────────────────────────────────────────
     const ZZ_Y = -100;
-    elements.addNode('circle', { id: 'zz-l', x: -200, y: ZZ_Y, radius: NODE_R, style: ANCHOR } as CircleElementSpec);
-    elements.addNode('circle', { id: 'zz-r', x:  200, y: ZZ_Y, radius: NODE_R, style: ANCHOR } as CircleElementSpec);
+    elements.addNode('circle', { id: 'zz-l', x: -200, y: ZZ_Y, radius: NODE_R, style: ANCHOR } as CircleNodeSpec);
+    elements.addNode('circle', { id: 'zz-r', x:  200, y: ZZ_Y, radius: NODE_R, style: ANCHOR } as CircleNodeSpec);
     elements.addEdge('zigzag', {
       id: 'zz-conn',
       from:      { x: -200 + NODE_R, y: ZZ_Y },
@@ -150,8 +150,8 @@ export const CustomConnector: Story = {
 
     // ── Ripple row ────────────────────────────────────────────────────────
     const RP_Y = 100;
-    elements.addNode('circle', { id: 'rp-l', x: -200, y: RP_Y, radius: NODE_R, style: ANCHOR } as CircleElementSpec);
-    elements.addNode('circle', { id: 'rp-r', x:  200, y: RP_Y, radius: NODE_R, style: ANCHOR } as CircleElementSpec);
+    elements.addNode('circle', { id: 'rp-l', x: -200, y: RP_Y, radius: NODE_R, style: ANCHOR } as CircleNodeSpec);
+    elements.addNode('circle', { id: 'rp-r', x:  200, y: RP_Y, radius: NODE_R, style: ANCHOR } as CircleNodeSpec);
     elements.addEdge('ripple', {
       id: 'rp-conn',
       from:      { x: -200 + NODE_R, y: RP_Y },

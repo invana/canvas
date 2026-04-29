@@ -1,5 +1,5 @@
 // ── CanvasEventMap augmentation ───────────────────────────────────────────────
-// Extends the canvas event map with graph:* events emitted by ElementPlugin.
+// Extends the canvas event map with graph:* events emitted by GraphPlugin.
 // This is automatically included when consumers import @invana/plugins-graph-data.
 
 import type {
@@ -17,7 +17,7 @@ import type {
   GraphStateChangeEvent,
   GraphAddedEvent,
   GraphRemovedEvent,
-} from './ElementEvents.js';
+} from './GraphEvents.js';
 
 declare module '@invana/canvas' {
   interface CanvasEventMap {

@@ -1,8 +1,8 @@
 /**
- * ElementPlugin — Custom Element
+ * GraphPlugin — Custom Element
  *
  * Shows how to extend BaseNode to create a fully custom element type
- * and register it with ElementPlugin via `registerNode()`.
+ * and register it with GraphPlugin via `registerNode()`.
  *
  * The `DatabaseNode` custom element:
  *   - Draws a cylinder shape (top ellipse + body rect + bottom ellipse)
@@ -16,17 +16,17 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  ElementPlugin,
+  GraphPlugin,
   BaseNode,
   LOD,
   type DrawContext,
-  type ElementBBox as BBox,
-  type ElementPoint as Point,
+  type BBox,
+  type Point,
   type BaseNodeSpec,
 } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
-const meta: Meta = { title: 'Canvas/Node Styles/Custom Element' };
+const meta: Meta = { title: 'Canvas/Node Styles/Custom Node' };
 export default meta;
 type Story = StoryObj;
 
@@ -128,7 +128,7 @@ class HexBadge extends BaseNode<HexBadgeSpec> {
 // ─── Story ────────────────────────────────────────────────────────────────────
 
 export const CustomElement: Story = {
-  name: 'Custom Element',
+  name: 'Custom Node',
   render: () => createContainer(),
   play: async () => {
     const container = document.getElementById('canvas-example');
@@ -142,7 +142,7 @@ export const CustomElement: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements' });
+    const elements = new GraphPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // Register custom types

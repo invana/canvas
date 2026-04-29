@@ -1,11 +1,11 @@
 // ── fadeInHandler (element-plugin) ────────────────────────────────────────────
 // Fades the element from a starting alpha up to full opacity.
 // Uses performance.now() for wall-clock elapsed time so it is unaffected by
-// frame-rate spikes. Writes to BaseSolid._animOverrides.alpha.
+// frame-rate spikes. Writes to BaseNode._animOverrides.alpha.
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
-import type { BaseNode as BaseSolid } from '../BaseSolid.js';
-import type { ElementHaloPool } from '../ElementHaloPool.js';
+import type { BaseNode } from '../BaseNode.js';
+import type { HaloPool } from '../HaloPool.js';
 
 /** Options for the `fadeIn` animation. */
 export interface FadeInOptions {
@@ -27,14 +27,14 @@ interface FadeInState {
  *
  * @remarks
  * Applies the alpha to `obj._animOverrides.alpha`, which
- * {@link ElementPlugin._applyContainerOverrides} sets on `container.alpha`.
+ * {@link _GraphPlugin._applyContainerOverrides} sets on `container.alpha`.
  * The starting alpha is applied immediately in `init` to avoid a one-frame
  * flash at full opacity before the first tick.
  */
 export const fadeInHandler: AnimationHandler<FadeInOptions, FadeInState> = {
   type: 'fadeIn',
 
-  init(spec: FadeInOptions, obj: BaseSolid, _halos: ElementHaloPool): FadeInState {
+  init(spec: FadeInOptions, obj: BaseNode, _halos: HaloPool): FadeInState {
     obj._animOverrides.alpha = spec.from ?? 0;
     return { startTime: performance.now(), repeatCount: 0 };
   },
@@ -56,14 +56,14 @@ export const fadeInHandler: AnimationHandler<FadeInOptions, FadeInState> = {
     return { dirty: true, stop: false };
   },
 
-  apply(state: FadeInState, spec: FadeInOptions, obj: BaseSolid, _halos: ElementHaloPool) {
+  apply(state: FadeInState, spec: FadeInOptions, obj: BaseNode, _halos: HaloPool) {
     const dur = spec.duration ?? 400;
     const from = spec.from ?? 0;
     const elapsed = performance.now() - state.startTime;
     obj._animOverrides.alpha = Math.min(1, from + (1 - from) * (elapsed / dur));
   },
 
-  cleanup(_state: FadeInState, obj: BaseSolid, _halos: ElementHaloPool) {
+  cleanup(_state: FadeInState, obj: BaseNode, _halos: HaloPool) {
     obj._animOverrides.alpha = 1;
   },
 };

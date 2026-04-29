@@ -1,7 +1,7 @@
 /**
- * ElementPlugin — Large Graph (Performance)
+ * GraphPlugin — Large Graph (Performance)
  *
- * Stress-tests the ElementPlugin renderer with a configurable number of nodes
+ * Stress-tests the GraphPlugin renderer with a configurable number of nodes
  * arranged in a grid, all connected with edges.
  *
  * Default: 100 nodes in a 10×10 grid, ~150 edges (nearest neighbours).
@@ -19,8 +19,8 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin, DevInfoPlugin } from '@invana/canvas';
 import {
-  ElementPlugin,
-  type BaseNodeSpec, type BaseEdgeSpec, type CircleElementSpec,
+  GraphPlugin,
+  type BaseNodeSpec, type BaseEdgeSpec, type CircleNodeSpec,
 } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
@@ -65,7 +65,7 @@ function generateGrid(
           draggable: true,
           cursor: 'grab',
           states: { hovered: { strokeWidth: 3, stroke: '#ffffff' } },
-        } as CircleElementSpec,
+        } as CircleNodeSpec,
       });
 
       // Right neighbour
@@ -126,7 +126,7 @@ export const LargeGridGraph: Story = {
     const devInfo = new DevInfoPlugin({ key: 'dev-info' });
     await canvas.plugins.register(devInfo);
 
-    const elements = new ElementPlugin({
+    const elements = new GraphPlugin({
       key: 'elements',
     });
     await canvas.plugins.register(elements);

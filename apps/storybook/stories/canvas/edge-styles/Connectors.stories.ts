@@ -1,5 +1,5 @@
 /**
- * ElementPlugin — Connectors
+ * GraphPlugin — Connectors
  *
  * All six built-in connector types shown between pairs of circle anchors.
  *
@@ -11,8 +11,8 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  ElementPlugin,
-  type CircleElementSpec,
+  GraphPlugin,
+  type CircleNodeSpec,
 } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
@@ -53,7 +53,7 @@ const ROWS: RowDef[] = [
 
 /** Build the shared element grid and return the connector id list for later updates. */
 function buildScene(
-  elements: ElementPlugin,
+  elements: GraphPlugin,
   prefix: string,
   sourceOffset: number,
   targetOffset: number,
@@ -69,12 +69,12 @@ function buildScene(
     elements.addNode('circle', {
       id: `${prefix}${row.id}-l`, x: lx, y: rowY,
       radius: NODE_R, style: ANCHOR_STYLE,
-    } as CircleElementSpec);
+    } as CircleNodeSpec);
 
     elements.addNode('circle', {
       id: `${prefix}${row.id}-r`, x: rx, y: rowY + row.dy,
       radius: NODE_R, style: ANCHOR_STYLE,
-    } as CircleElementSpec);
+    } as CircleNodeSpec);
 
     const midX  = (lx + rx) / 2;
     const verts = row.wverts?.map(v => ({ x: midX + v.xOff, y: rowY + v.yOff }));
@@ -115,7 +115,7 @@ export const Connectors: Story = {
     await canvas.init();
     await canvas.plugins.register(new BackgroundPlugin(BG_OPTS));
 
-    const elements = new ElementPlugin({ key: 'elements' });
+    const elements = new GraphPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     buildScene(elements, '', 0, 0);
@@ -136,7 +136,7 @@ export const ConnectorOffset: Story = {
     await canvas.init();
     await canvas.plugins.register(new BackgroundPlugin(BG_OPTS));
 
-    const elements = new ElementPlugin({ key: 'elements' });
+    const elements = new GraphPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     const params = { sourceOffset: 8, targetOffset: 8 };

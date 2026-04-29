@@ -1,17 +1,17 @@
-// ── CircleElement ─────────────────────────────────────────────────────────────
+// ── CircleNode ────────────────────────────────────────────────────────────────
 
 import { BaseNode, LOD } from '../BaseNode.js';
 import type { DrawContext } from '../DrawContext.js';
 import type { BaseNodeSpec, BBox, Point } from '../spec/index.js';
 
-/** Spec for a circle element. */
-export interface CircleElementSpec extends BaseNodeSpec {
+/** Spec for a circle node. */
+export interface CircleNodeSpec extends BaseNodeSpec {
   /** Outer radius in world-space pixels. */
   radius: number;
 }
 
 /**
- * A filled/stroked circle element.
+ * A filled/stroked circle node.
  *
  * @remarks
  * `getConnectionPoint()` returns a point on the circumference in the exact
@@ -19,7 +19,7 @@ export interface CircleElementSpec extends BaseNodeSpec {
  *
  * @example
  * ```ts
- * elementPlugin.addSolid('circle', {
+ * graphPlugin.addNode('circle', {
  *   id: 'n1', x: 0, y: 0, radius: 30,
  *   style: { fill: '#3fcbeb', stroke: '#ffffff', strokeWidth: 2 },
  *   label: 'Node 1',
@@ -31,7 +31,7 @@ export interface CircleElementSpec extends BaseNodeSpec {
  * });
  * ```
  */
-export class CircleElement extends BaseNode<CircleElementSpec> {
+export class CircleNode extends BaseNode<CircleNodeSpec> {
   draw(ctx: DrawContext, detail: LOD): void {
     const { x, y, radius, label } = this.spec;
     const style = this.resolveStyle();

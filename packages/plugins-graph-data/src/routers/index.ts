@@ -6,5 +6,5 @@ export { orthRouter } from './OrthRouter.js';
 export { oneSideRouter } from './OneSideRouter.js';
 export { erRouter } from './ErRouter.js';
 
-/** Map of all built-in routers, ready to seed ElementPlugin's registry. */
+/** Map of all built-in routers, ready to seed GraphPlugin's registry. */
 export { BUILTIN_ROUTERS } from './builtins.js';

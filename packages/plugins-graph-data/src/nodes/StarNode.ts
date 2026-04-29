@@ -1,11 +1,11 @@
-// ── StarElement ───────────────────────────────────────────────────────────────
+// ── StarNode ──────────────────────────────────────────────────────────────────
 
 import { BaseNode, LOD } from '../BaseNode.js';
 import type { DrawContext } from '../DrawContext.js';
 import type { BaseNodeSpec, BBox, Point } from '../spec/index.js';
 
-/** Spec for a star element. */
-export interface StarElementSpec extends BaseNodeSpec {
+/** Spec for a star node. */
+export interface StarNodeSpec extends BaseNodeSpec {
   /** Outer radius in world-space pixels. */
   radius: number;
   /** Number of points (default: 5). */
@@ -17,14 +17,14 @@ export interface StarElementSpec extends BaseNodeSpec {
 }
 
 /**
- * A star-shaped element.
+ * A star-shaped node.
  *
  * @remarks
  * `x`, `y` refer to the **centre** of the star.
  * `getConnectionPoint()` approximates the nearest outer edge using the
  * circumscribed-circle approach — suitable for most use cases.
  */
-export class StarElement extends BaseNode<StarElementSpec> {
+export class StarNode extends BaseNode<StarNodeSpec> {
   draw(ctx: DrawContext, detail: LOD): void {
     const { x, y, radius, points = 5, innerRatio = 0.42, rotation, label } = this.spec;
     const style = this.resolveStyle();
@@ -51,7 +51,6 @@ export class StarElement extends BaseNode<StarElementSpec> {
   }
 
   getConnectionPoint(toX: number, toY: number): Point {
-    // Approximate: use circumscribed circle for connection math
     const { x, y, radius } = this.spec;
     const dx = toX - x, dy = toY - y;
     const len = Math.sqrt(dx * dx + dy * dy) || 1;

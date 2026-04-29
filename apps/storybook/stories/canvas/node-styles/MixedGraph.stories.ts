@@ -1,8 +1,8 @@
 /**
- * ElementPlugin — Mixed Graph
+ * GraphPlugin — Mixed Graph
  *
  * A complete mini-graph combining solids and connectors to demonstrate
- * how ElementPlugin can serve as the rendering backbone for a graph view.
+ * how GraphPlugin can serve as the rendering backbone for a graph view.
  *
  * Topology:
  *
@@ -29,7 +29,7 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
-import { ElementPlugin, type BaseNodeSpec, type BaseEdgeSpec, type CircleElementSpec } from '@invana/plugins-graph-data';
+import { GraphPlugin, type BaseNodeSpec, type BaseEdgeSpec, type CircleNodeSpec } from '@invana/plugins-graph-data';
 // BaseNodeSpec and BaseEdgeSpec are re-exported from the element-plugin
 import { createContainer } from '../../../src/div-utils.js';
 
@@ -67,7 +67,7 @@ export const MixedGraph: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements' });
+    const elements = new GraphPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // ── Nodes ─────────────────────────────────────────────────────────────
@@ -92,7 +92,7 @@ export const MixedGraph: Story = {
           style: solidStyles.gateway,
           states: stateStyles,
           interactive: true,
-        } as CircleElementSpec,
+        } as CircleNodeSpec,
       },
       {
         type: 'rect',

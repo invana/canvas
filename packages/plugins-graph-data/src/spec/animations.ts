@@ -23,7 +23,7 @@ import type {
 } from '../handlers/index.js';
 
 /**
- * Animations to apply to a solid element via {@link ElementPlugin.animate}.
+ * Animations to apply to a solid element via {@link _GraphPlugin.animate}.
  *
  * @remarks
  * Each key is the animation **type name**; its value is the options for that

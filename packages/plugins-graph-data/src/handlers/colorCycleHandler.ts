@@ -1,11 +1,11 @@
 // ── colorCycleHandler (element-plugin) ────────────────────────────────────────
 // Transitions the element fill through a palette of colors over time.
-// Writes to BaseSolid._animOverrides.colorOverride, which resolveStyle()
+// Writes to BaseNode._animOverrides.colorOverride, which resolveStyle()
 // merges in place of the spec fill color.
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
-import type { BaseNode as BaseSolid } from '../BaseSolid.js';
-import type { ElementHaloPool } from '../ElementHaloPool.js';
+import type { BaseNode } from '../BaseNode.js';
+import type { HaloPool } from '../HaloPool.js';
 
 /** Options for the `colorCycle` animation. */
 export interface ColorCycleOptions {
@@ -27,13 +27,13 @@ interface ColorCycleState {
  *
  * @remarks
  * Writes the active color to `obj._animOverrides.colorOverride`.
- * {@link BaseSolid.resolveStyle} picks this up automatically — no extra
+ * {@link BaseNode.resolveStyle} picks this up automatically — no extra
  * draw logic required in element subclasses.
  */
 export const colorCycleHandler: AnimationHandler<ColorCycleOptions, ColorCycleState> = {
   type: 'colorCycle',
 
-  init(_spec: ColorCycleOptions, _obj: BaseSolid, _halos: ElementHaloPool): ColorCycleState {
+  init(_spec: ColorCycleOptions, _obj: BaseNode, _halos: HaloPool): ColorCycleState {
     return { phase: 0, repeatCount: 0 };
   },
 
@@ -50,7 +50,7 @@ export const colorCycleHandler: AnimationHandler<ColorCycleOptions, ColorCycleSt
     return { dirty: true, stop: false };
   },
 
-  apply(state: ColorCycleState, spec: ColorCycleOptions, obj: BaseSolid, _halos: ElementHaloPool) {
+  apply(state: ColorCycleState, spec: ColorCycleOptions, obj: BaseNode, _halos: HaloPool) {
     const colors = spec.colors;
     if (colors.length > 0) {
       const idx = Math.floor(state.phase) % colors.length;
@@ -58,7 +58,7 @@ export const colorCycleHandler: AnimationHandler<ColorCycleOptions, ColorCycleSt
     }
   },
 
-  cleanup(_state: ColorCycleState, obj: BaseSolid, _halos: ElementHaloPool) {
+  cleanup(_state: ColorCycleState, obj: BaseNode, _halos: HaloPool) {
     obj._animOverrides.colorOverride = undefined;
   },
 };

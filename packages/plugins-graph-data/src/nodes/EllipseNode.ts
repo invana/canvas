@@ -1,11 +1,11 @@
-// ── EllipseElement ────────────────────────────────────────────────────────────
+// ── EllipseNode ───────────────────────────────────────────────────────────────
 
 import { BaseNode, LOD } from '../BaseNode.js';
 import type { DrawContext } from '../DrawContext.js';
 import type { BaseNodeSpec, BBox, Point } from '../spec/index.js';
 
-/** Spec for an ellipse element. */
-export interface EllipseElementSpec extends BaseNodeSpec {
+/** Spec for an ellipse node. */
+export interface EllipseNodeSpec extends BaseNodeSpec {
   /** Horizontal radius in world-space pixels. */
   radiusX: number;
   /** Vertical radius in world-space pixels. */
@@ -13,13 +13,13 @@ export interface EllipseElementSpec extends BaseNodeSpec {
 }
 
 /**
- * A filled/stroked ellipse element.
+ * A filled/stroked ellipse node.
  *
  * @remarks
  * `x`, `y` in the spec refer to the **centre** of the ellipse.
  * `getConnectionPoint()` uses the parametric ellipse angle approximation.
  */
-export class EllipseElement extends BaseNode<EllipseElementSpec> {
+export class EllipseNode extends BaseNode<EllipseNodeSpec> {
   draw(ctx: DrawContext, detail: LOD): void {
     const { x, y, radiusX, radiusY, label } = this.spec;
     const style = this.resolveStyle();

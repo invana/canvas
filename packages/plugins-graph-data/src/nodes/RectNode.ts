@@ -1,11 +1,11 @@
-// ── RectElement ───────────────────────────────────────────────────────────────
+// ── RectNode ──────────────────────────────────────────────────────────────────
 
 import { BaseNode, LOD } from '../BaseNode.js';
 import type { DrawContext } from '../DrawContext.js';
 import type { BaseNodeSpec, BBox, Point } from '../spec/index.js';
 
-/** Spec for a rectangle element. */
-export interface RectElementSpec extends BaseNodeSpec {
+/** Spec for a rectangle node. */
+export interface RectNodeSpec extends BaseNodeSpec {
   /** Width in world-space pixels. */
   width: number;
   /** Height in world-space pixels. */
@@ -15,16 +15,15 @@ export interface RectElementSpec extends BaseNodeSpec {
 }
 
 /**
- * A filled/stroked rectangle element.
+ * A filled/stroked rectangle node.
  *
  * @remarks
- * `x`, `y` in the spec refer to the **top-left** corner of the rectangle,
- * consistent with PixiJS's rectangle convention.
+ * `x`, `y` in the spec refer to the **top-left** corner of the rectangle.
  *
  * `getConnectionPoint()` returns the intersection of the line from the rect's
  * centre to the target with the nearest edge.
  */
-export class RectElement extends BaseNode<RectElementSpec> {
+export class RectNode extends BaseNode<RectNodeSpec> {
   draw(ctx: DrawContext, detail: LOD): void {
     const { x, y, width, height, cornerRadius = 0, label } = this.spec;
     const style = this.resolveStyle();

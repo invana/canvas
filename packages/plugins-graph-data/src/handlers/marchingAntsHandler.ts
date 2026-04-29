@@ -1,12 +1,12 @@
 // ── marchingAntsHandler (element-plugin) ──────────────────────────────────────
 // Animates dashes marching around the element border by incrementing dashOffset.
-// Writes to BaseSolid._animOverrides.dashOffset (and optionally borderColor).
+// Writes to BaseNode._animOverrides.dashOffset (and optionally borderColor).
 // Visual effect requires elements whose draw() reads _animOverrides.dashOffset
 // for dashed border rendering.
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
-import type { BaseNode as BaseSolid } from '../BaseSolid.js';
-import type { ElementHaloPool } from '../ElementHaloPool.js';
+import type { BaseNode } from '../BaseNode.js';
+import type { HaloPool } from '../HaloPool.js';
 
 /** Options for the `marchingAnts` animation. */
 export interface MarchingAntsOptions {
@@ -37,7 +37,7 @@ const CYCLE_SIZE = 360;
 export const marchingAntsHandler: AnimationHandler<MarchingAntsOptions, MarchingAntsState> = {
   type: 'marchingAnts',
 
-  init(_spec: MarchingAntsOptions, _obj: BaseSolid, _halos: ElementHaloPool): MarchingAntsState {
+  init(_spec: MarchingAntsOptions, _obj: BaseNode, _halos: HaloPool): MarchingAntsState {
     return { offset: 0, repeatCount: 0 };
   },
 
@@ -53,12 +53,12 @@ export const marchingAntsHandler: AnimationHandler<MarchingAntsOptions, Marching
     return { dirty: true, stop: false };
   },
 
-  apply(state: MarchingAntsState, spec: MarchingAntsOptions, obj: BaseSolid, _halos: ElementHaloPool) {
+  apply(state: MarchingAntsState, spec: MarchingAntsOptions, obj: BaseNode, _halos: HaloPool) {
     obj._animOverrides.dashOffset = state.offset;
     if (spec.color) obj._animOverrides.borderColor = spec.color;
   },
 
-  cleanup(_state: MarchingAntsState, obj: BaseSolid, _halos: ElementHaloPool) {
+  cleanup(_state: MarchingAntsState, obj: BaseNode, _halos: HaloPool) {
     obj._animOverrides.dashOffset = 0;
     obj._animOverrides.borderColor = undefined;
   },

@@ -7,7 +7,7 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
-import { ElementPlugin, type CircleElementSpec, type RectElementSpec, type HexagonElementSpec } from '@invana/plugins-graph-data';
+import { GraphPlugin, type CircleNodeSpec, type RectNodeSpec, type HexagonNodeSpec } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Animations/Nodes' };
@@ -31,21 +31,21 @@ export const BorderGlow: Story = {
       color: '#1e293b', backgroundColor: DARK_BG, size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements' });
+    const elements = new GraphPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     elements.addNode('circle', {
       id: 'bg1', x: -GAP, y: 0, radius: 50, label: 'width only',
       style: { fill: '#1e3a5f', stroke: '#60a5fa', strokeWidth: 2 },
-    } as CircleElementSpec);
+    } as CircleNodeSpec);
     elements.addNode('rect', {
       id: 'bg2', x: 0, y: 0, width: 100, height: 80, label: 'colour',
       style: { fill: '#1f2937', stroke: '#f59e0b', strokeWidth: 2 },
-    } as RectElementSpec);
+    } as RectNodeSpec);
     elements.addNode('hexagon', {
       id: 'bg3', x: GAP, y: 0, radius: 55, label: 'both',
       style: { fill: '#1a0033', stroke: '#a78bfa', strokeWidth: 2 },
-    } as HexagonElementSpec);
+    } as HexagonNodeSpec);
 
     elements.fitContent();
 

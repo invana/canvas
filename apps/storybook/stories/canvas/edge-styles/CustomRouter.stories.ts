@@ -1,5 +1,5 @@
 /**
- * ElementPlugin — Custom Router
+ * GraphPlugin — Custom Router
  *
  * Shows how to register a custom router function via
  * `elementPlugin.registerRouter(name, fn)` and use it on any connector.
@@ -38,10 +38,10 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  ElementPlugin,
-  type CircleElementSpec,
+  GraphPlugin,
+  type CircleNodeSpec,
   type RouterFn,
-  type ElementPoint as Point,
+  type Point,
 } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../src/div-utils.js';
 
@@ -132,7 +132,7 @@ export const CustomRouter: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements' });
+    const elements = new GraphPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // Register all three custom routers
@@ -154,12 +154,12 @@ export const CustomRouter: Story = {
       elements.addNode('circle', {
         id: `${row.id}-l`, x: -HALF_W, y: rowY,
         radius: NODE_R, style: ANCHOR,
-      } as CircleElementSpec);
+      } as CircleNodeSpec);
 
       elements.addNode('circle', {
         id: `${row.id}-r`, x: HALF_W, y: rowY,
         radius: NODE_R, style: ANCHOR,
-      } as CircleElementSpec);
+      } as CircleNodeSpec);
 
       elements.addEdge('straight', {
         id:        `${row.id}-conn`,

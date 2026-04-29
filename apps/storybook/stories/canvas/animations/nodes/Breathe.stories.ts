@@ -7,7 +7,7 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
-import { ElementPlugin, type CircleElementSpec } from '@invana/plugins-graph-data';
+import { GraphPlugin, type CircleNodeSpec } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../../src/div-utils.js';
 
 const meta: Meta = { title: 'Canvas/Animations/Nodes' };
@@ -31,21 +31,21 @@ export const Breathe: Story = {
       color: '#1e293b', backgroundColor: DARK_BG, size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements' });
+    const elements = new GraphPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     elements.addNode('circle', {
       id: 'n1', x: -GAP, y: 0, radius: 50, label: 'slow',
       style: { fill: '#1e3a5f', stroke: '#60a5fa', strokeWidth: 2 },
-    } as CircleElementSpec);
+    } as CircleNodeSpec);
     elements.addNode('circle', {
       id: 'n2', x: 0, y: 0, radius: 50, label: 'default',
       style: { fill: '#1e3a5f', stroke: '#a78bfa', strokeWidth: 2 },
-    } as CircleElementSpec);
+    } as CircleNodeSpec);
     elements.addNode('circle', {
       id: 'n3', x: GAP, y: 0, radius: 50, label: 'fast',
       style: { fill: '#1e3a5f', stroke: '#f472b6', strokeWidth: 2 },
-    } as CircleElementSpec);
+    } as CircleNodeSpec);
 
     elements.fitContent();
 

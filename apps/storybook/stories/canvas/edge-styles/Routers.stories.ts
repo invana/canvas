@@ -1,5 +1,5 @@
 /**
- * ElementPlugin - Routers
+ * GraphPlugin - Routers
  *
  * Demonstrates the four built-in router functions used in the two-stage
  * connector pipeline. Each column shows the same source/target pair routed
@@ -20,8 +20,8 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import {
-  ElementPlugin,
-  type CircleElementSpec,
+  GraphPlugin,
+  type CircleNodeSpec,
   type OrthRouterArgs,
   type OneSideRouterArgs,
   type ErRouterArgs,
@@ -87,7 +87,7 @@ export const Routers: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements' });
+    const elements = new GraphPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     const totalWidth = (COLS - 1) * COL_GAP;
@@ -101,13 +101,13 @@ export const Routers: Story = {
         id: `${r.name}-src`, x: cx, y: SRC_Y,
         radius: NODE_R, style: ANCHOR,
         label: r.caption,
-      } as CircleElementSpec);
+      } as CircleNodeSpec);
 
       // Target node (bottom, slightly offset right to make routing visible)
       elements.addNode('circle', {
         id: `${r.name}-tgt`, x: cx + 60, y: TGT_Y,
         radius: NODE_R, style: ANCHOR,
-      } as CircleElementSpec);
+      } as CircleNodeSpec);
 
       // Connector using the router
       const spec: Record<string, unknown> = {

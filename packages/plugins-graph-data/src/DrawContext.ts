@@ -40,12 +40,12 @@ export type { DrawContext };
  * Concrete {@link DrawContext} implementation backed by a PixiJS `Graphics` + `Container`.
  *
  * @remarks
- * One `PixiDrawContext` is created per `ElementObject` and lives for the element's
+ * One `PixiDrawContext` is created per `GraphObject` and lives for the element's
  * lifetime.  Call {@link reset} at the start of each draw cycle to clear the
  * previous frame's geometry.  `Text` children are removed and re-created on each
  * draw to avoid stale labels when text content changes.
  *
- * This class is **internal** to `ElementPlugin` — element authors only use the
+ * This class is **internal** to `GraphPlugin` — element authors only use the
  * {@link DrawContext} interface.
  */
 export class PixiDrawContext implements DrawContext {

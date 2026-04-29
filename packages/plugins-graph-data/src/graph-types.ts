@@ -12,7 +12,7 @@ export type EdgePathType = 'straight' | 'bezier' | 'orthogonal' | 'quadratic' | 
 
 /**
  * Data descriptor for a single graph node.
- * GraphDataPlugin maps this to an ElementPlugin node spec.
+ * GraphDataPlugin maps this to an GraphPlugin node spec.
  */
 export interface INodeData {
   /** Unique node id. */
@@ -45,7 +45,7 @@ export interface INodeData {
 
 /**
  * Data descriptor for a single graph edge.
- * GraphDataPlugin maps this to an ElementPlugin edge spec.
+ * GraphDataPlugin maps this to an GraphPlugin edge spec.
  */
 export interface IEdgeData {
   /** Unique edge id. */

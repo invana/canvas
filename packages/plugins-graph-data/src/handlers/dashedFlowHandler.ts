@@ -1,10 +1,10 @@
 // ── dashedFlowHandler (element-plugin) ────────────────────────────────────────
 // Flows dashes along the border in one direction by advancing dashOffset.
-// Writes to BaseSolid._animOverrides.dashOffset (and optionally borderColor).
+// Writes to BaseNode._animOverrides.dashOffset (and optionally borderColor).
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
-import type { BaseNode as BaseSolid } from '../BaseSolid.js';
-import type { ElementHaloPool } from '../ElementHaloPool.js';
+import type { BaseNode } from '../BaseNode.js';
+import type { HaloPool } from '../HaloPool.js';
 
 /** Options for the `dashedFlow` animation. */
 export interface DashedFlowOptions {
@@ -36,7 +36,7 @@ const CYCLE_SIZE = 360;
 export const dashedFlowHandler: AnimationHandler<DashedFlowOptions, DashedFlowState> = {
   type: 'dashedFlow',
 
-  init(_spec: DashedFlowOptions, _obj: BaseSolid, _halos: ElementHaloPool): DashedFlowState {
+  init(_spec: DashedFlowOptions, _obj: BaseNode, _halos: HaloPool): DashedFlowState {
     return { offset: 0, repeatCount: 0 };
   },
 
@@ -53,12 +53,12 @@ export const dashedFlowHandler: AnimationHandler<DashedFlowOptions, DashedFlowSt
     return { dirty: true, stop: false };
   },
 
-  apply(state: DashedFlowState, spec: DashedFlowOptions, obj: BaseSolid, _halos: ElementHaloPool) {
+  apply(state: DashedFlowState, spec: DashedFlowOptions, obj: BaseNode, _halos: HaloPool) {
     obj._animOverrides.dashOffset = state.offset;
     if (spec.color) obj._animOverrides.borderColor = spec.color;
   },
 
-  cleanup(_state: DashedFlowState, obj: BaseSolid, _halos: ElementHaloPool) {
+  cleanup(_state: DashedFlowState, obj: BaseNode, _halos: HaloPool) {
     obj._animOverrides.dashOffset = 0;
     obj._animOverrides.borderColor = undefined;
   },

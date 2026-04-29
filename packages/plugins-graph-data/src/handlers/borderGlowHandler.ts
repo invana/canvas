@@ -1,11 +1,11 @@
 // ── borderGlowHandler (element-plugin) ────────────────────────────────────────
 // Oscillates the border stroke width between minWidth and maxWidth using a sine
-// wave. Writes to BaseSolid._animOverrides.borderWidth / borderColor, which
+// wave. Writes to BaseNode._animOverrides.borderWidth / borderColor, which
 // resolveStyle() picks up automatically.
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
-import type { BaseNode as BaseSolid } from '../BaseSolid.js';
-import type { ElementHaloPool } from '../ElementHaloPool.js';
+import type { BaseNode } from '../BaseNode.js';
+import type { HaloPool } from '../HaloPool.js';
 
 /** Options for the `borderGlow` animation. */
 export interface BorderGlowOptions {
@@ -31,14 +31,14 @@ interface BorderGlowState {
  *
  * @remarks
  * Writes the computed width to `obj._animOverrides.borderWidth`.
- * {@link BaseSolid.resolveStyle} returns this as `strokeWidth` so any element
+ * {@link BaseNode.resolveStyle} returns this as `strokeWidth` so any element
  * that renders a border via its `draw()` will pick up the animated width
  * automatically.
  */
 export const borderGlowHandler: AnimationHandler<BorderGlowOptions, BorderGlowState> = {
   type: 'borderGlow',
 
-  init(_spec: BorderGlowOptions, _obj: BaseSolid, _halos: ElementHaloPool): BorderGlowState {
+  init(_spec: BorderGlowOptions, _obj: BaseNode, _halos: HaloPool): BorderGlowState {
     return { phase: 0, repeatCount: 0 };
   },
 
@@ -54,14 +54,14 @@ export const borderGlowHandler: AnimationHandler<BorderGlowOptions, BorderGlowSt
     return { dirty: true, stop: false };
   },
 
-  apply(state: BorderGlowState, spec: BorderGlowOptions, obj: BaseSolid, _halos: ElementHaloPool) {
+  apply(state: BorderGlowState, spec: BorderGlowOptions, obj: BaseNode, _halos: HaloPool) {
     const min = spec.minWidth ?? 1;
     const max = spec.maxWidth ?? 6;
     obj._animOverrides.borderWidth = min + (Math.sin(state.phase) * 0.5 + 0.5) * (max - min);
     if (spec.color) obj._animOverrides.borderColor = spec.color;
   },
 
-  cleanup(_state: BorderGlowState, obj: BaseSolid, _halos: ElementHaloPool) {
+  cleanup(_state: BorderGlowState, obj: BaseNode, _halos: HaloPool) {
     obj._animOverrides.borderWidth = undefined;
     obj._animOverrides.borderColor = undefined;
   },

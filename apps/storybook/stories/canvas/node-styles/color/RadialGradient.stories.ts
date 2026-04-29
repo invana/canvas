@@ -4,7 +4,7 @@
  * Demonstrates radial gradient fills on every built-in node shape.
  * Imports `allNodeShapes` as the base node set and overrides each
  * shape's `style.fill` with a per-shape radial gradient before
- * passing the whole array to `ElementPlugin.setData()`.
+ * passing the whole array to `GraphPlugin.setData()`.
  *
  * Gradient styles used:
  *   centered (inner glow)  ·  offset center  ·  three-stop
@@ -16,7 +16,7 @@
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin, FillGradient } from '@invana/canvas';
-import { ElementPlugin } from '@invana/plugins-graph-data';
+import { GraphPlugin } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../../src/div-utils.js';
 import { allNodeShapes } from '../../all-nodes-shapes.js';
 
@@ -118,7 +118,7 @@ export const RadialGradient: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements' });
+    const elements = new GraphPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     elements.setData(nodes);

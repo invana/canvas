@@ -1,16 +1,15 @@
-// ── AnimationRegistry (element-plugin) ────────────────────────────────────────
+// ── AnimationRegistry ─────────────────────────────────────────────────────────
 // Defines the AnimationHandler contract and the registry that maps type names
-// to their handler objects.  Adapted from shape-plugin's AnimationRegistry —
-// handlers now receive a BaseSolid instead of a ShapeObject.
+// to their handler objects.
 
-import type { BaseNode as BaseSolid, AnimSlot } from './BaseSolid.js';
-import type { ElementHaloPool } from './ElementHaloPool.js';
+import type { BaseNode, AnimSlot } from './BaseNode.js';
+import type { HaloPool } from './HaloPool.js';
 
 export type { AnimSlot };
 
 /**
  * Contract for a self-contained, frame-driven animation handler for
- * {@link ElementPlugin} solid elements.
+ * {@link GraphPlugin} node elements.
  *
  * @typeParam TSpec  - User-facing options (no `type` field needed).
  * @typeParam TState - Mutable internal state owned by this handler per element.
@@ -33,13 +32,13 @@ export interface AnimationHandler<TSpec = Record<string, unknown>, TState = unkn
   readonly type: string;
 
   /**
-   * Create initial mutable state when this animation is started on an element.
+   * Create initial mutable state when this animation is started on a node.
    *
    * @param spec   - User-supplied options.
-   * @param obj    - The target {@link BaseSolid}.
-   * @param halos  - The {@link ElementHaloPool} (required by `pulse` to rent a halo graphics).
+   * @param node   - The target {@link BaseNode}.
+   * @param halos  - The {@link HaloPool} (required by `pulse` to rent a halo graphics).
    */
-  init(spec: TSpec, obj: BaseSolid, halos: ElementHaloPool): TState;
+  init(spec: TSpec, node: BaseNode, halos: HaloPool): TState;
 
   /**
    * Advance animation state by one frame.
@@ -52,23 +51,20 @@ export interface AnimationHandler<TSpec = Record<string, unknown>, TState = unkn
   tick(state: TState, spec: TSpec, deltaMS: number): { dirty: boolean; stop: boolean };
 
   /**
-   * Apply the current state to the element.
-   * Should write only to {@link BaseSolid._animOverrides}.
-   * Container-level transforms (scale, alpha) are applied centrally by
-   * {@link ElementPlugin._applyContainerOverrides} after all handlers run.
+   * Apply the current state to the node.
+   * Should write only to {@link BaseNode._animOverrides}.
    *
    * @param state  - Current animation state.
    * @param spec   - User-supplied options.
-   * @param obj    - The target {@link BaseSolid}.
-   * @param halos  - The {@link ElementHaloPool} (required by `pulse`).
+   * @param node   - The target {@link BaseNode}.
+   * @param halos  - The {@link HaloPool} (required by `pulse`).
    */
-  apply(state: TState, spec: TSpec, obj: BaseSolid, halos: ElementHaloPool): void;
+  apply(state: TState, spec: TSpec, node: BaseNode, halos: HaloPool): void;
 
   /**
    * Reset any display state touched by this animation back to defaults.
-   * Called when the animation is stopped (explicitly or auto-stop).
    */
-  cleanup?(state: TState, obj: BaseSolid, halos: ElementHaloPool): void;
+  cleanup?(state: TState, node: BaseNode, halos: HaloPool): void;
 }
 
 /**

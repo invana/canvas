@@ -1,5 +1,5 @@
 /**
- * ElementPlugin — Events: Interactive
+ * GraphPlugin — Events: Interactive
  *
  * Demonstrates the element event system routed through `canvas.events`.
  * Every handler receives a typed event class instance.
@@ -26,11 +26,11 @@ import { action } from 'storybook/actions';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin, DevInfoPlugin } from '@invana/canvas';
 import {
-  ElementPlugin,
+  GraphPlugin,
   type BaseNodeSpec,
-  type CircleElementSpec,
-  type PolygonElementSpec,
-  type StarElementSpec,
+  type CircleNodeSpec,
+  type PolygonNodeSpec,
+  type StarNodeSpec,
   type GraphClickEvent,
   type GraphDblClickEvent,
   type GraphPointerOverEvent,
@@ -64,7 +64,7 @@ export const EventsInteractive: Story = {
     const devInfo = new DevInfoPlugin({ key: 'dev-info' });
     await canvas.plugins.register(devInfo);
 
-    const elements = new ElementPlugin({ key: 'elements' });
+    const elements = new GraphPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     // ── Elements ──────────────────────────────────────────────────────────
@@ -77,7 +77,7 @@ export const EventsInteractive: Story = {
         selected: { fill: '#1e40af', stroke: '#ffffff', strokeWidth: 3 },
       },
       interactive: true,
-    } as CircleElementSpec);
+    } as CircleNodeSpec);
 
     elements.addNode('polygon', {
       id: 'hoverer', x: 60, y: 0, radius: 60, sides: 6,
@@ -87,7 +87,7 @@ export const EventsInteractive: Story = {
         hovered: { fill: '#047857', stroke: '#a7f3d0', strokeWidth: 3 },
       },
       interactive: true,
-    } as PolygonElementSpec);
+    } as PolygonNodeSpec);
 
     elements.addNode('star', {
       id: 'dragger', x: 320, y: 0, radius: 60,
@@ -99,7 +99,7 @@ export const EventsInteractive: Story = {
       interactive: true,
       draggable: true,
       cursor: 'grab',
-    } as StarElementSpec);
+    } as StarNodeSpec);
 
     elements.fitContent();
 
@@ -125,7 +125,7 @@ export const EventsInteractive: Story = {
         const cur = elements.getNode('dragger');
         if (!cur) return;
         const spec = cur.element.spec as BaseNodeSpec;
-        elements.updateNode('dragger', { x: spec.x + e.dx, y: spec.y + e.dy } as StarElementSpec);
+        elements.updateNode('dragger', { x: spec.x + e.dx, y: spec.y + e.dy } as StarNodeSpec);
         action('graph:dragmove')({ id: e.elementId, dx: e.dx, dy: e.dy });
       });
 

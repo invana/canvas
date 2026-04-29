@@ -17,14 +17,14 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, BackgroundPlugin, FillGradient } from '@invana/canvas';
 import {
-  ElementPlugin,
-  type CircleElementSpec,
-  type EllipseElementSpec,
-  type RectElementSpec,
-  type DiamondElementSpec,
-  type HexagonElementSpec,
-  type PolygonElementSpec,
-  type StarElementSpec,
+  GraphPlugin,
+  type CircleNodeSpec,
+  type EllipseNodeSpec,
+  type RectNodeSpec,
+  type DiamondNodeSpec,
+  type HexagonNodeSpec,
+  type PolygonNodeSpec,
+  type StarNodeSpec,
 } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../../src/div-utils.js';
 
@@ -106,7 +106,7 @@ export const LinearGradient: Story = {
       color: '#1e293b', backgroundColor: '#0f172a', size: 1.5, spacing: 30,
     }));
 
-    const elements = new ElementPlugin({ key: 'elements' });
+    const elements = new GraphPlugin({ key: 'elements' });
     await canvas.plugins.register(elements);
 
     const BORDER = { stroke: '#ffffff', strokeWidth: 2 };
@@ -120,7 +120,7 @@ export const LinearGradient: Story = {
       style:  { fill: hGrad('#3fcbeb', '#2563eb'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as CircleElementSpec);
+    } as CircleNodeSpec);
 
     // 1 — ellipse — purple → pink (horizontal)
     elements.addNode('ellipse', {
@@ -130,7 +130,7 @@ export const LinearGradient: Story = {
       style:  { fill: hGrad('#a78bfa', '#ec4899'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as EllipseElementSpec);
+    } as EllipseNodeSpec);
 
     // 2 — rect — orange → yellow (top → bottom)
     elements.addNode('rect', {
@@ -142,7 +142,7 @@ export const LinearGradient: Story = {
       style:  { fill: vGrad('#fb923c', '#fde68a'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as RectElementSpec);
+    } as RectNodeSpec);
 
     // 3 — rounded rect — green → teal (top → bottom)
     elements.addNode('rect', {
@@ -154,7 +154,7 @@ export const LinearGradient: Story = {
       style:  { fill: vGrad('#34d399', '#0d9488'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as RectElementSpec);
+    } as RectNodeSpec);
 
     // 4 — diamond — red → orange → yellow (diagonal)
     elements.addNode('diamond', {
@@ -163,7 +163,7 @@ export const LinearGradient: Story = {
       style:  { fill: dGrad('#ef4444', '#f97316', '#fbbf24'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as DiamondElementSpec);
+    } as DiamondNodeSpec);
 
     // 5 — hexagon — indigo → cyan (diagonal)
     elements.addNode('hexagon', {
@@ -172,7 +172,7 @@ export const LinearGradient: Story = {
       style:  { fill: dGrad('#6366f1', '#3fcbeb', '#06b6d4'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as HexagonElementSpec);
+    } as HexagonNodeSpec);
 
     // 6 — triangle — rose → violet (horizontal)
     elements.addNode('polygon', {
@@ -181,7 +181,7 @@ export const LinearGradient: Story = {
       style:  { fill: hGrad('#fb7185', '#7c3aed'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as PolygonElementSpec);
+    } as PolygonNodeSpec);
 
     // 7 — pentagon — sky → emerald (top → bottom)
     elements.addNode('polygon', {
@@ -190,7 +190,7 @@ export const LinearGradient: Story = {
       style:  { fill: vGrad('#38bdf8', '#10b981'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as PolygonElementSpec);
+    } as PolygonNodeSpec);
 
     // 8 — star 5-point — amber → pink (diagonal)
     elements.addNode('star', {
@@ -199,7 +199,7 @@ export const LinearGradient: Story = {
       style:  { fill: dGrad('#fbbf24', '#f472b6', '#818cf8'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as StarElementSpec);
+    } as StarNodeSpec);
 
     // 9 — star 6-point — teal → purple (horizontal)
     elements.addNode('star', {
@@ -208,7 +208,7 @@ export const LinearGradient: Story = {
       style:  { fill: hGrad('#2dd4bf', '#7c3aed'), ...BORDER },
       states: { hovered: HOVER, selected: SEL },
       interactive: true,
-    } as StarElementSpec);
+    } as StarNodeSpec);
 
     elements.fitContent();
   },

@@ -1,13 +1,13 @@
-// ── element-plugin public exports ─────────────────────────────────────────────
+// ── @invana/plugins-graph-data public exports ─────────────────────────────────
 
-// Main plugin
-export { ElementPlugin } from './ElementPlugin.js';
-export type { GraphPluginOptions, NodeCtor, EdgeCtor } from './ElementPlugin.js';
+// Internal rendering plugin
+export { GraphPlugin } from './GraphPlugin.js';
+export type { GraphPluginOptions, NodeCtor, EdgeCtor } from './GraphPlugin.js';
 
 // Base classes
-export { BaseNode, LOD } from './BaseSolid.js';
-export type { AnimSlot } from './BaseSolid.js';
-export { BaseEdge } from './BaseConnector.js';
+export { BaseNode, LOD } from './BaseNode.js';
+export type { AnimSlot } from './BaseNode.js';
+export { BaseEdge } from './BaseEdge.js';
 
 // Animation registry + default instance
 export { AnimationRegistry } from './AnimationRegistry.js';
@@ -41,24 +41,22 @@ export type {
   BaseNodeSpec,
   BaseEdgeSpec,
 } from './spec/index.js';
-// Legacy aliases (for backward compat with stories importing from @invana/canvas)
-export type { Point as ElementPoint, BBox as ElementBBox } from './spec/index.js';
 
-// Concrete solid elements
-export { CircleElement }   from './elements/CircleElement.js';
-export { RectElement }     from './elements/RectElement.js';
-export { EllipseElement }  from './elements/EllipseElement.js';
-export { PolygonElement }  from './elements/PolygonElement.js';
-export { DiamondElement }  from './elements/DiamondElement.js';
-export { StarElement }     from './elements/StarElement.js';
-export { HexagonElement }  from './elements/HexagonElement.js';
-export type { CircleElementSpec }  from './elements/CircleElement.js';
-export type { RectElementSpec }    from './elements/RectElement.js';
-export type { EllipseElementSpec } from './elements/EllipseElement.js';
-export type { PolygonElementSpec } from './elements/PolygonElement.js';
-export type { DiamondElementSpec } from './elements/DiamondElement.js';
-export type { StarElementSpec }    from './elements/StarElement.js';
-export type { HexagonElementSpec } from './elements/HexagonElement.js';
+// Concrete node types
+export { CircleNode }   from './nodes/CircleNode.js';
+export { RectNode }     from './nodes/RectNode.js';
+export { EllipseNode }  from './nodes/EllipseNode.js';
+export { PolygonNode }  from './nodes/PolygonNode.js';
+export { DiamondNode }  from './nodes/DiamondNode.js';
+export { StarNode }     from './nodes/StarNode.js';
+export { HexagonNode }  from './nodes/HexagonNode.js';
+export type { CircleNodeSpec }  from './nodes/CircleNode.js';
+export type { RectNodeSpec }    from './nodes/RectNode.js';
+export type { EllipseNodeSpec } from './nodes/EllipseNode.js';
+export type { PolygonNodeSpec } from './nodes/PolygonNode.js';
+export type { DiamondNodeSpec } from './nodes/DiamondNode.js';
+export type { StarNodeSpec }    from './nodes/StarNode.js';
+export type { HexagonNodeSpec } from './nodes/HexagonNode.js';
 
 // Concrete connectors
 export { StraightConnector }   from './connectors/StraightConnector.js';
@@ -85,8 +83,8 @@ export type { ErRouterArgs }      from './routers/ErRouter.js';
 
 // Event classes (base + concrete)
 export {
-  ElementBaseEvent,
-  ElementDragBaseEvent,
+  GraphBaseEvent,
+  GraphDragBaseEvent,
   GraphClickEvent,
   GraphDblClickEvent,
   GraphContextMenuEvent,
@@ -101,17 +99,17 @@ export {
   GraphStateChangeEvent,
   GraphAddedEvent,
   GraphRemovedEvent,
-} from './ElementEvents.js';
+} from './GraphEvents.js';
 export type {
-  ElementEventFields,
-  ElementDragEventFields,
-  ElementStateChangeFields,
-  ElementLifecycleFields,
-} from './ElementEvents.js';
+  GraphEventFields,
+  GraphDragEventFields,
+  GraphStateChangeFields,
+  GraphLifecycleFields,
+} from './GraphEvents.js';
 
-// ElementObject (for advanced use — e.g. plugin-graph hit-testing)
-export { ElementObject } from './ElementObject.js';
-export type { AnyElement } from './ElementObject.js';
+// GraphObject (for advanced use — e.g. plugin-graph hit-testing)
+export { GraphObject } from './GraphObject.js';
+export type { AnyGraphObject } from './GraphObject.js';
 
 // ── GraphDataPlugin (high-level API) ──────────────────────────────────────────
 export { GraphDataPlugin } from './GraphDataPlugin.js';

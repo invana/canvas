@@ -54,11 +54,11 @@ const DEFAULTS: LODThresholds = {
  * signals callers when the level changes.
  *
  * @remarks
- * This class is internal to {@link ElementPlugin}.
+ * This class is internal to {@link GraphPlugin}.
  */
 export class LODController {
   private _thresholds: LODThresholds;
-  /** Start at DETAIL so labels show at startup. Synced from camera.scale in ElementPlugin.register. */
+  /** Start at DETAIL so labels show at startup. Synced from camera.scale in _GraphPlugin.register. */
   private _current: LOD = LOD.DETAIL;
 
   constructor(thresholds: Partial<LODThresholds> = {}) {
