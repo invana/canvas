@@ -30,3 +30,6 @@ export type {
   LassoSelectStyle,
   LassoModifierKey,
 } from './LassoSelectPlugin.js';
+
+export { MiniMapPlugin } from './MiniMapPlugin.js';
+export type { MiniMapPluginOptions, MiniMapPosition } from './MiniMapPlugin.js';
