@@ -22,3 +22,11 @@ export type {
   BrushSelectStyle,
   BrushModifierKey,
 } from './BrushSelectPlugin.js';
+
+export { LassoSelectPlugin } from './LassoSelectPlugin.js';
+export type {
+  LassoSelectPluginOptions,
+  LassoSelectElementType,
+  LassoSelectStyle,
+  LassoModifierKey,
+} from './LassoSelectPlugin.js';
