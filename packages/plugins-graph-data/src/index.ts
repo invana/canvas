@@ -31,7 +31,7 @@ export type {
 } from './state/index.js';
 
 // ── Behaviour plugins (opt-in — register explicitly) ──────────────────────────
-export { HoverActivatePlugin, ClickSelectPlugin } from './plugins/index.js';
+export { HoverActivatePlugin, ClickSelectPlugin, BrushSelectPlugin } from './plugins/index.js';
 export type {
   HoverActivatePluginOptions,
   HoverableElement,
@@ -42,6 +42,10 @@ export type {
   SelectableElementType,
   SelectDirection,
   SelectModifierKey,
+  BrushSelectPluginOptions,
+  BrushSelectElementType,
+  BrushSelectStyle,
+  BrushModifierKey,
 } from './plugins/index.js';
 
 // ── CanvasEventMap augmentation (graph:* events kept for backward compat) ─────

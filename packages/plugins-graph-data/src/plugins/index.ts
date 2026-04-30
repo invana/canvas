@@ -14,3 +14,11 @@ export type {
   SelectDirection,
   SelectModifierKey,
 } from './ClickSelectPlugin.js';
+
+export { BrushSelectPlugin } from './BrushSelectPlugin.js';
+export type {
+  BrushSelectPluginOptions,
+  BrushSelectElementType,
+  BrushSelectStyle,
+  BrushModifierKey,
+} from './BrushSelectPlugin.js';
