@@ -182,8 +182,8 @@ export const allNodeShapeData: INodeData[] = [
   { id: 'shape-rounded-rect', ...pos(3), shape: 'rect',    size: RADIUS * 2,   label: 'Rounded Rect' },
   { id: 'shape-diamond',      ...pos(4), shape: 'diamond', size: RADIUS * 2,   label: 'Diamond'      },
   { id: 'shape-hexagon',      ...pos(5), shape: 'hexagon', size: RADIUS * 2,   label: 'Hexagon'      },
-  { id: 'shape-triangle',     ...pos(6), shape: 'polygon', size: RADIUS * 2,   label: 'Triangle'     },
-  { id: 'shape-pentagon',     ...pos(7), shape: 'polygon', size: RADIUS * 2,   label: 'Pentagon'     },
+  { id: 'shape-triangle',     ...pos(6), shape: 'polygon', size: RADIUS * 2, sides: 3, label: 'Triangle'     },
+  { id: 'shape-pentagon',     ...pos(7), shape: 'polygon', size: RADIUS * 2, sides: 5, label: 'Pentagon'     },
   { id: 'shape-star5',        ...pos(8), shape: 'star',    size: RADIUS * 2,   label: 'Star (5pt)'   },
   { id: 'shape-star6',        ...pos(9), shape: 'star',    size: RADIUS * 2,   label: 'Star (6pt)'   },
 ];

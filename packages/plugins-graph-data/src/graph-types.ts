@@ -25,6 +25,8 @@ export interface INodeData {
   shape?: NodeShape;
   /** Uniform size in world-space units (default: 40). */
   size?: number;
+  /** Number of sides for `polygon` shapes (3 = triangle, 5 = pentagon, …). */
+  sides?: number;
   /** Optional text label. */
   label?: string;
   /** Whether the node can be dragged (default: true). */

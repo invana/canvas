@@ -24,24 +24,60 @@ stories/layouts/
 
 ## Story pattern
 
-```typescript
-import { Canvas } from '@invana/canvas';
-import { createContainer } from '../../../src/div-utils.js';
-import type { StoryObj } from '@storybook/html';
+Node and edge styling stories must use `GraphDataPlugin` with the declarative `plugins` array. This keeps styling stories focused on graph data rather than low-level shape API.
 
+```typescript
+import type { Meta, StoryObj } from '@storybook/html-vite';
+import { Canvas, BackgroundPlugin } from '@invana/canvas';
+import { GraphDataPlugin } from '@invana/plugins-graph-data';
+import { allNodeShapeData } from '../../all-nodes-shapes.js';
+import { createContainer } from '../../../../src/div-utils.js';
+
+Canvas.registerPlugin('background', BackgroundPlugin);
+Canvas.registerPlugin('graph-data', GraphDataPlugin);
+
+const meta: Meta = { title: 'Canvas/Nodes/Styling/MyFeature' };
+export default meta;
 type Story = StoryObj;
 
-export default { title: 'Canvas/MyFeature' };
-
 export const MyStory: Story = {
+  name: 'MyStory',
   render: () => createContainer(),
   play: async () => {
     const container = document.getElementById('canvas-example');
     if (!container) return;
-    const canvas = new Canvas({ container, width: 800, height: 600 });
+
+    const canvas = new Canvas({
+      container,
+      backgroundColor: '#0f172a',
+      plugins: [
+        {
+          plugin: 'background',
+          key: 'bg',
+          options: {
+            type: 'pattern',
+            patternType: 'dots',
+            color: '#1e293b',
+            backgroundColor: '#0f172a',
+            size: 1.5,
+            spacing: 30,
+          },
+        },
+        {
+          plugin: 'graph-data',
+          key: 'graph',
+          options: {
+            fitOnRender: true,
+            fitPadding: 60,
+            data: { nodes: allNodeShapeData, edges: [] },
+            styles: { node: { fill: '#3fcbeb', stroke: '#ffffff', strokeWidth: 2 } },
+          },
+        },
+      ],
+    });
     await canvas.init();
-    // register plugins, interact with canvas.camera / canvas.events
-  }
+    // Use canvas.plugins.get<GraphDataPlugin>('graph') for runtime updates
+  },
 };
 ```
 
@@ -50,3 +86,5 @@ export const MyStory: Story = {
 - Import only from `@invana/canvas` — never from internal paths or `pixi.js`.
 - Use `createContainer()` for the DOM mount point; never create raw `<div>` elements.
 - Mirror the existing folder structure when adding new stories.
+- **Node/edge styling stories must use `GraphDataPlugin`** — never `ShapesPlugin` directly.
+- Register plugins with `Canvas.registerPlugin()` before using them declaratively in `CanvasOptions.plugins`.

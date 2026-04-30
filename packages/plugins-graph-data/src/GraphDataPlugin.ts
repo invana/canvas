@@ -415,6 +415,8 @@ export class GraphDataPlugin implements CanvasPlugin {
         geometry = { radiusX: size / 2, radiusY: size / 3 };
         break;
       case 'polygon':
+        geometry = { radius: size / 2, sides: (node as { sides?: number }).sides ?? 5 };
+        break;
       case 'diamond':
       case 'star':
       case 'hexagon':
