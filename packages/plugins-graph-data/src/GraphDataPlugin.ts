@@ -22,7 +22,6 @@ import type {
   ICanvasData,
   IGraphStyles,
   GraphDataPluginOptions,
-  NodeShape,
   EdgePathType,
 } from './graph-types.js';
 
@@ -315,7 +314,7 @@ export class GraphDataPlugin implements CanvasPlugin {
 
   private _renderAll(): void {
     for (const node of this._nodeStore.values()) {
-      const shape: NodeShape = node.shape ?? 'circle';
+      const shape: string = node.shape ?? 'circle';
       this._elements.addShape(shape, this._buildNodeSpec(node));
     }
     for (const edge of this._edgeStore.values()) {
@@ -401,7 +400,7 @@ export class GraphDataPlugin implements CanvasPlugin {
   private _buildNodeSpec(node: INodeData): BaseShapeSpec {
     const ns = this._styles.node ?? {};
     const size = node.size ?? 40;
-    const shape: NodeShape = node.shape ?? 'circle';
+    const shape: string = node.shape ?? 'circle';
 
     let geometry: Record<string, number> = {};
     switch (shape) {
@@ -433,8 +432,10 @@ export class GraphDataPlugin implements CanvasPlugin {
     const sal     = typeof ns.strokeAlignment === 'function' ? ns.strokeAlignment(node) : ns.strokeAlignment;
     const sml     = typeof ns.strokeMiterLimit === 'function' ? ns.strokeMiterLimit(node) : ns.strokeMiterLimit;
     const opacity = typeof ns.opacity === 'function' ? ns.opacity(node) : (ns.opacity ?? node.opacity);
+    const nodeDataStyle = (node.style as Record<string, unknown> | undefined) ?? {};
 
     return {
+      ...node,           // custom geometry fields (radius, width, height, …) pass through
       id:          node.id,
       x:           node.x ?? 0,
       y:           node.y ?? 0,
@@ -447,6 +448,7 @@ export class GraphDataPlugin implements CanvasPlugin {
       opacity:     opacity as number | undefined,
       data:        node.data,
       style: {
+        ...nodeDataStyle,  // per-node style as base; global setStyles() overrides below
         ...(fill   !== undefined ? { fill }        : {}),
         ...(stroke !== undefined ? { stroke }      : {}),
         ...(sw     !== undefined ? { strokeWidth: sw } : {}),
@@ -471,6 +473,7 @@ export class GraphDataPlugin implements CanvasPlugin {
     const sal     = typeof es.strokeAlignment === 'function' ? es.strokeAlignment(edge) : es.strokeAlignment;
     const sml     = typeof es.strokeMiterLimit === 'function' ? es.strokeMiterLimit(edge) : es.strokeMiterLimit;
     const opacity = typeof es.opacity     === 'function' ? es.opacity(edge)     : (es.opacity ?? edge.opacity);
+    const edgeDataStyle = (edge.style as Record<string, unknown> | undefined) ?? {};
 
     return {
       id:          edge.id,
@@ -493,6 +496,7 @@ export class GraphDataPlugin implements CanvasPlugin {
       ...(edge.startMarker   !== undefined ? { startMarker:  edge.startMarker }   : {}),
       ...(edge.endMarker     !== undefined ? { endMarker:    edge.endMarker }     : {}),
       style: {
+        ...edgeDataStyle,  // per-edge style as base; global setStyles() overrides below
         ...(stroke !== undefined ? { stroke }              : {}),
         ...(sw     !== undefined ? { strokeWidth: sw }     : {}),
         ...(sa     !== undefined ? { strokeAlpha: sa }     : {}),

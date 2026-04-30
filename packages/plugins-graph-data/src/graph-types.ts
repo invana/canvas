@@ -21,8 +21,8 @@ export interface INodeData {
   x?: number;
   /** Initial world-space y position. */
   y?: number;
-  /** Node shape type (default: `'circle'`). */
-  shape?: NodeShape;
+  /** Node shape type (default: `'circle'`). Built-in values: {@link NodeShape}. Any registered custom type is also valid. */
+  shape?: NodeShape | (string & {});
   /** Uniform size in world-space units (default: 40). */
   size?: number;
   /** Number of sides for `polygon` shapes (3 = triangle, 5 = pentagon, …). */
@@ -43,6 +43,8 @@ export interface INodeData {
   opacity?: number;
   /** Arbitrary extra data, available in events via `event.data`. */
   data?: Record<string, unknown>;
+  /** Custom geometry fields forwarded as-is to the shape spec (e.g. radius, width, height). */
+  [key: string]: unknown;
 }
 
 /**
@@ -80,6 +82,8 @@ export interface IEdgeData {
   interactive?: boolean;
   /** Arbitrary extra data. */
   data?: Record<string, unknown>;
+  /** Custom fields forwarded as-is to the connector spec (e.g. per-edge style). */
+  [key: string]: unknown;
 }
 
 /**
