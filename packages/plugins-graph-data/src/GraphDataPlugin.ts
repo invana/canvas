@@ -67,11 +67,15 @@ export class GraphDataPlugin implements CanvasPlugin {
 
   private _fitOnRender: boolean;
   private _fitPadding: number;
+  private _initialData?: ICanvasData;
+  private _initialStyles?: IGraphStyles;
 
   constructor(options: GraphDataPluginOptions = {}) {
     this.id            = options.key        ?? 'graph-data';
     this._fitOnRender  = options.fitOnRender ?? false;
     this._fitPadding   = options.fitPadding  ?? 40;
+    this._initialData  = options.data;
+    this._initialStyles = options.styles;
 
     this._elements = new ShapesPlugin({ key: `${this.id}-elements` });
   }
@@ -79,7 +83,13 @@ export class GraphDataPlugin implements CanvasPlugin {
   // ── CanvasPlugin lifecycle ────────────────────────────────────────────────
 
   register(ctx: PluginContext): void {
-    return this._elements.register(ctx);
+    this._elements.register(ctx);
+    if (this._initialData) {
+      this.setData(this._initialData);
+    }
+    if (this._initialStyles) {
+      this.setStyles(this._initialStyles);
+    }
   }
 
   destroy(): void {
@@ -415,6 +425,11 @@ export class GraphDataPlugin implements CanvasPlugin {
     const fill    = typeof ns.fill    === 'function' ? ns.fill(node)    : ns.fill;
     const stroke  = typeof ns.stroke  === 'function' ? ns.stroke(node)  : ns.stroke;
     const sw      = typeof ns.strokeWidth === 'function' ? ns.strokeWidth(node) : ns.strokeWidth;
+    const sa      = typeof ns.strokeAlpha === 'function' ? ns.strokeAlpha(node) : ns.strokeAlpha;
+    const sc      = typeof ns.strokeCap === 'function' ? ns.strokeCap(node) : ns.strokeCap;
+    const sj      = typeof ns.strokeJoin === 'function' ? ns.strokeJoin(node) : ns.strokeJoin;
+    const sal     = typeof ns.strokeAlignment === 'function' ? ns.strokeAlignment(node) : ns.strokeAlignment;
+    const sml     = typeof ns.strokeMiterLimit === 'function' ? ns.strokeMiterLimit(node) : ns.strokeMiterLimit;
     const opacity = typeof ns.opacity === 'function' ? ns.opacity(node) : (ns.opacity ?? node.opacity);
 
     return {
@@ -433,6 +448,11 @@ export class GraphDataPlugin implements CanvasPlugin {
         ...(fill   !== undefined ? { fill }        : {}),
         ...(stroke !== undefined ? { stroke }      : {}),
         ...(sw     !== undefined ? { strokeWidth: sw } : {}),
+        ...(sa     !== undefined ? { strokeAlpha: sa } : {}),
+        ...(sc     !== undefined ? { strokeCap: sc } : {}),
+        ...(sj     !== undefined ? { strokeJoin: sj } : {}),
+        ...(sal    !== undefined ? { strokeAlignment: sal } : {}),
+        ...(sml    !== undefined ? { strokeMiterLimit: sml } : {}),
       },
       ...geometry,
     } as BaseShapeSpec;
@@ -443,6 +463,11 @@ export class GraphDataPlugin implements CanvasPlugin {
     const es = this._styles.edge ?? {};
     const stroke  = typeof es.stroke      === 'function' ? es.stroke(edge)      : es.stroke;
     const sw      = typeof es.strokeWidth === 'function' ? es.strokeWidth(edge) : es.strokeWidth;
+    const sa      = typeof es.strokeAlpha === 'function' ? es.strokeAlpha(edge) : es.strokeAlpha;
+    const sc      = typeof es.strokeCap === 'function' ? es.strokeCap(edge) : es.strokeCap;
+    const sj      = typeof es.strokeJoin === 'function' ? es.strokeJoin(edge) : es.strokeJoin;
+    const sal     = typeof es.strokeAlignment === 'function' ? es.strokeAlignment(edge) : es.strokeAlignment;
+    const sml     = typeof es.strokeMiterLimit === 'function' ? es.strokeMiterLimit(edge) : es.strokeMiterLimit;
     const opacity = typeof es.opacity     === 'function' ? es.opacity(edge)     : (es.opacity ?? edge.opacity);
 
     return {
@@ -468,6 +493,11 @@ export class GraphDataPlugin implements CanvasPlugin {
       style: {
         ...(stroke !== undefined ? { stroke }              : {}),
         ...(sw     !== undefined ? { strokeWidth: sw }     : {}),
+        ...(sa     !== undefined ? { strokeAlpha: sa }     : {}),
+        ...(sc     !== undefined ? { strokeCap: sc }       : {}),
+        ...(sj     !== undefined ? { strokeJoin: sj }     : {}),
+        ...(sal    !== undefined ? { strokeAlignment: sal } : {}),
+        ...(sml    !== undefined ? { strokeMiterLimit: sml } : {}),
       },
       from: { x: 0, y: 0 },
       to:   { x: 0, y: 0 },

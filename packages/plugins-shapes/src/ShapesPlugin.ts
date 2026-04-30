@@ -151,6 +151,11 @@ export class ShapesPlugin implements CanvasPlugin {
   // Reverse index: shapeId → Set of connectorIds attached to it.
   private _shapeToConnectors = new Map<string, Set<string>>();
 
+  // Per-shape base style captured at setData time.  Used by setStyles to merge
+  // a shared global style on top of each shape's own style without losing it.
+  private _baseStyles  = new Map<string, BaseShapeSpec['style']>();
+  private _globalStyle: Partial<NonNullable<BaseShapeSpec['style']>> | null = null;
+
   // ── Registries ────────────────────────────────────────────────────────────
 
   private _markerRegistry = new Map<
@@ -363,6 +368,28 @@ export class ShapesPlugin implements CanvasPlugin {
     return this.getShape(id);
   }
 
+  /**
+   * Apply a shared style across every shape registered via {@link setData}.
+   *
+   * The style is merged *over* each shape's base style (captured from the
+   * `spec.style` passed to `setData`), so global keys win on conflict.  Each
+   * call re-merges from the captured base, so removing a key from `style`
+   * restores the original value for that key.
+   *
+   * Shapes added via {@link addShape} directly are not affected.
+   *
+   * @example
+   * ```ts
+   * shapes.setStyles({ stroke: '#f97316', strokeWidth: 4 });
+   * ```
+   */
+  setStyles(style: Partial<NonNullable<BaseShapeSpec['style']>>): void {
+    this._globalStyle = style;
+    for (const [id, base] of this._baseStyles) {
+      this.updateShape(id, { style: { ...(base ?? {}), ...style } });
+    }
+  }
+
   // ── Connector CRUD ────────────────────────────────────────────────────────
 
   /** Add a connector of the given type. */
@@ -497,6 +524,11 @@ export class ShapesPlugin implements CanvasPlugin {
 
   /**
    * Replace all current elements with the provided sets.
+   *
+   * Each shape's `spec.style` is captured as that shape's "base style" — used
+   * by {@link setStyles} to merge a shared global style on top without losing
+   * the per-shape baseline.  If a global style was previously set via
+   * {@link setStyles}, it is re-applied on top of the new batch.
    */
   setData(
     shapes:     Array<{ type: string; spec: BaseShapeSpec }>,
@@ -505,12 +537,17 @@ export class ShapesPlugin implements CanvasPlugin {
     this.clear();
     this._batchingAdd = true;
     try {
-      for (const { type, spec } of shapes)     this.addShape(type, spec);
+      for (const { type, spec } of shapes) {
+        this.addShape(type, spec);
+        this._baseStyles.set(spec.id, spec.style);
+      }
       for (const { type, spec } of connectors) this.addConnector(type, spec);
     } finally {
       this._batchingAdd = false;
     }
     this._cameraTracker.flush();
+
+    if (this._globalStyle) this.setStyles(this._globalStyle);
   }
 
   /** Remove all shapes and connectors, stop animations, and reset state. */
@@ -523,6 +560,8 @@ export class ShapesPlugin implements CanvasPlugin {
     this._shapePool.clear();
     this._connectorPool.clear();
     this._animSet.clear();
+    this._baseStyles.clear();
+    this._globalStyle = null;
     this._lastHoverId = null;
     this._dragState   = null;
   }

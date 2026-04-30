@@ -95,6 +95,11 @@ export interface INodeStyle {
   fill?: DrawStyle['fill'] | ((node: INodeData) => DrawStyle['fill']);
   stroke?: DrawStyle['stroke'] | ((node: INodeData) => DrawStyle['stroke']);
   strokeWidth?: number | ((node: INodeData) => number);
+  strokeAlpha?: number | ((node: INodeData) => number);
+  strokeCap?: DrawStyle['strokeCap'] | ((node: INodeData) => DrawStyle['strokeCap']);
+  strokeJoin?: DrawStyle['strokeJoin'] | ((node: INodeData) => DrawStyle['strokeJoin']);
+  strokeAlignment?: number | ((node: INodeData) => number);
+  strokeMiterLimit?: number | ((node: INodeData) => number);
   opacity?: number | ((node: INodeData) => number);
   labelColor?: string | ((node: INodeData) => string);
   labelSize?: number | ((node: INodeData) => number);
@@ -104,6 +109,11 @@ export interface INodeStyle {
 export interface IEdgeStyle {
   stroke?: string | ((edge: IEdgeData) => string);
   strokeWidth?: number | ((edge: IEdgeData) => number);
+  strokeAlpha?: number | ((edge: IEdgeData) => number);
+  strokeCap?: DrawStyle['strokeCap'] | ((edge: IEdgeData) => DrawStyle['strokeCap']);
+  strokeJoin?: DrawStyle['strokeJoin'] | ((edge: IEdgeData) => DrawStyle['strokeJoin']);
+  strokeAlignment?: number | ((edge: IEdgeData) => number);
+  strokeMiterLimit?: number | ((edge: IEdgeData) => number);
   opacity?: number | ((edge: IEdgeData) => number);
 }
 
@@ -135,4 +145,14 @@ export interface GraphDataPluginOptions {
    * Padding applied when auto-fitting. Defaults to `40`.
    */
   fitPadding?: number;
+  /**
+   * Initial graph dataset. If provided, {@link GraphDataPlugin.setData} is called
+   * automatically during plugin registration.
+   */
+  data?: ICanvasData;
+  /**
+   * Initial style overrides. If provided, {@link GraphDataPlugin.setStyles} is called
+   * automatically during plugin registration (after data).
+   */
+  styles?: IGraphStyles;
 }

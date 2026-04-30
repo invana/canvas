@@ -42,6 +42,28 @@ export class Canvas {
   readonly plugins: PluginSystem;
   readonly events: EventBus;
 
+  /** @internal Static registry mapping plugin names to constructors */
+  private static _pluginRegistry = new Map<
+    string,
+    new (options?: Record<string, unknown>) => CanvasPlugin
+  >();
+
+  /**
+   * Register a plugin class under a string name so it can be referenced
+   * declaratively in {@link CanvasOptions.plugins}.
+   *
+   * @example
+   * ```ts
+   * Canvas.registerPlugin('background', BackgroundPlugin);
+   * ```
+   */
+  static registerPlugin(
+    name: string,
+    ctor: new (options?: Record<string, unknown>) => CanvasPlugin,
+  ): void {
+    this._pluginRegistry.set(name, ctor);
+  }
+
   constructor(options: CanvasOptions) {
     this._options = options;
     this.events = new EventBus();
@@ -189,13 +211,38 @@ export class Canvas {
   private async _registerOptionsPlugins(): Promise<void> {
     const { plugins: pluginConfigs = [] } = this._options;
     for (const cfg of pluginConfigs) {
-      if (typeof cfg === 'string') {
-        // bare string: user must register class separately — skip for now
+      // 1. Pre-instantiated plugin object (backward compat)
+      if (typeof cfg === 'object' && cfg !== null && typeof (cfg as unknown as CanvasPlugin).register === 'function') {
+        await this.plugins.register(cfg as unknown as CanvasPlugin);
         continue;
       }
-      // Inline plugin instance
-      if (typeof (cfg as unknown as CanvasPlugin).register === 'function') {
-        await this.plugins.register(cfg as unknown as CanvasPlugin);
+
+      // 2. Bare string name
+      if (typeof cfg === 'string') {
+        const Ctor = Canvas._pluginRegistry.get(cfg);
+        if (!Ctor) {
+          console.warn(`[Canvas] Plugin "${cfg}" not found in registry. Did you forget to import the plugin package?`);
+          continue;
+        }
+        const plugin = new Ctor();
+        await this.plugins.register(plugin);
+        continue;
+      }
+
+      // 3. Object config: { plugin: string; key?: string; options?: Record<string, unknown> }
+      if (typeof cfg === 'object' && cfg !== null && 'plugin' in cfg && typeof cfg.plugin === 'string') {
+        const Ctor = Canvas._pluginRegistry.get(cfg.plugin);
+        if (!Ctor) {
+          console.warn(`[Canvas] Plugin "${cfg.plugin}" not found in registry. Did you forget to import the plugin package?`);
+          continue;
+        }
+        const options = cfg.options ? { ...cfg.options } : {};
+        if (cfg.key !== undefined) {
+          (options as Record<string, unknown>).key = cfg.key;
+        }
+        const plugin = new Ctor(options);
+        await this.plugins.register(plugin);
+        continue;
       }
     }
   }

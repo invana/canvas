@@ -109,7 +109,7 @@ export const OrgChartScientists: Story = {
         stroke:      n => ROLE_COLORS[roleOf(n.id)].stroke,
         strokeWidth: () => 2,
         labelColor:  n => ROLE_COLORS[roleOf(n.id)].labelColor,
-        labelFontSize: () => 11,
+        labelSize: () => 11,
       },
       edge: {
         stroke:      () => '#334155',
