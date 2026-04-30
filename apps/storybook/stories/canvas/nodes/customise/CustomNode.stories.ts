@@ -22,12 +22,12 @@ import {
   type Point,
   type BaseShapeSpec,
 } from '@invana/plugins-shapes';
-import { createContainer } from '../../../src/div-utils.js';
+import { createContainer } from '../../../../src/div-utils.js';
 
 Canvas.registerPlugin('background', BackgroundPlugin);
 Canvas.registerPlugin('graph-data', GraphDataPlugin);
 
-const meta: Meta = { title: 'Canvas/Nodes/Custom Node' };
+const meta: Meta = { title: 'Canvas/Nodes/Custom Nodes' };
 export default meta;
 type Story = StoryObj;
 
@@ -224,7 +224,7 @@ const graphData = {
 // ─── Story ────────────────────────────────────────────────────────────────────
 
 export const CustomNodeTypes: Story = {
-  name: 'Custom Node Types',
+  name: 'Server Example',
   render: () => createContainer(),
   play: async () => {
     const container = document.getElementById('canvas-example');

@@ -34,10 +34,9 @@ const DEFAULT_STYLE = {
   strokeWidth: 2,
 };
 
-const STATE_STYLES = {
-  hovered:  { strokeWidth: 3.5, fillAlpha: 0.9 },
-  selected: { strokeWidth: 4, stroke: '#ffffff' },
-};
+// Per-spec state overrides removed: the G6-style state set
+// (hovered, selected, active, highlight, inactive, disabled) is provided
+// by the engine via DEFAULT_NODE_STATES in BaseShape.resolveStyle().
 
 // ── Shape definitions ─────────────────────────────────────────────────────────
 export const allNodeShapes: Array<{ type: string; spec: BaseShapeSpec }> = [
@@ -49,7 +48,6 @@ export const allNodeShapes: Array<{ type: string; spec: BaseShapeSpec }> = [
       radius: RADIUS,
       label: 'Circle',
       style: DEFAULT_STYLE,
-      states: STATE_STYLES,
       interactive: true,
     } as BaseShapeSpec & { radius: number },
   },
@@ -62,7 +60,6 @@ export const allNodeShapes: Array<{ type: string; spec: BaseShapeSpec }> = [
       radiusY: RADIUS * 0.7,
       label: 'Ellipse',
       style: DEFAULT_STYLE,
-      states: STATE_STYLES,
       interactive: true,
     } as BaseShapeSpec & { radiusX: number; radiusY: number },
   },
@@ -77,7 +74,6 @@ export const allNodeShapes: Array<{ type: string; spec: BaseShapeSpec }> = [
       cornerRadius: 0,
       label: 'Rect',
       style: DEFAULT_STYLE,
-      states: STATE_STYLES,
       interactive: true,
     } as BaseShapeSpec & { width: number; height: number; cornerRadius: number },
   },
@@ -92,7 +88,6 @@ export const allNodeShapes: Array<{ type: string; spec: BaseShapeSpec }> = [
       cornerRadius: 14,
       label: 'Rounded Rect',
       style: DEFAULT_STYLE,
-      states: STATE_STYLES,
       interactive: true,
     } as BaseShapeSpec & { width: number; height: number; cornerRadius: number },
   },
@@ -104,7 +99,6 @@ export const allNodeShapes: Array<{ type: string; spec: BaseShapeSpec }> = [
       radius: RADIUS,
       label: 'Diamond',
       style: DEFAULT_STYLE,
-      states: STATE_STYLES,
       interactive: true,
     } as BaseShapeSpec & { radius: number },
   },
@@ -116,7 +110,6 @@ export const allNodeShapes: Array<{ type: string; spec: BaseShapeSpec }> = [
       radius: RADIUS,
       label: 'Hexagon',
       style: DEFAULT_STYLE,
-      states: STATE_STYLES,
       interactive: true,
     } as BaseShapeSpec & { radius: number },
   },
@@ -129,7 +122,6 @@ export const allNodeShapes: Array<{ type: string; spec: BaseShapeSpec }> = [
       sides: 3,
       label: 'Triangle',
       style: DEFAULT_STYLE,
-      states: STATE_STYLES,
       interactive: true,
     } as BaseShapeSpec & { radius: number; sides: number },
   },
@@ -142,7 +134,6 @@ export const allNodeShapes: Array<{ type: string; spec: BaseShapeSpec }> = [
       sides: 5,
       label: 'Pentagon',
       style: DEFAULT_STYLE,
-      states: STATE_STYLES,
       interactive: true,
     } as BaseShapeSpec & { radius: number; sides: number },
   },
@@ -155,7 +146,6 @@ export const allNodeShapes: Array<{ type: string; spec: BaseShapeSpec }> = [
       points: 5,
       label: 'Star (5pt)',
       style: DEFAULT_STYLE,
-      states: STATE_STYLES,
       interactive: true,
     } as BaseShapeSpec & { radius: number; points: number },
   },
@@ -168,7 +158,6 @@ export const allNodeShapes: Array<{ type: string; spec: BaseShapeSpec }> = [
       points: 6,
       label: 'Star (6pt)',
       style: DEFAULT_STYLE,
-      states: STATE_STYLES,
       interactive: true,
     } as BaseShapeSpec & { radius: number; points: number },
   },

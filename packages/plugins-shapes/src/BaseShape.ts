@@ -6,6 +6,7 @@ import type { Container } from 'pixi.js';
 import type { DrawContext } from './DrawContext.js';
 import { LOD } from './LODController.js';
 import type { BaseShapeSpec, BBox, DrawStyle, Point } from './spec/index.js';
+import { DEFAULT_NODE_STATES } from './defaultStates.js';
 
 /**
  * A per-element active animation slot.
@@ -191,6 +192,9 @@ export abstract class BaseShape<S extends BaseShapeSpec = BaseShapeSpec> {
   resolveStyle(): DrawStyle {
     let style: DrawStyle = { ...(this.spec.style ?? {}) };
     for (const state of this.activeStates) {
+      // Built-in G6-style default first, then user spec.states override (higher priority).
+      const fallback = DEFAULT_NODE_STATES[state];
+      if (fallback) style = { ...style, ...fallback };
       const override = this.spec.states?.[state];
       if (override) style = { ...style, ...override };
     }

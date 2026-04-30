@@ -29,6 +29,9 @@ export type { ElementAnimations } from './spec/animations.js';
 // DrawContext (interface only)
 export type { DrawContext } from './DrawContext.js';
 
+// Default states (G6-style built-in state set used as fallback in resolveStyle)
+export { DEFAULT_NODE_STATES, DEFAULT_EDGE_STATES } from './defaultStates.js';
+
 // Spec types
 export type {
   Point,

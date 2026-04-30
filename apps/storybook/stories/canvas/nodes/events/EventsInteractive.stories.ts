@@ -40,9 +40,9 @@ import {
   type GraphDragEndEvent,
   type GraphStateChangeEvent,
 } from '@invana/plugins-shapes';
-import { createContainer } from '../../../src/div-utils.js';
+import { createContainer } from '../../../../src/div-utils.js';
 
-const meta: Meta = { title: 'Canvas/Node Styles/Events Interactive' };
+const meta: Meta = { title: 'Canvas/Nodes/Events' };
 export default meta;
 type Story = StoryObj;
 

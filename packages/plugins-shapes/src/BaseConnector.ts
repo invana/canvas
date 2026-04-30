@@ -13,6 +13,7 @@ import type {
   Point,
   RouterFn,
 } from './spec/index.js';
+import { DEFAULT_EDGE_STATES } from './defaultStates.js';
 
 /**
  * Abstract base class for all connector (path/routing) elements managed by
@@ -246,6 +247,9 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
   resolveStyle(): PathStyle {
     let style: PathStyle = { ...(this.spec.style ?? {}) };
     for (const state of this.activeStates) {
+      // Built-in G6-style default first, then user spec.states override (higher priority).
+      const fallback = DEFAULT_EDGE_STATES[state];
+      if (fallback) style = { ...style, ...fallback };
       const override = this.spec.states?.[state];
       if (override) style = { ...style, ...override };
     }
