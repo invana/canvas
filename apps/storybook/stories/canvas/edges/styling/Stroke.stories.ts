@@ -1,8 +1,8 @@
 /**
  * Edge Stroke Styles
  *
- * Renders several connector types (straight, bezier, orthogonal) and exposes a
- * lil-gui panel to tweak stroke properties in real time.
+ * All six built-in edge path types rendered between node pairs, with a lil-gui
+ * panel to tweak stroke properties in real time via GraphDataPlugin.setStyles.
  *
  * Controls:
  *   - Stroke colour
@@ -14,46 +14,68 @@
  *   - Stroke miter limit
  *
  * API used:
- *   ShapesPlugin.updateConnector(id, { style: { … } })
+ *   GraphDataPlugin.setStyles({ edge: { … } })
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
-import {
-  ShapesPlugin,
-  type CircleShapeSpec,
-  type BaseConnectorSpec,
-} from '@invana/plugins-shapes';
+import { GraphDataPlugin, type IEdgeData, type INodeData } from '@invana/plugins-graph-data';
 import { createContainer } from '../../../../src/div-utils.js';
+
+Canvas.registerPlugin('background', BackgroundPlugin);
+Canvas.registerPlugin('graph-data', GraphDataPlugin);
 
 const meta: Meta = { title: 'Canvas/Edges/Styling/Stroke' };
 export default meta;
 type Story = StoryObj;
 
-const NODE_R  = 26;
 const COL_GAP = 340;
-const ROW_GAP = 120;
-
-const ANCHOR_STYLE = { fill: '#1e293b', stroke: '#475569', strokeWidth: 1.5 };
-const BG_OPTS = {
-  key: 'bg', type: 'pattern', patternType: 'grid',
-  color: '#1e293b', backgroundColor: '#0f172a', size: 1, spacing: 40,
-} as const;
+const ROW_GAP = 130;
 
 interface RowDef {
   id:       string;
-  connType: string;
+  pathType: string;
   label:    string;
   color:    string;
-  dy:       number;
+  dy?:      number;
   router?:  string;
 }
 
 const ROWS: RowDef[] = [
-  { id: 'straight',   connType: 'straight',   label: 'straight',   color: '#4fc3f7', dy: 0  },
-  { id: 'bezier',     connType: 'bezier',     label: 'bezier',     color: '#81c784', dy: 0  },
-  { id: 'orthogonal', connType: 'orthogonal', label: 'orthogonal', color: '#ffb74d', dy: 60 },
+  { id: 'straight',   pathType: 'straight',   label: 'straight',             color: '#4fc3f7' },
+  { id: 'bezier',     pathType: 'bezier',     label: 'bezier',               color: '#81c784' },
+  { id: 'orthogonal', pathType: 'orthogonal', label: 'orthogonal',           color: '#ffb74d', dy: 60 },
+  { id: 'quadratic',  pathType: 'quadratic',  label: 'quadratic',            color: '#f06292' },
+  { id: 'rounded',    pathType: 'rounded',    label: 'rounded + orth router', color: '#ce93d8', dy: 60, router: 'orth' },
+  { id: 'smooth',     pathType: 'smooth',     label: 'smooth (Catmull-Rom)', color: '#4dd0e1' },
 ];
+
+const startY = -((ROWS.length - 1) * ROW_GAP) / 2;
+
+const nodes: INodeData[] = [];
+const edges: IEdgeData[] = [];
+
+ROWS.forEach((row, i) => {
+  const rowY = startY + i * ROW_GAP;
+  const dy   = row.dy ?? 0;
+  const lx   = -COL_GAP / 2;
+  const rx   =  COL_GAP / 2;
+
+  nodes.push({ id: `${row.id}-l`, x: lx,  y: rowY,      shape: 'circle', size: 40 });
+  nodes.push({ id: `${row.id}-r`, x: rx,  y: rowY + dy, shape: 'circle', size: 40 });
+
+  const edge: IEdgeData = {
+    id:        `${row.id}-edge`,
+    source:    `${row.id}-l`,
+    target:    `${row.id}-r`,
+    pathType:  row.pathType as IEdgeData['pathType'],
+    label:     row.label,
+    endMarker: { type: 'triangle', size: 11 },
+    style:     { stroke: row.color, strokeWidth: 3 },
+  };
+  if (row.router) edge.router = row.router as IEdgeData['router'];
+  edges.push(edge);
+});
 
 export const EdgeStroke: Story = {
   name: 'Stroke',
@@ -62,101 +84,76 @@ export const EdgeStroke: Story = {
     const container = document.getElementById('canvas-example');
     if (!container) return;
 
-    const canvas = new Canvas({ container, backgroundColor: '#0f172a' });
-    await canvas.init();
-    await canvas.plugins.register(new BackgroundPlugin(BG_OPTS));
+    const params = {
+      stroke:           '#f97316',
+      strokeWidth:      3,
+      strokeAlpha:      1,
+      strokeCap:        'round' as 'butt' | 'round' | 'square',
+      strokeJoin:       'miter' as 'miter' | 'round' | 'bevel',
+      strokeAlignment:  0.5,
+      strokeMiterLimit: 10,
+    };
 
-    const shapes = new ShapesPlugin({ key: 'shapes' });
-    await canvas.plugins.register(shapes);
-
-    // ── Build anchors and connectors ────────────────────────────────────────
-    const ids: string[] = [];
-    const startY = -((ROWS.length - 1) * ROW_GAP) / 2;
-
-    ROWS.forEach((row, i) => {
-      const rowY = startY + i * ROW_GAP;
-      const lx   = -COL_GAP / 2;
-      const rx   =  COL_GAP / 2;
-
-      shapes.addShape('circle', {
-        id: `${row.id}-l`, x: lx, y: rowY,
-        radius: NODE_R, style: ANCHOR_STYLE,
-      } as CircleShapeSpec);
-
-      shapes.addShape('circle', {
-        id: `${row.id}-r`, x: rx, y: rowY + row.dy,
-        radius: NODE_R, style: ANCHOR_STYLE,
-      } as CircleShapeSpec);
-
-      const connId = `${row.id}-conn`;
-      shapes.addConnector(row.connType, {
-        id:           connId,
-        from:         { x: lx, y: rowY },
-        to:           { x: rx, y: rowY + row.dy },
-        sourceRadius: NODE_R,
-        targetRadius: NODE_R,
-        label:        row.label,
-        endMarker:    { type: 'triangle', size: 11 },
-        style:        { stroke: row.color, strokeWidth: 3 },
-        router:       row.router,
-      } as BaseConnectorSpec);
-      ids.push(connId);
+    const canvas = new Canvas({
+      container,
+      backgroundColor: '#0f172a',
+      plugins: [
+        {
+          plugin: 'background',
+          key: 'bg',
+          options: {
+            type: 'pattern',
+            patternType: 'grid',
+            color: '#1e293b',
+            backgroundColor: '#0f172a',
+            size: 1,
+            spacing: 40,
+          },
+        },
+        {
+          plugin: 'graph-data',
+          key: 'graph',
+          options: {
+            fitOnRender: true,
+            fitPadding: 80,
+            data: { nodes, edges },
+            styles: {
+              node: { fill: '#1e293b', stroke: '#475569', strokeWidth: 1.5 },
+              edge: { ...params}
+            },
+          },
+        },
+      ],
     });
+    await canvas.init();
 
-    shapes.fitContent();
+    const graph = canvas.plugins.get<GraphDataPlugin>('graph')!;
+    const applyStyles = () => graph.setStyles({ edge: { ...params } });
 
     // ── lil-gui panel ───────────────────────────────────────────────────────
     const gui = new GUI({ title: 'Edge Stroke Styles', container });
     gui.domElement.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;width:220px;';
 
-    const params = {
-      stroke: '#f97316',
-      strokeWidth: 3,
-      strokeAlpha: 1,
-      strokeCap: 'round' as 'butt' | 'round' | 'square',
-      strokeJoin: 'miter' as 'miter' | 'round' | 'bevel',
-      strokeAlignment: 0.5,
-      strokeMiterLimit: 10,
-    };
+    gui.addColor(params, 'stroke').name('Stroke colour').onChange(applyStyles);
+    gui.add(params, 'strokeWidth', 0, 10, 0.5).name('Stroke width').onChange(applyStyles);
+    gui.add(params, 'strokeAlpha', 0, 1, 0.05).name('Stroke alpha').onChange(applyStyles);
+    gui.add(params, 'strokeCap',  ['butt', 'round', 'square']).name('Stroke cap').onChange(applyStyles);
+    gui.add(params, 'strokeJoin', ['miter', 'round', 'bevel']).name('Stroke join').onChange(applyStyles);
+    gui.add(params, 'strokeAlignment', 0, 1, 0.05).name('Stroke alignment').onChange(applyStyles);
+    gui.add(params, 'strokeMiterLimit', 0, 30, 1).name('Stroke miter limit').onChange(applyStyles);
 
-    function applyToAll() {
-      for (const id of ids) {
-        const obj = shapes.getConnector(id);
-        if (!obj) continue;
-        const base = obj.element.spec.style ?? {};
-        shapes.updateConnector(id, {
-          style: {
-            ...base,
-            stroke: params.stroke,
-            strokeWidth: params.strokeWidth,
-            strokeAlpha: params.strokeAlpha,
-            strokeCap: params.strokeCap,
-            strokeJoin: params.strokeJoin,
-            strokeAlignment: params.strokeAlignment,
-            strokeMiterLimit: params.strokeMiterLimit,
-          },
-        } as Partial<BaseConnectorSpec>);
-      }
-    }
-
-    gui.addColor(params, 'stroke').name('Stroke colour').onChange(applyToAll);
-    gui.add(params, 'strokeWidth', 0, 10, 0.5).name('Stroke width').onChange(applyToAll);
-    gui.add(params, 'strokeAlpha', 0, 1, 0.05).name('Stroke alpha').onChange(applyToAll);
-    gui.add(params, 'strokeCap', ['butt', 'round', 'square']).name('Stroke cap').onChange(applyToAll);
-    gui.add(params, 'strokeJoin', ['miter', 'round', 'bevel']).name('Stroke join').onChange(applyToAll);
-    gui.add(params, 'strokeAlignment', 0, 1, 0.05).name('Stroke alignment').onChange(applyToAll);
-    gui.add(params, 'strokeMiterLimit', 0, 30, 1).name('Stroke miter limit').onChange(applyToAll);
-
-    gui.add({ reset: () => {
-      params.stroke = '#f97316';
-      params.strokeWidth = 3;
-      params.strokeAlpha = 1;
-      params.strokeCap = 'round';
-      params.strokeJoin = 'miter';
-      params.strokeAlignment = 0.5;
-      params.strokeMiterLimit = 10;
-      gui.controllers.forEach(c => c.updateDisplay());
-      applyToAll();
-    } }, 'reset').name('Reset');
+    gui.add({
+      reset: () => {
+        params.stroke           = '#f97316';
+        params.strokeWidth      = 3;
+        params.strokeAlpha      = 1;
+        params.strokeCap        = 'round';
+        params.strokeJoin       = 'miter';
+        params.strokeAlignment  = 0.5;
+        params.strokeMiterLimit = 10;
+        gui.controllers.forEach(c => c.updateDisplay());
+        applyStyles();
+      },
+    }, 'reset').name('Reset');
   },
 };

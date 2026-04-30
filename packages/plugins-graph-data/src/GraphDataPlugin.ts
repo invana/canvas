@@ -83,12 +83,17 @@ export class GraphDataPlugin implements CanvasPlugin {
 
   register(ctx: PluginContext): void {
     this._elements.register(ctx);
-    if (this._initialData) {
-      this.setData(this._initialData);
-    }
-    if (this._initialStyles) {
-      this.setStyles(this._initialStyles);
-    }
+
+    // Suppress per-call fitting while loading initial data + styles so that
+    // fitContent runs exactly once — after both have been fully applied.
+    const savedFit = this._fitOnRender;
+    this._fitOnRender = false;
+
+    if (this._initialData)   this.setData(this._initialData);
+    if (this._initialStyles) this.setStyles(this._initialStyles);
+
+    this._fitOnRender = savedFit;
+    if (this._fitOnRender) this._elements.fitContent(this._fitPadding);
   }
 
   destroy(): void {
@@ -212,7 +217,9 @@ export class GraphDataPlugin implements CanvasPlugin {
     }
     const updated = { ...existing, ...partial };
     this._edgeStore.set(id, updated);
-    this._elements.updateConnector(id, this._buildEdgeSpec(updated));
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { from: _f, to: _t, ...rest } = this._buildEdgeSpec(updated);
+    this._elements.updateConnector(id, rest as Partial<BaseConnectorSpec>);
   }
 
   /** Remove an edge by id. */
