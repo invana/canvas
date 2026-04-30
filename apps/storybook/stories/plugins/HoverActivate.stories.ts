@@ -20,10 +20,10 @@ import {
 } from '@invana/plugins-graph-data';
 import { D3ForceLayoutPlugin } from '@invana/plugin-layouts-d3-force';
 import { generateRandomTree } from '@invana/plugin-example-datasets';
-import { createContainer } from '../../../../src/div-utils.js';
+import { createContainer } from '../../src/div-utils.js';
 
 const meta: Meta = {
-  title: 'Canvas/Nodes/Behaviours',
+  title: 'Plugins/Behaviours',
   parameters: {
     layout: 'fullscreen',
     docs: {
