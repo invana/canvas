@@ -11,14 +11,14 @@ export function drawEllipse(
   radiusY: number,
   style: DrawStyle = {},
 ): void {
-  const { fill, fillAlpha = 1, stroke, strokeWidth = 1, strokeAlpha = 1 } = style;
+  const { fill, fillAlpha = 1, stroke, strokeWidth = 1, strokeAlpha = 1, strokeCap, strokeJoin, strokeAlignment, strokeMiterLimit } = style;
   const fillArg = resolveFillArg(fill, fillAlpha);
   if (fillArg !== undefined) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     g.ellipse(x, y, radiusX, radiusY).fill(fillArg as any);
   }
   if (stroke !== undefined) {
-    g.ellipse(x, y, radiusX, radiusY).stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha });
+    g.ellipse(x, y, radiusX, radiusY).stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha, cap: strokeCap, join: strokeJoin, alignment: strokeAlignment, miterLimit: strokeMiterLimit });
   }
 }
 

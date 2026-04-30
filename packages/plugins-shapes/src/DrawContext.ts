@@ -130,6 +130,10 @@ export class PixiDrawContext implements DrawContext {
       color:  style.stroke      ?? '#999999',
       width:  style.strokeWidth ?? 1,
       alpha:  style.strokeAlpha ?? 1,
+      cap:    style.strokeCap,
+      join:   style.strokeJoin,
+      alignment: style.strokeAlignment,
+      miterLimit: style.strokeMiterLimit,
     });
   }
 

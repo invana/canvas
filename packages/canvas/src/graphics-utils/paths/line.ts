@@ -10,6 +10,6 @@ export function drawLine(
   y2: number,
   style: PathStyle = {},
 ): void {
-  const { stroke = 0xffffff, strokeWidth = 1, strokeAlpha = 1 } = style;
-  g.moveTo(x1, y1).lineTo(x2, y2).stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha });
+  const { stroke = 0xffffff, strokeWidth = 1, strokeAlpha = 1, strokeCap, strokeJoin, strokeAlignment, strokeMiterLimit } = style;
+  g.moveTo(x1, y1).lineTo(x2, y2).stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha, cap: strokeCap, join: strokeJoin, alignment: strokeAlignment, miterLimit: strokeMiterLimit });
 }

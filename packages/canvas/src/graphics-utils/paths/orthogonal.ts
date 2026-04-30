@@ -111,13 +111,13 @@ export function drawOrthogonalPath(
   params: OrthogonalParams,
   style: OrthogonalStyle = {},
 ): void {
-  const { stroke = 0xffffff, strokeWidth = 1, strokeAlpha = 1, lineCap = 'square', lineJoin = 'miter' } = style;
+  const { stroke = 0xffffff, strokeWidth = 1, strokeAlpha = 1, strokeCap = 'square', strokeJoin = 'miter', strokeAlignment, strokeMiterLimit } = style;
   const points = calculateOrthogonalPath(params);
   if (points.length < 2) return;
 
   g.moveTo(points[0]!.x, points[0]!.y);
   for (let i = 1; i < points.length; i++) g.lineTo(points[i]!.x, points[i]!.y);
-  g.stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha, cap: lineCap, join: lineJoin });
+  g.stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha, cap: strokeCap, join: strokeJoin, alignment: strokeAlignment, miterLimit: strokeMiterLimit });
 }
 
 export function drawRoundedOrthogonalPath(
@@ -125,7 +125,7 @@ export function drawRoundedOrthogonalPath(
   params: OrthogonalParams,
   style: OrthogonalStyle = {},
 ): void {
-  const { stroke = 0xffffff, strokeWidth = 1, strokeAlpha = 1 } = style;
+  const { stroke = 0xffffff, strokeWidth = 1, strokeAlpha = 1, strokeCap, strokeJoin, strokeAlignment, strokeMiterLimit } = style;
   const { cornerRadius = 8 } = params;
   const points = calculateOrthogonalPath(params);
   if (points.length < 2) return;
@@ -152,5 +152,5 @@ export function drawRoundedOrthogonalPath(
 
   const last = points[points.length - 1]!;
   g.lineTo(last.x, last.y);
-  g.stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha, cap: 'round', join: 'round' });
+  g.stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha, cap: strokeCap ?? 'round', join: strokeJoin ?? 'round', alignment: strokeAlignment, miterLimit: strokeMiterLimit });
 }

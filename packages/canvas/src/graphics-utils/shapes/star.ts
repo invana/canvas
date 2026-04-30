@@ -19,6 +19,10 @@ export function drawStar(
     stroke,
     strokeWidth = 1,
     strokeAlpha = 1,
+    strokeCap,
+    strokeJoin,
+    strokeAlignment,
+    strokeMiterLimit,
     points = 5,
     innerRatio = 0.42,
     rotation = -Math.PI / 2,
@@ -32,7 +36,7 @@ export function drawStar(
     g.poly(verts).fill(fillArg as any);
   }
   if (stroke !== undefined) {
-    g.poly(verts).stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha });
+    g.poly(verts).stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha, cap: strokeCap, join: strokeJoin, alignment: strokeAlignment, miterLimit: strokeMiterLimit });
   }
 }
 

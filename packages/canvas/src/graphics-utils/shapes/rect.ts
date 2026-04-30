@@ -11,7 +11,7 @@ export function drawRect(
   height: number,
   style: DrawStyle & { cornerRadius?: number } = {},
 ): void {
-  const { fill, fillAlpha = 1, stroke, strokeWidth = 1, strokeAlpha = 1, cornerRadius = 0 } = style;
+  const { fill, fillAlpha = 1, stroke, strokeWidth = 1, strokeAlpha = 1, strokeCap, strokeJoin, strokeAlignment, strokeMiterLimit, cornerRadius = 0 } = style;
   const r = Math.min(cornerRadius, width / 2, height / 2);
   const draw = r > 0
     ? (gr: Graphics) => gr.roundRect(x, y, width, height, r)
@@ -19,7 +19,7 @@ export function drawRect(
   const fillArg = resolveFillArg(fill, fillAlpha);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (fillArg !== undefined) draw(g).fill(fillArg as any);
-  if (stroke !== undefined) draw(g).stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha });
+  if (stroke !== undefined) draw(g).stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha, cap: strokeCap, join: strokeJoin, alignment: strokeAlignment, miterLimit: strokeMiterLimit });
 }
 
 /** Draw a dashed rectangle border. x,y = top-left corner. */
