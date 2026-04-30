@@ -78,7 +78,8 @@ export { EventEmitter } from './utils/index.js';
 
 // Graphics utilities (for advanced plugin authors / plugins-graph-data internal use)
 export {
-  drawCircle, drawRect, drawEllipse, drawPolygon, drawStar, buildPolygonPoints,
+  drawCircle, drawRect, drawEllipse, drawPolygon, drawPolyline, drawStar,
+  buildPolygonPoints, buildStarPoints,
 } from './graphics-utils/shapes/index.js';
 export {
   drawTriangleArrow, drawTriangleOutlineArrow,
@@ -92,3 +93,11 @@ export {
 export { resolveFillArg } from './graphics-utils/types.js';
 export type { DrawContext as GraphicsDrawContext, PathCommand as GraphicsPathCommand } from './drawing/DrawContext.js';
 export type { BezierPoint as GraphicsBezierPoint } from './graphics-utils/paths/index.js';
+
+// Pure-math geometry primitives — used by plugins that need ray/boundary/flatten ops.
+export {
+  rayVsSegment, rayVsCircle, rayVsEllipse, rayVsRect, rayVsPolyline,
+  rayPointAt, unit,
+  flattenCubic, flattenQuadratic, flattenPath,
+} from './graphics-utils/geometry/index.js';
+export type { RayPolylineHit } from './graphics-utils/geometry/index.js';

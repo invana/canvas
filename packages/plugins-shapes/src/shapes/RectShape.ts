@@ -1,5 +1,6 @@
 // ── RectShape ─────────────────────────────────────────────────────────────────
 
+import { rayPointAt, rayVsRect } from '@invana/canvas';
 import { BaseShape, LOD } from '../BaseShape.js';
 import type { DrawContext } from '../DrawContext.js';
 import type { BaseShapeSpec, BBox, Point } from '../spec/index.js';
@@ -51,17 +52,11 @@ export class RectShape extends BaseShape<RectShapeSpec> {
     return { x: x + width / 2, y: y + height / 2 };
   }
 
-  getConnectionPoint(toX: number, toY: number): Point {
+  rayBoundaryHit(origin: Point, dir: Point): Point | null {
     const { x, y, width, height } = this.spec;
-    const cx = x + width / 2, cy = y + height / 2;
-    const dx = toX - cx, dy = toY - cy;
-
-    if (dx === 0 && dy === 0) return { x: cx, y };
-
-    const hw = width / 2, hh = height / 2;
-    const tx = hw / Math.abs(dx || 1), ty = hh / Math.abs(dy || 1);
-    const t = Math.min(tx, ty);
-    return { x: cx + dx * t, y: cy + dy * t };
+    const t = rayVsRect(origin.x, origin.y, dir.x, dir.y, x, y, x + width, y + height);
+    if (t === null) return null;
+    return rayPointAt(origin.x, origin.y, dir.x, dir.y, t);
   }
 
   hitTest(wx: number, wy: number): boolean {

@@ -1,5 +1,6 @@
 // ── EllipseShape ──────────────────────────────────────────────────────────────
 
+import { rayPointAt, rayVsEllipse } from '@invana/canvas';
 import { BaseShape, LOD } from '../BaseShape.js';
 import type { DrawContext } from '../DrawContext.js';
 import type { BaseShapeSpec, BBox, Point } from '../spec/index.js';
@@ -50,13 +51,11 @@ export class EllipseShape extends BaseShape<EllipseShapeSpec> {
     return { x: this.spec.x, y: this.spec.y };
   }
 
-  getConnectionPoint(toX: number, toY: number): Point {
+  rayBoundaryHit(origin: Point, dir: Point): Point | null {
     const { x, y, radiusX, radiusY } = this.spec;
-    const angle = Math.atan2(toY - y, toX - x);
-    return {
-      x: x + radiusX * Math.cos(angle),
-      y: y + radiusY * Math.sin(angle),
-    };
+    const t = rayVsEllipse(origin.x, origin.y, dir.x, dir.y, x, y, radiusX, radiusY);
+    if (t === null) return null;
+    return rayPointAt(origin.x, origin.y, dir.x, dir.y, t);
   }
 
   hitTest(wx: number, wy: number): boolean {

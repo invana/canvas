@@ -1,7 +1,7 @@
 // ── PolygonShape ──────────────────────────────────────────────────────────────
 
 import { BaseShape, LOD } from '../BaseShape.js';
-import { buildPolygonPoints } from '@invana/canvas';
+import { buildPolygonPoints, rayPointAt, rayVsPolyline } from '@invana/canvas';
 import type { DrawContext } from '../DrawContext.js';
 import type { BaseShapeSpec, BBox, Point } from '../spec/index.js';
 
@@ -22,6 +22,24 @@ export type PolygonNodeSpec = PolygonShapeSpec;
  * A regular polygon shape (triangle, pentagon, hexagon, etc.).
  */
 export class PolygonShape extends BaseShape<PolygonShapeSpec> {
+  /**
+   * Cached perimeter polyline as a flat `[x0,y0,x1,y1,...]` array.
+   * Rebuilt lazily; invalidated whenever a geometry-affecting spec field changes.
+   * @internal
+   */
+  private _boundaryCache: number[] | null = null;
+  private _cacheKey = '';
+
+  /** Build (or reuse) the flat polygon vertex array used for boundary tests. */
+  private _polyline(): number[] {
+    const { x, y, radius, sides, rotation = -Math.PI / 2 } = this.spec;
+    const key = `${x},${y},${radius},${sides},${rotation}`;
+    if (this._boundaryCache && this._cacheKey === key) return this._boundaryCache;
+    this._boundaryCache = buildPolygonPoints(x, y, radius, sides, rotation);
+    this._cacheKey = key;
+    return this._boundaryCache;
+  }
+
   draw(ctx: DrawContext, detail: LOD): void {
     const { x, y, radius, sides, rotation, label } = this.spec;
     const style = this.resolveStyle();
@@ -47,35 +65,15 @@ export class PolygonShape extends BaseShape<PolygonShapeSpec> {
     return { x: this.spec.x, y: this.spec.y };
   }
 
-  getConnectionPoint(toX: number, toY: number): Point {
-    const { x, y, radius, sides, rotation = -Math.PI / 2 } = this.spec;
-    const verts = buildPolygonPoints(x, y, radius, sides, rotation);
-    const angle = Math.atan2(toY - y, toX - x);
-
-    const n = verts.length / 2;
-    for (let i = 0; i < n; i++) {
-      const ax = verts[i * 2]!, ay = verts[i * 2 + 1]!;
-      const bx = verts[((i + 1) % n) * 2]!, by = verts[((i + 1) % n) * 2 + 1]!;
-      const pt = this._rayEdgeIntersect(x, y, angle, ax, ay, bx, by);
-      if (pt) return pt;
-    }
-    return { x: x + Math.cos(angle) * radius, y: y + Math.sin(angle) * radius };
+  rayBoundaryHit(origin: Point, dir: Point): Point | null {
+    const verts = this._polyline();
+    const hit = rayVsPolyline(origin.x, origin.y, dir.x, dir.y, verts, true);
+    if (hit === null) return null;
+    return rayPointAt(origin.x, origin.y, dir.x, dir.y, hit.t);
   }
 
-  private _rayEdgeIntersect(
-    ox: number, oy: number, angle: number,
-    ax: number, ay: number, bx: number, by: number,
-  ): Point | null {
-    const dx = Math.cos(angle), dy = Math.sin(angle);
-    const ex = bx - ax, ey = by - ay;
-    const denom = dx * ey - dy * ex;
-    if (Math.abs(denom) < 1e-8) return null;
-    const t = ((ax - ox) * ey - (ay - oy) * ex) / denom;
-    const s = ((ax - ox) * dy - (ay - oy) * dx) / denom;
-    if (t > 0 && s >= 0 && s <= 1) {
-      return { x: ox + dx * t, y: oy + dy * t };
-    }
-    return null;
+  override onUpdate(): void {
+    this._boundaryCache = null;
   }
 }
 

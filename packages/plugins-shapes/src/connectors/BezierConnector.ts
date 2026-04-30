@@ -27,15 +27,31 @@ export class BezierConnector extends BaseConnector<BezierConnectorSpec> {
       cp2 = { x: mid.x  + (to.x - mid.x)   * 0.5, y: mid.y  + (to.y - mid.y)   * 0.5 };
     } else {
       const curvature = this.spec.curvature ?? 80;
-      const mx = (from.x + to.x) / 2;
-      const my = (from.y + to.y) / 2;
-      const dx = to.x - from.x, dy = to.y - from.y;
-      const len = Math.sqrt(dx * dx + dy * dy) || 1;
-      const px = (-dy / len) * curvature;
-      const py = ( dx / len) * curvature;
+      const fromAngle = this.spec.fromAngle;
+      const toAngle   = this.spec.toAngle;
+      const dx        = to.x - from.x, dy = to.y - from.y;
+      const dist      = Math.sqrt(dx * dx + dy * dy) || 1;
 
-      cp1 = { x: from.x + (mx - from.x) * 0.5 + px, y: from.y + (my - from.y) * 0.5 + py };
-      cp2 = { x: mx + (to.x - mx) * 0.5 + px,        y: my + (to.y - my) * 0.5 + py };
+      if (fromAngle !== undefined && toAngle !== undefined) {
+        // cp1 = outward-normal direction (exits source cleanly) + perpendicular for curvature.
+        // cp2 = target outward-normal + same perpendicular (C-curve, same side as cp1).
+        // Using from_norm as tangential guarantees the bezier never sweeps back through
+        // the source node, even for steeply diagonal edges.
+        const d       = Math.min(curvature, dist * 0.4);
+        const cos_f   = Math.cos(fromAngle), sin_f = Math.sin(fromAngle);
+        const perp_x  = -sin_f, perp_y = cos_f;  // 90° CCW of source outward-normal
+        const cos_t   = Math.cos(toAngle),   sin_t = Math.sin(toAngle);
+        cp1 = { x: from.x + d * cos_f + d * perp_x, y: from.y + d * sin_f + d * perp_y };
+        cp2 = { x: to.x   + d * cos_t + d * perp_x, y: to.y   + d * sin_t + d * perp_y };
+      } else {
+        const mx = (from.x + to.x) / 2;
+        const my = (from.y + to.y) / 2;
+        const len = dist;
+        const px = (-dy / len) * curvature;
+        const py = ( dx / len) * curvature;
+        cp1 = { x: from.x + (mx - from.x) * 0.5 + px, y: from.y + (my - from.y) * 0.5 + py };
+        cp2 = { x: mx + (to.x - mx) * 0.5 + px,       y: my + (to.y - my) * 0.5 + py };
+      }
     }
 
     return [

@@ -1,5 +1,6 @@
 // ── StarShape ─────────────────────────────────────────────────────────────────
 
+import { buildStarPoints, rayPointAt, rayVsPolyline } from '@invana/canvas';
 import { BaseShape, LOD } from '../BaseShape.js';
 import type { DrawContext } from '../DrawContext.js';
 import type { BaseShapeSpec, BBox, Point } from '../spec/index.js';
@@ -23,6 +24,18 @@ export type StarNodeSpec = StarShapeSpec;
  * A star-shaped element.
  */
 export class StarShape extends BaseShape<StarShapeSpec> {
+  private _boundaryCache: number[] | null = null;
+  private _cacheKey = '';
+
+  private _polyline(): number[] {
+    const { x, y, radius, points = 5, innerRatio = 0.42, rotation = -Math.PI / 2 } = this.spec;
+    const key = `${x},${y},${radius},${points},${innerRatio},${rotation}`;
+    if (this._boundaryCache && this._cacheKey === key) return this._boundaryCache;
+    this._boundaryCache = buildStarPoints(x, y, radius, points, innerRatio, rotation);
+    this._cacheKey = key;
+    return this._boundaryCache;
+  }
+
   draw(ctx: DrawContext, detail: LOD): void {
     const { x, y, radius, points = 5, innerRatio = 0.42, rotation, label } = this.spec;
     const style = this.resolveStyle();
@@ -48,11 +61,15 @@ export class StarShape extends BaseShape<StarShapeSpec> {
     return { x: this.spec.x, y: this.spec.y };
   }
 
-  getConnectionPoint(toX: number, toY: number): Point {
-    const { x, y, radius } = this.spec;
-    const dx = toX - x, dy = toY - y;
-    const len = Math.sqrt(dx * dx + dy * dy) || 1;
-    return { x: x + (dx / len) * radius, y: y + (dy / len) * radius };
+  rayBoundaryHit(origin: Point, dir: Point): Point | null {
+    const verts = this._polyline();
+    const hit = rayVsPolyline(origin.x, origin.y, dir.x, dir.y, verts, true);
+    if (hit === null) return null;
+    return rayPointAt(origin.x, origin.y, dir.x, dir.y, hit.t);
+  }
+
+  override onUpdate(): void {
+    this._boundaryCache = null;
   }
 }
 

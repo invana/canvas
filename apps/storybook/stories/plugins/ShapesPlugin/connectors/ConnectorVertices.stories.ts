@@ -16,7 +16,7 @@
  * API fields shown:
  *   `vertices`     — preferred waypoint array
  *   `waypoints`    — deprecated alias
- *   `sourceRadius` / `targetRadius` — trims path to node boundary
+ *   `sourceOffset` / `targetOffset` — visible gap between perimeter and arrow tip
  *   `curvature`    — BezierConnectorSpec arc strength
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
@@ -142,10 +142,10 @@ export const ConnectorVertices: Story = {
 
       const spec: Record<string, unknown> = {
         id:           `${row.id}-conn`,
+        sourceId:     `${row.id}-l`,
+        targetId:     `${row.id}-r`,
         from:         { x: lx, y: rowY },
         to:           { x: rx, y: rowY },
-        sourceRadius: NODE_R,
-        targetRadius: NODE_R,
         label:        row.label,
         endMarker:    { type: 'triangle', size: 10 },
         style:        { stroke: row.color, strokeWidth: 2.5 },

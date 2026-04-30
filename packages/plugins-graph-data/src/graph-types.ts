@@ -66,12 +66,14 @@ export interface IEdgeData {
   router?: BaseEdgeSpec['router'];
   /** Manual waypoints. */
   vertices?: BaseEdgeSpec['vertices'];
-  /** Offset from source node center to connector endpoint. */
-  sourceRadius?: number;
-  /** Offset from target node center to connector endpoint. */
-  targetRadius?: number;
+  /** Visible gap (px) between the source perimeter and the start arrow tip. Default 0. */
   sourceOffset?: BaseEdgeSpec['sourceOffset'];
+  /** Visible gap (px) between the target perimeter and the end arrow tip. Default 0. */
   targetOffset?: BaseEdgeSpec['targetOffset'];
+  /** Optional id of a named port on the source node (see `BaseShape.getPorts()`). */
+  sourcePortId?: string;
+  /** Optional id of a named port on the target node. */
+  targetPortId?: string;
   startMarker?: BaseEdgeSpec['startMarker'];
   endMarker?: BaseEdgeSpec['endMarker'];
   states?: string[];

@@ -9,6 +9,7 @@ import {
   drawRect,
   drawEllipse,
   drawPolygon,
+  drawPolyline,
   drawStar,
 } from '@invana/canvas';
 import {
@@ -99,6 +100,13 @@ export class PixiDrawContext implements DrawContext {
     style: DrawStyle & { points?: number; innerRatio?: number; rotation?: number },
   ): void {
     drawStar(this._g, cx, cy, radius, style);
+  }
+
+  fillPolyline(
+    points: ArrayLike<number>,
+    style: DrawStyle & { closed?: boolean },
+  ): void {
+    drawPolyline(this._g, points, style);
   }
 
   strokePath(commands: PathCommand[], style: PathStyle): void {

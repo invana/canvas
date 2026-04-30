@@ -58,6 +58,37 @@ export function drawDashedPolyline(
 
 export type { DashStyle };
 
+/**
+ * Draw a free-form polyline / polygon from a flat `[x0,y0,x1,y1,...]` array.
+ * Set `closed: true` to close the shape and apply a fill.
+ */
+export function drawPolyline(
+  g: Graphics,
+  points: ArrayLike<number>,
+  style: DrawStyle & { closed?: boolean } = {},
+): void {
+  if (points.length < 4) return;
+  const { fill, fillAlpha = 1, stroke, closed = true } = style;
+  const pts: number[] = Array.from(points as ArrayLike<number>);
+
+  const fillArg = closed ? resolveFillArg(fill, fillAlpha) : undefined;
+  if (fillArg !== undefined) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    g.poly(pts).fill(fillArg as any);
+  }
+  if (stroke !== undefined) {
+    if (closed) {
+      g.poly(pts).stroke(resolveStrokeOpts(style));
+    } else {
+      g.moveTo(pts[0]!, pts[1]!);
+      for (let i = 2; i < pts.length; i += 2) {
+        g.lineTo(pts[i]!, pts[i + 1]!);
+      }
+      g.stroke(resolveStrokeOpts(style));
+    }
+  }
+}
+
 /** Returns flat [x0,y0, x1,y1, …] array of polygon vertices. */
 export function buildPolygonPoints(
   x: number,

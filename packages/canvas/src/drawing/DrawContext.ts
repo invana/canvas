@@ -76,6 +76,16 @@ export interface DrawContext {
     style: DrawStyle & { points?: number; innerRatio?: number; rotation?: number },
   ): void;
 
+  /**
+   * Draw a free-form polyline from a flat `[x0,y0, x1,y1, ...]` array.
+   * Closed polylines (`closed: true`, the default) are filled and stroked
+   * around the perimeter; open polylines are stroked only.
+   */
+  fillPolyline(
+    points: ArrayLike<number>,
+    style: DrawStyle & { closed?: boolean },
+  ): void;
+
   // ── Path strokes ─────────────────────────────────────────────────────────────
 
   /**

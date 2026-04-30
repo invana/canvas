@@ -82,10 +82,10 @@ function buildScene(
     const connId = `${prefix}${row.id}`;
     const spec: Record<string, unknown> = {
       id:           connId,
-      from:         { x: lx, y: rowY },
-      to:           { x: rx, y: rowY + row.dy },
-      sourceRadius: NODE_R,
-      targetRadius: NODE_R,
+      sourceId:     `${prefix}${row.id}-l`,
+      targetId:     `${prefix}${row.id}-r`,
+      from:         { x: lx, y: rowY },                    // resolved from sourceId
+      to:           { x: rx, y: rowY + row.dy },           // resolved from targetId
       sourceOffset,
       targetOffset,
       label:        row.label,

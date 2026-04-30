@@ -1,11 +1,16 @@
 // ── BaseShape ─────────────────────────────────────────────────────────────────
 // Abstract base class for all closed/filled shape elements.
-// Subclasses must implement draw(), getBBox(), getCenter(), and getConnectionPoint().
+// Subclasses must implement draw(), getBBox(), getCenter(), and rayBoundaryHit().
+//
+// `getConnectionPoint()` is provided as a non-abstract default that calls
+// `rayBoundaryHit()` (or, when the connector targets a named port, looks up
+// the port's anchor on `getPorts()`). Most shapes only need to implement the
+// boundary primitive.
 
 import type { Container } from 'pixi.js';
 import type { DrawContext } from './DrawContext.js';
 import { LOD } from './LODController.js';
-import type { BaseShapeSpec, BBox, DrawStyle, Point } from './spec/index.js';
+import type { BaseShapeSpec, BBox, DrawStyle, NodePort, Point } from './spec/index.js';
 import { DEFAULT_NODE_STATES } from './defaultStates.js';
 
 /**
@@ -127,10 +132,69 @@ export abstract class BaseShape<S extends BaseShapeSpec = BaseShapeSpec> {
   abstract getCenter(): Point;
 
   /**
+   * Boundary intersection along a ray cast from `origin` in unit direction
+   * `dir`. Returns the world-space hit point on the shape's perimeter, or
+   * `null` if the ray misses (rare — only when `origin` is outside the shape
+   * and points away from it).
+   *
+   * Implementations should be O(1) where possible (analytic for circle /
+   * ellipse / rect) and O(N) where N is the perimeter segment count
+   * (polygon / polyline / flattened path).
+   *
+   * This is the single primitive used by `getConnectionPoint()` to compute
+   * clean attachment positions. Subclasses typically only need to implement
+   * this; `getConnectionPoint()` is provided as a default.
+   */
+  abstract rayBoundaryHit(origin: Point, dir: Point): Point | null;
+
+  /**
+   * Optional declared connection ports. Default: `undefined`.
+   *
+   * Shapes that override should return a stable list — the same `id` always
+   * resolves to the same logical anchor; positions can move with the shape's
+   * own movement / resize.
+   *
+   * Connectors targeting a named port via `sourcePortId` / `targetPortId` use
+   * this; connectors without a port id fall through to {@link rayBoundaryHit}.
+   */
+  getPorts?(): NodePort[];
+
+  /**
    * Perimeter point in the direction of the given world-space target.
    * Called by connectors to compute clean attachment positions.
+   *
+   * Resolution order:
+   * 1. If `opts.portId` is set and `getPorts()` is implemented, return the
+   *    port's anchor.
+   * 2. Otherwise, ray-cast from the shape's centre in `opts.dir` (or, if
+   *    omitted, in the chord direction towards `(toX, toY)`).
+   *
+   * Override only when the default ray-cast logic isn't appropriate.
    */
-  abstract getConnectionPoint(toX: number, toY: number): Point;
+  getConnectionPoint(
+    toX: number,
+    toY: number,
+    opts?: { dir?: Point; portId?: string },
+  ): Point {
+    if (opts?.portId && this.getPorts) {
+      const port = this.getPorts().find((p) => p.id === opts.portId);
+      if (port) return port.position;
+    }
+    const c = this.getCenter();
+    let dx: number, dy: number;
+    if (opts?.dir) {
+      dx = opts.dir.x;
+      dy = opts.dir.y;
+    } else {
+      dx = toX - c.x;
+      dy = toY - c.y;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len < 1e-9) return c;
+      dx /= len;
+      dy /= len;
+    }
+    return this.rayBoundaryHit(c, { x: dx, y: dy }) ?? c;
+  }
 
   // ── Computed geometry ────────────────────────────────────────────────────────
 

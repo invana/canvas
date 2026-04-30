@@ -43,6 +43,7 @@ import { PolygonShape } from './shapes/PolygonShape.js';
 import { DiamondShape } from './shapes/DiamondShape.js';
 import { StarShape } from './shapes/StarShape.js';
 import { HexagonShape } from './shapes/HexagonShape.js';
+import { PolylineShape } from './shapes/PolylineShape.js';
 // Built-in connector types
 import { StraightConnector } from './connectors/StraightConnector.js';
 import { BezierConnector } from './connectors/BezierConnector.js';
@@ -173,6 +174,7 @@ export class ShapesPlugin implements CanvasPlugin {
     ['diamond',  DiamondShape  as unknown as ShapeCtor],
     ['star',     StarShape     as unknown as ShapeCtor],
     ['hexagon',  HexagonShape  as unknown as ShapeCtor],
+    ['polyline', PolylineShape as unknown as ShapeCtor],
   ]);
 
   private _connectorRegistry = new Map<string, ConnectorCtor>([
@@ -399,11 +401,18 @@ export class ShapesPlugin implements CanvasPlugin {
       console.warn(`[ShapesPlugin] Unknown connector type: "${type}". Register it via registerConnector().`);
       return;
     }
-    const resolved = this._resolveConnectorEndpoints(spec);
-    const resolvedSpec = { ...spec, from: resolved.from, to: resolved.to };
+    const resolved = this._resolveConnectorEndpoints(spec, type);
+    const resolvedSpec = {
+      ...spec,
+      from:      resolved.from,
+      to:        resolved.to,
+      fromAngle: resolved.fromAngle,
+      toAngle:   resolved.toAngle,
+    };
     const connector = new Ctor(resolvedSpec);
     (connector as BaseConnector)._routerRegistry = this._routerRegistry;
     (connector as BaseConnector)._markerRegistry = this._markerRegistry;
+    (connector as BaseConnector)._connectorType  = type;
     const obj = new ShapeObject(connector);
     this._connectorPool.add(obj);
     this._registerConnectorAttachment(resolvedSpec);
@@ -742,23 +751,166 @@ export class ShapesPlugin implements CanvasPlugin {
     for (const set of this._shapeToConnectors.values()) set.delete(connectorId);
   }
 
-  private _resolveConnectorEndpoints(spec: BaseConnectorSpec): { from: Point; to: Point } {
+  /**
+   * Resolve a connector's endpoints (`from` / `to`) and attachment tangents
+   * (`fromAngle` / `toAngle`) by asking the connector itself where its curve
+   * actually wants to enter/exit each shape.
+   *
+   * Algorithm:
+   *
+   *   1. **Ports** win — a named port supplies both the anchor position and
+   *      the outward normal directly.
+   *   2. **Explicit angles** on the spec are honoured next.
+   *   3. **Otherwise**, build a *draft route* between the two shape centres
+   *      using the actual connector class. Read the curve's true tangent at
+   *      each end, take its outward direction, and ray-cast from the centre
+   *      along that direction to find where the curve really wants to meet
+   *      the perimeter.
+   *
+   * This is the "refinement pass" approach: it works uniformly across
+   * straight, bezier, quadratic, smooth, orthogonal, and rounded connectors,
+   * because every connector type yields a path whose end-tangents reveal its
+   * preferred entry / exit direction. One pass converges visually for all
+   * typical cases.
+   */
+  private _resolveConnectorEndpoints(
+    spec: BaseConnectorSpec,
+    connectorType: string,
+  ): { from: Point; to: Point; fromAngle?: number; toAngle?: number } {
     let from = spec.from;
     let to   = spec.to;
-    if (spec.sourceId && spec.targetId) {
-      const srcCenter = this.getCenter(spec.sourceId);
-      const tgtCenter = this.getCenter(spec.targetId);
-      if (srcCenter && tgtCenter) {
-        from = this.getConnectionPoint(spec.sourceId, tgtCenter.x, tgtCenter.y) ?? from;
-        to   = this.getConnectionPoint(spec.targetId, srcCenter.x, srcCenter.y) ?? to;
+
+    const src = spec.sourceId ? (this._shapePool.get(spec.sourceId)?.element as BaseShape | undefined) : undefined;
+    const tgt = spec.targetId ? (this._shapePool.get(spec.targetId)?.element as BaseShape | undefined) : undefined;
+    const sC  = src?.getCenter();
+    const tC  = tgt?.getCenter();
+
+    // Outward unit vectors at source / target. Once known, we ray-cast from
+    // each centre along these to find the perimeter hit.
+    let srcOut: Point | undefined;
+    let tgtOut: Point | undefined;
+
+    // Tangent angles to propagate to the connector. Only set when we have a
+    // strong signal (port normal or user-provided angle); never set from the
+    // refinement pass — propagating those would lock the connector into its
+    // "explicit angle" branch and over-constrain control-point placement.
+    let fromAngleOut: number | undefined;
+    let toAngleOut:   number | undefined;
+
+    // 1. Ports win — anchor and outward normal both come from the port.
+    if (src && spec.sourcePortId) {
+      const port = src.getPorts?.()?.find((p) => p.id === spec.sourcePortId);
+      if (port) {
+        from = port.position;
+        srcOut = port.normal;
+        fromAngleOut = Math.atan2(port.normal.y, port.normal.x);
       }
-    } else if (spec.sourceId) {
-      from = this.getConnectionPoint(spec.sourceId, to.x, to.y) ?? from;
-    } else if (spec.targetId) {
-      to = this.getConnectionPoint(spec.targetId, from.x, from.y) ?? to;
     }
-    return { from, to };
+    if (tgt && spec.targetPortId) {
+      const port = tgt.getPorts?.()?.find((p) => p.id === spec.targetPortId);
+      if (port) {
+        to = port.position;
+        tgtOut = port.normal;
+        toAngleOut = Math.atan2(port.normal.y, port.normal.x);
+      }
+    }
+
+    // 2. Explicit user-supplied angles.
+    if (fromAngleOut === undefined && spec.fromAngle !== undefined) {
+      srcOut ??= { x: Math.cos(spec.fromAngle), y: Math.sin(spec.fromAngle) };
+      fromAngleOut = spec.fromAngle;
+    }
+    if (toAngleOut === undefined && spec.toAngle !== undefined) {
+      tgtOut ??= { x: Math.cos(spec.toAngle), y: Math.sin(spec.toAngle) };
+      toAngleOut = spec.toAngle;
+    }
+
+    // 3. Refinement pass — only when we still need an outward direction and
+    //    we have both centres to draft a route between.
+    if ((!srcOut || !tgtOut) && src && tgt && sC && tC) {
+      const refined = this._draftTangentDirections(spec, connectorType, sC, tC);
+      if (refined) {
+        srcOut ??= refined.srcOut;
+        tgtOut ??= refined.tgtOut;
+      }
+    }
+
+    // 4. Final fallback: chord direction (covers single-shape connectors).
+    if (!srcOut || !tgtOut) {
+      const refSrc = sC ?? from;
+      const refTgt = tC ?? to;
+      const chord  = _unitOrNull(refTgt.x - refSrc.x, refTgt.y - refSrc.y);
+      if (chord) {
+        srcOut ??= chord;
+        tgtOut ??= { x: -chord.x, y: -chord.y };
+      }
+    }
+
+    // 5. Boundary hits along outward directions.
+    if (src && sC && srcOut && !spec.sourcePortId) {
+      from = src.rayBoundaryHit(sC, srcOut) ?? sC;
+    } else if (src && !spec.sourcePortId) {
+      from = src.getConnectionPoint(to.x, to.y) ?? from;
+    }
+    if (tgt && tC && tgtOut && !spec.targetPortId) {
+      to = tgt.rayBoundaryHit(tC, tgtOut) ?? tC;
+    } else if (tgt && !spec.targetPortId) {
+      to = tgt.getConnectionPoint(from.x, from.y) ?? to;
+    }
+
+    return { from, to, fromAngle: fromAngleOut, toAngle: toAngleOut };
   }
+
+  /**
+   * Build a draft route between two shape centres and read back the curve's
+   * outward tangent direction at each end. Used by the endpoint resolver to
+   * decide where the curve actually wants to meet each shape's boundary.
+   *
+   * Returns `null` if the connector type isn't registered, or if the route
+   * generation fails for any reason (we fall back to chord direction).
+   */
+  private _draftTangentDirections(
+    spec: BaseConnectorSpec,
+    connectorType: string,
+    sC: Point,
+    tC: Point,
+  ): { srcOut: Point; tgtOut: Point } | null {
+    const Ctor = this._connectorRegistry.get(connectorType);
+    if (!Ctor) return null;
+    try {
+      // Build a draft connector with center-to-center endpoints. The draft is
+      // never added to the scene; we only call its `route()` method to read
+      // the curve's natural tangent directions.
+      const draftSpec = { ...spec, from: sC, to: tC };
+      const draft = new Ctor(draftSpec) as BaseConnector;
+      draft._routerRegistry = this._routerRegistry;
+
+      const rawWaypoints = (spec.vertices ?? spec.waypoints ?? []) as Point[];
+      const routedWaypoints = _runDraftRouter(draft, sC, tC, rawWaypoints, this._routerRegistry);
+      const route = draft.route(sC, tC, routedWaypoints);
+      if (route.length === 0) return null;
+
+      const startAngle = _startTangentAngleOfRoute(route, sC, tC);
+      const endAngle   = _endTangentAngleOfRoute(route, sC, tC);
+
+      // Tangent decoder:
+      //   `startAngle` returns atan2(from - cp1) — i.e. the OPPOSITE of the
+      //   curve's direction of travel at the start. So the source's outward
+      //   normal (= direction of travel at start) is the unit vector at angle
+      //   `startAngle + π`, which is `(-cos, -sin)`.
+      //
+      //   `endAngle` returns atan2(to - cp2) — the curve's direction of
+      //   travel at the end (going INTO the target). The target's outward
+      //   normal is the opposite, again `(-cos, -sin)`.
+      const srcOut: Point = { x: -Math.cos(startAngle), y: -Math.sin(startAngle) };
+      const tgtOut: Point = { x: -Math.cos(endAngle),   y: -Math.sin(endAngle)   };
+      return { srcOut, tgtOut };
+    } catch {
+      return null;
+    }
+  }
+
+  // ── Internal helpers (file-local) ─────────────────────────────────────────
 
   private _updateAttachedConnectors(movedShapeId: string): void {
     const connectorIds = this._shapeToConnectors.get(movedShapeId);
@@ -766,22 +918,16 @@ export class ShapesPlugin implements CanvasPlugin {
     for (const connectorId of connectorIds) {
       const connObj = this._connectorPool.get(connectorId);
       if (!connObj) continue;
-      const spec   = connObj.element.spec as BaseConnectorSpec;
-      const patch: Partial<BaseConnectorSpec> = {};
-
-      if (spec.sourceId) {
-        const tgtCenter = spec.targetId ? this.getCenter(spec.targetId) : spec.to;
-        const dir = tgtCenter ?? spec.to;
-        const cp = this.getConnectionPoint(spec.sourceId, dir.x, dir.y);
-        if (cp) patch.from = cp;
-      }
-      if (spec.targetId) {
-        const srcCenter = spec.sourceId ? this.getCenter(spec.sourceId) : spec.from;
-        const dir = srcCenter ?? spec.from;
-        const cp = this.getConnectionPoint(spec.targetId, dir.x, dir.y);
-        if (cp) patch.to = cp;
-      }
-      if (patch.from || patch.to) this.updateConnector(connectorId, patch);
+      const connector = connObj.element as BaseConnector;
+      const spec      = connector.spec;
+      const type      = connector._connectorType ?? 'straight';
+      const resolved  = this._resolveConnectorEndpoints(spec, type);
+      this.updateConnector(connectorId, {
+        from:      resolved.from,
+        to:        resolved.to,
+        fromAngle: resolved.fromAngle,
+        toAngle:   resolved.toAngle,
+      });
     }
   }
 
@@ -929,3 +1075,81 @@ export class ShapesPlugin implements CanvasPlugin {
 // ── Backward-compatibility alias ─────────────────────────────────────────────
 /** @deprecated Use {@link ShapesPlugin} instead. */
 export { ShapesPlugin as GraphPlugin };
+
+// ── File-local helpers ───────────────────────────────────────────────────────
+
+/** Normalise a 2-vector. Returns `null` for zero-length input. */
+function _unitOrNull(x: number, y: number): Point | null {
+  const len = Math.sqrt(x * x + y * y);
+  if (len < 1e-9) return null;
+  return { x: x / len, y: y / len };
+}
+
+/**
+ * Run the draft connector's router stage (if any) so the route reflects the
+ * waypoints the user expects. Mirrors `BaseConnector._runRouter`.
+ */
+function _runDraftRouter(
+  draft: BaseConnector,
+  from: Point,
+  to: Point,
+  rawWaypoints: Point[],
+  routerRegistry: Map<string, RouterFn>,
+): Point[] {
+  const routerField = draft.spec.router;
+  if (!routerField) return rawWaypoints;
+  const name = typeof routerField === 'string' ? routerField : routerField.name;
+  const args = typeof routerField === 'object' ? routerField.args : undefined;
+  const fn = routerRegistry.get(name);
+  if (!fn) return rawWaypoints;
+  return fn(from, to, rawWaypoints, args);
+}
+
+/**
+ * Direction of the curve's tangent at the **start** of a route, expressed as
+ * the angle of the vector pointing from the first control point back toward
+ * `from`. Mirrors `BaseConnector._startTangentAngle`.
+ */
+function _startTangentAngleOfRoute(
+  route: ReadonlyArray<{ cmd: string } & Record<string, number | string>>,
+  from: Point,
+  to: Point,
+): number {
+  const first = route[1] as
+    | undefined
+    | { cmd: 'L'; x: number; y: number }
+    | { cmd: 'C'; cp1x: number; cp1y: number; cp2x: number; cp2y: number; x: number; y: number }
+    | { cmd: 'Q'; cpx: number; cpy: number; x: number; y: number }
+    | { cmd: 'Z' };
+  if (!first) return Math.atan2(to.y - from.y, to.x - from.x);
+  if (first.cmd === 'C') return Math.atan2(from.y - first.cp1y, from.x - first.cp1x);
+  if (first.cmd === 'Q') return Math.atan2(from.y - first.cpy,  from.x - first.cpx);
+  if (first.cmd !== 'Z' && 'x' in first) return Math.atan2(from.y - first.y, from.x - first.x);
+  return Math.atan2(to.y - from.y, to.x - from.x);
+}
+
+/**
+ * Direction of the curve's tangent at the **end** of a route, expressed as
+ * the angle of the vector pointing from the last control point toward `to`
+ * (i.e. the curve's direction of travel into the target).
+ * Mirrors `BaseConnector._endTangentAngle`.
+ */
+function _endTangentAngleOfRoute(
+  route: ReadonlyArray<{ cmd: string } & Record<string, number | string>>,
+  from: Point,
+  to: Point,
+): number {
+  const last = route[route.length - 1] as
+    | undefined
+    | { cmd: 'M' | 'L'; x: number; y: number }
+    | { cmd: 'C'; cp1x: number; cp1y: number; cp2x: number; cp2y: number; x: number; y: number }
+    | { cmd: 'Q'; cpx: number; cpy: number; x: number; y: number }
+    | { cmd: 'Z' };
+  if (!last) return Math.atan2(to.y - from.y, to.x - from.x);
+  if (last.cmd === 'C') return Math.atan2(last.y - last.cp2y, last.x - last.cp2x);
+  if (last.cmd === 'Q') return Math.atan2(last.y - last.cpy,  last.x - last.cpx);
+  const prev = route[route.length - 2] as undefined | { x?: number; y?: number };
+  const px = prev && typeof prev.x === 'number' ? prev.x : from.x;
+  const py = prev && typeof prev.y === 'number' ? prev.y : from.y;
+  return Math.atan2(to.y - py, to.x - px);
+}

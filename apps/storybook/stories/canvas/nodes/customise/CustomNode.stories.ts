@@ -12,7 +12,7 @@
  *     node data JSON — INodeData forwards unknown fields to the shape spec
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
-import { Canvas, BackgroundPlugin } from '@invana/canvas';
+import { Canvas, BackgroundPlugin, rayPointAt, rayVsCircle, rayVsRect } from '@invana/canvas';
 import { GraphDataPlugin } from '@invana/plugins-graph-data';
 import {
   BaseNode,
@@ -67,11 +67,11 @@ class CloudNode extends BaseNode<CloudNodeSpec> {
     return { x: this.spec.x, y: this.spec.y };
   }
 
-  getConnectionPoint(toX: number, toY: number): Point {
+  rayBoundaryHit(origin: Point, dir: Point): Point | null {
     const { x, y, radius: r } = this.spec;
-    const dx = toX - x, dy = toY - y;
-    const len = Math.sqrt(dx * dx + dy * dy) || 1;
-    return { x: x + (dx / len) * r, y: y + (dy / len) * r };
+    const t = rayVsCircle(origin.x, origin.y, dir.x, dir.y, x, y, r);
+    if (t === null) return null;
+    return rayPointAt(origin.x, origin.y, dir.x, dir.y, t);
   }
 }
 
@@ -121,12 +121,11 @@ class ServerNode extends BaseNode<ServerNodeSpec> {
     return { x: x + w / 2, y: y + h / 2 };
   }
 
-  getConnectionPoint(toX: number, toY: number): Point {
+  rayBoundaryHit(origin: Point, dir: Point): Point | null {
     const { x, y, width: w, height: h } = this.spec;
-    const cx = x + w / 2, cy = y + h / 2;
-    const dx = toX - cx, dy = toY - cy;
-    const len = Math.sqrt(dx * dx + dy * dy) || 1;
-    return { x: cx + (dx / len) * Math.min(w, h) / 2, y: cy + (dy / len) * Math.min(w, h) / 2 };
+    const t = rayVsRect(origin.x, origin.y, dir.x, dir.y, x, y, x + w, y + h);
+    if (t === null) return null;
+    return rayPointAt(origin.x, origin.y, dir.x, dir.y, t);
   }
 }
 
@@ -165,12 +164,11 @@ class DatabaseNode extends BaseNode<DatabaseNodeSpec> {
     return { x: x + w / 2, y: y + h / 2 };
   }
 
-  getConnectionPoint(toX: number, toY: number): Point {
+  rayBoundaryHit(origin: Point, dir: Point): Point | null {
     const { x, y, width: w, height: h } = this.spec;
-    const cx = x + w / 2, cy = y + h / 2;
-    const dx = toX - cx, dy = toY - cy;
-    const len = Math.sqrt(dx * dx + dy * dy) || 1;
-    return { x: cx + (dx / len) * Math.min(w, h) / 2, y: cy + (dy / len) * Math.min(w, h) / 2 };
+    const t = rayVsRect(origin.x, origin.y, dir.x, dir.y, x, y, x + w, y + h);
+    if (t === null) return null;
+    return rayPointAt(origin.x, origin.y, dir.x, dir.y, t);
   }
 }
 

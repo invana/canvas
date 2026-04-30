@@ -1,5 +1,6 @@
 // ── CircleShape ───────────────────────────────────────────────────────────────
 
+import { rayPointAt, rayVsCircle } from '@invana/canvas';
 import { BaseShape, LOD } from '../BaseShape.js';
 import type { DrawContext } from '../DrawContext.js';
 import type { BaseShapeSpec, BBox, Point } from '../spec/index.js';
@@ -56,11 +57,11 @@ export class CircleShape extends BaseShape<CircleShapeSpec> {
     return { x: this.spec.x, y: this.spec.y };
   }
 
-  getConnectionPoint(toX: number, toY: number): Point {
+  rayBoundaryHit(origin: Point, dir: Point): Point | null {
     const { x, y, radius } = this.spec;
-    const dx = toX - x, dy = toY - y;
-    const len = Math.sqrt(dx * dx + dy * dy) || 1;
-    return { x: x + (dx / len) * radius, y: y + (dy / len) * radius };
+    const t = rayVsCircle(origin.x, origin.y, dir.x, dir.y, x, y, radius);
+    if (t === null) return null;
+    return rayPointAt(origin.x, origin.y, dir.x, dir.y, t);
   }
 
   hitTest(wx: number, wy: number): boolean {

@@ -62,6 +62,14 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
   _markerRegistry?: Map<string, (ctx: DrawContext, tip: Point, angle: number, spec: ArrowSpec) => void>;
 
   /**
+   * Registry name under which this connector was added (e.g. `'bezier'`,
+   * `'orthogonal'`). Set by {@link ShapesPlugin.addConnector}; used by the
+   * endpoint resolver to pick a tangent-direction strategy.
+   * @internal
+   */
+  _connectorType?: string;
+
+  /**
    * Cached route from the last `draw()` call.
    * @internal
    */
@@ -102,41 +110,68 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
     let arrowTip  = to;
     let arrowTail = from;
 
-    const effectiveTargetTrim = (this.spec.targetRadius ?? 0) + (this.spec.targetOffset ?? 0);
-    if (effectiveTargetTrim > 0) {
-      arrowTip  = {
-        x: to.x - effectiveTargetTrim * Math.cos(endAngle),
-        y: to.y - effectiveTargetTrim * Math.sin(endAngle),
+    const endMarkerSpec   = this._resolveMarkerSpec(this.spec.endMarker  ?? this.spec.endArrow);
+    const startMarkerSpec = this._resolveMarkerSpec(this.spec.startMarker ?? this.spec.startArrow);
+    const endMarkerSize   = endMarkerSpec?.size   ?? 10;
+    const startMarkerSize = startMarkerSpec?.size ?? 10;
+    const endHasMarker    = !endMarkerSpec   || endMarkerSpec.type   !== 'none';
+    const startHasMarker  =  startMarkerSpec && startMarkerSpec.type !== 'none';
+
+    // ── End placement ─────────────────────────────────────────────────────────
+    // `to` is already on the target's perimeter (placed by `rayBoundaryHit`).
+    // The arrow tip lands exactly there by default; `targetOffset` (default 0)
+    // pushes the tip back along the tangent for a visible gap. The line is
+    // automatically trimmed back by `markerSize` so the marker has clean
+    // space to draw without overlapping the line.
+    const endTipBackoff = this.spec.targetOffset ?? 0;
+    if (endTipBackoff !== 0) {
+      arrowTip = {
+        x: to.x - endTipBackoff * Math.cos(endAngle),
+        y: to.y - endTipBackoff * Math.sin(endAngle),
       };
-      drawRoute = this._trimRouteEnd(drawRoute, arrowTip);
+    }
+    const endLineBackoff = endTipBackoff + (endHasMarker ? endMarkerSize : 0);
+    if (endLineBackoff > 0) {
+      const lineEnd = {
+        x: to.x - endLineBackoff * Math.cos(endAngle),
+        y: to.y - endLineBackoff * Math.sin(endAngle),
+      };
+      drawRoute = this._trimRouteEnd(drawRoute, lineEnd);
     }
 
-    const effectiveSourceTrim = (this.spec.sourceRadius ?? 0) + (this.spec.sourceOffset ?? 0);
-    if (effectiveSourceTrim > 0) {
-      const fwdAngle = startAngle + Math.PI;
+    // ── Start placement ───────────────────────────────────────────────────────
+    // Mirror of the end logic. `startAngle` points from `from` back toward
+    // the source's centre, so the "forward along the curve" direction is the
+    // opposite (startAngle + π).
+    const fwdAngle = startAngle + Math.PI;
+    const startTipBackoff = this.spec.sourceOffset ?? 0;
+    if (startTipBackoff !== 0) {
       arrowTail = {
-        x: from.x + effectiveSourceTrim * Math.cos(fwdAngle),
-        y: from.y + effectiveSourceTrim * Math.sin(fwdAngle),
+        x: from.x + startTipBackoff * Math.cos(fwdAngle),
+        y: from.y + startTipBackoff * Math.sin(fwdAngle),
       };
-      drawRoute = this._trimRouteStart(drawRoute, arrowTail);
+    }
+    const startLineBackoff = startTipBackoff + (startHasMarker ? startMarkerSize : 0);
+    if (startLineBackoff > 0) {
+      const lineStart = {
+        x: from.x + startLineBackoff * Math.cos(fwdAngle),
+        y: from.y + startLineBackoff * Math.sin(fwdAngle),
+      };
+      drawRoute = this._trimRouteStart(drawRoute, lineStart);
     }
 
     ctx.strokePath(drawRoute, style);
 
-    const endMarkerSpec   = this._resolveMarkerSpec(this.spec.endMarker  ?? this.spec.endArrow);
-    const startMarkerSpec = this._resolveMarkerSpec(this.spec.startMarker ?? this.spec.startArrow);
-
-    if (!endMarkerSpec || endMarkerSpec.type !== 'none') {
+    if (endHasMarker) {
       const markerType  = endMarkerSpec?.type  ?? 'triangle';
       const markerColor = endMarkerSpec?.color  ?? (style.stroke as string | undefined) ?? '#999999';
-      const markerSize  = endMarkerSpec?.size   ?? 10;
       const markerAlpha = style.strokeAlpha ?? 1;
-      this._drawMarker(ctx, arrowTip, endAngle, markerType, markerSize, markerColor, markerAlpha, endMarkerSpec);
+      this._drawMarker(ctx, arrowTip, endAngle, markerType, endMarkerSize, markerColor, markerAlpha, endMarkerSpec);
     }
 
-    if (startMarkerSpec && startMarkerSpec.type !== 'none') {
-      const markerColor = startMarkerSpec.color ?? (style.stroke as string | undefined) ?? '#999999';
-      this._drawMarker(ctx, arrowTail, startAngle, startMarkerSpec.type, startMarkerSpec.size ?? 10, markerColor, style.strokeAlpha ?? 1, startMarkerSpec);
+    if (startHasMarker) {
+      const markerColor = startMarkerSpec!.color ?? (style.stroke as string | undefined) ?? '#999999';
+      this._drawMarker(ctx, arrowTail, startAngle, startMarkerSpec!.type, startMarkerSize, markerColor, style.strokeAlpha ?? 1, startMarkerSpec!);
     }
 
     if (detail >= LOD.DETAIL && label) {

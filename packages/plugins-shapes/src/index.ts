@@ -38,6 +38,7 @@ export type {
   BBox,
   PathCommand,
   ArrowSpec,
+  NodePort,
   RouterFn as RouterFnType,
   ConnectorFn,
   RouterContext,
@@ -58,6 +59,7 @@ export { PolygonShape, PolygonNode } from './shapes/PolygonShape.js';
 export { DiamondShape, DiamondNode } from './shapes/DiamondShape.js';
 export { StarShape, StarNode }       from './shapes/StarShape.js';
 export { HexagonShape, HexagonNode } from './shapes/HexagonShape.js';
+export { PolylineShape }             from './shapes/PolylineShape.js';
 export type { CircleShapeSpec, CircleNodeSpec }   from './shapes/CircleShape.js';
 export type { RectShapeSpec, RectNodeSpec }       from './shapes/RectShape.js';
 export type { EllipseShapeSpec, EllipseNodeSpec } from './shapes/EllipseShape.js';
@@ -65,6 +67,7 @@ export type { PolygonShapeSpec, PolygonNodeSpec } from './shapes/PolygonShape.js
 export type { DiamondShapeSpec, DiamondNodeSpec } from './shapes/DiamondShape.js';
 export type { StarShapeSpec, StarNodeSpec }       from './shapes/StarShape.js';
 export type { HexagonShapeSpec, HexagonNodeSpec } from './shapes/HexagonShape.js';
+export type { PolylineShapeSpec }                 from './shapes/PolylineShape.js';
 
 // Concrete connectors
 export { StraightConnector }   from './connectors/StraightConnector.js';

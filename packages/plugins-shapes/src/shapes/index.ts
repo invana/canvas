@@ -18,3 +18,6 @@ export type { StarShapeSpec, StarNodeSpec } from './StarShape.js';
 
 export { HexagonShape, HexagonNode } from './HexagonShape.js';
 export type { HexagonShapeSpec, HexagonNodeSpec } from './HexagonShape.js';
+
+export { PolylineShape } from './PolylineShape.js';
+export type { PolylineShapeSpec } from './PolylineShape.js';

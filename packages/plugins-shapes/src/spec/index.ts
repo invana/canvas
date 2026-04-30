@@ -26,6 +26,31 @@ export interface BBox {
 import type { GraphicsPathCommand as PathCommand } from '@invana/canvas';
 export type { PathCommand };
 
+// ── Node ports ────────────────────────────────────────────────────────────────
+
+/**
+ * A named anchor point on a shape's perimeter, used by connectors that target
+ * a specific connection slot rather than the nearest boundary intersection.
+ *
+ * Ports are the foundation for ER-style entities, BPMN tasks, and any diagram
+ * where edges must enter/exit the node at fixed, labelled positions.
+ */
+export interface NodePort {
+  /** Stable identifier; referenced by connector specs as `sourcePortId` / `targetPortId`. */
+  id: string;
+  /** World-space anchor position (typically on the shape's perimeter). */
+  position: Point;
+  /**
+   * Outward unit normal at the port. Used by curved connectors to orient
+   * cp1 / cp2 so the curve leaves / enters the port cleanly.
+   */
+  normal: Point;
+  /** Optional side hint for axis-aligned routers (orthogonal / rounded). */
+  side?: 'top' | 'right' | 'bottom' | 'left';
+  /** Optional human-readable label (e.g. attribute name in an ER entity). */
+  label?: string;
+}
+
 // ── Arrow marker ──────────────────────────────────────────────────────────────
 
 /**
@@ -231,19 +256,21 @@ export interface BaseConnectorSpec {
   /** Arbitrary consumer data — forwarded in event payloads unchanged. */
   data?: Record<string, unknown>;
   /**
-   * Distance (world pixels) to trim from the **start** of the path.
-   */
-  sourceRadius?: number;
-  /**
-   * Distance (world pixels) to trim from the **end** of the path.
-   */
-  targetRadius?: number;
-  /**
-   * Additional gap (world pixels) added beyond `sourceRadius`.
+   * Visible gap (world pixels) between the source perimeter and the start
+   * arrow tip. Default `0` → tip sits exactly on the perimeter. Positive
+   * pushes the arrow outward (toward the target).
+   *
+   * The line is automatically trimmed by the marker size on top of this, so
+   * users only need to think about the *visible gap*, not the marker
+   * geometry.
    */
   sourceOffset?: number;
   /**
-   * Additional gap (world pixels) added beyond `targetRadius`.
+   * Visible gap (world pixels) between the target perimeter and the end
+   * arrow tip. Default `0` → tip sits exactly on the perimeter. Positive
+   * pushes the arrow outward (toward the source).
+   *
+   * The line is automatically trimmed by the marker size on top of this.
    */
   targetOffset?: number;
   /**
@@ -258,6 +285,31 @@ export interface BaseConnectorSpec {
    * add-time and kept in sync when the target element is dragged.
    */
   targetId?: string;
+  /**
+   * Outward-normal angle (radians) at the source attachment point.
+   * Set automatically by ShapesPlugin when sourceId is resolved.
+   * Used by curved connectors to align their initial control point with the
+   * natural exit direction from the source node.
+   */
+  fromAngle?: number;
+  /**
+   * Outward-normal angle (radians) at the target attachment point.
+   * Set automatically by ShapesPlugin when targetId is resolved.
+   * Used by curved connectors to align their final control point with the
+   * natural entry direction into the target node.
+   */
+  toAngle?: number;
+  /**
+   * Optional id of a named port on the source shape. When set, the
+   * connector attaches at the port's anchor and the curve is oriented along
+   * the port's outward normal. Falls through to ray-cast boundary attachment
+   * when the source shape doesn't declare a port with this id.
+   */
+  sourcePortId?: string;
+  /**
+   * Optional id of a named port on the target shape. See {@link sourcePortId}.
+   */
+  targetPortId?: string;
 }
 
 // ── Backward-compatibility aliases ───────────────────────────────────────────
