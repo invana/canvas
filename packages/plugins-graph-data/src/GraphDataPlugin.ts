@@ -9,6 +9,7 @@ import {
   type ConnectorCtor,
   type RouterFn,
   type BaseShape,
+  type BaseConnector,
   type DrawContext,
   type ArrowSpec,
   type Point,
@@ -23,6 +24,7 @@ import type {
   IGraphStyles,
   GraphDataPluginOptions,
   EdgePathType,
+  TraversalDirection,
 } from './graph-types.js';
 
 // Backward-compat type aliases for public API
@@ -239,6 +241,14 @@ export class GraphDataPlugin implements CanvasPlugin {
     return this._edgeStore;
   }
 
+  /**
+   * Returns the live rendered connector element for a given edge id.
+   */
+  getEdgeElement(id: string): BaseConnector | undefined {
+    const obj = this._elements.getConnector(id);
+    return obj ? (obj.element as BaseConnector) : undefined;
+  }
+
   // ── Layout contract ───────────────────────────────────────────────────────
 
   /**
@@ -310,6 +320,68 @@ export class GraphDataPlugin implements CanvasPlugin {
   /** Register a custom arrow marker function. */
   registerMarker(name: string, fn: (ctx: DrawContext, tip: Point, angle: number, spec: ArrowSpec) => void): void {
     this._elements.registerMarker(name, fn);
+  }
+
+  // ── Graph introspection ───────────────────────────────────────────────────
+
+  /** Ids of every currently rendered node. */
+  getRenderedNodeIds(): string[] {
+    return [...this._nodeStore.keys()];
+  }
+
+  /** Ids of every currently rendered edge. */
+  getRenderedEdgeIds(): string[] {
+    return [...this._edgeStore.keys()];
+  }
+
+  /**
+   * Find all neighbour node and edge ids within `degree` hops of `nodeId`.
+   *
+   * Performs a breadth-first traversal of the edge store. The starting node
+   * itself is **not** included in the returned `nodeIds`.
+   *
+   * @param nodeId    Starting node id.
+   * @param degree    Maximum number of hops. `0` returns empty arrays.
+   * @param direction Edge filter — `'in'`, `'out'`, or `'both'`. Default `'both'`.
+   * @returns Object with `nodeIds` (visited nodes excluding the start) and
+   *          `edgeIds` (every edge whose traversal contributed to the visit).
+   */
+  getNeighborElements(
+    nodeId: string,
+    degree: number,
+    direction: TraversalDirection = 'both',
+  ): { nodeIds: string[]; edgeIds: string[] } {
+    const nodeIds = new Set<string>();
+    const edgeIds = new Set<string>();
+    if (degree <= 0 || !this._nodeStore.has(nodeId)) {
+      return { nodeIds: [], edgeIds: [] };
+    }
+
+    const visited = new Set<string>([nodeId]);
+    let frontier: string[] = [nodeId];
+
+    for (let hop = 0; hop < degree && frontier.length > 0; hop++) {
+      const next: string[] = [];
+      for (const current of frontier) {
+        for (const edge of this._edgeStore.values()) {
+          let neighbor: string | null = null;
+          if (direction !== 'in'  && edge.source === current) neighbor = edge.target;
+          if (direction !== 'out' && edge.target === current) neighbor = edge.source;
+          if (neighbor === null) continue;
+          if (!this._nodeStore.has(neighbor)) continue;
+
+          edgeIds.add(edge.id);
+          if (!visited.has(neighbor)) {
+            visited.add(neighbor);
+            nodeIds.add(neighbor);
+            next.push(neighbor);
+          }
+        }
+      }
+      frontier = next;
+    }
+
+    return { nodeIds: [...nodeIds], edgeIds: [...edgeIds] };
   }
 
   // ── Internal helpers ──────────────────────────────────────────────────────

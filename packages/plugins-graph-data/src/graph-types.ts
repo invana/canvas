@@ -11,6 +11,15 @@ export type NodeShape = 'circle' | 'rect' | 'ellipse' | 'polygon' | 'diamond' | 
 export type EdgePathType = 'straight' | 'bezier' | 'orthogonal' | 'quadratic' | 'rounded' | 'smooth';
 
 /**
+ * Edge direction filter for graph traversal queries.
+ *
+ * - `'in'`   — follow edges where the start node is the `target`.
+ * - `'out'`  — follow edges where the start node is the `source`.
+ * - `'both'` — follow edges in either direction (treat the graph as undirected).
+ */
+export type TraversalDirection = 'in' | 'out' | 'both';
+
+/**
  * Data descriptor for a single graph node.
  * GraphDataPlugin maps this to an GraphPlugin node spec.
  */

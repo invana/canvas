@@ -963,11 +963,7 @@ export class ShapesPlugin implements CanvasPlugin {
     const hit = this._hitTest(wx, wy);
 
     if (this._lastHoverId && (!hit || hit.id !== this._lastHoverId)) {
-      const prevObj  = this._shapePool.get(this._lastHoverId) ?? this._connectorPool.get(this._lastHoverId);
       const prevType = this._shapePool.has(this._lastHoverId) ? 'shape' : 'connector' as const;
-      prevObj?.element.setState('hovered', false);
-      const scene = this._shapePool.has(this._lastHoverId) ? this._shapeScene : this._connectorScene;
-      scene.redraw(this._lastHoverId);
       this._ctx.events.emit(
         'shape:pointerout',
         new ShapePointerOutEvent(this._fields(this._lastHoverId, prevType, wx, wy, e)),
@@ -976,10 +972,6 @@ export class ShapesPlugin implements CanvasPlugin {
     }
 
     if (hit && hit.id !== this._lastHoverId) {
-      const obj = this._shapePool.get(hit.id) ?? this._connectorPool.get(hit.id);
-      obj?.element.setState('hovered', true);
-      const scene = hit.type === 'shape' ? this._shapeScene : this._connectorScene;
-      scene.redraw(hit.id);
       this._ctx.events.emit(
         'shape:pointerover',
         new ShapePointerOverEvent(this._fields(hit.id, hit.type, wx, wy, e)),

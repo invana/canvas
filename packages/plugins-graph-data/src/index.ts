@@ -17,7 +17,21 @@ export type {
   GraphDataPluginOptions,
   NodeShape,
   EdgePathType,
+  TraversalDirection,
 } from './graph-types.js';
+
+// ── State stores (shared by behaviour plugins) ────────────────────────────────
+export { HoverStore } from './state/index.js';
+export type { HoverElementType, HoverStoreEvents } from './state/index.js';
+
+// ── Behaviour plugins (opt-in — register explicitly) ──────────────────────────
+export { HoverActivatePlugin } from './plugins/index.js';
+export type {
+  HoverActivatePluginOptions,
+  HoverableElement,
+  HoverableElementType,
+  HoverDirection,
+} from './plugins/index.js';
 
 // ── CanvasEventMap augmentation (graph:* events kept for backward compat) ─────
 // Shape:* augmentation is already included via @invana/plugins-shapes re-export.
