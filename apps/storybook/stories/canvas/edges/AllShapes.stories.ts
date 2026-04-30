@@ -37,86 +37,86 @@ const nodes: INodeData[] = [
 
   // ── Row 1: Path Types ── cellW=220 pairW=150 dy=90 (bezier dy=110, smooth dy=0) ──
 
-  { id: 'pt-straight-l',   x: -625, y:  -45, shape: 'circle', size: 36 },
-  { id: 'pt-straight-r',   x: -475, y:   45, shape: 'circle', size: 36 },
+  { id: 'pt-straight-l',   x: -625, y:  -45, shape: 'circle',  size: 36 },
+  { id: 'pt-straight-r',   x: -475, y:   45, shape: 'circle',  size: 36 },
 
-  { id: 'pt-bezier-l',     x: -405, y:  -55, shape: 'circle', size: 36 },  // dy=110
-  { id: 'pt-bezier-r',     x: -255, y:   55, shape: 'circle', size: 36 },
+  { id: 'pt-bezier-l',     x: -405, y:  -55, shape: 'ellipse', size: 36 },  // dy=110
+  { id: 'pt-bezier-r',     x: -255, y:   55, shape: 'ellipse', size: 36 },
 
-  { id: 'pt-orthogonal-l', x: -185, y:  -45, shape: 'circle', size: 36 },
-  { id: 'pt-orthogonal-r', x:  -35, y:   45, shape: 'circle', size: 36 },
+  { id: 'pt-orthogonal-l', x: -185, y:  -45, shape: 'rect',    size: 36 },
+  { id: 'pt-orthogonal-r', x:  -35, y:   45, shape: 'rect',    size: 36 },
 
-  { id: 'pt-quadratic-l',  x:   35, y:  -45, shape: 'circle', size: 36 },
-  { id: 'pt-quadratic-r',  x:  185, y:   45, shape: 'circle', size: 36 },
+  { id: 'pt-quadratic-l',  x:   35, y:  -45, shape: 'diamond', size: 36 },
+  { id: 'pt-quadratic-r',  x:  185, y:   45, shape: 'diamond', size: 36 },
 
-  { id: 'pt-rounded-l',    x:  255, y:  -45, shape: 'circle', size: 36 },
-  { id: 'pt-rounded-r',    x:  405, y:   45, shape: 'circle', size: 36 },
+  { id: 'pt-rounded-l',    x:  255, y:  -45, shape: 'hexagon', size: 36 },
+  { id: 'pt-rounded-r',    x:  405, y:   45, shape: 'hexagon', size: 36 },
 
-  { id: 'pt-smooth-l',     x:  475, y:    0, shape: 'circle', size: 36 },  // dy=0, waypoints create S-wave
-  { id: 'pt-smooth-r',     x:  625, y:    0, shape: 'circle', size: 36 },
+  { id: 'pt-smooth-l',     x:  475, y:    0, shape: 'star',    size: 36 },  // dy=0, waypoints create S-wave
+  { id: 'pt-smooth-r',     x:  625, y:    0, shape: 'star',    size: 36 },
 
   // ── Row 2: Markers A ── cellW=190 pairW=130 dy=0  y=300 ──
 
-  { id: 'mk-triangle-l',          x: -730, y: 300, shape: 'circle', size: 36 },
-  { id: 'mk-triangle-r',          x: -600, y: 300, shape: 'circle', size: 36 },
+  { id: 'mk-triangle-l',          x: -730, y: 300, shape: 'circle',  size: 36 },
+  { id: 'mk-triangle-r',          x: -600, y: 300, shape: 'circle',  size: 36 },
 
-  { id: 'mk-triangle-outline-l',  x: -540, y: 300, shape: 'circle', size: 36 },
-  { id: 'mk-triangle-outline-r',  x: -410, y: 300, shape: 'circle', size: 36 },
+  { id: 'mk-triangle-outline-l',  x: -540, y: 300, shape: 'ellipse', size: 36 },
+  { id: 'mk-triangle-outline-r',  x: -410, y: 300, shape: 'ellipse', size: 36 },
 
-  { id: 'mk-diamond-l',           x: -350, y: 300, shape: 'circle', size: 36 },
-  { id: 'mk-diamond-r',           x: -220, y: 300, shape: 'circle', size: 36 },
+  { id: 'mk-diamond-l',           x: -350, y: 300, shape: 'rect',    size: 36 },
+  { id: 'mk-diamond-r',           x: -220, y: 300, shape: 'rect',    size: 36 },
 
-  { id: 'mk-diamond-outline-l',   x: -160, y: 300, shape: 'circle', size: 36 },
-  { id: 'mk-diamond-outline-r',   x:  -30, y: 300, shape: 'circle', size: 36 },
+  { id: 'mk-diamond-outline-l',   x: -160, y: 300, shape: 'diamond', size: 36 },
+  { id: 'mk-diamond-outline-r',   x:  -30, y: 300, shape: 'diamond', size: 36 },
 
-  { id: 'mk-circle-l',            x:   30, y: 300, shape: 'circle', size: 36 },
-  { id: 'mk-circle-r',            x:  160, y: 300, shape: 'circle', size: 36 },
+  { id: 'mk-circle-l',            x:   30, y: 300, shape: 'hexagon', size: 36 },
+  { id: 'mk-circle-r',            x:  160, y: 300, shape: 'hexagon', size: 36 },
 
-  { id: 'mk-circle-outline-l',    x:  220, y: 300, shape: 'circle', size: 36 },
-  { id: 'mk-circle-outline-r',    x:  350, y: 300, shape: 'circle', size: 36 },
+  { id: 'mk-circle-outline-l',    x:  220, y: 300, shape: 'polygon', size: 36, sides: 3 },
+  { id: 'mk-circle-outline-r',    x:  350, y: 300, shape: 'polygon', size: 36, sides: 3 },
 
-  { id: 'mk-circle-plus-l',       x:  410, y: 300, shape: 'circle', size: 36 },
-  { id: 'mk-circle-plus-r',       x:  540, y: 300, shape: 'circle', size: 36 },
+  { id: 'mk-circle-plus-l',       x:  410, y: 300, shape: 'polygon', size: 36, sides: 5 },
+  { id: 'mk-circle-plus-r',       x:  540, y: 300, shape: 'polygon', size: 36, sides: 5 },
 
-  { id: 'mk-square-l',            x:  600, y: 300, shape: 'circle', size: 36 },
-  { id: 'mk-square-r',            x:  730, y: 300, shape: 'circle', size: 36 },
+  { id: 'mk-square-l',            x:  600, y: 300, shape: 'star',    size: 36 },
+  { id: 'mk-square-r',            x:  730, y: 300, shape: 'star',    size: 36 },
 
   // ── Row 3: Markers B ── cellW=190 pairW=130 dy=0  y=490 ──
 
-  { id: 'mk-square-outline-l', x: -635, y: 490, shape: 'circle', size: 36 },
-  { id: 'mk-square-outline-r', x: -505, y: 490, shape: 'circle', size: 36 },
+  { id: 'mk-square-outline-l', x: -635, y: 490, shape: 'circle',  size: 36 },
+  { id: 'mk-square-outline-r', x: -505, y: 490, shape: 'circle',  size: 36 },
 
-  { id: 'mk-block-l',          x: -445, y: 490, shape: 'circle', size: 36 },
-  { id: 'mk-block-r',          x: -315, y: 490, shape: 'circle', size: 36 },
+  { id: 'mk-block-l',          x: -445, y: 490, shape: 'ellipse', size: 36 },
+  { id: 'mk-block-r',          x: -315, y: 490, shape: 'ellipse', size: 36 },
 
-  { id: 'mk-classic-l',        x: -255, y: 490, shape: 'circle', size: 36 },
-  { id: 'mk-classic-r',        x: -125, y: 490, shape: 'circle', size: 36 },
+  { id: 'mk-classic-l',        x: -255, y: 490, shape: 'rect',    size: 36 },
+  { id: 'mk-classic-r',        x: -125, y: 490, shape: 'rect',    size: 36 },
 
-  { id: 'mk-ellipse-l',        x:  -65, y: 490, shape: 'circle', size: 36 },
-  { id: 'mk-ellipse-r',        x:   65, y: 490, shape: 'circle', size: 36 },
+  { id: 'mk-ellipse-l',        x:  -65, y: 490, shape: 'diamond', size: 36 },
+  { id: 'mk-ellipse-r',        x:   65, y: 490, shape: 'diamond', size: 36 },
 
-  { id: 'mk-cross-l',          x:  125, y: 490, shape: 'circle', size: 36 },
-  { id: 'mk-cross-r',          x:  255, y: 490, shape: 'circle', size: 36 },
+  { id: 'mk-cross-l',          x:  125, y: 490, shape: 'hexagon', size: 36 },
+  { id: 'mk-cross-r',          x:  255, y: 490, shape: 'hexagon', size: 36 },
 
-  { id: 'mk-async-l',          x:  315, y: 490, shape: 'circle', size: 36 },
-  { id: 'mk-async-r',          x:  445, y: 490, shape: 'circle', size: 36 },
+  { id: 'mk-async-l',          x:  315, y: 490, shape: 'polygon', size: 36, sides: 5 },
+  { id: 'mk-async-r',          x:  445, y: 490, shape: 'polygon', size: 36, sides: 5 },
 
-  { id: 'mk-none-l',           x:  505, y: 490, shape: 'circle', size: 36 },
-  { id: 'mk-none-r',           x:  635, y: 490, shape: 'circle', size: 36 },
+  { id: 'mk-none-l',           x:  505, y: 490, shape: 'star',    size: 36 },
+  { id: 'mk-none-r',           x:  635, y: 490, shape: 'star',    size: 36 },
 
   // ── Row 4: Routers ── cellW=280 pairW=190 dy=140  y=760 ──
 
-  { id: 'rt-normal-l',  x: -515, y: 690, shape: 'circle', size: 36 },
-  { id: 'rt-normal-r',  x: -325, y: 830, shape: 'circle', size: 36 },
+  { id: 'rt-normal-l',  x: -515, y: 690, shape: 'circle',  size: 36 },
+  { id: 'rt-normal-r',  x: -325, y: 830, shape: 'circle',  size: 36 },
 
-  { id: 'rt-orth-l',    x: -235, y: 690, shape: 'circle', size: 36 },
-  { id: 'rt-orth-r',    x:  -45, y: 830, shape: 'circle', size: 36 },
+  { id: 'rt-orth-l',    x: -235, y: 690, shape: 'rect',    size: 36 },
+  { id: 'rt-orth-r',    x:  -45, y: 830, shape: 'rect',    size: 36 },
 
-  { id: 'rt-oneside-l', x:   45, y: 690, shape: 'circle', size: 36 },
-  { id: 'rt-oneside-r', x:  235, y: 830, shape: 'circle', size: 36 },
+  { id: 'rt-oneside-l', x:   45, y: 690, shape: 'diamond', size: 36 },
+  { id: 'rt-oneside-r', x:  235, y: 830, shape: 'diamond', size: 36 },
 
-  { id: 'rt-er-l',      x:  325, y: 690, shape: 'circle', size: 36 },
-  { id: 'rt-er-r',      x:  515, y: 830, shape: 'circle', size: 36 },
+  { id: 'rt-er-l',      x:  325, y: 690, shape: 'hexagon', size: 36 },
+  { id: 'rt-er-r',      x:  515, y: 830, shape: 'hexagon', size: 36 },
 
 ];
 
