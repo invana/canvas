@@ -36,9 +36,9 @@ import {
   type GraphDragStartEvent,
   type GraphDragEndEvent,
 } from '@invana/plugins-shapes';
-import { createContainer } from '../../../src/div-utils.js';
+import { createContainer } from '../../../../src/div-utils.js';
 
-const meta: Meta = { title: 'Canvas/Edge Styles/Drag With Connectors' };
+const meta: Meta = { title: 'Plugins/ShapesPlugin/Drag With Connectors' };
 export default meta;
 type Story = StoryObj;
 

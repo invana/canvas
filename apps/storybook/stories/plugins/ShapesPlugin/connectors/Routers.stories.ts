@@ -26,9 +26,9 @@ import {
   type OneSideRouterArgs,
   type ErRouterArgs,
 } from '@invana/plugins-shapes';
-import { createContainer } from '../../../src/div-utils.js';
+import { createContainer } from '../../../../src/div-utils.js';
 
-const meta: Meta = { title: 'Canvas/Edge Styles/Routers' };
+const meta: Meta = { title: 'Plugins/ShapesPlugin/Routers' };
 export default meta;
 type Story = StoryObj;
 

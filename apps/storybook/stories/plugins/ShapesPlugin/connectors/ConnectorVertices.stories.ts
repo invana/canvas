@@ -27,9 +27,9 @@ import {
   type CircleShapeSpec,
   type BezierConnectorSpec,
 } from '@invana/plugins-shapes';
-import { createContainer } from '../../../src/div-utils.js';
+import { createContainer } from '../../../../src/div-utils.js';
 
-const meta: Meta = { title: 'Canvas/Edge Styles/Connector Vertices' };
+const meta: Meta = { title: 'Plugins/ShapesPlugin/Connector Vertices' };
 export default meta;
 type Story = StoryObj;
 

@@ -16,9 +16,10 @@ import type { BaseConnectorSpec, PathCommand, Point } from '../spec/index.js';
  * ```
  */
 export class StraightConnector extends BaseConnector<BaseConnectorSpec> {
-  route(from: Point, to: Point): PathCommand[] {
+  route(from: Point, to: Point, waypoints: Point[]): PathCommand[] {
     return [
       { cmd: 'M', x: from.x, y: from.y },
+      ...waypoints.map(p => ({ cmd: 'L' as const, x: p.x, y: p.y })),
       { cmd: 'L', x: to.x,   y: to.y   },
     ];
   }
