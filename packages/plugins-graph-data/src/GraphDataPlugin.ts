@@ -107,9 +107,19 @@ export class GraphDataPlugin implements CanvasPlugin {
     }
   }
 
-  /** Replace active style overrides and re-render all elements. */
+  /**
+   * Merge style overrides and re-render all elements.
+   * Existing properties not present in `styles` are preserved.
+   */
   setStyles(styles: IGraphStyles): void {
-    this._styles = styles;
+    this._styles = {
+      node: styles.node !== undefined
+        ? { ...this._styles.node, ...styles.node }
+        : this._styles.node,
+      edge: styles.edge !== undefined
+        ? { ...this._styles.edge, ...styles.edge }
+        : this._styles.edge,
+    };
     this._clearAll();
     this._renderAll();
   }

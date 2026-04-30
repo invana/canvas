@@ -126,15 +126,16 @@ export class PixiDrawContext implements DrawContext {
           break;
       }
     }
-    this._g.stroke({
-      color:  style.stroke      ?? '#999999',
-      width:  style.strokeWidth ?? 1,
-      alpha:  style.strokeAlpha ?? 1,
-      cap:    style.strokeCap,
-      join:   style.strokeJoin,
-      alignment: style.strokeAlignment,
-      miterLimit: style.strokeMiterLimit,
-    });
+    const strokeOpts: Record<string, unknown> = {
+      color: style.stroke      ?? '#999999',
+      width: style.strokeWidth ?? 1,
+      alpha: style.strokeAlpha ?? 1,
+    };
+    if (style.strokeCap        !== undefined) strokeOpts.cap        = style.strokeCap;
+    if (style.strokeJoin       !== undefined) strokeOpts.join       = style.strokeJoin;
+    if (style.strokeAlignment  !== undefined) strokeOpts.alignment  = style.strokeAlignment;
+    if (style.strokeMiterLimit !== undefined) strokeOpts.miterLimit = style.strokeMiterLimit;
+    this._g.stroke(strokeOpts);
   }
 
   drawArrow(

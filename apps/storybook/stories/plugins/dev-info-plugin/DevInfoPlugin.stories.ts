@@ -18,7 +18,7 @@ import type { DevInfoCorner } from '@invana/canvas';
 import { createContainer } from '../../../src/div-utils.js';
 
 const meta: Meta = {
-  title: 'Layers',
+  title: 'Plugins',
 };
 export default meta;
 type Story = StoryObj;

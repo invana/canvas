@@ -1,5 +1,5 @@
 import type { Graphics } from 'pixi.js';
-import { type DrawStyle, resolveFillArg } from '../types.js';
+import { type DrawStyle, resolveFillArg, resolveStrokeOpts } from '../types.js';
 import { type DashStyle } from './dashed.js';
 
 /** Draw a filled/stroked circle. */
@@ -10,14 +10,14 @@ export function drawCircle(
   radius: number,
   style: DrawStyle = {},
 ): void {
-  const { fill, fillAlpha = 1, stroke, strokeWidth = 1, strokeAlpha = 1, strokeCap, strokeJoin, strokeAlignment, strokeMiterLimit } = style;
+  const { fill, fillAlpha = 1, stroke } = style;
   const fillArg = resolveFillArg(fill, fillAlpha);
   if (fillArg !== undefined) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     g.circle(x, y, radius).fill(fillArg as any);
   }
   if (stroke !== undefined) {
-    g.circle(x, y, radius).stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha, cap: strokeCap, join: strokeJoin, alignment: strokeAlignment, miterLimit: strokeMiterLimit });
+    g.circle(x, y, radius).stroke(resolveStrokeOpts(style));
   }
 }
 

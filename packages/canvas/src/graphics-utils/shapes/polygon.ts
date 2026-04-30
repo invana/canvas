@@ -1,5 +1,5 @@
 import type { Graphics } from 'pixi.js';
-import { type DrawStyle, resolveFillArg } from '../types.js';
+import { type DrawStyle, resolveFillArg, resolveStrokeOpts } from '../types.js';
 import { type DashStyle, drawDashedLine } from './dashed.js';
 
 /**
@@ -14,7 +14,7 @@ export function drawPolygon(
   sides: number,
   style: DrawStyle & { rotation?: number } = {},
 ): void {
-  const { fill, fillAlpha = 1, stroke, strokeWidth = 1, strokeAlpha = 1, strokeCap, strokeJoin, strokeAlignment, strokeMiterLimit, rotation = -Math.PI / 2 } = style;
+  const { fill, fillAlpha = 1, stroke, rotation = -Math.PI / 2 } = style;
 
   const points = buildPolygonPoints(x, y, radius, sides, rotation);
 
@@ -24,7 +24,7 @@ export function drawPolygon(
     g.poly(points).fill(fillArg as any);
   }
   if (stroke !== undefined) {
-    g.poly(points).stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha, cap: strokeCap, join: strokeJoin, alignment: strokeAlignment, miterLimit: strokeMiterLimit });
+    g.poly(points).stroke(resolveStrokeOpts(style));
   }
 }
 

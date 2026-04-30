@@ -93,6 +93,34 @@ export interface PathStyle {
 }
 
 /**
+ * Build a PixiJS `StrokeStyle`-compatible options object from a `DrawStyle`/`PathStyle`.
+ *
+ * @remarks
+ * PixiJS spreads the caller-supplied object onto its `defaultStrokeStyle`, so explicit
+ * `undefined` values overwrite the engine's defaults (which corrupts `alignment`,
+ * `miterLimit`, `cap`, `join`). This helper omits any optional key that is `undefined`
+ * so PixiJS keeps its own defaults.
+ */
+export function resolveStrokeOpts(
+  style: Pick<DrawStyle, 'stroke' | 'strokeWidth' | 'strokeAlpha' | 'strokeCap' | 'strokeJoin' | 'strokeAlignment' | 'strokeMiterLimit'>,
+  defaults: { color?: string | number; width?: number; alpha?: number; cap?: LineCap; join?: LineJoin; alignment?: number; miterLimit?: number } = {},
+): Record<string, unknown> {
+  const color      = style.stroke           ?? defaults.color      ?? 0xffffff;
+  const width      = style.strokeWidth      ?? defaults.width      ?? 1;
+  const alpha      = style.strokeAlpha      ?? defaults.alpha      ?? 1;
+  const cap        = style.strokeCap        ?? defaults.cap;
+  const join       = style.strokeJoin       ?? defaults.join;
+  const alignment  = style.strokeAlignment  ?? defaults.alignment;
+  const miterLimit = style.strokeMiterLimit ?? defaults.miterLimit;
+  const opts: Record<string, unknown> = { color, width, alpha };
+  if (cap        !== undefined) opts.cap        = cap;
+  if (join       !== undefined) opts.join       = join;
+  if (alignment  !== undefined) opts.alignment  = alignment;
+  if (miterLimit !== undefined) opts.miterLimit = miterLimit;
+  return opts;
+}
+
+/**
  * Resolve a fill value into the correct argument for `Graphics.fill()`.
  * PixiJS 8 accepts FillGradient/Texture directly, but not as `{ color: FillGradient }`.
  */

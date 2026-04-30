@@ -1,5 +1,5 @@
 import type { Graphics } from 'pixi.js';
-import type { PathStyle } from '../types.js';
+import { type PathStyle, resolveStrokeOpts } from '../types.js';
 
 export interface BezierPoint { x: number; y: number; }
 
@@ -15,14 +15,13 @@ export function drawBezier(
   style: PathStyle = {},
   cp2?: BezierPoint,
 ): void {
-  const { stroke = 0xffffff, strokeWidth = 1, strokeAlpha = 1, strokeCap, strokeJoin, strokeAlignment, strokeMiterLimit } = style;
   g.moveTo(from.x, from.y);
   if (cp2) {
     g.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, to.x, to.y);
   } else {
     g.quadraticCurveTo(cp1.x, cp1.y, to.x, to.y);
   }
-  g.stroke({ color: stroke, width: strokeWidth, alpha: strokeAlpha, cap: strokeCap, join: strokeJoin, alignment: strokeAlignment, miterLimit: strokeMiterLimit });
+  g.stroke(resolveStrokeOpts(style));
 }
 
 /**
