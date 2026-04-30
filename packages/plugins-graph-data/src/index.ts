@@ -21,16 +21,27 @@ export type {
 } from './graph-types.js';
 
 // ── State stores (shared by behaviour plugins) ────────────────────────────────
-export { HoverStore } from './state/index.js';
-export type { HoverElementType, HoverStoreEvents } from './state/index.js';
+export { HoverStore, SelectionStore } from './state/index.js';
+export type {
+  HoverElementType,
+  HoverStoreEvents,
+  SelectionElementType,
+  SelectionSnapshot,
+  SelectionStoreEvents,
+} from './state/index.js';
 
 // ── Behaviour plugins (opt-in — register explicitly) ──────────────────────────
-export { HoverActivatePlugin } from './plugins/index.js';
+export { HoverActivatePlugin, ClickSelectPlugin } from './plugins/index.js';
 export type {
   HoverActivatePluginOptions,
   HoverableElement,
   HoverableElementType,
   HoverDirection,
+  ClickSelectPluginOptions,
+  SelectableElement,
+  SelectableElementType,
+  SelectDirection,
+  SelectModifierKey,
 } from './plugins/index.js';
 
 // ── CanvasEventMap augmentation (graph:* events kept for backward compat) ─────

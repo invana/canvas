@@ -5,3 +5,12 @@ export type {
   HoverableElementType,
   HoverDirection,
 } from './HoverActivatePlugin.js';
+
+export { ClickSelectPlugin } from './ClickSelectPlugin.js';
+export type {
+  ClickSelectPluginOptions,
+  SelectableElement,
+  SelectableElementType,
+  SelectDirection,
+  SelectModifierKey,
+} from './ClickSelectPlugin.js';
