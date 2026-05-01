@@ -49,6 +49,8 @@ import { StraightConnector } from './connectors/StraightConnector.js';
 import { BezierConnector } from './connectors/BezierConnector.js';
 import { OrthogonalConnector } from './connectors/OrthogonalConnector.js';
 import { QuadraticConnector } from './connectors/QuadraticConnector.js';
+import { CubicHorizontalConnector } from './connectors/CubicHorizontalConnector.js';
+import { CubicVerticalConnector } from './connectors/CubicVerticalConnector.js';
 import { RoundedConnector } from './connectors/RoundedConnector.js';
 import { SmoothConnector } from './connectors/SmoothConnector.js';
 import { LoopPolylineConnector } from './connectors/LoopPolylineConnector.js';
@@ -180,14 +182,17 @@ export class ShapesPlugin implements CanvasPlugin {
   ]);
 
   private _connectorRegistry = new Map<string, ConnectorCtor>([
-    ['straight',    StraightConnector   as unknown as ConnectorCtor],
-    ['bezier',      BezierConnector     as unknown as ConnectorCtor],
-    ['orthogonal',  OrthogonalConnector as unknown as ConnectorCtor],
-    ['quadratic',   QuadraticConnector  as unknown as ConnectorCtor],
-    ['rounded',     RoundedConnector    as unknown as ConnectorCtor],
-    ['smooth',        SmoothConnector        as unknown as ConnectorCtor],
-    ['loop-polyline', LoopPolylineConnector  as unknown as ConnectorCtor],
-    ['loop-curve',    LoopCurveConnector     as unknown as ConnectorCtor],
+    ['straight',         StraightConnector         as unknown as ConnectorCtor],
+    ['bezier',           BezierConnector           as unknown as ConnectorCtor],
+    ['cubic',            BezierConnector           as unknown as ConnectorCtor],
+    ['cubic-horizontal', CubicHorizontalConnector  as unknown as ConnectorCtor],
+    ['cubic-vertical',   CubicVerticalConnector    as unknown as ConnectorCtor],
+    ['orthogonal',       OrthogonalConnector       as unknown as ConnectorCtor],
+    ['quadratic',        QuadraticConnector        as unknown as ConnectorCtor],
+    ['rounded',          RoundedConnector          as unknown as ConnectorCtor],
+    ['smooth',           SmoothConnector           as unknown as ConnectorCtor],
+    ['loop-polyline',    LoopPolylineConnector     as unknown as ConnectorCtor],
+    ['loop-curve',       LoopCurveConnector        as unknown as ConnectorCtor],
   ]);
 
   constructor(options: ShapesPluginOptions = {}) {

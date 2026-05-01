@@ -1,49 +1,51 @@
 // ── QuadraticConnector ────────────────────────────────────────────────────────
+// Single-control-point bezier. Extends BezierConnector to share the
+// `curvePosition` / `curveOffset` API; only the first slot of each pair is
+// honoured (a quadratic curve has just one CP).
 
-import { BaseConnector } from '../BaseConnector.js';
-import type { BaseConnectorSpec, PathCommand, Point } from '../spec/index.js';
+import { BezierConnector, type BezierConnectorSpec } from './BezierConnector.js';
+import type { PathCommand, Point } from '../spec/index.js';
 
-export interface QuadraticConnectorSpec extends BaseConnectorSpec {
-  curvature?: number;
+export interface QuadraticConnectorSpec extends BezierConnectorSpec {
+  /**
+   * Explicit single control point. When set, `curvePosition` and `curveOffset`
+   * are ignored.
+   */
+  controlPoint?: Point;
+  /**
+   * Array-form alias for {@link controlPoint}. Only the first element of the
+   * array is used (a quadratic curve has one CP). When both `controlPoint`
+   * and `controlPoints` are set, `controlPoint` wins.
+   */
+  controlPoints?: Point[] | [Point, Point];
 }
 
-export class QuadraticConnector extends BaseConnector<QuadraticConnectorSpec> {
-  route(from: Point, to: Point, waypoints: Point[]): PathCommand[] {
-    let cp: Point;
+export class QuadraticConnector extends BezierConnector<QuadraticConnectorSpec> {
+  /** Default for quadratic: position 0.5, offset 30. */
+  protected static override readonly DEFAULT_POSITION: [number, number] = [0.5, 0.5];
+  protected static override readonly DEFAULT_OFFSET:   [number, number] = [30, 30];
 
-    if (waypoints.length >= 1) {
-      cp = waypoints[0]!;
-    } else {
-      const curvature = this.spec.curvature ?? 60;
-      const fromAngle = this.spec.fromAngle;
-      const toAngle   = this.spec.toAngle;
-      const dx        = to.x - from.x, dy = to.y - from.y;
-      const dist      = Math.sqrt(dx * dx + dy * dy) || 1;
-
-      if (fromAngle !== undefined && toAngle !== undefined) {
-        // Mirror the bezier approach: two candidate control points using outward-normal
-        // + 90°-CCW perpendicular, then average them for the single quadratic cp.
-        const d      = Math.min(curvature, dist * 0.4);
-        const cos_f  = Math.cos(fromAngle), sin_f = Math.sin(fromAngle);
-        const perp_x = -sin_f, perp_y = cos_f;
-        const cos_t  = Math.cos(toAngle), sin_t = Math.sin(toAngle);
-        const p1 = { x: from.x + d * cos_f + d * perp_x, y: from.y + d * sin_f + d * perp_y };
-        const p2 = { x: to.x   + d * cos_t + d * perp_x, y: to.y   + d * sin_t + d * perp_y };
-        cp = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
-      } else {
-        const mx  = (from.x + to.x) / 2;
-        const my  = (from.y + to.y) / 2;
-        const len = dist;
-        cp = {
-          x: mx + (-dy / len) * curvature,
-          y: my + ( dx / len) * curvature,
-        };
-      }
-    }
-
+  override route(from: Point, to: Point, waypoints: Point[]): PathCommand[] {
+    const cp = this._resolveQuadraticCp(from, to, waypoints);
     return [
       { cmd: 'M', x: from.x, y: from.y },
       { cmd: 'Q', cpx: cp.x, cpy: cp.y, x: to.x, y: to.y },
     ];
+  }
+
+  private _resolveQuadraticCp(from: Point, to: Point, waypoints: Point[]): Point {
+    if (this.spec.controlPoint) return this.spec.controlPoint;
+    if (this.spec.controlPoints && this.spec.controlPoints.length >= 1) {
+      return this.spec.controlPoints[0]!;
+    }
+    if (waypoints.length >= 1) return waypoints[0]!;
+
+    const fallback = this.spec.curvature !== undefined
+      ? [this.spec.curvature, this.spec.curvature] as [number, number]
+      : QuadraticConnector.DEFAULT_OFFSET;
+    const [t]   = this._pair(this.spec.curvePosition, QuadraticConnector.DEFAULT_POSITION);
+    const [off] = this._pair(this.spec.curveOffset,   fallback);
+    const { px, py, dx, dy } = this._perp(from, to);
+    return { x: from.x + dx * t + px * off, y: from.y + dy * t + py * off };
   }
 }

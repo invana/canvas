@@ -34,7 +34,7 @@ const DEFAULT_STYLE = {
   strokeWidth: 2,
 };
 
-// Per-spec state overrides removed: the G6-style state set
+// Per-spec state overrides removed: the built-in state set
 // (hovered, selected, active, highlight, inactive, disabled) is provided
 // by the engine via DEFAULT_NODE_STATES in BaseShape.resolveStyle().
 

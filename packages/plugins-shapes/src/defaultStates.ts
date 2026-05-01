@@ -1,12 +1,12 @@
 // ── Default States ────────────────────────────────────────────────────────────
-// G6-style built-in state set applied as fallback by BaseShape.resolveStyle()
-// and BaseConnector.resolveStyle() when a state is active but the spec does
-// not provide its own override for that state.
+// Built-in state set applied as fallback by BaseShape.resolveStyle() and
+// BaseConnector.resolveStyle() when a state is active but the spec does not
+// provide its own override for that state.
 //
 // User-supplied spec.states[name] always wins over these defaults — they are
 // only consulted when the spec has no entry for the active state name.
 //
-// State semantics (aligned with https://g6.antv.antgroup.com/en/manual/element/state):
+// State semantics
 //   hovered   — auto on pointer enter
 //   selected  — user click selection
 //   active    — currently interacting element

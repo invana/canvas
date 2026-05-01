@@ -256,7 +256,7 @@ export abstract class BaseShape<S extends BaseShapeSpec = BaseShapeSpec> {
   resolveStyle(): DrawStyle {
     let style: DrawStyle = { ...(this.spec.style ?? {}) };
     for (const state of this.activeStates) {
-      // Built-in G6-style default first, then user spec.states override (higher priority).
+      // Built-in default first, then user spec.states override (higher priority).
       const fallback = DEFAULT_NODE_STATES[state];
       if (fallback) style = { ...style, ...fallback };
       const override = this.spec.states?.[state];

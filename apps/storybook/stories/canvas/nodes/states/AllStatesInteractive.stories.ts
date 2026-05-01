@@ -5,7 +5,7 @@
  * The node relies entirely on the DEFAULT_NODE_STATES fallbacks built into
  * BaseShape — no `spec.states` overrides are needed for built-in state names.
  *
- * Built-in states (G6-aligned):
+ * Built-in states:
  *   hovered   — pointer-enter emphasis
  *   selected  — click selection
  *   active    — currently interacting

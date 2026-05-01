@@ -130,6 +130,36 @@ export const Straight: Story = {
 };
 
 // ── Bezier ───────────────────────────────────────────────────────────────────
+// Fan layout — 1 source → 5 targets, each edge in a different state style.
+
+const FAN_NODES: INodeData[] = [
+  { id: 'src', x:    0, y:  -40, shape: 'circle', size: 36 },
+  { id: 't0',  x: -290, y: -230, shape: 'circle', size: 32 },
+  { id: 't1',  x:  210, y: -260, shape: 'circle', size: 32 },
+  { id: 't2',  x:  300, y:    0, shape: 'circle', size: 32 },
+  { id: 't3',  x:  150, y:  240, shape: 'circle', size: 32 },
+  { id: 't4',  x: -270, y:  150, shape: 'circle', size: 32 },
+];
+
+const FAN_STATES = [
+  { target: 't0', label: 'line-default',   style: { stroke: '#9ca3af', strokeWidth: 1.5 } },
+  { target: 't1', label: 'line-active',    style: { stroke: '#059669', strokeWidth: 3   } },
+  { target: 't2', label: 'line-highlight', style: { stroke: '#d97706', strokeWidth: 3   } },
+  { target: 't3', label: 'line-selected',  style: { stroke: '#7c3aed', strokeWidth: 4   } },
+  { target: 't4', label: 'line-inactive',  style: { stroke: '#9ca3af', strokeWidth: 1.5, strokeAlpha: 0.4 } },
+];
+
+function fanEdges(pathType: IEdgeData['pathType']): IEdgeData[] {
+  return FAN_STATES.map((s, i) => ({
+    id: `e-${i}`,
+    source: 'src',
+    target: s.target,
+    pathType,
+    label: s.label,
+    endMarker: { type: 'triangle', size: 9 } as ArrowSpec,
+    style: s.style,
+  }));
+}
 
 export const Bezier: Story = {
   name: 'Bezier',
@@ -137,32 +167,139 @@ export const Bezier: Story = {
   play: async () => {
     const container = document.getElementById('canvas-example');
     if (!container) return;
+    await initGraph(container, FAN_NODES, fanEdges('bezier'), 80);
+  },
+};
+
+// ── Cubic ────────────────────────────────────────────────────────────────────
+// Alias of Bezier — shares the same connector class. Fan layout + GUI exposes
+// the geometry options (`curvePosition`, `curveOffset`) applied uniformly to
+// all five fan edges.
+
+export const Cubic: Story = {
+  name: 'Cubic',
+  render: () => createContainer(),
+  play: async () => {
+    const container = document.getElementById('canvas-example');
+    if (!container) return;
+    const graph = await initGraph(container, FAN_NODES, fanEdges('cubic'), 80);
+
+    // Defaults match BezierConnector's class defaults.
+    const p = { t1: 0.25, t2: 0.25, o1: 20, o2: 20 };
+
+    const applyCurve = () => {
+      for (let i = 0; i < FAN_STATES.length; i++) {
+        graph.updateEdge(`e-${i}`, {
+          curvePosition: [p.t1, p.t2],
+          curveOffset:   [p.o1, p.o2],
+        });
+      }
+    };
+
+    const gui = new GUI({ title: 'Cubic', container });
+    guiPosition(gui);
+
+    const cp = gui.addFolder('curvePosition');
+    cp.add(p, 't1', 0, 1, 0.05).name('t1 (cp1 from src)').onChange(applyCurve);
+    cp.add(p, 't2', 0, 1, 0.05).name('t2 (cp2 from tgt)').onChange(applyCurve);
+
+    const co = gui.addFolder('curveOffset');
+    co.add(p, 'o1', -100, 100, 1).name('o1 (cp1 offset)').onChange(applyCurve);
+    co.add(p, 'o2', -100, 100, 1).name('o2 (cp2 offset)').onChange(applyCurve);
+  },
+};
+
+// ── Cubic Horizontal ─────────────────────────────────────────────────────────
+// Axis-locked along x. Source on the left, 5 targets fanning to the right —
+// each curve exits/enters horizontally regardless of vertical offset.
+// GUI exposes `curvePosition` / `curveOffset` tuples.
+
+export const CubicHorizontal: Story = {
+  name: 'Cubic Horizontal',
+  render: () => createContainer(),
+  play: async () => {
+    const container = document.getElementById('canvas-example');
+    if (!container) return;
 
     const nodes: INodeData[] = [
-      { id: 'a', x: -220, y: -100, shape: 'ellipse', size: 44 },
-      { id: 'b', x:  220, y:  100, shape: 'ellipse', size: 44 },
+      { id: 'src', x: -300, y:    0, shape: 'circle', size: 36 },
+      { id: 't0',  x:  300, y: -240, shape: 'circle', size: 32 },
+      { id: 't1',  x:  300, y: -120, shape: 'circle', size: 32 },
+      { id: 't2',  x:  300, y:    0, shape: 'circle', size: 32 },
+      { id: 't3',  x:  300, y:  120, shape: 'circle', size: 32 },
+      { id: 't4',  x:  300, y:  240, shape: 'circle', size: 32 },
     ];
-    const edges: IEdgeData[] = [{
-      id: 'e', source: 'a', target: 'b',
-      pathType: 'bezier',
-      endMarker: { type: 'triangle', size: 12 } as ArrowSpec,
-      style: { stroke: '#81c784', strokeWidth: 2.5 },
-    }];
+    const graph = await initGraph(container, nodes, fanEdges('cubic-horizontal'), 80);
 
-    const graph = await initGraph(container, nodes, edges);
+    // Defaults match CubicHorizontalConnector's class defaults.
+    const p = { t1: 0.5, t2: 0.5, o1: 0, o2: 0 };
 
-    const p = { stroke: '#81c784', strokeWidth: 2.5, endType: 'triangle', endSize: 12 };
+    const applyCurve = () => {
+      for (let i = 0; i < FAN_STATES.length; i++) {
+        graph.updateEdge(`e-${i}`, {
+          curvePosition: [p.t1, p.t2],
+          curveOffset:   [p.o1, p.o2],
+        });
+      }
+    };
 
-    const applyStroke  = () => graph.setStyles({ edge: { stroke: p.stroke, strokeWidth: p.strokeWidth } });
-    const applyMarkers = () => graph.updateEdge('e', { endMarker: { type: p.endType, size: p.endSize } as ArrowSpec });
-
-    const gui = new GUI({ title: 'Bezier', container });
+    const gui = new GUI({ title: 'Cubic Horizontal', container });
     guiPosition(gui);
-    gui.addColor(p, 'stroke').name('Stroke colour').onChange(applyStroke);
-    gui.add(p, 'strokeWidth', 0.5, 10, 0.5).name('Stroke width').onChange(applyStroke);
-    const em = gui.addFolder('End marker');
-    em.add(p, 'endType', MARKER_TYPES).name('Type').onChange(applyMarkers);
-    em.add(p, 'endSize', 6, 32, 1).name('Size').onChange(applyMarkers);
+
+    const cp = gui.addFolder('curvePosition');
+    cp.add(p, 't1', 0, 1, 0.05).name('t1 (cp1 along x)').onChange(applyCurve);
+    cp.add(p, 't2', 0, 1, 0.05).name('t2 (cp2 along x)').onChange(applyCurve);
+
+    const co = gui.addFolder('curveOffset');
+    co.add(p, 'o1', -200, 200, 1).name('o1 (cp1 y offset)').onChange(applyCurve);
+    co.add(p, 'o2', -200, 200, 1).name('o2 (cp2 y offset)').onChange(applyCurve);
+  },
+};
+
+// ── Cubic Vertical ───────────────────────────────────────────────────────────
+// Axis-locked along y. Source on top, 5 targets fanning below — each curve
+// exits/enters vertically regardless of horizontal offset.
+// GUI exposes `curvePosition` / `curveOffset` tuples.
+
+export const CubicVertical: Story = {
+  name: 'Cubic Vertical',
+  render: () => createContainer(),
+  play: async () => {
+    const container = document.getElementById('canvas-example');
+    if (!container) return;
+
+    const nodes: INodeData[] = [
+      { id: 'src', x:    0, y: -240, shape: 'circle', size: 36 },
+      { id: 't0',  x: -280, y:  220, shape: 'circle', size: 32 },
+      { id: 't1',  x: -140, y:  220, shape: 'circle', size: 32 },
+      { id: 't2',  x:    0, y:  220, shape: 'circle', size: 32 },
+      { id: 't3',  x:  140, y:  220, shape: 'circle', size: 32 },
+      { id: 't4',  x:  280, y:  220, shape: 'circle', size: 32 },
+    ];
+    const graph = await initGraph(container, nodes, fanEdges('cubic-vertical'), 80);
+
+    // Defaults match CubicVerticalConnector's class defaults.
+    const p = { t1: 0.5, t2: 0.5, o1: 0, o2: 0 };
+
+    const applyCurve = () => {
+      for (let i = 0; i < FAN_STATES.length; i++) {
+        graph.updateEdge(`e-${i}`, {
+          curvePosition: [p.t1, p.t2],
+          curveOffset:   [p.o1, p.o2],
+        });
+      }
+    };
+
+    const gui = new GUI({ title: 'Cubic Vertical', container });
+    guiPosition(gui);
+
+    const cp = gui.addFolder('curvePosition');
+    cp.add(p, 't1', 0, 1, 0.05).name('t1 (cp1 along y)').onChange(applyCurve);
+    cp.add(p, 't2', 0, 1, 0.05).name('t2 (cp2 along y)').onChange(applyCurve);
+
+    const co = gui.addFolder('curveOffset');
+    co.add(p, 'o1', -200, 200, 1).name('o1 (cp1 x offset)').onChange(applyCurve);
+    co.add(p, 'o2', -200, 200, 1).name('o2 (cp2 x offset)').onChange(applyCurve);
   },
 };
 
@@ -204,6 +341,8 @@ export const Orthogonal: Story = {
 };
 
 // ── Quadratic ────────────────────────────────────────────────────────────────
+// Fan layout — 1 source → 5 targets, each edge in a different state style.
+// GUI exposes scalar `curvePosition` / `curveOffset` (single CP).
 
 export const Quadratic: Story = {
   name: 'Quadratic',
@@ -211,32 +350,25 @@ export const Quadratic: Story = {
   play: async () => {
     const container = document.getElementById('canvas-example');
     if (!container) return;
+    const graph = await initGraph(container, FAN_NODES, fanEdges('quadratic'), 80);
 
-    const nodes: INodeData[] = [
-      { id: 'a', x: -220, y: -90, shape: 'diamond', size: 44 },
-      { id: 'b', x:  220, y:  90, shape: 'diamond', size: 44 },
-    ];
-    const edges: IEdgeData[] = [{
-      id: 'e', source: 'a', target: 'b',
-      pathType: 'quadratic',
-      endMarker: { type: 'triangle', size: 12 } as ArrowSpec,
-      style: { stroke: '#f06292', strokeWidth: 2.5 },
-    }];
+    // Defaults match QuadraticConnector's class defaults.
+    const p = { t: 0.5, offset: 30 };
 
-    const graph = await initGraph(container, nodes, edges);
-
-    const p = { stroke: '#f06292', strokeWidth: 2.5, endType: 'triangle', endSize: 12 };
-
-    const applyStroke  = () => graph.setStyles({ edge: { stroke: p.stroke, strokeWidth: p.strokeWidth } });
-    const applyMarkers = () => graph.updateEdge('e', { endMarker: { type: p.endType, size: p.endSize } as ArrowSpec });
+    const applyCurve = () => {
+      for (let i = 0; i < FAN_STATES.length; i++) {
+        graph.updateEdge(`e-${i}`, {
+          curvePosition: p.t,
+          curveOffset:   p.offset,
+        });
+      }
+    };
 
     const gui = new GUI({ title: 'Quadratic', container });
     guiPosition(gui);
-    gui.addColor(p, 'stroke').name('Stroke colour').onChange(applyStroke);
-    gui.add(p, 'strokeWidth', 0.5, 10, 0.5).name('Stroke width').onChange(applyStroke);
-    const em = gui.addFolder('End marker');
-    em.add(p, 'endType', MARKER_TYPES).name('Type').onChange(applyMarkers);
-    em.add(p, 'endSize', 6, 32, 1).name('Size').onChange(applyMarkers);
+
+    gui.add(p, 't', 0, 1, 0.05).name('curvePosition').onChange(applyCurve);
+    gui.add(p, 'offset', -150, 150, 1).name('curveOffset').onChange(applyCurve);
   },
 };
 

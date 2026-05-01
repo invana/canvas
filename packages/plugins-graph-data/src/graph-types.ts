@@ -1,6 +1,6 @@
 // ── GraphDataPlugin types ──────────────────────────────────────────────────────
 
-import type { BaseEdgeSpec, DrawStyle } from '@invana/plugins-shapes';
+import type { BaseEdgeSpec, DrawStyle, Point } from '@invana/plugins-shapes';
 
 // ── Node / Edge data ──────────────────────────────────────────────────────────
 
@@ -8,7 +8,18 @@ import type { BaseEdgeSpec, DrawStyle } from '@invana/plugins-shapes';
 export type NodeShape = 'circle' | 'rect' | 'ellipse' | 'polygon' | 'diamond' | 'star' | 'hexagon';
 
 /** Supported built-in edge path types. */
-export type EdgePathType = 'straight' | 'bezier' | 'orthogonal' | 'quadratic' | 'rounded' | 'smooth' | 'loop-polyline' | 'loop-curve';
+export type EdgePathType =
+  | 'straight'
+  | 'bezier'
+  | 'cubic'
+  | 'cubic-horizontal'
+  | 'cubic-vertical'
+  | 'orthogonal'
+  | 'quadratic'
+  | 'rounded'
+  | 'smooth'
+  | 'loop-polyline'
+  | 'loop-curve';
 
 /**
  * Edge direction filter for graph traversal queries.
@@ -75,6 +86,40 @@ export interface IEdgeData {
   router?: BaseEdgeSpec['router'];
   /** Manual waypoints. */
   vertices?: BaseEdgeSpec['vertices'];
+  /**
+   * Explicit control points for cubic-family connectors (`bezier`, `cubic`,
+   * `cubic-horizontal`, `cubic-vertical`). When set, `curvePosition` and
+   * `curveOffset` are ignored. For `quadratic`, supply a single-element array
+   * (or use {@link controlPoint}).
+   */
+  controlPoints?: [Point, Point] | Point[];
+  /**
+   * Explicit single control point for `quadratic` connectors. When set,
+   * `curvePosition` and `curveOffset` are ignored.
+   */
+  controlPoint?: Point;
+  /**
+   * Relative position(s) of the control point(s) along the source-target
+   * chord, in the range `0–1`. Scalar applies to both CPs (cubic-family) or
+   * the single CP (quadratic); tuple `[t1, t2]` controls cp1-from-source and
+   * cp2-from-target independently. Only applies to `bezier` / `cubic` /
+   * `cubic-horizontal` / `cubic-vertical` / `quadratic`.
+   *
+   * Defaults: `[0.25, 0.25]` (cubic), `[0.5, 0.5]` (cubic-horizontal /
+   * cubic-vertical), `0.5` (quadratic).
+   */
+  curvePosition?: number | [number, number];
+  /**
+   * Perpendicular offset(s) of the control point(s) from the chord, in
+   * world-space pixels. Sign chooses the side (negative flips the bend).
+   * Scalar applies to both CPs; tuple `[o1, o2]` controls cp1 and cp2
+   * independently. Only applies to `bezier` / `cubic` / `cubic-horizontal` /
+   * `cubic-vertical` / `quadratic`.
+   *
+   * Defaults: `[20, 20]` (cubic), `[0, 0]` (cubic-horizontal / cubic-vertical),
+   * `30` (quadratic).
+   */
+  curveOffset?: number | [number, number];
   /** Visible gap (px) between the source perimeter and the start arrow tip. Default 0. */
   sourceOffset?: BaseEdgeSpec['sourceOffset'];
   /** Visible gap (px) between the target perimeter and the end arrow tip. Default 0. */
