@@ -1,13 +1,9 @@
 /**
- * Background — Events — background:options-updated
+ * Background — Events — background:updated
  *
- * Live demo of `'background:options-updated'`. Every `setOptions()` call
- * emits an event with the partial diff (`changes`) and the resolved base
- * options after the update. Events are logged to the Storybook Actions panel.
- *
- * `setOptions()` only updates BASE style; theme overrides (if any) still
- * layer on top at render. Theme changes have their own dedicated event —
- * see the `background:theme-switched` story.
+ * Live demo of `'background:updated'`. Every `setOptions()` call emits an
+ * event with the partial diff (`changes`) and the resolved options after
+ * the update. Events are logged to the Storybook Actions panel.
  */
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { action } from 'storybook/actions';
@@ -18,7 +14,7 @@ import {
   type BackgroundOptions,
   type BackgroundType,
   type PatternType,
-  type BackgroundOptionsUpdatedEvent,
+  type BackgroundUpdatedEvent,
 } from '@invana/canvas';
 import { GraphDataPlugin, type IGraphStyles } from '@invana/plugins-graph-data';
 import { D3ForceLayoutPlugin } from '@invana/plugin-layouts-d3-force';
@@ -38,8 +34,8 @@ const meta: Meta = { title: 'Plugins/Background/Events' };
 export default meta;
 type Story = StoryObj;
 
-export const OptionsUpdated: Story = {
-  name: 'background:options-updated',
+export const BackgroundUpdated: Story = {
+  name: 'background:updated',
   render: () => createContainer(),
   play: async () => {
     const container = document.getElementById('canvas-example');
@@ -74,10 +70,10 @@ export const OptionsUpdated: Story = {
       ],
     });
 
-    const logOptionsUpdated = action('background:options-updated');
+    const logBackgroundUpdated = action('background:updated');
 
-    canvas.events.on('background:options-updated', (e: BackgroundOptionsUpdatedEvent) => {
-      logOptionsUpdated(e);
+    canvas.events.on('background:updated', (e: BackgroundUpdatedEvent) => {
+      logBackgroundUpdated(e);
     });
 
     await canvas.init();

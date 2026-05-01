@@ -16,9 +16,9 @@ export { PluginSystem } from './plugins/index.js';
 export type { CanvasPlugin, PluginContext } from './plugins/index.js';
 
 // Built-in plugins
-export { BackgroundPlugin, DrawingPlugin, DevInfoPlugin } from './plugins/builtin/index.js';
+export { BackgroundPlugin, ThemedBackgroundPlugin, DrawingPlugin, DevInfoPlugin } from './plugins/builtin/index.js';
 export type { CustomShapeFn } from './plugins/builtin/DrawingPlugin.js';
-export type { BackgroundOptions, BackgroundType, PatternType, ThemeMode, ThemeKind, BackgroundTheme, DrawStyle, PathStyle, BezierPoint, DashStyle, OrthogonalStyle, OrthogonalParams, ArrowStyle, ArrowParams, ArrowType, EffectStyle, CircleGlowParams, RectGlowParams, RippleParams } from './plugins/builtin/index.js';
+export type { BackgroundOptions, BackgroundType, PatternType, ThemedBackgroundOptions, ThemedBackgroundTheme, ThemedBackgroundMode, ThemedBackgroundKind, DrawStyle, PathStyle, BezierPoint, DashStyle, OrthogonalStyle, OrthogonalParams, ArrowStyle, ArrowParams, ArrowType, EffectStyle, CircleGlowParams, RectGlowParams, RippleParams } from './plugins/builtin/index.js';
 export type { DevInfoPluginOptions, DevInfoCorner } from './plugins/builtin/index.js';
 
 // PixiJS re-exports needed by consumers (e.g. gradient fills)
@@ -67,9 +67,9 @@ export {
   LayerVisibilityChangedEvent,
 } from './events/index.js';
 
-// Background event classes (owned by BackgroundPlugin — augments CanvasEventMap)
-export { BackgroundThemeSwitchedEvent, BackgroundOptionsUpdatedEvent, BackgroundModeUpdatedEvent } from './plugins/builtin/index.js';
-export type { ThemeSwitchSource } from './plugins/builtin/index.js';
+// Background event classes (owned by BackgroundPlugin / ThemedBackgroundPlugin — augment CanvasEventMap)
+export { BackgroundUpdatedEvent, ThemedBackgroundThemeSwitchedEvent, ThemedBackgroundModeUpdatedEvent } from './plugins/builtin/index.js';
+export type { ThemeSwitchSource, ModeUpdateSource } from './plugins/builtin/index.js';
 
 // Event map type (augmentable interface)
 export type { CanvasEventMap } from './types/events.js';
