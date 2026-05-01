@@ -3,12 +3,12 @@ import GUI from 'lil-gui';
 import { Canvas, BackgroundPlugin } from '@invana/canvas';
 import { GraphDataPlugin, type IEdgeData, type INodeData } from '@invana/plugins-graph-data';
 import { type ArrowSpec, type DrawContext, type Point } from '@invana/plugins-shapes';
-import { createContainer } from '../../../../src/div-utils.js';
+import { createContainer } from '../../../src/div-utils.js';
 
 Canvas.registerPlugin('background', BackgroundPlugin);
 Canvas.registerPlugin('graph-data', GraphDataPlugin);
 
-const meta: Meta = { title: 'Canvas/Edges/Styling/Markers' };
+const meta: Meta = { title: 'Canvas/Edges/Markers' };
 export default meta;
 type Story = StoryObj;
 
