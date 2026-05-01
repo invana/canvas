@@ -141,4 +141,9 @@ export interface CanvasEventMap {
   'layer:added':              LayerAddedEvent;
   'layer:removed':            LayerRemovedEvent;
   'layer:visibility-changed': LayerVisibilityChangedEvent;
+
+  // ── Plugin-owned events ──────────────────────────────────────────────────
+  // Built-in plugins augment this map from their own modules (see
+  // `plugins/builtin/BackgroundEvents.ts`). External plugins do the same
+  // via `declare module '@invana/canvas'` — see `plugins-shapes/events-augment.ts`.
 }
