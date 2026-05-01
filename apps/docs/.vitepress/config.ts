@@ -63,6 +63,7 @@ export default defineConfig({
           text: 'Built-in Plugins',
           items: [
             { text: 'BackgroundPlugin', link: '/plugins/background' },
+            { text: 'ThemedBackgroundPlugin', link: '/plugins/themed-background' },
             { text: 'DrawingPlugin', link: '/plugins/drawing' },
             { text: 'DevInfoPlugin', link: '/plugins/dev-info' },
           ],
@@ -77,6 +78,11 @@ export default defineConfig({
           text: '@invana/plugins-graph-data',
           items: [
             { text: 'GraphDataPlugin', link: '/plugins/graph-data' },
+            { text: 'HoverActivatePlugin', link: '/plugins/hover-activate' },
+            { text: 'ClickSelectPlugin', link: '/plugins/click-select' },
+            { text: 'BrushSelectPlugin', link: '/plugins/brush-select' },
+            { text: 'LassoSelectPlugin', link: '/plugins/lasso-select' },
+            { text: 'MiniMapPlugin', link: '/plugins/minimap' },
           ],
         },
         {
