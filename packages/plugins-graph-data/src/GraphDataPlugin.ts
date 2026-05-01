@@ -71,6 +71,9 @@ export class GraphDataPlugin implements CanvasPlugin {
   private _initialData?: ICanvasData;
   private _initialStyles?: IGraphStyles;
 
+  private _ctx: PluginContext | null = null;
+  private _onResize: (() => void) | null = null;
+
   constructor(options: GraphDataPluginOptions = {}) {
     this.id            = options.key        ?? 'graph-data';
     this._fitOnRender  = options.fitOnRender ?? false;
@@ -84,6 +87,7 @@ export class GraphDataPlugin implements CanvasPlugin {
   // ── CanvasPlugin lifecycle ────────────────────────────────────────────────
 
   register(ctx: PluginContext): void {
+    this._ctx = ctx;
     this._elements.register(ctx);
 
     // Suppress per-call fitting while loading initial data + styles so that
@@ -96,9 +100,19 @@ export class GraphDataPlugin implements CanvasPlugin {
 
     this._fitOnRender = savedFit;
     if (this._fitOnRender) this._elements.fitContent(this._fitPadding);
+
+    this._onResize = () => {
+      if (this._fitOnRender) this._elements.fitContent(this._fitPadding);
+    };
+    ctx.events.on('canvas:resize', this._onResize);
   }
 
   destroy(): void {
+    if (this._onResize && this._ctx) {
+      this._ctx.events.off('canvas:resize', this._onResize);
+    }
+    this._onResize = null;
+    this._ctx = null;
     this._elements.destroy();
     this._nodeStore.clear();
     this._edgeStore.clear();

@@ -51,6 +51,7 @@ export class BackgroundPlugin implements CanvasPlugin {
   private _layer: Container | null = null;
   private _ctx: PluginContext | null = null;
   private _tilingSprite: TilingSprite | null = null;
+  private _onResize: (() => void) | null = null;
 
   // Camera state for followCamera mode
   private _camX = 0;
@@ -68,6 +69,9 @@ export class BackgroundPlugin implements CanvasPlugin {
     this._layer = ctx.createScreenLayer({ id: `${this.id}-layer`, zIndex: -1000 });
     this._render();
     this._wireCamera(ctx);
+
+    this._onResize = () => this._render();
+    ctx.events.on('canvas:resize', this._onResize);
   }
 
   // ── Public API ────────────────────────────────────────────────────────────
@@ -95,6 +99,10 @@ export class BackgroundPlugin implements CanvasPlugin {
   }
 
   destroy(): void {
+    if (this._onResize && this._ctx) {
+      this._ctx.events.off('canvas:resize', this._onResize);
+    }
+    this._onResize = null;
     if (this._layer) this._layer.removeChildren();
     this._tilingSprite = null;
   }
