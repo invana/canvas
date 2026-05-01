@@ -10,7 +10,7 @@ import { createContainer } from '../../../src/div-utils.js';
 import { drawScatter } from '../_utils.js';
 import GUI from 'lil-gui';
 
-const meta: Meta = { title: 'Plugins/Background' };
+const meta: Meta = { title: 'Plugins/Background/Patterns' };
 export default meta;
 type Story = StoryObj;
 
