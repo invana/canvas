@@ -8,7 +8,7 @@ import type { BaseEdgeSpec, DrawStyle } from '@invana/plugins-shapes';
 export type NodeShape = 'circle' | 'rect' | 'ellipse' | 'polygon' | 'diamond' | 'star' | 'hexagon';
 
 /** Supported built-in edge path types. */
-export type EdgePathType = 'straight' | 'bezier' | 'orthogonal' | 'quadratic' | 'rounded' | 'smooth';
+export type EdgePathType = 'straight' | 'bezier' | 'orthogonal' | 'quadratic' | 'rounded' | 'smooth' | 'loop-polyline' | 'loop-curve';
 
 /**
  * Edge direction filter for graph traversal queries.
@@ -91,6 +91,31 @@ export interface IEdgeData {
   zIndex?: number;
   draggable?: boolean;
   interactive?: boolean;
+  /**
+   * Placement of a self-loop relative to the node. Only used when `pathType` is
+   * `'loop-polyline'` or `'loop-curve'`. Supports the four cardinal sides
+   * (`'top' | 'right' | 'bottom' | 'left'`) and the four diagonals
+   * (`'top-right' | 'bottom-right' | 'bottom-left' | 'top-left'`).
+   * Default: `'top'`.
+   */
+  placement?:
+    | 'top' | 'right' | 'bottom' | 'left'
+    | 'top-right' | 'bottom-right' | 'bottom-left' | 'top-left';
+  /** How far the loop extends from the node in world-space pixels. Default: `40` (polyline) / `60` (curve). */
+  loopSize?: number;
+  /**
+   * Angular spread (radians) between the two anchor points on the node boundary.
+   * Controls the opening width of the loop: wider angle = wider opening.
+   * Default: `0.3` (~17°).  Works for both `loop-polyline` and `loop-curve`.
+   */
+  loopSpreadAngle?: number;
+  /**
+   * 0-based stacking index for multiple loops on the same node and side.
+   * Each step adds `loopSpacing` px to the loop size. Default: `0`.
+   */
+  loopIndex?: number;
+  /** Extra pixels added to loop size per `loopIndex` step. Default: `20` (polyline) / `25` (curve). */
+  loopSpacing?: number;
   /** Arbitrary extra data. */
   data?: Record<string, unknown>;
   /** Custom fields forwarded as-is to the connector spec (e.g. per-edge style). */

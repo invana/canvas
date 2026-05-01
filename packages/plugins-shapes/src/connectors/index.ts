@@ -9,3 +9,7 @@ export { RoundedConnector } from './RoundedConnector.js';
 export type { RoundedConnectorSpec } from './RoundedConnector.js';
 export { SmoothConnector } from './SmoothConnector.js';
 export type { SmoothConnectorSpec } from './SmoothConnector.js';
+export { LoopPolylineConnector } from './LoopPolylineConnector.js';
+export type { LoopPolylineConnectorSpec } from './LoopPolylineConnector.js';
+export { LoopCurveConnector } from './LoopCurveConnector.js';
+export type { LoopCurveConnectorSpec, LoopPlacement } from './LoopCurveConnector.js';

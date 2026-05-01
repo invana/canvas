@@ -51,6 +51,8 @@ import { OrthogonalConnector } from './connectors/OrthogonalConnector.js';
 import { QuadraticConnector } from './connectors/QuadraticConnector.js';
 import { RoundedConnector } from './connectors/RoundedConnector.js';
 import { SmoothConnector } from './connectors/SmoothConnector.js';
+import { LoopPolylineConnector } from './connectors/LoopPolylineConnector.js';
+import { LoopCurveConnector } from './connectors/LoopCurveConnector.js';
 // Built-in routers
 import { BUILTIN_ROUTERS } from './routers/builtins.js';
 import type { DrawContext } from './DrawContext.js';
@@ -183,7 +185,9 @@ export class ShapesPlugin implements CanvasPlugin {
     ['orthogonal',  OrthogonalConnector as unknown as ConnectorCtor],
     ['quadratic',   QuadraticConnector  as unknown as ConnectorCtor],
     ['rounded',     RoundedConnector    as unknown as ConnectorCtor],
-    ['smooth',      SmoothConnector     as unknown as ConnectorCtor],
+    ['smooth',        SmoothConnector        as unknown as ConnectorCtor],
+    ['loop-polyline', LoopPolylineConnector  as unknown as ConnectorCtor],
+    ['loop-curve',    LoopCurveConnector     as unknown as ConnectorCtor],
   ]);
 
   constructor(options: ShapesPluginOptions = {}) {

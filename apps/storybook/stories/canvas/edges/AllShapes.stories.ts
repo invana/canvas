@@ -1,18 +1,22 @@
 /**
  * Edge All-Shapes
  *
- * Four horizontal rows — items within each row rendered side-by-side.
+ * Six horizontal rows — items within each row rendered side-by-side.
  *
  *   Row 1 — Path types   (6)  y ≈    0 : straight · bezier · orthogonal · quadratic · rounded · smooth
  *   Row 2 — Markers A    (8)  y =  300 : triangle … square          (straight edges, dy = 0)
  *   Row 3 — Markers B    (7)  y =  490 : square-outline … none      (straight edges, dy = 0)
  *   Row 4 — Routers      (4)  y =  760 : normal · orth · oneSide · er
+ *   Row 5 — Loop Curve   (4)  y = 1100 : 4-cardinal · 4-diagonal · top-right · stacked
+ *   Row 6 — Loop Poly    (4)  y = 1380 : 4-cardinal · 4-diagonal · top-right · stacked
  *
  * Grid maths (for reference, not used at runtime):
  *   Row 1  cellW=220  pairW=150  dy=90   (bezier dy=110, smooth dy=0+waypoints)
  *   Row 2  cellW=190  pairW=130  dy=0
  *   Row 3  cellW=190  pairW=130  dy=0
  *   Row 4  cellW=280  pairW=190  dy=140
+ *   Row 5  cellW=250  single node per cell  (self-loop, source===target)
+ *   Row 6  cellW=250  single node per cell  (self-loop, source===target)
  *   Cell centre x  =  (i − (count−1)/2) × cellW
  *   Left  node     =  (cx − pairW/2,  sectionY − dy/2)
  *   Right node     =  (cx + pairW/2,  sectionY + dy/2)
@@ -117,6 +121,21 @@ const nodes: INodeData[] = [
 
   { id: 'rt-er-l',      x:  325, y: 690, shape: 'hexagon', size: 36 },
   { id: 'rt-er-r',      x:  515, y: 830, shape: 'hexagon', size: 36 },
+
+  // ── Row 5: Loop Curve ── cellW=320 sectionY=1100 ──
+  // 4 cells: cardinal-rosette · diagonal-rosette · single placement · stacked
+
+  { id: 'lc-cardinal', x: -480, y: 1100, shape: 'rect',    size: 60 },
+  { id: 'lc-diagonal', x: -160, y: 1100, shape: 'rect',    size: 60 },
+  { id: 'lc-single',   x:  160, y: 1100, shape: 'rect',    size: 60 },
+  { id: 'lc-stack',    x:  480, y: 1100, shape: 'rect',    size: 60 },
+
+  // ── Row 6: Loop Polyline ── cellW=320 sectionY=1450 ──
+
+  { id: 'lp-cardinal', x: -480, y: 1450, shape: 'rect', size: 60 },
+  { id: 'lp-diagonal', x: -160, y: 1450, shape: 'rect', size: 60 },
+  { id: 'lp-single',   x:  160, y: 1450, shape: 'rect', size: 60 },
+  { id: 'lp-stack',    x:  480, y: 1450, shape: 'rect', size: 60 },
 
 ];
 
@@ -292,6 +311,99 @@ const edges: IEdgeData[] = [
     startMarker: { type: 'circle',   size: 8  },
     endMarker:   { type: 'triangle', size: 11 },
     style: { stroke: '#fbbf24', strokeWidth: 2.5 },
+  },
+
+  // ── Row 5: Loop Curve ─────────────────────────────────────────────────────
+  // Cell 1: 4 cardinal placements on one node (top · right · bottom · left)
+  ...(['top', 'right', 'bottom', 'left'] as const).map((p, i) => ({
+    id: `e-lc-card-${p}`, source: 'lc-cardinal', target: 'lc-cardinal',
+    pathType: 'loop-curve' as const, placement: p, loopSize: 60,
+    ...(i === 0 ? { label: 'loop-curve / cardinal' } : {}),
+    endMarker: { type: 'triangle' as const, size: 10 },
+    style: { stroke: '#4fc3f7', strokeWidth: 2.5 },
+  })),
+  // Cell 2: 4 diagonal placements on one node
+  ...(['top-right', 'bottom-right', 'bottom-left', 'top-left'] as const).map((p, i) => ({
+    id: `e-lc-diag-${p}`, source: 'lc-diagonal', target: 'lc-diagonal',
+    pathType: 'loop-curve' as const, placement: p, loopSize: 60,
+    ...(i === 0 ? { label: 'loop-curve / diagonal' } : {}),
+    endMarker: { type: 'triangle' as const, size: 10 },
+    style: { stroke: '#81c784', strokeWidth: 2.5 },
+  })),
+  // Cell 3: single diagonal placement (top-right) for clarity
+  {
+    id: 'e-lc-single', source: 'lc-single', target: 'lc-single',
+    pathType: 'loop-curve', placement: 'top-right', loopSize: 60,
+    label: 'loop-curve / top-right',
+    endMarker: { type: 'triangle', size: 10 },
+    style: { stroke: '#ffb74d', strokeWidth: 2.5 },
+  },
+  // Cell 4: 3 stacked curve loops on same node (loopIndex 0/1/2)
+  {
+    id: 'e-lc-stack-0', source: 'lc-stack', target: 'lc-stack',
+    pathType: 'loop-curve', placement: 'bottom', loopSize: 50, loopIndex: 0, loopSpacing: 25,
+    label: 'loop-curve / stacked',
+    endMarker: { type: 'triangle', size: 10 },
+    style: { stroke: '#ce93d8', strokeWidth: 2.5 },
+  },
+  {
+    id: 'e-lc-stack-1', source: 'lc-stack', target: 'lc-stack',
+    pathType: 'loop-curve', placement: 'bottom', loopSize: 50, loopIndex: 1, loopSpacing: 25,
+    endMarker: { type: 'triangle', size: 10 },
+    style: { stroke: '#9c27b0', strokeWidth: 2.5 },
+  },
+  {
+    id: 'e-lc-stack-2', source: 'lc-stack', target: 'lc-stack',
+    pathType: 'loop-curve', placement: 'bottom', loopSize: 50, loopIndex: 2, loopSpacing: 25,
+    endMarker: { type: 'triangle', size: 10 },
+    style: { stroke: '#7b1fa2', strokeWidth: 2.5 },
+  },
+
+  // ── Row 6: Loop Polyline ──────────────────────────────────────────────────
+  // Wider spread + smaller leg = square loop (matches G6 visual).
+  // Cell 1: 4 cardinal placements on one node
+  ...(['top', 'right', 'bottom', 'left'] as const).map((p, i) => ({
+    id: `e-lp-card-${p}`, source: 'lp-cardinal', target: 'lp-cardinal',
+    pathType: 'loop-polyline' as const, placement: p, loopSize: 25, loopSpreadAngle: 0.4,
+    ...(i === 0 ? { label: 'loop-polyline / cardinal' } : {}),
+    endMarker: { type: 'triangle' as const, size: 10 },
+    style: { stroke: '#4dd0e1', strokeWidth: 2.5 },
+  })),
+  // Cell 2: 4 diagonal placements on one node
+  ...(['top-right', 'bottom-right', 'bottom-left', 'top-left'] as const).map((p, i) => ({
+    id: `e-lp-diag-${p}`, source: 'lp-diagonal', target: 'lp-diagonal',
+    pathType: 'loop-polyline' as const, placement: p, loopSize: 25, loopSpreadAngle: 0.4,
+    ...(i === 0 ? { label: 'loop-polyline / diagonal' } : {}),
+    endMarker: { type: 'triangle' as const, size: 10 },
+    style: { stroke: '#4fc3f7', strokeWidth: 2.5 },
+  })),
+  // Cell 3: single diagonal placement
+  {
+    id: 'e-lp-single', source: 'lp-single', target: 'lp-single',
+    pathType: 'loop-polyline', placement: 'top-right', loopSize: 25, loopSpreadAngle: 0.4,
+    label: 'loop-polyline / top-right',
+    endMarker: { type: 'triangle', size: 10 },
+    style: { stroke: '#ffb74d', strokeWidth: 2.5 },
+  },
+  // Cell 4: 3 stacked polyline loops on same node
+  {
+    id: 'e-lp-stack-0', source: 'lp-stack', target: 'lp-stack',
+    pathType: 'loop-polyline', placement: 'bottom', loopSize: 25, loopSpreadAngle: 0.4, loopIndex: 0, loopSpacing: 20,
+    label: 'loop-polyline / stacked',
+    endMarker: { type: 'triangle', size: 10 },
+    style: { stroke: '#4dd0e1', strokeWidth: 2.5 },
+  },
+  {
+    id: 'e-lp-stack-1', source: 'lp-stack', target: 'lp-stack',
+    pathType: 'loop-polyline', placement: 'bottom', loopSize: 25, loopSpreadAngle: 0.4, loopIndex: 1, loopSpacing: 20,
+    endMarker: { type: 'triangle', size: 10 },
+    style: { stroke: '#0097a7', strokeWidth: 2.5 },
+  },
+  {
+    id: 'e-lp-stack-2', source: 'lp-stack', target: 'lp-stack',
+    pathType: 'loop-polyline', placement: 'bottom', loopSize: 25, loopSpreadAngle: 0.4, loopIndex: 2, loopSpacing: 20,
+    endMarker: { type: 'triangle', size: 10 },
+    style: { stroke: '#006064', strokeWidth: 2.5 },
   },
 
 ];

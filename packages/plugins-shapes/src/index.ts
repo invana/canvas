@@ -75,12 +75,16 @@ export { BezierConnector }     from './connectors/BezierConnector.js';
 export { OrthogonalConnector } from './connectors/OrthogonalConnector.js';
 export { QuadraticConnector }  from './connectors/QuadraticConnector.js';
 export { RoundedConnector }    from './connectors/RoundedConnector.js';
-export { SmoothConnector }     from './connectors/SmoothConnector.js';
+export { SmoothConnector }        from './connectors/SmoothConnector.js';
+export { LoopPolylineConnector }  from './connectors/LoopPolylineConnector.js';
+export { LoopCurveConnector }     from './connectors/LoopCurveConnector.js';
 export type { BezierConnectorSpec }                                    from './connectors/BezierConnector.js';
 export type { OrthogonalConnectorSpec, OrthogonalRouteDirection }      from './connectors/OrthogonalConnector.js';
 export type { QuadraticConnectorSpec }                                 from './connectors/QuadraticConnector.js';
 export type { RoundedConnectorSpec }                                   from './connectors/RoundedConnector.js';
 export type { SmoothConnectorSpec }                                    from './connectors/SmoothConnector.js';
+export type { LoopPolylineConnectorSpec }                              from './connectors/LoopPolylineConnector.js';
+export type { LoopCurveConnectorSpec }                                 from './connectors/LoopCurveConnector.js';
 
 // Built-in routers
 export { normalRouter }    from './routers/NormalRouter.js';

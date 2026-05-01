@@ -588,6 +588,27 @@ export class GraphDataPlugin implements CanvasPlugin {
       ...(edge.targetPortId      !== undefined ? { targetPortId:      edge.targetPortId }      : {}),
       ...(edge.startMarker   !== undefined ? { startMarker:  edge.startMarker }   : {}),
       ...(edge.endMarker     !== undefined ? { endMarker:    edge.endMarker }     : {}),
+      ...(edge.placement        !== undefined ? { placement:        edge.placement        } : {}),
+      ...(edge.loopSpreadAngle  !== undefined ? { loopSpreadAngle:  edge.loopSpreadAngle  } : {}),
+      ...(edge.loopSize    !== undefined ? { loopSize:    edge.loopSize    } : {}),
+      ...(edge.loopIndex   !== undefined ? { loopIndex:   edge.loopIndex   } : {}),
+      ...(edge.loopSpacing !== undefined ? { loopSpacing: edge.loopSpacing } : {}),
+      // Spread `from` and `to` onto two separate boundary points so both loop legs
+      // land exactly on the node surface (works for any shape including stars).
+      // fromAngle = baseAngle + spread  →  one anchor
+      // toAngle   = baseAngle − spread  →  the other
+      ...(_isLoopType(edge.pathType)
+        ? (() => {
+            const placement = (edge.placement as string | undefined) ?? 'top';
+            const base   = _LOOP_PLACEMENT_ANGLES[placement] ?? _LOOP_PLACEMENT_ANGLES.top!;
+            // Polyline loops want a wider opening so the crossbar is visible
+            // and the box looks roughly square; curve loops look better with a
+            // narrower opening so the balloon is more rounded.
+            const defaultSpread = edge.pathType === 'loop-polyline' ? 0.5 : 0.3;
+            const spread = (edge.loopSpreadAngle as number | undefined) ?? defaultSpread;
+            return { fromAngle: base + spread, toAngle: base - spread };
+          })()
+        : {}),
       style: {
         ...edgeDataStyle,  // per-edge style as base; global setStyles() overrides below
         ...(stroke !== undefined ? { stroke }              : {}),
@@ -602,4 +623,21 @@ export class GraphDataPlugin implements CanvasPlugin {
       to:   { x: 0, y: 0 },
     } as BaseConnectorSpec;
   }
+}
+
+// ── Loop helpers ──────────────────────────────────────────────────────────────
+
+const _LOOP_PLACEMENT_ANGLES: Record<string, number> = {
+  top:           -Math.PI / 2,
+  'top-right':   -Math.PI / 4,
+  right:          0,
+  'bottom-right': Math.PI / 4,
+  bottom:         Math.PI / 2,
+  'bottom-left':  3 * Math.PI / 4,
+  left:           Math.PI,
+  'top-left':    -3 * Math.PI / 4,
+};
+
+function _isLoopType(pathType: string | undefined): boolean {
+  return pathType === 'loop-polyline' || pathType === 'loop-curve';
 }
