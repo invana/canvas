@@ -4,10 +4,14 @@ import type {
   BadgeSpec,
   BaseEdgeSpec,
   DrawStyle,
+  EdgeLabelSpec,
   HaloSpec,
   IconSpec,
+  NodeLabelSpec,
   Point,
 } from '@invana/plugins-shapes';
+
+export type { NodeLabelSpec, EdgeLabelSpec } from '@invana/plugins-shapes';
 
 // ── Node / Edge data ──────────────────────────────────────────────────────────
 
@@ -54,8 +58,14 @@ export interface INodeData {
   size?: number;
   /** Number of sides for `polygon` shapes (3 = triangle, 5 = pentagon, …). */
   sides?: number;
-  /** Optional text label. */
-  label?: string;
+  /**
+   * Optional label.
+   *
+   * - `string` shorthand renders a centred default-styled label.
+   * - `NodeLabelSpec` for one fully-styled label.
+   * - `NodeLabelSpec[]` for multiple labels (e.g. title + subtitle).
+   */
+  label?: string | NodeLabelSpec | NodeLabelSpec[];
   /** Whether the node can be dragged (default: true). */
   draggable?: boolean;
   /** Whether the node is interactive (pointer events, default: true). */
@@ -93,8 +103,15 @@ export interface IEdgeData {
   target: string;
   /** Edge path type (default: `'bezier'`). */
   pathType?: EdgePathType;
-  /** Optional text label. */
-  label?: string;
+  /**
+   * Optional label.
+   *
+   * - `string` shorthand renders a default-styled midpoint label.
+   * - `EdgeLabelSpec` for one fully-styled label (custom position along the
+   *   path, auto-rotation, background, etc.).
+   * - `EdgeLabelSpec[]` for multiple labels (e.g. forward and reverse).
+   */
+  label?: string | EdgeLabelSpec | EdgeLabelSpec[];
   /** Router name or config. */
   router?: BaseEdgeSpec['router'];
   /** Manual waypoints. */

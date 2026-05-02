@@ -40,8 +40,8 @@ interface CloudNodeSpec extends BaseShapeSpec {
 }
 
 class CloudNode extends BaseNode<CloudNodeSpec> {
-  drawBody(ctx: DrawContext, detail: LOD): void {
-    const { x, y, radius: r, label } = this.spec;
+  drawBody(ctx: DrawContext, _detail: LOD): void {
+    const { x, y, radius: r } = this.spec;
     const s = this.resolveStyle();
     // Setting stroke = fill erases the seam lines where overlapping shapes meet,
     // merging them into one unified cloud silhouette without internal borders.
@@ -52,10 +52,6 @@ class CloudNode extends BaseNode<CloudNodeSpec> {
     ctx.fillCircle(x - r * 0.47, y - r * 0.04,  r * 0.38, merged); // left bump
     ctx.fillCircle(x,            y - r * 0.3,   r * 0.46, merged); // centre bump
     ctx.fillCircle(x + r * 0.47, y - r * 0.04,  r * 0.38, merged); // right bump
-
-    if (detail === LOD.DETAIL && label) {
-      ctx.drawLabel(label, x, y + r * 0.52, { fill: '#e2e8f0', fontSize: 13, fontWeight: 'bold' });
-    }
   }
 
   getBBox(): BBox {
@@ -85,8 +81,8 @@ interface ServerNodeSpec extends BaseShapeSpec {
 }
 
 class ServerNode extends BaseNode<ServerNodeSpec> {
-  drawBody(ctx: DrawContext, detail: LOD): void {
-    const { x, y, width: w, height: h, label } = this.spec;
+  drawBody(ctx: DrawContext, _detail: LOD): void {
+    const { x, y, width: w, height: h } = this.spec;
     const s = this.resolveStyle();
 
     ctx.fillRect(x, y, w, h, { ...s, cornerRadius: 4 });
@@ -105,10 +101,6 @@ class ServerNode extends BaseNode<ServerNodeSpec> {
       stroke: 'rgba(0,0,0,0)',
       strokeWidth: 0,
     });
-
-    if (detail === LOD.DETAIL && label) {
-      ctx.drawLabel(label, x + w / 2, y + h + 16, { fill: '#94a3b8', fontSize: 12 });
-    }
   }
 
   getBBox(): BBox {
@@ -139,8 +131,8 @@ interface DatabaseNodeSpec extends BaseShapeSpec {
 }
 
 class DatabaseNode extends BaseNode<DatabaseNodeSpec> {
-  drawBody(ctx: DrawContext, detail: LOD): void {
-    const { x, y, width: w, height: h, label } = this.spec;
+  drawBody(ctx: DrawContext, _detail: LOD): void {
+    const { x, y, width: w, height: h } = this.spec;
     const s     = this.resolveStyle();
     const rx    = w / 2;
     const capRy = w * 0.18;
@@ -148,10 +140,6 @@ class DatabaseNode extends BaseNode<DatabaseNodeSpec> {
     ctx.fillEllipse(x + rx, y + h - capRy, rx, capRy, s);
     ctx.fillRect(x, y + capRy, w, h - capRy * 2, s);
     ctx.fillEllipse(x + rx, y + capRy, rx, capRy, s);
-
-    if (detail === LOD.DETAIL && label) {
-      ctx.drawLabel(label, x + rx, y + h / 2, { fill: '#e2e8f0', fontSize: 13, fontWeight: 'bold' });
-    }
   }
 
   getBBox(): BBox {

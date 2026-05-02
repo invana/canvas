@@ -3,11 +3,12 @@
 // Created by ShapesPlugin.addShape() / addConnector(); reused across viewport exits.
 
 import { Container, Graphics } from 'pixi.js';
-import type { BaseShape } from './BaseShape.js';
-import type { BaseConnector } from './BaseConnector.js';
+import { BaseShape } from './BaseShape.js';
+import { BaseConnector } from './BaseConnector.js';
 import type { LOD } from './LODController.js';
 import type { BBox } from './spec/index.js';
 import { PixiDrawContext } from './DrawContext.js';
+import { ShapeLabels } from './ShapeLabels.js';
 
 /** Union type for any shape element (shape or connector). */
 export type AnyShapeObject = BaseShape | BaseConnector;
@@ -35,15 +36,28 @@ export class ShapeObject {
   /** Underlay graphics for state-driven halos. Sits below `_g`. */
   private _haloG: Graphics;
   private _haloCtx: PixiDrawContext;
+  /**
+   * Per-element label pool. Labels render into a shared label layer (passed
+   * from `ShapesPlugin`), not as children of `container`, so they sit above
+   * neighbouring shape bodies and can be hidden as a group via the layer.
+   */
+  private _labels: ShapeLabels | null;
   private _dirty = true;
   private _haloDirty = true;
   private _mounted = false;
   /** LOD level used during the last completed draw. `null` = never drawn. */
   private _lastDrawnLOD: LOD | null = null;
 
-  constructor(element: AnyShapeObject) {
+  /**
+   * @param element     - The shape or connector to wrap.
+   * @param labelLayer  - Container for this element's labels. When omitted,
+   *                      labels are not rendered (ShapeObject still works
+   *                      headlessly — useful for tests).
+   */
+  constructor(element: AnyShapeObject, labelLayer?: Container) {
     this.id      = element.spec.id;
     this.element = element;
+    this._labels = labelLayer ? new ShapeLabels(labelLayer) : null;
 
     this.container = new Container();
     // Halo first so it sits underneath the body.
@@ -96,6 +110,7 @@ export class ShapeObject {
       this.element.draw(this._ctx, detail);
       this._dirty = false;
       this._lastDrawnLOD = detail;
+      this._syncLabels(detail);
     }
 
     if (!this._mounted) {
@@ -109,6 +124,15 @@ export class ShapeObject {
   /** `true` if the element has mutated since the last `draw()` call. */
   get isDirty(): boolean {
     return this._dirty;
+  }
+
+  /**
+   * Per-element label pool, or `null` when this object was constructed
+   * without a label layer. Exposed for behaviour plugins (e.g. label
+   * re-rasterization on zoom) that need to iterate every label.
+   */
+  get labels(): ShapeLabels | null {
+    return this._labels;
   }
 
   /** Force a redraw on the next pass regardless of mutation tracking. */
@@ -140,10 +164,21 @@ export class ShapeObject {
   destroy(): void {
     this._ctx.reset();
     this._haloCtx.reset();
+    this._labels?.destroy();
+    this._labels = null;
     this._g.destroy();
     this._haloG.destroy();
     this.container.destroy({ children: true });
     this.element.onDestroy?.();
+  }
+
+  private _syncLabels(detail: LOD): void {
+    if (!this._labels) return;
+    if (this.element instanceof BaseShape) {
+      this._labels.syncShape(this.element, detail);
+    } else if (this.element instanceof BaseConnector) {
+      this._labels.syncConnector(this.element, detail);
+    }
   }
 }
 

@@ -3,7 +3,7 @@
 // Can be used standalone or as the backend for higher-level plugins.
 
 import type { Ticker } from 'pixi.js';
-import type { CanvasPlugin, PluginContext } from '@invana/canvas';
+import type { CanvasPlugin, PluginContext, Label } from '@invana/canvas';
 import { ShapePool } from './ShapePool.js';
 import { ShapeScene } from './ShapeScene.js';
 import { ShapeObject } from './ShapeObject.js';
@@ -134,13 +134,15 @@ export class ShapesPlugin implements CanvasPlugin {
   private _zIndex:      number;
   private _lodOptions:  Partial<LODThresholds>;
 
-  private _shapePool!:      ShapePool;
-  private _connectorPool!:  ShapePool;
-  private _shapeScene!:     ShapeScene;
-  private _connectorScene!: ShapeScene;
-  private _lod!:            LODController;
-  private _cameraTracker!:  CameraTracker;
-  private _ctx!:            PluginContext;
+  private _shapePool!:       ShapePool;
+  private _connectorPool!:   ShapePool;
+  private _shapeScene!:      ShapeScene;
+  private _connectorScene!:  ShapeScene;
+  private _nodeLabelLayer!:  import('pixi.js').Container;
+  private _edgeLabelLayer!:  import('pixi.js').Container;
+  private _lod!:             LODController;
+  private _cameraTracker!:   CameraTracker;
+  private _ctx!:             PluginContext;
 
   private _ticker: Ticker | null = null;
   private _animSet = new Set<string>();
@@ -207,9 +209,16 @@ export class ShapesPlugin implements CanvasPlugin {
   register(ctx: PluginContext): void {
     this._ctx = ctx;
 
-    const connectorLayer = ctx.createLayer({ id: `${this.id}-connectors`, zIndex: this._zIndex,     label: 'Connectors' });
-    const shapeLayer     = ctx.createLayer({ id: `${this.id}-shapes`,     zIndex: this._zIndex + 1, label: 'Shapes' });
-    const haloLayer      = ctx.createLayer({ id: `${this.id}-halos`,      zIndex: this._zIndex + 2, label: 'Halos' });
+    const connectorLayer  = ctx.createLayer({ id: `${this.id}-connectors`,  zIndex: this._zIndex,     label: 'Connectors' });
+    const shapeLayer      = ctx.createLayer({ id: `${this.id}-shapes`,      zIndex: this._zIndex + 1, label: 'Shapes' });
+    const haloLayer       = ctx.createLayer({ id: `${this.id}-halos`,       zIndex: this._zIndex + 2, label: 'Halos' });
+    // Edge labels above shape bodies so a midpoint label is never hidden
+    // behind a neighbouring node; node labels above edge labels so they win
+    // when the two would overlap.
+    this._edgeLabelLayer  = ctx.createLayer({ id: `${this.id}-edge-labels`, zIndex: this._zIndex + 3, label: 'Edge labels' });
+    this._nodeLabelLayer  = ctx.createLayer({ id: `${this.id}-node-labels`, zIndex: this._zIndex + 4, label: 'Node labels' });
+    this._edgeLabelLayer.eventMode = 'none';
+    this._nodeLabelLayer.eventMode = 'none';
     this._halos = new AnimationHaloPool(haloLayer);
 
     this._shapePool      = new ShapePool();
@@ -319,7 +328,7 @@ export class ShapesPlugin implements CanvasPlugin {
       return;
     }
     const shape = new Ctor(spec);
-    const obj   = new ShapeObject(shape);
+    const obj   = new ShapeObject(shape, this._nodeLabelLayer);
     this._shapePool.add(obj);
     this._ctx.events.emit('shape:added', new ShapeAddedEvent({ elementId: spec.id, elementType: 'shape' }));
     if (shape.onAnimationTick) this._animSet.add(spec.id);
@@ -422,7 +431,7 @@ export class ShapesPlugin implements CanvasPlugin {
     (connector as BaseConnector)._routerRegistry = this._routerRegistry;
     (connector as BaseConnector)._markerRegistry = this._markerRegistry;
     (connector as BaseConnector)._connectorType  = type;
-    const obj = new ShapeObject(connector);
+    const obj = new ShapeObject(connector, this._edgeLabelLayer);
     this._connectorPool.add(obj);
     this._registerConnectorAttachment(resolvedSpec);
     this._ctx.events.emit('shape:added', new ShapeAddedEvent({ elementId: spec.id, elementType: 'connector' }));
@@ -472,6 +481,17 @@ export class ShapesPlugin implements CanvasPlugin {
   /** Get the raw `ShapeObject` wrapper for a connector by id. */
   getConnector(id: string): ShapeObject | undefined {
     return this._connectorPool.get(id);
+  }
+
+  /**
+   * Iterate every {@link Label} owned by this plugin's shapes and connectors,
+   * regardless of visibility. Used by behaviour plugins like
+   * `LabelResolutionPlugin` to drive runtime properties (resolution, etc.)
+   * without walking the Pixi display list.
+   */
+  forEachLabel(cb: (label: Label) => void): void {
+    for (const obj of this._shapePool.values())     obj.labels?.forEach(cb);
+    for (const obj of this._connectorPool.values()) obj.labels?.forEach(cb);
   }
 
   /** @deprecated Use {@link getConnector} instead. */

@@ -33,7 +33,7 @@ export type CircleNodeSpec = CircleShapeSpec;
  */
 export class CircleShape extends BaseShape<CircleShapeSpec> {
   drawBody(ctx: DrawContext, detail: LOD): void {
-    const { x, y, radius, label } = this.spec;
+    const { x, y, radius } = this.spec;
     const style = this.resolveStyle();
 
     if (detail === LOD.DOT) {
@@ -42,10 +42,6 @@ export class CircleShape extends BaseShape<CircleShapeSpec> {
     }
 
     ctx.fillCircle(x, y, radius, style);
-
-    if (detail >= LOD.DETAIL && label) {
-      ctx.drawLabel(label, x, y);
-    }
   }
 
   drawHalo(ctx: DrawContext, detail: LOD): void {

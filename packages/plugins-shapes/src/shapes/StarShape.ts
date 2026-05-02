@@ -37,7 +37,7 @@ export class StarShape extends BaseShape<StarShapeSpec> {
   }
 
   drawBody(ctx: DrawContext, detail: LOD): void {
-    const { x, y, radius, points = 5, innerRatio = 0.42, rotation, label } = this.spec;
+    const { x, y, radius, points = 5, innerRatio = 0.42, rotation } = this.spec;
     const style = this.resolveStyle();
 
     if (detail === LOD.DOT) {
@@ -46,10 +46,6 @@ export class StarShape extends BaseShape<StarShapeSpec> {
     }
 
     ctx.fillStar(x, y, radius, { ...style, points, innerRatio, rotation });
-
-    if (detail >= LOD.DETAIL && label) {
-      ctx.drawLabel(label, x, y);
-    }
   }
 
   drawHalo(ctx: DrawContext, detail: LOD): void {

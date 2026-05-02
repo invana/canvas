@@ -112,8 +112,8 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
 
   // ── Built-in methods ─────────────────────────────────────────────────────────
 
-  draw(ctx: DrawContext, detail: LOD): void {
-    const { from, to, label } = this.spec;
+  draw(ctx: DrawContext, _detail: LOD): void {
+    const { from, to } = this.spec;
     const style = this.resolveStyle();
 
     const rawWaypoints = this.spec.vertices ?? this.spec.waypoints ?? [];
@@ -191,10 +191,6 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
       this._drawMarker(ctx, arrowTail, startAngle, startMarkerSpec!.type, startMarkerSize, markerColor, style.strokeAlpha ?? 1, startMarkerSpec!);
     }
 
-    if (detail >= LOD.DETAIL && label) {
-      const mid = this._getMidpoint();
-      ctx.drawLabel(label, mid.x, mid.y - 12);
-    }
   }
 
   private _runRouter(from: Point, to: Point, vertices: Point[]): Point[] {

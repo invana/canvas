@@ -98,6 +98,16 @@ export { resolveFillArg } from './graphics-utils/types.js';
 export type { DrawContext as GraphicsDrawContext, PathCommand as GraphicsPathCommand } from './drawing/DrawContext.js';
 export type { BezierPoint as GraphicsBezierPoint } from './graphics-utils/paths/index.js';
 
+// Label primitive + style types. The `Label` class is exposed for use by
+// shape/element-rendering plugins (e.g. @invana/plugins-shapes) that own their
+// own label-pool lifecycle. Most plugin authors don't need to touch it
+// directly — just declare a label on the shape spec.
+export { Label } from './graphics-utils/labels/index.js';
+export type {
+  LabelAnchor, LabelPlacement,
+  LabelStyle, LabelBackgroundStyle, LabelPadding, LabelRenderer,
+} from './graphics-utils/labels/index.js';
+
 // Pure-math geometry primitives — used by plugins that need ray/boundary/flatten ops.
 export {
   rayVsSegment, rayVsCircle, rayVsEllipse, rayVsRect, rayVsPolyline,

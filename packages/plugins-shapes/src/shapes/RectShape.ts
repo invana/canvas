@@ -26,7 +26,7 @@ export type RectNodeSpec = RectShapeSpec;
  */
 export class RectShape extends BaseShape<RectShapeSpec> {
   drawBody(ctx: DrawContext, detail: LOD): void {
-    const { x, y, width, height, cornerRadius = 0, label } = this.spec;
+    const { x, y, width, height, cornerRadius = 0 } = this.spec;
     const style = this.resolveStyle();
 
     if (detail === LOD.DOT) {
@@ -36,10 +36,6 @@ export class RectShape extends BaseShape<RectShapeSpec> {
     }
 
     ctx.fillRect(x, y, width, height, { ...style, cornerRadius });
-
-    if (detail >= LOD.DETAIL && label) {
-      ctx.drawLabel(label, x + width / 2, y + height / 2);
-    }
   }
 
   drawHalo(ctx: DrawContext, detail: LOD): void {

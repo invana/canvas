@@ -3,7 +3,9 @@
 // They deliberately use the same DrawStyle / PathStyle as graphics-utils so
 // shape authors can pass style objects directly to DrawContext methods.
 
-import type { DrawStyle, PathStyle } from '@invana/canvas';
+import type { DrawStyle, PathStyle, LabelStyle } from '@invana/canvas';
+export type { LabelStyle };
+export type { LabelBackgroundStyle, LabelPadding, LabelRenderer } from '@invana/canvas';
 
 // ── Geometry primitives ───────────────────────────────────────────────────────
 
@@ -222,6 +224,72 @@ export interface HaloSpec {
   visibleStates?: string[];
 }
 
+// ── Label specs ──────────────────────────────────────────────────────────────
+
+/**
+ * LOD threshold above which a label is shown.
+ *
+ * - `'detail'` (default) — only at LOD.DETAIL (zoomed in).
+ * - `'full'` — at LOD.FULL and above.
+ * - `'always'` — at every LOD level except `LOD.DOT` (which only paints a 2-px
+ *   dot for the whole element).
+ */
+export type LabelVisibilityLOD = 'detail' | 'full' | 'always';
+
+/**
+ * Anchor on a node's bounding box used for label positioning.
+ * `'center'` is the geometric centre of the bbox; the cardinal positions
+ * (`'top'`, etc.) sit just outside the corresponding edge.
+ */
+export type NodeLabelPosition =
+  | 'center' | 'top' | 'bottom' | 'left' | 'right'
+  | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
+/**
+ * Position along an edge's path.
+ *
+ * - `'start' | 'middle' | 'end'` — keyword shorthands.
+ * - `number` — fractional position along the route (0 = start, 1 = end).
+ */
+export type EdgeLabelPosition = 'start' | 'middle' | 'end' | number;
+
+/** A label attached to a shape (node). */
+export interface NodeLabelSpec extends LabelStyle {
+  /** Label text. */
+  text: string;
+  /** Anchor on the node's bounding box. Default `'center'`. */
+  position?: NodeLabelPosition;
+  /** Extra horizontal offset in world-space pixels. Applied after `position`. */
+  offsetX?: number;
+  /** Extra vertical offset in world-space pixels. Applied after `position`. */
+  offsetY?: number;
+  /** LOD level above which the label is shown. Default `'detail'`. */
+  showAtLOD?: LabelVisibilityLOD;
+}
+
+/** A label attached to a connector (edge). */
+export interface EdgeLabelSpec extends LabelStyle {
+  /** Label text. */
+  text: string;
+  /** Position along the edge path. Default `'middle'`. */
+  position?: EdgeLabelPosition;
+  /**
+   * Perpendicular offset from the path in world-space pixels. Positive moves
+   * the label to the *right* of the path's direction of travel; negative moves
+   * it to the left. Default `-12` (above the path for a left-to-right edge —
+   * preserves the previous hard-coded offset).
+   */
+  offset?: number;
+  /**
+   * Rotation. `'auto'` aligns the label along the path tangent with auto-flip
+   * to keep text upright. A number sets a static rotation (radians). Default
+   * `'auto'`.
+   */
+  rotation?: number | 'auto';
+  /** LOD level above which the label is shown. Default `'detail'`. */
+  showAtLOD?: LabelVisibilityLOD;
+}
+
 // ── Base specs ────────────────────────────────────────────────────────────────
 
 /**
@@ -239,8 +307,17 @@ export interface BaseShapeSpec {
   x: number;
   /** World-space y coordinate of the element's anchor. */
   y: number;
-  /** Optional label shown at {@link LOD.DETAIL} zoom level. */
-  label?: string;
+  /**
+   * One or more labels attached to this shape.
+   *
+   * - `string` shorthand renders a centred label with default styling.
+   * - {@link NodeLabelSpec} for a single fully-styled label.
+   * - `NodeLabelSpec[]` for multiple labels on one shape (e.g. title + subtitle).
+   *
+   * Labels render in a dedicated `node-labels` layer above the shape body so
+   * they are never occluded by neighbouring shapes.
+   */
+  label?: string | NodeLabelSpec | NodeLabelSpec[];
   /** Fill and stroke style. */
   style?: DrawStyle;
   /** Container alpha (0–1). */
@@ -313,8 +390,17 @@ export interface BaseConnectorSpec {
   vertices?: Point[];
   /** @deprecated Use `vertices`. */
   waypoints?: Point[];
-  /** Optional midpoint label shown at {@link LOD.DETAIL} zoom level. */
-  label?: string;
+  /**
+   * One or more labels attached to this connector.
+   *
+   * - `string` shorthand renders a single midpoint label with default styling.
+   * - {@link EdgeLabelSpec} for a single fully-styled label.
+   * - `EdgeLabelSpec[]` for multiple labels (e.g. forward + reverse).
+   *
+   * Labels render in a dedicated `edge-labels` layer above shape bodies so a
+   * midpoint label is never hidden behind a neighbouring node.
+   */
+  label?: string | EdgeLabelSpec | EdgeLabelSpec[];
   /** Stroke style. */
   style?: PathStyle;
   /**

@@ -83,10 +83,6 @@ export class PolylineShape extends BaseShape<PolylineShapeSpec> {
     }
 
     ctx.fillPolyline(flat, { ...style, closed: this.spec.closed ?? true });
-
-    if (detail >= LOD.DETAIL && this.spec.label) {
-      ctx.drawLabel(this.spec.label, c.x, c.y);
-    }
   }
 
   /**

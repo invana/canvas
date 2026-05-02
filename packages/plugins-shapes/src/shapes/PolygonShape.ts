@@ -41,7 +41,7 @@ export class PolygonShape extends BaseShape<PolygonShapeSpec> {
   }
 
   drawBody(ctx: DrawContext, detail: LOD): void {
-    const { x, y, radius, sides, rotation, label } = this.spec;
+    const { x, y, radius, sides, rotation } = this.spec;
     const style = this.resolveStyle();
 
     if (detail === LOD.DOT) {
@@ -50,10 +50,6 @@ export class PolygonShape extends BaseShape<PolygonShapeSpec> {
     }
 
     ctx.fillPolygon(x, y, radius, sides, { ...style, rotation });
-
-    if (detail >= LOD.DETAIL && label) {
-      ctx.drawLabel(label, x, y);
-    }
   }
 
   drawHalo(ctx: DrawContext, detail: LOD): void {

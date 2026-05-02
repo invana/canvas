@@ -31,6 +31,8 @@ type Story = StoryObj;
 
 interface EREntitySpec extends BaseShapeSpec {
   width: number;
+  /** Entity title shown in the header strip. */
+  title?: string;
   /** Header label height (px). */
   headerHeight?: number;
   /** Row height per attribute (px). */
@@ -47,7 +49,7 @@ class EREntity extends BaseShape<EREntitySpec> {
   }
 
   drawBody(ctx: DrawContext, detail: LOD): void {
-    const { x, y, width, label, attributes } = this.spec;
+    const { x, y, width, title, attributes } = this.spec;
     const headerH = this.spec.headerHeight ?? 28;
     const rowH    = this.spec.rowHeight    ?? 24;
     const totalH  = this._bodyHeight();
@@ -67,8 +69,8 @@ class EREntity extends BaseShape<EREntitySpec> {
     });
 
     if (detail >= LOD.DETAIL) {
-      if (label) {
-        ctx.drawLabel(label, x + width / 2, y + headerH / 2, {
+      if (title) {
+        ctx.drawLabel(title, x + width / 2, y + headerH / 2, {
           fill: '#e2e8f0', fontSize: 13, fontWeight: 'bold',
         });
       }
@@ -160,7 +162,7 @@ export const EREntityPorts: Story = {
           x:     -360,
           y:     -100,
           width: 220,
-          label: 'customers',
+          title: 'customers',
           attributes: [
             { id: 'id',      name: 'id',         type: 'uuid' },
             { id: 'email',   name: 'email',      type: 'text' },
@@ -175,7 +177,7 @@ export const EREntityPorts: Story = {
           x:     140,
           y:     -130,
           width: 220,
-          label: 'orders',
+          title: 'orders',
           attributes: [
             { id: 'id',          name: 'id',           type: 'uuid' },
             { id: 'customer_id', name: 'customer_id',  type: 'uuid' },

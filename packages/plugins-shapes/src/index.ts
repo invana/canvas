@@ -5,6 +5,10 @@ export { ShapesPlugin, GraphPlugin } from './ShapesPlugin.js';
 export type { ShapesPluginOptions, ShapeCtor, ConnectorCtor, GraphPluginOptions, NodeCtor, EdgeCtor } from './ShapesPlugin.js';
 export type { RouterFn } from './ShapesPlugin.js';
 
+// Behaviour plugins (opt-in; explicit registration required)
+export { LabelResolutionPlugin } from './LabelResolutionPlugin.js';
+export type { LabelResolutionPluginOptions, LabelResolutionResolver } from './LabelResolutionPlugin.js';
+
 // Base classes
 export { BaseShape, BaseNode, LOD } from './BaseShape.js';
 export type { AnimSlot } from './BaseShape.js';
@@ -51,6 +55,16 @@ export type {
   BadgeSpec,
   BadgePosition,
   HaloSpec,
+  // Label specs
+  LabelStyle,
+  LabelBackgroundStyle,
+  LabelPadding,
+  LabelRenderer,
+  LabelVisibilityLOD,
+  NodeLabelSpec,
+  NodeLabelPosition,
+  EdgeLabelSpec,
+  EdgeLabelPosition,
   // Backward-compat aliases
   BaseNodeSpec,
   BaseEdgeSpec,

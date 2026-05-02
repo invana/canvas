@@ -24,7 +24,7 @@ export type EllipseNodeSpec = EllipseShapeSpec;
  */
 export class EllipseShape extends BaseShape<EllipseShapeSpec> {
   drawBody(ctx: DrawContext, detail: LOD): void {
-    const { x, y, radiusX, radiusY, label } = this.spec;
+    const { x, y, radiusX, radiusY } = this.spec;
     const style = this.resolveStyle();
 
     if (detail === LOD.DOT) {
@@ -33,10 +33,6 @@ export class EllipseShape extends BaseShape<EllipseShapeSpec> {
     }
 
     ctx.fillEllipse(x, y, radiusX, radiusY, style);
-
-    if (detail >= LOD.DETAIL && label) {
-      ctx.drawLabel(label, x, y);
-    }
   }
 
   drawHalo(ctx: DrawContext, detail: LOD): void {
