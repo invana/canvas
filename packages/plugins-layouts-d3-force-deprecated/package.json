@@ -1,0 +1,47 @@
+{
+  "name": "@invana/plugin-layouts-d3-force-deprecated",
+  "version": "0.0.1",
+  "description": "[DEPRECATED] D3 force-directed layout plugin for @invana/canvas — kept for reference during architecture migration.",
+  "type": "module",
+  "main": "./src/index.js",
+  "types": "./src/index.ts",
+  "typedocOptions": {
+    "entryPoints": ["src/index.ts"]
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "d3-force": "^3.0.0"
+  },
+  "peerDependencies": {
+    "@invana/canvas-deprecated": "workspace:*",
+    "@invana/plugins-graph-data-deprecated": "workspace:*"
+  },
+  "devDependencies": {
+    "@invana/canvas-deprecated": "workspace:*",
+    "@invana/plugins-graph-data-deprecated": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/d3-force": "^3.0.10",
+    "tsup": "^8.3.5",
+    "typescript": "5.9.2",
+    "vitest": "^2.1.8"
+  },
+  "keywords": [
+    "canvas",
+    "layout",
+    "d3",
+    "d3-force",
+    "network",
+    "network-layout",
+    "force-directed",
+    "graph-visualization",
+    "deprecated"
+  ],
+  "license": "Apache-2.0"
+}

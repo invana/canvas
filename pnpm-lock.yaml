@@ -35,21 +35,18 @@ importers:
       '@invana/canvas':
         specifier: workspace:*
         version: link:../../packages/canvas
-      '@invana/plugin-example-datasets':
+      '@invana/graph':
         specifier: workspace:*
-        version: link:../../packages/plugins-example-datasets
-      '@invana/plugin-layouts-d3-force':
+        version: link:../../packages/graph
+      '@invana/graph-datasets':
         specifier: workspace:*
-        version: link:../../packages/plugins-layouts-d3-force
-      '@invana/plugin-layouts-elkjs':
+        version: link:../../packages/graph-datasets
+      '@invana/graph-layout-d3-force':
         specifier: workspace:*
-        version: link:../../packages/plugins-layouts-elkjs
-      '@invana/plugins-graph-data':
+        version: link:../../packages/graph-layout-d3-force
+      '@invana/graph-layout-elkjs':
         specifier: workspace:*
-        version: link:../../packages/plugins-graph-data
-      '@invana/plugins-shapes':
-        specifier: workspace:*
-        version: link:../../packages/plugins-shapes
+        version: link:../../packages/graph-layout-elkjs
       lil-gui:
         specifier: ^0.21.0
         version: 0.21.0
@@ -80,6 +77,34 @@ importers:
         version: 7.3.0(@types/node@22.15.3)(yaml@2.8.3)
 
   packages/canvas:
+    dependencies:
+      pixi-viewport:
+        specifier: ^6.0.3
+        version: 6.0.3(pixi.js@8.18.1)
+      pixi.js:
+        specifier: ^8.18.1
+        version: 8.18.1
+      rbush:
+        specifier: ^4.0.1
+        version: 4.0.1
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/rbush':
+        specifier: ^4.0.0
+        version: 4.0.0
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(postcss@8.5.12)(typescript@5.9.2)(yaml@2.8.3)
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.15.3)
+
+  packages/canvas-deprecated:
     dependencies:
       pixi-viewport:
         specifier: ^6.0.3
@@ -143,26 +168,7 @@ importers:
         specifier: ^8.50.0
         version: 8.50.0(eslint@9.39.1)(typescript@5.9.2)
 
-  packages/plugins-example-datasets:
-    devDependencies:
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../typescript-config
-      tsup:
-        specifier: ^8.3.5
-        version: 8.5.1(postcss@8.5.12)(typescript@5.9.2)(yaml@2.8.3)
-      typescript:
-        specifier: 5.9.2
-        version: 5.9.2
-      vitest:
-        specifier: ^2.1.8
-        version: 2.1.9(@types/node@22.15.3)
-
-  packages/plugins-graph-data:
-    dependencies:
-      '@invana/plugins-shapes':
-        specifier: workspace:*
-        version: link:../plugins-shapes
+  packages/graph:
     devDependencies:
       '@invana/canvas':
         specifier: workspace:*
@@ -179,8 +185,26 @@ importers:
       typescript:
         specifier: 5.9.2
         version: 5.9.2
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.15.3)
 
-  packages/plugins-layouts-d3-force:
+  packages/graph-datasets:
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(postcss@8.5.12)(typescript@5.9.2)(yaml@2.8.3)
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.15.3)
+
+  packages/graph-layout-d3-force:
     dependencies:
       d3-force:
         specifier: ^3.0.0
@@ -189,9 +213,9 @@ importers:
       '@invana/canvas':
         specifier: workspace:*
         version: link:../canvas
-      '@invana/plugins-graph-data':
+      '@invana/graph':
         specifier: workspace:*
-        version: link:../plugins-graph-data
+        version: link:../graph
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -208,7 +232,7 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.15.3)
 
-  packages/plugins-layouts-elkjs:
+  packages/graph-layout-elkjs:
     dependencies:
       elkjs:
         specifier: ^0.9.3
@@ -217,9 +241,9 @@ importers:
       '@invana/canvas':
         specifier: workspace:*
         version: link:../canvas
-      '@invana/plugins-graph-data':
+      '@invana/graph':
         specifier: workspace:*
-        version: link:../plugins-graph-data
+        version: link:../graph
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -233,15 +257,105 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.15.3)
 
-  packages/plugins-shapes:
+  packages/plugins-example-datasets-deprecated:
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(postcss@8.5.12)(typescript@5.9.2)(yaml@2.8.3)
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.15.3)
+
+  packages/plugins-graph-data-deprecated:
+    dependencies:
+      '@invana/plugins-shapes-deprecated':
+        specifier: workspace:*
+        version: link:../plugins-shapes-deprecated
+    devDependencies:
+      '@invana/canvas-deprecated':
+        specifier: workspace:*
+        version: link:../canvas-deprecated
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      pixi.js:
+        specifier: ^8.18.1
+        version: 8.18.1
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(postcss@8.5.12)(typescript@5.9.2)(yaml@2.8.3)
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+
+  packages/plugins-layouts-d3-force-deprecated:
+    dependencies:
+      d3-force:
+        specifier: ^3.0.0
+        version: 3.0.0
+    devDependencies:
+      '@invana/canvas-deprecated':
+        specifier: workspace:*
+        version: link:../canvas-deprecated
+      '@invana/plugins-graph-data-deprecated':
+        specifier: workspace:*
+        version: link:../plugins-graph-data-deprecated
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/d3-force':
+        specifier: ^3.0.10
+        version: 3.0.10
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(postcss@8.5.12)(typescript@5.9.2)(yaml@2.8.3)
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.15.3)
+
+  packages/plugins-layouts-elkjs-deprecated:
+    dependencies:
+      elkjs:
+        specifier: ^0.9.3
+        version: 0.9.3
+    devDependencies:
+      '@invana/canvas-deprecated':
+        specifier: workspace:*
+        version: link:../canvas-deprecated
+      '@invana/plugins-graph-data-deprecated':
+        specifier: workspace:*
+        version: link:../plugins-graph-data-deprecated
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(postcss@8.5.12)(typescript@5.9.2)(yaml@2.8.3)
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.15.3)
+
+  packages/plugins-shapes-deprecated:
     dependencies:
       rbush:
         specifier: ^4.0.1
         version: 4.0.1
     devDependencies:
-      '@invana/canvas':
+      '@invana/canvas-deprecated':
         specifier: workspace:*
-        version: link:../canvas
+        version: link:../canvas-deprecated
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config

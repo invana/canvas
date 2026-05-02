@@ -1,5 +1,5 @@
-import { fileURLToPath } from "node:url";
-import { dirname } from "node:path";
+import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
 import type { StorybookConfig } from '@storybook/html-vite';
 
 const config: StorybookConfig = {
@@ -8,9 +8,9 @@ const config: StorybookConfig = {
     '../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)',
   ],
   addons: [
-    getAbsolutePath("@storybook/addon-links"),
+    getAbsolutePath('@storybook/addon-links'),
     {
-      name: getAbsolutePath("@storybook/addon-docs"),
+      name: getAbsolutePath('@storybook/addon-docs'),
       options: {
         mdxPluginOptions: {
           mdxCompileOptions: {},
@@ -22,7 +22,7 @@ const config: StorybookConfig = {
     defaultName: 'Docs',
   },
   framework: {
-    name: getAbsolutePath("@storybook/html-vite"),
+    name: getAbsolutePath('@storybook/html-vite'),
     options: {},
   },
 };

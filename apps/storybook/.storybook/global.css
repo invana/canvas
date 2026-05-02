@@ -1,11 +1,10 @@
-body {
+html, body, #storybook-root {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  height: 100%;
+  width: 100%;
 }
 
-.canvas-container {
-  width: 100%;
-  height: 100vh;
-  position: relative;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }

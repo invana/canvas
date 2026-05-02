@@ -2,9 +2,7 @@ import type { Preview } from '@storybook/html-vite';
 
 import './global.css';
 
-/**
- * Extracts only the play() function body from a story source string.
- */
+/** Extracts only the play() function body from a story source string. */
 function extractPlayBody(src: string): string {
   const playIdx = src.indexOf('play: async () =>');
   if (playIdx === -1) return src;
@@ -50,8 +48,8 @@ const preview: Preview = {
       options: {
         light: { name: 'light', value: '#ffffff' },
         dark: { name: 'dark', value: '#1a1a2e' },
-        gray: { name: 'gray', value: '#f5f5f5' }
-      }
+        gray: { name: 'gray', value: '#f5f5f5' },
+      },
     },
     docs: {
       codePanel: true,
@@ -64,9 +62,9 @@ const preview: Preview = {
 
   initialGlobals: {
     backgrounds: {
-      value: 'dark'
-    }
-  }
+      value: 'dark',
+    },
+  },
 };
 
 export default preview;

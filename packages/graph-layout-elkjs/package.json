@@ -1,0 +1,36 @@
+{
+  "name": "@invana/graph-layout-elkjs",
+  "version": "0.0.1",
+  "description": "ELK.js Layout for @invana/graph.",
+  "type": "module",
+  "main": "./src/index.js",
+  "types": "./src/index.ts",
+  "typedocOptions": {
+    "entryPoints": ["src/index.ts"]
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "elkjs": "^0.9.3"
+  },
+  "peerDependencies": {
+    "@invana/canvas": "workspace:*",
+    "@invana/graph": "workspace:*"
+  },
+  "devDependencies": {
+    "@invana/canvas": "workspace:*",
+    "@invana/graph": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "tsup": "^8.3.5",
+    "typescript": "5.9.2",
+    "vitest": "^2.1.8"
+  },
+  "keywords": ["canvas", "graph", "layout", "elk", "elkjs", "hierarchical", "layered"],
+  "license": "Apache-2.0"
+}

@@ -2,24 +2,22 @@
 layout: home
 
 hero:
-  name: "@invana/canvas"
-  text: "WebGPU-first canvas engine"
-  tagline: A high-performance rendering engine and graph visualization toolkit built on PixiJS v8.
+  name: '@invana/canvas'
+  text: 'WebGPU-first canvas engine'
+  tagline: 'Layer / Behaviour / Layout architecture for graph visualization.'
   actions:
     - theme: brand
       text: Get Started
       link: /guide/getting-started
     - theme: alt
-      text: View on GitHub
-      link: https://github.com/invana/canvas
+      text: API Reference
+      link: /api/
 
 features:
-  - title: WebGPU / WebGL2
-    details: Automatic renderer selection — WebGPU where supported, WebGL2 fallback. All rendering is GPU-accelerated canvas only.
-  - title: Plugin architecture
-    details: Every feature is a CanvasPlugin. Register only what you need. Built-ins include background, shapes, elements, and drawing tools.
-  - title: Typed event bus
-    details: All internal communication goes through a single typed EventBus. Downstream packages extend the event map via module augmentation — no raw PixiJS events leak out.
-  - title: Camera & layers
-    details: Infinite pan/zoom viewport via pixi-viewport. Photoshop-style z-ordered layers with per-layer visibility and opacity controls.
+  - title: Layer-first composition
+    details: 'Compose scenes from independent Layers (background, graph, minimap, dev info) with explicit z-order.'
+  - title: Behaviours = input
+    details: 'Hover, select, lasso, brush, pan, drag — each one explicit, opt-in, with shortcut conflict warnings.'
+  - title: Layouts = pure functions
+    details: 'D3 force, ELK — instantiate, call apply(), done. No registration, no rendering.'
 ---

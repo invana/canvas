@@ -1,20 +1,17 @@
 {
   "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "../../packages/canvas/src/index.ts",
+    "../../packages/graph/src/index.ts",
+    "../../packages/graph-layout-d3-force/src/index.ts",
+    "../../packages/graph-layout-elkjs/src/index.ts",
+    "../../packages/graph-datasets/src/index.ts"
+  ],
+  "out": "./api",
   "plugin": ["typedoc-plugin-markdown"],
-  "tsconfig": "../../packages/canvas/tsconfig.json",
-  "entryPoints": ["../../packages/canvas/src/index.ts"],
-  "out": "api",
-  "name": "@invana/canvas — API Reference",
-  "includeVersion": true,
-  "excludePrivate": true,
-  "excludeInternal": true,
-  "searchInComments": true,
   "readme": "none",
-  "entryFileName": "index",
-  "outputFileStrategy": "members",
-  "useCodeBlocks": true,
-  "expandObjects": false,
-  "navigationLinks": {
-    "GitHub": "https://github.com/invana/canvas"
-  }
+  "githubPages": false,
+  "hideBreadcrumbs": true,
+  "hidePageHeader": true,
+  "skipErrorChecking": true
 }
