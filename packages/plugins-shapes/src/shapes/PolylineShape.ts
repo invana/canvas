@@ -72,7 +72,7 @@ export class PolylineShape extends BaseShape<PolylineShapeSpec> {
     return out;
   }
 
-  draw(ctx: DrawContext, detail: LOD): void {
+  drawBody(ctx: DrawContext, detail: LOD): void {
     const flat = this._ensureCache();
     const c    = this._centre!;
     const style = this.resolveStyle();
@@ -87,6 +87,37 @@ export class PolylineShape extends BaseShape<PolylineShapeSpec> {
     if (detail >= LOD.DETAIL && this.spec.label) {
       ctx.drawLabel(this.spec.label, c.x, c.y);
     }
+  }
+
+  /**
+   * Halo for free-form shapes: push every perimeter vertex outward from the
+   * centroid by `halo.offset + halo.width / 2`. Approximates a polygon offset
+   * for convex shapes and gives a visually correct ring for concave ones.
+   */
+  drawHalo(ctx: DrawContext, detail: LOD): void {
+    if (detail === LOD.DOT || !this.isHaloActive()) return;
+    const flat = this._ensureCache();
+    const c    = this._centre!;
+    const halo = this.resolveHalo();
+    const push = halo.offset + halo.width / 2;
+    const offset = new Float32Array(flat.length);
+    for (let i = 0; i < flat.length; i += 2) {
+      const dx = flat[i]! - c.x;
+      const dy = flat[i + 1]! - c.y;
+      const len = Math.hypot(dx, dy);
+      if (len < 1e-6) {
+        offset[i]     = flat[i]!;
+        offset[i + 1] = flat[i + 1]!;
+      } else {
+        const k = (len + push) / len;
+        offset[i]     = c.x + dx * k;
+        offset[i + 1] = c.y + dy * k;
+      }
+    }
+    ctx.fillPolyline(offset, {
+      ...this.resolveHaloStyle(),
+      closed: this.spec.closed ?? true,
+    });
   }
 
   getBBox(): BBox {

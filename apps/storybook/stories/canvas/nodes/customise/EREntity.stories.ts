@@ -46,7 +46,7 @@ class EREntity extends BaseShape<EREntitySpec> {
     return headerH + this.spec.attributes.length * rowH;
   }
 
-  draw(ctx: DrawContext, detail: LOD): void {
+  drawBody(ctx: DrawContext, detail: LOD): void {
     const { x, y, width, label, attributes } = this.spec;
     const headerH = this.spec.headerHeight ?? 28;
     const rowH    = this.spec.rowHeight    ?? 24;

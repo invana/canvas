@@ -40,7 +40,7 @@ export class PolygonShape extends BaseShape<PolygonShapeSpec> {
     return this._boundaryCache;
   }
 
-  draw(ctx: DrawContext, detail: LOD): void {
+  drawBody(ctx: DrawContext, detail: LOD): void {
     const { x, y, radius, sides, rotation, label } = this.spec;
     const style = this.resolveStyle();
 
@@ -54,6 +54,16 @@ export class PolygonShape extends BaseShape<PolygonShapeSpec> {
     if (detail >= LOD.DETAIL && label) {
       ctx.drawLabel(label, x, y);
     }
+  }
+
+  drawHalo(ctx: DrawContext, detail: LOD): void {
+    if (detail === LOD.DOT || !this.isHaloActive()) return;
+    const { x, y, radius, sides, rotation } = this.spec;
+    const halo = this.resolveHalo();
+    ctx.fillPolygon(x, y, radius + halo.offset + halo.width / 2, sides, {
+      ...this.resolveHaloStyle(),
+      rotation,
+    });
   }
 
   getBBox(): BBox {

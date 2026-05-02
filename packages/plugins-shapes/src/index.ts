@@ -46,6 +46,11 @@ export type {
   PathStyle,
   BaseShapeSpec,
   BaseConnectorSpec,
+  // Decoration specs
+  IconSpec,
+  BadgeSpec,
+  BadgePosition,
+  HaloSpec,
   // Backward-compat aliases
   BaseNodeSpec,
   BaseEdgeSpec,

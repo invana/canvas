@@ -1,4 +1,4 @@
-// ── HaloPool ───────────────────────────────────────────────────────────────────
+// ── AnimationHaloPool ───────────────────────────────────────────────────────────────────
 // Fixed pool of Graphics objects for per-shape pulse animation rings.
 // Rented by pulseHandler.init() and returned by pulseHandler.cleanup().
 
@@ -7,7 +7,7 @@ import type { Container } from 'pixi.js';
 import type { BaseShape } from './BaseShape.js';
 
 /**
- * `HaloPool` is a fixed-size pool of pre-allocated `PIXI.Graphics` for
+ * `AnimationHaloPool` is a fixed-size pool of pre-allocated `PIXI.Graphics` for
  * rendering pulse animation rings without allocating at runtime.
  *
  * @remarks
@@ -16,7 +16,7 @@ import type { BaseShape } from './BaseShape.js';
  *
  * This class is internal to {@link ShapesPlugin}.
  */
-export class HaloPool {
+export class AnimationHaloPool {
   private _pool: Graphics[] = [];
   private _rented = new Map<string, Graphics>();
   private _scene: Container;

@@ -36,7 +36,7 @@ export class StarShape extends BaseShape<StarShapeSpec> {
     return this._boundaryCache;
   }
 
-  draw(ctx: DrawContext, detail: LOD): void {
+  drawBody(ctx: DrawContext, detail: LOD): void {
     const { x, y, radius, points = 5, innerRatio = 0.42, rotation, label } = this.spec;
     const style = this.resolveStyle();
 
@@ -50,6 +50,19 @@ export class StarShape extends BaseShape<StarShapeSpec> {
     if (detail >= LOD.DETAIL && label) {
       ctx.drawLabel(label, x, y);
     }
+  }
+
+  drawHalo(ctx: DrawContext, detail: LOD): void {
+    if (detail === LOD.DOT || !this.isHaloActive()) return;
+    const { x, y, radius, points = 5, innerRatio = 0.42, rotation } = this.spec;
+    const halo = this.resolveHalo();
+    const r = radius + halo.offset + halo.width / 2;
+    ctx.fillStar(x, y, r, {
+      ...this.resolveHaloStyle(),
+      points,
+      innerRatio,
+      rotation,
+    });
   }
 
   getBBox(): BBox {

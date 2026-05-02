@@ -133,6 +133,95 @@ export type ConnectorFn = (points: Point[], args?: Record<string, unknown>) => P
 
 export type { DrawStyle, PathStyle };
 
+// ── Decoration specs (icons, badges, halo) ───────────────────────────────────
+
+/**
+ * An icon glyph drawn at a shape's centre (or a badge's centre).
+ *
+ * Three sources are supported:
+ * - `'font'`    — codepoint string from an icon font (FontAwesome,
+ *                 Material Symbols, etc.). Requires {@link IconSpec.fontFamily}
+ *                 and the font to be loaded into the document.
+ * - `'unicode'` — any string (emoji, single character).
+ * - `'svg'`     — either a full `<svg>…</svg>` markup string (used as-is —
+ *                 required for stroke-based libraries like Lucide) or a path
+ *                 'd' attribute (wrapped in a 24×24 viewBox with fill=color).
+ */
+export interface IconSpec {
+  type: 'font' | 'unicode' | 'svg';
+  /** Codepoint, character, or SVG path data depending on {@link type}. */
+  value: string;
+  /** Render size in world-space pixels. Default depends on call site. */
+  size?: number;
+  /** Glyph or path color. Default: inherits from caller. */
+  color?: string;
+  /** Required when {@link type} is `'font'`. e.g. `'Font Awesome 6 Free'`. */
+  fontFamily?: string;
+  /** Optional font weight when {@link type} is `'font'`. */
+  fontWeight?: string;
+}
+
+/**
+ * One of the eight badge anchor positions on a shape's bounding box:
+ * cardinal sides (`T`, `B`, `L`, `R`) and corners (`TL`, `TR`, `BL`, `BR`).
+ */
+export type BadgePosition =
+  | 'T' | 'B' | 'L' | 'R'
+  | 'TL' | 'TR' | 'BL' | 'BR';
+
+/**
+ * A small chip (text and/or icon) anchored to one of eight positions on a
+ * shape's bounding box. Inspired by G6's badge system.
+ */
+export interface BadgeSpec {
+  /** Anchor on the shape's bounding box. */
+  position: BadgePosition;
+  /** Badge text (e.g. `'A'`, `'Important'`, count). Mutually combinable with `icon`. */
+  text?: string;
+  /** Optional icon drawn inside the badge. */
+  icon?: IconSpec;
+  /** Background shape. Default `'pill'`. */
+  shape?: 'pill' | 'circle' | 'rect';
+  /** Background fill. Default `'#1f2937'`. */
+  fill?: string;
+  /** Background stroke. Default: no stroke. */
+  stroke?: string;
+  /** Background stroke width. Default 0. */
+  strokeWidth?: number;
+  /** Text/icon color. Default `'#ffffff'`. */
+  textColor?: string;
+  /** Font size for the text. Default 10. */
+  fontSize?: number;
+  /** Horizontal text padding. Default 6. */
+  paddingX?: number;
+  /** Vertical text padding. Default 3. */
+  paddingY?: number;
+  /** Outward gap (world px) from the bounding box edge. Default 4. */
+  offset?: number;
+}
+
+/**
+ * A halo is a soft outer ring drawn around a shape (or alongside an edge)
+ * when one of {@link visibleStates} is active. Halos are drawn into a
+ * separate `Graphics` underneath the body so they never affect hit-testing
+ * or cause body-redraws.
+ */
+export interface HaloSpec {
+  /** Halo color. Default `'#7c3aed'`. */
+  color?: string;
+  /** Ring thickness in world-space pixels. Default 6. */
+  width?: number;
+  /** Gap (world px) between the body edge and the inner halo edge. Default 2. */
+  offset?: number;
+  /** Halo alpha. Default 0.35. */
+  alpha?: number;
+  /**
+   * State names that, when active, make the halo visible.
+   * Default `['selected']`. Set to `[]` to disable.
+   */
+  visibleStates?: string[];
+}
+
 // ── Base specs ────────────────────────────────────────────────────────────────
 
 /**
@@ -180,6 +269,22 @@ export interface BaseShapeSpec {
   states?: Record<string, DrawStyle>;
   /** Arbitrary consumer data — forwarded in event payloads unchanged. */
   data?: Record<string, unknown>;
+  /**
+   * Optional icon drawn at the shape's centre (typically over the body fill).
+   * Rendered at `LOD.SIMPLE` and above.
+   */
+  icon?: IconSpec;
+  /**
+   * Optional decorative chips anchored to the shape's bounding box.
+   * Rendered at `LOD.DETAIL`.
+   */
+  badges?: BadgeSpec[];
+  /**
+   * Optional state-driven outer halo. When any state in
+   * `halo.visibleStates` (default `['selected']`) is active, the halo is
+   * drawn underneath the shape body.
+   */
+  halo?: HaloSpec;
 }
 
 /**
@@ -310,6 +415,13 @@ export interface BaseConnectorSpec {
    * Optional id of a named port on the target shape. See {@link sourcePortId}.
    */
   targetPortId?: string;
+  /**
+   * Optional state-driven halo drawn underneath the connector path. When any
+   * state in `halo.visibleStates` (default `['selected']`) is active, the
+   * routed path is stroked once with `(strokeWidth + 2*(offset + width))` at
+   * `halo.alpha` underneath the main stroke.
+   */
+  halo?: HaloSpec;
 }
 
 // ── Backward-compatibility aliases ───────────────────────────────────────────

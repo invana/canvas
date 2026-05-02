@@ -2,7 +2,7 @@
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
 import type { BaseShape } from '../BaseShape.js';
-import type { HaloPool } from '../HaloPool.js';
+import type { AnimationHaloPool } from '../AnimationHaloPool.js';
 
 /** Options for the `fadeIn` animation. */
 export interface FadeInOptions {
@@ -22,7 +22,7 @@ interface FadeInState {
 export const fadeInHandler: AnimationHandler<FadeInOptions, FadeInState> = {
   type: 'fadeIn',
 
-  init(spec: FadeInOptions, obj: BaseShape, _halos: HaloPool): FadeInState {
+  init(spec: FadeInOptions, obj: BaseShape, _halos: AnimationHaloPool): FadeInState {
     obj._animOverrides.alpha = spec.from ?? 0;
     return { startTime: performance.now(), repeatCount: 0 };
   },
@@ -44,14 +44,14 @@ export const fadeInHandler: AnimationHandler<FadeInOptions, FadeInState> = {
     return { dirty: true, stop: false };
   },
 
-  apply(state: FadeInState, spec: FadeInOptions, obj: BaseShape, _halos: HaloPool) {
+  apply(state: FadeInState, spec: FadeInOptions, obj: BaseShape, _halos: AnimationHaloPool) {
     const dur = spec.duration ?? 400;
     const from = spec.from ?? 0;
     const elapsed = performance.now() - state.startTime;
     obj._animOverrides.alpha = Math.min(1, from + (1 - from) * (elapsed / dur));
   },
 
-  cleanup(_state: FadeInState, obj: BaseShape, _halos: HaloPool) {
+  cleanup(_state: FadeInState, obj: BaseShape, _halos: AnimationHaloPool) {
     obj._animOverrides.alpha = 1;
   },
 };

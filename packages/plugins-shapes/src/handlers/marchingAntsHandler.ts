@@ -2,7 +2,7 @@
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
 import type { BaseShape } from '../BaseShape.js';
-import type { HaloPool } from '../HaloPool.js';
+import type { AnimationHaloPool } from '../AnimationHaloPool.js';
 
 /** Options for the `marchingAnts` animation. */
 export interface MarchingAntsOptions {
@@ -24,7 +24,7 @@ const CYCLE_SIZE = 360;
 export const marchingAntsHandler: AnimationHandler<MarchingAntsOptions, MarchingAntsState> = {
   type: 'marchingAnts',
 
-  init(_spec: MarchingAntsOptions, _obj: BaseShape, _halos: HaloPool): MarchingAntsState {
+  init(_spec: MarchingAntsOptions, _obj: BaseShape, _halos: AnimationHaloPool): MarchingAntsState {
     return { offset: 0, repeatCount: 0 };
   },
 
@@ -40,12 +40,12 @@ export const marchingAntsHandler: AnimationHandler<MarchingAntsOptions, Marching
     return { dirty: true, stop: false };
   },
 
-  apply(state: MarchingAntsState, spec: MarchingAntsOptions, obj: BaseShape, _halos: HaloPool) {
+  apply(state: MarchingAntsState, spec: MarchingAntsOptions, obj: BaseShape, _halos: AnimationHaloPool) {
     obj._animOverrides.dashOffset = state.offset;
     if (spec.color) obj._animOverrides.borderColor = spec.color;
   },
 
-  cleanup(_state: MarchingAntsState, obj: BaseShape, _halos: HaloPool) {
+  cleanup(_state: MarchingAntsState, obj: BaseShape, _halos: AnimationHaloPool) {
     obj._animOverrides.dashOffset = 0;
     obj._animOverrides.borderColor = undefined;
   },

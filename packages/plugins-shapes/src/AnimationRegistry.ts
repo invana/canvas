@@ -3,7 +3,7 @@
 // to their handler objects.
 
 import type { BaseShape, AnimSlot } from './BaseShape.js';
-import type { HaloPool } from './HaloPool.js';
+import type { AnimationHaloPool } from './AnimationHaloPool.js';
 
 export type { AnimSlot };
 
@@ -34,7 +34,7 @@ export interface AnimationHandler<TSpec = Record<string, unknown>, TState = unkn
   /**
    * Create initial mutable state when this animation is started on a shape.
    */
-  init(spec: TSpec, shape: BaseShape, halos: HaloPool): TState;
+  init(spec: TSpec, shape: BaseShape, halos: AnimationHaloPool): TState;
 
   /**
    * Advance animation state by one frame.
@@ -50,12 +50,12 @@ export interface AnimationHandler<TSpec = Record<string, unknown>, TState = unkn
    * Apply the current state to the shape.
    * Should write only to {@link BaseShape._animOverrides}.
    */
-  apply(state: TState, spec: TSpec, shape: BaseShape, halos: HaloPool): void;
+  apply(state: TState, spec: TSpec, shape: BaseShape, halos: AnimationHaloPool): void;
 
   /**
    * Reset any display state touched by this animation back to defaults.
    */
-  cleanup?(state: TState, shape: BaseShape, halos: HaloPool): void;
+  cleanup?(state: TState, shape: BaseShape, halos: AnimationHaloPool): void;
 }
 
 /**

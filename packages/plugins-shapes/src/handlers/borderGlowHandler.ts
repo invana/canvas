@@ -2,7 +2,7 @@
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
 import type { BaseShape } from '../BaseShape.js';
-import type { HaloPool } from '../HaloPool.js';
+import type { AnimationHaloPool } from '../AnimationHaloPool.js';
 
 /** Options for the `borderGlow` animation. */
 export interface BorderGlowOptions {
@@ -26,7 +26,7 @@ interface BorderGlowState {
 export const borderGlowHandler: AnimationHandler<BorderGlowOptions, BorderGlowState> = {
   type: 'borderGlow',
 
-  init(_spec: BorderGlowOptions, _obj: BaseShape, _halos: HaloPool): BorderGlowState {
+  init(_spec: BorderGlowOptions, _obj: BaseShape, _halos: AnimationHaloPool): BorderGlowState {
     return { phase: 0, repeatCount: 0 };
   },
 
@@ -42,14 +42,14 @@ export const borderGlowHandler: AnimationHandler<BorderGlowOptions, BorderGlowSt
     return { dirty: true, stop: false };
   },
 
-  apply(state: BorderGlowState, spec: BorderGlowOptions, obj: BaseShape, _halos: HaloPool) {
+  apply(state: BorderGlowState, spec: BorderGlowOptions, obj: BaseShape, _halos: AnimationHaloPool) {
     const min = spec.minWidth ?? 1;
     const max = spec.maxWidth ?? 6;
     obj._animOverrides.borderWidth = min + (Math.sin(state.phase) * 0.5 + 0.5) * (max - min);
     if (spec.color) obj._animOverrides.borderColor = spec.color;
   },
 
-  cleanup(_state: BorderGlowState, obj: BaseShape, _halos: HaloPool) {
+  cleanup(_state: BorderGlowState, obj: BaseShape, _halos: AnimationHaloPool) {
     obj._animOverrides.borderWidth = undefined;
     obj._animOverrides.borderColor = undefined;
   },

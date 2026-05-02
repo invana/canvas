@@ -32,7 +32,11 @@ export class ShapeObject {
 
   private _g: Graphics;
   private _ctx: PixiDrawContext;
+  /** Underlay graphics for state-driven halos. Sits below `_g`. */
+  private _haloG: Graphics;
+  private _haloCtx: PixiDrawContext;
   private _dirty = true;
+  private _haloDirty = true;
   private _mounted = false;
   /** LOD level used during the last completed draw. `null` = never drawn. */
   private _lastDrawnLOD: LOD | null = null;
@@ -42,7 +46,10 @@ export class ShapeObject {
     this.element = element;
 
     this.container = new Container();
+    // Halo first so it sits underneath the body.
+    this._haloG    = new Graphics();
     this._g        = new Graphics();
+    this.container.addChild(this._haloG);
     this.container.addChild(this._g);
 
     if (element.spec.zIndex !== undefined) {
@@ -58,9 +65,11 @@ export class ShapeObject {
       this.container.cursor    = element.spec.cursor ?? 'pointer';
     }
 
-    this._ctx = new PixiDrawContext(this._g, this.container);
+    this._ctx     = new PixiDrawContext(this._g, this.container);
+    this._haloCtx = new PixiDrawContext(this._haloG, this.container);
 
-    element._onDirty = () => { this._dirty = true; };
+    element._onDirty     = () => { this._dirty = true; };
+    element._onHaloDirty = () => { this._haloDirty = true; };
 
     if ('_container' in element) {
       (element as BaseShape)._container = this.container;
@@ -70,15 +79,24 @@ export class ShapeObject {
   // ── Rendering ─────────────────────────────────────────────────────────────
 
   /**
-   * Redraw the element at the given detail level.
+   * Redraw the element (and its halo, if dirty) at the given detail level.
    */
   draw(detail: LOD): void {
-    if (!this._dirty && this._lastDrawnLOD === detail) return;
+    const bodyNeedsRedraw = this._dirty || this._lastDrawnLOD !== detail;
+    if (!bodyNeedsRedraw && !this._haloDirty) return;
 
-    this._ctx.reset();
-    this.element.draw(this._ctx, detail);
-    this._dirty = false;
-    this._lastDrawnLOD = detail;
+    if (this._haloDirty) {
+      this._haloCtx.reset();
+      this.element.drawHalo?.(this._haloCtx, detail);
+      this._haloDirty = false;
+    }
+
+    if (bodyNeedsRedraw) {
+      this._ctx.reset();
+      this.element.draw(this._ctx, detail);
+      this._dirty = false;
+      this._lastDrawnLOD = detail;
+    }
 
     if (!this._mounted) {
       this._mounted = true;
@@ -96,6 +114,7 @@ export class ShapeObject {
   /** Force a redraw on the next pass regardless of mutation tracking. */
   markDirty(): void {
     this._dirty = true;
+    this._haloDirty = true;
   }
 
   // ── Geometry ──────────────────────────────────────────────────────────────
@@ -120,7 +139,9 @@ export class ShapeObject {
    */
   destroy(): void {
     this._ctx.reset();
+    this._haloCtx.reset();
     this._g.destroy();
+    this._haloG.destroy();
     this.container.destroy({ children: true });
     this.element.onDestroy?.();
   }

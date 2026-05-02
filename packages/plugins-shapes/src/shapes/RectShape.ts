@@ -25,7 +25,7 @@ export type RectNodeSpec = RectShapeSpec;
  * `x`, `y` in the spec refer to the **top-left** corner of the rectangle.
  */
 export class RectShape extends BaseShape<RectShapeSpec> {
-  draw(ctx: DrawContext, detail: LOD): void {
+  drawBody(ctx: DrawContext, detail: LOD): void {
     const { x, y, width, height, cornerRadius = 0, label } = this.spec;
     const style = this.resolveStyle();
 
@@ -40,6 +40,20 @@ export class RectShape extends BaseShape<RectShapeSpec> {
     if (detail >= LOD.DETAIL && label) {
       ctx.drawLabel(label, x + width / 2, y + height / 2);
     }
+  }
+
+  drawHalo(ctx: DrawContext, detail: LOD): void {
+    if (detail === LOD.DOT || !this.isHaloActive()) return;
+    const halo = this.resolveHalo();
+    const pad = halo.offset + halo.width / 2;
+    const { x, y, width, height, cornerRadius = 0 } = this.spec;
+    ctx.fillRect(
+      x - pad,
+      y - pad,
+      width + pad * 2,
+      height + pad * 2,
+      { ...this.resolveHaloStyle(), cornerRadius: cornerRadius + pad },
+    );
   }
 
   getBBox(): BBox {

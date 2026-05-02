@@ -2,7 +2,7 @@
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
 import type { BaseShape } from '../BaseShape.js';
-import type { HaloPool } from '../HaloPool.js';
+import type { AnimationHaloPool } from '../AnimationHaloPool.js';
 
 /** Options for the `pulse` animation. */
 export interface PulseOptions {
@@ -24,7 +24,7 @@ interface PulseState {
 export const pulseHandler: AnimationHandler<PulseOptions, PulseState> = {
   type: 'pulse',
 
-  init(_spec: PulseOptions, obj: BaseShape, halos: HaloPool): PulseState {
+  init(_spec: PulseOptions, obj: BaseShape, halos: AnimationHaloPool): PulseState {
     halos.rentForPulse(obj);
     return { progress: 0, repeatCount: 0 };
   },
@@ -45,13 +45,13 @@ export const pulseHandler: AnimationHandler<PulseOptions, PulseState> = {
     return { dirty: false, stop: false };
   },
 
-  apply(state: PulseState, spec: PulseOptions, obj: BaseShape, halos: HaloPool) {
+  apply(state: PulseState, spec: PulseOptions, obj: BaseShape, halos: AnimationHaloPool) {
     const fillStyle = obj.spec.style?.fill;
     const color = spec.color ?? (typeof fillStyle === 'string' ? fillStyle : undefined) ?? '#ffffff';
     halos.redrawPulse(obj, state.progress, spec.maxRadius ?? 40, color);
   },
 
-  cleanup(_state: PulseState, obj: BaseShape, halos: HaloPool) {
+  cleanup(_state: PulseState, obj: BaseShape, halos: AnimationHaloPool) {
     halos.return(obj.spec.id);
   },
 };

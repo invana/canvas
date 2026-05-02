@@ -10,8 +10,26 @@
 import type { Container } from 'pixi.js';
 import type { DrawContext } from './DrawContext.js';
 import { LOD } from './LODController.js';
-import type { BaseShapeSpec, BBox, DrawStyle, NodePort, Point } from './spec/index.js';
+import type {
+  BadgePosition,
+  BadgeSpec,
+  BaseShapeSpec,
+  BBox,
+  DrawStyle,
+  HaloSpec,
+  NodePort,
+  Point,
+} from './spec/index.js';
 import { DEFAULT_NODE_STATES } from './defaultStates.js';
+
+/** Default halo style applied when `spec.halo` is partially or fully omitted. */
+const DEFAULT_HALO: Required<HaloSpec> = {
+  color: '#7c3aed',
+  width: 6,
+  offset: 2,
+  alpha: 0.35,
+  visibleStates: ['selected'],
+};
 
 /**
  * A per-element active animation slot.
@@ -73,6 +91,13 @@ export abstract class BaseShape<S extends BaseShapeSpec = BaseShapeSpec> {
   _onDirty?: () => void;
 
   /**
+   * Called by {@link ShapeObject} when the halo underlay needs a redraw.
+   * Set automatically — do not override.
+   * @internal
+   */
+  _onHaloDirty?: () => void;
+
+  /**
    * Reference to the owning `ShapeObject`'s PixiJS `Container`.
    * Set by {@link ShapeObject} constructor — do not set manually.
    * @internal
@@ -112,12 +137,42 @@ export abstract class BaseShape<S extends BaseShapeSpec = BaseShapeSpec> {
   // ── Abstract members ─────────────────────────────────────────────────────────
 
   /**
-   * Draw this shape using the provided {@link DrawContext}.
+   * Draw this shape's body (geometry + label) using the provided
+   * {@link DrawContext}. Subclasses implement only the silhouette + label;
+   * decorations (icons, badges) and halos are layered automatically by the
+   * non-abstract {@link draw} / {@link drawHalo} methods.
    *
-   * @param ctx    - Drawing context.  No PixiJS imports needed.
-   * @param detail - Current LOD level.  Typically only draw labels at `DETAIL`.
+   * @param ctx    - Drawing context. No PixiJS imports needed.
+   * @param detail - Current LOD level. Typically only draw labels at `DETAIL`.
    */
-  abstract draw(ctx: DrawContext, detail: LOD): void;
+  abstract drawBody(ctx: DrawContext, detail: LOD): void;
+
+  /**
+   * Stroke an outer halo silhouette into the halo underlay context.
+   *
+   * The default implementation draws a bounding-box-derived rounded rectangle
+   * — fine for arbitrary custom shapes. Built-in shapes override this with
+   * true outline-offset geometry so the halo hugs the silhouette (e.g. a
+   * Diamond's halo is a bigger Diamond, not a rounded square).
+   *
+   * Implementations should return early if {@link isHaloActive} is false.
+   *
+   * @param ctx    - Halo drawing context (separate `Graphics` from the body).
+   * @param detail - Current LOD level.
+   */
+  drawHalo(ctx: DrawContext, detail: LOD): void {
+    if (detail === LOD.DOT || !this.isHaloActive()) return;
+    const b = this.getBBox();
+    const halo = this.resolveHalo();
+    const pad = halo.offset + halo.width / 2;
+    ctx.fillRect(
+      b.minX - pad,
+      b.minY - pad,
+      (b.maxX - b.minX) + pad * 2,
+      (b.maxY - b.minY) + pad * 2,
+      { ...this.resolveHaloStyle(), cornerRadius: pad },
+    );
+  }
 
   /**
    * Axis-aligned bounding box for this shape.
@@ -217,6 +272,23 @@ export abstract class BaseShape<S extends BaseShapeSpec = BaseShapeSpec> {
   // ── Built-in methods ─────────────────────────────────────────────────────────
 
   /**
+   * Template method. Renders the shape body via {@link drawBody}, then layers
+   * the icon at the centre and badges around the bounding box. Subclasses
+   * should override `drawBody` rather than this method.
+   */
+  draw(ctx: DrawContext, detail: LOD): void {
+    this.drawBody(ctx, detail);
+    if (detail >= LOD.FILL_BORDER && this.spec.icon) {
+      const c = this.getCenter();
+      const fallback = Math.min(this.width, this.height) * 0.4;
+      ctx.drawIcon(c.x, c.y, this.spec.icon, fallback);
+    }
+    if (detail >= LOD.DETAIL && this.spec.badges?.length) {
+      this._drawBadges(ctx);
+    }
+  }
+
+  /**
    * Precise hit-test for a world-space pointer position.
    * Default implementation uses the bbox; override for non-rectangular shapes.
    */
@@ -239,6 +311,7 @@ export abstract class BaseShape<S extends BaseShapeSpec = BaseShapeSpec> {
     }
     this.onStateChange?.(state, active);
     this.markDirty();
+    if (this._isHaloVisibleState(state)) this._onHaloDirty?.();
   }
 
   /**
@@ -246,6 +319,86 @@ export abstract class BaseShape<S extends BaseShapeSpec = BaseShapeSpec> {
    */
   markDirty(): void {
     this._onDirty?.();
+  }
+
+  // ── Halo helpers ─────────────────────────────────────────────────────────────
+
+  /**
+   * Resolved halo settings (defaults merged with `spec.halo`).
+   * Concrete `drawHalo` implementations call this to get final colour, width,
+   * offset and alpha.
+   */
+  resolveHalo(): Required<HaloSpec> {
+    return { ...DEFAULT_HALO, ...(this.spec.halo ?? {}) };
+  }
+
+  /**
+   * `true` when at least one of the halo's `visibleStates` is currently active.
+   * Concrete `drawHalo` implementations use this to short-circuit early.
+   */
+  isHaloActive(): boolean {
+    const halo = this.resolveHalo();
+    if (halo.visibleStates.length === 0) return false;
+    for (const state of halo.visibleStates) {
+      if (this.activeStates.has(state)) return true;
+    }
+    return false;
+  }
+
+  /**
+   * The {@link DrawStyle} to pass to a stroke-only fill primitive when
+   * drawing the halo (transparent fill, halo color stroke at halo width).
+   */
+  resolveHaloStyle(): DrawStyle {
+    const halo = this.resolveHalo();
+    return {
+      fill: '#000000',
+      fillAlpha: 0,
+      stroke: halo.color,
+      strokeWidth: halo.width,
+      strokeAlpha: halo.alpha,
+    };
+  }
+
+  private _isHaloVisibleState(state: string): boolean {
+    const halo = this.resolveHalo();
+    return halo.visibleStates.includes(state);
+  }
+
+  // ── Decoration rendering ─────────────────────────────────────────────────────
+
+  /**
+   * Map a {@link BadgePosition} anchor to a world-space point on the shape's
+   * bounding box, offset outward by `offsetPx`.
+   */
+  protected _badgeAnchor(position: BadgePosition, offsetPx: number): Point {
+    const b = this.getBBox();
+    const cx = (b.minX + b.maxX) / 2;
+    const cy = (b.minY + b.maxY) / 2;
+    switch (position) {
+      case 'T':  return { x: cx,         y: b.minY - offsetPx };
+      case 'B':  return { x: cx,         y: b.maxY + offsetPx };
+      case 'L':  return { x: b.minX - offsetPx, y: cy };
+      case 'R':  return { x: b.maxX + offsetPx, y: cy };
+      case 'TL': return { x: b.minX - offsetPx, y: b.minY - offsetPx };
+      case 'TR': return { x: b.maxX + offsetPx, y: b.minY - offsetPx };
+      case 'BL': return { x: b.minX - offsetPx, y: b.maxY + offsetPx };
+      case 'BR': return { x: b.maxX + offsetPx, y: b.maxY + offsetPx };
+    }
+  }
+
+  private _drawBadges(ctx: DrawContext): void {
+    const badges = this.spec.badges;
+    if (!badges) return;
+    for (const badge of badges) {
+      this._drawBadge(ctx, badge);
+    }
+  }
+
+  private _drawBadge(ctx: DrawContext, badge: BadgeSpec): void {
+    const offset = badge.offset ?? 4;
+    const { x, y } = this._badgeAnchor(badge.position, offset);
+    ctx.drawBadge(x, y, badge);
   }
 
   /**

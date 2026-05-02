@@ -15,7 +15,7 @@ import { CameraTracker } from './CameraTracker.js';
 import { LODController, type LODThresholds } from './LODController.js';
 import { AnimationRegistry } from './AnimationRegistry.js';
 import type { AnimationHandler } from './AnimationRegistry.js';
-import { HaloPool } from './HaloPool.js';
+import { AnimationHaloPool } from './AnimationHaloPool.js';
 import { defaultRegistry } from './handlers/index.js';
 import type { ElementAnimations } from './spec/animations.js';
 import {
@@ -146,7 +146,7 @@ export class ShapesPlugin implements CanvasPlugin {
   private _animSet = new Set<string>();
   private _boundTick: ((t: Ticker) => void) | null = null;
   private _animRegistry: AnimationRegistry;
-  private _halos!: HaloPool;
+  private _halos!: AnimationHaloPool;
 
   private _lastHoverId:    string | null = null;
   private _dragState: { id: string; lastX: number; lastY: number; grabOffsetX: number; grabOffsetY: number } | null = null;
@@ -210,7 +210,7 @@ export class ShapesPlugin implements CanvasPlugin {
     const connectorLayer = ctx.createLayer({ id: `${this.id}-connectors`, zIndex: this._zIndex,     label: 'Connectors' });
     const shapeLayer     = ctx.createLayer({ id: `${this.id}-shapes`,     zIndex: this._zIndex + 1, label: 'Shapes' });
     const haloLayer      = ctx.createLayer({ id: `${this.id}-halos`,      zIndex: this._zIndex + 2, label: 'Halos' });
-    this._halos = new HaloPool(haloLayer);
+    this._halos = new AnimationHaloPool(haloLayer);
 
     this._shapePool      = new ShapePool();
     this._connectorPool  = new ShapePool();

@@ -3,7 +3,7 @@
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
 import type { BaseShape } from '../BaseShape.js';
-import type { HaloPool } from '../HaloPool.js';
+import type { AnimationHaloPool } from '../AnimationHaloPool.js';
 
 /** Options for the `breathe` animation. */
 export interface BreatheOptions {
@@ -23,7 +23,7 @@ interface BreatheState {
 export const breatheHandler: AnimationHandler<BreatheOptions, BreatheState> = {
   type: 'breathe',
 
-  init(_spec: BreatheOptions, _obj: BaseShape, _halos: HaloPool): BreatheState {
+  init(_spec: BreatheOptions, _obj: BaseShape, _halos: AnimationHaloPool): BreatheState {
     return { phase: 0, repeatCount: 0 };
   },
 
@@ -39,11 +39,11 @@ export const breatheHandler: AnimationHandler<BreatheOptions, BreatheState> = {
     return { dirty: true, stop: false };
   },
 
-  apply(state: BreatheState, spec: BreatheOptions, obj: BaseShape, _halos: HaloPool) {
+  apply(state: BreatheState, spec: BreatheOptions, obj: BaseShape, _halos: AnimationHaloPool) {
     obj._animOverrides.scale = 1 + Math.sin(state.phase) * (spec.amplitude ?? 0.1);
   },
 
-  cleanup(_state: BreatheState, obj: BaseShape, _halos: HaloPool) {
+  cleanup(_state: BreatheState, obj: BaseShape, _halos: AnimationHaloPool) {
     obj._animOverrides.scale = 1;
   },
 };

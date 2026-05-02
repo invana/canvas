@@ -8,12 +8,22 @@ import type {
   BaseConnectorSpec,
   ArrowSpec,
   BBox,
+  HaloSpec,
   PathCommand,
   PathStyle,
   Point,
   RouterFn,
 } from './spec/index.js';
 import { DEFAULT_EDGE_STATES } from './defaultStates.js';
+
+/** Default halo style applied when `spec.halo` is partially or fully omitted. */
+const DEFAULT_HALO: Required<HaloSpec> = {
+  color: '#7c3aed',
+  width: 6,
+  offset: 2,
+  alpha: 0.35,
+  visibleStates: ['selected'],
+};
 
 /**
  * Abstract base class for all connector (path/routing) elements managed by
@@ -81,6 +91,13 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
    * @internal
    */
   _onDirty?: () => void;
+
+  /**
+   * Called by {@link ShapeObject} when the halo underlay needs a redraw.
+   * Set automatically — do not override.
+   * @internal
+   */
+  _onHaloDirty?: () => void;
 
   constructor(spec: S) {
     this.spec = spec;
@@ -272,6 +289,7 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
     else this.activeStates.delete(state);
     this.onStateChange?.(state, active);
     this.markDirty();
+    if (this._isHaloVisibleState(state)) this._onHaloDirty?.();
   }
 
   markDirty(): void {
@@ -289,6 +307,53 @@ export abstract class BaseConnector<S extends BaseConnectorSpec = BaseConnectorS
       if (override) style = { ...style, ...override };
     }
     return style;
+  }
+
+  // ── Halo ────────────────────────────────────────────────────────────────────
+
+  /** Resolved halo settings (defaults merged with `spec.halo`). */
+  resolveHalo(): Required<HaloSpec> {
+    return { ...DEFAULT_HALO, ...(this.spec.halo ?? {}) };
+  }
+
+  /** `true` when at least one of the halo's `visibleStates` is currently active. */
+  isHaloActive(): boolean {
+    const halo = this.resolveHalo();
+    if (halo.visibleStates.length === 0) return false;
+    for (const state of halo.visibleStates) {
+      if (this.activeStates.has(state)) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Stroke the routed path into the halo underlay context. Drawn beneath the
+   * connector body so the visible band of halo equals
+   * `halo.offset + halo.width` on each side.
+   */
+  drawHalo(ctx: DrawContext, detail: LOD): void {
+    if (detail === LOD.DOT || !this.isHaloActive()) return;
+
+    const wps = this.spec.vertices ?? this.spec.waypoints ?? [];
+    const route = this._cachedRoute ?? this.route(this.spec.from, this.spec.to, wps);
+    this._cachedRoute = route;
+
+    const bodyStroke = this.resolveStyle();
+    const bodyWidth  = bodyStroke.strokeWidth ?? 1;
+    const halo = this.resolveHalo();
+
+    ctx.strokePath(route, {
+      stroke: halo.color,
+      strokeWidth: bodyWidth + 2 * (halo.offset + halo.width),
+      strokeAlpha: halo.alpha,
+      strokeCap: 'round',
+      strokeJoin: 'round',
+    });
+  }
+
+  private _isHaloVisibleState(state: string): boolean {
+    const halo = this.resolveHalo();
+    return halo.visibleStates.includes(state);
   }
 
   // ── Optional lifecycle hooks ──────────────────────────────────────────────────

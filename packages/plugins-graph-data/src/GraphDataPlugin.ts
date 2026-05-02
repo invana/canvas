@@ -165,6 +165,7 @@ export class GraphDataPlugin implements CanvasPlugin {
     this._nodeStore.set(node.id, node);
     const shape = node.shape ?? 'circle';
     this._elements.addShape(shape, this._buildNodeSpec(node));
+    this._seedInitialStates(node.id, node.states);
   }
 
   /** Merge partial update into an existing node. */
@@ -222,6 +223,7 @@ export class GraphDataPlugin implements CanvasPlugin {
     this._edgeStore.set(edge.id, edge);
     const pathType = edge.pathType ?? 'bezier';
     this._elements.addConnector(pathType, this._buildEdgeSpec(edge));
+    this._seedInitialStates(edge.id, edge.states);
   }
 
   /** Merge partial update into an existing edge. */
@@ -409,11 +411,19 @@ export class GraphDataPlugin implements CanvasPlugin {
     for (const node of this._nodeStore.values()) {
       const shape: string = node.shape ?? 'circle';
       this._elements.addShape(shape, this._buildNodeSpec(node));
+      this._seedInitialStates(node.id, node.states);
     }
     for (const edge of this._edgeStore.values()) {
       const pathType: EdgePathType = edge.pathType ?? 'bezier';
       this._elements.addConnector(pathType, this._buildEdgeSpec(edge));
+      this._seedInitialStates(edge.id, edge.states);
     }
+  }
+
+  /** Activate each name in `states` on a freshly added element. */
+  private _seedInitialStates(id: string, states: string[] | undefined): void {
+    if (!states?.length) return;
+    for (const state of states) this._elements.setState(id, state, true);
   }
 
   // ── Low-level spec API ────────────────────────────────────────────────────
@@ -527,15 +537,20 @@ export class GraphDataPlugin implements CanvasPlugin {
     const opacity = typeof ns.opacity === 'function' ? ns.opacity(node) : (ns.opacity ?? node.opacity);
     const nodeDataStyle = (node.style as Record<string, unknown> | undefined) ?? {};
 
+    // `node.states` is `string[]` (initial active states) — seeded via setState
+    // after addShape. Strip it from the spread so it can't collide with
+    // BaseShapeSpec.states (Record<string, DrawStyle> — per-state style overrides).
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { states: _initialStates, ...nodeRest } = node;
+
     return {
-      ...node,           // custom geometry fields (radius, width, height, …) pass through
+      ...nodeRest,       // custom geometry fields (radius, width, height, …) pass through
       id:          node.id,
       x:           node.x ?? 0,
       y:           node.y ?? 0,
       label:       node.label,
       interactive: node.interactive ?? true,
       draggable:   node.draggable   ?? true,
-      states:      node.states,
       zIndex:      node.zIndex,
       cursor:      node.cursor,
       opacity:     opacity as number | undefined,
@@ -575,7 +590,6 @@ export class GraphDataPlugin implements CanvasPlugin {
       label:       edge.label,
       interactive: edge.interactive ?? false,
       draggable:   edge.draggable   ?? false,
-      states:      edge.states,
       zIndex:      edge.zIndex,
       cursor:      edge.cursor,
       opacity:     opacity as number | undefined,
@@ -588,6 +602,7 @@ export class GraphDataPlugin implements CanvasPlugin {
       ...(edge.targetPortId      !== undefined ? { targetPortId:      edge.targetPortId }      : {}),
       ...(edge.startMarker   !== undefined ? { startMarker:  edge.startMarker }   : {}),
       ...(edge.endMarker     !== undefined ? { endMarker:    edge.endMarker }     : {}),
+      ...(edge.halo          !== undefined ? { halo:         edge.halo }          : {}),
       ...(edge.placement        !== undefined ? { placement:        edge.placement        } : {}),
       ...(edge.loopSpreadAngle  !== undefined ? { loopSpreadAngle:  edge.loopSpreadAngle  } : {}),
       ...(edge.loopSize    !== undefined ? { loopSize:    edge.loopSize    } : {}),

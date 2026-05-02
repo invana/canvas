@@ -2,7 +2,7 @@
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
 import type { BaseShape } from '../BaseShape.js';
-import type { HaloPool } from '../HaloPool.js';
+import type { AnimationHaloPool } from '../AnimationHaloPool.js';
 
 /** Options for the `colorCycle` animation. */
 export interface ColorCycleOptions {
@@ -22,7 +22,7 @@ interface ColorCycleState {
 export const colorCycleHandler: AnimationHandler<ColorCycleOptions, ColorCycleState> = {
   type: 'colorCycle',
 
-  init(_spec: ColorCycleOptions, _obj: BaseShape, _halos: HaloPool): ColorCycleState {
+  init(_spec: ColorCycleOptions, _obj: BaseShape, _halos: AnimationHaloPool): ColorCycleState {
     return { phase: 0, repeatCount: 0 };
   },
 
@@ -39,7 +39,7 @@ export const colorCycleHandler: AnimationHandler<ColorCycleOptions, ColorCycleSt
     return { dirty: true, stop: false };
   },
 
-  apply(state: ColorCycleState, spec: ColorCycleOptions, obj: BaseShape, _halos: HaloPool) {
+  apply(state: ColorCycleState, spec: ColorCycleOptions, obj: BaseShape, _halos: AnimationHaloPool) {
     const colors = spec.colors;
     if (colors.length > 0) {
       const idx = Math.floor(state.phase) % colors.length;
@@ -47,7 +47,7 @@ export const colorCycleHandler: AnimationHandler<ColorCycleOptions, ColorCycleSt
     }
   },
 
-  cleanup(_state: ColorCycleState, obj: BaseShape, _halos: HaloPool) {
+  cleanup(_state: ColorCycleState, obj: BaseShape, _halos: AnimationHaloPool) {
     obj._animOverrides.colorOverride = undefined;
   },
 };

@@ -23,7 +23,7 @@ export type EllipseNodeSpec = EllipseShapeSpec;
  * `x`, `y` in the spec refer to the **centre** of the ellipse.
  */
 export class EllipseShape extends BaseShape<EllipseShapeSpec> {
-  draw(ctx: DrawContext, detail: LOD): void {
+  drawBody(ctx: DrawContext, detail: LOD): void {
     const { x, y, radiusX, radiusY, label } = this.spec;
     const style = this.resolveStyle();
 
@@ -37,6 +37,14 @@ export class EllipseShape extends BaseShape<EllipseShapeSpec> {
     if (detail >= LOD.DETAIL && label) {
       ctx.drawLabel(label, x, y);
     }
+  }
+
+  drawHalo(ctx: DrawContext, detail: LOD): void {
+    if (detail === LOD.DOT || !this.isHaloActive()) return;
+    const { x, y, radiusX, radiusY } = this.spec;
+    const halo = this.resolveHalo();
+    const pad = halo.offset + halo.width / 2;
+    ctx.fillEllipse(x, y, radiusX + pad, radiusY + pad, this.resolveHaloStyle());
   }
 
   getBBox(): BBox {

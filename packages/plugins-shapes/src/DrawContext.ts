@@ -29,11 +29,34 @@ import {
   drawCirclePlusArrow,
 } from '@invana/canvas';
 import type { DrawStyle, PathStyle } from '@invana/canvas';
-import type { GraphicsDrawContext as DrawContext, GraphicsPathCommand as PathCommand } from '@invana/canvas';
-import type { Point } from './spec/index.js';
+import type { GraphicsDrawContext, GraphicsPathCommand as PathCommand } from '@invana/canvas';
+import type { BadgeSpec, IconSpec, Point } from './spec/index.js';
 
-// Re-export so shape files can keep their existing import path.
-export type { DrawContext };
+/**
+ * Drawing surface passed to every shape and connector's `drawBody` / `drawHalo`.
+ *
+ * Extends the engine-level {@link GraphicsDrawContext} with shape-decoration
+ * primitives (icons + badges) that are specific to `plugins-shapes`.
+ */
+export interface DrawContext extends GraphicsDrawContext {
+  /**
+   * Draw an icon at (x, y), centred. Supports font codepoints, unicode/emoji,
+   * or inline SVG path data (24×24 viewBox assumed for SVG).
+   *
+   * @param x            - World-space x of the icon centre.
+   * @param y            - World-space y of the icon centre.
+   * @param icon         - Icon source.
+   * @param fallbackSize - Used when `icon.size` is omitted.
+   */
+  drawIcon(x: number, y: number, icon: IconSpec, fallbackSize?: number): void;
+
+  /**
+   * Draw a badge centred at (cx, cy). Background shape (`pill` / `circle` /
+   * `rect`) is drawn first, then text and/or inner icon are layered on top.
+   * Width is estimated heuristically from `text.length * fontSize * 0.6`.
+   */
+  drawBadge(cx: number, cy: number, badge: BadgeSpec): void;
+}
 
 // ── PixiJS-backed implementation ──────────────────────────────────────────────
 
@@ -53,6 +76,9 @@ export class PixiDrawContext implements DrawContext {
   private _container: Container;
   private _texts: Text[] = [];
   private _textIdx = 0;
+  /** Pool of `Graphics` children used to render SVG-source icons. */
+  private _svgIcons: Graphics[] = [];
+  private _svgIconIdx = 0;
 
   constructor(g: Graphics, container: Container) {
     this._g = g;
@@ -63,6 +89,11 @@ export class PixiDrawContext implements DrawContext {
     this._g.clear();
     for (const t of this._texts) t.visible = false;
     this._textIdx = 0;
+    for (const g of this._svgIcons) {
+      g.visible = false;
+      g.clear();
+    }
+    this._svgIconIdx = 0;
   }
 
   fillCircle(cx: number, cy: number, r: number, style: DrawStyle): void {
@@ -223,5 +254,95 @@ export class PixiDrawContext implements DrawContext {
     }
     t.position.set(x, y);
     this._textIdx++;
+  }
+
+  drawIcon(x: number, y: number, icon: IconSpec, fallbackSize?: number): void {
+    const size = icon.size ?? fallbackSize ?? 16;
+    const color = icon.color ?? '#ffffff';
+
+    if (icon.type === 'svg') {
+      this._drawSvgIcon(x, y, icon.value, size, color);
+      return;
+    }
+
+    // 'font' and 'unicode' both render as a single-glyph Text.
+    this.drawLabel(icon.value, x, y, {
+      fontSize: size,
+      fill: color,
+      fontFamily: icon.fontFamily ?? 'sans-serif',
+      fontWeight: icon.fontWeight,
+    });
+  }
+
+  /**
+   * Render an SVG icon. Two input shapes are accepted via `IconSpec.value`:
+   *
+   * 1. **Full SVG markup** (starts with `<svg`) — used as-is. Required for
+   *    stroke-based icon sets like Lucide whose icons are
+   *    `<path stroke="..." fill="none" />` rather than filled paths.
+   * 2. **Path 'd' string** — wrapped in a 24×24 viewBox with
+   *    `fill="${color}"` so single-path filled icons (Material Symbols paths,
+   *    FontAwesome SVG paths) still work with minimal user effort.
+   *
+   * The result is rendered into a pooled child `Graphics`, then translated
+   * and scaled so the SVG's 24-unit canvas fits a `size`-px square centred
+   * at (x, y).
+   */
+  private _drawSvgIcon(x: number, y: number, value: string, size: number, color: string): void {
+    let g: Graphics;
+    if (this._svgIconIdx < this._svgIcons.length) {
+      g = this._svgIcons[this._svgIconIdx]!;
+      g.visible = true;
+    } else {
+      g = new Graphics();
+      this._container.addChild(g);
+      this._svgIcons.push(g);
+    }
+    this._svgIconIdx++;
+
+    const svg = value.trimStart().startsWith('<svg')
+      ? value
+      : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path d="${value}" fill="${color}"/></svg>`;
+    g.svg(svg);
+    const s = size / 24;
+    g.scale.set(s, s);
+    g.position.set(x - size / 2, y - size / 2);
+  }
+
+  drawBadge(cx: number, cy: number, badge: BadgeSpec): void {
+    const fontSize    = badge.fontSize    ?? 10;
+    const paddingX    = badge.paddingX    ?? 6;
+    const paddingY    = badge.paddingY    ?? 3;
+    const fill        = badge.fill        ?? '#1f2937';
+    const stroke      = badge.stroke;
+    const strokeWidth = badge.strokeWidth ?? 0;
+    const textColor   = badge.textColor   ?? '#ffffff';
+    const shape       = badge.shape       ?? 'pill';
+    const text        = badge.text        ?? '';
+
+    // Heuristic width estimate (sans-serif averages ~0.6 × fontSize per char).
+    const estTextW = text.length * fontSize * 0.6;
+    const estTextH = fontSize;
+
+    const bgStyle: DrawStyle & { cornerRadius?: number } = {
+      fill,
+      ...(stroke ? { stroke, strokeWidth } : {}),
+    };
+
+    if (shape === 'circle') {
+      const r = Math.max(estTextW, estTextH) / 2 + Math.max(paddingX, paddingY);
+      this.fillCircle(cx, cy, r, bgStyle);
+    } else {
+      const w = estTextW + paddingX * 2;
+      const h = estTextH + paddingY * 2;
+      const cornerRadius = shape === 'pill' ? h / 2 : 3;
+      this.fillRect(cx - w / 2, cy - h / 2, w, h, { ...bgStyle, cornerRadius });
+    }
+
+    if (badge.icon) {
+      this.drawIcon(cx, cy, badge.icon, fontSize);
+    } else if (text) {
+      this.drawLabel(text, cx, cy, { fontSize, fill: textColor });
+    }
   }
 }

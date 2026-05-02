@@ -2,7 +2,7 @@
 
 import type { AnimationHandler } from '../AnimationRegistry.js';
 import type { BaseShape } from '../BaseShape.js';
-import type { HaloPool } from '../HaloPool.js';
+import type { AnimationHaloPool } from '../AnimationHaloPool.js';
 
 /** Options for the `dashedFlow` animation. */
 export interface DashedFlowOptions {
@@ -26,7 +26,7 @@ const CYCLE_SIZE = 360;
 export const dashedFlowHandler: AnimationHandler<DashedFlowOptions, DashedFlowState> = {
   type: 'dashedFlow',
 
-  init(_spec: DashedFlowOptions, _obj: BaseShape, _halos: HaloPool): DashedFlowState {
+  init(_spec: DashedFlowOptions, _obj: BaseShape, _halos: AnimationHaloPool): DashedFlowState {
     return { offset: 0, repeatCount: 0 };
   },
 
@@ -43,12 +43,12 @@ export const dashedFlowHandler: AnimationHandler<DashedFlowOptions, DashedFlowSt
     return { dirty: true, stop: false };
   },
 
-  apply(state: DashedFlowState, spec: DashedFlowOptions, obj: BaseShape, _halos: HaloPool) {
+  apply(state: DashedFlowState, spec: DashedFlowOptions, obj: BaseShape, _halos: AnimationHaloPool) {
     obj._animOverrides.dashOffset = state.offset;
     if (spec.color) obj._animOverrides.borderColor = spec.color;
   },
 
-  cleanup(_state: DashedFlowState, obj: BaseShape, _halos: HaloPool) {
+  cleanup(_state: DashedFlowState, obj: BaseShape, _halos: AnimationHaloPool) {
     obj._animOverrides.dashOffset = 0;
     obj._animOverrides.borderColor = undefined;
   },

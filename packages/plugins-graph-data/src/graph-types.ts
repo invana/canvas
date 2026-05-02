@@ -1,6 +1,13 @@
 // ── GraphDataPlugin types ──────────────────────────────────────────────────────
 
-import type { BaseEdgeSpec, DrawStyle, Point } from '@invana/plugins-shapes';
+import type {
+  BadgeSpec,
+  BaseEdgeSpec,
+  DrawStyle,
+  HaloSpec,
+  IconSpec,
+  Point,
+} from '@invana/plugins-shapes';
 
 // ── Node / Edge data ──────────────────────────────────────────────────────────
 
@@ -63,6 +70,12 @@ export interface INodeData {
   opacity?: number;
   /** Arbitrary extra data, available in events via `event.data`. */
   data?: Record<string, unknown>;
+  /** Optional centred icon (font / unicode / svg). */
+  icon?: IconSpec;
+  /** Optional decorative chips anchored to the bounding box. */
+  badges?: BadgeSpec[];
+  /** Optional state-driven outer halo (defaults visible on `selected`). */
+  halo?: HaloSpec;
   /** Custom geometry fields forwarded as-is to the shape spec (e.g. radius, width, height). */
   [key: string]: unknown;
 }
@@ -163,6 +176,8 @@ export interface IEdgeData {
   loopSpacing?: number;
   /** Arbitrary extra data. */
   data?: Record<string, unknown>;
+  /** Optional state-driven halo (defaults visible on `selected`). */
+  halo?: HaloSpec;
   /** Custom fields forwarded as-is to the connector spec (e.g. per-edge style). */
   [key: string]: unknown;
 }

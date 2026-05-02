@@ -32,7 +32,7 @@ export type CircleNodeSpec = CircleShapeSpec;
  * ```
  */
 export class CircleShape extends BaseShape<CircleShapeSpec> {
-  draw(ctx: DrawContext, detail: LOD): void {
+  drawBody(ctx: DrawContext, detail: LOD): void {
     const { x, y, radius, label } = this.spec;
     const style = this.resolveStyle();
 
@@ -46,6 +46,13 @@ export class CircleShape extends BaseShape<CircleShapeSpec> {
     if (detail >= LOD.DETAIL && label) {
       ctx.drawLabel(label, x, y);
     }
+  }
+
+  drawHalo(ctx: DrawContext, detail: LOD): void {
+    if (detail === LOD.DOT || !this.isHaloActive()) return;
+    const { x, y, radius } = this.spec;
+    const halo = this.resolveHalo();
+    ctx.fillCircle(x, y, radius + halo.offset + halo.width / 2, this.resolveHaloStyle());
   }
 
   getBBox(): BBox {

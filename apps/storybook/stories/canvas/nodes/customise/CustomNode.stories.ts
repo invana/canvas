@@ -40,7 +40,7 @@ interface CloudNodeSpec extends BaseShapeSpec {
 }
 
 class CloudNode extends BaseNode<CloudNodeSpec> {
-  draw(ctx: DrawContext, detail: LOD): void {
+  drawBody(ctx: DrawContext, detail: LOD): void {
     const { x, y, radius: r, label } = this.spec;
     const s = this.resolveStyle();
     // Setting stroke = fill erases the seam lines where overlapping shapes meet,
@@ -85,7 +85,7 @@ interface ServerNodeSpec extends BaseShapeSpec {
 }
 
 class ServerNode extends BaseNode<ServerNodeSpec> {
-  draw(ctx: DrawContext, detail: LOD): void {
+  drawBody(ctx: DrawContext, detail: LOD): void {
     const { x, y, width: w, height: h, label } = this.spec;
     const s = this.resolveStyle();
 
@@ -139,7 +139,7 @@ interface DatabaseNodeSpec extends BaseShapeSpec {
 }
 
 class DatabaseNode extends BaseNode<DatabaseNodeSpec> {
-  draw(ctx: DrawContext, detail: LOD): void {
+  drawBody(ctx: DrawContext, detail: LOD): void {
     const { x, y, width: w, height: h, label } = this.spec;
     const s     = this.resolveStyle();
     const rx    = w / 2;
