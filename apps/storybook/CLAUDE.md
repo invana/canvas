@@ -7,7 +7,7 @@ Storybook for the new architecture. Rebuilt fresh as part of the architecture re
 ## Conventions
 
 - Stories live under `stories/<area>/...` mirroring the new structure proposed in the inventory:
-  - `stories/Renderer/ShapesRenderer/...`  ← primitive renderer demos
+  - `stories/Renderer/...`  ← primitive renderer demos
   - `stories/Layers/...`                  ← `BackgroundLayer`, `MiniMapLayer`, `ThemedBackgroundLayer`, `DevInfoLayer`
   - `stories/Behaviours/...`              ← `HoverActivate`, `ClickSelect`, `LassoSelect`, etc.
   - `stories/Layouts/...`                 ← `D3ForceLayout`, `ElkLayout`
