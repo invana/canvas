@@ -8,9 +8,9 @@ import { describe, expect, it } from 'vitest';
 import { Camera } from '../../../src/camera/Camera';
 import { CanvasEventBus } from '../../../src/events/CanvasEventBus';
 import { SubLayer } from '../../../src/lifecycle/SubLayer';
-import { ShapesRenderer } from '../../../src/renderers/shapes/ShapesRenderer';
-import type { CircleShapeSpec } from '../../../src/renderers/shapes/shapes/CircleShape';
-import type { TextShapeSpec } from '../../../src/renderers/shapes/shapes/TextShape';
+import { ShapesRenderer } from '../../../src/renderers/ShapesRenderer';
+import type { CircleShapeSpec } from '../../../src/renderers/CircleShape';
+import type { TextShapeSpec } from '../../../src/renderers/TextShape';
 import { makeTestScene } from '../../_helpers/makeWorld';
 
 function makeRenderer() {

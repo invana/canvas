@@ -110,8 +110,8 @@ export type {
 // Mirror of the `@invana/canvas/renderers/shapes` subpath export. The
 // renderer ships under both the kernel barrel (for convenience) and the
 // dedicated subpath (for tree-shaking / discoverability).
-export { ShapesRenderer } from './renderers/shapes/ShapesRenderer';
-export type { ShapesRendererOptions } from './renderers/shapes/ShapesRenderer';
+export { ShapesRenderer } from './renderers/ShapesRenderer';
+export type { ShapesRendererOptions } from './renderers/ShapesRenderer';
 export type {
   Point as ShapesPoint,
   Vec2,
@@ -142,4 +142,4 @@ export type {
   HitResult,
   ShapesRendererEventMap,
   RenderStats,
-} from './renderers/shapes/types';
+} from './renderers/types';

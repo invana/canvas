@@ -8,7 +8,7 @@
  */
 
 import { Container, Graphics } from 'pixi.js';
-import type { BaseConnectorSpec, IConnector, Point, ConnectorHostInfo } from '../types';
+import type { BaseConnectorSpec, IConnector, Point, ConnectorHostInfo } from '../shapes_/types';
 
 export interface LineConnectorSpec extends BaseConnectorSpec {
   readonly kind: 'line';

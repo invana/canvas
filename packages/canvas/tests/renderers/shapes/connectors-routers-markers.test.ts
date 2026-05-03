@@ -9,12 +9,12 @@ import { describe, expect, it } from 'vitest';
 import { Camera } from '../../../src/camera/Camera';
 import { CanvasEventBus } from '../../../src/events/CanvasEventBus';
 import { SubLayer } from '../../../src/lifecycle/SubLayer';
-import { ShapesRenderer } from '../../../src/renderers/shapes/ShapesRenderer';
-import type { LineConnectorSpec } from '../../../src/renderers/shapes/connectors/LineConnector';
-import type { CurveConnectorSpec } from '../../../src/renderers/shapes/connectors/CurveConnector';
-import { straightRouter } from '../../../src/renderers/shapes/routers/straight';
-import { orthogonalRouter } from '../../../src/renderers/shapes/routers/orthogonal';
-import { bezierRouter } from '../../../src/renderers/shapes/routers/bezier';
+import { ShapesRenderer } from '../../../src/renderers/ShapesRenderer';
+import type { LineConnectorSpec } from '../../../src/renderers/connectors/LineConnector';
+import type { CurveConnectorSpec } from '../../../src/renderers/connectors/CurveConnector';
+import { straightRouter } from '../../../src/renderers/routers/straight';
+import { orthogonalRouter } from '../../../src/renderers/routers/orthogonal';
+import { bezierRouter } from '../../../src/renderers/routers/bezier';
 import { makeTestScene } from '../../_helpers/makeWorld';
 
 function makeRenderer() {

@@ -12,7 +12,7 @@
  */
 
 import type { Container } from 'pixi.js';
-import type { EventMap } from '../../events/EventEmitter';
+import type { EventMap } from '../events/EventEmitter';
 
 // ─── Geometry primitives ───────────────────────────────────────────────────
 

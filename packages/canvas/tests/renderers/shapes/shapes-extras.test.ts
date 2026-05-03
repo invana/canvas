@@ -13,15 +13,15 @@ import { describe, expect, it } from 'vitest';
 import { Camera } from '../../../src/camera/Camera';
 import { CanvasEventBus } from '../../../src/events/CanvasEventBus';
 import { SubLayer } from '../../../src/lifecycle/SubLayer';
-import { ShapesRenderer } from '../../../src/renderers/shapes/ShapesRenderer';
-import type { EllipseShapeSpec } from '../../../src/renderers/shapes/shapes/EllipseShape';
-import type { PolygonShapeSpec } from '../../../src/renderers/shapes/shapes/PolygonShape';
+import { ShapesRenderer } from '../../../src/renderers/ShapesRenderer';
+import type { EllipseShapeSpec } from '../../../src/renderers/EllipseShape';
+import type { PolygonShapeSpec } from '../../../src/renderers/PolygonShape';
 import type {
   PathCommand,
   PathShapeSpec,
-} from '../../../src/renderers/shapes/shapes/PathShape';
-import type { ImageShapeSpec } from '../../../src/renderers/shapes/shapes/ImageShape';
-import type { TextShapeSpec } from '../../../src/renderers/shapes/shapes/TextShape';
+} from '../../../src/renderers/PathShape';
+import type { ImageShapeSpec } from '../../../src/renderers/ImageShape';
+import type { TextShapeSpec } from '../../../src/renderers/TextShape';
 import { makeTestScene } from '../../_helpers/makeWorld';
 
 function makeRenderer() {

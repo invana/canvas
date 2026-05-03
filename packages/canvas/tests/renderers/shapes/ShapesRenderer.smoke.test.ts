@@ -13,7 +13,7 @@ import { describe, expect, it } from 'vitest';
 import { Camera } from '../../../src/camera/Camera';
 import { CanvasEventBus } from '../../../src/events/CanvasEventBus';
 import { SubLayer } from '../../../src/lifecycle/SubLayer';
-import { ShapesRenderer } from '../../../src/renderers/shapes/ShapesRenderer';
+import { ShapesRenderer } from '../../../src/renderers/ShapesRenderer';
 import { makeTestScene } from '../../_helpers/makeWorld';
 import type {
   BaseConnectorSpec,
@@ -25,7 +25,7 @@ import type {
   Point,
   Rect,
   ShapeHostInfo,
-} from '../../../src/renderers/shapes/types';
+} from '../../../src/renderers/types';
 
 // ─── Minimal in-test fakes ─────────────────────────────────────────────────
 

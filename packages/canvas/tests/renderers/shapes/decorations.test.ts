@@ -9,10 +9,10 @@ import { describe, expect, it } from 'vitest';
 import { Camera } from '../../../src/camera/Camera';
 import { CanvasEventBus } from '../../../src/events/CanvasEventBus';
 import { SubLayer } from '../../../src/lifecycle/SubLayer';
-import { ShapesRenderer } from '../../../src/renderers/shapes/ShapesRenderer';
-import type { CircleShapeSpec } from '../../../src/renderers/shapes/shapes/CircleShape';
-import type { RectShapeSpec } from '../../../src/renderers/shapes/shapes/RectShape';
-import type { LineConnectorSpec } from '../../../src/renderers/shapes/connectors/LineConnector';
+import { ShapesRenderer } from '../../../src/renderers/ShapesRenderer';
+import type { CircleShapeSpec } from '../../../src/renderers/CircleShape';
+import type { RectShapeSpec } from '../../../src/renderers/RectShape';
+import type { LineConnectorSpec } from '../../../src/renderers/connectors/LineConnector';
 import { makeTestScene } from '../../_helpers/makeWorld';
 
 function makeRenderer() {
@@ -44,7 +44,7 @@ function addCircle(renderer: ShapesRenderer, id: string) {
 }
 
 // Convenient introspection — augment the shape gfx accessor on the test side.
-declare module '../../../src/renderers/shapes/ShapesRenderer' {
+declare module '../../../src/renderers/ShapesRenderer' {
   interface ShapesRenderer {
     shapeGfxFor(id: string): Container;
   }

@@ -24,7 +24,7 @@ The engine. Implements the Layer / Behaviour / Layout / Renderer architecture de
 
 ### Why decoration rendering logic lives here, not in domain packages
 
-A halo, a border, a marching-ants animation, a pulse ring — none of these are graph-specific. They're generic 2D visuals that ER diagrams, flowcharts, swimlanes, and graph all want, identically. So the rendering logic lives in `@invana/canvas/renderers/shapes/decorations/` and ships once. Domain packages add **named sugar methods** (`graphLayer.haloNode(id)`, `erLayer.haloTable(id)`) that mutate state and are projected to the same generic `renderer.setDecoration(id, 'halo', ...)` call. One implementation, many domain wrappers.
+A halo, a border, a marching-ants animation, a pulse ring — none of these are graph-specific. They're generic 2D visuals that ER diagrams, flowcharts, swimlanes, and graph all want, identically. So the rendering logic lives in `@invana/canvas/renderers/decorations/` and ships once. Domain packages add **named sugar methods** (`graphLayer.haloNode(id)`, `erLayer.haloTable(id)`) that mutate state and are projected to the same generic `renderer.setDecoration(id, 'halo', ...)` call. One implementation, many domain wrappers.
 
 ## Subpath exports
 

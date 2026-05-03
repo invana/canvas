@@ -39,9 +39,9 @@
  * LOD primitives land in subsequent steps (see plan).
  */
 
-import type { Camera } from '../../camera/Camera';
-import { EventEmitter } from '../../events/EventEmitter';
-import type { SubLayer } from '../../lifecycle/SubLayer';
+import type { Camera } from '../camera/Camera';
+import { EventEmitter } from '../events/EventEmitter';
+import type { SubLayer } from '../lifecycle/SubLayer';
 import { ConnectorInstance } from './ConnectorInstance';
 import { HitIndex } from './HitIndex';
 import { ShapeInstance } from './ShapeInstance';
