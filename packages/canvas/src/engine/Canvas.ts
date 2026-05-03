@@ -50,11 +50,9 @@ export interface CanvasOptions {
    * Override when running multiple Canvas instances in one document.
    */
   id?: string;
-}
 
-export interface CanvasInitOptions {
-  /** DOM element pixi mounts its `<canvas>` into. */
-  container: HTMLElement;
+  /** DOM element pixi mounts its `<canvas>` into. Required by `init()`. */
+  container?: HTMLElement;
 
   /** Preferred backend. Default `'webgpu'`. Pixi falls back via its own logic. */
   preference?: 'webgpu' | 'webgl' | 'canvas';
@@ -81,6 +79,13 @@ export interface CanvasInitOptions {
 
   /** Suppress pixi's "PixiJS X.X.X" startup log. Default `true`. */
   hello?: boolean;
+
+  /**
+   * Automatically resize the renderer and camera when the container element
+   * changes size. Covers both window resize and programmatic expand/collapse.
+   * Uses `ResizeObserver` internally. Default `false`.
+   */
+  autoResize?: boolean;
 }
 
 // ─── Canvas ────────────────────────────────────────────────────────────────
@@ -117,6 +122,7 @@ export class Canvas {
 
   private app?: Application;
   private _isInitialised = false;
+  private _onRendererResize?: (w: number, h: number) => void;
 
   constructor(opts: CanvasOptions = {}) {
     this.id = opts.id ?? 'canvas';
@@ -143,13 +149,16 @@ export class Canvas {
    * The selected backend (and capabilities) flows through the bus event so
    * consumers see which renderer pixi resolved.
    */
-  async init(opts: CanvasInitOptions): Promise<void> {
+  async init(opts: CanvasOptions): Promise<void> {
     if (this._isInitialised) {
       throw new Error(`Canvas "${this.id}" already initialised`);
     }
 
-    const width = opts.width ?? opts.container.clientWidth;
-    const height = opts.height ?? opts.container.clientHeight;
+    const container = opts.container;
+    if (!container) throw new Error(`Canvas "${this.id}": init() requires a container element`);
+
+    const width = opts.width ?? container.clientWidth;
+    const height = opts.height ?? container.clientHeight;
     const dpr =
       opts.resolution ??
       (typeof window !== 'undefined' ? window.devicePixelRatio : 1);
@@ -166,12 +175,26 @@ export class Canvas {
       backgroundColor: opts.backgroundColor ?? 0,
       powerPreference: opts.powerPreference ?? 'high-performance',
       hello: opts.hello ?? false,
+      // When `autoResize` is on, let pixi own the resize loop. It polls
+      // `container` on its ticker and calls `renderer.resize()` itself,
+      // which is naturally frame-paced and handles `autoDensity` / DPR.
+      // We just hook the renderer's `resize` event to keep camera in sync.
+      ...(opts.autoResize ? { resizeTo: container } : {}),
     });
 
-    opts.container.appendChild(this.app.canvas);
+    this.app.canvas.style.display = 'block';
+    container.appendChild(this.app.canvas);
 
     this._wireScene(this.app.stage, width, height, this.app.renderer.events);
     this.app.ticker.add(this.tick, this);
+
+    if (opts.autoResize) {
+      this._onRendererResize = (w, h) => {
+        this.camera.resize(w, h);
+      };
+      this.app.renderer.on('resize', this._onRendererResize);
+    }
+
     this._isInitialised = true;
 
     this.events.emit('renderer:initialised', {
@@ -246,6 +269,10 @@ export class Canvas {
   destroy(): void {
     if (!this._isInitialised) return;
 
+    if (this._onRendererResize && this.app) {
+      this.app.renderer.off('resize', this._onRendererResize);
+    }
+    this._onRendererResize = undefined;
     this.app?.ticker.remove(this.tick, this);
     this.layers?.clear();
     this.behaviours?.clear();

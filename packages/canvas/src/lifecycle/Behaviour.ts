@@ -82,6 +82,7 @@ export abstract class Behaviour implements IBehaviour {
     }
     this.ctx = ctx;
     this.onRegister(ctx);
+    if (this._enabled) this.onEnable();
   }
 
   /** Called by `BehaviourRegistry.unregister(id)`. Drops subscriptions. */

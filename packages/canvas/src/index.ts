@@ -88,7 +88,7 @@ export type { BehaviourRegistryOptions } from './registries/BehaviourRegistry';
 
 // ─── Engine ─────────────────────────────────────────────────────────────
 export { Canvas } from './engine/Canvas';
-export type { CanvasOptions, CanvasInitOptions } from './engine/Canvas';
+export type { CanvasOptions } from './engine/Canvas';
 
 // ─── Toolkit (built-in behaviours / layers) ─────────────────────────────
 export {
