@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Layer } from '../../src/lifecycle/Layer';
+import { Layer } from '../../src/layers/Layer';
 import { CanvasEventBus } from '../../src/events/CanvasEventBus';
 import { Camera } from '../../src/camera/Camera';
 import { LayerRegistry } from '../../src/registries/LayerRegistry';

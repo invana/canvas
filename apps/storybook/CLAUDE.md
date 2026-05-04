@@ -16,6 +16,49 @@ Storybook for the new architecture. Rebuilt fresh as part of the architecture re
 - Story files: `<Name>.stories.ts`. Title format: `'<Area>/<Subarea>'`.
 - No raw `pixi.js` imports inside stories — go through `@invana/canvas` / `@invana/graph` API.
 
+## Writing a story
+
+Always use the **`render` + `play`** pattern. Never use `requestAnimationFrame`.
+
+- `render` — synchronously returns the container DOM element via `createContainer`.
+- `play` — async; runs after Storybook mounts the element; all canvas init goes here.
+
+`createContainer` lives in `stories/div-util.ts`. Canvas is queried from `canvasElement` using the container's `id`.
+
+```ts
+import type { Meta, StoryObj } from '@storybook/html-vite';
+import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { createContainer } from '../../div-util';
+
+const meta: Meta = { title: 'Area/SubArea' };
+export default meta;
+type Story = StoryObj;
+
+export const MyStory: Story = {
+  render: () => createContainer({ id: 'cvs-my-story' }),
+
+  play: async ({ canvasElement }) => {
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-my-story')!;
+    const canvas = new Canvas();
+    await canvas.init({ container, autoResize: true });
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
+
+    // ... add layers, draw shapes, etc.
+  },
+};
+```
+
+`createContainer` options:
+
+| Option | Default | Description |
+|---|---|---|
+| `id` | `'canvas-example'` | DOM id — must be unique per story, used to query the element in `play` |
+| `height` | `'100vh'` | CSS height |
+| `width` | — | CSS width (omit to let the parent size it) |
+| `title` | — | Optional heading rendered inside the container |
+
 ## Run
 
 ```bash

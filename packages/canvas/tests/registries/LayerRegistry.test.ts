@@ -3,7 +3,7 @@ import { LayerRegistry } from '../../src/registries/LayerRegistry';
 import { CanvasEventBus } from '../../src/events/CanvasEventBus';
 import { Camera } from '../../src/camera/Camera';
 import { BehaviourRegistry } from '../../src/registries/BehaviourRegistry';
-import type { ILayer } from '../../src/lifecycle/Layer';
+import type { ILayer } from '../../src/layers/Layer';
 import type { CanvasContext } from '../../src/context/CanvasContext';
 import { makeTestScene } from '../_helpers/makeWorld';
 

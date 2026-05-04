@@ -16,7 +16,7 @@
  * consumers passing screen coords to a world layer or vice versa.
  */
 
-import { Container } from 'pixi.js';
+import { Container, type Graphics } from 'pixi.js';
 import type { CanvasContext } from '../context/CanvasContext';
 import type { EventMap } from '../events/EventEmitter';
 import { Layer, type LayerOptions } from './Layer';
@@ -83,11 +83,40 @@ export abstract class WorldLayer<
   }
 
   /**
-   * Create a child `SubLayer` of this layer's root. Convenience wrapper for
-   * `this.subLayer.createSubLayer(id, options)`.
+   * Create a child `SubLayer` of this layer's root. Use when you want a
+   * z-ordered visual subdivision *within* this single layer (e.g. an
+   * `edges` slot below a `nodes` slot, both projected from the same data).
+   * For top-level peers, register a separate `Layer` on the canvas instead.
+   *
+   * Delegates to `this.subLayer.createSubLayer(id, options)`.
    */
-  protected createSubLayer(subId: string, options?: { zIndex?: number }): SubLayer {
+  createSubLayer(subId: string, options?: { zIndex?: number }): SubLayer {
     return this.subLayer.createSubLayer(subId, options);
+  }
+
+  /**
+   * Create a pixi `Graphics` attached to this layer's root container. The
+   * sanctioned way for layer authors to obtain a `Graphics` for direct
+   * painting via `@invana/canvas/draw` primitives — keeps pixi internal
+   * (no `new Graphics()` in user code).
+   *
+   * Delegates to `this.subLayer.createGraphics(label)`.
+   */
+  createGraphics(label?: string): Graphics {
+    return this.subLayer.createGraphics(label);
+  }
+
+  /**
+   * Create a plain pixi `Container` attached to this layer's root container.
+   * Useful as a parent for mounted display objects (e.g. text via
+   * `mountPlainText(container, …)`). For an independent draw-order slot,
+   * prefer `createSubLayer` (returns a `SubLayer` with hierarchical id and
+   * a RenderGroup container).
+   *
+   * Delegates to `this.subLayer.createContainer(label)`.
+   */
+  createContainer(label?: string): Container {
+    return this.subLayer.createContainer(label);
   }
 
   /**
@@ -99,6 +128,16 @@ export abstract class WorldLayer<
   setZIndex(z: number): void {
     this.zIndex = z;
     if (this.mounted) this.subLayer.setZIndex(z);
+  }
+
+  /**
+   * Return the world-space AABB of everything currently rendered on this layer.
+   * Delegates to Pixi's `getLocalBounds()` — a one-shot scene-graph traversal.
+   * Suitable for "fit to content" calls; do not call every frame.
+   */
+  getBounds(): { x: number; y: number; width: number; height: number } {
+    const b = this.subLayer.container.getLocalBounds();
+    return { x: b.minX, y: b.minY, width: b.maxX - b.minX, height: b.maxY - b.minY };
   }
 
   /**

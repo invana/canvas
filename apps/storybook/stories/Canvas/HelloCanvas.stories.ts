@@ -1,14 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import {
   Canvas,
-  WorldLayer,
-  ShapesRenderer,
   DragPanBehaviour,
   WheelZoomBehaviour,
   PinchZoomBehaviour,
   KeyboardCameraInputBehaviour,
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
+import { RendererLayer } from '../_shared/GenericLayer';
 
 const meta: Meta = {
   title: 'Canvas/HelloCanvas',
@@ -16,23 +14,6 @@ const meta: Meta = {
 export default meta;
 
 type Story = StoryObj;
-
- 
-class GenericLayer extends WorldLayer {
-  renderer!: ShapesRenderer;
-
-  protected createState() {
-    return {};
-  }
-
-  protected override onMount(ctx: CanvasContext): void {
-    this.renderer = new ShapesRenderer({ subLayer: this.subLayer, camera: ctx.camera });
-  }
-
-  hitTest() {
-    return null;
-  }
-}
 
 // Circle center and square geometry — shared between both layers so the
 // connector endpoints align with the visible shape boundaries.
@@ -59,7 +40,7 @@ export const HelloCanvas: Story = {
       canvas.behaviours.register(keyboard); 
       
       // ── Connectors layer (below nodes) ────────────────────────────────
-      const connectorsLayer = new GenericLayer({ id: 'connectors', options: {} });
+      const connectorsLayer = new RendererLayer({ id: 'connectors', options: {} });
       canvas.layers.add(connectorsLayer);
 
       connectorsLayer.renderer.addConnector('edge-1', {
@@ -76,7 +57,7 @@ export const HelloCanvas: Story = {
       });
 
       // ── Shapes layer (above connectors) ───────────────────────────────
-      const shapesLayer = new GenericLayer({ id: 'shapes', options: {} });
+      const shapesLayer = new RendererLayer({ id: 'shapes', options: {} });
       canvas.layers.add(shapesLayer);
 
       shapesLayer.renderer.addShape('circle', {

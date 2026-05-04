@@ -19,7 +19,7 @@
 
 import type { CanvasContext } from '../context/CanvasContext';
 import type { CanvasEventBus } from '../events/CanvasEventBus';
-import type { ILayer } from '../lifecycle/Layer';
+import type { ILayer } from '../layers/Layer';
 
 export interface LayerRegistryOptions {
   /**

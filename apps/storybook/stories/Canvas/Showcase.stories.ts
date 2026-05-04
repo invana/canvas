@@ -1,27 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import {
   Canvas,
-  WorldLayer,
-  ShapesRenderer,
   DragPanBehaviour,
   WheelZoomBehaviour,
   PinchZoomBehaviour,
   KeyboardCameraInputBehaviour,
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
+import { RendererLayer } from '../_shared/GenericLayer';
 
 const meta: Meta = { title: 'Canvas/Showcase' };
 export default meta;
 type Story = StoryObj;
-
-class GenericLayer extends WorldLayer {
-  renderer!: ShapesRenderer;
-  protected createState() { return {}; }
-  protected override onMount(ctx: CanvasContext): void {
-    this.renderer = new ShapesRenderer({ subLayer: this.subLayer, camera: ctx.camera });
-  }
-  hitTest() { return null; }
-}
 
 // ── Data ───────────────────────────────────────────────────────────────────
 
@@ -67,7 +56,7 @@ export const Showcase: Story = {
       canvas.behaviours.register(new PinchZoomBehaviour({ id: 'pinch', enabled: true }));
       canvas.behaviours.register(new KeyboardCameraInputBehaviour({ id: 'keyboard-camera', enabled: true }));
 
-      const layer = new GenericLayer({ id: 'showcase', options: {} });
+      const layer = new RendererLayer({ id: 'showcase', options: {} });
       canvas.layers.add(layer);
 
       shapesData.forEach(({ id, ...props }) => layer.renderer.addShape(id, props as never));

@@ -62,22 +62,39 @@ export type { CameraOptions, Point, Rect } from './camera/Camera';
 // ─── Context ────────────────────────────────────────────────────────────
 export type { CanvasContext } from './context/CanvasContext';
 
-// ─── Lifecycle (Layer / Behaviour / Layout) ─────────────────────────────
-export { Layer } from './lifecycle/Layer';
-export type { ILayer, LayerOptions } from './lifecycle/Layer';
+// ─── Layers ─────────────────────────────────────────────────────────────
+export { Layer } from './layers/Layer';
+export type { ILayer, LayerOptions } from './layers/Layer';
 
-export { WorldLayer } from './lifecycle/WorldLayer';
-export type { WorldLayerHit } from './lifecycle/WorldLayer';
+export { WorldLayer } from './layers/WorldLayer';
+export type { WorldLayerHit } from './layers/WorldLayer';
 
-export { ScreenLayer } from './lifecycle/ScreenLayer';
-export type { ScreenLayerHit } from './lifecycle/ScreenLayer';
+export { ScreenLayer } from './layers/ScreenLayer';
+export type { ScreenLayerHit } from './layers/ScreenLayer';
 
-export { SubLayer } from './lifecycle/SubLayer';
+export { SubLayer } from './layers/SubLayer';
 
-export { Behaviour } from './lifecycle/Behaviour';
-export type { IBehaviour, BehaviourOptions } from './lifecycle/Behaviour';
+// ─── Behaviours ─────────────────────────────────────────────────────────
+export { Behaviour } from './behaviours/Behaviour';
+export type { IBehaviour, BehaviourOptions } from './behaviours/Behaviour';
 
-export type { Layout } from './lifecycle/Layout';
+export { DragPanBehaviour } from './behaviours/DragPanBehaviour';
+export type { DragPanBehaviourOptions, DragModifier } from './behaviours/DragPanBehaviour';
+
+export { WheelZoomBehaviour } from './behaviours/WheelZoomBehaviour';
+export type { WheelZoomBehaviourOptions } from './behaviours/WheelZoomBehaviour';
+
+export { PinchZoomBehaviour } from './behaviours/PinchZoomBehaviour';
+export type { PinchZoomBehaviourOptions } from './behaviours/PinchZoomBehaviour';
+
+export { KeyboardCameraInputBehaviour } from './behaviours/KeyboardCameraInputBehaviour';
+export type {
+  KeyboardCameraInputBehaviourOptions,
+  KeyboardCameraKeymap,
+} from './behaviours/KeyboardCameraInputBehaviour';
+
+// ─── Layouts ────────────────────────────────────────────────────────────
+export type { Layout } from './layouts/Layout';
 
 // ─── Registries ─────────────────────────────────────────────────────────
 export { LayerRegistry } from './registries/LayerRegistry';
@@ -90,21 +107,17 @@ export type { BehaviourRegistryOptions } from './registries/BehaviourRegistry';
 export { Canvas } from './engine/Canvas';
 export type { CanvasOptions } from './engine/Canvas';
 
-// ─── Toolkit (built-in behaviours / layers) ─────────────────────────────
-export {
-  DragPanBehaviour,
-  WheelZoomBehaviour,
-  PinchZoomBehaviour,
-  KeyboardCameraInputBehaviour,
-} from './toolkit/index';
-export type {
-  DragPanBehaviourOptions,
-  DragModifier,
-  WheelZoomBehaviourOptions,
-  PinchZoomBehaviourOptions,
-  KeyboardCameraInputBehaviourOptions,
-  KeyboardCameraKeymap,
-} from './toolkit/index';
+// ─── Draw module (low-level paint primitives) ──────────────────────────
+// Pure-function paint API for shapes / connectors / text / routers /
+// decorations. Single-responsibility per primitive — composition lives in
+// layers, not here. Re-exported as a namespace to avoid name conflicts with
+// the legacy renderer types.
+export * as draw from './renderers/draw';
+
+// Pixi `Graphics` type re-exported so consumers writing `paint(g => ...)`
+// callbacks against PaintLayer can type the callback parameter without a
+// raw `pixi.js` import.
+export type { Graphics } from 'pixi.js';
 
 // ─── Renderers ──────────────────────────────────────────────────────────
 // Mirror of the `@invana/canvas/renderers/shapes` subpath export. The

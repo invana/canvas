@@ -79,16 +79,7 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
 7. Behaviours don't auto-enable. Every behaviour (hover, select, drag, etc.) must be explicitly registered AND enabled by the developer.
 8. Cross-layer dependencies are declared as explicit `*LayerId` option fields. Don't infer "the only graph layer".
 9. Write TSDoc on all classes, public methods, and non-obvious variables.
-10. **Tests live in `tests/` at the package root, mirroring the `src/` tree.** Never co-locate `*.test.ts` files inside `src/`. Each package ships **one** `tsconfig.json` that covers both:
-    ```json
-    {
-      "extends": "@repo/typescript-config/base.json",
-      "compilerOptions": { "outDir": "./dist", "rootDir": ".", "baseUrl": ".", "paths": { "@/*": ["./src/*"] } },
-      "include": ["src/**/*", "tests/**/*"],
-      "exclude": ["node_modules", "dist"]
-    }
-    ```
-    Single config so VS Code's TypeScript language server picks up tests automatically (no red squiggles in test files). `tsc --noEmit` covers both. tsup uses its own `entry` config and ignores includes — only `src/index.ts` ships in `dist/`. Test files import production code with relative paths from `tests/` into `src/` (e.g. `import { Foo } from '../../src/foo/Foo'`). No path aliases for tests.
+10. **Do not write tests for `packages/canvas`.** No test files in that package unless explicitly asked.
 
 ---
 

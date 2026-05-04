@@ -1,27 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import {
   Canvas,
-  WorldLayer,
-  ShapesRenderer,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
+import { RendererLayer } from '../../_shared/GenericLayer';
 
 const meta: Meta = {
   title: 'Canvas/Renderer/Text',
 };
 export default meta;
 type Story = StoryObj;
-
-class GenericLayer extends WorldLayer {
-  renderer!: ShapesRenderer;
-  protected createState() { return {}; }
-  protected override onMount(ctx: CanvasContext): void {
-    this.renderer = new ShapesRenderer({ subLayer: this.subLayer, camera: ctx.camera });
-  }
-  hitTest() { return null; }
-}
 
 // TextShape spec: kind='text', text=string, style=Partial<TextStyleOptions>.
 // (x, y) is the anchor at the text center (anchor 0.5, 0.5 — set by the shape).
@@ -99,7 +88,7 @@ export const Text: Story = {
       canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
       canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-      const layer = new GenericLayer({ id: 'text', options: {} });
+      const layer = new RendererLayer({ id: 'text', options: {} });
       canvas.layers.add(layer);
 
       for (const { id, ...spec } of texts) {

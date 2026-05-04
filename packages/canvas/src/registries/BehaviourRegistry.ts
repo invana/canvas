@@ -15,7 +15,7 @@
 
 import type { CanvasContext } from '../context/CanvasContext';
 import type { CanvasEventBus } from '../events/CanvasEventBus';
-import type { IBehaviour } from '../lifecycle/Behaviour';
+import type { IBehaviour } from '../behaviours/Behaviour';
 
 export interface BehaviourRegistryOptions {
   getContext: () => CanvasContext;

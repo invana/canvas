@@ -14,7 +14,7 @@
  */
 
 import { Container, Graphics } from 'pixi.js';
-import type { BaseConnectorSpec, IConnector, Point, ConnectorHostInfo } from '../shapes_/types';
+import type { BaseConnectorSpec, IConnector, Point, ConnectorHostInfo } from '../types';
 
 export interface CurveConnectorSpec extends BaseConnectorSpec {
   readonly kind: 'curve';

@@ -1,27 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import {
   Canvas,
-  WorldLayer,
-  ShapesRenderer,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
+import { RendererLayer } from '../../_shared/GenericLayer';
 
 const meta: Meta = {
   title: 'Canvas/Renderer/Shapes',
 };
 export default meta;
 type Story = StoryObj;
-
-class GenericLayer extends WorldLayer {
-  renderer!: ShapesRenderer;
-  protected createState() { return {}; }
-  protected override onMount(ctx: CanvasContext): void {
-    this.renderer = new ShapesRenderer({ subLayer: this.subLayer, camera: ctx.camera });
-  }
-  hitTest() { return null; }
-}
 
 // A "server rack" composed entirely from built-in shape primitives:
 //   - rect   → chassis, bezels, server unit bodies, base, screen panel
@@ -422,7 +411,7 @@ export const ServerRack: Story = {
       canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
       canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-      const layer = new GenericLayer({ id: 'server-rack', options: {} });
+      const layer = new RendererLayer({ id: 'server-rack', options: {} });
       canvas.layers.add(layer);
 
       for (const { id, ...spec } of shapes) {

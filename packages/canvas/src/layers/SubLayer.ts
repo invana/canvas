@@ -16,7 +16,7 @@
  * in pixi devtools.
  */
 
-import { Container } from 'pixi.js';
+import { Container, Graphics } from 'pixi.js';
 
 export class SubLayer {
   readonly id: string;
@@ -63,5 +63,43 @@ export class SubLayer {
     this.container.zIndex = z;
     const parent = this.container.parent;
     if (parent) parent.sortableChildren = true;
+  }
+
+  /**
+   * Create a new pixi `Graphics` and attach it as a child of this sub-layer's
+   * container. Returns the `Graphics` so the caller can paint into it via the
+   * `@invana/canvas/draw` primitives (or any pixi Graphics method).
+   *
+   * This is the sanctioned way for layers and user code to obtain a `Graphics`
+   * — direct `new Graphics()` outside `packages/canvas/src` is prohibited so
+   * pixi stays an internal dependency.
+   *
+   * The returned `Graphics` is owned by the caller for subsequent draws. The
+   * SubLayer does not retain a reference; if the caller wants to clear/redraw
+   * later, they hold the reference themselves. On layer destroy the pixi
+   * scene-graph teardown destroys all descendants, including any `Graphics`
+   * created via this method.
+   */
+  createGraphics(label?: string): Graphics {
+    const g = new Graphics();
+    if (label) g.label = label;
+    this.container.addChild(g);
+    return g;
+  }
+
+  /**
+   * Create a new pixi `Container` and attach it as a child of this sub-layer's
+   * container. Returns the raw `Container` (not a `SubLayer` wrapper) — use
+   * `createSubLayer` instead when you want hierarchical id management or an
+   * independent render-group batch unit.
+   *
+   * Same rationale as `createGraphics`: keeps pixi internal, gives layer
+   * authors a sanctioned construction path.
+   */
+  createContainer(label?: string): Container {
+    const c = new Container();
+    if (label) c.label = label;
+    this.container.addChild(c);
+    return c;
   }
 }

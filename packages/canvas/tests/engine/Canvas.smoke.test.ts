@@ -11,8 +11,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Container } from 'pixi.js';
 import { Canvas } from '../../src/engine/Canvas';
-import { WorldLayer } from '../../src/lifecycle/WorldLayer';
-import { Behaviour } from '../../src/lifecycle/Behaviour';
+import { WorldLayer } from '../../src/layers/WorldLayer';
+import { Behaviour } from '../../src/behaviours/Behaviour';
 import type { CanvasContext } from '../../src/context/CanvasContext';
 import type { DirtySnapshot } from '../../src/state/DirtyBatcher';
 

@@ -22,6 +22,24 @@ The engine. Implements the Layer / Behaviour / Layout / Renderer architecture de
 - Built-in layers: `BackgroundLayer`, `ThemedBackgroundLayer` (`WorldLayer`); `DevInfoLayer` (`ScreenLayer`)
 - Built-in behaviours (all opt-in — never auto-registered): `DragPanBehaviour`, `WheelZoomBehaviour`, `PinchZoomBehaviour`, `KeyboardCameraInputBehaviour`
 
+### Picking a layer base — `WorldLayer` vs `ScreenLayer`
+
+**Default to `WorldLayer` for almost everything.** Diagram content (graph nodes, edges, ER tables, swimlane bodies, decorations on data, custom rendering, etc.) is camera-affected — it pans and zooms with the user's view. That's `WorldLayer`.
+
+**Reach for `ScreenLayer` only when the content must stay glued to a screen position regardless of camera.** Concrete cases:
+
+- minimap (sticks to a corner)
+- dev info / FPS overlay
+- floating toolbars and palettes
+- tooltips at cursor offsets
+- selection lasso / rubber-band rectangle
+- loading spinners, status badges, modals
+- scale ruler ("1cm = 100 units")
+
+The mental test: *if the user pans the camera 100px right, should this thing move with the diagram or stay glued to the screen?* Move with the diagram → `WorldLayer`. Stay glued → `ScreenLayer`.
+
+Most projects only ever subclass `WorldLayer`. `ScreenLayer` is invisible until you start adding UI overlays.
+
 ### Why decoration rendering logic lives here, not in domain packages
 
 A halo, a border, a marching-ants animation, a pulse ring — none of these are graph-specific. They're generic 2D visuals that ER diagrams, flowcharts, swimlanes, and graph all want, identically. So the rendering logic lives in `@invana/canvas/renderers/decorations/` and ships once. Domain packages add **named sugar methods** (`graphLayer.haloNode(id)`, `erLayer.haloTable(id)`) that mutate state and are projected to the same generic `renderer.setDecoration(id, 'halo', ...)` call. One implementation, many domain wrappers.

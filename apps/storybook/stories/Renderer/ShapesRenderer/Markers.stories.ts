@@ -1,27 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import {
   Canvas,
-  WorldLayer,
-  ShapesRenderer,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
+import { RendererLayer } from '../../_shared/GenericLayer';
 
 const meta: Meta = {
   title: 'Canvas/Renderer/Markers',
 };
 export default meta;
 type Story = StoryObj;
-
-class GenericLayer extends WorldLayer {
-  renderer!: ShapesRenderer;
-  protected createState() { return {}; }
-  protected override onMount(ctx: CanvasContext): void {
-    this.renderer = new ShapesRenderer({ subLayer: this.subLayer, camera: ctx.camera });
-  }
-  hitTest() { return null; }
-}
 
 // Markers are standalone connectors with raw coordinate endpoints (kind:'point').
 // Built-in marker kinds: 'arrow', 'circle', 'square', 'diamond'.
@@ -101,7 +90,7 @@ export const Markers: Story = {
       canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
       canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-      const layer = new GenericLayer({ id: 'markers', options: {} });
+      const layer = new RendererLayer({ id: 'markers', options: {} });
       canvas.layers.add(layer);
 
       for (const { id, ...spec } of connectors) {

@@ -19,7 +19,7 @@
  * consumers passing world coords to a screen layer or vice versa.
  */
 
-import { Container } from 'pixi.js';
+import { Container, type Graphics } from 'pixi.js';
 import type { CanvasContext } from '../context/CanvasContext';
 import type { EventMap } from '../events/EventEmitter';
 import { Layer, type LayerOptions } from './Layer';
@@ -82,11 +82,30 @@ export abstract class ScreenLayer<
   }
 
   /**
-   * Create a child `SubLayer` of this layer's root. Convenience wrapper for
-   * `this.subLayer.createSubLayer(id, options)`.
+   * Create a child `SubLayer` of this layer's root. Use for z-ordered visual
+   * subdivision *within* this single screen-space layer. For top-level peers,
+   * register a separate `Layer` on the canvas instead.
    */
-  protected createSubLayer(subId: string, options?: { zIndex?: number }): SubLayer {
+  createSubLayer(subId: string, options?: { zIndex?: number }): SubLayer {
     return this.subLayer.createSubLayer(subId, options);
+  }
+
+  /**
+   * Create a pixi `Graphics` attached to this layer's root container. The
+   * sanctioned way for layer authors to obtain a `Graphics` for direct
+   * painting via `@invana/canvas/draw` primitives.
+   */
+  createGraphics(label?: string): Graphics {
+    return this.subLayer.createGraphics(label);
+  }
+
+  /**
+   * Create a plain pixi `Container` attached to this layer's root container.
+   * Useful as a parent for mounted display objects (e.g. text via
+   * `mountPlainText(container, …)`).
+   */
+  createContainer(label?: string): Container {
+    return this.subLayer.createContainer(label);
   }
 
   /**

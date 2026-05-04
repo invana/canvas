@@ -20,7 +20,7 @@
  * to the same data) — not enforced here.
  */
 
-import type { Layer } from './Layer';
+import type { Layer } from '../layers/Layer';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface Layout<TLayer extends Layer<any, any, any, any> = Layer<any, any, any, any>> {

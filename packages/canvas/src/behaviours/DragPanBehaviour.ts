@@ -13,8 +13,8 @@
  * the pointer lifts. Disable with `decelerate: false`.
  */
 
-import { Behaviour, type BehaviourOptions } from '../../lifecycle/Behaviour';
-import type { CanvasContext } from '../../context/CanvasContext';
+import { Behaviour, type BehaviourOptions } from './Behaviour';
+import type { CanvasContext } from '../context/CanvasContext';
 
 export type DragModifier = 'none' | 'space' | 'shift' | 'alt';
 

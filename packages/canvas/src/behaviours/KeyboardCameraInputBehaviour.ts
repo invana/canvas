@@ -17,8 +17,8 @@
  * viewport so you see content *above* the current view.
  */
 
-import { Behaviour, type BehaviourOptions } from '../../lifecycle/Behaviour';
-import type { CanvasContext } from '../../context/CanvasContext';
+import { Behaviour, type BehaviourOptions } from './Behaviour';
+import type { CanvasContext } from '../context/CanvasContext';
 
 export interface KeyboardCameraKeymap {
   panUp: string[];
