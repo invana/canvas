@@ -10,7 +10,8 @@
  */
 
 import type { Graphics } from 'pixi.js';
-import type { BaseShapeSpec, Rect, ShapeKind } from '../types';
+import type { BaseShapeSpec, FillFit, FillInput, Rect, ShapeKind } from '../types';
+import { applyFill } from './textureMatrix';
 
 export type PathCommand =
   | { readonly kind: 'moveTo'; readonly x: number; readonly y: number }
@@ -36,8 +37,9 @@ export type PathCommand =
 export interface PathSpec extends BaseShapeSpec {
   readonly kind: 'path';
   readonly commands: ReadonlyArray<PathCommand>;
-  readonly fill?: number;
+  readonly fill?: FillInput;
   readonly fillAlpha?: number;
+  readonly fillFit?: FillFit;
   readonly stroke?: number;
   readonly strokeWidth?: number;
   readonly strokeAlpha?: number;
@@ -91,7 +93,18 @@ export function drawPath(
   }
 
   if (spec.fill !== undefined) {
-    g.fill({ color: spec.fill, alpha: spec.fillAlpha ?? 1 });
+    // Compute world-space AABB of on-curve endpoints for the texture matrix.
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const cmd of spec.commands) {
+      if (cmd.kind !== 'close') {
+        const p = tx(cmd.x, cmd.y);
+        if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+        if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
+      }
+    }
+    if (minX !== Infinity) {
+      applyFill(g, spec.fill, spec.fillAlpha, (minX + maxX) / 2, (minY + maxY) / 2, maxX - minX, maxY - minY, spec.fillFit);
+    }
   }
   if (spec.stroke !== undefined && (spec.strokeWidth ?? 0) > 0) {
     g.stroke({

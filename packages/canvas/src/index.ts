@@ -125,6 +125,10 @@ export type { Graphics } from 'pixi.js';
 // dedicated subpath (for tree-shaking / discoverability).
 export { ShapesRenderer } from './renderers/ShapesRenderer';
 export type { ShapesRendererOptions } from './renderers/ShapesRenderer';
+
+export { TextureRegistry } from './renderers/TextureRegistry';
+export type { ISpritePool } from './renderers/types';
+
 export type {
   Point as ShapesPoint,
   Vec2,

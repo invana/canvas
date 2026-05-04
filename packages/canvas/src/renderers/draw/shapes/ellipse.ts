@@ -7,17 +7,23 @@
  * `rot` is accepted but currently emits an axis-aligned ellipse (Pixi's
  * `g.ellipse` doesn't support rotation directly — for rotated ellipses the
  * caller can use a `path` shape with cubic curves).
+ *
+ * `fill` accepts a solid color (`number`) or a `Texture`. When a texture is
+ * supplied it is stretched to fill the ellipse's bounding box — the ellipse
+ * geometry acts as the clip mask.
  */
 
 import type { Graphics } from 'pixi.js';
-import type { BaseShapeSpec, Rect, ShapeKind } from '../types';
+import type { BaseShapeSpec, FillFit, FillInput, Rect, ShapeKind } from '../types';
+import { applyFill } from './textureMatrix';
 
 export interface EllipseSpec extends BaseShapeSpec {
   readonly kind: 'ellipse';
   readonly rx: number;
   readonly ry: number;
-  readonly fill?: number;
+  readonly fill?: FillInput;
   readonly fillAlpha?: number;
+  readonly fillFit?: FillFit;
   readonly stroke?: number;
   readonly strokeWidth?: number;
   readonly strokeAlpha?: number;
@@ -30,9 +36,11 @@ export function drawEllipse(
   oy: number = 0,
   _rot: number = 0,
 ): void {
-  g.ellipse(spec.x + ox, spec.y + oy, spec.rx, spec.ry);
+  const cx = spec.x + ox;
+  const cy = spec.y + oy;
+  g.ellipse(cx, cy, spec.rx, spec.ry);
   if (spec.fill !== undefined) {
-    g.fill({ color: spec.fill, alpha: spec.fillAlpha ?? 1 });
+    applyFill(g, spec.fill, spec.fillAlpha, cx, cy, spec.rx * 2, spec.ry * 2, spec.fillFit);
   }
   if (spec.stroke !== undefined && (spec.strokeWidth ?? 0) > 0) {
     g.stroke({

@@ -11,8 +11,9 @@
  * built-ins (circle/rect/halo/...) ship in sibling files.
  */
 
-import type { Container } from 'pixi.js';
+import type { Container, Sprite, Texture } from 'pixi.js';
 import type { EventMap } from '../events/EventEmitter';
+import type { TextureRegistry } from './TextureRegistry';
 
 // ─── Geometry primitives ───────────────────────────────────────────────────
 
@@ -92,16 +93,37 @@ export type ConnectorEndpointSpec =
   | { readonly kind: 'point'; readonly x: number; readonly y: number; readonly tangent?: Vec2 }
   | { readonly kind: 'shape'; readonly shapeId: string };
 
+// ─── Sprite pool interface (for pool-aware shapes) ────────────────────────
+
+/**
+ * Minimal interface for a sprite pool, used by `ShapeHostInfo` so custom
+ * shape implementations can participate in sprite pooling without a hard
+ * dependency on the concrete `SpritePool` class (which is internal).
+ */
+export interface ISpritePool {
+  acquire(url: string, texture: Texture): Sprite;
+  release(url: string, sprite: Sprite): void;
+}
+
 // ─── Host info (renderer → primitive) ──────────────────────────────────────
 
 /**
  * Information a `Shape` instance receives at construction. The renderer hands
  * shapes the surface they should attach to plus camera access for any
  * resolution-aware drawing (e.g. text rasterisation).
+ *
+ * `textureRegistry` and `spritePool` are optional engine internals. Shapes
+ * that accept a `url` field in their spec use the registry for texture
+ * resolution; shapes that create `Sprite` instances use the pool to avoid
+ * GC churn at 500k+ scale. Shapes that don't need either can ignore them.
  */
 export interface ShapeHostInfo {
   /** Surface to attach the shape's root `Container` to. */
   readonly surface: Container;
+  /** Registry for URL-based texture lookup and lazy loading. */
+  readonly textureRegistry?: TextureRegistry;
+  /** Object pool for `Sprite` reuse — reduces GC pressure at scale. */
+  readonly spritePool?: ISpritePool;
 }
 
 /**

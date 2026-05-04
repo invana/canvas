@@ -14,7 +14,27 @@ Storybook for the new architecture. Rebuilt fresh as part of the architecture re
   - `stories/Layer/Graph/...`             ← `GraphLayer`-specific stories
   - `stories/Showcase/...`                ← end-to-end demos
 - Story files: `<Name>.stories.ts`. Title format: `'<Area>/<Subarea>'`.
+- **One story per file.** Each `.stories.ts` file exports exactly one named story.
 - No raw `pixi.js` imports inside stories — go through `@invana/canvas` / `@invana/graph` API.
+
+## Shapes & Renderer stories
+
+Keep these minimal and focused:
+
+- Draw **one or two graphics at most** — the goal is to demonstrate the drawing/rendering capability, not to fill the canvas.
+- Always wire up a **lil-gui panel** to expose the relevant settings (fill color, stroke width, alpha, radius, etc.) so the viewer can interactively explore the options.
+- Update the graphic(s) live when the user tweaks a control — destroy and redraw, or mutate properties, whatever is cleanest for that shape.
+
+```ts
+import GUI from 'lil-gui';
+
+// inside play:
+const settings = { fillColor: 0x4a90d9, strokeWidth: 2, alpha: 1 };
+const gui = new GUI({ title: 'Rect settings' });
+gui.addColor(settings, 'fillColor').onChange(redraw);
+gui.add(settings, 'strokeWidth', 0, 20, 1).onChange(redraw);
+gui.add(settings, 'alpha', 0, 1, 0.01).onChange(redraw);
+```
 
 ## Writing a story
 

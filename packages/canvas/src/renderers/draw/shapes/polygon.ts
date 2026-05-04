@@ -9,13 +9,15 @@
  */
 
 import type { Graphics } from 'pixi.js';
-import type { BaseShapeSpec, Point, Rect, ShapeKind } from '../types';
+import type { BaseShapeSpec, FillFit, FillInput, Point, Rect, ShapeKind } from '../types';
+import { applyFill } from './textureMatrix';
 
 export interface PolygonSpec extends BaseShapeSpec {
   readonly kind: 'polygon';
   readonly points: ReadonlyArray<Point>;
-  readonly fill?: number;
+  readonly fill?: FillInput;
   readonly fillAlpha?: number;
+  readonly fillFit?: FillFit;
   readonly stroke?: number;
   readonly strokeWidth?: number;
   readonly strokeAlpha?: number;
@@ -39,7 +41,13 @@ export function drawPolygon(
   }));
   g.poly(transformed);
   if (spec.fill !== undefined) {
-    g.fill({ color: spec.fill, alpha: spec.fillAlpha ?? 1 });
+    // Compute world-space AABB of transformed vertices for the texture matrix.
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const p of transformed) {
+      if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
+    }
+    applyFill(g, spec.fill, spec.fillAlpha, (minX + maxX) / 2, (minY + maxY) / 2, maxX - minX, maxY - minY, spec.fillFit);
   }
   if (spec.stroke !== undefined && (spec.strokeWidth ?? 0) > 0) {
     g.stroke({

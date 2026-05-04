@@ -13,7 +13,35 @@
  * module never composes two primitives into one — that's the layer's job.
  */
 
-import type { Container, Graphics } from 'pixi.js';
+import type { Container, Graphics, Texture } from 'pixi.js';
+
+// ─── Fill input ───────────────────────────────────────────────────────────
+
+/**
+ * Accepted value for `fill` in shape specs.
+ *
+ * - `number` — solid color (e.g. `0x4f9cf9`). `fillAlpha` controls opacity.
+ * - `Texture` — image projected onto the shape geometry. The shape boundary
+ *   acts as the clip mask; sizing is controlled by `fillFit`.
+ *   Use `TextureRegistry` to load and share textures by URL.
+ */
+export type FillInput = number | Texture;
+
+/**
+ * Controls how a texture fill is sized within a shape's bounding box.
+ * Only meaningful when `fill` is a `Texture`; ignored for solid-color fills.
+ *
+ * - `'fill'`       — stretch to fit exactly (default). Ignores aspect ratio.
+ * - `'cover'`      — scale uniformly so the image covers the box; crops the overflow. Centered.
+ * - `'none'`       — natural pixel size, centered. Larger images are cropped; smaller images
+ *                    show the clamped edge pixel in the gap (PixiJS UV clamp limitation).
+ * - `'scale-down'` — like `'none'` but downscales when the image is larger than the box.
+ *                    Never upscales — equivalent to `min(none, contain)`.
+ *
+ * Note: `'contain'` is intentionally omitted. PixiJS clamps out-of-range UVs to the
+ * edge pixel, so letterbox gaps fill with the image border rather than being transparent.
+ */
+export type FillFit = 'fill' | 'cover' | 'none' | 'scale-down';
 
 // ─── Geometry primitives ───────────────────────────────────────────────────
 

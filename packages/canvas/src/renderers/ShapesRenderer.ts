@@ -42,12 +42,16 @@
 import type { Camera } from '../camera/Camera';
 import { EventEmitter } from '../events/EventEmitter';
 import type { SubLayer } from '../layers/SubLayer';
+import { TextureRegistry } from './TextureRegistry';
+import { SpritePool } from './SpritePool';
 import { ConnectorInstance } from './ConnectorInstance';
 import { HitIndex } from './HitIndex';
 import { ShapeInstance } from './ShapeInstance';
 import { CircleShape } from './shapes/CircleShape';
 import { EllipseShape } from './shapes/EllipseShape';
 import { ImageShape } from './shapes/ImageShape';
+import { ImageCircleShape } from './shapes/ImageCircleShape';
+import { ImageRectShape } from './shapes/ImageRectShape';
 import { PathShape } from './shapes/PathShape';
 import { PolygonShape } from './shapes/PolygonShape';
 import { RectShape } from './shapes/RectShape';
@@ -108,6 +112,16 @@ export interface ShapesRendererOptions {
   readonly subLayer: SubLayer;
   /** Canvas camera — used for resolution-aware draws (e.g. text rasterisation). */
   readonly camera: Camera;
+  /**
+   * Optional shared texture registry. When provided, `url`-based
+   * `ImageShapeSpec`s resolve textures from this registry (cache hit →
+   * synchronous; miss → async load). Multiple renderers sharing one registry
+   * share GPU texture uploads.
+   *
+   * If omitted, the renderer creates an internal registry — URL-based image
+   * shapes still work, but textures are not shared across renderer instances.
+   */
+  readonly textureRegistry?: TextureRegistry;
 }
 
 export class ShapesRenderer {
@@ -164,9 +178,16 @@ export class ShapesRenderer {
    */
   readonly camera: Camera;
 
+  /** Texture registry injected into every `ShapeHostInfo`. */
+  private readonly textureRegistry: TextureRegistry;
+
+  /** Sprite object pool — reduces GC churn at 500k+ scale. Internal only. */
+  private readonly spritePool = new SpritePool();
+
   constructor(opts: ShapesRendererOptions) {
     this.subLayer = opts.subLayer;
     this.camera = opts.camera;
+    this.textureRegistry = opts.textureRegistry ?? new TextureRegistry();
     this.registerBuiltins();
   }
 
@@ -183,6 +204,8 @@ export class ShapesRenderer {
     this.registerShape('polygon', PolygonShape);
     this.registerShape('path', PathShape);
     this.registerShape('image', ImageShape);
+    this.registerShape('image-circle', ImageCircleShape);
+    this.registerShape('image-rect', ImageRectShape);
     this.registerShape('text', TextShape);
 
     this.registerRouter('straight', straightRouter);
@@ -276,7 +299,11 @@ export class ShapesRenderer {
     if (!Ctor) {
       throw new Error(`ShapesRenderer.addShape: unknown shape kind "${spec.kind}"`);
     }
-    const host: ShapeHostInfo = { surface: this.subLayer.container };
+    const host: ShapeHostInfo = {
+      surface: this.subLayer.container,
+      textureRegistry: this.textureRegistry,
+      spritePool: this.spritePool,
+    };
     const shape = new Ctor(spec, host) as import('./types').IShape<TSpec>;
     shape.draw(spec);
     const inst = new ShapeInstance<TSpec>(id, spec, shape);
@@ -606,6 +633,7 @@ export class ShapesRenderer {
     for (const id of [...this.connectorInstances.keys()]) this.removeConnector(id);
     this.animated.clear();
     this.hit.clear();
+    this.spritePool.destroy();
     this.events.removeAllListeners();
   }
 

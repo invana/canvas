@@ -19,6 +19,8 @@
 
 // ─── Types ────────────────────────────────────────────────────────────────
 export type {
+  FillInput,
+  FillFit,
   Point,
   Vec2,
   Rect,
@@ -35,6 +37,9 @@ export type {
   AnimatedDecorationCtor,
   AnimatedDecoration,
 } from './types';
+
+// ─── Fill helpers ─────────────────────────────────────────────────────────
+export { textureMatrix, applyFill } from './shapes/textureMatrix';
 
 // ─── Shape primitives ─────────────────────────────────────────────────────
 export {

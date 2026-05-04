@@ -6,18 +6,24 @@
  *
  * `rot` rotates the rectangle around its center. Vertices are baked into the
  * emitted geometry — no Container transform.
+ *
+ * `fill` accepts a solid color (`number`) or a `Texture`. When a texture is
+ * supplied it is stretched to fill the rectangle's bounding box — the rect
+ * (or roundRect) geometry acts as the clip mask.
  */
 
 import type { Graphics } from 'pixi.js';
-import type { BaseShapeSpec, Rect, ShapeKind } from '../types';
+import type { BaseShapeSpec, FillFit, FillInput, Rect, ShapeKind } from '../types';
+import { applyFill } from './textureMatrix';
 
 export interface RectSpec extends BaseShapeSpec {
   readonly kind: 'rect';
   readonly width: number;
   readonly height: number;
   readonly cornerRadius?: number;
-  readonly fill?: number;
+  readonly fill?: FillInput;
   readonly fillAlpha?: number;
+  readonly fillFit?: FillFit;
   readonly stroke?: number;
   readonly strokeWidth?: number;
   readonly strokeAlpha?: number;
@@ -33,9 +39,9 @@ export function drawRect(
   const halfW = spec.width / 2;
   const halfH = spec.height / 2;
   const radius = spec.cornerRadius ?? 0;
-
   const cx = spec.x + ox;
   const cy = spec.y + oy;
+
   if (rot === 0) {
     if (radius > 0) {
       g.roundRect(cx - halfW, cy - halfH, spec.width, spec.height, radius);
@@ -57,7 +63,7 @@ export function drawRect(
   }
 
   if (spec.fill !== undefined) {
-    g.fill({ color: spec.fill, alpha: spec.fillAlpha ?? 1 });
+    applyFill(g, spec.fill, spec.fillAlpha, cx, cy, spec.width, spec.height, spec.fillFit);
   }
   if (spec.stroke !== undefined && (spec.strokeWidth ?? 0) > 0) {
     g.stroke({
