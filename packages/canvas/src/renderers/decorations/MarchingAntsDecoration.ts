@@ -21,6 +21,7 @@
 import { Container, Graphics } from 'pixi.js';
 import type { IShapeDecoration, ShapeDecorationHostInfo } from '../types';
 import { expandPolyline } from './polylineUtils';
+import { drawDashedPolyline, rotateClosedPolyline } from './polyline';
 
 export interface MarchingAntsStyle {
   readonly color: number;
@@ -97,7 +98,41 @@ export class MarchingAntsDecoration implements IShapeDecoration<MarchingAntsStyl
     const samples = this.sampleOutline(inset);
     if (samples.length < 2) return;
 
-    drawDashedPolyline(g, samples, dash, gap, this.offset);
+    let drawDash = dash;
+    let drawGap = gap;
+    let drawOffset = this.offset;
+    let drawSamples: { x: number; y: number }[] = samples;
+    const first = samples[0]!;
+    const last = samples[samples.length - 1]!;
+    const closed = first.x === last.x && first.y === last.y;
+    if (closed) {
+      let perimeter = 0;
+      for (let i = 0; i < samples.length - 1; i++) {
+        perimeter += Math.hypot(samples[i + 1]!.x - samples[i]!.x, samples[i + 1]!.y - samples[i]!.y);
+      }
+      const cycle = dash + gap;
+      if (perimeter > 0 && cycle > 0) {
+        // Snap so perimeter is an exact integer multiple of (dash + gap):
+        // kills the phase discontinuity at the loop seam.
+        const n = Math.max(1, Math.round(perimeter / cycle));
+        const scale = perimeter / n / cycle;
+        drawDash = dash * scale;
+        drawGap = gap * scale;
+        const snappedCycle = drawDash + drawGap;
+
+        // Rotate the polyline so its seam lands inside a gap rather than
+        // mid-dash. With drawOffset = drawGap below, the rotated start has
+        // dash phase = drawDash (gap-start) and the end wraps back to the
+        // same phase — both endpoints sit inside a gap, so we never split a
+        // dash across the seam and never produce abutting butt-caps.
+        // The animation crawl still happens because sAlign moves with offset.
+        const sAlign = (this.offset * scale + drawDash) % snappedCycle;
+        drawSamples = rotateClosedPolyline(samples, sAlign);
+        drawOffset = drawGap;
+      }
+    }
+
+    drawDashedPolyline(g, drawSamples, drawDash, drawGap, drawOffset);
     g.stroke({ color: this.style.color, width, alpha });
   }
 
@@ -108,14 +143,46 @@ export class MarchingAntsDecoration implements IShapeDecoration<MarchingAntsStyl
     const cy = y + height / 2;
 
     if (this.host!.hostKind === 'circle' || this.host!.hostKind === 'ellipse') {
+      // Sample by arc length, not by uniform θ. For a circle the two are
+      // identical, but for an ellipse uniform-θ produces longer chords near
+      // the ends of the long axis — visibly stretched dashes there. We build
+      // a dense cumulative-arc-length table (M θ-samples), then place N
+      // output samples at uniform fractions of total arc length.
       const rx = width / 2 + inset;
       const ry = height / 2 + inset;
+      const n = Math.max(8, Math.round((Math.PI * 2) / ARC_STEP));
+      const M = 720;
+      const dtheta = (Math.PI * 2) / M;
+      const cum = new Float64Array(M + 1);
+      let prevX = cx + rx;
+      let prevY = cy;
+      for (let i = 1; i <= M; i++) {
+        const theta = i * dtheta;
+        const px = cx + Math.cos(theta) * rx;
+        const py = cy + Math.sin(theta) * ry;
+        cum[i] = cum[i - 1]! + Math.hypot(px - prevX, py - prevY);
+        prevX = px;
+        prevY = py;
+      }
+      const total = cum[M]!;
       const out: { x: number; y: number }[] = [];
-      for (let theta = 0; theta < Math.PI * 2; theta += ARC_STEP) {
+      for (let i = 0; i < n; i++) {
+        const target = (i * total) / n;
+        let lo = 0;
+        let hi = M;
+        while (lo < hi) {
+          const mid = (lo + hi) >>> 1;
+          if (cum[mid]! < target) lo = mid + 1;
+          else hi = mid;
+        }
+        const k = lo === 0 ? 1 : lo;
+        const arcA = cum[k - 1]!;
+        const arcB = cum[k]!;
+        const f = arcB > arcA ? (target - arcA) / (arcB - arcA) : 0;
+        const theta = (k - 1 + f) * dtheta;
         out.push({ x: cx + Math.cos(theta) * rx, y: cy + Math.sin(theta) * ry });
       }
-      // Close the loop
-      out.push({ x: cx + rx, y: cy });
+      out.push({ x: out[0]!.x, y: out[0]!.y });
       return out;
     }
 
@@ -136,69 +203,5 @@ export class MarchingAntsDecoration implements IShapeDecoration<MarchingAntsStyl
       { x: x0, y: y1 },
       { x: x0, y: y0 },
     ];
-  }
-}
-
-/**
- * Stamp dashed segments along a polyline. Walks segment-by-segment with a
- * cumulative arc-length cursor. Dashes that span a polyline corner are drawn
- * as a single continuous path (one moveTo + multiple lineTo's) so Pixi applies
- * a proper line join at the corner instead of separate butt-cap end-pieces that
- * create a double-cap flicker artifact.
- */
-function drawDashedPolyline(
-  g: Graphics,
-  poly: ReadonlyArray<{ x: number; y: number }>,
-  dashLen: number,
-  gapLen: number,
-  offset: number,
-): void {
-  const cycle = dashLen + gapLen;
-  let s = -offset; // arc-length cursor; first dash starts at `offset` px in
-  let dashOpen = false; // true while we are mid-dash across a segment boundary
-
-  for (let i = 0; i < poly.length - 1; i++) {
-    const a = poly[i]!;
-    const b = poly[i + 1]!;
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const segLen = Math.hypot(dx, dy);
-    if (segLen === 0) continue;
-    const ux = dx / segLen;
-    const uy = dy / segLen;
-
-    // Walk the segment, emitting alternating dash/gap chunks of `cycle`.
-    let local = 0;
-    while (local < segLen) {
-      // Distance into the current cycle:
-      const within = ((s + local) % cycle + cycle) % cycle;
-      const isDash = within < dashLen;
-      const remainingInPhase = isDash ? dashLen - within : cycle - within;
-      const step = Math.min(remainingInPhase, segLen - local);
-
-      if (isDash) {
-        const px = a.x + ux * local;
-        const py = a.y + uy * local;
-        const ex = a.x + ux * (local + step);
-        const ey = a.y + uy * (local + step);
-        if (!dashOpen) {
-          g.moveTo(px, py); // start a new dash sub-path
-          dashOpen = true;
-        }
-        g.lineTo(ex, ey);  // extend current dash (may cross a corner)
-      } else {
-        dashOpen = false;   // gap ends the current dash sub-path
-      }
-
-      const prev = local;
-      local += step;
-      if (local === prev) {
-        // FP stall: step is sub-ULP at this magnitude — close the dash so
-        // the next segment doesn't get a wrong lineTo continuation.
-        dashOpen = false;
-        break;
-      }
-    }
-    s += segLen;
   }
 }
