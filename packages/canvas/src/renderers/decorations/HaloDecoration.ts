@@ -15,6 +15,7 @@
 
 import { Container, Graphics } from 'pixi.js';
 import type { IShapeDecoration, ShapeDecorationHostInfo } from '../types';
+import { expandPolyline, polyToShape } from './polylineUtils';
 
 export interface HaloStyle {
   /** Halo color (hex). */
@@ -69,6 +70,8 @@ export class HaloDecoration implements IShapeDecoration<HaloStyle> {
       const rx = width / 2 + padding;
       const ry = height / 2 + padding;
       g.ellipse(cx, cy, rx, ry);
+    } else if (host.outlinePolyline && host.outlinePolyline.length >= 3) {
+      polyToShape(g, expandPolyline(host.outlinePolyline, padding));
     } else {
       g.roundRect(
         x - padding,

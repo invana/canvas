@@ -11,6 +11,7 @@
 
 import { Container, Graphics } from 'pixi.js';
 import type { IShapeDecoration, ShapeDecorationHostInfo } from '../types';
+import { expandPolyline, polyToShape } from './polylineUtils';
 
 export interface BorderStyle {
   readonly color: number;
@@ -72,6 +73,9 @@ export class BorderDecoration implements IShapeDecoration<BorderStyle> {
       const rx = Math.max(0, w / 2 - inset);
       const ry = Math.max(0, h / 2 - inset);
       g.ellipse(cx, cy, rx, ry);
+    } else if (host.outlinePolyline && host.outlinePolyline.length >= 3) {
+      // Positive inset shrinks toward centroid; negative expands outward.
+      polyToShape(g, expandPolyline(host.outlinePolyline, -inset));
     } else if (cornerRadius > 0) {
       g.roundRect(x + inset, y + inset, w - 2 * inset, h - 2 * inset, cornerRadius);
     } else {

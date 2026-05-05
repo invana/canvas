@@ -14,6 +14,7 @@
 
 import { Container, Graphics } from 'pixi.js';
 import type { IShapeDecoration, ShapeDecorationHostInfo } from '../types';
+import { maxRadiusFromCentroid } from './polylineUtils';
 
 export interface DashedBorderRotatingStyle {
   readonly color: number;
@@ -84,7 +85,10 @@ export class DashedBorderRotatingDecoration
     const { x, y, width: w, height: h } = this.host.bounds;
     const cx = x + w / 2;
     const cy = y + h / 2;
-    const radius = Math.hypot(w, h) / 2 + padding;
+    // For polygon/path, use the actual max-vertex distance for a tighter fit.
+    const radius = this.host.outlinePolyline
+      ? maxRadiusFromCentroid(this.host.outlinePolyline) + padding
+      : Math.hypot(w, h) / 2 + padding;
 
     // Pivot the gfx so rotation happens around the host center, not the
     // surface origin (which is the shape's origin = its center for centered

@@ -9,6 +9,10 @@
  * line segments alternating dash / gap. The `dashOffset` advances each
  * tick, producing the classic crawling-ants animation.
  *
+ * Dashes that span a polyline corner are rendered as a single continuous path
+ * so the line join is drawn correctly. A separate `moveTo` is only emitted at
+ * the true start of each dash.
+ *
  * Outline geometry:
  *   • `circle` / `ellipse` hosts → arc-segmented ring
  *   • everything else            → rectangular bbox perimeter
@@ -16,6 +20,7 @@
 
 import { Container, Graphics } from 'pixi.js';
 import type { IShapeDecoration, ShapeDecorationHostInfo } from '../types';
+import { expandPolyline } from './polylineUtils';
 
 export interface MarchingAntsStyle {
   readonly color: number;
@@ -114,7 +119,12 @@ export class MarchingAntsDecoration implements IShapeDecoration<MarchingAntsStyl
       return out;
     }
 
-    // Rectangular outline (closed).
+    // For polygon/path hosts, trace the actual outline expanded by `inset`.
+    if (this.host!.outlinePolyline && this.host!.outlinePolyline.length >= 3) {
+      return expandPolyline(this.host!.outlinePolyline, inset);
+    }
+
+    // Rectangular outline fallback (rect, image, text, etc.).
     const x0 = x - inset;
     const y0 = y - inset;
     const x1 = x + width + inset;
@@ -131,8 +141,10 @@ export class MarchingAntsDecoration implements IShapeDecoration<MarchingAntsStyl
 
 /**
  * Stamp dashed segments along a polyline. Walks segment-by-segment with a
- * cumulative arc-length cursor so dashes that span polyline corners are
- * broken cleanly at the corner.
+ * cumulative arc-length cursor. Dashes that span a polyline corner are drawn
+ * as a single continuous path (one moveTo + multiple lineTo's) so Pixi applies
+ * a proper line join at the corner instead of separate butt-cap end-pieces that
+ * create a double-cap flicker artifact.
  */
 function drawDashedPolyline(
   g: Graphics,
@@ -143,6 +155,8 @@ function drawDashedPolyline(
 ): void {
   const cycle = dashLen + gapLen;
   let s = -offset; // arc-length cursor; first dash starts at `offset` px in
+  let dashOpen = false; // true while we are mid-dash across a segment boundary
+
   for (let i = 0; i < poly.length - 1; i++) {
     const a = poly[i]!;
     const b = poly[i + 1]!;
@@ -161,15 +175,29 @@ function drawDashedPolyline(
       const isDash = within < dashLen;
       const remainingInPhase = isDash ? dashLen - within : cycle - within;
       const step = Math.min(remainingInPhase, segLen - local);
+
       if (isDash) {
-        const sx = a.x + ux * local;
-        const sy = a.y + uy * local;
+        const px = a.x + ux * local;
+        const py = a.y + uy * local;
         const ex = a.x + ux * (local + step);
         const ey = a.y + uy * (local + step);
-        g.moveTo(sx, sy);
-        g.lineTo(ex, ey);
+        if (!dashOpen) {
+          g.moveTo(px, py); // start a new dash sub-path
+          dashOpen = true;
+        }
+        g.lineTo(ex, ey);  // extend current dash (may cross a corner)
+      } else {
+        dashOpen = false;   // gap ends the current dash sub-path
       }
+
+      const prev = local;
       local += step;
+      if (local === prev) {
+        // FP stall: step is sub-ULP at this magnitude — close the dash so
+        // the next segment doesn't get a wrong lineTo continuation.
+        dashOpen = false;
+        break;
+      }
     }
     s += segLen;
   }

@@ -53,6 +53,7 @@ import { ImageShape } from './shapes/ImageShape';
 import { ImageCircleShape } from './shapes/ImageCircleShape';
 import { ImageRectShape } from './shapes/ImageRectShape';
 import { PathShape } from './shapes/PathShape';
+import type { PathCommand } from './shapes/PathShape';
 import { PolygonShape } from './shapes/PolygonShape';
 import { RectShape } from './shapes/RectShape';
 import { TextShape } from './shapes/TextShape';
@@ -469,6 +470,7 @@ export class ShapesRenderer {
         bounds: shape.shape.bounds(),
         surface: shape.shape.gfx,
         slotZIndex: z,
+        outlinePolyline: shapeOutlinePolyline(shape.spec),
       };
       deco.mount(host);
       decorations.set(slot, deco);
@@ -788,6 +790,7 @@ export class ShapesRenderer {
         bounds,
         surface: inst.shape.gfx,
         slotZIndex: slotZIndex(slot),
+        outlinePolyline: shapeOutlinePolyline(inst.spec),
       };
       deco.update(host);
     }
@@ -941,6 +944,117 @@ export class ShapesRenderer {
 
 // ─── Slot z-band ──────────────────────────────────────────────────────────
 //
+// ─── Shape outline helpers ───────────────────────────────────────────────────
+
+type Pt = { x: number; y: number };
+
+/**
+ * Returns a closed outline polyline for `polygon` and `path` specs so
+ * decorations can trace the actual shape geometry instead of the AABB.
+ * Returns `undefined` for all other shape kinds.
+ */
+function shapeOutlinePolyline(spec: BaseShapeSpec): ReadonlyArray<Pt> | undefined {
+  if (spec.kind === 'polygon') {
+    const pts = (spec as unknown as { points: ReadonlyArray<Pt> }).points;
+    if (!pts || pts.length < 3) return undefined;
+    const first = pts[0]!;
+    const last = pts[pts.length - 1]!;
+    return first.x === last.x && first.y === last.y ? pts : [...pts, first];
+  }
+  if (spec.kind === 'path') {
+    const commands = (spec as unknown as { commands: ReadonlyArray<PathCommand> }).commands;
+    if (!commands || commands.length === 0) return undefined;
+    return pathCommandsToOutline(commands);
+  }
+  return undefined;
+}
+
+function pathCommandsToOutline(commands: ReadonlyArray<PathCommand>): Pt[] {
+  const pts: Pt[] = [];
+  let cx = 0;
+  let cy = 0;
+  let subStartX = 0;
+  let subStartY = 0;
+
+  for (const cmd of commands) {
+    switch (cmd.kind) {
+      case 'moveTo':
+        subStartX = cmd.x;
+        subStartY = cmd.y;
+        cx = cmd.x;
+        cy = cmd.y;
+        pts.push({ x: cx, y: cy });
+        break;
+      case 'lineTo':
+        cx = cmd.x;
+        cy = cmd.y;
+        pts.push({ x: cx, y: cy });
+        break;
+      case 'quadTo':
+        sampleQuad(pts, cx, cy, cmd.cpx, cmd.cpy, cmd.x, cmd.y, 8);
+        cx = cmd.x;
+        cy = cmd.y;
+        break;
+      case 'cubicTo':
+        sampleCubic(pts, cx, cy, cmd.cp1x, cmd.cp1y, cmd.cp2x, cmd.cp2y, cmd.x, cmd.y, 12);
+        cx = cmd.x;
+        cy = cmd.y;
+        break;
+      case 'close':
+        if (pts.length > 0) pts.push({ x: subStartX, y: subStartY });
+        cx = subStartX;
+        cy = subStartY;
+        break;
+    }
+  }
+
+  // Ensure closed
+  if (pts.length > 1) {
+    const first = pts[0]!;
+    const last = pts[pts.length - 1]!;
+    if (first.x !== last.x || first.y !== last.y) {
+      pts.push({ x: first.x, y: first.y });
+    }
+  }
+
+  return pts;
+}
+
+function sampleQuad(
+  out: Pt[],
+  x0: number, y0: number,
+  cpx: number, cpy: number,
+  x1: number, y1: number,
+  steps: number,
+): void {
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    const mt = 1 - t;
+    out.push({
+      x: mt * mt * x0 + 2 * mt * t * cpx + t * t * x1,
+      y: mt * mt * y0 + 2 * mt * t * cpy + t * t * y1,
+    });
+  }
+}
+
+function sampleCubic(
+  out: Pt[],
+  x0: number, y0: number,
+  cp1x: number, cp1y: number,
+  cp2x: number, cp2y: number,
+  x1: number, y1: number,
+  steps: number,
+): void {
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    const mt = 1 - t;
+    out.push({
+      x: mt * mt * mt * x0 + 3 * mt * mt * t * cp1x + 3 * mt * t * t * cp2x + t * t * t * x1,
+      y: mt * mt * mt * y0 + 3 * mt * mt * t * cp1y + 3 * mt * t * t * cp2y + t * t * t * y1,
+    });
+  }
+}
+
 // Decoration slots stack in a fixed visual order regardless of insertion
 // order. Built-in slots get well-known z-indices; unrecognised slot names
 // fall into a default mid-band so callers can pick custom slot names without

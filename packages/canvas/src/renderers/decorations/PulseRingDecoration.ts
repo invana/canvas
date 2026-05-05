@@ -5,41 +5,49 @@
  * Registered as kind `'pulse-ring'`, target `'shape'`. Lands in the `'pulse'`
  * slot z-band (above the shape).
  *
- * Useful as an attention-getter on a hovered / freshly-spawned / target-of-
- * action node. The ring traces a circle/ellipse on round hosts and an
- * AABB-rounded-rect on others.
+ * Shape fidelity: the ring traces the exact host outline geometry —
+ * sharp-cornered rect for `rect` hosts, ellipse for `circle`/`ellipse`,
+ * properly offset polygon for `polygon`/`path`. Offset uses edge-normal
+ * intersection so every edge stays at a uniform `padding` distance from the
+ * original shape.
+ *
+ * Multiple rings: set `ringCount > 1` to emit N evenly-phased concentric
+ * rings simultaneously (radar-ping effect). Each ring owns a dedicated
+ * `Graphics` object so Pixi's path state never bleeds between rings.
  */
 
 import { Container, Graphics } from 'pixi.js';
 import type { IShapeDecoration, ShapeDecorationHostInfo } from '../types';
+import { offsetPolygon, polyToShape } from './polylineUtils';
 
 export interface PulseRingStyle {
   readonly color: number;
-  /** Stroke width. Default `2`. */
+  /** Stroke width in pixels. Default `2`. */
   readonly width?: number;
-  /** Starting alpha at the begin-pulse moment. Default `0.6`. */
+  /** Starting alpha at the moment a ring spawns. Default `0.6`. */
   readonly alpha?: number;
-  /** Padding from host bounds at pulse start (pixels). Default `0`. */
+  /** Outset from host bounds when the ring first appears. Default `0`. */
   readonly startPadding?: number;
-  /** Padding from host bounds at pulse end (pixels). Default `30`. */
+  /** Outset from host bounds when the ring disappears. Default `30`. */
   readonly endPadding?: number;
-  /** Loop period in ms. Default `1500`. */
+  /** Duration of one ring cycle in ms. Default `1500`. */
   readonly periodMs?: number;
+  /** Number of concurrently visible rings, evenly staggered. Default `1`. */
+  readonly ringCount?: number;
 }
 
 export class PulseRingDecoration implements IShapeDecoration<PulseRingStyle> {
   readonly style: PulseRingStyle;
   private readonly gfx: Container;
-  private readonly graphics: Graphics;
   private host?: ShapeDecorationHostInfo;
   private elapsed = 0;
+  /** One `Graphics` per ring — isolated draw contexts, no cross-ring bleed. */
+  private rings: Graphics[] = [];
 
   constructor(style: PulseRingStyle) {
     this.style = style;
     this.gfx = new Container();
     this.gfx.label = 'deco:pulse-ring';
-    this.graphics = new Graphics();
-    this.gfx.addChild(this.graphics);
   }
 
   mount(host: ShapeDecorationHostInfo): void {
@@ -58,40 +66,68 @@ export class PulseRingDecoration implements IShapeDecoration<PulseRingStyle> {
     const period = this.style.periodMs ?? 1500;
     this.elapsed = (this.elapsed + deltaMs) % period;
     this.redraw();
-    return true; // never retire
+    return true;
   }
 
   destroy(): void {
     this.gfx.destroy({ children: true });
+    this.rings = [];
   }
 
   private redraw(): void {
     if (!this.host) return;
     const period = this.style.periodMs ?? 1500;
-    const t = this.elapsed / period;
     const startPad = this.style.startPadding ?? 0;
     const endPad = this.style.endPadding ?? 30;
-    const padding = startPad + (endPad - startPad) * t;
     const startAlpha = this.style.alpha ?? 0.6;
-    const alpha = startAlpha * (1 - t);
+    const ringCount = Math.max(1, Math.round(this.style.ringCount ?? 1));
+    const color = this.style.color;
+    const strokeWidth = this.style.width ?? 2;
 
-    const g = this.graphics;
-    g.clear();
-    const { x, y, width, height } = this.host.bounds;
-    const cx = x + width / 2;
-    const cy = y + height / 2;
+    this.syncRings(ringCount);
 
-    if (this.host.hostKind === 'circle' || this.host.hostKind === 'ellipse') {
-      g.ellipse(cx, cy, width / 2 + padding, height / 2 + padding);
-    } else {
-      g.roundRect(
-        x - padding,
-        y - padding,
-        width + padding * 2,
-        height + padding * 2,
-        Math.max(padding, 4),
-      );
+    for (let r = 0; r < ringCount; r++) {
+      const t = ((this.elapsed / period) + r / ringCount) % 1;
+      const padding = startPad + (endPad - startPad) * t;
+      const alpha = startAlpha * (1 - t);
+
+      const g = this.rings[r]!;
+      g.clear();
+      this.drawOutline(g, padding);
+      g.stroke({ color, width: strokeWidth, alpha });
     }
-    g.stroke({ color: this.style.color, width: this.style.width ?? 2, alpha });
+  }
+
+  /** Grow or shrink the ring pool to match `count`. */
+  private syncRings(count: number): void {
+    while (this.rings.length < count) {
+      const g = new Graphics();
+      this.gfx.addChild(g);
+      this.rings.push(g);
+    }
+    while (this.rings.length > count) {
+      const g = this.rings.pop()!;
+      g.destroy();
+    }
+  }
+
+  /** Draw the ring outline at `padding` px outset from the host bounds. */
+  private drawOutline(g: Graphics, padding: number): void {
+    const { x, y, width, height } = this.host!.bounds;
+
+    if (this.host!.hostKind === 'circle' || this.host!.hostKind === 'ellipse') {
+      const cx = x + width / 2;
+      const cy = y + height / 2;
+      g.ellipse(cx, cy, width / 2 + padding, height / 2 + padding);
+      return;
+    }
+
+    if (this.host!.outlinePolyline && this.host!.outlinePolyline.length >= 3) {
+      polyToShape(g, offsetPolygon(this.host!.outlinePolyline, padding));
+      return;
+    }
+
+    // Rectangular fallback — sharp corners to match the host shape.
+    g.rect(x - padding, y - padding, width + padding * 2, height + padding * 2);
   }
 }

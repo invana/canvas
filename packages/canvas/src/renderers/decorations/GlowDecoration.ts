@@ -13,6 +13,7 @@
 
 import { BlurFilter, Container, Graphics } from 'pixi.js';
 import type { IShapeDecoration, ShapeDecorationHostInfo } from '../types';
+import { expandPolyline, polyToShape } from './polylineUtils';
 
 export interface GlowStyle {
   readonly color: number;
@@ -64,6 +65,8 @@ export class GlowDecoration implements IShapeDecoration<GlowStyle> {
 
     if (host.hostKind === 'circle' || host.hostKind === 'ellipse') {
       g.ellipse(cx, cy, width / 2 + padding, height / 2 + padding);
+    } else if (host.outlinePolyline && host.outlinePolyline.length >= 3) {
+      polyToShape(g, expandPolyline(host.outlinePolyline, padding));
     } else {
       g.roundRect(
         x - padding,

@@ -178,6 +178,13 @@ export interface ShapeDecorationHostInfo {
   readonly surface: Container;
   /** Pre-computed z-index for the supplied slot. See SLOT_Z table in renderer. */
   readonly slotZIndex: number;
+  /**
+   * Closed outline polyline in shape-local coordinates. Present for `polygon`
+   * and `path` hosts; absent for `circle`, `ellipse`, `rect`, `image`, `text`.
+   * Decorations that trace outlines should use this instead of the AABB
+   * fallback when available, so the decoration follows the actual shape geometry.
+   */
+  readonly outlinePolyline?: ReadonlyArray<{ readonly x: number; readonly y: number }>;
 }
 
 export interface ConnectorDecorationHostInfo {
