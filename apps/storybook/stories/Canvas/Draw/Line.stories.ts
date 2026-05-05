@@ -8,15 +8,14 @@ const meta: Meta = { title: 'Canvas/Draw/Line' };
 export default meta;
 type Story = StoryObj;
 
-const toHex = (s: string) => parseInt(s.slice(1), 16);
-
-const SRC = { x: 60, y: 0 };
-const TGT = { x: 500, y: 120 };
-
 export const Line: Story = {
   render: () => createContainer({ id: 'cvs-line' }),
 
   play: async ({ canvasElement }) => {
+    const toHex = (s: string) => parseInt(s.slice(1), 16);
+    const SRC = { x: 60, y: 0 };
+    const TGT = { x: 500, y: 120 };
+
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-line')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });

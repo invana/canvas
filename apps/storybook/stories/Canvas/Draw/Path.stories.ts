@@ -8,23 +8,21 @@ const meta: Meta = { title: 'Canvas/Draw/Path' };
 export default meta;
 type Story = StoryObj;
 
-const toHex = (s: string) => parseInt(s.slice(1), 16);
-
-// Chevron arrow pointing right — closed path, scales with `size`.
-const chevronCommands = (size: number) => [
-  { kind: 'moveTo' as const, x: -size * 0.9, y: -size },
-  { kind: 'lineTo' as const, x:  size * 0.2,  y: -size },
-  { kind: 'lineTo' as const, x:  size,         y: 0    },
-  { kind: 'lineTo' as const, x:  size * 0.2,  y:  size },
-  { kind: 'lineTo' as const, x: -size * 0.9,  y:  size },
-  { kind: 'lineTo' as const, x: -size * 0.1,  y: 0     },
-  { kind: 'close'  as const },
-];
-
 export const Path: Story = {
   render: () => createContainer({ id: 'cvs-path' }),
 
   play: async ({ canvasElement }) => {
+    const toHex = (s: string) => parseInt(s.slice(1), 16);
+    const chevronCommands = (size: number) => [
+      { kind: 'moveTo' as const, x: -size * 0.9, y: -size },
+      { kind: 'lineTo' as const, x:  size * 0.2,  y: -size },
+      { kind: 'lineTo' as const, x:  size,         y: 0    },
+      { kind: 'lineTo' as const, x:  size * 0.2,  y:  size },
+      { kind: 'lineTo' as const, x: -size * 0.9,  y:  size },
+      { kind: 'lineTo' as const, x: -size * 0.1,  y: 0     },
+      { kind: 'close'  as const },
+    ];
+
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-path')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });

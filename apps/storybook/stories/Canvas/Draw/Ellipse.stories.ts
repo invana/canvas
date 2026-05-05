@@ -8,12 +8,11 @@ const meta: Meta = { title: 'Canvas/Draw/Ellipse' };
 export default meta;
 type Story = StoryObj;
 
-const toHex = (s: string) => parseInt(s.slice(1), 16);
-
 export const Ellipse: Story = {
   render: () => createContainer({ id: 'cvs-ellipse' }),
 
   play: async ({ canvasElement }) => {
+    const toHex = (s: string) => parseInt(s.slice(1), 16);
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-ellipse')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });

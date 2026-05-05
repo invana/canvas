@@ -8,14 +8,12 @@ const meta: Meta = { title: 'Canvas/Renderer/Shapes' };
 export default meta;
 type Story = StoryObj;
 
-const toHex = (s: string) => parseInt(s.slice(1), 16);
-
-// A single server unit — chassis + front panel + 2 status LEDs.
-// Demonstrates composing multiple shape primitives into one logical component.
 export const ServerRack: Story = {
   render: () => createContainer({ id: 'cvs-server-rack' }),
 
   play: async ({ canvasElement }) => {
+    const toHex = (s: string) => parseInt(s.slice(1), 16);
+
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-server-rack')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
@@ -59,6 +57,7 @@ export const ServerRack: Story = {
     }
 
     addShapes();
+    canvas.camera.fitContent(layer.getBounds(), 100);
 
     function redraw() {
       removeShapes();

@@ -8,12 +8,12 @@ const meta: Meta = { title: 'Canvas/Renderer/Markers' };
 export default meta;
 type Story = StoryObj;
 
-const toHex = (s: string) => parseInt(s.slice(1), 16);
-
 export const Markers: Story = {
   render: () => createContainer({ id: 'cvs-markers' }),
 
   play: async ({ canvasElement }) => {
+    const toHex = (s: string) => parseInt(s.slice(1), 16);
+
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-markers')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
@@ -51,6 +51,7 @@ export const Markers: Story = {
     }
 
     layer.renderer.addConnector('edge', buildSpec() as never);
+    canvas.camera.fitContent(layer.getBounds(), 100);
 
     function redraw() {
       layer.renderer.removeConnector('edge');

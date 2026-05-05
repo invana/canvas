@@ -8,14 +8,15 @@ const meta: Meta = { title: 'Canvas/Draw' };
 export default meta;
 type Story = StoryObj;
 
-const IMAGE_URL = 'https://picsum.photos/seed/invana-a/400/240.jpg';
-const FITS = ['fill', 'cover', 'none', 'scale-down'] as const;
-type FillFit = typeof FITS[number];
-
 export const ImageFill: Story = {
   render: () => createContainer({ id: 'cvs-draw-img' }),
 
   play: async ({ canvasElement }) => {
+    const IMAGE_URL = 'https://picsum.photos/seed/invana-a/400/240.jpg';
+    const FITS = ['fill', 'cover', 'none', 'scale-down'] as const;
+    type FillFit = typeof FITS[number];
+    const toHex = (s: string) => parseInt(s.slice(1), 16);
+
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-draw-img')!;
 
     const registry = new TextureRegistry();
@@ -32,7 +33,6 @@ export const ImageFill: Story = {
     const g = layer.createGraphics('img-gfx');
 
     const settings = { shape: 'circle' as 'circle' | 'rect', fillFit: 'cover' as FillFit, radius: 80, strokeWidth: 3, strokeColor: '#6366f1' };
-    const toHex = (s: string) => parseInt(s.slice(1), 16);
 
     function redraw() {
       g.clear();

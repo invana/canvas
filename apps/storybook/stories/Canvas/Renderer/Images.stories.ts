@@ -8,16 +8,15 @@ const meta: Meta = { title: 'Canvas/Renderer/Images' };
 export default meta;
 type Story = StoryObj;
 
-const toHex = (s: string) => parseInt(s.slice(1), 16);
-
-const IMAGE_URL = 'https://picsum.photos/seed/invana-a/400/240.jpg';
-const FITS = ['fill', 'cover', 'none', 'scale-down'] as const;
-type FillFit = typeof FITS[number];
-
 export const Images: Story = {
   render: () => createContainer({ id: 'cvs-renderer-images' }),
 
   play: async ({ canvasElement }) => {
+    const toHex = (s: string) => parseInt(s.slice(1), 16);
+    const IMAGE_URL = 'https://picsum.photos/seed/invana-a/400/240.jpg';
+    const FITS = ['fill', 'cover', 'none', 'scale-down'] as const;
+    type FillFit = typeof FITS[number];
+
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-renderer-images')!;
 
     const registry = new TextureRegistry();
@@ -48,6 +47,7 @@ export const Images: Story = {
     }
 
     layer.renderer.addShape('img', buildSpec() as never);
+    canvas.camera.fitContent(layer.getBounds(), 100);
 
     function redraw() {
       layer.renderer.removeShape('img');

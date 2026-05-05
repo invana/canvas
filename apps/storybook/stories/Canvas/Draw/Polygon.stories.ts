@@ -8,19 +8,17 @@ const meta: Meta = { title: 'Canvas/Draw/Polygon' };
 export default meta;
 type Story = StoryObj;
 
-const toHex = (s: string) => parseInt(s.slice(1), 16);
-
-// Pointy-top hexagon at radius r.
-const hexPoints = (r: number) => [
-  { x: 0, y: -r }, { x: r * 0.866, y: -r * 0.5 },
-  { x: r * 0.866, y:  r * 0.5 }, { x: 0, y:  r },
-  { x: -r * 0.866, y: r * 0.5 }, { x: -r * 0.866, y: -r * 0.5 },
-];
-
 export const Polygon: Story = {
   render: () => createContainer({ id: 'cvs-polygon' }),
 
   play: async ({ canvasElement }) => {
+    const toHex = (s: string) => parseInt(s.slice(1), 16);
+    const hexPoints = (r: number) => [
+      { x: 0, y: -r }, { x: r * 0.866, y: -r * 0.5 },
+      { x: r * 0.866, y:  r * 0.5 }, { x: 0, y:  r },
+      { x: -r * 0.866, y: r * 0.5 }, { x: -r * 0.866, y: -r * 0.5 },
+    ];
+
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-polygon')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });

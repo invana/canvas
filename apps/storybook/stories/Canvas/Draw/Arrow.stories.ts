@@ -8,12 +8,11 @@ const meta: Meta = { title: 'Canvas/Draw/Arrow' };
 export default meta;
 type Story = StoryObj;
 
-const toHex = (s: string) => parseInt(s.slice(1), 16);
-
 export const Arrow: Story = {
   render: () => createContainer({ id: 'cvs-arrow' }),
 
   play: async ({ canvasElement }) => {
+    const toHex = (s: string) => parseInt(s.slice(1), 16);
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-arrow')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });

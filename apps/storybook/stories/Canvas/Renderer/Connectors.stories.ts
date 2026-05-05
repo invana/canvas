@@ -8,15 +8,14 @@ const meta: Meta = { title: 'Canvas/Renderer/Connectors' };
 export default meta;
 type Story = StoryObj;
 
-const toHex = (s: string) => parseInt(s.slice(1), 16);
-
-const SRC = { kind: 'point' as const, x: 80, y: 200 };
-const TGT = { kind: 'point' as const, x: 480, y: 340 };
-
 export const Connectors: Story = {
   render: () => createContainer({ id: 'cvs-connectors' }),
 
   play: async ({ canvasElement }) => {
+    const toHex = (s: string) => parseInt(s.slice(1), 16);
+    const SRC = { kind: 'point' as const, x: 80, y: 200 };
+    const TGT = { kind: 'point' as const, x: 480, y: 340 };
+
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-connectors')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
@@ -51,6 +50,7 @@ export const Connectors: Story = {
     }
 
     layer.renderer.addConnector('edge', buildSpec() as never);
+    canvas.camera.fitContent(layer.getBounds(), 100);
 
     function redraw() {
       layer.renderer.removeConnector('edge');

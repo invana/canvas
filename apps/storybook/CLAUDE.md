@@ -40,6 +40,8 @@ gui.add(settings, 'alpha', 0, 1, 0.01).onChange(redraw);
 
 Always use the **`render` + `play`** pattern. Never use `requestAnimationFrame`.
 
+**Put everything inside `play`.** All constants, helper functions, shape data, settings objects, and GUI setup must be defined inside the `play` function body — not at module level. Storybook's "Show code" tab only renders the story object literal; anything declared outside `play` is invisible to readers of that tab.
+
 - `render` — synchronously returns the container DOM element via `createContainer`.
 - `play` — async; runs after Storybook mounts the element; all canvas init goes here.
 
