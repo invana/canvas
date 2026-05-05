@@ -12,7 +12,6 @@ import { describe, expect, it } from 'vitest';
 
 import { Camera } from '../../../src/camera/Camera';
 import { CanvasEventBus } from '../../../src/events/CanvasEventBus';
-import { SubLayer } from '../../../src/layers/SubLayer';
 import { ShapesRenderer } from '../../../src/renderers/ShapesRenderer';
 import { makeTestScene } from '../../_helpers/makeWorld';
 import type {
@@ -83,15 +82,14 @@ function makeRenderer() {
   const root = new Container({ isRenderGroup: true });
   root.label = 'test';
   world.addChild(root);
-  const subLayer = new SubLayer('test', root);
   const camera = new Camera({
     viewport: world,
     screenWidth: 800,
     screenHeight: 600,
     bus,
   });
-  const renderer = new ShapesRenderer({ subLayer, camera });
-  return { renderer, world, subLayer };
+  const renderer = new ShapesRenderer({ container: root, camera });
+  return { renderer, world, root };
 }
 
 // ─── Tests ─────────────────────────────────────────────────────────────────

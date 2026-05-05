@@ -1,26 +1,24 @@
 /**
- * `WorldLayer` — abstract Layer that sits in the **world coordinate space**.
+ * `WorldLayer` — abstract base for layers that live in **world coordinate space**.
  *
  * Architecture: see `architecture-proposal.md` §2.1.
  *
  * - Camera-affected: pans / zooms with the camera.
- * - Owns a root `SubLayer` (`this.subLayer`) attached to `surfaces.world`.
- *   The subLayer's `Container` is a pixi RenderGroup, so the layer is an
- *   independent GPU batch / cull unit.
+ * - Owns a root pixi `Container` (RenderGroup) attached to `surfaces.world`.
  * - `hitTest(worldX, worldY)` — input is in world coordinates.
  *
- * Subclasses access `this.subLayer` directly, or call `this.createSubLayer(id)`
- * to subdivide rendering (e.g. an `edges` sub-layer below a `nodes` sub-layer).
+ * Subclasses call `this.createGraphics(label?)` or `this.createContainer(label?)`
+ * to add pixi display objects, and override `onMount(ctx)` to wire up renderers.
+ * For stacked draw-order (e.g. edges below nodes), use separate Layer instances.
  *
  * The type-distinct `hitTest` signature (vs. `ScreenLayer`'s) is what stops
  * consumers passing screen coords to a world layer or vice versa.
  */
 
-import { Container, type Graphics } from 'pixi.js';
+import { Container, Graphics } from 'pixi.js';
 import type { CanvasContext } from '../context/CanvasContext';
 import type { EventMap } from '../events/EventEmitter';
 import { Layer, type LayerOptions } from './Layer';
-import { SubLayer } from './SubLayer';
 
 export interface WorldLayerHit {
   /** Whatever the subclass chooses to return — a node id, a sub-region, etc. */
@@ -37,24 +35,20 @@ export abstract class WorldLayer<
   THit extends WorldLayerHit = WorldLayerHit,
 > extends Layer<TOptions, TState, TEvents, TDirtyBucket> {
   /** Backing field — assigned in `mount`, cleared in `unmount`. */
-  private _subLayer?: SubLayer;
+  private _container?: Container;
 
   /**
-   * Root `SubLayer` for this layer. Set on `mount`, cleared on `unmount`.
-   * Available inside `onMount(ctx)` and for the layer's lifetime thereafter.
+   * Root pixi `Container` (RenderGroup) for this layer. Available from
+   * `onMount(ctx)` for the layer's lifetime. Throws before mount / after unmount.
    *
-   * **Public-readable** so cross-layer code can access peer sub-layers via
-   * `ctx.layers.get<MyLayer>('id').subLayer`. Reading is safe; mutating a
-   * peer's subLayer (e.g. `peer.subLayer.createSubLayer(...)` from outside)
-   * violates layer ownership and should be avoided.
-   *
-   * Throws if accessed before `mount` or after `unmount`.
+   * Pass to `ShapesRenderer` as the `container` option when wiring up a renderer
+   * inside `onMount`. Subclass-only — not part of the external layer API.
    */
-  get subLayer(): SubLayer {
-    if (!this._subLayer) {
-      throw new Error(`WorldLayer "${this.id}" subLayer accessed before mount`);
+  protected get container(): Container {
+    if (!this._container) {
+      throw new Error(`WorldLayer "${this.id}" container accessed before mount`);
     }
-    return this._subLayer;
+    return this._container;
   }
 
   constructor(opts: LayerOptions<TOptions>) {
@@ -63,7 +57,7 @@ export abstract class WorldLayer<
 
   override mount(ctx: CanvasContext): void {
     // Build the root container BEFORE calling `super.mount(ctx)` so that
-    // `onMount(ctx)` (invoked by `Layer.mount`) can rely on `this.subLayer`.
+    // `onMount(ctx)` (invoked by `Layer.mount`) can rely on `this.container`.
     const root = new Container({ isRenderGroup: true });
     root.label = this.id;
     if (this.zIndex !== 0) {
@@ -71,27 +65,15 @@ export abstract class WorldLayer<
       ctx.world.sortableChildren = true;
     }
     ctx.world.addChild(root);
-    this._subLayer = new SubLayer(this.id, root);
+    this._container = root;
     super.mount(ctx);
   }
 
   override unmount(): void {
     if (!this.mounted) return;
     super.unmount();
-    this._subLayer?.container.destroy({ children: true });
-    this._subLayer = undefined;
-  }
-
-  /**
-   * Create a child `SubLayer` of this layer's root. Use when you want a
-   * z-ordered visual subdivision *within* this single layer (e.g. an
-   * `edges` slot below a `nodes` slot, both projected from the same data).
-   * For top-level peers, register a separate `Layer` on the canvas instead.
-   *
-   * Delegates to `this.subLayer.createSubLayer(id, options)`.
-   */
-  createSubLayer(subId: string, options?: { zIndex?: number }): SubLayer {
-    return this.subLayer.createSubLayer(subId, options);
+    this._container?.destroy({ children: true });
+    this._container = undefined;
   }
 
   /**
@@ -99,24 +81,23 @@ export abstract class WorldLayer<
    * sanctioned way for layer authors to obtain a `Graphics` for direct
    * painting via `@invana/canvas/draw` primitives — keeps pixi internal
    * (no `new Graphics()` in user code).
-   *
-   * Delegates to `this.subLayer.createGraphics(label)`.
    */
   createGraphics(label?: string): Graphics {
-    return this.subLayer.createGraphics(label);
+    const g = new Graphics();
+    if (label) g.label = label;
+    this.container.addChild(g);
+    return g;
   }
 
   /**
    * Create a plain pixi `Container` attached to this layer's root container.
-   * Useful as a parent for mounted display objects (e.g. text via
-   * `mountPlainText(container, …)`). For an independent draw-order slot,
-   * prefer `createSubLayer` (returns a `SubLayer` with hierarchical id and
-   * a RenderGroup container).
-   *
-   * Delegates to `this.subLayer.createContainer(label)`.
+   * Useful as a parent for mounted display objects (e.g. text sprites).
    */
   createContainer(label?: string): Container {
-    return this.subLayer.createContainer(label);
+    const c = new Container();
+    if (label) c.label = label;
+    this.container.addChild(c);
+    return c;
   }
 
   /**
@@ -127,7 +108,11 @@ export abstract class WorldLayer<
    */
   setZIndex(z: number): void {
     this.zIndex = z;
-    if (this.mounted) this.subLayer.setZIndex(z);
+    if (this._container) {
+      this._container.zIndex = z;
+      const parent = this._container.parent;
+      if (parent) parent.sortableChildren = true;
+    }
   }
 
   /**
@@ -136,7 +121,7 @@ export abstract class WorldLayer<
    * Suitable for "fit to content" calls; do not call every frame.
    */
   getBounds(): { x: number; y: number; width: number; height: number } {
-    const b = this.subLayer.container.getLocalBounds();
+    const b = this.container.getLocalBounds();
     return { x: b.minX, y: b.minY, width: b.maxX - b.minX, height: b.maxY - b.minY };
   }
 

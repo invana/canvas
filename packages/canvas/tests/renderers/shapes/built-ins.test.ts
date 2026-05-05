@@ -8,7 +8,6 @@ import { describe, expect, it } from 'vitest';
 
 import { Camera } from '../../../src/camera/Camera';
 import { CanvasEventBus } from '../../../src/events/CanvasEventBus';
-import { SubLayer } from '../../../src/layers/SubLayer';
 import { ShapesRenderer } from '../../../src/renderers/ShapesRenderer';
 import type { CircleShapeSpec } from '../../../src/renderers/shapes/CircleShape';
 import type { RectShapeSpec } from '../../../src/renderers/shapes/RectShape';
@@ -20,15 +19,14 @@ function makeRenderer() {
   const root = new Container({ isRenderGroup: true });
   root.label = 'test';
   world.addChild(root);
-  const subLayer = new SubLayer('test', root);
   const camera = new Camera({
     viewport: world,
     screenWidth: 800,
     screenHeight: 600,
     bus,
   });
-  const renderer = new ShapesRenderer({ subLayer, camera });
-  return { renderer, subLayer };
+  const renderer = new ShapesRenderer({ container: root, camera });
+  return { renderer };
 }
 
 describe('Built-in shapes — circle', () => {

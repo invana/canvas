@@ -5,8 +5,10 @@ import {
   WheelZoomBehaviour,
   PinchZoomBehaviour,
   KeyboardCameraInputBehaviour,
+  WorldLayer,
+  ShapesRenderer,
 } from '@invana/canvas';
-import { RendererLayer } from '../_shared/GenericLayer';
+import type { CanvasContext } from '@invana/canvas';
 import { createContainer } from '../div-util';
 
 const meta: Meta = { title: 'Canvas/Showcase' };
@@ -17,6 +19,15 @@ export const Showcase: Story = {
   render: () => createContainer({ id: 'cvs-showcase' }),
 
   play: async ({ canvasElement }) => {
+    class RenderLayer extends WorldLayer {
+      renderer!: ShapesRenderer;
+      protected createState() { return {}; }
+      protected onMount(ctx: CanvasContext) {
+        this.renderer = new ShapesRenderer({ container: this.container, camera: ctx.camera });
+      }
+      hitTest() { return null; }
+    }
+
     function hexagonPoints(radius: number): Array<{ x: number; y: number }> {
       return Array.from({ length: 6 }, (_, i) => {
         const a = (Math.PI / 3) * i - Math.PI / 2;
@@ -68,7 +79,7 @@ export const Showcase: Story = {
     canvas.behaviours.register(new PinchZoomBehaviour({ id: 'pinch', enabled: true }));
     canvas.behaviours.register(new KeyboardCameraInputBehaviour({ id: 'keyboard-camera', enabled: true }));
 
-    const layer = new RendererLayer({ id: 'showcase', options: {} });
+    const layer = new RenderLayer({ id: 'showcase', options: {} });
     canvas.layers.add(layer);
 
     shapesData.forEach(({ id, ...props }) => layer.renderer.addShape(id, props as never));

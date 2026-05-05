@@ -7,7 +7,6 @@ import { describe, expect, it } from 'vitest';
 
 import { Camera } from '../../../src/camera/Camera';
 import { CanvasEventBus } from '../../../src/events/CanvasEventBus';
-import { SubLayer } from '../../../src/layers/SubLayer';
 import { ShapesRenderer } from '../../../src/renderers/ShapesRenderer';
 import type { CircleShapeSpec } from '../../../src/renderers/shapes/CircleShape';
 import type { TextShapeSpec } from '../../../src/renderers/shapes/TextShape';
@@ -19,14 +18,13 @@ function makeRenderer() {
   const root = new Container({ isRenderGroup: true });
   root.label = 'test';
   world.addChild(root);
-  const subLayer = new SubLayer('test', root);
   const camera = new Camera({
     viewport: world,
     screenWidth: 800,
     screenHeight: 600,
     bus,
   });
-  return { renderer: new ShapesRenderer({ subLayer, camera }) };
+  return { renderer: new ShapesRenderer({ container: root, camera }) };
 }
 
 describe('setLODLevel — default fallback (visibility toggle)', () => {

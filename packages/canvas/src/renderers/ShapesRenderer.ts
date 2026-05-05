@@ -26,22 +26,20 @@
  *
  * **Lifecycle**
  *
- * Constructed by the host Layer in `onMount(ctx)`. The Layer passes its
- * `SubLayer` and the canvas `Camera`. The renderer creates internal
- * `connectors` + `shapes` sub-layers (so connectors render below shapes).
- * On Layer unmount the parent SubLayer's container is destroyed (cascading
- * to the renderer's children); calling `destroy()` on the renderer first
- * ensures internal bookkeeping (instance maps, animation set, hit index)
- * is cleared.
+ * Constructed by the host Layer in `onMount(ctx)`. The Layer passes
+ * `this.container` (its own root pixi Container) and the canvas `Camera`.
+ * On Layer unmount the root container is destroyed (cascading to all renderer
+ * children); call `destroy()` on the renderer first to clear internal
+ * bookkeeping (instance maps, animation set, hit index).
  *
  * Status: Step 1 skeleton — registries + mutation/event/hit method
  * signatures. Built-in primitives, decoration framework, hit wiring, and
  * LOD primitives land in subsequent steps (see plan).
  */
 
+import { Container } from 'pixi.js';
 import type { Camera } from '../camera/Camera';
 import { EventEmitter } from '../events/EventEmitter';
-import type { SubLayer } from '../layers/SubLayer';
 import { TextureRegistry } from './TextureRegistry';
 import { SpritePool } from './SpritePool';
 import { ConnectorInstance } from './ConnectorInstance';
@@ -106,11 +104,11 @@ type AnimatedDecoration = { tick(deltaMs: number): boolean };
 
 export interface ShapesRendererOptions {
   /**
-   * Parent `SubLayer` the renderer attaches its pixi children to. The host
-   * Layer typically passes its root `subLayer`, or a dedicated child sub-layer
-   * (e.g. `this.createSubLayer('graph')`) when multiple renderers coexist.
+   * Pixi `Container` the renderer attaches its pixi children to. Pass
+   * `this.container` from the host `WorldLayer`'s `onMount` — the layer's own
+   * root container, obtained via the protected `container` getter.
    */
-  readonly subLayer: SubLayer;
+  readonly container: Container;
   /** Canvas camera — used for resolution-aware draws (e.g. text rasterisation). */
   readonly camera: Camera;
   /**
@@ -155,23 +153,8 @@ export class ShapesRenderer {
 
   // ─── Construction ───────────────────────────────────────────────────────
 
-  /**
-   * Parent `SubLayer` passed in by the host Layer. All shape, connector, and
-   * marker primitives attach to `subLayer.container` directly.
-   *
-   * **Z-order is insertion order.** Shapes / connectors stack in the order
-   * they're added to the renderer; later additions draw on top. For strict
-   * "edges below nodes" z-strata, instantiate two `ShapesRenderer`s on two
-   * separate `SubLayer`s the host Layer owns:
-   *
-   * ```ts
-   * const edges = this.createSubLayer('edges');
-   * const nodes = this.createSubLayer('nodes');
-   * this.edgeRenderer = new ShapesRenderer({ subLayer: edges, camera });
-   * this.nodeRenderer = new ShapesRenderer({ subLayer: nodes, camera });
-   * ```
-   */
-  readonly subLayer: SubLayer;
+  /** Pixi container all shape, connector, and marker primitives attach to. */
+  private readonly _container: Container;
 
   /**
    * Canvas camera. Exposed (read-only) so primitives can do
@@ -186,7 +169,7 @@ export class ShapesRenderer {
   private readonly spritePool = new SpritePool();
 
   constructor(opts: ShapesRendererOptions) {
-    this.subLayer = opts.subLayer;
+    this._container = opts.container;
     this.camera = opts.camera;
     this.textureRegistry = opts.textureRegistry ?? new TextureRegistry();
     this.registerBuiltins();
@@ -288,7 +271,7 @@ export class ShapesRenderer {
 
   /**
    * Add a shape. Throws if `id` already exists or `spec.kind` is unregistered.
-   * Pixi Graphics goes onto the renderer's `shapeSubLayer`; the bbox is
+   * Pixi Graphics attaches to the renderer's container; the bbox is
    * inserted into the hit index using the shape's `bounds()` translated by
    * the spec's `(x, y)`.
    */
@@ -301,7 +284,7 @@ export class ShapesRenderer {
       throw new Error(`ShapesRenderer.addShape: unknown shape kind "${spec.kind}"`);
     }
     const host: ShapeHostInfo = {
-      surface: this.subLayer.container,
+      surface: this._container,
       textureRegistry: this.textureRegistry,
       spritePool: this.spritePool,
     };
@@ -352,7 +335,7 @@ export class ShapesRenderer {
     if (!Ctor) {
       throw new Error(`ShapesRenderer.addConnector: unknown kind "${spec.kind}"`);
     }
-    const host: ConnectorHostInfo = { surface: this.subLayer.container };
+    const host: ConnectorHostInfo = { surface: this._container };
     const connector = new Ctor(spec, host) as import('./types').IConnector<TSpec>;
     const points = this.routePoints(spec);
     connector.draw(spec, points);
@@ -627,7 +610,7 @@ export class ShapesRenderer {
 
   /**
    * Release all renderer-owned objects. The host Layer calls this in its
-   * unmount path before the parent `SubLayer`'s container is destroyed
+   * unmount path before the host layer's container is destroyed
    * (which would orphan our pixi children otherwise).
    */
   destroy(): void {
@@ -724,7 +707,7 @@ export class ShapesRenderer {
    * (fresh connector) and `updateConnector` (when marker kinds change).
    */
   private installMarkers(inst: ConnectorInstance, spec: BaseConnectorSpec): void {
-    const host = { surface: this.subLayer.container };
+    const host = { surface: this._container };
     if (spec.sourceMarker) {
       const Ctor = this.markerRegistry.get(spec.sourceMarker);
       if (!Ctor) {

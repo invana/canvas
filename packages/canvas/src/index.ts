@@ -72,7 +72,6 @@ export type { WorldLayerHit } from './layers/WorldLayer';
 export { ScreenLayer } from './layers/ScreenLayer';
 export type { ScreenLayerHit } from './layers/ScreenLayer';
 
-export { SubLayer } from './layers/SubLayer';
 
 // ─── Behaviours ─────────────────────────────────────────────────────────
 export { Behaviour } from './behaviours/Behaviour';

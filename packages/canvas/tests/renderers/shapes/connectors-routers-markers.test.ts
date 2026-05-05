@@ -8,7 +8,6 @@ import { describe, expect, it } from 'vitest';
 
 import { Camera } from '../../../src/camera/Camera';
 import { CanvasEventBus } from '../../../src/events/CanvasEventBus';
-import { SubLayer } from '../../../src/layers/SubLayer';
 import { ShapesRenderer } from '../../../src/renderers/ShapesRenderer';
 import type { LineConnectorSpec } from '../../../src/renderers/connectors/LineConnector';
 import type { CurveConnectorSpec } from '../../../src/renderers/connectors/CurveConnector';
@@ -23,15 +22,14 @@ function makeRenderer() {
   const root = new Container({ isRenderGroup: true });
   root.label = 'test';
   world.addChild(root);
-  const subLayer = new SubLayer('test', root);
   const camera = new Camera({
     viewport: world,
     screenWidth: 800,
     screenHeight: 600,
     bus,
   });
-  const renderer = new ShapesRenderer({ subLayer, camera });
-  return { renderer };
+  const renderer = new ShapesRenderer({ container: root, camera });
+  return { renderer, root };
 }
 
 // ─── Routers (pure-fn unit tests) ──────────────────────────────────────────
@@ -150,7 +148,7 @@ describe('CurveConnector', () => {
 
 describe('Markers', () => {
   it('all four built-in marker kinds register', () => {
-    const { renderer } = makeRenderer();
+    const { renderer, root } = makeRenderer();
     for (const [i, marker] of (['arrow', 'circle', 'square', 'diamond'] as const).entries()) {
       renderer.addConnector<LineConnectorSpec>(`e-${i}`, {
         kind: 'line',
@@ -163,11 +161,11 @@ describe('Markers', () => {
       });
     }
     // 4 connector graphics + 4 marker containers = 8 children on the layer.
-    expect(renderer.subLayer.container.children.length).toBe(8);
+    expect(root.children.length).toBe(8);
   });
 
   it('source + target markers attach simultaneously', () => {
-    const { renderer } = makeRenderer();
+    const { renderer, root } = makeRenderer();
     renderer.addConnector<LineConnectorSpec>('e-1', {
       kind: 'line',
       source: { kind: 'point', x: 0, y: 0 },
@@ -178,11 +176,11 @@ describe('Markers', () => {
       targetMarker: 'arrow',
     });
     // 1 connector + 2 markers = 3 children
-    expect(renderer.subLayer.container.children.length).toBe(3);
+    expect(root.children.length).toBe(3);
   });
 
   it('updateConnector swapping marker kind re-installs cleanly', () => {
-    const { renderer } = makeRenderer();
+    const { renderer, root } = makeRenderer();
     renderer.addConnector<LineConnectorSpec>('e-1', {
       kind: 'line',
       source: { kind: 'point', x: 0, y: 0 },
@@ -191,14 +189,14 @@ describe('Markers', () => {
       strokeWidth: 1,
       targetMarker: 'circle',
     });
-    expect(renderer.subLayer.container.children.length).toBe(2);
+    expect(root.children.length).toBe(2);
     renderer.updateConnector<LineConnectorSpec>('e-1', { targetMarker: 'diamond' });
     // Still 1 connector + 1 marker = 2 (no leaks).
-    expect(renderer.subLayer.container.children.length).toBe(2);
+    expect(root.children.length).toBe(2);
   });
 
   it('removeConnector tears down markers along with the connector', () => {
-    const { renderer } = makeRenderer();
+    const { renderer, root } = makeRenderer();
     renderer.addConnector<LineConnectorSpec>('e-1', {
       kind: 'line',
       source: { kind: 'point', x: 0, y: 0 },
@@ -208,9 +206,9 @@ describe('Markers', () => {
       sourceMarker: 'circle',
       targetMarker: 'arrow',
     });
-    expect(renderer.subLayer.container.children.length).toBe(3);
+    expect(root.children.length).toBe(3);
     renderer.removeConnector('e-1');
-    expect(renderer.subLayer.container.children.length).toBe(0);
+    expect(root.children.length).toBe(0);
   });
 
   it('unknown marker kind throws on addConnector', () => {

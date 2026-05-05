@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, ShapesRenderer } from '@invana/canvas';
+import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { RendererLayer } from '../../_shared/GenericLayer';
 import { createContainer } from '../../div-util';
 
 const meta: Meta = { title: 'Canvas/Renderer/Shapes' };
@@ -12,6 +12,15 @@ export const Shapes: Story = {
   render: () => createContainer({ id: 'cvs-shapes' }),
 
   play: async ({ canvasElement }) => {
+    class RenderLayer extends WorldLayer {
+      renderer!: ShapesRenderer;
+      protected createState() { return {}; }
+      protected onMount(ctx: CanvasContext) {
+        this.renderer = new ShapesRenderer({ container: this.container, camera: ctx.camera });
+      }
+      hitTest() { return null; }
+    }
+
     const toHex = (s: string) => parseInt(s.slice(1), 16);
     const KINDS = ['circle', 'rect', 'ellipse', 'polygon', 'path'] as const;
     type ShapeKind = typeof KINDS[number];
@@ -48,7 +57,7 @@ export const Shapes: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new RendererLayer({ id: 'shapes', options: {} });
+    const layer = new RenderLayer({ id: 'shapes', options: {} });
     canvas.layers.add(layer);
 
     const settings = { kind: 'circle' as ShapeKind, fillColor: '#4f9cf9', strokeColor: '#1e3a8a', strokeWidth: 2 };

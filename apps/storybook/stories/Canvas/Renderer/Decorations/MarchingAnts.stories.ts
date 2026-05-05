@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, ShapesRenderer } from '@invana/canvas';
+import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { RendererLayer } from '../../../_shared/GenericLayer';
 import { createContainer } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Renderer/Decorations/MarchingAnts' };
@@ -12,6 +12,15 @@ export const MarchingAnts: Story = {
   render: () => createContainer({ id: 'cvs-deco-marching-ants' }),
 
   play: async ({ canvasElement }) => {
+    class RenderLayer extends WorldLayer {
+      renderer!: ShapesRenderer;
+      protected createState() { return {}; }
+      protected onMount(ctx: CanvasContext) {
+        this.renderer = new ShapesRenderer({ container: this.container, camera: ctx.camera });
+      }
+      hitTest() { return null; }
+    }
+
     const toHex = (s: string) => parseInt(s.slice(1), 16);
     const HEX_POINTS = [
       { x: 0, y: -50 }, { x: 43.3, y: -25 }, { x: 43.3, y: 25 },
@@ -40,7 +49,7 @@ export const MarchingAnts: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new RendererLayer({ id: 'deco-marching-ants', options: {} });
+    const layer = new RenderLayer({ id: 'deco-marching-ants', options: {} });
     canvas.layers.add(layer);
 
     for (const { id, spec } of SHAPES) {

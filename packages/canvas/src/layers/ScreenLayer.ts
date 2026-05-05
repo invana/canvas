@@ -1,16 +1,12 @@
 /**
- * `ScreenLayer` — abstract Layer that sits in **screen / viewport coordinate space**.
+ * `ScreenLayer` — abstract base for layers that live in **screen / viewport coordinate space**.
  *
  * Architecture: see `architecture-proposal.md` §2.1.
  *
  * - Viewport-fixed: NOT camera-affected. Pans / zooms do not transform it.
- * - Owns a root `SubLayer` (`this.subLayer`) attached **directly to**
- *   `ctx.stage` (the pixi `Application.stage`) — there is no wrapper
- *   "screen" container. `world` was added to stage first, so any ScreenLayer
- *   added afterwards sits above world in pixi's child-order draw model.
- *   The subLayer's `Container` is a plain `Container` (not a RenderGroup):
- *   screen-space content is typically lightweight HUD-style rendering and
- *   doesn't need its own GPU batch boundary.
+ * - Owns a root pixi `Container` attached directly to `ctx.stage`.
+ *   Plain `Container` (not a RenderGroup) — screen-space content is typically
+ *   lightweight HUD-style rendering that doesn't need its own GPU batch boundary.
  * - `hitTest(screenX, screenY)` — input is in screen pixels.
  *
  * Examples: `MiniMapLayer`, `DevInfoLayer`, HUD, tool palettes.
@@ -19,11 +15,10 @@
  * consumers passing world coords to a screen layer or vice versa.
  */
 
-import { Container, type Graphics } from 'pixi.js';
+import { Container, Graphics } from 'pixi.js';
 import type { CanvasContext } from '../context/CanvasContext';
 import type { EventMap } from '../events/EventEmitter';
 import { Layer, type LayerOptions } from './Layer';
-import { SubLayer } from './SubLayer';
 
 export interface ScreenLayerHit {
   readonly id: string;
@@ -39,21 +34,19 @@ export abstract class ScreenLayer<
   THit extends ScreenLayerHit = ScreenLayerHit,
 > extends Layer<TOptions, TState, TEvents, TDirtyBucket> {
   /** Backing field — assigned in `mount`, cleared in `unmount`. */
-  private _subLayer?: SubLayer;
+  private _container?: Container;
 
   /**
-   * Root `SubLayer` for this screen-space layer. Set on `mount`, cleared on
-   * `unmount`. Available inside `onMount(ctx)` for the layer's lifetime.
+   * Root pixi `Container` for this screen-space layer. Available from
+   * `onMount(ctx)` for the layer's lifetime. Throws before mount / after unmount.
    *
-   * **Public-readable** so cross-layer code can access peer sub-layers via
-   * `ctx.layers.get<MyLayer>('id').subLayer`. Reading is safe; mutating a
-   * peer's subLayer from outside violates layer ownership.
+   * Subclass-only — not part of the external layer API.
    */
-  get subLayer(): SubLayer {
-    if (!this._subLayer) {
-      throw new Error(`ScreenLayer "${this.id}" subLayer accessed before mount`);
+  protected get container(): Container {
+    if (!this._container) {
+      throw new Error(`ScreenLayer "${this.id}" container accessed before mount`);
     }
-    return this._subLayer;
+    return this._container;
   }
 
   constructor(opts: LayerOptions<TOptions>) {
@@ -62,7 +55,7 @@ export abstract class ScreenLayer<
 
   override mount(ctx: CanvasContext): void {
     // Build the root container BEFORE calling `super.mount(ctx)` so that
-    // `onMount(ctx)` can rely on `this.subLayer`.
+    // `onMount(ctx)` can rely on `this.container`.
     const root = new Container();
     root.label = this.id;
     if (this.zIndex !== 0) {
@@ -70,24 +63,15 @@ export abstract class ScreenLayer<
       ctx.stage.sortableChildren = true;
     }
     ctx.stage.addChild(root);
-    this._subLayer = new SubLayer(this.id, root);
+    this._container = root;
     super.mount(ctx);
   }
 
   override unmount(): void {
     if (!this.mounted) return;
     super.unmount();
-    this._subLayer?.container.destroy({ children: true });
-    this._subLayer = undefined;
-  }
-
-  /**
-   * Create a child `SubLayer` of this layer's root. Use for z-ordered visual
-   * subdivision *within* this single screen-space layer. For top-level peers,
-   * register a separate `Layer` on the canvas instead.
-   */
-  createSubLayer(subId: string, options?: { zIndex?: number }): SubLayer {
-    return this.subLayer.createSubLayer(subId, options);
+    this._container?.destroy({ children: true });
+    this._container = undefined;
   }
 
   /**
@@ -96,16 +80,21 @@ export abstract class ScreenLayer<
    * painting via `@invana/canvas/draw` primitives.
    */
   createGraphics(label?: string): Graphics {
-    return this.subLayer.createGraphics(label);
+    const g = new Graphics();
+    if (label) g.label = label;
+    this.container.addChild(g);
+    return g;
   }
 
   /**
    * Create a plain pixi `Container` attached to this layer's root container.
-   * Useful as a parent for mounted display objects (e.g. text via
-   * `mountPlainText(container, …)`).
+   * Useful as a parent for mounted display objects.
    */
   createContainer(label?: string): Container {
-    return this.subLayer.createContainer(label);
+    const c = new Container();
+    if (label) c.label = label;
+    this.container.addChild(c);
+    return c;
   }
 
   /**
@@ -115,7 +104,11 @@ export abstract class ScreenLayer<
    */
   setZIndex(z: number): void {
     this.zIndex = z;
-    if (this.mounted) this.subLayer.setZIndex(z);
+    if (this._container) {
+      this._container.zIndex = z;
+      const parent = this._container.parent;
+      if (parent) parent.sortableChildren = true;
+    }
   }
 
   /** Hit-test in screen / viewport coordinates. Top-most hit or `null`. */

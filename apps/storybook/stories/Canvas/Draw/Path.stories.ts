@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour, draw } from '@invana/canvas';
+import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, draw } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { GenericLayer } from '../../_shared/GenericLayer';
 import { createContainer } from '../../div-util';
 
 const meta: Meta = { title: 'Canvas/Draw/Path' };
@@ -12,6 +11,11 @@ export const Path: Story = {
   render: () => createContainer({ id: 'cvs-path' }),
 
   play: async ({ canvasElement }) => {
+    class DrawLayer extends WorldLayer {
+      protected createState() { return {}; }
+      hitTest() { return null; }
+    }
+
     const toHex = (s: string) => parseInt(s.slice(1), 16);
     const chevronCommands = (size: number) => [
       { kind: 'moveTo' as const, x: -size * 0.9, y: -size },
@@ -30,7 +34,7 @@ export const Path: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new GenericLayer({ id: 'path-layer', options: {} });
+    const layer = new DrawLayer({ id: 'path-layer', options: {} });
     canvas.layers.add(layer);
     const g = layer.createGraphics('path-gfx');
 

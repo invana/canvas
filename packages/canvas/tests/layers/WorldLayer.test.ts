@@ -35,19 +35,21 @@ function makeContext() {
   return ctx;
 }
 
-describe('WorldLayer — sub-layer lifecycle', () => {
-  it('mount creates a SubLayer rooted under ctx.world; unmount destroys it', () => {
+describe('WorldLayer — container lifecycle', () => {
+  it('mount creates a RenderGroup container under ctx.world; unmount destroys it', () => {
     const ctx = makeContext();
     const layer = new TestWorldLayer({ id: 'graph-1', options: { hits: [] } });
+    expect(ctx.world.children.length).toBe(0);
+
     layer.mount(ctx);
-    const root = layer.subLayer;
-    expect(root.id).toBe('graph-1');
-    expect(root.container.label).toBe('graph-1');
-    expect(root.container.isRenderGroup).toBe(true);
-    expect(ctx.world.children).toContain(root.container);
+    expect(ctx.world.children.length).toBe(1);
+    const root = ctx.world.children[0]!;
+    expect(root.label).toBe('graph-1');
+    expect(root.isRenderGroup).toBe(true);
 
     layer.unmount();
-    expect(root.container.destroyed).toBe(true);
+    expect(root.destroyed).toBe(true);
+    expect(ctx.world.children.length).toBe(0);
   });
 
   it('hitTest returns subclass result', () => {
@@ -61,7 +63,7 @@ describe('WorldLayer — sub-layer lifecycle', () => {
     expect(layer.hitTest(0, 0)).toBeNull();
   });
 
-  it('initial zIndex propagates to the SubLayer container', () => {
+  it('initial zIndex propagates to the root container', () => {
     const ctx = makeContext();
     const layer = new TestWorldLayer({
       id: 'graph-1',
@@ -69,37 +71,19 @@ describe('WorldLayer — sub-layer lifecycle', () => {
       zIndex: 7,
     });
     layer.mount(ctx);
-    expect(layer.subLayer.container.zIndex).toBe(7);
+    const root = ctx.world.children[0]!;
+    expect(root.zIndex).toBe(7);
     expect(ctx.world.sortableChildren).toBe(true);
   });
 
-  it('createSubLayer (via subLayer) yields hierarchical ids', () => {
+  it('two layers mount as separate containers on ctx.world', () => {
     const ctx = makeContext();
-    const layer = new TestWorldLayer({ id: 'graph-1', options: { hits: [] } });
-    layer.mount(ctx);
-    const edges = layer.subLayer.createSubLayer('edges');
-    const edgeLabels = edges.createSubLayer('labels');
-    expect(edges.id).toBe('graph-1:edges');
-    expect(edgeLabels.id).toBe('graph-1:edges:labels');
-    expect(edgeLabels.container.label).toBe('graph-1:edges:labels');
-    expect(edgeLabels.container.isRenderGroup).toBe(true);
-  });
-
-  it('subLayer is publicly readable for cross-layer access via the registry', () => {
-    const ctx = makeContext();
-    const a = new TestWorldLayer({ id: 'graph-1', options: { hits: [] } });
-    const b = new TestWorldLayer({ id: 'mini', options: { hits: [] } });
+    const a = new TestWorldLayer({ id: 'layer-a', options: { hits: [] } });
+    const b = new TestWorldLayer({ id: 'layer-b', options: { hits: [] } });
     ctx.layers.add(a);
     ctx.layers.add(b);
-
-    // From layer "b"'s perspective, look up peer "graph-1" and read its subLayer
-    const peer = ctx.layers.get<TestWorldLayer>('graph-1');
-    expect(peer).toBeDefined();
-    expect(peer!.subLayer.id).toBe('graph-1');
-  });
-
-  it('subLayer access throws before mount', () => {
-    const layer = new TestWorldLayer({ id: 'unmounted', options: { hits: [] } });
-    expect(() => layer.subLayer).toThrow(/accessed before mount/);
+    expect(ctx.world.children.length).toBe(2);
+    expect(ctx.world.children[0]!.label).toBe('layer-a');
+    expect(ctx.world.children[1]!.label).toBe('layer-b');
   });
 });

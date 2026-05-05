@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
-import { Canvas, DragPanBehaviour, TextureRegistry, WheelZoomBehaviour, draw } from '@invana/canvas';
+import { Canvas, DragPanBehaviour, TextureRegistry, WheelZoomBehaviour, WorldLayer, draw } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { GenericLayer } from '../../_shared/GenericLayer';
 import { createContainer } from '../../div-util';
 
 const meta: Meta = { title: 'Canvas/Draw' };
@@ -12,6 +11,11 @@ export const ImageFill: Story = {
   render: () => createContainer({ id: 'cvs-draw-img' }),
 
   play: async ({ canvasElement }) => {
+    class DrawLayer extends WorldLayer {
+      protected createState() { return {}; }
+      hitTest() { return null; }
+    }
+
     const IMAGE_URL = 'https://picsum.photos/seed/invana-a/400/240.jpg';
     const FITS = ['fill', 'cover', 'none', 'scale-down'] as const;
     type FillFit = typeof FITS[number];
@@ -28,7 +32,7 @@ export const ImageFill: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new GenericLayer({ id: 'img-layer', options: {} });
+    const layer = new DrawLayer({ id: 'img-layer', options: {} });
     canvas.layers.add(layer);
     const g = layer.createGraphics('img-gfx');
 

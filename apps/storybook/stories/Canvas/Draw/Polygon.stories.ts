@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour, draw } from '@invana/canvas';
+import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, draw } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { GenericLayer } from '../../_shared/GenericLayer';
 import { createContainer } from '../../div-util';
 
 const meta: Meta = { title: 'Canvas/Draw/Polygon' };
@@ -12,6 +11,11 @@ export const Polygon: Story = {
   render: () => createContainer({ id: 'cvs-polygon' }),
 
   play: async ({ canvasElement }) => {
+    class DrawLayer extends WorldLayer {
+      protected createState() { return {}; }
+      hitTest() { return null; }
+    }
+
     const toHex = (s: string) => parseInt(s.slice(1), 16);
     const hexPoints = (r: number) => [
       { x: 0, y: -r }, { x: r * 0.866, y: -r * 0.5 },
@@ -26,7 +30,7 @@ export const Polygon: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new GenericLayer({ id: 'polygon-layer', options: {} });
+    const layer = new DrawLayer({ id: 'polygon-layer', options: {} });
     canvas.layers.add(layer);
     const g = layer.createGraphics('polygon-gfx');
 
