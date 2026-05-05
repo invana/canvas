@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { RendererLayer } from '../../_shared/GenericLayer';
-import { createContainer } from '../../div-util';
+import { RendererLayer } from '../../../_shared/GenericLayer';
+import { createContainer } from '../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Decorations/Border' };
+const meta: Meta = { title: 'Canvas/Renderer/Decorations/Halo' };
 export default meta;
 type Story = StoryObj;
 
-export const Border: Story = {
-  render: () => createContainer({ id: 'cvs-deco-border' }),
+export const Halo: Story = {
+  render: () => createContainer({ id: 'cvs-deco-halo' }),
 
   play: async ({ canvasElement }) => {
     const toHex = (s: string) => parseInt(s.slice(1), 16);
@@ -34,13 +34,13 @@ export const Border: Story = {
       { id: 'path',    spec: { kind: 'path'    as const, x: 280,  y: 0, commands: ARROW_COMMANDS, fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2 } },
     ];
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-border')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-halo')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new RendererLayer({ id: 'deco-border', options: {} });
+    const layer = new RendererLayer({ id: 'deco-halo', options: {} });
     canvas.layers.add(layer);
 
     for (const { id, spec } of SHAPES) {
@@ -48,28 +48,20 @@ export const Border: Story = {
     }
     canvas.camera.fitContent(layer.getBounds(), 100);
 
-    const settings = { color: '#f43f5e', width: 3, alpha: 1, cornerRadius: 0, inset: 0 };
+    const settings = { color: '#f59e0b', alpha: 0.4, padding: 8 };
 
     function apply() {
-      const style = {
-        color: toHex(settings.color),
-        width: settings.width,
-        alpha: settings.alpha,
-        cornerRadius: settings.cornerRadius,
-        inset: settings.inset,
-      };
+      const style = { color: toHex(settings.color), alpha: settings.alpha, padding: settings.padding };
       for (const { id } of SHAPES) {
-        layer.renderer.setDecoration(id, 'border', { kind: 'border', style });
+        layer.renderer.setDecoration(id, 'halo', { kind: 'halo', style });
       }
     }
 
     apply();
 
-    const gui = new GUI({ title: 'Border' });
+    const gui = new GUI({ title: 'Halo' });
     gui.addColor(settings, 'color').onChange(apply);
-    gui.add(settings, 'width', 0, 20, 1).onChange(apply);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(apply);
-    gui.add(settings, 'cornerRadius', 0, 40, 1).onChange(apply);
-    gui.add(settings, 'inset', -20, 20, 1).onChange(apply);
+    gui.add(settings, 'padding', 0, 40, 1).onChange(apply);
   },
 };

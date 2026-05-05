@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { RendererLayer } from '../../_shared/GenericLayer';
-import { createContainer } from '../../div-util';
+import { RendererLayer } from '../../../_shared/GenericLayer';
+import { createContainer } from '../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Decorations/PulseRing' };
+const meta: Meta = { title: 'Canvas/Renderer/Decorations/MarchingAnts' };
 export default meta;
 type Story = StoryObj;
 
-export const PulseRing: Story = {
-  render: () => createContainer({ id: 'cvs-deco-pulse-ring' }),
+export const MarchingAnts: Story = {
+  render: () => createContainer({ id: 'cvs-deco-marching-ants' }),
 
   play: async ({ canvasElement }) => {
     const toHex = (s: string) => parseInt(s.slice(1), 16);
@@ -27,20 +27,20 @@ export const PulseRing: Story = {
       { kind: 'close' as const },
     ];
     const SHAPES = [
-      { id: 'circle',  spec: { kind: 'circle'  as const, x: -400, y: 0, r: 45, fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2 } },
-      { id: 'rect',    spec: { kind: 'rect'    as const, x: -200, y: 0, width: 110, height: 70, fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2 } },
+      { id: 'circle',  spec: { kind: 'circle'  as const, x: -280, y: 0, r: 45, fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2 } },
+      { id: 'rect',    spec: { kind: 'rect'    as const, x: -140, y: 0, width: 110, height: 70, fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2 } },
       { id: 'ellipse', spec: { kind: 'ellipse' as const, x: 0,    y: 0, rx: 65, ry: 35, fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2 } },
-      { id: 'polygon', spec: { kind: 'polygon' as const, x: 200,  y: 0, points: HEX_POINTS, fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2 } },
-      { id: 'path',    spec: { kind: 'path'    as const, x: 400,  y: 0, commands: ARROW_COMMANDS, fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2 } },
+      { id: 'polygon', spec: { kind: 'polygon' as const, x: 140,  y: 0, points: HEX_POINTS, fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2 } },
+      { id: 'path',    spec: { kind: 'path'    as const, x: 280,  y: 0, commands: ARROW_COMMANDS, fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2 } },
     ];
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-pulse-ring')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-marching-ants')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new RendererLayer({ id: 'deco-pulse-ring', options: {} });
+    const layer = new RendererLayer({ id: 'deco-marching-ants', options: {} });
     canvas.layers.add(layer);
 
     for (const { id, spec } of SHAPES) {
@@ -48,32 +48,32 @@ export const PulseRing: Story = {
     }
     canvas.camera.fitContent(layer.getBounds(), 100);
 
-    const settings = { color: '#a78bfa', width: 2, alpha: 0.6, startPadding: 0, endPadding: 30, periodMs: 1500, ringCount: 1 };
+    const settings = { color: '#f43f5e', width: 1.5, alpha: 1, dashLength: 6, gapLength: 4, speed: 0.04, inset: 2 };
 
     function apply() {
       const style = {
         color: toHex(settings.color),
         width: settings.width,
         alpha: settings.alpha,
-        startPadding: settings.startPadding,
-        endPadding: settings.endPadding,
-        periodMs: settings.periodMs,
-        ringCount: settings.ringCount,
+        dashLength: settings.dashLength,
+        gapLength: settings.gapLength,
+        speed: settings.speed,
+        inset: settings.inset,
       };
       for (const { id } of SHAPES) {
-        layer.renderer.setDecoration(id, 'pulse', { kind: 'pulse-ring', style });
+        layer.renderer.setDecoration(id, 'border', { kind: 'marching-ants', style });
       }
     }
 
     apply();
 
-    const gui = new GUI({ title: 'Pulse Ring' });
+    const gui = new GUI({ title: 'Marching Ants' });
     gui.addColor(settings, 'color').onChange(apply);
-    gui.add(settings, 'width', 0, 10, 1).onChange(apply);
+    gui.add(settings, 'width', 0, 10, 0.5).onChange(apply);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(apply);
-    gui.add(settings, 'startPadding', 0, 30, 1).onChange(apply);
-    gui.add(settings, 'endPadding', 10, 80, 1).onChange(apply);
-    gui.add(settings, 'periodMs', 200, 5000, 100).onChange(apply);
-    gui.add(settings, 'ringCount', 1, 5, 1).onChange(apply);
+    gui.add(settings, 'dashLength', 1, 30, 1).onChange(apply);
+    gui.add(settings, 'gapLength', 1, 30, 1).onChange(apply);
+    gui.add(settings, 'speed', 0, 0.2, 0.005).onChange(apply);
+    gui.add(settings, 'inset', 0, 20, 1).onChange(apply);
   },
 };
