@@ -24,13 +24,18 @@ export const Border: Story = {
       { x: -41.13, y: 56.63 }, { x: -28.53, y: 9.27 }, { x: -66.57, y: -21.63 },
       { x: -17.63, y: -24.27 }, { x: 0, y: -70 },
     ];
-    const pathLocal = [
-      { x: -60, y: 0 }, { x: -53.33, y: -33.33 }, { x: -33.33, y: -53.33 },
-      { x: 0, y: -60 }, { x: 33.33, y: -53.33 }, { x: 53.33, y: -33.33 },
-      { x: 60, y: 0 }, { x: 53.33, y: 33.33 }, { x: 33.33, y: 53.33 },
-      { x: 0, y: 60 }, { x: -33.33, y: 53.33 }, { x: -53.33, y: 33.33 },
-      { x: -60, y: 0 },
-    ];
+    const pathSpec: draw.PathSpec = {
+      kind: 'path', x: 280, y: 110,
+      commands: [
+        { kind: 'moveTo', x: -60, y: 0 },
+        { kind: 'quadTo', cpx: -60, cpy: -60, x: 0, y: -60 },
+        { kind: 'quadTo', cpx: 60, cpy: -60, x: 60, y: 0 },
+        { kind: 'quadTo', cpx: 60, cpy: 60, x: 0, y: 60 },
+        { kind: 'quadTo', cpx: -60, cpy: 60, x: -60, y: 0 },
+        { kind: 'close' },
+      ],
+      fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
+    };
 
     type Outline = ReadonlyArray<{ x: number; y: number }> | undefined;
     const cells: Array<{
@@ -57,7 +62,7 @@ export const Border: Story = {
       {
         kind: 'path', cx: 280, cy: 110,
         bounds: { x: 220, y: 50, width: 120, height: 120 },
-        outline: pathLocal.map((p) => ({ x: p.x + 280, y: p.y + 110 })),
+        outline: draw.pathOutline(pathSpec, 16),
       },
     ];
 
@@ -74,7 +79,7 @@ export const Border: Story = {
     const hostG = layer.createGraphics('host-gfx');
     const decoG = layer.createGraphics('border-gfx');
 
-    const settings = { color: '#f43f5e', width: 3, alpha: 1, cornerRadius: 0, inset: 0 };
+    const settings = { color: '#f43f5e', width: 3, alpha: 1, inset: 0 };
 
     function redraw() {
       hostG.clear();
@@ -83,14 +88,12 @@ export const Border: Story = {
         color: toHex(settings.color),
         width: settings.width,
         alpha: settings.alpha,
-        cornerRadius: settings.cornerRadius,
         inset: settings.inset,
       };
       for (const c of cells) {
         if (c.kind === 'rect') {
           draw.drawRect(hostG, {
             kind: 'rect', x: c.cx, y: c.cy, width: 200, height: 120,
-            cornerRadius: settings.cornerRadius,
             fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
           });
         } else if (c.kind === 'circle') {
@@ -116,18 +119,7 @@ export const Border: Story = {
             fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
           });
         } else if (c.kind === 'path') {
-          draw.drawPath(hostG, {
-            kind: 'path', x: c.cx, y: c.cy,
-            commands: [
-              { kind: 'moveTo', x: -60, y: 0 },
-              { kind: 'quadTo', cpx: -60, cpy: -60, x: 0, y: -60 },
-              { kind: 'quadTo', cpx: 60, cpy: -60, x: 60, y: 0 },
-              { kind: 'quadTo', cpx: 60, cpy: 60, x: 0, y: 60 },
-              { kind: 'quadTo', cpx: -60, cpy: 60, x: -60, y: 0 },
-              { kind: 'close' },
-            ],
-            fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
-          });
+          draw.drawPath(hostG, pathSpec);
         }
         draw.drawBorder(decoG, c.bounds, opts, c.kind, c.outline);
       }
@@ -140,7 +132,6 @@ export const Border: Story = {
     gui.addColor(settings, 'color').onChange(redraw);
     gui.add(settings, 'width', 0, 20, 1).onChange(redraw);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(redraw);
-    gui.add(settings, 'cornerRadius', 0, 40, 1).onChange(redraw);
     gui.add(settings, 'inset', -20, 20, 1).onChange(redraw);
   },
 };

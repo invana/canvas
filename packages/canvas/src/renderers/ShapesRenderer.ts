@@ -20,7 +20,7 @@
  * - markers     — `IMarker`          (built-ins: arrow, circle, square, diamond)
  * - routers     — `IRouter` (pure)   (built-ins: straight, orthogonal, bezier)
  * - decorations — `IShapeDecoration` / `IConnectorDecoration`
- *                                    (built-ins: halo, border, glow,
+ *                                    (built-ins: border, glow,
  *                                     marching-ants, pulse-ring)
  *
  * **Lifecycle**
@@ -59,7 +59,6 @@ import { CurveConnector } from './connectors/CurveConnector';
 import { straightRouter } from './routers/straight';
 import { orthogonalRouter } from './routers/orthogonal';
 import { bezierRouter } from './routers/bezier';
-import { HaloDecoration } from './decorations/HaloDecoration';
 import { BorderDecoration } from './decorations/BorderDecoration';
 import { GlowDecoration } from './decorations/GlowDecoration';
 import { PulseRingDecoration } from './decorations/PulseRingDecoration';
@@ -191,7 +190,6 @@ export class ShapesRenderer {
     this.registerConnector('line', LineConnector);
     this.registerConnector('curve', CurveConnector);
 
-    this.registerDecoration('halo', HaloDecoration, { target: 'shape' });
     this.registerDecoration('border', BorderDecoration, { target: 'shape' });
     this.registerDecoration('glow', GlowDecoration, { target: 'shape' });
     this.registerDecoration('pulse-ring', PulseRingDecoration, { target: 'shape' });
@@ -233,10 +231,10 @@ export class ShapesRenderer {
    * mismatches at runtime.
    *
    * The ctor's style parameter type flows through the generic so call-site
-   * inference works without `as` casts (`registerDecoration('halo',
-   * HaloDecoration, ...)` infers `TStyle = HaloStyle`). The registry stores
-   * the ctor with a widened style type — `setDecoration` is responsible for
-   * passing a matching `decoration.style` payload at the runtime boundary.
+   * inference works without `as` casts (`registerDecoration('border',
+   * BorderDecoration, ...)` infers `TStyle = BorderStyle`). The registry
+   * stores the ctor with a widened style type — `setDecoration` is responsible
+   * for passing a matching `decoration.style` payload at the runtime boundary.
    */
   registerDecoration<TStyle>(
     kind: string,

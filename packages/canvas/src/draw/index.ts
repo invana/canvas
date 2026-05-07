@@ -70,6 +70,7 @@ export {
 export {
   drawPath,
   pathBounds,
+  pathOutline,
   pathKind,
   type PathSpec,
   type PathCommand,
@@ -118,7 +119,6 @@ export { orthogonalRouter } from './routers/orthogonal';
 export { bezierRouter } from './routers/bezier';
 
 // ─── Shape decorations — static (functions) ───────────────────────────────
-export { drawHalo, haloKind, type HaloOpts } from './decorations/shape/halo';
 export {
   drawBorder,
   borderKind,

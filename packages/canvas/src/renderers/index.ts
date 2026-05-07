@@ -49,8 +49,6 @@ export { orthogonalRouter } from './routers/orthogonal';
 export { bezierRouter } from './routers/bezier';
 
 // ─── Built-in decorations ───────────────────────────────────────────────
-export { HaloDecoration } from './decorations/HaloDecoration';
-export type { HaloStyle } from './decorations/HaloDecoration';
 export { BorderDecoration } from './decorations/BorderDecoration';
 export type { BorderStyle } from './decorations/BorderDecoration';
 export { GlowDecoration } from './decorations/GlowDecoration';

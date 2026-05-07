@@ -31,18 +31,23 @@ export const PulseRing: Story = {
       { x: -41.13, y: 56.63 }, { x: -28.53, y: 9.27 }, { x: -66.57, y: -21.63 },
       { x: -17.63, y: -24.27 }, { x: 0, y: -70 },
     ];
-    // Path outline (rounded-square via 4 quadTo curves, ±60 extent) — sampled
-    // at t = 0, 1/3, 2/3 per curve = 12 unique points + close. Pre-tessellated
-    // so the decoration can parallel-offset it. drawPath supports curves
-    // (drawPolygon is straight-segments-only), so the curve has to be sampled
-    // into a polyline before any decoration can trace it.
-    const pathLocal = [
-      { x: -60, y: 0 }, { x: -53.33, y: -33.33 }, { x: -33.33, y: -53.33 },
-      { x: 0, y: -60 }, { x: 33.33, y: -53.33 }, { x: 53.33, y: -33.33 },
-      { x: 60, y: 0 }, { x: 53.33, y: 33.33 }, { x: 33.33, y: 53.33 },
-      { x: 0, y: 60 }, { x: -33.33, y: 53.33 }, { x: -53.33, y: 33.33 },
-      { x: -60, y: 0 },
-    ];
+    // Path host: rounded-square via 4 quadTo curves (±60 extent). Defined
+    // once and reused for both painting (drawPath) and decoration outline
+    // (pathOutline tessellates the curves into a 16-samples-per-curve closed
+    // polyline, so offsetPolygon produces a smooth-looking parallel offset
+    // instead of the visible facets a coarser polyline would yield).
+    const pathSpec: draw.PathSpec = {
+      kind: 'path', x: 280, y: 110,
+      commands: [
+        { kind: 'moveTo', x: -60, y: 0 },
+        { kind: 'quadTo', cpx: -60, cpy: -60, x: 0, y: -60 },
+        { kind: 'quadTo', cpx: 60, cpy: -60, x: 60, y: 0 },
+        { kind: 'quadTo', cpx: 60, cpy: 60, x: 0, y: 60 },
+        { kind: 'quadTo', cpx: -60, cpy: 60, x: -60, y: 0 },
+        { kind: 'close' },
+      ],
+      fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
+    };
 
     type Outline = ReadonlyArray<{ x: number; y: number }> | undefined;
     const cells: Array<{
@@ -69,7 +74,7 @@ export const PulseRing: Story = {
       {
         kind: 'path', cx: 280, cy: 110,
         bounds: { x: 220, y: 50, width: 120, height: 120 },
-        outline: pathLocal.map((p) => ({ x: p.x + 280, y: p.y + 110 })),
+        outline: draw.pathOutline(pathSpec, 16),
       },
     ];
 
@@ -93,7 +98,7 @@ export const PulseRing: Story = {
 
     const settings = {
       color: '#a78bfa', width: 2, alpha: 0.6,
-      startPadding: 0, endPadding: 30, periodMs: 1500, cornerRadius: 0,
+      startPadding: 0, endPadding: 30, periodMs: 1500,
     };
 
     function redrawHosts() {
@@ -102,7 +107,6 @@ export const PulseRing: Story = {
         if (c.kind === 'rect') {
           draw.drawRect(hostG, {
             kind: 'rect', x: c.cx, y: c.cy, width: 200, height: 120,
-            cornerRadius: settings.cornerRadius,
             fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
           });
         } else if (c.kind === 'circle') {
@@ -128,18 +132,7 @@ export const PulseRing: Story = {
             fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
           });
         } else if (c.kind === 'path') {
-          draw.drawPath(hostG, {
-            kind: 'path', x: c.cx, y: c.cy,
-            commands: [
-              { kind: 'moveTo', x: -60, y: 0 },
-              { kind: 'quadTo', cpx: -60, cpy: -60, x: 0, y: -60 },
-              { kind: 'quadTo', cpx: 60, cpy: -60, x: 60, y: 0 },
-              { kind: 'quadTo', cpx: 60, cpy: 60, x: 0, y: 60 },
-              { kind: 'quadTo', cpx: -60, cpy: 60, x: -60, y: 0 },
-              { kind: 'close' },
-            ],
-            fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
-          });
+          draw.drawPath(hostG, pathSpec);
         }
       }
     }
@@ -156,7 +149,6 @@ export const PulseRing: Story = {
           startPadding: settings.startPadding,
           endPadding: settings.endPadding,
           periodMs: settings.periodMs,
-          cornerRadius: settings.cornerRadius,
         });
         deco.update(c.bounds, c.kind, c.outline);
         return deco;
@@ -173,6 +165,5 @@ export const PulseRing: Story = {
     gui.add(settings, 'startPadding', 0, 30, 1).onChange(rebuild);
     gui.add(settings, 'endPadding', 10, 80, 1).onChange(rebuild);
     gui.add(settings, 'periodMs', 200, 5000, 100).onChange(rebuild);
-    gui.add(settings, 'cornerRadius', 0, 50, 1).onChange(rebuild);
   },
 };

@@ -10,7 +10,7 @@
  */
 
 import type { Graphics } from 'pixi.js';
-import type { BaseShapeSpec, FillFit, FillInput, Rect, ShapeKind } from '../types';
+import type { BaseShapeSpec, FillFit, FillInput, Point, Rect, ShapeKind } from '../types';
 import { applyFill } from './textureMatrix';
 
 export type PathCommand =
@@ -139,6 +139,111 @@ export function pathBounds(spec: PathSpec): Rect {
   }
   if (!any) return { x: 0, y: 0, width: 0, height: 0 };
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
+
+/**
+ * Tessellate a path spec into a closed polyline outline suitable for
+ * decorations (halo, border, marching-ants, pulse-ring, breathing,
+ * `offsetPolygon`, etc.).
+ *
+ * Curve commands (`quadTo`, `cubicTo`) are sampled into `samplesPerCurve`
+ * sub-segments using their Bernstein-form parameterisation; straight
+ * commands (`moveTo`, `lineTo`) emit single points. The result is in
+ * world coordinates — `spec.x`, `spec.y`, and `rot` are baked in, matching
+ * `drawPath`'s convention so callers can pass the same spec to both.
+ *
+ * Default `samplesPerCurve = 16`. At typical viewport zoom each sub-segment
+ * is sub-pixel, so the offset polygon reads as a smooth curve. Bump to 32+
+ * for designs that zoom far past 4×.
+ *
+ * The returned array is closed: if a `close` command is encountered (or the
+ * last on-curve point already equals the first), the final point duplicates
+ * the first so callers can detect closure.
+ */
+export function pathOutline(spec: PathSpec, samplesPerCurve: number = 16): Point[] {
+  const cx = spec.x;
+  const cy = spec.y;
+  const rot = 0;
+  const c = Math.cos(rot);
+  const s = Math.sin(rot);
+  const tx = (x: number, y: number): Point => ({
+    x: cx + x * c - y * s,
+    y: cy + x * s + y * c,
+  });
+
+  const out: Point[] = [];
+  let curX = 0;
+  let curY = 0;
+  let firstX = 0;
+  let firstY = 0;
+  let started = false;
+  const N = Math.max(2, samplesPerCurve | 0);
+
+  for (const cmd of spec.commands) {
+    switch (cmd.kind) {
+      case 'moveTo': {
+        const p = tx(cmd.x, cmd.y);
+        out.push(p);
+        curX = cmd.x;
+        curY = cmd.y;
+        if (!started) {
+          firstX = cmd.x;
+          firstY = cmd.y;
+          started = true;
+        }
+        break;
+      }
+      case 'lineTo': {
+        out.push(tx(cmd.x, cmd.y));
+        curX = cmd.x;
+        curY = cmd.y;
+        break;
+      }
+      case 'quadTo': {
+        // B(t) = (1-t)²·P0 + 2(1-t)t·CP + t²·P1
+        for (let i = 1; i <= N; i++) {
+          const t = i / N;
+          const u = 1 - t;
+          const x = u * u * curX + 2 * u * t * cmd.cpx + t * t * cmd.x;
+          const y = u * u * curY + 2 * u * t * cmd.cpy + t * t * cmd.y;
+          out.push(tx(x, y));
+        }
+        curX = cmd.x;
+        curY = cmd.y;
+        break;
+      }
+      case 'cubicTo': {
+        // B(t) = (1-t)³·P0 + 3(1-t)²t·CP1 + 3(1-t)t²·CP2 + t³·P1
+        for (let i = 1; i <= N; i++) {
+          const t = i / N;
+          const u = 1 - t;
+          const u2 = u * u;
+          const u3 = u2 * u;
+          const t2 = t * t;
+          const t3 = t2 * t;
+          const x = u3 * curX + 3 * u2 * t * cmd.cp1x + 3 * u * t2 * cmd.cp2x + t3 * cmd.x;
+          const y = u3 * curY + 3 * u2 * t * cmd.cp1y + 3 * u * t2 * cmd.cp2y + t3 * cmd.y;
+          out.push(tx(x, y));
+        }
+        curX = cmd.x;
+        curY = cmd.y;
+        break;
+      }
+      case 'close': {
+        if (started && (curX !== firstX || curY !== firstY)) {
+          out.push(tx(firstX, firstY));
+        }
+        break;
+      }
+    }
+  }
+
+  if (out.length >= 2) {
+    const f = out[0]!;
+    const l = out[out.length - 1]!;
+    if (f.x !== l.x || f.y !== l.y) out.push({ x: f.x, y: f.y });
+  }
+  return out;
 }
 
 export const pathKind: ShapeKind<PathSpec> = {
