@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, draw } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer } from '../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Draw/Rect' };
+const meta: Meta = { title: 'Canvas/Draw/Shapes/Circle' };
 export default meta;
 type Story = StoryObj;
 
-export const Rect: Story = {
-  render: () => createContainer({ id: 'cvs-rect' }),
+export const Circle: Story = {
+  render: () => createContainer({ id: 'cvs-circle' }),
 
   play: async ({ canvasElement }) => {
     class DrawLayer extends WorldLayer {
@@ -17,37 +17,33 @@ export const Rect: Story = {
     }
 
     const toHex = (s: string) => parseInt(s.slice(1), 16);
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-rect')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-circle')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new DrawLayer({ id: 'rect-layer', options: {} });
+    const layer = new DrawLayer({ id: 'circles-layer', options: {} });
     canvas.layers.add(layer);
-    const g = layer.createGraphics('rect-gfx');
+    const g = layer.createGraphics('circle-gfx');
 
-    const settings = { width: 160, height: 90, cornerRadius: 12, fillColor: '#4f9cf9', fillAlpha: 1.0, strokeColor: '#1e3a8a', strokeWidth: 3 };
+    const settings = { radius: 70, fillColor: '#4f9cf9', fillAlpha: 1.0, strokeColor: '#1e3a8a', strokeWidth: 3 };
 
     function redraw() {
       g.clear();
-      draw.drawRect(g, {
-        kind: 'rect', x: 0, y: 0,
-        width: settings.width, height: settings.height,
-        cornerRadius: settings.cornerRadius,
+      draw.drawCircle(g, {
+        kind: 'circle', x: 0, y: 0, r: settings.radius,
         fill: toHex(settings.fillColor), fillAlpha: settings.fillAlpha,
         stroke: toHex(settings.strokeColor), strokeWidth: settings.strokeWidth,
       });
     }
 
     redraw();
-    canvas.camera.fitContent(layer.getBounds(), 80);
+    canvas.camera.fitContent(layer.getBounds(), 120);
 
-    const gui = new GUI({ title: 'Rect' });
-    gui.add(settings, 'width', 20, 400, 1).onChange(redraw);
-    gui.add(settings, 'height', 20, 400, 1).onChange(redraw);
-    gui.add(settings, 'cornerRadius', 0, 100, 1).onChange(redraw);
+    const gui = new GUI({ title: 'Circle' });
+    gui.add(settings, 'radius', 10, 150, 1).onChange(redraw);
     gui.addColor(settings, 'fillColor').onChange(redraw);
     gui.add(settings, 'fillAlpha', 0, 1, 0.01).onChange(redraw);
     gui.addColor(settings, 'strokeColor').onChange(redraw);

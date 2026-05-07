@@ -115,6 +115,7 @@ function drawDashedPolyline(
   offset: number,
 ): void {
   const cycle = dashLen + gapLen;
+  if (cycle <= 0) return;
   let s = -offset;
   for (let i = 0; i < poly.length - 1; i++) {
     const a = poly[i]!;
@@ -140,7 +141,10 @@ function drawDashedPolyline(
         g.moveTo(sx, sy);
         g.lineTo(ex, ey);
       }
+      const prev = local;
       local += step;
+      // FP stall: step is sub-ULP at this magnitude — bail rather than spin.
+      if (local === prev) break;
     }
     s += segLen;
   }

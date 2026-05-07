@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, draw } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer } from '../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Draw/Polygon' };
+const meta: Meta = { title: 'Canvas/Draw/Shapes/Polygon' };
 export default meta;
 type Story = StoryObj;
 
