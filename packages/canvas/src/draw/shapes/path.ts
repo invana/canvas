@@ -143,7 +143,7 @@ export function pathBounds(spec: PathSpec): Rect {
 
 /**
  * Tessellate a path spec into a closed polyline outline suitable for
- * decorations (halo, border, marching-ants, pulse-ring, breathing,
+ * decorations (halo, ring, marching-ants, pulse-ring, breathing,
  * `offsetPolygon`, etc.).
  *
  * Curve commands (`quadTo`, `cubicTo`) are sampled into `samplesPerCurve`

@@ -18,7 +18,7 @@ The engine. Implements the Layer / Behaviour / Layout / Renderer architecture de
   - Built-in connectors: `line`, `curve`.
   - Built-in markers: `arrow`, `circle`, `square`, `diamond`.
   - Built-in routers: `straight`, `orthogonal`, `bezier`.
-  - Built-in shape decorations: `border`, `glow`, `marching-ants`, `pulse-ring`, `breathing`. Built-in connector decorations: `marching-ants-connector`, `pulsating-glow`. Animated decorations advance their phase via `tickAnimations(dt)` called by the Canvas tick.
+  - Built-in shape decorations: `ring`, `glow`, `marching-ants`, `pulse-ring`, `breathing`. Built-in connector decorations: `marching-ants-connector`, `pulsating-glow`. Animated decorations advance their phase via `tickAnimations(dt)` called by the Canvas tick.
   - **Decoration geometry lives in `draw/decorations/`** (split into `shape/` and `connector/` subfolders) as pure-function / pure-class primitives. The renderer-level decoration classes in `renderers/decorations/*` are thin wrappers that own the `IShapeDecoration` / `IConnectorDecoration` lifecycle (Container/Graphics + `mount`/`update`/`destroy`) and delegate **all** geometry + animation to the draw primitives. Never re-implement decoration geometry in the renderer wrapper — extend the draw primitive instead.
   - Shape decorations accept an optional `outlinePolyline` per `update()` (parallel to `bounds` + `hostKind`) for true shape-following parallel offset on `polygon` / `path` hosts; falls back to AABB rect when not provided.
 - Built-in layers: `BackgroundLayer`, `ThemedBackgroundLayer` (`WorldLayer`); `DevInfoLayer` (`ScreenLayer`)

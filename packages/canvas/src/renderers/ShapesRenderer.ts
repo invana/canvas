@@ -20,7 +20,7 @@
  * - markers     — `IMarker`          (built-ins: arrow, circle, square, diamond)
  * - routers     — `IRouter` (pure)   (built-ins: straight, orthogonal, bezier)
  * - decorations — `IShapeDecoration` / `IConnectorDecoration`
- *                                    (built-ins: border, glow,
+ *                                    (built-ins: ring, glow,
  *                                     marching-ants, pulse-ring)
  *
  * **Lifecycle**
@@ -59,7 +59,7 @@ import { CurveConnector } from './connectors/CurveConnector';
 import { straightRouter } from './routers/straight';
 import { orthogonalRouter } from './routers/orthogonal';
 import { bezierRouter } from './routers/bezier';
-import { BorderDecoration } from './decorations/BorderDecoration';
+import { RingDecoration } from './decorations/RingDecoration';
 import { GlowDecoration } from './decorations/GlowDecoration';
 import { PulseRingDecoration } from './decorations/PulseRingDecoration';
 import { MarchingAntsDecoration } from './decorations/MarchingAntsDecoration';
@@ -190,7 +190,7 @@ export class ShapesRenderer {
     this.registerConnector('line', LineConnector);
     this.registerConnector('curve', CurveConnector);
 
-    this.registerDecoration('border', BorderDecoration, { target: 'shape' });
+    this.registerDecoration('ring', RingDecoration, { target: 'shape' });
     this.registerDecoration('glow', GlowDecoration, { target: 'shape' });
     this.registerDecoration('pulse-ring', PulseRingDecoration, { target: 'shape' });
     this.registerDecoration('marching-ants', MarchingAntsDecoration, { target: 'shape' });
@@ -231,8 +231,8 @@ export class ShapesRenderer {
    * mismatches at runtime.
    *
    * The ctor's style parameter type flows through the generic so call-site
-   * inference works without `as` casts (`registerDecoration('border',
-   * BorderDecoration, ...)` infers `TStyle = BorderStyle`). The registry
+   * inference works without `as` casts (`registerDecoration('ring',
+   * RingDecoration, ...)` infers `TStyle = RingStyle`). The registry
    * stores the ctor with a widened style type — `setDecoration` is responsible
    * for passing a matching `decoration.style` payload at the runtime boundary.
    */
@@ -362,7 +362,7 @@ export class ShapesRenderer {
    * `null` to clear that slot.
    *
    * Slots are caller-defined names. Well-known slot names get a fixed z-band
-   * (`glow` / `halo` below the host; `border` / `pulse` / `badge` / `fx`
+   * (`glow` / `halo` below the host; `ring` / `pulse` / `badge` / `fx`
    * above) — see `slotZIndex()`. Other slot names land in a default mid-band.
    *
    * The decoration kind must have been registered via `registerDecoration`
@@ -963,7 +963,7 @@ function sampleCubic(
 //   glow        −200
 //   halo        −100
 //   <shape>        0
-//   border       100
+//   ring         100
 //   pulse        200
 //   badge        300
 //   fx           400
@@ -972,7 +972,7 @@ function sampleCubic(
 const SLOT_Z_TABLE: Readonly<Record<string, number>> = {
   glow: -200,
   halo: -100,
-  border: 100,
+  ring: 100,
   pulse: 200,
   badge: 300,
   fx: 400,

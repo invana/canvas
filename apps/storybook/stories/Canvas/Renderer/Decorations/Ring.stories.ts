@@ -4,12 +4,12 @@ import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer } from '../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Renderer/Decorations/Border' };
+const meta: Meta = { title: 'Canvas/Renderer/Decorations/Ring' };
 export default meta;
 type Story = StoryObj;
 
-export const Border: Story = {
-  render: () => createContainer({ id: 'cvs-deco-border' }),
+export const Ring: Story = {
+  render: () => createContainer({ id: 'cvs-deco-ring' }),
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
@@ -43,13 +43,13 @@ export const Border: Story = {
       { id: 'path',    spec: { kind: 'path'    as const, x: 280,  y: 0, commands: ARROW_COMMANDS, fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2 } },
     ];
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-border')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-ring')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new RenderLayer({ id: 'deco-border', options: {} });
+    const layer = new RenderLayer({ id: 'deco-ring', options: {} });
     canvas.layers.add(layer);
 
     for (const { id, spec } of SHAPES) {
@@ -68,13 +68,13 @@ export const Border: Story = {
         inset: settings.inset,
       };
       for (const { id } of SHAPES) {
-        layer.renderer.setDecoration(id, 'border', { kind: 'border', style });
+        layer.renderer.setDecoration(id, 'ring', { kind: 'ring', style });
       }
     }
 
     apply();
 
-    const gui = new GUI({ title: 'Border' });
+    const gui = new GUI({ title: 'Ring' });
     gui.addColor(settings, 'color').onChange(apply);
     gui.add(settings, 'width', 0, 20, 1).onChange(apply);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(apply);

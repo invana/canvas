@@ -1,28 +1,28 @@
 /**
- * `BorderDecoration` — outline drawn on top of the host.
+ * `RingDecoration` — outline drawn on top of the host.
  *
- * Registered as kind `'border'`, target `'shape'`. Static.
+ * Registered as kind `'ring'`, target `'shape'`. Static.
  *
  * Thin wrapper: owns the slot Container/Graphics + lifecycle and delegates
- * geometry to the `draw.drawBorder` primitive (shape-following parallel
+ * geometry to the `draw.drawRing` primitive (shape-following parallel
  * offset when an `outlinePolyline` is available).
  */
 
 import { Container, Graphics } from 'pixi.js';
-import { drawBorder, type BorderOpts } from '../../draw/decorations/shape/border';
+import { drawRing, type RingOpts } from '../../draw/decorations/shape/ring';
 import type { IShapeDecoration, ShapeDecorationHostInfo } from '../types';
 
-export type BorderStyle = BorderOpts;
+export type RingStyle = RingOpts;
 
-export class BorderDecoration implements IShapeDecoration<BorderStyle> {
-  readonly style: BorderStyle;
+export class RingDecoration implements IShapeDecoration<RingStyle> {
+  readonly style: RingStyle;
   private readonly gfx: Container;
   private readonly graphics: Graphics;
 
-  constructor(style: BorderStyle) {
+  constructor(style: RingStyle) {
     this.style = style;
     this.gfx = new Container();
-    this.gfx.label = 'deco:border';
+    this.gfx.label = 'deco:ring';
     this.graphics = new Graphics();
     this.gfx.addChild(this.graphics);
   }
@@ -43,7 +43,7 @@ export class BorderDecoration implements IShapeDecoration<BorderStyle> {
 
   private draw(host: ShapeDecorationHostInfo): void {
     this.graphics.clear();
-    drawBorder(
+    drawRing(
       this.graphics,
       host.bounds,
       this.style,

@@ -184,7 +184,7 @@ export interface ShapeDecorationHostInfo {
   readonly hostId: string;
   /** Registered shape kind of the host (`'circle'`, `'rect'`, …). */
   readonly hostKind: string;
-  /** Slot the decoration is being mounted into (e.g. `'halo'`, `'border'`). */
+  /** Slot the decoration is being mounted into (e.g. `'halo'`, `'ring'`). */
   readonly slot: string;
   /** Local-space axis-aligned bounding box of the host shape. */
   readonly bounds: Rect;

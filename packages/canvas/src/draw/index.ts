@@ -120,11 +120,11 @@ export { bezierRouter } from './routers/bezier';
 
 // ─── Shape decorations — static (functions) ───────────────────────────────
 export {
-  drawBorder,
-  borderKind,
-  type BorderOpts,
+  drawRing,
+  ringKind,
+  type RingOpts,
   type OutlineDecorationOpts,
-} from './decorations/shape/border';
+} from './decorations/shape/ring';
 export {
   drawGlow,
   setupGlow,

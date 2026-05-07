@@ -71,7 +71,7 @@ export const MarchingAnts: Story = {
         cornerRadius: settings.cornerRadius,
       };
       for (const { id } of SHAPES) {
-        layer.renderer.setDecoration(id, 'border', { kind: 'marching-ants', style });
+        layer.renderer.setDecoration(id, 'ring', { kind: 'marching-ants', style });
       }
       // Match the rect host's cornerRadius so the dash trace is concentric.
       type RectPartial = BaseShapeSpec & { cornerRadius?: number };

@@ -3,12 +3,12 @@ import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, draw } from '
 import GUI from 'lil-gui';
 import { createContainer } from '../../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Draw/Decorations/Shapes/Border' };
+const meta: Meta = { title: 'Canvas/Draw/Decorations/Shapes/Ring' };
 export default meta;
 type Story = StoryObj;
 
-export const Border: Story = {
-  render: () => createContainer({ id: 'cvs-deco-shape-border' }),
+export const Ring: Story = {
+  render: () => createContainer({ id: 'cvs-deco-shape-ring' }),
 
   play: async ({ canvasElement }) => {
     class DrawLayer extends WorldLayer {
@@ -66,18 +66,18 @@ export const Border: Story = {
       },
     ];
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-shape-border')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-shape-ring')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new DrawLayer({ id: 'deco-shape-border-layer', options: {} });
+    const layer = new DrawLayer({ id: 'deco-shape-ring-layer', options: {} });
     canvas.layers.add(layer);
 
     const hostG = layer.createGraphics('host-gfx');
-    const decoG = layer.createGraphics('border-gfx');
+    const decoG = layer.createGraphics('ring-gfx');
 
     const settings = { color: '#f43f5e', width: 3, alpha: 1, inset: 0 };
 
@@ -121,14 +121,14 @@ export const Border: Story = {
         } else if (c.kind === 'path') {
           draw.drawPath(hostG, pathSpec);
         }
-        draw.drawBorder(decoG, c.bounds, opts, c.kind, c.outline);
+        draw.drawRing(decoG, c.bounds, opts, c.kind, c.outline);
       }
     }
 
     redraw();
     canvas.camera.fitContent(layer.getBounds(), 80);
 
-    const gui = new GUI({ title: 'Border (all shapes)' });
+    const gui = new GUI({ title: 'Ring (all shapes)' });
     gui.addColor(settings, 'color').onChange(redraw);
     gui.add(settings, 'width', 0, 20, 1).onChange(redraw);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(redraw);

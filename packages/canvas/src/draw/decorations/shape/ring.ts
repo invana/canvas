@@ -1,10 +1,10 @@
 /**
- * `border` — primitive shape decoration: outline drawn on top of the host.
+ * `ring` — primitive shape decoration: outline drawn on top of the host.
  *
  * Static. Geometry strategy:
  * - circle / ellipse host: trace an ellipse contracted by `inset`
  * - non-circle host with `outlinePolyline`: parallel-offset the polygon by
- *   `-inset` px (true shape-following border for stars, triangles, paths)
+ *   `-inset` px (true shape-following ring for stars, triangles, paths)
  * - non-circle host without polyline: rect (or rounded rect) fallback
  */
 
@@ -13,7 +13,7 @@ import type { Point, Rect, StaticDecorationKind } from '../../types';
 import { offsetPolygon, polyToShape } from '../_polylineUtils';
 
 /**
- * Shared option base for outline-style decorations (`border`, `halo`, ...).
+ * Shared option base for outline-style decorations (`ring`, `halo`, ...).
  * Each decoration adds its own positional fields (`inset`, `padding`, ...)
  * and stroke/fill specifics on top.
  */
@@ -25,7 +25,7 @@ export interface OutlineDecorationOpts {
   readonly cornerRadius?: number;
 }
 
-export interface BorderOpts extends OutlineDecorationOpts {
+export interface RingOpts extends OutlineDecorationOpts {
   /** Stroke width. Default `1`. */
   readonly width?: number;
   /**
@@ -35,10 +35,10 @@ export interface BorderOpts extends OutlineDecorationOpts {
   readonly inset?: number;
 }
 
-export function drawBorder(
+export function drawRing(
   g: Graphics,
   bounds: Rect,
-  opts: BorderOpts,
+  opts: RingOpts,
   hostKind?: string,
   outlinePolyline?: ReadonlyArray<Point>,
 ): void {
@@ -66,4 +66,4 @@ export function drawBorder(
   g.stroke({ color: opts.color, width, alpha });
 }
 
-export const borderKind: StaticDecorationKind<BorderOpts> = { draw: drawBorder };
+export const ringKind: StaticDecorationKind<RingOpts> = { draw: drawRing };

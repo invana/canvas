@@ -3,12 +3,12 @@ import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, draw } from '
 import GUI from 'lil-gui';
 import { createContainer } from '../../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Draw/Decorations/Connectors/Border' };
+const meta: Meta = { title: 'Canvas/Draw/Decorations/Connectors/Ring' };
 export default meta;
 type Story = StoryObj;
 
-export const Border: Story = {
-  render: () => createContainer({ id: 'cvs-deco-conn-border' }),
+export const Ring: Story = {
+  render: () => createContainer({ id: 'cvs-deco-conn-ring' }),
 
   play: async ({ canvasElement }) => {
     class DrawLayer extends WorldLayer {
@@ -20,18 +20,18 @@ export const Border: Story = {
     const SRC = { x: 60, y: 200 };
     const TGT = { x: 440, y: 340 };
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-conn-border')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-conn-ring')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new DrawLayer({ id: 'deco-conn-border-layer', options: {} });
+    const layer = new DrawLayer({ id: 'deco-conn-ring-layer', options: {} });
     canvas.layers.add(layer);
 
     const hostG = layer.createGraphics('host-gfx');
-    const decoG = layer.createGraphics('border-gfx');
+    const decoG = layer.createGraphics('ring-gfx');
 
     const polyline = draw.straightRouter(SRC, TGT);
     const connectorSpec = {
@@ -49,7 +49,7 @@ export const Border: Story = {
       hostG.clear();
       draw.drawLineConnector(hostG, polyline, connectorSpec);
       decoG.clear();
-      draw.drawBorder(decoG, bounds, {
+      draw.drawRing(decoG, bounds, {
         color: toHex(settings.color),
         width: settings.width,
         alpha: settings.alpha,
@@ -61,7 +61,7 @@ export const Border: Story = {
     redraw();
     canvas.camera.fitContent(layer.getBounds(), 80);
 
-    const gui = new GUI({ title: 'Border (connector AABB)' });
+    const gui = new GUI({ title: 'Ring (connector AABB)' });
     gui.addColor(settings, 'color').onChange(redraw);
     gui.add(settings, 'width', 0, 20, 1).onChange(redraw);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(redraw);

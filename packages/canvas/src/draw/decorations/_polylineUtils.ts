@@ -2,7 +2,7 @@
  * Shared polyline + polygon geometry utilities for decorations.
  *
  * - `offsetPolygon` / `expandPolyline` produce shape-following outlines for
- *   shape decorations (halo, border, marching-ants, pulse-ring, breathing)
+ *   shape decorations (halo, ring, marching-ants, pulse-ring, breathing)
  *   when a host outline polyline is supplied.
  * - `polyToShape` traces a closed polygon path on a Graphics; caller fills /
  *   strokes after.
