@@ -63,6 +63,9 @@ import { RingDecoration } from './decorations/RingDecoration';
 import { GlowDecoration } from './decorations/GlowDecoration';
 import { PulseRingDecoration } from './decorations/PulseRingDecoration';
 import { MarchingAntsDecoration } from './decorations/MarchingAntsDecoration';
+import { RingConnectorDecoration } from './decorations/RingConnectorDecoration';
+import { BreathingConnectorDecoration } from './decorations/BreathingConnectorDecoration';
+import { PulseRingConnectorDecoration } from './decorations/PulseRingConnectorDecoration';
 import { MarchingAntsConnectorDecoration } from './decorations/MarchingAntsConnectorDecoration';
 import { PulsatingGlowConnectorDecoration } from './decorations/PulsatingGlowConnectorDecoration';
 import type {
@@ -198,6 +201,15 @@ export class ShapesRenderer {
       target: 'connector',
     });
     this.registerDecoration('pulsating-glow', PulsatingGlowConnectorDecoration, {
+      target: 'connector',
+    });
+    this.registerDecoration('ring-connector', RingConnectorDecoration, {
+      target: 'connector',
+    });
+    this.registerDecoration('breathing-connector', BreathingConnectorDecoration, {
+      target: 'connector',
+    });
+    this.registerDecoration('pulse-ring-connector', PulseRingConnectorDecoration, {
       target: 'connector',
     });
   }

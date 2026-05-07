@@ -12,7 +12,7 @@ export const PulseRing: Story = {
 
   play: async ({ canvasElement }) => {
     class DrawLayer extends WorldLayer {
-      deco?: draw.AnimatedDecoration;
+      deco?: draw.AnimatedConnectorDecoration;
       protected createState() { return {}; }
       hitTest() { return null; }
       tickAnimations(dt: number) { this.deco?.tick(dt); }
@@ -32,7 +32,22 @@ export const PulseRing: Story = {
     const layer = new DrawLayer({ id: 'deco-conn-pulse-layer', options: {} });
     canvas.layers.add(layer);
 
-    const polyline = draw.straightRouter(SRC, TGT);
+    const hostG = layer.createGraphics('host-gfx');
+    const decoSlot = layer.createContainer('pulse-slot');
+    const decoG = layer.createGraphics('pulse-gfx');
+    decoSlot.addChild(decoG);
+
+    const settings = {
+      router: 'straight' as 'straight' | 'orthogonal' | 'bezier',
+      color: '#a78bfa',
+      width: 2,
+      alpha: 0.6,
+      startPadding: 0,
+      endPadding: 24,
+      periodMs: 1500,
+      ringCount: 1,
+    };
+
     const connectorSpec = {
       kind: 'line' as const,
       source: { kind: 'point' as const, ...SRC },
@@ -40,39 +55,42 @@ export const PulseRing: Story = {
       stroke: 0x1e3a8a,
       strokeWidth: 4,
     };
-    const bounds = draw.lineConnectorBounds(polyline, connectorSpec);
 
-    const hostG = layer.createGraphics('host-gfx');
-    draw.drawLineConnector(hostG, polyline, connectorSpec);
-
-    const decoSlot = layer.createContainer('pulse-slot');
-    const decoG = layer.createGraphics('pulse-gfx');
-    decoSlot.addChild(decoG);
-
-    const settings = { color: '#a78bfa', width: 2, alpha: 0.6, startPadding: 0, endPadding: 30, periodMs: 1500 };
+    function route() {
+      return settings.router === 'orthogonal' ? draw.orthogonalRouter(SRC, TGT)
+        : settings.router === 'bezier' ? draw.bezierRouter(SRC, TGT)
+        : draw.straightRouter(SRC, TGT);
+    }
 
     function rebuild() {
+      const polyline = route();
+      hostG.clear();
+      draw.drawLineConnector(hostG, polyline, connectorSpec);
+
       layer.deco?.destroy();
-      layer.deco = new draw.PulseRingDecoration(decoSlot, decoG, {
+      layer.deco = new draw.PulseRingConnectorDecoration(decoSlot, decoG, {
         color: toHex(settings.color),
         width: settings.width,
         alpha: settings.alpha,
         startPadding: settings.startPadding,
         endPadding: settings.endPadding,
         periodMs: settings.periodMs,
+        ringCount: settings.ringCount,
       });
-      layer.deco.update(bounds, 'line');
+      layer.deco.update(polyline);
     }
 
     rebuild();
     canvas.camera.fitContent(layer.getBounds(), 80);
 
-    const gui = new GUI({ title: 'Pulse Ring (connector AABB)' });
+    const gui = new GUI({ title: 'Pulse ring (connector)' });
+    gui.add(settings, 'router', ['straight', 'orthogonal', 'bezier']).onChange(rebuild);
     gui.addColor(settings, 'color').onChange(rebuild);
     gui.add(settings, 'width', 0, 10, 1).onChange(rebuild);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(rebuild);
     gui.add(settings, 'startPadding', 0, 30, 1).onChange(rebuild);
     gui.add(settings, 'endPadding', 10, 80, 1).onChange(rebuild);
     gui.add(settings, 'periodMs', 200, 5000, 100).onChange(rebuild);
+    gui.add(settings, 'ringCount', 1, 5, 1).onChange(rebuild);
   },
 };

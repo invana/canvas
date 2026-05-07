@@ -3,12 +3,12 @@ import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, draw } from '
 import GUI from 'lil-gui';
 import { createContainer } from '../../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Draw/Decorations/Connectors/Glow' };
+const meta: Meta = { title: 'Canvas/Draw/Decorations/Connectors/Breathing' };
 export default meta;
 type Story = StoryObj;
 
-export const Glow: Story = {
-  render: () => createContainer({ id: 'cvs-deco-conn-glow' }),
+export const Breathing: Story = {
+  render: () => createContainer({ id: 'cvs-deco-conn-breathing' }),
 
   play: async ({ canvasElement }) => {
     class DrawLayer extends WorldLayer {
@@ -22,31 +22,29 @@ export const Glow: Story = {
     const SRC = { x: 60, y: 200 };
     const TGT = { x: 440, y: 340 };
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-conn-glow')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-conn-breathing')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new DrawLayer({ id: 'deco-conn-glow-layer', options: {} });
+    const layer = new DrawLayer({ id: 'deco-conn-breathing-layer', options: {} });
     canvas.layers.add(layer);
 
-    const decoSlot = layer.createContainer('glow-slot');
-    const decoG = layer.createGraphics('glow-gfx');
-    decoSlot.addChild(decoG);
     const hostG = layer.createGraphics('host-gfx');
+    const decoSlot = layer.createContainer('breathing-slot');
+    const decoG = layer.createGraphics('breathing-gfx');
+    decoSlot.addChild(decoG);
 
     const settings = {
       router: 'straight' as 'straight' | 'orthogonal' | 'bezier',
-      color: '#0ea5e9',
-      width: 14,
-      alphaMin: 0.35,
-      alphaMax: 0.9,
-      layerCount: 3,
-      featherStep: 5,
-      featherFalloff: 0.5,
-      periodMs: 1400,
+      color: '#34d399',
+      width: 2,
+      alpha: 0.9,
+      minPadding: 2,
+      maxPadding: 12,
+      periodMs: 1800,
     };
 
     const connectorSpec = {
@@ -69,14 +67,12 @@ export const Glow: Story = {
       draw.drawLineConnector(hostG, polyline, connectorSpec);
 
       layer.deco?.destroy();
-      layer.deco = new draw.PulsatingGlowConnectorDecoration(decoSlot, decoG, {
+      layer.deco = new draw.BreathingConnectorDecoration(decoSlot, decoG, {
         color: toHex(settings.color),
         width: settings.width,
-        alphaMin: settings.alphaMin,
-        alphaMax: settings.alphaMax,
-        layerCount: settings.layerCount,
-        featherStep: settings.featherStep,
-        featherFalloff: settings.featherFalloff,
+        alpha: settings.alpha,
+        minPadding: settings.minPadding,
+        maxPadding: settings.maxPadding,
         periodMs: settings.periodMs,
       });
       layer.deco.update(polyline);
@@ -85,15 +81,13 @@ export const Glow: Story = {
     rebuild();
     canvas.camera.fitContent(layer.getBounds(), 80);
 
-    const gui = new GUI({ title: 'Pulsating glow (connector)' });
+    const gui = new GUI({ title: 'Breathing (connector)' });
     gui.add(settings, 'router', ['straight', 'orthogonal', 'bezier']).onChange(rebuild);
     gui.addColor(settings, 'color').onChange(rebuild);
-    gui.add(settings, 'width', 1, 40, 1).onChange(rebuild);
-    gui.add(settings, 'alphaMin', 0, 1, 0.01).onChange(rebuild);
-    gui.add(settings, 'alphaMax', 0, 1, 0.01).onChange(rebuild);
-    gui.add(settings, 'layerCount', 0, 8, 1).onChange(rebuild);
-    gui.add(settings, 'featherStep', 0, 20, 1).onChange(rebuild);
-    gui.add(settings, 'featherFalloff', 0.1, 1, 0.05).onChange(rebuild);
-    gui.add(settings, 'periodMs', 200, 5000, 50).onChange(rebuild);
+    gui.add(settings, 'width', 0, 10, 0.5).onChange(rebuild);
+    gui.add(settings, 'alpha', 0, 1, 0.01).onChange(rebuild);
+    gui.add(settings, 'minPadding', 0, 30, 1).onChange(rebuild);
+    gui.add(settings, 'maxPadding', 5, 60, 1).onChange(rebuild);
+    gui.add(settings, 'periodMs', 200, 5000, 100).onChange(rebuild);
   },
 };

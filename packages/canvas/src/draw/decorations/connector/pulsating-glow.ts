@@ -1,40 +1,54 @@
 /**
  * `pulsating-glow-connector` — animated connector decoration: soft glow that
- * wraps the routed polyline with strength + alpha oscillating over time.
+ * wraps the routed polyline with alpha oscillating over time.
  *
- * Implementation: `update` repaints the polyline as a fat stroke into the
- * decoration's Graphics and (re-)attaches a `BlurFilter` to the slot
- * Container. `tick` advances a phase and mutates the filter's `strength`
- * plus `slot.alpha` — no per-tick redraw, since neither geometry nor colour
- * change frame-to-frame. Cheap.
+ * Implementation: `update` repaints the polyline as `layerCount` stacked
+ * ribbon polygons (one core + N feather layers, each at progressively larger
+ * half-width and lower alpha). `tick` advances a phase and mutates
+ * `slot.alpha` only — geometry is fixed once drawn, so per-tick cost is one
+ * scalar write. Cheap.
  *
- * The slot Container must be supplied (the decoration sets `filters` and
- * `alpha` on it). The Graphics is the polyline carrier and is expected to
- * already be a child of the slot.
+ * Why ribbons instead of a Pixi BlurFilter: filters render against the
+ * Container's AABB texture, which for a thin diagonal stroke is a tall
+ * rectangle — producing a rectangular halo rather than one that hugs the
+ * line. Stacked offset-polygon ribbons follow the polyline exactly.
+ *
+ * The slot Container must be supplied (the decoration mutates its `alpha`).
+ * The Graphics is the polyline carrier and is expected to already be a child
+ * of the slot.
  */
 
-import { BlurFilter, type Container, type Graphics } from 'pixi.js';
+import type { Container, Graphics } from 'pixi.js';
 import type {
   AnimatedConnectorDecoration,
   Point,
 } from '../../types';
+import { polyToShape, ribbonPolygon } from '../_polylineUtils';
 
 export interface PulsatingGlowConnectorOpts {
   readonly color: number;
-  /** Stroke width baseline. Default `8`. */
+  /** Core stroke width (innermost ribbon's full width). Default `8`. */
   readonly width?: number;
-  /** Minimum container alpha during the pulse cycle. Default `0.25`. */
+  /** Minimum container alpha during the pulse cycle. Default `0.35`. */
   readonly alphaMin?: number;
-  /** Maximum container alpha during the pulse cycle. Default `0.75`. */
+  /** Maximum container alpha during the pulse cycle. Default `0.9`. */
   readonly alphaMax?: number;
-  /** Minimum BlurFilter strength. Default `4`. */
-  readonly blurMin?: number;
-  /** Maximum BlurFilter strength. Default `12`. */
-  readonly blurMax?: number;
   /** Pulse period in ms. Default `1500`. */
   readonly periodMs?: number;
-  /** Pixi line cap. Default `'round'` for a softer look. */
-  readonly cap?: 'butt' | 'round' | 'square';
+  /**
+   * Number of feather layers stacked outside the core (in addition to the
+   * core). Default `3`.
+   */
+  readonly layerCount?: number;
+  /**
+   * Half-width step added per feather layer, in pixels. Default `5`.
+   */
+  readonly featherStep?: number;
+  /**
+   * Per-layer alpha multiplier. Each successive feather layer's alpha is
+   * `prev * featherFalloff`. Default `0.5`.
+   */
+  readonly featherFalloff?: number;
 }
 
 export class PulsatingGlowConnectorDecoration
@@ -42,16 +56,13 @@ export class PulsatingGlowConnectorDecoration
 {
   private polyline: ReadonlyArray<Point> = [];
   private phase = 0;
-  private readonly blur: BlurFilter;
 
   constructor(
     private readonly slot: Container,
     private readonly g: Graphics,
     private readonly opts: PulsatingGlowConnectorOpts,
   ) {
-    this.blur = new BlurFilter({ strength: opts.blurMin ?? 4 });
-    this.slot.filters = [this.blur];
-    this.slot.alpha = opts.alphaMin ?? 0.25;
+    this.slot.alpha = opts.alphaMin ?? 0.35;
   }
 
   update(polyline: ReadonlyArray<Point>): void {
@@ -66,36 +77,43 @@ export class PulsatingGlowConnectorDecoration
         (this.phase + (deltaMs / period) * Math.PI * 2) % (Math.PI * 2);
     }
     const k = (Math.sin(this.phase) + 1) / 2;
-    const alphaMin = this.opts.alphaMin ?? 0.25;
-    const alphaMax = this.opts.alphaMax ?? 0.75;
-    const blurMin = this.opts.blurMin ?? 4;
-    const blurMax = this.opts.blurMax ?? 12;
+    const alphaMin = this.opts.alphaMin ?? 0.35;
+    const alphaMax = this.opts.alphaMax ?? 0.9;
     this.slot.alpha = alphaMin + (alphaMax - alphaMin) * k;
-    this.blur.strength = blurMin + (blurMax - blurMin) * k;
     return true;
   }
 
   destroy(): void {
-    this.slot.filters = [];
+    this.slot.alpha = 1;
     this.g.clear();
   }
 
   private redraw(): void {
-    const width = this.opts.width ?? 8;
     this.g.clear();
+    const width = this.opts.width ?? 8;
     if (width <= 0 || this.polyline.length < 2) return;
 
-    const first = this.polyline[0]!;
-    this.g.moveTo(first.x, first.y);
-    for (let i = 1; i < this.polyline.length; i++) {
-      const p = this.polyline[i]!;
-      this.g.lineTo(p.x, p.y);
+    const layerCount = Math.max(0, Math.floor(this.opts.layerCount ?? 3));
+    const featherStep = this.opts.featherStep ?? 5;
+    const featherFalloff = this.opts.featherFalloff ?? 0.5;
+    const color = this.opts.color;
+
+    // Outer feather layers first (lowest alpha, largest), so the inner core
+    // overlays them and reads as the brightest band.
+    for (let i = layerCount; i >= 1; i--) {
+      const halfWidth = width / 2 + i * featherStep;
+      const layerAlpha = Math.pow(featherFalloff, i);
+      const ribbon = ribbonPolygon(this.polyline, halfWidth);
+      if (ribbon.length >= 3) {
+        polyToShape(this.g, ribbon);
+        this.g.fill({ color, alpha: layerAlpha });
+      }
     }
-    this.g.stroke({
-      color: this.opts.color,
-      width,
-      alpha: 1,
-      cap: this.opts.cap ?? 'round',
-    });
+
+    const core = ribbonPolygon(this.polyline, width / 2);
+    if (core.length >= 3) {
+      polyToShape(this.g, core);
+      this.g.fill({ color, alpha: 1 });
+    }
   }
 }

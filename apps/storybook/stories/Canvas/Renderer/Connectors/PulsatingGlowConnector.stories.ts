@@ -49,10 +49,11 @@ export const PulsatingGlowConnector: Story = {
       strokeWidth: 3,
       glowColor: '#0ea5e9',
       glowWidth: 14,
-      alphaMin: 0.2,
-      alphaMax: 0.8,
-      blurMin: 4,
-      blurMax: 16,
+      alphaMin: 0.35,
+      alphaMax: 0.9,
+      layerCount: 3,
+      featherStep: 5,
+      featherFalloff: 0.5,
       periodMs: 1400,
     };
 
@@ -84,8 +85,9 @@ export const PulsatingGlowConnector: Story = {
           width: settings.glowWidth,
           alphaMin: settings.alphaMin,
           alphaMax: settings.alphaMax,
-          blurMin: settings.blurMin,
-          blurMax: settings.blurMax,
+          layerCount: settings.layerCount,
+          featherStep: settings.featherStep,
+          featherFalloff: settings.featherFalloff,
           periodMs: settings.periodMs,
         },
       });
@@ -104,8 +106,9 @@ export const PulsatingGlowConnector: Story = {
     glowFolder.add(settings, 'glowWidth', 4, 40, 1).onChange(applyDecoration);
     glowFolder.add(settings, 'alphaMin', 0, 1, 0.01).onChange(applyDecoration);
     glowFolder.add(settings, 'alphaMax', 0, 1, 0.01).onChange(applyDecoration);
-    glowFolder.add(settings, 'blurMin', 0, 32, 1).onChange(applyDecoration);
-    glowFolder.add(settings, 'blurMax', 0, 32, 1).onChange(applyDecoration);
+    glowFolder.add(settings, 'layerCount', 0, 8, 1).onChange(applyDecoration);
+    glowFolder.add(settings, 'featherStep', 0, 20, 1).onChange(applyDecoration);
+    glowFolder.add(settings, 'featherFalloff', 0.1, 1, 0.05).onChange(applyDecoration);
     glowFolder.add(settings, 'periodMs', 200, 4000, 50).onChange(applyDecoration);
   },
 };

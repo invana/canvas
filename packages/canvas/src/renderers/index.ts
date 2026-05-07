@@ -67,6 +67,16 @@ export { PulsatingGlowConnectorDecoration } from './decorations/PulsatingGlowCon
 export type {
   PulsatingGlowConnectorStyle,
 } from './decorations/PulsatingGlowConnectorDecoration';
+export { RingConnectorDecoration } from './decorations/RingConnectorDecoration';
+export type { RingConnectorStyle } from './decorations/RingConnectorDecoration';
+export { BreathingConnectorDecoration } from './decorations/BreathingConnectorDecoration';
+export type {
+  BreathingConnectorStyle,
+} from './decorations/BreathingConnectorDecoration';
+export { PulseRingConnectorDecoration } from './decorations/PulseRingConnectorDecoration';
+export type {
+  PulseRingConnectorStyle,
+} from './decorations/PulseRingConnectorDecoration';
 
 export type {
   // geometry

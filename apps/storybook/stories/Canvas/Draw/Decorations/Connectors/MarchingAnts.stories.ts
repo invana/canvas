@@ -12,7 +12,7 @@ export const MarchingAnts: Story = {
 
   play: async ({ canvasElement }) => {
     class DrawLayer extends WorldLayer {
-      deco?: draw.AnimatedDecoration;
+      deco?: draw.AnimatedConnectorDecoration;
       protected createState() { return {}; }
       hitTest() { return null; }
       tickAnimations(dt: number) { this.deco?.tick(dt); }
@@ -32,7 +32,23 @@ export const MarchingAnts: Story = {
     const layer = new DrawLayer({ id: 'deco-conn-ants-layer', options: {} });
     canvas.layers.add(layer);
 
-    const polyline = draw.straightRouter(SRC, TGT);
+    const hostG = layer.createGraphics('host-gfx');
+    const decoSlot = layer.createContainer('ants-slot');
+    const decoG = layer.createGraphics('ants-gfx');
+    decoSlot.addChild(decoG);
+
+    const settings = {
+      router: 'straight' as 'straight' | 'orthogonal' | 'bezier',
+      color: '#f43f5e',
+      width: 1.5,
+      alpha: 1,
+      dashLength: 6,
+      gapLength: 4,
+      speed: 0.04,
+      cap: 'butt' as 'butt' | 'round' | 'square',
+      join: 'miter' as 'miter' | 'round' | 'bevel',
+    };
+
     const connectorSpec = {
       kind: 'line' as const,
       source: { kind: 'point' as const, ...SRC },
@@ -40,41 +56,44 @@ export const MarchingAnts: Story = {
       stroke: 0x1e3a8a,
       strokeWidth: 4,
     };
-    const bounds = draw.lineConnectorBounds(polyline, connectorSpec);
 
-    const hostG = layer.createGraphics('host-gfx');
-    draw.drawLineConnector(hostG, polyline, connectorSpec);
-
-    const decoSlot = layer.createContainer('ants-slot');
-    const decoG = layer.createGraphics('ants-gfx');
-    decoSlot.addChild(decoG);
-
-    const settings = { color: '#f43f5e', width: 1.5, alpha: 1, dashLength: 6, gapLength: 4, speed: 0.04, inset: 4 };
+    function route() {
+      return settings.router === 'orthogonal' ? draw.orthogonalRouter(SRC, TGT)
+        : settings.router === 'bezier' ? draw.bezierRouter(SRC, TGT)
+        : draw.straightRouter(SRC, TGT);
+    }
 
     function rebuild() {
+      const polyline = route();
+      hostG.clear();
+      draw.drawLineConnector(hostG, polyline, connectorSpec);
+
       layer.deco?.destroy();
-      layer.deco = new draw.MarchingAntsDecoration(decoSlot, decoG, {
+      layer.deco = new draw.MarchingAntsConnectorDecoration(decoSlot, decoG, {
         color: toHex(settings.color),
         width: settings.width,
         alpha: settings.alpha,
         dashLength: settings.dashLength,
         gapLength: settings.gapLength,
         speed: settings.speed,
-        inset: settings.inset,
+        cap: settings.cap,
+        join: settings.join,
       });
-      layer.deco.update(bounds, 'line');
+      layer.deco.update(polyline);
     }
 
     rebuild();
     canvas.camera.fitContent(layer.getBounds(), 80);
 
-    const gui = new GUI({ title: 'Marching Ants (connector AABB)' });
+    const gui = new GUI({ title: 'Marching ants (connector)' });
+    gui.add(settings, 'router', ['straight', 'orthogonal', 'bezier']).onChange(rebuild);
     gui.addColor(settings, 'color').onChange(rebuild);
     gui.add(settings, 'width', 0, 10, 0.5).onChange(rebuild);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(rebuild);
     gui.add(settings, 'dashLength', 1, 30, 1).onChange(rebuild);
     gui.add(settings, 'gapLength', 1, 30, 1).onChange(rebuild);
     gui.add(settings, 'speed', 0, 0.2, 0.005).onChange(rebuild);
-    gui.add(settings, 'inset', 0, 20, 1).onChange(rebuild);
+    gui.add(settings, 'cap', ['butt', 'round', 'square']).onChange(rebuild);
+    gui.add(settings, 'join', ['miter', 'round', 'bevel']).onChange(rebuild);
   },
 };

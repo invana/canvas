@@ -33,7 +33,14 @@ export const Ring: Story = {
     const hostG = layer.createGraphics('host-gfx');
     const decoG = layer.createGraphics('ring-gfx');
 
-    const polyline = draw.straightRouter(SRC, TGT);
+    const settings = {
+      router: 'straight' as 'straight' | 'orthogonal' | 'bezier',
+      color: '#f43f5e',
+      width: 2,
+      alpha: 1,
+      inset: 6,
+    };
+
     const connectorSpec = {
       kind: 'line' as const,
       source: { kind: 'point' as const, ...SRC },
@@ -41,31 +48,34 @@ export const Ring: Story = {
       stroke: 0x1e3a8a,
       strokeWidth: 4,
     };
-    const bounds = draw.lineConnectorBounds(polyline, connectorSpec);
 
-    const settings = { color: '#f43f5e', width: 2, alpha: 1, cornerRadius: 0, inset: -6 };
+    function route() {
+      return settings.router === 'orthogonal' ? draw.orthogonalRouter(SRC, TGT)
+        : settings.router === 'bezier' ? draw.bezierRouter(SRC, TGT)
+        : draw.straightRouter(SRC, TGT);
+    }
 
     function redraw() {
+      const polyline = route();
       hostG.clear();
       draw.drawLineConnector(hostG, polyline, connectorSpec);
       decoG.clear();
-      draw.drawRing(decoG, bounds, {
+      draw.drawRingConnector(decoG, polyline, {
         color: toHex(settings.color),
         width: settings.width,
         alpha: settings.alpha,
-        cornerRadius: settings.cornerRadius,
         inset: settings.inset,
-      }, 'line');
+      });
     }
 
     redraw();
     canvas.camera.fitContent(layer.getBounds(), 80);
 
-    const gui = new GUI({ title: 'Ring (connector AABB)' });
+    const gui = new GUI({ title: 'Ring (connector)' });
+    gui.add(settings, 'router', ['straight', 'orthogonal', 'bezier']).onChange(redraw);
     gui.addColor(settings, 'color').onChange(redraw);
     gui.add(settings, 'width', 0, 20, 1).onChange(redraw);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(redraw);
-    gui.add(settings, 'cornerRadius', 0, 40, 1).onChange(redraw);
-    gui.add(settings, 'inset', -20, 20, 1).onChange(redraw);
+    gui.add(settings, 'inset', 0, 30, 1).onChange(redraw);
   },
 };

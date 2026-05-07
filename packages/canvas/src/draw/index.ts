@@ -155,3 +155,16 @@ export {
   PulsatingGlowConnectorDecoration,
   type PulsatingGlowConnectorOpts,
 } from './decorations/connector/pulsating-glow';
+export {
+  drawRingConnector,
+  ringConnectorKind,
+  type RingConnectorOpts,
+} from './decorations/connector/ring';
+export {
+  BreathingConnectorDecoration,
+  type BreathingConnectorOpts,
+} from './decorations/connector/breathing';
+export {
+  PulseRingConnectorDecoration,
+  type PulseRingConnectorOpts,
+} from './decorations/connector/pulse-ring';
