@@ -59,10 +59,6 @@ export { PulseRingDecoration } from './decorations/PulseRingDecoration';
 export type { PulseRingStyle } from './decorations/PulseRingDecoration';
 export { MarchingAntsDecoration } from './decorations/MarchingAntsDecoration';
 export type { MarchingAntsStyle } from './decorations/MarchingAntsDecoration';
-export { DashedBorderRotatingDecoration } from './decorations/DashedBorderRotatingDecoration';
-export type {
-  DashedBorderRotatingStyle,
-} from './decorations/DashedBorderRotatingDecoration';
 export { MarchingAntsConnectorDecoration } from './decorations/MarchingAntsConnectorDecoration';
 export type {
   MarchingAntsConnectorStyle,

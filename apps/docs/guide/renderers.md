@@ -50,7 +50,7 @@ The kernel ships one renderer: `ShapesRenderer`. It's a fully generic, opinion-f
 | **Connector** | a line between two endpoints | `line`, `curve` |
 | **Marker** | a glyph attached to a connector endpoint | `arrow`, `circle`, `square`, `diamond` |
 | **Router** | pure function: endpoints → polyline | `straight`, `orthogonal`, `bezier` |
-| **Decoration** | visual augmentation of a shape or connector | `halo`, `border`, `glow`, `marching-ants`, `pulse-ring`, `dashed-border-rotating` |
+| **Decoration** | visual augmentation of a shape or connector | `halo`, `border`, `glow`, `marching-ants`, `pulse-ring` |
 
 Domain packages register their own (a flowchart layer ships `swimlane-divider`, an ER layer ships `conflict-warning` badge) without touching `@invana/canvas`.
 

@@ -1,6 +1,6 @@
 /**
- * Step 6 tests — animated decorations (`pulse-ring`, `marching-ants`,
- * `dashed-border-rotating`) + `tickAnimations` plumbing.
+ * Step 6 tests — animated decorations (`pulse-ring`, `marching-ants`)
+ * + `tickAnimations` plumbing.
  */
 
 import { Container } from 'pixi.js';
@@ -53,16 +53,6 @@ describe('Animated decoration registration adds to the animated set', () => {
     addCircle(renderer);
     renderer.setDecoration('c-1', 'border', {
       kind: 'marching-ants',
-      style: { color: 0x000000 },
-    });
-    expect(renderer.getRenderStats().animatedDecorations).toBe(1);
-  });
-
-  it('dashed-border-rotating is animated', () => {
-    const { renderer } = makeRenderer();
-    addCircle(renderer);
-    renderer.setDecoration('c-1', 'border', {
-      kind: 'dashed-border-rotating',
       style: { color: 0x000000 },
     });
     expect(renderer.getRenderStats().animatedDecorations).toBe(1);

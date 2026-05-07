@@ -18,7 +18,7 @@ The engine. Implements the Layer / Behaviour / Layout / Renderer architecture de
   - Built-in connectors: `line`, `curve`.
   - Built-in markers: `arrow`, `circle`, `square`, `diamond`.
   - Built-in routers: `straight`, `orthogonal`, `bezier`.
-  - Built-in decorations: `halo`, `border`, `glow`, `marching-ants`, `pulse-ring`, `dashed-border-rotating`. Animated decorations advance their phase via `tickAnimations(dt)` called by the Canvas tick.
+  - Built-in decorations: `halo`, `border`, `glow`, `marching-ants`, `pulse-ring`. Animated decorations advance their phase via `tickAnimations(dt)` called by the Canvas tick.
 - Built-in layers: `BackgroundLayer`, `ThemedBackgroundLayer` (`WorldLayer`); `DevInfoLayer` (`ScreenLayer`)
 - Built-in behaviours (all opt-in — never auto-registered): `DragPanBehaviour`, `WheelZoomBehaviour`, `PinchZoomBehaviour`, `KeyboardCameraInputBehaviour`
 

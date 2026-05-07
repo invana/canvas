@@ -456,7 +456,6 @@ All animated built-in decorations are Mesh + Shader, never per-frame Graphics re
 |---|---|---|
 | `marching-ants` | Mesh along path, fragment shader scrolls dash via `uPhase` uniform | One uniform write per frame; GPU does per-pixel work |
 | `pulse-ring` | Instanced quad mesh, vertex shader expands radius, fragment shader handles fade | All N rings in one draw call |
-| `dashed-border-rotating` | Mesh outline, fragment shader rotates dash UV | Same idea as marching-ants |
 | `pulsating-flow` | Tube mesh along connector path, fragment shader applies sine intensity | Per-pixel sine on GPU |
 | `glow` | Mesh expanding host outline + Gaussian falloff in fragment shader | No CPU blur cost |
 
@@ -556,7 +555,7 @@ class HaloDecoration implements IShapeDecoration<HaloStyle> {
 | Resolution | `devicePixelRatio` | Crisp on retina by default |
 | Built-in shapes | `cacheable: true`, `prebakeAllLODs: true` | Free perf for the common case; instant zoom |
 | Built-in static decorations (`halo`, `border`, `glow`, `badge`) | Texture-baked + cached | One bake per `(spec, lodLevel)`, infinite reuse |
-| Built-in animated decorations (`marching-ants`, `pulse-ring`, `dashed-border-rotating`, `pulsating-flow`) | Mesh + Shader | One uniform write per frame; per-pixel work on GPU |
+| Built-in animated decorations (`marching-ants`, `pulse-ring`, `pulsating-flow`) | Mesh + Shader | One uniform write per frame; per-pixel work on GPU |
 | Mipmap | Auto-on for textures larger than `512²` px | Smooth zoom-out without re-bake |
 | `ParticleContainer` promotion | Auto when shape kind exceeds `bulkRenderThreshold` (5000) | 100k+ scenes work without explicit opt-in |
 | Texture atlasing | `on` for cached textures sharing a `cacheCategory` | Single-digit draw-call counts |
@@ -845,7 +844,6 @@ Pre-registered in `ShapesRenderer`:
 | `glow` | static | Texture-baked + filter | Soft outer glow |
 | `marching-ants` | **animated** | Mesh + shader | Dashed border with scrolling `dashOffset` |
 | `pulse-ring` | **animated** | Graphics or Mesh | Expanding ring(s) radiating from host |
-| `dashed-border-rotating` | **animated** | Mesh + shader | Subtle rotating dash pattern |
 | `pulsating-flow` (connector only) | **animated** | Mesh + shader | Sine-wave intensity along connector path |
 
 Style shapes (sketch — not final):
@@ -896,11 +894,11 @@ When this design is approved, the following land:
 | `packages/canvas/src/renderers/TextureCache.ts` (new) | LRU cache implementation: byte accounting, refcounted entries, never-evict-displayed invariant, telemetry events on miss/evict. Used internally by `ShapesRenderer`. |
 | `packages/canvas/src/renderers/TextureAtlas.ts` (new) | Shelf-packing texture atlas; lazy re-pack during idle ticks; cap at `maxAtlasDimension` (default 4096). |
 | `packages/canvas/src/renderers/CompressedTextureLoader.ts` (new) | KTX2 / Basis Universal loader using pixi v8's compressed texture support; transcodes to native compressed formats (BC7/ASTC/ETC2) per device. |
-| `packages/canvas/src/renderers/shaders/` (new directory) | WGSL + GLSL transpilations for built-in animated decorations: `marching-ants.wgsl`/`.glsl`, `pulse-ring.wgsl`/`.glsl`, `pulsating-flow.wgsl`/`.glsl`, `dashed-border-rotating.wgsl`/`.glsl`, `glow.wgsl`/`.glsl`. |
+| `packages/canvas/src/renderers/shaders/` (new directory) | WGSL + GLSL transpilations for built-in animated decorations: `marching-ants.wgsl`/`.glsl`, `pulse-ring.wgsl`/`.glsl`, `pulsating-flow.wgsl`/`.glsl`, `glow.wgsl`/`.glsl`. |
 | `packages/canvas/src/engine/Canvas.ts` (new) | Calls `app.init({ preference: 'webgpu', fallback: ['webgl', 'canvas'], antialias: true, backgroundAlpha, powerPreference: 'high-performance' })`. Hooks `tick(ticker)` into `app.ticker.add(...)` at `UPDATE_PRIORITY.NORMAL` — no own RAF. Emits `canvas:renderer:initialised` telemetry with backend + capabilities. Tick body: `animationRunner.tick(dt)` → per-layer `flush` + culling + `tickAnimations(dt)`; pixi auto-commits the GPU render at end of tick. |
 | `packages/canvas/src/surfaces/SurfaceManager.ts` (new) | Constructs world + screen containers as `Container({ isRenderGroup: true })`. Each Layer registers its `shapeLayer` / `connectorLayer` (also RenderGroups) into the surface tree. Provides per-Layer `topDecorationLayer` / `dragLayer` / `transientLayer` RenderLayers on demand. |
 | `packages/canvas/src/renderers/capabilities.ts` (new) | `RendererCapabilities` derivation from active pixi backend (`ExtensionType.WebGPUSystem` / `WebGLSystem` / `CanvasSystem`); exposed via `host.capabilities` for decorations and shapes to gate features. |
-| `packages/canvas/src/renderers/decorations/` (new directory) | Built-in decoration classes: `HaloDecoration.ts` (texture-baked), `BorderDecoration.ts` (texture-baked or Graphics), `GlowDecoration.ts` (texture-baked + filter), `MarchingAntsDecoration.ts` (Mesh+shader), `PulseRingDecoration.ts` (Graphics or Mesh), `DashedBorderRotatingDecoration.ts`, `PulsatingFlowConnectorDecoration.ts` (Mesh+shader). |
+| `packages/canvas/src/renderers/decorations/` (new directory) | Built-in decoration classes: `HaloDecoration.ts` (texture-baked), `BorderDecoration.ts` (texture-baked or Graphics), `GlowDecoration.ts` (texture-baked + filter), `MarchingAntsDecoration.ts` (Mesh+shader), `PulseRingDecoration.ts` (Graphics or Mesh), `PulsatingFlowConnectorDecoration.ts` (Mesh+shader). |
 | `packages/canvas/src/animations/` (new directory) | `Tween.ts`, `AnimationRunner.ts`, `easings.ts`, `interpolate.ts` (lerpRGB, lerp2D, etc.). |
 | `packages/canvas/src/engine/Canvas.ts` (new) | Tick loop calls `animationRunner.tick(dt)` before layer flush, and `layer.renderer.tickAnimations(dt)` after. |
 

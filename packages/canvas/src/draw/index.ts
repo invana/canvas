@@ -126,7 +126,3 @@ export {
   PulseRingDecoration,
   type PulseRingOpts,
 } from './decorations/pulse-ring';
-export {
-  DashedBorderRotatingDecoration,
-  type DashedBorderRotatingOpts,
-} from './decorations/dashed-rotating';

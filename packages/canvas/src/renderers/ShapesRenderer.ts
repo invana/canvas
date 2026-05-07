@@ -21,8 +21,7 @@
  * - routers     — `IRouter` (pure)   (built-ins: straight, orthogonal, bezier)
  * - decorations — `IShapeDecoration` / `IConnectorDecoration`
  *                                    (built-ins: halo, border, glow,
- *                                     marching-ants, pulse-ring,
- *                                     dashed-border-rotating)
+ *                                     marching-ants, pulse-ring)
  *
  * **Lifecycle**
  *
@@ -65,7 +64,6 @@ import { BorderDecoration } from './decorations/BorderDecoration';
 import { GlowDecoration } from './decorations/GlowDecoration';
 import { PulseRingDecoration } from './decorations/PulseRingDecoration';
 import { MarchingAntsDecoration } from './decorations/MarchingAntsDecoration';
-import { DashedBorderRotatingDecoration } from './decorations/DashedBorderRotatingDecoration';
 import { MarchingAntsConnectorDecoration } from './decorations/MarchingAntsConnectorDecoration';
 import { PulsatingGlowConnectorDecoration } from './decorations/PulsatingGlowConnectorDecoration';
 import type {
@@ -198,9 +196,6 @@ export class ShapesRenderer {
     this.registerDecoration('glow', GlowDecoration, { target: 'shape' });
     this.registerDecoration('pulse-ring', PulseRingDecoration, { target: 'shape' });
     this.registerDecoration('marching-ants', MarchingAntsDecoration, { target: 'shape' });
-    this.registerDecoration('dashed-border-rotating', DashedBorderRotatingDecoration, {
-      target: 'shape',
-    });
     this.registerDecoration('marching-ants-connector', MarchingAntsConnectorDecoration, {
       target: 'connector',
     });

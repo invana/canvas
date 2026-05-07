@@ -126,17 +126,3 @@ export function polyToShape(g: Graphics, pts: ReadonlyArray<Pt>): void {
   g.poly(open as { x: number; y: number }[]);
 }
 
-/**
- * Max distance from the centroid to any vertex of the polyline.
- * Used by `DashedBorderRotatingDecoration` to compute a tight circumscribed
- * circle radius instead of the loose AABB-diagonal approximation.
- */
-export function maxRadiusFromCentroid(pts: ReadonlyArray<Pt>): number {
-  if (pts.length === 0) return 0;
-  const first = pts[0]!;
-  const last = pts[pts.length - 1]!;
-  const open = first.x === last.x && first.y === last.y ? pts.slice(0, -1) : pts;
-  const cx = open.reduce((s, p) => s + p.x, 0) / open.length;
-  const cy = open.reduce((s, p) => s + p.y, 0) / open.length;
-  return open.reduce((m, p) => Math.max(m, Math.hypot(p.x - cx, p.y - cy)), 0);
-}

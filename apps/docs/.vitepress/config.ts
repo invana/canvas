@@ -46,7 +46,6 @@ export default defineConfig({
               { text: 'glow', link: '/plugins/decorations/glow' },
               { text: 'marching-ants', link: '/plugins/decorations/marching-ants' },
               { text: 'pulse-ring', link: '/plugins/decorations/pulse-ring' },
-              { text: 'dashed-border-rotating', link: '/plugins/decorations/dashed-border-rotating' },
             ],
           },
           {
@@ -115,7 +114,6 @@ export default defineConfig({
             { text: 'glow', link: '/plugins/decorations/glow' },
             { text: 'marching-ants', link: '/plugins/decorations/marching-ants' },
             { text: 'pulse-ring', link: '/plugins/decorations/pulse-ring' },
-            { text: 'dashed-border-rotating', link: '/plugins/decorations/dashed-border-rotating' },
           ],
         },
         {

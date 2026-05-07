@@ -722,7 +722,6 @@ canvas.tick(deltaMs):
 | `glow` | static | Soft outer glow via filter |
 | `marching-ants` | **animated** | Dashed border with scrolling `dashOffset` |
 | `pulse-ring` | **animated** | Expanding ring(s) radiating from host; configurable count, period, easing |
-| `dashed-border-rotating` | **animated** | Subtle rotating dash pattern |
 
 Domain packages register their own (`@invana/er-diagram` ships a `conflict-warning` badge, etc.) without touching `@invana/canvas`.
 

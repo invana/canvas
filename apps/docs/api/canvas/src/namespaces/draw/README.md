@@ -2,7 +2,6 @@
 
 ## Classes
 
-- [DashedBorderRotatingDecoration](classes/DashedBorderRotatingDecoration.md)
 - [MarchingAntsDecoration](classes/MarchingAntsDecoration.md)
 - [PulseRingDecoration](classes/PulseRingDecoration.md)
 
@@ -16,7 +15,6 @@
 - [CircleSpec](interfaces/CircleSpec.md)
 - [ConnectorKind](interfaces/ConnectorKind.md)
 - [CurveConnectorSpec](interfaces/CurveConnectorSpec.md)
-- [DashedBorderRotatingOpts](interfaces/DashedBorderRotatingOpts.md)
 - [EllipseSpec](interfaces/EllipseSpec.md)
 - [Endpoint](interfaces/Endpoint.md)
 - [GlowOpts](interfaces/GlowOpts.md)

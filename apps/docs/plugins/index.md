@@ -2,7 +2,7 @@
 
 Built-in extensions that ship with `@invana/canvas` — opt-in pieces you register to give a `Canvas` instance behaviour and look. Three categories:
 
-- **[Decorations](/plugins/decorations/)** — halo, border, glow, marching-ants, pulse-ring, dashed-border-rotating.
+- **[Decorations](/plugins/decorations/)** — halo, border, glow, marching-ants, pulse-ring.
 - **[Layers](/plugins/layers/)** — `BackgroundLayer`, `ThemedBackgroundLayer`, `DevInfoLayer`.
 - **[Behaviours](/plugins/behaviours/)** — `DragPanBehaviour`, `WheelZoomBehaviour`, `PinchZoomBehaviour`, `KeyboardCameraInputBehaviour`.
 
