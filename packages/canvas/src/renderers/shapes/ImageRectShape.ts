@@ -15,8 +15,8 @@
 
 import { Graphics, type Texture } from 'pixi.js';
 import type { BaseShapeSpec, IShape, Rect, ShapeHostInfo } from '../types';
-import type { FillFit } from '../draw/types';
-import { drawRect } from '../draw/shapes/rect';
+import type { FillFit } from '../../draw/types';
+import { drawRect } from '../../draw/shapes/rect';
 import { resolveImageTexture } from './_imageUtils';
 
 export interface ImageRectShapeSpec extends BaseShapeSpec {

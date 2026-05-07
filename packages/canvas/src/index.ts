@@ -111,7 +111,7 @@ export type { CanvasOptions } from './engine/Canvas';
 // decorations. Single-responsibility per primitive — composition lives in
 // layers, not here. Re-exported as a namespace to avoid name conflicts with
 // the legacy renderer types.
-export * as draw from './renderers/draw';
+export * as draw from './draw';
 
 // Pixi `Graphics` type re-exported so consumers writing `paint(g => ...)`
 // callbacks against PaintLayer can type the callback parameter without a

@@ -15,8 +15,8 @@
 
 import { Graphics, type Texture } from 'pixi.js';
 import type { BaseShapeSpec, IShape, Rect, ShapeHostInfo } from '../types';
-import type { FillFit } from '../draw/types';
-import { drawCircle } from '../draw/shapes/circle';
+import type { FillFit } from '../../draw/types';
+import { drawCircle } from '../../draw/shapes/circle';
 import { resolveImageTexture } from './_imageUtils';
 
 export interface ImageCircleShapeSpec extends BaseShapeSpec {

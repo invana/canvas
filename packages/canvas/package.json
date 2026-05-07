@@ -5,6 +5,16 @@
   "type": "module",
   "main": "./src/index.js",
   "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.js"
+    },
+    "./draw": {
+      "types": "./src/draw/index.ts",
+      "default": "./src/draw/index.js"
+    }
+  },
   "typedocOptions": {
     "entryPoints": [
       "src/index.ts"
