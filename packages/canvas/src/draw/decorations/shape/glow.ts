@@ -1,5 +1,5 @@
 /**
- * `glow` — primitive decoration: soft outer glow.
+ * `glow` — primitive shape decoration: soft outer glow.
  *
  * Static, but uses a one-time `setup` hook to install a `BlurFilter` on the
  * slot Container. The `draw` step emits the same shape geometry as `halo`
@@ -7,10 +7,16 @@
  *
  * BlurFilter cost is per-frame on the filter-area rect (cheap) — not
  * per-shape pixel.
+ *
+ * Geometry strategy:
+ * - circle / ellipse host: ellipse expanded by `padding`
+ * - non-circle host with `outlinePolyline`: parallel-offset polygon
+ * - non-circle host without polyline: rounded-rect AABB fallback
  */
 
 import { BlurFilter, type Container, type Graphics } from 'pixi.js';
-import type { Rect, StaticDecorationKind } from '../types';
+import type { Point, Rect, StaticDecorationKind } from '../../types';
+import { offsetPolygon, polyToShape } from '../_polylineUtils';
 
 export interface GlowOpts {
   readonly color: number;
@@ -26,7 +32,13 @@ export function setupGlow(slot: Container, opts: GlowOpts): void {
   slot.filters = [new BlurFilter({ strength: opts.blur ?? 8 })];
 }
 
-export function drawGlow(g: Graphics, bounds: Rect, opts: GlowOpts, hostKind?: string): void {
+export function drawGlow(
+  g: Graphics,
+  bounds: Rect,
+  opts: GlowOpts,
+  hostKind?: string,
+  outlinePolyline?: ReadonlyArray<Point>,
+): void {
   const padding = opts.padding ?? 12;
   const alpha = opts.alpha ?? 0.6;
   const { x, y, width, height } = bounds;
@@ -35,6 +47,8 @@ export function drawGlow(g: Graphics, bounds: Rect, opts: GlowOpts, hostKind?: s
 
   if (hostKind === 'circle' || hostKind === 'ellipse') {
     g.ellipse(cx, cy, width / 2 + padding, height / 2 + padding);
+  } else if (outlinePolyline && outlinePolyline.length >= 3) {
+    polyToShape(g, offsetPolygon(outlinePolyline, padding));
   } else {
     g.roundRect(
       x - padding,

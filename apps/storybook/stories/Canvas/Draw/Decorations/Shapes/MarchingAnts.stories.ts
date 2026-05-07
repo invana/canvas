@@ -11,16 +11,60 @@ export const MarchingAnts: Story = {
   render: () => createContainer({ id: 'cvs-deco-shape-marching-ants' }),
 
   play: async ({ canvasElement }) => {
-    const BOUNDS = { x: 0, y: 0, width: 200, height: 120 };
-
     class DrawLayer extends WorldLayer {
-      deco?: draw.AnimatedDecoration;
+      decos: draw.AnimatedDecoration[] = [];
       protected createState() { return {}; }
       hitTest() { return null; }
-      tickAnimations(dt: number) { this.deco?.tick(dt); }
+      tickAnimations(dt: number) {
+        for (const d of this.decos) d.tick(dt);
+      }
     }
 
     const toHex = (s: string) => parseInt(s.slice(1), 16);
+
+    const starLocal = [
+      { x: 0, y: -70 }, { x: 17.63, y: -24.27 }, { x: 66.57, y: -21.63 },
+      { x: 28.53, y: 9.27 }, { x: 41.13, y: 56.63 }, { x: 0, y: 30 },
+      { x: -41.13, y: 56.63 }, { x: -28.53, y: 9.27 }, { x: -66.57, y: -21.63 },
+      { x: -17.63, y: -24.27 }, { x: 0, y: -70 },
+    ];
+    const pathLocal = [
+      { x: -60, y: 0 }, { x: -53.33, y: -33.33 }, { x: -33.33, y: -53.33 },
+      { x: 0, y: -60 }, { x: 33.33, y: -53.33 }, { x: 53.33, y: -33.33 },
+      { x: 60, y: 0 }, { x: 53.33, y: 33.33 }, { x: 33.33, y: 53.33 },
+      { x: 0, y: 60 }, { x: -33.33, y: 53.33 }, { x: -53.33, y: 33.33 },
+      { x: -60, y: 0 },
+    ];
+
+    type Outline = ReadonlyArray<{ x: number; y: number }> | undefined;
+    const cells: Array<{
+      kind: string; cx: number; cy: number;
+      bounds: { x: number; y: number; width: number; height: number };
+      outline: Outline;
+    }> = [
+      { kind: 'rect', cx: -280, cy: -110, bounds: { x: -380, y: -170, width: 200, height: 120 }, outline: undefined },
+      { kind: 'circle', cx: 0, cy: -110, bounds: { x: -60, y: -170, width: 120, height: 120 }, outline: undefined },
+      { kind: 'ellipse', cx: 280, cy: -110, bounds: { x: 200, y: -160, width: 160, height: 100 }, outline: undefined },
+      {
+        kind: 'polygon', cx: -280, cy: 110,
+        bounds: { x: -350, y: 50, width: 140, height: 120 },
+        outline: [
+          { x: -280, y: 50 }, { x: -210, y: 170 },
+          { x: -350, y: 170 }, { x: -280, y: 50 },
+        ],
+      },
+      {
+        kind: 'star', cx: 0, cy: 110,
+        bounds: { x: -70, y: 40, width: 140, height: 140 },
+        outline: starLocal.map((p) => ({ x: p.x, y: p.y + 110 })),
+      },
+      {
+        kind: 'path', cx: 280, cy: 110,
+        bounds: { x: 220, y: 50, width: 120, height: 120 },
+        outline: pathLocal.map((p) => ({ x: p.x + 280, y: p.y + 110 })),
+      },
+    ];
+
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-shape-marching-ants')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
@@ -32,44 +76,90 @@ export const MarchingAnts: Story = {
     canvas.layers.add(layer);
 
     const hostG = layer.createGraphics('host-gfx');
-    const decoSlot = layer.createContainer('ants-slot');
-    const decoG = layer.createGraphics('ants-gfx');
-    decoSlot.addChild(decoG);
+    const decoSlots = cells.map((_, i) => {
+      const slot = layer.createContainer(`ants-slot-${i}`);
+      const g = layer.createGraphics(`ants-gfx-${i}`);
+      slot.addChild(g);
+      return { slot, g };
+    });
 
-    const settings = { color: '#f43f5e', width: 1.5, alpha: 1, dashLength: 6, gapLength: 4, speed: 0.04, inset: 2, cornerRadius: 0 };
+    const settings = {
+      color: '#f43f5e', width: 1.5, alpha: 1,
+      dashLength: 6, gapLength: 4, speed: 0.04, inset: 2, cornerRadius: 0,
+    };
 
-    function redrawHost() {
+    function redrawHosts() {
       hostG.clear();
-      draw.drawRect(hostG, {
-        kind: 'rect',
-        x: BOUNDS.x + BOUNDS.width / 2,
-        y: BOUNDS.y + BOUNDS.height / 2,
-        width: BOUNDS.width, height: BOUNDS.height,
-        cornerRadius: settings.cornerRadius,
-        fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
-      });
+      for (const c of cells) {
+        if (c.kind === 'rect') {
+          draw.drawRect(hostG, {
+            kind: 'rect', x: c.cx, y: c.cy, width: 200, height: 120,
+            cornerRadius: settings.cornerRadius,
+            fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
+          });
+        } else if (c.kind === 'circle') {
+          draw.drawCircle(hostG, {
+            kind: 'circle', x: c.cx, y: c.cy, r: 60,
+            fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
+          });
+        } else if (c.kind === 'ellipse') {
+          draw.drawEllipse(hostG, {
+            kind: 'ellipse', x: c.cx, y: c.cy, rx: 80, ry: 50,
+            fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
+          });
+        } else if (c.kind === 'polygon') {
+          draw.drawPolygon(hostG, {
+            kind: 'polygon', x: c.cx, y: c.cy,
+            points: [{ x: 0, y: -60 }, { x: 70, y: 60 }, { x: -70, y: 60 }],
+            fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
+          });
+        } else if (c.kind === 'star') {
+          draw.drawStar(hostG, {
+            kind: 'star', x: c.cx, y: c.cy, points: 5,
+            outerRadius: 70, innerRadius: 30,
+            fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
+          });
+        } else if (c.kind === 'path') {
+          draw.drawPath(hostG, {
+            kind: 'path', x: c.cx, y: c.cy,
+            commands: [
+              { kind: 'moveTo', x: -60, y: 0 },
+              { kind: 'quadTo', cpx: -60, cpy: -60, x: 0, y: -60 },
+              { kind: 'quadTo', cpx: 60, cpy: -60, x: 60, y: 0 },
+              { kind: 'quadTo', cpx: 60, cpy: 60, x: 0, y: 60 },
+              { kind: 'quadTo', cpx: -60, cpy: 60, x: -60, y: 0 },
+              { kind: 'close' },
+            ],
+            fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
+          });
+        }
+      }
     }
 
     function rebuild() {
-      redrawHost();
-      layer.deco?.destroy();
-      layer.deco = new draw.MarchingAntsDecoration(decoSlot, decoG, {
-        color: toHex(settings.color),
-        width: settings.width,
-        alpha: settings.alpha,
-        dashLength: settings.dashLength,
-        gapLength: settings.gapLength,
-        speed: settings.speed,
-        inset: settings.inset,
-        cornerRadius: settings.cornerRadius,
+      redrawHosts();
+      for (const d of layer.decos) d.destroy();
+      layer.decos = cells.map((c, i) => {
+        const slot = decoSlots[i]!;
+        const deco = new draw.MarchingAntsDecoration(slot.slot, slot.g, {
+          color: toHex(settings.color),
+          width: settings.width,
+          alpha: settings.alpha,
+          dashLength: settings.dashLength,
+          gapLength: settings.gapLength,
+          speed: settings.speed,
+          inset: settings.inset,
+          cornerRadius: settings.cornerRadius,
+        });
+        deco.update(c.bounds, c.kind, c.outline);
+        return deco;
       });
-      layer.deco.update(BOUNDS, 'rect');
     }
 
     rebuild();
     canvas.camera.fitContent(layer.getBounds(), 80);
 
-    const gui = new GUI({ title: 'Marching Ants (shape)' });
+    const gui = new GUI({ title: 'Marching Ants (all shapes)' });
     gui.addColor(settings, 'color').onChange(rebuild);
     gui.add(settings, 'width', 0, 10, 0.5).onChange(rebuild);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(rebuild);

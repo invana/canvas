@@ -36,6 +36,9 @@ export type {
   StaticDecorationKind,
   AnimatedDecorationCtor,
   AnimatedDecoration,
+  StaticConnectorDecorationKind,
+  AnimatedConnectorDecorationCtor,
+  AnimatedConnectorDecoration,
 } from './types';
 
 // ─── Fill helpers ─────────────────────────────────────────────────────────
@@ -114,27 +117,41 @@ export { straightRouter } from './routers/straight';
 export { orthogonalRouter } from './routers/orthogonal';
 export { bezierRouter } from './routers/bezier';
 
-// ─── Decorations — static (functions) ─────────────────────────────────────
-export { drawHalo, haloKind, type HaloOpts } from './decorations/halo';
+// ─── Shape decorations — static (functions) ───────────────────────────────
+export { drawHalo, haloKind, type HaloOpts } from './decorations/shape/halo';
 export {
   drawBorder,
   borderKind,
   type BorderOpts,
   type OutlineDecorationOpts,
-} from './decorations/border';
+} from './decorations/shape/border';
 export {
   drawGlow,
   setupGlow,
   glowKind,
   type GlowOpts,
-} from './decorations/glow';
+} from './decorations/shape/glow';
 
-// ─── Decorations — animated (classes) ─────────────────────────────────────
+// ─── Shape decorations — animated (classes) ───────────────────────────────
 export {
   MarchingAntsDecoration,
   type MarchingAntsOpts,
-} from './decorations/marching-ants';
+} from './decorations/shape/marching-ants';
 export {
   PulseRingDecoration,
   type PulseRingOpts,
-} from './decorations/pulse-ring';
+} from './decorations/shape/pulse-ring';
+export {
+  BreathingDecoration,
+  type BreathingOpts,
+} from './decorations/shape/breathing';
+
+// ─── Connector decorations — animated (classes) ───────────────────────────
+export {
+  MarchingAntsConnectorDecoration,
+  type MarchingAntsConnectorOpts,
+} from './decorations/connector/marching-ants';
+export {
+  PulsatingGlowConnectorDecoration,
+  type PulsatingGlowConnectorOpts,
+} from './decorations/connector/pulsating-glow';

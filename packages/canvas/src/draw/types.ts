@@ -168,27 +168,41 @@ export type Router = (
   opts?: Record<string, unknown>,
 ) => ReadonlyArray<Point>;
 
+// ─── Shape decorations ─────────────────────────────────────────────────────
+//
+// Shape decorations consume a host's bounding rect (`Rect`), its kind (so a
+// circle host can get a curved halo while a rect host gets a square one),
+// and OPTIONALLY its outline polyline — when the caller passes the host's
+// closed-loop outline (e.g. a polygon's edges, a star's silhouette, an
+// arbitrary path's traced boundary), the decoration uses it to trace a true
+// shape-following offset (parallel offset polygon) instead of the AABB
+// fallback. `outlinePolyline` is a per-call runtime input (parallel to
+// `bounds`), not part of the static `opts` — it changes whenever the host
+// resizes / rotates / re-routes, so it can't be captured at construction.
+
 /**
- * Static decoration descriptor.
+ * Static shape decoration descriptor.
  *
  * `draw` emits decoration geometry into the supplied Graphics given host
- * bounds + style options. `hostKind` is supplied so a decoration can vary
- * its outline by host shape (circle hosts get a circular halo, rect hosts
- * get a rounded-rect halo).
- *
- * `setup` (optional) is called once when the decoration is first installed
- * on its host's slot Container, before any `draw`. Used for one-time
- * Container-level setup that can't be expressed as Graphics calls — e.g.
- * applying a `BlurFilter` for glow. Decorations that don't need it omit
- * the hook.
+ * bounds + style options + optional shape-following outline. `setup`
+ * (optional) is called once when the decoration is first installed on its
+ * host's slot Container, before any `draw` — used for one-time Container
+ * setup that isn't expressible as Graphics calls (e.g. applying a
+ * `BlurFilter` for glow). Decorations that don't need it omit the hook.
  */
 export interface StaticDecorationKind<TOpts> {
   setup?(slot: Container, opts: TOpts): void;
-  draw(g: Graphics, bounds: Rect, opts: TOpts, hostKind?: string): void;
+  draw(
+    g: Graphics,
+    bounds: Rect,
+    opts: TOpts,
+    hostKind?: string,
+    outlinePolyline?: ReadonlyArray<Point>,
+  ): void;
 }
 
 /**
- * Animated decoration constructor. The decoration owns animation state
+ * Animated shape decoration constructor. The decoration owns animation state
  * (phase, elapsed) and a `tick` method. The renderer hands it both the slot
  * Container (so the decoration can animate transforms cheaply — e.g.
  * rotating a pre-stamped dashed ring) and a Graphics for emit calls.
@@ -201,9 +215,51 @@ export type AnimatedDecorationCtor<TOpts> = new (
 ) => AnimatedDecoration;
 
 export interface AnimatedDecoration {
-  /** Re-render with new host bounds (called on host spec change). */
-  update(bounds: Rect, hostKind?: string): void;
+  /**
+   * Re-render with new host bounds + (optional) shape-following outline.
+   * Called on host spec change.
+   */
+  update(
+    bounds: Rect,
+    hostKind?: string,
+    outlinePolyline?: ReadonlyArray<Point>,
+  ): void;
   /** Advance animation by `deltaMs`. Return `false` to retire (renderer drops it). */
+  tick(deltaMs: number): boolean;
+  /** Final cleanup. Renderer is responsible for clearing the Graphics afterwards. */
+  destroy(): void;
+}
+
+// ─── Connector decorations ─────────────────────────────────────────────────
+//
+// Connector decorations consume a routed polyline (the actual edge path) —
+// not bounds. Their visual semantics are "along the path" (marching ants
+// crawl, glow halos the silhouette), not "around a perimeter". Different
+// geometry input, different primitive family.
+
+/**
+ * Static connector decoration descriptor. `draw` emits decoration geometry
+ * into the supplied Graphics given the routed polyline + style options.
+ */
+export interface StaticConnectorDecorationKind<TOpts> {
+  setup?(slot: Container, opts: TOpts): void;
+  draw(g: Graphics, polyline: ReadonlyArray<Point>, opts: TOpts): void;
+}
+
+/**
+ * Animated connector decoration constructor. Mirrors `AnimatedDecorationCtor`
+ * but consumes a polyline rather than bounds.
+ */
+export type AnimatedConnectorDecorationCtor<TOpts> = new (
+  slot: Container,
+  g: Graphics,
+  opts: TOpts,
+) => AnimatedConnectorDecoration;
+
+export interface AnimatedConnectorDecoration {
+  /** Re-render with a new routed polyline (called when the route changes). */
+  update(polyline: ReadonlyArray<Point>): void;
+  /** Advance animation by `deltaMs`. Return `false` to retire. */
   tick(deltaMs: number): boolean;
   /** Final cleanup. Renderer is responsible for clearing the Graphics afterwards. */
   destroy(): void;

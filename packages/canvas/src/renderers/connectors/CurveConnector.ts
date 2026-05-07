@@ -25,7 +25,7 @@ import type {
   Point,
   ShapeCtor,
 } from '../types';
-import { drawDashedPolyline } from '../decorations/polyline';
+import { drawDashedPolylineOpen as drawDashedPolyline } from '../../draw/decorations/_polylineUtils';
 import { paintMarkers } from './LineConnector';
 
 export interface CurveConnectorSpec extends BaseConnectorSpec {

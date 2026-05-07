@@ -1,20 +1,24 @@
 /**
- * `marching-ants` — animated decoration: dashed outline with a scrolling
- * dash offset (the classic "selection ants" effect).
+ * `marching-ants` — animated shape decoration: dashed outline with a
+ * scrolling dash offset (the classic "selection ants" effect).
  *
  * Heavy work (sample the outline, measure perimeter, snap dash/gap so
- * `perimeter = N * (dashLen + gapLen)`) is cached on `update` and reused
- * on every `tick`. The walker handles seam wrap inline — dashes never split
- * at the closing point, so we don't have to rotate the polyline per frame.
+ * `perimeter = N * (dashLen + gapLen)`) is cached on `update` and reused on
+ * every `tick`.
  *
- * Pixi v8's stroke API has no native dash array, so dashes are stamped as
- * straight chord segments. For circle/ellipse hosts the outline is sampled
- * around the ring; rect-like hosts get a bbox perimeter (or arc-sampled
- * rounded-rect perimeter when `cornerRadius > 0`).
+ * Outline source priority:
+ * 1. circle / ellipse host: arc-sampled ellipse perimeter
+ * 2. host with `outlinePolyline`: parallel-offset polygon (true shape-
+ *    following ants for stars, triangles, paths)
+ * 3. fallback: AABB rect, optionally rounded
  */
 
 import type { Container, Graphics } from 'pixi.js';
-import type { AnimatedDecoration, Rect } from '../types';
+import type { AnimatedDecoration, Point, Rect } from '../../types';
+import {
+  drawDashedPolylineClosed,
+  offsetPolygon,
+} from '../_polylineUtils';
 
 export interface MarchingAntsOpts {
   readonly color: number;
@@ -38,6 +42,7 @@ type Pt = { x: number; y: number };
 export class MarchingAntsDecoration implements AnimatedDecoration {
   private bounds: Rect = { x: 0, y: 0, width: 0, height: 0 };
   private hostKind?: string;
+  private outlinePolyline?: ReadonlyArray<Point>;
   private offset = 0;
 
   // Cache — populated by `update()`, reused by `tick()`.
@@ -51,9 +56,14 @@ export class MarchingAntsDecoration implements AnimatedDecoration {
     private readonly opts: MarchingAntsOpts,
   ) {}
 
-  update(bounds: Rect, hostKind?: string): void {
+  update(
+    bounds: Rect,
+    hostKind?: string,
+    outlinePolyline?: ReadonlyArray<Point>,
+  ): void {
     this.bounds = bounds;
     this.hostKind = hostKind;
+    this.outlinePolyline = outlinePolyline;
     this.rebuildCache();
     this.redraw();
   }
@@ -78,7 +88,13 @@ export class MarchingAntsDecoration implements AnimatedDecoration {
     const dash = this.opts.dashLength ?? 6;
     const gap = this.opts.gapLength ?? 4;
 
-    this.cachedSamples = sampleOutline(this.bounds, this.hostKind, inset, cornerRadius);
+    this.cachedSamples = sampleOutline(
+      this.bounds,
+      this.hostKind,
+      inset,
+      cornerRadius,
+      this.outlinePolyline,
+    );
 
     let perimeter = 0;
     const s = this.cachedSamples;
@@ -120,6 +136,7 @@ function sampleOutline(
   hostKind: string | undefined,
   inset: number,
   cornerRadius: number,
+  outlinePolyline?: ReadonlyArray<Point>,
 ): Pt[] {
   const { x, y, width, height } = bounds;
   const cx = x + width / 2;
@@ -136,6 +153,11 @@ function sampleOutline(
     }
     out.push({ x: out[0]!.x, y: out[0]!.y });
     return out;
+  }
+
+  if (outlinePolyline && outlinePolyline.length >= 3) {
+    const offset = offsetPolygon(outlinePolyline, inset);
+    return offset.map((p) => ({ x: p.x, y: p.y }));
   }
 
   const x0 = x - inset;
@@ -155,7 +177,13 @@ function sampleOutline(
   ];
 }
 
-function rectRoundedOutline(x0: number, y0: number, x1: number, y1: number, r: number): Pt[] {
+function rectRoundedOutline(
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  r: number,
+): Pt[] {
   if (r <= 0) {
     return [
       { x: x0, y: y0 },
@@ -192,100 +220,5 @@ function pushArc(
   for (let i = 1; i <= steps; i++) {
     const a = a0 + ((a1 - a0) * i) / steps;
     out.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r });
-  }
-}
-
-/**
- * Closed-loop dashed walker — emits each dash as a self-contained sub-path
- * (`moveTo` + `lineTo`s through any corners). Seam-spanning dashes emit two
- * connected arcs joined at `poly[0]` so Pixi never produces doubled
- * butt-caps.
- */
-function drawDashedPolylineClosed(
-  g: Graphics,
-  poly: ReadonlyArray<Pt>,
-  dashLen: number,
-  gapLen: number,
-  offset: number,
-): void {
-  const cycle = dashLen + gapLen;
-  if (cycle <= 0 || poly.length < 3 || dashLen <= 0) return;
-  const N = poly.length - 1;
-
-  const segLens: number[] = new Array(N);
-  let perimeter = 0;
-  for (let i = 0; i < N; i++) {
-    const a = poly[i]!;
-    const b = poly[i + 1]!;
-    const len = Math.hypot(b.x - a.x, b.y - a.y);
-    segLens[i] = len;
-    perimeter += len;
-  }
-  if (perimeter <= 0) return;
-
-  const normOffset = ((offset % cycle) + cycle) % cycle;
-  const firstDashStart = normOffset === 0 ? 0 : cycle - normOffset;
-  const numDashes = Math.max(1, Math.round(perimeter / cycle));
-
-  for (let k = 0; k < numDashes; k++) {
-    const dashStart = (firstDashStart + k * cycle) % perimeter;
-    const dashEnd = dashStart + dashLen;
-    if (dashEnd <= perimeter) {
-      emitArc(g, poly, segLens, dashStart, dashEnd, false);
-    } else {
-      emitArc(g, poly, segLens, dashStart, perimeter, false);
-      emitArc(g, poly, segLens, 0, dashEnd - perimeter, true);
-    }
-  }
-}
-
-function emitArc(
-  g: Graphics,
-  poly: ReadonlyArray<Pt>,
-  segLens: ReadonlyArray<number>,
-  from: number,
-  to: number,
-  continueDash: boolean,
-): void {
-  if (to <= from) return;
-
-  let acc = 0;
-  let segIdx = 0;
-  while (segIdx < segLens.length - 1 && acc + segLens[segIdx]! <= from) {
-    acc += segLens[segIdx]!;
-    segIdx++;
-  }
-  let local = from - acc;
-
-  if (!continueDash) {
-    const a = poly[segIdx]!;
-    const b = poly[segIdx + 1]!;
-    const segLen = segLens[segIdx]!;
-    if (segLen <= 0) return;
-    const ux = (b.x - a.x) / segLen;
-    const uy = (b.y - a.y) / segLen;
-    g.moveTo(a.x + ux * local, a.y + uy * local);
-  }
-
-  let remaining = to - from;
-  while (remaining > 0 && segIdx < segLens.length) {
-    const a = poly[segIdx]!;
-    const b = poly[segIdx + 1]!;
-    const segLen = segLens[segIdx]!;
-    if (segLen <= 0) {
-      segIdx++;
-      local = 0;
-      continue;
-    }
-    const ux = (b.x - a.x) / segLen;
-    const uy = (b.y - a.y) / segLen;
-    const stepInSeg = Math.min(remaining, segLen - local);
-    g.lineTo(a.x + ux * (local + stepInSeg), a.y + uy * (local + stepInSeg));
-    remaining -= stepInSeg;
-    local += stepInSeg;
-    if (local >= segLen - 1e-9) {
-      segIdx++;
-      local = 0;
-    }
   }
 }

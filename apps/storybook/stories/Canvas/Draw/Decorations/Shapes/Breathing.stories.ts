@@ -3,27 +3,35 @@ import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, draw } from '
 import GUI from 'lil-gui';
 import { createContainer } from '../../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Draw/Decorations/Shapes/Halo' };
+const meta: Meta = { title: 'Canvas/Draw/Decorations/Shapes/Breathing' };
 export default meta;
 type Story = StoryObj;
 
-export const Halo: Story = {
-  render: () => createContainer({ id: 'cvs-deco-shape-halo' }),
+export const Breathing: Story = {
+  render: () => createContainer({ id: 'cvs-deco-shape-breathing' }),
 
   play: async ({ canvasElement }) => {
     class DrawLayer extends WorldLayer {
+      decos: draw.AnimatedDecoration[] = [];
       protected createState() { return {}; }
       hitTest() { return null; }
+      tickAnimations(dt: number) {
+        for (const d of this.decos) d.tick(dt);
+      }
     }
 
     const toHex = (s: string) => parseInt(s.slice(1), 16);
 
+    // Star outline (5-point, outerR=70, innerR=30) in shape-local coords.
     const starLocal = [
       { x: 0, y: -70 }, { x: 17.63, y: -24.27 }, { x: 66.57, y: -21.63 },
       { x: 28.53, y: 9.27 }, { x: 41.13, y: 56.63 }, { x: 0, y: 30 },
       { x: -41.13, y: 56.63 }, { x: -28.53, y: 9.27 }, { x: -66.57, y: -21.63 },
       { x: -17.63, y: -24.27 }, { x: 0, y: -70 },
     ];
+    // Path outline (rounded-square via 4 quadTo curves) — pre-tessellated.
+    // drawPath supports curves; drawPolygon is straight-segments-only. To
+    // decorate a curved path, the curve has to be sampled into a polyline.
     const pathLocal = [
       { x: -60, y: 0 }, { x: -53.33, y: -33.33 }, { x: -33.33, y: -53.33 },
       { x: 0, y: -60 }, { x: 33.33, y: -53.33 }, { x: 53.33, y: -33.33 },
@@ -61,32 +69,32 @@ export const Halo: Story = {
       },
     ];
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-shape-halo')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-shape-breathing')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new DrawLayer({ id: 'deco-shape-halo-layer', options: {} });
+    const layer = new DrawLayer({ id: 'deco-shape-breathing-layer', options: {} });
     canvas.layers.add(layer);
 
-    const decoG = layer.createGraphics('halo-gfx');
     const hostG = layer.createGraphics('host-gfx');
+    const decoSlots = cells.map((_, i) => {
+      const slot = layer.createContainer(`breathing-slot-${i}`);
+      const g = layer.createGraphics(`breathing-gfx-${i}`);
+      slot.addChild(g);
+      return { slot, g };
+    });
 
-    const settings = { color: '#f59e0b', alpha: 0.4, padding: 8, cornerRadius: 0 };
+    const settings = {
+      color: '#22d3ee', width: 2, alpha: 0.9,
+      minPadding: 2, maxPadding: 18, periodMs: 1800, cornerRadius: 0,
+    };
 
-    function redraw() {
+    function redrawHosts() {
       hostG.clear();
-      decoG.clear();
-      const opts = {
-        color: toHex(settings.color),
-        alpha: settings.alpha,
-        padding: settings.padding,
-        cornerRadius: settings.cornerRadius,
-      };
       for (const c of cells) {
-        draw.drawHalo(decoG, c.bounds, opts, c.kind, c.outline);
         if (c.kind === 'rect') {
           draw.drawRect(hostG, {
             kind: 'rect', x: c.cx, y: c.cy, width: 200, height: 120,
@@ -132,13 +140,35 @@ export const Halo: Story = {
       }
     }
 
-    redraw();
+    function rebuild() {
+      redrawHosts();
+      for (const d of layer.decos) d.destroy();
+      layer.decos = cells.map((c, i) => {
+        const slot = decoSlots[i]!;
+        const deco = new draw.BreathingDecoration(slot.slot, slot.g, {
+          color: toHex(settings.color),
+          width: settings.width,
+          alpha: settings.alpha,
+          minPadding: settings.minPadding,
+          maxPadding: settings.maxPadding,
+          periodMs: settings.periodMs,
+          cornerRadius: settings.cornerRadius,
+        });
+        deco.update(c.bounds, c.kind, c.outline);
+        return deco;
+      });
+    }
+
+    rebuild();
     canvas.camera.fitContent(layer.getBounds(), 80);
 
-    const gui = new GUI({ title: 'Halo (all shapes)' });
-    gui.addColor(settings, 'color').onChange(redraw);
-    gui.add(settings, 'alpha', 0, 1, 0.01).onChange(redraw);
-    gui.add(settings, 'padding', 0, 40, 1).onChange(redraw);
-    gui.add(settings, 'cornerRadius', 0, 60, 1).onChange(redraw);
+    const gui = new GUI({ title: 'Breathing (all shapes)' });
+    gui.addColor(settings, 'color').onChange(rebuild);
+    gui.add(settings, 'width', 0, 10, 0.5).onChange(rebuild);
+    gui.add(settings, 'alpha', 0, 1, 0.01).onChange(rebuild);
+    gui.add(settings, 'minPadding', 0, 30, 1).onChange(rebuild);
+    gui.add(settings, 'maxPadding', 5, 60, 1).onChange(rebuild);
+    gui.add(settings, 'periodMs', 200, 5000, 100).onChange(rebuild);
+    gui.add(settings, 'cornerRadius', 0, 50, 1).onChange(rebuild);
   },
 };

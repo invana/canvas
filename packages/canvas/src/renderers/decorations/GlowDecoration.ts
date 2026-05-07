@@ -1,29 +1,23 @@
 /**
  * `GlowDecoration` — soft outer glow via Pixi's `BlurFilter`.
  *
- * Registered as kind `'glow'`, target `'shape'`. Static (no `tick`).
- * Lands in the `'glow'` slot z-band (deepest behind the host) so the blur
- * radiates outward without occluding the shape itself.
+ * Registered as kind `'glow'`, target `'shape'`. Static.
  *
- * Implementation: same shape geometry as `HaloDecoration` but rendered with
- * a blur filter, larger padding, and lower alpha. Cheaper-than-it-looks —
- * BlurFilter runs once per frame on the small filter-area rect rather than
- * per shape pixel.
+ * Thin wrapper: owns the slot Container/Graphics + lifecycle. Calls
+ * `setupGlow` once on construction (installs the BlurFilter on the slot)
+ * and delegates geometry to `draw.drawGlow` on each `mount`/`update`.
+ * Falls back to AABB rounded-rect when no `outlinePolyline` is supplied.
  */
 
-import { BlurFilter, Container, Graphics } from 'pixi.js';
+import { Container, Graphics } from 'pixi.js';
+import {
+  drawGlow,
+  setupGlow,
+  type GlowOpts,
+} from '../../draw/decorations/shape/glow';
 import type { IShapeDecoration, ShapeDecorationHostInfo } from '../types';
-import { expandPolyline, polyToShape } from './polylineUtils';
 
-export interface GlowStyle {
-  readonly color: number;
-  /** Padding outside the host bounds (filter-area expansion). Default `12`. */
-  readonly padding?: number;
-  /** 0..1 fill alpha for the glow disc. Default `0.6`. */
-  readonly alpha?: number;
-  /** Pixi `BlurFilter.strength`. Default `8`. Higher = wider, softer glow. */
-  readonly blur?: number;
-}
+export type GlowStyle = GlowOpts;
 
 export class GlowDecoration implements IShapeDecoration<GlowStyle> {
   readonly style: GlowStyle;
@@ -36,7 +30,7 @@ export class GlowDecoration implements IShapeDecoration<GlowStyle> {
     this.gfx.label = 'deco:glow';
     this.graphics = new Graphics();
     this.gfx.addChild(this.graphics);
-    this.gfx.filters = [new BlurFilter({ strength: this.style.blur ?? 8 })];
+    setupGlow(this.gfx, style);
   }
 
   mount(host: ShapeDecorationHostInfo): void {
@@ -54,28 +48,13 @@ export class GlowDecoration implements IShapeDecoration<GlowStyle> {
   }
 
   private draw(host: ShapeDecorationHostInfo): void {
-    const padding = this.style.padding ?? 12;
-    const alpha = this.style.alpha ?? 0.6;
-
-    const g = this.graphics;
-    g.clear();
-    const { x, y, width, height } = host.bounds;
-    const cx = x + width / 2;
-    const cy = y + height / 2;
-
-    if (host.hostKind === 'circle' || host.hostKind === 'ellipse') {
-      g.ellipse(cx, cy, width / 2 + padding, height / 2 + padding);
-    } else if (host.outlinePolyline && host.outlinePolyline.length >= 3) {
-      polyToShape(g, expandPolyline(host.outlinePolyline, padding));
-    } else {
-      g.roundRect(
-        x - padding,
-        y - padding,
-        width + padding * 2,
-        height + padding * 2,
-        Math.max(padding, 6),
-      );
-    }
-    g.fill({ color: this.style.color, alpha });
+    this.graphics.clear();
+    drawGlow(
+      this.graphics,
+      host.bounds,
+      this.style,
+      host.hostKind,
+      host.outlinePolyline,
+    );
   }
 }

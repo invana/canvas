@@ -24,7 +24,7 @@ import type {
   Point,
   ShapeCtor,
 } from '../types';
-import { drawDashedPolyline } from '../decorations/polyline';
+import { drawDashedPolylineOpen as drawDashedPolyline } from '../../draw/decorations/_polylineUtils';
 import { sourceAnchorAngle, targetAnchorAngle } from './markerPlacement';
 
 export interface LineConnectorSpec extends BaseConnectorSpec {

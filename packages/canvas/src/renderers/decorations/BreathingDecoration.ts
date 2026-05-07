@@ -1,38 +1,40 @@
 /**
- * `PulseRingDecoration` — expanding stroked ring that fades as it grows,
- * looping forever. Animated.
+ * `BreathingDecoration` — calm, continuous "alive" cue: stroked outline
+ * whose padding oscillates sinusoidally with co-pulsing alpha. Animated.
  *
- * Registered as kind `'pulse-ring'`, target `'shape'`. Lands in the `'pulse'`
- * slot z-band (above the shape).
+ * Registered as kind `'breathing'`, target `'shape'`. Useful for sustained
+ * focus states (selected node bound to a side-panel form, "watching" status,
+ * etc.) — distinct from `'pulse-ring'` (one-shot expand-and-fade) by being
+ * a steady heartbeat.
  *
  * Thin wrapper: owns the slot Container/Graphics + IShapeDecoration
  * lifecycle and delegates all animation/geometry to the
- * `draw.PulseRingDecoration` primitive — including multi-ring (ringCount)
- * and shape-following parallel offset for polygon/path hosts.
+ * `draw.BreathingDecoration` primitive — including shape-following parallel
+ * offset for polygon/path hosts.
  */
 
 import { Container, Graphics } from 'pixi.js';
 import {
-  PulseRingDecoration as DrawPulseRing,
-  type PulseRingOpts,
-} from '../../draw/decorations/shape/pulse-ring';
+  BreathingDecoration as DrawBreathing,
+  type BreathingOpts,
+} from '../../draw/decorations/shape/breathing';
 import type { IShapeDecoration, ShapeDecorationHostInfo } from '../types';
 
-export type PulseRingStyle = PulseRingOpts;
+export type BreathingStyle = BreathingOpts;
 
-export class PulseRingDecoration implements IShapeDecoration<PulseRingStyle> {
-  readonly style: PulseRingStyle;
+export class BreathingDecoration implements IShapeDecoration<BreathingStyle> {
+  readonly style: BreathingStyle;
   private readonly gfx: Container;
   private readonly graphics: Graphics;
-  private readonly impl: DrawPulseRing;
+  private readonly impl: DrawBreathing;
 
-  constructor(style: PulseRingStyle) {
+  constructor(style: BreathingStyle) {
     this.style = style;
     this.gfx = new Container();
-    this.gfx.label = 'deco:pulse-ring';
+    this.gfx.label = 'deco:breathing';
     this.graphics = new Graphics();
     this.gfx.addChild(this.graphics);
-    this.impl = new DrawPulseRing(this.gfx, this.graphics, style);
+    this.impl = new DrawBreathing(this.gfx, this.graphics, style);
   }
 
   mount(host: ShapeDecorationHostInfo): void {

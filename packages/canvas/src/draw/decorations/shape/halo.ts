@@ -1,17 +1,20 @@
 /**
- * `halo` — primitive decoration: filled ring outside host bounds.
+ * `halo` — primitive shape decoration: filled ring outside host bounds.
  *
- * Static (no animation). Single responsibility: emit a halo geometry into the
- * supplied Graphics given host bounds + host kind. The renderer holds the
- * Graphics in the host's `'halo'` slot and calls `drawHalo` on mount/update.
+ * Static (no animation). Single responsibility: emit halo geometry into the
+ * supplied Graphics given host bounds + (optionally) the host's outline
+ * polyline.
  *
- * Outline traces a circle/ellipse for round hosts and a (rounded) rect for
- * everything else. `cornerRadius` controls the outer corner roundness for
- * rect-like hosts; pass the host's own `cornerRadius` so the halo matches.
+ * Geometry strategy:
+ * - circle / ellipse host: trace an ellipse expanded by `padding`
+ * - non-circle host with `outlinePolyline`: parallel-offset the polygon by
+ *   `padding` px (true shape-following halo for stars, triangles, paths)
+ * - non-circle host without polyline: AABB rect (or rounded rect) fallback
  */
 
 import type { Graphics } from 'pixi.js';
-import type { Rect, StaticDecorationKind } from '../types';
+import type { Point, Rect, StaticDecorationKind } from '../../types';
+import { offsetPolygon, polyToShape } from '../_polylineUtils';
 import type { OutlineDecorationOpts } from './border';
 
 export interface HaloOpts extends OutlineDecorationOpts {
@@ -19,7 +22,13 @@ export interface HaloOpts extends OutlineDecorationOpts {
   readonly padding?: number;
 }
 
-export function drawHalo(g: Graphics, bounds: Rect, opts: HaloOpts, hostKind?: string): void {
+export function drawHalo(
+  g: Graphics,
+  bounds: Rect,
+  opts: HaloOpts,
+  hostKind?: string,
+  outlinePolyline?: ReadonlyArray<Point>,
+): void {
   const padding = opts.padding ?? 4;
   const alpha = opts.alpha ?? 0.4;
   const cornerRadius = opts.cornerRadius ?? 0;
@@ -29,6 +38,8 @@ export function drawHalo(g: Graphics, bounds: Rect, opts: HaloOpts, hostKind?: s
 
   if (hostKind === 'circle' || hostKind === 'ellipse') {
     g.ellipse(cx, cy, width / 2 + padding, height / 2 + padding);
+  } else if (outlinePolyline && outlinePolyline.length >= 3) {
+    polyToShape(g, offsetPolygon(outlinePolyline, padding));
   } else if (cornerRadius > 0) {
     g.roundRect(
       x - padding,

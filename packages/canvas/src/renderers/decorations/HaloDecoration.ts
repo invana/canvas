@@ -3,34 +3,18 @@
  *
  * Registered as kind `'halo'`, target `'shape'`. Static (no `tick`).
  *
- * The visible part is the `padding` band that pokes out beyond the shape's
- * draw region — the inner area is hidden behind the host shape since halos
- * land in the `'halo'` slot z-band (below the shape).
- *
- * For circle / ellipse hosts the halo traces the same rounded form. For all
- * other host kinds the halo is an axis-aligned rounded rectangle that
- * envelops the host's local-space AABB. Custom hosts can register their
- * own halo variants if they need shape-fitting halos.
+ * Thin wrapper: owns the slot Container/Graphics + IShapeDecoration lifecycle
+ * and delegates all geometry to the `draw.drawHalo` primitive. When the host
+ * is a `polygon` / `path` (i.e. supplies an `outlinePolyline`), the halo
+ * traces the actual outline via parallel offset; otherwise it falls back to
+ * the AABB.
  */
 
 import { Container, Graphics } from 'pixi.js';
+import { drawHalo, type HaloOpts } from '../../draw/decorations/shape/halo';
 import type { IShapeDecoration, ShapeDecorationHostInfo } from '../types';
-import { expandPolyline, polyToShape } from './polylineUtils';
 
-export interface HaloStyle {
-  /** Halo color (hex). */
-  readonly color: number;
-  /** 0..1 fill alpha. Default `0.4`. */
-  readonly alpha?: number;
-  /** Padding outside the host bounds. Default `4`. */
-  readonly padding?: number;
-  /**
-   * Rounded corner radius for rect-like hosts. Default `0` (sharp).
-   * The halo's outer radius is `cornerRadius + padding` so it stays
-   * concentric with a host that has the same `cornerRadius`.
-   */
-  readonly cornerRadius?: number;
-}
+export type HaloStyle = HaloOpts;
 
 export class HaloDecoration implements IShapeDecoration<HaloStyle> {
   readonly style: HaloStyle;
@@ -60,36 +44,13 @@ export class HaloDecoration implements IShapeDecoration<HaloStyle> {
   }
 
   private draw(host: ShapeDecorationHostInfo): void {
-    const padding = this.style.padding ?? 4;
-    const alpha = this.style.alpha ?? 0.4;
-    const cornerRadius = this.style.cornerRadius ?? 0;
-    const g = this.graphics;
-    g.clear();
-
-    // Bounds are local to the shape's gfx (which is positioned at spec.x/y),
-    // so the host's center sits at (0, 0) for centered shapes (circle, rect,
-    // ellipse, image, text) — which is the typical case here.
-    const { x, y, width, height } = host.bounds;
-    const cx = x + width / 2;
-    const cy = y + height / 2;
-
-    if (host.hostKind === 'circle' || host.hostKind === 'ellipse') {
-      const rx = width / 2 + padding;
-      const ry = height / 2 + padding;
-      g.ellipse(cx, cy, rx, ry);
-    } else if (host.outlinePolyline && host.outlinePolyline.length >= 3) {
-      polyToShape(g, expandPolyline(host.outlinePolyline, padding));
-    } else if (cornerRadius > 0) {
-      g.roundRect(
-        x - padding,
-        y - padding,
-        width + padding * 2,
-        height + padding * 2,
-        cornerRadius + padding,
-      );
-    } else {
-      g.rect(x - padding, y - padding, width + padding * 2, height + padding * 2);
-    }
-    g.fill({ color: this.style.color, alpha });
+    this.graphics.clear();
+    drawHalo(
+      this.graphics,
+      host.bounds,
+      this.style,
+      host.hostKind,
+      host.outlinePolyline,
+    );
   }
 }

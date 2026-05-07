@@ -1,13 +1,16 @@
 /**
- * `border` — primitive decoration: outline drawn on top of the host.
+ * `border` — primitive shape decoration: outline drawn on top of the host.
  *
- * Static. Single responsibility: emit border geometry into the supplied
- * Graphics. Traces a circle/ellipse for round hosts; rect (or rounded rect
- * if `cornerRadius` is set) for others.
+ * Static. Geometry strategy:
+ * - circle / ellipse host: trace an ellipse contracted by `inset`
+ * - non-circle host with `outlinePolyline`: parallel-offset the polygon by
+ *   `-inset` px (true shape-following border for stars, triangles, paths)
+ * - non-circle host without polyline: rect (or rounded rect) fallback
  */
 
 import type { Graphics } from 'pixi.js';
-import type { Rect, StaticDecorationKind } from '../types';
+import type { Point, Rect, StaticDecorationKind } from '../../types';
+import { offsetPolygon, polyToShape } from '../_polylineUtils';
 
 /**
  * Shared option base for outline-style decorations (`border`, `halo`, ...).
@@ -37,6 +40,7 @@ export function drawBorder(
   bounds: Rect,
   opts: BorderOpts,
   hostKind?: string,
+  outlinePolyline?: ReadonlyArray<Point>,
 ): void {
   const width = opts.width ?? 1;
   if (width <= 0) return;
@@ -52,6 +56,8 @@ export function drawBorder(
     const rx = Math.max(0, w / 2 - inset);
     const ry = Math.max(0, h / 2 - inset);
     g.ellipse(cx, cy, rx, ry);
+  } else if (outlinePolyline && outlinePolyline.length >= 3) {
+    polyToShape(g, offsetPolygon(outlinePolyline, -inset));
   } else if (cornerRadius > 0) {
     g.roundRect(x + inset, y + inset, w - 2 * inset, h - 2 * inset, cornerRadius);
   } else {
