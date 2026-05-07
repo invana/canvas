@@ -4,7 +4,7 @@
 
 > **createLayerStore**\<`T`\>(`initial`, `opts?`): [`Store`](../type-aliases/Store.md)\<`T`\>
 
-Defined in: [packages/canvas/src/state/Store.ts:138](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/state/Store.ts#L138)
+Defined in: [packages/canvas/src/state/Store.ts:138](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/state/Store.ts#L138)
 
 Create a `Store<T>` with our standard middleware stack.
 
@@ -37,7 +37,7 @@ close over imperative setup; the object form is the common case.
 
 > **createLayerStore**\<`T`\>(`creator`, `opts?`): [`Store`](../type-aliases/Store.md)\<`T`\>
 
-Defined in: [packages/canvas/src/state/Store.ts:142](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/state/Store.ts#L142)
+Defined in: [packages/canvas/src/state/Store.ts:142](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/state/Store.ts#L142)
 
 Create a `Store<T>` with our standard middleware stack.
 

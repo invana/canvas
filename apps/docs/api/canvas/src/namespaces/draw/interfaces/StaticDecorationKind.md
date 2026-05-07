@@ -1,6 +1,6 @@
 # Interface: StaticDecorationKind\<TOpts\>
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:185](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L185)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:185](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L185)
 
 Static decoration descriptor.
 
@@ -27,7 +27,7 @@ the hook.
 
 > **draw**(`g`, `bounds`, `opts`, `hostKind?`): `void`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:187](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L187)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:187](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L187)
 
 #### Parameters
 
@@ -57,7 +57,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:187](https://github.com
 
 > `optional` **setup**(`slot`, `opts`): `void`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:186](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L186)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:186](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L186)
 
 #### Parameters
 

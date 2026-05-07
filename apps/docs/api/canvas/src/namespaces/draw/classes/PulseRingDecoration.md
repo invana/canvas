@@ -1,6 +1,6 @@
 # Class: PulseRingDecoration
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:23](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L23)
+Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:23](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L23)
 
 `@invana/canvas/draw` — pure-function paint primitives.
 
@@ -29,7 +29,7 @@ lights) is always a Layer concern.
 
 > **new PulseRingDecoration**(`_slot`, `g`, `opts`): `PulseRingDecoration`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:28](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L28)
+Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:28](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L28)
 
 #### Parameters
 
@@ -55,7 +55,7 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:28](ht
 
 > **destroy**(): `void`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:47](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L47)
+Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:47](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L47)
 
 Final cleanup. Renderer is responsible for clearing the Graphics afterwards.
 
@@ -73,7 +73,7 @@ Final cleanup. Renderer is responsible for clearing the Graphics afterwards.
 
 > **tick**(`deltaMs`): `boolean`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:40](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L40)
+Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:40](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L40)
 
 Advance animation by `deltaMs`. Return `false` to retire (renderer drops it).
 
@@ -97,7 +97,7 @@ Advance animation by `deltaMs`. Return `false` to retire (renderer drops it).
 
 > **update**(`bounds`, `hostKind?`): `void`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:34](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L34)
+Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:34](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L34)
 
 Re-render with new host bounds (called on host spec change).
 

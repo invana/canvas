@@ -1,6 +1,6 @@
 # Interface: BorderOpts
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/border.ts:12](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/border.ts#L12)
+Defined in: [packages/canvas/src/renderers/draw/decorations/border.ts:12](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/border.ts#L12)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/border.ts:12](https:
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/border.ts:17](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/border.ts#L17)
+Defined in: [packages/canvas/src/renderers/draw/decorations/border.ts:17](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/border.ts#L17)
 
 0..1 stroke alpha. Default `1`.
 
@@ -18,7 +18,7 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/border.ts:17](https:
 
 > `readonly` **color**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/border.ts:13](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/border.ts#L13)
+Defined in: [packages/canvas/src/renderers/draw/decorations/border.ts:13](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/border.ts#L13)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/border.ts:13](https:
 
 > `readonly` `optional` **cornerRadius?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/border.ts:19](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/border.ts#L19)
+Defined in: [packages/canvas/src/renderers/draw/decorations/border.ts:19](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/border.ts#L19)
 
 Optional rounded corner radius for rect hosts. Default `0`.
 
@@ -36,7 +36,7 @@ Optional rounded corner radius for rect hosts. Default `0`.
 
 > `readonly` `optional` **inset?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/border.ts:24](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/border.ts#L24)
+Defined in: [packages/canvas/src/renderers/draw/decorations/border.ts:24](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/border.ts#L24)
 
 Inset/outset relative to host bounds. Negative = outside; positive = inside.
 Default `0` (sits on the host edge).
@@ -47,6 +47,6 @@ Default `0` (sits on the host edge).
 
 > `readonly` `optional` **width?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/border.ts:15](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/border.ts#L15)
+Defined in: [packages/canvas/src/renderers/draw/decorations/border.ts:15](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/border.ts#L15)
 
 Stroke width. Default `1`.

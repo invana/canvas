@@ -1,6 +1,6 @@
 # Interface: HaloOpts
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/halo.ts:16](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/halo.ts#L16)
+Defined in: [packages/canvas/src/renderers/draw/decorations/halo.ts:16](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/halo.ts#L16)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/halo.ts:16](https://
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/halo.ts:19](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/halo.ts#L19)
+Defined in: [packages/canvas/src/renderers/draw/decorations/halo.ts:19](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/halo.ts#L19)
 
 0..1 fill alpha. Default `0.4`.
 
@@ -18,7 +18,7 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/halo.ts:19](https://
 
 > `readonly` **color**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/halo.ts:17](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/halo.ts#L17)
+Defined in: [packages/canvas/src/renderers/draw/decorations/halo.ts:17](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/halo.ts#L17)
 
 ***
 
@@ -26,6 +26,6 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/halo.ts:17](https://
 
 > `readonly` `optional` **padding?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/halo.ts:21](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/halo.ts#L21)
+Defined in: [packages/canvas/src/renderers/draw/decorations/halo.ts:21](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/halo.ts#L21)
 
 Padding outside the host bounds. Default `4`.

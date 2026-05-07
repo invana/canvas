@@ -1,6 +1,6 @@
 # Interface: ConnectorPaintStyle
 
-Defined in: [packages/canvas/src/renderers/types.ts:279](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L279)
+Defined in: [packages/canvas/src/renderers/types.ts:279](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L279)
 
 Style override passed by decorations to `IConnector.paintInto`. The
 connector paints its full silhouette (path stroke + every shape-marker via
@@ -15,7 +15,7 @@ glow/halo.
 
 > `readonly` `optional` **dash?**: `object`
 
-Defined in: [packages/canvas/src/renderers/types.ts:287](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L287)
+Defined in: [packages/canvas/src/renderers/types.ts:287](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L287)
 
 #### dashLength
 
@@ -37,7 +37,7 @@ Phase offset in pixels along arc-length. Default `0`.
 
 > `readonly` `optional` **stroke?**: `object`
 
-Defined in: [packages/canvas/src/renderers/types.ts:280](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L280)
+Defined in: [packages/canvas/src/renderers/types.ts:280](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L280)
 
 #### alpha?
 
@@ -65,7 +65,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:280](https://github.com/inva
 
 > `readonly` `optional` **tintMarkers?**: `boolean`
 
-Defined in: [packages/canvas/src/renderers/types.ts:300](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L300)
+Defined in: [packages/canvas/src/renderers/types.ts:300](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L300)
 
 When `true`, markers paint with `stroke.color` / `stroke.alpha` instead
 of their own spec colours. Decorations like glow/halo set this so the

@@ -1,6 +1,6 @@
 # Interface: DragPanBehaviourOptions
 
-Defined in: [packages/canvas/src/behaviours/DragPanBehaviour.ts:21](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/behaviours/DragPanBehaviour.ts#L21)
+Defined in: [packages/canvas/src/behaviours/DragPanBehaviour.ts:21](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/behaviours/DragPanBehaviour.ts#L21)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [packages/canvas/src/behaviours/DragPanBehaviour.ts:21](https://gith
 
 > `optional` **decelerate?**: `boolean`
 
-Defined in: [packages/canvas/src/behaviours/DragPanBehaviour.ts:27](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/behaviours/DragPanBehaviour.ts#L27)
+Defined in: [packages/canvas/src/behaviours/DragPanBehaviour.ts:27](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/behaviours/DragPanBehaviour.ts#L27)
 
 Add momentum deceleration after pointer lift. Default `true`.
 
@@ -22,7 +22,7 @@ Add momentum deceleration after pointer lift. Default `true`.
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/behaviours/Behaviour.ts#L43)
+Defined in: [packages/canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/behaviours/Behaviour.ts#L43)
 
 Default `false` — the developer explicitly enables.
 
@@ -36,7 +36,7 @@ Default `false` — the developer explicitly enables.
 
 > **id**: `string`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/behaviours/Behaviour.ts#L36)
+Defined in: [packages/canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/behaviours/Behaviour.ts#L36)
 
 #### Inherited from
 
@@ -48,7 +48,7 @@ Defined in: [packages/canvas/src/behaviours/Behaviour.ts:36](https://github.com/
 
 > `optional` **layerId?**: `string`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:41](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/behaviours/Behaviour.ts#L41)
+Defined in: [packages/canvas/src/behaviours/Behaviour.ts:41](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/behaviours/Behaviour.ts#L41)
 
 Layer-scoped behaviours target a specific Layer by id. Canvas-scoped
 behaviours have no `layerId` and `scope: 'canvas'`.
@@ -63,7 +63,7 @@ behaviours have no `layerId` and `scope: 'canvas'`.
 
 > `optional` **modifier?**: [`DragModifier`](../type-aliases/DragModifier.md)
 
-Defined in: [packages/canvas/src/behaviours/DragPanBehaviour.ts:23](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/behaviours/DragPanBehaviour.ts#L23)
+Defined in: [packages/canvas/src/behaviours/DragPanBehaviour.ts:23](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/behaviours/DragPanBehaviour.ts#L23)
 
 Which modifier key must be held during drag. Default `'none'`.
 
@@ -73,7 +73,7 @@ Which modifier key must be held during drag. Default `'none'`.
 
 > `optional` **mouseButtons?**: `"all"` \| `"left"` \| `"right"` \| `"middle"`
 
-Defined in: [packages/canvas/src/behaviours/DragPanBehaviour.ts:25](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/behaviours/DragPanBehaviour.ts#L25)
+Defined in: [packages/canvas/src/behaviours/DragPanBehaviour.ts:25](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/behaviours/DragPanBehaviour.ts#L25)
 
 Allowed mouse buttons. Default `'left'`. Forwarded to pixi-viewport.
 
@@ -83,7 +83,7 @@ Allowed mouse buttons. Default `'left'`. Forwarded to pixi-viewport.
 
 > `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/behaviours/Behaviour.ts#L49)
+Defined in: [packages/canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/behaviours/Behaviour.ts#L49)
 
 Gesture identifiers this behaviour claims. Used by `BehaviourRegistry`
 for conflict warnings. Format is convention-free (`'shift+drag'`,

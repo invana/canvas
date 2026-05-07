@@ -1,6 +1,6 @@
 # Interface: CreateLayerStoreOptions
 
-Defined in: [packages/canvas/src/state/Store.ts:100](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/state/Store.ts#L100)
+Defined in: [packages/canvas/src/state/Store.ts:100](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/state/Store.ts#L100)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [packages/canvas/src/state/Store.ts:100](https://github.com/invana/c
 
 > `optional` **enableDevtools?**: `boolean`
 
-Defined in: [packages/canvas/src/state/Store.ts:112](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/state/Store.ts#L112)
+Defined in: [packages/canvas/src/state/Store.ts:112](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/state/Store.ts#L112)
 
 Force devtools on/off. Default: enabled when `process.env.NODE_ENV !== 'production'`.
 High-frequency mutation sites can pass `enableDevtools: false` per-store
@@ -20,7 +20,7 @@ to avoid devtools serialisation cost in dev too.
 
 > `optional` **name?**: `string`
 
-Defined in: [packages/canvas/src/state/Store.ts:105](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/state/Store.ts#L105)
+Defined in: [packages/canvas/src/state/Store.ts:105](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/state/Store.ts#L105)
 
 Devtools display name. Used as the "store" name in Redux DevTools.
 Convention: `<ClassName>:<id>` (e.g. `'GraphLayer:graph-1'`).

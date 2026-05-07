@@ -1,6 +1,6 @@
 # Interface: DashedBorderRotatingOpts
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:17](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L17)
+Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:17](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L17)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:1
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:20](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L20)
+Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:20](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L20)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:2
 
 > `readonly` **color**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:18](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L18)
+Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:18](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L18)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:1
 
 > `readonly` `optional` **dashLength?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:21](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L21)
+Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:21](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L21)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:2
 
 > `readonly` `optional` **gapLength?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:22](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L22)
+Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:22](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L22)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:2
 
 > `readonly` `optional` **padding?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:23](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L23)
+Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:23](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L23)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:2
 
 > `readonly` `optional` **speed?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:25](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L25)
+Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:25](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L25)
 
 Radians per ms. Default `0.0008`.
 
@@ -58,4 +58,4 @@ Radians per ms. Default `0.0008`.
 
 > `readonly` `optional` **width?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:19](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L19)
+Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:19](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L19)

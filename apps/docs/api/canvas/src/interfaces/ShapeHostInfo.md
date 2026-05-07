@@ -1,6 +1,6 @@
 # Interface: ShapeHostInfo
 
-Defined in: [packages/canvas/src/renderers/types.ts:135](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L135)
+Defined in: [packages/canvas/src/renderers/types.ts:135](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L135)
 
 Information a `Shape` instance receives at construction. The renderer hands
 shapes the surface they should attach to plus camera access for any
@@ -17,7 +17,7 @@ GC churn at 500k+ scale. Shapes that don't need either can ignore them.
 
 > `readonly` `optional` **spritePool?**: [`ISpritePool`](ISpritePool.md)
 
-Defined in: [packages/canvas/src/renderers/types.ts:141](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L141)
+Defined in: [packages/canvas/src/renderers/types.ts:141](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L141)
 
 Object pool for `Sprite` reuse — reduces GC pressure at scale.
 
@@ -27,7 +27,7 @@ Object pool for `Sprite` reuse — reduces GC pressure at scale.
 
 > `readonly` **surface**: `Container`
 
-Defined in: [packages/canvas/src/renderers/types.ts:137](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L137)
+Defined in: [packages/canvas/src/renderers/types.ts:137](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L137)
 
 Surface to attach the shape's root `Container` to.
 
@@ -37,6 +37,6 @@ Surface to attach the shape's root `Container` to.
 
 > `readonly` `optional` **textureRegistry?**: [`TextureRegistry`](../classes/TextureRegistry.md)
 
-Defined in: [packages/canvas/src/renderers/types.ts:139](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L139)
+Defined in: [packages/canvas/src/renderers/types.ts:139](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L139)
 
 Registry for URL-based texture lookup and lazy loading.

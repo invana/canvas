@@ -1,6 +1,6 @@
 # Interface: PulseRingOpts
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:12](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L12)
+Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:12](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L12)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:12](ht
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:16](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L16)
+Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:16](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L16)
 
 Starting alpha at the begin-pulse moment. Default `0.6`.
 
@@ -18,7 +18,7 @@ Starting alpha at the begin-pulse moment. Default `0.6`.
 
 > `readonly` **color**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:13](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L13)
+Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:13](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L13)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:13](ht
 
 > `readonly` `optional` **endPadding?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:18](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L18)
+Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:18](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L18)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:18](ht
 
 > `readonly` `optional` **periodMs?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:20](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L20)
+Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:20](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L20)
 
 Loop period in ms. Default `1500`.
 
@@ -44,7 +44,7 @@ Loop period in ms. Default `1500`.
 
 > `readonly` `optional` **startPadding?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:17](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L17)
+Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:17](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L17)
 
 ***
 
@@ -52,4 +52,4 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:17](ht
 
 > `readonly` `optional` **width?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:14](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L14)
+Defined in: [packages/canvas/src/renderers/draw/decorations/pulse-ring.ts:14](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/pulse-ring.ts#L14)

@@ -1,6 +1,6 @@
 # Interface: ImageSpec
 
-Defined in: [packages/canvas/src/renderers/draw/shapes/image.ts:19](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/shapes/image.ts#L19)
+Defined in: [packages/canvas/src/renderers/draw/shapes/image.ts:19](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/shapes/image.ts#L19)
 
 `@invana/canvas/draw` — pure-function paint primitives.
 
@@ -29,7 +29,7 @@ lights) is always a Layer concern.
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:79](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L79)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:79](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L79)
 
 #### Inherited from
 
@@ -41,7 +41,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:79](https://github.com/
 
 > `readonly` **height**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/shapes/image.ts:23](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/shapes/image.ts#L23)
+Defined in: [packages/canvas/src/renderers/draw/shapes/image.ts:23](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/shapes/image.ts#L23)
 
 ***
 
@@ -49,7 +49,7 @@ Defined in: [packages/canvas/src/renderers/draw/shapes/image.ts:23](https://gith
 
 > `readonly` **kind**: `"image"`
 
-Defined in: [packages/canvas/src/renderers/draw/shapes/image.ts:20](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/shapes/image.ts#L20)
+Defined in: [packages/canvas/src/renderers/draw/shapes/image.ts:20](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/shapes/image.ts#L20)
 
 #### Overrides
 
@@ -61,7 +61,7 @@ Defined in: [packages/canvas/src/renderers/draw/shapes/image.ts:20](https://gith
 
 > `readonly` **texture**: `Texture`
 
-Defined in: [packages/canvas/src/renderers/draw/shapes/image.ts:21](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/shapes/image.ts#L21)
+Defined in: [packages/canvas/src/renderers/draw/shapes/image.ts:21](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/shapes/image.ts#L21)
 
 ***
 
@@ -69,7 +69,7 @@ Defined in: [packages/canvas/src/renderers/draw/shapes/image.ts:21](https://gith
 
 > `readonly` `optional` **tint?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/shapes/image.ts:25](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/shapes/image.ts#L25)
+Defined in: [packages/canvas/src/renderers/draw/shapes/image.ts:25](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/shapes/image.ts#L25)
 
 Multiplicative tint; `0xffffff` for none. Default `0xffffff`.
 
@@ -79,7 +79,7 @@ Multiplicative tint; `0xffffff` for none. Default `0xffffff`.
 
 > `readonly` `optional` **visible?**: `boolean`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:80](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L80)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:80](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L80)
 
 #### Inherited from
 
@@ -91,7 +91,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:80](https://github.com/
 
 > `readonly` **width**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/shapes/image.ts:22](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/shapes/image.ts#L22)
+Defined in: [packages/canvas/src/renderers/draw/shapes/image.ts:22](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/shapes/image.ts#L22)
 
 ***
 
@@ -99,7 +99,7 @@ Defined in: [packages/canvas/src/renderers/draw/shapes/image.ts:22](https://gith
 
 > `readonly` **x**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:76](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L76)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:76](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L76)
 
 #### Inherited from
 
@@ -111,7 +111,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:76](https://github.com/
 
 > `readonly` **y**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:77](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L77)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:77](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L77)
 
 #### Inherited from
 
@@ -123,7 +123,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:77](https://github.com/
 
 > `readonly` `optional` **zIndex?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:78](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L78)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:78](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L78)
 
 #### Inherited from
 

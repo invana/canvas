@@ -1,6 +1,6 @@
 # Interface: ShapeKind\<TSpec\>
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:117](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L117)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:117](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L117)
 
 Shape primitive descriptor.
 
@@ -25,7 +25,7 @@ higher-level layer) pass a non-zero origin to draw at an offset.
 
 > **bounds**(`spec`): [`Rect`](Rect.md)
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:119](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L119)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:119](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L119)
 
 #### Parameters
 
@@ -43,7 +43,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:119](https://github.com
 
 > `optional` **contains**(`spec`, `lx`, `ly`): `boolean`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:120](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L120)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:120](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L120)
 
 #### Parameters
 
@@ -69,7 +69,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:120](https://github.com
 
 > **draw**(`g`, `spec`, `ox?`, `oy?`, `rot?`): `void`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:118](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L118)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:118](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L118)
 
 #### Parameters
 

@@ -1,6 +1,6 @@
 # Interface: IDecorationBase\<THostInfo, TStyle\>
 
-Defined in: [packages/canvas/src/renderers/types.ts:347](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L347)
+Defined in: [packages/canvas/src/renderers/types.ts:347](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L347)
 
 Base for both shape and connector decorations. Presence of `tick` makes
 the decoration animated and registers it into the renderer's per-frame
@@ -26,7 +26,7 @@ it from the animation set).
 
 > `readonly` **style**: `TStyle`
 
-Defined in: [packages/canvas/src/renderers/types.ts:348](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L348)
+Defined in: [packages/canvas/src/renderers/types.ts:348](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L348)
 
 ## Methods
 
@@ -34,7 +34,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:348](https://github.com/inva
 
 > `optional` **destroy**(): `void`
 
-Defined in: [packages/canvas/src/renderers/types.ts:352](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L352)
+Defined in: [packages/canvas/src/renderers/types.ts:352](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L352)
 
 #### Returns
 
@@ -46,7 +46,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:352](https://github.com/inva
 
 > **mount**(`host`): `void`
 
-Defined in: [packages/canvas/src/renderers/types.ts:349](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L349)
+Defined in: [packages/canvas/src/renderers/types.ts:349](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L349)
 
 #### Parameters
 
@@ -64,7 +64,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:349](https://github.com/inva
 
 > `optional` **tick**(`deltaMs`): `boolean`
 
-Defined in: [packages/canvas/src/renderers/types.ts:351](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L351)
+Defined in: [packages/canvas/src/renderers/types.ts:351](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L351)
 
 #### Parameters
 
@@ -82,7 +82,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:351](https://github.com/inva
 
 > `optional` **update**(`host`): `void`
 
-Defined in: [packages/canvas/src/renderers/types.ts:350](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L350)
+Defined in: [packages/canvas/src/renderers/types.ts:350](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L350)
 
 #### Parameters
 

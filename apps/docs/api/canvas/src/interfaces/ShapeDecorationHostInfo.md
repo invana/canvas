@@ -1,6 +1,6 @@
 # Interface: ShapeDecorationHostInfo
 
-Defined in: [packages/canvas/src/renderers/types.ts:183](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L183)
+Defined in: [packages/canvas/src/renderers/types.ts:183](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L183)
 
 Information a `Decoration` receives in `mount`/`update`. Carries the host's
 current bounds plus the surfaces above and below the host's draw call,
@@ -15,7 +15,7 @@ get the local-space AABB.
 
 > `readonly` **bounds**: [`ShapesRect`](ShapesRect.md)
 
-Defined in: [packages/canvas/src/renderers/types.ts:190](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L190)
+Defined in: [packages/canvas/src/renderers/types.ts:190](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L190)
 
 Local-space axis-aligned bounding box of the host shape.
 
@@ -25,7 +25,7 @@ Local-space axis-aligned bounding box of the host shape.
 
 > `readonly` **hostId**: `string`
 
-Defined in: [packages/canvas/src/renderers/types.ts:184](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L184)
+Defined in: [packages/canvas/src/renderers/types.ts:184](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L184)
 
 ***
 
@@ -33,7 +33,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:184](https://github.com/inva
 
 > `readonly` **hostKind**: `string`
 
-Defined in: [packages/canvas/src/renderers/types.ts:186](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L186)
+Defined in: [packages/canvas/src/renderers/types.ts:186](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L186)
 
 Registered shape kind of the host (`'circle'`, `'rect'`, …).
 
@@ -43,7 +43,7 @@ Registered shape kind of the host (`'circle'`, `'rect'`, …).
 
 > `readonly` `optional` **outlinePolyline?**: readonly `object`[]
 
-Defined in: [packages/canvas/src/renderers/types.ts:207](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L207)
+Defined in: [packages/canvas/src/renderers/types.ts:207](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L207)
 
 Closed outline polyline in shape-local coordinates. Present for `polygon`
 and `path` hosts; absent for `circle`, `ellipse`, `rect`, `image`, `text`.
@@ -56,7 +56,7 @@ fallback when available, so the decoration follows the actual shape geometry.
 
 > `readonly` **slot**: `string`
 
-Defined in: [packages/canvas/src/renderers/types.ts:188](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L188)
+Defined in: [packages/canvas/src/renderers/types.ts:188](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L188)
 
 Slot the decoration is being mounted into (e.g. `'halo'`, `'border'`).
 
@@ -66,7 +66,7 @@ Slot the decoration is being mounted into (e.g. `'halo'`, `'border'`).
 
 > `readonly` **slotZIndex**: `number`
 
-Defined in: [packages/canvas/src/renderers/types.ts:200](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L200)
+Defined in: [packages/canvas/src/renderers/types.ts:200](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L200)
 
 Pre-computed z-index for the supplied slot. See SLOT_Z table in renderer.
 
@@ -76,7 +76,7 @@ Pre-computed z-index for the supplied slot. See SLOT_Z table in renderer.
 
 > `readonly` **surface**: `Container`
 
-Defined in: [packages/canvas/src/renderers/types.ts:198](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L198)
+Defined in: [packages/canvas/src/renderers/types.ts:198](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L198)
 
 Surface to attach the decoration's `gfx` to. Set to the host shape's
 `gfx` Container so the decoration moves with the shape and draws in

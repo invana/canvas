@@ -1,6 +1,6 @@
 # Interface: ConnectorKind\<TSpec\>
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:132](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L132)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:132](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L132)
 
 Connector primitive descriptor.
 
@@ -22,7 +22,7 @@ runs the registered router and caches the result).
 
 > **bounds**(`polyline`, `spec`): [`Rect`](Rect.md)
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:134](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L134)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:134](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L134)
 
 #### Parameters
 
@@ -44,7 +44,7 @@ readonly [`Point`](Point.md)[]
 
 > **draw**(`g`, `polyline`, `spec`): `void`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:133](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L133)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:133](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L133)
 
 #### Parameters
 

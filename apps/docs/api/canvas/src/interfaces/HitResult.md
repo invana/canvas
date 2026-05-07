@@ -1,6 +1,6 @@
 # Interface: HitResult
 
-Defined in: [packages/canvas/src/renderers/types.ts:420](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L420)
+Defined in: [packages/canvas/src/renderers/types.ts:420](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L420)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:420](https://github.com/inva
 
 > `readonly` **id**: `string`
 
-Defined in: [packages/canvas/src/renderers/types.ts:422](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L422)
+Defined in: [packages/canvas/src/renderers/types.ts:422](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L422)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:422](https://github.com/inva
 
 > `readonly` **kind**: `"shape"` \| `"connector"`
 
-Defined in: [packages/canvas/src/renderers/types.ts:421](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L421)
+Defined in: [packages/canvas/src/renderers/types.ts:421](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L421)
 
 ***
 
@@ -24,6 +24,6 @@ Defined in: [packages/canvas/src/renderers/types.ts:421](https://github.com/inva
 
 > `readonly` `optional` **subId?**: `string`
 
-Defined in: [packages/canvas/src/renderers/types.ts:424](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L424)
+Defined in: [packages/canvas/src/renderers/types.ts:424](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L424)
 
 Optional sub-region id (e.g. a connector handle, a shape sub-part).

@@ -1,6 +1,6 @@
 # Interface: LineConnectorSpec
 
-Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:16](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/connectors/line.ts#L16)
+Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:16](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/connectors/line.ts#L16)
 
 Minimal connector spec. Note: NO marker / label fields. A connector
 primitive draws a polyline — nothing else. Layers compose markers/labels
@@ -16,7 +16,7 @@ as separate shape entries.
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:95](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L95)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:95](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L95)
 
 #### Inherited from
 
@@ -28,7 +28,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:95](https://github.com/
 
 > `readonly` `optional` **cap?**: `"butt"` \| `"round"` \| `"square"`
 
-Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:21](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/connectors/line.ts#L21)
+Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:21](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/connectors/line.ts#L21)
 
 ***
 
@@ -36,7 +36,7 @@ Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:21](https://g
 
 > `readonly` `optional` **join?**: `"round"` \| `"miter"` \| `"bevel"`
 
-Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:22](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/connectors/line.ts#L22)
+Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:22](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/connectors/line.ts#L22)
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:22](https://g
 
 > `readonly` **kind**: `"line"`
 
-Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:17](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/connectors/line.ts#L17)
+Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:17](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/connectors/line.ts#L17)
 
 #### Overrides
 
@@ -56,7 +56,7 @@ Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:17](https://g
 
 > `readonly` `optional` **router?**: `string`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:93](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L93)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:93](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L93)
 
 Registered router kind. Default `'straight'`.
 
@@ -70,7 +70,7 @@ Registered router kind. Default `'straight'`.
 
 > `readonly` **source**: [`ConnectorEndpointSpec`](../type-aliases/ConnectorEndpointSpec.md)
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:90](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L90)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:90](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L90)
 
 #### Inherited from
 
@@ -82,7 +82,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:90](https://github.com/
 
 > `readonly` **stroke**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:18](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/connectors/line.ts#L18)
+Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:18](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/connectors/line.ts#L18)
 
 ***
 
@@ -90,7 +90,7 @@ Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:18](https://g
 
 > `readonly` `optional` **strokeAlpha?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:20](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/connectors/line.ts#L20)
+Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:20](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/connectors/line.ts#L20)
 
 ***
 
@@ -98,7 +98,7 @@ Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:20](https://g
 
 > `readonly` `optional` **strokeWidth?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:19](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/connectors/line.ts#L19)
+Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:19](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/connectors/line.ts#L19)
 
 ***
 
@@ -106,7 +106,7 @@ Defined in: [packages/canvas/src/renderers/draw/connectors/line.ts:19](https://g
 
 > `readonly` **target**: [`ConnectorEndpointSpec`](../type-aliases/ConnectorEndpointSpec.md)
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:91](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L91)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:91](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L91)
 
 #### Inherited from
 
@@ -118,7 +118,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:91](https://github.com/
 
 > `readonly` `optional` **visible?**: `boolean`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:96](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L96)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:96](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L96)
 
 #### Inherited from
 
@@ -130,7 +130,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:96](https://github.com/
 
 > `readonly` `optional` **zIndex?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:94](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L94)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:94](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L94)
 
 #### Inherited from
 

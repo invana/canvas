@@ -1,6 +1,6 @@
 # Interface: CanvasEventBusOptions
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:95](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/events/CanvasEventBus.ts#L95)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:95](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/events/CanvasEventBus.ts#L95)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [packages/canvas/src/events/CanvasEventBus.ts:95](https://github.com
 
 > `optional` **source?**: [`EventSource`](EventSource.md)
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:98](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/events/CanvasEventBus.ts#L98)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:98](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/events/CanvasEventBus.ts#L98)
 
 Source identity for envelopes the bus publishes via its own `emit()`.
 Default: `{ kind: 'canvas', id: 'canvas' }`. Override per Canvas instance.

@@ -34,6 +34,42 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: 'Guide', link: '/guide/getting-started' },
+      {
+        text: 'Plugins',
+        items: [
+          {
+            text: 'Decorations',
+            items: [
+              { text: 'Overview', link: '/plugins/decorations/' },
+              { text: 'halo', link: '/plugins/decorations/halo' },
+              { text: 'border', link: '/plugins/decorations/border' },
+              { text: 'glow', link: '/plugins/decorations/glow' },
+              { text: 'marching-ants', link: '/plugins/decorations/marching-ants' },
+              { text: 'pulse-ring', link: '/plugins/decorations/pulse-ring' },
+              { text: 'dashed-border-rotating', link: '/plugins/decorations/dashed-border-rotating' },
+            ],
+          },
+          {
+            text: 'Layers',
+            items: [
+              { text: 'Overview', link: '/plugins/layers/' },
+              { text: 'BackgroundLayer', link: '/plugins/layers/background' },
+              { text: 'ThemedBackgroundLayer', link: '/plugins/layers/themed-background' },
+              { text: 'DevInfoLayer', link: '/plugins/layers/dev-info' },
+            ],
+          },
+          {
+            text: 'Behaviours',
+            items: [
+              { text: 'Overview', link: '/plugins/behaviours/' },
+              { text: 'DragPanBehaviour', link: '/plugins/behaviours/drag-pan' },
+              { text: 'WheelZoomBehaviour', link: '/plugins/behaviours/wheel-zoom' },
+              { text: 'PinchZoomBehaviour', link: '/plugins/behaviours/pinch-zoom' },
+              { text: 'KeyboardCameraInputBehaviour', link: '/plugins/behaviours/keyboard-camera-input' },
+            ],
+          },
+        ],
+      },
       { text: 'API Reference', link: '/api/' },
       {
         text: 'Storybook',
@@ -64,6 +100,43 @@ export default defineConfig({
             { text: 'Layouts', link: '/guide/layouts' },
             { text: 'Renderers', link: '/guide/renderers' },
             { text: 'Events', link: '/guide/events' },
+          ],
+        },
+      ],
+      '/plugins/': [
+        { text: 'Overview', link: '/plugins/' },
+        {
+          text: 'Decorations',
+          collapsed: false,
+          items: [
+            { text: 'Overview', link: '/plugins/decorations/' },
+            { text: 'halo', link: '/plugins/decorations/halo' },
+            { text: 'border', link: '/plugins/decorations/border' },
+            { text: 'glow', link: '/plugins/decorations/glow' },
+            { text: 'marching-ants', link: '/plugins/decorations/marching-ants' },
+            { text: 'pulse-ring', link: '/plugins/decorations/pulse-ring' },
+            { text: 'dashed-border-rotating', link: '/plugins/decorations/dashed-border-rotating' },
+          ],
+        },
+        {
+          text: 'Layers',
+          collapsed: false,
+          items: [
+            { text: 'Overview', link: '/plugins/layers/' },
+            { text: 'BackgroundLayer', link: '/plugins/layers/background' },
+            { text: 'ThemedBackgroundLayer', link: '/plugins/layers/themed-background' },
+            { text: 'DevInfoLayer', link: '/plugins/layers/dev-info' },
+          ],
+        },
+        {
+          text: 'Behaviours',
+          collapsed: false,
+          items: [
+            { text: 'Overview', link: '/plugins/behaviours/' },
+            { text: 'DragPanBehaviour', link: '/plugins/behaviours/drag-pan' },
+            { text: 'WheelZoomBehaviour', link: '/plugins/behaviours/wheel-zoom' },
+            { text: 'PinchZoomBehaviour', link: '/plugins/behaviours/pinch-zoom' },
+            { text: 'KeyboardCameraInputBehaviour', link: '/plugins/behaviours/keyboard-camera-input' },
           ],
         },
       ],

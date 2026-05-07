@@ -1,6 +1,6 @@
 # Class: MarchingAntsDecoration
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/marching-ants.ts:30](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/marching-ants.ts#L30)
+Defined in: [packages/canvas/src/renderers/draw/decorations/marching-ants.ts:30](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/marching-ants.ts#L30)
 
 `@invana/canvas/draw` — pure-function paint primitives.
 
@@ -29,7 +29,7 @@ lights) is always a Layer concern.
 
 > **new MarchingAntsDecoration**(`_slot`, `g`, `opts`): `MarchingAntsDecoration`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/marching-ants.ts:35](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/marching-ants.ts#L35)
+Defined in: [packages/canvas/src/renderers/draw/decorations/marching-ants.ts:35](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/marching-ants.ts#L35)
 
 #### Parameters
 
@@ -55,7 +55,7 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/marching-ants.ts:35]
 
 > **destroy**(): `void`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/marching-ants.ts:58](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/marching-ants.ts#L58)
+Defined in: [packages/canvas/src/renderers/draw/decorations/marching-ants.ts:58](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/marching-ants.ts#L58)
 
 Final cleanup. Renderer is responsible for clearing the Graphics afterwards.
 
@@ -73,7 +73,7 @@ Final cleanup. Renderer is responsible for clearing the Graphics afterwards.
 
 > **tick**(`deltaMs`): `boolean`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/marching-ants.ts:47](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/marching-ants.ts#L47)
+Defined in: [packages/canvas/src/renderers/draw/decorations/marching-ants.ts:47](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/marching-ants.ts#L47)
 
 Advance animation by `deltaMs`. Return `false` to retire (renderer drops it).
 
@@ -97,7 +97,7 @@ Advance animation by `deltaMs`. Return `false` to retire (renderer drops it).
 
 > **update**(`bounds`, `hostKind?`): `void`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/marching-ants.ts:41](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/marching-ants.ts#L41)
+Defined in: [packages/canvas/src/renderers/draw/decorations/marching-ants.ts:41](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/marching-ants.ts#L41)
 
 Re-render with new host bounds (called on host spec change).
 

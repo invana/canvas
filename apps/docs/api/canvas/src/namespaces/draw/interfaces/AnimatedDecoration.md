@@ -1,6 +1,6 @@
 # Interface: AnimatedDecoration
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:203](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L203)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:203](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L203)
 
 `@invana/canvas/draw` — pure-function paint primitives.
 
@@ -25,7 +25,7 @@ lights) is always a Layer concern.
 
 > **destroy**(): `void`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:209](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L209)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:209](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L209)
 
 Final cleanup. Renderer is responsible for clearing the Graphics afterwards.
 
@@ -39,7 +39,7 @@ Final cleanup. Renderer is responsible for clearing the Graphics afterwards.
 
 > **tick**(`deltaMs`): `boolean`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:207](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L207)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:207](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L207)
 
 Advance animation by `deltaMs`. Return `false` to retire (renderer drops it).
 
@@ -59,7 +59,7 @@ Advance animation by `deltaMs`. Return `false` to retire (renderer drops it).
 
 > **update**(`bounds`, `hostKind?`): `void`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:205](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L205)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:205](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L205)
 
 Re-render with new host bounds (called on host spec change).
 

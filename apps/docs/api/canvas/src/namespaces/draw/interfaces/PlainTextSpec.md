@@ -1,6 +1,6 @@
 # Interface: PlainTextSpec
 
-Defined in: [packages/canvas/src/renderers/draw/text/plain.ts:18](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/text/plain.ts#L18)
+Defined in: [packages/canvas/src/renderers/draw/text/plain.ts:18](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/text/plain.ts#L18)
 
 `@invana/canvas/draw` — pure-function paint primitives.
 
@@ -29,7 +29,7 @@ lights) is always a Layer concern.
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:79](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L79)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:79](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L79)
 
 #### Inherited from
 
@@ -41,7 +41,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:79](https://github.com/
 
 > `readonly` **kind**: `"plainText"`
 
-Defined in: [packages/canvas/src/renderers/draw/text/plain.ts:19](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/text/plain.ts#L19)
+Defined in: [packages/canvas/src/renderers/draw/text/plain.ts:19](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/text/plain.ts#L19)
 
 #### Overrides
 
@@ -53,7 +53,7 @@ Defined in: [packages/canvas/src/renderers/draw/text/plain.ts:19](https://github
 
 > `readonly` `optional` **resolution?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/text/plain.ts:24](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/text/plain.ts#L24)
+Defined in: [packages/canvas/src/renderers/draw/text/plain.ts:24](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/text/plain.ts#L24)
 
 Optional resolution multiplier for the underlying canvas raster.
 
@@ -63,7 +63,7 @@ Optional resolution multiplier for the underlying canvas raster.
 
 > `readonly` `optional` **style?**: `Partial`\<`TextStyleOptions`\>
 
-Defined in: [packages/canvas/src/renderers/draw/text/plain.ts:22](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/text/plain.ts#L22)
+Defined in: [packages/canvas/src/renderers/draw/text/plain.ts:22](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/text/plain.ts#L22)
 
 Forwarded to Pixi's `TextStyle`.
 
@@ -73,7 +73,7 @@ Forwarded to Pixi's `TextStyle`.
 
 > `readonly` **text**: `string`
 
-Defined in: [packages/canvas/src/renderers/draw/text/plain.ts:20](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/text/plain.ts#L20)
+Defined in: [packages/canvas/src/renderers/draw/text/plain.ts:20](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/text/plain.ts#L20)
 
 ***
 
@@ -81,7 +81,7 @@ Defined in: [packages/canvas/src/renderers/draw/text/plain.ts:20](https://github
 
 > `readonly` `optional` **visible?**: `boolean`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:80](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L80)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:80](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L80)
 
 #### Inherited from
 
@@ -93,7 +93,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:80](https://github.com/
 
 > `readonly` **x**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:76](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L76)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:76](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L76)
 
 #### Inherited from
 
@@ -105,7 +105,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:76](https://github.com/
 
 > `readonly` **y**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:77](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L77)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:77](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L77)
 
 #### Inherited from
 
@@ -117,7 +117,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:77](https://github.com/
 
 > `readonly` `optional` **zIndex?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:78](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L78)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:78](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L78)
 
 #### Inherited from
 

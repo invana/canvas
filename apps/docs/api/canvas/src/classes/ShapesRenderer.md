@@ -1,6 +1,6 @@
 # Class: ShapesRenderer
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:121](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L121)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:121](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L121)
 
 ## Constructors
 
@@ -8,7 +8,7 @@ Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:121](https://github
 
 > **new ShapesRenderer**(`opts`): `ShapesRenderer`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:165](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L165)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:165](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L165)
 
 #### Parameters
 
@@ -26,7 +26,7 @@ Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:165](https://github
 
 > `readonly` **camera**: [`Camera`](Camera.md)
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:157](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L157)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:157](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L157)
 
 Canvas camera. Exposed (read-only) so primitives can do
 resolution-aware draws (e.g. text rasterisation at the current zoom).
@@ -37,7 +37,7 @@ resolution-aware draws (e.g. text rasterisation at the current zoom).
 
 > `readonly` **events**: [`EventEmitter`](EventEmitter.md)\<[`ShapesRendererEventMap`](../interfaces/ShapesRendererEventMap.md)\>
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:146](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L146)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:146](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L146)
 
 Raw, DOM-level pointer events on shapes/connectors. The host Layer
 subscribes and translates these into domain events. No semantic
@@ -51,7 +51,7 @@ interpretation happens at this level.
 
 > **get** **connectorCount**(): `number`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:838](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L838)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:838](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L838)
 
 Number of connector instances currently in the renderer.
 
@@ -67,7 +67,7 @@ Number of connector instances currently in the renderer.
 
 > **get** **shapeCount**(): `number`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:833](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L833)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:833](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L833)
 
 Number of shape instances currently in the renderer.
 
@@ -81,7 +81,7 @@ Number of shape instances currently in the renderer.
 
 > **addConnector**\<`TSpec`\>(`id`, `spec`): `void`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:319](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L319)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:319](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L319)
 
 #### Type Parameters
 
@@ -109,7 +109,7 @@ Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:319](https://github
 
 > **addShape**\<`TSpec`\>(`id`, `spec`): `void`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:267](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L267)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:267](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L267)
 
 Add a shape. Throws if `id` already exists or `spec.kind` is unregistered.
 Pixi Graphics attaches to the renderer's container; the bbox is
@@ -142,7 +142,7 @@ the spec's `(x, y)`.
 
 > **destroy**(): `void`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:592](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L592)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:592](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L592)
 
 Release all renderer-owned objects. The host Layer calls this in its
 unmount path before the host layer's container is destroyed
@@ -158,7 +158,7 @@ unmount path before the host layer's container is destroyed
 
 > **getRenderStats**(): [`RenderStats`](../interfaces/RenderStats.md)
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:577](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L577)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:577](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L577)
 
 #### Returns
 
@@ -170,7 +170,7 @@ Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:577](https://github
 
 > **hasConnector**(`id`): `boolean`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:846](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L846)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:846](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L846)
 
 #### Parameters
 
@@ -188,7 +188,7 @@ Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:846](https://github
 
 > **hasShape**(`id`): `boolean`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:842](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L842)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:842](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L842)
 
 #### Parameters
 
@@ -206,7 +206,7 @@ Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:842](https://github
 
 > **hitTest**(`worldX`, `worldY`): [`HitResult`](../interfaces/HitResult.md)
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:529](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L529)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:529](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L529)
 
 Topmost-by-zIndex precise hit at the given world coordinates. Returns
 `null` when no candidate is hit.
@@ -242,7 +242,7 @@ for typical scenes).
 
 > **rasteriseLabel**(`id`, `resolution`): `void`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:491](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L491)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:491](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L491)
 
 Bake a label texture at the given resolution. Forwards to the shape's
 `setLabelResolution` if implemented (e.g. `TextShape` swaps its
@@ -269,7 +269,7 @@ Unknown ids are no-ops.
 
 > **registerConnector**\<`TSpec`\>(`kind`, `ctor`): `void`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:224](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L224)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:224](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L224)
 
 #### Type Parameters
 
@@ -297,7 +297,7 @@ Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:224](https://github
 
 > **registerDecoration**\<`TStyle`\>(`kind`, `ctor`, `opts`): `void`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:246](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L246)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:246](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L246)
 
 Register a decoration kind. `opts.target` declares whether the decoration
 applies to shapes, connectors, or both. `setDecoration` will reject
@@ -339,7 +339,7 @@ passing a matching `decoration.style` payload at the runtime boundary.
 
 > **registerRouter**(`kind`, `fn`): `void`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:231](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L231)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:231](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L231)
 
 #### Parameters
 
@@ -361,7 +361,7 @@ Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:231](https://github
 
 > **registerShape**\<`TSpec`\>(`kind`, `ctor`): `void`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:220](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L220)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:220](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L220)
 
 Register a shape kind. Subsequent `addShape({ kind, ... })` calls with a
 matching `spec.kind` instantiate this constructor. Re-registering an
@@ -394,7 +394,7 @@ the behaviour-registry conventions).
 
 > **removeConnector**(`id`): `void`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:355](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L355)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:355](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L355)
 
 #### Parameters
 
@@ -412,7 +412,7 @@ Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:355](https://github
 
 > **removeShape**(`id`): `void`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:307](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L307)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:307](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L307)
 
 #### Parameters
 
@@ -430,7 +430,7 @@ Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:307](https://github
 
 > **setDecoration**\<`TStyle`\>(`targetId`, `slot`, `decoration`): `void`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:382](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L382)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:382](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L382)
 
 Set / replace / clear a decoration on a host (shape or connector). Pass
 `null` to clear that slot.
@@ -476,7 +476,7 @@ one cleanly (and removes it from the animated set if it was animated).
 
 > **setLODLevel**(`id`, `level`): `void`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:475](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L475)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:475](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L475)
 
 Set a discrete LOD level on a shape. The host Layer owns the policy
 (which level a shape should be at given camera zoom / cull state); the
@@ -511,7 +511,7 @@ Unknown ids are silent no-ops (matches the rest of the
 
 > **tickAnimations**(`deltaMs`): `void`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:504](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L504)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:504](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L504)
 
 Advance all animated decorations. Called by the host Canvas tick after
 `layer.flush()`. Decorations that return `false` from their `tick`
@@ -533,7 +533,7 @@ retire from the animated set; static decorations cost zero per frame.
 
 > **updateConnector**\<`TSpec`\>(`id`, `partial`): `void`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:341](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L341)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:341](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L341)
 
 #### Type Parameters
 
@@ -561,7 +561,7 @@ Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:341](https://github
 
 > **updateShape**\<`TSpec`\>(`id`, `partial`): `void`
 
-Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:293](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/ShapesRenderer.ts#L293)
+Defined in: [packages/canvas/src/renderers/ShapesRenderer.ts:293](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/ShapesRenderer.ts#L293)
 
 Apply a partial update. Re-runs `draw()` on the shape, re-syncs the
 hit-index entry, and re-applies any active decorations so they track

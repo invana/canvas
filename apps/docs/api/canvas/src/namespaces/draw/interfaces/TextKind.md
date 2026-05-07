@@ -1,6 +1,6 @@
 # Interface: TextKind\<TSpec\>
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:149](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L149)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:149](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L149)
 
 Text primitive descriptor.
 
@@ -25,7 +25,7 @@ The renderer holds the handle and calls `update` on spec changes,
 
 > **bounds**(`handle`): [`Rect`](Rect.md)
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:151](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L151)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:151](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L151)
 
 #### Parameters
 
@@ -43,7 +43,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:151](https://github.com
 
 > **mount**(`parent`, `spec`, `ox?`, `oy?`, `rot?`): [`TextHandle`](TextHandle.md)\<`TSpec`\>
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:150](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L150)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:150](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L150)
 
 #### Parameters
 

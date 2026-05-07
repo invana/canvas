@@ -1,6 +1,6 @@
 # Interface: PolygonSpec
 
-Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:15](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/shapes/polygon.ts#L15)
+Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:15](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/shapes/polygon.ts#L15)
 
 `@invana/canvas/draw` — pure-function paint primitives.
 
@@ -29,7 +29,7 @@ lights) is always a Layer concern.
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:79](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L79)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:79](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L79)
 
 #### Inherited from
 
@@ -41,7 +41,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:79](https://github.com/
 
 > `readonly` `optional` **fill?**: [`FillInput`](../type-aliases/FillInput.md)
 
-Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:18](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/shapes/polygon.ts#L18)
+Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:18](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/shapes/polygon.ts#L18)
 
 ***
 
@@ -49,7 +49,7 @@ Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:18](https://gi
 
 > `readonly` `optional` **fillAlpha?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:19](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/shapes/polygon.ts#L19)
+Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:19](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/shapes/polygon.ts#L19)
 
 ***
 
@@ -57,7 +57,7 @@ Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:19](https://gi
 
 > `readonly` `optional` **fillFit?**: [`FillFit`](../type-aliases/FillFit.md)
 
-Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:20](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/shapes/polygon.ts#L20)
+Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:20](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/shapes/polygon.ts#L20)
 
 ***
 
@@ -65,7 +65,7 @@ Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:20](https://gi
 
 > `readonly` **kind**: `"polygon"`
 
-Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:16](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/shapes/polygon.ts#L16)
+Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:16](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/shapes/polygon.ts#L16)
 
 #### Overrides
 
@@ -77,7 +77,7 @@ Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:16](https://gi
 
 > `readonly` **points**: readonly [`Point`](Point.md)[]
 
-Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:17](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/shapes/polygon.ts#L17)
+Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:17](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/shapes/polygon.ts#L17)
 
 ***
 
@@ -85,7 +85,7 @@ Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:17](https://gi
 
 > `readonly` `optional` **stroke?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:21](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/shapes/polygon.ts#L21)
+Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:21](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/shapes/polygon.ts#L21)
 
 ***
 
@@ -93,7 +93,7 @@ Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:21](https://gi
 
 > `readonly` `optional` **strokeAlpha?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:23](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/shapes/polygon.ts#L23)
+Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:23](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/shapes/polygon.ts#L23)
 
 ***
 
@@ -101,7 +101,7 @@ Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:23](https://gi
 
 > `readonly` `optional` **strokeWidth?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:22](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/shapes/polygon.ts#L22)
+Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:22](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/shapes/polygon.ts#L22)
 
 ***
 
@@ -109,7 +109,7 @@ Defined in: [packages/canvas/src/renderers/draw/shapes/polygon.ts:22](https://gi
 
 > `readonly` `optional` **visible?**: `boolean`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:80](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L80)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:80](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L80)
 
 #### Inherited from
 
@@ -121,7 +121,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:80](https://github.com/
 
 > `readonly` **x**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:76](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L76)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:76](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L76)
 
 #### Inherited from
 
@@ -133,7 +133,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:76](https://github.com/
 
 > `readonly` **y**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:77](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L77)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:77](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L77)
 
 #### Inherited from
 
@@ -145,7 +145,7 @@ Defined in: [packages/canvas/src/renderers/draw/types.ts:77](https://github.com/
 
 > `readonly` `optional` **zIndex?**: `number`
 
-Defined in: [packages/canvas/src/renderers/draw/types.ts:78](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/types.ts#L78)
+Defined in: [packages/canvas/src/renderers/draw/types.ts:78](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/types.ts#L78)
 
 #### Inherited from
 

@@ -2,7 +2,7 @@
 
 > **circleBounds**(`spec`): [`Rect`](../interfaces/Rect.md)
 
-Defined in: [packages/canvas/src/renderers/draw/shapes/circle.ts:52](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/shapes/circle.ts#L52)
+Defined in: [packages/canvas/src/renderers/draw/shapes/circle.ts:52](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/shapes/circle.ts#L52)
 
 ## Parameters
 

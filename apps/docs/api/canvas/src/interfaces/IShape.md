@@ -1,6 +1,6 @@
 # Interface: IShape\<TSpec\>
 
-Defined in: [packages/canvas/src/renderers/types.ts:232](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L232)
+Defined in: [packages/canvas/src/renderers/types.ts:232](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L232)
 
 ## Type Parameters
 
@@ -14,7 +14,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:232](https://github.com/inva
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [packages/canvas/src/renderers/types.ts:234](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L234)
+Defined in: [packages/canvas/src/renderers/types.ts:234](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L234)
 
 Root display object — renderer adds/removes this on the host surface.
 
@@ -24,7 +24,7 @@ Root display object — renderer adds/removes this on the host surface.
 
 > **bounds**(): [`ShapesRect`](ShapesRect.md)
 
-Defined in: [packages/canvas/src/renderers/types.ts:238](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L238)
+Defined in: [packages/canvas/src/renderers/types.ts:238](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L238)
 
 Local-space axis-aligned bounding box used for hit-testing & decorations.
 
@@ -38,7 +38,7 @@ Local-space axis-aligned bounding box used for hit-testing & decorations.
 
 > `optional` **contains**(`localX`, `localY`): `boolean`
 
-Defined in: [packages/canvas/src/renderers/types.ts:247](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L247)
+Defined in: [packages/canvas/src/renderers/types.ts:247](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L247)
 
 Optional precise containment test in local coordinates (i.e. coords
 relative to `spec.x` / `spec.y`). The renderer first filters candidates
@@ -67,7 +67,7 @@ primitives override.
 
 > **destroy**(): `void`
 
-Defined in: [packages/canvas/src/renderers/types.ts:268](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L268)
+Defined in: [packages/canvas/src/renderers/types.ts:268](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L268)
 
 #### Returns
 
@@ -79,7 +79,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:268](https://github.com/inva
 
 > **draw**(`spec`): `void`
 
-Defined in: [packages/canvas/src/renderers/types.ts:236](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L236)
+Defined in: [packages/canvas/src/renderers/types.ts:236](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L236)
 
 (Re)paint the shape from the current spec. Called on add and on update.
 
@@ -99,7 +99,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:236](https://github.com/inva
 
 > `optional` **setLabelResolution**(`resolution`): `void`
 
-Defined in: [packages/canvas/src/renderers/types.ts:267](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L267)
+Defined in: [packages/canvas/src/renderers/types.ts:267](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L267)
 
 Optional label-rasterisation hook. Only meaningful for text-bearing
 shapes. The host Layer calls
@@ -123,7 +123,7 @@ ignore this.
 
 > `optional` **setLODLevel**(`level`): `void`
 
-Defined in: [packages/canvas/src/renderers/types.ts:259](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L259)
+Defined in: [packages/canvas/src/renderers/types.ts:259](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L259)
 
 Optional LOD hook. The host Layer drives LOD policy (e.g. "hide labels
 when zoomed out beyond 0.4×") and tells the renderer which level each

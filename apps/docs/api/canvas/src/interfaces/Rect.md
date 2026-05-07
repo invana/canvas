@@ -1,6 +1,6 @@
 # Interface: Rect
 
-Defined in: [packages/canvas/src/camera/Camera.ts:38](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/camera/Camera.ts#L38)
+Defined in: [packages/canvas/src/camera/Camera.ts:38](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/camera/Camera.ts#L38)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [packages/canvas/src/camera/Camera.ts:38](https://github.com/invana/
 
 > **height**: `number`
 
-Defined in: [packages/canvas/src/camera/Camera.ts:42](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/camera/Camera.ts#L42)
+Defined in: [packages/canvas/src/camera/Camera.ts:42](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/camera/Camera.ts#L42)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [packages/canvas/src/camera/Camera.ts:42](https://github.com/invana/
 
 > **width**: `number`
 
-Defined in: [packages/canvas/src/camera/Camera.ts:41](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/camera/Camera.ts#L41)
+Defined in: [packages/canvas/src/camera/Camera.ts:41](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/camera/Camera.ts#L41)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/canvas/src/camera/Camera.ts:41](https://github.com/invana/
 
 > **x**: `number`
 
-Defined in: [packages/canvas/src/camera/Camera.ts:39](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/camera/Camera.ts#L39)
+Defined in: [packages/canvas/src/camera/Camera.ts:39](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/camera/Camera.ts#L39)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [packages/canvas/src/camera/Camera.ts:39](https://github.com/invana/
 
 > **y**: `number`
 
-Defined in: [packages/canvas/src/camera/Camera.ts:40](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/camera/Camera.ts#L40)
+Defined in: [packages/canvas/src/camera/Camera.ts:40](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/camera/Camera.ts#L40)

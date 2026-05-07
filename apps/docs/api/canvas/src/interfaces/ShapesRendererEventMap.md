@@ -1,6 +1,6 @@
 # Interface: ShapesRendererEventMap
 
-Defined in: [packages/canvas/src/renderers/types.ts:434](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L434)
+Defined in: [packages/canvas/src/renderers/types.ts:434](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L434)
 
 Raw, DOM-level events the renderer surfaces. No semantic interpretation —
 they describe pointer hits on shapes / connectors and nothing more. Layers
@@ -20,7 +20,7 @@ translate them into domain events.
 
 > **connector:click**: `object`
 
-Defined in: [packages/canvas/src/renderers/types.ts:444](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L444)
+Defined in: [packages/canvas/src/renderers/types.ts:444](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L444)
 
 #### button
 
@@ -44,7 +44,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:444](https://github.com/inva
 
 > **connector:pointerdown**: `object`
 
-Defined in: [packages/canvas/src/renderers/types.ts:442](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L442)
+Defined in: [packages/canvas/src/renderers/types.ts:442](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L442)
 
 #### button
 
@@ -68,7 +68,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:442](https://github.com/inva
 
 > **connector:pointerout**: `object`
 
-Defined in: [packages/canvas/src/renderers/types.ts:441](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L441)
+Defined in: [packages/canvas/src/renderers/types.ts:441](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L441)
 
 #### id
 
@@ -88,7 +88,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:441](https://github.com/inva
 
 > **connector:pointerover**: `object`
 
-Defined in: [packages/canvas/src/renderers/types.ts:440](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L440)
+Defined in: [packages/canvas/src/renderers/types.ts:440](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L440)
 
 #### id
 
@@ -108,7 +108,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:440](https://github.com/inva
 
 > **connector:pointerup**: `object`
 
-Defined in: [packages/canvas/src/renderers/types.ts:443](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L443)
+Defined in: [packages/canvas/src/renderers/types.ts:443](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L443)
 
 #### button
 
@@ -132,7 +132,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:443](https://github.com/inva
 
 > **shape:click**: `object`
 
-Defined in: [packages/canvas/src/renderers/types.ts:439](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L439)
+Defined in: [packages/canvas/src/renderers/types.ts:439](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L439)
 
 #### button
 
@@ -156,7 +156,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:439](https://github.com/inva
 
 > **shape:pointerdown**: `object`
 
-Defined in: [packages/canvas/src/renderers/types.ts:437](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L437)
+Defined in: [packages/canvas/src/renderers/types.ts:437](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L437)
 
 #### button
 
@@ -180,7 +180,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:437](https://github.com/inva
 
 > **shape:pointerout**: `object`
 
-Defined in: [packages/canvas/src/renderers/types.ts:436](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L436)
+Defined in: [packages/canvas/src/renderers/types.ts:436](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L436)
 
 #### id
 
@@ -200,7 +200,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:436](https://github.com/inva
 
 > **shape:pointerover**: `object`
 
-Defined in: [packages/canvas/src/renderers/types.ts:435](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L435)
+Defined in: [packages/canvas/src/renderers/types.ts:435](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L435)
 
 #### id
 
@@ -220,7 +220,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:435](https://github.com/inva
 
 > **shape:pointerup**: `object`
 
-Defined in: [packages/canvas/src/renderers/types.ts:438](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/types.ts#L438)
+Defined in: [packages/canvas/src/renderers/types.ts:438](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L438)
 
 #### button
 

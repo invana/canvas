@@ -1,6 +1,6 @@
 # Class: DashedBorderRotatingDecoration
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:28](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L28)
+Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:28](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L28)
 
 `@invana/canvas/draw` — pure-function paint primitives.
 
@@ -29,7 +29,7 @@ lights) is always a Layer concern.
 
 > **new DashedBorderRotatingDecoration**(`slot`, `g`, `opts`): `DashedBorderRotatingDecoration`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:31](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L31)
+Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:31](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L31)
 
 #### Parameters
 
@@ -55,7 +55,7 @@ Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:3
 
 > **destroy**(): `void`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:48](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L48)
+Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:48](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L48)
 
 Final cleanup. Renderer is responsible for clearing the Graphics afterwards.
 
@@ -73,7 +73,7 @@ Final cleanup. Renderer is responsible for clearing the Graphics afterwards.
 
 > **tick**(`deltaMs`): `boolean`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:42](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L42)
+Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:42](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L42)
 
 Advance animation by `deltaMs`. Return `false` to retire (renderer drops it).
 
@@ -97,7 +97,7 @@ Advance animation by `deltaMs`. Return `false` to retire (renderer drops it).
 
 > **update**(`bounds`): `void`
 
-Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:37](https://github.com/invana/canvas/blob/99e83f9a80ef97289345e9761df2ad8404cdedc7/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L37)
+Defined in: [packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts:37](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/draw/decorations/dashed-rotating.ts#L37)
 
 Re-render with new host bounds (called on host spec change).
 
