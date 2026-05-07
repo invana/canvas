@@ -9,7 +9,7 @@
  */
 
 import { Container, Graphics } from 'pixi.js';
-import type { BaseShapeSpec, IShape, Point, Rect, ShapeHostInfo } from '../types';
+import type { BaseShapeSpec, IShape, Point, Rect, ShapeHostInfo, ShapePaintStyle } from '../types';
 
 export interface PolygonShapeSpec extends BaseShapeSpec {
   readonly kind: 'polygon';
@@ -89,6 +89,39 @@ export class PolygonShape implements IShape<PolygonShapeSpec> {
 
   destroy(): void {
     this.gfx.destroy({ children: true });
+  }
+
+  /**
+   * Paint a `PolygonShapeSpec` into a caller-supplied `Graphics`, with each
+   * point rotated by `angleRad` around the origin and translated by `anchor`.
+   * `style` overrides spec colour/alpha.
+   */
+  static paintInto(
+    g: Graphics,
+    spec: Omit<PolygonShapeSpec, 'x' | 'y'>,
+    anchor: Point,
+    angleRad: number,
+    style?: ShapePaintStyle,
+  ): void {
+    if (spec.points.length < 3) return;
+    const cos = Math.cos(angleRad);
+    const sin = Math.sin(angleRad);
+    const transformed: Point[] = spec.points.map((p) => ({
+      x: anchor.x + p.x * cos - p.y * sin,
+      y: anchor.y + p.x * sin + p.y * cos,
+    }));
+    g.poly(transformed);
+    const fillColor = style?.color ?? spec.fill;
+    if (fillColor !== undefined) {
+      g.fill({ color: fillColor, alpha: style?.alpha ?? spec.fillAlpha ?? 1 });
+    }
+    if (spec.stroke !== undefined && (spec.strokeWidth ?? 0) > 0) {
+      g.stroke({
+        color: style?.color ?? spec.stroke,
+        width: spec.strokeWidth ?? 1,
+        alpha: style?.alpha ?? spec.strokeAlpha ?? 1,
+      });
+    }
   }
 }
 

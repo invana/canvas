@@ -6,7 +6,7 @@
  */
 
 import { Container, Graphics } from 'pixi.js';
-import type { BaseShapeSpec, IShape, Rect, ShapeHostInfo } from '../types';
+import type { BaseShapeSpec, IShape, Point, Rect, ShapeHostInfo, ShapePaintStyle } from '../types';
 
 export interface EllipseShapeSpec extends BaseShapeSpec {
   readonly kind: 'ellipse';
@@ -76,5 +76,45 @@ export class EllipseShape implements IShape<EllipseShapeSpec> {
 
   destroy(): void {
     this.gfx.destroy({ children: true });
+  }
+
+  /**
+   * Paint an `EllipseShapeSpec` into a caller-supplied `Graphics`, anchored
+   * at `anchor` and rotated by `angleRad`. Pixi v8's `g.ellipse` is
+   * axis-aligned, so rotation is applied by sampling the ellipse outline as
+   * a 32-segment polygon. `style` overrides spec colour/alpha.
+   */
+  static paintInto(
+    g: Graphics,
+    spec: Omit<EllipseShapeSpec, 'x' | 'y'>,
+    anchor: Point,
+    angleRad: number,
+    style?: ShapePaintStyle,
+  ): void {
+    const segments = 32;
+    const cos = Math.cos(angleRad);
+    const sin = Math.sin(angleRad);
+    const points: Point[] = new Array(segments);
+    for (let i = 0; i < segments; i++) {
+      const t = (i / segments) * Math.PI * 2;
+      const lx = Math.cos(t) * spec.rx;
+      const ly = Math.sin(t) * spec.ry;
+      points[i] = {
+        x: anchor.x + lx * cos - ly * sin,
+        y: anchor.y + lx * sin + ly * cos,
+      };
+    }
+    g.poly(points);
+    const fillColor = style?.color ?? spec.fill;
+    if (fillColor !== undefined) {
+      g.fill({ color: fillColor, alpha: style?.alpha ?? spec.fillAlpha ?? 1 });
+    }
+    if (spec.stroke !== undefined && (spec.strokeWidth ?? 0) > 0) {
+      g.stroke({
+        color: style?.color ?? spec.stroke,
+        width: spec.strokeWidth ?? 1,
+        alpha: style?.alpha ?? spec.strokeAlpha ?? 1,
+      });
+    }
   }
 }

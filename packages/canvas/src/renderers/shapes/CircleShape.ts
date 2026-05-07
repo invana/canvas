@@ -8,7 +8,7 @@
  */
 
 import { Container, Graphics } from 'pixi.js';
-import type { BaseShapeSpec, IShape, Rect, ShapeHostInfo } from '../types';
+import type { BaseShapeSpec, IShape, Point, Rect, ShapeHostInfo, ShapePaintStyle } from '../types';
 
 export interface CircleShapeSpec extends BaseShapeSpec {
   readonly kind: 'circle';
@@ -69,5 +69,33 @@ export class CircleShape implements IShape<CircleShapeSpec> {
 
   destroy(): void {
     this.gfx.destroy({ children: true });
+  }
+
+  /**
+   * Paint a `CircleShapeSpec` into a caller-supplied `Graphics`, anchored
+   * at `anchor`. Rotation is irrelevant for a circle (rotation-symmetric)
+   * so `_angleRad` is ignored. `style.color` / `style.alpha`, when supplied,
+   * override `spec.fill` / `spec.fillAlpha` (used by decorations to tint
+   * markers).
+   */
+  static paintInto(
+    g: Graphics,
+    spec: Omit<CircleShapeSpec, 'x' | 'y'>,
+    anchor: Point,
+    _angleRad: number,
+    style?: ShapePaintStyle,
+  ): void {
+    g.circle(anchor.x, anchor.y, spec.r);
+    const fillColor = style?.color ?? spec.fill;
+    if (fillColor !== undefined) {
+      g.fill({ color: fillColor, alpha: style?.alpha ?? spec.fillAlpha ?? 1 });
+    }
+    if (spec.stroke !== undefined && (spec.strokeWidth ?? 0) > 0) {
+      g.stroke({
+        color: style?.color ?? spec.stroke,
+        width: spec.strokeWidth ?? 1,
+        alpha: style?.alpha ?? spec.strokeAlpha ?? 1,
+      });
+    }
   }
 }

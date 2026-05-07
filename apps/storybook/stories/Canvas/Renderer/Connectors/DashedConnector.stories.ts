@@ -14,12 +14,12 @@ import type { CanvasContext, MarkerShapeSpec } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer } from '../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Renderer/Connectors/LineConnector' };
+const meta: Meta = { title: 'Canvas/Renderer/Connectors/DashedConnector' };
 export default meta;
 type Story = StoryObj;
 
-export const LineConnector: Story = {
-  render: () => createContainer({ id: 'cvs-renderer-line-connector' }),
+export const DashedConnector: Story = {
+  render: () => createContainer({ id: 'cvs-renderer-dashed-connector' }),
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
@@ -35,26 +35,27 @@ export const LineConnector: Story = {
     const SRC = { kind: 'point' as const, x: 80, y: 200 };
     const TGT = { kind: 'point' as const, x: 480, y: 340 };
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-renderer-line-connector')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-renderer-dashed-connector')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new RenderLayer({ id: 'line-connector-layer', options: {} });
+    const layer = new RenderLayer({ id: 'dashed-connector-layer', options: {} });
     canvas.layers.add(layer);
 
     const settings = {
+      kind: 'line' as 'line' | 'curve',
       router: 'straight' as 'straight' | 'orthogonal' | 'bezier',
       strokeColor: '#374151',
-      strokeWidth: 2,
+      strokeWidth: 3,
       strokeAlpha: 1.0,
-      cap: 'butt' as 'butt' | 'round' | 'square',
-      join: 'miter' as 'miter' | 'round' | 'bevel',
+      dashLength: 12,
+      gapLength: 6,
       sourceMarker: 'none' as 'none' | 'arrow' | 'circle' | 'square' | 'diamond',
       targetMarker: 'arrow' as 'none' | 'arrow' | 'circle' | 'square' | 'diamond',
-      markerSize: 12,
+      markerSize: 14,
       markerColor: '#374151',
     };
 
@@ -71,15 +72,14 @@ export const LineConnector: Story = {
 
     function buildSpec() {
       return {
-        kind: 'line' as const,
+        kind: settings.kind,
         router: settings.router,
         source: SRC,
         target: TGT,
         stroke: toHex(settings.strokeColor),
         strokeWidth: settings.strokeWidth,
         strokeAlpha: settings.strokeAlpha,
-        cap: settings.cap,
-        join: settings.join,
+        dash: { dashLength: settings.dashLength, gapLength: settings.gapLength },
         sourceMarker: markerOf(settings.sourceMarker),
         targetMarker: markerOf(settings.targetMarker),
       };
@@ -93,13 +93,14 @@ export const LineConnector: Story = {
       layer.renderer.addConnector('edge', buildSpec() as never);
     }
 
-    const gui = new GUI({ title: 'Line connector' });
+    const gui = new GUI({ title: 'Dashed connector' });
+    gui.add(settings, 'kind', ['line', 'curve']).onChange(redraw);
     gui.add(settings, 'router', ['straight', 'orthogonal', 'bezier']).onChange(redraw);
     gui.addColor(settings, 'strokeColor').onChange(redraw);
     gui.add(settings, 'strokeWidth', 1, 20, 1).onChange(redraw);
     gui.add(settings, 'strokeAlpha', 0, 1, 0.01).onChange(redraw);
-    gui.add(settings, 'cap', ['butt', 'round', 'square']).onChange(redraw);
-    gui.add(settings, 'join', ['miter', 'round', 'bevel']).onChange(redraw);
+    gui.add(settings, 'dashLength', 1, 40, 1).onChange(redraw);
+    gui.add(settings, 'gapLength', 1, 40, 1).onChange(redraw);
 
     const markerFolder = gui.addFolder('Markers');
     markerFolder.add(settings, 'sourceMarker', ['none', 'arrow', 'circle', 'square', 'diamond']).onChange(redraw);

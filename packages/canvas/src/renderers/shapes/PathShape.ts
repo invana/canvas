@@ -12,7 +12,7 @@
  */
 
 import { Container, Graphics } from 'pixi.js';
-import type { BaseShapeSpec, IShape, Rect, ShapeHostInfo } from '../types';
+import type { BaseShapeSpec, IShape, Point, Rect, ShapeHostInfo, ShapePaintStyle } from '../types';
 
 export type PathCommand =
   | { readonly kind: 'moveTo'; readonly x: number; readonly y: number }
@@ -85,6 +85,68 @@ export class PathShape implements IShape<PathShapeSpec> {
 
   destroy(): void {
     this.gfx.destroy({ children: true });
+  }
+
+  /**
+   * Paint a `PathShapeSpec` into a caller-supplied `Graphics`, with every
+   * command point rotated by `angleRad` and translated by `anchor` so the
+   * authored path renders oriented along the connector tangent. `style`
+   * overrides spec colour/alpha.
+   */
+  static paintInto(
+    g: Graphics,
+    spec: Omit<PathShapeSpec, 'x' | 'y'>,
+    anchor: Point,
+    angleRad: number,
+    style?: ShapePaintStyle,
+  ): void {
+    const cos = Math.cos(angleRad);
+    const sin = Math.sin(angleRad);
+    const tx = (x: number, y: number): Point => ({
+      x: anchor.x + x * cos - y * sin,
+      y: anchor.y + x * sin + y * cos,
+    });
+    for (const cmd of spec.commands) {
+      switch (cmd.kind) {
+        case 'moveTo': {
+          const p = tx(cmd.x, cmd.y);
+          g.moveTo(p.x, p.y);
+          break;
+        }
+        case 'lineTo': {
+          const p = tx(cmd.x, cmd.y);
+          g.lineTo(p.x, p.y);
+          break;
+        }
+        case 'quadTo': {
+          const c = tx(cmd.cpx, cmd.cpy);
+          const p = tx(cmd.x, cmd.y);
+          g.quadraticCurveTo(c.x, c.y, p.x, p.y);
+          break;
+        }
+        case 'cubicTo': {
+          const c1 = tx(cmd.cp1x, cmd.cp1y);
+          const c2 = tx(cmd.cp2x, cmd.cp2y);
+          const p = tx(cmd.x, cmd.y);
+          g.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, p.x, p.y);
+          break;
+        }
+        case 'close':
+          g.closePath();
+          break;
+      }
+    }
+    const fillColor = style?.color ?? spec.fill;
+    if (fillColor !== undefined) {
+      g.fill({ color: fillColor, alpha: style?.alpha ?? spec.fillAlpha ?? 1 });
+    }
+    if (spec.stroke !== undefined && (spec.strokeWidth ?? 0) > 0) {
+      g.stroke({
+        color: style?.color ?? spec.stroke,
+        width: spec.strokeWidth ?? 1,
+        alpha: style?.alpha ?? spec.strokeAlpha ?? 1,
+      });
+    }
   }
 }
 

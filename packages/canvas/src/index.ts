@@ -128,6 +128,18 @@ export type { ShapesRendererOptions } from './renderers/ShapesRenderer';
 export { TextureRegistry } from './renderers/TextureRegistry';
 export type { ISpritePool } from './renderers/types';
 
+// Marker spec builders — convenience helpers that return shape specs ready
+// to drop into a connector's `sourceMarker` / `targetMarker`. Markers are
+// just shapes; these builders only exist so the four common ones don't
+// require constructing polygon arrays inline.
+export {
+  arrowMarkerSpec,
+  circleMarkerSpec,
+  squareMarkerSpec,
+  diamondMarkerSpec,
+} from './renderers/markers/markers';
+export type { MarkerStyle } from './renderers/markers/markers';
+
 export type {
   Point as ShapesPoint,
   Vec2,
@@ -136,9 +148,9 @@ export type {
   BaseShapeSpec,
   BaseConnectorSpec,
   ConnectorEndpointSpec,
+  MarkerShapeSpec,
   IShape,
   IConnector,
-  IMarker,
   IRouter,
   IShapeDecoration,
   IConnectorDecoration,
@@ -147,9 +159,10 @@ export type {
   ConnectorHostInfo,
   ShapeDecorationHostInfo,
   ConnectorDecorationHostInfo,
+  ShapePaintStyle,
+  ConnectorPaintStyle,
   ShapeCtor,
   ConnectorCtor,
-  MarkerCtor,
   ShapeDecorationCtor,
   ConnectorDecorationCtor,
   DecorationTarget,

@@ -5,13 +5,17 @@
  * boundaries) and `decorations-plan.md` §2 (five primitives).
  *
  * `ShapesRenderer` is a fully generic, opinion-free drawing API. It exposes
- * five extensible primitives — `Shape`, `Connector`, `Marker`, `Router`,
- * `Decoration` — and knows nothing about graphs, ER, flowcharts, or any other
- * domain. The interfaces below are what each primitive implements; concrete
+ * four extensible primitives — `Shape`, `Connector`, `Router`, `Decoration` —
+ * and knows nothing about graphs, ER, flowcharts, or any other domain. Marker
+ * arrowheads/dots/diamonds are not a separate primitive: they are shapes,
+ * registered through `registerShape`, that expose a static `paintInto`. The
+ * connector calls that static method to render the marker geometry directly
+ * into the connector's Graphics so the path + markers are a single drawing.
+ * The interfaces below are what each primitive implements; concrete
  * built-ins (circle/rect/halo/...) ship in sibling files.
  */
 
-import type { Container, Sprite, Texture } from 'pixi.js';
+import type { Container, Graphics, Sprite, Texture } from 'pixi.js';
 import type { EventMap } from '../events/EventEmitter';
 import type { TextureRegistry } from './TextureRegistry';
 
@@ -65,6 +69,15 @@ export interface BaseShapeSpec {
 }
 
 /**
+ * A marker spec is any registered shape spec **without** `x`/`y` — the
+ * connector positions and orients the marker at the polyline endpoint.
+ * Reuses the shape registry (`registerShape`) — there is no separate marker
+ * registry. The shape's constructor must expose a static `paintInto` for
+ * the connector to paint it into the connector's Graphics.
+ */
+export type MarkerShapeSpec = Omit<BaseShapeSpec, 'x' | 'y'> & { readonly kind: string };
+
+/**
  * Common connector fields. Every connector spec extends this with its own
  * `kind` discriminant + drawing fields. Endpoints may resolve to either raw
  * coordinates or another shape id (the renderer resolves shape-bound endpoints
@@ -76,14 +89,16 @@ export interface BaseConnectorSpec {
   readonly target: ConnectorEndpointSpec;
   /** Registered router kind. Default `'straight'`. */
   readonly router?: string;
-  /** Source-side marker (registered marker kind). Optional. */
-  readonly sourceMarker?: string;
-  /** Target-side marker (registered marker kind). Optional. */
-  readonly targetMarker?: string;
-  /** Style overrides applied to the source-side marker. */
-  readonly sourceMarkerOptions?: MarkerOptions;
-  /** Style overrides applied to the target-side marker. */
-  readonly targetMarkerOptions?: MarkerOptions;
+  /**
+   * Source-side marker. Any registered shape spec (e.g. polygon, circle,
+   * path) painted at the source endpoint, oriented along the line tangent.
+   * Use the `arrowMarkerSpec` / `circleMarkerSpec` / `squareMarkerSpec` /
+   * `diamondMarkerSpec` builders from the renderer barrel for the common
+   * cases.
+   */
+  readonly sourceMarker?: MarkerShapeSpec;
+  /** Target-side marker. See `sourceMarker`. */
+  readonly targetMarker?: MarkerShapeSpec;
   readonly zIndex?: number;
   readonly alpha?: number;
   readonly visible?: boolean;
@@ -127,28 +142,33 @@ export interface ShapeHostInfo {
 }
 
 /**
- * Information a `Connector` instance receives at construction. Same shape
- * as `ShapeHostInfo` but kept distinct so the type system records intent.
+ * Information a `Connector` instance receives at construction. The connector
+ * gets a surface to attach to plus read-only access to the shape registry —
+ * the latter is needed because connectors paint markers via the registered
+ * shape constructors' static `paintInto` method (markers are shapes; there
+ * is no separate marker registry).
  */
 export interface ConnectorHostInfo {
   readonly surface: Container;
+  /**
+   * Read-only view of the renderer's shape registry. The connector looks up
+   * a `ShapeCtor` by `spec.sourceMarker.kind` / `spec.targetMarker.kind` and
+   * invokes its static `paintInto` to render the marker into the connector's
+   * Graphics. Throws (clear error) if the marker's kind is not registered or
+   * its ctor does not expose `paintInto`.
+   */
+  readonly shapeRegistry: ReadonlyMap<string, ShapeCtor>;
 }
 
 /**
- * Host info for `IMarker` constructors. Markers attach as siblings of the
- * connector's gfx (rather than children) so a single marker style can be
- * reused across many connectors without nested transform inheritance — the
- * renderer drives marker position via `draw(anchor, tangent)` on each
- * connector update.
+ * Optional style override for `ShapeCtor.paintInto`. When supplied, the
+ * shape's spec colour/alpha are ignored and the override is applied — used
+ * by connector decorations to tint markers to match the decoration colour
+ * (e.g. a glow paints the markers in the glow colour for unified silhouette
+ * coverage).
  */
-export interface MarkerHostInfo {
-  readonly surface: Container;
-}
-
-/** Common style fields markers consume. Markers may ignore unknown fields. */
-export interface MarkerOptions {
+export interface ShapePaintStyle {
   readonly color?: number;
-  readonly size?: number;
   readonly alpha?: number;
 }
 
@@ -196,6 +216,15 @@ export interface ConnectorDecorationHostInfo {
   /** Connector-local surface (the connector's `gfx` Container). */
   readonly surface: Container;
   readonly slotZIndex: number;
+  /**
+   * The host connector instance. Decorations call `connector.paintInto(...)`
+   * with style overrides to repaint the connector's full silhouette into
+   * their own Graphics — see `ConnectorPaintStyle`. Decorations that need
+   * polyline-only access can ignore this field.
+   */
+  readonly connector: IConnector;
+  /** Current spec of the host connector — passed into `connector.paintInto`. */
+  readonly connectorSpec: BaseConnectorSpec;
 }
 
 // ─── Primitive interfaces ──────────────────────────────────────────────────
@@ -239,17 +268,59 @@ export interface IShape<TSpec extends BaseShapeSpec = BaseShapeSpec> {
   destroy(): void;
 }
 
+/**
+ * Style override passed by decorations to `IConnector.paintInto`. The
+ * connector paints its full silhouette (path stroke + every shape-marker via
+ * `ShapeCtor.paintInto`) into the supplied Graphics with these overrides
+ * applied. When `tintMarkers` is set, markers are painted in the same
+ * colour/alpha as the stroke — used by silhouette-wrapping decorations like
+ * glow/halo.
+ */
+export interface ConnectorPaintStyle {
+  readonly stroke?: {
+    readonly color: number;
+    readonly width: number;
+    readonly alpha?: number;
+    readonly cap?: 'butt' | 'round' | 'square';
+    readonly join?: 'miter' | 'round' | 'bevel';
+  };
+  readonly dash?: {
+    readonly dashLength: number;
+    readonly gapLength: number;
+    /** Phase offset in pixels along arc-length. Default `0`. */
+    readonly dashOffset?: number;
+  };
+  /**
+   * When `true`, markers paint with `stroke.color` / `stroke.alpha` instead
+   * of their own spec colours. Decorations like glow/halo set this so the
+   * decoration covers path + markers as one unified silhouette; decorations
+   * like marching-ants leave it undefined so markers paint normally over
+   * the dashed line.
+   */
+  readonly tintMarkers?: boolean;
+}
+
 export interface IConnector<TSpec extends BaseConnectorSpec = BaseConnectorSpec> {
   readonly gfx: Container;
   /** (Re)paint the connector with a router-resolved polyline. */
   draw(spec: TSpec, points: ReadonlyArray<Point>): void;
-  destroy(): void;
-}
-
-export interface IMarker {
-  readonly gfx: Container;
-  /** Position the marker at `anchor`, oriented along `tangent` (unit vector). */
-  draw(anchor: Point, tangent: Vec2): void;
+  /**
+   * Repaint the connector's full silhouette (path + markers) into a
+   * caller-supplied `Graphics` with style overrides. The caller has
+   * `g.clear()`ed the Graphics before calling. Connector decorations use
+   * this to draw with pixel-identical silhouette coverage — they never
+   * re-derive geometry from the polyline.
+   *
+   * Optional for back-compat: third-party `IConnector` implementations
+   * keep compiling without it; decorations check for presence and otherwise
+   * fall back. Both built-ins (`line`, `curve`) implement it.
+   */
+  paintInto?(
+    g: Graphics,
+    spec: TSpec,
+    points: ReadonlyArray<Point>,
+    style: ConnectorPaintStyle,
+  ): void;
   destroy(): void;
 }
 
@@ -293,17 +364,36 @@ export type IConnectorDecoration<TStyle = unknown> = IDecorationBase<
 
 // ─── Constructor / registry types ──────────────────────────────────────────
 
-export type ShapeCtor<TSpec extends BaseShapeSpec = BaseShapeSpec> = new (
-  spec: TSpec,
-  host: ShapeHostInfo,
-) => IShape<TSpec>;
+/**
+ * Constructor type for shapes registered via `registerShape`. Optionally
+ * exposes a static `paintInto` so the shape can also serve as a connector
+ * marker — the connector calls `Ctor.paintInto(g, spec, anchor, angle)` to
+ * paint the marker geometry into the connector's Graphics, oriented along
+ * the polyline tangent. Shapes without `paintInto` are still valid for
+ * `addShape` usage but cannot be used as markers.
+ */
+export interface ShapeCtor<TSpec extends BaseShapeSpec = BaseShapeSpec> {
+  new (spec: TSpec, host: ShapeHostInfo): IShape<TSpec>;
+  /**
+   * Optional static paint function. Paints the spec's drawing fields into a
+   * caller-supplied `Graphics`, anchored at `anchor` and rotated by
+   * `angleRad` (radians) around it. The spec's `x` / `y` are ignored — the
+   * caller (a connector) supplies position via `anchor`. When `style` is
+   * supplied, the shape's spec colour/alpha are overridden.
+   */
+  readonly paintInto?: (
+    g: Graphics,
+    spec: Omit<TSpec, 'x' | 'y'>,
+    anchor: Point,
+    angleRad: number,
+    style?: ShapePaintStyle,
+  ) => void;
+}
 
 export type ConnectorCtor<TSpec extends BaseConnectorSpec = BaseConnectorSpec> = new (
   spec: TSpec,
   host: ConnectorHostInfo,
 ) => IConnector<TSpec>;
-
-export type MarkerCtor = new (opts: MarkerOptions, host: MarkerHostInfo) => IMarker;
 
 export type ShapeDecorationCtor<TStyle = unknown> = new (
   style: TStyle,

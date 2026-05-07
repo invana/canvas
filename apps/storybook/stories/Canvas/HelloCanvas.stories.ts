@@ -7,6 +7,7 @@ import {
   KeyboardCameraInputBehaviour,
   WorldLayer,
   ShapesRenderer,
+  arrowMarkerSpec,
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import { createContainer } from '../div-util';
@@ -51,8 +52,7 @@ export const HelloCanvas: Story = {
       stroke: 0x374151,
       strokeWidth: 2,
       cap: 'round',
-      targetMarker: 'arrow',
-      targetMarkerOptions: { color: 0x374151, size: 12 },
+      targetMarker: arrowMarkerSpec(12, { color: 0x374151 }),
     });
 
     const shapesLayer = new RenderLayer({ id: 'shapes', options: {}, zIndex: 1 });

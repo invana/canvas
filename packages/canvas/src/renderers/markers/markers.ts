@@ -1,98 +1,91 @@
 /**
- * Built-in marker primitives — `arrow`, `circle`, `square`, `diamond`.
+ * Marker spec builders — convenience helpers that return registered shape
+ * specs ready to drop into a connector's `sourceMarker` / `targetMarker`
+ * field. Markers are not a separate primitive: they are shapes that the
+ * connector paints into its own Graphics via the shape's static `paintInto`.
  *
- * Each marker owns a `Graphics` + a parent `Container`. The container is
- * positioned at the marker's anchor and rotated to align with the supplied
- * tangent. The `Graphics` contents are drawn once at construction in
- * marker-local coordinates centred on `(0, 0)` and pointing along `+x`;
- * the parent rotation does the work of orienting them to the connector
- * direction. This keeps `draw()` cheap (just position + rotation update)
- * which matters for connector-heavy scenes.
- *
- * Default style: black, alpha 1, size 8 px (fill side; arrow uses size as
- * total length). Connectors override via `MarkerOptions`.
+ * Custom markers don't need a builder — just hand any registered shape spec
+ * (polygon, path, circle, …) to the connector. These helpers exist so the
+ * common four shapes don't require constructing polygon arrays inline.
  */
 
-import { Container, Graphics } from 'pixi.js';
-import type { IMarker, MarkerHostInfo, MarkerOptions, Point, Vec2 } from '../types';
+import type { CircleShapeSpec } from '../shapes/CircleShape';
+import type { PolygonShapeSpec } from '../shapes/PolygonShape';
+import type { RectShapeSpec } from '../shapes/RectShape';
+
+/** Common style fields the marker builders accept. */
+export interface MarkerStyle {
+  /** Solid fill colour. Default `0x000000`. */
+  readonly color?: number;
+  /** 0..1. Default `1`. */
+  readonly alpha?: number;
+}
 
 const DEFAULT_COLOR = 0x000000;
-const DEFAULT_SIZE = 8;
-const DEFAULT_ALPHA = 1;
 
-abstract class BaseMarker implements IMarker {
-  readonly gfx: Container;
-  protected readonly graphics: Graphics;
-  protected readonly color: number;
-  protected readonly size: number;
-  protected readonly alpha: number;
-
-  constructor(opts: MarkerOptions, host: MarkerHostInfo) {
-    this.color = opts.color ?? DEFAULT_COLOR;
-    this.size = opts.size ?? DEFAULT_SIZE;
-    this.alpha = opts.alpha ?? DEFAULT_ALPHA;
-
-    this.gfx = new Container();
-    this.gfx.label = 'marker';
-    this.graphics = new Graphics();
-    this.gfx.addChild(this.graphics);
-    host.surface.addChild(this.gfx);
-    this.paint(this.graphics);
-  }
-
-  draw(anchor: Point, tangent: Vec2): void {
-    this.gfx.position.set(anchor.x, anchor.y);
-    this.gfx.rotation = Math.atan2(tangent.y, tangent.x);
-  }
-
-  destroy(): void {
-    this.gfx.destroy({ children: true });
-  }
-
-  /** One-shot paint into local-space. Subclasses draw oriented along `+x`. */
-  protected abstract paint(g: Graphics): void;
-}
-
-/** Arrow head — triangle pointing along `+x`, anchored at the tip. */
-export class ArrowMarker extends BaseMarker {
-  protected paint(g: Graphics): void {
-    const s = this.size;
-    g.poly([
+/**
+ * Triangle pointing along `+x` (anchored at the tip). Use as a `targetMarker`
+ * for a classic arrowhead-on-line — the connector orients it forward into
+ * the target endpoint.
+ */
+export function arrowMarkerSpec(
+  size: number,
+  style?: MarkerStyle,
+): Omit<PolygonShapeSpec, 'x' | 'y'> {
+  return {
+    kind: 'polygon',
+    points: [
       { x: 0, y: 0 },
-      { x: -s, y: -s / 2 },
-      { x: -s, y: s / 2 },
-    ]);
-    g.fill({ color: this.color, alpha: this.alpha });
-  }
+      { x: -size, y: -size / 2 },
+      { x: -size, y: size / 2 },
+    ],
+    fill: style?.color ?? DEFAULT_COLOR,
+    fillAlpha: style?.alpha ?? 1,
+  };
 }
 
-/** Solid circle marker. */
-export class CircleMarker extends BaseMarker {
-  protected paint(g: Graphics): void {
-    g.circle(0, 0, this.size / 2);
-    g.fill({ color: this.color, alpha: this.alpha });
-  }
+/** Solid circle, anchored at its centre. */
+export function circleMarkerSpec(
+  size: number,
+  style?: MarkerStyle,
+): Omit<CircleShapeSpec, 'x' | 'y'> {
+  return {
+    kind: 'circle',
+    r: size / 2,
+    fill: style?.color ?? DEFAULT_COLOR,
+    fillAlpha: style?.alpha ?? 1,
+  };
 }
 
-/** Solid square marker (axis-aligned in marker-local space). */
-export class SquareMarker extends BaseMarker {
-  protected paint(g: Graphics): void {
-    const s = this.size;
-    g.rect(-s / 2, -s / 2, s, s);
-    g.fill({ color: this.color, alpha: this.alpha });
-  }
+/** Solid square (axis-aligned in marker-local space; rotates with tangent). */
+export function squareMarkerSpec(
+  size: number,
+  style?: MarkerStyle,
+): Omit<RectShapeSpec, 'x' | 'y'> {
+  return {
+    kind: 'rect',
+    width: size,
+    height: size,
+    fill: style?.color ?? DEFAULT_COLOR,
+    fillAlpha: style?.alpha ?? 1,
+  };
 }
 
-/** Solid diamond marker (square rotated 45° — drawn directly as a poly). */
-export class DiamondMarker extends BaseMarker {
-  protected paint(g: Graphics): void {
-    const r = this.size / 2;
-    g.poly([
+/** Solid diamond (square rotated 45°, drawn as a polygon). */
+export function diamondMarkerSpec(
+  size: number,
+  style?: MarkerStyle,
+): Omit<PolygonShapeSpec, 'x' | 'y'> {
+  const r = size / 2;
+  return {
+    kind: 'polygon',
+    points: [
       { x: r, y: 0 },
       { x: 0, y: r },
       { x: -r, y: 0 },
       { x: 0, y: -r },
-    ]);
-    g.fill({ color: this.color, alpha: this.alpha });
-  }
+    ],
+    fill: style?.color ?? DEFAULT_COLOR,
+    fillAlpha: style?.alpha ?? 1,
+  };
 }

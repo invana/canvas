@@ -1,6 +1,8 @@
 /**
  * Step 4 tests — built-in routers (straight, orthogonal, bezier),
- * connectors (line, curve), and markers (arrow, circle, square, diamond).
+ * connectors (line, curve), and shape-as-marker rendering (markers are
+ * registered shapes painted into the connector's Graphics via
+ * `ShapeCtor.paintInto`).
  */
 
 import { Container } from 'pixi.js';
@@ -11,6 +13,12 @@ import { CanvasEventBus } from '../../../src/events/CanvasEventBus';
 import { ShapesRenderer } from '../../../src/renderers/ShapesRenderer';
 import type { LineConnectorSpec } from '../../../src/renderers/connectors/LineConnector';
 import type { CurveConnectorSpec } from '../../../src/renderers/connectors/CurveConnector';
+import {
+  arrowMarkerSpec,
+  circleMarkerSpec,
+  diamondMarkerSpec,
+  squareMarkerSpec,
+} from '../../../src/renderers/markers/markers';
 import { straightRouter } from '../../../src/renderers/routers/straight';
 import { orthogonalRouter } from '../../../src/renderers/routers/orthogonal';
 import { bezierRouter } from '../../../src/renderers/routers/bezier';
@@ -144,27 +152,28 @@ describe('CurveConnector', () => {
   });
 });
 
-// ─── Markers ───────────────────────────────────────────────────────────────
+// ─── Markers (shape-as-marker) ─────────────────────────────────────────────
 
 describe('Markers', () => {
-  it('all four built-in marker kinds register', () => {
+  it('all four built-in marker shapes paint into the connector Graphics', () => {
     const { renderer, root } = makeRenderer();
-    for (const [i, marker] of (['arrow', 'circle', 'square', 'diamond'] as const).entries()) {
+    const builders = [arrowMarkerSpec, circleMarkerSpec, squareMarkerSpec, diamondMarkerSpec];
+    for (const [i, builder] of builders.entries()) {
       renderer.addConnector<LineConnectorSpec>(`e-${i}`, {
         kind: 'line',
         source: { kind: 'point', x: i * 100, y: 0 },
         target: { kind: 'point', x: i * 100 + 50, y: 0 },
         stroke: 0,
         strokeWidth: 1,
-        targetMarker: marker,
-        targetMarkerOptions: { color: 0xff0000, size: 6 },
+        targetMarker: builder(6, { color: 0xff0000 }),
       });
     }
-    // 4 connector graphics + 4 marker containers = 8 children on the layer.
-    expect(root.children.length).toBe(8);
+    // Markers paint inline into each connector's Graphics — only the four
+    // connector containers attach to the renderer's surface.
+    expect(root.children.length).toBe(4);
   });
 
-  it('source + target markers attach simultaneously', () => {
+  it('source + target markers paint as one drawing', () => {
     const { renderer, root } = makeRenderer();
     renderer.addConnector<LineConnectorSpec>('e-1', {
       kind: 'line',
@@ -172,14 +181,14 @@ describe('Markers', () => {
       target: { kind: 'point', x: 50, y: 0 },
       stroke: 0,
       strokeWidth: 1,
-      sourceMarker: 'circle',
-      targetMarker: 'arrow',
+      sourceMarker: circleMarkerSpec(6),
+      targetMarker: arrowMarkerSpec(8),
     });
-    // 1 connector + 2 markers = 3 children
-    expect(root.children.length).toBe(3);
+    // Connector + path-and-markers Graphics are one container — root has 1.
+    expect(root.children.length).toBe(1);
   });
 
-  it('updateConnector swapping marker kind re-installs cleanly', () => {
+  it('updateConnector swapping marker shape repaints inline', () => {
     const { renderer, root } = makeRenderer();
     renderer.addConnector<LineConnectorSpec>('e-1', {
       kind: 'line',
@@ -187,15 +196,14 @@ describe('Markers', () => {
       target: { kind: 'point', x: 50, y: 0 },
       stroke: 0,
       strokeWidth: 1,
-      targetMarker: 'circle',
+      targetMarker: circleMarkerSpec(6),
     });
-    expect(root.children.length).toBe(2);
-    renderer.updateConnector<LineConnectorSpec>('e-1', { targetMarker: 'diamond' });
-    // Still 1 connector + 1 marker = 2 (no leaks).
-    expect(root.children.length).toBe(2);
+    expect(root.children.length).toBe(1);
+    renderer.updateConnector<LineConnectorSpec>('e-1', { targetMarker: diamondMarkerSpec(8) });
+    expect(root.children.length).toBe(1);
   });
 
-  it('removeConnector tears down markers along with the connector', () => {
+  it('removeConnector tears down the connector cleanly', () => {
     const { renderer, root } = makeRenderer();
     renderer.addConnector<LineConnectorSpec>('e-1', {
       kind: 'line',
@@ -203,15 +211,15 @@ describe('Markers', () => {
       target: { kind: 'point', x: 50, y: 0 },
       stroke: 0,
       strokeWidth: 1,
-      sourceMarker: 'circle',
-      targetMarker: 'arrow',
+      sourceMarker: circleMarkerSpec(6),
+      targetMarker: arrowMarkerSpec(8),
     });
-    expect(root.children.length).toBe(3);
+    expect(root.children.length).toBe(1);
     renderer.removeConnector('e-1');
     expect(root.children.length).toBe(0);
   });
 
-  it('unknown marker kind throws on addConnector', () => {
+  it('marker referencing an unregistered shape kind throws', () => {
     const { renderer } = makeRenderer();
     expect(() =>
       renderer.addConnector<LineConnectorSpec>('e-1', {
@@ -220,8 +228,8 @@ describe('Markers', () => {
         target: { kind: 'point', x: 50, y: 0 },
         stroke: 0,
         strokeWidth: 1,
-        targetMarker: 'spaceship',
+        targetMarker: { kind: 'spaceship' } as never,
       }),
-    ).toThrow(/unknown marker/);
+    ).toThrow(/unregistered shape kind/);
   });
 });

@@ -1,10 +1,6 @@
 // `@invana/canvas/renderers/shapes` — public ShapesRenderer surface.
 //
 // Architecture: see `architecture-proposal.md` §2.6 + `decorations-plan.md`.
-//
-// This barrel currently exports only the Step 1 skeleton (orchestrator +
-// types + hit index). Built-in shapes/connectors/markers/routers/decorations
-// land in subsequent steps and will re-export from here.
 
 export { ShapesRenderer } from './ShapesRenderer';
 export type { ShapesRendererOptions } from './ShapesRenderer';
@@ -34,21 +30,23 @@ export type { LineConnectorSpec } from './connectors/LineConnector';
 export { CurveConnector } from './connectors/CurveConnector';
 export type { CurveConnectorSpec } from './connectors/CurveConnector';
 
-// ─── Built-in markers ───────────────────────────────────────────────────
+// ─── Marker spec builders ───────────────────────────────────────────────
+// Markers are not a separate primitive: they're shapes painted into the
+// connector's Graphics via `ShapeCtor.paintInto`. These builders return
+// ready-to-use sub-shape specs for the four common marker shapes; custom
+// markers just pass any registered shape spec to the connector.
 export {
-  ArrowMarker,
-  CircleMarker,
-  SquareMarker,
-  DiamondMarker,
+  arrowMarkerSpec,
+  circleMarkerSpec,
+  squareMarkerSpec,
+  diamondMarkerSpec,
 } from './markers/markers';
+export type { MarkerStyle } from './markers/markers';
 
 // ─── Built-in routers ───────────────────────────────────────────────────
 export { straightRouter } from './routers/straight';
 export { orthogonalRouter } from './routers/orthogonal';
 export { bezierRouter } from './routers/bezier';
-
-// ─── Marker types ───────────────────────────────────────────────────────
-export type { MarkerOptions, MarkerHostInfo } from './types';
 
 // ─── Built-in decorations ───────────────────────────────────────────────
 export { HaloDecoration } from './decorations/HaloDecoration';
@@ -62,7 +60,17 @@ export type { PulseRingStyle } from './decorations/PulseRingDecoration';
 export { MarchingAntsDecoration } from './decorations/MarchingAntsDecoration';
 export type { MarchingAntsStyle } from './decorations/MarchingAntsDecoration';
 export { DashedBorderRotatingDecoration } from './decorations/DashedBorderRotatingDecoration';
-export type { DashedBorderRotatingStyle } from './decorations/DashedBorderRotatingDecoration';
+export type {
+  DashedBorderRotatingStyle,
+} from './decorations/DashedBorderRotatingDecoration';
+export { MarchingAntsConnectorDecoration } from './decorations/MarchingAntsConnectorDecoration';
+export type {
+  MarchingAntsConnectorStyle,
+} from './decorations/MarchingAntsConnectorDecoration';
+export { PulsatingGlowConnectorDecoration } from './decorations/PulsatingGlowConnectorDecoration';
+export type {
+  PulsatingGlowConnectorStyle,
+} from './decorations/PulsatingGlowConnectorDecoration';
 
 export type {
   // geometry
@@ -74,10 +82,10 @@ export type {
   BaseShapeSpec,
   BaseConnectorSpec,
   ConnectorEndpointSpec,
+  MarkerShapeSpec,
   // primitive interfaces
   IShape,
   IConnector,
-  IMarker,
   IRouter,
   IShapeDecoration,
   IConnectorDecoration,
@@ -87,10 +95,12 @@ export type {
   ConnectorHostInfo,
   ShapeDecorationHostInfo,
   ConnectorDecorationHostInfo,
+  // styles
+  ShapePaintStyle,
+  ConnectorPaintStyle,
   // ctors / registry
   ShapeCtor,
   ConnectorCtor,
-  MarkerCtor,
   ShapeDecorationCtor,
   ConnectorDecorationCtor,
   DecorationTarget,

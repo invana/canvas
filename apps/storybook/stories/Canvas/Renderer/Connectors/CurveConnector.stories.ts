@@ -1,6 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, ShapesRenderer } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
+import {
+  Canvas,
+  DragPanBehaviour,
+  WheelZoomBehaviour,
+  WorldLayer,
+  ShapesRenderer,
+  arrowMarkerSpec,
+  circleMarkerSpec,
+  squareMarkerSpec,
+  diamondMarkerSpec,
+} from '@invana/canvas';
+import type { CanvasContext, MarkerShapeSpec } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer } from '../../../div-util';
 
@@ -47,8 +57,18 @@ export const CurveConnector: Story = {
       markerColor: '#a855f7',
     };
 
+    function markerOf(kind: typeof settings.sourceMarker): MarkerShapeSpec | undefined {
+      const opts = { color: toHex(settings.markerColor) };
+      switch (kind) {
+        case 'arrow': return arrowMarkerSpec(settings.markerSize, opts);
+        case 'circle': return circleMarkerSpec(settings.markerSize, opts);
+        case 'square': return squareMarkerSpec(settings.markerSize, opts);
+        case 'diamond': return diamondMarkerSpec(settings.markerSize, opts);
+        default: return undefined;
+      }
+    }
+
     function buildSpec() {
-      const markerColor = toHex(settings.markerColor);
       return {
         kind: 'curve' as const,
         router: settings.router,
@@ -58,14 +78,8 @@ export const CurveConnector: Story = {
         strokeWidth: settings.strokeWidth,
         strokeAlpha: settings.strokeAlpha,
         cap: settings.cap,
-        ...(settings.sourceMarker !== 'none' ? {
-          sourceMarker: settings.sourceMarker,
-          sourceMarkerOptions: { color: markerColor, size: settings.markerSize },
-        } : {}),
-        ...(settings.targetMarker !== 'none' ? {
-          targetMarker: settings.targetMarker,
-          targetMarkerOptions: { color: markerColor, size: settings.markerSize },
-        } : {}),
+        sourceMarker: markerOf(settings.sourceMarker),
+        targetMarker: markerOf(settings.targetMarker),
       };
     }
 

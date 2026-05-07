@@ -57,12 +57,6 @@ import { RectShape } from './shapes/RectShape';
 import { TextShape } from './shapes/TextShape';
 import { LineConnector } from './connectors/LineConnector';
 import { CurveConnector } from './connectors/CurveConnector';
-import {
-  ArrowMarker,
-  CircleMarker,
-  DiamondMarker,
-  SquareMarker,
-} from './markers/markers';
 import { straightRouter } from './routers/straight';
 import { orthogonalRouter } from './routers/orthogonal';
 import { bezierRouter } from './routers/bezier';
@@ -72,6 +66,8 @@ import { GlowDecoration } from './decorations/GlowDecoration';
 import { PulseRingDecoration } from './decorations/PulseRingDecoration';
 import { MarchingAntsDecoration } from './decorations/MarchingAntsDecoration';
 import { DashedBorderRotatingDecoration } from './decorations/DashedBorderRotatingDecoration';
+import { MarchingAntsConnectorDecoration } from './decorations/MarchingAntsConnectorDecoration';
+import { PulsatingGlowConnectorDecoration } from './decorations/PulsatingGlowConnectorDecoration';
 import type {
   BaseConnectorSpec,
   BaseShapeSpec,
@@ -82,7 +78,6 @@ import type {
   DecorationTarget,
   HitResult,
   IRouter,
-  MarkerCtor,
   RegisterDecorationOptions,
   RenderStats,
   ShapeCtor,
@@ -128,7 +123,6 @@ export class ShapesRenderer {
 
   private readonly shapeRegistry = new Map<string, ShapeCtor>();
   private readonly connectorRegistry = new Map<string, ConnectorCtor>();
-  private readonly markerRegistry = new Map<string, MarkerCtor>();
   private readonly routerRegistry = new Map<string, IRouter>();
   private readonly decorationRegistry = new Map<string, RegisteredDecoration>();
 
@@ -199,11 +193,6 @@ export class ShapesRenderer {
     this.registerConnector('line', LineConnector);
     this.registerConnector('curve', CurveConnector);
 
-    this.registerMarker('arrow', ArrowMarker);
-    this.registerMarker('circle', CircleMarker);
-    this.registerMarker('square', SquareMarker);
-    this.registerMarker('diamond', DiamondMarker);
-
     this.registerDecoration('halo', HaloDecoration, { target: 'shape' });
     this.registerDecoration('border', BorderDecoration, { target: 'shape' });
     this.registerDecoration('glow', GlowDecoration, { target: 'shape' });
@@ -212,8 +201,12 @@ export class ShapesRenderer {
     this.registerDecoration('dashed-border-rotating', DashedBorderRotatingDecoration, {
       target: 'shape',
     });
-    // line, curve connectors + arrow/circle/square/diamond markers + routers — Step 4
-    // halo, border, glow + animated decorations — Steps 5/6
+    this.registerDecoration('marching-ants-connector', MarchingAntsConnectorDecoration, {
+      target: 'connector',
+    });
+    this.registerDecoration('pulsating-glow', PulsatingGlowConnectorDecoration, {
+      target: 'connector',
+    });
   }
 
   // ─── Registry: shapes ────────────────────────────────────────────────────
@@ -233,10 +226,6 @@ export class ShapesRenderer {
     ctor: ConnectorCtor<TSpec>,
   ): void {
     this.connectorRegistry.set(kind, ctor as ConnectorCtor);
-  }
-
-  registerMarker(kind: string, ctor: MarkerCtor): void {
-    this.markerRegistry.set(kind, ctor);
   }
 
   registerRouter(kind: string, fn: IRouter): void {
@@ -335,13 +324,15 @@ export class ShapesRenderer {
     if (!Ctor) {
       throw new Error(`ShapesRenderer.addConnector: unknown kind "${spec.kind}"`);
     }
-    const host: ConnectorHostInfo = { surface: this._container };
+    const host: ConnectorHostInfo = {
+      surface: this._container,
+      shapeRegistry: this.shapeRegistry,
+    };
     const connector = new Ctor(spec, host) as import('./types').IConnector<TSpec>;
     const points = this.routePoints(spec);
     connector.draw(spec, points);
     const inst = new ConnectorInstance<TSpec>(id, spec, connector);
     inst.polyline = points;
-    this.installMarkers(inst, spec);
     this.connectorInstances.set(id, inst as unknown as ConnectorInstance);
     this.indexConnector(inst as unknown as ConnectorInstance);
     this.wireConnectorPointer(inst as unknown as ConnectorInstance);
@@ -353,25 +344,10 @@ export class ShapesRenderer {
   ): void {
     const inst = this.connectorInstances.get(id) as ConnectorInstance<TSpec> | undefined;
     if (!inst) return;
-    const prev = inst.spec;
     inst.spec = { ...inst.spec, ...partial };
     inst.polyline = this.routePoints(inst.spec);
     inst.connector.draw(inst.spec, inst.polyline);
     this.indexConnector(inst as unknown as ConnectorInstance);
-
-    // Marker kind changed → tear down + reinstall. Otherwise just reposition.
-    const markerKindChanged =
-      prev.sourceMarker !== inst.spec.sourceMarker ||
-      prev.targetMarker !== inst.spec.targetMarker;
-    if (markerKindChanged) {
-      inst.sourceMarker?.destroy();
-      inst.targetMarker?.destroy();
-      inst.sourceMarker = undefined;
-      inst.targetMarker = undefined;
-      this.installMarkers(inst, inst.spec);
-    } else {
-      this.repositionMarkers(inst);
-    }
 
     if (inst.decorations.size > 0) this.refreshConnectorDecorations(inst);
   }
@@ -382,8 +358,6 @@ export class ShapesRenderer {
     for (const deco of inst.decorations.values()) this.disposeDecoration(deco);
     inst.decorations.clear();
     this.hit.remove(id);
-    inst.sourceMarker?.destroy();
-    inst.targetMarker?.destroy();
     inst.connector.destroy();
     this.connectorInstances.delete(id);
   }
@@ -471,6 +445,8 @@ export class ShapesRenderer {
         polyline: connector!.polyline,
         surface: connector!.connector.gfx,
         slotZIndex: z,
+        connector: connector!.connector,
+        connectorSpec: connector!.spec,
       };
       deco.mount(host);
       decorations.set(slot, deco);
@@ -702,61 +678,6 @@ export class ShapesRenderer {
   }
 
   /**
-   * Instantiate any source/target markers declared on the connector spec and
-   * position them at the polyline endpoints. Called from `addConnector`
-   * (fresh connector) and `updateConnector` (when marker kinds change).
-   */
-  private installMarkers(inst: ConnectorInstance, spec: BaseConnectorSpec): void {
-    const host = { surface: this._container };
-    if (spec.sourceMarker) {
-      const Ctor = this.markerRegistry.get(spec.sourceMarker);
-      if (!Ctor) {
-        throw new Error(`ShapesRenderer: unknown marker "${spec.sourceMarker}"`);
-      }
-      inst.sourceMarker = new Ctor(spec.sourceMarkerOptions ?? {}, host);
-    }
-    if (spec.targetMarker) {
-      const Ctor = this.markerRegistry.get(spec.targetMarker);
-      if (!Ctor) {
-        throw new Error(`ShapesRenderer: unknown marker "${spec.targetMarker}"`);
-      }
-      inst.targetMarker = new Ctor(spec.targetMarkerOptions ?? {}, host);
-    }
-    this.repositionMarkers(inst);
-  }
-
-  /**
-   * Position existing markers at the current polyline endpoints, oriented
-   * by the polyline tangent at each end. The source marker points *away*
-   * from the line (tangent reversed) so an arrow at the source faces back
-   * toward the source point — flip the tangent at draw time as needed for
-   * the marker family. Here we keep the tangent in line direction; markers
-   * draw oriented along `+x` so they "point toward where the line came
-   * from." For arrow-into-target semantics, attach the arrow as
-   * `targetMarker`.
-   */
-  private repositionMarkers(inst: ConnectorInstance): void {
-    const pts = inst.polyline;
-    if (pts.length < 2) return;
-    if (inst.sourceMarker) {
-      const a = pts[0]!;
-      const b = pts[1]!;
-      const tx = a.x - b.x;
-      const ty = a.y - b.y;
-      const len = Math.hypot(tx, ty) || 1;
-      inst.sourceMarker.draw(a, { x: tx / len, y: ty / len });
-    }
-    if (inst.targetMarker) {
-      const a = pts[pts.length - 2]!;
-      const b = pts[pts.length - 1]!;
-      const tx = b.x - a.x;
-      const ty = b.y - a.y;
-      const len = Math.hypot(tx, ty) || 1;
-      inst.targetMarker.draw(b, { x: tx / len, y: ty / len });
-    }
-  }
-
-  /**
    * Re-issue host info for every decoration on a shape and call `update?.()`.
    * Triggered from `updateShape` whenever the spec's bounds may have shifted.
    * Decorations that don't expose `update` are left alone — they captured
@@ -789,6 +710,8 @@ export class ShapesRenderer {
         polyline: inst.polyline,
         surface: inst.connector.gfx,
         slotZIndex: slotZIndex(slot),
+        connector: inst.connector,
+        connectorSpec: inst.spec,
       };
       deco.update(host);
     }

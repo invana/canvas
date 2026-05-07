@@ -10,7 +10,7 @@
  */
 
 import { Container, Graphics } from 'pixi.js';
-import type { BaseShapeSpec, IShape, Rect, ShapeHostInfo } from '../types';
+import type { BaseShapeSpec, IShape, Point, Rect, ShapeHostInfo, ShapePaintStyle } from '../types';
 
 export interface RectShapeSpec extends BaseShapeSpec {
   readonly kind: 'rect';
@@ -81,5 +81,45 @@ export class RectShape implements IShape<RectShapeSpec> {
 
   destroy(): void {
     this.gfx.destroy({ children: true });
+  }
+
+  /**
+   * Paint a `RectShapeSpec` into a caller-supplied `Graphics` as a rotated
+   * polygon (Pixi v8's `g.rect` is axis-aligned only). Rounded corners are
+   * not preserved through rotation — rotated-marker callers requesting
+   * `cornerRadius > 0` get sharp corners. `style` overrides spec colour/alpha.
+   */
+  static paintInto(
+    g: Graphics,
+    spec: Omit<RectShapeSpec, 'x' | 'y'>,
+    anchor: Point,
+    angleRad: number,
+    style?: ShapePaintStyle,
+  ): void {
+    const halfW = spec.width / 2;
+    const halfH = spec.height / 2;
+    const cos = Math.cos(angleRad);
+    const sin = Math.sin(angleRad);
+    const corners: Point[] = [
+      { x: -halfW, y: -halfH },
+      { x: halfW, y: -halfH },
+      { x: halfW, y: halfH },
+      { x: -halfW, y: halfH },
+    ].map((p) => ({
+      x: anchor.x + p.x * cos - p.y * sin,
+      y: anchor.y + p.x * sin + p.y * cos,
+    }));
+    g.poly(corners);
+    const fillColor = style?.color ?? spec.fill;
+    if (fillColor !== undefined) {
+      g.fill({ color: fillColor, alpha: style?.alpha ?? spec.fillAlpha ?? 1 });
+    }
+    if (spec.stroke !== undefined && (spec.strokeWidth ?? 0) > 0) {
+      g.stroke({
+        color: style?.color ?? spec.stroke,
+        width: spec.strokeWidth ?? 1,
+        alpha: style?.alpha ?? spec.strokeAlpha ?? 1,
+      });
+    }
   }
 }
