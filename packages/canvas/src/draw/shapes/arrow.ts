@@ -12,11 +12,14 @@
 
 import type { Graphics } from 'pixi.js';
 import type { BaseShapeSpec, Rect, ShapeKind } from '../types';
+import { drawRoundedPoly } from './_polyUtils';
 
 export interface ArrowSpec extends BaseShapeSpec {
   readonly kind: 'arrow';
   /** Total length, tip → tail. */
   readonly size: number;
+  /** Vertex fillet radius. Default `0` (sharp). Auto-capped by half the shortest edge. */
+  readonly cornerRadius?: number;
   readonly fill?: number;
   readonly fillAlpha?: number;
   readonly stroke?: number;
@@ -39,7 +42,7 @@ export function drawArrow(
   const tip   = { x: ax, y: ay };
   const tail1 = { x: ax + (-s) * c - (-s / 2) * sn, y: ay + (-s) * sn + (-s / 2) * c };
   const tail2 = { x: ax + (-s) * c - ( s / 2) * sn, y: ay + (-s) * sn + ( s / 2) * c };
-  g.poly([tip, tail1, tail2]);
+  drawRoundedPoly(g, [tip, tail1, tail2], spec.cornerRadius ?? 0);
 
   if (spec.fill !== undefined) {
     g.fill({ color: spec.fill, alpha: spec.fillAlpha ?? 1 });

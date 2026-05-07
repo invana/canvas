@@ -34,13 +34,14 @@ export const Polygon: Story = {
     canvas.layers.add(layer);
     const g = layer.createGraphics('polygon-gfx');
 
-    const settings = { radius: 55, fillColor: '#4f9cf9', fillAlpha: 0.2, strokeColor: '#1e3a8a', strokeWidth: 3 };
+    const settings = { radius: 55, cornerRadius: 0, fillColor: '#4f9cf9', fillAlpha: 0.2, strokeColor: '#1e3a8a', strokeWidth: 3 };
 
     function redraw() {
       g.clear();
       draw.drawPolygon(g, {
         kind: 'polygon', x: 0, y: 0,
         points: hexPoints(settings.radius),
+        cornerRadius: settings.cornerRadius,
         fill: toHex(settings.fillColor), fillAlpha: settings.fillAlpha,
         stroke: toHex(settings.strokeColor), strokeWidth: settings.strokeWidth,
       });
@@ -51,6 +52,7 @@ export const Polygon: Story = {
 
     const gui = new GUI({ title: 'Polygon (hexagon)' });
     gui.add(settings, 'radius', 10, 150, 1).onChange(redraw);
+    gui.add(settings, 'cornerRadius', 0, 60, 1).onChange(redraw);
     gui.addColor(settings, 'fillColor').onChange(redraw);
     gui.add(settings, 'fillAlpha', 0, 1, 0.01).onChange(redraw);
     gui.addColor(settings, 'strokeColor').onChange(redraw);

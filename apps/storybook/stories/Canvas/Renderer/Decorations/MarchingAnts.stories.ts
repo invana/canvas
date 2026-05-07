@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, ShapesRenderer } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
+import type { BaseShapeSpec, CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer } from '../../../div-util';
 
@@ -57,7 +57,7 @@ export const MarchingAnts: Story = {
     }
     canvas.camera.fitContent(layer.getBounds(), 100);
 
-    const settings = { color: '#f43f5e', width: 1.5, alpha: 1, dashLength: 6, gapLength: 4, speed: 0.04, inset: 2 };
+    const settings = { color: '#f43f5e', width: 1.5, alpha: 1, dashLength: 6, gapLength: 4, speed: 0.04, inset: 2, cornerRadius: 0 };
 
     function apply() {
       const style = {
@@ -68,10 +68,14 @@ export const MarchingAnts: Story = {
         gapLength: settings.gapLength,
         speed: settings.speed,
         inset: settings.inset,
+        cornerRadius: settings.cornerRadius,
       };
       for (const { id } of SHAPES) {
         layer.renderer.setDecoration(id, 'border', { kind: 'marching-ants', style });
       }
+      // Match the rect host's cornerRadius so the dash trace is concentric.
+      type RectPartial = BaseShapeSpec & { cornerRadius?: number };
+      layer.renderer.updateShape<RectPartial>('rect', { cornerRadius: settings.cornerRadius });
     }
 
     apply();
@@ -84,5 +88,6 @@ export const MarchingAnts: Story = {
     gui.add(settings, 'gapLength', 1, 30, 1).onChange(apply);
     gui.add(settings, 'speed', 0, 0.2, 0.005).onChange(apply);
     gui.add(settings, 'inset', 0, 20, 1).onChange(apply);
+    gui.add(settings, 'cornerRadius', 0, 35, 1).onChange(apply);
   },
 };

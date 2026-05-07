@@ -11,10 +11,13 @@
 import type { Graphics } from 'pixi.js';
 import type { BaseShapeSpec, FillFit, FillInput, Point, Rect, ShapeKind } from '../types';
 import { applyFill } from './textureMatrix';
+import { drawRoundedPoly } from './_polyUtils';
 
 export interface PolygonSpec extends BaseShapeSpec {
   readonly kind: 'polygon';
   readonly points: ReadonlyArray<Point>;
+  /** Vertex fillet radius. Default `0` (sharp). Auto-capped per-vertex by half the shorter adjacent edge. */
+  readonly cornerRadius?: number;
   readonly fill?: FillInput;
   readonly fillAlpha?: number;
   readonly fillFit?: FillFit;
@@ -39,7 +42,7 @@ export function drawPolygon(
     x: cx + p.x * c - p.y * s,
     y: cy + p.x * s + p.y * c,
   }));
-  g.poly(transformed);
+  drawRoundedPoly(g, transformed, spec.cornerRadius ?? 0);
   if (spec.fill !== undefined) {
     // Compute world-space AABB of transformed vertices for the texture matrix.
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;

@@ -57,10 +57,15 @@ export const Halo: Story = {
     }
     canvas.camera.fitContent(layer.getBounds(), 100);
 
-    const settings = { color: '#f59e0b', alpha: 0.4, padding: 8 };
+    const settings = { color: '#f59e0b', alpha: 0.4, padding: 8, cornerRadius: 0 };
 
     function apply() {
-      const style = { color: toHex(settings.color), alpha: settings.alpha, padding: settings.padding };
+      const style = {
+        color: toHex(settings.color),
+        alpha: settings.alpha,
+        padding: settings.padding,
+        cornerRadius: settings.cornerRadius,
+      };
       for (const { id } of SHAPES) {
         layer.renderer.setDecoration(id, 'halo', { kind: 'halo', style });
       }
@@ -72,5 +77,6 @@ export const Halo: Story = {
     gui.addColor(settings, 'color').onChange(apply);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(apply);
     gui.add(settings, 'padding', 0, 40, 1).onChange(apply);
+    gui.add(settings, 'cornerRadius', 0, 60, 1).onChange(apply);
   },
 };

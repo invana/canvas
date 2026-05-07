@@ -34,6 +34,12 @@ export interface PulseRingStyle {
   readonly periodMs?: number;
   /** Number of concurrently visible rings, evenly staggered. Default `1`. */
   readonly ringCount?: number;
+  /**
+   * Rounded corner radius for rect-like hosts. Default `0` (sharp).
+   * Outer radius is `cornerRadius + padding` so the ring stays concentric
+   * with a host that has the same `cornerRadius`.
+   */
+  readonly cornerRadius?: number;
 }
 
 export class PulseRingDecoration implements IShapeDecoration<PulseRingStyle> {
@@ -114,6 +120,7 @@ export class PulseRingDecoration implements IShapeDecoration<PulseRingStyle> {
   /** Draw the ring outline at `padding` px outset from the host bounds. */
   private drawOutline(g: Graphics, padding: number): void {
     const { x, y, width, height } = this.host!.bounds;
+    const cornerRadius = this.style.cornerRadius ?? 0;
 
     if (this.host!.hostKind === 'circle' || this.host!.hostKind === 'ellipse') {
       const cx = x + width / 2;
@@ -127,7 +134,16 @@ export class PulseRingDecoration implements IShapeDecoration<PulseRingStyle> {
       return;
     }
 
-    // Rectangular fallback — sharp corners to match the host shape.
-    g.rect(x - padding, y - padding, width + padding * 2, height + padding * 2);
+    if (cornerRadius > 0) {
+      g.roundRect(
+        x - padding,
+        y - padding,
+        width + padding * 2,
+        height + padding * 2,
+        cornerRadius + padding,
+      );
+    } else {
+      g.rect(x - padding, y - padding, width + padding * 2, height + padding * 2);
+    }
   }
 }

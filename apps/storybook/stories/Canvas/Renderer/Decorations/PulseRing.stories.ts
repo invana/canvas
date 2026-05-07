@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, ShapesRenderer } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
+import type { BaseShapeSpec, CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer } from '../../../div-util';
 
@@ -57,7 +57,7 @@ export const PulseRing: Story = {
     }
     canvas.camera.fitContent(layer.getBounds(), 100);
 
-    const settings = { color: '#a78bfa', width: 2, alpha: 0.6, startPadding: 0, endPadding: 30, periodMs: 1500, ringCount: 1 };
+    const settings = { color: '#a78bfa', width: 2, alpha: 0.6, startPadding: 0, endPadding: 30, periodMs: 1500, ringCount: 1, cornerRadius: 0 };
 
     function apply() {
       const style = {
@@ -68,10 +68,14 @@ export const PulseRing: Story = {
         endPadding: settings.endPadding,
         periodMs: settings.periodMs,
         ringCount: settings.ringCount,
+        cornerRadius: settings.cornerRadius,
       };
       for (const { id } of SHAPES) {
         layer.renderer.setDecoration(id, 'pulse', { kind: 'pulse-ring', style });
       }
+      // Match the rect host's cornerRadius so the ring is visibly concentric.
+      type RectPartial = BaseShapeSpec & { cornerRadius?: number };
+      layer.renderer.updateShape<RectPartial>('rect', { cornerRadius: settings.cornerRadius });
     }
 
     apply();
@@ -84,5 +88,6 @@ export const PulseRing: Story = {
     gui.add(settings, 'endPadding', 10, 80, 1).onChange(apply);
     gui.add(settings, 'periodMs', 200, 5000, 100).onChange(apply);
     gui.add(settings, 'ringCount', 1, 5, 1).onChange(apply);
+    gui.add(settings, 'cornerRadius', 0, 35, 1).onChange(apply);
   },
 };

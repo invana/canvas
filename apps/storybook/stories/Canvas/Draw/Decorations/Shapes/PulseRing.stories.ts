@@ -32,19 +32,26 @@ export const PulseRing: Story = {
     canvas.layers.add(layer);
 
     const hostG = layer.createGraphics('host-gfx');
-    draw.drawRect(hostG, {
-      kind: 'rect', x: BOUNDS.x, y: BOUNDS.y,
-      width: BOUNDS.width, height: BOUNDS.height,
-      fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
-    });
-
     const decoSlot = layer.createContainer('pulse-slot');
     const decoG = layer.createGraphics('pulse-gfx');
     decoSlot.addChild(decoG);
 
-    const settings = { color: '#a78bfa', width: 2, alpha: 0.6, startPadding: 0, endPadding: 30, periodMs: 1500 };
+    const settings = { color: '#a78bfa', width: 2, alpha: 0.6, startPadding: 0, endPadding: 30, periodMs: 1500, cornerRadius: 0 };
+
+    function redrawHost() {
+      hostG.clear();
+      draw.drawRect(hostG, {
+        kind: 'rect',
+        x: BOUNDS.x + BOUNDS.width / 2,
+        y: BOUNDS.y + BOUNDS.height / 2,
+        width: BOUNDS.width, height: BOUNDS.height,
+        cornerRadius: settings.cornerRadius,
+        fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
+      });
+    }
 
     function rebuild() {
+      redrawHost();
       layer.deco?.destroy();
       layer.deco = new draw.PulseRingDecoration(decoSlot, decoG, {
         color: toHex(settings.color),
@@ -53,6 +60,7 @@ export const PulseRing: Story = {
         startPadding: settings.startPadding,
         endPadding: settings.endPadding,
         periodMs: settings.periodMs,
+        cornerRadius: settings.cornerRadius,
       });
       layer.deco.update(BOUNDS, 'rect');
     }
@@ -67,5 +75,6 @@ export const PulseRing: Story = {
     gui.add(settings, 'startPadding', 0, 30, 1).onChange(rebuild);
     gui.add(settings, 'endPadding', 10, 80, 1).onChange(rebuild);
     gui.add(settings, 'periodMs', 200, 5000, 100).onChange(rebuild);
+    gui.add(settings, 'cornerRadius', 0, 50, 1).onChange(rebuild);
   },
 };

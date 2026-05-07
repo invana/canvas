@@ -32,13 +32,16 @@ export const Halo: Story = {
     const decoG = layer.createGraphics('halo-gfx');
     const hostG = layer.createGraphics('host-gfx');
 
-    const settings = { color: '#f59e0b', alpha: 0.4, padding: 8 };
+    const settings = { color: '#f59e0b', alpha: 0.4, padding: 8, cornerRadius: 0 };
 
     function redraw() {
       hostG.clear();
       draw.drawRect(hostG, {
-        kind: 'rect', x: BOUNDS.x, y: BOUNDS.y,
+        kind: 'rect',
+        x: BOUNDS.x + BOUNDS.width / 2,
+        y: BOUNDS.y + BOUNDS.height / 2,
         width: BOUNDS.width, height: BOUNDS.height,
+        cornerRadius: settings.cornerRadius,
         fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
       });
       decoG.clear();
@@ -46,6 +49,7 @@ export const Halo: Story = {
         color: toHex(settings.color),
         alpha: settings.alpha,
         padding: settings.padding,
+        cornerRadius: settings.cornerRadius,
       }, 'rect');
     }
 
@@ -56,5 +60,6 @@ export const Halo: Story = {
     gui.addColor(settings, 'color').onChange(redraw);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(redraw);
     gui.add(settings, 'padding', 0, 40, 1).onChange(redraw);
+    gui.add(settings, 'cornerRadius', 0, 60, 1).onChange(redraw);
   },
 };

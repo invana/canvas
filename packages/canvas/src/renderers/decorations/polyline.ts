@@ -7,70 +7,128 @@ import { Graphics } from 'pixi.js';
 type Pt = { readonly x: number; readonly y: number };
 
 /**
- * Rotate a closed polyline so the new start sits at arc-length `sAlign`
- * measured from the current start point. The returned polyline is also closed
- * (first point duplicated at the end).
+ * Stamp dashed segments along a CLOSED polyline (last point === first). Each
+ * dash is emitted as one self-contained sub-path (`moveTo` + one or more
+ * `lineTo`s through any corners it crosses). When a dash spans the closing
+ * seam, the trailing portion continues into a second arc with no `moveTo`
+ * between the two — Pixi joins them at `poly[0]` as a regular polyline
+ * vertex, so there's no doubled butt-cap and no per-tick polyline rotation.
  *
- * Used by closed-loop dashed rendering: by rotating to a phase-zero (or
- * phase-equals-dashLen) position, the seam where the loop closes can be made
- * to land inside a gap rather than mid-dash, eliminating the abutting
- * butt-caps Pixi would otherwise stroke at the seam.
- *
- * Assumes input is closed (first point == last point) and has at least 3
- * unique vertices. Returns a copy of the input on degenerate cases.
+ * Caller issues `g.stroke({...})` afterwards. Scale `dashLen` / `gapLen` so
+ * the perimeter is an exact integer multiple of `dashLen + gapLen` first —
+ * otherwise the dash phase jumps where the loop closes.
  */
-export function rotateClosedPolyline(poly: ReadonlyArray<Pt>, sAlign: number): Pt[] {
-  if (poly.length < 3) return poly.map(p => ({ x: p.x, y: p.y }));
+export function drawDashedPolylineClosed(
+  g: Graphics,
+  poly: ReadonlyArray<Pt>,
+  dashLen: number,
+  gapLen: number,
+  offset: number,
+): void {
+  const cycle = dashLen + gapLen;
+  if (cycle <= 0 || poly.length < 3 || dashLen <= 0) return;
   const N = poly.length - 1;
+
   const segLens: number[] = new Array(N);
-  let total = 0;
+  let perimeter = 0;
   for (let i = 0; i < N; i++) {
     const a = poly[i]!;
     const b = poly[i + 1]!;
     const len = Math.hypot(b.x - a.x, b.y - a.y);
     segLens[i] = len;
-    total += len;
+    perimeter += len;
   }
-  if (total <= 0) return poly.map(p => ({ x: p.x, y: p.y }));
+  if (perimeter <= 0) return;
 
-  const target = ((sAlign % total) + total) % total;
-  if (target === 0) return poly.map(p => ({ x: p.x, y: p.y }));
+  // Phase normalization: at arc-length `s`, dash phase = (s - offset) mod cycle.
+  // The first dash that lies (at least partially) in [0, perimeter) starts at
+  // arc-length `firstDashStart` ∈ [0, cycle).
+  const normOffset = ((offset % cycle) + cycle) % cycle;
+  const firstDashStart = normOffset === 0 ? 0 : cycle - normOffset;
 
-  let segIdx = 0;
-  let acc = 0;
-  for (let i = 0; i < N; i++) {
-    if (acc + segLens[i]! >= target) {
-      segIdx = i;
-      break;
+  // Number of dashes that fit around the perimeter, given perimeter is
+  // pre-snapped to an integer multiple of `cycle` by the caller.
+  const numDashes = Math.max(1, Math.round(perimeter / cycle));
+
+  for (let k = 0; k < numDashes; k++) {
+    let dashStart = (firstDashStart + k * cycle) % perimeter;
+    let dashEnd = dashStart + dashLen;
+    if (dashEnd <= perimeter) {
+      emitArc(g, poly, segLens, dashStart, dashEnd, false);
+    } else {
+      // Dash wraps the seam — emit it as two connected arcs joined at poly[0].
+      emitArc(g, poly, segLens, dashStart, perimeter, false);
+      emitArc(g, poly, segLens, 0, dashEnd - perimeter, true);
     }
-    acc += segLens[i]!;
   }
-  const a = poly[segIdx]!;
-  const b = poly[segIdx + 1]!;
-  const segLen = segLens[segIdx]!;
-  const t = segLen > 0 ? (target - acc) / segLen : 0;
-  const startPt: Pt = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
-
-  const out: Pt[] = [{ x: startPt.x, y: startPt.y }];
-  for (let k = 1; k <= N; k++) {
-    const idx = (segIdx + k) % N;
-    out.push({ x: poly[idx]!.x, y: poly[idx]!.y });
-  }
-  out.push({ x: startPt.x, y: startPt.y });
-  return out;
 }
 
 /**
- * Stamp dashed segments along a polyline. Walks segment-by-segment with a
- * cumulative arc-length cursor. Dashes that span a polyline corner are drawn
- * as a single continuous path (one moveTo + multiple lineTo's) so Pixi
+ * Emit one dash arc from arc-length `from` to `to` along `poly`. When
+ * `continueDash` is true, skip the leading `moveTo` so the new arc joins
+ * the existing sub-path at `poly[0]` (used for seam-wrapped dashes).
+ */
+function emitArc(
+  g: Graphics,
+  poly: ReadonlyArray<Pt>,
+  segLens: ReadonlyArray<number>,
+  from: number,
+  to: number,
+  continueDash: boolean,
+): void {
+  if (to <= from) return;
+
+  // Locate segment + local offset for `from`.
+  let acc = 0;
+  let segIdx = 0;
+  while (segIdx < segLens.length - 1 && acc + segLens[segIdx]! <= from) {
+    acc += segLens[segIdx]!;
+    segIdx++;
+  }
+  let local = from - acc;
+
+  if (!continueDash) {
+    const a = poly[segIdx]!;
+    const b = poly[segIdx + 1]!;
+    const segLen = segLens[segIdx]!;
+    if (segLen <= 0) return;
+    const ux = (b.x - a.x) / segLen;
+    const uy = (b.y - a.y) / segLen;
+    g.moveTo(a.x + ux * local, a.y + uy * local);
+  }
+
+  let remaining = to - from;
+  while (remaining > 0 && segIdx < segLens.length) {
+    const a = poly[segIdx]!;
+    const b = poly[segIdx + 1]!;
+    const segLen = segLens[segIdx]!;
+    if (segLen <= 0) {
+      segIdx++;
+      local = 0;
+      continue;
+    }
+    const ux = (b.x - a.x) / segLen;
+    const uy = (b.y - a.y) / segLen;
+    const stepInSeg = Math.min(remaining, segLen - local);
+    g.lineTo(a.x + ux * (local + stepInSeg), a.y + uy * (local + stepInSeg));
+    remaining -= stepInSeg;
+    local += stepInSeg;
+    if (local >= segLen - 1e-9) {
+      segIdx++;
+      local = 0;
+    }
+  }
+}
+
+/**
+ * Stamp dashed segments along an open polyline. Walks segment-by-segment with
+ * a cumulative arc-length cursor. Dashes that span a polyline corner are
+ * drawn as a single continuous path (one moveTo + multiple lineTo's) so Pixi
  * applies a proper line join at the corner instead of separate butt-cap
  * end-pieces that create a double-cap flicker artifact.
  *
- * Caller issues `g.stroke({...})` after to set the visual style. For a closed
- * polyline, scale `dashLen` / `gapLen` / `offset` so the perimeter is an exact
- * integer multiple of `dashLen + gapLen` first — otherwise the dash phase
- * jumps where the loop closes (most visible on circle/ellipse outlines).
+ * For closed polylines (last === first), prefer `drawDashedPolylineClosed`,
+ * which also handles seam wrap so dashes never break at the closing point.
  */
 export function drawDashedPolyline(
   g: Graphics,

@@ -36,7 +36,7 @@ export const ImageFill: Story = {
     canvas.layers.add(layer);
     const g = layer.createGraphics('img-gfx');
 
-    const settings = { shape: 'circle' as 'circle' | 'rect', fillFit: 'cover' as FillFit, radius: 80, strokeWidth: 3, strokeColor: '#6366f1' };
+    const settings = { shape: 'circle' as 'circle' | 'rect', fillFit: 'cover' as FillFit, radius: 80, cornerRadius: 12, strokeWidth: 3, strokeColor: '#6366f1' };
 
     function redraw() {
       g.clear();
@@ -49,7 +49,7 @@ export const ImageFill: Story = {
       } else {
         draw.drawRect(g, {
           kind: 'rect', x: 0, y: 0, width: settings.radius * 2, height: settings.radius * 2,
-          cornerRadius: 12,
+          cornerRadius: settings.cornerRadius,
           fill: tex, fillFit: settings.fillFit,
           stroke: toHex(settings.strokeColor), strokeWidth: settings.strokeWidth,
         });
@@ -63,6 +63,7 @@ export const ImageFill: Story = {
     gui.add(settings, 'shape', ['circle', 'rect']).onChange(redraw);
     gui.add(settings, 'fillFit', [...FITS]).onChange(redraw);
     gui.add(settings, 'radius', 30, 150, 1).onChange(redraw);
+    gui.add(settings, 'cornerRadius', 0, 80, 1).onChange(redraw);
     gui.addColor(settings, 'strokeColor').onChange(redraw);
     gui.add(settings, 'strokeWidth', 0, 15, 1).onChange(redraw);
   },

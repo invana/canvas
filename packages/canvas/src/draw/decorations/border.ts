@@ -9,14 +9,22 @@
 import type { Graphics } from 'pixi.js';
 import type { Rect, StaticDecorationKind } from '../types';
 
-export interface BorderOpts {
+/**
+ * Shared option base for outline-style decorations (`border`, `halo`, ...).
+ * Each decoration adds its own positional fields (`inset`, `padding`, ...)
+ * and stroke/fill specifics on top.
+ */
+export interface OutlineDecorationOpts {
   readonly color: number;
+  /** 0..1 opacity. Default depends on the decoration. */
+  readonly alpha?: number;
+  /** Rounded corner radius for rect-like hosts. Default `0` (sharp). */
+  readonly cornerRadius?: number;
+}
+
+export interface BorderOpts extends OutlineDecorationOpts {
   /** Stroke width. Default `1`. */
   readonly width?: number;
-  /** 0..1 stroke alpha. Default `1`. */
-  readonly alpha?: number;
-  /** Optional rounded corner radius for rect hosts. Default `0`. */
-  readonly cornerRadius?: number;
   /**
    * Inset/outset relative to host bounds. Negative = outside; positive = inside.
    * Default `0` (sits on the host edge).

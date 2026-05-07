@@ -37,7 +37,9 @@ export const Border: Story = {
     function redraw() {
       hostG.clear();
       draw.drawRect(hostG, {
-        kind: 'rect', x: BOUNDS.x, y: BOUNDS.y,
+        kind: 'rect',
+        x: BOUNDS.x + BOUNDS.width / 2,
+        y: BOUNDS.y + BOUNDS.height / 2,
         width: BOUNDS.width, height: BOUNDS.height,
         fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
       });

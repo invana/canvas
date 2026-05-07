@@ -73,6 +73,13 @@ export {
 } from './shapes/path';
 export { drawImage, imageBounds, imageKind, type ImageSpec } from './shapes/image';
 export { drawArrow, arrowBounds, arrowKind, type ArrowSpec } from './shapes/arrow';
+export {
+  drawStar,
+  starBounds,
+  starContains,
+  starKind,
+  type StarSpec,
+} from './shapes/star';
 
 // ─── Text primitives ──────────────────────────────────────────────────────
 export {
@@ -109,7 +116,12 @@ export { bezierRouter } from './routers/bezier';
 
 // ─── Decorations — static (functions) ─────────────────────────────────────
 export { drawHalo, haloKind, type HaloOpts } from './decorations/halo';
-export { drawBorder, borderKind, type BorderOpts } from './decorations/border';
+export {
+  drawBorder,
+  borderKind,
+  type BorderOpts,
+  type OutlineDecorationOpts,
+} from './decorations/border';
 export {
   drawGlow,
   setupGlow,

@@ -24,6 +24,12 @@ export interface HaloStyle {
   readonly alpha?: number;
   /** Padding outside the host bounds. Default `4`. */
   readonly padding?: number;
+  /**
+   * Rounded corner radius for rect-like hosts. Default `0` (sharp).
+   * The halo's outer radius is `cornerRadius + padding` so it stays
+   * concentric with a host that has the same `cornerRadius`.
+   */
+  readonly cornerRadius?: number;
 }
 
 export class HaloDecoration implements IShapeDecoration<HaloStyle> {
@@ -56,6 +62,7 @@ export class HaloDecoration implements IShapeDecoration<HaloStyle> {
   private draw(host: ShapeDecorationHostInfo): void {
     const padding = this.style.padding ?? 4;
     const alpha = this.style.alpha ?? 0.4;
+    const cornerRadius = this.style.cornerRadius ?? 0;
     const g = this.graphics;
     g.clear();
 
@@ -72,14 +79,16 @@ export class HaloDecoration implements IShapeDecoration<HaloStyle> {
       g.ellipse(cx, cy, rx, ry);
     } else if (host.outlinePolyline && host.outlinePolyline.length >= 3) {
       polyToShape(g, expandPolyline(host.outlinePolyline, padding));
-    } else {
+    } else if (cornerRadius > 0) {
       g.roundRect(
         x - padding,
         y - padding,
         width + padding * 2,
         height + padding * 2,
-        Math.max(padding, 4),
+        cornerRadius + padding,
       );
+    } else {
+      g.rect(x - padding, y - padding, width + padding * 2, height + padding * 2);
     }
     g.fill({ color: this.style.color, alpha });
   }

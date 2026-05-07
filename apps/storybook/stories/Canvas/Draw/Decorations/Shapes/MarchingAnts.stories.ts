@@ -32,19 +32,26 @@ export const MarchingAnts: Story = {
     canvas.layers.add(layer);
 
     const hostG = layer.createGraphics('host-gfx');
-    draw.drawRect(hostG, {
-      kind: 'rect', x: BOUNDS.x, y: BOUNDS.y,
-      width: BOUNDS.width, height: BOUNDS.height,
-      fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
-    });
-
     const decoSlot = layer.createContainer('ants-slot');
     const decoG = layer.createGraphics('ants-gfx');
     decoSlot.addChild(decoG);
 
-    const settings = { color: '#f43f5e', width: 1.5, alpha: 1, dashLength: 6, gapLength: 4, speed: 0.04, inset: 2 };
+    const settings = { color: '#f43f5e', width: 1.5, alpha: 1, dashLength: 6, gapLength: 4, speed: 0.04, inset: 2, cornerRadius: 0 };
+
+    function redrawHost() {
+      hostG.clear();
+      draw.drawRect(hostG, {
+        kind: 'rect',
+        x: BOUNDS.x + BOUNDS.width / 2,
+        y: BOUNDS.y + BOUNDS.height / 2,
+        width: BOUNDS.width, height: BOUNDS.height,
+        cornerRadius: settings.cornerRadius,
+        fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2,
+      });
+    }
 
     function rebuild() {
+      redrawHost();
       layer.deco?.destroy();
       layer.deco = new draw.MarchingAntsDecoration(decoSlot, decoG, {
         color: toHex(settings.color),
@@ -54,6 +61,7 @@ export const MarchingAnts: Story = {
         gapLength: settings.gapLength,
         speed: settings.speed,
         inset: settings.inset,
+        cornerRadius: settings.cornerRadius,
       });
       layer.deco.update(BOUNDS, 'rect');
     }
@@ -69,5 +77,6 @@ export const MarchingAnts: Story = {
     gui.add(settings, 'gapLength', 1, 30, 1).onChange(rebuild);
     gui.add(settings, 'speed', 0, 0.2, 0.005).onChange(rebuild);
     gui.add(settings, 'inset', 0, 20, 1).onChange(rebuild);
+    gui.add(settings, 'cornerRadius', 0, 50, 1).onChange(rebuild);
   },
 };

@@ -18,6 +18,12 @@ export interface PulseRingOpts {
   readonly endPadding?: number;
   /** Loop period in ms. Default `1500`. */
   readonly periodMs?: number;
+  /**
+   * Rounded corner radius for rect-like hosts. Default `0` (sharp).
+   * Outer radius is `cornerRadius + padding` so the ring stays concentric
+   * with a host that has the same `cornerRadius`.
+   */
+  readonly cornerRadius?: number;
 }
 
 export class PulseRingDecoration implements AnimatedDecoration {
@@ -56,6 +62,7 @@ export class PulseRingDecoration implements AnimatedDecoration {
     const padding = startPad + (endPad - startPad) * t;
     const startAlpha = this.opts.alpha ?? 0.6;
     const alpha = startAlpha * (1 - t);
+    const cornerRadius = this.opts.cornerRadius ?? 0;
 
     this.g.clear();
     const { x, y, width, height } = this.bounds;
@@ -64,14 +71,16 @@ export class PulseRingDecoration implements AnimatedDecoration {
 
     if (this.hostKind === 'circle' || this.hostKind === 'ellipse') {
       this.g.ellipse(cx, cy, width / 2 + padding, height / 2 + padding);
-    } else {
+    } else if (cornerRadius > 0) {
       this.g.roundRect(
         x - padding,
         y - padding,
         width + padding * 2,
         height + padding * 2,
-        Math.max(padding, 4),
+        cornerRadius + padding,
       );
+    } else {
+      this.g.rect(x - padding, y - padding, width + padding * 2, height + padding * 2);
     }
     this.g.stroke({ color: this.opts.color, width: this.opts.width ?? 2, alpha });
   }
