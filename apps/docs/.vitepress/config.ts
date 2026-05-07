@@ -51,10 +51,13 @@ export default defineConfig({
       '/guide/': [
         {
           text: 'Getting Started',
-          items: [{ text: 'Installation', link: '/guide/getting-started' }],
+          items: [
+            { text: 'Installation & first scene', link: '/guide/getting-started' },
+            { text: 'Architecture overview', link: '/guide/architecture' },
+          ],
         },
         {
-          text: 'Architecture',
+          text: 'Concepts',
           items: [
             { text: 'Layers', link: '/guide/layers' },
             { text: 'Behaviours', link: '/guide/behaviours' },

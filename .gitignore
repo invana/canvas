@@ -40,6 +40,10 @@ yarn-error.log*
 
 storybook-static/
 
+# VitePress
+**/.vitepress/cache/
+**/.vitepress/dist/
+
 # Graphify output
 graphify-out/
 .graphify/
