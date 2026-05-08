@@ -1,6 +1,6 @@
 import type { Graphics } from 'pixi.js';
 import { ShapeBase } from '../base/ShapeBase';
-import { applyFill, applyStroke } from '../paint/applyFillStroke';
+import { applyFill, applyMarkerFill, applyStroke } from '../paint/applyFillStroke';
 import type {
   Point,
   Rect,
@@ -29,10 +29,13 @@ export class RectShape extends ShapeBase<RectSpec> {
     const h = Math.max(0, spec.height - inset * 2);
     const cr = Math.max(0, (spec.cornerRadius ?? 0) - inset);
 
-    if (cr > 0) g.roundRect(inset, inset, w, h, cr);
-    else g.rect(inset, inset, w, h);
-
-    applyFill(g, spec, style, this.host);
+    const trace = () => {
+      if (cr > 0) g.roundRect(inset, inset, w, h, cr);
+      else g.rect(inset, inset, w, h);
+    };
+    trace();
+    applyFill(g, spec, style, this.host, trace);
+    trace();
     applyStroke(g, spec, style);
   }
 
@@ -59,12 +62,6 @@ export class RectShape extends ShapeBase<RectSpec> {
     const y = anchor.y - spec.height / 2;
     if (cr > 0) g.roundRect(x, y, spec.width, spec.height, cr);
     else g.rect(x, y, spec.width, spec.height);
-    if (style?.fill !== false && style?.color !== undefined) {
-      g.fill({ color: style.color, alpha: style.alpha ?? 1 });
-    } else if (typeof spec.fill === 'number') {
-      g.fill({ color: spec.fill });
-    } else if (typeof spec.fill === 'object' && spec.fill?.kind === 'solid') {
-      g.fill({ color: spec.fill.color, alpha: spec.fill.alpha ?? 1 });
-    }
+    applyMarkerFill(g, spec.fill, style);
   }
 }

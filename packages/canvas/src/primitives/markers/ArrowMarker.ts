@@ -1,5 +1,6 @@
 import type { Graphics } from 'pixi.js';
 import { ShapeBase } from '../base/ShapeBase';
+import { applyMarkerFill } from '../paint/applyFillStroke';
 import type {
   BaseShapeSpec,
   Point,
@@ -132,12 +133,8 @@ export class ArrowMarker extends ShapeBase<ArrowMarkerSpec> {
       g.fill({ color: style.color, alpha: style.alpha ?? 1 });
       return;
     }
-    if (typeof spec.fill === 'number') {
-      g.fill({ color: spec.fill });
-      return;
-    }
-    if (typeof spec.fill === 'object' && spec.fill?.kind === 'solid') {
-      g.fill({ color: spec.fill.color, alpha: spec.fill.alpha ?? 1 });
+    if (spec.fill !== undefined) {
+      applyMarkerFill(g, spec.fill, style);
       return;
     }
     // Default: black-filled arrow.

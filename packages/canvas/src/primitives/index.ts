@@ -47,9 +47,9 @@ export type {
   PathCommand,
   IRouter,
 
-  IconRef,
-
   ShapeFill,
+  ShapeFillLayer,
+  InsetAnchor,
   ShapeStroke,
   ShapePaintStyle,
   ConnectorPaintStyle,

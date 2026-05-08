@@ -110,8 +110,9 @@ export * from './primitives';
 
 // ─── Infra services (used by primitives) ───────────────────────────────
 export { TextureRegistry } from './textures/TextureRegistry';
-export { IconRegistry } from './icons/IconRegistry';
-export type { IconFontPack } from './icons/IconRegistry';
+
+// ─── Font helpers ─────────────────────────────────────────────────────
+export { loadIconFont } from './fonts/loadIconFont';
 
 // ─── Pixi re-export for paint callbacks ────────────────────────────────
 //

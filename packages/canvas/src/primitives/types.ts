@@ -13,7 +13,6 @@
 
 import type { Container, Graphics } from 'pixi.js';
 import type { EventMap } from '../events/EventEmitter';
-import type { IconRegistry } from '../icons/IconRegistry';
 import type { TextureRegistry } from '../textures/TextureRegistry';
 
 // ─── Geometry primitives ───────────────────────────────────────────────────
@@ -77,71 +76,34 @@ export type IRouter = (
   opts?: Record<string, unknown>,
 ) => Path;
 
-// ─── Icon refs ─────────────────────────────────────────────────────────────
-
-/**
- * Generic icon reference. Two universal forms — anything an icon library
- * produces reduces to one of them, so the canvas package never references
- * specific icon libraries by name.
- *
- * - `glyph` — a Unicode char, optionally backed by a specific font family.
- *   Use for icon-font codepoints and for plain Unicode symbols / emojis.
- * - `svg`   — an SVG path-d string. Use for stroke-based icon sets and
- *   custom SVG paths. Multiple subpaths in one `pathD` (separated by
- *   additional `M` commands) are supported.
- *
- * The consumer (a story, a Layer, an app) loads icon-library specifics at
- * runtime — the canvas only renders.
- */
-export type IconRef =
-  | {
-      readonly kind: 'glyph';
-      readonly char: string;
-      /** Required for icon-font glyphs; optional for system-font Unicode. */
-      readonly fontFamily?: string;
-      /**
-       * Font weight (CSS value, e.g. `400`, `900`, `'bold'`). Required for
-       * icon fonts that pack different glyph sets per weight — e.g.
-       * Font Awesome 6 Free: Solid lives at weight `900`, Regular at `400`.
-       */
-      readonly fontWeight?: number | string;
-      /** Font style (`'normal'` | `'italic'`). */
-      readonly fontStyle?: 'normal' | 'italic';
-    }
-  | {
-      readonly kind: 'svg';
-      readonly pathD: string;
-      /** Viewport the path was authored in. Default `{ width: 24, height: 24 }`. */
-      readonly viewBox?: { readonly width: number; readonly height: number };
-      /** Stroke width when rendering. Default `2`. */
-      readonly strokeWidth?: number;
-    }
-  | {
-      /**
-       * Lookup form — resolved against the renderer's `IconRegistry` at
-       * draw time. Mirrors the CSS pattern of declaring a font-pack and
-       * named glyph once, then referring to it from many shapes.
-       *
-       * Format: `'<pack>:<icon-name>'` for glyphs, `'<icon-name>'` for SVGs.
-       */
-      readonly kind: 'ref';
-      readonly name: string;
-    };
-
 // ─── Fill ──────────────────────────────────────────────────────────────────
 
 /**
- * Fill discriminator on a shape spec. Resolved by `applyFill` at draw time.
- *
- * - `number` shorthand for solid color (e.g. `0x4f9cf9`).
- * - `solid`  — explicit color + alpha.
- * - `image`  — texture lookup via `TextureRegistry`. Lazy-loaded; redraws on resolve.
- * - `icon`   — `IconRef` (glyph or SVG path) layered as a sibling `Container`
- *              ON TOP of the silhouette, with an optional `background` color
- *              filling the silhouette underneath.
+ * Anchor positions for inset content layers (`glyph`, `svg`, `image-inset`).
+ * Defaults to `'center'`. Use `'top-right'` etc. for corner-badge composition.
  */
-export type ShapeFill =
-  | number
+export type InsetAnchor =
+  | 'center'
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right';
+
+/**
+ * One layer of a shape's fill. Layers split by role:
+ *
+ * - **Silhouette fillers** (`solid`, `image`) — paint into the silhouette via
+ *   Pixi's `g.fill()`. Multiple silhouette layers stack via alpha; each is
+ *   re-traced before painting.
+ * - **Inset content** (`glyph`, `svg`, `image-inset`) — mounted as Container
+ *   children of the shape's `gfx`. Sized by `sizeRatio` (fraction of the
+ *   smaller bounds dimension) and positioned by `anchor` (default `'center'`).
+ *
+ * The engine has no dedicated "icon" kind — icon-library specifics (Font
+ * Awesome glyphs, Lucide SVGs, Fluent icons, …) are produced by developer
+ * code and dropped into a `glyph` or `svg` layer directly.
+ */
+export type ShapeFillLayer =
   | { readonly kind: 'solid'; readonly color: number; readonly alpha?: number }
   | {
       readonly kind: 'image';
@@ -150,16 +112,79 @@ export type ShapeFill =
       readonly fit?: 'fill' | 'cover' | 'contain' | 'none' | 'tile';
     }
   | {
-      readonly kind: 'icon';
-      readonly icon: IconRef;
+      /** Font-rendered character (icon-font codepoint, Unicode symbol, emoji). */
+      readonly kind: 'glyph';
+      readonly char: string;
+      /** Required for icon-font glyphs; optional for system-font Unicode. */
+      readonly fontFamily?: string;
+      /**
+       * Font weight (CSS value, e.g. `400`, `900`, `'bold'`). Required for
+       * icon fonts that pack different glyph sets per weight.
+       */
+      readonly fontWeight?: number | string;
+      readonly fontStyle?: 'normal' | 'italic';
       /** Glyph color. Default `0xffffff`. */
       readonly color?: number;
       readonly alpha?: number;
-      /** Glyph size as fraction of the shape's smaller bounds dimension. Default `0.6`. */
+      /** Size as fraction of the shape's smaller bounds dimension. Default `0.6`. */
       readonly sizeRatio?: number;
-      /** Optional plate underneath the icon (silhouette gets this fill). */
-      readonly background?: { readonly color: number; readonly alpha?: number };
+      /** Anchor relative to the shape's bounds. Default `'center'`. */
+      readonly anchor?: InsetAnchor;
+    }
+  | {
+      /** SVG path-d. Multiple subpaths (`M...M...`) are supported. */
+      readonly kind: 'svg';
+      readonly pathD: string;
+      /** Viewport the path was authored in. Default `{ width: 24, height: 24 }`. */
+      readonly viewBox?: { readonly width: number; readonly height: number };
+      /** Stroke width when rendering. Default `2`. */
+      readonly strokeWidth?: number;
+      readonly color?: number;
+      readonly alpha?: number;
+      readonly sizeRatio?: number;
+      readonly anchor?: InsetAnchor;
+    }
+  | {
+      /** Raster image inset (small logo on a plate, photo thumb on a card). */
+      readonly kind: 'image-inset';
+      readonly url: string;
+      readonly alpha?: number;
+      readonly sizeRatio?: number;
+      readonly anchor?: InsetAnchor;
+    }
+  | {
+      /**
+       * Vector SVG icon fetched from a URL. The engine fetches the SVG,
+       * extracts every drawing primitive (`path` / `ellipse` / `circle` /
+       * `rect` / `line` / `polyline` / `polygon`) into a single concatenated
+       * `pathD`, and renders it as a Pixi Graphics path. Fetched lazily on
+       * first use; the resulting `pathD` is cached globally per URL.
+       *
+       * Use this when a consumer wants to point at their own remote SVG
+       * (logo, custom diagram, sample artwork). For curated icon-library
+       * usage, prefer an icon-font glyph via `kind: 'glyph'` — the
+       * library is icon-vendor-agnostic and intentionally has no
+       * vendor-specific fetch glue.
+       */
+      readonly kind: 'svg-url';
+      readonly url: string;
+      readonly viewBox?: { readonly width: number; readonly height: number };
+      readonly strokeWidth?: number;
+      readonly color?: number;
+      readonly alpha?: number;
+      readonly sizeRatio?: number;
+      readonly anchor?: InsetAnchor;
     };
+
+/**
+ * A shape's fill. Either a single layer, an array of layers (painted
+ * bottom-up — first array entry sits underneath), or the `number` shorthand
+ * for a solid color.
+ */
+export type ShapeFill =
+  | number
+  | ShapeFillLayer
+  | ReadonlyArray<ShapeFillLayer>;
 
 // ─── Stroke (border) ───────────────────────────────────────────────────────
 
@@ -277,12 +302,11 @@ export interface BaseConnectorSpec {
 /**
  * Information a `Shape` instance receives at construction. The renderer hands
  * shapes the surface to attach to plus the registries that fill resolution
- * needs (`textureRegistry` for image fills, `iconRegistry` for icon fills).
+ * needs (`textureRegistry` for image fills).
  */
 export interface ShapeHostInfo {
   readonly surface: Container;
   readonly textureRegistry: TextureRegistry;
-  readonly iconRegistry?: IconRegistry;
 }
 
 /**

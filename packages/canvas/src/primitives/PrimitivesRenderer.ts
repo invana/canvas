@@ -28,7 +28,6 @@
 import { Container } from 'pixi.js';
 import type { Camera } from '../camera/Camera';
 import { EventEmitter } from '../events/EventEmitter';
-import type { IconRegistry } from '../icons/IconRegistry';
 import { TextureRegistry } from '../textures/TextureRegistry';
 import { HitIndex } from '../hit/HitIndex';
 import { ShapeInstance } from '../instancing/ShapeInstance';
@@ -84,13 +83,6 @@ export interface PrimitivesRendererOptions {
    * not shared across renderer instances.
    */
   readonly textureRegistry?: TextureRegistry;
-  /**
-   * Optional icon registry. Required only when shape specs use
-   * `IconRef.kind === 'ref'`. Callers populate it once with packs +
-   * glyphs (CSS-class style) and pass it here so the renderer can
-   * resolve named refs at draw time.
-   */
-  readonly iconRegistry?: IconRegistry;
 }
 
 export class PrimitivesRenderer {
@@ -109,13 +101,11 @@ export class PrimitivesRenderer {
   private readonly _container: Container;
   readonly camera: Camera;
   private readonly textureRegistry: TextureRegistry;
-  private readonly iconRegistry?: IconRegistry;
 
   constructor(opts: PrimitivesRendererOptions) {
     this._container = opts.container;
     this.camera = opts.camera;
     this.textureRegistry = opts.textureRegistry ?? new TextureRegistry();
-    this.iconRegistry = opts.iconRegistry;
     this.registerBuiltins();
   }
 
@@ -166,7 +156,6 @@ export class PrimitivesRenderer {
     const host: ShapeHostInfo = {
       surface: this._container,
       textureRegistry: this.textureRegistry,
-      iconRegistry: this.iconRegistry,
     };
     const shape = new Ctor(spec, host) as IShape<TSpec>;
     this._container.addChild(shape.gfx);
