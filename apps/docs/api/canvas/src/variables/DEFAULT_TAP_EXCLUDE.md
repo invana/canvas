@@ -2,7 +2,7 @@
 
 > `const` **DEFAULT\_TAP\_EXCLUDE**: readonly `string`[]
 
-Defined in: [packages/canvas/src/events/CanvasEvent.ts:70](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/events/CanvasEvent.ts#L70)
+Defined in: [packages/canvas/src/events/CanvasEvent.ts:70](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/events/CanvasEvent.ts#L70)
 
 Default exclude list for the tap channel.
 

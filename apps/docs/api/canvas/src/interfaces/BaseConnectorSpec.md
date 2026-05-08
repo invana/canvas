@@ -1,11 +1,6 @@
 # Interface: BaseConnectorSpec
 
-Defined in: [packages/canvas/src/renderers/types.ts:86](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L86)
-
-Common connector fields. Every connector spec extends this with its own
-`kind` discriminant + drawing fields. Endpoints may resolve to either raw
-coordinates or another shape id (the renderer resolves shape-bound endpoints
-on every router pass).
+Defined in: packages/canvas/src/primitives/types.ts:239
 
 ## Properties
 
@@ -13,7 +8,7 @@ on every router pass).
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [packages/canvas/src/renderers/types.ts:103](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L103)
+Defined in: packages/canvas/src/primitives/types.ts:253
 
 ***
 
@@ -21,7 +16,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:103](https://github.com/inva
 
 > `readonly` **kind**: `string`
 
-Defined in: [packages/canvas/src/renderers/types.ts:87](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L87)
+Defined in: packages/canvas/src/primitives/types.ts:240
 
 ***
 
@@ -29,7 +24,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:87](https://github.com/invan
 
 > `readonly` `optional` **router?**: `string`
 
-Defined in: [packages/canvas/src/renderers/types.ts:91](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L91)
+Defined in: packages/canvas/src/primitives/types.ts:246
 
 Registered router kind. Default `'straight'`.
 
@@ -39,7 +34,7 @@ Registered router kind. Default `'straight'`.
 
 > `readonly` **source**: [`ConnectorEndpointSpec`](../type-aliases/ConnectorEndpointSpec.md)
 
-Defined in: [packages/canvas/src/renderers/types.ts:88](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L88)
+Defined in: packages/canvas/src/primitives/types.ts:241
 
 ***
 
@@ -47,13 +42,17 @@ Defined in: [packages/canvas/src/renderers/types.ts:88](https://github.com/invan
 
 > `readonly` `optional` **sourceMarker?**: [`MarkerShapeSpec`](../type-aliases/MarkerShapeSpec.md)
 
-Defined in: [packages/canvas/src/renderers/types.ts:99](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L99)
+Defined in: packages/canvas/src/primitives/types.ts:248
 
-Source-side marker. Any registered shape spec (e.g. polygon, circle,
-path) painted at the source endpoint, oriented along the line tangent.
-Use the `arrowMarkerSpec` / `circleMarkerSpec` / `squareMarkerSpec` /
-`diamondMarkerSpec` builders from the renderer barrel for the common
-cases.
+Optional shape spec painted at the source endpoint, oriented along the path tangent.
+
+***
+
+### stroke?
+
+> `readonly` `optional` **stroke?**: [`ShapeStroke`](ShapeStroke.md)
+
+Defined in: packages/canvas/src/primitives/types.ts:251
 
 ***
 
@@ -61,7 +60,7 @@ cases.
 
 > `readonly` **target**: [`ConnectorEndpointSpec`](../type-aliases/ConnectorEndpointSpec.md)
 
-Defined in: [packages/canvas/src/renderers/types.ts:89](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L89)
+Defined in: packages/canvas/src/primitives/types.ts:242
 
 ***
 
@@ -69,9 +68,9 @@ Defined in: [packages/canvas/src/renderers/types.ts:89](https://github.com/invan
 
 > `readonly` `optional` **targetMarker?**: [`MarkerShapeSpec`](../type-aliases/MarkerShapeSpec.md)
 
-Defined in: [packages/canvas/src/renderers/types.ts:101](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L101)
+Defined in: packages/canvas/src/primitives/types.ts:250
 
-Target-side marker. See `sourceMarker`.
+Optional shape spec painted at the target endpoint, oriented along the path tangent.
 
 ***
 
@@ -79,7 +78,17 @@ Target-side marker. See `sourceMarker`.
 
 > `readonly` `optional` **visible?**: `boolean`
 
-Defined in: [packages/canvas/src/renderers/types.ts:104](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L104)
+Defined in: packages/canvas/src/primitives/types.ts:254
+
+***
+
+### waypoints?
+
+> `readonly` `optional` **waypoints?**: readonly [`Point`](Point.md)[]
+
+Defined in: packages/canvas/src/primitives/types.ts:244
+
+Intermediate user-supplied points the router must respect. Optional.
 
 ***
 
@@ -87,4 +96,4 @@ Defined in: [packages/canvas/src/renderers/types.ts:104](https://github.com/inva
 
 > `readonly` `optional` **zIndex?**: `number`
 
-Defined in: [packages/canvas/src/renderers/types.ts:102](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L102)
+Defined in: packages/canvas/src/primitives/types.ts:252

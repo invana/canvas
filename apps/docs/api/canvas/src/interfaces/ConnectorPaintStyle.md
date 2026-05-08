@@ -1,63 +1,64 @@
 # Interface: ConnectorPaintStyle
 
-Defined in: [packages/canvas/src/renderers/types.ts:279](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L279)
+Defined in: packages/canvas/src/primitives/types.ts:184
 
-Style override passed by decorations to `IConnector.paintInto`. The
-connector paints its full silhouette (path stroke + every shape-marker via
-`ShapeCtor.paintInto`) into the supplied Graphics with these overrides
-applied. When `tintMarkers` is set, markers are painted in the same
-colour/alpha as the stroke — used by silhouette-wrapping decorations like
-glow/halo.
+Mirror of `ShapePaintStyle` for connectors. No `inset` (connectors are 1D).
 
 ## Properties
 
-### dash?
-
-> `readonly` `optional` **dash?**: `object`
-
-Defined in: [packages/canvas/src/renderers/types.ts:287](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L287)
-
-#### dashLength
-
-> `readonly` **dashLength**: `number`
-
-#### dashOffset?
-
-> `readonly` `optional` **dashOffset?**: `number`
-
-Phase offset in pixels along arc-length. Default `0`.
-
-#### gapLength
-
-> `readonly` **gapLength**: `number`
-
-***
-
-### stroke?
-
-> `readonly` `optional` **stroke?**: `object`
-
-Defined in: [packages/canvas/src/renderers/types.ts:280](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L280)
-
-#### alpha?
+### alpha?
 
 > `readonly` `optional` **alpha?**: `number`
 
-#### cap?
+Defined in: packages/canvas/src/primitives/types.ts:186
+
+***
+
+### cap?
 
 > `readonly` `optional` **cap?**: `"butt"` \| `"round"` \| `"square"`
 
-#### color
+Defined in: packages/canvas/src/primitives/types.ts:190
 
-> `readonly` **color**: `number`
+***
 
-#### join?
+### color?
+
+> `readonly` `optional` **color?**: `number`
+
+Defined in: packages/canvas/src/primitives/types.ts:185
+
+***
+
+### dashArray?
+
+> `readonly` `optional` **dashArray?**: readonly \[`number`, `number`\]
+
+Defined in: packages/canvas/src/primitives/types.ts:188
+
+***
+
+### dashOffset?
+
+> `readonly` `optional` **dashOffset?**: `number`
+
+Defined in: packages/canvas/src/primitives/types.ts:189
+
+***
+
+### join?
 
 > `readonly` `optional` **join?**: `"round"` \| `"miter"` \| `"bevel"`
 
-#### width
+Defined in: packages/canvas/src/primitives/types.ts:191
 
-> `readonly` **width**: `number`
+***
+
+### strokeWidth?
+
+> `readonly` `optional` **strokeWidth?**: `number`
+
+Defined in: packages/canvas/src/primitives/types.ts:187
 
 ***
 
@@ -65,10 +66,9 @@ Defined in: [packages/canvas/src/renderers/types.ts:280](https://github.com/inva
 
 > `readonly` `optional` **tintMarkers?**: `boolean`
 
-Defined in: [packages/canvas/src/renderers/types.ts:300](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L300)
+Defined in: packages/canvas/src/primitives/types.ts:198
 
-When `true`, markers paint with `stroke.color` / `stroke.alpha` instead
-of their own spec colours. Decorations like glow/halo set this so the
-decoration covers path + markers as one unified silhouette; decorations
-like marching-ants leave it undefined so markers paint normally over
-the dashed line.
+When `true`, markers paint with `color` / `alpha` instead of their own
+spec colors. Glow / halo decorations use this so the decoration covers
+path + markers as a unified silhouette; marching-ants leaves it
+undefined so markers stay normal-colored over the dashed line.

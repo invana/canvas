@@ -2,7 +2,7 @@
 
 > **findSerialisationViolations**(`value`, `rootPath?`): `string`[]
 
-Defined in: [packages/canvas/src/events/assertSerialisable.ts:34](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/events/assertSerialisable.ts#L34)
+Defined in: [packages/canvas/src/events/assertSerialisable.ts:34](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/events/assertSerialisable.ts#L34)
 
 Walk `value`, returning a list of human-readable violation messages.
 Empty array means "fully serialisable".

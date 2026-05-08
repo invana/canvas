@@ -1,11 +1,8 @@
 // @invana/canvas — public API surface
 //
-// Architecture: see `architecture-proposal.md` at repo root.
-// Concepts: Layer / Behaviour / Layout / Renderer.
-//
-// This file currently exports only the kernel primitives that have landed.
-// Additional surface (Layer base classes, ShapesRenderer, toolkit) lands
-// in subsequent steps.
+// Architecture: see `architecture-proposal.md` (long-term vision),
+// `primitives-redesign-plan.md` (macro renderer redesign), and
+// `primitives-v0-plan.md` (this v0 slice) at the repo root.
 
 // ─── Events ─────────────────────────────────────────────────────────────
 export { EventEmitter } from './events/EventEmitter';
@@ -57,7 +54,7 @@ export type { DirtySnapshot } from './state/DirtyBatcher';
 
 // ─── Camera ─────────────────────────────────────────────────────────────
 export { Camera } from './camera/Camera';
-export type { CameraOptions, Point, Rect } from './camera/Camera';
+export type { CameraOptions } from './camera/Camera';
 
 // ─── Context ────────────────────────────────────────────────────────────
 export type { CanvasContext } from './context/CanvasContext';
@@ -71,7 +68,6 @@ export type { WorldLayerHit } from './layers/WorldLayer';
 
 export { ScreenLayer } from './layers/ScreenLayer';
 export type { ScreenLayerHit } from './layers/ScreenLayer';
-
 
 // ─── Behaviours ─────────────────────────────────────────────────────────
 export { Behaviour } from './behaviours/Behaviour';
@@ -106,69 +102,19 @@ export type { BehaviourRegistryOptions } from './registries/BehaviourRegistry';
 export { Canvas } from './engine/Canvas';
 export type { CanvasOptions } from './engine/Canvas';
 
-// ─── Draw module (low-level paint primitives) ──────────────────────────
-// Pure-function paint API for shapes / connectors / text / routers /
-// decorations. Single-responsibility per primitive — composition lives in
-// layers, not here. Re-exported as a namespace to avoid name conflicts with
-// the legacy renderer types.
-export * as draw from './draw';
+// ─── Primitives (renderer + base classes + built-ins + types) ──────────
+//
+// The full primitives surface is also available via the `@invana/canvas/primitives`
+// subpath export for finer-grained imports / tree-shaking.
+export * from './primitives';
 
-// Pixi `Graphics` type re-exported so consumers writing `paint(g => ...)`
-// callbacks against PaintLayer can type the callback parameter without a
-// raw `pixi.js` import.
+// ─── Infra services (used by primitives) ───────────────────────────────
+export { TextureRegistry } from './textures/TextureRegistry';
+export { IconRegistry } from './icons/IconRegistry';
+export type { IconFontPack } from './icons/IconRegistry';
+
+// ─── Pixi re-export for paint callbacks ────────────────────────────────
+//
+// `Graphics` is re-exported so consumers writing `paint(g => ...)` style
+// callbacks can type the parameter without a raw `pixi.js` import.
 export type { Graphics } from 'pixi.js';
-
-// ─── Renderers ──────────────────────────────────────────────────────────
-// Mirror of the `@invana/canvas/renderers/shapes` subpath export. The
-// renderer ships under both the kernel barrel (for convenience) and the
-// dedicated subpath (for tree-shaking / discoverability).
-export { ShapesRenderer } from './renderers/ShapesRenderer';
-export type { ShapesRendererOptions } from './renderers/ShapesRenderer';
-
-export { TextureRegistry } from './renderers/TextureRegistry';
-export type { ISpritePool } from './renderers/types';
-
-// Marker spec builders — convenience helpers that return shape specs ready
-// to drop into a connector's `sourceMarker` / `targetMarker`. Markers are
-// just shapes; these builders only exist so the four common ones don't
-// require constructing polygon arrays inline.
-export {
-  arrowMarkerSpec,
-  circleMarkerSpec,
-  squareMarkerSpec,
-  diamondMarkerSpec,
-} from './renderers/markers/markers';
-export type { MarkerStyle } from './renderers/markers/markers';
-
-export type {
-  Point as ShapesPoint,
-  Vec2,
-  Rect as ShapesRect,
-  Endpoint,
-  BaseShapeSpec,
-  BaseConnectorSpec,
-  ConnectorEndpointSpec,
-  MarkerShapeSpec,
-  IShape,
-  IConnector,
-  IRouter,
-  IShapeDecoration,
-  IConnectorDecoration,
-  IDecorationBase,
-  ShapeHostInfo,
-  ConnectorHostInfo,
-  ShapeDecorationHostInfo,
-  ConnectorDecorationHostInfo,
-  ShapePaintStyle,
-  ConnectorPaintStyle,
-  ShapeCtor,
-  ConnectorCtor,
-  ShapeDecorationCtor,
-  ConnectorDecorationCtor,
-  DecorationTarget,
-  RegisterDecorationOptions,
-  DecorationSpec,
-  HitResult,
-  ShapesRendererEventMap,
-  RenderStats,
-} from './renderers/types';

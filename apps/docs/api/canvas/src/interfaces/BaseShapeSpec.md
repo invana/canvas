@@ -1,9 +1,12 @@
 # Interface: BaseShapeSpec
 
-Defined in: [packages/canvas/src/renderers/types.ts:55](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L55)
+Defined in: packages/canvas/src/primitives/types.ts:203
 
-Common shape fields. Every shape spec extends this with its own
-shape-specific `kind` discriminant + drawing fields.
+## Extended by
+
+- [`ArrowMarkerSpec`](ArrowMarkerSpec.md)
+- [`CircleSpec`](CircleSpec.md)
+- [`RectSpec`](RectSpec.md)
 
 ## Properties
 
@@ -11,9 +14,15 @@ shape-specific `kind` discriminant + drawing fields.
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [packages/canvas/src/renderers/types.ts:66](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L66)
+Defined in: packages/canvas/src/primitives/types.ts:211
 
-Per-instance opacity multiplier. Default `1`.
+***
+
+### fill?
+
+> `readonly` `optional` **fill?**: [`ShapeFill`](../type-aliases/ShapeFill.md)
+
+Defined in: packages/canvas/src/primitives/types.ts:207
 
 ***
 
@@ -21,9 +30,15 @@ Per-instance opacity multiplier. Default `1`.
 
 > `readonly` **kind**: `string`
 
-Defined in: [packages/canvas/src/renderers/types.ts:57](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L57)
+Defined in: packages/canvas/src/primitives/types.ts:204
 
-Registered kind from `registerShape(kind, ...)`.
+***
+
+### stroke?
+
+> `readonly` `optional` **stroke?**: [`ShapeStroke`](ShapeStroke.md)
+
+Defined in: packages/canvas/src/primitives/types.ts:208
 
 ***
 
@@ -31,9 +46,7 @@ Registered kind from `registerShape(kind, ...)`.
 
 > `readonly` `optional` **visible?**: `boolean`
 
-Defined in: [packages/canvas/src/renderers/types.ts:68](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L68)
-
-Hides the shape without removing it. Default `true`.
+Defined in: packages/canvas/src/primitives/types.ts:212
 
 ***
 
@@ -41,7 +54,7 @@ Hides the shape without removing it. Default `true`.
 
 > `readonly` **x**: `number`
 
-Defined in: [packages/canvas/src/renderers/types.ts:58](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L58)
+Defined in: packages/canvas/src/primitives/types.ts:205
 
 ***
 
@@ -49,7 +62,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:58](https://github.com/invan
 
 > `readonly` **y**: `number`
 
-Defined in: [packages/canvas/src/renderers/types.ts:59](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L59)
+Defined in: packages/canvas/src/primitives/types.ts:206
 
 ***
 
@@ -57,7 +70,6 @@ Defined in: [packages/canvas/src/renderers/types.ts:59](https://github.com/invan
 
 > `readonly` `optional` **zIndex?**: `number`
 
-Defined in: [packages/canvas/src/renderers/types.ts:64](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L64)
+Defined in: packages/canvas/src/primitives/types.ts:210
 
-Draw order within the shape layer. Higher = on top. Default `0`.
-Used by hit-testing to resolve overlapping candidates.
+Default `0`. Higher = on top. Used for hit-test resolution.

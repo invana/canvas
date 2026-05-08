@@ -44,7 +44,17 @@ Most projects only ever subclass `WorldLayer`. `ScreenLayer` is invisible until 
 
 ### Why decoration rendering logic lives here, not in domain packages
 
-A halo, a border, a marching-ants animation, a pulse ring — none of these are graph-specific. They're generic 2D visuals that ER diagrams, flowcharts, swimlanes, and graph all want, identically. So the rendering logic lives in `@invana/canvas/renderers/decorations/` and ships once. Domain packages add **named sugar methods** (`graphLayer.haloNode(id)`, `erLayer.haloTable(id)`) that mutate state and are projected to the same generic `renderer.setDecoration(id, 'halo', ...)` call. One implementation, many domain wrappers.
+A halo, a border, a marching-ants animation, a pulse ring — none of these are graph-specific. They're generic 2D visuals that ER diagrams, flowcharts, swimlanes, and graph all want, identically. So the rendering logic lives in `@invana/canvas/primitives/decorations/` and ships once. Domain packages add **named sugar methods** (`graphLayer.haloNode(id)`, `erLayer.haloTable(id)`) that mutate state and are projected to the same generic `renderer.setDecoration(id, 'halo', ...)` call. One implementation, many domain wrappers.
+
+### Domain-Free Primitives Rule
+
+**`primitives/` is domain-free.** No primitive — shape, connector, decoration, marker, router, fill resolver, icon, text — references a domain concept. Forbidden references include: node, edge, vertex, table, column, row, lane, header, port, pin, link, network, graph (the data structure), entity, relationship, swimlane, ER, flowchart, BPMN. The primitives layer only knows about geometric concepts (circle, rect, polygon, path, polyline, fill, stroke, glyph, decoration slot).
+
+Domain packages (`@invana/graph`, future `@invana/swimlane`, `@invana/er`) compose primitives by extending `WorldLayer` / `ScreenLayer` and calling `primitivesRenderer.addShape` / `addConnector` / `setDecoration`. Domain packages may register **new geometric primitives** via `registerShape` / `registerRouter` / `registerDecoration` (e.g., a `hexagon` shape kind, a `manhattan-routed` router, a `pk-badge` decoration), but the registered class itself must remain geometric — its name and its code must not reference the domain concept that motivated it.
+
+**Test:** if you can rename the file by stripping the domain word and the file still makes sense (`PrimaryKeyBadgeDecoration` → `BadgeDecoration` works fine; `SwimlaneShape` → `Shape` does not), it belongs in `primitives/`. Otherwise it belongs in the domain package.
+
+This rule is not enforced by tooling. It's a discipline statement — read it before adding code to `packages/canvas`.
 
 ## Subpath exports
 

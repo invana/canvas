@@ -2,7 +2,7 @@
 
 > **Store**\<`T`\> = `Omit`\<[`StoreApi`](../interfaces/StoreApi.md)\<`T`\>, `"setState"` \| `"subscribe"`\> & `object`
 
-Defined in: [packages/canvas/src/state/Store.ts:73](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/state/Store.ts#L73)
+Defined in: [packages/canvas/src/state/Store.ts:73](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/state/Store.ts#L73)
 
 The store API surface exposed to consumers.
 

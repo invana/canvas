@@ -1,12 +1,11 @@
 # Interface: ConnectorHostInfo
 
-Defined in: [packages/canvas/src/renderers/types.ts:151](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L151)
+Defined in: packages/canvas/src/primitives/types.ts:276
 
 Information a `Connector` instance receives at construction. The connector
-gets a surface to attach to plus read-only access to the shape registry —
-the latter is needed because connectors paint markers via the registered
-shape constructors' static `paintInto` method (markers are shapes; there
-is no separate marker registry).
+resolves marker shapes via the read-only shape registry, then invokes each
+marker class's static `paintInto` to render the marker into the
+connector's `Graphics`.
 
 ## Properties
 
@@ -14,13 +13,7 @@ is no separate marker registry).
 
 > `readonly` **shapeRegistry**: `ReadonlyMap`\<`string`, [`ShapeCtor`](ShapeCtor.md)\<[`BaseShapeSpec`](BaseShapeSpec.md)\>\>
 
-Defined in: [packages/canvas/src/renderers/types.ts:160](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L160)
-
-Read-only view of the renderer's shape registry. The connector looks up
-a `ShapeCtor` by `spec.sourceMarker.kind` / `spec.targetMarker.kind` and
-invokes its static `paintInto` to render the marker into the connector's
-Graphics. Throws (clear error) if the marker's kind is not registered or
-its ctor does not expose `paintInto`.
+Defined in: packages/canvas/src/primitives/types.ts:278
 
 ***
 
@@ -28,4 +21,4 @@ its ctor does not expose `paintInto`.
 
 > `readonly` **surface**: `Container`
 
-Defined in: [packages/canvas/src/renderers/types.ts:152](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L152)
+Defined in: packages/canvas/src/primitives/types.ts:277

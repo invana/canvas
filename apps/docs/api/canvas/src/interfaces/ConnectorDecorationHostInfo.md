@@ -1,6 +1,10 @@
 # Interface: ConnectorDecorationHostInfo
 
-Defined in: [packages/canvas/src/renderers/types.ts:210](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L210)
+Defined in: packages/canvas/src/primitives/types.ts:304
+
+Information a connector decoration receives. Decorations call
+`host.connector.paintInto(g, spec, path, style)` for silhouette repaint,
+or read `path` directly for parametric walking (e.g. label-along-path).
 
 ## Properties
 
@@ -8,12 +12,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:210](https://github.com/inva
 
 > `readonly` **connector**: [`IConnector`](IConnector.md)
 
-Defined in: [packages/canvas/src/renderers/types.ts:225](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L225)
-
-The host connector instance. Decorations call `connector.paintInto(...)`
-with style overrides to repaint the connector's full silhouette into
-their own Graphics — see `ConnectorPaintStyle`. Decorations that need
-polyline-only access can ignore this field.
+Defined in: packages/canvas/src/primitives/types.ts:310
 
 ***
 
@@ -21,9 +20,7 @@ polyline-only access can ignore this field.
 
 > `readonly` **connectorSpec**: [`BaseConnectorSpec`](BaseConnectorSpec.md)
 
-Defined in: [packages/canvas/src/renderers/types.ts:227](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L227)
-
-Current spec of the host connector — passed into `connector.paintInto`.
+Defined in: packages/canvas/src/primitives/types.ts:311
 
 ***
 
@@ -31,25 +28,15 @@ Current spec of the host connector — passed into `connector.paintInto`.
 
 > `readonly` **hostId**: `string`
 
-Defined in: [packages/canvas/src/renderers/types.ts:211](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L211)
+Defined in: packages/canvas/src/primitives/types.ts:305
 
 ***
 
-### hostKind
+### path
 
-> `readonly` **hostKind**: `string`
+> `readonly` **path**: [`Path`](../type-aliases/Path.md)
 
-Defined in: [packages/canvas/src/renderers/types.ts:212](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L212)
-
-***
-
-### polyline
-
-> `readonly` **polyline**: readonly [`ShapesPoint`](ShapesPoint.md)[]
-
-Defined in: [packages/canvas/src/renderers/types.ts:215](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L215)
-
-Routed polyline — same points the connector draws between.
+Defined in: packages/canvas/src/primitives/types.ts:308
 
 ***
 
@@ -57,7 +44,7 @@ Routed polyline — same points the connector draws between.
 
 > `readonly` **slot**: `string`
 
-Defined in: [packages/canvas/src/renderers/types.ts:213](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L213)
+Defined in: packages/canvas/src/primitives/types.ts:306
 
 ***
 
@@ -65,7 +52,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:213](https://github.com/inva
 
 > `readonly` **slotZIndex**: `number`
 
-Defined in: [packages/canvas/src/renderers/types.ts:218](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L218)
+Defined in: packages/canvas/src/primitives/types.ts:307
 
 ***
 
@@ -73,6 +60,4 @@ Defined in: [packages/canvas/src/renderers/types.ts:218](https://github.com/inva
 
 > `readonly` **surface**: `Container`
 
-Defined in: [packages/canvas/src/renderers/types.ts:217](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L217)
-
-Connector-local surface (the connector's `gfx` Container).
+Defined in: packages/canvas/src/primitives/types.ts:309

@@ -1,6 +1,6 @@
 # Interface: PinchZoomBehaviourOptions
 
-Defined in: [packages/canvas/src/behaviours/PinchZoomBehaviour.ts:15](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/behaviours/PinchZoomBehaviour.ts#L15)
+Defined in: [packages/canvas/src/behaviours/PinchZoomBehaviour.ts:15](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/behaviours/PinchZoomBehaviour.ts#L15)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [packages/canvas/src/behaviours/PinchZoomBehaviour.ts:15](https://gi
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/behaviours/Behaviour.ts#L43)
+Defined in: [packages/canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/behaviours/Behaviour.ts#L43)
 
 Default `false` — the developer explicitly enables.
 
@@ -26,7 +26,7 @@ Default `false` — the developer explicitly enables.
 
 > **id**: `string`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/behaviours/Behaviour.ts#L36)
+Defined in: [packages/canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/behaviours/Behaviour.ts#L36)
 
 #### Inherited from
 
@@ -38,7 +38,7 @@ Defined in: [packages/canvas/src/behaviours/Behaviour.ts:36](https://github.com/
 
 > `optional` **layerId?**: `string`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:41](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/behaviours/Behaviour.ts#L41)
+Defined in: [packages/canvas/src/behaviours/Behaviour.ts:41](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/behaviours/Behaviour.ts#L41)
 
 Layer-scoped behaviours target a specific Layer by id. Canvas-scoped
 behaviours have no `layerId` and `scope: 'canvas'`.
@@ -53,7 +53,7 @@ behaviours have no `layerId` and `scope: 'canvas'`.
 
 > `optional` **noDrag?**: `boolean`
 
-Defined in: [packages/canvas/src/behaviours/PinchZoomBehaviour.ts:21](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/behaviours/PinchZoomBehaviour.ts#L21)
+Defined in: [packages/canvas/src/behaviours/PinchZoomBehaviour.ts:21](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/behaviours/PinchZoomBehaviour.ts#L21)
 
 If `true`, suppress the implicit pan that accompanies a pinch gesture.
 Default `false` — pinch both zooms and centres the viewport on the
@@ -65,7 +65,7 @@ midpoint between the two fingers.
 
 > `optional` **percent?**: `number`
 
-Defined in: [packages/canvas/src/behaviours/PinchZoomBehaviour.ts:23](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/behaviours/PinchZoomBehaviour.ts#L23)
+Defined in: [packages/canvas/src/behaviours/PinchZoomBehaviour.ts:23](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/behaviours/PinchZoomBehaviour.ts#L23)
 
 Zoom speed multiplier. Default `0.1`.
 
@@ -75,7 +75,7 @@ Zoom speed multiplier. Default `0.1`.
 
 > `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/behaviours/Behaviour.ts#L49)
+Defined in: [packages/canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/behaviours/Behaviour.ts#L49)
 
 Gesture identifiers this behaviour claims. Used by `BehaviourRegistry`
 for conflict warnings. Format is convention-free (`'shift+drag'`,

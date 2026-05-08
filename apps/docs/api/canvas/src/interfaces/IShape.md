@@ -1,6 +1,12 @@
 # Interface: IShape\<TSpec\>
 
-Defined in: [packages/canvas/src/renderers/types.ts:232](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L232)
+Defined in: packages/canvas/src/primitives/types.ts:323
+
+A 2D primitive with a closed silhouette (circle, rect, polygon, path).
+Implementations typically extend `ShapeBase` (which provides `paintInto`,
+fill/stroke resolution, and icon-layer plumbing for free); shapes whose
+`draw` and `paintInto` differ (text, images-as-sprites) implement this
+interface directly.
 
 ## Type Parameters
 
@@ -14,7 +20,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:232](https://github.com/inva
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [packages/canvas/src/renderers/types.ts:234](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L234)
+Defined in: packages/canvas/src/primitives/types.ts:325
 
 Root display object — renderer adds/removes this on the host surface.
 
@@ -22,15 +28,15 @@ Root display object — renderer adds/removes this on the host surface.
 
 ### bounds()
 
-> **bounds**(): [`ShapesRect`](ShapesRect.md)
+> **bounds**(): [`Rect`](Rect.md)
 
-Defined in: [packages/canvas/src/renderers/types.ts:238](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L238)
+Defined in: packages/canvas/src/primitives/types.ts:329
 
-Local-space axis-aligned bounding box used for hit-testing & decorations.
+Local-space axis-aligned bounding box for hit-testing & decorations.
 
 #### Returns
 
-[`ShapesRect`](ShapesRect.md)
+[`Rect`](Rect.md)
 
 ***
 
@@ -38,14 +44,9 @@ Local-space axis-aligned bounding box used for hit-testing & decorations.
 
 > `optional` **contains**(`localX`, `localY`): `boolean`
 
-Defined in: [packages/canvas/src/renderers/types.ts:247](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L247)
+Defined in: packages/canvas/src/primitives/types.ts:343
 
-Optional precise containment test in local coordinates (i.e. coords
-relative to `spec.x` / `spec.y`). The renderer first filters candidates
-via the spatial index (bbox) and then calls `contains` for exact hit
-resolution. If absent, the shape is considered hit anywhere inside its
-bbox — a sensible default for rect / image / text. Round and polygon
-primitives override.
+Optional precise containment in shape-local coordinates.
 
 #### Parameters
 
@@ -67,7 +68,7 @@ primitives override.
 
 > **destroy**(): `void`
 
-Defined in: [packages/canvas/src/renderers/types.ts:268](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L268)
+Defined in: packages/canvas/src/primitives/types.ts:348
 
 #### Returns
 
@@ -79,7 +80,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:268](https://github.com/inva
 
 > **draw**(`spec`): `void`
 
-Defined in: [packages/canvas/src/renderers/types.ts:236](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L236)
+Defined in: packages/canvas/src/primitives/types.ts:327
 
 (Re)paint the shape from the current spec. Called on add and on update.
 
@@ -95,17 +96,45 @@ Defined in: [packages/canvas/src/renderers/types.ts:236](https://github.com/inva
 
 ***
 
+### paintInto()?
+
+> `optional` **paintInto**(`g`, `style?`): `void`
+
+Defined in: packages/canvas/src/primitives/types.ts:341
+
+Decoration entry point — repaint the silhouette into someone else's
+`Graphics` with a style override. The shape uses its own current spec;
+decorations don't pass one. (Distinct from `ShapeCtor.paintInto` —
+the static method markers use, which takes an explicit spec + anchor.)
+
+Optional for back-compat: `TextShape` (and similar non-silhouette shapes)
+may omit it. Decorations check for presence before calling and silently
+skip when absent (text labels just won't have glow / halo applied).
+Every shape that extends `ShapeBase` has it for free.
+
+#### Parameters
+
+##### g
+
+[`Graphics`](Graphics.md)
+
+##### style?
+
+[`ShapePaintStyle`](ShapePaintStyle.md)
+
+#### Returns
+
+`void`
+
+***
+
 ### setLabelResolution()?
 
 > `optional` **setLabelResolution**(`resolution`): `void`
 
-Defined in: [packages/canvas/src/renderers/types.ts:267](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L267)
+Defined in: packages/canvas/src/primitives/types.ts:347
 
-Optional label-rasterisation hook. Only meaningful for text-bearing
-shapes. The host Layer calls
-`ShapesRenderer.rasteriseLabel(id, resolution)` when label sharpness
-should change (e.g. on a meaningful zoom delta). Shapes without text
-ignore this.
+Optional label-rasterization hook. Only meaningful for text-bearing shapes.
 
 #### Parameters
 
@@ -123,17 +152,9 @@ ignore this.
 
 > `optional` **setLODLevel**(`level`): `void`
 
-Defined in: [packages/canvas/src/renderers/types.ts:259](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L259)
+Defined in: packages/canvas/src/primitives/types.ts:345
 
-Optional LOD hook. The host Layer drives LOD policy (e.g. "hide labels
-when zoomed out beyond 0.4×") and tells the renderer which level each
-shape should occupy via `ShapesRenderer.setLODLevel(id, level)`. The
-shape interprets the level any way it wants — hide / use a low-detail
-geometry / drop the icon, etc.
-
-Convention used by the renderer's default fallback: `level === 0` means
-"hide", `level >= 1` means "show at quality `level`". Shapes that
-implement `setLODLevel` themselves override this default fully.
+Optional LOD hook. Renderer forwards via `setLODLevel(id, level)`.
 
 #### Parameters
 

@@ -1,6 +1,10 @@
 # Interface: IConnector\<TSpec\>
 
-Defined in: [packages/canvas/src/renderers/types.ts:303](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L303)
+Defined in: packages/canvas/src/primitives/types.ts:356
+
+A line-like primitive joining two endpoints, optionally passing through
+waypoints. v0 has a single concrete `Connector` class; visual variation
+comes from the router (which produces the `Path`).
 
 ## Type Parameters
 
@@ -14,7 +18,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:303](https://github.com/inva
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [packages/canvas/src/renderers/types.ts:304](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L304)
+Defined in: packages/canvas/src/primitives/types.ts:357
 
 ## Methods
 
@@ -22,7 +26,7 @@ Defined in: [packages/canvas/src/renderers/types.ts:304](https://github.com/inva
 
 > **destroy**(): `void`
 
-Defined in: [packages/canvas/src/renderers/types.ts:324](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L324)
+Defined in: packages/canvas/src/primitives/types.ts:366
 
 #### Returns
 
@@ -32,11 +36,11 @@ Defined in: [packages/canvas/src/renderers/types.ts:324](https://github.com/inva
 
 ### draw()
 
-> **draw**(`spec`, `points`): `void`
+> **draw**(`spec`, `path`): `void`
 
-Defined in: [packages/canvas/src/renderers/types.ts:306](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L306)
+Defined in: packages/canvas/src/primitives/types.ts:359
 
-(Re)paint the connector with a router-resolved polyline.
+(Re)paint the connector with a router-resolved `Path`.
 
 #### Parameters
 
@@ -44,9 +48,9 @@ Defined in: [packages/canvas/src/renderers/types.ts:306](https://github.com/inva
 
 `TSpec`
 
-##### points
+##### path
 
-readonly [`ShapesPoint`](ShapesPoint.md)[]
+[`Path`](../type-aliases/Path.md)
 
 #### Returns
 
@@ -54,21 +58,15 @@ readonly [`ShapesPoint`](ShapesPoint.md)[]
 
 ***
 
-### paintInto()?
+### paintInto()
 
-> `optional` **paintInto**(`g`, `spec`, `points`, `style`): `void`
+> **paintInto**(`g`, `spec`, `path`, `style?`): `void`
 
-Defined in: [packages/canvas/src/renderers/types.ts:318](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L318)
+Defined in: packages/canvas/src/primitives/types.ts:365
 
 Repaint the connector's full silhouette (path + markers) into a
-caller-supplied `Graphics` with style overrides. The caller has
-`g.clear()`ed the Graphics before calling. Connector decorations use
-this to draw with pixel-identical silhouette coverage — they never
-re-derive geometry from the polyline.
-
-Optional for back-compat: third-party `IConnector` implementations
-keep compiling without it; decorations check for presence and otherwise
-fall back. Both built-ins (`line`, `curve`) implement it.
+caller-supplied `Graphics` with style overrides. Connector decorations
+use this to draw with pixel-identical silhouette coverage.
 
 #### Parameters
 
@@ -80,11 +78,11 @@ fall back. Both built-ins (`line`, `curve`) implement it.
 
 `TSpec`
 
-##### points
+##### path
 
-readonly [`ShapesPoint`](ShapesPoint.md)[]
+[`Path`](../type-aliases/Path.md)
 
-##### style
+##### style?
 
 [`ConnectorPaintStyle`](ConnectorPaintStyle.md)
 

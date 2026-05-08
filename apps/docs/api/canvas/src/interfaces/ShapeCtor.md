@@ -1,13 +1,10 @@
 # Interface: ShapeCtor\<TSpec\>
 
-Defined in: [packages/canvas/src/renderers/types.ts:375](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L375)
+Defined in: packages/canvas/src/primitives/types.ts:393
 
 Constructor type for shapes registered via `registerShape`. Optionally
-exposes a static `paintInto` so the shape can also serve as a connector
-marker — the connector calls `Ctor.paintInto(g, spec, anchor, angle)` to
-paint the marker geometry into the connector's Graphics, oriented along
-the polyline tangent. Shapes without `paintInto` are still valid for
-`addShape` usage but cannot be used as markers.
+exposes a `static paintInto` so the shape can also serve as a connector
+marker. Shapes without `paintInto` cannot be used as markers.
 
 ## Type Parameters
 
@@ -21,7 +18,7 @@ the polyline tangent. Shapes without `paintInto` are still valid for
 
 > **new ShapeCtor**(`spec`, `host`): [`IShape`](IShape.md)\<`TSpec`\>
 
-Defined in: [packages/canvas/src/renderers/types.ts:376](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L376)
+Defined in: packages/canvas/src/primitives/types.ts:394
 
 #### Parameters
 
@@ -43,13 +40,13 @@ Defined in: [packages/canvas/src/renderers/types.ts:376](https://github.com/inva
 
 > `readonly` `optional` **paintInto?**: (`g`, `spec`, `anchor`, `angleRad`, `style?`) => `void`
 
-Defined in: [packages/canvas/src/renderers/types.ts:384](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/types.ts#L384)
+Defined in: packages/canvas/src/primitives/types.ts:402
 
-Optional static paint function. Paints the spec's drawing fields into a
-caller-supplied `Graphics`, anchored at `anchor` and rotated by
-`angleRad` (radians) around it. The spec's `x` / `y` are ignored — the
-caller (a connector) supplies position via `anchor`. When `style` is
-supplied, the shape's spec colour/alpha are overridden.
+Optional static paint surface for marker rendering. Connectors call
+this to paint a marker at a polyline endpoint without instantiating
+the shape. The spec's `x` / `y` are ignored — the caller supplies
+position via `anchor`. When `style` is supplied, the shape's spec
+colors are overridden (used by glow/halo to tint markers).
 
 #### Parameters
 
@@ -63,7 +60,7 @@ supplied, the shape's spec colour/alpha are overridden.
 
 ##### anchor
 
-[`ShapesPoint`](ShapesPoint.md)
+[`Point`](Point.md)
 
 ##### angleRad
 

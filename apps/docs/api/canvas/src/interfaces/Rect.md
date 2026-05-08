@@ -1,35 +1,35 @@
 # Interface: Rect
 
-Defined in: [packages/canvas/src/camera/Camera.ts:38](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/camera/Camera.ts#L38)
+Defined in: packages/canvas/src/primitives/types.ts:30
 
 ## Properties
 
 ### height
 
-> **height**: `number`
+> `readonly` **height**: `number`
 
-Defined in: [packages/canvas/src/camera/Camera.ts:42](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/camera/Camera.ts#L42)
+Defined in: packages/canvas/src/primitives/types.ts:34
 
 ***
 
 ### width
 
-> **width**: `number`
+> `readonly` **width**: `number`
 
-Defined in: [packages/canvas/src/camera/Camera.ts:41](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/camera/Camera.ts#L41)
+Defined in: packages/canvas/src/primitives/types.ts:33
 
 ***
 
 ### x
 
-> **x**: `number`
+> `readonly` **x**: `number`
 
-Defined in: [packages/canvas/src/camera/Camera.ts:39](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/camera/Camera.ts#L39)
+Defined in: packages/canvas/src/primitives/types.ts:31
 
 ***
 
 ### y
 
-> **y**: `number`
+> `readonly` **y**: `number`
 
-Defined in: [packages/canvas/src/camera/Camera.ts:40](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/camera/Camera.ts#L40)
+Defined in: packages/canvas/src/primitives/types.ts:32

@@ -1,19 +1,19 @@
 # Interface: Point
 
-Defined in: [packages/canvas/src/camera/Camera.ts:33](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/camera/Camera.ts#L33)
+Defined in: packages/canvas/src/primitives/types.ts:20
 
 ## Properties
 
 ### x
 
-> **x**: `number`
+> `readonly` **x**: `number`
 
-Defined in: [packages/canvas/src/camera/Camera.ts:34](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/camera/Camera.ts#L34)
+Defined in: packages/canvas/src/primitives/types.ts:21
 
 ***
 
 ### y
 
-> **y**: `number`
+> `readonly` **y**: `number`
 
-Defined in: [packages/canvas/src/camera/Camera.ts:35](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/camera/Camera.ts#L35)
+Defined in: packages/canvas/src/primitives/types.ts:22

@@ -10,9 +10,9 @@
       "types": "./src/index.ts",
       "default": "./src/index.js"
     },
-    "./draw": {
-      "types": "./src/draw/index.ts",
-      "default": "./src/draw/index.js"
+    "./primitives": {
+      "types": "./src/primitives/index.ts",
+      "default": "./src/primitives/index.js"
     }
   },
   "typedocOptions": {

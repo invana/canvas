@@ -1,23 +1,18 @@
 # Function: arrowMarkerSpec()
 
-> **arrowMarkerSpec**(`size`, `style?`): `Omit`\<`PolygonShapeSpec`, `"x"` \| `"y"`\>
+> **arrowMarkerSpec**(`spec?`): `Omit`\<[`ArrowMarkerSpec`](../interfaces/ArrowMarkerSpec.md), `"x"` \| `"y"`\>
 
-Defined in: [packages/canvas/src/renderers/markers/markers.ts:31](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/renderers/markers/markers.ts#L31)
+Defined in: packages/canvas/src/primitives/markers/ArrowMarker.ts:37
 
-Triangle pointing along `+x` (anchored at the tip). Use as a `targetMarker`
-for a classic arrowhead-on-line — the connector orients it forward into
-the target endpoint.
+Convenience builder for connector marker specs (no `x` / `y`).
+Usage: `connectorSpec.targetMarker = arrowMarkerSpec({ fill: 0x000000 })`.
 
 ## Parameters
 
-### size
+### spec?
 
-`number`
-
-### style?
-
-[`MarkerStyle`](../interfaces/MarkerStyle.md)
+`Omit`\<[`ArrowMarkerSpec`](../interfaces/ArrowMarkerSpec.md), `"kind"` \| `"x"` \| `"y"`\> = `{}`
 
 ## Returns
 
-`Omit`\<`PolygonShapeSpec`, `"x"` \| `"y"`\>
+`Omit`\<[`ArrowMarkerSpec`](../interfaces/ArrowMarkerSpec.md), `"x"` \| `"y"`\>

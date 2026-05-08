@@ -1,6 +1,6 @@
 # Class: BehaviourRegistry
 
-Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:25](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/registries/BehaviourRegistry.ts#L25)
+Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:25](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/registries/BehaviourRegistry.ts#L25)
 
 ## Constructors
 
@@ -8,7 +8,7 @@ Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:25](https://git
 
 > **new BehaviourRegistry**(`opts`): `BehaviourRegistry`
 
-Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:30](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/registries/BehaviourRegistry.ts#L30)
+Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:30](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/registries/BehaviourRegistry.ts#L30)
 
 #### Parameters
 
@@ -28,7 +28,7 @@ Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:30](https://git
 
 > **get** **size**(): `number`
 
-Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:35](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/registries/BehaviourRegistry.ts#L35)
+Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:35](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/registries/BehaviourRegistry.ts#L35)
 
 ##### Returns
 
@@ -40,7 +40,7 @@ Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:35](https://git
 
 > **clear**(): `void`
 
-Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:101](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/registries/BehaviourRegistry.ts#L101)
+Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:101](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/registries/BehaviourRegistry.ts#L101)
 
 Tear down all behaviours. Called on Canvas destroy.
 
@@ -54,7 +54,7 @@ Tear down all behaviours. Called on Canvas destroy.
 
 > **get**\<`T`\>(`id`): `T`
 
-Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:88](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/registries/BehaviourRegistry.ts#L88)
+Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:88](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/registries/BehaviourRegistry.ts#L88)
 
 #### Type Parameters
 
@@ -78,7 +78,7 @@ Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:88](https://git
 
 > **has**(`id`): `boolean`
 
-Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:92](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/registries/BehaviourRegistry.ts#L92)
+Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:92](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/registries/BehaviourRegistry.ts#L92)
 
 #### Parameters
 
@@ -96,7 +96,7 @@ Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:92](https://git
 
 > **list**(): readonly [`IBehaviour`](../interfaces/IBehaviour.md)[]
 
-Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:96](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/registries/BehaviourRegistry.ts#L96)
+Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:96](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/registries/BehaviourRegistry.ts#L96)
 
 #### Returns
 
@@ -108,7 +108,7 @@ readonly [`IBehaviour`](../interfaces/IBehaviour.md)[]
 
 > **register**(`behaviour`): `void`
 
-Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:47](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/registries/BehaviourRegistry.ts#L47)
+Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:47](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/registries/BehaviourRegistry.ts#L47)
 
 Register a Behaviour. Calls `behaviour.register(ctx)` + fires
 `'behaviour:registered'`. If `behaviour.enabled` is `true` at construction
@@ -133,7 +133,7 @@ Throws on duplicate id.
 
 > **setEnabled**(`id`, `enabled`): `void`
 
-Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:74](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/registries/BehaviourRegistry.ts#L74)
+Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:74](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/registries/BehaviourRegistry.ts#L74)
 
 Enable / disable a behaviour. Fires the corresponding bus event.
 
@@ -157,7 +157,7 @@ Enable / disable a behaviour. Fires the corresponding bus event.
 
 > **unregister**(`id`): `void`
 
-Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:62](https://github.com/invana/canvas/blob/b5750d6d305a6431d50bde6b7585da68d85e2544/packages/canvas/src/registries/BehaviourRegistry.ts#L62)
+Defined in: [packages/canvas/src/registries/BehaviourRegistry.ts:62](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/registries/BehaviourRegistry.ts#L62)
 
 Remove a behaviour. Calls `destroy()`. No-op if not registered.
 
