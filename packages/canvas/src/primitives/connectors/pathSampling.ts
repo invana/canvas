@@ -124,72 +124,359 @@ export function pathBounds(path: Path): Rect {
 }
 
 /**
- * Pull the path's start / end anchors inward along their local tangents so
- * the connector body stops short of where its markers will be drawn. The
- * marker still anchors at the *original* endpoint (its tip touches the
- * target) — only the body is shortened.
+ * Pull the path's start / end anchors inward by the requested arc-length
+ * insets so the connector body stops short of where its markers will be
+ * drawn. Markers themselves still anchor at the *original* endpoints (their
+ * tips touch the target) — only the body is shortened.
  *
- * For straight (`L`) ends this is exact. For `Q` / `C` curve ends the
- * endpoint is shifted along the incoming tangent without rewalking arc
- * length — visually correct for short insets, approximate for long ones.
- * v0 only ships the `straight` router, so the curve cases are forward-
- * compatible scaffolding rather than a hot path.
+ * Correctness:
+ *   - `L` segments are trimmed in closed form (exact).
+ *   - `Q` / `C` segments are trimmed by walking arc length over a fine
+ *     sub-step table, refining the parameter `t` between bracketing samples,
+ *     and **De Casteljau subdividing** the curve at `t`. The kept half is
+ *     emitted as a new `Q` / `C` command, preserving correct curvature on
+ *     tight bends — chord-along-tangent approximation would diverge.
+ *   - When an inset exceeds the trailing segment's arc length, the segment
+ *     is consumed entirely and the trim continues into the prior segment.
+ *
+ * v0 only ships the `straight` router, so curve trimming is forward-looking
+ * scaffolding for the upcoming `bezier` / `orthogonal` routers.
  */
 export function trimPathEnds(path: Path, startInset: number, endInset: number): Path {
   if (path.length < 2) return path;
   if (startInset <= 0 && endInset <= 0) return path;
 
-  const first = path[0]!;
-  if (first.kind !== 'M') return path;
-
-  const result: PathCommand[] = path.slice();
-
-  if (startInset > 0) {
-    const t = tangentAtStart(path);
-    result[0] = { kind: 'M', x: first.x + t.x * startInset, y: first.y + t.y * startInset };
-  }
+  let result: PathCommand[] = path.slice();
 
   if (endInset > 0) {
-    const t = tangentAtEnd(path);
-    const last = result[result.length - 1]!;
-    switch (last.kind) {
-      case 'L':
-        result[result.length - 1] = {
-          kind: 'L',
-          x: last.x - t.x * endInset,
-          y: last.y - t.y * endInset,
-        };
-        break;
-      case 'Q':
-        result[result.length - 1] = {
-          kind: 'Q',
-          cx: last.cx,
-          cy: last.cy,
-          x: last.x - t.x * endInset,
-          y: last.y - t.y * endInset,
-        };
-        break;
-      case 'C':
-        result[result.length - 1] = {
-          kind: 'C',
-          c1x: last.c1x,
-          c1y: last.c1y,
-          c2x: last.c2x,
-          c2y: last.c2y,
-          x: last.x - t.x * endInset,
-          y: last.y - t.y * endInset,
-        };
-        break;
-      case 'M':
-        // Bare moveTo at the tail — nothing to trim.
-        break;
-    }
+    result = trimPathEnd(result, endInset);
+    if (result.length < 2) return result;
+  }
+
+  if (startInset > 0) {
+    result = trimPathStart(result, startInset);
   }
 
   return result;
 }
 
 // ─── Internals ─────────────────────────────────────────────────────────────
+
+/** Substeps used during arc-length trim — finer than display sampling. */
+const TRIM_QUAD_STEPS = 24;
+const TRIM_CUBIC_STEPS = 32;
+
+/**
+ * Trim `remaining` pixels from the end of the path, consuming whole segments
+ * when they're shorter than what's left to remove. Returns a fresh
+ * `PathCommand[]`. If the inset exceeds the path's total length, returns the
+ * leading `M` (degenerate but well-formed).
+ */
+function trimPathEnd(path: PathCommand[], remaining: number): PathCommand[] {
+  let work = path.slice();
+  while (work.length >= 2 && remaining > 0) {
+    const tail = work[work.length - 1]!;
+    const prev = anchorBefore(work, work.length - 1);
+    const segLen = segmentLength(prev, tail);
+
+    if (segLen <= 0) {
+      // Degenerate segment — drop it and continue.
+      work.pop();
+      continue;
+    }
+
+    if (remaining >= segLen) {
+      // Consume the whole segment and continue trimming into the prior one.
+      remaining -= segLen;
+      work.pop();
+      continue;
+    }
+
+    // Partial trim: clip the tail at arc-length distance `segLen - remaining`
+    // from `prev`. The result is a fresh segment whose end anchor sits at
+    // that interior point.
+    const keepLen = segLen - remaining;
+    work[work.length - 1] = clipSegmentEnd(prev, tail, keepLen);
+    remaining = 0;
+  }
+  return work;
+}
+
+/**
+ * Trim `remaining` pixels from the start of the path. Walks forward from
+ * the leading `M`, dropping commands whose arc length is fully consumed and
+ * partially clipping the first segment that survives.
+ */
+function trimPathStart(path: PathCommand[], remaining: number): PathCommand[] {
+  if (path.length < 2) return path;
+  const first = path[0];
+  if (!first || first.kind !== 'M') return path;
+
+  let cursor: Point = { x: first.x, y: first.y };
+  let i = 1;
+  while (i < path.length && remaining > 0) {
+    const seg = path[i]!;
+    const segLen = segmentLength(cursor, seg);
+
+    if (segLen <= 0) {
+      // Degenerate — advance cursor (without dropping; preserves anchor flow).
+      cursor = endpointOf(seg, cursor);
+      i++;
+      continue;
+    }
+
+    if (remaining >= segLen) {
+      remaining -= segLen;
+      cursor = endpointOf(seg, cursor);
+      i++;
+      continue;
+    }
+
+    // Partial trim: split at arc-length `remaining` from cursor and keep
+    // the back half. The new `M` lands at the split point.
+    const split = clipSegmentStart(cursor, seg, remaining);
+    const head: PathCommand[] = [{ kind: 'M', x: split.start.x, y: split.start.y }, split.tail];
+    return head.concat(path.slice(i + 1));
+  }
+
+  // The inset consumed every segment — collapse to a bare moveTo at the
+  // last anchor we walked through.
+  return [{ kind: 'M', x: cursor.x, y: cursor.y }];
+}
+
+/**
+ * Replace `seg` with a new segment that runs from `start` to the point on
+ * `seg` at arc length `keepLen` (measured from `start`). For `Q` / `C`
+ * segments, sub-divides via De Casteljau at the parameter t found by walking
+ * the sampled arc-length table.
+ */
+function clipSegmentEnd(start: Point, seg: PathCommand, keepLen: number): PathCommand {
+  switch (seg.kind) {
+    case 'L': {
+      const dx = seg.x - start.x;
+      const dy = seg.y - start.y;
+      const len = Math.hypot(dx, dy);
+      if (len === 0) return seg;
+      const u = keepLen / len;
+      return { kind: 'L', x: start.x + dx * u, y: start.y + dy * u };
+    }
+    case 'Q': {
+      const t = quadParamAtArcLength(start, seg, keepLen);
+      const split = subdivideQuad(start, seg, t);
+      return { kind: 'Q', cx: split.head.cx, cy: split.head.cy, x: split.head.x, y: split.head.y };
+    }
+    case 'C': {
+      const t = cubicParamAtArcLength(start, seg, keepLen);
+      const split = subdivideCubic(start, seg, t);
+      return {
+        kind: 'C',
+        c1x: split.head.c1x, c1y: split.head.c1y,
+        c2x: split.head.c2x, c2y: split.head.c2y,
+        x: split.head.x, y: split.head.y,
+      };
+    }
+    case 'M':
+      return seg;
+  }
+}
+
+/**
+ * Split `seg` at arc length `dropLen` from `start` and return both halves,
+ * along with the new start anchor for the back half. Used by start-trim.
+ */
+function clipSegmentStart(
+  start: Point,
+  seg: PathCommand,
+  dropLen: number,
+): { start: Point; tail: PathCommand } {
+  switch (seg.kind) {
+    case 'L': {
+      const dx = seg.x - start.x;
+      const dy = seg.y - start.y;
+      const len = Math.hypot(dx, dy);
+      if (len === 0) return { start, tail: seg };
+      const u = dropLen / len;
+      const splitPoint = { x: start.x + dx * u, y: start.y + dy * u };
+      return { start: splitPoint, tail: { kind: 'L', x: seg.x, y: seg.y } };
+    }
+    case 'Q': {
+      const t = quadParamAtArcLength(start, seg, dropLen);
+      const split = subdivideQuad(start, seg, t);
+      return {
+        start: { x: split.head.x, y: split.head.y },
+        tail: { kind: 'Q', cx: split.tail.cx, cy: split.tail.cy, x: split.tail.x, y: split.tail.y },
+      };
+    }
+    case 'C': {
+      const t = cubicParamAtArcLength(start, seg, dropLen);
+      const split = subdivideCubic(start, seg, t);
+      return {
+        start: { x: split.head.x, y: split.head.y },
+        tail: {
+          kind: 'C',
+          c1x: split.tail.c1x, c1y: split.tail.c1y,
+          c2x: split.tail.c2x, c2y: split.tail.c2y,
+          x: split.tail.x, y: split.tail.y,
+        },
+      };
+    }
+    case 'M':
+      return { start, tail: seg };
+  }
+}
+
+/**
+ * Total arc length of a single segment from `start` to its endpoint.
+ * Straight segments use Euclidean distance; curved segments accumulate
+ * chord lengths over a fixed substep count.
+ */
+function segmentLength(start: Point, seg: PathCommand): number {
+  switch (seg.kind) {
+    case 'L':
+      return Math.hypot(seg.x - start.x, seg.y - start.y);
+    case 'Q': {
+      let total = 0;
+      let px = start.x, py = start.y;
+      for (let i = 1; i <= TRIM_QUAD_STEPS; i++) {
+        const t = i / TRIM_QUAD_STEPS;
+        const mt = 1 - t;
+        const x = mt * mt * start.x + 2 * mt * t * seg.cx + t * t * seg.x;
+        const y = mt * mt * start.y + 2 * mt * t * seg.cy + t * t * seg.y;
+        total += Math.hypot(x - px, y - py);
+        px = x; py = y;
+      }
+      return total;
+    }
+    case 'C': {
+      let total = 0;
+      let px = start.x, py = start.y;
+      for (let i = 1; i <= TRIM_CUBIC_STEPS; i++) {
+        const t = i / TRIM_CUBIC_STEPS;
+        const mt = 1 - t;
+        const x = mt * mt * mt * start.x + 3 * mt * mt * t * seg.c1x + 3 * mt * t * t * seg.c2x + t * t * t * seg.x;
+        const y = mt * mt * mt * start.y + 3 * mt * mt * t * seg.c1y + 3 * mt * t * t * seg.c2y + t * t * t * seg.y;
+        total += Math.hypot(x - px, y - py);
+        px = x; py = y;
+      }
+      return total;
+    }
+    case 'M':
+      return 0;
+  }
+}
+
+function endpointOf(seg: PathCommand, fallback: Point): Point {
+  if (seg.kind === 'M' || seg.kind === 'L' || seg.kind === 'Q' || seg.kind === 'C') {
+    return { x: seg.x, y: seg.y };
+  }
+  return fallback;
+}
+
+/** Walk the quadratic and find `t` where cumulative arc length ≈ targetLen. */
+function quadParamAtArcLength(
+  start: Point,
+  seg: { cx: number; cy: number; x: number; y: number },
+  targetLen: number,
+): number {
+  let prevX = start.x, prevY = start.y;
+  let acc = 0;
+  for (let i = 1; i <= TRIM_QUAD_STEPS; i++) {
+    const t = i / TRIM_QUAD_STEPS;
+    const mt = 1 - t;
+    const x = mt * mt * start.x + 2 * mt * t * seg.cx + t * t * seg.x;
+    const y = mt * mt * start.y + 2 * mt * t * seg.cy + t * t * seg.y;
+    const step = Math.hypot(x - prevX, y - prevY);
+    if (acc + step >= targetLen) {
+      const frac = step === 0 ? 0 : (targetLen - acc) / step;
+      const tPrev = (i - 1) / TRIM_QUAD_STEPS;
+      return tPrev + (t - tPrev) * frac;
+    }
+    acc += step;
+    prevX = x; prevY = y;
+  }
+  return 1;
+}
+
+/** Walk the cubic and find `t` where cumulative arc length ≈ targetLen. */
+function cubicParamAtArcLength(
+  start: Point,
+  seg: { c1x: number; c1y: number; c2x: number; c2y: number; x: number; y: number },
+  targetLen: number,
+): number {
+  let prevX = start.x, prevY = start.y;
+  let acc = 0;
+  for (let i = 1; i <= TRIM_CUBIC_STEPS; i++) {
+    const t = i / TRIM_CUBIC_STEPS;
+    const mt = 1 - t;
+    const x = mt * mt * mt * start.x + 3 * mt * mt * t * seg.c1x + 3 * mt * t * t * seg.c2x + t * t * t * seg.x;
+    const y = mt * mt * mt * start.y + 3 * mt * mt * t * seg.c1y + 3 * mt * t * t * seg.c2y + t * t * t * seg.y;
+    const step = Math.hypot(x - prevX, y - prevY);
+    if (acc + step >= targetLen) {
+      const frac = step === 0 ? 0 : (targetLen - acc) / step;
+      const tPrev = (i - 1) / TRIM_CUBIC_STEPS;
+      return tPrev + (t - tPrev) * frac;
+    }
+    acc += step;
+    prevX = x; prevY = y;
+  }
+  return 1;
+}
+
+/**
+ * De Casteljau subdivision for a quadratic Bézier at parameter `t`.
+ * Returns the two halves: `head` runs from `start` to the split point,
+ * `tail` runs from the split point to the original endpoint. Each half is
+ * itself a valid quadratic.
+ */
+function subdivideQuad(
+  start: Point,
+  seg: { cx: number; cy: number; x: number; y: number },
+  t: number,
+): {
+  head: { cx: number; cy: number; x: number; y: number };
+  tail: { cx: number; cy: number; x: number; y: number };
+} {
+  const p0 = start, p1 = { x: seg.cx, y: seg.cy }, p2 = { x: seg.x, y: seg.y };
+  const a = lerp(p0, p1, t);
+  const b = lerp(p1, p2, t);
+  const m = lerp(a, b, t);
+  return {
+    head: { cx: a.x, cy: a.y, x: m.x, y: m.y },
+    tail: { cx: b.x, cy: b.y, x: p2.x, y: p2.y },
+  };
+}
+
+/**
+ * De Casteljau subdivision for a cubic Bézier at parameter `t`.
+ * Returns the two halves as cubic segments.
+ */
+function subdivideCubic(
+  start: Point,
+  seg: { c1x: number; c1y: number; c2x: number; c2y: number; x: number; y: number },
+  t: number,
+): {
+  head: { c1x: number; c1y: number; c2x: number; c2y: number; x: number; y: number };
+  tail: { c1x: number; c1y: number; c2x: number; c2y: number; x: number; y: number };
+} {
+  const p0 = start;
+  const p1 = { x: seg.c1x, y: seg.c1y };
+  const p2 = { x: seg.c2x, y: seg.c2y };
+  const p3 = { x: seg.x, y: seg.y };
+  const a = lerp(p0, p1, t);
+  const b = lerp(p1, p2, t);
+  const c = lerp(p2, p3, t);
+  const d = lerp(a, b, t);
+  const e = lerp(b, c, t);
+  const m = lerp(d, e, t);
+  return {
+    head: { c1x: a.x, c1y: a.y, c2x: d.x, c2y: d.y, x: m.x, y: m.y },
+    tail: { c1x: e.x, c1y: e.y, c2x: c.x, c2y: c.y, x: p3.x, y: p3.y },
+  };
+}
+
+function lerp(a: Point, b: Point, t: number): Point {
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+}
 
 function tangentAtStart(path: Path): Vec2 {
   // Find the first non-M command; tangent points from M's anchor toward it.

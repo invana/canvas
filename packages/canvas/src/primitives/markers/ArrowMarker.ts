@@ -10,25 +10,42 @@ import type {
 
 /**
  * Arrowhead marker. Drawn as a triangle whose tip lies at the anchor; the
- * base extends `length` pixels back along the negative tangent direction
- * with a perpendicular spread of `width`.
+ * base extends `lengthScale × strokeWidth` pixels back along the negative
+ * tangent direction with a perpendicular spread of `widthScale × strokeWidth`
+ * (clamped so the base is never narrower than the line).
+ *
+ * Sizing is **always proportional to the host connector's stroke width** —
+ * a 1px line gets a 4×3 arrow (with the default scales), a 7px line gets a
+ * 28×21 arrow. The base width is additionally clamped to ≥ strokeWidth so a
+ * thick line never feeds into a narrower arrow base.
  *
  * Two paint surfaces:
  *   - **instance**: used as a regular shape via `addShape` — the arrow tip
  *     anchors at `(spec.x, spec.y)` and points along +X (angle = 0). Useful
- *     for stand-alone arrowheads or directional badges.
+ *     for stand-alone arrowheads or directional badges. With no host
+ *     connector, sizing assumes `strokeWidth = 1`.
  *   - **static**: used as a connector marker via `connectorSpec.sourceMarker
  *     = arrowMarkerSpec(...)` — the connector calls `ArrowMarker.paintInto`
- *     with the polyline endpoint + tangent angle.
+ *     with the polyline endpoint, tangent angle, and resolved strokeWidth.
  */
 
 export interface ArrowMarkerSpec extends BaseShapeSpec {
   readonly kind: 'arrow';
-  /** Tip-to-base distance, px. Default `10`. */
-  readonly length?: number;
-  /** Perpendicular wing spread (full width across the base), px. Default `8`. */
-  readonly width?: number;
+  /**
+   * Multiplier on the connector's stroke width that yields the tip-to-base
+   * distance. Default `4` (so a 2px stroke produces an 8px-long arrow).
+   */
+  readonly lengthScale?: number;
+  /**
+   * Multiplier on the connector's stroke width that yields the perpendicular
+   * base width. Final width is clamped to `≥ strokeWidth` so the arrow base
+   * is never narrower than the line. Default `3`.
+   */
+  readonly widthScale?: number;
 }
+
+const DEFAULT_LENGTH_SCALE = 4;
+const DEFAULT_WIDTH_SCALE = 3;
 
 /**
  * Convenience builder for connector marker specs (no `x` / `y`).
@@ -40,6 +57,15 @@ export function arrowMarkerSpec(
   return { kind: 'arrow', ...spec };
 }
 
+function resolveLength(spec: Omit<ArrowMarkerSpec, 'x' | 'y'>, strokeWidth: number): number {
+  return (spec.lengthScale ?? DEFAULT_LENGTH_SCALE) * strokeWidth;
+}
+
+function resolveWidth(spec: Omit<ArrowMarkerSpec, 'x' | 'y'>, strokeWidth: number): number {
+  const raw = (spec.widthScale ?? DEFAULT_WIDTH_SCALE) * strokeWidth;
+  return raw < strokeWidth ? strokeWidth : raw;
+}
+
 export class ArrowMarker extends ShapeBase<ArrowMarkerSpec> {
   static readonly kind = 'arrow';
 
@@ -49,12 +75,16 @@ export class ArrowMarker extends ShapeBase<ArrowMarkerSpec> {
   }
 
   protected drawGeometry(g: Graphics, spec: ArrowMarkerSpec, style?: ShapePaintStyle): void {
-    ArrowMarker.paintInto(g, spec, { x: 0, y: 0 }, 0, style);
+    // Instance shapes have no host connector — assume stroke width 1 so the
+    // default scales (4, 3) yield a 4×3 arrow, matching the visual the spec
+    // multipliers promise relative to a unit line.
+    ArrowMarker.paintInto(g, spec, { x: 0, y: 0 }, 0, style, 1);
   }
 
   bounds(): Rect {
-    const len = this.spec.length ?? 10;
-    const wid = this.spec.width ?? 8;
+    // Mirrors `drawGeometry` — instance bounds use strokeWidth = 1.
+    const len = resolveLength(this.spec, 1);
+    const wid = resolveWidth(this.spec, 1);
     return { x: -len, y: -wid / 2, width: len, height: wid };
   }
 
@@ -64,8 +94,11 @@ export class ArrowMarker extends ShapeBase<ArrowMarkerSpec> {
    * marker's base — the marker triangle then visually starts where the line
    * ends and its tip reaches the original anchor (target endpoint).
    */
-  static markerInset(spec: Omit<ArrowMarkerSpec, 'x' | 'y'>): number {
-    return spec.length ?? 10;
+  static markerInset(
+    spec: Omit<ArrowMarkerSpec, 'x' | 'y'>,
+    strokeWidth: number = 1,
+  ): number {
+    return resolveLength(spec, strokeWidth);
   }
 
   static paintInto(
@@ -74,9 +107,10 @@ export class ArrowMarker extends ShapeBase<ArrowMarkerSpec> {
     anchor: Point,
     angleRad: number,
     style?: ShapePaintStyle,
+    strokeWidth: number = 1,
   ): void {
-    const len = spec.length ?? 10;
-    const wid = spec.width ?? 8;
+    const len = resolveLength(spec, strokeWidth);
+    const wid = resolveWidth(spec, strokeWidth);
     const cos = Math.cos(angleRad);
     const sin = Math.sin(angleRad);
 

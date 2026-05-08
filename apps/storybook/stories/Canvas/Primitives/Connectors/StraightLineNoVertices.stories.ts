@@ -51,10 +51,10 @@ export const StraightLineNoVertices: Story = {
       target: { kind: 'point' as const, x: settings.targetX, y: settings.targetY },
       stroke: { color: settings.strokeColor, width: settings.strokeWidth },
       sourceMarker: settings.showSourceMarker
-        ? arrowMarkerSpec({ length: 12, width: 10, fill: settings.strokeColor })
+        ? arrowMarkerSpec({ lengthScale: 4, widthScale: 3, fill: settings.strokeColor })
         : undefined,
       targetMarker: settings.showTargetMarker
-        ? arrowMarkerSpec({ length: 12, width: 10, fill: settings.strokeColor })
+        ? arrowMarkerSpec({ lengthScale: 4, widthScale: 3, fill: settings.strokeColor })
         : undefined,
     });
 

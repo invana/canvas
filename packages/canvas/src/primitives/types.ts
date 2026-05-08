@@ -416,6 +416,12 @@ export interface ShapeCtor<TSpec extends BaseShapeSpec = BaseShapeSpec> {
    * the shape. The spec's `x` / `y` are ignored — the caller supplies
    * position via `anchor`. When `style` is supplied, the shape's spec
    * colors are overridden (used by glow/halo to tint markers).
+   *
+   * `strokeWidth` is the host connector's resolved stroke width in pixels.
+   * Marker shapes that scale with the line (e.g. `ArrowMarker` derives its
+   * length and base width from multipliers × strokeWidth) read this. When
+   * the shape is rendered standalone (not as a connector marker), pass `1`
+   * or omit; the marker shape should fall back to a sensible default.
    */
   readonly paintInto?: (
     g: Graphics,
@@ -423,6 +429,7 @@ export interface ShapeCtor<TSpec extends BaseShapeSpec = BaseShapeSpec> {
     anchor: Point,
     angleRad: number,
     style?: ShapePaintStyle,
+    strokeWidth?: number,
   ) => void;
   /**
    * Optional marker-inset reporter. When this shape is used as a connector
@@ -434,8 +441,12 @@ export interface ShapeCtor<TSpec extends BaseShapeSpec = BaseShapeSpec> {
    * square it would be the half-extent along the tangent. Shapes without a
    * meaningful back edge (or that should not affect line trimming) omit this
    * and the connector treats the inset as `0`.
+   *
+   * `strokeWidth` mirrors `paintInto` — markers that derive size from the
+   * connector's stroke width (e.g. arrows with `lengthScale`) read it here
+   * so the trim and the painted marker agree on geometry.
    */
-  readonly markerInset?: (spec: Omit<TSpec, 'x' | 'y'>) => number;
+  readonly markerInset?: (spec: Omit<TSpec, 'x' | 'y'>, strokeWidth?: number) => number;
 }
 
 export type ShapeDecorationCtor<TStyle = unknown> = new (style: TStyle) => IShapeDecoration<TStyle>;
