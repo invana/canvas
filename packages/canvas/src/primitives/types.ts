@@ -424,6 +424,18 @@ export interface ShapeCtor<TSpec extends BaseShapeSpec = BaseShapeSpec> {
     angleRad: number,
     style?: ShapePaintStyle,
   ) => void;
+  /**
+   * Optional marker-inset reporter. When this shape is used as a connector
+   * marker, returns how far back from the anchor (along the negative tangent)
+   * the marker's "back edge" sits — i.e. how much the connector body must
+   * be trimmed so it stops where the marker visually begins.
+   *
+   * For an arrow this is the tip-to-base length; for a circle / diamond /
+   * square it would be the half-extent along the tangent. Shapes without a
+   * meaningful back edge (or that should not affect line trimming) omit this
+   * and the connector treats the inset as `0`.
+   */
+  readonly markerInset?: (spec: Omit<TSpec, 'x' | 'y'>) => number;
 }
 
 export type ShapeDecorationCtor<TStyle = unknown> = new (style: TStyle) => IShapeDecoration<TStyle>;

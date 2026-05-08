@@ -58,6 +58,16 @@ export class ArrowMarker extends ShapeBase<ArrowMarkerSpec> {
     return { x: -len, y: -wid / 2, width: len, height: wid };
   }
 
+  /**
+   * Distance from the arrow tip back to the base along the negative tangent.
+   * The connector trims its body by this amount so the line stops at the
+   * marker's base — the marker triangle then visually starts where the line
+   * ends and its tip reaches the original anchor (target endpoint).
+   */
+  static markerInset(spec: Omit<ArrowMarkerSpec, 'x' | 'y'>): number {
+    return spec.length ?? 10;
+  }
+
   static paintInto(
     g: Graphics,
     spec: Omit<ArrowMarkerSpec, 'x' | 'y'>,

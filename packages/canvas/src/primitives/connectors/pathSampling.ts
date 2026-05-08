@@ -123,6 +123,72 @@ export function pathBounds(path: Path): Rect {
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 
+/**
+ * Pull the path's start / end anchors inward along their local tangents so
+ * the connector body stops short of where its markers will be drawn. The
+ * marker still anchors at the *original* endpoint (its tip touches the
+ * target) — only the body is shortened.
+ *
+ * For straight (`L`) ends this is exact. For `Q` / `C` curve ends the
+ * endpoint is shifted along the incoming tangent without rewalking arc
+ * length — visually correct for short insets, approximate for long ones.
+ * v0 only ships the `straight` router, so the curve cases are forward-
+ * compatible scaffolding rather than a hot path.
+ */
+export function trimPathEnds(path: Path, startInset: number, endInset: number): Path {
+  if (path.length < 2) return path;
+  if (startInset <= 0 && endInset <= 0) return path;
+
+  const first = path[0]!;
+  if (first.kind !== 'M') return path;
+
+  const result: PathCommand[] = path.slice();
+
+  if (startInset > 0) {
+    const t = tangentAtStart(path);
+    result[0] = { kind: 'M', x: first.x + t.x * startInset, y: first.y + t.y * startInset };
+  }
+
+  if (endInset > 0) {
+    const t = tangentAtEnd(path);
+    const last = result[result.length - 1]!;
+    switch (last.kind) {
+      case 'L':
+        result[result.length - 1] = {
+          kind: 'L',
+          x: last.x - t.x * endInset,
+          y: last.y - t.y * endInset,
+        };
+        break;
+      case 'Q':
+        result[result.length - 1] = {
+          kind: 'Q',
+          cx: last.cx,
+          cy: last.cy,
+          x: last.x - t.x * endInset,
+          y: last.y - t.y * endInset,
+        };
+        break;
+      case 'C':
+        result[result.length - 1] = {
+          kind: 'C',
+          c1x: last.c1x,
+          c1y: last.c1y,
+          c2x: last.c2x,
+          c2y: last.c2y,
+          x: last.x - t.x * endInset,
+          y: last.y - t.y * endInset,
+        };
+        break;
+      case 'M':
+        // Bare moveTo at the tail — nothing to trim.
+        break;
+    }
+  }
+
+  return result;
+}
+
 // ─── Internals ─────────────────────────────────────────────────────────────
 
 function tangentAtStart(path: Path): Vec2 {

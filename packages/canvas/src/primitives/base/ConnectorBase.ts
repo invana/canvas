@@ -1,6 +1,6 @@
 import { Graphics } from 'pixi.js';
 import { PrimitiveBase } from './PrimitiveBase';
-import { tangentAt } from '../connectors/pathSampling';
+import { tangentAt, trimPathEnds } from '../connectors/pathSampling';
 import type {
   BaseConnectorSpec,
   ConnectorHostInfo,
@@ -58,13 +58,34 @@ export abstract class ConnectorBase<TSpec extends BaseConnectorSpec>
     this.gfx.visible = spec.visible ?? true;
     this.gfx.zIndex = spec.zIndex ?? 0;
     this.bodyGfx.clear();
-    this.drawGeometry(this.bodyGfx, spec, path);
+    const bodyPath = this.trimPathForMarkers(spec, path);
+    this.drawGeometry(this.bodyGfx, spec, bodyPath);
     this.paintMarkers(this.bodyGfx, spec, path);
   }
 
   paintInto(g: Graphics, spec: TSpec, path: Path, style?: ConnectorPaintStyle): void {
-    this.drawGeometry(g, spec, path, style);
+    const bodyPath = this.trimPathForMarkers(spec, path);
+    this.drawGeometry(g, spec, bodyPath, style);
     this.paintMarkers(g, spec, path, style);
+  }
+
+  /**
+   * Resolve source/target marker insets via each marker's
+   * `ShapeCtor.markerInset` and shorten the path's start / end so the body
+   * stops at the marker's back edge. Markers themselves still paint at the
+   * untrimmed endpoints, so the marker tip lands exactly on the path
+   * endpoint (e.g. the arrow's tip touches the target).
+   */
+  private trimPathForMarkers(spec: TSpec, path: Path): Path {
+    if (path.length < 2) return path;
+    const startInset = spec.sourceMarker
+      ? markerInsetFor(this.host.shapeRegistry, spec.sourceMarker)
+      : 0;
+    const endInset = spec.targetMarker
+      ? markerInsetFor(this.host.shapeRegistry, spec.targetMarker)
+      : 0;
+    if (startInset <= 0 && endInset <= 0) return path;
+    return trimPathEnds(path, startInset, endInset);
   }
 
   /**
@@ -139,4 +160,14 @@ function paintMarkerAt(
   const Ctor = shapeRegistry.get(marker.kind);
   if (!Ctor || typeof Ctor.paintInto !== 'function') return;
   Ctor.paintInto(g, marker, anchor, angleRad, style);
+}
+
+function markerInsetFor(
+  shapeRegistry: ReadonlyMap<string, ShapeCtor>,
+  marker: MarkerShapeSpec,
+): number {
+  const Ctor = shapeRegistry.get(marker.kind);
+  if (!Ctor || typeof Ctor.markerInset !== 'function') return 0;
+  const inset = Ctor.markerInset(marker);
+  return Number.isFinite(inset) && inset > 0 ? inset : 0;
 }
