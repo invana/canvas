@@ -54,9 +54,17 @@ export const IconFills: Story = {
     icons.registerSvg('lucide-database', { pathD: databasePathD, strokeWidth: 2 });
 
     // ─── Stylesheet + webfont readiness ─────────────────────────────────────
+    //
+    // Order matters here. `<link rel=stylesheet>` kicks off:
+    //   stylesheet download → CSS parse → @font-face registration → WOFF fetch
+    // The FontFaceSet only knows about the family AFTER the @font-face
+    // is parsed, so calling `document.fonts.load(...)` before that returns
+    // an empty result and Pixi rasterizes against a fallback (chopped /
+    // wrong-metrics glyph). Wait for the link's `load` event first, then
+    // ask the FontFaceSet to actually load the face.
 
-    ensureFAStylesheet();
-    await icons.loadFonts();              // awaits document.fonts for every pack
+    await ensureFAStylesheet();
+    await icons.loadFonts();
 
     // ─── Canvas setup ───────────────────────────────────────────────────────
 
@@ -129,14 +137,29 @@ export const IconFills: Story = {
 
     // ─── Helpers ────────────────────────────────────────────────────────────
 
-    /** Inject the FontAwesome 6 Free webfont stylesheet once per page. */
-    function ensureFAStylesheet(): void {
-      if (document.querySelector('link[data-fa-cdn]')) return;
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.dataset.faCdn = 'true';
-      link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
-      document.head.appendChild(link);
+    /**
+     * Inject the FontAwesome 6 Free webfont stylesheet once per page and
+     * resolve only when it has finished parsing — at which point the
+     * `@font-face` declarations are registered with the FontFaceSet.
+     */
+    function ensureFAStylesheet(): Promise<void> {
+      const existing = document.querySelector<HTMLLinkElement>('link[data-fa-cdn]');
+      if (existing) {
+        if (existing.sheet) return Promise.resolve();
+        return new Promise((resolve, reject) => {
+          existing.addEventListener('load', () => resolve(), { once: true });
+          existing.addEventListener('error', () => reject(new Error('FA stylesheet load failed')), { once: true });
+        });
+      }
+      return new Promise((resolve, reject) => {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.dataset.faCdn = 'true';
+        link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
+        link.onload = () => resolve();
+        link.onerror = () => reject(new Error('FA stylesheet load failed'));
+        document.head.appendChild(link);
+      });
     }
 
     /**
