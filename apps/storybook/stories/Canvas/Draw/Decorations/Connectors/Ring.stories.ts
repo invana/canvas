@@ -39,6 +39,8 @@ export const Ring: Story = {
       width: 2,
       alpha: 1,
       inset: 6,
+      ringCount: 1,
+      ringSpacing: 6,
     };
 
     const connectorSpec = {
@@ -65,6 +67,8 @@ export const Ring: Story = {
         width: settings.width,
         alpha: settings.alpha,
         inset: settings.inset,
+        ringCount: settings.ringCount,
+        ringSpacing: settings.ringSpacing,
       });
     }
 
@@ -77,5 +81,7 @@ export const Ring: Story = {
     gui.add(settings, 'width', 0, 20, 1).onChange(redraw);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(redraw);
     gui.add(settings, 'inset', 0, 30, 1).onChange(redraw);
+    gui.add(settings, 'ringCount', 1, 5, 1).onChange(redraw);
+    gui.add(settings, 'ringSpacing', 0, 30, 1).onChange(redraw);
   },
 };

@@ -57,7 +57,7 @@ export const Ring: Story = {
     }
     canvas.camera.fitContent(layer.getBounds(), 100);
 
-    const settings = { color: '#f43f5e', width: 3, alpha: 1, cornerRadius: 0, inset: 0 };
+    const settings = { color: '#f43f5e', width: 3, alpha: 1, cornerRadius: 0, inset: 0, ringCount: 1, ringSpacing: 6 };
 
     function apply() {
       const style = {
@@ -66,6 +66,8 @@ export const Ring: Story = {
         alpha: settings.alpha,
         cornerRadius: settings.cornerRadius,
         inset: settings.inset,
+        ringCount: settings.ringCount,
+        ringSpacing: settings.ringSpacing,
       };
       for (const { id } of SHAPES) {
         layer.renderer.setDecoration(id, 'ring', { kind: 'ring', style });
@@ -80,5 +82,7 @@ export const Ring: Story = {
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(apply);
     gui.add(settings, 'cornerRadius', 0, 40, 1).onChange(apply);
     gui.add(settings, 'inset', -20, 20, 1).onChange(apply);
+    gui.add(settings, 'ringCount', 1, 5, 1).onChange(apply);
+    gui.add(settings, 'ringSpacing', 0, 30, 1).onChange(apply);
   },
 };

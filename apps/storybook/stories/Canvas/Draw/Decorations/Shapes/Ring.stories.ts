@@ -79,7 +79,7 @@ export const Ring: Story = {
     const hostG = layer.createGraphics('host-gfx');
     const decoG = layer.createGraphics('ring-gfx');
 
-    const settings = { color: '#f43f5e', width: 3, alpha: 1, inset: 0 };
+    const settings = { color: '#f43f5e', width: 3, alpha: 1, inset: 0, ringCount: 1, ringSpacing: 6 };
 
     function redraw() {
       hostG.clear();
@@ -89,6 +89,8 @@ export const Ring: Story = {
         width: settings.width,
         alpha: settings.alpha,
         inset: settings.inset,
+        ringCount: settings.ringCount,
+        ringSpacing: settings.ringSpacing,
       };
       for (const c of cells) {
         if (c.kind === 'rect') {
@@ -133,5 +135,7 @@ export const Ring: Story = {
     gui.add(settings, 'width', 0, 20, 1).onChange(redraw);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(redraw);
     gui.add(settings, 'inset', -20, 20, 1).onChange(redraw);
+    gui.add(settings, 'ringCount', 1, 5, 1).onChange(redraw);
+    gui.add(settings, 'ringSpacing', 0, 30, 1).onChange(redraw);
   },
 };

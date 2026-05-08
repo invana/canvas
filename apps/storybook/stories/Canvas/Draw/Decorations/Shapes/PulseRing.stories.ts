@@ -98,7 +98,7 @@ export const PulseRing: Story = {
 
     const settings = {
       color: '#a78bfa', width: 2, alpha: 0.6,
-      startPadding: 0, endPadding: 30, periodMs: 1500,
+      startPadding: 0, endPadding: 30, periodMs: 1500, ringCount: 1,
     };
 
     function redrawHosts() {
@@ -149,6 +149,7 @@ export const PulseRing: Story = {
           startPadding: settings.startPadding,
           endPadding: settings.endPadding,
           periodMs: settings.periodMs,
+          ringCount: settings.ringCount,
         });
         deco.update(c.bounds, c.kind, c.outline);
         return deco;
@@ -165,5 +166,6 @@ export const PulseRing: Story = {
     gui.add(settings, 'startPadding', 0, 30, 1).onChange(rebuild);
     gui.add(settings, 'endPadding', 10, 80, 1).onChange(rebuild);
     gui.add(settings, 'periodMs', 200, 5000, 100).onChange(rebuild);
+    gui.add(settings, 'ringCount', 1, 5, 1).onChange(rebuild);
   },
 };
