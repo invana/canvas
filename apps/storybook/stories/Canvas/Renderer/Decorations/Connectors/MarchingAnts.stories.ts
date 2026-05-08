@@ -9,14 +9,14 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer } from '../../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Renderer/Connectors/PulsatingGlowConnector' };
+const meta: Meta = { title: 'Canvas/Renderer/Decorations/Connectors/MarchingAnts' };
 export default meta;
 type Story = StoryObj;
 
-export const PulsatingGlowConnector: Story = {
-  render: () => createContainer({ id: 'cvs-renderer-pulsating-glow-connector' }),
+export const MarchingAnts: Story = {
+  render: () => createContainer({ id: 'cvs-renderer-deco-conn-marching-ants' }),
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
@@ -32,29 +32,26 @@ export const PulsatingGlowConnector: Story = {
     const SRC = { kind: 'point' as const, x: 80, y: 200 };
     const TGT = { kind: 'point' as const, x: 480, y: 340 };
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-renderer-pulsating-glow-connector')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-renderer-deco-conn-marching-ants')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new RenderLayer({ id: 'pulsating-glow-connector-layer', options: {} });
+    const layer = new RenderLayer({ id: 'renderer-deco-conn-marching-ants-layer', options: {} });
     canvas.layers.add(layer);
 
     const settings = {
-      kind: 'line' as 'line' | 'curve',
-      router: 'straight' as 'straight' | 'orthogonal' | 'bezier',
-      strokeColor: '#0f172a',
-      strokeWidth: 3,
-      glowColor: '#0ea5e9',
-      glowWidth: 14,
-      alphaMin: 0.35,
-      alphaMax: 0.9,
-      layerCount: 3,
-      featherStep: 5,
-      featherFalloff: 0.5,
-      periodMs: 1400,
+      kind: 'curve' as 'line' | 'curve',
+      router: 'orthogonal' as 'straight' | 'orthogonal' | 'bezier',
+      strokeColor: '#94a3b8',
+      strokeWidth: 2,
+      antsColor: '#0ea5e9',
+      antsWidth: 2,
+      dashLength: 8,
+      gapLength: 6,
+      speed: 0.05,
     };
 
     function buildSpec() {
@@ -78,17 +75,15 @@ export const PulsatingGlowConnector: Story = {
     }
 
     function applyDecoration() {
-      layer.renderer.setDecoration('edge', 'glow', {
-        kind: 'pulsating-glow',
+      layer.renderer.setDecoration('edge', 'fx', {
+        kind: 'marching-ants-connector',
         style: {
-          color: toHex(settings.glowColor),
-          width: settings.glowWidth,
-          alphaMin: settings.alphaMin,
-          alphaMax: settings.alphaMax,
-          layerCount: settings.layerCount,
-          featherStep: settings.featherStep,
-          featherFalloff: settings.featherFalloff,
-          periodMs: settings.periodMs,
+          color: toHex(settings.antsColor),
+          width: settings.antsWidth,
+          dashLength: settings.dashLength,
+          gapLength: settings.gapLength,
+          speed: settings.speed,
+          cap: 'round',
         },
       });
     }
@@ -96,19 +91,16 @@ export const PulsatingGlowConnector: Story = {
     rebuild();
     canvas.camera.fitContent(layer.getBounds(), 100);
 
-    const gui = new GUI({ title: 'Pulsating glow' });
+    const gui = new GUI({ title: 'Marching ants' });
     gui.add(settings, 'kind', ['line', 'curve']).onChange(rebuild);
     gui.add(settings, 'router', ['straight', 'orthogonal', 'bezier']).onChange(rebuild);
     gui.addColor(settings, 'strokeColor').onChange(rebuild);
     gui.add(settings, 'strokeWidth', 1, 12, 1).onChange(rebuild);
-    const glowFolder = gui.addFolder('Glow');
-    glowFolder.addColor(settings, 'glowColor').onChange(applyDecoration);
-    glowFolder.add(settings, 'glowWidth', 4, 40, 1).onChange(applyDecoration);
-    glowFolder.add(settings, 'alphaMin', 0, 1, 0.01).onChange(applyDecoration);
-    glowFolder.add(settings, 'alphaMax', 0, 1, 0.01).onChange(applyDecoration);
-    glowFolder.add(settings, 'layerCount', 0, 8, 1).onChange(applyDecoration);
-    glowFolder.add(settings, 'featherStep', 0, 20, 1).onChange(applyDecoration);
-    glowFolder.add(settings, 'featherFalloff', 0.1, 1, 0.05).onChange(applyDecoration);
-    glowFolder.add(settings, 'periodMs', 200, 4000, 50).onChange(applyDecoration);
+    const antsFolder = gui.addFolder('Ants');
+    antsFolder.addColor(settings, 'antsColor').onChange(applyDecoration);
+    antsFolder.add(settings, 'antsWidth', 0.5, 8, 0.5).onChange(applyDecoration);
+    antsFolder.add(settings, 'dashLength', 1, 40, 1).onChange(applyDecoration);
+    antsFolder.add(settings, 'gapLength', 1, 40, 1).onChange(applyDecoration);
+    antsFolder.add(settings, 'speed', 0, 0.3, 0.005).onChange(applyDecoration);
   },
 };

@@ -2,14 +2,14 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, ShapesRenderer } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer } from '../../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Renderer/Decorations/Halo' };
+const meta: Meta = { title: 'Canvas/Renderer/Decorations/Shapes/Ring' };
 export default meta;
 type Story = StoryObj;
 
-export const Halo: Story = {
-  render: () => createContainer({ id: 'cvs-deco-halo' }),
+export const Ring: Story = {
+  render: () => createContainer({ id: 'cvs-renderer-deco-shape-ring' }),
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
@@ -43,13 +43,13 @@ export const Halo: Story = {
       { id: 'path',    spec: { kind: 'path'    as const, x: 280,  y: 0, commands: ARROW_COMMANDS, fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2 } },
     ];
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-halo')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-renderer-deco-shape-ring')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new RenderLayer({ id: 'deco-halo', options: {} });
+    const layer = new RenderLayer({ id: 'renderer-deco-shape-ring-layer', options: {} });
     canvas.layers.add(layer);
 
     for (const { id, spec } of SHAPES) {
@@ -57,26 +57,32 @@ export const Halo: Story = {
     }
     canvas.camera.fitContent(layer.getBounds(), 100);
 
-    const settings = { color: '#f59e0b', alpha: 0.4, padding: 8, cornerRadius: 0 };
+    const settings = { color: '#f43f5e', width: 3, alpha: 1, cornerRadius: 0, inset: -5, ringCount: 1, ringSpacing: 6 };
 
     function apply() {
       const style = {
         color: toHex(settings.color),
+        width: settings.width,
         alpha: settings.alpha,
-        padding: settings.padding,
         cornerRadius: settings.cornerRadius,
+        inset: settings.inset,
+        ringCount: settings.ringCount,
+        ringSpacing: settings.ringSpacing,
       };
       for (const { id } of SHAPES) {
-        layer.renderer.setDecoration(id, 'halo', { kind: 'halo', style });
+        layer.renderer.setDecoration(id, 'ring', { kind: 'ring', style });
       }
     }
 
     apply();
 
-    const gui = new GUI({ title: 'Halo' });
+    const gui = new GUI({ title: 'Ring' });
     gui.addColor(settings, 'color').onChange(apply);
+    gui.add(settings, 'width', 0, 20, 1).onChange(apply);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(apply);
-    gui.add(settings, 'padding', 0, 40, 1).onChange(apply);
-    gui.add(settings, 'cornerRadius', 0, 60, 1).onChange(apply);
+    gui.add(settings, 'cornerRadius', 0, 40, 1).onChange(apply);
+    gui.add(settings, 'inset', -20, 20, 1).onChange(apply);
+    gui.add(settings, 'ringCount', 1, 5, 1).onChange(apply);
+    gui.add(settings, 'ringSpacing', 0, 30, 1).onChange(apply);
   },
 };

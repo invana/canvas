@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, ShapesRenderer } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
+import type { BaseShapeSpec, CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer } from '../../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Renderer/Decorations/Glow' };
+const meta: Meta = { title: 'Canvas/Renderer/Decorations/Shapes/MarchingAnts' };
 export default meta;
 type Story = StoryObj;
 
-export const Glow: Story = {
-  render: () => createContainer({ id: 'cvs-deco-glow' }),
+export const MarchingAnts: Story = {
+  render: () => createContainer({ id: 'cvs-renderer-deco-shape-marching-ants' }),
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
@@ -43,13 +43,13 @@ export const Glow: Story = {
       { id: 'path',    spec: { kind: 'path'    as const, x: 280,  y: 0, commands: ARROW_COMMANDS, fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2 } },
     ];
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-glow')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-renderer-deco-shape-marching-ants')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new RenderLayer({ id: 'deco-glow', options: {} });
+    const layer = new RenderLayer({ id: 'renderer-deco-shape-marching-ants-layer', options: {} });
     canvas.layers.add(layer);
 
     for (const { id, spec } of SHAPES) {
@@ -57,26 +57,37 @@ export const Glow: Story = {
     }
     canvas.camera.fitContent(layer.getBounds(), 100);
 
-    const settings = { color: '#38bdf8', padding: 12, alpha: 0.6, blur: 8 };
+    const settings = { color: '#f43f5e', width: 1.5, alpha: 1, dashLength: 6, gapLength: 4, speed: 0.04, inset: 2, cornerRadius: 0 };
 
     function apply() {
       const style = {
         color: toHex(settings.color),
-        padding: settings.padding,
+        width: settings.width,
         alpha: settings.alpha,
-        blur: settings.blur,
+        dashLength: settings.dashLength,
+        gapLength: settings.gapLength,
+        speed: settings.speed,
+        inset: settings.inset,
+        cornerRadius: settings.cornerRadius,
       };
       for (const { id } of SHAPES) {
-        layer.renderer.setDecoration(id, 'glow', { kind: 'glow', style });
+        layer.renderer.setDecoration(id, 'ring', { kind: 'marching-ants', style });
       }
+      // Match the rect host's cornerRadius so the dash trace is concentric.
+      type RectPartial = BaseShapeSpec & { cornerRadius?: number };
+      layer.renderer.updateShape<RectPartial>('rect', { cornerRadius: settings.cornerRadius });
     }
 
     apply();
 
-    const gui = new GUI({ title: 'Glow' });
+    const gui = new GUI({ title: 'Marching Ants' });
     gui.addColor(settings, 'color').onChange(apply);
-    gui.add(settings, 'padding', 0, 40, 1).onChange(apply);
+    gui.add(settings, 'width', 0, 10, 0.5).onChange(apply);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(apply);
-    gui.add(settings, 'blur', 0, 30, 1).onChange(apply);
+    gui.add(settings, 'dashLength', 1, 30, 1).onChange(apply);
+    gui.add(settings, 'gapLength', 1, 30, 1).onChange(apply);
+    gui.add(settings, 'speed', 0, 0.2, 0.005).onChange(apply);
+    gui.add(settings, 'inset', 0, 20, 1).onChange(apply);
+    gui.add(settings, 'cornerRadius', 0, 35, 1).onChange(apply);
   },
 };

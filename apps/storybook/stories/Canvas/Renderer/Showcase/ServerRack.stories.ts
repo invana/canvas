@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, ShapesRenderer } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer } from '../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Renderer/Shapes' };
+const meta: Meta = { title: 'Canvas/Renderer/Showcase/ServerRack' };
 export default meta;
 type Story = StoryObj;
 

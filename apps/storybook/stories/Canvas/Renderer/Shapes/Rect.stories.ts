@@ -2,14 +2,14 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, ShapesRenderer } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer } from '../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Renderer/Routers' };
+const meta: Meta = { title: 'Canvas/Renderer/Shapes/Rect' };
 export default meta;
 type Story = StoryObj;
 
-export const Routers: Story = {
-  render: () => createContainer({ id: 'cvs-routers' }),
+export const Rect: Story = {
+  render: () => createContainer({ id: 'cvs-renderer-shape-rect' }),
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
@@ -23,50 +23,51 @@ export const Routers: Story = {
 
     const toHex = (s: string) => parseInt(s.slice(1), 16);
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-routers')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-renderer-shape-rect')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
-
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new RenderLayer({ id: 'routers', options: {} });
+    const layer = new RenderLayer({ id: 'rect', options: {} });
     canvas.layers.add(layer);
 
     const settings = {
-      router: 'straight' as 'straight' | 'orthogonal' | 'bezier',
-      targetX: 400,
-      targetY: 300,
-      strokeColor: '#374151',
+      fillColor: '#4f9cf9',
+      strokeColor: '#1e3a8a',
       strokeWidth: 2,
+      width: 120,
+      height: 80,
+      cornerRadius: 10,
     };
 
     function buildSpec() {
       return {
-        kind: settings.router === 'bezier' ? 'curve' : 'line',
-        router: settings.router,
-        source: { kind: 'point' as const, x: 80, y: 100 },
-        target: { kind: 'point' as const, x: settings.targetX, y: settings.targetY },
+        kind: 'rect' as const,
+        x: 0, y: 0,
+        width: settings.width,
+        height: settings.height,
+        cornerRadius: settings.cornerRadius,
+        fill: toHex(settings.fillColor),
         stroke: toHex(settings.strokeColor),
         strokeWidth: settings.strokeWidth,
-        targetMarker: 'arrow',
-        targetMarkerOptions: { color: toHex(settings.strokeColor), size: 12 },
       };
     }
 
-    layer.renderer.addConnector('edge', buildSpec() as never);
+    layer.renderer.addShape('s', buildSpec() as never);
     canvas.camera.fitContent(layer.getBounds(), 100);
 
     function redraw() {
-      layer.renderer.removeConnector('edge');
-      layer.renderer.addConnector('edge', buildSpec() as never);
+      layer.renderer.removeShape('s');
+      layer.renderer.addShape('s', buildSpec() as never);
     }
 
-    const gui = new GUI({ title: 'Router' });
-    gui.add(settings, 'router', ['straight', 'orthogonal', 'bezier']).onChange(redraw);
-    gui.add(settings, 'targetX', 100, 600, 1).onChange(redraw);
-    gui.add(settings, 'targetY', 100, 500, 1).onChange(redraw);
+    const gui = new GUI({ title: 'Rect' });
+    gui.addColor(settings, 'fillColor').onChange(redraw);
     gui.addColor(settings, 'strokeColor').onChange(redraw);
-    gui.add(settings, 'strokeWidth', 1, 20, 1).onChange(redraw);
+    gui.add(settings, 'strokeWidth', 0, 20, 1).onChange(redraw);
+    gui.add(settings, 'width', 20, 400, 1).onChange(redraw);
+    gui.add(settings, 'height', 20, 400, 1).onChange(redraw);
+    gui.add(settings, 'cornerRadius', 0, 80, 1).onChange(redraw);
   },
 };

@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, TextureRegistry, WheelZoomBehaviour, WorldLayer, ShapesRenderer } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer } from '../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Renderer/Images' };
+const meta: Meta = { title: 'Canvas/Renderer/Shapes/Image' };
 export default meta;
 type Story = StoryObj;
 
-export const Images: Story = {
+export const Image: Story = {
   render: () => createContainer({ id: 'cvs-renderer-images' }),
 
   play: async ({ canvasElement }) => {

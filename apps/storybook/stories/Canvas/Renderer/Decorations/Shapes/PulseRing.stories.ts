@@ -2,14 +2,14 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, ShapesRenderer } from '@invana/canvas';
 import type { BaseShapeSpec, CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer } from '../../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Renderer/Decorations/PulseRing' };
+const meta: Meta = { title: 'Canvas/Renderer/Decorations/Shapes/PulseRing' };
 export default meta;
 type Story = StoryObj;
 
 export const PulseRing: Story = {
-  render: () => createContainer({ id: 'cvs-deco-pulse-ring' }),
+  render: () => createContainer({ id: 'cvs-renderer-deco-shape-pulse-ring' }),
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
@@ -43,13 +43,13 @@ export const PulseRing: Story = {
       { id: 'path',    spec: { kind: 'path'    as const, x: 400,  y: 0, commands: ARROW_COMMANDS, fill: 0x4f9cf9, stroke: 0x1e3a8a, strokeWidth: 2 } },
     ];
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-pulse-ring')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-renderer-deco-shape-pulse-ring')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new RenderLayer({ id: 'deco-pulse-ring', options: {} });
+    const layer = new RenderLayer({ id: 'renderer-deco-shape-pulse-ring-layer', options: {} });
     canvas.layers.add(layer);
 
     for (const { id, spec } of SHAPES) {
