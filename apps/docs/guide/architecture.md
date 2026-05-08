@@ -171,11 +171,11 @@ See [the layouts guide](/guide/layouts).
 
 ## Renderer (primitive)
 
-A Renderer knows how to draw a *class* of things — shapes + connectors, tile pyramids, raster images. It carries no domain knowledge.
+A Renderer knows how to draw a *class* of things — shapes + connectors with their decorations, markers, and routers. It carries no domain knowledge.
 
-`ShapesRenderer` — the canvas's built-in renderer — knows about pixels, hit-testing, and the camera. It knows nothing about nodes, edges, tables, or columns. It's *told* what to draw, and draws it.
+`PrimitivesRenderer` — the canvas's built-in renderer — knows about pixels, hit-testing, and the camera. It knows nothing about nodes, edges, tables, or columns. It's *told* what to draw, and draws it.
 
-A `GraphLayer` composes `ShapesRenderer` internally and supplies all the policy: which nodes/edges become which shapes/connectors, what LOD thresholds apply, when to bump label resolution, what hover/selection look like. A future `ERDiagramLayer`, `FlowchartLayer`, or `SwimlaneLayer` would do the same — same renderer, different brain.
+A `GraphLayer` composes `PrimitivesRenderer` internally and supplies all the policy: which nodes/edges become which shapes/connectors, what LOD thresholds apply, when to bump label resolution, what hover/selection look like. A future `ERDiagramLayer`, `FlowchartLayer`, or `SwimlaneLayer` would do the same — same renderer, different brain.
 
 **Users add Layers. Renderers are tools Layer authors use.** A renderer is never added to `canvas.layers`.
 
@@ -216,5 +216,5 @@ Continue with the concept guides:
 - [Layers](/guide/layers) — state vs data, dirty/flush, hit testing, when to subclass which base
 - [Behaviours](/guide/behaviours) — scope, lifecycle, defaults, gesture conflicts
 - [Layouts](/guide/layouts) — pure-function model, continuous simulations
-- [Renderers](/guide/renderers) — `ShapesRenderer`, decorations, the boundary with Layers
+- [Renderers](/guide/renderers) — `PrimitivesRenderer`, decorations, the boundary with Layers
 - [Events](/guide/events) — the three-tier event hierarchy and the telemetry tap

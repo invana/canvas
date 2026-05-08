@@ -29,7 +29,7 @@ interface MarchingAntsStyle {
 ## Usage
 
 ```ts
-import { MarchingAntsDecoration } from '@invana/canvas/renderers/shapes';
+import { MarchingAntsDecoration } from '@invana/canvas/primitives';
 
 renderer.registerDecoration('marching-ants', 'shape', MarchingAntsDecoration);
 renderer.setDecoration(nodeId, 'marching-ants', { color: 0x000000 });

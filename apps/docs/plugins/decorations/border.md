@@ -21,7 +21,7 @@ interface BorderStyle {
 ## Usage
 
 ```ts
-import { BorderDecoration } from '@invana/canvas/renderers/shapes';
+import { BorderDecoration } from '@invana/canvas/primitives';
 
 renderer.registerDecoration('border', 'shape', BorderDecoration);
 renderer.setDecoration(nodeId, 'border', { color: 0x111111, width: 2 });

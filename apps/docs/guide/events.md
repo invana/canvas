@@ -8,7 +8,7 @@ The canvas has a **three-tier event hierarchy** plus a **single telemetry tap**.
 DOM pointer events
         │
         ▼
-ShapesRenderer.events            ← raw, primitive, hit-tested
+PrimitivesRenderer.events        ← raw, primitive, hit-tested
   shape:pointerover              ← no semantic meaning, no domain knowledge
   shape:click
   connector:pointermove …

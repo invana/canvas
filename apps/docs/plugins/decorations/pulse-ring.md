@@ -25,7 +25,7 @@ interface PulseRingStyle {
 ## Usage
 
 ```ts
-import { PulseRingDecoration } from '@invana/canvas/renderers/shapes';
+import { PulseRingDecoration } from '@invana/canvas/primitives';
 
 renderer.registerDecoration('pulse-ring', 'shape', PulseRingDecoration);
 renderer.setDecoration(nodeId, 'pulse-ring', { color: 0x4f8cff, ringCount: 3 });

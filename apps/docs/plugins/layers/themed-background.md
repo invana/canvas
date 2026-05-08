@@ -9,7 +9,7 @@ Planned. Not yet implemented in `@invana/canvas`.
 ## Planned shape
 
 ```ts
-import { ThemedBackgroundLayer } from '@invana/canvas/toolkit';
+import { ThemedBackgroundLayer } from '@invana/canvas';
 
 canvas.layers.add(new ThemedBackgroundLayer({
   id: 'background',

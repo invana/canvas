@@ -20,15 +20,14 @@ yarn add @invana/canvas pixi.js
 
 ## What you import from where
 
-`@invana/canvas` ships under three subpaths so consumers can pull only what they need:
+`@invana/canvas` ships under two subpaths so consumers can pull only what they need:
 
 | Subpath | Contains |
 |---|---|
-| `@invana/canvas` | `Canvas`, base classes (`Layer`, `WorldLayer`, `ScreenLayer`, `Behaviour`), `Camera`, registries, store, events |
-| `@invana/canvas/renderers/shapes` | `ShapesRenderer` + base interfaces + built-in shapes / connectors / markers / decorations |
-| `@invana/canvas/toolkit` | Built-in layers and camera-input behaviours (`BackgroundLayer`, `DevInfoLayer`, `DragPanBehaviour`, `WheelZoomBehaviour`, …) |
+| `@invana/canvas` | `Canvas`, base classes (`Layer`, `WorldLayer`, `ScreenLayer`, `Behaviour`), `Camera`, registries, store, events, the built-in camera-input behaviours (`DragPanBehaviour`, `WheelZoomBehaviour`, `PinchZoomBehaviour`, `KeyboardCameraInputBehaviour`), and a re-export of the full `primitives/` surface |
+| `@invana/canvas/primitives` | `PrimitivesRenderer` + base classes (`ShapeBase`, `ConnectorBase`, `ShapeDecorationBase`, `ConnectorDecorationBase`) + built-in shapes (`CircleShape`, `RectShape`), connector (`Connector`), markers (`ArrowMarker`), routers (`straightRouter`), decorations (`GlowDecoration`), path utilities, and shared types (`Path`, `PathCommand`, `BaseShapeSpec`, `BaseConnectorSpec`, `IShape`, `IConnector`, …) |
 
-For the kernel essentials, you can also import behaviours / `ShapesRenderer` directly from `@invana/canvas` — both paths re-export the same symbols.
+The `/primitives` subpath is the one to reach for when you're authoring a custom shape, connector, decoration, or router. Everyday application code rarely needs it directly — you compose Layers, and Layers compose the renderer for you.
 
 ## Step 1 — create and initialise the Canvas
 
@@ -95,10 +94,10 @@ canvas.behaviours.setEnabled('lasso', true);
 
 A Layer is the unit of rendered output. The kernel ships abstract base classes (`Layer`, `WorldLayer`, `ScreenLayer`); the toolkit (and `@invana/graph`) ship concrete ones.
 
-The simplest custom Layer paints a circle directly:
+The simplest custom Layer paints a couple of circles directly into a `Graphics`:
 
 ```ts
-import { WorldLayer, draw } from '@invana/canvas';
+import { WorldLayer } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 
 interface DotsState {
@@ -112,8 +111,8 @@ class DotsLayer extends WorldLayer<{}, DotsState> {
 
   protected onMount(_ctx: CanvasContext): void {
     const g = this.createGraphics('dots');
-    draw.drawCircle(g, { kind: 'circle', x: 0, y: 0, r: 40, fill: this.state.getState().color });
-    draw.drawCircle(g, { kind: 'circle', x: 100, y: 50, r: 20, fill: 0xef4444 });
+    g.circle(0, 0, 40).fill(this.state.getState().color);
+    g.circle(100, 50, 20).fill(0xef4444);
   }
 
   hitTest(_worldX: number, _worldY: number) {
@@ -124,7 +123,9 @@ class DotsLayer extends WorldLayer<{}, DotsState> {
 canvas.layers.add(new DotsLayer({ id: 'dots', options: {} }));
 ```
 
-`createGraphics(label?)` returns a pixi `Graphics` attached to this layer's root container. Use the `draw.*` helpers to paint into it without importing `pixi.js` directly.
+`createGraphics(label?)` returns a pixi `Graphics` attached to this layer's root container. The `Graphics` type is re-exported from `@invana/canvas` so you can type your callbacks without a direct `pixi.js` import.
+
+For richer scenes, compose `PrimitivesRenderer` from `@invana/canvas/primitives` and let it manage shape lifecycle, decorations, and hit-testing — see the [Renderers guide](/guide/renderers).
 
 ## Step 4 — listen to events
 
@@ -192,5 +193,5 @@ canvas.destroy();
 - [Layers](/guide/layers) — state vs data, dirty/flush, hit testing
 - [Behaviours](/guide/behaviours) — scope, defaults, gesture conflicts
 - [Layouts](/guide/layouts) — pure functions from data to positions
-- [Renderers](/guide/renderers) — `ShapesRenderer` and decorations
+- [Renderers](/guide/renderers) — `PrimitivesRenderer` and decorations
 - [Events](/guide/events) — three-tier hierarchy and telemetry tap

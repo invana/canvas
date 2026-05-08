@@ -235,7 +235,7 @@ Z-order ties broken by registration order — earlier add, drawn first.
 ## Custom Layer — minimal example
 
 ```ts
-import { WorldLayer, draw } from '@invana/canvas';
+import { WorldLayer } from '@invana/canvas';
 import type { CanvasContext, Graphics } from '@invana/canvas';
 
 interface BoxOptions {
@@ -265,14 +265,9 @@ class BoxLayer extends WorldLayer<BoxOptions, BoxState> {
     this.g.clear();
     const { size } = this.options;
     const { hovered } = this.state.getState();
-    draw.drawRect(this.g, {
-      kind: 'rect',
-      x: -size / 2,
-      y: -size / 2,
-      w: size,
-      h: size,
-      fill: hovered ? 0xef4444 : 0x3b82f6,
-    });
+    this.g
+      .rect(-size / 2, -size / 2, size, size)
+      .fill(hovered ? 0xef4444 : 0x3b82f6);
   }
 
   hover(yes: boolean): void {
@@ -295,10 +290,10 @@ await canvas.init({ container: document.getElementById('app')! });
 canvas.layers.add(new BoxLayer({ id: 'box', options: { size: 200 } }));
 ```
 
-In a real layer, swap the manual `repaint` for the `dirty` + `applyDirty` flow — but the minimal pattern is the same: state mutates, repaint reads state, draw helpers paint into the layer's `Graphics`.
+In a real layer, swap the manual `repaint` for the `dirty` + `applyDirty` flow — but the minimal pattern is the same: state mutates, the layer reads state, paints into a `Graphics`.
 
 ## What's next
 
 - [Behaviours](/guide/behaviours) — how input lands in `state`
-- [Renderers](/guide/renderers) — when to compose `ShapesRenderer` instead of painting directly
+- [Renderers](/guide/renderers) — when to compose `PrimitivesRenderer` instead of painting directly
 - [Events](/guide/events) — `layer.events` vs `canvas.events`

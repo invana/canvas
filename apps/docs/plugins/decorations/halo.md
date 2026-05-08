@@ -19,8 +19,8 @@ interface HaloStyle {
 ## Usage
 
 ```ts
-import { ShapesRenderer } from '@invana/canvas';
-import { HaloDecoration } from '@invana/canvas/renderers/shapes';
+import { PrimitivesRenderer } from '@invana/canvas';
+import { HaloDecoration } from '@invana/canvas/primitives';
 
 renderer.registerDecoration('halo', 'shape', HaloDecoration);
 

@@ -11,7 +11,7 @@ Planned. Not yet implemented in `@invana/canvas`.
 ## Planned shape
 
 ```ts
-import { DevInfoLayer } from '@invana/canvas/toolkit';
+import { DevInfoLayer } from '@invana/canvas';
 
 canvas.layers.add(new DevInfoLayer({
   id: 'dev-info',

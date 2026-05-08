@@ -20,7 +20,7 @@ interface GlowStyle {
 ## Usage
 
 ```ts
-import { GlowDecoration } from '@invana/canvas/renderers/shapes';
+import { GlowDecoration } from '@invana/canvas/primitives';
 
 renderer.registerDecoration('glow', 'shape', GlowDecoration);
 renderer.setDecoration(nodeId, 'glow', { color: 0xff8c4f, blur: 12 });

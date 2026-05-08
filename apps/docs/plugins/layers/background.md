@@ -9,7 +9,7 @@ Planned. Not yet implemented in `@invana/canvas`. Use a custom `WorldLayer` subc
 ## Planned shape
 
 ```ts
-import { BackgroundLayer } from '@invana/canvas/toolkit';
+import { BackgroundLayer } from '@invana/canvas';
 
 canvas.layers.add(new BackgroundLayer({
   id: 'background',

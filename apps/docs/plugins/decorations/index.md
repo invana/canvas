@@ -1,6 +1,6 @@
 # Decorations
 
-A **decoration** is a generic 2D visual attached to a host primitive — a halo around a node, a border on a table, a marching-ants outline on a selected edge. Decorations live in the `ShapesRenderer` and are projected from layer state via `renderer.setDecoration(id, kind, style)`.
+A **decoration** is a generic 2D visual attached to a host primitive — a halo around a node, a border on a table, a marching-ants outline on a selected edge. Decorations live in the `PrimitivesRenderer` and are projected from layer state via `renderer.setDecoration(id, kind, style)`.
 
 Five built-in shape decorations ship with `@invana/canvas`. Two also ship in connector variants (`MarchingAntsConnectorDecoration`, `PulsatingGlowConnectorDecoration`).
 
