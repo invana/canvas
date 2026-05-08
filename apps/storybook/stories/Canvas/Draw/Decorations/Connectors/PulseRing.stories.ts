@@ -12,10 +12,10 @@ export const PulseRing: Story = {
 
   play: async ({ canvasElement }) => {
     class DrawLayer extends WorldLayer {
-      deco?: draw.AnimatedConnectorDecoration;
+      ticker?: (dt: number) => void;
       protected createState() { return {}; }
       hitTest() { return null; }
-      tickAnimations(dt: number) { this.deco?.tick(dt); }
+      tickAnimations(dt: number) { this.ticker?.(dt); }
     }
 
     const toHex = (s: string) => parseInt(s.slice(1), 16);
@@ -33,9 +33,7 @@ export const PulseRing: Story = {
     canvas.layers.add(layer);
 
     const hostG = layer.createGraphics('host-gfx');
-    const decoSlot = layer.createContainer('pulse-slot');
     const decoG = layer.createGraphics('pulse-gfx');
-    decoSlot.addChild(decoG);
 
     const settings = {
       router: 'straight' as 'straight' | 'orthogonal' | 'bezier',
@@ -67,8 +65,7 @@ export const PulseRing: Story = {
       hostG.clear();
       draw.drawLineConnector(hostG, polyline, connectorSpec);
 
-      layer.deco?.destroy();
-      layer.deco = new draw.PulseRingConnectorDecoration(decoSlot, decoG, {
+      const deco = new draw.PulseRingConnectorDecoration({
         color: toHex(settings.color),
         width: settings.width,
         alpha: settings.alpha,
@@ -77,7 +74,15 @@ export const PulseRing: Story = {
         periodMs: settings.periodMs,
         ringCount: settings.ringCount,
       });
-      layer.deco.update(polyline);
+      // Each ring is at a different point in the staggered cycle, so the
+      // decoration emits N styles per tick (one per ring).
+      layer.ticker = (dt) => {
+        deco.tick(dt);
+        decoG.clear();
+        for (const style of deco.styles(0)) {
+          draw.paintCenterline(decoG, polyline, style);
+        }
+      };
     }
 
     rebuild();

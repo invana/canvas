@@ -12,10 +12,10 @@ export const MarchingAnts: Story = {
 
   play: async ({ canvasElement }) => {
     class DrawLayer extends WorldLayer {
-      deco?: draw.AnimatedConnectorDecoration;
+      ticker?: (dt: number) => void;
       protected createState() { return {}; }
       hitTest() { return null; }
-      tickAnimations(dt: number) { this.deco?.tick(dt); }
+      tickAnimations(dt: number) { this.ticker?.(dt); }
     }
 
     const toHex = (s: string) => parseInt(s.slice(1), 16);
@@ -33,9 +33,7 @@ export const MarchingAnts: Story = {
     canvas.layers.add(layer);
 
     const hostG = layer.createGraphics('host-gfx');
-    const decoSlot = layer.createContainer('ants-slot');
     const decoG = layer.createGraphics('ants-gfx');
-    decoSlot.addChild(decoG);
 
     const settings = {
       router: 'straight' as 'straight' | 'orthogonal' | 'bezier',
@@ -68,8 +66,7 @@ export const MarchingAnts: Story = {
       hostG.clear();
       draw.drawLineConnector(hostG, polyline, connectorSpec);
 
-      layer.deco?.destroy();
-      layer.deco = new draw.MarchingAntsConnectorDecoration(decoSlot, decoG, {
+      const deco = new draw.MarchingAntsConnectorDecoration({
         color: toHex(settings.color),
         width: settings.width,
         alpha: settings.alpha,
@@ -79,7 +76,15 @@ export const MarchingAnts: Story = {
         cap: settings.cap,
         join: settings.join,
       });
-      layer.deco.update(polyline);
+      // The decoration owns animation state + emits a `ConnectorPaintStyle`.
+      // We route the style to the draw-layer `paintCenterline` helper here;
+      // the renderer routes the same style through `IConnector.paintInto`.
+      layer.ticker = (dt) => {
+        deco.tick(dt);
+        decoG.clear();
+        const style = deco.style();
+        if (style) draw.paintCenterline(decoG, polyline, style);
+      };
     }
 
     rebuild();

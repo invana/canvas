@@ -247,20 +247,57 @@ export interface StaticConnectorDecorationKind<TOpts> {
 }
 
 /**
- * Animated connector decoration constructor. Mirrors `AnimatedDecorationCtor`
- * but consumes a polyline rather than bounds.
+ * Animated connector decoration constructor. Takes only the decoration's
+ * options — animation state lives inside the instance, geometry/painting
+ * is the consumer's responsibility (renderer wrappers route the emitted
+ * `style()` to `IConnector.paintInto`; draw-layer demos route it to
+ * `paintCenterline`).
  */
 export type AnimatedConnectorDecorationCtor<TOpts> = new (
-  slot: Container,
-  g: Graphics,
   opts: TOpts,
 ) => AnimatedConnectorDecoration;
 
 export interface AnimatedConnectorDecoration {
-  /** Re-render with a new routed polyline (called when the route changes). */
-  update(polyline: ReadonlyArray<Point>): void;
   /** Advance animation by `deltaMs`. Return `false` to retire. */
   tick(deltaMs: number): boolean;
-  /** Final cleanup. Renderer is responsible for clearing the Graphics afterwards. */
-  destroy(): void;
+  /** Optional final cleanup hook. Most state-only decorations have nothing to release. */
+  destroy?(): void;
+}
+
+// ─── Connector paint style ─────────────────────────────────────────────────
+//
+// A `ConnectorPaintStyle` describes HOW to stroke a connector silhouette:
+// stroke colour/width, optional dash pattern, optional marker tinting. It's
+// produced by connector-decoration `style()` / `styles()` methods and
+// consumed by:
+//   - Renderers: `IConnector.paintInto(g, spec, polyline, style)` — paints
+//     the full silhouette (path + markers) with the override.
+//   - Draw-layer demos: `paintCenterline(g, polyline, style)` — strokes the
+//     polyline with the same style (no markers, no curve smoothing).
+//
+// One specification, two consumers — kept in `draw/` because it's a
+// description of paint intent, not of any renderer wiring.
+
+export interface ConnectorPaintStyle {
+  readonly stroke?: {
+    readonly color: number;
+    readonly width: number;
+    readonly alpha?: number;
+    readonly cap?: 'butt' | 'round' | 'square';
+    readonly join?: 'miter' | 'round' | 'bevel';
+  };
+  readonly dash?: {
+    readonly dashLength: number;
+    readonly gapLength: number;
+    /** Phase offset in pixels along arc-length. Default `0`. */
+    readonly dashOffset?: number;
+  };
+  /**
+   * When `true`, markers paint with `stroke.color` / `stroke.alpha` instead
+   * of their own spec colours. Decorations like glow/halo set this so the
+   * decoration covers path + markers as one unified silhouette; decorations
+   * like marching-ants leave it undefined so markers paint normally over
+   * the dashed line.
+   */
+  readonly tintMarkers?: boolean;
 }

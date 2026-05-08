@@ -1,33 +1,30 @@
 /**
- * `pulsating-glow-connector` — animated connector decoration: soft glow that
- * wraps the routed polyline with alpha oscillating over time.
+ * `pulsating-glow-connector` — animated soft halo: stacked silhouette
+ * strokes (one core + N feather layers, each at progressively wider stroke
+ * and lower alpha) with the slot's `alpha` oscillating over time.
  *
- * Implementation: `update` repaints the polyline as `layerCount` stacked
- * ribbon polygons (one core + N feather layers, each at progressively larger
- * half-width and lower alpha). `tick` advances a phase and mutates
- * `slot.alpha` only — geometry is fixed once drawn, so per-tick cost is one
- * scalar write. Cheap.
+ * State + style emitter. Owns the pulse phase only — geometry is
+ * fixed-per-update; the per-tick cost is a single scalar (`containerAlpha`)
+ * the wrapper applies to the slot Container.
  *
- * Why ribbons instead of a Pixi BlurFilter: filters render against the
- * Container's AABB texture, which for a thin diagonal stroke is a tall
- * rectangle — producing a rectangular halo rather than one that hugs the
- * line. Stacked offset-polygon ribbons follow the polyline exactly.
+ * Why thicker silhouette strokes instead of a Pixi `BlurFilter`: filters
+ * render against the Container's AABB texture, which for a thin diagonal
+ * connector is a tall rectangle — producing a rectangular halo rather than
+ * one that hugs the line. Stacked silhouette repaints follow the connector
+ * exactly, including curve smoothing and markers.
  *
- * The slot Container must be supplied (the decoration mutates its `alpha`).
- * The Graphics is the polyline carrier and is expected to already be a child
- * of the slot.
+ * Use a slot with negative `slotZIndex` (`'glow'`, `'halo'`) so the glow
+ * sits below the connector body.
  */
 
-import type { Container, Graphics } from 'pixi.js';
 import type {
   AnimatedConnectorDecoration,
-  Point,
+  ConnectorPaintStyle,
 } from '../../types';
-import { polyToShape, ribbonPolygon } from '../_polylineUtils';
 
 export interface PulsatingGlowConnectorOpts {
   readonly color: number;
-  /** Core stroke width (innermost ribbon's full width). Default `8`. */
+  /** Core stroke width (extra px added beyond the connector body). Default `8`. */
   readonly width?: number;
   /** Minimum container alpha during the pulse cycle. Default `0.35`. */
   readonly alphaMin?: number;
@@ -40,9 +37,7 @@ export interface PulsatingGlowConnectorOpts {
    * core). Default `3`.
    */
   readonly layerCount?: number;
-  /**
-   * Half-width step added per feather layer, in pixels. Default `5`.
-   */
+  /** Half-width step added per feather layer, in pixels. Default `5`. */
   readonly featherStep?: number;
   /**
    * Per-layer alpha multiplier. Each successive feather layer's alpha is
@@ -54,21 +49,9 @@ export interface PulsatingGlowConnectorOpts {
 export class PulsatingGlowConnectorDecoration
   implements AnimatedConnectorDecoration
 {
-  private polyline: ReadonlyArray<Point> = [];
   private phase = 0;
 
-  constructor(
-    private readonly slot: Container,
-    private readonly g: Graphics,
-    private readonly opts: PulsatingGlowConnectorOpts,
-  ) {
-    this.slot.alpha = opts.alphaMin ?? 0.35;
-  }
-
-  update(polyline: ReadonlyArray<Point>): void {
-    this.polyline = polyline;
-    this.redraw();
-  }
+  constructor(private readonly opts: PulsatingGlowConnectorOpts) {}
 
   tick(deltaMs: number): boolean {
     const period = this.opts.periodMs ?? 1500;
@@ -76,44 +59,57 @@ export class PulsatingGlowConnectorDecoration
       this.phase =
         (this.phase + (deltaMs / period) * Math.PI * 2) % (Math.PI * 2);
     }
-    const k = (Math.sin(this.phase) + 1) / 2;
-    const alphaMin = this.opts.alphaMin ?? 0.35;
-    const alphaMax = this.opts.alphaMax ?? 0.9;
-    this.slot.alpha = alphaMin + (alphaMax - alphaMin) * k;
     return true;
   }
 
-  destroy(): void {
-    this.slot.alpha = 1;
-    this.g.clear();
+  /**
+   * Current container-level alpha multiplier. The wrapper applies this to
+   * the decoration slot's Container `alpha` once per tick (one scalar
+   * write), avoiding per-frame geometry repaints.
+   */
+  containerAlpha(): number {
+    const k = (Math.sin(this.phase) + 1) / 2;
+    const alphaMin = this.opts.alphaMin ?? 0.35;
+    const alphaMax = this.opts.alphaMax ?? 0.9;
+    return alphaMin + (alphaMax - alphaMin) * k;
   }
 
-  private redraw(): void {
-    this.g.clear();
+  /**
+   * Stacked silhouette layer styles — outermost feather first, brightest
+   * core last. Consumers paint them in this order so the core overlays the
+   * feather. `connectorWidth` is the host's stroke width (pass `0` for
+   * draw-layer demos with no host body).
+   */
+  styles(connectorWidth: number): readonly ConnectorPaintStyle[] {
     const width = this.opts.width ?? 8;
-    if (width <= 0 || this.polyline.length < 2) return;
+    if (width <= 0) return [];
 
     const layerCount = Math.max(0, Math.floor(this.opts.layerCount ?? 3));
     const featherStep = this.opts.featherStep ?? 5;
     const featherFalloff = this.opts.featherFalloff ?? 0.5;
     const color = this.opts.color;
 
-    // Outer feather layers first (lowest alpha, largest), so the inner core
-    // overlays them and reads as the brightest band.
+    const out: ConnectorPaintStyle[] = new Array(layerCount + 1);
+    let idx = 0;
     for (let i = layerCount; i >= 1; i--) {
-      const halfWidth = width / 2 + i * featherStep;
-      const layerAlpha = Math.pow(featherFalloff, i);
-      const ribbon = ribbonPolygon(this.polyline, halfWidth);
-      if (ribbon.length >= 3) {
-        polyToShape(this.g, ribbon);
-        this.g.fill({ color, alpha: layerAlpha });
-      }
+      const halo = width / 2 + i * featherStep;
+      out[idx++] = {
+        stroke: {
+          color,
+          width: connectorWidth + 2 * halo,
+          alpha: Math.pow(featherFalloff, i),
+        },
+        tintMarkers: true,
+      };
     }
-
-    const core = ribbonPolygon(this.polyline, width / 2);
-    if (core.length >= 3) {
-      polyToShape(this.g, core);
-      this.g.fill({ color, alpha: 1 });
-    }
+    out[idx] = {
+      stroke: {
+        color,
+        width: connectorWidth + width,
+        alpha: 1,
+      },
+      tintMarkers: true,
+    };
+    return out;
   }
 }

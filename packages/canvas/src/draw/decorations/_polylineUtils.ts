@@ -4,14 +4,14 @@
  * - `offsetPolygon` / `expandPolyline` produce shape-following outlines for
  *   shape decorations (halo, ring, marching-ants, pulse-ring, breathing)
  *   when a host outline polyline is supplied.
- * - `ribbonPolygon` builds a closed polygon ribbon around an open polyline
- *   for connector decorations (pulsating-glow, ring, breathing, pulse-ring).
  * - `polyToShape` traces a closed polygon path on a Graphics; caller fills /
  *   strokes after.
  * - `drawDashedPolylineClosed` stamps a dashed outline around a closed
  *   polyline (shape marching-ants).
- * - `drawDashedPolylineOpen` stamps dashes along an open polyline
- *   (connector marching-ants).
+ * - `drawDashedPolylineOpen` stamps dashes along an open polyline. Used by
+ *   `LineConnector.paintInto` / `CurveConnector.paintInto` for dash-aware
+ *   silhouette stroking, and by `paintCenterline` for the draw-layer
+ *   `marching-ants-connector` demo.
  *
  * All functions are pure with respect to inputs aside from `g.*` mutations.
  * Internal to the `draw/` module — leading underscore signals "not part of
@@ -117,92 +117,6 @@ export function expandPolyline(pts: ReadonlyArray<Pt>, delta: number): Pt[] {
     if (len === 0) return { x: p.x, y: p.y };
     return { x: p.x + (dx / len) * delta, y: p.y + (dy / len) * delta };
   });
-}
-
-/**
- * Build a closed polygon ribbon around an OPEN polyline by walking each side
- * at perpendicular offset `halfWidth`. Interior vertices use the bisector of
- * adjacent segment normals so the offset stays exactly `halfWidth` away from
- * each adjacent segment (true miter); endpoint vertices use the adjacent
- * segment's normal directly (square caps). Sharp interior corners are clamped
- * to a miter limit of 4× to avoid spike artefacts.
- *
- * For a polyline of `n >= 2` distinct points returns a `2n`-vertex closed
- * polygon ready to fill or stroke. For `n < 2` or `halfWidth <= 0` returns
- * `[]`. Coincident consecutive points are skipped.
- *
- * Used by connector decorations (`pulsating-glow`, `ring`, `breathing`,
- * `pulse-ring`) to render path-following outlines and fills without relying
- * on Pixi filter AABB textures (which produce rectangular halos for diagonal
- * strokes — see `connector/pulsating-glow.ts`).
- */
-export function ribbonPolygon(
-  pts: ReadonlyArray<Pt>,
-  halfWidth: number,
-): Pt[] {
-  if (halfWidth <= 0 || pts.length < 2) return [];
-
-  const clean: Pt[] = [pts[0]!];
-  for (let i = 1; i < pts.length; i++) {
-    const p = pts[i]!;
-    const last = clean[clean.length - 1]!;
-    if (p.x !== last.x || p.y !== last.y) clean.push(p);
-  }
-  if (clean.length < 2) return [];
-
-  const n = clean.length;
-  const segNormals: { x: number; y: number }[] = new Array(n - 1);
-  for (let i = 0; i < n - 1; i++) {
-    const a = clean[i]!;
-    const b = clean[i + 1]!;
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const len = Math.hypot(dx, dy);
-    segNormals[i] = len > 1e-10 ? { x: -dy / len, y: dx / len } : { x: 0, y: 0 };
-  }
-
-  const MITER_LIMIT = 4;
-  const left: Pt[] = new Array(n);
-  const right: Pt[] = new Array(n);
-  for (let i = 0; i < n; i++) {
-    let nx: number;
-    let ny: number;
-    let scale = 1;
-    if (i === 0) {
-      const s = segNormals[0]!;
-      nx = s.x;
-      ny = s.y;
-    } else if (i === n - 1) {
-      const s = segNormals[n - 2]!;
-      nx = s.x;
-      ny = s.y;
-    } else {
-      const a = segNormals[i - 1]!;
-      const b = segNormals[i]!;
-      const bx = a.x + b.x;
-      const by = a.y + b.y;
-      const blen = Math.hypot(bx, by);
-      if (blen < 1e-10) {
-        nx = a.x;
-        ny = a.y;
-      } else {
-        nx = bx / blen;
-        ny = by / blen;
-        const dot = nx * a.x + ny * a.y;
-        scale = dot > 1e-6 ? Math.min(1 / dot, MITER_LIMIT) : MITER_LIMIT;
-      }
-    }
-    const v = clean[i]!;
-    const dx = nx * halfWidth * scale;
-    const dy = ny * halfWidth * scale;
-    left[i] = { x: v.x + dx, y: v.y + dy };
-    right[i] = { x: v.x - dx, y: v.y - dy };
-  }
-
-  const ribbon: Pt[] = new Array(2 * n);
-  for (let i = 0; i < n; i++) ribbon[i] = left[i]!;
-  for (let i = 0; i < n; i++) ribbon[n + i] = right[n - 1 - i]!;
-  return ribbon;
 }
 
 /**

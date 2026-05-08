@@ -39,6 +39,7 @@ export type {
   StaticConnectorDecorationKind,
   AnimatedConnectorDecorationCtor,
   AnimatedConnectorDecoration,
+  ConnectorPaintStyle,
 } from './types';
 
 // ─── Fill helpers ─────────────────────────────────────────────────────────
@@ -146,7 +147,17 @@ export {
   type BreathingOpts,
 } from './decorations/shape/breathing';
 
-// ─── Connector decorations — animated (classes) ───────────────────────────
+// ─── Connector decorations — state + style emitters ──────────────────────
+//
+// Each connector decoration is a small class that owns its animation phase
+// (if any) and exposes a `style()` / `styles(connectorWidth)` method
+// returning a `ConnectorPaintStyle`. Consumers route the style to either:
+//   - `IConnector.paintInto` (renderer wrappers) for full-silhouette paint
+//     including markers and curve smoothing.
+//   - `paintCenterline` (draw-layer demos) for a polyline-only stroke.
+//
+// All animated kinds also expose `tick(deltaMs): boolean` so the consumer
+// can drive the animation from its own RAF loop.
 export {
   MarchingAntsConnectorDecoration,
   type MarchingAntsConnectorOpts,
@@ -156,8 +167,7 @@ export {
   type PulsatingGlowConnectorOpts,
 } from './decorations/connector/pulsating-glow';
 export {
-  drawRingConnector,
-  ringConnectorKind,
+  RingConnectorDecoration,
   type RingConnectorOpts,
 } from './decorations/connector/ring';
 export {
@@ -168,3 +178,4 @@ export {
   PulseRingConnectorDecoration,
   type PulseRingConnectorOpts,
 } from './decorations/connector/pulse-ring';
+export { paintCenterline } from './decorations/connector/_paint';

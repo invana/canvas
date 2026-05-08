@@ -971,21 +971,28 @@ function sampleCubic(
 // fall into a default mid-band so callers can pick custom slot names without
 // breaking ordering.
 //
+// Connector decorations like ring/pulse/breathing repaint the connector's
+// full silhouette (path + markers) at a wider stroke. They must sit BELOW
+// the host body so the body reads on top of the halo. Hence the negative
+// z-band for halo-style slots.
+//
 // Layout (bottom → top):
-//   glow        −200
-//   halo        −100
+//   glow        −300
+//   halo        −200
+//   breathing   −150
+//   pulse       −100
+//   ring         −50
 //   <shape>        0
-//   ring         100
-//   pulse        200
+//   <other>       50  (mid-band)
 //   badge        300
 //   fx           400
-//   <other>       50  (mid-band)
 
 const SLOT_Z_TABLE: Readonly<Record<string, number>> = {
-  glow: -200,
-  halo: -100,
-  ring: 100,
-  pulse: 200,
+  glow: -300,
+  halo: -200,
+  breathing: -150,
+  pulse: -100,
+  ring: -50,
   badge: 300,
   fx: 400,
 };

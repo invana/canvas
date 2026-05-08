@@ -1,63 +1,71 @@
 /**
- * `ring-connector` — primitive connector decoration: a stroked outline that
- * tubes the routed polyline at a perpendicular `inset` offset from the
- * connector's centerline.
+ * `ring-connector` — static halo decoration: one or more concentric strokes
+ * around the connector's silhouette. State-free style emitter.
  *
- * Static. Geometry: a closed ribbon polygon at half-width `inset + width/2`,
- * stroked at `width`. For a straight connector this draws an elongated
- * pill-less rectangle outline; for a curved/orthogonal polyline the outline
- * follows each bend with proper miter joints (clamped at a 4× miter limit
- * inside `ribbonPolygon`).
+ * Halo-style: each ring's `ConnectorPaintStyle` carries a stroke width that
+ * INCLUDES the connector body (`connectorWidth + 2 * (inset + r * spacing +
+ * width / 2)`), so when the consumer calls `IConnector.paintInto` the ring
+ * extends `inset + r * spacing + width / 2` pixels beyond the connector
+ * silhouette on each side. `tintMarkers: true` forces markers to paint in
+ * the ring colour so the halo wraps the entire silhouette including arrows
+ * / circles / diamonds.
  *
- * Visual analog of `shape/ring`: the shape variant draws a parallel-offset
- * outline around the host's perimeter; the connector variant draws a
- * parallel-offset tube around the connector's polyline.
+ * Concentric rings: outermost first in the returned array — consumers paint
+ * in order so inner rings stack visually on top of outer rings within the
+ * decoration's slot.
  *
- * Multiple rings: set `ringCount > 1` for evenly-spaced concentric tube
- * outlines. Each subsequent ring offsets outward by `ringSpacing` px.
+ * Use a slot name with a negative `slotZIndex` (`'ring'`, `'halo'`, `'glow'`)
+ * so the halo sits BELOW the connector body — see `SLOT_Z_TABLE` in the
+ * renderer.
+ *
+ * No animation; no `tick`.
  */
 
-import type { Graphics } from 'pixi.js';
-import type { Point, StaticConnectorDecorationKind } from '../../types';
-import { polyToShape, ribbonPolygon } from '../_polylineUtils';
+import type { ConnectorPaintStyle } from '../../types';
 
 export interface RingConnectorOpts {
   readonly color: number;
-  /** Stroke width. Default `1`. */
+  /** Ring stroke thickness. Default `1`. */
   readonly width?: number;
   /** 0..1 alpha. Default `1`. */
   readonly alpha?: number;
-  /** Perpendicular distance from the connector centerline. Default `4`. */
+  /** Perpendicular gap between connector body and innermost ring. Default `4`. */
   readonly inset?: number;
-  /** Number of concentric tube outlines, evenly spaced. Default `1`. */
+  /** Number of concentric rings, evenly spaced. Default `1`. */
   readonly ringCount?: number;
-  /**
-   * Distance (px) between consecutive rings. Positive grows outward (away
-   * from the centerline). Default `6`. Ignored when `ringCount` is `1`.
-   */
+  /** Distance (px) between consecutive rings. Default `6`. */
   readonly ringSpacing?: number;
 }
 
-export function drawRingConnector(
-  g: Graphics,
-  polyline: ReadonlyArray<Point>,
-  opts: RingConnectorOpts,
-): void {
-  const width = opts.width ?? 1;
-  if (width <= 0 || polyline.length < 2) return;
-  const alpha = opts.alpha ?? 1;
-  const inset = opts.inset ?? 4;
-  const ringCount = Math.max(1, Math.round(opts.ringCount ?? 1));
-  const ringSpacing = opts.ringSpacing ?? 6;
+export class RingConnectorDecoration {
+  constructor(private readonly opts: RingConnectorOpts) {}
 
-  for (let r = 0; r < ringCount; r++) {
-    const halfWidth = inset + r * ringSpacing + width / 2;
-    const ribbon = ribbonPolygon(polyline, halfWidth);
-    if (ribbon.length < 3) continue;
-    polyToShape(g, ribbon);
-    g.stroke({ color: opts.color, width, alpha });
+  /**
+   * Per-ring paint styles, outermost ring first. Returns an empty array
+   * when stroke width is non-positive. `connectorWidth` is the host
+   * connector's stroke width; pass `0` for draw-layer demos that want a
+   * centerline-only halo (no host body).
+   */
+  styles(connectorWidth: number): readonly ConnectorPaintStyle[] {
+    const width = this.opts.width ?? 1;
+    if (width <= 0) return [];
+    const alpha = this.opts.alpha ?? 1;
+    const inset = this.opts.inset ?? 4;
+    const ringCount = Math.max(1, Math.round(this.opts.ringCount ?? 1));
+    const ringSpacing = this.opts.ringSpacing ?? 6;
+
+    const out: ConnectorPaintStyle[] = new Array(ringCount);
+    for (let r = 0; r < ringCount; r++) {
+      const halo = inset + r * ringSpacing + width / 2;
+      out[r] = {
+        stroke: {
+          color: this.opts.color,
+          width: connectorWidth + 2 * halo,
+          alpha,
+        },
+        tintMarkers: true,
+      };
+    }
+    return out;
   }
 }
-
-export const ringConnectorKind: StaticConnectorDecorationKind<RingConnectorOpts> =
-  { draw: drawRingConnector };

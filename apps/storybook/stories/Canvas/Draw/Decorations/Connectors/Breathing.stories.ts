@@ -12,10 +12,10 @@ export const Breathing: Story = {
 
   play: async ({ canvasElement }) => {
     class DrawLayer extends WorldLayer {
-      deco?: draw.AnimatedConnectorDecoration;
+      ticker?: (dt: number) => void;
       protected createState() { return {}; }
       hitTest() { return null; }
-      tickAnimations(dt: number) { this.deco?.tick(dt); }
+      tickAnimations(dt: number) { this.ticker?.(dt); }
     }
 
     const toHex = (s: string) => parseInt(s.slice(1), 16);
@@ -33,9 +33,7 @@ export const Breathing: Story = {
     canvas.layers.add(layer);
 
     const hostG = layer.createGraphics('host-gfx');
-    const decoSlot = layer.createContainer('breathing-slot');
     const decoG = layer.createGraphics('breathing-gfx');
-    decoSlot.addChild(decoG);
 
     const settings = {
       router: 'straight' as 'straight' | 'orthogonal' | 'bezier',
@@ -66,8 +64,7 @@ export const Breathing: Story = {
       hostG.clear();
       draw.drawLineConnector(hostG, polyline, connectorSpec);
 
-      layer.deco?.destroy();
-      layer.deco = new draw.BreathingConnectorDecoration(decoSlot, decoG, {
+      const deco = new draw.BreathingConnectorDecoration({
         color: toHex(settings.color),
         width: settings.width,
         alpha: settings.alpha,
@@ -75,7 +72,12 @@ export const Breathing: Story = {
         maxPadding: settings.maxPadding,
         periodMs: settings.periodMs,
       });
-      layer.deco.update(polyline);
+      layer.ticker = (dt) => {
+        deco.tick(dt);
+        decoG.clear();
+        const style = deco.style(0);
+        if (style) draw.paintCenterline(decoG, polyline, style);
+      };
     }
 
     rebuild();

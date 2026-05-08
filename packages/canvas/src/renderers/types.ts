@@ -18,6 +18,9 @@
 import type { Container, Graphics, Sprite, Texture } from 'pixi.js';
 import type { EventMap } from '../events/EventEmitter';
 import type { TextureRegistry } from './TextureRegistry';
+import type { ConnectorPaintStyle } from '../draw/types';
+
+export type { ConnectorPaintStyle };
 
 // ─── Geometry primitives ───────────────────────────────────────────────────
 
@@ -268,37 +271,9 @@ export interface IShape<TSpec extends BaseShapeSpec = BaseShapeSpec> {
   destroy(): void;
 }
 
-/**
- * Style override passed by decorations to `IConnector.paintInto`. The
- * connector paints its full silhouette (path stroke + every shape-marker via
- * `ShapeCtor.paintInto`) into the supplied Graphics with these overrides
- * applied. When `tintMarkers` is set, markers are painted in the same
- * colour/alpha as the stroke — used by silhouette-wrapping decorations like
- * glow/halo.
- */
-export interface ConnectorPaintStyle {
-  readonly stroke?: {
-    readonly color: number;
-    readonly width: number;
-    readonly alpha?: number;
-    readonly cap?: 'butt' | 'round' | 'square';
-    readonly join?: 'miter' | 'round' | 'bevel';
-  };
-  readonly dash?: {
-    readonly dashLength: number;
-    readonly gapLength: number;
-    /** Phase offset in pixels along arc-length. Default `0`. */
-    readonly dashOffset?: number;
-  };
-  /**
-   * When `true`, markers paint with `stroke.color` / `stroke.alpha` instead
-   * of their own spec colours. Decorations like glow/halo set this so the
-   * decoration covers path + markers as one unified silhouette; decorations
-   * like marching-ants leave it undefined so markers paint normally over
-   * the dashed line.
-   */
-  readonly tintMarkers?: boolean;
-}
+// `ConnectorPaintStyle` lives in draw/types.ts (source of truth — connector
+// decorations live in draw/). Re-exported at the top of this file alongside
+// the other renderer-side imports so callers can pull it from this barrel.
 
 export interface IConnector<TSpec extends BaseConnectorSpec = BaseConnectorSpec> {
   readonly gfx: Container;

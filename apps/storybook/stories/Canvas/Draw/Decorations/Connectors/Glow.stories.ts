@@ -12,10 +12,10 @@ export const Glow: Story = {
 
   play: async ({ canvasElement }) => {
     class DrawLayer extends WorldLayer {
-      deco?: draw.AnimatedConnectorDecoration;
+      ticker?: (dt: number) => void;
       protected createState() { return {}; }
       hitTest() { return null; }
-      tickAnimations(dt: number) { this.deco?.tick(dt); }
+      tickAnimations(dt: number) { this.ticker?.(dt); }
     }
 
     const toHex = (s: string) => parseInt(s.slice(1), 16);
@@ -32,6 +32,9 @@ export const Glow: Story = {
     const layer = new DrawLayer({ id: 'deco-conn-glow-layer', options: {} });
     canvas.layers.add(layer);
 
+    // Slot Container holds the decoG below; the glow's container alpha is
+    // applied to the slot once per tick (geometry stays fixed between
+    // updates — only one scalar mutates per frame).
     const decoSlot = layer.createContainer('glow-slot');
     const decoG = layer.createGraphics('glow-gfx');
     decoSlot.addChild(decoG);
@@ -68,8 +71,7 @@ export const Glow: Story = {
       hostG.clear();
       draw.drawLineConnector(hostG, polyline, connectorSpec);
 
-      layer.deco?.destroy();
-      layer.deco = new draw.PulsatingGlowConnectorDecoration(decoSlot, decoG, {
+      const deco = new draw.PulsatingGlowConnectorDecoration({
         color: toHex(settings.color),
         width: settings.width,
         alphaMin: settings.alphaMin,
@@ -79,7 +81,19 @@ export const Glow: Story = {
         featherFalloff: settings.featherFalloff,
         periodMs: settings.periodMs,
       });
-      layer.deco.update(polyline);
+
+      // Stacked layer geometry is fixed per rebuild; only the slot's alpha
+      // changes per tick, so we paint once here and modulate alpha below.
+      decoG.clear();
+      for (const style of deco.styles(0)) {
+        draw.paintCenterline(decoG, polyline, style);
+      }
+      decoSlot.alpha = deco.containerAlpha();
+
+      layer.ticker = (dt) => {
+        deco.tick(dt);
+        decoSlot.alpha = deco.containerAlpha();
+      };
     }
 
     rebuild();

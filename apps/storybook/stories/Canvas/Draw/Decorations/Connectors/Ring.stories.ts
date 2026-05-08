@@ -61,8 +61,12 @@ export const Ring: Story = {
       const polyline = route();
       hostG.clear();
       draw.drawLineConnector(hostG, polyline, connectorSpec);
-      decoG.clear();
-      draw.drawRingConnector(decoG, polyline, {
+
+      // Static decoration — no animation, no tick. The decoration emits one
+      // `ConnectorPaintStyle` per ring (outermost first). The renderer
+      // routes each through `IConnector.paintInto`; here we route them
+      // through `paintCenterline` for the polyline-only demo.
+      const ring = new draw.RingConnectorDecoration({
         color: toHex(settings.color),
         width: settings.width,
         alpha: settings.alpha,
@@ -70,6 +74,10 @@ export const Ring: Story = {
         ringCount: settings.ringCount,
         ringSpacing: settings.ringSpacing,
       });
+      decoG.clear();
+      for (const style of ring.styles(0)) {
+        draw.paintCenterline(decoG, polyline, style);
+      }
     }
 
     redraw();
