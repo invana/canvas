@@ -8,9 +8,9 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext, InsetAnchor, ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../../div-util';
+import { createContainer } from '../../../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Primitives/Shapes/Fill/Glyph' };
+const meta: Meta = { title: 'Canvas/Primitives/Shapes/Fill/Icons/Glyph' };
 export default meta;
 type Story = StoryObj;
 
