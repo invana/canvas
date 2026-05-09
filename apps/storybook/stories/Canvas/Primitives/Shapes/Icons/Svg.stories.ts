@@ -37,10 +37,10 @@ export const Svg: Story = {
     // has no special knowledge of. Swap in any other SVG URL you want.
     const samples: Record<string, string> = {
       heart:    'https://upload.wikimedia.org/wikipedia/commons/4/42/Love_Heart_SVG.svg',
-      smiley:   'https://upload.wikimedia.org/wikipedia/commons/3/3f/Smiley.svg',
-      sun:      'https://upload.wikimedia.org/wikipedia/commons/d/d1/Sun01.svg',
-      svgLogo:  'https://upload.wikimedia.org/wikipedia/commons/0/01/SVG_logo.svg',
-      flagJp:   'https://upload.wikimedia.org/wikipedia/commons/9/9a/Flag_of_Japan.svg',
+      smiley:   'https://upload.wikimedia.org/wikipedia/commons/8/85/Smiley.svg',
+      sun:      'https://upload.wikimedia.org/wikipedia/commons/0/02/Sun01.svg',
+      svgLogo:  'https://upload.wikimedia.org/wikipedia/commons/0/02/SVG_logo.svg',
+      flagJp:   'https://upload.wikimedia.org/wikipedia/commons/9/9e/Flag_of_Japan.svg',
     };
 
     // ─── Canvas setup ──────────────────────────────────────────────────────
