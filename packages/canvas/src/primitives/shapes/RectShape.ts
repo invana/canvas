@@ -34,7 +34,7 @@ export class RectShape extends ShapeBase<RectSpec> {
       else g.rect(inset, inset, w, h);
     };
     trace();
-    applyFill(g, spec, style, this.host, trace);
+    applyFill(g, spec, style, this.host, this.bounds(), trace);
     trace();
     applyStroke(g, spec, style);
   }

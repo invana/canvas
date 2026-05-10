@@ -150,11 +150,22 @@ function renderChild(
   // layer.kind === 'image-inset'
   const sprite = new Sprite();
   sprite.alpha = alpha;
-  const tex = host.textureRegistry.get(layer.url);
-  if (tex) {
-    sprite.texture = tex;
+  const cached = host.textureRegistry.get(layer.url);
+  if (cached) {
+    sprite.texture = cached;
   } else {
-    host.textureRegistry.load(layer.url).catch(() => {});
+    void host.textureRegistry
+      .load(layer.url)
+      .then((loaded) => {
+        if (sprite.destroyed) return;
+        sprite.texture = loaded;
+        onAsyncReady();
+      })
+      .catch((err: unknown) => {
+        if (sprite.destroyed) return;
+        // eslint-disable-next-line no-console
+        console.warn(`[insetContentLayer] image-inset load failed for ${layer.url}:`, err);
+      });
   }
   return sprite;
 }

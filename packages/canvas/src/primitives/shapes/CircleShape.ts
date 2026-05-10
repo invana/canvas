@@ -27,7 +27,7 @@ export class CircleShape extends ShapeBase<CircleSpec> {
     const r = Math.max(0, spec.radius - (style?.inset ?? 0));
     const trace = () => g.circle(0, 0, r);
     trace();
-    applyFill(g, spec, style, this.host, trace);
+    applyFill(g, spec, style, this.host, this.bounds(), trace);
     trace();
     applyStroke(g, spec, style);
   }

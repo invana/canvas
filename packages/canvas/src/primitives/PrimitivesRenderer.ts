@@ -156,6 +156,10 @@ export class PrimitivesRenderer {
     const host: ShapeHostInfo = {
       surface: this._container,
       textureRegistry: this.textureRegistry,
+      requestRedraw: () => {
+        const cur = this.shapeInstances.get(id);
+        if (cur) cur.shape.draw(cur.spec);
+      },
     };
     const shape = new Ctor(spec, host) as IShape<TSpec>;
     this._container.addChild(shape.gfx);

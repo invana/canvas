@@ -15,9 +15,10 @@
  * `insetContentLayer.ts` — they're skipped here.
  */
 
-import type { Graphics } from 'pixi.js';
+import { Matrix, type Graphics, type Texture } from 'pixi.js';
 import type {
   BaseShapeSpec,
+  Rect,
   ShapeFill,
   ShapeFillLayer,
   ShapeHostInfo,
@@ -32,6 +33,7 @@ export function applyFill(
   spec: BaseShapeSpec,
   style: ShapePaintStyle | undefined,
   host: ShapeHostInfo,
+  bounds: Rect,
   retrace: () => void,
 ): void {
   if (style) {
@@ -46,7 +48,7 @@ export function applyFill(
   const layers = silhouetteLayersOf(spec.fill);
   for (let i = 0; i < layers.length; i++) {
     if (i > 0) retrace();
-    paintSilhouetteLayer(g, layers[i]!, host);
+    paintSilhouetteLayer(g, layers[i]!, host, bounds);
   }
 }
 
@@ -126,6 +128,7 @@ function paintSilhouetteLayer(
   g: Graphics,
   layer: SilhouetteLayer | { kind: 'shorthand'; color: number },
   host: ShapeHostInfo,
+  bounds: Rect,
 ): void {
   if (layer.kind === 'shorthand') {
     g.fill({ color: layer.color });
@@ -138,10 +141,64 @@ function paintSilhouetteLayer(
   // layer.kind === 'image'
   const tex = host.textureRegistry.get(layer.url);
   if (!tex) {
-    host.textureRegistry.load(layer.url).catch(() => {});
+    void host.textureRegistry
+      .load(layer.url)
+      .then(() => host.requestRedraw())
+      .catch((err: unknown) => {
+        // eslint-disable-next-line no-console
+        console.warn(`[applyFill] image load failed for ${layer.url}:`, err);
+      });
     return;
   }
-  g.fill({ texture: tex, alpha: layer.alpha ?? 1 });
+  const matrix = textureFitMatrix(layer.fit ?? 'fill', tex, bounds);
+  g.fill({ texture: tex, alpha: layer.alpha ?? 1, matrix });
+}
+
+/**
+ * Compute the texture-coord transform matrix for a given `fit` mode. Pixi's
+ * `fill({ texture, matrix })` interprets `matrix` as the transform from the
+ * texture's pixel space into the Graphics' local space — i.e. point `(u,v)`
+ * in the texture appears at `matrix * (u,v)` on the canvas. We therefore
+ * build the *forward* mapping (no manual inversion required).
+ *
+ *   - `tile`    — identity; Pixi's default 1:1 tiling.
+ *   - `fill`    — non-uniform stretch to bounds (aspect not preserved).
+ *   - `cover`   — uniform scale = max(...); image fully covers, may crop.
+ *   - `contain` — uniform scale = min(...); image fits inside, may letterbox.
+ *   - `none`    — natural pixel size, centred at the bounds centre.
+ */
+function textureFitMatrix(
+  fit: 'fill' | 'cover' | 'contain' | 'none' | 'tile',
+  tex: Texture,
+  bounds: Rect,
+): Matrix {
+  const tw = tex.width || 1;
+  const th = tex.height || 1;
+  const m = new Matrix();
+  if (fit === 'tile') return m;
+
+  let sx: number;
+  let sy: number;
+  if (fit === 'fill') {
+    sx = bounds.width / tw;
+    sy = bounds.height / th;
+  } else if (fit === 'cover') {
+    const s = Math.max(bounds.width / tw, bounds.height / th);
+    sx = sy = s;
+  } else if (fit === 'contain') {
+    const s = Math.min(bounds.width / tw, bounds.height / th);
+    sx = sy = s;
+  } else {
+    // none
+    sx = sy = 1;
+  }
+
+  const mappedW = tw * sx;
+  const mappedH = th * sy;
+  const tx = bounds.x + (bounds.width - mappedW) / 2;
+  const ty = bounds.y + (bounds.height - mappedH) / 2;
+  m.set(sx, 0, 0, sy, tx, ty);
+  return m;
 }
 
 function alignmentFor(a: ShapeStroke['alignment']): number {

@@ -307,6 +307,11 @@ export interface BaseConnectorSpec {
 export interface ShapeHostInfo {
   readonly surface: Container;
   readonly textureRegistry: TextureRegistry;
+  /**
+   * Re-invoke the shape's `draw(currentSpec)`. Used by async fill loaders
+   * (image silhouette, image-inset) to repaint once a texture resolves.
+   */
+  readonly requestRedraw: () => void;
 }
 
 /**
