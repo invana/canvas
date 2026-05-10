@@ -230,7 +230,7 @@ export const <Source>: Story = {
 ### Files unaffected
 - `packages/canvas/src/**` — already vendor-free after Phase B; Phase C does not touch the engine.
 - `apps/storybook/stories/Canvas/Primitives/Shapes/CircleSolid.stories.ts`, `RectSolid.stories.ts` — solid-fill demos, no icons, no change.
-- `apps/storybook/stories/Canvas/Primitives/Shapes/PhotoBadge.stories.ts` — vendor-free layered-fill demo (image + glyph corner badge with literal unicode chars). Stays as-is.
+- `apps/storybook/stories/Canvas/Primitives/Shapes/Fill/ImageWithInsetGlyph.stories.ts` — vendor-free layered-fill demo (image + inset glyph with literal unicode chars). Stays as-is.
 
 ### Verification
 - `pnpm --filter @invana/canvas check-types` — clean (engine untouched).

@@ -266,18 +266,18 @@ function anchorPoint(anchor: InsetAnchor, b: Rect): [number, number] {
  */
 function layerKey(layer: InsetLayer): string {
   if (layer.kind === 'glyph') {
-    return `g:${layer.char}:${layer.fontFamily ?? ''}:${layer.fontWeight ?? ''}:${layer.fontStyle ?? ''}`;
+    return `g:${layer.char}:${layer.fontFamily ?? ''}:${layer.fontWeight ?? ''}:${layer.fontStyle ?? ''}:${layer.color ?? 0xffffff}:${layer.alpha ?? 1}`;
   }
   if (layer.kind === 'text') {
-    return `t:${hashString(layer.text)}:${layer.fontFamily ?? ''}:${layer.fontSize ?? 12}:${layer.fontWeight ?? ''}:${layer.fontStyle ?? ''}:${layer.align ?? 'center'}`;
+    return `t:${hashString(layer.text)}:${layer.fontFamily ?? ''}:${layer.fontSize ?? 12}:${layer.fontWeight ?? ''}:${layer.fontStyle ?? ''}:${layer.align ?? 'center'}:${layer.color ?? 0x000000}:${layer.alpha ?? 1}`;
   }
   if (layer.kind === 'svg') {
-    return `s:${layer.pathD.length}:${hashString(layer.pathD)}:${layer.strokeWidth ?? 2}`;
+    return `s:${layer.pathD.length}:${hashString(layer.pathD)}:${layer.strokeWidth ?? 2}:${layer.color ?? 0xffffff}:${layer.alpha ?? 1}`;
   }
   if (layer.kind === 'svg-url') {
-    return `u:${layer.url}:${layer.strokeWidth ?? 2}`;
+    return `u:${layer.url}:${layer.strokeWidth ?? 2}:${layer.color ?? 0xffffff}:${layer.alpha ?? 1}`;
   }
-  return `i:${layer.url}`;
+  return `i:${layer.url}:${layer.alpha ?? 1}`;
 }
 
 function hashString(s: string): number {

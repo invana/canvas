@@ -8,25 +8,29 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext, InsetAnchor, ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer } from '../../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Primitives/Shapes/PhotoBadge' };
+const meta: Meta = { title: 'Canvas/Primitives/Shapes/Fill/ImageWithInsetGlyph' };
 export default meta;
 type Story = StoryObj;
 
 /**
- * Demonstrates a composition that the previous single-fill model couldn't
- * express: a raster image filling the silhouette with a small "verified"
- * glyph anchored to a corner — two fill layers in one shape.
+ * Multi-layer fill composition: a raster image filling the silhouette plus a
+ * glyph fill layer anchored to a corner via `InsetAnchor`. Two `ShapeFillLayer`
+ * entries on a single shape — no follower shapes involved.
  *
- * The lil-gui panel lets you move the badge to any of the five anchors and
- * resize it independently of the photo underneath.
+ * This is **not** the badge attachment system (`PrimitivesRenderer.setBadge()`).
+ * See `Canvas/Primitives/Shapes/Badges` for that — it attaches separate follower
+ * shapes to a host with auto-reanchoring.
+ *
+ * The lil-gui panel lets you move the inset glyph to any of the five anchors and
+ * resize it independently of the image underneath.
  */
-export const PhotoBadge: Story = {
-  render: () => createContainer({ id: 'cvs-prim-photo-badge' }),
+export const ImageWithInsetGlyph: Story = {
+  render: () => createContainer({ id: 'cvs-prim-image-with-inset-glyph' }),
 
   play: async ({ canvasElement }) => {
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-photo-badge')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-image-with-inset-glyph')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
@@ -43,7 +47,7 @@ export const PhotoBadge: Story = {
       }
       hitTest() { return null; }
     }
-    const layer = new RenderLayer({ id: 'photo-badge', options: {} });
+    const layer = new RenderLayer({ id: 'image-inset-glyph', options: {} });
     canvas.layers.add(layer);
 
     const settings = {
@@ -60,13 +64,10 @@ export const PhotoBadge: Story = {
         kind: 'glyph',
         char: settings.badgeChar,
         fontFamily: 'sans-serif',
-        color: 0xffffff,
+        color: settings.badgeColor,
         sizeRatio: settings.badgeSize,
         anchor: settings.anchor,
       },
-      // Tiny solid disc behind the glyph for visibility — drawn AFTER the
-      // image and BEFORE the glyph would also work via a third silhouette
-      // layer, but a glyph-on-photo demo reads cleaner without one.
     ];
 
     layer.renderer.addShape('avatar', {
@@ -85,7 +86,7 @@ export const PhotoBadge: Story = {
     const repaint = () =>
       layer.renderer.updateShape('avatar', { fill: buildFill() });
 
-    const gui = new GUI({ title: 'Photo + badge' });
+    const gui = new GUI({ title: 'Image + inset glyph' });
     gui.add(settings, 'anchor', ['center', 'top-left', 'top-right', 'bottom-left', 'bottom-right'])
       .onChange(repaint);
     gui.add(settings, 'badgeChar', ['✓', '★', '!', '♥', '⚡'])
