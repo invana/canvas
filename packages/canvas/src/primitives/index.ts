@@ -28,6 +28,15 @@ export { straightRouter } from './connectors/routers/straight';
 export { GlowDecoration } from './decorations/shape/GlowDecoration';
 export type { GlowDecorationStyle } from './decorations/shape/GlowDecoration';
 
+// ─── Badges ────────────────────────────────────────────────────────────────
+export type { BadgeOptions, BadgePlacement } from './badges/types';
+export {
+  placementToHostAnchor,
+  originToBadgeLocal,
+  mirrorPlacement,
+  resolveBadgePosition,
+} from './badges/placement';
+
 // ─── Path utilities ────────────────────────────────────────────────────────
 export {
   samplePath,

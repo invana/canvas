@@ -39,6 +39,8 @@ import { straightRouter } from './connectors/routers/straight';
 import { distanceToPolylineSq, pathBounds, samplePath } from './connectors/pathSampling';
 import { ArrowMarker } from './markers/ArrowMarker';
 import { GlowDecoration } from './decorations/shape/GlowDecoration';
+import { resolveBadgePosition } from './badges/placement';
+import type { BadgeOptions } from './badges/types';
 import type {
   BaseConnectorSpec,
   BaseShapeSpec,
@@ -93,6 +95,12 @@ export class PrimitivesRenderer {
   private readonly shapeInstances = new Map<string, ShapeInstance>();
   private readonly connectorInstances = new Map<string, ConnectorInstance>();
   private readonly animated = new Set<AnimatedDecoration>();
+
+  /**
+   * Host → (slot → BadgeOptions). Each entry corresponds to a shape registered
+   * under id `${hostId}:${slot}` and re-anchored on host updates.
+   */
+  private readonly badges = new Map<string, Map<string, BadgeOptions>>();
 
   private readonly hit = new HitIndex();
 
@@ -176,11 +184,19 @@ export class PrimitivesRenderer {
     inst.shape.draw(inst.spec);
     this.hit.update(id, this.shapeWorldBounds(inst), inst.spec.zIndex ?? 0);
     if (inst.decorations.size > 0) this.refreshShapeDecorations(inst);
+    if (this.badges.has(id)) this.reanchorBadges(id);
   }
 
   removeShape(id: string): void {
     const inst = this.shapeInstances.get(id);
     if (!inst) return;
+    // Cascade-remove attached badges *before* removing the host so the badge
+    // ids don't outlive the host in any consumer-visible state.
+    const attached = this.badges.get(id);
+    if (attached) {
+      for (const slot of [...attached.keys()]) this.removeBadge(id, slot);
+      this.badges.delete(id);
+    }
     for (const deco of inst.decorations.values()) this.disposeDecoration(deco);
     inst.decorations.clear();
     inst.shape.destroy();
@@ -303,6 +319,90 @@ export class PrimitivesRenderer {
       if (typeof deco.tick === 'function') {
         this.animated.add(deco as AnimatedDecoration);
       }
+    }
+  }
+
+  // ─── Badges ─────────────────────────────────────────────────────────────
+
+  /**
+   * Attach a badge to a host shape. The badge is registered as a real shape
+   * under id `` `${hostId}:${slot}` `` so it inherits every shape capability —
+   * any registered shape kind as the plate, any `ShapeFillLayer` as content
+   * (solid / image / glyph / text / svg / image-inset / svg-url), and any
+   * registered decoration via the `decorations` field.
+   *
+   * On `updateShape(hostId, …)` every attached badge re-anchors automatically.
+   * On `removeShape(hostId)` every attached badge is removed first.
+   *
+   * Calling `setBadge` with the same `(hostId, slot)` replaces the previous
+   * badge (the old badge shape and any of its decorations are destroyed).
+   */
+  setBadge(hostId: string, slot: string, options: BadgeOptions): void {
+    const host = this.shapeInstances.get(hostId);
+    if (!host) {
+      throw new Error(`PrimitivesRenderer.setBadge: unknown host "${hostId}"`);
+    }
+
+    const badgeId = badgeIdFor(hostId, slot);
+    if (this.shapeInstances.has(badgeId)) this.removeShape(badgeId);
+
+    // Instantiate at (0, 0); read `bounds()` from the live shape instance
+    // (works for any registered shape kind without a separate bounds-from-spec
+    // contract) and update to the resolved world position synchronously.
+    // No render frame happens between the two calls, so the (0, 0) position
+    // is never observed by the user.
+    this.addShape(badgeId, { ...options.shape, x: 0, y: 0 } as unknown as BaseShapeSpec);
+    const badge = this.shapeInstances.get(badgeId)!;
+    const pos = resolveBadgePosition(
+      this.shapeWorldBounds(host),
+      badge.shape.bounds(),
+      options,
+    );
+    this.updateShape(badgeId, { x: pos.x, y: pos.y });
+
+    if (options.decorations) {
+      for (const [decoSlot, decoSpec] of Object.entries(options.decorations)) {
+        this.setDecoration(badgeId, decoSlot, decoSpec);
+      }
+    }
+
+    let map = this.badges.get(hostId);
+    if (!map) {
+      map = new Map();
+      this.badges.set(hostId, map);
+    }
+    map.set(slot, options);
+  }
+
+  removeBadge(hostId: string, slot: string): void {
+    const map = this.badges.get(hostId);
+    if (!map || !map.has(slot)) return;
+    const badgeId = badgeIdFor(hostId, slot);
+    this.removeShape(badgeId);
+    map.delete(slot);
+    if (map.size === 0) this.badges.delete(hostId);
+  }
+
+  hasBadge(hostId: string, slot: string): boolean {
+    return this.badges.get(hostId)?.has(slot) ?? false;
+  }
+
+  /**
+   * Recompute every attached badge's `(x, y)` from the host's new bounds.
+   * Called from `updateShape` when the host has badges; safe to no-op when
+   * the badge map for `hostId` is empty.
+   */
+  private reanchorBadges(hostId: string): void {
+    const map = this.badges.get(hostId);
+    if (!map) return;
+    const host = this.shapeInstances.get(hostId);
+    if (!host) return;
+    const hostBounds = this.shapeWorldBounds(host);
+    for (const [slot, options] of map) {
+      const badge = this.shapeInstances.get(badgeIdFor(hostId, slot));
+      if (!badge) continue;
+      const pos = resolveBadgePosition(hostBounds, badge.shape.bounds(), options);
+      this.updateShape(badgeIdFor(hostId, slot), { x: pos.x, y: pos.y });
     }
   }
 
@@ -607,4 +707,9 @@ const SLOT_Z_DEFAULT = 50;
 
 function slotZIndex(slot: string): number {
   return SLOT_Z_TABLE[slot] ?? SLOT_Z_DEFAULT;
+}
+
+/** Stable id mapping `(hostId, slot)` → badge shape id. */
+function badgeIdFor(hostId: string, slot: string): string {
+  return `${hostId}:${slot}`;
 }

@@ -132,6 +132,36 @@ export type ShapeFillLayer =
       readonly anchor?: InsetAnchor;
     }
   | {
+      /**
+       * Multi-character text label rendered as inset content (badge labels,
+       * card titles, ER cell values, anything that needs more than the
+       * single-char `glyph` kind). Sized to fit the shape's bounds width
+       * (minus the inset margin used by other inset layers) and anchored the
+       * same way.
+       */
+      readonly kind: 'text';
+      readonly text: string;
+      readonly fontFamily?: string;
+      /** Pixel font size at scale 1. Default `12`. */
+      readonly fontSize?: number;
+      readonly fontWeight?: number | string;
+      readonly fontStyle?: 'normal' | 'italic';
+      /** Text color. Default `0x000000`. */
+      readonly color?: number;
+      readonly alpha?: number;
+      /**
+       * Maximum render width as a fraction of `bounds.width`. Default `0.85`.
+       * The text is scaled down (never up) to fit. For corner anchors, the
+       * cap is half of the available width to preserve room for the opposite
+       * corner's content.
+       */
+      readonly widthRatio?: number;
+      /** Horizontal alignment within the (possibly clipped) text block. Default `'center'`. */
+      readonly align?: 'left' | 'center' | 'right';
+      /** Anchor relative to the shape's bounds. Default `'center'`. */
+      readonly anchor?: InsetAnchor;
+    }
+  | {
       /** SVG path-d. Multiple subpaths (`M...M...`) are supported. */
       readonly kind: 'svg';
       readonly pathD: string;
