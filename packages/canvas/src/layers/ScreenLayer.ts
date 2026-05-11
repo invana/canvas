@@ -34,7 +34,7 @@ export abstract class ScreenLayer<
   THit extends ScreenLayerHit = ScreenLayerHit,
 > extends Layer<TOptions, TState, TEvents, TDirtyBucket> {
   /** Backing field — assigned in `mount`, cleared in `unmount`. */
-  private _container?: Container;
+  protected _container?: Container;
 
   /**
    * Root pixi `Container` for this screen-space layer. Available from
@@ -62,9 +62,15 @@ export abstract class ScreenLayer<
       root.zIndex = this.zIndex;
       ctx.stage.sortableChildren = true;
     }
+    root.visible = this.visible;
     ctx.stage.addChild(root);
     this._container = root;
     super.mount(ctx);
+  }
+
+  /** Keep the pixi container in sync when `layer.visible` is toggled. */
+  protected override onVisibleChange(value: boolean): void {
+    if (this._container) this._container.visible = value;
   }
 
   override unmount(): void {

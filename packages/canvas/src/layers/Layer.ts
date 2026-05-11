@@ -84,10 +84,25 @@ export abstract class Layer<
   readonly events: SourceEmitter<TEvents>;
   readonly dirty: DirtyBatcher<TDirtyBucket>;
 
-  visible: boolean;
+  /** Backing field for the `visible` accessor. */
+  private _visible: boolean = true;
   hittable: boolean;
   zIndex: number;
   cullable: boolean;
+
+  /**
+   * Whether this layer renders. Setting `false` hides the layer's pixi
+   * container (via `onVisibleChange`, overridden by `WorldLayer` /
+   * `ScreenLayer`) and the Canvas tick skips its flush.
+   */
+  get visible(): boolean {
+    return this._visible;
+  }
+  set visible(value: boolean) {
+    if (this._visible === value) return;
+    this._visible = value;
+    this.onVisibleChange(value);
+  }
 
   /** Set by `mount(ctx)`; cleared by `unmount()`. */
   protected ctx?: CanvasContext;
@@ -100,7 +115,7 @@ export abstract class Layer<
   constructor(opts: LayerOptions<TOptions>) {
     this.id = opts.id;
     this.options = opts.options;
-    this.visible = opts.visible ?? true;
+    this._visible = opts.visible ?? true;
     this.hittable = opts.hittable ?? true;
     this.zIndex = opts.zIndex ?? 0;
     this.cullable = opts.cullable ?? true;
@@ -182,6 +197,15 @@ export abstract class Layer<
 
   /** Domain-specific unmount teardown. */
   protected onUnmount(_ctx: CanvasContext): void {
+    /* default no-op */
+  }
+
+  /**
+   * Called whenever `visible` changes (setter only — not on initial
+   * construction). Subclasses override to keep their pixi container's
+   * `.visible` in sync. Default: no-op.
+   */
+  protected onVisibleChange(_value: boolean): void {
     /* default no-op */
   }
 }

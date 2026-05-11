@@ -76,6 +76,13 @@ export type {
   DevInfoCorner,
 } from './layers/DevInfoLayer';
 
+export { LayersPanelLayer } from './layers/LayersPanelLayer';
+export type {
+  LayersPanelLayerOptions,
+  LayersPanelLayerCtorOptions,
+  LayersPanelCorner,
+} from './layers/LayersPanelLayer';
+
 // ─── Behaviours ─────────────────────────────────────────────────────────
 export { Behaviour } from './behaviours/Behaviour';
 export type { IBehaviour, BehaviourOptions } from './behaviours/Behaviour';

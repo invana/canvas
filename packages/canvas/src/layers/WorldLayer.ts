@@ -35,7 +35,7 @@ export abstract class WorldLayer<
   THit extends WorldLayerHit = WorldLayerHit,
 > extends Layer<TOptions, TState, TEvents, TDirtyBucket> {
   /** Backing field — assigned in `mount`, cleared in `unmount`. */
-  private _container?: Container;
+  protected _container?: Container;
 
   /**
    * Root pixi `Container` (RenderGroup) for this layer. Available from
@@ -64,9 +64,15 @@ export abstract class WorldLayer<
       root.zIndex = this.zIndex;
       ctx.world.sortableChildren = true;
     }
+    root.visible = this.visible;
     ctx.world.addChild(root);
     this._container = root;
     super.mount(ctx);
+  }
+
+  /** Keep the pixi container in sync when `layer.visible` is toggled. */
+  protected override onVisibleChange(value: boolean): void {
+    if (this._container) this._container.visible = value;
   }
 
   override unmount(): void {
