@@ -81,6 +81,17 @@ export default defineConfig({
         ],
       },
       {
+        text: 'Behaviours',
+        items: [
+          { text: 'Behaviour basics', link: '/behaviours/' },
+          { text: 'DragPanBehaviour', link: '/behaviours/drag-pan-behaviour' },
+          { text: 'WheelZoomBehaviour', link: '/behaviours/wheel-zoom-behaviour' },
+          { text: 'PinchZoomBehaviour', link: '/behaviours/pinch-zoom-behaviour' },
+          { text: 'KeyboardCameraInputBehaviour', link: '/behaviours/keyboard-camera-input-behaviour' },
+          { text: 'DragShapeBehaviour', link: '/behaviours/drag-shape-behaviour' },
+        ],
+      },
+      {
         text: 'Storybook',
         link: 'http://localhost:6006',
         target: '_blank',
@@ -134,6 +145,24 @@ export default defineConfig({
           items: [
             { text: 'DevInfoLayer', link: '/layers/dev-info-layer' },
             { text: 'LayersPanelLayer', link: '/layers/layers-panel-layer' },
+          ],
+        },
+      ],
+      '/behaviours/': [
+        {
+          text: 'Behaviours',
+          items: [
+            { text: 'Behaviour basics', link: '/behaviours/' },
+          ],
+        },
+        {
+          text: 'Built-in behaviours',
+          items: [
+            { text: 'DragPanBehaviour', link: '/behaviours/drag-pan-behaviour' },
+            { text: 'WheelZoomBehaviour', link: '/behaviours/wheel-zoom-behaviour' },
+            { text: 'PinchZoomBehaviour', link: '/behaviours/pinch-zoom-behaviour' },
+            { text: 'KeyboardCameraInputBehaviour', link: '/behaviours/keyboard-camera-input-behaviour' },
+            { text: 'DragShapeBehaviour', link: '/behaviours/drag-shape-behaviour' },
           ],
         },
       ],
