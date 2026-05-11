@@ -352,6 +352,7 @@ export class Canvas {
       camera: this.camera,
       layers: this.layers,
       behaviours: this.behaviours,
+      canvasElement: this.app?.canvas,
     };
   }
 

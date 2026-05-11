@@ -52,4 +52,12 @@ export interface CanvasContext {
    * root is added after (above). No screen-wrapper container exists.
    */
   readonly stage: Container;
+
+  /**
+   * The underlying HTMLCanvasElement when running in DOM mode (`Canvas.init`).
+   * Undefined for `Canvas.initWithStage` (headless / test path). Layers that
+   * overlay DOM content above the canvas — `DevInfoLayer`, tooltips, popovers —
+   * read this to find a parent element and to attach native DOM listeners.
+   */
+  readonly canvasElement?: HTMLCanvasElement;
 }

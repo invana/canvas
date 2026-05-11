@@ -58,11 +58,8 @@ This rule is not enforced by tooling. It's a discipline statement — read it be
 
 ## Subpath exports
 
-Public API ships under three subpaths:
-
-- `@invana/canvas` — kernel: Canvas, base classes, registries, store, events, surfaces, camera
-- `@invana/canvas/renderers/shapes` — `ShapesRenderer` + base interfaces + built-in primitives + built-in decorations
-- `@invana/canvas/toolkit` — `BackgroundLayer`, `DevInfoLayer`, `DragPanBehaviour`, `WheelZoomBehaviour`, `PinchZoomBehaviour`, `KeyboardCameraInputBehaviour`
+- `@invana/canvas` — kernel: `Canvas`, base classes (`Layer`/`WorldLayer`/`ScreenLayer`, `Behaviour`), registries, store, events, surfaces, camera, **plus built-in layers (`DevInfoLayer`, future `BackgroundLayer`, `ThemedBackgroundLayer`) and built-in behaviours (`DragPanBehaviour`, `WheelZoomBehaviour`, `PinchZoomBehaviour`, `KeyboardCameraInputBehaviour`)**. Built-ins live in the same folder as their base class (`src/layers/`, `src/behaviours/`) and are re-exported from `src/index.ts` — no separate "toolkit" bucket.
+- `@invana/canvas/primitives` — `PrimitivesRenderer` + base interfaces + built-in primitives + built-in decorations
 
 ## Rules (carry-over from old `packages/canvas`)
 

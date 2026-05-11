@@ -69,6 +69,13 @@ export type { WorldLayerHit } from './layers/WorldLayer';
 export { ScreenLayer } from './layers/ScreenLayer';
 export type { ScreenLayerHit } from './layers/ScreenLayer';
 
+export { DevInfoLayer } from './layers/DevInfoLayer';
+export type {
+  DevInfoLayerOptions,
+  DevInfoLayerCtorOptions,
+  DevInfoCorner,
+} from './layers/DevInfoLayer';
+
 // ─── Behaviours ─────────────────────────────────────────────────────────
 export { Behaviour } from './behaviours/Behaviour';
 export type { IBehaviour, BehaviourOptions } from './behaviours/Behaviour';
