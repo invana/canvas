@@ -1,6 +1,6 @@
 # Abstract Class: Layer\<TOptions, TState, TEvents, TDirtyBucket\>
 
-Defined in: [packages/canvas/src/layers/Layer.ts:74](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L74)
+Defined in: [packages/canvas/src/layers/Layer.ts:74](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L74)
 
 The subset of `Layer` the `LayerRegistry` and `Canvas.tick` interact with.
 Lets the registry stay decoupled from the abstract class implementation.
@@ -38,7 +38,7 @@ Lets the registry stay decoupled from the abstract class implementation.
 
 > **new Layer**\<`TOptions`, `TState`, `TEvents`, `TDirtyBucket`\>(`opts`): `Layer`\<`TOptions`, `TState`, `TEvents`, `TDirtyBucket`\>
 
-Defined in: [packages/canvas/src/layers/Layer.ts:100](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L100)
+Defined in: [packages/canvas/src/layers/Layer.ts:115](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L115)
 
 #### Parameters
 
@@ -56,7 +56,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:100](https://github.com/invana/
 
 > `protected` `optional` **ctx?**: [`CanvasContext`](../interfaces/CanvasContext.md)
 
-Defined in: [packages/canvas/src/layers/Layer.ts:93](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L93)
+Defined in: [packages/canvas/src/layers/Layer.ts:108](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L108)
 
 Set by `mount(ctx)`; cleared by `unmount()`.
 
@@ -66,7 +66,7 @@ Set by `mount(ctx)`; cleared by `unmount()`.
 
 > **cullable**: `boolean`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:90](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L90)
+Defined in: [packages/canvas/src/layers/Layer.ts:91](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L91)
 
 #### Implementation of
 
@@ -78,7 +78,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:90](https://github.com/invana/c
 
 > `readonly` **dirty**: [`DirtyBatcher`](DirtyBatcher.md)\<`TDirtyBucket`\>
 
-Defined in: [packages/canvas/src/layers/Layer.ts:85](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L85)
+Defined in: [packages/canvas/src/layers/Layer.ts:85](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L85)
 
 ***
 
@@ -86,7 +86,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:85](https://github.com/invana/c
 
 > `readonly` **events**: [`SourceEmitter`](SourceEmitter.md)\<`TEvents`\>
 
-Defined in: [packages/canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L84)
+Defined in: [packages/canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L84)
 
 ***
 
@@ -94,7 +94,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:84](https://github.com/invana/c
 
 > **hittable**: `boolean`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:88](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L88)
+Defined in: [packages/canvas/src/layers/Layer.ts:89](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L89)
 
 #### Implementation of
 
@@ -106,7 +106,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:88](https://github.com/invana/c
 
 > `readonly` **id**: `string`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:81](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L81)
+Defined in: [packages/canvas/src/layers/Layer.ts:81](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L81)
 
 #### Implementation of
 
@@ -118,7 +118,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:81](https://github.com/invana/c
 
 > `readonly` **options**: `TOptions`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:82](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L82)
+Defined in: [packages/canvas/src/layers/Layer.ts:82](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L82)
 
 ***
 
@@ -126,19 +126,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:82](https://github.com/invana/c
 
 > `readonly` **state**: [`Store`](../type-aliases/Store.md)\<`TState`\>
 
-Defined in: [packages/canvas/src/layers/Layer.ts:83](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L83)
-
-***
-
-### visible
-
-> **visible**: `boolean`
-
-Defined in: [packages/canvas/src/layers/Layer.ts:87](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L87)
-
-#### Implementation of
-
-[`ILayer`](../interfaces/ILayer.md).[`visible`](../interfaces/ILayer.md#visible)
+Defined in: [packages/canvas/src/layers/Layer.ts:83](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L83)
 
 ***
 
@@ -146,7 +134,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:87](https://github.com/invana/c
 
 > **zIndex**: `number`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:89](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L89)
+Defined in: [packages/canvas/src/layers/Layer.ts:90](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L90)
 
 #### Implementation of
 
@@ -160,7 +148,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:89](https://github.com/invana/c
 
 > **get** `protected` **context**(): [`CanvasContext`](../interfaces/CanvasContext.md)
 
-Defined in: [packages/canvas/src/layers/Layer.ts:141](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L141)
+Defined in: [packages/canvas/src/layers/Layer.ts:156](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L156)
 
 Convenience accessor; throws when called pre-mount.
 
@@ -176,7 +164,7 @@ Convenience accessor; throws when called pre-mount.
 
 > **get** **mounted**(): `boolean`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:96](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L96)
+Defined in: [packages/canvas/src/layers/Layer.ts:111](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L111)
 
 True between `mount` and `unmount`.
 
@@ -184,13 +172,51 @@ True between `mount` and `unmount`.
 
 `boolean`
 
+***
+
+### visible
+
+#### Get Signature
+
+> **get** **visible**(): `boolean`
+
+Defined in: [packages/canvas/src/layers/Layer.ts:98](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L98)
+
+Whether this layer renders. Setting `false` hides the layer's pixi
+container (via `onVisibleChange`, overridden by `WorldLayer` /
+`ScreenLayer`) and the Canvas tick skips its flush.
+
+##### Returns
+
+`boolean`
+
+#### Set Signature
+
+> **set** **visible**(`value`): `void`
+
+Defined in: [packages/canvas/src/layers/Layer.ts:101](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L101)
+
+##### Parameters
+
+###### value
+
+`boolean`
+
+##### Returns
+
+`void`
+
+#### Implementation of
+
+[`ILayer`](../interfaces/ILayer.md).[`visible`](../interfaces/ILayer.md#visible)
+
 ## Methods
 
 ### applyDirty()
 
 > `protected` **applyDirty**(`_snap`): `void`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:174](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L174)
+Defined in: [packages/canvas/src/layers/Layer.ts:189](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L189)
 
 Translate a dirty snapshot into renderer / pixi commands.
 Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
@@ -211,7 +237,7 @@ Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
 > `abstract` `protected` **createState**(): `TState`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:168](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L168)
+Defined in: [packages/canvas/src/layers/Layer.ts:183](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L183)
 
 Build the initial UI / interaction state. Called once in the constructor.
 
@@ -225,7 +251,7 @@ Build the initial UI / interaction state. Called once in the constructor.
 
 > **flush**(): `void`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:159](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L159)
+Defined in: [packages/canvas/src/layers/Layer.ts:174](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L174)
 
 Called by Canvas tick when `hasPending()` is true. Swaps the dirty
 snapshot, hands it to `applyDirty`. Subclasses normally don't override.
@@ -244,7 +270,7 @@ snapshot, hands it to `applyDirty`. Subclasses normally don't override.
 
 > **hasPending**(): `boolean`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:151](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L151)
+Defined in: [packages/canvas/src/layers/Layer.ts:166](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L166)
 
 Whether `flush()` has work to do this frame.
 
@@ -262,7 +288,7 @@ Whether `flush()` has work to do this frame.
 
 > **mount**(`ctx`): `void`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:122](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L122)
+Defined in: [packages/canvas/src/layers/Layer.ts:137](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L137)
 
 #### Parameters
 
@@ -284,7 +310,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:122](https://github.com/invana/
 
 > `protected` **onMount**(`_ctx`): `void`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:179](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L179)
+Defined in: [packages/canvas/src/layers/Layer.ts:194](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L194)
 
 Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
@@ -304,7 +330,7 @@ Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
 > `protected` **onUnmount**(`_ctx`): `void`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:184](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L184)
+Defined in: [packages/canvas/src/layers/Layer.ts:199](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L199)
 
 Domain-specific unmount teardown.
 
@@ -320,11 +346,33 @@ Domain-specific unmount teardown.
 
 ***
 
+### onVisibleChange()
+
+> `protected` **onVisibleChange**(`_value`): `void`
+
+Defined in: [packages/canvas/src/layers/Layer.ts:208](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L208)
+
+Called whenever `visible` changes (setter only — not on initial
+construction). Subclasses override to keep their pixi container's
+`.visible` in sync. Default: no-op.
+
+#### Parameters
+
+##### \_value
+
+`boolean`
+
+#### Returns
+
+`void`
+
+***
+
 ### unmount()
 
 > **unmount**(): `void`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:131](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/layers/Layer.ts#L131)
+Defined in: [packages/canvas/src/layers/Layer.ts:146](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/layers/Layer.ts#L146)
 
 #### Returns
 

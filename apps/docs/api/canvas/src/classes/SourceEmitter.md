@@ -1,6 +1,6 @@
 # Class: SourceEmitter\<E\>
 
-Defined in: [packages/canvas/src/events/SourceEmitter.ts:40](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/SourceEmitter.ts#L40)
+Defined in: [packages/canvas/src/events/SourceEmitter.ts:40](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/SourceEmitter.ts#L40)
 
 ## Extends
 
@@ -18,7 +18,7 @@ Defined in: [packages/canvas/src/events/SourceEmitter.ts:40](https://github.com/
 
 > **new SourceEmitter**\<`E`\>(`source`, `bus?`): `SourceEmitter`\<`E`\>
 
-Defined in: [packages/canvas/src/events/SourceEmitter.ts:50](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/SourceEmitter.ts#L50)
+Defined in: [packages/canvas/src/events/SourceEmitter.ts:50](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/SourceEmitter.ts#L50)
 
 #### Parameters
 
@@ -46,7 +46,7 @@ Defined in: [packages/canvas/src/events/SourceEmitter.ts:50](https://github.com/
 
 > **get** **sourceInfo**(): [`EventSource`](../interfaces/EventSource.md)
 
-Defined in: [packages/canvas/src/events/SourceEmitter.ts:88](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/SourceEmitter.ts#L88)
+Defined in: [packages/canvas/src/events/SourceEmitter.ts:88](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/SourceEmitter.ts#L88)
 
 Convenience: source identity (read-only).
 
@@ -60,7 +60,7 @@ Convenience: source identity (read-only).
 
 > **emit**\<`K`\>(`event`, `payload`): `void`
 
-Defined in: [packages/canvas/src/events/SourceEmitter.ts:74](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/SourceEmitter.ts#L74)
+Defined in: [packages/canvas/src/events/SourceEmitter.ts:74](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/SourceEmitter.ts#L74)
 
 Emit to local subscribers AND publish to the bus's tap channel.
 Order: local handlers run first (synchronous, in registration order),
@@ -98,7 +98,7 @@ tap publish.
 
 > **listenerCount**(`event`): `number`
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:105](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/EventEmitter.ts#L105)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:105](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L105)
 
 Number of handlers registered for an event. Useful in tests.
 
@@ -122,7 +122,7 @@ keyof `E`
 
 > **off**\<`K`\>(`event`, `handler`): `void`
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:57](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/EventEmitter.ts#L57)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:57](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L57)
 
 Unsubscribe a specific handler.
 No-op if the handler wasn't registered.
@@ -157,7 +157,7 @@ No-op if the handler wasn't registered.
 
 > **on**\<`K`\>(`event`, `handler`): () => `void`
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:31](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/EventEmitter.ts#L31)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:31](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L31)
 
 Subscribe to an event. Returns an unsubscribe function for ergonomic cleanup.
 
@@ -191,7 +191,7 @@ Subscribe to an event. Returns an unsubscribe function for ergonomic cleanup.
 
 > **once**\<`K`\>(`event`, `handler`): () => `void`
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:45](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/EventEmitter.ts#L45)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:45](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L45)
 
 Subscribe once. The handler fires at most once and auto-removes itself.
 Returns an unsubscribe function in case you want to cancel before it fires.
@@ -226,7 +226,7 @@ Returns an unsubscribe function in case you want to cancel before it fires.
 
 > **removeAllListeners**(`event?`): `void`
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:94](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/EventEmitter.ts#L94)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:94](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L94)
 
 Remove all listeners for one event, or all events if no event is given.
 
@@ -250,7 +250,7 @@ keyof `E`
 
 > **setBus**(`bus`): `void`
 
-Defined in: [packages/canvas/src/events/SourceEmitter.ts:63](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/SourceEmitter.ts#L63)
+Defined in: [packages/canvas/src/events/SourceEmitter.ts:63](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/SourceEmitter.ts#L63)
 
 Attach (or detach) the bus this emitter forwards to.
 

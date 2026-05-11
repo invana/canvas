@@ -2,7 +2,7 @@
 
 > `const` **normalPathStyle**: [`IPathStyle`](../type-aliases/IPathStyle.md)
 
-Defined in: [packages/canvas/src/primitives/connectors/pathStyles/normal.ts:11](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/connectors/pathStyles/normal.ts#L11)
+Defined in: [packages/canvas/src/primitives/connectors/pathStyles/normal.ts:11](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/connectors/pathStyles/normal.ts#L11)
 
 Sharp segments. Walks the polyline emitting `M` then `L L L …`.
 

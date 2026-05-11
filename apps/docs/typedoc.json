@@ -13,5 +13,6 @@
   "githubPages": false,
   "hideBreadcrumbs": true,
   "hidePageHeader": true,
-  "skipErrorChecking": true
+  "skipErrorChecking": true,
+  "entryFileName": "index.md"
 }

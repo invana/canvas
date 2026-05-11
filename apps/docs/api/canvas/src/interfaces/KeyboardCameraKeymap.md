@@ -1,6 +1,6 @@
 # Interface: KeyboardCameraKeymap
 
-Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:23](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L23)
+Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:23](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L23)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:23](
 
 > **panDown**: `string`[]
 
-Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:25](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L25)
+Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:25](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L25)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:25](
 
 > **panLeft**: `string`[]
 
-Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:26](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L26)
+Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:26](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L26)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:26](
 
 > **panRight**: `string`[]
 
-Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:27](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L27)
+Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:27](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L27)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:27](
 
 > **panUp**: `string`[]
 
-Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:24](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L24)
+Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:24](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L24)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:24](
 
 > **resetZoom**: `string`[]
 
-Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:30](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L30)
+Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:30](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L30)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:30](
 
 > **zoomIn**: `string`[]
 
-Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:28](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L28)
+Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:28](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L28)
 
 ***
 
@@ -56,4 +56,4 @@ Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:28](
 
 > **zoomOut**: `string`[]
 
-Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:29](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L29)
+Defined in: [packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:29](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L29)

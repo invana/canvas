@@ -1,6 +1,6 @@
 # Interface: CanvasGlobalEvents
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:57](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/CanvasEventBus.ts#L57)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:57](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L57)
 
 Default canvas-wide event map. Domain packages or the canvas implementation
 can extend it via TypeScript module augmentation; for now we keep it open.
@@ -22,7 +22,7 @@ emit. Additional event names get added as their producers land.
 
 > **background:click**: `object`
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:69](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/CanvasEventBus.ts#L69)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:69](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L69)
 
 #### worldX
 
@@ -38,7 +38,7 @@ Defined in: [packages/canvas/src/events/CanvasEventBus.ts:69](https://github.com
 
 > **behaviour:disabled**: `object`
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:66](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/CanvasEventBus.ts#L66)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:66](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L66)
 
 #### id
 
@@ -50,7 +50,7 @@ Defined in: [packages/canvas/src/events/CanvasEventBus.ts:66](https://github.com
 
 > **behaviour:enabled**: `object`
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:65](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/CanvasEventBus.ts#L65)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:65](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L65)
 
 #### id
 
@@ -62,7 +62,7 @@ Defined in: [packages/canvas/src/events/CanvasEventBus.ts:65](https://github.com
 
 > **behaviour:registered**: `object`
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:64](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/CanvasEventBus.ts#L64)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:64](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L64)
 
 #### id
 
@@ -74,7 +74,7 @@ Defined in: [packages/canvas/src/events/CanvasEventBus.ts:64](https://github.com
 
 > **camera:pan**: `object`
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:68](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/CanvasEventBus.ts#L68)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:68](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L68)
 
 #### x
 
@@ -90,7 +90,7 @@ Defined in: [packages/canvas/src/events/CanvasEventBus.ts:68](https://github.com
 
 > **camera:zoom**: `object`
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:67](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/CanvasEventBus.ts#L67)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:67](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L67)
 
 #### centerX
 
@@ -110,7 +110,7 @@ Defined in: [packages/canvas/src/events/CanvasEventBus.ts:67](https://github.com
 
 > **layer:added**: `object`
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:62](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/CanvasEventBus.ts#L62)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:62](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L62)
 
 #### id
 
@@ -122,7 +122,7 @@ Defined in: [packages/canvas/src/events/CanvasEventBus.ts:62](https://github.com
 
 > **layer:removed**: `object`
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:63](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/CanvasEventBus.ts#L63)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:63](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L63)
 
 #### id
 
@@ -134,7 +134,7 @@ Defined in: [packages/canvas/src/events/CanvasEventBus.ts:63](https://github.com
 
 > **renderer:initialised**: `object`
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:58](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/CanvasEventBus.ts#L58)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:58](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L58)
 
 #### backend
 
@@ -150,7 +150,7 @@ Defined in: [packages/canvas/src/events/CanvasEventBus.ts:58](https://github.com
 
 > **tap:dropped**: `object`
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:70](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/CanvasEventBus.ts#L70)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:70](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L70)
 
 #### reason
 

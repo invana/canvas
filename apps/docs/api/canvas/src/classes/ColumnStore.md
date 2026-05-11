@@ -1,6 +1,6 @@
 # Class: ColumnStore\<TSchema\>
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:131](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L131)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:131](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L131)
 
 ## Type Parameters
 
@@ -14,7 +14,7 @@ Defined in: [packages/canvas/src/state/ColumnStore.ts:131](https://github.com/in
 
 > **new ColumnStore**\<`TSchema`\>(`schema`, `opts?`): `ColumnStore`\<`TSchema`\>
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:155](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L155)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:155](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L155)
 
 #### Parameters
 
@@ -38,7 +38,7 @@ Defined in: [packages/canvas/src/state/ColumnStore.ts:155](https://github.com/in
 
 > **get** **capacity**(): `number`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:180](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L180)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:180](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L180)
 
 Current allocated capacity. Grows automatically when filled.
 
@@ -54,7 +54,7 @@ Current allocated capacity. Grows automatically when filled.
 
 > **get** **size**(): `number`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:175](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L175)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:175](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L175)
 
 Number of items currently stored.
 
@@ -70,7 +70,7 @@ Number of items currently stored.
 
 > **get** **version**(): `number`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:185](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L185)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:185](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L185)
 
 Mutation counter — bumps on any change. Subscribers diff this.
 
@@ -84,7 +84,7 @@ Mutation counter — bumps on any change. Subscribers diff this.
 
 > **add**(`id`, `row`): `number`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:244](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L244)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:244](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L244)
 
 Add a new item. Throws if `id` already exists.
 Reuses a recycled slot when available; otherwise extends (and grows).
@@ -109,7 +109,7 @@ Reuses a recycled slot when available; otherwise extends (and grows).
 
 > **addBulk**(`items`): `void`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:262](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L262)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:262](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L262)
 
 Bulk add. Grows once if needed (cheaper than N individual grows).
 Throws if any id already exists.
@@ -130,7 +130,7 @@ readonly `object`[]
 
 > **clear**(): `void`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:348](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L348)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:348](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L348)
 
 Drop all items and recycled slots. Keeps the current capacity (no shrink).
 Cheap reset for repopulating from a feed.
@@ -145,7 +145,7 @@ Cheap reset for repopulating from a feed.
 
 > **column**\<`K`\>(`name`): [`ColumnArray`](../type-aliases/ColumnArray.md)\<`TSchema`\[`K`\]\>
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:216](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L216)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:216](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L216)
 
 Direct access to a column's TypedArray. **Holds a stable reference until
 the column is grown** (then the underlying buffer is replaced).
@@ -180,7 +180,7 @@ subscribers know.
 
 > **forEach**(`cb`): `void`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:363](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L363)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:363](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L363)
 
 Iterate over (id, slot) pairs in insertion order of currently-live ids.
 O(idIndex.size) — does NOT walk holes.
@@ -201,7 +201,7 @@ O(idIndex.size) — does NOT walk holes.
 
 > **get**\<`K`\>(`id`, `name`): [`ColumnValue`](../type-aliases/ColumnValue.md)\<`TSchema`\[`K`\]\>
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:221](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L221)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:221](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L221)
 
 Read a single value. ~50 ns: Map.get + TypedArray read.
 
@@ -231,7 +231,7 @@ Read a single value. ~50 ns: Map.get + TypedArray read.
 
 > **has**(`id`): `boolean`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:190](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L190)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:190](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L190)
 
 True iff `id` has been added.
 
@@ -251,7 +251,7 @@ True iff `id` has been added.
 
 > **idAt**(`slot`): `string`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:200](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L200)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:200](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L200)
 
 Returns the id at `slot`, or `undefined` if the slot is free.
 
@@ -271,7 +271,7 @@ Returns the id at `slot`, or `undefined` if the slot is free.
 
 > **ids**(): `IterableIterator`\<`string`\>
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:368](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L368)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:368](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L368)
 
 Iterator over live ids only.
 
@@ -285,7 +285,7 @@ Iterator over live ids only.
 
 > **remove**(`id`): `void`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:312](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L312)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:312](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L312)
 
 Remove an item. Recycles the slot. No-op if id doesn't exist.
 
@@ -305,7 +305,7 @@ Remove an item. Recycles the slot. No-op if id doesn't exist.
 
 > **removeBulk**(`ids`): `void`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:324](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L324)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:324](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L324)
 
 Bulk remove.
 
@@ -325,7 +325,7 @@ readonly `string`[]
 
 > **row**(`id`): [`RowOf`](../type-aliases/RowOf.md)\<`TSchema`\>
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:228](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L228)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:228](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L228)
 
 Materialise a full row by id. Allocates an object — avoid in hot loops.
 
@@ -345,7 +345,7 @@ Materialise a full row by id. Allocates an object — avoid in hot loops.
 
 > **set**\<`K`\>(`id`, `name`, `value`): `void`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:288](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L288)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:288](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L288)
 
 Set a single field. ~50 ns: Map.get + TypedArray write.
 No-op if id doesn't exist.
@@ -380,7 +380,7 @@ No-op if id doesn't exist.
 
 > **slot**(`id`): `number`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:195](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L195)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:195](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L195)
 
 Returns the slot for `id`, or `undefined`. Useful for the renderer fast path.
 
@@ -400,7 +400,7 @@ Returns the slot for `id`, or `undefined`. Useful for the renderer fast path.
 
 > **touch**(): `void`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:340](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L340)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:340](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L340)
 
 Mark the store as mutated without actually changing anything via the API.
 Use this after batches of fast-path writes via `column(...)[slot] = ...`
@@ -416,7 +416,7 @@ so version-bump-driven subscribers know to re-read.
 
 > **update**(`id`, `partial`): `void`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:298](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L298)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:298](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/state/ColumnStore.ts#L298)
 
 Update multiple fields of one item in one call. Avoids N version bumps.
 

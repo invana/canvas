@@ -1,6 +1,6 @@
 # Interface: RegisterDecorationOptions
 
-Defined in: [packages/canvas/src/primitives/types.ts:703](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L703)
+Defined in: [packages/canvas/src/primitives/types.ts:703](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/types.ts#L703)
 
 ## Properties
 
@@ -8,4 +8,4 @@ Defined in: [packages/canvas/src/primitives/types.ts:703](https://github.com/inv
 
 > `readonly` **target**: [`DecorationTarget`](../type-aliases/DecorationTarget.md)
 
-Defined in: [packages/canvas/src/primitives/types.ts:704](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L704)
+Defined in: [packages/canvas/src/primitives/types.ts:704](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/types.ts#L704)

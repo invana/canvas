@@ -2,7 +2,7 @@
 
 > **EventMap** = `Record`\<`string`, `unknown`\>
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:19](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/events/EventEmitter.ts#L19)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:19](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L19)
 
 Typed event emitter — generic over an event-map shape.
 

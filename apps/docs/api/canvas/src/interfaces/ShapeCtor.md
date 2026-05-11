@@ -1,6 +1,6 @@
 # Interface: ShapeCtor\<TSpec\>
 
-Defined in: [packages/canvas/src/primitives/types.ts:657](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L657)
+Defined in: [packages/canvas/src/primitives/types.ts:657](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/types.ts#L657)
 
 Constructor type for shapes registered via `registerShape`. Optionally
 exposes a `static paintInto` so the shape can also serve as a connector
@@ -18,7 +18,7 @@ marker. Shapes without `paintInto` cannot be used as markers.
 
 > **new ShapeCtor**(`spec`, `host`): [`IShape`](IShape.md)\<`TSpec`\>
 
-Defined in: [packages/canvas/src/primitives/types.ts:658](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L658)
+Defined in: [packages/canvas/src/primitives/types.ts:658](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/types.ts#L658)
 
 #### Parameters
 
@@ -40,7 +40,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:658](https://github.com/inv
 
 > `readonly` `optional` **markerInset?**: (`spec`, `strokeWidth?`) => `number`
 
-Defined in: [packages/canvas/src/primitives/types.ts:695](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L695)
+Defined in: [packages/canvas/src/primitives/types.ts:695](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/types.ts#L695)
 
 Optional marker-inset reporter. When this shape is used as a connector
 marker, returns how far back from the anchor (along the negative tangent)
@@ -76,7 +76,7 @@ so the trim and the painted marker agree on geometry.
 
 > `readonly` `optional` **paintInto?**: (`g`, `spec`, `anchor`, `angleRad`, `style?`, `strokeWidth?`) => `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:672](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L672)
+Defined in: [packages/canvas/src/primitives/types.ts:672](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/types.ts#L672)
 
 Optional static paint surface for marker rendering. Connectors call
 this to paint a marker at a polyline endpoint without instantiating
