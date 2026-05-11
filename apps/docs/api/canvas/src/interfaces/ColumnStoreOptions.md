@@ -1,6 +1,6 @@
 # Interface: ColumnStoreOptions
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:122](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/state/ColumnStore.ts#L122)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:122](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L122)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [packages/canvas/src/state/ColumnStore.ts:122](https://github.com/in
 
 > `optional` **initialCapacity?**: `number`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:124](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/state/ColumnStore.ts#L124)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:124](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L124)
 
 Initial slot capacity. Doubles on overflow. Default 256.
 
@@ -18,6 +18,6 @@ Initial slot capacity. Doubles on overflow. Default 256.
 
 > `optional` **maxCapacity?**: `number`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:126](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/state/ColumnStore.ts#L126)
+Defined in: [packages/canvas/src/state/ColumnStore.ts:126](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/ColumnStore.ts#L126)
 
 Max capacity. Throws on overflow. Default 16_777_216 (~16M).

@@ -1,6 +1,6 @@
 # Interface: GlowDecorationStyle
 
-Defined in: packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:13
+Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:13](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L13)
 
 Halo / outer glow. Repaints the host's silhouette N times with widening
 stroke and quadratic alpha falloff, producing a soft glow that hugs
@@ -16,7 +16,7 @@ glow) will extend this and add a `tick`.
 
 > `readonly` **color**: `number`
 
-Defined in: packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:14
+Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:14](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L14)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:1
 
 > `readonly` `optional` **innerAlpha?**: `number`
 
-Defined in: packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:20
+Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:20](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L20)
 
 Innermost (brightest) layer alpha. Default `0.55`.
 
@@ -34,7 +34,7 @@ Innermost (brightest) layer alpha. Default `0.55`.
 
 > `readonly` `optional` **layers?**: `number`
 
-Defined in: packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:18
+Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:18](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L18)
 
 Number of feather layers (more = smoother + more expensive). Default `6`.
 
@@ -44,6 +44,6 @@ Number of feather layers (more = smoother + more expensive). Default `6`.
 
 > `readonly` `optional` **radius?**: `number`
 
-Defined in: packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:16
+Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:16](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L16)
 
 Outermost glow extent, px. Default `12`.

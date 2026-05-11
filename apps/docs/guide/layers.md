@@ -1,299 +1,177 @@
 # Layers
 
-A **Layer** is the unit of rendered output. Compose a scene by stacking Layers in z-order.
+A **Layer** owns visual output, UI / interaction state, and a per-frame flush. Compose a scene by stacking Layers in z-order.
 
-If you take one thing away from this page: **a layer's `state` is the single source of truth.** The renderer is a function of state. Every mutation lands in state; every frame, the layer projects state to the renderer in one batched flush.
+Three layer classes ship today, all in `@invana/canvas`:
+
+- `Layer<TOptions, TState, TEvents, TDirtyBucket>` — the abstract base.
+- `WorldLayer` — camera-affected, world-coordinate content. **Default for almost everything.**
+- `ScreenLayer` — viewport-fixed overlays.
+
+There are no concrete built-in layers — `BackgroundLayer`, `MiniMapLayer`, etc. are future additions. Today every layer is one you subclass.
 
 ## What every Layer owns
 
-```ts
-abstract class Layer<TOptions, TState, TEvents, TDirtyBucket> {
-  readonly id: string;
-  readonly options: TOptions;          // construction-time, mostly-immutable config
-  readonly state: Store<TState>;       // observable interaction state (zustand+immer)
-  readonly events: SourceEmitter;      // typed, layer-scoped, auto-taps to canvas
-  readonly dirty: DirtyBatcher;        // marks which ids changed since last frame
+| Field | Type | Purpose |
+|---|---|---|
+| `id` | `string` | Stable identifier. Used by registries, events, telemetry envelopes. |
+| `options` | `TOptions` | Construction-time, mostly-immutable config. |
+| `state` | `Store<TState>` | UI / interaction state (zustand + immer). Small, observable. |
+| `events` | `SourceEmitter<TEvents>` | Typed per-layer events. Auto-forwarded to the canvas tap. |
+| `dirty` | `DirtyBatcher` | Per-frame batched flush. |
+| `visible` / `hittable` / `zIndex` / `cullable` | flags | Composition controls. |
 
-  visible: boolean;       // default true
-  hittable: boolean;      // default true — false skips this layer during hit-test
-  zIndex: number;         // default 0
-  cullable: boolean;      // default true — false for full-canvas effect layers
-}
-```
+Bulk hot data (`data`) is **not** on the base. Subclasses that need it (e.g. a future `GraphLayer`) attach `ColumnStore` instances themselves.
 
-Five fields, three flags. That's the surface every Layer presents to the canvas.
-
-## Two abstract bases — pick one
-
-You'll never extend `Layer` directly. You extend either `WorldLayer` or `ScreenLayer`. They mount onto different internal pixi containers and have different `hitTest` signatures so the type system catches coordinate mix-ups.
-
-| Class | Coords | Camera affects it? | Mounts onto |
-|---|---|---|---|
-| `WorldLayer` | world | yes — pans + zooms with the diagram | `ctx.world` (a `pixi-viewport`) |
-| `ScreenLayer` | screen pixels | no — fixed to the viewport | `ctx.stage` (the pixi root) |
-
-### The decision rule
-
-When you're not sure: imagine the user pans the camera 100px to the right.
-
-- **The thing should slide 100px with the diagram → `WorldLayer`.** Graph nodes and edges, a backdrop grid, ER tables, swimlane bodies, decorations on data, custom diagram content.
-- **The thing should stay glued to the same screen position → `ScreenLayer`.** Minimaps, dev info / FPS overlays, floating toolbars, tooltips, lasso rectangles, loading spinners, scale rulers.
-
-Most layers are `WorldLayer`s. Reach for `ScreenLayer` when you're building UI overlays, not diagram content.
-
-## Options vs state vs data — the bifurcated source of truth
-
-Three slots, deliberately distinct, each with a different mutation profile:
-
-| Slot | Purpose | Mutated by | Backed by | Scale |
-|---|---|---|---|---|
-| `options` | construction-time config: defaults, fixed style choices, peer layer ids | constructor; rare `setOptions()` | plain object | trivial |
-| `state` | UI / interaction / decoration *intent* — hover, selection, drag, view modes | layer API, behaviours | zustand + immer | small (< few k items), observable |
-| `data` | bulk hot data — node/edge attributes, positions, large per-instance fields | `Layer.update*`, layouts, external feeds | typed-array `ColumnStore` | huge (millions), high-frequency |
-
-Why split `state` and `data`? Because immutable `Map` + immer doesn't scale. Cloning a 500k-entry Map per mutation costs tens of milliseconds. A typed-array column store mutates in place at ~10 ns per write, holds millions of items in tens of MB instead of hundreds, and supports bulk feeds at memcpy rate.
-
-`state` and `data` together are the layer's source of truth. The split is performance, not semantics — both feed `flush()`, both feed the same dirty buckets.
-
-::: tip Where each field belongs
-**`state`** if it's read by inspectors, changes at user-input rate, is a `Set<id>` of "which ids are highlighted/selected", or matters for devtools / time-travel.
-
-**`data`** if the renderer reads it directly (coordinates, attributes), it changes at machine rate (feeds, layouts, simulations), or it's per-instance for potentially millions of items.
-
-Only subclasses that need bulk hot data declare a `data` field — the base `Layer` doesn't ship one.
-:::
-
-## The render projection — state → pixels
-
-This is the core of the architecture. It's worth understanding once and then it's automatic.
+## Lifecycle
 
 ```
-mutation (your code, behaviour, data feed)
-    │  setState / data.set* / etc.
-    ▼
-state commits
-    │  layer marks affected ids dirty: this.dirty.mark('halo', id)
-    ▼
-mutation returns (O(1) — no rendering yet)
-
-────────── ~16ms later ──────────
-
-Canvas tick (single RAF, owned by Canvas)
-    │
-    ▼
-walk layers in z-order
-    │
-    ▼  for each visible layer:
-    │     if hasPending(): flush()
-    │
-    ▼
-flush() drains dirty snapshot → applyDirty(snap)
-    │
-    ▼
-applyDirty translates buckets → renderer commands
-    │
-    ▼
-PixiJS paints only changed objects
+construct  →  add to canvas.layers  →  mount(ctx)  →  flush() on tick  →  ...  →  unmount()
 ```
 
-Two properties fall out:
+- `Canvas` (via `LayerRegistry.add`) calls `mount(ctx)`.
+- Subclass hooks: `createState()` (initial state), `onMount(ctx)`, `onUnmount(ctx)`, `applyDirty(snap)`.
+- `flush()` is called per tick when `hasPending()` is true. It snapshots the dirty buckets and calls `applyDirty(snap)`.
 
-- **Mutations are O(1).** No RAF scheduling at the call site, no synchronous render.
-- **Renders are bounded.** 1000 mutations in one frame collapse to one render pass touching only the changed shapes.
+## Picking a base — `WorldLayer` vs `ScreenLayer`
 
-This applies to **every** mutator. Your imperative API, behaviours, upstream feeds — they all use the same path.
+**Default to `WorldLayer`.** Diagram content — graph nodes, edges, ER tables, swimlane bodies, custom rendering — is camera-affected.
 
-## Subclass hooks
+Reach for `ScreenLayer` only when the content must stay glued to a screen position regardless of camera:
 
-When you write a Layer, you implement at minimum:
+| Use case | Base |
+|---|---|
+| Graph nodes, edges, diagram body | `WorldLayer` |
+| Custom shapes / decorations on data | `WorldLayer` |
+| Minimap (sticks to a corner) | `ScreenLayer` |
+| Dev info / FPS overlay | `ScreenLayer` |
+| Floating toolbars and palettes | `ScreenLayer` |
+| Tooltips at cursor offsets | `ScreenLayer` |
+| Lasso / rubber-band rectangle | `ScreenLayer` |
+| Scale ruler ("1 cm = 100 units") | `ScreenLayer` |
+
+The mental test: *if the user pans the camera 100px right, should this thing move with the diagram or stay glued to the screen?* Move with the diagram → `WorldLayer`. Stay glued → `ScreenLayer`.
+
+## A minimal WorldLayer
 
 ```ts
-class MyLayer extends WorldLayer<MyOptions, MyState, MyEvents, MyDirtyBucket> {
-  // Build initial state. Called once in the constructor.
-  protected createState(): MyState {
-    return { /* … */ };
+import {
+  WorldLayer,
+  type WorldLayerHit,
+  type CanvasContext,
+} from '@invana/canvas';
+import { PrimitivesRenderer } from '@invana/canvas/primitives';
+
+interface NotesOptions { /* layer config */ }
+interface NotesState  { selectedId: string | null }
+
+class NotesLayer extends WorldLayer<NotesOptions, NotesState> {
+  private renderer!: PrimitivesRenderer;
+
+  protected createState(): NotesState {
+    return { selectedId: null };
   }
 
-  // Optional: domain-specific mount setup — subscribe to peers, attach
-  // renderer, populate the renderer from data.
   protected onMount(ctx: CanvasContext): void {
-    const source = ctx.layers.get<GraphLayer>(this.options.sourceLayerId);
-    source.events.on('selection:changed', (s) => this.refresh(s));
-  }
-
-  // Optional: teardown — unwind subscriptions registered on peers in onMount.
-  protected onUnmount(_ctx: CanvasContext): void {
-    /* … */
-  }
-
-  // Optional: translate dirty buckets into renderer commands.
-  // Called once per frame when dirty.hasPending() is true.
-  protected applyDirty(snap: DirtySnapshot<MyDirtyBucket>): void {
-    for (const id of snap.get('shape')) this.renderer.updateShape(id, /* … */);
-    for (const id of snap.get('halo'))  this.renderer.setDecoration(id, 'halo', /* … */);
-  }
-
-  // Required (WorldLayer): hit-test in world coords. Top-most hit or null.
-  hitTest(worldX: number, worldY: number) {
-    return null;
-  }
-}
-```
-
-`createState()` is the only one that's strictly abstract. Everything else has a sensible default; override only what you need.
-
-## Marking dirty — the per-frame batching primitive
-
-Mutations *should not* re-render synchronously. They mark dirty:
-
-```ts
-class GraphLayer extends WorldLayer<...> {
-  // Public API — anything can call this; behaviours, your code, data feeds.
-  selectNode(id: string): void {
-    this.state.setState((s) => {
-      s.selectedIds = new Set([...s.selectedIds, id]);
+    this.renderer = new PrimitivesRenderer({
+      container: this.container,  // WorldLayer's own root container
+      camera: ctx.camera,
     });
-    this.dirty.mark('halo', id);
-  }
 
-  // Hot-path data mutation — typed-array write, no immer, O(1).
-  updateNodePosition(id: string, x: number, y: number): void {
-    this.data.nodes.setX(id, x);
-    this.data.nodes.setY(id, y);
-    this.dirty.mark('shape', id);
-  }
-}
-```
-
-The `applyDirty(snap)` hook is the single place where state becomes pixels. Each bucket name is a string of your choosing — `'shape'`, `'halo'`, `'edge-route'`, whatever the layer needs.
-
-External mutators (behaviours calling `state.setState` directly, upstream feeds writing to a column store) need to land in dirty buckets too. Layers wire this up by subscribing to their own state / data inside `onMount` and translating subscriber callbacks into `dirty.mark(...)` calls.
-
-## Hit testing
-
-Each Layer implements `hitTest` against its own data + spatial index. The Canvas drives a top-down hit walk by z-order:
-
-1. Walk layers in z-order, top to bottom (screen-layers before world-layers).
-2. Skip layers where `hittable === false`.
-3. The first layer that returns a non-null result wins. Stop.
-4. If no layer claims the hit, the canvas emits `'background:click'` (with world coords).
-
-This is DOM-style targeting — like `event.target` resolves to one element. Set `hittable: false` on backgrounds, decorative overlays, and effect layers that should never receive input.
-
-`WorldLayer.hitTest` takes world coords. `ScreenLayer.hitTest` takes screen coords. The signatures differ on purpose — TypeScript catches you when you mix them.
-
-## Cross-layer dependencies
-
-When a Layer reads from a peer (a minimap reflecting a graph, a heatmap overlay reading a graph's node positions), declare the dependency as an explicit `*LayerId` field in options:
-
-```ts
-canvas.layers.add(new GraphLayer({ id: 'graph', options: { /* … */ } }));
-canvas.layers.add(
-  new MiniMapLayer({
-    id: 'minimap',
-    options: { sourceLayerId: 'graph' },
-  }),
-);
-```
-
-Inside `MiniMapLayer.onMount`:
-
-```ts
-protected onMount(ctx: CanvasContext): void {
-  const source = ctx.layers.get<GraphLayer>(this.options.sourceLayerId);
-  if (!source) {
-    throw new Error(`MiniMapLayer "${this.id}" requires layer "${this.options.sourceLayerId}"`);
-  }
-  source.events.on('selection:changed', (s) => this.refresh(s));
-  source.state.subscribe((s) => this.highlightSelection(s.selectedIds));
-}
-```
-
-**Don't infer the dependency** ("find the only graph layer of type GraphLayer"). Adding a second graph would silently break the binding. Explicit ids make multi-layer scenes work without ambiguity, and missing dependencies surface as clear errors at mount time.
-
-## Composition
-
-Adding a Layer mounts it; removing unmounts it. Defaults: `visible: true`, `hittable: true`, `zIndex: 0`.
-
-```ts
-canvas.layers.add(new BackgroundLayer({ id: 'bg', options: { pattern: 'dots' } }));
-canvas.layers.add(new GraphLayer({ id: 'graph', options: { /* … */ }, zIndex: 10 }));
-canvas.layers.add(new MiniMapLayer({ id: 'minimap', options: { sourceLayerId: 'graph' } }));
-
-// Toggle without removing:
-canvas.layers.get('bg')!.visible = false;
-
-// Re-order at runtime (WorldLayer/ScreenLayer):
-canvas.layers.get<GraphLayer>('graph')!.setZIndex(5);
-
-// Remove permanently:
-canvas.layers.remove('minimap');
-```
-
-Z-order ties broken by registration order — earlier add, drawn first.
-
-## Custom Layer — minimal example
-
-```ts
-import { WorldLayer } from '@invana/canvas';
-import type { CanvasContext, Graphics } from '@invana/canvas';
-
-interface BoxOptions {
-  size: number;
-}
-
-interface BoxState {
-  hovered: boolean;
-}
-
-class BoxLayer extends WorldLayer<BoxOptions, BoxState> {
-  private g?: Graphics;
-
-  protected createState(): BoxState {
-    return { hovered: false };
-  }
-
-  protected onMount(_ctx: CanvasContext): void {
-    this.g = this.createGraphics('box');
-    this.repaint();
-    // when state changes, re-paint
-    this.state.subscribe(() => this.repaint());
-  }
-
-  private repaint(): void {
-    if (!this.g) return;
-    this.g.clear();
-    const { size } = this.options;
-    const { hovered } = this.state.getState();
-    this.g
-      .rect(-size / 2, -size / 2, size, size)
-      .fill(hovered ? 0xef4444 : 0x3b82f6);
-  }
-
-  hover(yes: boolean): void {
-    this.state.setState((s) => {
-      s.hovered = yes;
+    this.renderer.addShape('note-1', {
+      kind: 'rect',
+      x: 0, y: 0,
+      width: 200, height: 80,
+      cornerRadius: 6,
+      fill: 0xfff7d6,
+      stroke: { color: 0x999999, width: 1 },
     });
   }
 
-  hitTest(worldX: number, worldY: number) {
-    const half = this.options.size / 2;
-    if (Math.abs(worldX) <= half && Math.abs(worldY) <= half) {
-      return { id: this.id };
-    }
-    return null;
+  protected onUnmount(): void {
+    this.renderer.destroy();
+  }
+
+  hitTest(worldX: number, worldY: number): WorldLayerHit | null {
+    const hit = this.renderer.hitTest(worldX, worldY);
+    return hit ? { id: hit.id, kind: hit.kind } : null;
   }
 }
 
-const canvas = new Canvas();
-await canvas.init({ container: document.getElementById('app')! });
-canvas.layers.add(new BoxLayer({ id: 'box', options: { size: 200 } }));
+const notes = new NotesLayer({ id: 'notes', options: {} });
+canvas.layers.add(notes);
 ```
 
-In a real layer, swap the manual `repaint` for the `dirty` + `applyDirty` flow — but the minimal pattern is the same: state mutates, the layer reads state, paints into a `Graphics`.
+### What `WorldLayer` provides
 
-## What's next
+| Member | Purpose |
+|---|---|
+| `this.container` *(protected)* | Root pixi `Container` (RenderGroup) attached to `ctx.world`. Available from `onMount` onward. |
+| `this.createGraphics(label?)` | Sanctioned way to obtain a `Graphics` attached to this layer. Keeps pixi internal. |
+| `this.createContainer(label?)` | Same idea for grouped display objects. |
+| `this.setZIndex(z)` | Update z-order in both `LayerRegistry` and the pixi container. |
+| `this.getBounds()` | World-space AABB of everything rendered. One-shot scene-graph traversal — don't call per frame. |
+| `this.hitTest(wx, wy)` *(abstract)* | Return the topmost hit at world coordinates or `null`. |
 
-- [Behaviours](/guide/behaviours) — how input lands in `state`
-- [Renderers](/guide/renderers) — when to compose `PrimitivesRenderer` instead of painting directly
-- [Events](/guide/events) — `layer.events` vs `canvas.events`
+## A minimal ScreenLayer
+
+```ts
+import { ScreenLayer, type ScreenLayerHit, type CanvasContext } from '@invana/canvas';
+
+class FpsLayer extends ScreenLayer<{}, { fps: number }> {
+  protected createState() { return { fps: 0 }; }
+
+  protected onMount(ctx: CanvasContext): void {
+    // mount pixi text/graphics into `this.container`, which is attached
+    // to `ctx.stage` (a sibling of canvas.world).
+  }
+
+  hitTest(_screenX: number, _screenY: number): ScreenLayerHit | null {
+    return null; // pure overlay
+  }
+}
+```
+
+`ScreenLayer.hitTest` takes **screen** coordinates; `WorldLayer.hitTest` takes **world** coordinates. The type-distinct signatures stop you from accidentally feeding the wrong coordinate space.
+
+## Per-frame work — the dirty batcher
+
+Layers mutate state freely; the batcher coalesces work to one `flush` per frame.
+
+```ts
+// inside the layer
+this.state.setState((s) => { s.hoveredId = id; });
+this.dirty.mark('hover');   // declare a bucket name
+
+// per tick, when hasPending() is true:
+protected applyDirty(snap: DirtySnapshot<'hover' | 'data' | 'render'>): void {
+  if (snap.has('hover')) { /* update hover styling */ }
+  if (snap.has('data'))  { /* push data → renderer */ }
+}
+```
+
+`DirtyBatcher` is RAF-free. The `Canvas` tick is the only thing that calls `flush()`.
+
+## Stacked draw order
+
+For ordered painting (edges below nodes, labels on top, halos behind everything), use **separate Layer instances** with different `zIndex`. Don't try to draw multiple semantic layers inside one Layer — pull them apart and let the registry order them.
+
+```ts
+canvas.layers.add(new EdgesLayer({ id: 'edges', zIndex: 0, options: {} }));
+canvas.layers.add(new NodesLayer({ id: 'nodes', zIndex: 10, options: {} }));
+canvas.layers.add(new LabelsLayer({ id: 'labels', zIndex: 20, options: {} }));
+```
+
+## Animated layers
+
+If your layer (or a renderer it owns) needs per-frame animation, expose a `tickAnimations(dt)` method. The canvas tick calls it after `flush()`:
+
+```ts
+class PulseLayer extends WorldLayer { /* ... */
+  tickAnimations(dt: number) {
+    // advance phase, refresh transient visuals
+  }
+}
+```
+
+`PrimitivesRenderer` already exposes `tickAnimations(dt)` — the canvas tick detects it on `layer.renderer` and forwards automatically.

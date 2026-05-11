@@ -1,18 +1,25 @@
 # Interface: ShapeHostInfo
 
-Defined in: packages/canvas/src/primitives/types.ts:264
+Defined in: [packages/canvas/src/primitives/types.ts:495](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L495)
 
 Information a `Shape` instance receives at construction. The renderer hands
 shapes the surface to attach to plus the registries that fill resolution
-needs (`textureRegistry` for image fills, `iconRegistry` for icon fills).
+needs (`textureRegistry` for image fills).
 
 ## Properties
 
-### iconRegistry
+### requestRedraw
 
-> `readonly` **iconRegistry**: [`IIconRegistry`](IIconRegistry.md)
+> `readonly` **requestRedraw**: () => `void`
 
-Defined in: packages/canvas/src/primitives/types.ts:267
+Defined in: [packages/canvas/src/primitives/types.ts:502](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L502)
+
+Re-invoke the shape's `draw(currentSpec)`. Used by async fill loaders
+(image silhouette, image-inset) to repaint once a texture resolves.
+
+#### Returns
+
+`void`
 
 ***
 
@@ -20,7 +27,7 @@ Defined in: packages/canvas/src/primitives/types.ts:267
 
 > `readonly` **surface**: `Container`
 
-Defined in: packages/canvas/src/primitives/types.ts:265
+Defined in: [packages/canvas/src/primitives/types.ts:496](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L496)
 
 ***
 
@@ -28,4 +35,4 @@ Defined in: packages/canvas/src/primitives/types.ts:265
 
 > `readonly` **textureRegistry**: [`TextureRegistry`](../classes/TextureRegistry.md)
 
-Defined in: packages/canvas/src/primitives/types.ts:266
+Defined in: [packages/canvas/src/primitives/types.ts:497](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L497)

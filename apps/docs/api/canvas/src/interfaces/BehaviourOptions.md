@@ -1,10 +1,11 @@
 # Interface: BehaviourOptions
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:35](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/behaviours/Behaviour.ts#L35)
+Defined in: [packages/canvas/src/behaviours/Behaviour.ts:35](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/behaviours/Behaviour.ts#L35)
 
 ## Extended by
 
 - [`DragPanBehaviourOptions`](DragPanBehaviourOptions.md)
+- [`DragShapeBehaviourOptions`](DragShapeBehaviourOptions.md)
 - [`WheelZoomBehaviourOptions`](WheelZoomBehaviourOptions.md)
 - [`PinchZoomBehaviourOptions`](PinchZoomBehaviourOptions.md)
 - [`KeyboardCameraInputBehaviourOptions`](KeyboardCameraInputBehaviourOptions.md)
@@ -15,7 +16,7 @@ Defined in: [packages/canvas/src/behaviours/Behaviour.ts:35](https://github.com/
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/behaviours/Behaviour.ts#L43)
+Defined in: [packages/canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/behaviours/Behaviour.ts#L43)
 
 Default `false` — the developer explicitly enables.
 
@@ -25,7 +26,7 @@ Default `false` — the developer explicitly enables.
 
 > **id**: `string`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/behaviours/Behaviour.ts#L36)
+Defined in: [packages/canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/behaviours/Behaviour.ts#L36)
 
 ***
 
@@ -33,7 +34,7 @@ Defined in: [packages/canvas/src/behaviours/Behaviour.ts:36](https://github.com/
 
 > `optional` **layerId?**: `string`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:41](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/behaviours/Behaviour.ts#L41)
+Defined in: [packages/canvas/src/behaviours/Behaviour.ts:41](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/behaviours/Behaviour.ts#L41)
 
 Layer-scoped behaviours target a specific Layer by id. Canvas-scoped
 behaviours have no `layerId` and `scope: 'canvas'`.
@@ -44,7 +45,7 @@ behaviours have no `layerId` and `scope: 'canvas'`.
 
 > `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/behaviours/Behaviour.ts#L49)
+Defined in: [packages/canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/behaviours/Behaviour.ts#L49)
 
 Gesture identifiers this behaviour claims. Used by `BehaviourRegistry`
 for conflict warnings. Format is convention-free (`'shift+drag'`,

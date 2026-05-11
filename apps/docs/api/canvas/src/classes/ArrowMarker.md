@@ -1,20 +1,20 @@
 # Class: ArrowMarker
 
-Defined in: packages/canvas/src/primitives/markers/ArrowMarker.ts:43
+Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:70](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/markers/ArrowMarker.ts#L70)
 
 Base for shapes whose `draw` and `paintInto` share a single silhouette
 trace. Subclasses implement `drawGeometry` (trace path + apply fill +
 apply stroke) and `bounds`. They get `draw` and `paintInto` for free.
 
-The shape's root `gfx` Container holds two layers:
-  - `bodyGfx`  — Graphics drawing the silhouette + body fill + border
-  - `iconView` — sibling Container holding an icon glyph, when
-                 `spec.fill.kind === 'icon'`. Wired in step 4 (paint
-                 helpers), not here — at step 3 the iconView property is
-                 declared but unused.
+The shape's root `gfx` Container holds:
+  - `bodyGfx`     — Graphics drawing the silhouette + silhouette-filler
+                    fill layers (`solid` / `image`) + border.
+  - inset views   — sibling Containers, one per inset-content fill layer
+                    (`glyph` / `svg` / `image-inset`), keyed by layer
+                    index in `spec.fill`.
 
 Decorations operate against `paintInto` — a callback into the silhouette
-only, never into the icon view. This means a glow on a shape with an icon
+only, never into inset content. This means a glow on a shape with an icon
 halos the silhouette but leaves the glyph alone.
 
 ## Extends
@@ -27,7 +27,7 @@ halos the silhouette but leaves the glyph alone.
 
 > **new ArrowMarker**(`spec`, `host`): `ArrowMarker`
 
-Defined in: packages/canvas/src/primitives/markers/ArrowMarker.ts:46
+Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:73](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/markers/ArrowMarker.ts#L73)
 
 #### Parameters
 
@@ -53,7 +53,7 @@ Defined in: packages/canvas/src/primitives/markers/ArrowMarker.ts:46
 
 > `protected` `readonly` **bodyGfx**: [`Graphics`](../interfaces/Graphics.md)
 
-Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:38
+Defined in: [packages/canvas/src/primitives/base/ShapeBase.ts:42](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeBase.ts#L42)
 
 #### Inherited from
 
@@ -65,7 +65,7 @@ Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:38
 
 > `readonly` **gfx**: `Container`
 
-Defined in: packages/canvas/src/primitives/base/PrimitiveBase.ts:12
+Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 Root display object — renderer adds/removes this on the host surface.
 
@@ -79,7 +79,7 @@ Root display object — renderer adds/removes this on the host surface.
 
 > `protected` `readonly` **host**: [`ShapeHostInfo`](../interfaces/ShapeHostInfo.md)
 
-Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:42
+Defined in: [packages/canvas/src/primitives/base/ShapeBase.ts:46](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeBase.ts#L46)
 
 #### Inherited from
 
@@ -87,15 +87,15 @@ Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:42
 
 ***
 
-### iconView
+### insetViews
 
-> `protected` **iconView**: `IconView` = `null`
+> `protected` `readonly` **insetViews**: `any`
 
-Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:39
+Defined in: [packages/canvas/src/primitives/base/ShapeBase.ts:43](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeBase.ts#L43)
 
 #### Inherited from
 
-[`ShapeBase`](ShapeBase.md).[`iconView`](ShapeBase.md#iconview)
+[`ShapeBase`](ShapeBase.md).[`insetViews`](ShapeBase.md#insetviews)
 
 ***
 
@@ -103,7 +103,7 @@ Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:39
 
 > `protected` **spec**: [`ArrowMarkerSpec`](../interfaces/ArrowMarkerSpec.md)
 
-Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:40
+Defined in: [packages/canvas/src/primitives/base/ShapeBase.ts:44](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeBase.ts#L44)
 
 #### Inherited from
 
@@ -115,15 +115,47 @@ Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:40
 
 > `readonly` `static` **kind**: `"arrow"` = `'arrow'`
 
-Defined in: packages/canvas/src/primitives/markers/ArrowMarker.ts:44
+Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:71](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/markers/ArrowMarker.ts#L71)
 
 ## Methods
+
+### boundaryIntersect()
+
+> **boundaryIntersect**(`localFromCenter`): [`Point`](../interfaces/Point.md)
+
+Defined in: [packages/canvas/src/primitives/base/ShapeBase.ts:92](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeBase.ts#L92)
+
+Default boundary intersection: ray from the shape's geometric centre
+`(0, 0)` toward `localFromCenter`, intersected with a centred AABB
+derived from `this.bounds()`. Correct for `RectShape` (anchored
+top-left) and any shape whose silhouette can be approximated by its
+bounding box.
+
+Geometric shapes with non-rectangular silhouettes (`CircleShape`,
+`EllipseShape`, `PolygonShape`) should override this for pixel-accurate
+perimeter snapping. Input and output are both centre-relative.
+
+#### Parameters
+
+##### localFromCenter
+
+[`Point`](../interfaces/Point.md)
+
+#### Returns
+
+[`Point`](../interfaces/Point.md)
+
+#### Inherited from
+
+[`ShapeBase`](ShapeBase.md).[`boundaryIntersect`](ShapeBase.md#boundaryintersect)
+
+***
 
 ### bounds()
 
 > **bounds**(): [`Rect`](../interfaces/Rect.md)
 
-Defined in: packages/canvas/src/primitives/markers/ArrowMarker.ts:55
+Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:85](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/markers/ArrowMarker.ts#L85)
 
 Local-space axis-aligned bounding box for hit-testing & decorations.
 
@@ -141,7 +173,7 @@ Local-space axis-aligned bounding box for hit-testing & decorations.
 
 > **destroy**(): `void`
 
-Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:77
+Defined in: [packages/canvas/src/primitives/base/ShapeBase.ts:103](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeBase.ts#L103)
 
 #### Returns
 
@@ -157,7 +189,7 @@ Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:77
 
 > **draw**(`spec`): `void`
 
-Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:62
+Defined in: [packages/canvas/src/primitives/base/ShapeBase.ts:66](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeBase.ts#L66)
 
 (Re)paint the shape from the current spec. Called on add and on update.
 
@@ -181,7 +213,7 @@ Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:62
 
 > `protected` **drawGeometry**(`g`, `spec`, `style?`): `void`
 
-Defined in: packages/canvas/src/primitives/markers/ArrowMarker.ts:51
+Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:78](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/markers/ArrowMarker.ts#L78)
 
 Trace the silhouette into `g`, then apply fill + stroke. When `style`
 is supplied, it overrides the spec's fill/stroke (decoration use).
@@ -214,7 +246,7 @@ is supplied, it overrides the spec's fill/stroke (decoration use).
 
 > **paintInto**(`g`, `style?`): `void`
 
-Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:73
+Defined in: [packages/canvas/src/primitives/base/ShapeBase.ts:77](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeBase.ts#L77)
 
 Decoration entry point — repaint the silhouette into someone else's
 `Graphics` with a style override. The shape uses its own current spec;
@@ -246,11 +278,38 @@ Every shape that extends `ShapeBase` has it for free.
 
 ***
 
+### markerInset()
+
+> `static` **markerInset**(`spec`, `strokeWidth?`): `number`
+
+Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:98](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/markers/ArrowMarker.ts#L98)
+
+Distance from the arrow tip back to the base along the negative tangent.
+The connector trims its body by this amount so the line stops at the
+marker's base — the marker triangle then visually starts where the line
+ends and its tip reaches the original anchor (target endpoint).
+
+#### Parameters
+
+##### spec
+
+`Omit`\<[`ArrowMarkerSpec`](../interfaces/ArrowMarkerSpec.md), `"x"` \| `"y"`\>
+
+##### strokeWidth?
+
+`number` = `1`
+
+#### Returns
+
+`number`
+
+***
+
 ### paintInto()
 
-> `static` **paintInto**(`g`, `spec`, `anchor`, `angleRad`, `style?`): `void`
+> `static` **paintInto**(`g`, `spec`, `anchor`, `angleRad`, `style?`, `strokeWidth?`): `void`
 
-Defined in: packages/canvas/src/primitives/markers/ArrowMarker.ts:61
+Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:105](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/markers/ArrowMarker.ts#L105)
 
 #### Parameters
 
@@ -273,6 +332,10 @@ Defined in: packages/canvas/src/primitives/markers/ArrowMarker.ts:61
 ##### style?
 
 [`ShapePaintStyle`](../interfaces/ShapePaintStyle.md)
+
+##### strokeWidth?
+
+`number` = `1`
 
 #### Returns
 

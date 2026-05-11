@@ -1,6 +1,6 @@
 # Interface: PrimitivesRendererOptions
 
-Defined in: packages/canvas/src/primitives/PrimitivesRenderer.ts:79
+Defined in: [packages/canvas/src/primitives/PrimitivesRenderer.ts:105](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/PrimitivesRenderer.ts#L105)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: packages/canvas/src/primitives/PrimitivesRenderer.ts:79
 
 > `readonly` **camera**: [`Camera`](../classes/Camera.md)
 
-Defined in: packages/canvas/src/primitives/PrimitivesRenderer.ts:81
+Defined in: [packages/canvas/src/primitives/PrimitivesRenderer.ts:107](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/PrimitivesRenderer.ts#L107)
 
 ***
 
@@ -16,19 +16,7 @@ Defined in: packages/canvas/src/primitives/PrimitivesRenderer.ts:81
 
 > `readonly` **container**: `Container`
 
-Defined in: packages/canvas/src/primitives/PrimitivesRenderer.ts:80
-
-***
-
-### iconRegistry?
-
-> `readonly` `optional` **iconRegistry?**: [`IIconRegistry`](IIconRegistry.md)
-
-Defined in: packages/canvas/src/primitives/PrimitivesRenderer.ts:93
-
-Optional shared icon registry. When omitted, the renderer creates a
-default registry pre-populated with starter sets for Lucide and
-FontAwesome 6.
+Defined in: [packages/canvas/src/primitives/PrimitivesRenderer.ts:106](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/PrimitivesRenderer.ts#L106)
 
 ***
 
@@ -36,7 +24,7 @@ FontAwesome 6.
 
 > `readonly` `optional` **textureRegistry?**: [`TextureRegistry`](../classes/TextureRegistry.md)
 
-Defined in: packages/canvas/src/primitives/PrimitivesRenderer.ts:87
+Defined in: [packages/canvas/src/primitives/PrimitivesRenderer.ts:113](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/PrimitivesRenderer.ts#L113)
 
 Optional shared texture registry. When omitted, the renderer creates an
 internal one — image fills still work (lazy-loaded), but textures are

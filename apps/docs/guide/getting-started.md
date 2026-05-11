@@ -1,9 +1,9 @@
 # Getting Started
 
-This guide walks you through standing up a Canvas, mounting a Layer, and wiring camera input. By the end you'll have a working scene you can pan, zoom, and extend.
+This guide walks you through standing up a Canvas, mounting a Layer, drawing shapes, and wiring camera input. By the end you'll have a working pan-and-zoom scene with a couple of shapes connected by a line.
 
 ::: tip Implementation status
-The architecture (Layer / Behaviour / Layout / Renderer) is defined and the engine kernel has shipped. Domain layers (`GraphLayer`, `MiniMapLayer`) and layouts (`D3ForceLayout`, `ElkLayout`) are still being built. The examples below use what's actually exported today.
+The engine kernel — `Canvas`, `Layer` bases, `PrimitivesRenderer`, the five camera-input behaviours — has shipped. Domain packages (`@invana/graph`, the layout packages, datasets) are skeleton-only at the moment. See [Package status](./packages.md) for what each package actually exports today.
 :::
 
 ## Installation
@@ -20,44 +20,132 @@ yarn add @invana/canvas pixi.js
 
 ## What you import from where
 
-`@invana/canvas` ships under two subpaths so consumers can pull only what they need:
+`@invana/canvas` ships under two subpath exports:
 
-| Subpath | Contains |
+| Subpath | What's inside |
 |---|---|
-| `@invana/canvas` | `Canvas`, base classes (`Layer`, `WorldLayer`, `ScreenLayer`, `Behaviour`), `Camera`, registries, store, events, the built-in camera-input behaviours (`DragPanBehaviour`, `WheelZoomBehaviour`, `PinchZoomBehaviour`, `KeyboardCameraInputBehaviour`), and a re-export of the full `primitives/` surface |
-| `@invana/canvas/primitives` | `PrimitivesRenderer` + base classes (`ShapeBase`, `ConnectorBase`, `ShapeDecorationBase`, `ConnectorDecorationBase`) + built-in shapes (`CircleShape`, `RectShape`), connector (`Connector`), markers (`ArrowMarker`), routers (`straightRouter`), decorations (`GlowDecoration`), path utilities, and shared types (`Path`, `PathCommand`, `BaseShapeSpec`, `BaseConnectorSpec`, `IShape`, `IConnector`, …) |
+| `@invana/canvas` | `Canvas`, `Camera`, base classes (`Layer`, `WorldLayer`, `ScreenLayer`, `Behaviour`), `LayerRegistry`, `BehaviourRegistry`, `CanvasEventBus`, `Store`, `ColumnStore`, `DirtyBatcher`, the five built-in behaviours, and a full re-export of the primitives surface. |
+| `@invana/canvas/primitives` | `PrimitivesRenderer` and its base classes / built-in shapes / connectors / markers / routers / anchors / path styles / decorations. The granular subpath when you want to keep imports tight. |
 
-The `/primitives` subpath is the one to reach for when you're authoring a custom shape, connector, decoration, or router. Everyday application code rarely needs it directly — you compose Layers, and Layers compose the renderer for you.
+Everyday application code mostly imports from `@invana/canvas`. Reach for `/primitives` when you're authoring a custom shape, connector, decoration, router, or anchor.
 
 ## Step 1 — create and initialise the Canvas
+
+`Canvas` is the engine root. It owns the pixi `Application`, the tick loop, the camera, the registries, and the event bus.
 
 ```ts
 import { Canvas } from '@invana/canvas';
 
-const canvas = new Canvas();
+const canvas = new Canvas({ id: 'main' });
 
 await canvas.init({
-  container: document.getElementById('canvas-container')!,
-  width: 800,
-  height: 600,
-  preference: 'webgpu',  // falls back to webgl, then canvas
+  container: document.getElementById('canvas-root')!,
+  preference: 'webgpu', // pixi falls back to webgl/canvas if unavailable
   autoResize: true,
 });
 ```
 
-`init()` is async because it negotiates a GPU backend through PixiJS. After it resolves, `canvas.events`, `canvas.camera`, `canvas.layers`, and `canvas.behaviours` are all available.
+`init` is async because pixi's renderer creation is async. Once it resolves, `canvas.world`, `canvas.stage`, `canvas.camera`, `canvas.layers`, and `canvas.behaviours` are all live.
 
-The `'renderer:initialised'` event fires when init completes, with the resolved backend:
+Listen for the backend pixi resolved:
 
 ```ts
-canvas.events.on('renderer:initialised', ({ backend }) => {
-  console.log('Running on', backend);  // 'webgpu' | 'webgl' | 'canvas'
+canvas.events.on('renderer:initialised', ({ backend, capabilities }) => {
+  console.log(`rendering on ${backend}`, capabilities);
 });
 ```
 
-## Step 2 — wire camera input
+## Step 2 — define a Layer
 
-**Behaviours never auto-enable.** A fresh canvas has no input wired up — pan, zoom, and keyboard navigation are all opt-in. Register the ones you want:
+Most diagram content lives on a `WorldLayer` — camera-affected, panning and zooming with the user's view. Subclass it, compose a `PrimitivesRenderer` inside `onMount`, and your layer can draw shapes and connectors.
+
+```ts
+import { WorldLayer, type WorldLayerHit, type CanvasContext } from '@invana/canvas';
+import { PrimitivesRenderer } from '@invana/canvas/primitives';
+
+interface DemoOptions {
+  /* layer-specific config goes here */
+}
+
+interface DemoState {
+  hoveredId: string | null;
+}
+
+class DemoLayer extends WorldLayer<DemoOptions, DemoState> {
+  renderer!: PrimitivesRenderer;
+
+  protected createState(): DemoState {
+    return { hoveredId: null };
+  }
+
+  protected onMount(ctx: CanvasContext): void {
+    this.renderer = new PrimitivesRenderer({
+      container: this.container,   // root from WorldLayer
+      camera: ctx.camera,
+    });
+
+    this.renderer.addShape('a', {
+      kind: 'circle',
+      x: -120, y: 0,
+      radius: 32,
+      fill: 0x4f46e5,
+      stroke: { color: 0x1e1b4b, width: 2 },
+    });
+
+    this.renderer.addShape('b', {
+      kind: 'rect',
+      x: 60, y: -24,
+      width: 120, height: 48,
+      cornerRadius: 8,
+      fill: 0x10b981,
+    });
+
+    this.renderer.addConnector('a-b', {
+      kind: 'connector',
+      source: { kind: 'shape', shapeId: 'a', anchor: 'boundary' },
+      target: { kind: 'shape', shapeId: 'b', anchor: 'boundary' },
+      router: 'straight',
+      stroke: { color: 0x111827, width: 2 },
+    });
+  }
+
+  protected onUnmount(): void {
+    this.renderer.destroy();
+  }
+
+  hitTest(worldX: number, worldY: number): WorldLayerHit | null {
+    const hit = this.renderer.hitTest(worldX, worldY);
+    return hit ? { id: hit.id, kind: hit.kind } : null;
+  }
+
+  override getBounds() {
+    return super.getBounds();
+  }
+}
+```
+
+## Step 3 — mount the Layer
+
+```ts
+const demo = new DemoLayer({ id: 'demo', options: {} });
+canvas.layers.add(demo);
+```
+
+`LayerRegistry.add` calls `layer.mount(ctx)`, fires `layer:added` on the bus, and the next tick will draw the shapes you registered.
+
+## Step 4 — fit the camera to content
+
+After adding shapes, centre the viewport on whatever you drew:
+
+```ts
+canvas.camera.fitContent(demo.getBounds(), 100);
+```
+
+The `100` is screen-pixel padding around the bounding rect.
+
+## Step 5 — register and enable camera-input behaviours
+
+Behaviours don't auto-enable. Register each one, then explicitly enable it.
 
 ```ts
 import {
@@ -81,117 +169,21 @@ canvas.behaviours.register(
 );
 ```
 
-Note `enabled: true` on each — without it, the behaviour is registered but inactive.
+Toggle later with `canvas.behaviours.setEnabled('pan', false)`.
 
-Toggle later from a UI handler:
-
-```ts
-canvas.behaviours.setEnabled('pan', false);
-canvas.behaviours.setEnabled('lasso', true);
-```
-
-## Step 3 — add a Layer
-
-A Layer is the unit of rendered output. The kernel ships abstract base classes (`Layer`, `WorldLayer`, `ScreenLayer`); the toolkit (and `@invana/graph`) ship concrete ones.
-
-The simplest custom Layer paints a couple of circles directly into a `Graphics`:
-
-```ts
-import { WorldLayer } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
-
-interface DotsState {
-  color: number;
-}
-
-class DotsLayer extends WorldLayer<{}, DotsState> {
-  protected createState(): DotsState {
-    return { color: 0x3b82f6 };
-  }
-
-  protected onMount(_ctx: CanvasContext): void {
-    const g = this.createGraphics('dots');
-    g.circle(0, 0, 40).fill(this.state.getState().color);
-    g.circle(100, 50, 20).fill(0xef4444);
-  }
-
-  hitTest(_worldX: number, _worldY: number) {
-    return null;  // not interactive in this example
-  }
-}
-
-canvas.layers.add(new DotsLayer({ id: 'dots', options: {} }));
-```
-
-`createGraphics(label?)` returns a pixi `Graphics` attached to this layer's root container. The `Graphics` type is re-exported from `@invana/canvas` so you can type your callbacks without a direct `pixi.js` import.
-
-For richer scenes, compose `PrimitivesRenderer` from `@invana/canvas/primitives` and let it manage shape lifecycle, decorations, and hit-testing — see the [Renderers guide](/guide/renderers).
-
-## Step 4 — listen to events
-
-Every Layer has its own typed event emitter (`layer.events`). Canvas-wide events live on `canvas.events`:
-
-```ts
-canvas.events.on('camera:zoom', ({ scale }) => {
-  console.log('zoom is now', scale);
-});
-
-canvas.events.on('layer:added', ({ id }) => {
-  console.log('mounted', id);
-});
-```
-
-Layer events do **not** bubble to canvas events. If you want canvas-wide observability, use the telemetry tap:
-
-```ts
-canvas.events.tap((event) => {
-  console.log(event.type, event.payload);  // 'layer:dots:...'
-});
-```
-
-See [the events guide](/guide/events) for the full hierarchy.
-
-## Step 5 — react to state changes
-
-Layer state is observable. Subscribe and project changes into your UI:
-
-```ts
-const dots = canvas.layers.get<DotsLayer>('dots')!;
-
-dots.state.subscribe((s) => {
-  document.body.style.background = `#${s.color.toString(16)}`;
-});
-```
-
-In a domain layer like `GraphLayer`, this is how an inspector pane reacts to selection — same pattern.
-
-## Composing multiple Layers
-
-`canvas.layers.add()` mounts a Layer; `zIndex` controls draw order. Lower z draws below, higher above:
-
-```ts
-canvas.layers.add(new BackgroundLayer({ id: 'bg', options: { pattern: 'dots' }, zIndex: 0 }));
-canvas.layers.add(new GraphLayer({ id: 'graph', options: { ... }, zIndex: 10 }));
-canvas.layers.add(new MiniMapLayer({ id: 'minimap', options: { sourceLayerId: 'graph' } }));
-```
-
-`MiniMapLayer` is a `ScreenLayer` — it stays glued to the viewport regardless of camera. `BackgroundLayer` and `GraphLayer` are `WorldLayer`s — they pan and zoom with the user's view.
-
-When a Layer reads from a peer (a minimap reading the graph it mirrors), pass the source layer's id as an explicit option. Don't infer "the only graph layer."
-
-## Cleanup
+## Step 6 — tear down
 
 ```ts
 canvas.destroy();
 ```
 
-`destroy()` unmounts every Layer, destroys every Behaviour, drops the pixi `Application`, and clears the event bus. It's idempotent — safe to call twice.
+`destroy` is idempotent. It unmounts every layer, destroys every behaviour, drops the world subtree, clears bus subscriptions, and destroys the pixi `Application`.
 
-## Next steps
+## Where to next
 
-- [Architecture overview](/guide/architecture) — the three-concept model
-- [Layers](/guide/layers) — state vs data, dirty/flush, hit testing
-- [Behaviours](/guide/behaviours) — scope, defaults, gesture conflicts
-- [Layouts](/guide/layouts) — pure functions from data to positions
-- [Renderers](/guide/renderers) — `PrimitivesRenderer` and decorations
-- [Events](/guide/events) — three-tier hierarchy and telemetry tap
+- [Architecture](./architecture.md) — the Layer / Behaviour / Layout / Renderer mental model.
+- [Canvas & Camera](./canvas.md) — engine root and projection.
+- [Layers](./layers.md) — `WorldLayer` vs `ScreenLayer`, picking the right base.
+- [Behaviours](./behaviours.md) — the five built-in input behaviours, options, and gesture conflicts.
+- [Primitives renderer](./primitives.md) — shapes, connectors, markers, routers, anchors, decorations, badges.
+- [Events](./events.md) — typed events + the tap channel for telemetry.

@@ -1,239 +1,218 @@
 # Behaviours
 
-A **Behaviour** subscribes to input and translates it into state mutations. That's the whole job.
+A **Behaviour** subscribes to input and translates it into state mutations. That's the whole job — behaviours never render and never own data.
 
-A Behaviour does **not** render. It does **not** own data. It does **not** keep its own source of truth. Hover detection? Behaviour. Click-to-select logic? Behaviour. Pan and zoom? Camera-scoped behaviour. The visual halo that appears on hover? Not the behaviour — that's the layer projecting `state.hoveredId` to a halo decoration.
+::: tip Opt-in by default
+Every behaviour has `enabled: false` at construction. Register it on `canvas.behaviours`, then call `enable()` (or pass `enabled: true` to the constructor). There is no auto-activation of input behaviours anywhere in the engine.
+:::
 
-This split is important. Once you internalise it, behaviours become small, composable, and easy to reason about.
+## Lifecycle
 
-## The shape
-
-```ts
-abstract class Behaviour {
-  readonly id: string;
-  readonly enabled: boolean;            // default FALSE — opt-in only
-  readonly scope: 'layer' | 'canvas';   // inferred from layerId presence
-  readonly layerId?: string;
-  readonly shortcuts?: readonly string[]; // advisory metadata for conflict warnings
-
-  register(ctx: CanvasContext): void;
-  destroy(): void;
-  enable(): void;
-  disable(): void;
-
-  // Subclass hooks:
-  protected abstract onRegister(ctx: CanvasContext): void;
-  protected onDestroy(ctx: CanvasContext): void;
-  protected onEnable(): void;
-  protected onDisable(): void;
-}
+```
+construct  →  canvas.behaviours.register(b)  →  enable() / disable()  →  ...  →  unregister()
 ```
 
-`onRegister` always runs at registration. `onEnable` runs whenever the behaviour transitions from disabled to enabled — you typically wire input listeners here so disabled behaviours have zero subscriber overhead.
-
-## Behaviours never auto-enable
-
-This is **the** rule about behaviours. Every input behaviour — pan, zoom, hover, select, drag — is opt-in. The default is `enabled: false`.
-
-```ts
-canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));            // dormant
-canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true })); // active
-```
-
-Why? Two reasons:
-
-1. **Predictable composition.** A scene's input model is exactly what you wire up — no surprise listeners flowing into your data because you imported the wrong package. Two devs reading the same code see the same input semantics.
-2. **Tool switching.** A graph editor with a "pan tool" and a "lasso tool" needs both behaviours registered but only one enabled at a time. Auto-enabling either would fight the other.
-
-`canvas.behaviours.setEnabled(id, boolean)` flips a behaviour at runtime:
-
-```ts
-// User clicks the lasso tool button:
-canvas.behaviours.setEnabled('pan', false);
-canvas.behaviours.setEnabled('lasso', true);
-```
-
-## Two scopes: canvas vs layer
-
-The `scope` field is inferred from whether you pass a `layerId`:
-
-| Scope | When | Targets |
-|---|---|---|
-| **canvas** | no `layerId` | the canvas itself — camera, document-level input |
-| **layer** | `layerId: 'graph'` | a single Layer's state and events |
-
-Canvas-scoped behaviours include the built-in camera input — pan, zoom, keyboard navigation. They sit on the canvas, not on any specific layer.
-
-Layer-scoped behaviours target a specific Layer:
-
-```ts
-canvas.behaviours.register(
-  new HoverActivateBehaviour({ id: 'graph-hover', layerId: 'graph', enabled: true }),
-);
-canvas.behaviours.register(
-  new ClickSelectBehaviour({ id: 'graph-select', layerId: 'graph', enabled: true }),
-);
-canvas.behaviours.register(
-  new LassoSelectBehaviour({ id: 'graph-lasso', layerId: 'graph' }),  // dormant
-);
-```
-
-Inside a layer-scoped behaviour, fetch the target layer once at register time:
-
-```ts
-class HoverActivateBehaviour extends Behaviour {
-  protected onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
-    if (!layer) {
-      throw new Error(`Layer "${this.layerId}" not found — register it first`);
-    }
-    layer.events.on('node:hover', ({ id }) => {
-      if (!this.isEnabled) return;
-      layer.state.setState((s) => { s.hoveredId = id; });
-    });
-  }
-}
-```
-
-The `isEnabled` guard inside the handler is a cheap `if (!enabled) return;` — it lets the behaviour leave its subscriptions wired up while disabled, dropping events on the floor.
-
-## Behaviour-to-layer binding is always explicit
-
-A layer-scoped behaviour requires a `layerId`. Always. There's no "find the only layer of type T" inference, because adding a second layer of that type would silently change which one you're driving.
-
-If you want sugar for the single-layer case, register the behaviour against a known id — that's what the explicit `layerId` field gives you.
+| Method | What it does |
+|---|---|
+| `register(behaviour)` | Wires the behaviour up (calls `onRegister(ctx)`). If `enabled: true` at construction, also calls `onEnable()` and runs the conflict-warning check. |
+| `setEnabled(id, true)` | Calls `onEnable()` — typically adds pixi-viewport plugins or DOM listeners. |
+| `setEnabled(id, false)` | Calls `onDisable()` — drops the plugins / listeners. |
+| `unregister(id)` | Calls `destroy()` — drops everything. |
+| `get<T>(id)` | Typed lookup. |
 
 ## Built-in behaviours
 
-The canvas kernel ships four camera-input behaviours. All are canvas-scoped. All default to `enabled: false`.
+Five ship today, all camera-input. Authoring custom behaviours (hover, select, drag-shape, lasso, brush) is the next layer up.
 
-| Behaviour | Gesture | Notes |
+### `DragPanBehaviour`
+
+Pointer-drag panning via the pixi-viewport `drag` plugin.
+
+```ts
+import { DragPanBehaviour } from '@invana/canvas';
+
+canvas.behaviours.register(
+  new DragPanBehaviour({
+    id: 'pan',
+    enabled: true,
+    modifier: 'none',        // 'none' | 'space' | 'shift' | 'alt'
+    mouseButtons: 'left',    // 'all' | 'left' | 'right' | 'middle'
+    decelerate: true,        // momentum after pointer lift
+  }),
+);
+```
+
+| Option | Default | Description |
 |---|---|---|
-| `DragPanBehaviour` | drag (with optional modifier) | Modifier: `'none'` \| `'space'` \| `'shift'` \| `'alt'`. Decelerate on by default. |
-| `WheelZoomBehaviour` | wheel | Zoom centred on the cursor. |
-| `PinchZoomBehaviour` | two-finger pinch | Touch / trackpad. |
-| `KeyboardCameraInputBehaviour` | arrow keys + `=`/`-` | Configurable keymap. |
+| `modifier` | `'none'` | Modifier required during drag. `'space'` matches Figma/Sketch; `'shift'` / `'alt'` are also available. |
+| `mouseButtons` | `'left'` | Which buttons trigger drag. |
+| `decelerate` | `true` | Add momentum deceleration. |
 
-Wire them up explicitly when building a scene:
+The advertised gesture string is `'drag'` or `'${modifier}+drag'` — used by the registry for conflict warnings.
 
-```ts
-import {
-  DragPanBehaviour,
-  WheelZoomBehaviour,
-  PinchZoomBehaviour,
-  KeyboardCameraInputBehaviour,
-} from '@invana/canvas';
+### `WheelZoomBehaviour`
 
-canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom-wheel', enabled: true }));
-canvas.behaviours.register(new PinchZoomBehaviour({ id: 'zoom-pinch', enabled: true }));
-canvas.behaviours.register(new KeyboardCameraInputBehaviour({ id: 'keyboard', enabled: true }));
-```
-
-::: tip Tool switching with modifier keys
-Different camera-input gestures can coexist if you reach for modifier keys. `DragPanBehaviour({ modifier: 'space' })` means Space-drag pans; plain drag is free for a lasso behaviour. The same gesture string ends up in `shortcuts: ['space+drag']`, which the registry uses for conflict warnings.
-:::
-
-## Shortcut conflict detection
-
-When two enabled behaviours claim the same gesture, the `BehaviourRegistry` logs a warning:
-
-```
-[canvas] Behaviour "lasso-select" claims gesture "shift+drag" already used by enabled behaviour "pan".
-        Disable one before enabling the other.
-```
-
-The warning fires only when both are enabled simultaneously. Two behaviours sharing a gesture where one is disabled is the normal tool-switching case — that's fine.
+Scroll-wheel zoom via the `wheel` plugin. Trackpad pinch zooms instead of scrolling.
 
 ```ts
-new LassoSelectBehaviour({ id: 'lasso', shortcuts: ['shift+drag'] });
-new DragPanBehaviour({ id: 'pan', modifier: 'shift' }); // also claims 'shift+drag'
+import { WheelZoomBehaviour } from '@invana/canvas';
+
+canvas.behaviours.register(
+  new WheelZoomBehaviour({
+    id: 'wheel-zoom',
+    enabled: true,
+    requireCtrl: false,      // true → only ctrl+wheel zooms (good for inline embeds)
+    percent: 0.1,            // 10% per tick
+    smooth: false,           // false = snap; e.g. 8 = ease-out over 8 frames
+  }),
+);
 ```
 
-`shortcuts` is **advisory**. The framework warns. It does not enforce mutual exclusion — that's the developer's call. Different apps want different rules.
+### `PinchZoomBehaviour`
 
-## Where state mutations land
-
-A behaviour doesn't keep its own state. It writes into the appropriate layer's state (or the camera, for canvas-scoped camera behaviours):
+Two-finger pinch-to-zoom via the `pinch` plugin. Pair with `WheelZoomBehaviour` for touch + trackpad coverage.
 
 ```ts
-class ClickSelectBehaviour extends Behaviour {
+import { PinchZoomBehaviour } from '@invana/canvas';
+
+canvas.behaviours.register(
+  new PinchZoomBehaviour({
+    id: 'pinch-zoom',
+    enabled: true,
+    noDrag: false,           // true = pinch only zooms, doesn't centre
+    percent: 0.1,
+  }),
+);
+```
+
+### `KeyboardCameraInputBehaviour`
+
+Keyboard pan + zoom. Listens on `document`, so the canvas does not need keyboard focus. Input fields / textareas / selects are automatically excluded.
+
+```ts
+import { KeyboardCameraInputBehaviour } from '@invana/canvas';
+
+canvas.behaviours.register(
+  new KeyboardCameraInputBehaviour({
+    id: 'keyboard',
+    enabled: true,
+    panStep: 40,              // pixels per arrow press
+    zoomFactor: 1.1,          // 10% per +/- press
+    keymap: {                 // each field merges with the defaults
+      panUp:    ['ArrowUp', 'KeyW'],
+      panDown:  ['ArrowDown', 'KeyS'],
+      panLeft:  ['ArrowLeft', 'KeyA'],
+      panRight: ['ArrowRight', 'KeyD'],
+    },
+  }),
+);
+```
+
+Default keymap:
+
+| Action | Keys |
+|---|---|
+| Pan | `ArrowUp` / `Down` / `Left` / `Right` |
+| Zoom in | `+`, `=`, `NumpadAdd` |
+| Zoom out | `-`, `NumpadSubtract` |
+| Reset zoom to 1:1 | `0`, `Numpad0` |
+
+### `DragShapeBehaviour`
+
+Pointer-drag move for individual shapes managed by a `PrimitivesRenderer`. Layer-scoped — pass the renderer reference at construction.
+
+```ts
+import { DragShapeBehaviour } from '@invana/canvas';
+
+canvas.behaviours.register(
+  new DragShapeBehaviour({
+    id: 'drag-shapes',
+    layerId: 'demo',
+    renderer: demo.renderer,    // the layer's PrimitivesRenderer
+    enabled: true,
+    reRouteConnectors: true,    // re-route every connector after each move
+    filter: (id) => !id.endsWith(':badge'),
+    dragCursor: 'grabbing',
+  }),
+);
+```
+
+What it does:
+
+1. Subscribes to `shape:pointerdown` from the renderer.
+2. Pauses the viewport's pan plugin so the camera doesn't pan while you move a shape.
+3. Window-level `pointermove` updates the shape via `renderer.updateShape(id, { x, y })` so the click point stays under the cursor.
+4. When `reRouteConnectors: true`, re-routes every connector after each move (needed for obstacle-aware routers like `manhattan`).
+5. `pointerup` / `pointercancel` end the drag; viewport pan resumes.
+
+Set `reRouteConnectors: false` when you have thousands of edges and per-move re-route cost matters, or when you re-route via a smarter graph-level signal.
+
+## Gesture conflicts
+
+Behaviours advertise their `shortcuts` so the registry can warn when two enabled behaviours claim the same gesture. The framework logs `console.warn` — it does **not** enforce. You decide whether two behaviours can coexist on the same gesture.
+
+```ts
+new DragPanBehaviour({ id: 'pan', enabled: true, modifier: 'shift' });   // claims 'shift+drag'
+new LassoBehaviour ({ id: 'lasso', enabled: true });                     // also claims 'shift+drag'
+// → console.warn: gesture conflict on 'shift+drag' between 'pan' and 'lasso'
+```
+
+The standard way to resolve: pick distinct modifiers. `DragPanBehaviour` supports `'none' | 'space' | 'shift' | 'alt'` for exactly this reason.
+
+## Authoring a custom Behaviour
+
+```ts
+import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/canvas';
+
+interface ClickToFocusOptions extends BehaviourOptions {
+  layerId: string;
+}
+
+class ClickToFocusBehaviour extends Behaviour {
+  private off?: () => void;
+
+  constructor(opts: ClickToFocusOptions) {
+    super({ ...opts, shortcuts: opts.shortcuts ?? ['click'] });
+  }
+
   protected onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
-    layer.events.on('node:click', ({ id, originalEvent }) => {
+    // wire everything during enable so disable can cleanly drop it
+  }
+
+  protected onEnable(): void {
+    const handler = (e: MouseEvent) => {
       if (!this.isEnabled) return;
-      layer.state.setState((s) => {
-        if (originalEvent.shiftKey) {
-          // additive selection
-          s.selectedIds = new Set([...s.selectedIds, id]);
-        } else {
-          s.selectedIds = new Set([id]);
-        }
-      });
-    });
+      const { x, y } = this.ctx!.camera.toWorld(e.offsetX, e.offsetY);
+      // ... lookup hit, mutate state on the target layer
+    };
+    document.addEventListener('click', handler);
+    this.off = () => document.removeEventListener('click', handler);
+  }
+
+  protected onDisable(): void {
+    this.off?.();
+    this.off = undefined;
+  }
+
+  protected onDestroy(): void {
+    this.onDisable();
   }
 }
 ```
 
-Anything that wants to react to selection — an inspector pane, a halo decoration, a status bar — subscribes to `layer.state` or `layer.events('selection:changed')`. The behaviour and the consumers don't need to know about each other.
+Rules of thumb:
 
-## A complete behaviour: drag to move a node
+- Mutate `layer.state` only — never reach into the renderer directly.
+- Subscribe in `onEnable`, drop subscriptions in `onDisable` (and again in `onDestroy` for safety).
+- Set `shortcuts` so the registry can detect conflicts.
+- Default `enabled: false`. The developer opts in.
 
-The pattern: subscribe to the layer's pointer events on register, mutate the layer's state on enabled, project to the renderer through the layer's flush loop.
+## Bus events you can rely on
 
-```ts
-import { Behaviour, type BehaviourOptions } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
+| Event | When |
+|---|---|
+| `'behaviour:registered'` | After `register(b)` succeeds. |
+| `'behaviour:enabled'` | After `enable()` (or `register` of an `enabled: true` behaviour). |
+| `'behaviour:disabled'` | After `disable()`. |
 
-export class DragMoveBehaviour extends Behaviour {
-  private layer?: GraphLayer;
-
-  constructor(opts: BehaviourOptions) {
-    super({ ...opts, shortcuts: opts.shortcuts ?? ['drag'] });
-  }
-
-  protected onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
-    if (!layer) throw new Error(`Layer "${this.layerId}" not found`);
-    this.layer = layer;
-
-    layer.events.on('node:pointerdown', ({ id }) => {
-      if (!this.isEnabled) return;
-      layer.state.setState((s) => { s.draggingId = id; });
-    });
-
-    layer.events.on('node:pointermove', ({ worldX, worldY }) => {
-      if (!this.isEnabled) return;
-      const dragging = layer.state.getState().draggingId;
-      if (!dragging) return;
-      layer.updateNodePosition(dragging, worldX, worldY);
-    });
-
-    layer.events.on('node:pointerup', () => {
-      if (!this.isEnabled) return;
-      layer.state.setState((s) => { s.draggingId = null; });
-    });
-  }
-}
-```
-
-Three event subscriptions, three state mutations. The renderer sees `data.nodes.x/y` change (via the `'shape'` dirty bucket) and re-paints; the layer's `draggingId` state is observable for whatever else cares — a status bar, a "Dragging…" badge, telemetry.
-
-## Lifecycle in full
-
-```
-new MyBehaviour({...})         ← constructed, dormant
-canvas.behaviours.register(b)  ← onRegister(ctx) called
-b.enable()                     ← onEnable() called
-b.disable()                    ← onDisable() called
-b.enable()                     ← onEnable() called again (idempotent flips ignored)
-canvas.behaviours.unregister() ← b.destroy() → onDestroy(ctx) called
-```
-
-`canvas.destroy()` calls `unregister` on every behaviour. You don't usually destroy individual behaviours — register them once, toggle `enabled` over the lifetime of the canvas.
-
-## What's next
-
-- [Layers](/guide/layers) — where the state behaviours mutate actually lives
-- [Events](/guide/events) — what behaviours subscribe to: layer events vs canvas events
-- [Layouts](/guide/layouts) — the third concept; not a behaviour despite running over time
+All three flow through the tap channel.

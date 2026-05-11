@@ -1,9 +1,11 @@
 # Class: CircleShape
 
-Defined in: packages/canvas/src/primitives/shapes/CircleShape.ts:16
+Defined in: [packages/canvas/src/primitives/shapes/CircleShape.ts:18](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/shapes/CircleShape.ts#L18)
 
-Filled / stroked / icon-bearing circle. Centered at `(spec.x, spec.y)`;
-the silhouette is traced in shape-local space (origin at the center).
+Filled / stroked circle. Centered at `(spec.x, spec.y)`; the silhouette
+is traced in shape-local space (origin at the center). Inset-content fill
+layers (glyph / svg / image-inset) are mounted as sibling Containers by
+`ShapeBase` — they appear centred (or anchored) inside the circle.
 
 ## Extends
 
@@ -15,7 +17,7 @@ the silhouette is traced in shape-local space (origin at the center).
 
 > **new CircleShape**(`spec`, `host`): `CircleShape`
 
-Defined in: packages/canvas/src/primitives/shapes/CircleShape.ts:19
+Defined in: [packages/canvas/src/primitives/shapes/CircleShape.ts:21](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/shapes/CircleShape.ts#L21)
 
 #### Parameters
 
@@ -41,7 +43,7 @@ Defined in: packages/canvas/src/primitives/shapes/CircleShape.ts:19
 
 > `protected` `readonly` **bodyGfx**: [`Graphics`](../interfaces/Graphics.md)
 
-Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:38
+Defined in: [packages/canvas/src/primitives/base/ShapeBase.ts:42](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeBase.ts#L42)
 
 #### Inherited from
 
@@ -53,7 +55,7 @@ Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:38
 
 > `readonly` **gfx**: `Container`
 
-Defined in: packages/canvas/src/primitives/base/PrimitiveBase.ts:12
+Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 Root display object — renderer adds/removes this on the host surface.
 
@@ -67,7 +69,7 @@ Root display object — renderer adds/removes this on the host surface.
 
 > `protected` `readonly` **host**: [`ShapeHostInfo`](../interfaces/ShapeHostInfo.md)
 
-Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:42
+Defined in: [packages/canvas/src/primitives/base/ShapeBase.ts:46](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeBase.ts#L46)
 
 #### Inherited from
 
@@ -75,15 +77,15 @@ Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:42
 
 ***
 
-### iconView
+### insetViews
 
-> `protected` **iconView**: `IconView` = `null`
+> `protected` `readonly` **insetViews**: `any`
 
-Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:39
+Defined in: [packages/canvas/src/primitives/base/ShapeBase.ts:43](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeBase.ts#L43)
 
 #### Inherited from
 
-[`ShapeBase`](ShapeBase.md).[`iconView`](ShapeBase.md#iconview)
+[`ShapeBase`](ShapeBase.md).[`insetViews`](ShapeBase.md#insetviews)
 
 ***
 
@@ -91,7 +93,7 @@ Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:39
 
 > `protected` **spec**: [`CircleSpec`](../interfaces/CircleSpec.md)
 
-Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:40
+Defined in: [packages/canvas/src/primitives/base/ShapeBase.ts:44](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeBase.ts#L44)
 
 #### Inherited from
 
@@ -103,15 +105,44 @@ Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:40
 
 > `readonly` `static` **kind**: `"circle"` = `'circle'`
 
-Defined in: packages/canvas/src/primitives/shapes/CircleShape.ts:17
+Defined in: [packages/canvas/src/primitives/shapes/CircleShape.ts:19](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/shapes/CircleShape.ts#L19)
 
 ## Methods
+
+### boundaryIntersect()
+
+> **boundaryIntersect**(`localFromCenter`): [`Point`](../interfaces/Point.md)
+
+Defined in: [packages/canvas/src/primitives/shapes/CircleShape.ts:53](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/shapes/CircleShape.ts#L53)
+
+Analytical perimeter intersection. `CircleShape` is centred at its
+origin, so "centre-relative" and "origin-relative" local coords are the
+same here. The boundary point along the ray from `(0, 0)` toward
+`localFromCenter` is just the unit vector scaled by the radius.
+When `localFromCenter` coincides with the centre the ray is degenerate;
+we return `(r, 0)` as a stable sentinel.
+
+#### Parameters
+
+##### localFromCenter
+
+[`Point`](../interfaces/Point.md)
+
+#### Returns
+
+[`Point`](../interfaces/Point.md)
+
+#### Overrides
+
+[`ShapeBase`](ShapeBase.md).[`boundaryIntersect`](ShapeBase.md#boundaryintersect)
+
+***
 
 ### bounds()
 
 > **bounds**(): [`Rect`](../interfaces/Rect.md)
 
-Defined in: packages/canvas/src/primitives/shapes/CircleShape.ts:31
+Defined in: [packages/canvas/src/primitives/shapes/CircleShape.ts:35](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/shapes/CircleShape.ts#L35)
 
 Local-space axis-aligned bounding box for hit-testing & decorations.
 
@@ -129,7 +160,7 @@ Local-space axis-aligned bounding box for hit-testing & decorations.
 
 > **contains**(`localX`, `localY`): `boolean`
 
-Defined in: packages/canvas/src/primitives/shapes/CircleShape.ts:36
+Defined in: [packages/canvas/src/primitives/shapes/CircleShape.ts:40](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/shapes/CircleShape.ts#L40)
 
 #### Parameters
 
@@ -151,7 +182,7 @@ Defined in: packages/canvas/src/primitives/shapes/CircleShape.ts:36
 
 > **destroy**(): `void`
 
-Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:77
+Defined in: [packages/canvas/src/primitives/base/ShapeBase.ts:103](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeBase.ts#L103)
 
 #### Returns
 
@@ -167,7 +198,7 @@ Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:77
 
 > **draw**(`spec`): `void`
 
-Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:62
+Defined in: [packages/canvas/src/primitives/base/ShapeBase.ts:66](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeBase.ts#L66)
 
 (Re)paint the shape from the current spec. Called on add and on update.
 
@@ -191,7 +222,7 @@ Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:62
 
 > `protected` **drawGeometry**(`g`, `spec`, `style?`): `void`
 
-Defined in: packages/canvas/src/primitives/shapes/CircleShape.ts:24
+Defined in: [packages/canvas/src/primitives/shapes/CircleShape.ts:26](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/shapes/CircleShape.ts#L26)
 
 Trace the silhouette into `g`, then apply fill + stroke. When `style`
 is supplied, it overrides the spec's fill/stroke (decoration use).
@@ -220,11 +251,28 @@ is supplied, it overrides the spec's fill/stroke (decoration use).
 
 ***
 
+### obstacleTest()
+
+> **obstacleTest**(): (`worldX`, `worldY`, `inflate`) => `boolean`
+
+Defined in: [packages/canvas/src/primitives/shapes/CircleShape.ts:66](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/shapes/CircleShape.ts#L66)
+
+Silhouette obstacle-test for routers. Returns a closure over the
+circle's current `(centre, radius)` that tests world points against
+the inflated disc — pixel-tight, not the AABB-square. Routes hug the
+circle's tangent instead of avoiding its bounding box corners.
+
+#### Returns
+
+(`worldX`, `worldY`, `inflate`) => `boolean`
+
+***
+
 ### paintInto()
 
 > **paintInto**(`g`, `style?`): `void`
 
-Defined in: packages/canvas/src/primitives/base/ShapeBase.ts:73
+Defined in: [packages/canvas/src/primitives/base/ShapeBase.ts:77](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeBase.ts#L77)
 
 Decoration entry point — repaint the silhouette into someone else's
 `Graphics` with a style override. The shape uses its own current spec;
@@ -260,11 +308,13 @@ Every shape that extends `ShapeBase` has it for free.
 
 > `static` **paintInto**(`g`, `spec`, `anchor`, `_angleRad`, `style?`): `void`
 
-Defined in: packages/canvas/src/primitives/shapes/CircleShape.ts:46
+Defined in: [packages/canvas/src/primitives/shapes/CircleShape.ts:85](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/shapes/CircleShape.ts#L85)
 
 Static paint surface for marker rendering. Connectors call this when
 a circle is used as a source/target marker (no instantiation, just a
-paint into someone else's Graphics).
+paint into someone else's Graphics). Only the first solid layer of
+`spec.fill` is honoured here — markers don't support image fills or
+inset content.
 
 #### Parameters
 

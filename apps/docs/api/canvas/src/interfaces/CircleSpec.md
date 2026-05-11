@@ -1,6 +1,6 @@
 # Interface: CircleSpec
 
-Defined in: packages/canvas/src/primitives/types.ts:215
+Defined in: [packages/canvas/src/primitives/types.ts:357](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L357)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: packages/canvas/src/primitives/types.ts:215
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: packages/canvas/src/primitives/types.ts:211
+Defined in: [packages/canvas/src/primitives/types.ts:353](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L353)
 
 #### Inherited from
 
@@ -24,7 +24,7 @@ Defined in: packages/canvas/src/primitives/types.ts:211
 
 > `readonly` `optional` **fill?**: [`ShapeFill`](../type-aliases/ShapeFill.md)
 
-Defined in: packages/canvas/src/primitives/types.ts:207
+Defined in: [packages/canvas/src/primitives/types.ts:349](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L349)
 
 #### Inherited from
 
@@ -36,7 +36,7 @@ Defined in: packages/canvas/src/primitives/types.ts:207
 
 > `readonly` **kind**: `"circle"`
 
-Defined in: packages/canvas/src/primitives/types.ts:216
+Defined in: [packages/canvas/src/primitives/types.ts:358](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L358)
 
 #### Overrides
 
@@ -48,7 +48,7 @@ Defined in: packages/canvas/src/primitives/types.ts:216
 
 > `readonly` **radius**: `number`
 
-Defined in: packages/canvas/src/primitives/types.ts:217
+Defined in: [packages/canvas/src/primitives/types.ts:359](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L359)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: packages/canvas/src/primitives/types.ts:217
 
 > `readonly` `optional` **stroke?**: [`ShapeStroke`](ShapeStroke.md)
 
-Defined in: packages/canvas/src/primitives/types.ts:208
+Defined in: [packages/canvas/src/primitives/types.ts:350](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L350)
 
 #### Inherited from
 
@@ -68,7 +68,7 @@ Defined in: packages/canvas/src/primitives/types.ts:208
 
 > `readonly` `optional` **visible?**: `boolean`
 
-Defined in: packages/canvas/src/primitives/types.ts:212
+Defined in: [packages/canvas/src/primitives/types.ts:354](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L354)
 
 #### Inherited from
 
@@ -80,7 +80,7 @@ Defined in: packages/canvas/src/primitives/types.ts:212
 
 > `readonly` **x**: `number`
 
-Defined in: packages/canvas/src/primitives/types.ts:205
+Defined in: [packages/canvas/src/primitives/types.ts:347](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L347)
 
 #### Inherited from
 
@@ -92,7 +92,7 @@ Defined in: packages/canvas/src/primitives/types.ts:205
 
 > `readonly` **y**: `number`
 
-Defined in: packages/canvas/src/primitives/types.ts:206
+Defined in: [packages/canvas/src/primitives/types.ts:348](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L348)
 
 #### Inherited from
 
@@ -104,7 +104,7 @@ Defined in: packages/canvas/src/primitives/types.ts:206
 
 > `readonly` `optional` **zIndex?**: `number`
 
-Defined in: packages/canvas/src/primitives/types.ts:210
+Defined in: [packages/canvas/src/primitives/types.ts:352](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L352)
 
 Default `0`. Higher = on top. Used for hit-test resolution.
 

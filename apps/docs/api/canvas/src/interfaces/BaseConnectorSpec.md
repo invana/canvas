@@ -1,6 +1,6 @@
 # Interface: BaseConnectorSpec
 
-Defined in: packages/canvas/src/primitives/types.ts:239
+Defined in: [packages/canvas/src/primitives/types.ts:464](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L464)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: packages/canvas/src/primitives/types.ts:239
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: packages/canvas/src/primitives/types.ts:253
+Defined in: [packages/canvas/src/primitives/types.ts:484](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L484)
 
 ***
 
@@ -16,7 +16,27 @@ Defined in: packages/canvas/src/primitives/types.ts:253
 
 > `readonly` **kind**: `string`
 
-Defined in: packages/canvas/src/primitives/types.ts:240
+Defined in: [packages/canvas/src/primitives/types.ts:465](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L465)
+
+***
+
+### pathStyle?
+
+> `readonly` `optional` **pathStyle?**: `string`
+
+Defined in: [packages/canvas/src/primitives/types.ts:475](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L475)
+
+Registered pathStyle kind. Default `'normal'`.
+
+***
+
+### pathStyleOpts?
+
+> `readonly` `optional` **pathStyleOpts?**: `Readonly`\<`Record`\<`string`, `unknown`\>\>
+
+Defined in: [packages/canvas/src/primitives/types.ts:477](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L477)
+
+Per-pathStyle options forwarded to the pathStyle fn's `opts` parameter.
 
 ***
 
@@ -24,9 +44,19 @@ Defined in: packages/canvas/src/primitives/types.ts:240
 
 > `readonly` `optional` **router?**: `string`
 
-Defined in: packages/canvas/src/primitives/types.ts:246
+Defined in: [packages/canvas/src/primitives/types.ts:471](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L471)
 
 Registered router kind. Default `'straight'`.
+
+***
+
+### routerOpts?
+
+> `readonly` `optional` **routerOpts?**: `Readonly`\<`Record`\<`string`, `unknown`\>\>
+
+Defined in: [packages/canvas/src/primitives/types.ts:473](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L473)
+
+Per-router options forwarded to the router fn's `opts` parameter.
 
 ***
 
@@ -34,7 +64,7 @@ Registered router kind. Default `'straight'`.
 
 > `readonly` **source**: [`ConnectorEndpointSpec`](../type-aliases/ConnectorEndpointSpec.md)
 
-Defined in: packages/canvas/src/primitives/types.ts:241
+Defined in: [packages/canvas/src/primitives/types.ts:466](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L466)
 
 ***
 
@@ -42,7 +72,7 @@ Defined in: packages/canvas/src/primitives/types.ts:241
 
 > `readonly` `optional` **sourceMarker?**: [`MarkerShapeSpec`](../type-aliases/MarkerShapeSpec.md)
 
-Defined in: packages/canvas/src/primitives/types.ts:248
+Defined in: [packages/canvas/src/primitives/types.ts:479](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L479)
 
 Optional shape spec painted at the source endpoint, oriented along the path tangent.
 
@@ -52,7 +82,7 @@ Optional shape spec painted at the source endpoint, oriented along the path tang
 
 > `readonly` `optional` **stroke?**: [`ShapeStroke`](ShapeStroke.md)
 
-Defined in: packages/canvas/src/primitives/types.ts:251
+Defined in: [packages/canvas/src/primitives/types.ts:482](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L482)
 
 ***
 
@@ -60,7 +90,7 @@ Defined in: packages/canvas/src/primitives/types.ts:251
 
 > `readonly` **target**: [`ConnectorEndpointSpec`](../type-aliases/ConnectorEndpointSpec.md)
 
-Defined in: packages/canvas/src/primitives/types.ts:242
+Defined in: [packages/canvas/src/primitives/types.ts:467](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L467)
 
 ***
 
@@ -68,7 +98,7 @@ Defined in: packages/canvas/src/primitives/types.ts:242
 
 > `readonly` `optional` **targetMarker?**: [`MarkerShapeSpec`](../type-aliases/MarkerShapeSpec.md)
 
-Defined in: packages/canvas/src/primitives/types.ts:250
+Defined in: [packages/canvas/src/primitives/types.ts:481](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L481)
 
 Optional shape spec painted at the target endpoint, oriented along the path tangent.
 
@@ -78,7 +108,7 @@ Optional shape spec painted at the target endpoint, oriented along the path tang
 
 > `readonly` `optional` **visible?**: `boolean`
 
-Defined in: packages/canvas/src/primitives/types.ts:254
+Defined in: [packages/canvas/src/primitives/types.ts:485](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L485)
 
 ***
 
@@ -86,7 +116,7 @@ Defined in: packages/canvas/src/primitives/types.ts:254
 
 > `readonly` `optional` **waypoints?**: readonly [`Point`](Point.md)[]
 
-Defined in: packages/canvas/src/primitives/types.ts:244
+Defined in: [packages/canvas/src/primitives/types.ts:469](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L469)
 
 Intermediate user-supplied points the router must respect. Optional.
 
@@ -96,4 +126,4 @@ Intermediate user-supplied points the router must respect. Optional.
 
 > `readonly` `optional` **zIndex?**: `number`
 
-Defined in: packages/canvas/src/primitives/types.ts:252
+Defined in: [packages/canvas/src/primitives/types.ts:483](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L483)

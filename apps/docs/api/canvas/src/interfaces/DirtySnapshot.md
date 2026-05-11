@@ -1,6 +1,6 @@
 # Interface: DirtySnapshot\<TBucket\>
 
-Defined in: [packages/canvas/src/state/DirtyBatcher.ts:54](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/state/DirtyBatcher.ts#L54)
+Defined in: [packages/canvas/src/state/DirtyBatcher.ts:54](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/DirtyBatcher.ts#L54)
 
 The frozen snapshot handed to the flush handler.
 
@@ -24,7 +24,7 @@ For those buckets, the consumer should iterate the underlying data
 
 > `readonly` **buckets**: `ReadonlyMap`\<`TBucket`, `ReadonlySet`\<`string`\>\>
 
-Defined in: [packages/canvas/src/state/DirtyBatcher.ts:55](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/state/DirtyBatcher.ts#L55)
+Defined in: [packages/canvas/src/state/DirtyBatcher.ts:55](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/DirtyBatcher.ts#L55)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [packages/canvas/src/state/DirtyBatcher.ts:55](https://github.com/in
 
 > `readonly` **rebuildAll**: `ReadonlySet`\<`TBucket`\>
 
-Defined in: [packages/canvas/src/state/DirtyBatcher.ts:56](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/state/DirtyBatcher.ts#L56)
+Defined in: [packages/canvas/src/state/DirtyBatcher.ts:56](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/state/DirtyBatcher.ts#L56)

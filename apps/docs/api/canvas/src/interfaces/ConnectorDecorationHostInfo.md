@@ -1,6 +1,6 @@
 # Interface: ConnectorDecorationHostInfo
 
-Defined in: packages/canvas/src/primitives/types.ts:304
+Defined in: [packages/canvas/src/primitives/types.ts:539](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L539)
 
 Information a connector decoration receives. Decorations call
 `host.connector.paintInto(g, spec, path, style)` for silhouette repaint,
@@ -12,7 +12,7 @@ or read `path` directly for parametric walking (e.g. label-along-path).
 
 > `readonly` **connector**: [`IConnector`](IConnector.md)
 
-Defined in: packages/canvas/src/primitives/types.ts:310
+Defined in: [packages/canvas/src/primitives/types.ts:545](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L545)
 
 ***
 
@@ -20,7 +20,7 @@ Defined in: packages/canvas/src/primitives/types.ts:310
 
 > `readonly` **connectorSpec**: [`BaseConnectorSpec`](BaseConnectorSpec.md)
 
-Defined in: packages/canvas/src/primitives/types.ts:311
+Defined in: [packages/canvas/src/primitives/types.ts:546](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L546)
 
 ***
 
@@ -28,7 +28,7 @@ Defined in: packages/canvas/src/primitives/types.ts:311
 
 > `readonly` **hostId**: `string`
 
-Defined in: packages/canvas/src/primitives/types.ts:305
+Defined in: [packages/canvas/src/primitives/types.ts:540](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L540)
 
 ***
 
@@ -36,7 +36,7 @@ Defined in: packages/canvas/src/primitives/types.ts:305
 
 > `readonly` **path**: [`Path`](../type-aliases/Path.md)
 
-Defined in: packages/canvas/src/primitives/types.ts:308
+Defined in: [packages/canvas/src/primitives/types.ts:543](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L543)
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: packages/canvas/src/primitives/types.ts:308
 
 > `readonly` **slot**: `string`
 
-Defined in: packages/canvas/src/primitives/types.ts:306
+Defined in: [packages/canvas/src/primitives/types.ts:541](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L541)
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: packages/canvas/src/primitives/types.ts:306
 
 > `readonly` **slotZIndex**: `number`
 
-Defined in: packages/canvas/src/primitives/types.ts:307
+Defined in: [packages/canvas/src/primitives/types.ts:542](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L542)
 
 ***
 
@@ -60,4 +60,4 @@ Defined in: packages/canvas/src/primitives/types.ts:307
 
 > `readonly` **surface**: `Container`
 
-Defined in: packages/canvas/src/primitives/types.ts:309
+Defined in: [packages/canvas/src/primitives/types.ts:544](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L544)

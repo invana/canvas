@@ -1,6 +1,6 @@
 # Abstract Class: ShapeDecorationBase\<TStyle\>
 
-Defined in: packages/canvas/src/primitives/base/ShapeDecorationBase.ts:13
+Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:13](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L13)
 
 Base for decorations that target shape primitives. Subclass implements
 `repaint`; this base handles the `mount` / `update` lifecycle (attach gfx
@@ -34,7 +34,7 @@ its animation set; a falsy return retires the decoration.
 
 > **new ShapeDecorationBase**\<`TStyle`\>(`style`): `ShapeDecorationBase`\<`TStyle`\>
 
-Defined in: packages/canvas/src/primitives/base/ShapeDecorationBase.ts:20
+Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:20](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L20)
 
 #### Parameters
 
@@ -56,7 +56,7 @@ Defined in: packages/canvas/src/primitives/base/ShapeDecorationBase.ts:20
 
 > `readonly` **gfx**: `Container`
 
-Defined in: packages/canvas/src/primitives/base/PrimitiveBase.ts:12
+Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 #### Inherited from
 
@@ -68,7 +68,7 @@ Defined in: packages/canvas/src/primitives/base/PrimitiveBase.ts:12
 
 > `protected` **host**: [`ShapeDecorationHostInfo`](../interfaces/ShapeDecorationHostInfo.md) = `null`
 
-Defined in: packages/canvas/src/primitives/base/ShapeDecorationBase.ts:18
+Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:18](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L18)
 
 ***
 
@@ -76,7 +76,7 @@ Defined in: packages/canvas/src/primitives/base/ShapeDecorationBase.ts:18
 
 > `readonly` **style**: `TStyle`
 
-Defined in: packages/canvas/src/primitives/base/ShapeDecorationBase.ts:17
+Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:17](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L17)
 
 #### Implementation of
 
@@ -88,7 +88,7 @@ Defined in: packages/canvas/src/primitives/base/ShapeDecorationBase.ts:17
 
 > **destroy**(): `void`
 
-Defined in: packages/canvas/src/primitives/base/PrimitiveBase.ts:18
+Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
 
 #### Returns
 
@@ -108,7 +108,7 @@ Defined in: packages/canvas/src/primitives/base/PrimitiveBase.ts:18
 
 > **mount**(`host`): `void`
 
-Defined in: packages/canvas/src/primitives/base/ShapeDecorationBase.ts:26
+Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:26](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L26)
 
 #### Parameters
 
@@ -130,7 +130,7 @@ Defined in: packages/canvas/src/primitives/base/ShapeDecorationBase.ts:26
 
 > `abstract` `protected` **repaint**(): `void`
 
-Defined in: packages/canvas/src/primitives/base/ShapeDecorationBase.ts:39
+Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:39](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L39)
 
 Render the decoration based on the current `host`.
 
@@ -144,7 +144,7 @@ Render the decoration based on the current `host`.
 
 > **update**(`host`): `void`
 
-Defined in: packages/canvas/src/primitives/base/ShapeDecorationBase.ts:33
+Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:33](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L33)
 
 #### Parameters
 

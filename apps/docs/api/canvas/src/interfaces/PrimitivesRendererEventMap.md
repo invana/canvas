@@ -1,6 +1,6 @@
 # Interface: PrimitivesRendererEventMap
 
-Defined in: packages/canvas/src/primitives/types.ts:442
+Defined in: [packages/canvas/src/primitives/types.ts:729](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L729)
 
 Raw, DOM-level events the `PrimitivesRenderer` surfaces. No semantic
 interpretation — they describe pointer hits on shapes / connectors and
@@ -20,7 +20,7 @@ nothing more. Layers translate them into domain events.
 
 > **connector:click**: `object`
 
-Defined in: packages/canvas/src/primitives/types.ts:452
+Defined in: [packages/canvas/src/primitives/types.ts:739](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L739)
 
 #### button
 
@@ -44,7 +44,7 @@ Defined in: packages/canvas/src/primitives/types.ts:452
 
 > **connector:pointerdown**: `object`
 
-Defined in: packages/canvas/src/primitives/types.ts:450
+Defined in: [packages/canvas/src/primitives/types.ts:737](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L737)
 
 #### button
 
@@ -68,7 +68,7 @@ Defined in: packages/canvas/src/primitives/types.ts:450
 
 > **connector:pointerout**: `object`
 
-Defined in: packages/canvas/src/primitives/types.ts:449
+Defined in: [packages/canvas/src/primitives/types.ts:736](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L736)
 
 #### id
 
@@ -88,7 +88,7 @@ Defined in: packages/canvas/src/primitives/types.ts:449
 
 > **connector:pointerover**: `object`
 
-Defined in: packages/canvas/src/primitives/types.ts:448
+Defined in: [packages/canvas/src/primitives/types.ts:735](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L735)
 
 #### id
 
@@ -108,7 +108,7 @@ Defined in: packages/canvas/src/primitives/types.ts:448
 
 > **connector:pointerup**: `object`
 
-Defined in: packages/canvas/src/primitives/types.ts:451
+Defined in: [packages/canvas/src/primitives/types.ts:738](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L738)
 
 #### button
 
@@ -132,7 +132,7 @@ Defined in: packages/canvas/src/primitives/types.ts:451
 
 > **shape:click**: `object`
 
-Defined in: packages/canvas/src/primitives/types.ts:447
+Defined in: [packages/canvas/src/primitives/types.ts:734](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L734)
 
 #### button
 
@@ -156,7 +156,7 @@ Defined in: packages/canvas/src/primitives/types.ts:447
 
 > **shape:pointerdown**: `object`
 
-Defined in: packages/canvas/src/primitives/types.ts:445
+Defined in: [packages/canvas/src/primitives/types.ts:732](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L732)
 
 #### button
 
@@ -180,7 +180,7 @@ Defined in: packages/canvas/src/primitives/types.ts:445
 
 > **shape:pointerout**: `object`
 
-Defined in: packages/canvas/src/primitives/types.ts:444
+Defined in: [packages/canvas/src/primitives/types.ts:731](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L731)
 
 #### id
 
@@ -200,7 +200,7 @@ Defined in: packages/canvas/src/primitives/types.ts:444
 
 > **shape:pointerover**: `object`
 
-Defined in: packages/canvas/src/primitives/types.ts:443
+Defined in: [packages/canvas/src/primitives/types.ts:730](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L730)
 
 #### id
 
@@ -220,7 +220,7 @@ Defined in: packages/canvas/src/primitives/types.ts:443
 
 > **shape:pointerup**: `object`
 
-Defined in: packages/canvas/src/primitives/types.ts:446
+Defined in: [packages/canvas/src/primitives/types.ts:733](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L733)
 
 #### button
 

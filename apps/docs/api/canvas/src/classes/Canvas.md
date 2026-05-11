@@ -1,6 +1,6 @@
 # Class: Canvas
 
-Defined in: [packages/canvas/src/engine/Canvas.ts:93](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/engine/Canvas.ts#L93)
+Defined in: [packages/canvas/src/engine/Canvas.ts:93](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/engine/Canvas.ts#L93)
 
 ## Constructors
 
@@ -8,7 +8,7 @@ Defined in: [packages/canvas/src/engine/Canvas.ts:93](https://github.com/invana/
 
 > **new Canvas**(`opts?`): `Canvas`
 
-Defined in: [packages/canvas/src/engine/Canvas.ts:127](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/engine/Canvas.ts#L127)
+Defined in: [packages/canvas/src/engine/Canvas.ts:127](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/engine/Canvas.ts#L127)
 
 #### Parameters
 
@@ -26,7 +26,7 @@ Defined in: [packages/canvas/src/engine/Canvas.ts:127](https://github.com/invana
 
 > **behaviours**: [`BehaviourRegistry`](BehaviourRegistry.md)
 
-Defined in: [packages/canvas/src/engine/Canvas.ts:120](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/engine/Canvas.ts#L120)
+Defined in: [packages/canvas/src/engine/Canvas.ts:120](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/engine/Canvas.ts#L120)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [packages/canvas/src/engine/Canvas.ts:120](https://github.com/invana
 
 > **camera**: [`Camera`](Camera.md)
 
-Defined in: [packages/canvas/src/engine/Canvas.ts:118](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/engine/Canvas.ts#L118)
+Defined in: [packages/canvas/src/engine/Canvas.ts:118](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/engine/Canvas.ts#L118)
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: [packages/canvas/src/engine/Canvas.ts:118](https://github.com/invana
 
 > **context**: [`CanvasContext`](../interfaces/CanvasContext.md)
 
-Defined in: [packages/canvas/src/engine/Canvas.ts:121](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/engine/Canvas.ts#L121)
+Defined in: [packages/canvas/src/engine/Canvas.ts:121](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/engine/Canvas.ts#L121)
 
 ***
 
@@ -50,7 +50,7 @@ Defined in: [packages/canvas/src/engine/Canvas.ts:121](https://github.com/invana
 
 > `readonly` **events**: [`CanvasEventBus`](CanvasEventBus.md)
 
-Defined in: [packages/canvas/src/engine/Canvas.ts:102](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/engine/Canvas.ts#L102)
+Defined in: [packages/canvas/src/engine/Canvas.ts:102](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/engine/Canvas.ts#L102)
 
 Public surface — populated by `init()` / `initWithStage()`. Accessing
 before init throws (definite-assignment via `!`). Use `isInitialised`
@@ -62,7 +62,7 @@ to guard if needed.
 
 > `readonly` **id**: `string`
 
-Defined in: [packages/canvas/src/engine/Canvas.ts:94](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/engine/Canvas.ts#L94)
+Defined in: [packages/canvas/src/engine/Canvas.ts:94](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/engine/Canvas.ts#L94)
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: [packages/canvas/src/engine/Canvas.ts:94](https://github.com/invana/
 
 > **layers**: [`LayerRegistry`](LayerRegistry.md)
 
-Defined in: [packages/canvas/src/engine/Canvas.ts:119](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/engine/Canvas.ts#L119)
+Defined in: [packages/canvas/src/engine/Canvas.ts:119](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/engine/Canvas.ts#L119)
 
 ***
 
@@ -78,7 +78,7 @@ Defined in: [packages/canvas/src/engine/Canvas.ts:119](https://github.com/invana
 
 > `readonly` **options**: [`CanvasOptions`](../interfaces/CanvasOptions.md)
 
-Defined in: [packages/canvas/src/engine/Canvas.ts:95](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/engine/Canvas.ts#L95)
+Defined in: [packages/canvas/src/engine/Canvas.ts:95](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/engine/Canvas.ts#L95)
 
 ***
 
@@ -86,7 +86,7 @@ Defined in: [packages/canvas/src/engine/Canvas.ts:95](https://github.com/invana/
 
 > **stage**: `Container`
 
-Defined in: [packages/canvas/src/engine/Canvas.ts:117](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/engine/Canvas.ts#L117)
+Defined in: [packages/canvas/src/engine/Canvas.ts:117](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/engine/Canvas.ts#L117)
 
 The pixi `Application.stage` (or, for `initWithStage`, the caller-
 provided stage). `ScreenLayer`s mount their roots directly here, as
@@ -99,7 +99,7 @@ after (above). No "screen" wrapper container.
 
 > **world**: `Container`
 
-Defined in: [packages/canvas/src/engine/Canvas.ts:109](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/engine/Canvas.ts#L109)
+Defined in: [packages/canvas/src/engine/Canvas.ts:109](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/engine/Canvas.ts#L109)
 
 The world container — a `pixi-viewport` `Viewport` instance attached to
 `app.stage`. Camera-transformed; `WorldLayer`s mount their roots here.
@@ -114,7 +114,7 @@ for the `Viewport`-specific API via `camera.viewport`.
 
 > **get** **application**(): `Application`\<`Renderer`\>
 
-Defined in: [packages/canvas/src/engine/Canvas.ts:138](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/engine/Canvas.ts#L138)
+Defined in: [packages/canvas/src/engine/Canvas.ts:138](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/engine/Canvas.ts#L138)
 
 Pixi `Application`, available after `init()` (not `initWithStage`).
 
@@ -130,7 +130,7 @@ Pixi `Application`, available after `init()` (not `initWithStage`).
 
 > **get** **isInitialised**(): `boolean`
 
-Defined in: [packages/canvas/src/engine/Canvas.ts:133](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/engine/Canvas.ts#L133)
+Defined in: [packages/canvas/src/engine/Canvas.ts:133](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/engine/Canvas.ts#L133)
 
 ##### Returns
 
@@ -142,7 +142,7 @@ Defined in: [packages/canvas/src/engine/Canvas.ts:133](https://github.com/invana
 
 > **destroy**(): `void`
 
-Defined in: [packages/canvas/src/engine/Canvas.ts:269](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/engine/Canvas.ts#L269)
+Defined in: [packages/canvas/src/engine/Canvas.ts:269](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/engine/Canvas.ts#L269)
 
 Tear down everything: ticker callback, registries (which unmount their
 Layers / destroy their Behaviours and any ScreenLayer roots they own),
@@ -158,7 +158,7 @@ the world subtree, bus subscriptions, pixi Application. Idempotent.
 
 > **init**(`opts`): `Promise`\<`void`\>
 
-Defined in: [packages/canvas/src/engine/Canvas.ts:152](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/engine/Canvas.ts#L152)
+Defined in: [packages/canvas/src/engine/Canvas.ts:152](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/engine/Canvas.ts#L152)
 
 Production init: create a pixi `Application`, mount its canvas into the
 supplied DOM container, wire the ticker, and emit
@@ -183,7 +183,7 @@ consumers see which renderer pixi resolved.
 
 > **initWithStage**(`stage`, `screenWidth`, `screenHeight`): `void`
 
-Defined in: [packages/canvas/src/engine/Canvas.ts:213](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/engine/Canvas.ts#L213)
+Defined in: [packages/canvas/src/engine/Canvas.ts:213](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/engine/Canvas.ts#L213)
 
 Headless / test init. Caller provides a pre-built stage `Container`
 and viewport dimensions; we skip pixi's `Application` setup entirely.
@@ -215,7 +215,7 @@ that don't need an actual GPU renderer.
 
 > **tickOnce**(`deltaMs?`): `void`
 
-Defined in: [packages/canvas/src/engine/Canvas.ts:231](https://github.com/invana/canvas/blob/1c7f4d3821ea03a7b4d27842859356b596bd4d78/packages/canvas/src/engine/Canvas.ts#L231)
+Defined in: [packages/canvas/src/engine/Canvas.ts:231](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/engine/Canvas.ts#L231)
 
 Run one tick manually with a fixed delta. Useful in tests; in production
 pixi's ticker calls `tick` automatically.

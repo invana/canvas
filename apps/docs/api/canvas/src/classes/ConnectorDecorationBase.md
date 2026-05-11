@@ -1,6 +1,6 @@
 # Abstract Class: ConnectorDecorationBase\<TStyle\>
 
-Defined in: packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:14
+Defined in: [packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:14](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L14)
 
 Base for decorations that target connector primitives. Mirrors
 `ShapeDecorationBase` — subclass implements `repaint`, the base handles
@@ -31,7 +31,7 @@ call `connector.paintInto` for native dashed/styled strokes), it pulls
 
 > **new ConnectorDecorationBase**\<`TStyle`\>(`style`): `ConnectorDecorationBase`\<`TStyle`\>
 
-Defined in: packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:21
+Defined in: [packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:21](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L21)
 
 #### Parameters
 
@@ -53,7 +53,7 @@ Defined in: packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:21
 
 > `readonly` **gfx**: `Container`
 
-Defined in: packages/canvas/src/primitives/base/PrimitiveBase.ts:12
+Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 #### Inherited from
 
@@ -65,7 +65,7 @@ Defined in: packages/canvas/src/primitives/base/PrimitiveBase.ts:12
 
 > `protected` **host**: [`ConnectorDecorationHostInfo`](../interfaces/ConnectorDecorationHostInfo.md) = `null`
 
-Defined in: packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:19
+Defined in: [packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:19](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L19)
 
 ***
 
@@ -73,7 +73,7 @@ Defined in: packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:19
 
 > `readonly` **style**: `TStyle`
 
-Defined in: packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:18
+Defined in: [packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:18](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L18)
 
 #### Implementation of
 
@@ -85,7 +85,7 @@ Defined in: packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:18
 
 > **destroy**(): `void`
 
-Defined in: packages/canvas/src/primitives/base/PrimitiveBase.ts:18
+Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
 
 #### Returns
 
@@ -105,7 +105,7 @@ Defined in: packages/canvas/src/primitives/base/PrimitiveBase.ts:18
 
 > **mount**(`host`): `void`
 
-Defined in: packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:27
+Defined in: [packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:27](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L27)
 
 #### Parameters
 
@@ -127,7 +127,7 @@ Defined in: packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:27
 
 > `abstract` `protected` **repaint**(): `void`
 
-Defined in: packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:39
+Defined in: [packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:39](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L39)
 
 #### Returns
 
@@ -139,7 +139,7 @@ Defined in: packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:39
 
 > **update**(`host`): `void`
 
-Defined in: packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:34
+Defined in: [packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:34](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L34)
 
 #### Parameters
 

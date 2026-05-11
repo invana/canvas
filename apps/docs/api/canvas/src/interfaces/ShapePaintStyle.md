@@ -1,6 +1,6 @@
 # Interface: ShapePaintStyle
 
-Defined in: packages/canvas/src/primitives/types.ts:171
+Defined in: [packages/canvas/src/primitives/types.ts:313](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L313)
 
 Decoration entry-point override on `IShape.paintInto`. When supplied, the
 shape ignores `spec.fill` / `spec.stroke` and paints with these values
@@ -16,7 +16,7 @@ its own silhouette.
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: packages/canvas/src/primitives/types.ts:173
+Defined in: [packages/canvas/src/primitives/types.ts:315](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L315)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: packages/canvas/src/primitives/types.ts:173
 
 > `readonly` `optional` **color?**: `number`
 
-Defined in: packages/canvas/src/primitives/types.ts:172
+Defined in: [packages/canvas/src/primitives/types.ts:314](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L314)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: packages/canvas/src/primitives/types.ts:172
 
 > `readonly` `optional` **dashArray?**: readonly \[`number`, `number`\]
 
-Defined in: packages/canvas/src/primitives/types.ts:177
+Defined in: [packages/canvas/src/primitives/types.ts:319](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L319)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: packages/canvas/src/primitives/types.ts:177
 
 > `readonly` `optional` **dashOffset?**: `number`
 
-Defined in: packages/canvas/src/primitives/types.ts:178
+Defined in: [packages/canvas/src/primitives/types.ts:320](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L320)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: packages/canvas/src/primitives/types.ts:178
 
 > `readonly` `optional` **fill?**: `boolean`
 
-Defined in: packages/canvas/src/primitives/types.ts:176
+Defined in: [packages/canvas/src/primitives/types.ts:318](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L318)
 
 Default `false` — decorations almost always stroke without filling.
 
@@ -58,7 +58,7 @@ Default `false` — decorations almost always stroke without filling.
 
 > `readonly` `optional` **inset?**: `number`
 
-Defined in: packages/canvas/src/primitives/types.ts:180
+Defined in: [packages/canvas/src/primitives/types.ts:322](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L322)
 
 Positive = inside the silhouette, negative = outside. Default `0`.
 
@@ -68,4 +68,4 @@ Positive = inside the silhouette, negative = outside. Default `0`.
 
 > `readonly` `optional` **strokeWidth?**: `number`
 
-Defined in: packages/canvas/src/primitives/types.ts:174
+Defined in: [packages/canvas/src/primitives/types.ts:316](https://github.com/invana/canvas/blob/6a7a4e112d472abded99af8343d8e343f181d637/packages/canvas/src/primitives/types.ts#L316)
