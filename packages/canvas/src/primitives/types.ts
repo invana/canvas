@@ -41,7 +41,16 @@ export interface Endpoint {
   readonly tangent?: Vec2;
 }
 
-// ─── Path (router output, connector input) ─────────────────────────────────
+// ─── Polyline (router output, pathStyle input) ─────────────────────────────
+
+/**
+ * Flat ordered list of points. Output of a `Router`; input to a `PathStyle`.
+ * Also used as the densified form of a `Path` for hit-testing
+ * (`samplePath(path)`).
+ */
+export type Polyline = ReadonlyArray<Point>;
+
+// ─── Path (pathStyle output, connector input) ──────────────────────────────
 
 /**
  * One step of a `Path`. Mirrors SVG path commands one-for-one:
@@ -50,7 +59,7 @@ export interface Endpoint {
  * - `Q` quadratic Bézier with one control point.
  * - `C` cubic Bézier with two control points.
  *
- * No relative variants, no arcs, no shorthand — routers emit one of these
+ * No relative variants, no arcs, no shorthand — pathStyles emit one of these
  * four. Connector renders by walking the path and dispatching to Pixi's
  * `moveTo` / `lineTo` / `quadraticCurveTo` / `bezierCurveTo`.
  */
@@ -63,16 +72,76 @@ export type PathCommand =
 export type Path = ReadonlyArray<PathCommand>;
 
 /**
- * Router: a pure function `(source, target, waypoints?, opts?) → Path`.
- * Routers never touch pixi; trivially testable.
+ * Read-only scene context handed to routers that need awareness of other
+ * shapes — primarily for obstacle-avoidance routing (`manhattan` and
+ * friends). Simple geometric routers (`straight`, `orth`) ignore it.
  *
- * `waypoints` is reserved for a future phase (the macro plan's Phase 5);
- * v0 routers accept the parameter but may ignore it.
+ * `obstacles` are world-space `Rect`s the router should not cross. Each
+ * obstacle may also expose `containsInflated` for pixel-accurate silhouette
+ * testing (e.g. circles route around their tangent, not their AABB).
+ * The renderer auto-collects these from `shapeInstances` (excluding the
+ * source/target shapes); callers can override or opt out via
+ * `routerOpts.obstacles`.
+ */
+export interface RouterCtx {
+  readonly obstacles: ReadonlyArray<Obstacle>;
+}
+
+/**
+ * Obstacle handed to obstacle-aware routers. `Obstacle extends Rect` so any
+ * `Rect[]` is assignable; the optional `containsInflated` callback unlocks
+ * silhouette-tight routing for non-rect shapes (circles, polygons, paths).
+ */
+export interface Obstacle extends Rect {
+  /**
+   * Optional silhouette obstacle-test in world coordinates. Returns `true`
+   * when `(worldX, worldY)` lies inside the obstacle's silhouette OR within
+   * `inflate` world units of it.
+   *
+   * Routers use this for pixel-accurate marking — when present, the grid
+   * blocks only cells that pass this test (in addition to the cheap AABB
+   * pre-filter). When absent, the inflated AABB is the source of truth.
+   *
+   * Shapes opt in by overriding `IShape.obstacleTest`.
+   */
+  readonly containsInflated?: (worldX: number, worldY: number, inflate: number) => boolean;
+}
+
+/**
+ * Router: a pure function `(source, target, waypoints?, opts?, ctx?) → Polyline`.
+ *
+ * Routers decide path **topology** — where bends sit. They emit a flat
+ * polyline (Point[]); the visual style of segments between bend points is
+ * decided by the downstream `PathStyle`. Routers never touch pixi.
+ *
+ * `waypoints` are intermediate user-supplied points the router should respect.
+ * Built-in `straight` passes them through verbatim; topological routers
+ * (orth, manhattan, …) anchor stair / corner segments to them.
+ *
+ * `ctx` is optional — only obstacle-aware routers consume it. The renderer
+ * always passes a `RouterCtx`; routers that ignore it lose nothing.
  */
 export type IRouter = (
   source: Endpoint,
   target: Endpoint,
   waypoints?: ReadonlyArray<Point>,
+  opts?: Record<string, unknown>,
+  ctx?: RouterCtx,
+) => Polyline;
+
+/**
+ * PathStyle: a pure function `(polyline, opts?) → Path`.
+ *
+ * PathStyles decide visual **style** — how segments between polyline points
+ * are drawn (sharp, rounded fillets, bezier-smoothed, single bezier A→B).
+ * They never see the connector spec or shape context; pure geometric
+ * transform.
+ *
+ * Built-ins: `normal` (sharp), `rounded` (quadratic fillets at corners),
+ * `smooth` (Catmull-Rom → cubic), `bezier` (single cubic with auto controls).
+ */
+export type IPathStyle = (
+  polyline: Polyline,
   opts?: Record<string, unknown>,
 ) => Path;
 
@@ -305,9 +374,92 @@ export interface RectSpec extends BaseShapeSpec {
  */
 export type MarkerShapeSpec = Omit<BaseShapeSpec, 'x' | 'y'> & { readonly kind: string };
 
+/**
+ * Anchor selection for a `kind: 'shape'` connector endpoint. Resolves the
+ * shape id to a concrete world-space `(x, y)` point on the shape — center of
+ * the bounding box (`'center'`, default), perimeter intersection toward the
+ * other endpoint (`'boundary'`), or any registered custom anchor.
+ *
+ * String shorthand picks an anchor by name with default opts; the object
+ * form passes opts to the anchor function.
+ */
+export type AnchorSpec =
+  | string
+  | { readonly name: string; readonly opts?: Readonly<Record<string, unknown>> };
+
 export type ConnectorEndpointSpec =
   | { readonly kind: 'point'; readonly x: number; readonly y: number; readonly tangent?: Vec2 }
-  | { readonly kind: 'shape'; readonly shapeId: string };
+  | {
+      readonly kind: 'shape';
+      readonly shapeId: string;
+      readonly anchor?: AnchorSpec;
+      /**
+       * Outward offset applied AFTER the anchor resolves. The anchor's
+       * returned `tangent` is treated as the outward direction; the endpoint
+       * moves by `tangent * padding` world units before reaching the router.
+       *
+       * Use cases:
+       * - Halo / glow decoration extends beyond the silhouette → set
+       *   `padding` to the halo's outer radius so the connector visibly
+       *   starts at the halo's edge, not at the shape's tight boundary.
+       * - Visual breathing room around tightly packed shapes.
+       *
+       * No-op when the chosen anchor returns no tangent (e.g. `center`).
+       * Negative values pull the endpoint INWARD; default `0`.
+       */
+      readonly padding?: number;
+    };
+
+/**
+ * Read-only view of a shape that an anchor function consumes. The renderer
+ * builds one of these for the referenced shape id and hands it to the
+ * registered anchor. Anchors operate against this — they never see the live
+ * `ShapeInstance` or `Pixi` objects.
+ *
+ * **Origin vs centre.** `origin` is the shape's spec position `(spec.x,
+ * spec.y)` — this is the top-left for `RectShape`, the centre for
+ * `CircleShape`, and shape-dependent for others. `center` is the geometric
+ * centre of the bounding box in world space, computed by the renderer from
+ * `origin` + `bounds`. Anchors should reference `center` (not `origin`) so
+ * their behaviour is uniform across shape kinds.
+ */
+export interface AnchorShapeRef {
+  /** World-space origin of the shape (`(spec.x, spec.y)`). */
+  readonly origin: Point;
+  /** Local-space axis-aligned bounding box (relative to `origin`). */
+  readonly bounds: Rect;
+  /** World-space geometric centre of the shape's bounding box. */
+  readonly center: Point;
+  /**
+   * Optional analytical boundary-intersection in shape-local coordinates,
+   * relative to the shape's geometric **centre** (not its `origin`).
+   * Anchors fall back to a default centred-AABB ray-exit when this is
+   * absent. `localFromCenter` is the other endpoint's offset from the
+   * shape's centre.
+   */
+  boundaryIntersect?(localFromCenter: Point): Point | null;
+}
+
+export interface AnchorCtx {
+  getShape(id: string): AnchorShapeRef | undefined;
+}
+
+/**
+ * Anchor: a pure function that resolves a `kind: 'shape'` endpoint to a
+ * concrete world-space point on the referenced shape.
+ *
+ * - `endpoint` carries the shape id and any per-call opts.
+ * - `fromPoint` is the OTHER endpoint's first-pass world point — used by
+ *   `boundary` to project a ray toward it. Anchors that don't need it
+ *   (`center`) ignore it.
+ * - The returned `Endpoint` may include an outward `tangent` hint; routers
+ *   that respect it (`orthogonal`, `er`, …) prefer it over heuristics.
+ */
+export type IAnchor = (
+  endpoint: { readonly shapeId: string; readonly opts?: Readonly<Record<string, unknown>> },
+  fromPoint: Point,
+  ctx: AnchorCtx,
+) => Endpoint;
 
 export interface BaseConnectorSpec {
   readonly kind: string;
@@ -317,6 +469,12 @@ export interface BaseConnectorSpec {
   readonly waypoints?: ReadonlyArray<Point>;
   /** Registered router kind. Default `'straight'`. */
   readonly router?: string;
+  /** Per-router options forwarded to the router fn's `opts` parameter. */
+  readonly routerOpts?: Readonly<Record<string, unknown>>;
+  /** Registered pathStyle kind. Default `'normal'`. */
+  readonly pathStyle?: string;
+  /** Per-pathStyle options forwarded to the pathStyle fn's `opts` parameter. */
+  readonly pathStyleOpts?: Readonly<Record<string, unknown>>;
   /** Optional shape spec painted at the source endpoint, oriented along the path tangent. */
   readonly sourceMarker?: MarkerShapeSpec;
   /** Optional shape spec painted at the target endpoint, oriented along the path tangent. */
@@ -418,6 +576,35 @@ export interface IShape<TSpec extends BaseShapeSpec = BaseShapeSpec> {
   paintInto?(g: Graphics, style?: ShapePaintStyle): void;
   /** Optional precise containment in shape-local coordinates. */
   contains?(localX: number, localY: number): boolean;
+  /**
+   * Optional analytical boundary-intersection in shape-local coordinates,
+   * **relative to the shape's geometric centre** (NOT its `(0, 0)` origin).
+   * Returns the point on the silhouette where the ray from the centre to
+   * `localFromCenter` exits — or `null` to defer to the AABB fallback.
+   *
+   * The centre-relative convention decouples anchor placement from each
+   * shape's local-origin choice (`CircleShape` is centred at origin;
+   * `RectShape` is anchored top-left). Shapes with non-rectangular
+   * silhouettes (circle, ellipse, polygon) override; rect-like shapes fall
+   * back to the centred-AABB ray-exit provided by `ShapeBase`.
+   */
+  boundaryIntersect?(localFromCenter: Point): Point | null;
+  /**
+   * Optional silhouette obstacle-test factory. Returns a world-space test
+   * `(worldX, worldY, inflate) → boolean` that says whether a point lies
+   * inside (or within `inflate` units of) the shape's silhouette. Called
+   * by the renderer once per route to populate `Obstacle.containsInflated`.
+   *
+   * Shapes with non-rectangular silhouettes implement this for pixel-tight
+   * routing (`CircleShape`: distance from centre ≤ radius + inflate;
+   * `PolygonShape`: signed-distance to outline; etc.). Rect-like shapes
+   * with an exact AABB silhouette can omit it — the inflated AABB is
+   * already tight.
+   *
+   * The returned callable captures the shape's current spec; the renderer
+   * re-invokes `obstacleTest()` on every route so movement is reflected.
+   */
+  obstacleTest?(): (worldX: number, worldY: number, inflate: number) => boolean;
   /** Optional LOD hook. Renderer forwards via `setLODLevel(id, level)`. */
   setLODLevel?(level: number): void;
   /** Optional label-rasterization hook. Only meaningful for text-bearing shapes. */

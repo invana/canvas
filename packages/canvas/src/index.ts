@@ -76,6 +76,9 @@ export type { IBehaviour, BehaviourOptions } from './behaviours/Behaviour';
 export { DragPanBehaviour } from './behaviours/DragPanBehaviour';
 export type { DragPanBehaviourOptions, DragModifier } from './behaviours/DragPanBehaviour';
 
+export { DragShapeBehaviour } from './behaviours/DragShapeBehaviour';
+export type { DragShapeBehaviourOptions } from './behaviours/DragShapeBehaviour';
+
 export { WheelZoomBehaviour } from './behaviours/WheelZoomBehaviour';
 export type { WheelZoomBehaviourOptions } from './behaviours/WheelZoomBehaviour';
 

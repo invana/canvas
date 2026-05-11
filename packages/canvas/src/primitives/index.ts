@@ -23,6 +23,22 @@ export type { ArrowMarkerSpec } from './markers/ArrowMarker';
 
 // ─── Built-in routers ──────────────────────────────────────────────────────
 export { straightRouter } from './connectors/routers/straight';
+export { orthRouter } from './connectors/routers/orth';
+export { manhattanRouter } from './connectors/routers/manhattan';
+export { metroRouter } from './connectors/routers/metro';
+export { erRouter } from './connectors/routers/er';
+export { oneSideRouter } from './connectors/routers/oneSide';
+
+// ─── Built-in pathStyles ───────────────────────────────────────────────────
+export { normalPathStyle } from './connectors/pathStyles/normal';
+export { roundedPathStyle } from './connectors/pathStyles/rounded';
+export { bezierPathStyle } from './connectors/pathStyles/bezier';
+export { smoothPathStyle } from './connectors/pathStyles/smooth';
+
+// ─── Built-in anchors ──────────────────────────────────────────────────────
+export { centerAnchor } from './connectors/anchors/center';
+export { boundaryAnchor } from './connectors/anchors/boundary';
+export { perpendicularAnchor } from './connectors/anchors/perpendicular';
 
 // ─── Built-in decorations ──────────────────────────────────────────────────
 export { GlowDecoration } from './decorations/shape/GlowDecoration';
@@ -54,7 +70,15 @@ export type {
 
   Path,
   PathCommand,
+  Polyline,
   IRouter,
+  IPathStyle,
+  IAnchor,
+  Obstacle,
+  RouterCtx,
+  AnchorSpec,
+  AnchorCtx,
+  AnchorShapeRef,
 
   ShapeFill,
   ShapeFillLayer,

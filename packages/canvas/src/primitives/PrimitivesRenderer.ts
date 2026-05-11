@@ -8,14 +8,20 @@
  * knows about pixels, hit-testing, and a camera; it knows nothing about
  * data, semantics, interactions, LOD policy, or label policy.
  *
- * **Three extensible registries**
- * - shapes      — `ShapeCtor`             (built-ins: circle, rect)
- * - routers     — `IRouter`               (built-ins: straight)
- * - decorations — shape / connector       (built-ins: registered as the v0
- *                                          plan progresses — currently none)
+ * **Five extensible registries**
+ * - shapes      — `ShapeCtor`             (built-ins: circle, rect, arrow)
+ * - routers     — `IRouter`               (built-ins: straight, orth, orthogonal,
+ *                                          manhattan, metro, er, oneSide)
+ * - pathStyles  — `IPathStyle`            (built-ins: normal, rounded, bezier, smooth)
+ * - anchors     — `IAnchor`               (built-ins: center, boundary, perpendicular)
+ * - decorations — shape / connector       (built-ins: glow)
  *
  * **No connector registry** — there is one concrete `Connector` class.
- * Visual variation comes from the router (which produces the path).
+ * Visual variation comes from the (anchor → router → pathStyle) pipeline:
+ * anchors resolve shape-id endpoints to concrete points (center / boundary),
+ * routers produce a `Polyline` (topology — where bends sit), pathStyles
+ * produce the final `Path` (visual style — how segments between bends are
+ * drawn).
  *
  * **Lifecycle**
  *
@@ -36,33 +42,53 @@ import { CircleShape } from './shapes/CircleShape';
 import { RectShape } from './shapes/RectShape';
 import { Connector } from './connectors/Connector';
 import { straightRouter } from './connectors/routers/straight';
+import { orthRouter } from './connectors/routers/orth';
+import { manhattanRouter } from './connectors/routers/manhattan';
+import { metroRouter } from './connectors/routers/metro';
+import { erRouter } from './connectors/routers/er';
+import { oneSideRouter } from './connectors/routers/oneSide';
+import { normalPathStyle } from './connectors/pathStyles/normal';
+import { roundedPathStyle } from './connectors/pathStyles/rounded';
+import { bezierPathStyle } from './connectors/pathStyles/bezier';
+import { smoothPathStyle } from './connectors/pathStyles/smooth';
+import { centerAnchor } from './connectors/anchors/center';
+import { boundaryAnchor } from './connectors/anchors/boundary';
+import { perpendicularAnchor } from './connectors/anchors/perpendicular';
 import { distanceToPolylineSq, pathBounds, samplePath } from './connectors/pathSampling';
 import { ArrowMarker } from './markers/ArrowMarker';
 import { GlowDecoration } from './decorations/shape/GlowDecoration';
 import { resolveBadgePosition } from './badges/placement';
 import type { BadgeOptions } from './badges/types';
 import type {
+  AnchorCtx,
+  AnchorShapeRef,
+  AnchorSpec,
   BaseConnectorSpec,
   BaseShapeSpec,
   ConnectorDecorationCtor,
   ConnectorDecorationHostInfo,
+  ConnectorEndpointSpec,
   ConnectorHostInfo,
   DecorationSpec,
   DecorationTarget,
   Endpoint,
   HitResult,
+  IAnchor,
   IConnector,
   IConnectorDecoration,
   IDecorationBase,
+  IPathStyle,
   IRouter,
   IShape,
   IShapeDecoration,
+  Obstacle,
   Path,
   Point,
   PrimitivesRendererEventMap,
   Rect,
   RegisterDecorationOptions,
   RenderStats,
+  RouterCtx,
   ShapeCtor,
   ShapeDecorationCtor,
   ShapeDecorationHostInfo,
@@ -90,6 +116,8 @@ export interface PrimitivesRendererOptions {
 export class PrimitivesRenderer {
   private readonly shapeRegistry = new Map<string, ShapeCtor>();
   private readonly routerRegistry = new Map<string, IRouter>();
+  private readonly pathStyleRegistry = new Map<string, IPathStyle>();
+  private readonly anchorRegistry = new Map<string, IAnchor>();
   private readonly decorationRegistry = new Map<string, RegisteredDecoration>();
 
   private readonly shapeInstances = new Map<string, ShapeInstance>();
@@ -126,6 +154,26 @@ export class PrimitivesRenderer {
     this.registerShape('arrow', ArrowMarker);
 
     this.registerRouter('straight', straightRouter);
+    // `orth` is the simple H/V router (matches X6 / JointJS naming).
+    // `orthogonal` is an alias kept for compatibility.
+    this.registerRouter('orth', orthRouter);
+    this.registerRouter('orthogonal', orthRouter);
+    // `manhattan` is the obstacle-aware variant — routes around `RouterCtx.obstacles`
+    // via A* on a coarse grid; falls back to `orth` when obstacles are empty
+    // or A* fails. See `connectors/routers/manhattan.ts`.
+    this.registerRouter('manhattan', manhattanRouter);
+    this.registerRouter('metro', metroRouter);
+    this.registerRouter('er', erRouter);
+    this.registerRouter('oneSide', oneSideRouter);
+
+    this.registerPathStyle('normal', normalPathStyle);
+    this.registerPathStyle('rounded', roundedPathStyle);
+    this.registerPathStyle('bezier', bezierPathStyle);
+    this.registerPathStyle('smooth', smoothPathStyle);
+
+    this.registerAnchor('center', centerAnchor);
+    this.registerAnchor('boundary', boundaryAnchor);
+    this.registerAnchor('perpendicular', perpendicularAnchor);
 
     this.registerDecoration('glow', GlowDecoration, { target: 'shape' });
   }
@@ -138,6 +186,14 @@ export class PrimitivesRenderer {
 
   registerRouter(kind: string, fn: IRouter): void {
     this.routerRegistry.set(kind, fn);
+  }
+
+  registerPathStyle(kind: string, fn: IPathStyle): void {
+    this.pathStyleRegistry.set(kind, fn);
+  }
+
+  registerAnchor(kind: string, fn: IAnchor): void {
+    this.anchorRegistry.set(kind, fn);
   }
 
   registerDecoration<TStyle>(
@@ -501,6 +557,68 @@ export class PrimitivesRenderer {
     return this.connectorInstances.has(id);
   }
 
+  /**
+   * World-space AABB of the registered shape, or `null` when no shape with
+   * that id exists. Domain-free read accessor for layer code that needs to
+   * query shape geometry without poking at private state — e.g. a graph
+   * layer building an obstacle list for an edge's router, a behaviour that
+   * wants to fit content to a selection, or a debug overlay.
+   */
+  getShapeWorldBounds(id: string): Rect | null {
+    const inst = this.shapeInstances.get(id);
+    return inst ? this.shapeWorldBounds(inst) : null;
+  }
+
+  /**
+   * World-space origin `(spec.x, spec.y)` of the registered shape, or `null`
+   * when no shape with that id exists. Counterpart to `getShapeWorldBounds`;
+   * use this when a behaviour needs the shape's translation point (drag
+   * offset baseline, anchor for an external overlay, etc.).
+   */
+  getShapePosition(id: string): Point | null {
+    const inst = this.shapeInstances.get(id);
+    return inst ? { x: inst.spec.x, y: inst.spec.y } : null;
+  }
+
+  /**
+   * World-space geometric **centre** of the registered shape's bounding box,
+   * or `null` when no shape with that id exists. Differs from
+   * `getShapePosition` for shapes whose local origin isn't the centre
+   * (`RectShape` is anchored top-left; `CircleShape` is already centred).
+   *
+   * This is the canonical "anchor reference point" for layer code that wants
+   * a uniform centre regardless of shape kind — connector routing, badge
+   * placement, fit-to-content, etc.
+   */
+  getShapeCenter(id: string): Point | null {
+    const inst = this.shapeInstances.get(id);
+    if (!inst) return null;
+    const b = inst.shape.bounds();
+    return {
+      x: inst.spec.x + b.x + b.width / 2,
+      y: inst.spec.y + b.y + b.height / 2,
+    };
+  }
+
+  /**
+   * Re-route every registered connector. Useful after a non-endpoint shape
+   * moves (e.g. an obstacle) and you want connectors that auto-collect
+   * obstacles to update their path.
+   *
+   * Each call re-runs `routePath` per connector and refreshes the hit index
+   * and any connector decorations. Linear in `connectorInstances`; safe to
+   * call from drag handlers in typical layouts. Heavy graphs with thousands
+   * of edges should prefer a targeted re-route (future).
+   */
+  reRouteAllConnectors(): void {
+    for (const inst of this.connectorInstances.values()) {
+      inst.path = this.routePath(inst.spec);
+      inst.connector.draw(inst.spec, inst.path);
+      this.indexConnector(inst);
+      if (inst.decorations.size > 0) this.refreshConnectorDecorations(inst);
+    }
+  }
+
   // ─── Teardown ───────────────────────────────────────────────────────────
 
   destroy(): void {
@@ -524,22 +642,127 @@ export class PrimitivesRenderer {
   }
 
   private routePath(spec: BaseConnectorSpec): Path {
-    const router = this.routerRegistry.get(spec.router ?? 'straight');
+    const routerKind = spec.router ?? 'straight';
+    const router = this.routerRegistry.get(routerKind);
     if (!router) {
-      throw new Error(`PrimitivesRenderer: unknown router "${spec.router ?? 'straight'}"`);
+      throw new Error(`PrimitivesRenderer: unknown router "${routerKind}"`);
     }
-    const source = this.resolveEndpoint(spec.source);
-    const target = this.resolveEndpoint(spec.target);
-    return router(source, target, spec.waypoints);
+    const pathStyleKind = spec.pathStyle ?? 'normal';
+    const pathStyle = this.pathStyleRegistry.get(pathStyleKind);
+    if (!pathStyle) {
+      throw new Error(`PrimitivesRenderer: unknown pathStyle "${pathStyleKind}"`);
+    }
+
+    // Pass 1: resolve both endpoints to a stable point (centre for shape
+    // endpoints, literal for `kind: 'point'`). The pass-1 point of one
+    // endpoint is the `fromPoint` for the other endpoint's anchor in pass 2.
+    const sourceCenter = this.endpointCenter(spec.source);
+    const targetCenter = this.endpointCenter(spec.target);
+
+    // Pass 2: re-resolve each endpoint with its declared anchor.
+    const source = this.resolveEndpoint(spec.source, targetCenter);
+    const target = this.resolveEndpoint(spec.target, sourceCenter);
+
+    const ctx: RouterCtx = { obstacles: this.resolveObstacles(spec) };
+    const polyline = router(source, target, spec.waypoints, spec.routerOpts, ctx);
+    return pathStyle(polyline, spec.pathStyleOpts);
   }
 
-  private resolveEndpoint(spec: BaseConnectorSpec['source']): Endpoint {
-    if (spec.kind === 'point') return { x: spec.x, y: spec.y, tangent: spec.tangent };
-    const target = this.shapeInstances.get(spec.shapeId);
-    if (!target) {
+  /**
+   * Build the obstacle list passed to the router. By default every shape in
+   * the renderer except the source / target shapes (when those endpoints are
+   * `kind: 'shape'`) is included. Each obstacle carries its AABB plus an
+   * optional `containsInflated` silhouette test (when the shape exposes
+   * `obstacleTest`) so routers can hug non-rect silhouettes tightly.
+   *
+   * Callers can override via `routerOpts.obstacles`:
+   * - `'auto'` (default) — auto-collected as above.
+   * - `'none'` — empty list; router runs as if no obstacles exist.
+   * - `Obstacle[]` / `Rect[]` — verbatim list (used for testing or
+   *   layer-specific filtering). Plain `Rect` entries are valid because
+   *   `Obstacle extends Rect`; they fall back to AABB-only marking.
+   */
+  private resolveObstacles(spec: BaseConnectorSpec): ReadonlyArray<Obstacle> {
+    const opt = (spec.routerOpts as
+      | { obstacles?: 'auto' | 'none' | ReadonlyArray<Obstacle> }
+      | undefined)?.obstacles;
+    if (opt === 'none') return [];
+    if (Array.isArray(opt)) return opt;
+    const excludeIds = new Set<string>();
+    if (spec.source.kind === 'shape') excludeIds.add(spec.source.shapeId);
+    if (spec.target.kind === 'shape') excludeIds.add(spec.target.shapeId);
+    const out: Obstacle[] = [];
+    for (const [id, inst] of this.shapeInstances) {
+      if (excludeIds.has(id)) continue;
+      const bounds = this.shapeWorldBounds(inst);
+      const containsInflated = inst.shape.obstacleTest?.();
+      out.push({ ...bounds, containsInflated });
+    }
+    return out;
+  }
+
+  /**
+   * Pass-1 endpoint resolution — stable, anchor-independent reference point.
+   * Returns the shape's geometric bounding-box centre in world space (NOT
+   * the raw `(spec.x, spec.y)` origin) so the anchor's pass-2 ray cast is
+   * uniform across shape kinds.
+   */
+  private endpointCenter(spec: ConnectorEndpointSpec): Point {
+    if (spec.kind === 'point') return { x: spec.x, y: spec.y };
+    const inst = this.shapeInstances.get(spec.shapeId);
+    if (!inst) {
       throw new Error(`PrimitivesRenderer: connector references unknown shape "${spec.shapeId}"`);
     }
-    return { x: target.spec.x, y: target.spec.y };
+    const b = inst.shape.bounds();
+    return {
+      x: inst.spec.x + b.x + b.width / 2,
+      y: inst.spec.y + b.y + b.height / 2,
+    };
+  }
+
+  /** Pass-2 endpoint resolution — applies the declared anchor for shape endpoints. */
+  private resolveEndpoint(spec: ConnectorEndpointSpec, fromPoint: Point): Endpoint {
+    if (spec.kind === 'point') {
+      return { x: spec.x, y: spec.y, tangent: spec.tangent };
+    }
+    const inst = this.shapeInstances.get(spec.shapeId);
+    if (!inst) {
+      throw new Error(`PrimitivesRenderer: connector references unknown shape "${spec.shapeId}"`);
+    }
+    const { name, opts } = normalizeAnchorSpec(spec.anchor);
+    const anchor = this.anchorRegistry.get(name);
+    if (!anchor) {
+      throw new Error(`PrimitivesRenderer: unknown anchor "${name}"`);
+    }
+    const ctx: AnchorCtx = { getShape: (id) => this.anchorShapeRef(id) };
+    const result = anchor({ shapeId: spec.shapeId, opts }, fromPoint, ctx);
+
+    // Optional outward `padding`: push the endpoint along the anchor's
+    // tangent direction. Useful when a halo / glow decoration extends
+    // beyond the silhouette and the connector should visibly start at
+    // the halo's edge. No-op when the anchor returns no tangent.
+    const padding = spec.padding ?? 0;
+    if (padding === 0 || !result.tangent) return result;
+    return {
+      x: result.x + result.tangent.x * padding,
+      y: result.y + result.tangent.y * padding,
+      tangent: result.tangent,
+    };
+  }
+
+  private anchorShapeRef(id: string): AnchorShapeRef | undefined {
+    const inst = this.shapeInstances.get(id);
+    if (!inst) return undefined;
+    const bounds = inst.shape.bounds();
+    return {
+      origin: { x: inst.spec.x, y: inst.spec.y },
+      bounds,
+      center: {
+        x: inst.spec.x + bounds.x + bounds.width / 2,
+        y: inst.spec.y + bounds.y + bounds.height / 2,
+      },
+      boundaryIntersect: inst.shape.boundaryIntersect?.bind(inst.shape),
+    };
   }
 
   private indexConnector(inst: ConnectorInstance): void {
@@ -712,4 +935,13 @@ function slotZIndex(slot: string): number {
 /** Stable id mapping `(hostId, slot)` → badge shape id. */
 function badgeIdFor(hostId: string, slot: string): string {
   return `${hostId}:${slot}`;
+}
+
+/** Resolve an `AnchorSpec` (string or object form) to a `(name, opts)` pair. */
+function normalizeAnchorSpec(
+  spec: AnchorSpec | undefined,
+): { name: string; opts?: Readonly<Record<string, unknown>> } {
+  if (spec === undefined) return { name: 'center' };
+  if (typeof spec === 'string') return { name: spec };
+  return { name: spec.name, opts: spec.opts };
 }

@@ -3,6 +3,7 @@ import { PrimitiveBase } from './PrimitiveBase';
 import type {
   BaseShapeSpec,
   IShape,
+  Point,
   Rect,
   ShapeFill,
   ShapeFillLayer,
@@ -77,6 +78,28 @@ export abstract class ShapeBase<TSpec extends BaseShapeSpec>
     this.drawGeometry(g, this.spec, style);
   }
 
+  /**
+   * Default boundary intersection: ray from the shape's geometric centre
+   * `(0, 0)` toward `localFromCenter`, intersected with a centred AABB
+   * derived from `this.bounds()`. Correct for `RectShape` (anchored
+   * top-left) and any shape whose silhouette can be approximated by its
+   * bounding box.
+   *
+   * Geometric shapes with non-rectangular silhouettes (`CircleShape`,
+   * `EllipseShape`, `PolygonShape`) should override this for pixel-accurate
+   * perimeter snapping. Input and output are both centre-relative.
+   */
+  boundaryIntersect(localFromCenter: Point): Point | null {
+    const b = this.bounds();
+    const centred: Rect = {
+      x: -b.width / 2,
+      y: -b.height / 2,
+      width: b.width,
+      height: b.height,
+    };
+    return aabbRayExit(localFromCenter, centred);
+  }
+
   override destroy(): void {
     for (const view of this.insetViews.values()) destroyInsetContent(view);
     this.insetViews.clear();
@@ -111,6 +134,30 @@ export abstract class ShapeBase<TSpec extends BaseShapeSpec>
       }
     }
   }
+}
+
+/**
+ * Ray from `(0, 0)` toward `localFrom`, parametrised `P(t) = t * localFrom`
+ * for `t ≥ 0`. Returns the smallest positive `t` at which `P(t)` exits the
+ * AABB `bounds`. When `localFrom` is at the origin the ray is degenerate and
+ * we return the bounds origin as a sentinel; callers using this as a
+ * `boundary` anchor should ensure the two endpoints differ.
+ */
+function aabbRayExit(localFrom: Point, bounds: Rect): Point {
+  const x = localFrom.x;
+  const y = localFrom.y;
+  if (x === 0 && y === 0) return { x: bounds.x, y: bounds.y };
+  let tMin = Infinity;
+  if (x !== 0) {
+    const tx = (x > 0 ? bounds.x + bounds.width : bounds.x) / x;
+    if (tx > 0 && tx < tMin) tMin = tx;
+  }
+  if (y !== 0) {
+    const ty = (y > 0 ? bounds.y + bounds.height : bounds.y) / y;
+    if (ty > 0 && ty < tMin) tMin = ty;
+  }
+  if (!isFinite(tMin)) return { x: 0, y: 0 };
+  return { x: x * tMin, y: y * tMin };
 }
 
 /** Walk a `ShapeFill` and return inset-content layers keyed by their index. */
