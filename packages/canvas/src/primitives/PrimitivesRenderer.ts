@@ -58,6 +58,7 @@ import { distanceToPolylineSq, pathBounds, samplePath } from './connectors/pathS
 import { ArrowMarker } from './markers/ArrowMarker';
 import { GlowDecoration } from './decorations/shape/GlowDecoration';
 import { PulseRingDecoration } from './decorations/shape/PulseRingDecoration';
+import { LiquidFillDecoration } from './decorations/shape/LiquidFillDecoration';
 import { ShakeEffect } from './effects/shape/ShakeEffect';
 import { BreathingEffect } from './effects/shape/BreathingEffect';
 import { resolveBadgePosition } from './badges/placement';
@@ -199,6 +200,7 @@ export class PrimitivesRenderer {
 
     this.registerDecoration('glow', GlowDecoration, { target: 'shape' });
     this.registerDecoration('pulse-ring', PulseRingDecoration, { target: 'shape' });
+    this.registerDecoration('liquid-fill', LiquidFillDecoration, { target: 'shape' });
 
     this.registerEffect('shake', ShakeEffect, { target: 'shape' });
     this.registerEffect('breathing', BreathingEffect, { target: 'shape' });
@@ -1145,12 +1147,14 @@ export class PrimitivesRenderer {
 // ordering.
 //
 // Layout (bottom → top):
-//   glow        −300
-//   halo        −200
-//   breathing   −150
-//   pulse       −100
+//   glow         −300
+//   halo         −200
+//   breathing    −150
+//   pulse        −100
+//   pulse-ring   −80
 //   ring         −50
 //   <shape>        0
+//   liquid        20  (fills inside silhouette, above shape body)
 //   <other>       50  (mid-band)
 //   badge        300
 //   fx           400
@@ -1160,7 +1164,9 @@ const SLOT_Z_TABLE: Readonly<Record<string, number>> = {
   halo: -200,
   breathing: -150,
   pulse: -100,
+  'pulse-ring': -80,
   ring: -50,
+  liquid: 20,
   badge: 300,
   fx: 400,
 };

@@ -57,6 +57,8 @@ export { GlowDecoration } from './decorations/shape/GlowDecoration';
 export type { GlowDecorationStyle } from './decorations/shape/GlowDecoration';
 export { PulseRingDecoration } from './decorations/shape/PulseRingDecoration';
 export type { PulseRingDecorationStyle } from './decorations/shape/PulseRingDecoration';
+export { LiquidFillDecoration } from './decorations/shape/LiquidFillDecoration';
+export type { LiquidFillDecorationStyle } from './decorations/shape/LiquidFillDecoration';
 
 // ─── Built-in effects ──────────────────────────────────────────────────────
 export { ShakeEffect } from './effects/shape/ShakeEffect';
