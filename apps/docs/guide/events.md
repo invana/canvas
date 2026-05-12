@@ -136,6 +136,70 @@ App subscriptions stay tight (you only get the events you ask for at the source 
 
 In dev mode, every emit runs through `assertSerialisableInDev` — it surfaces non-serialisable payloads (DOM nodes, pixi objects, functions) immediately with the offending path. Telemetry sinks should never see anything that wouldn't survive `JSON.stringify`.
 
+## Camera vs viewport — keep them apart
+
+Two related but distinct concepts; they get separate event namespaces:
+
+| Concept | What it is | Events |
+|---|---|---|
+| **Camera** | Transform state — pan offset, zoom scale, the world↔screen projection | `camera:pan`, `camera:zoom` |
+| **Viewport** | The DOM surface — its width/height and the pointer/keyboard events landing on it | `viewport:resized`, `viewport:click`, `viewport:contextmenu`, `viewport:doubleclick`, `viewport:cursor:move` *(planned)* |
+
+The camera doesn't get clicked or resized — the viewport does. `camera:zoom` means "the camera's zoom-scale state changed"; `viewport:resized` means "the DOM rect we render into changed size." Don't conflate them.
+
+## Planned changes — two-tier pointer dispatch
+
+Today `PrimitivesRenderer.events` emits `shape:click` / `connector:click` etc., and layer code subscribes to translate them into domain events. The planned model collapses this into a two-tier dispatch:
+
+```
+DOM pointer event
+        │
+        ▼
+Canvas dispatcher
+  - runs renderer.hitTest(world) once per DOM event
+  - cascades top-down through hittable layers by z-order
+  - dispatches to the topmost layer that claims the hit
+  - if no hit: emits viewport:* on canvas.events
+        │
+        ▼
+Layer.onPointer*(hit, domEvent) template methods
+  Domain layers override these and emit semantic events
+        │
+        ▼
+layer.events
+  node:click, edge:hover, selection:changed (GraphLayer)
+```
+
+Effects of the change once it ships:
+
+- **Renderer becomes silent.** `PrimitivesRenderer.events` no longer emits pointer events; the renderer exposes `hitTest()` as its public input-handling surface.
+- **One emit per physical interaction.** No `shape:click` followed by `node:click`.
+- **`Layer` gains seven template methods** — `onPointerOver / out / down / up / move`, `onClick`, `onDoubleClick`, `onContextMenu`. Default no-op; domain layers override and emit `node:click` etc. on `this.events`.
+- **`BackgroundLayer` defaults to `hittable: false`** so clicks pass through to `viewport:click` unless you explicitly want the background to claim them.
+
+The existing renderer events documented in [Primitives → Pointer events](./primitives.md#pointer-events) remain the shipping surface until this lands.
+
+## Planned additional events
+
+Once the two-tier dispatch ships, these expand the catalogue (all on `canvas.events` unless noted):
+
+| Event | Payload | Notes |
+|---|---|---|
+| `layer:visibility:changed` | `{ id, visible }` | |
+| `layer:zindex:changed` | `{ id, zIndex }` | |
+| `layer:hittable:changed` | `{ id, hittable }` | |
+| `layer:reordered` | `{ order: string[] }` | |
+| `behaviour:deregistered` | `{ id }` | |
+| `behaviour:shortcut:conflict` | `{ aId, bId, shortcut }` | |
+| `viewport:resized` | `{ width, height }` | Wired via `ResizeObserver`. |
+| `viewport:click` / `:doubleclick` / `:contextmenu` | `{ worldX, worldY, screenX, screenY, button, modifiers }` | Fires only when no layer claims the hit. |
+| `viewport:cursor:move` | `{ worldX, worldY, screenX, screenY }` | Opt-in via `CursorTrackBehaviour`. Default-excluded from tap. |
+| `frame:rendered` | `{ durationMs, layersRendered }` | Whole-frame lifecycle. Default-excluded from tap. |
+| `render:start` / `render:end` | `{ dirtyCount }` / `{ durationMs, dirtyCount }` | Per-layer; emitted on **each layer's** `events`. Default-excluded from tap. |
+| `layout:start` / `layout:end` | `{ layoutId, layerId, durationMs? }` | Opt-in via `LayoutInstrumentationBehaviour`. |
+
+Lifecycle verbs also shift: `layer:added` → `layer:registered`, `layer:removed` → `layer:deregistered` (and same for behaviours).
+
 ## Render init event
 
 ```ts

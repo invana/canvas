@@ -31,9 +31,34 @@ The renderer ships built-ins for each and accepts custom registrations.
 | **anchors** | `center`, `boundary`, `perpendicular` | Resolve a shape-id endpoint to a concrete world point on the shape. |
 | **decorations** | `glow` (shape decoration) | Halos / glows / borders / animations attached to a shape or connector. |
 
-There is **no connector registry** — one concrete `Connector` class. Variation comes from the `anchor → router → pathStyle` pipeline.
+There is **no connector registry** — one concrete `Connector` class. Variation comes from the **`anchor → router → pathStyle`** three-stage pipeline:
+
+```
+ConnectorEndpointSpec ──► anchor ──► (x,y) on shape boundary
+                                       │
+                                       ▼
+                          ┌─►  router  ──► Polyline  (where bends sit)
+                          │     │
+                          │     ▼
+                          └─► pathStyle ──► Path     (how segments are drawn: M / L / Q / C)
+                                       │
+                                       ▼
+                                  Connector  walks the Path via Pixi commands
+```
+
+Three open registries — `anchorRegistry`, `routerRegistry`, `pathStyleRegistry`. To add any new drawing style, register a function in one of the three; the `Connector` class itself never changes.
 
 ## Adding shapes
+
+### Built-in shape kinds
+
+| Kind | Class | Spec fields |
+|---|---|---|
+| `circle` | `CircleShape` | `{ radius }` |
+| `rect` | `RectShape` | `{ width, height, cornerRadius? }` |
+| `polygon` | `PolygonShape` | `{ points: [{x,y}, …] }` (literal vertices, closed) |
+| `regular-polygon` | `RegularPolygonShape` | `{ radius, sides, rotation? }` |
+| `star` | `StarShape` | `{ radius, innerRadius, points, rotation? }` |
 
 ```ts
 renderer.addShape('node-a', {
@@ -126,7 +151,7 @@ renderer.addConnector('a-b', {
 |---|---|
 | `straight` | Direct line between endpoints + waypoints. |
 | `orth` (alias `orthogonal`) | Axis-aligned H/V bends. |
-| `manhattan` | Obstacle-aware orthogonal; A* on a coarse grid around `RouterCtx.obstacles`. Falls back to `orth` when no obstacles. |
+| `manhattan` | Obstacle-aware orthogonal; A* on a coarse grid around `RouterCtx.obstacles`. Falls back to `orth` when no obstacles. When obstacles move, call `renderer.reRouteAllConnectors()` to recompute. `DragShapeBehaviour` does this automatically. |
 | `metro` | Subway-style bends with mid-segment offsets. |
 | `er` | ER-diagram style endpoint-aware routing. |
 | `oneSide` | Forces both endpoints on the same side of their hosts (parent-child trees). |
@@ -152,6 +177,12 @@ Pass per-router options via `routerOpts`.
 
 Specify on the endpoint: `anchor: 'boundary'` or `anchor: { name: 'boundary', opts: { ... } }`.
 
+Boundary anchors rely on the shape's `boundaryIntersect(localFrom)` method. `CircleShape` solves analytically; `PolygonShape` walks edges and picks the nearest segment intersection; `RectShape` keeps the AABB default. Without an override the anchor still works — it falls back to AABB intersection, which is correct for rectangles and a few pixels off for round shapes.
+
+#### Ports — planned
+
+A named-port system on top of the dynamic anchor mechanism is planned: shapes will declare `ports?: Record<string, { x, y, normal? }>` and endpoints will reference them via `anchor: 'port:<name>'`. Not shipped yet — use `boundary` or `perpendicular` for now.
+
 ### Markers
 
 A marker is **any registered shape spec without `x`/`y`** — the connector positions and orients it at the polyline endpoint. Use the `arrowMarkerSpec` helper for the built-in arrow:
@@ -173,6 +204,8 @@ Or pass the raw spec inline: `{ kind: 'arrow', fill: 0x111827, lengthScale: 4 }`
 
 `ArrowMarker` is the only built-in marker today. Sizing is **proportional to the host connector's stroke width** — a 1px line gets a 4×3 arrow with default scales; a 7px line gets a 28×21 arrow. The base width is additionally clamped to `≥ strokeWidth` so a thick line never feeds into a narrower arrow base.
 
+The connector also trims its visible path so the stroke ends where the marker visually begins, using arc-length sampling on curved paths (not naïve t-trim). Custom markers can opt in by exposing `static markerInset(spec, strokeWidth?): number`.
+
 To author a custom marker, register a shape kind that exposes a `static paintInto(g, spec, anchor, angleRad, style?, strokeWidth?)` (and optionally `static markerInset(spec, strokeWidth?)` to tell the connector how much to trim the line so it stops where the marker visually begins).
 
 ## Decorations
@@ -188,19 +221,19 @@ renderer.setDecoration('node-a', 'glow', {
 renderer.setDecoration('node-a', 'glow', null); // clear
 ```
 
-### Built-in decorations
+See **[Decorations, effects & animations](./decorations.md)** for the full conceptual model and the catalog of shipping decorations / effects. A short summary:
 
-| Kind | Target | Style |
+| Concept | Adds | Examples |
 |---|---|---|
-| `glow` | `shape` | `{ color: number, radius?: number, layers?: number, innerAlpha?: number }` |
-
-That's the entire shipping set today. Other decorations (`halo`, `border`, `marching-ants`, `pulse-ring`, `breathing`, connector decorations) are planned but not yet built.
+| **Decoration** | New geometry attached to the host | `glow`, `pulse-ring`, `marching-ants`, `liquid-fill`, `flow-particles`, `fly-marker`, `reveal`, `ripple` |
+| **Effect** (`setEffect`) | Modulation of host transform/style | `shake`, `breathing` |
+| **Animation** (`Tween`) | Shared interpolation primitive used inside decorations & effects | n/a — building block |
 
 ### Animated decorations
 
 A decoration that exposes `tick(deltaMs): boolean` is automatically registered into the renderer's per-frame animation set. `tickAnimations(dt)` on the renderer (called by the canvas tick) advances every animated decoration; `tick` returns `true` to keep ticking, `false` to retire.
 
-`GlowDecoration` is static — it does not animate.
+`GlowDecoration` is static; the other shipping decorations animate.
 
 ## Badges
 

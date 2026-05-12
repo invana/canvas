@@ -2,7 +2,7 @@
 
 WebGPU-first canvas rendering engine + graph visualization toolkit. WebGL2 fallback automatic. pnpm + Turbo monorepo.
 
-**Architecture rewrite in progress.** The new architecture is described in `architecture-proposal.md` and the storybook port is tracked in `migration-storybook-inventory.md` (both at repo root). All new code goes in the new packages listed below.
+**Architecture rewrite in progress.** The long-form design rationale lives in `architecture-proposal.md` at repo root. Day-to-day API and concept documentation lives in `apps/docs/` (VitePress) — that's the single source of truth for engine surfaces; consult it before referring back to the proposal. Standalone `*-plan.md` files have been consolidated into `apps/docs/`; don't create new ones. All new code goes in the active packages listed below.
 
 ---
 

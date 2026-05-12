@@ -71,6 +71,7 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: 'Guide', link: '/guide/getting-started' },
+      { text: 'Graph', link: '/graph/' },
       { text: 'API Reference', link: '/api/' },
       {
         text: 'Layers',
@@ -110,6 +111,7 @@ export default defineConfig({
           items: [
             { text: 'Installation & first scene', link: '/guide/getting-started' },
             { text: 'Architecture', link: '/guide/architecture' },
+            { text: 'Glossary', link: '/guide/glossary' },
             { text: 'Package status', link: '/guide/packages' },
           ],
         },
@@ -126,6 +128,17 @@ export default defineConfig({
           text: 'Rendering',
           items: [
             { text: 'Primitives renderer', link: '/guide/primitives' },
+            { text: 'Decorations, effects & animations', link: '/guide/decorations' },
+          ],
+        },
+      ],
+      '/graph/': [
+        {
+          text: '@invana/graph',
+          items: [
+            { text: 'Overview', link: '/graph/' },
+            { text: 'Data model', link: '/graph/data-model' },
+            { text: 'Events', link: '/graph/events' },
           ],
         },
       ],
