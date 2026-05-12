@@ -5,16 +5,8 @@ import {
   WheelZoomBehaviour,
   WorldLayer,
   PrimitivesRenderer,
-  ShapeBase,
 } from '@invana/canvas';
-import type {
-  BaseShapeSpec,
-  CanvasContext,
-  Graphics,
-  Rect,
-  ShapeHostInfo,
-  ShapePaintStyle,
-} from '@invana/canvas';
+import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer } from '../../../div-util';
 
@@ -23,16 +15,15 @@ export default meta;
 type Story = StoryObj;
 
 /**
- * Liquid fill applied to four different silhouettes — pill, circle, square,
- * triangle — using one shared style. The decoration masks itself to
- * whatever the host's `paintInto` traces, so a single implementation
- * produces a consistent "fluid level" inside any shape kind.
+ * Liquid fill applied uniformly to every built-in shape kind. The
+ * decoration masks itself to whatever the host's `paintInto` traces, so
+ * a single implementation produces a consistent "fluid level" inside any
+ * silhouette.
  *
  * Toggle **wave** off for still water (the decoration's `tick` returns
  * `false` and the renderer retires it from its animation set — zero
  * per-frame cost). Toggle **highlight** to add a glossy meniscus band on
- * the surface. Stroke alignment is `'outside'` so each host's outline
- * stays fully visible above the liquid.
+ * the surface.
  */
 export const LiquidFill: Story = {
   render: () => createContainer({ id: 'cvs-deco-liquid-fill' }),
@@ -47,63 +38,6 @@ export const LiquidFill: Story = {
       hitTest() { return null; }
     }
 
-    // Story-local triangle primitive. Engine only ships `circle` + `rect`
-    // built-in; we register a minimal `triangle` for the story. Anchored
-    // top-left like `rect` so `bounds()` is `{0, 0, w, h}`.
-    interface TriangleSpec extends BaseShapeSpec {
-      readonly kind: 'triangle';
-      readonly width: number;
-      readonly height: number;
-    }
-    class TriangleShape extends ShapeBase<TriangleSpec> {
-      constructor(spec: TriangleSpec, host: ShapeHostInfo) {
-        super(host);
-        this.draw(spec);
-      }
-      protected drawGeometry(g: Graphics, spec: TriangleSpec, style?: ShapePaintStyle): void {
-        const inset = style?.inset ?? 0;
-        const w = spec.width - inset * 2;
-        const h = spec.height - inset * 2;
-        const x = inset;
-        const y = inset;
-        g.moveTo(x + w / 2, y);
-        g.lineTo(x + w, y + h);
-        g.lineTo(x, y + h);
-        g.closePath();
-        if (style) {
-          if (style.fill !== false) {
-            g.fill({ color: style.color ?? 0xffffff, alpha: style.alpha ?? 1 });
-          }
-          if (style.strokeWidth && style.strokeWidth > 0) {
-            g.stroke({
-              color: style.color ?? 0xffffff,
-              alpha: style.alpha ?? 1,
-              width: style.strokeWidth,
-            });
-          }
-        } else {
-          if (typeof spec.fill === 'number') {
-            g.fill({ color: spec.fill });
-          } else if (
-            spec.fill && typeof spec.fill === 'object' && 'kind' in spec.fill &&
-            spec.fill.kind === 'solid'
-          ) {
-            g.fill({ color: spec.fill.color, alpha: spec.fill.alpha ?? 1 });
-          }
-          if (spec.stroke) {
-            g.stroke({
-              color: spec.stroke.color,
-              alpha: spec.stroke.alpha ?? 1,
-              width: spec.stroke.width ?? 1,
-            });
-          }
-        }
-      }
-      bounds(): Rect {
-        return { x: 0, y: 0, width: this.spec.width, height: this.spec.height };
-      }
-    }
-
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-liquid-fill')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
@@ -112,72 +46,44 @@ export const LiquidFill: Story = {
 
     const layer = new RenderLayer({ id: 'liquid-fill', options: {} });
     canvas.layers.add(layer);
-    layer.renderer.registerShape('triangle', TriangleShape);
 
-    // Hero: pill-shaped tank, like the reference screenshot.
-    const tankW = 280;
-    const tankH = 140;
-    layer.renderer.addShape('pill', {
-      kind: 'rect',
-      x: -tankW / 2,
-      y: -tankH / 2 - 130,
-      width: tankW,
-      height: tankH,
-      cornerRadius: tankH / 2,
-      fill: { kind: 'solid', color: 0xf5f5f5 },
-      stroke: { color: 0x1f2937, width: 2.5, alignment: 'outside' },
-    });
-    layer.renderer.addShape('pill-label', {
-      kind: 'rect',
-      x: -50, y: -14 - 130,
-      width: 100, height: 28,
-      fill: [
-        { kind: 'solid', color: 0xffffff, alpha: 0.95 },
-        { kind: 'text', text: 'Feed Tank', fontSize: 14, fontWeight: 600, color: 0x0f172a },
-      ],
-      stroke: { color: 0x1f2937, width: 1 },
-      zIndex: 1,
-    });
-
-    // Variety row: circle, square, triangle — same liquid style applied to each.
-    const size = 120;
-    const gap = 40;
-    const rowY = 50;
-    const circleR = size / 2;
-    const colSpan = size + gap;
-
-    layer.renderer.addShape('circle', {
-      kind: 'circle',
-      x: -colSpan,
-      y: rowY + circleR,
-      radius: circleR,
-      fill: { kind: 'solid', color: 0xf5f5f5 },
-      stroke: { color: 0x1f2937, width: 2.5, alignment: 'outside' },
-    });
-
-    layer.renderer.addShape('square', {
-      kind: 'rect',
-      x: -size / 2,
-      y: rowY,
-      width: size,
-      height: size,
-      fill: { kind: 'solid', color: 0xf5f5f5 },
-      stroke: { color: 0x1f2937, width: 2.5, alignment: 'outside' },
-    });
-
-    layer.renderer.addShape('triangle', {
-      kind: 'triangle',
-      x: colSpan - size / 2,
-      y: rowY,
-      width: size,
-      height: size,
-      fill: { kind: 'solid', color: 0xf5f5f5 },
-      stroke: { color: 0x1f2937, width: 2.5, alignment: 'outside' },
-    } as TriangleSpec);
-
-    const targets = ['pill', 'circle', 'square', 'triangle'];
+    const hosts = [
+      { id: 'circle',   spec: { kind: 'circle' as const,
+          x: -220, y: -110, radius: 50,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 },
+          stroke: { color: 0x1f3a5f, width: 2, alpha: 1 } } },
+      { id: 'rect',     spec: { kind: 'rect' as const,
+          x: -55,  y: -155, width: 110, height: 90, cornerRadius: 8,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 },
+          stroke: { color: 0x1f3a5f, width: 2, alpha: 1 } } },
+      { id: 'triangle', spec: { kind: 'regular-polygon' as const,
+          x: 220, y: -110, sides: 3, radius: 60,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 },
+          stroke: { color: 0x1f3a5f, width: 2, alpha: 1 } } },
+      { id: 'hexagon',  spec: { kind: 'regular-polygon' as const,
+          x: -220, y: 110, sides: 6, radius: 55, rotation: Math.PI / 6,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 },
+          stroke: { color: 0x1f3a5f, width: 2, alpha: 1 } } },
+      { id: 'star',     spec: { kind: 'star' as const,
+          x: 0, y: 110, points: 5, outerRadius: 60, innerRadius: 25,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 },
+          stroke: { color: 0x1f3a5f, width: 2, alpha: 1 } } },
+      { id: 'chevron',  spec: { kind: 'polygon' as const, x: 220, y: 110,
+          vertices: [
+            { x: -60, y: -35 }, { x:  25, y: -35 }, { x:  60, y: 0 },
+            { x:  25, y:  35 }, { x: -60, y:  35 }, { x: -25, y: 0 },
+          ],
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 },
+          stroke: { color: 0x1f3a5f, width: 2, alpha: 1 } } },
+    ];
+    for (const h of hosts) layer.renderer.addShape(h.id, h.spec);
+    const hostIds = hosts.map((h) => h.id);
 
     const settings = {
+      fillColor: 0x4f9cf9,
+      strokeColor: 0x1f3a5f,
+      strokeWidth: 2,
+      strokeAlpha: 1,
       fillLevel: 0.6,
       colorTop: 0xbcd2ea,
       colorBottom: 0x315c89,
@@ -216,13 +122,37 @@ export const LiquidFill: Story = {
             }
           : {}),
       };
-      for (const id of targets) {
+      for (const id of hostIds) {
         layer.renderer.setDecoration(id, 'liquid', { kind: 'liquid-fill', style });
       }
     };
     apply();
 
+    const applyFill = () => {
+      for (const id of hostIds) {
+        layer.renderer.updateShape(id, { fill: { kind: 'solid', color: settings.fillColor } });
+      }
+    };
+
+    const applyStroke = () => {
+      for (const id of hostIds) {
+        layer.renderer.updateShape(id, {
+          stroke: {
+            color: settings.strokeColor,
+            width: settings.strokeWidth,
+            alpha: settings.strokeAlpha,
+          },
+        });
+      }
+    };
+
     const gui = new GUI({ title: 'Liquid fill' });
+    gui.addColor(settings, 'fillColor').name('shape fill').onChange(applyFill);
+
+    const strokeFolder = gui.addFolder('Stroke');
+    strokeFolder.addColor(settings, 'strokeColor').name('color').onChange(applyStroke);
+    strokeFolder.add(settings, 'strokeWidth', 0, 12, 0.5).name('width').onChange(applyStroke);
+    strokeFolder.add(settings, 'strokeAlpha', 0, 1, 0.05).name('alpha').onChange(applyStroke);
     gui.add(settings, 'fillLevel', 0, 1, 0.01).onChange(apply);
     gui.addColor(settings, 'colorTop').onChange(apply);
     gui.addColor(settings, 'colorBottom').onChange(apply);
@@ -239,6 +169,6 @@ export const LiquidFill: Story = {
     hlFolder.add(settings, 'highlightAlpha', 0, 1, 0.05).onChange(apply);
     hlFolder.add(settings, 'highlightThickness', 0, 12, 0.5).onChange(apply);
 
-    canvas.camera.fitContent(layer.getBounds(), 100);
+    canvas.camera.fitContent(layer.getBounds(), 200);
   },
 };

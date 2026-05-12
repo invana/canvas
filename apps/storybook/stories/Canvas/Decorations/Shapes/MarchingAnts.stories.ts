@@ -43,17 +43,35 @@ export const MarchingAnts: Story = {
     const layer = new RenderLayer({ id: 'marching-ants', options: {} });
     canvas.layers.add(layer);
 
-    layer.renderer.addShape('circle-host', {
-      kind: 'circle', x: -90, y: 0, radius: 44,
-      fill: { kind: 'solid', color: 0x4f9cf9 },
-    });
-    layer.renderer.addShape('rect-host', {
-      kind: 'rect', x: 30, y: -44, width: 120, height: 88, cornerRadius: 12,
-      fill: { kind: 'solid', color: 0xfde68a },
-    });
+    const hosts = [
+      { id: 'circle',   spec: { kind: 'circle' as const,
+          x: -220, y: -110, radius: 50,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'rect',     spec: { kind: 'rect' as const,
+          x: -55,  y: -155, width: 110, height: 90, cornerRadius: 8,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'triangle', spec: { kind: 'regular-polygon' as const,
+          x: 220, y: -110, sides: 3, radius: 60,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'hexagon',  spec: { kind: 'regular-polygon' as const,
+          x: -220, y: 110, sides: 6, radius: 55, rotation: Math.PI / 6,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'star',     spec: { kind: 'star' as const,
+          x: 0, y: 110, points: 5, outerRadius: 60, innerRadius: 25,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'chevron',  spec: { kind: 'polygon' as const, x: 220, y: 110,
+          vertices: [
+            { x: -60, y: -35 }, { x:  25, y: -35 }, { x:  60, y: 0 },
+            { x:  25, y:  35 }, { x: -60, y:  35 }, { x: -25, y: 0 },
+          ],
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+    ];
+    for (const h of hosts) layer.renderer.addShape(h.id, h.spec);
+    const hostIds = hosts.map((h) => h.id);
 
     const settings = {
-      color: 0x111827,
+      fillColor: 0x4f9cf9,
+      color: 0x919191,
       strokeWidth: 1.5,
       dashLength: 6,
       gapLength: 4,
@@ -63,19 +81,24 @@ export const MarchingAnts: Story = {
     };
 
     const apply = () => {
-      const style = { ...settings };
-      layer.renderer.setDecoration('circle-host', 'marching-ants', {
-        kind: 'marching-ants',
-        style,
-      });
-      layer.renderer.setDecoration('rect-host', 'marching-ants', {
-        kind: 'marching-ants',
-        style,
-      });
+      const { fillColor: _ignored, ...style } = settings;
+      for (const id of hostIds) {
+        layer.renderer.setDecoration(id, 'marching-ants', {
+          kind: 'marching-ants',
+          style,
+        });
+      }
     };
     apply();
 
+    const applyFill = () => {
+      for (const id of hostIds) {
+        layer.renderer.updateShape(id, { fill: { kind: 'solid', color: settings.fillColor } });
+      }
+    };
+
     const gui = new GUI({ title: 'MarchingAnts' });
+    gui.addColor(settings, 'fillColor').name('shape fill').onChange(applyFill);
     gui.addColor(settings, 'color').onChange(apply);
     gui.add(settings, 'strokeWidth', 0.5, 6, 0.5).onChange(apply);
     gui.add(settings, 'dashLength', 1, 24, 0.5).onChange(apply);
@@ -84,6 +107,11 @@ export const MarchingAnts: Story = {
     gui.add(settings, 'inset', -20, 20, 1).onChange(apply);
     gui.add(settings, 'alpha', 0, 1, 0.05).onChange(apply);
 
-    canvas.camera.fitContent(layer.getBounds(), 100);
+    // DEBUG: bypass layer.getBounds() to isolate whether the bug is bounds-computation
+    // or shape-rendering. This rect contains all 6 host positions.
+    const debugBounds = layer.getBounds()
+    // eslint-disable-next-line no-console
+    console.log('[MarchingAnts debug] layer.getBounds()', layer.getBounds(), 'using debug bounds:', debugBounds);
+    canvas.camera.fitContent(debugBounds, 200);
   },
 };

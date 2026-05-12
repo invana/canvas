@@ -42,25 +42,57 @@ export const PulseRing: Story = {
     const layer = new RenderLayer({ id: 'pulse-ring', options: {} });
     canvas.layers.add(layer);
 
-    layer.renderer.addShape('host', {
-      kind: 'circle', x: 0, y: 0, radius: 36,
-      fill: { kind: 'solid', color: 0xfb923c },
-    });
+    const hosts = [
+      { id: 'circle',   spec: { kind: 'circle' as const,
+          x: -220, y: -110, radius: 50,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'rect',     spec: { kind: 'rect' as const,
+          x: -55,  y: -155, width: 110, height: 90, cornerRadius: 8,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'triangle', spec: { kind: 'regular-polygon' as const,
+          x: 220, y: -110, sides: 3, radius: 60,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'hexagon',  spec: { kind: 'regular-polygon' as const,
+          x: -220, y: 110, sides: 6, radius: 55, rotation: Math.PI / 6,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'star',     spec: { kind: 'star' as const,
+          x: 0, y: 110, points: 5, outerRadius: 60, innerRadius: 25,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'chevron',  spec: { kind: 'polygon' as const, x: 220, y: 110,
+          vertices: [
+            { x: -60, y: -35 }, { x:  25, y: -35 }, { x:  60, y: 0 },
+            { x:  25, y:  35 }, { x: -60, y:  35 }, { x: -25, y: 0 },
+          ],
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+    ];
+    for (const h of hosts) layer.renderer.addShape(h.id, h.spec);
+    const hostIds = hosts.map((h) => h.id);
 
     const settings = {
+      fillColor: 0x4f9cf9,
       color: 0xfb923c, maxRadius: 40, periodMs: 1600, rings: 2,
       strokeWidth: 2, innerAlpha: 0.7,
     };
 
     const apply = () => {
-      layer.renderer.setDecoration('host', 'pulse-ring', {
-        kind: 'pulse-ring',
-        style: { ...settings },
-      });
+      const { fillColor: _ignored, ...style } = settings;
+      for (const id of hostIds) {
+        layer.renderer.setDecoration(id, 'pulse-ring', {
+          kind: 'pulse-ring',
+          style: { ...style },
+        });
+      }
     };
     apply();
 
+    const applyFill = () => {
+      for (const id of hostIds) {
+        layer.renderer.updateShape(id, { fill: { kind: 'solid', color: settings.fillColor } });
+      }
+    };
+
     const gui = new GUI({ title: 'PulseRing' });
+    gui.addColor(settings, 'fillColor').name('shape fill').onChange(applyFill);
     gui.addColor(settings, 'color').onChange(apply);
     gui.add(settings, 'maxRadius', 4, 120, 2).onChange(apply);
     gui.add(settings, 'periodMs', 400, 4000, 100).onChange(apply);
@@ -68,6 +100,11 @@ export const PulseRing: Story = {
     gui.add(settings, 'strokeWidth', 0.5, 8, 0.5).onChange(apply);
     gui.add(settings, 'innerAlpha', 0, 1, 0.05).onChange(apply);
 
-    canvas.camera.fitContent(layer.getBounds(), 200);
+    // DEBUG: bypass layer.getBounds() to isolate whether the bug is bounds-computation
+    // or shape-rendering. This rect contains all 6 host positions.
+    const debugBounds = layer.getBounds()
+    // eslint-disable-next-line no-console
+    console.log('[PulseRing debug] layer.getBounds()', layer.getBounds(), 'using debug bounds:', debugBounds);
+    canvas.camera.fitContent(debugBounds, 200);
   },
 };

@@ -37,30 +37,47 @@ export const Glow: Story = {
     const layer = new RenderLayer({ id: 'glow', options: {} });
     canvas.layers.add(layer);
 
-    layer.renderer.addShape('circle-host', {
-      kind: 'circle', x: -180, y: 0, radius: 40,
-      fill: { kind: 'solid', color: 0x4f9cf9 },
-    });
+    const hosts = [
+      { id: 'circle',   spec: { kind: 'circle' as const,
+          x: -220, y: -110, radius: 50,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'rect',     spec: { kind: 'rect' as const,
+          x: -55,  y: -155, width: 110, height: 90, cornerRadius: 8,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'triangle', spec: { kind: 'regular-polygon' as const,
+          x: 220, y: -110, sides: 3, radius: 60,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'hexagon',  spec: { kind: 'regular-polygon' as const,
+          x: -220, y: 110, sides: 6, radius: 55, rotation: Math.PI / 6,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'star',     spec: { kind: 'star' as const,
+          x: 0, y: 110, points: 5, outerRadius: 60, innerRadius: 25,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'chevron',  spec: { kind: 'polygon' as const, x: 220, y: 110,
+          vertices: [
+            { x: -60, y: -35 }, { x:  25, y: -35 }, { x:  60, y: 0 },
+            { x:  25, y:  35 }, { x: -60, y:  35 }, { x: -25, y: 0 },
+          ],
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+    ];
+    for (const h of hosts) layer.renderer.addShape(h.id, h.spec);
+    const hostIds = hosts.map((h) => h.id);
 
-    layer.renderer.addShape('rect-host', {
-      kind: 'rect', x: -50, y: -40, width: 100, height: 80,
-      fill: { kind: 'solid', color: 0x10b981 },
-    });
-
-    layer.renderer.addShape('rounded-host', {
-      kind: 'rect', x: 110, y: -40, width: 100, height: 80, cornerRadius: 18,
-      fill: { kind: 'solid', color: 0xfacc15 },
-    });
-
-    const hosts = ['circle-host', 'rect-host', 'rounded-host'];
     const settings = {
+      fillColor: 0x4f9cf9,
       color: 0xfb923c,
-      radius: 18,
+      radius: 40,
       layers: 8,
       innerAlpha: 0.55,
-      pulseEnabled: false,
+      pulseEnabled: true,
       periodMs: 1200,
       amplitude: 0.5,
+    };
+
+    const applyFill = () => {
+      for (const id of hostIds) {
+        layer.renderer.updateShape(id, { fill: { kind: 'solid', color: settings.fillColor } });
+      }
     };
 
     const apply = () => {
@@ -73,13 +90,14 @@ export const Glow: Story = {
           ? { pulse: { periodMs: settings.periodMs, amplitude: settings.amplitude } }
           : {}),
       };
-      for (const id of hosts) {
+      for (const id of hostIds) {
         layer.renderer.setDecoration(id, 'glow', { kind: 'glow', style });
       }
     };
     apply();
 
     const gui = new GUI({ title: 'Glow' });
+    gui.addColor(settings, 'fillColor').name('shape fill').onChange(applyFill);
     gui.addColor(settings, 'color').onChange(apply);
     gui.add(settings, 'radius', 2, 60, 1).onChange(apply);
     gui.add(settings, 'layers', 1, 16, 1).onChange(apply);
@@ -89,6 +107,6 @@ export const Glow: Story = {
     pulse.add(settings, 'periodMs', 200, 4000, 100).onChange(apply);
     pulse.add(settings, 'amplitude', 0, 1, 0.05).onChange(apply);
 
-    canvas.camera.fitContent(layer.getBounds(), 100);
+    canvas.camera.fitContent(layer.getBounds(), 150);
   },
 };

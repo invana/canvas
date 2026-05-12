@@ -131,7 +131,7 @@ function resolveVertices(
   vertices: ReadonlyArray<Point>,
   inset: number,
 ): ReadonlyArray<Point> {
-  if (inset <= 0) return vertices;
+  if (inset === 0) return vertices;
   return offsetPolygon(vertices, inset);
 }
 

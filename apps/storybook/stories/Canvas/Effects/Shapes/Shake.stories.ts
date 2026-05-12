@@ -42,27 +42,50 @@ export const Shake: Story = {
     const layer = new RenderLayer({ id: 'shake', options: {} });
     canvas.layers.add(layer);
 
-    layer.renderer.addShape('host', {
-      kind: 'circle', x: 0, y: 0, radius: 48,
-      fill: { kind: 'solid', color: 0x4f9cf9 },
-      stroke: { color: 0x1e3a8a, width: 3 },
-    });
+    const hosts = [
+      { id: 'circle',   spec: { kind: 'circle' as const,
+          x: -220, y: -110, radius: 50,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'rect',     spec: { kind: 'rect' as const,
+          x: -55,  y: -155, width: 110, height: 90, cornerRadius: 8,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'triangle', spec: { kind: 'regular-polygon' as const,
+          x: 220, y: -110, sides: 3, radius: 60,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'hexagon',  spec: { kind: 'regular-polygon' as const,
+          x: -220, y: 110, sides: 6, radius: 55, rotation: Math.PI / 6,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'star',     spec: { kind: 'star' as const,
+          x: 0, y: 110, points: 5, outerRadius: 60, innerRadius: 25,
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+      { id: 'chevron',  spec: { kind: 'polygon' as const, x: 220, y: 110,
+          vertices: [
+            { x: -60, y: -35 }, { x:  25, y: -35 }, { x:  60, y: 0 },
+            { x:  25, y:  35 }, { x: -60, y:  35 }, { x: -25, y: 0 },
+          ],
+          fill: { kind: 'solid' as const, color: 0x4f9cf9 } } },
+    ];
+    for (const h of hosts) layer.renderer.addShape(h.id, h.spec);
+    const hostIds = hosts.map((h) => h.id);
 
-    const settings = { enabled: true, amplitude: 4, axis: 'both' as 'both' | 'x' | 'y' };
+    const settings = { fillColor: 0x4f9cf9, enabled: true, amplitude: 4, axis: 'both' as 'both' | 'x' | 'y' };
 
     const applyShake = () => {
-      if (settings.enabled) {
-        layer.renderer.setEffect('host', 'shake', {
-          kind: 'shake',
-          style: { amplitude: settings.amplitude, axis: settings.axis },
-        });
-      } else {
-        layer.renderer.setEffect('host', 'shake', null);
-      }
+      const spec = settings.enabled
+        ? { kind: 'shake' as const, style: { amplitude: settings.amplitude, axis: settings.axis } }
+        : null;
+      for (const id of hostIds) layer.renderer.setEffect(id, 'shake', spec);
     };
     applyShake();
 
+    const applyFill = () => {
+      for (const id of hostIds) {
+        layer.renderer.updateShape(id, { fill: { kind: 'solid', color: settings.fillColor } });
+      }
+    };
+
     const gui = new GUI({ title: 'Shake' });
+    gui.addColor(settings, 'fillColor').name('shape fill').onChange(applyFill);
     gui.add(settings, 'enabled').onChange(applyShake);
     gui.add(settings, 'amplitude', 0, 20, 0.5).onChange(applyShake);
     gui.add(settings, 'axis', ['both', 'x', 'y']).onChange(applyShake);
