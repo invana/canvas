@@ -1,6 +1,6 @@
 # Interface: IDecorationBase\<THostInfo, TStyle\>
 
-Defined in: [packages/canvas/src/primitives/types.ts:639](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/types.ts#L639)
+Defined in: [packages/canvas/src/primitives/types.ts:639](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L639)
 
 Common base for shape and connector decorations. Presence of `tick` makes
 the decoration animated — the renderer registers it into the per-frame
@@ -23,7 +23,7 @@ Static decorations omit `tick` and cost zero per frame after `mount`.
 
 > `readonly` **style**: `TStyle`
 
-Defined in: [packages/canvas/src/primitives/types.ts:640](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/types.ts#L640)
+Defined in: [packages/canvas/src/primitives/types.ts:640](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L640)
 
 ## Methods
 
@@ -31,7 +31,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:640](https://github.com/inv
 
 > `optional` **destroy**(): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:644](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/types.ts#L644)
+Defined in: [packages/canvas/src/primitives/types.ts:644](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L644)
 
 #### Returns
 
@@ -43,7 +43,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:644](https://github.com/inv
 
 > **mount**(`host`): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:641](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/types.ts#L641)
+Defined in: [packages/canvas/src/primitives/types.ts:641](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L641)
 
 #### Parameters
 
@@ -61,7 +61,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:641](https://github.com/inv
 
 > `optional` **tick**(`deltaMs`): `boolean`
 
-Defined in: [packages/canvas/src/primitives/types.ts:643](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/types.ts#L643)
+Defined in: [packages/canvas/src/primitives/types.ts:643](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L643)
 
 #### Parameters
 
@@ -79,7 +79,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:643](https://github.com/inv
 
 > `optional` **update**(`host`): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:642](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/types.ts#L642)
+Defined in: [packages/canvas/src/primitives/types.ts:642](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L642)
 
 #### Parameters
 

@@ -1,6 +1,6 @@
 # Interface: CanvasEvent\<TPayload\>
 
-Defined in: [packages/canvas/src/events/CanvasEvent.ts:25](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEvent.ts#L25)
+Defined in: [packages/canvas/src/events/CanvasEvent.ts:25](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/CanvasEvent.ts#L25)
 
 ## Type Parameters
 
@@ -14,7 +14,7 @@ Defined in: [packages/canvas/src/events/CanvasEvent.ts:25](https://github.com/in
 
 > `readonly` **payload**: `TPayload`
 
-Defined in: [packages/canvas/src/events/CanvasEvent.ts:29](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEvent.ts#L29)
+Defined in: [packages/canvas/src/events/CanvasEvent.ts:29](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/CanvasEvent.ts#L29)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [packages/canvas/src/events/CanvasEvent.ts:29](https://github.com/in
 
 > `readonly` **source**: [`EventSource`](EventSource.md)
 
-Defined in: [packages/canvas/src/events/CanvasEvent.ts:28](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEvent.ts#L28)
+Defined in: [packages/canvas/src/events/CanvasEvent.ts:28](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/CanvasEvent.ts#L28)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [packages/canvas/src/events/CanvasEvent.ts:28](https://github.com/in
 
 > `readonly` **timestamp**: `number`
 
-Defined in: [packages/canvas/src/events/CanvasEvent.ts:27](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEvent.ts#L27)
+Defined in: [packages/canvas/src/events/CanvasEvent.ts:27](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/CanvasEvent.ts#L27)
 
 ***
 
@@ -38,4 +38,4 @@ Defined in: [packages/canvas/src/events/CanvasEvent.ts:27](https://github.com/in
 
 > `readonly` **type**: `string`
 
-Defined in: [packages/canvas/src/events/CanvasEvent.ts:26](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEvent.ts#L26)
+Defined in: [packages/canvas/src/events/CanvasEvent.ts:26](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/CanvasEvent.ts#L26)

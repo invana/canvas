@@ -1,6 +1,6 @@
 # Interface: DragShapeBehaviourOptions
 
-Defined in: [packages/canvas/src/behaviours/DragShapeBehaviour.ts:36](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/behaviours/DragShapeBehaviour.ts#L36)
+Defined in: [packages/canvas/src/behaviours/DragShapeBehaviour.ts:36](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/behaviours/DragShapeBehaviour.ts#L36)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [packages/canvas/src/behaviours/DragShapeBehaviour.ts:36](https://gi
 
 > `readonly` `optional` **dragCursor?**: `string`
 
-Defined in: [packages/canvas/src/behaviours/DragShapeBehaviour.ts:54](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/behaviours/DragShapeBehaviour.ts#L54)
+Defined in: [packages/canvas/src/behaviours/DragShapeBehaviour.ts:54](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/behaviours/DragShapeBehaviour.ts#L54)
 
 Optional cursor while dragging. Applied on drag start and cleared on
 drag end. Default `'grabbing'`.
@@ -23,7 +23,7 @@ drag end. Default `'grabbing'`.
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/behaviours/Behaviour.ts#L43)
+Defined in: [packages/canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/behaviours/Behaviour.ts#L43)
 
 Default `false` — the developer explicitly enables.
 
@@ -37,7 +37,7 @@ Default `false` — the developer explicitly enables.
 
 > `readonly` `optional` **filter?**: (`id`) => `boolean`
 
-Defined in: [packages/canvas/src/behaviours/DragShapeBehaviour.ts:43](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/behaviours/DragShapeBehaviour.ts#L43)
+Defined in: [packages/canvas/src/behaviours/DragShapeBehaviour.ts:43](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/behaviours/DragShapeBehaviour.ts#L43)
 
 Optional predicate to restrict which shape ids are draggable. Returning
 `false` ignores the pointerdown. Default = every shape is draggable.
@@ -58,7 +58,7 @@ Optional predicate to restrict which shape ids are draggable. Returning
 
 > **id**: `string`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/behaviours/Behaviour.ts#L36)
+Defined in: [packages/canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/behaviours/Behaviour.ts#L36)
 
 #### Inherited from
 
@@ -70,7 +70,7 @@ Defined in: [packages/canvas/src/behaviours/Behaviour.ts:36](https://github.com/
 
 > `optional` **layerId?**: `string`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:41](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/behaviours/Behaviour.ts#L41)
+Defined in: [packages/canvas/src/behaviours/Behaviour.ts:41](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/behaviours/Behaviour.ts#L41)
 
 Layer-scoped behaviours target a specific Layer by id. Canvas-scoped
 behaviours have no `layerId` and `scope: 'canvas'`.
@@ -85,7 +85,7 @@ behaviours have no `layerId` and `scope: 'canvas'`.
 
 > `readonly` **renderer**: [`PrimitivesRenderer`](../classes/PrimitivesRenderer.md)
 
-Defined in: [packages/canvas/src/behaviours/DragShapeBehaviour.ts:38](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/behaviours/DragShapeBehaviour.ts#L38)
+Defined in: [packages/canvas/src/behaviours/DragShapeBehaviour.ts:38](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/behaviours/DragShapeBehaviour.ts#L38)
 
 The renderer whose shapes this behaviour can drag.
 
@@ -95,7 +95,7 @@ The renderer whose shapes this behaviour can drag.
 
 > `readonly` `optional` **reRouteConnectors?**: `boolean`
 
-Defined in: [packages/canvas/src/behaviours/DragShapeBehaviour.ts:49](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/behaviours/DragShapeBehaviour.ts#L49)
+Defined in: [packages/canvas/src/behaviours/DragShapeBehaviour.ts:49](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/behaviours/DragShapeBehaviour.ts#L49)
 
 Re-route every connector after each move. Default `true` — needed for
 obstacle-aware routers (`manhattan` etc.) so they recompute when
@@ -107,7 +107,7 @@ obstacles move. Set `false` to avoid the per-move re-route cost.
 
 > `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/behaviours/Behaviour.ts#L49)
+Defined in: [packages/canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/behaviours/Behaviour.ts#L49)
 
 Gesture identifiers this behaviour claims. Used by `BehaviourRegistry`
 for conflict warnings. Format is convention-free (`'shift+drag'`,

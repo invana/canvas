@@ -13,6 +13,18 @@ export { ShapeBase } from './base/ShapeBase';
 export { ConnectorBase } from './base/ConnectorBase';
 export { ShapeDecorationBase } from './base/ShapeDecorationBase';
 export { ConnectorDecorationBase } from './base/ConnectorDecorationBase';
+export { EffectBase } from './base/EffectBase';
+
+// ─── Animation primitive ───────────────────────────────────────────────────
+export { Tween } from './animation/Tween';
+export type { TweenOptions } from './animation/Tween';
+export {
+  linear,
+  easeInOutSine,
+  easeOutCubic,
+  easeInOutCubic,
+} from './animation/easings';
+export type { Easing } from './animation/easings';
 
 // ─── Built-in primitives ──────────────────────────────────────────────────
 export { CircleShape } from './shapes/CircleShape';
@@ -43,6 +55,14 @@ export { perpendicularAnchor } from './connectors/anchors/perpendicular';
 // ─── Built-in decorations ──────────────────────────────────────────────────
 export { GlowDecoration } from './decorations/shape/GlowDecoration';
 export type { GlowDecorationStyle } from './decorations/shape/GlowDecoration';
+export { PulseRingDecoration } from './decorations/shape/PulseRingDecoration';
+export type { PulseRingDecorationStyle } from './decorations/shape/PulseRingDecoration';
+
+// ─── Built-in effects ──────────────────────────────────────────────────────
+export { ShakeEffect } from './effects/shape/ShakeEffect';
+export type { ShakeEffectStyle } from './effects/shape/ShakeEffect';
+export { BreathingEffect } from './effects/shape/BreathingEffect';
+export type { BreathingEffectStyle } from './effects/shape/BreathingEffect';
 
 // ─── Badges ────────────────────────────────────────────────────────────────
 export type { BadgeOptions, BadgePlacement } from './badges/types';
@@ -112,6 +132,17 @@ export type {
   DecorationTarget,
   RegisterDecorationOptions,
   DecorationSpec,
+
+  EffectTarget,
+  EffectTargetKind,
+  TransformDelta,
+  StyleOverride,
+  ShapeEffectHostInfo,
+  IEffectBase,
+  IShapeEffect,
+  ShapeEffectCtor,
+  RegisterEffectOptions,
+  EffectSpec,
 
   HitResult,
   PrimitivesRendererEventMap,

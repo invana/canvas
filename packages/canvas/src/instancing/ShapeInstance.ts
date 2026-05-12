@@ -10,10 +10,17 @@ import type {
   BaseShapeSpec,
   IShape,
   IShapeDecoration,
+  IShapeEffect,
 } from '../primitives/types';
 
 export class ShapeInstance<TSpec extends BaseShapeSpec = BaseShapeSpec> {
   readonly decorations = new Map<string, IShapeDecoration>();
+  /**
+   * Active effects keyed by slot. Effects modulate the host's transform
+   * and/or style each frame; the renderer aggregates contributions from
+   * every entry and writes the result onto `shape.gfx`.
+   */
+  readonly effects = new Map<string, IShapeEffect>();
 
   constructor(
     readonly id: string,

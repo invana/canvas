@@ -2,7 +2,7 @@
 
 > **arrowMarkerSpec**(`spec?`): `Omit`\<[`ArrowMarkerSpec`](../interfaces/ArrowMarkerSpec.md), `"x"` \| `"y"`\>
 
-Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:55](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/markers/ArrowMarker.ts#L55)
+Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:55](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/markers/ArrowMarker.ts#L55)
 
 Convenience builder for connector marker specs (no `x` / `y`).
 Usage: `connectorSpec.targetMarker = arrowMarkerSpec({ fill: 0x000000 })`.

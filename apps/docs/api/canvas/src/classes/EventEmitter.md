@@ -1,6 +1,6 @@
 # Class: EventEmitter\<E\>
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:23](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L23)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:23](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/EventEmitter.ts#L23)
 
 ## Extended by
 
@@ -29,7 +29,7 @@ Defined in: [packages/canvas/src/events/EventEmitter.ts:23](https://github.com/i
 
 > **emit**\<`K`\>(`event`, `payload`): `void`
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:72](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L72)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:72](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/EventEmitter.ts#L72)
 
 Emit an event. Each registered handler is called synchronously in registration order.
 
@@ -64,7 +64,7 @@ to crash unrelated code paths through the event bus.
 
 > **listenerCount**(`event`): `number`
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:105](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L105)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:105](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/EventEmitter.ts#L105)
 
 Number of handlers registered for an event. Useful in tests.
 
@@ -84,7 +84,7 @@ keyof `E`
 
 > **off**\<`K`\>(`event`, `handler`): `void`
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:57](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L57)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:57](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/EventEmitter.ts#L57)
 
 Unsubscribe a specific handler.
 No-op if the handler wasn't registered.
@@ -115,7 +115,7 @@ No-op if the handler wasn't registered.
 
 > **on**\<`K`\>(`event`, `handler`): () => `void`
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:31](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L31)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:31](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/EventEmitter.ts#L31)
 
 Subscribe to an event. Returns an unsubscribe function for ergonomic cleanup.
 
@@ -145,7 +145,7 @@ Subscribe to an event. Returns an unsubscribe function for ergonomic cleanup.
 
 > **once**\<`K`\>(`event`, `handler`): () => `void`
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:45](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L45)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:45](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/EventEmitter.ts#L45)
 
 Subscribe once. The handler fires at most once and auto-removes itself.
 Returns an unsubscribe function in case you want to cancel before it fires.
@@ -176,7 +176,7 @@ Returns an unsubscribe function in case you want to cancel before it fires.
 
 > **removeAllListeners**(`event?`): `void`
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:94](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L94)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:94](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/EventEmitter.ts#L94)
 
 Remove all listeners for one event, or all events if no event is given.
 

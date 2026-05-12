@@ -57,6 +57,9 @@ import { perpendicularAnchor } from './connectors/anchors/perpendicular';
 import { distanceToPolylineSq, pathBounds, samplePath } from './connectors/pathSampling';
 import { ArrowMarker } from './markers/ArrowMarker';
 import { GlowDecoration } from './decorations/shape/GlowDecoration';
+import { PulseRingDecoration } from './decorations/shape/PulseRingDecoration';
+import { ShakeEffect } from './effects/shape/ShakeEffect';
+import { BreathingEffect } from './effects/shape/BreathingEffect';
 import { resolveBadgePosition } from './badges/placement';
 import type { BadgeOptions } from './badges/types';
 import type {
@@ -71,6 +74,8 @@ import type {
   ConnectorHostInfo,
   DecorationSpec,
   DecorationTarget,
+  EffectSpec,
+  EffectTargetKind,
   Endpoint,
   HitResult,
   IAnchor,
@@ -81,17 +86,21 @@ import type {
   IRouter,
   IShape,
   IShapeDecoration,
+  IShapeEffect,
   Obstacle,
   Path,
   Point,
   PrimitivesRendererEventMap,
   Rect,
   RegisterDecorationOptions,
+  RegisterEffectOptions,
   RenderStats,
   RouterCtx,
   ShapeCtor,
   ShapeDecorationCtor,
   ShapeDecorationHostInfo,
+  ShapeEffectCtor,
+  ShapeEffectHostInfo,
   ShapeHostInfo,
 } from './types';
 
@@ -100,7 +109,13 @@ interface RegisteredDecoration {
   readonly target: DecorationTarget;
 }
 
+interface RegisteredEffect {
+  readonly ctor: ShapeEffectCtor;
+  readonly target: EffectTargetKind;
+}
+
 type AnimatedDecoration = { tick(deltaMs: number): boolean };
+type AnimatedEffect = IShapeEffect & { tick(deltaMs: number): boolean };
 
 export interface PrimitivesRendererOptions {
   readonly container: Container;
@@ -119,10 +134,17 @@ export class PrimitivesRenderer {
   private readonly pathStyleRegistry = new Map<string, IPathStyle>();
   private readonly anchorRegistry = new Map<string, IAnchor>();
   private readonly decorationRegistry = new Map<string, RegisteredDecoration>();
+  private readonly effectRegistry = new Map<string, RegisteredEffect>();
 
   private readonly shapeInstances = new Map<string, ShapeInstance>();
   private readonly connectorInstances = new Map<string, ConnectorInstance>();
   private readonly animated = new Set<AnimatedDecoration>();
+  private readonly animatedEffects = new Set<AnimatedEffect>();
+  /**
+   * Shape instances that currently have at least one effect attached. The
+   * per-frame aggregation walks this set rather than every shape instance.
+   */
+  private readonly hostsWithEffects = new Set<ShapeInstance>();
 
   /**
    * Host → (slot → BadgeOptions). Each entry corresponds to a shape registered
@@ -176,6 +198,10 @@ export class PrimitivesRenderer {
     this.registerAnchor('perpendicular', perpendicularAnchor);
 
     this.registerDecoration('glow', GlowDecoration, { target: 'shape' });
+    this.registerDecoration('pulse-ring', PulseRingDecoration, { target: 'shape' });
+
+    this.registerEffect('shake', ShakeEffect, { target: 'shape' });
+    this.registerEffect('breathing', BreathingEffect, { target: 'shape' });
   }
 
   // ─── Registries ─────────────────────────────────────────────────────────
@@ -203,6 +229,27 @@ export class PrimitivesRenderer {
   ): void {
     this.decorationRegistry.set(kind, {
       ctor: ctor as unknown as ShapeDecorationCtor | ConnectorDecorationCtor,
+      target: opts.target,
+    });
+  }
+
+  /**
+   * Register an effect under a string kind. Effects are domain-free primitives
+   * that modulate the host shape's transform or style channels each frame
+   * (shake, breathing, shimmer, …). The effect's constructor receives the
+   * caller's `style` payload; `opts.target` constrains which host kinds the
+   * effect may attach to (shape-only for v0).
+   *
+   * Throws on `setEffect` if the registered `target` doesn't include the
+   * host kind being targeted.
+   */
+  registerEffect<TStyle>(
+    kind: string,
+    ctor: new (style: TStyle) => IShapeEffect<TStyle>,
+    opts: RegisterEffectOptions,
+  ): void {
+    this.effectRegistry.set(kind, {
+      ctor: ctor as unknown as ShapeEffectCtor,
       target: opts.target,
     });
   }
@@ -255,6 +302,9 @@ export class PrimitivesRenderer {
     }
     for (const deco of inst.decorations.values()) this.disposeDecoration(deco);
     inst.decorations.clear();
+    for (const fx of inst.effects.values()) this.disposeEffect(fx);
+    inst.effects.clear();
+    this.hostsWithEffects.delete(inst);
     inst.shape.destroy();
     this.hit.remove(id);
     this.shapeInstances.delete(id);
@@ -378,6 +428,74 @@ export class PrimitivesRenderer {
     }
   }
 
+  // ─── Effects ────────────────────────────────────────────────────────────
+
+  /**
+   * Attach (or detach with `null`) an effect to a shape at the given slot.
+   * Effects don't draw — they modulate the host shape's transform and/or
+   * style. Multiple effects per host stack: transform deltas compose
+   * additively (translations + rotation) and multiplicatively (scale);
+   * style channels are last-writer-wins per channel by insertion order.
+   *
+   * Connector effects are not supported in v0 — the call throws if `targetId`
+   * resolves to a connector. Once concrete connector effects land, this
+   * branches on host kind like `setDecoration`.
+   */
+  setEffect<TStyle = unknown>(
+    targetId: string,
+    slot: string,
+    effect: EffectSpec<TStyle> | null,
+  ): void {
+    const shape = this.shapeInstances.get(targetId);
+    if (!shape) {
+      if (this.connectorInstances.has(targetId)) {
+        throw new Error(
+          `PrimitivesRenderer.setEffect: connector effects not yet supported ("${targetId}")`,
+        );
+      }
+      throw new Error(`PrimitivesRenderer.setEffect: unknown target "${targetId}"`);
+    }
+
+    const prev = shape.effects.get(slot);
+    if (prev) this.disposeEffect(prev);
+
+    if (effect === null) {
+      shape.effects.delete(slot);
+      if (shape.effects.size === 0) {
+        this.hostsWithEffects.delete(shape);
+        // Reset baseline so any prior modulation doesn't linger on the gfx.
+        this.resetHostToBaseline(shape);
+      }
+      return;
+    }
+
+    const entry = this.effectRegistry.get(effect.kind);
+    if (!entry) {
+      throw new Error(`PrimitivesRenderer.setEffect: unknown kind "${effect.kind}"`);
+    }
+    if (entry.target !== 'both' && entry.target !== 'shape') {
+      throw new Error(
+        `PrimitivesRenderer.setEffect: kind "${effect.kind}" targets "${entry.target}" but host is a shape`,
+      );
+    }
+
+    const fx = new entry.ctor(effect.style);
+    const host: ShapeEffectHostInfo = {
+      hostId: targetId,
+      slot,
+      bounds: shape.shape.bounds(),
+      shape: shape.shape,
+    };
+    fx.mount(host);
+    shape.effects.set(slot, fx);
+    this.hostsWithEffects.add(shape);
+    if (typeof fx.tick === 'function') {
+      this.animatedEffects.add(fx as AnimatedEffect);
+    }
+    // Apply non-animated effects immediately so they take effect this frame.
+    this.applyEffectsToHost(shape);
+  }
+
   // ─── Badges ─────────────────────────────────────────────────────────────
 
   /**
@@ -483,11 +601,96 @@ export class PrimitivesRenderer {
   // ─── Per-frame animation ────────────────────────────────────────────────
 
   tickAnimations(deltaMs: number): void {
-    if (this.animated.size === 0) return;
-    for (const deco of this.animated) {
-      const keep = deco.tick(deltaMs);
-      if (!keep) this.animated.delete(deco);
+    if (this.animated.size > 0) {
+      for (const deco of this.animated) {
+        const keep = deco.tick(deltaMs);
+        if (!keep) this.animated.delete(deco);
+      }
     }
+
+    if (this.animatedEffects.size > 0) {
+      for (const fx of this.animatedEffects) {
+        const keep = fx.tick(deltaMs);
+        if (!keep) this.animatedEffects.delete(fx);
+      }
+    }
+
+    if (this.hostsWithEffects.size > 0) {
+      for (const host of this.hostsWithEffects) {
+        this.applyEffectsToHost(host);
+      }
+    }
+  }
+
+  /**
+   * Aggregate every effect attached to `inst` and write the result onto the
+   * host gfx. Resets to the spec baseline first so removing effects (or a
+   * scale dropping to identity) cleanly reverts. Called every frame for
+   * hosts with at least one effect, and synchronously on `setEffect` so
+   * non-animated effects take effect immediately.
+   */
+  private applyEffectsToHost(inst: ShapeInstance): void {
+    const { gfx } = inst.shape;
+    const spec = inst.spec;
+    const baseAlpha = spec.alpha ?? 1;
+    const baseX = spec.x;
+    const baseY = spec.y;
+
+    let dx = 0;
+    let dy = 0;
+    let dRot = 0;
+    let sx = 1;
+    let sy = 1;
+    let tint = 0xffffff;
+    let alphaMul = 1;
+
+    for (const fx of inst.effects.values()) {
+      if (fx.target === 'transform' && fx.readTransform) {
+        const d = fx.readTransform();
+        if (d.dx) dx += d.dx;
+        if (d.dy) dy += d.dy;
+        if (d.dRot) dRot += d.dRot;
+        if (d.sx !== undefined) sx *= d.sx;
+        if (d.sy !== undefined) sy *= d.sy;
+      } else if (fx.target === 'style' && fx.readStyle) {
+        const s = fx.readStyle();
+        if (s.tint !== undefined) tint = s.tint;
+        if (s.alpha !== undefined) alphaMul *= s.alpha;
+      }
+    }
+
+    // Pivot at the shape's local centre so scale and rotation deltas spin
+    // around the visual centre (matters for shapes whose local origin isn't
+    // the centre — e.g. RectShape is top-left). When scale and rotation are
+    // identity, skip the pivot detour to keep the position math trivial.
+    const needsCentredPivot = sx !== 1 || sy !== 1 || dRot !== 0;
+    if (needsCentredPivot) {
+      const b = inst.shape.bounds();
+      const cx = b.x + b.width / 2;
+      const cy = b.y + b.height / 2;
+      gfx.pivot.set(cx, cy);
+      gfx.position.set(baseX + dx + cx, baseY + dy + cy);
+    } else {
+      gfx.pivot.set(0, 0);
+      gfx.position.set(baseX + dx, baseY + dy);
+    }
+    gfx.rotation = dRot;
+    gfx.scale.set(sx, sy);
+    gfx.alpha = baseAlpha * alphaMul;
+    // Pixi v8 Container.tint is multiplicative; 0xffffff is identity.
+    (gfx as unknown as { tint: number }).tint = tint;
+  }
+
+  /** Restore the host gfx to its spec-derived baseline (used after the last effect is removed). */
+  private resetHostToBaseline(inst: ShapeInstance): void {
+    const { gfx } = inst.shape;
+    const spec = inst.spec;
+    gfx.pivot.set(0, 0);
+    gfx.position.set(spec.x, spec.y);
+    gfx.rotation = 0;
+    gfx.scale.set(1, 1);
+    gfx.alpha = spec.alpha ?? 1;
+    (gfx as unknown as { tint: number }).tint = 0xffffff;
   }
 
   // ─── Hit-testing ────────────────────────────────────────────────────────
@@ -924,6 +1127,13 @@ export class PrimitivesRenderer {
       this.animated.delete(deco as AnimatedDecoration);
     }
     deco.destroy?.();
+  }
+
+  private disposeEffect(fx: IShapeEffect): void {
+    if (typeof fx.tick === 'function') {
+      this.animatedEffects.delete(fx as AnimatedEffect);
+    }
+    fx.destroy?.();
   }
 }
 

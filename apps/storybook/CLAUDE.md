@@ -10,23 +10,26 @@ Inside each package namespace, the seven core engine concepts each get a folder:
 
 - `Canvas/Shapes/...`      — shape primitives (rectangle, circle, polygon, glyph / icon fills, image fills). In a graph context these are the **nodes**.
 - `Canvas/Connectors/...`  — connector pipeline: `Anchors/`, `Routers/`, `PathStyles/`, `ConnectorTypes/`.
-- `Canvas/Decorations/...` — decorations painted on top of shapes / connectors (glow, badge, etc.). Static by default.
-- `Canvas/Animations/...`  — per-frame motion across any animatable target: shapes, decorations, connectors, the viewport / camera, layer properties. Reserved; no stories yet.
+- `Canvas/Decorations/...` — decorations painted *alongside / on top of* a host (glow, halo, pulse-ring, badge). Additive geometry. Static by default; animated decorations also live here.
+- `Canvas/Effects/...`     — effects that *modulate* a host (shake, breathing, shimmer). No new geometry — they tweak the host's transform or style channels each frame.
+- `Canvas/Animations/...`  — per-frame motion across any animatable target where the *motion itself* is the subject of the story: viewport tweens, camera fly-to, easing comparisons, composed-effects proof stories.
 - `Canvas/Layers/...`      — built-in layers: `BackgroundLayer`, `DevInfoLayer`, `LayersPanelLayer`, etc.
 - `Canvas/Behaviours/...`  — registrable behaviours: `DragPanBehaviour`, `WheelZoomBehaviour`, etc.
 - `Canvas/Events/...`      — canvas / layer event demos.
 
-### Decorations vs. animations
+### Decorations vs. Effects vs. Animations
 
-These are orthogonal concepts and compose:
+These are three orthogonal concepts; they compose. See `packages/canvas/CLAUDE.md` and `architecture-proposal.md` §2.7 for the full story.
 
-- A **decoration** is *what* is drawn — a visual primitive painted on top of a shape or connector. See `packages/canvas/src/primitives/decorations/`. Decorations are static unless they opt into animation.
-- An **animation** is *how a thing changes over time*. Any subclass of `ShapeDecorationBase` can opt in by implementing `tick(deltaMs)`; the renderer auto-registers ticking decorations into its animation set and retires them on a falsy return. Animations are not limited to decorations — the same per-frame model applies to shape position / properties, viewport pan and zoom transitions, camera moves, and layer-level effects.
+- **Decoration** — what is drawn *alongside* a host. Additive geometry painted on top of a shape or connector (glow, halo, pulse-ring, marching-ants, badge). Static by default; can opt into animation via `tick(dt)`. Source: `packages/canvas/src/primitives/decorations/`.
+- **Effect** — a *modulation* of the host itself. No new geometry — transform-effects (`shake`, `breathing`) write `{dx, dy, dRot, sx, sy}` deltas the renderer composes onto the host gfx; style-effects write tint/alpha overrides. Source: `packages/canvas/src/primitives/effects/`.
+- **Animation** — the per-frame `tick(deltaMs)` engine. Both animated decorations and effects opt in via `tick`. Animation also drives camera easing, viewport transitions, etc.
 
 In storybook this means:
 - A static decoration story (e.g. `Glow`) lives under `Canvas/Decorations/`.
-- An animated decoration story (e.g. `PulsatingGlow`, `BreathingGlow`) also lives under `Canvas/Decorations/` — animation is just a property of that decoration.
-- A story whose primary subject is the animation itself — viewport tweens, shape transitions, camera fly-to, easing comparisons — lives under `Canvas/Animations/`.
+- An animated decoration story (e.g. `PulseRing`, `AnimatedGlow`) also lives under `Canvas/Decorations/` — animation is a property of the decoration.
+- An effect story (`Shake`, `Breathing`) lives under `Canvas/Effects/`.
+- A story whose primary subject is the *animation engine itself* — viewport tweens, shape transitions, camera fly-to, easing comparisons, composed-effects proofs — lives under `Canvas/Animations/`.
 
 Rules:
 

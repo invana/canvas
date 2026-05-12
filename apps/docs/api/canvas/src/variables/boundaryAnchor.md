@@ -2,7 +2,7 @@
 
 > `const` **boundaryAnchor**: [`IAnchor`](../type-aliases/IAnchor.md)
 
-Defined in: [packages/canvas/src/primitives/connectors/anchors/boundary.ts:24](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/connectors/anchors/boundary.ts#L24)
+Defined in: [packages/canvas/src/primitives/connectors/anchors/boundary.ts:24](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/connectors/anchors/boundary.ts#L24)
 
 Boundary anchor — snaps the endpoint onto the shape silhouette where the
 ray from the shape's geometric **centre** toward the *other* endpoint

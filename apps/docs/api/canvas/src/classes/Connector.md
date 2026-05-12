@@ -1,6 +1,6 @@
 # Class: Connector
 
-Defined in: [packages/canvas/src/primitives/connectors/Connector.ts:18](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/connectors/Connector.ts#L18)
+Defined in: [packages/canvas/src/primitives/connectors/Connector.ts:18](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/connectors/Connector.ts#L18)
 
 The single concrete connector class. Renders any `Path` natively via
 Pixi commands (`moveTo` / `lineTo` / `quadraticCurveTo` / `bezierCurveTo`),
@@ -20,7 +20,7 @@ wiggle) are added later by extending `ConnectorBase` directly.
 
 > **new Connector**(`host`): `Connector`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:35](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/base/ConnectorBase.ts#L35)
+Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:35](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/base/ConnectorBase.ts#L35)
 
 #### Parameters
 
@@ -42,7 +42,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:35](https://gi
 
 > `protected` `readonly` **bodyGfx**: [`Graphics`](../interfaces/Graphics.md)
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:31](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/base/ConnectorBase.ts#L31)
+Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:31](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/base/ConnectorBase.ts#L31)
 
 #### Inherited from
 
@@ -54,7 +54,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:31](https://gi
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
+Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 #### Inherited from
 
@@ -66,7 +66,7 @@ Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:12](https://gi
 
 > `protected` `readonly` **host**: [`ConnectorHostInfo`](../interfaces/ConnectorHostInfo.md)
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:35](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/base/ConnectorBase.ts#L35)
+Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:35](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/base/ConnectorBase.ts#L35)
 
 #### Inherited from
 
@@ -78,7 +78,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:35](https://gi
 
 > `protected` **path**: [`Path`](../type-aliases/Path.md) = `[]`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:33](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/base/ConnectorBase.ts#L33)
+Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:33](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/base/ConnectorBase.ts#L33)
 
 #### Inherited from
 
@@ -90,7 +90,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:33](https://gi
 
 > `protected` **spec**: [`BaseConnectorSpec`](../interfaces/BaseConnectorSpec.md)
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:32](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/base/ConnectorBase.ts#L32)
+Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:32](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/base/ConnectorBase.ts#L32)
 
 #### Inherited from
 
@@ -102,7 +102,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:32](https://gi
 
 > **destroy**(): `void`
 
-Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
+Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
 
 #### Returns
 
@@ -118,7 +118,7 @@ Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:18](https://gi
 
 > **draw**(`spec`, `path`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:54](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/base/ConnectorBase.ts#L54)
+Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:54](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/base/ConnectorBase.ts#L54)
 
 (Re)paint the connector with a router-resolved `Path`.
 
@@ -146,7 +146,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:54](https://gi
 
 > `protected` **drawGeometry**(`g`, `spec`, `path`, `style?`): `void`
 
-Defined in: [packages/canvas/src/primitives/connectors/Connector.ts:19](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/connectors/Connector.ts#L19)
+Defined in: [packages/canvas/src/primitives/connectors/Connector.ts:19](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/connectors/Connector.ts#L19)
 
 Render the path natively via Pixi commands (`moveTo` / `lineTo` /
 `quadraticCurveTo` / `bezierCurveTo`) plus the spec's stroke (or `style`
@@ -185,7 +185,7 @@ by the base via `paintMarkers`.
 
 > **paintInto**(`g`, `spec`, `path`, `style?`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:67](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/base/ConnectorBase.ts#L67)
+Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:67](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/base/ConnectorBase.ts#L67)
 
 Repaint the connector's full silhouette (path + markers) into a
 caller-supplied `Graphics` with style overrides. Connector decorations
@@ -223,7 +223,7 @@ use this to draw with pixel-identical silhouette coverage.
 
 > `protected` **paintMarkers**(`g`, `spec`, `path`, `style?`, `strokeWidth?`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:106](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/base/ConnectorBase.ts#L106)
+Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:106](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/base/ConnectorBase.ts#L106)
 
 Paint source/target markers anchored at the path endpoints, oriented
 along the local tangent. Looks up each marker's class via

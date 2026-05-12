@@ -647,6 +647,107 @@ export interface IDecorationBase<THostInfo, TStyle = unknown> {
 export type IShapeDecoration<TStyle = unknown> = IDecorationBase<ShapeDecorationHostInfo, TStyle>;
 export type IConnectorDecoration<TStyle = unknown> = IDecorationBase<ConnectorDecorationHostInfo, TStyle>;
 
+// ─── Effects ───────────────────────────────────────────────────────────────
+
+/**
+ * What an effect modulates. Distinguishes effects that wiggle the host's
+ * transform (shake, breathing, jiggle) from effects that override the host's
+ * style channels (shimmer, fade-pulse, color-flash).
+ *
+ * Effects are NOT decorations. A decoration adds geometry alongside the host;
+ * an effect modulates the host itself. Spec is untouched in either case — the
+ * renderer applies the effect's contribution to the host's gfx each frame.
+ */
+export type EffectTarget = 'transform' | 'style';
+
+/**
+ * Per-frame transform contribution from a `target: 'transform'` effect. Each
+ * field is optional and contributes additively (translations + rotation) or
+ * multiplicatively (scale) when the renderer aggregates across all transform
+ * effects attached to the same host. Omitted fields contribute the identity
+ * (0 for additive, 1 for multiplicative).
+ *
+ * Coordinates are in the host shape's parent space (the renderer's world
+ * container) so deltas read like "wiggle the shape 3px right" regardless of
+ * the host's internal local origin.
+ */
+export interface TransformDelta {
+  readonly dx?: number;
+  readonly dy?: number;
+  /** Rotation delta in radians. */
+  readonly dRot?: number;
+  /** Horizontal scale multiplier. Identity = 1. */
+  readonly sx?: number;
+  /** Vertical scale multiplier. Identity = 1. */
+  readonly sy?: number;
+}
+
+/**
+ * Per-frame style override from a `target: 'style'` effect. Channels are
+ * merged across effects with last-writer-wins per channel (insertion order in
+ * the host's effect map). Pixi's tint multiplies the underlying fill, so a
+ * `tint` of `0xffffff` is the identity.
+ */
+export interface StyleOverride {
+  /** Pixi tint (multiplicative). Identity = `0xffffff`. */
+  readonly tint?: number;
+  /** Multiplier on the host's current alpha. Identity = 1. */
+  readonly alpha?: number;
+}
+
+/**
+ * Information a shape effect receives in `mount` / `update`. No `surface`
+ * field — effects don't draw, they modulate. The renderer applies the
+ * effect's `readTransform` / `readStyle` output onto the host gfx each frame.
+ */
+export interface ShapeEffectHostInfo {
+  readonly hostId: string;
+  readonly slot: string;
+  /** Local-space axis-aligned bounding box of the host shape. */
+  readonly bounds: Rect;
+  /** The host shape itself — effects may read shape state but never paint. */
+  readonly shape: IShape;
+}
+
+/**
+ * Common interface for shape and connector effects. Mirrors `IDecorationBase`
+ * but reads modulations instead of drawing geometry. Animated effects expose
+ * `tick(deltaMs)` (renderer advances them each frame); static effects omit it
+ * and only contribute via `readTransform` / `readStyle`.
+ *
+ * An effect declares exactly one of:
+ *  - `readTransform()` when `target === 'transform'`.
+ *  - `readStyle()` when `target === 'style'`.
+ * The renderer ignores whichever isn't relevant for the declared target.
+ */
+export interface IEffectBase<THostInfo, TStyle = unknown> {
+  readonly target: EffectTarget;
+  readonly style: TStyle;
+  mount(host: THostInfo): void;
+  update?(host: THostInfo): void;
+  tick?(deltaMs: number): boolean;
+  readTransform?(): TransformDelta;
+  readStyle?(): StyleOverride;
+  destroy?(): void;
+}
+
+export type IShapeEffect<TStyle = unknown> = IEffectBase<ShapeEffectHostInfo, TStyle>;
+
+export type ShapeEffectCtor<TStyle = unknown> = new (style: TStyle) => IShapeEffect<TStyle>;
+
+/** Same target taxonomy as decorations — effects may be shape-only, connector-only, or both. */
+export type EffectTargetKind = 'shape' | 'connector' | 'both';
+
+export interface RegisterEffectOptions {
+  readonly target: EffectTargetKind;
+}
+
+/** Caller-side payload for `setEffect(id, slot, ...)`. */
+export interface EffectSpec<TStyle = unknown> {
+  readonly kind: string;
+  readonly style: TStyle;
+}
+
 // ─── Constructor types ─────────────────────────────────────────────────────
 
 /**

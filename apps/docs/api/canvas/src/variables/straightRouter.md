@@ -2,7 +2,7 @@
 
 > `const` **straightRouter**: [`IRouter`](../type-aliases/IRouter.md)
 
-Defined in: [packages/canvas/src/primitives/connectors/routers/straight.ts:14](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/primitives/connectors/routers/straight.ts#L14)
+Defined in: [packages/canvas/src/primitives/connectors/routers/straight.ts:14](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/connectors/routers/straight.ts#L14)
 
 Direct line from source through any waypoints to target.
 Output: `[source, ...waypoints, target]` — a flat polyline.

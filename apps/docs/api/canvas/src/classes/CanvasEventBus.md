@@ -1,6 +1,6 @@
 # Class: CanvasEventBus
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:101](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L101)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:101](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/CanvasEventBus.ts#L101)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [packages/canvas/src/events/CanvasEventBus.ts:101](https://github.co
 
 > **new CanvasEventBus**(`opts?`): `CanvasEventBus`
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:105](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L105)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:105](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/CanvasEventBus.ts#L105)
 
 #### Parameters
 
@@ -34,7 +34,7 @@ Defined in: [packages/canvas/src/events/CanvasEventBus.ts:105](https://github.co
 
 > **clearTaps**(): `void`
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:180](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L180)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:180](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/CanvasEventBus.ts#L180)
 
 Drop all tap subscribers. Used on canvas teardown.
 
@@ -48,7 +48,7 @@ Drop all tap subscribers. Used on canvas teardown.
 
 > **emit**\<`K`\>(`event`, `payload`): `void`
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:119](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L119)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:119](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/CanvasEventBus.ts#L119)
 
 Override of `EventEmitter.emit` so canvas-wide events ALSO reach the tap
 channel (per `architecture-proposal.md` §2.5: "every emitter — canvas,
@@ -88,7 +88,7 @@ tap handler is isolated by `publish()`.
 
 > **listenerCount**(`event`): `number`
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:105](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L105)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:105](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/EventEmitter.ts#L105)
 
 Number of handlers registered for an event. Useful in tests.
 
@@ -112,7 +112,7 @@ keyof [`CanvasGlobalEvents`](../interfaces/CanvasGlobalEvents.md)
 
 > **off**\<`K`\>(`event`, `handler`): `void`
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:57](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L57)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:57](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/EventEmitter.ts#L57)
 
 Unsubscribe a specific handler.
 No-op if the handler wasn't registered.
@@ -147,7 +147,7 @@ No-op if the handler wasn't registered.
 
 > **on**\<`K`\>(`event`, `handler`): () => `void`
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:31](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L31)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:31](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/EventEmitter.ts#L31)
 
 Subscribe to an event. Returns an unsubscribe function for ergonomic cleanup.
 
@@ -181,7 +181,7 @@ Subscribe to an event. Returns an unsubscribe function for ergonomic cleanup.
 
 > **once**\<`K`\>(`event`, `handler`): () => `void`
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:45](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L45)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:45](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/EventEmitter.ts#L45)
 
 Subscribe once. The handler fires at most once and auto-removes itself.
 Returns an unsubscribe function in case you want to cancel before it fires.
@@ -216,7 +216,7 @@ Returns an unsubscribe function in case you want to cancel before it fires.
 
 > **publish**(`event`): `void`
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:159](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L159)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:159](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/CanvasEventBus.ts#L159)
 
 Publish an envelope to all tap subscribers. Called by `SourceEmitter`
 (and by canvas-internal code that emits envelopes directly).
@@ -243,7 +243,7 @@ No allocation per call other than what the handlers themselves do.
 
 > **removeAllListeners**(`event?`): `void`
 
-Defined in: [packages/canvas/src/events/EventEmitter.ts:94](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/EventEmitter.ts#L94)
+Defined in: [packages/canvas/src/events/EventEmitter.ts:94](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/EventEmitter.ts#L94)
 
 Remove all listeners for one event, or all events if no event is given.
 
@@ -267,7 +267,7 @@ keyof [`CanvasGlobalEvents`](../interfaces/CanvasGlobalEvents.md)
 
 > **tap**(`handler`, `opts?`): () => `void`
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:137](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L137)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:137](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/CanvasEventBus.ts#L137)
 
 Subscribe to the tap channel. Returns an unsubscribe function.
 
@@ -297,7 +297,7 @@ just like local emitter handlers — one bad sink can't break the rest.
 
 > **tapCount**(): `number`
 
-Defined in: [packages/canvas/src/events/CanvasEventBus.ts:175](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/events/CanvasEventBus.ts#L175)
+Defined in: [packages/canvas/src/events/CanvasEventBus.ts:175](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/CanvasEventBus.ts#L175)
 
 Number of currently registered tap subscribers. Useful in tests.
 

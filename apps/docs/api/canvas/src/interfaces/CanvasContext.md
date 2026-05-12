@@ -1,6 +1,6 @@
 # Interface: CanvasContext
 
-Defined in: [packages/canvas/src/context/CanvasContext.ts:22](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/context/CanvasContext.ts#L22)
+Defined in: [packages/canvas/src/context/CanvasContext.ts:22](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/context/CanvasContext.ts#L22)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [packages/canvas/src/context/CanvasContext.ts:22](https://github.com
 
 > `readonly` **behaviours**: [`BehaviourRegistry`](../classes/BehaviourRegistry.md)
 
-Defined in: [packages/canvas/src/context/CanvasContext.ts:31](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/context/CanvasContext.ts#L31)
+Defined in: [packages/canvas/src/context/CanvasContext.ts:31](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/context/CanvasContext.ts#L31)
 
 Behaviour registry — `register / setEnabled / get<T>(id) / list`.
 Behaviours never auto-enable; the developer registers + enables explicitly
@@ -20,7 +20,7 @@ Behaviours never auto-enable; the developer registers + enables explicitly
 
 > `readonly` **camera**: [`Camera`](../classes/Camera.md)
 
-Defined in: [packages/canvas/src/context/CanvasContext.ts:34](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/context/CanvasContext.ts#L34)
+Defined in: [packages/canvas/src/context/CanvasContext.ts:34](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/context/CanvasContext.ts#L34)
 
 Camera — pan/zoom/projection. Wraps a `pixi-viewport` `Viewport`.
 
@@ -30,7 +30,7 @@ Camera — pan/zoom/projection. Wraps a `pixi-viewport` `Viewport`.
 
 > `readonly` `optional` **canvasElement?**: `HTMLCanvasElement`
 
-Defined in: [packages/canvas/src/context/CanvasContext.ts:62](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/context/CanvasContext.ts#L62)
+Defined in: [packages/canvas/src/context/CanvasContext.ts:62](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/context/CanvasContext.ts#L62)
 
 The underlying HTMLCanvasElement when running in DOM mode (`Canvas.init`).
 Undefined for `Canvas.initWithStage` (headless / test path). Layers that
@@ -43,7 +43,7 @@ read this to find a parent element and to attach native DOM listeners.
 
 > `readonly` **events**: [`CanvasEventBus`](../classes/CanvasEventBus.md)
 
-Defined in: [packages/canvas/src/context/CanvasContext.ts:37](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/context/CanvasContext.ts#L37)
+Defined in: [packages/canvas/src/context/CanvasContext.ts:37](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/context/CanvasContext.ts#L37)
 
 Canvas-wide event bus + telemetry tap channel.
 
@@ -53,7 +53,7 @@ Canvas-wide event bus + telemetry tap channel.
 
 > `readonly` **layers**: [`LayerRegistry`](../classes/LayerRegistry.md)
 
-Defined in: [packages/canvas/src/context/CanvasContext.ts:24](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/context/CanvasContext.ts#L24)
+Defined in: [packages/canvas/src/context/CanvasContext.ts:24](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/context/CanvasContext.ts#L24)
 
 Layer registry — `add / remove / get<T>(id) / list / byZOrder`.
 
@@ -63,7 +63,7 @@ Layer registry — `add / remove / get<T>(id) / list / byZOrder`.
 
 > `readonly` **stage**: `Container`
 
-Defined in: [packages/canvas/src/context/CanvasContext.ts:54](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/context/CanvasContext.ts#L54)
+Defined in: [packages/canvas/src/context/CanvasContext.ts:54](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/context/CanvasContext.ts#L54)
 
 The pixi `app.stage` (or test stage) — the renderer root. `ScreenLayer.mount`
 attaches its root container here, as a sibling of `world`. Pixi's child
@@ -76,7 +76,7 @@ root is added after (above). No screen-wrapper container exists.
 
 > `readonly` **world**: `Container`
 
-Defined in: [packages/canvas/src/context/CanvasContext.ts:46](https://github.com/invana/canvas/blob/fb7f42e39d0dedbf8d9472a5a1f5ae0c776661da/packages/canvas/src/context/CanvasContext.ts#L46)
+Defined in: [packages/canvas/src/context/CanvasContext.ts:46](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/context/CanvasContext.ts#L46)
 
 The world container — a `pixi-viewport` `Viewport` instance. Camera-
 transformed; `WorldLayer.mount` attaches its root sub-layer container

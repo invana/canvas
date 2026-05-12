@@ -7,8 +7,8 @@ import { ShapeDecorationBase } from '../../base/ShapeDecorationBase';
  * whatever silhouette the host paints. Works on every shape that
  * implements `paintInto` (everything extending `ShapeBase`).
  *
- * Static — does not animate. Future variants (pulsating glow, breathing
- * glow) will extend this and add a `tick`.
+ * Static by default. Supply `pulse` to animate brightness sinusoidally —
+ * the renderer will register `tick` and advance the phase each frame.
  */
 export interface GlowDecorationStyle {
   readonly color: number;
@@ -18,10 +18,22 @@ export interface GlowDecorationStyle {
   readonly layers?: number;
   /** Innermost (brightest) layer alpha. Default `0.55`. */
   readonly innerAlpha?: number;
+  /**
+   * Optional brightness pulse. When omitted, the glow is static. When set,
+   * the decoration alpha-multiplies between `1` and `1 - amplitude` on a
+   * sinusoidal cycle of `periodMs` milliseconds.
+   */
+  readonly pulse?: {
+    /** Cycle length in ms. Default `1200`. */
+    readonly periodMs?: number;
+    /** How far below full brightness the dim phase reaches, `[0, 1]`. Default `0.5`. */
+    readonly amplitude?: number;
+  };
 }
 
 export class GlowDecoration extends ShapeDecorationBase<GlowDecorationStyle> {
   private layerGfx: Graphics[] = [];
+  private pulseElapsed = 0;
 
   protected repaint(): void {
     const host = this.host;
@@ -51,6 +63,22 @@ export class GlowDecoration extends ShapeDecorationBase<GlowDecorationStyle> {
       g.clear();
       shape.paintInto(g, { color, alpha, strokeWidth, fill: false });
     }
+  }
+
+  /**
+   * Advance the optional pulse phase. Geometry is repainted once at mount
+   * (cheap) and never again — only `this.gfx.alpha` is touched per frame,
+   * so animated pulse is essentially free.
+   */
+  tick(deltaMs: number): boolean {
+    if (!this.style.pulse) return false;
+    this.pulseElapsed += deltaMs;
+    const period = this.style.pulse.periodMs ?? 1200;
+    const amplitude = this.style.pulse.amplitude ?? 0.5;
+    const phase = (this.pulseElapsed / period) * Math.PI * 2;
+    // Map sin from [-1, 1] to [1 - amplitude, 1].
+    this.gfx.alpha = 1 - amplitude * (0.5 - 0.5 * Math.sin(phase));
+    return true;
   }
 
   private syncLayerCount(n: number): void {

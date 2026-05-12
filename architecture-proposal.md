@@ -719,11 +719,36 @@ canvas.tick(deltaMs):
 |---|---|---|
 | `halo` | static | Solid blurred ring outside host bounds |
 | `border` | static | Outline; supports `dash: [on, off]` for dashed |
-| `glow` | static | Soft outer glow via filter |
+| `glow` | static (animated via `pulse` option) | Soft outer glow; optional brightness pulse |
 | `marching-ants` | **animated** | Dashed border with scrolling `dashOffset` |
 | `pulse-ring` | **animated** | Expanding ring(s) radiating from host; configurable count, period, easing |
 
 Domain packages register their own (`@invana/er-diagram` ships a `conflict-warning` badge, etc.) without touching `@invana/canvas`.
+
+#### Effects — modulations of the host
+
+Decorations add geometry next to a host. **Effects modulate the host itself.** A separate primitive kind alongside decorations, registered through `renderer.registerEffect(kind, ctor, { target })` and attached via `renderer.setEffect(targetId, slot, spec | null)`.
+
+Two `target` flavours:
+- `target: 'transform'` — writes `{dx, dy, dRot, sx, sy}` deltas. The renderer aggregates across every transform-effect attached to the host (additive translation + rotation, multiplicative scale), pivots around the host's bounds-centre, and applies to the host's `gfx`. Spec is untouched. Examples: `shake`, `breathing`, `jiggle`, `bounce`.
+- `target: 'style'` — writes `{tint, alpha}` overrides via Pixi's multiplicative `Container.tint` / `Container.alpha`. Last-writer-wins per channel. Examples: shimmer, color-flash, fade-pulse.
+
+Effects don't own a Pixi container — they have no `gfx` to attach. That's the structural difference from `PrimitiveBase` children (shapes / connectors / decorations) which all draw into their own container.
+
+Stacking is identical to decorations: multiple effects per host, slot-keyed. A single shape can simultaneously carry shake + breathing + animated-glow + pulse-ring; the renderer composes them every frame.
+
+Built-in effects shipped with `@invana/canvas`:
+
+| Kind | Target | Visual |
+|---|---|---|
+| `shake` | transform | Random per-frame jitter; optional `decayMs` envelope tween for one-shot shake-on-event |
+| `breathing` | transform | Sinusoidal scale around the host's bounds-centre; configurable period + amplitude |
+
+#### Animation primitive (`Tween`)
+
+The shared interpolation primitive used by every animated decoration and effect. Constructed with `{from, to, duration, easing?, repeat?, yoyo?, onUpdate?, onComplete?}` — `tick(dt)` advances and returns `false` when finished. Reach for `Tween` instead of rolling per-class easing math; the easings module ships `linear`, `easeInOutSine`, `easeOutCubic`, `easeInOutCubic`. The Canvas tick walks the renderer's animated-decoration and animated-effect sets each frame; Tweens are held *inside* those classes and driven from their `tick` methods — there is no separate global tween runner.
+
+Per `architecture-proposal.md` §2.1, Canvas owns the single RAF. Animation is not its own primitive kind — it's the time engine that any primitive opts into.
 
 #### Domain-package sugar
 
@@ -741,7 +766,7 @@ class GraphLayer extends WorldLayer<...> {
 
 The layer's `flush()` projects state → `renderer.setDecoration(...)`. App code uses the friendly methods; the renderer stays generic; state remains the single source of truth so devtools, time-travel, and telemetry catch every change.
 
-**Out of scope.** Shape-transform animations (the shape itself scaling / rotating / moving along a path) belong to a separate animation/tween system, not the decoration model. Cross-shape "group halos" are layer-level — emit a temporary `Shape`, not a `Decoration`. Per-vertex shader effects (custom WebGPU passes) deferred until a real use case appears.
+**Out of scope.** Cross-shape "group halos" are layer-level — emit a temporary `Shape`, not a `Decoration`. Per-vertex shader effects (custom WebGPU passes) deferred until a real use case appears. *Note: shape-transform animations are no longer out of scope — they're modelled as `target: 'transform'` effects (`shake`, `breathing`) per the Effects section above.*
 
 ---
 
