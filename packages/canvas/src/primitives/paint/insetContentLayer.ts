@@ -24,6 +24,7 @@ import {
 } from 'pixi.js';
 import type {
   InsetAnchor,
+  Point,
   Rect,
   ShapeFillLayer,
   ShapeHostInfo,
@@ -55,16 +56,17 @@ export function mountInsetContent(
   layer: InsetLayer,
   bounds: Rect,
   host: ShapeHostInfo,
+  visualCenter?: Point,
 ): InsetContentView {
   const gfx = new Container();
   gfx.label = `inset:${layer.kind}`;
   gfx.zIndex = 10;
-  const reposition = () => positionAndScale(gfx, view.child, layer, bounds);
+  const reposition = () => positionAndScale(gfx, view.child, layer, bounds, visualCenter);
   const child = renderChild(layer, host, reposition);
   gfx.addChild(child);
   parent.addChild(gfx);
   const view: InsetContentView = { gfx, child, key: layerKey(layer) };
-  positionAndScale(gfx, child, layer, bounds);
+  positionAndScale(gfx, child, layer, bounds, visualCenter);
   return view;
 }
 
@@ -73,18 +75,19 @@ export function updateInsetContent(
   layer: InsetLayer,
   bounds: Rect,
   host: ShapeHostInfo,
+  visualCenter?: Point,
 ): void {
   const key = layerKey(layer);
   if (key !== view.key) {
     view.child.destroy();
-    const reposition = () => positionAndScale(view.gfx, view.child, layer, bounds);
+    const reposition = () => positionAndScale(view.gfx, view.child, layer, bounds, visualCenter);
     const fresh = renderChild(layer, host, reposition);
     view.gfx.removeChildren();
     view.gfx.addChild(fresh);
     view.child = fresh;
     view.key = key;
   }
-  positionAndScale(view.gfx, view.child, layer, bounds);
+  positionAndScale(view.gfx, view.child, layer, bounds, visualCenter);
 }
 
 export function destroyInsetContent(view: InsetContentView): void {
@@ -190,6 +193,7 @@ function positionAndScale(
   child: Text | Graphics | Sprite,
   layer: InsetLayer,
   bounds: Rect,
+  visualCenter?: Point,
 ): void {
   // Sprites need their texture to determine natural size; defer until ready.
   if (child instanceof Sprite && (!child.texture || !child.texture.width)) {
@@ -206,8 +210,10 @@ function positionAndScale(
   child.scale.set(scale);
 
   // Position the host container at the anchor point on the shape's bounds.
+  // `visualCenter` overrides the AABB midpoint for the `center` anchor only
+  // — corner anchors stay bounds-relative.
   const anchor = layer.anchor ?? 'center';
-  const [ax, ay] = anchorPoint(anchor, bounds);
+  const [ax, ay] = anchorPoint(anchor, bounds, visualCenter);
   host.position.set(ax, ay);
 
   // Centre the child within the host container — `getLocalBounds` may not be
@@ -247,7 +253,11 @@ function isCornerAnchor(a: InsetAnchor): boolean {
   return a === 'top-left' || a === 'top-right' || a === 'bottom-left' || a === 'bottom-right';
 }
 
-function anchorPoint(anchor: InsetAnchor, b: Rect): [number, number] {
+function anchorPoint(
+  anchor: InsetAnchor,
+  b: Rect,
+  visualCenter?: Point,
+): [number, number] {
   const inset = Math.min(b.width, b.height) * 0.15;
   switch (anchor) {
     case 'top-left':     return [b.x + inset, b.y + inset];
@@ -255,7 +265,10 @@ function anchorPoint(anchor: InsetAnchor, b: Rect): [number, number] {
     case 'bottom-left':  return [b.x + inset, b.y + b.height - inset];
     case 'bottom-right': return [b.x + b.width - inset, b.y + b.height - inset];
     case 'center':
-    default:             return [b.x + b.width / 2, b.y + b.height / 2];
+    default:
+      return visualCenter
+        ? [visualCenter.x, visualCenter.y]
+        : [b.x + b.width / 2, b.y + b.height / 2];
   }
 }
 

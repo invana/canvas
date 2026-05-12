@@ -30,6 +30,9 @@ export type { Easing } from './animation/easings';
 // ─── Built-in primitives ──────────────────────────────────────────────────
 export { CircleShape } from './shapes/CircleShape';
 export { RectShape } from './shapes/RectShape';
+export { PolygonShape } from './shapes/PolygonShape';
+export { RegularPolygonShape } from './shapes/RegularPolygonShape';
+export { StarShape } from './shapes/StarShape';
 export { Connector } from './connectors/Connector';
 export { ArrowMarker, arrowMarkerSpec } from './markers/ArrowMarker';
 export type { ArrowMarkerSpec } from './markers/ArrowMarker';
@@ -140,6 +143,9 @@ export type {
   BaseShapeSpec,
   CircleSpec,
   RectSpec,
+  PolygonSpec,
+  RegularPolygonSpec,
+  StarSpec,
   MarkerShapeSpec,
 
   BaseConnectorSpec,

@@ -385,6 +385,45 @@ export interface RectSpec extends BaseShapeSpec {
 }
 
 /**
+ * Free-form polygon. `vertices` are centre-relative — the silhouette is
+ * traced around the origin, then translated to `(x, y)`. Closed implicitly:
+ * the last vertex connects back to the first. Use this for arbitrary
+ * outlines (arrows, blobs, callouts). For regular n-gons or stars prefer
+ * `RegularPolygonSpec` / `StarSpec` — they're cheaper to author.
+ */
+export interface PolygonSpec extends BaseShapeSpec {
+  readonly kind: 'polygon';
+  readonly vertices: ReadonlyArray<Point>;
+}
+
+/**
+ * Regular n-gon centred at `(x, y)` with circum-radius `radius`. Covers
+ * triangle (`sides: 3`), pentagon, hexagon (pointy-top by default — pass
+ * `rotation: Math.PI / 6` for flat-top), octagon, etc. `rotation` is in
+ * radians; positive rotates counter-clockwise in screen space.
+ */
+export interface RegularPolygonSpec extends BaseShapeSpec {
+  readonly kind: 'regular-polygon';
+  readonly sides: number;
+  readonly radius: number;
+  readonly rotation?: number;
+}
+
+/**
+ * Star centred at `(x, y)`, with `points` outer points alternating between
+ * `outerRadius` and `innerRadius`. Classic 5-point star uses
+ * `points: 5, outerRadius: r, innerRadius: r * 0.4`. `rotation` is in
+ * radians; positive rotates counter-clockwise.
+ */
+export interface StarSpec extends BaseShapeSpec {
+  readonly kind: 'star';
+  readonly points: number;
+  readonly innerRadius: number;
+  readonly outerRadius: number;
+  readonly rotation?: number;
+}
+
+/**
  * A marker spec is any registered shape spec **without** `x` / `y` — the
  * connector positions and orients the marker at the polyline endpoint.
  * Reuses the shape registry: there is no separate marker registry. The
@@ -594,6 +633,16 @@ export interface IShape<TSpec extends BaseShapeSpec = BaseShapeSpec> {
   paintInto?(g: Graphics, style?: ShapePaintStyle): void;
   /** Optional precise containment in shape-local coordinates. */
   contains?(localX: number, localY: number): boolean;
+  /**
+   * Optional shape-local "visual centre" — the point inset-content layers
+   * with `anchor: 'center'` snap to. Defaults to the AABB midpoint when
+   * omitted, which is correct for `CircleShape` and `RectShape` (their
+   * silhouette fills the AABB). Non-rectangular shapes — triangle, hexagon,
+   * star, free-form polygon — override to return the geometric centroid
+   * (typically the shape's local origin), so a glyph drawn on a triangle
+   * sits on the visual centroid instead of floating above it.
+   */
+  visualCenter?(): Point;
   /**
    * Optional analytical boundary-intersection in shape-local coordinates,
    * **relative to the shape's geometric centre** (NOT its `(0, 0)` origin).

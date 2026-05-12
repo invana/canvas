@@ -107,6 +107,20 @@ export abstract class ShapeBase<TSpec extends BaseShapeSpec>
   }
 
   /**
+   * Visual centre — the point inset content with `anchor: 'center'` snaps
+   * to. Default is the AABB midpoint of `bounds()`, which is correct for
+   * `CircleShape` (bounds is centred on origin) and `RectShape` (bounds is
+   * the rect itself). Shapes whose silhouette doesn't fill its AABB —
+   * triangle, hexagon, star, free-form polygon — override to return the
+   * geometric centroid so a glyph drawn on a triangle sits on the visual
+   * centroid instead of floating above it.
+   */
+  visualCenter(): Point {
+    const b = this.bounds();
+    return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+  }
+
+  /**
    * Diff the spec's inset-content fill layers (`glyph` / `svg` /
    * `image-inset`) against the current `insetViews` map, keyed by layer
    * index. Mounts new layers, updates existing ones, destroys removed ones.
@@ -114,14 +128,15 @@ export abstract class ShapeBase<TSpec extends BaseShapeSpec>
   private syncInsetLayers(spec: TSpec): void {
     const layers = insetLayersByIndex(spec.fill);
     const bounds = this.bounds();
+    const centre = this.visualCenter();
 
     // Mount or update layers present in the new spec.
     for (const [index, layer] of layers) {
       const existing = this.insetViews.get(index);
       if (existing) {
-        updateInsetContent(existing, layer, bounds, this.host);
+        updateInsetContent(existing, layer, bounds, this.host, centre);
       } else {
-        const view = mountInsetContent(this.gfx, layer, bounds, this.host);
+        const view = mountInsetContent(this.gfx, layer, bounds, this.host, centre);
         this.insetViews.set(index, view);
       }
     }

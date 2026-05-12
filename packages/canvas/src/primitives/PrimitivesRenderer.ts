@@ -40,6 +40,9 @@ import { ShapeInstance } from '../instancing/ShapeInstance';
 import { ConnectorInstance } from '../instancing/ConnectorInstance';
 import { CircleShape } from './shapes/CircleShape';
 import { RectShape } from './shapes/RectShape';
+import { PolygonShape } from './shapes/PolygonShape';
+import { RegularPolygonShape } from './shapes/RegularPolygonShape';
+import { StarShape } from './shapes/StarShape';
 import { Connector } from './connectors/Connector';
 import { straightRouter } from './connectors/routers/straight';
 import { orthRouter } from './connectors/routers/orth';
@@ -208,6 +211,9 @@ export class PrimitivesRenderer {
   private registerBuiltins(): void {
     this.registerShape('circle', CircleShape);
     this.registerShape('rect', RectShape);
+    this.registerShape('polygon', PolygonShape);
+    this.registerShape('regular-polygon', RegularPolygonShape);
+    this.registerShape('star', StarShape);
     // Markers are shapes — registered through the same shape registry so
     // they can also be added directly via `addShape` and so connectors can
     // resolve them by `kind` from the read-only registry.
