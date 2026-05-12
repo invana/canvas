@@ -29,13 +29,24 @@ export abstract class ConnectorBase<TSpec extends BaseConnectorSpec>
   implements IConnector<TSpec>
 {
   protected readonly bodyGfx: Graphics;
+  protected readonly sourceMarkerGfx: Graphics;
+  protected readonly targetMarkerGfx: Graphics;
   protected spec!: TSpec;
   protected path: Path = [];
 
   constructor(protected readonly host: ConnectorHostInfo) {
     super();
+    // Three siblings under `gfx` so decorations can hide each piece
+    // independently. A reveal animation, for example, hides the body line
+    // and the "ending" marker (the one the reveal is sweeping toward),
+    // leaves the "starting" marker visible, and pops the ending marker in
+    // when the line reaches it.
     this.bodyGfx = new Graphics();
+    this.sourceMarkerGfx = new Graphics();
+    this.targetMarkerGfx = new Graphics();
     this.gfx.addChild(this.bodyGfx);
+    this.gfx.addChild(this.sourceMarkerGfx);
+    this.gfx.addChild(this.targetMarkerGfx);
   }
 
   /**
@@ -58,10 +69,13 @@ export abstract class ConnectorBase<TSpec extends BaseConnectorSpec>
     this.gfx.visible = spec.visible ?? true;
     this.gfx.zIndex = spec.zIndex ?? 0;
     this.bodyGfx.clear();
+    this.sourceMarkerGfx.clear();
+    this.targetMarkerGfx.clear();
     const strokeWidth = resolveStrokeWidth(spec);
     const bodyPath = this.trimPathForMarkers(spec, path, strokeWidth);
     this.drawGeometry(this.bodyGfx, spec, bodyPath);
-    this.paintMarkers(this.bodyGfx, spec, path, undefined, strokeWidth);
+    this.paintSourceMarker(this.sourceMarkerGfx, spec, path, undefined, strokeWidth);
+    this.paintTargetMarker(this.targetMarkerGfx, spec, path, undefined, strokeWidth);
   }
 
   paintInto(g: Graphics, spec: TSpec, path: Path, style?: ConnectorPaintStyle): void {
@@ -88,6 +102,26 @@ export abstract class ConnectorBase<TSpec extends BaseConnectorSpec>
    */
   getVisiblePath(spec: TSpec, path: Path): Path {
     return this.trimPathForMarkers(spec, path, resolveStrokeWidth(spec));
+  }
+
+  /**
+   * Toggle the body stroke without affecting markers or decoration children.
+   * Body, source marker, and target marker live in three sibling Graphics
+   * under `gfx`, so each can be hidden independently. The next `draw()`
+   * re-strokes the body but preserves the hidden state.
+   */
+  setBodyVisible(visible: boolean): void {
+    this.bodyGfx.visible = visible;
+  }
+
+  /** Toggle just the source-endpoint marker. See `setBodyVisible`. */
+  setSourceMarkerVisible(visible: boolean): void {
+    this.sourceMarkerGfx.visible = visible;
+  }
+
+  /** Toggle just the target-endpoint marker. See `setBodyVisible`. */
+  setTargetMarkerVisible(visible: boolean): void {
+    this.targetMarkerGfx.visible = visible;
   }
 
   /**
@@ -135,57 +169,81 @@ export abstract class ConnectorBase<TSpec extends BaseConnectorSpec>
      */
     haloStrokeWidth: number = strokeWidth,
   ): void {
-    if (path.length < 2) return;
+    this.paintSourceMarker(g, spec, path, style, strokeWidth, haloStrokeWidth);
+    this.paintTargetMarker(g, spec, path, style, strokeWidth, haloStrokeWidth);
+  }
+
+  protected paintSourceMarker(
+    g: Graphics,
+    spec: TSpec,
+    path: Path,
+    style?: ConnectorPaintStyle,
+    strokeWidth: number = resolveStrokeWidth(spec),
+    haloStrokeWidth: number = strokeWidth,
+  ): void {
+    if (!spec.sourceMarker || path.length < 2) return;
     const m = path[0]!;
     const last = path[path.length - 1]!;
-    if (m.kind !== 'M') return;
-    if (last.kind === 'M') return;
-
-    const markerStyle: ShapePaintStyle | undefined = style?.tintMarkers
-      ? style.markerHalo
-        ? {
-            // Halo mode: outline the marker silhouette at the halo width.
-            // `fill: false` tells the marker class to stroke instead of fill.
-            color: style.color ?? 0x000000,
-            alpha: style.alpha,
-            fill: false,
-            strokeWidth: haloStrokeWidth,
-          }
-        : {
-            color: style.color ?? 0x000000,
-            alpha: style.alpha,
-            fill: true,
-          }
-      : undefined;
-
-    if (spec.sourceMarker) {
-      const t = tangentAt(path, 0);
-      const angleRad = Math.atan2(-t.y, -t.x);
-      paintMarkerAt(
-        g,
-        this.host.shapeRegistry,
-        spec.sourceMarker,
-        { x: m.x, y: m.y },
-        angleRad,
-        markerStyle,
-        strokeWidth,
-      );
-    }
-
-    if (spec.targetMarker) {
-      const t = tangentAt(path, 1);
-      const angleRad = Math.atan2(t.y, t.x);
-      paintMarkerAt(
-        g,
-        this.host.shapeRegistry,
-        spec.targetMarker,
-        { x: last.x, y: last.y },
-        angleRad,
-        markerStyle,
-        strokeWidth,
-      );
-    }
+    if (m.kind !== 'M' || last.kind === 'M') return;
+    const markerStyle = resolveMarkerStyle(style, haloStrokeWidth);
+    const t = tangentAt(path, 0);
+    const angleRad = Math.atan2(-t.y, -t.x);
+    paintMarkerAt(
+      g,
+      this.host.shapeRegistry,
+      spec.sourceMarker,
+      { x: m.x, y: m.y },
+      angleRad,
+      markerStyle,
+      strokeWidth,
+    );
   }
+
+  protected paintTargetMarker(
+    g: Graphics,
+    spec: TSpec,
+    path: Path,
+    style?: ConnectorPaintStyle,
+    strokeWidth: number = resolveStrokeWidth(spec),
+    haloStrokeWidth: number = strokeWidth,
+  ): void {
+    if (!spec.targetMarker || path.length < 2) return;
+    const m = path[0]!;
+    const last = path[path.length - 1]!;
+    if (m.kind !== 'M' || last.kind === 'M') return;
+    const markerStyle = resolveMarkerStyle(style, haloStrokeWidth);
+    const t = tangentAt(path, 1);
+    const angleRad = Math.atan2(t.y, t.x);
+    paintMarkerAt(
+      g,
+      this.host.shapeRegistry,
+      spec.targetMarker,
+      { x: last.x, y: last.y },
+      angleRad,
+      markerStyle,
+      strokeWidth,
+    );
+  }
+}
+
+function resolveMarkerStyle(
+  style: ConnectorPaintStyle | undefined,
+  haloStrokeWidth: number,
+): ShapePaintStyle | undefined {
+  if (!style?.tintMarkers) return undefined;
+  if (style.markerHalo) {
+    return {
+      color: style.color ?? 0x000000,
+      alpha: style.alpha,
+      fill: false,
+      strokeWidth: haloStrokeWidth,
+    };
+  }
+  return {
+    color: style.color ?? 0x000000,
+    alpha: style.alpha,
+    fill: true,
+  };
 }
 
 /**

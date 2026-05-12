@@ -65,9 +65,11 @@ import { FlyMarkerConnectorDecoration } from './decorations/connector/FlyMarkerC
 import { FlowParticlesConnectorDecoration } from './decorations/connector/FlowParticlesConnectorDecoration';
 import { GlowConnectorDecoration } from './decorations/connector/GlowConnectorDecoration';
 import { RippleConnectorDecoration } from './decorations/connector/RippleConnectorDecoration';
+import { RevealConnectorDecoration } from './decorations/connector/RevealConnectorDecoration';
 import { ShakeEffect } from './effects/shape/ShakeEffect';
 import { BreathingEffect } from './effects/shape/BreathingEffect';
 import { BreathingConnectorEffect } from './effects/connector/BreathingConnectorEffect';
+import { FadeInConnectorEffect } from './effects/connector/FadeInConnectorEffect';
 import { resolveBadgePosition } from './badges/placement';
 import type { BadgeOptions } from './badges/types';
 import type {
@@ -242,10 +244,12 @@ export class PrimitivesRenderer {
     this.registerDecoration('flow-particles-connector', FlowParticlesConnectorDecoration, { target: 'connector' });
     this.registerDecoration('glow-connector', GlowConnectorDecoration, { target: 'connector' });
     this.registerDecoration('ripple-connector', RippleConnectorDecoration, { target: 'connector' });
+    this.registerDecoration('reveal-connector', RevealConnectorDecoration, { target: 'connector' });
 
     this.registerEffect('shake', ShakeEffect, { target: 'shape' });
     this.registerEffect('breathing', BreathingEffect, { target: 'shape' });
     this.registerEffect('breathing-connector', BreathingConnectorEffect, { target: 'connector' });
+    this.registerEffect('fade-in-connector', FadeInConnectorEffect, { target: 'connector' });
   }
 
   // ─── Registries ─────────────────────────────────────────────────────────

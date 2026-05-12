@@ -72,6 +72,14 @@ export { GlowConnectorDecoration } from './decorations/connector/GlowConnectorDe
 export type { GlowConnectorDecorationStyle } from './decorations/connector/GlowConnectorDecoration';
 export { RippleConnectorDecoration } from './decorations/connector/RippleConnectorDecoration';
 export type { RippleConnectorDecorationStyle } from './decorations/connector/RippleConnectorDecoration';
+export { RevealConnectorDecoration } from './decorations/connector/RevealConnectorDecoration';
+export type {
+  RevealConnectorDecorationStyle,
+  RevealDirection,
+  RevealEasingName,
+  RevealHostStroke,
+  RevealRepeat,
+} from './decorations/connector/RevealConnectorDecoration';
 
 // ─── Built-in effects ──────────────────────────────────────────────────────
 export { ShakeEffect } from './effects/shape/ShakeEffect';
@@ -80,6 +88,11 @@ export { BreathingEffect } from './effects/shape/BreathingEffect';
 export type { BreathingEffectStyle } from './effects/shape/BreathingEffect';
 export { BreathingConnectorEffect } from './effects/connector/BreathingConnectorEffect';
 export type { BreathingConnectorEffectStyle } from './effects/connector/BreathingConnectorEffect';
+export { FadeInConnectorEffect } from './effects/connector/FadeInConnectorEffect';
+export type {
+  FadeInConnectorEffectStyle,
+  FadeInEasingName,
+} from './effects/connector/FadeInConnectorEffect';
 
 // ─── Badges ────────────────────────────────────────────────────────────────
 export type { BadgeOptions, BadgePlacement } from './badges/types';

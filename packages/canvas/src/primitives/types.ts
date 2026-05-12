@@ -655,6 +655,19 @@ export interface IConnector<TSpec extends BaseConnectorSpec = BaseConnectorSpec>
    * Returns the input path unchanged when no markers are configured.
    */
   getVisiblePath(spec: TSpec, path: Path): Path;
+  /**
+   * Toggle the body stroke without affecting markers or decoration children.
+   * Body, source marker, and target marker live in three sibling Graphics
+   * under `gfx`, so each can be hidden independently — used by a reveal
+   * animation that owns the visible line and pops the ending marker in
+   * when the reveal reaches it. The next `draw()` re-strokes the body but
+   * preserves the hidden state.
+   */
+  setBodyVisible(visible: boolean): void;
+  /** Toggle just the source-endpoint marker. See `setBodyVisible`. */
+  setSourceMarkerVisible(visible: boolean): void;
+  /** Toggle just the target-endpoint marker. See `setBodyVisible`. */
+  setTargetMarkerVisible(visible: boolean): void;
   destroy(): void;
 }
 
