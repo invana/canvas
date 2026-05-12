@@ -3,17 +3,17 @@ import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, PrimitivesRen
 import type { CanvasContext } from '@invana/canvas';
 import { createContainer } from '../../div-util';
 
-const meta: Meta = { title: 'Canvas/Decorations/Halo' };
+const meta: Meta = { title: 'Canvas/Decorations/Glow' };
 export default meta;
 type Story = StoryObj;
 
 /**
  * Same `GlowDecoration` applied to a circle, a rect, and a rounded rect.
  * Visual proof that decorations don't branch on shape kind — the same code
- * path produces a coherent halo around any silhouette.
+ * path produces a coherent glow around any silhouette.
  */
-export const Halo: Story = {
-  render: () => createContainer({ id: 'cvs-prim-halo' }),
+export const Glow: Story = {
+  render: () => createContainer({ id: 'cvs-prim-glow' }),
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
@@ -25,13 +25,13 @@ export const Halo: Story = {
       hitTest() { return null; }
     }
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-halo')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-glow')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new RenderLayer({ id: 'halo', options: {} });
+    const layer = new RenderLayer({ id: 'glow', options: {} });
     canvas.layers.add(layer);
 
     layer.renderer.addShape('circle-host', {

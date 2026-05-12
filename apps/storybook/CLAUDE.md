@@ -10,11 +10,23 @@ Inside each package namespace, the seven core engine concepts each get a folder:
 
 - `Canvas/Shapes/...`      — shape primitives (rectangle, circle, polygon, glyph / icon fills, image fills). In a graph context these are the **nodes**.
 - `Canvas/Connectors/...`  — connector pipeline: `Anchors/`, `Routers/`, `PathStyles/`, `ConnectorTypes/`.
-- `Canvas/Decorations/...` — decorations applied on top of shapes / connectors (halos, badges, etc.).
-- `Canvas/Animations/...`  — animated visual behaviours (reserved; no stories yet).
+- `Canvas/Decorations/...` — decorations painted on top of shapes / connectors (glow, badge, etc.). Static by default.
+- `Canvas/Animations/...`  — per-frame motion across any animatable target: shapes, decorations, connectors, the viewport / camera, layer properties. Reserved; no stories yet.
 - `Canvas/Layers/...`      — built-in layers: `BackgroundLayer`, `DevInfoLayer`, `LayersPanelLayer`, etc.
 - `Canvas/Behaviours/...`  — registrable behaviours: `DragPanBehaviour`, `WheelZoomBehaviour`, etc.
 - `Canvas/Events/...`      — canvas / layer event demos.
+
+### Decorations vs. animations
+
+These are orthogonal concepts and compose:
+
+- A **decoration** is *what* is drawn — a visual primitive painted on top of a shape or connector. See `packages/canvas/src/primitives/decorations/`. Decorations are static unless they opt into animation.
+- An **animation** is *how a thing changes over time*. Any subclass of `ShapeDecorationBase` can opt in by implementing `tick(deltaMs)`; the renderer auto-registers ticking decorations into its animation set and retires them on a falsy return. Animations are not limited to decorations — the same per-frame model applies to shape position / properties, viewport pan and zoom transitions, camera moves, and layer-level effects.
+
+In storybook this means:
+- A static decoration story (e.g. `Glow`) lives under `Canvas/Decorations/`.
+- An animated decoration story (e.g. `PulsatingGlow`, `BreathingGlow`) also lives under `Canvas/Decorations/` — animation is just a property of that decoration.
+- A story whose primary subject is the animation itself — viewport tweens, shape transitions, camera fly-to, easing comparisons — lives under `Canvas/Animations/`.
 
 Rules:
 
