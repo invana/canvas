@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, PrimitivesRenderer } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
+import GUI from 'lil-gui';
 import { createContainer } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Decorations/Shapes/Glow' };
@@ -10,7 +11,9 @@ type Story = StoryObj;
 /**
  * Same `GlowDecoration` applied to a circle, a rect, and a rounded rect.
  * Visual proof that decorations don't branch on shape kind — the same code
- * path produces a coherent glow around any silhouette.
+ * path produces a coherent glow around any silhouette. The lil-gui panel
+ * exposes every field of `GlowDecorationStyle`, including the optional
+ * `pulse` animation.
  */
 export const Glow: Story = {
   render: () => createContainer({ id: 'cvs-prim-glow' }),
@@ -49,11 +52,42 @@ export const Glow: Story = {
       fill: { kind: 'solid', color: 0xfacc15 },
     });
 
-    // Same glow style applied to all three — three different silhouettes.
-    const glowStyle = { color: 0xfb923c, radius: 18, layers: 8, innerAlpha: 0.55 };
-    layer.renderer.setDecoration('circle-host', 'glow', { kind: 'glow', style: glowStyle });
-    layer.renderer.setDecoration('rect-host', 'glow', { kind: 'glow', style: glowStyle });
-    layer.renderer.setDecoration('rounded-host', 'glow', { kind: 'glow', style: glowStyle });
+    const hosts = ['circle-host', 'rect-host', 'rounded-host'];
+    const settings = {
+      color: 0xfb923c,
+      radius: 18,
+      layers: 8,
+      innerAlpha: 0.55,
+      pulseEnabled: false,
+      periodMs: 1200,
+      amplitude: 0.5,
+    };
+
+    const apply = () => {
+      const style = {
+        color: settings.color,
+        radius: settings.radius,
+        layers: settings.layers,
+        innerAlpha: settings.innerAlpha,
+        ...(settings.pulseEnabled
+          ? { pulse: { periodMs: settings.periodMs, amplitude: settings.amplitude } }
+          : {}),
+      };
+      for (const id of hosts) {
+        layer.renderer.setDecoration(id, 'glow', { kind: 'glow', style });
+      }
+    };
+    apply();
+
+    const gui = new GUI({ title: 'Glow' });
+    gui.addColor(settings, 'color').onChange(apply);
+    gui.add(settings, 'radius', 2, 60, 1).onChange(apply);
+    gui.add(settings, 'layers', 1, 16, 1).onChange(apply);
+    gui.add(settings, 'innerAlpha', 0, 1, 0.05).onChange(apply);
+    const pulse = gui.addFolder('pulse');
+    pulse.add(settings, 'pulseEnabled').name('enabled').onChange(apply);
+    pulse.add(settings, 'periodMs', 200, 4000, 100).onChange(apply);
+    pulse.add(settings, 'amplitude', 0, 1, 0.05).onChange(apply);
 
     canvas.camera.fitContent(layer.getBounds(), 100);
   },
