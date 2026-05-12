@@ -129,7 +129,20 @@ export class ArrowMarker extends ShapeBase<ArrowMarkerSpec> {
       baseX - perpX * halfW, baseY - perpY * halfW,   // wing 2
     ]);
 
-    if (style?.fill !== false && style?.color !== undefined) {
+    if (style?.fill === false) {
+      // Halo / outline mode: stroke the marker silhouette at the requested
+      // width. Geometry size still comes from `strokeWidth × *Scale` (above),
+      // so the halo widens without scaling the marker.
+      if (style.color !== undefined && (style.strokeWidth ?? 0) > 0) {
+        g.stroke({
+          width: style.strokeWidth!,
+          color: style.color,
+          alpha: style.alpha ?? 1,
+        });
+      }
+      return;
+    }
+    if (style?.color !== undefined) {
       g.fill({ color: style.color, alpha: style.alpha ?? 1 });
       return;
     }

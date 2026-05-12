@@ -14,6 +14,7 @@ export { ConnectorBase } from './base/ConnectorBase';
 export { ShapeDecorationBase } from './base/ShapeDecorationBase';
 export { ConnectorDecorationBase } from './base/ConnectorDecorationBase';
 export { EffectBase } from './base/EffectBase';
+export { ConnectorEffectBase } from './base/ConnectorEffectBase';
 
 // ─── Animation primitive ───────────────────────────────────────────────────
 export { Tween } from './animation/Tween';
@@ -63,12 +64,22 @@ export { MarchingAntsDecoration } from './decorations/shape/MarchingAntsDecorati
 export type { MarchingAntsDecorationStyle } from './decorations/shape/MarchingAntsDecoration';
 export { MarchingAntsConnectorDecoration } from './decorations/connector/MarchingAntsConnectorDecoration';
 export type { MarchingAntsConnectorDecorationStyle } from './decorations/connector/MarchingAntsConnectorDecoration';
+export { FlyMarkerConnectorDecoration } from './decorations/connector/FlyMarkerConnectorDecoration';
+export type { FlyMarkerConnectorDecorationStyle } from './decorations/connector/FlyMarkerConnectorDecoration';
+export { FlowParticlesConnectorDecoration } from './decorations/connector/FlowParticlesConnectorDecoration';
+export type { FlowParticlesConnectorDecorationStyle } from './decorations/connector/FlowParticlesConnectorDecoration';
+export { GlowConnectorDecoration } from './decorations/connector/GlowConnectorDecoration';
+export type { GlowConnectorDecorationStyle } from './decorations/connector/GlowConnectorDecoration';
+export { RippleConnectorDecoration } from './decorations/connector/RippleConnectorDecoration';
+export type { RippleConnectorDecorationStyle } from './decorations/connector/RippleConnectorDecoration';
 
 // ─── Built-in effects ──────────────────────────────────────────────────────
 export { ShakeEffect } from './effects/shape/ShakeEffect';
 export type { ShakeEffectStyle } from './effects/shape/ShakeEffect';
 export { BreathingEffect } from './effects/shape/BreathingEffect';
 export type { BreathingEffectStyle } from './effects/shape/BreathingEffect';
+export { BreathingConnectorEffect } from './effects/connector/BreathingConnectorEffect';
+export type { BreathingConnectorEffectStyle } from './effects/connector/BreathingConnectorEffect';
 
 // ─── Badges ────────────────────────────────────────────────────────────────
 export type { BadgeOptions, BadgePlacement } from './badges/types';

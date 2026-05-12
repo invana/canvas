@@ -65,10 +65,29 @@ export abstract class ConnectorBase<TSpec extends BaseConnectorSpec>
   }
 
   paintInto(g: Graphics, spec: TSpec, path: Path, style?: ConnectorPaintStyle): void {
-    const strokeWidth = resolveStrokeWidth(spec, style);
-    const bodyPath = this.trimPathForMarkers(spec, path, strokeWidth);
+    // Body uses the (possibly overridden) stroke width — decorations like
+    // glow legitimately widen it for halo coverage. Markers always size off
+    // the spec's stroke width: their geometry is `strokeWidth × *Scale`, so
+    // a 16-px halo override would render a 96-px arrowhead on a 2-px line.
+    // Path trimming also uses the spec width so the body stops where the
+    // host's actual marker base lands.
+    const bodyStrokeWidth = resolveStrokeWidth(spec, style);
+    const markerStrokeWidth = resolveStrokeWidth(spec);
+    const bodyPath = this.trimPathForMarkers(spec, path, markerStrokeWidth);
     this.drawGeometry(g, spec, bodyPath, style);
-    this.paintMarkers(g, spec, path, style, strokeWidth);
+    if (!style?.skipMarkers) {
+      this.paintMarkers(g, spec, path, style, markerStrokeWidth, bodyStrokeWidth);
+    }
+  }
+
+  /**
+   * Path trimmed by the source / target marker insets at the *spec* stroke
+   * width — i.e. the visible body of the connector. Decorations call this
+   * when they need to parameterise along the segment markers actually
+   * cover. Identity when no markers are configured.
+   */
+  getVisiblePath(spec: TSpec, path: Path): Path {
+    return this.trimPathForMarkers(spec, path, resolveStrokeWidth(spec));
   }
 
   /**
@@ -108,7 +127,13 @@ export abstract class ConnectorBase<TSpec extends BaseConnectorSpec>
     spec: TSpec,
     path: Path,
     style?: ConnectorPaintStyle,
-    strokeWidth: number = resolveStrokeWidth(spec, style),
+    strokeWidth: number = resolveStrokeWidth(spec),
+    /**
+     * Halo stroke thickness used when `style.markerHalo` is set. Decoupled
+     * from `strokeWidth` (which sizes marker geometry) so a glow can outline
+     * the marker at its halo width without scaling the marker itself.
+     */
+    haloStrokeWidth: number = strokeWidth,
   ): void {
     if (path.length < 2) return;
     const m = path[0]!;
@@ -117,11 +142,20 @@ export abstract class ConnectorBase<TSpec extends BaseConnectorSpec>
     if (last.kind === 'M') return;
 
     const markerStyle: ShapePaintStyle | undefined = style?.tintMarkers
-      ? {
-          color: style.color ?? 0x000000,
-          alpha: style.alpha,
-          fill: true,
-        }
+      ? style.markerHalo
+        ? {
+            // Halo mode: outline the marker silhouette at the halo width.
+            // `fill: false` tells the marker class to stroke instead of fill.
+            color: style.color ?? 0x000000,
+            alpha: style.alpha,
+            fill: false,
+            strokeWidth: haloStrokeWidth,
+          }
+        : {
+            color: style.color ?? 0x000000,
+            alpha: style.alpha,
+            fill: true,
+          }
       : undefined;
 
     if (spec.sourceMarker) {

@@ -11,5 +11,8 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "imessage@claude-plugins-official": true
   }
 }

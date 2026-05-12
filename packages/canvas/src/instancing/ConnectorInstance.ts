@@ -10,11 +10,18 @@ import type {
   BaseConnectorSpec,
   IConnector,
   IConnectorDecoration,
+  IConnectorEffect,
   Path,
 } from '../primitives/types';
 
 export class ConnectorInstance<TSpec extends BaseConnectorSpec = BaseConnectorSpec> {
   readonly decorations = new Map<string, IConnectorDecoration>();
+  /**
+   * Active effects keyed by slot. Effects modulate the host connector's
+   * style each frame; the renderer aggregates contributions from every
+   * entry and writes the result onto `connector.gfx`.
+   */
+  readonly effects = new Map<string, IConnectorEffect>();
   /** Last router-resolved path. Reused by decoration update + hit-testing. */
   path: Path = [];
 

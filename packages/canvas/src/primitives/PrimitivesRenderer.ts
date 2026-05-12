@@ -54,15 +54,20 @@ import { smoothPathStyle } from './connectors/pathStyles/smooth';
 import { centerAnchor } from './connectors/anchors/center';
 import { boundaryAnchor } from './connectors/anchors/boundary';
 import { perpendicularAnchor } from './connectors/anchors/perpendicular';
-import { distanceToPolylineSq, pathBounds, samplePath } from './connectors/pathSampling';
+import { distanceToPolylineSq, pathBounds, samplePath, trimPathEnds } from './connectors/pathSampling';
 import { ArrowMarker } from './markers/ArrowMarker';
 import { GlowDecoration } from './decorations/shape/GlowDecoration';
 import { PulseRingDecoration } from './decorations/shape/PulseRingDecoration';
 import { LiquidFillDecoration } from './decorations/shape/LiquidFillDecoration';
 import { MarchingAntsDecoration } from './decorations/shape/MarchingAntsDecoration';
 import { MarchingAntsConnectorDecoration } from './decorations/connector/MarchingAntsConnectorDecoration';
+import { FlyMarkerConnectorDecoration } from './decorations/connector/FlyMarkerConnectorDecoration';
+import { FlowParticlesConnectorDecoration } from './decorations/connector/FlowParticlesConnectorDecoration';
+import { GlowConnectorDecoration } from './decorations/connector/GlowConnectorDecoration';
+import { RippleConnectorDecoration } from './decorations/connector/RippleConnectorDecoration';
 import { ShakeEffect } from './effects/shape/ShakeEffect';
 import { BreathingEffect } from './effects/shape/BreathingEffect';
+import { BreathingConnectorEffect } from './effects/connector/BreathingConnectorEffect';
 import { resolveBadgePosition } from './badges/placement';
 import type { BadgeOptions } from './badges/types';
 import type {
@@ -90,6 +95,9 @@ import type {
   IShape,
   IShapeDecoration,
   IShapeEffect,
+  IConnectorEffect,
+  ConnectorEffectCtor,
+  ConnectorEffectHostInfo,
   Obstacle,
   Path,
   Point,
@@ -113,12 +121,12 @@ interface RegisteredDecoration {
 }
 
 interface RegisteredEffect {
-  readonly ctor: ShapeEffectCtor;
+  readonly ctor: ShapeEffectCtor | ConnectorEffectCtor;
   readonly target: EffectTargetKind;
 }
 
 type AnimatedDecoration = { tick(deltaMs: number): boolean };
-type AnimatedEffect = IShapeEffect & { tick(deltaMs: number): boolean };
+type AnimatedEffect = (IShapeEffect | IConnectorEffect) & { tick(deltaMs: number): boolean };
 
 export interface PrimitivesRendererOptions {
   readonly container: Container;
@@ -148,6 +156,12 @@ export class PrimitivesRenderer {
    * per-frame aggregation walks this set rather than every shape instance.
    */
   private readonly hostsWithEffects = new Set<ShapeInstance>();
+  /**
+   * Connector instances that currently have at least one effect attached.
+   * Walked per frame to aggregate style modulations (tint + alpha) onto
+   * `connector.gfx`. Transform deltas are ignored for connector hosts.
+   */
+  private readonly connectorHostsWithEffects = new Set<ConnectorInstance>();
 
   /**
    * Host → (slot → BadgeOptions). Each entry corresponds to a shape registered
@@ -160,6 +174,17 @@ export class PrimitivesRenderer {
   readonly events = new EventEmitter<PrimitivesRendererEventMap>();
 
   private readonly _container: Container;
+  /**
+   * Connector sub-layer — added to `_container` first so it renders *below*
+   * the shape layer. Connector decorations live inside `connector.gfx`
+   * (children of this layer), so any decoration geometry that extends past
+   * the path endpoints (e.g. a glow halo's radius, a ripple wave's
+   * `maxRadius`) is naturally hidden by overlapping shapes on top —
+   * matching the standard graph-viz "nodes above edges" convention.
+   */
+  private readonly connectorLayer: Container;
+  /** Shape sub-layer — rendered above `connectorLayer`. */
+  private readonly shapeLayer: Container;
   readonly camera: Camera;
   private readonly textureRegistry: TextureRegistry;
 
@@ -167,6 +192,14 @@ export class PrimitivesRenderer {
     this._container = opts.container;
     this.camera = opts.camera;
     this.textureRegistry = opts.textureRegistry ?? new TextureRegistry();
+    // Insertion order = render order in Pixi. Adding the connector layer
+    // first then the shape layer puts shapes on top — so any connector
+    // decoration that extends past a path endpoint (glow halo, ripple
+    // wave) is clipped visually by the overlapping shape.
+    this.connectorLayer = new Container();
+    this.shapeLayer = new Container();
+    this._container.addChild(this.connectorLayer);
+    this._container.addChild(this.shapeLayer);
     this.registerBuiltins();
   }
 
@@ -205,9 +238,14 @@ export class PrimitivesRenderer {
     this.registerDecoration('liquid-fill', LiquidFillDecoration, { target: 'shape' });
     this.registerDecoration('marching-ants', MarchingAntsDecoration, { target: 'shape' });
     this.registerDecoration('marching-ants-connector', MarchingAntsConnectorDecoration, { target: 'connector' });
+    this.registerDecoration('fly-marker-connector', FlyMarkerConnectorDecoration, { target: 'connector' });
+    this.registerDecoration('flow-particles-connector', FlowParticlesConnectorDecoration, { target: 'connector' });
+    this.registerDecoration('glow-connector', GlowConnectorDecoration, { target: 'connector' });
+    this.registerDecoration('ripple-connector', RippleConnectorDecoration, { target: 'connector' });
 
     this.registerEffect('shake', ShakeEffect, { target: 'shape' });
     this.registerEffect('breathing', BreathingEffect, { target: 'shape' });
+    this.registerEffect('breathing-connector', BreathingConnectorEffect, { target: 'connector' });
   }
 
   // ─── Registries ─────────────────────────────────────────────────────────
@@ -251,11 +289,11 @@ export class PrimitivesRenderer {
    */
   registerEffect<TStyle>(
     kind: string,
-    ctor: new (style: TStyle) => IShapeEffect<TStyle>,
+    ctor: new (style: TStyle) => IShapeEffect<TStyle> | IConnectorEffect<TStyle>,
     opts: RegisterEffectOptions,
   ): void {
     this.effectRegistry.set(kind, {
-      ctor: ctor as unknown as ShapeEffectCtor,
+      ctor: ctor as unknown as ShapeEffectCtor | ConnectorEffectCtor,
       target: opts.target,
     });
   }
@@ -271,7 +309,7 @@ export class PrimitivesRenderer {
       throw new Error(`PrimitivesRenderer.addShape: unknown shape kind "${spec.kind}"`);
     }
     const host: ShapeHostInfo = {
-      surface: this._container,
+      surface: this.shapeLayer,
       textureRegistry: this.textureRegistry,
       requestRedraw: () => {
         const cur = this.shapeInstances.get(id);
@@ -279,7 +317,7 @@ export class PrimitivesRenderer {
       },
     };
     const shape = new Ctor(spec, host) as IShape<TSpec>;
-    this._container.addChild(shape.gfx);
+    this.shapeLayer.addChild(shape.gfx);
     const inst = new ShapeInstance<TSpec>(id, spec, shape);
     this.shapeInstances.set(id, inst as unknown as ShapeInstance);
     this.hit.insert(id, 'shape', this.shapeWorldBounds(inst), spec.zIndex ?? 0);
@@ -323,17 +361,17 @@ export class PrimitivesRenderer {
       throw new Error(`PrimitivesRenderer.addConnector: id "${id}" already exists`);
     }
     const host: ConnectorHostInfo = {
-      surface: this._container,
+      surface: this.connectorLayer,
       shapeRegistry: this.shapeRegistry,
     };
     const connector = new Connector(host) as unknown as IConnector<TSpec>;
-    this._container.addChild(connector.gfx);
-    const path = this.routePath(spec);
-    connector.draw(spec, path);
+    this.connectorLayer.addChild(connector.gfx);
     const inst = new ConnectorInstance<TSpec>(id, spec, connector);
-    inst.path = path;
     this.connectorInstances.set(id, inst as unknown as ConnectorInstance);
-    this.indexConnector(inst as unknown as ConnectorInstance);
+    // No decorations attached yet, so padding is zero — but funnel through
+    // `recomputeConnectorPath` for a single code path that handles both
+    // the no-decoration and with-decoration cases.
+    this.recomputeConnectorPath(inst as unknown as ConnectorInstance);
     this.wireConnectorPointer(inst as unknown as ConnectorInstance);
   }
 
@@ -341,10 +379,50 @@ export class PrimitivesRenderer {
     const inst = this.connectorInstances.get(id) as ConnectorInstance<TSpec> | undefined;
     if (!inst) return;
     inst.spec = { ...inst.spec, ...partial };
-    inst.path = this.routePath(inst.spec);
+    this.recomputeConnectorPath(inst as unknown as ConnectorInstance);
+  }
+
+  /**
+   * Re-route the path for `inst`, trim by aggregated decoration end-padding,
+   * redraw the connector body + markers on the trimmed path, and refresh
+   * any attached decorations against the new path. Called whenever the
+   * spec, decorations, or padding requirements change.
+   */
+  private recomputeConnectorPath(inst: ConnectorInstance): void {
+    const rawPath = this.routePath(inst.spec);
+    const padding = this.aggregateConnectorPadding(inst);
+    // Padding only applies at endpoints that actually have a marker. Without
+    // a marker, the body's stroke (and any decoration's body stroke) ends
+    // sharp at the path endpoint (butt cap) — there's no "outer extent"
+    // past the anchor to make room for. Inserting padding there would just
+    // shorten the body and open a visible gap between it and the anchor.
+    const srcPad = inst.spec.sourceMarker ? padding.source : 0;
+    const tgtPad = inst.spec.targetMarker ? padding.target : 0;
+    inst.path = srcPad > 0 || tgtPad > 0
+      ? trimPathEnds(rawPath, srcPad, tgtPad)
+      : rawPath;
     inst.connector.draw(inst.spec, inst.path);
-    this.indexConnector(inst as unknown as ConnectorInstance);
+    this.indexConnector(inst);
     if (inst.decorations.size > 0) this.refreshConnectorDecorations(inst);
+  }
+
+  /**
+   * Max end-padding across every decoration attached to `inst`. Decorations
+   * declare their outer extent via `getEndPadding()`; we take the max per
+   * endpoint so a glow with radius 16 and a ripple with maxRadius 24 on the
+   * same edge result in a 24-px inset at each end (both reach the anchor;
+   * the glow stops 8 px short, which is the intended "smaller halo" look).
+   */
+  private aggregateConnectorPadding(inst: ConnectorInstance): { source: number; target: number } {
+    let src = 0;
+    let tgt = 0;
+    for (const deco of inst.decorations.values()) {
+      if (typeof deco.getEndPadding !== 'function') continue;
+      const p = deco.getEndPadding();
+      if (p.source > src) src = p.source;
+      if (p.target > tgt) tgt = p.target;
+    }
+    return { source: src, target: tgt };
   }
 
   removeConnector(id: string): void {
@@ -352,6 +430,9 @@ export class PrimitivesRenderer {
     if (!inst) return;
     for (const deco of inst.decorations.values()) this.disposeDecoration(deco);
     inst.decorations.clear();
+    for (const fx of inst.effects.values()) this.disposeEffect(fx);
+    inst.effects.clear();
+    this.connectorHostsWithEffects.delete(inst);
     this.hit.remove(id);
     inst.connector.destroy();
     this.connectorInstances.delete(id);
@@ -379,6 +460,9 @@ export class PrimitivesRenderer {
 
     if (decoration === null) {
       decorations.delete(slot);
+      // Removing a decoration may shrink the aggregated padding for the
+      // connector — re-route + redraw on the new (less-trimmed) path.
+      if (connector) this.recomputeConnectorPath(connector);
       return;
     }
 
@@ -431,6 +515,11 @@ export class PrimitivesRenderer {
       if (typeof deco.tick === 'function') {
         this.animated.add(deco as AnimatedDecoration);
       }
+      // Now that the decoration is in the map, re-aggregate padding and
+      // re-route the path. `recomputeConnectorPath` redraws the body /
+      // markers on the trimmed path and refreshes every decoration
+      // (including the one we just mounted) with the new host info.
+      this.recomputeConnectorPath(connector!);
     }
   }
 
@@ -443,9 +532,10 @@ export class PrimitivesRenderer {
    * additively (translations + rotation) and multiplicatively (scale);
    * style channels are last-writer-wins per channel by insertion order.
    *
-   * Connector effects are not supported in v0 — the call throws if `targetId`
-   * resolves to a connector. Once concrete connector effects land, this
-   * branches on host kind like `setDecoration`.
+   * Connector effects are supported and modulate the host connector's
+   * style channels (tint + alpha). Transform deltas on a path-resolved
+   * primitive have no coherent meaning, so transform effects on connector
+   * hosts are ignored at aggregation time.
    */
   setEffect<TStyle = unknown>(
     targetId: string,
@@ -453,15 +543,24 @@ export class PrimitivesRenderer {
     effect: EffectSpec<TStyle> | null,
   ): void {
     const shape = this.shapeInstances.get(targetId);
-    if (!shape) {
-      if (this.connectorInstances.has(targetId)) {
-        throw new Error(
-          `PrimitivesRenderer.setEffect: connector effects not yet supported ("${targetId}")`,
-        );
-      }
-      throw new Error(`PrimitivesRenderer.setEffect: unknown target "${targetId}"`);
+    if (shape) {
+      this.setShapeEffect(shape, targetId, slot, effect);
+      return;
     }
+    const connector = this.connectorInstances.get(targetId);
+    if (connector) {
+      this.setConnectorEffect(connector, targetId, slot, effect);
+      return;
+    }
+    throw new Error(`PrimitivesRenderer.setEffect: unknown target "${targetId}"`);
+  }
 
+  private setShapeEffect<TStyle>(
+    shape: ShapeInstance,
+    targetId: string,
+    slot: string,
+    effect: EffectSpec<TStyle> | null,
+  ): void {
     const prev = shape.effects.get(slot);
     if (prev) this.disposeEffect(prev);
 
@@ -469,7 +568,6 @@ export class PrimitivesRenderer {
       shape.effects.delete(slot);
       if (shape.effects.size === 0) {
         this.hostsWithEffects.delete(shape);
-        // Reset baseline so any prior modulation doesn't linger on the gfx.
         this.resetHostToBaseline(shape);
       }
       return;
@@ -485,7 +583,7 @@ export class PrimitivesRenderer {
       );
     }
 
-    const fx = new entry.ctor(effect.style);
+    const fx = new (entry.ctor as ShapeEffectCtor)(effect.style) as IShapeEffect;
     const host: ShapeEffectHostInfo = {
       hostId: targetId,
       slot,
@@ -498,8 +596,50 @@ export class PrimitivesRenderer {
     if (typeof fx.tick === 'function') {
       this.animatedEffects.add(fx as AnimatedEffect);
     }
-    // Apply non-animated effects immediately so they take effect this frame.
     this.applyEffectsToHost(shape);
+  }
+
+  private setConnectorEffect<TStyle>(
+    connector: ConnectorInstance,
+    targetId: string,
+    slot: string,
+    effect: EffectSpec<TStyle> | null,
+  ): void {
+    const prev = connector.effects.get(slot);
+    if (prev) this.disposeEffect(prev);
+
+    if (effect === null) {
+      connector.effects.delete(slot);
+      if (connector.effects.size === 0) {
+        this.connectorHostsWithEffects.delete(connector);
+        this.resetConnectorToBaseline(connector);
+      }
+      return;
+    }
+
+    const entry = this.effectRegistry.get(effect.kind);
+    if (!entry) {
+      throw new Error(`PrimitivesRenderer.setEffect: unknown kind "${effect.kind}"`);
+    }
+    if (entry.target !== 'both' && entry.target !== 'connector') {
+      throw new Error(
+        `PrimitivesRenderer.setEffect: kind "${effect.kind}" targets "${entry.target}" but host is a connector`,
+      );
+    }
+
+    const fx = new (entry.ctor as ConnectorEffectCtor)(effect.style) as IConnectorEffect;
+    const host: ConnectorEffectHostInfo = {
+      hostId: targetId,
+      slot,
+      connector: connector.connector,
+    };
+    fx.mount(host);
+    connector.effects.set(slot, fx);
+    this.connectorHostsWithEffects.add(connector);
+    if (typeof fx.tick === 'function') {
+      this.animatedEffects.add(fx as AnimatedEffect);
+    }
+    this.applyEffectsToConnector(connector);
   }
 
   // ─── Badges ─────────────────────────────────────────────────────────────
@@ -626,6 +766,12 @@ export class PrimitivesRenderer {
         this.applyEffectsToHost(host);
       }
     }
+
+    if (this.connectorHostsWithEffects.size > 0) {
+      for (const host of this.connectorHostsWithEffects) {
+        this.applyEffectsToConnector(host);
+      }
+    }
   }
 
   /**
@@ -685,6 +831,38 @@ export class PrimitivesRenderer {
     gfx.alpha = baseAlpha * alphaMul;
     // Pixi v8 Container.tint is multiplicative; 0xffffff is identity.
     (gfx as unknown as { tint: number }).tint = tint;
+  }
+
+  /**
+   * Aggregate every effect attached to a connector and write the result onto
+   * `connector.gfx`. Resets to the spec baseline first so removing effects
+   * cleanly reverts. Only style channels are honoured for connector hosts
+   * (transform deltas on a path-resolved primitive have no coherent
+   * meaning); transform effects on connectors contribute nothing.
+   */
+  private applyEffectsToConnector(inst: ConnectorInstance): void {
+    const { gfx } = inst.connector;
+    const baseAlpha = inst.spec.alpha ?? 1;
+
+    let tint = 0xffffff;
+    let alphaMul = 1;
+
+    for (const fx of inst.effects.values()) {
+      if (fx.target === 'style' && fx.readStyle) {
+        const s = fx.readStyle();
+        if (s.tint !== undefined) tint = s.tint;
+        if (s.alpha !== undefined) alphaMul *= s.alpha;
+      }
+    }
+
+    gfx.alpha = baseAlpha * alphaMul;
+    (gfx as unknown as { tint: number }).tint = tint;
+  }
+
+  private resetConnectorToBaseline(inst: ConnectorInstance): void {
+    const { gfx } = inst.connector;
+    gfx.alpha = inst.spec.alpha ?? 1;
+    (gfx as unknown as { tint: number }).tint = 0xffffff;
   }
 
   /** Restore the host gfx to its spec-derived baseline (used after the last effect is removed). */
@@ -1135,7 +1313,7 @@ export class PrimitivesRenderer {
     deco.destroy?.();
   }
 
-  private disposeEffect(fx: IShapeEffect): void {
+  private disposeEffect(fx: IShapeEffect | IConnectorEffect): void {
     if (typeof fx.tick === 'function') {
       this.animatedEffects.delete(fx as AnimatedEffect);
     }

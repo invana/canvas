@@ -34,8 +34,12 @@ export class Connector extends ConnectorBase<BaseConnectorSpec> {
         dashArray: style.dashArray,
         dashOffset: style.dashOffset,
         closed: false,
-        cap: style.cap,
-        join: style.join,
+        // Inherit cap / join from the spec when the override doesn't
+        // specify them — decorations that only widen the stroke (glow,
+        // ripple) should match the host's silhouette ends instead of
+        // forcing butt/miter back on.
+        cap: style.cap ?? spec.stroke?.cap,
+        join: style.join ?? spec.stroke?.join,
       });
       return;
     }
@@ -62,8 +66,8 @@ export class Connector extends ConnectorBase<BaseConnectorSpec> {
         color: style.color ?? 0x000000,
         alpha: style.alpha ?? 1,
         width: style.strokeWidth,
-        cap: style.cap,
-        join: style.join,
+        cap: style.cap ?? spec.stroke?.cap,
+        join: style.join ?? spec.stroke?.join,
       });
       return;
     }

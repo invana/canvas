@@ -338,6 +338,24 @@ export interface ConnectorPaintStyle {
    * undefined so markers stay normal-colored over the dashed line.
    */
   readonly tintMarkers?: boolean;
+  /**
+   * When `true`, `paintInto` paints only the body (no source / target
+   * markers). Useful for decorations that handle markers separately or
+   * want to leave them untouched. `markerHalo` is preferred for glow /
+   * halo coverage; reach for `skipMarkers` only when even outlined
+   * markers would be wrong.
+   */
+  readonly skipMarkers?: boolean;
+  /**
+   * When `true`, markers paint as **outlines** at `style.strokeWidth`
+   * (using `style.color` / `style.alpha`) instead of as filled silhouettes.
+   * Marker geometry continues to size off the host connector's spec
+   * stroke width — the halo width affects only the outline stroke, never
+   * the marker's tip-to-base / wing-spread dimensions. Combined with the
+   * widening-stroke / decreasing-alpha pattern of a glow decoration,
+   * this produces a halo around the marker that matches the body halo.
+   */
+  readonly markerHalo?: boolean;
 }
 
 // ─── Spec types ────────────────────────────────────────────────────────────
@@ -627,6 +645,16 @@ export interface IConnector<TSpec extends BaseConnectorSpec = BaseConnectorSpec>
    * use this to draw with pixel-identical silhouette coverage.
    */
   paintInto(g: Graphics, spec: TSpec, path: Path, style?: ConnectorPaintStyle): void;
+  /**
+   * Path trimmed by the source / target marker insets — i.e. the *visible*
+   * body of the connector, with the segments that the markers cover removed.
+   * Decorations that parameterise along arc length (ripple, fly-marker,
+   * flow-particles, label-along-path, …) call this so `t = 1` lands at the
+   * marker base rather than the marker tip (which sits inside the target
+   * shape and hides the ripple's inner rings under the silhouette).
+   * Returns the input path unchanged when no markers are configured.
+   */
+  getVisiblePath(spec: TSpec, path: Path): Path;
   destroy(): void;
 }
 
@@ -642,6 +670,17 @@ export interface IDecorationBase<THostInfo, TStyle = unknown> {
   update?(host: THostInfo): void;
   tick?(deltaMs: number): boolean;
   destroy?(): void;
+  /**
+   * Connector-only: declare how many pixels of extra "outer extent" this
+   * decoration needs past each endpoint of the routed path. The renderer
+   * aggregates the max across all attached decorations and trims the path
+   * by that amount before drawing — so the body + markers sit back from
+   * the anchor, and the decoration's outer edge (halo radius, ripple peak)
+   * lands at the anchor instead of overshooting into the host shape.
+   * Omit (or return 0) when the decoration doesn't extend past endpoints
+   * (e.g. marching-ants strokes the line at the host's width).
+   */
+  getEndPadding?(): { readonly source: number; readonly target: number };
 }
 
 export type IShapeDecoration<TStyle = unknown> = IDecorationBase<ShapeDecorationHostInfo, TStyle>;
@@ -734,6 +773,26 @@ export interface IEffectBase<THostInfo, TStyle = unknown> {
 export type IShapeEffect<TStyle = unknown> = IEffectBase<ShapeEffectHostInfo, TStyle>;
 
 export type ShapeEffectCtor<TStyle = unknown> = new (style: TStyle) => IShapeEffect<TStyle>;
+
+/**
+ * Information a connector effect receives. Mirrors `ShapeEffectHostInfo` —
+ * effects don't draw, so no `surface` field. The renderer reads the
+ * effect's contribution every frame and applies the aggregate to the
+ * connector's `gfx`. Connector effects only modulate style channels
+ * (tint + alpha) — transform deltas on a 1D path-resolved primitive don't
+ * have a coherent meaning, so they're ignored for connector hosts.
+ */
+export interface ConnectorEffectHostInfo {
+  readonly hostId: string;
+  readonly slot: string;
+  /** The host connector itself — effects may read state but never paint. */
+  readonly connector: IConnector;
+}
+
+export type IConnectorEffect<TStyle = unknown> = IEffectBase<ConnectorEffectHostInfo, TStyle>;
+
+export type ConnectorEffectCtor<TStyle = unknown> =
+  new (style: TStyle) => IConnectorEffect<TStyle>;
 
 /** Same target taxonomy as decorations — effects may be shape-only, connector-only, or both. */
 export type EffectTargetKind = 'shape' | 'connector' | 'both';
