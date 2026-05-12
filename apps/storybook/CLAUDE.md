@@ -12,7 +12,7 @@ Inside each package namespace, the seven core engine concepts each get a folder:
 - `Canvas/Connectors/...`  — connector pipeline: `Anchors/`, `Routers/`, `PathStyles/`, `ConnectorTypes/`.
 - `Canvas/Decorations/...` — decorations painted *alongside / on top of* a host (glow, halo, pulse-ring, badge). Additive geometry. Static by default; animated decorations also live here.
 - `Canvas/Effects/...`     — effects that *modulate* a host (shake, breathing, shimmer). No new geometry — they tweak the host's transform or style channels each frame.
-- `Canvas/Animations/...`  — per-frame motion across any animatable target where the *motion itself* is the subject of the story: viewport tweens, camera fly-to, easing comparisons, composed-effects proof stories.
+- `Canvas/Animations/...`  — per-frame motion across any animatable target where the *motion itself* is the subject of the story: viewport tweens, camera fly-to, easing comparisons.
 - `Canvas/Layers/...`      — built-in layers: `BackgroundLayer`, `DevInfoLayer`, `LayersPanelLayer`, etc.
 - `Canvas/Behaviours/...`  — registrable behaviours: `DragPanBehaviour`, `WheelZoomBehaviour`, etc.
 - `Canvas/Events/...`      — canvas / layer event demos.
@@ -29,7 +29,8 @@ In storybook this means:
 - A static decoration story (e.g. `Glow`) lives under `Canvas/Decorations/`.
 - An animated decoration story (e.g. `PulseRing`, `AnimatedGlow`) also lives under `Canvas/Decorations/` — animation is a property of the decoration.
 - An effect story (`Shake`, `Breathing`) lives under `Canvas/Effects/`.
-- A story whose primary subject is the *animation engine itself* — viewport tweens, shape transitions, camera fly-to, easing comparisons, composed-effects proofs — lives under `Canvas/Animations/`.
+- A story whose primary subject is the *animation engine itself* — viewport tweens, shape transitions, camera fly-to, easing comparisons — lives under `Canvas/Animations/`.
+- A composed-effects proof for a given host kind lives under that host's `Effects/` folder (e.g. `Canvas/Effects/Shapes/ComposedEffects`, `Canvas/Effects/Connectors/ComposedEffects`) — it's a proof about how effects + decorations compose on that host, not about the animation engine.
 
 Rules:
 

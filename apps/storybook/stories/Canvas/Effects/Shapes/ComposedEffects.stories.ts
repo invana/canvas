@@ -10,7 +10,7 @@ import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer } from '../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Animations/Shapes/ComposedEffects' };
+const meta: Meta = { title: 'Canvas/Effects/Shapes/ComposedEffects' };
 export default meta;
 type Story = StoryObj;
 
@@ -26,7 +26,7 @@ type Story = StoryObj;
  * no stuck scale).
  */
 export const ComposedEffects: Story = {
-  render: () => createContainer({ id: 'cvs-animations-composed' }),
+  render: () => createContainer({ id: 'cvs-effects-composed' }),
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
@@ -38,7 +38,7 @@ export const ComposedEffects: Story = {
       hitTest() { return null; }
     }
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-animations-composed')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-effects-composed')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
