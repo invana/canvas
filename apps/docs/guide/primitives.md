@@ -254,9 +254,15 @@ renderer.events.on('shape:click', ({ id, worldX, worldY, button }) => {
 | Event | Payload |
 |---|---|
 | `shape:pointerover` / `:pointerout` | `{ id, worldX, worldY }` |
-| `shape:pointerdown` / `:pointerup` / `:click` | `{ id, worldX, worldY, button }` |
+| `shape:pointerdown` / `:pointerup` | `{ id, worldX, worldY, button }` |
+| `shape:click` / `:doubleclick` | `{ id, worldX, worldY, button }` — left-button only |
+| `shape:contextmenu` | `{ id, worldX, worldY }` — right-button |
 | `connector:pointerover` / `:pointerout` | `{ id, worldX, worldY }` |
-| `connector:pointerdown` / `:pointerup` / `:click` | `{ id, worldX, worldY, button }` |
+| `connector:pointerdown` / `:pointerup` | `{ id, worldX, worldY, button }` |
+| `connector:click` / `:doubleclick` | `{ id, worldX, worldY, button }` — left-button only |
+| `connector:contextmenu` | `{ id, worldX, worldY }` — right-button |
+
+`click` fires only on left-button (button `0`); right-button releases go to `contextmenu` instead. `doubleclick` fires *in addition to* the second `click` when the OS-defined double-click interval is met — matches DOM semantics. The browser's native right-click context menu is suppressed on the canvas element by default; opt out with `new Canvas({ suppressBrowserContextMenu: false })`.
 
 Layers translate these raw events into domain events (`node:click`, `edge:hover`, etc.) via `layer.events`. Behaviours subscribe to either layer events or these raw renderer events.
 

@@ -850,8 +850,25 @@ export class PrimitivesRenderer {
       this.events.emit('shape:pointerup', { id: inst.id, worldX: w.x, worldY: w.y, button: e.button });
     });
     inst.shape.gfx.on('click', (e) => {
+      // Only emit `shape:click` for left-button presses. Right-button gets its
+      // own channel (`shape:contextmenu`) so consumers can distinguish without
+      // inspecting `button`.
+      if (e.button !== 0) return;
       const w = worldOf(e);
       this.events.emit('shape:click', { id: inst.id, worldX: w.x, worldY: w.y, button: e.button });
+      // Pixi's federated `click` carries the DOM `detail` counter (1 on first
+      // click, 2 on a double-click within the OS double-click interval). Fire
+      // `shape:doubleclick` *in addition* to the second `shape:click` — matches
+      // DOM semantics. Consumers that only want one of them filter by name.
+      if (e.detail >= 2) {
+        this.events.emit('shape:doubleclick', {
+          id: inst.id, worldX: w.x, worldY: w.y, button: e.button,
+        });
+      }
+    });
+    inst.shape.gfx.on('rightclick', (e) => {
+      const w = worldOf(e);
+      this.events.emit('shape:contextmenu', { id: inst.id, worldX: w.x, worldY: w.y });
     });
   }
 
@@ -885,8 +902,20 @@ export class PrimitivesRenderer {
       this.events.emit('connector:pointerup', { id: inst.id, worldX: w.x, worldY: w.y, button: e.button });
     });
     inst.connector.gfx.on('click', (e) => {
+      if (e.button !== 0) return;
       const w = worldOf(e);
-      this.events.emit('connector:click', { id: inst.id, worldX: w.x, worldY: w.y, button: e.button });
+      this.events.emit('connector:click', {
+        id: inst.id, worldX: w.x, worldY: w.y, button: e.button,
+      });
+      if (e.detail >= 2) {
+        this.events.emit('connector:doubleclick', {
+          id: inst.id, worldX: w.x, worldY: w.y, button: e.button,
+        });
+      }
+    });
+    inst.connector.gfx.on('rightclick', (e) => {
+      const w = worldOf(e);
+      this.events.emit('connector:contextmenu', { id: inst.id, worldX: w.x, worldY: w.y });
     });
   }
 

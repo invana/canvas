@@ -18,22 +18,24 @@ const off = canvas.events.on('layer:added', ({ id }) => console.log(id));
 off(); // unsubscribe
 ```
 
-Built-in events on `CanvasEventBus`:
+Built-in events on `CanvasEventBus` (everything currently emitted by `@invana/canvas`):
 
-| Event | Payload |
-|---|---|
-| `'renderer:initialised'` | `{ backend: 'webgpu' \| 'webgl' \| 'canvas', capabilities?: Record<string, unknown> }` |
-| `'layer:added'` | `{ id }` |
-| `'layer:removed'` | `{ id }` |
-| `'behaviour:registered'` | `{ id }` |
-| `'behaviour:enabled'` | `{ id }` |
-| `'behaviour:disabled'` | `{ id }` |
-| `'camera:pan'` | `{ x, y }` |
-| `'camera:zoom'` | `{ scale, centerX, centerY }` |
-| `'background:click'` | `{ worldX, worldY }` |
-| `'tap:dropped'` | `{ type, reason: 'excluded' \| 'sampled' }` |
+| Event | Payload | Emitted by |
+|---|---|---|
+| `'renderer:initialised'` | `{ backend: 'webgpu' \| 'webgl' \| 'canvas', capabilities?: Record<string, unknown> }` | `Canvas.init()` / `Canvas.initWithStage()` |
+| `'layer:added'` | `{ id: string }` | `canvas.layers.add(layer)` |
+| `'layer:removed'` | `{ id: string }` | `canvas.layers.remove(id)` |
+| `'behaviour:registered'` | `{ id: string }` | `canvas.behaviours.register(b)` |
+| `'behaviour:enabled'` | `{ id: string }` | `register()` (when `enabled: true`) + `setEnabled(id, true)` |
+| `'behaviour:disabled'` | `{ id: string }` | `setEnabled(id, false)` |
+| `'camera:pan'` | `{ x: number, y: number }` | `camera.panTo / panBy / setPosition` |
+| `'camera:zoom'` | `{ scale: number, centerX: number, centerY: number }` | `camera.zoomTo / zoomBy / setZoom` |
 
 The event map is extensible. Domain packages can declare additional types via TypeScript module augmentation; the bus accepts any string key.
+
+### Renderer-level pointer events
+
+Raw, hit-tested pointer events for shapes and connectors live on `PrimitivesRenderer.events`, not on `canvas.events`. See the [Primitives guide → Pointer events](./primitives.md#pointer-events) for the full list (`shape:pointerover/out/down/up/click`, same for `connector:*`). They forward through the tap channel like every other event.
 
 ## The tap channel
 
@@ -58,7 +60,7 @@ canvas.events.tap((event) => {
 
 ### Exclude list
 
-By default the tap excludes a small set of high-frequency event-name suffixes so dashboards don't drown:
+By default the tap excludes a small set of high-frequency event-name suffixes so dashboards don't drown (see `DEFAULT_TAP_EXCLUDE` in `events/CanvasEvent.ts`):
 
 ```
 pointermove
@@ -67,6 +69,8 @@ shape:pointermove
 connector:pointermove
 state:dirty-flush
 ```
+
+Matched as **suffixes** of the envelope `type`, so `'pointermove'` excludes `'layer:graph:shape:pointermove'`, `'layer:er:shape:pointermove'`, etc. — without enumerating every emitter.
 
 Override per subscription:
 

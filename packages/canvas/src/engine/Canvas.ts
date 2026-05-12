@@ -86,6 +86,16 @@ export interface CanvasOptions {
    * Uses `ResizeObserver` internally. Default `false`.
    */
   autoResize?: boolean;
+
+  /**
+   * Suppress the browser's native right-click context menu on the canvas
+   * element. Diagram apps typically want to show their own menu UI via the
+   * `shape:contextmenu` / `connector:contextmenu` events. Default `true`.
+   *
+   * Set to `false` if the app wants the OS context menu (e.g. for
+   * accessibility / dev tooling on right-click).
+   */
+  suppressBrowserContextMenu?: boolean;
 }
 
 // ─── Canvas ────────────────────────────────────────────────────────────────
@@ -184,6 +194,10 @@ export class Canvas {
 
     this.app.canvas.style.display = 'block';
     container.appendChild(this.app.canvas);
+
+    if (opts.suppressBrowserContextMenu ?? true) {
+      this.app.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
 
     this._wireScene(this.app.stage, width, height, this.app.renderer.events);
     this.app.ticker.add(this.tick, this);
