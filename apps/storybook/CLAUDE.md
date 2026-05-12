@@ -1,21 +1,26 @@
 # CLAUDE.md — apps/storybook (`@canvas/storybook`)
 
-Storybook for the new architecture. Rebuilt fresh as part of the architecture rewrite.
-
-**Status:** skeleton — only a Welcome page so far. Stories to port are listed in `migration-storybook-inventory.md` at repo root; that file is the authoritative checklist.
+Storybook for the new architecture. The sidebar mirrors the seven core engine concepts under each package namespace.
 
 ## Conventions
 
-- Stories live under `stories/<area>/...` mirroring the new structure proposed in the inventory:
-  - `stories/Renderer/...`  ← primitive renderer demos
-  - `stories/Layers/...`                  ← `BackgroundLayer`, `MiniMapLayer`, `ThemedBackgroundLayer`, `DevInfoLayer`
-  - `stories/Behaviours/...`              ← `HoverActivate`, `ClickSelect`, `LassoSelect`, etc.
-  - `stories/Layouts/...`                 ← `D3ForceLayout`, `ElkLayout`
-  - `stories/Layer/Graph/...`             ← `GraphLayer`-specific stories
-  - `stories/Showcase/...`                ← end-to-end demos
-- Story files: `<Name>.stories.ts`. Title format: `'<Area>/<Subarea>'`.
-- **One story per file.** Each `.stories.ts` file exports exactly one named story.
-- No raw `pixi.js` imports inside stories — go through `@invana/canvas` / `@invana/graph` API.
+Storybook top-level namespacing follows package names. Stories from `@invana/canvas` live under `stories/Canvas/...`; future `@invana/graph` stories will live under `stories/Graph/...`, etc.
+
+Inside each package namespace, the seven core engine concepts each get a folder:
+
+- `Canvas/Shapes/...`      — shape primitives (rectangle, circle, polygon, glyph / icon fills, image fills). In a graph context these are the **nodes**.
+- `Canvas/Connectors/...`  — connector pipeline: `Anchors/`, `Routers/`, `PathStyles/`, `ConnectorTypes/`.
+- `Canvas/Decorations/...` — decorations applied on top of shapes / connectors (halos, badges, etc.).
+- `Canvas/Animations/...`  — animated visual behaviours (reserved; no stories yet).
+- `Canvas/Layers/...`      — built-in layers: `BackgroundLayer`, `DevInfoLayer`, `LayersPanelLayer`, etc.
+- `Canvas/Behaviours/...`  — registrable behaviours: `DragPanBehaviour`, `WheelZoomBehaviour`, etc.
+- `Canvas/Events/...`      — canvas / layer event demos.
+
+Rules:
+
+- Story files: `<Name>.stories.ts`. Title format: `'<Package>/<Area>/<Subarea>'` mirroring the filesystem path exactly.
+- **One story per file.** Each `.stories.ts` exports exactly one named story.
+- No raw `pixi.js` imports inside stories — go through `@invana/canvas` / `@invana/graph` public API.
 
 ## Shapes & Renderer stories
 
@@ -52,7 +57,7 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import { createContainer } from '../../div-util';
 
-const meta: Meta = { title: 'Area/SubArea' };
+const meta: Meta = { title: 'Canvas/Area/SubArea' };
 export default meta;
 type Story = StoryObj;
 
