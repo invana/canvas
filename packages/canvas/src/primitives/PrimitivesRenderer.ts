@@ -59,6 +59,8 @@ import { ArrowMarker } from './markers/ArrowMarker';
 import { GlowDecoration } from './decorations/shape/GlowDecoration';
 import { PulseRingDecoration } from './decorations/shape/PulseRingDecoration';
 import { LiquidFillDecoration } from './decorations/shape/LiquidFillDecoration';
+import { MarchingAntsDecoration } from './decorations/shape/MarchingAntsDecoration';
+import { MarchingAntsConnectorDecoration } from './decorations/connector/MarchingAntsConnectorDecoration';
 import { ShakeEffect } from './effects/shape/ShakeEffect';
 import { BreathingEffect } from './effects/shape/BreathingEffect';
 import { resolveBadgePosition } from './badges/placement';
@@ -201,6 +203,8 @@ export class PrimitivesRenderer {
     this.registerDecoration('glow', GlowDecoration, { target: 'shape' });
     this.registerDecoration('pulse-ring', PulseRingDecoration, { target: 'shape' });
     this.registerDecoration('liquid-fill', LiquidFillDecoration, { target: 'shape' });
+    this.registerDecoration('marching-ants', MarchingAntsDecoration, { target: 'shape' });
+    this.registerDecoration('marching-ants-connector', MarchingAntsConnectorDecoration, { target: 'connector' });
 
     this.registerEffect('shake', ShakeEffect, { target: 'shape' });
     this.registerEffect('breathing', BreathingEffect, { target: 'shape' });

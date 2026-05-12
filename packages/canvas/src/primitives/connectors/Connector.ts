@@ -1,10 +1,12 @@
 import type { Graphics } from 'pixi.js';
 import { ConnectorBase } from '../base/ConnectorBase';
+import { emitDashedStroke } from '../paint/dashedStroke';
 import type {
   BaseConnectorSpec,
   ConnectorPaintStyle,
   Path,
 } from '../types';
+import { samplePath } from './pathSampling';
 
 /**
  * The single concrete connector class. Renders any `Path` natively via
@@ -23,6 +25,20 @@ export class Connector extends ConnectorBase<BaseConnectorSpec> {
     style?: ConnectorPaintStyle,
   ): void {
     if (path.length < 2) return;
+
+    if (style?.dashArray) {
+      emitDashedStroke(g, samplePath(path), {
+        color: style.color ?? 0x000000,
+        alpha: style.alpha ?? 1,
+        width: style.strokeWidth ?? spec.stroke?.width ?? 1,
+        dashArray: style.dashArray,
+        dashOffset: style.dashOffset,
+        closed: false,
+        cap: style.cap,
+        join: style.join,
+      });
+      return;
+    }
 
     for (const cmd of path) {
       switch (cmd.kind) {

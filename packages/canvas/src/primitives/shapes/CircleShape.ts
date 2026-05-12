@@ -1,6 +1,7 @@
 import type { Graphics } from 'pixi.js';
 import { ShapeBase } from '../base/ShapeBase';
 import { applyFill, applyMarkerFill, applyStroke } from '../paint/applyFillStroke';
+import { emitDashedStroke } from '../paint/dashedStroke';
 import type {
   CircleSpec,
   Point,
@@ -25,6 +26,19 @@ export class CircleShape extends ShapeBase<CircleSpec> {
 
   protected drawGeometry(g: Graphics, spec: CircleSpec, style?: ShapePaintStyle): void {
     const r = Math.max(0, spec.radius - (style?.inset ?? 0));
+
+    if (style?.dashArray) {
+      emitDashedStroke(g, sampleCircleOutline(r), {
+        color: style.color ?? 0x000000,
+        alpha: style.alpha ?? 1,
+        width: style.strokeWidth ?? 1,
+        dashArray: style.dashArray,
+        dashOffset: style.dashOffset,
+        closed: true,
+      });
+      return;
+    }
+
     const trace = () => g.circle(0, 0, r);
     trace();
     applyFill(g, spec, style, this.host, this.bounds(), trace);
@@ -93,4 +107,21 @@ export class CircleShape extends ShapeBase<CircleSpec> {
     g.circle(anchor.x, anchor.y, r);
     applyMarkerFill(g, spec.fill, style);
   }
+}
+
+/**
+ * Densify the circle outline into a polyline for dashed-stroke emission.
+ * Step count is proportional to perimeter (≈ 1 vertex per 4 px), clamped
+ * to a minimum that keeps small circles smooth. Output is centred at the
+ * origin and traverses counter-clockwise from `(r, 0)`.
+ */
+function sampleCircleOutline(r: number): Point[] {
+  if (r <= 0) return [];
+  const n = Math.max(24, Math.ceil((Math.PI * 2 * r) / 4));
+  const out: Point[] = new Array(n);
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    out[i] = { x: Math.cos(a) * r, y: Math.sin(a) * r };
+  }
+  return out;
 }

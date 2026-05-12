@@ -59,6 +59,10 @@ export { PulseRingDecoration } from './decorations/shape/PulseRingDecoration';
 export type { PulseRingDecorationStyle } from './decorations/shape/PulseRingDecoration';
 export { LiquidFillDecoration } from './decorations/shape/LiquidFillDecoration';
 export type { LiquidFillDecorationStyle } from './decorations/shape/LiquidFillDecoration';
+export { MarchingAntsDecoration } from './decorations/shape/MarchingAntsDecoration';
+export type { MarchingAntsDecorationStyle } from './decorations/shape/MarchingAntsDecoration';
+export { MarchingAntsConnectorDecoration } from './decorations/connector/MarchingAntsConnectorDecoration';
+export type { MarchingAntsConnectorDecorationStyle } from './decorations/connector/MarchingAntsConnectorDecoration';
 
 // ─── Built-in effects ──────────────────────────────────────────────────────
 export { ShakeEffect } from './effects/shape/ShakeEffect';
