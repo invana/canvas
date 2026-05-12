@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, PrimitivesRenderer } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
-import { createContainer } from '../../div-util';
+import { createContainer } from '../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Decorations/Glow' };
+const meta: Meta = { title: 'Canvas/Decorations/Shapes/Glow' };
 export default meta;
 type Story = StoryObj;
 

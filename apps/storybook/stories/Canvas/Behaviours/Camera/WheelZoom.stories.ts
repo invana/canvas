@@ -2,24 +2,23 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import {
   Canvas,
   DragPanBehaviour,
-  DragShapeBehaviour,
   WheelZoomBehaviour,
   WorldLayer,
   PrimitivesRenderer,
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer } from '../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Behaviours/DragShapeBehaviour' };
+const meta: Meta = { title: 'Canvas/Behaviours/Camera/WheelZoomBehaviour' };
 export default meta;
 type Story = StoryObj;
 
-export const DragShape: Story = {
-  render: () => createContainer({ id: 'cvs-behaviour-drag-shape' }),
+export const WheelZoom: Story = {
+  render: () => createContainer({ id: 'cvs-behaviour-wheel-zoom' }),
 
   play: async ({ canvasElement }) => {
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-behaviour-drag-shape')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-behaviour-wheel-zoom')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
 
@@ -44,47 +43,42 @@ export const DragShape: Story = {
 
     layer.renderer.addShape('a', {
       kind: 'circle',
-      x: -140,
+      x: 0,
       y: 0,
-      radius: 50,
+      radius: 60,
       fill: { kind: 'solid', color: 0x4f9cf9 },
       stroke: { color: 0x1d4ed8, width: 2 },
     });
     layer.renderer.addShape('b', {
       kind: 'rect',
-      x: 60,
+      x: 140,
       y: -40,
       width: 120,
       height: 80,
       fill: { kind: 'solid', color: 0x10b981, alpha: 0.9 },
       stroke: { color: 0x047857, width: 2 },
     });
-    layer.renderer.addConnector('a-b', {
-      kind: 'line',
-      source: { kind: 'shape', shapeId: 'a' },
-      target: { kind: 'shape', shapeId: 'b' },
-      stroke: { color: 0x334155, width: 2 },
-    });
 
     canvas.camera.fitContent(layer.getBounds(), 120);
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     const settings = {
       enabled: true,
-      reRouteConnectors: true,
-      dragCursor: 'grabbing',
+      requireCtrl: false,
+      percent: 0.1,
+      smoothEnabled: false,
+      smoothFrames: 8,
     };
 
-    const ID = 'drag-shape';
-    const build = (): DragShapeBehaviour =>
-      new DragShapeBehaviour({
+    const ID = 'zoom';
+    const build = (): WheelZoomBehaviour =>
+      new WheelZoomBehaviour({
         id: ID,
         enabled: settings.enabled,
-        renderer: layer.renderer,
-        reRouteConnectors: settings.reRouteConnectors,
-        dragCursor: settings.dragCursor,
+        requireCtrl: settings.requireCtrl,
+        percent: settings.percent,
+        smooth: settings.smoothEnabled ? settings.smoothFrames : false,
       });
 
     canvas.behaviours.register(build());
@@ -94,11 +88,11 @@ export const DragShape: Story = {
       canvas.behaviours.register(build());
     };
 
-    const gui = new GUI({ title: 'DragShapeBehaviour' });
+    const gui = new GUI({ title: 'WheelZoomBehaviour' });
     gui.add(settings, 'enabled').onChange((v: boolean) => canvas.behaviours.setEnabled(ID, v));
-    gui.add(settings, 'reRouteConnectors').onChange(rebuild);
-    gui
-      .add(settings, 'dragCursor', ['grabbing', 'grab', 'move', 'crosshair', 'pointer', 'default'])
-      .onChange(rebuild);
+    gui.add(settings, 'requireCtrl').onChange(rebuild);
+    gui.add(settings, 'percent', 0.01, 0.5, 0.01).onChange(rebuild);
+    gui.add(settings, 'smoothEnabled').name('smooth').onChange(rebuild);
+    gui.add(settings, 'smoothFrames', 1, 30, 1).name('smooth frames').onChange(rebuild);
   },
 };

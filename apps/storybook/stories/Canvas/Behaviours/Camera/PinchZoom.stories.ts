@@ -2,23 +2,23 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import {
   Canvas,
   DragPanBehaviour,
-  WheelZoomBehaviour,
+  PinchZoomBehaviour,
   WorldLayer,
   PrimitivesRenderer,
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer } from '../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Behaviours/WheelZoomBehaviour' };
+const meta: Meta = { title: 'Canvas/Behaviours/Camera/PinchZoomBehaviour' };
 export default meta;
 type Story = StoryObj;
 
-export const WheelZoom: Story = {
-  render: () => createContainer({ id: 'cvs-behaviour-wheel-zoom' }),
+export const PinchZoom: Story = {
+  render: () => createContainer({ id: 'cvs-behaviour-pinch-zoom' }),
 
   play: async ({ canvasElement }) => {
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-behaviour-wheel-zoom')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-behaviour-pinch-zoom')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
 
@@ -65,20 +65,17 @@ export const WheelZoom: Story = {
 
     const settings = {
       enabled: true,
-      requireCtrl: false,
+      noDrag: false,
       percent: 0.1,
-      smoothEnabled: false,
-      smoothFrames: 8,
     };
 
-    const ID = 'zoom';
-    const build = (): WheelZoomBehaviour =>
-      new WheelZoomBehaviour({
+    const ID = 'pinch';
+    const build = (): PinchZoomBehaviour =>
+      new PinchZoomBehaviour({
         id: ID,
         enabled: settings.enabled,
-        requireCtrl: settings.requireCtrl,
+        noDrag: settings.noDrag,
         percent: settings.percent,
-        smooth: settings.smoothEnabled ? settings.smoothFrames : false,
       });
 
     canvas.behaviours.register(build());
@@ -88,11 +85,9 @@ export const WheelZoom: Story = {
       canvas.behaviours.register(build());
     };
 
-    const gui = new GUI({ title: 'WheelZoomBehaviour' });
+    const gui = new GUI({ title: 'PinchZoomBehaviour (touchscreen only)' });
     gui.add(settings, 'enabled').onChange((v: boolean) => canvas.behaviours.setEnabled(ID, v));
-    gui.add(settings, 'requireCtrl').onChange(rebuild);
+    gui.add(settings, 'noDrag').onChange(rebuild);
     gui.add(settings, 'percent', 0.01, 0.5, 0.01).onChange(rebuild);
-    gui.add(settings, 'smoothEnabled').name('smooth').onChange(rebuild);
-    gui.add(settings, 'smoothFrames', 1, 30, 1).name('smooth frames').onChange(rebuild);
   },
 };

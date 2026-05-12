@@ -2,23 +2,22 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import {
   Canvas,
   DragPanBehaviour,
-  PinchZoomBehaviour,
   WorldLayer,
   PrimitivesRenderer,
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
+import type { CanvasContext, DragModifier } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer } from '../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Behaviours/PinchZoomBehaviour' };
+const meta: Meta = { title: 'Canvas/Behaviours/Camera/DragPanBehaviour' };
 export default meta;
 type Story = StoryObj;
 
-export const PinchZoom: Story = {
-  render: () => createContainer({ id: 'cvs-behaviour-pinch-zoom' }),
+export const DragPan: Story = {
+  render: () => createContainer({ id: 'cvs-behaviour-drag-pan' }),
 
   play: async ({ canvasElement }) => {
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-behaviour-pinch-zoom')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-behaviour-drag-pan')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
 
@@ -43,7 +42,7 @@ export const PinchZoom: Story = {
 
     layer.renderer.addShape('a', {
       kind: 'circle',
-      x: 0,
+      x: -100,
       y: 0,
       radius: 60,
       fill: { kind: 'solid', color: 0x4f9cf9 },
@@ -51,31 +50,31 @@ export const PinchZoom: Story = {
     });
     layer.renderer.addShape('b', {
       kind: 'rect',
-      x: 140,
+      x: 60,
       y: -40,
-      width: 120,
-      height: 80,
+      width: 140,
+      height: 90,
       fill: { kind: 'solid', color: 0x10b981, alpha: 0.9 },
       stroke: { color: 0x047857, width: 2 },
     });
 
     canvas.camera.fitContent(layer.getBounds(), 120);
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-
     const settings = {
       enabled: true,
-      noDrag: false,
-      percent: 0.1,
+      modifier: 'none' as DragModifier,
+      mouseButtons: 'left' as 'all' | 'left' | 'right' | 'middle',
+      decelerate: true,
     };
 
-    const ID = 'pinch';
-    const build = (): PinchZoomBehaviour =>
-      new PinchZoomBehaviour({
+    const ID = 'pan';
+    const build = (): DragPanBehaviour =>
+      new DragPanBehaviour({
         id: ID,
         enabled: settings.enabled,
-        noDrag: settings.noDrag,
-        percent: settings.percent,
+        modifier: settings.modifier,
+        mouseButtons: settings.mouseButtons,
+        decelerate: settings.decelerate,
       });
 
     canvas.behaviours.register(build());
@@ -85,9 +84,14 @@ export const PinchZoom: Story = {
       canvas.behaviours.register(build());
     };
 
-    const gui = new GUI({ title: 'PinchZoomBehaviour (touchscreen only)' });
+    const gui = new GUI({ title: 'DragPanBehaviour' });
     gui.add(settings, 'enabled').onChange((v: boolean) => canvas.behaviours.setEnabled(ID, v));
-    gui.add(settings, 'noDrag').onChange(rebuild);
-    gui.add(settings, 'percent', 0.01, 0.5, 0.01).onChange(rebuild);
+    gui
+      .add(settings, 'modifier', ['none', 'space', 'shift', 'alt'])
+      .onChange(rebuild);
+    gui
+      .add(settings, 'mouseButtons', ['all', 'left', 'right', 'middle'])
+      .onChange(rebuild);
+    gui.add(settings, 'decelerate').onChange(rebuild);
   },
 };

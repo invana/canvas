@@ -9,21 +9,22 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer } from '../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Decorations/FlowParticlesConnector' };
+const meta: Meta = { title: 'Canvas/Decorations/Connectors/RippleConnector' };
 export default meta;
 type Story = StoryObj;
 
 /**
- * Connector decoration that animates N markers travelling along the routed
- * path at the same speed, evenly spread in phase — a sustained "flow" of
- * particles on the edge. Demonstrated with both a straight `normal` path
- * and a `bezier`-styled path so you can see the particles follow whatever
- * curve the path resolves to.
+ * Connector-shaped ripple. Each wave strokes the host's body + markers at
+ * a width that grows outward and fades — so the wave inherits the line's
+ * shape (straight, bezier, curves, bends) and the arrowhead silhouette
+ * instead of being a circular pulse. Multiple concurrent rings are
+ * phase-distributed across one period for a steady rhythm. Demonstrated
+ * on both a straight `normal` path and a `bezier`-styled path.
  */
-export const FlowParticlesConnector: Story = {
-  render: () => createContainer({ id: 'cvs-deco-flow-particles-connector' }),
+export const RippleConnector: Story = {
+  render: () => createContainer({ id: 'cvs-deco-ripple-connector' }),
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
@@ -35,13 +36,13 @@ export const FlowParticlesConnector: Story = {
       hitTest() { return null; }
     }
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-flow-particles-connector')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-ripple-connector')!;
     const canvas = new Canvas();
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const layer = new RenderLayer({ id: 'flow-particles-connector', options: {} });
+    const layer = new RenderLayer({ id: 'ripple-connector', options: {} });
     canvas.layers.add(layer);
 
     layer.renderer.addShape('a', {
@@ -82,40 +83,32 @@ export const FlowParticlesConnector: Story = {
     });
 
     const settings = {
-      color: 0x111827,
-      markerKind: 'circle' as 'circle' | 'square' | 'arrow',
-      count: 6,
-      size: 7,
-      speedPxPerSec: 60,
-      loop: true,
-      phase: 0,
-      orientToPath: false,
-      alpha: 1,
+      color: 0xef4444,
+      maxRadius: 18,
+      periodMs: 1400,
+      rings: 3,
+      innerAlpha: 0.7,
     };
 
     const apply = () => {
       const style = { ...settings };
-      layer.renderer.setDecoration('a-to-b', 'flow-particles-connector', {
-        kind: 'flow-particles-connector',
+      layer.renderer.setDecoration('a-to-b', 'ripple-connector', {
+        kind: 'ripple-connector',
         style,
       });
-      layer.renderer.setDecoration('c-to-d', 'flow-particles-connector', {
-        kind: 'flow-particles-connector',
+      layer.renderer.setDecoration('c-to-d', 'ripple-connector', {
+        kind: 'ripple-connector',
         style,
       });
     };
     apply();
 
-    const gui = new GUI({ title: 'FlowParticlesConnector' });
+    const gui = new GUI({ title: 'RippleConnector' });
     gui.addColor(settings, 'color').onChange(apply);
-    gui.add(settings, 'markerKind', ['circle', 'square', 'arrow']).onChange(apply);
-    gui.add(settings, 'count', 1, 24, 1).onChange(apply);
-    gui.add(settings, 'size', 2, 24, 1).onChange(apply);
-    gui.add(settings, 'speedPxPerSec', -240, 240, 2).onChange(apply);
-    gui.add(settings, 'loop').onChange(apply);
-    gui.add(settings, 'phase', 0, 1, 0.01).onChange(apply);
-    gui.add(settings, 'orientToPath').onChange(apply);
-    gui.add(settings, 'alpha', 0, 1, 0.05).onChange(apply);
+    gui.add(settings, 'maxRadius', 2, 48, 1).onChange(apply);
+    gui.add(settings, 'periodMs', 200, 4000, 50).onChange(apply);
+    gui.add(settings, 'rings', 1, 8, 1).onChange(apply);
+    gui.add(settings, 'innerAlpha', 0, 1, 0.05).onChange(apply);
 
     canvas.camera.fitContent(layer.getBounds(), 100);
   },

@@ -9,9 +9,9 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer } from '../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Decorations/GlowConnector' };
+const meta: Meta = { title: 'Canvas/Decorations/Connectors/GlowConnector' };
 export default meta;
 type Story = StoryObj;
 

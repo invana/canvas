@@ -16,9 +16,9 @@ import type {
   ShapePaintStyle,
 } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer } from '../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Decorations/LiquidFill' };
+const meta: Meta = { title: 'Canvas/Decorations/Shapes/LiquidFill' };
 export default meta;
 type Story = StoryObj;
 
