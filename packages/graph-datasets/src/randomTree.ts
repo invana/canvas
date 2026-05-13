@@ -1,36 +1,26 @@
 /**
- * Procedurally-generated random tree, for force-layout stress tests and
+ * Procedurally-generated tree, for force-layout stress tests and
  * tree-shaped demos.
  *
- * Each non-root node picks a uniformly-random earlier node as its
- * parent. This yields a "branchy" shape (no single chain dominates)
- * while keeping the algorithm trivial — O(n) time, no balancing,
- * deterministic given a `seed`.
+ * Node `i + 1`'s parent is node `floor(sqrt(i))`, which yields a
+ * branchy, square-root-balanced tree in O(n) time with no RNG.
  *
- * Export shape is structurally compatible with `GraphData` from
- * `@invana/graph` — pass it straight to `graph.setData()` (per-node
- * `depth` lives on `data` for colour-by-depth demos).
+ * The export uses a minimal `{ index }` / `{ source, target }` shape.
+ * Map it onto `GraphNode` / `GraphEdge` at the call site (see the
+ * `RandomTree` story for an example).
  *
  * @example
  * import { generateRandomTree } from '@invana/graph-datasets';
- * const tree = generateRandomTree(500, 42);
- * graph.setData(tree);
+ * const tree = generateRandomTree(500);
  */
 
-export interface RandomTreeNodeData {
-  /** 0 at the root, +1 per generation. Useful for colour-by-depth. */
-  depth: number;
-}
-
 export interface RandomTreeNode {
-  id: string;
-  data: RandomTreeNodeData;
+  index: number;
 }
 
 export interface RandomTreeEdge {
-  id: string;
-  source: string;
-  target: string;
+  source: number;
+  target: number;
 }
 
 export interface RandomTreeData {
@@ -38,33 +28,11 @@ export interface RandomTreeData {
   edges: RandomTreeEdge[];
 }
 
-/**
- * Generate a random tree of `count` nodes.
- *
- * @param count Total node count, including the root. `0` returns empty.
- * @param seed Seed for the internal LCG so output is reproducible.
- *             Default `1`.
- */
-export function generateRandomTree(count: number, seed = 1): RandomTreeData {
-  const nodes: RandomTreeNode[] = [];
-  const edges: RandomTreeEdge[] = [];
-  if (count <= 0) return { nodes, edges };
-
-  // Tiny LCG — adequate for picking parents; not for crypto.
-  let s = seed >>> 0;
-  const rand = (): number => {
-    s = (s * 9301 + 49297) % 233280;
-    return s / 233280;
-  };
-
-  const depths: number[] = [0];
-  nodes.push({ id: '0', data: { depth: 0 } });
-  for (let i = 1; i < count; i++) {
-    const parentIdx = Math.floor(rand() * i);
-    const depth = depths[parentIdx]! + 1;
-    depths.push(depth);
-    nodes.push({ id: String(i), data: { depth } });
-    edges.push({ id: `e${i}`, source: String(parentIdx), target: String(i) });
-  }
+export const generateRandomTree = (numNodes: number): RandomTreeData => {
+  const nodes = Array.from({ length: numNodes }, (_, i) => ({ index: i }));
+  const edges = Array.from({ length: numNodes - 1 }, (_, i) => ({
+    source: Math.floor(Math.sqrt(i)),
+    target: i + 1,
+  }));
   return { nodes, edges };
-}
+};

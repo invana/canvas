@@ -22,7 +22,6 @@ export const RandomTree: Story = {
     // ── Tree data ────────────────────────────────────────────────────────
     const settings = {
       nodeCount: 500,
-      seed: 42,
       chargeStrength: -60,
       chargeDistanceMax: 120,
       linkDistance: 18,
@@ -48,21 +47,27 @@ export const RandomTree: Story = {
     };
 
     const buildGraphData = (): { nodes: GraphNode[]; edges: GraphEdge[] } => {
-      const tree = generateRandomTree(settings.nodeCount, settings.seed);
+      const tree = generateRandomTree(settings.nodeCount);
+
+      // Depth via BFS from root (index 0). The dataset doesn't carry depth,
+      // but the topology is a tree so a single pass over edges is enough.
+      const depths = new Array<number>(tree.nodes.length).fill(0);
+      for (const e of tree.edges) depths[e.target] = depths[e.source]! + 1;
       let maxDepth = 0;
-      for (const n of tree.nodes) if (n.data.depth > maxDepth) maxDepth = n.data.depth;
+      for (const d of depths) if (d > maxDepth) maxDepth = d;
+
       const colorAt = (depth: number): number => {
         const t = maxDepth === 0 ? 0 : depth / maxDepth;
         return hslToHex(30 + t * 190, 0.65, 0.55); // 30° orange → 220° blue
       };
       const nodes: GraphNode[] = tree.nodes.map((n) => ({
-        id: n.id,
-        data: { fill: colorAt(n.data.depth), size: 8 },
+        id: String(n.index),
+        data: { fill: colorAt(depths[n.index]!), size: 8 },
       }));
-      const edges: GraphEdge[] = tree.edges.map((e) => ({
-        id: e.id,
-        source: e.source,
-        target: e.target,
+      const edges: GraphEdge[] = tree.edges.map((e, i) => ({
+        id: `e${i}`,
+        source: String(e.source),
+        target: String(e.target),
       }));
       return { nodes, edges };
     };
@@ -138,7 +143,6 @@ export const RandomTree: Story = {
 
     const tree = gui.addFolder('Tree');
     tree.add(settings, 'nodeCount', 10, 5000, 10);
-    tree.add(settings, 'seed', 1, 9999, 1);
 
     const forces = gui.addFolder('Forces');
     forces.add(settings, 'chargeStrength', -500, 0, 5);
