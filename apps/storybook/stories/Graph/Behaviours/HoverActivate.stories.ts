@@ -9,7 +9,7 @@ import {
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'Graph/Behaviours/HoverActivate' };
 export default meta;
@@ -36,6 +36,7 @@ export const HoverActivate: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-hover-activate')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
@@ -119,6 +120,7 @@ export const HoverActivate: Story = {
     });
 
     const gui = new GUI({ title: 'Hover Activate' });
+    onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'enable').onChange(apply);
     gui.add(settings, 'state', ['active', 'highlighted']).onChange(apply);
     gui

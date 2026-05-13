@@ -8,7 +8,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Decorations/Shapes/LiquidFill' };
 export default meta;
@@ -40,6 +40,7 @@ export const LiquidFill: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-liquid-fill')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -147,6 +148,7 @@ export const LiquidFill: Story = {
     };
 
     const gui = new GUI({ title: 'Liquid fill' });
+    onStoryTeardown(() => gui.destroy());
     gui.addColor(settings, 'fillColor').name('shape fill').onChange(applyFill);
 
     const strokeFolder = gui.addFolder('Stroke');

@@ -7,7 +7,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Behaviours/Camera/KeyboardCameraInputBehaviour' };
 export default meta;
@@ -19,6 +19,7 @@ export const KeyboardCameraInput: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-behaviour-keyboard-camera')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
 
     class RenderLayer extends WorldLayer {
@@ -83,6 +84,7 @@ export const KeyboardCameraInput: Story = {
     };
 
     const gui = new GUI({ title: 'KeyboardCameraInput — Arrows / + - 0' });
+    onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'enabled').onChange((v: boolean) => canvas.behaviours.setEnabled(ID, v));
     gui.add(settings, 'panStep', 1, 200, 1).onChange(rebuild);
     gui.add(settings, 'zoomFactor', 1.01, 2, 0.01).onChange(rebuild);

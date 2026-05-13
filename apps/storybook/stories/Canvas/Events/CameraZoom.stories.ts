@@ -8,7 +8,7 @@ import {
   PrimitivesRenderer,
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
-import { createContainer } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'Canvas/Events/camera:zoom' };
 export default meta;
@@ -20,6 +20,7 @@ export const CameraZoom: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-evt-camera-zoom')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     canvas.events.on('camera:zoom', action('camera:zoom'));
     await canvas.init({ container, autoResize: true });
 

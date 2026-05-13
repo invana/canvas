@@ -4,7 +4,7 @@ import { DragNodeBehaviour, GraphLayer, MiniMapLayer, type GraphNode } from '@in
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'Graph/Layer/MiniMap' };
 export default meta;
@@ -31,6 +31,7 @@ export const MiniMap: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-minimap')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
@@ -108,6 +109,7 @@ export const MiniMap: Story = {
       });
     };
     const gui = new GUI({ title: 'Minimap' });
+    onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'enableDrag').onChange(apply);
     gui
       .add(settings, 'position', ['top-left', 'top-right', 'bottom-left', 'bottom-right'])

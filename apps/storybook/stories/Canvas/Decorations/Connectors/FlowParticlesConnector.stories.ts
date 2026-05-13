@@ -9,7 +9,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Decorations/Connectors/FlowParticlesConnector' };
 export default meta;
@@ -37,6 +37,7 @@ export const FlowParticlesConnector: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-flow-particles-connector')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -107,6 +108,7 @@ export const FlowParticlesConnector: Story = {
     apply();
 
     const gui = new GUI({ title: 'FlowParticlesConnector' });
+    onStoryTeardown(() => gui.destroy());
     gui.addColor(settings, 'color').onChange(apply);
     gui.add(settings, 'markerKind', ['circle', 'square', 'arrow']).onChange(apply);
     gui.add(settings, 'count', 1, 24, 1).onChange(apply);

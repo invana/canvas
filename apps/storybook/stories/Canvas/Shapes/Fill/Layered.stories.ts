@@ -8,7 +8,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext, ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Shapes/Fill/Layered' };
 export default meta;
@@ -35,6 +35,7 @@ export const Layered: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-fill-layered')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -100,6 +101,7 @@ export const Layered: Story = {
     canvas.camera.fitContent(layer.getBounds(), 60);
 
     const gui = new GUI({ title: 'Layered fill' });
+    onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'preset', Object.keys(presets)).onChange(() => {
       layer.renderer.updateShape('l', { fill: presets[settings.preset] });
     });

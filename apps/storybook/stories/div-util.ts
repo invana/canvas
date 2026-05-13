@@ -1,3 +1,19 @@
+declare global {
+  interface Window {
+    __storyCleanups?: Array<() => void>;
+  }
+}
+
+/**
+ * Register a teardown callback for the current story. Storybook's `beforeEach`
+ * (configured in `.storybook/preview.ts`) drains and invokes the queue before
+ * the next story mounts, so each story can destroy its Canvas / GUI / etc.
+ * without bleeding state across story switches.
+ */
+export const onStoryTeardown = (fn: () => void): void => {
+  (window.__storyCleanups ??= []).push(fn);
+};
+
 interface CreateContainerOptions {
   id?: string;
   height?: string;

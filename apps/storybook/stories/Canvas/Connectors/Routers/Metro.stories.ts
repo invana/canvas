@@ -5,7 +5,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Connectors/Routers/Metro' };
 export default meta;
@@ -32,6 +32,7 @@ export const Metro: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-router-metro')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -140,6 +141,7 @@ export const Metro: Story = {
     canvas.camera.fitContent(layer.getBounds(), 100);
 
     const gui = new GUI({ title: 'metro router' });
+    onStoryTeardown(() => gui.destroy());
 
     const routerFolder = gui.addFolder('router (metro)');
     routerFolder.add(settings, 'avoidance', ['auto', 'none']).onChange(drawEdge);

@@ -7,7 +7,7 @@ import {
   PrimitivesRenderer,
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
-import { createContainer } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'Canvas/Events/camera:pan' };
 export default meta;
@@ -19,6 +19,7 @@ export const CameraPan: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-evt-camera-pan')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     canvas.events.on('camera:pan', action('camera:pan'));
     await canvas.init({ container, autoResize: true });
 

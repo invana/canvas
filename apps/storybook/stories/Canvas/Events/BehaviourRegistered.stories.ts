@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { action } from 'storybook/actions';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour, PinchZoomBehaviour } from '@invana/canvas';
-import { createContainer } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'Canvas/Events/behaviour:registered' };
 export default meta;
@@ -15,6 +15,7 @@ export const BehaviourRegistered: Story = {
       '#cvs-evt-behaviour-registered',
     )!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     canvas.events.on('behaviour:registered', action('behaviour:registered'));
     await canvas.init({ container, autoResize: true });
 

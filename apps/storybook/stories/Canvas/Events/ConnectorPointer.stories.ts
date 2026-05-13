@@ -8,7 +8,7 @@ import {
   PrimitivesRenderer,
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
-import { createContainer } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'Canvas/Events/connector:pointer*' };
 export default meta;
@@ -20,6 +20,7 @@ export const ConnectorPointer: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-evt-connector-pointer')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));

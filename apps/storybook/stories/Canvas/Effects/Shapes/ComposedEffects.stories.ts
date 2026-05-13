@@ -8,7 +8,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Effects/Shapes/ComposedEffects' };
 export default meta;
@@ -40,6 +40,7 @@ export const ComposedEffects: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-effects-composed')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -124,6 +125,7 @@ export const ComposedEffects: Story = {
     };
 
     const gui = new GUI({ title: 'Composed effects' });
+    onStoryTeardown(() => gui.destroy());
     gui.addColor(settings, 'fillColor').name('shape fill').onChange(applyFill);
     gui.add(settings, 'shake').onChange(applyShake);
     gui.add(settings, 'breathing').onChange(applyBreathing);

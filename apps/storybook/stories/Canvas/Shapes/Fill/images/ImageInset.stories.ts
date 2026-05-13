@@ -8,7 +8,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext, InsetAnchor, ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Shapes/Fill/Images/ImageInset' };
 export default meta;
@@ -27,6 +27,7 @@ export const ImageInset: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-fill-image-inset')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -83,6 +84,7 @@ export const ImageInset: Story = {
     canvas.camera.fitContent(layer.getBounds(), 60);
 
     const gui = new GUI({ title: 'Image-inset fill' });
+    onStoryTeardown(() => gui.destroy());
     const repaint = () => layer.renderer.updateShape('ii', { fill: buildFill() });
     gui.add(settings, 'sample', Object.keys(samples)).onChange(repaint);
     gui.add(settings, 'sizeRatio', 0.1, 1, 0.01).onChange(repaint);

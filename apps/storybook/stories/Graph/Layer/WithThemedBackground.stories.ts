@@ -9,7 +9,7 @@ import type { ThemedBackgroundMode } from '@invana/canvas';
 import { DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'Graph/Layer/WithThemedBackground' };
 export default meta;
@@ -45,6 +45,7 @@ export const WithThemedBackground: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-themed-bg')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
@@ -184,6 +185,7 @@ export const WithThemedBackground: Story = {
     };
 
     const gui = new GUI({ title: 'Themed background' });
+    onStoryTeardown(() => gui.destroy());
     gui
       .add(
         settings,

@@ -5,7 +5,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Connectors/PathStyles/Smooth' };
 export default meta;
@@ -31,6 +31,7 @@ export const Smooth: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-pathstyle-smooth')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -106,6 +107,7 @@ export const Smooth: Story = {
     canvas.camera.fitContent(layer.getBounds(), 100);
 
     const gui = new GUI({ title: 'smooth pathStyle' });
+    onStoryTeardown(() => gui.destroy());
 
     const pathStyleFolder = gui.addFolder('pathStyle (smooth)');
     pathStyleFolder.add(settings, 'tension', 0, 2, 0.05).onChange(draw);

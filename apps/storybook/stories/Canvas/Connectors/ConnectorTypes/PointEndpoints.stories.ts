@@ -5,7 +5,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Connectors/ConnectorTypes/PointEndpoints' };
 export default meta;
@@ -33,6 +33,7 @@ export const PointEndpoints: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-connector-point-endpoints')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -97,6 +98,7 @@ export const PointEndpoints: Story = {
     canvas.camera.fitContent(layer.getBounds(), 100);
 
     const gui = new GUI({ title: 'connector (point endpoints)' });
+    onStoryTeardown(() => gui.destroy());
 
     const endpointsFolder = gui.addFolder('endpoints');
     endpointsFolder.add(settings, 'sourceX', -400, 400, 1).onChange(redraw);

@@ -9,7 +9,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Effects/Connectors/FadeInConnector' };
 export default meta;
@@ -38,6 +38,7 @@ export const FadeInConnector: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-effect-fade-in-connector')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -112,6 +113,7 @@ export const FadeInConnector: Story = {
     apply();
 
     const gui = new GUI({ title: 'FadeInConnector' });
+    onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'durationMs', 100, 4000, 50).onChange(apply);
     gui.add(settings, 'fromAlpha', 0, 1, 0.05).onChange(apply);
     gui.add(settings, 'toAlpha', 0, 1, 0.05).onChange(apply);

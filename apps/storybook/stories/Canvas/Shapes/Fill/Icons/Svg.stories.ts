@@ -8,7 +8,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext, InsetAnchor, ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Shapes/Fill/Icons/Svg' };
 export default meta;
@@ -27,6 +27,7 @@ export const Svg: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-fill-svg')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -89,6 +90,7 @@ export const Svg: Story = {
     canvas.camera.fitContent(layer.getBounds(), 80);
 
     const gui = new GUI({ title: 'SVG (literal path-d)' });
+    onStoryTeardown(() => gui.destroy());
     const repaint = () => layer.renderer.updateShape('s', { fill: buildFill() });
     gui.add(settings, 'path', Object.keys(paths)).onChange(repaint);
     gui.addColor(settings, 'color').onChange(repaint);

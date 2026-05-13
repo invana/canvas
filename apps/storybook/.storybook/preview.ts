@@ -36,6 +36,25 @@ function extractPlayBody(src: string): string {
 }
 
 const preview: Preview = {
+  /**
+   * Tear down the previous story before the next one mounts. Stories register
+   * cleanups (canvas.destroy(), gui.destroy(), etc.) via `onStoryTeardown` in
+   * `stories/div-util.ts`. The DOM sweep is belt-and-braces in case a story
+   * created a lil-gui panel without registering one.
+   */
+  beforeEach: async () => {
+    const fns = window.__storyCleanups ?? [];
+    window.__storyCleanups = [];
+    for (const fn of fns) {
+      try {
+        fn();
+      } catch (err) {
+        console.warn('[story cleanup]', err);
+      }
+    }
+    document.querySelectorAll('.lil-gui').forEach((n) => n.remove());
+  },
+
   parameters: {
     controls: {
       matchers: {

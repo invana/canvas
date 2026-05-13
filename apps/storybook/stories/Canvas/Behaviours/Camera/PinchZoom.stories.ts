@@ -8,7 +8,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Behaviours/Camera/PinchZoomBehaviour' };
 export default meta;
@@ -20,6 +20,7 @@ export const PinchZoom: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-behaviour-pinch-zoom')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
 
     class RenderLayer extends WorldLayer {
@@ -86,6 +87,7 @@ export const PinchZoom: Story = {
     };
 
     const gui = new GUI({ title: 'PinchZoomBehaviour (touchscreen only)' });
+    onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'enabled').onChange((v: boolean) => canvas.behaviours.setEnabled(ID, v));
     gui.add(settings, 'noDrag').onChange(rebuild);
     gui.add(settings, 'percent', 0.01, 0.5, 0.01).onChange(rebuild);

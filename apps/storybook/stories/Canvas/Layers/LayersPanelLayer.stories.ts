@@ -10,7 +10,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext, LayersPanelCorner } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'Canvas/Layers/LayersPanelLayer' };
 export default meta;
@@ -38,6 +38,7 @@ export const LayersPanel: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-layers-panel-layer')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
@@ -129,6 +130,7 @@ export const LayersPanel: Story = {
     };
 
     const gui = new GUI({ title: 'LayersPanelLayer' });
+    onStoryTeardown(() => gui.destroy());
 
     const fGeneral = gui.addFolder('General');
     fGeneral.add(settings, 'enabled').onChange((v: boolean) => panel.setEnabled(v));

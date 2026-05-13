@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { action } from 'storybook/actions';
 import { Canvas, DragPanBehaviour } from '@invana/canvas';
-import { createContainer } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'Canvas/Events/behaviour:disabled' };
 export default meta;
@@ -13,6 +13,7 @@ export const BehaviourDisabled: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-evt-behaviour-disabled')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     canvas.events.on('behaviour:disabled', action('behaviour:disabled'));
     await canvas.init({ container, autoResize: true });
 

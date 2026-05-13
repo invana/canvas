@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, PrimitivesRenderer } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Decorations/Shapes/Glow' };
 export default meta;
@@ -30,6 +30,7 @@ export const Glow: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-glow')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -97,6 +98,7 @@ export const Glow: Story = {
     apply();
 
     const gui = new GUI({ title: 'Glow' });
+    onStoryTeardown(() => gui.destroy());
     gui.addColor(settings, 'fillColor').name('shape fill').onChange(applyFill);
     gui.addColor(settings, 'color').onChange(apply);
     gui.add(settings, 'radius', 2, 60, 1).onChange(apply);

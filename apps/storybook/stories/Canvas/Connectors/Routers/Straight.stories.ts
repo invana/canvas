@@ -5,7 +5,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Connectors/Routers/Straight' };
 export default meta;
@@ -32,6 +32,7 @@ export const Straight: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-router-straight')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -105,6 +106,7 @@ export const Straight: Story = {
     canvas.camera.fitContent(layer.getBounds(), 100);
 
     const gui = new GUI({ title: 'straight router' });
+    onStoryTeardown(() => gui.destroy());
 
     const pathStyleFolder = gui.addFolder('pathStyle');
     pathStyleFolder.add(settings, 'pathStyle', ['normal', 'rounded', 'bezier', 'smooth']).onChange(draw);

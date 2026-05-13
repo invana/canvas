@@ -7,7 +7,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext, DragModifier } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Behaviours/Camera/DragPanBehaviour' };
 export default meta;
@@ -19,6 +19,7 @@ export const DragPan: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-behaviour-drag-pan')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
 
     class RenderLayer extends WorldLayer {
@@ -85,6 +86,7 @@ export const DragPan: Story = {
     };
 
     const gui = new GUI({ title: 'DragPanBehaviour' });
+    onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'enabled').onChange((v: boolean) => canvas.behaviours.setEnabled(ID, v));
     gui
       .add(settings, 'modifier', ['none', 'space', 'shift', 'alt'])

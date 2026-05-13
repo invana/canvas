@@ -5,7 +5,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Connectors/PathStyles/Rounded' };
 export default meta;
@@ -32,6 +32,7 @@ export const Rounded: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-pathstyle-rounded')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -106,6 +107,7 @@ export const Rounded: Story = {
     canvas.camera.fitContent(layer.getBounds(), 100);
 
     const gui = new GUI({ title: 'rounded pathStyle' });
+    onStoryTeardown(() => gui.destroy());
 
     const pathStyleFolder = gui.addFolder('pathStyle (rounded)');
     pathStyleFolder.add(settings, 'radius', 0, 80, 1).onChange(draw);

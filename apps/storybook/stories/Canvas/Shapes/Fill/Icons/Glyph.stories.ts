@@ -8,7 +8,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext, InsetAnchor, ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Shapes/Fill/Icons/Glyph' };
 export default meta;
@@ -30,6 +30,7 @@ export const Glyph: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-fill-glyph')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -81,6 +82,7 @@ export const Glyph: Story = {
     canvas.camera.fitContent(layer.getBounds(), 80);
 
     const gui = new GUI({ title: 'Glyph fill' });
+    onStoryTeardown(() => gui.destroy());
     const repaint = () => layer.renderer.updateShape('g', { fill: buildFill() });
     gui.add(settings, 'char', ['★', '♥', '✓', '✗', '➜', '⚡', '🔥', '🚀']).onChange(repaint);
     gui.addColor(settings, 'color').onChange(repaint);

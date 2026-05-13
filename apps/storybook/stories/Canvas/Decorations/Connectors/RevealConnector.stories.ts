@@ -9,7 +9,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Decorations/Connectors/RevealConnector' };
 export default meta;
@@ -47,6 +47,7 @@ export const RevealConnector: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-reveal-connector')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -165,6 +166,7 @@ export const RevealConnector: Story = {
     apply();
 
     const gui = new GUI({ title: 'RevealConnector' });
+    onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'durationMs', 100, 6000, 50).onChange(apply);
     gui.add(settings, 'repeatMode', ['one-shot', 'infinite', 'count']).onChange(apply);
     gui.add(settings, 'repeatCount', 1, 10, 1).onChange(apply);

@@ -10,7 +10,7 @@ import {
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'Graph/Behaviours/ClickSelect' };
 export default meta;
@@ -37,6 +37,7 @@ export const ClickSelect: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-click-select')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
@@ -132,6 +133,7 @@ export const ClickSelect: Story = {
     });
 
     const gui = new GUI({ title: 'Click Select' });
+    onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'enable').onChange(apply);
     gui.add(settings, 'multiple').onChange(apply);
     gui

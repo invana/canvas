@@ -8,7 +8,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext, ShapeStroke } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'Canvas/Shapes/Stroke' };
 export default meta;
@@ -31,6 +31,7 @@ export const Stroke: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-stroke')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -93,6 +94,7 @@ export const Stroke: Story = {
     canvas.camera.fitContent(layer.getBounds(), 100);
 
     const gui = new GUI({ title: 'Stroke' });
+    onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'shape', ['circle', 'rect']).onChange(drawShape);
     gui.addColor(settings, 'color').onChange(drawShape);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(drawShape);

@@ -9,7 +9,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext, ThemedBackgroundMode } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'Canvas/Layers/ThemedBackgroundLayer' };
 export default meta;
@@ -62,6 +62,7 @@ export const ThemedBackground: Story = {
       '#cvs-themed-background-layer',
     )!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
@@ -172,6 +173,7 @@ export const ThemedBackground: Story = {
     };
 
     const gui = new GUI({ title: 'Themed background' });
+    onStoryTeardown(() => gui.destroy());
     gui
       .add(
         settings,

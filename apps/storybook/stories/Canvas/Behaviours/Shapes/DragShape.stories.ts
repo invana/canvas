@@ -9,7 +9,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Behaviours/Shapes/DragShapeBehaviour' };
 export default meta;
@@ -21,6 +21,7 @@ export const DragShape: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-behaviour-drag-shape')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
 
     class RenderLayer extends WorldLayer {
@@ -95,6 +96,7 @@ export const DragShape: Story = {
     };
 
     const gui = new GUI({ title: 'DragShapeBehaviour' });
+    onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'enabled').onChange((v: boolean) => canvas.behaviours.setEnabled(ID, v));
     gui.add(settings, 'reRouteConnectors').onChange(rebuild);
     gui

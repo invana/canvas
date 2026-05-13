@@ -8,7 +8,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Decorations/Shapes/MarchingAnts' };
 export default meta;
@@ -36,6 +36,7 @@ export const MarchingAnts: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-deco-marching-ants')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -98,6 +99,7 @@ export const MarchingAnts: Story = {
     };
 
     const gui = new GUI({ title: 'MarchingAnts' });
+    onStoryTeardown(() => gui.destroy());
     gui.addColor(settings, 'fillColor').name('shape fill').onChange(applyFill);
     gui.addColor(settings, 'color').onChange(apply);
     gui.add(settings, 'strokeWidth', 0.5, 6, 0.5).onChange(apply);

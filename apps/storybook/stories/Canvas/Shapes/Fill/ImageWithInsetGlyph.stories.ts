@@ -8,7 +8,7 @@ import {
 } from '@invana/canvas';
 import type { CanvasContext, InsetAnchor, ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'Canvas/Shapes/Fill/ImageWithInsetGlyph' };
 export default meta;
@@ -32,6 +32,7 @@ export const ImageWithInsetGlyph: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-image-with-inset-glyph')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -87,6 +88,7 @@ export const ImageWithInsetGlyph: Story = {
       layer.renderer.updateShape('avatar', { fill: buildFill() });
 
     const gui = new GUI({ title: 'Image + inset glyph' });
+    onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'anchor', ['center', 'top-left', 'top-right', 'bottom-left', 'bottom-right'])
       .onChange(repaint);
     gui.add(settings, 'badgeChar', ['✓', '★', '!', '♥', '⚡'])

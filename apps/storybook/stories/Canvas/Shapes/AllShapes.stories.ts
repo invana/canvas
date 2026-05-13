@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, PrimitivesRenderer } from '@invana/canvas';
 import type { BadgePlacement, CanvasContext, ShapeFill, ShapeFillLayer, ShapeStroke } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'Canvas/Shapes/AllShapes' };
 export default meta;
@@ -23,6 +23,7 @@ export const AllShapes: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-all-shapes')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
@@ -214,6 +215,7 @@ export const AllShapes: Story = {
     applyToAllShapes();
 
     const gui = new GUI({ title: 'All shapes — live settings' });
+    onStoryTeardown(() => gui.destroy());
 
     const fillFolder = gui.addFolder('Fill (compose layers)');
     fillFolder.add(settings, 'showSolid').name('solid bg').onChange(applyToAllShapes);

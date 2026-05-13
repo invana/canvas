@@ -10,7 +10,7 @@ import { DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
-import { createContainer } from '../div-util';
+import { createContainer, onStoryTeardown } from '../div-util';
 
 const meta: Meta = { title: 'graph-layouts-force-d3-themed' };
 export default meta;
@@ -38,6 +38,7 @@ export const D3ForceThemed: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-d3-force-themed')!;
     const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
@@ -176,6 +177,7 @@ export const D3ForceThemed: Story = {
     };
 
     const gui = new GUI({ title: 'Themed background' });
+    onStoryTeardown(() => gui.destroy());
     gui
       .add(
         settings,
