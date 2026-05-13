@@ -8,8 +8,8 @@
  *     analytics, animations) sees the move.
  *   - The layer's connector-reroute pass runs naturally on the store flush.
  *   - Pinned-node semantics work: a dragged node automatically becomes
- *     `pinned: true` (configurable) so a running `D3ForceLayout` won't snap
- *     it back to its sim position.
+ *     `pinned: true` (configurable) so a subsequent layout pass leaves the
+ *     dropped node where the user put it.
  *
  * Default `enabled: false` — register, then explicitly enable.
  *
@@ -37,9 +37,8 @@ export interface DragNodeBehaviourOptions extends BehaviourOptions {
   filter?: (id: string) => boolean;
 
   /**
-   * Pin the node (`store.setPinned(id, true)`) when the drag starts. Keeps
-   * an in-flight `D3ForceLayout` (or any layout that respects `pinned`) from
-   * snapping the node back to its sim position while the user is grabbing it.
+   * Pin the node (`store.setPinned(id, true)`) when the drag starts so any
+   * subsequent layout pass leaves the dropped node where the user put it.
    * Default `true`.
    */
   pinWhileDragging?: boolean;
@@ -58,10 +57,22 @@ export interface DragNodeBehaviourOptions extends BehaviourOptions {
 
 interface DragState {
   readonly id: string;
-  /** Pointer's world position at drag start. */
-  readonly pointerWorldStart: { x: number; y: number };
-  /** Node's position at drag start (used to compute the delta). */
-  readonly nodePosStart: { x: number; y: number };
+  /**
+   * Pointer's world position at the gesture's anchoring moment. Captured at
+   * pointerdown initially and re-captured on the first real pointermove (the
+   * same instant we lazy-apply the pin) so the gesture's delta is measured
+   * from a *fresh* cursor position — see the `nodePosStart` note.
+   */
+  pointerWorldStart: { x: number; y: number };
+  /**
+   * Node's position at the gesture's anchoring moment. Initially set at
+   * pointerdown, then refreshed on the first real pointermove. The refresh
+   * matters when an active layout (e.g. `D3ForceLayout`) is still moving the
+   * node between pointerdown and the first pointermove: without it, deltas
+   * would be measured against a stale anchor and the dragged node would
+   * teleport away from the cursor.
+   */
+  nodePosStart: { x: number; y: number };
   /** Whether the node was already pinned when the drag began. */
   readonly wasPinned: boolean;
   /**
@@ -214,6 +225,18 @@ export class DragNodeBehaviour extends Behaviour {
     if (!this.state || !this.ctxRef || !this.layer) return;
     const { screenX, screenY } = this.clientToScreen(e.clientX, e.clientY);
     const world = this.ctxRef.camera.toWorld(screenX, screenY);
+
+    // First real pointermove: refresh the gesture anchors against the node's
+    // current store position, so a layout that's been moving the node between
+    // pointerdown and now doesn't leave us measuring deltas from a stale
+    // anchor. After this branch, `nextX/nextY` equals the fresh node position
+    // (delta = 0 on the anchoring move).
+    if (!this.state.pinApplied) {
+      const fresh = this.layer.store.getNode(this.state.id)?.position;
+      if (fresh) this.state.nodePosStart = { x: fresh.x, y: fresh.y };
+      this.state.pointerWorldStart = { x: world.x, y: world.y };
+    }
+
     const dx = world.x - this.state.pointerWorldStart.x;
     const dy = world.y - this.state.pointerWorldStart.y;
     const nextX = this.state.nodePosStart.x + dx;

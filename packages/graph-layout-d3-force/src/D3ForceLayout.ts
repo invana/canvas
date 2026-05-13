@@ -5,25 +5,27 @@
  *
  * Reads nodes + edges from the layer's `GraphStore`, runs a d3-force
  * simulation, writes back positions via `store.setPositionsBulk` per tick.
- * Respects `node.pinned` as d3-force `fx` / `fy` fixed positions.
+ * Respects `node.pinned` as d3-force `fx` / `fy` fixed positions at
+ * apply-time.
+ *
+ * Also subscribes to `node:update` so external mutators (e.g. a drag
+ * behaviour calling `store.setPosition`) flow into the live sim — the new
+ * position is mirrored onto the matching `SimNode` (non-freezing, no
+ * `fx`/`fy` lock) and α is re-heated so the cluster physically reacts.
  *
  * Two execution modes:
  *
  * - **Animated (default)**: drives the simulation across `requestAnimationFrame`
  *   ticks, writing positions back after each tick. The `apply()` promise
- *   resolves when `alpha < alphaMin` (the simulation has settled).
+ *   resolves when `alpha < alphaMin` (the simulation has settled), or on
+ *   first settle when `keepAlive: true`.
  * - **Sync (`syncTicks: true`)**: runs the simulation to convergence
  *   synchronously inside `apply()`, writes positions once.
  *
  * @example
  * const layout = new D3ForceLayout({ charge: -400, linkDistance: 100 });
- * await layout.apply(graphLayer);   // returns when settled
- *
- * // To rerun after data change:
  * await layout.apply(graphLayer);
- *
- * // Cancel an in-flight animated apply:
- * layout.stop();
+ * layout.stop();   // cancel an in-flight animated apply
  */
 
 import {
@@ -50,33 +52,22 @@ interface SimLink extends SimulationLinkDatum<SimNode> {
   id: string;
 }
 
-const DEFAULTS: Required<
-  Omit<D3ForceLayoutOptions, 'center' | 'collide' | 'onStart' | 'onTick' | 'onEnd'>
-> & {
-  center: { x: number; y: number };
-  collide: number;
-  onStart: (() => void) | undefined;
-  onTick: (() => void) | undefined;
-  onEnd: (() => void) | undefined;
-} = {
+const DEFAULTS = {
   charge: -300,
   linkDistance: 80,
   linkStrength: 0.6,
-  center: { x: 0, y: 0 },
-  collide: 24,
+  center: { x: 0, y: 0 } as { x: number; y: number } | null,
+  collide: 24 as number | false,
   alpha: 1,
   alphaMin: 0.001,
   alphaDecay: 0.0228,
   velocityDecay: 0.4,
   syncTicks: false,
-  onStart: undefined,
-  onTick: undefined,
-  onEnd: undefined,
+  keepAlive: false,
+  onStart: undefined as (() => void) | undefined,
+  onTick: undefined as (() => void) | undefined,
+  onEnd: undefined as (() => void) | undefined,
 };
-
-const hasRAF =
-  typeof globalThis !== 'undefined' &&
-  typeof (globalThis as { requestAnimationFrame?: unknown }).requestAnimationFrame === 'function';
 
 export class D3ForceLayout implements Layout<GraphLayer> {
   private readonly opts: typeof DEFAULTS;
@@ -88,23 +79,13 @@ export class D3ForceLayout implements Layout<GraphLayer> {
   private cancelTick: (() => void) | null = null;
 
   constructor(opts: D3ForceLayoutOptions = {}) {
-    this.opts = {
-      ...DEFAULTS,
-      ...opts,
-      center: opts.center === null ? DEFAULTS.center : (opts.center ?? DEFAULTS.center),
-      collide: opts.collide === false ? 0 : (opts.collide ?? DEFAULTS.collide),
-    };
-    // Stash the resolved center=null choice for build-time decision.
-    if (opts.center === null) this._noCenter = true;
-    if (opts.collide === false) this._noCollide = true;
+    this.opts = { ...DEFAULTS, ...opts };
   }
-
-  private _noCenter = false;
-  private _noCollide = false;
 
   /**
    * Run the layout against `layer`. Resolves when the simulation settles
-   * (alpha < alphaMin) or when `stop()` is called.
+   * (alpha < alphaMin) or when `stop()` is called. With `keepAlive: true`
+   * resolves at first settle and the loop keeps running until `stop()`.
    */
   async apply(layer: GraphLayer): Promise<void> {
     this.stop();
@@ -127,12 +108,12 @@ export class D3ForceLayout implements Layout<GraphLayer> {
       simNodes.push(node);
     }
 
+    if (simNodes.length === 0) return;
+
     const simLinks: SimLink[] = [];
     for (const e of store.edges()) {
       simLinks.push({ id: e.id, source: e.source, target: e.target });
     }
-
-    if (simNodes.length === 0) return;
 
     const sim = forceSimulation<SimNode, SimLink>(simNodes)
       .force(
@@ -149,44 +130,43 @@ export class D3ForceLayout implements Layout<GraphLayer> {
       .velocityDecay(this.opts.velocityDecay)
       .stop();
 
-    if (!this._noCenter) {
+    if (this.opts.center !== null) {
       sim.force('center', forceCenter<SimNode>(this.opts.center.x, this.opts.center.y));
     }
-    if (!this._noCollide) {
+    if (this.opts.collide !== false) {
       sim.force('collide', forceCollide<SimNode>(this.opts.collide));
     }
 
     this.sim = sim;
 
-    // O(1) sim-node lookup for the store subscription below.
-    const nodeIndex = new Map<string, number>();
-    for (let i = 0; i < nodeIds.length; i++) nodeIndex.set(nodeIds[i]!, i);
-
-    // Set while we're flushing positions back to the store, so the subscription
-    // below can ignore the resulting `node:update` events. Without this guard
-    // we'd treat our own write-back as an "external" change every frame.
+    // Set while we're flushing positions back to the store, so the
+    // `node:update` subscriber below ignores our own writes — otherwise
+    // every tick's bulk write-back would loop back through the bridge as
+    // an "external" change.
     let writingBack = false;
 
     const xy = new Float32Array(simNodes.length * 2);
-    const writeBack = () => {
+    const writeBack = (): void => {
       for (let i = 0; i < simNodes.length; i++) {
         xy[i * 2] = simNodes[i]!.x ?? 0;
         xy[i * 2 + 1] = simNodes[i]!.y ?? 0;
       }
       writingBack = true;
-      store.batch(() => {
-        store.setPositionsBulk(nodeIds, xy);
-      });
+      store.batch(() => store.setPositionsBulk(nodeIds, xy));
       writingBack = false;
     };
 
-    // Reactive bridge from the store to the running simulation. When an
-    // external mutator (e.g. `DragNodeBehaviour`) writes a new position or
-    // toggles `pinned`, the change lands here *immediately* — no per-frame
-    // polling — and we mirror it onto the matching `SimNode` so the next
-    // tick respects the user input. We also re-heat the simulation via
-    // `alphaTarget(0.3)` so the rest of the graph reacts to the drag, then
-    // schedule a cooldown so it eventually settles after the user lets go.
+    // Reactive sync from external store mutations into the running sim.
+    // When `DragNodeBehaviour` (or any caller) writes a new position via
+    // `store.setPosition`, mirror it onto the matching `SimNode.x` /
+    // `SimNode.y` so the next tick computes forces from the up-to-date
+    // position. This is *non-freezing* — `fx`/`fy` are left alone, so
+    // physics is free to continue moving the node from its new starting
+    // point. A short re-heat + cooldown ensures the cluster actually
+    // reacts even when the sim was idle (`alpha ≈ 0` with `keepAlive`).
+    const nodeIndex = new Map<string, number>();
+    for (let i = 0; i < nodeIds.length; i++) nodeIndex.set(nodeIds[i]!, i);
+
     let cooldownTimer: ReturnType<typeof setTimeout> | null = null;
     const scheduleCooldown = (): void => {
       if (cooldownTimer) clearTimeout(cooldownTimer);
@@ -197,88 +177,19 @@ export class D3ForceLayout implements Layout<GraphLayer> {
     };
 
     const offNodeUpdate = store.events.on('node:update', ({ nodeId, patch }) => {
-      if (writingBack) return;
+      if (writingBack || !patch.position) return;
       const idx = nodeIndex.get(nodeId);
       if (idx === undefined) return;
       const sn = simNodes[idx]!;
-
-      let touched = false;
-      if (patch.position) {
-        sn.x = patch.position.x;
-        sn.y = patch.position.y;
-        // If the node is currently pinned in the sim, keep its lock in sync
-        // with the new position — otherwise the next tick would snap it back
-        // to the old fx/fy.
-        if (sn.fx !== undefined) sn.fx = patch.position.x;
-        if (sn.fy !== undefined) sn.fy = patch.position.y;
-        touched = true;
-      }
-      if (patch.pinned !== undefined) {
-        if (patch.pinned) {
-          const stored = store.getNode(nodeId);
-          const px = stored?.position?.x ?? sn.x ?? 0;
-          const py = stored?.position?.y ?? sn.y ?? 0;
-          sn.fx = px;
-          sn.fy = py;
-          sn.x = px;
-          sn.y = py;
-        } else {
-          sn.fx = undefined;
-          sn.fy = undefined;
-        }
-        touched = true;
-      }
-
-      if (touched && this.sim) {
+      sn.x = patch.position.x;
+      sn.y = patch.position.y;
+      if (this.sim) {
         this.sim.alphaTarget(0.3).restart();
         scheduleCooldown();
       }
     });
 
-    const fireStart = (): void => {
-      try {
-        this.opts.onStart?.();
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error('[D3ForceLayout] onStart threw:', err);
-      }
-    };
-    const fireTick = (): void => {
-      try {
-        this.opts.onTick?.();
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error('[D3ForceLayout] onTick threw:', err);
-      }
-    };
-    const fireEnd = (): void => {
-      try {
-        this.opts.onEnd?.();
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error('[D3ForceLayout] onEnd threw:', err);
-      }
-    };
-
-    // Write the initial scatter to the store so any `onStart` consumer that
-    // reads `layer.getBounds()` sees the same positions the first tick will.
-    writeBack();
-    fireStart();
-
-    if (this.opts.syncTicks) {
-      // d3-force computes `numTicks = ceil(log(alphaMin) / log(1 - alphaDecay))`
-      // ticks to settle when called with no argument.
-      sim.tick();
-      writeBack();
-      fireTick();
-      this.sim = null;
-      offNodeUpdate();
-      if (cooldownTimer) clearTimeout(cooldownTimer);
-      fireEnd();
-      return;
-    }
-
-    const teardown = (): void => {
+    const teardownBridge = (): void => {
       offNodeUpdate();
       if (cooldownTimer) {
         clearTimeout(cooldownTimer);
@@ -286,52 +197,72 @@ export class D3ForceLayout implements Layout<GraphLayer> {
       }
     };
 
+    const { onStart, onTick, onEnd, syncTicks, keepAlive } = this.opts;
+
+    // Seed the store with initial positions so anything reading
+    // `layer.getBounds()` in `onStart` sees what the first tick will see.
+    writeBack();
+    onStart?.();
+
+    if (syncTicks) {
+      sim.tick();
+      writeBack();
+      onTick?.();
+      this.sim = null;
+      teardownBridge();
+      onEnd?.();
+      return;
+    }
+
     return new Promise<void>((resolve) => {
       let stopped = false;
+      let endSignalled = false;
+
+      const finish = (): void => {
+        this.sim = null;
+        this.cancelTick = null;
+        teardownBridge();
+        if (!endSignalled) {
+          endSignalled = true;
+          onEnd?.();
+          resolve();
+        }
+      };
+
       const tick = (): void => {
         if (stopped) return;
-        // Settle condition — but only when there's no active drag-cooldown
-        // keeping the simulation hot. Without this guard, a drag right at the
-        // settle boundary would exit the loop before the reheat takes effect.
-        if (sim.alpha() < sim.alphaMin() && sim.alphaTarget() < sim.alphaMin()) {
+        const settled =
+          sim.alpha() < sim.alphaMin() && sim.alphaTarget() < sim.alphaMin();
+
+        if (settled && !keepAlive) {
           writeBack();
-          fireTick();
-          this.sim = null;
-          this.cancelTick = null;
-          teardown();
-          fireEnd();
-          resolve();
+          onTick?.();
+          finish();
           return;
         }
-        sim.tick();
-        writeBack();
-        fireTick();
-        if (hasRAF) {
-          const handle = (
-            globalThis as { requestAnimationFrame: (cb: () => void) => number }
-          ).requestAnimationFrame(tick);
-          this.cancelTick = () => {
-            stopped = true;
-            (
-              globalThis as { cancelAnimationFrame?: (h: number) => void }
-            ).cancelAnimationFrame?.(handle);
-            this.sim = null;
-            teardown();
-            fireEnd();
+        if (settled) {
+          // keepAlive: resolve once at first settle, then idle-spin. Alpha is
+          // 0 so a tick would be a noop — skip the tick + write-back to avoid
+          // broadcasting "every position unchanged" each frame.
+          if (!endSignalled) {
+            writeBack();
+            onTick?.();
+            endSignalled = true;
+            onEnd?.();
             resolve();
-          };
+          }
         } else {
-          // Test / node fallback — schedule via microtask so the loop
-          // doesn't starve the event queue.
-          queueMicrotask(tick);
-          this.cancelTick = () => {
-            stopped = true;
-            this.sim = null;
-            teardown();
-            fireEnd();
-            resolve();
-          };
+          sim.tick();
+          writeBack();
+          onTick?.();
         }
+
+        const handle = requestAnimationFrame(tick);
+        this.cancelTick = () => {
+          stopped = true;
+          cancelAnimationFrame(handle);
+          finish();
+        };
       };
       tick();
     });
@@ -360,4 +291,5 @@ export class D3ForceLayout implements Layout<GraphLayer> {
     if (!this.sim) return;
     this.sim.alpha(alpha).restart();
   }
+
 }

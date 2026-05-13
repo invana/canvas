@@ -8,7 +8,7 @@ import {
 import { DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
-import GUI from 'lil-gui';
+import GUI, { type Controller } from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
 
 const meta: Meta = { title: 'graph-layouts-force-d3/LesMiserables' };
@@ -70,22 +70,12 @@ export const LesMiserables: Story = {
 
     graph.setData({ nodes, edges: lesMiserables.edges });
 
-    // Drag a node: store.setPosition fires, layout respects the now-pinned
-    // node so released nodes stay where you drop them.
+    // Drag a node: store.setPosition fires, the layer re-renders the shape,
+    // and the persistent `pinned` flag is set so the dropped position is
+    // honoured by any subsequent layout pass.
     canvas.behaviours.register(
       new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
     );
-
-    // Initial fit — pre-allocate a generous view based on the expected
-    // d3-force spread (~`linkDistance * √N` cluster radius, padded), so the
-    // simulation stays visible end-to-end without any per-tick re-centering.
-    // The user can pan / zoom freely afterwards, or hit "Fit" to retighten.
-    // const N = graph.store.nodeCount();
-    // const reach = Math.max(300, 50 * Math.sqrt(Math.max(1, N)) * 1.5);
-    // canvas.camera.fitContent(
-    //   { x: -reach, y: -reach, width: reach * 2, height: reach * 2 },
-    //   80,
-    // );
 
     const settings = {
       charge: -120,
@@ -101,11 +91,19 @@ export const LesMiserables: Story = {
       alphaDecay: 0.0228,
       velocityDecay: 0.4,
       syncTicks: false,
-      // Off by default — auto-fitting every tick fights user pan/zoom and
-      // visually freezes the camera during the simulation. Opt in when you
-      // actually want the camera to chase the spreading cluster.
-      autoFitCamera: false,
+      // On by default — the camera follows the spreading cluster from frame 1
+      // until the simulation settles (or the user toggles this off to keep
+      // pan / zoom sticky).
+      autoFitCamera: true,
+      // Keep the sim alive after first settle so the "Reheat" / "Apply"
+      // GUI buttons can revive physics on the existing simulation without
+      // a full rebuild. Idle ticks are noops, no event spam.
+      keepAlive: true,
     };
+
+    // Forward-declared so `buildLayout`'s `onEnd` can sync the checkbox after
+    // the initial settle. Assigned below when the Simulation folder is built.
+    let autoFitCtrl: Controller | null = null;
 
     let layout: D3ForceLayout = buildLayout();
 
@@ -121,17 +119,22 @@ export const LesMiserables: Story = {
         alphaDecay: settings.alphaDecay,
         velocityDecay: settings.velocityDecay,
         syncTicks: settings.syncTicks,
-        // One-time fit when the simulation kicks off, so the user sees the
-        // whole cluster from the start without continuous per-tick re-fitting.
-        onStart: () => canvas.camera.fitContent(graph.getBounds(), 80),
-        // Per-tick fit only when the user explicitly opts in via the GUI.
+        keepAlive: settings.keepAlive,
+        // Per-tick fit while `autoFitCamera` is on — drops out the moment the
+        // user toggles it off so they can pan / zoom freely.
         onTick: () => {
           if (settings.autoFitCamera) canvas.camera.fitContent(graph.getBounds(), 80);
         },
-        // Always retighten to the settled layout — the cluster's final bounds
-        // are usually larger than the initial onStart fit, so without this
-        // the user is left looking at a cropped view at settle time.
-        onEnd: () => canvas.camera.fitContent(graph.getBounds(), 80),
+        onEnd: () => {
+          canvas.camera.fitContent(graph.getBounds(), 80);
+          // Once the initial layout has settled, stop chasing the cluster on
+          // every tick — otherwise post-settle drags reflow the neighbours,
+          // bounds change per frame, and `fitContent` re-zooms the whole
+          // viewport each frame (background + nodes appear to breathe). The
+          // GUI checkbox is still the manual override.
+          settings.autoFitCamera = false;
+          autoFitCtrl?.updateDisplay();
+        },
       });
     }
 
@@ -168,7 +171,10 @@ export const LesMiserables: Story = {
     sim.add(settings, 'alphaDecay', 0.001, 0.2, 0.001);
     sim.add(settings, 'velocityDecay', 0, 1, 0.01);
     sim.add(settings, 'syncTicks');
-    sim.add(settings, 'autoFitCamera').name('autoFitCamera (per-tick fit)');
+    sim.add(settings, 'keepAlive').name('keepAlive (idle sim after settle)');
+    autoFitCtrl = sim
+      .add(settings, 'autoFitCamera')
+      .name('autoFitCamera (on; off = sticky)');
 
     const actions = {
       apply: () => reapply(),

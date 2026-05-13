@@ -67,6 +67,35 @@ export interface D3ForceLayoutOptions {
   syncTicks?: boolean;
 
   /**
+   * Keep the simulation alive after the initial settle. With this on, an
+   * external `store.setPosition` (e.g. a node drag) flows into the live
+   * sim — the layout listens to `node:update` events, mirrors the new
+   * position onto the matching `SimNode`, and re-heats α so the cluster
+   * physically reacts to the change instead of just snapping the node
+   * into a dead frame. The position sync is *non-freezing* — no
+   * `fx` / `fy` lock, so physics is free to continue moving the node
+   * from its new starting point. Default `false`.
+   *
+   * Semantics with `keepAlive: true`:
+   * - The `apply()` promise still resolves at first settle and `onEnd`
+   *   still fires once at that moment — the "initial layout is ready"
+   *   contract is unchanged.
+   * - The animated tick loop stays alive after that. While
+   *   `alphaTarget === 0` the loop is effectively idle (d3-force scales
+   *   all forces by alpha, so a tick with `alpha ≈ 0` is a noop and the
+   *   loop skips its own write-back to avoid event spam).
+   * - Any external `store.setPosition` bumps `alphaTarget` to `0.3` and
+   *   restarts the sim; a 200 ms cooldown after the last mutation cools
+   *   `alphaTarget` back to `0`.
+   * - The only way to terminate the run is `layout.stop()` (or destroying
+   *   the layer, which calls `stop()` for you).
+   *
+   * Ignored when `syncTicks: true` — sync mode has no animated tick loop
+   * to keep alive.
+   */
+  keepAlive?: boolean;
+
+  /**
    * Fired once when the simulation is built and the initial node positions
    * have been written back to the store, *before* the first tick. Use this
    * to set up the camera (e.g. `canvas.camera.fitContent(layer.getBounds())`)
