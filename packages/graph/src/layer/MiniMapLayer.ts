@@ -308,17 +308,29 @@ export class MiniMapLayer extends ScreenLayer<
       g.stroke({ width: 1, color: stroke });
     }
 
-    // Nodes as tiny rects keyed off `data.size` (default 4 px on the minimap).
+    // Nodes — match the shape kind actually drawn on the canvas (circle vs
+    // rect), scaled into minimap space. Falls back to the layer's
+    // `nodeDefaults` for any hint the node omits.
+    const defaults = graph.getNodeDefaults();
     for (const node of graph.store.nodes()) {
       const pos = node.position ?? { x: 0, y: 0 };
       const p = this.worldToMinimap(pos.x, pos.y);
       const data = (node.data as NodeRenderHints | undefined) ?? {};
-      const fill = typeof data.fill === 'number' ? data.fill : 0x4caf50;
-      // Use node size scaled to minimap, with a floor so single-pixel zooms
-      // don't disappear entirely.
-      const nodeWorldSize = data.size ?? 16;
-      const dot = Math.max(2, nodeWorldSize * this.scale);
-      g.rect(p.x - dot / 2, p.y - dot / 2, dot, dot).fill(fill);
+      const fill = typeof data.fill === 'number' ? data.fill : defaults.fill;
+      const fillColor = typeof fill === 'number' ? fill : 0x4caf50;
+      const shape = data.shape ?? defaults.shape;
+      const sizeWorld = data.size ?? defaults.size;
+
+      if (shape === 'rect') {
+        const heightWorld = data.height ?? sizeWorld;
+        const w = Math.max(2, sizeWorld * this.scale);
+        const h = Math.max(2, heightWorld * this.scale);
+        g.rect(p.x - w / 2, p.y - h / 2, w, h).fill(fillColor);
+      } else {
+        // 'circle' — half-size is the radius.
+        const r = Math.max(1, (sizeWorld / 2) * this.scale);
+        g.circle(p.x, p.y, r).fill(fillColor);
+      }
     }
   }
 
@@ -358,12 +370,17 @@ export class MiniMapLayer extends ScreenLayer<
     return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
   }
 
-  /** AABB of all node centers + padding. Falls back to a 1000×1000 box. */
+  /**
+   * AABB of all drawn node *footprints* (position ± half-size) + padding —
+   * not just centers, so nodes at the cluster edge aren't clipped or
+   * compressed against the minimap border. Falls back to a 1000×1000 box.
+   */
   private nodeBounds(): Bounds {
     const graph = this.graph;
     if (!graph || graph.store.nodeCount() === 0) {
       return { x: -500, y: -500, width: 1000, height: 1000 };
     }
+    const defaults = graph.getNodeDefaults();
     let minX = Infinity,
       minY = Infinity,
       maxX = -Infinity,
@@ -371,11 +388,16 @@ export class MiniMapLayer extends ScreenLayer<
     let any = false;
     for (const node of graph.store.nodes()) {
       const pos = node.position ?? { x: 0, y: 0 };
+      const data = (node.data as NodeRenderHints | undefined) ?? {};
+      const shape = data.shape ?? defaults.shape;
+      const sizeWorld = data.size ?? defaults.size;
+      const halfW = sizeWorld / 2;
+      const halfH = shape === 'rect' ? (data.height ?? sizeWorld) / 2 : sizeWorld / 2;
       any = true;
-      if (pos.x < minX) minX = pos.x;
-      if (pos.y < minY) minY = pos.y;
-      if (pos.x > maxX) maxX = pos.x;
-      if (pos.y > maxY) maxY = pos.y;
+      if (pos.x - halfW < minX) minX = pos.x - halfW;
+      if (pos.y - halfH < minY) minY = pos.y - halfH;
+      if (pos.x + halfW > maxX) maxX = pos.x + halfW;
+      if (pos.y + halfH > maxY) maxY = pos.y + halfH;
     }
     if (!any) return { x: -500, y: -500, width: 1000, height: 1000 };
     const pad = this.opts.padding;

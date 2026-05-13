@@ -67,6 +67,15 @@ export interface D3ForceLayoutOptions {
   syncTicks?: boolean;
 
   /**
+   * Fired once when the simulation is built and the initial node positions
+   * have been written back to the store, *before* the first tick. Use this
+   * to set up the camera (e.g. `canvas.camera.fitContent(layer.getBounds())`)
+   * exactly once when the run kicks off — preferred over a per-tick fit
+   * because it doesn't fight user pan / zoom during the simulation.
+   */
+  onStart?: () => void;
+
+  /**
    * Fired after every tick + write-back. Use this to follow the spreading
    * cluster with the camera, update overlays, log telemetry, etc.
    *

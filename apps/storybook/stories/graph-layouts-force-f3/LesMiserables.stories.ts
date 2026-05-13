@@ -76,9 +76,16 @@ export const LesMiserables: Story = {
       new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
     );
 
-    // Initial fit — nodes scatter near the origin so this is mostly to set a
-    // reasonable starting zoom.
-    canvas.camera.fitContent(graph.getBounds(), 80);
+    // Initial fit — pre-allocate a generous view based on the expected
+    // d3-force spread (~`linkDistance * √N` cluster radius, padded), so the
+    // simulation stays visible end-to-end without any per-tick re-centering.
+    // The user can pan / zoom freely afterwards, or hit "Fit" to retighten.
+    // const N = graph.store.nodeCount();
+    // const reach = Math.max(300, 50 * Math.sqrt(Math.max(1, N)) * 1.5);
+    // canvas.camera.fitContent(
+    //   { x: -reach, y: -reach, width: reach * 2, height: reach * 2 },
+    //   80,
+    // );
 
     const settings = {
       charge: -120,
@@ -94,7 +101,10 @@ export const LesMiserables: Story = {
       alphaDecay: 0.0228,
       velocityDecay: 0.4,
       syncTicks: false,
-      autoFitCamera: true,
+      // Off by default — auto-fitting every tick fights user pan/zoom and
+      // visually freezes the camera during the simulation. Opt in when you
+      // actually want the camera to chase the spreading cluster.
+      autoFitCamera: false,
     };
 
     let layout: D3ForceLayout = buildLayout();
@@ -111,13 +121,17 @@ export const LesMiserables: Story = {
         alphaDecay: settings.alphaDecay,
         velocityDecay: settings.velocityDecay,
         syncTicks: settings.syncTicks,
-        // Camera tracks the spreading cluster every tick; final tight fit on settle.
+        // One-time fit when the simulation kicks off, so the user sees the
+        // whole cluster from the start without continuous per-tick re-fitting.
+        onStart: () => canvas.camera.fitContent(graph.getBounds(), 80),
+        // Per-tick fit only when the user explicitly opts in via the GUI.
         onTick: () => {
           if (settings.autoFitCamera) canvas.camera.fitContent(graph.getBounds(), 80);
         },
-        onEnd: () => {
-          if (settings.autoFitCamera) canvas.camera.fitContent(graph.getBounds(), 80);
-        },
+        // Always retighten to the settled layout — the cluster's final bounds
+        // are usually larger than the initial onStart fit, so without this
+        // the user is left looking at a cropped view at settle time.
+        onEnd: () => canvas.camera.fitContent(graph.getBounds(), 80),
       });
     }
 
@@ -160,9 +174,11 @@ export const LesMiserables: Story = {
       apply: () => reapply(),
       reheat: () => layout.reheat(0.5),
       stop: () => layout.stop(),
+      fit: () => canvas.camera.fitContent(graph.getBounds(), 80),
     };
     gui.add(actions, 'apply').name('Apply (rebuild + run)');
     gui.add(actions, 'reheat').name('Reheat (alpha=0.5)');
     gui.add(actions, 'stop').name('Stop');
+    gui.add(actions, 'fit').name('Fit to content');
   },
 };

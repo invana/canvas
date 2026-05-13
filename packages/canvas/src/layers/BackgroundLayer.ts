@@ -119,7 +119,7 @@ export class BackgroundLayer extends ScreenLayer<
   private tiling: TilingSprite | null = null;
   private patternTexture: Texture | null = null;
   /** DPR baked into the current pattern texture — used to compensate `tileScale`. */
-  private textureDpr = 1;
+  private textureDpr = window.devicePixelRatio || 1;
   private resizeObserver: ResizeObserver | null = null;
   private offCameraPan: (() => void) | null = null;
   private offCameraZoom: (() => void) | null = null;

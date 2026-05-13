@@ -107,6 +107,15 @@ export class GraphLayer extends WorldLayer<
     return this._renderer;
   }
 
+  /**
+   * Resolved per-node defaults (caller-supplied `nodeDefaults` merged onto the
+   * factory defaults). Exposed for layers that need to mirror what's drawn —
+   * e.g. `MiniMapLayer` falls back to these when a node omits `shape` / `size`.
+   */
+  getNodeDefaults(): Required<Omit<NodeRenderHints, 'height' | 'label'>> {
+    return this.nodeDefaults;
+  }
+
   /** Data source. Either supplied by the caller or self-created. */
   readonly store: GraphStore;
 

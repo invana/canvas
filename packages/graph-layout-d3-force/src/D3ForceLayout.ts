@@ -51,10 +51,11 @@ interface SimLink extends SimulationLinkDatum<SimNode> {
 }
 
 const DEFAULTS: Required<
-  Omit<D3ForceLayoutOptions, 'center' | 'collide' | 'onTick' | 'onEnd'>
+  Omit<D3ForceLayoutOptions, 'center' | 'collide' | 'onStart' | 'onTick' | 'onEnd'>
 > & {
   center: { x: number; y: number };
   collide: number;
+  onStart: (() => void) | undefined;
   onTick: (() => void) | undefined;
   onEnd: (() => void) | undefined;
 } = {
@@ -68,6 +69,7 @@ const DEFAULTS: Required<
   alphaDecay: 0.0228,
   velocityDecay: 0.4,
   syncTicks: false,
+  onStart: undefined,
   onTick: undefined,
   onEnd: undefined,
 };
@@ -156,17 +158,91 @@ export class D3ForceLayout implements Layout<GraphLayer> {
 
     this.sim = sim;
 
+    // O(1) sim-node lookup for the store subscription below.
+    const nodeIndex = new Map<string, number>();
+    for (let i = 0; i < nodeIds.length; i++) nodeIndex.set(nodeIds[i]!, i);
+
+    // Set while we're flushing positions back to the store, so the subscription
+    // below can ignore the resulting `node:update` events. Without this guard
+    // we'd treat our own write-back as an "external" change every frame.
+    let writingBack = false;
+
     const xy = new Float32Array(simNodes.length * 2);
     const writeBack = () => {
       for (let i = 0; i < simNodes.length; i++) {
         xy[i * 2] = simNodes[i]!.x ?? 0;
         xy[i * 2 + 1] = simNodes[i]!.y ?? 0;
       }
+      writingBack = true;
       store.batch(() => {
         store.setPositionsBulk(nodeIds, xy);
       });
+      writingBack = false;
     };
 
+    // Reactive bridge from the store to the running simulation. When an
+    // external mutator (e.g. `DragNodeBehaviour`) writes a new position or
+    // toggles `pinned`, the change lands here *immediately* — no per-frame
+    // polling — and we mirror it onto the matching `SimNode` so the next
+    // tick respects the user input. We also re-heat the simulation via
+    // `alphaTarget(0.3)` so the rest of the graph reacts to the drag, then
+    // schedule a cooldown so it eventually settles after the user lets go.
+    let cooldownTimer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleCooldown = (): void => {
+      if (cooldownTimer) clearTimeout(cooldownTimer);
+      cooldownTimer = setTimeout(() => {
+        this.sim?.alphaTarget(0);
+        cooldownTimer = null;
+      }, 200);
+    };
+
+    const offNodeUpdate = store.events.on('node:update', ({ nodeId, patch }) => {
+      if (writingBack) return;
+      const idx = nodeIndex.get(nodeId);
+      if (idx === undefined) return;
+      const sn = simNodes[idx]!;
+
+      let touched = false;
+      if (patch.position) {
+        sn.x = patch.position.x;
+        sn.y = patch.position.y;
+        // If the node is currently pinned in the sim, keep its lock in sync
+        // with the new position — otherwise the next tick would snap it back
+        // to the old fx/fy.
+        if (sn.fx !== undefined) sn.fx = patch.position.x;
+        if (sn.fy !== undefined) sn.fy = patch.position.y;
+        touched = true;
+      }
+      if (patch.pinned !== undefined) {
+        if (patch.pinned) {
+          const stored = store.getNode(nodeId);
+          const px = stored?.position?.x ?? sn.x ?? 0;
+          const py = stored?.position?.y ?? sn.y ?? 0;
+          sn.fx = px;
+          sn.fy = py;
+          sn.x = px;
+          sn.y = py;
+        } else {
+          sn.fx = undefined;
+          sn.fy = undefined;
+        }
+        touched = true;
+      }
+
+      if (touched && this.sim) {
+        this.sim.alphaTarget(0.3).restart();
+        scheduleCooldown();
+      }
+    });
+
+    const fireStart = (): void => {
+      try {
+        this.opts.onStart?.();
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[D3ForceLayout] onStart threw:', err);
+      }
+    };
     const fireTick = (): void => {
       try {
         this.opts.onTick?.();
@@ -184,6 +260,11 @@ export class D3ForceLayout implements Layout<GraphLayer> {
       }
     };
 
+    // Write the initial scatter to the store so any `onStart` consumer that
+    // reads `layer.getBounds()` sees the same positions the first tick will.
+    writeBack();
+    fireStart();
+
     if (this.opts.syncTicks) {
       // d3-force computes `numTicks = ceil(log(alphaMin) / log(1 - alphaDecay))`
       // ticks to settle when called with no argument.
@@ -191,19 +272,33 @@ export class D3ForceLayout implements Layout<GraphLayer> {
       writeBack();
       fireTick();
       this.sim = null;
+      offNodeUpdate();
+      if (cooldownTimer) clearTimeout(cooldownTimer);
       fireEnd();
       return;
     }
+
+    const teardown = (): void => {
+      offNodeUpdate();
+      if (cooldownTimer) {
+        clearTimeout(cooldownTimer);
+        cooldownTimer = null;
+      }
+    };
 
     return new Promise<void>((resolve) => {
       let stopped = false;
       const tick = (): void => {
         if (stopped) return;
-        if (sim.alpha() < sim.alphaMin()) {
+        // Settle condition — but only when there's no active drag-cooldown
+        // keeping the simulation hot. Without this guard, a drag right at the
+        // settle boundary would exit the loop before the reheat takes effect.
+        if (sim.alpha() < sim.alphaMin() && sim.alphaTarget() < sim.alphaMin()) {
           writeBack();
           fireTick();
           this.sim = null;
           this.cancelTick = null;
+          teardown();
           fireEnd();
           resolve();
           return;
@@ -221,6 +316,7 @@ export class D3ForceLayout implements Layout<GraphLayer> {
               globalThis as { cancelAnimationFrame?: (h: number) => void }
             ).cancelAnimationFrame?.(handle);
             this.sim = null;
+            teardown();
             fireEnd();
             resolve();
           };
@@ -231,6 +327,7 @@ export class D3ForceLayout implements Layout<GraphLayer> {
           this.cancelTick = () => {
             stopped = true;
             this.sim = null;
+            teardown();
             fireEnd();
             resolve();
           };
