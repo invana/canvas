@@ -118,6 +118,8 @@ export class BackgroundLayer extends ScreenLayer<
   private opts: Required<BackgroundLayerOptions>;
   private tiling: TilingSprite | null = null;
   private patternTexture: Texture | null = null;
+  /** DPR baked into the current pattern texture — used to compensate `tileScale`. */
+  private textureDpr = 1;
   private resizeObserver: ResizeObserver | null = null;
   private offCameraPan: (() => void) | null = null;
   private offCameraZoom: (() => void) | null = null;
@@ -270,25 +272,40 @@ export class BackgroundLayer extends ScreenLayer<
 
   private syncTileTransform(): void {
     if (!this.tiling) return;
+    // Texture is rasterised at `textureDpr` device pixels per CSS pixel; we
+    // divide `tileScale` by it so on-screen pattern size stays in CSS-pixel
+    // units regardless of display density.
+    const dpr = this.textureDpr;
     if (!this.opts.followCamera) {
-      this.tiling.tileScale.set(1, 1);
+      this.tiling.tileScale.set(1 / dpr, 1 / dpr);
       this.tiling.tilePosition.set(0, 0);
       return;
     }
     const s = this.camScale;
-    this.tiling.tileScale.set(s, s);
+    this.tiling.tileScale.set(s / dpr, s / dpr);
     // Modulo keeps the offset small so we don't accumulate float drift over
-    // long pans. The pattern is periodic at `spacing * scale` px.
+    // long pans. The pattern is periodic at `spacing * scale` px (in screen
+    // pixels — independent of DPR, since the period is texture_size * tileScale).
     const period = this.opts.spacing * s;
     this.tiling.tilePosition.set(this.camX % period, this.camY % period);
   }
 
   private createPatternTexture(): Texture {
     const { patternType, color, size, spacing } = this.opts;
+    // Rasterise the tile at device-pixel density so dots / lines stay crisp on
+    // retina / scaled displays. `tileScale` compensates so the on-screen size
+    // is still expressed in CSS pixels.
+    const dpr =
+      typeof window !== 'undefined' && typeof window.devicePixelRatio === 'number'
+        ? Math.max(1, window.devicePixelRatio)
+        : 1;
+    this.textureDpr = dpr;
+
     const off = document.createElement('canvas');
-    off.width = spacing;
-    off.height = spacing;
+    off.width = Math.round(spacing * dpr);
+    off.height = Math.round(spacing * dpr);
     const ctx2d = off.getContext('2d')!;
+    ctx2d.scale(dpr, dpr);
     ctx2d.fillStyle = colorToCss(this.resolveColor(color));
 
     switch (patternType) {
