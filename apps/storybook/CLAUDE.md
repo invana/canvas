@@ -93,6 +93,45 @@ export const MyStory: Story = {
 };
 ```
 
+## Teardown — every story must register cleanup
+
+Storybook keeps the iframe alive across story switches, so anything a story creates (Canvas, lil-gui panels, ResizeObservers, event listeners, RAF loops) leaks into the next story unless explicitly destroyed. The global `beforeEach` in `.storybook/preview.ts` drains a per-story cleanup queue between stories — your job is to populate that queue.
+
+**Rule:** register cleanup **inline, right next to the thing being created**, using `onStoryTeardown` from `stories/div-util.ts`. Don't lift refs to module scope and don't batch teardown at the bottom of `play` — co-locating creation and destruction keeps it readable and survives refactors.
+
+```ts
+import { createContainer, onStoryTeardown } from '../../div-util';
+
+play: async ({ canvasElement }) => {
+  const container = canvasElement.querySelector<HTMLDivElement>('#cvs-my-story')!;
+
+  const canvas = new Canvas();
+  onStoryTeardown(() => canvas.destroy());
+  await canvas.init({ container, autoResize: true });
+
+  const gui = new GUI({ title: 'My settings' });
+  onStoryTeardown(() => gui.destroy());
+  // ... gui.add(...) etc.
+},
+```
+
+What needs a teardown:
+
+- **`new Canvas()`** — always `onStoryTeardown(() => canvas.destroy())`.
+- **`new GUI(...)`** — always `onStoryTeardown(() => gui.destroy())`. The preview also sweeps stray `.lil-gui` DOM nodes as a belt-and-braces fallback, but don't rely on it.
+- **Manually added `window` / `document` event listeners** — `onStoryTeardown(() => window.removeEventListener(...))`.
+- **`ResizeObserver`, `MutationObserver`, `IntersectionObserver`** — disconnect in teardown.
+- **`setInterval` / `setTimeout` (long-lived)** — clear in teardown.
+- **`requestAnimationFrame` loops** — don't write these in stories (use the engine's animation loop), but if one slips in, cancel it in teardown.
+
+What does **not** need a teardown:
+
+- Layers and behaviours registered on the Canvas — `canvas.destroy()` tears them down.
+- Shapes added via a renderer attached to a Canvas-owned layer — same.
+- DOM nodes inside the container returned from `render` — Storybook unmounts the container itself.
+
+Don't try to lift teardown into a `beforeEach` on the story object or a decorator: the things being destroyed are *created during `play`*, so any external hook would need a reference back into play's closure. The inline `onStoryTeardown` pattern is the cleanest available — keep it that way.
+
 `createContainer` options:
 
 | Option | Default | Description |
