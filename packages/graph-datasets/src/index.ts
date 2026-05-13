@@ -10,3 +10,11 @@ export {
   type LesMiserablesNode,
   type LesMiserablesNodeData,
 } from './lesMiserables';
+
+export {
+  generateRandomTree,
+  type RandomTreeData,
+  type RandomTreeEdge,
+  type RandomTreeNode,
+  type RandomTreeNodeData,
+} from './randomTree';

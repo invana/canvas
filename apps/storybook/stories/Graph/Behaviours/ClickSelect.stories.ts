@@ -62,13 +62,12 @@ export const ClickSelect: Story = {
 
     canvas.camera.fitContent(graph.getBounds(), 80);
     void new D3ForceLayout({
-      charge: -120,
-      linkDistance: 50,
-      linkStrength: 0.5,
-      collide: 14,
-      onTick: () => canvas.camera.fitContent(graph.getBounds(), 80),
-      onEnd: () => canvas.camera.fitContent(graph.getBounds(), 80),
-    }).apply(graph);
+      charge: { strength: -120 },
+      link: { distance: 50 },
+      collide: { radius: 14 },
+    })
+      .apply(graph)
+      .then(() => canvas.camera.fitContent(graph.getBounds(), 80));
 
     canvas.behaviours.register(
       new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
