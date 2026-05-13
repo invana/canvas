@@ -209,20 +209,19 @@ export class BrushSelectBehaviour extends Behaviour {
     const onDown = (e: PointerEvent) => this.handlePointerDown(e);
     const onMove = (e: PointerEvent) => this.handlePointerMove(e);
     const onUp = (e: PointerEvent) => this.handlePointerUp(e);
-    const onLeave = () => this.cancelDrag();
+    const onCancel = () => this.cancelDrag();
 
     el.addEventListener('pointerdown', onDown);
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
-    window.addEventListener('pointercancel', onLeave);
-    el.addEventListener('pointerleave', onLeave);
+    window.addEventListener('pointercancel', onCancel);
+    // No `pointerleave` listener — see LassoSelectBehaviour for rationale.
 
     this.listenerDisposers.push(
       () => el.removeEventListener('pointerdown', onDown),
       () => window.removeEventListener('pointermove', onMove),
       () => window.removeEventListener('pointerup', onUp),
-      () => window.removeEventListener('pointercancel', onLeave),
-      () => el.removeEventListener('pointerleave', onLeave),
+      () => window.removeEventListener('pointercancel', onCancel),
     );
   }
 

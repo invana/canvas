@@ -170,20 +170,22 @@ export class LassoSelectBehaviour extends Behaviour {
     const onDown = (e: PointerEvent) => this.handlePointerDown(e);
     const onMove = (e: PointerEvent) => this.handlePointerMove(e);
     const onUp = (e: PointerEvent) => this.handlePointerUp(e);
-    const onLeave = () => this.cancelDrag();
+    const onCancel = () => this.cancelDrag();
 
     el.addEventListener('pointerdown', onDown);
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
-    window.addEventListener('pointercancel', onLeave);
-    el.addEventListener('pointerleave', onLeave);
+    window.addEventListener('pointercancel', onCancel);
+    // NOTE: no `pointerleave` listener. Freeform lassos routinely sweep over
+    // the canvas edge (or over overlapping GUI panels) — cancelling on leave
+    // mid-draw kills the gesture. Window-level pointerup + pointercancel
+    // cover the genuine end-of-drag and OS-level cancellation cases.
 
     this.listenerDisposers.push(
       () => el.removeEventListener('pointerdown', onDown),
       () => window.removeEventListener('pointermove', onMove),
       () => window.removeEventListener('pointerup', onUp),
-      () => window.removeEventListener('pointercancel', onLeave),
-      () => el.removeEventListener('pointerleave', onLeave),
+      () => window.removeEventListener('pointercancel', onCancel),
     );
   }
 

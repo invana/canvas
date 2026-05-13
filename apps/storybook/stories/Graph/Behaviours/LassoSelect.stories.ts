@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   ClickSelectBehaviour,
+  DragNodeBehaviour,
   GraphLayer,
   LassoSelectBehaviour,
   type GraphNode,
@@ -57,9 +58,13 @@ export const LassoSelect: Story = {
       linkDistance: 50,
       linkStrength: 0.5,
       collide: 14,
-    })
-      .apply(graph)
-      .then(() => canvas.camera.fitContent(graph.getBounds(), 80));
+      onTick: () => canvas.camera.fitContent(graph.getBounds(), 80),
+      onEnd: () => canvas.camera.fitContent(graph.getBounds(), 80),
+    }).apply(graph);
+
+    canvas.behaviours.register(
+      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
+    );
 
     const click = new ClickSelectBehaviour({
       id: 'click-select',
@@ -86,30 +91,70 @@ export const LassoSelect: Story = {
     });
     canvas.behaviours.register(lasso);
 
+    // Every option from LassoSelectBehaviourOptions exposed here.
+    const toCss = (n: number): string => `#${n.toString(16).padStart(6, '0')}`;
+    const parseColor = (s: string): number => parseInt(s.replace('#', ''), 16);
     const settings = {
-      enabled: true,
+      enable: true,
       pickShapes: true,
       pickConnectors: true,
+      'trigger (modifier key)': 'shift' as 'shift' | 'control' | 'alt' | 'meta' | 'none',
       immediately: false,
-      modifier: 'shift' as 'shift' | 'control' | 'alt' | 'meta' | 'none',
+      state: 'selected' as 'selected' | 'highlighted',
+      clearOnBackground: true,
+      'style.fill': toCss(0x14b8a6),
+      'style.fillAlpha': 0.12,
+      'style.stroke': toCss(0x14b8a6),
+      'style.strokeAlpha': 0.8,
+      'style.strokeWidth': 1.5,
+      'style.dashLen': 6,
+      'style.gapLen': 4,
     };
     const apply = (): void => {
-      if (settings.enabled) lasso.enable();
+      if (settings.enable) lasso.enable();
       else lasso.disable();
       const enableElements: ('shape' | 'connector')[] = [];
       if (settings.pickShapes) enableElements.push('shape');
       if (settings.pickConnectors) enableElements.push('connector');
-      const trigger = settings.modifier === 'none' ? [] : [settings.modifier];
-      lasso.setOptions({ enableElements, immediately: settings.immediately, trigger });
+      const trigger =
+        settings['trigger (modifier key)'] === 'none'
+          ? []
+          : [settings['trigger (modifier key)']];
+      lasso.setOptions({
+        enableElements,
+        trigger,
+        immediately: settings.immediately,
+        state: settings.state,
+        clearOnBackground: settings.clearOnBackground,
+        style: {
+          fill: parseColor(settings['style.fill']),
+          fillAlpha: settings['style.fillAlpha'],
+          stroke: parseColor(settings['style.stroke']),
+          strokeAlpha: settings['style.strokeAlpha'],
+          strokeWidth: settings['style.strokeWidth'],
+          strokeDash: [settings['style.dashLen'], settings['style.gapLen']],
+        },
+      });
     };
-    const gui = new GUI({ title: 'Lasso-select' });
-    gui.add(settings, 'enabled').onChange(apply);
+
+    const gui = new GUI({ title: 'Lasso Select' });
+    gui.add(settings, 'enable').onChange(apply);
     gui.add(settings, 'pickShapes').onChange(apply);
     gui.add(settings, 'pickConnectors').onChange(apply);
-    gui.add(settings, 'immediately').onChange(apply);
     gui
-      .add(settings, 'modifier', ['shift', 'control', 'alt', 'meta', 'none'])
+      .add(settings, 'trigger (modifier key)', ['shift', 'control', 'alt', 'meta', 'none'])
       .onChange(apply);
+    gui.add(settings, 'immediately').onChange(apply);
+    gui.add(settings, 'state', ['selected', 'highlighted']).onChange(apply);
+    gui.add(settings, 'clearOnBackground').onChange(apply);
+    const styleFolder = gui.addFolder('Style');
+    styleFolder.addColor(settings, 'style.fill').onChange(apply);
+    styleFolder.add(settings, 'style.fillAlpha', 0, 1, 0.05).onChange(apply);
+    styleFolder.addColor(settings, 'style.stroke').onChange(apply);
+    styleFolder.add(settings, 'style.strokeAlpha', 0, 1, 0.05).onChange(apply);
+    styleFolder.add(settings, 'style.strokeWidth', 0, 6, 0.5).onChange(apply);
+    styleFolder.add(settings, 'style.dashLen', 0, 20, 1).onChange(apply);
+    styleFolder.add(settings, 'style.gapLen', 0, 20, 1).onChange(apply);
     gui.add({ clear: () => click.clearSelection() }, 'clear');
 
     const hint = document.createElement('div');

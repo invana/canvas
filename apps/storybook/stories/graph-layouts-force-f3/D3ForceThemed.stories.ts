@@ -6,7 +6,7 @@ import {
   WheelZoomBehaviour,
 } from '@invana/canvas';
 import type { ThemedBackgroundMode } from '@invana/canvas';
-import { GraphLayer, type GraphNode } from '@invana/graph';
+import { DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -126,6 +126,10 @@ export const D3ForceThemed: Story = {
     themed.events.on('theme:switched', () => reloadGraphForTheme());
     themed.events.on('mode:updated', () => reloadGraphForTheme());
 
+    canvas.behaviours.register(
+      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
+    );
+
     canvas.camera.fitContent(graph.getBounds(), 80);
 
     // ── D3 force-directed layout ────────────────────────────────────────
@@ -134,11 +138,11 @@ export const D3ForceThemed: Story = {
       linkDistance: 50,
       linkStrength: 0.5,
       collide: 14,
+      onTick: () => canvas.camera.fitContent(graph.getBounds(), 80),
+      onEnd: () => canvas.camera.fitContent(graph.getBounds(), 80),
     });
 
-    void layout.apply(graph).then(() => {
-      canvas.camera.fitContent(graph.getBounds(), 80);
-    });
+    void layout.apply(graph);
 
     // ── GUI: theme + mode + every BackgroundLayer option ────────────────
     const toCssColor = (c: number | string): string =>

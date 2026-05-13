@@ -52,4 +52,6 @@ export {
   type LassoSelectElementType,
   type LassoSelectStyle,
   type LassoModifierKey,
+  DragNodeBehaviour,
+  type DragNodeBehaviourOptions,
 } from './behaviours';

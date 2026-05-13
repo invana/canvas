@@ -6,7 +6,7 @@ import {
   WheelZoomBehaviour,
 } from '@invana/canvas';
 import type { ThemedBackgroundMode } from '@invana/canvas';
-import { GraphLayer, type GraphNode } from '@invana/graph';
+import { DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer } from '../../div-util';
@@ -141,6 +141,10 @@ export const WithThemedBackground: Story = {
 
     // Initial load + react to theme / mode changes.
     reloadGraphForTheme();
+
+    canvas.behaviours.register(
+      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
+    );
     themed.events.on('theme:switched', () => reloadGraphForTheme());
     themed.events.on('mode:updated', () => reloadGraphForTheme());
 

@@ -1,6 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphLayer, HoverActivateBehaviour, type GraphNode } from '@invana/graph';
+import {
+  DragNodeBehaviour,
+  GraphLayer,
+  HoverActivateBehaviour,
+  type GraphNode,
+} from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -43,12 +48,15 @@ export const HoverActivate: Story = {
     canvas.layers.add(graph);
     graph.setData({ nodes, edges: lesMiserables.edges });
 
-    // Visual states — node + edge each get an 'active' (highlighted) and
-    // 'inactive' (dimmed) override.
+    // Visual states — the GUI can switch between any of these names.
     graph.setNodeStateConfig('active', { stroke: 0xfacc15, strokeWidth: 3 });
     graph.setEdgeStateConfig('active', { stroke: 0xfacc15, strokeWidth: 2 });
+    graph.setNodeStateConfig('highlighted', { stroke: 0xf97316, strokeWidth: 4 });
+    graph.setEdgeStateConfig('highlighted', { stroke: 0xf97316, strokeWidth: 2.5 });
     graph.setNodeStateConfig('inactive', { alpha: 0.2 });
     graph.setEdgeStateConfig('inactive', { alpha: 0.15 });
+    graph.setNodeStateConfig('dimmed', { alpha: 0.45 });
+    graph.setEdgeStateConfig('dimmed', { alpha: 0.4 });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
     void new D3ForceLayout({
@@ -56,9 +64,13 @@ export const HoverActivate: Story = {
       linkDistance: 50,
       linkStrength: 0.5,
       collide: 14,
-    })
-      .apply(graph)
-      .then(() => canvas.camera.fitContent(graph.getBounds(), 80));
+      onTick: () => canvas.camera.fitContent(graph.getBounds(), 80),
+      onEnd: () => canvas.camera.fitContent(graph.getBounds(), 80),
+    }).apply(graph);
+
+    canvas.behaviours.register(
+      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
+    );
 
     const hover = new HoverActivateBehaviour({
       id: 'hover',
@@ -71,26 +83,49 @@ export const HoverActivate: Story = {
     });
     canvas.behaviours.register(hover);
 
-    // GUI exposes every option.
+    // Every option from HoverActivateBehaviourOptions is bound below.
+    // `hoveredId` is a read-only display fed by onHover / onHoverEnd.
     const settings = {
-      enabled: true,
-      degree: 1,
+      enable: true,
+      state: 'active' as 'active' | 'highlighted',
+      'inactiveState (dim non-hovered)': 'inactive' as 'inactive' | 'dimmed' | 'none',
+      'degree (neighbor hops)': 1,
       direction: 'both' as 'in' | 'out' | 'both',
-      inactiveState: 'inactive' as 'inactive' | 'none',
+      hoveredId: '—',
     };
     const apply = (): void => {
-      if (settings.enabled) hover.enable();
+      if (settings.enable) hover.enable();
       else hover.disable();
+      const inactive =
+        settings['inactiveState (dim non-hovered)'] === 'none'
+          ? undefined
+          : settings['inactiveState (dim non-hovered)'];
       hover.setOptions({
-        degree: settings.degree,
+        state: settings.state,
+        inactiveState: inactive,
+        degree: settings['degree (neighbor hops)'],
         direction: settings.direction,
-        inactiveState: settings.inactiveState === 'none' ? undefined : 'inactive',
       });
     };
-    const gui = new GUI({ title: 'Hover-activate' });
-    gui.add(settings, 'enabled').onChange(apply);
-    gui.add(settings, 'degree', 0, 4, 1).onChange(apply);
+    hover.setOptions({
+      onHover: (el) => {
+        settings.hoveredId = el.id;
+        gui.controllersRecursive().forEach((c) => c.updateDisplay());
+      },
+      onHoverEnd: () => {
+        settings.hoveredId = '—';
+        gui.controllersRecursive().forEach((c) => c.updateDisplay());
+      },
+    });
+
+    const gui = new GUI({ title: 'Hover Activate' });
+    gui.add(settings, 'enable').onChange(apply);
+    gui.add(settings, 'state', ['active', 'highlighted']).onChange(apply);
+    gui
+      .add(settings, 'inactiveState (dim non-hovered)', ['inactive', 'dimmed', 'none'])
+      .onChange(apply);
+    gui.add(settings, 'degree (neighbor hops)', 0, 4, 1).onChange(apply);
     gui.add(settings, 'direction', ['in', 'out', 'both']).onChange(apply);
-    gui.add(settings, 'inactiveState', ['inactive', 'none']).onChange(apply);
+    gui.add(settings, 'hoveredId').disable();
   },
 };

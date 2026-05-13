@@ -50,9 +50,13 @@ interface SimLink extends SimulationLinkDatum<SimNode> {
   id: string;
 }
 
-const DEFAULTS: Required<Omit<D3ForceLayoutOptions, 'center' | 'collide'>> & {
+const DEFAULTS: Required<
+  Omit<D3ForceLayoutOptions, 'center' | 'collide' | 'onTick' | 'onEnd'>
+> & {
   center: { x: number; y: number };
   collide: number;
+  onTick: (() => void) | undefined;
+  onEnd: (() => void) | undefined;
 } = {
   charge: -300,
   linkDistance: 80,
@@ -64,6 +68,8 @@ const DEFAULTS: Required<Omit<D3ForceLayoutOptions, 'center' | 'collide'>> & {
   alphaDecay: 0.0228,
   velocityDecay: 0.4,
   syncTicks: false,
+  onTick: undefined,
+  onEnd: undefined,
 };
 
 const hasRAF =
@@ -161,12 +167,31 @@ export class D3ForceLayout implements Layout<GraphLayer> {
       });
     };
 
+    const fireTick = (): void => {
+      try {
+        this.opts.onTick?.();
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[D3ForceLayout] onTick threw:', err);
+      }
+    };
+    const fireEnd = (): void => {
+      try {
+        this.opts.onEnd?.();
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[D3ForceLayout] onEnd threw:', err);
+      }
+    };
+
     if (this.opts.syncTicks) {
       // d3-force computes `numTicks = ceil(log(alphaMin) / log(1 - alphaDecay))`
       // ticks to settle when called with no argument.
       sim.tick();
       writeBack();
+      fireTick();
       this.sim = null;
+      fireEnd();
       return;
     }
 
@@ -176,13 +201,16 @@ export class D3ForceLayout implements Layout<GraphLayer> {
         if (stopped) return;
         if (sim.alpha() < sim.alphaMin()) {
           writeBack();
+          fireTick();
           this.sim = null;
           this.cancelTick = null;
+          fireEnd();
           resolve();
           return;
         }
         sim.tick();
         writeBack();
+        fireTick();
         if (hasRAF) {
           const handle = (
             globalThis as { requestAnimationFrame: (cb: () => void) => number }
@@ -193,6 +221,7 @@ export class D3ForceLayout implements Layout<GraphLayer> {
               globalThis as { cancelAnimationFrame?: (h: number) => void }
             ).cancelAnimationFrame?.(handle);
             this.sim = null;
+            fireEnd();
             resolve();
           };
         } else {
@@ -202,6 +231,7 @@ export class D3ForceLayout implements Layout<GraphLayer> {
           this.cancelTick = () => {
             stopped = true;
             this.sim = null;
+            fireEnd();
             resolve();
           };
         }

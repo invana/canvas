@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphLayer, type GraphNode } from '@invana/graph';
+import { DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
 import { createContainer } from '../div-util';
@@ -47,6 +47,12 @@ export const LesMiserables: Story = {
 
     graph.setData({ nodes, edges: lesMiserables.edges });
 
+    // Drag a node: store.setPosition fires, layout respects the now-pinned
+    // node so released nodes stay where you drop them.
+    canvas.behaviours.register(
+      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
+    );
+
     // Initial fit — nodes scatter near the origin so this is mostly to set a
     // reasonable starting zoom.
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -56,12 +62,13 @@ export const LesMiserables: Story = {
       linkDistance: 50,
       linkStrength: 0.5,
       collide: 14,
+      // Camera tracks the spreading cluster every tick; final tight fit on settle.
+      onTick: () => canvas.camera.fitContent(graph.getBounds(), 80),
+      onEnd: () => canvas.camera.fitContent(graph.getBounds(), 80),
     });
 
     // Animated apply — resolves when alpha settles. We don't await; the
     // user can pan / zoom while the simulation runs.
-    void layout.apply(graph).then(() => {
-      canvas.camera.fitContent(graph.getBounds(), 80);
-    });
+    void layout.apply(graph);
   },
 };

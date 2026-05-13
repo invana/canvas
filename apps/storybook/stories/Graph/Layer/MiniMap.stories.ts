@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphLayer, MiniMapLayer, type GraphNode } from '@invana/graph';
+import { DragNodeBehaviour, GraphLayer, MiniMapLayer, type GraphNode } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -43,15 +43,19 @@ export const MiniMap: Story = {
     canvas.layers.add(graph);
     graph.setData({ nodes, edges: lesMiserables.edges });
 
+    canvas.behaviours.register(
+      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
+    );
+
     canvas.camera.fitContent(graph.getBounds(), 80);
     void new D3ForceLayout({
       charge: -120,
       linkDistance: 50,
       linkStrength: 0.5,
       collide: 14,
-    })
-      .apply(graph)
-      .then(() => canvas.camera.fitContent(graph.getBounds(), 80));
+      onTick: () => canvas.camera.fitContent(graph.getBounds(), 80),
+      onEnd: () => canvas.camera.fitContent(graph.getBounds(), 80),
+    }).apply(graph);
 
     const minimap = new MiniMapLayer({
       id: 'minimap',
@@ -68,12 +72,23 @@ export const MiniMap: Story = {
     });
     canvas.layers.add(minimap);
 
+    // Every option from MiniMapLayerOptions exposed here.
+    const toCss = (n: number): string => `#${n.toString(16).padStart(6, '0')}`;
+    const parseColor = (s: string): number => parseInt(s.replace('#', ''), 16);
     const settings = {
       enableDrag: true,
       position: 'bottom-right' as 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right',
       width: 240,
       height: 160,
+      backgroundColor: toCss(0x0f172a),
+      borderColor: toCss(0x444444),
+      borderWidth: 1,
+      viewportFill: toCss(0xfacc15),
+      viewportStroke: toCss(0xf59e0b),
+      viewportFillAlpha: 0.25,
+      viewportStrokeWidth: 2,
       padding: 20,
+      margin: 10,
     };
     const apply = (): void => {
       minimap.setOptions({
@@ -81,7 +96,15 @@ export const MiniMap: Story = {
         position: settings.position,
         width: settings.width,
         height: settings.height,
+        backgroundColor: parseColor(settings.backgroundColor),
+        borderColor: parseColor(settings.borderColor),
+        borderWidth: settings.borderWidth,
+        viewportFill: parseColor(settings.viewportFill),
+        viewportStroke: parseColor(settings.viewportStroke),
+        viewportFillAlpha: settings.viewportFillAlpha,
+        viewportStrokeWidth: settings.viewportStrokeWidth,
         padding: settings.padding,
+        margin: settings.margin,
       });
     };
     const gui = new GUI({ title: 'Minimap' });
@@ -92,6 +115,16 @@ export const MiniMap: Story = {
     gui.add(settings, 'width', 100, 400, 10).onChange(apply);
     gui.add(settings, 'height', 80, 300, 10).onChange(apply);
     gui.add(settings, 'padding', 0, 100, 5).onChange(apply);
+    gui.add(settings, 'margin', 0, 60, 2).onChange(apply);
+    const bgFolder = gui.addFolder('Chrome');
+    bgFolder.addColor(settings, 'backgroundColor').onChange(apply);
+    bgFolder.addColor(settings, 'borderColor').onChange(apply);
+    bgFolder.add(settings, 'borderWidth', 0, 6, 0.5).onChange(apply);
+    const vpFolder = gui.addFolder('Viewport indicator');
+    vpFolder.addColor(settings, 'viewportFill').onChange(apply);
+    vpFolder.addColor(settings, 'viewportStroke').onChange(apply);
+    vpFolder.add(settings, 'viewportFillAlpha', 0, 1, 0.05).onChange(apply);
+    vpFolder.add(settings, 'viewportStrokeWidth', 0, 6, 0.5).onChange(apply);
 
     const hint = document.createElement('div');
     hint.style.cssText =

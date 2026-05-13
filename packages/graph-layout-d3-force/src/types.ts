@@ -65,4 +65,25 @@ export interface D3ForceLayoutOptions {
    * (animated). Set `true` for a one-shot layout pass with no animation.
    */
   syncTicks?: boolean;
+
+  /**
+   * Fired after every tick + write-back. Use this to follow the spreading
+   * cluster with the camera, update overlays, log telemetry, etc.
+   *
+   * The store's positions are already updated when this fires; the typical
+   * consumer is `() => canvas.camera.fitContent(graphLayer.getBounds(), 80)`.
+   *
+   * Fires once on every animated tick (~60/sec) or exactly once at the end
+   * when `syncTicks: true`.
+   */
+  onTick?: () => void;
+
+  /**
+   * Fired exactly once when the simulation settles (`alpha < alphaMin`),
+   * the `apply()` promise has resolved, and the final write-back has
+   * happened. Use this for "one last camera fit", post-settle cleanup, etc.
+   *
+   * Also fired when `stop()` interrupts the simulation.
+   */
+  onEnd?: () => void;
 }

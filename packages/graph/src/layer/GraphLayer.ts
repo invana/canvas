@@ -510,9 +510,20 @@ export class GraphLayer extends WorldLayer<
   private updateNodeShape(node: GraphNode, patch: Partial<GraphNode>): void {
     if (!this._renderer) return;
 
+    // Skip the renderer entirely for patches whose fields don't affect what
+    // the shape *looks* like. `pinned` is metadata for layouts; `parentId`
+    // is metadata for hierarchy queries. Critically, **a renderer rebuild
+    // during pixi's pointer-event flow would invalidate the in-flight
+    // gesture** (the user clicks → drag-node pins → shape gets re-created
+    // → pixi's synthesized `shape:click` for the original instance is
+    // dropped). So a no-visual update must remain a no-op here.
+    const patchKeys = Object.keys(patch);
+    const nonVisualOnly = patchKeys.every((k) => k === 'pinned' || k === 'parentId');
+    if (nonVisualOnly) return;
+
     // Position-only updates: cheap partial. Connectors anchored to this node
     // need re-routing too; queue them for the flush-time drain.
-    if ('position' in patch && patch.position && Object.keys(patch).length === 1) {
+    if ('position' in patch && patch.position && patchKeys.length === 1) {
       this._renderer.updateShape<CircleSpec>(node.id, {
         x: patch.position.x,
         y: patch.position.y,
@@ -521,9 +532,9 @@ export class GraphLayer extends WorldLayer<
       return;
     }
 
-    // For data / pinned / parent changes, rebuild the full spec by remove+add
-    // so a kind change (circle → rect) works correctly. updateShape can't
-    // change `kind` safely since it merges over the existing instance.
+    // For data changes, rebuild the full spec by remove+add so a kind change
+    // (circle → rect) works correctly. updateShape can't change `kind`
+    // safely since it merges over the existing instance.
     const spec = this.nodeSpec(node);
     this._renderer.removeShape(node.id);
     this._renderer.addShape(node.id, spec);

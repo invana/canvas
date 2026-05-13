@@ -175,6 +175,9 @@ export class ClickSelectBehaviour extends Behaviour {
   /** True when the most recent click already consumed an element. */
   private clickConsumedByElement = false;
 
+  /** Pointerdown screen-position — used to distinguish a click from a drag. */
+  private pointerDownScreen: { x: number; y: number } | null = null;
+
   constructor(opts: ClickSelectBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? ['pointer+click'] });
     this.opts = resolveOptions(null, opts);
@@ -210,22 +213,58 @@ export class ClickSelectBehaviour extends Behaviour {
       this.clickConsumedByElement = true;
       this.handleElementClick(e.id, 'connector');
     };
-    const onBackgroundClick = () => {
+    // `background:click` is declared on the canvas event bus but the engine
+    // doesn't emit it today, so we listen to native DOM `click` on the canvas
+    // element instead. PixiJS dispatches `shape:click` / `connector:click`
+    // synchronously *during* the DOM event, so by the time this handler runs
+    // `clickConsumedByElement` is already set when a shape was hit.
+    //
+    // We also track pointerdown screen-position to distinguish a click
+    // (small movement) from a drag (e.g. brush / lasso select). A click
+    // after a drag would otherwise clear the just-applied selection.
+    const DRAG_VS_CLICK_THRESHOLD_PX = 4;
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.button !== 0) {
+        this.pointerDownScreen = null;
+        return;
+      }
+      this.pointerDownScreen = { x: e.clientX, y: e.clientY };
+    };
+    const onCanvasClick = (e: MouseEvent) => {
+      const down = this.pointerDownScreen;
+      this.pointerDownScreen = null;
       if (this.clickConsumedByElement) {
         this.clickConsumedByElement = false;
         return;
+      }
+      if (e.button !== 0) return;
+      // If the pointer moved more than the threshold between pointerdown
+      // and click, this was a drag — don't treat it as a background click.
+      if (down) {
+        const dx = e.clientX - down.x;
+        const dy = e.clientY - down.y;
+        if (Math.hypot(dx, dy) > DRAG_VS_CLICK_THRESHOLD_PX) return;
       }
       if (this.opts.clearOnBackground) this.clearSelection();
     };
 
     renderer.events.on('shape:click', onShapeClick);
     renderer.events.on('connector:click', onConnClick);
-    const offBg = ctx.events.on('background:click', onBackgroundClick);
+    const el = ctx.canvasElement;
+    if (el) {
+      el.addEventListener('pointerdown', onPointerDown);
+      el.addEventListener('click', onCanvasClick);
+    }
 
     this.subs.push(
       () => renderer.events.off('shape:click', onShapeClick),
       () => renderer.events.off('connector:click', onConnClick),
-      offBg,
+      () => {
+        if (el) {
+          el.removeEventListener('pointerdown', onPointerDown);
+          el.removeEventListener('click', onCanvasClick);
+        }
+      },
     );
   }
 

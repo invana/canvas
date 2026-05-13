@@ -1,6 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { ClickSelectBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
+import {
+  ClickSelectBehaviour,
+  DragNodeBehaviour,
+  GraphLayer,
+  type GraphNode,
+  type SelectModifierKey,
+} from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -43,10 +49,15 @@ export const ClickSelect: Story = {
     canvas.layers.add(graph);
     graph.setData({ nodes, edges: lesMiserables.edges });
 
+    // Register every state config the GUI is allowed to switch between.
     graph.setNodeStateConfig('selected', { stroke: 0xf97316, strokeWidth: 4 });
     graph.setEdgeStateConfig('selected', { stroke: 0xf97316, strokeWidth: 2.5 });
+    graph.setNodeStateConfig('highlighted', { stroke: 0xfacc15, strokeWidth: 4 });
+    graph.setEdgeStateConfig('highlighted', { stroke: 0xfacc15, strokeWidth: 2.5 });
     graph.setNodeStateConfig('muted', { alpha: 0.2 });
     graph.setEdgeStateConfig('muted', { alpha: 0.15 });
+    graph.setNodeStateConfig('dimmed', { alpha: 0.45 });
+    graph.setEdgeStateConfig('dimmed', { alpha: 0.4 });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
     void new D3ForceLayout({
@@ -54,15 +65,13 @@ export const ClickSelect: Story = {
       linkDistance: 50,
       linkStrength: 0.5,
       collide: 14,
-    })
-      .apply(graph)
-      .then(() => canvas.camera.fitContent(graph.getBounds(), 80));
+      onTick: () => canvas.camera.fitContent(graph.getBounds(), 80),
+      onEnd: () => canvas.camera.fitContent(graph.getBounds(), 80),
+    }).apply(graph);
 
-    const counter = document.createElement('div');
-    counter.style.cssText =
-      'position:absolute; top:10px; left:10px; padding:6px 10px; background:rgba(15,23,42,.85); color:#f8fafc; font:12px/1.2 ui-monospace, monospace; border-radius:4px; z-index:100;';
-    counter.textContent = 'selected: 0 nodes, 0 edges';
-    container.appendChild(counter);
+    canvas.behaviours.register(
+      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
+    );
 
     const click = new ClickSelectBehaviour({
       id: 'click-select',
@@ -70,40 +79,73 @@ export const ClickSelect: Story = {
       enabled: true,
       multiple: true,
       trigger: ['shift'],
-      degree: 0,
+      degree: 1,
       state: 'selected',
-      onSelectionChange: ({ shapeIds, connectorIds }) => {
-        counter.textContent = `selected: ${shapeIds.length} nodes, ${connectorIds.length} edges`;
-      },
+      clearOnBackground: true,
     });
     canvas.behaviours.register(click);
 
+    // Every option from ClickSelectBehaviourOptions is bound below. The two
+    // read-only counters are updated by `onSelectionChange`.
     const settings = {
-      enabled: true,
+      enable: true,
       multiple: true,
-      degree: 0,
+      'trigger (modifier key)': 'shift' as SelectModifierKey | 'none',
+      'degree (neighbor hops)': 1,
       direction: 'both' as 'in' | 'out' | 'both',
-      muteUnselected: false,
+      state: 'selected' as 'selected' | 'highlighted',
+      'unselectedState (dim non-selected)': 'muted' as 'muted' | 'dimmed' | 'none',
       clearOnBackground: true,
+      selectedNodes: 0,
+      selectedEdges: 0,
     };
+
     const apply = (): void => {
-      if (settings.enabled) click.enable();
+      if (settings.enable) click.enable();
       else click.disable();
+      const trigger =
+        settings['trigger (modifier key)'] === 'none'
+          ? []
+          : [settings['trigger (modifier key)'] as SelectModifierKey];
+      const unsel =
+        settings['unselectedState (dim non-selected)'] === 'none'
+          ? ''
+          : settings['unselectedState (dim non-selected)'];
       click.setOptions({
         multiple: settings.multiple,
-        degree: settings.degree,
+        trigger,
+        degree: settings['degree (neighbor hops)'],
         direction: settings.direction,
-        unselectedState: settings.muteUnselected ? 'muted' : '',
+        state: settings.state,
+        unselectedState: unsel,
         clearOnBackground: settings.clearOnBackground,
       });
     };
-    const gui = new GUI({ title: 'Click-select' });
-    gui.add(settings, 'enabled').onChange(apply);
+
+    // Wire the selection counters back to GUI displays.
+    click.setOptions({
+      onSelectionChange: ({ shapeIds, connectorIds }) => {
+        settings.selectedNodes = shapeIds.length;
+        settings.selectedEdges = connectorIds.length;
+        gui.controllersRecursive().forEach((c) => c.updateDisplay());
+      },
+    });
+
+    const gui = new GUI({ title: 'Click Select' });
+    gui.add(settings, 'enable').onChange(apply);
     gui.add(settings, 'multiple').onChange(apply);
-    gui.add(settings, 'degree', 0, 4, 1).onChange(apply);
+    gui
+      .add(settings, 'trigger (modifier key)', ['shift', 'control', 'alt', 'meta', 'none'])
+      .onChange(apply);
+    gui.add(settings, 'degree (neighbor hops)', 0, 4, 1).onChange(apply);
     gui.add(settings, 'direction', ['in', 'out', 'both']).onChange(apply);
-    gui.add(settings, 'muteUnselected').onChange(apply);
+    gui.add(settings, 'state', ['selected', 'highlighted']).onChange(apply);
+    gui
+      .add(settings, 'unselectedState (dim non-selected)', ['muted', 'dimmed', 'none'])
+      .onChange(apply);
     gui.add(settings, 'clearOnBackground').onChange(apply);
+    gui.add(settings, 'selectedNodes').disable();
+    gui.add(settings, 'selectedEdges').disable();
     gui.add({ clear: () => click.clearSelection() }, 'clear');
   },
 };

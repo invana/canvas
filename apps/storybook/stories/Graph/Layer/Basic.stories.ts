@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphLayer, type GraphNode } from '@invana/graph';
+import { DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { createContainer } from '../../div-util';
 
@@ -53,6 +53,10 @@ export const Basic: Story = {
     canvas.layers.add(graph);
 
     graph.setData({ nodes, edges: lesMiserables.edges });
+
+    canvas.behaviours.register(
+      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
+    );
 
     canvas.camera.fitContent(graph.getBounds(), 80);
   },
