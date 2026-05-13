@@ -1,6 +1,6 @@
 # Interface: StyleOverride
 
-Defined in: [packages/canvas/src/primitives/types.ts:691](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L691)
+Defined in: [packages/canvas/src/primitives/types.ts:792](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L792)
 
 Per-frame style override from a `target: 'style'` effect. Channels are
 merged across effects with last-writer-wins per channel (insertion order in
@@ -13,7 +13,7 @@ the host's effect map). Pixi's tint multiplies the underlying fill, so a
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [packages/canvas/src/primitives/types.ts:695](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L695)
+Defined in: [packages/canvas/src/primitives/types.ts:796](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L796)
 
 Multiplier on the host's current alpha. Identity = 1.
 
@@ -23,6 +23,6 @@ Multiplier on the host's current alpha. Identity = 1.
 
 > `readonly` `optional` **tint?**: `number`
 
-Defined in: [packages/canvas/src/primitives/types.ts:693](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L693)
+Defined in: [packages/canvas/src/primitives/types.ts:794](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L794)
 
 Pixi tint (multiplicative). Identity = `0xffffff`.

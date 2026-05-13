@@ -1,6 +1,6 @@
 # Interface: EffectSpec\<TStyle\>
 
-Defined in: [packages/canvas/src/primitives/types.ts:746](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L746)
+Defined in: [packages/canvas/src/primitives/types.ts:867](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L867)
 
 Caller-side payload for `setEffect(id, slot, ...)`.
 
@@ -16,7 +16,7 @@ Caller-side payload for `setEffect(id, slot, ...)`.
 
 > `readonly` **kind**: `string`
 
-Defined in: [packages/canvas/src/primitives/types.ts:747](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L747)
+Defined in: [packages/canvas/src/primitives/types.ts:868](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L868)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [packages/canvas/src/primitives/types.ts:747](https://github.com/inv
 
 > `readonly` **style**: `TStyle`
 
-Defined in: [packages/canvas/src/primitives/types.ts:748](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L748)
+Defined in: [packages/canvas/src/primitives/types.ts:869](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L869)

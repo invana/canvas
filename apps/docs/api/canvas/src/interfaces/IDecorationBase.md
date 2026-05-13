@@ -1,6 +1,6 @@
 # Interface: IDecorationBase\<THostInfo, TStyle\>
 
-Defined in: [packages/canvas/src/primitives/types.ts:639](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L639)
+Defined in: [packages/canvas/src/primitives/types.ts:729](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L729)
 
 Common base for shape and connector decorations. Presence of `tick` makes
 the decoration animated — the renderer registers it into the per-frame
@@ -23,7 +23,7 @@ Static decorations omit `tick` and cost zero per frame after `mount`.
 
 > `readonly` **style**: `TStyle`
 
-Defined in: [packages/canvas/src/primitives/types.ts:640](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L640)
+Defined in: [packages/canvas/src/primitives/types.ts:730](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L730)
 
 ## Methods
 
@@ -31,7 +31,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:640](https://github.com/inv
 
 > `optional` **destroy**(): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:644](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L644)
+Defined in: [packages/canvas/src/primitives/types.ts:734](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L734)
 
 #### Returns
 
@@ -39,11 +39,40 @@ Defined in: [packages/canvas/src/primitives/types.ts:644](https://github.com/inv
 
 ***
 
+### getEndPadding()?
+
+> `optional` **getEndPadding**(): `object`
+
+Defined in: [packages/canvas/src/primitives/types.ts:745](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L745)
+
+Connector-only: declare how many pixels of extra "outer extent" this
+decoration needs past each endpoint of the routed path. The renderer
+aggregates the max across all attached decorations and trims the path
+by that amount before drawing — so the body + markers sit back from
+the anchor, and the decoration's outer edge (halo radius, ripple peak)
+lands at the anchor instead of overshooting into the host shape.
+Omit (or return 0) when the decoration doesn't extend past endpoints
+(e.g. marching-ants strokes the line at the host's width).
+
+#### Returns
+
+`object`
+
+##### source
+
+> `readonly` **source**: `number`
+
+##### target
+
+> `readonly` **target**: `number`
+
+***
+
 ### mount()
 
 > **mount**(`host`): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:641](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L641)
+Defined in: [packages/canvas/src/primitives/types.ts:731](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L731)
 
 #### Parameters
 
@@ -61,7 +90,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:641](https://github.com/inv
 
 > `optional` **tick**(`deltaMs`): `boolean`
 
-Defined in: [packages/canvas/src/primitives/types.ts:643](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L643)
+Defined in: [packages/canvas/src/primitives/types.ts:733](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L733)
 
 #### Parameters
 
@@ -79,7 +108,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:643](https://github.com/inv
 
 > `optional` **update**(`host`): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:642](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L642)
+Defined in: [packages/canvas/src/primitives/types.ts:732](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L732)
 
 #### Parameters
 

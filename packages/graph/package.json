@@ -6,7 +6,9 @@
   "main": "./src/index.js",
   "types": "./src/index.ts",
   "typedocOptions": {
-    "entryPoints": ["src/index.ts"]
+    "entryPoints": [
+      "src/index.ts"
+    ]
   },
   "scripts": {
     "build": "tsup",
@@ -14,7 +16,8 @@
     "lint": "eslint src/",
     "check-types": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "test": "vitest run"
+    "test": "vitest run",
+    "bench": "vitest bench --run"
   },
   "peerDependencies": {
     "@invana/canvas": "workspace:*",
@@ -25,9 +28,16 @@
     "@repo/typescript-config": "workspace:*",
     "pixi.js": "^8.18.1",
     "tsup": "^8.3.5",
+    "tsx": "^4.21.0",
     "typescript": "5.9.2",
     "vitest": "^2.1.8"
   },
-  "keywords": ["canvas", "graph", "nodes", "edges", "visualization"],
+  "keywords": [
+    "canvas",
+    "graph",
+    "nodes",
+    "edges",
+    "visualization"
+  ],
   "license": "Apache-2.0"
 }

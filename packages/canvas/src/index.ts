@@ -76,6 +76,22 @@ export type {
   DevInfoCorner,
 } from './layers/DevInfoLayer';
 
+export { BackgroundLayer } from './layers/BackgroundLayer';
+export type {
+  BackgroundLayerOptions,
+  BackgroundType,
+  BackgroundPatternType,
+} from './layers/BackgroundLayer';
+
+export { ThemedBackgroundLayer } from './layers/ThemedBackgroundLayer';
+export type {
+  ThemedBackgroundLayerOptions,
+  ThemedBackgroundLayerEvents,
+  ThemedBackgroundTheme,
+  ThemedBackgroundMode,
+  ThemedBackgroundKind,
+} from './layers/ThemedBackgroundLayer';
+
 export { LayersPanelLayer } from './layers/LayersPanelLayer';
 export type {
   LayersPanelLayerOptions,

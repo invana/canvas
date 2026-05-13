@@ -1,6 +1,6 @@
 # Interface: HitResult
 
-Defined in: [packages/canvas/src/primitives/types.ts:816](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L816)
+Defined in: [packages/canvas/src/primitives/types.ts:937](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L937)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:816](https://github.com/inv
 
 > `readonly` **id**: `string`
 
-Defined in: [packages/canvas/src/primitives/types.ts:818](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L818)
+Defined in: [packages/canvas/src/primitives/types.ts:939](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L939)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:818](https://github.com/inv
 
 > `readonly` **kind**: `"shape"` \| `"connector"`
 
-Defined in: [packages/canvas/src/primitives/types.ts:817](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L817)
+Defined in: [packages/canvas/src/primitives/types.ts:938](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L938)
 
 ***
 
@@ -24,6 +24,6 @@ Defined in: [packages/canvas/src/primitives/types.ts:817](https://github.com/inv
 
 > `readonly` `optional` **subId?**: `string`
 
-Defined in: [packages/canvas/src/primitives/types.ts:820](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L820)
+Defined in: [packages/canvas/src/primitives/types.ts:941](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L941)
 
 Optional sub-region (e.g. a connector handle, a shape sub-part).

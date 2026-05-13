@@ -1,6 +1,6 @@
 # Interface: ShapeDecorationHostInfo
 
-Defined in: [packages/canvas/src/primitives/types.ts:522](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L522)
+Defined in: [packages/canvas/src/primitives/types.ts:579](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L579)
 
 Information a shape decoration receives in `mount` / `update`. Decorations
 call `host.shape.paintInto(g, ...)` to repaint the host silhouette into
@@ -13,7 +13,7 @@ contract.
 
 > `readonly` **bounds**: [`Rect`](Rect.md)
 
-Defined in: [packages/canvas/src/primitives/types.ts:527](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L527)
+Defined in: [packages/canvas/src/primitives/types.ts:584](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L584)
 
 Local-space axis-aligned bounding box of the host shape.
 
@@ -23,7 +23,7 @@ Local-space axis-aligned bounding box of the host shape.
 
 > `readonly` **hostId**: `string`
 
-Defined in: [packages/canvas/src/primitives/types.ts:523](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L523)
+Defined in: [packages/canvas/src/primitives/types.ts:580](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L580)
 
 ***
 
@@ -31,7 +31,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:523](https://github.com/inv
 
 > `readonly` **shape**: [`IShape`](IShape.md)
 
-Defined in: [packages/canvas/src/primitives/types.ts:531](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L531)
+Defined in: [packages/canvas/src/primitives/types.ts:588](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L588)
 
 The host shape itself — decorations call `shape.paintInto(...)`.
 
@@ -41,7 +41,7 @@ The host shape itself — decorations call `shape.paintInto(...)`.
 
 > `readonly` **slot**: `string`
 
-Defined in: [packages/canvas/src/primitives/types.ts:524](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L524)
+Defined in: [packages/canvas/src/primitives/types.ts:581](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L581)
 
 ***
 
@@ -49,7 +49,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:524](https://github.com/inv
 
 > `readonly` **slotZIndex**: `number`
 
-Defined in: [packages/canvas/src/primitives/types.ts:525](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L525)
+Defined in: [packages/canvas/src/primitives/types.ts:582](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L582)
 
 ***
 
@@ -57,6 +57,6 @@ Defined in: [packages/canvas/src/primitives/types.ts:525](https://github.com/inv
 
 > `readonly` **surface**: `Container`
 
-Defined in: [packages/canvas/src/primitives/types.ts:529](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L529)
+Defined in: [packages/canvas/src/primitives/types.ts:586](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L586)
 
 Surface to attach the decoration's `gfx` to. Set to the host shape's `gfx`.

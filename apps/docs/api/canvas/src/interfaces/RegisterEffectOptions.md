@@ -1,6 +1,6 @@
 # Interface: RegisterEffectOptions
 
-Defined in: [packages/canvas/src/primitives/types.ts:741](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L741)
+Defined in: [packages/canvas/src/primitives/types.ts:862](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L862)
 
 ## Properties
 
@@ -8,4 +8,4 @@ Defined in: [packages/canvas/src/primitives/types.ts:741](https://github.com/inv
 
 > `readonly` **target**: [`EffectTargetKind`](../type-aliases/EffectTargetKind.md)
 
-Defined in: [packages/canvas/src/primitives/types.ts:742](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L742)
+Defined in: [packages/canvas/src/primitives/types.ts:863](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L863)

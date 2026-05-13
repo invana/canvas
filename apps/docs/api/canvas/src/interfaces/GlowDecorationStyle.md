@@ -1,6 +1,6 @@
 # Interface: GlowDecorationStyle
 
-Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:13](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L13)
+Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:13](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L13)
 
 Halo / outer glow. Repaints the host's silhouette N times with widening
 stroke and quadratic alpha falloff, producing a soft glow that hugs
@@ -16,7 +16,7 @@ the renderer will register `tick` and advance the phase each frame.
 
 > `readonly` **color**: `number`
 
-Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:14](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L14)
+Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:14](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L14)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:
 
 > `readonly` `optional` **innerAlpha?**: `number`
 
-Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:20](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L20)
+Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:20](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L20)
 
 Innermost (brightest) layer alpha. Default `0.55`.
 
@@ -34,7 +34,7 @@ Innermost (brightest) layer alpha. Default `0.55`.
 
 > `readonly` `optional` **layers?**: `number`
 
-Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:18](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L18)
+Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:18](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L18)
 
 Number of feather layers (more = smoother + more expensive). Default `6`.
 
@@ -44,7 +44,7 @@ Number of feather layers (more = smoother + more expensive). Default `6`.
 
 > `readonly` `optional` **pulse?**: `object`
 
-Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:26](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L26)
+Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:26](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L26)
 
 Optional brightness pulse. When omitted, the glow is static. When set,
 the decoration alpha-multiplies between `1` and `1 - amplitude` on a
@@ -68,6 +68,6 @@ Cycle length in ms. Default `1200`.
 
 > `readonly` `optional` **radius?**: `number`
 
-Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:16](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L16)
+Defined in: [packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts:16](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L16)
 
 Outermost glow extent, px. Default `12`.

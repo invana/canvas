@@ -1,6 +1,6 @@
 # Abstract Class: EffectBase\<TStyle\>
 
-Defined in: packages/canvas/src/primitives/base/EffectBase.ts:28
+Defined in: [packages/canvas/src/primitives/base/EffectBase.ts:28](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/EffectBase.ts#L28)
 
 Base for effects that target shape primitives. An effect *modulates* the
 host — wiggle its transform, override its tint/alpha — rather than adding
@@ -41,7 +41,7 @@ decorations draw, effects modulate.
 
 > **new EffectBase**\<`TStyle`\>(`style`): `EffectBase`\<`TStyle`\>
 
-Defined in: packages/canvas/src/primitives/base/EffectBase.ts:34
+Defined in: [packages/canvas/src/primitives/base/EffectBase.ts:34](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/EffectBase.ts#L34)
 
 #### Parameters
 
@@ -59,7 +59,7 @@ Defined in: packages/canvas/src/primitives/base/EffectBase.ts:34
 
 > `protected` **host**: [`ShapeEffectHostInfo`](../interfaces/ShapeEffectHostInfo.md) = `null`
 
-Defined in: packages/canvas/src/primitives/base/EffectBase.ts:32
+Defined in: [packages/canvas/src/primitives/base/EffectBase.ts:32](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/EffectBase.ts#L32)
 
 ***
 
@@ -67,7 +67,7 @@ Defined in: packages/canvas/src/primitives/base/EffectBase.ts:32
 
 > `readonly` **style**: `TStyle`
 
-Defined in: packages/canvas/src/primitives/base/EffectBase.ts:31
+Defined in: [packages/canvas/src/primitives/base/EffectBase.ts:31](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/EffectBase.ts#L31)
 
 #### Implementation of
 
@@ -79,7 +79,7 @@ Defined in: packages/canvas/src/primitives/base/EffectBase.ts:31
 
 > `abstract` `readonly` **target**: [`EffectTarget`](../type-aliases/EffectTarget.md)
 
-Defined in: packages/canvas/src/primitives/base/EffectBase.ts:29
+Defined in: [packages/canvas/src/primitives/base/EffectBase.ts:29](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/EffectBase.ts#L29)
 
 #### Implementation of
 
@@ -91,7 +91,7 @@ Defined in: packages/canvas/src/primitives/base/EffectBase.ts:29
 
 > **destroy**(): `void`
 
-Defined in: packages/canvas/src/primitives/base/EffectBase.ts:46
+Defined in: [packages/canvas/src/primitives/base/EffectBase.ts:46](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/EffectBase.ts#L46)
 
 #### Returns
 
@@ -107,7 +107,7 @@ Defined in: packages/canvas/src/primitives/base/EffectBase.ts:46
 
 > **mount**(`host`): `void`
 
-Defined in: packages/canvas/src/primitives/base/EffectBase.ts:38
+Defined in: [packages/canvas/src/primitives/base/EffectBase.ts:38](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/EffectBase.ts#L38)
 
 #### Parameters
 
@@ -129,7 +129,7 @@ Defined in: packages/canvas/src/primitives/base/EffectBase.ts:38
 
 > `optional` **readStyle**(): [`StyleOverride`](../interfaces/StyleOverride.md)
 
-Defined in: packages/canvas/src/primitives/base/EffectBase.ts:66
+Defined in: [packages/canvas/src/primitives/base/EffectBase.ts:66](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/EffectBase.ts#L66)
 
 Required by style-effects; the renderer ignores it for transform-effects.
 Subclasses with `target='style'` must override.
@@ -148,7 +148,7 @@ Subclasses with `target='style'` must override.
 
 > `optional` **readTransform**(): [`TransformDelta`](../interfaces/TransformDelta.md)
 
-Defined in: packages/canvas/src/primitives/base/EffectBase.ts:60
+Defined in: [packages/canvas/src/primitives/base/EffectBase.ts:60](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/EffectBase.ts#L60)
 
 Required by transform-effects; the renderer ignores it for style-effects.
 Subclasses with `target='transform'` must override.
@@ -167,7 +167,7 @@ Subclasses with `target='transform'` must override.
 
 > `optional` **tick**(`deltaMs`): `boolean`
 
-Defined in: packages/canvas/src/primitives/base/EffectBase.ts:54
+Defined in: [packages/canvas/src/primitives/base/EffectBase.ts:54](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/EffectBase.ts#L54)
 
 Optional per-frame advance. Subclasses override; the base no-ops. Return
 `false` to retire the effect from the renderer's animation set.
@@ -192,7 +192,7 @@ Optional per-frame advance. Subclasses override; the base no-ops. Return
 
 > **update**(`host`): `void`
 
-Defined in: packages/canvas/src/primitives/base/EffectBase.ts:42
+Defined in: [packages/canvas/src/primitives/base/EffectBase.ts:42](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/EffectBase.ts#L42)
 
 #### Parameters
 

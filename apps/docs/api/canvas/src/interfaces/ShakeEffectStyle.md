@@ -1,6 +1,6 @@
 # Interface: ShakeEffectStyle
 
-Defined in: packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:18
+Defined in: [packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:18](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L18)
 
 Style options for `ShakeEffect`.
 
@@ -19,7 +19,7 @@ Style options for `ShakeEffect`.
 
 > `readonly` `optional` **amplitude?**: `number`
 
-Defined in: packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:19
+Defined in: [packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:19](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L19)
 
 ***
 
@@ -27,7 +27,7 @@ Defined in: packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:19
 
 > `readonly` `optional` **axis?**: `"x"` \| `"y"` \| `"both"`
 
-Defined in: packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:20
+Defined in: [packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:20](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L20)
 
 ***
 
@@ -35,7 +35,7 @@ Defined in: packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:20
 
 > `readonly` `optional` **decayMs?**: `number`
 
-Defined in: packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:21
+Defined in: [packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:21](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L21)
 
 ***
 
@@ -43,4 +43,4 @@ Defined in: packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:21
 
 > `readonly` `optional` **seed?**: `number`
 
-Defined in: packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:22
+Defined in: [packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:22](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L22)

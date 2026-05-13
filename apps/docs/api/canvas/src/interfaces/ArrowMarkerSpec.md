@@ -1,6 +1,6 @@
 # Interface: ArrowMarkerSpec
 
-Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:33](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/markers/ArrowMarker.ts#L33)
+Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:33](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/markers/ArrowMarker.ts#L33)
 
 Arrowhead marker. Drawn as a triangle whose tip lies at the anchor; the
 base extends `lengthScale × strokeWidth` pixels back along the negative
@@ -31,7 +31,7 @@ Two paint surfaces:
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [packages/canvas/src/primitives/types.ts:353](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L353)
+Defined in: [packages/canvas/src/primitives/types.ts:371](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L371)
 
 #### Inherited from
 
@@ -43,7 +43,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:353](https://github.com/inv
 
 > `readonly` `optional` **fill?**: [`ShapeFill`](../type-aliases/ShapeFill.md)
 
-Defined in: [packages/canvas/src/primitives/types.ts:349](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L349)
+Defined in: [packages/canvas/src/primitives/types.ts:367](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L367)
 
 #### Inherited from
 
@@ -55,7 +55,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:349](https://github.com/inv
 
 > `readonly` **kind**: `"arrow"`
 
-Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:34](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/markers/ArrowMarker.ts#L34)
+Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:34](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/markers/ArrowMarker.ts#L34)
 
 #### Overrides
 
@@ -67,7 +67,7 @@ Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:34](https://g
 
 > `readonly` `optional` **lengthScale?**: `number`
 
-Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:39](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/markers/ArrowMarker.ts#L39)
+Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:39](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/markers/ArrowMarker.ts#L39)
 
 Multiplier on the connector's stroke width that yields the tip-to-base
 distance. Default `4` (so a 2px stroke produces an 8px-long arrow).
@@ -78,7 +78,7 @@ distance. Default `4` (so a 2px stroke produces an 8px-long arrow).
 
 > `readonly` `optional` **stroke?**: [`ShapeStroke`](ShapeStroke.md)
 
-Defined in: [packages/canvas/src/primitives/types.ts:350](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L350)
+Defined in: [packages/canvas/src/primitives/types.ts:368](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L368)
 
 #### Inherited from
 
@@ -90,7 +90,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:350](https://github.com/inv
 
 > `readonly` `optional` **visible?**: `boolean`
 
-Defined in: [packages/canvas/src/primitives/types.ts:354](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L354)
+Defined in: [packages/canvas/src/primitives/types.ts:372](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L372)
 
 #### Inherited from
 
@@ -102,7 +102,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:354](https://github.com/inv
 
 > `readonly` `optional` **widthScale?**: `number`
 
-Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:45](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/markers/ArrowMarker.ts#L45)
+Defined in: [packages/canvas/src/primitives/markers/ArrowMarker.ts:45](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/markers/ArrowMarker.ts#L45)
 
 Multiplier on the connector's stroke width that yields the perpendicular
 base width. Final width is clamped to `≥ strokeWidth` so the arrow base
@@ -114,7 +114,7 @@ is never narrower than the line. Default `3`.
 
 > `readonly` **x**: `number`
 
-Defined in: [packages/canvas/src/primitives/types.ts:347](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L347)
+Defined in: [packages/canvas/src/primitives/types.ts:365](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L365)
 
 #### Inherited from
 
@@ -126,7 +126,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:347](https://github.com/inv
 
 > `readonly` **y**: `number`
 
-Defined in: [packages/canvas/src/primitives/types.ts:348](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L348)
+Defined in: [packages/canvas/src/primitives/types.ts:366](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L366)
 
 #### Inherited from
 
@@ -138,7 +138,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:348](https://github.com/inv
 
 > `readonly` `optional` **zIndex?**: `number`
 
-Defined in: [packages/canvas/src/primitives/types.ts:352](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L352)
+Defined in: [packages/canvas/src/primitives/types.ts:370](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L370)
 
 Default `0`. Higher = on top. Used for hit-test resolution.
 

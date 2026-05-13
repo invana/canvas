@@ -2,7 +2,7 @@
 
 > `const` **bezierPathStyle**: [`IPathStyle`](../type-aliases/IPathStyle.md)
 
-Defined in: [packages/canvas/src/primitives/connectors/pathStyles/bezier.ts:35](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/connectors/pathStyles/bezier.ts#L35)
+Defined in: [packages/canvas/src/primitives/connectors/pathStyles/bezier.ts:35](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/connectors/pathStyles/bezier.ts#L35)
 
 Single cubic Bézier between the first and last polyline points, with
 auto-generated control handles. Intermediate polyline points (router

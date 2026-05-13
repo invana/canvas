@@ -2,7 +2,7 @@
 
 > **makeCanvasEvent**\<`TPayload`\>(`source`, `name`, `payload`): [`CanvasEvent`](../interfaces/CanvasEvent.md)\<`TPayload`\>
 
-Defined in: [packages/canvas/src/events/CanvasEvent.ts:45](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/events/CanvasEvent.ts#L45)
+Defined in: [packages/canvas/src/events/CanvasEvent.ts:45](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/events/CanvasEvent.ts#L45)
 
 Construct a CanvasEvent envelope. The source is captured by reference, but the
 caller is expected to honour the rule that source ids are immutable for the

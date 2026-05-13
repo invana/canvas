@@ -1,6 +1,6 @@
 # Interface: ConnectorDecorationHostInfo
 
-Defined in: [packages/canvas/src/primitives/types.ts:539](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L539)
+Defined in: [packages/canvas/src/primitives/types.ts:596](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L596)
 
 Information a connector decoration receives. Decorations call
 `host.connector.paintInto(g, spec, path, style)` for silhouette repaint,
@@ -12,7 +12,7 @@ or read `path` directly for parametric walking (e.g. label-along-path).
 
 > `readonly` **connector**: [`IConnector`](IConnector.md)
 
-Defined in: [packages/canvas/src/primitives/types.ts:545](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L545)
+Defined in: [packages/canvas/src/primitives/types.ts:602](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L602)
 
 ***
 
@@ -20,7 +20,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:545](https://github.com/inv
 
 > `readonly` **connectorSpec**: [`BaseConnectorSpec`](BaseConnectorSpec.md)
 
-Defined in: [packages/canvas/src/primitives/types.ts:546](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L546)
+Defined in: [packages/canvas/src/primitives/types.ts:603](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L603)
 
 ***
 
@@ -28,7 +28,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:546](https://github.com/inv
 
 > `readonly` **hostId**: `string`
 
-Defined in: [packages/canvas/src/primitives/types.ts:540](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L540)
+Defined in: [packages/canvas/src/primitives/types.ts:597](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L597)
 
 ***
 
@@ -36,7 +36,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:540](https://github.com/inv
 
 > `readonly` **path**: [`Path`](../type-aliases/Path.md)
 
-Defined in: [packages/canvas/src/primitives/types.ts:543](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L543)
+Defined in: [packages/canvas/src/primitives/types.ts:600](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L600)
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:543](https://github.com/inv
 
 > `readonly` **slot**: `string`
 
-Defined in: [packages/canvas/src/primitives/types.ts:541](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L541)
+Defined in: [packages/canvas/src/primitives/types.ts:598](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L598)
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:541](https://github.com/inv
 
 > `readonly` **slotZIndex**: `number`
 
-Defined in: [packages/canvas/src/primitives/types.ts:542](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L542)
+Defined in: [packages/canvas/src/primitives/types.ts:599](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L599)
 
 ***
 
@@ -60,4 +60,4 @@ Defined in: [packages/canvas/src/primitives/types.ts:542](https://github.com/inv
 
 > `readonly` **surface**: `Container`
 
-Defined in: [packages/canvas/src/primitives/types.ts:544](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/primitives/types.ts#L544)
+Defined in: [packages/canvas/src/primitives/types.ts:601](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L601)

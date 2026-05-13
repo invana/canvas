@@ -4,6 +4,16 @@ WebGPU-first canvas rendering engine + graph visualization toolkit. WebGL2 fallb
 
 **Architecture rewrite in progress.** The long-form design rationale lives in `architecture-proposal.md` at repo root. Day-to-day API and concept documentation lives in `apps/docs/` (VitePress) — that's the single source of truth for engine surfaces; consult it before referring back to the proposal. Standalone `*-plan.md` files have been consolidated into `apps/docs/`; don't create new ones. All new code goes in the active packages listed below.
 
+### Don't write API docs to `apps/docs/` unless explicitly asked
+
+The plan is to wire up TSDoc + VitePress for automatic API doc generation — class / method / type references will be derived from the TSDoc comments on the source. Until then, **don't hand-author API reference pages in `apps/docs/`** (no `data-model.md`-style "here are all the public fields" pages, no per-class method tables). Instead:
+
+- Write rich TSDoc comments on public classes, methods, types, and non-obvious internals — those become the source of truth.
+- Limited exceptions, only when I ask: planning docs (`*-plan.md`), conceptual guides (`guide/architecture.md`-style mental-model pages), event catalogues that aren't 1:1 with code.
+- Concept pages may *reference* types (`See GraphNode`) but shouldn't *redeclare* fields the TSDoc already covers — duplicates rot.
+
+If I ask for "docs", "documentation", or "data model docs" without further qualification, ask whether I want a planning/concept doc or to update TSDoc on the source.
+
 ---
 
 ## Workspace

@@ -1,6 +1,6 @@
 # Interface: ILayer
 
-Defined in: [packages/canvas/src/layers/Layer.ts:42](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/layers/Layer.ts#L42)
+Defined in: [packages/canvas/src/layers/Layer.ts:42](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/layers/Layer.ts#L42)
 
 The subset of `Layer` the `LayerRegistry` and `Canvas.tick` interact with.
 Lets the registry stay decoupled from the abstract class implementation.
@@ -11,7 +11,7 @@ Lets the registry stay decoupled from the abstract class implementation.
 
 > **cullable**: `boolean`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:47](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/layers/Layer.ts#L47)
+Defined in: [packages/canvas/src/layers/Layer.ts:47](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/layers/Layer.ts#L47)
 
 ***
 
@@ -19,7 +19,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:47](https://github.com/invana/c
 
 > **hittable**: `boolean`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:45](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/layers/Layer.ts#L45)
+Defined in: [packages/canvas/src/layers/Layer.ts:45](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/layers/Layer.ts#L45)
 
 ***
 
@@ -27,7 +27,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:45](https://github.com/invana/c
 
 > `readonly` **id**: `string`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:43](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/layers/Layer.ts#L43)
+Defined in: [packages/canvas/src/layers/Layer.ts:43](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/layers/Layer.ts#L43)
 
 ***
 
@@ -35,7 +35,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:43](https://github.com/invana/c
 
 > **visible**: `boolean`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:44](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/layers/Layer.ts#L44)
+Defined in: [packages/canvas/src/layers/Layer.ts:44](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/layers/Layer.ts#L44)
 
 ***
 
@@ -43,7 +43,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:44](https://github.com/invana/c
 
 > **zIndex**: `number`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:46](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/layers/Layer.ts#L46)
+Defined in: [packages/canvas/src/layers/Layer.ts:46](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/layers/Layer.ts#L46)
 
 ## Methods
 
@@ -51,7 +51,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:46](https://github.com/invana/c
 
 > **flush**(): `void`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:50](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/layers/Layer.ts#L50)
+Defined in: [packages/canvas/src/layers/Layer.ts:50](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/layers/Layer.ts#L50)
 
 #### Returns
 
@@ -63,7 +63,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:50](https://github.com/invana/c
 
 > **hasPending**(): `boolean`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:51](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/layers/Layer.ts#L51)
+Defined in: [packages/canvas/src/layers/Layer.ts:51](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/layers/Layer.ts#L51)
 
 #### Returns
 
@@ -75,7 +75,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:51](https://github.com/invana/c
 
 > **mount**(`ctx`): `void`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:48](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/layers/Layer.ts#L48)
+Defined in: [packages/canvas/src/layers/Layer.ts:48](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/layers/Layer.ts#L48)
 
 #### Parameters
 
@@ -93,7 +93,7 @@ Defined in: [packages/canvas/src/layers/Layer.ts:48](https://github.com/invana/c
 
 > **unmount**(): `void`
 
-Defined in: [packages/canvas/src/layers/Layer.ts:49](https://github.com/invana/canvas/blob/8bae293c3b3776c3f462615b5b8e9132190d7ae2/packages/canvas/src/layers/Layer.ts#L49)
+Defined in: [packages/canvas/src/layers/Layer.ts:49](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/layers/Layer.ts#L49)
 
 #### Returns
 
