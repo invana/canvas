@@ -142,8 +142,11 @@ export const ThemedBackground: Story = {
     const fixtures = new FixturesLayer({ id: 'fx', options: {} });
     canvas.layers.add(fixtures);
 
-    const toCssColor = (c: number | string): string =>
-      typeof c === 'number' ? `#${c.toString(16).padStart(6, '0')}` : c;
+    const toCssColor = (c: number | string | { light: number | string; dark: number | string }): string => {
+      if (typeof c === 'number') return `#${c.toString(16).padStart(6, '0')}`;
+      if (typeof c === 'string') return c;
+      return toCssColor(themed.getResolvedKind() === 'dark' ? c.dark : c.light);
+    };
 
     const initial = themed.getOptions();
     const settings = {

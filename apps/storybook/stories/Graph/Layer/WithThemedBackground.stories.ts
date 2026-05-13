@@ -154,8 +154,11 @@ export const WithThemedBackground: Story = {
     // GUI: theme + mode at the top, then every BackgroundLayer option as a
     // live override. Switching theme / mode resets the variant (clearing
     // overrides) — we re-sync the GUI to the resolved variant after each.
-    const toCssColor = (c: number | string): string =>
-      typeof c === 'number' ? `#${c.toString(16).padStart(6, '0')}` : c;
+    const toCssColor = (c: number | string | { light: number | string; dark: number | string }): string => {
+      if (typeof c === 'number') return `#${c.toString(16).padStart(6, '0')}`;
+      if (typeof c === 'string') return c;
+      return toCssColor(themed.getResolvedKind() === 'dark' ? c.dark : c.light);
+    };
 
     const initial = themed.getOptions();
     const settings = {

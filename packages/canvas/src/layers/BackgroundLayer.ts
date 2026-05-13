@@ -36,16 +36,37 @@ export type BackgroundType = 'solid' | 'pattern';
 /** Pattern texture kind. */
 export type BackgroundPatternType = 'dots' | 'grid' | 'lines';
 
+/**
+ * Mode selector for light/dark colour resolution. `'auto'` follows the host's
+ * `prefers-color-scheme` media query; `'light'` / `'dark'` pin explicitly.
+ */
+export type BackgroundMode = 'auto' | 'light' | 'dark';
+
+/** The concrete kind currently being rendered after mode resolution. */
+export type BackgroundKind = 'light' | 'dark';
+
+/**
+ * A colour input. Pass a `number` / CSS string for a single colour, or a
+ * `{ light, dark }` pair to swap based on the layer's `mode`.
+ */
+export type BackgroundColor =
+  | number
+  | string
+  | { light: number | string; dark: number | string };
+
 /** Construction-time options for `BackgroundLayer`. */
 export interface BackgroundLayerOptions {
   /** `'solid'` paints a flat fill; `'pattern'` overlays a tiled texture. Default `'solid'`. */
   type?: BackgroundType;
   /** Tile texture kind when `type === 'pattern'`. Default `'dots'`. */
   patternType?: BackgroundPatternType;
-  /** Pattern foreground colour (dot / line / grid colour). Accepts `0xRRGGBB` or a CSS string. */
-  color?: number | string;
+  /**
+   * Pattern foreground colour (dot / line / grid colour). Accepts `0xRRGGBB`,
+   * a CSS string, or a `{ light, dark }` pair resolved against `mode`.
+   */
+  color?: BackgroundColor;
   /** Solid-fill colour painted behind the pattern. Same accepted forms as `color`. */
-  backgroundColor?: number | string;
+  backgroundColor?: BackgroundColor;
   /** Dot radius / line thickness, in *texture pixels*. Default `1.5`. */
   size?: number;
   /** Tile cell spacing, in *texture pixels*. Default `30`. */
@@ -57,6 +78,12 @@ export interface BackgroundLayerOptions {
    * stays fixed to the screen regardless of camera state.
    */
   followCamera?: boolean;
+  /**
+   * How `{ light, dark }` colour variants are resolved. `'auto'` (default)
+   * follows `prefers-color-scheme`; `'light'` / `'dark'` pin explicitly. Has
+   * no effect when both colours are plain scalars.
+   */
+  mode?: BackgroundMode;
 }
 
 const DEFAULTS: Required<BackgroundLayerOptions> = {
@@ -68,6 +95,7 @@ const DEFAULTS: Required<BackgroundLayerOptions> = {
   spacing: 30,
   alpha: 0.6,
   followCamera: true,
+  mode: 'auto',
 };
 
 interface BackgroundLayerState {
@@ -93,6 +121,8 @@ export class BackgroundLayer extends ScreenLayer<
   private resizeObserver: ResizeObserver | null = null;
   private offCameraPan: (() => void) | null = null;
   private offCameraZoom: (() => void) | null = null;
+  private modeMediaQuery: MediaQueryList | null = null;
+  private modeMediaListener: ((e: MediaQueryListEvent) => void) | null = null;
 
   // Cached camera state used by tile-transform sync.
   private camX = 0;
@@ -117,17 +147,26 @@ export class BackgroundLayer extends ScreenLayer<
   }
 
   protected override onMount(ctx: CanvasContext): void {
+    // Seed cached camera state — events may not have fired yet if the camera
+    // is at a non-default initial position when this layer mounts.
+    this.camX = ctx.camera.x;
+    this.camY = ctx.camera.y;
+    this.camScale = ctx.camera.scale;
+
     this.render();
+    this.wireModeMediaQuery();
 
     this.offCameraPan = ctx.events.on('camera:pan', ({ x, y }) => {
       this.camX = x;
       this.camY = y;
       this.syncTileTransform();
     });
-    this.offCameraZoom = ctx.events.on('camera:zoom', ({ scale, centerX, centerY }) => {
+    this.offCameraZoom = ctx.events.on('camera:zoom', ({ scale }) => {
+      // `centerX/centerY` is the screen-space zoom anchor — *not* the
+      // world-origin screen position — so we only consume the new scale here.
+      // The accompanying `camera:pan` emission (always paired with zoom)
+      // updates `camX/camY` to the post-zoom origin offset.
       this.camScale = scale;
-      this.camX = centerX;
-      this.camY = centerY;
       this.syncTileTransform();
     });
 
@@ -138,6 +177,7 @@ export class BackgroundLayer extends ScreenLayer<
   }
 
   protected override onUnmount(): void {
+    this.detachModeMediaQuery();
     this.offCameraPan?.();
     this.offCameraZoom?.();
     this.offCameraPan = null;
@@ -162,12 +202,38 @@ export class BackgroundLayer extends ScreenLayer<
   /** Merge-update options + re-render. */
   setOptions(changes: Partial<BackgroundLayerOptions>): void {
     this.opts = { ...this.opts, ...changes };
-    if (this.mounted) this.render();
+    if (this.mounted) {
+      this.wireModeMediaQuery();
+      this.render();
+    }
   }
 
   /** Snapshot of the resolved options. */
   getOptions(): Required<BackgroundLayerOptions> {
     return { ...this.opts };
+  }
+
+  /**
+   * Set the colour-resolution mode. `'auto'` re-arms the system listener;
+   * `'light'` / `'dark'` pin explicitly. No-op when mode is unchanged.
+   */
+  setMode(mode: BackgroundMode): void {
+    if (this.opts.mode === mode) return;
+    this.opts = { ...this.opts, mode };
+    if (this.mounted) {
+      this.wireModeMediaQuery();
+      this.render();
+    }
+  }
+
+  /** Current mode setting. */
+  getMode(): BackgroundMode {
+    return this.opts.mode;
+  }
+
+  /** Concrete kind currently being rendered after mode resolution. */
+  getResolvedKind(): BackgroundKind {
+    return resolveKind(this.opts.mode);
   }
 
   // ─── Internals ──────────────────────────────────────────────────────────
@@ -188,7 +254,7 @@ export class BackgroundLayer extends ScreenLayer<
     const { width, height } = this.viewportSize();
 
     const bg = new Graphics();
-    bg.rect(0, 0, width, height).fill(this.opts.backgroundColor);
+    bg.rect(0, 0, width, height).fill(this.resolveColor(this.opts.backgroundColor));
     this.container.addChild(bg);
 
     if (this.opts.type === 'solid') return;
@@ -223,7 +289,7 @@ export class BackgroundLayer extends ScreenLayer<
     off.width = spacing;
     off.height = spacing;
     const ctx2d = off.getContext('2d')!;
-    ctx2d.fillStyle = colorToCss(color);
+    ctx2d.fillStyle = colorToCss(this.resolveColor(color));
 
     switch (patternType) {
       case 'dots':
@@ -242,4 +308,49 @@ export class BackgroundLayer extends ScreenLayer<
 
     return Texture.from(off);
   }
+
+  private resolveColor(c: BackgroundColor): number | string {
+    if (typeof c === 'number' || typeof c === 'string') return c;
+    return this.getResolvedKind() === 'dark' ? c.dark : c.light;
+  }
+
+  private hasVariantColor(): boolean {
+    return isVariant(this.opts.color) || isVariant(this.opts.backgroundColor);
+  }
+
+  private wireModeMediaQuery(): void {
+    // Only listen when we're actually following the system AND at least one
+    // colour has a `{ light, dark }` shape — avoids wasted listeners.
+    if (this.opts.mode !== 'auto' || !this.hasVariantColor()) {
+      this.detachModeMediaQuery();
+      return;
+    }
+    if (this.modeMediaQuery) return;
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    this.modeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    this.modeMediaListener = () => {
+      if (this.mounted) this.render();
+    };
+    this.modeMediaQuery.addEventListener('change', this.modeMediaListener);
+  }
+
+  private detachModeMediaQuery(): void {
+    if (this.modeMediaQuery && this.modeMediaListener) {
+      this.modeMediaQuery.removeEventListener('change', this.modeMediaListener);
+    }
+    this.modeMediaQuery = null;
+    this.modeMediaListener = null;
+  }
+}
+
+function isVariant(
+  c: BackgroundColor,
+): c is { light: number | string; dark: number | string } {
+  return typeof c === 'object' && c !== null;
+}
+
+function resolveKind(mode: BackgroundMode): BackgroundKind {
+  if (mode === 'light' || mode === 'dark') return mode;
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }

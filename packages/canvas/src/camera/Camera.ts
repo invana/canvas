@@ -92,6 +92,25 @@ export class Camera {
     const initialScale = this.clampScale(opts.initialScale ?? 1);
     this.viewport.scale.set(initialScale);
     this.viewport.position.set(opts.initialX ?? 0, opts.initialY ?? 0);
+
+    // Bridge pixi-viewport's plugin-driven events to the canvas bus. Without
+    // this, interactive pan/zoom (drag, wheel, pinch — all driven via
+    // `viewport.drag()` / `viewport.wheel()` / etc. inside camera-input
+    // behaviours) never reaches `camera:pan` / `camera:zoom` listeners,
+    // because plugin-driven mutations bypass Camera's typed mutators.
+    // Direct `.position.set` / `.scale.set` calls from this class don't
+    // trigger viewport's 'moved' / 'zoomed', so we don't double-emit.
+    this.viewport.on('moved', () => {
+      this.bus?.emit('camera:pan', { x: this.viewport.position.x, y: this.viewport.position.y });
+    });
+    this.viewport.on('zoomed', () => {
+      this.bus?.emit('camera:zoom', {
+        scale: this.viewport.scale.x,
+        centerX: this._screenWidth / 2,
+        centerY: this._screenHeight / 2,
+      });
+      this.bus?.emit('camera:pan', { x: this.viewport.position.x, y: this.viewport.position.y });
+    });
   }
 
   // ─── Read accessors ──────────────────────────────────────────────────────
