@@ -18,6 +18,7 @@ import { Container, Graphics } from 'pixi.js';
 import { ShapeDecorationBase } from '../../base/ShapeDecorationBase';
 import {
   applyLabelResolution,
+  fitInsideBox,
   mountLabelContent,
   updateLabelContent,
   type LabelContentView,
@@ -102,6 +103,19 @@ export class LabelDecoration extends ShapeDecorationBase<ShapeLabelStyle> {
     // label would silently revert to base sharpness on the next style change.
     if (this.resolution !== null) applyLabelResolution(this.contentView, this.resolution);
 
+    // For `inside-*` placements, the label carries a containment contract —
+    // it must fit inside the host shape's inner box. Run the shrink → truncate
+    // → hide cascade against the placement-specific inner-box budget before
+    // measuring. Outside placements and `'center'` skip this and size freely.
+    const placement = this.style.placement ?? 'bottom';
+    let hidden = false;
+    if (isInsidePlacement(placement)) {
+      const box = innerBoxFor(placement, host.bounds);
+      const minFontSize = this.style.minFontSize ?? 9;
+      const result = fitInsideBox(this.contentView, this.style.content, this.style.wrap, box, minFontSize);
+      hidden = result.hidden;
+    }
+
     // Measure text after style update; Pixi computes width/height on access.
     const textW = this.contentView.display.width;
     const textH = this.contentView.display.height;
@@ -125,15 +139,15 @@ export class LabelDecoration extends ShapeDecorationBase<ShapeLabelStyle> {
     this.contentView.display.position.set(-textW / 2, -textH / 2);
 
     // Compute the host-bounds-relative anchor for this placement. For the
-    // `'center'` placement, prefer the shape's `visualCenter()` over the AABB
-    // midpoint when the shape provides it — non-rectangular silhouettes
-    // (arc / polygon / star / ...) have AABB centres that can sit outside
-    // their actual interior, which would visibly mis-place a centred label.
-    const placement = this.style.placement ?? 'bottom';
+    // `'center'` and `'inside-center'` placements, prefer the shape's
+    // `visualCenter()` over the AABB midpoint when the shape provides it —
+    // non-rectangular silhouettes (arc / polygon / star / ...) have AABB
+    // centres that can sit outside their actual interior, which would
+    // visibly mis-place a centred label.
     const offsetX = this.style.offset?.x ?? 0;
     const offsetY = this.style.offset?.y ?? 0;
     const visualCenter =
-      placement === 'center' && host.shape.visualCenter
+      (placement === 'center' || placement === 'inside-center') && host.shape.visualCenter
         ? host.shape.visualCenter()
         : undefined;
     const { ax, ay, alignDx, alignDy } = anchorAndAlign(
@@ -146,7 +160,10 @@ export class LabelDecoration extends ShapeDecorationBase<ShapeLabelStyle> {
 
     this.gfx.position.set(ax + alignDx + offsetX, ay + alignDy + offsetY);
     this.gfx.rotation = this.style.rotation ?? 0;
-    this.gfx.alpha = this.style.alpha ?? 1;
+    // Fit cascade may have produced a "hide" result for inside-* placements
+    // that couldn't fit even after shrink + truncate; clamp alpha to 0 in
+    // that case. Otherwise honour the style's configured alpha.
+    this.gfx.alpha = hidden ? 0 : (this.style.alpha ?? 1);
     this.gfx.cursor = this.style.cursor ?? 'default';
     this.gfx.eventMode = this.style.interactive ? 'static' : 'none';
   }
@@ -235,6 +252,69 @@ function anchorAndAlign(
       return { ax: left + inside, ay: bottom - inside, alignDx: outerW / 2, alignDy: -outerH / 2 };
     case 'inside-bottom-right':
       return { ax: right - inside, ay: bottom - inside, alignDx: -outerW / 2, alignDy: -outerH / 2 };
+
+    case 'inside-top':
+      return { ax: cx, ay: top + inside, alignDx: 0, alignDy: outerH / 2 };
+    case 'inside-bottom':
+      return { ax: cx, ay: bottom - inside, alignDx: 0, alignDy: -outerH / 2 };
+    case 'inside-left':
+      return { ax: left + inside, ay: cy, alignDx: outerW / 2, alignDy: 0 };
+    case 'inside-right':
+      return { ax: right - inside, ay: cy, alignDx: -outerW / 2, alignDy: 0 };
+    case 'inside-center':
+      return { ax: cx, ay: cy, alignDx: 0, alignDy: 0 };
+  }
+}
+
+/**
+ * Whether `placement` carries the "label must stay inside the shape"
+ * containment contract — true for any `inside-*` value, false for the 8
+ * outside sides/corners and bare `'center'`. The fit cascade (shrink →
+ * truncate → hide) only runs for inside placements.
+ */
+export function isInsidePlacement(placement: ShapeLabelPlacement): boolean {
+  return placement.startsWith('inside-');
+}
+
+/**
+ * Inner-box budget the label is allowed to occupy for an `inside-*` placement,
+ * expressed relative to the host shape's AABB. All inside placements share the
+ * same uniform inset `INSIDE_CORNER_INSET_RATIO * min(w, h)` so the visual
+ * rhythm matches the existing inside-corners. Width/height halves correspond
+ * to which axis the placement subdivides:
+ *
+ * - `inside-center`        — full box minus 2× inset on both axes
+ * - `inside-top`/`-bottom` — full width, half height
+ * - `inside-left`/`-right` — half width, full height
+ * - `inside-*-corner`      — half width, half height
+ */
+export function innerBoxFor(
+  placement: ShapeLabelPlacement,
+  bounds: Rect,
+): { width: number; height: number } {
+  const inset = Math.min(bounds.width, bounds.height) * INSIDE_CORNER_INSET_RATIO;
+  const fullW = Math.max(0, bounds.width - 2 * inset);
+  const fullH = Math.max(0, bounds.height - 2 * inset);
+  const halfW = Math.max(0, bounds.width / 2 - inset);
+  const halfH = Math.max(0, bounds.height / 2 - inset);
+  switch (placement) {
+    case 'inside-center':
+      return { width: fullW, height: fullH };
+    case 'inside-top':
+    case 'inside-bottom':
+      return { width: fullW, height: halfH };
+    case 'inside-left':
+    case 'inside-right':
+      return { width: halfW, height: fullH };
+    case 'inside-top-left':
+    case 'inside-top-right':
+    case 'inside-bottom-left':
+    case 'inside-bottom-right':
+      return { width: halfW, height: halfH };
+    default:
+      // Not an inside placement — caller should not invoke; return zero box
+      // so any incidental use is harmless.
+      return { width: 0, height: 0 };
   }
 }
 

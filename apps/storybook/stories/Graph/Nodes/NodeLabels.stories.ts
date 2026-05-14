@@ -25,6 +25,10 @@ type Story = StoryObj;
  *   font controls, and a single html-text example with inline tag styles.
  * - Eight outside-side placements rendered in a ring around a hub so the
  *   anchor math is immediately readable.
+ * - A separate row of rect nodes demonstrating each `inside-*` placement.
+ *   These carry a containment contract: the label is constrained to the
+ *   shape via the shrink → truncate → hide cascade. Toggle the "long label"
+ *   and "tiny shape" GUI options to see the cascade in action.
  *
  * Drag any node to confirm labels track their host across moves; pan / zoom
  * to verify positioning stays correct under the camera.
@@ -175,7 +179,42 @@ export const NodeLabels: Story = {
       },
     };
 
-    const nodes: Node[] = [hub, ...ringNodes, wrappy, rich, simple];
+    // Inside-placement demo row — 9 rect nodes, each pinned to one of the
+    // `inside-*` placements (4 sides + 4 corners + inside-center). Their
+    // labels prove the containment contract: they shrink to fit and never
+    // bleed past the rect bounds.
+    const insidePlacements: ShapeLabelPlacement[] = [
+      'inside-top-left',    'inside-top',    'inside-top-right',
+      'inside-left',        'inside-center', 'inside-right',
+      'inside-bottom-left', 'inside-bottom', 'inside-bottom-right',
+    ];
+    const insideRowY = 460;
+    const insideRowSpacing = 160;
+    const insideRowStartX = -((insidePlacements.length - 1) * insideRowSpacing) / 2;
+    const insideNodes: Node[] = insidePlacements.map((p, i) => ({
+      id: `inside-${p}`,
+      position: { x: insideRowStartX + i * insideRowSpacing, y: insideRowY },
+      data: {
+        shape: 'rect',
+        size: 130,
+        height: 80,
+        cornerRadius: 8,
+        fill: 0xf1f5f9,
+        stroke: 0x475569,
+        label: {
+          content: {
+            kind: 'text',
+            text: p,
+            fontSize: 14,
+            fontWeight: 600,
+            fill: 0x0f172a,
+          },
+          placement: p,
+        },
+      },
+    }));
+
+    const nodes: Node[] = [hub, ...ringNodes, ...insideNodes, wrappy, rich, simple];
 
     // Edges fan from the hub to every ring node so the labels sit on top of
     // a visible relationship.
@@ -205,25 +244,53 @@ export const NodeLabels: Story = {
 
     canvas.camera.fitContent(graph.getBounds(), 100);
 
-    // GUI: a single picked node ('n-bottom') exposes its label fields so the
-    // viewer can sweep through placements, background, and wrap live.
+    // GUI: a single picked node exposes its label fields so the viewer can
+    // sweep through placements, background, and wrap live. All 18 placement
+    // values are exposed; pick an inside-* one and toggle `longLabel` /
+    // `tinyShape` to see the shrink → truncate → hide cascade kick in.
+    const ALL_PLACEMENTS: ShapeLabelPlacement[] = [
+      // outside sides + corners
+      'top', 'top-right', 'right', 'bottom-right',
+      'bottom', 'bottom-left', 'left', 'top-left',
+      // anchor-only centre (may overflow)
+      'center',
+      // inside sides
+      'inside-top', 'inside-right', 'inside-bottom', 'inside-left',
+      // inside corners
+      'inside-top-left', 'inside-top-right', 'inside-bottom-left', 'inside-bottom-right',
+      // inside centre (containment contract)
+      'inside-center',
+    ];
+    const LONG_LABEL = 'A very long descriptive label that will not fit naturally';
+
+    const allPickableIds = [
+      ...ring.map((r) => r.id),
+      'hub',
+      ...insideNodes.map((n) => n.id),
+    ];
+
     const settings = {
-      pickedNode: 'n-bottom',
-      text: 'bottom',
-      placement: 'bottom' as ShapeLabelPlacement,
-      background: true,
-      fontSize: 12,
+      pickedNode: 'inside-inside-center',
+      text: 'inside-center',
+      placement: 'inside-center' as ShapeLabelPlacement,
+      longLabel: false,
+      tinyShape: false,
+      background: false,
+      fontSize: 14,
       fontWeight: 600,
+      minFontSize: 9,
       maxWidth: 0,
+      maxHeight: 0,
       maxLines: 1,
     };
 
     const applyToPicked = (): void => {
       const node = graph.store.getNode(settings.pickedNode);
       if (!node) return;
-      const wrap = settings.maxWidth > 0 || settings.maxLines > 1
+      const wrap = settings.maxWidth > 0 || settings.maxHeight > 0 || settings.maxLines > 1
         ? {
             ...(settings.maxWidth > 0 ? { maxWidth: settings.maxWidth, wordWrap: true } : {}),
+            ...(settings.maxHeight > 0 ? { maxHeight: settings.maxHeight } : {}),
             maxLines: settings.maxLines,
             overflow: 'ellipsis' as const,
           }
@@ -231,7 +298,7 @@ export const NodeLabels: Story = {
       const label: NodeLabelHint = {
         content: {
           kind: 'text',
-          text: settings.text,
+          text: settings.longLabel ? LONG_LABEL : settings.text,
           fontSize: settings.fontSize,
           fontWeight: settings.fontWeight,
           fill: 0x0f172a,
@@ -241,27 +308,36 @@ export const NodeLabels: Story = {
         } : undefined,
         wrap,
         placement: settings.placement,
+        minFontSize: settings.minFontSize,
       };
+      // Tiny-shape toggle shrinks the picked node so the inside-fit cascade
+      // visibly kicks in. Only affects rect-shaped nodes (the inside row);
+      // the ring of circles uses `size` only.
+      const prevData = node.data as NodeRenderHints;
+      const sizeOverride = settings.tinyShape
+        ? { size: 60, height: 30 }
+        : prevData.shape === 'rect'
+          ? { size: 130, height: 80 }
+          : { size: prevData.size };
       graph.store.updateNode(settings.pickedNode, {
-        data: { ...(node.data as NodeRenderHints), label },
+        data: { ...prevData, ...sizeOverride, label },
       });
     };
 
     const gui = new GUI({ title: 'Node Label' });
     onStoryTeardown(() => gui.destroy());
-    gui.add(settings, 'pickedNode', ring.map((r) => r.id)).onChange(applyToPicked);
+    gui.add(settings, 'pickedNode', allPickableIds).onChange(applyToPicked);
     gui.add(settings, 'text').onChange(applyToPicked);
-    gui.add(settings, 'placement', [
-      'top', 'top-right', 'right', 'bottom-right',
-      'bottom', 'bottom-left', 'left', 'top-left',
-      'center', 'inside-top-left', 'inside-top-right',
-      'inside-bottom-left', 'inside-bottom-right',
-    ]).onChange(applyToPicked);
+    gui.add(settings, 'placement', ALL_PLACEMENTS).onChange(applyToPicked);
+    gui.add(settings, 'longLabel').name('long label').onChange(applyToPicked);
+    gui.add(settings, 'tinyShape').name('tiny shape').onChange(applyToPicked);
     gui.add(settings, 'background').onChange(applyToPicked);
     gui.add(settings, 'fontSize', 8, 24, 1).onChange(applyToPicked);
     gui.add(settings, 'fontWeight', { regular: 400, semibold: 600, bold: 700 }).onChange(applyToPicked);
+    gui.add(settings, 'minFontSize', 6, 16, 1).name('minFontSize (inside-*)').onChange(applyToPicked);
     const wr = gui.addFolder('wrap');
     wr.add(settings, 'maxWidth', 0, 240, 10).name('maxWidth (0=off)').onChange(applyToPicked);
+    wr.add(settings, 'maxHeight', 0, 200, 10).name('maxHeight (0=off)').onChange(applyToPicked);
     wr.add(settings, 'maxLines', 1, 4, 1).onChange(applyToPicked);
   },
 };

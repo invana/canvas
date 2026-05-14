@@ -1069,6 +1069,13 @@ export interface LabelBackground {
 export interface LabelWrap {
   /** Pixel cap on render width. Triggers word-wrap when set. */
   readonly maxWidth?: number;
+  /**
+   * Pixel cap on render height. Combined with the text's `lineHeight` (read
+   * from `LabelContent.lineHeight` or derived from `fontSize`) to derive an
+   * effective `maxLines = floor(maxHeight / lineHeight)`. If both `maxHeight`
+   * and `maxLines` are set, the smaller (more restrictive) wins.
+   */
+  readonly maxHeight?: number;
   /** Cap on rendered lines; lines past this are dropped (after `overflow`). */
   readonly maxLines?: number;
   /** Enable wrap explicitly; auto-true when `maxWidth` is set. */
@@ -1109,23 +1116,41 @@ export interface LabelStyleCommon {
   readonly priority?: number;
   readonly collisionGroup?: string;
   readonly forceShow?: boolean;
+  /**
+   * Floor used by the shrink → truncate → hide fit cascade when an
+   * `inside-*` placement requires the label to stay inside the host shape.
+   * Below this size, the cascade moves on to truncation (ellipsis) and
+   * finally hide. Default `9` (px). Ignored for non-`inside-*` placements.
+   */
+  readonly minFontSize?: number;
 }
 
 /**
  * Placement options for a shape-anchored label.
  *
- * - `'center'` — at the host's visual centre (inside the silhouette).
- * - 8 outside placements — sit on the host's outer perimeter.
- * - 4 inside corners — sit inset from a corner, inside the silhouette.
+ * Two semantic groups distinguished by the `inside-` prefix:
  *
- * `'center'` subsumes the legacy inset `kind: 'text'` fill layer.
+ * - **Anchor-only placements** — `'center'` plus the 8 outside sides /
+ *   corners (`'top'`, `'top-right'`, ..., `'top-left'`). The label is
+ *   positioned at the anchor and sized freely per `LabelWrap`; it may
+ *   extend past the host shape's bounds.
+ * - **Inside placements** (`'inside-*'`) — carry a *containment contract*:
+ *   the label must stay inside the host shape's inner box. The decoration
+ *   runs a shrink → truncate → hide fit cascade against the per-placement
+ *   inner box to enforce this. Use these for sunburst wedges, treemap
+ *   cells, pack circles — anywhere the label must not overflow.
+ *
+ * `'center'` and `'inside-center'` share the geometric anchor (shape
+ * centre) but differ in containment: `'center'` may overflow, `'inside-center'`
+ * may not. They are distinct values, not aliases.
  */
 export type ShapeLabelPlacement =
   | 'center'
   | 'top' | 'top-right' | 'right' | 'bottom-right'
   | 'bottom' | 'bottom-left' | 'left' | 'top-left'
-  | 'inside-top-left' | 'inside-top-right'
-  | 'inside-bottom-left' | 'inside-bottom-right';
+  | 'inside-top' | 'inside-top-right' | 'inside-right' | 'inside-bottom-right'
+  | 'inside-bottom' | 'inside-bottom-left' | 'inside-left' | 'inside-top-left'
+  | 'inside-center';
 
 /** Style payload passed to `setDecoration(id, 'label', { kind: 'label', style })`. */
 export interface ShapeLabelStyle extends LabelStyleCommon {
