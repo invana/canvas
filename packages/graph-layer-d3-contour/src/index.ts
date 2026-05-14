@@ -1,10 +1,15 @@
 // @invana/graph-layer-d3-contour — public API surface
 
-export { DensityContourLayer } from './DensityContourLayer';
+export { DensityContourLayerBase } from './DensityContourLayerBase';
+export { DensityContourFillLayer } from './DensityContourFillLayer';
+export { DensityContourStrokeLayer } from './DensityContourStrokeLayer';
 export type {
-  DensityContourLayerOptions,
-  DensityContourLayerState,
+  DensityContourLayerBaseOptions,
+  DensityContourFillLayerOptions,
+  DensityContourStrokeLayerOptions,
+  DensityContourPaletteOptions,
   DensityContourLayerEvents,
+  DensityContourLayerState,
 } from './types';
 export {
   DENSITY_CONTOUR_PALETTES,

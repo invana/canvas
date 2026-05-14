@@ -1,12 +1,11 @@
 /**
- * Density-contour overlay over a force-directed Les Misérables graph.
+ * `DensityContourFillLayer` over a force-directed Les Misérables graph.
  *
- * Demonstrates {@link DensityContourLayer} as a *toggleable* overlay on top
- * of a `GraphLayer`. The contour layer reads node positions from the graph
- * (by `graphLayerId`) and renders d3-contour density bands beneath the
- * nodes / edges. lil-gui exposes `bandwidth`, `thresholds`, `cellSize`,
- * `fillOpacity`, plus a `visible` toggle that swaps the overlay on / off
- * without touching the graph data.
+ * The fill layer paints filled iso-bands beneath the nodes and edges,
+ * coloured through one of three palette forms: a named ramp, a two-colour
+ * range, or a continuous function `(t) => 0xRRGGBB`. The companion
+ * `DensityContourStrokeLayer` story is the outline-only sibling — compose
+ * both (same `graphLayerId`, different `zIndex`) for fill + outline.
  */
 
 import type { Meta, StoryObj } from '@storybook/html-vite';
@@ -22,19 +21,20 @@ import { DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import {
   DENSITY_CONTOUR_PALETTE_NAMES,
-  DensityContourLayer,
+  DensityContourFillLayer,
   type DensityContourPaletteName,
 } from '@invana/graph-layer-d3-contour';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
-const meta: Meta = { title: 'graph-layers/d3-contour/LesMiserables' };
+const meta: Meta = { title: 'graph-layers/d3-contour/DensityContourFillLayer' };
 export default meta;
 type Story = StoryObj;
 
-export const LesMiserables: Story = {
-  render: () => createContainer({ id: 'graph-density-les-miserables' }),
+export const DensityContourFillLayer_Story: Story = {
+  name: 'DensityContourFillLayer',
+  render: () => createContainer({ id: 'graph-density-fill-lesmis' }),
 
   play: async ({ canvasElement }) => {
     const groupColors = [
@@ -51,7 +51,7 @@ export const LesMiserables: Story = {
       },
     }));
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#graph-density-les-miserables')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#graph-density-fill-lesmis')!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
@@ -84,11 +84,10 @@ export const LesMiserables: Story = {
     });
     canvas.layers.add(graph);
 
-    // Contour overlay — added AFTER graph in the layer list but placed at a
-    // lower zIndex so the graph nodes/edges paint on top of the density
-    // bands. The layer subscribes to `graph.events('data:changed')` so it
-    // automatically tracks the force-directed simulation as it settles.
-    const contour = new DensityContourLayer({
+    // Fill overlay — added AFTER graph but at a lower zIndex so the nodes
+    // and edges paint on top. The layer subscribes to `data:changed` and
+    // recomputes automatically as the force simulation settles.
+    const contour = new DensityContourFillLayer({
       id: 'density',
       zIndex: -1,
       options: {
@@ -103,9 +102,6 @@ export const LesMiserables: Story = {
     });
     canvas.layers.add(contour);
 
-    // Layers panel — gives a live view of every layer in the canvas
-    // (background, graph, density, dev-info, the panel itself), with a
-    // visibility toggle per layer. Sits on top so it's never occluded.
     canvas.layers.add(
       new LayersPanelLayer({
         corner: 'top-left',
@@ -131,9 +127,6 @@ export const LesMiserables: Story = {
     });
     onStoryTeardown(() => layout.stop());
 
-    // Fit after the simulation settles so the density blobs land nicely in
-    // the viewport. The contour layer recomputes on `data:changed` so its
-    // bands track the final positions automatically.
     layout.events.on('end', () => {
       canvas.camera.fitContent(graph.getBounds(), 100);
       contour.recompute();
@@ -142,9 +135,9 @@ export const LesMiserables: Story = {
     void layout.apply(graph);
 
     // Three palette modes the layer accepts:
-    //  - 'palette' : named built-in (or array of stops)
-    //  - 'range'   : two-colour gradient via paletteRangeStart/End
-    //  - 'function': continuous (t in [0,1]) => 0xRRGGBB callback
+    //  - 'palette'  : named built-in (or an array of stops)
+    //  - 'range'    : two-colour gradient via paletteRangeStart/End
+    //  - 'function' : continuous (t in [0,1]) => 0xRRGGBB callback
     type PaletteMode = 'palette' | 'range' | 'function';
     type FnPreset = 'hueSweep' | 'rainbow' | 'grayscale';
 
@@ -157,18 +150,8 @@ export const LesMiserables: Story = {
       },
     };
 
-    // Style preset — snaps `fillOpacity` and `strokeWidth` to sensible
-    // values for each of the three canonical looks. The underlying sliders
-    // stay editable below for fine-tuning.
-    type StylePreset = 'fill' | 'stroke' | 'both';
-    // Two stroke colour forms, mirroring the fill `mode` selector:
-    //  - 'palette'  : every iso-line tinted through the active palette chain
-    //  - 'constant' : single `0xRRGGBB` colour for all bands
-    type StrokeMode = 'palette' | 'constant';
-
     const settings = {
       visible: true,
-      style: 'fill' as StylePreset,
       mode: 'palette' as PaletteMode,
       palette: 'viridis' as DensityContourPaletteName,
       rangeStart: 0xfff5f0,
@@ -178,52 +161,21 @@ export const LesMiserables: Story = {
       thresholds: 10,
       cellSize: 4,
       fillOpacity: 0.45,
-      strokeWidth: 0,
-      strokeMode: 'palette' as StrokeMode,
-      strokeColorConst: 0x1f2937,
     };
 
-    const gui = new GUI({ title: 'DensityContourLayer' });
+    const gui = new GUI({ title: 'DensityContourFillLayer' });
     onStoryTeardown(() => gui.destroy());
 
     gui.add(settings, 'visible').name('Show contour').onChange((v: boolean) => {
       contour.visible = v;
     });
 
-    // Style preset — snaps the fill/stroke sliders to canonical looks.
-    // `fill`   : today's filled-band overlay (no outline)
-    // `stroke` : Observable-style stroke-only iso-lines (no fill)
-    // `both`   : faint fill with overlaid lines
-    gui
-      .add(settings, 'style', ['fill', 'stroke', 'both'] satisfies StylePreset[])
-      .name('Style')
-      .onChange((v: StylePreset) => {
-        if (v === 'fill') {
-          settings.fillOpacity = 0.45;
-          settings.strokeWidth = 0;
-        } else if (v === 'stroke') {
-          settings.fillOpacity = 0;
-          settings.strokeWidth = 0.6;
-        } else {
-          settings.fillOpacity = 0.35;
-          settings.strokeWidth = 0.4;
-        }
-        gui.controllersRecursive().forEach((c) => c.updateDisplay());
-        rebuildContour();
-      });
-
     const rebuildContour = (): void => {
-      // The layer reads options live via `this.options`. We clear the
-      // unused palette fields so the resolution order picks up only the
-      // form that matches the current `mode` selector.
       const o = contour.options as unknown as Record<string, unknown>;
       o.bandwidth = settings.bandwidth;
       o.thresholds = settings.thresholds;
       o.cellSize = settings.cellSize;
       o.fillOpacity = settings.fillOpacity;
-      o.strokeWidth = settings.strokeWidth;
-      o.strokeColor =
-        settings.strokeMode === 'palette' ? 'palette' : settings.strokeColorConst;
 
       // Reset all palette forms; set only the one matching the active mode.
       o.palette = undefined;
@@ -245,9 +197,6 @@ export const LesMiserables: Story = {
 
     const colorFolder = gui.addFolder('Colour');
 
-    // Controllers per mode — captured so we can show only the one matching
-    // the active mode, keeping the GUI honest about which form actually
-    // drives the layer.
     const paletteCtl = colorFolder
       .add(settings, 'palette', [...DENSITY_CONTOUR_PALETTE_NAMES])
       .name('Named palette')
@@ -272,8 +221,6 @@ export const LesMiserables: Story = {
       fnPresetCtl.show(settings.mode === 'function');
     };
 
-    // Add the mode selector at the top of the folder so the visible
-    // controls below it always reflect the active choice.
     colorFolder
       .add(settings, 'mode', ['palette', 'range', 'function'] satisfies PaletteMode[])
       .name('Mode')
@@ -287,26 +234,8 @@ export const LesMiserables: Story = {
     const contourFolder = gui.addFolder('Contour');
     contourFolder.add(settings, 'bandwidth', 5, 100, 1).onChange(rebuildContour);
     contourFolder.add(settings, 'thresholds', 3, 30, 1).onChange(rebuildContour);
-    contourFolder.add(settings, 'cellSize', 1, 16, 1).onChange(rebuildContour);
+    contourFolder.add(settings, 'cellSize', [1, 2, 4, 8, 16]).onChange(rebuildContour);
     contourFolder.add(settings, 'fillOpacity', 0, 1, 0.01).onChange(rebuildContour);
-
-    // Stroke folder — iso-line outline. `strokeWidth: 0` hides the lines
-    // entirely; `strokeMode: 'palette'` tints each line through the active
-    // fill palette chain (the Observable density-contour look).
-    const strokeFolder = gui.addFolder('Stroke');
-    strokeFolder.add(settings, 'strokeWidth', 0, 4, 0.1).onChange(rebuildContour);
-    strokeFolder
-      .add(settings, 'strokeMode', ['palette', 'constant'] satisfies StrokeMode[])
-      .name('Stroke mode')
-      .onChange(() => {
-        strokeColorConstCtl.show(settings.strokeMode === 'constant');
-        rebuildContour();
-      });
-    const strokeColorConstCtl = strokeFolder
-      .addColor(settings, 'strokeColorConst')
-      .name('Stroke colour')
-      .onChange(rebuildContour);
-    strokeColorConstCtl.show(settings.strokeMode === 'constant');
 
     gui.add({ recompute: () => contour.recompute() }, 'recompute').name('Recompute now');
     gui.add(
