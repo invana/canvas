@@ -17,6 +17,27 @@ Inside each package namespace, the seven core engine concepts each get a folder:
 - `Canvas/Behaviours/...`  — registrable behaviours: `DragPanBehaviour`, `WheelZoomBehaviour`, etc.
 - `Canvas/Events/...`      — canvas / layer event demos.
 
+### Layout-package stories — `graph-layouts/<flavour>/...`
+
+Stories for any `@invana/graph-layout-<flavour>` package live under a *single* shared parent folder, namespaced by the package suffix (the package name with the `graph-layout-` prefix stripped):
+
+```
+apps/storybook/stories/graph-layouts/
+├── d3-force/          ← @invana/graph-layout-d3-force
+│   ├── Lattice.stories.ts
+│   ├── LesMiserables.stories.ts
+│   └── …
+├── d3-hierarchy/      ← @invana/graph-layout-d3-hierarchy
+│   ├── Sunburst.stories.ts
+│   ├── Tree.stories.ts
+│   └── …
+└── elkjs/             ← @invana/graph-layout-elkjs (future)
+```
+
+Title fields match the path exactly: `title: 'graph-layouts/<flavour>/<Name>'` — e.g. `'graph-layouts/d3-force/Lattice'`, `'graph-layouts/d3-hierarchy/Sunburst'`. The sidebar then groups all layout flavours under one `graph-layouts` node with one child per layout package, instead of scattering them as siblings of `Canvas` and `Graph`.
+
+When adding a new layout package `@invana/graph-layout-<X>`, create `apps/storybook/stories/graph-layouts/<X>/` and write the story titles as `graph-layouts/<X>/<Name>`. Don't put layout-package stories under `Graph/Layer/`, `Canvas/Layers/`, or a flat `graph-layouts-<X>/` folder — those are the wrong neighbours.
+
 ### Decorations vs. Effects vs. Animations
 
 These are three orthogonal concepts; they compose. See `packages/canvas/CLAUDE.md` and `architecture-proposal.md` §2.7 for the full story.

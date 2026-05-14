@@ -27,7 +27,7 @@ import {
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import GUI from 'lil-gui';
-import { createContainer, onStoryTeardown } from '../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'graph-layouts/d3-force/Lattice' };
 export default meta;

@@ -98,7 +98,7 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
     - effect → `Canvas/Effects/{Shapes,Connectors}/`
     - layer → `Canvas/Layers/` (or `Graph/Layer/` for graph-domain layers)
     - behaviour → `Canvas/Behaviours/` (or `Graph/Behaviours/`)
-    - layout → `graph-layouts-<vendor>-<flavour>/` (matches the package name)
+    - layout → `graph-layouts/<flavour>/` (where `<flavour>` is the package name minus the `graph-layout-` prefix — e.g. `@invana/graph-layout-d3-force` → `graph-layouts/d3-force/`). See `apps/storybook/CLAUDE.md` for the full layout-namespacing rule.
     - graph node/edge feature → `Graph/Nodes/` or `Graph/Edges/`
 
 ---

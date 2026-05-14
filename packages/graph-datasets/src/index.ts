@@ -63,3 +63,11 @@ export {
   type UkEnergyFlowGraphEdge,
   type UkEnergyFlowGraphNode,
 } from './uk-energy-flow';
+
+export {
+  oldFaithful,
+  type OldFaithfulGraphData,
+  type OldFaithfulNode,
+  type OldFaithfulNodeData,
+  type OldFaithfulPoint,
+} from './oldFaithful';

@@ -91,8 +91,19 @@ export interface DensityContourLayerOptions {
   /** Fill alpha 0..1. Defaults to `0.4`. */
   fillOpacity?: number;
 
-  /** Optional band outline colour. Default `0` (no stroke unless `strokeWidth > 0`). */
-  strokeColor?: number;
+  /**
+   * Band outline colour.
+   *
+   * - A `0xRRGGBB` number → constant stroke colour for every band (default
+   *   `0x000000`, only visible when {@link strokeWidth} `> 0`).
+   * - The literal string `'palette'` → stroke colour for each band is
+   *   resolved through the same palette chain as the fill (`fillColor` >
+   *   `paletteFn` > `paletteRangeStart`/`paletteRangeEnd` > `palette`).
+   *   Use this to reproduce the classic d3 density-contour look (e.g. the
+   *   Observable `@d3/density-contours` example) where each iso-line is
+   *   tinted by the density ramp without any fill.
+   */
+  strokeColor?: number | 'palette';
 
   /** Optional band outline width. Default `0`. */
   strokeWidth?: number;

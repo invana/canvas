@@ -9,7 +9,7 @@ import { GraphLayer, LabelResolutionLODBehaviour, type NodeLabelHint } from '@in
 import { D3HierarchyLayout, type D3HierarchyLayoutMode } from '@invana/graph-layout-d3-hierarchy';
 import { lifeTreeAsGraph, type LifeTreeKingdom } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
-import { createContainer, onStoryTeardown } from '../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'graph-layouts/d3-hierarchy/TreeOfLife' };
 export default meta;

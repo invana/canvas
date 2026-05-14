@@ -202,36 +202,48 @@ export class DensityContourLayer extends WorldLayer<
   ): void {
     const opacity = this.options.fillOpacity ?? DEFAULTS.fillOpacity;
     const strokeWidth = this.options.strokeWidth ?? DEFAULTS.strokeWidth;
-    const strokeColor = this.options.strokeColor ?? DEFAULTS.strokeColor;
+    const strokeColorOpt = this.options.strokeColor;
     const total = density.length;
 
-    // Resolution order (most specific wins): `fillColor` callback
+    // Palette resolution order (most specific wins):
+    //   `fillColor` callback
     //   > `paletteFn(t)`
     //   > `paletteRangeStart`/`paletteRangeEnd` (only when BOTH are set)
     //   > `palette` (name or array of stops)
     //   > default `'blues'` palette.
     // Resolved once per paint so callers can hot-swap any of these at
-    // runtime without re-constructing the layer.
+    // runtime without re-constructing the layer. Returns a per-band colour
+    // function reused for both fill and stroke (when stroke opts into the
+    // palette via `strokeColor: 'palette'`).
     const o = this.options;
-    let fill: (value: number, index: number, t: number) => number;
+    let paletteColor: (value: number, index: number, total: number) => number;
     if (o.fillColor) {
-      fill = o.fillColor;
+      paletteColor = o.fillColor;
     } else if (o.paletteFn) {
       const fn = o.paletteFn;
-      fill = (_v, i, n) => fn(n > 1 ? i / (n - 1) : 0);
+      paletteColor = (_v, i, n) => fn(n > 1 ? i / (n - 1) : 0);
     } else if (o.paletteRangeStart !== undefined && o.paletteRangeEnd !== undefined) {
       const a = o.paletteRangeStart;
       const b = o.paletteRangeEnd;
-      fill = (_v, i, n) => lerpColor(a, b, n > 1 ? i / (n - 1) : 0);
+      paletteColor = (_v, i, n) => lerpColor(a, b, n > 1 ? i / (n - 1) : 0);
     } else {
       const stops = resolveStops(o.palette);
-      fill = (_v, i, n) => sampleStops(stops, i, n);
+      paletteColor = (_v, i, n) => sampleStops(stops, i, n);
     }
+
+    // Stroke colour: constant number, palette-resolved per band, or the
+    // default constant black when unset.
+    const strokeAt: (value: number, index: number, total: number) => number =
+      strokeColorOpt === 'palette'
+        ? paletteColor
+        : typeof strokeColorOpt === 'number'
+          ? () => strokeColorOpt
+          : () => DEFAULTS.strokeColor;
 
     // d3 returns bands ordered low-density → high-density; that's the order
     // we paint in so higher-density bands sit on top.
     density.forEach((band, i) => {
-      const color = fill(band.value, i, total);
+      const fillColor = paletteColor(band.value, i, total);
       // Each band is a MultiPolygon: an array of polygons; each polygon is an
       // array of rings (outer + holes). For density bands, the outer ring is
       // what we want filled; holes are rare and visually subtle, so we paint
@@ -248,9 +260,9 @@ export class DensityContourLayer extends WorldLayer<
         }
         g.poly(flat);
       }
-      g.fill({ color, alpha: opacity });
+      g.fill({ color: fillColor, alpha: opacity });
       if (strokeWidth > 0) {
-        g.stroke({ color: strokeColor, width: strokeWidth });
+        g.stroke({ color: strokeAt(band.value, i, total), width: strokeWidth });
       }
     });
   }

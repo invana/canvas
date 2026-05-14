@@ -20,7 +20,7 @@ import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
 import { DevInfoLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
-import { createContainer, onStoryTeardown } from '../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'graph-layouts/d3-force/LesMiserables' };
 export default meta;

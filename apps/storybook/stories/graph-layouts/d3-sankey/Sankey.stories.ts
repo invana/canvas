@@ -10,7 +10,7 @@ import { GraphLayer, type NodeLabelHint } from '@invana/graph';
 import { D3SankeyLayout } from '@invana/graph-layout-d3-sankey';
 import { ukEnergyFlowAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
-import { createContainer, onStoryTeardown } from '../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'graph-layouts/d3-sankey/Sankey' };
 export default meta;

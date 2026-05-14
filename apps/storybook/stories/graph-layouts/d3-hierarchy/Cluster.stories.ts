@@ -13,36 +13,24 @@ import {
 } from '@invana/graph-layout-d3-hierarchy';
 import { flareAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
-import { createContainer, onStoryTeardown } from '../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
-const meta: Meta = { title: 'graph-layouts/d3-hierarchy/Tree' };
+const meta: Meta = { title: 'graph-layouts/d3-hierarchy/Cluster' };
 export default meta;
 type Story = StoryObj;
 
-export const Tree: Story = {
-  render: () => createContainer({ id: 'graph-tree' }),
+export const Cluster: Story = {
+  render: () => createContainer({ id: 'graph-cluster' }),
 
   play: async ({ canvasElement }) => {
     // ── Settings ─────────────────────────────────────────────────────────
-    // Tidy tree (Reingold-Tilford via `d3.tree()`) compresses subtrees
-    // tighter than `d3.cluster()` — internal nodes sit on top of their
-    // children's centroid, so leaves at different depths land at different
-    // depths on screen (rather than aligned at the rightmost column the way
-    // a dendrogram does).
-    //
-    // The d3 example's recipe:
-    //   const dx = 10;
-    //   const dy = width / (root.height + 1);
-    //   d3.tree().nodeSize([dx, dy])(d3.hierarchy(data));
-    // We mirror that with `nodeSize: [siblingSpacing, depthSpacing]` and
-    // let the camera fit the result instead of pre-computing dy from a
-    // viewport width.
     const settings = {
-      mode: 'tree' as D3HierarchyLayoutMode,
+      mode: 'cluster' as D3HierarchyLayoutMode,
       orientation: 'horizontal' as CartesianOrientation,
-      // d3 tree/2 uses dx=10, dy=width/(root.height+1). With label-bearing
-      // leaves the default dx is too tight — bump sibling spacing to 14 so
-      // leaf labels don't overlap vertically when fully zoomed-in.
+      // `nodeSize` (per-node spacing) keeps the dendrogram readable for
+      // ~250-node Flare. d3's cluster/2 example uses ~10px between siblings;
+      // bumped to 14 here because label-bearing leaves need vertical room
+      // to avoid overlapping text.
       siblingSpacing: 14,
       depthSpacing: 160,
       edgeAlpha: 0.55,
@@ -51,13 +39,14 @@ export const Tree: Story = {
       colorByDepth: true,
       showLabels: true,
       labelFontSize: 10,
-      // Zoom-aware label sharpness — see Cluster.stories.ts for rationale.
+      // Zoom-aware label sharpness: bumps Pixi's Text resolution once the
+      // camera zooms past a threshold so glyph textures don't sample-blur.
+      // Tier-based to avoid frame stutter on every zoom step — see
+      // `LabelResolutionLODBehaviour`.
       sharpLabelsOnZoom: true,
     };
 
-    // Depth-based colour ramp (warm root → cool leaves). Kept identical to
-    // the Cluster story so a side-by-side comparison reads as "same data,
-    // different layout algorithm".
+    // Depth-based color ramp (warm root → cool leaves).
     const hslToHex = (h: number, s: number, l: number): number => {
       const c = (1 - Math.abs(2 * l - 1)) * s;
       const hh = h / 60;
@@ -92,10 +81,9 @@ export const Tree: Story = {
             size: settings.nodeRadius * 2,
             fill: settings.colorByDepth ? colorAt(n.data.depth) : 0x1f2937,
             stroke: false as const,
-            // d3 tree/2's label rule: leaves get their name on the right
-            // side, internal nodes on the left. With horizontal orientation
-            // that lines labels up *away* from the subtree they belong to,
-            // so they don't overprint the children below.
+            // d3 cluster/2's label rule: leaves get their name on the right,
+            // internal nodes on the left. Horizontal orientation lines labels
+            // up *away* from their subtree so they don't overprint children.
             ...(settings.showLabels
               ? {
                   label: {
@@ -124,7 +112,7 @@ export const Tree: Story = {
     };
 
     // ── Canvas setup ─────────────────────────────────────────────────────
-    const container = canvasElement.querySelector<HTMLDivElement>('#graph-tree')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#graph-cluster')!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
@@ -152,15 +140,17 @@ export const Tree: Story = {
           strokeWidth: settings.edgeStrokeWidth,
           alpha: settings.edgeAlpha,
           arrow: false,
-          // `bezier` with `axis: 'h'` matches d3.linkHorizontal(). Don't
-          // rely on `axis: 'auto'` — for sibling pairs whose parent sits
-          // between them, `dy > dx` flips auto to vertical and produces
-          // wrong-direction S-curves crossing the tree.
+          // `bezier` with `axis: 'h'` matches d3.linkHorizontal() — control
+          // points always pull along the horizontal axis. Don't rely on
+          // `axis: 'auto'` here: in a horizontal cluster, sibling pairs whose
+          // parent sits between them have `dy > dx`, which would flip auto
+          // to vertical and produce wrong-direction S-curves crossing the
+          // tree.
           pathType: 'bezier',
           pathStyleOpts: { axis: 'h' },
-          // Centre-anchor so the bezier tangent at each endpoint matches
-          // the node centre rather than the trimmed boundary cut. Nodes
-          // overdraw the inner part of the curve.
+          // Centre-anchor so the tangent at each endpoint matches the node
+          // centre rather than the trimmed boundary cut. Same trick the
+          // RadialTree story uses; nodes draw on top of the curve.
           anchor: 'center',
         },
       },
@@ -185,10 +175,9 @@ export const Tree: Story = {
       layout = new D3HierarchyLayout({
         mode: settings.mode,
         orientation: settings.orientation,
-        // d3's `tree.nodeSize([dx, dy])` — dx is sibling spacing, dy is
-        // depth spacing. Per-node spacing (vs. a fixed `size` bounding
-        // box) keeps siblings consistently spaced no matter how unbalanced
-        // a subtree is.
+        // Per-node spacing (`nodeSize`) keeps siblings consistently-spaced
+        // regardless of subtree imbalance — preferred over `size` for
+        // dendrograms with many leaves.
         nodeSize: [settings.siblingSpacing, settings.depthSpacing],
       });
       await layout.apply(graph);
@@ -199,12 +188,12 @@ export const Tree: Story = {
     onStoryTeardown(() => layout?.stop());
 
     // ── GUI ──────────────────────────────────────────────────────────────
-    const gui = new GUI({ title: 'Tree' });
+    const gui = new GUI({ title: 'Cluster' });
     onStoryTeardown(() => gui.destroy());
 
     const layoutFolder = gui.addFolder('Layout');
     layoutFolder
-      .add(settings, 'mode', ['tree', 'cluster'] satisfies D3HierarchyLayoutMode[])
+      .add(settings, 'mode', ['cluster', 'tree'] satisfies D3HierarchyLayoutMode[])
       .onChange(run);
     layoutFolder
       .add(settings, 'orientation', ['horizontal', 'vertical'] satisfies CartesianOrientation[])
@@ -226,6 +215,6 @@ export const Tree: Story = {
       .name('Sharp on zoom')
       .onChange((on: boolean) => (on ? labelResolutionLOD.enable() : labelResolutionLOD.disable()));
 
-    gui.add({ refit: () => canvas.camera.fitContent(graph.getBounds(), 20) }, 'refit').name('Re-fit camera');
+    gui.add({ refit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'refit').name('Re-fit camera');
   },
 };

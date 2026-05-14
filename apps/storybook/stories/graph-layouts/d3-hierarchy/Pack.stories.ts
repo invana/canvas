@@ -10,7 +10,7 @@ import { GraphLayer, LabelResolutionLODBehaviour, type NodeLabelHint } from '@in
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
 import { h1b2019AsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
-import { createContainer, onStoryTeardown } from '../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'graph-layouts/d3-hierarchy/Pack' };
 export default meta;

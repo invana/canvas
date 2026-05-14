@@ -9,7 +9,7 @@ import { DragNodeBehaviour, GraphLayer, type GraphEdge, type GraphNode } from '@
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { generateRandomTree } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
-import { createContainer, onStoryTeardown } from '../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'graph-layouts/d3-force/RandomTree' };
 export default meta;

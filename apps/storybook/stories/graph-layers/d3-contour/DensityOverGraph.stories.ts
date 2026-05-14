@@ -27,7 +27,7 @@ import {
 } from '@invana/graph-layer-d3-contour';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
-import { createContainer, onStoryTeardown } from '../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'graph-layers/d3-contour/DensityOverGraph' };
 export default meta;
