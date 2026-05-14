@@ -7,8 +7,18 @@ import type { HierarchyNode } from 'd3-hierarchy';
  * - `'cluster'` — `d3.cluster()` dendrogram (leaves aligned), Cartesian positions.
  * - `'radial-tree'` — `d3.tree()` projected to polar coordinates.
  * - `'radial-cluster'` — `d3.cluster()` projected to polar coordinates.
+ * - `'pack'` — `d3.pack()` enclosure layout. Each node is sized by the
+ *   accumulated `value` and positioned so children are packed inside the
+ *   parent's circle. The layout also writes per-node sizes onto each node
+ *   (`data.size = 2 * r`), so the renderer can draw the correct circle
+ *   diameter; this is unique to pack and is why it needs `value`.
  */
-export type D3HierarchyLayoutMode = 'tree' | 'cluster' | 'radial-tree' | 'radial-cluster';
+export type D3HierarchyLayoutMode =
+  | 'tree'
+  | 'cluster'
+  | 'radial-tree'
+  | 'radial-cluster'
+  | 'pack';
 
 /**
  * Per-pair separation accessor — passed straight through to d3's
@@ -18,6 +28,20 @@ export type SeparationFn = (
   a: HierarchyNode<{ id: string }>,
   b: HierarchyNode<{ id: string }>,
 ) => number;
+
+/**
+ * Cartesian-mode orientation.
+ *
+ * - `'vertical'` (default) — depth axis runs top-to-bottom; root at top,
+ *   leaves at bottom. Pairs naturally with `pathType: 'bezier'` (axis 'auto'
+ *   picks vertical) or `pathType: 'smooth'`.
+ * - `'horizontal'` — depth axis runs left-to-right; root on the left,
+ *   leaves aligned on the right. Matches the d3 cluster / tidy-tree
+ *   examples. Pairs with `pathType: 'bezier'` (axis 'auto' picks horizontal).
+ *
+ * Ignored in `radial-*` modes.
+ */
+export type CartesianOrientation = 'vertical' | 'horizontal';
 
 /**
  * `D3HierarchyLayout` options.
@@ -59,6 +83,12 @@ export interface D3HierarchyLayoutOptions {
    */
   radius?: number;
 
+  /**
+   * Cartesian orientation. Default `'vertical'`. See {@link CartesianOrientation}.
+   * Ignored in `radial-*` modes.
+   */
+  orientation?: CartesianOrientation;
+
   /** Custom separation function. See d3-hierarchy `tree.separation`. */
   separation?: SeparationFn;
 
@@ -68,4 +98,31 @@ export interface D3HierarchyLayoutOptions {
    * origin in radial modes (the default already does this).
    */
   center?: { x?: number; y?: number };
+
+  // ─── pack mode ───────────────────────────────────────────────────────
+
+  /**
+   * Pack-only: padding between sibling circles, in world units. Default `0`
+   * (d3's default). Ignored in non-pack modes.
+   */
+  padding?: number;
+
+  /**
+   * Pack-only: per-node value accessor used by `hierarchy.sum()`. Defaults
+   * to reading `node.data.value` (treats missing as `1`). The accumulated
+   * sum drives each circle's radius. Ignored in non-pack modes.
+   *
+   * Note: the input is the raw `GraphNode<unknown>`, not the d3 hierarchy
+   * node. Cast `data` if you know its shape.
+   */
+  value?: (node: { id: string; data?: unknown }) => number;
+
+  /**
+   * Pack-only: sibling sort comparator. Defaults to `(a, b) => b.value - a.value`
+   * (descending by value, which gives a tighter pack). Set to `null` to
+   * leave d3's input order. Ignored in non-pack modes.
+   */
+  sort?:
+    | ((a: { value?: number }, b: { value?: number }) => number)
+    | null;
 }

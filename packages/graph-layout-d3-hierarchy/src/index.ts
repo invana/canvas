@@ -4,6 +4,7 @@
 
 export { D3HierarchyLayout } from './D3HierarchyLayout';
 export type {
+  CartesianOrientation,
   D3HierarchyLayoutMode,
   D3HierarchyLayoutOptions,
   SeparationFn,

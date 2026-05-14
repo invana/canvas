@@ -52,6 +52,7 @@ const DEFAULT_NODE_HINTS: Required<Omit<NodeRenderHints, 'height' | 'label'>> = 
 const DEFAULT_EDGE_HINTS: Required<EdgeRenderHints> = {
   pathType: 'straight',
   anchor: 'boundary',
+  pathStyleOpts: {},
   stroke: 0x94a3b8,
   strokeWidth: 1.5,
   alpha: 1,
@@ -463,6 +464,7 @@ export class GraphLayer extends WorldLayer<
     const alpha = hints.alpha ?? this.edgeDefaults.alpha;
     const arrow = hints.arrow ?? this.edgeDefaults.arrow;
     const anchor = hints.anchor ?? this.edgeDefaults.anchor ?? 'boundary';
+    const pathStyleOpts = hints.pathStyleOpts ?? this.edgeDefaults.pathStyleOpts;
     const { router, pathStyle } = pathTypeToRouterPathStyle(pathType);
 
     return {
@@ -471,6 +473,7 @@ export class GraphLayer extends WorldLayer<
       target: { kind: 'shape', shapeId: edge.target, anchor },
       router,
       pathStyle,
+      ...(pathStyleOpts && Object.keys(pathStyleOpts).length > 0 ? { pathStyleOpts } : {}),
       stroke: { color: stroke, width: strokeWidth },
       alpha,
       ...(arrow ? { targetMarker: { kind: 'arrow', fill: stroke } } : {}),

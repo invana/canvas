@@ -64,6 +64,19 @@ export interface EdgeRenderHints {
   pathType?: EdgePathType;
   /** Endpoint anchor for both ends. Default `'boundary'`. See {@link EdgeAnchor}. */
   anchor?: EdgeAnchor;
+  /**
+   * Path-style-specific options forwarded to the underlying canvas pathStyle
+   * function. Shape depends on the active `pathType`:
+   *
+   * - `'bezier'` accepts `{ axis?: 'h' | 'v' | 'auto', tension?: number }`.
+   * - `'bump-radial'` accepts `{ origin?: { x, y } }`.
+   * - `'smooth'` accepts `{ tension?: number }`.
+   *
+   * Set this when the per-edge `axis: 'auto'` heuristic picks the wrong axis
+   * for your layout (e.g. a horizontal cluster where some sibling pairs have
+   * `dy > dx` and would otherwise flip to vertical curves).
+   */
+  pathStyleOpts?: Readonly<Record<string, unknown>>;
   /** Stroke color. Default `0x94a3b8`. */
   stroke?: number;
   /** Stroke width. Default 1.5. */
