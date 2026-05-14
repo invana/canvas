@@ -32,6 +32,7 @@ export type EdgePathType =
   | 'straight'
   | 'bezier'
   | 'bump-radial'
+  | 'bump-horizontal'
   | 'step-radial'
   | 'orth'
   | 'manhattan'
@@ -51,8 +52,15 @@ export type EdgePathType =
  *   from the true node-centre angle rather than the trimmed cut point.
  * - `'perpendicular'` — exit / enter perpendicular to the host edge of a
  *   rect-like node. Reserved for box-shaped nodes.
+ * - `'edge-port'` — attach to a specific point on one face of the node's
+ *   bounding box, picked by `{ side, offset }` on the per-endpoint
+ *   `sourceAnchorOpts` / `targetAnchorOpts`. Used by the Sankey layout to
+ *   stack ribbons along the right face of source and left face of target.
+ *
+ * Widened to `string` so anchors registered at runtime (e.g. domain-specific
+ * port anchors) can be referenced by name.
  */
-export type EdgeAnchor = 'boundary' | 'center' | 'perpendicular';
+export type EdgeAnchor = 'boundary' | 'center' | 'perpendicular' | 'edge-port' | (string & {});
 
 /**
  * Render-spec hints a caller may put under `node.data` to control how the
@@ -107,6 +115,26 @@ export interface EdgeRenderHints {
   pathType?: EdgePathType;
   /** Endpoint anchor for both ends. Default `'boundary'`. See {@link EdgeAnchor}. */
   anchor?: EdgeAnchor;
+  /**
+   * Per-endpoint anchor override. Falls back to `anchor` when omitted. Lets
+   * each end of an edge attach via a different anchor — needed e.g. by
+   * Sankey, where the source uses `{ side: 'right' }` on the source's right
+   * face and the target uses `{ side: 'left' }` on the target's left face.
+   */
+  sourceAnchor?: EdgeAnchor;
+  /** Per-endpoint anchor override; see {@link sourceAnchor}. */
+  targetAnchor?: EdgeAnchor;
+  /**
+   * Opts forwarded to the source / target anchor's `endpoint.opts`. The
+   * shape is anchor-specific:
+   *
+   * - `'edge-port'` expects `{ side: 'left' | 'right' | 'top' | 'bottom'; offset?: number }`.
+   *
+   * Built-in `'boundary'` / `'center'` / `'perpendicular'` ignore opts.
+   */
+  sourceAnchorOpts?: Readonly<Record<string, unknown>>;
+  /** Opts for the target anchor; see {@link sourceAnchorOpts}. */
+  targetAnchorOpts?: Readonly<Record<string, unknown>>;
   /**
    * Path-style-specific options forwarded to the underlying canvas pathStyle
    * function. Shape depends on the active `pathType`:

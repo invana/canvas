@@ -54,7 +54,7 @@ const DEFAULT_NODE_HINTS: Required<Omit<NodeRenderHints, 'height' | 'label' | 'i
   alpha: 1,
 };
 
-const DEFAULT_EDGE_HINTS: Required<Omit<EdgeRenderHints, 'label'>> = {
+const DEFAULT_EDGE_HINTS: Required<Omit<EdgeRenderHints, 'label' | 'sourceAnchor' | 'targetAnchor' | 'sourceAnchorOpts' | 'targetAnchorOpts'>> = {
   pathType: 'straight',
   anchor: 'boundary',
   pathStyleOpts: {},
@@ -76,6 +76,8 @@ function pathTypeToRouterPathStyle(t: EdgePathType): { router: string; pathStyle
       return { router: 'straight', pathStyle: 'bezier' };
     case 'bump-radial':
       return { router: 'straight', pathStyle: 'bump-radial' };
+    case 'bump-horizontal':
+      return { router: 'straight', pathStyle: 'bump-horizontal' };
     case 'step-radial':
       return { router: 'straight', pathStyle: 'step-radial' };
     case 'orth':
@@ -87,6 +89,7 @@ function pathTypeToRouterPathStyle(t: EdgePathType): { router: string; pathStyle
     case 'smooth':
       return { router: 'orth', pathStyle: 'smooth' };
   }
+  return { router: 'straight', pathStyle: 'normal' };
 }
 
 // ─── State (none for now) ──────────────────────────────────────────────────
@@ -146,7 +149,7 @@ export class GraphLayer extends WorldLayer<
 
   /** Resolved defaults (caller overrides + factory defaults). */
   private readonly nodeDefaults: Required<Omit<NodeRenderHints, 'height' | 'label' | 'innerR' | 'outerR' | 'startAngle' | 'endAngle'>>;
-  private readonly edgeDefaults: Required<Omit<EdgeRenderHints, 'label'>>;
+  private readonly edgeDefaults: Required<Omit<EdgeRenderHints, 'label' | 'sourceAnchor' | 'targetAnchor' | 'sourceAnchorOpts' | 'targetAnchorOpts'>>;
 
   /** Subscription disposers, called in `onUnmount`. */
   private subs: Array<() => void> = [];
@@ -499,14 +502,31 @@ export class GraphLayer extends WorldLayer<
     const strokeWidth = hints.strokeWidth ?? this.edgeDefaults.strokeWidth;
     const alpha = hints.alpha ?? this.edgeDefaults.alpha;
     const arrow = hints.arrow ?? this.edgeDefaults.arrow;
-    const anchor = hints.anchor ?? this.edgeDefaults.anchor ?? 'boundary';
+    const baseAnchor = hints.anchor ?? this.edgeDefaults.anchor ?? 'boundary';
+    const sourceAnchorName = hints.sourceAnchor ?? baseAnchor;
+    const targetAnchorName = hints.targetAnchor ?? baseAnchor;
+    const sourceAnchorOpts = hints.sourceAnchorOpts;
+    const targetAnchorOpts = hints.targetAnchorOpts;
     const pathStyleOpts = hints.pathStyleOpts ?? this.edgeDefaults.pathStyleOpts;
     const { router, pathStyle } = pathTypeToRouterPathStyle(pathType);
 
+    // String form when no per-endpoint opts; object form (`{ name, opts }`)
+    // when opts present. Identity-equal to the previous one-arg form when
+    // sourceAnchor / sourceAnchorOpts are undefined — zero cost on the
+    // non-port path.
+    const sourceAnchorSpec =
+      sourceAnchorOpts && Object.keys(sourceAnchorOpts).length > 0
+        ? { name: sourceAnchorName, opts: sourceAnchorOpts }
+        : sourceAnchorName;
+    const targetAnchorSpec =
+      targetAnchorOpts && Object.keys(targetAnchorOpts).length > 0
+        ? { name: targetAnchorName, opts: targetAnchorOpts }
+        : targetAnchorName;
+
     return {
       kind: 'connector',
-      source: { kind: 'shape', shapeId: edge.source, anchor },
-      target: { kind: 'shape', shapeId: edge.target, anchor },
+      source: { kind: 'shape', shapeId: edge.source, anchor: sourceAnchorSpec },
+      target: { kind: 'shape', shapeId: edge.target, anchor: targetAnchorSpec },
       router,
       pathStyle,
       ...(pathStyleOpts && Object.keys(pathStyleOpts).length > 0 ? { pathStyleOpts } : {}),

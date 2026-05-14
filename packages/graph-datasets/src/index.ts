@@ -45,3 +45,14 @@ export {
   type LifeTreeKingdom,
   type LifeTreeNode,
 } from './lifeTree';
+
+export {
+  ukEnergyFlow,
+  ukEnergyFlowAsGraph,
+  type UkEnergyFlow,
+  type UkEnergyFlowLink,
+  type UkEnergyFlowNode,
+  type UkEnergyFlowGraphData,
+  type UkEnergyFlowGraphEdge,
+  type UkEnergyFlowGraphNode,
+} from './uk-energy-flow';

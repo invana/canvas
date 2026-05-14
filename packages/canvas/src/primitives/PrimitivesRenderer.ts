@@ -55,11 +55,13 @@ import { normalPathStyle } from './connectors/pathStyles/normal';
 import { roundedPathStyle } from './connectors/pathStyles/rounded';
 import { bezierPathStyle } from './connectors/pathStyles/bezier';
 import { bumpRadialPathStyle } from './connectors/pathStyles/bumpRadial';
+import { bumpHorizontalPathStyle } from './connectors/pathStyles/bumpHorizontal';
 import { stepRadialPathStyle } from './connectors/pathStyles/stepRadial';
 import { smoothPathStyle } from './connectors/pathStyles/smooth';
 import { centerAnchor } from './connectors/anchors/center';
 import { boundaryAnchor } from './connectors/anchors/boundary';
 import { perpendicularAnchor } from './connectors/anchors/perpendicular';
+import { edgePortAnchor } from './connectors/anchors/edgePort';
 import { distanceToPolylineSq, pathBounds, samplePath, trimPathEnds } from './connectors/pathSampling';
 import { ArrowMarker } from './markers/ArrowMarker';
 import { GlowDecoration } from './decorations/shape/GlowDecoration';
@@ -273,12 +275,14 @@ export class PrimitivesRenderer {
     this.registerPathStyle('rounded', roundedPathStyle);
     this.registerPathStyle('bezier', bezierPathStyle);
     this.registerPathStyle('bump-radial', bumpRadialPathStyle);
+    this.registerPathStyle('bump-horizontal', bumpHorizontalPathStyle);
     this.registerPathStyle('step-radial', stepRadialPathStyle);
     this.registerPathStyle('smooth', smoothPathStyle);
 
     this.registerAnchor('center', centerAnchor);
     this.registerAnchor('boundary', boundaryAnchor);
     this.registerAnchor('perpendicular', perpendicularAnchor);
+    this.registerAnchor('edge-port', edgePortAnchor);
 
     this.registerDecoration('glow', GlowDecoration, { target: 'shape' });
     this.registerDecoration('pulse-ring', PulseRingDecoration, { target: 'shape' });
