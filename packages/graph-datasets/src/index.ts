@@ -28,6 +28,13 @@ export {
 } from './flare';
 
 export {
+  flareImportsAsGraph,
+  type FlareImportEdge,
+  type FlareImportsGraphData,
+  type FlareImportsOptions,
+} from './flare-imports';
+
+export {
   h1b2019AsGraph,
   h1b2019Hierarchy,
   type H1B2019GraphData,

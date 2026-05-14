@@ -12,7 +12,7 @@
  * - shapes      — `ShapeCtor`             (built-ins: circle, rect, arrow)
  * - routers     — `IRouter`               (built-ins: straight, orth, orthogonal,
  *                                          manhattan, metro, er, oneSide)
- * - pathStyles  — `IPathStyle`            (built-ins: normal, rounded, bezier, smooth)
+ * - pathStyles  — `IPathStyle`            (built-ins: normal, rounded, bezier, bump-radial, bump-horizontal, step-radial, smooth, bundle)
  * - anchors     — `IAnchor`               (built-ins: center, boundary, perpendicular)
  * - decorations — shape / connector       (built-ins: glow)
  *
@@ -56,6 +56,7 @@ import { roundedPathStyle } from './connectors/pathStyles/rounded';
 import { bezierPathStyle } from './connectors/pathStyles/bezier';
 import { bumpRadialPathStyle } from './connectors/pathStyles/bumpRadial';
 import { bumpHorizontalPathStyle } from './connectors/pathStyles/bumpHorizontal';
+import { bundlePathStyle } from './connectors/pathStyles/bundle';
 import { stepRadialPathStyle } from './connectors/pathStyles/stepRadial';
 import { smoothPathStyle } from './connectors/pathStyles/smooth';
 import { centerAnchor } from './connectors/anchors/center';
@@ -276,6 +277,7 @@ export class PrimitivesRenderer {
     this.registerPathStyle('bezier', bezierPathStyle);
     this.registerPathStyle('bump-radial', bumpRadialPathStyle);
     this.registerPathStyle('bump-horizontal', bumpHorizontalPathStyle);
+    this.registerPathStyle('bundle', bundlePathStyle);
     this.registerPathStyle('step-radial', stepRadialPathStyle);
     this.registerPathStyle('smooth', smoothPathStyle);
 

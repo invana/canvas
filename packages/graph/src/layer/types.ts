@@ -37,7 +37,8 @@ export type EdgePathType =
   | 'orth'
   | 'manhattan'
   | 'rounded'
-  | 'smooth';
+  | 'smooth'
+  | 'bundle';
 
 /**
  * Endpoint anchor.
@@ -143,12 +144,25 @@ export interface EdgeRenderHints {
    * - `'bump-radial'` accepts `{ origin?: { x, y } }`.
    * - `'step-radial'` accepts `{ origin?: { x, y } }`.
    * - `'smooth'` accepts `{ tension?: number }`.
+   * - `'bundle'` accepts `{ beta?: number }` (β ∈ [0, 1], default 0.85).
    *
    * Set this when the per-edge `axis: 'auto'` heuristic picks the wrong axis
    * for your layout (e.g. a horizontal cluster where some sibling pairs have
    * `dy > dx` and would otherwise flip to vertical curves).
    */
   pathStyleOpts?: Readonly<Record<string, unknown>>;
+  /**
+   * Intermediate control points the connector should respect. Passed through
+   * to the underlying canvas router as `waypoints`; the `straight` router
+   * concatenates them as `[source, ...waypoints, target]` so a multi-point
+   * pathStyle (`'bundle'`, `'smooth'`) can curve through the hierarchy or
+   * routed corridor the caller computed.
+   *
+   * Used today by hierarchical edge bundling: a layout walks each leaf-to-leaf
+   * import path through its common ancestors and writes the projected
+   * ancestor `(x, y)` sequence here, then sets `pathType: 'bundle'`.
+   */
+  waypoints?: ReadonlyArray<{ readonly x: number; readonly y: number }>;
   /** Stroke color. Default `0x94a3b8`. */
   stroke?: number;
   /** Stroke width. Default 1.5. */

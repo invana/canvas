@@ -54,7 +54,7 @@ const DEFAULT_NODE_HINTS: Required<Omit<NodeRenderHints, 'height' | 'label' | 'i
   alpha: 1,
 };
 
-const DEFAULT_EDGE_HINTS: Required<Omit<EdgeRenderHints, 'label' | 'sourceAnchor' | 'targetAnchor' | 'sourceAnchorOpts' | 'targetAnchorOpts'>> = {
+const DEFAULT_EDGE_HINTS: Required<Omit<EdgeRenderHints, 'label' | 'sourceAnchor' | 'targetAnchor' | 'sourceAnchorOpts' | 'targetAnchorOpts' | 'waypoints'>> = {
   pathType: 'straight',
   anchor: 'boundary',
   pathStyleOpts: {},
@@ -88,6 +88,11 @@ function pathTypeToRouterPathStyle(t: EdgePathType): { router: string; pathStyle
       return { router: 'orth', pathStyle: 'rounded' };
     case 'smooth':
       return { router: 'orth', pathStyle: 'smooth' };
+    case 'bundle':
+      // The bundle curve consumes the polyline literally — including all
+      // intermediate `waypoints` — so it has to pair with `straight`, the
+      // only router that passes waypoints through unaltered.
+      return { router: 'straight', pathStyle: 'bundle' };
   }
   return { router: 'straight', pathStyle: 'normal' };
 }
@@ -149,7 +154,7 @@ export class GraphLayer extends WorldLayer<
 
   /** Resolved defaults (caller overrides + factory defaults). */
   private readonly nodeDefaults: Required<Omit<NodeRenderHints, 'height' | 'label' | 'innerR' | 'outerR' | 'startAngle' | 'endAngle'>>;
-  private readonly edgeDefaults: Required<Omit<EdgeRenderHints, 'label' | 'sourceAnchor' | 'targetAnchor' | 'sourceAnchorOpts' | 'targetAnchorOpts'>>;
+  private readonly edgeDefaults: Required<Omit<EdgeRenderHints, 'label' | 'sourceAnchor' | 'targetAnchor' | 'sourceAnchorOpts' | 'targetAnchorOpts' | 'waypoints'>>;
 
   /** Subscription disposers, called in `onUnmount`. */
   private subs: Array<() => void> = [];
@@ -508,6 +513,7 @@ export class GraphLayer extends WorldLayer<
     const sourceAnchorOpts = hints.sourceAnchorOpts;
     const targetAnchorOpts = hints.targetAnchorOpts;
     const pathStyleOpts = hints.pathStyleOpts ?? this.edgeDefaults.pathStyleOpts;
+    const waypoints = hints.waypoints;
     const { router, pathStyle } = pathTypeToRouterPathStyle(pathType);
 
     // String form when no per-endpoint opts; object form (`{ name, opts }`)
@@ -530,6 +536,7 @@ export class GraphLayer extends WorldLayer<
       router,
       pathStyle,
       ...(pathStyleOpts && Object.keys(pathStyleOpts).length > 0 ? { pathStyleOpts } : {}),
+      ...(waypoints && waypoints.length > 0 ? { waypoints } : {}),
       stroke: { color: stroke, width: strokeWidth },
       alpha,
       ...(arrow ? { targetMarker: { kind: 'arrow', fill: stroke } } : {}),
