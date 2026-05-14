@@ -70,6 +70,8 @@ import { FlowParticlesConnectorDecoration } from './decorations/connector/FlowPa
 import { GlowConnectorDecoration } from './decorations/connector/GlowConnectorDecoration';
 import { RippleConnectorDecoration } from './decorations/connector/RippleConnectorDecoration';
 import { RevealConnectorDecoration } from './decorations/connector/RevealConnectorDecoration';
+import { LabelDecoration } from './decorations/shape/LabelDecoration';
+import { LabelConnectorDecoration } from './decorations/connector/LabelConnectorDecoration';
 import { ShakeEffect } from './effects/shape/ShakeEffect';
 import { BreathingEffect } from './effects/shape/BreathingEffect';
 import { BreathingConnectorEffect } from './effects/connector/BreathingConnectorEffect';
@@ -253,6 +255,8 @@ export class PrimitivesRenderer {
     this.registerDecoration('glow-connector', GlowConnectorDecoration, { target: 'connector' });
     this.registerDecoration('ripple-connector', RippleConnectorDecoration, { target: 'connector' });
     this.registerDecoration('reveal-connector', RevealConnectorDecoration, { target: 'connector' });
+    this.registerDecoration('label', LabelDecoration, { target: 'shape' });
+    this.registerDecoration('label-connector', LabelConnectorDecoration, { target: 'connector' });
 
     this.registerEffect('shake', ShakeEffect, { target: 'shape' });
     this.registerEffect('breathing', BreathingEffect, { target: 'shape' });
@@ -957,6 +961,54 @@ export class PrimitivesRenderer {
   }
 
   /**
+   * Local-space AABB of a decoration's gfx container in world coordinates
+   * (origin offset by the host). Returns `null` when no host or slot exists.
+   *
+   * Cheaper to call than `getGlobalBounds` because we don't traverse the
+   * scene; just take the decoration's local bounds and offset by its
+   * position. Used by `LabelCollisionBehaviour` and any other behaviour
+   * that needs per-decoration screen geometry.
+   */
+  getDecorationWorldBounds(targetId: string, slot: string): Rect | null {
+    const host =
+      this.shapeInstances.get(targetId) ?? this.connectorInstances.get(targetId);
+    if (!host) return null;
+    const deco = host.decorations.get(slot);
+    if (!deco) return null;
+    const g = (deco as { gfx?: Container }).gfx;
+    if (!g) return null;
+    const lb = g.getLocalBounds();
+    // Decoration gfx is parented to the host's gfx. The host's gfx has the
+    // host position applied (shape: spec.x/y, connector: 0). Combine to get
+    // world-space.
+    const hostX = (host as { spec?: { x?: number; y?: number } }).spec?.x ?? 0;
+    const hostY = (host as { spec?: { x?: number; y?: number } }).spec?.y ?? 0;
+    return {
+      x: hostX + g.position.x + lb.x,
+      y: hostY + g.position.y + lb.y,
+      width: lb.width,
+      height: lb.height,
+    };
+  }
+
+  /**
+   * Show / hide a decoration's gfx without destroying it. Used by
+   * collision-style behaviours that want to suppress overlapping labels for a
+   * frame without paying the cost of re-mounting on the next reveal.
+   *
+   * No-op when `targetId` / `slot` doesn't resolve.
+   */
+  setDecorationVisible(targetId: string, slot: string, visible: boolean): void {
+    const host =
+      this.shapeInstances.get(targetId) ?? this.connectorInstances.get(targetId);
+    if (!host) return;
+    const deco = host.decorations.get(slot);
+    if (!deco) return;
+    const g = (deco as { gfx?: Container }).gfx;
+    if (g) g.visible = visible;
+  }
+
+  /**
    * World-space AABB of the registered shape, or `null` when no shape with
    * that id exists. Domain-free read accessor for layer code that needs to
    * query shape geometry without poking at private state — e.g. a graph
@@ -1361,6 +1413,7 @@ const SLOT_Z_TABLE: Readonly<Record<string, number>> = {
   'pulse-ring': -80,
   ring: -50,
   liquid: 20,
+  label: 200,
   badge: 300,
   fx: 400,
 };

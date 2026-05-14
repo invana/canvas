@@ -2,7 +2,27 @@
  * `GraphLayer` public types — option shapes and per-node/per-edge render-spec
  * hints that map domain data to primitive specs.
  */
+import type { ShapeLabelStyle, ConnectorLabelStyle } from '@invana/canvas';
 import type { GraphEdge, GraphNode } from '../store/types';
+
+/**
+ * Node-label hint — either a bare string (shorthand for plain text with
+ * defaults) or a full `ShapeLabelStyle` payload (background pill, wrap,
+ * placement, etc.). The graph layer translates this to a `'label'`
+ * decoration on the node's shape via `setDecoration`.
+ *
+ * @see `@invana/canvas#ShapeLabelStyle` for the full option surface.
+ */
+export type NodeLabelHint = string | ShapeLabelStyle;
+
+/**
+ * Edge-label hint — string shorthand or a full `ConnectorLabelStyle`. The
+ * graph layer translates this to a `'label-connector'` decoration on the
+ * edge's connector via `setDecoration`.
+ *
+ * @see `@invana/canvas#ConnectorLabelStyle` for the full option surface.
+ */
+export type EdgeLabelHint = string | ConnectorLabelStyle;
 
 /** Shape kinds the layer can render for a node. */
 export type NodeShapeKind = 'circle' | 'rect';
@@ -54,8 +74,15 @@ export interface NodeRenderHints {
   strokeWidth?: number;
   /** Alpha 0–1. Default 1. */
   alpha?: number;
-  /** Optional human label — rendered by future extensions, ignored for now. */
-  label?: string;
+  /**
+   * Optional text label attached to the node. Pass a string for the simple
+   * case (defaults to plain text below the node) or a `ShapeLabelStyle`
+   * payload for full control (placement, wrap, background pill, html-text).
+   *
+   * Resolves to a canvas `'label'` decoration on the rendered shape.
+   * @see {@link NodeLabelHint}
+   */
+  label?: NodeLabelHint;
 }
 
 /** Render-spec hints for an edge. Optional, all defaulted. */
@@ -85,6 +112,17 @@ export interface EdgeRenderHints {
   alpha?: number;
   /** Whether to draw an arrowhead at target. Default `true`. */
   arrow?: boolean;
+  /**
+   * Optional text label attached to the edge. Pass a string for the simple
+   * case (defaults to centred autoRotate-on text) or a `ConnectorLabelStyle`
+   * payload for full control (placement, pathOffset, wrap, background pill,
+   * html-text, etc.).
+   *
+   * Resolves to a canvas `'label-connector'` decoration on the rendered
+   * connector.
+   * @see {@link EdgeLabelHint}
+   */
+  label?: EdgeLabelHint;
 }
 
 /** Initial-load shape passed to `graphLayer.setData(data)`. */

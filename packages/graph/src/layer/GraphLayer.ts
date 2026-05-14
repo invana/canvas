@@ -18,8 +18,10 @@ import type {
   BaseConnectorSpec,
   CanvasContext,
   CircleSpec,
+  ConnectorLabelStyle,
   LayerOptions,
   RectSpec,
+  ShapeLabelStyle,
   WorldLayerHit,
 } from '@invana/canvas';
 
@@ -27,12 +29,14 @@ import { GraphStore } from '../store/GraphStore';
 import type { GraphEdge, GraphNode } from '../store/types';
 
 import type {
+  EdgeLabelHint,
   EdgePathType,
   EdgeRenderHints,
   EdgeStateConfig,
   GraphData,
   GraphLayerEvents,
   GraphLayerOptions,
+  NodeLabelHint,
   NodeRenderHints,
   NodeStateConfig,
 } from './types';
@@ -49,7 +53,7 @@ const DEFAULT_NODE_HINTS: Required<Omit<NodeRenderHints, 'height' | 'label'>> = 
   alpha: 1,
 };
 
-const DEFAULT_EDGE_HINTS: Required<EdgeRenderHints> = {
+const DEFAULT_EDGE_HINTS: Required<Omit<EdgeRenderHints, 'label'>> = {
   pathType: 'straight',
   anchor: 'boundary',
   pathStyleOpts: {},
@@ -125,7 +129,7 @@ export class GraphLayer extends WorldLayer<
 
   /** Resolved defaults (caller overrides + factory defaults). */
   private readonly nodeDefaults: Required<Omit<NodeRenderHints, 'height' | 'label'>>;
-  private readonly edgeDefaults: Required<EdgeRenderHints>;
+  private readonly edgeDefaults: Required<Omit<EdgeRenderHints, 'label'>>;
 
   /** Subscription disposers, called in `onUnmount`. */
   private subs: Array<() => void> = [];
@@ -488,6 +492,8 @@ export class GraphLayer extends WorldLayer<
     const spec = this.nodeSpec(node);
     this._renderer.removeShape(id);
     this._renderer.addShape(id, spec);
+    // Decorations are dropped on removeShape — re-attach the label slot.
+    this.syncNodeLabel(id);
     // Adjacency anchors point to this shape — re-route connectors.
     for (const edge of this.store.edgesOf(id, 'both')) {
       this.dirtyConnectors.add(edge.id);
@@ -503,6 +509,7 @@ export class GraphLayer extends WorldLayer<
     const spec = this.edgeSpec(edge);
     this._renderer.removeConnector(id);
     this._renderer.addConnector(id, spec);
+    this.syncEdgeLabel(id);
   }
 
   private drainDirtyConnectors(): void {
@@ -516,11 +523,49 @@ export class GraphLayer extends WorldLayer<
   private installNodeShape(node: GraphNode): void {
     if (!this._renderer) return;
     this._renderer.addShape(node.id, this.nodeSpec(node));
+    this.syncNodeLabel(node.id);
   }
 
   private installEdgeConnector(edge: GraphEdge): void {
     if (!this._renderer) return;
     this._renderer.addConnector(edge.id, this.edgeSpec(edge));
+    this.syncEdgeLabel(edge.id);
+  }
+
+  /**
+   * Project the resolved `label` hint onto the canvas `'label'` decoration
+   * slot for the given node. A `null` / `undefined` hint clears the slot.
+   * Called after every `addShape` and every `rerenderNode` since decorations
+   * are dropped when the shape is destroyed.
+   */
+  private syncNodeLabel(id: string): void {
+    if (!this._renderer) return;
+    const node = this.store.getNode(id);
+    if (!node) return;
+    const hint = this.resolveNodeHints(node).label;
+    if (hint === undefined || hint === null) {
+      this._renderer.setDecoration(id, 'label', null);
+      return;
+    }
+    this._renderer.setDecoration(id, 'label', {
+      kind: 'label',
+      style: nodeLabelHintToStyle(hint),
+    });
+  }
+
+  private syncEdgeLabel(id: string): void {
+    if (!this._renderer) return;
+    const edge = this.store.getEdge(id);
+    if (!edge) return;
+    const hint = this.resolveEdgeHints(edge).label;
+    if (hint === undefined || hint === null) {
+      this._renderer.setDecoration(id, 'label', null);
+      return;
+    }
+    this._renderer.setDecoration(id, 'label', {
+      kind: 'label-connector',
+      style: edgeLabelHintToStyle(hint),
+    });
   }
 
   private updateNodeShape(node: GraphNode, patch: Partial<GraphNode>): void {
@@ -554,6 +599,9 @@ export class GraphLayer extends WorldLayer<
     const spec = this.nodeSpec(node);
     this._renderer.removeShape(node.id);
     this._renderer.addShape(node.id, spec);
+    // Decorations (including the label slot) were dropped on removeShape;
+    // re-attach the label so updates to `label` text or styling apply.
+    this.syncNodeLabel(node.id);
     // A removed+re-added shape invalidates anchors referencing it — re-route
     // incident connectors too.
     this.queueIncidentConnectors(node.id);
@@ -572,5 +620,31 @@ export class GraphLayer extends WorldLayer<
     const spec = this.edgeSpec(edge);
     this._renderer.removeConnector(edge.id);
     this._renderer.addConnector(edge.id, spec);
+    this.syncEdgeLabel(edge.id);
   }
+}
+
+// ─── Label hint resolution ───────────────────────────────────────────────────
+
+/**
+ * Translate a `NodeLabelHint` (string shorthand or full payload) into the
+ * `ShapeLabelStyle` shape the canvas decoration consumes. The string shorthand
+ * expands to plain text with default placement (`'bottom'`).
+ */
+function nodeLabelHintToStyle(hint: NodeLabelHint): ShapeLabelStyle {
+  if (typeof hint === 'string') {
+    return { content: { kind: 'text', text: hint } };
+  }
+  return hint;
+}
+
+/**
+ * Translate an `EdgeLabelHint` into the `ConnectorLabelStyle`. String shorthand
+ * expands to plain text centred on the path with default `autoRotate: true`.
+ */
+function edgeLabelHintToStyle(hint: EdgeLabelHint): ConnectorLabelStyle {
+  if (typeof hint === 'string') {
+    return { content: { kind: 'text', text: hint } };
+  }
+  return hint;
 }

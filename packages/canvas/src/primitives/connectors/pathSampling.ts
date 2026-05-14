@@ -93,6 +93,62 @@ export function tangentAt(path: Path, t: number): Vec2 {
   return normalize(b.x - a.x, b.y - a.y);
 }
 
+/**
+ * Combined point + unit-tangent sample at parameter `t ∈ [0, 1]` along the
+ * path. Used by labels-along-path and any other decoration that needs both
+ * the location and the local direction at the same parameter (e.g. for
+ * `autoRotate`). Cheaper than calling `samplePath` + `tangentAt` separately
+ * because it walks the polyline once.
+ *
+ * `t` is fractional in arc-length space — the function picks the segment of
+ * the densified polyline whose cumulative length most closely matches `t *
+ * totalLength` and linearly interpolates inside it. For most practical path
+ * kinds this matches an analytical sample to within a pixel; orthogonal
+ * paths reproduce segment endpoints exactly.
+ */
+export function samplePathAt(path: Path, t: number): { point: Point; tangent: Vec2 } {
+  const samples = samplePath(path);
+  if (samples.length === 0) return { point: { x: 0, y: 0 }, tangent: { x: 1, y: 0 } };
+  if (samples.length === 1) return { point: samples[0]!, tangent: { x: 1, y: 0 } };
+
+  // Compute cumulative arc length once.
+  let total = 0;
+  const cum = new Array<number>(samples.length);
+  cum[0] = 0;
+  for (let i = 1; i < samples.length; i++) {
+    const a = samples[i - 1]!;
+    const b = samples[i]!;
+    total += Math.hypot(b.x - a.x, b.y - a.y);
+    cum[i] = total;
+  }
+
+  if (total <= 0) {
+    return { point: samples[0]!, tangent: { x: 1, y: 0 } };
+  }
+
+  const clamped = t <= 0 ? 0 : t >= 1 ? 1 : t;
+  const target = clamped * total;
+
+  // Binary search for the segment containing `target`.
+  let lo = 0;
+  let hi = samples.length - 1;
+  while (lo < hi - 1) {
+    const mid = (lo + hi) >>> 1;
+    if (cum[mid]! <= target) lo = mid;
+    else hi = mid;
+  }
+  const a = samples[lo]!;
+  const b = samples[lo + 1]!;
+  const segLen = cum[lo + 1]! - cum[lo]!;
+  const u = segLen > 0 ? (target - cum[lo]!) / segLen : 0;
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  return {
+    point: { x: a.x + dx * u, y: a.y + dy * u },
+    tangent: normalize(dx, dy),
+  };
+}
+
 /** AABB of the path's anchor + control points. Used by hit-test bbox indexing. */
 export function pathBounds(path: Path): Rect {
   if (path.length === 0) return { x: 0, y: 0, width: 0, height: 0 };

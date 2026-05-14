@@ -92,21 +92,29 @@ export const Badges: Story = {
         origin: settings.statusOrigin === 'center' ? 'center' : undefined,
       });
 
-      // Priority: rounded-rect plate with multi-char text label (fully outside)
+      // Priority: rounded-rect plate with multi-char text label (fully outside).
+      // The text is rendered by a `'label'` decoration centred on the badge —
+      // gives us wrap / ellipsis / pill background controls for free.
       layer.renderer.setBadge(HOST_ID, 'badge:priority', {
         shape: {
           kind: 'rect',
           width: 100,
           height: 30,
           cornerRadius: 15,
-          fill: [
-            { kind: 'solid', color: 0xe5654a },
-            { kind: 'text', text: 'Important', color: 0xffffff, fontSize: 13, fontWeight: 600 },
-          ],
+          fill: { kind: 'solid', color: 0xe5654a },
         },
         placement: settings.priorityPlacement,
         origin: settings.priorityOrigin === 'center' ? 'center' : undefined,
         offsetX: settings.priorityPlacement === 'right' ? 8 : 0,
+        decorations: {
+          label: {
+            kind: 'label',
+            style: {
+              content: { kind: 'text', text: 'Important', fill: 0xffffff, fontSize: 13, fontWeight: 600 },
+              placement: 'center',
+            },
+          },
+        },
       });
 
       // Flag: yellow rounded-rect with text + a glow decoration on the badge
@@ -116,10 +124,7 @@ export const Badges: Story = {
           width: 80,
           height: 30,
           cornerRadius: 15,
-          fill: [
-            { kind: 'solid', color: 0xf2c14e },
-            { kind: 'text', text: 'Notice', color: 0xffffff, fontSize: 13, fontWeight: 600 },
-          ],
+          fill: { kind: 'solid', color: 0xf2c14e },
         },
         placement: settings.flagPlacement,
         origin: settings.flagOrigin === 'center' ? 'center' : undefined,
@@ -127,6 +132,13 @@ export const Badges: Story = {
         offsetY: 8,
         decorations: {
           glow: { kind: 'glow', style: { color: 0xf2c14e, radius: 14, layers: 6, innerAlpha: 0.6 } },
+          label: {
+            kind: 'label',
+            style: {
+              content: { kind: 'text', text: 'Notice', fill: 0xffffff, fontSize: 13, fontWeight: 600 },
+              placement: 'center',
+            },
+          },
         },
       });
     };

@@ -84,6 +84,8 @@ export type {
   RevealHostStroke,
   RevealRepeat,
 } from './decorations/connector/RevealConnectorDecoration';
+export { LabelDecoration } from './decorations/shape/LabelDecoration';
+export { LabelConnectorDecoration } from './decorations/connector/LabelConnectorDecoration';
 
 // ─── Built-in effects ──────────────────────────────────────────────────────
 export { ShakeEffect } from './effects/shape/ShakeEffect';
@@ -110,6 +112,7 @@ export {
 // ─── Path utilities ────────────────────────────────────────────────────────
 export {
   samplePath,
+  samplePathAt,
   tangentAt,
   pathBounds,
   distanceToPolylineSq,
@@ -184,4 +187,15 @@ export type {
   HitResult,
   PrimitivesRendererEventMap,
   RenderStats,
+
+  LabelContent,
+  LabelBackground,
+  LabelWrap,
+  LabelVisibility,
+  LabelStyleCommon,
+  ShapeLabelPlacement,
+  ShapeLabelStyle,
+  ConnectorLabelPlacement,
+  ConnectorLabelStyle,
+  HtmlTagStyle,
 } from './types';

@@ -93,15 +93,23 @@ export const AllShapes: Story = {
         layer.renderer.addShape(s.id, { ...s.spec, x, y });
       }
 
-      layer.renderer.addShape(`${s.id}-label`, {
+      // Invisible rect acts as a positioning anchor for the label decoration.
+      // The text itself is rendered by the `'label'` decoration centred on it
+      // — gives us a single, well-typed surface for wrap / pill / placement.
+      const labelId = `${s.id}-label`;
+      layer.renderer.addShape(labelId, {
         kind: 'rect',
         x: x - LABEL_W / 2,
         y: y + LABEL_OFFSET_Y,
         width: LABEL_W,
         height: LABEL_H,
-        fill: [
-          { kind: 'text', text: s.label, color: 0x0f172a, fontSize: 13, fontWeight: 600 },
-        ],
+      });
+      layer.renderer.setDecoration(labelId, 'label', {
+        kind: 'label',
+        style: {
+          content: { kind: 'text', text: s.label, fill: 0x0f172a, fontSize: 13, fontWeight: 600 },
+          placement: 'center',
+        },
       });
     }
 
@@ -196,12 +204,18 @@ export const AllShapes: Story = {
               width: Math.max(46, settings.badgeText.length * 9 + 16),
               height: 22,
               cornerRadius: 11,
-              fill: [
-                { kind: 'solid', color: 0xef4444 },
-                { kind: 'text', text: settings.badgeText, color: 0xffffff, fontSize: 11, fontWeight: 700 },
-              ],
+              fill: { kind: 'solid', color: 0xef4444 },
             },
             placement: settings.badgePlacement,
+            decorations: {
+              label: {
+                kind: 'label',
+                style: {
+                  content: { kind: 'text', text: settings.badgeText, fill: 0xffffff, fontSize: 11, fontWeight: 700 },
+                  placement: 'center',
+                },
+              },
+            },
           });
         } else {
           layer.renderer.removeBadge(id, 'badge');

@@ -1,8 +1,15 @@
 /**
- * Inset-content mount / update / destroy for `glyph`, `text`, `svg`,
- * `svg-url`, and `image-inset` fill layers. Each inset layer becomes a
- * sibling Container parented to the shape's `gfx`, sized as a fraction of
- * the shape's bounds and positioned by the layer's `anchor`.
+ * Inset-content mount / update / destroy for `glyph`, `svg`, `svg-url`, and
+ * `image-inset` fill layers. Each inset layer becomes a sibling Container
+ * parented to the shape's `gfx`, sized as a fraction of the shape's bounds
+ * and positioned by the layer's `anchor`.
+ *
+ * Text labels are NOT handled here. Multi-character labels (centred-inside,
+ * outside-side, or along-path) are rendered by `LabelDecoration` /
+ * `LabelConnectorDecoration` via `setDecoration(id, 'label', ...)` — they
+ * support backgrounds, wrap / ellipsis, rich (HTML) text, and 13 placements
+ * including the inside-centre case the legacy `kind: 'text'` fill layer used
+ * to cover.
  *
  * Decorations operate on the silhouette only (via `paintInto`) — they never
  * see inset content. Animated decorations like glow / pulse paint a halo
@@ -32,7 +39,7 @@ import type {
 
 export type InsetLayer = Extract<
   ShapeFillLayer,
-  { kind: 'glyph' | 'text' | 'svg' | 'svg-url' | 'image-inset' }
+  { kind: 'glyph' | 'svg' | 'svg-url' | 'image-inset' }
 >;
 
 export interface InsetContentView {
@@ -44,7 +51,6 @@ export interface InsetContentView {
 export function isInsetLayer(layer: ShapeFillLayer): layer is InsetLayer {
   return (
     layer.kind === 'glyph' ||
-    layer.kind === 'text' ||
     layer.kind === 'svg' ||
     layer.kind === 'svg-url' ||
     layer.kind === 'image-inset'
@@ -114,20 +120,6 @@ function renderChild(
     if (layer.fontWeight !== undefined) style.fontWeight = layer.fontWeight as never;
     if (layer.fontStyle !== undefined) style.fontStyle = layer.fontStyle;
     const t = new Text({ text: layer.char, style });
-    t.alpha = alpha;
-    return t;
-  }
-
-  if (layer.kind === 'text') {
-    const style: TextStyleOptions = {
-      fontFamily: layer.fontFamily ?? 'sans-serif',
-      fontSize: layer.fontSize ?? 12,
-      fill: layer.color ?? 0x000000,
-      align: layer.align ?? 'center',
-    };
-    if (layer.fontWeight !== undefined) style.fontWeight = layer.fontWeight as never;
-    if (layer.fontStyle !== undefined) style.fontStyle = layer.fontStyle;
-    const t = new Text({ text: layer.text, style });
     t.alpha = alpha;
     return t;
   }
@@ -226,31 +218,16 @@ function positionAndScale(
 }
 
 /**
- * Two sizing modes:
- *
- * - **`text`** uses the layer's literal `fontSize`; only scaled *down* if the
- *   rendered width exceeds `widthRatio × bounds.width` (or half of that for
- *   corner anchors, to leave room for the opposite-corner content).
- * - **All other inset kinds** scale to fit a fraction (`sizeRatio`) of the
- *   shape's smaller bounds dimension — the legacy bounds-fraction-square rule.
+ * Inset kinds (`glyph`, `svg`, `svg-url`, `image-inset`) all scale to fit a
+ * fraction (`sizeRatio`) of the shape's smaller bounds dimension — the
+ * bounds-fraction-square rule. Text labels live on `LabelDecoration` and
+ * handle their own sizing.
  */
 function resolveScale(layer: InsetLayer, bounds: Rect, local: Rect): number {
-  if (layer.kind === 'text') {
-    if (local.width <= 0) return 1;
-    const ratio = layer.widthRatio ?? 0.85;
-    const cap = isCornerAnchor(layer.anchor ?? 'center')
-      ? (bounds.width * ratio) / 2
-      : bounds.width * ratio;
-    return Math.min(1, cap / local.width);
-  }
   const ratio = (layer as { sizeRatio?: number }).sizeRatio ?? 0.6;
   const targetSize = Math.min(bounds.width, bounds.height) * ratio;
   const naturalSize = Math.max(local.width, local.height) || 1;
   return targetSize / naturalSize;
-}
-
-function isCornerAnchor(a: InsetAnchor): boolean {
-  return a === 'top-left' || a === 'top-right' || a === 'bottom-left' || a === 'bottom-right';
 }
 
 function anchorPoint(
@@ -280,9 +257,6 @@ function anchorPoint(
 function layerKey(layer: InsetLayer): string {
   if (layer.kind === 'glyph') {
     return `g:${layer.char}:${layer.fontFamily ?? ''}:${layer.fontWeight ?? ''}:${layer.fontStyle ?? ''}:${layer.color ?? 0xffffff}:${layer.alpha ?? 1}`;
-  }
-  if (layer.kind === 'text') {
-    return `t:${hashString(layer.text)}:${layer.fontFamily ?? ''}:${layer.fontSize ?? 12}:${layer.fontWeight ?? ''}:${layer.fontStyle ?? ''}:${layer.align ?? 'center'}:${layer.color ?? 0x000000}:${layer.alpha ?? 1}`;
   }
   if (layer.kind === 'svg') {
     return `s:${layer.pathD.length}:${hashString(layer.pathD)}:${layer.strokeWidth ?? 2}:${layer.color ?? 0xffffff}:${layer.alpha ?? 1}`;

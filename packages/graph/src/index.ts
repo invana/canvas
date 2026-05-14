@@ -55,4 +55,10 @@ export {
   type LassoModifierKey,
   DragNodeBehaviour,
   type DragNodeBehaviourOptions,
+  LabelCollisionBehaviour,
+  type LabelCollisionBehaviourOptions,
+  type LabelCollisionStrategy,
+  type LabelPriorityResolver,
 } from './behaviours';
+
+export type { NodeLabelHint, EdgeLabelHint } from './layer';

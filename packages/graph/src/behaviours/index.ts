@@ -40,3 +40,10 @@ export type {
 
 export { DragNodeBehaviour } from './DragNodeBehaviour';
 export type { DragNodeBehaviourOptions } from './DragNodeBehaviour';
+
+export { LabelCollisionBehaviour } from './LabelCollisionBehaviour';
+export type {
+  LabelCollisionBehaviourOptions,
+  LabelCollisionStrategy,
+  LabelPriorityResolver,
+} from './LabelCollisionBehaviour';
