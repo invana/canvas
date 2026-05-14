@@ -36,7 +36,7 @@ import {
   type SimulationNodeDatum,
 } from 'd3-force';
 
-import type { Layout } from '@invana/canvas';
+import { Layout } from '@invana/canvas';
 import type { GraphLayer } from '@invana/graph';
 
 import type { D3ForceLayoutOptions } from './types';
@@ -49,7 +49,7 @@ interface SimLink extends SimulationLinkDatum<SimNode> {}
 /** α target re-applied when an external `node:update` arrives. */
 const REHEAT_ALPHA = 0.3;
 
-export class D3ForceLayout implements Layout<GraphLayer> {
+export class D3ForceLayout extends Layout<GraphLayer> {
   private readonly opts: D3ForceLayoutOptions;
   private sim: Simulation<SimNode, SimLink> | null = null;
   private nodes: SimNode[] = [];
@@ -61,14 +61,19 @@ export class D3ForceLayout implements Layout<GraphLayer> {
    *  store's default sync flush firing events inside the bulk call. */
   private writing = false;
   private unsubscribe: (() => void) | null = null;
+  /** True while a run is active. Guards `stop()` so it only emits `end`
+   *  once per run, even if called externally after a natural settle. */
+  private running = false;
 
   constructor(opts: D3ForceLayoutOptions = {}) {
+    super();
     this.opts = opts;
   }
 
   /**
-   * Run the layout against `layer`. Resolves when the simulation settles.
-   * Calling `apply()` again cancels any in-flight run first.
+   * Run the layout against `layer`. Resolves when the simulation settles
+   * naturally OR is cancelled via `stop()` / a second `apply()` call.
+   * Lifecycle events (`start` / `tick` / `end`) fire around the run.
    */
   async apply(layer: GraphLayer): Promise<void> {
     this.stop();
@@ -107,8 +112,13 @@ export class D3ForceLayout implements Layout<GraphLayer> {
     this.configureSimulation(sim);
     this.sim = sim;
 
-    // 3. Each d3 tick → bulk write to store. Renderer updates via store events.
-    sim.on('tick', () => this.writeBack(store));
+    // 3. Each d3 tick → bulk write to store + emit lifecycle `tick`.
+    //    Renderer updates via store events; subscribers (camera fits,
+    //    progress UI, etc.) drive off the layout's own emitter.
+    sim.on('tick', () => {
+      this.writeBack(store);
+      this.events.emit('tick', {});
+    });
 
     // 4. External writes (drag, etc.) → mirror onto sim, reheat.
     this.unsubscribe = store.events.on('node:update', ({ nodeId, patch }) => {
@@ -120,14 +130,29 @@ export class D3ForceLayout implements Layout<GraphLayer> {
       if (sim.alpha() < REHEAT_ALPHA) sim.alpha(REHEAT_ALPHA).restart();
     });
 
-    // 5. Resolve on natural settle.
+    // 5. Mark run as active and announce `start` after wiring is in place
+    //    so handlers see a fully-initialised layout.
+    this.running = true;
+    this.events.emit('start', {});
+
+    // 6. Resolve on natural settle. The `end` emission happens here (not in
+    //    `stop()`) so a natural settle reports `reason: 'completed'`;
+    //    external `stop()` flips `running` first and emits `'stopped'`.
     return new Promise<void>((resolve) => {
-      sim.on('end', () => resolve());
+      sim.on('end', () => {
+        if (this.running) {
+          this.running = false;
+          this.events.emit('end', { reason: 'completed' });
+        }
+        resolve();
+      });
     });
   }
 
   /** Cancel an in-flight run. Positions stay in the store. No-op when idle. */
   stop(): void {
+    const wasRunning = this.running;
+    this.running = false;
     this.sim?.stop();
     this.sim = null;
     this.unsubscribe?.();
@@ -135,6 +160,7 @@ export class D3ForceLayout implements Layout<GraphLayer> {
     this.nodes = [];
     this.ids = [];
     this.nodeById.clear();
+    if (wasRunning) this.events.emit('end', { reason: 'stopped' });
   }
 
   // ─── Configuration ─────────────────────────────────────────────────────

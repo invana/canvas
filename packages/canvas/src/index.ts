@@ -122,7 +122,8 @@ export type {
 } from './behaviours/KeyboardCameraInputBehaviour';
 
 // ─── Layouts ────────────────────────────────────────────────────────────
-export type { Layout } from './layouts/Layout';
+export { Layout } from './layouts/Layout';
+export type { LayoutEvents, LayoutEndReason } from './layouts/Layout';
 
 // ─── Registries ─────────────────────────────────────────────────────────
 export { LayerRegistry } from './registries/LayerRegistry';

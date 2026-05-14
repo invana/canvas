@@ -5,7 +5,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer, type GraphEdge, type GraphNode } from '@invana/graph';
+import { DragNodeBehaviour, GraphLayer, type GraphEdge, type GraphNode } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { generateRandomTree } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -99,19 +99,15 @@ export const RandomTree: Story = {
       },
     });
     canvas.layers.add(graph);
+    canvas.behaviours.register(
+      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
+    );
 
     let layout: D3ForceLayout | null = null;
-    let offDataChanged: (() => void) | null = null;
 
     const run = (): void => {
       layout?.stop();
-      offDataChanged?.();
-
       graph.setData(buildGraphData());
-
-      offDataChanged = graph.events.on('data:changed', () => {
-        canvas.camera.fitContent(graph.getBounds(), 60);
-      });
 
       layout = new D3ForceLayout({
         charge: {
@@ -126,11 +122,7 @@ export const RandomTree: Story = {
         x: { strength: settings.xyAnchorStrength },
         y: { strength: settings.xyAnchorStrength },
       });
-      void layout.apply(graph).then(() => {
-        offDataChanged?.();
-        offDataChanged = null;
-        canvas.camera.fitContent(graph.getBounds(), 60);
-      });
+      void layout.apply(graph);
     };
 
     run();
@@ -138,7 +130,6 @@ export const RandomTree: Story = {
     // ── GUI ──────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'RandomTree' });
     onStoryTeardown(() => gui.destroy());
-    onStoryTeardown(() => offDataChanged?.());
     onStoryTeardown(() => layout?.stop());
 
     const tree = gui.addFolder('Tree');

@@ -18,6 +18,7 @@ import {
 import { DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
+import { DevInfoLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
 
@@ -66,11 +67,12 @@ export const LesMiserables: Story = {
         },
       }),
     );
+    canvas.layers.add(new DevInfoLayer({ id: 'dev-info' }));
 
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        edgeDefaults: { stroke: 0xcbd5e1, strokeWidth: 1, arrow: false },
+        edgeDefaults: { stroke: 0xcbd5e1, strokeWidth: 0.5, arrow: true },
       },
     });
     canvas.layers.add(graph);
@@ -90,26 +92,22 @@ export const LesMiserables: Story = {
     };
 
     let layout: D3ForceLayout = buildLayout();
-    let offDataChanged: (() => void) | null = null;
 
     function buildLayout(): D3ForceLayout {
-      return new D3ForceLayout({
+      const next = new D3ForceLayout({
         link: {},
         charge: {},
         center: { x: settings.centerX, y: settings.centerY },
       });
+      // Fit only after the run settles. `forceCenter` keeps the layout
+      // around (0, 0) during the sim, so the user can pan / zoom / drag
+      // freely while it runs — no per-tick refit fighting their input.
+      // next.events.on('end', () => canvas.camera.fitContent(graph.getBounds(), 80));
+      return next;
     }
 
     const run = (): void => {
-      offDataChanged?.();
-      offDataChanged = graph.events.on('data:changed', () =>
-        canvas.camera.fitContent(graph.getBounds(), 80),
-      );
-      void layout.apply(graph).then(() => {
-        offDataChanged?.();
-        offDataChanged = null;
-        canvas.camera.fitContent(graph.getBounds(), 80);
-      });
+      void layout.apply(graph);
     };
 
     const reapply = (): void => {
@@ -122,7 +120,7 @@ export const LesMiserables: Story = {
 
     const gui = new GUI({ title: 'D3ForceLayout' });
     onStoryTeardown(() => gui.destroy());
-    onStoryTeardown(() => offDataChanged?.());
+    onStoryTeardown(() => layout.stop());
 
     gui.add(settings, 'centerX', -1000, 1000, 10).name('center.x');
     gui.add(settings, 'centerY', -1000, 1000, 10).name('center.y');

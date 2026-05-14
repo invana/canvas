@@ -146,7 +146,6 @@ export const Lattice: Story = {
     );
 
     let layout: D3ForceLayout | null = null;
-    let offDataChanged: (() => void) | null = null;
 
     const buildLayout = (): D3ForceLayout =>
       new D3ForceLayout({
@@ -173,20 +172,9 @@ export const Lattice: Story = {
 
     const run = (): void => {
       layout?.stop();
-      offDataChanged?.();
-
       graph.setData(buildGraphData());
-
-      offDataChanged = graph.events.on('data:changed', () => {
-        canvas.camera.fitContent(graph.getBounds(), 80);
-      });
-
       layout = buildLayout();
-      void layout.apply(graph).then(() => {
-        offDataChanged?.();
-        offDataChanged = null;
-        canvas.camera.fitContent(graph.getBounds(), 80);
-      });
+      void layout.apply(graph);
     };
 
     run();
@@ -194,7 +182,6 @@ export const Lattice: Story = {
     // ── GUI ──────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'D3ForceLayout — Lattice' });
     onStoryTeardown(() => gui.destroy());
-    onStoryTeardown(() => offDataChanged?.());
     onStoryTeardown(() => layout?.stop());
 
     const grid = gui.addFolder('Lattice');

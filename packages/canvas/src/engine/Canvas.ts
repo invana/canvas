@@ -349,6 +349,13 @@ export class Canvas {
       bus: this.events,
     });
 
+    // Default the camera so world (0, 0) sits at the centre of the screen.
+    // Most diagram / graph content positions itself around the origin
+    // (e.g. d3-force's `forceCenter` defaults to 0, 0), so a top-left
+    // anchor leaves content drifting in from the corner on boot. Callers
+    // who want top-left semantics can `camera.setPosition(0, 0)` after init.
+    this.camera.setPosition(screenWidth / 2, screenHeight / 2);
+
     this.layers = new LayerRegistry({
       getContext: () => this.context,
       bus: this.events,
