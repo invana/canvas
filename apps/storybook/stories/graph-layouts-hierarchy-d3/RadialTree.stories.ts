@@ -109,6 +109,12 @@ export const RadialTree: Story = {
           // midradius circle at the source/target angles, so edges leave and
           // arrive tangent to the radius instead of bulging sideways.
           pathType: 'bump-radial',
+          // `center` anchor: don't trim endpoints to the node boundary. The
+          // path style computes its tangent from the true node-centre angle
+          // (radial-perfect at every endpoint); nodes overdraw the inner
+          // part of the curve, so visually the edge still terminates at the
+          // boundary. Same trick d3's example uses.
+          anchor: 'center',
         },
       },
     });

@@ -6,6 +6,7 @@ export { GraphLayer } from './GraphLayer';
 export { MiniMapLayer } from './MiniMapLayer';
 export type { MiniMapLayerOptions, MiniMapPosition } from './MiniMapLayer';
 export type {
+  EdgeAnchor,
   EdgePathType,
   EdgeRenderHints,
   EdgeStateConfig,

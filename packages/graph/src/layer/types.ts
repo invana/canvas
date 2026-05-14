@@ -18,6 +18,22 @@ export type EdgePathType =
   | 'smooth';
 
 /**
+ * Endpoint anchor.
+ *
+ * - `'boundary'` (default) — trim the endpoint at the node's outline along
+ *   the line from the other endpoint. Visually the edge stops at the node
+ *   boundary; works with arrows and connector decorations cleanly.
+ * - `'center'` — leave the endpoint at the node's centre. The edge passes
+ *   through the node visually; rely on z-order (nodes drawn on top) to make
+ *   it look like the edge terminates at the boundary. Pick this for radial
+ *   layouts so polar pathStyles (e.g. `bump-radial`) compute their tangent
+ *   from the true node-centre angle rather than the trimmed cut point.
+ * - `'perpendicular'` — exit / enter perpendicular to the host edge of a
+ *   rect-like node. Reserved for box-shaped nodes.
+ */
+export type EdgeAnchor = 'boundary' | 'center' | 'perpendicular';
+
+/**
  * Render-spec hints a caller may put under `node.data` to control how the
  * layer renders this node. All fields are optional; defaults below.
  */
@@ -46,6 +62,8 @@ export interface NodeRenderHints {
 export interface EdgeRenderHints {
   /** Path-style shortcut. Default `'straight'`. */
   pathType?: EdgePathType;
+  /** Endpoint anchor for both ends. Default `'boundary'`. See {@link EdgeAnchor}. */
+  anchor?: EdgeAnchor;
   /** Stroke color. Default `0x94a3b8`. */
   stroke?: number;
   /** Stroke width. Default 1.5. */

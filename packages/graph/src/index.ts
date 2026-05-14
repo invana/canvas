@@ -18,6 +18,7 @@ export {
   MiniMapLayer,
   type MiniMapLayerOptions,
   type MiniMapPosition,
+  type EdgeAnchor,
   type EdgePathType,
   type EdgeRenderHints,
   type EdgeStateConfig,
