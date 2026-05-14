@@ -37,7 +37,7 @@ import {
 } from 'd3-force';
 
 import { Layout } from '@invana/canvas';
-import type { GraphLayer } from '@invana/graph';
+import type { GraphLayer, GraphNode } from '@invana/graph';
 
 import type { D3ForceLayoutOptions } from './types';
 
@@ -55,6 +55,13 @@ export class D3ForceLayout extends Layout<GraphLayer> {
   private nodes: SimNode[] = [];
   private ids: string[] = [];
   private nodeById = new Map<string, SimNode>();
+  /** GraphNode snapshot indexed by id — used by per-node force callbacks
+   *  (e.g. `collide.radius(d => ...)`) without coupling SimNode to GraphNode. */
+  private graphNodeById = new Map<string, GraphNode>();
+  /** Ids of nodes pinned at snapshot time. Pinned nodes are driven via
+   *  d3-force's `fx/fy` so the simulation keeps them fixed; external
+   *  `node:update` patches mirror onto `fx/fy` instead of `x/y`. */
+  private pinnedIds = new Set<string>();
   private buffer = new Float32Array(0);
   /** True while our own bulk write is in-flight, so the `node:update`
    *  events it triggers don't bounce back into the sim. Relies on the
@@ -83,20 +90,34 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     this.nodes = [];
     this.ids = [];
     this.nodeById.clear();
+    this.graphNodeById.clear();
+    this.pinnedIds.clear();
     for (const n of store.nodes()) {
       const pos = store.getPosition(n.id);
       const node: SimNode = { id: n.id };
-      // Only seed if the store has a real position. (0, 0) is treated as
-      // the typed-array default; leaving x/y `undefined` lets
-      // `forceSimulation` phyllotaxis-scatter the cluster — without it,
-      // all-colocated nodes can't break their tie under d3 defaults.
-      if (pos && (pos.x !== 0 || pos.y !== 0)) {
+      if (n.pinned) {
+        // Pinned nodes use d3-force's `fx/fy` so the sim treats them as
+        // immovable but still applies their forces to neighbours
+        // (e.g. a cursor-follower that pushes other nodes via collide).
+        const px = pos?.x ?? 0;
+        const py = pos?.y ?? 0;
+        node.fx = px;
+        node.fy = py;
+        node.x = px;
+        node.y = py;
+        this.pinnedIds.add(n.id);
+      } else if (pos && (pos.x !== 0 || pos.y !== 0)) {
+        // Only seed if the store has a real position. (0, 0) is treated as
+        // the typed-array default; leaving x/y `undefined` lets
+        // `forceSimulation` phyllotaxis-scatter the cluster — without it,
+        // all-colocated nodes can't break their tie under d3 defaults.
         node.x = pos.x;
         node.y = pos.y;
       }
       this.nodes.push(node);
       this.ids.push(n.id);
       this.nodeById.set(n.id, node);
+      this.graphNodeById.set(n.id, n);
     }
     if (this.nodes.length === 0) return;
     this.buffer = new Float32Array(this.nodes.length * 2);
@@ -120,13 +141,20 @@ export class D3ForceLayout extends Layout<GraphLayer> {
       this.events.emit('tick', {});
     });
 
-    // 4. External writes (drag, etc.) → mirror onto sim, reheat.
+    // 4. External writes (drag, cursor-follower, etc.) → mirror onto sim,
+    //    reheat. Pinned nodes write to `fx/fy` so the sim keeps holding
+    //    them at the new spot instead of letting forces nudge them away.
     this.unsubscribe = store.events.on('node:update', ({ nodeId, patch }) => {
       if (this.writing || !patch.position) return;
       const node = this.nodeById.get(nodeId);
       if (!node) return;
-      node.x = patch.position.x;
-      node.y = patch.position.y;
+      if (this.pinnedIds.has(nodeId)) {
+        node.fx = patch.position.x;
+        node.fy = patch.position.y;
+      } else {
+        node.x = patch.position.x;
+        node.y = patch.position.y;
+      }
       if (sim.alpha() < REHEAT_ALPHA) sim.alpha(REHEAT_ALPHA).restart();
     });
 
@@ -160,6 +188,8 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     this.nodes = [];
     this.ids = [];
     this.nodeById.clear();
+    this.graphNodeById.clear();
+    this.pinnedIds.clear();
     if (wasRunning) this.events.emit('end', { reason: 'stopped' });
   }
 
@@ -193,7 +223,18 @@ export class D3ForceLayout extends Layout<GraphLayer> {
 
     if (collide !== undefined) {
       const force = forceCollide<SimNode>();
-      if (collide.radius !== undefined) force.radius(collide.radius);
+      if (collide.radius !== undefined) {
+        if (typeof collide.radius === 'function') {
+          const fn = collide.radius;
+          const refs = this.graphNodeById;
+          force.radius((d) => {
+            const node = refs.get(d.id);
+            return node ? fn(node) : 0;
+          });
+        } else {
+          force.radius(collide.radius);
+        }
+      }
       if (collide.strength !== undefined) force.strength(collide.strength);
       if (collide.iterations !== undefined) force.iterations(collide.iterations);
       sim.force('collide', force);

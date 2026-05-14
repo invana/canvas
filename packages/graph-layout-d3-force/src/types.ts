@@ -1,3 +1,5 @@
+import type { GraphNode } from '@invana/graph';
+
 /**
  * `D3ForceLayout` options. Every field maps 1:1 to a d3-force setter
  * documented at https://d3js.org/d3-force.
@@ -81,8 +83,13 @@ export interface CenterForceOptions {
 
 /** `forceCollide` configuration. */
 export interface CollideForceOptions {
-  /** `collide.radius(r)`. */
-  radius?: number;
+  /**
+   * `collide.radius(r)`. Either a constant, or a per-node function called
+   * once per node at `apply()` time with the underlying `GraphNode`. Use
+   * the function form when collision sizes vary per node (e.g. read
+   * `node.data.size`).
+   */
+  radius?: number | ((node: GraphNode) => number);
   /** `collide.strength(s)` in `[0, 1]`. */
   strength?: number;
   /** `collide.iterations(n)`. */
