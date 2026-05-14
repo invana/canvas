@@ -174,13 +174,6 @@ export const RadialTree: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-    const labelResolutionLOD = new LabelResolutionLODBehaviour({
-      id: 'label-resolution',
-      layerId: 'graph',
-      enabled: settings.sharpLabelsOnZoom,
-      max: settings.sharpLabelsMax,
-    });
-    canvas.behaviours.register(labelResolutionLOD);
 
     canvas.layers.add(
       new BackgroundLayer({
@@ -216,6 +209,16 @@ export const RadialTree: Story = {
       },
     });
     canvas.layers.add(graph);
+
+    // Registered after the `graph` layer is added — the behaviour resolves
+    // its target layer at register-time, so the layer must exist first.
+    const labelResolutionLOD = new LabelResolutionLODBehaviour({
+      id: 'label-resolution',
+      layerId: 'graph',
+      enabled: settings.sharpLabelsOnZoom,
+      max: settings.sharpLabelsMax,
+    });
+    canvas.behaviours.register(labelResolutionLOD);
 
     let layout: D3HierarchyLayout | null = null;
 

@@ -26,3 +26,12 @@ export {
   type FlareGraphNode,
   type FlareNode,
 } from './flare';
+
+export {
+  h1b2019AsGraph,
+  h1b2019Hierarchy,
+  type H1B2019GraphData,
+  type H1B2019GraphEdge,
+  type H1B2019GraphNode,
+  type H1B2019Node,
+} from './h1b2019';

@@ -5,9 +5,9 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer } from '@invana/graph';
+import { GraphLayer, LabelResolutionLODBehaviour, type NodeLabelHint } from '@invana/graph';
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
-import { flareAsGraph } from '@invana/graph-datasets';
+import { h1b2019AsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
 
@@ -19,82 +19,133 @@ export const Pack: Story = {
   render: () => createContainer({ id: 'graph-pack' }),
 
   play: async ({ canvasElement }) => {
-    // ── Settings ─────────────────────────────────────────────────────────
-    // Pack is the d3 enclosure layout — every node becomes a circle whose
-    // area is proportional to its accumulated `value`, and children are
-    // packed inside their parent. There are no edges in the visual; the
-    // hierarchy is conveyed entirely by containment.
+    // ── About ────────────────────────────────────────────────────────────
+    // Mirrors https://observablehq.com/@d3/pack-rollup/2 — a `d3.pack` over
+    // the H-1B 2019 dataset rolled up by State → City → Employer, with the
+    // leaf value being the sum of all four petition outcomes (initial /
+    // continuing × approvals / denials).
     //
-    // The d3 example's recipe:
-    //   const root = d3.hierarchy(data).sum(d => d.value).sort((a,b) => b.value - a.value);
-    //   const pack = d3.pack().size([w, h]).padding(3);
-    //   pack(root);
-    // We mirror that — `D3HierarchyLayout` does the `.sum`/`.sort` and
-    // `pack()` configuration internally; we just pass `mode: 'pack'`.
+    // The d3 recipe:
+    //   const rollup = d3.rollup(rows, D => d3.sum(D, d => d.IA + d.ID + d.CA + d.CD),
+    //                            d => d.State, d => d.City, d => d.Employer);
+    //   const root = d3.hierarchy(rollup).sum(([, v]) => v).sort((a,b) => b.value - a.value);
+    //   d3.pack().size([w, h]).padding(3)(root);
+    // We mirror the visualisation; the rollup itself was done offline so the
+    // dataset package ships a pre-aggregated JSON instead of a 22k-row CSV.
+    // See `@invana/graph-datasets` / `h1b2019AsGraph`.
+
+    // ── Settings ─────────────────────────────────────────────────────────
     const settings = {
-      size: 800,
+      size: 2000,
       padding: 3,
-      // Tint internal nodes with a depth-based ramp; leaves get a single
-      // accent fill so the structure reads as "containers + contents", the
-      // same separation the d3 example uses.
-      colorByDepth: true,
-      leafFill: 0xfde68a, // amber-200
-      strokeAlpha: 0.5,
+      // The full dataset has 21 763 employer leaves + ~3 000 cities + 55
+      // states + the same count of (invisible) parent→child edges. That's
+      // ~50 000 Pixi Container instances — enough to OOM the renderer on
+      // first paint. Filter to leaves whose petition total clears this
+      // threshold; cities / states that end up with no kept children are
+      // pruned. Default 10 ⇒ ~1 450 employers + their containers ≈ 4 000
+      // total objects, which renders snappily. Dial down to 1 to see the
+      // full d3.pack-rollup picture (heavier first paint).
+      minLeafValue: 10,
+      // d3's example renders inner nodes as `fill: #fff` + `stroke: #bbb`
+      // and leaves as `fill: #ddd` (no stroke). Reproduced below.
+      innerFill: 0xffffff,
+      innerStroke: 0xbbbbbb,
+      innerStrokeWidth: 1,
+      leafFill: 0xdddddd,
+      showLabels: true,
+      // d3's example only labels leaves whose radius exceeds 10. Below that
+      // the label wouldn't fit and the page would be label-noise. The
+      // exact-d3 default (10) is exposed so the user can dial it.
+      labelMinRadius: 10,
+      // Cap so the largest employer bubble doesn't blast its label across
+      // the screen. d3 uses a fixed 10px; we let the label scale up to a
+      // bubble-sized font and then clamp here.
+      maxLabelFontSize: 14,
     };
 
-    // Depth-based colour ramp (cool indigo → cool sky for inner nodes).
-    const hslToHex = (h: number, s: number, l: number): number => {
-      const c = (1 - Math.abs(2 * l - 1)) * s;
-      const hh = h / 60;
-      const x = c * (1 - Math.abs((hh % 2) - 1));
-      let r = 0, g = 0, b = 0;
-      if (hh < 1) [r, g, b] = [c, x, 0];
-      else if (hh < 2) [r, g, b] = [x, c, 0];
-      else if (hh < 3) [r, g, b] = [0, c, x];
-      else if (hh < 4) [r, g, b] = [0, x, c];
-      else if (hh < 5) [r, g, b] = [x, 0, c];
-      else [r, g, b] = [c, 0, x];
-      const m = l - c / 2;
-      const to8 = (v: number): number => Math.round((v + m) * 255);
-      return (to8(r) << 16) | (to8(g) << 8) | to8(b);
-    };
-
-    // ── Build node/edge data from Flare ──────────────────────────────────
+    // ── Build node/edge data from the rollup dataset ─────────────────────
+    //
+    // Two-pass prune:
+    //   1. Walk leaves; keep only those with `value >= minLeafValue`.
+    //   2. Re-walk the tree bottom-up; drop any inner node (city / state)
+    //      that lost all its descendants. The pack layout will then derive
+    //      `sum` from the surviving leaves only, so a city with a single
+    //      kept employer still shows up sized to that one petition count.
     const buildGraphData = () => {
-      const data = flareAsGraph();
-      let maxDepth = 0;
-      for (const n of data.nodes) {
-        if (n.data.depth > maxDepth) maxDepth = n.data.depth;
+      const data = h1b2019AsGraph();
+
+      // Children-by-parent index to drive the bottom-up sweep without
+      // mutating the source data.
+      const childrenOf = new Map<string, string[]>();
+      for (const e of data.edges) {
+        let list = childrenOf.get(e.source);
+        if (!list) {
+          list = [];
+          childrenOf.set(e.source, list);
+        }
+        list.push(e.target);
       }
-      const innerColorAt = (depth: number): number => {
-        const t = maxDepth === 0 ? 0 : depth / maxDepth;
-        // Cool ramp: 250° indigo → 200° sky-blue, low saturation, light.
-        return hslToHex(250 - t * 50, 0.35, 0.92 - t * 0.06);
+      const nodeById = new Map(data.nodes.map((n) => [n.id, n] as const));
+
+      const keep = new Set<string>();
+      // Returns true if `id` (or any descendant) survived. Inner nodes
+      // survive iff they have a surviving child; leaves survive iff their
+      // value clears the threshold.
+      const visit = (id: string): boolean => {
+        const node = nodeById.get(id);
+        if (!node) return false;
+        if (node.data.isLeaf) {
+          if ((node.data.value ?? 0) >= settings.minLeafValue) {
+            keep.add(id);
+            return true;
+          }
+          return false;
+        }
+        let kept = false;
+        for (const childId of childrenOf.get(id) ?? []) {
+          if (visit(childId)) kept = true;
+        }
+        if (kept) keep.add(id);
+        return kept;
       };
+      // Root is the one node whose id never appears as an edge target.
+      // Build the set once (O(E)) — the prior `edges.some(...)` form was
+      // O(N·E), which on the full 22k-node dataset is ~6×10⁸ comparisons
+      // and a tab-killer on its own.
+      const targets = new Set(data.edges.map((e) => e.target));
+      for (const n of data.nodes) {
+        if (!targets.has(n.id)) visit(n.id);
+      }
+
       return {
-        nodes: data.nodes.map((n) => ({
-          id: n.id,
-          // The pack layout will overwrite `size` with the computed diameter
-          // once it runs. Until then a tiny placeholder keeps the node from
-          // flashing at default size during the initial setData.
-          data: {
-            // Carry value through so D3HierarchyLayout's pack accessor finds
-            // it (defaults to `data.value`, treats missing as 1).
-            ...(n.data.value !== undefined ? { value: n.data.value } : {}),
-            size: 0.1,
-            fill: settings.colorByDepth && !n.data.isLeaf
-              ? innerColorAt(n.data.depth)
-              : settings.leafFill,
-            stroke: 0x64748b,
-            strokeWidth: n.data.isLeaf ? 0 : 0.5,
-            alpha: n.data.isLeaf ? 1 : settings.strokeAlpha,
-          },
-        })),
-        edges: data.edges.map((e) => ({
-          id: e.id,
-          source: e.source,
-          target: e.target,
-        })),
+        nodes: data.nodes
+          .filter((n) => keep.has(n.id))
+          .map((n) => {
+            const isLeaf = n.data.isLeaf;
+            return {
+              id: n.id,
+              data: {
+                // Pack writes the real diameter onto `data.size` once it
+                // runs; this placeholder keeps a fresh setData from flashing
+                // at the renderer's default node size.
+                size: 0.1,
+                // Pack reads `data.value` (default accessor). Inner nodes
+                // omit it — pack's `sum` rolls them up from leaves.
+                ...(n.data.value !== undefined ? { value: n.data.value } : {}),
+                fill: isLeaf ? settings.leafFill : settings.innerFill,
+                stroke: isLeaf ? 0xffffff : settings.innerStroke,
+                strokeWidth: isLeaf ? 0 : settings.innerStrokeWidth,
+                // Carried through so the post-layout label pass can pick
+                // out employer names without re-traversing the source.
+                name: n.data.name,
+                isLeaf,
+              },
+            };
+          }),
+        edges: data.edges
+          .filter((e) => keep.has(e.source) && keep.has(e.target))
+          .map((e) => ({ id: e.id, source: e.source, target: e.target })),
       };
     };
 
@@ -123,10 +174,9 @@ export const Pack: Story = {
       options: {
         nodeDefaults: { shape: 'circle', size: 0.1 },
         edgeDefaults: {
-          // Pack conveys hierarchy through enclosure, not links. The data
-          // still has parent→child edges (the layout needs them to build
-          // the tree), but they're rendered fully transparent so only the
-          // packed circles read.
+          // Pack conveys hierarchy through enclosure, not links. Edges are
+          // required by the layout (so it can derive the tree) but rendered
+          // fully transparent so only the packed circles read.
           stroke: 0x000000,
           strokeWidth: 0,
           alpha: 0,
@@ -136,7 +186,70 @@ export const Pack: Story = {
     });
     canvas.layers.add(graph);
 
+    // Registered after the `graph` layer is added — the behaviour resolves
+    // its target layer at register-time, so the layer must exist first.
+    canvas.behaviours.register(
+      new LabelResolutionLODBehaviour({
+        id: 'label-resolution',
+        layerId: 'graph',
+        enabled: true,
+        max: 6,
+      }),
+    );
+
     let layout: D3HierarchyLayout | null = null;
+
+    /**
+     * Centre an employer-name label inside every leaf bubble whose packed
+     * radius exceeds `labelMinRadius`. `d3.pack()` writes the diameter onto
+     * `data.size`, so this has to run *after* `layout.apply()`.
+     *
+     * Font size: text width is roughly `fontSize * chars * 0.55` for
+     * sans-serif. Solving for `fontSize` so a label spans ~85% of the
+     * diameter gives `fontSize = diameter * 0.85 / (chars * 0.55)`. Clamped
+     * to `maxLabelFontSize`.
+     */
+    const applyLeafLabels = (): void => {
+      graph.store.batch(() => {
+        for (const node of graph.store.nodes()) {
+          const data = node.data as {
+            size?: number;
+            name?: string;
+            isLeaf?: boolean;
+            label?: NodeLabelHint;
+          };
+          const next = { ...data } as Record<string, unknown>;
+          if ('label' in next) delete next.label;
+
+          if (
+            settings.showLabels &&
+            data.isLeaf === true &&
+            data.size !== undefined &&
+            data.size / 2 >= settings.labelMinRadius &&
+            data.name
+          ) {
+            const chars = Math.max(4, data.name.length);
+            const fontSize = Math.min(
+              settings.maxLabelFontSize,
+              (data.size * 0.85) / (chars * 0.55),
+            );
+            const label: NodeLabelHint = {
+              content: {
+                kind: 'text',
+                text: data.name,
+                fontSize,
+                fontWeight: 500,
+                fill: 0x0f172a,
+              },
+              placement: 'center',
+            };
+            next.label = label;
+          }
+
+          graph.store.updateNode(node.id, { data: next });
+        }
+      });
+    };
 
     const run = async (): Promise<void> => {
       layout?.stop();
@@ -147,9 +260,10 @@ export const Pack: Story = {
         size: [settings.size, settings.size],
         padding: settings.padding,
         // Default value accessor reads `data.value`; default sort is
-        // descending by value. Both match d3's example, so no overrides.
+        // descending by value. Both match d3's example.
       });
       await layout.apply(graph);
+      applyLeafLabels();
       canvas.camera.fitContent(graph.getBounds(), 40);
     };
 
@@ -161,13 +275,26 @@ export const Pack: Story = {
     onStoryTeardown(() => gui.destroy());
 
     const layoutFolder = gui.addFolder('Layout');
-    layoutFolder.add(settings, 'size', 200, 2000, 50).onChange(run);
+    layoutFolder.add(settings, 'size', 500, 4000, 100).onChange(run);
     layoutFolder.add(settings, 'padding', 0, 20, 0.5).onChange(run);
+    // Dataset filter — see `settings.minLeafValue` rationale. At 1 the full
+    // d3.pack-rollup picture renders (slow first paint, ≈ 50 k objects); the
+    // default 10 keeps it under 5 k.
+    layoutFolder
+      .add(settings, 'minLeafValue', 1, 100, 1)
+      .name('min petitions / leaf')
+      .onChange(run);
 
     const style = gui.addFolder('Style');
-    style.add(settings, 'colorByDepth').onChange(run);
+    style.addColor(settings, 'innerFill').onChange(run);
+    style.addColor(settings, 'innerStroke').onChange(run);
+    style.add(settings, 'innerStrokeWidth', 0, 4, 0.5).onChange(run);
     style.addColor(settings, 'leafFill').onChange(run);
-    style.add(settings, 'strokeAlpha', 0, 1, 0.05).onChange(run);
+
+    const labels = gui.addFolder('Labels');
+    labels.add(settings, 'showLabels').onChange(applyLeafLabels);
+    labels.add(settings, 'labelMinRadius', 0, 60, 1).onChange(applyLeafLabels);
+    labels.add(settings, 'maxLabelFontSize', 6, 32, 1).onChange(applyLeafLabels);
 
     gui.add({ refit: () => canvas.camera.fitContent(graph.getBounds(), 40) }, 'refit').name('Re-fit camera');
   },
