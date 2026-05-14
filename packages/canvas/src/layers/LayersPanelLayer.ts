@@ -241,7 +241,9 @@ export class LayersPanelLayer extends ScreenLayer<LayersPanelLayerOptions, Layer
       'line-height:1.5;',
       'pointer-events:auto;',
       'z-index:9998;',
-      'min-width:200px;',
+      'width:260px;',
+      'max-width:320px;',
+      'box-sizing:border-box;',
       'border:1px solid rgba(255,255,255,0.08);',
       'box-shadow:0 4px 16px rgba(0,0,0,0.5);',
       'user-select:none;',
@@ -263,9 +265,6 @@ export class LayersPanelLayer extends ScreenLayer<LayersPanelLayerOptions, Layer
     const headerHtml =
       `<div style="color:${accentColor};font-weight:bold;margin-bottom:6px;">` +
       ` LAYERS (${all.length})` +
-      `</div>` +
-      `<div style="color:${accentColor};opacity:0.5;margin-bottom:4px;">` +
-      '─'.repeat(28) +
       `</div>`;
 
     if (all.length === 0) {
@@ -275,20 +274,48 @@ export class LayersPanelLayer extends ScreenLayer<LayersPanelLayerOptions, Layer
       return;
     }
 
+    const headerCellStyle =
+      `text-align:left;padding:2px 6px 4px 0;color:${accentColor};` +
+      `border-bottom:1px solid rgba(255,255,255,0.12);font-weight:600;`;
+    const cellStyle =
+      'padding:2px 6px 2px 0;vertical-align:middle;' +
+      'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+
+    const tableHead =
+      `<thead><tr>` +
+      `<th style="${headerCellStyle}width:16px;"></th>` +
+      `<th style="${headerCellStyle}">id</th>` +
+      `<th style="${headerCellStyle}">class</th>` +
+      `<th style="${headerCellStyle}text-align:right;padding-right:0;width:46px;">z</th>` +
+      `</tr></thead>`;
+
     const rows = all
       .map((l) => {
         const checked = l.visible ? 'checked' : '';
+        const className = l.constructor?.name ?? '';
+        const idHtml = escapeHtml(l.id);
+        const classHtml = escapeHtml(className);
         return (
-          `<label style="display:flex;align-items:center;gap:6px;padding:2px 0;cursor:pointer;">` +
+          `<tr>` +
+          `<td style="${cellStyle}width:16px;">` +
           `<input type="checkbox" data-layer-id="${escapeAttr(l.id)}" ${checked}` +
-          ` style="cursor:pointer;margin:0;" />` +
-          `<span>${escapeHtml(l.id)}</span>` +
-          `</label>`
+          ` style="cursor:pointer;margin:0;display:block;" />` +
+          `</td>` +
+          `<td style="${cellStyle}" title="${idHtml}">${idHtml}</td>` +
+          `<td style="${cellStyle}opacity:0.75;" title="${classHtml}">${classHtml}</td>` +
+          `<td style="${cellStyle}text-align:right;padding-right:0;opacity:0.75;width:46px;">` +
+          `${escapeHtml(String(l.zIndex))}</td>` +
+          `</tr>`
         );
       })
       .join('');
 
-    this._overlay.innerHTML = headerHtml + rows;
+    this._overlay.innerHTML =
+      headerHtml +
+      `<table style="border-collapse:collapse;width:100%;table-layout:fixed;font-size:inherit;font-family:inherit;color:inherit;">` +
+      tableHead +
+      `<tbody>${rows}</tbody>` +
+      `</table>`;
   }
 }
 
