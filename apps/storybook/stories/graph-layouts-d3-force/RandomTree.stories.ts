@@ -11,7 +11,7 @@ import { generateRandomTree } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
 
-const meta: Meta = { title: 'graph-layouts-force-d3/RandomTree' };
+const meta: Meta = { title: 'graph-layouts/d3-force/RandomTree' };
 export default meta;
 type Story = StoryObj;
 

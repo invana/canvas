@@ -12,7 +12,7 @@ import { flareAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
 
-const meta: Meta = { title: 'graph-layouts-hierarchy-d3/Sunburst' };
+const meta: Meta = { title: 'graph-layouts/d3-hierarchy/Sunburst' };
 export default meta;
 type Story = StoryObj;
 

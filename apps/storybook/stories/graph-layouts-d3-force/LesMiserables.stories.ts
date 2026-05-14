@@ -22,7 +22,7 @@ import { DevInfoLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
 
-const meta: Meta = { title: 'graph-layouts-force-d3/LesMiserables' };
+const meta: Meta = { title: 'graph-layouts/d3-force/LesMiserables' };
 export default meta;
 type Story = StoryObj;
 

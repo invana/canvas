@@ -38,7 +38,7 @@ interface NodeData {
   alpha?: number;
 }
 
-const meta: Meta = { title: 'graph-layouts-force-d3/CollisionDetection' };
+const meta: Meta = { title: 'graph-layouts/d3-force/CollisionDetection' };
 export default meta;
 type Story = StoryObj;
 

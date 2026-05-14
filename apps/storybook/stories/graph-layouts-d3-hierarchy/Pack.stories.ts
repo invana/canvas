@@ -12,7 +12,7 @@ import { h1b2019AsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
 
-const meta: Meta = { title: 'graph-layouts-hierarchy-d3/Pack' };
+const meta: Meta = { title: 'graph-layouts/d3-hierarchy/Pack' };
 export default meta;
 type Story = StoryObj;
 

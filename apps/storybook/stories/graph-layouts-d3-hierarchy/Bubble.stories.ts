@@ -11,7 +11,7 @@ import { flareAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
 
-const meta: Meta = { title: 'graph-layouts-hierarchy-d3/Bubble' };
+const meta: Meta = { title: 'graph-layouts/d3-hierarchy/Bubble' };
 export default meta;
 type Story = StoryObj;
 
