@@ -130,12 +130,19 @@ export const TreeOfLife: Story = {
           if (r < 1e-3) continue;
           const theta = Math.atan2(pos.y, pos.x);
           const isLeftHalf = pos.x < 0;
-          const radialDist = 6; // outward by 6 world units, like d3's `x = 6`
+          // d3-radial-cluster's `text-anchor: start, dx: 6` trick: the leaf
+          // sits at the *inner* end of the rotated label, text reading
+          // outward. Pixi has no text-anchor; push the centroid past the
+          // leaf by half the estimated label width (+ leaf radius + gap)
+          // so the inner edge of the rotated text lands next to the leaf.
+          const displayName = meta.name.replace(/_/g, ' ');
+          const estimatedHalfWidth = (displayName.length * settings.labelFontSize * 0.55) / 2;
+          const radialDist = estimatedHalfWidth + settings.leafNodeSize / 2 + 4;
 
           const label: NodeLabelHint = {
             content: {
               kind: 'text',
-              text: meta.name.replace(/_/g, ' '),
+              text: displayName,
               fontSize: settings.labelFontSize,
               fontWeight: 400,
               fill: 0x0f172a,

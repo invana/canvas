@@ -219,7 +219,15 @@ export const EdgeBundling: Story = {
 
           const theta = Math.atan2(pos.y, pos.x);
           const isLeftHalf = pos.x < 0;
-          const radialDist = 6;
+          // d3-radial-cluster's `text-anchor: start, dx: 6` trick: the leaf
+          // sits at the *inner* end of the label, text reading outward. Pixi
+          // has no text-anchor; instead we push the label's centroid past
+          // the leaf by half the estimated text width (+ leaf radius + gap),
+          // so after `rotation: theta` the inner edge of the rotated label
+          // lands next to the leaf and the text extends outward.
+          const name = nameById.get(node.id) ?? node.id;
+          const estimatedHalfWidth = (name.length * settings.labelFontSize * 0.55) / 2;
+          const radialDist = estimatedHalfWidth + settings.leafSize / 2 + 4;
 
           const baseData = node.data as Record<string, unknown>;
           if (!settings.showLabels) {
@@ -234,7 +242,7 @@ export const EdgeBundling: Story = {
           const label: NodeLabelHint = {
             content: {
               kind: 'text',
-              text: nameById.get(node.id) ?? node.id,
+              text: name,
               fontSize: settings.labelFontSize,
               fontWeight: 500,
               fill: 0x0f172a,

@@ -140,7 +140,18 @@ export const RadialTree: Story = {
 
           const theta = Math.atan2(pos.y, pos.x);
           const isLeftHalf = pos.x < 0;
-          const radialDist = meta.isLeaf ? 6 : -6;
+          // d3-radial-cluster's `text-anchor: start, dx: 6` trick: the node
+          // sits at the *inner* end of the label (leaves) or *outer* end
+          // (internal nodes), text reading along the radial axis. Pixi has
+          // no text-anchor; instead push the label's centroid by half the
+          // estimated text width plus the node radius and a small gap so
+          // after rotation the appropriate edge of the label lands next to
+          // the node. Sign of the offset flips for internal nodes so their
+          // labels read inward (matching d3 radial-tree/2).
+          const estimatedHalfWidth = (meta.name.length * settings.labelFontSize * 0.55) / 2;
+          const signedDist =
+            estimatedHalfWidth + settings.nodeSize / 2 + 4;
+          const radialDist = meta.isLeaf ? signedDist : -signedDist;
 
           const label: NodeLabelHint = {
             content: {
