@@ -54,6 +54,7 @@ import { normalPathStyle } from './connectors/pathStyles/normal';
 import { roundedPathStyle } from './connectors/pathStyles/rounded';
 import { bezierPathStyle } from './connectors/pathStyles/bezier';
 import { bumpRadialPathStyle } from './connectors/pathStyles/bumpRadial';
+import { stepRadialPathStyle } from './connectors/pathStyles/stepRadial';
 import { smoothPathStyle } from './connectors/pathStyles/smooth';
 import { centerAnchor } from './connectors/anchors/center';
 import { boundaryAnchor } from './connectors/anchors/boundary';
@@ -270,6 +271,7 @@ export class PrimitivesRenderer {
     this.registerPathStyle('rounded', roundedPathStyle);
     this.registerPathStyle('bezier', bezierPathStyle);
     this.registerPathStyle('bump-radial', bumpRadialPathStyle);
+    this.registerPathStyle('step-radial', stepRadialPathStyle);
     this.registerPathStyle('smooth', smoothPathStyle);
 
     this.registerAnchor('center', centerAnchor);

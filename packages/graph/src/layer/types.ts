@@ -32,6 +32,7 @@ export type EdgePathType =
   | 'straight'
   | 'bezier'
   | 'bump-radial'
+  | 'step-radial'
   | 'orth'
   | 'manhattan'
   | 'rounded'
@@ -97,6 +98,7 @@ export interface EdgeRenderHints {
    *
    * - `'bezier'` accepts `{ axis?: 'h' | 'v' | 'auto', tension?: number }`.
    * - `'bump-radial'` accepts `{ origin?: { x, y } }`.
+   * - `'step-radial'` accepts `{ origin?: { x, y } }`.
    * - `'smooth'` accepts `{ tension?: number }`.
    *
    * Set this when the per-edge `axis: 'auto'` heuristic picks the wrong axis
