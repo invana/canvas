@@ -6,27 +6,28 @@ import {
   DragShapeBehaviour,
   WorldLayer,
   PrimitivesRenderer,
+  arrowMarkerSpec,
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Decorations/Shapes/Label/HtmlContent' };
+const meta: Meta = { title: 'Canvas/Decorations/Connectors/Label/HtmlContent' };
 export default meta;
 type Story = StoryObj;
 
 /**
- * The `kind: 'html-text'` variant of `LabelContent` — backed by Pixi's
- * `HTMLText`. Inline tags are styled via the `tagStyles` map; arbitrary CSS
- * (e.g. `@font-face` rules for an icon font) can be injected via
- * `cssOverrides`.
+ * The `kind: 'html-text'` variant of `LabelContent` on a connector — inline
+ * tag styles via `tagStyles`. Useful for "verb + qualifier" relation labels
+ * (`reads <b>users</b>`) where the markup carries semantics.
  *
- * Three presets demonstrate the common shapes: badge + name + version,
- * inline highlight, and a multi-line snippet. Edit the raw HTML or tweak
- * `defaultFontSize` / `defaultFill` to see live changes.
+ * Note: `autoRotate` is disabled by default in this story because `HTMLText`
+ * has a single-rotation transform that doesn't always interact well with
+ * mid-line tag changes — try toggling it on a diagonal connector to see
+ * whether the result reads in your use case.
  */
 export const HtmlContent: Story = {
-  render: () => createContainer({ id: 'cvs-prim-label-html' }),
+  render: () => createContainer({ id: 'cvs-cdeco-label-html' }),
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
@@ -38,7 +39,7 @@ export const HtmlContent: Story = {
       hitTest() { return null; }
     }
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-label-html')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-cdeco-label-html')!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
@@ -49,29 +50,36 @@ export const HtmlContent: Story = {
     canvas.layers.add(layer);
     canvas.behaviours.register(new DragShapeBehaviour({ id: 'drag', enabled: true, renderer: layer.renderer }));
 
-    layer.renderer.addShape('host', {
-      kind: 'circle', x: 0, y: 0, radius: 32,
-      fill: { kind: 'solid', color: 0x10b981 }, stroke: { color: 0x047857, width: 1 },
+    // Diagonal endpoints + bezier so the html label sits on a visible curve.
+    layer.renderer.addShape('src', { kind: 'circle', x: -280, y: -50, radius: 22, fill: { kind: 'solid', color: 0x4f9cf9 } });
+    layer.renderer.addShape('tgt', { kind: 'circle', x:  280, y:  50, radius: 22, fill: { kind: 'solid', color: 0x10b981 } });
+    layer.renderer.addConnector('edge', {
+      kind: 'connector',
+      router: 'straight', pathStyle: 'bezier',
+      pathStyleOpts: { axis: 'h', tension: 0.5 },
+      source: { kind: 'shape', shapeId: 'src', anchor: 'boundary' },
+      target: { kind: 'shape', shapeId: 'tgt', anchor: 'boundary' },
+      stroke: { color: 0xcbd5e1, width: 1.5 },
+      targetMarker: arrowMarkerSpec({ lengthScale: 6, widthScale: 4, fill: 0xcbd5e1 }),
     });
 
     const PRESETS = {
-      'badge + name + version':
-        '<role>API</role> <name>users-service</name> <ver>v2.4.1</ver>',
-      'highlight phrase':
-        'Status: <hl>Healthy</hl> — last seen 2s ago',
-      'multi-line':
-        '<title>Server A</title><br/><meta>region: us-east-1</meta><br/><meta>uptime: 13d 4h</meta>',
+      'verb + entity':
+        '<verb>reads</verb> <entity>users</entity>',
+      'weighted relation':
+        '<verb>flows</verb> <weight>×3.4</weight>',
+      'state badge':
+        '<state>RUNNING</state> for <dur>13d 4h</dur>',
     } as const;
 
     type PresetKey = keyof typeof PRESETS;
 
     const TAG_STYLES: Record<string, Record<string, unknown>> = {
-      role:  { fontSize: 10, fill: '#10b981', fontWeight: 700 },
-      name:  { fontSize: 13, fill: '#0f172a', fontWeight: 600 },
-      ver:   { fontSize: 10, fill: '#64748b', fontWeight: 400 },
-      hl:    { fontSize: 12, fill: '#0f172a', fontWeight: 700 },
-      title: { fontSize: 14, fill: '#0f172a', fontWeight: 700 },
-      meta:  { fontSize: 11, fill: '#64748b', fontWeight: 400 },
+      verb:   { fontSize: 12, fill: '#0f172a', fontWeight: 600 },
+      entity: { fontSize: 12, fill: '#4f9cf9', fontWeight: 700 },
+      weight: { fontSize: 11, fill: '#64748b', fontWeight: 500 },
+      state:  { fontSize: 11, fill: '#10b981', fontWeight: 700 },
+      dur:    { fontSize: 11, fill: '#475569', fontWeight: 400 },
     };
 
     const settings: {
@@ -80,23 +88,23 @@ export const HtmlContent: Story = {
       defaultFontFamily: string;
       defaultFontSize: number;
       defaultFill: string;
-      defaultFontWeight: number;
       width: number;
+      autoRotate: boolean;
       background: boolean;
     } = {
-      preset: 'badge + name + version',
-      html: PRESETS['badge + name + version'],
+      preset: 'verb + entity',
+      html: PRESETS['verb + entity'],
       defaultFontFamily: 'sans-serif',
       defaultFontSize: 12,
       defaultFill: '#0f172a',
-      defaultFontWeight: 400,
-      width: 280,
+      width: 240,
+      autoRotate: false,
       background: true,
     };
 
     const apply = (): void => {
-      layer.renderer.setDecoration('host', 'label', {
-        kind: 'label',
+      layer.renderer.setDecoration('edge', 'label', {
+        kind: 'label-connector',
         style: {
           content: {
             kind: 'html-text',
@@ -104,21 +112,21 @@ export const HtmlContent: Story = {
             defaultFontFamily: settings.defaultFontFamily,
             defaultFontSize: settings.defaultFontSize,
             defaultFill: settings.defaultFill,
-            defaultFontWeight: settings.defaultFontWeight,
             width: settings.width,
             tagStyles: TAG_STYLES,
           },
           background: settings.background ? {
-            fill: 0xecfdf5, stroke: 0x10b981, strokeWidth: 1, radius: 6, padding: [6, 10],
+            fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [4, 8],
           } : undefined,
-          placement: 'bottom',
-          offset: { y: 12 },
+          placement: 'center',
+          autoRotate: settings.autoRotate,
+          offset: { y: -12 },
         },
       });
     };
     apply();
 
-    canvas.camera.fitContent(layer.getBounds(), 200);
+    canvas.camera.fitContent(layer.getBounds(), 160);
 
     const gui = new GUI({ title: 'HtmlContent' });
     onStoryTeardown(() => gui.destroy());
@@ -131,8 +139,8 @@ export const HtmlContent: Story = {
     gui.add(settings, 'defaultFontFamily', ['sans-serif', 'serif', 'monospace', 'system-ui']).onChange(apply);
     gui.add(settings, 'defaultFontSize', 8, 28, 1).onChange(apply);
     gui.addColor(settings, 'defaultFill').onChange(apply);
-    gui.add(settings, 'defaultFontWeight', { regular: 400, semibold: 600, bold: 700 }).onChange(apply);
     gui.add(settings, 'width', 80, 480, 10).name('width (for wrap)').onChange(apply);
+    gui.add(settings, 'autoRotate').name('autoRotate (HTMLText, experimental)').onChange(apply);
     gui.add(settings, 'background').onChange(apply);
   },
 };

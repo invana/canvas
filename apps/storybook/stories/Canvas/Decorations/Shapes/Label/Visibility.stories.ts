@@ -3,6 +3,7 @@ import {
   Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
+  DragShapeBehaviour,
   WorldLayer,
   PrimitivesRenderer,
 } from '@invana/canvas';
@@ -49,6 +50,7 @@ export const Visibility: Story = {
 
     const layer = new RenderLayer({ id: 'label-vis', options: {} });
     canvas.layers.add(layer);
+    canvas.behaviours.register(new DragShapeBehaviour({ id: 'drag', enabled: true, renderer: layer.renderer }));
 
     const HOSTS = [
       { id: 'always', x: -260, label: 'always',     fill: 0x4f9cf9, stroke: 0x1d4ed8 },

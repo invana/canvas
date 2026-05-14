@@ -3,6 +3,7 @@ import {
   Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
+  DragShapeBehaviour,
   WorldLayer,
   PrimitivesRenderer,
 } from '@invana/canvas';
@@ -51,6 +52,7 @@ export const Containment: Story = {
 
     const layer = new RenderLayer({ id: 'label-containment', options: {} });
     canvas.layers.add(layer);
+    canvas.behaviours.register(new DragShapeBehaviour({ id: 'drag', enabled: true, renderer: layer.renderer }));
 
     // Two hosts side-by-side: same label, different placement. Left uses
     // `inside-center` (constrained); right uses `center` (free to overflow).

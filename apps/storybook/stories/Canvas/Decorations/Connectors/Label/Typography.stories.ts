@@ -6,26 +6,28 @@ import {
   DragShapeBehaviour,
   WorldLayer,
   PrimitivesRenderer,
+  arrowMarkerSpec,
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
-const meta: Meta = { title: 'Canvas/Decorations/Shapes/Label/Typography' };
+const meta: Meta = { title: 'Canvas/Decorations/Connectors/Label/Typography' };
 export default meta;
 type Story = StoryObj;
 
 /**
- * Every typographic field of the `kind: 'text'` variant of `LabelContent`:
- * font family, size, weight, style, variant, letter spacing, line height,
- * fill, stroke, and drop shadow. Plus `align` for multi-line layout.
+ * Every typographic field of the `kind: 'text'` variant of `LabelContent`
+ * exercised on a connector-anchored label: family, size, weight, style,
+ * variant, letter-spacing, line-height, fill, stroke, drop shadow, align.
  *
- * Uses a multi-line label by default so `align` and `lineHeight` produce
- * visible differences. Switch the alignment dropdown to see how text shifts
- * within the wrap box.
+ * Connector labels and shape labels share the same `LabelContent` type —
+ * this story exists so you can preview rich typography in its connector
+ * context (autoRotate is on by default so you can see how stroke / shadow
+ * read on rotated text).
  */
 export const Typography: Story = {
-  render: () => createContainer({ id: 'cvs-prim-label-typo' }),
+  render: () => createContainer({ id: 'cvs-cdeco-label-typo' }),
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
@@ -37,7 +39,7 @@ export const Typography: Story = {
       hitTest() { return null; }
     }
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-label-typo')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-cdeco-label-typo')!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
@@ -48,15 +50,24 @@ export const Typography: Story = {
     canvas.layers.add(layer);
     canvas.behaviours.register(new DragShapeBehaviour({ id: 'drag', enabled: true, renderer: layer.renderer }));
 
-    layer.renderer.addShape('host', {
-      kind: 'circle', x: 0, y: 0, radius: 28,
-      fill: { kind: 'solid', color: 0x4f9cf9 }, stroke: { color: 0x1d4ed8, width: 1 },
+    // Diagonal endpoints + bezier so the rotated typography is visible
+    // against a non-axis-aligned baseline.
+    layer.renderer.addShape('src', { kind: 'circle', x: -260, y: 80, radius: 20, fill: { kind: 'solid', color: 0x4f9cf9 } });
+    layer.renderer.addShape('tgt', { kind: 'circle', x:  260, y: -80, radius: 20, fill: { kind: 'solid', color: 0x10b981 } });
+    layer.renderer.addConnector('edge', {
+      kind: 'connector',
+      router: 'straight', pathStyle: 'bezier',
+      pathStyleOpts: { axis: 'h', tension: 0.5 },
+      source: { kind: 'shape', shapeId: 'src', anchor: 'boundary' },
+      target: { kind: 'shape', shapeId: 'tgt', anchor: 'boundary' },
+      stroke: { color: 0xcbd5e1, width: 1.5 },
+      targetMarker: arrowMarkerSpec({ lengthScale: 6, widthScale: 4, fill: 0xcbd5e1 }),
     });
 
     const settings = {
-      text: 'The quick brown fox\njumps over the\nlazy dog',
+      text: 'connects-to',
       fontFamily: 'sans-serif',
-      fontSize: 18,
+      fontSize: 16,
       fontWeight: 600,
       fontStyle: 'normal' as 'normal' | 'italic',
       fontVariant: 'normal' as 'normal' | 'small-caps',
@@ -64,6 +75,7 @@ export const Typography: Story = {
       lineHeight: 0,
       fill: 0x0f172a,
       align: 'center' as 'left' | 'center' | 'right',
+      autoRotate: true,
       // stroke
       strokeEnabled: false,
       strokeColor: 0xffffff,
@@ -73,13 +85,13 @@ export const Typography: Story = {
       shadowColor: 0x000000,
       shadowBlur: 3,
       shadowOffsetX: 0,
-      shadowOffsetY: 2,
-      shadowAlpha: 0.4,
+      shadowOffsetY: 1,
+      shadowAlpha: 0.35,
     };
 
     const apply = (): void => {
-      layer.renderer.setDecoration('host', 'label', {
-        kind: 'label',
+      layer.renderer.setDecoration('edge', 'label', {
+        kind: 'label-connector',
         style: {
           content: {
             kind: 'text',
@@ -93,36 +105,26 @@ export const Typography: Story = {
             ...(settings.lineHeight > 0 ? { lineHeight: settings.lineHeight } : {}),
             fill: settings.fill,
             align: settings.align,
-            ...(settings.strokeEnabled
-              ? { stroke: { color: settings.strokeColor, width: settings.strokeWidth } }
-              : {}),
+            ...(settings.strokeEnabled ? { stroke: { color: settings.strokeColor, width: settings.strokeWidth } } : {}),
             ...(settings.shadowEnabled
-              ? {
-                  shadow: {
-                    color: settings.shadowColor,
-                    blur: settings.shadowBlur,
-                    offsetX: settings.shadowOffsetX,
-                    offsetY: settings.shadowOffsetY,
-                    alpha: settings.shadowAlpha,
-                  },
-                }
+              ? { shadow: { color: settings.shadowColor, blur: settings.shadowBlur, offsetX: settings.shadowOffsetX, offsetY: settings.shadowOffsetY, alpha: settings.shadowAlpha } }
               : {}),
           },
-          wrap: { wordWrap: true, maxWidth: 280 },
-          placement: 'bottom',
-          offset: { y: 12 },
+          placement: 'center',
+          autoRotate: settings.autoRotate,
+          offset: { y: -10 },
         },
       });
     };
     apply();
 
-    canvas.camera.fitContent(layer.getBounds(), 200);
+    canvas.camera.fitContent(layer.getBounds(), 140);
 
     const gui = new GUI({ title: 'Typography' });
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'text').onChange(apply);
     gui.add(settings, 'fontFamily', ['sans-serif', 'serif', 'monospace', 'system-ui']).onChange(apply);
-    gui.add(settings, 'fontSize', 8, 48, 1).onChange(apply);
+    gui.add(settings, 'fontSize', 8, 36, 1).onChange(apply);
     gui.add(settings, 'fontWeight', { regular: 400, semibold: 600, bold: 700, black: 900 }).onChange(apply);
     gui.add(settings, 'fontStyle', ['normal', 'italic']).onChange(apply);
     gui.add(settings, 'fontVariant', ['normal', 'small-caps']).onChange(apply);
@@ -130,6 +132,7 @@ export const Typography: Story = {
     gui.add(settings, 'lineHeight', 0, 60, 1).name('lineHeight (0=auto)').onChange(apply);
     gui.addColor(settings, 'fill').onChange(apply);
     gui.add(settings, 'align', ['left', 'center', 'right']).onChange(apply);
+    gui.add(settings, 'autoRotate').onChange(apply);
     const st = gui.addFolder('stroke');
     st.add(settings, 'strokeEnabled').name('enabled').onChange(apply);
     st.addColor(settings, 'strokeColor').name('color').onChange(apply);

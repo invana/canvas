@@ -3,6 +3,7 @@ import {
   Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
+  DragShapeBehaviour,
   WorldLayer,
   PrimitivesRenderer,
 } from '@invana/canvas';
@@ -46,6 +47,7 @@ export const Placement: Story = {
 
     const layer = new RenderLayer({ id: 'label-placement', options: {} });
     canvas.layers.add(layer);
+    canvas.behaviours.register(new DragShapeBehaviour({ id: 'drag', enabled: true, renderer: layer.renderer }));
 
     // Top block: 9 anchor-only placements on circle hosts arranged in a 3×3
     // grid. Order matches the visual position the placement names suggest.
