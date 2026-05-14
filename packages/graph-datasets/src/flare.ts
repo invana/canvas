@@ -38,6 +38,14 @@ export interface FlareGraphNode {
     isLeaf: boolean;
     /** Original `value` field, if present (only on leaves). */
     value?: number;
+    /**
+     * Top-level category — the depth-1 ancestor's name (e.g. `analytics`,
+     * `animate`, `data`, ...). Depth-1 nodes carry their own name here;
+     * the root (depth 0) carries `undefined`. Drives categorical colour
+     * in the bubble-chart layout, since every leaf inherits the same
+     * `group` as every other leaf under the same top-level branch.
+     */
+    group?: string;
   };
 }
 
@@ -72,14 +80,23 @@ export function flareAsGraph(): FlareGraphData {
     parentId: string | null;
     path: string;
     depth: number;
+    /** Top-level category (depth-1 ancestor name). Set when we descend
+     *  into a depth-1 node and inherited by everything beneath it. */
+    group: string | undefined;
   }
 
   const queue: Pending[] = [
-    { node: flareHierarchy, parentId: null, path: flareHierarchy.name, depth: 0 },
+    {
+      node: flareHierarchy,
+      parentId: null,
+      path: flareHierarchy.name,
+      depth: 0,
+      group: undefined,
+    },
   ];
 
   while (queue.length > 0) {
-    const { node, parentId, path, depth } = queue.shift()!;
+    const { node, parentId, path, depth, group } = queue.shift()!;
     const isLeaf = !node.children || node.children.length === 0;
     nodes.push({
       id: path,
@@ -88,6 +105,7 @@ export function flareAsGraph(): FlareGraphData {
         depth,
         isLeaf,
         ...(node.value !== undefined ? { value: node.value } : {}),
+        ...(group !== undefined ? { group } : {}),
       },
     });
     if (parentId !== null) {
@@ -100,6 +118,10 @@ export function flareAsGraph(): FlareGraphData {
           parentId: path,
           path: `${path}/${child.name}`,
           depth: depth + 1,
+          // Depth-1 nodes seed `group` from their own name; deeper nodes
+          // inherit it from their parent so every leaf carries the same
+          // top-level category as the branch it lives under.
+          group: depth === 0 ? child.name : group,
         });
       }
     }
