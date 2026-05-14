@@ -59,6 +59,8 @@ export {
   type LabelCollisionBehaviourOptions,
   type LabelCollisionStrategy,
   type LabelPriorityResolver,
+  LabelResolutionLODBehaviour,
+  type LabelResolutionLODBehaviourOptions,
 } from './behaviours';
 
 export type { NodeLabelHint, EdgeLabelHint } from './layer';

@@ -179,6 +179,15 @@ export class PrimitivesRenderer {
 
   private readonly hit = new HitIndex();
 
+  /**
+   * Most recently-pushed label rasterisation resolution. `null` until a
+   * zoom-LOD behaviour (or the host app) calls `setLabelsResolution`. When
+   * non-null, every newly-mounted label decoration inherits this value so
+   * the user never sees a freshly-drawn label start at base fidelity and
+   * snap up on the next zoom event.
+   */
+  private trackedLabelResolution: number | null = null;
+
   readonly events = new EventEmitter<PrimitivesRendererEventMap>();
 
   private readonly _container: Container;
@@ -513,6 +522,7 @@ export class PrimitivesRenderer {
       if (typeof deco.tick === 'function') {
         this.animated.add(deco as AnimatedDecoration);
       }
+      this.applyTrackedLabelResolution(deco);
     } else {
       const ctor = entry.ctor as ConnectorDecorationCtor;
       const deco = new ctor(decoration.style);
@@ -531,6 +541,7 @@ export class PrimitivesRenderer {
       if (typeof deco.tick === 'function') {
         this.animated.add(deco as AnimatedDecoration);
       }
+      this.applyTrackedLabelResolution(deco);
       // Now that the decoration is in the map, re-aggregate padding and
       // re-route the path. `recomputeConnectorPath` redraws the body /
       // markers on the trimmed path and refreshes every decoration
@@ -758,6 +769,46 @@ export class PrimitivesRenderer {
     const inst = this.shapeInstances.get(id);
     if (!inst) return;
     inst.shape.setLabelResolution?.(resolution);
+  }
+
+  /**
+   * Push a rasterisation resolution to every label decoration (shape + edge)
+   * currently attached, and remember it so labels mounted later inherit the
+   * same fidelity. Driven by zoom-aware behaviours
+   * (see `@invana/graph` / `LabelResolutionLODBehaviour`): when the camera
+   * zooms past a threshold, push `dpr * zoom` to re-rasterise glyphs sharp.
+   *
+   * Idempotent: Pixi internally short-circuits `Text.resolution` writes when
+   * the value matches, so calling this with the unchanged value every frame
+   * is safe and cheap.
+   */
+  setLabelsResolution(resolution: number): void {
+    if (!Number.isFinite(resolution) || resolution <= 0) return;
+    this.trackedLabelResolution = resolution;
+    for (const inst of this.shapeInstances.values()) {
+      for (const deco of inst.decorations.values()) {
+        this.applyTrackedLabelResolution(deco);
+      }
+    }
+    for (const inst of this.connectorInstances.values()) {
+      for (const deco of inst.decorations.values()) {
+        this.applyTrackedLabelResolution(deco);
+      }
+    }
+  }
+
+  /**
+   * Forward the tracked label resolution to `deco` when it exposes a
+   * `setResolution` method. Used both on every label mount (so new labels
+   * inherit the current resolution) and inside `setLabelsResolution` (so an
+   * updated resolution propagates to existing labels).
+   */
+  private applyTrackedLabelResolution(deco: IDecorationBase<unknown>): void {
+    if (this.trackedLabelResolution === null) return;
+    const withResolution = deco as { setResolution?: (r: number) => void };
+    if (typeof withResolution.setResolution === 'function') {
+      withResolution.setResolution(this.trackedLabelResolution);
+    }
   }
 
   // ─── Per-frame animation ────────────────────────────────────────────────

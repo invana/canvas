@@ -19,6 +19,7 @@ import { Container, Graphics } from 'pixi.js';
 import { ConnectorDecorationBase } from '../../base/ConnectorDecorationBase';
 import { samplePathAt } from '../../connectors/pathSampling';
 import {
+  applyLabelResolution,
   mountLabelContent,
   updateLabelContent,
   type LabelContentView,
@@ -32,6 +33,14 @@ export class LabelConnectorDecoration extends ConnectorDecorationBase<ConnectorL
   private bgGfx: Graphics | null = null;
   private attached = true;
   private hostSurface: Container | null = null;
+  /** See `LabelDecoration.resolution`. */
+  private resolution: number | null = null;
+
+  /** See `LabelDecoration.setResolution`. */
+  setResolution(resolution: number): void {
+    this.resolution = resolution;
+    if (this.contentView) applyLabelResolution(this.contentView, resolution);
+  }
 
   protected repaint(): void {
     const host = this.host;
@@ -62,6 +71,7 @@ export class LabelConnectorDecoration extends ConnectorDecorationBase<ConnectorL
         this.contentView = next;
       }
     }
+    if (this.resolution !== null) applyLabelResolution(this.contentView, this.resolution);
 
     const textW = this.contentView.display.width;
     const textH = this.contentView.display.height;

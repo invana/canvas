@@ -47,3 +47,6 @@ export type {
   LabelCollisionStrategy,
   LabelPriorityResolver,
 } from './LabelCollisionBehaviour';
+
+export { LabelResolutionLODBehaviour } from './LabelResolutionLODBehaviour';
+export type { LabelResolutionLODBehaviourOptions } from './LabelResolutionLODBehaviour';

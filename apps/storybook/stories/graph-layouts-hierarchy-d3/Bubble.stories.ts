@@ -5,7 +5,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer } from '@invana/graph';
+import { GraphLayer, type NodeLabelHint } from '@invana/graph';
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
 import { flareAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -42,6 +42,15 @@ export const Bubble: Story = {
       size: 1000,
       padding: 3,
       leafStrokeWidth: 0,
+      showLabels: true,
+      // Cap: even huge bubbles never use a font larger than this. Keeps the
+      // outliers (e.g. "FlareVis" if it ever appeared) from drowning out the
+      // surrounding bubbles' labels.
+      maxLabelFontSize: 14,
+      // Skip the label when the bubble is too small to fit any readable text
+      // (in world units — pre-zoom). The user can still pan/zoom in and see
+      // the bubble; the label just doesn't render at this LOD.
+      minLabelDiameter: 16,
     };
 
     // ── Categorical palette (d3.schemeTableau10) ─────────────────────────
@@ -89,11 +98,13 @@ export const Bubble: Story = {
               stroke: 0xffffff,
               strokeWidth: isLeaf ? settings.leafStrokeWidth : 0,
               alpha: isLeaf ? 1 : 0,
-              // Carried through so future label rendering / tooltips can
-              // use it. Flare's `name` is the class name (e.g. "Easing");
-              // `value` is the metric the bubble area is proportional to.
-              label: n.data.name,
+              // Carried through so the post-layout pass can build a
+              // properly-centred label hint once `data.size` reflects the
+              // packed diameter. Flare's `name` is the class name (e.g.
+              // "Easing"); `value` is the metric the bubble area is
+              // proportional to.
               name: n.data.name,
+              isLeaf,
               group: n.data.group,
               ...(n.data.value !== undefined ? { value: n.data.value } : {}),
             },
@@ -146,6 +157,62 @@ export const Bubble: Story = {
 
     let layout: D3HierarchyLayout | null = null;
 
+    /**
+     * Centre a label inside every leaf bubble, sized to fit. `d3.pack()`
+     * writes the final diameter onto `data.size` (see D3HierarchyLayout —
+     * `sizes.set(id, 2 * r)`), so this has to run *after* `layout.apply()`.
+     *
+     * Font sizing: text width is roughly `fontSize * charCount * 0.55`
+     * for sans-serif. Solving for `fontSize` so the text spans ~85% of
+     * the diameter gives `fontSize = diameter * 0.85 / (chars * 0.55)`.
+     * Clamped to `maxLabelFontSize` so huge bubbles don't shout, and
+     * labels are skipped entirely when even a 4px font would overflow
+     * (i.e. the bubble is smaller than `minLabelDiameter`).
+     */
+    const applyBubbleLabels = (): void => {
+      graph.store.batch(() => {
+        for (const node of graph.store.nodes()) {
+          const data = node.data as {
+            size?: number;
+            name?: string;
+            isLeaf?: boolean;
+            label?: NodeLabelHint;
+          };
+          const next = { ...data } as Record<string, unknown>;
+          // Always clear stale labels so re-runs (font size, settings
+          // toggles) don't accumulate.
+          if ('label' in next) delete next.label;
+
+          if (
+            settings.showLabels &&
+            data.isLeaf === true &&
+            data.size !== undefined &&
+            data.size >= settings.minLabelDiameter &&
+            data.name
+          ) {
+            const chars = Math.max(4, data.name.length);
+            const fontSize = Math.min(
+              settings.maxLabelFontSize,
+              (data.size * 0.85) / (chars * 0.55),
+            );
+            const label: NodeLabelHint = {
+              content: {
+                kind: 'text',
+                text: data.name,
+                fontSize,
+                fontWeight: 500,
+                fill: 0x0f172a,
+              },
+              placement: 'center',
+            };
+            next.label = label;
+          }
+
+          graph.store.updateNode(node.id, { data: next });
+        }
+      });
+    };
+
     const run = async (): Promise<void> => {
       layout?.stop();
       graph.setData(buildGraphData());
@@ -158,6 +225,9 @@ export const Bubble: Story = {
         // descending by value. Both match d3's example, so no overrides.
       });
       await layout.apply(graph);
+      // Labels are size-dependent (font scales with packed diameter), so
+      // they have to be attached *after* layout writes `data.size`.
+      applyBubbleLabels();
       canvas.camera.fitContent(graph.getBounds(), 40);
     };
 
@@ -174,6 +244,11 @@ export const Bubble: Story = {
 
     const style = gui.addFolder('Style');
     style.add(settings, 'leafStrokeWidth', 0, 4, 0.5).onChange(run);
+
+    const labels = gui.addFolder('Labels');
+    labels.add(settings, 'showLabels').onChange(applyBubbleLabels);
+    labels.add(settings, 'maxLabelFontSize', 6, 32, 1).onChange(applyBubbleLabels);
+    labels.add(settings, 'minLabelDiameter', 0, 80, 1).onChange(applyBubbleLabels);
 
     gui
       .add(

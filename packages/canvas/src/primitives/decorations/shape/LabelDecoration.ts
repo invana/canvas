@@ -17,6 +17,7 @@
 import { Container, Graphics } from 'pixi.js';
 import { ShapeDecorationBase } from '../../base/ShapeDecorationBase';
 import {
+  applyLabelResolution,
   mountLabelContent,
   updateLabelContent,
   type LabelContentView,
@@ -35,6 +36,24 @@ export class LabelDecoration extends ShapeDecorationBase<ShapeLabelStyle> {
   private attached = true;
   /** Cached host surface for re-attach on LOD show. */
   private hostSurface: Container | null = null;
+  /**
+   * Cached rasterisation resolution applied to the inner text. Survives
+   * `repaint()` so a renderer-level zoom-LOD push isn't lost when style
+   * changes trigger a fresh `updateLabelContent`.
+   */
+  private resolution: number | null = null;
+
+  /**
+   * Pixi rasterises `Text` to a glyph texture once and re-uses it across
+   * frames. The default resolution is the renderer's DPR, so when the
+   * camera zooms in the texture is sampled up and labels get fuzzy.
+   * Bumping `resolution` re-rasterises at higher fidelity. Idempotent
+   * with the same value (Pixi short-circuits internally).
+   */
+  setResolution(resolution: number): void {
+    this.resolution = resolution;
+    if (this.contentView) applyLabelResolution(this.contentView, resolution);
+  }
 
   protected repaint(): void {
     const host = this.host;
@@ -67,6 +86,11 @@ export class LabelDecoration extends ShapeDecorationBase<ShapeLabelStyle> {
         this.contentView = next;
       }
     }
+    // Re-apply the renderer-pushed rasterisation resolution. `mountLabelContent`
+    // / kind-switch in `updateLabelContent` creates a fresh Pixi `Text` whose
+    // resolution defaults back to renderer DPR; without this re-apply the
+    // label would silently revert to base sharpness on the next style change.
+    if (this.resolution !== null) applyLabelResolution(this.contentView, this.resolution);
 
     // Measure text after style update; Pixi computes width/height on access.
     const textW = this.contentView.display.width;

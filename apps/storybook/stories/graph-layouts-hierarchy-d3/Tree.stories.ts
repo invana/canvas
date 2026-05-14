@@ -5,7 +5,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer } from '@invana/graph';
+import { GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
 import {
   D3HierarchyLayout,
   type CartesianOrientation,
@@ -40,12 +40,20 @@ export const Tree: Story = {
     const settings = {
       mode: 'tree' as D3HierarchyLayoutMode,
       orientation: 'horizontal' as CartesianOrientation,
-      siblingSpacing: 10,
-      depthSpacing: 110,
+      // d3 tree/2 uses dx=10, dy=width/(root.height+1). With label-bearing
+      // leaves the default dx is too tight — bump sibling spacing to 14 so
+      // leaf labels don't overlap vertically when fully zoomed-in.
+      siblingSpacing: 14,
+      depthSpacing: 160,
       edgeAlpha: 0.55,
       edgeStrokeWidth: 0.7,
       nodeRadius: 2.5,
       colorByDepth: true,
+      showLabels: true,
+      labelFontSize: 10,
+      // Zoom-aware label sharpness — see Cluster.stories.ts for rationale.
+      sharpLabelsOnZoom: true,
+      sharpLabelsMax: 6,
     };
 
     // Depth-based colour ramp (warm root → cool leaves). Kept identical to
@@ -85,6 +93,27 @@ export const Tree: Story = {
             size: settings.nodeRadius * 2,
             fill: settings.colorByDepth ? colorAt(n.data.depth) : 0x1f2937,
             stroke: false as const,
+            // d3 tree/2's label rule: leaves get their name on the right
+            // side, internal nodes on the left. With horizontal orientation
+            // that lines labels up *away* from the subtree they belong to,
+            // so they don't overprint the children below.
+            ...(settings.showLabels
+              ? {
+                  label: {
+                    content: {
+                      kind: 'text' as const,
+                      text: n.data.name,
+                      fontSize: settings.labelFontSize,
+                      fontWeight: 500,
+                      fill: 0x0f172a,
+                    },
+                    placement: (n.data.isLeaf ? 'right' : 'left') as
+                      | 'left'
+                      | 'right',
+                    offset: { x: n.data.isLeaf ? 4 : -4 },
+                  },
+                }
+              : {}),
           },
         })),
         edges: data.edges.map((e) => ({
@@ -103,6 +132,13 @@ export const Tree: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
+    const labelResolutionLOD = new LabelResolutionLODBehaviour({
+      id: 'label-resolution',
+      layerId: 'graph',
+      enabled: settings.sharpLabelsOnZoom,
+      max: settings.sharpLabelsMax,
+    });
+    canvas.behaviours.register(labelResolutionLOD);
 
     canvas.layers.add(
       new BackgroundLayer({
@@ -180,6 +216,14 @@ export const Tree: Story = {
     style.add(settings, 'colorByDepth').onChange(run);
     style.add(settings, 'edgeStrokeWidth', 0.2, 4, 0.1).onChange(run);
     style.add(settings, 'edgeAlpha', 0, 1, 0.05).onChange(run);
+
+    const labels = gui.addFolder('Labels');
+    labels.add(settings, 'showLabels').onChange(run);
+    labels.add(settings, 'labelFontSize', 6, 18, 1).onChange(run);
+    labels
+      .add(settings, 'sharpLabelsOnZoom')
+      .name('Sharp on zoom')
+      .onChange((on: boolean) => (on ? labelResolutionLOD.enable() : labelResolutionLOD.disable()));
 
     gui.add({ refit: () => canvas.camera.fitContent(graph.getBounds(), 20) }, 'refit').name('Re-fit camera');
   },

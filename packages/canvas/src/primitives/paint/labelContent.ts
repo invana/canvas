@@ -68,6 +68,17 @@ export function updateLabelContent(
   return view;
 }
 
+/**
+ * Set the rasterisation resolution of the underlying Pixi text. Higher
+ * resolution = sharper glyphs when the camera is zoomed in, at the cost of
+ * a larger glyph texture. Setting the same value twice is a no-op in Pixi
+ * (it short-circuits the re-rasterise), so callers can re-invoke freely.
+ */
+export function applyLabelResolution(view: LabelContentView, resolution: number): void {
+  if (resolution <= 0 || !Number.isFinite(resolution)) return;
+  (view.display as unknown as { resolution: number }).resolution = resolution;
+}
+
 // ─── Style builders ────────────────────────────────────────────────────────
 
 function textStyleFor(
