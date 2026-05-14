@@ -35,7 +35,6 @@ export const RadialTree: Story = {
       labelFontSize: 9,
       // Zoom-aware label sharpness — see Cluster.stories.ts for rationale.
       sharpLabelsOnZoom: true,
-      sharpLabelsMax: 6,
     };
 
     // Depth-based color ramp (warm root → cool leaves), pre-converted to
@@ -216,7 +215,6 @@ export const RadialTree: Story = {
       id: 'label-resolution',
       layerId: 'graph',
       enabled: settings.sharpLabelsOnZoom,
-      max: settings.sharpLabelsMax,
     });
     canvas.behaviours.register(labelResolutionLOD);
 

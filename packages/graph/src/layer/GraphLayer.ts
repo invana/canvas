@@ -116,6 +116,20 @@ export class GraphLayer extends WorldLayer<
   }
 
   /**
+   * Per-frame tick — delegated to `PrimitivesRenderer.tickAnimations` so
+   * animated decorations (`pulse-ring`, `marching-ants`, …) and the
+   * viewport-clipped label-resolution sweep advance every frame.
+   *
+   * `Canvas.tickOnce` duck-types this hook on each layer; without it the
+   * renderer would never tick for graph layers because the field that
+   * holds it (`_renderer`) is private and the alternative fallback path
+   * looks for a public `renderer` property.
+   */
+  tickAnimations(deltaMs: number): void {
+    this._renderer?.tickAnimations(deltaMs);
+  }
+
+  /**
    * Resolved per-node defaults (caller-supplied `nodeDefaults` merged onto the
    * factory defaults). Exposed for layers that need to mirror what's drawn —
    * e.g. `MiniMapLayer` falls back to these when a node omits `shape` / `size`.

@@ -39,11 +39,11 @@ export const Cluster: Story = {
       colorByDepth: true,
       showLabels: true,
       labelFontSize: 10,
-      // Zoom-aware label sharpness: bumps Pixi's Text resolution as the
-      // camera zooms in so glyph textures don't sample-blur. Capped at 6×
-      // DPR (≈ 6× zoom looks crisp; beyond that, gains are imperceptible).
+      // Zoom-aware label sharpness: bumps Pixi's Text resolution once the
+      // camera zooms past a threshold so glyph textures don't sample-blur.
+      // Tier-based to avoid frame stutter on every zoom step — see
+      // `LabelResolutionLODBehaviour`.
       sharpLabelsOnZoom: true,
-      sharpLabelsMax: 6,
     };
 
     // Depth-based color ramp (warm root → cool leaves).
@@ -163,7 +163,6 @@ export const Cluster: Story = {
       id: 'label-resolution',
       layerId: 'graph',
       enabled: settings.sharpLabelsOnZoom,
-      max: settings.sharpLabelsMax,
     });
     canvas.behaviours.register(labelResolutionLOD);
 

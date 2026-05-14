@@ -55,6 +55,16 @@ export class LabelDecoration extends ShapeDecorationBase<ShapeLabelStyle> {
     if (this.contentView) applyLabelResolution(this.contentView, resolution);
   }
 
+  /**
+   * Last-applied rasterisation resolution, or `null` if `setResolution`
+   * has never been called. The renderer's viewport sweep uses this to
+   * skip labels already at the target so a converged scene costs nothing
+   * past one bounds check per label per frame.
+   */
+  getResolution(): number | null {
+    return this.resolution;
+  }
+
   protected repaint(): void {
     const host = this.host;
     if (!host) return;

@@ -42,6 +42,11 @@ export class LabelConnectorDecoration extends ConnectorDecorationBase<ConnectorL
     if (this.contentView) applyLabelResolution(this.contentView, resolution);
   }
 
+  /** See `LabelDecoration.getResolution`. */
+  getResolution(): number | null {
+    return this.resolution;
+  }
+
   protected repaint(): void {
     const host = this.host;
     if (!host) return;

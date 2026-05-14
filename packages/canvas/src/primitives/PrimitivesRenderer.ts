@@ -188,6 +188,28 @@ export class PrimitivesRenderer {
    */
   private trackedLabelResolution: number | null = null;
 
+  /**
+   * Every decoration exposing the `setResolution` / `getResolution` hooks
+   * (i.e. `LabelDecoration` / `LabelConnectorDecoration`). Maintained on
+   * `setDecoration` / `disposeDecoration` so `tickAnimations` can sweep it
+   * cheaply without re-scanning every shape and connector instance.
+   *
+   * The sweep applies the tracked resolution only to labels currently
+   * inside the camera viewport — re-rastering an off-screen label burns a
+   * GPU texture upload with no visible benefit. Off-screen labels catch
+   * up the moment they pan in, since the sweep re-checks every frame.
+   */
+  private readonly labelBearingDecorations = new Set<IDecorationBase<unknown>>();
+  /**
+   * Per-frame budget on how many on-screen labels get re-rastered. Each
+   * `setResolution(r)` write triggers one glyph-texture regen in Pixi's
+   * next render pass. 64 keeps the regen cost inside frame budget for a
+   * typical few-hundred-visible-label scene while finishing the transition
+   * in under 5 frames; widen if your scenes have larger visible label
+   * sets and tolerate a longer transition.
+   */
+  private static readonly LABEL_RASTER_PER_TICK = 64;
+
   readonly events = new EventEmitter<PrimitivesRendererEventMap>();
 
   private readonly _container: Container;
@@ -522,6 +544,7 @@ export class PrimitivesRenderer {
       if (typeof deco.tick === 'function') {
         this.animated.add(deco as AnimatedDecoration);
       }
+      if (decoHasSetResolution(deco)) this.labelBearingDecorations.add(deco);
       this.applyTrackedLabelResolution(deco);
     } else {
       const ctor = entry.ctor as ConnectorDecorationCtor;
@@ -541,6 +564,7 @@ export class PrimitivesRenderer {
       if (typeof deco.tick === 'function') {
         this.animated.add(deco as AnimatedDecoration);
       }
+      if (decoHasSetResolution(deco)) this.labelBearingDecorations.add(deco);
       this.applyTrackedLabelResolution(deco);
       // Now that the decoration is in the map, re-aggregate padding and
       // re-route the path. `recomputeConnectorPath` redraws the body /
@@ -784,31 +808,26 @@ export class PrimitivesRenderer {
    */
   setLabelsResolution(resolution: number): void {
     if (!Number.isFinite(resolution) || resolution <= 0) return;
+    // Identity short-circuit — keeps repeat pushes from churning the
+    // viewport sweep below.
+    if (this.trackedLabelResolution === resolution) return;
     this.trackedLabelResolution = resolution;
-    for (const inst of this.shapeInstances.values()) {
-      for (const deco of inst.decorations.values()) {
-        this.applyTrackedLabelResolution(deco);
-      }
-    }
-    for (const inst of this.connectorInstances.values()) {
-      for (const deco of inst.decorations.values()) {
-        this.applyTrackedLabelResolution(deco);
-      }
-    }
+    // No iteration here. The frame-tick sweep (see `tickLabelRasterise`)
+    // picks up the new target and re-rasters only on-screen labels, plus
+    // any that scroll into view later. This bounds the per-frame texture-
+    // regen cost to whatever's visible instead of the full dataset.
   }
 
   /**
    * Forward the tracked label resolution to `deco` when it exposes a
-   * `setResolution` method. Used both on every label mount (so new labels
-   * inherit the current resolution) and inside `setLabelsResolution` (so an
-   * updated resolution propagates to existing labels).
+   * `setResolution` method. Called on every label mount (so a newly-added
+   * label inherits the current resolution immediately, no waiting for the
+   * next tier-change to populate it).
    */
   private applyTrackedLabelResolution(deco: IDecorationBase<unknown>): void {
     if (this.trackedLabelResolution === null) return;
-    const withResolution = deco as { setResolution?: (r: number) => void };
-    if (typeof withResolution.setResolution === 'function') {
-      withResolution.setResolution(this.trackedLabelResolution);
-    }
+    const withResolution = deco as unknown as { setResolution?: (r: number) => void };
+    withResolution.setResolution?.(this.trackedLabelResolution);
   }
 
   // ─── Per-frame animation ────────────────────────────────────────────────
@@ -838,6 +857,61 @@ export class PrimitivesRenderer {
       for (const host of this.connectorHostsWithEffects) {
         this.applyEffectsToConnector(host);
       }
+    }
+
+    if (this.trackedLabelResolution !== null && this.labelBearingDecorations.size > 0) {
+      this.tickLabelRasterise();
+    }
+  }
+
+  /**
+   * Re-raster labels whose current resolution differs from the tracked
+   * target, prioritising those currently inside the camera viewport so the
+   * tier crossing reads as a fade-into-crispness on what the user is
+   * looking at. Off-screen labels are deferred to subsequent ticks but
+   * *not* skipped forever — once the in-view set converges, remaining
+   * budget rolls over to off-screen labels so panning later lands on
+   * already-crisp text. Bounds that come back degenerate (Infinity AABB
+   * from a container that hasn't laid out yet) fall through to the second
+   * pass and are treated as off-screen for this tick.
+   *
+   * Convergence: once every label matches the target, the loop is O(N)
+   * `getResolution` checks per frame with zero texture work — negligible.
+   */
+  private tickLabelRasterise(): void {
+    const target = this.trackedLabelResolution;
+    if (target === null) return;
+    const viewport = (this.camera.viewport as unknown as {
+      getVisibleBounds: () => { x: number; y: number; width: number; height: number };
+    }).getVisibleBounds();
+    let budget = PrimitivesRenderer.LABEL_RASTER_PER_TICK;
+    // First pass: in-viewport labels.
+    const offscreen: Array<{ setResolution: (r: number) => void }> = [];
+    for (const deco of this.labelBearingDecorations) {
+      if (budget <= 0) break;
+      const withRes = deco as unknown as {
+        getResolution?: () => number | null;
+        setResolution: (r: number) => void;
+        gfx?: { getBounds?: () => { x: number; y: number; width: number; height: number } };
+      };
+      if (withRes.getResolution?.() === target) continue;
+      const bounds = withRes.gfx?.getBounds?.();
+      const inView = bounds !== undefined && isFiniteRect(bounds) && rectsIntersect(bounds, viewport);
+      if (inView) {
+        withRes.setResolution(target);
+        budget--;
+      } else {
+        offscreen.push(withRes);
+      }
+    }
+    // Second pass: spend the remaining budget on off-screen labels so they
+    // converge in the background. Without this, a brand-new tier would
+    // leave every off-screen label permanently stale (its bounds wouldn't
+    // change until the camera pans past it).
+    for (const deco of offscreen) {
+      if (budget <= 0) break;
+      deco.setResolution(target);
+      budget--;
     }
   }
 
@@ -1425,6 +1499,7 @@ export class PrimitivesRenderer {
     if ('tick' in deco && typeof deco.tick === 'function') {
       this.animated.delete(deco as AnimatedDecoration);
     }
+    if (decoHasSetResolution(deco)) this.labelBearingDecorations.delete(deco);
     deco.destroy?.();
   }
 
@@ -1487,4 +1562,42 @@ function normalizeAnchorSpec(
   if (spec === undefined) return { name: 'center' };
   if (typeof spec === 'string') return { name: spec };
   return { name: spec.name, opts: spec.opts };
+}
+
+/**
+ * Duck-type check for the `setResolution` hook used by label decorations
+ * (`LabelDecoration` / `LabelConnectorDecoration`). Other decoration kinds
+ * don't implement it, so the viewport-clipped rasterisation sweep can
+ * skip them cheaply.
+ */
+function decoHasSetResolution(deco: IDecorationBase<unknown>): boolean {
+  return typeof (deco as { setResolution?: unknown }).setResolution === 'function';
+}
+
+/** AABB intersection in screen / world coords. Half-open on the far edges. */
+function rectsIntersect(
+  a: { x: number; y: number; width: number; height: number },
+  b: { x: number; y: number; width: number; height: number },
+): boolean {
+  return (
+    a.x < b.x + b.width &&
+    a.x + a.width > b.x &&
+    a.y < b.y + b.height &&
+    a.y + a.height > b.y
+  );
+}
+
+/**
+ * Pixi v8's `Container.getBounds()` returns an Infinity-AABB for containers
+ * whose content hasn't been laid out yet (no children with renderable
+ * geometry attached). Filter those out — the label decoration just got
+ * mounted; its real bounds will resolve on the next tick.
+ */
+function isFiniteRect(r: { x: number; y: number; width: number; height: number }): boolean {
+  return (
+    Number.isFinite(r.x) &&
+    Number.isFinite(r.y) &&
+    Number.isFinite(r.width) &&
+    Number.isFinite(r.height)
+  );
 }

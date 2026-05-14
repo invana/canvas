@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import {
   BackgroundLayer,
   Canvas,
+  DevInfoLayer,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
@@ -186,6 +187,11 @@ export const Pack: Story = {
     });
     canvas.layers.add(graph);
 
+    // Dev overlay — useful here to watch the camera zoom cross the
+    // LabelResolutionLODBehaviour's tier threshold (default 1.5×) and to
+    // sanity-check node / edge counts after the `minLeafValue` filter.
+    canvas.layers.add(new DevInfoLayer({ id: 'dev', corner: 'top-left' }));
+
     // Registered after the `graph` layer is added — the behaviour resolves
     // its target layer at register-time, so the layer must exist first.
     canvas.behaviours.register(
@@ -193,7 +199,6 @@ export const Pack: Story = {
         id: 'label-resolution',
         layerId: 'graph',
         enabled: true,
-        max: 6,
       }),
     );
 

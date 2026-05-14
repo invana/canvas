@@ -53,7 +53,6 @@ export const Tree: Story = {
       labelFontSize: 10,
       // Zoom-aware label sharpness — see Cluster.stories.ts for rationale.
       sharpLabelsOnZoom: true,
-      sharpLabelsMax: 6,
     };
 
     // Depth-based colour ramp (warm root → cool leaves). Kept identical to
@@ -174,7 +173,6 @@ export const Tree: Story = {
       id: 'label-resolution',
       layerId: 'graph',
       enabled: settings.sharpLabelsOnZoom,
-      max: settings.sharpLabelsMax,
     });
     canvas.behaviours.register(labelResolutionLOD);
 

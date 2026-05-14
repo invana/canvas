@@ -3,20 +3,25 @@
  * resolution as the camera zooms in, so text stays crisp instead of
  * sampling-blurry when the user inspects nodes up close.
  *
- * Mechanism: Pixi rasterises a `Text` to a glyph texture exactly once
- * (default resolution = renderer DPR). When the world container is scaled
- * 5×, that texture is upsampled 5× — fuzzy. This behaviour watches
- * `camera:zoom` and pushes `effectiveDpr × zoom` into
- * `PrimitivesRenderer.setLabelsResolution`, which re-rasterises every
- * label decoration at the new fidelity.
+ * **Why this is tier-based, not step-based.** Pixi rasterises each `Text`
+ * to a glyph texture exactly once (default resolution = renderer DPR).
+ * When the world is scaled 5×, that texture is upsampled 5× — fuzzy.
+ * Re-rasterising fixes the fuzziness but regenerates every label's
+ * texture on the GPU, which is the expensive part. With a few thousand
+ * labels (e.g. the H-1B pack story) a re-raster is a multi-hundred-ms
+ * frame pause — perceptible as a stutter mid-zoom.
  *
- * Snapping: regenerating a glyph texture per wheel tick is expensive
- * (GPU upload + texture allocation), so the behaviour snaps the zoom to
- * a configurable `step` (default `0.5`) before computing the resolution.
- * A pinch from 1.0 → 1.4 stays at the same texture; crossing 1.5 triggers
- * a single re-raster. Combined with the `min` / `max` clamp this keeps
- * memory bounded — at `max: 8` a 12px label texture caps around 96 dp,
- * easily within budget for thousands of nodes.
+ * An earlier design snapped the zoom to a step (e.g. `step: 0.5`) and
+ * re-rastered at every snap boundary — so a continuous zoom from 1× to
+ * 6× crossed ~10 boundaries and dropped frames at each one. This design
+ * uses **discrete tiers**: a few widely-spaced minZoom thresholds, with
+ * a multiplier per tier. In a typical zoom-in-and-stay session the user
+ * crosses one boundary, pays one re-raster, and the rest is GPU-cheap.
+ *
+ * **Hysteresis** keeps boundary scrolls (1.49 → 1.51 → 1.49) from
+ * flickering between tiers. After crossing UP into tier N, the behaviour
+ * only reverts to tier N-1 when zoom drops below
+ * `levels[N].minZoom - hysteresis`.
  *
  * Default `enabled: false` — register, then explicitly enable. Matches
  * the project rule that no behaviour auto-activates.
@@ -28,9 +33,13 @@
  *     id: 'label-resolution',
  *     layerId: 'graph',
  *     enabled: true,
- *     // optional tuning
- *     max: 6,         // cap at 6× DPR — covers up to ~6× zoom sharply
- *     step: 0.5,      // snap zoom to nearest 0.5 before re-rastering
+ *     // Defaults: 1× DPR by default, jump to 4× DPR once zoom > 1.5.
+ *     // Override for more or fewer tiers.
+ *     levels: [
+ *       { minZoom: 0,   multiplier: 1 },
+ *       { minZoom: 1.5, multiplier: 4 },
+ *       { minZoom: 5,   multiplier: 8 },
+ *     ],
  *   }),
  * );
  * ```
@@ -40,56 +49,77 @@ import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/ca
 
 import { GraphLayer } from '../layer/GraphLayer';
 
+/** One discrete LOD tier. Highest `minZoom` ≤ current zoom wins. */
+export interface LabelResolutionLODTier {
+  /** Camera zoom (`canvas.camera.scale`) at which this tier becomes active. */
+  minZoom: number;
+  /** Multiplier applied to `baseResolution` while this tier is active. */
+  multiplier: number;
+}
+
 export interface LabelResolutionLODBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour drives. */
   layerId: string;
 
   /**
-   * Base resolution to multiply the zoom by. Default `window.devicePixelRatio`
-   * (≈ 1 on standard displays, 2 on retina). Set this if your Canvas was
-   * initialised with a custom `resolution` option and you want labels to
-   * match that baseline at zoom 1.
+   * Base resolution to multiply by the active tier's multiplier. Default
+   * `window.devicePixelRatio` (≈ 1 on standard displays, 2 on retina). Set
+   * this if your Canvas was initialised with a custom `resolution` option.
    */
   baseResolution?: number;
 
   /**
-   * Minimum applied resolution as a multiple of `baseResolution`. Labels
-   * never drop below this even when zoomed out. Default `1` (always at
-   * least native DPR).
+   * Discrete zoom tiers, evaluated as a step function. Each tier names a
+   * `minZoom` at which it activates and a `multiplier` applied to
+   * `baseResolution` while it's active. Order doesn't matter — the
+   * behaviour sorts by `minZoom` internally.
+   *
+   * Pick *few, widely-spaced* tiers: every additional tier means another
+   * GPU re-raster of every label during a typical zoom-in pass. Default:
+   * `[{ minZoom: 0, multiplier: 1 }, { minZoom: 1.5, multiplier: 4 }]` —
+   * one threshold, one re-raster.
    */
-  min?: number;
+  levels?: LabelResolutionLODTier[];
 
   /**
-   * Maximum applied resolution as a multiple of `baseResolution`. Caps the
-   * memory cost — a label texture at 8× retina is already ≈ 16× the byte
-   * count of a baseline texture, beyond which gains are imperceptible.
-   * Default `8`.
+   * Hysteresis applied to *downward* tier changes. After crossing UP into
+   * tier N at `levels[N].minZoom`, the behaviour only reverts to tier N-1
+   * once zoom drops below `levels[N].minZoom - hysteresis`. Prevents
+   * flicker when the user dithers on a threshold. Default `0.1`.
    */
-  max?: number;
-
-  /**
-   * Zoom snap-step before computing the resolution. Avoids retexturing on
-   * every wheel tick. Default `0.5` (re-rasters at zoom 1.0, 1.5, 2.0, …).
-   */
-  step?: number;
+  hysteresis?: number;
 }
 
 interface ResolvedOptions {
   baseResolution: number;
-  min: number;
-  max: number;
-  step: number;
+  /** Sorted ascending by `minZoom`. Guaranteed non-empty. */
+  levels: LabelResolutionLODTier[];
+  hysteresis: number;
 }
+
+const DEFAULT_LEVELS: LabelResolutionLODTier[] = [
+  // Each tier covers a ~2.5× zoom band so sampling stays ≥ ~1px-per-glyph-
+  // px through the whole zoom range. The math: at zoom Z with multiplier M
+  // and DPR=2, glyph-texture sampling per displayed pixel = (M * 2) / Z.
+  // Aim for ≥ 1 to keep text crisp. So multiplier ≈ Z / 2.
+  { minZoom: 0, multiplier: 1 },     // 0 – 1.5×: native DPR
+  { minZoom: 1.5, multiplier: 4 },   // 1.5 – 4×: sampling 8/Z ∈ [2, 5.3]
+  { minZoom: 4, multiplier: 8 },     // 4 – 10×: sampling 16/Z ∈ [1.6, 4]
+  { minZoom: 10, multiplier: 16 },   // 10×+ : sampling 32/Z, headroom for deep zoom
+];
 
 export class LabelResolutionLODBehaviour extends Behaviour {
   private layer: GraphLayer | null = null;
   private readonly opts: ResolvedOptions;
   private subs: Array<() => void> = [];
   /**
-   * Last resolution actually pushed to the renderer. Tracked so onDisable
-   * can decide whether a baseline-restore is needed, and so we skip a
-   * push when the snapped value is unchanged.
+   * Index into `opts.levels` of the currently active tier. Re-evaluated
+   * on every camera-zoom event; the renderer is only nudged when this
+   * index actually changes, so a continuous zoom inside one tier costs
+   * nothing past the cheap comparison below.
    */
+  private currentTierIdx = 0;
+  /** Last resolution actually pushed to the renderer. */
   private lastPushed: number | null = null;
 
   constructor(opts: LabelResolutionLODBehaviourOptions) {
@@ -98,11 +128,17 @@ export class LabelResolutionLODBehaviour extends Behaviour {
       opts.baseResolution ??
       (typeof window !== 'undefined' ? window.devicePixelRatio : 1) ??
       1;
+    const rawLevels = opts.levels && opts.levels.length > 0 ? opts.levels : DEFAULT_LEVELS;
+    // Sort + defensive-copy so callers can mutate their array after register.
+    const levels = rawLevels.slice().sort((a, b) => a.minZoom - b.minZoom);
+    // First tier must cover zoom 0; if the user didn't supply one, prepend.
+    if (levels[0]!.minZoom > 0) {
+      levels.unshift({ minZoom: 0, multiplier: 1 });
+    }
     this.opts = {
       baseResolution,
-      min: opts.min ?? 1,
-      max: opts.max ?? 8,
-      step: opts.step ?? 0.5,
+      levels,
+      hysteresis: opts.hysteresis ?? 0.1,
     };
   }
 
@@ -134,6 +170,7 @@ export class LabelResolutionLODBehaviour extends Behaviour {
     this.subs.length = 0;
     this.layer = null;
     this.lastPushed = null;
+    this.currentTierIdx = 0;
   }
 
   protected override onEnable(): void {
@@ -146,28 +183,35 @@ export class LabelResolutionLODBehaviour extends Behaviour {
     const renderer = this.layer?.getRenderer();
     if (renderer) renderer.setLabelsResolution(this.opts.baseResolution);
     this.lastPushed = this.opts.baseResolution;
+    this.currentTierIdx = 0;
   }
 
-  /** Push the current camera-snapped resolution to the renderer. */
+  /**
+   * Re-evaluate the active tier under the current camera zoom and push the
+   * tier's resolution to the renderer only when the tier index changes.
+   * Continuous zoom inside one tier is a constant-time no-op past the
+   * `idx === currentTierIdx` check below.
+   */
   private apply(): void {
     if (!this.enabled) return;
     const renderer = this.layer?.getRenderer();
     if (!renderer || !this.ctx) return;
     const zoom = this.ctx.camera.scale;
-    const snapped = snapZoom(zoom, this.opts.step);
-    const next = clamp(snapped, this.opts.min, this.opts.max) * this.opts.baseResolution;
+
+    let idx = this.currentTierIdx;
+    const levels = this.opts.levels;
+    const hyst = this.opts.hysteresis;
+    // Climb up: highest tier whose minZoom ≤ zoom wins.
+    while (idx + 1 < levels.length && levels[idx + 1]!.minZoom <= zoom) idx++;
+    // Climb down with hysteresis: only fall out of tier N when we're a
+    // full `hysteresis` below its minZoom, never flicker on the boundary.
+    while (idx > 0 && zoom < levels[idx]!.minZoom - hyst) idx--;
+
+    if (idx === this.currentTierIdx && this.lastPushed !== null) return;
+    this.currentTierIdx = idx;
+    const next = levels[idx]!.multiplier * this.opts.baseResolution;
     if (this.lastPushed !== null && Math.abs(this.lastPushed - next) < 1e-6) return;
     this.lastPushed = next;
     renderer.setLabelsResolution(next);
   }
-}
-
-function clamp(v: number, lo: number, hi: number): number {
-  return v < lo ? lo : v > hi ? hi : v;
-}
-
-/** Snap `zoom` *up* to the next multiple of `step`. */
-function snapZoom(zoom: number, step: number): number {
-  if (step <= 0) return zoom;
-  return Math.ceil(zoom / step) * step;
 }
