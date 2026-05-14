@@ -29,12 +29,12 @@ import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
-const meta: Meta = { title: 'graph-layers/d3-contour/DensityOverGraph' };
+const meta: Meta = { title: 'graph-layers/d3-contour/LesMiserables' };
 export default meta;
 type Story = StoryObj;
 
-export const DensityOverGraph: Story = {
-  render: () => createContainer({ id: 'graph-density-contour' }),
+export const LesMiserables: Story = {
+  render: () => createContainer({ id: 'graph-density-les-miserables' }),
 
   play: async ({ canvasElement }) => {
     const groupColors = [
@@ -51,7 +51,7 @@ export const DensityOverGraph: Story = {
       },
     }));
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#graph-density-contour')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#graph-density-les-miserables')!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
@@ -157,8 +157,18 @@ export const DensityOverGraph: Story = {
       },
     };
 
+    // Style preset — snaps `fillOpacity` and `strokeWidth` to sensible
+    // values for each of the three canonical looks. The underlying sliders
+    // stay editable below for fine-tuning.
+    type StylePreset = 'fill' | 'stroke' | 'both';
+    // Two stroke colour forms, mirroring the fill `mode` selector:
+    //  - 'palette'  : every iso-line tinted through the active palette chain
+    //  - 'constant' : single `0xRRGGBB` colour for all bands
+    type StrokeMode = 'palette' | 'constant';
+
     const settings = {
       visible: true,
+      style: 'fill' as StylePreset,
       mode: 'palette' as PaletteMode,
       palette: 'viridis' as DensityContourPaletteName,
       rangeStart: 0xfff5f0,
@@ -168,6 +178,9 @@ export const DensityOverGraph: Story = {
       thresholds: 10,
       cellSize: 4,
       fillOpacity: 0.45,
+      strokeWidth: 0,
+      strokeMode: 'palette' as StrokeMode,
+      strokeColorConst: 0x1f2937,
     };
 
     const gui = new GUI({ title: 'DensityContourLayer' });
@@ -176,6 +189,28 @@ export const DensityOverGraph: Story = {
     gui.add(settings, 'visible').name('Show contour').onChange((v: boolean) => {
       contour.visible = v;
     });
+
+    // Style preset — snaps the fill/stroke sliders to canonical looks.
+    // `fill`   : today's filled-band overlay (no outline)
+    // `stroke` : Observable-style stroke-only iso-lines (no fill)
+    // `both`   : faint fill with overlaid lines
+    gui
+      .add(settings, 'style', ['fill', 'stroke', 'both'] satisfies StylePreset[])
+      .name('Style')
+      .onChange((v: StylePreset) => {
+        if (v === 'fill') {
+          settings.fillOpacity = 0.45;
+          settings.strokeWidth = 0;
+        } else if (v === 'stroke') {
+          settings.fillOpacity = 0;
+          settings.strokeWidth = 0.6;
+        } else {
+          settings.fillOpacity = 0.35;
+          settings.strokeWidth = 0.4;
+        }
+        gui.controllersRecursive().forEach((c) => c.updateDisplay());
+        rebuildContour();
+      });
 
     const rebuildContour = (): void => {
       // The layer reads options live via `this.options`. We clear the
@@ -186,6 +221,9 @@ export const DensityOverGraph: Story = {
       o.thresholds = settings.thresholds;
       o.cellSize = settings.cellSize;
       o.fillOpacity = settings.fillOpacity;
+      o.strokeWidth = settings.strokeWidth;
+      o.strokeColor =
+        settings.strokeMode === 'palette' ? 'palette' : settings.strokeColorConst;
 
       // Reset all palette forms; set only the one matching the active mode.
       o.palette = undefined;
@@ -251,6 +289,24 @@ export const DensityOverGraph: Story = {
     contourFolder.add(settings, 'thresholds', 3, 30, 1).onChange(rebuildContour);
     contourFolder.add(settings, 'cellSize', 1, 16, 1).onChange(rebuildContour);
     contourFolder.add(settings, 'fillOpacity', 0, 1, 0.01).onChange(rebuildContour);
+
+    // Stroke folder — iso-line outline. `strokeWidth: 0` hides the lines
+    // entirely; `strokeMode: 'palette'` tints each line through the active
+    // fill palette chain (the Observable density-contour look).
+    const strokeFolder = gui.addFolder('Stroke');
+    strokeFolder.add(settings, 'strokeWidth', 0, 4, 0.1).onChange(rebuildContour);
+    strokeFolder
+      .add(settings, 'strokeMode', ['palette', 'constant'] satisfies StrokeMode[])
+      .name('Stroke mode')
+      .onChange(() => {
+        strokeColorConstCtl.show(settings.strokeMode === 'constant');
+        rebuildContour();
+      });
+    const strokeColorConstCtl = strokeFolder
+      .addColor(settings, 'strokeColorConst')
+      .name('Stroke colour')
+      .onChange(rebuildContour);
+    strokeColorConstCtl.show(settings.strokeMode === 'constant');
 
     gui.add({ recompute: () => contour.recompute() }, 'recompute').name('Recompute now');
     gui.add(
