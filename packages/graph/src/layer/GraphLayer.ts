@@ -15,6 +15,7 @@
 
 import { PrimitivesRenderer, WorldLayer } from '@invana/canvas';
 import type {
+  ArcSpec,
   BaseConnectorSpec,
   CanvasContext,
   CircleSpec,
@@ -43,7 +44,7 @@ import type {
 
 // ─── Defaults ──────────────────────────────────────────────────────────────
 
-const DEFAULT_NODE_HINTS: Required<Omit<NodeRenderHints, 'height' | 'label'>> = {
+const DEFAULT_NODE_HINTS: Required<Omit<NodeRenderHints, 'height' | 'label' | 'innerR' | 'outerR' | 'startAngle' | 'endAngle'>> = {
   shape: 'circle',
   size: 32,
   cornerRadius: 4,
@@ -136,7 +137,7 @@ export class GraphLayer extends WorldLayer<
    * factory defaults). Exposed for layers that need to mirror what's drawn —
    * e.g. `MiniMapLayer` falls back to these when a node omits `shape` / `size`.
    */
-  getNodeDefaults(): Required<Omit<NodeRenderHints, 'height' | 'label'>> {
+  getNodeDefaults(): Required<Omit<NodeRenderHints, 'height' | 'label' | 'innerR' | 'outerR' | 'startAngle' | 'endAngle'>> {
     return this.nodeDefaults;
   }
 
@@ -144,7 +145,7 @@ export class GraphLayer extends WorldLayer<
   readonly store: GraphStore;
 
   /** Resolved defaults (caller overrides + factory defaults). */
-  private readonly nodeDefaults: Required<Omit<NodeRenderHints, 'height' | 'label'>>;
+  private readonly nodeDefaults: Required<Omit<NodeRenderHints, 'height' | 'label' | 'innerR' | 'outerR' | 'startAngle' | 'endAngle'>>;
   private readonly edgeDefaults: Required<Omit<EdgeRenderHints, 'label'>>;
 
   /** Subscription disposers, called in `onUnmount`. */
@@ -439,7 +440,7 @@ export class GraphLayer extends WorldLayer<
     return out;
   }
 
-  private nodeSpec(node: GraphNode): CircleSpec | RectSpec {
+  private nodeSpec(node: GraphNode): CircleSpec | RectSpec | ArcSpec {
     const hints = this.resolveNodeHints(node);
     const shape = hints.shape ?? this.nodeDefaults.shape;
     const size = hints.size ?? this.nodeDefaults.size;
@@ -465,6 +466,21 @@ export class GraphLayer extends WorldLayer<
         width: size,
         height,
         cornerRadius,
+        ...common,
+      };
+    }
+    if (shape === 'arc') {
+      // Arc geometry comes from per-node hints (typically written by a
+      // hierarchical layout like `D3HierarchyLayout({ mode: 'sunburst' })`).
+      // Zero-sweep / zero-radius fallback so a node with unresolved arc
+      // params is still legal — it just paints nothing until the layout fills
+      // the hints in.
+      return {
+        kind: 'arc',
+        innerR: hints.innerR ?? 0,
+        outerR: hints.outerR ?? 0,
+        startAngle: hints.startAngle ?? 0,
+        endAngle: hints.endAngle ?? 0,
         ...common,
       };
     }

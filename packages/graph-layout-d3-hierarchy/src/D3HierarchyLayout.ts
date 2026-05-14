@@ -26,6 +26,7 @@ import {
   cluster as d3cluster,
   hierarchy as d3hierarchy,
   pack as d3pack,
+  partition as d3partition,
   tree as d3tree,
 } from 'd3-hierarchy';
 
@@ -116,10 +117,31 @@ export class D3HierarchyLayout extends Layout<GraphLayer> {
     const isRadial = mode === 'radial-tree' || mode === 'radial-cluster';
     const isCluster = mode === 'cluster' || mode === 'radial-cluster';
     const isPack = mode === 'pack';
+    const isSunburst = mode === 'sunburst';
 
     const h = d3hierarchy<TreeNode>(root, (d) => d.children);
 
-    if (isPack) {
+    if (isSunburst) {
+      // Sunburst = polar `d3.partition`. Same value/sort plumbing as pack:
+      // each leaf contributes its `value` (default reads `data.value`);
+      // siblings sort descending by value for a stable visual order. The
+      // partition layout assigns `(x0, x1, y0, y1)` to every node, with
+      // `x` in [0, 2π] (angle, 0 = 12 o'clock running clockwise — d3's
+      // convention) and `y` in [0, radius²] (the squared-radius form gives
+      // every ring equal area when we take `sqrt(y)` below).
+      const valueFn = this.opts.value ?? defaultPackValue;
+      h.sum((d) => valueFn(d));
+      const sortFn =
+        this.opts.sort === undefined
+          ? (a: { value?: number }, b: { value?: number }): number =>
+              (b.value ?? 0) - (a.value ?? 0)
+          : this.opts.sort;
+      if (sortFn !== null) h.sort(sortFn);
+
+      const radius = this.opts.radius ?? DEFAULT_RADIUS;
+      const partitionFn = d3partition<TreeNode>().size([2 * Math.PI, radius * radius]);
+      partitionFn(h);
+    } else if (isPack) {
       // Pack needs an accumulated value per node. `.sum(fn)` walks bottom-up,
       // so internal nodes get the sum of their leaves. Sort siblings by
       // descending value (d3's recommended default) for tighter packing —
@@ -173,10 +195,37 @@ export class D3HierarchyLayout extends Layout<GraphLayer> {
     const positions = new Map<string, [number, number]>();
     /** Pack-only: per-node diameter the layout assigns. Empty for other modes. */
     const sizes = new Map<string, number>();
+    /** Sunburst-only: per-node arc params. Empty for other modes. */
+    const arcs = new Map<
+      string,
+      { innerR: number; outerR: number; startAngle: number; endAngle: number }
+    >();
     h.each((node) => {
       let x: number;
       let y: number;
-      if (isPack) {
+      if (isSunburst) {
+        // Every sunburst node renders as an arc centred at the same origin —
+        // the per-node geometry is the arc spec, not a translated position.
+        // d3.partition writes (x0, x1, y0, y1) with `x` in [0, 2π] (angle,
+        // 0 = 12 o'clock) and `y` in [0, radius²]. Convert to ArcShape's
+        // convention (0 = 3 o'clock, increasing clockwise on screen) by
+        // subtracting π/2, and take `sqrt(y)` so each ring covers equal area
+        // per unit `value` — d3's standard sunburst projection.
+        const p = node as typeof node & {
+          x0?: number;
+          x1?: number;
+          y0?: number;
+          y1?: number;
+        };
+        arcs.set(node.data.id, {
+          innerR: Math.sqrt(p.y0 ?? 0),
+          outerR: Math.sqrt(p.y1 ?? 0),
+          startAngle: (p.x0 ?? 0) - Math.PI / 2,
+          endAngle: (p.x1 ?? 0) - Math.PI / 2,
+        });
+        x = 0;
+        y = 0;
+      } else if (isPack) {
         // Pack writes node.x / node.y / node.r in [0, w] × [0, h]. Centre
         // the pack on the world origin so a `fitContent` frames it
         // naturally without the caller knowing the pack viewport. `r` is
@@ -247,6 +296,34 @@ export class D3HierarchyLayout extends Layout<GraphLayer> {
               ? (existing.data as Record<string, unknown>)
               : {};
           store.updateNode(id, { data: { ...baseData, size: diameter } });
+        }
+      });
+    } else if (isSunburst) {
+      // Sunburst writes the arc geometry onto each node's data. The renderer
+      // reads `shape: 'arc'` + (innerR / outerR / startAngle / endAngle) from
+      // the `NodeRenderHints` surface to instantiate the right ArcSpec. Wrap
+      // in a batch for the same reason as pack — one coalesced flush.
+      store.batch(() => {
+        store.setPositionsBulk(ids, buffer);
+        for (const id of ids) {
+          const arc = arcs.get(id);
+          if (arc === undefined) continue;
+          const existing = store.getNode(id);
+          if (!existing) continue;
+          const baseData =
+            existing.data && typeof existing.data === 'object'
+              ? (existing.data as Record<string, unknown>)
+              : {};
+          store.updateNode(id, {
+            data: {
+              ...baseData,
+              shape: 'arc',
+              innerR: arc.innerR,
+              outerR: arc.outerR,
+              startAngle: arc.startAngle,
+              endAngle: arc.endAngle,
+            },
+          });
         }
       });
     } else {

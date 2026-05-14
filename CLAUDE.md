@@ -90,6 +90,15 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
 8. Cross-layer dependencies are declared as explicit `*LayerId` option fields. Don't infer "the only graph layer".
 9. Write TSDoc on all classes, public methods, and non-obvious variables.
 10. **Do not write tests for `packages/canvas`.** No test files in that package unless explicitly asked.
+11. **Every new engine primitive ships with a Storybook story.** Adding a shape, connector, anchor, router, pathStyle, marker, decoration, effect, layer, behaviour, layout, or graph-layer feature (e.g. a new `NodeShapeKind`) to `packages/canvas` or `packages/graph` is incomplete until there's a `.stories.ts` file demonstrating it under `apps/storybook/stories/<Package>/<Area>/` per the namespacing in `apps/storybook/CLAUDE.md`. Path map:
+    - shape → `Canvas/Shapes/`
+    - connector / anchor / router / pathStyle / marker → `Canvas/Connectors/{Anchors,Routers,PathStyles,ConnectorTypes}/`
+    - decoration → `Canvas/Decorations/{Shapes,Connectors}/`
+    - effect → `Canvas/Effects/{Shapes,Connectors}/`
+    - layer → `Canvas/Layers/` (or `Graph/Layer/` for graph-domain layers)
+    - behaviour → `Canvas/Behaviours/` (or `Graph/Behaviours/`)
+    - layout → `graph-layouts-<vendor>-<flavour>/` (matches the package name)
+    - graph node/edge feature → `Graph/Nodes/` or `Graph/Edges/`
 
 ---
 

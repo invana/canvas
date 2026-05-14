@@ -12,13 +12,21 @@ import type { HierarchyNode } from 'd3-hierarchy';
  *   parent's circle. The layout also writes per-node sizes onto each node
  *   (`data.size = 2 * r`), so the renderer can draw the correct circle
  *   diameter; this is unique to pack and is why it needs `value`.
+ * - `'sunburst'` — `d3.partition()` over polar coordinates. Each node becomes
+ *   an annular sector; positions all collapse to `(center.x, center.y)` and
+ *   the per-node shape (innerR / outerR / startAngle / endAngle) is written
+ *   onto `data` so the renderer can paint it as an `'arc'` shape. Sized off
+ *   the accumulated `value` like pack. Ring radii grow with `sqrt(y)` so
+ *   every ring covers an area proportional to its summed leaves — the
+ *   convention d3's example uses.
  */
 export type D3HierarchyLayoutMode =
   | 'tree'
   | 'cluster'
   | 'radial-tree'
   | 'radial-cluster'
-  | 'pack';
+  | 'pack'
+  | 'sunburst';
 
 /**
  * Per-pair separation accessor — passed straight through to d3's

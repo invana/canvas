@@ -25,7 +25,7 @@ export type NodeLabelHint = string | ShapeLabelStyle;
 export type EdgeLabelHint = string | ConnectorLabelStyle;
 
 /** Shape kinds the layer can render for a node. */
-export type NodeShapeKind = 'circle' | 'rect';
+export type NodeShapeKind = 'circle' | 'rect' | 'arc';
 
 /** Path-style shortcut for an edge. Maps to the canvas router + pathStyle pair. */
 export type EdgePathType =
@@ -67,6 +67,21 @@ export interface NodeRenderHints {
   height?: number;
   /** Rect corner radius. Default 4. */
   cornerRadius?: number;
+  /**
+   * Arc-only — inner radius of the annular sector. Required when
+   * `shape === 'arc'`; ignored for other shapes. Pair with `outerR`,
+   * `startAngle`, `endAngle`. The node's `position` is the arc's centre.
+   */
+  innerR?: number;
+  /** Arc-only — outer radius. Required when `shape === 'arc'`. */
+  outerR?: number;
+  /**
+   * Arc-only — start angle in radians (`0` = 3 o'clock, increasing sweeps
+   * clockwise on screen). Required when `shape === 'arc'`.
+   */
+  startAngle?: number;
+  /** Arc-only — end angle in radians. Required when `shape === 'arc'`. */
+  endAngle?: number;
   /** Fill color (0xRRGGBB) or `false` for no fill. Default `0x3b82f6`. */
   fill?: number | false;
   /** Stroke color (0xRRGGBB) or `false` for no stroke. Default `0x1d4ed8`. */

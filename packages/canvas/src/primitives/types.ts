@@ -380,6 +380,30 @@ export interface RegularPolygonSpec extends BaseShapeSpec {
 }
 
 /**
+ * Annular sector centred at `(x, y)` between radii `innerR`/`outerR` and
+ * angles `startAngle`/`endAngle` (radians). Angle convention: `0` is along
+ * `+x` (3 o'clock); increasing values sweep clockwise on screen.
+ *
+ * Special cases:
+ * - `innerR === 0` → pie slice.
+ * - `endAngle - startAngle >= 2π` and `innerR > 0` → full annulus (ring).
+ * - `endAngle - startAngle >= 2π` and `innerR === 0` → full disc (prefer
+ *   `CircleSpec` for that case).
+ *
+ * The natural fit for sunburst / partition layouts where each node is an
+ * arc-shaped region rather than a positioned dot. Pair with
+ * `D3HierarchyLayout({ mode: 'sunburst' })`, which writes the four arc
+ * parameters per node.
+ */
+export interface ArcSpec extends BaseShapeSpec {
+  readonly kind: 'arc';
+  readonly innerR: number;
+  readonly outerR: number;
+  readonly startAngle: number;
+  readonly endAngle: number;
+}
+
+/**
  * Star centred at `(x, y)`, with `points` outer points alternating between
  * `outerRadius` and `innerRadius`. Classic 5-point star uses
  * `points: 5, outerRadius: r, innerRadius: r * 0.4`. `rotation` is in

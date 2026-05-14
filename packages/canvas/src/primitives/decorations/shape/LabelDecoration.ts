@@ -124,11 +124,25 @@ export class LabelDecoration extends ShapeDecorationBase<ShapeLabelStyle> {
     // Center text inside the content layer (and background).
     this.contentView.display.position.set(-textW / 2, -textH / 2);
 
-    // Compute the host-bounds-relative anchor for this placement.
+    // Compute the host-bounds-relative anchor for this placement. For the
+    // `'center'` placement, prefer the shape's `visualCenter()` over the AABB
+    // midpoint when the shape provides it — non-rectangular silhouettes
+    // (arc / polygon / star / ...) have AABB centres that can sit outside
+    // their actual interior, which would visibly mis-place a centred label.
     const placement = this.style.placement ?? 'bottom';
     const offsetX = this.style.offset?.x ?? 0;
     const offsetY = this.style.offset?.y ?? 0;
-    const { ax, ay, alignDx, alignDy } = anchorAndAlign(host.bounds, placement, outerW, outerH);
+    const visualCenter =
+      placement === 'center' && host.shape.visualCenter
+        ? host.shape.visualCenter()
+        : undefined;
+    const { ax, ay, alignDx, alignDy } = anchorAndAlign(
+      host.bounds,
+      placement,
+      outerW,
+      outerH,
+      visualCenter,
+    );
 
     this.gfx.position.set(ax + alignDx + offsetX, ay + alignDy + offsetY);
     this.gfx.rotation = this.style.rotation ?? 0;
@@ -181,9 +195,10 @@ function anchorAndAlign(
   placement: ShapeLabelPlacement,
   outerW: number,
   outerH: number,
+  visualCenter: { x: number; y: number } | undefined,
 ): { ax: number; ay: number; alignDx: number; alignDy: number } {
-  const cx = bounds.x + bounds.width / 2;
-  const cy = bounds.y + bounds.height / 2;
+  const cx = visualCenter ? visualCenter.x : bounds.x + bounds.width / 2;
+  const cy = visualCenter ? visualCenter.y : bounds.y + bounds.height / 2;
   const left = bounds.x;
   const right = bounds.x + bounds.width;
   const top = bounds.y;
