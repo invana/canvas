@@ -26,6 +26,7 @@ If I ask for "docs", "documentation", or "data model docs" without further quali
 | `packages/graph` | `@invana/graph` | `GraphLayer`, `MiniMapLayer`, hover/click/lasso/brush/pan/drag behaviours |
 | `packages/graph-layout-d3-force` | `@invana/graph-layout-d3-force` | `D3ForceLayout` |
 | `packages/graph-layout-elkjs` | `@invana/graph-layout-elkjs` | `ElkLayout` |
+| `packages/graph-layer-d3-contour` | `@invana/graph-layer-d3-contour` | `DensityContourLayer` (d3-contour density overlay) |
 | `packages/graph-datasets` | `@invana/graph-datasets` | sample graph data |
 | `packages/typescript-config` | `@repo/typescript-config` | shared tsconfig |
 | `packages/eslint-config` | `@repo/eslint-config` | shared ESLint |

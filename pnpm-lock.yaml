@@ -41,6 +41,9 @@ importers:
       '@invana/graph-datasets':
         specifier: workspace:*
         version: link:../../packages/graph-datasets
+      '@invana/graph-layer-d3-contour':
+        specifier: workspace:*
+        version: link:../../packages/graph-layer-d3-contour
       '@invana/graph-layout-d3-force':
         specifier: workspace:*
         version: link:../../packages/graph-layout-d3-force
@@ -221,6 +224,34 @@ importers:
       vitest:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.15.3)(happy-dom@20.9.0)
+
+  packages/graph-layer-d3-contour:
+    dependencies:
+      d3-contour:
+        specifier: ^4.0.2
+        version: 4.0.2
+    devDependencies:
+      '@invana/canvas':
+        specifier: workspace:*
+        version: link:../canvas
+      '@invana/graph':
+        specifier: workspace:*
+        version: link:../graph
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/d3-contour':
+        specifier: ^3.0.6
+        version: 3.0.6
+      pixi.js:
+        specifier: ^8.18.1
+        version: 8.18.1
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(postcss@8.5.12)(tsx@4.21.0)(typescript@5.9.2)(yaml@2.8.3)
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
 
   packages/graph-layout-d3-force:
     dependencies:
@@ -1204,6 +1235,12 @@ packages:
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
 
+  '@types/d3-array@3.2.2':
+    resolution: {integrity: sha512-hOLWVbm7uRza0BYXpIIW5pxfrKe0W+D5lrFiAEYR+pb6w3N2SwSMaJbXdUfSEv+dT4MfHBLtn5js0LAWaO6otw==}
+
+  '@types/d3-contour@3.0.6':
+    resolution: {integrity: sha512-BjzLgXGnCWjUSYGfH1cpdo41/hgdWETu4YxpezoztawmqsvCeep+8QGfiY6YbDvfgHz/DkjeIkkZVJavB4a3rg==}
+
   '@types/d3-force@3.0.10':
     resolution: {integrity: sha512-ZYeSaCF3p73RdOKcjj+swRlZfnYpK1EbaDiYICEEp5Q6sUiqFaFQ9qgoshp5CzIyyb/yD09kD9o2zEltCexlgw==}
 
@@ -1230,6 +1267,9 @@ packages:
 
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
+
+  '@types/geojson@7946.0.16':
+    resolution: {integrity: sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg==}
 
   '@types/hast@3.0.4':
     resolution: {integrity: sha512-WPs+bbQw5aCj+x6laNGWLH3wviHtoCv/P3+otBhbOhJgG8qtpdAMlTCxLtsTWA7LH1Oh/bFCHsBn0TPS5m30EQ==}
@@ -1696,6 +1736,14 @@ packages:
 
   d3-array@2.12.1:
     resolution: {integrity: sha512-B0ErZK/66mHtEsR1TkPEEkwdy+WDesimkM5gpZr5Dsg54BiTA5RXtYW5qTLIAcekaS9xfZrzBLF/OAkB3Qn1YQ==}
+
+  d3-array@3.2.4:
+    resolution: {integrity: sha512-tdQAmyA18i4J7wprpYq8ClcxZy3SC31QMeByyCFyRt7BVHdREQZ5lpzoe5mFEYZUWe+oq8HBvk9JjpibyEV4Jg==}
+    engines: {node: '>=12'}
+
+  d3-contour@4.0.2:
+    resolution: {integrity: sha512-4EzFTRIikzs47RGmdxbeUvLWtGedDUNkTcmzoeyg4sP/dvCexO47AaQL7VKy/gul85TOxw+IBgA8US2xwbToNA==}
+    engines: {node: '>=12'}
 
   d3-dispatch@3.0.1:
     resolution: {integrity: sha512-rzUyPU/S7rwUflMyLc1ETDeBj0NRuHKKAcvukozwhshr6g6c5d8zh4c2gQjY2bZ0dXeGLWc1PF174P2tVvKhfg==}
@@ -4044,6 +4092,13 @@ snapshots:
       '@types/deep-eql': 4.0.2
       assertion-error: 2.0.1
 
+  '@types/d3-array@3.2.2': {}
+
+  '@types/d3-contour@3.0.6':
+    dependencies:
+      '@types/d3-array': 3.2.2
+      '@types/geojson': 7946.0.16
+
   '@types/d3-force@3.0.10': {}
 
   '@types/d3-hierarchy@3.1.7': {}
@@ -4067,6 +4122,8 @@ snapshots:
   '@types/earcut@3.0.0': {}
 
   '@types/estree@1.0.8': {}
+
+  '@types/geojson@7946.0.16': {}
 
   '@types/hast@3.0.4':
     dependencies:
@@ -4608,6 +4665,14 @@ snapshots:
   d3-array@2.12.1:
     dependencies:
       internmap: 1.0.1
+
+  d3-array@3.2.4:
+    dependencies:
+      internmap: 1.0.1
+
+  d3-contour@4.0.2:
+    dependencies:
+      d3-array: 3.2.4
 
   d3-dispatch@3.0.1: {}
 
