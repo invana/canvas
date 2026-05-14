@@ -44,6 +44,9 @@ importers:
       '@invana/graph-layout-d3-force':
         specifier: workspace:*
         version: link:../../packages/graph-layout-d3-force
+      '@invana/graph-layout-d3-hierarchy':
+        specifier: workspace:*
+        version: link:../../packages/graph-layout-d3-hierarchy
       '@invana/graph-layout-elkjs':
         specifier: workspace:*
         version: link:../../packages/graph-layout-elkjs
@@ -234,6 +237,34 @@ importers:
       '@types/d3-force':
         specifier: ^3.0.10
         version: 3.0.10
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(postcss@8.5.12)(tsx@4.21.0)(typescript@5.9.2)(yaml@2.8.3)
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.15.3)(happy-dom@20.9.0)
+
+  packages/graph-layout-d3-hierarchy:
+    dependencies:
+      d3-hierarchy:
+        specifier: ^3.1.2
+        version: 3.1.2
+    devDependencies:
+      '@invana/canvas':
+        specifier: workspace:*
+        version: link:../canvas
+      '@invana/graph':
+        specifier: workspace:*
+        version: link:../graph
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/d3-hierarchy':
+        specifier: ^3.1.7
+        version: 3.1.7
       tsup:
         specifier: ^8.3.5
         version: 8.5.1(postcss@8.5.12)(tsx@4.21.0)(typescript@5.9.2)(yaml@2.8.3)
@@ -1145,6 +1176,9 @@ packages:
   '@types/d3-force@3.0.10':
     resolution: {integrity: sha512-ZYeSaCF3p73RdOKcjj+swRlZfnYpK1EbaDiYICEEp5Q6sUiqFaFQ9qgoshp5CzIyyb/yD09kD9o2zEltCexlgw==}
 
+  '@types/d3-hierarchy@3.1.7':
+    resolution: {integrity: sha512-tJFtNoYBtRtkNysX1Xq4sxtjK8YgoWUNpIiUee0/jHGRwqvzYxkq0hGVbbOGSz+JgFxxRu4K8nb3YpG3CMARtg==}
+
   '@types/debug@4.1.13':
     resolution: {integrity: sha512-KSVgmQmzMwPlmtljOomayoR89W4FynCAi3E8PPs7vmDVPe84hT+vGPKkJfThkmXs0x0jAaa9U8uW8bbfyS2fWw==}
 
@@ -1626,6 +1660,10 @@ packages:
 
   d3-force@3.0.0:
     resolution: {integrity: sha512-zxV/SsA+U4yte8051P4ECydjD/S+qeYtnaIyAs9tgHCqfguma/aAQDjo85A9Z6EKhBirHRJHXIgJUlffT4wdLg==}
+    engines: {node: '>=12'}
+
+  d3-hierarchy@3.1.2:
+    resolution: {integrity: sha512-FX/9frcub54beBdugHjDCdikxThEqjnR93Qt7PvQTOHxyiNCAlvMrHhclk3cD5VeAaq9fxmfRp+CnWw9rEMBuA==}
     engines: {node: '>=12'}
 
   d3-quadtree@3.0.1:
@@ -3953,6 +3991,8 @@ snapshots:
 
   '@types/d3-force@3.0.10': {}
 
+  '@types/d3-hierarchy@3.1.7': {}
+
   '@types/debug@4.1.13':
     dependencies:
       '@types/ms': 2.1.0
@@ -4507,6 +4547,8 @@ snapshots:
       d3-dispatch: 3.0.1
       d3-quadtree: 3.0.1
       d3-timer: 3.0.1
+
+  d3-hierarchy@3.1.2: {}
 
   d3-quadtree@3.0.1: {}
 

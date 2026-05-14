@@ -17,3 +17,12 @@ export {
   type RandomTreeEdge,
   type RandomTreeNode,
 } from './randomTree';
+
+export {
+  flareAsGraph,
+  flareHierarchy,
+  type FlareGraphData,
+  type FlareGraphEdge,
+  type FlareGraphNode,
+  type FlareNode,
+} from './flare';

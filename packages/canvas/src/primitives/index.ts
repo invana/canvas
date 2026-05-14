@@ -49,6 +49,7 @@ export { oneSideRouter } from './connectors/routers/oneSide';
 export { normalPathStyle } from './connectors/pathStyles/normal';
 export { roundedPathStyle } from './connectors/pathStyles/rounded';
 export { bezierPathStyle } from './connectors/pathStyles/bezier';
+export { bumpRadialPathStyle } from './connectors/pathStyles/bumpRadial';
 export { smoothPathStyle } from './connectors/pathStyles/smooth';
 
 // ─── Built-in anchors ──────────────────────────────────────────────────────

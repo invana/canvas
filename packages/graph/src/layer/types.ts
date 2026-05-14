@@ -8,7 +8,14 @@ import type { GraphEdge, GraphNode } from '../store/types';
 export type NodeShapeKind = 'circle' | 'rect';
 
 /** Path-style shortcut for an edge. Maps to the canvas router + pathStyle pair. */
-export type EdgePathType = 'straight' | 'bezier' | 'orth' | 'manhattan' | 'rounded' | 'smooth';
+export type EdgePathType =
+  | 'straight'
+  | 'bezier'
+  | 'bump-radial'
+  | 'orth'
+  | 'manhattan'
+  | 'rounded'
+  | 'smooth';
 
 /**
  * Render-spec hints a caller may put under `node.data` to control how the

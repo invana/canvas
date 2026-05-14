@@ -15,6 +15,7 @@
     "@invana/graph": "workspace:*",
     "@invana/graph-datasets": "workspace:*",
     "@invana/graph-layout-d3-force": "workspace:*",
+    "@invana/graph-layout-d3-hierarchy": "workspace:*",
     "@invana/graph-layout-elkjs": "workspace:*",
     "lil-gui": "^0.21.0"
   },
