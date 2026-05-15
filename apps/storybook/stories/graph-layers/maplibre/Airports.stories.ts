@@ -18,8 +18,8 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import type { Meta, StoryObj } from '@storybook/html-vite';
-import { Canvas, DevInfoLayer, ScreenSizeBehaviour } from '@invana/canvas';
-import { GraphLayer, GraphNodesScreenScaleTarget, type GraphNode } from '@invana/graph';
+import { Canvas, DevInfoLayer } from '@invana/canvas';
+import { GraphLayer, ScreenSizeBehaviour, type GraphNode } from '@invana/graph';
 import { MapLayer } from '@invana/graph-layer-maplibre';
 import {
   DENSITY_CONTOUR_PALETTE_NAMES,
@@ -155,12 +155,14 @@ export const Airports_Story: Story = {
     const screenSize = new ScreenSizeBehaviour({
       id: 'screen-size',
       enabled: false,
-      targets: [
-        new GraphNodesScreenScaleTarget({
+      layers: [
+        {
           layerId: 'graph',
-          sizePx: () => settings.targetNodePx,
-          strokeWidthPx: () => settings.targetStrokePx,
-        }),
+          nodes: {
+            sizePx: () => settings.targetNodePx,
+            strokeWidthPx: () => settings.targetStrokePx,
+          },
+        },
       ],
     });
     canvas.behaviours.register(screenSize);

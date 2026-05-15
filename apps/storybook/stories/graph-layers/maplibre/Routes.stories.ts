@@ -21,11 +21,10 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import type { Meta, StoryObj } from '@storybook/html-vite';
-import { Canvas, DevInfoLayer, ScreenSizeBehaviour } from '@invana/canvas';
+import { Canvas, DevInfoLayer } from '@invana/canvas';
 import {
-  GraphEdgesScreenScaleTarget,
   GraphLayer,
-  GraphNodesScreenScaleTarget,
+  ScreenSizeBehaviour,
   type GraphEdge,
   type GraphNode,
 } from '@invana/graph';
@@ -169,16 +168,17 @@ export const Routes_Story: Story = {
     const screenSize = new ScreenSizeBehaviour({
       id: 'screen-size',
       enabled: false,
-      targets: [
-        new GraphNodesScreenScaleTarget({
+      layers: [
+        {
           layerId: 'graph',
-          sizePx: () => settings.targetNodePx,
-          strokeWidthPx: () => settings.targetNodeStrokePx,
-        }),
-        new GraphEdgesScreenScaleTarget({
-          layerId: 'graph',
-          strokeWidthPx: () => settings.targetEdgePx,
-        }),
+          nodes: {
+            sizePx: () => settings.targetNodePx,
+            strokeWidthPx: () => settings.targetNodeStrokePx,
+          },
+          edges: {
+            strokeWidthPx: () => settings.targetEdgePx,
+          },
+        },
       ],
     });
     canvas.behaviours.register(screenSize);

@@ -50,3 +50,9 @@ export type {
 
 export { LabelResolutionLODBehaviour } from './LabelResolutionLODBehaviour';
 export type { LabelResolutionLODBehaviourOptions } from './LabelResolutionLODBehaviour';
+
+export { ScreenSizeBehaviour } from './ScreenSizeBehaviour';
+export type {
+  ScreenSizeBehaviourOptions,
+  GraphLayerScaleConfig,
+} from './ScreenSizeBehaviour';
