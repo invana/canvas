@@ -115,9 +115,26 @@ interface ResolvedTarget {
   layer: GraphLayer;
 }
 
+/**
+ * Trailing-edge debounce for the reanchor pass — see
+ * {@link NodeSizeLODBehaviour.apply}. Picked to match
+ * {@link EdgeSizeLODBehaviour}'s `DEFAULT_EDGE_SETTLE_MS = 80`: short
+ * enough to feel "instant on release", long enough that a fling never
+ * fires it mid-gesture.
+ */
+const REANCHOR_SETTLE_MS = 80;
+
 export class NodeSizeLODBehaviour extends ElementSizeLODBehaviour {
   private readonly configs: NodeSizeLODConfig[];
   private resolved: ResolvedTarget[] = [];
+  /**
+   * Pending reanchor timer. The per-frame `scaleShape` fast path is cheap
+   * (transform writes only), but `reanchorAllConnectors` rebuilds every
+   * connector's Pixi geometry — at thousands of edges that drops fps to
+   * the floor under a continuous zoom gesture. Coalesce to a single
+   * trailing-edge call.
+   */
+  private reanchorTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(opts: NodeSizeLODBehaviourOptions) {
     super(opts);
@@ -137,6 +154,10 @@ export class NodeSizeLODBehaviour extends ElementSizeLODBehaviour {
   }
 
   protected override onReleaseTargets(): void {
+    if (this.reanchorTimer !== null) {
+      clearTimeout(this.reanchorTimer);
+      this.reanchorTimer = null;
+    }
     this.resolved = [];
   }
 
@@ -162,6 +183,47 @@ export class NodeSizeLODBehaviour extends ElementSizeLODBehaviour {
       for (const node of layer.store.nodes()) {
         renderer.scaleShape(node.id, gfxScale);
       }
+    }
+    // The transform-scale fast path mutates each shape's *visible*
+    // silhouette without touching its spec. Connectors anchored to those
+    // shapes cached a path against the pre-scale bounds, so they fall
+    // short of (or overshoot) the now-resized shape until re-anchored.
+    //
+    // Reanchoring runs `recomputeConnectorPath` per edge, which redraws
+    // the Pixi geometry — at multiple-thousand edges that flattens fps
+    // during a continuous zoom. We debounce the reanchor to a trailing
+    // call: mid-gesture frames stay on the cheap `scaleShape`-only path
+    // and edges snap to the new silhouette ~80ms after the user stops
+    // zooming. The transient mis-anchor is bounded by node radius in
+    // screen px (≈ 5px at typical `sizePx`) — visually negligible.
+    this.scheduleReanchor();
+  }
+
+  private scheduleReanchor(): void {
+    if (this.reanchorTimer !== null) clearTimeout(this.reanchorTimer);
+    this.reanchorTimer = setTimeout(() => {
+      this.reanchorTimer = null;
+      this.flushReanchor();
+    }, REANCHOR_SETTLE_MS);
+  }
+
+  private flushReanchor(): void {
+    if (this.reanchorTimer !== null) {
+      clearTimeout(this.reanchorTimer);
+      this.reanchorTimer = null;
+    }
+    for (const { layer } of this.resolved) {
+      const renderer = layer.getRenderer();
+      if (!renderer) continue;
+      // Hit-test bboxes for this layer's nodes were intentionally left
+      // stale by the mid-gesture `scaleShape` fast path (per-id `hit.update`
+      // is O(N²) for thousands of shapes). Rebuild them once now via the
+      // bulk path so pointer hit-tests are accurate the moment the user
+      // stops zooming.
+      const ids: string[] = [];
+      for (const node of layer.store.nodes()) ids.push(node.id);
+      renderer.reindexScaledShapeHits(ids);
+      renderer.reanchorAllConnectors();
     }
   }
 
@@ -215,6 +277,13 @@ export class NodeSizeLODBehaviour extends ElementSizeLODBehaviour {
       if (!renderer) continue;
       this.writeLayerBaseline(layer, renderer, mode, config);
     }
+    // The spec just changed across every node — connectors anchored to
+    // these nodes still hold paths against the previous radii. Re-anchor
+    // once *synchronously* (writeBaseline is a one-shot enable / disable /
+    // reflow event, not a per-frame gesture, so the cost is amortised over
+    // the user's interaction). `flushReanchor` also cancels any pending
+    // debounced reanchor so we don't double-pay.
+    this.flushReanchor();
   }
 
   private writeLayerBaseline(

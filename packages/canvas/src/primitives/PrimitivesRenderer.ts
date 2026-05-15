@@ -393,8 +393,7 @@ export class PrimitivesRenderer {
 
   /**
    * Fast-path uniform rescale for a shape — writes the gfx transform
-   * directly without touching the spec or rebuilding geometry. Hit-test
-   * bounds are multiplied by `scale` to match the visible size.
+   * directly without touching the spec or rebuilding geometry.
    *
    * `updateShape` rebuilds the underlying Pixi geometry (Graphics.clear()
    * + retrace) on every call, which dominates the cost when something
@@ -402,8 +401,16 @@ export class PrimitivesRenderer {
    * camera-zoom frame. `scaleShape` skips all of that: the geometry on
    * the GPU is unchanged, only its transform changes.
    *
-   * **Limitations** — decorations and badges attached to the host are
-   * **not** re-anchored against the new visible bounds; if you have
+   * **Hit-test bounds are NOT updated here.** rbush's `remove(entry)` is
+   * an O(N) tree walk, so per-id `hit.update` × N shapes is O(N²) per
+   * zoom frame — pathological at a few thousand shapes. Call
+   * {@link reindexScaledShapeHits} once *after* a batch (typically on
+   * gesture settle) to bulk-reindex in O(N log N). The hit-bounds are
+   * stale until you do — acceptable when the caller knows pointer
+   * interaction is unlikely mid-gesture.
+   *
+   * **Other limitations** — decorations and badges attached to the host
+   * are **not** re-anchored against the new visible bounds; if you have
    * either on a size-LOD'd node, prefer `updateShape` or accept the
    * stale anchor. Stroke width inside the geometry scales with the
    * transform (Pixi's stroke is in local units), which is usually the
@@ -413,18 +420,50 @@ export class PrimitivesRenderer {
   scaleShape(id: string, scale: number): void {
     const inst = this.shapeInstances.get(id);
     if (!inst) return;
+    inst.gfxScale = scale;
     inst.shape.gfx.scale.set(scale, scale);
-    const local = inst.shape.bounds();
-    this.hit.update(
-      id,
-      {
-        x: inst.spec.x + local.x * scale,
-        y: inst.spec.y + local.y * scale,
-        width: local.width * scale,
-        height: local.height * scale,
-      },
-      inst.spec.zIndex ?? 0,
-    );
+  }
+
+  /**
+   * Bulk re-index hit-test bboxes for shapes — pairs with
+   * {@link scaleShape} (which intentionally skips per-call hit updates).
+   *
+   * Passing `ids` confines the reindex to those shapes. Omitting it
+   * touches every shape instance. Either way the rbush tree is rebuilt
+   * once via `clear + load` rather than N × `remove + insert`.
+   *
+   * Call on gesture settle (e.g. inside `NodeSizeLODBehaviour`'s
+   * trailing-edge `flushReanchor`) so mid-gesture frames stay cheap and
+   * hit-test accuracy snaps back the moment the user stops zooming.
+   */
+  reindexScaledShapeHits(ids?: Iterable<string>): void {
+    const updates: Array<{ id: string; rect: Rect }> = [];
+    const sourceIds: Iterable<string> = ids ?? this.shapeInstances.keys();
+    for (const id of sourceIds) {
+      const inst = this.shapeInstances.get(id);
+      if (!inst) continue;
+      updates.push({ id, rect: this.shapeWorldBounds(inst) });
+    }
+    this.hit.bulkUpdateBoxes(updates);
+  }
+
+  /**
+   * Recompute the path of every connector. Use after a batch of
+   * `scaleShape` calls (e.g. one `NodeSizeLODBehaviour` zoom tick) so
+   * connectors re-anchor against the freshly-scaled silhouettes — without
+   * this, edges remain anchored to the pre-scale bounds and visibly fall
+   * short of the smaller shape.
+   *
+   * Cheap when paired with the lazy `obstacles` getter in `routePath`:
+   * routers that don't read obstacles (e.g. `straight`) skip the
+   * `O(shapes)` collection per connector. Routers that *do* read
+   * obstacles (`manhattan`, `metro`, `er`) still pay it — pair them with
+   * a debounce when re-anchoring on a continuous gesture.
+   */
+  reanchorAllConnectors(): void {
+    for (const inst of this.connectorInstances.values()) {
+      this.recomputeConnectorPath(inst);
+    }
   }
 
   removeShape(id: string): void {
@@ -1279,11 +1318,12 @@ export class PrimitivesRenderer {
 
   private shapeWorldBounds(inst: ShapeInstance): Rect {
     const local = inst.shape.bounds();
+    const s = inst.gfxScale;
     return {
-      x: inst.spec.x + local.x,
-      y: inst.spec.y + local.y,
-      width: local.width,
-      height: local.height,
+      x: inst.spec.x + local.x * s,
+      y: inst.spec.y + local.y * s,
+      width: local.width * s,
+      height: local.height * s,
     };
   }
 
@@ -1309,7 +1349,18 @@ export class PrimitivesRenderer {
     const source = this.resolveEndpoint(spec.source, targetCenter);
     const target = this.resolveEndpoint(spec.target, sourceCenter);
 
-    const ctx: RouterCtx = { obstacles: this.resolveObstacles(spec) };
+    // `obstacles` is a memoised getter — routers that don't read it (e.g.
+    // `straight`, `orth`) avoid the O(shapes) per-connector cost. Critical
+    // when `reanchorAllConnectors` re-routes thousands of straight edges
+    // per zoom frame; without laziness the build is O(connectors × shapes).
+    const resolveObstacles = (): ReadonlyArray<Obstacle> => this.resolveObstacles(spec);
+    let obstaclesCache: ReadonlyArray<Obstacle> | null = null;
+    const ctx: RouterCtx = {
+      get obstacles(): ReadonlyArray<Obstacle> {
+        if (obstaclesCache === null) obstaclesCache = resolveObstacles();
+        return obstaclesCache;
+      },
+    };
     const polyline = router(source, target, spec.waypoints, spec.routerOpts, ctx);
     return pathStyle(polyline, spec.pathStyleOpts);
   }
@@ -1360,9 +1411,10 @@ export class PrimitivesRenderer {
       throw new Error(`PrimitivesRenderer: connector references unknown shape "${spec.shapeId}"`);
     }
     const b = inst.shape.bounds();
+    const s = inst.gfxScale;
     return {
-      x: inst.spec.x + b.x + b.width / 2,
-      y: inst.spec.y + b.y + b.height / 2,
+      x: inst.spec.x + (b.x + b.width / 2) * s,
+      y: inst.spec.y + (b.y + b.height / 2) * s,
     };
   }
 
@@ -1399,7 +1451,31 @@ export class PrimitivesRenderer {
   private anchorShapeRef(id: string): AnchorShapeRef | undefined {
     const inst = this.shapeInstances.get(id);
     if (!inst) return undefined;
-    const bounds = inst.shape.bounds();
+    const localBounds = inst.shape.bounds();
+    const s = inst.gfxScale;
+    const bounds = s === 1
+      ? localBounds
+      : {
+          x: localBounds.x * s,
+          y: localBounds.y * s,
+          width: localBounds.width * s,
+          height: localBounds.height * s,
+        };
+    // When `gfxScale !== 1` the visible silhouette is a uniform scale of
+    // the local geometry around the gfx origin. The anchor passes a
+    // `localFromCenter` in *world units* relative to the (scaled) centre;
+    // the shape's `boundaryIntersect` interprets its input in *unscaled*
+    // local coords. Divide on the way in, multiply on the way out so the
+    // returned point lands on the visible silhouette.
+    const rawBoundary = inst.shape.boundaryIntersect?.bind(inst.shape);
+    const boundaryIntersect = rawBoundary
+      ? s === 1
+        ? rawBoundary
+        : (localFromCenter: Point): Point | null => {
+            const p = rawBoundary({ x: localFromCenter.x / s, y: localFromCenter.y / s });
+            return p === null ? null : { x: p.x * s, y: p.y * s };
+          }
+      : undefined;
     return {
       origin: { x: inst.spec.x, y: inst.spec.y },
       bounds,
@@ -1407,7 +1483,7 @@ export class PrimitivesRenderer {
         x: inst.spec.x + bounds.x + bounds.width / 2,
         y: inst.spec.y + bounds.y + bounds.height / 2,
       },
-      boundaryIntersect: inst.shape.boundaryIntersect?.bind(inst.shape),
+      boundaryIntersect,
     };
   }
 

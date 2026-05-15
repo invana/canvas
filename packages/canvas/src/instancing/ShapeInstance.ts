@@ -22,6 +22,23 @@ export class ShapeInstance<TSpec extends BaseShapeSpec = BaseShapeSpec> {
    */
   readonly effects = new Map<string, IShapeEffect>();
 
+  /**
+   * Uniform gfx-transform scale most recently written by
+   * `PrimitivesRenderer.scaleShape`. Defaults to `1` (no extra scale).
+   *
+   * The spec's geometry (`radius` / `width` / `height`) describes the
+   * shape in unscaled local units; `gfxScale` is the *visual* multiplier
+   * the renderer applies on top, used by behaviours like
+   * `NodeSizeLODBehaviour` to keep shapes pixel-constant across camera
+   * zoom without rebuilding geometry every frame.
+   *
+   * Anchor / obstacle / endpoint-centre computations multiply the local
+   * bounds by this factor so connectors stay glued to the *visible*
+   * silhouette — without it, edges anchor to the pre-scaled bounds and
+   * visibly fall short of the smaller shape.
+   */
+  gfxScale: number = 1;
+
   constructor(
     readonly id: string,
     /** Mutable; the renderer merges partial updates onto this in place. */

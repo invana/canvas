@@ -71,6 +71,40 @@ export class HitIndex {
     this.entries.clear();
   }
 
+  /**
+   * Bulk replace bboxes for many existing entries in one O(N log N) pass.
+   *
+   * Per-id `update(...)` does `remove + insert`, and rbush's `remove(item)`
+   * is a linear tree walk — so updating thousands of entries one at a time
+   * is O(N²). When a behaviour like `NodeSizeLODBehaviour` rescales every
+   * node on each camera-zoom frame, the per-id path floors fps even at
+   * modest graph sizes.
+   *
+   * This path swaps the cached entry's bbox in place (the tree still holds
+   * the same reference, so we can mutate the four bbox fields directly),
+   * then rebuilds the tree once via `clear + load`. Bulk-loading is
+   * `O(N log N)` total — for 3k entries, ~10× faster than the per-id
+   * variant. zIndex is left untouched.
+   *
+   * Use when many entries change in the same logical tick (zoom settle,
+   * bulk position update). For single-shape edits, prefer {@link update}.
+   */
+  bulkUpdateBoxes(updates: Iterable<{ id: string; rect: Rect }>): void {
+    let touched = false;
+    for (const u of updates) {
+      const entry = this.entries.get(u.id);
+      if (!entry) continue;
+      entry.minX = u.rect.x;
+      entry.minY = u.rect.y;
+      entry.maxX = u.rect.x + u.rect.width;
+      entry.maxY = u.rect.y + u.rect.height;
+      touched = true;
+    }
+    if (!touched) return;
+    this.tree.clear();
+    this.tree.load([...this.entries.values()]);
+  }
+
   get size(): number {
     return this.entries.size;
   }
