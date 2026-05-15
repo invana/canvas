@@ -125,7 +125,10 @@ export {
   ElementSizeLODBehaviour,
   resolveNumberOrGetter,
 } from './behaviours/ElementSizeLODBehaviour';
-export type { NumberOrGetter } from './behaviours/ElementSizeLODBehaviour';
+export type {
+  ElementSizeLODBehaviourOptions,
+  NumberOrGetter,
+} from './behaviours/ElementSizeLODBehaviour';
 
 // ─── Layouts ────────────────────────────────────────────────────────────
 export { Layout } from './layouts/Layout';

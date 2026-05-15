@@ -31,13 +31,22 @@
 import {
   ElementSizeLODBehaviour,
   resolveNumberOrGetter,
-  type BehaviourOptions,
   type CanvasContext,
+  type ElementSizeLODBehaviourOptions,
   type NumberOrGetter,
   type PrimitivesRenderer,
 } from '@invana/canvas';
 
 import type { GraphLayer } from '../layer/GraphLayer';
+
+/**
+ * Default debounce when the caller doesn't override `settleMs`.
+ * Edge stroke updates are the expensive path (one Pixi geometry rebuild
+ * per connector), so we trade mid-gesture stroke drift for sustained
+ * frame rate — apply only after the user stops zooming. 80ms is short
+ * enough to feel "instant on release" without firing during a fling.
+ */
+const DEFAULT_EDGE_SETTLE_MS = 80;
 
 /** Per-`GraphLayer` config — one entry per layer this behaviour rescales. */
 export interface EdgeSizeLODConfig {
@@ -52,7 +61,7 @@ export interface EdgeSizeLODConfig {
   strokeWidthPx?: NumberOrGetter;
 }
 
-export interface EdgeSizeLODBehaviourOptions extends BehaviourOptions {
+export interface EdgeSizeLODBehaviourOptions extends ElementSizeLODBehaviourOptions {
   /** One config per `GraphLayer` to drive. */
   layers: EdgeSizeLODConfig[];
 }
@@ -73,7 +82,7 @@ export class EdgeSizeLODBehaviour extends ElementSizeLODBehaviour {
   private resolved: ResolvedTarget[] = [];
 
   constructor(opts: EdgeSizeLODBehaviourOptions) {
-    super(opts);
+    super({ settleMs: DEFAULT_EDGE_SETTLE_MS, ...opts });
     this.configs = opts.layers.slice();
   }
 

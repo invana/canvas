@@ -58,7 +58,7 @@ export const Routes_Story: Story = {
     };
     const EDGE_DEFAULTS = {
       stroke: 0x676767,
-      strokeWidth: 0.5,
+      strokeWidth: 1,
       // alpha: 0.18,
     };
 

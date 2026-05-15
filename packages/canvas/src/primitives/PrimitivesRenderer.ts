@@ -391,6 +391,42 @@ export class PrimitivesRenderer {
     if (this.badges.has(id)) this.reanchorBadges(id);
   }
 
+  /**
+   * Fast-path uniform rescale for a shape — writes the gfx transform
+   * directly without touching the spec or rebuilding geometry. Hit-test
+   * bounds are multiplied by `scale` to match the visible size.
+   *
+   * `updateShape` rebuilds the underlying Pixi geometry (Graphics.clear()
+   * + retrace) on every call, which dominates the cost when something
+   * like `NodeSizeLODBehaviour` rewrites thousands of node sizes per
+   * camera-zoom frame. `scaleShape` skips all of that: the geometry on
+   * the GPU is unchanged, only its transform changes.
+   *
+   * **Limitations** — decorations and badges attached to the host are
+   * **not** re-anchored against the new visible bounds; if you have
+   * either on a size-LOD'd node, prefer `updateShape` or accept the
+   * stale anchor. Stroke width inside the geometry scales with the
+   * transform (Pixi's stroke is in local units), which is usually the
+   * intent for pixel-constant sizing but means you can't independently
+   * target body size and stroke width via `scaleShape` alone.
+   */
+  scaleShape(id: string, scale: number): void {
+    const inst = this.shapeInstances.get(id);
+    if (!inst) return;
+    inst.shape.gfx.scale.set(scale, scale);
+    const local = inst.shape.bounds();
+    this.hit.update(
+      id,
+      {
+        x: inst.spec.x + local.x * scale,
+        y: inst.spec.y + local.y * scale,
+        width: local.width * scale,
+        height: local.height * scale,
+      },
+      inst.spec.zIndex ?? 0,
+    );
+  }
+
   removeShape(id: string): void {
     const inst = this.shapeInstances.get(id);
     if (!inst) return;
