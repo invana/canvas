@@ -19,7 +19,12 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DevInfoLayer } from '@invana/canvas';
-import { GraphLayer, NodeSizeLODBehaviour, type GraphNode } from '@invana/graph';
+import {
+  GraphLayer,
+  HoverActivateBehaviour,
+  NodeSizeLODBehaviour,
+  type GraphNode,
+} from '@invana/graph';
 import { MapLayer } from '@invana/graph-layer-maplibre';
 import {
   DENSITY_CONTOUR_PALETTE_NAMES,
@@ -80,6 +85,17 @@ export const Airports_Story: Story = {
       },
     });
     canvas.layers.add(graph);
+
+    // Hover state palette — bright fill + ring on the hovered airport,
+    // everything else dimmed. No edges in this dataset, so `degree` stays
+    // at 0 (hovered node only) and `inactiveState` does the cross-fade.
+    graph.setNodeStateConfig('active', {
+      fill: 0xfacc15,
+      stroke: 0xfacc15,
+      strokeWidth: 1.5,
+      size: 6,
+    });
+    graph.setNodeStateConfig('inactive', { alpha: 0.25 });
 
     // Density overlay between the map and the airport dots. World-space
     // contour bands track the camera through MapLayer's transform mirror,
@@ -165,6 +181,18 @@ export const Airports_Story: Story = {
     });
     canvas.behaviours.register(nodeSizeLOD);
 
+    // Hover-to-activate — highlights the airport under the pointer and
+    // dims the rest. Registered after the graph layer is mounted so the
+    // behaviour can resolve its target at register-time.
+    const hover = new HoverActivateBehaviour({
+      id: 'hover',
+      layerId: 'graph',
+      enabled: true,
+      state: 'active',
+      inactiveState: 'inactive',
+    });
+    canvas.behaviours.register(hover);
+
     const gui = new GUI({ title: 'World Airports' });
     onStoryTeardown(() => gui.destroy());
 
@@ -222,6 +250,13 @@ export const Airports_Story: Story = {
       .onChange(() => {
         if (settings.screenConstant) nodeSizeLOD.reflow();
       });
+
+    const hoverFolder = gui.addFolder('Hover');
+    const hoverSettings = { enable: true };
+    hoverFolder
+      .add(hoverSettings, 'enable')
+      .name('Enable')
+      .onChange((v: boolean) => (v ? hover.enable() : hover.disable()));
 
     const densityFolder = gui.addFolder('Density overlay');
     densityFolder.add(settings, 'showDensity').name('Show density').onChange((v: boolean) => {

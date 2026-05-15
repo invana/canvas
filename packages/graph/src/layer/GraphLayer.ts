@@ -17,6 +17,7 @@ import { PrimitivesRenderer, WorldLayer } from '@invana/canvas';
 import type {
   ArcSpec,
   BaseConnectorSpec,
+  BaseShapeSpec,
   CanvasContext,
   CircleSpec,
   ConnectorLabelStyle,
@@ -553,31 +554,65 @@ export class GraphLayer extends WorldLayer<
     };
   }
 
-  /** Re-render a single node from its current data + active state stack. */
+  /**
+   * Re-render a single node from its current data + active state stack.
+   *
+   * Prefers `renderer.updateShape` (instance-preserving) over the
+   * `removeShape + addShape` fallback so the renderer's per-instance
+   * state — `gfxScale` (written by `NodeSizeLODBehaviour`), attached
+   * decorations, badges, effects — survives a state toggle. Falls back
+   * to remove+add only when the rebuilt spec has a different `kind`,
+   * which `updateShape` can't safely handle (the `IShape` class is
+   * fixed at construction time).
+   */
   private rerenderNode(id: string): void {
     if (!this._renderer) return;
     const node = this.store.getNode(id);
     if (!node) return;
     const spec = this.nodeSpec(node);
-    this._renderer.removeShape(id);
-    this._renderer.addShape(id, spec);
-    // Decorations are dropped on removeShape — re-attach the label slot.
+    const currentKind = this._renderer.getShapeKind(id);
+    if (currentKind === undefined) {
+      this._renderer.addShape(id, spec);
+    } else if (currentKind === spec.kind) {
+      // Kind already matches — cast through `BaseShapeSpec` since the
+      // `CircleSpec | RectSpec | ArcSpec` union narrows by `kind` and
+      // `updateShape`'s generic infers a single member otherwise.
+      this._renderer.updateShape<BaseShapeSpec>(id, spec);
+    } else {
+      this._renderer.removeShape(id);
+      this._renderer.addShape(id, spec);
+    }
+    // `syncNodeLabel` is idempotent — `setDecoration` replaces the
+    // 'label' slot whether or not one was already there. Cheap to call
+    // in both the update and rebuild branches.
     this.syncNodeLabel(id);
-    // Adjacency anchors point to this shape — re-route connectors.
+    // Anchors of incident connectors point to this shape — re-route in
+    // either branch since the shape's bounds may have changed (size
+    // hint shift, kind change, etc.).
     for (const edge of this.store.edgesOf(id, 'both')) {
       this.dirtyConnectors.add(edge.id);
     }
     this.drainDirtyConnectors();
   }
 
-  /** Re-render a single edge from its current data + active state stack. */
+  /**
+   * Re-render a single edge from its current data + active state stack.
+   *
+   * Always uses `renderer.updateConnector` so `inst.strokeWidthScale`
+   * (written by `EdgeSizeLODBehaviour` as `1/cameraScale`) survives the
+   * state-driven full-spec replacement. The fresh spec carries the new
+   * "base" stroke width; the multiplier applies on top at draw time.
+   */
   private rerenderEdge(id: string): void {
     if (!this._renderer) return;
     const edge = this.store.getEdge(id);
     if (!edge) return;
     const spec = this.edgeSpec(edge);
-    this._renderer.removeConnector(id);
-    this._renderer.addConnector(id, spec);
+    if (this._renderer.hasConnector(id)) {
+      this._renderer.updateConnector(id, spec);
+    } else {
+      this._renderer.addConnector(id, spec);
+    }
     this.syncEdgeLabel(id);
   }
 
@@ -662,17 +697,25 @@ export class GraphLayer extends WorldLayer<
       return;
     }
 
-    // For data changes, rebuild the full spec by remove+add so a kind change
-    // (circle → rect) works correctly. updateShape can't change `kind`
-    // safely since it merges over the existing instance.
+    // Data change: prefer `updateShape` (instance-preserving — keeps the
+    // renderer's `gfxScale`, decorations, badges, effects) and fall back
+    // to `removeShape + addShape` only when the new spec has a different
+    // `kind` (e.g. `circle` → `rect`). `updateShape` can't safely change
+    // kind because the underlying `IShape` class is fixed at construction.
     const spec = this.nodeSpec(node);
-    this._renderer.removeShape(node.id);
-    this._renderer.addShape(node.id, spec);
-    // Decorations (including the label slot) were dropped on removeShape;
-    // re-attach the label so updates to `label` text or styling apply.
+    const currentKind = this._renderer.getShapeKind(node.id);
+    if (currentKind === undefined) {
+      this._renderer.addShape(node.id, spec);
+    } else if (currentKind === spec.kind) {
+      // See `rerenderNode` for the `BaseShapeSpec` cast rationale.
+      this._renderer.updateShape<BaseShapeSpec>(node.id, spec);
+    } else {
+      this._renderer.removeShape(node.id);
+      this._renderer.addShape(node.id, spec);
+    }
     this.syncNodeLabel(node.id);
-    // A removed+re-added shape invalidates anchors referencing it — re-route
-    // incident connectors too.
+    // Connectors anchored to this shape may need re-routing in either
+    // branch — the shape's bounds can shift on a size/kind change.
     this.queueIncidentConnectors(node.id);
   }
 
@@ -684,11 +727,16 @@ export class GraphLayer extends WorldLayer<
 
   private updateEdgeConnector(edge: GraphEdge, _patch: Partial<GraphEdge>): void {
     if (!this._renderer) return;
-    // Same rationale as updateNodeShape — rebuild rather than partial-merge
-    // so router/pathStyle/marker changes apply cleanly.
+    // Prefer `updateConnector` (instance-preserving — keeps `strokeWidthScale`
+    // from `EdgeSizeLODBehaviour`, attached decorations, effects). The
+    // underlying `recomputeConnectorPath` rebuilds the routed geometry,
+    // so router / pathStyle / marker changes still apply cleanly.
     const spec = this.edgeSpec(edge);
-    this._renderer.removeConnector(edge.id);
-    this._renderer.addConnector(edge.id, spec);
+    if (this._renderer.hasConnector(edge.id)) {
+      this._renderer.updateConnector(edge.id, spec);
+    } else {
+      this._renderer.addConnector(edge.id, spec);
+    }
     this.syncEdgeLabel(edge.id);
   }
 }

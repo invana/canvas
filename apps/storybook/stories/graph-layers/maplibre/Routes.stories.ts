@@ -18,13 +18,14 @@
  * Acceptable for the demo; flagged so future stories can upgrade.
  */
 
-import 'maplibre-gl/dist/maplibre-gl.css';
+import 'maplibre-gl/dist/maplibre-gl.css?inline';
 
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DevInfoLayer } from '@invana/canvas';
 import {
   EdgeSizeLODBehaviour,
   GraphLayer,
+  HoverActivateBehaviour,
   NodeSizeLODBehaviour,
   type GraphEdge,
   type GraphNode,
@@ -58,7 +59,7 @@ export const Routes_Story: Story = {
     };
     const EDGE_DEFAULTS = {
       stroke: 0x676767,
-      strokeWidth: 1,
+      strokeWidth: 2,
       // alpha: 0.18,
     };
 
@@ -86,6 +87,18 @@ export const Routes_Story: Story = {
       },
     });
     canvas.layers.add(graph);
+
+    // Active / inactive state palettes — hover lights up the airport and
+    // its connected routes (N-hop) in amber, dimming everything else.
+    graph.setNodeStateConfig('active', {
+      fill: 0xfacc15,
+      stroke: 0xfacc15,
+      strokeWidth: 1.5,
+      size: 5,
+    });
+    graph.setEdgeStateConfig('active', { stroke: 0xfacc15, strokeWidth: 1.2, alpha: 0.95 });
+    graph.setNodeStateConfig('inactive', { alpha: 0.15 });
+    graph.setEdgeStateConfig('inactive', { alpha: 0.05 });
 
     // Density overlay between the map and the graph. The contour resolves
     // `graphLayerId` synchronously at mount, so it must be added AFTER
@@ -189,6 +202,8 @@ export const Routes_Story: Story = {
       densityThresholds: 8,
       densityOpacity: 0.55,
       densityPalette: 'inferno' as DensityContourPaletteName,
+      hoverEnabled: true,
+      hoverDegree: 1,
     };
 
     // Pixel-constant nodes + edges. Routes are the bigger problem here:
@@ -218,6 +233,20 @@ export const Routes_Story: Story = {
     });
     canvas.behaviours.register(nodeSizeLOD);
     canvas.behaviours.register(edgeSizeLOD);
+
+    // Hover-to-activate — highlights the airport under the pointer plus
+    // its N-hop neighbour airports and connecting Delaunay routes, and
+    // dims everything else. Registered after the graph layer is mounted.
+    const hover = new HoverActivateBehaviour({
+      id: 'hover',
+      layerId: 'graph',
+      enabled: settings.hoverEnabled,
+      state: 'active',
+      // inactiveState: 'inactive',
+      degree: settings.hoverDegree,
+      direction: 'both',
+    });
+    canvas.behaviours.register(hover);
 
     const gui = new GUI({ title: 'World Routes (Delaunay)' });
     onStoryTeardown(() => gui.destroy());
@@ -300,6 +329,16 @@ export const Routes_Story: Story = {
       .onChange(() => {
         if (settings.screenConstant) edgeSizeLOD.reflow();
       });
+
+    const hoverFolder = gui.addFolder('Hover');
+    hoverFolder
+      .add(settings, 'hoverEnabled')
+      .name('Enable')
+      .onChange((v: boolean) => (v ? hover.enable() : hover.disable()));
+    hoverFolder
+      .add(settings, 'hoverDegree', 0, 3, 1)
+      .name('Neighbour hops')
+      .onChange((n: number) => hover.setOptions({ degree: n }));
 
     const densityFolder = gui.addFolder('Density overlay');
     densityFolder.add(settings, 'showDensity').name('Show density').onChange((v: boolean) => {

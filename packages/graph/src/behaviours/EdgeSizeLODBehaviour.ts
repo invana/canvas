@@ -30,11 +30,9 @@
 
 import {
   ElementSizeLODBehaviour,
-  resolveNumberOrGetter,
   type CanvasContext,
   type ElementSizeLODBehaviourOptions,
   type NumberOrGetter,
-  type PrimitivesRenderer,
 } from '@invana/canvas';
 
 import type { GraphLayer } from '../layer/GraphLayer';
@@ -64,12 +62,6 @@ export interface EdgeSizeLODConfig {
 export interface EdgeSizeLODBehaviourOptions extends ElementSizeLODBehaviourOptions {
   /** One config per `GraphLayer` to drive. */
   layers: EdgeSizeLODConfig[];
-}
-
-function readNumber(data: unknown, field: string): number | undefined {
-  if (data == null || typeof data !== 'object') return undefined;
-  const v = (data as Record<string, unknown>)[field];
-  return typeof v === 'number' ? v : undefined;
 }
 
 interface ResolvedTarget {
@@ -102,33 +94,29 @@ export class EdgeSizeLODBehaviour extends ElementSizeLODBehaviour {
     this.resolved = [];
   }
 
+  /**
+   * Per-zoom-frame apply: write the screen-px / world-px ratio to every
+   * managed edge as a render-time stroke multiplier. The renderer's draw
+   * pipeline reads `inst.strokeWidthScale` and multiplies it into the
+   * spec's `stroke.width` at draw time, so state-config strokes (e.g.
+   * `active: { strokeWidth: 1.5 }`) are interpreted in the same screen-px
+   * unit the layer's "live" strokes are interpreted in — no LOD-loss
+   * across a `GraphLayer.rerenderEdge` rebuild, and no inversion of the
+   * caller's intent.
+   *
+   * The strokeWidthPx config field is unused under this model — every
+   * spec width is treated as the target screen-px. Kept on the type for
+   * back-compat; a future revision may remove it.
+   */
   protected override apply(rawScale: number): void {
     const scale = Math.max(rawScale, 1e-6);
-    for (const { config, layer } of this.resolved) {
+    const multiplier = 1 / scale;
+    for (const { layer } of this.resolved) {
       const renderer = layer.getRenderer();
       if (!renderer) continue;
-      this.writeLayer(layer, renderer, scale, config);
-    }
-  }
-
-  private writeLayer(
-    layer: GraphLayer,
-    renderer: PrimitivesRenderer,
-    scale: number,
-    config: EdgeSizeLODConfig,
-  ): void {
-    const defaults = layer.getEdgeDefaults();
-    const fallbackSwPx =
-      resolveNumberOrGetter(config.strokeWidthPx) ?? defaults.strokeWidth;
-
-    for (const edge of layer.store.edges()) {
-      const data = edge.data;
-      const baseSw = readNumber(data, 'strokeWidth') ?? fallbackSwPx;
-      const strokeColor = readNumber(data, 'stroke') ?? defaults.stroke;
-      renderer.setConnectorStroke(edge.id, {
-        color: strokeColor,
-        width: baseSw / scale,
-      });
+      for (const edge of layer.store.edges()) {
+        renderer.scaleConnectorStroke(edge.id, multiplier);
+      }
     }
   }
 }

@@ -25,6 +25,22 @@ export class ConnectorInstance<TSpec extends BaseConnectorSpec = BaseConnectorSp
   /** Last router-resolved path. Reused by decoration update + hit-testing. */
   path: Path = [];
 
+  /**
+   * Render-time multiplier applied to `spec.stroke.width` at draw time.
+   * Defaults to `1` (no extra scale). Written by `EdgeSizeLODBehaviour`
+   * to `1 / cameraScale` so spec stroke widths render as pixel-constant
+   * regardless of camera zoom — symmetric with `ShapeInstance.gfxScale`.
+   *
+   * The multiplier lives outside `spec` so `setConnectorStroke` /
+   * `updateConnector` callers (and the state-config-driven full-spec
+   * replacement in `GraphLayer.rerenderEdge`) can rewrite `spec.stroke`
+   * without clobbering the LOD intent. The renderer's draw helper reads
+   * this field on every draw and applies the multiplication on a
+   * shallow-cloned spec, so the canonical `inst.spec` always carries the
+   * caller-authored width.
+   */
+  strokeWidthScale: number = 1;
+
   constructor(
     readonly id: string,
     public spec: TSpec,

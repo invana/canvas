@@ -535,7 +535,7 @@ export class PrimitivesRenderer {
     const inst = this.connectorInstances.get(id);
     if (!inst) return;
     inst.spec = { ...inst.spec, stroke };
-    inst.connector.draw(inst.spec, inst.path);
+    this.drawConnectorInstance(inst);
   }
 
   /**
@@ -557,9 +557,55 @@ export class PrimitivesRenderer {
     inst.path = srcPad > 0 || tgtPad > 0
       ? trimPathEnds(rawPath, srcPad, tgtPad)
       : rawPath;
-    inst.connector.draw(inst.spec, inst.path);
+    this.drawConnectorInstance(inst);
     this.indexConnector(inst);
     if (inst.decorations.size > 0) this.refreshConnectorDecorations(inst);
+  }
+
+  /**
+   * Fast-path render-time stroke multiplier for a connector — writes
+   * `inst.strokeWidthScale` and redraws on the cached path.
+   *
+   * `EdgeSizeLODBehaviour` uses this each `camera:zoom` frame to keep
+   * spec stroke widths pixel-constant across zoom. Critically, it does
+   * **not** touch `spec.stroke.width`: the canonical spec stays as the
+   * caller authored it, so a downstream `setConnectorStroke` (or a state-
+   * config-driven `updateConnector` rebuild via `GraphLayer.rerenderEdge`)
+   * supplies the new "base" width and the LOD multiplier applies on top
+   * — no clobber, no inversion of caller intent.
+   *
+   * Path / obstacles / decorations are unchanged by a stroke-only
+   * rescale, so this is the same shape as `setConnectorStroke`: skip
+   * `recomputeConnectorPath`, just redraw on the cached path.
+   */
+  scaleConnectorStroke(id: string, scale: number): void {
+    const inst = this.connectorInstances.get(id);
+    if (!inst) return;
+    inst.strokeWidthScale = scale;
+    this.drawConnectorInstance(inst);
+  }
+
+  /**
+   * Draw a connector with `inst.strokeWidthScale` baked into the spec's
+   * stroke width. The original `inst.spec` is unchanged — only the spec
+   * handed to `inst.connector.draw` carries the scaled width.
+   *
+   * The multiplication also flows through markers (sized off the stroke
+   * width via `*Scale` multipliers) and the trimmed body path (computed
+   * from stroke width), so the whole connector visual scales coherently.
+   */
+  private drawConnectorInstance(inst: ConnectorInstance): void {
+    const k = inst.strokeWidthScale;
+    const stroke = inst.spec.stroke;
+    if (k === 1 || !stroke || stroke.width === undefined) {
+      inst.connector.draw(inst.spec, inst.path);
+      return;
+    }
+    const scaledSpec = {
+      ...inst.spec,
+      stroke: { ...stroke, width: stroke.width * k },
+    };
+    inst.connector.draw(scaledSpec, inst.path);
   }
 
   /**
@@ -1190,6 +1236,21 @@ export class PrimitivesRenderer {
     return this.shapeInstances.has(id);
   }
 
+  /**
+   * Kind of the currently-installed shape with id `id`, or `undefined`
+   * if no shape with that id exists.
+   *
+   * `GraphLayer.rerenderNode` / `updateNodeShape` use this to decide
+   * between an instance-preserving `updateShape` (when the rebuilt spec
+   * has the same kind — the common case) and a `removeShape + addShape`
+   * fallback (when the kind changed, e.g. `circle` → `rect`, which
+   * `updateShape` can't handle since the underlying `IShape` class is
+   * fixed at construction time).
+   */
+  getShapeKind(id: string): string | undefined {
+    return this.shapeInstances.get(id)?.spec.kind;
+  }
+
   hasConnector(id: string): boolean {
     return this.connectorInstances.has(id);
   }
@@ -1298,7 +1359,7 @@ export class PrimitivesRenderer {
   reRouteAllConnectors(): void {
     for (const inst of this.connectorInstances.values()) {
       inst.path = this.routePath(inst.spec);
-      inst.connector.draw(inst.spec, inst.path);
+      this.drawConnectorInstance(inst);
       this.indexConnector(inst);
       if (inst.decorations.size > 0) this.refreshConnectorDecorations(inst);
     }
