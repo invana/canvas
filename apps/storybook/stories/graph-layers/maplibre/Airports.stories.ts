@@ -135,7 +135,7 @@ export const Airports_Story: Story = {
       nodeSize: NODE_DEFAULTS.size,
       nodeFill: NODE_DEFAULTS.fill,
       nodeAlpha: NODE_DEFAULTS.alpha,
-      screenConstant: false,
+      screenConstant: true,
       targetNodePx: 6,
       targetStrokePx: 1,
       showDensity: false,
@@ -154,7 +154,7 @@ export const Airports_Story: Story = {
     // updates sizes live without recreating the behaviour.
     const nodeSizeLOD = new NodeSizeLODBehaviour({
       id: 'node-size-lod',
-      enabled: false,
+      enabled: true,
       layers: [
         {
           layerId: 'graph',

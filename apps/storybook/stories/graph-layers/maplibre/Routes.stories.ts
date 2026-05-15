@@ -180,7 +180,7 @@ export const Routes_Story: Story = {
       nodeSize: NODE_DEFAULTS.size,
       nodeFill: NODE_DEFAULTS.fill,
       nodeAlpha: NODE_DEFAULTS.alpha,
-      screenConstant: false,
+      screenConstant: true,
       targetNodePx: 5,
       targetNodeStrokePx: 0.8,
       targetEdgePx: 0.6,
@@ -202,7 +202,7 @@ export const Routes_Story: Story = {
     // as a single behaviour doing both passes.
     const nodeSizeLOD = new NodeSizeLODBehaviour({
       id: 'node-size-lod',
-      enabled: false,
+      enabled: true,
       layers: [
         {
           layerId: 'graph',
@@ -213,7 +213,7 @@ export const Routes_Story: Story = {
     });
     const edgeSizeLOD = new EdgeSizeLODBehaviour({
       id: 'edge-size-lod',
-      enabled: false,
+      enabled: true,
       layers: [{ layerId: 'graph', strokeWidthPx: () => settings.targetEdgePx }],
     });
     canvas.behaviours.register(nodeSizeLOD);
