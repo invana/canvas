@@ -15,17 +15,21 @@
     "@invana/graph": "workspace:*",
     "@invana/graph-datasets": "workspace:*",
     "@invana/graph-layer-d3-contour": "workspace:*",
+    "@invana/graph-layer-maplibre": "workspace:*",
     "@invana/graph-layout-d3-force": "workspace:*",
     "@invana/graph-layout-d3-hierarchy": "workspace:*",
     "@invana/graph-layout-d3-sankey": "workspace:*",
     "@invana/graph-layout-elkjs": "workspace:*",
-    "lil-gui": "^0.21.0"
+    "d3-delaunay": "^6.0.4",
+    "lil-gui": "^0.21.0",
+    "maplibre-gl": "^4.7.1"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@storybook/addon-docs": "^10.3.5",
     "@storybook/addon-links": "^10.3.5",
     "@storybook/html-vite": "^10.3.5",
+    "@types/d3-delaunay": "^6.0.4",
     "remark-gfm": "^4.0.1",
     "storybook": "^10.3.5",
     "typescript": "5.9.2",

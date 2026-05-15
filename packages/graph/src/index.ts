@@ -63,4 +63,11 @@ export {
   type LabelResolutionLODBehaviourOptions,
 } from './behaviours';
 
+export {
+  GraphNodesScreenScaleTarget,
+  GraphEdgesScreenScaleTarget,
+  type GraphNodesScreenScaleTargetOptions,
+  type GraphEdgesScreenScaleTargetOptions,
+} from './screenScaleTargets';
+
 export type { NodeLabelHint, EdgeLabelHint } from './layer';

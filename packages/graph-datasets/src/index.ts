@@ -71,3 +71,10 @@ export {
   type OldFaithfulNodeData,
   type OldFaithfulPoint,
 } from './oldFaithful';
+
+export {
+  airports,
+  landTopology,
+  type Airport,
+  type LandTopology,
+} from './air-routes';

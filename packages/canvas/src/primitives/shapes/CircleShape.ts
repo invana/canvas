@@ -39,7 +39,15 @@ export class CircleShape extends ShapeBase<CircleSpec> {
       return;
     }
 
-    const trace = () => g.circle(0, 0, r);
+    // Pixi's `g.circle(...)` chooses segment count from the world-coord
+    // radius — at very small radii (e.g. when `ScreenSizeBehaviour` shrinks
+    // a screen-constant node's world radius to ~0.01 at high camera zoom)
+    // it falls to 4–6 segments and the result reads as a diamond / octagon.
+    // We trace through `regularPoly` with a floor of 32 sides, which is
+    // visually indistinguishable from a true circle at any reasonable
+    // effective size while staying cheap on the vertex budget.
+    const segments = Math.max(32, Math.ceil((Math.PI * 2 * r) / 4));
+    const trace = () => g.regularPoly(0, 0, r, segments);
     trace();
     applyFill(g, spec, style, this.host, this.bounds(), trace);
     trace();
@@ -104,7 +112,11 @@ export class CircleShape extends ShapeBase<CircleSpec> {
     style?: ShapePaintStyle,
   ): void {
     const r = Math.max(0, spec.radius - (style?.inset ?? 0));
-    g.circle(anchor.x, anchor.y, r);
+    // Same fixed-segment trace as the instance path — see comment in
+    // `draw()` above. Markers occasionally render at small effective
+    // sizes (high-zoom edge tips), so the floor matters here too.
+    const segments = Math.max(32, Math.ceil((Math.PI * 2 * r) / 4));
+    g.regularPoly(anchor.x, anchor.y, r, segments);
     applyMarkerFill(g, spec.fill, style);
   }
 }

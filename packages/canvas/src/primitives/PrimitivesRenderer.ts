@@ -440,6 +440,30 @@ export class PrimitivesRenderer {
   }
 
   /**
+   * Fast-path render update for connectors — patches the `stroke` spec
+   * and redraws on the **existing cached path** without re-running the
+   * router / pathStyle / obstacle calculation.
+   *
+   * `updateConnector` always calls `recomputeConnectorPath`, which builds
+   * an obstacle list by iterating every shape in the renderer (line 1271).
+   * For a `straight` router with thousands of connectors that's
+   * `O(connectors × shapes)` per update — fine for one-off restyles, but
+   * lethal during continuous camera-driven reflows (e.g. `ScreenSizeBehaviour`
+   * keeping stroke widths pixel-constant across zoom).
+   *
+   * This skips all of that: the path is unchanged (scale doesn't move
+   * any endpoint in world coords), so we just redraw the body on the
+   * cached `inst.path` with the new stroke. Use when you know **only**
+   * the stroke is changing.
+   */
+  setConnectorStroke(id: string, stroke: { color: number; width: number }): void {
+    const inst = this.connectorInstances.get(id);
+    if (!inst) return;
+    inst.spec = { ...inst.spec, stroke };
+    inst.connector.draw(inst.spec, inst.path);
+  }
+
+  /**
    * Re-route the path for `inst`, trim by aggregated decoration end-padding,
    * redraw the connector body + markers on the trimmed path, and refresh
    * any attached decorations against the new path. Called whenever the

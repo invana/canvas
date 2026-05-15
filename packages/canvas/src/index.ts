@@ -121,6 +121,9 @@ export type {
   KeyboardCameraKeymap,
 } from './behaviours/KeyboardCameraInputBehaviour';
 
+export { ScreenSizeBehaviour, ScreenScaleTarget } from './behaviours/ScreenSizeBehaviour';
+export type { ScreenSizeBehaviourOptions } from './behaviours/ScreenSizeBehaviour';
+
 // ─── Layouts ────────────────────────────────────────────────────────────
 export { Layout } from './layouts/Layout';
 export type { LayoutEvents, LayoutEndReason } from './layouts/Layout';

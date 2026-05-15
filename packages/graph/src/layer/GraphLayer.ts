@@ -149,6 +149,16 @@ export class GraphLayer extends WorldLayer<
     return this.nodeDefaults;
   }
 
+  /**
+   * Resolved per-edge defaults (caller-supplied `edgeDefaults` merged onto the
+   * factory defaults). Exposed symmetrically with {@link getNodeDefaults} for
+   * sibling layers / behaviours that need to read what an edge would look
+   * like before any per-edge `data` override kicks in.
+   */
+  getEdgeDefaults(): Required<Omit<EdgeRenderHints, 'label' | 'sourceAnchor' | 'targetAnchor' | 'sourceAnchorOpts' | 'targetAnchorOpts' | 'waypoints'>> {
+    return this.edgeDefaults;
+  }
+
   /** Data source. Either supplied by the caller or self-created. */
   readonly store: GraphStore;
 
