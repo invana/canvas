@@ -23,11 +23,17 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DevInfoLayer } from '@invana/canvas';
 import {
+  EdgeSizeLODBehaviour,
   GraphLayer,
-  ScreenSizeBehaviour,
+  NodeSizeLODBehaviour,
   type GraphEdge,
   type GraphNode,
 } from '@invana/graph';
+import {
+  DENSITY_CONTOUR_PALETTE_NAMES,
+  DensityContourFillLayer,
+  type DensityContourPaletteName,
+} from '@invana/graph-layer-d3-contour';
 import { MapLayer } from '@invana/graph-layer-maplibre';
 import { airports } from '@invana/graph-datasets';
 import { Delaunay } from 'd3-delaunay';
@@ -51,9 +57,9 @@ export const Routes_Story: Story = {
       alpha: 0.9,
     };
     const EDGE_DEFAULTS = {
-      stroke: 0xfb923c,
-      strokeWidth: 0.25,
-      alpha: 0.18,
+      stroke: 0x676767,
+      strokeWidth: 0.5,
+      // alpha: 0.18,
     };
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-maplibre-routes')!;
@@ -80,6 +86,26 @@ export const Routes_Story: Story = {
       },
     });
     canvas.layers.add(graph);
+
+    // Density overlay between the map and the graph. The contour resolves
+    // `graphLayerId` synchronously at mount, so it must be added AFTER
+    // the graph layer; zIndex still controls paint order, so the contour
+    // sits visually below the nodes and edges.
+    const contour = new DensityContourFillLayer({
+      id: 'density',
+      zIndex: 5,
+      visible: false,
+      options: {
+        graphLayerId: 'graph',
+        bandwidth: 10,
+        thresholds: 8,
+        cellSize: 2,
+        padding: 40,
+        fillOpacity: 0.55,
+        palette: 'inferno',
+      },
+    });
+    canvas.layers.add(contour);
 
     // Project every airport to world coords (mercator pixels at zoom 0)
     // once at setup. Positions are stable across map zoom because the
@@ -150,7 +176,7 @@ export const Routes_Story: Story = {
       view: 'World' as Region,
       edgeColor: EDGE_DEFAULTS.stroke,
       edgeWidth: EDGE_DEFAULTS.strokeWidth,
-      edgeAlpha: EDGE_DEFAULTS.alpha,
+      edgeAlpha: 1,
       nodeSize: NODE_DEFAULTS.size,
       nodeFill: NODE_DEFAULTS.fill,
       nodeAlpha: NODE_DEFAULTS.alpha,
@@ -158,6 +184,11 @@ export const Routes_Story: Story = {
       targetNodePx: 5,
       targetNodeStrokePx: 0.8,
       targetEdgePx: 0.6,
+      showDensity: false,
+      densityBandwidth: 10,
+      densityThresholds: 8,
+      densityOpacity: 0.55,
+      densityPalette: 'inferno' as DensityContourPaletteName,
     };
 
     // Pixel-constant nodes + edges. Routes are the bigger problem here:
@@ -165,23 +196,28 @@ export const Routes_Story: Story = {
     // zoom 8 it's a slab. The behaviour reinterprets the values as
     // screen px and rewrites them to `px / scale` on each `camera:zoom`,
     // which `MapLayer` bridges from MapLibre's gesture.
-    const screenSize = new ScreenSizeBehaviour({
-      id: 'screen-size',
+    // Separate behaviours for nodes vs edges — each handles its own
+    // RAF coalescing. The browser batches all behaviours' RAF callbacks
+    // into the same animation frame, so this is the same per-frame cost
+    // as a single behaviour doing both passes.
+    const nodeSizeLOD = new NodeSizeLODBehaviour({
+      id: 'node-size-lod',
       enabled: false,
       layers: [
         {
           layerId: 'graph',
-          nodes: {
-            sizePx: () => settings.targetNodePx,
-            strokeWidthPx: () => settings.targetNodeStrokePx,
-          },
-          edges: {
-            strokeWidthPx: () => settings.targetEdgePx,
-          },
+          sizePx: () => settings.targetNodePx,
+          strokeWidthPx: () => settings.targetNodeStrokePx,
         },
       ],
     });
-    canvas.behaviours.register(screenSize);
+    const edgeSizeLOD = new EdgeSizeLODBehaviour({
+      id: 'edge-size-lod',
+      enabled: false,
+      layers: [{ layerId: 'graph', strokeWidthPx: () => settings.targetEdgePx }],
+    });
+    canvas.behaviours.register(nodeSizeLOD);
+    canvas.behaviours.register(edgeSizeLOD);
 
     const gui = new GUI({ title: 'World Routes (Delaunay)' });
     onStoryTeardown(() => gui.destroy());
@@ -238,27 +274,64 @@ export const Routes_Story: Story = {
       .add(settings, 'screenConstant')
       .name('Enable')
       .onChange((v: boolean) => {
-        if (v) screenSize.enable();
-        else screenSize.disable();
+        if (v) {
+          nodeSizeLOD.enable();
+          edgeSizeLOD.enable();
+        } else {
+          nodeSizeLOD.disable();
+          edgeSizeLOD.disable();
+        }
       });
     screenFolder
       .add(settings, 'targetNodePx', 1, 24, 0.5)
       .name('Node px')
       .onChange(() => {
-        if (settings.screenConstant) screenSize.reflow();
+        if (settings.screenConstant) nodeSizeLOD.reflow();
       });
     screenFolder
       .add(settings, 'targetNodeStrokePx', 0, 5, 0.1)
       .name('Node stroke px')
       .onChange(() => {
-        if (settings.screenConstant) screenSize.reflow();
+        if (settings.screenConstant) nodeSizeLOD.reflow();
       });
     screenFolder
       .add(settings, 'targetEdgePx', 0.1, 5, 0.1)
       .name('Edge px')
       .onChange(() => {
-        if (settings.screenConstant) screenSize.reflow();
+        if (settings.screenConstant) edgeSizeLOD.reflow();
       });
+
+    const densityFolder = gui.addFolder('Density overlay');
+    densityFolder.add(settings, 'showDensity').name('Show density').onChange((v: boolean) => {
+      contour.visible = v;
+      if (v) contour.recompute();
+    });
+
+    const rebuildContour = (): void => {
+      const o = contour.options as unknown as Record<string, unknown>;
+      o.bandwidth = settings.densityBandwidth;
+      o.thresholds = settings.densityThresholds;
+      o.fillOpacity = settings.densityOpacity;
+      o.palette = settings.densityPalette;
+      contour.recompute();
+    };
+
+    densityFolder
+      .add(settings, 'densityBandwidth', 2, 30, 0.5)
+      .name('Bandwidth')
+      .onChange(rebuildContour);
+    densityFolder
+      .add(settings, 'densityThresholds', 3, 20, 1)
+      .name('Bands')
+      .onChange(rebuildContour);
+    densityFolder
+      .add(settings, 'densityOpacity', 0, 1, 0.01)
+      .name('Opacity')
+      .onChange(rebuildContour);
+    densityFolder
+      .add(settings, 'densityPalette', [...DENSITY_CONTOUR_PALETTE_NAMES])
+      .name('Palette')
+      .onChange(rebuildContour);
 
     gui.add({ airports: nodes.length }, 'airports').name('Airport count').disable();
     gui.add({ routes: edges.length }, 'routes').name('Route count').disable();

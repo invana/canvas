@@ -19,7 +19,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DevInfoLayer } from '@invana/canvas';
-import { GraphLayer, ScreenSizeBehaviour, type GraphNode } from '@invana/graph';
+import { GraphLayer, NodeSizeLODBehaviour, type GraphNode } from '@invana/graph';
 import { MapLayer } from '@invana/graph-layer-maplibre';
 import {
   DENSITY_CONTOUR_PALETTE_NAMES,
@@ -152,20 +152,18 @@ export const Airports_Story: Story = {
     // MapLibre's native zoom gesture too. The `defaultPx` getter reads
     // `settings.targetNodePx` fresh each reflow, so the slider below
     // updates sizes live without recreating the behaviour.
-    const screenSize = new ScreenSizeBehaviour({
-      id: 'screen-size',
+    const nodeSizeLOD = new NodeSizeLODBehaviour({
+      id: 'node-size-lod',
       enabled: false,
       layers: [
         {
           layerId: 'graph',
-          nodes: {
-            sizePx: () => settings.targetNodePx,
-            strokeWidthPx: () => settings.targetStrokePx,
-          },
+          sizePx: () => settings.targetNodePx,
+          strokeWidthPx: () => settings.targetStrokePx,
         },
       ],
     });
-    canvas.behaviours.register(screenSize);
+    canvas.behaviours.register(nodeSizeLOD);
 
     const gui = new GUI({ title: 'World Airports' });
     onStoryTeardown(() => gui.destroy());
@@ -206,23 +204,23 @@ export const Airports_Story: Story = {
       .add(settings, 'screenConstant')
       .name('Enable')
       .onChange((v: boolean) => {
-        if (v) screenSize.enable();
-        else screenSize.disable();
+        if (v) nodeSizeLOD.enable();
+        else nodeSizeLOD.disable();
       });
     screenFolder
       .add(settings, 'targetNodePx', 1, 24, 0.5)
       .name('Node px')
       .onChange(() => {
-        // Reflow only matters while the behaviour is on. Off → originals
-        // are already restored; turning it on later will pick up the
-        // current slider value from the closure.
-        if (settings.screenConstant) screenSize.reflow();
+        // Reflow only matters while enabled. Off → originals are already
+        // restored; turning it on later will pick up the slider value
+        // from the closure.
+        if (settings.screenConstant) nodeSizeLOD.reflow();
       });
     screenFolder
       .add(settings, 'targetStrokePx', 0, 5, 0.1)
       .name('Stroke px')
       .onChange(() => {
-        if (settings.screenConstant) screenSize.reflow();
+        if (settings.screenConstant) nodeSizeLOD.reflow();
       });
 
     const densityFolder = gui.addFolder('Density overlay');

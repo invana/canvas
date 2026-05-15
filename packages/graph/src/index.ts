@@ -61,9 +61,12 @@ export {
   type LabelPriorityResolver,
   LabelResolutionLODBehaviour,
   type LabelResolutionLODBehaviourOptions,
-  ScreenSizeBehaviour,
-  type ScreenSizeBehaviourOptions,
-  type GraphLayerScaleConfig,
+  NodeSizeLODBehaviour,
+  type NodeSizeLODBehaviourOptions,
+  type NodeSizeLODConfig,
+  EdgeSizeLODBehaviour,
+  type EdgeSizeLODBehaviourOptions,
+  type EdgeSizeLODConfig,
 } from './behaviours';
 
 export type { NodeLabelHint, EdgeLabelHint } from './layer';

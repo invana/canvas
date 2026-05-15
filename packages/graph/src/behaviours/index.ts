@@ -51,8 +51,14 @@ export type {
 export { LabelResolutionLODBehaviour } from './LabelResolutionLODBehaviour';
 export type { LabelResolutionLODBehaviourOptions } from './LabelResolutionLODBehaviour';
 
-export { ScreenSizeBehaviour } from './ScreenSizeBehaviour';
+export { NodeSizeLODBehaviour } from './NodeSizeLODBehaviour';
 export type {
-  ScreenSizeBehaviourOptions,
-  GraphLayerScaleConfig,
-} from './ScreenSizeBehaviour';
+  NodeSizeLODBehaviourOptions,
+  NodeSizeLODConfig,
+} from './NodeSizeLODBehaviour';
+
+export { EdgeSizeLODBehaviour } from './EdgeSizeLODBehaviour';
+export type {
+  EdgeSizeLODBehaviourOptions,
+  EdgeSizeLODConfig,
+} from './EdgeSizeLODBehaviour';

@@ -121,6 +121,12 @@ export type {
   KeyboardCameraKeymap,
 } from './behaviours/KeyboardCameraInputBehaviour';
 
+export {
+  ElementSizeLODBehaviour,
+  resolveNumberOrGetter,
+} from './behaviours/ElementSizeLODBehaviour';
+export type { NumberOrGetter } from './behaviours/ElementSizeLODBehaviour';
+
 // ─── Layouts ────────────────────────────────────────────────────────────
 export { Layout } from './layouts/Layout';
 export type { LayoutEvents, LayoutEndReason } from './layouts/Layout';
