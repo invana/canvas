@@ -11,7 +11,7 @@
  * `primitives-v0-plan.md` (this v0 slice) at the repo root.
  */
 
-import type { Container, Graphics } from 'pixi.js';
+import type { Container, Graphics, IHitArea } from 'pixi.js';
 import type { EventMap } from '../events/EventEmitter';
 import type { TextureRegistry } from '../textures/TextureRegistry';
 
@@ -625,6 +625,17 @@ export interface IShape<TSpec extends BaseShapeSpec = BaseShapeSpec> {
    * Every shape that extends `ShapeBase` has it for free.
    */
   paintInto?(g: Graphics, style?: ShapePaintStyle): void;
+  /**
+   * Hit-test region for this shape in shape-local coordinates. Used by
+   * `ShapeBase` to wire `gfx.hitArea` at construct time and by
+   * `PrimitivesRenderer.hitTest` for the rbush-backed manual hit-test path.
+   *
+   * The default `ShapeBase` implementation derives the region from
+   * `drawGeometry` via `bodyGfx.containsPoint`, so the hit area always
+   * matches the rendered silhouette + stroke. Subclasses may override with
+   * a cheaper analytical test (e.g. `CircleShape`: `x² + y² ≤ r²`).
+   */
+  getHitArea(): IHitArea;
   /** Optional precise containment in shape-local coordinates. */
   contains?(localX: number, localY: number): boolean;
   /**

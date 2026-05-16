@@ -100,6 +100,24 @@ export const Routes_Story: Story = {
     graph.setNodeStateConfig('inactive', { alpha: 0.15 });
     graph.setEdgeStateConfig('inactive', { alpha: 0.05 });
 
+    // Zoom-tier palette — applied by `HoverActivateBehaviour` when the
+    // camera scale drops at or below its `zoomThreshold` (MapLibre's
+    // `viewport.scale = 2^zoom`, so threshold 4 means world-ish view).
+    // At that zoom, every node is ~1 anti-aliased pixel and the normal
+    // `active` state is invisible against the background dots; this
+    // bigger palette is what makes the hovered node "pop".
+    graph.setNodeStateConfig('active-far', {
+      fill: 0xfacc15,
+      stroke: 0xffffff,
+      strokeWidth: 2,
+      size: 18,
+    });
+    graph.setEdgeStateConfig('active-far', {
+      stroke: 0xfacc15,
+      strokeWidth: 4,
+      alpha: 1,
+    });
+
     // Density overlay between the map and the graph. The contour resolves
     // `graphLayerId` synchronously at mount, so it must be added AFTER
     // the graph layer; zIndex still controls paint order, so the contour
@@ -204,6 +222,9 @@ export const Routes_Story: Story = {
       densityPalette: 'inferno' as DensityContourPaletteName,
       hoverEnabled: true,
       hoverDegree: 1,
+      hoverZoomThreshold: 4,
+      hoverFarSize: 18,
+      hoverFarStrokeWidth: 4,
     };
 
     // Pixel-constant nodes + edges. Routes are the bigger problem here:
@@ -237,6 +258,11 @@ export const Routes_Story: Story = {
     // Hover-to-activate — highlights the airport under the pointer plus
     // its N-hop neighbour airports and connecting Delaunay routes, and
     // dims everything else. Registered after the graph layer is mounted.
+    //
+    // `zoomThreshold` swaps to the bigger `active-far` palette when the
+    // MapLibre camera scale (= `2^zoom`) drops to ≤ 4 (world view). The
+    // behaviour re-applies on every `camera:zoom`, so dragging the camera
+    // across the threshold mid-hover swaps the visuals cleanly.
     const hover = new HoverActivateBehaviour({
       id: 'hover',
       layerId: 'graph',
@@ -245,6 +271,9 @@ export const Routes_Story: Story = {
       // inactiveState: 'inactive',
       degree: settings.hoverDegree,
       direction: 'both',
+      zoomThreshold: settings.hoverZoomThreshold,
+      zoomedOutState: 'active-far',
+      zoomedOutEdgeState: 'active-far',
     });
     canvas.behaviours.register(hover);
 
@@ -339,6 +368,33 @@ export const Routes_Story: Story = {
       .add(settings, 'hoverDegree', 0, 3, 1)
       .name('Neighbour hops')
       .onChange((n: number) => hover.setOptions({ degree: n }));
+    hoverFolder
+      .add(settings, 'hoverZoomThreshold', 0.25, 64, 0.25)
+      .name('Far-zoom threshold')
+      .onChange((v: number) => hover.setOptions({ zoomThreshold: v }));
+    hoverFolder
+      .add(settings, 'hoverFarSize', 6, 40, 1)
+      .name('Far-zoom node px')
+      .onChange((v: number) => {
+        // Rewrite the `active-far` node config; if a hover is currently
+        // showing it, the next state-driven rerender picks up the new size.
+        graph.setNodeStateConfig('active-far', {
+          fill: 0xfacc15,
+          stroke: 0xffffff,
+          strokeWidth: 2,
+          size: v,
+        });
+      });
+    hoverFolder
+      .add(settings, 'hoverFarStrokeWidth', 0.5, 12, 0.5)
+      .name('Far-zoom edge px')
+      .onChange((v: number) => {
+        graph.setEdgeStateConfig('active-far', {
+          stroke: 0xfacc15,
+          strokeWidth: v,
+          alpha: 1,
+        });
+      });
 
     const densityFolder = gui.addFolder('Density overlay');
     densityFolder.add(settings, 'showDensity').name('Show density').onChange((v: boolean) => {

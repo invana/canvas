@@ -31,7 +31,7 @@
  * before the Layer's container is destroyed.
  */
 
-import { Container } from 'pixi.js';
+import { Container, type IHitArea } from 'pixi.js';
 import type { Camera } from '../camera/Camera';
 import { EventEmitter } from '../events/EventEmitter';
 import { TextureRegistry } from '../textures/TextureRegistry';
@@ -151,6 +151,22 @@ export interface PrimitivesRendererOptions {
    */
   readonly textureRegistry?: TextureRegistry;
 }
+
+/**
+ * Minimum hover/click target in screen pixels — a renderer-level interaction
+ * policy that backstops the primitive's geometric hit area. When a node or
+ * edge shrinks below this many pixels on screen (low camera zoom, or a
+ * physically tiny shape), the cursor still registers a hit within this many
+ * pixels of the shape's local origin (or the connector's polyline).
+ *
+ * The floor never *shrinks* a hit area — it OR's with the primitive's exact
+ * `IHitArea.contains`, so big shapes keep their precise silhouette boundary.
+ *
+ * Kept as a renderer-level constant rather than a `PrimitivesRendererOptions`
+ * field until a real use case asks for it — touch-friendly stories might
+ * want `8`, cursor-precision stories `4`. Promote to an option when needed.
+ */
+const MIN_HIT_PX = 6;
 
 export class PrimitivesRenderer {
   private readonly shapeRegistry = new Map<string, ShapeCtor>();
@@ -378,7 +394,7 @@ export class PrimitivesRenderer {
     const inst = new ShapeInstance<TSpec>(id, spec, shape);
     this.shapeInstances.set(id, inst as unknown as ShapeInstance);
     this.hit.insert(id, 'shape', this.shapeWorldBounds(inst), spec.zIndex ?? 0);
-    this.wireShapePointer(inst as unknown as ShapeInstance);
+    this.wireShapeEvents(inst as unknown as ShapeInstance);
   }
 
   updateShape<TSpec extends BaseShapeSpec>(id: string, partial: Partial<TSpec>): void {
@@ -504,7 +520,7 @@ export class PrimitivesRenderer {
     // `recomputeConnectorPath` for a single code path that handles both
     // the no-decoration and with-decoration cases.
     this.recomputeConnectorPath(inst as unknown as ConnectorInstance);
-    this.wireConnectorPointer(inst as unknown as ConnectorInstance);
+    this.wireConnectorEvents(inst as unknown as ConnectorInstance);
   }
 
   updateConnector<TSpec extends BaseConnectorSpec>(id: string, partial: Partial<TSpec>): void {
@@ -1176,7 +1192,12 @@ export class PrimitivesRenderer {
   // ─── Hit-testing ────────────────────────────────────────────────────────
 
   hitTest(worldX: number, worldY: number): HitResult | null {
-    const candidates = this.hit.query(worldX, worldY);
+    // Match the federated-event hit floor: pad the rbush query by the
+    // same screen-px → world-units conversion that `withinShapeFloor` /
+    // `withinConnectorFloor` use. Otherwise sub-pixel shapes get pruned
+    // here before `preciseContains` could rescue them via the floor.
+    const pad = this.hitFloorWorld();
+    const candidates = this.hit.query(worldX, worldY, pad);
     if (candidates.length === 0) return null;
     let best: { kind: 'shape' | 'connector'; id: string; zIndex: number } | null = null;
     for (const c of candidates) {
@@ -1199,12 +1220,18 @@ export class PrimitivesRenderer {
       if (!inst) return false;
       const localX = worldX - inst.spec.x;
       const localY = worldY - inst.spec.y;
-      return inst.shape.contains?.(localX, localY) ?? true;
+      return (
+        inst.shape.getHitArea().contains(localX, localY) ||
+        this.withinShapeFloor(localX, localY)
+      );
     }
     const inst = this.connectorInstances.get(id);
     if (!inst) return false;
     const poly = samplePath(inst.path);
-    return distanceToPolylineSq(poly, worldX, worldY) <= this.connectorHitToleranceSq(inst);
+    const dsq = distanceToPolylineSq(poly, worldX, worldY);
+    const floorR = this.hitFloorWorld();
+    const tolSq = Math.max(this.connectorHitToleranceSq(inst), floorR * floorR);
+    return dsq <= tolSq;
   }
 
   private connectorHitToleranceSq(inst: ConnectorInstance): number {
@@ -1212,6 +1239,51 @@ export class PrimitivesRenderer {
     const slop = 4;
     const r = sw / 2 + slop;
     return r * r;
+  }
+
+  /**
+   * `MIN_HIT_PX` translated into world units at the current camera scale.
+   * The clamp guards against a zero/NaN scale from a misconfigured camera —
+   * with a divide-by-zero, the floor would balloon to `Infinity` and every
+   * pointer event would hit every shape.
+   */
+  private hitFloorWorld(): number {
+    const scale = this.camera.scale;
+    return MIN_HIT_PX / Math.max(scale, 1e-6);
+  }
+
+  /**
+   * Screen-pixel floor for shapes — true when the local point lies within
+   * `MIN_HIT_PX / camera.scale` of the shape's local origin. Used to OR a
+   * minimum hover target on top of the primitive's geometric hit area, so a
+   * tiny visual stays hoverable.
+   *
+   * Origin-centred rather than centroid-centred — a deliberate choice for
+   * the v1 floor. For `CircleShape` / `EllipseShape` / `RectShape` / `ArcShape`
+   * the local origin matches the centroid. For `PolygonShape` / `PathShape`
+   * the origin may sit off-centre; the floor backstop is biased toward one
+   * side. Acceptable for a backstop (the geometric test still owns the
+   * primary hit boundary); revisit when a polygon hover-miss complaint
+   * surfaces.
+   */
+  private withinShapeFloor(localX: number, localY: number): boolean {
+    const r = this.hitFloorWorld();
+    return localX * localX + localY * localY <= r * r;
+  }
+
+  /**
+   * Screen-pixel floor for connectors — true when the local point lies
+   * within `MIN_HIT_PX / camera.scale` of any segment of the connector's
+   * polyline. Reads `path` by reference; route reruns flow through.
+   */
+  private withinConnectorFloor(
+    localX: number,
+    localY: number,
+    path: Path,
+  ): boolean {
+    if (path.length < 2) return false;
+    const r = this.hitFloorWorld();
+    return distanceToPolylineSq(samplePath(path), localX, localY) <= r * r;
   }
 
   // ─── Diagnostics ────────────────────────────────────────────────────────
@@ -1602,16 +1674,31 @@ export class PrimitivesRenderer {
     }
   }
 
-  private wireShapePointer(inst: ShapeInstance): void {
-    inst.shape.gfx.eventMode = 'static';
-    inst.shape.gfx.cursor = 'pointer';
-
-    const containsFn = inst.shape.contains?.bind(inst.shape);
-    if (containsFn) {
-      inst.shape.gfx.hitArea = {
-        contains: (x: number, y: number): boolean => containsFn(x, y),
-      };
-    }
+  /**
+   * Subscribe to the primitive's Pixi pointer events and re-emit them on the
+   * renderer's typed bus (`shape:pointerover` / `shape:click` / etc.) with
+   * the instance id + world-space coords.
+   *
+   * Hit geometry — `eventMode`, `cursor`, `hitArea` — is owned by
+   * {@link ShapeBase} (`hitArea` derived from `drawGeometry` via
+   * `getHitArea`). This wirer adds one renderer-level UX policy on top: the
+   * screen-pixel **hit floor**. The geometric `contains` is OR'd with a
+   * disc of `MIN_HIT_PX` screen pixels around the shape's local origin —
+   * so a shape that's collapsed to ~1 anti-aliased pixel at low zoom stays
+   * hoverable within ~6 px of where the user sees it. The floor only adds
+   * area, never shrinks it.
+   */
+  private wireShapeEvents(inst: ShapeInstance): void {
+    // Wrap the primitive's geometric hit area with the screen-pixel floor.
+    // The closure captures the original `contains` by reference so further
+    // `draw()` calls (which update the silhouette `containsPoint` reads
+    // from) still flow through, and the floor `this.camera.scale` lookup
+    // happens per pointer event — no zoom subscription needed.
+    const geometric = inst.shape.gfx.hitArea as IHitArea | null;
+    inst.shape.gfx.hitArea = {
+      contains: (x: number, y: number): boolean =>
+        (geometric?.contains(x, y) ?? false) || this.withinShapeFloor(x, y),
+    };
 
     const worldOf = (e: { global: { x: number; y: number } }): Point =>
       this.camera.toWorld(e.global.x, e.global.y);
@@ -1655,14 +1742,19 @@ export class PrimitivesRenderer {
     });
   }
 
-  private wireConnectorPointer(inst: ConnectorInstance): void {
-    inst.connector.gfx.eventMode = 'static';
-    inst.connector.gfx.cursor = 'pointer';
-
-    const tolSq = this.connectorHitToleranceSq(inst);
+  /**
+   * Sibling of {@link wireShapeEvents} for connectors. Hit geometry lives
+   * in {@link ConnectorBase} (distance to the resolved polyline within
+   * stroke / world-slop tolerance). This wirer adds the same screen-pixel
+   * floor as shapes: a thin line at low zoom stays hoverable within
+   * `MIN_HIT_PX` screen pixels of the polyline.
+   */
+  private wireConnectorEvents(inst: ConnectorInstance): void {
+    const geometric = inst.connector.gfx.hitArea as IHitArea | null;
     inst.connector.gfx.hitArea = {
       contains: (x: number, y: number): boolean =>
-        distanceToPolylineSq(samplePath(inst.path), x, y) <= tolSq,
+        (geometric?.contains(x, y) ?? false) ||
+        this.withinConnectorFloor(x, y, inst.path),
     };
 
     const worldOf = (e: { global: { x: number; y: number } }): Point =>

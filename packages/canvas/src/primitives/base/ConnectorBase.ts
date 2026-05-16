@@ -1,6 +1,11 @@
 import { Graphics } from 'pixi.js';
 import { PrimitiveBase } from './PrimitiveBase';
-import { tangentAt, trimPathEnds } from '../connectors/pathSampling';
+import {
+  distanceToPolylineSq,
+  samplePath,
+  tangentAt,
+  trimPathEnds,
+} from '../connectors/pathSampling';
 import type {
   BaseConnectorSpec,
   ConnectorHostInfo,
@@ -47,6 +52,27 @@ export abstract class ConnectorBase<TSpec extends BaseConnectorSpec>
     this.gfx.addChild(this.bodyGfx);
     this.gfx.addChild(this.sourceMarkerGfx);
     this.gfx.addChild(this.targetMarkerGfx);
+
+    // Hit-test geometry is part of the connector's identity, not the
+    // renderer's bookkeeping. The closure reads `this.path` and
+    // `this.spec.stroke.width` at call time, so route changes (router rerun)
+    // and stroke changes (`setConnectorStroke` / spec rewrite) automatically
+    // flow into the hit area — no re-wiring needed.
+    //
+    // Before the first `draw()`, `this.path` is empty and `this.spec` is
+    // undefined; the early return makes hit-tests return `false` until the
+    // connector is mounted with data. Pixi calls `hitArea.contains` only on
+    // pointer events, by which time the connector has been drawn.
+    this.gfx.eventMode = 'static';
+    this.gfx.cursor = 'pointer';
+    this.gfx.hitArea = {
+      contains: (x: number, y: number): boolean => {
+        if (this.path.length < 2 || !this.spec) return false;
+        const sw = this.spec.stroke?.width ?? 1;
+        const tol = sw / 2 + 4;
+        return distanceToPolylineSq(samplePath(this.path), x, y) <= tol * tol;
+      },
+    };
   }
 
   /**

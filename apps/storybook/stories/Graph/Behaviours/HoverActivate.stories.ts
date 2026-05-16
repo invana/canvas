@@ -80,6 +80,10 @@ export const HoverActivate: Story = {
       inactiveState: 'inactive',
       degree: 1,
       direction: 'both',
+      // At low zoom, multiply each hovered node's gfx.scale so the same
+      // node — original colour, stroke, label — just grows visually.
+      zoomThreshold: 0.4,
+      zoomedOutScale: 3,
     });
     canvas.behaviours.register(hover);
 
@@ -91,6 +95,10 @@ export const HoverActivate: Story = {
       'inactiveState (dim non-hovered)': 'inactive' as 'inactive' | 'dimmed' | 'none',
       'degree (neighbor hops)': 1,
       direction: 'both' as 'in' | 'out' | 'both',
+      // Zoom-tier knobs — `zoomedOutScale` of 1 (or 0) disables the
+      // multiplier. The trigger is `camera.scale <= zoomThreshold`.
+      zoomedOutScale: 3,
+      zoomThreshold: 0.4,
       hoveredId: '—',
     };
     const apply = (): void => {
@@ -105,6 +113,8 @@ export const HoverActivate: Story = {
         inactiveState: inactive,
         degree: settings['degree (neighbor hops)'],
         direction: settings.direction,
+        zoomThreshold: settings.zoomThreshold,
+        zoomedOutScale: settings.zoomedOutScale,
       });
     };
     hover.setOptions({
@@ -127,6 +137,8 @@ export const HoverActivate: Story = {
       .onChange(apply);
     gui.add(settings, 'degree (neighbor hops)', 0, 4, 1).onChange(apply);
     gui.add(settings, 'direction', ['in', 'out', 'both']).onChange(apply);
+    gui.add(settings, 'zoomedOutScale', 1, 8, 0.25).onChange(apply);
+    gui.add(settings, 'zoomThreshold', 0.05, 2, 0.05).onChange(apply);
     gui.add(settings, 'hoveredId').disable();
   },
 };

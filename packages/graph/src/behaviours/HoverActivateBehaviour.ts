@@ -78,6 +78,57 @@ export interface HoverActivateBehaviourOptions extends BehaviourOptions {
   /** Direction for neighbour traversal. Default `'both'`. */
   direction?: HoverDirection;
 
+  /**
+   * Camera scale at or below which the behaviour swaps `state` for
+   * `zoomedOutState` (and `zoomedOutEdgeState` for edges). The hovered set
+   * gets re-painted through the swapped state names whenever the camera
+   * crosses this threshold mid-hover. Omit (or leave both zoomed-out names
+   * undefined) and the behaviour is identical to today.
+   *
+   * Typical use: at world-level zoom every node collapses to ~1 anti-aliased
+   * pixel, so the normal `active` state is invisible against background
+   * dots. A bigger `active-far` config (size + strokeWidth bumped) makes
+   * the hovered node pop.
+   */
+  zoomThreshold?: number;
+
+  /**
+   * State name applied to the hovered node + N-hop neighbour nodes when
+   * `camera.scale <= zoomThreshold`. Falls back to `state` when undefined
+   * (no node-side zoom swap, but edges may still swap via
+   * `zoomedOutEdgeState`).
+   */
+  zoomedOutState?: string;
+
+  /**
+   * State name applied to connecting edges when
+   * `camera.scale <= zoomThreshold` AND `degree > 0`. Falls back to `state`
+   * when undefined.
+   */
+  zoomedOutEdgeState?: string;
+
+  /**
+   * Gfx-transform scale multiplier applied to each hovered node (and the
+   * N-hop neighbour nodes) when `camera.scale <= zoomThreshold`. Pure
+   * transform write via {@link PrimitivesRenderer.scaleShape} — no geometry
+   * rebuild, no styling change. Use this when you want the hovered node to
+   * just *grow visually* at low zoom (so it stands out against ~1 px
+   * background dots) while keeping its original colour, stroke, and label.
+   *
+   * Multiplies the existing `gfx.scale`, so if `NodeSizeLODBehaviour` is
+   * also active it will overwrite the multiplier on the next zoom frame —
+   * prefer `zoomedOutState` with a bigger `size` in that case. For stories
+   * without an LOD behaviour, this is the cleanest "scale on hover" knob.
+   *
+   * Only nodes are scaled — connectors don't compose cleanly with
+   * `gfx.scale` (the polyline would shift, not just thicken). The hovered
+   * node's outgoing edges still anchor to its geometric position, which
+   * sits inside the now-bigger silhouette — visually acceptable.
+   *
+   * `undefined` (default) and `1` both disable the multiplier.
+   */
+  zoomedOutScale?: number;
+
   /** Fired when an element first becomes hovered. */
   onHover?: (element: HoverableElement) => void;
   /** Fired when hover ends on a previously hovered element. */
@@ -90,6 +141,10 @@ interface ResolvedOptions {
   inactiveState: string | undefined;
   degree: number;
   direction: HoverDirection;
+  zoomThreshold: number | undefined;
+  zoomedOutState: string | undefined;
+  zoomedOutEdgeState: string | undefined;
+  zoomedOutScale: number | undefined;
   onHover: ((element: HoverableElement) => void) | undefined;
   onHoverEnd: ((element: HoverableElement) => void) | undefined;
 }
@@ -104,6 +159,10 @@ function resolveOptions(
     inactiveState: undefined,
     degree: 0,
     direction: 'both',
+    zoomThreshold: undefined,
+    zoomedOutState: undefined,
+    zoomedOutEdgeState: undefined,
+    zoomedOutScale: undefined,
     onHover: undefined,
     onHoverEnd: undefined,
   };
@@ -113,6 +172,16 @@ function resolveOptions(
     inactiveState: 'inactiveState' in patch ? patch.inactiveState : base.inactiveState,
     degree: patch.degree ?? base.degree,
     direction: patch.direction ?? base.direction,
+    zoomThreshold:
+      'zoomThreshold' in patch ? patch.zoomThreshold : base.zoomThreshold,
+    zoomedOutState:
+      'zoomedOutState' in patch ? patch.zoomedOutState : base.zoomedOutState,
+    zoomedOutEdgeState:
+      'zoomedOutEdgeState' in patch
+        ? patch.zoomedOutEdgeState
+        : base.zoomedOutEdgeState,
+    zoomedOutScale:
+      'zoomedOutScale' in patch ? patch.zoomedOutScale : base.zoomedOutScale,
     onHover: 'onHover' in patch ? patch.onHover : base.onHover,
     onHoverEnd: 'onHoverEnd' in patch ? patch.onHoverEnd : base.onHoverEnd,
   };
@@ -133,6 +202,26 @@ export class HoverActivateBehaviour extends Behaviour {
   private activeIds = new Set<string>();
   /** Element ids that received the inactive state. */
   private inactiveIds = new Set<string>();
+
+  /**
+   * State name actually applied to nodes for the current hover — equals
+   * `opts.state` normally, `opts.zoomedOutState` when the camera was below
+   * `opts.zoomThreshold` at activation (or after a mid-hover swap). Tracked
+   * so `clearHover` / `swapStates` remove whatever was actually applied,
+   * not just whatever the current `opts.state` is now.
+   */
+  private appliedNodeState: string | null = null;
+  /** Sibling of {@link appliedNodeState} for edges. */
+  private appliedEdgeState: string | null = null;
+
+  /**
+   * Gfx-transform multiplier currently applied to the hovered node set.
+   * `1` (or `null`) means no multiplier is active. Tracked so a threshold
+   * cross or clear can reset only the ids we actually scaled.
+   */
+  private appliedScale: number = 1;
+  /** Node ids currently scaled via `renderer.scaleShape` — reset on clear. */
+  private readonly scaledNodeIds = new Set<string>();
 
   constructor(opts: HoverActivateBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? ['pointer+hover'] });
@@ -175,6 +264,15 @@ export class HoverActivateBehaviour extends Behaviour {
       () => renderer.events.off('connector:pointerover', onConnOver),
       () => renderer.events.off('connector:pointerout', onConnOut),
     );
+
+    // Camera-zoom subscription is **conditional** — only wired when a
+    // `zoomThreshold` is configured. Stories that don't use the zoom-tier
+    // pay zero per-zoom cost.
+    if (this.opts.zoomThreshold !== undefined) {
+      const onZoom = (): void => this.handleCameraZoom();
+      ctx.events.on('camera:zoom', onZoom);
+      this.subs.push(() => ctx.events.off('camera:zoom', onZoom));
+    }
   }
 
   protected override onDestroy(): void {
@@ -207,9 +305,16 @@ export class HoverActivateBehaviour extends Behaviour {
   setOptions(patch: Partial<HoverActivateBehaviourOptions>): void {
     const stateChanged =
       (patch.state !== undefined && patch.state !== this.opts.state) ||
-      ('inactiveState' in patch && patch.inactiveState !== this.opts.inactiveState);
+      ('inactiveState' in patch && patch.inactiveState !== this.opts.inactiveState) ||
+      ('zoomedOutState' in patch &&
+        patch.zoomedOutState !== this.opts.zoomedOutState) ||
+      ('zoomedOutEdgeState' in patch &&
+        patch.zoomedOutEdgeState !== this.opts.zoomedOutEdgeState);
     if (stateChanged) this.clearHover();
     this.opts = resolveOptions(this.opts, patch);
+    // Re-pick states / scale if the threshold or scale moved while a hover
+    // is active — runtime knob changes (GUI sliders) should swap immediately.
+    if (this.current) this.handleCameraZoom();
   }
 
   /** Clear all states applied by the current hover. */
@@ -218,19 +323,28 @@ export class HoverActivateBehaviour extends Behaviour {
       this.current = null;
       this.activeIds.clear();
       this.inactiveIds.clear();
+      this.scaledNodeIds.clear();
+      this.appliedNodeState = null;
+      this.appliedEdgeState = null;
+      this.appliedScale = 1;
       return;
     }
+    // Use the state names that were *actually* applied — they may differ
+    // from `opts.state` when a zoom-tier swap happened mid-hover, or when
+    // the user changed `state` via `setOptions` after the hover started.
+    const nodeState = this.appliedNodeState ?? this.opts.state;
+    const edgeState = this.appliedEdgeState ?? this.opts.state;
     if (this.current) {
       if (this.current.type === 'shape') {
-        this.layer.setNodeState(this.current.id, this.opts.state, false);
+        this.layer.setNodeState(this.current.id, nodeState, false);
       } else {
-        this.layer.setEdgeState(this.current.id, this.opts.state, false);
+        this.layer.setEdgeState(this.current.id, edgeState, false);
       }
     }
     for (const id of this.activeIds) {
       // Active ids can be either nodes or edges; try both.
-      this.layer.setNodeState(id, this.opts.state, false);
-      this.layer.setEdgeState(id, this.opts.state, false);
+      this.layer.setNodeState(id, nodeState, false);
+      this.layer.setEdgeState(id, edgeState, false);
     }
     this.activeIds.clear();
 
@@ -242,7 +356,20 @@ export class HoverActivateBehaviour extends Behaviour {
       }
     }
     this.inactiveIds.clear();
+
+    // Reset any gfx.scale bumps we applied during this hover.
+    if (this.scaledNodeIds.size > 0) {
+      const renderer = this.layer.getRenderer();
+      if (renderer) {
+        for (const id of this.scaledNodeIds) renderer.scaleShape(id, 1);
+      }
+      this.scaledNodeIds.clear();
+    }
+    this.appliedScale = 1;
+
     this.current = null;
+    this.appliedNodeState = null;
+    this.appliedEdgeState = null;
   }
 
   // ─── Pointer handlers ───────────────────────────────────────────────────
@@ -276,24 +403,166 @@ export class HoverActivateBehaviour extends Behaviour {
     if (!layer) return;
 
     this.current = target;
-    if (target.type === 'shape') layer.setNodeState(target.id, this.opts.state, true);
-    else layer.setEdgeState(target.id, this.opts.state, true);
+    const picked = this.pickTier();
+    this.appliedNodeState = picked.node;
+    this.appliedEdgeState = picked.edge;
+
+    if (target.type === 'shape') layer.setNodeState(target.id, picked.node, true);
+    else layer.setEdgeState(target.id, picked.edge, true);
 
     if (this.opts.degree > 0 && target.type === 'shape') {
       const { nodeIds, edgeIds } = this.collectNeighbours(target.id, this.opts.degree);
       for (const nid of nodeIds) {
-        layer.setNodeState(nid, this.opts.state, true);
+        layer.setNodeState(nid, picked.node, true);
         this.activeIds.add(nid);
       }
       for (const eid of edgeIds) {
-        layer.setEdgeState(eid, this.opts.state, true);
+        layer.setEdgeState(eid, picked.edge, true);
         this.activeIds.add(eid);
       }
     }
 
     if (this.opts.inactiveState) this.applyInactive(target.id);
 
+    // Visual scale-up bump must run AFTER the active set is finalised
+    // (so neighbour shapes are included). State+scale are independent
+    // dimensions of the zoom-tier — either, both, or neither may activate.
+    if (picked.scale !== 1) this.applyScale(picked.scale);
+
     this.opts.onHover?.(target);
+  }
+
+  /**
+   * Choose which node + edge state names AND gfx scale to apply right now,
+   * based on `camera.scale` vs. `opts.zoomThreshold`.
+   *
+   * - `node` / `edge`: `opts.state` (or `opts.zoomedOutState` /
+   *   `opts.zoomedOutEdgeState` at far zoom). Each role falls back to
+   *   `opts.state` independently.
+   * - `scale`: `1` (or `opts.zoomedOutScale` at far zoom). The scale
+   *   multiplier is independent of the state-name swap — a story can
+   *   configure either, both, or neither.
+   */
+  private pickTier(): { node: string; edge: string; scale: number } {
+    const o = this.opts;
+    const scale = this.ctx?.camera.scale ?? Infinity;
+    const usingZoomed =
+      o.zoomThreshold !== undefined && scale <= o.zoomThreshold;
+    return {
+      node: usingZoomed && o.zoomedOutState ? o.zoomedOutState : o.state,
+      edge: usingZoomed && o.zoomedOutEdgeState ? o.zoomedOutEdgeState : o.state,
+      scale:
+        usingZoomed && o.zoomedOutScale !== undefined && o.zoomedOutScale > 0
+          ? o.zoomedOutScale
+          : 1,
+    };
+  }
+
+  /**
+   * Handle a `camera:zoom` event while a hover is active. Two independent
+   * dimensions may change as the camera crosses the threshold:
+   *
+   * - State names — swap via {@link swapStates} (state-config-driven
+   *   restyle, composes with `NodeSizeLODBehaviour`).
+   * - Scale multiplier — re-apply via {@link applyScale} (`gfx.scale`
+   *   write, does NOT compose with LOD).
+   *
+   * Idempotent: a zoom that doesn't cross the threshold leaves both
+   * dimensions unchanged and exits cheaply.
+   */
+  private handleCameraZoom(): void {
+    if (!this.current || !this.layer) return;
+    const picked = this.pickTier();
+    const statesChanged =
+      picked.node !== this.appliedNodeState ||
+      picked.edge !== this.appliedEdgeState;
+    const scaleChanged = picked.scale !== this.appliedScale;
+    if (!statesChanged && !scaleChanged) return;
+    if (statesChanged) {
+      this.swapStates({ node: picked.node, edge: picked.edge });
+    }
+    if (scaleChanged) {
+      this.applyScale(picked.scale);
+    }
+  }
+
+  /**
+   * Set / reset `gfx.scale` on the hovered node set. Pure transform write
+   * via {@link PrimitivesRenderer.scaleShape} — no geometry rebuild,
+   * preserves the node's spec-driven colour, stroke, label, etc.
+   *
+   * Resets any previously-scaled ids first so `applyScale(1)` is a clean
+   * teardown. Only ids that resolve to shapes (not connectors) are
+   * touched — `activeIds` is a flat set of mixed kinds; `renderer.hasShape`
+   * filters out edge ids cheaply.
+   */
+  private applyScale(scale: number): void {
+    const renderer = this.layer?.getRenderer();
+    if (!renderer) {
+      this.scaledNodeIds.clear();
+      this.appliedScale = 1;
+      return;
+    }
+    for (const id of this.scaledNodeIds) renderer.scaleShape(id, 1);
+    this.scaledNodeIds.clear();
+    this.appliedScale = 1;
+
+    if (scale === 1) return;
+
+    if (this.current?.type === 'shape') {
+      renderer.scaleShape(this.current.id, scale);
+      this.scaledNodeIds.add(this.current.id);
+    }
+    for (const id of this.activeIds) {
+      if (!renderer.hasShape(id)) continue;
+      renderer.scaleShape(id, scale);
+      this.scaledNodeIds.add(id);
+    }
+    this.appliedScale = scale;
+  }
+
+  /**
+   * Walk the current hovered set (`current` + `activeIds`) and replace the
+   * previously-applied state names with `picked.node` / `picked.edge`.
+   * Skips work per-role when the state name didn't change for that role
+   * (e.g. only the edge state swapped while the node state stayed put).
+   *
+   * `activeIds` is a flat set containing both node and edge ids — we don't
+   * track type per id, so we call `setNodeState` / `setEdgeState` for both;
+   * mismatched calls (an id that doesn't exist in that store) no-op
+   * gracefully. Matches the existing pattern in {@link clearHover}.
+   */
+  private swapStates(picked: { node: string; edge: string }): void {
+    const layer = this.layer;
+    if (!layer) return;
+    const prevNode = this.appliedNodeState ?? this.opts.state;
+    const prevEdge = this.appliedEdgeState ?? this.opts.state;
+    const nodeChanged = prevNode !== picked.node;
+    const edgeChanged = prevEdge !== picked.edge;
+    if (!nodeChanged && !edgeChanged) return;
+
+    if (this.current) {
+      if (this.current.type === 'shape' && nodeChanged) {
+        layer.setNodeState(this.current.id, prevNode, false);
+        layer.setNodeState(this.current.id, picked.node, true);
+      } else if (this.current.type === 'connector' && edgeChanged) {
+        layer.setEdgeState(this.current.id, prevEdge, false);
+        layer.setEdgeState(this.current.id, picked.edge, true);
+      }
+    }
+    for (const id of this.activeIds) {
+      if (nodeChanged) {
+        layer.setNodeState(id, prevNode, false);
+        layer.setNodeState(id, picked.node, true);
+      }
+      if (edgeChanged) {
+        layer.setEdgeState(id, prevEdge, false);
+        layer.setEdgeState(id, picked.edge, true);
+      }
+    }
+
+    this.appliedNodeState = picked.node;
+    this.appliedEdgeState = picked.edge;
   }
 
   /** BFS neighbourhood expansion using the store's adjacency index. */

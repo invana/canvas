@@ -58,12 +58,28 @@ export class HitIndex {
   }
 
   /**
-   * Query candidates whose bbox contains `(x, y)`. Caller is responsible for
-   * precise per-shape hit-testing if the bbox is not the final answer (e.g.
-   * a circle inside its bbox).
+   * Query candidates whose bbox intersects a `padWorld`-padded box around
+   * `(x, y)`. With `padWorld = 0` (default), this matches the classic
+   * "point in bbox" search.
+   *
+   * The pad exists for the renderer's **screen-pixel hit floor**:
+   * `PrimitivesRenderer.hitTest` passes `MIN_HIT_PX / camera.scale` so a
+   * shape whose bbox is smaller than the floor (e.g. a node collapsed to
+   * sub-pixel size at low zoom) is still in the candidate set. The
+   * subsequent `containsWithFloor` / precise check applies the same floor
+   * in local coords. Without this pad, rbush would prune the tiny shape
+   * before the floor could rescue it.
+   *
+   * Caller is responsible for the precise per-shape hit-test if the bbox
+   * isn't the final answer (e.g. a circle inside its bbox).
    */
-  query(x: number, y: number): HitEntry[] {
-    return this.tree.search({ minX: x, minY: y, maxX: x, maxY: y });
+  query(x: number, y: number, padWorld: number = 0): HitEntry[] {
+    return this.tree.search({
+      minX: x - padWorld,
+      minY: y - padWorld,
+      maxX: x + padWorld,
+      maxY: y + padWorld,
+    });
   }
 
   clear(): void {

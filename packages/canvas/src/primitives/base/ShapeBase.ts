@@ -1,4 +1,4 @@
-import { Graphics } from 'pixi.js';
+import { Graphics, type IHitArea } from 'pixi.js';
 import { PrimitiveBase } from './PrimitiveBase';
 import type {
   BaseShapeSpec,
@@ -49,6 +49,44 @@ export abstract class ShapeBase<TSpec extends BaseShapeSpec>
     this.bodyGfx = new Graphics();
     this.bodyGfx.zIndex = 0;
     this.gfx.addChild(this.bodyGfx);
+
+    // Hit-test geometry is part of the shape's identity, not the renderer's
+    // bookkeeping. Wire `hitArea` once from `getHitArea()` — the default
+    // implementation returns an object that delegates to
+    // `bodyGfx.containsPoint`, which Pixi answers against the silhouette
+    // that `drawGeometry` paints there on every `draw()`. So every shape
+    // (graph nodes, ER columns, badges, future composite hosts) gets exact
+    // silhouette + stroke-tolerant hit-testing for free, derived from the
+    // single source of truth: the geometry trace itself.
+    this.gfx.eventMode = 'static';
+    this.gfx.cursor = 'pointer';
+    this.gfx.hitArea = this.getHitArea();
+  }
+
+  /**
+   * Hit-test region for this shape, derived from {@link drawGeometry}.
+   *
+   * Default behaviour: the returned `IHitArea`'s `contains(x, y)` delegates
+   * to `bodyGfx.containsPoint({ x, y })`. Because `drawGeometry` is the
+   * single function that paints the silhouette into `bodyGfx` (see
+   * {@link draw}), the hit region tracks the rendered silhouette exactly —
+   * including any stroke (Pixi's `containsPoint` uses `strokeContains` for
+   * stroke instructions, with a half-stroke-width tolerance).
+   *
+   * The returned object is stable across `draw()` calls: the closure reads
+   * `bodyGfx` by reference, so subsequent `drawGeometry` repaints
+   * automatically update the hit region. No re-wiring of `gfx.hitArea`.
+   *
+   * Subclasses with cheap analytical hit tests — `CircleShape`
+   * (`x² + y² ≤ r²`), `RectShape` (AABB) — may override to skip Pixi's
+   * path-walk on hot paths. Keep the contract: input is shape-local
+   * coordinates; `true` iff the point is inside the silhouette.
+   */
+  getHitArea(): IHitArea {
+    return {
+      contains: (x: number, y: number): boolean =>
+        this.bodyGfx.containsPoint({ x, y }),
+    };
   }
 
   /**
