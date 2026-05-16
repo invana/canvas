@@ -1,6 +1,6 @@
 # Interface: DecorationSpec\<TStyle\>
 
-Defined in: [packages/canvas/src/primitives/types.ts:930](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L930)
+Defined in: [canvas/src/primitives/types.ts:935](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L935)
 
 Caller-side payload for `setDecoration(id, slot, ...)`.
 
@@ -16,7 +16,7 @@ Caller-side payload for `setDecoration(id, slot, ...)`.
 
 > `readonly` **kind**: `string`
 
-Defined in: [packages/canvas/src/primitives/types.ts:931](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L931)
+Defined in: [canvas/src/primitives/types.ts:936](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L936)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [packages/canvas/src/primitives/types.ts:931](https://github.com/inv
 
 > `readonly` **style**: `TStyle`
 
-Defined in: [packages/canvas/src/primitives/types.ts:932](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L932)
+Defined in: [canvas/src/primitives/types.ts:937](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L937)

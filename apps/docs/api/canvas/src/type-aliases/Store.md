@@ -1,8 +1,8 @@
 # Type Alias: Store\<T\>
 
-> **Store**\<`T`\> = `Omit`\<[`StoreApi`](../interfaces/StoreApi.md)\<`T`\>, `"setState"` \| `"subscribe"`\> & `object`
+> **Store**\<`T`\> = `Omit`\<`StoreApi`\<`T`\>, `"setState"` \| `"subscribe"`\> & `object`
 
-Defined in: [packages/canvas/src/state/Store.ts:73](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/state/Store.ts#L73)
+Defined in: [canvas/src/state/Store.ts:73](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/state/Store.ts#L73)
 
 The store API surface exposed to consumers.
 
@@ -79,7 +79,7 @@ Replace-state form (second arg = true).
 
 ### subscribe
 
-> **subscribe**: [`StoreApi`](../interfaces/StoreApi.md)\<`T`\>\[`"subscribe"`\] & \<`U`\>(`selector`, `listener`, `options?`) => () => `void`
+> **subscribe**: `StoreApi`\<`T`\>\[`"subscribe"`\] & \<`U`\>(`selector`, `listener`, `options?`) => () => `void`
 
 ## Type Parameters
 

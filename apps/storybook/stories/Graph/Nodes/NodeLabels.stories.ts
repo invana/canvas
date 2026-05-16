@@ -1,13 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import type { ShapeLabelPlacement } from '@invana/canvas';
+import type { ShapeLabelPlacement, ShapeLabelStyle } from '@invana/canvas';
 import {
   DragNodeBehaviour,
   GraphLayer,
-  type GraphEdge,
-  type GraphNode,
-  type NodeLabelHint,
-  type NodeRenderHints,
+  type EdgeData,
+  type NodeData,
+  type NodeStyle,
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../div-util';
@@ -17,18 +16,19 @@ export default meta;
 type Story = StoryObj;
 
 /**
- * `GraphLayer` rendering nodes with text labels via the `label` hint on
- * `NodeRenderHints`. Demonstrates the full surface of `ShapeLabelStyle`:
+ * `GraphLayer` rendering nodes with text labels via the v3 `NodeData` shape.
  *
- * - String shorthand (`label: 'Hello'`) for the simple case.
- * - Full payload with placement, pill background, wrap / maxLines / ellipsis,
- *   font controls, and a single html-text example with inline tag styles.
- * - Eight outside-side placements rendered in a ring around a hub so the
- *   anchor math is immediately readable.
- * - A separate row of rect nodes demonstrating each `inside-*` placement.
- *   These carry a containment contract: the label is constrained to the
- *   shape via the shrink → truncate → hide cascade. Toggle the "long label"
- *   and "tiny shape" GUI options to see the cascade in action.
+ * Demonstrates two label paths on `NodeStyle`:
+ * - **Flat fields** (`labelText`, `labelColor`, `labelFontSize`,
+ *   `labelPlacement`, `labelBackground*`, etc.) for the common case.
+ * - **`labelStyle` escape hatch** for advanced cases the flat fields don't
+ *   cover (wrap, maxLines / ellipsis, html-text). Pass a full
+ *   `ShapeLabelStyle` payload and the adapter uses it verbatim.
+ *
+ * - String shorthand replaced by `labelText: 'Hello'`.
+ * - Eight outside-side placements rendered in a ring around a hub.
+ * - A separate row of rect nodes demonstrating each `inside-*` placement
+ *   with the shrink → truncate → hide cascade.
  *
  * Drag any node to confirm labels track their host across moves; pan / zoom
  * to verify positioning stays correct under the camera.
@@ -37,91 +37,116 @@ export const NodeLabels: Story = {
   render: () => createContainer({ id: 'graph-node-labels' }),
 
   play: async ({ canvasElement }) => {
-    // Each entry is a self-contained node with its render hints (shape +
-    // label) inlined. The label hint demonstrates a distinct facet of the
-    // ShapeLabelStyle surface — placement, background, wrap, html-text.
-    type Node = GraphNode<NodeRenderHints>;
+    type Node = NodeData;
 
-    const ring: Array<{ id: string; placement: ShapeLabelPlacement }> = [
-      { id: 'n-top',    placement: 'top' },
-      { id: 'n-tr',     placement: 'top-right' },
-      { id: 'n-right',  placement: 'right' },
-      { id: 'n-br',     placement: 'bottom-right' },
-      { id: 'n-bottom', placement: 'bottom' },
-      { id: 'n-bl',     placement: 'bottom-left' },
-      { id: 'n-left',   placement: 'left' },
-      { id: 'n-tl',     placement: 'top-left' },
-    ];
-
-    const ringNodes: Node[] = ring.map((r, i) => {
-      const theta = (i / ring.length) * Math.PI * 2 - Math.PI / 2;
-      const radius = 260;
-      return {
-        id: r.id,
-        position: { x: Math.cos(theta) * radius, y: Math.sin(theta) * radius },
-        data: {
-          shape: 'circle',
-          size: 32,
-          fill: 0x4f9cf9,
-          stroke: 0x1d4ed8,
-          label: {
-            content: {
-              kind: 'text',
-              text: r.placement,
-              fontSize: 12,
-              fontWeight: 600,
-              fill: 0x0f172a,
-            },
-            background: {
-              fill: 0xffffff,
-              stroke: 0xcbd5e1,
-              strokeWidth: 1,
-              radius: 4,
-              padding: [3, 6],
-            },
-            placement: r.placement,
-            offset: { y: r.placement.startsWith('top') ? -4 : r.placement.startsWith('bottom') ? 4 : 0 },
-          },
+    // 8-node ring at radius 260, polar angles −π/2, −π/4, 0, π/4, π/2, 3π/4,
+    // π, 5π/4 (i.e. top, top-right, right, bottom-right, bottom, bottom-left,
+    // left, top-left). The shared circle / fill / stroke / font lives on the
+    // layer's `node.style` template; each node carries only its per-instance
+    // difference (position, labelText, placement, offset, pill background).
+    const ringNodes: Node[] = [
+      {
+        id: 'n-top',
+        position: { x: 0, y: -260 },
+        style: {
+          labelText: 'top', labelPlacement: 'top', labelOffsetY: -4,
+          labelBackgroundFill: 0xffffff, labelBackgroundStrokeColor: 0xcbd5e1,
+          labelBackgroundStrokeWidth: 1, labelBackgroundCornerRadius: 4, labelBackgroundPadding: 4,
         },
-      };
-    });
+      },
+      {
+        id: 'n-tr',
+        position: { x: 184, y: -184 },
+        style: {
+          labelText: 'top-right', labelPlacement: 'top-right', labelOffsetY: -4,
+          labelBackgroundFill: 0xffffff, labelBackgroundStrokeColor: 0xcbd5e1,
+          labelBackgroundStrokeWidth: 1, labelBackgroundCornerRadius: 4, labelBackgroundPadding: 4,
+        },
+      },
+      {
+        id: 'n-right',
+        position: { x: 260, y: 0 },
+        style: {
+          labelText: 'right', labelPlacement: 'right', labelOffsetY: 0,
+          labelBackgroundFill: 0xffffff, labelBackgroundStrokeColor: 0xcbd5e1,
+          labelBackgroundStrokeWidth: 1, labelBackgroundCornerRadius: 4, labelBackgroundPadding: 4,
+        },
+      },
+      {
+        id: 'n-br',
+        position: { x: 184, y: 184 },
+        style: {
+          labelText: 'bottom-right', labelPlacement: 'bottom-right', labelOffsetY: 4,
+          labelBackgroundFill: 0xffffff, labelBackgroundStrokeColor: 0xcbd5e1,
+          labelBackgroundStrokeWidth: 1, labelBackgroundCornerRadius: 4, labelBackgroundPadding: 4,
+        },
+      },
+      {
+        id: 'n-bottom',
+        position: { x: 0, y: 260 },
+        style: {
+          labelText: 'bottom', labelPlacement: 'bottom', labelOffsetY: 4,
+          labelBackgroundFill: 0xffffff, labelBackgroundStrokeColor: 0xcbd5e1,
+          labelBackgroundStrokeWidth: 1, labelBackgroundCornerRadius: 4, labelBackgroundPadding: 4,
+        },
+      },
+      {
+        id: 'n-bl',
+        position: { x: -184, y: 184 },
+        style: {
+          labelText: 'bottom-left', labelPlacement: 'bottom-left', labelOffsetY: 4,
+          labelBackgroundFill: 0xffffff, labelBackgroundStrokeColor: 0xcbd5e1,
+          labelBackgroundStrokeWidth: 1, labelBackgroundCornerRadius: 4, labelBackgroundPadding: 4,
+        },
+      },
+      {
+        id: 'n-left',
+        position: { x: -260, y: 0 },
+        style: {
+          labelText: 'left', labelPlacement: 'left', labelOffsetY: 0,
+          labelBackgroundFill: 0xffffff, labelBackgroundStrokeColor: 0xcbd5e1,
+          labelBackgroundStrokeWidth: 1, labelBackgroundCornerRadius: 4, labelBackgroundPadding: 4,
+        },
+      },
+      {
+        id: 'n-tl',
+        position: { x: -184, y: -184 },
+        style: {
+          labelText: 'top-left', labelPlacement: 'top-left', labelOffsetY: -4,
+          labelBackgroundFill: 0xffffff, labelBackgroundStrokeColor: 0xcbd5e1,
+          labelBackgroundStrokeWidth: 1, labelBackgroundCornerRadius: 4, labelBackgroundPadding: 4,
+        },
+      },
+    ];
 
     // Hub at the centre — wide rect with a centred-inside label demonstrating
     // that `placement: 'center'` subsumes the legacy inset text use case.
     const hub: Node = {
       id: 'hub',
       position: { x: 0, y: 0 },
-      data: {
-        shape: 'rect',
-        size: 180,
-        height: 56,
-        cornerRadius: 10,
-        fill: 0x0f172a,
-        stroke: 0x0f172a,
-        label: {
-          content: {
-            kind: 'text',
-            text: 'Centered Inside',
-            fontSize: 14,
-            fontWeight: 700,
-            fill: 0xffffff,
-          },
-          placement: 'center',
-        },
+      style: {
+        shape: { kind: 'rect', width: 180, height: 56, cornerRadius: 10 },
+        bgFill: 0x0f172a,
+        bgStrokeColor: 0x0f172a,
+        labelText: 'Centered Inside',
+        labelFontSize: 14,
+        labelFontWeight: 700,
+        labelColor: 0xffffff,
+        labelPlacement: 'center',
       },
     };
 
     // Two extra nodes off to the side — one with wrap + ellipsis, one with
-    // html-text demonstrating rich content.
+    // html-text. Both use the `labelStyle` escape hatch because flat fields
+    // don't cover wrap config or html-text content kind.
     const wrappy: Node = {
       id: 'n-wrap',
       position: { x: 460, y: -160 },
-      data: {
-        shape: 'circle',
-        size: 36,
-        fill: 0xfb923c,
-        stroke: 0xea580c,
-        label: {
+      style: {
+        shape: { kind: 'circle', radius: 18 },
+        bgFill: 0xfb923c,
+        bgStrokeColor: 0xea580c,
+        labelStyle: {
           content: {
             kind: 'text',
             text: 'A very long server description that needs to wrap and eventually ellipse out',
@@ -140,12 +165,11 @@ export const NodeLabels: Story = {
     const rich: Node = {
       id: 'n-rich',
       position: { x: 460, y: 160 },
-      data: {
-        shape: 'circle',
-        size: 36,
-        fill: 0x10b981,
-        stroke: 0x047857,
-        label: {
+      style: {
+        shape: { kind: 'circle', radius: 18 },
+        bgFill: 0x10b981,
+        bgStrokeColor: 0x047857,
+        labelStyle: {
           content: {
             kind: 'html-text',
             html: '<role>API</role> <name>users-service</name> <ver>v2.4.1</ver>',
@@ -166,63 +190,151 @@ export const NodeLabels: Story = {
       },
     };
 
-    // String shorthand demo — `label: 'Quick label'` is the simplest case.
+    // Simple flat-field label — the simplest case.
     const simple: Node = {
       id: 'n-simple',
       position: { x: -460, y: 0 },
-      data: {
-        shape: 'circle',
-        size: 36,
-        fill: 0x8b5cf6,
-        stroke: 0x6d28d9,
-        label: 'shorthand',
+      style: {
+        shape: { kind: 'circle', radius: 18 },
+        bgFill: 0x8b5cf6,
+        bgStrokeColor: 0x6d28d9,
+        labelText: 'shorthand',
+        labelPlacement: 'bottom',
+        labelFontSize: 12,
+        labelOffsetY: 4,
       },
     };
 
-    // Inside-placement demo row — 9 rect nodes, each pinned to one of the
-    // `inside-*` placements (4 sides + 4 corners + inside-center). Their
-    // labels prove the containment contract: they shrink to fit and never
-    // bleed past the rect bounds.
-    const insidePlacements: ShapeLabelPlacement[] = [
-      'inside-top-left',    'inside-top',    'inside-top-right',
-      'inside-left',        'inside-center', 'inside-right',
-      'inside-bottom-left', 'inside-bottom', 'inside-bottom-right',
-    ];
-    const insideRowY = 460;
-    const insideRowSpacing = 160;
-    const insideRowStartX = -((insidePlacements.length - 1) * insideRowSpacing) / 2;
-    const insideNodes: Node[] = insidePlacements.map((p, i) => ({
-      id: `inside-${p}`,
-      position: { x: insideRowStartX + i * insideRowSpacing, y: insideRowY },
-      data: {
-        shape: 'rect',
-        size: 130,
-        height: 80,
-        cornerRadius: 8,
-        fill: 0xf1f5f9,
-        stroke: 0x475569,
-        label: {
-          content: {
-            kind: 'text',
-            text: p,
-            fontSize: 14,
-            fontWeight: 600,
-            fill: 0x0f172a,
+    // Inside-placement demo row — 9 rect nodes at y=460, x from -640 to +640
+    // in 160-pixel steps, each pinned to one of the 9 `inside-*` placements
+    // (3×3: corners + sides + center). The shrink → truncate → hide cascade
+    // is a wrap/fit feature; we use `labelStyle` so the `minFontSize` knob
+    // in the GUI can drive the cascade.
+    const insideNodes: Node[] = [
+      {
+        id: 'inside-inside-top-left',
+        position: { x: -640, y: 460 },
+        style: {
+          shape: { kind: 'rect', width: 130, height: 80, cornerRadius: 8 },
+          bgFill: 0xf1f5f9, bgStrokeColor: 0x475569,
+          labelStyle: {
+            content: { kind: 'text', text: 'inside-top-left', fontSize: 14, fontWeight: 600, fill: 0x0f172a },
+            placement: 'inside-top-left',
           },
-          placement: p,
         },
       },
-    }));
+      {
+        id: 'inside-inside-top',
+        position: { x: -480, y: 460 },
+        style: {
+          shape: { kind: 'rect', width: 130, height: 80, cornerRadius: 8 },
+          bgFill: 0xf1f5f9, bgStrokeColor: 0x475569,
+          labelStyle: {
+            content: { kind: 'text', text: 'inside-top', fontSize: 14, fontWeight: 600, fill: 0x0f172a },
+            placement: 'inside-top',
+          },
+        },
+      },
+      {
+        id: 'inside-inside-top-right',
+        position: { x: -320, y: 460 },
+        style: {
+          shape: { kind: 'rect', width: 130, height: 80, cornerRadius: 8 },
+          bgFill: 0xf1f5f9, bgStrokeColor: 0x475569,
+          labelStyle: {
+            content: { kind: 'text', text: 'inside-top-right', fontSize: 14, fontWeight: 600, fill: 0x0f172a },
+            placement: 'inside-top-right',
+          },
+        },
+      },
+      {
+        id: 'inside-inside-left',
+        position: { x: -160, y: 460 },
+        style: {
+          shape: { kind: 'rect', width: 130, height: 80, cornerRadius: 8 },
+          bgFill: 0xf1f5f9, bgStrokeColor: 0x475569,
+          labelStyle: {
+            content: { kind: 'text', text: 'inside-left', fontSize: 14, fontWeight: 600, fill: 0x0f172a },
+            placement: 'inside-left',
+          },
+        },
+      },
+      {
+        id: 'inside-inside-center',
+        position: { x: 0, y: 460 },
+        style: {
+          shape: { kind: 'rect', width: 130, height: 80, cornerRadius: 8 },
+          bgFill: 0xf1f5f9, bgStrokeColor: 0x475569,
+          labelStyle: {
+            content: { kind: 'text', text: 'inside-center', fontSize: 14, fontWeight: 600, fill: 0x0f172a },
+            placement: 'inside-center',
+          },
+        },
+      },
+      {
+        id: 'inside-inside-right',
+        position: { x: 160, y: 460 },
+        style: {
+          shape: { kind: 'rect', width: 130, height: 80, cornerRadius: 8 },
+          bgFill: 0xf1f5f9, bgStrokeColor: 0x475569,
+          labelStyle: {
+            content: { kind: 'text', text: 'inside-right', fontSize: 14, fontWeight: 600, fill: 0x0f172a },
+            placement: 'inside-right',
+          },
+        },
+      },
+      {
+        id: 'inside-inside-bottom-left',
+        position: { x: 320, y: 460 },
+        style: {
+          shape: { kind: 'rect', width: 130, height: 80, cornerRadius: 8 },
+          bgFill: 0xf1f5f9, bgStrokeColor: 0x475569,
+          labelStyle: {
+            content: { kind: 'text', text: 'inside-bottom-left', fontSize: 14, fontWeight: 600, fill: 0x0f172a },
+            placement: 'inside-bottom-left',
+          },
+        },
+      },
+      {
+        id: 'inside-inside-bottom',
+        position: { x: 480, y: 460 },
+        style: {
+          shape: { kind: 'rect', width: 130, height: 80, cornerRadius: 8 },
+          bgFill: 0xf1f5f9, bgStrokeColor: 0x475569,
+          labelStyle: {
+            content: { kind: 'text', text: 'inside-bottom', fontSize: 14, fontWeight: 600, fill: 0x0f172a },
+            placement: 'inside-bottom',
+          },
+        },
+      },
+      {
+        id: 'inside-inside-bottom-right',
+        position: { x: 640, y: 460 },
+        style: {
+          shape: { kind: 'rect', width: 130, height: 80, cornerRadius: 8 },
+          bgFill: 0xf1f5f9, bgStrokeColor: 0x475569,
+          labelStyle: {
+            content: { kind: 'text', text: 'inside-bottom-right', fontSize: 14, fontWeight: 600, fill: 0x0f172a },
+            placement: 'inside-bottom-right',
+          },
+        },
+      },
+    ];
 
     const nodes: Node[] = [hub, ...ringNodes, ...insideNodes, wrappy, rich, simple];
 
     // Edges fan from the hub to every ring node so the labels sit on top of
-    // a visible relationship.
-    const edges: GraphEdge[] = ring.map((r) => ({
-      id: `hub->${r.id}`,
-      source: 'hub',
-      target: r.id,
-    }));
+    // a visible relationship. Hardcoded literal list — one per ring node.
+    const edges: EdgeData[] = [
+      { id: 'hub->n-top',    source: 'hub', target: 'n-top' },
+      { id: 'hub->n-tr',     source: 'hub', target: 'n-tr' },
+      { id: 'hub->n-right',  source: 'hub', target: 'n-right' },
+      { id: 'hub->n-br',     source: 'hub', target: 'n-br' },
+      { id: 'hub->n-bottom', source: 'hub', target: 'n-bottom' },
+      { id: 'hub->n-bl',     source: 'hub', target: 'n-bl' },
+      { id: 'hub->n-left',   source: 'hub', target: 'n-left' },
+      { id: 'hub->n-tl',     source: 'hub', target: 'n-tl' },
+    ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-node-labels')!;
     const canvas = new Canvas();
@@ -233,7 +345,29 @@ export const NodeLabels: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { edgeDefaults: { stroke: 0xcbd5e1, strokeWidth: 1, arrow: false } },
+      options: {
+        // Layer-wide node template — every node renders against these unless
+        // it overrides a field in its own `style`. Ring nodes only declare
+        // their per-instance differences (position, labelText, placement).
+        // Hub / inside / wrap / rich / simple override `shape` and / or
+        // bg colours.
+        node: {
+          style: {
+            shape: { kind: 'circle', radius: 16 },
+            bgFill: 0x4f9cf9,
+            bgStrokeColor: 0x1d4ed8,
+            labelFontSize: 12,
+            labelFontWeight: 600,
+            labelColor: 0x0f172a,
+            labelBackgroundFill: 0xffffff,
+            labelBackgroundStrokeColor: 0xcbd5e1,
+            labelBackgroundStrokeWidth: 1,
+            labelBackgroundCornerRadius: 4,
+            labelBackgroundPadding: 4,
+          },
+        },
+        edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' } },
+      },
     });
     canvas.layers.add(graph);
     graph.setData({ nodes, edges });
@@ -264,9 +398,12 @@ export const NodeLabels: Story = {
     const LONG_LABEL = 'A very long descriptive label that will not fit naturally';
 
     const allPickableIds = [
-      ...ring.map((r) => r.id),
+      'n-top', 'n-tr', 'n-right', 'n-br',
+      'n-bottom', 'n-bl', 'n-left', 'n-tl',
       'hub',
-      ...insideNodes.map((n) => n.id),
+      'inside-inside-top-left', 'inside-inside-top', 'inside-inside-top-right',
+      'inside-inside-left', 'inside-inside-center', 'inside-inside-right',
+      'inside-inside-bottom-left', 'inside-inside-bottom', 'inside-inside-bottom-right',
     ];
 
     const settings = {
@@ -287,15 +424,16 @@ export const NodeLabels: Story = {
     const applyToPicked = (): void => {
       const node = graph.store.getNode(settings.pickedNode);
       if (!node) return;
-      const wrap = settings.maxWidth > 0 || settings.maxHeight > 0 || settings.maxLines > 1
-        ? {
-            ...(settings.maxWidth > 0 ? { maxWidth: settings.maxWidth, wordWrap: true } : {}),
-            ...(settings.maxHeight > 0 ? { maxHeight: settings.maxHeight } : {}),
-            maxLines: settings.maxLines,
-            overflow: 'ellipsis' as const,
-          }
-        : undefined;
-      const label: NodeLabelHint = {
+      const wrap =
+        settings.maxWidth > 0 || settings.maxHeight > 0 || settings.maxLines > 1
+          ? {
+              ...(settings.maxWidth > 0 ? { maxWidth: settings.maxWidth, wordWrap: true } : {}),
+              ...(settings.maxHeight > 0 ? { maxHeight: settings.maxHeight } : {}),
+              maxLines: settings.maxLines,
+              overflow: 'ellipsis' as const,
+            }
+          : undefined;
+      const labelStyle: ShapeLabelStyle = {
         content: {
           kind: 'text',
           text: settings.longLabel ? LONG_LABEL : settings.text,
@@ -303,25 +441,30 @@ export const NodeLabels: Story = {
           fontWeight: settings.fontWeight,
           fill: 0x0f172a,
         },
-        background: settings.background ? {
-          fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [3, 6],
-        } : undefined,
+        background: settings.background
+          ? { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [3, 6] }
+          : undefined,
         wrap,
         placement: settings.placement,
         minFontSize: settings.minFontSize,
       };
       // Tiny-shape toggle shrinks the picked node so the inside-fit cascade
       // visibly kicks in. Only affects rect-shaped nodes (the inside row);
-      // the ring of circles uses `size` only.
-      const prevData = node.data as NodeRenderHints;
-      const sizeOverride = settings.tinyShape
-        ? { size: 60, height: 30 }
-        : prevData.shape === 'rect'
-          ? { size: 130, height: 80 }
-          : { size: prevData.size };
-      graph.store.updateNode(settings.pickedNode, {
-        data: { ...prevData, ...sizeOverride, label },
-      });
+      // the ring of circles uses circle radius only.
+      const prevStyle = (node.style as NodeStyle | undefined) ?? {};
+      const prevShape = prevStyle.shape;
+      const nextShape =
+        settings.tinyShape && prevShape?.kind === 'rect'
+          ? { ...prevShape, width: 60, height: 30 }
+          : prevShape?.kind === 'rect'
+            ? { ...prevShape, width: 130, height: 80 }
+            : prevShape;
+      const nextStyle: NodeStyle = {
+        ...prevStyle,
+        shape: nextShape,
+        labelStyle,
+      };
+      graph.store.updateNode(settings.pickedNode, { style: nextStyle });
     };
 
     const gui = new GUI({ title: 'Node Label' });

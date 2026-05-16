@@ -1,6 +1,6 @@
 # Interface: BreathingEffectStyle
 
-Defined in: [packages/canvas/src/primitives/effects/shape/BreathingEffect.ts:14](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/shape/BreathingEffect.ts#L14)
+Defined in: [canvas/src/primitives/effects/shape/BreathingEffect.ts:14](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/effects/shape/BreathingEffect.ts#L14)
 
 Style options for `BreathingEffect`.
 
@@ -17,7 +17,7 @@ Style options for `BreathingEffect`.
 
 > `readonly` `optional` **amplitude?**: `number`
 
-Defined in: [packages/canvas/src/primitives/effects/shape/BreathingEffect.ts:15](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/shape/BreathingEffect.ts#L15)
+Defined in: [canvas/src/primitives/effects/shape/BreathingEffect.ts:15](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/effects/shape/BreathingEffect.ts#L15)
 
 ***
 
@@ -25,7 +25,7 @@ Defined in: [packages/canvas/src/primitives/effects/shape/BreathingEffect.ts:15]
 
 > `readonly` `optional` **axis?**: `"x"` \| `"y"` \| `"both"`
 
-Defined in: [packages/canvas/src/primitives/effects/shape/BreathingEffect.ts:17](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/shape/BreathingEffect.ts#L17)
+Defined in: [canvas/src/primitives/effects/shape/BreathingEffect.ts:17](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/effects/shape/BreathingEffect.ts#L17)
 
 ***
 
@@ -33,7 +33,7 @@ Defined in: [packages/canvas/src/primitives/effects/shape/BreathingEffect.ts:17]
 
 > `readonly` `optional` **periodMs?**: `number`
 
-Defined in: [packages/canvas/src/primitives/effects/shape/BreathingEffect.ts:16](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/shape/BreathingEffect.ts#L16)
+Defined in: [canvas/src/primitives/effects/shape/BreathingEffect.ts:16](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/effects/shape/BreathingEffect.ts#L16)
 
 ***
 
@@ -41,4 +41,4 @@ Defined in: [packages/canvas/src/primitives/effects/shape/BreathingEffect.ts:16]
 
 > `readonly` `optional` **phaseOffsetMs?**: `number`
 
-Defined in: [packages/canvas/src/primitives/effects/shape/BreathingEffect.ts:18](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/shape/BreathingEffect.ts#L18)
+Defined in: [canvas/src/primitives/effects/shape/BreathingEffect.ts:18](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/effects/shape/BreathingEffect.ts#L18)

@@ -1,6 +1,6 @@
 # Abstract Class: ShapeDecorationBase\<TStyle\>
 
-Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:13](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L13)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:13](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L13)
 
 Base for decorations that target shape primitives. Subclass implements
 `repaint`; this base handles the `mount` / `update` lifecycle (attach gfx
@@ -20,6 +20,7 @@ its animation set; a falsy return retires the decoration.
 - [`PulseRingDecoration`](PulseRingDecoration.md)
 - [`LiquidFillDecoration`](LiquidFillDecoration.md)
 - [`MarchingAntsDecoration`](MarchingAntsDecoration.md)
+- [`LabelDecoration`](LabelDecoration.md)
 
 ## Type Parameters
 
@@ -37,7 +38,7 @@ its animation set; a falsy return retires the decoration.
 
 > **new ShapeDecorationBase**\<`TStyle`\>(`style`): `ShapeDecorationBase`\<`TStyle`\>
 
-Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:20](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L20)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:20](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L20)
 
 #### Parameters
 
@@ -59,7 +60,7 @@ Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:20](http
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 #### Inherited from
 
@@ -71,7 +72,7 @@ Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:12](https://gi
 
 > `protected` **host**: [`ShapeDecorationHostInfo`](../interfaces/ShapeDecorationHostInfo.md) = `null`
 
-Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:18](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L18)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:18](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L18)
 
 ***
 
@@ -79,7 +80,7 @@ Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:18](http
 
 > `readonly` **style**: `TStyle`
 
-Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:17](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L17)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:17](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L17)
 
 #### Implementation of
 
@@ -91,7 +92,7 @@ Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:17](http
 
 > **destroy**(): `void`
 
-Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
 
 #### Returns
 
@@ -111,7 +112,7 @@ Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:18](https://gi
 
 > **mount**(`host`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:26](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L26)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:26](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L26)
 
 #### Parameters
 
@@ -133,7 +134,7 @@ Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:26](http
 
 > `abstract` `protected` **repaint**(): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:39](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L39)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:39](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L39)
 
 Render the decoration based on the current `host`.
 
@@ -147,7 +148,7 @@ Render the decoration based on the current `host`.
 
 > **update**(`host`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ShapeDecorationBase.ts:33](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L33)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:33](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L33)
 
 #### Parameters
 

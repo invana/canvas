@@ -1,6 +1,6 @@
 # Interface: ShakeEffectStyle
 
-Defined in: [packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:18](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L18)
+Defined in: [canvas/src/primitives/effects/shape/ShakeEffect.ts:18](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L18)
 
 Style options for `ShakeEffect`.
 
@@ -19,7 +19,7 @@ Style options for `ShakeEffect`.
 
 > `readonly` `optional` **amplitude?**: `number`
 
-Defined in: [packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:19](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L19)
+Defined in: [canvas/src/primitives/effects/shape/ShakeEffect.ts:19](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L19)
 
 ***
 
@@ -27,7 +27,7 @@ Defined in: [packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:19](htt
 
 > `readonly` `optional` **axis?**: `"x"` \| `"y"` \| `"both"`
 
-Defined in: [packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:20](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L20)
+Defined in: [canvas/src/primitives/effects/shape/ShakeEffect.ts:20](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L20)
 
 ***
 
@@ -35,7 +35,7 @@ Defined in: [packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:20](htt
 
 > `readonly` `optional` **decayMs?**: `number`
 
-Defined in: [packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:21](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L21)
+Defined in: [canvas/src/primitives/effects/shape/ShakeEffect.ts:21](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L21)
 
 ***
 
@@ -43,4 +43,4 @@ Defined in: [packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:21](htt
 
 > `readonly` `optional` **seed?**: `number`
 
-Defined in: [packages/canvas/src/primitives/effects/shape/ShakeEffect.ts:22](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L22)
+Defined in: [canvas/src/primitives/effects/shape/ShakeEffect.ts:22](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L22)

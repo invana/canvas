@@ -1,6 +1,6 @@
 # Interface: IBehaviour
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:23](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/behaviours/Behaviour.ts#L23)
+Defined in: [canvas/src/behaviours/Behaviour.ts:23](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L23)
 
 What `BehaviourRegistry` sees.
 
@@ -10,7 +10,7 @@ What `BehaviourRegistry` sees.
 
 > `readonly` **enabled**: `boolean`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:25](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/behaviours/Behaviour.ts#L25)
+Defined in: [canvas/src/behaviours/Behaviour.ts:25](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L25)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [packages/canvas/src/behaviours/Behaviour.ts:25](https://github.com/
 
 > `readonly` **id**: `string`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:24](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/behaviours/Behaviour.ts#L24)
+Defined in: [canvas/src/behaviours/Behaviour.ts:24](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L24)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [packages/canvas/src/behaviours/Behaviour.ts:24](https://github.com/
 
 > `readonly` `optional` **layerId?**: `string`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:27](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/behaviours/Behaviour.ts#L27)
+Defined in: [canvas/src/behaviours/Behaviour.ts:27](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L27)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [packages/canvas/src/behaviours/Behaviour.ts:27](https://github.com/
 
 > `readonly` **scope**: `"canvas"` \| `"layer"`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:26](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/behaviours/Behaviour.ts#L26)
+Defined in: [canvas/src/behaviours/Behaviour.ts:26](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L26)
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: [packages/canvas/src/behaviours/Behaviour.ts:26](https://github.com/
 
 > `readonly` `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:28](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/behaviours/Behaviour.ts#L28)
+Defined in: [canvas/src/behaviours/Behaviour.ts:28](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L28)
 
 ## Methods
 
@@ -50,7 +50,7 @@ Defined in: [packages/canvas/src/behaviours/Behaviour.ts:28](https://github.com/
 
 > **destroy**(): `void`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:30](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/behaviours/Behaviour.ts#L30)
+Defined in: [canvas/src/behaviours/Behaviour.ts:30](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L30)
 
 #### Returns
 
@@ -62,7 +62,7 @@ Defined in: [packages/canvas/src/behaviours/Behaviour.ts:30](https://github.com/
 
 > **disable**(): `void`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:32](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/behaviours/Behaviour.ts#L32)
+Defined in: [canvas/src/behaviours/Behaviour.ts:32](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L32)
 
 #### Returns
 
@@ -74,7 +74,7 @@ Defined in: [packages/canvas/src/behaviours/Behaviour.ts:32](https://github.com/
 
 > **enable**(): `void`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:31](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/behaviours/Behaviour.ts#L31)
+Defined in: [canvas/src/behaviours/Behaviour.ts:31](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L31)
 
 #### Returns
 
@@ -86,7 +86,7 @@ Defined in: [packages/canvas/src/behaviours/Behaviour.ts:31](https://github.com/
 
 > **register**(`ctx`): `void`
 
-Defined in: [packages/canvas/src/behaviours/Behaviour.ts:29](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/behaviours/Behaviour.ts#L29)
+Defined in: [canvas/src/behaviours/Behaviour.ts:29](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L29)
 
 #### Parameters
 

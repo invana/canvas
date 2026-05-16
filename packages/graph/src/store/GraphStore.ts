@@ -423,7 +423,10 @@ export class GraphStore {
 
     if ('data' in patch) cold.data = patch.data;
 
-    if ('state' in patch) cold.state = patch.state ?? undefined;
+    if ('states' in patch) cold.states = patch.states ?? undefined;
+    if ('state' in patch) cold.state = patch.state;
+    if ('type' in patch) cold.type = patch.type;
+    if ('style' in patch) cold.style = patch.style;
 
     if ('position' in patch && patch.position !== undefined) {
       this.nodeCols.column('x')[slot] = patch.position.x;
@@ -570,7 +573,9 @@ export class GraphStore {
 
     if ('type' in patch) cold.type = patch.type;
     if ('data' in patch) cold.data = patch.data;
-    if ('state' in patch) cold.state = patch.state ?? undefined;
+    if ('states' in patch) cold.states = patch.states ?? undefined;
+    if ('state' in patch) cold.state = patch.state;
+    if ('style' in patch) cold.style = patch.style;
 
     this.edgeCols.touch();
     this._version++;
@@ -807,7 +812,10 @@ export class GraphStore {
     const cold: GraphNode = { id: node.id };
     if (node.data !== undefined) cold.data = node.data;
     if (node.parentId !== undefined) cold.parentId = node.parentId;
+    if (node.states !== undefined) cold.states = node.states;
     if (node.state !== undefined) cold.state = node.state;
+    if (node.type !== undefined) cold.type = node.type;
+    if (node.style !== undefined) cold.style = node.style;
     this.nodeMap.set(node.id, cold);
 
     if (node.parentId !== undefined) {
@@ -837,7 +845,9 @@ export class GraphStore {
     const cold: GraphEdge = { id: edge.id, source: edge.source, target: edge.target };
     if (edge.type !== undefined) cold.type = edge.type;
     if (edge.data !== undefined) cold.data = edge.data;
+    if (edge.states !== undefined) cold.states = edge.states;
     if (edge.state !== undefined) cold.state = edge.state;
+    if (edge.style !== undefined) cold.style = edge.style;
     this.edgeMap.set(edge.id, cold);
 
     this._version++;

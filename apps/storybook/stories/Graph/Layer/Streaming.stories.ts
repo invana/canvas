@@ -144,7 +144,7 @@ export const Streaming: Story = {
           position: randomPos(),
           data: { group: randInt(palette.length) },
           ...(settings.includeState
-            ? { state: [pick(canonicalStates)] }
+            ? { states: [pick(canonicalStates)] }
             : {}),
         });
       }

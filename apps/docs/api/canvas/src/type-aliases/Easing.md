@@ -2,7 +2,7 @@
 
 > **Easing** = (`t`) => `number`
 
-Defined in: [packages/canvas/src/primitives/animation/easings.ts:11](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/animation/easings.ts#L11)
+Defined in: [canvas/src/primitives/animation/easings.ts:11](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/animation/easings.ts#L11)
 
 Easing functions consumed by `Tween`. Each is a pure `(t: number) => number`
 where `t ∈ [0, 1]` is normalised progress and the return value is the eased

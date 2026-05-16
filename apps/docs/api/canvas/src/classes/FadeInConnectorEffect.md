@@ -1,6 +1,6 @@
 # Class: FadeInConnectorEffect
 
-Defined in: [packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:39](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L39)
+Defined in: [canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:39](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L39)
 
 Base for effects that target connector primitives. Mirror of `EffectBase`
 for shape effects — the effect modulates the host connector's style
@@ -32,7 +32,7 @@ decorations draw, effects modulate.
 
 > **new FadeInConnectorEffect**(`style`): `FadeInConnectorEffect`
 
-Defined in: [packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:48](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L48)
+Defined in: [canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:48](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L48)
 
 #### Parameters
 
@@ -54,7 +54,7 @@ Defined in: [packages/canvas/src/primitives/effects/connector/FadeInConnectorEff
 
 > `protected` **host**: `ConnectorEffectHostInfo` = `null`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorEffectBase.ts:34](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L34)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:34](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L34)
 
 #### Inherited from
 
@@ -66,7 +66,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorEffectBase.ts:34](http
 
 > `readonly` **style**: [`FadeInConnectorEffectStyle`](../interfaces/FadeInConnectorEffectStyle.md)
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorEffectBase.ts:33](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L33)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:33](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L33)
 
 #### Inherited from
 
@@ -78,7 +78,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorEffectBase.ts:33](http
 
 > `readonly` **target**: [`EffectTarget`](../type-aliases/EffectTarget.md) = `'style'`
 
-Defined in: [packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:40](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L40)
+Defined in: [canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:40](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L40)
 
 #### Overrides
 
@@ -90,7 +90,7 @@ Defined in: [packages/canvas/src/primitives/effects/connector/FadeInConnectorEff
 
 > **destroy**(): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorEffectBase.ts:48](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L48)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:48](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L48)
 
 #### Returns
 
@@ -106,7 +106,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorEffectBase.ts:48](http
 
 > **mount**(`host`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorEffectBase.ts:40](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L40)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:40](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L40)
 
 #### Parameters
 
@@ -128,7 +128,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorEffectBase.ts:40](http
 
 > **readStyle**(): [`StyleOverride`](../interfaces/StyleOverride.md)
 
-Defined in: [packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:77](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L77)
+Defined in: [canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:77](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L77)
 
 #### Returns
 
@@ -144,7 +144,7 @@ Defined in: [packages/canvas/src/primitives/effects/connector/FadeInConnectorEff
 
 > `optional` **readTransform**(): [`TransformDelta`](../interfaces/TransformDelta.md)
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorEffectBase.ts:54](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L54)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:54](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L54)
 
 #### Returns
 
@@ -160,7 +160,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorEffectBase.ts:54](http
 
 > **tick**(`deltaMs`): `boolean`
 
-Defined in: [packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:62](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L62)
+Defined in: [canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:62](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L62)
 
 #### Parameters
 
@@ -182,7 +182,7 @@ Defined in: [packages/canvas/src/primitives/effects/connector/FadeInConnectorEff
 
 > **update**(`host`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorEffectBase.ts:44](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L44)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:44](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L44)
 
 #### Parameters
 

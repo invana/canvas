@@ -1,6 +1,6 @@
 # Interface: GraphEdge\<D\>
 
-Defined in: packages/graph/src/store/types.ts:23
+Defined in: [graph/src/store/types.ts:59](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L59)
 
 A directed edge. Multi-edges between the same pair are allowed.
 
@@ -16,7 +16,7 @@ A directed edge. Multi-edges between the same pair are allowed.
 
 > `optional` **data?**: `D`
 
-Defined in: packages/graph/src/store/types.ts:33
+Defined in: [graph/src/store/types.ts:69](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L69)
 
 Arbitrary user payload — opaque to the store.
 
@@ -26,7 +26,7 @@ Arbitrary user payload — opaque to the store.
 
 > **id**: `string`
 
-Defined in: packages/graph/src/store/types.ts:25
+Defined in: [graph/src/store/types.ts:61](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L61)
 
 Stable identity. Must be unique within the store.
 
@@ -36,9 +36,39 @@ Stable identity. Must be unique within the store.
 
 > **source**: `string`
 
-Defined in: packages/graph/src/store/types.ts:27
+Defined in: [graph/src/store/types.ts:63](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L63)
 
 Source node id.
+
+***
+
+### state?
+
+> `optional` **state?**: `unknown`
+
+Defined in: [graph/src/store/types.ts:75](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L75)
+
+Per-instance overlay catalogue. Typed by consumer as `Record<string, EdgeStyle>`.
+
+***
+
+### states?
+
+> `optional` **states?**: readonly `string`[]
+
+Defined in: [graph/src/store/types.ts:71](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L71)
+
+Sibling of [GraphNode.states](GraphNode.md#states) — currently-active state names.
+
+***
+
+### style?
+
+> `optional` **style?**: `unknown`
+
+Defined in: [graph/src/store/types.ts:73](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L73)
+
+Per-instance style. Typed by consumer as `EdgeStyle`.
 
 ***
 
@@ -46,7 +76,7 @@ Source node id.
 
 > **target**: `string`
 
-Defined in: packages/graph/src/store/types.ts:29
+Defined in: [graph/src/store/types.ts:65](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L65)
 
 Target node id.
 
@@ -56,6 +86,6 @@ Target node id.
 
 > `optional` **type?**: `string`
 
-Defined in: packages/graph/src/store/types.ts:31
+Defined in: [graph/src/store/types.ts:67](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L67)
 
 Predicate / FK label / "calls" / "depends-on" — free-form.

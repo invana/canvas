@@ -1,6 +1,6 @@
 # Interface: HitResult
 
-Defined in: [packages/canvas/src/primitives/types.ts:937](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L937)
+Defined in: [canvas/src/primitives/types.ts:942](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L942)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:937](https://github.com/inv
 
 > `readonly` **id**: `string`
 
-Defined in: [packages/canvas/src/primitives/types.ts:939](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L939)
+Defined in: [canvas/src/primitives/types.ts:944](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L944)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:939](https://github.com/inv
 
 > `readonly` **kind**: `"shape"` \| `"connector"`
 
-Defined in: [packages/canvas/src/primitives/types.ts:938](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L938)
+Defined in: [canvas/src/primitives/types.ts:943](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L943)
 
 ***
 
@@ -24,6 +24,6 @@ Defined in: [packages/canvas/src/primitives/types.ts:938](https://github.com/inv
 
 > `readonly` `optional` **subId?**: `string`
 
-Defined in: [packages/canvas/src/primitives/types.ts:941](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L941)
+Defined in: [canvas/src/primitives/types.ts:946](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L946)
 
 Optional sub-region (e.g. a connector handle, a shape sub-part).

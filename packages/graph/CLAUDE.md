@@ -11,7 +11,117 @@ Graph-domain layers and behaviours that compose `@invana/canvas`. Replaces the o
 - `GraphEdgeStore extends ColumnStore` — typed-array columns: `sourceSlot:u32, targetSlot:u32, weight:f32, color:u32, typeId:u16, …`.
 - `MiniMapLayer` (extends `ScreenLayer`) — viewport-fixed minimap of a source `GraphLayer`.
 - Behaviours: `HoverActivateBehaviour`, `ClickSelectBehaviour`, `LassoSelectBehaviour`, `BrushSelectBehaviour`, `PanBehaviour`, `DragMoveBehaviour`.
-- Types: `INodeData`, `IEdgeData`, `IGraphStyles`.
+
+## Data model — `NodeData` / `EdgeData` + layer-level `NodeOption` / `EdgeOption`
+
+G6-aligned shape. The per-item descriptor (`NodeData<D>` / `EdgeData<D>`) is what the consumer hands to `GraphLayer.setData` and what `GraphStore` holds internally. The layer-level template (`NodeOption` / `EdgeOption`) lives under `GraphLayerOptions.node` / `.edge` and carries the *shared* styling — every node/edge inherits these unless it overrides a field.
+
+```ts
+// per-item (passed to setData; stored in GraphStore)
+interface NodeData<D = unknown> {
+  id: string;
+  type?: string;                          // type tag (free-form)
+  data?: D;                               // user payload — opaque to the store
+  style?: NodeStyle;                      // base visual style (concrete)
+  state?: Record<string, NodeStyle>;      // per-instance overlay catalogue
+  states?: readonly string[] | null;      // active state names (plural)
+  position?: { x: number; y: number };
+  pinned?: boolean;
+  parentId?: string;                      // single hierarchy field; covers tree + combo/group membership
+}
+
+interface EdgeData<D = unknown> {
+  id: string;
+  source: string;
+  target: string;
+  type?: string;                          // predicate / FK label (free-form)
+  data?: D;
+  style?: EdgeStyle;
+  state?: Record<string, EdgeStyle>;
+  states?: readonly string[] | null;
+}
+
+// layer-level template (under GraphLayerOptions.node / .edge)
+interface NodeOption {
+  type?: string;
+  style?: ResolvableNodeStyle<GraphNode>;
+  state?: Record<string, ResolvableNodeStyle<GraphNode>>;
+  palette?: unknown;                      // reserved
+}
+// EdgeOption is the same shape with EdgeStyle / GraphEdge.
+```
+
+### `NodeStyle` and `EdgeStyle` — flat with one escape hatch
+
+Visual style is **flat-prefixed** (`bgFill`, `bgStrokeColor`, `bgStrokeWidth`, `bgStrokeDashArray`, `labelText`, `labelColor`, `labelFontSize`, `labelPlacement`, `labelOffsetY`, `labelBackgroundFill`, …). Polymorphic values (`shape`, `icon`, `image`, `badges`, `decorations`, `effects`) stay structured because their kinds carry different required params.
+
+**`NodeStyle.shape` = `NodeShapeOptions`** — discriminated union of `RectShapeOption | CircleShapeOption | ArcShapeOption`. The `kind` tag drives compile-time enforcement of variant-required fields (`{ kind: 'arc' }` requires `innerR` / `outerR` / `startAngle` / `endAngle`).
+
+**`EdgeStyle.shape` = `EdgeShapeOptions`** — single interface (no union) carrying `pathType` + anchor + router + pathStyle params (`sourceAnchor`, `targetAnchor`, `sourceAnchorOpts`, `targetAnchorOpts`, `pathStyleOpts`, `waypoints`).
+
+**Label fields** flatten the canvas `ShapeLabelStyle` / `ConnectorLabelStyle` surfaces:
+
+- text/font: `labelText`, `labelColor`, `labelFontSize`, `labelFontFamily`, `labelFontWeight`, `labelFontStyle`, `labelAlign`, `labelLineHeight`, `labelLetterSpacing`
+- placement: `labelPlacement`, `labelOffsetX`, `labelOffsetY`, `labelRotation` (nodes) / `labelPathOffset`, `labelAutoRotate`, `labelKeepUpright` (edges), `labelAlpha`, `labelMinFontSize`
+- background pill: `labelBackgroundFill`, `labelBackgroundAlpha`, `labelBackgroundStrokeColor`, `labelBackgroundStrokeWidth`, `labelBackgroundPadding`, `labelBackgroundCornerRadius`
+- resolution / LOD / collision: `labelMinZoom`, `labelMaxZoom`, `labelPriority`, `labelCollisionGroup`, `labelForceShow`
+
+**Escape hatch — `labelStyle: ShapeLabelStyle | ConnectorLabelStyle`** — when the flat fields don't cover a case (wrap / maxLines, html-text content, custom stroke on text), supply the full canvas payload directly. The adapter uses it verbatim and **ignores the flat label fields**.
+
+### Hierarchy — `parentId` is the only field
+
+Earlier drafts followed G6 and exposed `combo` (group id) and `children` (denormalised child ids) alongside `parentId`. Both were dropped:
+
+- `combo` overlaps with `parentId` — a "combo" is just a regular node that visually represents a group; nodes "in the combo" can express that as `parentId: <comboNodeId>`. Two fields for one concept.
+- `children` is the inverse of `parentId` — users could set both and drift them out of sync. The store already maintains the inverse index internally (`childrenIndex: Map<string, Set<string>>`) and exposes it via the existing iterators `store.childrenOf(id)` / `store.descendantsOf(id)`.
+
+**Rule:** users describe the tree bottom-up via `parentId`. To query children/descendants, use the store methods. The hierarchy field is single and authoritative.
+
+### `state` (catalogue) vs `states` (active list)
+
+Singular `state` is a *catalogue* of style overlays keyed by state name. Plural `states` is the *active list* of state names currently applied. Both can be set at multiple layers; precedence is documented in `data-types-implementation-plan.md`.
+
+- Per-instance `NodeData.state` — `Record<string, NodeStyle>` overlay payloads for THIS node.
+- Per-instance `NodeData.states` — `readonly string[]` (active list).
+- Layer-level `NodeOption.state` — `Record<string, ResolvableNodeStyle<GraphNode>>` overlay payloads for ALL nodes.
+
+### Resolution precedence (highest wins, per-field merge)
+
+For each node, the renderer builds the final style by merging in this order:
+
+1. Layer `node.style` (resolved against the stored `GraphNode`)
+2. Legacy `node.data` hints (back-compat — `NodeRenderHints` shape)
+3. Per-node `node.style` (concrete `NodeStyle`)
+4. For each name in `node.states[]`:
+   - layer-level legacy `nodeStateConfigs[name]` (resolved)
+   - layer-level `node.state[name]` (resolved)
+   - per-node `node.state[name]` (concrete)
+
+**Merge happens at the flat-style level** (not at the adapted-NodeRenderHints level) — this lets layer-level `labelFontSize` compose with per-node `labelText` into one `ShapeLabelStyle`. See `GraphLayer.resolveNodeHints`.
+
+### Resolver model
+
+`ResolvableNodeStyle<D>` makes each field `T | ((subject: D) => T)`:
+
+- On `NodeOption.style`, `D = GraphNode` — resolvers fire every render.
+- On the (future) `NodeInput`, `D` = the raw input `data` — resolvers fire once at insert; the store holds concrete values.
+
+`ResolvableId<D> = string | ((data: D) => string)` for the optional input-side id derivation.
+
+### Storybook convention — light per-item, heavy layer template
+
+Per [[feedback_storybook_data_pattern]] and recent refinements:
+
+- **Hardcode per-item data** as literal arrays (no `.map()` / `for` loops generating nodes or edges). The data shape needs to read cleanly in Storybook's "Show code" tab.
+- **Hoist truly shared styling to the layer template** (`options.node.style`, `options.edge.style`). Per-item entries only carry what genuinely differs (id, position/source/target, unique `labelText`, distinguishing fill).
+- **Don't write helper functions** in story files. The adapter merges layer + per-item styles correctly, so the layer template can carry e.g. label font/colour/background and per-item only sets `labelText`.
+- **Escape hatch (`labelStyle`)** only when the flat fields can't express the case (wrap, html-text). Otherwise prefer flat.
+
+### Legacy path (back-compat)
+
+Pre-v3 stories and behaviours that read `node.data` as `NodeRenderHints` (`shape: 'circle'`, `fill: 0x...`, `label: ShapeLabelStyle`, …) continue to work — the layer's `resolveNodeHints` reads both paths and applies the legacy hints between layer-template and per-node v3 style. Migration is opt-in per node: set `node.style` and the v3 path takes over; omit it and the legacy hints render unchanged.
+
+Legacy types kept: `NodeRenderHints`, `EdgeRenderHints`, `Resolvable*RenderHints`, `NodeStateConfig`, `EdgeStateConfig`, `ResolvedNodeDefaults`, `ResolvedEdgeDefaults`, `DEFAULT_NODE_STATE_CONFIGS`, `DEFAULT_EDGE_STATE_CONFIGS`, `nodeDefaults` / `edgeDefaults` / `nodeStateConfigs` / `edgeStateConfigs` options. Slated for removal once datasets + behaviours migrate (phase 8 of `data-types-implementation-plan.md`).
 
 ## State vs. data — bifurcated source of truth
 

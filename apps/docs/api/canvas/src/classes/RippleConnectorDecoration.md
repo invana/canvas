@@ -1,6 +1,6 @@
 # Class: RippleConnectorDecoration
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:34](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L34)
+Defined in: [canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:34](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L34)
 
 Base for decorations that target connector primitives. Mirrors
 `ShapeDecorationBase` — subclass implements `repaint`, the base handles
@@ -21,7 +21,7 @@ call `connector.paintInto` for native dashed/styled strokes), it pulls
 
 > **new RippleConnectorDecoration**(`style`): `RippleConnectorDecoration`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:21](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L21)
+Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:21](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L21)
 
 #### Parameters
 
@@ -43,7 +43,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:21](
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 #### Inherited from
 
@@ -55,7 +55,7 @@ Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:12](https://gi
 
 > `protected` **host**: [`ConnectorDecorationHostInfo`](../interfaces/ConnectorDecorationHostInfo.md) = `null`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:19](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L19)
+Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:19](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L19)
 
 #### Inherited from
 
@@ -67,7 +67,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:19](
 
 > `readonly` **style**: [`RippleConnectorDecorationStyle`](../interfaces/RippleConnectorDecorationStyle.md)
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:18](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L18)
+Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:18](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L18)
 
 #### Inherited from
 
@@ -79,7 +79,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:18](
 
 > **destroy**(): `void`
 
-Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
 
 #### Returns
 
@@ -95,7 +95,7 @@ Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:18](https://gi
 
 > **getEndPadding**(): `object`
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:45](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L45)
+Defined in: [canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:45](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L45)
 
 The peak wave extends `maxRadius` px past each path endpoint (the
 widest ring's stroke is `2 × maxRadius` centered on the path). Asking
@@ -121,7 +121,7 @@ anchor by `maxRadius` so they're enveloped as each wave grows.
 
 > **mount**(`host`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:27](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L27)
+Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:27](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L27)
 
 #### Parameters
 
@@ -143,7 +143,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:27](
 
 > `protected` **repaint**(): `void`
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:50](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L50)
+Defined in: [canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:50](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L50)
 
 #### Returns
 
@@ -159,7 +159,7 @@ Defined in: [packages/canvas/src/primitives/decorations/connector/RippleConnecto
 
 > **tick**(`deltaMs`): `boolean`
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:55](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L55)
+Defined in: [canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:55](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L55)
 
 #### Parameters
 
@@ -177,7 +177,7 @@ Defined in: [packages/canvas/src/primitives/decorations/connector/RippleConnecto
 
 > **update**(`host`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorDecorationBase.ts:34](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L34)
+Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:34](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L34)
 
 #### Parameters
 

@@ -1,6 +1,6 @@
 # Interface: LiquidFillDecorationStyle
 
-Defined in: [packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts:21](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts#L21)
+Defined in: [canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts:21](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts#L21)
 
 Liquid fill — paints a fluid level inside the host's silhouette, with a
 vertical gradient and an optional wavy surface. Achieved without a "fill
@@ -24,7 +24,7 @@ from its animation set, so still-water mode costs zero per frame after
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts:29](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts#L29)
+Defined in: [canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts:29](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts#L29)
 
 Overall opacity of the fluid. Default `1`.
 
@@ -34,7 +34,7 @@ Overall opacity of the fluid. Default `1`.
 
 > `readonly` `optional` **colorBottom?**: `number`
 
-Defined in: [packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts:27](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts#L27)
+Defined in: [canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts:27](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts#L27)
 
 Gradient colour at the bottom. Default dark blue (`0x2d4d6e`).
 
@@ -44,7 +44,7 @@ Gradient colour at the bottom. Default dark blue (`0x2d4d6e`).
 
 > `readonly` `optional` **colorTop?**: `number`
 
-Defined in: [packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts:25](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts#L25)
+Defined in: [canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts:25](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts#L25)
 
 Gradient colour at the surface. Default light blue (`0x9bbedb`).
 
@@ -54,7 +54,7 @@ Gradient colour at the surface. Default light blue (`0x9bbedb`).
 
 > `readonly` `optional` **fillLevel?**: `number`
 
-Defined in: [packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts:23](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts#L23)
+Defined in: [canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts:23](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts#L23)
 
 Surface height as a fraction of host bounds height. `0` empty, `1` full. Default `0.6`.
 
@@ -64,7 +64,7 @@ Surface height as a fraction of host bounds height. `0` empty, `1` full. Default
 
 > `readonly` `optional` **surfaceHighlight?**: `object`
 
-Defined in: [packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts:48](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts#L48)
+Defined in: [canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts:48](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts#L48)
 
 Optional thin highlight band stroked along the surface (gloss / meniscus
 effect). Opt-in: omit the field to skip drawing the highlight entirely.
@@ -93,7 +93,7 @@ Stroke width in px. Default `3`.
 
 > `readonly` `optional` **wave?**: `object`
 
-Defined in: [packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts:34](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts#L34)
+Defined in: [canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts:34](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/LiquidFillDecoration.ts#L34)
 
 Wave configuration. Omit (or pass `undefined`) for a flat still surface.
 Provide for an animated meniscus — phase advances every frame.

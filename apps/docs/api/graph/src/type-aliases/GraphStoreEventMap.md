@@ -2,7 +2,7 @@
 
 > **GraphStoreEventMap** = `object`
 
-Defined in: packages/graph/src/store/types.ts:78
+Defined in: [graph/src/store/types.ts:120](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L120)
 
 Event-map shape for `GraphStore.events` (used by `EventEmitter<E>`).
 
@@ -15,7 +15,7 @@ or to `flush` for aggregated per-batch counts.
 
 > **edge:add**: `object`
 
-Defined in: packages/graph/src/store/types.ts:82
+Defined in: [graph/src/store/types.ts:124](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L124)
 
 #### edgeId
 
@@ -27,7 +27,7 @@ Defined in: packages/graph/src/store/types.ts:82
 
 > **edge:orphaned**: `object`
 
-Defined in: packages/graph/src/store/types.ts:86
+Defined in: [graph/src/store/types.ts:128](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L128)
 
 Emitted when a buffered edge is dropped after exceeding `pendingEdgeTTL`.
 
@@ -41,7 +41,7 @@ Emitted when a buffered edge is dropped after exceeding `pendingEdgeTTL`.
 
 > **edge:remove**: `object`
 
-Defined in: packages/graph/src/store/types.ts:84
+Defined in: [graph/src/store/types.ts:126](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L126)
 
 #### edgeId
 
@@ -53,7 +53,7 @@ Defined in: packages/graph/src/store/types.ts:84
 
 > **edge:update**: `object`
 
-Defined in: packages/graph/src/store/types.ts:83
+Defined in: [graph/src/store/types.ts:125](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L125)
 
 #### edgeId
 
@@ -69,7 +69,7 @@ Defined in: packages/graph/src/store/types.ts:83
 
 > **flush**: `object`
 
-Defined in: packages/graph/src/store/types.ts:88
+Defined in: [graph/src/store/types.ts:130](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L130)
 
 Aggregate counts per flush. Fires once per batch / RAF flush.
 
@@ -103,7 +103,7 @@ Aggregate counts per flush. Fires once per batch / RAF flush.
 
 > **node:add**: `object`
 
-Defined in: packages/graph/src/store/types.ts:79
+Defined in: [graph/src/store/types.ts:121](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L121)
 
 #### nodeId
 
@@ -115,7 +115,7 @@ Defined in: packages/graph/src/store/types.ts:79
 
 > **node:remove**: `object`
 
-Defined in: packages/graph/src/store/types.ts:81
+Defined in: [graph/src/store/types.ts:123](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L123)
 
 #### nodeId
 
@@ -127,7 +127,7 @@ Defined in: packages/graph/src/store/types.ts:81
 
 > **node:update**: `object`
 
-Defined in: packages/graph/src/store/types.ts:80
+Defined in: [graph/src/store/types.ts:122](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L122)
 
 #### nodeId
 

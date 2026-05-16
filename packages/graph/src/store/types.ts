@@ -3,12 +3,19 @@
  *
  * See `apps/docs/graph/data-model.md` for the user-facing description and
  * `apps/docs/graph/store-plan.md` for the implementation rationale.
+ *
+ * **v3 G6-aligned shape**: per-instance descriptor is flat with
+ * `{ id, type, data, style, state, states, combo, children, ... }`.
+ * `state` (singular) is the per-instance overlay catalogue;
+ * `states` (plural) is the active-state list.
  */
 
 /** A node in the graph. `id` is unique within a `GraphStore`. */
 export interface GraphNode<D = unknown> {
   /** Stable identity. Must be unique within the store. */
   id: string;
+  /** Type tag — matches a `NodeOption.type` template if any. Free-form. */
+  type?: string;
   /** Arbitrary user payload — opaque to the store. */
   data?: D;
   /** Logical parent. Cycles are rejected at write time. */
@@ -17,23 +24,35 @@ export interface GraphNode<D = unknown> {
   position?: { x: number; y: number };
   /** True iff layouts must not move this node. */
   pinned?: boolean;
+
   /**
-   * Initial / data-driven visual states active on this node. Each name must
-   * match a `NodeStateConfig` registered on the consuming `GraphLayer`
-   * (see `setNodeStateConfig`, the canonical `DEFAULT_NODE_STATE_CONFIGS`,
-   * or the `nodeStateConfigs` option).
+   * Currently-active state names (plural). Each name should match a key in
+   * `style.state` (per-instance overlay catalogue) or in
+   * `GraphLayerOptions.node.state` (layer-level catalogue).
    *
    * The store treats this field as opaque metadata. The layer reads it on
    * insert and update to toggle visual states via `setNodeState`. On
-   * update with `state` present in the patch the layer REPLACES the
+   * update with `states` present in the patch the layer REPLACES the
    * visible state set with the new array — runtime states applied via
    * `setNodeState` (e.g. hover) are wiped. Pass an empty array (or
    * `null`) to clear.
-   *
-   * Reading `getNode(id).state` reflects the most recent value supplied
-   * to the store, not runtime states added imperatively.
    */
-  state?: readonly string[] | null;
+  states?: readonly string[] | null;
+
+  /**
+   * Visual + structural style for this node. Typed via
+   * `import('../layer/types').NodeStyle` in consumer code; left as `unknown`
+   * here to avoid a store → layer dependency cycle.
+   */
+  style?: unknown;
+
+  /**
+   * Per-instance overlay catalogue keyed by state name (singular `state`).
+   * Each value is a `NodeStyle` patch applied when that name appears in
+   * {@link states}. Typed by the consumer as
+   * `Readonly<Record<string, NodeStyle>>`.
+   */
+  state?: unknown;
 }
 
 /** A directed edge. Multi-edges between the same pair are allowed. */
@@ -48,8 +67,12 @@ export interface GraphEdge<D = unknown> {
   type?: string;
   /** Arbitrary user payload — opaque to the store. */
   data?: D;
-  /** Sibling of {@link GraphNode.state} — data-driven visual states for this edge. */
-  state?: readonly string[] | null;
+  /** Sibling of {@link GraphNode.states} — currently-active state names. */
+  states?: readonly string[] | null;
+  /** Per-instance style. Typed by consumer as `EdgeStyle`. */
+  style?: unknown;
+  /** Per-instance overlay catalogue. Typed by consumer as `Record<string, EdgeStyle>`. */
+  state?: unknown;
 }
 
 /**

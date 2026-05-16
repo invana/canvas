@@ -1,6 +1,6 @@
 # Interface: IEffectBase\<THostInfo, TStyle\>
 
-Defined in: [packages/canvas/src/primitives/types.ts:824](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L824)
+Defined in: [canvas/src/primitives/types.ts:829](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L829)
 
 Common interface for shape and connector effects. Mirrors `IDecorationBase`
 but reads modulations instead of drawing geometry. Animated effects expose
@@ -28,7 +28,7 @@ The renderer ignores whichever isn't relevant for the declared target.
 
 > `readonly` **style**: `TStyle`
 
-Defined in: [packages/canvas/src/primitives/types.ts:826](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L826)
+Defined in: [canvas/src/primitives/types.ts:831](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L831)
 
 ***
 
@@ -36,7 +36,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:826](https://github.com/inv
 
 > `readonly` **target**: [`EffectTarget`](../type-aliases/EffectTarget.md)
 
-Defined in: [packages/canvas/src/primitives/types.ts:825](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L825)
+Defined in: [canvas/src/primitives/types.ts:830](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L830)
 
 ## Methods
 
@@ -44,7 +44,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:825](https://github.com/inv
 
 > `optional` **destroy**(): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:832](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L832)
+Defined in: [canvas/src/primitives/types.ts:837](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L837)
 
 #### Returns
 
@@ -56,7 +56,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:832](https://github.com/inv
 
 > **mount**(`host`): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:827](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L827)
+Defined in: [canvas/src/primitives/types.ts:832](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L832)
 
 #### Parameters
 
@@ -74,7 +74,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:827](https://github.com/inv
 
 > `optional` **readStyle**(): [`StyleOverride`](StyleOverride.md)
 
-Defined in: [packages/canvas/src/primitives/types.ts:831](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L831)
+Defined in: [canvas/src/primitives/types.ts:836](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L836)
 
 #### Returns
 
@@ -86,7 +86,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:831](https://github.com/inv
 
 > `optional` **readTransform**(): [`TransformDelta`](TransformDelta.md)
 
-Defined in: [packages/canvas/src/primitives/types.ts:830](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L830)
+Defined in: [canvas/src/primitives/types.ts:835](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L835)
 
 #### Returns
 
@@ -98,7 +98,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:830](https://github.com/inv
 
 > `optional` **tick**(`deltaMs`): `boolean`
 
-Defined in: [packages/canvas/src/primitives/types.ts:829](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L829)
+Defined in: [canvas/src/primitives/types.ts:834](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L834)
 
 #### Parameters
 
@@ -116,7 +116,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:829](https://github.com/inv
 
 > `optional` **update**(`host`): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:828](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L828)
+Defined in: [canvas/src/primitives/types.ts:833](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L833)
 
 #### Parameters
 

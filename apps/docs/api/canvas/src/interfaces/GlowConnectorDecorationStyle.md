@@ -1,6 +1,6 @@
 # Interface: GlowConnectorDecorationStyle
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts:15](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts#L15)
+Defined in: [canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts:15](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts#L15)
 
 Soft halo around the routed path of a connector. Repaints the path N
 times with widening stroke and quadratic alpha falloff, producing a
@@ -18,7 +18,7 @@ geometry is only repainted on `repaint`; per-frame work touches
 
 > `readonly` **color**: `number`
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts:16](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts#L16)
+Defined in: [canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts:16](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts#L16)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [packages/canvas/src/primitives/decorations/connector/GlowConnectorD
 
 > `readonly` `optional` **innerAlpha?**: `number`
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts:22](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts#L22)
+Defined in: [canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts:22](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts#L22)
 
 Innermost (brightest) layer alpha. Default `0.55`.
 
@@ -36,7 +36,7 @@ Innermost (brightest) layer alpha. Default `0.55`.
 
 > `readonly` `optional` **layers?**: `number`
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts:20](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts#L20)
+Defined in: [canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts:20](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts#L20)
 
 Number of feather layers (more = smoother + more expensive). Default `6`.
 
@@ -46,7 +46,7 @@ Number of feather layers (more = smoother + more expensive). Default `6`.
 
 > `readonly` `optional` **pulse?**: `object`
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts:28](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts#L28)
+Defined in: [canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts:28](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts#L28)
 
 Optional brightness pulse. When omitted, the glow is static. When set,
 the decoration alpha-multiplies between `1` and `1 - amplitude` on a
@@ -70,6 +70,6 @@ Cycle length in ms. Default `1200`.
 
 > `readonly` `optional` **radius?**: `number`
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts:18](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts#L18)
+Defined in: [canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts:18](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/GlowConnectorDecoration.ts#L18)
 
 Outermost glow extent in px (widest stroke). Default `12`.

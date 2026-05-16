@@ -1,6 +1,6 @@
 # Interface: Rect
 
-Defined in: [packages/canvas/src/primitives/types.ts:30](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L30)
+Defined in: [canvas/src/primitives/types.ts:30](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L30)
 
 ## Extended by
 
@@ -12,7 +12,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:30](https://github.com/inva
 
 > `readonly` **height**: `number`
 
-Defined in: [packages/canvas/src/primitives/types.ts:34](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L34)
+Defined in: [canvas/src/primitives/types.ts:34](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L34)
 
 ***
 
@@ -20,7 +20,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:34](https://github.com/inva
 
 > `readonly` **width**: `number`
 
-Defined in: [packages/canvas/src/primitives/types.ts:33](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L33)
+Defined in: [canvas/src/primitives/types.ts:33](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L33)
 
 ***
 
@@ -28,7 +28,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:33](https://github.com/inva
 
 > `readonly` **x**: `number`
 
-Defined in: [packages/canvas/src/primitives/types.ts:31](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L31)
+Defined in: [canvas/src/primitives/types.ts:31](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L31)
 
 ***
 
@@ -36,4 +36,4 @@ Defined in: [packages/canvas/src/primitives/types.ts:31](https://github.com/inva
 
 > `readonly` **y**: `number`
 
-Defined in: [packages/canvas/src/primitives/types.ts:32](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L32)
+Defined in: [canvas/src/primitives/types.ts:32](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L32)

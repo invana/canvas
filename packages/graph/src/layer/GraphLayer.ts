@@ -35,17 +35,25 @@ import {
   DEFAULT_NODE_STATE_CONFIGS,
   resolveField,
   type EdgeLabelHint,
+  type EdgeOption,
   type EdgePathType,
   type EdgeRenderHints,
+  type EdgeShapeOptions,
   type EdgeStateConfig,
+  type EdgeStyle,
   type GraphData,
   type GraphLayerEvents,
   type GraphLayerOptions,
   type NodeLabelHint,
+  type NodeOption,
   type NodeRenderHints,
+  type NodeShapeOptions,
   type NodeStateConfig,
+  type NodeStyle,
   type ResolvableEdgeRenderHints,
+  type ResolvableEdgeStyle,
   type ResolvableNodeRenderHints,
+  type ResolvableNodeStyle,
 } from './types';
 
 // ─── Resolved-defaults types ───────────────────────────────────────────────
@@ -263,6 +271,12 @@ export class GraphLayer extends WorldLayer<
   private readonly nodeStates: Map<string, Set<string>> = new Map();
   private readonly edgeStates: Map<string, Set<string>> = new Map();
 
+  // ─── v3 G6-aligned layer template ────────────────────────────────────
+  // `options.node` and `options.edge` carry layer-level NodeOption /
+  // EdgeOption templates (style + state catalogue, resolver-aware).
+  private nodeOption: NodeOption | undefined;
+  private edgeOption: EdgeOption | undefined;
+
   constructor(opts: LayerOptions<GraphLayerOptions>) {
     super(opts);
     this.store = opts.options.store ?? new GraphStore();
@@ -293,6 +307,12 @@ export class GraphLayer extends WorldLayer<
         this.edgeStateConfigs.set(name, cfg);
       }
     }
+
+    // v3 G6-aligned layer template (NodeOption / EdgeOption). Coexists with
+    // the legacy nodeDefaults / nodeStateConfigs path; both are read at
+    // render time and merged per §2 of `data-types-implementation-plan.md`.
+    this.nodeOption = opts.options.node;
+    this.edgeOption = opts.options.edge;
   }
 
   protected createState(): GraphLayerState {
@@ -329,8 +349,8 @@ export class GraphLayer extends WorldLayer<
         const node = this.store.getNode(nodeId);
         if (!node) return;
         this.updateNodeShape(node, patch);
-        if ('state' in patch) {
-          this.syncDataDrivenNodeStates(node, patch.state ?? null);
+        if ('states' in patch) {
+          this.syncDataDrivenNodeStates(node, patch.states ?? null);
         }
       }),
       s.on('node:remove', ({ nodeId }) => {
@@ -347,8 +367,8 @@ export class GraphLayer extends WorldLayer<
         const edge = this.store.getEdge(edgeId);
         if (!edge) return;
         this.updateEdgeConnector(edge, patch);
-        if ('state' in patch) {
-          this.syncDataDrivenEdgeStates(edge, patch.state ?? null);
+        if ('states' in patch) {
+          this.syncDataDrivenEdgeStates(edge, patch.states ?? null);
         }
       }),
       s.on('edge:remove', ({ edgeId }) => {
@@ -529,37 +549,104 @@ export class GraphLayer extends WorldLayer<
   // ─── Internals: data → spec translation ─────────────────────────────────
 
   /**
-   * Resolve the active node hints — merges base `node.data` hints with each
-   * active state's overlay, resolving overlay resolver functions against the
-   * current node. The returned `NodeRenderHints` is fully static.
+   * Resolve the active node hints — merges base `node.data` hints (legacy)
+   * and v3 `node.style` with each active state's overlay (legacy + v3),
+   * resolving layer-side resolver functions against the current node.
+   *
+   * Precedence (lowest → highest):
+   * 1. layer `node.style` (resolved against GraphNode, adapted)
+   * 2. `node.data` (legacy hints)
+   * 3. per-node `node.style` (concrete NodeStyle, adapted)
+   * 4. For each active state name in `node.states[]`:
+   *    a. layer legacy `nodeStateConfigs[name]` (resolved)
+   *    b. layer v3 `node.state[name]` (resolved against GraphNode, adapted)
+   *    c. per-node `node.state[name]` (concrete NodeStyle, adapted)
    */
   private resolveNodeHints(node: GraphNode): NodeRenderHints {
-    const base = (node.data as NodeRenderHints | undefined) ?? {};
-    const states = this.nodeStates.get(node.id);
-    if (!states || states.size === 0) return base;
-    const out: NodeRenderHints = { ...base };
-    for (const name of states) {
-      const cfg = this.nodeStateConfigs.get(name);
-      if (!cfg) continue;
-      for (const k of Object.keys(cfg) as (keyof ResolvableNodeRenderHints)[]) {
-        const resolved = resolveField(cfg[k], node);
-        if (resolved !== undefined) (out as Record<string, unknown>)[k as string] = resolved;
+    // Merge v3 NodeStyle fields BEFORE adapting. Necessary so layer-level
+    // settings like `labelFontSize` compose with per-node `labelText` into
+    // one ShapeLabelStyle — otherwise adapting layer + per-node separately
+    // would build two labels and Object.assign would clobber the layer's
+    // font settings with the per-node label.
+    const mergedStyle: Partial<NodeStyle> = {};
+    if (this.nodeOption?.style) {
+      Object.assign(mergedStyle, resolveNodeStyleFields(this.nodeOption.style, node));
+    }
+    Object.assign(mergedStyle, (node.style as Partial<NodeStyle> | undefined) ?? {});
+
+    // Start from legacy `node.data` hints, then apply the adapted v3 style.
+    const out: NodeRenderHints = { ...((node.data as NodeRenderHints | undefined) ?? {}) };
+    Object.assign(out, adaptNodeStyle(mergedStyle));
+
+    const activeStates = this.nodeStates.get(node.id);
+    if (activeStates && activeStates.size > 0) {
+      const perNodeCatalogue = node.state as Readonly<Record<string, NodeStyle>> | undefined;
+      for (const name of activeStates) {
+        // (a) Legacy state config — applied directly to NodeRenderHints.
+        const legacy = this.nodeStateConfigs.get(name);
+        if (legacy) {
+          for (const k of Object.keys(legacy) as (keyof ResolvableNodeRenderHints)[]) {
+            const v = resolveField(legacy[k], node);
+            if (v !== undefined) (out as Record<string, unknown>)[k as string] = v;
+          }
+        }
+        // (b+c) v3 state overlays — merge into mergedStyle so label-field
+        // composition works (e.g. state's `bgStrokeWidth` doesn't lose the
+        // base `labelText`), then re-adapt.
+        let stateDirty = false;
+        const layerOverlay = this.nodeOption?.state?.[name];
+        if (layerOverlay) {
+          Object.assign(mergedStyle, resolveNodeStyleFields(layerOverlay, node));
+          stateDirty = true;
+        }
+        const perNodeOverlay = perNodeCatalogue?.[name];
+        if (perNodeOverlay) {
+          Object.assign(mergedStyle, perNodeOverlay);
+          stateDirty = true;
+        }
+        if (stateDirty) {
+          Object.assign(out, adaptNodeStyle(mergedStyle));
+        }
       }
     }
     return out;
   }
 
   private resolveEdgeHints(edge: GraphEdge): EdgeRenderHints {
-    const base = (edge.data as EdgeRenderHints | undefined) ?? {};
-    const states = this.edgeStates.get(edge.id);
-    if (!states || states.size === 0) return base;
-    const out: EdgeRenderHints = { ...base };
-    for (const name of states) {
-      const cfg = this.edgeStateConfigs.get(name);
-      if (!cfg) continue;
-      for (const k of Object.keys(cfg) as (keyof ResolvableEdgeRenderHints)[]) {
-        const resolved = resolveField(cfg[k], edge);
-        if (resolved !== undefined) (out as Record<string, unknown>)[k as string] = resolved;
+    const mergedStyle: Partial<EdgeStyle> = {};
+    if (this.edgeOption?.style) {
+      Object.assign(mergedStyle, resolveEdgeStyleFields(this.edgeOption.style, edge));
+    }
+    Object.assign(mergedStyle, (edge.style as Partial<EdgeStyle> | undefined) ?? {});
+
+    const out: EdgeRenderHints = { ...((edge.data as EdgeRenderHints | undefined) ?? {}) };
+    Object.assign(out, adaptEdgeStyle(mergedStyle));
+
+    const activeStates = this.edgeStates.get(edge.id);
+    if (activeStates && activeStates.size > 0) {
+      const perEdgeCatalogue = edge.state as Readonly<Record<string, EdgeStyle>> | undefined;
+      for (const name of activeStates) {
+        const legacy = this.edgeStateConfigs.get(name);
+        if (legacy) {
+          for (const k of Object.keys(legacy) as (keyof ResolvableEdgeRenderHints)[]) {
+            const v = resolveField(legacy[k], edge);
+            if (v !== undefined) (out as Record<string, unknown>)[k as string] = v;
+          }
+        }
+        let stateDirty = false;
+        const layerOverlay = this.edgeOption?.state?.[name];
+        if (layerOverlay) {
+          Object.assign(mergedStyle, resolveEdgeStyleFields(layerOverlay, edge));
+          stateDirty = true;
+        }
+        const perEdgeOverlay = perEdgeCatalogue?.[name];
+        if (perEdgeOverlay) {
+          Object.assign(mergedStyle, perEdgeOverlay);
+          stateDirty = true;
+        }
+        if (stateDirty) {
+          Object.assign(out, adaptEdgeStyle(mergedStyle));
+        }
       }
     }
     return out;
@@ -699,7 +786,7 @@ export class GraphLayer extends WorldLayer<
   ): void {
     if (replacement === undefined) {
       // Insert path — only add named states; do not clear.
-      for (const name of node.state ?? []) {
+      for (const name of node.states ?? []) {
         this.setNodeState(node.id, name, true);
       }
       return;
@@ -720,7 +807,7 @@ export class GraphLayer extends WorldLayer<
     replacement: readonly string[] | null | undefined,
   ): void {
     if (replacement === undefined) {
-      for (const name of edge.state ?? []) {
+      for (const name of edge.states ?? []) {
         this.setEdgeState(edge.id, name, true);
       }
       return;
@@ -955,4 +1042,269 @@ function edgeLabelHintToStyle(hint: EdgeLabelHint): ConnectorLabelStyle {
     return { content: { kind: 'text', text: hint } };
   }
   return hint;
+}
+
+// ─── v3 NodeStyle / EdgeStyle adapters (new-shape → legacy NodeRenderHints) ─
+// Translate the v3 flat-key NodeStyle / EdgeStyle into the internal
+// NodeRenderHints / EdgeRenderHints fields the renderer already understands.
+// Keeps the v3 public API stable while reusing today's render path.
+
+/**
+ * Adapt a {@link NodeShapeOptions} (discriminated union) to the legacy
+ * flat hint fields the renderer consumes. Lives inside `style.shape` in v3.
+ */
+function adaptNodeShape(shape: NodeShapeOptions | undefined): Partial<NodeRenderHints> {
+  if (!shape) return {};
+  switch (shape.kind) {
+    case 'rect':
+      return {
+        shape: 'rect',
+        size: shape.width,
+        height: shape.height,
+        ...(shape.cornerRadius !== undefined ? { cornerRadius: shape.cornerRadius } : {}),
+      };
+    case 'circle':
+      return { shape: 'circle', size: shape.radius * 2 };
+    case 'arc':
+      return {
+        shape: 'arc',
+        innerR: shape.innerR,
+        outerR: shape.outerR,
+        startAngle: shape.startAngle,
+        endAngle: shape.endAngle,
+      };
+  }
+}
+
+/**
+ * Adapt the flat-prefixed {@link NodeStyle} fields to the legacy
+ * NodeRenderHints fields. Includes the `style.shape` structural variant.
+ *
+ * Polymorphic fields (`bgFill` as ShapeFillLayer / array, `icon`, `image`,
+ * `badges`, `decorations`, `effects`) are not yet wired into the legacy
+ * spec path; they pass through for forward compatibility but the renderer
+ * ignores them until a follow-up phase wires them.
+ */
+function adaptNodeStyle(style: Partial<NodeStyle> | undefined): Partial<NodeRenderHints> {
+  if (!style) return {};
+  const hints: Partial<NodeRenderHints> = { ...adaptNodeShape(style.shape) };
+  if (style.bgFill !== undefined) {
+    // Legacy `fill` only accepts `number | false`. Pass through numbers;
+    // complex fill layers (gradient, glyph, image) are pending renderer
+    // wiring — they no-op for now in the legacy path.
+    if (typeof style.bgFill === 'number') hints.fill = style.bgFill;
+  }
+  if (style.bgStrokeColor !== undefined) hints.stroke = style.bgStrokeColor;
+  if (style.bgStrokeWidth !== undefined) hints.strokeWidth = style.bgStrokeWidth;
+  if (style.bgAlpha !== undefined) hints.alpha = style.bgAlpha;
+
+  // Escape hatch: full `ShapeLabelStyle` payload wins over flat fields.
+  if (style.labelStyle !== undefined) {
+    hints.label = style.labelStyle;
+  } else {
+    const label = buildShapeLabelStyle(style);
+    if (label !== undefined) hints.label = label;
+  }
+  return hints;
+}
+
+/**
+ * Build a `ShapeLabelStyle` from the flat label fields on a NodeStyle.
+ * Returns `undefined` when there's no `labelText` — a label without text
+ * is meaningless, and silently emitting an empty-text label would show
+ * a 0×0 decoration on nodes that only inherit layer-level label *settings*
+ * without supplying any text.
+ */
+function buildShapeLabelStyle(style: Partial<NodeStyle>): ShapeLabelStyle | undefined {
+  if (style.labelText === undefined) {
+    return undefined;
+  }
+  return {
+    content: {
+      kind: 'text',
+      text: style.labelText ?? '',
+      ...(style.labelColor !== undefined ? { fill: style.labelColor } : {}),
+      ...(style.labelFontSize !== undefined ? { fontSize: style.labelFontSize } : {}),
+      ...(style.labelFontFamily !== undefined ? { fontFamily: style.labelFontFamily } : {}),
+      ...(style.labelFontWeight !== undefined ? { fontWeight: style.labelFontWeight } : {}),
+      ...(style.labelFontStyle !== undefined ? { fontStyle: style.labelFontStyle } : {}),
+      ...(style.labelAlign !== undefined ? { align: style.labelAlign } : {}),
+      ...(style.labelLineHeight !== undefined ? { lineHeight: style.labelLineHeight } : {}),
+      ...(style.labelLetterSpacing !== undefined ? { letterSpacing: style.labelLetterSpacing } : {}),
+    },
+    ...(style.labelPlacement !== undefined ? { placement: style.labelPlacement } : {}),
+    ...(style.labelRotation !== undefined ? { rotation: style.labelRotation } : {}),
+    ...(style.labelAlpha !== undefined ? { alpha: style.labelAlpha } : {}),
+    ...(style.labelMinFontSize !== undefined ? { minFontSize: style.labelMinFontSize } : {}),
+    ...(style.labelPriority !== undefined ? { priority: style.labelPriority } : {}),
+    ...(style.labelCollisionGroup !== undefined ? { collisionGroup: style.labelCollisionGroup } : {}),
+    ...(style.labelForceShow !== undefined ? { forceShow: style.labelForceShow } : {}),
+    ...(style.labelMinZoom !== undefined || style.labelMaxZoom !== undefined
+      ? {
+          visibility: {
+            ...(style.labelMinZoom !== undefined ? { minZoom: style.labelMinZoom } : {}),
+            ...(style.labelMaxZoom !== undefined ? { maxZoom: style.labelMaxZoom } : {}),
+          },
+        }
+      : {}),
+    ...(style.labelOffsetX !== undefined || style.labelOffsetY !== undefined
+      ? {
+          offset: {
+            ...(style.labelOffsetX !== undefined ? { x: style.labelOffsetX } : {}),
+            ...(style.labelOffsetY !== undefined ? { y: style.labelOffsetY } : {}),
+          },
+        }
+      : {}),
+    ...(buildLabelBackground(style) !== undefined ? { background: buildLabelBackground(style)! } : {}),
+  };
+}
+
+/** Build the `LabelBackground` payload from flat `labelBackground*` fields. */
+function buildLabelBackground(
+  style: Partial<NodeStyle> | Partial<EdgeStyle>,
+): ShapeLabelStyle['background'] | undefined {
+  if (
+    style.labelBackgroundFill === undefined
+    && style.labelBackgroundAlpha === undefined
+    && style.labelBackgroundStrokeColor === undefined
+    && style.labelBackgroundStrokeWidth === undefined
+    && style.labelBackgroundPadding === undefined
+    && style.labelBackgroundCornerRadius === undefined
+  ) {
+    return undefined;
+  }
+  return {
+    ...(style.labelBackgroundFill !== undefined ? { fill: style.labelBackgroundFill } : {}),
+    ...(style.labelBackgroundAlpha !== undefined ? { fillAlpha: style.labelBackgroundAlpha } : {}),
+    ...(style.labelBackgroundStrokeColor !== undefined ? { stroke: style.labelBackgroundStrokeColor } : {}),
+    ...(style.labelBackgroundStrokeWidth !== undefined ? { strokeWidth: style.labelBackgroundStrokeWidth } : {}),
+    ...(style.labelBackgroundPadding !== undefined ? { padding: style.labelBackgroundPadding } : {}),
+    ...(style.labelBackgroundCornerRadius !== undefined ? { radius: style.labelBackgroundCornerRadius } : {}),
+  };
+}
+
+/**
+ * Resolve every Resolvable field on a ResolvableNodeStyle against `subject`
+ * (raw input data at insert-time, or stored GraphNode at render-time).
+ */
+function resolveNodeStyleFields<D>(
+  cfg: ResolvableNodeStyle<D>,
+  subject: D,
+): Partial<NodeStyle> {
+  const out: Record<string, unknown> = {};
+  for (const k of Object.keys(cfg) as (keyof ResolvableNodeStyle<D>)[]) {
+    const v = resolveField(cfg[k] as never, subject);
+    if (v !== undefined) out[k as string] = v;
+  }
+  return out as Partial<NodeStyle>;
+}
+
+// ─── Edge adapters ─────────────────────────────────────────────────────────
+
+/** Adapt {@link EdgeShapeOptions} (lives at edge.style.shape) to legacy hints. */
+function adaptEdgeShape(shape: EdgeShapeOptions | undefined): Partial<EdgeRenderHints> {
+  if (!shape) return {};
+  const out: Partial<EdgeRenderHints> = {};
+  if (shape.pathType !== undefined) out.pathType = shape.pathType;
+  if (shape.sourceAnchor !== undefined) out.sourceAnchor = shape.sourceAnchor;
+  if (shape.targetAnchor !== undefined) out.targetAnchor = shape.targetAnchor;
+  if (shape.sourceAnchorOpts !== undefined) out.sourceAnchorOpts = shape.sourceAnchorOpts;
+  if (shape.targetAnchorOpts !== undefined) out.targetAnchorOpts = shape.targetAnchorOpts;
+  if (shape.pathStyleOpts !== undefined) out.pathStyleOpts = shape.pathStyleOpts;
+  if (shape.waypoints !== undefined) out.waypoints = shape.waypoints;
+  return out;
+}
+
+/**
+ * Adapt the flat-prefixed {@link EdgeStyle} fields to the legacy
+ * EdgeRenderHints fields. Includes the `edge.style.shape` structural variant.
+ *
+ * Arrow source/target are simplified — the legacy spec only supports
+ * `arrow: boolean` (target-only). `arrowTargetShape` other than `'none'`
+ * enables the arrow; `'none'` disables. Source arrows pass through as
+ * forward-compat metadata but aren't yet rendered by the legacy path.
+ */
+function adaptEdgeStyle(style: Partial<EdgeStyle> | undefined): Partial<EdgeRenderHints> {
+  if (!style) return {};
+  const hints: Partial<EdgeRenderHints> = { ...adaptEdgeShape(style.shape) };
+  if (style.strokeColor !== undefined) hints.stroke = style.strokeColor;
+  if (style.strokeWidth !== undefined) hints.strokeWidth = style.strokeWidth;
+  if (style.strokeAlpha !== undefined) hints.alpha = style.strokeAlpha;
+  if (style.arrowTargetShape !== undefined) {
+    hints.arrow = style.arrowTargetShape !== 'none';
+  }
+  // Escape hatch: full `ConnectorLabelStyle` payload wins over flat fields.
+  if (style.labelStyle !== undefined) {
+    hints.label = style.labelStyle;
+  } else {
+    const label = buildConnectorLabelStyle(style);
+    if (label !== undefined) hints.label = label;
+  }
+  return hints;
+}
+
+/**
+ * Build a `ConnectorLabelStyle` from the flat label fields on an EdgeStyle.
+ * Returns `undefined` when there's no `labelText` — same rationale as
+ * {@link buildShapeLabelStyle}.
+ */
+function buildConnectorLabelStyle(style: Partial<EdgeStyle>): ConnectorLabelStyle | undefined {
+  if (style.labelText === undefined) {
+    return undefined;
+  }
+  return {
+    content: {
+      kind: 'text',
+      text: style.labelText ?? '',
+      ...(style.labelColor !== undefined ? { fill: style.labelColor } : {}),
+      ...(style.labelFontSize !== undefined ? { fontSize: style.labelFontSize } : {}),
+      ...(style.labelFontFamily !== undefined ? { fontFamily: style.labelFontFamily } : {}),
+      ...(style.labelFontWeight !== undefined ? { fontWeight: style.labelFontWeight } : {}),
+      ...(style.labelFontStyle !== undefined ? { fontStyle: style.labelFontStyle } : {}),
+      ...(style.labelAlign !== undefined ? { align: style.labelAlign } : {}),
+      ...(style.labelLineHeight !== undefined ? { lineHeight: style.labelLineHeight } : {}),
+      ...(style.labelLetterSpacing !== undefined ? { letterSpacing: style.labelLetterSpacing } : {}),
+    },
+    ...(style.labelPlacement !== undefined ? { placement: style.labelPlacement } : {}),
+    ...(style.labelPathOffset !== undefined ? { pathOffset: style.labelPathOffset } : {}),
+    ...(style.labelAutoRotate !== undefined ? { autoRotate: style.labelAutoRotate } : {}),
+    ...(style.labelKeepUpright !== undefined ? { keepUpright: style.labelKeepUpright } : {}),
+    ...(style.labelAlpha !== undefined ? { alpha: style.labelAlpha } : {}),
+    ...(style.labelMinFontSize !== undefined ? { minFontSize: style.labelMinFontSize } : {}),
+    ...(style.labelPriority !== undefined ? { priority: style.labelPriority } : {}),
+    ...(style.labelCollisionGroup !== undefined ? { collisionGroup: style.labelCollisionGroup } : {}),
+    ...(style.labelForceShow !== undefined ? { forceShow: style.labelForceShow } : {}),
+    ...(style.labelMinZoom !== undefined || style.labelMaxZoom !== undefined
+      ? {
+          visibility: {
+            ...(style.labelMinZoom !== undefined ? { minZoom: style.labelMinZoom } : {}),
+            ...(style.labelMaxZoom !== undefined ? { maxZoom: style.labelMaxZoom } : {}),
+          },
+        }
+      : {}),
+    ...(style.labelOffsetX !== undefined || style.labelOffsetY !== undefined
+      ? {
+          offset: {
+            ...(style.labelOffsetX !== undefined ? { x: style.labelOffsetX } : {}),
+            ...(style.labelOffsetY !== undefined ? { y: style.labelOffsetY } : {}),
+          },
+        }
+      : {}),
+    ...(buildLabelBackground(style) !== undefined ? { background: buildLabelBackground(style)! } : {}),
+  };
+}
+
+/**
+ * Resolve every Resolvable field on a ResolvableEdgeStyle against `subject`.
+ */
+function resolveEdgeStyleFields<D>(
+  cfg: ResolvableEdgeStyle<D>,
+  subject: D,
+): Partial<EdgeStyle> {
+  const out: Record<string, unknown> = {};
+  for (const k of Object.keys(cfg) as (keyof ResolvableEdgeStyle<D>)[]) {
+    const v = resolveField(cfg[k] as never, subject);
+    if (v !== undefined) out[k as string] = v;
+  }
+  return out as Partial<EdgeStyle>;
 }

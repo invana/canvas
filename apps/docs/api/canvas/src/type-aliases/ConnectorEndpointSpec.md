@@ -2,7 +2,7 @@
 
 > **ConnectorEndpointSpec** = \{ `kind`: `"point"`; `tangent?`: [`Vec2`](../interfaces/Vec2.md); `x`: `number`; `y`: `number`; \} \| \{ `anchor?`: [`AnchorSpec`](AnchorSpec.md); `kind`: `"shape"`; `padding?`: `number`; `shapeId`: `string`; \}
 
-Defined in: [packages/canvas/src/primitives/types.ts:447](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L447)
+Defined in: [canvas/src/primitives/types.ts:441](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L441)
 
 ## Union Members
 

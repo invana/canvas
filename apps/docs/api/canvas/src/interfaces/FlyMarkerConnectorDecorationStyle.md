@@ -1,6 +1,6 @@
 # Interface: FlyMarkerConnectorDecorationStyle
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:17](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L17)
+Defined in: [canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:17](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L17)
 
 Connector decoration that animates a single marker travelling along the
 routed path of its host. Useful for visualising direction, data flow, or
@@ -18,7 +18,7 @@ so per-frame work is a binary search + interpolation.
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:42](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L42)
+Defined in: [canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:42](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L42)
 
 Overall decoration alpha. Default `1`.
 
@@ -28,7 +28,7 @@ Overall decoration alpha. Default `1`.
 
 > `readonly` **color**: `number`
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:18](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L18)
+Defined in: [canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:18](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L18)
 
 ***
 
@@ -36,7 +36,7 @@ Defined in: [packages/canvas/src/primitives/decorations/connector/FlyMarkerConne
 
 > `readonly` `optional` **loop?**: `boolean`
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:33](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L33)
+Defined in: [canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:33](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L33)
 
 When `true` (default) the marker wraps back to the start after reaching
 the end (or vice versa for negative speed). When `false` the marker
@@ -48,7 +48,7 @@ stops at the end of the path until the decoration is removed.
 
 > `readonly` `optional` **markerKind?**: `"circle"` \| `"arrow"` \| `"square"`
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:20](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L20)
+Defined in: [canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:20](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L20)
 
 Marker silhouette. Default `'circle'`.
 
@@ -58,7 +58,7 @@ Marker silhouette. Default `'circle'`.
 
 > `readonly` `optional` **orientToPath?**: `boolean`
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:40](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L40)
+Defined in: [canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:40](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L40)
 
 Rotate the marker so its local +x axis points along the local tangent.
 Default `true` for `'arrow'`, `false` for `'circle'` and `'square'`.
@@ -69,7 +69,7 @@ Default `true` for `'arrow'`, `false` for `'circle'` and `'square'`.
 
 > `readonly` `optional` **phase?**: `number`
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:35](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L35)
+Defined in: [canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:35](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L35)
 
 Initial position along the path in `[0, 1]`. Default `0`.
 
@@ -79,7 +79,7 @@ Initial position along the path in `[0, 1]`. Default `0`.
 
 > `readonly` `optional` **size?**: `number`
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:22](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L22)
+Defined in: [canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:22](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L22)
 
 Marker size in px (diameter / arrow length / square side). Default `8`.
 
@@ -89,7 +89,7 @@ Marker size in px (diameter / arrow length / square side). Default `8`.
 
 > `readonly` `optional` **speedPxPerSec?**: `number`
 
-Defined in: [packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:27](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L27)
+Defined in: [canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts:27](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/FlyMarkerConnectorDecoration.ts#L27)
 
 Travel speed along the path in px/sec. Negative values reverse direction.
 Default `80`.

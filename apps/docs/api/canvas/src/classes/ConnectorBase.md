@@ -1,6 +1,6 @@
 # Abstract Class: ConnectorBase\<TSpec\>
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:27](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L27)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:32](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L32)
 
 Base for the single concrete `Connector` class (and any future custom
 subclasses). Subclasses implement `drawGeometry` to render a `Path` onto a
@@ -36,7 +36,7 @@ in v0" section.
 
 > **new ConnectorBase**\<`TSpec`\>(`host`): `ConnectorBase`\<`TSpec`\>
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:37](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L37)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:42](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L42)
 
 #### Parameters
 
@@ -56,9 +56,9 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:37](https://gi
 
 ### bodyGfx
 
-> `protected` `readonly` **bodyGfx**: [`Graphics`](../interfaces/Graphics.md)
+> `protected` `readonly` **bodyGfx**: `Graphics`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:31](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L31)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:36](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L36)
 
 ***
 
@@ -66,7 +66,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:31](https://gi
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 #### Implementation of
 
@@ -82,7 +82,7 @@ Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:12](https://gi
 
 > `protected` `readonly` **host**: [`ConnectorHostInfo`](../interfaces/ConnectorHostInfo.md)
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:37](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L37)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:42](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L42)
 
 ***
 
@@ -90,15 +90,15 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:37](https://gi
 
 > `protected` **path**: [`Path`](../type-aliases/Path.md) = `[]`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:35](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L35)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:40](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L40)
 
 ***
 
 ### sourceMarkerGfx
 
-> `protected` `readonly` **sourceMarkerGfx**: [`Graphics`](../interfaces/Graphics.md)
+> `protected` `readonly` **sourceMarkerGfx**: `Graphics`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:32](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L32)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:37](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L37)
 
 ***
 
@@ -106,15 +106,15 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:32](https://gi
 
 > `protected` **spec**: `TSpec`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:34](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L34)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:39](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L39)
 
 ***
 
 ### targetMarkerGfx
 
-> `protected` `readonly` **targetMarkerGfx**: [`Graphics`](../interfaces/Graphics.md)
+> `protected` `readonly` **targetMarkerGfx**: `Graphics`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:33](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L33)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:38](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L38)
 
 ## Methods
 
@@ -122,7 +122,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:33](https://gi
 
 > **destroy**(): `void`
 
-Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
 
 #### Returns
 
@@ -142,7 +142,7 @@ Defined in: [packages/canvas/src/primitives/base/PrimitiveBase.ts:18](https://gi
 
 > **draw**(`spec`, `path`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:65](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L65)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:91](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L91)
 
 (Re)paint the connector with a router-resolved `Path`.
 
@@ -170,7 +170,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:65](https://gi
 
 > `abstract` `protected` **drawGeometry**(`g`, `spec`, `path`, `style?`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:58](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L58)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:84](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L84)
 
 Render the path natively via Pixi commands (`moveTo` / `lineTo` /
 `quadraticCurveTo` / `bezierCurveTo`) plus the spec's stroke (or `style`
@@ -181,7 +181,7 @@ by the base via `paintMarkers`.
 
 ##### g
 
-[`Graphics`](../interfaces/Graphics.md)
+`Graphics`
 
 ##### spec
 
@@ -205,7 +205,7 @@ by the base via `paintMarkers`.
 
 > **getVisiblePath**(`spec`, `path`): [`Path`](../type-aliases/Path.md)
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:103](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L103)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:129](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L129)
 
 Path trimmed by the source / target marker insets at the *spec* stroke
 width — i.e. the visible body of the connector. Decorations call this
@@ -236,7 +236,7 @@ cover. Identity when no markers are configured.
 
 > **paintInto**(`g`, `spec`, `path`, `style?`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:81](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L81)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:107](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L107)
 
 Repaint the connector's full silhouette (path + markers) into a
 caller-supplied `Graphics` with style overrides. Connector decorations
@@ -246,7 +246,7 @@ use this to draw with pixel-identical silhouette coverage.
 
 ##### g
 
-[`Graphics`](../interfaces/Graphics.md)
+`Graphics`
 
 ##### spec
 
@@ -274,7 +274,7 @@ use this to draw with pixel-identical silhouette coverage.
 
 > `protected` **paintMarkers**(`g`, `spec`, `path`, `style?`, `strokeWidth?`, `haloStrokeWidth?`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:159](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L159)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:185](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L185)
 
 Paint source/target markers anchored at the path endpoints, oriented
 along the local tangent. Looks up each marker's class via
@@ -292,7 +292,7 @@ coverage). Otherwise markers use their own spec colors.
 
 ##### g
 
-[`Graphics`](../interfaces/Graphics.md)
+`Graphics`
 
 ##### spec
 
@@ -328,13 +328,13 @@ the marker at its halo width without scaling the marker itself.
 
 > `protected` **paintSourceMarker**(`g`, `spec`, `path`, `style?`, `strokeWidth?`, `haloStrokeWidth?`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:176](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L176)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:202](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L202)
 
 #### Parameters
 
 ##### g
 
-[`Graphics`](../interfaces/Graphics.md)
+`Graphics`
 
 ##### spec
 
@@ -366,13 +366,13 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:176](https://g
 
 > `protected` **paintTargetMarker**(`g`, `spec`, `path`, `style?`, `strokeWidth?`, `haloStrokeWidth?`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:202](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L202)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:228](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L228)
 
 #### Parameters
 
 ##### g
 
-[`Graphics`](../interfaces/Graphics.md)
+`Graphics`
 
 ##### spec
 
@@ -404,7 +404,7 @@ Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:202](https://g
 
 > **setBodyVisible**(`visible`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:113](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L113)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:139](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L139)
 
 Toggle the body stroke without affecting markers or decoration children.
 Body, source marker, and target marker live in three sibling Graphics
@@ -431,7 +431,7 @@ re-strokes the body but preserves the hidden state.
 
 > **setSourceMarkerVisible**(`visible`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:118](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L118)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:144](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L144)
 
 Toggle just the source-endpoint marker. See `setBodyVisible`.
 
@@ -455,7 +455,7 @@ Toggle just the source-endpoint marker. See `setBodyVisible`.
 
 > **setTargetMarkerVisible**(`visible`): `void`
 
-Defined in: [packages/canvas/src/primitives/base/ConnectorBase.ts:123](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/base/ConnectorBase.ts#L123)
+Defined in: [canvas/src/primitives/base/ConnectorBase.ts:149](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/ConnectorBase.ts#L149)
 
 Toggle just the target-endpoint marker. See `setBodyVisible`.
 

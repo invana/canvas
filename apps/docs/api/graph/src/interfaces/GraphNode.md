@@ -1,6 +1,6 @@
 # Interface: GraphNode\<D\>
 
-Defined in: packages/graph/src/store/types.ts:9
+Defined in: [graph/src/store/types.ts:14](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L14)
 
 A node in the graph. `id` is unique within a `GraphStore`.
 
@@ -16,7 +16,7 @@ A node in the graph. `id` is unique within a `GraphStore`.
 
 > `optional` **data?**: `D`
 
-Defined in: packages/graph/src/store/types.ts:13
+Defined in: [graph/src/store/types.ts:20](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L20)
 
 Arbitrary user payload — opaque to the store.
 
@@ -26,7 +26,7 @@ Arbitrary user payload — opaque to the store.
 
 > **id**: `string`
 
-Defined in: packages/graph/src/store/types.ts:11
+Defined in: [graph/src/store/types.ts:16](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L16)
 
 Stable identity. Must be unique within the store.
 
@@ -36,7 +36,7 @@ Stable identity. Must be unique within the store.
 
 > `optional` **parentId?**: `string`
 
-Defined in: packages/graph/src/store/types.ts:15
+Defined in: [graph/src/store/types.ts:22](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L22)
 
 Logical parent. Cycles are rejected at write time.
 
@@ -46,7 +46,7 @@ Logical parent. Cycles are rejected at write time.
 
 > `optional` **pinned?**: `boolean`
 
-Defined in: packages/graph/src/store/types.ts:19
+Defined in: [graph/src/store/types.ts:26](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L26)
 
 True iff layouts must not move this node.
 
@@ -56,7 +56,7 @@ True iff layouts must not move this node.
 
 > `optional` **position?**: `object`
 
-Defined in: packages/graph/src/store/types.ts:17
+Defined in: [graph/src/store/types.ts:24](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L24)
 
 Canonical position. Owned by the store; mutated by layouts and drags.
 
@@ -67,3 +67,57 @@ Canonical position. Owned by the store; mutated by layouts and drags.
 #### y
 
 > **y**: `number`
+
+***
+
+### state?
+
+> `optional` **state?**: `unknown`
+
+Defined in: [graph/src/store/types.ts:55](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L55)
+
+Per-instance overlay catalogue keyed by state name (singular `state`).
+Each value is a `NodeStyle` patch applied when that name appears in
+[states](#states). Typed by the consumer as
+`Readonly<Record<string, NodeStyle>>`.
+
+***
+
+### states?
+
+> `optional` **states?**: readonly `string`[]
+
+Defined in: [graph/src/store/types.ts:40](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L40)
+
+Currently-active state names (plural). Each name should match a key in
+`style.state` (per-instance overlay catalogue) or in
+`GraphLayerOptions.node.state` (layer-level catalogue).
+
+The store treats this field as opaque metadata. The layer reads it on
+insert and update to toggle visual states via `setNodeState`. On
+update with `states` present in the patch the layer REPLACES the
+visible state set with the new array — runtime states applied via
+`setNodeState` (e.g. hover) are wiped. Pass an empty array (or
+`null`) to clear.
+
+***
+
+### style?
+
+> `optional` **style?**: `unknown`
+
+Defined in: [graph/src/store/types.ts:47](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L47)
+
+Visual + structural style for this node. Typed via
+`import('../layer/types').NodeStyle` in consumer code; left as `unknown`
+here to avoid a store → layer dependency cycle.
+
+***
+
+### type?
+
+> `optional` **type?**: `string`
+
+Defined in: [graph/src/store/types.ts:18](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L18)
+
+Type tag — matches a `NodeOption.type` template if any. Free-form.

@@ -1,6 +1,6 @@
 # Interface: PrimitivesRendererEventMap
 
-Defined in: [packages/canvas/src/primitives/types.ts:951](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L951)
+Defined in: [canvas/src/primitives/types.ts:956](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L956)
 
 Raw, DOM-level events the `PrimitivesRenderer` surfaces. No semantic
 interpretation — they describe pointer hits on shapes / connectors and
@@ -20,7 +20,7 @@ nothing more. Layers translate them into domain events.
 
 > **connector:click**: `object`
 
-Defined in: [packages/canvas/src/primitives/types.ts:965](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L965)
+Defined in: [canvas/src/primitives/types.ts:970](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L970)
 
 Left-button click. Right-button → `connector:contextmenu`.
 
@@ -46,7 +46,7 @@ Left-button click. Right-button → `connector:contextmenu`.
 
 > **connector:contextmenu**: `object`
 
-Defined in: [packages/canvas/src/primitives/types.ts:967](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L967)
+Defined in: [canvas/src/primitives/types.ts:972](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L972)
 
 #### id
 
@@ -66,7 +66,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:967](https://github.com/inv
 
 > **connector:doubleclick**: `object`
 
-Defined in: [packages/canvas/src/primitives/types.ts:966](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L966)
+Defined in: [canvas/src/primitives/types.ts:971](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L971)
 
 #### button
 
@@ -90,7 +90,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:966](https://github.com/inv
 
 > **connector:pointerdown**: `object`
 
-Defined in: [packages/canvas/src/primitives/types.ts:962](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L962)
+Defined in: [canvas/src/primitives/types.ts:967](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L967)
 
 #### button
 
@@ -114,7 +114,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:962](https://github.com/inv
 
 > **connector:pointerout**: `object`
 
-Defined in: [packages/canvas/src/primitives/types.ts:961](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L961)
+Defined in: [canvas/src/primitives/types.ts:966](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L966)
 
 #### id
 
@@ -134,7 +134,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:961](https://github.com/inv
 
 > **connector:pointerover**: `object`
 
-Defined in: [packages/canvas/src/primitives/types.ts:960](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L960)
+Defined in: [canvas/src/primitives/types.ts:965](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L965)
 
 #### id
 
@@ -154,7 +154,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:960](https://github.com/inv
 
 > **connector:pointerup**: `object`
 
-Defined in: [packages/canvas/src/primitives/types.ts:963](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L963)
+Defined in: [canvas/src/primitives/types.ts:968](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L968)
 
 #### button
 
@@ -178,7 +178,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:963](https://github.com/inv
 
 > **shape:click**: `object`
 
-Defined in: [packages/canvas/src/primitives/types.ts:957](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L957)
+Defined in: [canvas/src/primitives/types.ts:962](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L962)
 
 Left-button click. Right-button → `shape:contextmenu`.
 
@@ -204,7 +204,7 @@ Left-button click. Right-button → `shape:contextmenu`.
 
 > **shape:contextmenu**: `object`
 
-Defined in: [packages/canvas/src/primitives/types.ts:959](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L959)
+Defined in: [canvas/src/primitives/types.ts:964](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L964)
 
 #### id
 
@@ -224,7 +224,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:959](https://github.com/inv
 
 > **shape:doubleclick**: `object`
 
-Defined in: [packages/canvas/src/primitives/types.ts:958](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L958)
+Defined in: [canvas/src/primitives/types.ts:963](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L963)
 
 #### button
 
@@ -248,7 +248,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:958](https://github.com/inv
 
 > **shape:pointerdown**: `object`
 
-Defined in: [packages/canvas/src/primitives/types.ts:954](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L954)
+Defined in: [canvas/src/primitives/types.ts:959](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L959)
 
 #### button
 
@@ -272,7 +272,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:954](https://github.com/inv
 
 > **shape:pointerout**: `object`
 
-Defined in: [packages/canvas/src/primitives/types.ts:953](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L953)
+Defined in: [canvas/src/primitives/types.ts:958](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L958)
 
 #### id
 
@@ -292,7 +292,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:953](https://github.com/inv
 
 > **shape:pointerover**: `object`
 
-Defined in: [packages/canvas/src/primitives/types.ts:952](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L952)
+Defined in: [canvas/src/primitives/types.ts:957](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L957)
 
 #### id
 
@@ -312,7 +312,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:952](https://github.com/inv
 
 > **shape:pointerup**: `object`
 
-Defined in: [packages/canvas/src/primitives/types.ts:955](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L955)
+Defined in: [canvas/src/primitives/types.ts:960](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L960)
 
 #### button
 

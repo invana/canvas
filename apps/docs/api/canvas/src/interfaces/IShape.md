@@ -1,6 +1,6 @@
 # Interface: IShape\<TSpec\>
 
-Defined in: [packages/canvas/src/primitives/types.ts:615](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L615)
+Defined in: [canvas/src/primitives/types.ts:609](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L609)
 
 A 2D primitive with a closed silhouette (circle, rect, polygon, path).
 Implementations typically extend `ShapeBase` (which provides `paintInto`,
@@ -20,7 +20,7 @@ interface directly.
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [packages/canvas/src/primitives/types.ts:617](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L617)
+Defined in: [canvas/src/primitives/types.ts:611](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L611)
 
 Root display object — renderer adds/removes this on the host surface.
 
@@ -30,7 +30,7 @@ Root display object — renderer adds/removes this on the host surface.
 
 > `optional` **boundaryIntersect**(`localFromCenter`): [`Point`](Point.md)
 
-Defined in: [packages/canvas/src/primitives/types.ts:658](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L658)
+Defined in: [canvas/src/primitives/types.ts:663](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L663)
 
 Optional analytical boundary-intersection in shape-local coordinates,
 **relative to the shape's geometric centre** (NOT its `(0, 0)` origin).
@@ -59,7 +59,7 @@ back to the centred-AABB ray-exit provided by `ShapeBase`.
 
 > **bounds**(): [`Rect`](Rect.md)
 
-Defined in: [packages/canvas/src/primitives/types.ts:621](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L621)
+Defined in: [canvas/src/primitives/types.ts:615](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L615)
 
 Local-space axis-aligned bounding box for hit-testing & decorations.
 
@@ -73,7 +73,7 @@ Local-space axis-aligned bounding box for hit-testing & decorations.
 
 > `optional` **contains**(`localX`, `localY`): `boolean`
 
-Defined in: [packages/canvas/src/primitives/types.ts:635](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L635)
+Defined in: [canvas/src/primitives/types.ts:640](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L640)
 
 Optional precise containment in shape-local coordinates.
 
@@ -97,7 +97,7 @@ Optional precise containment in shape-local coordinates.
 
 > **destroy**(): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:679](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L679)
+Defined in: [canvas/src/primitives/types.ts:684](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L684)
 
 #### Returns
 
@@ -109,7 +109,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:679](https://github.com/inv
 
 > **draw**(`spec`): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:619](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L619)
+Defined in: [canvas/src/primitives/types.ts:613](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L613)
 
 (Re)paint the shape from the current spec. Called on add and on update.
 
@@ -125,11 +125,32 @@ Defined in: [packages/canvas/src/primitives/types.ts:619](https://github.com/inv
 
 ***
 
+### getHitArea()
+
+> **getHitArea**(): `IHitArea`
+
+Defined in: [canvas/src/primitives/types.ts:638](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L638)
+
+Hit-test region for this shape in shape-local coordinates. Used by
+`ShapeBase` to wire `gfx.hitArea` at construct time and by
+`PrimitivesRenderer.hitTest` for the rbush-backed manual hit-test path.
+
+The default `ShapeBase` implementation derives the region from
+`drawGeometry` via `bodyGfx.containsPoint`, so the hit area always
+matches the rendered silhouette + stroke. Subclasses may override with
+a cheaper analytical test (e.g. `CircleShape`: `x² + y² ≤ r²`).
+
+#### Returns
+
+`IHitArea`
+
+***
+
 ### obstacleTest()?
 
 > `optional` **obstacleTest**(): (`worldX`, `worldY`, `inflate`) => `boolean`
 
-Defined in: [packages/canvas/src/primitives/types.ts:674](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L674)
+Defined in: [canvas/src/primitives/types.ts:679](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L679)
 
 Optional silhouette obstacle-test factory. Returns a world-space test
 `(worldX, worldY, inflate) → boolean` that says whether a point lies
@@ -155,7 +176,7 @@ re-invokes `obstacleTest()` on every route so movement is reflected.
 
 > `optional` **paintInto**(`g`, `style?`): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:633](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L633)
+Defined in: [canvas/src/primitives/types.ts:627](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L627)
 
 Decoration entry point — repaint the silhouette into someone else's
 `Graphics` with a style override. The shape uses its own current spec;
@@ -171,7 +192,7 @@ Every shape that extends `ShapeBase` has it for free.
 
 ##### g
 
-[`Graphics`](Graphics.md)
+`Graphics`
 
 ##### style?
 
@@ -187,7 +208,7 @@ Every shape that extends `ShapeBase` has it for free.
 
 > `optional` **setLabelResolution**(`resolution`): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:678](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L678)
+Defined in: [canvas/src/primitives/types.ts:683](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L683)
 
 Optional label-rasterization hook. Only meaningful for text-bearing shapes.
 
@@ -207,7 +228,7 @@ Optional label-rasterization hook. Only meaningful for text-bearing shapes.
 
 > `optional` **setLODLevel**(`level`): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:676](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L676)
+Defined in: [canvas/src/primitives/types.ts:681](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L681)
 
 Optional LOD hook. Renderer forwards via `setLODLevel(id, level)`.
 
@@ -227,7 +248,7 @@ Optional LOD hook. Renderer forwards via `setLODLevel(id, level)`.
 
 > `optional` **visualCenter**(): [`Point`](Point.md)
 
-Defined in: [packages/canvas/src/primitives/types.ts:645](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L645)
+Defined in: [canvas/src/primitives/types.ts:650](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L650)
 
 Optional shape-local "visual centre" — the point inset-content layers
 with `anchor: 'center'` snap to. Defaults to the AABB midpoint when

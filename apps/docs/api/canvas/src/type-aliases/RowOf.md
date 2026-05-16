@@ -2,7 +2,7 @@
 
 > **RowOf**\<`TSchema`\> = `{ [K in keyof TSchema]: ColumnValue<TSchema[K]> }`
 
-Defined in: [packages/canvas/src/state/ColumnStore.ts:102](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/state/ColumnStore.ts#L102)
+Defined in: [canvas/src/state/ColumnStore.ts:102](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/state/ColumnStore.ts#L102)
 
 ## Type Parameters
 

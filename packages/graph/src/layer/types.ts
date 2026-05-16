@@ -2,7 +2,14 @@
  * `GraphLayer` public types — option shapes and per-node/per-edge render-spec
  * hints that map domain data to primitive specs.
  */
-import type { ShapeLabelStyle, ConnectorLabelStyle } from '@invana/canvas';
+import type {
+  ShapeLabelStyle,
+  ConnectorLabelStyle,
+  ShapeFill,
+  ShapeLabelPlacement,
+  ConnectorLabelPlacement,
+  InsetAnchor,
+} from '@invana/canvas';
 import type { GraphEdge, GraphNode } from '../store/types';
 
 /**
@@ -29,14 +36,17 @@ export type NodeShapeKind = 'circle' | 'rect' | 'arc';
 
 /**
  * A field value that's either a static value or a function that derives the
- * value from the host item (node / edge).
+ * value from the host item (node / edge / raw data).
  *
- * Used on every field of `NodeRenderHints` / `EdgeRenderHints` so callers can
- * supply per-item-derived styling on `nodeDefaults` / `edgeDefaults` (or on a
- * `NodeStateConfig` / `EdgeStateConfig`) without spreading hints into every
- * node's / edge's `data`. Resolved per render, not memoised — keep resolvers
- * cheap and pure. Recursive returns (a function returning another function)
- * are not unwrapped — return the final value.
+ * Used on every field of `NodeRenderHints` / `EdgeRenderHints` (legacy) and
+ * `NodeStyle` / `EdgeStyle` (v3) so callers can supply per-item-derived
+ * styling on `nodeDefaults` / `node` / `edge` defaults without spreading
+ * hints into every node's / edge's `data`.
+ *
+ * Resolved per render (layer-level) or once at insert (per-input). Keep
+ * resolvers cheap and pure — they may run per frame. Recursive returns
+ * (a function returning another function) are not unwrapped — return the
+ * final value.
  *
  * @example
  * ```ts
@@ -48,6 +58,9 @@ export type NodeShapeKind = 'circle' | 'rect' | 'arc';
  * ```
  */
 export type Resolvable<T, I> = T | ((input: I) => T);
+
+/** Convenience alias for id-resolvers; `D` is the raw data type on input. */
+export type ResolvableId<D> = string | ((data: D) => string);
 
 /**
  * Unwrap a {@link Resolvable} field for `input`. Static values pass through
@@ -111,6 +124,9 @@ export type EdgeAnchor = 'boundary' | 'center' | 'perpendicular' | 'edge-port' |
  * `nodeDefaults` and for `NodeStateConfig`; both are typed as
  * {@link ResolvableNodeRenderHints}, the resolver-aware sibling of this
  * interface.
+ *
+ * **LEGACY** — superseded by {@link NodeStyle} (v3 G6-aligned shape). Kept
+ * for backward compatibility; the GraphLayer reads both paths and merges.
  */
 export interface NodeRenderHints {
   /** Shape kind. Default `'circle'`. */
@@ -180,9 +196,7 @@ export type ResolvableNodeRenderHints = {
 /**
  * Render-spec hints for an edge. Optional, all defaulted.
  *
- * Per-edge `edge.data` uses this **static** form — write concrete values, not
- * functions. Resolver functions are reserved for `edgeDefaults` and
- * `EdgeStateConfig`; both are typed as {@link ResolvableEdgeRenderHints}.
+ * **LEGACY** — superseded by {@link EdgeStyle} (v3 G6-aligned shape).
  */
 export interface EdgeRenderHints {
   /** Path-style shortcut. Default `'straight'`. */
@@ -190,51 +204,18 @@ export interface EdgeRenderHints {
   /** Endpoint anchor for both ends. Default `'boundary'`. See {@link EdgeAnchor}. */
   anchor?: EdgeAnchor;
   /**
-   * Per-endpoint anchor override. Falls back to `anchor` when omitted. Lets
-   * each end of an edge attach via a different anchor — needed e.g. by
-   * Sankey, where the source uses `{ side: 'right' }` on the source's right
-   * face and the target uses `{ side: 'left' }` on the target's left face.
+   * Per-endpoint anchor override. Falls back to `anchor` when omitted.
    */
   sourceAnchor?: EdgeAnchor;
   /** Per-endpoint anchor override; see {@link sourceAnchor}. */
   targetAnchor?: EdgeAnchor;
-  /**
-   * Opts forwarded to the source / target anchor's `endpoint.opts`. The
-   * shape is anchor-specific:
-   *
-   * - `'edge-port'` expects `{ side: 'left' | 'right' | 'top' | 'bottom'; offset?: number }`.
-   *
-   * Built-in `'boundary'` / `'center'` / `'perpendicular'` ignore opts.
-   */
+  /** Opts forwarded to the source anchor's `endpoint.opts`. */
   sourceAnchorOpts?: Readonly<Record<string, unknown>>;
   /** Opts for the target anchor; see {@link sourceAnchorOpts}. */
   targetAnchorOpts?: Readonly<Record<string, unknown>>;
-  /**
-   * Path-style-specific options forwarded to the underlying canvas pathStyle
-   * function. Shape depends on the active `pathType`:
-   *
-   * - `'bezier'` accepts `{ axis?: 'h' | 'v' | 'auto', tension?: number }`.
-   * - `'bump-radial'` accepts `{ origin?: { x, y } }`.
-   * - `'step-radial'` accepts `{ origin?: { x, y } }`.
-   * - `'smooth'` accepts `{ tension?: number }`.
-   * - `'bundle'` accepts `{ beta?: number }` (β ∈ [0, 1], default 0.85).
-   *
-   * Set this when the per-edge `axis: 'auto'` heuristic picks the wrong axis
-   * for your layout (e.g. a horizontal cluster where some sibling pairs have
-   * `dy > dx` and would otherwise flip to vertical curves).
-   */
+  /** Path-style-specific options forwarded to the canvas pathStyle function. */
   pathStyleOpts?: Readonly<Record<string, unknown>>;
-  /**
-   * Intermediate control points the connector should respect. Passed through
-   * to the underlying canvas router as `waypoints`; the `straight` router
-   * concatenates them as `[source, ...waypoints, target]` so a multi-point
-   * pathStyle (`'bundle'`, `'smooth'`) can curve through the hierarchy or
-   * routed corridor the caller computed.
-   *
-   * Used today by hierarchical edge bundling: a layout walks each leaf-to-leaf
-   * import path through its common ancestors and writes the projected
-   * ancestor `(x, y)` sequence here, then sets `pathType: 'bundle'`.
-   */
+  /** Intermediate control points the connector should respect. */
   waypoints?: ReadonlyArray<{ readonly x: number; readonly y: number }>;
   /** Stroke color. Default `0x94a3b8`. */
   stroke?: number;
@@ -245,22 +226,14 @@ export interface EdgeRenderHints {
   /** Whether to draw an arrowhead at target. Default `true`. */
   arrow?: boolean;
   /**
-   * Optional text label attached to the edge. Pass a string for the simple
-   * case (defaults to centred autoRotate-on text) or a `ConnectorLabelStyle`
-   * payload for full control (placement, pathOffset, wrap, background pill,
-   * html-text, etc.).
-   *
-   * Resolves to a canvas `'label-connector'` decoration on the rendered
-   * connector.
+   * Optional text label attached to the edge.
    * @see {@link EdgeLabelHint}
    */
   label?: EdgeLabelHint;
 }
 
 /**
- * Resolver-aware mirror of {@link EdgeRenderHints} — every field accepts
- * either a static value or a function `(edge) => value`. Used by
- * `edgeDefaults` and `EdgeStateConfig`.
+ * Resolver-aware mirror of {@link EdgeRenderHints}.
  */
 export type ResolvableEdgeRenderHints = {
   [K in keyof EdgeRenderHints]?: Resolvable<NonNullable<EdgeRenderHints[K]>, GraphEdge>;
@@ -277,9 +250,9 @@ export interface GraphData {
  * when that state is active. Multiple active states stack — later-set state
  * wins per field. Removing the state restores the base hints.
  *
- * State configs accept resolver functions per field (same as `nodeDefaults`
- * / `edgeDefaults`) so an overlay can derive from the host item's `data`,
- * e.g. `{ stroke: (n) => brighten(n.data.color) }`.
+ * **LEGACY** — v3 stores per-instance overlays at `NodeData.state` (singular,
+ * overlay catalogue) and active list at `NodeData.states` (plural). Kept for
+ * back-compat.
  */
 export type NodeStateConfig = ResolvableNodeRenderHints;
 export type EdgeStateConfig = ResolvableEdgeRenderHints;
@@ -308,10 +281,6 @@ export type CanonicalStateName =
  * Override individual entries with `setNodeStateConfig(name, customConfig)`
  * after construction, or opt out entirely via
  * `GraphLayerOptions.useDefaultStateConfigs: false`.
- *
- * Each overlay is intentionally minimal — only the fields that change from
- * the resting baseline. Stack-application means combining states is
- * predictable (e.g. `selected` + `dimmed` = yellow ring at low alpha).
  */
 export const DEFAULT_NODE_STATE_CONFIGS: Readonly<Record<CanonicalStateName, NodeStateConfig>> = {
   hover:       { stroke: 0xffffff, strokeWidth: 3 },
@@ -326,11 +295,6 @@ export const DEFAULT_NODE_STATE_CONFIGS: Readonly<Record<CanonicalStateName, Nod
 
 /**
  * Canonical edge state configs registered on every `GraphLayer` by default.
- * Same opt-out / override semantics as {@link DEFAULT_NODE_STATE_CONFIGS}.
- *
- * `disabled` drops the arrowhead so a non-interactive edge reads as
- * "passive line"; everything else mirrors the node bundle's intent
- * (yellow = action, blue = focus, red = error, lower alpha = de-emphasised).
  */
 export const DEFAULT_EDGE_STATE_CONFIGS: Readonly<Record<CanonicalStateName, EdgeStateConfig>> = {
   hover:       { stroke: 0x111827, strokeWidth: 3 },
@@ -343,6 +307,486 @@ export const DEFAULT_EDGE_STATE_CONFIGS: Readonly<Record<CanonicalStateName, Edg
   focused:     { stroke: 0x60a5fa, strokeWidth: 3 },
 };
 
+// ───────────────────────────────────────────────────────────────────────────
+// v3 — G6-aligned types (NodeData / NodeInput / NodeOption + edge mirror)
+// See `data-types-instances.md` + `data-types-implementation-plan.md`.
+// ───────────────────────────────────────────────────────────────────────────
+
+// ─── NodeShapeOptions (structural geometry, per-shape options) ─────────────
+
+/** Rect-shape option. `cornerRadius` is optional; everything else required. */
+export interface RectShapeOption {
+  readonly kind: 'rect';
+  readonly width: number;
+  readonly height: number;
+  readonly cornerRadius?: number;
+}
+
+/** Circle-shape option. */
+export interface CircleShapeOption {
+  readonly kind: 'circle';
+  readonly radius: number;
+}
+
+/** Arc (annular sector) shape option. All four geometry params required. */
+export interface ArcShapeOption {
+  readonly kind: 'arc';
+  readonly innerR: number;
+  readonly outerR: number;
+  readonly startAngle: number;
+  readonly endAngle: number;
+}
+
+/**
+ * Discriminated union of node shape options. The `kind` field enforces
+ * per-variant required fields at compile time (e.g., `kind: 'arc'`
+ * requires `innerR`/`outerR`/`startAngle`/`endAngle`).
+ */
+export type NodeShapeOptions = RectShapeOption | CircleShapeOption | ArcShapeOption;
+
+// ─── NodeIcon / NodeImage / NodeBadge / BadgePlacement ────────────────────
+
+/**
+ * Vector inset rendered inside a node's body — glyph (font codepoint), SVG
+ * path, or SVG by URL. Kept structured (discriminated union) because each
+ * kind carries different required params.
+ */
+export type NodeIcon =
+  | {
+      readonly kind: 'glyph';
+      readonly char: string;
+      readonly fontFamily?: string;
+      readonly fontWeight?: number | string;
+      readonly fontStyle?: 'normal' | 'italic';
+      readonly color?: number;
+      readonly alpha?: number;
+      readonly sizeRatio?: number;
+      readonly anchor?: InsetAnchor;
+    }
+  | {
+      readonly kind: 'svg';
+      readonly pathD: string;
+      readonly viewBox?: { readonly width: number; readonly height: number };
+      readonly strokeWidth?: number;
+      readonly color?: number;
+      readonly alpha?: number;
+      readonly sizeRatio?: number;
+      readonly anchor?: InsetAnchor;
+    }
+  | {
+      readonly kind: 'svg-url';
+      readonly url: string;
+      readonly viewBox?: { readonly width: number; readonly height: number };
+      readonly strokeWidth?: number;
+      readonly color?: number;
+      readonly alpha?: number;
+      readonly sizeRatio?: number;
+      readonly anchor?: InsetAnchor;
+    };
+
+/** Raster image inset rendered inside a node's body. */
+export interface NodeImage {
+  readonly url: string;
+  readonly alpha?: number;
+  readonly sizeRatio?: number;
+  readonly anchor?: InsetAnchor;
+  readonly fit?: 'fill' | 'cover' | 'contain' | 'none' | 'tile';
+}
+
+/** Placement of a badge relative to its host node. */
+export type BadgePlacement =
+  | 'top-right'
+  | 'top-left'
+  | 'bottom-right'
+  | 'bottom-left'
+  | 'top'
+  | 'bottom'
+  | 'left'
+  | 'right'
+  | { readonly x: number; readonly y: number };
+
+/** Small overlay attached to a node — e.g. notification dot, count chip, status indicator. */
+export interface NodeBadge {
+  /** Stable id within the node, for keyed updates / animation. Optional. */
+  readonly id?: string;
+  readonly placement: BadgePlacement;
+  /** Default `'circle'`. */
+  readonly shape?: 'circle' | 'rect' | 'pill';
+  /** Pixels — fixed visual size regardless of node scale. Default 12. */
+  readonly size?: number;
+  readonly fill?: number;
+  readonly alpha?: number;
+  readonly strokeColor?: number;
+  readonly strokeWidth?: number;
+  /** Optional vector inset rendered inside the badge. */
+  readonly icon?: NodeIcon;
+  /** Optional short text (e.g. count "3" or "!"). */
+  readonly labelText?: string;
+  readonly labelColor?: number;
+  readonly labelFontSize?: number;
+  readonly offsetX?: number;
+  readonly offsetY?: number;
+  readonly zIndex?: number;
+}
+
+// ─── NodeDecorations / NodeEffects (slot dicts) ────────────────────────────
+
+/**
+ * Slot-based decoration attachments on a node. Each slot holds at most one
+ * decoration; `null` clears it. State overlays can swap a slot's spec
+ * (e.g., `state.hover.decorations.halo = {...}` adds a halo on hover).
+ *
+ * Slot names match the canvas renderer's decoration-slot model:
+ * `setDecoration(id, slot, spec)`.
+ *
+ * Decoration style payloads come from `@invana/canvas` — typed loosely as
+ * `unknown` here until the canvas package re-exports named style types for
+ * each decoration kind (HaloStyle, GlowStyle, …).
+ */
+export interface NodeDecorations {
+  /** Slot 'halo' — `HaloStyle` from @invana/canvas. */
+  readonly halo?: unknown | null;
+  /** Slot 'glow'. */
+  readonly glow?: unknown | null;
+  /** Slot 'pulse' — pulse-ring decoration. */
+  readonly pulse?: unknown | null;
+  /** Slot 'border' — border / dash-border / marching-ants. */
+  readonly border?: unknown | null;
+  /** Slot 'ring'. */
+  readonly ring?: unknown | null;
+  /** Open-ended for any registered decoration slot. */
+  readonly [slot: string]: unknown | null | undefined;
+}
+
+/**
+ * Host-modulation effects (sibling of decorations). Effects don't add
+ * geometry — they modulate the host's transform (`shake`, `breathing`) or
+ * style channels (tint/alpha). One spec per kind.
+ */
+export interface NodeEffects {
+  readonly shake?: unknown | null;
+  readonly breathing?: unknown | null;
+  readonly [kind: string]: unknown | null | undefined;
+}
+
+// ─── NodeStyle ─────────────────────────────────────────────────────────────
+
+/**
+ * Visual + structural style for a node. Flat-prefixed scalars for orthogonal
+ * properties (`bgFill`, `bgStrokeWidth`, `labelColor`); polymorphic values
+ * kept structured (`shape`, `icon`, `image`, `decorations`, `effects`,
+ * `badges`).
+ *
+ * Per-instance state overlays for a node live at {@link NodeData.state}
+ * (a sibling of `style`), NOT inside `NodeStyle`.
+ */
+export interface NodeStyle {
+  // ===== Structural geometry =====
+  readonly shape?: NodeShapeOptions;
+
+  // ===== Background paint =====
+  /**
+   * Accepts all six `ShapeFillLayer` kinds — `solid` / `image` / `glyph` /
+   * `svg` / `svg-url` / `image-inset` — and arrays for stacked layers.
+   */
+  readonly bgFill?: ShapeFill;
+  readonly bgAlpha?: number;
+  readonly bgStrokeColor?: number;
+  readonly bgStrokeAlpha?: number;
+  readonly bgStrokeWidth?: number;
+  readonly bgStrokeAlignment?: 'inside' | 'center' | 'outside';
+  readonly bgStrokeDashArray?: readonly [number, number];
+  readonly bgStrokeDashOffset?: number;
+  readonly bgStrokeCap?: 'butt' | 'round' | 'square';
+  readonly bgStrokeJoin?: 'miter' | 'round' | 'bevel';
+
+  // ===== Icon / image insets =====
+  readonly icon?: NodeIcon;
+  readonly image?: NodeImage;
+
+  // ===== Label =====
+  readonly labelText?: string;
+  readonly labelColor?: number;
+  readonly labelFontSize?: number;
+  readonly labelFontFamily?: string;
+  readonly labelFontWeight?: number | string;
+  readonly labelFontStyle?: 'normal' | 'italic';
+  readonly labelAlign?: 'left' | 'center' | 'right';
+  readonly labelLineHeight?: number;
+  readonly labelLetterSpacing?: number;
+  readonly labelPlacement?: ShapeLabelPlacement;
+  readonly labelOffsetX?: number;
+  readonly labelOffsetY?: number;
+  readonly labelAlpha?: number;
+  readonly labelMinFontSize?: number;
+  /** Radians. */
+  readonly labelRotation?: number;
+
+  // ===== Label resolution / LOD / collision =====
+  /** Hide the label below this camera zoom level. */
+  readonly labelMinZoom?: number;
+  /** Hide the label above this camera zoom level. */
+  readonly labelMaxZoom?: number;
+  /** Collision priority — higher wins when two labels overlap. */
+  readonly labelPriority?: number;
+  /** Collision partition — labels in different groups never compete. */
+  readonly labelCollisionGroup?: string;
+  /** Bypass collision entirely — label always renders. */
+  readonly labelForceShow?: boolean;
+
+  // Label background (flattened from ShapeLabelStyle.background)
+  readonly labelBackgroundFill?: number;
+  readonly labelBackgroundAlpha?: number;
+  readonly labelBackgroundStrokeColor?: number;
+  readonly labelBackgroundStrokeWidth?: number;
+  readonly labelBackgroundPadding?: number;
+  readonly labelBackgroundCornerRadius?: number;
+
+  /**
+   * Escape hatch — full `ShapeLabelStyle` payload from `@invana/canvas`.
+   * Use this when the flat `label*` fields don't cover the case (wrap,
+   * html-text content, custom collision settings, etc.). When set, the
+   * adapter uses this payload verbatim instead of building one from the
+   * flat fields. Flat label fields are ignored on the same node.
+   */
+  readonly labelStyle?: ShapeLabelStyle;
+
+  // ===== Badges (multiple) =====
+  readonly badges?: readonly NodeBadge[];
+
+  // ===== Decorations (slot dict) — see NodeDecorations =====
+  readonly decorations?: NodeDecorations;
+
+  // ===== Effects (slot dict) — see NodeEffects =====
+  readonly effects?: NodeEffects;
+}
+
+/**
+ * Resolver-aware mirror of {@link NodeStyle}. Each field is either a static
+ * value or `(D) => T`. Two scopes use this generic at different `D`:
+ *
+ *   - `NodeInput<D>.style` — resolvers fire at insert (`D` = raw node data).
+ *   - `NodeOption.style` — resolvers fire at render (`D` = stored `GraphNode`).
+ */
+export type ResolvableNodeStyle<D = unknown> = {
+  readonly [K in keyof NodeStyle]?: Resolvable<NonNullable<NodeStyle[K]>, D>;
+};
+
+// ─── NodeData / NodeInput / NodeOption ─────────────────────────────────────
+
+/**
+ * Per-instance node descriptor as stored by `GraphStore`. All values
+ * concrete (no functions). Flat field layout matching G6's `NodeData`
+ * convention.
+ *
+ * - `state` (singular) = per-instance overlay catalogue.
+ * - `states` (plural) = currently-active state names.
+ */
+export interface NodeData<D = unknown> {
+  readonly id: string;
+  /** Type tag (free-form). Matches a `NodeOption` template if any. */
+  readonly type?: string;
+  readonly data?: D;
+  readonly style?: NodeStyle;
+  /** Per-instance overlay catalogue (singular `state`). */
+  readonly state?: Readonly<Record<string, NodeStyle>>;
+  /** Currently-active state names (plural `states`). */
+  readonly states?: readonly string[] | null;
+  // store-side concerns:
+  readonly position?: { readonly x: number; readonly y: number };
+  readonly pinned?: boolean;
+  /**
+   * Logical parent id — the only hierarchy field. Use this for both tree
+   * structures AND group/combo membership (the parent is just a regular
+   * node that visually represents the group). The store auto-maintains an
+   * inverse index, queryable via `store.childrenOf(id)` /
+   * `store.descendantsOf(id)`.
+   */
+  readonly parentId?: string;
+}
+
+/**
+ * What the consumer passes to `GraphLayer.setData`. Same shape as
+ * {@link NodeData} but with Resolvable fields — `id` and per-field styles
+ * may be functions over `data`. Resolvers fire once at insert; the store
+ * holds `NodeData`.
+ */
+export interface NodeInput<D = unknown> {
+  readonly id?: ResolvableId<D>;
+  readonly type?: string;
+  readonly data?: D;
+  readonly style?: ResolvableNodeStyle<D>;
+  readonly state?: Readonly<Record<string, ResolvableNodeStyle<D>>>;
+  readonly states?: readonly string[];
+  readonly position?: { readonly x: number; readonly y: number };
+  readonly pinned?: boolean;
+  readonly parentId?: string;
+}
+
+/**
+ * Layer-level node template — G6's `node` field on GraphOptions. Resolvers
+ * fire every frame against the stored `GraphNode`.
+ *
+ * No `animation` field — per [[feedback_decoration_vs_animation]], animation
+ * is the per-frame engine, not a node-level config. Decoration / effect
+ * attachments live on `NodeStyle.decorations` / `NodeStyle.effects`.
+ */
+export interface NodeOption {
+  /** Type tag this template defines (e.g. 'person', 'doc'). Optional. */
+  readonly type?: string;
+  readonly style?: ResolvableNodeStyle<GraphNode>;
+  readonly state?: Readonly<Record<string, ResolvableNodeStyle<GraphNode>>>;
+  /** Reserved for palette-driven theming. Deferred wiring. */
+  readonly palette?: unknown;
+}
+
+// ─── Edge mirror ───────────────────────────────────────────────────────────
+
+/** Arrowhead shape catalogue. */
+export type ArrowShape = 'triangle' | 'diamond' | 'circle' | 'none';
+
+/**
+ * Structural variant of an edge — the three-stage connector pipeline
+ * (anchor → router → pathStyle). Variant-specific params live inside
+ * `pathStyleOpts`, so this stays non-discriminated.
+ */
+export interface EdgeShapeOptions {
+  readonly pathType?: EdgePathType;
+  readonly sourceAnchor?: EdgeAnchor;
+  readonly targetAnchor?: EdgeAnchor;
+  readonly sourceAnchorOpts?: Readonly<Record<string, unknown>>;
+  readonly targetAnchorOpts?: Readonly<Record<string, unknown>>;
+  readonly pathStyleOpts?: Readonly<Record<string, unknown>>;
+  readonly waypoints?: ReadonlyArray<{ readonly x: number; readonly y: number }>;
+}
+
+/**
+ * Flat-prefixed style bag for an edge. Edges have one stroke (the path), so
+ * stroke fields are unprefixed. Arrow ends and label keep their distinct
+ * prefixes.
+ */
+export interface EdgeStyle {
+  // ===== Structural =====
+  readonly shape?: EdgeShapeOptions;
+
+  // ===== Path stroke =====
+  readonly strokeColor?: number;
+  readonly strokeAlpha?: number;
+  readonly strokeWidth?: number;
+  readonly strokeAlignment?: 'inside' | 'center' | 'outside';
+  readonly strokeDashArray?: readonly [number, number];
+  readonly strokeDashOffset?: number;
+  readonly strokeCap?: 'butt' | 'round' | 'square';
+  readonly strokeJoin?: 'miter' | 'round' | 'bevel';
+
+  // ===== Arrows (two ends — flat prefix per end) =====
+  readonly arrowSourceShape?: ArrowShape;
+  readonly arrowSourceSize?: number;
+  readonly arrowSourceColor?: number;
+  readonly arrowSourceAlpha?: number;
+  readonly arrowTargetShape?: ArrowShape;
+  readonly arrowTargetSize?: number;
+  readonly arrowTargetColor?: number;
+  readonly arrowTargetAlpha?: number;
+
+  // ===== Label =====
+  readonly labelText?: string;
+  readonly labelColor?: number;
+  readonly labelFontSize?: number;
+  readonly labelFontFamily?: string;
+  readonly labelFontWeight?: number | string;
+  readonly labelFontStyle?: 'normal' | 'italic';
+  readonly labelAlign?: 'left' | 'center' | 'right';
+  readonly labelLineHeight?: number;
+  readonly labelLetterSpacing?: number;
+  readonly labelPlacement?: ConnectorLabelPlacement;
+  readonly labelPathOffset?: number;
+  readonly labelAutoRotate?: boolean;
+  readonly labelKeepUpright?: boolean;
+  readonly labelOffsetX?: number;
+  readonly labelOffsetY?: number;
+  readonly labelAlpha?: number;
+  readonly labelMinFontSize?: number;
+
+  // ===== Label resolution / LOD / collision =====
+  /** Hide the label below this camera zoom level. */
+  readonly labelMinZoom?: number;
+  /** Hide the label above this camera zoom level. */
+  readonly labelMaxZoom?: number;
+  /** Collision priority — higher wins when two labels overlap. */
+  readonly labelPriority?: number;
+  /** Collision partition — labels in different groups never compete. */
+  readonly labelCollisionGroup?: string;
+  /** Bypass collision entirely — label always renders. */
+  readonly labelForceShow?: boolean;
+  readonly labelBackgroundFill?: number;
+  readonly labelBackgroundAlpha?: number;
+  readonly labelBackgroundStrokeColor?: number;
+  readonly labelBackgroundStrokeWidth?: number;
+  readonly labelBackgroundPadding?: number;
+  readonly labelBackgroundCornerRadius?: number;
+
+  /**
+   * Escape hatch — full `ConnectorLabelStyle` payload from `@invana/canvas`.
+   * Use this when the flat `label*` fields don't cover the case (wrap,
+   * html-text content, etc.). When set, the adapter uses this payload
+   * verbatim instead of building one from the flat fields.
+   */
+  readonly labelStyle?: ConnectorLabelStyle;
+}
+
+/** Resolver-aware mirror of {@link EdgeStyle}; generic over the resolver argument. */
+export type ResolvableEdgeStyle<D = unknown> = {
+  readonly [K in keyof EdgeStyle]?: Resolvable<NonNullable<EdgeStyle[K]>, D>;
+};
+
+/** Per-instance edge descriptor — stored by GraphStore, concrete values. */
+export interface EdgeData<D = unknown> {
+  readonly id: string;
+  readonly source: string;
+  readonly target: string;
+  /** Predicate / FK label. Free-form. G6 calls this `type`. */
+  readonly type?: string;
+  readonly data?: D;
+  readonly style?: EdgeStyle;
+  readonly state?: Readonly<Record<string, EdgeStyle>>;
+  readonly states?: readonly string[] | null;
+}
+
+/** Resolver-aware input shape for an edge. */
+export interface EdgeInput<D = unknown> {
+  readonly id?: ResolvableId<D>;
+  readonly source: string;
+  readonly target: string;
+  readonly type?: string;
+  readonly data?: D;
+  readonly style?: ResolvableEdgeStyle<D>;
+  readonly state?: Readonly<Record<string, ResolvableEdgeStyle<D>>>;
+  readonly states?: readonly string[];
+}
+
+/** Layer-level edge template — G6's `edge` field. */
+export interface EdgeOption {
+  readonly type?: string;
+  readonly style?: ResolvableEdgeStyle<GraphEdge>;
+  readonly state?: Readonly<Record<string, ResolvableEdgeStyle<GraphEdge>>>;
+  readonly palette?: unknown;
+}
+
+// ─── GraphDataOptions ──────────────────────────────────────────────────────
+
+/**
+ * Top-level data input shape for `GraphLayer.setData(opts)`. Carries node /
+ * edge inputs plus optional layer-wide id resolvers.
+ */
+export interface GraphDataOptions<DN = unknown, DE = unknown> {
+  readonly nodes: readonly NodeInput<DN>[];
+  readonly edges: readonly EdgeInput<DE>[];
+  /** Optional layer-wide id resolver applied to nodes that lack an explicit `id`. */
+  readonly nodeIdResolver?: (data: DN) => string;
+  readonly edgeIdResolver?: (data: DE) => string;
+}
+
 /** Constructor options for `GraphLayer`. */
 export interface GraphLayerOptions {
   /**
@@ -353,68 +797,47 @@ export interface GraphLayerOptions {
   store?: import('../store/GraphStore').GraphStore;
 
   /**
-   * Default node render hints applied when a node has no per-node override
-   * under `node.data`. Defaults shown in {@link NodeRenderHints}. Every
-   * field may be a static value or a resolver `(node) => value` — see
-   * {@link ResolvableNodeRenderHints}.
+   * **LEGACY** default node render hints (`node.data` fallback path). Every
+   * field may be a static value or a resolver `(node) => value`. Use
+   * {@link node} instead for new code.
    */
   nodeDefaults?: ResolvableNodeRenderHints;
 
-  /**
-   * Default edge render hints. Every field may be a static value or a
-   * resolver `(edge) => value` — see {@link ResolvableEdgeRenderHints}.
-   */
+  /** **LEGACY** — see {@link nodeDefaults}. */
   edgeDefaults?: ResolvableEdgeRenderHints;
 
   /**
    * Auto-register the canonical state configs
    * ({@link DEFAULT_NODE_STATE_CONFIGS}, {@link DEFAULT_EDGE_STATE_CONFIGS})
    * on construction. Default `true`.
-   *
-   * The default `true` exists because state configs are pure styling data
-   * — registering them is cheap and silent until something calls
-   * `setNodeState(id, name, true)`. This is the *exception* to the
-   * project's no-auto-registration rule, which applies to behaviours
-   * (interaction lifecycle).
-   *
-   * Set `false` for a bare layer with no state configs — your call to
-   * `setNodeStateConfig` / `setEdgeStateConfig` is then the only way state
-   * styling appears. Individual entries can also be overridden by calling
-   * `setNodeStateConfig(name, customConfig)` after construction; the
-   * setter overwrites the auto-registered entry under that name.
    */
   useDefaultStateConfigs?: boolean;
 
   /**
    * Override individual canonical state configs and / or register new ones
-   * declaratively at construction. Each entry is applied AFTER the
-   * canonical bundle, so a key that matches a canonical name wins, and
-   * new names register as fresh states. The runtime
-   * {@link GraphLayer.setNodeStateConfig} still works and overrides these
-   * in turn.
+   * declaratively at construction.
    *
-   * Has no effect when `useDefaultStateConfigs: false` AND no entries are
-   * provided — the layer starts with zero registered configs. Setting
-   * `useDefaultStateConfigs: false` with entries here ships a bespoke
-   * bundle (canonical skipped, custom only).
-   *
-   * @example
-   * ```ts
-   * new GraphLayer({
-   *   id: 'graph',
-   *   options: {
-   *     nodeStateConfigs: {
-   *       hover: { stroke: 0xff0000, strokeWidth: 5 },     // override default
-   *       mention: { fill: 0xfacc15, strokeWidth: 2 },     // new state name
-   *     },
-   *   },
-   * });
-   * ```
+   * **LEGACY** — v3 uses `node.state` (catalogue on {@link NodeOption}).
    */
   nodeStateConfigs?: Readonly<Record<string, NodeStateConfig>>;
 
   /** Sibling of {@link nodeStateConfigs} for edges. */
   edgeStateConfigs?: Readonly<Record<string, EdgeStateConfig>>;
+
+  // ─── v3 G6-aligned layer template ──────────────────────────────────────
+
+  /**
+   * Layer-level node template (G6's `node` field). Fields support resolver
+   * functions `(node: GraphNode) => value` that fire every render.
+   *
+   * Stacking order with legacy `nodeDefaults`: legacy applies first, then
+   * `node.style` overrides for any field the consumer supplied. State
+   * overlays in `node.state[name]` apply after the base style.
+   */
+  node?: NodeOption;
+
+  /** Sibling of {@link node} for edges. */
+  edge?: EdgeOption;
 }
 
 /**

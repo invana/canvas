@@ -2,7 +2,7 @@
 
 > `const` **metroRouter**: [`IRouter`](../type-aliases/IRouter.md)
 
-Defined in: [packages/canvas/src/primitives/connectors/routers/metro.ts:34](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/connectors/routers/metro.ts#L34)
+Defined in: [canvas/src/primitives/connectors/routers/metro.ts:34](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/connectors/routers/metro.ts#L34)
 
 Metro router — manhattan-style topology with 45° diagonals.
 

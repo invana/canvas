@@ -1,12 +1,7 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": [
-    "../../packages/canvas/src/index.ts",
-    "../../packages/graph/src/index.ts",
-    "../../packages/graph-layout-d3-force/src/index.ts",
-    "../../packages/graph-layout-elkjs/src/index.ts",
-    "../../packages/graph-datasets/src/index.ts"
-  ],
+  "entryPoints": ["../../packages/*/src/index.ts"],
+  "exclude": ["**/*-deprecated/**", "**/node_modules/**"],
   "out": "./api",
   "plugin": ["typedoc-plugin-markdown"],
   "readme": "none",

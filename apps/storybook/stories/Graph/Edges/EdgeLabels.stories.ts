@@ -1,17 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import type { ConnectorLabelPlacement } from '@invana/canvas';
 import {
   DragNodeBehaviour,
   GraphLayer,
-  type EdgeLabelHint,
-  type EdgePathType,
-  type EdgeRenderHints,
-  type GraphEdge,
-  type GraphNode,
-  type NodeRenderHints,
+  type EdgeData,
+  type NodeData,
 } from '@invana/graph';
-import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'Graph/Edges/EdgeLabels' };
@@ -19,101 +13,91 @@ export default meta;
 type Story = StoryObj;
 
 /**
- * `GraphLayer` rendering edges with text labels via the `label` hint on
- * `EdgeRenderHints` across every built-in `pathType` — `straight`, `bezier`,
- * `bump-radial`, `smooth`, `rounded`, `orth`, `manhattan`. Each row uses a
- * different path style; the same label demonstrates that `autoRotate`,
- * `keepUpright`, `placement`, and `pathOffset` behave uniformly.
+ * `GraphLayer` rendering edges with text labels via the v3 `EdgeData` shape.
+ *
+ * One row per built-in `pathType` — `straight`, `bezier`, `bump-radial`,
+ * `smooth`, `rounded`, `orth`, `manhattan`. The shared label payload lives
+ * on the layer's `edge.style.labelStyle` template; each edge only carries
+ * its pathType-specific `shape`.
  *
  * Drag any endpoint to confirm the label tracks the path under live
- * re-routing. The lil-gui panel rewrites every edge's label hint so you can
- * sweep through placements (start / center / end / 0.25 / 0.75), pathOffset
- * (pad N px from source toward target), and screen-space offset (lift the
- * label perpendicular to the path direction).
+ * re-routing — `autoRotate` + `keepUpright` on the layer-level labelStyle
+ * apply uniformly across all path styles.
  */
 export const EdgeLabels: Story = {
   render: () => createContainer({ id: 'graph-edge-labels' }),
 
   play: async ({ canvasElement }) => {
-    type Node = GraphNode<NodeRenderHints>;
-    type Edge = GraphEdge<EdgeRenderHints>;
-
-    // One row per path style. Each row has a source on the left and a target
-    // on the right; the label sits on the path.
-    const variants: Array<{ id: string; pathType: EdgePathType; tag: string }> = [
-      { id: 'straight',    pathType: 'straight',    tag: 'straight' },
-      { id: 'bezier',      pathType: 'bezier',      tag: 'bezier' },
-      { id: 'bump-radial', pathType: 'bump-radial', tag: 'bump-radial' },
-      { id: 'smooth',      pathType: 'smooth',      tag: 'smooth' },
-      { id: 'rounded',     pathType: 'rounded',     tag: 'rounded' },
-      { id: 'orth',        pathType: 'orth',        tag: 'orth' },
-      { id: 'manhattan',   pathType: 'manhattan',   tag: 'manhattan' },
+    // Source nodes — blue circle on the left edge of each row, tagged with
+    // the variant name as a left-placed label. Target nodes — green circle
+    // on the right, offset vertically by +60 so the orth-family routers
+    // (smooth / rounded / orth / manhattan) actually demonstrate a corner
+    // instead of collapsing to a horizontal line. Row spacing 120, centred
+    // — source y values: -360, -240, -120, 0, 120, 240, 360.
+    //
+    // Layer-level `node.style` carries the shared circle shape AND the
+    // shared label font / placement / colour (only sources have a
+    // labelText so targets effectively skip the label).
+    const nodes: NodeData[] = [
+      // sources
+      { id: 'straight-src',    position: { x: -240, y: -360 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'straight' } },
+      { id: 'bezier-src',      position: { x: -240, y: -240 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'bezier' } },
+      { id: 'bump-radial-src', position: { x: -240, y: -120 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'bump-radial' } },
+      { id: 'smooth-src',      position: { x: -240, y:    0 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'smooth' } },
+      { id: 'rounded-src',     position: { x: -240, y:  120 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'rounded' } },
+      { id: 'orth-src',        position: { x: -240, y:  240 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'orth' } },
+      { id: 'manhattan-src',   position: { x: -240, y:  360 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'manhattan' } },
+      // targets — each at source.y + 60 so routers have a vertical delta to bridge
+      { id: 'straight-tgt',    position: { x: 240, y: -300 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
+      { id: 'bezier-tgt',      position: { x: 240, y: -180 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
+      { id: 'bump-radial-tgt', position: { x: 240, y:  -60 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
+      { id: 'smooth-tgt',      position: { x: 240, y:   60 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
+      { id: 'rounded-tgt',     position: { x: 240, y:  180 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
+      { id: 'orth-tgt',        position: { x: 240, y:  300 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
+      { id: 'manhattan-tgt',   position: { x: 240, y:  420 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
     ];
 
-    const rowSpacing = 100;
-    const xSrc = -240;
-    const xTgt = 240;
-    const y0 = -((variants.length - 1) * rowSpacing) / 2;
-
-    const nodes: Node[] = [];
-    const edges: Edge[] = [];
-
-    for (let i = 0; i < variants.length; i++) {
-      const v = variants[i]!;
-      const y = y0 + i * rowSpacing;
-
-      // Source — a small circle tagged with the variant name (as its own
-      // label, so the visual cross-reference is obvious).
-      nodes.push({
-        id: `${v.id}-src`,
-        position: { x: xSrc, y },
-        data: {
-          shape: 'circle',
-          size: 18,
-          fill: 0x4f9cf9,
-          stroke: 0x1d4ed8,
-          label: {
-            content: { kind: 'text', text: v.tag, fontSize: 11, fontWeight: 600, fill: 0x475569 },
-            placement: 'left',
-            offset: { x: -4 },
-          },
+    // Bezier needs an explicit axis to bend horizontally; bump-radial needs
+    // an origin reference so the arc bulges away from the centre of the
+    // layout. Other path types take no pathStyleOpts. Each edge's
+    // `labelText` shows its pathType + (when present) the pathStyleOpts
+    // payload so the demo also documents the data.
+    const edges: EdgeData[] = [
+      {
+        id: 'straight',    source: 'straight-src',    target: 'straight-tgt',
+        style: { shape: { pathType: 'straight' }, labelText: 'straight' },
+      },
+      {
+        id: 'bezier',      source: 'bezier-src',      target: 'bezier-tgt',
+        style: {
+          shape: { pathType: 'bezier', pathStyleOpts: { axis: 'h', tension: 0.6 } },
+          labelText: "bezier · { axis: 'h', tension: 0.6 }",
         },
-      });
-      nodes.push({
-        id: `${v.id}-tgt`,
-        position: { x: xTgt, y },
-        data: {
-          shape: 'circle',
-          size: 18,
-          fill: 0x10b981,
-          stroke: 0x047857,
+      },
+      {
+        id: 'bump-radial', source: 'bump-radial-src', target: 'bump-radial-tgt',
+        style: {
+          shape: { pathType: 'bump-radial', pathStyleOpts: { origin: { x: 0, y: 0 } } },
+          labelText: 'bump-radial · { origin: { x: 0, y: 0 } }',
         },
-      });
-
-      // Edge with a label sitting on its path. Bezier needs an explicit axis
-      // to bend horizontally; bump-radial needs an origin reference so the
-      // arc bulges away from the centre of the layout.
-      const pathStyleOpts: Record<string, unknown> | undefined =
-        v.pathType === 'bezier'
-          ? { axis: 'h', tension: 0.6 }
-          : v.pathType === 'bump-radial'
-            ? { origin: { x: 0, y: 0 } }
-            : undefined;
-
-      edges.push({
-        id: v.id,
-        source: `${v.id}-src`,
-        target: `${v.id}-tgt`,
-        data: {
-          pathType: v.pathType,
-          ...(pathStyleOpts ? { pathStyleOpts } : {}),
-          stroke: 0xcbd5e1,
-          strokeWidth: 1.5,
-          arrow: true,
-          label: defaultEdgeLabel('flows-to'),
-        },
-      });
-    }
+      },
+      {
+        id: 'smooth',      source: 'smooth-src',      target: 'smooth-tgt',
+        style: { shape: { pathType: 'smooth' }, labelText: 'smooth' },
+      },
+      {
+        id: 'rounded',     source: 'rounded-src',     target: 'rounded-tgt',
+        style: { shape: { pathType: 'rounded' }, labelText: 'rounded' },
+      },
+      {
+        id: 'orth',        source: 'orth-src',        target: 'orth-tgt',
+        style: { shape: { pathType: 'orth' }, labelText: 'orth' },
+      },
+      {
+        id: 'manhattan',   source: 'manhattan-src',   target: 'manhattan-tgt',
+        style: { shape: { pathType: 'manhattan' }, labelText: 'manhattan' },
+      },
+    ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edge-labels')!;
     const canvas = new Canvas();
@@ -124,7 +108,38 @@ export const EdgeLabels: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { edgeDefaults: { stroke: 0xcbd5e1, strokeWidth: 1.5, arrow: true } },
+      options: {
+        node: {
+          style: {
+            shape: { kind: 'circle', radius: 9 },
+            labelFontSize: 11,
+            labelFontWeight: 600,
+            labelColor: 0x475569,
+            labelPlacement: 'left',
+            labelOffsetX: -4,
+          },
+        },
+        edge: {
+          style: {
+            strokeColor: 0xcbd5e1,
+            strokeWidth: 1.5,
+            arrowTargetShape: 'triangle',
+            // Shared label styling — per-edge `labelText` supplies the text.
+            labelFontSize: 11,
+            labelFontWeight: 500,
+            labelColor: 0x0f172a,
+            labelPlacement: 'center',
+            labelOffsetY: -8,
+            labelAutoRotate: true,
+            labelKeepUpright: true,
+            labelBackgroundFill: 0xffffff,
+            labelBackgroundStrokeColor: 0xe2e8f0,
+            labelBackgroundStrokeWidth: 1,
+            labelBackgroundCornerRadius: 4,
+            labelBackgroundPadding: 4,
+          },
+        },
+      },
     });
     canvas.layers.add(graph);
     graph.setData({ nodes, edges });
@@ -134,88 +149,5 @@ export const EdgeLabels: Story = {
     );
 
     canvas.camera.fitContent(graph.getBounds(), 80);
-
-    // ─── GUI: rewrite every edge's label hint live ─────────────────────────
-    const settings = {
-      text: 'flows-to',
-      placement: 'center' as ConnectorLabelPlacement,
-      pathOffset: 0,
-      autoRotate: true,
-      keepUpright: true,
-      offsetX: 0,
-      offsetY: -8,
-      background: true,
-    };
-
-    const applyAll = (): void => {
-      for (const v of variants) {
-        const edge = graph.store.getEdge(v.id);
-        if (!edge) continue;
-        const baseData = (edge.data ?? {}) as EdgeRenderHints;
-        graph.store.updateEdge(v.id, {
-          data: { ...baseData, label: buildEdgeLabel(settings) },
-        });
-      }
-    };
-
-    const gui = new GUI({ title: 'Edge Label' });
-    onStoryTeardown(() => gui.destroy());
-    gui.add(settings, 'text').onChange(applyAll);
-    gui.add(settings, 'placement', {
-      start: 'start',
-      center: 'center',
-      end: 'end',
-      '0.25': 0.25,
-      '0.75': 0.75,
-    } as Record<string, ConnectorLabelPlacement>).onChange(applyAll);
-    gui.add(settings, 'pathOffset', -80, 80, 2).onChange(applyAll);
-    gui.add(settings, 'autoRotate').onChange(applyAll);
-    gui.add(settings, 'keepUpright').onChange(applyAll);
-    const off = gui.addFolder('offset (post-rotation)');
-    off.add(settings, 'offsetX', -30, 30, 1).onChange(applyAll);
-    off.add(settings, 'offsetY', -30, 30, 1).onChange(applyAll);
-    gui.add(settings, 'background').onChange(applyAll);
   },
 };
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function defaultEdgeLabel(text: string): EdgeLabelHint {
-  return {
-    content: { kind: 'text', text, fontSize: 11, fontWeight: 500, fill: 0x0f172a },
-    background: {
-      fill: 0xffffff,
-      stroke: 0xe2e8f0,
-      strokeWidth: 1,
-      radius: 4,
-      padding: [2, 6],
-    },
-    placement: 'center',
-    offset: { y: -8 },
-    autoRotate: true,
-    keepUpright: true,
-  };
-}
-
-function buildEdgeLabel(s: {
-  text: string;
-  placement: ConnectorLabelPlacement;
-  pathOffset: number;
-  autoRotate: boolean;
-  keepUpright: boolean;
-  offsetX: number;
-  offsetY: number;
-  background: boolean;
-}): EdgeLabelHint {
-  return {
-    content: { kind: 'text', text: s.text, fontSize: 11, fontWeight: 500, fill: 0x0f172a },
-    background: s.background
-      ? { fill: 0xffffff, stroke: 0xe2e8f0, strokeWidth: 1, radius: 4, padding: [2, 6] }
-      : undefined,
-    placement: s.placement,
-    pathOffset: s.pathOffset,
-    autoRotate: s.autoRotate,
-    keepUpright: s.keepUpright,
-    offset: { x: s.offsetX, y: s.offsetY },
-  };
-}

@@ -1,6 +1,6 @@
 # Interface: ShapeHostInfo
 
-Defined in: [packages/canvas/src/primitives/types.ts:552](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L552)
+Defined in: [canvas/src/primitives/types.ts:546](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L546)
 
 Information a `Shape` instance receives at construction. The renderer hands
 shapes the surface to attach to plus the registries that fill resolution
@@ -12,7 +12,7 @@ needs (`textureRegistry` for image fills).
 
 > `readonly` **requestRedraw**: () => `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:559](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L559)
+Defined in: [canvas/src/primitives/types.ts:553](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L553)
 
 Re-invoke the shape's `draw(currentSpec)`. Used by async fill loaders
 (image silhouette, image-inset) to repaint once a texture resolves.
@@ -27,7 +27,7 @@ Re-invoke the shape's `draw(currentSpec)`. Used by async fill loaders
 
 > `readonly` **surface**: `Container`
 
-Defined in: [packages/canvas/src/primitives/types.ts:553](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L553)
+Defined in: [canvas/src/primitives/types.ts:547](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L547)
 
 ***
 
@@ -35,4 +35,4 @@ Defined in: [packages/canvas/src/primitives/types.ts:553](https://github.com/inv
 
 > `readonly` **textureRegistry**: [`TextureRegistry`](../classes/TextureRegistry.md)
 
-Defined in: [packages/canvas/src/primitives/types.ts:554](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L554)
+Defined in: [canvas/src/primitives/types.ts:548](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L548)

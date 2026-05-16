@@ -2,7 +2,7 @@
 
 > **assertSerialisableInDev**(`value`, `context`): `void`
 
-Defined in: [packages/canvas/src/events/assertSerialisable.ts:137](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/events/assertSerialisable.ts#L137)
+Defined in: [canvas/src/events/assertSerialisable.ts:137](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/events/assertSerialisable.ts#L137)
 
 Convenience: assert a payload is serialisable. In dev, logs warnings via
 `console.warn` for each violation (with offending path). In production,

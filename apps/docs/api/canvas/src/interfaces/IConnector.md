@@ -1,6 +1,6 @@
 # Interface: IConnector\<TSpec\>
 
-Defined in: [packages/canvas/src/primitives/types.ts:687](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L687)
+Defined in: [canvas/src/primitives/types.ts:692](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L692)
 
 A line-like primitive joining two endpoints, optionally passing through
 waypoints. v0 has a single concrete `Connector` class; visual variation
@@ -18,7 +18,7 @@ comes from the router (which produces the `Path`).
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [packages/canvas/src/primitives/types.ts:688](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L688)
+Defined in: [canvas/src/primitives/types.ts:693](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L693)
 
 ## Methods
 
@@ -26,7 +26,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:688](https://github.com/inv
 
 > **destroy**(): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:720](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L720)
+Defined in: [canvas/src/primitives/types.ts:725](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L725)
 
 #### Returns
 
@@ -38,7 +38,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:720](https://github.com/inv
 
 > **draw**(`spec`, `path`): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:690](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L690)
+Defined in: [canvas/src/primitives/types.ts:695](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L695)
 
 (Re)paint the connector with a router-resolved `Path`.
 
@@ -62,7 +62,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:690](https://github.com/inv
 
 > **getVisiblePath**(`spec`, `path`): [`Path`](../type-aliases/Path.md)
 
-Defined in: [packages/canvas/src/primitives/types.ts:706](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L706)
+Defined in: [canvas/src/primitives/types.ts:711](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L711)
 
 Path trimmed by the source / target marker insets — i.e. the *visible*
 body of the connector, with the segments that the markers cover removed.
@@ -92,7 +92,7 @@ Returns the input path unchanged when no markers are configured.
 
 > **paintInto**(`g`, `spec`, `path`, `style?`): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:696](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L696)
+Defined in: [canvas/src/primitives/types.ts:701](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L701)
 
 Repaint the connector's full silhouette (path + markers) into a
 caller-supplied `Graphics` with style overrides. Connector decorations
@@ -102,7 +102,7 @@ use this to draw with pixel-identical silhouette coverage.
 
 ##### g
 
-[`Graphics`](Graphics.md)
+`Graphics`
 
 ##### spec
 
@@ -126,7 +126,7 @@ use this to draw with pixel-identical silhouette coverage.
 
 > **setBodyVisible**(`visible`): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:715](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L715)
+Defined in: [canvas/src/primitives/types.ts:720](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L720)
 
 Toggle the body stroke without affecting markers or decoration children.
 Body, source marker, and target marker live in three sibling Graphics
@@ -151,7 +151,7 @@ preserves the hidden state.
 
 > **setSourceMarkerVisible**(`visible`): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:717](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L717)
+Defined in: [canvas/src/primitives/types.ts:722](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L722)
 
 Toggle just the source-endpoint marker. See `setBodyVisible`.
 
@@ -171,7 +171,7 @@ Toggle just the source-endpoint marker. See `setBodyVisible`.
 
 > **setTargetMarkerVisible**(`visible`): `void`
 
-Defined in: [packages/canvas/src/primitives/types.ts:719](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L719)
+Defined in: [canvas/src/primitives/types.ts:724](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L724)
 
 Toggle just the target-endpoint marker. See `setBodyVisible`.
 

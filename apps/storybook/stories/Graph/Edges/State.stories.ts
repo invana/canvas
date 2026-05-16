@@ -3,8 +3,8 @@ import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   GraphLayer,
   type CanonicalStateName,
-  type GraphEdge,
-  type GraphNode,
+  type EdgeData,
+  type NodeData,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
@@ -17,18 +17,20 @@ type Story = StoryObj;
  *
  * Mirror of `Graph/Nodes/State`. `GraphLayer` ships with
  * `DEFAULT_EDGE_STATE_CONFIGS` auto-registered, so no state-config
- * registration in story code. Each edge's label styling lives in
- * `edgeDefaults.label` (resolver), and each tile's edge state is supplied
- * directly via the data-driven `state` field on `GraphEdge`.
+ * registration in story code. Layer-level `edge.style` carries the shared
+ * label font / placement / background-pill / autoRotate-off settings;
+ * each per-edge entry only declares its `labelText` (two-line:
+ * "{state}\n{note}") plus the data-driven `states: [name]` activation.
  *
- * The nodes / edges are flat literal arrays (no map / forEach) so the
- * data shape is visible at a glance in Storybook's "Show code" tab.
+ * v3 G6-aligned shape:
+ *   - per-edge: `id`, `source`, `target`, `data`, `style.labelText`, `states`
+ *   - layer `edge.style`: everything else (label font/colour/pill/placement)
+ *   - `data` is pure user payload; the rendering reads from `style.labelText`
  */
 export const State: Story = {
   render: () => createContainer({ id: 'graph-edge-state' }),
 
   play: async ({ canvasElement }) => {
-
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edge-state')!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
@@ -43,7 +45,7 @@ export const State: Story = {
 
     // 3×3 grid. Cell pitch: 280 × 180. Endpoints sit ±90 from each cell
     // centre. Anchor ids: a-* (left), b-* (right) per tile.
-    const nodes: GraphNode[] = [
+    const nodes: NodeData[] = [
       // row 0 — y = -180
       { id: 'a-default',     position: { x: -370, y: -180 } },
       { id: 'b-default',     position: { x: -190, y: -180 } },
@@ -69,92 +71,96 @@ export const State: Story = {
       { id: 'b-error',       position: { x:  370, y:  180 } },
     ];
 
-    const edges: GraphEdge<TileData>[] = [
+    const edges: EdgeData<TileData>[] = [
       {
         id: 'e-default',
         source: 'a-default', target: 'b-default',
         data: { state: 'default', note: 'resting appearance — no state active' },
+        style: { labelText: 'default\nresting appearance — no state active' },
       },
       {
         id: 'e-hover',
         source: 'a-hover', target: 'b-hover',
         data: { state: 'hover', note: 'pointer is over the edge' },
-        state: ['hover'],
+        style: { labelText: 'hover\npointer is over the edge' },
+        states: ['hover'],
       },
       {
         id: 'e-selected',
         source: 'a-selected', target: 'b-selected',
         data: { state: 'selected', note: 'click-selected (sticky)' },
-        state: ['selected'],
+        style: { labelText: 'selected\nclick-selected (sticky)' },
+        states: ['selected'],
       },
       {
         id: 'e-active',
         source: 'a-active', target: 'b-active',
         data: { state: 'active', note: 'directly-hovered focal edge' },
-        state: ['active'],
+        style: { labelText: 'active\ndirectly-hovered focal edge' },
+        states: ['active'],
       },
       {
         id: 'e-highlighted',
         source: 'a-highlighted', target: 'b-highlighted',
         data: { state: 'highlighted', note: 'incident to a focal node' },
-        state: ['highlighted'],
+        style: { labelText: 'highlighted\nincident to a focal node' },
+        states: ['highlighted'],
       },
       {
         id: 'e-focused',
         source: 'a-focused', target: 'b-focused',
         data: { state: 'focused', note: 'keyboard-focus ring' },
-        state: ['focused'],
+        style: { labelText: 'focused\nkeyboard-focus ring' },
+        states: ['focused'],
       },
       {
         id: 'e-dimmed',
         source: 'a-dimmed', target: 'b-dimmed',
         data: { state: 'dimmed', note: 'de-emphasised by another active set' },
-        state: ['dimmed'],
+        style: { labelText: 'dimmed\nde-emphasised by another active set' },
+        states: ['dimmed'],
       },
       {
         id: 'e-disabled',
         source: 'a-disabled', target: 'b-disabled',
         data: { state: 'disabled', note: 'not interactive' },
-        state: ['disabled'],
+        style: { labelText: 'disabled\nnot interactive' },
+        states: ['disabled'],
       },
       {
         id: 'e-error',
         source: 'a-error', target: 'b-error',
         data: { state: 'error', note: 'invalid relationship' },
-        state: ['error'],
+        style: { labelText: 'error\ninvalid relationship' },
+        states: ['error'],
       },
     ];
 
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        nodeDefaults: {
-          shape: 'circle',
-          size: 20,
-          fill: 0xe5e7eb,
-          stroke: 0x9ca3af,
-          strokeWidth: 1,
+        node: {
+          style: {
+            shape: { kind: 'circle', radius: 10 },
+            bgFill: 0xe5e7eb,
+            bgStrokeColor: 0x9ca3af,
+            bgStrokeWidth: 1,
+          },
         },
-        edgeDefaults: {
-          stroke: 0x6b7280,
-          strokeWidth: 2,
-          arrow: true,
-          label: (e) => {
-            const tile = e.data as TileData;
-            return {
-              content: {
-                kind: 'text',
-                text: `${tile.state}\n${tile.note}`,
-                fontSize: 12,
-                fontWeight: 600,
-                fill: 0x454545,
-                align: 'center',
-                lineHeight: 16,
-              },
-              placement: 'center',
-              offset: { y: 22 },
-              autoRotate: false,
-            };
+        edge: {
+          style: {
+            strokeColor: 0x6b7280,
+            strokeWidth: 2,
+            arrowTargetShape: 'triangle',
+            // Shared label styling — per-edge `labelText` supplies the text.
+            labelFontSize: 12,
+            labelFontWeight: 600,
+            labelColor: 0x454545,
+            labelAlign: 'center',
+            labelLineHeight: 16,
+            labelPlacement: 'center',
+            labelOffsetY: 22,
+            labelAutoRotate: false,
           },
         },
         // Canonical state configs are auto-registered. Pass

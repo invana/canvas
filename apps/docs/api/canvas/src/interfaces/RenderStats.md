@@ -1,6 +1,6 @@
 # Interface: RenderStats
 
-Defined in: [packages/canvas/src/primitives/types.ts:972](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L972)
+Defined in: [canvas/src/primitives/types.ts:1200](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L1200)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:972](https://github.com/inv
 
 > `readonly` **animatedDecorations**: `number`
 
-Defined in: [packages/canvas/src/primitives/types.ts:975](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L975)
+Defined in: [canvas/src/primitives/types.ts:1203](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L1203)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [packages/canvas/src/primitives/types.ts:975](https://github.com/inv
 
 > `readonly` **connectors**: `number`
 
-Defined in: [packages/canvas/src/primitives/types.ts:974](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L974)
+Defined in: [canvas/src/primitives/types.ts:1202](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L1202)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [packages/canvas/src/primitives/types.ts:974](https://github.com/inv
 
 > `readonly` **shapes**: `number`
 
-Defined in: [packages/canvas/src/primitives/types.ts:973](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L973)
+Defined in: [canvas/src/primitives/types.ts:1201](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L1201)

@@ -185,6 +185,12 @@ export default defineConfig({
       { icon: 'github', link: 'https://github.com/invana/canvas' },
     ],
 
+    // Right-side "On this page" TOC depth. TypeDoc emits each method /
+    // property / accessor as a `###` heading under `## Methods` etc., so
+    // we expand the outline to include those individual entries — letting
+    // the reader jump straight to a single method on a long class page.
+    outline: [2, 3],
+
     search: {
       provider: 'local',
     },

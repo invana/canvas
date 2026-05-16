@@ -1,8 +1,8 @@
 # Type Alias: ShapeFillLayer
 
-> **ShapeFillLayer** = \{ `alpha?`: `number`; `color`: `number`; `kind`: `"solid"`; \} \| \{ `alpha?`: `number`; `fit?`: `"fill"` \| `"cover"` \| `"contain"` \| `"none"` \| `"tile"`; `kind`: `"image"`; `url`: `string`; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `char`: `string`; `color?`: `number`; `fontFamily?`: `string`; `fontStyle?`: `"normal"` \| `"italic"`; `fontWeight?`: `number` \| `string`; `kind`: `"glyph"`; `sizeRatio?`: `number`; \} \| \{ `align?`: `"left"` \| `"center"` \| `"right"`; `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `color?`: `number`; `fontFamily?`: `string`; `fontSize?`: `number`; `fontStyle?`: `"normal"` \| `"italic"`; `fontWeight?`: `number` \| `string`; `kind`: `"text"`; `text`: `string`; `widthRatio?`: `number`; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `color?`: `number`; `kind`: `"svg"`; `pathD`: `string`; `sizeRatio?`: `number`; `strokeWidth?`: `number`; `viewBox?`: \{ `height`: `number`; `width`: `number`; \}; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `kind`: `"image-inset"`; `sizeRatio?`: `number`; `url`: `string`; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `color?`: `number`; `kind`: `"svg-url"`; `sizeRatio?`: `number`; `strokeWidth?`: `number`; `url`: `string`; `viewBox?`: \{ `height`: `number`; `width`: `number`; \}; \}
+> **ShapeFillLayer** = \{ `alpha?`: `number`; `color`: `number`; `kind`: `"solid"`; \} \| \{ `alpha?`: `number`; `fit?`: `"fill"` \| `"cover"` \| `"contain"` \| `"none"` \| `"tile"`; `kind`: `"image"`; `url`: `string`; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `char`: `string`; `color?`: `number`; `fontFamily?`: `string`; `fontStyle?`: `"normal"` \| `"italic"`; `fontWeight?`: `number` \| `string`; `kind`: `"glyph"`; `sizeRatio?`: `number`; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `color?`: `number`; `kind`: `"svg"`; `pathD`: `string`; `sizeRatio?`: `number`; `strokeWidth?`: `number`; `viewBox?`: \{ `height`: `number`; `width`: `number`; \}; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `kind`: `"image-inset"`; `sizeRatio?`: `number`; `url`: `string`; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `color?`: `number`; `kind`: `"svg-url"`; `sizeRatio?`: `number`; `strokeWidth?`: `number`; `url`: `string`; `viewBox?`: \{ `height`: `number`; `width`: `number`; \}; \}
 
-Defined in: [packages/canvas/src/primitives/types.ts:175](https://github.com/invana/canvas/blob/12871cd6263f61ab8408b5f91b592d2e697cc6ce/packages/canvas/src/primitives/types.ts#L175)
+Defined in: [canvas/src/primitives/types.ts:175](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L175)
 
 One layer of a shape's fill. Layers split by role:
 
@@ -83,75 +83,6 @@ Font-rendered character (icon-font codepoint, Unicode symbol, emoji).
 > `readonly` `optional` **sizeRatio?**: `number`
 
 Size as fraction of the shape's smaller bounds dimension. Default `0.6`.
-
-***
-
-### Type Literal
-
-\{ `align?`: `"left"` \| `"center"` \| `"right"`; `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `color?`: `number`; `fontFamily?`: `string`; `fontSize?`: `number`; `fontStyle?`: `"normal"` \| `"italic"`; `fontWeight?`: `number` \| `string`; `kind`: `"text"`; `text`: `string`; `widthRatio?`: `number`; \}
-
-#### align?
-
-> `readonly` `optional` **align?**: `"left"` \| `"center"` \| `"right"`
-
-Horizontal alignment within the (possibly clipped) text block. Default `'center'`.
-
-#### alpha?
-
-> `readonly` `optional` **alpha?**: `number`
-
-#### anchor?
-
-> `readonly` `optional` **anchor?**: [`InsetAnchor`](InsetAnchor.md)
-
-Anchor relative to the shape's bounds. Default `'center'`.
-
-#### color?
-
-> `readonly` `optional` **color?**: `number`
-
-Text color. Default `0x000000`.
-
-#### fontFamily?
-
-> `readonly` `optional` **fontFamily?**: `string`
-
-#### fontSize?
-
-> `readonly` `optional` **fontSize?**: `number`
-
-Pixel font size at scale 1. Default `12`.
-
-#### fontStyle?
-
-> `readonly` `optional` **fontStyle?**: `"normal"` \| `"italic"`
-
-#### fontWeight?
-
-> `readonly` `optional` **fontWeight?**: `number` \| `string`
-
-#### kind
-
-> `readonly` **kind**: `"text"`
-
-Multi-character text label rendered as inset content (badge labels,
-card titles, ER cell values, anything that needs more than the
-single-char `glyph` kind). Sized to fit the shape's bounds width
-(minus the inset margin used by other inset layers) and anchored the
-same way.
-
-#### text
-
-> `readonly` **text**: `string`
-
-#### widthRatio?
-
-> `readonly` `optional` **widthRatio?**: `number`
-
-Maximum render width as a fraction of `bounds.width`. Default `0.85`.
-The text is scaled down (never up) to fit. For corner anchors, the
-cap is half of the available width to preserve room for the opposite
-corner's content.
 
 ***
 
