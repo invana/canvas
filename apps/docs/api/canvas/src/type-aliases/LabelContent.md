@@ -2,7 +2,7 @@
 
 > **LabelContent** = \{ `align?`: `"left"` \| `"center"` \| `"right"`; `alpha?`: `number`; `fill?`: `number`; `fontFamily?`: `string`; `fontSize?`: `number`; `fontStyle?`: `"normal"` \| `"italic"`; `fontVariant?`: `"normal"` \| `"small-caps"`; `fontWeight?`: `number` \| `string`; `kind`: `"text"`; `letterSpacing?`: `number`; `lineHeight?`: `number`; `shadow?`: \{ `alpha?`: `number`; `blur?`: `number`; `color`: `number`; `offsetX?`: `number`; `offsetY?`: `number`; \}; `stroke?`: \{ `color`: `number`; `width`: `number`; \}; `text`: `string`; \} \| \{ `alpha?`: `number`; `cssOverrides?`: `ReadonlyArray`\<`string`\>; `defaultFill?`: `number` \| `string`; `defaultFontFamily?`: `string`; `defaultFontSize?`: `number`; `defaultFontWeight?`: `number` \| `string`; `html`: `string`; `kind`: `"html-text"`; `tagStyles?`: `Readonly`\<`Record`\<`string`, [`HtmlTagStyle`](../interfaces/HtmlTagStyle.md)\>\>; `width?`: `number`; \}
 
-Defined in: [canvas/src/primitives/types.ts:1006](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L1006)
+Defined in: [canvas/src/primitives/types.ts:1006](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L1006)
 
 The visible content of a `LabelDecoration`. Two variants:
 

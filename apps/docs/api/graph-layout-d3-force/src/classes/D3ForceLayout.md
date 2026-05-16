@@ -1,6 +1,6 @@
 # Class: D3ForceLayout
 
-Defined in: [graph-layout-d3-force/src/D3ForceLayout.ts:52](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layout-d3-force/src/D3ForceLayout.ts#L52)
+Defined in: [graph-layout-d3-force/src/D3ForceLayout.ts:52](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/D3ForceLayout.ts#L52)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [graph-layout-d3-force/src/D3ForceLayout.ts:52](https://github.com/i
 
 > **new D3ForceLayout**(`opts?`): `D3ForceLayout`
 
-Defined in: [graph-layout-d3-force/src/D3ForceLayout.ts:75](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layout-d3-force/src/D3ForceLayout.ts#L75)
+Defined in: [graph-layout-d3-force/src/D3ForceLayout.ts:75](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/D3ForceLayout.ts#L75)
 
 #### Parameters
 
@@ -34,7 +34,7 @@ Defined in: [graph-layout-d3-force/src/D3ForceLayout.ts:75](https://github.com/i
 
 > `readonly` **events**: [`EventEmitter`](../../../canvas/src/classes/EventEmitter.md)\<[`LayoutEvents`](../../../canvas/src/type-aliases/LayoutEvents.md)\>
 
-Defined in: [canvas/src/layouts/Layout.ts:71](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layouts/Layout.ts#L71)
+Defined in: [canvas/src/layouts/Layout.ts:71](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layouts/Layout.ts#L71)
 
 Lifecycle event bus. See class docs for the event vocabulary.
 Subclasses with richer telemetry can declare their own typed
@@ -50,7 +50,7 @@ emitter on top (`override readonly events = new EventEmitter<MyEvents>()`).
 
 > **apply**(`layer`): `Promise`\<`void`\>
 
-Defined in: [graph-layout-d3-force/src/D3ForceLayout.ts:85](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layout-d3-force/src/D3ForceLayout.ts#L85)
+Defined in: [graph-layout-d3-force/src/D3ForceLayout.ts:85](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/D3ForceLayout.ts#L85)
 
 Run the layout against `layer`. Resolves when the simulation settles
 naturally OR is cancelled via `stop()` / a second `apply()` call.
@@ -76,7 +76,7 @@ Lifecycle events (`start` / `tick` / `end`) fire around the run.
 
 > **stop**(): `void`
 
-Defined in: [graph-layout-d3-force/src/D3ForceLayout.ts:181](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layout-d3-force/src/D3ForceLayout.ts#L181)
+Defined in: [graph-layout-d3-force/src/D3ForceLayout.ts:181](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/D3ForceLayout.ts#L181)
 
 Cancel an in-flight run. Positions stay in the store. No-op when idle.
 

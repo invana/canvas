@@ -1,6 +1,6 @@
 # Interface: SelectionSnapshot
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:54](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L54)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:54](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L54)
 
 Per-flush snapshot fired to `onSelectionChange`.
 
@@ -10,7 +10,7 @@ Per-flush snapshot fired to `onSelectionChange`.
 
 > **connectorIds**: `string`[]
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:56](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L56)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:56](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L56)
 
 ***
 
@@ -18,4 +18,4 @@ Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:56](https://github.com
 
 > **shapeIds**: `string`[]
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:55](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L55)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:55](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L55)

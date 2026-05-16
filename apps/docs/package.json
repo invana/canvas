@@ -8,7 +8,7 @@
     "dev": "vitepress dev",
     "build": "typedoc && vitepress build",
     "preview": "vitepress preview",
-    "typedoc": "typedoc"
+    "typedoc": "typedoc && touch .vitepress/config.ts"
   },
   "devDependencies": {
     "typedoc": "^0.28.1",

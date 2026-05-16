@@ -2,6 +2,6 @@
 
 > **BrushModifierKey** = `ModifierKey`
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:48](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L48)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:48](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L48)
 
 Modifier-key names accepted by `trigger`.

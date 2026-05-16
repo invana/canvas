@@ -2,7 +2,7 @@
 
 > **EventSourceKind** = `"canvas"` \| `"layer"` \| `"behaviour"` \| `"layout"`
 
-Defined in: [canvas/src/events/CanvasEvent.ts:18](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/events/CanvasEvent.ts#L18)
+Defined in: [canvas/src/events/CanvasEvent.ts:18](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/events/CanvasEvent.ts#L18)
 
 Telemetry envelope for events crossing into the canvas-wide tap channel.
 

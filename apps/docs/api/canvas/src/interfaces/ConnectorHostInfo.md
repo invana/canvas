@@ -1,6 +1,6 @@
 # Interface: ConnectorHostInfo
 
-Defined in: [canvas/src/primitives/types.ts:562](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L562)
+Defined in: [canvas/src/primitives/types.ts:562](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L562)
 
 Information a `Connector` instance receives at construction. The connector
 resolves marker shapes via the read-only shape registry, then invokes each
@@ -13,7 +13,7 @@ connector's `Graphics`.
 
 > `readonly` **shapeRegistry**: `ReadonlyMap`\<`string`, [`ShapeCtor`](ShapeCtor.md)\<[`BaseShapeSpec`](BaseShapeSpec.md)\>\>
 
-Defined in: [canvas/src/primitives/types.ts:564](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L564)
+Defined in: [canvas/src/primitives/types.ts:564](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L564)
 
 ***
 
@@ -21,4 +21,4 @@ Defined in: [canvas/src/primitives/types.ts:564](https://github.com/invana/canva
 
 > `readonly` **surface**: `Container`
 
-Defined in: [canvas/src/primitives/types.ts:563](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L563)
+Defined in: [canvas/src/primitives/types.ts:563](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L563)

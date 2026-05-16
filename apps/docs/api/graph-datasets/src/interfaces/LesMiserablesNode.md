@@ -1,6 +1,6 @@
 # Interface: LesMiserablesNode
 
-Defined in: [graph-datasets/src/lesMiserables.ts:31](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/lesMiserables.ts#L31)
+Defined in: [graph-datasets/src/lesMiserables.ts:31](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/lesMiserables.ts#L31)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [graph-datasets/src/lesMiserables.ts:31](https://github.com/invana/c
 
 > **data**: [`LesMiserablesNodeData`](LesMiserablesNodeData.md)
 
-Defined in: [graph-datasets/src/lesMiserables.ts:33](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/lesMiserables.ts#L33)
+Defined in: [graph-datasets/src/lesMiserables.ts:33](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/lesMiserables.ts#L33)
 
 ***
 
@@ -16,4 +16,4 @@ Defined in: [graph-datasets/src/lesMiserables.ts:33](https://github.com/invana/c
 
 > **id**: `string`
 
-Defined in: [graph-datasets/src/lesMiserables.ts:32](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/lesMiserables.ts#L32)
+Defined in: [graph-datasets/src/lesMiserables.ts:32](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/lesMiserables.ts#L32)

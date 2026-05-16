@@ -1,6 +1,6 @@
 # Interface: FlareImportsGraphData
 
-Defined in: [graph-datasets/src/flare-imports.ts:42](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/flare-imports.ts#L42)
+Defined in: [graph-datasets/src/flare-imports.ts:42](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/flare-imports.ts#L42)
 
 Output of [flareImportsAsGraph](../functions/flareImportsAsGraph.md).
 
@@ -10,7 +10,7 @@ Output of [flareImportsAsGraph](../functions/flareImportsAsGraph.md).
 
 > **importEdges**: [`FlareImportEdge`](FlareImportEdge.md)[]
 
-Defined in: [graph-datasets/src/flare-imports.ts:47](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/flare-imports.ts#L47)
+Defined in: [graph-datasets/src/flare-imports.ts:47](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/flare-imports.ts#L47)
 
 Synthetic leaf→leaf import edges. Render these as bundled curves.
 
@@ -20,7 +20,7 @@ Synthetic leaf→leaf import edges. Render these as bundled curves.
 
 > **nodes**: [`FlareGraphNode`](FlareGraphNode.md)[]
 
-Defined in: [graph-datasets/src/flare-imports.ts:43](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/flare-imports.ts#L43)
+Defined in: [graph-datasets/src/flare-imports.ts:43](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/flare-imports.ts#L43)
 
 ***
 
@@ -28,6 +28,6 @@ Defined in: [graph-datasets/src/flare-imports.ts:43](https://github.com/invana/c
 
 > **treeEdges**: [`FlareGraphEdge`](FlareGraphEdge.md)[]
 
-Defined in: [graph-datasets/src/flare-imports.ts:45](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/flare-imports.ts#L45)
+Defined in: [graph-datasets/src/flare-imports.ts:45](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/flare-imports.ts#L45)
 
 Parent→child edges from the flare hierarchy. Feed these to the layout.

@@ -1,6 +1,6 @@
 # Interface: H1B2019GraphNode
 
-Defined in: [graph-datasets/src/h1b2019.ts:52](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/h1b2019.ts#L52)
+Defined in: [graph-datasets/src/h1b2019.ts:52](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/h1b2019.ts#L52)
 
 A single node in the flat projection. The id is the slash-joined path
 from the root (e.g. `H-1B 2019/CA/SAN JOSE/GOOGLE LLC`) so duplicate
@@ -12,7 +12,7 @@ employer / city names across states stay distinct.
 
 > **data**: `object`
 
-Defined in: [graph-datasets/src/h1b2019.ts:54](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/h1b2019.ts#L54)
+Defined in: [graph-datasets/src/h1b2019.ts:54](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/h1b2019.ts#L54)
 
 #### depth
 
@@ -53,4 +53,4 @@ Sum of petition counts for this leaf. Inner nodes omit it.
 
 > **id**: `string`
 
-Defined in: [graph-datasets/src/h1b2019.ts:53](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/h1b2019.ts#L53)
+Defined in: [graph-datasets/src/h1b2019.ts:53](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/h1b2019.ts#L53)

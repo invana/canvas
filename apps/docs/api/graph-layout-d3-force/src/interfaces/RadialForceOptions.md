@@ -1,6 +1,6 @@
 # Interface: RadialForceOptions
 
-Defined in: [graph-layout-d3-force/src/types.ts:116](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layout-d3-force/src/types.ts#L116)
+Defined in: [graph-layout-d3-force/src/types.ts:116](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L116)
 
 `forceRadial` configuration. `radius` is required.
 
@@ -10,7 +10,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:116](https://github.com/invana/c
 
 > **radius**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:118](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layout-d3-force/src/types.ts#L118)
+Defined in: [graph-layout-d3-force/src/types.ts:118](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L118)
 
 Target circle radius.
 
@@ -20,7 +20,7 @@ Target circle radius.
 
 > `optional` **strength?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:124](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layout-d3-force/src/types.ts#L124)
+Defined in: [graph-layout-d3-force/src/types.ts:124](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L124)
 
 `radial.strength(s)`.
 
@@ -30,7 +30,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:124](https://github.com/invana/c
 
 > `optional` **x?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:120](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layout-d3-force/src/types.ts#L120)
+Defined in: [graph-layout-d3-force/src/types.ts:120](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L120)
 
 Circle center x.
 
@@ -40,6 +40,6 @@ Circle center x.
 
 > `optional` **y?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:122](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layout-d3-force/src/types.ts#L122)
+Defined in: [graph-layout-d3-force/src/types.ts:122](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L122)
 
 Circle center y.

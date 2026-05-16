@@ -1,6 +1,6 @@
 # Interface: BehaviourRegistryOptions
 
-Defined in: [canvas/src/registries/BehaviourRegistry.ts:20](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/registries/BehaviourRegistry.ts#L20)
+Defined in: [canvas/src/registries/BehaviourRegistry.ts:20](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/registries/BehaviourRegistry.ts#L20)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [canvas/src/registries/BehaviourRegistry.ts:20](https://github.com/i
 
 > **bus**: [`CanvasEventBus`](../classes/CanvasEventBus.md)
 
-Defined in: [canvas/src/registries/BehaviourRegistry.ts:22](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/registries/BehaviourRegistry.ts#L22)
+Defined in: [canvas/src/registries/BehaviourRegistry.ts:22](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/registries/BehaviourRegistry.ts#L22)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [canvas/src/registries/BehaviourRegistry.ts:22](https://github.com/i
 
 > **getContext**: () => [`CanvasContext`](CanvasContext.md)
 
-Defined in: [canvas/src/registries/BehaviourRegistry.ts:21](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/registries/BehaviourRegistry.ts#L21)
+Defined in: [canvas/src/registries/BehaviourRegistry.ts:21](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/registries/BehaviourRegistry.ts#L21)
 
 #### Returns
 

@@ -2,7 +2,7 @@
 
 > `const` **manhattanRouter**: [`IRouter`](../type-aliases/IRouter.md)
 
-Defined in: [canvas/src/primitives/connectors/routers/manhattan.ts:62](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/connectors/routers/manhattan.ts#L62)
+Defined in: [canvas/src/primitives/connectors/routers/manhattan.ts:62](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/connectors/routers/manhattan.ts#L62)
 
 Manhattan router — H/V segments only, **routing around obstacles when
 necessary**.

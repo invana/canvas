@@ -1,6 +1,6 @@
 # Interface: UkEnergyFlowGraphEdge
 
-Defined in: [graph-datasets/src/uk-energy-flow.ts:66](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/uk-energy-flow.ts#L66)
+Defined in: [graph-datasets/src/uk-energy-flow.ts:66](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/uk-energy-flow.ts#L66)
 
 Edge in the flat projection. `value` is the flow magnitude (TWh).
 
@@ -10,7 +10,7 @@ Edge in the flat projection. `value` is the flow magnitude (TWh).
 
 > **data**: `object`
 
-Defined in: [graph-datasets/src/uk-energy-flow.ts:70](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/uk-energy-flow.ts#L70)
+Defined in: [graph-datasets/src/uk-energy-flow.ts:70](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/uk-energy-flow.ts#L70)
 
 #### value
 
@@ -22,7 +22,7 @@ Defined in: [graph-datasets/src/uk-energy-flow.ts:70](https://github.com/invana/
 
 > **id**: `string`
 
-Defined in: [graph-datasets/src/uk-energy-flow.ts:67](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/uk-energy-flow.ts#L67)
+Defined in: [graph-datasets/src/uk-energy-flow.ts:67](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/uk-energy-flow.ts#L67)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [graph-datasets/src/uk-energy-flow.ts:67](https://github.com/invana/
 
 > **source**: `string`
 
-Defined in: [graph-datasets/src/uk-energy-flow.ts:68](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/uk-energy-flow.ts#L68)
+Defined in: [graph-datasets/src/uk-energy-flow.ts:68](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/uk-energy-flow.ts#L68)
 
 ***
 
@@ -38,4 +38,4 @@ Defined in: [graph-datasets/src/uk-energy-flow.ts:68](https://github.com/invana/
 
 > **target**: `string`
 
-Defined in: [graph-datasets/src/uk-energy-flow.ts:69](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/uk-energy-flow.ts#L69)
+Defined in: [graph-datasets/src/uk-energy-flow.ts:69](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/uk-energy-flow.ts#L69)

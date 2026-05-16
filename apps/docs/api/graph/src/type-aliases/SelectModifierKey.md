@@ -2,6 +2,6 @@
 
 > **SelectModifierKey** = `ModifierKey`
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:43](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L43)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:43](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L43)
 
 Modifier-key names accepted by `trigger`.

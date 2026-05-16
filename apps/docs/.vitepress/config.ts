@@ -57,7 +57,7 @@ function apiSidebar() {
     .filter((name) => statSync(join(apiRoot, name)).isDirectory())
     .filter((name) => existsSync(join(apiRoot, name, 'src')))
     .sort();
-  return packages.flatMap((pkg) => apiPackageSection(`@invana/${pkg}`, `${pkg}/src`));
+  return packages.flatMap((pkg) => apiPackageSection(pkg, `${pkg}/src`));
 }
 
 export default defineConfig({

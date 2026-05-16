@@ -1,6 +1,6 @@
 # Interface: LayersPanelLayerOptions
 
-Defined in: [canvas/src/layers/LayersPanelLayer.ts:36](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/LayersPanelLayer.ts#L36)
+Defined in: [canvas/src/layers/LayersPanelLayer.ts:36](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/LayersPanelLayer.ts#L36)
 
 ## Extended by
 
@@ -12,7 +12,7 @@ Defined in: [canvas/src/layers/LayersPanelLayer.ts:36](https://github.com/invana
 
 > `optional` **accentColor?**: `string`
 
-Defined in: [canvas/src/layers/LayersPanelLayer.ts:50](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/LayersPanelLayer.ts#L50)
+Defined in: [canvas/src/layers/LayersPanelLayer.ts:50](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/LayersPanelLayer.ts#L50)
 
 Accent / header color. Default: '#4fc3f7'
 
@@ -22,7 +22,7 @@ Accent / header color. Default: '#4fc3f7'
 
 > `optional` **backgroundColor?**: `string`
 
-Defined in: [canvas/src/layers/LayersPanelLayer.ts:46](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/LayersPanelLayer.ts#L46)
+Defined in: [canvas/src/layers/LayersPanelLayer.ts:46](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/LayersPanelLayer.ts#L46)
 
 Overlay background CSS color. Default: 'rgba(10,10,10,0.82)'
 
@@ -32,7 +32,7 @@ Overlay background CSS color. Default: 'rgba(10,10,10,0.82)'
 
 > `optional` **corner?**: [`LayersPanelCorner`](../type-aliases/LayersPanelCorner.md)
 
-Defined in: [canvas/src/layers/LayersPanelLayer.ts:38](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/LayersPanelLayer.ts#L38)
+Defined in: [canvas/src/layers/LayersPanelLayer.ts:38](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/LayersPanelLayer.ts#L38)
 
 Which corner to anchor the overlay. Default: 'top-right'
 
@@ -42,7 +42,7 @@ Which corner to anchor the overlay. Default: 'top-right'
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: [canvas/src/layers/LayersPanelLayer.ts:40](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/LayersPanelLayer.ts#L40)
+Defined in: [canvas/src/layers/LayersPanelLayer.ts:40](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/LayersPanelLayer.ts#L40)
 
 Show the overlay. Toggle at runtime via setEnabled(). Default: true
 
@@ -52,7 +52,7 @@ Show the overlay. Toggle at runtime via setEnabled(). Default: true
 
 > `optional` **fontSize?**: `number`
 
-Defined in: [canvas/src/layers/LayersPanelLayer.ts:42](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/LayersPanelLayer.ts#L42)
+Defined in: [canvas/src/layers/LayersPanelLayer.ts:42](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/LayersPanelLayer.ts#L42)
 
 Font size in px. Default: 11
 
@@ -62,7 +62,7 @@ Font size in px. Default: 11
 
 > `optional` **hideIds?**: readonly `string`[]
 
-Defined in: [canvas/src/layers/LayersPanelLayer.ts:55](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/LayersPanelLayer.ts#L55)
+Defined in: [canvas/src/layers/LayersPanelLayer.ts:55](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/LayersPanelLayer.ts#L55)
 
 Layer ids to hide from the list. The panel's own id is always hidden
 regardless of this option.
@@ -73,7 +73,7 @@ regardless of this option.
 
 > `optional` **opacity?**: `number`
 
-Defined in: [canvas/src/layers/LayersPanelLayer.ts:44](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/LayersPanelLayer.ts#L44)
+Defined in: [canvas/src/layers/LayersPanelLayer.ts:44](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/LayersPanelLayer.ts#L44)
 
 Panel opacity 0–1. Default: 0.92
 
@@ -83,6 +83,6 @@ Panel opacity 0–1. Default: 0.92
 
 > `optional` **textColor?**: `string`
 
-Defined in: [canvas/src/layers/LayersPanelLayer.ts:48](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/LayersPanelLayer.ts#L48)
+Defined in: [canvas/src/layers/LayersPanelLayer.ts:48](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/LayersPanelLayer.ts#L48)
 
 Text color. Default: '#c8d3e0'

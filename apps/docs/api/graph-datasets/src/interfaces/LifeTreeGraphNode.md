@@ -1,6 +1,6 @@
 # Interface: LifeTreeGraphNode
 
-Defined in: [graph-datasets/src/lifeTree.ts:37](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/lifeTree.ts#L37)
+Defined in: [graph-datasets/src/lifeTree.ts:37](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/lifeTree.ts#L37)
 
 A single node in the flat projection.
 
@@ -10,7 +10,7 @@ A single node in the flat projection.
 
 > **data**: `object`
 
-Defined in: [graph-datasets/src/lifeTree.ts:39](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/lifeTree.ts#L39)
+Defined in: [graph-datasets/src/lifeTree.ts:39](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/lifeTree.ts#L39)
 
 #### depth
 
@@ -50,4 +50,4 @@ Original Newick name. Empty for anonymous internal clades.
 
 > **id**: `string`
 
-Defined in: [graph-datasets/src/lifeTree.ts:38](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/lifeTree.ts#L38)
+Defined in: [graph-datasets/src/lifeTree.ts:38](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/lifeTree.ts#L38)

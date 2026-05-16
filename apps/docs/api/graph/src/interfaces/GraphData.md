@@ -1,6 +1,6 @@
 # Interface: GraphData
 
-Defined in: [graph/src/layer/types.ts:243](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L243)
+Defined in: [graph/src/layer/types.ts:243](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L243)
 
 Initial-load shape passed to `graphLayer.setData(data)`.
 
@@ -10,7 +10,7 @@ Initial-load shape passed to `graphLayer.setData(data)`.
 
 > **edges**: [`GraphEdge`](GraphEdge.md)\<`unknown`\>[]
 
-Defined in: [graph/src/layer/types.ts:245](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L245)
+Defined in: [graph/src/layer/types.ts:245](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L245)
 
 ***
 
@@ -18,4 +18,4 @@ Defined in: [graph/src/layer/types.ts:245](https://github.com/invana/canvas/blob
 
 > **nodes**: [`GraphNode`](GraphNode.md)\<`unknown`\>[]
 
-Defined in: [graph/src/layer/types.ts:244](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L244)
+Defined in: [graph/src/layer/types.ts:244](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L244)

@@ -1,6 +1,6 @@
 # Interface: NodeSizeLODConfig
 
-Defined in: [graph/src/behaviours/NodeSizeLODBehaviour.ts:75](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/behaviours/NodeSizeLODBehaviour.ts#L75)
+Defined in: [graph/src/behaviours/NodeSizeLODBehaviour.ts:75](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/NodeSizeLODBehaviour.ts#L75)
 
 Per-`GraphLayer` config — one entry per layer this behaviour rescales.
 
@@ -10,7 +10,7 @@ Per-`GraphLayer` config — one entry per layer this behaviour rescales.
 
 > **layerId**: `string`
 
-Defined in: [graph/src/behaviours/NodeSizeLODBehaviour.ts:77](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/behaviours/NodeSizeLODBehaviour.ts#L77)
+Defined in: [graph/src/behaviours/NodeSizeLODBehaviour.ts:77](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/NodeSizeLODBehaviour.ts#L77)
 
 Required — the `GraphLayer` whose nodes are rescaled.
 
@@ -20,7 +20,7 @@ Required — the `GraphLayer` whose nodes are rescaled.
 
 > `optional` **sizePx?**: [`NumberOrGetter`](../../../canvas/src/type-aliases/NumberOrGetter.md)
 
-Defined in: [graph/src/behaviours/NodeSizeLODBehaviour.ts:84](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/behaviours/NodeSizeLODBehaviour.ts#L84)
+Defined in: [graph/src/behaviours/NodeSizeLODBehaviour.ts:84](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/NodeSizeLODBehaviour.ts#L84)
 
 Target body size in screen px for nodes that don't carry a per-node
 `data.size` override. Falls back to the layer's `nodeDefaults.size`
@@ -33,7 +33,7 @@ on every reflow so GUI sliders update live.
 
 > `optional` **strokeWidthPx?**: [`NumberOrGetter`](../../../canvas/src/type-aliases/NumberOrGetter.md)
 
-Defined in: [graph/src/behaviours/NodeSizeLODBehaviour.ts:93](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/behaviours/NodeSizeLODBehaviour.ts#L93)
+Defined in: [graph/src/behaviours/NodeSizeLODBehaviour.ts:93](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/NodeSizeLODBehaviour.ts#L93)
 
 Target outline width in screen px. When omitted, the layer's
 `nodeDefaults.strokeWidth` (or each node's `data.strokeWidth`) is

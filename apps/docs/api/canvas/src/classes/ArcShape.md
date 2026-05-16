@@ -1,6 +1,6 @@
 # Class: ArcShape
 
-Defined in: [canvas/src/primitives/shapes/ArcShape.ts:36](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/shapes/ArcShape.ts#L36)
+Defined in: [canvas/src/primitives/shapes/ArcShape.ts:36](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/shapes/ArcShape.ts#L36)
 
 Annular sector centred at `(spec.x, spec.y)` between two radii
 (`innerR`, `outerR`) and two angles (`startAngle`, `endAngle`). Angles are
@@ -29,7 +29,7 @@ at `ARC_SAMPLE_STEP`.
 
 > **new ArcShape**(`spec`, `host`): `ArcShape`
 
-Defined in: [canvas/src/primitives/shapes/ArcShape.ts:39](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/shapes/ArcShape.ts#L39)
+Defined in: [canvas/src/primitives/shapes/ArcShape.ts:39](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/shapes/ArcShape.ts#L39)
 
 #### Parameters
 
@@ -55,7 +55,7 @@ Defined in: [canvas/src/primitives/shapes/ArcShape.ts:39](https://github.com/inv
 
 > `protected` `readonly` **bodyGfx**: `Graphics`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:42](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/ShapeBase.ts#L42)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:42](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ShapeBase.ts#L42)
 
 #### Inherited from
 
@@ -67,7 +67,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:42](https://github.com/inva
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 Root display object — renderer adds/removes this on the host surface.
 
@@ -81,7 +81,7 @@ Root display object — renderer adds/removes this on the host surface.
 
 > `protected` `readonly` **host**: [`ShapeHostInfo`](../interfaces/ShapeHostInfo.md)
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:46](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/ShapeBase.ts#L46)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:46](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ShapeBase.ts#L46)
 
 #### Inherited from
 
@@ -93,7 +93,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:46](https://github.com/inva
 
 > `protected` `readonly` **insetViews**: `any`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:43](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/ShapeBase.ts#L43)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:43](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ShapeBase.ts#L43)
 
 #### Inherited from
 
@@ -105,7 +105,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:43](https://github.com/inva
 
 > `protected` **spec**: [`ArcSpec`](../interfaces/ArcSpec.md)
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:44](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/ShapeBase.ts#L44)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:44](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ShapeBase.ts#L44)
 
 #### Inherited from
 
@@ -117,7 +117,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:44](https://github.com/inva
 
 > `readonly` `static` **kind**: `"arc"` = `'arc'`
 
-Defined in: [canvas/src/primitives/shapes/ArcShape.ts:37](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/shapes/ArcShape.ts#L37)
+Defined in: [canvas/src/primitives/shapes/ArcShape.ts:37](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/shapes/ArcShape.ts#L37)
 
 ## Methods
 
@@ -125,7 +125,7 @@ Defined in: [canvas/src/primitives/shapes/ArcShape.ts:37](https://github.com/inv
 
 > **boundaryIntersect**(`localFromCenter`): [`Point`](../interfaces/Point.md)
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:130](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/ShapeBase.ts#L130)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:130](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ShapeBase.ts#L130)
 
 Default boundary intersection: ray from the shape's geometric centre
 `(0, 0)` toward `localFromCenter`, intersected with a centred AABB
@@ -157,7 +157,7 @@ perimeter snapping. Input and output are both centre-relative.
 
 > **bounds**(): [`Rect`](../interfaces/Rect.md)
 
-Defined in: [canvas/src/primitives/shapes/ArcShape.ts:72](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/shapes/ArcShape.ts#L72)
+Defined in: [canvas/src/primitives/shapes/ArcShape.ts:72](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/shapes/ArcShape.ts#L72)
 
 Local-space axis-aligned bounding box for hit-testing & decorations.
 
@@ -175,7 +175,7 @@ Local-space axis-aligned bounding box for hit-testing & decorations.
 
 > **contains**(`localX`, `localY`): `boolean`
 
-Defined in: [canvas/src/primitives/shapes/ArcShape.ts:91](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/shapes/ArcShape.ts#L91)
+Defined in: [canvas/src/primitives/shapes/ArcShape.ts:91](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/shapes/ArcShape.ts#L91)
 
 #### Parameters
 
@@ -197,7 +197,7 @@ Defined in: [canvas/src/primitives/shapes/ArcShape.ts:91](https://github.com/inv
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:141](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/ShapeBase.ts#L141)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:141](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ShapeBase.ts#L141)
 
 #### Returns
 
@@ -213,7 +213,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:141](https://github.com/inv
 
 > **draw**(`spec`): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:104](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/ShapeBase.ts#L104)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:104](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ShapeBase.ts#L104)
 
 (Re)paint the shape from the current spec. Called on add and on update.
 
@@ -237,7 +237,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:104](https://github.com/inv
 
 > `protected` **drawGeometry**(`g`, `spec`, `style?`): `void`
 
-Defined in: [canvas/src/primitives/shapes/ArcShape.ts:44](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/shapes/ArcShape.ts#L44)
+Defined in: [canvas/src/primitives/shapes/ArcShape.ts:44](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/shapes/ArcShape.ts#L44)
 
 Trace the silhouette into `g`, then apply fill + stroke. When `style`
 is supplied, it overrides the spec's fill/stroke (decoration use).
@@ -270,7 +270,7 @@ is supplied, it overrides the spec's fill/stroke (decoration use).
 
 > **getHitArea**(): `IHitArea`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:85](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/ShapeBase.ts#L85)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:85](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ShapeBase.ts#L85)
 
 Hit-test region for this shape, derived from [drawGeometry](#drawgeometry).
 
@@ -304,7 +304,7 @@ coordinates; `true` iff the point is inside the silhouette.
 
 > **paintInto**(`g`, `style?`): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:115](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/ShapeBase.ts#L115)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:115](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ShapeBase.ts#L115)
 
 Decoration entry point — repaint the silhouette into someone else's
 `Graphics` with a style override. The shape uses its own current spec;
@@ -340,7 +340,7 @@ Every shape that extends `ShapeBase` has it for free.
 
 > **visualCenter**(): [`Point`](../interfaces/Point.md)
 
-Defined in: [canvas/src/primitives/shapes/ArcShape.ts:82](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/shapes/ArcShape.ts#L82)
+Defined in: [canvas/src/primitives/shapes/ArcShape.ts:82](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/shapes/ArcShape.ts#L82)
 
 Visual centre of an annular sector — half-angle direction, midradius
 distance. Used by inset-content labels (`placement: 'center'`); good

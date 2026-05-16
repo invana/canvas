@@ -2,7 +2,7 @@
 
 > **LayoutEndReason** = `"completed"` \| `"stopped"`
 
-Defined in: [canvas/src/layouts/Layout.ts:50](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layouts/Layout.ts#L50)
+Defined in: [canvas/src/layouts/Layout.ts:50](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layouts/Layout.ts#L50)
 
 Why the run ended.
 

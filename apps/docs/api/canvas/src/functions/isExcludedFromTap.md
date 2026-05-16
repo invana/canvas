@@ -2,7 +2,7 @@
 
 > **isExcludedFromTap**(`type`, `exclude?`): `boolean`
 
-Defined in: [canvas/src/events/CanvasEvent.ts:83](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/events/CanvasEvent.ts#L83)
+Defined in: [canvas/src/events/CanvasEvent.ts:83](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/events/CanvasEvent.ts#L83)
 
 Returns true if the given envelope type should be excluded from the tap
 channel under the supplied exclude list. Exclusion is suffix-based so

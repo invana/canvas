@@ -1,6 +1,6 @@
 # Interface: ShapeStroke
 
-Defined in: [canvas/src/primitives/types.ts:260](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L260)
+Defined in: [canvas/src/primitives/types.ts:260](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L260)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [canvas/src/primitives/types.ts:260](https://github.com/invana/canva
 
 > `readonly` `optional` **alignment?**: `"center"` \| `"inside"` \| `"outside"`
 
-Defined in: [canvas/src/primitives/types.ts:265](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L265)
+Defined in: [canvas/src/primitives/types.ts:265](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L265)
 
 Default `'center'`.
 
@@ -18,7 +18,7 @@ Default `'center'`.
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:262](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L262)
+Defined in: [canvas/src/primitives/types.ts:262](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L262)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [canvas/src/primitives/types.ts:262](https://github.com/invana/canva
 
 > `readonly` `optional` **cap?**: `"butt"` \| `"round"` \| `"square"`
 
-Defined in: [canvas/src/primitives/types.ts:268](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L268)
+Defined in: [canvas/src/primitives/types.ts:268](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L268)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [canvas/src/primitives/types.ts:268](https://github.com/invana/canva
 
 > `readonly` **color**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:261](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L261)
+Defined in: [canvas/src/primitives/types.ts:261](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L261)
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: [canvas/src/primitives/types.ts:261](https://github.com/invana/canva
 
 > `readonly` `optional` **dashArray?**: readonly \[`number`, `number`\]
 
-Defined in: [canvas/src/primitives/types.ts:266](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L266)
+Defined in: [canvas/src/primitives/types.ts:266](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L266)
 
 ***
 
@@ -50,7 +50,7 @@ Defined in: [canvas/src/primitives/types.ts:266](https://github.com/invana/canva
 
 > `readonly` `optional` **dashOffset?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:267](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L267)
+Defined in: [canvas/src/primitives/types.ts:267](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L267)
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: [canvas/src/primitives/types.ts:267](https://github.com/invana/canva
 
 > `readonly` `optional` **join?**: `"round"` \| `"miter"` \| `"bevel"`
 
-Defined in: [canvas/src/primitives/types.ts:269](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L269)
+Defined in: [canvas/src/primitives/types.ts:269](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L269)
 
 ***
 
@@ -66,4 +66,4 @@ Defined in: [canvas/src/primitives/types.ts:269](https://github.com/invana/canva
 
 > `readonly` `optional` **width?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:263](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L263)
+Defined in: [canvas/src/primitives/types.ts:263](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L263)

@@ -2,7 +2,7 @@
 
 > **D3SankeyNodeAlign** = `"left"` \| `"right"` \| `"center"` \| `"justify"`
 
-Defined in: [graph-layout-d3-sankey/src/types.ts:17](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layout-d3-sankey/src/types.ts#L17)
+Defined in: [graph-layout-d3-sankey/src/types.ts:17](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-sankey/src/types.ts#L17)
 
 Column-alignment strategy. Mirrors d3-sankey's `nodeAlign` setters:
 

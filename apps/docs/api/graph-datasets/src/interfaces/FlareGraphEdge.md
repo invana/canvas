@@ -1,6 +1,6 @@
 # Interface: FlareGraphEdge
 
-Defined in: [graph-datasets/src/flare.ts:53](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/flare.ts#L53)
+Defined in: [graph-datasets/src/flare.ts:53](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/flare.ts#L53)
 
 A single parent→child edge in the flat projection.
 
@@ -10,7 +10,7 @@ A single parent→child edge in the flat projection.
 
 > **id**: `string`
 
-Defined in: [graph-datasets/src/flare.ts:54](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/flare.ts#L54)
+Defined in: [graph-datasets/src/flare.ts:54](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/flare.ts#L54)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [graph-datasets/src/flare.ts:54](https://github.com/invana/canvas/bl
 
 > **source**: `string`
 
-Defined in: [graph-datasets/src/flare.ts:55](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/flare.ts#L55)
+Defined in: [graph-datasets/src/flare.ts:55](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/flare.ts#L55)
 
 ***
 
@@ -26,4 +26,4 @@ Defined in: [graph-datasets/src/flare.ts:55](https://github.com/invana/canvas/bl
 
 > **target**: `string`
 
-Defined in: [graph-datasets/src/flare.ts:56](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/flare.ts#L56)
+Defined in: [graph-datasets/src/flare.ts:56](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/flare.ts#L56)

@@ -1,6 +1,6 @@
 # Interface: RandomTreeData
 
-Defined in: [graph-datasets/src/randomTree.ts:26](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/randomTree.ts#L26)
+Defined in: [graph-datasets/src/randomTree.ts:26](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/randomTree.ts#L26)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [graph-datasets/src/randomTree.ts:26](https://github.com/invana/canv
 
 > **edges**: [`RandomTreeEdge`](RandomTreeEdge.md)[]
 
-Defined in: [graph-datasets/src/randomTree.ts:28](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/randomTree.ts#L28)
+Defined in: [graph-datasets/src/randomTree.ts:28](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/randomTree.ts#L28)
 
 ***
 
@@ -16,4 +16,4 @@ Defined in: [graph-datasets/src/randomTree.ts:28](https://github.com/invana/canv
 
 > **nodes**: [`RandomTreeNode`](RandomTreeNode.md)[]
 
-Defined in: [graph-datasets/src/randomTree.ts:27](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/randomTree.ts#L27)
+Defined in: [graph-datasets/src/randomTree.ts:27](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/randomTree.ts#L27)

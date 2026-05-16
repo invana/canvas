@@ -2,7 +2,7 @@
 
 > **CartesianOrientation** = `"vertical"` \| `"horizontal"`
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:52](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layout-d3-hierarchy/src/types.ts#L52)
+Defined in: [graph-layout-d3-hierarchy/src/types.ts:52](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-hierarchy/src/types.ts#L52)
 
 Cartesian-mode orientation.
 

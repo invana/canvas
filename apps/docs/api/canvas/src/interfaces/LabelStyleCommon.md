@@ -1,6 +1,6 @@
 # Interface: LabelStyleCommon
 
-Defined in: [canvas/src/primitives/types.ts:1108](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L1108)
+Defined in: [canvas/src/primitives/types.ts:1108](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L1108)
 
 Common style block shared by shape- and connector-anchored labels.
 Placement / offset / rotation specifics live on the host-specific spec.
@@ -16,7 +16,7 @@ Placement / offset / rotation specifics live on the host-specific spec.
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:1114](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L1114)
+Defined in: [canvas/src/primitives/types.ts:1114](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L1114)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [canvas/src/primitives/types.ts:1114](https://github.com/invana/canv
 
 > `readonly` `optional` **background?**: [`LabelBackground`](LabelBackground.md)
 
-Defined in: [canvas/src/primitives/types.ts:1110](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L1110)
+Defined in: [canvas/src/primitives/types.ts:1110](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L1110)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [canvas/src/primitives/types.ts:1110](https://github.com/invana/canv
 
 > `readonly` `optional` **collisionGroup?**: `string`
 
-Defined in: [canvas/src/primitives/types.ts:1128](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L1128)
+Defined in: [canvas/src/primitives/types.ts:1128](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L1128)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [canvas/src/primitives/types.ts:1128](https://github.com/invana/canv
 
 > `readonly` **content**: [`LabelContent`](../type-aliases/LabelContent.md)
 
-Defined in: [canvas/src/primitives/types.ts:1109](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L1109)
+Defined in: [canvas/src/primitives/types.ts:1109](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L1109)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [canvas/src/primitives/types.ts:1109](https://github.com/invana/canv
 
 > `readonly` `optional` **cursor?**: `string`
 
-Defined in: [canvas/src/primitives/types.ts:1118](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L1118)
+Defined in: [canvas/src/primitives/types.ts:1118](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L1118)
 
 Cursor on hover when the label container has hit-testing enabled.
 
@@ -58,7 +58,7 @@ Cursor on hover when the label container has hit-testing enabled.
 
 > `readonly` `optional` **forceShow?**: `boolean`
 
-Defined in: [canvas/src/primitives/types.ts:1129](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L1129)
+Defined in: [canvas/src/primitives/types.ts:1129](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L1129)
 
 ***
 
@@ -66,7 +66,7 @@ Defined in: [canvas/src/primitives/types.ts:1129](https://github.com/invana/canv
 
 > `readonly` `optional` **interactive?**: `boolean`
 
-Defined in: [canvas/src/primitives/types.ts:1120](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L1120)
+Defined in: [canvas/src/primitives/types.ts:1120](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L1120)
 
 Pointer events enabled on the label container. Default `false`.
 
@@ -76,7 +76,7 @@ Pointer events enabled on the label container. Default `false`.
 
 > `readonly` `optional` **minFontSize?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:1136](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L1136)
+Defined in: [canvas/src/primitives/types.ts:1136](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L1136)
 
 Floor used by the shrink → truncate → hide fit cascade when an
 `inside-*` placement requires the label to stay inside the host shape.
@@ -89,7 +89,7 @@ finally hide. Default `9` (px). Ignored for non-`inside-*` placements.
 
 > `readonly` `optional` **offset?**: `object`
 
-Defined in: [canvas/src/primitives/types.ts:1113](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L1113)
+Defined in: [canvas/src/primitives/types.ts:1113](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L1113)
 
 Screen-space offset in pixels applied *after* any auto-rotation.
 
@@ -107,7 +107,7 @@ Screen-space offset in pixels applied *after* any auto-rotation.
 
 > `readonly` `optional` **priority?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:1127](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L1127)
+Defined in: [canvas/src/primitives/types.ts:1127](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L1127)
 
 Read by `LabelCollisionBehaviour` only — the primitive ignores these.
 `priority` higher wins ties when collision hides overlap. `collisionGroup`
@@ -120,7 +120,7 @@ partitions the collision graph (labels in different groups never compete).
 
 > `readonly` `optional` **visibility?**: [`LabelVisibility`](LabelVisibility.md)
 
-Defined in: [canvas/src/primitives/types.ts:1116](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L1116)
+Defined in: [canvas/src/primitives/types.ts:1116](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L1116)
 
 Per-label zoom-band LOD; the decoration mounts/unmounts on threshold.
 
@@ -130,4 +130,4 @@ Per-label zoom-band LOD; the decoration mounts/unmounts on threshold.
 
 > `readonly` `optional` **wrap?**: [`LabelWrap`](LabelWrap.md)
 
-Defined in: [canvas/src/primitives/types.ts:1111](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L1111)
+Defined in: [canvas/src/primitives/types.ts:1111](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L1111)

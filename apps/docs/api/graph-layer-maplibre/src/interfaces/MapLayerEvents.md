@@ -1,6 +1,6 @@
 # Interface: MapLayerEvents
 
-Defined in: [graph-layer-maplibre/src/types.ts:75](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/types.ts#L75)
+Defined in: [graph-layer-maplibre/src/types.ts:75](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layer-maplibre/src/types.ts#L75)
 
 Event payloads emitted by [MapLayer](../classes/MapLayer.md).
 
@@ -18,7 +18,7 @@ Event payloads emitted by [MapLayer](../classes/MapLayer.md).
 
 > **map:move**: `object`
 
-Defined in: [graph-layer-maplibre/src/types.ts:79](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/types.ts#L79)
+Defined in: [graph-layer-maplibre/src/types.ts:79](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layer-maplibre/src/types.ts#L79)
 
 Fired each time the map transform changes (move / zoom / resize).
 
@@ -36,7 +36,7 @@ Fired each time the map transform changes (move / zoom / resize).
 
 > **map:ready**: `object`
 
-Defined in: [graph-layer-maplibre/src/types.ts:77](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/types.ts#L77)
+Defined in: [graph-layer-maplibre/src/types.ts:77](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layer-maplibre/src/types.ts#L77)
 
 Fired once after MapLibre's `load` event — style + initial tiles ready.
 

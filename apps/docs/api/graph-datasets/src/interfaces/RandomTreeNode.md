@@ -1,6 +1,6 @@
 # Interface: RandomTreeNode
 
-Defined in: [graph-datasets/src/randomTree.ts:17](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/randomTree.ts#L17)
+Defined in: [graph-datasets/src/randomTree.ts:17](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/randomTree.ts#L17)
 
 Procedurally-generated tree, for force-layout stress tests and
 tree-shaped demos.
@@ -25,4 +25,4 @@ const tree = generateRandomTree(500);
 
 > **index**: `number`
 
-Defined in: [graph-datasets/src/randomTree.ts:18](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/randomTree.ts#L18)
+Defined in: [graph-datasets/src/randomTree.ts:18](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/randomTree.ts#L18)

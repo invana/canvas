@@ -2,7 +2,7 @@
 
 > **resolveBadgePosition**(`hostWorldBounds`, `badgeLocalBounds`, `options`): `object`
 
-Defined in: [canvas/src/primitives/badges/placement.ts:96](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/badges/placement.ts#L96)
+Defined in: [canvas/src/primitives/badges/placement.ts:96](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/badges/placement.ts#L96)
 
 Resolve the badge spec's `(x, y)` so that the chosen origin point on the
 badge AABB lands at the chosen anchor point on the host AABB, plus the

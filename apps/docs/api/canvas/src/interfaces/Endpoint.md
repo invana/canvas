@@ -1,6 +1,6 @@
 # Interface: Endpoint
 
-Defined in: [canvas/src/primitives/types.ts:38](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L38)
+Defined in: [canvas/src/primitives/types.ts:38](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L38)
 
 Endpoint anchor a router consumes — point + optional outgoing tangent.
 
@@ -10,7 +10,7 @@ Endpoint anchor a router consumes — point + optional outgoing tangent.
 
 > `readonly` `optional` **tangent?**: [`Vec2`](Vec2.md)
 
-Defined in: [canvas/src/primitives/types.ts:41](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L41)
+Defined in: [canvas/src/primitives/types.ts:41](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L41)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [canvas/src/primitives/types.ts:41](https://github.com/invana/canvas
 
 > `readonly` **x**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:39](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L39)
+Defined in: [canvas/src/primitives/types.ts:39](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L39)
 
 ***
 
@@ -26,4 +26,4 @@ Defined in: [canvas/src/primitives/types.ts:39](https://github.com/invana/canvas
 
 > `readonly` **y**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:40](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L40)
+Defined in: [canvas/src/primitives/types.ts:40](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L40)

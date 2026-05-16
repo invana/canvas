@@ -1,6 +1,6 @@
 # Class: RevealConnectorDecoration
 
-Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:89](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L89)
+Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:89](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L89)
 
 Base for decorations that target connector primitives. Mirrors
 `ShapeDecorationBase` — subclass implements `repaint`, the base handles
@@ -21,7 +21,7 @@ call `connector.paintInto` for native dashed/styled strokes), it pulls
 
 > **new RevealConnectorDecoration**(`style`): `RevealConnectorDecoration`
 
-Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:103](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L103)
+Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:103](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L103)
 
 #### Parameters
 
@@ -43,7 +43,7 @@ Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecorati
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 #### Inherited from
 
@@ -55,7 +55,7 @@ Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/
 
 > `protected` **host**: [`ConnectorDecorationHostInfo`](../interfaces/ConnectorDecorationHostInfo.md) = `null`
 
-Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:19](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L19)
+Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:19](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L19)
 
 #### Inherited from
 
@@ -67,7 +67,7 @@ Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:19](https://g
 
 > `readonly` **style**: [`RevealConnectorDecorationStyle`](../interfaces/RevealConnectorDecorationStyle.md)
 
-Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:18](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L18)
+Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:18](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L18)
 
 #### Inherited from
 
@@ -79,7 +79,7 @@ Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:18](https://g
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:214](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L214)
+Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:214](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L214)
 
 #### Returns
 
@@ -95,7 +95,7 @@ Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecorati
 
 > **mount**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:27](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L27)
+Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:27](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L27)
 
 #### Parameters
 
@@ -117,7 +117,7 @@ Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:27](https://g
 
 > `protected` **repaint**(): `void`
 
-Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:108](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L108)
+Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:108](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L108)
 
 #### Returns
 
@@ -133,7 +133,7 @@ Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecorati
 
 > **tick**(`deltaMs`): `boolean`
 
-Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:175](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L175)
+Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:175](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L175)
 
 #### Parameters
 
@@ -151,7 +151,7 @@ Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecorati
 
 > **update**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:34](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L34)
+Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:34](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L34)
 
 #### Parameters
 
