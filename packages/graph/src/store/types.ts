@@ -17,6 +17,23 @@ export interface GraphNode<D = unknown> {
   position?: { x: number; y: number };
   /** True iff layouts must not move this node. */
   pinned?: boolean;
+  /**
+   * Initial / data-driven visual states active on this node. Each name must
+   * match a `NodeStateConfig` registered on the consuming `GraphLayer`
+   * (see `setNodeStateConfig`, the canonical `DEFAULT_NODE_STATE_CONFIGS`,
+   * or the `nodeStateConfigs` option).
+   *
+   * The store treats this field as opaque metadata. The layer reads it on
+   * insert and update to toggle visual states via `setNodeState`. On
+   * update with `state` present in the patch the layer REPLACES the
+   * visible state set with the new array — runtime states applied via
+   * `setNodeState` (e.g. hover) are wiped. Pass an empty array (or
+   * `null`) to clear.
+   *
+   * Reading `getNode(id).state` reflects the most recent value supplied
+   * to the store, not runtime states added imperatively.
+   */
+  state?: readonly string[] | null;
 }
 
 /** A directed edge. Multi-edges between the same pair are allowed. */
@@ -31,6 +48,8 @@ export interface GraphEdge<D = unknown> {
   type?: string;
   /** Arbitrary user payload — opaque to the store. */
   data?: D;
+  /** Sibling of {@link GraphNode.state} — data-driven visual states for this edge. */
+  state?: readonly string[] | null;
 }
 
 /**

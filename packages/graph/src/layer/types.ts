@@ -27,6 +27,45 @@ export type EdgeLabelHint = string | ConnectorLabelStyle;
 /** Shape kinds the layer can render for a node. */
 export type NodeShapeKind = 'circle' | 'rect' | 'arc';
 
+/**
+ * A field value that's either a static value or a function that derives the
+ * value from the host item (node / edge).
+ *
+ * Used on every field of `NodeRenderHints` / `EdgeRenderHints` so callers can
+ * supply per-item-derived styling on `nodeDefaults` / `edgeDefaults` (or on a
+ * `NodeStateConfig` / `EdgeStateConfig`) without spreading hints into every
+ * node's / edge's `data`. Resolved per render, not memoised — keep resolvers
+ * cheap and pure. Recursive returns (a function returning another function)
+ * are not unwrapped — return the final value.
+ *
+ * @example
+ * ```ts
+ * nodeDefaults: {
+ *   fill: (n) => groupColors[n.data.group % groupColors.length],
+ *   size: (n) => 12 + Math.sqrt(n.data.degree ?? 1) * 4,
+ *   label: (n) => n.data.name,
+ * }
+ * ```
+ */
+export type Resolvable<T, I> = T | ((input: I) => T);
+
+/**
+ * Unwrap a {@link Resolvable} field for `input`. Static values pass through
+ * untouched; function values are invoked once with `input` and their return
+ * is used. Functions returning further functions are NOT unwrapped — return
+ * the final value.
+ *
+ * Exposed so callers reading defaults via `graphLayer.getNodeDefaults()` /
+ * `getEdgeDefaults()` can resolve resolver-typed fields without re-implementing
+ * the function check.
+ */
+export function resolveField<T, I>(
+  v: Resolvable<T, I> | undefined,
+  input: I,
+): T | undefined {
+  return typeof v === 'function' ? (v as (i: I) => T)(input) : v;
+}
+
 /** Path-style shortcut for an edge. Maps to the canvas router + pathStyle pair. */
 export type EdgePathType =
   | 'straight'
@@ -66,6 +105,12 @@ export type EdgeAnchor = 'boundary' | 'center' | 'perpendicular' | 'edge-port' |
 /**
  * Render-spec hints a caller may put under `node.data` to control how the
  * layer renders this node. All fields are optional; defaults below.
+ *
+ * Per-node `node.data` uses this **static** form — write concrete values,
+ * not functions. Resolver functions are reserved for the layer-wide
+ * `nodeDefaults` and for `NodeStateConfig`; both are typed as
+ * {@link ResolvableNodeRenderHints}, the resolver-aware sibling of this
+ * interface.
  */
 export interface NodeRenderHints {
   /** Shape kind. Default `'circle'`. */
@@ -110,7 +155,35 @@ export interface NodeRenderHints {
   label?: NodeLabelHint;
 }
 
-/** Render-spec hints for an edge. Optional, all defaulted. */
+/**
+ * Resolver-aware mirror of {@link NodeRenderHints} — every field accepts
+ * either a static value (same as `NodeRenderHints`) or a function
+ * `(node) => value` that derives the value per node from `node.data`.
+ *
+ * Used by `nodeDefaults` (layer-wide fallback) and `NodeStateConfig`
+ * (overlay applied while a named state is active). Keep resolvers cheap
+ * and pure — they run per render call, not memoised.
+ *
+ * @example
+ * ```ts
+ * nodeDefaults: {
+ *   fill: (n) => groupColors[n.data.group % groupColors.length],
+ *   size: (n) => 12 + Math.sqrt(n.data.degree ?? 1) * 4,
+ *   label: (n) => n.data.name,
+ * }
+ * ```
+ */
+export type ResolvableNodeRenderHints = {
+  [K in keyof NodeRenderHints]?: Resolvable<NonNullable<NodeRenderHints[K]>, GraphNode>;
+};
+
+/**
+ * Render-spec hints for an edge. Optional, all defaulted.
+ *
+ * Per-edge `edge.data` uses this **static** form — write concrete values, not
+ * functions. Resolver functions are reserved for `edgeDefaults` and
+ * `EdgeStateConfig`; both are typed as {@link ResolvableEdgeRenderHints}.
+ */
 export interface EdgeRenderHints {
   /** Path-style shortcut. Default `'straight'`. */
   pathType?: EdgePathType;
@@ -184,6 +257,15 @@ export interface EdgeRenderHints {
   label?: EdgeLabelHint;
 }
 
+/**
+ * Resolver-aware mirror of {@link EdgeRenderHints} — every field accepts
+ * either a static value or a function `(edge) => value`. Used by
+ * `edgeDefaults` and `EdgeStateConfig`.
+ */
+export type ResolvableEdgeRenderHints = {
+  [K in keyof EdgeRenderHints]?: Resolvable<NonNullable<EdgeRenderHints[K]>, GraphEdge>;
+};
+
 /** Initial-load shape passed to `graphLayer.setData(data)`. */
 export interface GraphData {
   nodes: GraphNode[];
@@ -194,9 +276,72 @@ export interface GraphData {
  * Visual-state override applied on top of a node's / edge's base render hints
  * when that state is active. Multiple active states stack — later-set state
  * wins per field. Removing the state restores the base hints.
+ *
+ * State configs accept resolver functions per field (same as `nodeDefaults`
+ * / `edgeDefaults`) so an overlay can derive from the host item's `data`,
+ * e.g. `{ stroke: (n) => brighten(n.data.color) }`.
  */
-export type NodeStateConfig = NodeRenderHints;
-export type EdgeStateConfig = EdgeRenderHints;
+export type NodeStateConfig = ResolvableNodeRenderHints;
+export type EdgeStateConfig = ResolvableEdgeRenderHints;
+
+/**
+ * Canonical interaction-state names that `GraphLayer` registers a default
+ * config for on every layer (unless `useDefaultStateConfigs: false`).
+ *
+ * `'default'` is intentionally absent — it's the *absence* of any active
+ * state, not a state itself. Consumers can register additional named
+ * states (e.g. `'pinned'`, `'flagged'`) via `setNodeStateConfig` —
+ * the state-config map is open-keyed.
+ */
+export type CanonicalStateName =
+  | 'hover'
+  | 'selected'
+  | 'active'
+  | 'highlighted'
+  | 'dimmed'
+  | 'disabled'
+  | 'error'
+  | 'focused';
+
+/**
+ * Canonical node state configs registered on every `GraphLayer` by default.
+ * Override individual entries with `setNodeStateConfig(name, customConfig)`
+ * after construction, or opt out entirely via
+ * `GraphLayerOptions.useDefaultStateConfigs: false`.
+ *
+ * Each overlay is intentionally minimal — only the fields that change from
+ * the resting baseline. Stack-application means combining states is
+ * predictable (e.g. `selected` + `dimmed` = yellow ring at low alpha).
+ */
+export const DEFAULT_NODE_STATE_CONFIGS: Readonly<Record<CanonicalStateName, NodeStateConfig>> = {
+  hover:       { stroke: 0xffffff, strokeWidth: 3 },
+  selected:    { stroke: 0xfacc15, strokeWidth: 3 },
+  active:      { stroke: 0xfacc15, strokeWidth: 5 },
+  highlighted: { stroke: 0xfde68a, strokeWidth: 2 },
+  dimmed:      { alpha: 0.25 },
+  disabled:    { fill: 0x9ca3af, alpha: 0.6 },
+  error:       { stroke: 0xef4444, strokeWidth: 3 },
+  focused:     { stroke: 0x60a5fa, strokeWidth: 3 },
+};
+
+/**
+ * Canonical edge state configs registered on every `GraphLayer` by default.
+ * Same opt-out / override semantics as {@link DEFAULT_NODE_STATE_CONFIGS}.
+ *
+ * `disabled` drops the arrowhead so a non-interactive edge reads as
+ * "passive line"; everything else mirrors the node bundle's intent
+ * (yellow = action, blue = focus, red = error, lower alpha = de-emphasised).
+ */
+export const DEFAULT_EDGE_STATE_CONFIGS: Readonly<Record<CanonicalStateName, EdgeStateConfig>> = {
+  hover:       { stroke: 0x111827, strokeWidth: 3 },
+  selected:    { stroke: 0xfacc15, strokeWidth: 3 },
+  active:      { stroke: 0xfacc15, strokeWidth: 5 },
+  highlighted: { stroke: 0xfde68a, strokeWidth: 2 },
+  dimmed:      { alpha: 0.2 },
+  disabled:    { stroke: 0x9ca3af, alpha: 0.6, arrow: false },
+  error:       { stroke: 0xef4444, strokeWidth: 3 },
+  focused:     { stroke: 0x60a5fa, strokeWidth: 3 },
+};
 
 /** Constructor options for `GraphLayer`. */
 export interface GraphLayerOptions {
@@ -209,12 +354,67 @@ export interface GraphLayerOptions {
 
   /**
    * Default node render hints applied when a node has no per-node override
-   * under `node.data`. Defaults shown in {@link NodeRenderHints}.
+   * under `node.data`. Defaults shown in {@link NodeRenderHints}. Every
+   * field may be a static value or a resolver `(node) => value` — see
+   * {@link ResolvableNodeRenderHints}.
    */
-  nodeDefaults?: NodeRenderHints;
+  nodeDefaults?: ResolvableNodeRenderHints;
 
-  /** Default edge render hints. */
-  edgeDefaults?: EdgeRenderHints;
+  /**
+   * Default edge render hints. Every field may be a static value or a
+   * resolver `(edge) => value` — see {@link ResolvableEdgeRenderHints}.
+   */
+  edgeDefaults?: ResolvableEdgeRenderHints;
+
+  /**
+   * Auto-register the canonical state configs
+   * ({@link DEFAULT_NODE_STATE_CONFIGS}, {@link DEFAULT_EDGE_STATE_CONFIGS})
+   * on construction. Default `true`.
+   *
+   * The default `true` exists because state configs are pure styling data
+   * — registering them is cheap and silent until something calls
+   * `setNodeState(id, name, true)`. This is the *exception* to the
+   * project's no-auto-registration rule, which applies to behaviours
+   * (interaction lifecycle).
+   *
+   * Set `false` for a bare layer with no state configs — your call to
+   * `setNodeStateConfig` / `setEdgeStateConfig` is then the only way state
+   * styling appears. Individual entries can also be overridden by calling
+   * `setNodeStateConfig(name, customConfig)` after construction; the
+   * setter overwrites the auto-registered entry under that name.
+   */
+  useDefaultStateConfigs?: boolean;
+
+  /**
+   * Override individual canonical state configs and / or register new ones
+   * declaratively at construction. Each entry is applied AFTER the
+   * canonical bundle, so a key that matches a canonical name wins, and
+   * new names register as fresh states. The runtime
+   * {@link GraphLayer.setNodeStateConfig} still works and overrides these
+   * in turn.
+   *
+   * Has no effect when `useDefaultStateConfigs: false` AND no entries are
+   * provided — the layer starts with zero registered configs. Setting
+   * `useDefaultStateConfigs: false` with entries here ships a bespoke
+   * bundle (canonical skipped, custom only).
+   *
+   * @example
+   * ```ts
+   * new GraphLayer({
+   *   id: 'graph',
+   *   options: {
+   *     nodeStateConfigs: {
+   *       hover: { stroke: 0xff0000, strokeWidth: 5 },     // override default
+   *       mention: { fill: 0xfacc15, strokeWidth: 2 },     // new state name
+   *     },
+   *   },
+   * });
+   * ```
+   */
+  nodeStateConfigs?: Readonly<Record<string, NodeStateConfig>>;
+
+  /** Sibling of {@link nodeStateConfigs} for edges. */
+  edgeStateConfigs?: Readonly<Record<string, EdgeStateConfig>>;
 }
 
 /**

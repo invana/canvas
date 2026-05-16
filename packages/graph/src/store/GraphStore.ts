@@ -423,6 +423,8 @@ export class GraphStore {
 
     if ('data' in patch) cold.data = patch.data;
 
+    if ('state' in patch) cold.state = patch.state ?? undefined;
+
     if ('position' in patch && patch.position !== undefined) {
       this.nodeCols.column('x')[slot] = patch.position.x;
       this.nodeCols.column('y')[slot] = patch.position.y;
@@ -568,6 +570,7 @@ export class GraphStore {
 
     if ('type' in patch) cold.type = patch.type;
     if ('data' in patch) cold.data = patch.data;
+    if ('state' in patch) cold.state = patch.state ?? undefined;
 
     this.edgeCols.touch();
     this._version++;
@@ -604,6 +607,85 @@ export class GraphStore {
   addEdgesBulk(edges: readonly GraphEdge[]): void {
     this.batch(() => {
       for (const e of edges) this.addEdge(e);
+    });
+  }
+
+  /**
+   * Append nodes + edges in one batch — non-destructive (does NOT clear).
+   * Convenience for streaming feeds that push a fresh chunk of items as
+   * they arrive. Subscribers see a single `flush`.
+   *
+   * Differs from `GraphLayer.setData`, which clears the store first.
+   */
+  addData(data: { nodes?: readonly GraphNode[]; edges?: readonly GraphEdge[] }): void {
+    this.batch(() => {
+      if (data.nodes && data.nodes.length > 0) {
+        for (const n of data.nodes) this.addNode(n);
+      }
+      if (data.edges && data.edges.length > 0) {
+        for (const e of data.edges) this.addEdge(e);
+      }
+    });
+  }
+
+  /**
+   * Apply a streaming delta in a single batch. Order within the batch:
+   * 1. `removed.edgeIds`  — removed first so node removals can't cascade
+   *    them again (no-op double removal is harmless, but explicit is cleaner).
+   * 2. `removed.nodeIds`  — cascade-removes incident edges per `removeNode`'s
+   *    default `cascade: true`.
+   * 3. `added.nodes`      — `upsertNode` (idempotent; safe to re-send).
+   * 4. `added.edges`      — `upsertEdge`.
+   * 5. `updated.nodes`    — partial patches via `updateNode`.
+   * 6. `updated.edges`    — partial patches via `updateEdge`.
+   *
+   * Use `upsertNode` / `upsertEdge` for the `added` lists so a feed that
+   * re-sends an existing id (common in pub-sub) merges rather than throwing.
+   * If you have hard-add semantics, use `addData` instead.
+   *
+   * Subscribers see one `flush` regardless of how many items were touched.
+   */
+  applyDelta(delta: {
+    added?: { nodes?: readonly GraphNode[]; edges?: readonly GraphEdge[] };
+    updated?: {
+      nodes?: ReadonlyArray<{ id: string; patch: Partial<GraphNode> }>;
+      edges?: ReadonlyArray<{ id: string; patch: Partial<GraphEdge> }>;
+    };
+    removed?: { nodeIds?: readonly string[]; edgeIds?: readonly string[] };
+  }): void {
+    this.batch(() => {
+      const removedEdgeIds = delta.removed?.edgeIds;
+      if (removedEdgeIds) {
+        for (const id of removedEdgeIds) {
+          if (this.hasEdge(id)) this.removeEdge(id);
+        }
+      }
+      const removedNodeIds = delta.removed?.nodeIds;
+      if (removedNodeIds) {
+        for (const id of removedNodeIds) {
+          if (this.hasNode(id)) this.removeNode(id);
+        }
+      }
+      const addedNodes = delta.added?.nodes;
+      if (addedNodes) {
+        for (const n of addedNodes) this.upsertNode(n);
+      }
+      const addedEdges = delta.added?.edges;
+      if (addedEdges) {
+        for (const e of addedEdges) this.upsertEdge(e);
+      }
+      const updatedNodes = delta.updated?.nodes;
+      if (updatedNodes) {
+        for (const u of updatedNodes) {
+          if (this.hasNode(u.id)) this.updateNode(u.id, u.patch);
+        }
+      }
+      const updatedEdges = delta.updated?.edges;
+      if (updatedEdges) {
+        for (const u of updatedEdges) {
+          if (this.hasEdge(u.id)) this.updateEdge(u.id, u.patch);
+        }
+      }
     });
   }
 
@@ -725,6 +807,7 @@ export class GraphStore {
     const cold: GraphNode = { id: node.id };
     if (node.data !== undefined) cold.data = node.data;
     if (node.parentId !== undefined) cold.parentId = node.parentId;
+    if (node.state !== undefined) cold.state = node.state;
     this.nodeMap.set(node.id, cold);
 
     if (node.parentId !== undefined) {
@@ -754,6 +837,7 @@ export class GraphStore {
     const cold: GraphEdge = { id: edge.id, source: edge.source, target: edge.target };
     if (edge.type !== undefined) cold.type = edge.type;
     if (edge.data !== undefined) cold.data = edge.data;
+    if (edge.state !== undefined) cold.state = edge.state;
     this.edgeMap.set(edge.id, cold);
 
     this._version++;

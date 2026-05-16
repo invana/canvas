@@ -14,8 +14,12 @@ export {
 } from './store';
 
 export {
+  DEFAULT_EDGE_STATE_CONFIGS,
+  DEFAULT_NODE_STATE_CONFIGS,
   GraphLayer,
   MiniMapLayer,
+  resolveField,
+  type CanonicalStateName,
   type MiniMapLayerOptions,
   type MiniMapPosition,
   type EdgeAnchor,
@@ -28,6 +32,11 @@ export {
   type NodeRenderHints,
   type NodeShapeKind,
   type NodeStateConfig,
+  type Resolvable,
+  type ResolvableEdgeRenderHints,
+  type ResolvableNodeRenderHints,
+  type ResolvedEdgeDefaults,
+  type ResolvedNodeDefaults,
 } from './layer';
 
 export {

@@ -29,7 +29,7 @@ import { ScreenLayer, type CanvasContext, type ScreenLayerHit } from '@invana/ca
 import type { LayerOptions } from '@invana/canvas';
 
 import { GraphLayer } from './GraphLayer';
-import type { NodeRenderHints, EdgeRenderHints } from './types';
+import { resolveField, type NodeRenderHints, type EdgeRenderHints } from './types';
 
 /** Anchor corner inside the canvas viewport. */
 export type MiniMapPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -310,16 +310,18 @@ export class MiniMapLayer extends ScreenLayer<
 
     // Nodes — match the shape kind actually drawn on the canvas (circle vs
     // rect), scaled into minimap space. Falls back to the layer's
-    // `nodeDefaults` for any hint the node omits.
+    // `nodeDefaults` for any hint the node omits. Defaults may be resolver
+    // functions; resolve each per node.
     const defaults = graph.getNodeDefaults();
     for (const node of graph.store.nodes()) {
       const pos = node.position ?? { x: 0, y: 0 };
       const p = this.worldToMinimap(pos.x, pos.y);
       const data = (node.data as NodeRenderHints | undefined) ?? {};
-      const fill = typeof data.fill === 'number' ? data.fill : defaults.fill;
+      const defaultFill = resolveField(defaults.fill, node);
+      const fill = typeof data.fill === 'number' ? data.fill : defaultFill;
       const fillColor = typeof fill === 'number' ? fill : 0x4caf50;
-      const shape = data.shape ?? defaults.shape;
-      const sizeWorld = data.size ?? defaults.size;
+      const shape = data.shape ?? resolveField(defaults.shape, node);
+      const sizeWorld = data.size ?? resolveField(defaults.size, node) ?? 0;
 
       if (shape === 'rect') {
         const heightWorld = data.height ?? sizeWorld;
@@ -389,8 +391,8 @@ export class MiniMapLayer extends ScreenLayer<
     for (const node of graph.store.nodes()) {
       const pos = node.position ?? { x: 0, y: 0 };
       const data = (node.data as NodeRenderHints | undefined) ?? {};
-      const shape = data.shape ?? defaults.shape;
-      const sizeWorld = data.size ?? defaults.size;
+      const shape = data.shape ?? resolveField(defaults.shape, node);
+      const sizeWorld = data.size ?? resolveField(defaults.size, node) ?? 0;
       const halfW = sizeWorld / 2;
       const halfH = shape === 'rect' ? (data.height ?? sizeWorld) / 2 : sizeWorld / 2;
       any = true;

@@ -30,18 +30,43 @@ import type {
 import { GraphStore } from '../store/GraphStore';
 import type { GraphEdge, GraphNode } from '../store/types';
 
-import type {
-  EdgeLabelHint,
-  EdgePathType,
-  EdgeRenderHints,
-  EdgeStateConfig,
-  GraphData,
-  GraphLayerEvents,
-  GraphLayerOptions,
-  NodeLabelHint,
-  NodeRenderHints,
-  NodeStateConfig,
+import {
+  DEFAULT_EDGE_STATE_CONFIGS,
+  DEFAULT_NODE_STATE_CONFIGS,
+  resolveField,
+  type EdgeLabelHint,
+  type EdgePathType,
+  type EdgeRenderHints,
+  type EdgeStateConfig,
+  type GraphData,
+  type GraphLayerEvents,
+  type GraphLayerOptions,
+  type NodeLabelHint,
+  type NodeRenderHints,
+  type NodeStateConfig,
+  type ResolvableEdgeRenderHints,
+  type ResolvableNodeRenderHints,
 } from './types';
+
+// ─── Resolved-defaults types ───────────────────────────────────────────────
+
+/**
+ * Shape of the per-layer node defaults after merging the caller's
+ * `nodeDefaults` onto the factory `DEFAULT_NODE_HINTS`. The always-present
+ * fields (covered by the factory defaults) are non-optional resolvers;
+ * the rest stay optional.
+ */
+export type ResolvedNodeDefaults =
+  Required<Pick<ResolvableNodeRenderHints,
+    'shape' | 'size' | 'cornerRadius' | 'fill' | 'stroke' | 'strokeWidth' | 'alpha'>>
+  & Pick<ResolvableNodeRenderHints,
+    'label' | 'height' | 'innerR' | 'outerR' | 'startAngle' | 'endAngle'>;
+
+export type ResolvedEdgeDefaults =
+  Required<Pick<ResolvableEdgeRenderHints,
+    'pathType' | 'anchor' | 'pathStyleOpts' | 'stroke' | 'strokeWidth' | 'alpha' | 'arrow'>>
+  & Pick<ResolvableEdgeRenderHints,
+    'label' | 'sourceAnchor' | 'targetAnchor' | 'sourceAnchorOpts' | 'targetAnchorOpts' | 'waypoints'>;
 
 // ─── Defaults ──────────────────────────────────────────────────────────────
 
@@ -145,8 +170,12 @@ export class GraphLayer extends WorldLayer<
    * Resolved per-node defaults (caller-supplied `nodeDefaults` merged onto the
    * factory defaults). Exposed for layers that need to mirror what's drawn —
    * e.g. `MiniMapLayer` falls back to these when a node omits `shape` / `size`.
+   *
+   * Fields may be either static values or resolver functions
+   * (`(node) => value`). Callers that need a concrete value per node should
+   * use {@link resolveNodeDefault} to unwrap.
    */
-  getNodeDefaults(): Required<Omit<NodeRenderHints, 'height' | 'label' | 'innerR' | 'outerR' | 'startAngle' | 'endAngle'>> {
+  getNodeDefaults(): ResolvedNodeDefaults {
     return this.nodeDefaults;
   }
 
@@ -156,16 +185,58 @@ export class GraphLayer extends WorldLayer<
    * sibling layers / behaviours that need to read what an edge would look
    * like before any per-edge `data` override kicks in.
    */
-  getEdgeDefaults(): Required<Omit<EdgeRenderHints, 'label' | 'sourceAnchor' | 'targetAnchor' | 'sourceAnchorOpts' | 'targetAnchorOpts' | 'waypoints'>> {
+  getEdgeDefaults(): ResolvedEdgeDefaults {
     return this.edgeDefaults;
+  }
+
+  /**
+   * Replace the layer-wide `nodeDefaults` wholesale and re-render every node.
+   *
+   * The new value is merged onto the factory `DEFAULT_NODE_HINTS` (so omitted
+   * always-present fields fall back to factory values, not to whatever the
+   * previous user-supplied defaults were). Use {@link updateNodeDefaults} to
+   * partial-merge against the current defaults instead of replacing.
+   *
+   * Every node currently in the layer is re-rendered because per-render
+   * lookup reads from `nodeDefaults` whenever a per-node hint is omitted.
+   */
+  setNodeDefaults(defaults: ResolvableNodeRenderHints): void {
+    this.nodeDefaults = { ...DEFAULT_NODE_HINTS, ...defaults };
+    this.rerenderAllNodes();
+  }
+
+  /**
+   * Patch-merge `nodeDefaults` against the current resolved defaults and
+   * re-render every node. `undefined` values in `patch` are ignored
+   * (they don't blank out an existing field — pass an explicit `false` /
+   * `0` / factory value to override). Use {@link setNodeDefaults} for a
+   * wholesale replacement.
+   */
+  updateNodeDefaults(patch: ResolvableNodeRenderHints): void {
+    this.nodeDefaults = { ...this.nodeDefaults, ...patch };
+    this.rerenderAllNodes();
+  }
+
+  /** Sibling of {@link setNodeDefaults} for edges. */
+  setEdgeDefaults(defaults: ResolvableEdgeRenderHints): void {
+    this.edgeDefaults = { ...DEFAULT_EDGE_HINTS, ...defaults };
+    this.rerenderAllEdges();
+  }
+
+  /** Sibling of {@link updateNodeDefaults} for edges. */
+  updateEdgeDefaults(patch: ResolvableEdgeRenderHints): void {
+    this.edgeDefaults = { ...this.edgeDefaults, ...patch };
+    this.rerenderAllEdges();
   }
 
   /** Data source. Either supplied by the caller or self-created. */
   readonly store: GraphStore;
 
-  /** Resolved defaults (caller overrides + factory defaults). */
-  private readonly nodeDefaults: Required<Omit<NodeRenderHints, 'height' | 'label' | 'innerR' | 'outerR' | 'startAngle' | 'endAngle'>>;
-  private readonly edgeDefaults: Required<Omit<EdgeRenderHints, 'label' | 'sourceAnchor' | 'targetAnchor' | 'sourceAnchorOpts' | 'targetAnchorOpts' | 'waypoints'>>;
+  /** Resolved defaults (caller overrides + factory defaults). Mutable to
+   * support runtime updates via {@link setNodeDefaults} / {@link updateNodeDefaults}
+   * and their edge equivalents. */
+  private nodeDefaults: ResolvedNodeDefaults;
+  private edgeDefaults: ResolvedEdgeDefaults;
 
   /** Subscription disposers, called in `onUnmount`. */
   private subs: Array<() => void> = [];
@@ -197,6 +268,31 @@ export class GraphLayer extends WorldLayer<
     this.store = opts.options.store ?? new GraphStore();
     this.nodeDefaults = { ...DEFAULT_NODE_HINTS, ...opts.options.nodeDefaults };
     this.edgeDefaults = { ...DEFAULT_EDGE_HINTS, ...opts.options.edgeDefaults };
+
+    // Auto-register the canonical state configs unless the caller opts out.
+    // Writes go straight to the internal Maps (not through `setNodeStateConfig`)
+    // because the public setter triggers a re-render walk that's pointless
+    // at construction — no nodes exist yet and the renderer isn't mounted.
+    if (opts.options.useDefaultStateConfigs !== false) {
+      for (const [name, cfg] of Object.entries(DEFAULT_NODE_STATE_CONFIGS)) {
+        this.nodeStateConfigs.set(name, cfg);
+      }
+      for (const [name, cfg] of Object.entries(DEFAULT_EDGE_STATE_CONFIGS)) {
+        this.edgeStateConfigs.set(name, cfg);
+      }
+    }
+    // Caller-supplied state configs go LAST so they override canonical
+    // entries by name, and new names register as fresh states.
+    if (opts.options.nodeStateConfigs) {
+      for (const [name, cfg] of Object.entries(opts.options.nodeStateConfigs)) {
+        this.nodeStateConfigs.set(name, cfg);
+      }
+    }
+    if (opts.options.edgeStateConfigs) {
+      for (const [name, cfg] of Object.entries(opts.options.edgeStateConfigs)) {
+        this.edgeStateConfigs.set(name, cfg);
+      }
+    }
   }
 
   protected createState(): GraphLayerState {
@@ -209,21 +305,33 @@ export class GraphLayer extends WorldLayer<
       camera: ctx.camera,
     });
 
-    // Initial sync — render anything the store already has.
-    for (const node of this.store.nodes()) this.installNodeShape(node);
-    for (const edge of this.store.edges()) this.installEdgeConnector(edge);
+    // Initial sync — render anything the store already has, then apply any
+    // data-driven `state` fields the nodes / edges arrived with.
+    for (const node of this.store.nodes()) {
+      this.installNodeShape(node);
+      this.syncDataDrivenNodeStates(node, undefined);
+    }
+    for (const edge of this.store.edges()) {
+      this.installEdgeConnector(edge);
+      this.syncDataDrivenEdgeStates(edge, undefined);
+    }
 
     // Subscribe to fine-grained store events.
     const s = this.store.events;
     this.subs.push(
       s.on('node:add', ({ nodeId }) => {
         const node = this.store.getNode(nodeId);
-        if (node) this.installNodeShape(node);
+        if (!node) return;
+        this.installNodeShape(node);
+        this.syncDataDrivenNodeStates(node, undefined);
       }),
       s.on('node:update', ({ nodeId, patch }) => {
         const node = this.store.getNode(nodeId);
         if (!node) return;
         this.updateNodeShape(node, patch);
+        if ('state' in patch) {
+          this.syncDataDrivenNodeStates(node, patch.state ?? null);
+        }
       }),
       s.on('node:remove', ({ nodeId }) => {
         this.nodeStates.delete(nodeId);
@@ -231,12 +339,17 @@ export class GraphLayer extends WorldLayer<
       }),
       s.on('edge:add', ({ edgeId }) => {
         const edge = this.store.getEdge(edgeId);
-        if (edge) this.installEdgeConnector(edge);
+        if (!edge) return;
+        this.installEdgeConnector(edge);
+        this.syncDataDrivenEdgeStates(edge, undefined);
       }),
       s.on('edge:update', ({ edgeId, patch }) => {
         const edge = this.store.getEdge(edgeId);
         if (!edge) return;
         this.updateEdgeConnector(edge, patch);
+        if ('state' in patch) {
+          this.syncDataDrivenEdgeStates(edge, patch.state ?? null);
+        }
       }),
       s.on('edge:remove', ({ edgeId }) => {
         this.edgeStates.delete(edgeId);
@@ -263,11 +376,20 @@ export class GraphLayer extends WorldLayer<
     this._renderer = undefined;
   }
 
-  // ─── Sugar over store ────────────────────────────────────────────────────
+  // ─── Bulk loading ────────────────────────────────────────────────────────
 
   /**
-   * Bulk-load nodes + edges. Wraps the underlying store inserts in a single
-   * `batch()` so subscribers see one flush.
+   * Bulk-load nodes + edges, **replacing** any prior data. Wraps the
+   * underlying store inserts in a single `batch()` so subscribers see one
+   * flush.
+   *
+   * For streaming consumers (constantly arriving data), use the store
+   * directly: `graph.store.addData({ nodes, edges })` appends without
+   * clearing, and `graph.store.applyDelta({ added, updated, removed })`
+   * applies an incremental change in one batch. All other per-id CRUD
+   * (`upsertNode`, `updateNode`, `removeNode`, edge equivalents, `batch`,
+   * `flush`, `clear`) lives on `graph.store` — the store is the single
+   * source of truth and the layer just orchestrates store → renderer.
    */
   setData(data: GraphData): void {
     this.store.batch(() => {
@@ -275,26 +397,6 @@ export class GraphLayer extends WorldLayer<
       this.store.addNodesBulk(data.nodes);
       this.store.addEdgesBulk(data.edges);
     });
-  }
-
-  /** Pass-through to the underlying store. */
-  addNode<D>(node: GraphNode<D>): void {
-    this.store.addNode(node);
-  }
-
-  /** Pass-through to the underlying store. */
-  addEdge<D>(edge: GraphEdge<D>): void {
-    this.store.addEdge(edge);
-  }
-
-  /** Pass-through to the underlying store. */
-  removeNode(id: string, opts?: { cascade?: boolean }): void {
-    this.store.removeNode(id, opts);
-  }
-
-  /** Pass-through to the underlying store. */
-  removeEdge(id: string): void {
-    this.store.removeEdge(id);
   }
 
   // ─── State machinery ────────────────────────────────────────────────────
@@ -426,7 +528,11 @@ export class GraphLayer extends WorldLayer<
 
   // ─── Internals: data → spec translation ─────────────────────────────────
 
-  /** Resolve the active node hints, merging base data hints + state overrides. */
+  /**
+   * Resolve the active node hints — merges base `node.data` hints with each
+   * active state's overlay, resolving overlay resolver functions against the
+   * current node. The returned `NodeRenderHints` is fully static.
+   */
   private resolveNodeHints(node: GraphNode): NodeRenderHints {
     const base = (node.data as NodeRenderHints | undefined) ?? {};
     const states = this.nodeStates.get(node.id);
@@ -435,9 +541,9 @@ export class GraphLayer extends WorldLayer<
     for (const name of states) {
       const cfg = this.nodeStateConfigs.get(name);
       if (!cfg) continue;
-      for (const k of Object.keys(cfg) as (keyof NodeRenderHints)[]) {
-        const v = cfg[k];
-        if (v !== undefined) (out as Record<string, unknown>)[k as string] = v;
+      for (const k of Object.keys(cfg) as (keyof ResolvableNodeRenderHints)[]) {
+        const resolved = resolveField(cfg[k], node);
+        if (resolved !== undefined) (out as Record<string, unknown>)[k as string] = resolved;
       }
     }
     return out;
@@ -451,9 +557,9 @@ export class GraphLayer extends WorldLayer<
     for (const name of states) {
       const cfg = this.edgeStateConfigs.get(name);
       if (!cfg) continue;
-      for (const k of Object.keys(cfg) as (keyof EdgeRenderHints)[]) {
-        const v = cfg[k];
-        if (v !== undefined) (out as Record<string, unknown>)[k as string] = v;
+      for (const k of Object.keys(cfg) as (keyof ResolvableEdgeRenderHints)[]) {
+        const resolved = resolveField(cfg[k], edge);
+        if (resolved !== undefined) (out as Record<string, unknown>)[k as string] = resolved;
       }
     }
     return out;
@@ -461,12 +567,13 @@ export class GraphLayer extends WorldLayer<
 
   private nodeSpec(node: GraphNode): CircleSpec | RectSpec | ArcSpec {
     const hints = this.resolveNodeHints(node);
-    const shape = hints.shape ?? this.nodeDefaults.shape;
-    const size = hints.size ?? this.nodeDefaults.size;
-    const fill = hints.fill ?? this.nodeDefaults.fill;
-    const stroke = hints.stroke ?? this.nodeDefaults.stroke;
-    const strokeWidth = hints.strokeWidth ?? this.nodeDefaults.strokeWidth;
-    const alpha = hints.alpha ?? this.nodeDefaults.alpha;
+    const shape = hints.shape ?? resolveField(this.nodeDefaults.shape, node)!;
+    const size = hints.size ?? resolveField(this.nodeDefaults.size, node)!;
+    const fill = hints.fill ?? resolveField(this.nodeDefaults.fill, node)!;
+    const stroke = hints.stroke ?? resolveField(this.nodeDefaults.stroke, node)!;
+    const strokeWidth =
+      hints.strokeWidth ?? resolveField(this.nodeDefaults.strokeWidth, node)!;
+    const alpha = hints.alpha ?? resolveField(this.nodeDefaults.alpha, node)!;
     const pos = node.position ?? { x: 0, y: 0 };
 
     const common = {
@@ -478,8 +585,10 @@ export class GraphLayer extends WorldLayer<
     };
 
     if (shape === 'rect') {
-      const height = hints.height ?? size;
-      const cornerRadius = hints.cornerRadius ?? this.nodeDefaults.cornerRadius;
+      const height =
+        hints.height ?? resolveField(this.nodeDefaults.height, node) ?? size;
+      const cornerRadius =
+        hints.cornerRadius ?? resolveField(this.nodeDefaults.cornerRadius, node)!;
       return {
         kind: 'rect',
         width: size,
@@ -496,10 +605,12 @@ export class GraphLayer extends WorldLayer<
       // the hints in.
       return {
         kind: 'arc',
-        innerR: hints.innerR ?? 0,
-        outerR: hints.outerR ?? 0,
-        startAngle: hints.startAngle ?? 0,
-        endAngle: hints.endAngle ?? 0,
+        innerR: hints.innerR ?? resolveField(this.nodeDefaults.innerR, node) ?? 0,
+        outerR: hints.outerR ?? resolveField(this.nodeDefaults.outerR, node) ?? 0,
+        startAngle:
+          hints.startAngle ?? resolveField(this.nodeDefaults.startAngle, node) ?? 0,
+        endAngle:
+          hints.endAngle ?? resolveField(this.nodeDefaults.endAngle, node) ?? 0,
         ...common,
       };
     }
@@ -513,18 +624,25 @@ export class GraphLayer extends WorldLayer<
 
   private edgeSpec(edge: GraphEdge): BaseConnectorSpec {
     const hints = this.resolveEdgeHints(edge);
-    const pathType = hints.pathType ?? this.edgeDefaults.pathType;
-    const stroke = hints.stroke ?? this.edgeDefaults.stroke;
-    const strokeWidth = hints.strokeWidth ?? this.edgeDefaults.strokeWidth;
-    const alpha = hints.alpha ?? this.edgeDefaults.alpha;
-    const arrow = hints.arrow ?? this.edgeDefaults.arrow;
-    const baseAnchor = hints.anchor ?? this.edgeDefaults.anchor ?? 'boundary';
-    const sourceAnchorName = hints.sourceAnchor ?? baseAnchor;
-    const targetAnchorName = hints.targetAnchor ?? baseAnchor;
-    const sourceAnchorOpts = hints.sourceAnchorOpts;
-    const targetAnchorOpts = hints.targetAnchorOpts;
-    const pathStyleOpts = hints.pathStyleOpts ?? this.edgeDefaults.pathStyleOpts;
-    const waypoints = hints.waypoints;
+    const pathType = hints.pathType ?? resolveField(this.edgeDefaults.pathType, edge)!;
+    const stroke = hints.stroke ?? resolveField(this.edgeDefaults.stroke, edge)!;
+    const strokeWidth =
+      hints.strokeWidth ?? resolveField(this.edgeDefaults.strokeWidth, edge)!;
+    const alpha = hints.alpha ?? resolveField(this.edgeDefaults.alpha, edge)!;
+    const arrow = hints.arrow ?? resolveField(this.edgeDefaults.arrow, edge)!;
+    const baseAnchor =
+      hints.anchor ?? resolveField(this.edgeDefaults.anchor, edge) ?? 'boundary';
+    const sourceAnchorName =
+      hints.sourceAnchor ?? resolveField(this.edgeDefaults.sourceAnchor, edge) ?? baseAnchor;
+    const targetAnchorName =
+      hints.targetAnchor ?? resolveField(this.edgeDefaults.targetAnchor, edge) ?? baseAnchor;
+    const sourceAnchorOpts =
+      hints.sourceAnchorOpts ?? resolveField(this.edgeDefaults.sourceAnchorOpts, edge);
+    const targetAnchorOpts =
+      hints.targetAnchorOpts ?? resolveField(this.edgeDefaults.targetAnchorOpts, edge);
+    const pathStyleOpts =
+      hints.pathStyleOpts ?? resolveField(this.edgeDefaults.pathStyleOpts, edge)!;
+    const waypoints = hints.waypoints ?? resolveField(this.edgeDefaults.waypoints, edge);
     const { router, pathStyle } = pathTypeToRouterPathStyle(pathType);
 
     // String form when no per-endpoint opts; object form (`{ name, opts }`)
@@ -565,6 +683,73 @@ export class GraphLayer extends WorldLayer<
    * which `updateShape` can't safely handle (the `IShape` class is
    * fixed at construction time).
    */
+  /**
+   * Apply a node's data-driven `state` field to the visible state set.
+   *
+   * - `replacement === undefined` is the **insert path**: each name in
+   *   `node.state` is toggled on additively (existing visible states stay).
+   * - `replacement === null` or a `readonly string[]` is the **update path**:
+   *   clear every currently-visible state on this id, then apply `replacement`.
+   *   Replace-on-update means runtime states (e.g. hover) are wiped — the
+   *   data feed is the source of truth at update time.
+   */
+  private syncDataDrivenNodeStates(
+    node: GraphNode,
+    replacement: readonly string[] | null | undefined,
+  ): void {
+    if (replacement === undefined) {
+      // Insert path — only add named states; do not clear.
+      for (const name of node.state ?? []) {
+        this.setNodeState(node.id, name, true);
+      }
+      return;
+    }
+    // Update path — clear current visible set first, then apply replacement.
+    const current = this.nodeStates.get(node.id);
+    if (current && current.size > 0) {
+      for (const name of [...current]) this.setNodeState(node.id, name, false);
+    }
+    if (replacement !== null) {
+      for (const name of replacement) this.setNodeState(node.id, name, true);
+    }
+  }
+
+  /** Sibling of {@link syncDataDrivenNodeStates} for edges. */
+  private syncDataDrivenEdgeStates(
+    edge: GraphEdge,
+    replacement: readonly string[] | null | undefined,
+  ): void {
+    if (replacement === undefined) {
+      for (const name of edge.state ?? []) {
+        this.setEdgeState(edge.id, name, true);
+      }
+      return;
+    }
+    const current = this.edgeStates.get(edge.id);
+    if (current && current.size > 0) {
+      for (const name of [...current]) this.setEdgeState(edge.id, name, false);
+    }
+    if (replacement !== null) {
+      for (const name of replacement) this.setEdgeState(edge.id, name, true);
+    }
+  }
+
+  /**
+   * Re-render every node currently in the layer. Used after a `nodeDefaults`
+   * change so the new fallbacks take effect immediately. Edges are not
+   * touched — change `edgeDefaults` to repaint those.
+   */
+  private rerenderAllNodes(): void {
+    if (!this._renderer) return;
+    for (const node of this.store.nodes()) this.rerenderNode(node.id);
+  }
+
+  /** Mirror of {@link rerenderAllNodes} for edges. */
+  private rerenderAllEdges(): void {
+    if (!this._renderer) return;
+    for (const edge of this.store.edges()) this.rerenderEdge(edge.id);
+  }
+
   private rerenderNode(id: string): void {
     if (!this._renderer) return;
     const node = this.store.getNode(id);
@@ -646,7 +831,11 @@ export class GraphLayer extends WorldLayer<
     if (!this._renderer) return;
     const node = this.store.getNode(id);
     if (!node) return;
-    const hint = this.resolveNodeHints(node).label;
+    // Per-node hint wins (always static); otherwise fall back to
+    // `nodeDefaults.label` which may be a resolver function.
+    const hint =
+      this.resolveNodeHints(node).label
+      ?? resolveField(this.nodeDefaults.label, node);
     if (hint === undefined || hint === null) {
       this._renderer.setDecoration(id, 'label', null);
       return;
@@ -661,7 +850,9 @@ export class GraphLayer extends WorldLayer<
     if (!this._renderer) return;
     const edge = this.store.getEdge(id);
     if (!edge) return;
-    const hint = this.resolveEdgeHints(edge).label;
+    const hint =
+      this.resolveEdgeHints(edge).label
+      ?? resolveField(this.edgeDefaults.label, edge);
     if (hint === undefined || hint === null) {
       this._renderer.setDecoration(id, 'label', null);
       return;

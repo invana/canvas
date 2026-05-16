@@ -69,6 +69,7 @@ import {
 } from '@invana/canvas';
 
 import type { GraphLayer } from '../layer/GraphLayer';
+import { resolveField } from '../layer/types';
 
 /** Per-`GraphLayer` config — one entry per layer this behaviour rescales. */
 export interface NodeSizeLODConfig {
@@ -293,23 +294,29 @@ export class NodeSizeLODBehaviour extends ElementSizeLODBehaviour {
     config: NodeSizeLODConfig,
   ): void {
     const defaults = layer.getNodeDefaults();
-    const sizePxFallback = resolveNumberOrGetter(config.sizePx) ?? defaults.size;
+    const sizePxFallback = resolveNumberOrGetter(config.sizePx);
     const strokePxFallback = resolveNumberOrGetter(config.strokeWidthPx);
-    const defaultStrokeColor =
-      typeof defaults.stroke === 'number' ? defaults.stroke : undefined;
 
     for (const node of layer.store.nodes()) {
       const data = node.data;
-      const kind = readShapeKind(data) ?? defaults.shape;
+      // Defaults are resolvers — unwrap each for the current node.
+      const defaultShape = resolveField(defaults.shape, node);
+      const defaultSize = resolveField(defaults.size, node);
+      const defaultStroke = resolveField(defaults.stroke, node);
+      const defaultStrokeWidth = resolveField(defaults.strokeWidth, node);
+
+      const kind = readShapeKind(data) ?? defaultShape;
       if (kind === 'arc') continue;
 
       // Per-node `data.size` always wins over the behaviour's fallback —
       // matches the resolution order used everywhere else in GraphLayer.
       // For 'worldUnit' restore, the layer's own defaults are the fallback
       // (mirrors what `GraphLayer.nodeSpec` would write for `addShape`).
-      const size =
-        readNumber(data, 'size') ??
-        (mode === 'target' ? sizePxFallback : defaults.size);
+      const baselineSize = mode === 'target'
+        ? (sizePxFallback ?? defaultSize)
+        : defaultSize;
+      const size = readNumber(data, 'size') ?? baselineSize;
+      if (size === undefined) continue;
 
       const partial: Record<string, unknown> = {};
       if (kind === 'circle') {
@@ -323,10 +330,12 @@ export class NodeSizeLODBehaviour extends ElementSizeLODBehaviour {
       const strokeDisabled =
         data && (data as Record<string, unknown>).stroke === false;
       if (!strokeDisabled) {
+        const defaultStrokeColor =
+          typeof defaultStroke === 'number' ? defaultStroke : undefined;
         const strokeColor = readNumber(data, 'stroke') ?? defaultStrokeColor;
         if (strokeColor !== undefined) {
           const strokeWidthFallback =
-            mode === 'target' ? strokePxFallback : defaults.strokeWidth;
+            mode === 'target' ? strokePxFallback : defaultStrokeWidth;
           const baseSw = readNumber(data, 'strokeWidth') ?? strokeWidthFallback;
           if (baseSw !== undefined) {
             partial.stroke = { color: strokeColor, width: baseSw };
