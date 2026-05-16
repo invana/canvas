@@ -1,6 +1,6 @@
 # Interface: FlareImportsOptions
 
-Defined in: [graph-datasets/src/flare-imports.ts:51](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/flare-imports.ts#L51)
+Defined in: [graph-datasets/src/flare-imports.ts:51](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/flare-imports.ts#L51)
 
 Options for [flareImportsAsGraph](../functions/flareImportsAsGraph.md).
 
@@ -10,7 +10,7 @@ Options for [flareImportsAsGraph](../functions/flareImportsAsGraph.md).
 
 > `readonly` `optional` **intraGroupBias?**: `number`
 
-Defined in: [graph-datasets/src/flare-imports.ts:62](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/flare-imports.ts#L62)
+Defined in: [graph-datasets/src/flare-imports.ts:62](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/flare-imports.ts#L62)
 
 Probability that a generated import targets a leaf in the same depth-1
 package as its source (vs a leaf in any other package). Default `0.7`
@@ -23,7 +23,7 @@ bundles cleanly through the hierarchy.
 
 > `readonly` `optional` **maxImportsPerLeaf?**: `number`
 
-Defined in: [graph-datasets/src/flare-imports.ts:55](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/flare-imports.ts#L55)
+Defined in: [graph-datasets/src/flare-imports.ts:55](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/flare-imports.ts#L55)
 
 Maximum import out-degree per leaf. Default `5`.
 
@@ -33,6 +33,6 @@ Maximum import out-degree per leaf. Default `5`.
 
 > `readonly` `optional` **minImportsPerLeaf?**: `number`
 
-Defined in: [graph-datasets/src/flare-imports.ts:53](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/flare-imports.ts#L53)
+Defined in: [graph-datasets/src/flare-imports.ts:53](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/flare-imports.ts#L53)
 
 Minimum import out-degree per leaf. Default `1`.

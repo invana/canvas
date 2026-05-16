@@ -1,6 +1,6 @@
 # Interface: MapLayerOptions
 
-Defined in: [graph-layer-maplibre/src/types.ts:30](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/types.ts#L30)
+Defined in: [graph-layer-maplibre/src/types.ts:30](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/types.ts#L30)
 
 Construction-time options for [MapLayer](../classes/MapLayer.md).
 
@@ -15,7 +15,7 @@ pixel-accurately with the basemap as the user pans / zooms.
 
 > `optional` **center?**: [`LngLat`](../type-aliases/LngLat.md)
 
-Defined in: [graph-layer-maplibre/src/types.ts:39](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/types.ts#L39)
+Defined in: [graph-layer-maplibre/src/types.ts:39](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/types.ts#L39)
 
 Initial map centre as `[lng, lat]`. Default `[0, 20]`.
 
@@ -25,7 +25,7 @@ Initial map centre as `[lng, lat]`. Default `[0, 20]`.
 
 > `optional` **maxZoom?**: `number`
 
-Defined in: [graph-layer-maplibre/src/types.ts:50](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/types.ts#L50)
+Defined in: [graph-layer-maplibre/src/types.ts:50](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/types.ts#L50)
 
 ***
 
@@ -33,7 +33,7 @@ Defined in: [graph-layer-maplibre/src/types.ts:50](https://github.com/invana/can
 
 > `optional` **minZoom?**: `number`
 
-Defined in: [graph-layer-maplibre/src/types.ts:49](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/types.ts#L49)
+Defined in: [graph-layer-maplibre/src/types.ts:49](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/types.ts#L49)
 
 Minimum / maximum allowed MapLibre zoom. Defaults `0` / `22`. The canvas
 camera mirrors `2^zoom` as its scale, so these implicitly clamp how far
@@ -45,7 +45,7 @@ the user can zoom the engine view too.
 
 > `optional` **mountTarget?**: `HTMLElement`
 
-Defined in: [graph-layer-maplibre/src/types.ts:57](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/types.ts#L57)
+Defined in: [graph-layer-maplibre/src/types.ts:57](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/types.ts#L57)
 
 Optional DOM element the map is mounted into. If omitted, the layer
 inserts a new `<div>` as the first child of the Pixi canvas's parent
@@ -57,7 +57,7 @@ element (so the basemap renders *behind* the Pixi canvas).
 
 > `optional` **passInputToMap?**: `boolean`
 
-Defined in: [graph-layer-maplibre/src/types.ts:65](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/types.ts#L65)
+Defined in: [graph-layer-maplibre/src/types.ts:65](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/types.ts#L65)
 
 Make the Pixi canvas pointer-event-transparent so MapLibre receives all
 mouse / touch input (pan, zoom, click). Default `true`. Set `false` if
@@ -70,7 +70,7 @@ priority — you'll then have to drive map pan/zoom by other means.
 
 > `optional` **styleUrl?**: `string` \| `object`
 
-Defined in: [graph-layer-maplibre/src/types.ts:36](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/types.ts#L36)
+Defined in: [graph-layer-maplibre/src/types.ts:36](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/types.ts#L36)
 
 MapLibre style URL. Defaults to the OpenFreeMap "liberty" style
 (https://openfreemap.org) — free, no-key, OSM-based vector tiles. Pass a
@@ -82,6 +82,6 @@ different URL or a full StyleSpecification object to swap basemaps.
 
 > `optional` **zoom?**: `number`
 
-Defined in: [graph-layer-maplibre/src/types.ts:42](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/types.ts#L42)
+Defined in: [graph-layer-maplibre/src/types.ts:42](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/types.ts#L42)
 
 Initial MapLibre zoom level (0..22). Default `1.5`.

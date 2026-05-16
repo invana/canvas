@@ -1,6 +1,6 @@
 # CLAUDE.md — packages/graph-layout-elkjs (`@invana/graph-layout-elkjs`)
 
-ELK.js `Layout` for `@invana/graph`. Replaces the old `@invana/plugin-layouts-elkjs` (now `*-deprecated`).
+ELK.js `Layout` for `@invana/graph`.
 
 **Status:** skeleton.
 

@@ -1,6 +1,6 @@
 # Class: Tween
 
-Defined in: [canvas/src/primitives/animation/Tween.ts:37](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/animation/Tween.ts#L37)
+Defined in: [canvas/src/primitives/animation/Tween.ts:37](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/animation/Tween.ts#L37)
 
 Time-based interpolation primitive. Authors call `tick(deltaMs)` once per
 frame; the tween advances internal time, applies easing, fires `onUpdate`,
@@ -17,7 +17,7 @@ Reusable: call `reset()` to play again from `from`.
 
 > **new Tween**(`opts`): `Tween`
 
-Defined in: [canvas/src/primitives/animation/Tween.ts:46](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/animation/Tween.ts#L46)
+Defined in: [canvas/src/primitives/animation/Tween.ts:46](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/animation/Tween.ts#L46)
 
 #### Parameters
 
@@ -37,7 +37,7 @@ Defined in: [canvas/src/primitives/animation/Tween.ts:46](https://github.com/inv
 
 > **get** **done**(): `boolean`
 
-Defined in: [canvas/src/primitives/animation/Tween.ts:60](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/animation/Tween.ts#L60)
+Defined in: [canvas/src/primitives/animation/Tween.ts:60](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/animation/Tween.ts#L60)
 
 ##### Returns
 
@@ -51,7 +51,7 @@ Defined in: [canvas/src/primitives/animation/Tween.ts:60](https://github.com/inv
 
 > **get** **value**(): `number`
 
-Defined in: [canvas/src/primitives/animation/Tween.ts:56](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/animation/Tween.ts#L56)
+Defined in: [canvas/src/primitives/animation/Tween.ts:56](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/animation/Tween.ts#L56)
 
 ##### Returns
 
@@ -63,7 +63,7 @@ Defined in: [canvas/src/primitives/animation/Tween.ts:56](https://github.com/inv
 
 > **reset**(): `void`
 
-Defined in: [canvas/src/primitives/animation/Tween.ts:102](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/animation/Tween.ts#L102)
+Defined in: [canvas/src/primitives/animation/Tween.ts:102](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/animation/Tween.ts#L102)
 
 Restart from `from`. Clears `done`.
 
@@ -77,7 +77,7 @@ Restart from `from`. Clears `done`.
 
 > **tick**(`dt`): `boolean`
 
-Defined in: [canvas/src/primitives/animation/Tween.ts:70](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/animation/Tween.ts#L70)
+Defined in: [canvas/src/primitives/animation/Tween.ts:70](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/animation/Tween.ts#L70)
 
 Advance by `dt` milliseconds. Returns `false` when the tween has finished
 its final cycle; callers should remove finished tweens from their tick

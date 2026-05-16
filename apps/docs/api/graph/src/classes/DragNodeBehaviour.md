@@ -1,6 +1,6 @@
 # Class: DragNodeBehaviour
 
-Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:88](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/behaviours/DragNodeBehaviour.ts#L88)
+Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:88](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/behaviours/DragNodeBehaviour.ts#L88)
 
 What `BehaviourRegistry` sees.
 
@@ -14,7 +14,7 @@ What `BehaviourRegistry` sees.
 
 > **new DragNodeBehaviour**(`opts`): `DragNodeBehaviour`
 
-Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:102](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/behaviours/DragNodeBehaviour.ts#L102)
+Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:102](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/behaviours/DragNodeBehaviour.ts#L102)
 
 #### Parameters
 
@@ -36,7 +36,7 @@ Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:102](https://github.com/i
 
 > `protected` **\_enabled**: `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:63](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L63)
+Defined in: [canvas/src/behaviours/Behaviour.ts:63](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/behaviours/Behaviour.ts#L63)
 
 #### Inherited from
 
@@ -48,7 +48,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:63](https://github.com/invana/ca
 
 > `protected` `optional` **ctx?**: [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:64](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L64)
+Defined in: [canvas/src/behaviours/Behaviour.ts:64](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/behaviours/Behaviour.ts#L64)
 
 #### Inherited from
 
@@ -60,7 +60,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:64](https://github.com/invana/ca
 
 > `readonly` **id**: `string`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:53](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L53)
+Defined in: [canvas/src/behaviours/Behaviour.ts:53](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/behaviours/Behaviour.ts#L53)
 
 #### Inherited from
 
@@ -72,7 +72,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:53](https://github.com/invana/ca
 
 > `readonly` `optional` **layerId?**: `string`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:54](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L54)
+Defined in: [canvas/src/behaviours/Behaviour.ts:54](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/behaviours/Behaviour.ts#L54)
 
 #### Inherited from
 
@@ -84,7 +84,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:54](https://github.com/invana/ca
 
 > `readonly` **scope**: `"canvas"` \| `"layer"`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:61](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L61)
+Defined in: [canvas/src/behaviours/Behaviour.ts:61](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/behaviours/Behaviour.ts#L61)
 
 `'layer'` if `layerId` is set, otherwise `'canvas'`. Set automatically
 from the constructor — subclasses don't need to re-declare.
@@ -99,7 +99,7 @@ from the constructor — subclasses don't need to re-declare.
 
 > `readonly` `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:55](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L55)
+Defined in: [canvas/src/behaviours/Behaviour.ts:55](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/behaviours/Behaviour.ts#L55)
 
 #### Inherited from
 
@@ -113,7 +113,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:55](https://github.com/invana/ca
 
 > **get** **enabled**(): `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:74](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L74)
+Defined in: [canvas/src/behaviours/Behaviour.ts:74](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/behaviours/Behaviour.ts#L74)
 
 ##### Returns
 
@@ -131,7 +131,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:74](https://github.com/invana/ca
 
 > **get** `protected` **isEnabled**(): `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:133](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L133)
+Defined in: [canvas/src/behaviours/Behaviour.ts:133](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/behaviours/Behaviour.ts#L133)
 
 Convenience `if (!enabled) return;` for use inside event handlers
 (without rebinding `this` cost).
@@ -150,7 +150,7 @@ Convenience `if (!enabled) return;` for use inside event handlers
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:89](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L89)
+Defined in: [canvas/src/behaviours/Behaviour.ts:89](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/behaviours/Behaviour.ts#L89)
 
 Called by `BehaviourRegistry.unregister(id)`. Drops subscriptions.
 
@@ -168,7 +168,7 @@ Called by `BehaviourRegistry.unregister(id)`. Drops subscriptions.
 
 > **disable**(): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:103](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L103)
+Defined in: [canvas/src/behaviours/Behaviour.ts:103](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/behaviours/Behaviour.ts#L103)
 
 #### Returns
 
@@ -184,7 +184,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:103](https://github.com/invana/c
 
 > **enable**(): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:97](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L97)
+Defined in: [canvas/src/behaviours/Behaviour.ts:97](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/behaviours/Behaviour.ts#L97)
 
 #### Returns
 
@@ -200,7 +200,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:97](https://github.com/invana/ca
 
 > `protected` **onDestroy**(): `void`
 
-Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:141](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/behaviours/DragNodeBehaviour.ts#L141)
+Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:141](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/behaviours/DragNodeBehaviour.ts#L141)
 
 Cleanup on destroy. Default no-op.
 
@@ -218,7 +218,7 @@ Cleanup on destroy. Default no-op.
 
 > `protected` **onDisable**(): `void`
 
-Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:150](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/behaviours/DragNodeBehaviour.ts#L150)
+Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:150](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/behaviours/DragNodeBehaviour.ts#L150)
 
 Hook fired on disable.
 
@@ -236,7 +236,7 @@ Hook fired on disable.
 
 > `protected` **onEnable**(): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:120](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L120)
+Defined in: [canvas/src/behaviours/Behaviour.ts:120](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/behaviours/Behaviour.ts#L120)
 
 Hook fired when the developer enables the behaviour.
 
@@ -254,7 +254,7 @@ Hook fired when the developer enables the behaviour.
 
 > `protected` **onRegister**(`ctx`): `void`
 
-Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:112](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/behaviours/DragNodeBehaviour.ts#L112)
+Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:112](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/behaviours/DragNodeBehaviour.ts#L112)
 
 Subscribe to events / setup any handler resources.
 
@@ -278,7 +278,7 @@ Subscribe to events / setup any handler resources.
 
 > **register**(`ctx`): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:79](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/behaviours/Behaviour.ts#L79)
+Defined in: [canvas/src/behaviours/Behaviour.ts:79](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/behaviours/Behaviour.ts#L79)
 
 Called by `BehaviourRegistry.register(behaviour)`. Subscribes to inputs.
 

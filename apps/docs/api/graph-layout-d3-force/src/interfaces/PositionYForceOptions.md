@@ -1,6 +1,6 @@
 # Interface: PositionYForceOptions
 
-Defined in: [graph-layout-d3-force/src/types.ts:108](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layout-d3-force/src/types.ts#L108)
+Defined in: [graph-layout-d3-force/src/types.ts:108](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layout-d3-force/src/types.ts#L108)
 
 `forceY` configuration.
 
@@ -10,7 +10,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:108](https://github.com/invana/c
 
 > `optional` **strength?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:112](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layout-d3-force/src/types.ts#L112)
+Defined in: [graph-layout-d3-force/src/types.ts:112](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layout-d3-force/src/types.ts#L112)
 
 `forceY.strength(s)`.
 
@@ -20,6 +20,6 @@ Defined in: [graph-layout-d3-force/src/types.ts:112](https://github.com/invana/c
 
 > `optional` **y?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:110](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layout-d3-force/src/types.ts#L110)
+Defined in: [graph-layout-d3-force/src/types.ts:110](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layout-d3-force/src/types.ts#L110)
 
 `forceY.y(y)`.

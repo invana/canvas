@@ -2,7 +2,7 @@
 
 The engine. Implements the Layer / Behaviour / Layout / Renderer architecture defined in `architecture-proposal.md` (repo root).
 
-**Status:** skeleton. Built fresh during the architecture rewrite. Reference the matching `*-deprecated` package for the prior implementation, but do not import it.
+**Status:** skeleton. Built fresh during the architecture rewrite.
 
 ## Scope (per proposal §5 + §2.7)
 

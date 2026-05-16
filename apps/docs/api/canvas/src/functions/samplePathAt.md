@@ -2,7 +2,7 @@
 
 > **samplePathAt**(`path`, `t`): `object`
 
-Defined in: [canvas/src/primitives/connectors/pathSampling.ts:109](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/connectors/pathSampling.ts#L109)
+Defined in: [canvas/src/primitives/connectors/pathSampling.ts:109](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/connectors/pathSampling.ts#L109)
 
 Combined point + unit-tangent sample at parameter `t ∈ [0, 1]` along the
 path. Used by labels-along-path and any other decoration that needs both

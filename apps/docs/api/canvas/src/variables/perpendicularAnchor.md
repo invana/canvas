@@ -2,7 +2,7 @@
 
 > `const` **perpendicularAnchor**: [`IAnchor`](../type-aliases/IAnchor.md)
 
-Defined in: [canvas/src/primitives/connectors/anchors/perpendicular.ts:24](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/connectors/anchors/perpendicular.ts#L24)
+Defined in: [canvas/src/primitives/connectors/anchors/perpendicular.ts:24](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/connectors/anchors/perpendicular.ts#L24)
 
 Perpendicular anchor — exits at the **midpoint of the face** of the
 shape's bounding box that is closest to the other endpoint. The face is

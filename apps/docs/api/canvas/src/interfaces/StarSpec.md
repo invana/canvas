@@ -1,6 +1,6 @@
 # Interface: StarSpec
 
-Defined in: [canvas/src/primitives/types.ts:412](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L412)
+Defined in: [canvas/src/primitives/types.ts:412](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L412)
 
 Star centred at `(x, y)`, with `points` outer points alternating between
 `outerRadius` and `innerRadius`. Classic 5-point star uses
@@ -17,7 +17,7 @@ radians; positive rotates counter-clockwise.
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:341](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L341)
+Defined in: [canvas/src/primitives/types.ts:341](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L341)
 
 #### Inherited from
 
@@ -29,7 +29,7 @@ Defined in: [canvas/src/primitives/types.ts:341](https://github.com/invana/canva
 
 > `readonly` `optional` **fill?**: [`ShapeFill`](../type-aliases/ShapeFill.md)
 
-Defined in: [canvas/src/primitives/types.ts:337](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L337)
+Defined in: [canvas/src/primitives/types.ts:337](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L337)
 
 #### Inherited from
 
@@ -41,7 +41,7 @@ Defined in: [canvas/src/primitives/types.ts:337](https://github.com/invana/canva
 
 > `readonly` **innerRadius**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:415](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L415)
+Defined in: [canvas/src/primitives/types.ts:415](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L415)
 
 ***
 
@@ -49,7 +49,7 @@ Defined in: [canvas/src/primitives/types.ts:415](https://github.com/invana/canva
 
 > `readonly` **kind**: `"star"`
 
-Defined in: [canvas/src/primitives/types.ts:413](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L413)
+Defined in: [canvas/src/primitives/types.ts:413](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L413)
 
 #### Overrides
 
@@ -61,7 +61,7 @@ Defined in: [canvas/src/primitives/types.ts:413](https://github.com/invana/canva
 
 > `readonly` **outerRadius**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:416](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L416)
+Defined in: [canvas/src/primitives/types.ts:416](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L416)
 
 ***
 
@@ -69,7 +69,7 @@ Defined in: [canvas/src/primitives/types.ts:416](https://github.com/invana/canva
 
 > `readonly` **points**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:414](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L414)
+Defined in: [canvas/src/primitives/types.ts:414](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L414)
 
 ***
 
@@ -77,7 +77,7 @@ Defined in: [canvas/src/primitives/types.ts:414](https://github.com/invana/canva
 
 > `readonly` `optional` **rotation?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:417](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L417)
+Defined in: [canvas/src/primitives/types.ts:417](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L417)
 
 ***
 
@@ -85,7 +85,7 @@ Defined in: [canvas/src/primitives/types.ts:417](https://github.com/invana/canva
 
 > `readonly` `optional` **stroke?**: [`ShapeStroke`](ShapeStroke.md)
 
-Defined in: [canvas/src/primitives/types.ts:338](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L338)
+Defined in: [canvas/src/primitives/types.ts:338](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L338)
 
 #### Inherited from
 
@@ -97,7 +97,7 @@ Defined in: [canvas/src/primitives/types.ts:338](https://github.com/invana/canva
 
 > `readonly` `optional` **visible?**: `boolean`
 
-Defined in: [canvas/src/primitives/types.ts:342](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L342)
+Defined in: [canvas/src/primitives/types.ts:342](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L342)
 
 #### Inherited from
 
@@ -109,7 +109,7 @@ Defined in: [canvas/src/primitives/types.ts:342](https://github.com/invana/canva
 
 > `readonly` **x**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:335](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L335)
+Defined in: [canvas/src/primitives/types.ts:335](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L335)
 
 #### Inherited from
 
@@ -121,7 +121,7 @@ Defined in: [canvas/src/primitives/types.ts:335](https://github.com/invana/canva
 
 > `readonly` **y**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:336](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L336)
+Defined in: [canvas/src/primitives/types.ts:336](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L336)
 
 #### Inherited from
 
@@ -133,7 +133,7 @@ Defined in: [canvas/src/primitives/types.ts:336](https://github.com/invana/canva
 
 > `readonly` `optional` **zIndex?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:340](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L340)
+Defined in: [canvas/src/primitives/types.ts:340](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L340)
 
 Default `0`. Higher = on top. Used for hit-test resolution.
 

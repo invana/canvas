@@ -35,21 +35,6 @@ If I ask for "docs", "documentation", or "data model docs" without further quali
 
 Per-package coding rules → see each package's own `CLAUDE.md`.
 
-### Deprecated packages (do NOT search or read by default)
-
-These hold the previous implementation, kept temporarily as a feature-completeness reference. **Do not search, grep, read, or import from them unless I explicitly ask.** When a request would normally pull them into scope (e.g. "find where X is implemented", "how did the old plugin work"), ignore them and tell me you skipped them — wait for me to opt in.
-
-| Path | Package |
-|---|---|
-| `packages/canvas-deprecated` | `@invana/canvas-deprecated` |
-| `packages/plugins-shapes-deprecated` | `@invana/plugins-shapes-deprecated` |
-| `packages/plugins-graph-data-deprecated` | `@invana/plugins-graph-data-deprecated` |
-| `packages/plugins-layouts-d3-force-deprecated` | `@invana/plugin-layouts-d3-force-deprecated` |
-| `packages/plugins-layouts-elkjs-deprecated` | `@invana/plugin-layouts-elkjs-deprecated` |
-| `packages/plugins-example-datasets-deprecated` | `@invana/plugin-example-datasets-deprecated` |
-
-When invoking grep / find / Explore agents, scope to the active paths above (or exclude `*-deprecated`). Same for the `Read` tool: don't open `*-deprecated` files unless asked.
-
 ---
 
 ## Commands
@@ -83,7 +68,7 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
 
 1. Don't write code unless we discuss and I give a go ahead.
 2. Ask me questions before coding.
-3. All new code goes in the active packages listed above. Never touch `*-deprecated` packages, and never read from them without my explicit ask (see the deprecated section).
+3. All new code goes in the active packages listed above.
 4. No `pixi.js` imports outside `packages/canvas` internals.
 5. No direct `new Graphics()` / `new Container()` outside `packages/canvas/src`.
 6. Events go through `canvas.events` (canvas-wide) or `layer.events` (layer-scoped) per `architecture-proposal.md` §2.5 — never raw PixiJS events from outside the engine.

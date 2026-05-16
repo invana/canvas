@@ -1,6 +1,6 @@
 # Abstract Class: PrimitiveBase
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:11](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/PrimitiveBase.ts#L11)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:11](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/PrimitiveBase.ts#L11)
 
 Common base for every rendered primitive — shapes, connectors, decorations.
 Owns the root `gfx` Container and a default `destroy` that tears it down
@@ -22,7 +22,7 @@ Subclasses add Graphics or other display objects as children of `gfx`.
 
 > **new PrimitiveBase**(): `PrimitiveBase`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:14](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/PrimitiveBase.ts#L14)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:14](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/PrimitiveBase.ts#L14)
 
 #### Returns
 
@@ -34,7 +34,7 @@ Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:14](https://github.com/
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 ## Methods
 
@@ -42,7 +42,7 @@ Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
 
 #### Returns
 

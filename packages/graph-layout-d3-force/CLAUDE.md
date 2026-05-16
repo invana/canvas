@@ -1,6 +1,6 @@
 # CLAUDE.md — packages/graph-layout-d3-force (`@invana/graph-layout-d3-force`)
 
-D3 force-directed `Layout` for `@invana/graph`. Replaces the old `@invana/plugin-layouts-d3-force` (now `*-deprecated`).
+D3 force-directed `Layout` for `@invana/graph`.
 
 **Status:** skeleton.
 

@@ -1,6 +1,6 @@
 # Interface: WorldPoint
 
-Defined in: [graph-layer-maplibre/src/types.ts:17](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/types.ts#L17)
+Defined in: [graph-layer-maplibre/src/types.ts:17](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/types.ts#L17)
 
 A world-coordinate point (mercator pixels at the layer's reference zoom).
 
@@ -10,7 +10,7 @@ A world-coordinate point (mercator pixels at the layer's reference zoom).
 
 > **x**: `number`
 
-Defined in: [graph-layer-maplibre/src/types.ts:18](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/types.ts#L18)
+Defined in: [graph-layer-maplibre/src/types.ts:18](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/types.ts#L18)
 
 ***
 
@@ -18,4 +18,4 @@ Defined in: [graph-layer-maplibre/src/types.ts:18](https://github.com/invana/can
 
 > **y**: `number`
 
-Defined in: [graph-layer-maplibre/src/types.ts:19](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/types.ts#L19)
+Defined in: [graph-layer-maplibre/src/types.ts:19](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/types.ts#L19)

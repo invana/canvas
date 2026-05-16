@@ -1,6 +1,6 @@
 # Interface: Point
 
-Defined in: [canvas/src/primitives/types.ts:20](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L20)
+Defined in: [canvas/src/primitives/types.ts:20](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L20)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [canvas/src/primitives/types.ts:20](https://github.com/invana/canvas
 
 > `readonly` **x**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:21](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L21)
+Defined in: [canvas/src/primitives/types.ts:21](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L21)
 
 ***
 
@@ -16,4 +16,4 @@ Defined in: [canvas/src/primitives/types.ts:21](https://github.com/invana/canvas
 
 > `readonly` **y**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:22](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L22)
+Defined in: [canvas/src/primitives/types.ts:22](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L22)

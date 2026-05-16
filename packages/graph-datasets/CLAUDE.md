@@ -1,6 +1,6 @@
 # CLAUDE.md — packages/graph-datasets (`@invana/graph-datasets`)
 
-Example graph datasets used by storybook stories and tests. Replaces `@invana/plugin-example-datasets` (now `*-deprecated`).
+Example graph datasets used by storybook stories and tests.
 
 **Status:** skeleton. Datasets shipped: Les Misérables, random tree, Flare hierarchy. To port: Scientists org chart.
 

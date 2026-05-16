@@ -1,6 +1,6 @@
 # Interface: Rect
 
-Defined in: [canvas/src/primitives/types.ts:30](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L30)
+Defined in: [canvas/src/primitives/types.ts:30](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L30)
 
 ## Extended by
 
@@ -12,7 +12,7 @@ Defined in: [canvas/src/primitives/types.ts:30](https://github.com/invana/canvas
 
 > `readonly` **height**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:34](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L34)
+Defined in: [canvas/src/primitives/types.ts:34](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L34)
 
 ***
 
@@ -20,7 +20,7 @@ Defined in: [canvas/src/primitives/types.ts:34](https://github.com/invana/canvas
 
 > `readonly` **width**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:33](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L33)
+Defined in: [canvas/src/primitives/types.ts:33](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L33)
 
 ***
 
@@ -28,7 +28,7 @@ Defined in: [canvas/src/primitives/types.ts:33](https://github.com/invana/canvas
 
 > `readonly` **x**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:31](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L31)
+Defined in: [canvas/src/primitives/types.ts:31](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L31)
 
 ***
 
@@ -36,4 +36,4 @@ Defined in: [canvas/src/primitives/types.ts:31](https://github.com/invana/canvas
 
 > `readonly` **y**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:32](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L32)
+Defined in: [canvas/src/primitives/types.ts:32](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L32)

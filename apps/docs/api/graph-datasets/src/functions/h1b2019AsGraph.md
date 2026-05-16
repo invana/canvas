@@ -2,7 +2,7 @@
 
 > **h1b2019AsGraph**(): [`H1B2019GraphData`](../interfaces/H1B2019GraphData.md)
 
-Defined in: [graph-datasets/src/h1b2019.ts:98](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/h1b2019.ts#L98)
+Defined in: [graph-datasets/src/h1b2019.ts:98](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/h1b2019.ts#L98)
 
 Flatten [h1b2019Hierarchy](../variables/h1b2019Hierarchy.md) to a `{nodes, edges}` shape compatible with
 `GraphLayer.setData`. BFS-traverses the tree, assigning slash-joined path

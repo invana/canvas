@@ -1,6 +1,6 @@
 # Interface: NodeDecorations
 
-Defined in: [graph/src/layer/types.ts:446](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L446)
+Defined in: [graph/src/layer/types.ts:446](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L446)
 
 Slot-based decoration attachments on a node. Each slot holds at most one
 decoration; `null` clears it. State overlays can swap a slot's spec
@@ -25,7 +25,7 @@ Open-ended for any registered decoration slot.
 
 > `readonly` `optional` **border?**: `unknown`
 
-Defined in: [graph/src/layer/types.ts:454](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L454)
+Defined in: [graph/src/layer/types.ts:454](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L454)
 
 Slot 'border' — border / dash-border / marching-ants.
 
@@ -35,7 +35,7 @@ Slot 'border' — border / dash-border / marching-ants.
 
 > `readonly` `optional` **glow?**: `unknown`
 
-Defined in: [graph/src/layer/types.ts:450](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L450)
+Defined in: [graph/src/layer/types.ts:450](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L450)
 
 Slot 'glow'.
 
@@ -45,7 +45,7 @@ Slot 'glow'.
 
 > `readonly` `optional` **halo?**: `unknown`
 
-Defined in: [graph/src/layer/types.ts:448](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L448)
+Defined in: [graph/src/layer/types.ts:448](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L448)
 
 Slot 'halo' — `HaloStyle` from @invana/canvas.
 
@@ -55,7 +55,7 @@ Slot 'halo' — `HaloStyle` from @invana/canvas.
 
 > `readonly` `optional` **pulse?**: `unknown`
 
-Defined in: [graph/src/layer/types.ts:452](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L452)
+Defined in: [graph/src/layer/types.ts:452](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L452)
 
 Slot 'pulse' — pulse-ring decoration.
 
@@ -65,6 +65,6 @@ Slot 'pulse' — pulse-ring decoration.
 
 > `readonly` `optional` **ring?**: `unknown`
 
-Defined in: [graph/src/layer/types.ts:456](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L456)
+Defined in: [graph/src/layer/types.ts:456](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L456)
 
 Slot 'ring'.

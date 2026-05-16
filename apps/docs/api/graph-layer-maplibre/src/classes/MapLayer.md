@@ -1,6 +1,6 @@
 # Class: MapLayer
 
-Defined in: [graph-layer-maplibre/src/MapLayer.ts:79](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/MapLayer.ts#L79)
+Defined in: [graph-layer-maplibre/src/MapLayer.ts:79](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/MapLayer.ts#L79)
 
 The subset of `Layer` the `LayerRegistry` and `Canvas.tick` interact with.
 Lets the registry stay decoupled from the abstract class implementation.
@@ -15,7 +15,7 @@ Lets the registry stay decoupled from the abstract class implementation.
 
 > **new MapLayer**(`opts`): `MapLayer`
 
-Defined in: [graph-layer-maplibre/src/MapLayer.ts:97](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/MapLayer.ts#L97)
+Defined in: [graph-layer-maplibre/src/MapLayer.ts:97](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/MapLayer.ts#L97)
 
 #### Parameters
 
@@ -37,7 +37,7 @@ Defined in: [graph-layer-maplibre/src/MapLayer.ts:97](https://github.com/invana/
 
 > `protected` `optional` **ctx?**: [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
-Defined in: [canvas/src/layers/Layer.ts:108](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L108)
+Defined in: [canvas/src/layers/Layer.ts:108](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L108)
 
 Set by `mount(ctx)`; cleared by `unmount()`.
 
@@ -51,7 +51,7 @@ Set by `mount(ctx)`; cleared by `unmount()`.
 
 > **cullable**: `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:91](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L91)
+Defined in: [canvas/src/layers/Layer.ts:91](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L91)
 
 #### Inherited from
 
@@ -63,7 +63,7 @@ Defined in: [canvas/src/layers/Layer.ts:91](https://github.com/invana/canvas/blo
 
 > `readonly` **dirty**: [`DirtyBatcher`](../../../canvas/src/classes/DirtyBatcher.md)\<`string`\>
 
-Defined in: [canvas/src/layers/Layer.ts:85](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L85)
+Defined in: [canvas/src/layers/Layer.ts:85](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L85)
 
 #### Inherited from
 
@@ -75,7 +75,7 @@ Defined in: [canvas/src/layers/Layer.ts:85](https://github.com/invana/canvas/blo
 
 > `readonly` **events**: [`SourceEmitter`](../../../canvas/src/classes/SourceEmitter.md)\<[`MapLayerEvents`](../interfaces/MapLayerEvents.md)\>
 
-Defined in: [canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L84)
+Defined in: [canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L84)
 
 #### Inherited from
 
@@ -87,7 +87,7 @@ Defined in: [canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blo
 
 > **hittable**: `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:89](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L89)
+Defined in: [canvas/src/layers/Layer.ts:89](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L89)
 
 #### Inherited from
 
@@ -99,7 +99,7 @@ Defined in: [canvas/src/layers/Layer.ts:89](https://github.com/invana/canvas/blo
 
 > `readonly` **id**: `string`
 
-Defined in: [canvas/src/layers/Layer.ts:81](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L81)
+Defined in: [canvas/src/layers/Layer.ts:81](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L81)
 
 #### Inherited from
 
@@ -111,7 +111,7 @@ Defined in: [canvas/src/layers/Layer.ts:81](https://github.com/invana/canvas/blo
 
 > `readonly` **options**: [`MapLayerOptions`](../interfaces/MapLayerOptions.md)
 
-Defined in: [canvas/src/layers/Layer.ts:82](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L82)
+Defined in: [canvas/src/layers/Layer.ts:82](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L82)
 
 #### Inherited from
 
@@ -123,7 +123,7 @@ Defined in: [canvas/src/layers/Layer.ts:82](https://github.com/invana/canvas/blo
 
 > `readonly` **state**: [`Store`](../../../canvas/src/type-aliases/Store.md)\<[`MapLayerState`](../interfaces/MapLayerState.md)\>
 
-Defined in: [canvas/src/layers/Layer.ts:83](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L83)
+Defined in: [canvas/src/layers/Layer.ts:83](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L83)
 
 #### Inherited from
 
@@ -135,7 +135,7 @@ Defined in: [canvas/src/layers/Layer.ts:83](https://github.com/invana/canvas/blo
 
 > **zIndex**: `number`
 
-Defined in: [canvas/src/layers/Layer.ts:90](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L90)
+Defined in: [canvas/src/layers/Layer.ts:90](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L90)
 
 #### Inherited from
 
@@ -149,7 +149,7 @@ Defined in: [canvas/src/layers/Layer.ts:90](https://github.com/invana/canvas/blo
 
 > **get** `protected` **context**(): [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
-Defined in: [canvas/src/layers/Layer.ts:156](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L156)
+Defined in: [canvas/src/layers/Layer.ts:156](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L156)
 
 Convenience accessor; throws when called pre-mount.
 
@@ -169,7 +169,7 @@ Convenience accessor; throws when called pre-mount.
 
 > **get** **maplibre**(): `any`
 
-Defined in: [graph-layer-maplibre/src/MapLayer.ts:111](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/MapLayer.ts#L111)
+Defined in: [graph-layer-maplibre/src/MapLayer.ts:111](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/MapLayer.ts#L111)
 
 The underlying MapLibre Map. `null` before mount / after unmount.
 
@@ -185,7 +185,7 @@ The underlying MapLibre Map. `null` before mount / after unmount.
 
 > **get** **mounted**(): `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:111](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L111)
+Defined in: [canvas/src/layers/Layer.ts:111](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L111)
 
 True between `mount` and `unmount`.
 
@@ -205,7 +205,7 @@ True between `mount` and `unmount`.
 
 > **get** **visible**(): `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:98](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L98)
+Defined in: [canvas/src/layers/Layer.ts:98](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L98)
 
 Whether this layer renders. Setting `false` hides the layer's pixi
 container (via `onVisibleChange`, overridden by `WorldLayer` /
@@ -219,7 +219,7 @@ container (via `onVisibleChange`, overridden by `WorldLayer` /
 
 > **set** **visible**(`value`): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:101](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L101)
+Defined in: [canvas/src/layers/Layer.ts:101](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L101)
 
 ##### Parameters
 
@@ -241,7 +241,7 @@ Defined in: [canvas/src/layers/Layer.ts:101](https://github.com/invana/canvas/bl
 
 > `protected` **applyDirty**(`_snap`): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:189](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L189)
+Defined in: [canvas/src/layers/Layer.ts:189](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L189)
 
 Translate a dirty snapshot into renderer / pixi commands.
 Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
@@ -266,7 +266,7 @@ Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
 > `protected` **createState**(): [`MapLayerState`](../interfaces/MapLayerState.md)
 
-Defined in: [graph-layer-maplibre/src/MapLayer.ts:115](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/MapLayer.ts#L115)
+Defined in: [graph-layer-maplibre/src/MapLayer.ts:115](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/MapLayer.ts#L115)
 
 Build the initial UI / interaction state. Called once in the constructor.
 
@@ -284,7 +284,7 @@ Build the initial UI / interaction state. Called once in the constructor.
 
 > **flush**(): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:174](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L174)
+Defined in: [canvas/src/layers/Layer.ts:174](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L174)
 
 Called by Canvas tick when `hasPending()` is true. Swaps the dirty
 snapshot, hands it to `applyDirty`. Subclasses normally don't override.
@@ -303,7 +303,7 @@ snapshot, hands it to `applyDirty`. Subclasses normally don't override.
 
 > **flyTo**(`opts`): `void`
 
-Defined in: [graph-layer-maplibre/src/MapLayer.ts:151](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/MapLayer.ts#L151)
+Defined in: [graph-layer-maplibre/src/MapLayer.ts:151](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/MapLayer.ts#L151)
 
 Pan/zoom the basemap to a new view. Camera follows automatically via `move`.
 
@@ -333,7 +333,7 @@ Pan/zoom the basemap to a new view. Camera follows automatically via `move`.
 
 > **hasPending**(): `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:166](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L166)
+Defined in: [canvas/src/layers/Layer.ts:166](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L166)
 
 Whether `flush()` has work to do this frame.
 
@@ -351,7 +351,7 @@ Whether `flush()` has work to do this frame.
 
 > **mount**(`ctx`): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:137](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L137)
+Defined in: [canvas/src/layers/Layer.ts:137](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L137)
 
 #### Parameters
 
@@ -373,7 +373,7 @@ Defined in: [canvas/src/layers/Layer.ts:137](https://github.com/invana/canvas/bl
 
 > `protected` **onMount**(`ctx`): `void`
 
-Defined in: [graph-layer-maplibre/src/MapLayer.ts:160](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/MapLayer.ts#L160)
+Defined in: [graph-layer-maplibre/src/MapLayer.ts:160](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/MapLayer.ts#L160)
 
 Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
@@ -397,7 +397,7 @@ Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
 > `protected` **onUnmount**(`ctx`): `void`
 
-Defined in: [graph-layer-maplibre/src/MapLayer.ts:252](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/MapLayer.ts#L252)
+Defined in: [graph-layer-maplibre/src/MapLayer.ts:252](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/MapLayer.ts#L252)
 
 Domain-specific unmount teardown.
 
@@ -421,7 +421,7 @@ Domain-specific unmount teardown.
 
 > `protected` **onVisibleChange**(`_value`): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:208](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L208)
+Defined in: [canvas/src/layers/Layer.ts:208](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L208)
 
 Called whenever `visible` changes (setter only — not on initial
 construction). Subclasses override to keep their pixi container's
@@ -447,7 +447,7 @@ construction). Subclasses override to keep their pixi container's
 
 > **project**(`lngLat`): [`WorldPoint`](../interfaces/WorldPoint.md)
 
-Defined in: [graph-layer-maplibre/src/MapLayer.ts:130](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/MapLayer.ts#L130)
+Defined in: [graph-layer-maplibre/src/MapLayer.ts:130](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/MapLayer.ts#L130)
 
 Project a geographic coordinate to canvas world coordinates.
 
@@ -478,7 +478,7 @@ const { x, y } = mapLayer.project([airport.lng, airport.lat]);
 
 > **unmount**(): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:146](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/Layer.ts#L146)
+Defined in: [canvas/src/layers/Layer.ts:146](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/Layer.ts#L146)
 
 #### Returns
 
@@ -494,7 +494,7 @@ Defined in: [canvas/src/layers/Layer.ts:146](https://github.com/invana/canvas/bl
 
 > **unproject**(`world`): \[`number`, `number`\]
 
-Defined in: [graph-layer-maplibre/src/MapLayer.ts:143](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-layer-maplibre/src/MapLayer.ts#L143)
+Defined in: [graph-layer-maplibre/src/MapLayer.ts:143](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-layer-maplibre/src/MapLayer.ts#L143)
 
 Inverse of [project](#project) — world coords back to `[lng, lat]`. Useful
 for hit-testing or reporting the geographic location under a cursor.

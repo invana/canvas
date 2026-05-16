@@ -1,6 +1,6 @@
 # Interface: OldFaithfulNodeData
 
-Defined in: [graph-datasets/src/oldFaithful.ts:33](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/oldFaithful.ts#L33)
+Defined in: [graph-datasets/src/oldFaithful.ts:33](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/oldFaithful.ts#L33)
 
 Old Faithful geyser eruptions — 272 measurements.
 
@@ -38,7 +38,7 @@ graph.setData(oldFaithful);
 
 > **cluster**: `"short"` \| `"long"`
 
-Defined in: [graph-datasets/src/oldFaithful.ts:40](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/oldFaithful.ts#L40)
+Defined in: [graph-datasets/src/oldFaithful.ts:40](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/oldFaithful.ts#L40)
 
 Bimodal cluster the point most likely belongs to — `'short'` for the
 brief eruption / short-wait cluster, `'long'` for the long-duration /
@@ -51,7 +51,7 @@ Useful for colour-by-cluster stories.
 
 > **eruptions**: `number`
 
-Defined in: [graph-datasets/src/oldFaithful.ts:28](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/oldFaithful.ts#L28)
+Defined in: [graph-datasets/src/oldFaithful.ts:28](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/oldFaithful.ts#L28)
 
 Eruption duration in minutes.
 
@@ -65,7 +65,7 @@ Eruption duration in minutes.
 
 > **waiting**: `number`
 
-Defined in: [graph-datasets/src/oldFaithful.ts:30](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/oldFaithful.ts#L30)
+Defined in: [graph-datasets/src/oldFaithful.ts:30](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/oldFaithful.ts#L30)
 
 Minutes elapsed before the next eruption.
 

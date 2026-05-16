@@ -1,6 +1,6 @@
 # Interface: MarchingAntsDecorationStyle
 
-Defined in: [canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts:15](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts#L15)
+Defined in: [canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts:15](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts#L15)
 
 Classic "marching ants" selection outline. Strokes the host silhouette
 with a dashed border whose `dashOffset` advances each frame, producing
@@ -18,7 +18,7 @@ silhouette tessellation. Works on every shape that implements
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts:34](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts#L34)
+Defined in: [canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts:34](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts#L34)
 
 Overall decoration alpha. Default `1`.
 
@@ -28,7 +28,7 @@ Overall decoration alpha. Default `1`.
 
 > `readonly` **color**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts:16](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts#L16)
+Defined in: [canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts:16](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts#L16)
 
 ***
 
@@ -36,7 +36,7 @@ Defined in: [canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts:1
 
 > `readonly` `optional` **dashLength?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts:20](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts#L20)
+Defined in: [canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts:20](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts#L20)
 
 Dash length in px. Default `6`.
 
@@ -46,7 +46,7 @@ Dash length in px. Default `6`.
 
 > `readonly` `optional` **gapLength?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts:22](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts#L22)
+Defined in: [canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts:22](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts#L22)
 
 Gap length in px. Default `4`.
 
@@ -56,7 +56,7 @@ Gap length in px. Default `4`.
 
 > `readonly` `optional` **inset?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts:32](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts#L32)
+Defined in: [canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts:32](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts#L32)
 
 Distance from the host silhouette. Positive = inside, negative =
 outside. Default `0` (on the silhouette itself).
@@ -67,7 +67,7 @@ outside. Default `0` (on the silhouette itself).
 
 > `readonly` `optional` **speedPxPerSec?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts:27](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts#L27)
+Defined in: [canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts:27](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts#L27)
 
 March speed in px/sec along the perimeter. Default `24`.
 Negative values reverse the march direction.
@@ -78,6 +78,6 @@ Negative values reverse the march direction.
 
 > `readonly` `optional` **strokeWidth?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts:18](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts#L18)
+Defined in: [canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts:18](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/shape/MarchingAntsDecoration.ts#L18)
 
 Stroke width in px. Default `1.5`.

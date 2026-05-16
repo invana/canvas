@@ -1,6 +1,6 @@
 # Interface: ThemedBackgroundLayerEvents
 
-Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:66](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L66)
+Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:66](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L66)
 
 Layer-event map fired by `ThemedBackgroundLayer.events`.
 
@@ -14,7 +14,7 @@ Layer-event map fired by `ThemedBackgroundLayer.events`.
 
 > **mode:updated**: `object`
 
-Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:72](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L72)
+Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:72](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L72)
 
 #### mode
 
@@ -38,7 +38,7 @@ Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:72](https://github.com/i
 
 > **theme:switched**: `object`
 
-Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:67](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L67)
+Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:67](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L67)
 
 #### resolvedKind
 

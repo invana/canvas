@@ -1,6 +1,6 @@
 # Interface: GraphStoreOptions
 
-Defined in: [graph/src/store/types.ts:84](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L84)
+Defined in: [graph/src/store/types.ts:84](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/store/types.ts#L84)
 
 Constructor options for `GraphStore`.
 
@@ -13,7 +13,7 @@ feeds should set `flushMode: 'frame'` and `unknownEndpoint: 'buffer'`.
 
 > `optional` **flushMode?**: `"sync"` \| `"frame"`
 
-Defined in: [graph/src/store/types.ts:90](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L90)
+Defined in: [graph/src/store/types.ts:90](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/store/types.ts#L90)
 
 `'sync'` — events fire synchronously at each mutation / on `batch` exit.
 `'frame'` — events coalesce into a single flush per animation frame.
@@ -25,7 +25,7 @@ Default `'sync'`.
 
 > `optional` **initialCapacity?**: `number`
 
-Defined in: [graph/src/store/types.ts:111](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L111)
+Defined in: [graph/src/store/types.ts:111](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/store/types.ts#L111)
 
 Initial slot capacity for the underlying `ColumnStore`s. Larger up-front
 capacity avoids early geometric growth on bulk inserts. Default 256.
@@ -36,7 +36,7 @@ capacity avoids early geometric growth on bulk inserts. Default 256.
 
 > `optional` **pendingEdgeTTL?**: `number`
 
-Defined in: [graph/src/store/types.ts:105](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L105)
+Defined in: [graph/src/store/types.ts:105](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/store/types.ts#L105)
 
 Drop a buffered edge (and emit `edge:orphaned`) if it has been pending
 for more than this many frames. Default `Infinity` (never expire).
@@ -48,7 +48,7 @@ Only meaningful with `unknownEndpoint: 'buffer'`.
 
 > `optional` **unknownEndpoint?**: `"throw"` \| `"buffer"` \| `"drop"`
 
-Defined in: [graph/src/store/types.ts:98](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L98)
+Defined in: [graph/src/store/types.ts:98](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/store/types.ts#L98)
 
 What to do when `addEdge` is called with an unknown source or target id.
 - `'throw'` (default) — reject and throw.

@@ -2,7 +2,7 @@
 
 > **IAnchor** = (`endpoint`, `fromPoint`, `ctx`) => [`Endpoint`](../interfaces/Endpoint.md)
 
-Defined in: [canvas/src/primitives/types.ts:509](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L509)
+Defined in: [canvas/src/primitives/types.ts:509](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L509)
 
 Anchor: a pure function that resolves a `kind: 'shape'` endpoint to a
 concrete world-space point on the referenced shape.

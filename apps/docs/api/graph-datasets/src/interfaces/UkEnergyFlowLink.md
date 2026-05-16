@@ -1,6 +1,6 @@
 # Interface: UkEnergyFlowLink
 
-Defined in: [graph-datasets/src/uk-energy-flow.ts:36](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/uk-energy-flow.ts#L36)
+Defined in: [graph-datasets/src/uk-energy-flow.ts:36](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/uk-energy-flow.ts#L36)
 
 Original (numeric-index) link shape — `source` / `target` are indices
  into the `nodes` array.
@@ -11,7 +11,7 @@ Original (numeric-index) link shape — `source` / `target` are indices
 
 > **source**: `number`
 
-Defined in: [graph-datasets/src/uk-energy-flow.ts:37](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/uk-energy-flow.ts#L37)
+Defined in: [graph-datasets/src/uk-energy-flow.ts:37](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/uk-energy-flow.ts#L37)
 
 ***
 
@@ -19,7 +19,7 @@ Defined in: [graph-datasets/src/uk-energy-flow.ts:37](https://github.com/invana/
 
 > **target**: `number`
 
-Defined in: [graph-datasets/src/uk-energy-flow.ts:38](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/uk-energy-flow.ts#L38)
+Defined in: [graph-datasets/src/uk-energy-flow.ts:38](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/uk-energy-flow.ts#L38)
 
 ***
 
@@ -27,4 +27,4 @@ Defined in: [graph-datasets/src/uk-energy-flow.ts:38](https://github.com/invana/
 
 > **value**: `number`
 
-Defined in: [graph-datasets/src/uk-energy-flow.ts:39](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/uk-energy-flow.ts#L39)
+Defined in: [graph-datasets/src/uk-energy-flow.ts:39](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/uk-energy-flow.ts#L39)

@@ -1,6 +1,6 @@
 # Interface: NodeImage
 
-Defined in: [graph/src/layer/types.ts:388](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L388)
+Defined in: [graph/src/layer/types.ts:388](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L388)
 
 Raster image inset rendered inside a node's body.
 
@@ -10,7 +10,7 @@ Raster image inset rendered inside a node's body.
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [graph/src/layer/types.ts:390](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L390)
+Defined in: [graph/src/layer/types.ts:390](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L390)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [graph/src/layer/types.ts:390](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **anchor?**: [`InsetAnchor`](../../../canvas/src/type-aliases/InsetAnchor.md)
 
-Defined in: [graph/src/layer/types.ts:392](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L392)
+Defined in: [graph/src/layer/types.ts:392](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L392)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [graph/src/layer/types.ts:392](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **fit?**: `"none"` \| `"fill"` \| `"cover"` \| `"contain"` \| `"tile"`
 
-Defined in: [graph/src/layer/types.ts:393](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L393)
+Defined in: [graph/src/layer/types.ts:393](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L393)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [graph/src/layer/types.ts:393](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **sizeRatio?**: `number`
 
-Defined in: [graph/src/layer/types.ts:391](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L391)
+Defined in: [graph/src/layer/types.ts:391](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L391)
 
 ***
 
@@ -42,4 +42,4 @@ Defined in: [graph/src/layer/types.ts:391](https://github.com/invana/canvas/blob
 
 > `readonly` **url**: `string`
 
-Defined in: [graph/src/layer/types.ts:389](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L389)
+Defined in: [graph/src/layer/types.ts:389](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L389)

@@ -1,6 +1,6 @@
 # CLAUDE.md — packages/graph (`@invana/graph`)
 
-Graph-domain layers and behaviours that compose `@invana/canvas`. Replaces the old `@invana/plugins-graph-data` (now `*-deprecated`).
+Graph-domain layers and behaviours that compose `@invana/canvas`.
 
 **Status:** skeleton.
 

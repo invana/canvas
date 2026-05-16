@@ -1,6 +1,6 @@
 # Class: TextureRegistry
 
-Defined in: [canvas/src/textures/TextureRegistry.ts:21](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/textures/TextureRegistry.ts#L21)
+Defined in: [canvas/src/textures/TextureRegistry.ts:21](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/textures/TextureRegistry.ts#L21)
 
 ## Constructors
 
@@ -18,7 +18,7 @@ Defined in: [canvas/src/textures/TextureRegistry.ts:21](https://github.com/invan
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/textures/TextureRegistry.ts:93](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/textures/TextureRegistry.ts#L93)
+Defined in: [canvas/src/textures/TextureRegistry.ts:93](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/textures/TextureRegistry.ts#L93)
 
 Unload and destroy all textures owned by this registry. External textures
 (registered via `register`) are not touched. Call when the host Layer
@@ -34,7 +34,7 @@ unmounts.
 
 > **get**(`url`): `Texture`\<`TextureSource`\<`any`\>\>
 
-Defined in: [canvas/src/textures/TextureRegistry.ts:28](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/textures/TextureRegistry.ts#L28)
+Defined in: [canvas/src/textures/TextureRegistry.ts:28](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/textures/TextureRegistry.ts#L28)
 
 Look up a cached texture by URL or atlas frame name.
 
@@ -54,7 +54,7 @@ Look up a cached texture by URL or atlas frame name.
 
 > **has**(`url`): `boolean`
 
-Defined in: [canvas/src/textures/TextureRegistry.ts:32](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/textures/TextureRegistry.ts#L32)
+Defined in: [canvas/src/textures/TextureRegistry.ts:32](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/textures/TextureRegistry.ts#L32)
 
 #### Parameters
 
@@ -72,7 +72,7 @@ Defined in: [canvas/src/textures/TextureRegistry.ts:32](https://github.com/invan
 
 > **load**(`url`): `Promise`\<`Texture`\<`TextureSource`\<`any`\>\>\>
 
-Defined in: [canvas/src/textures/TextureRegistry.ts:54](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/textures/TextureRegistry.ts#L54)
+Defined in: [canvas/src/textures/TextureRegistry.ts:54](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/textures/TextureRegistry.ts#L54)
 
 Load a single URL and cache it. Returns the cached texture on subsequent
 calls (synchronous fast path). Uses pixi's `Assets` pipeline so the
@@ -98,7 +98,7 @@ requested so PixiJS doesn't skip loading due to an unknown file type.
 
 > **loadAtlas**(`jsonUrl`): `Promise`\<`void`\>
 
-Defined in: [canvas/src/textures/TextureRegistry.ts:79](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/textures/TextureRegistry.ts#L79)
+Defined in: [canvas/src/textures/TextureRegistry.ts:79](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/textures/TextureRegistry.ts#L79)
 
 Load a PixiJS spritesheet atlas JSON. After this resolves, individual
 frame textures are accessible via `get(frameName)` where `frameName`
@@ -123,7 +123,7 @@ draw call for every sprite sharing that atlas page.
 
 > **preload**(`urls`): `Promise`\<`void`\>
 
-Defined in: [canvas/src/textures/TextureRegistry.ts:67](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/textures/TextureRegistry.ts#L67)
+Defined in: [canvas/src/textures/TextureRegistry.ts:67](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/textures/TextureRegistry.ts#L67)
 
 Batch-preload a list of URLs in parallel. Await before first render to avoid mid-frame async loads.
 
@@ -143,7 +143,7 @@ Batch-preload a list of URLs in parallel. Await before first render to avoid mid
 
 > **register**(`url`, `texture`): `void`
 
-Defined in: [canvas/src/textures/TextureRegistry.ts:41](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/textures/TextureRegistry.ts#L41)
+Defined in: [canvas/src/textures/TextureRegistry.ts:41](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/textures/TextureRegistry.ts#L41)
 
 Register a pre-built texture. Useful for programmatically generated or
 SVG-constructed textures. The caller retains ownership — `destroy()` will

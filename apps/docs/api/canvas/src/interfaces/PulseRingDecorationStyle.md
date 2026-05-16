@@ -1,6 +1,6 @@
 # Interface: PulseRingDecorationStyle
 
-Defined in: [canvas/src/primitives/decorations/shape/PulseRingDecoration.ts:15](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/PulseRingDecoration.ts#L15)
+Defined in: [canvas/src/primitives/decorations/shape/PulseRingDecoration.ts:15](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/shape/PulseRingDecoration.ts#L15)
 
 Concentric rings that expand outward from the host's silhouette and fade
 as they grow. A canonical "attention" decoration — pings, notifications,
@@ -18,7 +18,7 @@ giving a steady visual rhythm.
 
 > `readonly` **color**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/PulseRingDecoration.ts:16](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/PulseRingDecoration.ts#L16)
+Defined in: [canvas/src/primitives/decorations/shape/PulseRingDecoration.ts:16](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/shape/PulseRingDecoration.ts#L16)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [canvas/src/primitives/decorations/shape/PulseRingDecoration.ts:16](
 
 > `readonly` `optional` **innerAlpha?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/PulseRingDecoration.ts:26](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/PulseRingDecoration.ts#L26)
+Defined in: [canvas/src/primitives/decorations/shape/PulseRingDecoration.ts:26](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/shape/PulseRingDecoration.ts#L26)
 
 Initial (full-brightness) alpha at radius 0. Default `0.7`.
 
@@ -36,7 +36,7 @@ Initial (full-brightness) alpha at radius 0. Default `0.7`.
 
 > `readonly` `optional` **maxRadius?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/PulseRingDecoration.ts:18](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/PulseRingDecoration.ts#L18)
+Defined in: [canvas/src/primitives/decorations/shape/PulseRingDecoration.ts:18](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/shape/PulseRingDecoration.ts#L18)
 
 Peak expansion distance from the host silhouette, px. Default `24`.
 
@@ -46,7 +46,7 @@ Peak expansion distance from the host silhouette, px. Default `24`.
 
 > `readonly` `optional` **periodMs?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/PulseRingDecoration.ts:20](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/PulseRingDecoration.ts#L20)
+Defined in: [canvas/src/primitives/decorations/shape/PulseRingDecoration.ts:20](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/shape/PulseRingDecoration.ts#L20)
 
 Cycle length in ms. Default `1400`.
 
@@ -56,7 +56,7 @@ Cycle length in ms. Default `1400`.
 
 > `readonly` `optional` **rings?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/PulseRingDecoration.ts:22](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/PulseRingDecoration.ts#L22)
+Defined in: [canvas/src/primitives/decorations/shape/PulseRingDecoration.ts:22](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/shape/PulseRingDecoration.ts#L22)
 
 Number of concurrent rings (phase-distributed). Default `2`.
 
@@ -66,6 +66,6 @@ Number of concurrent rings (phase-distributed). Default `2`.
 
 > `readonly` `optional` **strokeWidth?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/PulseRingDecoration.ts:24](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/shape/PulseRingDecoration.ts#L24)
+Defined in: [canvas/src/primitives/decorations/shape/PulseRingDecoration.ts:24](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/shape/PulseRingDecoration.ts#L24)
 
 Stroke width of each ring, px. Default `2`.

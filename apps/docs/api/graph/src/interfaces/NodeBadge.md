@@ -1,6 +1,6 @@
 # Interface: NodeBadge
 
-Defined in: [graph/src/layer/types.ts:409](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L409)
+Defined in: [graph/src/layer/types.ts:409](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L409)
 
 Small overlay attached to a node — e.g. notification dot, count chip, status indicator.
 
@@ -10,7 +10,7 @@ Small overlay attached to a node — e.g. notification dot, count chip, status i
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [graph/src/layer/types.ts:418](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L418)
+Defined in: [graph/src/layer/types.ts:418](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L418)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [graph/src/layer/types.ts:418](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **fill?**: `number`
 
-Defined in: [graph/src/layer/types.ts:417](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L417)
+Defined in: [graph/src/layer/types.ts:417](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L417)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [graph/src/layer/types.ts:417](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **icon?**: [`NodeIcon`](../type-aliases/NodeIcon.md)
 
-Defined in: [graph/src/layer/types.ts:422](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L422)
+Defined in: [graph/src/layer/types.ts:422](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L422)
 
 Optional vector inset rendered inside the badge.
 
@@ -36,7 +36,7 @@ Optional vector inset rendered inside the badge.
 
 > `readonly` `optional` **id?**: `string`
 
-Defined in: [graph/src/layer/types.ts:411](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L411)
+Defined in: [graph/src/layer/types.ts:411](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L411)
 
 Stable id within the node, for keyed updates / animation. Optional.
 
@@ -46,7 +46,7 @@ Stable id within the node, for keyed updates / animation. Optional.
 
 > `readonly` `optional` **labelColor?**: `number`
 
-Defined in: [graph/src/layer/types.ts:425](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L425)
+Defined in: [graph/src/layer/types.ts:425](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L425)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [graph/src/layer/types.ts:425](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelFontSize?**: `number`
 
-Defined in: [graph/src/layer/types.ts:426](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L426)
+Defined in: [graph/src/layer/types.ts:426](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L426)
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: [graph/src/layer/types.ts:426](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelText?**: `string`
 
-Defined in: [graph/src/layer/types.ts:424](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L424)
+Defined in: [graph/src/layer/types.ts:424](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L424)
 
 Optional short text (e.g. count "3" or "!").
 
@@ -72,7 +72,7 @@ Optional short text (e.g. count "3" or "!").
 
 > `readonly` `optional` **offsetX?**: `number`
 
-Defined in: [graph/src/layer/types.ts:427](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L427)
+Defined in: [graph/src/layer/types.ts:427](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L427)
 
 ***
 
@@ -80,7 +80,7 @@ Defined in: [graph/src/layer/types.ts:427](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **offsetY?**: `number`
 
-Defined in: [graph/src/layer/types.ts:428](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L428)
+Defined in: [graph/src/layer/types.ts:428](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L428)
 
 ***
 
@@ -88,7 +88,7 @@ Defined in: [graph/src/layer/types.ts:428](https://github.com/invana/canvas/blob
 
 > `readonly` **placement**: [`BadgePlacement`](../type-aliases/BadgePlacement.md)
 
-Defined in: [graph/src/layer/types.ts:412](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L412)
+Defined in: [graph/src/layer/types.ts:412](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L412)
 
 ***
 
@@ -96,7 +96,7 @@ Defined in: [graph/src/layer/types.ts:412](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **shape?**: `"circle"` \| `"rect"` \| `"pill"`
 
-Defined in: [graph/src/layer/types.ts:414](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L414)
+Defined in: [graph/src/layer/types.ts:414](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L414)
 
 Default `'circle'`.
 
@@ -106,7 +106,7 @@ Default `'circle'`.
 
 > `readonly` `optional` **size?**: `number`
 
-Defined in: [graph/src/layer/types.ts:416](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L416)
+Defined in: [graph/src/layer/types.ts:416](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L416)
 
 Pixels — fixed visual size regardless of node scale. Default 12.
 
@@ -116,7 +116,7 @@ Pixels — fixed visual size regardless of node scale. Default 12.
 
 > `readonly` `optional` **strokeColor?**: `number`
 
-Defined in: [graph/src/layer/types.ts:419](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L419)
+Defined in: [graph/src/layer/types.ts:419](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L419)
 
 ***
 
@@ -124,7 +124,7 @@ Defined in: [graph/src/layer/types.ts:419](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **strokeWidth?**: `number`
 
-Defined in: [graph/src/layer/types.ts:420](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L420)
+Defined in: [graph/src/layer/types.ts:420](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L420)
 
 ***
 
@@ -132,4 +132,4 @@ Defined in: [graph/src/layer/types.ts:420](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **zIndex?**: `number`
 
-Defined in: [graph/src/layer/types.ts:429](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L429)
+Defined in: [graph/src/layer/types.ts:429](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L429)

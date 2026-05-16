@@ -390,7 +390,7 @@ const baseSize =
 - Top-level exports prune.
 
 **Exit criterion:**
-- Grepping the repo for any remaining legacy identifier (`NodeRenderHints`, `EdgeRenderHints`, `ResolvedNodeDefaults`, `ResolvedEdgeDefaults`, `nodeDefaults`, `edgeDefaults`) returns zero matches outside `*-deprecated` packages.
+- Grepping the repo for any remaining legacy identifier (`NodeRenderHints`, `EdgeRenderHints`, `ResolvedNodeDefaults`, `ResolvedEdgeDefaults`, `nodeDefaults`, `edgeDefaults`) returns zero matches.
 - All tests green; all stories render.
 
 ---

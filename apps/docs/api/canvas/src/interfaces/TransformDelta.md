@@ -1,6 +1,6 @@
 # Interface: TransformDelta
 
-Defined in: [canvas/src/primitives/types.ts:780](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L780)
+Defined in: [canvas/src/primitives/types.ts:780](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L780)
 
 Per-frame transform contribution from a `target: 'transform'` effect. Each
 field is optional and contributes additively (translations + rotation) or
@@ -18,7 +18,7 @@ the host's internal local origin.
 
 > `readonly` `optional` **dRot?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:784](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L784)
+Defined in: [canvas/src/primitives/types.ts:784](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L784)
 
 Rotation delta in radians.
 
@@ -28,7 +28,7 @@ Rotation delta in radians.
 
 > `readonly` `optional` **dx?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:781](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L781)
+Defined in: [canvas/src/primitives/types.ts:781](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L781)
 
 ***
 
@@ -36,7 +36,7 @@ Defined in: [canvas/src/primitives/types.ts:781](https://github.com/invana/canva
 
 > `readonly` `optional` **dy?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:782](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L782)
+Defined in: [canvas/src/primitives/types.ts:782](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L782)
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: [canvas/src/primitives/types.ts:782](https://github.com/invana/canva
 
 > `readonly` `optional` **sx?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:786](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L786)
+Defined in: [canvas/src/primitives/types.ts:786](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L786)
 
 Horizontal scale multiplier. Identity = 1.
 
@@ -54,6 +54,6 @@ Horizontal scale multiplier. Identity = 1.
 
 > `readonly` `optional` **sy?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:788](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L788)
+Defined in: [canvas/src/primitives/types.ts:788](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L788)
 
 Vertical scale multiplier. Identity = 1.

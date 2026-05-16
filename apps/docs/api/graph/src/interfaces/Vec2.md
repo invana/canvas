@@ -1,6 +1,6 @@
 # Interface: Vec2
 
-Defined in: [graph/src/store/types.ts:144](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L144)
+Defined in: [graph/src/store/types.ts:144](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/store/types.ts#L144)
 
 Position record (used by `getPosition` / `setPosition`).
 
@@ -10,7 +10,7 @@ Position record (used by `getPosition` / `setPosition`).
 
 > **x**: `number`
 
-Defined in: [graph/src/store/types.ts:145](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L145)
+Defined in: [graph/src/store/types.ts:145](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/store/types.ts#L145)
 
 ***
 
@@ -18,4 +18,4 @@ Defined in: [graph/src/store/types.ts:145](https://github.com/invana/canvas/blob
 
 > **y**: `number`
 
-Defined in: [graph/src/store/types.ts:146](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/store/types.ts#L146)
+Defined in: [graph/src/store/types.ts:146](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/store/types.ts#L146)

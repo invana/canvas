@@ -1,6 +1,6 @@
 # Interface: ShapePaintStyle
 
-Defined in: [canvas/src/primitives/types.ts:283](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L283)
+Defined in: [canvas/src/primitives/types.ts:283](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L283)
 
 Decoration entry-point override on `IShape.paintInto`. When supplied, the
 shape ignores `spec.fill` / `spec.stroke` and paints with these values
@@ -16,7 +16,7 @@ its own silhouette.
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:285](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L285)
+Defined in: [canvas/src/primitives/types.ts:285](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L285)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [canvas/src/primitives/types.ts:285](https://github.com/invana/canva
 
 > `readonly` `optional` **color?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:284](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L284)
+Defined in: [canvas/src/primitives/types.ts:284](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L284)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [canvas/src/primitives/types.ts:284](https://github.com/invana/canva
 
 > `readonly` `optional` **dashArray?**: readonly \[`number`, `number`\]
 
-Defined in: [canvas/src/primitives/types.ts:289](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L289)
+Defined in: [canvas/src/primitives/types.ts:289](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L289)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [canvas/src/primitives/types.ts:289](https://github.com/invana/canva
 
 > `readonly` `optional` **dashOffset?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:290](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L290)
+Defined in: [canvas/src/primitives/types.ts:290](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L290)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [canvas/src/primitives/types.ts:290](https://github.com/invana/canva
 
 > `readonly` `optional` **fill?**: `boolean`
 
-Defined in: [canvas/src/primitives/types.ts:288](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L288)
+Defined in: [canvas/src/primitives/types.ts:288](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L288)
 
 Default `false` — decorations almost always stroke without filling.
 
@@ -58,7 +58,7 @@ Default `false` — decorations almost always stroke without filling.
 
 > `readonly` `optional` **inset?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:292](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L292)
+Defined in: [canvas/src/primitives/types.ts:292](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L292)
 
 Positive = inside the silhouette, negative = outside. Default `0`.
 
@@ -68,4 +68,4 @@ Positive = inside the silhouette, negative = outside. Default `0`.
 
 > `readonly` `optional` **strokeWidth?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:286](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L286)
+Defined in: [canvas/src/primitives/types.ts:286](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L286)

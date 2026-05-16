@@ -2,7 +2,7 @@
 
 > **LayoutEvents** = `object`
 
-Defined in: [canvas/src/layouts/Layout.ts:58](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layouts/Layout.ts#L58)
+Defined in: [canvas/src/layouts/Layout.ts:58](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layouts/Layout.ts#L58)
 
 Lifecycle events fired by every `Layout`.
 
@@ -15,7 +15,7 @@ subclass-specific event map, not here.
 
 > **end**: `object`
 
-Defined in: [canvas/src/layouts/Layout.ts:61](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layouts/Layout.ts#L61)
+Defined in: [canvas/src/layouts/Layout.ts:61](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layouts/Layout.ts#L61)
 
 #### reason
 
@@ -27,7 +27,7 @@ Defined in: [canvas/src/layouts/Layout.ts:61](https://github.com/invana/canvas/b
 
 > **start**: `Record`\<`string`, `never`\>
 
-Defined in: [canvas/src/layouts/Layout.ts:59](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layouts/Layout.ts#L59)
+Defined in: [canvas/src/layouts/Layout.ts:59](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layouts/Layout.ts#L59)
 
 ***
 
@@ -35,4 +35,4 @@ Defined in: [canvas/src/layouts/Layout.ts:59](https://github.com/invana/canvas/b
 
 > **tick**: `Record`\<`string`, `never`\>
 
-Defined in: [canvas/src/layouts/Layout.ts:60](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/layouts/Layout.ts#L60)
+Defined in: [canvas/src/layouts/Layout.ts:60](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/layouts/Layout.ts#L60)

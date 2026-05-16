@@ -1,6 +1,6 @@
 # Interface: OldFaithfulNode
 
-Defined in: [graph-datasets/src/oldFaithful.ts:43](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/oldFaithful.ts#L43)
+Defined in: [graph-datasets/src/oldFaithful.ts:43](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/oldFaithful.ts#L43)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [graph-datasets/src/oldFaithful.ts:43](https://github.com/invana/can
 
 > **data**: [`OldFaithfulNodeData`](OldFaithfulNodeData.md)
 
-Defined in: [graph-datasets/src/oldFaithful.ts:45](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/oldFaithful.ts#L45)
+Defined in: [graph-datasets/src/oldFaithful.ts:45](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/oldFaithful.ts#L45)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [graph-datasets/src/oldFaithful.ts:45](https://github.com/invana/can
 
 > **id**: `string`
 
-Defined in: [graph-datasets/src/oldFaithful.ts:44](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/oldFaithful.ts#L44)
+Defined in: [graph-datasets/src/oldFaithful.ts:44](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/oldFaithful.ts#L44)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [graph-datasets/src/oldFaithful.ts:44](https://github.com/invana/can
 
 > **position**: `object`
 
-Defined in: [graph-datasets/src/oldFaithful.ts:46](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/oldFaithful.ts#L46)
+Defined in: [graph-datasets/src/oldFaithful.ts:46](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/oldFaithful.ts#L46)
 
 #### x
 

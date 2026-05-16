@@ -1,6 +1,6 @@
 # Interface: BaseConnectorSpec
 
-Defined in: [canvas/src/primitives/types.ts:515](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L515)
+Defined in: [canvas/src/primitives/types.ts:515](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L515)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [canvas/src/primitives/types.ts:515](https://github.com/invana/canva
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:535](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L535)
+Defined in: [canvas/src/primitives/types.ts:535](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L535)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [canvas/src/primitives/types.ts:535](https://github.com/invana/canva
 
 > `readonly` **kind**: `string`
 
-Defined in: [canvas/src/primitives/types.ts:516](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L516)
+Defined in: [canvas/src/primitives/types.ts:516](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L516)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [canvas/src/primitives/types.ts:516](https://github.com/invana/canva
 
 > `readonly` `optional` **pathStyle?**: `string`
 
-Defined in: [canvas/src/primitives/types.ts:526](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L526)
+Defined in: [canvas/src/primitives/types.ts:526](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L526)
 
 Registered pathStyle kind. Default `'normal'`.
 
@@ -34,7 +34,7 @@ Registered pathStyle kind. Default `'normal'`.
 
 > `readonly` `optional` **pathStyleOpts?**: `Readonly`\<`Record`\<`string`, `unknown`\>\>
 
-Defined in: [canvas/src/primitives/types.ts:528](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L528)
+Defined in: [canvas/src/primitives/types.ts:528](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L528)
 
 Per-pathStyle options forwarded to the pathStyle fn's `opts` parameter.
 
@@ -44,7 +44,7 @@ Per-pathStyle options forwarded to the pathStyle fn's `opts` parameter.
 
 > `readonly` `optional` **router?**: `string`
 
-Defined in: [canvas/src/primitives/types.ts:522](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L522)
+Defined in: [canvas/src/primitives/types.ts:522](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L522)
 
 Registered router kind. Default `'straight'`.
 
@@ -54,7 +54,7 @@ Registered router kind. Default `'straight'`.
 
 > `readonly` `optional` **routerOpts?**: `Readonly`\<`Record`\<`string`, `unknown`\>\>
 
-Defined in: [canvas/src/primitives/types.ts:524](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L524)
+Defined in: [canvas/src/primitives/types.ts:524](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L524)
 
 Per-router options forwarded to the router fn's `opts` parameter.
 
@@ -64,7 +64,7 @@ Per-router options forwarded to the router fn's `opts` parameter.
 
 > `readonly` **source**: [`ConnectorEndpointSpec`](../type-aliases/ConnectorEndpointSpec.md)
 
-Defined in: [canvas/src/primitives/types.ts:517](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L517)
+Defined in: [canvas/src/primitives/types.ts:517](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L517)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: [canvas/src/primitives/types.ts:517](https://github.com/invana/canva
 
 > `readonly` `optional` **sourceMarker?**: [`MarkerShapeSpec`](../type-aliases/MarkerShapeSpec.md)
 
-Defined in: [canvas/src/primitives/types.ts:530](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L530)
+Defined in: [canvas/src/primitives/types.ts:530](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L530)
 
 Optional shape spec painted at the source endpoint, oriented along the path tangent.
 
@@ -82,7 +82,7 @@ Optional shape spec painted at the source endpoint, oriented along the path tang
 
 > `readonly` `optional` **stroke?**: [`ShapeStroke`](ShapeStroke.md)
 
-Defined in: [canvas/src/primitives/types.ts:533](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L533)
+Defined in: [canvas/src/primitives/types.ts:533](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L533)
 
 ***
 
@@ -90,7 +90,7 @@ Defined in: [canvas/src/primitives/types.ts:533](https://github.com/invana/canva
 
 > `readonly` **target**: [`ConnectorEndpointSpec`](../type-aliases/ConnectorEndpointSpec.md)
 
-Defined in: [canvas/src/primitives/types.ts:518](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L518)
+Defined in: [canvas/src/primitives/types.ts:518](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L518)
 
 ***
 
@@ -98,7 +98,7 @@ Defined in: [canvas/src/primitives/types.ts:518](https://github.com/invana/canva
 
 > `readonly` `optional` **targetMarker?**: [`MarkerShapeSpec`](../type-aliases/MarkerShapeSpec.md)
 
-Defined in: [canvas/src/primitives/types.ts:532](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L532)
+Defined in: [canvas/src/primitives/types.ts:532](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L532)
 
 Optional shape spec painted at the target endpoint, oriented along the path tangent.
 
@@ -108,7 +108,7 @@ Optional shape spec painted at the target endpoint, oriented along the path tang
 
 > `readonly` `optional` **visible?**: `boolean`
 
-Defined in: [canvas/src/primitives/types.ts:536](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L536)
+Defined in: [canvas/src/primitives/types.ts:536](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L536)
 
 ***
 
@@ -116,7 +116,7 @@ Defined in: [canvas/src/primitives/types.ts:536](https://github.com/invana/canva
 
 > `readonly` `optional` **waypoints?**: readonly [`Point`](Point.md)[]
 
-Defined in: [canvas/src/primitives/types.ts:520](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L520)
+Defined in: [canvas/src/primitives/types.ts:520](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L520)
 
 Intermediate user-supplied points the router must respect. Optional.
 
@@ -126,4 +126,4 @@ Intermediate user-supplied points the router must respect. Optional.
 
 > `readonly` `optional` **zIndex?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:534](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/types.ts#L534)
+Defined in: [canvas/src/primitives/types.ts:534](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/types.ts#L534)

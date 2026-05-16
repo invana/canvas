@@ -1,6 +1,6 @@
 # Interface: RippleConnectorDecorationStyle
 
-Defined in: [canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:18](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L18)
+Defined in: [canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:18](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L18)
 
 Connector analogue of `PulseRingDecoration`. Each frame, every ring
 strokes the host's body + markers at a width that grows outward over
@@ -21,7 +21,7 @@ rings, ≥ 0 for "above" rings — pick a slot name accordingly).
 
 > `readonly` **color**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:19](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L19)
+Defined in: [canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:19](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L19)
 
 ***
 
@@ -29,7 +29,7 @@ Defined in: [canvas/src/primitives/decorations/connector/RippleConnectorDecorati
 
 > `readonly` `optional` **innerAlpha?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:31](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L31)
+Defined in: [canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:31](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L31)
 
 Initial (full-brightness) alpha at radius 0. Default `0.7`.
 
@@ -39,7 +39,7 @@ Initial (full-brightness) alpha at radius 0. Default `0.7`.
 
 > `readonly` `optional` **maxRadius?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:25](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L25)
+Defined in: [canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:25](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L25)
 
 Peak halo extent in px (half-width). Each ring's stroke widens from
 `0` to `2 × maxRadius` over one period, so the silhouette appears to
@@ -51,7 +51,7 @@ push outward by up to `maxRadius` on each side. Default `16`.
 
 > `readonly` `optional` **periodMs?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:27](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L27)
+Defined in: [canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:27](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L27)
 
 Cycle length in ms. Default `1400`.
 
@@ -61,6 +61,6 @@ Cycle length in ms. Default `1400`.
 
 > `readonly` `optional` **rings?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:29](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L29)
+Defined in: [canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts:29](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/decorations/connector/RippleConnectorDecoration.ts#L29)
 
 Number of concurrent rings (phase-distributed). Default `2`.

@@ -1,6 +1,6 @@
 # Interface: PrimitivesRendererOptions
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:144](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/PrimitivesRenderer.ts#L144)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:144](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/PrimitivesRenderer.ts#L144)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:144](https://github.com
 
 > `readonly` **camera**: [`Camera`](../classes/Camera.md)
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:146](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/PrimitivesRenderer.ts#L146)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:146](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/PrimitivesRenderer.ts#L146)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:146](https://github.com
 
 > `readonly` **container**: `Container`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:145](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/PrimitivesRenderer.ts#L145)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:145](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/PrimitivesRenderer.ts#L145)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:145](https://github.com
 
 > `readonly` `optional` **textureRegistry?**: [`TextureRegistry`](../classes/TextureRegistry.md)
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:152](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/primitives/PrimitivesRenderer.ts#L152)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:152](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/primitives/PrimitivesRenderer.ts#L152)
 
 Optional shared texture registry. When omitted, the renderer creates an
 internal one — image fills still work (lazy-loaded), but textures are

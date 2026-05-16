@@ -1,6 +1,6 @@
 # Interface: CircleShapeOption
 
-Defined in: [graph/src/layer/types.ts:326](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L326)
+Defined in: [graph/src/layer/types.ts:326](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L326)
 
 Circle-shape option.
 
@@ -10,7 +10,7 @@ Circle-shape option.
 
 > `readonly` **kind**: `"circle"`
 
-Defined in: [graph/src/layer/types.ts:327](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L327)
+Defined in: [graph/src/layer/types.ts:327](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L327)
 
 ***
 
@@ -18,4 +18,4 @@ Defined in: [graph/src/layer/types.ts:327](https://github.com/invana/canvas/blob
 
 > `readonly` **radius**: `number`
 
-Defined in: [graph/src/layer/types.ts:328](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph/src/layer/types.ts#L328)
+Defined in: [graph/src/layer/types.ts:328](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph/src/layer/types.ts#L328)

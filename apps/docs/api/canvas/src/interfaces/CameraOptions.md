@@ -1,6 +1,6 @@
 # Interface: CameraOptions
 
-Defined in: [canvas/src/camera/Camera.ts:45](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/camera/Camera.ts#L45)
+Defined in: [canvas/src/camera/Camera.ts:45](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/camera/Camera.ts#L45)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [canvas/src/camera/Camera.ts:45](https://github.com/invana/canvas/bl
 
 > `optional` **bus?**: [`CanvasEventBus`](../classes/CanvasEventBus.md)
 
-Defined in: [canvas/src/camera/Camera.ts:56](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/camera/Camera.ts#L56)
+Defined in: [canvas/src/camera/Camera.ts:56](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/camera/Camera.ts#L56)
 
 Optional bus for `camera:zoom` / `camera:pan` events.
 
@@ -18,7 +18,7 @@ Optional bus for `camera:zoom` / `camera:pan` events.
 
 > `optional` **initialScale?**: `number`
 
-Defined in: [canvas/src/camera/Camera.ts:58](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/camera/Camera.ts#L58)
+Defined in: [canvas/src/camera/Camera.ts:58](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/camera/Camera.ts#L58)
 
 Initial uniform scale. Default 1.
 
@@ -28,7 +28,7 @@ Initial uniform scale. Default 1.
 
 > `optional` **initialX?**: `number`
 
-Defined in: [canvas/src/camera/Camera.ts:60](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/camera/Camera.ts#L60)
+Defined in: [canvas/src/camera/Camera.ts:60](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/camera/Camera.ts#L60)
 
 Initial world-container offset (= where world (0,0) lives in screen pixels). Default (0,0).
 
@@ -38,7 +38,7 @@ Initial world-container offset (= where world (0,0) lives in screen pixels). Def
 
 > `optional` **initialY?**: `number`
 
-Defined in: [canvas/src/camera/Camera.ts:61](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/camera/Camera.ts#L61)
+Defined in: [canvas/src/camera/Camera.ts:61](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/camera/Camera.ts#L61)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [canvas/src/camera/Camera.ts:61](https://github.com/invana/canvas/bl
 
 > `optional` **maxScale?**: `number`
 
-Defined in: [canvas/src/camera/Camera.ts:64](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/camera/Camera.ts#L64)
+Defined in: [canvas/src/camera/Camera.ts:64](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/camera/Camera.ts#L64)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [canvas/src/camera/Camera.ts:64](https://github.com/invana/canvas/bl
 
 > `optional` **minScale?**: `number`
 
-Defined in: [canvas/src/camera/Camera.ts:63](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/camera/Camera.ts#L63)
+Defined in: [canvas/src/camera/Camera.ts:63](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/camera/Camera.ts#L63)
 
 Min / max zoom clamp. Defaults: 0.01 .. 100.
 
@@ -64,7 +64,7 @@ Min / max zoom clamp. Defaults: 0.01 .. 100.
 
 > **screenHeight**: `number`
 
-Defined in: [canvas/src/camera/Camera.ts:54](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/camera/Camera.ts#L54)
+Defined in: [canvas/src/camera/Camera.ts:54](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/camera/Camera.ts#L54)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: [canvas/src/camera/Camera.ts:54](https://github.com/invana/canvas/bl
 
 > **screenWidth**: `number`
 
-Defined in: [canvas/src/camera/Camera.ts:53](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/camera/Camera.ts#L53)
+Defined in: [canvas/src/camera/Camera.ts:53](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/camera/Camera.ts#L53)
 
 Initial viewport size in CSS pixels. Mirrors the Viewport's own `screenWidth`/`screenHeight` for projection math.
 
@@ -82,7 +82,7 @@ Initial viewport size in CSS pixels. Mirrors the Viewport's own `screenWidth`/`s
 
 > **viewport**: `Viewport`
 
-Defined in: [canvas/src/camera/Camera.ts:51](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/camera/Camera.ts#L51)
+Defined in: [canvas/src/camera/Camera.ts:51](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/camera/Camera.ts#L51)
 
 The `Viewport` instance the camera transforms. Created by `Canvas` and
 attached to `app.stage` as the world root. Camera mutates its

@@ -1,6 +1,6 @@
 # Interface: H1B2019GraphData
 
-Defined in: [graph-datasets/src/h1b2019.ts:81](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/h1b2019.ts#L81)
+Defined in: [graph-datasets/src/h1b2019.ts:81](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/h1b2019.ts#L81)
 
 Output of [h1b2019AsGraph](../functions/h1b2019AsGraph.md).
 
@@ -10,7 +10,7 @@ Output of [h1b2019AsGraph](../functions/h1b2019AsGraph.md).
 
 > **edges**: [`H1B2019GraphEdge`](H1B2019GraphEdge.md)[]
 
-Defined in: [graph-datasets/src/h1b2019.ts:83](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/h1b2019.ts#L83)
+Defined in: [graph-datasets/src/h1b2019.ts:83](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/h1b2019.ts#L83)
 
 ***
 
@@ -18,4 +18,4 @@ Defined in: [graph-datasets/src/h1b2019.ts:83](https://github.com/invana/canvas/
 
 > **nodes**: [`H1B2019GraphNode`](H1B2019GraphNode.md)[]
 
-Defined in: [graph-datasets/src/h1b2019.ts:82](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/graph-datasets/src/h1b2019.ts#L82)
+Defined in: [graph-datasets/src/h1b2019.ts:82](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/graph-datasets/src/h1b2019.ts#L82)

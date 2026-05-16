@@ -1,6 +1,6 @@
 # Interface: EventSource
 
-Defined in: [canvas/src/events/CanvasEvent.ts:20](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/events/CanvasEvent.ts#L20)
+Defined in: [canvas/src/events/CanvasEvent.ts:20](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/events/CanvasEvent.ts#L20)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [canvas/src/events/CanvasEvent.ts:20](https://github.com/invana/canv
 
 > `readonly` **id**: `string`
 
-Defined in: [canvas/src/events/CanvasEvent.ts:22](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/events/CanvasEvent.ts#L22)
+Defined in: [canvas/src/events/CanvasEvent.ts:22](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/events/CanvasEvent.ts#L22)
 
 ***
 
@@ -16,4 +16,4 @@ Defined in: [canvas/src/events/CanvasEvent.ts:22](https://github.com/invana/canv
 
 > `readonly` **kind**: [`EventSourceKind`](../type-aliases/EventSourceKind.md)
 
-Defined in: [canvas/src/events/CanvasEvent.ts:21](https://github.com/invana/canvas/blob/9082d7c9f5a0b14b8c8220f666d8bd3c74c1d3bd/packages/canvas/src/events/CanvasEvent.ts#L21)
+Defined in: [canvas/src/events/CanvasEvent.ts:21](https://github.com/invana/canvas/blob/8a2273fc60ebddbecf4b072783e05574468bb05a/packages/canvas/src/events/CanvasEvent.ts#L21)
