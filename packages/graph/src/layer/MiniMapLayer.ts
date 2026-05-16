@@ -26,9 +26,10 @@
 
 import { Container, FederatedPointerEvent, Graphics } from 'pixi.js';
 import { ScreenLayer, type CanvasContext, type ScreenLayerHit } from '@invana/canvas';
-import type { LayerOptions } from '@invana/canvas';
+import type { LayerOptions, Rect } from '@invana/canvas';
 
 import { GraphLayer } from './GraphLayer';
+import type { GraphNode } from '../store/types';
 import { resolveField, type NodeRenderHints, type EdgeRenderHints } from './types';
 
 /** Anchor corner inside the canvas viewport. */
@@ -291,9 +292,29 @@ export class MiniMapLayer extends ScreenLayer<
     const graph = this.graph;
     if (!g || !graph) return;
     g.clear();
+    const renderer = graph.getRenderer();
 
-    // Edges first so node markers cover them at intersections.
+    // Edges first so node markers cover them at intersections. Use the actual
+    // routed polyline from the renderer — preserves orthogonal kinks, bezier
+    // curves, waypoints, anchor offsets, everything the canvas drew. Falls
+    // back to a straight endpoint-to-endpoint line only when the renderer
+    // isn't available (pre-mount) or hasn't installed the connector yet.
     for (const edge of graph.store.edges()) {
+      const data = (edge.data as EdgeRenderHints | undefined) ?? {};
+      const stroke = typeof data.stroke === 'number' ? data.stroke : 0x666666;
+
+      const polyline = renderer?.getConnectorPolyline(edge.id);
+      if (polyline && polyline.length >= 2) {
+        const first = this.worldToMinimap(polyline[0]!.x, polyline[0]!.y);
+        g.moveTo(first.x, first.y);
+        for (let i = 1; i < polyline.length; i++) {
+          const p = this.worldToMinimap(polyline[i]!.x, polyline[i]!.y);
+          g.lineTo(p.x, p.y);
+        }
+        g.stroke({ width: 1, color: stroke });
+        continue;
+      }
+
       const src = graph.store.getNode(edge.source);
       const dst = graph.store.getNode(edge.target);
       if (!src || !dst) continue;
@@ -301,39 +322,49 @@ export class MiniMapLayer extends ScreenLayer<
       const tp = dst.position ?? { x: 0, y: 0 };
       const p1 = this.worldToMinimap(sp.x, sp.y);
       const p2 = this.worldToMinimap(tp.x, tp.y);
-      const data = (edge.data as EdgeRenderHints | undefined) ?? {};
-      const stroke = typeof data.stroke === 'number' ? data.stroke : 0x666666;
       g.moveTo(p1.x, p1.y);
       g.lineTo(p2.x, p2.y);
       g.stroke({ width: 1, color: stroke });
     }
 
-    // Nodes — match the shape kind actually drawn on the canvas (circle vs
-    // rect), scaled into minimap space. Falls back to the layer's
-    // `nodeDefaults` for any hint the node omits. Defaults may be resolver
-    // functions; resolve each per node.
+    // Nodes — ask the renderer for the world-space AABB of whatever it
+    // actually drew (circle, rect, arc, polygon, star, custom kind). The
+    // minimap paints each shape as a small rect at its true footprint —
+    // geometry-driven, no per-kind switching. Fill colour still resolves
+    // from data hints / defaults since colour isn't carried by `bounds()`.
     const defaults = graph.getNodeDefaults();
     for (const node of graph.store.nodes()) {
-      const pos = node.position ?? { x: 0, y: 0 };
-      const p = this.worldToMinimap(pos.x, pos.y);
+      const bounds = renderer?.getShapeWorldBounds(node.id) ?? this.fallbackNodeBounds(node);
+      if (!bounds) continue;
+      const tl = this.worldToMinimap(bounds.x, bounds.y);
+      const br = this.worldToMinimap(bounds.x + bounds.width, bounds.y + bounds.height);
+      const w = Math.max(2, br.x - tl.x);
+      const h = Math.max(2, br.y - tl.y);
+
       const data = (node.data as NodeRenderHints | undefined) ?? {};
       const defaultFill = resolveField(defaults.fill, node);
       const fill = typeof data.fill === 'number' ? data.fill : defaultFill;
       const fillColor = typeof fill === 'number' ? fill : 0x4caf50;
-      const shape = data.shape ?? resolveField(defaults.shape, node);
-      const sizeWorld = data.size ?? resolveField(defaults.size, node) ?? 0;
 
-      if (shape === 'rect') {
-        const heightWorld = data.height ?? sizeWorld;
-        const w = Math.max(2, sizeWorld * this.scale);
-        const h = Math.max(2, heightWorld * this.scale);
-        g.rect(p.x - w / 2, p.y - h / 2, w, h).fill(fillColor);
-      } else {
-        // 'circle' — half-size is the radius.
-        const r = Math.max(1, (sizeWorld / 2) * this.scale);
-        g.circle(p.x, p.y, r).fill(fillColor);
-      }
+      g.rect(tl.x, tl.y, w, h).fill(fillColor);
     }
+  }
+
+  /**
+   * Pre-mount / pre-install fallback for shape bounds. Used when the renderer
+   * hasn't yet built an instance for a node (very brief window — the layer's
+   * `data:changed` event repaints the minimap as soon as the renderer catches
+   * up). Returns a square AABB centred on the node's stored position using
+   * the layer-level default size; gracefully degrades when defaults are also
+   * resolver-only.
+   */
+  private fallbackNodeBounds(node: GraphNode): Rect | null {
+    const graph = this.graph;
+    if (!graph) return null;
+    const pos = node.position ?? { x: 0, y: 0 };
+    const sizeWorld = resolveField(graph.getNodeDefaults().size, node) ?? 32;
+    const half = sizeWorld / 2;
+    return { x: pos.x - half, y: pos.y - half, width: sizeWorld, height: sizeWorld };
   }
 
   private paintViewportIndicator(): void {
@@ -373,33 +404,31 @@ export class MiniMapLayer extends ScreenLayer<
   }
 
   /**
-   * AABB of all drawn node *footprints* (position ± half-size) + padding —
-   * not just centers, so nodes at the cluster edge aren't clipped or
-   * compressed against the minimap border. Falls back to a 1000×1000 box.
+   * AABB of all drawn node *footprints* + padding, queried directly from the
+   * renderer's per-instance world bounds — so arcs / polygons / stars /
+   * custom shapes contribute their true extent, not a hardcoded size-derived
+   * estimate. Pre-mount nodes fall through to a position+default-size box.
+   * Returns a 1000×1000 placeholder when the layer has no nodes yet.
    */
   private nodeBounds(): Bounds {
     const graph = this.graph;
     if (!graph || graph.store.nodeCount() === 0) {
       return { x: -500, y: -500, width: 1000, height: 1000 };
     }
-    const defaults = graph.getNodeDefaults();
+    const renderer = graph.getRenderer();
     let minX = Infinity,
       minY = Infinity,
       maxX = -Infinity,
       maxY = -Infinity;
     let any = false;
     for (const node of graph.store.nodes()) {
-      const pos = node.position ?? { x: 0, y: 0 };
-      const data = (node.data as NodeRenderHints | undefined) ?? {};
-      const shape = data.shape ?? resolveField(defaults.shape, node);
-      const sizeWorld = data.size ?? resolveField(defaults.size, node) ?? 0;
-      const halfW = sizeWorld / 2;
-      const halfH = shape === 'rect' ? (data.height ?? sizeWorld) / 2 : sizeWorld / 2;
+      const b = renderer?.getShapeWorldBounds(node.id) ?? this.fallbackNodeBounds(node);
+      if (!b) continue;
       any = true;
-      if (pos.x - halfW < minX) minX = pos.x - halfW;
-      if (pos.y - halfH < minY) minY = pos.y - halfH;
-      if (pos.x + halfW > maxX) maxX = pos.x + halfW;
-      if (pos.y + halfH > maxY) maxY = pos.y + halfH;
+      if (b.x < minX) minX = b.x;
+      if (b.y < minY) minY = b.y;
+      if (b.x + b.width > maxX) maxX = b.x + b.width;
+      if (b.y + b.height > maxY) maxY = b.y + b.height;
     }
     if (!any) return { x: -500, y: -500, width: 1000, height: 1000 };
     const pad = this.opts.padding;

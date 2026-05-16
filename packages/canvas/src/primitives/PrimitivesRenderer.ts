@@ -1328,6 +1328,23 @@ export class PrimitivesRenderer {
   }
 
   /**
+   * Densified polyline of the routed connector's path, in world coordinates,
+   * or `null` when no connector with that id exists. Returns the same point
+   * set used internally for hit-testing — so curved / orthogonal / bezier
+   * connectors hand back their true visible silhouette, not the straight
+   * source-to-target line.
+   *
+   * Domain-free read accessor for overview layers (e.g. `MiniMapLayer`) that
+   * need to render the actual routed shape without re-running the router.
+   * Cheap: only samples the cached `inst.path`; no router invocation.
+   */
+  getConnectorPolyline(id: string): readonly Point[] | null {
+    const inst = this.connectorInstances.get(id);
+    if (!inst) return null;
+    return samplePath(inst.path);
+  }
+
+  /**
    * Local-space AABB of a decoration's gfx container in world coordinates
    * (origin offset by the host). Returns `null` when no host or slot exists.
    *
