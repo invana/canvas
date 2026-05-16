@@ -8,21 +8,15 @@ export default meta;
 type Story = StoryObj;
 
 /**
- * Validates `style.decorations` (slot dict) — per-instance declarative
- * decoration attachment via the v3 NodeData shape. State overlays toggle
- * decorations on/off as state changes.
+ * Validates `style.decorations` (discriminated-union array) — per-instance
+ * declarative decoration attachment via the v3 NodeData shape. State
+ * overlays append decorations to the resolved set; the layer projects them
+ * to `renderer.setDecoration` calls per slot id.
  *
- * Each tile activates a different decoration slot via `state`:
- * - selected → halo (yellow ring)
+ * Each tile activates a different decoration kind via `state`:
+ * - selected → yellow ring decoration
  * - error → marching-ants border (red animated dashes)
- * - active → glow
- *
- * NOTE: Decoration runtime wiring (slot-diff + `renderer.setDecoration`)
- * arrives in a follow-up phase. For now, this story validates that the
- * `style.decorations` field round-trips through input → store → layer
- * without typecheck or runtime errors. The visual decorations will appear
- * once the render-path adapter projects `style.decorations` slots to
- * `renderer.setDecoration(id, slot, spec)` calls.
+ * - active → soft glow
  */
 export const Decorations: Story = {
   render: () => createContainer({ id: 'graph-states-decorations' }),
@@ -54,9 +48,9 @@ export const Decorations: Story = {
         },
         state: {
           selected: {
-            bgStrokeColor: 0xfacc15,
-            bgStrokeWidth: 3,
-            decorations: { halo: { color: 0xfacc15, width: 4, alpha: 0.6 } },
+            decorations: [
+              { kind: 'ring', id: 'select', color: 0xfacc15, width: 4, gap: 3, alpha: 0.9 },
+            ],
           },
         },
         states: ['selected'],
@@ -77,11 +71,9 @@ export const Decorations: Story = {
         },
         state: {
           error: {
-            bgStrokeColor: 0xef4444,
-            bgStrokeWidth: 3,
-            decorations: {
-              border: { kind: 'marching-ants', color: 0xff0000, width: 2 },
-            },
+            decorations: [
+              { kind: 'marching-ants', id: 'err-border', color: 0xff0000, strokeWidth: 2 },
+            ],
           },
         },
         states: ['error'],
@@ -102,7 +94,9 @@ export const Decorations: Story = {
         },
         state: {
           active: {
-            decorations: { glow: { color: 0x10b981, blur: 12, alpha: 0.7 } },
+            decorations: [
+              { kind: 'glow', id: 'active-glow', color: 0x10b981, radius: 14, innerAlpha: 0.7 },
+            ],
           },
         },
         states: ['active'],

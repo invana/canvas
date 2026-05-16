@@ -34,6 +34,7 @@ import {
   DEFAULT_EDGE_STATE_CONFIGS,
   DEFAULT_NODE_STATE_CONFIGS,
   resolveField,
+  type EdgeDecorationSpec,
   type EdgeLabelHint,
   type EdgeOption,
   type EdgePathType,
@@ -44,6 +45,7 @@ import {
   type GraphData,
   type GraphLayerEvents,
   type GraphLayerOptions,
+  type NodeDecorationSpec,
   type NodeLabelHint,
   type NodeOption,
   type NodeRenderHints,
@@ -66,7 +68,7 @@ import {
  */
 export type ResolvedNodeDefaults =
   Required<Pick<ResolvableNodeRenderHints,
-    'shape' | 'size' | 'cornerRadius' | 'fill' | 'stroke' | 'strokeWidth' | 'alpha'>>
+    'shape' | 'size' | 'cornerRadius' | 'fill' | 'stroke' | 'strokeWidth' | 'strokeAlignment' | 'alpha'>>
   & Pick<ResolvableNodeRenderHints,
     'label' | 'height' | 'innerR' | 'outerR' | 'startAngle' | 'endAngle'>;
 
@@ -85,6 +87,9 @@ const DEFAULT_NODE_HINTS: Required<Omit<NodeRenderHints, 'height' | 'label' | 'i
   fill: 0x3b82f6,
   stroke: 0x1d4ed8,
   strokeWidth: 1,
+  // Module-level default: paint strokes outside the silhouette so thick
+  // state-overlay rings (halo, focus, selection) don't eat into the fill.
+  strokeAlignment: 'outside',
   alpha: 1,
 };
 
@@ -271,6 +276,16 @@ export class GraphLayer extends WorldLayer<
   private readonly nodeStates: Map<string, Set<string>> = new Map();
   private readonly edgeStates: Map<string, Set<string>> = new Map();
 
+  /**
+   * Currently-mounted decoration slot ids per node / edge, so the resolver
+   * can diff (mount new / dispose removed / replace changed) against the
+   * previous render's set. Slot ids are synthesized from `spec.id` or
+   * `${kind}#<index>`. The `'label'` slot is managed separately by
+   * `syncNodeLabel` / `syncEdgeLabel` and never appears in these maps.
+   */
+  private readonly nodeDecorationSlots: Map<string, Set<string>> = new Map();
+  private readonly edgeDecorationSlots: Map<string, Set<string>> = new Map();
+
   // ─── v3 G6-aligned layer template ────────────────────────────────────
   // `options.node` and `options.edge` carry layer-level NodeOption /
   // EdgeOption templates (style + state catalogue, resolver-aware).
@@ -355,6 +370,7 @@ export class GraphLayer extends WorldLayer<
       }),
       s.on('node:remove', ({ nodeId }) => {
         this.nodeStates.delete(nodeId);
+        this.nodeDecorationSlots.delete(nodeId);
         this._renderer?.removeShape(nodeId);
       }),
       s.on('edge:add', ({ edgeId }) => {
@@ -373,6 +389,7 @@ export class GraphLayer extends WorldLayer<
       }),
       s.on('edge:remove', ({ edgeId }) => {
         this.edgeStates.delete(edgeId);
+        this.edgeDecorationSlots.delete(edgeId);
         this._renderer?.removeConnector(edgeId);
       }),
       s.on('flush', (counters) => {
@@ -660,6 +677,10 @@ export class GraphLayer extends WorldLayer<
     const stroke = hints.stroke ?? resolveField(this.nodeDefaults.stroke, node)!;
     const strokeWidth =
       hints.strokeWidth ?? resolveField(this.nodeDefaults.strokeWidth, node)!;
+    const strokeAlignment =
+      hints.strokeAlignment
+      ?? resolveField(this.nodeDefaults.strokeAlignment, node)
+      ?? 'outside';
     const alpha = hints.alpha ?? resolveField(this.nodeDefaults.alpha, node)!;
     const pos = node.position ?? { x: 0, y: 0 };
 
@@ -668,7 +689,9 @@ export class GraphLayer extends WorldLayer<
       y: pos.y,
       alpha,
       ...(fill === false ? {} : { fill }),
-      ...(stroke === false ? {} : { stroke: { color: stroke, width: strokeWidth } }),
+      ...(stroke === false
+        ? {}
+        : { stroke: { color: stroke, width: strokeWidth, alignment: strokeAlignment } }),
     };
 
     if (shape === 'rect') {
@@ -852,12 +875,17 @@ export class GraphLayer extends WorldLayer<
       this._renderer.updateShape<BaseShapeSpec>(id, spec);
     } else {
       this._renderer.removeShape(id);
+      // `removeShape` disposes every mounted decoration on the host. Drop
+      // our tracking so `syncNodeDecorations` treats the next pass as a
+      // full mount instead of trying to diff against ghost slots.
+      this.nodeDecorationSlots.delete(id);
       this._renderer.addShape(id, spec);
     }
-    // `syncNodeLabel` is idempotent — `setDecoration` replaces the
-    // 'label' slot whether or not one was already there. Cheap to call
-    // in both the update and rebuild branches.
+    // `syncNodeLabel` / `syncNodeDecorations` are idempotent —
+    // `setDecoration` replaces a slot whether or not one was already there.
+    // Cheap to call in both the update and rebuild branches.
     this.syncNodeLabel(id);
+    this.syncNodeDecorations(id);
     // Anchors of incident connectors point to this shape — re-route in
     // either branch since the shape's bounds may have changed (size
     // hint shift, kind change, etc.).
@@ -886,6 +914,7 @@ export class GraphLayer extends WorldLayer<
       this._renderer.addConnector(id, spec);
     }
     this.syncEdgeLabel(id);
+    this.syncEdgeDecorations(id);
   }
 
   private drainDirtyConnectors(): void {
@@ -900,12 +929,14 @@ export class GraphLayer extends WorldLayer<
     if (!this._renderer) return;
     this._renderer.addShape(node.id, this.nodeSpec(node));
     this.syncNodeLabel(node.id);
+    this.syncNodeDecorations(node.id);
   }
 
   private installEdgeConnector(edge: GraphEdge): void {
     if (!this._renderer) return;
     this._renderer.addConnector(edge.id, this.edgeSpec(edge));
     this.syncEdgeLabel(edge.id);
+    this.syncEdgeDecorations(edge.id);
   }
 
   /**
@@ -950,6 +981,146 @@ export class GraphLayer extends WorldLayer<
     });
   }
 
+  /**
+   * Resolve the final list of decorations for a node by concatenating every
+   * contributing layer (layer template + per-node base + each active state
+   * overlay) and deduping by `id`. Later precedence wins; `remove: true`
+   * drops an earlier same-id entry. Entries without an explicit `id` fall
+   * back to `${kind}#<combined-index>` — unique per source position, so
+   * id-less decorations stack rather than collapsing.
+   *
+   * Returns a `Map<slotId, NodeDecorationSpec>` keyed by the resolved
+   * identity. Caller emits one `setDecoration` call per slot to the
+   * renderer; the slot id is reused on subsequent renders to enable diffing.
+   */
+  private resolveNodeDecorations(node: GraphNode): Map<string, NodeDecorationSpec> {
+    const collected: NodeDecorationSpec[] = [];
+
+    const pushFrom = (style: Partial<NodeStyle> | undefined): void => {
+      const decos = style?.decorations;
+      if (decos && decos.length > 0) collected.push(...decos);
+    };
+
+    if (this.nodeOption?.style) {
+      pushFrom(resolveNodeStyleFields(this.nodeOption.style, node));
+    }
+    pushFrom(node.style as Partial<NodeStyle> | undefined);
+
+    const activeStates = this.nodeStates.get(node.id);
+    if (activeStates && activeStates.size > 0) {
+      const perNodeCatalogue = node.state as Readonly<Record<string, NodeStyle>> | undefined;
+      for (const name of activeStates) {
+        const layerOverlay = this.nodeOption?.state?.[name];
+        if (layerOverlay) {
+          pushFrom(resolveNodeStyleFields(layerOverlay, node));
+        }
+        const perNodeOverlay = perNodeCatalogue?.[name];
+        if (perNodeOverlay) pushFrom(perNodeOverlay);
+      }
+    }
+
+    const out = new Map<string, NodeDecorationSpec>();
+    for (let i = 0; i < collected.length; i++) {
+      const spec = collected[i]!;
+      const slotId = spec.id ?? `${spec.kind}#${i}`;
+      if (spec.remove) {
+        out.delete(slotId);
+      } else {
+        out.set(slotId, spec);
+      }
+    }
+    return out;
+  }
+
+  /** Sibling of {@link resolveNodeDecorations} for edges. */
+  private resolveEdgeDecorations(edge: GraphEdge): Map<string, EdgeDecorationSpec> {
+    const collected: EdgeDecorationSpec[] = [];
+
+    const pushFrom = (style: Partial<EdgeStyle> | undefined): void => {
+      const decos = style?.decorations;
+      if (decos && decos.length > 0) collected.push(...decos);
+    };
+
+    if (this.edgeOption?.style) {
+      pushFrom(resolveEdgeStyleFields(this.edgeOption.style, edge));
+    }
+    pushFrom(edge.style as Partial<EdgeStyle> | undefined);
+
+    const activeStates = this.edgeStates.get(edge.id);
+    if (activeStates && activeStates.size > 0) {
+      const perEdgeCatalogue = edge.state as Readonly<Record<string, EdgeStyle>> | undefined;
+      for (const name of activeStates) {
+        const layerOverlay = this.edgeOption?.state?.[name];
+        if (layerOverlay) {
+          pushFrom(resolveEdgeStyleFields(layerOverlay, edge));
+        }
+        const perEdgeOverlay = perEdgeCatalogue?.[name];
+        if (perEdgeOverlay) pushFrom(perEdgeOverlay);
+      }
+    }
+
+    const out = new Map<string, EdgeDecorationSpec>();
+    for (let i = 0; i < collected.length; i++) {
+      const spec = collected[i]!;
+      const slotId = spec.id ?? `${spec.kind}#${i}`;
+      if (spec.remove) {
+        out.delete(slotId);
+      } else {
+        out.set(slotId, spec);
+      }
+    }
+    return out;
+  }
+
+  /**
+   * Project the resolved decoration array onto the canvas renderer for the
+   * given node. Diffs against the previous render's slot set tracked in
+   * {@link nodeDecorationSlots}: mounts new ids, removes vanished ones,
+   * replaces specs whose slot id appears in both.
+   */
+  private syncNodeDecorations(id: string): void {
+    if (!this._renderer) return;
+    const node = this.store.getNode(id);
+    if (!node) return;
+    const next = this.resolveNodeDecorations(node);
+    const prev = this.nodeDecorationSlots.get(id);
+
+    if (prev) {
+      for (const slotId of prev) {
+        if (!next.has(slotId)) this._renderer.setDecoration(id, slotId, null);
+      }
+    }
+    for (const [slotId, spec] of next) {
+      const { kind, style } = splitDecorationSpec(spec);
+      this._renderer.setDecoration(id, slotId, { kind, style });
+    }
+
+    if (next.size === 0) this.nodeDecorationSlots.delete(id);
+    else this.nodeDecorationSlots.set(id, new Set(next.keys()));
+  }
+
+  /** Sibling of {@link syncNodeDecorations} for edges. */
+  private syncEdgeDecorations(id: string): void {
+    if (!this._renderer) return;
+    const edge = this.store.getEdge(id);
+    if (!edge) return;
+    const next = this.resolveEdgeDecorations(edge);
+    const prev = this.edgeDecorationSlots.get(id);
+
+    if (prev) {
+      for (const slotId of prev) {
+        if (!next.has(slotId)) this._renderer.setDecoration(id, slotId, null);
+      }
+    }
+    for (const [slotId, spec] of next) {
+      const { kind, style } = splitDecorationSpec(spec);
+      this._renderer.setDecoration(id, slotId, { kind, style });
+    }
+
+    if (next.size === 0) this.edgeDecorationSlots.delete(id);
+    else this.edgeDecorationSlots.set(id, new Set(next.keys()));
+  }
+
   private updateNodeShape(node: GraphNode, patch: Partial<GraphNode>): void {
     if (!this._renderer) return;
 
@@ -989,9 +1160,12 @@ export class GraphLayer extends WorldLayer<
       this._renderer.updateShape<BaseShapeSpec>(node.id, spec);
     } else {
       this._renderer.removeShape(node.id);
+      // `removeShape` disposes attached decorations — drop our tracking.
+      this.nodeDecorationSlots.delete(node.id);
       this._renderer.addShape(node.id, spec);
     }
     this.syncNodeLabel(node.id);
+    this.syncNodeDecorations(node.id);
     // Connectors anchored to this shape may need re-routing in either
     // branch — the shape's bounds can shift on a size/kind change.
     this.queueIncidentConnectors(node.id);
@@ -1031,6 +1205,24 @@ function nodeLabelHintToStyle(hint: NodeLabelHint): ShapeLabelStyle {
     return { content: { kind: 'text', text: hint } };
   }
   return hint;
+}
+
+/**
+ * Split a `NodeDecorationSpec` / `EdgeDecorationSpec` (a discriminated
+ * union with `{ kind, id?, remove?, ...style }`) into the renderer-facing
+ * `{ kind, style }` shape. Strips the resolver-only `id` and `remove`
+ * fields — they're consumed during {@link resolveNodeDecorations} /
+ * {@link resolveEdgeDecorations} and aren't part of the decoration's
+ * style payload.
+ */
+function splitDecorationSpec(
+  spec: NodeDecorationSpec | EdgeDecorationSpec,
+): { kind: string; style: Record<string, unknown> } {
+  const { kind, id: _id, remove: _remove, ...style } = spec as NodeDecorationSpec & {
+    id?: string;
+    remove?: boolean;
+  };
+  return { kind, style: style as Record<string, unknown> };
 }
 
 /**
@@ -1096,6 +1288,7 @@ function adaptNodeStyle(style: Partial<NodeStyle> | undefined): Partial<NodeRend
   }
   if (style.bgStrokeColor !== undefined) hints.stroke = style.bgStrokeColor;
   if (style.bgStrokeWidth !== undefined) hints.strokeWidth = style.bgStrokeWidth;
+  if (style.bgStrokeAlignment !== undefined) hints.strokeAlignment = style.bgStrokeAlignment;
   if (style.bgAlpha !== undefined) hints.alpha = style.bgAlpha;
 
   // Escape hatch: full `ShapeLabelStyle` payload wins over flat fields.

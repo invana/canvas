@@ -10,6 +10,20 @@ import type {
   ConnectorLabelPlacement,
   InsetAnchor,
 } from '@invana/canvas';
+import type {
+  RingDecorationStyle,
+  GlowDecorationStyle,
+  PulseRingDecorationStyle,
+  MarchingAntsDecorationStyle,
+  LiquidFillDecorationStyle,
+  RingConnectorDecorationStyle,
+  GlowConnectorDecorationStyle,
+  MarchingAntsConnectorDecorationStyle,
+  RippleConnectorDecorationStyle,
+  FlyMarkerConnectorDecorationStyle,
+  FlowParticlesConnectorDecorationStyle,
+  RevealConnectorDecorationStyle,
+} from '@invana/canvas/primitives';
 import type { GraphEdge, GraphNode } from '../store/types';
 
 /**
@@ -158,6 +172,12 @@ export interface NodeRenderHints {
   stroke?: number | false;
   /** Stroke width. Default 1. */
   strokeWidth?: number;
+  /**
+   * Stroke alignment relative to the shape silhouette. Default `'outside'`
+   * — keeps thick state-overlay rings (halo, focus, selection) painted
+   * around the body instead of eating into the fill.
+   */
+  strokeAlignment?: 'inside' | 'center' | 'outside';
   /** Alpha 0–1. Default 1. */
   alpha?: number;
   /**
@@ -265,15 +285,86 @@ export type EdgeStateConfig = ResolvableEdgeRenderHints;
  * state, not a state itself. Consumers can register additional named
  * states (e.g. `'pinned'`, `'flagged'`) via `setNodeStateConfig` —
  * the state-config map is open-keyed.
+ *
+ * ### Driver → state map
+ *
+ * Each canonical state has a distinct *driver* (what causes the state to be
+ * written) and *lifetime* (when it clears). The visual treatments overlap
+ * (most are stroke rings of various colours), but the semantics do not —
+ * a single node can carry several states simultaneously (e.g. `selected +
+ * hover + error`) and a behaviour should only write the states it owns.
+ *
+ * | State         | Driver                                  | Lifetime                          | Cardinality       |
+ * | ------------- | --------------------------------------- | --------------------------------- | ----------------- |
+ * | `hover`       | Mouse / touch pointer-over              | Transient — clears on pointer-out | ≤ 1 per layer     |
+ * | `focused`     | Keyboard focus (Tab navigation)         | Sticky until blur / Tab moves on  | ≤ 1 per layer     |
+ * | `active`      | Hover-emphasis focal (typically the hovered node) | Transient — paired with `highlighted` / `dimmed` | ≤ 1 per layer |
+ * | `highlighted` | 1-hop neighbours of the `active` node   | Transient — clears with `active`  | 0–N per layer     |
+ * | `dimmed`      | Complement of the focal-emphasis set    | Transient — clears with `active`  | 0–N per layer     |
+ * | `selected`    | Click / lasso / brush — user's chosen set | Sticky until explicitly cleared | 0–N per layer     |
+ * | `disabled`    | Data flag — "not interactive"           | Sticky — owned by the data feed   | 0–N per layer     |
+ * | `error`       | Data flag — validation failure          | Sticky — owned by the data feed   | 0–N per layer     |
+ *
+ * ### Pointer cursors — `hover` vs `focused`
+ *
+ * Both answer "the cursor is pointed at this node", but represent two
+ * different input modalities. `hover` is the mouse cursor (or touch
+ * point); `focused` is the keyboard cursor. A user navigating with Tab
+ * sees a `focused` ring without a `hover` ring; a touch user has no
+ * `focused` concept but plenty of `hover` events. Drop `focused` if
+ * keyboard accessibility isn't a product requirement.
+ *
+ * ### Focal-emphasis flow — `active` + `highlighted` + `dimmed`
+ *
+ * These three travel as a group, written by one behaviour
+ * (`HoverActivateBehaviour` or a similar focal-emphasis behaviour). When
+ * the user hovers a node:
+ * - that node goes `active` — *the protagonist*,
+ * - its 1-hop neighbours go `highlighted` — *supporting cast*,
+ * - everyone else goes `dimmed` — *pushed back so the focal set pops*.
+ *
+ * All three clear together when emphasis ends. Drop the trio if the
+ * product never needs the "fade everyone except the hovered subgraph"
+ * interaction — `hover` alone is enough in that case.
+ *
+ * ### Sticky chosen set — `selected`
+ *
+ * `selected` is the click / lasso / brush state — what the user *chose*.
+ * Persists until explicitly deselected. **Multi-select doesn't need its
+ * own state**: it's just the same `selected` state applied to every
+ * member of `selectedIds: Set<string>`. One node selected → one ring;
+ * ten nodes selected → ten rings.
+ *
+ * `selected` can co-exist with `hover` / `active` / `focused` — clicking
+ * a node doesn't stop it from being hovered or focused.
+ *
+ * ### Data-driven — `disabled` and `error`
+ *
+ * Both are sticky and owned by the data feed (not by an interaction
+ * behaviour). `disabled` is "this node isn't interactive — don't let the
+ * user pick it"; `error` is "this node's data failed validation". They
+ * overlap visually with `dimmed` but are semantically distinct:
+ * - `dimmed` says *"you're focusing elsewhere"* (transient, behaviour).
+ * - `disabled` says *"you can't interact with me"* (sticky, data).
+ * Conflating them would couple interaction code to data code — keep them
+ * separate even if the visual treatment is similar.
  */
 export type CanonicalStateName =
+  /** Mouse / touch pointer is over the node. Transient; one node at a time. */
   | 'hover'
+  /** User's chosen set (click / lasso / brush). Sticky; many at a time. Multi-select is just this state applied to each member of the selection. */
   | 'selected'
+  /** Focal node in a hover-emphasis interaction — "the protagonist". Transient; one at a time. Travels with `highlighted` + `dimmed`. */
   | 'active'
+  /** 1-hop neighbour of the `active` node — "supporting cast". Transient; many at a time. Cleared together with `active`. */
   | 'highlighted'
+  /** Complement of the focal-emphasis set — pushed back so `active` + `highlighted` pop. Transient; cleared with `active`. NOT `disabled` — that's a data flag. */
   | 'dimmed'
+  /** Data flag: "not interactive". Sticky; owned by the data feed. Visually similar to `dimmed` but semantically distinct (data, not interaction). */
   | 'disabled'
+  /** Data flag: validation failure / invalid node. Sticky; owned by the data feed. */
   | 'error'
+  /** Keyboard focus ring (Tab navigation) — a different cursor from `hover`. Sticky until blur. Skip this if keyboard a11y is out of scope. */
   | 'focused';
 
 /**
@@ -429,34 +520,58 @@ export interface NodeBadge {
   readonly zIndex?: number;
 }
 
-// ─── NodeDecorations / NodeEffects (slot dicts) ────────────────────────────
+// ─── NodeDecorationSpec / EdgeDecorationSpec / NodeEffects ────────────────
 
 /**
- * Slot-based decoration attachments on a node. Each slot holds at most one
- * decoration; `null` clears it. State overlays can swap a slot's spec
- * (e.g., `state.hover.decorations.halo = {...}` adds a halo on hover).
- *
- * Slot names match the canvas renderer's decoration-slot model:
- * `setDecoration(id, slot, spec)`.
- *
- * Decoration style payloads come from `@invana/canvas` — typed loosely as
- * `unknown` here until the canvas package re-exports named style types for
- * each decoration kind (HaloStyle, GlowStyle, …).
+ * Common fields on every entry in a `decorations[]` array. The `id` gives
+ * stable diff identity (state overlays can re-declare the same id to
+ * override, or set `remove: true` to drop a base-level decoration while a
+ * state is active). When `id` is absent, identity falls back to `kind + array index`.
  */
-export interface NodeDecorations {
-  /** Slot 'halo' — `HaloStyle` from @invana/canvas. */
-  readonly halo?: unknown | null;
-  /** Slot 'glow'. */
-  readonly glow?: unknown | null;
-  /** Slot 'pulse' — pulse-ring decoration. */
-  readonly pulse?: unknown | null;
-  /** Slot 'border' — border / dash-border / marching-ants. */
-  readonly border?: unknown | null;
-  /** Slot 'ring'. */
-  readonly ring?: unknown | null;
-  /** Open-ended for any registered decoration slot. */
-  readonly [slot: string]: unknown | null | undefined;
+export interface DecorationSpecCommon {
+  /** Stable id for diffing. Optional — falls back to `kind#<index>` when absent. */
+  readonly id?: string;
+  /**
+   * When `true`, this entry instructs the resolver to drop any earlier-
+   * precedence decoration with the same `id`. Use it in a state overlay to
+   * temporarily remove a base-level decoration while the state is active.
+   */
+  readonly remove?: boolean;
 }
+
+/**
+ * Discriminated union of decoration specs attachable to a node via
+ * {@link NodeStyle.decorations}. Each variant pairs `kind` (the registered
+ * canvas decoration name) with the matching style payload from
+ * `@invana/canvas/primitives`.
+ *
+ * Multiples are allowed — the same kind can appear several times (e.g. an
+ * inner + outer ring on a single node), as long as their `id`s differ.
+ * `label` is intentionally absent — labels are managed by the flat
+ * `labelText` / `label*` fields on `NodeStyle`, not by the decorations
+ * array.
+ */
+export type NodeDecorationSpec =
+  | (DecorationSpecCommon & { readonly kind: 'ring' } & RingDecorationStyle)
+  | (DecorationSpecCommon & { readonly kind: 'glow' } & GlowDecorationStyle)
+  | (DecorationSpecCommon & { readonly kind: 'pulse-ring' } & PulseRingDecorationStyle)
+  | (DecorationSpecCommon & { readonly kind: 'marching-ants' } & MarchingAntsDecorationStyle)
+  | (DecorationSpecCommon & { readonly kind: 'liquid-fill' } & LiquidFillDecorationStyle);
+
+/**
+ * Discriminated union of decoration specs attachable to an edge via
+ * {@link EdgeStyle.decorations}. Mirrors {@link NodeDecorationSpec} for
+ * the connector-target decoration registry. `label-connector` is excluded
+ * for the same reason `label` is — labels live on the flat label fields.
+ */
+export type EdgeDecorationSpec =
+  | (DecorationSpecCommon & { readonly kind: 'ring-connector' } & RingConnectorDecorationStyle)
+  | (DecorationSpecCommon & { readonly kind: 'glow-connector' } & GlowConnectorDecorationStyle)
+  | (DecorationSpecCommon & { readonly kind: 'marching-ants-connector' } & MarchingAntsConnectorDecorationStyle)
+  | (DecorationSpecCommon & { readonly kind: 'ripple-connector' } & RippleConnectorDecorationStyle)
+  | (DecorationSpecCommon & { readonly kind: 'fly-marker-connector' } & FlyMarkerConnectorDecorationStyle)
+  | (DecorationSpecCommon & { readonly kind: 'flow-particles-connector' } & FlowParticlesConnectorDecorationStyle)
+  | (DecorationSpecCommon & { readonly kind: 'reveal-connector' } & RevealConnectorDecorationStyle);
 
 /**
  * Host-modulation effects (sibling of decorations). Effects don't add
@@ -554,8 +669,18 @@ export interface NodeStyle {
   // ===== Badges (multiple) =====
   readonly badges?: readonly NodeBadge[];
 
-  // ===== Decorations (slot dict) — see NodeDecorations =====
-  readonly decorations?: NodeDecorations;
+  // ===== Decorations (array of discriminated specs) =====
+  /**
+   * Ordered list of decorations attached to the node. Each entry's `kind`
+   * names a registered canvas decoration; the rest of the entry is that
+   * decoration's style payload. See {@link NodeDecorationSpec}.
+   *
+   * The resolver concatenates this array across base style + every active
+   * state's overlay, then dedupes by `id` (later precedence wins). Use
+   * `remove: true` in a higher-precedence overlay to drop an earlier entry
+   * with the same id while a state is active.
+   */
+  readonly decorations?: readonly NodeDecorationSpec[];
 
   // ===== Effects (slot dict) — see NodeEffects =====
   readonly effects?: NodeEffects;
@@ -733,6 +858,18 @@ export interface EdgeStyle {
    * verbatim instead of building one from the flat fields.
    */
   readonly labelStyle?: ConnectorLabelStyle;
+
+  // ===== Decorations (array of discriminated specs) =====
+  /**
+   * Ordered list of decorations attached to the edge. Each entry's `kind`
+   * names a registered canvas connector-decoration; the rest is that
+   * decoration's style payload. See {@link EdgeDecorationSpec}.
+   *
+   * Resolver semantics match {@link NodeStyle.decorations}: concatenate
+   * across base + active state overlays, dedupe by `id`, later precedence
+   * wins.
+   */
+  readonly decorations?: readonly EdgeDecorationSpec[];
 }
 
 /** Resolver-aware mirror of {@link EdgeStyle}; generic over the resolver argument. */
