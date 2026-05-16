@@ -1,6 +1,6 @@
 # Interface: D3HierarchyLayoutOptions
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:61](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-hierarchy/src/types.ts#L61)
+Defined in: [graph-layout-d3-hierarchy/src/types.ts:61](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-hierarchy/src/types.ts#L61)
 
 `D3HierarchyLayout` options.
 
@@ -14,7 +14,7 @@ defaults — no setter is called when you don't provide a value.
 
 > `optional` **center?**: `object`
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:108](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-hierarchy/src/types.ts#L108)
+Defined in: [graph-layout-d3-hierarchy/src/types.ts:108](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-hierarchy/src/types.ts#L108)
 
 Translate the projected coordinates by `(x, y)` after layout. Default
 `{ x: 0, y: 0 }`. Useful for centring the cluster around the world
@@ -34,7 +34,7 @@ origin in radial modes (the default already does this).
 
 > `optional` **mode?**: [`D3HierarchyLayoutMode`](../type-aliases/D3HierarchyLayoutMode.md)
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:63](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-hierarchy/src/types.ts#L63)
+Defined in: [graph-layout-d3-hierarchy/src/types.ts:63](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-hierarchy/src/types.ts#L63)
 
 Layout mode. Default `'radial-tree'`.
 
@@ -44,7 +44,7 @@ Layout mode. Default `'radial-tree'`.
 
 > `optional` **nodeSize?**: \[`number`, `number`\]
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:86](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-hierarchy/src/types.ts#L86)
+Defined in: [graph-layout-d3-hierarchy/src/types.ts:86](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-hierarchy/src/types.ts#L86)
 
 `tree.nodeSize([dx, dy])` / `cluster.nodeSize([dx, dy])`. Mutually
 exclusive with `size`.
@@ -55,7 +55,7 @@ exclusive with `size`.
 
 > `optional` **orientation?**: [`CartesianOrientation`](../type-aliases/CartesianOrientation.md)
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:98](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-hierarchy/src/types.ts#L98)
+Defined in: [graph-layout-d3-hierarchy/src/types.ts:98](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-hierarchy/src/types.ts#L98)
 
 Cartesian orientation. Default `'vertical'`. See [CartesianOrientation](../type-aliases/CartesianOrientation.md).
 Ignored in `radial-*` modes.
@@ -66,7 +66,7 @@ Ignored in `radial-*` modes.
 
 > `optional` **padding?**: `number`
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:116](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-hierarchy/src/types.ts#L116)
+Defined in: [graph-layout-d3-hierarchy/src/types.ts:116](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-hierarchy/src/types.ts#L116)
 
 Pack-only: padding between sibling circles, in world units. Default `0`
 (d3's default). Ignored in non-pack modes.
@@ -77,7 +77,7 @@ Pack-only: padding between sibling circles, in world units. Default `0`
 
 > `optional` **radius?**: `number`
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:92](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-hierarchy/src/types.ts#L92)
+Defined in: [graph-layout-d3-hierarchy/src/types.ts:92](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-hierarchy/src/types.ts#L92)
 
 Polar radius for `radial-*` modes. Default `400`. Ignored for Cartesian
 modes.
@@ -88,7 +88,7 @@ modes.
 
 > `optional` **rootId?**: `string`
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:70](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-hierarchy/src/types.ts#L70)
+Defined in: [graph-layout-d3-hierarchy/src/types.ts:70](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-hierarchy/src/types.ts#L70)
 
 Explicit root node id. If omitted, the layout auto-detects the root as
 the unique node with no incoming edge in the snapshot. Throws if there
@@ -100,7 +100,7 @@ is none or more than one.
 
 > `optional` **separation?**: [`SeparationFn`](../type-aliases/SeparationFn.md)
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:101](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-hierarchy/src/types.ts#L101)
+Defined in: [graph-layout-d3-hierarchy/src/types.ts:101](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-hierarchy/src/types.ts#L101)
 
 Custom separation function. See d3-hierarchy `tree.separation`.
 
@@ -110,7 +110,7 @@ Custom separation function. See d3-hierarchy `tree.separation`.
 
 > `optional` **size?**: \[`number`, `number`\]
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:80](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-hierarchy/src/types.ts#L80)
+Defined in: [graph-layout-d3-hierarchy/src/types.ts:80](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-hierarchy/src/types.ts#L80)
 
 `tree.size([w, h])` / `cluster.size([w, h])`. Cartesian modes default
 to `[640, 480]` if neither `size` nor `nodeSize` is provided.
@@ -125,7 +125,7 @@ per-node angular spacing) instead.
 
 > `optional` **sort?**: (`a`, `b`) => `number`
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:133](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-hierarchy/src/types.ts#L133)
+Defined in: [graph-layout-d3-hierarchy/src/types.ts:133](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-hierarchy/src/types.ts#L133)
 
 Pack-only: sibling sort comparator. Defaults to `(a, b) => b.value - a.value`
 (descending by value, which gives a tighter pack). Set to `null` to
@@ -155,7 +155,7 @@ leave d3's input order. Ignored in non-pack modes.
 
 > `optional` **value?**: (`node`) => `number`
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:126](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-hierarchy/src/types.ts#L126)
+Defined in: [graph-layout-d3-hierarchy/src/types.ts:126](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-hierarchy/src/types.ts#L126)
 
 Pack-only: per-node value accessor used by `hierarchy.sum()`. Defaults
 to reading `node.data.value` (treats missing as `1`). The accumulated

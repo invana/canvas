@@ -1,6 +1,6 @@
 # Interface: NodeRenderHints
 
-Defined in: [graph/src/layer/types.ts:131](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L131)
+Defined in: [graph/src/layer/types.ts:131](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L131)
 
 Render-spec hints a caller may put under `node.data` to control how the
 layer renders this node. All fields are optional; defaults below.
@@ -20,7 +20,7 @@ for backward compatibility; the GraphLayer reads both paths and merges.
 
 > `optional` **alpha?**: `number`
 
-Defined in: [graph/src/layer/types.ts:162](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L162)
+Defined in: [graph/src/layer/types.ts:162](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L162)
 
 Alpha 0–1. Default 1.
 
@@ -30,7 +30,7 @@ Alpha 0–1. Default 1.
 
 > `optional` **cornerRadius?**: `number`
 
-Defined in: [graph/src/layer/types.ts:139](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L139)
+Defined in: [graph/src/layer/types.ts:139](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L139)
 
 Rect corner radius. Default 4.
 
@@ -40,7 +40,7 @@ Rect corner radius. Default 4.
 
 > `optional` **endAngle?**: `number`
 
-Defined in: [graph/src/layer/types.ts:154](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L154)
+Defined in: [graph/src/layer/types.ts:154](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L154)
 
 Arc-only — end angle in radians. Required when `shape === 'arc'`.
 
@@ -50,7 +50,7 @@ Arc-only — end angle in radians. Required when `shape === 'arc'`.
 
 > `optional` **fill?**: `number` \| `false`
 
-Defined in: [graph/src/layer/types.ts:156](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L156)
+Defined in: [graph/src/layer/types.ts:156](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L156)
 
 Fill color (0xRRGGBB) or `false` for no fill. Default `0x3b82f6`.
 
@@ -60,7 +60,7 @@ Fill color (0xRRGGBB) or `false` for no fill. Default `0x3b82f6`.
 
 > `optional` **height?**: `number`
 
-Defined in: [graph/src/layer/types.ts:137](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L137)
+Defined in: [graph/src/layer/types.ts:137](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L137)
 
 Height (rect only). Defaults to `size` for square rects.
 
@@ -70,7 +70,7 @@ Height (rect only). Defaults to `size` for square rects.
 
 > `optional` **innerR?**: `number`
 
-Defined in: [graph/src/layer/types.ts:145](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L145)
+Defined in: [graph/src/layer/types.ts:145](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L145)
 
 Arc-only — inner radius of the annular sector. Required when
 `shape === 'arc'`; ignored for other shapes. Pair with `outerR`,
@@ -82,7 +82,7 @@ Arc-only — inner radius of the annular sector. Required when
 
 > `optional` **label?**: [`NodeLabelHint`](../type-aliases/NodeLabelHint.md)
 
-Defined in: [graph/src/layer/types.ts:171](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L171)
+Defined in: [graph/src/layer/types.ts:171](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L171)
 
 Optional text label attached to the node. Pass a string for the simple
 case (defaults to plain text below the node) or a `ShapeLabelStyle`
@@ -100,7 +100,7 @@ Resolves to a canvas `'label'` decoration on the rendered shape.
 
 > `optional` **outerR?**: `number`
 
-Defined in: [graph/src/layer/types.ts:147](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L147)
+Defined in: [graph/src/layer/types.ts:147](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L147)
 
 Arc-only — outer radius. Required when `shape === 'arc'`.
 
@@ -110,7 +110,7 @@ Arc-only — outer radius. Required when `shape === 'arc'`.
 
 > `optional` **shape?**: [`NodeShapeKind`](../type-aliases/NodeShapeKind.md)
 
-Defined in: [graph/src/layer/types.ts:133](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L133)
+Defined in: [graph/src/layer/types.ts:133](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L133)
 
 Shape kind. Default `'circle'`.
 
@@ -120,7 +120,7 @@ Shape kind. Default `'circle'`.
 
 > `optional` **size?**: `number`
 
-Defined in: [graph/src/layer/types.ts:135](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L135)
+Defined in: [graph/src/layer/types.ts:135](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L135)
 
 Diameter (circle) or width (rect). Default 32.
 
@@ -130,7 +130,7 @@ Diameter (circle) or width (rect). Default 32.
 
 > `optional` **startAngle?**: `number`
 
-Defined in: [graph/src/layer/types.ts:152](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L152)
+Defined in: [graph/src/layer/types.ts:152](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L152)
 
 Arc-only — start angle in radians (`0` = 3 o'clock, increasing sweeps
 clockwise on screen). Required when `shape === 'arc'`.
@@ -141,7 +141,7 @@ clockwise on screen). Required when `shape === 'arc'`.
 
 > `optional` **stroke?**: `number` \| `false`
 
-Defined in: [graph/src/layer/types.ts:158](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L158)
+Defined in: [graph/src/layer/types.ts:158](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L158)
 
 Stroke color (0xRRGGBB) or `false` for no stroke. Default `0x1d4ed8`.
 
@@ -151,6 +151,6 @@ Stroke color (0xRRGGBB) or `false` for no stroke. Default `0x1d4ed8`.
 
 > `optional` **strokeWidth?**: `number`
 
-Defined in: [graph/src/layer/types.ts:160](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L160)
+Defined in: [graph/src/layer/types.ts:160](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L160)
 
 Stroke width. Default 1.

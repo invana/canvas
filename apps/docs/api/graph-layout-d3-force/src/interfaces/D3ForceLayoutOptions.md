@@ -1,6 +1,6 @@
 # Interface: D3ForceLayoutOptions
 
-Defined in: [graph-layout-d3-force/src/types.ts:22](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L22)
+Defined in: [graph-layout-d3-force/src/types.ts:22](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L22)
 
 `D3ForceLayout` options. Every field maps 1:1 to a d3-force setter
 documented at https://d3js.org/d3-force.
@@ -29,7 +29,7 @@ new D3ForceLayout({
 
 > `optional` **alpha?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:25](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L25)
+Defined in: [graph-layout-d3-force/src/types.ts:25](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L25)
 
 `simulation.alpha(alpha)`.
 
@@ -39,7 +39,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:25](https://github.com/invana/ca
 
 > `optional` **alphaDecay?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:29](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L29)
+Defined in: [graph-layout-d3-force/src/types.ts:29](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L29)
 
 `simulation.alphaDecay(decay)`.
 
@@ -49,7 +49,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:29](https://github.com/invana/ca
 
 > `optional` **alphaMin?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:27](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L27)
+Defined in: [graph-layout-d3-force/src/types.ts:27](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L27)
 
 `simulation.alphaMin(min)`.
 
@@ -59,7 +59,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:27](https://github.com/invana/ca
 
 > `optional` **alphaTarget?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:31](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L31)
+Defined in: [graph-layout-d3-force/src/types.ts:31](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L31)
 
 `simulation.alphaTarget(target)`.
 
@@ -69,7 +69,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:31](https://github.com/invana/ca
 
 > `optional` **center?**: [`CenterForceOptions`](CenterForceOptions.md)
 
-Defined in: [graph-layout-d3-force/src/types.ts:41](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L41)
+Defined in: [graph-layout-d3-force/src/types.ts:41](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L41)
 
 `forceCenter` — translates the cluster's centroid to `(x, y)`.
 
@@ -79,7 +79,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:41](https://github.com/invana/ca
 
 > `optional` **charge?**: [`ChargeForceOptions`](ChargeForceOptions.md)
 
-Defined in: [graph-layout-d3-force/src/types.ts:39](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L39)
+Defined in: [graph-layout-d3-force/src/types.ts:39](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L39)
 
 `forceManyBody` — n-body charge (negative = repulsion).
 
@@ -89,7 +89,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:39](https://github.com/invana/ca
 
 > `optional` **collide?**: [`CollideForceOptions`](CollideForceOptions.md)
 
-Defined in: [graph-layout-d3-force/src/types.ts:43](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L43)
+Defined in: [graph-layout-d3-force/src/types.ts:43](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L43)
 
 `forceCollide` — prevents overlap.
 
@@ -99,7 +99,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:43](https://github.com/invana/ca
 
 > `optional` **link?**: [`LinkForceOptions`](LinkForceOptions.md)
 
-Defined in: [graph-layout-d3-force/src/types.ts:37](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L37)
+Defined in: [graph-layout-d3-force/src/types.ts:37](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L37)
 
 `forceLink` — pulls connected nodes toward a target distance.
 
@@ -109,7 +109,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:37](https://github.com/invana/ca
 
 > `optional` **radial?**: [`RadialForceOptions`](RadialForceOptions.md)
 
-Defined in: [graph-layout-d3-force/src/types.ts:49](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L49)
+Defined in: [graph-layout-d3-force/src/types.ts:49](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L49)
 
 `forceRadial` — pulls toward a circle of given radius. Requires `radius`.
 
@@ -119,7 +119,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:49](https://github.com/invana/ca
 
 > `optional` **velocityDecay?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:33](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L33)
+Defined in: [graph-layout-d3-force/src/types.ts:33](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L33)
 
 `simulation.velocityDecay(decay)`.
 
@@ -129,7 +129,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:33](https://github.com/invana/ca
 
 > `optional` **x?**: [`PositionXForceOptions`](PositionXForceOptions.md)
 
-Defined in: [graph-layout-d3-force/src/types.ts:45](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L45)
+Defined in: [graph-layout-d3-force/src/types.ts:45](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L45)
 
 `forceX` — positioning force along x.
 
@@ -139,6 +139,6 @@ Defined in: [graph-layout-d3-force/src/types.ts:45](https://github.com/invana/ca
 
 > `optional` **y?**: [`PositionYForceOptions`](PositionYForceOptions.md)
 
-Defined in: [graph-layout-d3-force/src/types.ts:47](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L47)
+Defined in: [graph-layout-d3-force/src/types.ts:47](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L47)
 
 `forceY` — positioning force along y.

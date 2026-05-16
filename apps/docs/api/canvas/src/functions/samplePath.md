@@ -2,7 +2,7 @@
 
 > **samplePath**(`path`): [`Point`](../interfaces/Point.md)[]
 
-Defined in: [canvas/src/primitives/connectors/pathSampling.ts:27](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/connectors/pathSampling.ts#L27)
+Defined in: [canvas/src/primitives/connectors/pathSampling.ts:27](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/connectors/pathSampling.ts#L27)
 
 Densify a `Path` into a flat polyline. Lines emit two endpoints per
 segment; quadratic / cubic curves are sampled with fixed substep counts.

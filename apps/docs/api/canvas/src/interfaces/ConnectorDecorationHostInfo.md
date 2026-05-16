@@ -1,6 +1,6 @@
 # Interface: ConnectorDecorationHostInfo
 
-Defined in: [canvas/src/primitives/types.ts:590](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L590)
+Defined in: [canvas/src/primitives/types.ts:590](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L590)
 
 Information a connector decoration receives. Decorations call
 `host.connector.paintInto(g, spec, path, style)` for silhouette repaint,
@@ -12,7 +12,7 @@ or read `path` directly for parametric walking (e.g. label-along-path).
 
 > `readonly` **connector**: [`IConnector`](IConnector.md)
 
-Defined in: [canvas/src/primitives/types.ts:596](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L596)
+Defined in: [canvas/src/primitives/types.ts:596](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L596)
 
 ***
 
@@ -20,7 +20,7 @@ Defined in: [canvas/src/primitives/types.ts:596](https://github.com/invana/canva
 
 > `readonly` **connectorSpec**: [`BaseConnectorSpec`](BaseConnectorSpec.md)
 
-Defined in: [canvas/src/primitives/types.ts:597](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L597)
+Defined in: [canvas/src/primitives/types.ts:597](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L597)
 
 ***
 
@@ -28,7 +28,7 @@ Defined in: [canvas/src/primitives/types.ts:597](https://github.com/invana/canva
 
 > `readonly` **hostId**: `string`
 
-Defined in: [canvas/src/primitives/types.ts:591](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L591)
+Defined in: [canvas/src/primitives/types.ts:591](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L591)
 
 ***
 
@@ -36,7 +36,7 @@ Defined in: [canvas/src/primitives/types.ts:591](https://github.com/invana/canva
 
 > `readonly` **path**: [`Path`](../type-aliases/Path.md)
 
-Defined in: [canvas/src/primitives/types.ts:594](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L594)
+Defined in: [canvas/src/primitives/types.ts:594](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L594)
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: [canvas/src/primitives/types.ts:594](https://github.com/invana/canva
 
 > `readonly` **slot**: `string`
 
-Defined in: [canvas/src/primitives/types.ts:592](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L592)
+Defined in: [canvas/src/primitives/types.ts:592](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L592)
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: [canvas/src/primitives/types.ts:592](https://github.com/invana/canva
 
 > `readonly` **slotZIndex**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:593](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L593)
+Defined in: [canvas/src/primitives/types.ts:593](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L593)
 
 ***
 
@@ -60,4 +60,4 @@ Defined in: [canvas/src/primitives/types.ts:593](https://github.com/invana/canva
 
 > `readonly` **surface**: `Container`
 
-Defined in: [canvas/src/primitives/types.ts:595](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L595)
+Defined in: [canvas/src/primitives/types.ts:595](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L595)

@@ -1,6 +1,6 @@
 # Interface: AnchorShapeRef
 
-Defined in: [canvas/src/primitives/types.ts:477](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L477)
+Defined in: [canvas/src/primitives/types.ts:477](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L477)
 
 Read-only view of a shape that an anchor function consumes. The renderer
 builds one of these for the referenced shape id and hands it to the
@@ -20,7 +20,7 @@ their behaviour is uniform across shape kinds.
 
 > `readonly` **bounds**: [`Rect`](Rect.md)
 
-Defined in: [canvas/src/primitives/types.ts:481](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L481)
+Defined in: [canvas/src/primitives/types.ts:481](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L481)
 
 Local-space axis-aligned bounding box (relative to `origin`).
 
@@ -30,7 +30,7 @@ Local-space axis-aligned bounding box (relative to `origin`).
 
 > `readonly` **center**: [`Point`](Point.md)
 
-Defined in: [canvas/src/primitives/types.ts:483](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L483)
+Defined in: [canvas/src/primitives/types.ts:483](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L483)
 
 World-space geometric centre of the shape's bounding box.
 
@@ -40,7 +40,7 @@ World-space geometric centre of the shape's bounding box.
 
 > `readonly` **origin**: [`Point`](Point.md)
 
-Defined in: [canvas/src/primitives/types.ts:479](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L479)
+Defined in: [canvas/src/primitives/types.ts:479](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L479)
 
 World-space origin of the shape (`(spec.x, spec.y)`).
 
@@ -50,7 +50,7 @@ World-space origin of the shape (`(spec.x, spec.y)`).
 
 > `optional` **boundaryIntersect**(`localFromCenter`): [`Point`](Point.md)
 
-Defined in: [canvas/src/primitives/types.ts:491](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L491)
+Defined in: [canvas/src/primitives/types.ts:491](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L491)
 
 Optional analytical boundary-intersection in shape-local coordinates,
 relative to the shape's geometric **centre** (not its `origin`).

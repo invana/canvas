@@ -2,7 +2,7 @@
 
 > **Resolvable**\<`T`, `I`\> = `T` \| ((`input`) => `T`)
 
-Defined in: [graph/src/layer/types.ts:60](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L60)
+Defined in: [graph/src/layer/types.ts:60](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L60)
 
 A field value that's either a static value or a function that derives the
 value from the host item (node / edge / raw data).

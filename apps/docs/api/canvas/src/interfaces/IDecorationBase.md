@@ -1,6 +1,6 @@
 # Interface: IDecorationBase\<THostInfo, TStyle\>
 
-Defined in: [canvas/src/primitives/types.ts:734](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L734)
+Defined in: [canvas/src/primitives/types.ts:734](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L734)
 
 Common base for shape and connector decorations. Presence of `tick` makes
 the decoration animated — the renderer registers it into the per-frame
@@ -23,7 +23,7 @@ Static decorations omit `tick` and cost zero per frame after `mount`.
 
 > `readonly` **style**: `TStyle`
 
-Defined in: [canvas/src/primitives/types.ts:735](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L735)
+Defined in: [canvas/src/primitives/types.ts:735](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L735)
 
 ## Methods
 
@@ -31,7 +31,7 @@ Defined in: [canvas/src/primitives/types.ts:735](https://github.com/invana/canva
 
 > `optional` **destroy**(): `void`
 
-Defined in: [canvas/src/primitives/types.ts:739](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L739)
+Defined in: [canvas/src/primitives/types.ts:739](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L739)
 
 #### Returns
 
@@ -43,7 +43,7 @@ Defined in: [canvas/src/primitives/types.ts:739](https://github.com/invana/canva
 
 > `optional` **getEndPadding**(): `object`
 
-Defined in: [canvas/src/primitives/types.ts:750](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L750)
+Defined in: [canvas/src/primitives/types.ts:750](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L750)
 
 Connector-only: declare how many pixels of extra "outer extent" this
 decoration needs past each endpoint of the routed path. The renderer
@@ -72,7 +72,7 @@ Omit (or return 0) when the decoration doesn't extend past endpoints
 
 > **mount**(`host`): `void`
 
-Defined in: [canvas/src/primitives/types.ts:736](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L736)
+Defined in: [canvas/src/primitives/types.ts:736](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L736)
 
 #### Parameters
 
@@ -90,7 +90,7 @@ Defined in: [canvas/src/primitives/types.ts:736](https://github.com/invana/canva
 
 > `optional` **tick**(`deltaMs`): `boolean`
 
-Defined in: [canvas/src/primitives/types.ts:738](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L738)
+Defined in: [canvas/src/primitives/types.ts:738](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L738)
 
 #### Parameters
 
@@ -108,7 +108,7 @@ Defined in: [canvas/src/primitives/types.ts:738](https://github.com/invana/canva
 
 > `optional` **update**(`host`): `void`
 
-Defined in: [canvas/src/primitives/types.ts:737](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L737)
+Defined in: [canvas/src/primitives/types.ts:737](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L737)
 
 #### Parameters
 

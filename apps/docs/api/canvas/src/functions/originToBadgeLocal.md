@@ -2,7 +2,7 @@
 
 > **originToBadgeLocal**(`badgeLocalBounds`, `placement`, `origin`): `object`
 
-Defined in: [canvas/src/primitives/badges/placement.ts:47](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/badges/placement.ts#L47)
+Defined in: [canvas/src/primitives/badges/placement.ts:47](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/badges/placement.ts#L47)
 
 Returns the point on the badge's local AABB that should land at the host
 anchor, given the chosen origin. The default (omitted origin) is the

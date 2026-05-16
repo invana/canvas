@@ -2,7 +2,7 @@
 
 > **RevealHostStroke** = `"hide"` \| `"overlay"`
 
-Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:38](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L38)
+Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:38](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L38)
 
 How the underlying host connector should be treated during reveal.
 

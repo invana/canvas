@@ -1,6 +1,6 @@
 # Class: BackgroundLayer
 
-Defined in: [canvas/src/layers/BackgroundLayer.ts:111](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/BackgroundLayer.ts#L111)
+Defined in: [canvas/src/layers/BackgroundLayer.ts:111](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/BackgroundLayer.ts#L111)
 
 The subset of `Layer` the `LayerRegistry` and `Canvas.tick` interact with.
 Lets the registry stay decoupled from the abstract class implementation.
@@ -19,7 +19,7 @@ Lets the registry stay decoupled from the abstract class implementation.
 
 > **new BackgroundLayer**(`opts`): `BackgroundLayer`
 
-Defined in: [canvas/src/layers/BackgroundLayer.ts:134](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/BackgroundLayer.ts#L134)
+Defined in: [canvas/src/layers/BackgroundLayer.ts:134](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/BackgroundLayer.ts#L134)
 
 #### Parameters
 
@@ -41,7 +41,7 @@ Defined in: [canvas/src/layers/BackgroundLayer.ts:134](https://github.com/invana
 
 > `protected` `optional` **\_container?**: `Container`
 
-Defined in: [canvas/src/layers/ScreenLayer.ts:37](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/ScreenLayer.ts#L37)
+Defined in: [canvas/src/layers/ScreenLayer.ts:37](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/ScreenLayer.ts#L37)
 
 Backing field — assigned in `mount`, cleared in `unmount`.
 
@@ -55,7 +55,7 @@ Backing field — assigned in `mount`, cleared in `unmount`.
 
 > `protected` `optional` **ctx?**: [`CanvasContext`](../interfaces/CanvasContext.md)
 
-Defined in: [canvas/src/layers/Layer.ts:108](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L108)
+Defined in: [canvas/src/layers/Layer.ts:108](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L108)
 
 Set by `mount(ctx)`; cleared by `unmount()`.
 
@@ -69,7 +69,7 @@ Set by `mount(ctx)`; cleared by `unmount()`.
 
 > **cullable**: `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:91](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L91)
+Defined in: [canvas/src/layers/Layer.ts:91](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L91)
 
 #### Inherited from
 
@@ -81,7 +81,7 @@ Defined in: [canvas/src/layers/Layer.ts:91](https://github.com/invana/canvas/blo
 
 > `readonly` **dirty**: [`DirtyBatcher`](DirtyBatcher.md)\<`never`\>
 
-Defined in: [canvas/src/layers/Layer.ts:85](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L85)
+Defined in: [canvas/src/layers/Layer.ts:85](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L85)
 
 #### Inherited from
 
@@ -93,7 +93,7 @@ Defined in: [canvas/src/layers/Layer.ts:85](https://github.com/invana/canvas/blo
 
 > `readonly` **events**: [`SourceEmitter`](SourceEmitter.md)\<`Record`\<`string`, `never`\>\>
 
-Defined in: [canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L84)
+Defined in: [canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L84)
 
 #### Inherited from
 
@@ -105,7 +105,7 @@ Defined in: [canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blo
 
 > **hittable**: `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:89](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L89)
+Defined in: [canvas/src/layers/Layer.ts:89](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L89)
 
 #### Inherited from
 
@@ -117,7 +117,7 @@ Defined in: [canvas/src/layers/Layer.ts:89](https://github.com/invana/canvas/blo
 
 > `readonly` **id**: `string`
 
-Defined in: [canvas/src/layers/Layer.ts:81](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L81)
+Defined in: [canvas/src/layers/Layer.ts:81](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L81)
 
 #### Inherited from
 
@@ -129,7 +129,7 @@ Defined in: [canvas/src/layers/Layer.ts:81](https://github.com/invana/canvas/blo
 
 > `readonly` **options**: [`BackgroundLayerOptions`](../interfaces/BackgroundLayerOptions.md)
 
-Defined in: [canvas/src/layers/Layer.ts:82](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L82)
+Defined in: [canvas/src/layers/Layer.ts:82](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L82)
 
 #### Inherited from
 
@@ -141,7 +141,7 @@ Defined in: [canvas/src/layers/Layer.ts:82](https://github.com/invana/canvas/blo
 
 > `readonly` **state**: [`Store`](../type-aliases/Store.md)\<`BackgroundLayerState`\>
 
-Defined in: [canvas/src/layers/Layer.ts:83](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L83)
+Defined in: [canvas/src/layers/Layer.ts:83](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L83)
 
 #### Inherited from
 
@@ -153,7 +153,7 @@ Defined in: [canvas/src/layers/Layer.ts:83](https://github.com/invana/canvas/blo
 
 > **zIndex**: `number`
 
-Defined in: [canvas/src/layers/Layer.ts:90](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L90)
+Defined in: [canvas/src/layers/Layer.ts:90](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L90)
 
 #### Inherited from
 
@@ -167,7 +167,7 @@ Defined in: [canvas/src/layers/Layer.ts:90](https://github.com/invana/canvas/blo
 
 > **get** `protected` **container**(): `Container`
 
-Defined in: [canvas/src/layers/ScreenLayer.ts:45](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/ScreenLayer.ts#L45)
+Defined in: [canvas/src/layers/ScreenLayer.ts:45](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/ScreenLayer.ts#L45)
 
 Root pixi `Container` for this screen-space layer. Available from
 `onMount(ctx)` for the layer's lifetime. Throws before mount / after unmount.
@@ -190,7 +190,7 @@ Subclass-only — not part of the external layer API.
 
 > **get** `protected` **context**(): [`CanvasContext`](../interfaces/CanvasContext.md)
 
-Defined in: [canvas/src/layers/Layer.ts:156](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L156)
+Defined in: [canvas/src/layers/Layer.ts:156](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L156)
 
 Convenience accessor; throws when called pre-mount.
 
@@ -210,7 +210,7 @@ Convenience accessor; throws when called pre-mount.
 
 > **get** **mounted**(): `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:111](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L111)
+Defined in: [canvas/src/layers/Layer.ts:111](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L111)
 
 True between `mount` and `unmount`.
 
@@ -230,7 +230,7 @@ True between `mount` and `unmount`.
 
 > **get** **visible**(): `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:98](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L98)
+Defined in: [canvas/src/layers/Layer.ts:98](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L98)
 
 Whether this layer renders. Setting `false` hides the layer's pixi
 container (via `onVisibleChange`, overridden by `WorldLayer` /
@@ -244,7 +244,7 @@ container (via `onVisibleChange`, overridden by `WorldLayer` /
 
 > **set** **visible**(`value`): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:101](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L101)
+Defined in: [canvas/src/layers/Layer.ts:101](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L101)
 
 ##### Parameters
 
@@ -266,7 +266,7 @@ Defined in: [canvas/src/layers/Layer.ts:101](https://github.com/invana/canvas/bl
 
 > `protected` **applyDirty**(`_snap`): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:189](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L189)
+Defined in: [canvas/src/layers/Layer.ts:189](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L189)
 
 Translate a dirty snapshot into renderer / pixi commands.
 Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
@@ -291,7 +291,7 @@ Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
 > **createContainer**(`label?`): `Container`
 
-Defined in: [canvas/src/layers/ScreenLayer.ts:99](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/ScreenLayer.ts#L99)
+Defined in: [canvas/src/layers/ScreenLayer.ts:99](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/ScreenLayer.ts#L99)
 
 Create a plain pixi `Container` attached to this layer's root container.
 Useful as a parent for mounted display objects.
@@ -316,7 +316,7 @@ Useful as a parent for mounted display objects.
 
 > **createGraphics**(`label?`): `Graphics`
 
-Defined in: [canvas/src/layers/ScreenLayer.ts:88](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/ScreenLayer.ts#L88)
+Defined in: [canvas/src/layers/ScreenLayer.ts:88](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/ScreenLayer.ts#L88)
 
 Create a pixi `Graphics` attached to this layer's root container. The
 sanctioned way for layer authors to obtain a `Graphics` for direct
@@ -342,7 +342,7 @@ painting via `@invana/canvas/draw` primitives.
 
 > `protected` **createState**(): `BackgroundLayerState`
 
-Defined in: [canvas/src/layers/BackgroundLayer.ts:147](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/BackgroundLayer.ts#L147)
+Defined in: [canvas/src/layers/BackgroundLayer.ts:147](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/BackgroundLayer.ts#L147)
 
 Build the initial UI / interaction state. Called once in the constructor.
 
@@ -360,7 +360,7 @@ Build the initial UI / interaction state. Called once in the constructor.
 
 > **flush**(): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:174](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L174)
+Defined in: [canvas/src/layers/Layer.ts:174](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L174)
 
 Called by Canvas tick when `hasPending()` is true. Swaps the dirty
 snapshot, hands it to `applyDirty`. Subclasses normally don't override.
@@ -379,7 +379,7 @@ snapshot, hands it to `applyDirty`. Subclasses normally don't override.
 
 > **getMode**(): `BackgroundMode`
 
-Defined in: [canvas/src/layers/BackgroundLayer.ts:232](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/BackgroundLayer.ts#L232)
+Defined in: [canvas/src/layers/BackgroundLayer.ts:232](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/BackgroundLayer.ts#L232)
 
 Current mode setting.
 
@@ -393,7 +393,7 @@ Current mode setting.
 
 > **getOptions**(): `Required`\<[`BackgroundLayerOptions`](../interfaces/BackgroundLayerOptions.md)\>
 
-Defined in: [canvas/src/layers/BackgroundLayer.ts:214](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/BackgroundLayer.ts#L214)
+Defined in: [canvas/src/layers/BackgroundLayer.ts:214](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/BackgroundLayer.ts#L214)
 
 Snapshot of the resolved options.
 
@@ -407,7 +407,7 @@ Snapshot of the resolved options.
 
 > **getResolvedKind**(): `BackgroundKind`
 
-Defined in: [canvas/src/layers/BackgroundLayer.ts:237](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/BackgroundLayer.ts#L237)
+Defined in: [canvas/src/layers/BackgroundLayer.ts:237](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/BackgroundLayer.ts#L237)
 
 Concrete kind currently being rendered after mode resolution.
 
@@ -421,7 +421,7 @@ Concrete kind currently being rendered after mode resolution.
 
 > **hasPending**(): `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:166](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L166)
+Defined in: [canvas/src/layers/Layer.ts:166](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L166)
 
 Whether `flush()` has work to do this frame.
 
@@ -439,7 +439,7 @@ Whether `flush()` has work to do this frame.
 
 > **hitTest**(): [`ScreenLayerHit`](../interfaces/ScreenLayerHit.md)
 
-Defined in: [canvas/src/layers/BackgroundLayer.ts:198](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/BackgroundLayer.ts#L198)
+Defined in: [canvas/src/layers/BackgroundLayer.ts:198](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/BackgroundLayer.ts#L198)
 
 Hit tests on the background always miss — clicks fall through to the
 world layer beneath, which is what users expect for a bg.
@@ -458,7 +458,7 @@ world layer beneath, which is what users expect for a bg.
 
 > **mount**(`ctx`): `void`
 
-Defined in: [canvas/src/layers/ScreenLayer.ts:56](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/ScreenLayer.ts#L56)
+Defined in: [canvas/src/layers/ScreenLayer.ts:56](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/ScreenLayer.ts#L56)
 
 #### Parameters
 
@@ -480,7 +480,7 @@ Defined in: [canvas/src/layers/ScreenLayer.ts:56](https://github.com/invana/canv
 
 > `protected` **onMount**(`ctx`): `void`
 
-Defined in: [canvas/src/layers/BackgroundLayer.ts:151](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/BackgroundLayer.ts#L151)
+Defined in: [canvas/src/layers/BackgroundLayer.ts:151](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/BackgroundLayer.ts#L151)
 
 Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
@@ -504,7 +504,7 @@ Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
 > `protected` **onUnmount**(): `void`
 
-Defined in: [canvas/src/layers/BackgroundLayer.ts:181](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/BackgroundLayer.ts#L181)
+Defined in: [canvas/src/layers/BackgroundLayer.ts:181](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/BackgroundLayer.ts#L181)
 
 Domain-specific unmount teardown.
 
@@ -522,7 +522,7 @@ Domain-specific unmount teardown.
 
 > `protected` **onVisibleChange**(`value`): `void`
 
-Defined in: [canvas/src/layers/ScreenLayer.ts:72](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/ScreenLayer.ts#L72)
+Defined in: [canvas/src/layers/ScreenLayer.ts:72](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/ScreenLayer.ts#L72)
 
 Keep the pixi container in sync when `layer.visible` is toggled.
 
@@ -546,7 +546,7 @@ Keep the pixi container in sync when `layer.visible` is toggled.
 
 > **setMode**(`mode`): `void`
 
-Defined in: [canvas/src/layers/BackgroundLayer.ts:222](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/BackgroundLayer.ts#L222)
+Defined in: [canvas/src/layers/BackgroundLayer.ts:222](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/BackgroundLayer.ts#L222)
 
 Set the colour-resolution mode. `'auto'` re-arms the system listener;
 `'light'` / `'dark'` pin explicitly. No-op when mode is unchanged.
@@ -567,7 +567,7 @@ Set the colour-resolution mode. `'auto'` re-arms the system listener;
 
 > **setOptions**(`changes`): `void`
 
-Defined in: [canvas/src/layers/BackgroundLayer.ts:205](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/BackgroundLayer.ts#L205)
+Defined in: [canvas/src/layers/BackgroundLayer.ts:205](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/BackgroundLayer.ts#L205)
 
 Merge-update options + re-render.
 
@@ -587,7 +587,7 @@ Merge-update options + re-render.
 
 > **setZIndex**(`z`): `void`
 
-Defined in: [canvas/src/layers/ScreenLayer.ts:111](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/ScreenLayer.ts#L111)
+Defined in: [canvas/src/layers/ScreenLayer.ts:111](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/ScreenLayer.ts#L111)
 
 Update this layer's z-order relative to its peers. Keeps the iteration
 field (`this.zIndex`) and the pixi container's `zIndex` in sync, and
@@ -613,7 +613,7 @@ flips `ctx.stage` into sorted mode so the change renders.
 
 > **unmount**(): `void`
 
-Defined in: [canvas/src/layers/ScreenLayer.ts:76](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/ScreenLayer.ts#L76)
+Defined in: [canvas/src/layers/ScreenLayer.ts:76](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/ScreenLayer.ts#L76)
 
 #### Returns
 

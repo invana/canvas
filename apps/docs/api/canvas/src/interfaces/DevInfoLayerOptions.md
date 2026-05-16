@@ -1,6 +1,6 @@
 # Interface: DevInfoLayerOptions
 
-Defined in: [canvas/src/layers/DevInfoLayer.ts:35](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/DevInfoLayer.ts#L35)
+Defined in: [canvas/src/layers/DevInfoLayer.ts:35](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/DevInfoLayer.ts#L35)
 
 ## Extended by
 
@@ -12,7 +12,7 @@ Defined in: [canvas/src/layers/DevInfoLayer.ts:35](https://github.com/invana/can
 
 > `optional` **accentColor?**: `string`
 
-Defined in: [canvas/src/layers/DevInfoLayer.ts:49](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/DevInfoLayer.ts#L49)
+Defined in: [canvas/src/layers/DevInfoLayer.ts:49](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/DevInfoLayer.ts#L49)
 
 Accent / header color. Default: '#4fc3f7'
 
@@ -22,7 +22,7 @@ Accent / header color. Default: '#4fc3f7'
 
 > `optional` **backgroundColor?**: `string`
 
-Defined in: [canvas/src/layers/DevInfoLayer.ts:45](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/DevInfoLayer.ts#L45)
+Defined in: [canvas/src/layers/DevInfoLayer.ts:45](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/DevInfoLayer.ts#L45)
 
 Overlay background CSS color. Default: 'rgba(10,10,10,0.82)'
 
@@ -32,7 +32,7 @@ Overlay background CSS color. Default: 'rgba(10,10,10,0.82)'
 
 > `optional` **corner?**: [`DevInfoCorner`](../type-aliases/DevInfoCorner.md)
 
-Defined in: [canvas/src/layers/DevInfoLayer.ts:37](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/DevInfoLayer.ts#L37)
+Defined in: [canvas/src/layers/DevInfoLayer.ts:37](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/DevInfoLayer.ts#L37)
 
 Which corner to anchor the overlay. Default: 'bottom-left'
 
@@ -42,7 +42,7 @@ Which corner to anchor the overlay. Default: 'bottom-left'
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: [canvas/src/layers/DevInfoLayer.ts:39](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/DevInfoLayer.ts#L39)
+Defined in: [canvas/src/layers/DevInfoLayer.ts:39](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/DevInfoLayer.ts#L39)
 
 Show the overlay. Can be toggled at runtime via setEnabled(). Default: true
 
@@ -52,7 +52,7 @@ Show the overlay. Can be toggled at runtime via setEnabled(). Default: true
 
 > `optional` **fontSize?**: `number`
 
-Defined in: [canvas/src/layers/DevInfoLayer.ts:41](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/DevInfoLayer.ts#L41)
+Defined in: [canvas/src/layers/DevInfoLayer.ts:41](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/DevInfoLayer.ts#L41)
 
 Font size in px. Default: 11
 
@@ -62,7 +62,7 @@ Font size in px. Default: 11
 
 > `optional` **opacity?**: `number`
 
-Defined in: [canvas/src/layers/DevInfoLayer.ts:43](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/DevInfoLayer.ts#L43)
+Defined in: [canvas/src/layers/DevInfoLayer.ts:43](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/DevInfoLayer.ts#L43)
 
 Panel opacity 0–1. Default: 0.92
 
@@ -72,6 +72,6 @@ Panel opacity 0–1. Default: 0.92
 
 > `optional` **textColor?**: `string`
 
-Defined in: [canvas/src/layers/DevInfoLayer.ts:47](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/DevInfoLayer.ts#L47)
+Defined in: [canvas/src/layers/DevInfoLayer.ts:47](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/DevInfoLayer.ts#L47)
 
 Text color. Default: '#c8d3e0'

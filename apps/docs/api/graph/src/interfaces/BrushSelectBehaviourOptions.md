@@ -1,6 +1,6 @@
 # Interface: BrushSelectBehaviourOptions
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:67](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L67)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:67](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L67)
 
 Constructor options for `BrushSelectBehaviour`.
 
@@ -14,7 +14,7 @@ Constructor options for `BrushSelectBehaviour`.
 
 > `optional` **clearOnBackground?**: `boolean`
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:114](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L114)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:114](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L114)
 
 Clear selection when the user clicks on the empty background (no drag).
 Default `true`.
@@ -25,7 +25,7 @@ Default `true`.
 
 > `optional` **clickSelectId?**: `string`
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:76](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L76)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:76](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L76)
 
 Optional `ClickSelectBehaviour` id to delegate to. Default `'click-select'`.
 If found, the brush hands the merged selection to the click-select layer
@@ -38,7 +38,7 @@ directly.
 
 > `optional` **enable?**: `boolean` \| ((`event`) => `boolean`)
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:82](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L82)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:82](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L82)
 
 Per-drag enable predicate. `boolean` global on/off; or a function
 called with the pointerdown native event. Default `true`.
@@ -49,7 +49,7 @@ called with the pointerdown native event. Default `true`.
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/behaviours/Behaviour.ts#L43)
+Defined in: [canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L43)
 
 Default `false` — the developer explicitly enables.
 
@@ -63,7 +63,7 @@ Default `false` — the developer explicitly enables.
 
 > `optional` **enableElements?**: [`HoverableElementType`](../type-aliases/HoverableElementType.md)[]
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:87](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L87)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:87](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L87)
 
 Element types eligible for brush selection. Default `['shape', 'connector']`.
 
@@ -73,7 +73,7 @@ Element types eligible for brush selection. Default `['shape', 'connector']`.
 
 > **id**: `string`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/behaviours/Behaviour.ts#L36)
+Defined in: [canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L36)
 
 #### Inherited from
 
@@ -85,7 +85,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/ca
 
 > `optional` **immediately?**: `boolean`
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:99](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L99)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:99](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L99)
 
 Live-update the selection as the rect grows. `false` = apply only on
 release. Default `false`.
@@ -96,7 +96,7 @@ release. Default `false`.
 
 > **layerId**: `string`
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:69](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L69)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:69](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L69)
 
 Required — the `GraphLayer` id this behaviour brushes over.
 
@@ -110,7 +110,7 @@ Required — the `GraphLayer` id this behaviour brushes over.
 
 > `optional` **onSelect?**: (`snapshot`) => `void`
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:117](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L117)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:117](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L117)
 
 Fired once on release if the brush produced a selection change.
 
@@ -130,7 +130,7 @@ Fired once on release if the brush produced a selection change.
 
 > `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/behaviours/Behaviour.ts#L49)
+Defined in: [canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L49)
 
 Gesture identifiers this behaviour claims. Used by `BehaviourRegistry`
 for conflict warnings. Format is convention-free (`'shift+drag'`,
@@ -146,7 +146,7 @@ for conflict warnings. Format is convention-free (`'shift+drag'`,
 
 > `optional` **state?**: `string`
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:105](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L105)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:105](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L105)
 
 Visual state name applied to brushed elements when no `ClickSelectBehaviour`
 is targeted. Ignored on the delegate path. Default `'selected'`.
@@ -157,7 +157,7 @@ is targeted. Ignored on the delegate path. Default `'selected'`.
 
 > `optional` **style?**: [`BrushSelectStyle`](BrushSelectStyle.md)
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:108](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L108)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:108](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L108)
 
 Rectangle style.
 
@@ -167,7 +167,7 @@ Rectangle style.
 
 > `optional` **trigger?**: `ModifierKey`[]
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:93](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L93)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:93](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L93)
 
 Modifier key(s) that must be held during pointerdown to activate the
 brush. Empty array = any left-drag activates. Default `['shift']`.

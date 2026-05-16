@@ -1,6 +1,6 @@
 # Interface: EdgeRenderHints
 
-Defined in: [graph/src/layer/types.ts:201](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L201)
+Defined in: [graph/src/layer/types.ts:201](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L201)
 
 Render-spec hints for an edge. Optional, all defaulted.
 
@@ -12,7 +12,7 @@ Render-spec hints for an edge. Optional, all defaulted.
 
 > `optional` **alpha?**: `number`
 
-Defined in: [graph/src/layer/types.ts:225](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L225)
+Defined in: [graph/src/layer/types.ts:225](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L225)
 
 Alpha 0–1. Default 1.
 
@@ -22,7 +22,7 @@ Alpha 0–1. Default 1.
 
 > `optional` **anchor?**: [`EdgeAnchor`](../type-aliases/EdgeAnchor.md)
 
-Defined in: [graph/src/layer/types.ts:205](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L205)
+Defined in: [graph/src/layer/types.ts:205](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L205)
 
 Endpoint anchor for both ends. Default `'boundary'`. See [EdgeAnchor](../type-aliases/EdgeAnchor.md).
 
@@ -32,7 +32,7 @@ Endpoint anchor for both ends. Default `'boundary'`. See [EdgeAnchor](../type-al
 
 > `optional` **arrow?**: `boolean`
 
-Defined in: [graph/src/layer/types.ts:227](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L227)
+Defined in: [graph/src/layer/types.ts:227](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L227)
 
 Whether to draw an arrowhead at target. Default `true`.
 
@@ -42,7 +42,7 @@ Whether to draw an arrowhead at target. Default `true`.
 
 > `optional` **label?**: [`EdgeLabelHint`](../type-aliases/EdgeLabelHint.md)
 
-Defined in: [graph/src/layer/types.ts:232](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L232)
+Defined in: [graph/src/layer/types.ts:232](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L232)
 
 Optional text label attached to the edge.
 
@@ -56,7 +56,7 @@ Optional text label attached to the edge.
 
 > `optional` **pathStyleOpts?**: `Readonly`\<`Record`\<`string`, `unknown`\>\>
 
-Defined in: [graph/src/layer/types.ts:217](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L217)
+Defined in: [graph/src/layer/types.ts:217](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L217)
 
 Path-style-specific options forwarded to the canvas pathStyle function.
 
@@ -66,7 +66,7 @@ Path-style-specific options forwarded to the canvas pathStyle function.
 
 > `optional` **pathType?**: [`EdgePathType`](../type-aliases/EdgePathType.md)
 
-Defined in: [graph/src/layer/types.ts:203](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L203)
+Defined in: [graph/src/layer/types.ts:203](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L203)
 
 Path-style shortcut. Default `'straight'`.
 
@@ -76,7 +76,7 @@ Path-style shortcut. Default `'straight'`.
 
 > `optional` **sourceAnchor?**: [`EdgeAnchor`](../type-aliases/EdgeAnchor.md)
 
-Defined in: [graph/src/layer/types.ts:209](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L209)
+Defined in: [graph/src/layer/types.ts:209](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L209)
 
 Per-endpoint anchor override. Falls back to `anchor` when omitted.
 
@@ -86,7 +86,7 @@ Per-endpoint anchor override. Falls back to `anchor` when omitted.
 
 > `optional` **sourceAnchorOpts?**: `Readonly`\<`Record`\<`string`, `unknown`\>\>
 
-Defined in: [graph/src/layer/types.ts:213](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L213)
+Defined in: [graph/src/layer/types.ts:213](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L213)
 
 Opts forwarded to the source anchor's `endpoint.opts`.
 
@@ -96,7 +96,7 @@ Opts forwarded to the source anchor's `endpoint.opts`.
 
 > `optional` **stroke?**: `number`
 
-Defined in: [graph/src/layer/types.ts:221](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L221)
+Defined in: [graph/src/layer/types.ts:221](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L221)
 
 Stroke color. Default `0x94a3b8`.
 
@@ -106,7 +106,7 @@ Stroke color. Default `0x94a3b8`.
 
 > `optional` **strokeWidth?**: `number`
 
-Defined in: [graph/src/layer/types.ts:223](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L223)
+Defined in: [graph/src/layer/types.ts:223](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L223)
 
 Stroke width. Default 1.5.
 
@@ -116,7 +116,7 @@ Stroke width. Default 1.5.
 
 > `optional` **targetAnchor?**: [`EdgeAnchor`](../type-aliases/EdgeAnchor.md)
 
-Defined in: [graph/src/layer/types.ts:211](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L211)
+Defined in: [graph/src/layer/types.ts:211](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L211)
 
 Per-endpoint anchor override; see [sourceAnchor](#sourceanchor).
 
@@ -126,7 +126,7 @@ Per-endpoint anchor override; see [sourceAnchor](#sourceanchor).
 
 > `optional` **targetAnchorOpts?**: `Readonly`\<`Record`\<`string`, `unknown`\>\>
 
-Defined in: [graph/src/layer/types.ts:215](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L215)
+Defined in: [graph/src/layer/types.ts:215](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L215)
 
 Opts for the target anchor; see [sourceAnchorOpts](#sourceanchoropts).
 
@@ -136,6 +136,6 @@ Opts for the target anchor; see [sourceAnchorOpts](#sourceanchoropts).
 
 > `optional` **waypoints?**: readonly `object`[]
 
-Defined in: [graph/src/layer/types.ts:219](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L219)
+Defined in: [graph/src/layer/types.ts:219](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L219)
 
 Intermediate control points the connector should respect.

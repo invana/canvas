@@ -1,6 +1,6 @@
 # Class: ClickSelectBehaviour
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:161](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L161)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:161](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L161)
 
 What `BehaviourRegistry` sees.
 
@@ -14,7 +14,7 @@ What `BehaviourRegistry` sees.
 
 > **new ClickSelectBehaviour**(`opts`): `ClickSelectBehaviour`
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:181](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L181)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:181](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L181)
 
 #### Parameters
 
@@ -36,7 +36,7 @@ Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:181](https://github.co
 
 > `protected` **\_enabled**: `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:63](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/behaviours/Behaviour.ts#L63)
+Defined in: [canvas/src/behaviours/Behaviour.ts:63](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L63)
 
 #### Inherited from
 
@@ -48,7 +48,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:63](https://github.com/invana/ca
 
 > `protected` `optional` **ctx?**: [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:64](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/behaviours/Behaviour.ts#L64)
+Defined in: [canvas/src/behaviours/Behaviour.ts:64](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L64)
 
 #### Inherited from
 
@@ -60,7 +60,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:64](https://github.com/invana/ca
 
 > `readonly` **id**: `string`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:53](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/behaviours/Behaviour.ts#L53)
+Defined in: [canvas/src/behaviours/Behaviour.ts:53](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L53)
 
 #### Inherited from
 
@@ -72,7 +72,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:53](https://github.com/invana/ca
 
 > `readonly` `optional` **layerId?**: `string`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:54](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/behaviours/Behaviour.ts#L54)
+Defined in: [canvas/src/behaviours/Behaviour.ts:54](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L54)
 
 #### Inherited from
 
@@ -84,7 +84,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:54](https://github.com/invana/ca
 
 > `readonly` **scope**: `"canvas"` \| `"layer"`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:61](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/behaviours/Behaviour.ts#L61)
+Defined in: [canvas/src/behaviours/Behaviour.ts:61](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L61)
 
 `'layer'` if `layerId` is set, otherwise `'canvas'`. Set automatically
 from the constructor — subclasses don't need to re-declare.
@@ -99,7 +99,7 @@ from the constructor — subclasses don't need to re-declare.
 
 > `readonly` `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:55](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/behaviours/Behaviour.ts#L55)
+Defined in: [canvas/src/behaviours/Behaviour.ts:55](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L55)
 
 #### Inherited from
 
@@ -113,7 +113,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:55](https://github.com/invana/ca
 
 > **get** **enabled**(): `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:74](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/behaviours/Behaviour.ts#L74)
+Defined in: [canvas/src/behaviours/Behaviour.ts:74](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L74)
 
 ##### Returns
 
@@ -131,7 +131,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:74](https://github.com/invana/ca
 
 > **get** `protected` **isEnabled**(): `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:133](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/behaviours/Behaviour.ts#L133)
+Defined in: [canvas/src/behaviours/Behaviour.ts:133](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L133)
 
 Convenience `if (!enabled) return;` for use inside event handlers
 (without rebinding `this` cost).
@@ -152,7 +152,7 @@ Convenience `if (!enabled) return;` for use inside event handlers
 
 > **get** **options**(): `Readonly`\<`ResolvedOptions`\>
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:286](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L286)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:286](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L286)
 
 Resolved current options (read-only snapshot).
 
@@ -166,7 +166,7 @@ Resolved current options (read-only snapshot).
 
 > **addToSelection**(`id`, `type?`): `void`
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:330](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L330)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:330](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L330)
 
 Add a single element to the current selection.
 
@@ -190,7 +190,7 @@ Add a single element to the current selection.
 
 > **clearSelection**(): `void`
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:376](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L376)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:376](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L376)
 
 Clear the entire selection and any dimming.
 
@@ -204,7 +204,7 @@ Clear the entire selection and any dimming.
 
 > **deselect**(`id`): `void`
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:338](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L338)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:338](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L338)
 
 Remove a single element from the current selection.
 
@@ -224,7 +224,7 @@ Remove a single element from the current selection.
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:89](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/behaviours/Behaviour.ts#L89)
+Defined in: [canvas/src/behaviours/Behaviour.ts:89](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L89)
 
 Called by `BehaviourRegistry.unregister(id)`. Drops subscriptions.
 
@@ -242,7 +242,7 @@ Called by `BehaviourRegistry.unregister(id)`. Drops subscriptions.
 
 > **disable**(): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:103](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/behaviours/Behaviour.ts#L103)
+Defined in: [canvas/src/behaviours/Behaviour.ts:103](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L103)
 
 #### Returns
 
@@ -258,7 +258,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:103](https://github.com/invana/c
 
 > **enable**(): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:97](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/behaviours/Behaviour.ts#L97)
+Defined in: [canvas/src/behaviours/Behaviour.ts:97](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L97)
 
 #### Returns
 
@@ -274,7 +274,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:97](https://github.com/invana/ca
 
 > **getSelectedConnectorIds**(): `string`[]
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:369](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L369)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:369](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L369)
 
 Currently selected connector (edge) ids.
 
@@ -288,7 +288,7 @@ Currently selected connector (edge) ids.
 
 > **getSelectedIds**(): `string`[]
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:357](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L357)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:357](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L357)
 
 All currently selected ids (seeds + expanded).
 
@@ -302,7 +302,7 @@ All currently selected ids (seeds + expanded).
 
 > **getSelectedShapeIds**(): `string`[]
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:362](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L362)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:362](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L362)
 
 Currently selected shape (node) ids.
 
@@ -316,7 +316,7 @@ Currently selected shape (node) ids.
 
 > **isSelected**(`id`): `boolean`
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:352](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L352)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:352](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L352)
 
 True iff `id` is part of the rendered selection (seed or expanded).
 
@@ -336,7 +336,7 @@ True iff `id` is part of the rendered selection (seed or expanded).
 
 > `protected` **onDestroy**(): `void`
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:271](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L271)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:271](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L271)
 
 Cleanup on destroy. Default no-op.
 
@@ -354,7 +354,7 @@ Cleanup on destroy. Default no-op.
 
 > `protected` **onDisable**(): `void`
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:279](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L279)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:279](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L279)
 
 Hook fired on disable.
 
@@ -372,7 +372,7 @@ Hook fired on disable.
 
 > `protected` **onEnable**(): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:120](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/behaviours/Behaviour.ts#L120)
+Defined in: [canvas/src/behaviours/Behaviour.ts:120](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L120)
 
 Hook fired when the developer enables the behaviour.
 
@@ -390,7 +390,7 @@ Hook fired when the developer enables the behaviour.
 
 > `protected` **onRegister**(`ctx`): `void`
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:188](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L188)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:188](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L188)
 
 Subscribe to events / setup any handler resources.
 
@@ -414,7 +414,7 @@ Subscribe to events / setup any handler resources.
 
 > **register**(`ctx`): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:79](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/behaviours/Behaviour.ts#L79)
+Defined in: [canvas/src/behaviours/Behaviour.ts:79](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L79)
 
 Called by `BehaviourRegistry.register(behaviour)`. Subscribes to inputs.
 
@@ -438,7 +438,7 @@ Called by `BehaviourRegistry.register(behaviour)`. Subscribes to inputs.
 
 > **select**(`id`, `type?`): `void`
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:318](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L318)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:318](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L318)
 
 Replace the selection with a single element.
 
@@ -462,7 +462,7 @@ Replace the selection with a single element.
 
 > **selectMultiple**(`elements`): `void`
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:323](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L323)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:323](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L323)
 
 Replace the selection with the given (id, type) pairs.
 
@@ -482,7 +482,7 @@ Replace the selection with the given (id, type) pairs.
 
 > **setOptions**(`patch`): `void`
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:294](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L294)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:294](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L294)
 
 Runtime option update. State-affecting changes clear the current
 visual selection and re-apply with the new options.
@@ -503,7 +503,7 @@ visual selection and re-apply with the new options.
 
 > **toggle**(`id`, `type?`): `void`
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:346](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L346)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:346](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L346)
 
 Toggle the membership of `id` in the selection.
 

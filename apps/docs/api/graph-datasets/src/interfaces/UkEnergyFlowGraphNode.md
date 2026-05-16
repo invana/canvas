@@ -1,6 +1,6 @@
 # Interface: UkEnergyFlowGraphNode
 
-Defined in: [graph-datasets/src/uk-energy-flow.ts:49](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/uk-energy-flow.ts#L49)
+Defined in: [graph-datasets/src/uk-energy-flow.ts:49](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/uk-energy-flow.ts#L49)
 
 Node in the flat `{nodes, edges}` projection.
 
@@ -10,7 +10,7 @@ Node in the flat `{nodes, edges}` projection.
 
 > **data**: `object`
 
-Defined in: [graph-datasets/src/uk-energy-flow.ts:51](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/uk-energy-flow.ts#L51)
+Defined in: [graph-datasets/src/uk-energy-flow.ts:51](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/uk-energy-flow.ts#L51)
 
 #### category
 
@@ -34,4 +34,4 @@ Original `name` field — used by Sankey labels.
 
 > **id**: `string`
 
-Defined in: [graph-datasets/src/uk-energy-flow.ts:50](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/uk-energy-flow.ts#L50)
+Defined in: [graph-datasets/src/uk-energy-flow.ts:50](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/uk-energy-flow.ts#L50)

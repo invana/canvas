@@ -2,7 +2,7 @@
 
 > **ShapeDecorationCtor**\<`TStyle`\> = (`style`) => [`IShapeDecoration`](IShapeDecoration.md)\<`TStyle`\>
 
-Defined in: [canvas/src/primitives/types.ts:925](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L925)
+Defined in: [canvas/src/primitives/types.ts:925](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L925)
 
 ## Type Parameters
 

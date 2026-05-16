@@ -1,6 +1,6 @@
 # Interface: ChargeForceOptions
 
-Defined in: [graph-layout-d3-force/src/types.ts:63](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L63)
+Defined in: [graph-layout-d3-force/src/types.ts:63](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L63)
 
 `forceManyBody` configuration.
 
@@ -10,7 +10,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:63](https://github.com/invana/ca
 
 > `optional` **distanceMax?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:71](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L71)
+Defined in: [graph-layout-d3-force/src/types.ts:71](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L71)
 
 `manyBody.distanceMax(d)`.
 
@@ -20,7 +20,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:71](https://github.com/invana/ca
 
 > `optional` **distanceMin?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:69](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L69)
+Defined in: [graph-layout-d3-force/src/types.ts:69](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L69)
 
 `manyBody.distanceMin(d)`.
 
@@ -30,7 +30,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:69](https://github.com/invana/ca
 
 > `optional` **strength?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:65](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L65)
+Defined in: [graph-layout-d3-force/src/types.ts:65](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L65)
 
 `manyBody.strength(s)` — negative repels, positive attracts.
 
@@ -40,6 +40,6 @@ Defined in: [graph-layout-d3-force/src/types.ts:65](https://github.com/invana/ca
 
 > `optional` **theta?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:67](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layout-d3-force/src/types.ts#L67)
+Defined in: [graph-layout-d3-force/src/types.ts:67](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L67)
 
 `manyBody.theta(θ)` — Barnes–Hut accuracy threshold.

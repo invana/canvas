@@ -1,6 +1,6 @@
 # Interface: BadgeOptions
 
-Defined in: [canvas/src/primitives/badges/types.ts:52](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/badges/types.ts#L52)
+Defined in: [canvas/src/primitives/badges/types.ts:52](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/badges/types.ts#L52)
 
 Options for `PrimitivesRenderer.setBadge`. The `shape` field carries the
 full shape spec (any kind + fill + stroke + kind-specific fields);
@@ -13,7 +13,7 @@ the host anchor, any nested decorations) are the four extra fields.
 
 > `readonly` `optional` **decorations?**: `Readonly`\<`Record`\<`string`, [`DecorationSpec`](DecorationSpec.md)\>\>
 
-Defined in: [canvas/src/primitives/badges/types.ts:80](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/badges/types.ts#L80)
+Defined in: [canvas/src/primitives/badges/types.ts:80](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/badges/types.ts#L80)
 
 Decorations applied to the badge shape, keyed by slot. Internally each
 entry becomes a `setDecoration(badgeId, slot, spec)` call, so any
@@ -25,7 +25,7 @@ registered decoration kind (glow, ring, marching-ants, …) works.
 
 > `readonly` `optional` **offsetX?**: `number`
 
-Defined in: [canvas/src/primitives/badges/types.ts:60](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/badges/types.ts#L60)
+Defined in: [canvas/src/primitives/badges/types.ts:60](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/badges/types.ts#L60)
 
 Pixel offset applied after origin resolution. Default `0` for both.
 
@@ -35,7 +35,7 @@ Pixel offset applied after origin resolution. Default `0` for both.
 
 > `readonly` `optional` **offsetY?**: `number`
 
-Defined in: [canvas/src/primitives/badges/types.ts:61](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/badges/types.ts#L61)
+Defined in: [canvas/src/primitives/badges/types.ts:61](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/badges/types.ts#L61)
 
 ***
 
@@ -43,7 +43,7 @@ Defined in: [canvas/src/primitives/badges/types.ts:61](https://github.com/invana
 
 > `readonly` `optional` **origin?**: [`BadgePlacement`](../type-aliases/BadgePlacement.md) \| `"center"`
 
-Defined in: [canvas/src/primitives/badges/types.ts:73](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/badges/types.ts#L73)
+Defined in: [canvas/src/primitives/badges/types.ts:73](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/badges/types.ts#L73)
 
 Which point of the badge's own AABB lands at the host anchor.
 
@@ -60,7 +60,7 @@ Which point of the badge's own AABB lands at the host anchor.
 
 > `readonly` **placement**: [`BadgePlacement`](../type-aliases/BadgePlacement.md)
 
-Defined in: [canvas/src/primitives/badges/types.ts:57](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/badges/types.ts#L57)
+Defined in: [canvas/src/primitives/badges/types.ts:57](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/badges/types.ts#L57)
 
 Anchor point on the host AABB.
 
@@ -70,6 +70,6 @@ Anchor point on the host AABB.
 
 > `readonly` **shape**: `BadgeShapeSpec`
 
-Defined in: [canvas/src/primitives/badges/types.ts:54](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/badges/types.ts#L54)
+Defined in: [canvas/src/primitives/badges/types.ts:54](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/badges/types.ts#L54)
 
 The badge plate as a shape spec, sans `x` / `y` (placement provides position).

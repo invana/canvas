@@ -2,7 +2,7 @@
 
 > **ResolvableNodeRenderHints** = `{ [K in keyof NodeRenderHints]?: Resolvable<NonNullable<NodeRenderHints[K]>, GraphNode> }`
 
-Defined in: [graph/src/layer/types.ts:192](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/types.ts#L192)
+Defined in: [graph/src/layer/types.ts:192](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L192)
 
 Resolver-aware mirror of [NodeRenderHints](../interfaces/NodeRenderHints.md) — every field accepts
 either a static value (same as `NodeRenderHints`) or a function

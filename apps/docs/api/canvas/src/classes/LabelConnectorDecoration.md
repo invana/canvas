@@ -1,6 +1,6 @@
 # Class: LabelConnectorDecoration
 
-Defined in: [canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts:30](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts#L30)
+Defined in: [canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts:30](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts#L30)
 
 Base for decorations that target connector primitives. Mirrors
 `ShapeDecorationBase` — subclass implements `repaint`, the base handles
@@ -21,7 +21,7 @@ call `connector.paintInto` for native dashed/styled strokes), it pulls
 
 > **new LabelConnectorDecoration**(`style`): `LabelConnectorDecoration`
 
-Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:21](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L21)
+Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:21](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L21)
 
 #### Parameters
 
@@ -43,7 +43,7 @@ Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:21](https://g
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 #### Inherited from
 
@@ -55,7 +55,7 @@ Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/
 
 > `protected` **host**: [`ConnectorDecorationHostInfo`](../interfaces/ConnectorDecorationHostInfo.md) = `null`
 
-Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:19](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L19)
+Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:19](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L19)
 
 #### Inherited from
 
@@ -67,7 +67,7 @@ Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:19](https://g
 
 > `readonly` **style**: [`ConnectorLabelStyle`](../interfaces/ConnectorLabelStyle.md)
 
-Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:18](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L18)
+Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:18](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L18)
 
 #### Inherited from
 
@@ -79,7 +79,7 @@ Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:18](https://g
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
 
 #### Returns
 
@@ -95,7 +95,7 @@ Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/
 
 > **getResolution**(): `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts:46](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts#L46)
+Defined in: [canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts:46](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts#L46)
 
 See `LabelDecoration.getResolution`.
 
@@ -109,7 +109,7 @@ See `LabelDecoration.getResolution`.
 
 > **mount**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:27](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L27)
+Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:27](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L27)
 
 #### Parameters
 
@@ -131,7 +131,7 @@ Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:27](https://g
 
 > `protected` **repaint**(): `void`
 
-Defined in: [canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts:50](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts#L50)
+Defined in: [canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts:50](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts#L50)
 
 #### Returns
 
@@ -147,7 +147,7 @@ Defined in: [canvas/src/primitives/decorations/connector/LabelConnectorDecoratio
 
 > **setResolution**(`resolution`): `void`
 
-Defined in: [canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts:40](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts#L40)
+Defined in: [canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts:40](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts#L40)
 
 See `LabelDecoration.setResolution`.
 
@@ -167,7 +167,7 @@ See `LabelDecoration.setResolution`.
 
 > **tick**(`_deltaMs`): `boolean`
 
-Defined in: [canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts:152](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts#L152)
+Defined in: [canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts:152](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/connector/LabelConnectorDecoration.ts#L152)
 
 #### Parameters
 
@@ -185,7 +185,7 @@ Defined in: [canvas/src/primitives/decorations/connector/LabelConnectorDecoratio
 
 > **update**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:34](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L34)
+Defined in: [canvas/src/primitives/base/ConnectorDecorationBase.ts:34](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/ConnectorDecorationBase.ts#L34)
 
 #### Parameters
 

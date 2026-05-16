@@ -1,6 +1,6 @@
 # Abstract Class: DensityContourLayerBase\<TOpt, TEvt\>
 
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:41](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L41)
+Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:41](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L41)
 
 The subset of `Layer` the `LayerRegistry` and `Canvas.tick` interact with.
 Lets the registry stay decoupled from the abstract class implementation.
@@ -30,7 +30,7 @@ Lets the registry stay decoupled from the abstract class implementation.
 
 > **new DensityContourLayerBase**\<`TOpt`, `TEvt`\>(`opts`): `DensityContourLayerBase`\<`TOpt`, `TEvt`\>
 
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:56](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L56)
+Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:56](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L56)
 
 #### Parameters
 
@@ -52,7 +52,7 @@ Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:56](https://g
 
 > `protected` `optional` **\_container?**: `Container`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:38](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L38)
+Defined in: [canvas/src/layers/WorldLayer.ts:38](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L38)
 
 Backing field — assigned in `mount`, cleared in `unmount`.
 
@@ -66,7 +66,7 @@ Backing field — assigned in `mount`, cleared in `unmount`.
 
 > `protected` `optional` **ctx?**: [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
-Defined in: [canvas/src/layers/Layer.ts:108](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L108)
+Defined in: [canvas/src/layers/Layer.ts:108](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L108)
 
 Set by `mount(ctx)`; cleared by `unmount()`.
 
@@ -80,7 +80,7 @@ Set by `mount(ctx)`; cleared by `unmount()`.
 
 > **cullable**: `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:91](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L91)
+Defined in: [canvas/src/layers/Layer.ts:91](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L91)
 
 #### Inherited from
 
@@ -92,7 +92,7 @@ Defined in: [canvas/src/layers/Layer.ts:91](https://github.com/invana/canvas/blo
 
 > `readonly` **dirty**: [`DirtyBatcher`](../../../canvas/src/classes/DirtyBatcher.md)\<`never`\>
 
-Defined in: [canvas/src/layers/Layer.ts:85](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L85)
+Defined in: [canvas/src/layers/Layer.ts:85](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L85)
 
 #### Inherited from
 
@@ -104,7 +104,7 @@ Defined in: [canvas/src/layers/Layer.ts:85](https://github.com/invana/canvas/blo
 
 > `readonly` **events**: [`SourceEmitter`](../../../canvas/src/classes/SourceEmitter.md)\<`TEvt`\>
 
-Defined in: [canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L84)
+Defined in: [canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L84)
 
 #### Inherited from
 
@@ -116,7 +116,7 @@ Defined in: [canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blo
 
 > `protected` **gfx**: `Graphics` = `null`
 
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:48](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L48)
+Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:48](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L48)
 
 ***
 
@@ -124,7 +124,7 @@ Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:48](https://g
 
 > **hittable**: `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:89](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L89)
+Defined in: [canvas/src/layers/Layer.ts:89](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L89)
 
 #### Inherited from
 
@@ -136,7 +136,7 @@ Defined in: [canvas/src/layers/Layer.ts:89](https://github.com/invana/canvas/blo
 
 > `readonly` **id**: `string`
 
-Defined in: [canvas/src/layers/Layer.ts:81](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L81)
+Defined in: [canvas/src/layers/Layer.ts:81](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L81)
 
 #### Inherited from
 
@@ -148,7 +148,7 @@ Defined in: [canvas/src/layers/Layer.ts:81](https://github.com/invana/canvas/blo
 
 > `readonly` **options**: `TOpt`
 
-Defined in: [canvas/src/layers/Layer.ts:82](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L82)
+Defined in: [canvas/src/layers/Layer.ts:82](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L82)
 
 #### Inherited from
 
@@ -160,7 +160,7 @@ Defined in: [canvas/src/layers/Layer.ts:82](https://github.com/invana/canvas/blo
 
 > `readonly` **state**: [`Store`](../../../canvas/src/type-aliases/Store.md)\<[`DensityContourLayerState`](../interfaces/DensityContourLayerState.md)\>
 
-Defined in: [canvas/src/layers/Layer.ts:83](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L83)
+Defined in: [canvas/src/layers/Layer.ts:83](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L83)
 
 #### Inherited from
 
@@ -172,7 +172,7 @@ Defined in: [canvas/src/layers/Layer.ts:83](https://github.com/invana/canvas/blo
 
 > **zIndex**: `number`
 
-Defined in: [canvas/src/layers/Layer.ts:90](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L90)
+Defined in: [canvas/src/layers/Layer.ts:90](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L90)
 
 #### Inherited from
 
@@ -186,7 +186,7 @@ Defined in: [canvas/src/layers/Layer.ts:90](https://github.com/invana/canvas/blo
 
 > **get** `protected` **container**(): `Container`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:47](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L47)
+Defined in: [canvas/src/layers/WorldLayer.ts:47](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L47)
 
 Root pixi `Container` (RenderGroup) for this layer. Available from
 `onMount(ctx)` for the layer's lifetime. Throws before mount / after unmount.
@@ -210,7 +210,7 @@ inside `onMount`. Subclass-only — not part of the external layer API.
 
 > **get** `protected` **context**(): [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
-Defined in: [canvas/src/layers/Layer.ts:156](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L156)
+Defined in: [canvas/src/layers/Layer.ts:156](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L156)
 
 Convenience accessor; throws when called pre-mount.
 
@@ -230,7 +230,7 @@ Convenience accessor; throws when called pre-mount.
 
 > **get** **mounted**(): `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:111](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L111)
+Defined in: [canvas/src/layers/Layer.ts:111](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L111)
 
 True between `mount` and `unmount`.
 
@@ -250,7 +250,7 @@ True between `mount` and `unmount`.
 
 > **get** **visible**(): `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:98](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L98)
+Defined in: [canvas/src/layers/Layer.ts:98](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L98)
 
 Whether this layer renders. Setting `false` hides the layer's pixi
 container (via `onVisibleChange`, overridden by `WorldLayer` /
@@ -264,7 +264,7 @@ container (via `onVisibleChange`, overridden by `WorldLayer` /
 
 > **set** **visible**(`value`): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:101](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L101)
+Defined in: [canvas/src/layers/Layer.ts:101](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L101)
 
 ##### Parameters
 
@@ -286,7 +286,7 @@ Defined in: [canvas/src/layers/Layer.ts:101](https://github.com/invana/canvas/bl
 
 > `protected` **applyDirty**(`_snap`): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:189](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L189)
+Defined in: [canvas/src/layers/Layer.ts:189](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L189)
 
 Translate a dirty snapshot into renderer / pixi commands.
 Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
@@ -311,7 +311,7 @@ Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
 > **createContainer**(`label?`): `Container`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:102](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L102)
+Defined in: [canvas/src/layers/WorldLayer.ts:102](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L102)
 
 Create a plain pixi `Container` attached to this layer's root container.
 Useful as a parent for mounted display objects (e.g. text sprites).
@@ -336,7 +336,7 @@ Useful as a parent for mounted display objects (e.g. text sprites).
 
 > **createGraphics**(`label?`): `Graphics`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:91](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L91)
+Defined in: [canvas/src/layers/WorldLayer.ts:91](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L91)
 
 Create a pixi `Graphics` attached to this layer's root container. The
 sanctioned way for layer authors to obtain a `Graphics` for direct
@@ -363,7 +363,7 @@ painting via `@invana/canvas/draw` primitives — keeps pixi internal
 
 > `protected` **createState**(): [`DensityContourLayerState`](../interfaces/DensityContourLayerState.md)
 
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:68](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L68)
+Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:68](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L68)
 
 Build the initial UI / interaction state. Called once in the constructor.
 
@@ -381,7 +381,7 @@ Build the initial UI / interaction state. Called once in the constructor.
 
 > **flush**(): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:174](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L174)
+Defined in: [canvas/src/layers/Layer.ts:174](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L174)
 
 Called by Canvas tick when `hasPending()` is true. Swaps the dirty
 snapshot, hands it to `applyDirty`. Subclasses normally don't override.
@@ -400,7 +400,7 @@ snapshot, hands it to `applyDirty`. Subclasses normally don't override.
 
 > **getBounds**(): `object`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:129](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L129)
+Defined in: [canvas/src/layers/WorldLayer.ts:129](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L129)
 
 Return the world-space AABB of everything currently rendered on this layer.
 Delegates to Pixi's `getLocalBounds()` — a one-shot scene-graph traversal.
@@ -436,7 +436,7 @@ Suitable for "fit to content" calls; do not call every frame.
 
 > **hasPending**(): `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:166](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L166)
+Defined in: [canvas/src/layers/Layer.ts:166](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L166)
 
 Whether `flush()` has work to do this frame.
 
@@ -454,7 +454,7 @@ Whether `flush()` has work to do this frame.
 
 > **hitTest**(`_worldX`, `_worldY`): [`WorldLayerHit`](../../../canvas/src/interfaces/WorldLayerHit.md)
 
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:112](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L112)
+Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:112](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L112)
 
 Hit-test in world coordinates. Returns the topmost hit or `null`.
 Concrete layers implement this against their own data + spatial index.
@@ -486,7 +486,7 @@ first hit, screen-layers-before-world per proposal Q6) calls this.
 
 > **mount**(`ctx`): `void`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:58](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L58)
+Defined in: [canvas/src/layers/WorldLayer.ts:58](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L58)
 
 #### Parameters
 
@@ -508,7 +508,7 @@ Defined in: [canvas/src/layers/WorldLayer.ts:58](https://github.com/invana/canva
 
 > `protected` **onMount**(`ctx`): `void`
 
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:72](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L72)
+Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:72](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L72)
 
 Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
@@ -532,7 +532,7 @@ Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
 > `protected` **onUnmount**(): `void`
 
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:92](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L92)
+Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:92](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L92)
 
 Domain-specific unmount teardown.
 
@@ -550,7 +550,7 @@ Domain-specific unmount teardown.
 
 > `protected` **onVisibleChange**(`value`): `void`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:74](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L74)
+Defined in: [canvas/src/layers/WorldLayer.ts:74](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L74)
 
 Keep the pixi container in sync when `layer.visible` is toggled.
 
@@ -574,7 +574,7 @@ Keep the pixi container in sync when `layer.visible` is toggled.
 
 > `abstract` `protected` **paintDensity**(`g`, `density`, `offsetX`, `offsetY`): `void`
 
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:197](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L197)
+Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:197](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L197)
 
 Render the iso-bands into `g`. The bands are ordered low-density →
 high-density; subclasses typically paint in that order so denser bands
@@ -609,7 +609,7 @@ compute grid — add them to each polygon point.
 
 > **recompute**(): `void`
 
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:108](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L108)
+Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:108](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L108)
 
 Force an immediate recompute. Useful in `recompute: 'manual'` mode, or
 to refresh the overlay after externally mutating options that don't
@@ -625,7 +625,7 @@ have setters yet.
 
 > **setZIndex**(`z`): `void`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:115](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L115)
+Defined in: [canvas/src/layers/WorldLayer.ts:115](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L115)
 
 Update this layer's z-order relative to its peers. Keeps the iteration
 field (`this.zIndex`, used by `LayerRegistry.byZOrder()`) and the pixi
@@ -652,7 +652,7 @@ so the change renders.
 
 > **unmount**(): `void`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:78](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L78)
+Defined in: [canvas/src/layers/WorldLayer.ts:78](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L78)
 
 #### Returns
 

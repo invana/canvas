@@ -2,7 +2,7 @@
 
 > **EffectTarget** = `"transform"` \| `"style"`
 
-Defined in: [canvas/src/primitives/types.ts:767](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L767)
+Defined in: [canvas/src/primitives/types.ts:767](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L767)
 
 What an effect modulates. Distinguishes effects that wiggle the host's
 transform (shake, breathing, jiggle) from effects that override the host's

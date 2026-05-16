@@ -1,6 +1,6 @@
 # Class: Camera
 
-Defined in: [canvas/src/camera/Camera.ts:67](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L67)
+Defined in: [canvas/src/camera/Camera.ts:67](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L67)
 
 ## Constructors
 
@@ -8,7 +8,7 @@ Defined in: [canvas/src/camera/Camera.ts:67](https://github.com/invana/canvas/bl
 
 > **new Camera**(`opts`): `Camera`
 
-Defined in: [canvas/src/camera/Camera.ts:84](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L84)
+Defined in: [canvas/src/camera/Camera.ts:84](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L84)
 
 #### Parameters
 
@@ -26,7 +26,7 @@ Defined in: [canvas/src/camera/Camera.ts:84](https://github.com/invana/canvas/bl
 
 > `readonly` **viewport**: `Viewport`
 
-Defined in: [canvas/src/camera/Camera.ts:75](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L75)
+Defined in: [canvas/src/camera/Camera.ts:75](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L75)
 
 The underlying `pixi-viewport` `Viewport`. Public for engine internals
 (camera-input behaviours that need `viewport.drag()` / `viewport.snap()`
@@ -42,7 +42,7 @@ Viewport directly.
 
 > **get** **scale**(): `number`
 
-Defined in: [canvas/src/camera/Camera.ts:119](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L119)
+Defined in: [canvas/src/camera/Camera.ts:119](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L119)
 
 Current uniform scale.
 
@@ -58,7 +58,7 @@ Current uniform scale.
 
 > **get** **screenHeight**(): `number`
 
-Defined in: [canvas/src/camera/Camera.ts:136](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L136)
+Defined in: [canvas/src/camera/Camera.ts:136](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L136)
 
 ##### Returns
 
@@ -72,7 +72,7 @@ Defined in: [canvas/src/camera/Camera.ts:136](https://github.com/invana/canvas/b
 
 > **get** **screenWidth**(): `number`
 
-Defined in: [canvas/src/camera/Camera.ts:132](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L132)
+Defined in: [canvas/src/camera/Camera.ts:132](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L132)
 
 ##### Returns
 
@@ -86,7 +86,7 @@ Defined in: [canvas/src/camera/Camera.ts:132](https://github.com/invana/canvas/b
 
 > **get** **x**(): `number`
 
-Defined in: [canvas/src/camera/Camera.ts:124](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L124)
+Defined in: [canvas/src/camera/Camera.ts:124](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L124)
 
 Current world-container x in screen pixels. (Where world (0,0) sits.)
 
@@ -102,7 +102,7 @@ Current world-container x in screen pixels. (Where world (0,0) sits.)
 
 > **get** **y**(): `number`
 
-Defined in: [canvas/src/camera/Camera.ts:128](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L128)
+Defined in: [canvas/src/camera/Camera.ts:128](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L128)
 
 ##### Returns
 
@@ -114,7 +114,7 @@ Defined in: [canvas/src/camera/Camera.ts:128](https://github.com/invana/canvas/b
 
 > **fitContent**(`worldRect`, `padding?`): `void`
 
-Defined in: [canvas/src/camera/Camera.ts:206](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L206)
+Defined in: [canvas/src/camera/Camera.ts:206](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L206)
 
 Fit a world-space rectangle into the viewport. Scales so the whole rect
 is visible (limited by the smaller axis), centres it. `padding` is in
@@ -140,7 +140,7 @@ screen pixels around the rect.
 
 > **getVisibleBounds**(): `Rect`
 
-Defined in: [canvas/src/camera/Camera.ts:254](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L254)
+Defined in: [canvas/src/camera/Camera.ts:254](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L254)
 
 The world-space rectangle currently visible. Used by viewport culling
 (per `decorations-plan.md` §11.6) and minimap layers.
@@ -155,7 +155,7 @@ The world-space rectangle currently visible. Used by viewport culling
 
 > **pan**(`dx`, `dy`): `void`
 
-Defined in: [canvas/src/camera/Camera.ts:153](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L153)
+Defined in: [canvas/src/camera/Camera.ts:153](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L153)
 
 Pan by `(dx, dy)` screen pixels.
 
@@ -179,7 +179,7 @@ Pan by `(dx, dy)` screen pixels.
 
 > **resize**(`screenWidth`, `screenHeight`): `void`
 
-Defined in: [canvas/src/camera/Camera.ts:230](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L230)
+Defined in: [canvas/src/camera/Camera.ts:230](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L230)
 
 Update on viewport resize. Forwards to Viewport so its hit-area + plugin math stays correct.
 
@@ -203,7 +203,7 @@ Update on viewport resize. Forwards to Viewport so its hit-area + plugin math st
 
 > **setPosition**(`x`, `y`): `void`
 
-Defined in: [canvas/src/camera/Camera.ts:146](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L146)
+Defined in: [canvas/src/camera/Camera.ts:146](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L146)
 
 Set absolute world-container offset. `(x, y)` is where world (0,0) lives
 in screen pixels. Most consumers want `pan(dx, dy)` instead.
@@ -228,7 +228,7 @@ in screen pixels. Most consumers want `pan(dx, dy)` instead.
 
 > **setZoom**(`scale`): `void`
 
-Defined in: [canvas/src/camera/Camera.ts:163](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L163)
+Defined in: [canvas/src/camera/Camera.ts:163](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L163)
 
 Set absolute scale, anchored at the viewport centre. The world point at
 the centre stays put. For zoom-around-an-arbitrary-point semantics use
@@ -250,7 +250,7 @@ the centre stays put. For zoom-around-an-arbitrary-point semantics use
 
 > **tick**(`dt`): `void`
 
-Defined in: [canvas/src/camera/Camera.ts:266](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L266)
+Defined in: [canvas/src/camera/Camera.ts:266](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L266)
 
 Advance viewport plugins that animate over time (decelerate, snap, etc.).
 Called by `Canvas.tickOnce()` every frame. No-op until a camera-input
@@ -272,7 +272,7 @@ behaviour enables a plugin that uses `update()`.
 
 > **toScreen**(`worldX`, `worldY`): `Point`
 
-Defined in: [canvas/src/camera/Camera.ts:245](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L245)
+Defined in: [canvas/src/camera/Camera.ts:245](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L245)
 
 World → screen.
 
@@ -296,7 +296,7 @@ World → screen.
 
 > **toWorld**(`screenX`, `screenY`): `Point`
 
-Defined in: [canvas/src/camera/Camera.ts:239](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L239)
+Defined in: [canvas/src/camera/Camera.ts:239](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L239)
 
 Screen → world.
 
@@ -320,7 +320,7 @@ Screen → world.
 
 > **zoomAt**(`factor`, `centerX?`, `centerY?`): `void`
 
-Defined in: [canvas/src/camera/Camera.ts:184](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/camera/Camera.ts#L184)
+Defined in: [canvas/src/camera/Camera.ts:184](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/camera/Camera.ts#L184)
 
 Multiply scale by `factor`, holding the world point under the screen
 cursor `(centerX, centerY)` in place. Default centre = viewport centre.

@@ -1,6 +1,6 @@
 # Interface: FadeInConnectorEffectStyle
 
-Defined in: [canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:26](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L26)
+Defined in: [canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:26](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L26)
 
 One-shot opacity fade-in on the host connector. Drives the connector's
 alpha from `fromAlpha` (default `0`) to `toAlpha` (default `1`) over
@@ -18,7 +18,7 @@ deliberately one-shot.
 
 > `readonly` `optional` **delayMs?**: `number`
 
-Defined in: [canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:36](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L36)
+Defined in: [canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:36](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L36)
 
 Hold the effect at `fromAlpha` for this many ms before the fade starts. Default `0`.
 
@@ -28,7 +28,7 @@ Hold the effect at `fromAlpha` for this many ms before the fade starts. Default 
 
 > `readonly` `optional` **durationMs?**: `number`
 
-Defined in: [canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:28](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L28)
+Defined in: [canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:28](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L28)
 
 Duration of the fade in milliseconds. Default `600`.
 
@@ -38,7 +38,7 @@ Duration of the fade in milliseconds. Default `600`.
 
 > `readonly` `optional` **easing?**: [`FadeInEasingName`](../type-aliases/FadeInEasingName.md)
 
-Defined in: [canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:34](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L34)
+Defined in: [canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:34](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L34)
 
 Easing curve. Default `'easeOutCubic'`.
 
@@ -48,7 +48,7 @@ Easing curve. Default `'easeOutCubic'`.
 
 > `readonly` `optional` **fromAlpha?**: `number`
 
-Defined in: [canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:30](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L30)
+Defined in: [canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:30](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L30)
 
 Start alpha. Default `0`.
 
@@ -58,6 +58,6 @@ Start alpha. Default `0`.
 
 > `readonly` `optional` **toAlpha?**: `number`
 
-Defined in: [canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:32](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L32)
+Defined in: [canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts:32](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/connector/FadeInConnectorEffect.ts#L32)
 
 End alpha. Default `1`.

@@ -2,7 +2,7 @@
 
 > **greatCircleSamples**(`from`, `to`, `n`): \[`number`, `number`\][]
 
-Defined in: [graph-layer-maplibre/src/greatCircle.ts:45](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-layer-maplibre/src/greatCircle.ts#L45)
+Defined in: [graph-layer-maplibre/src/greatCircle.ts:45](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-maplibre/src/greatCircle.ts#L45)
 
 Sample `n` points (`n >= 2`) along the great circle from `from` to `to`.
 

@@ -1,6 +1,6 @@
 # Interface: FlareGraphData
 
-Defined in: [graph-datasets/src/flare.ts:60](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/flare.ts#L60)
+Defined in: [graph-datasets/src/flare.ts:60](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/flare.ts#L60)
 
 Output of [flareAsGraph](../functions/flareAsGraph.md).
 
@@ -10,7 +10,7 @@ Output of [flareAsGraph](../functions/flareAsGraph.md).
 
 > **edges**: [`FlareGraphEdge`](FlareGraphEdge.md)[]
 
-Defined in: [graph-datasets/src/flare.ts:62](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/flare.ts#L62)
+Defined in: [graph-datasets/src/flare.ts:62](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/flare.ts#L62)
 
 ***
 
@@ -18,4 +18,4 @@ Defined in: [graph-datasets/src/flare.ts:62](https://github.com/invana/canvas/bl
 
 > **nodes**: [`FlareGraphNode`](FlareGraphNode.md)[]
 
-Defined in: [graph-datasets/src/flare.ts:61](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph-datasets/src/flare.ts#L61)
+Defined in: [graph-datasets/src/flare.ts:61](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/flare.ts#L61)

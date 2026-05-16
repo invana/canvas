@@ -2,7 +2,7 @@
 
 > **ColumnValue**\<`T`\> = `T` *extends* `"f32"` \| `"f64"` ? `number` : `number`
 
-Defined in: [canvas/src/state/ColumnStore.ts:78](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/state/ColumnStore.ts#L78)
+Defined in: [canvas/src/state/ColumnStore.ts:78](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/state/ColumnStore.ts#L78)
 
 ## Type Parameters
 

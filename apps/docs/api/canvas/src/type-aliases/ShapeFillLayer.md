@@ -2,7 +2,7 @@
 
 > **ShapeFillLayer** = \{ `alpha?`: `number`; `color`: `number`; `kind`: `"solid"`; \} \| \{ `alpha?`: `number`; `fit?`: `"fill"` \| `"cover"` \| `"contain"` \| `"none"` \| `"tile"`; `kind`: `"image"`; `url`: `string`; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `char`: `string`; `color?`: `number`; `fontFamily?`: `string`; `fontStyle?`: `"normal"` \| `"italic"`; `fontWeight?`: `number` \| `string`; `kind`: `"glyph"`; `sizeRatio?`: `number`; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `color?`: `number`; `kind`: `"svg"`; `pathD`: `string`; `sizeRatio?`: `number`; `strokeWidth?`: `number`; `viewBox?`: \{ `height`: `number`; `width`: `number`; \}; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `kind`: `"image-inset"`; `sizeRatio?`: `number`; `url`: `string`; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `color?`: `number`; `kind`: `"svg-url"`; `sizeRatio?`: `number`; `strokeWidth?`: `number`; `url`: `string`; `viewBox?`: \{ `height`: `number`; `width`: `number`; \}; \}
 
-Defined in: [canvas/src/primitives/types.ts:175](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/types.ts#L175)
+Defined in: [canvas/src/primitives/types.ts:175](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L175)
 
 One layer of a shape's fill. Layers split by role:
 

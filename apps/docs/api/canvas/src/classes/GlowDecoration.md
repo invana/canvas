@@ -1,6 +1,6 @@
 # Class: GlowDecoration
 
-Defined in: [canvas/src/primitives/decorations/shape/GlowDecoration.ts:34](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L34)
+Defined in: [canvas/src/primitives/decorations/shape/GlowDecoration.ts:34](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L34)
 
 Base for decorations that target shape primitives. Subclass implements
 `repaint`; this base handles the `mount` / `update` lifecycle (attach gfx
@@ -20,7 +20,7 @@ its animation set; a falsy return retires the decoration.
 
 > **new GlowDecoration**(`style`): `GlowDecoration`
 
-Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:20](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L20)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:20](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L20)
 
 #### Parameters
 
@@ -42,7 +42,7 @@ Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:20](https://githu
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 #### Inherited from
 
@@ -54,7 +54,7 @@ Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/
 
 > `protected` **host**: [`ShapeDecorationHostInfo`](../interfaces/ShapeDecorationHostInfo.md) = `null`
 
-Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:18](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L18)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:18](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L18)
 
 #### Inherited from
 
@@ -66,7 +66,7 @@ Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:18](https://githu
 
 > `readonly` **style**: [`GlowDecorationStyle`](../interfaces/GlowDecorationStyle.md)
 
-Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:17](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L17)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:17](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L17)
 
 #### Inherited from
 
@@ -78,7 +78,7 @@ Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:17](https://githu
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
 
 #### Returns
 
@@ -94,7 +94,7 @@ Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/
 
 > **mount**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:26](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L26)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:26](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L26)
 
 #### Parameters
 
@@ -116,7 +116,7 @@ Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:26](https://githu
 
 > `protected` **repaint**(): `void`
 
-Defined in: [canvas/src/primitives/decorations/shape/GlowDecoration.ts:38](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L38)
+Defined in: [canvas/src/primitives/decorations/shape/GlowDecoration.ts:38](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L38)
 
 Render the decoration based on the current `host`.
 
@@ -134,7 +134,7 @@ Render the decoration based on the current `host`.
 
 > **tick**(`deltaMs`): `boolean`
 
-Defined in: [canvas/src/primitives/decorations/shape/GlowDecoration.ts:73](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L73)
+Defined in: [canvas/src/primitives/decorations/shape/GlowDecoration.ts:73](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/shape/GlowDecoration.ts#L73)
 
 Advance the optional pulse phase. Geometry is repainted once at mount
 (cheap) and never again — only `this.gfx.alpha` is touched per frame,
@@ -156,7 +156,7 @@ so animated pulse is essentially free.
 
 > **update**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:33](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L33)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:33](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L33)
 
 #### Parameters
 

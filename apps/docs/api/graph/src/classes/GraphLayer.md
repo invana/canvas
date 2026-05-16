@@ -1,6 +1,6 @@
 # Class: GraphLayer
 
-Defined in: [graph/src/layer/GraphLayer.ts:143](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L143)
+Defined in: [graph/src/layer/GraphLayer.ts:143](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L143)
 
 The subset of `Layer` the `LayerRegistry` and `Canvas.tick` interact with.
 Lets the registry stay decoupled from the abstract class implementation.
@@ -15,7 +15,7 @@ Lets the registry stay decoupled from the abstract class implementation.
 
 > **new GraphLayer**(`opts`): `GraphLayer`
 
-Defined in: [graph/src/layer/GraphLayer.ts:280](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L280)
+Defined in: [graph/src/layer/GraphLayer.ts:280](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L280)
 
 #### Parameters
 
@@ -37,7 +37,7 @@ Defined in: [graph/src/layer/GraphLayer.ts:280](https://github.com/invana/canvas
 
 > `protected` `optional` **\_container?**: `Container`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:38](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L38)
+Defined in: [canvas/src/layers/WorldLayer.ts:38](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L38)
 
 Backing field — assigned in `mount`, cleared in `unmount`.
 
@@ -51,7 +51,7 @@ Backing field — assigned in `mount`, cleared in `unmount`.
 
 > `protected` `optional` **ctx?**: [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
-Defined in: [canvas/src/layers/Layer.ts:108](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L108)
+Defined in: [canvas/src/layers/Layer.ts:108](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L108)
 
 Set by `mount(ctx)`; cleared by `unmount()`.
 
@@ -65,7 +65,7 @@ Set by `mount(ctx)`; cleared by `unmount()`.
 
 > **cullable**: `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:91](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L91)
+Defined in: [canvas/src/layers/Layer.ts:91](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L91)
 
 #### Inherited from
 
@@ -77,7 +77,7 @@ Defined in: [canvas/src/layers/Layer.ts:91](https://github.com/invana/canvas/blo
 
 > `readonly` **dirty**: [`DirtyBatcher`](../../../canvas/src/classes/DirtyBatcher.md)\<`never`\>
 
-Defined in: [canvas/src/layers/Layer.ts:85](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L85)
+Defined in: [canvas/src/layers/Layer.ts:85](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L85)
 
 #### Inherited from
 
@@ -89,7 +89,7 @@ Defined in: [canvas/src/layers/Layer.ts:85](https://github.com/invana/canvas/blo
 
 > `readonly` **events**: [`SourceEmitter`](../../../canvas/src/classes/SourceEmitter.md)\<[`GraphLayerEvents`](../interfaces/GraphLayerEvents.md)\>
 
-Defined in: [canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L84)
+Defined in: [canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L84)
 
 #### Inherited from
 
@@ -101,7 +101,7 @@ Defined in: [canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blo
 
 > **hittable**: `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:89](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L89)
+Defined in: [canvas/src/layers/Layer.ts:89](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L89)
 
 #### Inherited from
 
@@ -113,7 +113,7 @@ Defined in: [canvas/src/layers/Layer.ts:89](https://github.com/invana/canvas/blo
 
 > `readonly` **id**: `string`
 
-Defined in: [canvas/src/layers/Layer.ts:81](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L81)
+Defined in: [canvas/src/layers/Layer.ts:81](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L81)
 
 #### Inherited from
 
@@ -125,7 +125,7 @@ Defined in: [canvas/src/layers/Layer.ts:81](https://github.com/invana/canvas/blo
 
 > `readonly` **options**: [`GraphLayerOptions`](../interfaces/GraphLayerOptions.md)
 
-Defined in: [canvas/src/layers/Layer.ts:82](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L82)
+Defined in: [canvas/src/layers/Layer.ts:82](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L82)
 
 #### Inherited from
 
@@ -137,7 +137,7 @@ Defined in: [canvas/src/layers/Layer.ts:82](https://github.com/invana/canvas/blo
 
 > `readonly` **state**: [`Store`](../../../canvas/src/type-aliases/Store.md)\<`GraphLayerState`\>
 
-Defined in: [canvas/src/layers/Layer.ts:83](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L83)
+Defined in: [canvas/src/layers/Layer.ts:83](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L83)
 
 #### Inherited from
 
@@ -149,7 +149,7 @@ Defined in: [canvas/src/layers/Layer.ts:83](https://github.com/invana/canvas/blo
 
 > `readonly` **store**: [`GraphStore`](GraphStore.md)
 
-Defined in: [graph/src/layer/GraphLayer.ts:241](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L241)
+Defined in: [graph/src/layer/GraphLayer.ts:241](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L241)
 
 Data source. Either supplied by the caller or self-created.
 
@@ -159,7 +159,7 @@ Data source. Either supplied by the caller or self-created.
 
 > **zIndex**: `number`
 
-Defined in: [canvas/src/layers/Layer.ts:90](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L90)
+Defined in: [canvas/src/layers/Layer.ts:90](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L90)
 
 #### Inherited from
 
@@ -173,7 +173,7 @@ Defined in: [canvas/src/layers/Layer.ts:90](https://github.com/invana/canvas/blo
 
 > **get** `protected` **container**(): `Container`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:47](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L47)
+Defined in: [canvas/src/layers/WorldLayer.ts:47](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L47)
 
 Root pixi `Container` (RenderGroup) for this layer. Available from
 `onMount(ctx)` for the layer's lifetime. Throws before mount / after unmount.
@@ -197,7 +197,7 @@ inside `onMount`. Subclass-only — not part of the external layer API.
 
 > **get** `protected` **context**(): [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
-Defined in: [canvas/src/layers/Layer.ts:156](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L156)
+Defined in: [canvas/src/layers/Layer.ts:156](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L156)
 
 Convenience accessor; throws when called pre-mount.
 
@@ -217,7 +217,7 @@ Convenience accessor; throws when called pre-mount.
 
 > **get** **mounted**(): `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:111](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L111)
+Defined in: [canvas/src/layers/Layer.ts:111](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L111)
 
 True between `mount` and `unmount`.
 
@@ -237,7 +237,7 @@ True between `mount` and `unmount`.
 
 > **get** **visible**(): `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:98](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L98)
+Defined in: [canvas/src/layers/Layer.ts:98](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L98)
 
 Whether this layer renders. Setting `false` hides the layer's pixi
 container (via `onVisibleChange`, overridden by `WorldLayer` /
@@ -251,7 +251,7 @@ container (via `onVisibleChange`, overridden by `WorldLayer` /
 
 > **set** **visible**(`value`): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:101](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L101)
+Defined in: [canvas/src/layers/Layer.ts:101](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L101)
 
 ##### Parameters
 
@@ -273,7 +273,7 @@ Defined in: [canvas/src/layers/Layer.ts:101](https://github.com/invana/canvas/bl
 
 > `protected` **applyDirty**(`_snap`): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:189](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L189)
+Defined in: [canvas/src/layers/Layer.ts:189](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L189)
 
 Translate a dirty snapshot into renderer / pixi commands.
 Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
@@ -298,7 +298,7 @@ Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
 > **clearEdgeState**(`name`): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:518](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L518)
+Defined in: [graph/src/layer/GraphLayer.ts:518](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L518)
 
 #### Parameters
 
@@ -316,7 +316,7 @@ Defined in: [graph/src/layer/GraphLayer.ts:518](https://github.com/invana/canvas
 
 > **clearNodeState**(`name`): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:507](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L507)
+Defined in: [graph/src/layer/GraphLayer.ts:507](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L507)
 
 Remove state `name` from every node that carries it, in one pass. Useful
 for clearing a transient selection / hover set without iterating
@@ -338,7 +338,7 @@ externally.
 
 > **createContainer**(`label?`): `Container`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:102](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L102)
+Defined in: [canvas/src/layers/WorldLayer.ts:102](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L102)
 
 Create a plain pixi `Container` attached to this layer's root container.
 Useful as a parent for mounted display objects (e.g. text sprites).
@@ -363,7 +363,7 @@ Useful as a parent for mounted display objects (e.g. text sprites).
 
 > **createGraphics**(`label?`): `Graphics`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:91](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L91)
+Defined in: [canvas/src/layers/WorldLayer.ts:91](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L91)
 
 Create a pixi `Graphics` attached to this layer's root container. The
 sanctioned way for layer authors to obtain a `Graphics` for direct
@@ -390,7 +390,7 @@ painting via `@invana/canvas/draw` primitives — keeps pixi internal
 
 > `protected` **createState**(): `GraphLayerState`
 
-Defined in: [graph/src/layer/GraphLayer.ts:318](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L318)
+Defined in: [graph/src/layer/GraphLayer.ts:318](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L318)
 
 Build the initial UI / interaction state. Called once in the constructor.
 
@@ -408,7 +408,7 @@ Build the initial UI / interaction state. Called once in the constructor.
 
 > **edgesWithState**(`name`): `IterableIterator`\<`string`\>
 
-Defined in: [graph/src/layer/GraphLayer.ts:534](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L534)
+Defined in: [graph/src/layer/GraphLayer.ts:534](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L534)
 
 #### Parameters
 
@@ -426,7 +426,7 @@ Defined in: [graph/src/layer/GraphLayer.ts:534](https://github.com/invana/canvas
 
 > **flush**(): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:174](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L174)
+Defined in: [canvas/src/layers/Layer.ts:174](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L174)
 
 Called by Canvas tick when `hasPending()` is true. Swaps the dirty
 snapshot, hands it to `applyDirty`. Subclasses normally don't override.
@@ -445,7 +445,7 @@ snapshot, hands it to `applyDirty`. Subclasses normally don't override.
 
 > **getBounds**(): `object`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:129](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L129)
+Defined in: [canvas/src/layers/WorldLayer.ts:129](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L129)
 
 Return the world-space AABB of everything currently rendered on this layer.
 Delegates to Pixi's `getLocalBounds()` — a one-shot scene-graph traversal.
@@ -481,7 +481,7 @@ Suitable for "fit to content" calls; do not call every frame.
 
 > **getEdgeDefaults**(): [`ResolvedEdgeDefaults`](../type-aliases/ResolvedEdgeDefaults.md)
 
-Defined in: [graph/src/layer/GraphLayer.ts:196](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L196)
+Defined in: [graph/src/layer/GraphLayer.ts:196](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L196)
 
 Resolved per-edge defaults (caller-supplied `edgeDefaults` merged onto the
 factory defaults). Exposed symmetrically with [getNodeDefaults](#getnodedefaults) for
@@ -498,7 +498,7 @@ like before any per-edge `data` override kicks in.
 
 > **getNodeDefaults**(): [`ResolvedNodeDefaults`](../type-aliases/ResolvedNodeDefaults.md)
 
-Defined in: [graph/src/layer/GraphLayer.ts:186](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L186)
+Defined in: [graph/src/layer/GraphLayer.ts:186](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L186)
 
 Resolved per-node defaults (caller-supplied `nodeDefaults` merged onto the
 factory defaults). Exposed for layers that need to mirror what's drawn —
@@ -518,7 +518,7 @@ use resolveNodeDefault to unwrap.
 
 > **getRenderer**(): [`PrimitivesRenderer`](../../../canvas/src/classes/PrimitivesRenderer.md)
 
-Defined in: [graph/src/layer/GraphLayer.ts:159](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L159)
+Defined in: [graph/src/layer/GraphLayer.ts:159](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L159)
 
 Renderer accessor for behaviours. Undefined before `onMount`.
 
@@ -532,7 +532,7 @@ Renderer accessor for behaviours. Undefined before `onMount`.
 
 > **hasEdgeState**(`id`, `name`): `boolean`
 
-Defined in: [graph/src/layer/GraphLayer.ts:498](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L498)
+Defined in: [graph/src/layer/GraphLayer.ts:498](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L498)
 
 #### Parameters
 
@@ -554,7 +554,7 @@ Defined in: [graph/src/layer/GraphLayer.ts:498](https://github.com/invana/canvas
 
 > **hasNodeState**(`id`, `name`): `boolean`
 
-Defined in: [graph/src/layer/GraphLayer.ts:494](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L494)
+Defined in: [graph/src/layer/GraphLayer.ts:494](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L494)
 
 True iff `id` currently carries state `name`.
 
@@ -578,7 +578,7 @@ True iff `id` currently carries state `name`.
 
 > **hasPending**(): `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:166](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/Layer.ts#L166)
+Defined in: [canvas/src/layers/Layer.ts:166](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L166)
 
 Whether `flush()` has work to do this frame.
 
@@ -596,7 +596,7 @@ Whether `flush()` has work to do this frame.
 
 > **hitTest**(`_worldX`, `_worldY`): [`WorldLayerHit`](../../../canvas/src/interfaces/WorldLayerHit.md)
 
-Defined in: [graph/src/layer/GraphLayer.ts:545](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L545)
+Defined in: [graph/src/layer/GraphLayer.ts:545](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L545)
 
 Placeholder hit test — returns `null` until proper hit testing wires up
 in a later phase (likely via the canvas hit-test pipeline reading the
@@ -626,7 +626,7 @@ renderer's shape registry).
 
 > **mount**(`ctx`): `void`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:58](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L58)
+Defined in: [canvas/src/layers/WorldLayer.ts:58](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L58)
 
 #### Parameters
 
@@ -648,7 +648,7 @@ Defined in: [canvas/src/layers/WorldLayer.ts:58](https://github.com/invana/canva
 
 > **nodesWithState**(`name`): `IterableIterator`\<`string`\>
 
-Defined in: [graph/src/layer/GraphLayer.ts:530](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L530)
+Defined in: [graph/src/layer/GraphLayer.ts:530](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L530)
 
 Ids currently carrying state `name`. Useful for snapshots / iteration.
 
@@ -668,7 +668,7 @@ Ids currently carrying state `name`. Useful for snapshots / iteration.
 
 > `protected` **onMount**(`ctx`): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:322](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L322)
+Defined in: [graph/src/layer/GraphLayer.ts:322](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L322)
 
 Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
@@ -692,7 +692,7 @@ Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
 > `protected` **onUnmount**(): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:392](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L392)
+Defined in: [graph/src/layer/GraphLayer.ts:392](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L392)
 
 Domain-specific unmount teardown.
 
@@ -710,7 +710,7 @@ Domain-specific unmount teardown.
 
 > `protected` **onVisibleChange**(`value`): `void`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:74](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L74)
+Defined in: [canvas/src/layers/WorldLayer.ts:74](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L74)
 
 Keep the pixi container in sync when `layer.visible` is toggled.
 
@@ -734,7 +734,7 @@ Keep the pixi container in sync when `layer.visible` is toggled.
 
 > **setData**(`data`): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:414](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L414)
+Defined in: [graph/src/layer/GraphLayer.ts:414](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L414)
 
 Bulk-load nodes + edges, **replacing** any prior data. Wraps the
 underlying store inserts in a single `batch()` so subscribers see one
@@ -764,7 +764,7 @@ source of truth and the layer just orchestrates store → renderer.
 
 > **setEdgeDefaults**(`defaults`): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:229](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L229)
+Defined in: [graph/src/layer/GraphLayer.ts:229](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L229)
 
 Sibling of [setNodeDefaults](#setnodedefaults) for edges.
 
@@ -784,7 +784,7 @@ Sibling of [setNodeDefaults](#setnodedefaults) for edges.
 
 > **setEdgeState**(`id`, `name`, `on?`): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:475](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L475)
+Defined in: [graph/src/layer/GraphLayer.ts:475](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L475)
 
 Same as [setNodeState](#setnodestate) for edges.
 
@@ -812,7 +812,7 @@ Same as [setNodeState](#setnodestate) for edges.
 
 > **setEdgeStateConfig**(`name`, `config`): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:443](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L443)
+Defined in: [graph/src/layer/GraphLayer.ts:443](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L443)
 
 Same as [setNodeStateConfig](#setnodestateconfig) for edges.
 
@@ -836,7 +836,7 @@ Same as [setNodeStateConfig](#setnodestateconfig) for edges.
 
 > **setNodeDefaults**(`defaults`): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:211](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L211)
+Defined in: [graph/src/layer/GraphLayer.ts:211](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L211)
 
 Replace the layer-wide `nodeDefaults` wholesale and re-render every node.
 
@@ -864,7 +864,7 @@ lookup reads from `nodeDefaults` whenever a per-node hint is omitted.
 
 > **setNodeState**(`id`, `name`, `on?`): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:456](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L456)
+Defined in: [graph/src/layer/GraphLayer.ts:456](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L456)
 
 Toggle a named state on a node. Defaults to `on=true`. Re-renders the
 node with the merged state overrides applied. No-op if the node id is
@@ -894,7 +894,7 @@ unknown.
 
 > **setNodeStateConfig**(`name`, `config`): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:433](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L433)
+Defined in: [graph/src/layer/GraphLayer.ts:433](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L433)
 
 Configure how a named state restyles a node. Multiple active states stack
 — later-set state wins per field. Pass `null` to remove the config.
@@ -927,7 +927,7 @@ graph.setNodeStateConfig('inactive', { alpha: 0.25 });
 
 > **setZIndex**(`z`): `void`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:115](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L115)
+Defined in: [canvas/src/layers/WorldLayer.ts:115](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L115)
 
 Update this layer's z-order relative to its peers. Keeps the iteration
 field (`this.zIndex`, used by `LayerRegistry.byZOrder()`) and the pixi
@@ -954,7 +954,7 @@ so the change renders.
 
 > **tickAnimations**(`deltaMs`): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:173](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L173)
+Defined in: [graph/src/layer/GraphLayer.ts:173](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L173)
 
 Per-frame tick — delegated to `PrimitivesRenderer.tickAnimations` so
 animated decorations (`pulse-ring`, `marching-ants`, …) and the
@@ -981,7 +981,7 @@ looks for a public `renderer` property.
 
 > **unmount**(): `void`
 
-Defined in: [canvas/src/layers/WorldLayer.ts:78](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/canvas/src/layers/WorldLayer.ts#L78)
+Defined in: [canvas/src/layers/WorldLayer.ts:78](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/WorldLayer.ts#L78)
 
 #### Returns
 
@@ -997,7 +997,7 @@ Defined in: [canvas/src/layers/WorldLayer.ts:78](https://github.com/invana/canva
 
 > **updateEdgeDefaults**(`patch`): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:235](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L235)
+Defined in: [graph/src/layer/GraphLayer.ts:235](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L235)
 
 Sibling of [updateNodeDefaults](#updatenodedefaults) for edges.
 
@@ -1017,7 +1017,7 @@ Sibling of [updateNodeDefaults](#updatenodedefaults) for edges.
 
 > **updateNodeDefaults**(`patch`): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:223](https://github.com/invana/canvas/blob/6bb086f78a3fc3d8475fe9fda4e47cf5a277b9ff/packages/graph/src/layer/GraphLayer.ts#L223)
+Defined in: [graph/src/layer/GraphLayer.ts:223](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/GraphLayer.ts#L223)
 
 Patch-merge `nodeDefaults` against the current resolved defaults and
 re-render every node. `undefined` values in `patch` are ignored
