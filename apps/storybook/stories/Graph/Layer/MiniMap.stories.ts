@@ -22,10 +22,12 @@ export const MiniMap: Story = {
       id: n.id,
       data: {
         group: n.data.group,
-        fill: groupColors[n.data.group % groupColors.length],
-        size: 18,
-        stroke: 0xffffff,
-        strokeWidth: 1,
+      },
+      style: {
+        shape: { kind: 'circle', radius: 9 },
+        bgFill: groupColors[n.data.group % groupColors.length],
+        bgStrokeColor: 0xffffff,
+        bgStrokeWidth: 1,
       },
     }));
 
@@ -39,7 +41,9 @@ export const MiniMap: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { edgeDefaults: { stroke: 0xcbd5e1, strokeWidth: 1, arrow: false } },
+      options: {
+        edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' } },
+      },
     });
     canvas.layers.add(graph);
     graph.setData({ nodes, edges: lesMiserables.edges });

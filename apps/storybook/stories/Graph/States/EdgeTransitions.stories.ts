@@ -14,8 +14,8 @@ type Story = StoryObj;
  * canonical edge state configs.
  *
  * Three rows demonstrate:
- * - row 1: resting + built-in `hover` (light + black stroke, width 3)
- * - row 2: per-edge `state.hover` override → orange ring on hover
+ * - row 1: resting + built-in `hovered` (light + black stroke, width 3)
+ * - row 2: per-edge `state.hovered` override → orange ring on hover
  * - row 3: per-edge `state.selected` with dashed pattern
  */
 export const EdgeTransitions: Story = {
@@ -54,7 +54,7 @@ export const EdgeTransitions: Story = {
           labelFontSize: 12,
           labelOffsetY: -10,
         },
-        states: ['hover'],
+        states: ['hovered'],
       },
       {
         id: 'e2',
@@ -70,9 +70,9 @@ export const EdgeTransitions: Story = {
           labelOffsetY: -10,
         },
         state: {
-          hover: { strokeColor: 0xffaa00, strokeWidth: 5 },
+          hovered: { strokeColor: 0xffaa00, strokeWidth: 5 },
         },
-        states: ['hover'],
+        states: ['hovered'],
       },
       {
         id: 'e3',

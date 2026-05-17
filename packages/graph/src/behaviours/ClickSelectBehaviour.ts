@@ -9,11 +9,12 @@
  *
  * Default `enabled: false` — register, then explicitly enable.
  *
+ * The canonical `selected` state is auto-merged into every
+ * `GraphLayer`'s state catalogue — no setup needed. Override the layer's
+ * `options.node.state.selected` to customise the visual.
+ *
  * @example
  * ```ts
- * graph.setNodeStateConfig('selected', { stroke: 0xfacc15, strokeWidth: 3 });
- * graph.setEdgeStateConfig('selected', { stroke: 0xfacc15, strokeWidth: 2 });
- *
  * canvas.behaviours.register(
  *   new ClickSelectBehaviour({
  *     id: 'select',

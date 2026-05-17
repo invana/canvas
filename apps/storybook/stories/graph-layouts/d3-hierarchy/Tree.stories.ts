@@ -146,22 +146,27 @@ export const Tree: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        nodeDefaults: { shape: 'circle', size: settings.nodeRadius * 2, stroke: false },
-        edgeDefaults: {
-          stroke: 0x94a3b8,
-          strokeWidth: settings.edgeStrokeWidth,
-          alpha: settings.edgeAlpha,
-          arrow: false,
-          // `bezier` with `axis: 'h'` matches d3.linkHorizontal(). Don't
-          // rely on `axis: 'auto'` — for sibling pairs whose parent sits
-          // between them, `dy > dx` flips auto to vertical and produces
-          // wrong-direction S-curves crossing the tree.
-          pathType: 'bezier',
-          pathStyleOpts: { axis: 'h' },
-          // Centre-anchor so the bezier tangent at each endpoint matches
-          // the node centre rather than the trimmed boundary cut. Nodes
-          // overdraw the inner part of the curve.
-          anchor: 'center',
+        node: { style: { shape: { kind: 'circle', radius: settings.nodeRadius } } },
+        edge: {
+          style: {
+            strokeColor: 0x94a3b8,
+            strokeWidth: settings.edgeStrokeWidth,
+            strokeAlpha: settings.edgeAlpha,
+            arrowTargetShape: 'none',
+            // `bezier` with `axis: 'h'` matches d3.linkHorizontal(). Don't
+            // rely on `axis: 'auto'` — for sibling pairs whose parent sits
+            // between them, `dy > dx` flips auto to vertical and produces
+            // wrong-direction S-curves crossing the tree.
+            shape: {
+              pathType: 'bezier',
+              pathStyleOpts: { axis: 'h' },
+              // Centre-anchor so the bezier tangent at each endpoint matches
+              // the node centre rather than the trimmed boundary cut. Nodes
+              // overdraw the inner part of the curve.
+              sourceAnchor: 'center',
+              targetAnchor: 'center',
+            },
+          },
         },
       },
     });

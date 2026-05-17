@@ -5,7 +5,8 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer, LabelResolutionLODBehaviour, type NodeLabelHint } from '@invana/graph';
+import { GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
+import type { ShapeLabelStyle } from '@invana/canvas';
 import { D3HierarchyLayout, type D3HierarchyLayoutMode } from '@invana/graph-layout-d3-hierarchy';
 import { lifeTreeAsGraph, type LifeTreeKingdom } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -79,21 +80,23 @@ export const TreeOfLife: Story = {
       return {
         nodes: data.nodes.map((n) => ({
           id: n.id,
-          data: {
+          style: {
             // Only leaves get a visible dot; internal clades shrink to a
             // near-invisible pip so the radial "lines" dominate the read.
-            size: n.data.isLeaf ? settings.leafNodeSize : settings.internalNodeSize,
-            fill: colorFor(n.data.kingdom),
-            stroke: false as const,
+            shape: {
+              kind: 'circle' as const,
+              radius: (n.data.isLeaf ? settings.leafNodeSize : settings.internalNodeSize) / 2,
+            },
+            bgFill: colorFor(n.data.kingdom),
           },
         })),
         edges: data.edges.map((e) => ({
           id: e.id,
           source: e.source,
           target: e.target,
-          // Per-edge stroke override — `EdgeRenderHints.stroke` on edge.data
-          // wins over `edgeDefaults.stroke` in `resolveEdgeHints`.
-          data: { stroke: colorFor(kingdomOf.get(e.target)) },
+          // Per-edge stroke override — wins over the layer template's
+          // `edge.style.strokeColor`.
+          style: { strokeColor: colorFor(kingdomOf.get(e.target)) },
         })),
       };
     };
@@ -115,13 +118,13 @@ export const TreeOfLife: Story = {
           const meta = nodeMeta.get(node.id);
           if (!pos || !meta) continue;
 
-          const next = { ...(node.data as object) } as Record<string, unknown>;
+          const baseStyle = { ...(node.style ?? {}) };
 
           // Internal clades and the disabled-labels mode share the clear path.
           if (!settings.showLabels || !meta.isLeaf) {
-            if ('label' in next) {
-              delete next.label;
-              graph.store.updateNode(node.id, { data: next });
+            if ('labelStyle' in baseStyle) {
+              delete (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle;
+              graph.store.updateNode(node.id, { style: baseStyle });
             }
             continue;
           }
@@ -130,16 +133,11 @@ export const TreeOfLife: Story = {
           if (r < 1e-3) continue;
           const theta = Math.atan2(pos.y, pos.x);
           const isLeftHalf = pos.x < 0;
-          // d3-radial-cluster's `text-anchor: start, dx: 6` trick: the leaf
-          // sits at the *inner* end of the rotated label, text reading
-          // outward. Pixi has no text-anchor; push the centroid past the
-          // leaf by half the estimated label width (+ leaf radius + gap)
-          // so the inner edge of the rotated text lands next to the leaf.
           const displayName = meta.name.replace(/_/g, ' ');
           const estimatedHalfWidth = (displayName.length * settings.labelFontSize * 0.55) / 2;
           const radialDist = estimatedHalfWidth + settings.leafNodeSize / 2 + 4;
 
-          const label: NodeLabelHint = {
+          const labelStyle: ShapeLabelStyle = {
             content: {
               kind: 'text',
               text: displayName,
@@ -155,7 +153,7 @@ export const TreeOfLife: Story = {
             rotation: isLeftHalf ? theta + Math.PI : theta,
           };
 
-          graph.store.updateNode(node.id, { data: { ...next, label } });
+          graph.store.updateNode(node.id, { style: { ...baseStyle, labelStyle } });
         }
       });
     };
@@ -183,24 +181,19 @@ export const TreeOfLife: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        nodeDefaults: { shape: 'circle', size: settings.leafNodeSize, stroke: false },
-        edgeDefaults: {
-          stroke: UNCLASSIFIED_COLOR,
-          strokeWidth: settings.edgeStrokeWidth,
-          alpha: settings.edgeAlpha,
-          arrow: false,
-          // `step-radial` matches d3's `linkStep` helper used by the canonical
-          // Tree of Life example: a constant-radius arc along the parent's
-          // tier, then a straight radial line out to the child. Produces the
-          // boxy cluster-dendrogram fan you see in the d3 reference, where
-          // each clade reads as a horizontal arc with straight outward spokes
-          // — different from the smooth `bump-radial` used by RadialTree.
-          pathType: 'step-radial',
-          // `center` anchor so the tangent at each endpoint is the true
-          // node-centre angle (radial-perfect). The leaf dots over-draw the
-          // tail of the curve, so visually the edge still terminates at the
-          // boundary.
-          anchor: 'center',
+        edge: {
+          style: {
+            strokeColor: UNCLASSIFIED_COLOR,
+            strokeWidth: settings.edgeStrokeWidth,
+            strokeAlpha: settings.edgeAlpha,
+            arrowTargetShape: 'none',
+            shape: {
+              // `step-radial` matches d3's `linkStep` helper.
+              pathType: 'step-radial',
+              sourceAnchor: 'center',
+              targetAnchor: 'center',
+            },
+          },
         },
       },
     });

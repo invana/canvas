@@ -284,6 +284,14 @@ export interface ShapePaintStyle {
   readonly color?: number;
   readonly alpha?: number;
   readonly strokeWidth?: number;
+  /**
+   * Stroke alignment relative to the silhouette. Default `'outside'` —
+   * decorations almost always want their geometry painted outside the
+   * host body (halo, glow, ring), so the inner band doesn't eat into the
+   * fill. Override per-call when a decoration genuinely wants to bleed
+   * inward (e.g. an "inset border" effect).
+   */
+  readonly alignment?: 'inside' | 'center' | 'outside';
   /** Default `false` — decorations almost always stroke without filling. */
   readonly fill?: boolean;
   readonly dashArray?: readonly [number, number];

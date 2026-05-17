@@ -43,32 +43,24 @@ export const State: Story = {
       readonly note: string;
     }
 
-    // 3×3 grid. Cell pitch: 280 × 180. Endpoints sit ±90 from each cell
+    // 3×2 grid. Cell pitch: 280 × 200. Endpoints sit ±90 from each cell
     // centre. Anchor ids: a-* (left), b-* (right) per tile.
     const nodes: NodeData[] = [
-      // row 0 — y = -180
-      { id: 'a-default',     position: { x: -370, y: -180 } },
-      { id: 'b-default',     position: { x: -190, y: -180 } },
-      { id: 'a-hover',       position: { x:  -90, y: -180 } },
-      { id: 'b-hover',       position: { x:   90, y: -180 } },
-      { id: 'a-selected',    position: { x:  190, y: -180 } },
-      { id: 'b-selected',    position: { x:  370, y: -180 } },
+      // row 0 — y = -100
+      { id: 'a-default',     position: { x: -370, y: -100 } },
+      { id: 'b-default',     position: { x: -190, y: -100 } },
+      { id: 'a-hover',       position: { x:  -90, y: -100 } },
+      { id: 'b-hover',       position: { x:   90, y: -100 } },
+      { id: 'a-selected',    position: { x:  190, y: -100 } },
+      { id: 'b-selected',    position: { x:  370, y: -100 } },
 
-      // row 1 — y = 0
-      { id: 'a-active',      position: { x: -370, y:    0 } },
-      { id: 'b-active',      position: { x: -190, y:    0 } },
-      { id: 'a-highlighted', position: { x:  -90, y:    0 } },
-      { id: 'b-highlighted', position: { x:   90, y:    0 } },
-      { id: 'a-focused',     position: { x:  190, y:    0 } },
-      { id: 'b-focused',     position: { x:  370, y:    0 } },
-
-      // row 2 — y = 180
-      { id: 'a-dimmed',      position: { x: -370, y:  180 } },
-      { id: 'b-dimmed',      position: { x: -190, y:  180 } },
-      { id: 'a-disabled',    position: { x:  -90, y:  180 } },
-      { id: 'b-disabled',    position: { x:   90, y:  180 } },
-      { id: 'a-error',       position: { x:  190, y:  180 } },
-      { id: 'b-error',       position: { x:  370, y:  180 } },
+      // row 1 — y = 100
+      { id: 'a-highlighted', position: { x: -370, y:  100 } },
+      { id: 'b-highlighted', position: { x: -190, y:  100 } },
+      { id: 'a-dimmed',      position: { x:  -90, y:  100 } },
+      { id: 'b-dimmed',      position: { x:   90, y:  100 } },
+      { id: 'a-disabled',    position: { x:  190, y:  100 } },
+      { id: 'b-disabled',    position: { x:  370, y:  100 } },
     ];
 
     const edges: EdgeData<TileData>[] = [
@@ -81,9 +73,9 @@ export const State: Story = {
       {
         id: 'e-hover',
         source: 'a-hover', target: 'b-hover',
-        data: { state: 'hover', note: 'pointer is over the edge' },
-        style: { labelText: 'hover\npointer is over the edge' },
-        states: ['hover'],
+        data: { state: 'hovered', note: 'pointer is over the edge' },
+        style: { labelText: 'hovered\npointer is over the edge' },
+        states: ['hovered'],
       },
       {
         id: 'e-selected',
@@ -93,25 +85,11 @@ export const State: Story = {
         states: ['selected'],
       },
       {
-        id: 'e-active',
-        source: 'a-active', target: 'b-active',
-        data: { state: 'active', note: 'directly-hovered focal edge' },
-        style: { labelText: 'active\ndirectly-hovered focal edge' },
-        states: ['active'],
-      },
-      {
         id: 'e-highlighted',
         source: 'a-highlighted', target: 'b-highlighted',
         data: { state: 'highlighted', note: 'incident to a focal node' },
         style: { labelText: 'highlighted\nincident to a focal node' },
         states: ['highlighted'],
-      },
-      {
-        id: 'e-focused',
-        source: 'a-focused', target: 'b-focused',
-        data: { state: 'focused', note: 'keyboard-focus ring' },
-        style: { labelText: 'focused\nkeyboard-focus ring' },
-        states: ['focused'],
       },
       {
         id: 'e-dimmed',
@@ -126,13 +104,6 @@ export const State: Story = {
         data: { state: 'disabled', note: 'not interactive' },
         style: { labelText: 'disabled\nnot interactive' },
         states: ['disabled'],
-      },
-      {
-        id: 'e-error',
-        source: 'a-error', target: 'b-error',
-        data: { state: 'error', note: 'invalid relationship' },
-        style: { labelText: 'error\ninvalid relationship' },
-        states: ['error'],
       },
     ];
 

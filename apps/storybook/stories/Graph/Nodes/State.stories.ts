@@ -47,60 +47,42 @@ export const State: Story = {
       readonly note: string;
     }
 
-    // 3×3 grid. Cell pitch: 220 × 200. Origin at (0, 0).
+    // 3×2 grid. Cell pitch: 220 × 200. Origin at (0, 0).
     const nodes: NodeData<TileData>[] = [
       {
         id: 'n-default',
-        position: { x: -220, y: -200 },
+        position: { x: -220, y: -100 },
         data: { state: 'default', note: 'resting appearance — no state active' },
       },
       {
         id: 'n-hover',
-        position: { x: 0, y: -200 },
-        data: { state: 'hover', note: 'pointer is over the node' },
-        states: ['hover'],
+        position: { x: 0, y: -100 },
+        data: { state: 'hovered', note: 'pointer is over the node' },
+        states: ['hovered'],
       },
       {
         id: 'n-selected',
-        position: { x: 220, y: -200 },
+        position: { x: 220, y: -100 },
         data: { state: 'selected', note: 'click-selected (sticky)' },
         states: ['selected'],
       },
       {
-        id: 'n-active',
-        position: { x: -220, y: 0 },
-        data: { state: 'active', note: 'directly-hovered focal node' },
-        states: ['active'],
-      },
-      {
         id: 'n-highlighted',
-        position: { x: 0, y: 0 },
+        position: { x: -220, y: 100 },
         data: { state: 'highlighted', note: '1-hop neighbour of the focal' },
         states: ['highlighted'],
       },
       {
-        id: 'n-focused',
-        position: { x: 220, y: 0 },
-        data: { state: 'focused', note: 'keyboard-focus ring' },
-        states: ['focused'],
-      },
-      {
         id: 'n-dimmed',
-        position: { x: -220, y: 200 },
+        position: { x: 0, y: 100 },
         data: { state: 'dimmed', note: 'de-emphasised by another active set' },
         states: ['dimmed'],
       },
       {
         id: 'n-disabled',
-        position: { x: 0, y: 200 },
+        position: { x: 220, y: 100 },
         data: { state: 'disabled', note: 'not interactive' },
         states: ['disabled'],
-      },
-      {
-        id: 'n-error',
-        position: { x: 220, y: 200 },
-        data: { state: 'error', note: 'invalid — red ring' },
-        states: ['error'],
       },
     ];
 

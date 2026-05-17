@@ -283,7 +283,8 @@ export class D3HierarchyLayout extends Layout<GraphLayer> {
     if (isPack) {
       // Pack writes per-node sizes in addition to positions. Wrap both in a
       // store batch so the renderer sees a single coalesced flush instead of
-      // N separate node:update events firing renders.
+      // N separate node:update events firing renders. Size is projected onto
+      // `style.shape` as a circle radius.
       store.batch(() => {
         store.setPositionsBulk(ids, buffer);
         for (const id of ids) {
@@ -291,18 +292,23 @@ export class D3HierarchyLayout extends Layout<GraphLayer> {
           if (diameter === undefined) continue;
           const existing = store.getNode(id);
           if (!existing) continue;
-          const baseData =
-            existing.data && typeof existing.data === 'object'
-              ? (existing.data as Record<string, unknown>)
+          const existingStyle =
+            existing.style && typeof existing.style === 'object'
+              ? (existing.style as Record<string, unknown>)
               : {};
-          store.updateNode(id, { data: { ...baseData, size: diameter } });
+          store.updateNode(id, {
+            style: {
+              ...existingStyle,
+              shape: { kind: 'circle', radius: diameter / 2 },
+            },
+          });
         }
       });
     } else if (isSunburst) {
-      // Sunburst writes the arc geometry onto each node's data. The renderer
-      // reads `shape: 'arc'` + (innerR / outerR / startAngle / endAngle) from
-      // the `NodeRenderHints` surface to instantiate the right ArcSpec. Wrap
-      // in a batch for the same reason as pack — one coalesced flush.
+      // Sunburst writes arc geometry onto each node's `style.shape`. The
+      // renderer reads the `kind: 'arc'` discriminant + (innerR / outerR /
+      // startAngle / endAngle) to instantiate the right ArcSpec. Wrap in a
+      // batch for the same reason as pack — one coalesced flush.
       store.batch(() => {
         store.setPositionsBulk(ids, buffer);
         for (const id of ids) {
@@ -310,18 +316,20 @@ export class D3HierarchyLayout extends Layout<GraphLayer> {
           if (arc === undefined) continue;
           const existing = store.getNode(id);
           if (!existing) continue;
-          const baseData =
-            existing.data && typeof existing.data === 'object'
-              ? (existing.data as Record<string, unknown>)
+          const existingStyle =
+            existing.style && typeof existing.style === 'object'
+              ? (existing.style as Record<string, unknown>)
               : {};
           store.updateNode(id, {
-            data: {
-              ...baseData,
-              shape: 'arc',
-              innerR: arc.innerR,
-              outerR: arc.outerR,
-              startAngle: arc.startAngle,
-              endAngle: arc.endAngle,
+            style: {
+              ...existingStyle,
+              shape: {
+                kind: 'arc',
+                innerR: arc.innerR,
+                outerR: arc.outerR,
+                startAngle: arc.startAngle,
+                endAngle: arc.endAngle,
+              },
             },
           });
         }

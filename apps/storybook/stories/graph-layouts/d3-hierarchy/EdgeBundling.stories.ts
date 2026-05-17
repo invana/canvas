@@ -9,8 +9,8 @@ import {
   GraphLayer,
   HoverActivateBehaviour,
   LabelResolutionLODBehaviour,
-  type NodeLabelHint,
 } from '@invana/graph';
+import type { ShapeLabelStyle } from '@invana/canvas';
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
 import { flareImportsAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -63,19 +63,14 @@ export const EdgeBundling: Story = {
     // invisible — the d3 demo only shows class names on the rim.
     const nodes = rawNodes.map((n) => ({
       id: n.id,
-      data: n.data.isLeaf
+      style: n.data.isLeaf
         ? {
-            shape: 'circle' as const,
-            size: settings.leafSize,
-            fill: 0x1f2937,
-            stroke: false as const,
+            shape: { kind: 'circle' as const, radius: settings.leafSize / 2 },
+            bgFill: 0x1f2937,
           }
         : {
-            shape: 'circle' as const,
-            size: 0,
-            fill: false as const,
-            stroke: false as const,
-            alpha: 0,
+            shape: { kind: 'circle' as const, radius: 0 },
+            bgAlpha: 0,
           },
     }));
 
@@ -107,30 +102,36 @@ export const EdgeBundling: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        nodeDefaults: { shape: 'circle', size: settings.leafSize, stroke: false },
-        edgeDefaults: {
-          stroke: 0x94a3b8,
-          strokeWidth: settings.edgeStrokeWidth,
-          alpha: settings.edgeAlpha,
-          arrow: false,
-          pathType: 'bundle',
-          // `center` (vs `boundary`) so endpoints sit on the leaf centre —
-          // matters because the bundle curve uses the chord between
-          // endpoints as its β=0 baseline, and we want that chord to start
-          // at the leaf position the layout assigned, not at a trimmed
-          // boundary point that depends on the leaf glyph's size.
-          anchor: 'center',
+        node: {
+          // Override the canonical `hovered` / `dimmed` defaults with the
+          // brighter orange / heavier fade that reads on a dense bundling
+          // diagram.
+          state: {
+            hovered: { bgFill: 0xf97316, bgStrokeColor: 0xf97316, bgStrokeWidth: 1 },
+            dimmed: { bgAlpha: 0.18 },
+          },
+        },
+        edge: {
+          style: {
+            strokeColor: 0x94a3b8,
+            strokeWidth: settings.edgeStrokeWidth,
+            strokeAlpha: settings.edgeAlpha,
+            arrowTargetShape: 'none',
+            shape: {
+              pathType: 'bundle',
+              // `center` (vs `boundary`) so endpoints sit on the leaf centre.
+              sourceAnchor: 'center',
+              targetAnchor: 'center',
+            },
+          },
+          state: {
+            hovered: { strokeColor: 0xf97316, strokeWidth: 1.5, strokeAlpha: 0.95 },
+            dimmed: { strokeAlpha: 0.08 },
+          },
         },
       },
     });
     canvas.layers.add(graph);
-
-    // Active / inactive state palettes — the hover behaviour swaps these on
-    // hovered leaves and their 1-hop neighbours, dimming the rest.
-    graph.setNodeStateConfig('active', { fill: 0xf97316, stroke: 0xf97316, strokeWidth: 1 });
-    graph.setEdgeStateConfig('active', { stroke: 0xf97316, strokeWidth: 1.5, alpha: 0.95 });
-    graph.setNodeStateConfig('inactive', { alpha: 0.18 });
-    graph.setEdgeStateConfig('inactive', { alpha: 0.08 });
 
     const labelResolutionLOD = new LabelResolutionLODBehaviour({
       id: 'label-resolution',
@@ -229,17 +230,16 @@ export const EdgeBundling: Story = {
           const estimatedHalfWidth = (name.length * settings.labelFontSize * 0.55) / 2;
           const radialDist = estimatedHalfWidth + settings.leafSize / 2 + 4;
 
-          const baseData = node.data as Record<string, unknown>;
+          const baseStyle = { ...(node.style ?? {}) };
           if (!settings.showLabels) {
-            if ('label' in baseData) {
-              const next = { ...baseData };
-              delete next.label;
-              graph.store.updateNode(node.id, { data: next });
+            if ('labelStyle' in baseStyle) {
+              delete (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle;
+              graph.store.updateNode(node.id, { style: baseStyle });
             }
             continue;
           }
 
-          const label: NodeLabelHint = {
+          const labelStyle: ShapeLabelStyle = {
             content: {
               kind: 'text',
               text: name,
@@ -254,7 +254,7 @@ export const EdgeBundling: Story = {
             },
             rotation: isLeftHalf ? theta + Math.PI : theta,
           };
-          graph.store.updateNode(node.id, { data: { ...baseData, label } });
+          graph.store.updateNode(node.id, { style: { ...baseStyle, labelStyle } });
         }
 
         // 2. Drop tree edges. Iterate a snapshot of ids — removeEdge
@@ -274,14 +274,17 @@ export const EdgeBundling: Story = {
             id: e.id,
             source: e.source,
             target: e.target,
-            data: {
-              pathType: 'bundle',
-              pathStyleOpts: bundleOpts,
-              waypoints,
-              alpha: settings.edgeAlpha,
+            style: {
+              strokeAlpha: settings.edgeAlpha,
               strokeWidth: settings.edgeStrokeWidth,
-              arrow: false,
-              anchor: 'center',
+              arrowTargetShape: 'none',
+              shape: {
+                pathType: 'bundle',
+                pathStyleOpts: bundleOpts,
+                waypoints,
+                sourceAnchor: 'center',
+                targetAnchor: 'center',
+              },
             },
           });
         }
@@ -297,13 +300,14 @@ export const EdgeBundling: Story = {
       const bundleOpts = { beta: settings.beta };
       graph.store.batch(() => {
         for (const e of graph.store.edges()) {
-          const base = (e.data as Record<string, unknown> | undefined) ?? {};
+          const baseStyle = (e.style as Record<string, unknown> | undefined) ?? {};
+          const baseShape = (baseStyle.shape as Record<string, unknown> | undefined) ?? {};
           graph.store.updateEdge(e.id, {
-            data: {
-              ...base,
-              pathStyleOpts: bundleOpts,
-              alpha: settings.edgeAlpha,
+            style: {
+              ...baseStyle,
+              strokeAlpha: settings.edgeAlpha,
               strokeWidth: settings.edgeStrokeWidth,
+              shape: { ...baseShape, pathStyleOpts: bundleOpts },
             },
           });
         }
@@ -335,8 +339,8 @@ export const EdgeBundling: Story = {
       id: 'hover',
       layerId: 'graph',
       enabled: true,
-      state: 'active',
-      // inactiveState: 'inactive',
+      state: 'hovered',
+      // inactiveState: 'dimmed',
       degree: settings.hoverDegree,
       direction: 'both',
     });

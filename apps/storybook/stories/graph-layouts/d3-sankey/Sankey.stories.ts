@@ -6,7 +6,8 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer, type NodeLabelHint } from '@invana/graph';
+import { GraphLayer } from '@invana/graph';
+import type { ShapeLabelStyle } from '@invana/canvas';
 import { D3SankeyLayout } from '@invana/graph-layout-d3-sankey';
 import { ukEnergyFlowAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -88,16 +89,22 @@ export const Sankey: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        // The layout overrides shape/size/height per node, but these
-        // defaults catch any node it can't size (shouldn't happen) and
-        // give the rect a neutral fill.
-        nodeDefaults: { shape: 'rect', size: 15, height: 30, stroke: false, fill: 0x64748b },
-        edgeDefaults: {
-          pathType: 'bump-horizontal',
-          stroke: settings.linkStroke,
-          strokeWidth: 1,
-          alpha: settings.linkAlpha,
-          arrow: false,
+        // The layout overrides shape per node, but the bgFill catches the
+        // case before per-node category styling runs.
+        node: {
+          style: {
+            shape: { kind: 'rect', width: 15, height: 30 },
+            bgFill: 0x64748b,
+          },
+        },
+        edge: {
+          style: {
+            shape: { pathType: 'bump-horizontal' },
+            strokeColor: settings.linkStroke,
+            strokeWidth: 1,
+            strokeAlpha: settings.linkAlpha,
+            arrowTargetShape: 'none',
+          },
         },
       },
     });
@@ -121,20 +128,17 @@ export const Sankey: Story = {
           const data = node.data as {
             name?: string;
             category?: string;
-            size?: number;
-            height?: number;
-            shape?: string;
-            label?: NodeLabelHint;
-            fill?: number;
           };
-          const next = { ...data } as Record<string, unknown>;
-          if ('label' in next) delete next.label;
+          const baseStyle = { ...(node.style ?? {}) };
+          delete (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle;
 
-          if (data.category) next.fill = colorFor(data.category);
+          if (data.category) {
+            (baseStyle as { bgFill?: number }).bgFill = colorFor(data.category);
+          }
 
           if (settings.showLabels && data.name && node.position) {
             const onLeftHalf = node.position.x < midX;
-            const label: NodeLabelHint = {
+            const labelStyle: ShapeLabelStyle = {
               content: {
                 kind: 'text',
                 text: data.name,
@@ -144,10 +148,10 @@ export const Sankey: Story = {
               placement: onLeftHalf ? 'right' : 'left',
               offset: { x: onLeftHalf ? 4 : -4 },
             };
-            next.label = label;
+            (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle = labelStyle;
           }
 
-          graph.store.updateNode(node.id, { data: next });
+          graph.store.updateNode(node.id, { style: baseStyle });
         }
       });
     };
@@ -160,24 +164,15 @@ export const Sankey: Story = {
     const applyEdgeStyling = (): void => {
       graph.store.batch(() => {
         for (const edge of graph.store.edges()) {
-          const data = edge.data as {
-            strokeWidth?: number;
-            pathType?: string;
-            sourceAnchor?: string;
-            sourceAnchorOpts?: Record<string, unknown>;
-            targetAnchor?: string;
-            targetAnchorOpts?: Record<string, unknown>;
-            stroke?: number;
-            alpha?: number;
-          };
+          const baseStyle = { ...(edge.style ?? {}) };
           const srcNode = graph.store.getNode(edge.source);
           const srcCategory = (srcNode?.data as { category?: string } | undefined)?.category;
           const stroke = srcCategory ? colorFor(srcCategory) : settings.linkStroke;
           graph.store.updateEdge(edge.id, {
-            data: {
-              ...data,
-              stroke,
-              alpha: settings.linkAlpha,
+            style: {
+              ...baseStyle,
+              strokeColor: stroke,
+              strokeAlpha: settings.linkAlpha,
             },
           });
         }

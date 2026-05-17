@@ -31,8 +31,10 @@ export const Basic: Story = {
         position: { x: Math.cos(theta) * R, y: Math.sin(theta) * R },
         data: {
           group: n.data.group,
-          fill: groupColors[n.data.group % groupColors.length],
-          size: 18,
+        },
+        style: {
+          shape: { kind: 'circle', radius: 9 },
+          bgFill: groupColors[n.data.group % groupColors.length],
         },
       };
     });
@@ -48,7 +50,7 @@ export const Basic: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        edgeDefaults: { stroke: 0xcbd5e1, strokeWidth: 1, arrow: false },
+        edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' } },
       },
     });
     canvas.layers.add(graph);

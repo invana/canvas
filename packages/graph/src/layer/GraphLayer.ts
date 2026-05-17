@@ -31,77 +31,24 @@ import { GraphStore } from '../store/GraphStore';
 import type { GraphEdge, GraphNode } from '../store/types';
 
 import {
-  DEFAULT_EDGE_STATE_CONFIGS,
-  DEFAULT_NODE_STATE_CONFIGS,
+  DEFAULT_EDGE_STATES,
+  DEFAULT_NODE_STATES,
   resolveField,
+  type EdgeAnchor,
   type EdgeDecorationSpec,
-  type EdgeLabelHint,
   type EdgeOption,
   type EdgePathType,
-  type EdgeRenderHints,
-  type EdgeShapeOptions,
-  type EdgeStateConfig,
   type EdgeStyle,
   type GraphData,
   type GraphLayerEvents,
   type GraphLayerOptions,
   type NodeDecorationSpec,
-  type NodeLabelHint,
   type NodeOption,
-  type NodeRenderHints,
   type NodeShapeOptions,
-  type NodeStateConfig,
   type NodeStyle,
-  type ResolvableEdgeRenderHints,
   type ResolvableEdgeStyle,
-  type ResolvableNodeRenderHints,
   type ResolvableNodeStyle,
 } from './types';
-
-// ─── Resolved-defaults types ───────────────────────────────────────────────
-
-/**
- * Shape of the per-layer node defaults after merging the caller's
- * `nodeDefaults` onto the factory `DEFAULT_NODE_HINTS`. The always-present
- * fields (covered by the factory defaults) are non-optional resolvers;
- * the rest stay optional.
- */
-export type ResolvedNodeDefaults =
-  Required<Pick<ResolvableNodeRenderHints,
-    'shape' | 'size' | 'cornerRadius' | 'fill' | 'stroke' | 'strokeWidth' | 'strokeAlignment' | 'alpha'>>
-  & Pick<ResolvableNodeRenderHints,
-    'label' | 'height' | 'innerR' | 'outerR' | 'startAngle' | 'endAngle'>;
-
-export type ResolvedEdgeDefaults =
-  Required<Pick<ResolvableEdgeRenderHints,
-    'pathType' | 'anchor' | 'pathStyleOpts' | 'stroke' | 'strokeWidth' | 'alpha' | 'arrow'>>
-  & Pick<ResolvableEdgeRenderHints,
-    'label' | 'sourceAnchor' | 'targetAnchor' | 'sourceAnchorOpts' | 'targetAnchorOpts' | 'waypoints'>;
-
-// ─── Defaults ──────────────────────────────────────────────────────────────
-
-const DEFAULT_NODE_HINTS: Required<Omit<NodeRenderHints, 'height' | 'label' | 'innerR' | 'outerR' | 'startAngle' | 'endAngle'>> = {
-  shape: 'circle',
-  size: 32,
-  cornerRadius: 4,
-  fill: 0x3b82f6,
-  stroke: 0x1d4ed8,
-  strokeWidth: 1,
-  // Module-level default: paint strokes outside the silhouette so thick
-  // state-overlay rings (halo, focus, selection) don't eat into the fill.
-  strokeAlignment: 'outside',
-  alpha: 1,
-};
-
-const DEFAULT_EDGE_HINTS: Required<Omit<EdgeRenderHints, 'label' | 'sourceAnchor' | 'targetAnchor' | 'sourceAnchorOpts' | 'targetAnchorOpts' | 'waypoints'>> = {
-  pathType: 'straight',
-  anchor: 'boundary',
-  pathStyleOpts: {},
-  stroke: 0x94a3b8,
-  strokeWidth: 1.5,
-  alpha: 1,
-  arrow: true,
-};
 
 /**
  * Translate a {@link EdgePathType} shortcut into the canvas `router` +
@@ -133,7 +80,6 @@ function pathTypeToRouterPathStyle(t: EdgePathType): { router: string; pathStyle
       // only router that passes waypoints through unaltered.
       return { router: 'straight', pathStyle: 'bundle' };
   }
-  return { router: 'straight', pathStyle: 'normal' };
 }
 
 // ─── State (none for now) ──────────────────────────────────────────────────
@@ -179,77 +125,8 @@ export class GraphLayer extends WorldLayer<
     this._renderer?.tickAnimations(deltaMs);
   }
 
-  /**
-   * Resolved per-node defaults (caller-supplied `nodeDefaults` merged onto the
-   * factory defaults). Exposed for layers that need to mirror what's drawn —
-   * e.g. `MiniMapLayer` falls back to these when a node omits `shape` / `size`.
-   *
-   * Fields may be either static values or resolver functions
-   * (`(node) => value`). Callers that need a concrete value per node should
-   * use {@link resolveNodeDefault} to unwrap.
-   */
-  getNodeDefaults(): ResolvedNodeDefaults {
-    return this.nodeDefaults;
-  }
-
-  /**
-   * Resolved per-edge defaults (caller-supplied `edgeDefaults` merged onto the
-   * factory defaults). Exposed symmetrically with {@link getNodeDefaults} for
-   * sibling layers / behaviours that need to read what an edge would look
-   * like before any per-edge `data` override kicks in.
-   */
-  getEdgeDefaults(): ResolvedEdgeDefaults {
-    return this.edgeDefaults;
-  }
-
-  /**
-   * Replace the layer-wide `nodeDefaults` wholesale and re-render every node.
-   *
-   * The new value is merged onto the factory `DEFAULT_NODE_HINTS` (so omitted
-   * always-present fields fall back to factory values, not to whatever the
-   * previous user-supplied defaults were). Use {@link updateNodeDefaults} to
-   * partial-merge against the current defaults instead of replacing.
-   *
-   * Every node currently in the layer is re-rendered because per-render
-   * lookup reads from `nodeDefaults` whenever a per-node hint is omitted.
-   */
-  setNodeDefaults(defaults: ResolvableNodeRenderHints): void {
-    this.nodeDefaults = { ...DEFAULT_NODE_HINTS, ...defaults };
-    this.rerenderAllNodes();
-  }
-
-  /**
-   * Patch-merge `nodeDefaults` against the current resolved defaults and
-   * re-render every node. `undefined` values in `patch` are ignored
-   * (they don't blank out an existing field — pass an explicit `false` /
-   * `0` / factory value to override). Use {@link setNodeDefaults} for a
-   * wholesale replacement.
-   */
-  updateNodeDefaults(patch: ResolvableNodeRenderHints): void {
-    this.nodeDefaults = { ...this.nodeDefaults, ...patch };
-    this.rerenderAllNodes();
-  }
-
-  /** Sibling of {@link setNodeDefaults} for edges. */
-  setEdgeDefaults(defaults: ResolvableEdgeRenderHints): void {
-    this.edgeDefaults = { ...DEFAULT_EDGE_HINTS, ...defaults };
-    this.rerenderAllEdges();
-  }
-
-  /** Sibling of {@link updateNodeDefaults} for edges. */
-  updateEdgeDefaults(patch: ResolvableEdgeRenderHints): void {
-    this.edgeDefaults = { ...this.edgeDefaults, ...patch };
-    this.rerenderAllEdges();
-  }
-
   /** Data source. Either supplied by the caller or self-created. */
   readonly store: GraphStore;
-
-  /** Resolved defaults (caller overrides + factory defaults). Mutable to
-   * support runtime updates via {@link setNodeDefaults} / {@link updateNodeDefaults}
-   * and their edge equivalents. */
-  private nodeDefaults: ResolvedNodeDefaults;
-  private edgeDefaults: ResolvedEdgeDefaults;
 
   /** Subscription disposers, called in `onUnmount`. */
   private subs: Array<() => void> = [];
@@ -263,16 +140,11 @@ export class GraphLayer extends WorldLayer<
   private dirtyConnectors: Set<string> = new Set();
 
   /**
-   * Visual-state machinery — name → config + name → set of ids carrying it.
-   *
-   * Callers configure a state shape once (`setNodeStateConfig('selected', {...})`)
-   * then toggle it on individual ids (`setNodeState(id, 'selected', true)`).
-   * The active states stack on top of the base render hints from `node.data`
-   * — last-set-state wins per field.
+   * Visual-state machinery — `id → Set<stateName>`. State styling itself
+   * is declared on the `NodeOption.state` / per-node `state` catalogue;
+   * this map only tracks which states are currently active per item so
+   * the resolver can fold their overlays into the final NodeStyle.
    */
-  private readonly nodeStateConfigs: Map<string, NodeStateConfig> = new Map();
-  private readonly edgeStateConfigs: Map<string, EdgeStateConfig> = new Map();
-  /** id → set of active state names. */
   private readonly nodeStates: Map<string, Set<string>> = new Map();
   private readonly edgeStates: Map<string, Set<string>> = new Map();
 
@@ -295,39 +167,15 @@ export class GraphLayer extends WorldLayer<
   constructor(opts: LayerOptions<GraphLayerOptions>) {
     super(opts);
     this.store = opts.options.store ?? new GraphStore();
-    this.nodeDefaults = { ...DEFAULT_NODE_HINTS, ...opts.options.nodeDefaults };
-    this.edgeDefaults = { ...DEFAULT_EDGE_HINTS, ...opts.options.edgeDefaults };
-
-    // Auto-register the canonical state configs unless the caller opts out.
-    // Writes go straight to the internal Maps (not through `setNodeStateConfig`)
-    // because the public setter triggers a re-render walk that's pointless
-    // at construction — no nodes exist yet and the renderer isn't mounted.
-    if (opts.options.useDefaultStateConfigs !== false) {
-      for (const [name, cfg] of Object.entries(DEFAULT_NODE_STATE_CONFIGS)) {
-        this.nodeStateConfigs.set(name, cfg);
-      }
-      for (const [name, cfg] of Object.entries(DEFAULT_EDGE_STATE_CONFIGS)) {
-        this.edgeStateConfigs.set(name, cfg);
-      }
-    }
-    // Caller-supplied state configs go LAST so they override canonical
-    // entries by name, and new names register as fresh states.
-    if (opts.options.nodeStateConfigs) {
-      for (const [name, cfg] of Object.entries(opts.options.nodeStateConfigs)) {
-        this.nodeStateConfigs.set(name, cfg);
-      }
-    }
-    if (opts.options.edgeStateConfigs) {
-      for (const [name, cfg] of Object.entries(opts.options.edgeStateConfigs)) {
-        this.edgeStateConfigs.set(name, cfg);
-      }
-    }
-
-    // v3 G6-aligned layer template (NodeOption / EdgeOption). Coexists with
-    // the legacy nodeDefaults / nodeStateConfigs path; both are read at
-    // render time and merged per §2 of `data-types-implementation-plan.md`.
-    this.nodeOption = opts.options.node;
-    this.edgeOption = opts.options.edge;
+    // v3 G6-aligned layer template — single source of truth for style /
+    // state catalogue. Both fields are resolver-aware via the
+    // `ResolvableNodeStyle` / `ResolvableEdgeStyle` shape. The canonical
+    // state defaults are auto-merged underneath so a layer that touches
+    // no state code still renders distinct hover / select / error / etc.
+    // visuals. Opt out with `useDefaultStates: false`.
+    const useDefaults = opts.options.useDefaultStates !== false;
+    this.nodeOption = mergeNodeOptionWithDefaults(opts.options.node, useDefaults);
+    this.edgeOption = mergeEdgeOptionWithDefaults(opts.options.edge, useDefaults);
   }
 
   protected createState(): GraphLayerState {
@@ -437,33 +285,6 @@ export class GraphLayer extends WorldLayer<
   }
 
   // ─── State machinery ────────────────────────────────────────────────────
-
-  /**
-   * Configure how a named state restyles a node. Multiple active states stack
-   * — later-set state wins per field. Pass `null` to remove the config.
-   *
-   * @example
-   * graph.setNodeStateConfig('selected', { stroke: 0xfacc15, strokeWidth: 3 });
-   * graph.setNodeStateConfig('hovered', { fill: 0x60a5fa });
-   * graph.setNodeStateConfig('inactive', { alpha: 0.25 });
-   */
-  setNodeStateConfig(name: string, config: NodeStateConfig | null): void {
-    if (config === null) this.nodeStateConfigs.delete(name);
-    else this.nodeStateConfigs.set(name, config);
-    // Re-render every node that currently carries this state.
-    for (const [id, states] of this.nodeStates) {
-      if (states.has(name)) this.rerenderNode(id);
-    }
-  }
-
-  /** Same as {@link setNodeStateConfig} for edges. */
-  setEdgeStateConfig(name: string, config: EdgeStateConfig | null): void {
-    if (config === null) this.edgeStateConfigs.delete(name);
-    else this.edgeStateConfigs.set(name, config);
-    for (const [id, states] of this.edgeStates) {
-      if (states.has(name)) this.rerenderEdge(id);
-    }
-  }
 
   /**
    * Toggle a named state on a node. Defaults to `on=true`. Re-renders the
@@ -579,186 +400,153 @@ export class GraphLayer extends WorldLayer<
    *    b. layer v3 `node.state[name]` (resolved against GraphNode, adapted)
    *    c. per-node `node.state[name]` (concrete NodeStyle, adapted)
    */
-  private resolveNodeHints(node: GraphNode): NodeRenderHints {
-    // Merge v3 NodeStyle fields BEFORE adapting. Necessary so layer-level
-    // settings like `labelFontSize` compose with per-node `labelText` into
-    // one ShapeLabelStyle — otherwise adapting layer + per-node separately
-    // would build two labels and Object.assign would clobber the layer's
-    // font settings with the per-node label.
-    const mergedStyle: Partial<NodeStyle> = {};
+  /**
+   * Resolve the final flat NodeStyle for a node by merging contributions from
+   * the layer-level template (`options.node.style`), the per-node `style`,
+   * and every active state's layer + per-node overlay. Object.assign order
+   * encodes precedence (later wins).
+   *
+   * Exposed publicly so behaviours (NodeSizeLODBehaviour, label collision,
+   * minimap, etc.) can read the same effective style the renderer sees,
+   * without duplicating the merge logic.
+   */
+  resolveNodeStyle(node: GraphNode): Partial<NodeStyle> {
+    const merged: Partial<NodeStyle> = {};
     if (this.nodeOption?.style) {
-      Object.assign(mergedStyle, resolveNodeStyleFields(this.nodeOption.style, node));
+      Object.assign(merged, resolveNodeStyleFields(this.nodeOption.style, node));
     }
-    Object.assign(mergedStyle, (node.style as Partial<NodeStyle> | undefined) ?? {});
-
-    // Start from legacy `node.data` hints, then apply the adapted v3 style.
-    const out: NodeRenderHints = { ...((node.data as NodeRenderHints | undefined) ?? {}) };
-    Object.assign(out, adaptNodeStyle(mergedStyle));
+    Object.assign(merged, (node.style as Partial<NodeStyle> | undefined) ?? {});
 
     const activeStates = this.nodeStates.get(node.id);
     if (activeStates && activeStates.size > 0) {
       const perNodeCatalogue = node.state as Readonly<Record<string, NodeStyle>> | undefined;
       for (const name of activeStates) {
-        // (a) Legacy state config — applied directly to NodeRenderHints.
-        const legacy = this.nodeStateConfigs.get(name);
-        if (legacy) {
-          for (const k of Object.keys(legacy) as (keyof ResolvableNodeRenderHints)[]) {
-            const v = resolveField(legacy[k], node);
-            if (v !== undefined) (out as Record<string, unknown>)[k as string] = v;
-          }
-        }
-        // (b+c) v3 state overlays — merge into mergedStyle so label-field
-        // composition works (e.g. state's `bgStrokeWidth` doesn't lose the
-        // base `labelText`), then re-adapt.
-        let stateDirty = false;
         const layerOverlay = this.nodeOption?.state?.[name];
         if (layerOverlay) {
-          Object.assign(mergedStyle, resolveNodeStyleFields(layerOverlay, node));
-          stateDirty = true;
+          Object.assign(merged, resolveNodeStyleFields(layerOverlay, node));
         }
         const perNodeOverlay = perNodeCatalogue?.[name];
-        if (perNodeOverlay) {
-          Object.assign(mergedStyle, perNodeOverlay);
-          stateDirty = true;
-        }
-        if (stateDirty) {
-          Object.assign(out, adaptNodeStyle(mergedStyle));
-        }
+        if (perNodeOverlay) Object.assign(merged, perNodeOverlay);
       }
     }
-    return out;
+    return merged;
   }
 
-  private resolveEdgeHints(edge: GraphEdge): EdgeRenderHints {
-    const mergedStyle: Partial<EdgeStyle> = {};
+  /** Sibling of {@link resolveNodeStyle} for edges. Public for the same reason. */
+  resolveEdgeStyle(edge: GraphEdge): Partial<EdgeStyle> {
+    const merged: Partial<EdgeStyle> = {};
     if (this.edgeOption?.style) {
-      Object.assign(mergedStyle, resolveEdgeStyleFields(this.edgeOption.style, edge));
+      Object.assign(merged, resolveEdgeStyleFields(this.edgeOption.style, edge));
     }
-    Object.assign(mergedStyle, (edge.style as Partial<EdgeStyle> | undefined) ?? {});
-
-    const out: EdgeRenderHints = { ...((edge.data as EdgeRenderHints | undefined) ?? {}) };
-    Object.assign(out, adaptEdgeStyle(mergedStyle));
+    Object.assign(merged, (edge.style as Partial<EdgeStyle> | undefined) ?? {});
 
     const activeStates = this.edgeStates.get(edge.id);
     if (activeStates && activeStates.size > 0) {
       const perEdgeCatalogue = edge.state as Readonly<Record<string, EdgeStyle>> | undefined;
       for (const name of activeStates) {
-        const legacy = this.edgeStateConfigs.get(name);
-        if (legacy) {
-          for (const k of Object.keys(legacy) as (keyof ResolvableEdgeRenderHints)[]) {
-            const v = resolveField(legacy[k], edge);
-            if (v !== undefined) (out as Record<string, unknown>)[k as string] = v;
-          }
-        }
-        let stateDirty = false;
         const layerOverlay = this.edgeOption?.state?.[name];
         if (layerOverlay) {
-          Object.assign(mergedStyle, resolveEdgeStyleFields(layerOverlay, edge));
-          stateDirty = true;
+          Object.assign(merged, resolveEdgeStyleFields(layerOverlay, edge));
         }
         const perEdgeOverlay = perEdgeCatalogue?.[name];
-        if (perEdgeOverlay) {
-          Object.assign(mergedStyle, perEdgeOverlay);
-          stateDirty = true;
-        }
-        if (stateDirty) {
-          Object.assign(out, adaptEdgeStyle(mergedStyle));
-        }
+        if (perEdgeOverlay) Object.assign(merged, perEdgeOverlay);
       }
     }
-    return out;
+    return merged;
   }
 
+  /**
+   * Build the renderer-facing CircleSpec / RectSpec / ArcSpec from the
+   * resolved {@link NodeStyle}. Geometry is driven by the discriminated
+   * `style.shape` union; paint comes from the flat `bg*` fields.
+   */
   private nodeSpec(node: GraphNode): CircleSpec | RectSpec | ArcSpec {
-    const hints = this.resolveNodeHints(node);
-    const shape = hints.shape ?? resolveField(this.nodeDefaults.shape, node)!;
-    const size = hints.size ?? resolveField(this.nodeDefaults.size, node)!;
-    const fill = hints.fill ?? resolveField(this.nodeDefaults.fill, node)!;
-    const stroke = hints.stroke ?? resolveField(this.nodeDefaults.stroke, node)!;
-    const strokeWidth =
-      hints.strokeWidth ?? resolveField(this.nodeDefaults.strokeWidth, node)!;
-    const strokeAlignment =
-      hints.strokeAlignment
-      ?? resolveField(this.nodeDefaults.strokeAlignment, node)
-      ?? 'outside';
-    const alpha = hints.alpha ?? resolveField(this.nodeDefaults.alpha, node)!;
+    const style = this.resolveNodeStyle(node);
+    const shape: NodeShapeOptions = style.shape ?? { kind: 'circle', radius: 16 };
     const pos = node.position ?? { x: 0, y: 0 };
+
+    const bgFill = style.bgFill;
+    // Only number fills survive the spec — ShapeFill complex layer / array
+    // forms aren't wired into the renderer yet.
+    const fill = typeof bgFill === 'number' ? bgFill : undefined;
+
+    const bgStrokeWidth = style.bgStrokeWidth ?? 0;
+    const stroke =
+      style.bgStrokeColor !== undefined && bgStrokeWidth > 0
+        ? {
+            color: style.bgStrokeColor,
+            width: bgStrokeWidth,
+            alignment: style.bgStrokeAlignment ?? 'outside',
+            ...(style.bgStrokeAlpha !== undefined ? { alpha: style.bgStrokeAlpha } : {}),
+            ...(style.bgStrokeDashArray ? { dashArray: style.bgStrokeDashArray } : {}),
+            ...(style.bgStrokeDashOffset !== undefined ? { dashOffset: style.bgStrokeDashOffset } : {}),
+          }
+        : undefined;
 
     const common = {
       x: pos.x,
       y: pos.y,
-      alpha,
-      ...(fill === false ? {} : { fill }),
-      ...(stroke === false
-        ? {}
-        : { stroke: { color: stroke, width: strokeWidth, alignment: strokeAlignment } }),
+      ...(style.bgAlpha !== undefined ? { alpha: style.bgAlpha } : {}),
+      ...(fill !== undefined ? { fill } : {}),
+      ...(stroke ? { stroke } : {}),
     };
 
-    if (shape === 'rect') {
-      const height =
-        hints.height ?? resolveField(this.nodeDefaults.height, node) ?? size;
-      const cornerRadius =
-        hints.cornerRadius ?? resolveField(this.nodeDefaults.cornerRadius, node)!;
-      return {
-        kind: 'rect',
-        width: size,
-        height,
-        cornerRadius,
-        ...common,
-      };
+    switch (shape.kind) {
+      case 'rect':
+        return {
+          kind: 'rect',
+          width: shape.width,
+          height: shape.height,
+          ...(shape.cornerRadius !== undefined ? { cornerRadius: shape.cornerRadius } : {}),
+          ...common,
+        };
+      case 'arc':
+        return {
+          kind: 'arc',
+          innerR: shape.innerR,
+          outerR: shape.outerR,
+          startAngle: shape.startAngle,
+          endAngle: shape.endAngle,
+          ...common,
+        };
+      case 'circle':
+      default:
+        return {
+          kind: 'circle',
+          radius: shape.radius,
+          ...common,
+        };
     }
-    if (shape === 'arc') {
-      // Arc geometry comes from per-node hints (typically written by a
-      // hierarchical layout like `D3HierarchyLayout({ mode: 'sunburst' })`).
-      // Zero-sweep / zero-radius fallback so a node with unresolved arc
-      // params is still legal — it just paints nothing until the layout fills
-      // the hints in.
-      return {
-        kind: 'arc',
-        innerR: hints.innerR ?? resolveField(this.nodeDefaults.innerR, node) ?? 0,
-        outerR: hints.outerR ?? resolveField(this.nodeDefaults.outerR, node) ?? 0,
-        startAngle:
-          hints.startAngle ?? resolveField(this.nodeDefaults.startAngle, node) ?? 0,
-        endAngle:
-          hints.endAngle ?? resolveField(this.nodeDefaults.endAngle, node) ?? 0,
-        ...common,
-      };
-    }
-    // circle (default)
-    return {
-      kind: 'circle',
-      radius: size / 2,
-      ...common,
-    };
   }
 
+  /**
+   * Build the renderer-facing connector spec from the resolved
+   * {@link EdgeStyle}. The three-stage pipeline (anchor → router →
+   * pathStyle) is driven by `style.shape.pathType` + the anchor / router
+   * options on the same struct; paint comes from the flat `stroke*` fields.
+   */
   private edgeSpec(edge: GraphEdge): BaseConnectorSpec {
-    const hints = this.resolveEdgeHints(edge);
-    const pathType = hints.pathType ?? resolveField(this.edgeDefaults.pathType, edge)!;
-    const stroke = hints.stroke ?? resolveField(this.edgeDefaults.stroke, edge)!;
-    const strokeWidth =
-      hints.strokeWidth ?? resolveField(this.edgeDefaults.strokeWidth, edge)!;
-    const alpha = hints.alpha ?? resolveField(this.edgeDefaults.alpha, edge)!;
-    const arrow = hints.arrow ?? resolveField(this.edgeDefaults.arrow, edge)!;
-    const baseAnchor =
-      hints.anchor ?? resolveField(this.edgeDefaults.anchor, edge) ?? 'boundary';
-    const sourceAnchorName =
-      hints.sourceAnchor ?? resolveField(this.edgeDefaults.sourceAnchor, edge) ?? baseAnchor;
-    const targetAnchorName =
-      hints.targetAnchor ?? resolveField(this.edgeDefaults.targetAnchor, edge) ?? baseAnchor;
-    const sourceAnchorOpts =
-      hints.sourceAnchorOpts ?? resolveField(this.edgeDefaults.sourceAnchorOpts, edge);
-    const targetAnchorOpts =
-      hints.targetAnchorOpts ?? resolveField(this.edgeDefaults.targetAnchorOpts, edge);
-    const pathStyleOpts =
-      hints.pathStyleOpts ?? resolveField(this.edgeDefaults.pathStyleOpts, edge)!;
-    const waypoints = hints.waypoints ?? resolveField(this.edgeDefaults.waypoints, edge);
+    const style = this.resolveEdgeStyle(edge);
+    const shape = style.shape ?? {};
+
+    const pathType: EdgePathType = shape.pathType ?? 'straight';
     const { router, pathStyle } = pathTypeToRouterPathStyle(pathType);
 
-    // String form when no per-endpoint opts; object form (`{ name, opts }`)
-    // when opts present. Identity-equal to the previous one-arg form when
-    // sourceAnchor / sourceAnchorOpts are undefined — zero cost on the
-    // non-port path.
+    const baseAnchor: EdgeAnchor = 'boundary';
+    const sourceAnchorName: EdgeAnchor = shape.sourceAnchor ?? baseAnchor;
+    const targetAnchorName: EdgeAnchor = shape.targetAnchor ?? baseAnchor;
+    const sourceAnchorOpts = shape.sourceAnchorOpts;
+    const targetAnchorOpts = shape.targetAnchorOpts;
+    const pathStyleOpts = shape.pathStyleOpts ?? {};
+    const waypoints = shape.waypoints;
+
+    const strokeColor = style.strokeColor ?? 0x94a3b8;
+    const strokeWidth = style.strokeWidth ?? 1.5;
+    const alpha = style.strokeAlpha ?? 1;
+
+    const arrowTargetShape = style.arrowTargetShape ?? 'triangle';
+    const arrowTargetColor = style.arrowTargetColor ?? strokeColor;
+
     const sourceAnchorSpec =
       sourceAnchorOpts && Object.keys(sourceAnchorOpts).length > 0
         ? { name: sourceAnchorName, opts: sourceAnchorOpts }
@@ -776,9 +564,20 @@ export class GraphLayer extends WorldLayer<
       pathStyle,
       ...(pathStyleOpts && Object.keys(pathStyleOpts).length > 0 ? { pathStyleOpts } : {}),
       ...(waypoints && waypoints.length > 0 ? { waypoints } : {}),
-      stroke: { color: stroke, width: strokeWidth },
+      stroke: {
+        color: strokeColor,
+        width: strokeWidth,
+        ...(style.strokeAlignment !== undefined ? { alignment: style.strokeAlignment } : {}),
+        ...(style.strokeDashArray ? { dashArray: style.strokeDashArray } : {}),
+        ...(style.strokeDashOffset !== undefined ? { dashOffset: style.strokeDashOffset } : {}),
+      },
       alpha,
-      ...(arrow ? { targetMarker: { kind: 'arrow', fill: stroke } } : {}),
+      ...(arrowTargetShape !== 'none'
+        ? { targetMarker: { kind: 'arrow', fill: arrowTargetColor } }
+        : {}),
+      ...(style.arrowSourceShape && style.arrowSourceShape !== 'none'
+        ? { sourceMarker: { kind: 'arrow', fill: style.arrowSourceColor ?? strokeColor } }
+        : {}),
     };
   }
 
@@ -842,22 +641,6 @@ export class GraphLayer extends WorldLayer<
     if (replacement !== null) {
       for (const name of replacement) this.setEdgeState(edge.id, name, true);
     }
-  }
-
-  /**
-   * Re-render every node currently in the layer. Used after a `nodeDefaults`
-   * change so the new fallbacks take effect immediately. Edges are not
-   * touched — change `edgeDefaults` to repaint those.
-   */
-  private rerenderAllNodes(): void {
-    if (!this._renderer) return;
-    for (const node of this.store.nodes()) this.rerenderNode(node.id);
-  }
-
-  /** Mirror of {@link rerenderAllNodes} for edges. */
-  private rerenderAllEdges(): void {
-    if (!this._renderer) return;
-    for (const edge of this.store.edges()) this.rerenderEdge(edge.id);
   }
 
   private rerenderNode(id: string): void {
@@ -949,36 +732,27 @@ export class GraphLayer extends WorldLayer<
     if (!this._renderer) return;
     const node = this.store.getNode(id);
     if (!node) return;
-    // Per-node hint wins (always static); otherwise fall back to
-    // `nodeDefaults.label` which may be a resolver function.
-    const hint =
-      this.resolveNodeHints(node).label
-      ?? resolveField(this.nodeDefaults.label, node);
-    if (hint === undefined || hint === null) {
+    const style = this.resolveNodeStyle(node);
+    // Escape hatch wins over flat-field synthesis.
+    const labelStyle = style.labelStyle ?? buildShapeLabelStyle(style);
+    if (!labelStyle) {
       this._renderer.setDecoration(id, 'label', null);
       return;
     }
-    this._renderer.setDecoration(id, 'label', {
-      kind: 'label',
-      style: nodeLabelHintToStyle(hint),
-    });
+    this._renderer.setDecoration(id, 'label', { kind: 'label', style: labelStyle });
   }
 
   private syncEdgeLabel(id: string): void {
     if (!this._renderer) return;
     const edge = this.store.getEdge(id);
     if (!edge) return;
-    const hint =
-      this.resolveEdgeHints(edge).label
-      ?? resolveField(this.edgeDefaults.label, edge);
-    if (hint === undefined || hint === null) {
+    const style = this.resolveEdgeStyle(edge);
+    const labelStyle = style.labelStyle ?? buildConnectorLabelStyle(style);
+    if (!labelStyle) {
       this._renderer.setDecoration(id, 'label', null);
       return;
     }
-    this._renderer.setDecoration(id, 'label', {
-      kind: 'label-connector',
-      style: edgeLabelHintToStyle(hint),
-    });
+    this._renderer.setDecoration(id, 'label', { kind: 'label-connector', style: labelStyle });
   }
 
   /**
@@ -1193,18 +967,31 @@ export class GraphLayer extends WorldLayer<
   }
 }
 
-// ─── Label hint resolution ───────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
 /**
- * Translate a `NodeLabelHint` (string shorthand or full payload) into the
- * `ShapeLabelStyle` shape the canvas decoration consumes. The string shorthand
- * expands to plain text with default placement (`'bottom'`).
+ * Build the effective `NodeOption` by merging the caller's option (if any)
+ * with {@link DEFAULT_NODE_STATES}. Consumer entries on `state[name]` win
+ * outright — no per-field deep merge. When `applyDefaults` is `false`,
+ * just returns the caller's option verbatim.
  */
-function nodeLabelHintToStyle(hint: NodeLabelHint): ShapeLabelStyle {
-  if (typeof hint === 'string') {
-    return { content: { kind: 'text', text: hint } };
-  }
-  return hint;
+function mergeNodeOptionWithDefaults(
+  opt: NodeOption | undefined,
+  applyDefaults: boolean,
+): NodeOption | undefined {
+  if (!applyDefaults) return opt;
+  const mergedState = { ...DEFAULT_NODE_STATES, ...(opt?.state ?? {}) };
+  return { ...(opt ?? {}), state: mergedState };
+}
+
+/** Sibling of {@link mergeNodeOptionWithDefaults} for edges. */
+function mergeEdgeOptionWithDefaults(
+  opt: EdgeOption | undefined,
+  applyDefaults: boolean,
+): EdgeOption | undefined {
+  if (!applyDefaults) return opt;
+  const mergedState = { ...DEFAULT_EDGE_STATES, ...(opt?.state ?? {}) };
+  return { ...(opt ?? {}), state: mergedState };
 }
 
 /**
@@ -1223,82 +1010,6 @@ function splitDecorationSpec(
     remove?: boolean;
   };
   return { kind, style: style as Record<string, unknown> };
-}
-
-/**
- * Translate an `EdgeLabelHint` into the `ConnectorLabelStyle`. String shorthand
- * expands to plain text centred on the path with default `autoRotate: true`.
- */
-function edgeLabelHintToStyle(hint: EdgeLabelHint): ConnectorLabelStyle {
-  if (typeof hint === 'string') {
-    return { content: { kind: 'text', text: hint } };
-  }
-  return hint;
-}
-
-// ─── v3 NodeStyle / EdgeStyle adapters (new-shape → legacy NodeRenderHints) ─
-// Translate the v3 flat-key NodeStyle / EdgeStyle into the internal
-// NodeRenderHints / EdgeRenderHints fields the renderer already understands.
-// Keeps the v3 public API stable while reusing today's render path.
-
-/**
- * Adapt a {@link NodeShapeOptions} (discriminated union) to the legacy
- * flat hint fields the renderer consumes. Lives inside `style.shape` in v3.
- */
-function adaptNodeShape(shape: NodeShapeOptions | undefined): Partial<NodeRenderHints> {
-  if (!shape) return {};
-  switch (shape.kind) {
-    case 'rect':
-      return {
-        shape: 'rect',
-        size: shape.width,
-        height: shape.height,
-        ...(shape.cornerRadius !== undefined ? { cornerRadius: shape.cornerRadius } : {}),
-      };
-    case 'circle':
-      return { shape: 'circle', size: shape.radius * 2 };
-    case 'arc':
-      return {
-        shape: 'arc',
-        innerR: shape.innerR,
-        outerR: shape.outerR,
-        startAngle: shape.startAngle,
-        endAngle: shape.endAngle,
-      };
-  }
-}
-
-/**
- * Adapt the flat-prefixed {@link NodeStyle} fields to the legacy
- * NodeRenderHints fields. Includes the `style.shape` structural variant.
- *
- * Polymorphic fields (`bgFill` as ShapeFillLayer / array, `icon`, `image`,
- * `badges`, `decorations`, `effects`) are not yet wired into the legacy
- * spec path; they pass through for forward compatibility but the renderer
- * ignores them until a follow-up phase wires them.
- */
-function adaptNodeStyle(style: Partial<NodeStyle> | undefined): Partial<NodeRenderHints> {
-  if (!style) return {};
-  const hints: Partial<NodeRenderHints> = { ...adaptNodeShape(style.shape) };
-  if (style.bgFill !== undefined) {
-    // Legacy `fill` only accepts `number | false`. Pass through numbers;
-    // complex fill layers (gradient, glyph, image) are pending renderer
-    // wiring — they no-op for now in the legacy path.
-    if (typeof style.bgFill === 'number') hints.fill = style.bgFill;
-  }
-  if (style.bgStrokeColor !== undefined) hints.stroke = style.bgStrokeColor;
-  if (style.bgStrokeWidth !== undefined) hints.strokeWidth = style.bgStrokeWidth;
-  if (style.bgStrokeAlignment !== undefined) hints.strokeAlignment = style.bgStrokeAlignment;
-  if (style.bgAlpha !== undefined) hints.alpha = style.bgAlpha;
-
-  // Escape hatch: full `ShapeLabelStyle` payload wins over flat fields.
-  if (style.labelStyle !== undefined) {
-    hints.label = style.labelStyle;
-  } else {
-    const label = buildShapeLabelStyle(style);
-    if (label !== undefined) hints.label = label;
-  }
-  return hints;
 }
 
 /**
@@ -1390,50 +1101,6 @@ function resolveNodeStyleFields<D>(
     if (v !== undefined) out[k as string] = v;
   }
   return out as Partial<NodeStyle>;
-}
-
-// ─── Edge adapters ─────────────────────────────────────────────────────────
-
-/** Adapt {@link EdgeShapeOptions} (lives at edge.style.shape) to legacy hints. */
-function adaptEdgeShape(shape: EdgeShapeOptions | undefined): Partial<EdgeRenderHints> {
-  if (!shape) return {};
-  const out: Partial<EdgeRenderHints> = {};
-  if (shape.pathType !== undefined) out.pathType = shape.pathType;
-  if (shape.sourceAnchor !== undefined) out.sourceAnchor = shape.sourceAnchor;
-  if (shape.targetAnchor !== undefined) out.targetAnchor = shape.targetAnchor;
-  if (shape.sourceAnchorOpts !== undefined) out.sourceAnchorOpts = shape.sourceAnchorOpts;
-  if (shape.targetAnchorOpts !== undefined) out.targetAnchorOpts = shape.targetAnchorOpts;
-  if (shape.pathStyleOpts !== undefined) out.pathStyleOpts = shape.pathStyleOpts;
-  if (shape.waypoints !== undefined) out.waypoints = shape.waypoints;
-  return out;
-}
-
-/**
- * Adapt the flat-prefixed {@link EdgeStyle} fields to the legacy
- * EdgeRenderHints fields. Includes the `edge.style.shape` structural variant.
- *
- * Arrow source/target are simplified — the legacy spec only supports
- * `arrow: boolean` (target-only). `arrowTargetShape` other than `'none'`
- * enables the arrow; `'none'` disables. Source arrows pass through as
- * forward-compat metadata but aren't yet rendered by the legacy path.
- */
-function adaptEdgeStyle(style: Partial<EdgeStyle> | undefined): Partial<EdgeRenderHints> {
-  if (!style) return {};
-  const hints: Partial<EdgeRenderHints> = { ...adaptEdgeShape(style.shape) };
-  if (style.strokeColor !== undefined) hints.stroke = style.strokeColor;
-  if (style.strokeWidth !== undefined) hints.strokeWidth = style.strokeWidth;
-  if (style.strokeAlpha !== undefined) hints.alpha = style.strokeAlpha;
-  if (style.arrowTargetShape !== undefined) {
-    hints.arrow = style.arrowTargetShape !== 'none';
-  }
-  // Escape hatch: full `ConnectorLabelStyle` payload wins over flat fields.
-  if (style.labelStyle !== undefined) {
-    hints.label = style.labelStyle;
-  } else {
-    const label = buildConnectorLabelStyle(style);
-    if (label !== undefined) hints.label = label;
-  }
-  return hints;
 }
 
 /**

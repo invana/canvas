@@ -10,9 +10,9 @@ type Story = StoryObj;
 /**
  * Validates per-node `state` overlay catalogue (singular) on `NodeData`.
  *
- * Three tiles, all with `states: ['hover']` so the built-in hover config
- * tries to apply. Each tile overrides `hover` differently via its own
- * `state.hover` — proving the per-node patch wins over the layer's
+ * Three tiles, all with `states: ['hovered']` so the built-in hovered config
+ * tries to apply. Each tile overrides `hovered` differently via its own
+ * `state.hovered` — proving the per-node patch wins over the layer's
  * canonical config.
  *
  * - left: no override → built-in hover (white stroke).
@@ -47,7 +47,7 @@ export const PerNodeOverride: Story = {
           labelFontSize: 12,
           labelOffsetY: 8,
         },
-        states: ['hover'],
+        states: ['hovered'],
       },
       {
         id: 'orange',
@@ -64,9 +64,9 @@ export const PerNodeOverride: Story = {
           labelOffsetY: 8,
         },
         state: {
-          hover: { bgStrokeColor: 0xffaa00, bgStrokeWidth: 4 },
+          hovered: { bgStrokeColor: 0xffaa00, bgStrokeWidth: 4 },
         },
-        states: ['hover'],
+        states: ['hovered'],
       },
       {
         id: 'red',
@@ -83,9 +83,9 @@ export const PerNodeOverride: Story = {
           labelOffsetY: 8,
         },
         state: {
-          hover: { bgStrokeColor: 0xef4444, bgStrokeWidth: 6, bgFill: 0xfde2e2 },
+          hovered: { bgStrokeColor: 0xef4444, bgStrokeWidth: 6, bgFill: 0xfde2e2 },
         },
-        states: ['hover'],
+        states: ['hovered'],
       },
     ];
 

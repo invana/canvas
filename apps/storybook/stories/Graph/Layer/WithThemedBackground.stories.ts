@@ -33,12 +33,12 @@ export const WithThemedBackground: Story = {
       return {
         id: n.id,
         position: { x: Math.cos(theta) * R, y: Math.sin(theta) * R },
-        data: {
-          group: n.data.group,
-          fill: groupColors[n.data.group % groupColors.length],
-          size: 18,
-          stroke: 0xffffff,
-          strokeWidth: 1,
+        data: { group: n.data.group },
+        style: {
+          shape: { kind: 'circle', radius: 9 },
+          bgFill: groupColors[n.data.group % groupColors.length],
+          bgStrokeColor: 0xffffff,
+          bgStrokeWidth: 1,
         },
       };
     });
@@ -126,7 +126,7 @@ export const WithThemedBackground: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        edgeDefaults: { strokeWidth: 1, arrow: false },
+        edge: { style: { strokeWidth: 1, arrowTargetShape: 'none' } },
       },
     });
     canvas.layers.add(graph);
@@ -135,7 +135,7 @@ export const WithThemedBackground: Story = {
       const edgeColor = themed.getResolvedKind() === 'dark' ? darkEdge : lightEdge;
       const themedEdges = lesMiserables.edges.map((e) => ({
         ...e,
-        data: { ...e.data, stroke: edgeColor },
+        style: { strokeColor: edgeColor },
       }));
       graph.setData({ nodes, edges: themedEdges });
     };

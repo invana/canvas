@@ -50,7 +50,7 @@ export const Airports_Story: Story = {
       stroke: 0xffffff,
       strokeWidth: 0.5,
       alpha: 0.95,
-    };
+    } as const;
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-maplibre-airports')!;
     const canvas = new Canvas();
@@ -78,24 +78,29 @@ export const Airports_Story: Story = {
       id: 'graph',
       zIndex: 10,
       options: {
-        nodeDefaults: {
-          shape: 'circle',
-          ...NODE_DEFAULTS,
+        node: {
+          style: {
+            shape: { kind: 'circle', radius: NODE_DEFAULTS.size / 2 },
+            bgFill: NODE_DEFAULTS.fill,
+            bgStrokeColor: NODE_DEFAULTS.stroke,
+            bgStrokeWidth: NODE_DEFAULTS.strokeWidth,
+            bgAlpha: NODE_DEFAULTS.alpha,
+          },
+          state: {
+            // Hovered state palette — bright fill + ring on the hovered
+            // airport, everything else dimmed. No edges in this dataset.
+            hovered: {
+              bgFill: 0xfacc15,
+              bgStrokeColor: 0xfacc15,
+              bgStrokeWidth: 1.5,
+              shape: { kind: 'circle', radius: 3 },
+            },
+            dimmed: { bgAlpha: 0.25 },
+          },
         },
       },
     });
     canvas.layers.add(graph);
-
-    // Hover state palette — bright fill + ring on the hovered airport,
-    // everything else dimmed. No edges in this dataset, so `degree` stays
-    // at 0 (hovered node only) and `inactiveState` does the cross-fade.
-    graph.setNodeStateConfig('active', {
-      fill: 0xfacc15,
-      stroke: 0xfacc15,
-      strokeWidth: 1.5,
-      size: 6,
-    });
-    graph.setNodeStateConfig('inactive', { alpha: 0.25 });
 
     // Density overlay between the map and the airport dots. World-space
     // contour bands track the camera through MapLayer's transform mirror,
@@ -188,8 +193,8 @@ export const Airports_Story: Story = {
       id: 'hover',
       layerId: 'graph',
       enabled: true,
-      state: 'active',
-      inactiveState: 'inactive',
+      state: 'hovered',
+      inactiveState: 'dimmed',
     });
     canvas.behaviours.register(hover);
 
@@ -211,11 +216,12 @@ export const Airports_Story: Story = {
       graph.store.batch(() => {
         for (const n of nodes) {
           graph.store.updateNode(n.id, {
-            data: {
-              ...(n.data as Record<string, unknown>),
-              size: settings.nodeSize,
-              fill: settings.nodeFill,
-              alpha: settings.nodeAlpha,
+            style: {
+              shape: { kind: 'circle', radius: settings.nodeSize / 2 },
+              bgFill: settings.nodeFill,
+              bgStrokeColor: NODE_DEFAULTS.stroke,
+              bgStrokeWidth: NODE_DEFAULTS.strokeWidth,
+              bgAlpha: settings.nodeAlpha,
             },
           });
         }

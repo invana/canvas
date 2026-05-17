@@ -87,24 +87,32 @@ Singular `state` is a *catalogue* of style overlays keyed by state name. Plural 
 
 ### Resolution precedence (highest wins, per-field merge)
 
-For each node, the renderer builds the final style by merging in this order:
+For each node, `GraphLayer.resolveNodeStyle(node)` builds the final flat
+`NodeStyle` by `Object.assign`-ing contributions in this order:
 
-1. Layer `node.style` (resolved against the stored `GraphNode`)
-2. Legacy `node.data` hints (back-compat — `NodeRenderHints` shape)
-3. Per-node `node.style` (concrete `NodeStyle`)
-4. For each name in `node.states[]`:
-   - layer-level legacy `nodeStateConfigs[name]` (resolved)
-   - layer-level `node.state[name]` (resolved)
-   - per-node `node.state[name]` (concrete)
+1. Layer `options.node.style` — resolved against the stored `GraphNode`.
+2. Per-node `node.style` — concrete `NodeStyle`.
+3. For each name in `node.states[]` (iteration order):
+   - layer-level `options.node.state[name]` — resolved.
+   - per-node `node.state[name]` — concrete.
 
-**Merge happens at the flat-style level** (not at the adapted-NodeRenderHints level) — this lets layer-level `labelFontSize` compose with per-node `labelText` into one `ShapeLabelStyle`. See `GraphLayer.resolveNodeHints`.
+Decorations are a special case: instead of last-write-wins per field, the
+contributing `decorations[]` arrays are **concatenated** across the same
+contribution order, then deduped by `id` (`spec.id ?? `${kind}#<index>``,
+later wins). `remove: true` in a higher-precedence overlay drops an earlier
+same-id entry. See `resolveNodeDecorations` / `resolveEdgeDecorations`.
+
+`resolveNodeStyle` and `resolveEdgeStyle` are public on `GraphLayer` —
+behaviours that need the same effective style the renderer sees
+(`NodeSizeLODBehaviour`, `LabelCollisionBehaviour`, `MiniMapLayer`) call
+them directly rather than duplicating the merge logic.
 
 ### Resolver model
 
 `ResolvableNodeStyle<D>` makes each field `T | ((subject: D) => T)`:
 
 - On `NodeOption.style`, `D = GraphNode` — resolvers fire every render.
-- On the (future) `NodeInput`, `D` = the raw input `data` — resolvers fire once at insert; the store holds concrete values.
+- On `NodeInput`, `D` = the raw input `data` — resolvers fire once at insert; the store holds concrete values.
 
 `ResolvableId<D> = string | ((data: D) => string)` for the optional input-side id derivation.
 
@@ -114,14 +122,8 @@ Per [[feedback_storybook_data_pattern]] and recent refinements:
 
 - **Hardcode per-item data** as literal arrays (no `.map()` / `for` loops generating nodes or edges). The data shape needs to read cleanly in Storybook's "Show code" tab.
 - **Hoist truly shared styling to the layer template** (`options.node.style`, `options.edge.style`). Per-item entries only carry what genuinely differs (id, position/source/target, unique `labelText`, distinguishing fill).
-- **Don't write helper functions** in story files. The adapter merges layer + per-item styles correctly, so the layer template can carry e.g. label font/colour/background and per-item only sets `labelText`.
+- **Don't write helper functions** in story files. The resolver merges layer + per-item styles correctly, so the layer template can carry e.g. label font/colour/background and per-item only sets `labelText`.
 - **Escape hatch (`labelStyle`)** only when the flat fields can't express the case (wrap, html-text). Otherwise prefer flat.
-
-### Legacy path (back-compat)
-
-Pre-v3 stories and behaviours that read `node.data` as `NodeRenderHints` (`shape: 'circle'`, `fill: 0x...`, `label: ShapeLabelStyle`, …) continue to work — the layer's `resolveNodeHints` reads both paths and applies the legacy hints between layer-template and per-node v3 style. Migration is opt-in per node: set `node.style` and the v3 path takes over; omit it and the legacy hints render unchanged.
-
-Legacy types kept: `NodeRenderHints`, `EdgeRenderHints`, `Resolvable*RenderHints`, `NodeStateConfig`, `EdgeStateConfig`, `ResolvedNodeDefaults`, `ResolvedEdgeDefaults`, `DEFAULT_NODE_STATE_CONFIGS`, `DEFAULT_EDGE_STATE_CONFIGS`, `nodeDefaults` / `edgeDefaults` / `nodeStateConfigs` / `edgeStateConfigs` options. Slated for removal once datasets + behaviours migrate (phase 8 of `data-types-implementation-plan.md`).
 
 ## State vs. data — bifurcated source of truth
 

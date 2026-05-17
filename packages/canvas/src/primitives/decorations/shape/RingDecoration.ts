@@ -56,15 +56,17 @@ export class RingDecoration extends ShapeDecorationBase<RingDecorationStyle> {
       return;
     }
 
-    // Stroke center sits at `gap + width / 2` outside the silhouette, so
-    // the visible band's inner edge lands at `gap` and outer edge at
-    // `gap + width`. Negative inset = "outside" in shape.paintInto's vocab.
+    // Paint a stroke at `inset = -gap` (the silhouette pushed `gap` outward)
+    // and let alignment: 'outside' place the entire `width`-thick band on
+    // the *outside* of that path. Net result: visible ring sits at
+    // [gap, gap + width] outside the body, with no bleed into the fill.
     shape.paintInto(this.band, {
       color,
       alpha,
       strokeWidth: width,
+      alignment: 'outside',
       fill: false,
-      inset: -(gap + width / 2),
+      inset: -gap,
       ...(dashArray ? { dashArray } : {}),
     });
   }

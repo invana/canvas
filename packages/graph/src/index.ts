@@ -14,8 +14,8 @@ export {
 } from './store';
 
 export {
-  DEFAULT_EDGE_STATE_CONFIGS,
-  DEFAULT_NODE_STATE_CONFIGS,
+  DEFAULT_EDGE_STATES,
+  DEFAULT_NODE_STATES,
   GraphLayer,
   MiniMapLayer,
   resolveField,
@@ -24,19 +24,10 @@ export {
   type MiniMapPosition,
   type EdgeAnchor,
   type EdgePathType,
-  type EdgeRenderHints,
-  type EdgeStateConfig,
   type GraphData,
   type GraphLayerEvents,
   type GraphLayerOptions,
-  type NodeRenderHints,
-  type NodeShapeKind,
-  type NodeStateConfig,
   type Resolvable,
-  type ResolvableEdgeRenderHints,
-  type ResolvableNodeRenderHints,
-  type ResolvedEdgeDefaults,
-  type ResolvedNodeDefaults,
   // v3 G6-aligned shape
   type ArcShapeOption,
   type ArrowShape,
@@ -105,4 +96,3 @@ export {
   type EdgeSizeLODConfig,
 } from './behaviours';
 
-export type { NodeLabelHint, EdgeLabelHint } from './layer';

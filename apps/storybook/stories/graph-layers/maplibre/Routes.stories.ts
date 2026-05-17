@@ -82,41 +82,52 @@ export const Routes_Story: Story = {
       id: 'graph',
       zIndex: 10,
       options: {
-        nodeDefaults: { shape: 'circle', ...NODE_DEFAULTS },
-        edgeDefaults: { pathType: 'straight', arrow: false, ...EDGE_DEFAULTS },
+        node: {
+          style: {
+            shape: { kind: 'circle', radius: NODE_DEFAULTS.size / 2 },
+            bgFill: NODE_DEFAULTS.fill,
+            bgStrokeColor: NODE_DEFAULTS.stroke,
+            bgStrokeWidth: NODE_DEFAULTS.strokeWidth,
+            bgAlpha: NODE_DEFAULTS.alpha,
+          },
+          state: {
+            // Hover / dimmed palettes — hovered lights up the airport and
+            // its connected routes (N-hop) in amber; dimmed pushes the
+            // rest back. `'hover-far'` is a custom (non-canonical) state
+            // swapped in via `zoomedOutState` when the camera zooms past
+            // the threshold; bigger node body so it stays visible at
+            // world-level zoom.
+            hovered: {
+              bgFill: 0xfacc15,
+              bgStrokeColor: 0xfacc15,
+              bgStrokeWidth: 1.5,
+              shape: { kind: 'circle', radius: 2.5 },
+            },
+            dimmed: { bgAlpha: 0.15 },
+            'hover-far': {
+              bgFill: 0xfacc15,
+              bgStrokeColor: 0xffffff,
+              bgStrokeWidth: 2,
+              shape: { kind: 'circle', radius: 9 },
+            },
+          },
+        },
+        edge: {
+          style: {
+            shape: { pathType: 'straight' },
+            arrowTargetShape: 'none',
+            strokeColor: EDGE_DEFAULTS.stroke,
+            strokeWidth: EDGE_DEFAULTS.strokeWidth,
+          },
+          state: {
+            hovered: { strokeColor: 0xfacc15, strokeWidth: 1.2, strokeAlpha: 0.95 },
+            dimmed: { strokeAlpha: 0.05 },
+            'hover-far': { strokeColor: 0xfacc15, strokeWidth: 4, strokeAlpha: 1 },
+          },
+        },
       },
     });
     canvas.layers.add(graph);
-
-    // Active / inactive state palettes — hover lights up the airport and
-    // its connected routes (N-hop) in amber, dimming everything else.
-    graph.setNodeStateConfig('active', {
-      fill: 0xfacc15,
-      stroke: 0xfacc15,
-      strokeWidth: 1.5,
-      size: 5,
-    });
-    graph.setEdgeStateConfig('active', { stroke: 0xfacc15, strokeWidth: 1.2, alpha: 0.95 });
-    graph.setNodeStateConfig('inactive', { alpha: 0.15 });
-    graph.setEdgeStateConfig('inactive', { alpha: 0.05 });
-
-    // Zoom-tier palette — applied by `HoverActivateBehaviour` when the
-    // camera scale drops at or below its `zoomThreshold` (MapLibre's
-    // `viewport.scale = 2^zoom`, so threshold 4 means world-ish view).
-    // At that zoom, every node is ~1 anti-aliased pixel and the normal
-    // `active` state is invisible against the background dots; this
-    // bigger palette is what makes the hovered node "pop".
-    graph.setNodeStateConfig('active-far', {
-      fill: 0xfacc15,
-      stroke: 0xffffff,
-      strokeWidth: 2,
-      size: 18,
-    });
-    graph.setEdgeStateConfig('active-far', {
-      stroke: 0xfacc15,
-      strokeWidth: 4,
-      alpha: 1,
-    });
 
     // Density overlay between the map and the graph. The contour resolves
     // `graphLayerId` synchronously at mount, so it must be added AFTER
@@ -259,7 +270,7 @@ export const Routes_Story: Story = {
     // its N-hop neighbour airports and connecting Delaunay routes, and
     // dims everything else. Registered after the graph layer is mounted.
     //
-    // `zoomThreshold` swaps to the bigger `active-far` palette when the
+    // `zoomThreshold` swaps to the bigger `hover-far` palette when the
     // MapLibre camera scale (= `2^zoom`) drops to ≤ 4 (world view). The
     // behaviour re-applies on every `camera:zoom`, so dragging the camera
     // across the threshold mid-hover swaps the visuals cleanly.
@@ -267,13 +278,13 @@ export const Routes_Story: Story = {
       id: 'hover',
       layerId: 'graph',
       enabled: settings.hoverEnabled,
-      state: 'active',
-      // inactiveState: 'inactive',
+      state: 'hovered',
+      // inactiveState: 'dimmed',
       degree: settings.hoverDegree,
       direction: 'both',
       zoomThreshold: settings.hoverZoomThreshold,
-      zoomedOutState: 'active-far',
-      zoomedOutEdgeState: 'active-far',
+      zoomedOutState: 'hover-far',
+      zoomedOutEdgeState: 'hover-far',
     });
     canvas.behaviours.register(hover);
 
@@ -292,11 +303,12 @@ export const Routes_Story: Story = {
       graph.store.batch(() => {
         for (const n of nodes) {
           graph.store.updateNode(n.id, {
-            data: {
-              ...(n.data as Record<string, unknown>),
-              size: settings.nodeSize,
-              fill: settings.nodeFill,
-              alpha: settings.nodeAlpha,
+            style: {
+              shape: { kind: 'circle', radius: settings.nodeSize / 2 },
+              bgFill: settings.nodeFill,
+              bgStrokeColor: NODE_DEFAULTS.stroke,
+              bgStrokeWidth: NODE_DEFAULTS.strokeWidth,
+              bgAlpha: settings.nodeAlpha,
             },
           });
         }
@@ -307,10 +319,10 @@ export const Routes_Story: Story = {
       graph.store.batch(() => {
         for (const e of edges) {
           graph.store.updateEdge(e.id, {
-            data: {
-              stroke: settings.edgeColor,
+            style: {
+              strokeColor: settings.edgeColor,
               strokeWidth: settings.edgeWidth,
-              alpha: settings.edgeAlpha,
+              strokeAlpha: settings.edgeAlpha,
             },
           });
         }
@@ -372,29 +384,10 @@ export const Routes_Story: Story = {
       .add(settings, 'hoverZoomThreshold', 0.25, 64, 0.25)
       .name('Far-zoom threshold')
       .onChange((v: number) => hover.setOptions({ zoomThreshold: v }));
-    hoverFolder
-      .add(settings, 'hoverFarSize', 6, 40, 1)
-      .name('Far-zoom node px')
-      .onChange((v: number) => {
-        // Rewrite the `active-far` node config; if a hover is currently
-        // showing it, the next state-driven rerender picks up the new size.
-        graph.setNodeStateConfig('active-far', {
-          fill: 0xfacc15,
-          stroke: 0xffffff,
-          strokeWidth: 2,
-          size: v,
-        });
-      });
-    hoverFolder
-      .add(settings, 'hoverFarStrokeWidth', 0.5, 12, 0.5)
-      .name('Far-zoom edge px')
-      .onChange((v: number) => {
-        graph.setEdgeStateConfig('active-far', {
-          stroke: 0xfacc15,
-          strokeWidth: v,
-          alpha: 1,
-        });
-      });
+    // Far-zoom node/edge px sliders dropped — state styling is now
+    // layer-template-only and can't be mutated at runtime. The baked-in
+    // `hover-far` overlay (declared in `options.node.state`) covers
+    // the static case.
 
     const densityFolder = gui.addFolder('Density overlay');
     densityFolder.add(settings, 'showDensity').name('Show density').onChange((v: boolean) => {

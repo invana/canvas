@@ -79,7 +79,7 @@ export const DensityContourFillLayer_Story: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        edgeDefaults: { stroke: 0xcbd5e1, strokeWidth: 0.5, arrow: true },
+        edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.5 } },
       },
     });
     canvas.layers.add(graph);

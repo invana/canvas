@@ -8,11 +8,11 @@ export default meta;
 type Story = StoryObj;
 
 /**
- * Validates the v3 G6-aligned `NodeData` shape against the built-in `hover`
+ * Validates the v3 G6-aligned `NodeData` shape against the built-in `hovered`
  * state config that `GraphLayer` auto-registers
- * (`DEFAULT_NODE_STATE_CONFIGS.hover` — strokeWidth: 3, stroke: 0xffffff).
+ * (`DEFAULT_NODE_STATE_CONFIGS.hovered` — strokeWidth: 3, stroke: 0xffffff).
  *
- * Two tiles — left is at rest, right is rendered with `states: ['hover']`
+ * Two tiles — left is at rest, right is rendered with `states: ['hovered']`
  * from the data feed, so the built-in hover overlay applies on top of the
  * `style` fields.
  *
@@ -59,16 +59,16 @@ export const BuiltinHover: Story = {
           bgFill: 0x3b82f6,
           bgStrokeColor: 0x1d4ed8,
           bgStrokeWidth: 1,
-          labelText: 'states: [hover]',
+          labelText: 'states: [hovered]',
           labelColor: 0x1f2937,
           labelPlacement: 'bottom',
           labelFontSize: 12,
           labelFontWeight: 600,
           labelOffsetY: 8,
         },
-        // Activated via data-driven states (plural). The built-in `hover`
+        // Activated via data-driven states (plural). The built-in `hovered`
         // config (strokeWidth: 3, stroke: 0xffffff) applies on top of `style`.
-        states: ['hover'],
+        states: ['hovered'],
       },
     ];
 

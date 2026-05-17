@@ -6,7 +6,8 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer, LabelResolutionLODBehaviour, type NodeLabelHint } from '@invana/graph';
+import { GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
+import type { ShapeLabelStyle } from '@invana/canvas';
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
 import { flareAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -131,22 +132,24 @@ export const Sunburst: Story = {
         nodes: data.nodes.map((n) => ({
           id: n.id,
           data: {
-            // Placeholder shape — D3HierarchyLayout('sunburst') overwrites
-            // `shape`, `innerR`, `outerR`, `startAngle`, `endAngle` once it
-            // resolves. The renderer paints nothing for an arc with all
-            // zeros, so this stays invisible during the brief interval
-            // between setData and apply().
-            shape: 'arc' as const,
-            innerR: 0,
-            outerR: 0,
-            startAngle: 0,
-            endAngle: 0,
-            fill: fillFor(n.data.group, n.data.depth, maxDepth),
-            stroke: settings.strokeColor,
-            strokeWidth: settings.strokeWidth,
             // The layout reads `data.value` via its default value accessor —
             // only leaves carry one, inner nodes get summed by d3.hierarchy.
             ...(n.data.value !== undefined ? { value: n.data.value } : {}),
+          },
+          style: {
+            // Placeholder zero-size arc — D3HierarchyLayout('sunburst')
+            // overwrites `style.shape` with the resolved arc geometry once
+            // it runs.
+            shape: {
+              kind: 'arc' as const,
+              innerR: 0,
+              outerR: 0,
+              startAngle: 0,
+              endAngle: 0,
+            },
+            bgFill: fillFor(n.data.group, n.data.depth, maxDepth),
+            bgStrokeColor: settings.strokeColor,
+            bgStrokeWidth: settings.strokeWidth,
           },
         })),
         edges: data.edges.map((e) => ({
@@ -168,33 +171,32 @@ export const Sunburst: Story = {
     const applySunburstLabels = (): void => {
       graph.store.batch(() => {
         for (const node of graph.store.nodes()) {
-          const data = node.data as Record<string, unknown> & {
-            innerR?: number;
-            outerR?: number;
-            startAngle?: number;
-            endAngle?: number;
+          const baseStyle = {
+            ...((node.style as Record<string, unknown> | undefined) ?? {}),
           };
-          const next = { ...data };
-          if ('label' in next) delete next.label;
+          delete (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle;
 
+          const shape = baseStyle.shape as
+            | { kind?: string; innerR?: number; outerR?: number; startAngle?: number; endAngle?: number }
+            | undefined;
           if (
             settings.showLabels &&
-            data.innerR !== undefined &&
-            data.outerR !== undefined &&
-            data.startAngle !== undefined &&
-            data.endAngle !== undefined
+            shape &&
+            shape.kind === 'arc' &&
+            shape.innerR !== undefined &&
+            shape.outerR !== undefined &&
+            shape.startAngle !== undefined &&
+            shape.endAngle !== undefined
           ) {
-            const sweep = data.endAngle - data.startAngle;
-            const midR = (data.innerR + data.outerR) / 2;
+            const sweep = shape.endAngle - shape.startAngle;
+            const midR = (shape.innerR + shape.outerR) / 2;
             const arcLen = sweep * midR;
             const meta = nodeMeta.get(node.id);
             if (meta && arcLen >= settings.labelMinArcPx && meta.depth > 0) {
-              const midAngle = (data.startAngle + data.endAngle) / 2;
-              // Flip on the left half so text reads upright (cos(angle) < 0
-              // means we're pointing into the left hemisphere).
+              const midAngle = (shape.startAngle + shape.endAngle) / 2;
               const flipped = Math.cos(midAngle) < 0;
               const rotation = flipped ? midAngle + Math.PI : midAngle;
-              const label: NodeLabelHint = {
+              const labelStyle: ShapeLabelStyle = {
                 content: {
                   kind: 'text',
                   text: meta.name,
@@ -205,11 +207,11 @@ export const Sunburst: Story = {
                 placement: 'center',
                 rotation,
               };
-              next.label = label;
+              (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle = labelStyle;
             }
           }
 
-          graph.store.updateNode(node.id, { data: next });
+          graph.store.updateNode(node.id, { style: baseStyle });
         }
       });
     };
@@ -237,20 +239,23 @@ export const Sunburst: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        nodeDefaults: {
-          shape: 'arc',
-          fill: 0xcccccc,
-          stroke: settings.strokeColor,
-          strokeWidth: settings.strokeWidth,
+        node: {
+          style: {
+            bgFill: 0xcccccc,
+            bgStrokeColor: settings.strokeColor,
+            bgStrokeWidth: settings.strokeWidth,
+          },
         },
-        edgeDefaults: {
+        edge: {
           // Hierarchy is conveyed by ring enclosure, not links. Edges are
           // required so the layout can derive the tree topology but stay
           // fully transparent at render time. Same trick as the Pack story.
-          stroke: 0x000000,
-          strokeWidth: 0,
-          alpha: 0,
-          arrow: false,
+          style: {
+            strokeColor: 0x000000,
+            strokeWidth: 0,
+            strokeAlpha: 0,
+            arrowTargetShape: 'none',
+          },
         },
       },
     });

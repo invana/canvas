@@ -5,7 +5,8 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer, LabelResolutionLODBehaviour, type NodeLabelHint } from '@invana/graph';
+import { GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
+import type { ShapeLabelStyle } from '@invana/canvas';
 import { D3HierarchyLayout, type D3HierarchyLayoutMode } from '@invana/graph-layout-d3-hierarchy';
 import { flareAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -80,10 +81,8 @@ export const RadialTree: Story = {
       return {
         nodes: data.nodes.map((n) => ({
           id: n.id,
-          data: {
-            size: settings.nodeSize,
-            fill: settings.colorByDepth ? colorAt(n.data.depth) : 0x1f2937,
-            stroke: false as const,
+          style: {
+            bgFill: settings.colorByDepth ? colorAt(n.data.depth) : 0x1f2937,
           },
         })),
         edges: data.edges.map((e) => ({
@@ -119,10 +118,10 @@ export const RadialTree: Story = {
         // Clear any labels left over from a prior run.
         graph.store.batch(() => {
           for (const node of graph.store.nodes()) {
-            const next = { ...(node.data as object) } as Record<string, unknown>;
-            if ('label' in next) {
-              delete next.label;
-              graph.store.updateNode(node.id, { data: next });
+            const baseStyle = { ...(node.style ?? {}) };
+            if ('labelStyle' in baseStyle) {
+              delete (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle;
+              graph.store.updateNode(node.id, { style: baseStyle });
             }
           }
         });
@@ -140,20 +139,12 @@ export const RadialTree: Story = {
 
           const theta = Math.atan2(pos.y, pos.x);
           const isLeftHalf = pos.x < 0;
-          // d3-radial-cluster's `text-anchor: start, dx: 6` trick: the node
-          // sits at the *inner* end of the label (leaves) or *outer* end
-          // (internal nodes), text reading along the radial axis. Pixi has
-          // no text-anchor; instead push the label's centroid by half the
-          // estimated text width plus the node radius and a small gap so
-          // after rotation the appropriate edge of the label lands next to
-          // the node. Sign of the offset flips for internal nodes so their
-          // labels read inward (matching d3 radial-tree/2).
           const estimatedHalfWidth = (meta.name.length * settings.labelFontSize * 0.55) / 2;
           const signedDist =
             estimatedHalfWidth + settings.nodeSize / 2 + 4;
           const radialDist = meta.isLeaf ? signedDist : -signedDist;
 
-          const label: NodeLabelHint = {
+          const labelStyle: ShapeLabelStyle = {
             content: {
               kind: 'text',
               text: meta.name,
@@ -170,7 +161,7 @@ export const RadialTree: Story = {
           };
 
           graph.store.updateNode(node.id, {
-            data: { ...(node.data as object), label },
+            style: { ...(node.style ?? {}), labelStyle },
           });
         }
       });
@@ -199,22 +190,21 @@ export const RadialTree: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        nodeDefaults: { shape: 'circle', size: settings.nodeSize, stroke: false },
-        edgeDefaults: {
-          stroke: 0x94a3b8,
-          strokeWidth: settings.edgeStrokeWidth,
-          alpha: settings.edgeAlpha,
-          arrow: false,
-          // `bump-radial` matches d3.linkRadial() — control points sit on the
-          // midradius circle at the source/target angles, so edges leave and
-          // arrive tangent to the radius instead of bulging sideways.
-          pathType: 'bump-radial',
-          // `center` anchor: don't trim endpoints to the node boundary. The
-          // path style computes its tangent from the true node-centre angle
-          // (radial-perfect at every endpoint); nodes overdraw the inner
-          // part of the curve, so visually the edge still terminates at the
-          // boundary. Same trick d3's example uses.
-          anchor: 'center',
+        node: { style: { shape: { kind: 'circle', radius: settings.nodeSize / 2 } } },
+        edge: {
+          style: {
+            strokeColor: 0x94a3b8,
+            strokeWidth: settings.edgeStrokeWidth,
+            strokeAlpha: settings.edgeAlpha,
+            arrowTargetShape: 'none',
+            shape: {
+              // `bump-radial` matches d3.linkRadial().
+              pathType: 'bump-radial',
+              // `center` anchor: don't trim endpoints to the node boundary.
+              sourceAnchor: 'center',
+              targetAnchor: 'center',
+            },
+          },
         },
       },
     });

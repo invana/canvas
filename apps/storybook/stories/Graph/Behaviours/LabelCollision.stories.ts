@@ -38,30 +38,23 @@ export const LabelCollision: Story = {
     // readable on any underlying edge / shape colour.
     const nodes: GraphNode[] = lesMiserables.nodes.map((n) => ({
       id: n.id,
-      data: {
-        group: n.data.group,
-        fill: groupColors[n.data.group % groupColors.length],
-        size: 14,
-        stroke: 0xffffff,
-        strokeWidth: 1,
-        label: {
-          content: {
-            kind: 'text',
-            text: n.id,
-            fontSize: 11,
-            fontWeight: 500,
-            fill: 0x0f172a,
-          },
-          background: {
-            fill: 0xffffff,
-            stroke: 0xe2e8f0,
-            strokeWidth: 1,
-            radius: 3,
-            padding: [1, 4],
-          },
-          placement: 'bottom',
-          offset: { y: 4 },
-        },
+      data: { group: n.data.group },
+      style: {
+        shape: { kind: 'circle', radius: 7 },
+        bgFill: groupColors[n.data.group % groupColors.length],
+        bgStrokeColor: 0xffffff,
+        bgStrokeWidth: 1,
+        labelText: n.id,
+        labelFontSize: 11,
+        labelFontWeight: 500,
+        labelColor: 0x0f172a,
+        labelPlacement: 'bottom',
+        labelOffsetY: 4,
+        labelBackgroundFill: 0xffffff,
+        labelBackgroundStrokeColor: 0xe2e8f0,
+        labelBackgroundStrokeWidth: 1,
+        labelBackgroundCornerRadius: 3,
+        labelBackgroundPadding: 1,
       },
     }));
 
@@ -75,7 +68,9 @@ export const LabelCollision: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { edgeDefaults: { stroke: 0xcbd5e1, strokeWidth: 1, arrow: false } },
+      options: {
+        edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' } },
+      },
     });
     canvas.layers.add(graph);
     graph.setData({ nodes, edges: lesMiserables.edges });

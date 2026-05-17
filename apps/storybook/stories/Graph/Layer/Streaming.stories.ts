@@ -48,21 +48,22 @@ export const Streaming: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        nodeDefaults: {
-          shape: 'circle',
-          size: 14,
-          // Resolver — colour follows the node's `data.group`, so a feed
-          // only has to push `{ id, position, data: { group } }` and the
-          // layer paints it for free. Same data shape covers initial seed,
-          // upsert, and update.
-          fill: (n) => {
-            const group = (n.data as { group?: number } | undefined)?.group ?? 0;
-            return palette[group % palette.length]!;
+        node: {
+          style: {
+            shape: { kind: 'circle', radius: 7 },
+            // Resolver — colour follows the node's `data.group`, so a feed
+            // only has to push `{ id, position, data: { group } }` and the
+            // layer paints it for free. Same data shape covers initial seed,
+            // upsert, and update.
+            bgFill: (n: GraphNode) => {
+              const group = (n.data as { group?: number } | undefined)?.group ?? 0;
+              return palette[group % palette.length]!;
+            },
+            bgStrokeColor: 0xffffff,
+            bgStrokeWidth: 1,
           },
-          stroke: 0xffffff,
-          strokeWidth: 1,
         },
-        edgeDefaults: { stroke: 0x9ca3af, strokeWidth: 1, arrow: false },
+        edge: { style: { strokeColor: 0x9ca3af, strokeWidth: 1, arrowTargetShape: 'none' } },
       },
     });
     canvas.layers.add(graph);
@@ -128,8 +129,7 @@ export const Streaming: Story = {
       // Canonical state names a feed might push. Sampled when the
       // "include state" GUI toggle is on.
       const canonicalStates = [
-        'hover', 'selected', 'active', 'highlighted',
-        'dimmed', 'disabled', 'error', 'focused',
+        'hovered', 'selected', 'highlighted', 'dimmed', 'disabled',
       ] as const;
 
       // ADD — fresh nodes at random positions; sparse new edges anchored
@@ -262,15 +262,22 @@ export const Streaming: Story = {
     statsFolder.add(stats, 'edgeCount').name('edges').disable();
     statsFolder.add(stats, 'storeVersion').name('store.version').disable();
 
-    // Defaults runtime knobs — demonstrates `updateNodeDefaults` / etc.
-    // by switching the resolver to a uniform colour and back.
-    const defaultsFolder = gui.addFolder('defaults runtime').close();
+    // Runtime mass-update — iterate the store and write per-node `style`
+    // patches. State styling is layer-template-only in v3, but per-node
+    // style.shape / style.bgFill can still be rewritten on the fly.
+    const defaultsFolder = gui.addFolder('mass-update runtime').close();
     const uniformFill = { color: 0xfacc15 };
+    const massUpdate = (patch: Record<string, unknown>): void => {
+      graph.store.batch(() => {
+        for (const n of graph.store.nodes()) {
+          const existing = (n.style as Record<string, unknown> | undefined) ?? {};
+          graph.store.updateNode(n.id, { style: { ...existing, ...patch } });
+        }
+      });
+    };
     defaultsFolder
       .add(
-        {
-          uniform: () => graph.updateNodeDefaults({ fill: uniformFill.color }),
-        },
+        { uniform: () => massUpdate({ bgFill: uniformFill.color }) },
         'uniform',
       )
       .name('uniform fill (static)');
@@ -279,25 +286,28 @@ export const Streaming: Story = {
       .add(
         {
           byGroup: () =>
-            graph.updateNodeDefaults({
-              fill: (n) => {
+            graph.store.batch(() => {
+              for (const n of graph.store.nodes()) {
                 const group = (n.data as { group?: number } | undefined)?.group ?? 0;
-                return palette[group % palette.length]!;
-              },
+                const existing = (n.style as Record<string, unknown> | undefined) ?? {};
+                graph.store.updateNode(n.id, {
+                  style: { ...existing, bgFill: palette[group % palette.length]! },
+                });
+              }
             }),
         },
         'byGroup',
       )
-      .name('by-group fill (resolver)');
+      .name('by-group fill (per-node)');
     defaultsFolder
       .add(
-        { biggerNodes: () => graph.updateNodeDefaults({ size: 24 }) },
+        { biggerNodes: () => massUpdate({ shape: { kind: 'circle', radius: 12 } }) },
         'biggerNodes',
       )
       .name('size: 24');
     defaultsFolder
       .add(
-        { smallerNodes: () => graph.updateNodeDefaults({ size: 14 }) },
+        { smallerNodes: () => massUpdate({ shape: { kind: 'circle', radius: 7 } }) },
         'smallerNodes',
       )
       .name('size: 14');

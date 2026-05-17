@@ -6,7 +6,8 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer, LabelResolutionLODBehaviour, type NodeLabelHint } from '@invana/graph';
+import { GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
+import type { ShapeLabelStyle } from '@invana/canvas';
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
 import { h1b2019AsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -134,13 +135,13 @@ export const Pack: Story = {
                 // Pack reads `data.value` (default accessor). Inner nodes
                 // omit it — pack's `sum` rolls them up from leaves.
                 ...(n.data.value !== undefined ? { value: n.data.value } : {}),
-                fill: isLeaf ? settings.leafFill : settings.innerFill,
-                stroke: isLeaf ? 0xffffff : settings.innerStroke,
-                strokeWidth: isLeaf ? 0 : settings.innerStrokeWidth,
-                // Carried through so the post-layout label pass can pick
-                // out employer names without re-traversing the source.
                 name: n.data.name,
                 isLeaf,
+              },
+              style: {
+                bgFill: isLeaf ? settings.leafFill : settings.innerFill,
+                bgStrokeColor: isLeaf ? 0xffffff : settings.innerStroke,
+                bgStrokeWidth: isLeaf ? 0 : settings.innerStrokeWidth,
               },
             };
           }),
@@ -173,15 +174,24 @@ export const Pack: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        nodeDefaults: { shape: 'circle', size: 0.1 },
-        edgeDefaults: {
+        node: {
+          style: {
+            shape: (n) => {
+              const size = (n.data as { size?: number } | undefined)?.size ?? 0.1;
+              return { kind: 'circle', radius: size / 2 };
+            },
+          },
+        },
+        edge: {
           // Pack conveys hierarchy through enclosure, not links. Edges are
           // required by the layout (so it can derive the tree) but rendered
           // fully transparent so only the packed circles read.
-          stroke: 0x000000,
-          strokeWidth: 0,
-          alpha: 0,
-          arrow: false,
+          style: {
+            strokeColor: 0x000000,
+            strokeWidth: 0,
+            strokeAlpha: 0,
+            arrowTargetShape: 'none',
+          },
         },
       },
     });
@@ -221,10 +231,9 @@ export const Pack: Story = {
             size?: number;
             name?: string;
             isLeaf?: boolean;
-            label?: NodeLabelHint;
           };
-          const next = { ...data } as Record<string, unknown>;
-          if ('label' in next) delete next.label;
+          const baseStyle = { ...(node.style ?? {}) };
+          delete (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle;
 
           if (
             settings.showLabels &&
@@ -238,7 +247,7 @@ export const Pack: Story = {
               settings.maxLabelFontSize,
               (data.size * 0.85) / (chars * 0.55),
             );
-            const label: NodeLabelHint = {
+            const labelStyle: ShapeLabelStyle = {
               content: {
                 kind: 'text',
                 text: data.name,
@@ -248,10 +257,10 @@ export const Pack: Story = {
               },
               placement: 'center',
             };
-            next.label = label;
+            (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle = labelStyle;
           }
 
-          graph.store.updateNode(node.id, { data: next });
+          graph.store.updateNode(node.id, { style: baseStyle });
         }
       });
     };

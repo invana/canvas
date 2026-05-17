@@ -11,20 +11,24 @@
  * Default `enabled: false` — register, then explicitly enable. Matches the
  * project rule that no behaviour auto-activates.
  *
+ * Defaults align with the canonical state catalogue auto-merged into
+ * every `GraphLayer`: `state: 'hovered'` for the focal (and N-hop
+ * neighbours when `degree > 0`), and optional `inactiveState: 'dimmed'`
+ * for everything else. Override these when the project's state
+ * vocabulary diverges.
+ *
  * @example
  * ```ts
- * graph.setNodeStateConfig('active',   { stroke: 0xfacc15, strokeWidth: 3 });
- * graph.setNodeStateConfig('inactive', { alpha: 0.25 });
- * graph.setEdgeStateConfig('active',   { stroke: 0xfacc15, strokeWidth: 2 });
- * graph.setEdgeStateConfig('inactive', { alpha: 0.2 });
+ * // Layer defaults already include `hovered`, `highlighted`, `dimmed` —
+ * // no setup needed beyond registering the behaviour.
  *
  * canvas.behaviours.register(
  *   new HoverActivateBehaviour({
  *     id: 'hover',
  *     layerId: 'graph',
  *     enabled: true,
- *     state: 'active',
- *     inactiveState: 'inactive',
+ *     // state defaults to 'hovered'
+ *     inactiveState: 'dimmed',
  *     degree: 1,
  *   }),
  * );
@@ -60,7 +64,13 @@ export interface HoverActivateBehaviourOptions extends BehaviourOptions {
    */
   enable?: boolean | ((element: HoverableElement) => boolean);
 
-  /** Active-state name (configured on the layer). Default `'active'`. */
+  /**
+   * State name applied to the hovered focal element (and its N-hop
+   * neighbours when `degree > 0`). Default `'hovered'` — matches the
+   * canonical state catalogue auto-merged into every `GraphLayer`. Pass
+   * a custom name when the behaviour should write a project-specific
+   * state instead (e.g. `'focal'`).
+   */
   state?: string;
 
   /**
@@ -155,7 +165,7 @@ function resolveOptions(
 ): ResolvedOptions {
   const base: ResolvedOptions = prev ?? {
     enable: true,
-    state: 'active',
+    state: 'hovered',
     inactiveState: undefined,
     degree: 0,
     direction: 'both',

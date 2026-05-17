@@ -37,10 +37,10 @@ export const LesMiserables: Story = {
 
     const nodes: GraphNode[] = lesMiserables.nodes.map((n) => ({
       id: n.id,
-      data: {
-        group: n.data.group,
-        fill: groupColors[n.data.group % groupColors.length],
-        size: 10,
+      data: { group: n.data.group },
+      style: {
+        shape: { kind: 'circle', radius: 5 },
+        bgFill: groupColors[n.data.group % groupColors.length],
       },
     }));
 
@@ -72,7 +72,7 @@ export const LesMiserables: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        edgeDefaults: { stroke: 0xcbd5e1, strokeWidth: 0.5, arrow: true },
+        edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.5 } },
       },
     });
     canvas.layers.add(graph);

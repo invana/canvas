@@ -58,10 +58,15 @@ export function applyStroke(
   style: ShapePaintStyle | undefined,
 ): void {
   if (style?.strokeWidth !== undefined) {
+    // Decorations default to `'outside'` alignment so their stroke lives
+    // wholly past the silhouette instead of bleeding inward (Pixi's
+    // built-in default is center-aligned, which makes a halo's inner band
+    // cover the host body — see the `selected` ring + glow regression).
     g.stroke({
       color: style.color ?? 0x000000,
       alpha: style.alpha ?? 1,
       width: style.strokeWidth,
+      alignment: alignmentFor(style.alignment ?? 'outside'),
     });
     return;
   }

@@ -21,10 +21,10 @@ The Sankey model operates on a **DAG** (a node can have multiple parents);
 `link.y0` / `link.y1` — the precise y-position of the ribbon at the source's
 right face and the target's left face. The layout writes:
 
-- Per node: position (centre of rect), `data.shape = 'rect'`, `data.size = x1 − x0`, `data.height = y1 − y0`.
-- Per edge: `data.strokeWidth = link.width`, `data.pathType = 'bump-horizontal'`, per-endpoint anchor opts pointing at `edge-port` with the right `{ side, offset }` so the ribbon attaches at the correct y.
+- Per node: position (centre of rect), `style.shape = { kind: 'rect', width: x1 − x0, height: y1 − y0 }`.
+- Per edge: `style.strokeWidth = link.width`, `style.shape = { pathType: 'bump-horizontal', sourceAnchor: 'edge-port', sourceAnchorOpts: { side: 'right', offset }, targetAnchor: 'edge-port', targetAnchorOpts: { side: 'left', offset } }`.
 
-Pair with `edgeDefaults: { pathType: 'bump-horizontal', alpha: 0.5, arrow: false }`
+Pair with `edge: { style: { shape: { pathType: 'bump-horizontal' }, strokeAlpha: 0.5, arrowTargetShape: 'none' } }`
 in the `GraphLayer` for a faithful reproduction of d3-sankey's SVG output. The
 ribbons are stroked horizontal cubic beziers — same approach d3-sankey takes
 in SVG, with the `'edge-port'` anchor handling per-link y stacking.

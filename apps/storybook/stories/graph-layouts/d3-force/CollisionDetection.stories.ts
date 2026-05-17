@@ -155,7 +155,7 @@ export const CollisionDetection: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        edgeDefaults: { stroke: 0x94a3b8, strokeWidth: 0.8, arrow: false },
+        edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 0.8, arrowTargetShape: 'none' } },
       },
     });
     canvas.layers.add(graph);

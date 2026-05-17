@@ -5,7 +5,8 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer, type NodeLabelHint } from '@invana/graph';
+import { GraphLayer } from '@invana/graph';
+import type { ShapeLabelStyle } from '@invana/canvas';
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
 import { flareAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -91,22 +92,19 @@ export const Bubble: Story = {
               // runs — this is just a placeholder so nodes don't flash at
               // the default size during the initial setData.
               size: 0.1,
-              // Internal nodes (including the root) stay transparent so
-              // only the leaf bubbles read visually, matching the d3
-              // example. Leaves get the categorical fill.
-              fill: isLeaf ? colorFor(n.data.group) : 0xffffff,
-              stroke: 0xffffff,
-              strokeWidth: isLeaf ? settings.leafStrokeWidth : 0,
-              alpha: isLeaf ? 1 : 0,
-              // Carried through so the post-layout pass can build a
-              // properly-centred label hint once `data.size` reflects the
-              // packed diameter. Flare's `name` is the class name (e.g.
-              // "Easing"); `value` is the metric the bubble area is
-              // proportional to.
               name: n.data.name,
               isLeaf,
               group: n.data.group,
               ...(n.data.value !== undefined ? { value: n.data.value } : {}),
+            },
+            style: {
+              // Internal nodes (including the root) stay transparent so
+              // only the leaf bubbles read visually, matching the d3
+              // example. Leaves get the categorical fill.
+              bgFill: isLeaf ? colorFor(n.data.group) : 0xffffff,
+              bgStrokeColor: 0xffffff,
+              bgStrokeWidth: isLeaf ? settings.leafStrokeWidth : 0,
+              bgAlpha: isLeaf ? 1 : 0,
             },
           };
         }),
@@ -141,15 +139,24 @@ export const Bubble: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        nodeDefaults: { shape: 'circle', size: 0.1 },
-        edgeDefaults: {
+        node: {
+          style: {
+            shape: (n) => {
+              const size = (n.data as { size?: number } | undefined)?.size ?? 0.1;
+              return { kind: 'circle', radius: size / 2 };
+            },
+          },
+        },
+        edge: {
           // Bubble chart conveys grouping by enclosure, not links. Edges
           // are required by the layout (so it can derive the tree) but
           // rendered fully transparent.
-          stroke: 0x000000,
-          strokeWidth: 0,
-          alpha: 0,
-          arrow: false,
+          style: {
+            strokeColor: 0x000000,
+            strokeWidth: 0,
+            strokeAlpha: 0,
+            arrowTargetShape: 'none',
+          },
         },
       },
     });
@@ -176,12 +183,11 @@ export const Bubble: Story = {
             size?: number;
             name?: string;
             isLeaf?: boolean;
-            label?: NodeLabelHint;
           };
-          const next = { ...data } as Record<string, unknown>;
+          const baseStyle = { ...(node.style ?? {}) };
           // Always clear stale labels so re-runs (font size, settings
           // toggles) don't accumulate.
-          if ('label' in next) delete next.label;
+          delete (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle;
 
           if (
             settings.showLabels &&
@@ -195,7 +201,7 @@ export const Bubble: Story = {
               settings.maxLabelFontSize,
               (data.size * 0.85) / (chars * 0.55),
             );
-            const label: NodeLabelHint = {
+            const labelStyle: ShapeLabelStyle = {
               content: {
                 kind: 'text',
                 text: data.name,
@@ -205,10 +211,10 @@ export const Bubble: Story = {
               },
               placement: 'center',
             };
-            next.label = label;
+            (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle = labelStyle;
           }
 
-          graph.store.updateNode(node.id, { data: next });
+          graph.store.updateNode(node.id, { style: baseStyle });
         }
       });
     };

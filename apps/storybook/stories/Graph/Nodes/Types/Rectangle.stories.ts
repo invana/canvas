@@ -15,11 +15,11 @@ type Story = StoryObj;
 /**
  * Catalogue story for the **rectangle** node shape (`shape.kind: 'rect'`).
  *
- * Draws a 3×3 grid of rect nodes — one cell per standard appearance:
- * the resting `default` plus the eight canonical interaction states auto-
- * registered by `GraphLayer` (`hover`, `selected`, `active`, `highlighted`,
- * `dimmed`, `disabled`, `error`, `focused`). State is supplied data-driven
- * via the `states` field on each `NodeData`.
+ * Draws a 3×2 grid of rect nodes — one cell per standard appearance:
+ * the resting `default` plus the five canonical interaction states
+ * (`hovered`, `selected`, `highlighted`, `dimmed`, `disabled`) auto-merged
+ * into every layer's state catalogue. State is supplied data-driven via
+ * the `states` field on each `NodeData`.
  */
 export const Rectangle: Story = {
   render: () => createContainer({ id: 'graph-node-types-rectangle' }),
@@ -36,25 +36,19 @@ export const Rectangle: Story = {
       readonly state: 'default' | CanonicalStateName;
     }
 
-    // 3×3 grid. Cell pitch 240 × 180. Origin at (0, 0).
+    // 3×2 grid. Cell pitch 240 × 180. Origin at (0, 0).
     const nodes: NodeData<TileData>[] = [
-      { id: 'n-default',     position: { x: -240, y: -180 }, data: { state: 'default'     } },
-      { id: 'n-hover',       position: { x:    0, y: -180 }, data: { state: 'hover'       }, states: ['hover']       },
-      { id: 'n-selected',    position: { x:  240, y: -180 }, data: { state: 'selected'    }, states: ['selected']    },
-      { id: 'n-active',      position: { x: -240, y:    0 }, data: { state: 'active'      }, states: ['active']      },
-      { id: 'n-highlighted', position: { x:    0, y:    0 }, data: { state: 'highlighted' }, states: ['highlighted'] },
-      { id: 'n-focused',     position: { x:  240, y:    0 }, data: { state: 'focused'     }, states: ['focused']     },
-      { id: 'n-dimmed',      position: { x: -240, y:  180 }, data: { state: 'dimmed'      }, states: ['dimmed']      },
-      { id: 'n-disabled',    position: { x:    0, y:  180 }, data: { state: 'disabled'    }, states: ['disabled']    },
-      { id: 'n-error',       position: { x:  240, y:  180 }, data: { state: 'error'       }, states: ['error']       },
+      { id: 'n-default',     position: { x: -240, y: -90 }, data: { state: 'default'     } },
+      { id: 'n-hover',       position: { x:    0, y: -90 }, data: { state: 'hovered'     }, states: ['hovered']     },
+      { id: 'n-selected',    position: { x:  240, y: -90 }, data: { state: 'selected'    }, states: ['selected']    },
+      { id: 'n-highlighted', position: { x: -240, y:  90 }, data: { state: 'highlighted' }, states: ['highlighted'] },
+      { id: 'n-dimmed',      position: { x:    0, y:  90 }, data: { state: 'dimmed'      }, states: ['dimmed']      },
+      { id: 'n-disabled',    position: { x:  240, y:  90 }, data: { state: 'disabled'    }, states: ['disabled']    },
     ];
 
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        // Opt out of the canonical state palette so every state's look in
-        // this story is fully described inline below.
-        useDefaultStateConfigs: false,
         node: {
           style: {
             shape: { kind: 'rect', width: 140, height: 64, cornerRadius: 10 },
@@ -75,7 +69,7 @@ export const Rectangle: Story = {
             // `ring` decoration rather than a thick stroke, so it composes
             // with other decorations (e.g. `selected`'s ring) without
             // trampling them.
-            hover: {
+            hovered: {
               decorations: [
                 {
                   kind: 'ring',
@@ -87,20 +81,10 @@ export const Rectangle: Story = {
                 },
               ],
             },
-            // Same idea, wider band — “focal” feel.
-            active: {
-              decorations: [
-                {
-                  kind: 'ring',
-                  id: 'active-ring',
-                  color: 0xbfdbfe,
-                  width: 10,
-                  gap: 2,
-                  alpha: 0.65,
-                },
-              ],
-            },
-            // Thick black ring (sticky click-selection).
+            // Thick black ring (sticky click-selection) — plus a soft halo
+            // sitting outside it for extra prominence. The ring stays sharp
+            // at 4px / 2px-gap-from-body; the halo extends a further ~12px
+            // outward with quadratic alpha falloff (built into `glow`).
             selected: {
               decorations: [
                 {
@@ -110,6 +94,14 @@ export const Rectangle: Story = {
                   width: 4,
                   gap: 2,
                   alpha: 1,
+                },
+                {
+                  kind: 'glow',
+                  id: 'select-halo',
+                  color: 0x000000,
+                  radius: 12,
+                  innerAlpha: 0.35,
+                  layers: 5,
                 },
               ],
               labelFontWeight: 700,
@@ -128,19 +120,6 @@ export const Rectangle: Story = {
               ],
               labelFontWeight: 800,
             },
-            // Blue keyboard-focus ring.
-            focused: {
-              decorations: [
-                {
-                  kind: 'ring',
-                  id: 'focus-ring',
-                  color: 0x60a5fa,
-                  width: 3,
-                  gap: 2,
-                  alpha: 1,
-                },
-              ],
-            },
             // Washed-out (the "inactive" tile in the design).
             dimmed: {
               bgAlpha: 0.35,
@@ -151,19 +130,6 @@ export const Rectangle: Story = {
               bgFill: 0xcbd5e1,
               bgAlpha: 0.7,
               labelColor: 0x64748b,
-            },
-            // Red ring (validation / invalid).
-            error: {
-              decorations: [
-                {
-                  kind: 'ring',
-                  id: 'error-ring',
-                  color: 0xef4444,
-                  width: 4,
-                  gap: 2,
-                  alpha: 1,
-                },
-              ],
             },
           },
         },

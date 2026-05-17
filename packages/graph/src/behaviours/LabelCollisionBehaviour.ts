@@ -37,7 +37,34 @@
 import { Behaviour, type BehaviourOptions, type CanvasContext, type Rect } from '@invana/canvas';
 
 import { GraphLayer } from '../layer/GraphLayer';
-import type { EdgeLabelHint, NodeLabelHint } from '../layer/types';
+import type { EdgeStyle, NodeStyle } from '../layer/types';
+
+/** Subset of label settings the collision pass needs — pulled from a
+ * resolved {@link NodeStyle} / {@link EdgeStyle} via flat label fields or
+ * the `labelStyle` escape hatch. */
+interface LabelSettings {
+  readonly priority?: number;
+  readonly collisionGroup?: string;
+  readonly forceShow?: boolean;
+}
+
+function labelSettingsFromStyle(
+  style: Partial<NodeStyle> | Partial<EdgeStyle>,
+): LabelSettings | undefined {
+  const hasFlat =
+    style.labelText !== undefined
+    || style.labelPriority !== undefined
+    || style.labelCollisionGroup !== undefined
+    || style.labelForceShow !== undefined;
+  if (style.labelStyle === undefined && !hasFlat) return undefined;
+
+  const ls = style.labelStyle;
+  return {
+    priority: style.labelPriority ?? ls?.priority,
+    collisionGroup: style.labelCollisionGroup ?? ls?.collisionGroup,
+    forceShow: style.labelForceShow ?? ls?.forceShow,
+  };
+}
 
 /** What the behaviour does with an overlap. `'hide'` is the only strategy in v0. */
 export type LabelCollisionStrategy = 'hide';
@@ -195,32 +222,32 @@ export class LabelCollisionBehaviour extends Behaviour {
     const records: LabelRecord[] = [];
 
     for (const node of layer.store.nodes()) {
-      const labelHint = (node.data as { label?: NodeLabelHint } | undefined)?.label;
-      if (labelHint === undefined) continue;
+      const settings = labelSettingsFromStyle(layer.resolveNodeStyle(node));
+      if (settings === undefined) continue;
       const b = renderer.getDecorationWorldBounds(node.id, 'label');
       if (!b || b.width === 0 || b.height === 0) continue;
       records.push({
         kind: 'node',
         id: node.id,
         bounds: b,
-        priority: this.priorityFor('node', node.id, labelHint),
-        group: groupOf(labelHint) ?? this.opts.nodeGroup,
-        forceShow: forceShowOf(labelHint),
+        priority: this.priorityFor('node', node.id, settings),
+        group: settings.collisionGroup ?? this.opts.nodeGroup,
+        forceShow: settings.forceShow === true,
       });
     }
 
     for (const edge of layer.store.edges()) {
-      const labelHint = (edge.data as { label?: EdgeLabelHint } | undefined)?.label;
-      if (labelHint === undefined) continue;
+      const settings = labelSettingsFromStyle(layer.resolveEdgeStyle(edge));
+      if (settings === undefined) continue;
       const b = renderer.getDecorationWorldBounds(edge.id, 'label');
       if (!b || b.width === 0 || b.height === 0) continue;
       records.push({
         kind: 'edge',
         id: edge.id,
         bounds: b,
-        priority: this.priorityFor('edge', edge.id, labelHint),
-        group: groupOf(labelHint) ?? this.opts.edgeGroup,
-        forceShow: forceShowOf(labelHint),
+        priority: this.priorityFor('edge', edge.id, settings),
+        group: settings.collisionGroup ?? this.opts.edgeGroup,
+        forceShow: settings.forceShow === true,
       });
     }
 
@@ -267,13 +294,12 @@ export class LabelCollisionBehaviour extends Behaviour {
   private priorityFor(
     kind: 'node' | 'edge',
     id: string,
-    hint: NodeLabelHint | EdgeLabelHint,
+    settings: LabelSettings,
   ): number {
     const resolver = this.opts.prioritise;
     if (typeof resolver === 'function') return resolver(kind, id);
     if (resolver === 'priority-field') {
-      const explicit = priorityOf(hint);
-      if (explicit !== undefined) return explicit;
+      if (settings.priority !== undefined) return settings.priority;
       // Fallback: degree for nodes, 0 for edges (edge labels rarely have a
       // natural ranking; consumers pass a function when they want one).
       return kind === 'node' ? this.degreeOf(id) : 0;
@@ -301,17 +327,3 @@ function intersects(a: Rect, b: Rect): boolean {
   );
 }
 
-function priorityOf(hint: NodeLabelHint | EdgeLabelHint): number | undefined {
-  if (typeof hint === 'string') return undefined;
-  return hint.priority;
-}
-
-function groupOf(hint: NodeLabelHint | EdgeLabelHint): string | undefined {
-  if (typeof hint === 'string') return undefined;
-  return hint.collisionGroup;
-}
-
-function forceShowOf(hint: NodeLabelHint | EdgeLabelHint): boolean {
-  if (typeof hint === 'string') return false;
-  return hint.forceShow === true;
-}

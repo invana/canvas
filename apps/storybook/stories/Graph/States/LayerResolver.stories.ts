@@ -9,16 +9,16 @@ type Story = StoryObj;
 
 /**
  * Validates layer-wide `node` template (v3 G6-aligned `NodeOption`) with
- * resolver functions on style fields and a layer-level `state.hover`
+ * resolver functions on style fields and a layer-level `state.hovered`
  * overlay catalogue.
  *
  * - `node.style.bgFill` is a resolver `(node: GraphNode) => color` picking
  *   from `data.group`.
- * - `node.state.hover` overrides the canonical hover for this layer only
+ * - `node.state.hovered` overrides the canonical hovered for this layer only
  *   — orange thick ring instead of the default white thin.
  *
  * Five nodes feed varying `data.group`; every other one carries
- * `states: ['hover']` so we can compare resting vs. hover with the
+ * `states: ['hovered']` so we can compare resting vs. hovered with the
  * layer-level overrides applied.
  */
 export const LayerResolver: Story = {
@@ -56,7 +56,7 @@ export const LayerResolver: Story = {
         position: { x: -120, y: 0 },
         data: { weight: 1.5, group: 1 },
         style: { shape: { kind: 'circle', radius: 26 }, labelText: 'b' },
-        states: ['hover'],
+        states: ['hovered'],
       },
       {
         id: 'c',
@@ -69,7 +69,7 @@ export const LayerResolver: Story = {
         position: { x: 120, y: 0 },
         data: { weight: 2.5, group: 0 },
         style: { shape: { kind: 'circle', radius: 38 }, labelText: 'd' },
-        states: ['hover'],
+        states: ['hovered'],
       },
       {
         id: 'e',
@@ -94,10 +94,10 @@ export const LayerResolver: Story = {
             labelFontSize: 12,
             labelOffsetY: 8,
           },
-          // Override the layer's built-in `hover` with a v3 overlay — wins
+          // Override the layer's built-in `hovered` with a v3 overlay — wins
           // over the canonical config for this layer only.
           state: {
-            hover: { bgStrokeColor: 0xffaa00, bgStrokeWidth: 4 },
+            hovered: { bgStrokeColor: 0xffaa00, bgStrokeWidth: 4 },
           },
         },
       },

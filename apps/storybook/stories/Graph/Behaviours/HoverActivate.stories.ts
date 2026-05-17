@@ -25,12 +25,12 @@ export const HoverActivate: Story = {
     ];
     const nodes: GraphNode[] = lesMiserables.nodes.map((n) => ({
       id: n.id,
-      data: {
-        group: n.data.group,
-        fill: groupColors[n.data.group % groupColors.length],
-        size: 18,
-        stroke: 0xffffff,
-        strokeWidth: 1,
+      data: { group: n.data.group },
+      style: {
+        shape: { kind: 'circle', radius: 9 },
+        bgFill: groupColors[n.data.group % groupColors.length],
+        bgStrokeColor: 0xffffff,
+        bgStrokeWidth: 1,
       },
     }));
 
@@ -44,20 +44,25 @@ export const HoverActivate: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { edgeDefaults: { stroke: 0xcbd5e1, strokeWidth: 1, arrow: false } },
+      options: {
+        node: {
+          // `hovered` and `dimmed` come from the canonical defaults; this
+          // override just bumps `highlighted` to a sharper orange so the
+          // N-hop neighbour ring is unmistakable in the demo.
+          state: {
+            highlighted: { bgStrokeColor: 0xf97316, bgStrokeWidth: 4 },
+          },
+        },
+        edge: {
+          style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' },
+          state: {
+            highlighted: { strokeColor: 0xf97316, strokeWidth: 2.5 },
+          },
+        },
+      },
     });
     canvas.layers.add(graph);
     graph.setData({ nodes, edges: lesMiserables.edges });
-
-    // Visual states — the GUI can switch between any of these names.
-    graph.setNodeStateConfig('active', { stroke: 0xfacc15, strokeWidth: 3 });
-    graph.setEdgeStateConfig('active', { stroke: 0xfacc15, strokeWidth: 2 });
-    graph.setNodeStateConfig('highlighted', { stroke: 0xf97316, strokeWidth: 4 });
-    graph.setEdgeStateConfig('highlighted', { stroke: 0xf97316, strokeWidth: 2.5 });
-    graph.setNodeStateConfig('inactive', { alpha: 0.2 });
-    graph.setEdgeStateConfig('inactive', { alpha: 0.15 });
-    graph.setNodeStateConfig('dimmed', { alpha: 0.45 });
-    graph.setEdgeStateConfig('dimmed', { alpha: 0.4 });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
     void new D3ForceLayout({
@@ -76,8 +81,8 @@ export const HoverActivate: Story = {
       id: 'hover',
       layerId: 'graph',
       enabled: true,
-      state: 'active',
-      inactiveState: 'inactive',
+      state: 'hovered',
+      inactiveState: 'dimmed',
       degree: 1,
       direction: 'both',
       // At low zoom, multiply each hovered node's gfx.scale so the same
@@ -91,8 +96,8 @@ export const HoverActivate: Story = {
     // `hoveredId` is a read-only display fed by onHover / onHoverEnd.
     const settings = {
       enable: true,
-      state: 'active' as 'active' | 'highlighted',
-      'inactiveState (dim non-hovered)': 'inactive' as 'inactive' | 'dimmed' | 'none',
+      state: 'hovered' as 'hovered' | 'highlighted',
+      'inactiveState (dim non-hovered)': 'dimmed' as 'dimmed' | 'none',
       'degree (neighbor hops)': 1,
       direction: 'both' as 'in' | 'out' | 'both',
       // Zoom-tier knobs — `zoomedOutScale` of 1 (or 0) disables the
@@ -131,9 +136,9 @@ export const HoverActivate: Story = {
     const gui = new GUI({ title: 'Hover Activate' });
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'enable').onChange(apply);
-    gui.add(settings, 'state', ['active', 'highlighted']).onChange(apply);
+    gui.add(settings, 'state', ['hovered', 'highlighted']).onChange(apply);
     gui
-      .add(settings, 'inactiveState (dim non-hovered)', ['inactive', 'dimmed', 'none'])
+      .add(settings, 'inactiveState (dim non-hovered)', ['dimmed', 'none'])
       .onChange(apply);
     gui.add(settings, 'degree (neighbor hops)', 0, 4, 1).onChange(apply);
     gui.add(settings, 'direction', ['in', 'out', 'both']).onChange(apply);

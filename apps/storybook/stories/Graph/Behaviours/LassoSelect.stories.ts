@@ -26,12 +26,12 @@ export const LassoSelect: Story = {
     ];
     const nodes: GraphNode[] = lesMiserables.nodes.map((n) => ({
       id: n.id,
-      data: {
-        group: n.data.group,
-        fill: groupColors[n.data.group % groupColors.length],
-        size: 18,
-        stroke: 0xffffff,
-        strokeWidth: 1,
+      data: { group: n.data.group },
+      style: {
+        shape: { kind: 'circle', radius: 9 },
+        bgFill: groupColors[n.data.group % groupColors.length],
+        bgStrokeColor: 0xffffff,
+        bgStrokeWidth: 1,
       },
     }));
 
@@ -45,13 +45,16 @@ export const LassoSelect: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { edgeDefaults: { stroke: 0xcbd5e1, strokeWidth: 1, arrow: false } },
+      options: {
+        node: { state: { selected: { bgStrokeColor: 0xf97316, bgStrokeWidth: 4 } } },
+        edge: {
+          style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' },
+          state: { selected: { strokeColor: 0xf97316, strokeWidth: 2.5 } },
+        },
+      },
     });
     canvas.layers.add(graph);
     graph.setData({ nodes, edges: lesMiserables.edges });
-
-    graph.setNodeStateConfig('selected', { stroke: 0xf97316, strokeWidth: 4 });
-    graph.setEdgeStateConfig('selected', { stroke: 0xf97316, strokeWidth: 2.5 });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
     void new D3ForceLayout({

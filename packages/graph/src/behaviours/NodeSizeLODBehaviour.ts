@@ -69,7 +69,6 @@ import {
 } from '@invana/canvas';
 
 import type { GraphLayer } from '../layer/GraphLayer';
-import { resolveField } from '../layer/types';
 
 /** Per-`GraphLayer` config — one entry per layer this behaviour rescales. */
 export interface NodeSizeLODConfig {
@@ -96,19 +95,6 @@ export interface NodeSizeLODConfig {
 export interface NodeSizeLODBehaviourOptions extends ElementSizeLODBehaviourOptions {
   /** One config per `GraphLayer` to drive. */
   layers: NodeSizeLODConfig[];
-}
-
-function readNumber(data: unknown, field: string): number | undefined {
-  if (data == null || typeof data !== 'object') return undefined;
-  const v = (data as Record<string, unknown>)[field];
-  return typeof v === 'number' ? v : undefined;
-}
-
-function readShapeKind(data: unknown): 'circle' | 'rect' | 'arc' | undefined {
-  if (data == null || typeof data !== 'object') return undefined;
-  const v = (data as Record<string, unknown>).shape;
-  if (v === 'circle' || v === 'rect' || v === 'arc') return v;
-  return undefined;
 }
 
 interface ResolvedTarget {
@@ -293,54 +279,50 @@ export class NodeSizeLODBehaviour extends ElementSizeLODBehaviour {
     mode: 'target' | 'worldUnit',
     config: NodeSizeLODConfig,
   ): void {
-    const defaults = layer.getNodeDefaults();
     const sizePxFallback = resolveNumberOrGetter(config.sizePx);
     const strokePxFallback = resolveNumberOrGetter(config.strokeWidthPx);
 
     for (const node of layer.store.nodes()) {
-      const data = node.data;
-      // Defaults are resolvers — unwrap each for the current node.
-      const defaultShape = resolveField(defaults.shape, node);
-      const defaultSize = resolveField(defaults.size, node);
-      const defaultStroke = resolveField(defaults.stroke, node);
-      const defaultStrokeWidth = resolveField(defaults.strokeWidth, node);
+      // Read the *currently effective* NodeStyle — what the renderer would
+      // hand the shape if we drew it now. That accounts for the layer
+      // template, per-node overrides, and any active state overlays.
+      const style = layer.resolveNodeStyle(node);
+      const shape = style.shape;
+      if (!shape) continue;
+      if (shape.kind === 'arc') continue;
 
-      const kind = readShapeKind(data) ?? defaultShape;
-      if (kind === 'arc') continue;
-
-      // Per-node `data.size` always wins over the behaviour's fallback —
-      // matches the resolution order used everywhere else in GraphLayer.
-      // For 'worldUnit' restore, the layer's own defaults are the fallback
-      // (mirrors what `GraphLayer.nodeSpec` would write for `addShape`).
-      const baselineSize = mode === 'target'
-        ? (sizePxFallback ?? defaultSize)
-        : defaultSize;
-      const size = readNumber(data, 'size') ?? baselineSize;
-      if (size === undefined) continue;
+      // For 'target' mode: write the LOD-on baseline so the per-frame
+      // `gfx.scale = 1 / cameraScale` collapses to pixel-constant.
+      // For 'worldUnit' mode: restore the natural world-unit baseline that
+      // came from the resolved style (matches what `GraphLayer.nodeSpec`
+      // would write for a fresh `addShape`).
+      const naturalSize =
+        shape.kind === 'circle' ? shape.radius * 2 : shape.width;
+      const baselineSize = mode === 'target' ? (sizePxFallback ?? naturalSize) : naturalSize;
+      if (baselineSize === undefined) continue;
 
       const partial: Record<string, unknown> = {};
-      if (kind === 'circle') {
-        partial.radius = size / 2;
+      if (shape.kind === 'circle') {
+        partial.radius = baselineSize / 2;
       } else {
-        partial.width = size;
-        const heightHint = readNumber(data, 'height');
-        partial.height = heightHint ?? size;
+        // rect
+        partial.width = baselineSize;
+        const naturalHeight = shape.height;
+        const heightRatio = naturalSize > 0 ? naturalHeight / naturalSize : 1;
+        partial.height =
+          mode === 'target' ? baselineSize * heightRatio : naturalHeight;
       }
 
-      const strokeDisabled =
-        data && (data as Record<string, unknown>).stroke === false;
-      if (!strokeDisabled) {
-        const defaultStrokeColor =
-          typeof defaultStroke === 'number' ? defaultStroke : undefined;
-        const strokeColor = readNumber(data, 'stroke') ?? defaultStrokeColor;
-        if (strokeColor !== undefined) {
-          const strokeWidthFallback =
-            mode === 'target' ? strokePxFallback : defaultStrokeWidth;
-          const baseSw = readNumber(data, 'strokeWidth') ?? strokeWidthFallback;
-          if (baseSw !== undefined) {
-            partial.stroke = { color: strokeColor, width: baseSw };
-          }
-        }
+      // Stroke channel — only relevant when the resolved style sets a stroke.
+      const strokeColor = style.bgStrokeColor;
+      const naturalStrokeWidth = style.bgStrokeWidth;
+      if (strokeColor !== undefined && naturalStrokeWidth !== undefined && naturalStrokeWidth > 0) {
+        const baseSw = mode === 'target' ? (strokePxFallback ?? naturalStrokeWidth) : naturalStrokeWidth;
+        partial.stroke = {
+          color: strokeColor,
+          width: baseSw,
+          ...(style.bgStrokeAlignment ? { alignment: style.bgStrokeAlignment } : {}),
+        };
       }
 
       renderer.updateShape(node.id, partial);

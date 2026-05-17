@@ -3,31 +3,17 @@
  */
 
 export { GraphLayer } from './GraphLayer';
-export type { ResolvedEdgeDefaults, ResolvedNodeDefaults } from './GraphLayer';
 export { MiniMapLayer } from './MiniMapLayer';
 export type { MiniMapLayerOptions, MiniMapPosition } from './MiniMapLayer';
-export {
-  DEFAULT_EDGE_STATE_CONFIGS,
-  DEFAULT_NODE_STATE_CONFIGS,
-  resolveField,
-} from './types';
+export { DEFAULT_EDGE_STATES, DEFAULT_NODE_STATES, resolveField } from './types';
 export type {
   CanonicalStateName,
   EdgeAnchor,
-  EdgeLabelHint,
   EdgePathType,
-  EdgeRenderHints,
-  EdgeStateConfig,
   GraphData,
   GraphLayerEvents,
   GraphLayerOptions,
-  NodeLabelHint,
-  NodeRenderHints,
-  NodeShapeKind,
-  NodeStateConfig,
   Resolvable,
-  ResolvableEdgeRenderHints,
-  ResolvableNodeRenderHints,
   // v3 G6-aligned shape
   ArcShapeOption,
   ArrowShape,

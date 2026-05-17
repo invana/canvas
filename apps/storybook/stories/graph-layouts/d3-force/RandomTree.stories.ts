@@ -95,7 +95,7 @@ export const RandomTree: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        edgeDefaults: { stroke: 0x64748b, strokeWidth: 0.8, arrow: false },
+        edge: { style: { strokeColor: 0x64748b, strokeWidth: 0.8, arrowTargetShape: 'none' } },
       },
     });
     canvas.layers.add(graph);

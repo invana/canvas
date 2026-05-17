@@ -30,7 +30,7 @@ import type { LayerOptions, Rect } from '@invana/canvas';
 
 import { GraphLayer } from './GraphLayer';
 import type { GraphNode } from '../store/types';
-import { resolveField, type NodeRenderHints, type EdgeRenderHints } from './types';
+import type { EdgeStyle, NodeStyle } from './types';
 
 /** Anchor corner inside the canvas viewport. */
 export type MiniMapPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -300,8 +300,8 @@ export class MiniMapLayer extends ScreenLayer<
     // back to a straight endpoint-to-endpoint line only when the renderer
     // isn't available (pre-mount) or hasn't installed the connector yet.
     for (const edge of graph.store.edges()) {
-      const data = (edge.data as EdgeRenderHints | undefined) ?? {};
-      const stroke = typeof data.stroke === 'number' ? data.stroke : 0x666666;
+      const edgeStyle = (edge.style as Partial<EdgeStyle> | undefined) ?? {};
+      const stroke = typeof edgeStyle.strokeColor === 'number' ? edgeStyle.strokeColor : 0x666666;
 
       const polyline = renderer?.getConnectorPolyline(edge.id);
       if (polyline && polyline.length >= 2) {
@@ -330,9 +330,10 @@ export class MiniMapLayer extends ScreenLayer<
     // Nodes — ask the renderer for the world-space AABB of whatever it
     // actually drew (circle, rect, arc, polygon, star, custom kind). The
     // minimap paints each shape as a small rect at its true footprint —
-    // geometry-driven, no per-kind switching. Fill colour still resolves
-    // from data hints / defaults since colour isn't carried by `bounds()`.
-    const defaults = graph.getNodeDefaults();
+    // geometry-driven, no per-kind switching. Fill colour reads from the
+    // per-node `style.bgFill` when concrete; falls back to a neutral
+    // green-grey for the layer-template / resolver case (the minimap
+    // doesn't run the full style resolution pipeline).
     for (const node of graph.store.nodes()) {
       const bounds = renderer?.getShapeWorldBounds(node.id) ?? this.fallbackNodeBounds(node);
       if (!bounds) continue;
@@ -341,10 +342,8 @@ export class MiniMapLayer extends ScreenLayer<
       const w = Math.max(2, br.x - tl.x);
       const h = Math.max(2, br.y - tl.y);
 
-      const data = (node.data as NodeRenderHints | undefined) ?? {};
-      const defaultFill = resolveField(defaults.fill, node);
-      const fill = typeof data.fill === 'number' ? data.fill : defaultFill;
-      const fillColor = typeof fill === 'number' ? fill : 0x4caf50;
+      const nodeStyle = (node.style as Partial<NodeStyle> | undefined) ?? {};
+      const fillColor = typeof nodeStyle.bgFill === 'number' ? nodeStyle.bgFill : 0x4caf50;
 
       g.rect(tl.x, tl.y, w, h).fill(fillColor);
     }
@@ -354,15 +353,16 @@ export class MiniMapLayer extends ScreenLayer<
    * Pre-mount / pre-install fallback for shape bounds. Used when the renderer
    * hasn't yet built an instance for a node (very brief window — the layer's
    * `data:changed` event repaints the minimap as soon as the renderer catches
-   * up). Returns a square AABB centred on the node's stored position using
-   * the layer-level default size; gracefully degrades when defaults are also
-   * resolver-only.
+   * up). Returns a square AABB centred on the node's stored position using a
+   * minimap-side default footprint; gracefully degrades when per-node `style`
+   * is absent or holds a resolver. The minimap doesn't run the full graph-
+   * level resolver pipeline — it just needs an "approximately right" size.
    */
   private fallbackNodeBounds(node: GraphNode): Rect | null {
     const graph = this.graph;
     if (!graph) return null;
     const pos = node.position ?? { x: 0, y: 0 };
-    const sizeWorld = resolveField(graph.getNodeDefaults().size, node) ?? 32;
+    const sizeWorld = inferNodeFootprint(node);
     const half = sizeWorld / 2;
     return { x: pos.x - half, y: pos.y - half, width: sizeWorld, height: sizeWorld };
   }
@@ -523,5 +523,24 @@ export class MiniMapLayer extends ScreenLayer<
     const tx = cam.screenWidth / 2 - wx * s;
     const ty = cam.screenHeight / 2 - wy * s;
     cam.setPosition(tx, ty);
+  }
+}
+
+/**
+ * Best-effort "size" estimate for a node, used by the minimap's pre-mount
+ * fallback. Reads the per-node `style.shape` discriminated union when
+ * present; falls back to a neutral 32px footprint. The minimap doesn't run
+ * the full graph-level style resolver, so layer-template / state-overlay
+ * geometry isn't visible here — once the renderer is mounted, the actual
+ * AABB from `getShapeWorldBounds()` takes over and this fallback drops out.
+ */
+function inferNodeFootprint(node: GraphNode): number {
+  const shape = (node.style as Partial<NodeStyle> | undefined)?.shape;
+  if (!shape) return 32;
+  switch (shape.kind) {
+    case 'circle': return shape.radius * 2;
+    case 'rect':   return Math.max(shape.width, shape.height);
+    case 'arc':    return shape.outerR * 2;
+    default:       return 32;
   }
 }

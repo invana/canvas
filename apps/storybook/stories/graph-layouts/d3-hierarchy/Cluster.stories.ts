@@ -134,24 +134,29 @@ export const Cluster: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        nodeDefaults: { shape: 'circle', size: settings.nodeRadius * 2, stroke: false },
-        edgeDefaults: {
-          stroke: 0x94a3b8,
-          strokeWidth: settings.edgeStrokeWidth,
-          alpha: settings.edgeAlpha,
-          arrow: false,
-          // `bezier` with `axis: 'h'` matches d3.linkHorizontal() — control
-          // points always pull along the horizontal axis. Don't rely on
-          // `axis: 'auto'` here: in a horizontal cluster, sibling pairs whose
-          // parent sits between them have `dy > dx`, which would flip auto
-          // to vertical and produce wrong-direction S-curves crossing the
-          // tree.
-          pathType: 'bezier',
-          pathStyleOpts: { axis: 'h' },
-          // Centre-anchor so the tangent at each endpoint matches the node
-          // centre rather than the trimmed boundary cut. Same trick the
-          // RadialTree story uses; nodes draw on top of the curve.
-          anchor: 'center',
+        node: { style: { shape: { kind: 'circle', radius: settings.nodeRadius } } },
+        edge: {
+          style: {
+            strokeColor: 0x94a3b8,
+            strokeWidth: settings.edgeStrokeWidth,
+            strokeAlpha: settings.edgeAlpha,
+            arrowTargetShape: 'none',
+            // `bezier` with `axis: 'h'` matches d3.linkHorizontal() — control
+            // points always pull along the horizontal axis. Don't rely on
+            // `axis: 'auto'` here: in a horizontal cluster, sibling pairs whose
+            // parent sits between them have `dy > dx`, which would flip auto
+            // to vertical and produce wrong-direction S-curves crossing the
+            // tree.
+            shape: {
+              pathType: 'bezier',
+              pathStyleOpts: { axis: 'h' },
+              // Centre-anchor so the tangent at each endpoint matches the node
+              // centre rather than the trimmed boundary cut. Same trick the
+              // RadialTree story uses; nodes draw on top of the curve.
+              sourceAnchor: 'center',
+              targetAnchor: 'center',
+            },
+          },
         },
       },
     });

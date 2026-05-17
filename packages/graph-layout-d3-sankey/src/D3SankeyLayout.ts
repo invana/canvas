@@ -18,7 +18,7 @@
  *    `targetAnchor: 'edge-port'` with `{ side: 'left', offset }`) so the
  *    ribbons attach at the correct y on each rect face.
  *
- * Pair with `edgeDefaults: { pathType: 'bump-horizontal', alpha: 0.5, arrow: false }`
+ * Pair with `edge: { style: { shape: { pathType: 'bump-horizontal' }, strokeAlpha: 0.5, arrowTargetShape: 'none' } }`
  * on the `GraphLayer` to reproduce d3-sankey's SVG appearance.
  *
  * @example
@@ -151,30 +151,28 @@ export class D3SankeyLayout extends Layout<GraphLayer> {
     store.batch(() => {
       store.setPositionsBulk(ids, buffer);
 
-      // Per-node geometry hints — the GraphLayer reads `shape` / `size` /
-      // `height` from `NodeRenderHints` and renders a `rect`. Merge over
-      // existing data so callers' colour / category / name fields survive.
+      // Per-node geometry — write the discriminated `style.shape` as a rect
+      // with the d3-sankey-solved `{ width, height }`. Merge over existing
+      // `style` so caller-provided colour / label fields survive.
       for (const id of ids) {
         const size = sizes.get(id);
         if (!size) continue;
         const existing = store.getNode(id);
         if (!existing) continue;
-        const baseData =
-          existing.data && typeof existing.data === 'object'
-            ? (existing.data as Record<string, unknown>)
+        const existingStyle =
+          existing.style && typeof existing.style === 'object'
+            ? (existing.style as Record<string, unknown>)
             : {};
         store.updateNode(id, {
-          data: {
-            ...baseData,
-            shape: 'rect',
-            size: size.width,
-            height: size.height,
+          style: {
+            ...existingStyle,
+            shape: { kind: 'rect', width: size.width, height: size.height },
           },
         });
       }
 
-      // Per-edge geometry hints — stroke thickness ∝ flow value (d3-sankey
-      // sets `link.width` from the solver), plus per-endpoint anchor opts
+      // Per-edge geometry — stroke thickness ∝ flow value (d3-sankey sets
+      // `link.width` from the solver), plus per-endpoint anchor opts
       // pointing at the right `edge-port`.
       //
       // `link.y0` is the absolute world-y of the link's centre at the
@@ -194,19 +192,21 @@ export class D3SankeyLayout extends Layout<GraphLayer> {
 
         const existing = store.getEdge(link.id);
         if (!existing) continue;
-        const baseData =
-          existing.data && typeof existing.data === 'object'
-            ? (existing.data as Record<string, unknown>)
+        const existingStyle =
+          existing.style && typeof existing.style === 'object'
+            ? (existing.style as Record<string, unknown>)
             : {};
         store.updateEdge(link.id, {
-          data: {
-            ...baseData,
-            pathType: 'bump-horizontal',
+          style: {
+            ...existingStyle,
+            shape: {
+              pathType: 'bump-horizontal',
+              sourceAnchor: 'edge-port',
+              sourceAnchorOpts: { side: 'right', offset: sourceOffset },
+              targetAnchor: 'edge-port',
+              targetAnchorOpts: { side: 'left', offset: targetOffset },
+            },
             strokeWidth: Math.max(1, linkWidth),
-            sourceAnchor: 'edge-port',
-            sourceAnchorOpts: { side: 'right', offset: sourceOffset },
-            targetAnchor: 'edge-port',
-            targetAnchorOpts: { side: 'left', offset: targetOffset },
           },
         });
       }

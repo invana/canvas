@@ -27,35 +27,13 @@ import type {
 import type { GraphEdge, GraphNode } from '../store/types';
 
 /**
- * Node-label hint — either a bare string (shorthand for plain text with
- * defaults) or a full `ShapeLabelStyle` payload (background pill, wrap,
- * placement, etc.). The graph layer translates this to a `'label'`
- * decoration on the node's shape via `setDecoration`.
- *
- * @see `@invana/canvas#ShapeLabelStyle` for the full option surface.
- */
-export type NodeLabelHint = string | ShapeLabelStyle;
-
-/**
- * Edge-label hint — string shorthand or a full `ConnectorLabelStyle`. The
- * graph layer translates this to a `'label-connector'` decoration on the
- * edge's connector via `setDecoration`.
- *
- * @see `@invana/canvas#ConnectorLabelStyle` for the full option surface.
- */
-export type EdgeLabelHint = string | ConnectorLabelStyle;
-
-/** Shape kinds the layer can render for a node. */
-export type NodeShapeKind = 'circle' | 'rect' | 'arc';
-
-/**
  * A field value that's either a static value or a function that derives the
  * value from the host item (node / edge / raw data).
  *
- * Used on every field of `NodeRenderHints` / `EdgeRenderHints` (legacy) and
- * `NodeStyle` / `EdgeStyle` (v3) so callers can supply per-item-derived
- * styling on `nodeDefaults` / `node` / `edge` defaults without spreading
- * hints into every node's / edge's `data`.
+ * Used on every field of `NodeStyle` / `EdgeStyle` (via `ResolvableNodeStyle`
+ * / `ResolvableEdgeStyle`) so callers can supply per-item-derived styling
+ * on the layer template (`options.node.style`) or per-instance input
+ * (`NodeInput.style`) without spreading hints into every node's `data`.
  *
  * Resolved per render (layer-level) or once at insert (per-input). Keep
  * resolvers cheap and pure — they may run per frame. Recursive returns
@@ -64,10 +42,12 @@ export type NodeShapeKind = 'circle' | 'rect' | 'arc';
  *
  * @example
  * ```ts
- * nodeDefaults: {
- *   fill: (n) => groupColors[n.data.group % groupColors.length],
- *   size: (n) => 12 + Math.sqrt(n.data.degree ?? 1) * 4,
- *   label: (n) => n.data.name,
+ * node: {
+ *   style: {
+ *     bgFill:    (n) => groupColors[(n.data as Group).group % groupColors.length],
+ *     shape:     (n) => ({ kind: 'circle', radius: 12 + Math.sqrt((n.data as N).degree ?? 1) * 4 }),
+ *     labelText: (n) => (n.data as N).name,
+ *   },
  * }
  * ```
  */
@@ -81,10 +61,6 @@ export type ResolvableId<D> = string | ((data: D) => string);
  * untouched; function values are invoked once with `input` and their return
  * is used. Functions returning further functions are NOT unwrapped — return
  * the final value.
- *
- * Exposed so callers reading defaults via `graphLayer.getNodeDefaults()` /
- * `getEdgeDefaults()` can resolve resolver-typed fields without re-implementing
- * the function check.
  */
 export function resolveField<T, I>(
   v: Resolvable<T, I> | undefined,
@@ -129,136 +105,6 @@ export type EdgePathType =
  */
 export type EdgeAnchor = 'boundary' | 'center' | 'perpendicular' | 'edge-port' | (string & {});
 
-/**
- * Render-spec hints a caller may put under `node.data` to control how the
- * layer renders this node. All fields are optional; defaults below.
- *
- * Per-node `node.data` uses this **static** form — write concrete values,
- * not functions. Resolver functions are reserved for the layer-wide
- * `nodeDefaults` and for `NodeStateConfig`; both are typed as
- * {@link ResolvableNodeRenderHints}, the resolver-aware sibling of this
- * interface.
- *
- * **LEGACY** — superseded by {@link NodeStyle} (v3 G6-aligned shape). Kept
- * for backward compatibility; the GraphLayer reads both paths and merges.
- */
-export interface NodeRenderHints {
-  /** Shape kind. Default `'circle'`. */
-  shape?: NodeShapeKind;
-  /** Diameter (circle) or width (rect). Default 32. */
-  size?: number;
-  /** Height (rect only). Defaults to `size` for square rects. */
-  height?: number;
-  /** Rect corner radius. Default 4. */
-  cornerRadius?: number;
-  /**
-   * Arc-only — inner radius of the annular sector. Required when
-   * `shape === 'arc'`; ignored for other shapes. Pair with `outerR`,
-   * `startAngle`, `endAngle`. The node's `position` is the arc's centre.
-   */
-  innerR?: number;
-  /** Arc-only — outer radius. Required when `shape === 'arc'`. */
-  outerR?: number;
-  /**
-   * Arc-only — start angle in radians (`0` = 3 o'clock, increasing sweeps
-   * clockwise on screen). Required when `shape === 'arc'`.
-   */
-  startAngle?: number;
-  /** Arc-only — end angle in radians. Required when `shape === 'arc'`. */
-  endAngle?: number;
-  /** Fill color (0xRRGGBB) or `false` for no fill. Default `0x3b82f6`. */
-  fill?: number | false;
-  /** Stroke color (0xRRGGBB) or `false` for no stroke. Default `0x1d4ed8`. */
-  stroke?: number | false;
-  /** Stroke width. Default 1. */
-  strokeWidth?: number;
-  /**
-   * Stroke alignment relative to the shape silhouette. Default `'outside'`
-   * — keeps thick state-overlay rings (halo, focus, selection) painted
-   * around the body instead of eating into the fill.
-   */
-  strokeAlignment?: 'inside' | 'center' | 'outside';
-  /** Alpha 0–1. Default 1. */
-  alpha?: number;
-  /**
-   * Optional text label attached to the node. Pass a string for the simple
-   * case (defaults to plain text below the node) or a `ShapeLabelStyle`
-   * payload for full control (placement, wrap, background pill, html-text).
-   *
-   * Resolves to a canvas `'label'` decoration on the rendered shape.
-   * @see {@link NodeLabelHint}
-   */
-  label?: NodeLabelHint;
-}
-
-/**
- * Resolver-aware mirror of {@link NodeRenderHints} — every field accepts
- * either a static value (same as `NodeRenderHints`) or a function
- * `(node) => value` that derives the value per node from `node.data`.
- *
- * Used by `nodeDefaults` (layer-wide fallback) and `NodeStateConfig`
- * (overlay applied while a named state is active). Keep resolvers cheap
- * and pure — they run per render call, not memoised.
- *
- * @example
- * ```ts
- * nodeDefaults: {
- *   fill: (n) => groupColors[n.data.group % groupColors.length],
- *   size: (n) => 12 + Math.sqrt(n.data.degree ?? 1) * 4,
- *   label: (n) => n.data.name,
- * }
- * ```
- */
-export type ResolvableNodeRenderHints = {
-  [K in keyof NodeRenderHints]?: Resolvable<NonNullable<NodeRenderHints[K]>, GraphNode>;
-};
-
-/**
- * Render-spec hints for an edge. Optional, all defaulted.
- *
- * **LEGACY** — superseded by {@link EdgeStyle} (v3 G6-aligned shape).
- */
-export interface EdgeRenderHints {
-  /** Path-style shortcut. Default `'straight'`. */
-  pathType?: EdgePathType;
-  /** Endpoint anchor for both ends. Default `'boundary'`. See {@link EdgeAnchor}. */
-  anchor?: EdgeAnchor;
-  /**
-   * Per-endpoint anchor override. Falls back to `anchor` when omitted.
-   */
-  sourceAnchor?: EdgeAnchor;
-  /** Per-endpoint anchor override; see {@link sourceAnchor}. */
-  targetAnchor?: EdgeAnchor;
-  /** Opts forwarded to the source anchor's `endpoint.opts`. */
-  sourceAnchorOpts?: Readonly<Record<string, unknown>>;
-  /** Opts for the target anchor; see {@link sourceAnchorOpts}. */
-  targetAnchorOpts?: Readonly<Record<string, unknown>>;
-  /** Path-style-specific options forwarded to the canvas pathStyle function. */
-  pathStyleOpts?: Readonly<Record<string, unknown>>;
-  /** Intermediate control points the connector should respect. */
-  waypoints?: ReadonlyArray<{ readonly x: number; readonly y: number }>;
-  /** Stroke color. Default `0x94a3b8`. */
-  stroke?: number;
-  /** Stroke width. Default 1.5. */
-  strokeWidth?: number;
-  /** Alpha 0–1. Default 1. */
-  alpha?: number;
-  /** Whether to draw an arrowhead at target. Default `true`. */
-  arrow?: boolean;
-  /**
-   * Optional text label attached to the edge.
-   * @see {@link EdgeLabelHint}
-   */
-  label?: EdgeLabelHint;
-}
-
-/**
- * Resolver-aware mirror of {@link EdgeRenderHints}.
- */
-export type ResolvableEdgeRenderHints = {
-  [K in keyof EdgeRenderHints]?: Resolvable<NonNullable<EdgeRenderHints[K]>, GraphEdge>;
-};
-
 /** Initial-load shape passed to `graphLayer.setData(data)`. */
 export interface GraphData {
   nodes: GraphNode[];
@@ -266,66 +112,35 @@ export interface GraphData {
 }
 
 /**
- * Visual-state override applied on top of a node's / edge's base render hints
- * when that state is active. Multiple active states stack — later-set state
- * wins per field. Removing the state restores the base hints.
- *
- * **LEGACY** — v3 stores per-instance overlays at `NodeData.state` (singular,
- * overlay catalogue) and active list at `NodeData.states` (plural). Kept for
- * back-compat.
- */
-export type NodeStateConfig = ResolvableNodeRenderHints;
-export type EdgeStateConfig = ResolvableEdgeRenderHints;
-
 /**
- * Canonical interaction-state names that `GraphLayer` registers a default
- * config for on every layer (unless `useDefaultStateConfigs: false`).
+ * Canonical interaction-state names with sensible defaults baked into the
+ * GraphLayer's resolver. State styling lives on the layer-level
+ * {@link NodeOption.state} / per-node {@link NodeData.state} catalogue —
+ * `default` is intentionally absent (it's the absence of any active state,
+ * not a state itself).
  *
- * `'default'` is intentionally absent — it's the *absence* of any active
- * state, not a state itself. Consumers can register additional named
- * states (e.g. `'pinned'`, `'flagged'`) via `setNodeStateConfig` —
- * the state-config map is open-keyed.
+ * The state-config map is open-keyed: consumers can declare additional
+ * named states (e.g. `'pinned'`, `'flagged'`, `'error'`, `'focused'`)
+ * directly on `options.node.state` / `node.state` with the same shape —
+ * they compose via the same merge rules. The canonical set below is
+ * deliberately small; reach for it only when the named driver applies.
  *
  * ### Driver → state map
  *
- * Each canonical state has a distinct *driver* (what causes the state to be
- * written) and *lifetime* (when it clears). The visual treatments overlap
- * (most are stroke rings of various colours), but the semantics do not —
- * a single node can carry several states simultaneously (e.g. `selected +
- * hover + error`) and a behaviour should only write the states it owns.
+ * Each canonical state has a distinct *driver* (what causes the state to
+ * be written) and *lifetime* (when it clears). The visual treatments
+ * overlap (most are stroke rings of various colours), but the semantics
+ * do not — a single node can carry several states simultaneously (e.g.
+ * `selected + hover`) and a behaviour should only write the states it
+ * owns.
  *
- * | State         | Driver                                  | Lifetime                          | Cardinality       |
- * | ------------- | --------------------------------------- | --------------------------------- | ----------------- |
- * | `hover`       | Mouse / touch pointer-over              | Transient — clears on pointer-out | ≤ 1 per layer     |
- * | `focused`     | Keyboard focus (Tab navigation)         | Sticky until blur / Tab moves on  | ≤ 1 per layer     |
- * | `active`      | Hover-emphasis focal (typically the hovered node) | Transient — paired with `highlighted` / `dimmed` | ≤ 1 per layer |
- * | `highlighted` | 1-hop neighbours of the `active` node   | Transient — clears with `active`  | 0–N per layer     |
- * | `dimmed`      | Complement of the focal-emphasis set    | Transient — clears with `active`  | 0–N per layer     |
- * | `selected`    | Click / lasso / brush — user's chosen set | Sticky until explicitly cleared | 0–N per layer     |
- * | `disabled`    | Data flag — "not interactive"           | Sticky — owned by the data feed   | 0–N per layer     |
- * | `error`       | Data flag — validation failure          | Sticky — owned by the data feed   | 0–N per layer     |
- *
- * ### Pointer cursors — `hover` vs `focused`
- *
- * Both answer "the cursor is pointed at this node", but represent two
- * different input modalities. `hover` is the mouse cursor (or touch
- * point); `focused` is the keyboard cursor. A user navigating with Tab
- * sees a `focused` ring without a `hover` ring; a touch user has no
- * `focused` concept but plenty of `hover` events. Drop `focused` if
- * keyboard accessibility isn't a product requirement.
- *
- * ### Focal-emphasis flow — `active` + `highlighted` + `dimmed`
- *
- * These three travel as a group, written by one behaviour
- * (`HoverActivateBehaviour` or a similar focal-emphasis behaviour). When
- * the user hovers a node:
- * - that node goes `active` — *the protagonist*,
- * - its 1-hop neighbours go `highlighted` — *supporting cast*,
- * - everyone else goes `dimmed` — *pushed back so the focal set pops*.
- *
- * All three clear together when emphasis ends. Drop the trio if the
- * product never needs the "fade everyone except the hovered subgraph"
- * interaction — `hover` alone is enough in that case.
+ * | State         | Driver                                    | Lifetime                          | Cardinality       |
+ * | ------------- | ----------------------------------------- | --------------------------------- | ----------------- |
+ * | `hovered`     | Mouse / touch pointer-over                | Transient — clears on pointer-out | ≤ 1 per layer     |
+ * | `selected`    | Click / lasso / brush — user's chosen set | Sticky until explicitly cleared   | 0–N per layer     |
+ * | `highlighted` | 1-hop neighbours of the hovered / selected | Transient — clears with the driver | 0–N per layer    |
+ * | `dimmed`      | Complement of the focal-emphasis set      | Transient — clears with the driver | 0–N per layer    |
+ * | `disabled`    | Data flag — "not interactive"             | Sticky — owned by the data feed   | 0–N per layer     |
  *
  * ### Sticky chosen set — `selected`
  *
@@ -335,15 +150,24 @@ export type EdgeStateConfig = ResolvableEdgeRenderHints;
  * member of `selectedIds: Set<string>`. One node selected → one ring;
  * ten nodes selected → ten rings.
  *
- * `selected` can co-exist with `hover` / `active` / `focused` — clicking
- * a node doesn't stop it from being hovered or focused.
+ * `selected` can co-exist with `hovered` — clicking a node doesn't stop
+ * it from being hovered.
  *
- * ### Data-driven — `disabled` and `error`
+ * ### Focal-emphasis flow — `highlighted` + `dimmed`
  *
- * Both are sticky and owned by the data feed (not by an interaction
- * behaviour). `disabled` is "this node isn't interactive — don't let the
- * user pick it"; `error` is "this node's data failed validation". They
- * overlap visually with `dimmed` but are semantically distinct:
+ * Written together by a focal-emphasis behaviour (typically driven by
+ * hover or selection). When the user hovers / selects a node:
+ * - its 1-hop neighbours go `highlighted` — *supporting cast*,
+ * - everyone else goes `dimmed` — *pushed back so the focal set pops*.
+ *
+ * Both clear together when emphasis ends. Drop the pair if the product
+ * never needs the "fade everyone except the focal subgraph" interaction.
+ *
+ * ### Data-driven — `disabled`
+ *
+ * Sticky and owned by the data feed (not by an interaction behaviour).
+ * `disabled` is "this node isn't interactive — don't let the user pick
+ * it". Visually overlaps `dimmed` but they're semantically distinct:
  * - `dimmed` says *"you're focusing elsewhere"* (transient, behaviour).
  * - `disabled` says *"you can't interact with me"* (sticky, data).
  * Conflating them would couple interaction code to data code — keep them
@@ -351,52 +175,15 @@ export type EdgeStateConfig = ResolvableEdgeRenderHints;
  */
 export type CanonicalStateName =
   /** Mouse / touch pointer is over the node. Transient; one node at a time. */
-  | 'hover'
+  | 'hovered'
   /** User's chosen set (click / lasso / brush). Sticky; many at a time. Multi-select is just this state applied to each member of the selection. */
   | 'selected'
-  /** Focal node in a hover-emphasis interaction — "the protagonist". Transient; one at a time. Travels with `highlighted` + `dimmed`. */
-  | 'active'
-  /** 1-hop neighbour of the `active` node — "supporting cast". Transient; many at a time. Cleared together with `active`. */
+  /** 1-hop neighbour of the hovered / selected focal — "supporting cast". Transient; cleared with the focal. */
   | 'highlighted'
-  /** Complement of the focal-emphasis set — pushed back so `active` + `highlighted` pop. Transient; cleared with `active`. NOT `disabled` — that's a data flag. */
+  /** Complement of the focal-emphasis set — pushed back so `selected` + `highlighted` pop. Transient. NOT `disabled` — that's a data flag. */
   | 'dimmed'
   /** Data flag: "not interactive". Sticky; owned by the data feed. Visually similar to `dimmed` but semantically distinct (data, not interaction). */
-  | 'disabled'
-  /** Data flag: validation failure / invalid node. Sticky; owned by the data feed. */
-  | 'error'
-  /** Keyboard focus ring (Tab navigation) — a different cursor from `hover`. Sticky until blur. Skip this if keyboard a11y is out of scope. */
-  | 'focused';
-
-/**
- * Canonical node state configs registered on every `GraphLayer` by default.
- * Override individual entries with `setNodeStateConfig(name, customConfig)`
- * after construction, or opt out entirely via
- * `GraphLayerOptions.useDefaultStateConfigs: false`.
- */
-export const DEFAULT_NODE_STATE_CONFIGS: Readonly<Record<CanonicalStateName, NodeStateConfig>> = {
-  hover:       { stroke: 0xffffff, strokeWidth: 3 },
-  selected:    { stroke: 0xfacc15, strokeWidth: 3 },
-  active:      { stroke: 0xfacc15, strokeWidth: 5 },
-  highlighted: { stroke: 0xfde68a, strokeWidth: 2 },
-  dimmed:      { alpha: 0.25 },
-  disabled:    { fill: 0x9ca3af, alpha: 0.6 },
-  error:       { stroke: 0xef4444, strokeWidth: 3 },
-  focused:     { stroke: 0x60a5fa, strokeWidth: 3 },
-};
-
-/**
- * Canonical edge state configs registered on every `GraphLayer` by default.
- */
-export const DEFAULT_EDGE_STATE_CONFIGS: Readonly<Record<CanonicalStateName, EdgeStateConfig>> = {
-  hover:       { stroke: 0x111827, strokeWidth: 3 },
-  selected:    { stroke: 0xfacc15, strokeWidth: 3 },
-  active:      { stroke: 0xfacc15, strokeWidth: 5 },
-  highlighted: { stroke: 0xfde68a, strokeWidth: 2 },
-  dimmed:      { alpha: 0.2 },
-  disabled:    { stroke: 0x9ca3af, alpha: 0.6, arrow: false },
-  error:       { stroke: 0xef4444, strokeWidth: 3 },
-  focused:     { stroke: 0x60a5fa, strokeWidth: 3 },
-};
+  | 'disabled';
 
 // ───────────────────────────────────────────────────────────────────────────
 // v3 — G6-aligned types (NodeData / NodeInput / NodeOption + edge mirror)
@@ -910,6 +697,61 @@ export interface EdgeOption {
   readonly palette?: unknown;
 }
 
+// ─── Canonical state defaults ─────────────────────────────────────────────
+
+/**
+ * Canonical node-state overlays auto-merged into every `GraphLayer`'s
+ * `options.node.state` catalogue on construction (unless
+ * `GraphLayerOptions.useDefaultStates: false`). Consumer-supplied
+ * `options.node.state[name]` entries override individual fields per the
+ * normal merge precedence; this map provides the resting visual identity
+ * of each canonical state so a layer that touches no state code still
+ * gets a sensible hover / select / error ring out of the box.
+ *
+ * All values are flat NodeStyle fields — extending or overriding is the
+ * same shape as any other layer-template state overlay. Decorations are
+ * intentionally not declared here so consumers compose them additively
+ * (e.g. a ring decoration on hover) without colliding with the canonical
+ * stroke treatment below.
+ */
+export const DEFAULT_NODE_STATES: Readonly<Record<CanonicalStateName, NodeStyle>> = {
+  // Hovered — detached white ring sitting 2px outside the body. Real
+  // decoration (not a stroke) so it composes cleanly with `selected`'s
+  // own ring + halo when both states are active simultaneously.
+  hovered: {
+    decorations: [
+      { kind: 'ring', id: 'canonical-hover-ring', color: 0xffffff, width: 3, gap: 2, alpha: 1 },
+    ],
+  },
+  // Click-selected — sharp ring outside the body plus a soft halo for
+  // extra prominence. Ring sits at `gap: 2` with `width: 3`; halo extends
+  // a further ~10px outward with quadratic alpha falloff (built into
+  // `glow`). `id`s scope the slots so per-layer overlays can swap or
+  // remove either independently.
+  selected: {
+    decorations: [
+      { kind: 'ring', id: 'canonical-select-ring', color: 0xfacc15, width: 3, gap: 2, alpha: 1 },
+      { kind: 'glow', id: 'canonical-select-halo', color: 0xfacc15, radius: 10, innerAlpha: 0.4, layers: 4 },
+    ],
+  },
+  highlighted: { bgStrokeColor: 0xfde68a, bgStrokeWidth: 2 },
+  dimmed:      { bgAlpha: 0.25 },
+  disabled:    { bgFill: 0x9ca3af, bgAlpha: 0.6 },
+};
+
+/**
+ * Canonical edge-state overlays — sibling of {@link DEFAULT_NODE_STATES}.
+ * Auto-merged into every `GraphLayer`'s `options.edge.state` catalogue
+ * unless `GraphLayerOptions.useDefaultStates: false`.
+ */
+export const DEFAULT_EDGE_STATES: Readonly<Record<CanonicalStateName, EdgeStyle>> = {
+  hovered:     { strokeColor: 0x111827, strokeWidth: 3 },
+  selected:    { strokeColor: 0xfacc15, strokeWidth: 3 },
+  highlighted: { strokeColor: 0xfde68a, strokeWidth: 2 },
+  dimmed:      { strokeAlpha: 0.2 },
+  disabled:    { strokeColor: 0x9ca3af, strokeAlpha: 0.6, arrowTargetShape: 'none' },
+};
+
 // ─── GraphDataOptions ──────────────────────────────────────────────────────
 
 /**
@@ -934,47 +776,26 @@ export interface GraphLayerOptions {
   store?: import('../store/GraphStore').GraphStore;
 
   /**
-   * **LEGACY** default node render hints (`node.data` fallback path). Every
-   * field may be a static value or a resolver `(node) => value`. Use
-   * {@link node} instead for new code.
-   */
-  nodeDefaults?: ResolvableNodeRenderHints;
-
-  /** **LEGACY** — see {@link nodeDefaults}. */
-  edgeDefaults?: ResolvableEdgeRenderHints;
-
-  /**
-   * Auto-register the canonical state configs
-   * ({@link DEFAULT_NODE_STATE_CONFIGS}, {@link DEFAULT_EDGE_STATE_CONFIGS})
-   * on construction. Default `true`.
-   */
-  useDefaultStateConfigs?: boolean;
-
-  /**
-   * Override individual canonical state configs and / or register new ones
-   * declaratively at construction.
-   *
-   * **LEGACY** — v3 uses `node.state` (catalogue on {@link NodeOption}).
-   */
-  nodeStateConfigs?: Readonly<Record<string, NodeStateConfig>>;
-
-  /** Sibling of {@link nodeStateConfigs} for edges. */
-  edgeStateConfigs?: Readonly<Record<string, EdgeStateConfig>>;
-
-  // ─── v3 G6-aligned layer template ──────────────────────────────────────
-
-  /**
-   * Layer-level node template (G6's `node` field). Fields support resolver
-   * functions `(node: GraphNode) => value` that fire every render.
-   *
-   * Stacking order with legacy `nodeDefaults`: legacy applies first, then
-   * `node.style` overrides for any field the consumer supplied. State
-   * overlays in `node.state[name]` apply after the base style.
+   * Layer-level node template (G6's `node` field). Carries `style` (base
+   * appearance) and `state` (catalogue of named overlays applied while a
+   * state in `node.states[]` is active). Resolver-aware: every field on
+   * `style` / each `state[name]` may be a static value or a function
+   * `(node: GraphNode) => value` that fires every render.
    */
   node?: NodeOption;
 
   /** Sibling of {@link node} for edges. */
   edge?: EdgeOption;
+
+  /**
+   * Auto-merge {@link DEFAULT_NODE_STATES} / {@link DEFAULT_EDGE_STATES}
+   * into `options.node.state` / `options.edge.state` on construction so
+   * every canonical state has a sensible default appearance even when the
+   * consumer supplied no state overlays. Consumer entries win on a
+   * per-name basis (no per-field deep merge here — declare a full
+   * `NodeStyle` if you want to replace a default entry). Default `true`.
+   */
+  useDefaultStates?: boolean;
 }
 
 /**
