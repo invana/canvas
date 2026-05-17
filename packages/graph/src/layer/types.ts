@@ -720,21 +720,25 @@ export const DEFAULT_NODE_STATES: Readonly<Record<CanonicalStateName, NodeStyle>
   // own ring + halo when both states are active simultaneously.
   hovered: {
     decorations: [
-      { kind: 'ring', id: 'canonical-hover-ring', color: 0xffffff, width: 3, gap: 2, alpha: 1 },
+      { kind: 'ring', id: 'canonical-hover-ring', color: 0xffffff, width: 3, gap: 5, alpha: 1 },
     ],
   },
   // Click-selected — sharp ring outside the body plus a soft halo for
-  // extra prominence. Ring sits at `gap: 2` with `width: 3`; halo extends
+  // extra prominence. Ring sits at `gap: 7` with `width: 3`; halo extends
   // a further ~10px outward with quadratic alpha falloff (built into
   // `glow`). `id`s scope the slots so per-layer overlays can swap or
   // remove either independently.
   selected: {
     decorations: [
-      { kind: 'ring', id: 'canonical-select-ring', color: 0xfacc15, width: 3, gap: 2, alpha: 1 },
-      { kind: 'glow', id: 'canonical-select-halo', color: 0xfacc15, radius: 10, innerAlpha: 0.4, layers: 4 },
+      { kind: 'ring', id: 'canonical-select-ring', color: 0xfacc15, width: 3, gap: 7, alpha: 1 },
+      { kind: 'glow', id: 'canonical-select-halo', color: 0xfacc15, radius: 30, innerAlpha: 0.4, layers: 4 },
     ],
   },
-  highlighted: { bgStrokeColor: 0xfde68a, bgStrokeWidth: 2 },
+  highlighted: {
+        decorations: [
+      { kind: 'ring', id: 'canonical-hover-ring', color: 0xfde68a, width: 3, gap: 5, alpha: 1 },
+    ],
+},
   dimmed:      { bgAlpha: 0.25 },
   disabled:    { bgFill: 0x9ca3af, bgAlpha: 0.6 },
 };

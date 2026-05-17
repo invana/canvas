@@ -63,76 +63,7 @@ export const Circle: Story = {
             labelPlacement: 'bottom',
             labelOffsetY: 10,
           },
-          // Layer-level overlay catalogue — fields here win over `style`
-          // when the corresponding state is in `node.states[]`.
-          state: {
-            // Detached translucent ring sitting outside the body — a real
-            // `ring` decoration rather than a thick stroke, so it composes
-            // with other decorations (e.g. `selected`'s ring) without
-            // trampling them.
-            hovered: {
-              decorations: [
-                {
-                  kind: 'ring',
-                  id: 'hover-ring',
-                  color: 0xbfdbfe,
-                  width: 6,
-                  gap: 3,
-                  alpha: 0.75,
-                },
-              ],
-            },
-            // Thick black ring (sticky click-selection) — plus a soft halo
-            // sitting outside it for extra prominence. The ring stays sharp
-            // at 4px / 2px-gap-from-body; the halo extends a further ~12px
-            // outward with quadratic alpha falloff (built into `glow`).
-            selected: {
-              decorations: [
-                {
-                  kind: 'ring',
-                  id: 'select-ring',
-                  color: 0x000000,
-                  width: 4,
-                  gap: 2,
-                  alpha: 1,
-                },
-                {
-                  kind: 'glow',
-                  id: 'select-halo',
-                  color: 0x000000,
-                  radius: 12,
-                  innerAlpha: 0.35,
-                  layers: 5,
-                },
-              ],
-              labelFontWeight: 700,
-            },
-            // Same black ring + bolder label.
-            highlighted: {
-              decorations: [
-                {
-                  kind: 'ring',
-                  id: 'highlight-ring',
-                  color: 0x000000,
-                  width: 4,
-                  gap: 2,
-                  alpha: 1,
-                },
-              ],
-              labelFontWeight: 800,
-            },
-            // Washed-out (the "inactive" tile in the design).
-            dimmed: {
-              bgAlpha: 0.35,
-              labelAlpha: 0.45,
-            },
-            // Gray + low alpha, non-interactive.
-            disabled: {
-              bgFill: 0xcbd5e1,
-              bgAlpha: 0.7,
-              labelColor: 0x94a3b8,
-            },
-          },
+ 
         },
       },
     });
