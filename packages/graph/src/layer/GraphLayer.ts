@@ -15,17 +15,15 @@
 
 import { PrimitivesRenderer, WorldLayer } from '@invana/canvas';
 import type {
-  ArcSpec,
   BaseConnectorSpec,
   BaseShapeSpec,
   CanvasContext,
-  CircleSpec,
   ConnectorLabelStyle,
   LayerOptions,
-  RectSpec,
   ShapeLabelStyle,
   WorldLayerHit,
 } from '@invana/canvas';
+import type { Rect } from '@invana/canvas/primitives';
 
 import { GraphStore } from '../store/GraphStore';
 import type { GraphEdge, GraphNode } from '../store/types';
@@ -456,11 +454,43 @@ export class GraphLayer extends WorldLayer<
   }
 
   /**
-   * Build the renderer-facing CircleSpec / RectSpec / ArcSpec from the
-   * resolved {@link NodeStyle}. Geometry is driven by the discriminated
-   * `style.shape` union; paint comes from the flat `bg*` fields.
+   * Build the renderer-facing shape spec from the resolved {@link NodeStyle}.
+   * Geometry is driven by the discriminated `style.shape` union; paint comes
+   * from the flat `bg*` fields.
+   *
+   * The `kind` discriminator and any spec params on `style.shape` pass
+   * straight through to the renderer, so any shape registered via
+   * `canvas.primitives.registerShape(name, ctor)` is usable by name — built-
+   * ins (`rect` / `circle` / `arc` / `regular-polygon` / `star` / `polygon`)
+   * and custom shapes alike. An unknown `kind` errors loudly in the
+   * renderer's `addShape` rather than silently falling back to a circle.
    */
-  private nodeSpec(node: GraphNode): CircleSpec | RectSpec | ArcSpec {
+  /**
+   * Local AABB for `node`'s resolved shape. Delegates to the registered
+   * shape's `static boundsOf` via `PrimitivesRenderer.boundsOfSpec`, so
+   * built-in and custom shape kinds flow through the same hook.
+   *
+   * Returns `undefined` when:
+   * - the renderer isn't mounted yet,
+   * - the resolved `style.shape.kind` isn't registered, or
+   * - the registered ctor doesn't implement `boundsOf`.
+   *
+   * The returned rect is in the shape's local (centre-relative) frame —
+   * `node.position` is *not* baked in. Consumers that only need a size
+   * read `width` / `height`; consumers that need world-space corners
+   * offset by `node.position` themselves.
+   *
+   * Used by `MiniMapLayer` to estimate node footprint before the source
+   * renderer mounts and by `ElkLayout` (and other layouts) to read node
+   * sizes for layout-time placement — both without switching over a
+   * closed shape-kind enum.
+   */
+  boundsOfNode(node: GraphNode): Rect | undefined {
+    if (!this._renderer) return undefined;
+    return this._renderer.boundsOfSpec(this.nodeSpec(node));
+  }
+
+  private nodeSpec(node: GraphNode): BaseShapeSpec {
     const style = this.resolveNodeStyle(node);
     const shape: NodeShapeOptions = style.shape ?? { kind: 'circle', radius: 10 };
     const pos = node.position ?? { x: 0, y: 0 };
@@ -483,40 +513,14 @@ export class GraphLayer extends WorldLayer<
           }
         : undefined;
 
-    const common = {
+    return {
+      ...(shape as unknown as Record<string, unknown>),
       x: pos.x,
       y: pos.y,
       ...(style.bgAlpha !== undefined ? { alpha: style.bgAlpha } : {}),
       ...(fill !== undefined ? { fill } : {}),
       ...(stroke ? { stroke } : {}),
-    };
-
-    switch (shape.kind) {
-      case 'rect':
-        return {
-          kind: 'rect',
-          width: shape.width,
-          height: shape.height,
-          ...(shape.cornerRadius !== undefined ? { cornerRadius: shape.cornerRadius } : {}),
-          ...common,
-        };
-      case 'arc':
-        return {
-          kind: 'arc',
-          innerR: shape.innerR,
-          outerR: shape.outerR,
-          startAngle: shape.startAngle,
-          endAngle: shape.endAngle,
-          ...common,
-        };
-      case 'circle':
-      default:
-        return {
-          kind: 'circle',
-          radius: shape.radius,
-          ...common,
-        };
-    }
+    } as BaseShapeSpec;
   }
 
   /**
@@ -652,9 +656,7 @@ export class GraphLayer extends WorldLayer<
     if (currentKind === undefined) {
       this._renderer.addShape(id, spec);
     } else if (currentKind === spec.kind) {
-      // Kind already matches — cast through `BaseShapeSpec` since the
-      // `CircleSpec | RectSpec | ArcSpec` union narrows by `kind` and
-      // `updateShape`'s generic infers a single member otherwise.
+      // Kind already matches — instance-preserving partial update.
       this._renderer.updateShape<BaseShapeSpec>(id, spec);
     } else {
       this._renderer.removeShape(id);
@@ -912,7 +914,7 @@ export class GraphLayer extends WorldLayer<
     // Position-only updates: cheap partial. Connectors anchored to this node
     // need re-routing too; queue them for the flush-time drain.
     if ('position' in patch && patch.position && patchKeys.length === 1) {
-      this._renderer.updateShape<CircleSpec>(node.id, {
+      this._renderer.updateShape<BaseShapeSpec>(node.id, {
         x: patch.position.x,
         y: patch.position.y,
       });

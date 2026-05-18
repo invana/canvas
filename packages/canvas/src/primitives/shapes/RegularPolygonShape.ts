@@ -59,7 +59,18 @@ export class RegularPolygonShape extends ShapeBase<RegularPolygonSpec> {
   }
 
   bounds(): Rect {
-    return polygonBounds(computeVertices(this.spec, 0));
+    return RegularPolygonShape.boundsOf(this.spec);
+  }
+
+  static boundsOf(spec: Omit<RegularPolygonSpec, 'x' | 'y'>): Rect {
+    return polygonBounds(regularPolygonVertices(spec.sides, spec.radius, spec.rotation ?? 0));
+  }
+
+  static scaleSpec(
+    spec: Omit<RegularPolygonSpec, 'x' | 'y'>,
+    factor: number,
+  ): Partial<RegularPolygonSpec> {
+    return { radius: spec.radius * factor };
   }
 
   /**

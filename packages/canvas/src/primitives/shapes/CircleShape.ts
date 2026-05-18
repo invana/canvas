@@ -55,8 +55,16 @@ export class CircleShape extends ShapeBase<CircleSpec> {
   }
 
   bounds(): Rect {
-    const r = this.spec.radius;
+    return CircleShape.boundsOf(this.spec);
+  }
+
+  static boundsOf(spec: Omit<CircleSpec, 'x' | 'y'>): Rect {
+    const r = spec.radius;
     return { x: -r, y: -r, width: r * 2, height: r * 2 };
+  }
+
+  static scaleSpec(spec: Omit<CircleSpec, 'x' | 'y'>, factor: number): Partial<CircleSpec> {
+    return { radius: spec.radius * factor };
   }
 
   contains(localX: number, localY: number): boolean {

@@ -1359,6 +1359,57 @@ export class PrimitivesRenderer {
     return this.shapeInstances.get(id)?.spec.kind;
   }
 
+  /**
+   * Local AABB for the registered shape `kind`, derived from `spec` alone
+   * without instantiating the shape's Pixi `Graphics`. Returns `undefined`
+   * when the kind isn't registered, or when the registered ctor doesn't
+   * implement `static boundsOf`.
+   *
+   * `spec.x` / `spec.y` are ignored — the returned rect is in the shape's
+   * local (centre-relative) frame, so callers can reuse the same width /
+   * height for every positioned instance of the kind. To get world-space
+   * bounds for a mounted instance, use {@link getShapeWorldBounds}
+   * instead.
+   *
+   * The argument's only required field is `kind`; pass either a full
+   * positioned spec (with `x` / `y` / paint) or a bare shape-options
+   * record (geometry only — `NodeStyle.shape` from `@invana/graph`).
+   * Either way the shape's static `boundsOf` reads only its own
+   * geometry params.
+   *
+   * Consumers (minimap footprint estimation, layouts that need node
+   * sizes, label-collision pre-pass, the LOD behaviours) call this so
+   * they don't have to switch over a closed kind enum — built-in shapes
+   * and shapes registered at runtime via {@link registerShape} both
+   * flow through the same hook.
+   */
+  boundsOfSpec(spec: { readonly kind: string }): Rect | undefined {
+    const Ctor = this.shapeRegistry.get(spec.kind);
+    return Ctor?.boundsOf?.(spec as never);
+  }
+
+  /**
+   * Uniformly-scaled partial of the registered shape `kind`, with
+   * geometry params multiplied by `factor`. Aspect ratio, angular
+   * range, and vertex topology are preserved. Returns `undefined`
+   * when the kind isn't registered or its ctor doesn't implement
+   * `static scaleSpec`.
+   *
+   * The contract pairs with {@link boundsOfSpec}: scaling by `k`
+   * scales the AABB exactly by `k`. Callers compose the returned
+   * partial with paint channels (`fill` / `stroke`) and position
+   * (`x` / `y`) themselves.
+   *
+   * Used by `NodeSizeLODBehaviour` to rewrite shape size as the
+   * camera zooms, without switching over a closed kind enum. Shapes
+   * that don't implement `scaleSpec` are simply skipped by the
+   * LOD writer.
+   */
+  scaleShapeSpec(spec: { readonly kind: string }, factor: number): Record<string, unknown> | undefined {
+    const Ctor = this.shapeRegistry.get(spec.kind);
+    return Ctor?.scaleSpec?.(spec as never, factor) as Record<string, unknown> | undefined;
+  }
+
   hasConnector(id: string): boolean {
     return this.connectorInstances.has(id);
   }

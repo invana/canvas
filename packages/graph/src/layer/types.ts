@@ -10,6 +10,7 @@ import type {
   ConnectorLabelPlacement,
   InsetAnchor,
 } from '@invana/canvas';
+import type { Point } from '@invana/canvas/primitives';
 import type {
   RingDecorationStyle,
   GlowDecorationStyle,
@@ -216,11 +217,107 @@ export interface ArcShapeOption {
 }
 
 /**
- * Discriminated union of node shape options. The `kind` field enforces
- * per-variant required fields at compile time (e.g., `kind: 'arc'`
- * requires `innerR`/`outerR`/`startAngle`/`endAngle`).
+ * Regular n-gon. With `rotation = 0` the first vertex points straight up, so
+ * a triangle / pentagon / hexagon points up by default. Pass
+ * `rotation: Math.PI / sides` for flat-top.
  */
-export type NodeShapeOptions = RectShapeOption | CircleShapeOption | ArcShapeOption;
+export interface RegularPolygonShapeOption {
+  readonly kind: 'regular-polygon';
+  readonly sides: number;
+  readonly radius: number;
+  readonly rotation?: number;
+}
+
+/**
+ * N-pointed star. Classic 5-point star uses
+ * `{ points: 5, outerRadius: r, innerRadius: r * 0.4 }`.
+ */
+export interface StarShapeOption {
+  readonly kind: 'star';
+  readonly points: number;
+  readonly innerRadius: number;
+  readonly outerRadius: number;
+  readonly rotation?: number;
+}
+
+/**
+ * Free-form polygon. `vertices` are centre-relative — closed implicitly
+ * (last vertex connects to first).
+ */
+export interface PolygonShapeOption {
+  readonly kind: 'polygon';
+  readonly vertices: ReadonlyArray<Point>;
+}
+
+/**
+ * Escape-hatch variant for shape kinds registered at runtime via
+ * `canvas.primitives.registerShape(name, ctor)`. The widened `kind` accepts
+ * any string the type-checker can't match against a built-in variant;
+ * additional spec params are erased at the type level but pass through to
+ * the renderer untouched at runtime (the adapter spreads the whole shape
+ * record into the spec).
+ *
+ * Authors of custom shapes typically declare a local interface
+ * (`interface ChevronShapeOption { kind: 'chevron'; size: number }`) and
+ * cast at the boundary (`style: { shape: chevron as NodeShapeOptions }`).
+ * The index signature was deliberately omitted here so that discriminant
+ * narrowing on the typed built-in variants (`shape.kind === 'rect'` →
+ * `RectShapeOption`) keeps working everywhere else in the codebase.
+ *
+ * Built-in kinds (`'rect'`, `'circle'`, `'arc'`, `'regular-polygon'`,
+ * `'star'`, `'polygon'`) are matched by the typed variants above before
+ * this fallback applies.
+ */
+export interface CustomShapeOption {
+  readonly kind: string & {};
+}
+
+/**
+ * Closed union of the six shape kinds that `@invana/canvas` registers out
+ * of the box. Exported so internal switch-narrowing sites can target it
+ * directly via the {@link isBuiltInNodeShape} type guard.
+ */
+export type BuiltInNodeShapeOptions =
+  | RectShapeOption
+  | CircleShapeOption
+  | ArcShapeOption
+  | RegularPolygonShapeOption
+  | StarShapeOption
+  | PolygonShapeOption;
+
+/**
+ * Discriminated union of node shape options. The `kind` field enforces
+ * per-variant required fields at compile time for the six built-in kinds
+ * registered by `@invana/canvas`. {@link CustomShapeOption} provides an
+ * open-keyed fallback for shapes registered at runtime by the consumer.
+ *
+ * Internal call sites that need to read variant-specific fields should
+ * narrow via the {@link isBuiltInNodeShape} type guard first — the
+ * open-keyed `CustomShapeOption.kind` prevents `switch (shape.kind)` over
+ * literals from excluding the custom variant on its own.
+ */
+export type NodeShapeOptions = BuiltInNodeShapeOptions | CustomShapeOption;
+
+/**
+ * Type guard separating the typed built-in variants from
+ * {@link CustomShapeOption}. Use this before reading variant-specific
+ * fields so TypeScript narrows cleanly inside each `case`.
+ */
+export function isBuiltInNodeShape(
+  shape: NodeShapeOptions,
+): shape is BuiltInNodeShapeOptions {
+  switch (shape.kind) {
+    case 'rect':
+    case 'circle':
+    case 'arc':
+    case 'regular-polygon':
+    case 'star':
+    case 'polygon':
+      return true;
+    default:
+      return false;
+  }
+}
 
 // ─── NodeIcon / NodeImage / NodeBadge / BadgePlacement ────────────────────
 

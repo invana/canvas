@@ -5,7 +5,12 @@
 export { GraphLayer } from './GraphLayer';
 export { MiniMapLayer } from './MiniMapLayer';
 export type { MiniMapLayerOptions, MiniMapPosition } from './MiniMapLayer';
-export { DEFAULT_EDGE_STATES, DEFAULT_NODE_STATES, resolveField } from './types';
+export {
+  DEFAULT_EDGE_STATES,
+  DEFAULT_NODE_STATES,
+  isBuiltInNodeShape,
+  resolveField,
+} from './types';
 export type {
   CanonicalStateName,
   EdgeAnchor,
@@ -18,7 +23,9 @@ export type {
   ArcShapeOption,
   ArrowShape,
   BadgePlacement,
+  BuiltInNodeShapeOptions,
   CircleShapeOption,
+  CustomShapeOption,
   EdgeData,
   EdgeInput,
   EdgeOption,
@@ -37,8 +44,11 @@ export type {
   NodeOption,
   NodeShapeOptions,
   NodeStyle,
+  PolygonShapeOption,
   RectShapeOption,
+  RegularPolygonShapeOption,
   ResolvableEdgeStyle,
   ResolvableId,
   ResolvableNodeStyle,
+  StarShapeOption,
 } from './types';

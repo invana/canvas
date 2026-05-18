@@ -53,7 +53,19 @@ export class RectShape extends ShapeBase<RectSpec> {
   }
 
   bounds(): Rect {
-    return { x: 0, y: 0, width: this.spec.width, height: this.spec.height };
+    return RectShape.boundsOf(this.spec);
+  }
+
+  static boundsOf(spec: Omit<RectSpec, 'x' | 'y'>): Rect {
+    return { x: 0, y: 0, width: spec.width, height: spec.height };
+  }
+
+  static scaleSpec(spec: Omit<RectSpec, 'x' | 'y'>, factor: number): Partial<RectSpec> {
+    return {
+      width: spec.width * factor,
+      height: spec.height * factor,
+      ...(spec.cornerRadius !== undefined ? { cornerRadius: spec.cornerRadius * factor } : {}),
+    };
   }
 
   contains(localX: number, localY: number): boolean {

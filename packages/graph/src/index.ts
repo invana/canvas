@@ -17,6 +17,7 @@ export {
   DEFAULT_EDGE_STATES,
   DEFAULT_NODE_STATES,
   GraphLayer,
+  isBuiltInNodeShape,
   MiniMapLayer,
   resolveField,
   type CanonicalStateName,
@@ -32,7 +33,9 @@ export {
   type ArcShapeOption,
   type ArrowShape,
   type BadgePlacement,
+  type BuiltInNodeShapeOptions,
   type CircleShapeOption,
+  type CustomShapeOption,
   type EdgeData,
   type EdgeInput,
   type EdgeOption,
@@ -51,10 +54,13 @@ export {
   type NodeOption,
   type NodeShapeOptions,
   type NodeStyle,
+  type PolygonShapeOption,
   type RectShapeOption,
+  type RegularPolygonShapeOption,
   type ResolvableEdgeStyle,
   type ResolvableId,
   type ResolvableNodeStyle,
+  type StarShapeOption,
 } from './layer';
 
 export {

@@ -164,21 +164,22 @@ export class ElkLayout extends Layout<GraphLayer> {
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
 /**
- * Read the resolved `style.shape` from the layer and derive a tight
- * bounding box. Falls back to `FALLBACK_NODE_SIZE` when no shape is set.
+ * Read the resolved shape's local AABB from {@link GraphLayer.boundsOfNode}
+ * and project it to a `{ width, height }`. The layer routes through the
+ * shape registry's `static boundsOf` hook, so every registered kind
+ * (built-in or custom) flows through the same code path here without a
+ * per-kind switch.
+ *
+ * Falls back to {@link FALLBACK_NODE_SIZE} when the renderer isn't
+ * mounted yet, the resolved shape kind isn't registered, or the
+ * registered ctor doesn't expose `boundsOf`. Consumers that need a
+ * tighter override on a per-node basis can pass `nodeSize: (node) =>
+ * ({ width, height })` to bypass this hook entirely.
  */
 function resolveSizeFromLayer(layer: GraphLayer, node: GraphNode): NodeSize {
-  const style = layer.resolveNodeStyle(node);
-  const shape = style.shape;
-  if (!shape) return FALLBACK_NODE_SIZE;
-  switch (shape.kind) {
-    case 'circle':
-      return { width: shape.radius * 2, height: shape.radius * 2 };
-    case 'rect':
-      return { width: shape.width, height: shape.height };
-    case 'arc':
-      return { width: shape.outerR * 2, height: shape.outerR * 2 };
-  }
+  const local = layer.boundsOfNode(node);
+  if (!local) return FALLBACK_NODE_SIZE;
+  return { width: local.width, height: local.height };
 }
 
 /**

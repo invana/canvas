@@ -70,7 +70,15 @@ export class ArcShape extends ShapeBase<ArcSpec> {
   }
 
   bounds(): Rect {
-    return arcBounds(this.spec.innerR, this.spec.outerR, this.spec.startAngle, this.spec.endAngle);
+    return ArcShape.boundsOf(this.spec);
+  }
+
+  static boundsOf(spec: Omit<ArcSpec, 'x' | 'y'>): Rect {
+    return arcBounds(spec.innerR, spec.outerR, spec.startAngle, spec.endAngle);
+  }
+
+  static scaleSpec(spec: Omit<ArcSpec, 'x' | 'y'>, factor: number): Partial<ArcSpec> {
+    return { innerR: spec.innerR * factor, outerR: spec.outerR * factor };
   }
 
   /**

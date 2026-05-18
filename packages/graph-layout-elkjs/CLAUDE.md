@@ -35,16 +35,18 @@ result is dropped and `end: { reason: 'stopped' }` fires immediately.
 ## Node sizing
 
 ELK needs concrete `width × height` for every node. By default `ElkLayout`
-reads the resolved `style.shape` via `layer.resolveNodeStyle(node)`:
+reads the resolved shape's local AABB via `layer.boundsOfNode(node)`,
+which routes through the shape registry's `static boundsOf` hook — every
+registered shape kind (built-in *and* custom shapes registered via
+`canvas.primitives.registerShape(...)`) flows through the same path
+without a per-kind switch in this package. Falls back to
+`defaultNodeSize` (`40 × 40`) when the renderer isn't mounted yet, the
+resolved shape kind isn't registered, or the registered ctor doesn't
+expose `boundsOf`.
 
-| shape kind | size                              |
-|-----------:|-----------------------------------|
-| `circle`   | `2*radius × 2*radius`             |
-| `rect`     | `width × height`                  |
-| `arc`      | `2*outerR × 2*outerR`             |
-| _none_     | `defaultNodeSize` (`40 × 40`)     |
-
-Override per-node with `nodeSize: (node) => ({ width, height })`.
+Override per-node with `nodeSize: (node) => ({ width, height })` —
+useful when the layout-time footprint must differ from the visual
+footprint (e.g. label-aware padding, port reservations).
 
 ## Options surface
 

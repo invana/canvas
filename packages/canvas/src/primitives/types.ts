@@ -955,6 +955,42 @@ export interface ShapeCtor<TSpec extends BaseShapeSpec = BaseShapeSpec> {
    * so the trim and the painted marker agree on geometry.
    */
   readonly markerInset?: (spec: Omit<TSpec, 'x' | 'y'>, strokeWidth?: number) => number;
+  /**
+   * Optional static AABB reporter. Returns the shape's bounding box in
+   * *local* (centre-relative) coordinates — `spec.x` / `spec.y` are
+   * ignored, so the same value can be reused for any positioned instance.
+   *
+   * Lets consumers (minimap footprint estimation, layouts that need node
+   * sizes, label-collision pre-pass) query a registered shape's size from
+   * the spec alone without instantiating the shape or its Pixi `Graphics`.
+   * Shapes that don't implement this expose `undefined` from
+   * {@link PrimitivesRenderer.boundsOfSpec}; consumers fall back to a
+   * default size.
+   *
+   * Built-in shapes' instance `bounds()` delegates to this static so the
+   * geometry isn't duplicated.
+   */
+  readonly boundsOf?: (spec: Omit<TSpec, 'x' | 'y'>) => Rect;
+  /**
+   * Optional uniform-scale operator. Returns a partial spec that resizes
+   * the shape's geometry by `factor` while preserving its aspect ratio,
+   * angular range, and any other shape-specific invariants. Paint
+   * channels (`fill` / `stroke` / `alpha`) and position (`x` / `y`) are
+   * not the shape's concern — callers compose them onto the result.
+   *
+   * The contract: `boundsOf(scaleSpec(spec, k)).width ==
+   * boundsOf(spec).width * k` (likewise for height). I.e. uniform
+   * scaling is exact for the AABB. Internal layout (a star's
+   * inner/outer ratio, an arc's angular sweep, a polygon's vertex
+   * topology) is preserved.
+   *
+   * Used by `NodeSizeLODBehaviour` to rewrite shape size as the camera
+   * zooms, without switching over a closed kind enum. Shapes that don't
+   * implement this expose `undefined` from
+   * {@link PrimitivesRenderer.scaleShapeSpec}; the LOD behaviour skips
+   * those nodes.
+   */
+  readonly scaleSpec?: (spec: Omit<TSpec, 'x' | 'y'>, factor: number) => Partial<TSpec>;
 }
 
 export type ShapeDecorationCtor<TStyle = unknown> = new (style: TStyle) => IShapeDecoration<TStyle>;

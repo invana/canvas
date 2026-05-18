@@ -57,7 +57,20 @@ export class StarShape extends ShapeBase<StarSpec> {
   }
 
   bounds(): Rect {
-    return polygonBounds(computeVertices(this.spec, 0));
+    return StarShape.boundsOf(this.spec);
+  }
+
+  static boundsOf(spec: Omit<StarSpec, 'x' | 'y'>): Rect {
+    return polygonBounds(
+      starVertices(spec.points, spec.innerRadius, spec.outerRadius, spec.rotation ?? 0),
+    );
+  }
+
+  static scaleSpec(spec: Omit<StarSpec, 'x' | 'y'>, factor: number): Partial<StarSpec> {
+    return {
+      innerRadius: spec.innerRadius * factor,
+      outerRadius: spec.outerRadius * factor,
+    };
   }
 
   /**

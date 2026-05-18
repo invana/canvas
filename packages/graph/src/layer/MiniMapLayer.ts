@@ -353,18 +353,25 @@ export class MiniMapLayer extends ScreenLayer<
    * Pre-mount / pre-install fallback for shape bounds. Used when the renderer
    * hasn't yet built an instance for a node (very brief window — the layer's
    * `data:changed` event repaints the minimap as soon as the renderer catches
-   * up). Returns a square AABB centred on the node's stored position using a
-   * minimap-side default footprint; gracefully degrades when per-node `style`
-   * is absent or holds a resolver. The minimap doesn't run the full graph-
-   * level resolver pipeline — it just needs an "approximately right" size.
+   * up).
+   *
+   * Delegates to {@link GraphLayer.boundsOfNode}, which routes through the
+   * shape registry's `static boundsOf` hook — built-in and custom shape
+   * kinds flow through the same code path. Falls back to a 32px square
+   * AABB centred on the node's stored position when the resolved shape
+   * isn't registered or its ctor doesn't expose `boundsOf`.
    */
   private fallbackNodeBounds(node: GraphNode): Rect | null {
     const graph = this.graph;
     if (!graph) return null;
     const pos = node.position ?? { x: 0, y: 0 };
-    const sizeWorld = inferNodeFootprint(node);
-    const half = sizeWorld / 2;
-    return { x: pos.x - half, y: pos.y - half, width: sizeWorld, height: sizeWorld };
+    const local = graph.boundsOfNode(node) ?? FALLBACK_LOCAL_BOUNDS;
+    return {
+      x: pos.x + local.x,
+      y: pos.y + local.y,
+      width: local.width,
+      height: local.height,
+    };
   }
 
   private paintViewportIndicator(): void {
@@ -527,20 +534,8 @@ export class MiniMapLayer extends ScreenLayer<
 }
 
 /**
- * Best-effort "size" estimate for a node, used by the minimap's pre-mount
- * fallback. Reads the per-node `style.shape` discriminated union when
- * present; falls back to a neutral 32px footprint. The minimap doesn't run
- * the full graph-level style resolver, so layer-template / state-overlay
- * geometry isn't visible here — once the renderer is mounted, the actual
- * AABB from `getShapeWorldBounds()` takes over and this fallback drops out.
+ * Default local AABB used when the resolved shape isn't registered or its
+ * ctor doesn't expose `static boundsOf`. Centred on the origin so the
+ * minimap places it symmetrically around the node's stored position.
  */
-function inferNodeFootprint(node: GraphNode): number {
-  const shape = (node.style as Partial<NodeStyle> | undefined)?.shape;
-  if (!shape) return 32;
-  switch (shape.kind) {
-    case 'circle': return shape.radius * 2;
-    case 'rect':   return Math.max(shape.width, shape.height);
-    case 'arc':    return shape.outerR * 2;
-    default:       return 32;
-  }
-}
+const FALLBACK_LOCAL_BOUNDS: Rect = { x: -16, y: -16, width: 32, height: 32 };

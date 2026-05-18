@@ -54,7 +54,15 @@ export class PolygonShape extends ShapeBase<PolygonSpec> {
   }
 
   bounds(): Rect {
-    return polygonBounds(this.spec.vertices);
+    return PolygonShape.boundsOf(this.spec);
+  }
+
+  static boundsOf(spec: Omit<PolygonSpec, 'x' | 'y'>): Rect {
+    return polygonBounds(spec.vertices);
+  }
+
+  static scaleSpec(spec: Omit<PolygonSpec, 'x' | 'y'>, factor: number): Partial<PolygonSpec> {
+    return { vertices: spec.vertices.map((v) => ({ x: v.x * factor, y: v.y * factor })) };
   }
 
   /**

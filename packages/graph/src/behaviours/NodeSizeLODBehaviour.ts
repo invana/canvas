@@ -289,31 +289,34 @@ export class NodeSizeLODBehaviour extends ElementSizeLODBehaviour {
       const style = layer.resolveNodeStyle(node);
       const shape = style.shape;
       if (!shape) continue;
-      if (shape.kind === 'arc') continue;
+
+      // Natural size: longest AABB dimension of the resolved shape, via
+      // the shape registry's `static boundsOf` hook. Works for every
+      // registered kind (built-in + custom) — no closed switch here.
+      const naturalAABB = renderer.boundsOfSpec(shape);
+      if (!naturalAABB) continue;
+      const naturalSize = Math.max(naturalAABB.width, naturalAABB.height);
+      if (naturalSize <= 0) continue;
 
       // For 'target' mode: write the LOD-on baseline so the per-frame
       // `gfx.scale = 1 / cameraScale` collapses to pixel-constant.
       // For 'worldUnit' mode: restore the natural world-unit baseline that
       // came from the resolved style (matches what `GraphLayer.nodeSpec`
       // would write for a fresh `addShape`).
-      const naturalSize =
-        shape.kind === 'circle' ? shape.radius * 2 : shape.width;
       const baselineSize = mode === 'target' ? (sizePxFallback ?? naturalSize) : naturalSize;
-      if (baselineSize === undefined) continue;
+      const factor = baselineSize / naturalSize;
 
-      const partial: Record<string, unknown> = {};
-      if (shape.kind === 'circle') {
-        partial.radius = baselineSize / 2;
-      } else {
-        // rect
-        partial.width = baselineSize;
-        const naturalHeight = shape.height;
-        const heightRatio = naturalSize > 0 ? naturalHeight / naturalSize : 1;
-        partial.height =
-          mode === 'target' ? baselineSize * heightRatio : naturalHeight;
-      }
+      // Geometry partial: uniform scale via the shape's `static scaleSpec`
+      // hook. Shapes that don't implement scaleSpec (e.g. a custom shape
+      // that hasn't opted into LOD) are skipped — the alternative would
+      // be guessing which fields to multiply, which silently misbehaves.
+      const geomPartial = renderer.scaleShapeSpec(shape, factor);
+      if (!geomPartial) continue;
 
-      // Stroke channel — only relevant when the resolved style sets a stroke.
+      const partial: Record<string, unknown> = { ...geomPartial };
+
+      // Stroke channel — kind-agnostic, applies to every shape that uses
+      // the standard `bg*` paint surface.
       const strokeColor = style.bgStrokeColor;
       const naturalStrokeWidth = style.bgStrokeWidth;
       if (strokeColor !== undefined && naturalStrokeWidth !== undefined && naturalStrokeWidth > 0) {
