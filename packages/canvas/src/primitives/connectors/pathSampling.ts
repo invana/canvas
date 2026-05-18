@@ -562,11 +562,47 @@ function tangentAtEnd(path: Path): Vec2 {
       return { x: 1, y: 0 };
     case 'L':
       return normalize(last.x - prevAnchor.x, last.y - prevAnchor.y);
-    case 'Q':
-      return normalize(last.x - last.cx, last.y - last.cy);
-    case 'C':
-      return normalize(last.x - last.c2x, last.y - last.c2y);
+    case 'Q': {
+      // Tangent at t=1 of a quadratic is 2·(P2 − P1). Degenerate when the
+      // control point coincides with the endpoint — walk back one leg.
+      const dx = last.x - last.cx;
+      const dy = last.y - last.cy;
+      const chordDx = last.x - prevAnchor.x;
+      const chordDy = last.y - prevAnchor.y;
+      if (isDegenerateLeg(dx, dy, chordDx, chordDy)) {
+        return normalize(chordDx, chordDy);
+      }
+      return normalize(dx, dy);
+    }
+    case 'C': {
+      // Tangent at t=1 of a cubic is 3·(P3 − P2). When the c2 → endpoint
+      // leg is vanishingly short relative to the c1 → c2 leg (e.g. a polar
+      // d3.linkRadial curve whose endpoints sit at near-equal radii from
+      // the polar origin), that direction is ill-conditioned and bears no
+      // resemblance to the curve's visual approach. Fall back to the
+      // c1 → endpoint direction, which carries the dominant angular sweep.
+      const dx = last.x - last.c2x;
+      const dy = last.y - last.c2y;
+      const c1dx = last.x - last.c1x;
+      const c1dy = last.y - last.c1y;
+      if (isDegenerateLeg(dx, dy, c1dx, c1dy)) {
+        if (c1dx !== 0 || c1dy !== 0) return normalize(c1dx, c1dy);
+        return normalize(last.x - prevAnchor.x, last.y - prevAnchor.y);
+      }
+      return normalize(dx, dy);
+    }
   }
+}
+
+// A terminal Bézier handle is "degenerate" when its length is less than 1%
+// of the preceding control-polygon leg. Compared squared to avoid sqrts.
+function isDegenerateLeg(
+  legDx: number, legDy: number,
+  refDx: number, refDy: number,
+): boolean {
+  const legSq = legDx * legDx + legDy * legDy;
+  const refSq = refDx * refDx + refDy * refDy;
+  return refSq > 0 && legSq * 10000 < refSq;
 }
 
 function anchorBefore(path: Path, idx: number): Point {

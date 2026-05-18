@@ -76,9 +76,15 @@ export const EdgeLabels: Story = {
       },
       {
         id: 'bump-radial', source: 'bump-radial-src', target: 'bump-radial-tgt',
+        // Polar origin off to the left of the grid — places the endpoints
+        // on a single near-horizontal radial sector but at clearly different
+        // radii (r0 ≈ 376, r1 ≈ 842), which is the layout bump-radial is
+        // built for. `origin: (0, 0)` here would put both endpoints at
+        // nearly the same radius and the curve would collapse to a near
+        // straight line.
         style: {
-          shape: { pathType: 'bump-radial', pathStyleOpts: { origin: { x: 0, y: 0 } } },
-          labelText: 'bump-radial · { origin: { x: 0, y: 0 } }',
+          shape: { pathType: 'bump-radial', pathStyleOpts: { origin: { x: -600, y: 0 } } },
+          labelText: 'bump-radial · { origin: { x: -600, y: 0 } }',
         },
       },
       {
