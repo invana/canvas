@@ -87,7 +87,7 @@ export type EdgePathType =
   // anchored at the host node; the anchor/router pair is degenerate for a
   // self-edge so these styles ignore the polyline beyond its first point.
   | 'loop-curve'
-  | 'loop-orth';
+  | 'loop-polyline';
 
 /**
  * Endpoint anchor.

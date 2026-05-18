@@ -14,7 +14,7 @@ type Story = StoryObj;
  *
  * Two pathTypes are exercised:
  *  - `loop-curve` — cubic-bezier petal. Knobs: `angle`, `radius`, `width`.
- *  - `loop-orth`  — rectangular U-bracket. Knobs: `side`, `stubLength`,
+ *  - `loop-polyline` — rectangular U-bracket. Knobs: `side`, `stubLength`,
  *    `gap`.
  *
  * "Nesting" isn't a separate pathType; it's the same pathType used N
@@ -108,7 +108,7 @@ export const Loops: Story = {
       { id: 'loop-6', source: 'node2', target: 'node2',
         style: {
           shape: {
-            pathType: 'loop-orth',
+            pathType: 'loop-polyline',
             pathStyleOpts: { side: 'bottom', baseOffset: 28, stubLength: 24, gap: 22 },
           },
           strokeColor: 0x111827,
@@ -119,7 +119,7 @@ export const Loops: Story = {
       { id: 'loop-7', source: 'node2', target: 'node2',
         style: {
           shape: {
-            pathType: 'loop-orth',
+            pathType: 'loop-polyline',
             pathStyleOpts: { side: 'bottom', baseOffset: 60, stubLength: 30, gap: 44 },
           },
           strokeColor: 0x9333ea,
@@ -131,7 +131,7 @@ export const Loops: Story = {
       { id: 'loop-8', source: 'node3', target: 'node3',
         style: {
           shape: {
-            pathType: 'loop-orth',
+            pathType: 'loop-polyline',
             pathStyleOpts: { side: 'left', baseOffset: 28, stubLength: 24, gap: 22 },
           },
           strokeColor: 0xb45309,
@@ -142,7 +142,7 @@ export const Loops: Story = {
       { id: 'loop-9', source: 'node3', target: 'node3',
         style: {
           shape: {
-            pathType: 'loop-orth',
+            pathType: 'loop-polyline',
             pathStyleOpts: { side: 'left', baseOffset: 60, stubLength: 30, gap: 44 },
           },
           strokeColor: 0x047857,

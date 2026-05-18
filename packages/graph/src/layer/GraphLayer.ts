@@ -78,7 +78,7 @@ function pathTypeToRouterPathStyle(t: EdgePathType): { router: string; pathStyle
       // only router that passes waypoints through unaltered.
       return { router: 'straight', pathStyle: 'bundle' };
     case 'loop-curve':
-    case 'loop-orth':
+    case 'loop-polyline':
       // Self-loop styles: source and target reference the same shape, so
       // the anchor/router stage emits a degenerate two-coincident-point
       // polyline. The pathStyle generates the loop geometry from its own
