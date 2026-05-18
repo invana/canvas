@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import { GraphLayer, type EdgeData, type NodeData } from '@invana/graph';
 import GUI from 'lil-gui';
-import { createContainer, onStoryTeardown } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'Graph/Edges/Stroke' };
+const meta: Meta = { title: 'Graph/Edges/Stroke/Interactive' };
 export default meta;
 type Story = StoryObj;
 
@@ -23,8 +23,8 @@ type Story = StoryObj;
  *
  * Set both `dash on` and `dash off` to 0 to disable dashing (solid line).
  */
-export const Stroke: Story = {
-  render: () => createContainer({ id: 'graph-edges-stroke' }),
+export const Interactive: Story = {
+  render: () => createContainer({ id: 'graph-edges-stroke-interactive' }),
 
   play: async ({ canvasElement }) => {
     // 7 rows. Sources on the left tagged with the pathType as a label so
@@ -87,7 +87,7 @@ export const Stroke: Story = {
       strokeJoin: 'miter' as 'miter' | 'round' | 'bevel',
     };
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#graph-edges-stroke')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#graph-edges-stroke-interactive')!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });

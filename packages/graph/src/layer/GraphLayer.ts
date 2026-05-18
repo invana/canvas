@@ -77,6 +77,13 @@ function pathTypeToRouterPathStyle(t: EdgePathType): { router: string; pathStyle
       // intermediate `waypoints` — so it has to pair with `straight`, the
       // only router that passes waypoints through unaltered.
       return { router: 'straight', pathStyle: 'bundle' };
+    case 'loop-curve':
+    case 'loop-orth':
+      // Self-loop styles: source and target reference the same shape, so
+      // the anchor/router stage emits a degenerate two-coincident-point
+      // polyline. The pathStyle generates the loop geometry from its own
+      // opts; `straight` is the cheapest pass-through router.
+      return { router: 'straight', pathStyle: t };
   }
 }
 

@@ -81,7 +81,13 @@ export type EdgePathType =
   | 'manhattan'
   | 'rounded'
   | 'smooth'
-  | 'bundle';
+  | 'bundle'
+  // Self-loop variants — use when `source === target`. Path geometry is
+  // generated from `pathStyleOpts` (angle, radius/stubLength, width/gap)
+  // anchored at the host node; the anchor/router pair is degenerate for a
+  // self-edge so these styles ignore the polyline beyond its first point.
+  | 'loop-curve'
+  | 'loop-orth';
 
 /**
  * Endpoint anchor.

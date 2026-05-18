@@ -52,6 +52,11 @@ export { roundedPathStyle } from './connectors/pathStyles/rounded';
 export { bezierPathStyle } from './connectors/pathStyles/bezier';
 export { bumpRadialPathStyle } from './connectors/pathStyles/bumpRadial';
 export { smoothPathStyle } from './connectors/pathStyles/smooth';
+export {
+  loopCurvePathStyle,
+  LOOP_CURVE_PRESETS,
+  type LoopCurvePresetName,
+} from './connectors/pathStyles/loopCurve';
 
 // ─── Built-in anchors ──────────────────────────────────────────────────────
 export { centerAnchor } from './connectors/anchors/center';

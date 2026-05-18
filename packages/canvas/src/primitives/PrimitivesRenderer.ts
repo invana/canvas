@@ -12,7 +12,7 @@
  * - shapes      — `ShapeCtor`             (built-ins: circle, rect, arrow)
  * - routers     — `IRouter`               (built-ins: straight, orth, orthogonal,
  *                                          manhattan, metro, er, oneSide)
- * - pathStyles  — `IPathStyle`            (built-ins: normal, rounded, bezier, bump-radial, bump-horizontal, step-radial, smooth, bundle)
+ * - pathStyles  — `IPathStyle`            (built-ins: normal, rounded, bezier, bump-radial, bump-horizontal, step-radial, smooth, bundle, loop-curve, loop-orth)
  * - anchors     — `IAnchor`               (built-ins: center, boundary, perpendicular)
  * - decorations — shape / connector       (built-ins: glow)
  *
@@ -59,6 +59,8 @@ import { bumpHorizontalPathStyle } from './connectors/pathStyles/bumpHorizontal'
 import { bundlePathStyle } from './connectors/pathStyles/bundle';
 import { stepRadialPathStyle } from './connectors/pathStyles/stepRadial';
 import { smoothPathStyle } from './connectors/pathStyles/smooth';
+import { loopCurvePathStyle } from './connectors/pathStyles/loopCurve';
+import { loopOrthPathStyle } from './connectors/pathStyles/loopOrth';
 import { centerAnchor } from './connectors/anchors/center';
 import { boundaryAnchor } from './connectors/anchors/boundary';
 import { perpendicularAnchor } from './connectors/anchors/perpendicular';
@@ -298,6 +300,11 @@ export class PrimitivesRenderer {
     this.registerPathStyle('bundle', bundlePathStyle);
     this.registerPathStyle('step-radial', stepRadialPathStyle);
     this.registerPathStyle('smooth', smoothPathStyle);
+    // Self-loop pathStyles — draw a petal / U-stub anchored at the first
+    // polyline point. Pair with `router: 'straight'` and a connector whose
+    // source and target reference the same shape.
+    this.registerPathStyle('loop-curve', loopCurvePathStyle);
+    this.registerPathStyle('loop-orth', loopOrthPathStyle);
 
     this.registerAnchor('center', centerAnchor);
     this.registerAnchor('boundary', boundaryAnchor);
