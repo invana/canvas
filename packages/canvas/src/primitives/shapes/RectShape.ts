@@ -30,13 +30,14 @@ export class RectShape extends ShapeBase<RectSpec> {
     const h0 = Math.max(0, spec.height - baseInset * 2);
     const cr0 = Math.max(0, (spec.cornerRadius ?? 0) - baseInset);
 
-    if (style?.dashArray) {
+    const dashArray = style?.dashArray ?? spec.stroke?.dashArray;
+    if (dashArray && dashArray[0] > 0 && dashArray[1] > 0) {
       emitDashedStroke(g, sampleRectOutline(baseInset, baseInset, w0, h0, cr0), {
-        color: style.color ?? 0x000000,
-        alpha: style.alpha ?? 1,
-        width: style.strokeWidth ?? 1,
-        dashArray: style.dashArray,
-        dashOffset: style.dashOffset,
+        color: style?.color ?? spec.stroke?.color ?? 0x000000,
+        alpha: style?.alpha ?? spec.stroke?.alpha ?? 1,
+        width: style?.strokeWidth ?? spec.stroke?.width ?? 1,
+        dashArray,
+        dashOffset: style?.dashOffset ?? spec.stroke?.dashOffset,
         closed: true,
       });
       return;

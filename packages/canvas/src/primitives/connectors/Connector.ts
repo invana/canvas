@@ -26,20 +26,25 @@ export class Connector extends ConnectorBase<BaseConnectorSpec> {
   ): void {
     if (path.length < 2) return;
 
-    if (style?.dashArray) {
+    // Decoration overlays take precedence; otherwise honour the spec's own
+    // dash. `[0, 0]` (and any tuple with a non-positive endpoint) reads as
+    // "no dash pattern" — fall through to the solid stroke so the line
+    // doesn't disappear when a slider parks at zero.
+    const dashArray = style?.dashArray ?? spec.stroke?.dashArray;
+    if (dashArray && dashArray[0] > 0 && dashArray[1] > 0) {
       emitDashedStroke(g, samplePath(path), {
-        color: style.color ?? 0x000000,
-        alpha: style.alpha ?? 1,
-        width: style.strokeWidth ?? spec.stroke?.width ?? 1,
-        dashArray: style.dashArray,
-        dashOffset: style.dashOffset,
+        color: style?.color ?? spec.stroke?.color ?? 0x000000,
+        alpha: style?.alpha ?? spec.stroke?.alpha ?? 1,
+        width: style?.strokeWidth ?? spec.stroke?.width ?? 1,
+        dashArray,
+        dashOffset: style?.dashOffset ?? spec.stroke?.dashOffset,
         closed: false,
         // Inherit cap / join from the spec when the override doesn't
         // specify them — decorations that only widen the stroke (glow,
         // ripple) should match the host's silhouette ends instead of
         // forcing butt/miter back on.
-        cap: style.cap ?? spec.stroke?.cap,
-        join: style.join ?? spec.stroke?.join,
+        cap: style?.cap ?? spec.stroke?.cap,
+        join: style?.join ?? spec.stroke?.join,
       });
       return;
     }

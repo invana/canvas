@@ -51,13 +51,14 @@ export class ArcShape extends ShapeBase<ArcSpec> {
     const outerR0 = Math.max(innerR0, spec.outerR - baseInset);
     if (outerR0 <= 0) return;
 
-    if (style?.dashArray) {
+    const dashArray = style?.dashArray ?? spec.stroke?.dashArray;
+    if (dashArray && dashArray[0] > 0 && dashArray[1] > 0) {
       emitDashedStroke(g, sampleArcOutline(innerR0, outerR0, spec.startAngle, spec.endAngle), {
-        color: style.color ?? 0x000000,
-        alpha: style.alpha ?? 1,
-        width: style.strokeWidth ?? 1,
-        dashArray: style.dashArray,
-        dashOffset: style.dashOffset,
+        color: style?.color ?? spec.stroke?.color ?? 0x000000,
+        alpha: style?.alpha ?? spec.stroke?.alpha ?? 1,
+        width: style?.strokeWidth ?? spec.stroke?.width ?? 1,
+        dashArray,
+        dashOffset: style?.dashOffset ?? spec.stroke?.dashOffset,
         closed: true,
       });
       return;
