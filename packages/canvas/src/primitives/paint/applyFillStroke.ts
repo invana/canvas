@@ -7,12 +7,14 @@
  * (decoration override) it takes precedence over `spec.fill` / `spec.stroke`.
  *
  * Layered fills: `spec.fill` may be a single layer or an array. This module
- * iterates only **silhouette-filler** layer kinds (`solid`, `image`), painting
- * each into the silhouette via `g.fill()`. Multiple silhouette layers are
- * supported — each is re-traced before painting (Pixi's `fill` consumes the
- * most recent path). **Inset-content** layer kinds (`glyph`, `svg`,
- * `image-inset`) are handled separately by `ShapeBase.syncInsetLayers` /
- * `insetContentLayer.ts` — they're skipped here.
+ * iterates only **silhouette-filler** layer kinds — `solid` and `image` —
+ * painting each into the silhouette via `g.fill()`. Image layers always
+ * paint with CSS-`cover` semantics (uniform scale, may crop). Multiple
+ * silhouette layers are supported — each is re-traced before painting
+ * (Pixi's `fill` consumes the most recent path). **Inset-content** layers
+ * (`glyph`, `svg`, `svg-url`) are handled separately by
+ * `ShapeBase.syncInsetLayers` / `insetContentLayer.ts` — they're skipped
+ * here.
  */
 
 import { Matrix, type Graphics, type Texture } from 'pixi.js';
@@ -143,7 +145,6 @@ function paintSilhouetteLayer(
     g.fill({ color: layer.color, alpha: layer.alpha ?? 1 });
     return;
   }
-  // layer.kind === 'image'
   const tex = host.textureRegistry.get(layer.url);
   if (!tex) {
     void host.textureRegistry
@@ -155,55 +156,33 @@ function paintSilhouetteLayer(
       });
     return;
   }
-  const matrix = textureFitMatrix(layer.fit ?? 'fill', tex, bounds);
-  g.fill({ texture: tex, alpha: layer.alpha ?? 1, matrix });
+  const matrix = coverFitMatrix(tex, bounds);
+  // `textureSpace: 'global'` — interpret our `matrix` as texture→world
+  // (forward mapping) without Pixi's default local-bounds auto-fit. Without
+  // this, Pixi pre-normalises UV to the shape's bounds and our custom
+  // scaling stacks on top of the already-fitted UV, which then tiles via
+  // Pixi's auto-enabled `addressMode: 'repeat'` once UV crosses [0, 1].
+  g.fill({ texture: tex, alpha: layer.alpha ?? 1, matrix, textureSpace: 'global' });
 }
 
 /**
- * Compute the texture-coord transform matrix for a given `fit` mode. Pixi's
- * `fill({ texture, matrix })` interprets `matrix` as the transform from the
- * texture's pixel space into the Graphics' local space — i.e. point `(u,v)`
- * in the texture appears at `matrix * (u,v)` on the canvas. We therefore
- * build the *forward* mapping (no manual inversion required).
- *
- *   - `tile`    — identity; Pixi's default 1:1 tiling.
- *   - `fill`    — non-uniform stretch to bounds (aspect not preserved).
- *   - `cover`   — uniform scale = max(...); image fully covers, may crop.
- *   - `contain` — uniform scale = min(...); image fits inside, may letterbox.
- *   - `none`    — natural pixel size, centred at the bounds centre.
+ * Forward texture→world matrix that cover-fits `tex` to `bounds` — uniform
+ * scale `max(bounds.w / tex.w, bounds.h / tex.h)`, then centre on the
+ * cross-axis. With `textureSpace: 'global'` on the `fill` call, Pixi
+ * inverts this and uses it directly for the UV-from-position transform.
+ * Cover is the only fit mode the engine offers for image fills — the
+ * texture fully covers the silhouette (may crop on the cross-axis, never
+ * letterboxes).
  */
-function textureFitMatrix(
-  fit: 'fill' | 'cover' | 'contain' | 'none' | 'tile',
-  tex: Texture,
-  bounds: Rect,
-): Matrix {
+function coverFitMatrix(tex: Texture, bounds: Rect): Matrix {
   const tw = tex.width || 1;
   const th = tex.height || 1;
-  const m = new Matrix();
-  if (fit === 'tile') return m;
-
-  let sx: number;
-  let sy: number;
-  if (fit === 'fill') {
-    sx = bounds.width / tw;
-    sy = bounds.height / th;
-  } else if (fit === 'cover') {
-    const s = Math.max(bounds.width / tw, bounds.height / th);
-    sx = sy = s;
-  } else if (fit === 'contain') {
-    const s = Math.min(bounds.width / tw, bounds.height / th);
-    sx = sy = s;
-  } else {
-    // none
-    sx = sy = 1;
-  }
-
-  const mappedW = tw * sx;
-  const mappedH = th * sy;
+  const s = Math.max(bounds.width / tw, bounds.height / th);
+  const mappedW = tw * s;
+  const mappedH = th * s;
   const tx = bounds.x + (bounds.width - mappedW) / 2;
   const ty = bounds.y + (bounds.height - mappedH) / 2;
-  m.set(sx, 0, 0, sy, tx, ty);
-  return m;
+  return new Matrix().set(s, 0, 0, s, tx, ty);
 }
 
 function alignmentFor(a: ShapeStroke['alignment']): number {

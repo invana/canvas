@@ -359,13 +359,17 @@ export type NodeIcon =
       readonly anchor?: InsetAnchor;
     };
 
-/** Raster image inset rendered inside a node's body. */
+/**
+ * Raster image attached to a node. Mirrors the canvas-level `kind: 'image'`
+ * `ShapeFillLayer` field-for-field. The texture is cover-fitted to the
+ * node's silhouette (uniform scale, may crop on the cross-axis); CSS-style
+ * `background-size` / `background-repeat` knobs aren't part of the engine
+ * surface. For a small vector inset (badge, icon, logo) reach for
+ * `NodeStyle.icon` (`glyph` / `svg` / `svg-url`) instead.
+ */
 export interface NodeImage {
   readonly url: string;
   readonly alpha?: number;
-  readonly sizeRatio?: number;
-  readonly anchor?: InsetAnchor;
-  readonly fit?: 'fill' | 'cover' | 'contain' | 'none' | 'tile';
 }
 
 /** Placement of a badge relative to its host node. */
@@ -485,8 +489,10 @@ export interface NodeStyle {
 
   // ===== Background paint =====
   /**
-   * Accepts all six `ShapeFillLayer` kinds — `solid` / `image` / `glyph` /
-   * `svg` / `svg-url` / `image-inset` — and arrays for stacked layers.
+   * Accepts every `ShapeFillLayer` kind — `solid` / `image` / `glyph` /
+   * `svg` / `svg-url` — and arrays for stacked layers. The `image` kind
+   * doubles as silhouette filler and inset content via its `fit` field
+   * (`'inset'` vs the silhouette modes).
    */
   readonly bgFill?: ShapeFill;
   readonly bgAlpha?: number;

@@ -60,7 +60,7 @@ export const ImageWithInsetGlyph: Story = {
     };
 
     const buildFill = (): ReadonlyArray<ShapeFillLayer> => [
-      { kind: 'image', url: settings.photoUrl, fit: 'cover' },
+      { kind: 'image', url: settings.photoUrl },
       {
         kind: 'glyph',
         char: settings.badgeChar,

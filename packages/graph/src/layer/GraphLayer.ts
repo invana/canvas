@@ -23,7 +23,7 @@ import type {
   ShapeLabelStyle,
   WorldLayerHit,
 } from '@invana/canvas';
-import type { Rect } from '@invana/canvas/primitives';
+import type { Rect, ShapeFillLayer } from '@invana/canvas/primitives';
 
 import { GraphStore } from '../store/GraphStore';
 import type { GraphEdge, GraphNode } from '../store/types';
@@ -495,10 +495,49 @@ export class GraphLayer extends WorldLayer<
     const shape: NodeShapeOptions = style.shape ?? { kind: 'circle', radius: 10 };
     const pos = node.position ?? { x: 0, y: 0 };
 
-    const bgFill = style.bgFill;
-    // Only number fills survive the spec — ShapeFill complex layer / array
-    // forms aren't wired into the renderer yet.
-    const fill = typeof bgFill === 'number' ? bgFill : undefined;
+    // Project the resolved style into a `ShapeFill` for the renderer.
+    // Layers stack bottom-up:
+    //   1. `bgFill` — `number` (shorthand solid), single `ShapeFillLayer`,
+    //      or `ReadonlyArray<ShapeFillLayer>`. Arrays are passed through
+    //      so consumers can express e.g. tint + glow / image-cover +
+    //      colour-wash compositions directly.
+    //   2. `style.image` — projects 1:1 to a `kind: 'image'` layer. The
+    //      canvas renderer cover-fits the texture into the silhouette.
+    //   3. `style.icon` — projects verbatim to a `glyph` / `svg` /
+    //      `svg-url` layer. The discriminated union mirrors
+    //      `ShapeFillLayer` field-for-field.
+    // The fast path (no image, no icon, `bgFill` is a number) collapses
+    // to the bare-number shorthand so simple solid nodes stay cheap.
+    const bg = style.bgFill;
+    const hasImage = style.image !== undefined;
+    const hasIcon = style.icon !== undefined;
+    let fill: number | ReadonlyArray<ShapeFillLayer> | undefined;
+    if (!hasImage && !hasIcon && typeof bg === 'number') {
+      fill = bg;
+    } else if (bg === undefined && !hasImage && !hasIcon) {
+      fill = undefined;
+    } else {
+      const layers: ShapeFillLayer[] = [];
+      if (typeof bg === 'number') {
+        layers.push({ kind: 'solid', color: bg });
+      } else if (Array.isArray(bg)) {
+        for (const l of bg) layers.push(l as ShapeFillLayer);
+      } else if (bg !== undefined) {
+        layers.push(bg as ShapeFillLayer);
+      }
+      if (style.image !== undefined) {
+        const img = style.image;
+        layers.push({
+          kind: 'image',
+          url: img.url,
+          ...(img.alpha !== undefined ? { alpha: img.alpha } : {}),
+        });
+      }
+      if (style.icon !== undefined) {
+        layers.push(style.icon as ShapeFillLayer);
+      }
+      fill = layers.length > 0 ? layers : undefined;
+    }
 
     const bgStrokeWidth = style.bgStrokeWidth ?? 0;
     const stroke =

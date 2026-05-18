@@ -148,8 +148,9 @@ export type IPathStyle = (
 // ─── Fill ──────────────────────────────────────────────────────────────────
 
 /**
- * Anchor positions for inset content layers (`glyph`, `svg`, `image-inset`).
- * Defaults to `'center'`. Use `'top-right'` etc. for corner-badge composition.
+ * Anchor positions for inset content layers (`glyph`, `svg`, `svg-url`).
+ * Defaults to `'center'`. Use `'top-right'` etc. for corner-badge
+ * composition.
  */
 export type InsetAnchor =
   | 'center'
@@ -161,12 +162,16 @@ export type InsetAnchor =
 /**
  * One layer of a shape's fill. Layers split by role:
  *
- * - **Silhouette fillers** (`solid`, `image`) — paint into the silhouette via
- *   Pixi's `g.fill()`. Multiple silhouette layers stack via alpha; each is
- *   re-traced before painting.
- * - **Inset content** (`glyph`, `svg`, `image-inset`) — mounted as Container
+ * - **Silhouette fillers** (`solid`, `image`) — paint into the silhouette
+ *   via Pixi's `g.fill()`. Multiple silhouette layers stack via alpha;
+ *   each is re-traced before painting. Image fills always render the
+ *   texture cover-fitted to the silhouette (uniform scale, may crop) —
+ *   the engine intentionally does not expose CSS-style `background-size`
+ *   / `background-repeat` knobs on raster fills.
+ * - **Inset content** (`glyph`, `svg`, `svg-url`) — mounted as Container
  *   children of the shape's `gfx`. Sized by `sizeRatio` (fraction of the
- *   smaller bounds dimension) and positioned by `anchor` (default `'center'`).
+ *   smaller bounds dimension) and positioned by `anchor` (default
+ *   `'center'`).
  *
  * The engine has no dedicated "icon" kind — icon-library specifics (Font
  * Awesome glyphs, Lucide SVGs, Fluent icons, …) are produced by developer
@@ -175,10 +180,19 @@ export type InsetAnchor =
 export type ShapeFillLayer =
   | { readonly kind: 'solid'; readonly color: number; readonly alpha?: number }
   | {
+      /**
+       * Raster image painted into the host silhouette. The texture is
+       * uniformly scaled to fully cover the shape's bounds (CSS `cover`
+       * semantics) and centred — may crop on the cross-axis but never
+       * letterboxes. Aspect-controlled sizing, tile patterns, and
+       * inset/badge raster placement aren't part of the engine surface;
+       * stack a `glyph` / `svg` / `svg-url` layer for icon-shaped
+       * content, or pre-process the texture if the consumer needs a
+       * specific framing.
+       */
       readonly kind: 'image';
       readonly url: string;
       readonly alpha?: number;
-      readonly fit?: 'fill' | 'cover' | 'contain' | 'none' | 'tile';
     }
   | {
       /** Font-rendered character (icon-font codepoint, Unicode symbol, emoji). */
@@ -209,14 +223,6 @@ export type ShapeFillLayer =
       /** Stroke width when rendering. Default `2`. */
       readonly strokeWidth?: number;
       readonly color?: number;
-      readonly alpha?: number;
-      readonly sizeRatio?: number;
-      readonly anchor?: InsetAnchor;
-    }
-  | {
-      /** Raster image inset (small logo on a plate, photo thumb on a card). */
-      readonly kind: 'image-inset';
-      readonly url: string;
       readonly alpha?: number;
       readonly sizeRatio?: number;
       readonly anchor?: InsetAnchor;
@@ -556,7 +562,7 @@ export interface ShapeHostInfo {
   readonly textureRegistry: TextureRegistry;
   /**
    * Re-invoke the shape's `draw(currentSpec)`. Used by async fill loaders
-   * (image silhouette, image-inset) to repaint once a texture resolves.
+   * (any `image` layer) to repaint once a texture resolves.
    */
   readonly requestRedraw: () => void;
 }

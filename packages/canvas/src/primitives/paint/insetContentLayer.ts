@@ -1,15 +1,20 @@
 /**
- * Inset-content mount / update / destroy for `glyph`, `svg`, `svg-url`, and
- * `image-inset` fill layers. Each inset layer becomes a sibling Container
- * parented to the shape's `gfx`, sized as a fraction of the shape's bounds
+ * Inset-content mount / update / destroy for `glyph`, `svg`, and `svg-url`
+ * fill layers. Each inset layer becomes a sibling Container parented to the
+ * shape's `gfx`, sized as a fraction of the shape's bounds (`sizeRatio`)
  * and positioned by the layer's `anchor`.
  *
- * Text labels are NOT handled here. Multi-character labels (centred-inside,
- * outside-side, or along-path) are rendered by `LabelDecoration` /
- * `LabelConnectorDecoration` via `setDecoration(id, 'label', ...)` — they
- * support backgrounds, wrap / ellipsis, rich (HTML) text, and 13 placements
- * including the inside-centre case the legacy `kind: 'text'` fill layer used
- * to cover.
+ * Image fills are NOT handled here — they paint into the silhouette via
+ * `applyFillStroke.ts` with CSS-`cover` semantics. The engine does not
+ * expose an inset-Sprite mode for raster images; reach for a `glyph` /
+ * `svg` / `svg-url` layer when a small vector inset is what's wanted.
+ *
+ * Text labels are NOT handled here either. Multi-character labels
+ * (centred-inside, outside-side, or along-path) are rendered by
+ * `LabelDecoration` / `LabelConnectorDecoration` via
+ * `setDecoration(id, 'label', ...)` — they support backgrounds, wrap /
+ * ellipsis, rich (HTML) text, and 13 placements including the
+ * inside-centre case the legacy `kind: 'text'` fill layer used to cover.
  *
  * Decorations operate on the silhouette only (via `paintInto`) — they never
  * see inset content. Animated decorations like glow / pulse paint a halo
@@ -25,7 +30,6 @@ import {
   Container,
   Graphics,
   GraphicsPath,
-  Sprite,
   Text,
   type TextStyleOptions,
 } from 'pixi.js';
@@ -34,41 +38,34 @@ import type {
   Point,
   Rect,
   ShapeFillLayer,
-  ShapeHostInfo,
 } from '../types';
 
 export type InsetLayer = Extract<
   ShapeFillLayer,
-  { kind: 'glyph' | 'svg' | 'svg-url' | 'image-inset' }
+  { kind: 'glyph' | 'svg' | 'svg-url' }
 >;
 
 export interface InsetContentView {
   readonly gfx: Container;
-  child: Text | Graphics | Sprite;
+  child: Text | Graphics;
   key: string;
 }
 
 export function isInsetLayer(layer: ShapeFillLayer): layer is InsetLayer {
-  return (
-    layer.kind === 'glyph' ||
-    layer.kind === 'svg' ||
-    layer.kind === 'svg-url' ||
-    layer.kind === 'image-inset'
-  );
+  return layer.kind === 'glyph' || layer.kind === 'svg' || layer.kind === 'svg-url';
 }
 
 export function mountInsetContent(
   parent: Container,
   layer: InsetLayer,
   bounds: Rect,
-  host: ShapeHostInfo,
   visualCenter?: Point,
 ): InsetContentView {
   const gfx = new Container();
   gfx.label = `inset:${layer.kind}`;
   gfx.zIndex = 10;
   const reposition = () => positionAndScale(gfx, view.child, layer, bounds, visualCenter);
-  const child = renderChild(layer, host, reposition);
+  const child = renderChild(layer, reposition);
   gfx.addChild(child);
   parent.addChild(gfx);
   const view: InsetContentView = { gfx, child, key: layerKey(layer) };
@@ -80,14 +77,13 @@ export function updateInsetContent(
   view: InsetContentView,
   layer: InsetLayer,
   bounds: Rect,
-  host: ShapeHostInfo,
   visualCenter?: Point,
 ): void {
   const key = layerKey(layer);
   if (key !== view.key) {
     view.child.destroy();
     const reposition = () => positionAndScale(view.gfx, view.child, layer, bounds, visualCenter);
-    const fresh = renderChild(layer, host, reposition);
+    const fresh = renderChild(layer, reposition);
     view.gfx.removeChildren();
     view.gfx.addChild(fresh);
     view.child = fresh;
@@ -104,10 +100,9 @@ export function destroyInsetContent(view: InsetContentView): void {
 
 function renderChild(
   layer: InsetLayer,
-  host: ShapeHostInfo,
   onAsyncReady: () => void,
-): Text | Graphics | Sprite {
-  const color = layer.kind === 'image-inset' ? 0xffffff : layer.color ?? 0xffffff;
+): Text | Graphics {
+  const color = layer.color ?? 0xffffff;
   const alpha = layer.alpha ?? 1;
 
   if (layer.kind === 'glyph') {
@@ -135,64 +130,37 @@ function renderChild(
     return g;
   }
 
-  if (layer.kind === 'svg-url') {
-    const g = new Graphics();
-    void fetchSvgPathD(layer.url)
-      .then((pathD) => {
-        if (g.destroyed) return;
-        g.path(new GraphicsPath(pathD));
-        g.stroke({
-          color,
-          alpha,
-          width: layer.strokeWidth ?? 2,
-        });
-        onAsyncReady();
-      })
-      .catch((err: unknown) => {
-        // Stay quiet on programmatic destroys; surface real errors.
-        if (g.destroyed) return;
-        // eslint-disable-next-line no-console
-        console.warn(`[insetContentLayer] svg-url fetch failed for ${layer.url}:`, err);
+  // layer.kind === 'svg-url'
+  const g = new Graphics();
+  void fetchSvgPathD(layer.url)
+    .then((pathD) => {
+      if (g.destroyed) return;
+      g.path(new GraphicsPath(pathD));
+      g.stroke({
+        color,
+        alpha,
+        width: layer.strokeWidth ?? 2,
       });
-    return g;
-  }
-
-  // layer.kind === 'image-inset'
-  const sprite = new Sprite();
-  sprite.alpha = alpha;
-  const cached = host.textureRegistry.get(layer.url);
-  if (cached) {
-    sprite.texture = cached;
-  } else {
-    void host.textureRegistry
-      .load(layer.url)
-      .then((loaded) => {
-        if (sprite.destroyed) return;
-        sprite.texture = loaded;
-        onAsyncReady();
-      })
-      .catch((err: unknown) => {
-        if (sprite.destroyed) return;
-        // eslint-disable-next-line no-console
-        console.warn(`[insetContentLayer] image-inset load failed for ${layer.url}:`, err);
-      });
-  }
-  return sprite;
+      onAsyncReady();
+    })
+    .catch((err: unknown) => {
+      // Stay quiet on programmatic destroys; surface real errors.
+      if (g.destroyed) return;
+      // eslint-disable-next-line no-console
+      console.warn(`[insetContentLayer] svg-url fetch failed for ${layer.url}:`, err);
+    });
+  return g;
 }
 
 function positionAndScale(
   host: Container,
-  child: Text | Graphics | Sprite,
+  child: Text | Graphics,
   layer: InsetLayer,
   bounds: Rect,
   visualCenter?: Point,
 ): void {
-  // Sprites need their texture to determine natural size; defer until ready.
-  if (child instanceof Sprite && (!child.texture || !child.texture.width)) {
-    return;
-  }
   // svg-url Graphics start out empty until the fetch resolves.
-  if (child instanceof Graphics && layer.kind === 'svg-url') {
+  if (layer.kind === 'svg-url') {
     const lb = child.getLocalBounds();
     if (lb.width === 0 && lb.height === 0) return;
   }
@@ -209,7 +177,7 @@ function positionAndScale(
   host.position.set(ax, ay);
 
   // Centre the child within the host container — `getLocalBounds` may not be
-  // origin-aligned (Text / Graphics path-d / Sprite all have offsets).
+  // origin-aligned (Text / Graphics path-d both have offsets).
   child.position.set(
     -(local.x + local.width / 2) * scale,
     -(local.y + local.height / 2) * scale,
@@ -218,13 +186,13 @@ function positionAndScale(
 }
 
 /**
- * Inset kinds (`glyph`, `svg`, `svg-url`, `image-inset`) all scale to fit a
- * fraction (`sizeRatio`) of the shape's smaller bounds dimension — the
+ * Inset kinds (`glyph`, `svg`, `svg-url`) all scale to fit a fraction
+ * (`sizeRatio`) of the shape's smaller bounds dimension — the
  * bounds-fraction-square rule. Text labels live on `LabelDecoration` and
  * handle their own sizing.
  */
 function resolveScale(layer: InsetLayer, bounds: Rect, local: Rect): number {
-  const ratio = (layer as { sizeRatio?: number }).sizeRatio ?? 0.6;
+  const ratio = layer.sizeRatio ?? 0.6;
   const targetSize = Math.min(bounds.width, bounds.height) * ratio;
   const naturalSize = Math.max(local.width, local.height) || 1;
   return targetSize / naturalSize;
@@ -261,10 +229,8 @@ function layerKey(layer: InsetLayer): string {
   if (layer.kind === 'svg') {
     return `s:${layer.pathD.length}:${hashString(layer.pathD)}:${layer.strokeWidth ?? 2}:${layer.color ?? 0xffffff}:${layer.alpha ?? 1}`;
   }
-  if (layer.kind === 'svg-url') {
-    return `u:${layer.url}:${layer.strokeWidth ?? 2}:${layer.color ?? 0xffffff}:${layer.alpha ?? 1}`;
-  }
-  return `i:${layer.url}:${layer.alpha ?? 1}`;
+  // layer.kind === 'svg-url'
+  return `u:${layer.url}:${layer.strokeWidth ?? 2}:${layer.color ?? 0xffffff}:${layer.alpha ?? 1}`;
 }
 
 function hashString(s: string): number {

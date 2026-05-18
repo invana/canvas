@@ -6,8 +6,8 @@
  * badge is just a shape under the hood (registered with id
  * `${hostId}:${slot}`), it picks up every existing capability for free:
  * any registered shape kind as a plate, any `ShapeFillLayer` as content
- * (solid / image / glyph / text / svg / image-inset / svg-url), and any
- * registered decoration via `setDecoration` on the badge id.
+ * (solid / image / glyph / svg / svg-url), and any registered decoration
+ * via `setDecoration` on the badge id.
  *
  * See `badges-plan.md` at the repo root for the full design rationale.
  */

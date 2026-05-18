@@ -13,7 +13,7 @@ import type {
 /**
  * Filled / stroked circle. Centered at `(spec.x, spec.y)`; the silhouette
  * is traced in shape-local space (origin at the center). Inset-content fill
- * layers (glyph / svg / image-inset) are mounted as sibling Containers by
+ * layers (glyph / svg / svg-url) are mounted as sibling Containers by
  * `ShapeBase` — they appear centred (or anchored) inside the circle.
  */
 export class CircleShape extends ShapeBase<CircleSpec> {

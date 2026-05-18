@@ -906,8 +906,8 @@ export class PrimitivesRenderer {
    * Attach a badge to a host shape. The badge is registered as a real shape
    * under id `` `${hostId}:${slot}` `` so it inherits every shape capability —
    * any registered shape kind as the plate, any `ShapeFillLayer` as content
-   * (solid / image / glyph / text / svg / image-inset / svg-url), and any
-   * registered decoration via the `decorations` field.
+   * (solid / image / glyph / svg / svg-url), and any registered decoration
+   * via the `decorations` field.
    *
    * On `updateShape(hostId, …)` every attached badge re-anchors automatically.
    * On `removeShape(hostId)` every attached badge is removed first.

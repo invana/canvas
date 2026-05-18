@@ -16,10 +16,11 @@ type Story = StoryObj;
 
 /**
  * Demonstrates the engine's `kind: 'image'` silhouette-filler — a raster
- * image fills the **entire silhouette**. The `fit` option (`fill` / `cover`
- * / `contain` / `none` / `tile`) controls how the texture maps onto the
- * silhouette. For a *small* raster centred inside a plate, see the
- * `image-inset` story instead.
+ * image cover-fitted into the **entire silhouette** (uniform scale, may
+ * crop on the cross-axis). The engine does not expose CSS-style
+ * `background-size` / `background-repeat` knobs; for a small vector
+ * inset (badge, logo glyph) reach for `kind: 'glyph'` / `kind: 'svg'`
+ * instead and compose via layered fill (see `Canvas/Shapes/Fill/Layered`).
  */
 export const Image: Story = {
   render: () => createContainer({ id: 'cvs-prim-fill-image' }),
@@ -53,14 +54,12 @@ export const Image: Story = {
     };
     const settings = {
       sample: 'avatar' as keyof typeof samples,
-      fit: 'cover' as 'fill' | 'cover' | 'contain' | 'none' | 'tile',
       alpha: 1,
     };
 
     const buildFill = (): ShapeFillLayer => ({
       kind: 'image',
       url: samples[settings.sample],
-      fit: settings.fit,
       alpha: settings.alpha,
     });
 
@@ -81,7 +80,6 @@ export const Image: Story = {
     onStoryTeardown(() => gui.destroy());
     const repaint = () => layer.renderer.updateShape('img', { fill: buildFill() });
     gui.add(settings, 'sample', Object.keys(samples)).onChange(repaint);
-    gui.add(settings, 'fit', ['fill', 'cover', 'contain', 'none', 'tile']).onChange(repaint);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(repaint);
   },
 };

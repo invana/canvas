@@ -17,15 +17,15 @@ type Story = StoryObj;
 /**
  * Demonstrates **layered fills** — `fill` accepts an array of layers,
  * painted bottom-up. Silhouette-filler layers (`solid`, `image`) stack
- * via alpha; inset-content layers (`glyph`, `svg`, `image-inset`,
- * `svg-url`) sit on top of the silhouette as Pixi children.
+ * via alpha; inset-content layers (`glyph`, `svg`, `svg-url`) sit on top
+ * of the silhouette as Pixi children.
  *
  * The dropdown swaps among preset combinations the previous single-fill
  * model couldn't express:
  *
  * - `plateAndGlyph` — `[solid, glyph]` (icon on coloured plate).
  * - `photoAndBadge` — `[image, glyph]` (photo silhouette + corner glyph).
- * - `plateAndLogoAndBadge` — `[solid, image-inset, glyph]` (three layers).
+ * - `plateAndSvgAndBadge` — `[solid, svg, glyph]` (three layers).
  * - `twoSolidsStacked` — `[solid, solid(alpha)]` (alpha-blended plates).
  * - `plateAndSvg` — `[solid, svg]` (literal path-d on plate).
  */
@@ -60,12 +60,19 @@ export const Layered: Story = {
         { kind: 'glyph', char: '★', fontFamily: 'sans-serif', color: 0xffffff, sizeRatio: 0.55 },
       ],
       photoAndBadge: [
-        { kind: 'image', url: 'https://picsum.photos/seed/canvas-layered-photo/256/256', fit: 'cover' },
+        { kind: 'image', url: 'https://picsum.photos/seed/canvas-layered-photo/256/256' },
         { kind: 'glyph', char: '✓', fontFamily: 'sans-serif', color: 0x10b981, sizeRatio: 0.28, anchor: 'top-right' },
       ],
-      plateAndLogoAndBadge: [
+      plateAndSvgAndBadge: [
         { kind: 'solid', color: 0x18181b },
-        { kind: 'image-inset', url: 'https://picsum.photos/seed/canvas-layered-logo/96/96', sizeRatio: 0.55 },
+        {
+          kind: 'svg',
+          pathD: 'M12 2 L15 9 L22 9 L17 14 L19 21 L12 17 L5 21 L7 14 L2 9 L9 9 Z',
+          viewBox: { width: 24, height: 24 },
+          strokeWidth: 2,
+          color: 0xfbbf24,
+          sizeRatio: 0.55,
+        },
         { kind: 'glyph', char: '⚡', fontFamily: 'sans-serif', color: 0xfbbf24, sizeRatio: 0.25, anchor: 'top-right' },
       ],
       twoSolidsStacked: [

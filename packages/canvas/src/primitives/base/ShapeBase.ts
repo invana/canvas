@@ -28,8 +28,8 @@ import {
  *   - `bodyGfx`     — Graphics drawing the silhouette + silhouette-filler
  *                     fill layers (`solid` / `image`) + border.
  *   - inset views   — sibling Containers, one per inset-content fill layer
- *                     (`glyph` / `svg` / `image-inset`), keyed by layer
- *                     index in `spec.fill`.
+ *                     (`glyph` / `svg` / `svg-url`), keyed by layer index
+ *                     in `spec.fill`.
  *
  * Decorations operate against `paintInto` — a callback into the silhouette
  * only, never into inset content. This means a glow on a shape with an icon
@@ -159,9 +159,9 @@ export abstract class ShapeBase<TSpec extends BaseShapeSpec>
   }
 
   /**
-   * Diff the spec's inset-content fill layers (`glyph` / `svg` /
-   * `image-inset`) against the current `insetViews` map, keyed by layer
-   * index. Mounts new layers, updates existing ones, destroys removed ones.
+   * Diff the spec's inset-content fill layers (`glyph` / `svg` / `svg-url`)
+   * against the current `insetViews` map, keyed by layer index. Mounts new
+   * layers, updates existing ones, destroys removed ones.
    */
   private syncInsetLayers(spec: TSpec): void {
     const layers = insetLayersByIndex(spec.fill);
@@ -172,9 +172,9 @@ export abstract class ShapeBase<TSpec extends BaseShapeSpec>
     for (const [index, layer] of layers) {
       const existing = this.insetViews.get(index);
       if (existing) {
-        updateInsetContent(existing, layer, bounds, this.host, centre);
+        updateInsetContent(existing, layer, bounds, centre);
       } else {
-        const view = mountInsetContent(this.gfx, layer, bounds, this.host, centre);
+        const view = mountInsetContent(this.gfx, layer, bounds, centre);
         this.insetViews.set(index, view);
       }
     }

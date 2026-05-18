@@ -137,7 +137,6 @@ export const AllShapes: Story = {
       showImage: true,
       imagePreset: 'forest' as keyof typeof IMAGE_PRESETS,
       imageUrl: IMAGE_PRESETS.forest as string,
-      imageFit: 'cover' as 'fill' | 'cover' | 'contain' | 'none' | 'tile',
       imageAlpha: 0.6,
       strokeColor: '#0f172a',
       strokeWidth: 2,
@@ -169,7 +168,6 @@ export const AllShapes: Story = {
         layers.push({
           kind: 'image',
           url: settings.imageUrl,
-          fit: settings.imageFit,
           alpha: settings.imageAlpha,
         });
       }
@@ -245,7 +243,6 @@ export const AllShapes: Story = {
       applyToAllShapes();
     });
     const imageUrlCtrl = fillFolder.add(settings, 'imageUrl').name('image url').onChange(applyToAllShapes);
-    fillFolder.add(settings, 'imageFit', ['fill', 'cover', 'contain', 'none', 'tile']).name('image fit').onChange(applyToAllShapes);
     fillFolder.add(settings, 'imageAlpha', 0, 1, 0.01).name('image alpha').onChange(applyToAllShapes);
 
     const strokeFolder = gui.addFolder('Stroke');
