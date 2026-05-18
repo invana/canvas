@@ -8,13 +8,20 @@
  *
  * Layered fills: `spec.fill` may be a single layer or an array. This module
  * iterates only **silhouette-filler** layer kinds — `solid` and `image` —
- * painting each into the silhouette via `g.fill()`. Image layers always
- * paint with CSS-`cover` semantics (uniform scale, may crop). Multiple
- * silhouette layers are supported — each is re-traced before painting
- * (Pixi's `fill` consumes the most recent path). **Inset-content** layers
- * (`glyph`, `svg`, `svg-url`) are handled separately by
- * `ShapeBase.syncInsetLayers` / `insetContentLayer.ts` — they're skipped
- * here.
+ * painting each into the silhouette via `g.fill()`. Image layers honour
+ * two CSS-aligned knobs: `fit` (`'cover'` default, or `'contain'`) and
+ * `padding` (pixel inset on the silhouette for *this layer only*, so the
+ * gap between the full silhouette and the inset silhouette paints from
+ * the layer underneath — typically a `solid` plate). The `retrace`
+ * callback supplied by the shape accepts the requested inset and
+ * re-traces its silhouette accordingly; every built-in shape's
+ * `drawGeometry` already honours `style.inset`, so per-layer padding
+ * works uniformly across `circle` / `rect` / `polygon` / `regular-polygon`
+ * / `star` / `arc`. Multiple silhouette layers are supported — each is
+ * re-traced before painting (Pixi's `fill` consumes the most recent
+ * path). **Inset-content** layers (`glyph`, `svg`, `svg-url`) are handled
+ * separately by `ShapeBase.syncInsetLayers` / `insetContentLayer.ts` —
+ * they're skipped here.
  */
 
 import { Matrix, type Graphics, type Texture } from 'pixi.js';
@@ -36,7 +43,7 @@ export function applyFill(
   style: ShapePaintStyle | undefined,
   host: ShapeHostInfo,
   bounds: Rect,
-  retrace: () => void,
+  retrace: (inset?: number) => void,
 ): void {
   if (style) {
     if (style.fill === false) return;
@@ -49,8 +56,14 @@ export function applyFill(
 
   const layers = silhouetteLayersOf(spec.fill);
   for (let i = 0; i < layers.length; i++) {
-    if (i > 0) retrace();
-    paintSilhouetteLayer(g, layers[i]!, host, bounds);
+    const layer = layers[i]!;
+    const inset = layerInset(layer);
+    // Retrace when we're past the first layer (its silhouette was already
+    // consumed) or when this layer wants a non-zero inset (the pre-applyFill
+    // trace is at inset 0). Otherwise the first layer can reuse the trace
+    // the shape made before calling applyFill.
+    if (i > 0 || inset > 0) retrace(inset);
+    paintSilhouetteLayer(g, layer, host, insetBounds(bounds, inset));
   }
 }
 
@@ -156,33 +169,80 @@ function paintSilhouetteLayer(
       });
     return;
   }
-  const matrix = coverFitMatrix(tex, bounds);
+  // Force clamp-to-edge on the texture's sampler so UV outside [0, 1]
+  // reads the boundary pixel instead of tiling. Pixi v8 reads the wrap
+  // mode from `source.style.addressModeU` / `addressModeV`; assignment
+  // alone is not enough — `TextureStyle` caches the GPU sampler resource
+  // ID on `_sharedResourceId`, and reuses the previously-built sampler
+  // (default `'repeat'`) until `style.update()` invalidates the cache
+  // and re-emits `'change'`. Without the explicit `update()` you see
+  // tiled copies of the texture across the silhouette for `fit:
+  // 'contain'` (and any other case where the matrix maps UV outside
+  // [0, 1]). For PNG sources with transparent edges, clamp-to-edge
+  // yields a transparent margin (the underlying `bgFill` reads
+  // through); for opaque sources it smears the edge pixel as a
+  // 1px-stretched border.
+  const style = tex.source.style;
+  if (style.addressModeU !== 'clamp-to-edge' || style.addressModeV !== 'clamp-to-edge') {
+    style.addressMode = 'clamp-to-edge';
+    style.update();
+  }
+  const matrix = textureFitMatrix(layer.fit ?? 'cover', tex, bounds);
   // `textureSpace: 'global'` — interpret our `matrix` as texture→world
   // (forward mapping) without Pixi's default local-bounds auto-fit. Without
   // this, Pixi pre-normalises UV to the shape's bounds and our custom
-  // scaling stacks on top of the already-fitted UV, which then tiles via
-  // Pixi's auto-enabled `addressMode: 'repeat'` once UV crosses [0, 1].
+  // scaling stacks on top of the already-fitted UV.
   g.fill({ texture: tex, alpha: layer.alpha ?? 1, matrix, textureSpace: 'global' });
 }
 
 /**
- * Forward texture→world matrix that cover-fits `tex` to `bounds` — uniform
- * scale `max(bounds.w / tex.w, bounds.h / tex.h)`, then centre on the
- * cross-axis. With `textureSpace: 'global'` on the `fill` call, Pixi
+ * Forward texture→world matrix sizing `tex` into `bounds` per the chosen
+ * fit mode. Uniform scale either way; the only difference is `max(...)` vs
+ * `min(...)` for the cover-vs-contain decision. The result is centred on
+ * the cross-axis. With `textureSpace: 'global'` on the `fill` call, Pixi
  * inverts this and uses it directly for the UV-from-position transform.
- * Cover is the only fit mode the engine offers for image fills — the
- * texture fully covers the silhouette (may crop on the cross-axis, never
- * letterboxes).
+ *
+ *   - `'cover'`   — texture fully covers `bounds`; may crop on the
+ *                   cross-axis but never leaves transparent edges.
+ *   - `'contain'` — texture fully fits inside `bounds`; may letterbox.
+ *                   The letterbox area still samples the texture, but
+ *                   sits outside [0,1] UV → tiles via Pixi's repeat
+ *                   addressMode. For a clean transparent letterbox,
+ *                   pair the image layer with `padding > 0` so the
+ *                   silhouette is shrunk to match the texture's
+ *                   aspect-fit rect.
  */
-function coverFitMatrix(tex: Texture, bounds: Rect): Matrix {
+function textureFitMatrix(
+  fit: 'cover' | 'contain',
+  tex: Texture,
+  bounds: Rect,
+): Matrix {
   const tw = tex.width || 1;
   const th = tex.height || 1;
-  const s = Math.max(bounds.width / tw, bounds.height / th);
+  const sx = bounds.width / tw;
+  const sy = bounds.height / th;
+  const s = fit === 'cover' ? Math.max(sx, sy) : Math.min(sx, sy);
   const mappedW = tw * s;
   const mappedH = th * s;
   const tx = bounds.x + (bounds.width - mappedW) / 2;
   const ty = bounds.y + (bounds.height - mappedH) / 2;
   return new Matrix().set(s, 0, 0, s, tx, ty);
+}
+
+function layerInset(
+  layer: SilhouetteLayer | { kind: 'shorthand'; color: number },
+): number {
+  return layer.kind === 'image' ? layer.padding ?? 0 : 0;
+}
+
+function insetBounds(bounds: Rect, inset: number): Rect {
+  if (inset <= 0) return bounds;
+  return {
+    x: bounds.x + inset,
+    y: bounds.y + inset,
+    width: Math.max(0, bounds.width - inset * 2),
+    height: Math.max(0, bounds.height - inset * 2),
+  };
 }
 
 function alignmentFor(a: ShapeStroke['alignment']): number {

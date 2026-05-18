@@ -25,7 +25,8 @@ export class CircleShape extends ShapeBase<CircleSpec> {
   }
 
   protected drawGeometry(g: Graphics, spec: CircleSpec, style?: ShapePaintStyle): void {
-    const r = Math.max(0, spec.radius - (style?.inset ?? 0));
+    const baseInset = style?.inset ?? 0;
+    const r = Math.max(0, spec.radius - baseInset);
 
     if (style?.dashArray) {
       emitDashedStroke(g, sampleCircleOutline(r), {
@@ -46,8 +47,11 @@ export class CircleShape extends ShapeBase<CircleSpec> {
     // We trace through `regularPoly` with a floor of 32 sides, which is
     // visually indistinguishable from a true circle at any reasonable
     // effective size while staying cheap on the vertex budget.
-    const segments = Math.max(32, Math.ceil((Math.PI * 2 * r) / 4));
-    const trace = () => g.regularPoly(0, 0, r, segments);
+    const trace = (extra = 0) => {
+      const rr = Math.max(0, spec.radius - baseInset - extra);
+      const segments = Math.max(32, Math.ceil((Math.PI * 2 * rr) / 4));
+      g.regularPoly(0, 0, rr, segments);
+    };
     trace();
     applyFill(g, spec, style, this.host, this.bounds(), trace);
     trace();

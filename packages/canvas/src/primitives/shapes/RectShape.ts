@@ -25,13 +25,13 @@ export class RectShape extends ShapeBase<RectSpec> {
   }
 
   protected drawGeometry(g: Graphics, spec: RectSpec, style?: ShapePaintStyle): void {
-    const inset = style?.inset ?? 0;
-    const w = Math.max(0, spec.width - inset * 2);
-    const h = Math.max(0, spec.height - inset * 2);
-    const cr = Math.max(0, (spec.cornerRadius ?? 0) - inset);
+    const baseInset = style?.inset ?? 0;
+    const w0 = Math.max(0, spec.width - baseInset * 2);
+    const h0 = Math.max(0, spec.height - baseInset * 2);
+    const cr0 = Math.max(0, (spec.cornerRadius ?? 0) - baseInset);
 
     if (style?.dashArray) {
-      emitDashedStroke(g, sampleRectOutline(inset, inset, w, h, cr), {
+      emitDashedStroke(g, sampleRectOutline(baseInset, baseInset, w0, h0, cr0), {
         color: style.color ?? 0x000000,
         alpha: style.alpha ?? 1,
         width: style.strokeWidth ?? 1,
@@ -42,9 +42,13 @@ export class RectShape extends ShapeBase<RectSpec> {
       return;
     }
 
-    const trace = () => {
-      if (cr > 0) g.roundRect(inset, inset, w, h, cr);
-      else g.rect(inset, inset, w, h);
+    const trace = (extra = 0) => {
+      const i = baseInset + extra;
+      const w = Math.max(0, spec.width - i * 2);
+      const h = Math.max(0, spec.height - i * 2);
+      const cr = Math.max(0, (spec.cornerRadius ?? 0) - i);
+      if (cr > 0) g.roundRect(i, i, w, h, cr);
+      else g.rect(i, i, w, h);
     };
     trace();
     applyFill(g, spec, style, this.host, this.bounds(), trace);

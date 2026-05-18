@@ -43,6 +43,8 @@ export const Jpeg: Story = {
     const settings = {
       image: 'square' as keyof typeof IMAGES,
       alpha: 1,
+      fit: 'cover' as 'cover' | 'contain',
+      padding: 0,
       bgFill: 0x6366f1,
     };
 
@@ -90,6 +92,8 @@ export const Jpeg: Story = {
             image: () => ({
               url: IMAGES[settings.image]!,
               alpha: settings.alpha,
+              fit: settings.fit,
+              padding: settings.padding,
             }),
             labelText: (n) => n.type ?? '?',
             labelFontSize: 12,
@@ -119,6 +123,8 @@ export const Jpeg: Story = {
     const gui = new GUI({ title: 'JPEG image' });
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'image', Object.keys(IMAGES)).onChange(rerenderAll);
+    gui.add(settings, 'fit', ['cover', 'contain']).onChange(rerenderAll);
+    gui.add(settings, 'padding', 0, 30, 1).onChange(rerenderAll);
     gui.add(settings, 'alpha', 0, 1, 0.05).onChange(rerenderAll);
     gui.addColor(settings, 'bgFill').name('bg fill').onChange(rerenderAll);
   },

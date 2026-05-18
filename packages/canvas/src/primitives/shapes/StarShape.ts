@@ -34,7 +34,8 @@ export class StarShape extends ShapeBase<StarSpec> {
   }
 
   protected drawGeometry(g: Graphics, spec: StarSpec, style?: ShapePaintStyle): void {
-    const verts = computeVertices(spec, style?.inset ?? 0);
+    const baseInset = style?.inset ?? 0;
+    const verts = computeVertices(spec, baseInset);
     if (verts.length < 3) return;
 
     if (style?.dashArray) {
@@ -49,7 +50,10 @@ export class StarShape extends ShapeBase<StarSpec> {
       return;
     }
 
-    const trace = () => tracePolygon(g, verts);
+    const trace = (extra = 0) => {
+      const v = extra > 0 ? computeVertices(spec, baseInset + extra) : verts;
+      if (v.length >= 3) tracePolygon(g, v);
+    };
     trace();
     applyFill(g, spec, style, this.host, this.bounds(), trace);
     trace();

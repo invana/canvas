@@ -31,7 +31,8 @@ export class PolygonShape extends ShapeBase<PolygonSpec> {
   }
 
   protected drawGeometry(g: Graphics, spec: PolygonSpec, style?: ShapePaintStyle): void {
-    const verts = resolveVertices(spec.vertices, style?.inset ?? 0);
+    const baseInset = style?.inset ?? 0;
+    const verts = resolveVertices(spec.vertices, baseInset);
     if (verts.length < 3) return;
 
     if (style?.dashArray) {
@@ -46,7 +47,10 @@ export class PolygonShape extends ShapeBase<PolygonSpec> {
       return;
     }
 
-    const trace = () => tracePolygon(g, verts);
+    const trace = (extra = 0) => {
+      const v = extra > 0 ? resolveVertices(spec.vertices, baseInset + extra) : verts;
+      if (v.length >= 3) tracePolygon(g, v);
+    };
     trace();
     applyFill(g, spec, style, this.host, this.bounds(), trace);
     trace();

@@ -531,6 +531,8 @@ export class GraphLayer extends WorldLayer<
           kind: 'image',
           url: img.url,
           ...(img.alpha !== undefined ? { alpha: img.alpha } : {}),
+          ...(img.fit !== undefined ? { fit: img.fit } : {}),
+          ...(img.padding !== undefined ? { padding: img.padding } : {}),
         });
       }
       if (style.icon !== undefined) {

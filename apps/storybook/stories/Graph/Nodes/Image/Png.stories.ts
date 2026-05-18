@@ -33,19 +33,21 @@ export const Png: Story = {
       { id: 'polygon',         type: 'polygon',         position: { x: 280,  y: 150 } },
     ];
 
-    // Three Wikimedia thumbnails of SVG-source logos rendered to PNG.
-    // Wikimedia's thumbnailer preserves alpha, the URLs are stable and
-    // CORS-friendly, and the aspect-ratio spread (square / wide / square)
-    // makes silhouette cover-cropping visible.
+    // Three twemoji glyphs hosted on jsDelivr (pinned to v15.1.0 for
+    // stability). The 72x72 PNGs have transparent backgrounds — the
+    // surrounding negative space within each silhouette reveals the
+    // underlying `bgFill` solid layer.
     const IMAGES: Record<string, string> = {
-      'js':    'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Unofficial_JavaScript_logo_2.svg/200px-Unofficial_JavaScript_logo_2.svg.png',
-      'html5': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/HTML5_logo_and_wordmark.svg/300px-HTML5_logo_and_wordmark.svg.png',
-      'ts':    'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Typescript_logo_2020.svg/200px-Typescript_logo_2020.svg.png',
+      'rocket':    'https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f680.png',
+      'star':      'https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f31f.png',
+      'lightbulb': 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f4a1.png',
     };
 
     const settings = {
-      image: 'js' as keyof typeof IMAGES,
+      image: 'rocket' as keyof typeof IMAGES,
       alpha: 1,
+      fit: 'cover' as 'cover' | 'contain',
+      padding: 10,
       bgFill: 0x6366f1,
     };
 
@@ -93,6 +95,8 @@ export const Png: Story = {
             image: () => ({
               url: IMAGES[settings.image]!,
               alpha: settings.alpha,
+              fit: settings.fit,
+              padding: settings.padding,
             }),
             labelText: (n) => n.type ?? '?',
             labelFontSize: 12,
@@ -122,6 +126,8 @@ export const Png: Story = {
     const gui = new GUI({ title: 'PNG (transparent)' });
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'image', Object.keys(IMAGES)).onChange(rerenderAll);
+    gui.add(settings, 'fit', ['cover', 'contain']).onChange(rerenderAll);
+    gui.add(settings, 'padding', 0, 30, 1).onChange(rerenderAll);
     gui.add(settings, 'alpha', 0, 1, 0.05).onChange(rerenderAll);
     gui.addColor(settings, 'bgFill').name('bg fill').onChange(rerenderAll);
   },

@@ -42,16 +42,17 @@ export class ArcShape extends ShapeBase<ArcSpec> {
   }
 
   protected drawGeometry(g: Graphics, spec: ArcSpec, style?: ShapePaintStyle): void {
-    const inset = style?.inset ?? 0;
+    const baseInset = style?.inset ?? 0;
     // Inset shrinks the silhouette uniformly along its inward normal — for an
     // annular sector that means growing the inner radius and shrinking the
     // outer. The angle endpoints don't move; the wedge gets narrower radially.
-    const innerR = Math.max(0, spec.innerR + inset);
-    const outerR = Math.max(innerR, spec.outerR - inset);
-    if (outerR <= 0 || spec.endAngle <= spec.startAngle) return;
+    if (spec.endAngle <= spec.startAngle) return;
+    const innerR0 = Math.max(0, spec.innerR + baseInset);
+    const outerR0 = Math.max(innerR0, spec.outerR - baseInset);
+    if (outerR0 <= 0) return;
 
     if (style?.dashArray) {
-      emitDashedStroke(g, sampleArcOutline(innerR, outerR, spec.startAngle, spec.endAngle), {
+      emitDashedStroke(g, sampleArcOutline(innerR0, outerR0, spec.startAngle, spec.endAngle), {
         color: style.color ?? 0x000000,
         alpha: style.alpha ?? 1,
         width: style.strokeWidth ?? 1,
@@ -62,7 +63,13 @@ export class ArcShape extends ShapeBase<ArcSpec> {
       return;
     }
 
-    const trace = (): void => traceArc(g, innerR, outerR, spec.startAngle, spec.endAngle);
+    const trace = (extra = 0): void => {
+      const i = baseInset + extra;
+      const inner = Math.max(0, spec.innerR + i);
+      const outer = Math.max(inner, spec.outerR - i);
+      if (outer <= 0) return;
+      traceArc(g, inner, outer, spec.startAngle, spec.endAngle);
+    };
     trace();
     applyFill(g, spec, style, this.host, this.bounds(), trace);
     trace();

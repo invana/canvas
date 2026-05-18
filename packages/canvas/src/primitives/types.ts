@@ -181,18 +181,36 @@ export type ShapeFillLayer =
   | { readonly kind: 'solid'; readonly color: number; readonly alpha?: number }
   | {
       /**
-       * Raster image painted into the host silhouette. The texture is
-       * uniformly scaled to fully cover the shape's bounds (CSS `cover`
-       * semantics) and centred — may crop on the cross-axis but never
-       * letterboxes. Aspect-controlled sizing, tile patterns, and
-       * inset/badge raster placement aren't part of the engine surface;
-       * stack a `glyph` / `svg` / `svg-url` layer for icon-shaped
-       * content, or pre-process the texture if the consumer needs a
-       * specific framing.
+       * Raster image painted into the host silhouette.
+       *
+       * Two orthogonal knobs control sizing:
+       *
+       * - `fit` (default `'cover'`) — how the texture's aspect maps to
+       *   the silhouette's AABB. `'cover'` scales by `max(...)`, fully
+       *   covers, may crop on the cross-axis. `'contain'` scales by
+       *   `min(...)`, fully fits, leaves the cross-axis margin
+       *   transparent (the underlying fill layer reads through; the
+       *   engine pins the texture sampler to `clamp-to-edge` so the
+       *   margin doesn't tile).
+       *
+       * - `padding` (default `0`) — pixel inset on the silhouette
+       *   *before* fit math runs. The silhouette itself is re-traced at
+       *   that inset for this layer only, so the gap between the
+       *   full-size silhouette and the inset silhouette is painted by
+       *   layers underneath (typically a `solid` `bgFill`). Use this
+       *   when the host silhouette is more restrictive than its AABB
+       *   (circle, polygon, star, arc) and the texture corners would
+       *   otherwise clip against the curve.
+       *
+       * Tile patterns, repeat modes, and inset-Sprite badge placement
+       * aren't on the engine surface — stack a `glyph` / `svg` /
+       * `svg-url` layer for icon-shaped content.
        */
       readonly kind: 'image';
       readonly url: string;
       readonly alpha?: number;
+      readonly fit?: 'cover' | 'contain';
+      readonly padding?: number;
     }
   | {
       /** Font-rendered character (icon-font codepoint, Unicode symbol, emoji). */
