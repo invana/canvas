@@ -150,8 +150,18 @@ export class LabelDecoration extends ShapeDecorationBase<ShapeLabelStyle> {
       (placement === 'center' || placement === 'inside-center') && host.shape.visualCenter
         ? host.shape.visualCenter()
         : undefined;
+    // For outside placements (top / bottom / left / right / corners), inflate
+    // the anchor rect by the host's `outerDecorationExtent` so the label
+    // sits past the outermost ring / halo on the host instead of overlapping
+    // it. Inside placements and the centred placements operate against the
+    // raw silhouette bounds — pushing them outward would walk the label off
+    // the shape it's meant to sit inside.
+    const anchorBounds =
+      host.outerDecorationExtent > 0 && isOutsidePlacement(placement)
+        ? inflateRect(host.bounds, host.outerDecorationExtent)
+        : host.bounds;
     const { ax, ay, alignDx, alignDy } = anchorAndAlign(
-      host.bounds,
+      anchorBounds,
       placement,
       outerW,
       outerH,
@@ -274,6 +284,37 @@ function anchorAndAlign(
  */
 export function isInsidePlacement(placement: ShapeLabelPlacement): boolean {
   return placement.startsWith('inside-');
+}
+
+/**
+ * Whether `placement` anchors the label *outside* the host silhouette —
+ * one of the 8 cardinal / diagonal slots (`top`, `top-right`, `right`,
+ * `bottom-right`, `bottom`, `bottom-left`, `left`, `top-left`).
+ *
+ * `'center'` is intentionally excluded: the label sits *on* the host's
+ * geometric centre, so the host's outer decorations don't push it.
+ */
+function isOutsidePlacement(placement: ShapeLabelPlacement): boolean {
+  return (
+    placement === 'top' ||
+    placement === 'bottom' ||
+    placement === 'left' ||
+    placement === 'right' ||
+    placement === 'top-left' ||
+    placement === 'top-right' ||
+    placement === 'bottom-left' ||
+    placement === 'bottom-right'
+  );
+}
+
+/** Expand `r` by `pad` on every side. */
+function inflateRect(r: Rect, pad: number): Rect {
+  return {
+    x: r.x - pad,
+    y: r.y - pad,
+    width: r.width + pad * 2,
+    height: r.height + pad * 2,
+  };
 }
 
 /**

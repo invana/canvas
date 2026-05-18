@@ -70,4 +70,15 @@ export class RingDecoration extends ShapeDecorationBase<RingDecorationStyle> {
       ...(dashArray ? { dashArray } : {}),
     });
   }
+
+  /**
+   * Outer edge of the band: `gap` pushes the silhouette outward, then the
+   * full stroke width sits past that. Reported so `LabelDecoration` can
+   * offset outside-placement labels past the ring.
+   */
+  getOuterExtent(): number {
+    const width = this.style.width ?? 2;
+    const gap = this.style.gap ?? 4;
+    return gap + width;
+  }
 }

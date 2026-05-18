@@ -647,6 +647,25 @@ export class PrimitivesRenderer {
     return { source: src, target: tgt };
   }
 
+  /**
+   * Max resting outer extent across every shape decoration attached to
+   * `inst`. Read by `LabelDecoration` (via `ShapeDecorationHostInfo`) so
+   * outside-placement labels offset past the outermost ring / halo on the
+   * host. Decorations that don't paint past the silhouette (label,
+   * marching-ants) omit `getOuterExtent` and contribute `0`; animated
+   * transients (pulse-ring) deliberately report `0` so the label doesn't
+   * yo-yo with the pulse.
+   */
+  private aggregateShapeOuterExtent(inst: ShapeInstance): number {
+    let max = 0;
+    for (const deco of inst.decorations.values()) {
+      if (typeof deco.getOuterExtent !== 'function') continue;
+      const v = deco.getOuterExtent();
+      if (v > max) max = v;
+    }
+    return max;
+  }
+
   removeConnector(id: string): void {
     const inst = this.connectorInstances.get(id);
     if (!inst) return;
@@ -685,6 +704,10 @@ export class PrimitivesRenderer {
       // Removing a decoration may shrink the aggregated padding for the
       // connector — re-route + redraw on the new (less-trimmed) path.
       if (connector) this.recomputeConnectorPath(connector);
+      // Shape analogue: dropping a ring / halo shrinks the aggregated outer
+      // extent, so any LabelDecoration on the same host needs to re-flow
+      // back toward the silhouette.
+      if (shape) this.refreshShapeDecorations(shape);
       return;
     }
 
@@ -706,6 +729,11 @@ export class PrimitivesRenderer {
       const ctor = entry.ctor as ShapeDecorationCtor;
       const deco = new ctor(decoration.style);
       shape.shape.gfx.sortableChildren = true;
+      // Aggregate must include the new decoration's contribution — set it
+      // into the map first so `aggregateShapeOuterExtent` picks it up, then
+      // mount.
+      decorations.set(slot, deco);
+      const outerDecorationExtent = this.aggregateShapeOuterExtent(shape);
       const host: ShapeDecorationHostInfo = {
         hostId: targetId,
         slot,
@@ -713,14 +741,18 @@ export class PrimitivesRenderer {
         bounds: shape.shape.bounds(),
         surface: shape.shape.gfx,
         shape: shape.shape,
+        outerDecorationExtent,
       };
       deco.mount(host);
-      decorations.set(slot, deco);
       if (typeof deco.tick === 'function') {
         this.animated.add(deco as AnimatedDecoration);
       }
       if (decoHasSetResolution(deco)) this.labelBearingDecorations.add(deco);
       this.applyTrackedLabelResolution(deco);
+      // Refresh siblings so any LabelDecoration on this host re-flows past
+      // the new ring / halo. Skip the just-mounted decoration — we already
+      // gave it the up-to-date aggregate above.
+      this.refreshShapeDecorations(shape, deco);
     } else {
       const ctor = entry.ctor as ConnectorDecorationCtor;
       const deco = new ctor(decoration.style);
@@ -1663,9 +1695,14 @@ export class PrimitivesRenderer {
     );
   }
 
-  private refreshShapeDecorations(inst: ShapeInstance): void {
+  private refreshShapeDecorations(
+    inst: ShapeInstance,
+    skip?: IDecorationBase<ShapeDecorationHostInfo>,
+  ): void {
     const bounds = inst.shape.bounds();
+    const outerDecorationExtent = this.aggregateShapeOuterExtent(inst);
     for (const [slot, deco] of inst.decorations) {
+      if (deco === skip) continue;
       if (!deco.update) continue;
       const host: ShapeDecorationHostInfo = {
         hostId: inst.id,
@@ -1674,6 +1711,7 @@ export class PrimitivesRenderer {
         bounds,
         surface: inst.shape.gfx,
         shape: inst.shape,
+        outerDecorationExtent,
       };
       deco.update(host);
     }

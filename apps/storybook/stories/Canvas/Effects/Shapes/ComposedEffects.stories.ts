@@ -97,7 +97,7 @@ export const ComposedEffects: Story = {
         ? {
             kind: 'glow' as const,
             style: {
-              color: 0xfb923c, radius: 20, layers: 8, innerAlpha: 0.6,
+              color: 0xfb923c, strokeWidth: 20, layers: 8, innerAlpha: 0.6,
               pulse: { periodMs: 1200, amplitude: 0.5 },
             },
           }

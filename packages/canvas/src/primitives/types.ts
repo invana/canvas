@@ -588,6 +588,19 @@ export interface ShapeDecorationHostInfo {
   readonly surface: Container;
   /** The host shape itself — decorations call `shape.paintInto(...)`. */
   readonly shape: IShape;
+  /**
+   * Max resting outer extent across every decoration attached to this host
+   * (including this one — but most decorations contribute `0`, so it acts
+   * like a sibling max in practice). Aggregated from each decoration's
+   * `getOuterExtent()` by the renderer. The `LabelDecoration` reads this
+   * to push outside-placement labels past the outermost ring / halo so
+   * they don't collide.
+   *
+   * Animated transients (pulse-ring, ripple) contribute `0` by design —
+   * labels stay anchored to the resting silhouette rather than tracking
+   * the peak of an animation.
+   */
+  readonly outerDecorationExtent: number;
 }
 
 /**
@@ -756,6 +769,20 @@ export interface IDecorationBase<THostInfo, TStyle = unknown> {
    * (e.g. marching-ants strokes the line at the host's width).
    */
   getEndPadding?(): { readonly source: number; readonly target: number };
+  /**
+   * Shape-only: declare how many pixels past the host silhouette this
+   * decoration paints **at rest**. The renderer aggregates the max across
+   * sibling decorations and threads it through `ShapeDecorationHostInfo`
+   * so the `LabelDecoration` can push outside-placement labels past the
+   * outermost ring / halo instead of overlapping them.
+   *
+   * Return the resting (non-animated) outer edge — a `pulse-ring` whose
+   * radius oscillates 0 → 24 → 0 should still report `0`, otherwise the
+   * label would yo-yo with the pulse. Static decorations that overlay
+   * the host silhouette directly (`marching-ants`, the label itself)
+   * also return `0`. Omit entirely when irrelevant.
+   */
+  getOuterExtent?(): number;
 }
 
 export type IShapeDecoration<TStyle = unknown> = IDecorationBase<ShapeDecorationHostInfo, TStyle>;

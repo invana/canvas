@@ -250,7 +250,7 @@ renderer.setBadge('node-a', 'count', {
   offsetX: 2,
   offsetY: -2,
   decorations: {
-    label: { kind: 'glow', style: { color: 0xfca5a5, radius: 6 } },
+    label: { kind: 'glow', style: { color: 0xfca5a5, strokeWidth: 6 } },
   },
 });
 

@@ -67,7 +67,7 @@ export const Glow: Story = {
     const settings = {
       fillColor: 0x4f9cf9,
       color: 0xfb923c,
-      radius: 40,
+      strokeWidth: 40,
       layers: 8,
       innerAlpha: 0.55,
       pulseEnabled: true,
@@ -84,7 +84,7 @@ export const Glow: Story = {
     const apply = () => {
       const style = {
         color: settings.color,
-        radius: settings.radius,
+        strokeWidth: settings.strokeWidth,
         layers: settings.layers,
         innerAlpha: settings.innerAlpha,
         ...(settings.pulseEnabled
@@ -101,7 +101,7 @@ export const Glow: Story = {
     onStoryTeardown(() => gui.destroy());
     gui.addColor(settings, 'fillColor').name('shape fill').onChange(applyFill);
     gui.addColor(settings, 'color').onChange(apply);
-    gui.add(settings, 'radius', 2, 60, 1).onChange(apply);
+    gui.add(settings, 'strokeWidth', 2, 60, 1).onChange(apply);
     gui.add(settings, 'layers', 1, 16, 1).onChange(apply);
     gui.add(settings, 'innerAlpha', 0, 1, 0.05).onChange(apply);
     const pulse = gui.addFolder('pulse');

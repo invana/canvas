@@ -131,7 +131,7 @@ export const Badges: Story = {
         offsetX: 8,
         offsetY: 8,
         decorations: {
-          glow: { kind: 'glow', style: { color: 0xf2c14e, radius: 14, layers: 6, innerAlpha: 0.6 } },
+          glow: { kind: 'glow', style: { color: 0xf2c14e, strokeWidth: 14, layers: 6, innerAlpha: 0.6 } },
           label: {
             kind: 'label',
             style: {

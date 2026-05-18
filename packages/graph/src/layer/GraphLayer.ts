@@ -462,7 +462,7 @@ export class GraphLayer extends WorldLayer<
    */
   private nodeSpec(node: GraphNode): CircleSpec | RectSpec | ArcSpec {
     const style = this.resolveNodeStyle(node);
-    const shape: NodeShapeOptions = style.shape ?? { kind: 'circle', radius: 16 };
+    const shape: NodeShapeOptions = style.shape ?? { kind: 'circle', radius: 10 };
     const pos = node.position ?? { x: 0, y: 0 };
 
     const bgFill = style.bgFill;

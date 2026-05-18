@@ -95,7 +95,7 @@ export const Decorations: Story = {
         state: {
           active: {
             decorations: [
-              { kind: 'glow', id: 'active-glow', color: 0x10b981, radius: 14, innerAlpha: 0.7 },
+              { kind: 'glow', id: 'active-glow', color: 0x10b981, strokeWidth: 14, innerAlpha: 0.7 },
             ],
           },
         },

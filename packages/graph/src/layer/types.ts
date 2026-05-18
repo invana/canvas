@@ -731,7 +731,7 @@ export const DEFAULT_NODE_STATES: Readonly<Record<CanonicalStateName, NodeStyle>
   selected: {
     decorations: [
       { kind: 'ring', id: 'canonical-select-ring', color: 0xfacc15, width: 3, gap: 7, alpha: 1 },
-      { kind: 'glow', id: 'canonical-select-halo', color: 0xfacc15, radius: 30, innerAlpha: 0.4, layers: 4 },
+      { kind: 'glow', id: 'canonical-select-halo', color: 0xfacc15, strokeWidth: 30, innerAlpha: 0.4, layers: 4 },
     ],
   },
   highlighted: {

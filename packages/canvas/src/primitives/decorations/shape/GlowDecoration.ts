@@ -12,8 +12,18 @@ import { ShapeDecorationBase } from '../../base/ShapeDecorationBase';
  */
 export interface GlowDecorationStyle {
   readonly color: number;
-  /** Outermost glow extent, px. Default `12`. */
-  readonly radius?: number;
+  /**
+   * Outermost feather layer's stroke width, px. The outermost stroke
+   * extends this many pixels past the host silhouette (`paintInto`'s
+   * default alignment is `'outside'`), so the visual outer reach of the
+   * glow matches this value. Inner layers taper linearly to `1` px.
+   * Default `12`.
+   *
+   * Not a circle radius — the glow traces whatever silhouette the host
+   * draws (rect / polygon / star / ...). The name reflects the underlying
+   * stroke geometry, not the shape kind.
+   */
+  readonly strokeWidth?: number;
   /** Number of feather layers (more = smoother + more expensive). Default `6`. */
   readonly layers?: number;
   /** Innermost (brightest) layer alpha. Default `0.55`. */
@@ -39,7 +49,7 @@ export class GlowDecoration extends ShapeDecorationBase<GlowDecorationStyle> {
     const host = this.host;
     if (!host) return;
 
-    const radius = this.style.radius ?? 12;
+    const maxStroke = this.style.strokeWidth ?? 12;
     const layers = Math.max(1, this.style.layers ?? 6);
     const innerAlpha = this.style.innerAlpha ?? 0.55;
     const color = this.style.color;
@@ -57,7 +67,7 @@ export class GlowDecoration extends ShapeDecorationBase<GlowDecorationStyle> {
     // Outermost first (i=0), brightest last (i=layers-1).
     for (let i = 0; i < layers; i++) {
       const t = i / (layers - 1 || 1);                  // 0 (outer) .. 1 (inner)
-      const strokeWidth = radius * (1 - t) + 1;          // wide outside, thin inside
+      const strokeWidth = maxStroke * (1 - t) + 1;       // wide outside, thin inside
       const alpha = innerAlpha * (t * t);                // quadratic falloff
       const g = this.layerGfx[i]!;
       g.clear();
@@ -79,6 +89,18 @@ export class GlowDecoration extends ShapeDecorationBase<GlowDecorationStyle> {
     // Map sin from [-1, 1] to [1 - amplitude, 1].
     this.gfx.alpha = 1 - amplitude * (0.5 - 0.5 * Math.sin(phase));
     return true;
+  }
+
+  /**
+   * Outer edge of the halo — the widest stroke layer paints at roughly
+   * `strokeWidth` past the silhouette (`paintInto` defaults to `'outside'`
+   * alignment, so the full stroke sits outward). Reported so
+   * `LabelDecoration` can push outside-placement labels past the glow.
+   * The optional `pulse` only modulates alpha, not geometry, so the
+   * resting extent is the only one worth reporting.
+   */
+  getOuterExtent(): number {
+    return this.style.strokeWidth ?? 12;
   }
 
   private syncLayerCount(n: number): void {
