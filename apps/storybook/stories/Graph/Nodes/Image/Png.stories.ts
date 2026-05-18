@@ -4,23 +4,24 @@ import { GraphLayer, type NodeData, type NodeShapeOptions } from '@invana/graph'
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'Graph/Nodes/Image/Raster' };
+const meta: Meta = { title: 'Graph/Nodes/Image/Png' };
 export default meta;
 type Story = StoryObj;
 
 /**
- * `NodeStyle.image` projects 1:1 to a `kind: 'image'` `ShapeFillLayer`.
- * The texture is cover-fitted into the host silhouette (uniform scale,
- * may crop on the cross-axis); the engine does not expose CSS-style
- * `background-size` / `background-repeat` knobs on raster fills. For a
- * small vector inset (badge, icon, logo) reach for `NodeStyle.icon`
- * (`glyph` / `svg` / `svg-url`).
+ * `NodeStyle.image` with transparent PNG sources. The underlying `bgFill`
+ * (a solid silhouette layer painted before the image) shows through the
+ * PNG's transparent regions — the texture is cover-fitted into the host
+ * silhouette and Pixi blends the image's alpha against the layer
+ * beneath. Try changing `bg fill` in the GUI to see the colour read
+ * through the logo's gaps.
  *
- * 3-col × 2-row grid of every built-in shape kind; the lil-gui knobs fan
- * out to every cell via the layer-template resolver.
+ * Three Wikimedia-thumbnail logos at different aspect ratios so
+ * cover-cropping is visible per shape. The thumbnailer renders the
+ * SVG-source files to PNG preserving alpha.
  */
-export const Raster: Story = {
-  render: () => createContainer({ id: 'graph-nodes-image' }),
+export const Png: Story = {
+  render: () => createContainer({ id: 'graph-nodes-image-png' }),
 
   play: async ({ canvasElement }) => {
     const nodes: NodeData[] = [
@@ -32,17 +33,18 @@ export const Raster: Story = {
       { id: 'polygon',         type: 'polygon',         position: { x: 280,  y: 150 } },
     ];
 
-    // Three seed images at different aspect ratios so cover-cropping is
-    // visible per silhouette. Picsum is deterministic-by-seed and
-    // CORS-friendly.
+    // Three Wikimedia thumbnails of SVG-source logos rendered to PNG.
+    // Wikimedia's thumbnailer preserves alpha, the URLs are stable and
+    // CORS-friendly, and the aspect-ratio spread (square / wide / square)
+    // makes silhouette cover-cropping visible.
     const IMAGES: Record<string, string> = {
-      'square':     'https://picsum.photos/seed/canvas-square/200/200',
-      'wide':       'https://picsum.photos/seed/canvas-wide/300/120',
-      'tall':       'https://picsum.photos/seed/canvas-tall/120/300',
+      'js':    'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Unofficial_JavaScript_logo_2.svg/200px-Unofficial_JavaScript_logo_2.svg.png',
+      'html5': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/HTML5_logo_and_wordmark.svg/300px-HTML5_logo_and_wordmark.svg.png',
+      'ts':    'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Typescript_logo_2020.svg/200px-Typescript_logo_2020.svg.png',
     };
 
     const settings = {
-      image: 'square' as keyof typeof IMAGES,
+      image: 'js' as keyof typeof IMAGES,
       alpha: 1,
       bgFill: 0x6366f1,
     };
@@ -72,7 +74,7 @@ export const Raster: Story = {
       }
     };
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#graph-nodes-image')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#graph-nodes-image-png')!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
@@ -117,7 +119,7 @@ export const Raster: Story = {
       }
     };
 
-    const gui = new GUI({ title: 'Image' });
+    const gui = new GUI({ title: 'PNG (transparent)' });
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'image', Object.keys(IMAGES)).onChange(rerenderAll);
     gui.add(settings, 'alpha', 0, 1, 0.05).onChange(rerenderAll);
