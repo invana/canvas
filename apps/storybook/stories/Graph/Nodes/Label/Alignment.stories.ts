@@ -12,10 +12,10 @@ type Story = StoryObj;
  * `labelAlign` controls horizontal alignment **inside** the label's text
  * box once `wrap` has produced multiple lines — `'left' | 'center' | 'right'`.
  *
- * One node with a long label, wrap forced via `labelStyle.wrap.maxWidth`,
- * so multiple lines exist for alignment to act on. Flip the picker to
- * compare the three values; a single-line label looks identical for all
- * three because alignment only matters when there's slack.
+ * Row of six shapes, each with a long wrapped label that fans the same
+ * `align` value over every silhouette. Flip the picker to compare; a
+ * single-line label would look identical for all three values since
+ * alignment only matters when there is slack.
  */
 export const Alignment: Story = {
   render: () => createContainer({ id: 'graph-label-alignment' }),
@@ -25,12 +25,83 @@ export const Alignment: Story = {
 
     const nodes: NodeData[] = [
       {
-        id: 'n',
-        position: { x: 0, y: 0 },
+        id: 'circle',
+        position: { x: -280, y: -150 },
         style: {
+          shape: { kind: 'circle', radius: 24 },
           labelStyle: {
             content: { kind: 'text', text: LONG, fontSize: 13, fontWeight: 500, fill: 0x454545, align: 'center' },
-            wrap: { maxWidth: 180, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
+            wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
+            background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [6, 10] },
+            placement: 'bottom',
+            offset: { y: 8 },
+          },
+        },
+      },
+      {
+        id: 'rect',
+        position: { x: 0, y: -150 },
+        style: {
+          shape: { kind: 'rect', width: 56, height: 40, cornerRadius: 8 },
+          labelStyle: {
+            content: { kind: 'text', text: LONG, fontSize: 13, fontWeight: 500, fill: 0x454545, align: 'center' },
+            wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
+            background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [6, 10] },
+            placement: 'bottom',
+            offset: { y: 8 },
+          },
+        },
+      },
+      {
+        id: 'arc',
+        position: { x: 280, y: -150 },
+        style: {
+          shape: { kind: 'arc', innerR: 10, outerR: 26, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 },
+          labelStyle: {
+            content: { kind: 'text', text: LONG, fontSize: 13, fontWeight: 500, fill: 0x454545, align: 'center' },
+            wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
+            background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [6, 10] },
+            placement: 'bottom',
+            offset: { y: 8 },
+          },
+        },
+      },
+      {
+        id: 'regular-polygon',
+        position: { x: -280, y: 150 },
+        style: {
+          shape: { kind: 'regular-polygon', sides: 5, radius: 26 },
+          labelStyle: {
+            content: { kind: 'text', text: LONG, fontSize: 13, fontWeight: 500, fill: 0x454545, align: 'center' },
+            wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
+            background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [6, 10] },
+            placement: 'bottom',
+            offset: { y: 8 },
+          },
+        },
+      },
+      {
+        id: 'star',
+        position: { x: 0, y: 150 },
+        style: {
+          shape: { kind: 'star', points: 5, outerRadius: 28, innerRadius: 12 },
+          labelStyle: {
+            content: { kind: 'text', text: LONG, fontSize: 13, fontWeight: 500, fill: 0x454545, align: 'center' },
+            wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
+            background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [6, 10] },
+            placement: 'bottom',
+            offset: { y: 8 },
+          },
+        },
+      },
+      {
+        id: 'polygon',
+        position: { x: 280, y: 150 },
+        style: {
+          shape: { kind: 'polygon', vertices: [ { x: 24, y: 0 }, { x: 12, y: -21 }, { x: -12, y: -21 }, { x: -24, y: 0 }, { x: -12, y: 21 }, { x: 12, y: 21 } ] },
+          labelStyle: {
+            content: { kind: 'text', text: LONG, fontSize: 13, fontWeight: 500, fill: 0x454545, align: 'center' },
+            wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
             background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [6, 10] },
             placement: 'bottom',
             offset: { y: 8 },
@@ -50,37 +121,28 @@ export const Alignment: Story = {
       id: 'graph',
       options: {
         node: {
-          style: {
-            shape: { kind: 'circle', radius: 22 },
-            bgFill: 0xfb923c,
-            bgStrokeColor: 0xea580c,
-          },
+          style: { bgFill: 0xfb923c, bgStrokeColor: 0xea580c },
         },
       },
     });
     canvas.layers.add(graph);
     graph.setData({ nodes, edges: [] });
-    canvas.camera.fitContent(graph.getBounds(), 200);
+    canvas.camera.fitContent(graph.getBounds(), 80);
 
-    // Alignment is on `LabelContent.align` (the canvas surface). The graph
-    // adapter forwards `labelAlign` into the same field, but we drive the
-    // escape-hatch `labelStyle` here because `wrap` is required to make
-    // multi-line happen — and you can't mix flat label fields with
-    // `labelStyle` (the adapter ignores flat when `labelStyle` is set).
+    const ALL_IDS = ['circle', 'rect', 'arc', 'regular-polygon', 'star', 'polygon'];
     const settings = { align: 'center' as 'left' | 'center' | 'right' };
     const apply = (): void => {
-      const prev = (graph.store.getNode('n')?.style as NodeStyle | undefined) ?? {};
-      const prevLs = prev.labelStyle;
-      if (!prevLs || prevLs.content.kind !== 'text') return;
-      graph.store.updateNode('n', {
-        style: {
-          ...prev,
-          labelStyle: {
-            ...prevLs,
-            content: { ...prevLs.content, align: settings.align },
+      for (const id of ALL_IDS) {
+        const prev = (graph.store.getNode(id)?.style as NodeStyle | undefined) ?? {};
+        const prevLs = prev.labelStyle;
+        if (!prevLs || prevLs.content.kind !== 'text') continue;
+        graph.store.updateNode(id, {
+          style: {
+            ...prev,
+            labelStyle: { ...prevLs, content: { ...prevLs.content, align: settings.align } },
           },
-        },
-      });
+        });
+      }
     };
     const gui = new GUI({ title: 'labelAlign' });
     onStoryTeardown(() => gui.destroy());

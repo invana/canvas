@@ -11,14 +11,11 @@ type Story = StoryObj;
 
 /**
  * `wrap` controls word-wrap and truncation — `maxWidth`, `maxLines`,
- * `wordWrap`, and `overflow: 'clip' | 'ellipsis'`. Wrap config has no
- * matching flat field on `NodeStyle`, so this story uses the
- * `labelStyle` escape hatch (full `ShapeLabelStyle` payload).
+ * `wordWrap`, `overflow: 'clip' | 'ellipsis'`. Wrap config has no flat
+ * field on `NodeStyle`, so the `labelStyle` escape hatch is used here.
  *
- * One node with a long label. Sweep `maxWidth` to trigger wrap, then
- * `maxLines` + `overflow` to control truncation. `wordWrap` toggles
- * wrap entirely — when off, the label renders on one line regardless of
- * `maxWidth`.
+ * Row of six shapes; the wrap controls fan out to every label so the
+ * same wrap settings apply across every silhouette.
  */
 export const Wrap: Story = {
   render: () => createContainer({ id: 'graph-label-wrap' }),
@@ -28,9 +25,80 @@ export const Wrap: Story = {
 
     const nodes: NodeData[] = [
       {
-        id: 'n',
-        position: { x: 0, y: 0 },
+        id: 'circle',
+        position: { x: -280, y: -150 },
         style: {
+          shape: { kind: 'circle', radius: 24 },
+          labelStyle: {
+            content: { kind: 'text', text: LONG, fontSize: 13, fontWeight: 500, fill: 0x454545 },
+            wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
+            background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [6, 10] },
+            placement: 'bottom',
+            offset: { y: 8 },
+          },
+        },
+      },
+      {
+        id: 'rect',
+        position: { x: 0, y: -150 },
+        style: {
+          shape: { kind: 'rect', width: 56, height: 40, cornerRadius: 8 },
+          labelStyle: {
+            content: { kind: 'text', text: LONG, fontSize: 13, fontWeight: 500, fill: 0x454545 },
+            wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
+            background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [6, 10] },
+            placement: 'bottom',
+            offset: { y: 8 },
+          },
+        },
+      },
+      {
+        id: 'arc',
+        position: { x: 280, y: -150 },
+        style: {
+          shape: { kind: 'arc', innerR: 10, outerR: 26, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 },
+          labelStyle: {
+            content: { kind: 'text', text: LONG, fontSize: 13, fontWeight: 500, fill: 0x454545 },
+            wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
+            background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [6, 10] },
+            placement: 'bottom',
+            offset: { y: 8 },
+          },
+        },
+      },
+      {
+        id: 'regular-polygon',
+        position: { x: -280, y: 150 },
+        style: {
+          shape: { kind: 'regular-polygon', sides: 5, radius: 26 },
+          labelStyle: {
+            content: { kind: 'text', text: LONG, fontSize: 13, fontWeight: 500, fill: 0x454545 },
+            wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
+            background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [6, 10] },
+            placement: 'bottom',
+            offset: { y: 8 },
+          },
+        },
+      },
+      {
+        id: 'star',
+        position: { x: 0, y: 150 },
+        style: {
+          shape: { kind: 'star', points: 5, outerRadius: 28, innerRadius: 12 },
+          labelStyle: {
+            content: { kind: 'text', text: LONG, fontSize: 13, fontWeight: 500, fill: 0x454545 },
+            wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
+            background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [6, 10] },
+            placement: 'bottom',
+            offset: { y: 8 },
+          },
+        },
+      },
+      {
+        id: 'polygon',
+        position: { x: 280, y: 150 },
+        style: {
+          shape: { kind: 'polygon', vertices: [ { x: 24, y: 0 }, { x: 12, y: -21 }, { x: -12, y: -21 }, { x: -24, y: 0 }, { x: -12, y: 21 }, { x: 12, y: 21 } ] },
           labelStyle: {
             content: { kind: 'text', text: LONG, fontSize: 13, fontWeight: 500, fill: 0x454545 },
             wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
@@ -53,18 +121,15 @@ export const Wrap: Story = {
       id: 'graph',
       options: {
         node: {
-          style: {
-            shape: { kind: 'circle', radius: 22 },
-            bgFill: 0x4f9cf9,
-            bgStrokeColor: 0x1d4ed8,
-          },
+          style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8 },
         },
       },
     });
     canvas.layers.add(graph);
     graph.setData({ nodes, edges: [] });
-    canvas.camera.fitContent(graph.getBounds(), 240);
+    canvas.camera.fitContent(graph.getBounds(), 80);
 
+    const ALL_IDS = ['circle', 'rect', 'arc', 'regular-polygon', 'star', 'polygon'];
     const settings = {
       text: LONG,
       maxWidth: 160,
@@ -73,20 +138,22 @@ export const Wrap: Story = {
       overflow: 'ellipsis' as 'clip' | 'ellipsis',
     };
     const apply = (): void => {
-      const prev = (graph.store.getNode('n')?.style as NodeStyle | undefined) ?? {};
-      const prevLs = prev.labelStyle;
-      if (!prevLs || prevLs.content.kind !== 'text') return;
-      const nextLs: ShapeLabelStyle = {
-        ...prevLs,
-        content: { ...prevLs.content, text: settings.text },
-        wrap: {
-          maxWidth: settings.maxWidth,
-          maxLines: settings.maxLines,
-          wordWrap: settings.wordWrap,
-          overflow: settings.overflow,
-        },
-      };
-      graph.store.updateNode('n', { style: { ...prev, labelStyle: nextLs } });
+      for (const id of ALL_IDS) {
+        const prev = (graph.store.getNode(id)?.style as NodeStyle | undefined) ?? {};
+        const prevLs = prev.labelStyle;
+        if (!prevLs || prevLs.content.kind !== 'text') continue;
+        const nextLs: ShapeLabelStyle = {
+          ...prevLs,
+          content: { ...prevLs.content, text: settings.text },
+          wrap: {
+            maxWidth: settings.maxWidth,
+            maxLines: settings.maxLines,
+            wordWrap: settings.wordWrap,
+            overflow: settings.overflow,
+          },
+        };
+        graph.store.updateNode(id, { style: { ...prev, labelStyle: nextLs } });
+      }
     };
     const gui = new GUI({ title: 'Wrap' });
     onStoryTeardown(() => gui.destroy());

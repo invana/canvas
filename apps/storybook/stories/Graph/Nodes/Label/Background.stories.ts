@@ -9,32 +9,27 @@ export default meta;
 type Story = StoryObj;
 
 /**
- * Background "pill" rendered behind the label text — `labelBackgroundFill`,
+ * Background "pill" rendered behind the label — `labelBackgroundFill`,
  * `labelBackgroundAlpha`, `labelBackgroundStrokeColor`,
  * `labelBackgroundStrokeWidth`, `labelBackgroundPadding`,
  * `labelBackgroundCornerRadius`.
  *
- * One node with an outside-bottom label. Toggle the pill on, tweak fill /
- * stroke / padding / radius. Background-only fields take effect only when
- * **at least one** of fill / stroke is set.
+ * Row of six shapes; the pill config fans out to every label. Background
+ * fields take effect only when **at least one** of fill / stroke is set,
+ * so the GUI's `enabled` toggle nulls fill+stroke together.
  */
 export const Background: Story = {
   render: () => createContainer({ id: 'graph-label-background' }),
 
   play: async ({ canvasElement }) => {
     const nodes: NodeData[] = [
-      {
-        id: 'n',
-        position: { x: 0, y: 0 },
-        style: {
-          labelText: 'background pill',
-          labelPlacement: 'bottom',
-          labelOffsetY: 10,
-          labelFontSize: 13,
-          labelFontWeight: 600,
-          labelColor: 0x454545,
-        },
-      },
+      // 3-col × 2-row grid so pill labels don't overlap horizontally.
+      { id: 'circle',          position: { x: -280, y: -150 }, style: { shape: { kind: 'circle', radius: 24 },                                                                  labelText: 'circle',          labelPlacement: 'bottom', labelOffsetY: 10 } },
+      { id: 'rect',            position: { x: 0,    y: -150 }, style: { shape: { kind: 'rect', width: 56, height: 40, cornerRadius: 8 },                                        labelText: 'rect',            labelPlacement: 'bottom', labelOffsetY: 10 } },
+      { id: 'arc',             position: { x: 280,  y: -150 }, style: { shape: { kind: 'arc', innerR: 10, outerR: 26, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 },        labelText: 'arc',             labelPlacement: 'bottom', labelOffsetY: 10 } },
+      { id: 'regular-polygon', position: { x: -280, y: 150  }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 26 },                                               labelText: 'pentagon',        labelPlacement: 'bottom', labelOffsetY: 10 } },
+      { id: 'star',            position: { x: 0,    y: 150  }, style: { shape: { kind: 'star', points: 5, outerRadius: 28, innerRadius: 12 },                                   labelText: 'star',            labelPlacement: 'bottom', labelOffsetY: 10 } },
+      { id: 'polygon',         position: { x: 280,  y: 150  }, style: { shape: { kind: 'polygon', vertices: [ { x: 24, y: 0 }, { x: 12, y: -21 }, { x: -12, y: -21 }, { x: -24, y: 0 }, { x: -12, y: 21 }, { x: 12, y: 21 } ] }, labelText: 'polygon', labelPlacement: 'bottom', labelOffsetY: 10 } },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-label-background')!;
@@ -49,17 +44,20 @@ export const Background: Story = {
       options: {
         node: {
           style: {
-            shape: { kind: 'circle', radius: 22 },
             bgFill: 0x8b5cf6,
             bgStrokeColor: 0x6d28d9,
+            labelFontSize: 13,
+            labelFontWeight: 600,
+            labelColor: 0x454545,
           },
         },
       },
     });
     canvas.layers.add(graph);
     graph.setData({ nodes, edges: [] });
-    canvas.camera.fitContent(graph.getBounds(), 240);
+    canvas.camera.fitContent(graph.getBounds(), 80);
 
+    const ALL_IDS = ['circle', 'rect', 'arc', 'regular-polygon', 'star', 'polygon'];
     const settings = {
       enabled: true,
       fill: 0xffffff,
@@ -70,20 +68,20 @@ export const Background: Story = {
       cornerRadius: 6,
     };
     const apply = (): void => {
-      const prev = (graph.store.getNode('n')?.style as NodeStyle | undefined) ?? {};
-      // Clear by setting fill/stroke to undefined when `enabled` is off —
-      // the decoration draws the pill only when at least one is set.
-      graph.store.updateNode('n', {
-        style: {
-          ...prev,
-          labelBackgroundFill: settings.enabled ? settings.fill : undefined,
-          labelBackgroundAlpha: settings.fillAlpha,
-          labelBackgroundStrokeColor: settings.enabled ? settings.strokeColor : undefined,
-          labelBackgroundStrokeWidth: settings.strokeWidth,
-          labelBackgroundPadding: settings.padding,
-          labelBackgroundCornerRadius: settings.cornerRadius,
-        },
-      });
+      for (const id of ALL_IDS) {
+        const prev = (graph.store.getNode(id)?.style as NodeStyle | undefined) ?? {};
+        graph.store.updateNode(id, {
+          style: {
+            ...prev,
+            labelBackgroundFill: settings.enabled ? settings.fill : undefined,
+            labelBackgroundAlpha: settings.fillAlpha,
+            labelBackgroundStrokeColor: settings.enabled ? settings.strokeColor : undefined,
+            labelBackgroundStrokeWidth: settings.strokeWidth,
+            labelBackgroundPadding: settings.padding,
+            labelBackgroundCornerRadius: settings.cornerRadius,
+          },
+        });
+      }
     };
     apply();
     const gui = new GUI({ title: 'Label background' });

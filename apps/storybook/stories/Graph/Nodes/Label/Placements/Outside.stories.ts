@@ -28,16 +28,19 @@ export const Outside: Story = {
       'bottom', 'bottom-left', 'left', 'top-left',
     ];
 
+    // Each ring node picks a different shape kind so outside-placement
+    // anchoring is exercised across all six built-in silhouettes. Polygon
+    // vertices and arc params are literals — no helper functions.
     const nodes: NodeData[] = [
       { id: 'hub',      position: { x: 0,    y: 0    }, style: { shape: { kind: 'circle', radius: 22 }, bgFill: 0x0f172a, bgStrokeColor: 0x0f172a, labelText: 'hub', labelColor: 0xffffff, labelPlacement: 'center' } },
-      { id: 'n-top',    position: { x: 0,    y: -220 }, style: { labelText: 'top',          labelPlacement: 'top',          labelOffsetY: -4 } },
-      { id: 'n-tr',     position: { x: 156,  y: -156 }, style: { labelText: 'top-right',    labelPlacement: 'top-right',    labelOffsetY: -4 } },
-      { id: 'n-right',  position: { x: 220,  y: 0    }, style: { labelText: 'right',        labelPlacement: 'right' } },
-      { id: 'n-br',     position: { x: 156,  y: 156  }, style: { labelText: 'bottom-right', labelPlacement: 'bottom-right', labelOffsetY: 4 } },
-      { id: 'n-bottom', position: { x: 0,    y: 220  }, style: { labelText: 'bottom',       labelPlacement: 'bottom',       labelOffsetY: 4 } },
-      { id: 'n-bl',     position: { x: -156, y: 156  }, style: { labelText: 'bottom-left',  labelPlacement: 'bottom-left',  labelOffsetY: 4 } },
-      { id: 'n-left',   position: { x: -220, y: 0    }, style: { labelText: 'left',         labelPlacement: 'left' } },
-      { id: 'n-tl',     position: { x: -156, y: -156 }, style: { labelText: 'top-left',     labelPlacement: 'top-left',     labelOffsetY: -4 } },
+      { id: 'n-top',    position: { x: 0,    y: -220 }, style: { shape: { kind: 'circle', radius: 16 },                                       labelText: 'top',          labelPlacement: 'top',          labelOffsetY: -4 } },
+      { id: 'n-tr',     position: { x: 156,  y: -156 }, style: { shape: { kind: 'rect', width: 40, height: 32, cornerRadius: 6 },             labelText: 'top-right',    labelPlacement: 'top-right',    labelOffsetY: -4 } },
+      { id: 'n-right',  position: { x: 220,  y: 0    }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 20 },                    labelText: 'right',        labelPlacement: 'right' } },
+      { id: 'n-br',     position: { x: 156,  y: 156  }, style: { shape: { kind: 'star', points: 5, outerRadius: 22, innerRadius: 10 },        labelText: 'bottom-right', labelPlacement: 'bottom-right', labelOffsetY: 4 } },
+      { id: 'n-bottom', position: { x: 0,    y: 220  }, style: { shape: { kind: 'polygon', vertices: [ { x: 0, y: -20 }, { x: 20, y: 0 }, { x: 0, y: 20 }, { x: -20, y: 0 } ] }, labelText: 'bottom', labelPlacement: 'bottom', labelOffsetY: 4 } },
+      { id: 'n-bl',     position: { x: -156, y: 156  }, style: { shape: { kind: 'arc', innerR: 8, outerR: 22, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 }, labelText: 'bottom-left', labelPlacement: 'bottom-left', labelOffsetY: 4 } },
+      { id: 'n-left',   position: { x: -220, y: 0    }, style: { shape: { kind: 'regular-polygon', sides: 6, radius: 20, rotation: Math.PI / 6 }, labelText: 'left',     labelPlacement: 'left' } },
+      { id: 'n-tl',     position: { x: -156, y: -156 }, style: { shape: { kind: 'rect', width: 40, height: 40, cornerRadius: 20 },            labelText: 'top-left',     labelPlacement: 'top-left',     labelOffsetY: -4 } },
     ];
 
     const edges: EdgeData[] = [

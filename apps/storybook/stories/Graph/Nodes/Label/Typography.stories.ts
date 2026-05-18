@@ -9,28 +9,26 @@ export default meta;
 type Story = StoryObj;
 
 /**
- * Font controls on a single label — `labelFontSize`, `labelFontWeight`,
- * `labelFontStyle`, `labelFontFamily`, `labelColor`, `labelAlpha`,
- * `labelLetterSpacing`, `labelLineHeight`.
+ * Font controls applied to every built-in shape kind — `labelFontSize`,
+ * `labelFontWeight`, `labelFontStyle`, `labelFontFamily`, `labelColor`,
+ * `labelAlpha`, `labelLetterSpacing`, `labelLineHeight`.
  *
- * One node, one label. Sweep the GUI knobs to see each field's effect in
- * isolation. `labelLineHeight` is exercised together with a hardcoded
- * two-line `labelText` via `\n`.
+ * Row of six shapes: circle, rect, arc, regular-polygon, star, polygon.
+ * The GUI knobs fan out to every label in the row, so each tweak is
+ * exercised against every silhouette at once.
  */
 export const Typography: Story = {
   render: () => createContainer({ id: 'graph-label-typography' }),
 
   play: async ({ canvasElement }) => {
     const nodes: NodeData[] = [
-      {
-        id: 'n',
-        position: { x: 0, y: 0 },
-        style: {
-          labelText: 'Typography\nsample',
-          labelPlacement: 'bottom',
-          labelOffsetY: 8,
-        },
-      },
+      // 3-col × 2-row grid so wide labels (multi-line / wrapped) don't collide.
+      { id: 'circle',          position: { x: -280, y: -150 }, style: { shape: { kind: 'circle', radius: 24 },                                          labelText: 'circle\ntwo lines',          labelPlacement: 'bottom', labelOffsetY: 8 } },
+      { id: 'rect',            position: { x: 0,    y: -150 }, style: { shape: { kind: 'rect', width: 56, height: 40, cornerRadius: 8 },                labelText: 'rect\ntwo lines',            labelPlacement: 'bottom', labelOffsetY: 8 } },
+      { id: 'arc',             position: { x: 280,  y: -150 }, style: { shape: { kind: 'arc', innerR: 10, outerR: 26, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 }, labelText: 'arc\ntwo lines', labelPlacement: 'bottom', labelOffsetY: 8 } },
+      { id: 'regular-polygon', position: { x: -280, y: 150  }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 26 },                       labelText: 'pentagon\ntwo lines',        labelPlacement: 'bottom', labelOffsetY: 8 } },
+      { id: 'star',            position: { x: 0,    y: 150  }, style: { shape: { kind: 'star', points: 5, outerRadius: 28, innerRadius: 12 },           labelText: 'star\ntwo lines',            labelPlacement: 'bottom', labelOffsetY: 8 } },
+      { id: 'polygon',         position: { x: 280,  y: 150  }, style: { shape: { kind: 'polygon', vertices: [ { x: 24, y: 0 }, { x: 12, y: -21 }, { x: -12, y: -21 }, { x: -24, y: 0 }, { x: -12, y: 21 }, { x: 12, y: 21 } ] }, labelText: 'polygon\ntwo lines', labelPlacement: 'bottom', labelOffsetY: 8 } },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-label-typography')!;
@@ -45,17 +43,18 @@ export const Typography: Story = {
       options: {
         node: {
           style: {
-            shape: { kind: 'circle', radius: 22 },
             bgFill: 0x4f9cf9,
             bgStrokeColor: 0x1d4ed8,
+            bgStrokeWidth: 1,
           },
         },
       },
     });
     canvas.layers.add(graph);
     graph.setData({ nodes, edges: [] });
-    canvas.camera.fitContent(graph.getBounds(), 240);
+    canvas.camera.fitContent(graph.getBounds(), 80);
 
+    const ALL_IDS = ['circle', 'rect', 'arc', 'regular-polygon', 'star', 'polygon'];
     const settings = {
       fontFamily: 'sans-serif',
       fontSize: 14,
@@ -67,20 +66,22 @@ export const Typography: Story = {
       lineHeight: 18,
     };
     const apply = (): void => {
-      const prev = (graph.store.getNode('n')?.style as NodeStyle | undefined) ?? {};
-      graph.store.updateNode('n', {
-        style: {
-          ...prev,
-          labelFontFamily: settings.fontFamily,
-          labelFontSize: settings.fontSize,
-          labelFontWeight: settings.fontWeight,
-          labelFontStyle: settings.fontStyle,
-          labelColor: settings.color,
-          labelAlpha: settings.alpha,
-          labelLetterSpacing: settings.letterSpacing,
-          labelLineHeight: settings.lineHeight,
-        },
-      });
+      for (const id of ALL_IDS) {
+        const prev = (graph.store.getNode(id)?.style as NodeStyle | undefined) ?? {};
+        graph.store.updateNode(id, {
+          style: {
+            ...prev,
+            labelFontFamily: settings.fontFamily,
+            labelFontSize: settings.fontSize,
+            labelFontWeight: settings.fontWeight,
+            labelFontStyle: settings.fontStyle,
+            labelColor: settings.color,
+            labelAlpha: settings.alpha,
+            labelLetterSpacing: settings.letterSpacing,
+            labelLineHeight: settings.lineHeight,
+          },
+        });
+      }
     };
     const gui = new GUI({ title: 'Typography' });
     onStoryTeardown(() => gui.destroy());
