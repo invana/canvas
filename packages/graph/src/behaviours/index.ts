@@ -41,6 +41,12 @@ export type {
 export { DragNodeBehaviour } from './DragNodeBehaviour';
 export type { DragNodeBehaviourOptions } from './DragNodeBehaviour';
 
+export { CollapseExpandBehaviour, GROUP_TOGGLE_SLOT } from './CollapseExpandBehaviour';
+export type { CollapseExpandBehaviourOptions } from './CollapseExpandBehaviour';
+
+export { NodeResizeBehaviour } from './NodeResizeBehaviour';
+export type { NodeResizeBehaviourOptions } from './NodeResizeBehaviour';
+
 export { LabelCollisionBehaviour } from './LabelCollisionBehaviour';
 export type {
   LabelCollisionBehaviourOptions,

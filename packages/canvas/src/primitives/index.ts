@@ -96,6 +96,26 @@ export type {
 } from './decorations/connector/RevealConnectorDecoration';
 export { LabelDecoration } from './decorations/shape/LabelDecoration';
 export { LabelConnectorDecoration } from './decorations/connector/LabelConnectorDecoration';
+export { ToggleDecoration } from './decorations/shape/ToggleDecoration';
+export type {
+  ToggleDecorationStyle,
+  TogglePlacement,
+  ToggleHitGeometry,
+} from './decorations/shape/ToggleDecoration';
+export { ResizeHandleDecoration } from './decorations/shape/ResizeHandleDecoration';
+export type {
+  ResizeHandleDecorationStyle,
+  ResizeHandlePlacement,
+  ResizeHandleHitGeometry,
+} from './decorations/shape/ResizeHandleDecoration';
+export { SelectionFrameDecoration } from './decorations/shape/SelectionFrameDecoration';
+export type {
+  SelectionFrameDecorationStyle,
+  SelectionFramePlacement,
+  SelectionFrameHandleHit,
+  SelectionFrameBorderStyle,
+  SelectionFrameHandleShape,
+} from './decorations/shape/SelectionFrameDecoration';
 
 // ─── Built-in effects ──────────────────────────────────────────────────────
 export { ShakeEffect } from './effects/shape/ShakeEffect';

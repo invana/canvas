@@ -81,6 +81,9 @@ import { RippleConnectorDecoration } from './decorations/connector/RippleConnect
 import { RevealConnectorDecoration } from './decorations/connector/RevealConnectorDecoration';
 import { RingConnectorDecoration } from './decorations/connector/RingConnectorDecoration';
 import { LabelDecoration } from './decorations/shape/LabelDecoration';
+import { ToggleDecoration } from './decorations/shape/ToggleDecoration';
+import { ResizeHandleDecoration } from './decorations/shape/ResizeHandleDecoration';
+import { SelectionFrameDecoration } from './decorations/shape/SelectionFrameDecoration';
 import { LabelConnectorDecoration } from './decorations/connector/LabelConnectorDecoration';
 import { ShakeEffect } from './effects/shape/ShakeEffect';
 import { BreathingEffect } from './effects/shape/BreathingEffect';
@@ -327,6 +330,9 @@ export class PrimitivesRenderer {
     this.registerDecoration('ring-connector', RingConnectorDecoration, { target: 'connector' });
     this.registerDecoration('label', LabelDecoration, { target: 'shape' });
     this.registerDecoration('label-connector', LabelConnectorDecoration, { target: 'connector' });
+    this.registerDecoration('toggle', ToggleDecoration, { target: 'shape' });
+    this.registerDecoration('resize-handle', ResizeHandleDecoration, { target: 'shape' });
+    this.registerDecoration('selection-frame', SelectionFrameDecoration, { target: 'shape' });
 
     this.registerEffect('shake', ShakeEffect, { target: 'shape' });
     this.registerEffect('breathing', BreathingEffect, { target: 'shape' });
@@ -1421,6 +1427,27 @@ export class PrimitivesRenderer {
 
   hasConnector(id: string): boolean {
     return this.connectorInstances.has(id);
+  }
+
+  /**
+   * Currently-mounted decoration instance for shape (or connector) `id` at
+   * `slot`, or `undefined` when no decoration is attached at that slot.
+   *
+   * Domain behaviours read this when they need to introspect a decoration's
+   * exposed state — e.g. `CollapseExpandBehaviour` calls
+   * `getDecoration(nodeId, 'collapse-toggle')` and reads the toggle's
+   * cached hit geometry to test a pointer click against the button's
+   * shape-local centre + radius.
+   *
+   * The returned object is the live `IDecorationBase` — callers should
+   * treat it as read-only and not mutate the decoration's `style` directly
+   * (use `setDecoration` to swap the style atomically).
+   */
+  getDecoration(id: string, slot: string): IDecorationBase<unknown> | undefined {
+    const shape = this.shapeInstances.get(id);
+    const connector = this.connectorInstances.get(id);
+    if (!shape && !connector) return undefined;
+    return (shape ?? connector!).decorations.get(slot) as IDecorationBase<unknown> | undefined;
   }
 
   /**

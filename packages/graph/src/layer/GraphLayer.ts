@@ -40,6 +40,7 @@ import {
   type GraphData,
   type GraphLayerEvents,
   type GraphLayerOptions,
+  type GroupOptions,
   type NodeDecorationSpec,
   type NodeOption,
   type NodeShapeOptions,
@@ -145,6 +146,31 @@ export class GraphLayer extends WorldLayer<
   private dirtyConnectors: Set<string> = new Set();
 
   /**
+   * Last-projected collapsed flag per group node id. Read by the
+   * `node:update` handler so it can detect a collapse → expand (or
+   * expand → collapse) flip — the patch itself doesn't carry the
+   * previous style, and the store has already overwritten it by the
+   * time the event fires. Updated by {@link syncGroupSyntheticDecorations}
+   * on every group render.
+   */
+  private readonly lastCollapsedByGroup: Map<string, boolean> = new Map();
+
+  /**
+   * Group node ids whose visible frame may need re-projection (auto-fit
+   * recompute, descendant visibility change, collapse / expand toggle).
+   * Drained per flush in deepest-first order — see {@link drainDirtyGroups}.
+   *
+   * Populated by store subscriptions when:
+   * - a group's own spec changes (add / update with `style.group` patch),
+   * - a child's position changes and its parent is a group with `autoFit`,
+   * - a child is added / removed from a group.
+   *
+   * Holding ids (not full snapshots) keeps the bucket idempotent — multiple
+   * mutations within a single batch coalesce to one rerender per group.
+   */
+  private dirtyGroups: Set<string> = new Set();
+
+  /**
    * Visual-state machinery — `id → Set<stateName>`. State styling itself
    * is declared on the `NodeOption.state` / per-node `state` catalogue;
    * this map only tracks which states are currently active per item so
@@ -198,11 +224,18 @@ export class GraphLayer extends WorldLayer<
     for (const node of this.store.nodes()) {
       this.installNodeShape(node);
       this.syncDataDrivenNodeStates(node, undefined);
+      if (this.isGroupNode(node)) this.dirtyGroups.add(node.id);
     }
     for (const edge of this.store.edges()) {
       this.installEdgeConnector(edge);
       this.syncDataDrivenEdgeStates(edge, undefined);
     }
+    // Settle every group's auto-fit frame and visibility state in one pass
+    // before the first user input — `installNodeShape` iterated linearly,
+    // so a parent inserted before its children rendered against zero
+    // children. Drain now to re-fit those frames against the freshly-mounted
+    // descendants.
+    this.drainDirtyGroups();
 
     // Subscribe to fine-grained store events.
     const s = this.store.events;
@@ -212,19 +245,57 @@ export class GraphLayer extends WorldLayer<
         if (!node) return;
         this.installNodeShape(node);
         this.syncDataDrivenNodeStates(node, undefined);
+        // Inserting a child node may extend an ancestor group's auto-fit
+        // bbox; mark the parent chain for recompute. Also re-mark this
+        // node if it is itself a group, so its initial frame projects with
+        // whatever children landed first.
+        if (this.isGroupNode(node)) this.dirtyGroups.add(node.id);
+        if (node.parentId) this.markGroupAncestorsDirty(node.parentId);
       }),
       s.on('node:update', ({ nodeId, patch }) => {
         const node = this.store.getNode(nodeId);
         if (!node) return;
+        const wasCollapsed = this.lastCollapsedByGroup.get(nodeId) === true;
         this.updateNodeShape(node, patch);
         if ('states' in patch) {
           this.syncDataDrivenNodeStates(node, patch.states ?? null);
+        }
+        // A position patch on a child propagates up to any auto-fit group
+        // ancestor; their frames re-shrink / grow on the next flush.
+        if (patch.position && node.parentId) {
+          this.markGroupAncestorsDirty(node.parentId);
+        }
+        // A re-parent triggers a recompute on the *new* parent chain. We
+        // can't reach the *previous* parent through the patch alone (the
+        // store has already mutated the index), so old-parent shrinkage
+        // mirrors the `node:remove` limitation: explicit `recomputeGroup`
+        // is the escape hatch when the feed re-parents individually.
+        if ('parentId' in patch && node.parentId) {
+          this.markGroupAncestorsDirty(node.parentId);
+        }
+        // A group's own style patch (collapsed flip, padding change, size
+        // change) re-projects this group; if collapsed changed, descendants'
+        // visibility and incident-edge endpoints need a refresh too.
+        if (this.isGroupNode(node)) {
+          this.dirtyGroups.add(node.id);
+          const isNowCollapsed = this.isCollapsedGroup(node);
+          if (wasCollapsed !== isNowCollapsed) {
+            this.refreshDescendantsAndIncidentEdges(node.id);
+          }
         }
       }),
       s.on('node:remove', ({ nodeId }) => {
         this.nodeStates.delete(nodeId);
         this.nodeDecorationSlots.delete(nodeId);
         this._renderer?.removeShape(nodeId);
+        this.dirtyGroups.delete(nodeId);
+        this.lastCollapsedByGroup.delete(nodeId);
+        // We can't infer the removed node's parentId from the event payload
+        // (the store has already cleaned it up). For an auto-fit group whose
+        // child was just removed, the frame will not auto-shrink on its own
+        // — call `recomputeGroup(parentId)` explicitly if your feed removes
+        // children individually and you want the frame to track. Frames
+        // grow / shrink correctly on add and on every position change.
       }),
       s.on('edge:add', ({ edgeId }) => {
         const edge = this.store.getEdge(edgeId);
@@ -246,6 +317,10 @@ export class GraphLayer extends WorldLayer<
         this._renderer?.removeConnector(edgeId);
       }),
       s.on('flush', (counters) => {
+        // Groups first — their frames may grow / shrink based on freshly-
+        // mutated child positions, which in turn shifts the anchor points
+        // every incident connector sees on the next route.
+        this.drainDirtyGroups();
         if (this.dirtyConnectors.size > 0 && this._renderer) {
           for (const edgeId of this.dirtyConnectors) {
             // Empty partial — triggers recomputeConnectorPath which re-runs
@@ -499,8 +574,25 @@ export class GraphLayer extends WorldLayer<
 
   private nodeSpec(node: GraphNode): BaseShapeSpec {
     const style = this.resolveNodeStyle(node);
-    const shape: NodeShapeOptions = style.shape ?? { kind: 'circle', radius: 10 };
-    const pos = node.position ?? { x: 0, y: 0 };
+    let shape: NodeShapeOptions = style.shape ?? { kind: 'circle', radius: 10 };
+    let pos = node.position ?? { x: 0, y: 0 };
+
+    // Group projection — frame-size / position recompute for expanded
+    // auto-fit groups, and zIndex push-back so descendants paint on top.
+    // Collapsed groups skip the recompute and project as a regular node;
+    // children are hidden separately via the `visible: false` branch below.
+    const group = style.group;
+    if (group && !group.collapsed) {
+      const fitted = this.projectGroupShape(node.id, shape, group, pos);
+      shape = fitted.shape;
+      pos = fitted.pos;
+    }
+
+    // Visibility — a node is hidden when any ancestor is a collapsed group.
+    // We still emit a spec (so decorations / size are valid for any incident
+    // edge re-route math against the group node), but with `visible: false`
+    // so PixiJS skips drawing it.
+    const hiddenByGroup = this.collapsedAncestor(node.id) !== undefined;
 
     // Project the resolved style into a `ShapeFill` for the renderer.
     // Layers stack bottom-up:
@@ -561,6 +653,17 @@ export class GraphLayer extends WorldLayer<
           }
         : undefined;
 
+    // Compute the effective zIndex. Expanded group nodes paint underneath
+    // their descendants by default (`behindChildren !== false`); subtract
+    // one from any declared zIndex so children (at zIndex 0 by default)
+    // sit on top. Collapsed groups skip this — they render like a regular
+    // interactive node.
+    const baseZ = (style as { zIndex?: number }).zIndex;
+    let zIndex: number | undefined = baseZ;
+    if (group && !group.collapsed && group.behindChildren !== false) {
+      zIndex = (baseZ ?? 0) - 1;
+    }
+
     return {
       ...(shape as unknown as Record<string, unknown>),
       x: pos.x,
@@ -568,6 +671,12 @@ export class GraphLayer extends WorldLayer<
       ...(style.bgAlpha !== undefined ? { alpha: style.bgAlpha } : {}),
       ...(fill !== undefined ? { fill } : {}),
       ...(stroke ? { stroke } : {}),
+      ...(zIndex !== undefined ? { zIndex } : {}),
+      // Always emit `visible` — the renderer partial-merges patches onto
+      // the cached spec, so omitting the field on the "now visible" pass
+      // after a collapse → expand transition would leave the previous
+      // `visible: false` in place and the descendant would stay hidden.
+      visible: !hiddenByGroup,
     } as BaseShapeSpec;
   }
 
@@ -608,10 +717,17 @@ export class GraphLayer extends WorldLayer<
         ? { name: targetAnchorName, opts: targetAnchorOpts }
         : targetAnchorName;
 
+    // When an endpoint sits under a collapsed group ancestor, re-route the
+    // connector to that ancestor so the line ends at the visible super-node
+    // instead of pointing at a hidden descendant. The store edge is not
+    // mutated — `edge.source` / `edge.target` stay authoritative.
+    const sourceShapeId = this.effectiveEndpoint(edge.source);
+    const targetShapeId = this.effectiveEndpoint(edge.target);
+
     return {
       kind: 'connector',
-      source: { kind: 'shape', shapeId: edge.source, anchor: sourceAnchorSpec },
-      target: { kind: 'shape', shapeId: edge.target, anchor: targetAnchorSpec },
+      source: { kind: 'shape', shapeId: sourceShapeId, anchor: sourceAnchorSpec },
+      target: { kind: 'shape', shapeId: targetShapeId, anchor: targetAnchorSpec },
       router,
       pathStyle,
       ...(pathStyleOpts && Object.keys(pathStyleOpts).length > 0 ? { pathStyleOpts } : {}),
@@ -719,6 +835,7 @@ export class GraphLayer extends WorldLayer<
     // Cheap to call in both the update and rebuild branches.
     this.syncNodeLabel(id);
     this.syncNodeDecorations(id);
+    this.syncGroupSyntheticDecorations(id);
     // Anchors of incident connectors point to this shape — re-route in
     // either branch since the shape's bounds may have changed (size
     // hint shift, kind change, etc.).
@@ -763,6 +880,7 @@ export class GraphLayer extends WorldLayer<
     this._renderer.addShape(node.id, this.nodeSpec(node));
     this.syncNodeLabel(node.id);
     this.syncNodeDecorations(node.id);
+    this.syncGroupSyntheticDecorations(node.id);
   }
 
   private installEdgeConnector(edge: GraphEdge): void {
@@ -990,6 +1108,7 @@ export class GraphLayer extends WorldLayer<
     }
     this.syncNodeLabel(node.id);
     this.syncNodeDecorations(node.id);
+    this.syncGroupSyntheticDecorations(node.id);
     // Connectors anchored to this shape may need re-routing in either
     // branch — the shape's bounds can shift on a size/kind change.
     this.queueIncidentConnectors(node.id);
@@ -998,6 +1117,356 @@ export class GraphLayer extends WorldLayer<
   private queueIncidentConnectors(nodeId: string): void {
     for (const edge of this.store.edgesOf(nodeId, 'both')) {
       this.dirtyConnectors.add(edge.id);
+    }
+  }
+
+  // ─── Group helpers ────────────────────────────────────────────────────
+
+  /**
+   * True iff `node`'s resolved style carries a `group` field — the only
+   * signal that promotes the node from a regular renderable into a
+   * compound-group frame.
+   *
+   * Cheap to call: reads {@link resolveNodeStyle} which is already
+   * memoised per render cycle through `Object.assign` of the merged
+   * contributions.
+   */
+  isGroupNode(node: GraphNode): boolean {
+    const style = this.resolveNodeStyle(node);
+    return style.group !== undefined;
+  }
+
+  /** True when this group node's resolved style carries `group.collapsed === true`. */
+  isCollapsedGroup(node: GraphNode): boolean {
+    const style = this.resolveNodeStyle(node);
+    return style.group?.collapsed === true;
+  }
+
+  /**
+   * Public predicate behaviours can use to filter group nodes out of their
+   * own hit pipeline. Hover / select / drag should typically skip groups
+   * when the group is *expanded* (the frame is interaction-less) but treat
+   * a collapsed group as a regular node. Returns one of:
+   *
+   * - `'none'`  — the id is not a group (treat as a regular node).
+   * - `'expanded'` — group, currently expanded. Behaviours wanting to honour
+   *   the "interaction-less frame" intent should early-return.
+   * - `'collapsed'` — group, currently collapsed. Behaviours that act on
+   *   regular nodes should treat this as a normal target.
+   * - `undefined` — no such node.
+   *
+   * The string form is preferred over a boolean pair so a future
+   * `'collapsed-locked'` (or similar) can be added without breaking callers.
+   */
+  getGroupRole(nodeId: string): 'none' | 'expanded' | 'collapsed' | undefined {
+    const node = this.store.getNode(nodeId);
+    if (!node) return undefined;
+    if (!this.isGroupNode(node)) return 'none';
+    return this.isCollapsedGroup(node) ? 'collapsed' : 'expanded';
+  }
+
+  /**
+   * Climb the `parentId` chain from `nodeId` (exclusive) and return the
+   * first ancestor whose resolved style has `group.collapsed === true`, or
+   * `undefined` if no such ancestor exists. Used to decide whether a node
+   * is currently hidden (any collapsed ancestor → hidden) and where to
+   * re-route an incident edge (to that collapsed ancestor).
+   */
+  collapsedAncestor(nodeId: string): string | undefined {
+    let cur = this.store.getNode(nodeId);
+    while (cur?.parentId) {
+      const parent = this.store.getNode(cur.parentId);
+      if (!parent) return undefined;
+      if (this.isCollapsedGroup(parent)) return parent.id;
+      cur = parent;
+    }
+    return undefined;
+  }
+
+  /**
+   * Resolve which renderer-side shape id an edge endpoint should attach to
+   * for `nodeId`. Returns the nearest collapsed-group ancestor when the
+   * node is hidden, or `nodeId` unchanged when the node is visible. Pure
+   * read — the store's `edge.source` / `edge.target` are never mutated.
+   */
+  effectiveEndpoint(nodeId: string): string {
+    return this.collapsedAncestor(nodeId) ?? nodeId;
+  }
+
+  /**
+   * Walk the `parentId` chain from `nodeId` and `add` every group ancestor
+   * to {@link dirtyGroups}. Called whenever a descendant moves, is added,
+   * or otherwise triggers an auto-fit recompute.
+   */
+  private markGroupAncestorsDirty(nodeId: string): void {
+    let cur: GraphNode | undefined = this.store.getNode(nodeId);
+    while (cur) {
+      if (this.isGroupNode(cur)) this.dirtyGroups.add(cur.id);
+      if (!cur.parentId) break;
+      cur = this.store.getNode(cur.parentId);
+    }
+  }
+
+  /**
+   * After a group flips `collapsed`, every descendant changes visibility
+   * and every incident edge of every descendant needs re-routing (the
+   * endpoint now resolves to either the original node or to the collapsed
+   * group ancestor). Walk the subtree once, re-render each descendant
+   * (which re-projects `visible`), and queue incident edges for re-route.
+   */
+  private refreshDescendantsAndIncidentEdges(groupId: string): void {
+    for (const descId of this.store.descendantsOf(groupId)) {
+      const desc = this.store.getNode(descId);
+      if (!desc) continue;
+      this.rerenderNode(descId);
+      for (const edge of this.store.edgesOf(descId, 'both')) {
+        this.dirtyConnectors.add(edge.id);
+      }
+    }
+    // Edges of the group node itself can swap from a "real" endpoint to
+    // the same ancestor's id when there's a nested-collapse scenario.
+    for (const edge of this.store.edgesOf(groupId, 'both')) {
+      this.dirtyConnectors.add(edge.id);
+    }
+  }
+
+  /**
+   * Compute the world-space AABB of the direct (one-level) children of
+   * `groupId`. Returns `undefined` when the group has no children — the
+   * caller falls back to whatever floor size the group's declared
+   * width/height/radius provides.
+   *
+   * Recurses into child groups via {@link boundsOfNode} so a child whose
+   * own frame has already been auto-fit contributes its current size, not
+   * its stored declared size.
+   */
+  private directChildrenWorldBounds(
+    groupId: string,
+  ): { minX: number; minY: number; maxX: number; maxY: number } | undefined {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    let any = false;
+    for (const childId of this.store.childrenOf(groupId)) {
+      const child = this.store.getNode(childId);
+      if (!child) continue;
+      const local = this.boundsOfNode(child);
+      if (!local) continue;
+      const pos = child.position ?? { x: 0, y: 0 };
+      const wx = pos.x + local.x;
+      const wy = pos.y + local.y;
+      if (wx < minX) minX = wx;
+      if (wy < minY) minY = wy;
+      if (wx + local.width > maxX) maxX = wx + local.width;
+      if (wy + local.height > maxY) maxY = wy + local.height;
+      any = true;
+    }
+    return any ? { minX, minY, maxX, maxY } : undefined;
+  }
+
+  /**
+   * Project an expanded group's spec — apply auto-fit (when enabled),
+   * compose the children-derived width/height/radius with the group's
+   * declared floor, and shift `pos` so the frame wraps the bbox correctly.
+   *
+   * For `kind: 'rect'`: `pos` becomes top-left of the framed area; size is
+   * `max(declared, childrenAABB) + 2 · padding (+ headerHeight on y)`.
+   *
+   * For `kind: 'circle'`: `pos` becomes the AABB centroid; `radius` is
+   * `max(declared, AABB half-diagonal) + padding`. The half-diagonal is
+   * the smallest enclosing-circle approximation that's still cheap
+   * (`Math.hypot` over AABB half-extents); true minimum-enclosing-circle
+   * (Welzl) is out of scope.
+   *
+   * Non-rect / non-circle group shapes pass through untouched — autoFit is
+   * a no-op outside those two kinds. Domain shapes that want their own
+   * fit math can extend the layer's projection later.
+   */
+  private projectGroupShape(
+    groupId: string,
+    shape: NodeShapeOptions,
+    group: GroupOptions,
+    pos: { x: number; y: number },
+  ): { shape: NodeShapeOptions; pos: { x: number; y: number } } {
+    const padding = group.padding ?? 16;
+    const header = group.headerHeight ?? 0;
+    const bbox = group.autoFit ? this.directChildrenWorldBounds(groupId) : undefined;
+
+    if (shape.kind === 'rect') {
+      const rectShape = shape as { kind: 'rect'; width: number; height: number; cornerRadius?: number };
+      let width = group.width ?? rectShape.width;
+      let height = group.height ?? rectShape.height;
+      let nextPos = pos;
+      if (bbox) {
+        const childW = bbox.maxX - bbox.minX;
+        const childH = bbox.maxY - bbox.minY;
+        width = Math.max(width ?? 0, childW) + 2 * padding;
+        height = Math.max(height ?? 0, childH) + 2 * padding + header;
+        nextPos = { x: bbox.minX - padding, y: bbox.minY - padding - header };
+      } else {
+        // No children: honour declared dims; ensure non-zero so the frame
+        // still renders something rather than a 0×0 silhouette.
+        width = Math.max(width ?? 0, 1);
+        height = Math.max(height ?? 0, 1);
+      }
+      const out: NodeShapeOptions = { ...rectShape, width, height };
+      return { shape: out, pos: nextPos };
+    }
+    if (shape.kind === 'circle') {
+      const circleShape = shape as { kind: 'circle'; radius: number };
+      let radius = group.radius ?? circleShape.radius;
+      let nextPos = pos;
+      if (bbox) {
+        const halfW = (bbox.maxX - bbox.minX) / 2;
+        const halfH = (bbox.maxY - bbox.minY) / 2;
+        const halfDiag = Math.hypot(halfW, halfH);
+        radius = Math.max(radius ?? 0, halfDiag) + padding;
+        nextPos = {
+          x: bbox.minX + halfW,
+          y: bbox.minY + halfH,
+        };
+      } else {
+        radius = Math.max(radius ?? 0, 1);
+      }
+      const out: NodeShapeOptions = { ...circleShape, radius };
+      return { shape: out, pos: nextPos };
+    }
+    // Non-fit-aware shape kind — pass through.
+    return { shape, pos };
+  }
+
+  /**
+   * Force a group's frame to re-project right now (outside the normal
+   * flush cycle). Public escape hatch for feeds that remove children
+   * individually without triggering a position change on a sibling — the
+   * `node:remove` event doesn't carry the parentId, so the layer can't
+   * mark the parent dirty on its own. Domain code can call this after
+   * `store.removeNode` to make the auto-fit frame catch up.
+   */
+  recomputeGroup(groupId: string): void {
+    this.dirtyGroups.add(groupId);
+    this.drainDirtyGroups();
+  }
+
+  /**
+   * Drain {@link dirtyGroups} in deepest-first order. Each pop re-renders
+   * the group (re-running `nodeSpec` with the latest auto-fit math) and
+   * marks the group's own parent chain dirty so a multi-level nested
+   * group cascade settles in one flush.
+   *
+   * Bounded by `MAX_PASSES` to defend against a pathological cycle (which
+   * the cycle-rejecting store should already prevent on insert, but the
+   * extra guard is cheap).
+   */
+  private drainDirtyGroups(): void {
+    const MAX_PASSES = 32;
+    let pass = 0;
+    while (this.dirtyGroups.size > 0 && pass++ < MAX_PASSES) {
+      // Sort current set by ancestor-chain depth, deepest first. New ids
+      // that get added during the pass will be processed in the next
+      // outer iteration — bounded by MAX_PASSES.
+      const ids = [...this.dirtyGroups];
+      this.dirtyGroups.clear();
+      ids.sort((a, b) => this.depthOf(b) - this.depthOf(a));
+      for (const id of ids) {
+        const node = this.store.getNode(id);
+        if (!node) continue;
+        this.rerenderNode(id);
+        // Mark the group's incident edges dirty — the frame may have
+        // moved or resized, shifting where boundary anchors land.
+        for (const edge of this.store.edgesOf(id, 'both')) {
+          this.dirtyConnectors.add(edge.id);
+        }
+        // Propagate the size change up to the parent group, if any.
+        if (node.parentId) {
+          const parent = this.store.getNode(node.parentId);
+          if (parent && this.isGroupNode(parent)) {
+            this.dirtyGroups.add(parent.id);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Count of ancestors between `nodeId` and the root (`parentId === undefined`).
+   * Used by {@link drainDirtyGroups} to order deepest first so a child
+   * group recomputes before any group that depends on its bounds.
+   */
+  private depthOf(nodeId: string): number {
+    let d = 0;
+    let cur = this.store.getNode(nodeId);
+    while (cur?.parentId) {
+      d++;
+      cur = this.store.getNode(cur.parentId);
+    }
+    return d;
+  }
+
+  /**
+   * Project the synthetic group-only decorations onto the renderer:
+   * - the `+` / `−` toggle button at the group's bottom anchor; and
+   * - a centred count badge (label decoration) when the group is
+   *   collapsed, showing the number of hidden descendants.
+   *
+   * Called on every node lifecycle event for group nodes. Cleared
+   * automatically when `style.group` goes away (the slots get `null` so
+   * any previous mount disposes).
+   */
+  private syncGroupSyntheticDecorations(id: string): void {
+    if (!this._renderer) return;
+    const node = this.store.getNode(id);
+    if (!node) return;
+    const style = this.resolveNodeStyle(node);
+    const group = style.group;
+    if (!group) {
+      this._renderer.setDecoration(id, 'group-toggle', null);
+      this._renderer.setDecoration(id, 'group-count', null);
+      this.lastCollapsedByGroup.delete(id);
+      return;
+    }
+    const isCollapsed = group.collapsed === true;
+    this.lastCollapsedByGroup.set(id, isCollapsed);
+    // Toggle button — present on every group, glyph mirrors collapsed state.
+    // Placement is configurable via `group.togglePlacement`: a keyword
+    // (`'bottom'`, `'inside-bottom'`, …) resolves against the host AABB,
+    // or a `{ x, y }` object pins the toggle to exact shape-local coords.
+    // Default `'bottom'` — centred just below the silhouette, matching
+    // the "small bubble attached to the rim" pattern in the reference UI.
+    // The behaviour does its own canvas-level hit math, so outside-
+    // silhouette placements remain fully clickable.
+    const tp = group.togglePlacement;
+    const placementStyle =
+      typeof tp === 'object' && tp !== null
+        ? { position: tp }
+        : { placement: tp ?? 'bottom' };
+    this._renderer.setDecoration(id, 'group-toggle', {
+      kind: 'toggle',
+      style: {
+        state: isCollapsed ? 'plus' : 'minus',
+        radius: 10,
+        ...placementStyle,
+      },
+    });
+    if (isCollapsed) {
+      let count = 0;
+      for (const _ of this.store.descendantsOf(id)) count++;
+      this._renderer.setDecoration(id, 'group-count', {
+        kind: 'label',
+        style: {
+          content: {
+            kind: 'text',
+            text: String(count),
+            fill: 0xffffff,
+            fontSize: 14,
+            fontWeight: 700,
+          },
+          placement: 'inside-center',
+        },
+      });
+    } else {
+      this._renderer.setDecoration(id, 'group-count', null);
     }
   }
 

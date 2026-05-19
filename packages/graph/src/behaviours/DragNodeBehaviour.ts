@@ -53,6 +53,20 @@ export interface DragNodeBehaviourOptions extends BehaviourOptions {
 
   /** Cursor applied to the canvas while dragging. Default `'grabbing'`. */
   dragCursor?: string;
+
+  /**
+   * When `true` (the default), dragging a node that is itself a compound
+   * group (resolved `style.group` set) translates every descendant by the
+   * same delta in one `setPositionsBulk` call so the whole subtree moves
+   * together. Set to `false` to drag the group frame on its own — useful
+   * only when descendants are layout-driven and should stay put.
+   *
+   * For auto-fit groups the frame's position is layer-derived from the
+   * children bbox; moving descendants moves the frame naturally on the
+   * next flush. For non-auto-fit groups, the group's stored `position`
+   * is also updated so the declared frame follows the cursor.
+   */
+  groupAware?: boolean;
 }
 
 interface DragState {
@@ -93,6 +107,7 @@ export class DragNodeBehaviour extends Behaviour {
   private readonly pinWhileDragging: boolean;
   private readonly pinOnRelease: 'keep' | 'release' | 'restore';
   private readonly dragCursor: string;
+  private readonly groupAware: boolean;
 
   private state: DragState | null = null;
   private offShapeDown: (() => void) | null = null;
@@ -105,6 +120,7 @@ export class DragNodeBehaviour extends Behaviour {
     this.pinWhileDragging = opts.pinWhileDragging ?? true;
     this.pinOnRelease = opts.pinOnRelease ?? 'keep';
     this.dragCursor = opts.dragCursor ?? 'grabbing';
+    this.groupAware = opts.groupAware ?? true;
   }
 
   // ─── Lifecycle ──────────────────────────────────────────────────────────
@@ -247,6 +263,36 @@ export class DragNodeBehaviour extends Behaviour {
       this.layer.store.setPinned(this.state.id, true);
     }
     this.state.pinApplied = true;
+
+    // Group-aware drag: when the moved node is itself a compound group,
+    // translate every descendant by the same delta so the subtree moves
+    // together. We compute the delta against the *just-applied* position
+    // (`nextX - this.state.nodePosStart.x`) instead of against `world`,
+    // which gives the descendants the exact same translation the group
+    // node received — no anchor drift between root and descendants.
+    if (this.groupAware && this.layer.getGroupRole(this.state.id) === 'expanded') {
+      const groupDx = nextX - this.state.nodePosStart.x;
+      const groupDy = nextY - this.state.nodePosStart.y;
+      // First update the group's own position, then walk descendants. The
+      // store's `batch` collapses both into one flush so the layer sees a
+      // single coherent state.
+      const layer = this.layer;
+      layer.store.batch(() => {
+        layer.store.setPosition(this.state!.id, { x: nextX, y: nextY });
+        const descIds: string[] = [];
+        const xy: number[] = [];
+        for (const descId of layer.store.descendantsOf(this.state!.id)) {
+          const desc = layer.store.getNode(descId);
+          if (!desc?.position) continue;
+          descIds.push(descId);
+          xy.push(desc.position.x + groupDx, desc.position.y + groupDy);
+        }
+        if (descIds.length > 0) {
+          layer.store.setPositionsBulk(descIds, new Float32Array(xy));
+        }
+      });
+      return;
+    }
 
     // Non-silent so the layer's node:update subscriber repaints the shape
     // *and* queues an incident-edge reroute on the next store flush.

@@ -32,6 +32,7 @@ export type {
   EdgeShapeOptions,
   EdgeStyle,
   GraphDataOptions,
+  GroupOptions,
   NodeBadge,
   NodeData,
   NodeDecorationSpec,
