@@ -64,6 +64,11 @@ export const Cluster: Story = {
     };
 
     // ── Build node/edge data from Flare ──────────────────────────────────
+    // Per-item style carries the depth-derived fill and (when enabled) the
+    // flat `label*` fields. The previous version stashed these on `data`,
+    // which `GraphLayer` treats as opaque domain payload — so neither the
+    // fill nor the label ever reached the renderer and the dendrogram came
+    // out as edges only with no visible nodes or text.
     const buildGraphData = () => {
       const data = flareAsGraph();
       let maxDepth = 0;
@@ -77,28 +82,23 @@ export const Cluster: Story = {
       return {
         nodes: data.nodes.map((n) => ({
           id: n.id,
-          data: {
-            size: settings.nodeRadius * 2,
-            fill: settings.colorByDepth ? colorAt(n.data.depth) : 0x1f2937,
-            stroke: false as const,
+          data: { name: n.data.name, depth: n.data.depth, isLeaf: n.data.isLeaf },
+          style: {
+            bgFill: settings.colorByDepth ? colorAt(n.data.depth) : 0x1f2937,
             // d3 cluster/2's label rule: leaves get their name on the right,
-            // internal nodes on the left. Horizontal orientation lines labels
-            // up *away* from their subtree so they don't overprint children.
+            // internal nodes on the left. With horizontal orientation that
+            // lines labels up *away* from the subtree they belong to, so
+            // they don't overprint children below.
             ...(settings.showLabels
               ? {
-                  label: {
-                    content: {
-                      kind: 'text' as const,
-                      text: n.data.name,
-                      fontSize: settings.labelFontSize,
-                      fontWeight: 500,
-                      fill: 0x0f172a,
-                    },
-                    placement: (n.data.isLeaf ? 'right' : 'left') as
-                      | 'left'
-                      | 'right',
-                    offset: { x: n.data.isLeaf ? 4 : -4 },
-                  },
+                  labelText: n.data.name,
+                  labelFontSize: settings.labelFontSize,
+                  labelFontWeight: 500,
+                  labelColor: 0x0f172a,
+                  labelPlacement: (n.data.isLeaf ? 'right' : 'left') as
+                    | 'left'
+                    | 'right',
+                  labelOffsetX: n.data.isLeaf ? 4 : -4,
                 }
               : {}),
           },

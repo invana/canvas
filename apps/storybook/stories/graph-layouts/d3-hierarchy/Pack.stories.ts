@@ -137,6 +137,7 @@ export const Pack: Story = {
                 ...(n.data.value !== undefined ? { value: n.data.value } : {}),
                 name: n.data.name,
                 isLeaf,
+                depth: n.data.depth,
               },
               style: {
                 bgFill: isLeaf ? settings.leafFill : settings.innerFill,
@@ -215,47 +216,55 @@ export const Pack: Story = {
     let layout: D3HierarchyLayout | null = null;
 
     /**
-     * Centre an employer-name label inside every leaf bubble whose packed
-     * radius exceeds `labelMinRadius`. `d3.pack()` writes the diameter onto
-     * `data.size`, so this has to run *after* `layout.apply()`.
+     * Centre a name label inside every bubble whose packed radius exceeds
+     * `labelMinRadius` — employer leaves get their company name, city
+     * circles get the city, state circles get the state code. The root
+     * ("H-1B 2019") is skipped because its label would sit at the chart
+     * centre on top of every leaf.
      *
-     * Font size: text width is roughly `fontSize * chars * 0.55` for
-     * sans-serif. Solving for `fontSize` so a label spans ~85% of the
-     * diameter gives `fontSize = diameter * 0.85 / (chars * 0.55)`. Clamped
-     * to `maxLabelFontSize`.
+     * The packed diameter is read off `style.shape.radius` — `D3HierarchyLayout`
+     * writes the resolved size onto each node's shape spec (see its
+     * `store.updateNode(id, { style: { shape: { kind: 'circle', radius } } })`
+     * pack branch), so this has to run *after* `layout.apply()`.
+     *
+     * `placement: 'inside-center'` carries the containment contract (see
+     * [[feedback_label_placement_containment]]) — the LabelDecoration runs
+     * its shrink → truncate → hide fit cascade against the host's inner box
+     * so the label is guaranteed to stay inside the bubble. We just hand it
+     * a generous starting font size (`maxLabelFontSize`) and a floor
+     * (`minFontSize`) below which it stops shrinking and hides instead.
      */
     const applyLeafLabels = (): void => {
       graph.store.batch(() => {
         for (const node of graph.store.nodes()) {
           const data = node.data as {
-            size?: number;
             name?: string;
             isLeaf?: boolean;
+            depth?: number;
           };
-          const baseStyle = { ...(node.style ?? {}) };
+          const baseStyle = {
+            ...((node.style as Record<string, unknown> | undefined) ?? {}),
+          };
           delete (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle;
+          const radius =
+            (baseStyle.shape as { radius?: number } | undefined)?.radius ?? 0;
 
           if (
             settings.showLabels &&
-            data.isLeaf === true &&
-            data.size !== undefined &&
-            data.size / 2 >= settings.labelMinRadius &&
+            (data.depth ?? 0) > 0 &&
+            radius >= settings.labelMinRadius &&
             data.name
           ) {
-            const chars = Math.max(4, data.name.length);
-            const fontSize = Math.min(
-              settings.maxLabelFontSize,
-              (data.size * 0.85) / (chars * 0.55),
-            );
             const labelStyle: ShapeLabelStyle = {
               content: {
                 kind: 'text',
                 text: data.name,
-                fontSize,
+                fontSize: settings.maxLabelFontSize,
                 fontWeight: 500,
                 fill: 0x0f172a,
               },
-              placement: 'center',
+              placement: 'inside-center',
+              minFontSize: 6,
             };
             (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle = labelStyle;
           }

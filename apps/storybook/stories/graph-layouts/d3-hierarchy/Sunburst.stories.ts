@@ -167,6 +167,13 @@ export const Sunburst: Story = {
      * × sweep angle. Text rotates so the baseline reads radially outward,
      * flipping by π on the left half so labels stay right-way-up — same
      * trick as the RadialTree story.
+     *
+     * `placement: 'inside-center'` enforces the wedge-containment contract
+     * (see [[feedback_label_placement_containment]]): the LabelDecoration's
+     * fit cascade shrinks / truncates / hides the label so it stays inside
+     * the arc's AABB. The arc-length pre-filter still suppresses labels on
+     * slivers where the engine would just hide them anyway, which keeps the
+     * scene quieter than letting every arc try.
      */
     const applySunburstLabels = (): void => {
       graph.store.batch(() => {
@@ -204,8 +211,9 @@ export const Sunburst: Story = {
                   fontWeight: 500,
                   fill: 0x0f172a,
                 },
-                placement: 'center',
+                placement: 'inside-center',
                 rotation,
+                minFontSize: 6,
               };
               (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle = labelStyle;
             }
