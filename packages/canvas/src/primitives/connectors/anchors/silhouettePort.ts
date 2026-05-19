@@ -19,8 +19,11 @@ import type { IAnchor, Point } from '../../types';
  * the corner to the top / bottom face instead of falling off the shape.
  *
  * Opts:
- *  - `side: 'left' | 'right' | 'top' | 'bottom'` — which AABB face's
- *    direction the offset is measured against. Required; throws if omitted.
+ *  - `side: 'left' | 'right' | 'top' | 'bottom' | 'auto'` — which AABB face's
+ *    direction the offset is measured against. `'auto'` picks the face whose
+ *    outward normal best aligns with the vector from this shape's centre to
+ *    the *other* endpoint (`fromPoint`) — dominant-axis rule. Default
+ *    `'auto'`.
  *  - `offset: number` — displacement from the face midpoint along the face
  *    axis. For `'left'` / `'right'` this is a vertical offset (+ down); for
  *    `'top'` / `'bottom'` a horizontal offset (+ right). Default `0`.
@@ -36,29 +39,30 @@ import type { IAnchor, Point } from '../../types';
  */
 
 interface SilhouettePortOpts {
-  readonly side: 'left' | 'right' | 'top' | 'bottom';
+  readonly side?: 'left' | 'right' | 'top' | 'bottom' | 'auto';
   readonly offset?: number;
 }
 
-export const silhouettePortAnchor: IAnchor = (endpoint, _fromPoint, ctx) => {
+export const silhouettePortAnchor: IAnchor = (endpoint, fromPoint, ctx) => {
   const ref = ctx.getShape(endpoint.shapeId);
   if (!ref) {
     throw new Error(`silhouettePortAnchor: unknown shape "${endpoint.shapeId}"`);
   }
   const opts = endpoint.opts as SilhouettePortOpts | undefined;
-  if (!opts || !opts.side) {
-    throw new Error(
-      `silhouettePortAnchor: shape "${endpoint.shapeId}" is missing the required \`side\` opt`,
-    );
-  }
-  const offset = opts.offset ?? 0;
+  const offset = opts?.offset ?? 0;
   const halfW = ref.bounds.width / 2;
   const halfH = ref.bounds.height / 2;
+
+  // Default `side` is `'auto'` — pick the face pointing toward the other
+  // endpoint. Callers that want a fixed face pass an explicit `side`.
+  const requestedSide = opts?.side ?? 'auto';
+  const side: 'left' | 'right' | 'top' | 'bottom' =
+    requestedSide === 'auto' ? resolveAutoSide(fromPoint, ref.center) : requestedSide;
 
   // Centre-relative target the ray aims at. The ray runs from local origin
   // (= centre) through this point and intersects the silhouette en route.
   let localTarget: Point;
-  switch (opts.side) {
+  switch (side) {
     case 'left':   localTarget = { x: -halfW, y: offset }; break;
     case 'right':  localTarget = { x:  halfW, y: offset }; break;
     case 'top':    localTarget = { x: offset, y: -halfH }; break;
@@ -79,3 +83,18 @@ export const silhouettePortAnchor: IAnchor = (endpoint, _fromPoint, ctx) => {
 
   return { x, y, tangent };
 };
+
+/**
+ * Pick the AABB face whose outward normal best aligns with the vector from
+ * the host centre to `fromPoint` (the other endpoint). Dominant axis wins;
+ * ties resolve to the horizontal face (`right` / `left`).
+ */
+function resolveAutoSide(
+  fromPoint: Point,
+  center: Point,
+): 'left' | 'right' | 'top' | 'bottom' {
+  const dx = fromPoint.x - center.x;
+  const dy = fromPoint.y - center.y;
+  if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? 'right' : 'left';
+  return dy >= 0 ? 'bottom' : 'top';
+}

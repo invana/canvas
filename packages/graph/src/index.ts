@@ -100,5 +100,13 @@ export {
   EdgeSizeLODBehaviour,
   type EdgeSizeLODBehaviourOptions,
   type EdgeSizeLODConfig,
+  ParallelEdgeBehaviour,
+  centeredRanksPolicy,
+  type ParallelEdgeBasis,
+  type ParallelEdgeBehaviourOptions,
+  type ParallelEdgeDistribute,
+  type ParallelEdgeDistributeContext,
+  type ParallelEdgeGroup,
+  type ParallelEdgePatch,
 } from './behaviours';
 

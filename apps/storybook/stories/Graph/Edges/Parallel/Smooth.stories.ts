@@ -11,49 +11,49 @@ import {
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'Graph/Edges/Parallel/Rounded' };
+const meta: Meta = { title: 'Graph/Edges/Parallel/Smooth' };
 export default meta;
 type Story = StoryObj;
 
 /**
- * `count` parallel axis-aligned edges with rounded corner fillets between
- * two rect nodes. `pathStyle` `rounded` accepts a `radius` opt that controls
- * the fillet size at each bend.
+ * `count` parallel `smooth`-routed edges between two circle nodes. The
+ * `smooth` pathStyle is a Catmull-Rom spline through every input point, so
+ * the single perpendicular midpoint waypoint the behaviour writes pulls
+ * each edge into a clean arc. The bundle visually resembles a leaf with
+ * the chord as its midrib.
  *
- * `ParallelEdgeBehaviour` distributes the ranks and writes the midpoint
- * waypoint per edge; the corner-fillet rendering is purely a pathStyle
- * concern and lives in the connector pipeline. Tweak `radius` to see only
- * the corners change without re-distributing the bundle.
+ * Replaces the previous top-level `Graph/Edges/ParallelEdges` story —
+ * same scene, now sitting alongside the other per-pathType variants. All
+ * bundling logic lives in `ParallelEdgeBehaviour`; this story is the
+ * minimum amount of code needed to seed the demo.
  */
-export const Rounded: Story = {
-  render: () => createContainer({ id: 'graph-parallel-rounded' }),
+export const Smooth: Story = {
+  render: () => createContainer({ id: 'graph-parallel-smooth' }),
 
   play: async ({ canvasElement }) => {
     const ANCHORS: readonly EdgeAnchor[] = [
+      'boundary',
       'silhouette-port',
       'edge-port',
-      'boundary',
       'center',
     ];
     const COUNT_MAX = 15;
     const settings = {
-      anchor: 'silhouette-port' as EdgeAnchor,
+      anchor: 'boundary' as EdgeAnchor,
       count: 7,
-      spacing: 14,
-      radius: 14,
+      spacing: 26,
     };
 
     const nodes: NodeData[] = [
-      { id: 'a', position: { x: -240, y: -160 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155, shape: { kind: 'rect', width: 80, height: 80 } } },
-      { id: 'b', position: { x:  240, y:  160 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155, shape: { kind: 'rect', width: 80, height: 80 } } },
+      { id: 'a', position: { x: -260, y: -180 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155, shape: { kind: 'circle', radius: 22 } } },
+      { id: 'b', position: { x:  260, y:  180 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155, shape: { kind: 'circle', radius: 22 } } },
     ];
 
     const edgeStyle = (): EdgeData['style'] => ({
       shape: {
-        pathType: 'rounded',
+        pathType: 'smooth',
         sourceAnchor: settings.anchor,
         targetAnchor: settings.anchor,
-        pathStyleOpts: { radius: settings.radius },
       },
     });
 
@@ -61,7 +61,7 @@ export const Rounded: Story = {
       id: `e${i}`, source: 'a', target: 'b', style: edgeStyle(),
     }));
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#graph-parallel-rounded')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#graph-parallel-smooth')!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
@@ -101,12 +101,11 @@ export const Rounded: Story = {
       }
     };
 
-    const gui = new GUI({ title: 'Parallel · rounded' });
+    const gui = new GUI({ title: 'Parallel · smooth' });
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'anchor', [...ANCHORS]).onChange(applyEdgeStyle);
     gui.add(settings, 'count', 1, COUNT_MAX, 1).onChange(applyCount);
-    gui.add(settings, 'spacing', 0, 30, 1).onChange((v: number) => parallel.setOptions({ spacing: v }));
-    gui.add(settings, 'radius', 0, 40, 1).onChange(applyEdgeStyle);
+    gui.add(settings, 'spacing', 0, 80, 1).onChange((v: number) => parallel.setOptions({ spacing: v }));
 
     canvas.camera.fitContent(graph.getBounds(), 100);
   },

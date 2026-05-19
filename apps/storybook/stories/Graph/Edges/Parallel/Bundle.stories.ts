@@ -3,9 +3,10 @@ import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour,
   GraphLayer,
+  ParallelEdgeBehaviour,
+  type EdgeAnchor,
   type EdgeData,
   type NodeData,
-  type NodeShapeOptions,
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -15,42 +16,52 @@ export default meta;
 type Story = StoryObj;
 
 /**
- * `count` parallel `bundle` edges between two nodes. Router `straight`
- * + pathStyle `bundle` (d3-shape `curveBundle`). Each edge's mid-waypoint
- * sits at `midpoint + perpendicular × k × spacing`; the bundle curve
- * pulls tight against the straight `src ↔ tgt` chord, weighted by `beta`.
+ * `count` parallel `bundle`-routed edges between two circle nodes.
+ * `bundle` is d3-shape's `curveBundle` — a B-spline whose `beta` parameter
+ * controls how tightly each curve pulls toward the straight chord between
+ * its endpoints. `beta = 1` lets the perpendicular midpoint waypoint
+ * dominate (max bow), `beta = 0` collapses every curve onto the chord
+ * (the bundle disappears).
  *
- *  - `beta = 1` → tight cubic through the waypoint (max bend)
- *  - `beta = 0` → flat against the chord (parallel edges collapse)
- *
- * `nodeKind` swaps the source / target shape between `circle`, `rect`,
- * `pill`, and `ellipse`. Bundle uses the default `boundary` anchor, which
- * trims at the actual silhouette of any shape.
+ * `ParallelEdgeBehaviour` writes the bow waypoints; `beta` is a pure
+ * pathStyle parameter and is re-stamped on every edge when the slider
+ * moves.
  */
 export const Bundle: Story = {
   render: () => createContainer({ id: 'graph-parallel-bundle' }),
 
   play: async ({ canvasElement }) => {
-    const SHAPES: Record<string, NodeShapeOptions> = {
-      circle: { kind: 'circle', radius: 40 },
-      rect: { kind: 'rect', width: 80, height: 80 },
-      pill: { kind: 'rect', width: 100, height: 50, cornerRadius: 25 },
-      ellipse: {
-        kind: 'polygon',
-        vertices: Array.from({ length: 32 }, (_, i) => ({
-          x: Math.cos((i / 32) * Math.PI * 2) * 50,
-          y: Math.sin((i / 32) * Math.PI * 2) * 30,
-        })),
-      },
+    const ANCHORS: readonly EdgeAnchor[] = [
+      'boundary',
+      'silhouette-port',
+      'edge-port',
+      'center',
+    ];
+    const COUNT_MAX = 15;
+    const settings = {
+      anchor: 'boundary' as EdgeAnchor,
+      count: 7,
+      spacing: 22,
+      beta: 0.85,
     };
 
     const nodes: NodeData[] = [
-      { id: 'a', position: { x: -260, y: -180 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155 } },
-      { id: 'b', position: { x:  260, y:  180 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155 } },
+      { id: 'a', position: { x: -240, y: -160 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155, shape: { kind: 'circle', radius: 30 } } },
+      { id: 'b', position: { x:  240, y:  160 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155, shape: { kind: 'circle', radius: 30 } } },
     ];
 
-    const settings = { nodeKind: 'circle', anchor: 'boundary', count: 7, spacing: 32, beta: 0.85 };
-    const ANCHORS = ['silhouette-port', 'edge-port', 'boundary', 'center'];
+    const edgeStyle = (): EdgeData['style'] => ({
+      shape: {
+        pathType: 'bundle',
+        sourceAnchor: settings.anchor,
+        targetAnchor: settings.anchor,
+        pathStyleOpts: { beta: settings.beta },
+      },
+    });
+
+    const edges: EdgeData[] = Array.from({ length: settings.count }, (_, i) => ({
+      id: `e${i}`, source: 'a', target: 'b', style: edgeStyle(),
+    }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-parallel-bundle')!;
     const canvas = new Canvas();
@@ -61,120 +72,43 @@ export const Bundle: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: {
-        edge: {
-          style: {
-            strokeColor: 0x64748b,
-            strokeWidth: 2,
-            strokeCap: 'round',
-          },
-        },
-      },
+      options: { edge: { style: { strokeColor: 0x64748b, strokeWidth: 2, strokeCap: 'round' } } },
     });
     canvas.layers.add(graph);
+    graph.setData({ nodes, edges });
 
-    const centerOf = (pos: { x: number; y: number }) => {
-      const s = SHAPES[settings.nodeKind] as { kind: string; width?: number; height?: number };
-      if (s.kind === 'rect' && s.width !== undefined && s.height !== undefined) {
-        return { x: pos.x + s.width / 2, y: pos.y + s.height / 2 };
-      }
-      return { x: pos.x, y: pos.y };
+    const parallel = new ParallelEdgeBehaviour({
+      id: 'parallel-edges',
+      layerId: 'graph',
+      enabled: true,
+      spacing: settings.spacing,
+    });
+    canvas.behaviours.register(parallel);
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }));
+
+    const applyEdgeStyle = () => {
+      const style = edgeStyle();
+      for (const e of graph.store.edges()) graph.store.updateEdge(e.id, { style });
+      parallel.recompute();
     };
-
-    const patchAllEdges = () => {
-      const srcPos = graph.store.getPosition('a');
-      const tgtPos = graph.store.getPosition('b');
-      if (!srcPos || !tgtPos) return;
-      const src = centerOf(srcPos);
-      const tgt = centerOf(tgtPos);
-      const dx = tgt.x - src.x;
-      const dy = tgt.y - src.y;
-      const len = Math.hypot(dx, dy) || 1;
-      const nx = -dy / len;
-      const ny =  dx / len;
-      const horizontal = Math.abs(dx) >= Math.abs(dy);
-      const srcSide = horizontal ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'bottom' : 'top');
-      const tgtSide = horizontal ? (dx > 0 ? 'left' : 'right') : (dy > 0 ? 'top' : 'bottom');
-      const isPort = settings.anchor === 'silhouette-port' || settings.anchor === 'edge-port';
-      const half = (settings.count - 1) / 2;
-      for (let i = 0; i < settings.count; i++) {
-        const k = i - half;
-        const off = k * settings.spacing;
-        const portOpts = isPort
-          ? {
-              sourceAnchorOpts: { side: srcSide, offset: off },
-              targetAnchorOpts: { side: tgtSide, offset: off },
-            }
-          : {};
-        graph.store.updateEdge(`e${i}`, {
-          style: {
-            shape: {
-              pathType: 'bundle',
-              pathStyleOpts: { beta: settings.beta },
-              sourceAnchor: settings.anchor,
-              targetAnchor: settings.anchor,
-              ...portOpts,
-              waypoints: [{
-                x: src.x + dx * 0.5 + nx * k * settings.spacing,
-                y: src.y + dy * 0.5 + ny * k * settings.spacing,
-              }],
-            },
-          },
-        });
-      }
-    };
-
-    const COUNT_MAX = 15;
-
-    const initialSeed = () => {
-      const shape = SHAPES[settings.nodeKind];
-      const liveNodes: NodeData[] = nodes.map((n) => ({
-        ...n,
-        style: { ...n.style, shape },
-      }));
-      const edges: EdgeData[] = Array.from({ length: settings.count }, (_, i) => ({
-        id: `e${i}`, source: 'a', target: 'b',
-      }));
-      graph.setData({ nodes: liveNodes, edges });
-      patchAllEdges();
-    };
-
-    const applyShape = () => {
-      const shape = SHAPES[settings.nodeKind];
-      for (const n of nodes) {
-        graph.store.updateNode(n.id, { style: { ...n.style, shape } });
-      }
-    };
-
     const applyCount = () => {
-      const desired = settings.count;
-      for (let i = 0; i < desired; i++) {
+      const style = edgeStyle();
+      for (let i = 0; i < settings.count; i++) {
         if (!graph.store.getEdge(`e${i}`)) {
-          graph.store.addEdge({ id: `e${i}`, source: 'a', target: 'b' });
+          graph.store.addEdge({ id: `e${i}`, source: 'a', target: 'b', style });
         }
       }
-      for (let i = desired; i <= COUNT_MAX; i++) {
-        if (graph.store.getEdge(`e${i}`)) {
-          graph.store.removeEdge(`e${i}`);
-        }
+      for (let i = settings.count; i <= COUNT_MAX; i++) {
+        if (graph.store.getEdge(`e${i}`)) graph.store.removeEdge(`e${i}`);
       }
-      patchAllEdges();
     };
 
-    initialSeed();
-
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
-    graph.store.events.on('node:update', () => patchAllEdges());
-
-    const gui = new GUI({ title: 'Bundle · parallel edges' });
+    const gui = new GUI({ title: 'Parallel · bundle' });
     onStoryTeardown(() => gui.destroy());
-    gui.add(settings, 'nodeKind', Object.keys(SHAPES)).onChange(applyShape);
-    gui.add(settings, 'anchor', ANCHORS).onChange(patchAllEdges);
+    gui.add(settings, 'anchor', [...ANCHORS]).onChange(applyEdgeStyle);
     gui.add(settings, 'count', 1, COUNT_MAX, 1).onChange(applyCount);
-    gui.add(settings, 'spacing', 0, 120, 1).onChange(patchAllEdges);
-    gui.add(settings, 'beta', 0, 1, 0.01).onChange(patchAllEdges);
+    gui.add(settings, 'spacing', 0, 60, 1).onChange((v: number) => parallel.setOptions({ spacing: v }));
+    gui.add(settings, 'beta', 0, 1, 0.01).onChange(applyEdgeStyle);
 
     canvas.camera.fitContent(graph.getBounds(), 100);
   },
