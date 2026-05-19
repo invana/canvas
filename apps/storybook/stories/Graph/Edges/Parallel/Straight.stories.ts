@@ -47,7 +47,8 @@ export const Straight: Story = {
       { id: 'b', position: { x:  260, y:  180 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155 } },
     ];
 
-    const settings = { nodeKind: 'circle', count: 7, spacing: 26 };
+    const settings = { nodeKind: 'circle', anchor: 'boundary', count: 7, spacing: 26 };
+    const ANCHORS = ['silhouette-port', 'edge-port', 'boundary', 'center'];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-parallel-straight')!;
     const canvas = new Canvas();
@@ -89,13 +90,29 @@ export const Straight: Story = {
       const len = Math.hypot(dx, dy) || 1;
       const nx = -dy / len;
       const ny =  dx / len;
+      // Side derivation is only consumed by the port anchors; computed
+      // unconditionally to keep the closure simple.
+      const horizontal = Math.abs(dx) >= Math.abs(dy);
+      const srcSide = horizontal ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'bottom' : 'top');
+      const tgtSide = horizontal ? (dx > 0 ? 'left' : 'right') : (dy > 0 ? 'top' : 'bottom');
+      const isPort = settings.anchor === 'silhouette-port' || settings.anchor === 'edge-port';
       const half = (settings.count - 1) / 2;
       for (let i = 0; i < settings.count; i++) {
         const k = i - half;
+        const off = k * settings.spacing;
+        const portOpts = isPort
+          ? {
+              sourceAnchorOpts: { side: srcSide, offset: off },
+              targetAnchorOpts: { side: tgtSide, offset: off },
+            }
+          : {};
         graph.store.updateEdge(`e${i}`, {
           style: {
             shape: {
               pathType: 'straight',
+              sourceAnchor: settings.anchor,
+              targetAnchor: settings.anchor,
+              ...portOpts,
               waypoints: [{
                 x: src.x + dx * 0.5 + nx * k * settings.spacing,
                 y: src.y + dy * 0.5 + ny * k * settings.spacing,
@@ -157,6 +174,7 @@ export const Straight: Story = {
     const gui = new GUI({ title: 'Straight · parallel edges' });
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'nodeKind', Object.keys(SHAPES)).onChange(applyShape);
+    gui.add(settings, 'anchor', ANCHORS).onChange(patchAllEdges);
     gui.add(settings, 'count', 1, COUNT_MAX, 1).onChange(applyCount);
     gui.add(settings, 'spacing', 0, 80, 1).onChange(patchAllEdges);
 

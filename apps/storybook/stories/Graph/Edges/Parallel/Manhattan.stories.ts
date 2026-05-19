@@ -45,7 +45,8 @@ export const Manhattan: Story = {
       { id: 'b', position: { x:  260, y:  180 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155 } },
     ];
 
-    const settings = { nodeKind: 'rect', count: 7, spacing: 11 };
+    const settings = { nodeKind: 'rect', anchor: 'silhouette-port', count: 7, spacing: 11 };
+    const ANCHORS = ['silhouette-port', 'edge-port', 'boundary', 'center'];
     const COUNT_MAX = 15;
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-parallel-manhattan')!;
@@ -81,20 +82,26 @@ export const Manhattan: Story = {
       const midX = (src.x + tgt.x) / 2;
       const midY = (src.y + tgt.y) / 2;
       const half = (settings.count - 1) / 2;
+      const isPort = settings.anchor === 'silhouette-port' || settings.anchor === 'edge-port';
       for (let i = 0; i < settings.count; i++) {
         const k = i - half;
         const off = k * settings.spacing;
         const wp = horizontal
           ? { x: midX + off, y: midY }
           : { x: midX,       y: midY + off };
+        const portOpts = isPort
+          ? {
+              sourceAnchorOpts: { side: srcSide, offset: off },
+              targetAnchorOpts: { side: tgtSide, offset: off },
+            }
+          : {};
         graph.store.updateEdge(`e${i}`, {
           style: {
             shape: {
               pathType: 'manhattan',
-              sourceAnchor: 'silhouette-port',
-              sourceAnchorOpts: { side: srcSide, offset: off },
-              targetAnchor: 'silhouette-port',
-              targetAnchorOpts: { side: tgtSide, offset: off },
+              sourceAnchor: settings.anchor,
+              targetAnchor: settings.anchor,
+              ...portOpts,
               waypoints: [wp],
             },
           },
@@ -147,6 +154,7 @@ export const Manhattan: Story = {
     const gui = new GUI({ title: 'Manhattan · parallel edges' });
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'nodeKind', Object.keys(SHAPES)).onChange(applyShape);
+    gui.add(settings, 'anchor', ANCHORS).onChange(patchAllEdges);
     gui.add(settings, 'count', 1, COUNT_MAX, 1).onChange(applyCount);
     gui.add(settings, 'spacing', 0, 18, 1).onChange(patchAllEdges);
 
