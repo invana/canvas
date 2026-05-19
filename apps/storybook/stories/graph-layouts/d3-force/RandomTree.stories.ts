@@ -46,23 +46,24 @@ export const RandomTree: Story = {
       return (to8(r) << 16) | (to8(g) << 8) | to8(b);
     };
 
-    const buildGraphData = (): { nodes: GraphNode[]; edges: GraphEdge[] } => {
+    type TreeNodeData = { depth: number };
+    // Updated each rebuild; the layer-level `bgFill` resolver closes over it
+    // so colours rescale automatically when the tree grows or shrinks.
+    let maxDepth = 0;
+
+    const buildGraphData = (): { nodes: GraphNode<TreeNodeData>[]; edges: GraphEdge[] } => {
       const tree = generateRandomTree(settings.nodeCount);
 
       // Depth via BFS from root (index 0). The dataset doesn't carry depth,
       // but the topology is a tree so a single pass over edges is enough.
       const depths = new Array<number>(tree.nodes.length).fill(0);
       for (const e of tree.edges) depths[e.target] = depths[e.source]! + 1;
-      let maxDepth = 0;
+      maxDepth = 0;
       for (const d of depths) if (d > maxDepth) maxDepth = d;
 
-      const colorAt = (depth: number): number => {
-        const t = maxDepth === 0 ? 0 : depth / maxDepth;
-        return hslToHex(30 + t * 190, 0.65, 0.55); // 30° orange → 220° blue
-      };
-      const nodes: GraphNode[] = tree.nodes.map((n) => ({
+      const nodes: GraphNode<TreeNodeData>[] = tree.nodes.map((n) => ({
         id: String(n.index),
-        data: { fill: colorAt(depths[n.index]!), size: 8 },
+        data: { depth: depths[n.index]! },
       }));
       const edges: GraphEdge[] = tree.edges.map((e, i) => ({
         id: `e${i}`,
@@ -95,6 +96,17 @@ export const RandomTree: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        node: {
+          style: {
+            shape: { kind: 'circle', radius: 4 },
+            // 30° orange (root) → 220° blue (leaves), rescaling per rebuild.
+            bgFill: (n: GraphNode) => {
+              const depth = (n.data as TreeNodeData).depth;
+              const t = maxDepth === 0 ? 0 : depth / maxDepth;
+              return hslToHex(30 + t * 190, 0.65, 0.55);
+            },
+          },
+        },
         edge: { style: { strokeColor: 0x64748b, strokeWidth: 0.8, arrowTargetShape: 'none' } },
       },
     });

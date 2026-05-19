@@ -33,9 +33,10 @@ import { createContainer, onStoryTeardown } from '../../div-util';
 const POINTER_ID = '__pointer__';
 
 interface NodeData {
-  fill: number;
-  size: number;
-  alpha?: number;
+  /** Visual + collision radius. The pointer node ignores this and uses
+   *  `settings.pointerRadius` live, so collide-and-flee responds to the GUI. */
+  radius: number;
+  kind: 'circle' | 'pointer';
 }
 
 const meta: Meta = { title: 'graph-layouts/d3-force/CollisionDetection' };
@@ -80,9 +81,10 @@ export const CollisionDetection: Story = {
 
     // ── Data ─────────────────────────────────────────────────────────────
     // Disconnected nodes — `forceCollide` is the whole point of this demo,
-    // so there are no edges. Radii are sampled uniformly in [min, max] and
-    // mapped to a warm→cool hue so size and colour read together. The last
-    // node is a pinned "pointer" that the cursor drives at runtime.
+    // so there are no edges. Radii are sampled uniformly in [min, max]; the
+    // colour mapping (warm small → cool large) lives in the layer-level
+    // `bgFill` resolver below. The last node is a pinned "pointer" that
+    // the cursor drives at runtime.
     const lerpChannel = (a: number, b: number, t: number): number =>
       Math.round(a + (b - a) * t);
 
@@ -94,11 +96,6 @@ export const CollisionDetection: Story = {
       const nodes: GraphNode<NodeData>[] = [];
       for (let i = 0; i < count; i++) {
         const r = minR + Math.random() * (maxR - minR);
-        const t = maxR === minR ? 0 : (r - minR) / (maxR - minR);
-        // Warm (small, amber) → cool (large, indigo).
-        const fillR = lerpChannel(0xf5, 0x63, t) & 0xff;
-        const fillG = lerpChannel(0x9e, 0x60, t) & 0xff;
-        const fillB = lerpChannel(0x0b, 0xf1, t) & 0xff;
         nodes.push({
           id: String(i),
           // No explicit `position` — the layout leaves x/y undefined so
@@ -106,7 +103,7 @@ export const CollisionDetection: Story = {
           // a small radius. `forceCollide` then explodes them out to the
           // natural packing density, with `forceX`/`forceY` holding the
           // cluster centred. This matches the Observable original.
-          data: { fill: (fillR << 16) | (fillG << 8) | fillB, size: r * 2 },
+          data: { radius: r, kind: 'circle' },
         });
       }
 
@@ -116,11 +113,7 @@ export const CollisionDetection: Story = {
         id: POINTER_ID,
         position: { x: 1e6, y: 1e6 },
         pinned: true,
-        data: {
-          fill: 0xffffff,
-          size: settings.pointerRadius * 2,
-          alpha: settings.pointerVisible ? 0.15 : 0,
-        },
+        data: { radius: settings.pointerRadius, kind: 'pointer' },
       });
 
       return { nodes, edges: [] };
@@ -155,6 +148,38 @@ export const CollisionDetection: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        node: {
+          style: {
+            // Pointer follows `settings.pointerRadius` live; circles take
+            // the radius sampled at build time.
+            shape: (n: GraphNode) => {
+              const d = n.data as NodeData;
+              return {
+                kind: 'circle',
+                radius: d.kind === 'pointer' ? settings.pointerRadius : d.radius,
+              };
+            },
+            // Pointer is white; circles map their radius to a warm→cool hue
+            // against the current [min, max] window so size and colour
+            // read together as the sliders change.
+            bgFill: (n: GraphNode) => {
+              const d = n.data as NodeData;
+              if (d.kind === 'pointer') return 0xffffff;
+              const minR = Math.min(settings.minRadius, settings.maxRadius);
+              const maxR = Math.max(settings.minRadius, settings.maxRadius);
+              const t = maxR === minR ? 0 : (d.radius - minR) / (maxR - minR);
+              const fillR = lerpChannel(0xf5, 0x63, t) & 0xff;
+              const fillG = lerpChannel(0x9e, 0x60, t) & 0xff;
+              const fillB = lerpChannel(0x0b, 0xf1, t) & 0xff;
+              return (fillR << 16) | (fillG << 8) | fillB;
+            },
+            bgAlpha: (n: GraphNode) => {
+              const d = n.data as NodeData;
+              if (d.kind === 'pointer') return settings.pointerVisible ? 0.15 : 0;
+              return 1;
+            },
+          },
+        },
         edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 0.8, arrowTargetShape: 'none' } },
       },
     });
@@ -175,11 +200,13 @@ export const CollisionDetection: Story = {
         x: { x: 0, strength: settings.xStrength },
         y: { y: 0, strength: settings.yStrength },
         collide: {
-          // Per-node radius — circles use their visual radius (`size / 2`)
-          // plus padding, and the pointer node uses its own large radius.
+          // Per-node radius — circles use their stored radius; the pointer
+          // node tracks the GUI slider live so collide-and-flee responds.
           radius: (n) => {
-            const size = (n.data as NodeData | undefined)?.size ?? 0;
-            return size / 2 + settings.collidePadding;
+            const d = n.data as NodeData | undefined;
+            if (!d) return settings.collidePadding;
+            const r = d.kind === 'pointer' ? settings.pointerRadius : d.radius;
+            return r + settings.collidePadding;
           },
           strength: settings.collideStrength,
           iterations: settings.collideIterations,
