@@ -7,6 +7,7 @@ import {
   type EdgeAnchor,
   type EdgeData,
   type NodeData,
+  type NodeShapeOptions,
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -30,6 +31,18 @@ export const Straight: Story = {
   render: () => createContainer({ id: 'graph-parallel-straight' }),
 
   play: async ({ canvasElement }) => {
+    const SHAPES: Record<string, NodeShapeOptions> = {
+      circle:  { kind: 'circle', radius: 40 },
+      rect:    { kind: 'rect', width: 80, height: 80 },
+      pill:    { kind: 'rect', width: 100, height: 50, cornerRadius: 25 },
+      ellipse: {
+        kind: 'polygon',
+        vertices: Array.from({ length: 32 }, (_, i) => ({
+          x: Math.cos((i / 32) * Math.PI * 2) * 50,
+          y: Math.sin((i / 32) * Math.PI * 2) * 30,
+        })),
+      },
+    };
     const ANCHORS: readonly EdgeAnchor[] = [
       'boundary',
       'silhouette-port',
@@ -38,14 +51,16 @@ export const Straight: Story = {
     ];
     const COUNT_MAX = 15;
     const settings = {
+      nodeKind: 'circle',
       anchor: 'boundary' as EdgeAnchor,
       count: 7,
       spacing: 22,
     };
 
+    const nodeStyle = () => ({ bgFill: 0x64748b, bgStrokeColor: 0x334155, shape: SHAPES[settings.nodeKind]! });
     const nodes: NodeData[] = [
-      { id: 'a', position: { x: -240, y: -160 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155, shape: { kind: 'circle', radius: 30 } } },
-      { id: 'b', position: { x:  240, y:  160 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155, shape: { kind: 'circle', radius: 30 } } },
+      { id: 'a', position: { x: -240, y: -160 }, style: nodeStyle() },
+      { id: 'b', position: { x:  240, y:  160 }, style: nodeStyle() },
     ];
 
     const edgeStyle = (): EdgeData['style'] => ({
@@ -83,6 +98,11 @@ export const Straight: Story = {
     canvas.behaviours.register(parallel);
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }));
 
+    const applyShape = () => {
+      const style = nodeStyle();
+      for (const n of graph.store.nodes()) graph.store.updateNode(n.id, { style });
+      parallel.recompute();
+    };
     const applyEdgeStyle = () => {
       const style = edgeStyle();
       for (const e of graph.store.edges()) graph.store.updateEdge(e.id, { style });
@@ -102,6 +122,7 @@ export const Straight: Story = {
 
     const gui = new GUI({ title: 'Parallel · straight' });
     onStoryTeardown(() => gui.destroy());
+    gui.add(settings, 'nodeKind', Object.keys(SHAPES)).onChange(applyShape);
     gui.add(settings, 'anchor', [...ANCHORS]).onChange(applyEdgeStyle);
     gui.add(settings, 'count', 1, COUNT_MAX, 1).onChange(applyCount);
     gui.add(settings, 'spacing', 0, 60, 1).onChange((v: number) => parallel.setOptions({ spacing: v }));
