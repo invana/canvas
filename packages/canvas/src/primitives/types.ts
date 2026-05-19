@@ -130,12 +130,31 @@ export type IRouter = (
 ) => Polyline;
 
 /**
- * PathStyle: a pure function `(polyline, opts?) → Path`.
+ * Anchor-resolved endpoints handed to a pathStyle alongside the polyline.
+ *
+ * Tangent-aware pathStyles (`bump-horizontal`, …) read `source.tangent` /
+ * `target.tangent` to place their Bézier handles along each shape's outward
+ * surface normal, so the curve leaves and arrives flush with the silhouette
+ * instead of in a hard-coded direction. Tangent-agnostic pathStyles (`normal`,
+ * `rounded`, …) simply ignore the argument — it's optional and additive.
+ */
+export interface PathStyleEndpoints {
+  readonly source: Endpoint;
+  readonly target: Endpoint;
+}
+
+/**
+ * PathStyle: a pure function `(polyline, opts?, endpoints?) → Path`.
  *
  * PathStyles decide visual **style** — how segments between polyline points
  * are drawn (sharp, rounded fillets, bezier-smoothed, single bezier A→B).
  * They never see the connector spec or shape context; pure geometric
  * transform.
+ *
+ * `endpoints` carries the anchor-resolved source/target (with `tangent`) so
+ * tangent-aware styles can align Bézier handles with each shape's outward
+ * normal. Optional — styles that don't need it ignore the argument and a
+ * direct unit-test invocation (`bumpHorizontal(polyline)`) keeps working.
  *
  * Built-ins: `normal` (sharp), `rounded` (quadratic fillets at corners),
  * `smooth` (Catmull-Rom → cubic), `bezier` (single cubic with auto controls).
@@ -143,6 +162,7 @@ export type IRouter = (
 export type IPathStyle = (
   polyline: Polyline,
   opts?: Record<string, unknown>,
+  endpoints?: PathStyleEndpoints,
 ) => Path;
 
 // ─── Fill ──────────────────────────────────────────────────────────────────

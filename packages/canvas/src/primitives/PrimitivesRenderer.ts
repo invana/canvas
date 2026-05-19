@@ -1608,7 +1608,7 @@ export class PrimitivesRenderer {
       },
     };
     const polyline = router(source, target, spec.waypoints, spec.routerOpts, ctx);
-    return pathStyle(polyline, spec.pathStyleOpts);
+    return pathStyle(polyline, spec.pathStyleOpts, { source, target });
   }
 
   /**

@@ -140,6 +140,7 @@ export type {
   Polyline,
   IRouter,
   IPathStyle,
+  PathStyleEndpoints,
   IAnchor,
   Obstacle,
   RouterCtx,
