@@ -44,13 +44,15 @@ export const Bubble: Story = {
       padding: 3,
       leafStrokeWidth: 0,
       showLabels: true,
-      // Cap: even huge bubbles never use a font larger than this. Keeps the
-      // outliers (e.g. "FlareVis" if it ever appeared) from drowning out the
-      // surrounding bubbles' labels.
+      // Initial font size handed to every leaf label. `'inside-center'`
+      // placement runs shrink → truncate → hide against the bubble's
+      // inner box, so this is an upper bound — small bubbles get a
+      // smaller rendered size automatically.
       maxLabelFontSize: 14,
-      // Skip the label when the bubble is too small to fit any readable text
-      // (in world units — pre-zoom). The user can still pan/zoom in and see
-      // the bubble; the label just doesn't render at this LOD.
+      // Skip the label entirely when the bubble is too small to fit any
+      // readable text. The fit cascade also hides labels that can't make
+      // it down to `minFontSize: 6`, but the diameter cutoff keeps the
+      // d3-bubble-chart look (only "real" bubbles get labels at all).
       minLabelDiameter: 16,
     };
 
@@ -94,6 +96,7 @@ export const Bubble: Story = {
               size: 0.1,
               name: n.data.name,
               isLeaf,
+              depth: n.data.depth,
               group: n.data.group,
               ...(n.data.value !== undefined ? { value: n.data.value } : {}),
             },
@@ -165,51 +168,56 @@ export const Bubble: Story = {
     let layout: D3HierarchyLayout | null = null;
 
     /**
-     * Centre a label inside every leaf bubble, sized to fit. `d3.pack()`
-     * writes the final diameter onto `data.size` (see D3HierarchyLayout —
-     * `sizes.set(id, 2 * r)`), so this has to run *after* `layout.apply()`.
+     * Centre a label inside every bubble — leaves *and* inner sub-package
+     * nodes. The packed diameter is read off `style.shape.radius` —
+     * `D3HierarchyLayout` writes the resolved size onto each node's shape
+     * spec (see its `store.updateNode(id, { style: { shape: { kind: 'circle',
+     * radius } } })` pack branch), so this has to run *after* `layout.apply()`.
      *
-     * Font sizing: text width is roughly `fontSize * charCount * 0.55`
-     * for sans-serif. Solving for `fontSize` so the text spans ~85% of
-     * the diameter gives `fontSize = diameter * 0.85 / (chars * 0.55)`.
-     * Clamped to `maxLabelFontSize` so huge bubbles don't shout, and
-     * labels are skipped entirely when even a 4px font would overflow
-     * (i.e. the bubble is smaller than `minLabelDiameter`).
+     * `placement: 'inside-center'` carries the containment contract (see
+     * [[feedback_label_placement_containment]]) — the LabelDecoration's
+     * fit cascade shrinks the font until it fits inside the bubble's
+     * inner box, truncates if shrinking hits `minFontSize`, and hides
+     * the label entirely if even the truncated form won't fit. That makes
+     * it safe to attach a label to every node and let the cascade decide
+     * which ones actually render. The root ("flare") is skipped because
+     * its label would just sit at the visual centre on top of every
+     * leaf — informationally redundant.
      */
     const applyBubbleLabels = (): void => {
       graph.store.batch(() => {
         for (const node of graph.store.nodes()) {
           const data = node.data as {
-            size?: number;
             name?: string;
             isLeaf?: boolean;
+            depth?: number;
           };
-          const baseStyle = { ...(node.style ?? {}) };
+          const baseStyle = {
+            ...((node.style as Record<string, unknown> | undefined) ?? {}),
+          };
           // Always clear stale labels so re-runs (font size, settings
           // toggles) don't accumulate.
           delete (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle;
+          const radius =
+            (baseStyle.shape as { radius?: number } | undefined)?.radius ?? 0;
+          const diameter = radius * 2;
 
           if (
             settings.showLabels &&
-            data.isLeaf === true &&
-            data.size !== undefined &&
-            data.size >= settings.minLabelDiameter &&
+            (data.depth ?? 0) > 0 &&
+            diameter >= settings.minLabelDiameter &&
             data.name
           ) {
-            const chars = Math.max(4, data.name.length);
-            const fontSize = Math.min(
-              settings.maxLabelFontSize,
-              (data.size * 0.85) / (chars * 0.55),
-            );
             const labelStyle: ShapeLabelStyle = {
               content: {
                 kind: 'text',
                 text: data.name,
-                fontSize,
+                fontSize: settings.maxLabelFontSize,
                 fontWeight: 500,
                 fill: 0x0f172a,
               },
-              placement: 'center',
+              placement: 'inside-center',
+              minFontSize: 6,
             };
             (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle = labelStyle;
           }

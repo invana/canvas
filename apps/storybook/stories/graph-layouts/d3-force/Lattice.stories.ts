@@ -65,28 +65,20 @@ export const Lattice: Story = {
       centerStrength: 1,
     };
 
-    const buildGraphData = (): { nodes: GraphNode[]; edges: GraphEdge[] } => {
-      const n = Math.max(2, Math.floor(settings.n));
-      const nodes: GraphNode[] = [];
-      const edges: GraphEdge[] = [];
+    type LatticeNodeData = { i: number; j: number };
+    // Captured by the `bgFill` resolver below so the 2D gradient rescales
+    // when the grid is rebuilt at a new size.
+    let gridSize = Math.max(2, Math.floor(settings.n));
 
-      // 2D gradient: top-left warm → bottom-right cool.
-      const lerpChannel = (a: number, b: number, t: number): number =>
-        Math.round(a + (b - a) * t);
-      const colorAt = (i: number, j: number): number => {
-        const t = (i + j) / (2 * (n - 1));
-        const r = lerpChannel(0xf9, 0x38, t);
-        const g = lerpChannel(0x73, 0x82, t);
-        const b = lerpChannel(0x16, 0xf6, t);
-        return (r << 16) | (g << 8) | b;
-      };
+    const buildGraphData = (): { nodes: GraphNode<LatticeNodeData>[]; edges: GraphEdge[] } => {
+      const n = Math.max(2, Math.floor(settings.n));
+      gridSize = n;
+      const nodes: GraphNode<LatticeNodeData>[] = [];
+      const edges: GraphEdge[] = [];
 
       for (let i = 0; i < n; i++) {
         for (let j = 0; j < n; j++) {
-          nodes.push({
-            id: `${i},${j}`,
-            data: { fill: colorAt(i, j), size: 6 },
-          });
+          nodes.push({ id: `${i},${j}`, data: { i, j } });
           if (j < n - 1) {
             edges.push({
               id: `h-${i}-${j}`,
@@ -106,6 +98,9 @@ export const Lattice: Story = {
 
       return { nodes, edges };
     };
+
+    const lerpChannel = (a: number, b: number, t: number): number =>
+      Math.round(a + (b - a) * t);
 
     // ── Canvas setup ─────────────────────────────────────────────────────
     const container =
@@ -136,6 +131,21 @@ export const Lattice: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        node: {
+          style: {
+            shape: { kind: 'circle', radius: 3 },
+            // 2D gradient: top-left warm → bottom-right cool. Rescales each
+            // rebuild via `gridSize` captured from `buildGraphData`.
+            bgFill: (n: GraphNode) => {
+              const d = n.data as LatticeNodeData;
+              const t = gridSize <= 1 ? 0 : (d.i + d.j) / (2 * (gridSize - 1));
+              const r = lerpChannel(0xf9, 0x38, t);
+              const g = lerpChannel(0x73, 0x82, t);
+              const b = lerpChannel(0x16, 0xf6, t);
+              return (r << 16) | (g << 8) | b;
+            },
+          },
+        },
         edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 0.8, arrowTargetShape: 'none' } },
       },
     });
