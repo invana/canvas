@@ -80,6 +80,54 @@ export class RectShape extends ShapeBase<RectSpec> {
     );
   }
 
+  /**
+   * Silhouette-aware ray exit. For `cornerRadius > 0` the AABB face isn't
+   * the actual outline — the rendered rect rounds inward at each corner.
+   * Take the AABB exit first; if it falls in one of the four corner zones
+   * (within `R` of a corner in both axes), re-cast the ray against that
+   * corner's quarter-circle so the returned point sits on the visible
+   * silhouette. For sharp rects this is unchanged from the AABB fallback.
+   */
+  override boundaryIntersect(localFromCenter: Point): Point | null {
+    const cr = this.spec.cornerRadius ?? 0;
+    if (cr <= 0) return super.boundaryIntersect(localFromCenter);
+
+    const halfW = this.spec.width / 2;
+    const halfH = this.spec.height / 2;
+    const R = Math.min(cr, halfW, halfH);
+
+    const aabb = super.boundaryIntersect(localFromCenter);
+    if (!aabb) return null;
+
+    const onRight = aabb.x >  halfW - R;
+    const onLeft  = aabb.x < -halfW + R;
+    const onTop   = aabb.y < -halfH + R;
+    const onBot   = aabb.y >  halfH - R;
+    let cornerX: number;
+    let cornerY: number;
+    if (onRight && onTop)      { cornerX =  halfW - R; cornerY = -halfH + R; }
+    else if (onRight && onBot) { cornerX =  halfW - R; cornerY =  halfH - R; }
+    else if (onLeft  && onTop) { cornerX = -halfW + R; cornerY = -halfH + R; }
+    else if (onLeft  && onBot) { cornerX = -halfW + R; cornerY =  halfH - R; }
+    else return aabb;
+
+    const len = Math.hypot(localFromCenter.x, localFromCenter.y);
+    if (len === 0) return aabb;
+    const ux = localFromCenter.x / len;
+    const uy = localFromCenter.y / len;
+    // Solve |t·(ux,uy) − C|² = R² with unit direction → quadratic in t:
+    //   t² − 2·dot·t + (Cx² + Cy² − R²) = 0
+    // The rect interior in a corner zone is inside the arc circle (the
+    // arc centre sits inside the body), so the ray exits the rect where
+    // it crosses *out* of the circle — the larger positive root.
+    const dot = ux * cornerX + uy * cornerY;
+    const c = cornerX * cornerX + cornerY * cornerY - R * R;
+    const disc = dot * dot - c;
+    if (disc < 0) return aabb;
+    const t = dot + Math.sqrt(disc);
+    return { x: ux * t, y: uy * t };
+  }
+
   static paintInto(
     g: Graphics,
     spec: Omit<RectSpec, 'x' | 'y'>,

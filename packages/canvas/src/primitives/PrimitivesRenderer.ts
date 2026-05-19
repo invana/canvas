@@ -65,6 +65,7 @@ import { centerAnchor } from './connectors/anchors/center';
 import { boundaryAnchor } from './connectors/anchors/boundary';
 import { perpendicularAnchor } from './connectors/anchors/perpendicular';
 import { edgePortAnchor } from './connectors/anchors/edgePort';
+import { silhouettePortAnchor } from './connectors/anchors/silhouettePort';
 import { distanceToPolylineSq, pathBounds, samplePath, trimPathEnds } from './connectors/pathSampling';
 import { ArrowMarker } from './markers/ArrowMarker';
 import { GlowDecoration } from './decorations/shape/GlowDecoration';
@@ -310,6 +311,7 @@ export class PrimitivesRenderer {
     this.registerAnchor('boundary', boundaryAnchor);
     this.registerAnchor('perpendicular', perpendicularAnchor);
     this.registerAnchor('edge-port', edgePortAnchor);
+    this.registerAnchor('silhouette-port', silhouettePortAnchor);
 
     this.registerDecoration('glow', GlowDecoration, { target: 'shape' });
     this.registerDecoration('pulse-ring', PulseRingDecoration, { target: 'shape' });

@@ -5,6 +5,7 @@ import {
   GraphLayer,
   type EdgeData,
   type NodeData,
+  type NodeShapeOptions,
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -18,24 +19,35 @@ type Story = StoryObj;
  * pathStyle `rounded` — H/V segments with a quadratic fillet at every
  * corner (`radius` is the fillet length along each incoming segment).
  *
- * Waypoint scheme auto-switches per layout (same logic as `Parallel/Orth`):
- *
- *  - **Diagonal endpoints** → 1 waypoint, 2-corner Z per edge.
- *  - **Near-collinear endpoints** → 2 waypoints at 25 % / 75 %, 4-corner
- *    train-tracks with a parallel lane.
- *
- * Drag the nodes to swap layouts; tweak `radius` to soften the corners.
+ * Same per-edge `silhouette-port` anchor + midpoint-pinned waypoint
+ * scheme as `Parallel/Orth`. See that story's header for the rationale;
+ * the only difference here is the corner fillet pathStyle and the
+ * `radius` GUI knob.
  */
 export const Rounded: Story = {
   render: () => createContainer({ id: 'graph-parallel-rounded' }),
 
   play: async ({ canvasElement }) => {
+    const SHAPES: Record<string, NodeShapeOptions> = {
+      circle: { kind: 'circle', radius: 40 },
+      rect: { kind: 'rect', width: 80, height: 80 },
+      pill: { kind: 'rect', width: 100, height: 50, cornerRadius: 25 },
+      ellipse: {
+        kind: 'polygon',
+        vertices: Array.from({ length: 32 }, (_, i) => ({
+          x: Math.cos((i / 32) * Math.PI * 2) * 50,
+          y: Math.sin((i / 32) * Math.PI * 2) * 30,
+        })),
+      },
+    };
+
     const nodes: NodeData[] = [
       { id: 'a', position: { x: -260, y: -180 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155 } },
       { id: 'b', position: { x:  260, y:  180 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155 } },
     ];
 
-    const settings = { count: 7, spacing: 20, radius: 12 };
+    const settings = { nodeKind: 'rect', count: 7, spacing: 11, radius: 8 };
+    const COUNT_MAX = 15;
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-parallel-rounded')!;
     const canvas = new Canvas();
@@ -47,8 +59,13 @@ export const Rounded: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        node: { style: { shape: { kind: 'circle', radius: 22 } } },
-        edge: { style: { strokeColor: 0x64748b, strokeWidth: 2, strokeCap: 'round' } },
+        edge: {
+          style: {
+            strokeColor: 0x64748b,
+            strokeWidth: 2,
+            strokeCap: 'round',
+          },
+        },
       },
     });
     canvas.layers.add(graph);
@@ -59,40 +76,39 @@ export const Rounded: Story = {
       if (!src || !tgt) return;
       const dx = tgt.x - src.x;
       const dy = tgt.y - src.y;
-      const len = Math.hypot(dx, dy) || 1;
-      const nx = -dy / len;
-      const ny =  dx / len;
+      const horizontal = Math.abs(dx) >= Math.abs(dy);
+      const srcSide = horizontal ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'bottom' : 'top');
+      const tgtSide = horizontal ? (dx > 0 ? 'left' : 'right') : (dy > 0 ? 'top' : 'bottom');
+      const midX = (src.x + tgt.x) / 2;
+      const midY = (src.y + tgt.y) / 2;
       const half = (settings.count - 1) / 2;
-      const fanHalfWidth = half * settings.spacing;
-      const useLane = Math.min(Math.abs(dx), Math.abs(dy)) < fanHalfWidth;
       for (let i = 0; i < settings.count; i++) {
         const k = i - half;
-        const offX = nx * k * settings.spacing;
-        const offY = ny * k * settings.spacing;
-        const waypoints = useLane
-          ? [
-              { x: src.x + dx * 0.25 + offX, y: src.y + dy * 0.25 + offY },
-              { x: src.x + dx * 0.75 + offX, y: src.y + dy * 0.75 + offY },
-            ]
-          : [
-              { x: src.x + dx * 0.5 + offX, y: src.y + dy * 0.5 + offY },
-            ];
+        const off = k * settings.spacing;
+        const wp = horizontal
+          ? { x: midX + off, y: midY }
+          : { x: midX,       y: midY + off };
         graph.store.updateEdge(`e${i}`, {
           style: {
             shape: {
               pathType: 'rounded',
               pathStyleOpts: { radius: settings.radius },
-              waypoints,
+              sourceAnchor: 'silhouette-port',
+              sourceAnchorOpts: { side: srcSide, offset: off },
+              targetAnchor: 'silhouette-port',
+              targetAnchorOpts: { side: tgtSide, offset: off },
+              waypoints: [wp],
             },
           },
         });
       }
     };
 
-    const reseed = () => {
-      const liveNodes = nodes.map((n) => ({
+    const initialSeed = () => {
+      const shape = SHAPES[settings.nodeKind];
+      const liveNodes: NodeData[] = nodes.map((n) => ({
         ...n,
-        position: graph.store.getPosition(n.id) ?? n.position!,
+        style: { ...n.style, shape },
       }));
       const edges: EdgeData[] = Array.from({ length: settings.count }, (_, i) => ({
         id: `e${i}`, source: 'a', target: 'b',
@@ -101,7 +117,29 @@ export const Rounded: Story = {
       patchAllEdges();
     };
 
-    reseed();
+    const applyShape = () => {
+      const shape = SHAPES[settings.nodeKind];
+      for (const n of nodes) {
+        graph.store.updateNode(n.id, { style: { ...n.style, shape } });
+      }
+    };
+
+    const applyCount = () => {
+      const desired = settings.count;
+      for (let i = 0; i < desired; i++) {
+        if (!graph.store.getEdge(`e${i}`)) {
+          graph.store.addEdge({ id: `e${i}`, source: 'a', target: 'b' });
+        }
+      }
+      for (let i = desired; i <= COUNT_MAX; i++) {
+        if (graph.store.getEdge(`e${i}`)) {
+          graph.store.removeEdge(`e${i}`);
+        }
+      }
+      patchAllEdges();
+    };
+
+    initialSeed();
 
     canvas.behaviours.register(
       new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
@@ -110,8 +148,9 @@ export const Rounded: Story = {
 
     const gui = new GUI({ title: 'Rounded · parallel edges' });
     onStoryTeardown(() => gui.destroy());
-    gui.add(settings, 'count', 1, 15, 1).onChange(reseed);
-    gui.add(settings, 'spacing', 0, 60, 1).onChange(patchAllEdges);
+    gui.add(settings, 'nodeKind', Object.keys(SHAPES)).onChange(applyShape);
+    gui.add(settings, 'count', 1, COUNT_MAX, 1).onChange(applyCount);
+    gui.add(settings, 'spacing', 0, 18, 1).onChange(patchAllEdges);
     gui.add(settings, 'radius', 0, 40, 1).onChange(patchAllEdges);
 
     canvas.camera.fitContent(graph.getBounds(), 100);
