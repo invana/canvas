@@ -42,13 +42,10 @@ export const DensityContourFillLayer_Story: Story = {
       0x3b82f6, 0x8b5cf6, 0xec4899, 0x14b8a6, 0xa3e635,
     ];
 
-    const nodes: GraphNode[] = lesMiserables.nodes.map((n) => ({
+    type LesMisNodeData = { group: number };
+    const nodes: GraphNode<LesMisNodeData>[] = lesMiserables.nodes.map((n) => ({
       id: n.id,
-      data: {
-        group: n.data.group,
-        fill: groupColors[n.data.group % groupColors.length],
-        size: 10,
-      },
+      data: { group: n.data.group },
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-density-fill-lesmis')!;
@@ -79,6 +76,13 @@ export const DensityContourFillLayer_Story: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        node: {
+          style: {
+            shape: { kind: 'circle', radius: 5 },
+            bgFill: (n: GraphNode) =>
+              groupColors[(n.data as LesMisNodeData).group % groupColors.length]!,
+          },
+        },
         edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.5 } },
       },
     });
