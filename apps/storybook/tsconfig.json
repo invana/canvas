@@ -5,6 +5,6 @@
     "rootDir": ".",
     "noEmit": true
   },
-  "include": ["stories/**/*", ".storybook/**/*"],
+  "include": ["stories/**/*", ".storybook/**/*", "src/**/*", "vite-env.d.ts"],
   "exclude": ["node_modules", "dist", "storybook-static"]
 }

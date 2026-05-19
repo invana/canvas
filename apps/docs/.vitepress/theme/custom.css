@@ -1,0 +1,9 @@
+/*
+ * Hide VitePress's built-in flat outline. Our `CollapsibleOutline.vue`
+ * component (injected via the `aside-outline-before` slot) replaces it.
+ * The outline marker / spy is reimplemented inside the custom component,
+ * so nothing downstream depends on the default outline element.
+ */
+.VPDocAsideOutline {
+  display: none !important;
+}

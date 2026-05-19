@@ -1,0 +1,34 @@
+{
+  "name": "@invana/graph-layer-maplibre",
+  "version": "0.0.1",
+  "description": "MapLibre GL JS basemap Layer for @invana/canvas — projects graph nodes onto a real interactive world map.",
+  "type": "module",
+  "main": "./src/index.js",
+  "types": "./src/index.ts",
+  "typedocOptions": {
+    "entryPoints": ["src/index.ts"]
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "maplibre-gl": "^4.7.1"
+  },
+  "peerDependencies": {
+    "@invana/canvas": "workspace:*",
+    "pixi.js": "^8.18.1"
+  },
+  "devDependencies": {
+    "@invana/canvas": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "pixi.js": "^8.18.1",
+    "tsup": "^8.3.5",
+    "typescript": "5.9.2"
+  },
+  "keywords": ["canvas", "graph", "layer", "maplibre", "map", "geo", "basemap"],
+  "license": "Apache-2.0"
+}

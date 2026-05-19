@@ -1,0 +1,24 @@
+{
+  "name": "@invana/graph-datasets",
+  "version": "0.0.1",
+  "description": "Example graph datasets for @invana/graph (Les Misérables, scientists org chart, random tree, etc.).",
+  "type": "module",
+  "main": "./src/index.js",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "tsup": "^8.3.5",
+    "typescript": "5.9.2",
+    "vitest": "^2.1.8"
+  },
+  "keywords": ["canvas", "graph", "datasets", "examples", "visualization"],
+  "license": "Apache-2.0"
+}

@@ -1,0 +1,18 @@
+# Function: flareImportsAsGraph()
+
+> **flareImportsAsGraph**(`opts?`): [`FlareImportsGraphData`](../interfaces/FlareImportsGraphData.md)
+
+Defined in: [graph-datasets/src/flare-imports.ts:69](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/flare-imports.ts#L69)
+
+Build the Flare hierarchy plus a deterministic synthetic imports graph
+over its leaves. See module doc for the generation policy.
+
+## Parameters
+
+### opts?
+
+[`FlareImportsOptions`](../interfaces/FlareImportsOptions.md) = `{}`
+
+## Returns
+
+[`FlareImportsGraphData`](../interfaces/FlareImportsGraphData.md)

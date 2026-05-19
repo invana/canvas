@@ -1,0 +1,125 @@
+import type { GraphNode } from '@invana/graph';
+
+/**
+ * `D3ForceLayout` options. Every field maps 1:1 to a d3-force setter
+ * documented at https://d3js.org/d3-force.
+ *
+ * **All options default to `undefined`.** A force is only added to the
+ * simulation when its option is provided. A setter is only called when
+ * its sub-option is provided. Anything omitted falls through to
+ * d3-force's own defaults — or, for forces themselves, is not added at
+ * all.
+ *
+ * @example
+ * new D3ForceLayout({
+ *   charge: {},                       // adds forceManyBody at d3 defaults
+ *   link: { distance: 80 },           // adds forceLink, override distance
+ *   center: { x: 0, y: 0 },           // adds forceCenter at (0, 0)
+ *   // no `collide` → no collision force
+ *   // no `alphaDecay` → d3 default decay rate
+ * });
+ */
+export interface D3ForceLayoutOptions {
+  // ─── Simulation parameters ────────────────────────────────────────────
+  /** `simulation.alpha(alpha)`. */
+  alpha?: number;
+  /** `simulation.alphaMin(min)`. */
+  alphaMin?: number;
+  /** `simulation.alphaDecay(decay)`. */
+  alphaDecay?: number;
+  /** `simulation.alphaTarget(target)`. */
+  alphaTarget?: number;
+  /** `simulation.velocityDecay(decay)`. */
+  velocityDecay?: number;
+
+  // ─── Forces (each off unless provided) ────────────────────────────────
+  /** `forceLink` — pulls connected nodes toward a target distance. */
+  link?: LinkForceOptions;
+  /** `forceManyBody` — n-body charge (negative = repulsion). */
+  charge?: ChargeForceOptions;
+  /** `forceCenter` — translates the cluster's centroid to `(x, y)`. */
+  center?: CenterForceOptions;
+  /** `forceCollide` — prevents overlap. */
+  collide?: CollideForceOptions;
+  /** `forceX` — positioning force along x. */
+  x?: PositionXForceOptions;
+  /** `forceY` — positioning force along y. */
+  y?: PositionYForceOptions;
+  /** `forceRadial` — pulls toward a circle of given radius. Requires `radius`. */
+  radial?: RadialForceOptions;
+}
+
+/** `forceLink` configuration. */
+export interface LinkForceOptions {
+  /** `link.distance(d)`. */
+  distance?: number;
+  /** `link.strength(s)`. */
+  strength?: number;
+  /** `link.iterations(n)`. */
+  iterations?: number;
+}
+
+/** `forceManyBody` configuration. */
+export interface ChargeForceOptions {
+  /** `manyBody.strength(s)` — negative repels, positive attracts. */
+  strength?: number;
+  /** `manyBody.theta(θ)` — Barnes–Hut accuracy threshold. */
+  theta?: number;
+  /** `manyBody.distanceMin(d)`. */
+  distanceMin?: number;
+  /** `manyBody.distanceMax(d)`. */
+  distanceMax?: number;
+}
+
+/** `forceCenter` configuration. */
+export interface CenterForceOptions {
+  /** `center.x(x)`. */
+  x?: number;
+  /** `center.y(y)`. */
+  y?: number;
+  /** `center.strength(s)`. */
+  strength?: number;
+}
+
+/** `forceCollide` configuration. */
+export interface CollideForceOptions {
+  /**
+   * `collide.radius(r)`. Either a constant, or a per-node function called
+   * once per node at `apply()` time with the underlying `GraphNode`. Use
+   * the function form when collision sizes vary per node (e.g. read
+   * `node.data.size`).
+   */
+  radius?: number | ((node: GraphNode) => number);
+  /** `collide.strength(s)` in `[0, 1]`. */
+  strength?: number;
+  /** `collide.iterations(n)`. */
+  iterations?: number;
+}
+
+/** `forceX` configuration. */
+export interface PositionXForceOptions {
+  /** `forceX.x(x)`. */
+  x?: number;
+  /** `forceX.strength(s)`. */
+  strength?: number;
+}
+
+/** `forceY` configuration. */
+export interface PositionYForceOptions {
+  /** `forceY.y(y)`. */
+  y?: number;
+  /** `forceY.strength(s)`. */
+  strength?: number;
+}
+
+/** `forceRadial` configuration. `radius` is required. */
+export interface RadialForceOptions {
+  /** Target circle radius. */
+  radius: number;
+  /** Circle center x. */
+  x?: number;
+  /** Circle center y. */
+  y?: number;
+  /** `radial.strength(s)`. */
+  strength?: number;
+}

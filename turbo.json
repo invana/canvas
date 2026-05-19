@@ -23,6 +23,14 @@
     },
     "clean": {
       "cache": false
+    },
+    "docs": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "typedoc.json"],
+      "outputs": [".vitepress/dist/**"]
+    },
+    "preview": {
+      "cache": false
     }
   }
 }

@@ -1,0 +1,37 @@
+{
+  "name": "@invana/graph-layout-d3-hierarchy",
+  "version": "0.0.1",
+  "description": "D3 hierarchy (tree / cluster / radial) Layout for @invana/graph.",
+  "type": "module",
+  "main": "./src/index.js",
+  "types": "./src/index.ts",
+  "typedocOptions": {
+    "entryPoints": ["src/index.ts"]
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "d3-hierarchy": "^3.1.2"
+  },
+  "peerDependencies": {
+    "@invana/canvas": "workspace:*",
+    "@invana/graph": "workspace:*"
+  },
+  "devDependencies": {
+    "@invana/canvas": "workspace:*",
+    "@invana/graph": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/d3-hierarchy": "^3.1.7",
+    "tsup": "^8.3.5",
+    "typescript": "5.9.2",
+    "vitest": "^2.1.8"
+  },
+  "keywords": ["canvas", "graph", "layout", "d3", "d3-hierarchy", "tree", "cluster", "radial"],
+  "license": "Apache-2.0"
+}

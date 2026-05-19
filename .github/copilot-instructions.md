@@ -14,11 +14,11 @@
  * - Dark theme (dark gray with dots)
  * 
  * Uses lil-gui for interactive theme switching
- * Now uses G6-style plugin configuration pattern
+ * Uses the declarative plugin configuration pattern
  */
 
 import type { Meta, StoryObj } from '@storybook/html';
-import { Canvas, GraphDataPlugin } from '@invana/canvas-core';
+import { Canvas, GraphDataPlugin } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer } from '@/div-utils';
 
@@ -78,7 +78,6 @@ export const Theming: Story = {
         container,
         width: container.clientWidth || 800,
         height: container.clientHeight || 600,
-        behavior: 'default',
         plugins: [
           styles.background
         ]

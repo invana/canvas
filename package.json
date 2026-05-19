@@ -10,7 +10,10 @@
     "check-types": "turbo run check-types",
     "test": "turbo run test",
     "clean": "turbo run clean && rm -rf node_modules",
-    "storybook": "pnpm --filter storybook dev"
+    "storybook": "pnpm --filter @canvas/storybook dev",
+    "docs": "pnpm --filter @canvas/docs build",
+    "docs:dev": "pnpm --filter @canvas/docs dev",
+    "docs:preview": "pnpm --filter @canvas/docs preview"
   },
   "devDependencies": {
     "prettier": "^3.7.4",

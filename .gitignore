@@ -38,4 +38,15 @@ yarn-error.log*
 *.pem
 
 
-apps/storybook/storybook-static/
+storybook-static/
+
+# VitePress
+**/.vitepress/cache/
+**/.vitepress/dist/
+
+# Graphify output
+graphify-out/
+.graphify/
+
+
+debug-storybook.log

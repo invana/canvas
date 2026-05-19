@@ -1,0 +1,541 @@
+/**
+ * `MiniMapLayer` — bird's-eye overview of a `GraphLayer` with a draggable
+ * viewport indicator.
+ *
+ * Implemented as a `ScreenLayer` rather than a self-hosted pixi `Application`
+ * — much cheaper, no extra GPU surface, and pans/zooms/visibility integrate
+ * with the main canvas naturally. The minimap occupies a fixed
+ * `width × height` rectangle anchored to a corner of the viewport.
+ *
+ * Cross-layer dependency declared via `graphLayerId` per the canvas
+ * architecture rule: no inference of "the only graph layer". You must point
+ * the minimap at a specific id.
+ *
+ * @example
+ * ```ts
+ * const graph = new GraphLayer({ id: 'graph', options: {} });
+ * canvas.layers.add(graph);
+ *
+ * const minimap = new MiniMapLayer({
+ *   id: 'minimap',
+ *   options: { graphLayerId: 'graph', position: 'bottom-right' },
+ * });
+ * canvas.layers.add(minimap);
+ * ```
+ */
+
+import { Container, FederatedPointerEvent, Graphics } from 'pixi.js';
+import { ScreenLayer, type CanvasContext, type ScreenLayerHit } from '@invana/canvas';
+import type { LayerOptions, Rect } from '@invana/canvas';
+
+import { GraphLayer } from './GraphLayer';
+import type { GraphNode } from '../store/types';
+import type { EdgeStyle, NodeStyle } from './types';
+
+/** Anchor corner inside the canvas viewport. */
+export type MiniMapPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
+/** Constructor options for `MiniMapLayer`. */
+export interface MiniMapLayerOptions {
+  /** Required — the `GraphLayer` id this minimap mirrors. */
+  graphLayerId: string;
+
+  /** Minimap width in screen pixels. Default `200`. */
+  width?: number;
+  /** Minimap height in screen pixels. Default `150`. */
+  height?: number;
+  /** Background fill `0xRRGGBB`. Default `0x1a1a2e`. */
+  backgroundColor?: number;
+  /** Border colour `0xRRGGBB`. Default `0x444444`. */
+  borderColor?: number;
+  /** Border stroke width. Default `1`. */
+  borderWidth?: number;
+
+  /** Viewport indicator fill. Default `0x4a90d9`. */
+  viewportFill?: number;
+  /** Viewport indicator stroke. Default `0x2a70b9`. */
+  viewportStroke?: number;
+  /** Viewport indicator fill alpha 0–1. Default `0.3`. */
+  viewportFillAlpha?: number;
+  /** Viewport indicator stroke width. Default `2`. */
+  viewportStrokeWidth?: number;
+
+  /** World-space padding around node bounds. Default `20`. */
+  padding?: number;
+  /** Whether dragging the minimap pans the main camera. Default `true`. */
+  enableDrag?: boolean;
+  /** Anchor corner. Default `'bottom-right'`. */
+  position?: MiniMapPosition;
+  /** Distance from the chosen corner, in screen pixels. Default `10`. */
+  margin?: number;
+}
+
+const DEFAULTS: Required<Omit<MiniMapLayerOptions, 'graphLayerId'>> = {
+  width: 200,
+  height: 150,
+  backgroundColor: 0x1a1a2e,
+  borderColor: 0x444444,
+  borderWidth: 1,
+  viewportFill: 0x4a90d9,
+  viewportStroke: 0x2a70b9,
+  viewportFillAlpha: 0.3,
+  viewportStrokeWidth: 2,
+  padding: 20,
+  enableDrag: true,
+  position: 'bottom-right',
+  margin: 10,
+};
+
+interface Bounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface MiniMapState {
+  readonly _placeholder?: never;
+}
+
+export class MiniMapLayer extends ScreenLayer<
+  MiniMapLayerOptions,
+  MiniMapState,
+  Record<string, never>,
+  never,
+  ScreenLayerHit
+> {
+  private opts: Required<Omit<MiniMapLayerOptions, 'graphLayerId'>>;
+  private readonly graphLayerId: string;
+
+  private graph: GraphLayer | null = null;
+  private ctxRef: CanvasContext | null = null;
+
+  /** Inner content container (the minimap's drawable area). */
+  private inner: Container | null = null;
+  private bgGfx: Graphics | null = null;
+  private worldGfx: Graphics | null = null;
+  private viewportGfx: Graphics | null = null;
+
+  /** Per-frame projection scale + offset (world → minimap-local). */
+  private scale = 1;
+  private offsetX = 0;
+  private offsetY = 0;
+
+  /** Drag state. */
+  private isDragging = false;
+  private dragOffsetX = 0;
+  private dragOffsetY = 0;
+
+  /** ResizeObserver disposer. */
+  private offResize: (() => void) | null = null;
+  private offCameraPan: (() => void) | null = null;
+  private offCameraZoom: (() => void) | null = null;
+
+  constructor(opts: LayerOptions<MiniMapLayerOptions>) {
+    super({
+      ...opts,
+      zIndex: opts.zIndex ?? 1000,
+      cullable: opts.cullable ?? false,
+      hittable: opts.hittable ?? false,
+    });
+    this.graphLayerId = opts.options.graphLayerId;
+    this.opts = { ...DEFAULTS, ...opts.options, graphLayerId: undefined } as typeof DEFAULTS;
+  }
+
+  protected createState(): MiniMapState {
+    return {};
+  }
+
+  protected override onMount(ctx: CanvasContext): void {
+    const graph = ctx.layers.get<GraphLayer>(this.graphLayerId);
+    if (!graph) {
+      throw new Error(
+        `MiniMapLayer "${this.id}": graph layer "${this.graphLayerId}" not found. ` +
+          `Add the GraphLayer before MiniMapLayer.`,
+      );
+    }
+    this.graph = graph;
+    this.ctxRef = ctx;
+
+    // Build the screen-space minimap container.
+    this.inner = new Container();
+    this.inner.label = `${this.id}-inner`;
+    this.bgGfx = new Graphics();
+    this.worldGfx = new Graphics();
+    this.viewportGfx = new Graphics();
+    this.inner.addChild(this.bgGfx);
+    this.inner.addChild(this.worldGfx);
+    this.inner.addChild(this.viewportGfx);
+    this.container.addChild(this.inner);
+
+    if (this.opts.enableDrag) this.wireInteractions();
+
+    this.layoutPosition();
+    this.repaint();
+
+    // Re-paint when graph data changes or the camera moves.
+    this.offCameraPan = ctx.events.on('camera:pan', () => this.repaint());
+    this.offCameraZoom = ctx.events.on('camera:zoom', () => this.repaint());
+    const offDataChanged = graph.events.on('data:changed', () => this.repaint());
+
+    if (typeof ResizeObserver !== 'undefined' && ctx.canvasElement) {
+      const ro = new ResizeObserver(() => {
+        this.layoutPosition();
+        this.repaint();
+      });
+      ro.observe(ctx.canvasElement);
+      this.offResize = () => ro.disconnect();
+    }
+
+    // Subscription to data:changed returns an unsubscribe function — capture it
+    // so we drop it on unmount.
+    const prevOffResize = this.offResize;
+    this.offResize = () => {
+      offDataChanged();
+      prevOffResize?.();
+    };
+  }
+
+  protected override onUnmount(): void {
+    this.offCameraPan?.();
+    this.offCameraZoom?.();
+    this.offResize?.();
+    this.offCameraPan = null;
+    this.offCameraZoom = null;
+    this.offResize = null;
+
+    this.inner?.removeFromParent();
+    this.inner?.destroy({ children: true });
+    this.inner = null;
+    this.bgGfx = null;
+    this.worldGfx = null;
+    this.viewportGfx = null;
+    this.graph = null;
+    this.ctxRef = null;
+  }
+
+  hitTest(): ScreenLayerHit | null {
+    return null;
+  }
+
+  // ─── Public API ─────────────────────────────────────────────────────────
+
+  /** Force a re-paint. Cheap — call after mutating colours / sizes externally. */
+  refresh(): void {
+    this.repaint();
+  }
+
+  setOptions(patch: Partial<Omit<MiniMapLayerOptions, 'graphLayerId'>>): void {
+    this.opts = { ...this.opts, ...patch };
+    this.layoutPosition();
+    this.repaint();
+  }
+
+  // ─── Layout ─────────────────────────────────────────────────────────────
+
+  private viewportSize(): { width: number; height: number } {
+    const el = this.ctxRef?.canvasElement;
+    if (el) return { width: el.clientWidth || 800, height: el.clientHeight || 600 };
+    return { width: 800, height: 600 };
+  }
+
+  private layoutPosition(): void {
+    if (!this.inner) return;
+    const { width, height, position, margin } = this.opts;
+    const vp = this.viewportSize();
+    let x = 0;
+    let y = 0;
+    switch (position) {
+      case 'top-left':
+        x = margin;
+        y = margin;
+        break;
+      case 'top-right':
+        x = vp.width - width - margin;
+        y = margin;
+        break;
+      case 'bottom-left':
+        x = margin;
+        y = vp.height - height - margin;
+        break;
+      case 'bottom-right':
+        x = vp.width - width - margin;
+        y = vp.height - height - margin;
+        break;
+    }
+    this.inner.position.set(x, y);
+  }
+
+  // ─── Painting ───────────────────────────────────────────────────────────
+
+  private repaint(): void {
+    if (!this.inner || !this.graph || !this.ctxRef) return;
+    this.projectBounds(this.effectiveBounds());
+    this.paintBackground();
+    this.paintWorld();
+    this.paintViewportIndicator();
+  }
+
+  private paintBackground(): void {
+    const g = this.bgGfx;
+    if (!g) return;
+    const { width, height, backgroundColor, borderColor, borderWidth } = this.opts;
+    g.clear();
+    g.rect(0, 0, width, height).fill(backgroundColor);
+    if (borderWidth > 0) {
+      g.rect(0, 0, width, height).stroke({ color: borderColor, width: borderWidth });
+    }
+  }
+
+  private paintWorld(): void {
+    const g = this.worldGfx;
+    const graph = this.graph;
+    if (!g || !graph) return;
+    g.clear();
+    const renderer = graph.getRenderer();
+
+    // Edges first so node markers cover them at intersections. Use the actual
+    // routed polyline from the renderer — preserves orthogonal kinks, bezier
+    // curves, waypoints, anchor offsets, everything the canvas drew. Falls
+    // back to a straight endpoint-to-endpoint line only when the renderer
+    // isn't available (pre-mount) or hasn't installed the connector yet.
+    for (const edge of graph.store.edges()) {
+      const edgeStyle = (edge.style as Partial<EdgeStyle> | undefined) ?? {};
+      const stroke = typeof edgeStyle.strokeColor === 'number' ? edgeStyle.strokeColor : 0x666666;
+
+      const polyline = renderer?.getConnectorPolyline(edge.id);
+      if (polyline && polyline.length >= 2) {
+        const first = this.worldToMinimap(polyline[0]!.x, polyline[0]!.y);
+        g.moveTo(first.x, first.y);
+        for (let i = 1; i < polyline.length; i++) {
+          const p = this.worldToMinimap(polyline[i]!.x, polyline[i]!.y);
+          g.lineTo(p.x, p.y);
+        }
+        g.stroke({ width: 1, color: stroke });
+        continue;
+      }
+
+      const src = graph.store.getNode(edge.source);
+      const dst = graph.store.getNode(edge.target);
+      if (!src || !dst) continue;
+      const sp = src.position ?? { x: 0, y: 0 };
+      const tp = dst.position ?? { x: 0, y: 0 };
+      const p1 = this.worldToMinimap(sp.x, sp.y);
+      const p2 = this.worldToMinimap(tp.x, tp.y);
+      g.moveTo(p1.x, p1.y);
+      g.lineTo(p2.x, p2.y);
+      g.stroke({ width: 1, color: stroke });
+    }
+
+    // Nodes — ask the renderer for the world-space AABB of whatever it
+    // actually drew (circle, rect, arc, polygon, star, custom kind). The
+    // minimap paints each shape as a small rect at its true footprint —
+    // geometry-driven, no per-kind switching. Fill colour reads from the
+    // per-node `style.bgFill` when concrete; falls back to a neutral
+    // green-grey for the layer-template / resolver case (the minimap
+    // doesn't run the full style resolution pipeline).
+    for (const node of graph.store.nodes()) {
+      const bounds = renderer?.getShapeWorldBounds(node.id) ?? this.fallbackNodeBounds(node);
+      if (!bounds) continue;
+      const tl = this.worldToMinimap(bounds.x, bounds.y);
+      const br = this.worldToMinimap(bounds.x + bounds.width, bounds.y + bounds.height);
+      const w = Math.max(2, br.x - tl.x);
+      const h = Math.max(2, br.y - tl.y);
+
+      const nodeStyle = (node.style as Partial<NodeStyle> | undefined) ?? {};
+      const fillColor = typeof nodeStyle.bgFill === 'number' ? nodeStyle.bgFill : 0x4caf50;
+
+      g.rect(tl.x, tl.y, w, h).fill(fillColor);
+    }
+  }
+
+  /**
+   * Pre-mount / pre-install fallback for shape bounds. Used when the renderer
+   * hasn't yet built an instance for a node (very brief window — the layer's
+   * `data:changed` event repaints the minimap as soon as the renderer catches
+   * up).
+   *
+   * Delegates to {@link GraphLayer.boundsOfNode}, which routes through the
+   * shape registry's `static boundsOf` hook — built-in and custom shape
+   * kinds flow through the same code path. Falls back to a 32px square
+   * AABB centred on the node's stored position when the resolved shape
+   * isn't registered or its ctor doesn't expose `boundsOf`.
+   */
+  private fallbackNodeBounds(node: GraphNode): Rect | null {
+    const graph = this.graph;
+    if (!graph) return null;
+    const pos = node.position ?? { x: 0, y: 0 };
+    const local = graph.boundsOfNode(node) ?? FALLBACK_LOCAL_BOUNDS;
+    return {
+      x: pos.x + local.x,
+      y: pos.y + local.y,
+      width: local.width,
+      height: local.height,
+    };
+  }
+
+  private paintViewportIndicator(): void {
+    const g = this.viewportGfx;
+    const ctx = this.ctxRef;
+    if (!g || !ctx) return;
+    const vis = ctx.camera.getVisibleBounds();
+    const tl = this.worldToMinimap(vis.x, vis.y);
+    const br = this.worldToMinimap(vis.x + vis.width, vis.y + vis.height);
+    const x = tl.x;
+    const y = tl.y;
+    const w = br.x - tl.x;
+    const h = br.y - tl.y;
+    g.clear();
+    g.rect(x, y, w, h);
+    g.fill({ color: this.opts.viewportFill, alpha: this.opts.viewportFillAlpha });
+    g.rect(x, y, w, h);
+    g.stroke({ color: this.opts.viewportStroke, width: this.opts.viewportStrokeWidth });
+  }
+
+  // ─── Bounds + projection ────────────────────────────────────────────────
+
+  /** Union node bounds with the current camera-visible bounds. */
+  private effectiveBounds(): Bounds {
+    const node = this.nodeBounds();
+    const vis = this.ctxRef?.camera.getVisibleBounds() ?? {
+      x: 0,
+      y: 0,
+      width: 1,
+      height: 1,
+    };
+    const minX = Math.min(node.x, vis.x);
+    const minY = Math.min(node.y, vis.y);
+    const maxX = Math.max(node.x + node.width, vis.x + vis.width);
+    const maxY = Math.max(node.y + node.height, vis.y + vis.height);
+    return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+  }
+
+  /**
+   * AABB of all drawn node *footprints* + padding, queried directly from the
+   * renderer's per-instance world bounds — so arcs / polygons / stars /
+   * custom shapes contribute their true extent, not a hardcoded size-derived
+   * estimate. Pre-mount nodes fall through to a position+default-size box.
+   * Returns a 1000×1000 placeholder when the layer has no nodes yet.
+   */
+  private nodeBounds(): Bounds {
+    const graph = this.graph;
+    if (!graph || graph.store.nodeCount() === 0) {
+      return { x: -500, y: -500, width: 1000, height: 1000 };
+    }
+    const renderer = graph.getRenderer();
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
+    let any = false;
+    for (const node of graph.store.nodes()) {
+      const b = renderer?.getShapeWorldBounds(node.id) ?? this.fallbackNodeBounds(node);
+      if (!b) continue;
+      any = true;
+      if (b.x < minX) minX = b.x;
+      if (b.y < minY) minY = b.y;
+      if (b.x + b.width > maxX) maxX = b.x + b.width;
+      if (b.y + b.height > maxY) maxY = b.y + b.height;
+    }
+    if (!any) return { x: -500, y: -500, width: 1000, height: 1000 };
+    const pad = this.opts.padding;
+    return {
+      x: minX - pad,
+      y: minY - pad,
+      width: Math.max(1, maxX - minX + pad * 2),
+      height: Math.max(1, maxY - minY + pad * 2),
+    };
+  }
+
+  private projectBounds(b: Bounds): void {
+    const { width, height } = this.opts;
+    const sx = width / b.width;
+    const sy = height / b.height;
+    this.scale = Math.min(sx, sy) * 0.9;
+    this.offsetX = (width - b.width * this.scale) / 2 - b.x * this.scale;
+    this.offsetY = (height - b.height * this.scale) / 2 - b.y * this.scale;
+  }
+
+  private worldToMinimap(wx: number, wy: number): { x: number; y: number } {
+    return {
+      x: wx * this.scale + this.offsetX,
+      y: wy * this.scale + this.offsetY,
+    };
+  }
+
+  private minimapToWorld(mx: number, my: number): { x: number; y: number } {
+    return {
+      x: (mx - this.offsetX) / this.scale,
+      y: (my - this.offsetY) / this.scale,
+    };
+  }
+
+  // ─── Interactions ───────────────────────────────────────────────────────
+
+  private wireInteractions(): void {
+    const inner = this.inner;
+    if (!inner) return;
+    inner.eventMode = 'static';
+    inner.hitArea = {
+      contains: (x, y) => x >= 0 && x <= this.opts.width && y >= 0 && y <= this.opts.height,
+    };
+    inner.cursor = 'pointer';
+    inner.on('pointerdown', this.onMiniPointerDown);
+    inner.on('pointermove', this.onMiniPointerMove);
+    inner.on('pointerup', this.onMiniPointerUp);
+    inner.on('pointerupoutside', this.onMiniPointerUp);
+  }
+
+  private onMiniPointerDown = (e: FederatedPointerEvent): void => {
+    const ctx = this.ctxRef;
+    if (!ctx || !this.inner) return;
+    const local = e.getLocalPosition(this.inner);
+    const world = this.minimapToWorld(local.x, local.y);
+    const vis = ctx.camera.getVisibleBounds();
+    const cx = vis.x + vis.width / 2;
+    const cy = vis.y + vis.height / 2;
+    const inside =
+      world.x >= vis.x &&
+      world.x <= vis.x + vis.width &&
+      world.y >= vis.y &&
+      world.y <= vis.y + vis.height;
+
+    this.isDragging = true;
+    if (inside) {
+      this.dragOffsetX = world.x - cx;
+      this.dragOffsetY = world.y - cy;
+    } else {
+      this.dragOffsetX = 0;
+      this.dragOffsetY = 0;
+      this.panMainCameraTo(world.x, world.y);
+    }
+  };
+
+  private onMiniPointerMove = (e: FederatedPointerEvent): void => {
+    if (!this.isDragging || !this.ctxRef || !this.inner) return;
+    const local = e.getLocalPosition(this.inner);
+    const world = this.minimapToWorld(local.x, local.y);
+    this.panMainCameraTo(world.x - this.dragOffsetX, world.y - this.dragOffsetY);
+  };
+
+  private onMiniPointerUp = (): void => {
+    this.isDragging = false;
+  };
+
+  /** Position the main camera so the world point `(wx, wy)` lands at screen centre. */
+  private panMainCameraTo(wx: number, wy: number): void {
+    const cam = this.ctxRef?.camera;
+    if (!cam) return;
+    const s = cam.scale;
+    const tx = cam.screenWidth / 2 - wx * s;
+    const ty = cam.screenHeight / 2 - wy * s;
+    cam.setPosition(tx, ty);
+  }
+}
+
+/**
+ * Default local AABB used when the resolved shape isn't registered or its
+ * ctor doesn't expose `static boundsOf`. Centred on the origin so the
+ * minimap places it symmetrically around the node's stored position.
+ */
+const FALLBACK_LOCAL_BOUNDS: Rect = { x: -16, y: -16, width: 32, height: 32 };

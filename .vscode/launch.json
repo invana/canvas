@@ -17,6 +17,30 @@
         "console": "integratedTerminal",
         },
         {
+            "name": "docs build",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/apps/docs",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "build"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "docs dev",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/apps/docs",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "dev"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "layouts-d3-force watch",
             "type": "node",
             "request": "launch",

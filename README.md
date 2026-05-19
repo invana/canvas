@@ -6,8 +6,7 @@ High-performance WebGPU-first canvas rendering engine and visualization toolkit.
 
 | Package | Description |
 |---------|-------------|
-| [@invana/canvas-core](./packages/canvas-core) | Core rendering engine with WebGPU/WebGL support |
-| [@invana/canvas-utils](./packages/canvas-utils) | Shared utilities (math, color, etc.) |
+| [@invana/canvas](./packages/canvas) | Core rendering engine with WebGPU/WebGL support |
 
 ## Quick Start
 
@@ -19,7 +18,7 @@ pnpm storybook
 
 
 ```bash
-pnpm --filter @invana/canvas-core build 
+pnpm --filter @invana/canvas build 
 pnpm --filter @invana/layouts-d3-force build
 ```
 
@@ -31,20 +30,7 @@ pnpm --filter @invana/layouts-d3-force build
 - Multiple node shapes and edge types
 - Rich interactions - pan, zoom, drag, select
 - Support for animations
-
-## Usage
-
-```typescript
-
-
-```
-
-## Documentation
-
-1. [Architecture](./docs/architecture.md)
-2. Plugins
-    - [Usage Patterns](./docs/plugins/usage-patterns.md)
-    - [How to create a plugin](./docs/plugins/how-to-create-plugin.md)
+ 
 
 ## License
 
