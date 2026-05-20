@@ -26,7 +26,7 @@ type Story = StoryObj;
  * The lil-gui panel flips each badge's `placement` so you can see the
  * eight-anchor system at work without rebuilding the graph.
  */
-export const Badges: Story = {
+export const Overview: Story = {
   render: () => createContainer({ id: 'graph-nodes-badges' }),
 
   play: async ({ canvasElement }) => {

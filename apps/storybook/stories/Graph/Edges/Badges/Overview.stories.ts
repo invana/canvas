@@ -35,7 +35,7 @@ type Story = StoryObj;
  * Drag the right-hand node of any row to confirm badges re-anchor as the
  * path re-routes.
  */
-export const Badges: Story = {
+export const Overview: Story = {
   render: () => createContainer({ id: 'graph-edges-badges' }),
 
   play: async ({ canvasElement }) => {
