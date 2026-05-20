@@ -241,6 +241,9 @@ export class GraphLayer extends WorldLayer<
       ...(this.options.hitFloorPx !== undefined
         ? { hitFloorPx: this.options.hitFloorPx }
         : {}),
+      // Forwarded so the renderer's pointer router can apply
+      // `cursor: pointer` on shape / connector hover.
+      ...(ctx.canvasElement ? { canvasElement: ctx.canvasElement } : {}),
     });
 
     // Initial sync — render anything the store already has, then apply any

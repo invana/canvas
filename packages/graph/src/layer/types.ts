@@ -1294,15 +1294,12 @@ export interface GraphLayerOptions {
 
   /**
    * Minimum hover/click target in screen pixels, forwarded to the
-   * internal `PrimitivesRenderer`. Defaults to `6` — a cursor-friendly
-   * floor that keeps tiny visuals (low camera zoom, pinpoint dots)
-   * hoverable.
+   * internal `PrimitivesRenderer`. Default `6`.
    *
-   * Lower this (`1`–`2`) on dense graphs (thousands of close-packed
-   * nodes) where the default floor causes neighbouring hit zones to
-   * overlap and the cursor "snaps" onto nodes that aren't under it.
-   *
-   * Raise this (`8`–`12`) for touch-friendly stories.
+   * Behaves as a *fallback*: exact geometric hits always win; only
+   * when no shape contains the cursor does the dispatcher pick the
+   * closest candidate within `hitFloorPx` screen pixels. See
+   * `PrimitivesRendererOptions.hitFloorPx` for details.
    */
   hitFloorPx?: number;
 }

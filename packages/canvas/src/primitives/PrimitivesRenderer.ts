@@ -31,7 +31,7 @@
  * before the Layer's container is destroyed.
  */
 
-import { Container, type IHitArea } from 'pixi.js';
+import { Container, type FederatedPointerEvent } from 'pixi.js';
 import type { Camera } from '../camera/Camera';
 import { EventEmitter } from '../events/EventEmitter';
 import { TextureRegistry } from '../textures/TextureRegistry';
@@ -165,18 +165,28 @@ export interface PrimitivesRendererOptions {
    */
   readonly textureRegistry?: TextureRegistry;
   /**
-   * Minimum hover/click target in screen pixels — OR'd onto every shape's
-   * geometric hit area so tiny visuals stay hoverable. Defaults to
-   * `6` (cursor-friendly, matches the previous hard-coded constant).
+   * Optional DOM `<canvas>` element. Used by `hitMode: 'indexed'` to
+   * apply `cursor: pointer` on shape/connector hover (Pixi's native
+   * `gfx.cursor` auto-application is bypassed in indexed mode because
+   * `eventMode = 'none'` skips the federated hit-test walk).
    *
-   * **Lower this** (`1`–`2`) on dense graphs where the default floor
-   * causes neighbouring nodes' hit zones to overlap — the hit test
-   * picks by `zIndex` first, so equal-zIndex ties resolve to whichever
-   * candidate rbush returns first, which reads as "random nodes get
-   * hovered" when the cursor isn't actually over any node.
+   * When omitted in indexed mode, hover-cursor styling is a no-op —
+   * shape/connector hits still emit `pointerover` / `pointerout` events
+   * to behaviours, just without the cursor feedback. Most consumers
+   * should pass this; `GraphLayer` forwards `CanvasContext.canvasElement`
+   * automatically.
+   */
+  readonly canvasElement?: HTMLCanvasElement;
+  /**
+   * Minimum hover/click target in screen pixels — used as a *fallback*
+   * by {@link hitTest}: exact geometric hits always win; only when no
+   * shape contains the cursor does the dispatcher pick the closest
+   * candidate within this many screen pixels of its origin. Exact
+   * hits are never widened, so dense graphs don't suffer false
+   * positives.
    *
-   * **Raise this** (`8`–`12`) for touch-friendly stories where the user
-   * pokes around with a finger and tiny pinpoints would be unhittable.
+   * Default `6` (cursor-friendly). Raise (`8`–`12`) for touch-friendly
+   * stories; drop to `0` to forbid the fallback entirely.
    */
   readonly hitFloorPx?: number;
 }
@@ -268,12 +278,40 @@ export class PrimitivesRenderer {
   readonly camera: Camera;
   private readonly textureRegistry: TextureRegistry;
   private readonly hitFloorPx: number;
+  /** DOM canvas element used by the router for cursor styling. */
+  private readonly canvasElement: HTMLCanvasElement | null;
+
+  /** Currently-hovered target. Tracks pointerover/out diffs. */
+  private currentHover: { kind: 'shape' | 'connector'; id: string } | null = null;
+  /** Target captured by a pointerdown — used to gate click emission. */
+  private downHit: { kind: 'shape' | 'connector'; id: string; button: number } | null = null;
+  /**
+   * True while any pointer button is held down (regardless of where
+   * the pointerdown landed). Used to suppress hover state-changes
+   * during a drag — without this, dragging a node over neighbouring
+   * shapes fires `pointerover` on each one and triggers
+   * `HoverActivateBehaviour` mid-drag.
+   */
+  private pointerDown = false;
+  /** Last left-click time + target — drives double-click detection. */
+  private lastLeftClick: { kind: 'shape' | 'connector'; id: string; t: number } | null = null;
+  /** Pointer-router subscriptions to clean up on `destroy`. */
+  private pointerRouterUnsubs: Array<() => void> = [];
+  /**
+   * RAF handle + latest pointer-move event for the move-coalescing
+   * throttle. Raw `globalpointermove` fires hundreds of times per
+   * second on a fast mouse sweep; we only need to resolve the hit
+   * once per animation frame.
+   */
+  private pendingPointerMove: FederatedPointerEvent | null = null;
+  private pointerMoveRaf: number | null = null;
 
   constructor(opts: PrimitivesRendererOptions) {
     this._container = opts.container;
     this.camera = opts.camera;
     this.textureRegistry = opts.textureRegistry ?? new TextureRegistry();
     this.hitFloorPx = opts.hitFloorPx ?? DEFAULT_HIT_FLOOR_PX;
+    this.canvasElement = opts.canvasElement ?? null;
     // Insertion order = render order in Pixi. Adding the connector layer
     // first then the shape layer puts shapes on top — so any connector
     // decoration that extends past a path endpoint (glow halo, ripple
@@ -283,6 +321,7 @@ export class PrimitivesRenderer {
     this._container.addChild(this.connectorLayer);
     this._container.addChild(this.shapeLayer);
     this.registerBuiltins();
+    this.installPointerRouter();
   }
 
   private registerBuiltins(): void {
@@ -428,7 +467,14 @@ export class PrimitivesRenderer {
     const inst = new ShapeInstance<TSpec>(id, spec, shape);
     this.shapeInstances.set(id, inst as unknown as ShapeInstance);
     this.hit.insert(id, 'shape', this.shapeWorldBounds(inst), spec.zIndex ?? 0);
-    this.wireShapeEvents(inst as unknown as ShapeInstance);
+    // Per-shape Pixi event dispatch is bypassed — the renderer's global
+    // pointer router (see `installPointerRouter`) handles hit-routing
+    // via `hitTest`. Disabling `eventMode` on the gfx skips Pixi's
+    // per-shape hit-test walk on every pointer event (the perf win on
+    // dense graphs); the geometric `hitArea` set by `ShapeBase` is
+    // left in place so `hitTest` can still consult it via
+    // `inst.shape.getHitArea().contains(...)`.
+    shape.gfx.eventMode = 'none';
   }
 
   updateShape<TSpec extends BaseShapeSpec>(id: string, partial: Partial<TSpec>): void {
@@ -554,7 +600,9 @@ export class PrimitivesRenderer {
     // `recomputeConnectorPath` for a single code path that handles both
     // the no-decoration and with-decoration cases.
     this.recomputeConnectorPath(inst as unknown as ConnectorInstance);
-    this.wireConnectorEvents(inst as unknown as ConnectorInstance);
+    // See `addShape` for the rationale — per-connector Pixi event
+    // dispatch is replaced by the global pointer router.
+    connector.gfx.eventMode = 'none';
   }
 
   updateConnector<TSpec extends BaseConnectorSpec>(id: string, partial: Partial<TSpec>): void {
@@ -1336,56 +1384,266 @@ export class PrimitivesRenderer {
     (gfx as unknown as { tint: number }).tint = 0xffffff;
   }
 
-  // ─── Hit-testing ────────────────────────────────────────────────────────
+  // ─── Hit-testing + pointer router ────────────────────────────────────
 
+  /**
+   * Resolve the hit at a world point under closest-wins rules. Two
+   * priority bands:
+   *
+   *   1. **Exact geometric hits** — any candidate whose
+   *      `IHitArea.contains` (shapes) or stroke-tolerance polyline
+   *      distance (connectors) covers the cursor. Among these, the
+   *      closest one to its origin wins; equal distances tie-break by
+   *      higher `zIndex`. No "first-match" ambiguity under overlap.
+   *   2. **Floor fallback** — if NO exact hit, return the closest
+   *      candidate whose origin sits within `hitFloorPx` screen pixels
+   *      of the cursor. Lets tiny pinpoints stay hoverable in sparse
+   *      regions without widening hit areas in dense ones.
+   *
+   * Returns `null` when nothing is hit.
+   */
   hitTest(worldX: number, worldY: number): HitResult | null {
-    // Match the federated-event hit floor: pad the rbush query by the
-    // same screen-px → world-units conversion that `withinShapeFloor` /
-    // `withinConnectorFloor` use. Otherwise sub-pixel shapes get pruned
-    // here before `preciseContains` could rescue them via the floor.
-    const pad = this.hitFloorWorld();
-    const candidates = this.hit.query(worldX, worldY, pad);
+    const floorWorld = this.hitFloorWorld();
+    const candidates = this.hit.query(worldX, worldY, floorWorld);
     if (candidates.length === 0) return null;
-    let best: { kind: 'shape' | 'connector'; id: string; zIndex: number } | null = null;
+
+    let bestExact: { kind: 'shape' | 'connector'; id: string; distSq: number; zIndex: number } | null = null;
+    let bestFloor: { kind: 'shape' | 'connector'; id: string; distSq: number } | null = null;
+    const floorSq = floorWorld * floorWorld;
+
     for (const c of candidates) {
-      if (!this.preciseContains(c.kind, c.id, worldX, worldY)) continue;
-      if (best === null || c.zIndex > best.zIndex) {
-        best = { kind: c.kind, id: c.id, zIndex: c.zIndex };
+      const res = this.geometricHit(c.kind, c.id, worldX, worldY);
+      if (!res) continue;
+      if (res.exact) {
+        if (
+          bestExact === null ||
+          res.distSq < bestExact.distSq ||
+          (res.distSq === bestExact.distSq && c.zIndex > bestExact.zIndex)
+        ) {
+          bestExact = { kind: c.kind, id: c.id, distSq: res.distSq, zIndex: c.zIndex };
+        }
+      } else if (res.distSq <= floorSq) {
+        if (bestFloor === null || res.distSq < bestFloor.distSq) {
+          bestFloor = { kind: c.kind, id: c.id, distSq: res.distSq };
+        }
       }
     }
-    return best ? { kind: best.kind, id: best.id } : null;
+
+    const winner = bestExact ?? bestFloor;
+    return winner ? { kind: winner.kind, id: winner.id } : null;
   }
 
-  private preciseContains(
-    kind: 'shape' | 'connector',
-    id: string,
-    worldX: number,
-    worldY: number,
-  ): boolean {
-    if (kind === 'shape') {
-      const inst = this.shapeInstances.get(id);
-      if (!inst) return false;
-      const localX = worldX - inst.spec.x;
-      const localY = worldY - inst.spec.y;
-      return (
-        inst.shape.getHitArea().contains(localX, localY) ||
-        this.withinShapeFloor(localX, localY)
-      );
-    }
-    const inst = this.connectorInstances.get(id);
-    if (!inst) return false;
-    const poly = samplePath(inst.path);
-    const dsq = distanceToPolylineSq(poly, worldX, worldY);
-    const floorR = this.hitFloorWorld();
-    const tolSq = Math.max(this.connectorHitToleranceSq(inst), floorR * floorR);
-    return dsq <= tolSq;
-  }
-
+  /**
+   * Squared tolerance (world units) for an *exact* connector hit:
+   * `(strokeWidth / 2 + slop)²`. The slop adds 4 world units of
+   * forgiveness on top of the stroke half-width since 1-px-stroke
+   * lines are genuinely hard to click pixel-perfect.
+   */
   private connectorHitToleranceSq(inst: ConnectorInstance): number {
     const sw = inst.spec.stroke?.width ?? 1;
     const slop = 4;
     const r = sw / 2 + slop;
     return r * r;
+  }
+
+  /**
+   * Geometric test that returns *both* whether the cursor exactly
+   * contains the shape/connector AND the squared distance to the
+   * shape's origin (or to the connector's nearest polyline point) —
+   * used together by {@link hitTest} for the two-band ranking.
+   */
+  private geometricHit(
+    kind: 'shape' | 'connector',
+    id: string,
+    worldX: number,
+    worldY: number,
+  ): { exact: boolean; distSq: number } | null {
+    if (kind === 'shape') {
+      const inst = this.shapeInstances.get(id);
+      if (!inst) return null;
+      const dx = worldX - inst.spec.x;
+      const dy = worldY - inst.spec.y;
+      // World-space distance to the shape's origin — used for closest-
+      // wins ranking + the floor-radius fallback. Independent of any
+      // `gfx.scale` multiplier the shape carries (the visual centre
+      // doesn't move under a uniform scale-about-origin).
+      const distSq = dx * dx + dy * dy;
+      // The shape's geometric `hitArea` operates in its *local* frame
+      // — i.e. before `gfx.scale` is applied. `NodeSizeLODBehaviour`
+      // (and `HoverActivateBehaviour.zoomedOutScale`) write `gfx.scale`
+      // to inflate visuals without rebuilding geometry, so we must
+      // divide world-space deltas by `gfxScale` before consulting
+      // `contains` — otherwise a 5×-scaled shape whose visible
+      // silhouette covers the cursor reports `false`.
+      const s = inst.gfxScale || 1;
+      const exact = inst.shape.getHitArea().contains(dx / s, dy / s);
+      return { exact, distSq };
+    }
+    const inst = this.connectorInstances.get(id);
+    if (!inst) return null;
+    const poly = samplePath(inst.path);
+    const distSq = distanceToPolylineSq(poly, worldX, worldY);
+    const exact = distSq <= this.connectorHitToleranceSq(inst);
+    return { exact, distSq };
+  }
+
+  /**
+   * Attach a single `globalpointer*` listener trio to the renderer's
+   * container. Pixi's *global* pointer events fire on every move /
+   * down / up regardless of which DisplayObject is under the cursor —
+   * so one listener handles the whole renderer's hit-routing.
+   *
+   * Setting `eventMode = 'static'` on the container is the standard
+   * Pixi v8 idiom for opting into the event system; we don't set a
+   * `hitArea` because the container itself is never the dispatch
+   * target — we delegate to {@link hitTest} on every move/down/up.
+   */
+  private installPointerRouter(): void {
+    this._container.eventMode = 'static';
+    // Always-true `hitArea` so the container catches `pointerdown` /
+    // `pointerup` for the whole canvas. Without this, Pixi can't find
+    // an interactive target on press (every shape's `eventMode` is
+    // `'none'` so the router can do its own hit-testing), and our
+    // `pointerdown` / `pointerup` listeners below never fire —
+    // breaking `DragNodeBehaviour` and anything else that listens for
+    // `shape:pointerdown` / `connector:pointerdown`. The container's
+    // own pointer events are then routed through `hitTest` exactly
+    // like the move stream. `globalpointermove` doesn't need this
+    // (the `global` variant fires regardless of hit) but the regular
+    // down / up events do.
+    this._container.hitArea = { contains: () => true };
+
+    // Move events are RAF-coalesced — only the latest pointer position
+    // is resolved per frame. Without this, a fast mouse sweep over a
+    // dense graph fires hundreds of pickAtWorld + hover-state churns
+    // per second, swamping the renderer.
+    const onMove = (e: FederatedPointerEvent): void => {
+      this.pendingPointerMove = e;
+      if (this.pointerMoveRaf !== null) return;
+      this.pointerMoveRaf = requestAnimationFrame(() => {
+        this.pointerMoveRaf = null;
+        const pending = this.pendingPointerMove;
+        this.pendingPointerMove = null;
+        if (pending) this.routePointerMove(pending);
+      });
+    };
+    const onDown = (e: FederatedPointerEvent): void => this.routePointerDown(e);
+    const onUp = (e: FederatedPointerEvent): void => this.routePointerUp(e);
+
+    this._container.on('globalpointermove', onMove);
+    this._container.on('pointerdown', onDown);
+    this._container.on('pointerup', onUp);
+    this._container.on('pointerupoutside', onUp);
+
+    this.pointerRouterUnsubs.push(
+      () => this._container.off('globalpointermove', onMove),
+      () => this._container.off('pointerdown', onDown),
+      () => this._container.off('pointerup', onUp),
+      () => this._container.off('pointerupoutside', onUp),
+    );
+  }
+
+  private routePointerMove(e: FederatedPointerEvent): void {
+    // Suppress hover state-changes while a pointer button is held.
+    // The currently-hovered target stays highlighted through the
+    // drag; on release, the next move resolves the cursor's actual
+    // target and fires `pointerover` / `pointerout` normally.
+    if (this.pointerDown) return;
+    const w = this.camera.toWorld(e.global.x, e.global.y);
+    const hit = this.hitTest(w.x, w.y);
+    const prev = this.currentHover;
+
+    if (hit === null) {
+      if (prev) {
+        this.events.emit(`${prev.kind}:pointerout`, {
+          id: prev.id, worldX: w.x, worldY: w.y,
+        });
+        this.currentHover = null;
+        this.applyHoverCursor(null);
+      }
+      return;
+    }
+
+    if (prev && prev.kind === hit.kind && prev.id === hit.id) return;
+
+    if (prev) {
+      this.events.emit(`${prev.kind}:pointerout`, {
+        id: prev.id, worldX: w.x, worldY: w.y,
+      });
+    }
+    this.events.emit(`${hit.kind}:pointerover`, {
+      id: hit.id, worldX: w.x, worldY: w.y,
+    });
+    this.currentHover = hit;
+    this.applyHoverCursor(hit);
+  }
+
+  /**
+   * Apply a hover cursor on the canvas DOM element. Skipped when a
+   * pointer-capture interaction is in flight (`downHit != null`) so
+   * behaviours like `DragNodeBehaviour` that own the cursor during a
+   * drag (`'grabbing'`) aren't overridden mid-gesture.
+   */
+  private applyHoverCursor(hit: { kind: 'shape' | 'connector'; id: string } | null): void {
+    if (!this.canvasElement) return;
+    if (this.downHit) return;
+    this.canvasElement.style.cursor = hit ? 'pointer' : '';
+  }
+
+  private routePointerDown(e: FederatedPointerEvent): void {
+    this.pointerDown = true;
+    const w = this.camera.toWorld(e.global.x, e.global.y);
+    const hit = this.hitTest(w.x, w.y);
+    if (!hit) {
+      this.downHit = null;
+      return;
+    }
+    this.events.emit(`${hit.kind}:pointerdown`, {
+      id: hit.id, worldX: w.x, worldY: w.y, button: e.button,
+    });
+    this.downHit = { kind: hit.kind, id: hit.id, button: e.button };
+  }
+
+  private routePointerUp(e: FederatedPointerEvent): void {
+    this.pointerDown = false;
+    const w = this.camera.toWorld(e.global.x, e.global.y);
+    const hit = this.hitTest(w.x, w.y);
+
+    if (hit) {
+      this.events.emit(`${hit.kind}:pointerup`, {
+        id: hit.id, worldX: w.x, worldY: w.y, button: e.button,
+      });
+    }
+
+    const down = this.downHit;
+    this.downHit = null;
+    if (!down || !hit) return;
+    if (down.kind !== hit.kind || down.id !== hit.id) return;
+    if (down.button !== e.button) return;
+
+    if (e.button === 0) {
+      this.events.emit(`${hit.kind}:click`, {
+        id: hit.id, worldX: w.x, worldY: w.y, button: 0,
+      });
+      // Manual double-click detection — Pixi's federated `e.detail`
+      // counter isn't available on `globalpointer*` paths the same way,
+      // so we track per-target click timestamps ourselves. 350ms matches
+      // common OS double-click intervals; same target required.
+      const now = performance.now();
+      const last = this.lastLeftClick;
+      if (last && last.kind === hit.kind && last.id === hit.id && now - last.t < 350) {
+        this.events.emit(`${hit.kind}:doubleclick`, {
+          id: hit.id, worldX: w.x, worldY: w.y, button: 0,
+        });
+        this.lastLeftClick = null;
+      } else {
+        this.lastLeftClick = { kind: hit.kind, id: hit.id, t: now };
+      }
+    } else if (e.button === 2) {
+      this.events.emit(`${hit.kind}:contextmenu`, {
+        id: hit.id, worldX: w.x, worldY: w.y,
+      });
+    }
   }
 
   /**
@@ -1397,40 +1655,6 @@ export class PrimitivesRenderer {
   private hitFloorWorld(): number {
     const scale = this.camera.scale;
     return this.hitFloorPx / Math.max(scale, 1e-6);
-  }
-
-  /**
-   * Screen-pixel floor for shapes — true when the local point lies within
-   * `hitFloorPx / camera.scale` of the shape's local origin. Used to OR a
-   * minimum hover target on top of the primitive's geometric hit area, so a
-   * tiny visual stays hoverable.
-   *
-   * Origin-centred rather than centroid-centred — a deliberate choice for
-   * the v1 floor. For `CircleShape` / `EllipseShape` / `RectShape` / `ArcShape`
-   * the local origin matches the centroid. For `PolygonShape` / `PathShape`
-   * the origin may sit off-centre; the floor backstop is biased toward one
-   * side. Acceptable for a backstop (the geometric test still owns the
-   * primary hit boundary); revisit when a polygon hover-miss complaint
-   * surfaces.
-   */
-  private withinShapeFloor(localX: number, localY: number): boolean {
-    const r = this.hitFloorWorld();
-    return localX * localX + localY * localY <= r * r;
-  }
-
-  /**
-   * Screen-pixel floor for connectors — true when the local point lies
-   * within `hitFloorPx / camera.scale` of any segment of the connector's
-   * polyline. Reads `path` by reference; route reruns flow through.
-   */
-  private withinConnectorFloor(
-    localX: number,
-    localY: number,
-    path: Path,
-  ): boolean {
-    if (path.length < 2) return false;
-    const r = this.hitFloorWorld();
-    return distanceToPolylineSq(samplePath(path), localX, localY) <= r * r;
   }
 
   // ─── Diagnostics ────────────────────────────────────────────────────────
@@ -1676,6 +1900,17 @@ export class PrimitivesRenderer {
   // ─── Teardown ───────────────────────────────────────────────────────────
 
   destroy(): void {
+    if (this.pointerMoveRaf !== null) {
+      cancelAnimationFrame(this.pointerMoveRaf);
+      this.pointerMoveRaf = null;
+    }
+    this.pendingPointerMove = null;
+    for (const fn of this.pointerRouterUnsubs) fn();
+    this.pointerRouterUnsubs = [];
+    this.currentHover = null;
+    this.downHit = null;
+    this.lastLeftClick = null;
+    this.pointerDown = false;
     for (const id of [...this.shapeInstances.keys()]) this.removeShape(id);
     for (const id of [...this.connectorInstances.keys()]) this.removeConnector(id);
     this.animated.clear();
@@ -1914,126 +2149,6 @@ export class PrimitivesRenderer {
       };
       deco.update(host);
     }
-  }
-
-  /**
-   * Subscribe to the primitive's Pixi pointer events and re-emit them on the
-   * renderer's typed bus (`shape:pointerover` / `shape:click` / etc.) with
-   * the instance id + world-space coords.
-   *
-   * Hit geometry — `eventMode`, `cursor`, `hitArea` — is owned by
-   * {@link ShapeBase} (`hitArea` derived from `drawGeometry` via
-   * `getHitArea`). This wirer adds one renderer-level UX policy on top: the
-   * screen-pixel **hit floor**. The geometric `contains` is OR'd with a
-   * disc of `hitFloorPx` screen pixels around the shape's local origin —
-   * so a shape that's collapsed to ~1 anti-aliased pixel at low zoom stays
-   * hoverable within ~6 px of where the user sees it. The floor only adds
-   * area, never shrinks it.
-   */
-  private wireShapeEvents(inst: ShapeInstance): void {
-    // Wrap the primitive's geometric hit area with the screen-pixel floor.
-    // The closure captures the original `contains` by reference so further
-    // `draw()` calls (which update the silhouette `containsPoint` reads
-    // from) still flow through, and the floor `this.camera.scale` lookup
-    // happens per pointer event — no zoom subscription needed.
-    const geometric = inst.shape.gfx.hitArea as IHitArea | null;
-    inst.shape.gfx.hitArea = {
-      contains: (x: number, y: number): boolean =>
-        (geometric?.contains(x, y) ?? false) || this.withinShapeFloor(x, y),
-    };
-
-    const worldOf = (e: { global: { x: number; y: number } }): Point =>
-      this.camera.toWorld(e.global.x, e.global.y);
-
-    inst.shape.gfx.on('pointerover', (e) => {
-      const w = worldOf(e);
-      this.events.emit('shape:pointerover', { id: inst.id, worldX: w.x, worldY: w.y });
-    });
-    inst.shape.gfx.on('pointerout', (e) => {
-      const w = worldOf(e);
-      this.events.emit('shape:pointerout', { id: inst.id, worldX: w.x, worldY: w.y });
-    });
-    inst.shape.gfx.on('pointerdown', (e) => {
-      const w = worldOf(e);
-      this.events.emit('shape:pointerdown', { id: inst.id, worldX: w.x, worldY: w.y, button: e.button });
-    });
-    inst.shape.gfx.on('pointerup', (e) => {
-      const w = worldOf(e);
-      this.events.emit('shape:pointerup', { id: inst.id, worldX: w.x, worldY: w.y, button: e.button });
-    });
-    inst.shape.gfx.on('click', (e) => {
-      // Only emit `shape:click` for left-button presses. Right-button gets its
-      // own channel (`shape:contextmenu`) so consumers can distinguish without
-      // inspecting `button`.
-      if (e.button !== 0) return;
-      const w = worldOf(e);
-      this.events.emit('shape:click', { id: inst.id, worldX: w.x, worldY: w.y, button: e.button });
-      // Pixi's federated `click` carries the DOM `detail` counter (1 on first
-      // click, 2 on a double-click within the OS double-click interval). Fire
-      // `shape:doubleclick` *in addition* to the second `shape:click` — matches
-      // DOM semantics. Consumers that only want one of them filter by name.
-      if (e.detail >= 2) {
-        this.events.emit('shape:doubleclick', {
-          id: inst.id, worldX: w.x, worldY: w.y, button: e.button,
-        });
-      }
-    });
-    inst.shape.gfx.on('rightclick', (e) => {
-      const w = worldOf(e);
-      this.events.emit('shape:contextmenu', { id: inst.id, worldX: w.x, worldY: w.y });
-    });
-  }
-
-  /**
-   * Sibling of {@link wireShapeEvents} for connectors. Hit geometry lives
-   * in {@link ConnectorBase} (distance to the resolved polyline within
-   * stroke / world-slop tolerance). This wirer adds the same screen-pixel
-   * floor as shapes: a thin line at low zoom stays hoverable within
-   * `hitFloorPx` screen pixels of the polyline.
-   */
-  private wireConnectorEvents(inst: ConnectorInstance): void {
-    const geometric = inst.connector.gfx.hitArea as IHitArea | null;
-    inst.connector.gfx.hitArea = {
-      contains: (x: number, y: number): boolean =>
-        (geometric?.contains(x, y) ?? false) ||
-        this.withinConnectorFloor(x, y, inst.path),
-    };
-
-    const worldOf = (e: { global: { x: number; y: number } }): Point =>
-      this.camera.toWorld(e.global.x, e.global.y);
-
-    inst.connector.gfx.on('pointerover', (e) => {
-      const w = worldOf(e);
-      this.events.emit('connector:pointerover', { id: inst.id, worldX: w.x, worldY: w.y });
-    });
-    inst.connector.gfx.on('pointerout', (e) => {
-      const w = worldOf(e);
-      this.events.emit('connector:pointerout', { id: inst.id, worldX: w.x, worldY: w.y });
-    });
-    inst.connector.gfx.on('pointerdown', (e) => {
-      const w = worldOf(e);
-      this.events.emit('connector:pointerdown', { id: inst.id, worldX: w.x, worldY: w.y, button: e.button });
-    });
-    inst.connector.gfx.on('pointerup', (e) => {
-      const w = worldOf(e);
-      this.events.emit('connector:pointerup', { id: inst.id, worldX: w.x, worldY: w.y, button: e.button });
-    });
-    inst.connector.gfx.on('click', (e) => {
-      if (e.button !== 0) return;
-      const w = worldOf(e);
-      this.events.emit('connector:click', {
-        id: inst.id, worldX: w.x, worldY: w.y, button: e.button,
-      });
-      if (e.detail >= 2) {
-        this.events.emit('connector:doubleclick', {
-          id: inst.id, worldX: w.x, worldY: w.y, button: e.button,
-        });
-      }
-    });
-    inst.connector.gfx.on('rightclick', (e) => {
-      const w = worldOf(e);
-      this.events.emit('connector:contextmenu', { id: inst.id, worldX: w.x, worldY: w.y });
-    });
   }
 
   private disposeDecoration(deco: IDecorationBase<unknown>): void {
