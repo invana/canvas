@@ -164,23 +164,29 @@ export interface PrimitivesRendererOptions {
    * not shared across renderer instances.
    */
   readonly textureRegistry?: TextureRegistry;
+  /**
+   * Minimum hover/click target in screen pixels — OR'd onto every shape's
+   * geometric hit area so tiny visuals stay hoverable. Defaults to
+   * `6` (cursor-friendly, matches the previous hard-coded constant).
+   *
+   * **Lower this** (`1`–`2`) on dense graphs where the default floor
+   * causes neighbouring nodes' hit zones to overlap — the hit test
+   * picks by `zIndex` first, so equal-zIndex ties resolve to whichever
+   * candidate rbush returns first, which reads as "random nodes get
+   * hovered" when the cursor isn't actually over any node.
+   *
+   * **Raise this** (`8`–`12`) for touch-friendly stories where the user
+   * pokes around with a finger and tiny pinpoints would be unhittable.
+   */
+  readonly hitFloorPx?: number;
 }
 
 /**
- * Minimum hover/click target in screen pixels — a renderer-level interaction
- * policy that backstops the primitive's geometric hit area. When a node or
- * edge shrinks below this many pixels on screen (low camera zoom, or a
- * physically tiny shape), the cursor still registers a hit within this many
- * pixels of the shape's local origin (or the connector's polyline).
- *
- * The floor never *shrinks* a hit area — it OR's with the primitive's exact
- * `IHitArea.contains`, so big shapes keep their precise silhouette boundary.
- *
- * Kept as a renderer-level constant rather than a `PrimitivesRendererOptions`
- * field until a real use case asks for it — touch-friendly stories might
- * want `8`, cursor-precision stories `4`. Promote to an option when needed.
+ * Default for {@link PrimitivesRendererOptions.hitFloorPx} — overridable
+ * per-renderer. See the option's TSDoc for the rationale on raising /
+ * lowering it.
  */
-const MIN_HIT_PX = 6;
+const DEFAULT_HIT_FLOOR_PX = 6;
 
 export class PrimitivesRenderer {
   private readonly shapeRegistry = new Map<string, ShapeCtor>();
@@ -261,11 +267,13 @@ export class PrimitivesRenderer {
   private readonly shapeLayer: Container;
   readonly camera: Camera;
   private readonly textureRegistry: TextureRegistry;
+  private readonly hitFloorPx: number;
 
   constructor(opts: PrimitivesRendererOptions) {
     this._container = opts.container;
     this.camera = opts.camera;
     this.textureRegistry = opts.textureRegistry ?? new TextureRegistry();
+    this.hitFloorPx = opts.hitFloorPx ?? DEFAULT_HIT_FLOOR_PX;
     // Insertion order = render order in Pixi. Adding the connector layer
     // first then the shape layer puts shapes on top — so any connector
     // decoration that extends past a path endpoint (glow halo, ripple
@@ -1381,19 +1389,19 @@ export class PrimitivesRenderer {
   }
 
   /**
-   * `MIN_HIT_PX` translated into world units at the current camera scale.
+   * `hitFloorPx` translated into world units at the current camera scale.
    * The clamp guards against a zero/NaN scale from a misconfigured camera —
    * with a divide-by-zero, the floor would balloon to `Infinity` and every
    * pointer event would hit every shape.
    */
   private hitFloorWorld(): number {
     const scale = this.camera.scale;
-    return MIN_HIT_PX / Math.max(scale, 1e-6);
+    return this.hitFloorPx / Math.max(scale, 1e-6);
   }
 
   /**
    * Screen-pixel floor for shapes — true when the local point lies within
-   * `MIN_HIT_PX / camera.scale` of the shape's local origin. Used to OR a
+   * `hitFloorPx / camera.scale` of the shape's local origin. Used to OR a
    * minimum hover target on top of the primitive's geometric hit area, so a
    * tiny visual stays hoverable.
    *
@@ -1412,7 +1420,7 @@ export class PrimitivesRenderer {
 
   /**
    * Screen-pixel floor for connectors — true when the local point lies
-   * within `MIN_HIT_PX / camera.scale` of any segment of the connector's
+   * within `hitFloorPx / camera.scale` of any segment of the connector's
    * polyline. Reads `path` by reference; route reruns flow through.
    */
   private withinConnectorFloor(
@@ -1917,7 +1925,7 @@ export class PrimitivesRenderer {
    * {@link ShapeBase} (`hitArea` derived from `drawGeometry` via
    * `getHitArea`). This wirer adds one renderer-level UX policy on top: the
    * screen-pixel **hit floor**. The geometric `contains` is OR'd with a
-   * disc of `MIN_HIT_PX` screen pixels around the shape's local origin —
+   * disc of `hitFloorPx` screen pixels around the shape's local origin —
    * so a shape that's collapsed to ~1 anti-aliased pixel at low zoom stays
    * hoverable within ~6 px of where the user sees it. The floor only adds
    * area, never shrinks it.
@@ -1981,7 +1989,7 @@ export class PrimitivesRenderer {
    * in {@link ConnectorBase} (distance to the resolved polyline within
    * stroke / world-slop tolerance). This wirer adds the same screen-pixel
    * floor as shapes: a thin line at low zoom stays hoverable within
-   * `MIN_HIT_PX` screen pixels of the polyline.
+   * `hitFloorPx` screen pixels of the polyline.
    */
   private wireConnectorEvents(inst: ConnectorInstance): void {
     const geometric = inst.connector.gfx.hitArea as IHitArea | null;

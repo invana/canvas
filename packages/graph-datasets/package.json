@@ -5,6 +5,16 @@
   "type": "module",
   "main": "./src/index.js",
   "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.js"
+    },
+    "./usecase-demos": {
+      "types": "./src/usecase-demos/index.ts",
+      "default": "./src/usecase-demos/index.js"
+    }
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",

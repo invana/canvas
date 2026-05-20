@@ -133,11 +133,14 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     this.configureSimulation(sim);
     this.sim = sim;
 
-    // 3. Each d3 tick → bulk write to store + emit lifecycle `tick`.
-    //    Renderer updates via store events; subscribers (camera fits,
-    //    progress UI, etc.) drive off the layout's own emitter.
+    // 3. Each d3 tick → optionally bulk write to store + emit lifecycle
+    //    `tick`. When `animate` is `false` we skip the per-tick store
+    //    writeback (and the renderer storm that follows) and defer to a
+    //    single writeback in the natural-end handler below — see
+    //    `D3ForceLayoutOptions.animate` for the rationale.
+    const animate = this.opts.animate ?? true;
     sim.on('tick', () => {
-      this.writeBack(store);
+      if (animate) this.writeBack(store);
       this.events.emit('tick', {});
     });
 
@@ -169,6 +172,10 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     return new Promise<void>((resolve) => {
       sim.on('end', () => {
         if (this.running) {
+          // `animate: false` runs deferred every per-tick writeback —
+          // flush the final settled positions now so the renderer
+          // actually sees the layout result.
+          if (!animate) this.writeBack(store);
           this.running = false;
           this.events.emit('end', { reason: 'completed' });
         }

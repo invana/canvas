@@ -238,6 +238,9 @@ export class GraphLayer extends WorldLayer<
     this._renderer = new PrimitivesRenderer({
       container: this.container,
       camera: ctx.camera,
+      ...(this.options.hitFloorPx !== undefined
+        ? { hitFloorPx: this.options.hitFloorPx }
+        : {}),
     });
 
     // Initial sync — render anything the store already has, then apply any

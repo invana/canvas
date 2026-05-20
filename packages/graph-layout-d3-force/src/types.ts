@@ -20,6 +20,28 @@ import type { GraphNode } from '@invana/graph';
  * });
  */
 export interface D3ForceLayoutOptions {
+  // ─── Run-loop behaviour ───────────────────────────────────────────────
+  /**
+   * When `true` (default), positions are written back to the store on
+   * every d3-force tick — the renderer animates the simulation as it
+   * settles.
+   *
+   * When `false`, per-tick writeback is suppressed and positions are
+   * flushed to the store exactly once when the simulation settles
+   * (`sim.on('end')`). The simulation still runs to completion; only the
+   * mirrored renderer updates are skipped. For large graphs (thousands
+   * of nodes / tens of thousands of edges) this avoids the ~hundreds of
+   * intermediate `setPositionsBulk` → `node:update` → renderer storms
+   * that dominate cost — the run finishes noticeably faster and the
+   * viewer just sees the settled picture appear.
+   *
+   * Lifecycle `tick` events are still emitted in both modes — only the
+   * store writeback is gated.
+   *
+   * Default `true`.
+   */
+  animate?: boolean;
+
   // ─── Simulation parameters ────────────────────────────────────────────
   /** `simulation.alpha(alpha)`. */
   alpha?: number;
