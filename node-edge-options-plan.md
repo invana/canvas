@@ -370,7 +370,7 @@ State application stacks; later states override earlier states. Per-node overrid
 
 **Stories ship before the rename hits the rest of the codebase.** They serve two purposes: (a) validate the new shape ergonomically before mass migration; (b) become the regression bed when we rewire the renderer.
 
-Path: `apps/storybook/stories/Graph/States/` (per `apps/storybook/CLAUDE.md` namespacing).
+Path: `apps/storybook/stories/Graph/Etc/` (per `apps/storybook/CLAUDE.md` namespacing).
 
 ### Stories
 
@@ -524,7 +524,7 @@ Migration is opt-in per node: setting `node.options` activates the new path; omi
 - `packages/graph/src/store/types.ts` — add `options?: unknown`; keep `edge.type` (predicate)
 - `packages/graph/src/store/GraphStore.ts` — copy `options` in `installNode` / `installEdge` and on patch
 - `packages/graph/src/layer/index.ts`, `packages/graph/src/index.ts` — export new types
-- `apps/storybook/stories/Graph/States/*` — six stories using `node.options` shape
+- `apps/storybook/stories/Graph/Etc/*` — six stories using `node.options` shape
 
 ### Execution order
 
@@ -542,7 +542,7 @@ After landing this design:
 
 1. `pnpm check-types` — typechecks across all 16 packages
 2. `pnpm --filter @invana/graph test` — 34 store tests still pass (revert of `predicate` → `type`)
-3. `pnpm --filter @canvas/storybook dev` — open `Graph/States/*` and visually verify all six stories
+3. `pnpm --filter @canvas/storybook dev` — open `Graph/Etc/*` and visually verify all six stories
 4. **State perf check:** confirm hover on a node triggers a paint but not a geometry rebuild
 5. **Field-level resolvers:** `LayerResolver` story should compute `bgFill` and `shape.radius` per node from `data`
 6. **Per-node `options.state`** with a custom state name in `state: [...]` activates the overlay immediately on render

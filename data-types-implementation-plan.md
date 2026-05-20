@@ -269,16 +269,16 @@ Eight phases, each independently shippable. Every phase has a clear scope, file 
 
 ### Phase 5 — Migrate the six State stories
 
-**Goal:** the six `apps/storybook/stories/Graph/States/*` stories (already shipped) move to the new `NodeData` / `NodeOption` shape. Existing State stories under `Graph/Nodes/State.stories.ts` and `Graph/Edges/State.stories.ts` (legacy `node.data` shape) stay until Phase 7.
+**Goal:** the six `apps/storybook/stories/Graph/Etc/*` stories (already shipped) move to the new `NodeData` / `NodeOption` shape. Existing State stories under `Graph/Nodes/State.stories.ts` and `Graph/Edges/State.stories.ts` (legacy `node.data` shape) stay until Phase 7.
 
 **Files:**
-- `apps/storybook/stories/Graph/States/BuiltinHover.stories.ts`
-- `apps/storybook/stories/Graph/States/PerNodeOverride.stories.ts`
-- `apps/storybook/stories/Graph/States/Custom.stories.ts`
-- `apps/storybook/stories/Graph/States/Stacking.stories.ts`
-- `apps/storybook/stories/Graph/States/LayerResolver.stories.ts`
-- `apps/storybook/stories/Graph/States/EdgeTransitions.stories.ts`
-- `apps/storybook/stories/Graph/States/Decorations.stories.ts` (NEW — exercises `style.decorations` slot dict via state overlays)
+- `apps/storybook/stories/Graph/Etc/BuiltinHover.stories.ts`
+- `apps/storybook/stories/Graph/Etc/PerNodeOverride.stories.ts`
+- `apps/storybook/stories/Graph/Etc/Custom.stories.ts`
+- `apps/storybook/stories/Graph/Etc/Stacking.stories.ts`
+- `apps/storybook/stories/Graph/Etc/LayerResolver.stories.ts`
+- `apps/storybook/stories/Graph/Etc/EdgeTransitions.stories.ts`
+- `apps/storybook/stories/Graph/Etc/Decorations.stories.ts` (NEW — exercises `style.decorations` slot dict via state overlays)
 
 **Pattern (with a decoration on a state):**
 
@@ -454,7 +454,7 @@ These are judgment calls; flag any you'd flip before Phase 1 ships.
 | 3 | `packages/graph/src/layer/GraphLayer.ts` | `setData` overload + resolver eval. |
 | 3 | `packages/graph/tests/layer/NodeInput.test.ts` | NEW — resolver semantics. |
 | 4 | `packages/graph/src/layer/GraphLayer.ts` | `resolveNodeHints` reads new path. |
-| 5 | `apps/storybook/stories/Graph/States/*.stories.ts` | Six stories migrate. |
+| 5 | `apps/storybook/stories/Graph/Etc/*.stories.ts` | Six stories migrate. |
 | 6 | `packages/graph/src/behaviours/*.ts` | Read-path adapter per behaviour. |
 | 7 | `packages/graph-datasets/src/**/*.ts` | Sample data on new shape. |
 | 7 | `apps/storybook/stories/**/*.stories.ts` | Remaining stories migrate. |

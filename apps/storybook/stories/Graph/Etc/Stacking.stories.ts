@@ -3,28 +3,28 @@ import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import { GraphLayer, type NodeData } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
-const meta: Meta = { title: 'Graph/States/PerNodeOverride' };
+const meta: Meta = { title: 'Graph/Etc/Stacking' };
 export default meta;
 type Story = StoryObj;
 
 /**
- * Validates per-node `state` overlay catalogue (singular) on `NodeData`.
+ * Validates that multiple active states stack additively in `states[]`
+ * order — later wins per field. Three rows show:
  *
- * Three tiles, all with `states: ['hovered']` so the built-in hovered config
- * tries to apply. Each tile overrides `hovered` differently via its own
- * `state.hovered` — proving the per-node patch wins over the layer's
- * canonical config.
+ * 1. just `selected` — yellow ring (built-in `DEFAULT_NODE_STATE_CONFIGS.selected`)
+ * 2. `selected` then `dimmed` — yellow ring + alpha 0.25
+ * 3. `selected`, `dimmed`, then per-node `pulse` overlay — yellow ring,
+ *    dimmed alpha, plus a thicker stroke from the custom state.
  *
- * - left: no override → built-in hover (white stroke).
- * - middle: orange ring on hover.
- * - right: red ring + scaled stroke + fill on hover.
+ * Stacking order is left-to-right in the `states[]` array — last wins per
+ * field.
  */
-export const PerNodeOverride: Story = {
-  render: () => createContainer({ id: 'graph-states-per-node-override' }),
+export const Stacking: Story = {
+  render: () => createContainer({ id: 'graph-states-stacking' }),
 
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>(
-      '#graph-states-per-node-override',
+      '#graph-states-stacking',
     )!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
@@ -34,58 +34,55 @@ export const PerNodeOverride: Story = {
 
     const nodes: NodeData[] = [
       {
-        id: 'default',
-        position: { x: -180, y: 0 },
+        id: 'sel',
+        position: { x: -200, y: 0 },
         style: {
           shape: { kind: 'circle', radius: 36 },
           bgFill: 0x3b82f6,
           bgStrokeColor: 0x1d4ed8,
           bgStrokeWidth: 1,
-          labelText: 'built-in hover',
+          labelText: '[selected]',
           labelColor: 0x1f2937,
           labelPlacement: 'bottom',
           labelFontSize: 12,
           labelOffsetY: 8,
         },
-        states: ['hovered'],
+        states: ['selected'],
       },
       {
-        id: 'orange',
+        id: 'sel-dim',
         position: { x: 0, y: 0 },
         style: {
           shape: { kind: 'circle', radius: 36 },
           bgFill: 0x3b82f6,
           bgStrokeColor: 0x1d4ed8,
           bgStrokeWidth: 1,
-          labelText: 'override → orange',
+          labelText: '[selected, dimmed]',
           labelColor: 0x1f2937,
           labelPlacement: 'bottom',
           labelFontSize: 12,
           labelOffsetY: 8,
         },
-        state: {
-          hovered: { bgStrokeColor: 0xffaa00, bgStrokeWidth: 4 },
-        },
-        states: ['hovered'],
+        states: ['selected', 'dimmed'],
       },
       {
-        id: 'red',
-        position: { x: 180, y: 0 },
+        id: 'sel-dim-pulse',
+        position: { x: 200, y: 0 },
         style: {
           shape: { kind: 'circle', radius: 36 },
           bgFill: 0x3b82f6,
           bgStrokeColor: 0x1d4ed8,
           bgStrokeWidth: 1,
-          labelText: 'override → red',
+          labelText: '[selected, dimmed, pulse]',
           labelColor: 0x1f2937,
           labelPlacement: 'bottom',
           labelFontSize: 12,
           labelOffsetY: 8,
         },
         state: {
-          hovered: { bgStrokeColor: 0xef4444, bgStrokeWidth: 6, bgFill: 0xfde2e2 },
+          pulse: { bgStrokeWidth: 8, bgStrokeColor: 0xfacc15 },
         },
-        states: ['hovered'],
+        states: ['selected', 'dimmed', 'pulse'],
       },
     ];
 

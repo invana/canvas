@@ -459,7 +459,7 @@ These are judgment calls I made; flag any you'd flip:
    - `NodeStyle.test.ts` — `style.states.hover` overlay applied when `states: ['hover']`.
    - `NodeStyle.test.ts` — multi-state stacking order (later wins).
 4. **Storybook stories** updated to use new `NodeInput` shape:
-   - `Graph/States/*` (six stories) updated.
+   - `Graph/Etc/*` (six stories) updated.
    - One new story showing `nodeIdResolver` (layer-wide id resolver).
    - One new story showing `style: { bgFill: (d) => ..., states: { hover: { ... } } }` (per-node resolvers + nested overlays).
 5. `pnpm --filter @canvas/storybook dev` — visual verification.
@@ -478,7 +478,7 @@ These are judgment calls I made; flag any you'd flip:
 1. Lock the seven open decisions in §9.
 2. Implement the type definitions in `packages/graph/src/store/types.ts` + `packages/graph/src/layer/types.ts`.
 3. Wire `GraphLayer.setData` to evaluate per-node resolvers at insert.
-4. Migrate the six `Graph/States/*` stories to the new `NodeInput` shape.
+4. Migrate the six `Graph/Etc/*` stories to the new `NodeInput` shape.
 5. Run typecheck + tests + storybook visual verification.
 
 Pending review — no code changes yet.

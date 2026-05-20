@@ -3,7 +3,7 @@ import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import { GraphLayer, type NodeData } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
-const meta: Meta = { title: 'Graph/States/BuiltinHover' };
+const meta: Meta = { title: 'Graph/Etc/BuiltinHover' };
 export default meta;
 type Story = StoryObj;
 

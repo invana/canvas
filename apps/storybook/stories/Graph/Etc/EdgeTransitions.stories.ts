@@ -3,7 +3,7 @@ import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import { GraphLayer, type EdgeData, type NodeData } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
-const meta: Meta = { title: 'Graph/States/EdgeTransitions' };
+const meta: Meta = { title: 'Graph/Etc/EdgeTransitions' };
 export default meta;
 type Story = StoryObj;
 
