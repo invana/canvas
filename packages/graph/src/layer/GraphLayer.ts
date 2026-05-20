@@ -726,6 +726,14 @@ export class GraphLayer extends WorldLayer<
     const sourceShapeId = this.effectiveEndpoint(edge.source);
     const targetShapeId = this.effectiveEndpoint(edge.target);
 
+    // Collapse-induced self-loop: an intra-group edge whose both endpoints
+    // now resolve to the same collapsed group. Rendering it would produce
+    // a degenerate stub at the group's silhouette — visible as a stray
+    // segment near the super-node. Hide it. Always emit `visible` so the
+    // renderer's partial-merge restores the field on re-expand.
+    const isCollapseSelfLoop =
+      sourceShapeId === targetShapeId && edge.source !== edge.target;
+
     return {
       kind: 'connector',
       source: { kind: 'shape', shapeId: sourceShapeId, anchor: sourceAnchorSpec },
@@ -742,6 +750,7 @@ export class GraphLayer extends WorldLayer<
         ...(style.strokeDashOffset !== undefined ? { dashOffset: style.strokeDashOffset } : {}),
       },
       alpha,
+      visible: !isCollapseSelfLoop,
       ...(arrowTargetShape !== 'none'
         ? { targetMarker: { kind: 'arrow', fill: arrowTargetColor } }
         : {}),
@@ -1120,6 +1129,21 @@ export class GraphLayer extends WorldLayer<
     for (const edge of this.store.edgesOf(nodeId, 'both')) {
       this.dirtyConnectors.add(edge.id);
     }
+    // When the moved node is a collapsed group, the renderer-side anchor
+    // for any descendant's edge has been re-routed to *this* group via
+    // `effectiveEndpoint`. Those edges live under the descendants in the
+    // store (`edge.source` / `edge.target` are never mutated), so the
+    // top-level `edgesOf(group)` walk doesn't see them. Sweep the
+    // descendant subtree explicitly so the connector re-routes when the
+    // collapsed group is dragged.
+    const node = this.store.getNode(nodeId);
+    if (node && this.isCollapsedGroup(node)) {
+      for (const descId of this.store.descendantsOf(nodeId)) {
+        for (const edge of this.store.edgesOf(descId, 'both')) {
+          this.dirtyConnectors.add(edge.id);
+        }
+      }
+    }
   }
 
   // ─── Group helpers ────────────────────────────────────────────────────
@@ -1217,19 +1241,29 @@ export class GraphLayer extends WorldLayer<
    * (which re-projects `visible`), and queue incident edges for re-route.
    */
   private refreshDescendantsAndIncidentEdges(groupId: string): void {
+    // Avoid re-rendering the same connector twice when both endpoints are
+    // descendants of the toggled group.
+    const seenEdges = new Set<string>();
+    const refreshEdge = (edgeId: string): void => {
+      if (seenEdges.has(edgeId)) return;
+      seenEdges.add(edgeId);
+      // Full rerender (not just dirtyConnectors → empty partial). On a
+      // collapse-induced self-loop the new spec carries `visible: false`,
+      // and on re-expand it switches back to `visible: true`. The empty
+      // partial path only re-routes the path; it doesn't refresh the
+      // spec's `visible` field, so the renderer's cached value would
+      // survive the transition.
+      this.rerenderEdge(edgeId);
+    };
     for (const descId of this.store.descendantsOf(groupId)) {
       const desc = this.store.getNode(descId);
       if (!desc) continue;
       this.rerenderNode(descId);
-      for (const edge of this.store.edgesOf(descId, 'both')) {
-        this.dirtyConnectors.add(edge.id);
-      }
+      for (const edge of this.store.edgesOf(descId, 'both')) refreshEdge(edge.id);
     }
     // Edges of the group node itself can swap from a "real" endpoint to
     // the same ancestor's id when there's a nested-collapse scenario.
-    for (const edge of this.store.edgesOf(groupId, 'both')) {
-      this.dirtyConnectors.add(edge.id);
-    }
+    for (const edge of this.store.edgesOf(groupId, 'both')) refreshEdge(edge.id);
   }
 
   /**

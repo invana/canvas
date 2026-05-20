@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
+import GUI from 'lil-gui';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   CollapseExpandBehaviour,
@@ -6,6 +7,7 @@ import {
   GraphLayer,
   type GraphEdge,
   type GraphNode,
+  type NodeStyle,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
@@ -14,30 +16,50 @@ export default meta;
 type Story = StoryObj;
 
 /**
- * Two adjacent rectangular groups, each with three internal nodes, plus
- * a cross-group edge between `a3` and `b1`. Demonstrates that:
+ * Two rect groups with intra-group edges plus one cross-group edge.
  *
- * - Intra-group edges (`a1 → a2`, `b1 → b2`) route normally — the
- *   group's `hittable: false` doesn't affect connectors.
- * - The cross-group edge anchors at each endpoint's boundary as usual.
- *   Collapsing one group (via `CollapseExpandBehaviour`) re-routes the
- *   cross edge to the collapsed super-node automatically.
- * - The group frame paints behind its children (zIndex `−1`) so edges
- *   drawn at default zIndex sit on top of the frame.
+ * The frames carry a **tinted bgFill** so you can directly observe the
+ * renderer's z-order: `PrimitivesRenderer` paints all connectors below
+ * all shapes, so the cross edge slipping under the colored group
+ * silhouettes is the expected behaviour — and the visible artifact a
+ * future `backgroundShapeLayer` refactor would address. Toggle the fill
+ * via the GUI to confirm: `'filled'` (tinted) hides the edge inside
+ * each group; `'stroke-only'` lets it read through.
+ *
+ * `CollapseExpandBehaviour` is wired up so you can collapse either
+ * group and watch the cross edge re-route to the surviving super-node.
  */
 export const GroupWithEdges: Story = {
   render: () => createContainer({ id: 'graph-group-with-edges' }),
 
   play: async ({ canvasElement }) => {
+    // Default to a low-alpha tinted fill so the edge-vs-shape z-order is
+    // visible (the renderer paints connectors below shapes, so the
+    // cross-group edge gets occluded inside the colored silhouette).
+    // Flip via GUI to `stroke-only` to see the edge unobstructed.
+    const settings = { bgVariant: 'filled' as 'filled' | 'stroke-only' };
+    const variantStyleA = (v: typeof settings.bgVariant) =>
+      v === 'filled'
+        ? { bgFill: 0x6b7fff, bgAlpha: 0.18 }
+        : { bgFill: undefined, bgAlpha: undefined };
+    const variantStyleB = (v: typeof settings.bgVariant) =>
+      v === 'filled'
+        ? { bgFill: 0xc026d3, bgAlpha: 0.18 }
+        : { bgFill: undefined, bgAlpha: undefined };
+
     const nodes: GraphNode[] = [
       {
         id: 'group-a',
         position: { x: 0, y: 0 },
         style: {
-          shape: { kind: 'rect', width: 220, height: 200, cornerRadius: 8 },
-          bgFill: 0xf5f7ff,
+          // Small declared base — `autoFit: true` grows the frame to wrap
+          // children when expanded; the small base is what shows on
+          // collapse so the super-node reads as node-sized.
+          shape: { kind: 'rect', width: 60, height: 60, cornerRadius: 8 },
+          bgFill: 0x6b7fff,
+          bgAlpha: 0.18,
           bgStrokeColor: 0x6b7fff,
-          bgStrokeWidth: 1,
+          bgStrokeWidth: 1.5,
           group: { autoFit: true, padding: 20 },
           labelText: 'Service A',
           labelColor: 0x6b7fff,
@@ -62,10 +84,11 @@ export const GroupWithEdges: Story = {
         id: 'group-b',
         position: { x: 360, y: 0 },
         style: {
-          shape: { kind: 'rect', width: 220, height: 200, cornerRadius: 8 },
-          bgFill: 0xfdf4ff,
+          shape: { kind: 'rect', width: 60, height: 60, cornerRadius: 8 },
+          bgFill: 0xc026d3,
+          bgAlpha: 0.18,
           bgStrokeColor: 0xc026d3,
-          bgStrokeWidth: 1,
+          bgStrokeWidth: 1.5,
           group: { autoFit: true, padding: 20 },
           labelText: 'Service B',
           labelColor: 0xc026d3,
@@ -110,17 +133,33 @@ export const GroupWithEdges: Story = {
     graph.setData({ nodes, edges });
 
     canvas.behaviours.register(
-      new DragNodeBehaviour({
-        id: 'drag',
-        layerId: 'graph',
-        enabled: true,
-        filter: (id) => graph.getGroupRole(id) !== 'expanded',
-      }),
+      new DragNodeBehaviour({ id: 'drag', layerId: 'graph', enabled: true }),
     );
     canvas.behaviours.register(
       new CollapseExpandBehaviour({ id: 'collapse-expand', layerId: 'graph', enabled: true }),
     );
 
     canvas.camera.fitContent(graph.getBounds(), 100);
+
+    const gui = new GUI({ title: 'Group fill' });
+    onStoryTeardown(() => gui.destroy());
+    gui
+      .add(settings, 'bgVariant', ['filled', 'stroke-only'])
+      .name('bgVariant')
+      .onChange(() => {
+        for (const [id, variantFn] of [
+          ['group-a', variantStyleA] as const,
+          ['group-b', variantStyleB] as const,
+        ]) {
+          const node = graph.store.getNode(id);
+          if (!node) continue;
+          const priorStyle = (node.style ?? {}) as NodeStyle;
+          // Spread variant *after* the prior style so it overrides any
+          // leftover `bgFill` / `bgAlpha` when switching to stroke-only.
+          graph.store.updateNode(id, {
+            style: { ...priorStyle, ...variantFn(settings.bgVariant) },
+          });
+        }
+      });
   },
 };

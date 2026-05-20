@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
+  CollapseExpandBehaviour,
   DragNodeBehaviour,
   GraphLayer,
   type GraphEdge,
@@ -78,12 +79,10 @@ export const FixedSizeGroup: Story = {
     graph.setData({ nodes, edges });
 
     canvas.behaviours.register(
-      new DragNodeBehaviour({
-        id: 'drag',
-        layerId: 'graph',
-        enabled: true,
-        filter: (id) => graph.getGroupRole(id) !== 'expanded',
-      }),
+      new DragNodeBehaviour({ id: 'drag', layerId: 'graph', enabled: true }),
+    );
+    canvas.behaviours.register(
+      new CollapseExpandBehaviour({ id: 'collapse-expand', layerId: 'graph', enabled: true }),
     );
 
     canvas.camera.fitContent(graph.getBounds(), 120);
