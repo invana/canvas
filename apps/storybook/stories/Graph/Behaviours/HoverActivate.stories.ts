@@ -64,14 +64,12 @@ export const HoverActivate: Story = {
     canvas.layers.add(graph);
     graph.setData({ nodes, edges: lesMiserables.edges });
 
-    canvas.camera.fitContent(graph.getBounds(), 80);
     void new D3ForceLayout({
       charge: { strength: -120 },
       link: { distance: 50 },
       collide: { radius: 14 },
-    })
-      .apply(graph)
-      .then(() => canvas.camera.fitContent(graph.getBounds(), 80));
+      center: { x: 0, y: 0 },
+    }).apply(graph);
 
     canvas.behaviours.register(
       new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),

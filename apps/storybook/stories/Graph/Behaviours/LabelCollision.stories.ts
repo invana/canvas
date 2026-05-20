@@ -75,14 +75,12 @@ export const LabelCollision: Story = {
     canvas.layers.add(graph);
     graph.setData({ nodes, edges: lesMiserables.edges });
 
-    canvas.camera.fitContent(graph.getBounds(), 80);
     void new D3ForceLayout({
       charge: { strength: -160 },
       link: { distance: 70 },
       collide: { radius: 22 },
-    })
-      .apply(graph)
-      .then(() => canvas.camera.fitContent(graph.getBounds(), 80));
+      center: { x: 0, y: 0 },
+    }).apply(graph);
 
     const collision = new LabelCollisionBehaviour({
       id: 'label-collision',
