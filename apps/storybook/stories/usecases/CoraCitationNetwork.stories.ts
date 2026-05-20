@@ -22,10 +22,10 @@ import {
 } from '@invana/canvas';
 import {
   DragNodeBehaviour,
-  EdgeSizeLODBehaviour,
+  // EdgeSizeLODBehaviour,
   GraphLayer,
   HoverActivateBehaviour,
-  NodeSizeLODBehaviour,
+  // NodeSizeLODBehaviour,
   type GraphNode,
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
@@ -57,15 +57,15 @@ export const CoraCitationNetwork: Story = {
     const DEFAULT_FILL = 0x3b82f6; // blue-500 — matches the screenshot
 
     const settings = {
-      colorBySubject: false,
-      edgeAlpha: 0.18,
-      edgeWidth: 0.45,
-      nodeRadius: 1.6,
+      colorBySubject: true,
+      edgeAlpha: 0.6,
+      edgeWidth: 1,
+      nodeRadius: 10,
       // D3-force tuning. Cora is dense; weaker charge + shorter links
       // pack the clusters more tightly than the LesMis defaults.
       chargeStrength: -28,
-      linkDistance: 22,
-      collideRadius: 3.2,
+      // linkDistance: 22,
+      collideRadius: 20,
       showDensity: false,
       pixelConstantSizing: true,
     };
@@ -93,13 +93,6 @@ export const CoraCitationNetwork: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        // 2,708 nodes packed at ~22 world-unit spacing. The default 6 px
-        // hit floor — sensible for sparse graphs — would balloon to
-        // ~8–10 world units at fit zoom, causing every node's hit zone
-        // to overlap several neighbours and the cursor to "snap" to
-        // random nodes. Tighten to ~1 px so the hit area matches the
-        // visual pinpoint.
-        hitFloorPx: 1,
         node: {
           style: {
             shape: { kind: 'circle', radius: settings.nodeRadius },
@@ -127,7 +120,8 @@ export const CoraCitationNetwork: Story = {
             // thousand near-transparent curves is what produces the
             // watercolor / Gephi-style bundled appearance — the path
             // type itself doesn't bundle.
-            shape: { pathType: 'bezier', pathStyleOpts: { axis: 'h', tension: 0.5 } },
+            shape: { pathType: 'bezier', sourceAnchor: "boundary", targetAnchor: "boundary", 
+              pathStyleOpts: { axis: 'h', tension: 0.5 } },
             strokeColor: DEFAULT_FILL,
             strokeWidth: settings.edgeWidth,
             strokeAlpha: settings.edgeAlpha,
@@ -170,22 +164,27 @@ export const CoraCitationNetwork: Story = {
       new HoverActivateBehaviour({
         id: 'hover', layerId: 'graph', enabled: true,
         state: 'hovered',
-        inactiveState: 'dimmed',
+        // `inactiveState: 'dimmed'` would force a per-hover walk over
+        // all 2,708 nodes + 10,556 edges (HoverActivateBehaviour calls
+        // `setNodeState` per item, each triggering a sync `rerenderNode`).
+        // Skip the dim entirely on this dataset — the highlighted
+        // neighbourhood reads fine against the watercolor background
+        // without it.
         degree: 1,
         direction: 'both',
       }),
     );
 
-    const nodeSizeLOD = new NodeSizeLODBehaviour({
-      id: 'node-size-lod', enabled: settings.pixelConstantSizing,
-      layers: [{ layerId: 'graph', sizePx: () => settings.nodeRadius * 2 }],
-    });
-    const edgeSizeLOD = new EdgeSizeLODBehaviour({
-      id: 'edge-size-lod', enabled: settings.pixelConstantSizing,
-      layers: [{ layerId: 'graph', strokeWidthPx: () => settings.edgeWidth }],
-    });
-    canvas.behaviours.register(nodeSizeLOD);
-    canvas.behaviours.register(edgeSizeLOD);
+    // const nodeSizeLOD = new NodeSizeLODBehaviour({
+    //   id: 'node-size-lod', enabled: settings.pixelConstantSizing,
+    //   layers: [{ layerId: 'graph', sizePx: () => settings.nodeRadius * 2 }],
+    // });
+    // const edgeSizeLOD = new EdgeSizeLODBehaviour({
+    //   id: 'edge-size-lod', enabled: settings.pixelConstantSizing,
+    //   layers: [{ layerId: 'graph', strokeWidthPx: () => settings.edgeWidth }],
+    // });
+    // canvas.behaviours.register(nodeSizeLOD);
+    // canvas.behaviours.register(edgeSizeLOD);
 
     // ── Layout ──────────────────────────────────────────────────────────
     let layout: D3ForceLayout | null = null;
@@ -197,9 +196,11 @@ export const CoraCitationNetwork: Story = {
         // positions once on `sim.on('end')`, so the user sees the
         // settled picture appear rather than watching the slow scatter.
         animate: false,
-        link: { distance: settings.linkDistance },
-        charge: { strength: settings.chargeStrength },
-        collide: { radius: settings.collideRadius },
+        // link: { distance: settings.linkDistance },
+        // charge: { strength: settings.chargeStrength },
+        // collide: { radius: settings.collideRadius },
+        link: {},
+        charge: {},
         center: { x: 0, y: 0 },
       });
       layout.events.on('end', () => {
@@ -233,31 +234,31 @@ export const CoraCitationNetwork: Story = {
       .add(settings, 'edgeAlpha', 0, 1, 0.01)
       .name('edge alpha')
       .onChange(rerenderAll);
-    styleFolder
-      .add(settings, 'edgeWidth', 0.1, 2, 0.05)
-      .name('edge width (px)')
-      .onChange(() => {
-        rerenderAll();
-        if (settings.pixelConstantSizing) edgeSizeLOD.reflow();
-      });
-    styleFolder
-      .add(settings, 'nodeRadius', 0.5, 6, 0.1)
-      .name('node radius (px)')
-      .onChange(() => {
-        rerenderAll();
-        if (settings.pixelConstantSizing) nodeSizeLOD.reflow();
-      });
-    styleFolder
-      .add(settings, 'pixelConstantSizing')
-      .name('px-constant sizing')
-      .onChange((on: boolean) => {
-        if (on) { nodeSizeLOD.enable(); edgeSizeLOD.enable(); }
-        else    { nodeSizeLOD.disable(); edgeSizeLOD.disable(); }
-      });
+    // styleFolder
+    //   .add(settings, 'edgeWidth', 0.1, 2, 0.05)
+    //   .name('edge width (px)')
+    //   .onChange(() => {
+    //     rerenderAll();
+    //     if (settings.pixelConstantSizing) edgeSizeLOD.reflow();
+    //   });
+    // styleFolder
+    //   .add(settings, 'nodeRadius', 0.5, 6, 0.1)
+    //   .name('node radius (px)')
+    //   .onChange(() => {
+    //     rerenderAll();
+    //     if (settings.pixelConstantSizing) nodeSizeLOD.reflow();
+    //   });
+    // styleFolder
+    //   .add(settings, 'pixelConstantSizing')
+    //   .name('px-constant sizing')
+    //   .onChange((on: boolean) => {
+    //     if (on) { nodeSizeLOD.enable(); edgeSizeLOD.enable(); }
+    //     else    { nodeSizeLOD.disable(); edgeSizeLOD.disable(); }
+    //   });
 
     const forceFolder = gui.addFolder('D3-force');
     forceFolder.add(settings, 'chargeStrength', -200, 0, 1).onFinishChange(() => void runLayout());
-    forceFolder.add(settings, 'linkDistance', 1, 80, 1).onFinishChange(() => void runLayout());
+    // forceFolder.add(settings, 'linkDistance', 1, 80, 1).onFinishChange(() => void runLayout());
     forceFolder.add(settings, 'collideRadius', 0, 12, 0.1).onFinishChange(() => void runLayout());
 
     const overlayFolder = gui.addFolder('Density overlay');
