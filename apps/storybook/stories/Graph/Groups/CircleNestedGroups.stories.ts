@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
+  CollapseExpandBehaviour,
   DragNodeBehaviour,
   GraphLayer,
   type GraphEdge,
@@ -28,7 +29,10 @@ export const CircleNestedGroups: Story = {
         id: 'outer',
         position: { x: 0, y: 0 },
         style: {
-          shape: { kind: 'circle', radius: 200 },
+          // Small declared radius — autoFit grows the frame around
+          // children while expanded; the small base is reused on collapse
+          // so the super-node reads as node-sized.
+          shape: { kind: 'circle', radius: 36 },
           bgFill: 0xf5f7ff,
           bgStrokeColor: 0x6b7fff,
           bgStrokeWidth: 1,
@@ -40,7 +44,7 @@ export const CircleNestedGroups: Story = {
         parentId: 'outer',
         position: { x: 0, y: -50 },
         style: {
-          shape: { kind: 'circle', radius: 90 },
+          shape: { kind: 'circle', radius: 28 },
           bgFill: 0xeef2ff,
           bgStrokeColor: 0x6b7fff,
           bgStrokeWidth: 1,
@@ -106,12 +110,10 @@ export const CircleNestedGroups: Story = {
     graph.setData({ nodes, edges });
 
     canvas.behaviours.register(
-      new DragNodeBehaviour({
-        id: 'drag',
-        layerId: 'graph',
-        enabled: true,
-        filter: (id) => graph.getGroupRole(id) !== 'expanded',
-      }),
+      new DragNodeBehaviour({ id: 'drag', layerId: 'graph', enabled: true }),
+    );
+    canvas.behaviours.register(
+      new CollapseExpandBehaviour({ id: 'collapse-expand', layerId: 'graph', enabled: true }),
     );
 
     canvas.camera.fitContent(graph.getBounds(), 100);

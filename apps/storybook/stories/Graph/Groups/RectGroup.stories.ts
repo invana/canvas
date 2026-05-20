@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import GUI from 'lil-gui';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
+  CollapseExpandBehaviour,
   DragNodeBehaviour,
   GraphLayer,
   type GraphEdge,
@@ -28,14 +29,40 @@ export const RectGroup: Story = {
   render: () => createContainer({ id: 'graph-rect-group' }),
 
   play: async ({ canvasElement }) => {
-    const settings = { autoFit: true, padding: 20, headerHeight: 0 };
+    const settings = {
+      autoFit: true,
+      padding: 20,
+      headerHeight: 0,
+      // `'filled'` → light fill behind children (default look).
+      // `'stroke-only'` → no `bgFill`, transparent interior so cross edges
+      //   stay visible (matches the GroupWithEdges fix).
+      // `'ghost'` → low-alpha tint that hints at the frame without
+      //   occluding the canvas underneath.
+      bgVariant: 'filled' as 'filled' | 'stroke-only' | 'ghost',
+    };
+
+    /**
+     * Resolve the bg paint fields for the current `bgVariant`. The store
+     * replaces `style` wholesale on update; we spread these onto the rest
+     * of the prior style each apply.
+     */
+    const variantStyle = (
+      v: typeof settings.bgVariant,
+    ): { bgFill?: number; bgAlpha?: number } => {
+      if (v === 'stroke-only') return { bgFill: undefined, bgAlpha: undefined };
+      if (v === 'ghost') return { bgFill: 0x6b7fff, bgAlpha: 0.08 };
+      return { bgFill: 0xf5f7ff, bgAlpha: 1 };
+    };
 
     const nodes: GraphNode[] = [
       {
         id: 'group-a',
         position: { x: 0, y: 0 },
         style: {
-          shape: { kind: 'rect', width: 240, height: 220, cornerRadius: 8 },
+          // Small declared base — `autoFit: true` grows the frame around
+          // children while expanded; on collapse the layer reuses this
+          // declared size so the super-node reads as node-sized.
+          shape: { kind: 'rect', width: 80, height: 60, cornerRadius: 8 },
           bgFill: 0xf5f7ff,
           bgStrokeColor: 0x6b7fff,
           bgStrokeWidth: 1,
@@ -110,15 +137,15 @@ export const RectGroup: Story = {
     graph.setData({ nodes, edges });
 
     canvas.behaviours.register(
-      new DragNodeBehaviour({
-        id: 'drag',
-        layerId: 'graph',
-        enabled: true,
-        // Skip the group frame itself — dragging children is what reveals
-        // auto-fit behaviour. groupAware: true (the default) would
-        // translate the whole subtree when the group is grabbed.
-        filter: (id) => graph.getGroupRole(id) !== 'expanded',
-      }),
+      // Drag freely — clicking a child node drags only that child
+      // (children sit at zIndex 0 vs the group's −1, so PixiJS's
+      // topmost-hit semantics resolve to the child). Clicking the
+      // group's empty frame area drags the whole group; `groupAware`
+      // defaults to true and translates every descendant in lockstep.
+      new DragNodeBehaviour({ id: 'drag', layerId: 'graph', enabled: true }),
+    );
+    canvas.behaviours.register(
+      new CollapseExpandBehaviour({ id: 'collapse-expand', layerId: 'graph', enabled: true }),
     );
 
     canvas.camera.fitContent(graph.getBounds(), 100);
@@ -130,9 +157,14 @@ export const RectGroup: Story = {
       if (!node) return;
       const priorStyle = (node.style ?? {}) as NodeStyle;
       const priorGroup = priorStyle.group ?? {};
+      const variant = variantStyle(settings.bgVariant);
       graph.store.updateNode('group-a', {
         style: {
           ...priorStyle,
+          // Spread the variant *after* the prior style so it overrides
+          // any leftover `bgFill` / `bgAlpha` (otherwise stroke-only
+          // wouldn't drop the existing fill).
+          ...variant,
           group: {
             ...priorGroup,
             autoFit: settings.autoFit,
@@ -145,5 +177,9 @@ export const RectGroup: Story = {
     gui.add(settings, 'autoFit').onChange(apply);
     gui.add(settings, 'padding', 0, 60, 1).onChange(apply);
     gui.add(settings, 'headerHeight', 0, 40, 1).onChange(apply);
+    gui
+      .add(settings, 'bgVariant', ['filled', 'stroke-only', 'ghost'])
+      .name('bgVariant')
+      .onChange(apply);
   },
 };

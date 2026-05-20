@@ -265,18 +265,23 @@ export class DragNodeBehaviour extends Behaviour {
     this.state.pinApplied = true;
 
     // Group-aware drag: when the moved node is itself a compound group,
-    // translate every descendant by the same delta so the subtree moves
-    // together. We compute the delta against the *just-applied* position
-    // (`nextX - this.state.nodePosStart.x`) instead of against `world`,
-    // which gives the descendants the exact same translation the group
-    // node received — no anchor drift between root and descendants.
+    // translate every descendant by the same per-tick delta so the
+    // subtree moves together.
+    //
+    // The per-tick delta is computed against the group's **current**
+    // stored position (pre-update), not against `nodePosStart`. Using
+    // `nextX − nodePosStart.x` would be the *cumulative* delta from
+    // drag-start — applied every tick, it snowballs and the descendants
+    // fly off-screen on a small drag. Reading the current position right
+    // before the update gives the correct per-frame increment regardless
+    // of how many ticks have elapsed.
     if (this.groupAware && this.layer.getGroupRole(this.state.id) === 'expanded') {
-      const groupDx = nextX - this.state.nodePosStart.x;
-      const groupDy = nextY - this.state.nodePosStart.y;
-      // First update the group's own position, then walk descendants. The
-      // store's `batch` collapses both into one flush so the layer sees a
-      // single coherent state.
       const layer = this.layer;
+      const current = layer.store.getNode(this.state.id)?.position;
+      const groupDx = nextX - (current?.x ?? this.state.nodePosStart.x);
+      const groupDy = nextY - (current?.y ?? this.state.nodePosStart.y);
+      // Store's `batch` collapses the group + descendant updates into a
+      // single flush so the layer projects them coherently.
       layer.store.batch(() => {
         layer.store.setPosition(this.state!.id, { x: nextX, y: nextY });
         const descIds: string[] = [];

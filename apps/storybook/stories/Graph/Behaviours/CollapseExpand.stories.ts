@@ -82,15 +82,11 @@ export const CollapseExpand: Story = {
     graph.setData({ nodes, edges });
 
     canvas.behaviours.register(
-      new DragNodeBehaviour({
-        id: 'drag',
-        layerId: 'graph',
-        enabled: true,
-        // Skip expanded groups — only the toggle is interactive on them.
-        // Collapsed groups behave like regular nodes (`getGroupRole` returns
-        // `'collapsed'`), so they remain draggable.
-        filter: (id) => graph.getGroupRole(id) !== 'expanded',
-      }),
+      // Drag enabled for everything — children, collapsed groups, and
+      // expanded group frames. `groupAware: true` (default) makes
+      // dragging an expanded group translate every descendant in
+      // lockstep via setPositionsBulk.
+      new DragNodeBehaviour({ id: 'drag', layerId: 'graph', enabled: true }),
     );
     canvas.behaviours.register(
       new CollapseExpandBehaviour({ id: 'collapse-expand', layerId: 'graph', enabled: true }),

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
+  CollapseExpandBehaviour,
   DragNodeBehaviour,
   GraphLayer,
   type GraphEdge,
@@ -29,7 +30,10 @@ export const NestedGroups: Story = {
         id: 'outer',
         position: { x: 0, y: 0 },
         style: {
-          shape: { kind: 'rect', width: 360, height: 360, cornerRadius: 10 },
+          // Small declared base — autoFit grows the frame around children
+          // while expanded; on collapse the small base is reused so the
+          // super-node reads as node-sized.
+          shape: { kind: 'rect', width: 90, height: 70, cornerRadius: 10 },
           bgFill: 0xf5f7ff,
           bgStrokeColor: 0x6b7fff,
           bgStrokeWidth: 1,
@@ -41,7 +45,7 @@ export const NestedGroups: Story = {
         parentId: 'outer',
         position: { x: 0, y: -60 },
         style: {
-          shape: { kind: 'rect', width: 220, height: 110, cornerRadius: 8 },
+          shape: { kind: 'rect', width: 70, height: 50, cornerRadius: 8 },
           bgFill: 0xeef2ff,
           bgStrokeColor: 0x6b7fff,
           bgStrokeWidth: 1,
@@ -107,12 +111,10 @@ export const NestedGroups: Story = {
     graph.setData({ nodes, edges });
 
     canvas.behaviours.register(
-      new DragNodeBehaviour({
-        id: 'drag',
-        layerId: 'graph',
-        enabled: true,
-        filter: (id) => graph.getGroupRole(id) !== 'expanded',
-      }),
+      new DragNodeBehaviour({ id: 'drag', layerId: 'graph', enabled: true }),
+    );
+    canvas.behaviours.register(
+      new CollapseExpandBehaviour({ id: 'collapse-expand', layerId: 'graph', enabled: true }),
     );
 
     canvas.camera.fitContent(graph.getBounds(), 100);
