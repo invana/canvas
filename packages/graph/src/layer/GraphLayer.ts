@@ -23,7 +23,13 @@ import type {
   ShapeLabelStyle,
   WorldLayerHit,
 } from '@invana/canvas';
-import type { Rect, ShapeFillLayer } from '@invana/canvas/primitives';
+import type {
+  BadgeOptions,
+  DecorationSpec,
+  EffectSpec,
+  Rect,
+  ShapeFillLayer,
+} from '@invana/canvas/primitives';
 
 import { GraphStore } from '../store/GraphStore';
 import type { GraphEdge, GraphNode } from '../store/types';
@@ -33,6 +39,7 @@ import {
   DEFAULT_NODE_STATES,
   resolveField,
   type EdgeAnchor,
+  type EdgeBadge,
   type EdgeDecorationSpec,
   type EdgeOption,
   type EdgePathType,
@@ -41,6 +48,7 @@ import {
   type GraphLayerEvents,
   type GraphLayerOptions,
   type GroupOptions,
+  type NodeBadge,
   type NodeDecorationSpec,
   type NodeOption,
   type NodeShapeOptions,
@@ -191,6 +199,17 @@ export class GraphLayer extends WorldLayer<
   private readonly nodeDecorationSlots: Map<string, Set<string>> = new Map();
   private readonly edgeDecorationSlots: Map<string, Set<string>> = new Map();
 
+  /**
+   * Currently-mounted badge slot ids per node, mirroring
+   * {@link nodeDecorationSlots} for badge diffing. Slot id falls back to
+   * `${badge.placement-name}#<index>` when `NodeBadge.id` is absent so
+   * id-less badges stack rather than collapse.
+   */
+  private readonly nodeBadgeSlots: Map<string, Set<string>> = new Map();
+
+  /** Edge-side counterpart of {@link nodeBadgeSlots}. */
+  private readonly edgeBadgeSlots: Map<string, Set<string>> = new Map();
+
   // ─── v3 G6-aligned layer template ────────────────────────────────────
   // `options.node` and `options.edge` carry layer-level NodeOption /
   // EdgeOption templates (style + state catalogue, resolver-aware).
@@ -289,6 +308,7 @@ export class GraphLayer extends WorldLayer<
       s.on('node:remove', ({ nodeId }) => {
         this.nodeStates.delete(nodeId);
         this.nodeDecorationSlots.delete(nodeId);
+        this.nodeBadgeSlots.delete(nodeId);
         this._renderer?.removeShape(nodeId);
         this.dirtyGroups.delete(nodeId);
         this.lastCollapsedByGroup.delete(nodeId);
@@ -316,6 +336,7 @@ export class GraphLayer extends WorldLayer<
       s.on('edge:remove', ({ edgeId }) => {
         this.edgeStates.delete(edgeId);
         this.edgeDecorationSlots.delete(edgeId);
+        this.edgeBadgeSlots.delete(edgeId);
         this._renderer?.removeConnector(edgeId);
       }),
       s.on('flush', (counters) => {
@@ -835,17 +856,19 @@ export class GraphLayer extends WorldLayer<
       this._renderer.updateShape<BaseShapeSpec>(id, spec);
     } else {
       this._renderer.removeShape(id);
-      // `removeShape` disposes every mounted decoration on the host. Drop
-      // our tracking so `syncNodeDecorations` treats the next pass as a
-      // full mount instead of trying to diff against ghost slots.
+      // `removeShape` disposes every mounted decoration AND badge on the
+      // host. Drop our tracking so the next sync treats it as a full mount
+      // instead of diffing against ghost slots.
       this.nodeDecorationSlots.delete(id);
+      this.nodeBadgeSlots.delete(id);
       this._renderer.addShape(id, spec);
     }
-    // `syncNodeLabel` / `syncNodeDecorations` are idempotent —
-    // `setDecoration` replaces a slot whether or not one was already there.
-    // Cheap to call in both the update and rebuild branches.
+    // `syncNodeLabel` / `syncNodeDecorations` / `syncNodeBadges` are
+    // idempotent — `setDecoration` / `setBadge` replace a slot whether or
+    // not one was already there. Cheap to call in both branches.
     this.syncNodeLabel(id);
     this.syncNodeDecorations(id);
+    this.syncNodeBadges(id);
     this.syncGroupSyntheticDecorations(id);
     // Anchors of incident connectors point to this shape — re-route in
     // either branch since the shape's bounds may have changed (size
@@ -876,6 +899,7 @@ export class GraphLayer extends WorldLayer<
     }
     this.syncEdgeLabel(id);
     this.syncEdgeDecorations(id);
+    this.syncEdgeBadges(id);
   }
 
   private drainDirtyConnectors(): void {
@@ -891,6 +915,7 @@ export class GraphLayer extends WorldLayer<
     this._renderer.addShape(node.id, this.nodeSpec(node));
     this.syncNodeLabel(node.id);
     this.syncNodeDecorations(node.id);
+    this.syncNodeBadges(node.id);
     this.syncGroupSyntheticDecorations(node.id);
   }
 
@@ -899,6 +924,7 @@ export class GraphLayer extends WorldLayer<
     this._renderer.addConnector(edge.id, this.edgeSpec(edge));
     this.syncEdgeLabel(edge.id);
     this.syncEdgeDecorations(edge.id);
+    this.syncEdgeBadges(edge.id);
   }
 
   /**
@@ -1074,6 +1100,131 @@ export class GraphLayer extends WorldLayer<
     else this.edgeDecorationSlots.set(id, new Set(next.keys()));
   }
 
+  /**
+   * Resolve the final list of badges for a node by concatenating every
+   * contributing layer (layer template + per-node base + each active state
+   * overlay) and deduping by `id`. Later precedence wins. Entries without an
+   * explicit `id` fall back to `badge#<combined-index>` so id-less badges
+   * stack rather than collapsing.
+   */
+  private resolveNodeBadges(node: GraphNode): Map<string, NodeBadge> {
+    const collected: NodeBadge[] = [];
+
+    const pushFrom = (style: Partial<NodeStyle> | undefined): void => {
+      const badges = style?.badges;
+      if (badges && badges.length > 0) collected.push(...badges);
+    };
+
+    if (this.nodeOption?.style) {
+      pushFrom(resolveNodeStyleFields(this.nodeOption.style, node));
+    }
+    pushFrom(node.style as Partial<NodeStyle> | undefined);
+
+    const activeStates = this.nodeStates.get(node.id);
+    if (activeStates && activeStates.size > 0) {
+      const perNodeCatalogue = node.state as Readonly<Record<string, NodeStyle>> | undefined;
+      for (const name of activeStates) {
+        const layerOverlay = this.nodeOption?.state?.[name];
+        if (layerOverlay) {
+          pushFrom(resolveNodeStyleFields(layerOverlay, node));
+        }
+        const perNodeOverlay = perNodeCatalogue?.[name];
+        if (perNodeOverlay) pushFrom(perNodeOverlay);
+      }
+    }
+
+    const out = new Map<string, NodeBadge>();
+    for (let i = 0; i < collected.length; i++) {
+      const badge = collected[i]!;
+      const slotId = badge.id ?? `badge#${i}`;
+      out.set(slotId, badge);
+    }
+    return out;
+  }
+
+  /**
+   * Project the resolved badge map onto the canvas renderer for the given
+   * node. Diffs against the previous render's slot set tracked in
+   * {@link nodeBadgeSlots}: mounts new ids, removes vanished ones, replaces
+   * specs whose slot id appears in both.
+   */
+  private syncNodeBadges(id: string): void {
+    if (!this._renderer) return;
+    const node = this.store.getNode(id);
+    if (!node) return;
+    const next = this.resolveNodeBadges(node);
+    const prev = this.nodeBadgeSlots.get(id);
+
+    if (prev) {
+      for (const slotId of prev) {
+        if (!next.has(slotId)) this._renderer.removeBadge(id, slotId);
+      }
+    }
+    for (const [slotId, badge] of next) {
+      this._renderer.setBadge(id, slotId, nodeBadgeToCanvasOptions(badge));
+    }
+
+    if (next.size === 0) this.nodeBadgeSlots.delete(id);
+    else this.nodeBadgeSlots.set(id, new Set(next.keys()));
+  }
+
+  /** Sibling of {@link resolveNodeBadges} for edges. */
+  private resolveEdgeBadges(edge: GraphEdge): Map<string, EdgeBadge> {
+    const collected: EdgeBadge[] = [];
+
+    const pushFrom = (style: Partial<EdgeStyle> | undefined): void => {
+      const badges = style?.badges;
+      if (badges && badges.length > 0) collected.push(...badges);
+    };
+
+    if (this.edgeOption?.style) {
+      pushFrom(resolveEdgeStyleFields(this.edgeOption.style, edge));
+    }
+    pushFrom(edge.style as Partial<EdgeStyle> | undefined);
+
+    const activeStates = this.edgeStates.get(edge.id);
+    if (activeStates && activeStates.size > 0) {
+      const perEdgeCatalogue = edge.state as Readonly<Record<string, EdgeStyle>> | undefined;
+      for (const name of activeStates) {
+        const layerOverlay = this.edgeOption?.state?.[name];
+        if (layerOverlay) {
+          pushFrom(resolveEdgeStyleFields(layerOverlay, edge));
+        }
+        const perEdgeOverlay = perEdgeCatalogue?.[name];
+        if (perEdgeOverlay) pushFrom(perEdgeOverlay);
+      }
+    }
+
+    const out = new Map<string, EdgeBadge>();
+    for (let i = 0; i < collected.length; i++) {
+      const badge = collected[i]!;
+      const slotId = badge.id ?? `badge#${i}`;
+      out.set(slotId, badge);
+    }
+    return out;
+  }
+
+  /** Sibling of {@link syncNodeBadges} for edges. */
+  private syncEdgeBadges(id: string): void {
+    if (!this._renderer) return;
+    const edge = this.store.getEdge(id);
+    if (!edge) return;
+    const next = this.resolveEdgeBadges(edge);
+    const prev = this.edgeBadgeSlots.get(id);
+
+    if (prev) {
+      for (const slotId of prev) {
+        if (!next.has(slotId)) this._renderer.removeBadge(id, slotId);
+      }
+    }
+    for (const [slotId, badge] of next) {
+      this._renderer.setBadge(id, slotId, edgeBadgeToCanvasOptions(badge));
+    }
+
+    if (next.size === 0) this.edgeBadgeSlots.delete(id);
+    else this.edgeBadgeSlots.set(id, new Set(next.keys()));
+  }
+
   private updateNodeShape(node: GraphNode, patch: Partial<GraphNode>): void {
     if (!this._renderer) return;
 
@@ -1113,12 +1264,14 @@ export class GraphLayer extends WorldLayer<
       this._renderer.updateShape<BaseShapeSpec>(node.id, spec);
     } else {
       this._renderer.removeShape(node.id);
-      // `removeShape` disposes attached decorations — drop our tracking.
+      // `removeShape` disposes attached decorations + badges — drop our tracking.
       this.nodeDecorationSlots.delete(node.id);
+      this.nodeBadgeSlots.delete(node.id);
       this._renderer.addShape(node.id, spec);
     }
     this.syncNodeLabel(node.id);
     this.syncNodeDecorations(node.id);
+    this.syncNodeBadges(node.id);
     this.syncGroupSyntheticDecorations(node.id);
     // Connectors anchored to this shape may need re-routing in either
     // branch — the shape's bounds can shift on a size/kind change.
@@ -1565,6 +1718,165 @@ function splitDecorationSpec(
     remove?: boolean;
   };
   return { kind, style: style as Record<string, unknown> };
+}
+
+/**
+ * Translate a graph-level {@link NodeBadge} into the canvas-level
+ * {@link BadgeOptions} `setBadge` expects.
+ *
+ * Sugar fields collapse onto the structured shape spec:
+ * - `fill` → first `solid` fill layer; `icon` → second fill layer stacked
+ *   on top (mirrors the node-body fill stack in `nodeSpec`).
+ * - `strokeColor` + `strokeWidth` → `stroke` on the shape spec.
+ * - `labelText` (+ colour / size) → a `'label'` decoration on the badge,
+ *   centred on the plate.
+ *
+ * Nested `decorations` are id-keyed (slot id falls back to `${kind}#<i>`);
+ * `effects` flatten into a `{ [kind]: { kind, style } }` record. The
+ * canvas-level `setBadge` projects both maps internally.
+ */
+function nodeBadgeToCanvasOptions(badge: NodeBadge): BadgeOptions {
+  const fillLayers: ShapeFillLayer[] = [];
+  if (badge.fill !== undefined) {
+    fillLayers.push({ kind: 'solid', color: badge.fill });
+  }
+  if (badge.icon !== undefined) {
+    fillLayers.push(badge.icon as ShapeFillLayer);
+  }
+
+  const strokeWidth = badge.strokeWidth ?? 0;
+  const stroke =
+    badge.strokeColor !== undefined && strokeWidth > 0
+      ? { color: badge.strokeColor, width: strokeWidth }
+      : undefined;
+
+  const shape = {
+    ...(badge.shape as unknown as Record<string, unknown>),
+    ...(fillLayers.length > 0 ? { fill: fillLayers } : {}),
+    ...(stroke ? { stroke } : {}),
+    ...(badge.alpha !== undefined ? { alpha: badge.alpha } : {}),
+    ...(badge.zIndex !== undefined ? { zIndex: badge.zIndex } : {}),
+  } as BadgeOptions['shape'];
+
+  const decorations: Record<string, DecorationSpec> = {};
+  if (badge.decorations) {
+    badge.decorations.forEach((spec, i) => {
+      if (spec.remove) return;
+      const slotId = spec.id ?? `${spec.kind}#${i}`;
+      const { kind, style } = splitDecorationSpec(spec);
+      decorations[slotId] = { kind, style } as DecorationSpec;
+    });
+  }
+  if (badge.labelText !== undefined) {
+    decorations.label = {
+      kind: 'label',
+      style: {
+        content: {
+          kind: 'text',
+          text: badge.labelText,
+          ...(badge.labelColor !== undefined ? { fill: badge.labelColor } : {}),
+          ...(badge.labelFontSize !== undefined ? { fontSize: badge.labelFontSize } : {}),
+        },
+        placement: 'center',
+      },
+    } as DecorationSpec;
+  }
+
+  const effects: Record<string, EffectSpec> = {};
+  if (badge.effects) {
+    for (const [kind, style] of Object.entries(badge.effects)) {
+      if (style === undefined || style === null) continue;
+      effects[kind] = { kind, style } as EffectSpec;
+    }
+  }
+
+  return {
+    shape,
+    placement: badge.placement,
+    ...(badge.origin !== undefined ? { origin: badge.origin } : {}),
+    ...(badge.offsetX !== undefined ? { offsetX: badge.offsetX } : {}),
+    ...(badge.offsetY !== undefined ? { offsetY: badge.offsetY } : {}),
+    ...(Object.keys(decorations).length > 0 ? { decorations } : {}),
+    ...(Object.keys(effects).length > 0 ? { effects } : {}),
+  };
+}
+
+/**
+ * Edge-side counterpart of {@link nodeBadgeToCanvasOptions}. Translates a
+ * graph-level {@link EdgeBadge} into the canvas-level {@link BadgeOptions}
+ * `setBadge` expects, carrying the path-only fields (`pathOffset`,
+ * `autoRotate`, `keepUpright`) through verbatim. The sugar-to-canvas
+ * collapse is identical to the node-side helper — the only structural
+ * difference is the `placement` is an {@link EdgeBadgePlacement}, which
+ * `setBadge` dispatches on at runtime when the host is a connector.
+ */
+function edgeBadgeToCanvasOptions(badge: EdgeBadge): BadgeOptions {
+  const fillLayers: ShapeFillLayer[] = [];
+  if (badge.fill !== undefined) {
+    fillLayers.push({ kind: 'solid', color: badge.fill });
+  }
+  if (badge.icon !== undefined) {
+    fillLayers.push(badge.icon as ShapeFillLayer);
+  }
+
+  const strokeWidth = badge.strokeWidth ?? 0;
+  const stroke =
+    badge.strokeColor !== undefined && strokeWidth > 0
+      ? { color: badge.strokeColor, width: strokeWidth }
+      : undefined;
+
+  const shape = {
+    ...(badge.shape as unknown as Record<string, unknown>),
+    ...(fillLayers.length > 0 ? { fill: fillLayers } : {}),
+    ...(stroke ? { stroke } : {}),
+    ...(badge.alpha !== undefined ? { alpha: badge.alpha } : {}),
+    ...(badge.zIndex !== undefined ? { zIndex: badge.zIndex } : {}),
+  } as BadgeOptions['shape'];
+
+  const decorations: Record<string, DecorationSpec> = {};
+  if (badge.decorations) {
+    badge.decorations.forEach((spec, i) => {
+      if (spec.remove) return;
+      const slotId = spec.id ?? `${spec.kind}#${i}`;
+      const { kind, style } = splitDecorationSpec(spec);
+      decorations[slotId] = { kind, style } as DecorationSpec;
+    });
+  }
+  if (badge.labelText !== undefined) {
+    decorations.label = {
+      kind: 'label',
+      style: {
+        content: {
+          kind: 'text',
+          text: badge.labelText,
+          ...(badge.labelColor !== undefined ? { fill: badge.labelColor } : {}),
+          ...(badge.labelFontSize !== undefined ? { fontSize: badge.labelFontSize } : {}),
+        },
+        placement: 'center',
+      },
+    } as DecorationSpec;
+  }
+
+  const effects: Record<string, EffectSpec> = {};
+  if (badge.effects) {
+    for (const [kind, style] of Object.entries(badge.effects)) {
+      if (style === undefined || style === null) continue;
+      effects[kind] = { kind, style } as EffectSpec;
+    }
+  }
+
+  return {
+    shape,
+    placement: badge.placement,
+    ...(badge.origin !== undefined ? { origin: badge.origin } : {}),
+    ...(badge.offsetX !== undefined ? { offsetX: badge.offsetX } : {}),
+    ...(badge.offsetY !== undefined ? { offsetY: badge.offsetY } : {}),
+    ...(badge.pathOffset !== undefined ? { pathOffset: badge.pathOffset } : {}),
+    ...(badge.autoRotate !== undefined ? { autoRotate: badge.autoRotate } : {}),
+    ...(badge.keepUpright !== undefined ? { keepUpright: badge.keepUpright } : {}),
+    ...(Object.keys(decorations).length > 0 ? { decorations } : {}),
+    ...(Object.keys(effects).length > 0 ? { effects } : {}),
+  };
 }
 
 /**

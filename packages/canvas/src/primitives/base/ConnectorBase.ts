@@ -300,7 +300,17 @@ function paintMarkerAt(
   Ctor.paintInto(g, marker, anchor, angleRad, style, strokeWidth);
 }
 
-function markerInsetFor(
+/**
+ * Resolve the tangent-extent of a marker spec — how far past the path's
+ * untrimmed endpoint the marker visually extends. Looks up the marker's
+ * `static markerInset` on the shape registry and clamps to a positive
+ * finite value (`0` for markers that don't declare an inset).
+ *
+ * Exported so `PrimitivesRenderer` can compute clearance for
+ * endpoint-anchored badges (the badge needs to sit past the *whole*
+ * marker, not just the trimmed path endpoint).
+ */
+export function markerInsetFor(
   shapeRegistry: ReadonlyMap<string, ShapeCtor>,
   marker: MarkerShapeSpec,
   strokeWidth: number,

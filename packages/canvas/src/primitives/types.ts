@@ -392,6 +392,19 @@ export interface BaseShapeSpec {
   readonly zIndex?: number;
   readonly alpha?: number;
   readonly visible?: boolean;
+  /**
+   * Container-level rotation in radians, applied around the shape's
+   * top-left local origin. Composes with effect-driven transform deltas
+   * — the effect aggregator writes `(spec.rotation ?? 0) + dRot` per frame
+   * so connector-hosted badges with `autoRotate: true` keep rotating
+   * smoothly even while a `shake` / `breathing` effect runs on top.
+   *
+   * For per-shape geometric rotation (the visible rotation of a regular
+   * polygon's vertices, a star's points, etc.), use the kind-specific
+   * `rotation` field on those shape specs — that one rotates the *geometry*
+   * before it's drawn; this one rotates the *container* after.
+   */
+  readonly rotation?: number;
 }
 
 export interface CircleSpec extends BaseShapeSpec {

@@ -132,7 +132,12 @@ export type {
 } from './effects/connector/FadeInConnectorEffect';
 
 // ─── Badges ────────────────────────────────────────────────────────────────
-export type { BadgeOptions, BadgePlacement } from './badges/types';
+export type {
+  BadgeOptions,
+  BadgePlacement,
+  ConnectorBadgePlacement,
+  NamedBadgePlacement,
+} from './badges/types';
 export {
   placementToHostAnchor,
   originToBadgeLocal,

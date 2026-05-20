@@ -395,7 +395,13 @@ export interface NodeImage {
   readonly padding?: number;
 }
 
-/** Placement of a badge relative to its host node. */
+/**
+ * Anchor point on the host node where a badge attaches. The eight cardinal
+ * names address the midpoints / corners of the host's axis-aligned bounding
+ * box; the `{ x, y }` variant pins to an explicit world point and is rarely
+ * needed (use {@link NodeBadge.offsetX} / `offsetY` to nudge an enum anchor
+ * before reaching for raw coordinates).
+ */
 export type BadgePlacement =
   | 'top-right'
   | 'top-left'
@@ -407,28 +413,238 @@ export type BadgePlacement =
   | 'right'
   | { readonly x: number; readonly y: number };
 
-/** Small overlay attached to a node — e.g. notification dot, count chip, status indicator. */
+/**
+ * Point on the badge's own AABB that lands at the host anchor.
+ *
+ * - The eight cardinal names mirror {@link BadgePlacement} (without the
+ *   custom `{x, y}` variant — origin is always a named point on the badge).
+ * - `'center'` centres the badge on the host anchor — yields the classic
+ *   "half-overhanging" notification-bubble look.
+ *
+ * When omitted, the projection defaults to the **mirror** of `placement`
+ * (e.g. `placement: 'top-right'` → origin `'bottom-left'`) so the badge
+ * sits fully outside the host edge.
+ */
+export type BadgeOrigin =
+  | 'top-right'
+  | 'top-left'
+  | 'bottom-right'
+  | 'bottom-left'
+  | 'top'
+  | 'bottom'
+  | 'left'
+  | 'right'
+  | 'center';
+
+/**
+ * Host-modulation effects on a badge. Re-exports the {@link NodeEffects}
+ * surface because a badge is rendered as a shape under the hood — the same
+ * `shake` / `breathing` / future shape-effect kinds apply field-for-field.
+ */
+export type BadgeEffects = NodeEffects;
+
+/**
+ * Small overlay attached to a node — e.g. notification dot, count chip,
+ * status indicator. A badge is rendered as a real shape, so it inherits the
+ * full shape surface: any registered {@link NodeShapeOptions} kind as the
+ * plate, optional {@link NodeIcon} as content, optional label text, plus
+ * nested {@link decorations} / {@link effects} that compose exactly the way
+ * they do on a node body.
+ *
+ * Position resolves from the host's AABB + the `placement` anchor + an
+ * `origin` (which point of the badge sits at the anchor — defaults to the
+ * mirror of `placement` so the badge nests fully outside the host edge).
+ * Use `'center'` for the half-overhanging notification-bubble look.
+ */
 export interface NodeBadge {
-  /** Stable id within the node, for keyed updates / animation. Optional. */
+  /**
+   * Stable id within the node, for keyed updates / state-overlay diffing.
+   * When omitted, identity falls back to the badge's position in the
+   * containing `badges[]` array.
+   */
   readonly id?: string;
+
+  /** Anchor point on the host node's AABB, or an explicit world point. */
   readonly placement: BadgePlacement;
-  /** Default `'circle'`. */
-  readonly shape?: 'circle' | 'rect' | 'pill';
-  /** Pixels — fixed visual size regardless of node scale. Default 12. */
-  readonly size?: number;
+
+  /**
+   * Which point of the badge's own AABB lands at the host anchor.
+   * Default: mirror of `placement` (badge sits fully outside the host edge).
+   * Use `'center'` for the half-overhanging look.
+   */
+  readonly origin?: BadgeOrigin;
+
+  /**
+   * Pure geometry — any registered {@link NodeShapeOptions} kind. Fill /
+   * stroke / alpha come from the flat sugar fields below, mirroring the
+   * `NodeStyle.shape` + `bgFill` split used for node bodies.
+   */
+  readonly shape: NodeShapeOptions;
+
+  /** Solid plate colour — projects to the badge shape's first fill layer. */
   readonly fill?: number;
   readonly alpha?: number;
   readonly strokeColor?: number;
   readonly strokeWidth?: number;
-  /** Optional vector inset rendered inside the badge. */
+
+  /**
+   * Vector inset rendered inside the badge plate (glyph / svg / svg-url).
+   * Projects to an extra fill layer stacked on top of the solid plate.
+   */
   readonly icon?: NodeIcon;
-  /** Optional short text (e.g. count "3" or "!"). */
+
+  /**
+   * Optional short text rendered centred on the badge (count "3", "!").
+   * Projects to a `'label'` decoration on the badge.
+   */
   readonly labelText?: string;
   readonly labelColor?: number;
   readonly labelFontSize?: number;
+
+  /** Pixel offset applied after placement resolution. */
   readonly offsetX?: number;
   readonly offsetY?: number;
+
   readonly zIndex?: number;
+
+  /**
+   * Decorations attached to the badge plate. Each entry is a regular
+   * {@link NodeDecorationSpec} — glow, ring, marching-ants, pulse-ring, etc.
+   * Identity / merge rules match {@link NodeStyle.decorations} (id-keyed,
+   * `remove: true` drops earlier same-id entries from base under a state
+   * overlay).
+   */
+  readonly decorations?: readonly NodeDecorationSpec[];
+
+  /**
+   * Effects modulating the badge plate's transform / style each frame
+   * (`shake`, `breathing`, …). Same surface as {@link NodeStyle.effects}.
+   */
+  readonly effects?: BadgeEffects;
+}
+
+/**
+ * Anchor point along an edge's routed path.
+ *
+ * - `'start'` / `'end'` — anchored *near* the source / target endpoint with
+ *   automatic clearance: the badge is shifted tangentially by its own
+ *   half-extent so it kisses the endpoint node's silhouette from outside
+ *   rather than half-overlapping it. The natural choice for endpoint
+ *   chips, status icons, etc.
+ * - `'middle'` — exact arc-length midpoint (`t = 0.5`).
+ * - A `number` in `[0, 1]` — raw arc-length `t`, no clearance applied.
+ *   Use `placement: 1` when you explicitly want a badge centred on the
+ *   silhouette point. Values outside `[0, 1]` are clamped.
+ *
+ * `'middle'` (not `'center'`) avoids term-clashing with `BadgeOrigin`
+ * where `'center'` means "centre the badge on its own AABB".
+ */
+export type EdgeBadgePlacement = 'start' | 'middle' | 'end' | number;
+
+/**
+ * Small overlay attached to an edge — e.g. flow-rate chip on the midpoint,
+ * count badge at the source endpoint, arrow-tag at the target. A badge is
+ * rendered as a real shape (any registered {@link NodeShapeOptions} kind);
+ * placement is parametric along the routed path.
+ *
+ * Position resolves via `samplePathAt(path, t)` so the badge re-anchors
+ * automatically when the path changes (source / target shape moves, anchor
+ * / router / waypoints change). For loop edges, `'middle'` naturally lands
+ * on the loop apex because the path passes through it at `t ≈ 0.5`.
+ *
+ * Decorations and effects compose exactly the way they do on
+ * {@link NodeBadge}; the badge being shape-rendered means shape decorations
+ * (`glow`, `ring`, `marching-ants`, `pulse-ring`, …) apply uniformly.
+ */
+export interface EdgeBadge {
+  /**
+   * Stable id within the edge, for keyed updates / state-overlay diffing.
+   * When omitted, identity falls back to the badge's position in the
+   * containing `badges[]` array.
+   */
+  readonly id?: string;
+
+  /** Where along the routed path the badge attaches. */
+  readonly placement: EdgeBadgePlacement;
+
+  /**
+   * Which point of the badge's own AABB lands at the path anchor.
+   * Default for edge badges is `'center'` — the badge centres on the path
+   * point. Use other origins to lift the badge off the line (e.g.
+   * `origin: 'bottom'` puts the badge above the line with its bottom edge
+   * touching the path).
+   */
+  readonly origin?: BadgeOrigin;
+
+  /**
+   * Pure geometry — any registered {@link NodeShapeOptions} kind. Fill /
+   * stroke / alpha come from the flat sugar fields below, mirroring the
+   * `NodeStyle.shape` + `bgFill` split used for node bodies.
+   */
+  readonly shape: NodeShapeOptions;
+
+  /** Solid plate colour — projects to the badge shape's first fill layer. */
+  readonly fill?: number;
+  readonly alpha?: number;
+  readonly strokeColor?: number;
+  readonly strokeWidth?: number;
+
+  /**
+   * Vector inset rendered inside the badge plate (glyph / svg / svg-url).
+   * Projects to an extra fill layer stacked on top of the solid plate.
+   */
+  readonly icon?: NodeIcon;
+
+  /**
+   * Optional short text rendered centred on the badge (count "3", "!").
+   * Projects to a `'label'` decoration on the badge.
+   */
+  readonly labelText?: string;
+  readonly labelColor?: number;
+  readonly labelFontSize?: number;
+
+  /**
+   * Shift the path-anchor along the local tangent (positive = forward
+   * toward `'end'`, negative = backward toward `'start'`). Useful for
+   * nudging a `'middle'`-anchored badge sideways without changing `t`.
+   */
+  readonly pathOffset?: number;
+
+  /** Pixel offset applied after placement resolution. */
+  readonly offsetX?: number;
+  readonly offsetY?: number;
+
+  /**
+   * When `true`, the badge rotates to follow the path tangent at the
+   * anchor point. Default `false` (badges stay axis-aligned). Useful for
+   * arrow-shaped or directional badges on curved edges.
+   */
+  readonly autoRotate?: boolean;
+
+  /**
+   * When {@link autoRotate} is `true`, flip the badge by 180° on the
+   * "downward" half of the path so text decorations stay readable on
+   * every edge orientation. Default `true`. Ignored when `autoRotate` is
+   * `false`.
+   */
+  readonly keepUpright?: boolean;
+
+  readonly zIndex?: number;
+
+  /**
+   * Decorations attached to the badge plate. Same surface as
+   * {@link NodeBadge.decorations} — shape decorations (`glow`, `ring`,
+   * `marching-ants`, `pulse-ring`) apply because the badge is itself a
+   * shape, regardless of being hosted on a connector.
+   */
+  readonly decorations?: readonly NodeDecorationSpec[];
+
+  /**
+   * Effects modulating the badge plate's transform / style each frame
+   * (`shake`, `breathing`, …). Same surface as
+   * {@link NodeBadge.effects}.
+   */
+  readonly effects?: BadgeEffects;
 }
 
 // ─── NodeDecorationSpec / EdgeDecorationSpec / NodeEffects ────────────────
@@ -918,6 +1134,20 @@ export interface EdgeStyle {
    * wins.
    */
   readonly decorations?: readonly EdgeDecorationSpec[];
+
+  // ===== Badges (multiple, along the routed path) =====
+  /**
+   * Ordered list of badges attached to the edge. Each entry is a real
+   * {@link EdgeBadge} — any registered shape kind as the plate, optional
+   * icon / labelText sugar, optional nested decorations and effects.
+   * Placement is parametric along the routed path (`'start' | 'middle' |
+   * 'end' | number`) and re-anchors automatically when the path changes
+   * (source / target shape moves, anchor / router / waypoints change).
+   *
+   * Resolver semantics match {@link decorations}: concatenate across base
+   * + active state overlays, dedupe by `id`, later precedence wins.
+   */
+  readonly badges?: readonly EdgeBadge[];
 }
 
 /** Resolver-aware mirror of {@link EdgeStyle}; generic over the resolver argument. */

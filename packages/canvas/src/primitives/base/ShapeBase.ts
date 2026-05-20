@@ -104,6 +104,7 @@ export abstract class ShapeBase<TSpec extends BaseShapeSpec>
   draw(spec: TSpec): void {
     this.spec = spec;
     this.gfx.position.set(spec.x, spec.y);
+    this.gfx.rotation = spec.rotation ?? 0;
     this.gfx.alpha = spec.alpha ?? 1;
     this.gfx.visible = spec.visible ?? true;
     this.gfx.zIndex = spec.zIndex ?? 0;

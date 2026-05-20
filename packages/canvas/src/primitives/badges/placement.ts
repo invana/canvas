@@ -15,18 +15,35 @@
  */
 
 import type { Rect } from '../types';
-import type { BadgeOptions, BadgePlacement } from './types';
+import type { BadgeOptions, BadgePlacement, NamedBadgePlacement } from './types';
 
 /**
- * Returns the world-space point on `hostBounds` named by `placement`.
- * Edge placements sit at the midpoint of that edge; corner placements at the
- * corner.
+ * Returns the world-space anchor point for `placement`. Named placements
+ * resolve against `hostBounds` (corner or edge midpoint of the AABB); the
+ * raw `{ x, y }` variant is the world-space point itself, with `hostBounds`
+ * ignored.
  */
 export function placementToHostAnchor(
   hostBounds: Rect,
   placement: BadgePlacement,
 ): { x: number; y: number } {
-  const { x, y, width: w, height: h } = hostBounds;
+  if (typeof placement === 'object') {
+    return { x: placement.x, y: placement.y };
+  }
+  return namedPlacementToAnchor(hostBounds, placement);
+}
+
+/**
+ * Returns the world-space point on `bounds` named by a {@link
+ * NamedBadgePlacement}. Edge names sit at the midpoint of that edge; corner
+ * names at the corner. Used by both host-anchor resolution and badge-origin
+ * resolution (with the badge's local AABB as the bounds).
+ */
+function namedPlacementToAnchor(
+  bounds: Rect,
+  placement: NamedBadgePlacement,
+): { x: number; y: number } {
+  const { x, y, width: w, height: h } = bounds;
   switch (placement) {
     case 'top':          return { x: x + w / 2, y };
     case 'bottom':       return { x: x + w / 2, y: y + h };
@@ -43,31 +60,35 @@ export function placementToHostAnchor(
  * Returns the point on the badge's local AABB that should land at the host
  * anchor, given the chosen origin. The default (omitted origin) is the
  * mirror of `placement` so the badge sits fully outside the host edge.
+ * When `placement` is a raw `{x, y}` point with no inherent mirror, the
+ * default falls back to `'center'`.
  */
 export function originToBadgeLocal(
   badgeLocalBounds: Rect,
   placement: BadgePlacement,
   origin: BadgeOptions['origin'],
 ): { x: number; y: number } {
-  if (origin === 'center') {
+  if (origin === 'center' || (origin === undefined && typeof placement === 'object')) {
     return {
       x: badgeLocalBounds.x + badgeLocalBounds.width / 2,
       y: badgeLocalBounds.y + badgeLocalBounds.height / 2,
     };
   }
-  const point = origin ?? mirrorPlacement(placement);
-  // Reuse host-anchor math — it's the same "point on an AABB" computation,
+  const point = origin ?? mirrorPlacement(placement as NamedBadgePlacement);
+  // Reuse named-point math — it's the same "point on an AABB" computation,
   // just applied to the badge's local AABB instead of the host's world AABB.
-  return placementToHostAnchor(badgeLocalBounds, point);
+  return namedPlacementToAnchor(badgeLocalBounds, point);
 }
 
 /**
- * Mirror of a placement across the host centre. `top-right` ↔ `bottom-left`,
- * `right` ↔ `left`, and so on. Used as the default `origin` so a badge with
- * `placement: 'top-right'` sits with its `bottom-left` corner at the host's
- * top-right corner — i.e. the badge nests fully outside the host edge.
+ * Mirror of a named placement across the host centre. `top-right` ↔
+ * `bottom-left`, `right` ↔ `left`, and so on. Used as the default `origin`
+ * so a badge with `placement: 'top-right'` sits with its `bottom-left`
+ * corner at the host's top-right corner — i.e. the badge nests fully
+ * outside the host edge. Only defined for {@link NamedBadgePlacement};
+ * raw `{x, y}` placements have no symmetric counterpart on the host AABB.
  */
-export function mirrorPlacement(p: BadgePlacement): BadgePlacement {
+export function mirrorPlacement(p: NamedBadgePlacement): NamedBadgePlacement {
   switch (p) {
     case 'top':          return 'bottom';
     case 'bottom':       return 'top';
@@ -98,10 +119,16 @@ export function resolveBadgePosition(
   badgeLocalBounds: Rect,
   options: BadgeOptions,
 ): { x: number; y: number } {
-  const anchor = placementToHostAnchor(hostWorldBounds, options.placement);
+  // Shape-host dispatch: `options.placement` is statically widened to
+  // `BadgePlacement | ConnectorBadgePlacement`. `setBadge` routes connector
+  // hosts away from this function, so by construction the runtime placement
+  // is always a `BadgePlacement` here. The cast collapses the unused union
+  // arm at the type level only.
+  const placement = options.placement as BadgePlacement;
+  const anchor = placementToHostAnchor(hostWorldBounds, placement);
   const originLocal = originToBadgeLocal(
     badgeLocalBounds,
-    options.placement,
+    placement,
     options.origin,
   );
   return {

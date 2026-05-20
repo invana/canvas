@@ -91,7 +91,12 @@ import { BreathingEffect } from './effects/shape/BreathingEffect';
 import { BreathingConnectorEffect } from './effects/connector/BreathingConnectorEffect';
 import { FadeInConnectorEffect } from './effects/connector/FadeInConnectorEffect';
 import { resolveBadgePosition } from './badges/placement';
+import {
+  DEFAULT_ENDPOINT_BADGE_GAP_PX,
+  resolveConnectorBadgePosition,
+} from './badges/connectorPlacement';
 import type { BadgeOptions } from './badges/types';
+import { markerInsetFor } from './base/ConnectorBase';
 import type {
   AnchorCtx,
   AnchorShapeRef,
@@ -597,6 +602,7 @@ export class PrimitivesRenderer {
     this.drawConnectorInstance(inst);
     this.indexConnector(inst);
     if (inst.decorations.size > 0) this.refreshConnectorDecorations(inst);
+    if (this.badges.has(inst.id)) this.reanchorConnectorBadges(inst, inst.id);
   }
 
   /**
@@ -686,6 +692,14 @@ export class PrimitivesRenderer {
   removeConnector(id: string): void {
     const inst = this.connectorInstances.get(id);
     if (!inst) return;
+    // Cascade-remove attached badges *before* destroying the host so the
+    // badge ids don't outlive the host in any consumer-visible state.
+    // Mirrors the symmetric path in `removeShape`.
+    const attached = this.badges.get(id);
+    if (attached) {
+      for (const slot of [...attached.keys()]) this.removeBadge(id, slot);
+      this.badges.delete(id);
+    }
     for (const deco of inst.decorations.values()) this.disposeDecoration(deco);
     inst.decorations.clear();
     for (const fx of inst.effects.values()) this.disposeEffect(fx);
@@ -933,8 +947,9 @@ export class PrimitivesRenderer {
    * badge (the old badge shape and any of its decorations are destroyed).
    */
   setBadge(hostId: string, slot: string, options: BadgeOptions): void {
-    const host = this.shapeInstances.get(hostId);
-    if (!host) {
+    const shapeHost = this.shapeInstances.get(hostId);
+    const connectorHost = shapeHost ? undefined : this.connectorInstances.get(hostId);
+    if (!shapeHost && !connectorHost) {
       throw new Error(`PrimitivesRenderer.setBadge: unknown host "${hostId}"`);
     }
 
@@ -948,16 +963,34 @@ export class PrimitivesRenderer {
     // is never observed by the user.
     this.addShape(badgeId, { ...options.shape, x: 0, y: 0 } as unknown as BaseShapeSpec);
     const badge = this.shapeInstances.get(badgeId)!;
-    const pos = resolveBadgePosition(
-      this.shapeWorldBounds(host),
-      badge.shape.bounds(),
-      options,
-    );
-    this.updateShape(badgeId, { x: pos.x, y: pos.y });
+
+    if (shapeHost) {
+      const pos = resolveBadgePosition(
+        this.shapeWorldBounds(shapeHost),
+        badge.shape.bounds(),
+        options,
+      );
+      this.updateShape(badgeId, { x: pos.x, y: pos.y });
+    } else {
+      const clearance = this.connectorBadgeEndpointClearance(connectorHost!);
+      const pos = resolveConnectorBadgePosition(
+        connectorHost!.path,
+        badge.shape.bounds(),
+        options,
+        clearance,
+      );
+      this.updateShape(badgeId, { x: pos.x, y: pos.y, rotation: pos.rotation });
+    }
 
     if (options.decorations) {
       for (const [decoSlot, decoSpec] of Object.entries(options.decorations)) {
         this.setDecoration(badgeId, decoSlot, decoSpec);
+      }
+    }
+
+    if (options.effects) {
+      for (const [effectSlot, effectSpec] of Object.entries(options.effects)) {
+        this.setEffect(badgeId, effectSlot, effectSpec);
       }
     }
 
@@ -985,7 +1018,8 @@ export class PrimitivesRenderer {
   /**
    * Recompute every attached badge's `(x, y)` from the host's new bounds.
    * Called from `updateShape` when the host has badges; safe to no-op when
-   * the badge map for `hostId` is empty.
+   * the badge map for `hostId` is empty. Shape-host flavour only; see
+   * {@link reanchorConnectorBadges} for the connector-path flavour.
    */
   private reanchorBadges(hostId: string): void {
     const map = this.badges.get(hostId);
@@ -999,6 +1033,58 @@ export class PrimitivesRenderer {
       const pos = resolveBadgePosition(hostBounds, badge.shape.bounds(), options);
       this.updateShape(badgeIdFor(hostId, slot), { x: pos.x, y: pos.y });
     }
+  }
+
+  /**
+   * Recompute every attached badge's `(x, y, rotation)` from the connector
+   * host's new path. Called from {@link recomputeConnectorPath} whenever
+   * the routed path changes (source / target shape moved, anchor / router /
+   * waypoints reconfigured, marker insets adjusted).
+   */
+  private reanchorConnectorBadges(inst: ConnectorInstance, hostId: string): void {
+    const map = this.badges.get(hostId);
+    if (!map) return;
+    const clearance = this.connectorBadgeEndpointClearance(inst);
+    for (const [slot, options] of map) {
+      const badge = this.shapeInstances.get(badgeIdFor(hostId, slot));
+      if (!badge) continue;
+      const pos = resolveConnectorBadgePosition(
+        inst.path,
+        badge.shape.bounds(),
+        options,
+        clearance,
+      );
+      this.updateShape(badgeIdFor(hostId, slot), {
+        x: pos.x,
+        y: pos.y,
+        rotation: pos.rotation,
+      });
+    }
+  }
+
+  /**
+   * Per-endpoint clearance to apply when an endpoint-anchored badge sits
+   * on a connector — marker length (so the arrowhead isn't tucked under
+   * the badge) plus {@link DEFAULT_ENDPOINT_BADGE_GAP_PX} of visual gap.
+   *
+   * Independent of decoration `getEndPadding()` (which feeds path-trim
+   * for the body stroke); markers paint at the *untrimmed* endpoints, so
+   * we have to look at the marker spec directly.
+   */
+  private connectorBadgeEndpointClearance(
+    inst: ConnectorInstance,
+  ): { source: number; target: number } {
+    const strokeWidth = inst.spec.stroke?.width ?? 1;
+    const sourceMarkerInset = inst.spec.sourceMarker
+      ? markerInsetFor(this.shapeRegistry, inst.spec.sourceMarker, strokeWidth)
+      : 0;
+    const targetMarkerInset = inst.spec.targetMarker
+      ? markerInsetFor(this.shapeRegistry, inst.spec.targetMarker, strokeWidth)
+      : 0;
+    return {
+      source: sourceMarkerInset + DEFAULT_ENDPOINT_BADGE_GAP_PX,
+      target: targetMarkerInset + DEFAULT_ENDPOINT_BADGE_GAP_PX,
+    };
   }
 
   // ─── LOD / labels ───────────────────────────────────────────────────────
@@ -1191,7 +1277,7 @@ export class PrimitivesRenderer {
       gfx.pivot.set(0, 0);
       gfx.position.set(baseX + dx, baseY + dy);
     }
-    gfx.rotation = dRot;
+    gfx.rotation = (spec.rotation ?? 0) + dRot;
     gfx.scale.set(sx, sy);
     gfx.alpha = baseAlpha * alphaMul;
     // Pixi v8 Container.tint is multiplicative; 0xffffff is identity.
@@ -1236,7 +1322,7 @@ export class PrimitivesRenderer {
     const spec = inst.spec;
     gfx.pivot.set(0, 0);
     gfx.position.set(spec.x, spec.y);
-    gfx.rotation = 0;
+    gfx.rotation = spec.rotation ?? 0;
     gfx.scale.set(1, 1);
     gfx.alpha = spec.alpha ?? 1;
     (gfx as unknown as { tint: number }).tint = 0xffffff;
