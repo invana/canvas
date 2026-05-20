@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
+import GUI from 'lil-gui';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   CollapseExpandBehaviour,
@@ -6,35 +7,63 @@ import {
   GraphLayer,
   type GraphEdge,
   type GraphNode,
+  type GroupOptions,
+  type NodeStyle,
 } from '@invana/graph';
+import type { TogglePlacement } from '@invana/canvas/primitives';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'Graph/Behaviours/CollapseExpand' };
 export default meta;
 type Story = StoryObj;
 
+const TOGGLE_PLACEMENTS: TogglePlacement[] = [
+  'top',
+  'right',
+  'bottom',
+  'left',
+  'top-left',
+  'top-right',
+  'bottom-left',
+  'bottom-right',
+  'inside-top',
+  'inside-right',
+  'inside-bottom',
+  'inside-left',
+];
+
 /**
- * Group + outside node + cross-group edge. Click the `−` toggle at the
- * bottom of the group's frame to collapse — descendants disappear, the
- * frame renders as a single super-node carrying a count badge of the
- * hidden descendants, and the edge that pointed at `node2` re-routes to
- * the group node automatically. Click the `+` to expand back.
+ * Group + outside node + cross-group edge. Click the `−` / `+` toggle at
+ * the bottom of the group's frame to collapse / expand — descendants
+ * hide, the frame renders as a super-node carrying a count badge, and
+ * the cross edge re-routes to the group automatically.
  *
- * Notice: store data isn't mutated when collapsing — only `style.group.collapsed`
- * flips. `edge.source` / `edge.target` stay pointing at `node2`; the
- * layer's `edgeSpec` substitution rewrites the renderer-side endpoint at
- * project time.
+ * The lil-gui surfaces the full configurable surface:
+ *
+ * - **Behaviour** — `enabled` flag (live disable / re-enable to test).
+ * - **Group state** — `collapsed` (programmatic flip, equivalent to
+ *   clicking the toggle).
+ * - **Toggle button** — `togglePlacement` keyword or raw `{ x, y }`
+ *   coords (`'custom'` mode uses the slider values).
  */
 export const CollapseExpand: Story = {
   render: () => createContainer({ id: 'graph-collapse-expand' }),
 
   play: async ({ canvasElement }) => {
+    const settings = {
+      behaviourEnabled: true,
+      collapsed: false,
+      togglePlacement: 'bottom' as TogglePlacement | 'custom',
+      togglePosX: 0,
+      togglePosY: 60,
+    };
+
     const nodes: GraphNode[] = [
       {
         id: 'group-a',
         position: { x: 0, y: 0 },
         style: {
-          shape: { kind: 'circle', radius: 60 },
+          shape: { kind: 'circle', radius: 32 },
           bgFill: 0xb4c0e9,
           bgStrokeColor: 0x6b7fff,
           bgStrokeWidth: 1,
@@ -82,16 +111,61 @@ export const CollapseExpand: Story = {
     graph.setData({ nodes, edges });
 
     canvas.behaviours.register(
-      // Drag enabled for everything — children, collapsed groups, and
-      // expanded group frames. `groupAware: true` (default) makes
-      // dragging an expanded group translate every descendant in
-      // lockstep via setPositionsBulk.
       new DragNodeBehaviour({ id: 'drag', layerId: 'graph', enabled: true }),
     );
-    canvas.behaviours.register(
-      new CollapseExpandBehaviour({ id: 'collapse-expand', layerId: 'graph', enabled: true }),
-    );
+    const collapseExpand = new CollapseExpandBehaviour({
+      id: 'collapse-expand',
+      layerId: 'graph',
+      enabled: settings.behaviourEnabled,
+    });
+    canvas.behaviours.register(collapseExpand);
 
     canvas.camera.fitContent(graph.getBounds(), 100);
+
+    const applyGroupOptions = (): void => {
+      const node = graph.store.getNode('group-a');
+      if (!node) return;
+      const priorStyle = (node.style ?? {}) as NodeStyle;
+      const togglePlacement =
+        settings.togglePlacement === 'custom'
+          ? { x: settings.togglePosX, y: settings.togglePosY }
+          : settings.togglePlacement;
+      const priorGroup = (priorStyle.group ?? {}) as GroupOptions;
+      graph.store.updateNode('group-a', {
+        style: {
+          ...priorStyle,
+          group: {
+            ...priorGroup,
+            collapsed: settings.collapsed,
+            togglePlacement,
+          },
+        },
+      });
+    };
+
+    const gui = new GUI({ title: 'CollapseExpand' });
+    onStoryTeardown(() => gui.destroy());
+
+    const beh = gui.addFolder('Behaviour');
+    beh
+      .add(settings, 'behaviourEnabled')
+      .name('enabled')
+      .onChange((on: boolean) => (on ? collapseExpand.enable() : collapseExpand.disable()));
+
+    const state = gui.addFolder('Group state');
+    state.add(settings, 'collapsed').name('collapsed (programmatic)').onChange(applyGroupOptions);
+
+    const toggle = gui.addFolder('Toggle button');
+    toggle
+      .add(settings, 'togglePlacement', [...TOGGLE_PLACEMENTS, 'custom'])
+      .onChange(applyGroupOptions);
+    toggle
+      .add(settings, 'togglePosX', -200, 200, 1)
+      .name('custom posX')
+      .onChange(applyGroupOptions);
+    toggle
+      .add(settings, 'togglePosY', -200, 200, 1)
+      .name('custom posY')
+      .onChange(applyGroupOptions);
   },
 };

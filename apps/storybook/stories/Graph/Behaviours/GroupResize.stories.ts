@@ -16,21 +16,38 @@ export default meta;
 type Story = StoryObj;
 
 /**
- * Two side-by-side resizable nodes — a compound group (`style.group.userResizable: true`)
- * on the left and a plain rect (`style.resizable: true`) on the right. The
- * same `NodeResizeBehaviour` registration handles both: dragging a corner
- * writes back into `style.group.width / height` for the group and
- * `style.shape.width / height` for the plain rect. The opposite anchor
- * stays fixed in both cases.
+ * Comprehensive `NodeResizeBehaviour` demo. Two hosts:
+ * - A compound **group** with `style.group.userResizable: true` (writes
+ *   back to `style.group.width / height`).
+ * - A plain **rect** with `style.resizable: true` (writes back to
+ *   `style.shape.width / height`).
  *
- * Toggle `group.autoFit` in the GUI to flip the group between "user size is
- * a floor, frame still tracks children" and "user size is exact, no tracking".
+ * The lil-gui surfaces every constructor option (`handleRadius`,
+ * `handleFill`, `frameColor`, dash pattern, `framePadding`, `minSize`)
+ * plus the `enabled` flag and per-host resizable toggles. Constructor
+ * options re-register the behaviour live so you can see the selection-
+ * frame restyle without reloading the story.
  */
 export const GroupResize: Story = {
   render: () => createContainer({ id: 'graph-group-resize' }),
 
   play: async ({ canvasElement }) => {
-    const settings = { autoFit: false };
+    const settings = {
+      // Group-side
+      groupResizable: true,
+      groupAutoFit: false,
+      // Plain-rect side
+      shapeResizable: true,
+      // Behaviour
+      enabled: true,
+      handleRadius: 5,
+      handleFill: 0xffffff,
+      frameColor: 0x6b7fff,
+      dashLength: 5,
+      gapLength: 4,
+      framePadding: 4,
+      minSize: 20,
+    };
 
     const nodes: GraphNode[] = [
       {
@@ -41,7 +58,7 @@ export const GroupResize: Story = {
           bgFill: 0xf5f7ff,
           bgStrokeColor: 0x6b7fff,
           bgStrokeWidth: 1,
-          group: { userResizable: true, autoFit: settings.autoFit, padding: 16 },
+          group: { userResizable: true, autoFit: false, padding: 16 },
           labelText: 'Group (drag corners)',
           labelColor: 0x6b7fff,
           labelFontSize: 11,
@@ -69,9 +86,6 @@ export const GroupResize: Story = {
           bgFill: 0xfef9c3,
           bgStrokeColor: 0xeab308,
           bgStrokeWidth: 1,
-          // No group field here — this is a regular node opting into resize
-          // via the new `style.resizable` flag. Drag writes to
-          // `style.shape.width / height` directly.
           resizable: true,
           labelText: 'Plain rect (resizable)',
           labelColor: 0xa16207,
@@ -96,6 +110,9 @@ export const GroupResize: Story = {
     canvas.layers.add(graph);
     graph.setData({ nodes, edges });
 
+    // Keep the filter on this story: dragging the frame would conflict
+    // with the corner-handle gesture (both consume pointerdown on the
+    // same host).
     canvas.behaviours.register(
       new DragNodeBehaviour({
         id: 'drag',
@@ -104,22 +121,82 @@ export const GroupResize: Story = {
         filter: (id) => graph.getGroupRole(id) !== 'expanded',
       }),
     );
-    canvas.behaviours.register(
-      new NodeResizeBehaviour({ id: 'resize', layerId: 'graph', enabled: true }),
-    );
+
+    /**
+     * Constructor-time NodeResize options take effect via re-register —
+     * the behaviour stashes them on construction; live updates flow
+     * through a destroy → re-register cycle. Cheap (the canvas registry
+     * disposes mounts cleanly) and visually instant.
+     */
+    const buildResize = () =>
+      new NodeResizeBehaviour({
+        id: 'resize',
+        layerId: 'graph',
+        enabled: settings.enabled,
+        handleRadius: settings.handleRadius,
+        handleFill: settings.handleFill,
+        frameColor: settings.frameColor,
+        dashArray: [settings.dashLength, settings.gapLength],
+        framePadding: settings.framePadding,
+        minSize: settings.minSize,
+      });
+    canvas.behaviours.register(buildResize());
+
+    const reregisterResize = (): void => {
+      canvas.behaviours.unregister('resize');
+      canvas.behaviours.register(buildResize());
+    };
 
     canvas.camera.fitContent(graph.getBounds(), 100);
 
-    const gui = new GUI({ title: 'Resize behaviour' });
-    onStoryTeardown(() => gui.destroy());
-    gui.add(settings, 'autoFit').onChange(() => {
+    const setGroupOption = (key: 'userResizable' | 'autoFit', value: boolean): void => {
       const node = graph.store.getNode('group-a');
       if (!node) return;
       const priorStyle = (node.style ?? {}) as NodeStyle;
       const priorGroup = priorStyle.group ?? {};
       graph.store.updateNode('group-a', {
-        style: { ...priorStyle, group: { ...priorGroup, autoFit: settings.autoFit } },
+        style: { ...priorStyle, group: { ...priorGroup, [key]: value } },
       });
-    });
+    };
+
+    const setShapeResizable = (value: boolean): void => {
+      const node = graph.store.getNode('plain-rect');
+      if (!node) return;
+      const priorStyle = (node.style ?? {}) as NodeStyle;
+      graph.store.updateNode('plain-rect', {
+        style: { ...priorStyle, resizable: value },
+      });
+    };
+
+    const gui = new GUI({ title: 'NodeResize options' });
+    onStoryTeardown(() => gui.destroy());
+
+    const beh = gui.addFolder('Behaviour');
+    beh
+      .add(settings, 'enabled')
+      .onChange(reregisterResize);
+    beh
+      .add(settings, 'handleRadius', 2, 14, 1)
+      .onChange(reregisterResize);
+    beh.addColor(settings, 'handleFill').onChange(reregisterResize);
+    beh.addColor(settings, 'frameColor').onChange(reregisterResize);
+    beh.add(settings, 'dashLength', 0, 24, 1).onChange(reregisterResize);
+    beh.add(settings, 'gapLength', 0, 24, 1).onChange(reregisterResize);
+    beh.add(settings, 'framePadding', 0, 20, 1).onChange(reregisterResize);
+    beh.add(settings, 'minSize', 5, 60, 1).onChange(reregisterResize);
+
+    const hosts = gui.addFolder('Per-host flags');
+    hosts
+      .add(settings, 'groupResizable')
+      .name('group.userResizable')
+      .onChange((v: boolean) => setGroupOption('userResizable', v));
+    hosts
+      .add(settings, 'groupAutoFit')
+      .name('group.autoFit (floor mode)')
+      .onChange((v: boolean) => setGroupOption('autoFit', v));
+    hosts
+      .add(settings, 'shapeResizable')
+      .name('plain rect: style.resizable')
+      .onChange(setShapeResizable);
   },
 };
