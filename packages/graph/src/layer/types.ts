@@ -78,6 +78,7 @@ export function resolveField<T, I>(
 export type EdgePathType =
   | 'straight'
   | 'bezier'
+  | 'quadratic'
   | 'bump-radial'
   | 'bump-horizontal'
   | 'step-radial'

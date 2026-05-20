@@ -59,6 +59,8 @@ function pathTypeToRouterPathStyle(t: EdgePathType): { router: string; pathStyle
       return { router: 'straight', pathStyle: 'normal' };
     case 'bezier':
       return { router: 'straight', pathStyle: 'bezier' };
+    case 'quadratic':
+      return { router: 'straight', pathStyle: 'quadratic' };
     case 'bump-radial':
       return { router: 'straight', pathStyle: 'bump-radial' };
     case 'bump-horizontal':

@@ -59,6 +59,7 @@ import { bumpHorizontalPathStyle } from './connectors/pathStyles/bumpHorizontal'
 import { bundlePathStyle } from './connectors/pathStyles/bundle';
 import { stepRadialPathStyle } from './connectors/pathStyles/stepRadial';
 import { smoothPathStyle } from './connectors/pathStyles/smooth';
+import { quadraticPathStyle } from './connectors/pathStyles/quadratic';
 import { loopCurvePathStyle } from './connectors/pathStyles/loopCurve';
 import { loopPolylinePathStyle } from './connectors/pathStyles/loopPolyline';
 import { centerAnchor } from './connectors/anchors/center';
@@ -299,6 +300,7 @@ export class PrimitivesRenderer {
     this.registerPathStyle('normal', normalPathStyle);
     this.registerPathStyle('rounded', roundedPathStyle);
     this.registerPathStyle('bezier', bezierPathStyle);
+    this.registerPathStyle('quadratic', quadraticPathStyle);
     this.registerPathStyle('bump-radial', bumpRadialPathStyle);
     this.registerPathStyle('bump-horizontal', bumpHorizontalPathStyle);
     this.registerPathStyle('bundle', bundlePathStyle);
