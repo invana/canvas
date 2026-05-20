@@ -9,9 +9,9 @@ import {
   type ParallelEdgeDistribute,
 } from '@invana/graph';
 import GUI from 'lil-gui';
-import { createContainer, onStoryTeardown } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'Graph/Behaviours/ParallelEdgeCustomPolicy' };
+const meta: Meta = { title: 'Graph/Behaviours/ParallelEdges/ParallelEdgeCustomPolicy' };
 export default meta;
 type Story = StoryObj;
 

@@ -1,23 +1,23 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
+  BrushSelectBehaviour,
   ClickSelectBehaviour,
   DragNodeBehaviour,
   GraphLayer,
-  LassoSelectBehaviour,
   type GraphNode,
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
-import { createContainer, onStoryTeardown } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'Graph/Behaviours/LassoSelect' };
+const meta: Meta = { title: 'Graph/Behaviours/Select/BrushSelect' };
 export default meta;
 type Story = StoryObj;
 
-export const LassoSelect: Story = {
-  render: () => createContainer({ id: 'graph-lasso-select' }),
+export const BrushSelect: Story = {
+  render: () => createContainer({ id: 'graph-brush-select' }),
 
   play: async ({ canvasElement }) => {
     const groupColors = [
@@ -35,7 +35,7 @@ export const LassoSelect: Story = {
       },
     }));
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#graph-lasso-select')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#graph-brush-select')!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
     await canvas.init({ container, autoResize: true });
@@ -69,6 +69,8 @@ export const LassoSelect: Story = {
       new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
     );
 
+    // ClickSelectBehaviour first so Brush can delegate to it for unified
+    // selection state. Default `clickSelectId` matches its id below.
     const click = new ClickSelectBehaviour({
       id: 'click-select',
       layerId: 'graph',
@@ -78,25 +80,24 @@ export const LassoSelect: Story = {
     });
     canvas.behaviours.register(click);
 
-    const lasso = new LassoSelectBehaviour({
-      id: 'lasso-select',
+    const brush = new BrushSelectBehaviour({
+      id: 'brush-select',
       layerId: 'graph',
       enabled: true,
       trigger: ['shift'],
       enableElements: ['shape', 'connector'],
       style: {
-        fill: 0x14b8a6,
+        fill: 0x1677ff,
         fillAlpha: 0.12,
-        stroke: 0x14b8a6,
-        strokeWidth: 1.5,
-        strokeDash: [6, 4],
+        stroke: 0x1677ff,
+        strokeWidth: 1,
+        strokeDash: [4, 4],
       },
     });
-    canvas.behaviours.register(lasso);
+    canvas.behaviours.register(brush);
 
-    // Every option from LassoSelectBehaviourOptions exposed here.
+    // Every option from BrushSelectBehaviourOptions surfaced here.
     const toCss = (n: number): string => `#${n.toString(16).padStart(6, '0')}`;
-    const parseColor = (s: string): number => parseInt(s.replace('#', ''), 16);
     const settings = {
       enable: true,
       pickShapes: true,
@@ -105,17 +106,18 @@ export const LassoSelect: Story = {
       immediately: false,
       state: 'selected' as 'selected' | 'highlighted',
       clearOnBackground: true,
-      'style.fill': toCss(0x14b8a6),
+      'style.fill': toCss(0x1677ff),
       'style.fillAlpha': 0.12,
-      'style.stroke': toCss(0x14b8a6),
+      'style.stroke': toCss(0x1677ff),
       'style.strokeAlpha': 0.8,
-      'style.strokeWidth': 1.5,
-      'style.dashLen': 6,
+      'style.strokeWidth': 1,
+      'style.dashLen': 4,
       'style.gapLen': 4,
     };
+    const parseColor = (s: string): number => parseInt(s.replace('#', ''), 16);
     const apply = (): void => {
-      if (settings.enable) lasso.enable();
-      else lasso.disable();
+      if (settings.enable) brush.enable();
+      else brush.disable();
       const enableElements: ('shape' | 'connector')[] = [];
       if (settings.pickShapes) enableElements.push('shape');
       if (settings.pickConnectors) enableElements.push('connector');
@@ -123,7 +125,7 @@ export const LassoSelect: Story = {
         settings['trigger (modifier key)'] === 'none'
           ? []
           : [settings['trigger (modifier key)']];
-      lasso.setOptions({
+      brush.setOptions({
         enableElements,
         trigger,
         immediately: settings.immediately,
@@ -140,7 +142,7 @@ export const LassoSelect: Story = {
       });
     };
 
-    const gui = new GUI({ title: 'Lasso Select' });
+    const gui = new GUI({ title: 'Brush Select' });
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'enable').onChange(apply);
     gui.add(settings, 'pickShapes').onChange(apply);
@@ -161,10 +163,11 @@ export const LassoSelect: Story = {
     styleFolder.add(settings, 'style.gapLen', 0, 20, 1).onChange(apply);
     gui.add({ clear: () => click.clearSelection() }, 'clear');
 
+    // Helper text
     const hint = document.createElement('div');
     hint.style.cssText =
       'position:absolute; top:10px; left:10px; padding:6px 10px; background:rgba(15,23,42,.85); color:#f8fafc; font:12px/1.2 ui-monospace, monospace; border-radius:4px; z-index:100;';
-    hint.textContent = 'Hold shift + drag a freeform loop on empty space';
+    hint.textContent = 'Hold shift + drag on empty space to brush-select';
     container.appendChild(hint);
   },
 };

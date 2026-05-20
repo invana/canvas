@@ -11,9 +11,9 @@ import {
   type NodeShapeOptions,
 } from '@invana/graph';
 import GUI from 'lil-gui';
-import { createContainer, onStoryTeardown } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'Graph/Behaviours/ParallelEdge' };
+const meta: Meta = { title: 'Graph/Behaviours/ParallelEdges/ParallelEdge' };
 export default meta;
 type Story = StoryObj;
 
