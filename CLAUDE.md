@@ -23,6 +23,7 @@ If I ask for "docs", "documentation", or "data model docs" without further quali
 | Path | Package | Description |
 |---|---|---|
 | `packages/canvas` | `@invana/canvas` | engine — `Canvas`, `Layer`, `Behaviour`, `Layout` base classes, `ShapesRenderer`, built-in `BackgroundLayer` / `DevInfoLayer` / `CameraInputBehaviour` |
+| `packages/canvas-react` | `@invana/canvas-react` | React bindings — declarative `<Canvas>` with JSX children mapped to layers, behaviours, layouts via context |
 | `packages/graph` | `@invana/graph` | `GraphLayer`, `MiniMapLayer`, hover/click/lasso/brush/pan/drag behaviours |
 | `packages/graph-layout-d3-force` | `@invana/graph-layout-d3-force` | `D3ForceLayout` |
 | `packages/graph-layout-elkjs` | `@invana/graph-layout-elkjs` | `ElkLayout` |

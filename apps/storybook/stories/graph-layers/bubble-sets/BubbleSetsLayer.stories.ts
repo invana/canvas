@@ -9,7 +9,7 @@
  * source layer's `data:changed` event.
  */
 
-import type { Meta, StoryObj } from '@storybook/html-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   Canvas,

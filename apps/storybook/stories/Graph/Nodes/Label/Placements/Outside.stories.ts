@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/html-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import type { ShapeLabelPlacement } from '@invana/canvas';
 import { GraphLayer, type EdgeData, type NodeData, type NodeStyle } from '@invana/graph';

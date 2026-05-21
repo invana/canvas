@@ -14,7 +14,7 @@
 
 import 'maplibre-gl/dist/maplibre-gl.css?inline';
 
-import type { Meta, StoryObj } from '@storybook/html-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Canvas } from '@invana/canvas';
 import {
   EdgeSizeLODBehaviour,

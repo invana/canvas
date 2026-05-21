@@ -2,9 +2,18 @@
 
 Storybook for the new architecture. The sidebar mirrors the seven core engine concepts under each package namespace.
 
+## Framework — `@storybook/react-vite`
+
+Storybook runs on the React framework (`@storybook/react-vite`). Story files are `.stories.ts` or `.stories.tsx` and import `Meta` / `StoryObj` from `@storybook/react-vite`. Two authoring shapes coexist:
+
+1. **Imperative / `play`-based** — the existing engine, graph, layout, and decoration stories. `render()` returns `createContainer(...)` (defined in `stories/div-util.tsx` — it returns a React element rendering a sized `<div>` with a stable id), and the `play({ canvasElement })` function queries the container by id and drives the engine imperatively. No changes from the pre-React-framework pattern; `play` runs against the same DOM shape.
+2. **Declarative React** — stories for `@invana/canvas-react`. `render()` returns the React tree directly (`<Canvas><GraphLayer/>…</Canvas>`). No `play`. No `onStoryTeardown` either — the `<Canvas>` effect cleanup tears the engine down on unmount.
+
+When in doubt: engine + graph stories follow shape (1). Anything under `Canvas-React/*` follows shape (2).
+
 ## Conventions
 
-Storybook top-level namespacing follows package names. Stories from `@invana/canvas` live under `stories/Canvas/...`; future `@invana/graph` stories will live under `stories/Graph/...`, etc.
+Storybook top-level namespacing follows package names. Stories from `@invana/canvas` live under `stories/Canvas/...`; `@invana/graph` stories under `stories/Graph/...`; `@invana/canvas-react` stories under `stories/Canvas-React/...`; etc.
 
 Inside each package namespace, the seven core engine concepts each get a folder:
 

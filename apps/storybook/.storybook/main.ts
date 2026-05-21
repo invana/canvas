@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
-import type { StorybookConfig } from '@storybook/html-vite';
+import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
   stories: [
@@ -22,7 +22,7 @@ const config: StorybookConfig = {
     defaultName: 'Docs',
   },
   framework: {
-    name: getAbsolutePath('@storybook/html-vite'),
+    name: getAbsolutePath('@storybook/react-vite'),
     options: {},
   },
 };

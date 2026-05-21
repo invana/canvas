@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/html-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, PrimitivesRenderer } from '@invana/canvas';
 import type { BadgePlacement, CanvasContext, ShapeFill, ShapeFillLayer, ShapeStroke } from '@invana/canvas';
 import GUI from 'lil-gui';

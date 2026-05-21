@@ -17,7 +17,7 @@
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import type { Meta, StoryObj } from '@storybook/html-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Canvas, DevInfoLayer } from '@invana/canvas';
 import {
   GraphLayer,

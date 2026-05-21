@@ -10,7 +10,7 @@
  * label-on-hover overlay, `LassoSelectBehaviour`, `MiniMapLayer`.
  */
 
-import type { Meta, StoryObj } from '@storybook/html-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   Canvas,

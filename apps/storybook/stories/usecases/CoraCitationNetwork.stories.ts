@@ -13,7 +13,7 @@
  * overlay to bring the topic clusters forward.
  */
 
-import type { Meta, StoryObj } from '@storybook/html-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   Canvas,

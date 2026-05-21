@@ -11,7 +11,7 @@
  * `MiniMapLayer` for navigation on larger codebases.
  */
 
-import type { Meta, StoryObj } from '@storybook/html-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   Canvas,

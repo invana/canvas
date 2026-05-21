@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/html-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { action } from 'storybook/actions';
 import { Canvas } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../div-util';

@@ -9,7 +9,7 @@
  * (same `graphLayerId`, different `zIndex`) for fill + outline.
  */
 
-import type { Meta, StoryObj } from '@storybook/html-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   Canvas,

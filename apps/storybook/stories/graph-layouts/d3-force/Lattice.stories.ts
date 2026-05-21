@@ -12,7 +12,7 @@
  * (simulation alpha/decay, link, charge, center).
  */
 
-import type { Meta, StoryObj } from '@storybook/html-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   Canvas,

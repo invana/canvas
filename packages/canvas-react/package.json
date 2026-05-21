@@ -1,0 +1,49 @@
+{
+  "name": "@invana/canvas-react",
+  "version": "0.0.1",
+  "description": "React bindings for @invana/canvas — declarative <Canvas> with JSX children mapped to layers, behaviours, and layouts.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "typedocOptions": {
+    "entryPoints": [
+      "src/index.ts"
+    ]
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@invana/canvas": "workspace:*",
+    "@invana/graph": "workspace:*",
+    "@invana/graph-layout-d3-force": "workspace:*",
+    "pixi.js": "^8.18.1",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@invana/canvas": "workspace:*",
+    "@invana/graph": "workspace:*",
+    "@invana/graph-layout-d3-force": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "pixi.js": "^8.18.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsup": "^8.3.5",
+    "typescript": "5.9.2"
+  },
+  "keywords": [
+    "canvas",
+    "react",
+    "graph",
+    "visualization",
+    "pixi"
+  ],
+  "license": "Apache-2.0"
+}

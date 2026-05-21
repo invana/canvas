@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": ".",
-    "noEmit": true
+    "noEmit": true,
+    "jsx": "react-jsx"
   },
   "include": ["stories/**/*", ".storybook/**/*", "src/**/*", "vite-env.d.ts"],
   "exclude": ["node_modules", "dist", "storybook-static"]

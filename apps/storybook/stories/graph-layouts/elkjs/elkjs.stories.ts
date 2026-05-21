@@ -10,7 +10,7 @@
  * compare ELK's catalogue on the same fixed DAG.
  */
 
-import type { Meta, StoryObj } from '@storybook/html-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   Canvas,

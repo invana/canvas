@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/html-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Canvas, DragPanBehaviour, loadIconFont, WheelZoomBehaviour } from '@invana/canvas';
 import type { InsetAnchor } from '@invana/canvas';
 import { GraphLayer, type NodeData, type NodeShapeOptions } from '@invana/graph';
