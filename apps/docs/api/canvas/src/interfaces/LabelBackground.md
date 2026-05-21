@@ -1,6 +1,6 @@
 # Interface: LabelBackground
 
-Defined in: [canvas/src/primitives/types.ts:1060](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L1060)
+Defined in: [canvas/src/primitives/types.ts:1188](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1188)
 
 Background pill drawn behind a label's text. Optional.
 
@@ -10,7 +10,7 @@ Background pill drawn behind a label's text. Optional.
 
 > `readonly` `optional` **fill?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:1061](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L1061)
+Defined in: [canvas/src/primitives/types.ts:1189](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1189)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [canvas/src/primitives/types.ts:1061](https://github.com/invana/canv
 
 > `readonly` `optional` **fillAlpha?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:1062](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L1062)
+Defined in: [canvas/src/primitives/types.ts:1190](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1190)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [canvas/src/primitives/types.ts:1062](https://github.com/invana/canv
 
 > `readonly` `optional` **padding?**: `number` \| readonly \[`number`, `number`\] \| readonly \[`number`, `number`, `number`, `number`\]
 
-Defined in: [canvas/src/primitives/types.ts:1069](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L1069)
+Defined in: [canvas/src/primitives/types.ts:1197](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1197)
 
 Uniform padding, [v,h], or [t,r,b,l].
 
@@ -36,7 +36,7 @@ Uniform padding, [v,h], or [t,r,b,l].
 
 > `readonly` `optional` **radius?**: `number` \| readonly \[`number`, `number`, `number`, `number`\]
 
-Defined in: [canvas/src/primitives/types.ts:1067](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L1067)
+Defined in: [canvas/src/primitives/types.ts:1195](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1195)
 
 Uniform radius or per-corner [tl, tr, br, bl].
 
@@ -46,7 +46,7 @@ Uniform radius or per-corner [tl, tr, br, bl].
 
 > `readonly` `optional` **shadow?**: `object`
 
-Defined in: [canvas/src/primitives/types.ts:1070](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L1070)
+Defined in: [canvas/src/primitives/types.ts:1198](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1198)
 
 #### alpha?
 
@@ -74,7 +74,7 @@ Defined in: [canvas/src/primitives/types.ts:1070](https://github.com/invana/canv
 
 > `readonly` `optional` **stroke?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:1063](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L1063)
+Defined in: [canvas/src/primitives/types.ts:1191](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1191)
 
 ***
 
@@ -82,7 +82,7 @@ Defined in: [canvas/src/primitives/types.ts:1063](https://github.com/invana/canv
 
 > `readonly` `optional` **strokeAlpha?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:1064](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L1064)
+Defined in: [canvas/src/primitives/types.ts:1192](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1192)
 
 ***
 
@@ -90,4 +90,4 @@ Defined in: [canvas/src/primitives/types.ts:1064](https://github.com/invana/canv
 
 > `readonly` `optional` **strokeWidth?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:1065](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L1065)
+Defined in: [canvas/src/primitives/types.ts:1193](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1193)

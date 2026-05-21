@@ -1,6 +1,6 @@
 # Interface: GraphLayerEvents
 
-Defined in: [graph/src/layer/types.ts:847](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L847)
+Defined in: [graph/src/layer/types.ts:1311](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1311)
 
 Layer-level event payloads (separate from store events). Pointer/drag/etc.
 arrive in later phases; today this is just the aggregated lifecycle.
@@ -15,7 +15,7 @@ arrive in later phases; today this is just the aggregated lifecycle.
 
 > **data:changed**: `object`
 
-Defined in: [graph/src/layer/types.ts:848](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L848)
+Defined in: [graph/src/layer/types.ts:1312](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1312)
 
 #### addedEdges
 
@@ -47,7 +47,7 @@ Defined in: [graph/src/layer/types.ts:848](https://github.com/invana/canvas/blob
 
 > **positions:updated**: `object`
 
-Defined in: [graph/src/layer/types.ts:856](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L856)
+Defined in: [graph/src/layer/types.ts:1320](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1320)
 
 #### count
 

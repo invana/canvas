@@ -1,6 +1,6 @@
 # Class: GraphStore
 
-Defined in: [graph/src/store/GraphStore.ts:67](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L67)
+Defined in: [graph/src/store/GraphStore.ts:67](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L67)
 
 ## Constructors
 
@@ -8,7 +8,7 @@ Defined in: [graph/src/store/GraphStore.ts:67](https://github.com/invana/canvas/
 
 > **new GraphStore**(`opts?`): `GraphStore`
 
-Defined in: [graph/src/store/GraphStore.ts:118](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L118)
+Defined in: [graph/src/store/GraphStore.ts:118](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L118)
 
 #### Parameters
 
@@ -26,7 +26,7 @@ Defined in: [graph/src/store/GraphStore.ts:118](https://github.com/invana/canvas
 
 > `readonly` **events**: [`EventEmitter`](../../../canvas/src/classes/EventEmitter.md)\<[`GraphStoreEventMap`](../type-aliases/GraphStoreEventMap.md)\>
 
-Defined in: [graph/src/store/GraphStore.ts:89](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L89)
+Defined in: [graph/src/store/GraphStore.ts:89](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L89)
 
 Public event bus. Subscribe via `store.events.on('node:add', ...)`.
 
@@ -38,7 +38,7 @@ Public event bus. Subscribe via `store.events.on('node:add', ...)`.
 
 > **get** **version**(): `number`
 
-Defined in: [graph/src/store/GraphStore.ts:135](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L135)
+Defined in: [graph/src/store/GraphStore.ts:135](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L135)
 
 Monotonic counter. Bumps on every mutation including silent position writes.
 
@@ -52,7 +52,7 @@ Monotonic counter. Bumps on every mutation including silent position writes.
 
 > **addData**(`data`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:625](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L625)
+Defined in: [graph/src/store/GraphStore.ts:625](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L625)
 
 Append nodes + edges in one batch — non-destructive (does NOT clear).
 Convenience for streaming feeds that push a fresh chunk of items as
@@ -82,7 +82,7 @@ readonly [`GraphNode`](../interfaces/GraphNode.md)\<`unknown`\>[]
 
 > **addEdge**\<`D`\>(`edge`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:523](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L523)
+Defined in: [graph/src/store/GraphStore.ts:523](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L523)
 
 #### Type Parameters
 
@@ -106,7 +106,7 @@ Defined in: [graph/src/store/GraphStore.ts:523](https://github.com/invana/canvas
 
 > **addEdgesBulk**(`edges`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:612](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L612)
+Defined in: [graph/src/store/GraphStore.ts:612](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L612)
 
 #### Parameters
 
@@ -124,7 +124,7 @@ readonly [`GraphEdge`](../interfaces/GraphEdge.md)\<`unknown`\>[]
 
 > **addNode**\<`D`\>(`node`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:375](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L375)
+Defined in: [graph/src/store/GraphStore.ts:375](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L375)
 
 Strict add — throws on duplicate.
 
@@ -150,7 +150,7 @@ Strict add — throws on duplicate.
 
 > **addNodesBulk**(`nodes`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:606](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L606)
+Defined in: [graph/src/store/GraphStore.ts:606](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L606)
 
 #### Parameters
 
@@ -168,7 +168,7 @@ readonly [`GraphNode`](../interfaces/GraphNode.md)\<`unknown`\>[]
 
 > **ancestorsOf**(`id`): `IterableIterator`\<`string`\>
 
-Defined in: [graph/src/store/GraphStore.ts:276](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L276)
+Defined in: [graph/src/store/GraphStore.ts:276](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L276)
 
 #### Parameters
 
@@ -186,7 +186,7 @@ Defined in: [graph/src/store/GraphStore.ts:276](https://github.com/invana/canvas
 
 > **applyDelta**(`delta`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:653](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L653)
+Defined in: [graph/src/store/GraphStore.ts:653](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L653)
 
 Apply a streaming delta in a single batch. Order within the batch:
 1. `removed.edgeIds`  — removed first so node removals can't cascade
@@ -254,7 +254,7 @@ readonly `object`[]
 
 > **batch**\<`T`\>(`fn`): `T`
 
-Defined in: [graph/src/store/GraphStore.ts:703](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L703)
+Defined in: [graph/src/store/GraphStore.ts:703](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L703)
 
 Coalesce all mutations inside `fn` into a single flush. Nested `batch`
 calls flush only on the outermost exit.
@@ -281,7 +281,7 @@ calls flush only on the outermost exit.
 
 > **childrenOf**(`parentId`): `IterableIterator`\<`string`\>
 
-Defined in: [graph/src/store/GraphStore.ts:258](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L258)
+Defined in: [graph/src/store/GraphStore.ts:258](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L258)
 
 #### Parameters
 
@@ -299,7 +299,7 @@ Defined in: [graph/src/store/GraphStore.ts:258](https://github.com/invana/canvas
 
 > **clear**(): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:727](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L727)
+Defined in: [graph/src/store/GraphStore.ts:727](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L727)
 
 Wipe all data. Cancels any pending flush.
 
@@ -313,7 +313,7 @@ Wipe all data. Cancels any pending flush.
 
 > **compact**(): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:752](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L752)
+Defined in: [graph/src/store/GraphStore.ts:752](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L752)
 
 Reclaim tombstoned slots. Invalidates any external code that cached
 slot indices. Renderer batch buffers etc. must invalidate first.
@@ -328,7 +328,7 @@ slot indices. Renderer batch buffers etc. must invalidate first.
 
 > **descendantsOf**(`id`): `IterableIterator`\<`string`\>
 
-Defined in: [graph/src/store/GraphStore.ts:264](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L264)
+Defined in: [graph/src/store/GraphStore.ts:264](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L264)
 
 #### Parameters
 
@@ -346,7 +346,7 @@ Defined in: [graph/src/store/GraphStore.ts:264](https://github.com/invana/canvas
 
 > **edgeCount**(): `number`
 
-Defined in: [graph/src/store/GraphStore.ts:145](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L145)
+Defined in: [graph/src/store/GraphStore.ts:145](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L145)
 
 Number of live (non-tombstoned) edges.
 
@@ -360,7 +360,7 @@ Number of live (non-tombstoned) edges.
 
 > **edges**(): `IterableIterator`\<[`GraphEdge`](../interfaces/GraphEdge.md)\<`unknown`\>\>
 
-Defined in: [graph/src/store/GraphStore.ts:179](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L179)
+Defined in: [graph/src/store/GraphStore.ts:179](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L179)
 
 #### Returns
 
@@ -372,7 +372,7 @@ Defined in: [graph/src/store/GraphStore.ts:179](https://github.com/invana/canvas
 
 > **edgesOf**(`nodeId`, `dir?`): `IterableIterator`\<[`GraphEdge`](../interfaces/GraphEdge.md)\<`unknown`\>\>
 
-Defined in: [graph/src/store/GraphStore.ts:203](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L203)
+Defined in: [graph/src/store/GraphStore.ts:203](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L203)
 
 Yield edges incident to `nodeId` in the requested direction.
 `'out'` — edges where `nodeId` is the source.
@@ -399,7 +399,7 @@ Yield edges incident to `nodeId` in the requested direction.
 
 > **flush**(): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:721](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L721)
+Defined in: [graph/src/store/GraphStore.ts:721](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L721)
 
 Drain any pending events. Cancels the RAF-scheduled flush (frame mode).
 In sync mode this still works — handy for forcing the TTL eviction sweep
@@ -415,7 +415,7 @@ even if no mutation has happened since the last flush.
 
 > **getEdge**\<`D`\>(`id`): [`GraphEdge`](../interfaces/GraphEdge.md)\<`D`\>
 
-Defined in: [graph/src/store/GraphStore.ts:167](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L167)
+Defined in: [graph/src/store/GraphStore.ts:167](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L167)
 
 #### Type Parameters
 
@@ -439,7 +439,7 @@ Defined in: [graph/src/store/GraphStore.ts:167](https://github.com/invana/canvas
 
 > **getNode**\<`D`\>(`id`): [`GraphNode`](../interfaces/GraphNode.md)\<`D`\>
 
-Defined in: [graph/src/store/GraphStore.ts:157](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L157)
+Defined in: [graph/src/store/GraphStore.ts:157](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L157)
 
 #### Type Parameters
 
@@ -463,7 +463,7 @@ Defined in: [graph/src/store/GraphStore.ts:157](https://github.com/invana/canvas
 
 > **getPosition**(`id`): [`Vec2`](../interfaces/Vec2.md)
 
-Defined in: [graph/src/store/GraphStore.ts:286](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L286)
+Defined in: [graph/src/store/GraphStore.ts:286](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L286)
 
 #### Parameters
 
@@ -481,7 +481,7 @@ Defined in: [graph/src/store/GraphStore.ts:286](https://github.com/invana/canvas
 
 > **hasEdge**(`id`): `boolean`
 
-Defined in: [graph/src/store/GraphStore.ts:153](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L153)
+Defined in: [graph/src/store/GraphStore.ts:153](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L153)
 
 #### Parameters
 
@@ -499,7 +499,7 @@ Defined in: [graph/src/store/GraphStore.ts:153](https://github.com/invana/canvas
 
 > **hasNode**(`id`): `boolean`
 
-Defined in: [graph/src/store/GraphStore.ts:149](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L149)
+Defined in: [graph/src/store/GraphStore.ts:149](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L149)
 
 #### Parameters
 
@@ -517,7 +517,7 @@ Defined in: [graph/src/store/GraphStore.ts:149](https://github.com/invana/canvas
 
 > **inDegree**(`nodeId`): `number`
 
-Defined in: [graph/src/store/GraphStore.ts:191](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L191)
+Defined in: [graph/src/store/GraphStore.ts:191](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L191)
 
 #### Parameters
 
@@ -535,7 +535,7 @@ Defined in: [graph/src/store/GraphStore.ts:191](https://github.com/invana/canvas
 
 > **isPinned**(`id`): `boolean`
 
-Defined in: [graph/src/store/GraphStore.ts:357](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L357)
+Defined in: [graph/src/store/GraphStore.ts:357](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L357)
 
 #### Parameters
 
@@ -553,7 +553,7 @@ Defined in: [graph/src/store/GraphStore.ts:357](https://github.com/invana/canvas
 
 > **neighborsOf**(`nodeId`, `dir?`): `IterableIterator`\<`string`\>
 
-Defined in: [graph/src/store/GraphStore.ts:229](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L229)
+Defined in: [graph/src/store/GraphStore.ts:229](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L229)
 
 Yield neighbor node ids in the requested direction.
 
@@ -577,7 +577,7 @@ Yield neighbor node ids in the requested direction.
 
 > **nodeCount**(): `number`
 
-Defined in: [graph/src/store/GraphStore.ts:140](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L140)
+Defined in: [graph/src/store/GraphStore.ts:140](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L140)
 
 Number of live (non-tombstoned) nodes.
 
@@ -591,7 +591,7 @@ Number of live (non-tombstoned) nodes.
 
 > **nodes**(): `IterableIterator`\<[`GraphNode`](../interfaces/GraphNode.md)\<`unknown`\>\>
 
-Defined in: [graph/src/store/GraphStore.ts:172](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L172)
+Defined in: [graph/src/store/GraphStore.ts:172](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L172)
 
 #### Returns
 
@@ -603,7 +603,7 @@ Defined in: [graph/src/store/GraphStore.ts:172](https://github.com/invana/canvas
 
 > **outDegree**(`nodeId`): `number`
 
-Defined in: [graph/src/store/GraphStore.ts:185](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L185)
+Defined in: [graph/src/store/GraphStore.ts:185](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L185)
 
 #### Parameters
 
@@ -621,7 +621,7 @@ Defined in: [graph/src/store/GraphStore.ts:185](https://github.com/invana/canvas
 
 > **parentOf**(`id`): `string`
 
-Defined in: [graph/src/store/GraphStore.ts:254](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L254)
+Defined in: [graph/src/store/GraphStore.ts:254](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L254)
 
 #### Parameters
 
@@ -639,7 +639,7 @@ Defined in: [graph/src/store/GraphStore.ts:254](https://github.com/invana/canvas
 
 > **pinnedIds**(): `IterableIterator`\<`string`\>
 
-Defined in: [graph/src/store/GraphStore.ts:363](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L363)
+Defined in: [graph/src/store/GraphStore.ts:363](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L363)
 
 #### Returns
 
@@ -651,7 +651,7 @@ Defined in: [graph/src/store/GraphStore.ts:363](https://github.com/invana/canvas
 
 > **removeEdge**(`id`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:586](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L586)
+Defined in: [graph/src/store/GraphStore.ts:586](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L586)
 
 #### Parameters
 
@@ -669,7 +669,7 @@ Defined in: [graph/src/store/GraphStore.ts:586](https://github.com/invana/canvas
 
 > **removeNode**(`id`, `opts?`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:452](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L452)
+Defined in: [graph/src/store/GraphStore.ts:452](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L452)
 
 Remove a node. Cascades by default — removes all incident edges first.
 `cascade: false` throws if any incident edges still exist.
@@ -696,7 +696,7 @@ Remove a node. Cascades by default — removes all incident edges first.
 
 > **setPinned**(`id`, `pinned`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:343](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L343)
+Defined in: [graph/src/store/GraphStore.ts:343](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L343)
 
 #### Parameters
 
@@ -718,7 +718,7 @@ Defined in: [graph/src/store/GraphStore.ts:343](https://github.com/invana/canvas
 
 > **setPosition**(`id`, `pos`, `opts?`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:296](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L296)
+Defined in: [graph/src/store/GraphStore.ts:296](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L296)
 
 Set a single node's position.
 
@@ -751,7 +751,7 @@ bumps `version` — use for layout sim ticks at 60fps.
 
 > **setPositionsBulk**(`ids`, `xy`, `opts?`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:318](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L318)
+Defined in: [graph/src/store/GraphStore.ts:318](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L318)
 
 Set many positions in a single tight loop.
 
@@ -785,7 +785,7 @@ readonly `string`[]
 
 > **updateEdge**\<`D`\>(`id`, `patch`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:546](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L546)
+Defined in: [graph/src/store/GraphStore.ts:546](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L546)
 
 #### Type Parameters
 
@@ -813,7 +813,7 @@ Defined in: [graph/src/store/GraphStore.ts:546](https://github.com/invana/canvas
 
 > **updateNode**\<`D`\>(`id`, `patch`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:393](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L393)
+Defined in: [graph/src/store/GraphStore.ts:393](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L393)
 
 #### Type Parameters
 
@@ -841,7 +841,7 @@ Defined in: [graph/src/store/GraphStore.ts:393](https://github.com/invana/canvas
 
 > **upsertEdge**\<`D`\>(`edge`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:537](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L537)
+Defined in: [graph/src/store/GraphStore.ts:537](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L537)
 
 #### Type Parameters
 
@@ -865,7 +865,7 @@ Defined in: [graph/src/store/GraphStore.ts:537](https://github.com/invana/canvas
 
 > **upsertNode**\<`D`\>(`node`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:384](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/store/GraphStore.ts#L384)
+Defined in: [graph/src/store/GraphStore.ts:384](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/GraphStore.ts#L384)
 
 Add-or-merge. Streaming-friendly path.
 

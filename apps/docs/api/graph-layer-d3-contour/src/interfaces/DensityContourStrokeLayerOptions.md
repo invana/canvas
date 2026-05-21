@@ -1,6 +1,6 @@
 # Interface: DensityContourStrokeLayerOptions
 
-Defined in: [graph-layer-d3-contour/src/types.ts:100](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L100)
+Defined in: [graph-layer-d3-contour/src/types.ts:100](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L100)
 
 Options for [DensityContourStrokeLayer](../classes/DensityContourStrokeLayer.md). Paints iso-line outlines
 and nothing else — no fill. Defaults match Observable's
@@ -18,7 +18,7 @@ steelblue strokes, every 5th band stroked at 1 unit, the rest at 0.25
 
 > `optional` **bandwidth?**: `number`
 
-Defined in: [graph-layer-d3-contour/src/types.ts:23](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L23)
+Defined in: [graph-layer-d3-contour/src/types.ts:23](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L23)
 
 Kernel bandwidth in world units. Larger = smoother / broader blobs.
 Defaults to `20` (d3's own default).
@@ -33,7 +33,7 @@ Defaults to `20` (d3's own default).
 
 > `optional` **cellSize?**: `number`
 
-Defined in: [graph-layer-d3-contour/src/types.ts:36](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L36)
+Defined in: [graph-layer-d3-contour/src/types.ts:36](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L36)
 
 Grid cell size in world units. Smaller = sharper bands but quadratically
 more compute. d3 requires a power of two (1, 2, 4, 8, 16). Defaults to `4`.
@@ -48,7 +48,7 @@ more compute. d3 requires a power of two (1, 2, 4, 8, 16). Defaults to `4`.
 
 > **graphLayerId**: `string`
 
-Defined in: [graph-layer-d3-contour/src/types.ts:17](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L17)
+Defined in: [graph-layer-d3-contour/src/types.ts:17](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L17)
 
 Required. Id of the `GraphLayer` whose node positions feed the density
 estimate. Per canvas architecture: cross-layer deps are declared
@@ -64,7 +64,7 @@ explicitly, never inferred.
 
 > `optional` **indexEvery?**: `number`
 
-Defined in: [graph-layer-d3-contour/src/types.ts:142](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L142)
+Defined in: [graph-layer-d3-contour/src/types.ts:142](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L142)
 
 Index-contour sugar — every `indexEvery`-th band (counting from
 low-density at `i=0`) is stroked with [indexMajorWidth](#indexmajorwidth), all
@@ -86,7 +86,7 @@ Defaults reproduce Observable's example: `indexEvery: 5`,
 
 > `optional` **indexMajorWidth?**: `number`
 
-Defined in: [graph-layer-d3-contour/src/types.ts:143](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L143)
+Defined in: [graph-layer-d3-contour/src/types.ts:143](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L143)
 
 ***
 
@@ -94,7 +94,7 @@ Defined in: [graph-layer-d3-contour/src/types.ts:143](https://github.com/invana/
 
 > `optional` **indexMinorWidth?**: `number`
 
-Defined in: [graph-layer-d3-contour/src/types.ts:144](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L144)
+Defined in: [graph-layer-d3-contour/src/types.ts:144](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L144)
 
 ***
 
@@ -102,7 +102,7 @@ Defined in: [graph-layer-d3-contour/src/types.ts:144](https://github.com/invana/
 
 > `optional` **padding?**: `number`
 
-Defined in: [graph-layer-d3-contour/src/types.ts:43](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L43)
+Defined in: [graph-layer-d3-contour/src/types.ts:43](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L43)
 
 Padding added around the node bounding box before building the grid, so
 bands at the edge of the cluster aren't clipped against the grid border.
@@ -118,7 +118,7 @@ World units. Defaults to `50`.
 
 > `optional` **palette?**: `number`[] \| [`DensityContourPaletteName`](../type-aliases/DensityContourPaletteName.md)
 
-Defined in: [graph-layer-d3-contour/src/types.ts:66](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L66)
+Defined in: [graph-layer-d3-contour/src/types.ts:66](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L66)
 
 #### Inherited from
 
@@ -130,7 +130,7 @@ Defined in: [graph-layer-d3-contour/src/types.ts:66](https://github.com/invana/c
 
 > `optional` **paletteFn?**: (`t`) => `number`
 
-Defined in: [graph-layer-d3-contour/src/types.ts:69](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L69)
+Defined in: [graph-layer-d3-contour/src/types.ts:69](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L69)
 
 #### Parameters
 
@@ -152,7 +152,7 @@ Defined in: [graph-layer-d3-contour/src/types.ts:69](https://github.com/invana/c
 
 > `optional` **paletteRangeEnd?**: `number`
 
-Defined in: [graph-layer-d3-contour/src/types.ts:68](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L68)
+Defined in: [graph-layer-d3-contour/src/types.ts:68](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L68)
 
 #### Inherited from
 
@@ -164,7 +164,7 @@ Defined in: [graph-layer-d3-contour/src/types.ts:68](https://github.com/invana/c
 
 > `optional` **paletteRangeStart?**: `number`
 
-Defined in: [graph-layer-d3-contour/src/types.ts:67](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L67)
+Defined in: [graph-layer-d3-contour/src/types.ts:67](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L67)
 
 #### Inherited from
 
@@ -176,7 +176,7 @@ Defined in: [graph-layer-d3-contour/src/types.ts:67](https://github.com/invana/c
 
 > `optional` **recompute?**: `"auto"` \| `"manual"`
 
-Defined in: [graph-layer-d3-contour/src/types.ts:51](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L51)
+Defined in: [graph-layer-d3-contour/src/types.ts:51](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L51)
 
 Recompute trigger:
 - `'auto'` (default) — subscribe to the source layer's `data:changed`
@@ -193,7 +193,7 @@ Recompute trigger:
 
 > `optional` **recomputeDebounceMs?**: `number`
 
-Defined in: [graph-layer-d3-contour/src/types.ts:54](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L54)
+Defined in: [graph-layer-d3-contour/src/types.ts:54](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L54)
 
 Debounce window for `auto` recomputes. Default `120` ms.
 
@@ -207,7 +207,7 @@ Debounce window for `auto` recomputes. Default `120` ms.
 
 > `optional` **strokeColor?**: `number` \| `"palette"`
 
-Defined in: [graph-layer-d3-contour/src/types.ts:112](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L112)
+Defined in: [graph-layer-d3-contour/src/types.ts:112](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L112)
 
 Band outline colour.
 
@@ -223,7 +223,7 @@ Band outline colour.
 
 > `optional` **strokeWidth?**: `number` \| ((`index`, `total`, `value`) => `number`)
 
-Defined in: [graph-layer-d3-contour/src/types.ts:125](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L125)
+Defined in: [graph-layer-d3-contour/src/types.ts:125](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L125)
 
 Band outline width. Either a constant or a per-band function that
 receives `(index, total, value)` and returns a width in world units.
@@ -241,7 +241,7 @@ Default `0.5`.
 
 > `optional` **thresholds?**: `number` \| `number`[]
 
-Defined in: [graph-layer-d3-contour/src/types.ts:30](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L30)
+Defined in: [graph-layer-d3-contour/src/types.ts:30](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L30)
 
 Either a count of iso-bands or an explicit array of iso-values. Defaults
 to `10`. With a number, d3-contour picks evenly-spaced thresholds across

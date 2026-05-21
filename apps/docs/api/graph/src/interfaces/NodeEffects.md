@@ -1,6 +1,6 @@
 # Interface: NodeEffects
 
-Defined in: [graph/src/layer/types.ts:466](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L466)
+Defined in: [graph/src/layer/types.ts:711](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L711)
 
 Host-modulation effects (sibling of decorations). Effects don't add
 geometry — they modulate the host's transform (`shake`, `breathing`) or
@@ -16,7 +16,7 @@ style channels (tint/alpha). One spec per kind.
 
 > `readonly` `optional` **breathing?**: `unknown`
 
-Defined in: [graph/src/layer/types.ts:468](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L468)
+Defined in: [graph/src/layer/types.ts:713](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L713)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [graph/src/layer/types.ts:468](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **shake?**: `unknown`
 
-Defined in: [graph/src/layer/types.ts:467](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L467)
+Defined in: [graph/src/layer/types.ts:712](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L712)

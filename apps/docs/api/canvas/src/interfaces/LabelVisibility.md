@@ -1,6 +1,6 @@
 # Interface: LabelVisibility
 
-Defined in: [canvas/src/primitives/types.ts:1099](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L1099)
+Defined in: [canvas/src/primitives/types.ts:1227](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1227)
 
 Per-label LOD — hides the label outside the zoom range.
 
@@ -10,7 +10,7 @@ Per-label LOD — hides the label outside the zoom range.
 
 > `readonly` `optional` **maxZoom?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:1101](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L1101)
+Defined in: [canvas/src/primitives/types.ts:1229](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1229)
 
 ***
 
@@ -18,4 +18,4 @@ Defined in: [canvas/src/primitives/types.ts:1101](https://github.com/invana/canv
 
 > `readonly` `optional` **minZoom?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:1100](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L1100)
+Defined in: [canvas/src/primitives/types.ts:1228](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1228)

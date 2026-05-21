@@ -1,6 +1,6 @@
 # Interface: BreathingConnectorEffectStyle
 
-Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:15](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L15)
+Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:15](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L15)
 
 Sinusoidal alpha modulation on the host connector. Cycles forever — never
 retires on its own; remove explicitly via `setEffect(id, slot, null)`.
@@ -18,7 +18,7 @@ alone for "blinking" / "pulsing" / "in-flight" visualisations.
 
 > `readonly` `optional` **amplitude?**: `number`
 
-Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:20](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L20)
+Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:20](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L20)
 
 How far below full brightness the dim phase reaches, `[0, 1]`.
 `0.5` swings alpha between `0.5` and `1`. Default `0.5`.
@@ -29,7 +29,7 @@ How far below full brightness the dim phase reaches, `[0, 1]`.
 
 > `readonly` `optional` **periodMs?**: `number`
 
-Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:22](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L22)
+Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:22](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L22)
 
 Duration of one full breath cycle in ms. Default `1800`.
 
@@ -39,6 +39,6 @@ Duration of one full breath cycle in ms. Default `1800`.
 
 > `readonly` `optional` **phaseOffsetMs?**: `number`
 
-Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:24](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L24)
+Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:24](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L24)
 
 Start-time offset so multiple breathing hosts can desync. Default `0`.

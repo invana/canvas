@@ -1,6 +1,6 @@
 # Class: ShakeEffect
 
-Defined in: [canvas/src/primitives/effects/shape/ShakeEffect.ts:34](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L34)
+Defined in: [canvas/src/primitives/effects/shape/ShakeEffect.ts:34](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L34)
 
 Per-frame random jitter applied to the host's position. Pure transform
 modulation — the host's spec is untouched; removing the effect (or letting
@@ -20,7 +20,7 @@ with other animated primitives.
 
 > **new ShakeEffect**(`style`): `ShakeEffect`
 
-Defined in: [canvas/src/primitives/effects/shape/ShakeEffect.ts:44](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L44)
+Defined in: [canvas/src/primitives/effects/shape/ShakeEffect.ts:44](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L44)
 
 #### Parameters
 
@@ -42,7 +42,7 @@ Defined in: [canvas/src/primitives/effects/shape/ShakeEffect.ts:44](https://gith
 
 > `protected` **host**: [`ShapeEffectHostInfo`](../interfaces/ShapeEffectHostInfo.md) = `null`
 
-Defined in: [canvas/src/primitives/base/EffectBase.ts:32](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/EffectBase.ts#L32)
+Defined in: [canvas/src/primitives/base/EffectBase.ts:32](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/EffectBase.ts#L32)
 
 #### Inherited from
 
@@ -54,7 +54,7 @@ Defined in: [canvas/src/primitives/base/EffectBase.ts:32](https://github.com/inv
 
 > `readonly` **style**: [`ShakeEffectStyle`](../interfaces/ShakeEffectStyle.md)
 
-Defined in: [canvas/src/primitives/base/EffectBase.ts:31](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/EffectBase.ts#L31)
+Defined in: [canvas/src/primitives/base/EffectBase.ts:31](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/EffectBase.ts#L31)
 
 #### Inherited from
 
@@ -66,7 +66,7 @@ Defined in: [canvas/src/primitives/base/EffectBase.ts:31](https://github.com/inv
 
 > `readonly` **target**: [`EffectTarget`](../type-aliases/EffectTarget.md) = `'transform'`
 
-Defined in: [canvas/src/primitives/effects/shape/ShakeEffect.ts:35](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L35)
+Defined in: [canvas/src/primitives/effects/shape/ShakeEffect.ts:35](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L35)
 
 #### Overrides
 
@@ -78,7 +78,7 @@ Defined in: [canvas/src/primitives/effects/shape/ShakeEffect.ts:35](https://gith
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/primitives/base/EffectBase.ts:46](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/EffectBase.ts#L46)
+Defined in: [canvas/src/primitives/base/EffectBase.ts:46](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/EffectBase.ts#L46)
 
 #### Returns
 
@@ -94,7 +94,7 @@ Defined in: [canvas/src/primitives/base/EffectBase.ts:46](https://github.com/inv
 
 > **mount**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/EffectBase.ts:38](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/EffectBase.ts#L38)
+Defined in: [canvas/src/primitives/base/EffectBase.ts:38](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/EffectBase.ts#L38)
 
 #### Parameters
 
@@ -116,7 +116,7 @@ Defined in: [canvas/src/primitives/base/EffectBase.ts:38](https://github.com/inv
 
 > `optional` **readStyle**(): [`StyleOverride`](../interfaces/StyleOverride.md)
 
-Defined in: [canvas/src/primitives/base/EffectBase.ts:66](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/EffectBase.ts#L66)
+Defined in: [canvas/src/primitives/base/EffectBase.ts:66](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/EffectBase.ts#L66)
 
 Required by style-effects; the renderer ignores it for transform-effects.
 Subclasses with `target='style'` must override.
@@ -135,7 +135,7 @@ Subclasses with `target='style'` must override.
 
 > **readTransform**(): [`TransformDelta`](../interfaces/TransformDelta.md)
 
-Defined in: [canvas/src/primitives/effects/shape/ShakeEffect.ts:75](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L75)
+Defined in: [canvas/src/primitives/effects/shape/ShakeEffect.ts:75](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L75)
 
 Required by transform-effects; the renderer ignores it for style-effects.
 Subclasses with `target='transform'` must override.
@@ -154,7 +154,7 @@ Subclasses with `target='transform'` must override.
 
 > **tick**(`deltaMs`): `boolean`
 
-Defined in: [canvas/src/primitives/effects/shape/ShakeEffect.ts:54](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L54)
+Defined in: [canvas/src/primitives/effects/shape/ShakeEffect.ts:54](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/effects/shape/ShakeEffect.ts#L54)
 
 Optional per-frame advance. Subclasses override; the base no-ops. Return
 `false` to retire the effect from the renderer's animation set.
@@ -179,7 +179,7 @@ Optional per-frame advance. Subclasses override; the base no-ops. Return
 
 > **update**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/EffectBase.ts:42](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/EffectBase.ts#L42)
+Defined in: [canvas/src/primitives/base/EffectBase.ts:42](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/EffectBase.ts#L42)
 
 #### Parameters
 

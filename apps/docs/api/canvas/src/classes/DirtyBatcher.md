@@ -1,6 +1,6 @@
 # Class: DirtyBatcher\<TBucket\>
 
-Defined in: [canvas/src/state/DirtyBatcher.ts:67](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/state/DirtyBatcher.ts#L67)
+Defined in: [canvas/src/state/DirtyBatcher.ts:67](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/state/DirtyBatcher.ts#L67)
 
 ## Type Parameters
 
@@ -24,7 +24,7 @@ Defined in: [canvas/src/state/DirtyBatcher.ts:67](https://github.com/invana/canv
 
 > **bucketSize**(`bucket`): `number`
 
-Defined in: [canvas/src/state/DirtyBatcher.ts:157](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/state/DirtyBatcher.ts#L157)
+Defined in: [canvas/src/state/DirtyBatcher.ts:157](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/state/DirtyBatcher.ts#L157)
 
 Number of dirty ids in a bucket. Returns 0 if bucket has never been touched.
 
@@ -44,7 +44,7 @@ Number of dirty ids in a bucket. Returns 0 if bucket has never been touched.
 
 > **flush**(): [`DirtySnapshot`](../interfaces/DirtySnapshot.md)\<`TBucket`\>
 
-Defined in: [canvas/src/state/DirtyBatcher.ts:121](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/state/DirtyBatcher.ts#L121)
+Defined in: [canvas/src/state/DirtyBatcher.ts:121](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/state/DirtyBatcher.ts#L121)
 
 Swap buffers and return the previous frame's snapshot. After this call:
   - The returned snapshot is stable for the duration of the consumer's
@@ -65,7 +65,7 @@ reuse and clear them.
 
 > **hasPending**(): `boolean`
 
-Defined in: [canvas/src/state/DirtyBatcher.ts:107](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/state/DirtyBatcher.ts#L107)
+Defined in: [canvas/src/state/DirtyBatcher.ts:107](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/state/DirtyBatcher.ts#L107)
 
 Cheap check the canvas tick uses to decide whether to call `flush()`.
 
@@ -79,7 +79,7 @@ Cheap check the canvas tick uses to decide whether to call `flush()`.
 
 > **isRebuildAll**(`bucket`): `boolean`
 
-Defined in: [canvas/src/state/DirtyBatcher.ts:162](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/state/DirtyBatcher.ts#L162)
+Defined in: [canvas/src/state/DirtyBatcher.ts:162](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/state/DirtyBatcher.ts#L162)
 
 True iff the bucket has been flagged for rebuild this frame.
 
@@ -99,7 +99,7 @@ True iff the bucket has been flagged for rebuild this frame.
 
 > **mark**(`bucket`, `id`): `void`
 
-Defined in: [canvas/src/state/DirtyBatcher.ts:84](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/state/DirtyBatcher.ts#L84)
+Defined in: [canvas/src/state/DirtyBatcher.ts:84](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/state/DirtyBatcher.ts#L84)
 
 Mark a single id as dirty in a bucket. O(1), no allocation in steady state.
 
@@ -127,7 +127,7 @@ If the bucket is currently flagged `markAll`, this call is redundant
 
 > **markAll**(`bucket`): `void`
 
-Defined in: [canvas/src/state/DirtyBatcher.ts:101](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/state/DirtyBatcher.ts#L101)
+Defined in: [canvas/src/state/DirtyBatcher.ts:101](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/state/DirtyBatcher.ts#L101)
 
 Flag a whole bucket as needing rebuild. The consumer's flush handler
 should iterate its full data set for this bucket, ignoring the per-id Set.
@@ -151,7 +151,7 @@ data feed wholesale replace.
 
 > **reset**(): `void`
 
-Defined in: [canvas/src/state/DirtyBatcher.ts:146](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/state/DirtyBatcher.ts#L146)
+Defined in: [canvas/src/state/DirtyBatcher.ts:146](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/state/DirtyBatcher.ts#L146)
 
 Drop both buffers. Call on layer unmount. After reset(), the batcher is
 usable again from a clean state.

@@ -1,6 +1,6 @@
 # Interface: TweenOptions
 
-Defined in: [canvas/src/primitives/animation/Tween.ts:16](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/animation/Tween.ts#L16)
+Defined in: [canvas/src/primitives/animation/Tween.ts:16](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/animation/Tween.ts#L16)
 
 Options for constructing a `Tween`. `from` / `to` / `duration` are required;
 everything else is optional and falls back to a sensible default.
@@ -20,7 +20,7 @@ everything else is optional and falls back to a sensible default.
 
 > `readonly` **duration**: `number`
 
-Defined in: [canvas/src/primitives/animation/Tween.ts:19](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/animation/Tween.ts#L19)
+Defined in: [canvas/src/primitives/animation/Tween.ts:19](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/animation/Tween.ts#L19)
 
 ***
 
@@ -28,7 +28,7 @@ Defined in: [canvas/src/primitives/animation/Tween.ts:19](https://github.com/inv
 
 > `readonly` `optional` **easing?**: [`Easing`](../type-aliases/Easing.md)
 
-Defined in: [canvas/src/primitives/animation/Tween.ts:20](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/animation/Tween.ts#L20)
+Defined in: [canvas/src/primitives/animation/Tween.ts:20](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/animation/Tween.ts#L20)
 
 ***
 
@@ -36,7 +36,7 @@ Defined in: [canvas/src/primitives/animation/Tween.ts:20](https://github.com/inv
 
 > `readonly` **from**: `number`
 
-Defined in: [canvas/src/primitives/animation/Tween.ts:17](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/animation/Tween.ts#L17)
+Defined in: [canvas/src/primitives/animation/Tween.ts:17](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/animation/Tween.ts#L17)
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: [canvas/src/primitives/animation/Tween.ts:17](https://github.com/inv
 
 > `readonly` `optional` **onComplete?**: () => `void`
 
-Defined in: [canvas/src/primitives/animation/Tween.ts:24](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/animation/Tween.ts#L24)
+Defined in: [canvas/src/primitives/animation/Tween.ts:24](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/animation/Tween.ts#L24)
 
 #### Returns
 
@@ -56,7 +56,7 @@ Defined in: [canvas/src/primitives/animation/Tween.ts:24](https://github.com/inv
 
 > `readonly` `optional` **onUpdate?**: (`value`) => `void`
 
-Defined in: [canvas/src/primitives/animation/Tween.ts:23](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/animation/Tween.ts#L23)
+Defined in: [canvas/src/primitives/animation/Tween.ts:23](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/animation/Tween.ts#L23)
 
 #### Parameters
 
@@ -74,7 +74,7 @@ Defined in: [canvas/src/primitives/animation/Tween.ts:23](https://github.com/inv
 
 > `readonly` `optional` **repeat?**: `number` \| `"forever"`
 
-Defined in: [canvas/src/primitives/animation/Tween.ts:21](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/animation/Tween.ts#L21)
+Defined in: [canvas/src/primitives/animation/Tween.ts:21](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/animation/Tween.ts#L21)
 
 ***
 
@@ -82,7 +82,7 @@ Defined in: [canvas/src/primitives/animation/Tween.ts:21](https://github.com/inv
 
 > `readonly` **to**: `number`
 
-Defined in: [canvas/src/primitives/animation/Tween.ts:18](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/animation/Tween.ts#L18)
+Defined in: [canvas/src/primitives/animation/Tween.ts:18](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/animation/Tween.ts#L18)
 
 ***
 
@@ -90,4 +90,4 @@ Defined in: [canvas/src/primitives/animation/Tween.ts:18](https://github.com/inv
 
 > `readonly` `optional` **yoyo?**: `boolean`
 
-Defined in: [canvas/src/primitives/animation/Tween.ts:22](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/animation/Tween.ts#L22)
+Defined in: [canvas/src/primitives/animation/Tween.ts:22](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/animation/Tween.ts#L22)

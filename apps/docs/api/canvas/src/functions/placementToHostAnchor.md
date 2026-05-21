@@ -2,11 +2,12 @@
 
 > **placementToHostAnchor**(`hostBounds`, `placement`): `object`
 
-Defined in: [canvas/src/primitives/badges/placement.ts:25](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/badges/placement.ts#L25)
+Defined in: [canvas/src/primitives/badges/placement.ts:26](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/badges/placement.ts#L26)
 
-Returns the world-space point on `hostBounds` named by `placement`.
-Edge placements sit at the midpoint of that edge; corner placements at the
-corner.
+Returns the world-space anchor point for `placement`. Named placements
+resolve against `hostBounds` (corner or edge midpoint of the AABB); the
+raw `{ x, y }` variant is the world-space point itself, with `hostBounds`
+ignored.
 
 ## Parameters
 

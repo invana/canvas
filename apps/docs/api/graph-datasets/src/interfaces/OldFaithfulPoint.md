@@ -1,6 +1,6 @@
 # Interface: OldFaithfulPoint
 
-Defined in: [graph-datasets/src/oldFaithful.ts:26](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/oldFaithful.ts#L26)
+Defined in: [graph-datasets/src/oldFaithful.ts:26](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/oldFaithful.ts#L26)
 
 Old Faithful geyser eruptions — 272 measurements.
 
@@ -38,7 +38,7 @@ graph.setData(oldFaithful);
 
 > **eruptions**: `number`
 
-Defined in: [graph-datasets/src/oldFaithful.ts:28](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/oldFaithful.ts#L28)
+Defined in: [graph-datasets/src/oldFaithful.ts:28](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/oldFaithful.ts#L28)
 
 Eruption duration in minutes.
 
@@ -48,6 +48,6 @@ Eruption duration in minutes.
 
 > **waiting**: `number`
 
-Defined in: [graph-datasets/src/oldFaithful.ts:30](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/oldFaithful.ts#L30)
+Defined in: [graph-datasets/src/oldFaithful.ts:30](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/oldFaithful.ts#L30)
 
 Minutes elapsed before the next eruption.

@@ -1,6 +1,6 @@
 # Interface: EdgeInput\<D\>
 
-Defined in: [graph/src/layer/types.ts:757](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L757)
+Defined in: [graph/src/layer/types.ts:1172](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1172)
 
 Resolver-aware input shape for an edge.
 
@@ -16,7 +16,7 @@ Resolver-aware input shape for an edge.
 
 > `readonly` `optional` **data?**: `D`
 
-Defined in: [graph/src/layer/types.ts:762](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L762)
+Defined in: [graph/src/layer/types.ts:1177](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1177)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [graph/src/layer/types.ts:762](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **id?**: [`ResolvableId`](../type-aliases/ResolvableId.md)\<`D`\>
 
-Defined in: [graph/src/layer/types.ts:758](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L758)
+Defined in: [graph/src/layer/types.ts:1173](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1173)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [graph/src/layer/types.ts:758](https://github.com/invana/canvas/blob
 
 > `readonly` **source**: `string`
 
-Defined in: [graph/src/layer/types.ts:759](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L759)
+Defined in: [graph/src/layer/types.ts:1174](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1174)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [graph/src/layer/types.ts:759](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **state?**: `Readonly`\<`Record`\<`string`, [`ResolvableEdgeStyle`](../type-aliases/ResolvableEdgeStyle.md)\<`D`\>\>\>
 
-Defined in: [graph/src/layer/types.ts:764](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L764)
+Defined in: [graph/src/layer/types.ts:1179](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1179)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [graph/src/layer/types.ts:764](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **states?**: readonly `string`[]
 
-Defined in: [graph/src/layer/types.ts:765](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L765)
+Defined in: [graph/src/layer/types.ts:1180](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1180)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [graph/src/layer/types.ts:765](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **style?**: [`ResolvableEdgeStyle`](../type-aliases/ResolvableEdgeStyle.md)\<`D`\>
 
-Defined in: [graph/src/layer/types.ts:763](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L763)
+Defined in: [graph/src/layer/types.ts:1178](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1178)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [graph/src/layer/types.ts:763](https://github.com/invana/canvas/blob
 
 > `readonly` **target**: `string`
 
-Defined in: [graph/src/layer/types.ts:760](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L760)
+Defined in: [graph/src/layer/types.ts:1175](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1175)
 
 ***
 
@@ -72,4 +72,4 @@ Defined in: [graph/src/layer/types.ts:760](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **type?**: `string`
 
-Defined in: [graph/src/layer/types.ts:761](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L761)
+Defined in: [graph/src/layer/types.ts:1176](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1176)

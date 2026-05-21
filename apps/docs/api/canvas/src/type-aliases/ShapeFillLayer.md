@@ -1,17 +1,21 @@
 # Type Alias: ShapeFillLayer
 
-> **ShapeFillLayer** = \{ `alpha?`: `number`; `color`: `number`; `kind`: `"solid"`; \} \| \{ `alpha?`: `number`; `fit?`: `"fill"` \| `"cover"` \| `"contain"` \| `"none"` \| `"tile"`; `kind`: `"image"`; `url`: `string`; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `char`: `string`; `color?`: `number`; `fontFamily?`: `string`; `fontStyle?`: `"normal"` \| `"italic"`; `fontWeight?`: `number` \| `string`; `kind`: `"glyph"`; `sizeRatio?`: `number`; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `color?`: `number`; `kind`: `"svg"`; `pathD`: `string`; `sizeRatio?`: `number`; `strokeWidth?`: `number`; `viewBox?`: \{ `height`: `number`; `width`: `number`; \}; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `kind`: `"image-inset"`; `sizeRatio?`: `number`; `url`: `string`; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `color?`: `number`; `kind`: `"svg-url"`; `sizeRatio?`: `number`; `strokeWidth?`: `number`; `url`: `string`; `viewBox?`: \{ `height`: `number`; `width`: `number`; \}; \}
+> **ShapeFillLayer** = \{ `alpha?`: `number`; `color`: `number`; `kind`: `"solid"`; \} \| \{ `alpha?`: `number`; `fit?`: `"cover"` \| `"contain"`; `kind`: `"image"`; `padding?`: `number`; `url`: `string`; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `char`: `string`; `color?`: `number`; `fontFamily?`: `string`; `fontStyle?`: `"normal"` \| `"italic"`; `fontWeight?`: `number` \| `string`; `kind`: `"glyph"`; `sizeRatio?`: `number`; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `color?`: `number`; `kind`: `"svg"`; `pathD`: `string`; `sizeRatio?`: `number`; `strokeWidth?`: `number`; `viewBox?`: \{ `height`: `number`; `width`: `number`; \}; \} \| \{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `color?`: `number`; `kind`: `"svg-url"`; `sizeRatio?`: `number`; `strokeWidth?`: `number`; `url`: `string`; `viewBox?`: \{ `height`: `number`; `width`: `number`; \}; \}
 
-Defined in: [canvas/src/primitives/types.ts:175](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L175)
+Defined in: [canvas/src/primitives/types.ts:200](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L200)
 
 One layer of a shape's fill. Layers split by role:
 
-- **Silhouette fillers** (`solid`, `image`) — paint into the silhouette via
-  Pixi's `g.fill()`. Multiple silhouette layers stack via alpha; each is
-  re-traced before painting.
-- **Inset content** (`glyph`, `svg`, `image-inset`) — mounted as Container
+- **Silhouette fillers** (`solid`, `image`) — paint into the silhouette
+  via Pixi's `g.fill()`. Multiple silhouette layers stack via alpha;
+  each is re-traced before painting. Image fills always render the
+  texture cover-fitted to the silhouette (uniform scale, may crop) —
+  the engine intentionally does not expose CSS-style `background-size`
+  / `background-repeat` knobs on raster fills.
+- **Inset content** (`glyph`, `svg`, `svg-url`) — mounted as Container
   children of the shape's `gfx`. Sized by `sizeRatio` (fraction of the
-  smaller bounds dimension) and positioned by `anchor` (default `'center'`).
+  smaller bounds dimension) and positioned by `anchor` (default
+  `'center'`).
 
 The engine has no dedicated "icon" kind — icon-library specifics (Font
 Awesome glyphs, Lucide SVGs, Fluent icons, …) are produced by developer
@@ -27,7 +31,52 @@ code and dropped into a `glyph` or `svg` layer directly.
 
 ### Type Literal
 
-\{ `alpha?`: `number`; `fit?`: `"fill"` \| `"cover"` \| `"contain"` \| `"none"` \| `"tile"`; `kind`: `"image"`; `url`: `string`; \}
+\{ `alpha?`: `number`; `fit?`: `"cover"` \| `"contain"`; `kind`: `"image"`; `padding?`: `number`; `url`: `string`; \}
+
+#### alpha?
+
+> `readonly` `optional` **alpha?**: `number`
+
+#### fit?
+
+> `readonly` `optional` **fit?**: `"cover"` \| `"contain"`
+
+#### kind
+
+> `readonly` **kind**: `"image"`
+
+Raster image painted into the host silhouette.
+
+Two orthogonal knobs control sizing:
+
+- `fit` (default `'cover'`) — how the texture's aspect maps to
+  the silhouette's AABB. `'cover'` scales by `max(...)`, fully
+  covers, may crop on the cross-axis. `'contain'` scales by
+  `min(...)`, fully fits, leaves the cross-axis margin
+  transparent (the underlying fill layer reads through; the
+  engine pins the texture sampler to `clamp-to-edge` so the
+  margin doesn't tile).
+
+- `padding` (default `0`) — pixel inset on the silhouette
+  *before* fit math runs. The silhouette itself is re-traced at
+  that inset for this layer only, so the gap between the
+  full-size silhouette and the inset silhouette is painted by
+  layers underneath (typically a `solid` `bgFill`). Use this
+  when the host silhouette is more restrictive than its AABB
+  (circle, polygon, star, arc) and the texture corners would
+  otherwise clip against the curve.
+
+Tile patterns, repeat modes, and inset-Sprite badge placement
+aren't on the engine surface — stack a `glyph` / `svg` /
+`svg-url` layer for icon-shaped content.
+
+#### padding?
+
+> `readonly` `optional` **padding?**: `number`
+
+#### url
+
+> `readonly` **url**: `string`
 
 ***
 
@@ -135,34 +184,6 @@ Viewport the path was authored in. Default `{ width: 24, height: 24 }`.
 ##### viewBox.width
 
 > `readonly` **width**: `number`
-
-***
-
-### Type Literal
-
-\{ `alpha?`: `number`; `anchor?`: [`InsetAnchor`](InsetAnchor.md); `kind`: `"image-inset"`; `sizeRatio?`: `number`; `url`: `string`; \}
-
-#### alpha?
-
-> `readonly` `optional` **alpha?**: `number`
-
-#### anchor?
-
-> `readonly` `optional` **anchor?**: [`InsetAnchor`](InsetAnchor.md)
-
-#### kind
-
-> `readonly` **kind**: `"image-inset"`
-
-Raster image inset (small logo on a plate, photo thumb on a card).
-
-#### sizeRatio?
-
-> `readonly` `optional` **sizeRatio?**: `number`
-
-#### url
-
-> `readonly` **url**: `string`
 
 ***
 

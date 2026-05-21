@@ -4,6 +4,7 @@
 
 - [canvas/src](canvas/src/index.md)
 - [graph-datasets/src](graph-datasets/src/index.md)
+- [graph-layer-bubble-sets/src](graph-layer-bubble-sets/src/index.md)
 - [graph-layer-d3-contour/src](graph-layer-d3-contour/src/index.md)
 - [graph-layer-maplibre/src](graph-layer-maplibre/src/index.md)
 - [graph-layout-d3-force/src](graph-layout-d3-force/src/index.md)

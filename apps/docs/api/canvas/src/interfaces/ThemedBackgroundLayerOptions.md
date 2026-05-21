@@ -1,6 +1,6 @@
 # Interface: ThemedBackgroundLayerOptions
 
-Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:56](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L56)
+Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:56](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L56)
 
 Construction-time options for `ThemedBackgroundLayer`.
 
@@ -10,7 +10,7 @@ Construction-time options for `ThemedBackgroundLayer`.
 
 > `optional` **defaultTheme?**: `string`
 
-Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:60](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L60)
+Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:60](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L60)
 
 Id of the theme to start with. Defaults to `themes[0].id`.
 
@@ -20,7 +20,7 @@ Id of the theme to start with. Defaults to `themes[0].id`.
 
 > `optional` **mode?**: [`ThemedBackgroundMode`](../type-aliases/ThemedBackgroundMode.md)
 
-Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:62](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L62)
+Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:62](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L62)
 
 Initial mode. Defaults to `'auto'`.
 
@@ -30,6 +30,6 @@ Initial mode. Defaults to `'auto'`.
 
 > **themes**: [`ThemedBackgroundTheme`](ThemedBackgroundTheme.md)[]
 
-Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:58](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L58)
+Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:58](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L58)
 
 Named themes. Must contain at least one entry.

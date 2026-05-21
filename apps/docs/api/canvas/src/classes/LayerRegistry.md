@@ -1,6 +1,6 @@
 # Class: LayerRegistry
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:35](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/registries/LayerRegistry.ts#L35)
+Defined in: [canvas/src/registries/LayerRegistry.ts:35](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L35)
 
 ## Constructors
 
@@ -8,7 +8,7 @@ Defined in: [canvas/src/registries/LayerRegistry.ts:35](https://github.com/invan
 
 > **new LayerRegistry**(`opts`): `LayerRegistry`
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:43](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/registries/LayerRegistry.ts#L43)
+Defined in: [canvas/src/registries/LayerRegistry.ts:43](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L43)
 
 #### Parameters
 
@@ -28,7 +28,7 @@ Defined in: [canvas/src/registries/LayerRegistry.ts:43](https://github.com/invan
 
 > **get** **size**(): `number`
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:49](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/registries/LayerRegistry.ts#L49)
+Defined in: [canvas/src/registries/LayerRegistry.ts:49](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L49)
 
 Number of registered layers.
 
@@ -42,7 +42,7 @@ Number of registered layers.
 
 > **add**(`layer`): `void`
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:57](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/registries/LayerRegistry.ts#L57)
+Defined in: [canvas/src/registries/LayerRegistry.ts:57](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L57)
 
 Add a Layer to the canvas. Calls `layer.mount(ctx)` and fires `layer:added`.
 Throws if `id` is already registered.
@@ -63,7 +63,7 @@ Throws if `id` is already registered.
 
 > **byZOrder**(): readonly [`ILayer`](../interfaces/ILayer.md)[]
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:101](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/registries/LayerRegistry.ts#L101)
+Defined in: [canvas/src/registries/LayerRegistry.ts:101](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L101)
 
 Iterate layers in z-order (low → high). The Canvas tick walks layers in
 z-order to flush dirty work; rendering order is then determined by
@@ -81,7 +81,7 @@ readonly [`ILayer`](../interfaces/ILayer.md)[]
 
 > **clear**(): `void`
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:128](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/registries/LayerRegistry.ts#L128)
+Defined in: [canvas/src/registries/LayerRegistry.ts:128](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L128)
 
 Tear down every registered layer. Called on Canvas destroy.
 Iteration is over a snapshot so unmount-triggered side effects don't
@@ -97,7 +97,7 @@ corrupt the loop.
 
 > **get**\<`T`\>(`id`): `T`
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:81](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/registries/LayerRegistry.ts#L81)
+Defined in: [canvas/src/registries/LayerRegistry.ts:81](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L81)
 
 Typed get by id. Returns `undefined` if not found.
 
@@ -123,7 +123,7 @@ Typed get by id. Returns `undefined` if not found.
 
 > **has**(`id`): `boolean`
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:85](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/registries/LayerRegistry.ts#L85)
+Defined in: [canvas/src/registries/LayerRegistry.ts:85](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L85)
 
 #### Parameters
 
@@ -141,7 +141,7 @@ Defined in: [canvas/src/registries/LayerRegistry.ts:85](https://github.com/invan
 
 > **list**(): readonly [`ILayer`](../interfaces/ILayer.md)[]
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:90](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/registries/LayerRegistry.ts#L90)
+Defined in: [canvas/src/registries/LayerRegistry.ts:90](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L90)
 
 Snapshot of all layers in insertion order.
 
@@ -155,7 +155,7 @@ readonly [`ILayer`](../interfaces/ILayer.md)[]
 
 > **remove**(`id`): `void`
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:71](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/registries/LayerRegistry.ts#L71)
+Defined in: [canvas/src/registries/LayerRegistry.ts:71](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L71)
 
 Remove a Layer. Calls `layer.unmount()` and fires `layer:removed`.
 No-op if `id` isn't registered.
@@ -176,7 +176,7 @@ No-op if `id` isn't registered.
 
 > **setZIndex**(`id`, `zIndex`): `void`
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:113](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/registries/LayerRegistry.ts#L113)
+Defined in: [canvas/src/registries/LayerRegistry.ts:113](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L113)
 
 Update a layer's `zIndex` and propagate to surfaces. Invalidates the
 z-order cache. No-op if the layer isn't registered.

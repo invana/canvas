@@ -2,7 +2,7 @@
 
 > **DensityContourPaletteName** = `"blues"` \| `"greens"` \| `"oranges"` \| `"purples"` \| `"reds"` \| `"viridis"` \| `"plasma"` \| `"magma"` \| `"inferno"` \| `"warm"` \| `"cool"`
 
-Defined in: [graph-layer-d3-contour/src/palettes.ts:14](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/palettes.ts#L14)
+Defined in: [graph-layer-d3-contour/src/palettes.ts:14](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/palettes.ts#L14)
 
 Built-in colour ramps for DensityContourLayer.
 

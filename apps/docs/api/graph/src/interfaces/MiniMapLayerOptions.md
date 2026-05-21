@@ -1,6 +1,6 @@
 # Interface: MiniMapLayerOptions
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:39](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/MiniMapLayer.ts#L39)
+Defined in: [graph/src/layer/MiniMapLayer.ts:39](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L39)
 
 Constructor options for `MiniMapLayer`.
 
@@ -10,7 +10,7 @@ Constructor options for `MiniMapLayer`.
 
 > `optional` **backgroundColor?**: `number`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:48](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/MiniMapLayer.ts#L48)
+Defined in: [graph/src/layer/MiniMapLayer.ts:48](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L48)
 
 Background fill `0xRRGGBB`. Default `0x1a1a2e`.
 
@@ -20,7 +20,7 @@ Background fill `0xRRGGBB`. Default `0x1a1a2e`.
 
 > `optional` **borderColor?**: `number`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:50](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/MiniMapLayer.ts#L50)
+Defined in: [graph/src/layer/MiniMapLayer.ts:50](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L50)
 
 Border colour `0xRRGGBB`. Default `0x444444`.
 
@@ -30,7 +30,7 @@ Border colour `0xRRGGBB`. Default `0x444444`.
 
 > `optional` **borderWidth?**: `number`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:52](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/MiniMapLayer.ts#L52)
+Defined in: [graph/src/layer/MiniMapLayer.ts:52](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L52)
 
 Border stroke width. Default `1`.
 
@@ -40,7 +40,7 @@ Border stroke width. Default `1`.
 
 > `optional` **enableDrag?**: `boolean`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:66](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/MiniMapLayer.ts#L66)
+Defined in: [graph/src/layer/MiniMapLayer.ts:66](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L66)
 
 Whether dragging the minimap pans the main camera. Default `true`.
 
@@ -50,7 +50,7 @@ Whether dragging the minimap pans the main camera. Default `true`.
 
 > **graphLayerId**: `string`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:41](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/MiniMapLayer.ts#L41)
+Defined in: [graph/src/layer/MiniMapLayer.ts:41](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L41)
 
 Required — the `GraphLayer` id this minimap mirrors.
 
@@ -60,7 +60,7 @@ Required — the `GraphLayer` id this minimap mirrors.
 
 > `optional` **height?**: `number`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:46](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/MiniMapLayer.ts#L46)
+Defined in: [graph/src/layer/MiniMapLayer.ts:46](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L46)
 
 Minimap height in screen pixels. Default `150`.
 
@@ -70,7 +70,7 @@ Minimap height in screen pixels. Default `150`.
 
 > `optional` **margin?**: `number`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:70](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/MiniMapLayer.ts#L70)
+Defined in: [graph/src/layer/MiniMapLayer.ts:70](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L70)
 
 Distance from the chosen corner, in screen pixels. Default `10`.
 
@@ -80,7 +80,7 @@ Distance from the chosen corner, in screen pixels. Default `10`.
 
 > `optional` **padding?**: `number`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:64](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/MiniMapLayer.ts#L64)
+Defined in: [graph/src/layer/MiniMapLayer.ts:64](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L64)
 
 World-space padding around node bounds. Default `20`.
 
@@ -90,7 +90,7 @@ World-space padding around node bounds. Default `20`.
 
 > `optional` **position?**: [`MiniMapPosition`](../type-aliases/MiniMapPosition.md)
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:68](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/MiniMapLayer.ts#L68)
+Defined in: [graph/src/layer/MiniMapLayer.ts:68](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L68)
 
 Anchor corner. Default `'bottom-right'`.
 
@@ -100,7 +100,7 @@ Anchor corner. Default `'bottom-right'`.
 
 > `optional` **viewportFill?**: `number`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:55](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/MiniMapLayer.ts#L55)
+Defined in: [graph/src/layer/MiniMapLayer.ts:55](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L55)
 
 Viewport indicator fill. Default `0x4a90d9`.
 
@@ -110,7 +110,7 @@ Viewport indicator fill. Default `0x4a90d9`.
 
 > `optional` **viewportFillAlpha?**: `number`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:59](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/MiniMapLayer.ts#L59)
+Defined in: [graph/src/layer/MiniMapLayer.ts:59](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L59)
 
 Viewport indicator fill alpha 0–1. Default `0.3`.
 
@@ -120,7 +120,7 @@ Viewport indicator fill alpha 0–1. Default `0.3`.
 
 > `optional` **viewportStroke?**: `number`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:57](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/MiniMapLayer.ts#L57)
+Defined in: [graph/src/layer/MiniMapLayer.ts:57](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L57)
 
 Viewport indicator stroke. Default `0x2a70b9`.
 
@@ -130,7 +130,7 @@ Viewport indicator stroke. Default `0x2a70b9`.
 
 > `optional` **viewportStrokeWidth?**: `number`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:61](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/MiniMapLayer.ts#L61)
+Defined in: [graph/src/layer/MiniMapLayer.ts:61](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L61)
 
 Viewport indicator stroke width. Default `2`.
 
@@ -140,6 +140,6 @@ Viewport indicator stroke width. Default `2`.
 
 > `optional` **width?**: `number`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:44](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/MiniMapLayer.ts#L44)
+Defined in: [graph/src/layer/MiniMapLayer.ts:44](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L44)
 
 Minimap width in screen pixels. Default `200`.

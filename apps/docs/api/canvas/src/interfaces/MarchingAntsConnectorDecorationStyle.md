@@ -1,6 +1,6 @@
 # Interface: MarchingAntsConnectorDecorationStyle
 
-Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:16](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L16)
+Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:16](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L16)
 
 Connector variant of marching-ants. Strokes the connector's routed path
 with a dashed line whose `dashOffset` advances each frame, producing
@@ -19,7 +19,7 @@ a `Path`).
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:30](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L30)
+Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:30](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L30)
 
 Overall decoration alpha. Default `1`.
 
@@ -29,7 +29,7 @@ Overall decoration alpha. Default `1`.
 
 > `readonly` `optional` **cap?**: `"butt"` \| `"round"` \| `"square"`
 
-Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:31](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L31)
+Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:31](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L31)
 
 ***
 
@@ -37,7 +37,7 @@ Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDe
 
 > `readonly` **color**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:17](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L17)
+Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:17](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L17)
 
 ***
 
@@ -45,7 +45,7 @@ Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDe
 
 > `readonly` `optional` **dashLength?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:21](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L21)
+Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:21](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L21)
 
 Dash length in px. Default `6`.
 
@@ -55,7 +55,7 @@ Dash length in px. Default `6`.
 
 > `readonly` `optional` **gapLength?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:23](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L23)
+Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:23](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L23)
 
 Gap length in px. Default `4`.
 
@@ -65,7 +65,7 @@ Gap length in px. Default `4`.
 
 > `readonly` `optional` **join?**: `"round"` \| `"miter"` \| `"bevel"`
 
-Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:32](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L32)
+Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:32](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L32)
 
 ***
 
@@ -73,7 +73,7 @@ Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDe
 
 > `readonly` `optional` **speedPxPerSec?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:28](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L28)
+Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:28](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L28)
 
 March speed in px/sec along the path. Default `24`.
 Negative values reverse the march direction.
@@ -84,6 +84,6 @@ Negative values reverse the march direction.
 
 > `readonly` `optional` **strokeWidth?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:19](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L19)
+Defined in: [canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts:19](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/MarchingAntsConnectorDecoration.ts#L19)
 
 Stroke width in px. Default `1.5`.

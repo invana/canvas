@@ -2,7 +2,7 @@
 
 > **generateRandomTree**(`numNodes`): [`RandomTreeData`](../interfaces/RandomTreeData.md)
 
-Defined in: [graph-datasets/src/randomTree.ts:31](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/randomTree.ts#L31)
+Defined in: [graph-datasets/src/randomTree.ts:31](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/randomTree.ts#L31)
 
 ## Parameters
 

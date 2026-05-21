@@ -1,6 +1,6 @@
 # Interface: ConnectorPaintStyle
 
-Defined in: [canvas/src/primitives/types.ts:296](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L296)
+Defined in: [canvas/src/primitives/types.ts:348](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L348)
 
 Mirror of `ShapePaintStyle` for connectors. No `inset` (connectors are 1D).
 
@@ -10,7 +10,7 @@ Mirror of `ShapePaintStyle` for connectors. No `inset` (connectors are 1D).
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:298](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L298)
+Defined in: [canvas/src/primitives/types.ts:350](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L350)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [canvas/src/primitives/types.ts:298](https://github.com/invana/canva
 
 > `readonly` `optional` **cap?**: `"butt"` \| `"round"` \| `"square"`
 
-Defined in: [canvas/src/primitives/types.ts:302](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L302)
+Defined in: [canvas/src/primitives/types.ts:354](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L354)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [canvas/src/primitives/types.ts:302](https://github.com/invana/canva
 
 > `readonly` `optional` **color?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:297](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L297)
+Defined in: [canvas/src/primitives/types.ts:349](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L349)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [canvas/src/primitives/types.ts:297](https://github.com/invana/canva
 
 > `readonly` `optional` **dashArray?**: readonly \[`number`, `number`\]
 
-Defined in: [canvas/src/primitives/types.ts:300](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L300)
+Defined in: [canvas/src/primitives/types.ts:352](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L352)
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: [canvas/src/primitives/types.ts:300](https://github.com/invana/canva
 
 > `readonly` `optional` **dashOffset?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:301](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L301)
+Defined in: [canvas/src/primitives/types.ts:353](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L353)
 
 ***
 
@@ -50,7 +50,7 @@ Defined in: [canvas/src/primitives/types.ts:301](https://github.com/invana/canva
 
 > `readonly` `optional` **join?**: `"round"` \| `"miter"` \| `"bevel"`
 
-Defined in: [canvas/src/primitives/types.ts:303](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L303)
+Defined in: [canvas/src/primitives/types.ts:355](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L355)
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: [canvas/src/primitives/types.ts:303](https://github.com/invana/canva
 
 > `readonly` `optional` **markerHalo?**: `boolean`
 
-Defined in: [canvas/src/primitives/types.ts:328](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L328)
+Defined in: [canvas/src/primitives/types.ts:380](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L380)
 
 When `true`, markers paint as **outlines** at `style.strokeWidth`
 (using `style.color` / `style.alpha`) instead of as filled silhouettes.
@@ -74,7 +74,7 @@ this produces a halo around the marker that matches the body halo.
 
 > `readonly` `optional` **skipMarkers?**: `boolean`
 
-Defined in: [canvas/src/primitives/types.ts:318](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L318)
+Defined in: [canvas/src/primitives/types.ts:370](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L370)
 
 When `true`, `paintInto` paints only the body (no source / target
 markers). Useful for decorations that handle markers separately or
@@ -88,7 +88,7 @@ markers would be wrong.
 
 > `readonly` `optional` **strokeWidth?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:299](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L299)
+Defined in: [canvas/src/primitives/types.ts:351](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L351)
 
 ***
 
@@ -96,7 +96,7 @@ Defined in: [canvas/src/primitives/types.ts:299](https://github.com/invana/canva
 
 > `readonly` `optional` **tintMarkers?**: `boolean`
 
-Defined in: [canvas/src/primitives/types.ts:310](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L310)
+Defined in: [canvas/src/primitives/types.ts:362](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L362)
 
 When `true`, markers paint with `color` / `alpha` instead of their own
 spec colors. Glow / halo decorations use this so the decoration covers

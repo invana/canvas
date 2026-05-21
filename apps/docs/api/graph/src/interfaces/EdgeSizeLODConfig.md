@@ -1,6 +1,6 @@
 # Interface: EdgeSizeLODConfig
 
-Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:50](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/EdgeSizeLODBehaviour.ts#L50)
+Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:50](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/EdgeSizeLODBehaviour.ts#L50)
 
 Per-`GraphLayer` config — one entry per layer this behaviour rescales.
 
@@ -10,7 +10,7 @@ Per-`GraphLayer` config — one entry per layer this behaviour rescales.
 
 > **layerId**: `string`
 
-Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:52](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/EdgeSizeLODBehaviour.ts#L52)
+Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:52](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/EdgeSizeLODBehaviour.ts#L52)
 
 Required — the `GraphLayer` whose edges are rescaled.
 
@@ -20,7 +20,7 @@ Required — the `GraphLayer` whose edges are rescaled.
 
 > `optional` **strokeWidthPx?**: [`NumberOrGetter`](../../../canvas/src/type-aliases/NumberOrGetter.md)
 
-Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:59](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/EdgeSizeLODBehaviour.ts#L59)
+Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:59](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/EdgeSizeLODBehaviour.ts#L59)
 
 Target stroke width in screen px for edges that don't carry a
 per-edge `data.strokeWidth` override. Falls back to the layer's

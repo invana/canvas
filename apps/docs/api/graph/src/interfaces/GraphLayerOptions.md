@@ -1,6 +1,6 @@
 # Interface: GraphLayerOptions
 
-Defined in: [graph/src/layer/types.ts:791](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L791)
+Defined in: [graph/src/layer/types.ts:1265](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1265)
 
 Constructor options for `GraphLayer`.
 
@@ -10,29 +10,25 @@ Constructor options for `GraphLayer`.
 
 > `optional` **edge?**: [`EdgeOption`](EdgeOption.md)
 
-Defined in: [graph/src/layer/types.ts:840](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L840)
+Defined in: [graph/src/layer/types.ts:1283](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1283)
 
 Sibling of [node](#node) for edges.
 
 ***
 
-### edgeDefaults?
+### hitFloorPx?
 
-> `optional` **edgeDefaults?**: [`ResolvableEdgeRenderHints`](../type-aliases/ResolvableEdgeRenderHints.md)
+> `optional` **hitFloorPx?**: `number`
 
-Defined in: [graph/src/layer/types.ts:807](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L807)
+Defined in: [graph/src/layer/types.ts:1304](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1304)
 
-**LEGACY** — see [nodeDefaults](#nodedefaults).
+Minimum hover/click target in screen pixels, forwarded to the
+internal `PrimitivesRenderer`. Default `6`.
 
-***
-
-### edgeStateConfigs?
-
-> `optional` **edgeStateConfigs?**: `Readonly`\<`Record`\<`string`, [`EdgeStateConfig`](../type-aliases/EdgeStateConfig.md)\>\>
-
-Defined in: [graph/src/layer/types.ts:825](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L825)
-
-Sibling of [nodeStateConfigs](#nodestateconfigs) for edges.
+Behaves as a *fallback*: exact geometric hits always win; only
+when no shape contains the cursor does the dispatcher pick the
+closest candidate within `hitFloorPx` screen pixels. See
+`PrimitivesRendererOptions.hitFloorPx` for details.
 
 ***
 
@@ -40,39 +36,13 @@ Sibling of [nodeStateConfigs](#nodestateconfigs) for edges.
 
 > `optional` **node?**: [`NodeOption`](NodeOption.md)
 
-Defined in: [graph/src/layer/types.ts:837](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L837)
+Defined in: [graph/src/layer/types.ts:1280](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1280)
 
-Layer-level node template (G6's `node` field). Fields support resolver
-functions `(node: GraphNode) => value` that fire every render.
-
-Stacking order with legacy `nodeDefaults`: legacy applies first, then
-`node.style` overrides for any field the consumer supplied. State
-overlays in `node.state[name]` apply after the base style.
-
-***
-
-### nodeDefaults?
-
-> `optional` **nodeDefaults?**: [`ResolvableNodeRenderHints`](../type-aliases/ResolvableNodeRenderHints.md)
-
-Defined in: [graph/src/layer/types.ts:804](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L804)
-
-**LEGACY** default node render hints (`node.data` fallback path). Every
-field may be a static value or a resolver `(node) => value`. Use
-[node](#node) instead for new code.
-
-***
-
-### nodeStateConfigs?
-
-> `optional` **nodeStateConfigs?**: `Readonly`\<`Record`\<`string`, [`NodeStateConfig`](../type-aliases/NodeStateConfig.md)\>\>
-
-Defined in: [graph/src/layer/types.ts:822](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L822)
-
-Override individual canonical state configs and / or register new ones
-declaratively at construction.
-
-**LEGACY** — v3 uses `node.state` (catalogue on [NodeOption](NodeOption.md)).
+Layer-level node template (G6's `node` field). Carries `style` (base
+appearance) and `state` (catalogue of named overlays applied while a
+state in `node.states[]` is active). Resolver-aware: every field on
+`style` / each `state[name]` may be a static value or a function
+`(node: GraphNode) => value` that fires every render.
 
 ***
 
@@ -80,7 +50,7 @@ declaratively at construction.
 
 > `optional` **store?**: [`GraphStore`](../classes/GraphStore.md)
 
-Defined in: [graph/src/layer/types.ts:797](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L797)
+Defined in: [graph/src/layer/types.ts:1271](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1271)
 
 Optional pre-built store. If omitted, the layer creates its own with
 default options (`flushMode: 'sync'`, `unknownEndpoint: 'throw'`). Pass
@@ -88,12 +58,15 @@ a store you own to share data with other layers / sync code.
 
 ***
 
-### useDefaultStateConfigs?
+### useDefaultStates?
 
-> `optional` **useDefaultStateConfigs?**: `boolean`
+> `optional` **useDefaultStates?**: `boolean`
 
-Defined in: [graph/src/layer/types.ts:814](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L814)
+Defined in: [graph/src/layer/types.ts:1293](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1293)
 
-Auto-register the canonical state configs
-([DEFAULT\_NODE\_STATE\_CONFIGS](../variables/DEFAULT_NODE_STATE_CONFIGS.md), [DEFAULT\_EDGE\_STATE\_CONFIGS](../variables/DEFAULT_EDGE_STATE_CONFIGS.md))
-on construction. Default `true`.
+Auto-merge [DEFAULT\_NODE\_STATES](../variables/DEFAULT_NODE_STATES.md) / [DEFAULT\_EDGE\_STATES](../variables/DEFAULT_EDGE_STATES.md)
+into `options.node.state` / `options.edge.state` on construction so
+every canonical state has a sensible default appearance even when the
+consumer supplied no state overlays. Consumer entries win on a
+per-name basis (no per-field deep merge here — declare a full
+`NodeStyle` if you want to replace a default entry). Default `true`.

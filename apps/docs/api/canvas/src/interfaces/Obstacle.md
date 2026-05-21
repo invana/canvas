@@ -1,6 +1,6 @@
 # Interface: Obstacle
 
-Defined in: [canvas/src/primitives/types.ts:95](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L95)
+Defined in: [canvas/src/primitives/types.ts:95](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L95)
 
 Obstacle handed to obstacle-aware routers. `Obstacle extends Rect` so any
 `Rect[]` is assignable; the optional `containsInflated` callback unlocks
@@ -16,7 +16,7 @@ silhouette-tight routing for non-rect shapes (circles, polygons, paths).
 
 > `readonly` `optional` **containsInflated?**: (`worldX`, `worldY`, `inflate`) => `boolean`
 
-Defined in: [canvas/src/primitives/types.ts:107](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L107)
+Defined in: [canvas/src/primitives/types.ts:107](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L107)
 
 Optional silhouette obstacle-test in world coordinates. Returns `true`
 when `(worldX, worldY)` lies inside the obstacle's silhouette OR within
@@ -52,7 +52,7 @@ Shapes opt in by overriding `IShape.obstacleTest`.
 
 > `readonly` **height**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:34](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L34)
+Defined in: [canvas/src/primitives/types.ts:34](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L34)
 
 #### Inherited from
 
@@ -64,7 +64,7 @@ Defined in: [canvas/src/primitives/types.ts:34](https://github.com/invana/canvas
 
 > `readonly` **width**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:33](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L33)
+Defined in: [canvas/src/primitives/types.ts:33](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L33)
 
 #### Inherited from
 
@@ -76,7 +76,7 @@ Defined in: [canvas/src/primitives/types.ts:33](https://github.com/invana/canvas
 
 > `readonly` **x**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:31](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L31)
+Defined in: [canvas/src/primitives/types.ts:31](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L31)
 
 #### Inherited from
 
@@ -88,7 +88,7 @@ Defined in: [canvas/src/primitives/types.ts:31](https://github.com/invana/canvas
 
 > `readonly` **y**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:32](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L32)
+Defined in: [canvas/src/primitives/types.ts:32](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L32)
 
 #### Inherited from
 

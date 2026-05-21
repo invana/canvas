@@ -1,20 +1,22 @@
 # Function: mirrorPlacement()
 
-> **mirrorPlacement**(`p`): [`BadgePlacement`](../type-aliases/BadgePlacement.md)
+> **mirrorPlacement**(`p`): [`NamedBadgePlacement`](../type-aliases/NamedBadgePlacement.md)
 
-Defined in: [canvas/src/primitives/badges/placement.ts:70](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/badges/placement.ts#L70)
+Defined in: [canvas/src/primitives/badges/placement.ts:91](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/badges/placement.ts#L91)
 
-Mirror of a placement across the host centre. `top-right` ↔ `bottom-left`,
-`right` ↔ `left`, and so on. Used as the default `origin` so a badge with
-`placement: 'top-right'` sits with its `bottom-left` corner at the host's
-top-right corner — i.e. the badge nests fully outside the host edge.
+Mirror of a named placement across the host centre. `top-right` ↔
+`bottom-left`, `right` ↔ `left`, and so on. Used as the default `origin`
+so a badge with `placement: 'top-right'` sits with its `bottom-left`
+corner at the host's top-right corner — i.e. the badge nests fully
+outside the host edge. Only defined for [NamedBadgePlacement](../type-aliases/NamedBadgePlacement.md);
+raw `{x, y}` placements have no symmetric counterpart on the host AABB.
 
 ## Parameters
 
 ### p
 
-[`BadgePlacement`](../type-aliases/BadgePlacement.md)
+[`NamedBadgePlacement`](../type-aliases/NamedBadgePlacement.md)
 
 ## Returns
 
-[`BadgePlacement`](../type-aliases/BadgePlacement.md)
+[`NamedBadgePlacement`](../type-aliases/NamedBadgePlacement.md)

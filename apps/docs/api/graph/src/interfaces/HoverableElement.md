@@ -1,6 +1,6 @@
 # Interface: HoverableElement
 
-Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:45](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L45)
+Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:49](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L49)
 
 Element handed to hover callbacks.
 
@@ -10,7 +10,7 @@ Element handed to hover callbacks.
 
 > `readonly` **data**: `unknown`
 
-Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:49](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L49)
+Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:53](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L53)
 
 Arbitrary user payload from `node.data` or `edge.data`.
 
@@ -20,7 +20,7 @@ Arbitrary user payload from `node.data` or `edge.data`.
 
 > `readonly` **id**: `string`
 
-Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:46](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L46)
+Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:50](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L50)
 
 ***
 
@@ -28,4 +28,4 @@ Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:46](https://github.c
 
 > `readonly` **type**: [`HoverableElementType`](../type-aliases/HoverableElementType.md)
 
-Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:47](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L47)
+Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:51](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L51)

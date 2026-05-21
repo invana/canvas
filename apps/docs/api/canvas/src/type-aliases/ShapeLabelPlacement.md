@@ -2,7 +2,7 @@
 
 > **ShapeLabelPlacement** = `"center"` \| `"top"` \| `"top-right"` \| `"right"` \| `"bottom-right"` \| `"bottom"` \| `"bottom-left"` \| `"left"` \| `"top-left"` \| `"inside-top"` \| `"inside-top-right"` \| `"inside-right"` \| `"inside-bottom-right"` \| `"inside-bottom"` \| `"inside-bottom-left"` \| `"inside-left"` \| `"inside-top-left"` \| `"inside-center"`
 
-Defined in: [canvas/src/primitives/types.ts:1158](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L1158)
+Defined in: [canvas/src/primitives/types.ts:1286](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1286)
 
 Placement options for a shape-anchored label.
 

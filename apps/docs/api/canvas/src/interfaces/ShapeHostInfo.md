@@ -1,6 +1,6 @@
 # Interface: ShapeHostInfo
 
-Defined in: [canvas/src/primitives/types.ts:546](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L546)
+Defined in: [canvas/src/primitives/types.ts:611](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L611)
 
 Information a `Shape` instance receives at construction. The renderer hands
 shapes the surface to attach to plus the registries that fill resolution
@@ -12,10 +12,10 @@ needs (`textureRegistry` for image fills).
 
 > `readonly` **requestRedraw**: () => `void`
 
-Defined in: [canvas/src/primitives/types.ts:553](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L553)
+Defined in: [canvas/src/primitives/types.ts:618](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L618)
 
 Re-invoke the shape's `draw(currentSpec)`. Used by async fill loaders
-(image silhouette, image-inset) to repaint once a texture resolves.
+(any `image` layer) to repaint once a texture resolves.
 
 #### Returns
 
@@ -27,7 +27,7 @@ Re-invoke the shape's `draw(currentSpec)`. Used by async fill loaders
 
 > `readonly` **surface**: `Container`
 
-Defined in: [canvas/src/primitives/types.ts:547](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L547)
+Defined in: [canvas/src/primitives/types.ts:612](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L612)
 
 ***
 
@@ -35,4 +35,4 @@ Defined in: [canvas/src/primitives/types.ts:547](https://github.com/invana/canva
 
 > `readonly` **textureRegistry**: [`TextureRegistry`](../classes/TextureRegistry.md)
 
-Defined in: [canvas/src/primitives/types.ts:548](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L548)
+Defined in: [canvas/src/primitives/types.ts:613](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L613)

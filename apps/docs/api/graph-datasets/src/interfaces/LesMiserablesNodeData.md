@@ -1,6 +1,6 @@
 # Interface: LesMiserablesNodeData
 
-Defined in: [graph-datasets/src/lesMiserables.ts:21](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/lesMiserables.ts#L21)
+Defined in: [graph-datasets/src/lesMiserables.ts:21](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/lesMiserables.ts#L21)
 
 Les Misérables character co-occurrence network.
 
@@ -29,6 +29,6 @@ graph.setData(lesMiserables);
 
 > **group**: `number`
 
-Defined in: [graph-datasets/src/lesMiserables.ts:23](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/lesMiserables.ts#L23)
+Defined in: [graph-datasets/src/lesMiserables.ts:23](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/lesMiserables.ts#L23)
 
 Co-occurrence cluster (0–10). Used for colour-by-group in stories.

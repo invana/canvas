@@ -1,6 +1,6 @@
 # Interface: ThemedBackgroundTheme
 
-Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:44](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L44)
+Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:44](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L44)
 
 A named look bundling both a light and dark variant.
 
@@ -10,7 +10,7 @@ A named look bundling both a light and dark variant.
 
 > **dark**: [`BackgroundLayerOptions`](BackgroundLayerOptions.md)
 
-Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:52](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L52)
+Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:52](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L52)
 
 Style applied when the resolved kind is `'dark'`.
 
@@ -20,7 +20,7 @@ Style applied when the resolved kind is `'dark'`.
 
 > **id**: `string`
 
-Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:46](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L46)
+Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:46](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L46)
 
 Stable identifier — referenced by `setTheme(id)` and `defaultTheme`.
 
@@ -30,7 +30,7 @@ Stable identifier — referenced by `setTheme(id)` and `defaultTheme`.
 
 > `optional` **label?**: `string`
 
-Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:48](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L48)
+Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:48](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L48)
 
 Optional human-friendly label for UIs.
 
@@ -40,6 +40,6 @@ Optional human-friendly label for UIs.
 
 > **light**: [`BackgroundLayerOptions`](BackgroundLayerOptions.md)
 
-Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:50](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L50)
+Defined in: [canvas/src/layers/ThemedBackgroundLayer.ts:50](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/ThemedBackgroundLayer.ts#L50)
 
 Style applied when the resolved kind is `'light'`.

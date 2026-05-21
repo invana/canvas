@@ -1,6 +1,6 @@
 # Interface: LinkForceOptions
 
-Defined in: [graph-layout-d3-force/src/types.ts:53](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L53)
+Defined in: [graph-layout-d3-force/src/types.ts:75](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layout-d3-force/src/types.ts#L75)
 
 `forceLink` configuration.
 
@@ -10,7 +10,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:53](https://github.com/invana/ca
 
 > `optional` **distance?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:55](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L55)
+Defined in: [graph-layout-d3-force/src/types.ts:77](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layout-d3-force/src/types.ts#L77)
 
 `link.distance(d)`.
 
@@ -20,7 +20,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:55](https://github.com/invana/ca
 
 > `optional` **iterations?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:59](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L59)
+Defined in: [graph-layout-d3-force/src/types.ts:81](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layout-d3-force/src/types.ts#L81)
 
 `link.iterations(n)`.
 
@@ -30,6 +30,6 @@ Defined in: [graph-layout-d3-force/src/types.ts:59](https://github.com/invana/ca
 
 > `optional` **strength?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:57](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-force/src/types.ts#L57)
+Defined in: [graph-layout-d3-force/src/types.ts:79](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layout-d3-force/src/types.ts#L79)
 
 `link.strength(s)`.

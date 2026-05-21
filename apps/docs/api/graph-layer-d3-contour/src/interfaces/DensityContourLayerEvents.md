@@ -1,6 +1,6 @@
 # Interface: DensityContourLayerEvents
 
-Defined in: [graph-layer-d3-contour/src/types.ts:157](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L157)
+Defined in: [graph-layer-d3-contour/src/types.ts:157](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L157)
 
 Typed event emitter — generic over an event-map shape.
 
@@ -35,7 +35,7 @@ off();
 
 > **recompute**: `object`
 
-Defined in: [graph-layer-d3-contour/src/types.ts:159](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layer-d3-contour/src/types.ts#L159)
+Defined in: [graph-layer-d3-contour/src/types.ts:159](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-d3-contour/src/types.ts#L159)
 
 Fired after each recompute completes, before paint.
 

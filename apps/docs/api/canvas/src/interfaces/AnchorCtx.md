@@ -1,6 +1,6 @@
 # Interface: AnchorCtx
 
-Defined in: [canvas/src/primitives/types.ts:494](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L494)
+Defined in: [canvas/src/primitives/types.ts:559](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L559)
 
 ## Methods
 
@@ -8,7 +8,7 @@ Defined in: [canvas/src/primitives/types.ts:494](https://github.com/invana/canva
 
 > **getShape**(`id`): [`AnchorShapeRef`](AnchorShapeRef.md)
 
-Defined in: [canvas/src/primitives/types.ts:495](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L495)
+Defined in: [canvas/src/primitives/types.ts:560](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L560)
 
 #### Parameters
 

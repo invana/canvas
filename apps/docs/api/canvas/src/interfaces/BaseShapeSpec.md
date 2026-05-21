@@ -1,6 +1,6 @@
 # Interface: BaseShapeSpec
 
-Defined in: [canvas/src/primitives/types.ts:333](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L333)
+Defined in: [canvas/src/primitives/types.ts:385](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L385)
 
 ## Extended by
 
@@ -18,7 +18,7 @@ Defined in: [canvas/src/primitives/types.ts:333](https://github.com/invana/canva
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:341](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L341)
+Defined in: [canvas/src/primitives/types.ts:393](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L393)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [canvas/src/primitives/types.ts:341](https://github.com/invana/canva
 
 > `readonly` `optional` **fill?**: [`ShapeFill`](../type-aliases/ShapeFill.md)
 
-Defined in: [canvas/src/primitives/types.ts:337](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L337)
+Defined in: [canvas/src/primitives/types.ts:389](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L389)
 
 ***
 
@@ -34,7 +34,26 @@ Defined in: [canvas/src/primitives/types.ts:337](https://github.com/invana/canva
 
 > `readonly` **kind**: `string`
 
-Defined in: [canvas/src/primitives/types.ts:334](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L334)
+Defined in: [canvas/src/primitives/types.ts:386](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L386)
+
+***
+
+### rotation?
+
+> `readonly` `optional` **rotation?**: `number`
+
+Defined in: [canvas/src/primitives/types.ts:407](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L407)
+
+Container-level rotation in radians, applied around the shape's
+top-left local origin. Composes with effect-driven transform deltas
+— the effect aggregator writes `(spec.rotation ?? 0) + dRot` per frame
+so connector-hosted badges with `autoRotate: true` keep rotating
+smoothly even while a `shake` / `breathing` effect runs on top.
+
+For per-shape geometric rotation (the visible rotation of a regular
+polygon's vertices, a star's points, etc.), use the kind-specific
+`rotation` field on those shape specs — that one rotates the *geometry*
+before it's drawn; this one rotates the *container* after.
 
 ***
 
@@ -42,7 +61,7 @@ Defined in: [canvas/src/primitives/types.ts:334](https://github.com/invana/canva
 
 > `readonly` `optional` **stroke?**: [`ShapeStroke`](ShapeStroke.md)
 
-Defined in: [canvas/src/primitives/types.ts:338](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L338)
+Defined in: [canvas/src/primitives/types.ts:390](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L390)
 
 ***
 
@@ -50,7 +69,7 @@ Defined in: [canvas/src/primitives/types.ts:338](https://github.com/invana/canva
 
 > `readonly` `optional` **visible?**: `boolean`
 
-Defined in: [canvas/src/primitives/types.ts:342](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L342)
+Defined in: [canvas/src/primitives/types.ts:394](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L394)
 
 ***
 
@@ -58,7 +77,7 @@ Defined in: [canvas/src/primitives/types.ts:342](https://github.com/invana/canva
 
 > `readonly` **x**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:335](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L335)
+Defined in: [canvas/src/primitives/types.ts:387](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L387)
 
 ***
 
@@ -66,7 +85,7 @@ Defined in: [canvas/src/primitives/types.ts:335](https://github.com/invana/canva
 
 > `readonly` **y**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:336](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L336)
+Defined in: [canvas/src/primitives/types.ts:388](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L388)
 
 ***
 
@@ -74,6 +93,6 @@ Defined in: [canvas/src/primitives/types.ts:336](https://github.com/invana/canva
 
 > `readonly` `optional` **zIndex?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:340](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L340)
+Defined in: [canvas/src/primitives/types.ts:392](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L392)
 
 Default `0`. Higher = on top. Used for hit-test resolution.

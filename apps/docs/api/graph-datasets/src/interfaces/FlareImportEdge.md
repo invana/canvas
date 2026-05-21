@@ -1,6 +1,6 @@
 # Interface: FlareImportEdge
 
-Defined in: [graph-datasets/src/flare-imports.ts:35](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/flare-imports.ts#L35)
+Defined in: [graph-datasets/src/flare-imports.ts:35](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/flare-imports.ts#L35)
 
 A synthetic leaf→leaf import edge.
 
@@ -10,7 +10,7 @@ A synthetic leaf→leaf import edge.
 
 > **id**: `string`
 
-Defined in: [graph-datasets/src/flare-imports.ts:36](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/flare-imports.ts#L36)
+Defined in: [graph-datasets/src/flare-imports.ts:36](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/flare-imports.ts#L36)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [graph-datasets/src/flare-imports.ts:36](https://github.com/invana/c
 
 > **source**: `string`
 
-Defined in: [graph-datasets/src/flare-imports.ts:37](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/flare-imports.ts#L37)
+Defined in: [graph-datasets/src/flare-imports.ts:37](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/flare-imports.ts#L37)
 
 ***
 
@@ -26,4 +26,4 @@ Defined in: [graph-datasets/src/flare-imports.ts:37](https://github.com/invana/c
 
 > **target**: `string`
 
-Defined in: [graph-datasets/src/flare-imports.ts:38](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/flare-imports.ts#L38)
+Defined in: [graph-datasets/src/flare-imports.ts:38](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/flare-imports.ts#L38)

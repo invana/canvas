@@ -1,6 +1,6 @@
 # Interface: NodeData\<D\>
 
-Defined in: [graph/src/layer/types.ts:585](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L585)
+Defined in: [graph/src/layer/types.ts:974](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L974)
 
 Per-instance node descriptor as stored by `GraphStore`. All values
 concrete (no functions). Flat field layout matching G6's `NodeData`
@@ -21,7 +21,7 @@ convention.
 
 > `readonly` `optional` **data?**: `D`
 
-Defined in: [graph/src/layer/types.ts:589](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L589)
+Defined in: [graph/src/layer/types.ts:978](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L978)
 
 ***
 
@@ -29,7 +29,7 @@ Defined in: [graph/src/layer/types.ts:589](https://github.com/invana/canvas/blob
 
 > `readonly` **id**: `string`
 
-Defined in: [graph/src/layer/types.ts:586](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L586)
+Defined in: [graph/src/layer/types.ts:975](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L975)
 
 ***
 
@@ -37,7 +37,7 @@ Defined in: [graph/src/layer/types.ts:586](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **parentId?**: `string`
 
-Defined in: [graph/src/layer/types.ts:605](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L605)
+Defined in: [graph/src/layer/types.ts:994](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L994)
 
 Logical parent id — the only hierarchy field. Use this for both tree
 structures AND group/combo membership (the parent is just a regular
@@ -51,7 +51,7 @@ inverse index, queryable via `store.childrenOf(id)` /
 
 > `readonly` `optional` **pinned?**: `boolean`
 
-Defined in: [graph/src/layer/types.ts:597](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L597)
+Defined in: [graph/src/layer/types.ts:986](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L986)
 
 ***
 
@@ -59,7 +59,7 @@ Defined in: [graph/src/layer/types.ts:597](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **position?**: `object`
 
-Defined in: [graph/src/layer/types.ts:596](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L596)
+Defined in: [graph/src/layer/types.ts:985](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L985)
 
 #### x
 
@@ -75,7 +75,7 @@ Defined in: [graph/src/layer/types.ts:596](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **state?**: `Readonly`\<`Record`\<`string`, [`NodeStyle`](NodeStyle.md)\>\>
 
-Defined in: [graph/src/layer/types.ts:592](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L592)
+Defined in: [graph/src/layer/types.ts:981](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L981)
 
 Per-instance overlay catalogue (singular `state`).
 
@@ -85,7 +85,7 @@ Per-instance overlay catalogue (singular `state`).
 
 > `readonly` `optional` **states?**: readonly `string`[]
 
-Defined in: [graph/src/layer/types.ts:594](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L594)
+Defined in: [graph/src/layer/types.ts:983](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L983)
 
 Currently-active state names (plural `states`).
 
@@ -95,7 +95,7 @@ Currently-active state names (plural `states`).
 
 > `readonly` `optional` **style?**: [`NodeStyle`](NodeStyle.md)
 
-Defined in: [graph/src/layer/types.ts:590](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L590)
+Defined in: [graph/src/layer/types.ts:979](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L979)
 
 ***
 
@@ -103,6 +103,6 @@ Defined in: [graph/src/layer/types.ts:590](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **type?**: `string`
 
-Defined in: [graph/src/layer/types.ts:588](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/layer/types.ts#L588)
+Defined in: [graph/src/layer/types.ts:977](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L977)
 
 Type tag (free-form). Matches a `NodeOption` template if any.

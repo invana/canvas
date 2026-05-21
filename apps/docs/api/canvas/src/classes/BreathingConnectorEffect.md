@@ -1,6 +1,6 @@
 # Class: BreathingConnectorEffect
 
-Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:27](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L27)
+Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:27](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L27)
 
 Base for effects that target connector primitives. Mirror of `EffectBase`
 for shape effects — the effect modulates the host connector's style
@@ -32,7 +32,7 @@ decorations draw, effects modulate.
 
 > **new BreathingConnectorEffect**(`style`): `BreathingConnectorEffect`
 
-Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:35](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L35)
+Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:35](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L35)
 
 #### Parameters
 
@@ -54,7 +54,7 @@ Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts
 
 > `protected` **host**: `ConnectorEffectHostInfo` = `null`
 
-Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:34](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L34)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:34](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L34)
 
 #### Inherited from
 
@@ -66,7 +66,7 @@ Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:34](https://githu
 
 > `readonly` **style**: [`BreathingConnectorEffectStyle`](../interfaces/BreathingConnectorEffectStyle.md)
 
-Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:33](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L33)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:33](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L33)
 
 #### Inherited from
 
@@ -78,7 +78,7 @@ Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:33](https://githu
 
 > `readonly` **target**: [`EffectTarget`](../type-aliases/EffectTarget.md) = `'style'`
 
-Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:28](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L28)
+Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:28](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L28)
 
 #### Overrides
 
@@ -90,7 +90,7 @@ Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:48](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L48)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:48](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L48)
 
 #### Returns
 
@@ -106,7 +106,7 @@ Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:48](https://githu
 
 > **mount**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:40](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L40)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:40](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L40)
 
 #### Parameters
 
@@ -128,7 +128,7 @@ Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:40](https://githu
 
 > **readStyle**(): [`StyleOverride`](../interfaces/StyleOverride.md)
 
-Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:50](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L50)
+Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:50](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L50)
 
 #### Returns
 
@@ -144,7 +144,7 @@ Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts
 
 > `optional` **readTransform**(): [`TransformDelta`](../interfaces/TransformDelta.md)
 
-Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:54](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L54)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:54](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L54)
 
 #### Returns
 
@@ -160,7 +160,7 @@ Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:54](https://githu
 
 > **tick**(`deltaMs`): `boolean`
 
-Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:42](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L42)
+Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts:42](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts#L42)
 
 #### Parameters
 
@@ -182,7 +182,7 @@ Defined in: [canvas/src/primitives/effects/connector/BreathingConnectorEffect.ts
 
 > **update**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:44](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L44)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:44](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L44)
 
 #### Parameters
 

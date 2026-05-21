@@ -2,7 +2,7 @@
 
 > `const` **smoothPathStyle**: [`IPathStyle`](../type-aliases/IPathStyle.md)
 
-Defined in: [canvas/src/primitives/connectors/pathStyles/smooth.ts:31](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/connectors/pathStyles/smooth.ts#L31)
+Defined in: [canvas/src/primitives/connectors/pathStyles/smooth.ts:31](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/connectors/pathStyles/smooth.ts#L31)
 
 Catmull-Rom spline through every polyline point, emitted as cubic Béziers.
 The curve passes through every input point exactly; intermediate router

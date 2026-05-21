@@ -1,6 +1,6 @@
 # Class: D3SankeyLayout
 
-Defined in: [graph-layout-d3-sankey/src/D3SankeyLayout.ts:60](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-sankey/src/D3SankeyLayout.ts#L60)
+Defined in: [graph-layout-d3-sankey/src/D3SankeyLayout.ts:60](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layout-d3-sankey/src/D3SankeyLayout.ts#L60)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [graph-layout-d3-sankey/src/D3SankeyLayout.ts:60](https://github.com
 
 > **new D3SankeyLayout**(`opts?`): `D3SankeyLayout`
 
-Defined in: [graph-layout-d3-sankey/src/D3SankeyLayout.ts:65](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-sankey/src/D3SankeyLayout.ts#L65)
+Defined in: [graph-layout-d3-sankey/src/D3SankeyLayout.ts:65](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layout-d3-sankey/src/D3SankeyLayout.ts#L65)
 
 #### Parameters
 
@@ -34,7 +34,7 @@ Defined in: [graph-layout-d3-sankey/src/D3SankeyLayout.ts:65](https://github.com
 
 > `readonly` **events**: [`EventEmitter`](../../../canvas/src/classes/EventEmitter.md)\<[`LayoutEvents`](../../../canvas/src/type-aliases/LayoutEvents.md)\>
 
-Defined in: [canvas/src/layouts/Layout.ts:71](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layouts/Layout.ts#L71)
+Defined in: [canvas/src/layouts/Layout.ts:71](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layouts/Layout.ts#L71)
 
 Lifecycle event bus. See class docs for the event vocabulary.
 Subclasses with richer telemetry can declare their own typed
@@ -50,7 +50,7 @@ emitter on top (`override readonly events = new EventEmitter<MyEvents>()`).
 
 > **apply**(`layer`): `Promise`\<`void`\>
 
-Defined in: [graph-layout-d3-sankey/src/D3SankeyLayout.ts:75](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-sankey/src/D3SankeyLayout.ts#L75)
+Defined in: [graph-layout-d3-sankey/src/D3SankeyLayout.ts:75](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layout-d3-sankey/src/D3SankeyLayout.ts#L75)
 
 Run the layout against `layer`. Resolves once positions and per-edge
 hints have been written. Lifecycle events fire in order:
@@ -76,7 +76,7 @@ hints have been written. Lifecycle events fire in order:
 
 > **stop**(): `void`
 
-Defined in: [graph-layout-d3-sankey/src/D3SankeyLayout.ts:226](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-layout-d3-sankey/src/D3SankeyLayout.ts#L226)
+Defined in: [graph-layout-d3-sankey/src/D3SankeyLayout.ts:226](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layout-d3-sankey/src/D3SankeyLayout.ts#L226)
 
 Cancel a run. The synchronous body of `apply()` rarely yields long
  enough for this to fire, but it keeps the contract symmetric with

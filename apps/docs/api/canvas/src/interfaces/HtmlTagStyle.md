@@ -1,6 +1,6 @@
 # Interface: HtmlTagStyle
 
-Defined in: [canvas/src/primitives/types.ts:982](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L982)
+Defined in: [canvas/src/primitives/types.ts:1110](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1110)
 
 One tag's worth of HTML-text style overrides. Mirrors a subset of Pixi
 `HTMLTextStyle`. Used in `LabelHtmlContent.tagStyles` to restyle specific
@@ -12,7 +12,7 @@ tags (`<b>`, `<i>`, custom `<role>`, etc.) without affecting the base style.
 
 > `readonly` `optional` **fill?**: `string` \| `number`
 
-Defined in: [canvas/src/primitives/types.ts:987](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L987)
+Defined in: [canvas/src/primitives/types.ts:1115](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1115)
 
 ***
 
@@ -20,7 +20,7 @@ Defined in: [canvas/src/primitives/types.ts:987](https://github.com/invana/canva
 
 > `readonly` `optional` **fontFamily?**: `string`
 
-Defined in: [canvas/src/primitives/types.ts:983](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L983)
+Defined in: [canvas/src/primitives/types.ts:1111](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1111)
 
 ***
 
@@ -28,7 +28,7 @@ Defined in: [canvas/src/primitives/types.ts:983](https://github.com/invana/canva
 
 > `readonly` `optional` **fontSize?**: `string` \| `number`
 
-Defined in: [canvas/src/primitives/types.ts:984](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L984)
+Defined in: [canvas/src/primitives/types.ts:1112](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1112)
 
 ***
 
@@ -36,7 +36,7 @@ Defined in: [canvas/src/primitives/types.ts:984](https://github.com/invana/canva
 
 > `readonly` `optional` **fontStyle?**: `"normal"` \| `"italic"` \| `"oblique"`
 
-Defined in: [canvas/src/primitives/types.ts:986](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L986)
+Defined in: [canvas/src/primitives/types.ts:1114](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1114)
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: [canvas/src/primitives/types.ts:986](https://github.com/invana/canva
 
 > `readonly` `optional` **fontWeight?**: `string` \| `number`
 
-Defined in: [canvas/src/primitives/types.ts:985](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L985)
+Defined in: [canvas/src/primitives/types.ts:1113](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1113)
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: [canvas/src/primitives/types.ts:985](https://github.com/invana/canva
 
 > `readonly` `optional` **letterSpacing?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:988](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L988)
+Defined in: [canvas/src/primitives/types.ts:1116](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1116)
 
 ***
 
@@ -60,4 +60,4 @@ Defined in: [canvas/src/primitives/types.ts:988](https://github.com/invana/canva
 
 > `readonly` `optional` **textDecoration?**: `string`
 
-Defined in: [canvas/src/primitives/types.ts:989](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/types.ts#L989)
+Defined in: [canvas/src/primitives/types.ts:1117](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1117)

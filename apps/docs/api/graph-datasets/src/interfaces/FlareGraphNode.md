@@ -1,6 +1,6 @@
 # Interface: FlareGraphNode
 
-Defined in: [graph-datasets/src/flare.ts:30](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/flare.ts#L30)
+Defined in: [graph-datasets/src/flare.ts:30](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/flare.ts#L30)
 
 A single node in the flat projection. The id is the slash-joined path
  from the root (e.g. `flare/analytics/cluster/AgglomerativeCluster`) so
@@ -12,7 +12,7 @@ A single node in the flat projection. The id is the slash-joined path
 
 > **data**: `object`
 
-Defined in: [graph-datasets/src/flare.ts:32](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/flare.ts#L32)
+Defined in: [graph-datasets/src/flare.ts:32](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/flare.ts#L32)
 
 #### depth
 
@@ -54,4 +54,4 @@ Original `value` field, if present (only on leaves).
 
 > **id**: `string`
 
-Defined in: [graph-datasets/src/flare.ts:31](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph-datasets/src/flare.ts#L31)
+Defined in: [graph-datasets/src/flare.ts:31](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/flare.ts#L31)

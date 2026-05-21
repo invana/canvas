@@ -1,6 +1,6 @@
 # Interface: LayerOptions\<TOptions\>
 
-Defined in: [canvas/src/layers/Layer.ts:56](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L56)
+Defined in: [canvas/src/layers/Layer.ts:56](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L56)
 
 ## Type Parameters
 
@@ -14,7 +14,7 @@ Defined in: [canvas/src/layers/Layer.ts:56](https://github.com/invana/canvas/blo
 
 > `optional` **cullable?**: `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:67](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L67)
+Defined in: [canvas/src/layers/Layer.ts:67](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L67)
 
 Off-screen culling participation. Default `true`. Set `false` for
 full-canvas effect layers (background gradient, overlay) that should
@@ -26,7 +26,7 @@ always render regardless of camera visibility.
 
 > `optional` **devtoolsName?**: `string`
 
-Defined in: [canvas/src/layers/Layer.ts:69](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L69)
+Defined in: [canvas/src/layers/Layer.ts:69](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L69)
 
 Optional: name shown in devtools. Default `'<ClassName>:<id>'`.
 
@@ -36,7 +36,7 @@ Optional: name shown in devtools. Default `'<ClassName>:<id>'`.
 
 > `optional` **hittable?**: `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:60](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L60)
+Defined in: [canvas/src/layers/Layer.ts:60](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L60)
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: [canvas/src/layers/Layer.ts:60](https://github.com/invana/canvas/blo
 
 > **id**: `string`
 
-Defined in: [canvas/src/layers/Layer.ts:57](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L57)
+Defined in: [canvas/src/layers/Layer.ts:57](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L57)
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: [canvas/src/layers/Layer.ts:57](https://github.com/invana/canvas/blo
 
 > **options**: `TOptions`
 
-Defined in: [canvas/src/layers/Layer.ts:58](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L58)
+Defined in: [canvas/src/layers/Layer.ts:58](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L58)
 
 ***
 
@@ -60,7 +60,7 @@ Defined in: [canvas/src/layers/Layer.ts:58](https://github.com/invana/canvas/blo
 
 > `optional` **visible?**: `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:59](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L59)
+Defined in: [canvas/src/layers/Layer.ts:59](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L59)
 
 ***
 
@@ -68,4 +68,4 @@ Defined in: [canvas/src/layers/Layer.ts:59](https://github.com/invana/canvas/blo
 
 > `optional` **zIndex?**: `number`
 
-Defined in: [canvas/src/layers/Layer.ts:61](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/layers/Layer.ts#L61)
+Defined in: [canvas/src/layers/Layer.ts:61](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L61)

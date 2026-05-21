@@ -2,7 +2,7 @@
 
 > `const` **orthRouter**: [`IRouter`](../type-aliases/IRouter.md)
 
-Defined in: [canvas/src/primitives/connectors/routers/orth.ts:28](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/primitives/connectors/routers/orth.ts#L28)
+Defined in: [canvas/src/primitives/connectors/routers/orth.ts:28](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/connectors/routers/orth.ts#L28)
 
 Orth router — produces a polyline made of horizontal and vertical
 segments only. Simple, geometric, **no obstacle awareness**: pick this

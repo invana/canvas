@@ -1,6 +1,6 @@
 # Interface: HoverActivateBehaviourOptions
 
-Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:53](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L53)
+Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:57](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L57)
 
 Constructor options for `HoverActivateBehaviour`.
 
@@ -14,7 +14,7 @@ Constructor options for `HoverActivateBehaviour`.
 
 > `optional` **degree?**: `number`
 
-Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:76](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L76)
+Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:86](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L86)
 
 N-hop neighbour radius. `0` = hovered element only; `1` = direct
 neighbours + connecting edges; `N` = N-hop. Default `0`.
@@ -25,7 +25,7 @@ neighbours + connecting edges; `N` = N-hop. Default `0`.
 
 > `optional` **direction?**: [`HoverDirection`](../type-aliases/HoverDirection.md)
 
-Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:79](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L79)
+Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:89](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L89)
 
 Direction for neighbour traversal. Default `'both'`.
 
@@ -35,7 +35,7 @@ Direction for neighbour traversal. Default `'both'`.
 
 > `optional` **enable?**: `boolean` \| ((`element`) => `boolean`)
 
-Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:61](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L61)
+Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:65](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L65)
 
 Per-target enable predicate. `boolean` is a global on/off; a function
 runs per pointer-over and may veto activation. Default `true`.
@@ -46,7 +46,7 @@ runs per pointer-over and may veto activation. Default `true`.
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L43)
+Defined in: [canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L43)
 
 Default `false` — the developer explicitly enables.
 
@@ -60,7 +60,7 @@ Default `false` — the developer explicitly enables.
 
 > **id**: `string`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L36)
+Defined in: [canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L36)
 
 #### Inherited from
 
@@ -72,7 +72,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/ca
 
 > `optional` **inactiveState?**: `string`
 
-Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:70](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L70)
+Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:80](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L80)
 
 State name applied to every element *not* in the active set. Leave
 `undefined` to skip inactive dimming. Default `undefined`.
@@ -83,7 +83,7 @@ State name applied to every element *not* in the active set. Leave
 
 > **layerId**: `string`
 
-Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:55](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L55)
+Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:59](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L59)
 
 Required — the `GraphLayer` id this behaviour drives.
 
@@ -97,7 +97,7 @@ Required — the `GraphLayer` id this behaviour drives.
 
 > `optional` **onHover?**: (`element`) => `void`
 
-Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:133](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L133)
+Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:143](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L143)
 
 Fired when an element first becomes hovered.
 
@@ -117,7 +117,7 @@ Fired when an element first becomes hovered.
 
 > `optional` **onHoverEnd?**: (`element`) => `void`
 
-Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:135](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L135)
+Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:145](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L145)
 
 Fired when hover ends on a previously hovered element.
 
@@ -137,7 +137,7 @@ Fired when hover ends on a previously hovered element.
 
 > `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/canvas/src/behaviours/Behaviour.ts#L49)
+Defined in: [canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L49)
 
 Gesture identifiers this behaviour claims. Used by `BehaviourRegistry`
 for conflict warnings. Format is convention-free (`'shift+drag'`,
@@ -153,9 +153,13 @@ for conflict warnings. Format is convention-free (`'shift+drag'`,
 
 > `optional` **state?**: `string`
 
-Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:64](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L64)
+Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:74](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L74)
 
-Active-state name (configured on the layer). Default `'active'`.
+State name applied to the hovered focal element (and its N-hop
+neighbours when `degree > 0`). Default `'hovered'` — matches the
+canonical state catalogue auto-merged into every `GraphLayer`. Pass
+a custom name when the behaviour should write a project-specific
+state instead (e.g. `'focal'`).
 
 ***
 
@@ -163,7 +167,7 @@ Active-state name (configured on the layer). Default `'active'`.
 
 > `optional` **zoomedOutEdgeState?**: `string`
 
-Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:108](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L108)
+Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:118](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L118)
 
 State name applied to connecting edges when
 `camera.scale <= zoomThreshold` AND `degree > 0`. Falls back to `state`
@@ -175,7 +179,7 @@ when undefined.
 
 > `optional` **zoomedOutScale?**: `number`
 
-Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:130](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L130)
+Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:140](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L140)
 
 Gfx-transform scale multiplier applied to each hovered node (and the
 N-hop neighbour nodes) when `camera.scale <= zoomThreshold`. Pure
@@ -202,7 +206,7 @@ sits inside the now-bigger silhouette — visually acceptable.
 
 > `optional` **zoomedOutState?**: `string`
 
-Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:101](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L101)
+Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:111](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L111)
 
 State name applied to the hovered node + N-hop neighbour nodes when
 `camera.scale <= zoomThreshold`. Falls back to `state` when undefined
@@ -215,7 +219,7 @@ State name applied to the hovered node + N-hop neighbour nodes when
 
 > `optional` **zoomThreshold?**: `number`
 
-Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:93](https://github.com/invana/canvas/blob/923d3ae6f212f718b1d8c043b664b6646d19dabf/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L93)
+Defined in: [graph/src/behaviours/HoverActivateBehaviour.ts:103](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/HoverActivateBehaviour.ts#L103)
 
 Camera scale at or below which the behaviour swaps `state` for
 `zoomedOutState` (and `zoomedOutEdgeState` for edges). The hovered set
