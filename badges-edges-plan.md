@@ -183,7 +183,7 @@ Order of work, each landable independently:
 2. `packages/graph/src/layer/GraphLayer.ts` (or wherever node→renderer projection lives)
    - Translate `NodeBadge` to canvas-level `BadgeOptions` — including the new fields.
 3. `apps/storybook/stories/Graph/Nodes/Badges.stories.ts` (new) — story showing node badges with decorations + effects (glow, pulse-ring, shake).
-4. Port `Canvas/Shapes/Badges.stories.ts` to use the new `shape` shape (mechanical edit).
+4. Port `Canvas/Concepts/Shapes/Badges.stories.ts` to use the new `shape` shape (mechanical edit).
 
 ### Step 2 — edge badges
 

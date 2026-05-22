@@ -17,7 +17,7 @@ Storybook top-level namespacing follows package names. Stories from `@invana/can
 
 Inside each package namespace, the seven core engine concepts each get a folder:
 
-- `Canvas/Shapes/...`      — shape primitives (rectangle, circle, polygon, glyph / icon fills, image fills). In a graph context these are the **nodes**.
+- `Canvas/Concepts/Shapes/...`      — shape primitives (rectangle, circle, polygon, glyph / icon fills, image fills). In a graph context these are the **nodes**.
 - `Canvas/Connectors/...`  — connector pipeline: `Anchors/`, `Routers/`, `PathStyles/`, `ConnectorTypes/`.
 - `Canvas/Decorations/...` — decorations painted *alongside / on top of* a host (glow, halo, pulse-ring, badge). Additive geometry. Static by default; animated decorations also live here.
 - `Canvas/Effects/...`     — effects that *modulate* a host (shake, breathing, shimmer). No new geometry — they tweak the host's transform or style channels each frame.
@@ -43,7 +43,7 @@ apps/storybook/stories/graph-layouts/
 └── elkjs/             ← @invana/graph-layout-elkjs (future)
 ```
 
-Title fields match the path exactly: `title: 'graph-layouts/<flavour>/<Name>'` — e.g. `'graph-layouts/d3-force/Lattice'`, `'graph-layouts/d3-hierarchy/Sunburst'`. The sidebar then groups all layout flavours under one `graph-layouts` node with one child per layout package, instead of scattering them as siblings of `Canvas` and `Graph`.
+Title fields match the path exactly: `title: 'canvas/graph-layouts/<flavour>/<Name>'` — e.g. `'canvas/graph-layouts/d3-force/Lattice'`, `'canvas/graph-layouts/d3-hierarchy/Sunburst'`. The sidebar then groups all layout flavours under one `graph-layouts` node with one child per layout package, instead of scattering them as siblings of `Canvas` and `Graph`.
 
 When adding a new layout package `@invana/graph-layout-<X>`, create `apps/storybook/stories/graph-layouts/<X>/` and write the story titles as `graph-layouts/<X>/<Name>`. Don't put layout-package stories under `Graph/Layer/`, `Canvas/Layers/`, or a flat `graph-layouts-<X>/` folder — those are the wrong neighbours.
 
@@ -103,7 +103,7 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import { createContainer } from '../../div-util';
 
-const meta: Meta = { title: 'Canvas/Area/SubArea' };
+const meta: Meta = { title: 'canvas/Concepts/Area/SubArea' };
 export default meta;
 type Story = StoryObj;
 

@@ -79,7 +79,7 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
 9. Write TSDoc on all classes, public methods, and non-obvious variables.
 10. **Do not write tests for `packages/canvas`.** No test files in that package unless explicitly asked.
 11. **Every new engine primitive ships with a Storybook story.** Adding a shape, connector, anchor, router, pathStyle, marker, decoration, effect, layer, behaviour, layout, or graph-layer feature (e.g. a new `NodeShapeKind`) to `packages/canvas` or `packages/graph` is incomplete until there's a `.stories.ts` file demonstrating it under `apps/storybook/stories/<Package>/<Area>/` per the namespacing in `apps/storybook/CLAUDE.md`. Path map:
-    - shape → `Canvas/Shapes/`
+    - shape → `Canvas/Concepts/Shapes/`
     - connector / anchor / router / pathStyle / marker → `Canvas/Connectors/{Anchors,Routers,PathStyles,ConnectorTypes}/`
     - decoration → `Canvas/Decorations/{Shapes,Connectors}/`
     - effect → `Canvas/Effects/{Shapes,Connectors}/`
