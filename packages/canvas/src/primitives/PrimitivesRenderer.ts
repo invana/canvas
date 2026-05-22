@@ -1599,7 +1599,7 @@ export class PrimitivesRenderer {
       return;
     }
     this.events.emit(`${hit.kind}:pointerdown`, {
-      id: hit.id, worldX: w.x, worldY: w.y, button: e.button,
+      id: hit.id, worldX: w.x, worldY: w.y, button: e.button, pointerId: e.pointerId,
     });
     this.downHit = { kind: hit.kind, id: hit.id, button: e.button };
   }
@@ -1611,7 +1611,7 @@ export class PrimitivesRenderer {
 
     if (hit) {
       this.events.emit(`${hit.kind}:pointerup`, {
-        id: hit.id, worldX: w.x, worldY: w.y, button: e.button,
+        id: hit.id, worldX: w.x, worldY: w.y, button: e.button, pointerId: e.pointerId,
       });
     }
 

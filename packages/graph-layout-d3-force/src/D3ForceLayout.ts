@@ -147,14 +147,44 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     // 4. External writes (drag, cursor-follower, etc.) → mirror onto sim,
     //    reheat. Pinned nodes write to `fx/fy` so the sim keeps holding
     //    them at the new spot instead of letting forces nudge them away.
+    //
+    //    Pin state is read live from the store on every update. The original
+    //    `pinnedIds` snapshot at `apply()` time is only a fast-path seed —
+    //    once the user (or any feed) pins / unpins a node mid-run, the next
+    //    `node:update` here adjusts the sim accordingly. Without the live
+    //    read, a mid-run drag-pin (`DragNodeBehaviour.startDrag` → lazy
+    //    `store.setPinned(id, true)`) would never be observed by the sim:
+    //    cursor positions would land on `node.x/y`, forces would recompute
+    //    them every tick, and the dragged node would visibly lag / drift
+    //    behind the cursor.
     this.unsubscribe = store.events.on('node:update', ({ nodeId, patch }) => {
-      if (this.writing || !patch.position) return;
+      if (this.writing) return;
       const node = this.nodeById.get(nodeId);
       if (!node) return;
-      if (this.pinnedIds.has(nodeId)) {
+
+      // Track pin changes (pinned: true|false patches don't carry position).
+      if ('pinned' in patch) {
+        if (patch.pinned) this.pinnedIds.add(nodeId);
+        else this.pinnedIds.delete(nodeId);
+      }
+
+      if (!patch.position) return;
+      const livePinned =
+        this.pinnedIds.has(nodeId) ||
+        store.getNode(nodeId)?.pinned === true;
+      if (livePinned) {
+        this.pinnedIds.add(nodeId);
         node.fx = patch.position.x;
         node.fy = patch.position.y;
+        // Mirror onto `x/y` too — d3-force reads `fx/fy` for force-pinning
+        // but uses `x/y` as the rendered position downstream of forceX/Y.
+        node.x = patch.position.x;
+        node.y = patch.position.y;
       } else {
+        // Just-unpinned: clear any prior `fx/fy` so forces can move the
+        // node again. d3-force treats `undefined` as "free".
+        if (node.fx !== undefined) node.fx = undefined as unknown as number;
+        if (node.fy !== undefined) node.fy = undefined as unknown as number;
         node.x = patch.position.x;
         node.y = patch.position.y;
       }

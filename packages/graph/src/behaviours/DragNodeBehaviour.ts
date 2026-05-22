@@ -113,6 +113,13 @@ export class DragNodeBehaviour extends Behaviour {
   private offShapeDown: (() => void) | null = null;
   private canvasEl: HTMLCanvasElement | null = null;
   private prevCursor: string | null = null;
+  /**
+   * Pointer id captured on `pointerdown` so we can hold the capture on the
+   * canvas element for the duration of the drag — otherwise the cursor
+   * crossing the canvas bounds (e.g. over a lil-gui panel) fires
+   * `pointercancel` on the document and the drag ends prematurely.
+   */
+  private capturedPointerId: number | null = null;
 
   constructor(opts: DragNodeBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? ['node+drag'] });
@@ -143,11 +150,17 @@ export class DragNodeBehaviour extends Behaviour {
       );
     }
 
-    const onShapeDown = (e: { id: string; worldX: number; worldY: number }): void => {
+    const onShapeDown = (e: {
+      id: string;
+      worldX: number;
+      worldY: number;
+      pointerId: number;
+    }): void => {
       if (!this._enabled) return;
       if (this.filter && !this.filter(e.id)) return;
       const node = layer.store.getNode(e.id);
       if (!node) return;
+      this.capturedPointerId = e.pointerId;
       this.startDrag(e.id, e.worldX, e.worldY, node.position ?? { x: 0, y: 0 });
     };
     renderer.events.on('shape:pointerdown', onShapeDown);
@@ -201,6 +214,25 @@ export class DragNodeBehaviour extends Behaviour {
     if (this.canvasEl) {
       this.prevCursor = this.canvasEl.style.cursor;
       this.canvasEl.style.cursor = this.dragCursor;
+      // Hold the pointer capture on the canvas DOM element for the duration
+      // of the drag. Without this, the cursor crossing the canvas bounds —
+      // over a lil-gui panel, the storybook chrome, or off the page — fires
+      // `pointercancel` on the document, prematurely ending the drag and
+      // (because we paused the camera viewport's drag plugin on startDrag
+      // and resume it in endDrag) handing the still-held button off to the
+      // camera-pan plugin mid-gesture. That midpath handoff is what makes
+      // the world appear to "jump" and the dragged node appear to leave
+      // edge / node trails behind it. Capturing keeps every subsequent
+      // pointermove routed to the canvas.
+      if (this.capturedPointerId !== null) {
+        try {
+          this.canvasEl.setPointerCapture(this.capturedPointerId);
+        } catch {
+          // Capture can throw if the pointer has already been released (rare
+          // race when the browser cancels between pointerdown and our
+          // startDrag). Swallow — endDrag handles the missing capture.
+        }
+      }
     }
   }
 
@@ -215,6 +247,14 @@ export class DragNodeBehaviour extends Behaviour {
       this.canvasEl.style.cursor = this.prevCursor;
       this.prevCursor = null;
     }
+    if (this.canvasEl && this.capturedPointerId !== null) {
+      try {
+        this.canvasEl.releasePointerCapture(this.capturedPointerId);
+      } catch {
+        // Already released by the browser (pointer ended / cancelled).
+      }
+    }
+    this.capturedPointerId = null;
 
     // Only run the pinOnRelease logic if we actually pinned during this
     // gesture — a click that never moved should leave the pin state alone.

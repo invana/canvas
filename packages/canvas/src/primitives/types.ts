@@ -1084,16 +1084,16 @@ export interface HitResult {
 export interface PrimitivesRendererEventMap extends EventMap {
   'shape:pointerover':     { id: string; worldX: number; worldY: number };
   'shape:pointerout':      { id: string; worldX: number; worldY: number };
-  'shape:pointerdown':     { id: string; worldX: number; worldY: number; button: number };
-  'shape:pointerup':       { id: string; worldX: number; worldY: number; button: number };
+  'shape:pointerdown':     { id: string; worldX: number; worldY: number; button: number; pointerId: number };
+  'shape:pointerup':       { id: string; worldX: number; worldY: number; button: number; pointerId: number };
   /** Left-button click. Right-button → `shape:contextmenu`. */
   'shape:click':           { id: string; worldX: number; worldY: number; button: number };
   'shape:doubleclick':     { id: string; worldX: number; worldY: number; button: number };
   'shape:contextmenu':     { id: string; worldX: number; worldY: number };
   'connector:pointerover': { id: string; worldX: number; worldY: number };
   'connector:pointerout':  { id: string; worldX: number; worldY: number };
-  'connector:pointerdown': { id: string; worldX: number; worldY: number; button: number };
-  'connector:pointerup':   { id: string; worldX: number; worldY: number; button: number };
+  'connector:pointerdown': { id: string; worldX: number; worldY: number; button: number; pointerId: number };
+  'connector:pointerup':   { id: string; worldX: number; worldY: number; button: number; pointerId: number };
   /** Left-button click. Right-button → `connector:contextmenu`. */
   'connector:click':       { id: string; worldX: number; worldY: number; button: number };
   'connector:doubleclick': { id: string; worldX: number; worldY: number; button: number };
