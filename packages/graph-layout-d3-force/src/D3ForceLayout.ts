@@ -58,16 +58,27 @@ export class D3ForceLayout extends Layout<GraphLayer> {
   /** GraphNode snapshot indexed by id — used by per-node force callbacks
    *  (e.g. `collide.radius(d => ...)`) without coupling SimNode to GraphNode. */
   private graphNodeById = new Map<string, GraphNode>();
-  /** Ids of nodes pinned at snapshot time. Pinned nodes are driven via
-   *  d3-force's `fx/fy` so the simulation keeps them fixed; external
-   *  `node:update` patches mirror onto `fx/fy` instead of `x/y`. */
+  /** Ids of nodes whose `GraphNode.pinned === true` — permanent pins from
+   *  user data. Driven via d3-force's `fx/fy` so the simulation keeps them
+   *  fixed. Live: pin/unpin patches on `node:update` add/remove entries. */
   private pinnedIds = new Set<string>();
+  /** Ids of nodes currently being dragged by a user behaviour. Populated
+   *  on `node:drag-start` from the layer, drained on `node:drag-end`. While
+   *  an id is in this set, position updates mirror onto `fx/fy` so the
+   *  simulation can't push the node away from the cursor. On drag-end the
+   *  transient `fx/fy` clears (unless the node is also in `pinnedIds`,
+   *  which is the permanent-pin path). Decoupled from `pinned` so a drag
+   *  never mutates user-data semantics — pin-on-release is opt-in via a
+   *  separate behaviour. */
+  private draggedIds = new Set<string>();
   private buffer = new Float32Array(0);
   /** True while our own bulk write is in-flight, so the `node:update`
    *  events it triggers don't bounce back into the sim. Relies on the
    *  store's default sync flush firing events inside the bulk call. */
   private writing = false;
   private unsubscribe: (() => void) | null = null;
+  private offDragStart: (() => void) | null = null;
+  private offDragEnd: (() => void) | null = null;
   /** True while a run is active. Guards `stop()` so it only emits `end`
    *  once per run, even if called externally after a natural settle. */
   private running = false;
@@ -92,6 +103,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     this.nodeById.clear();
     this.graphNodeById.clear();
     this.pinnedIds.clear();
+    this.draggedIds.clear();
     for (const n of store.nodes()) {
       const pos = store.getPosition(n.id);
       const node: SimNode = { id: n.id };
@@ -145,50 +157,74 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     });
 
     // 4. External writes (drag, cursor-follower, etc.) → mirror onto sim,
-    //    reheat. Pinned nodes write to `fx/fy` so the sim keeps holding
-    //    them at the new spot instead of letting forces nudge them away.
+    //    reheat. Nodes that are either permanently pinned (`pinnedIds`,
+    //    user-data semantics) or transiently locked by an in-flight drag
+    //    (`draggedIds`, signalled by `node:drag-start` / `node:drag-end`
+    //    on the layer's events) write to `fx/fy` so the simulation can't
+    //    push them away from the supplied position. Otherwise the update
+    //    flows into `x/y` and the next force tick may move the node.
     //
-    //    Pin state is read live from the store on every update. The original
-    //    `pinnedIds` snapshot at `apply()` time is only a fast-path seed —
-    //    once the user (or any feed) pins / unpins a node mid-run, the next
-    //    `node:update` here adjusts the sim accordingly. Without the live
-    //    read, a mid-run drag-pin (`DragNodeBehaviour.startDrag` → lazy
-    //    `store.setPinned(id, true)`) would never be observed by the sim:
-    //    cursor positions would land on `node.x/y`, forces would recompute
-    //    them every tick, and the dragged node would visibly lag / drift
-    //    behind the cursor.
+    //    Pin patches are tracked live so a mid-run flip (e.g. a feed
+    //    enabling `pinned: true` on a node) takes effect on the next
+    //    `node:update` without needing a fresh `apply()`.
     this.unsubscribe = store.events.on('node:update', ({ nodeId, patch }) => {
       if (this.writing) return;
       const node = this.nodeById.get(nodeId);
       if (!node) return;
 
-      // Track pin changes (pinned: true|false patches don't carry position).
       if ('pinned' in patch) {
         if (patch.pinned) this.pinnedIds.add(nodeId);
         else this.pinnedIds.delete(nodeId);
       }
 
       if (!patch.position) return;
-      const livePinned =
-        this.pinnedIds.has(nodeId) ||
-        store.getNode(nodeId)?.pinned === true;
-      if (livePinned) {
-        this.pinnedIds.add(nodeId);
+      const locked =
+        this.pinnedIds.has(nodeId) || this.draggedIds.has(nodeId);
+      if (locked) {
         node.fx = patch.position.x;
         node.fy = patch.position.y;
-        // Mirror onto `x/y` too — d3-force reads `fx/fy` for force-pinning
-        // but uses `x/y` as the rendered position downstream of forceX/Y.
+        // Mirror onto `x/y` so rendered position matches before the next
+        // force tick — `forceCenter`/`forceX`/`forceY` read `x/y`.
         node.x = patch.position.x;
         node.y = patch.position.y;
       } else {
-        // Just-unpinned: clear any prior `fx/fy` so forces can move the
-        // node again. d3-force treats `undefined` as "free".
+        // Free node: ensure no stale `fx/fy` are holding it.
         if (node.fx !== undefined) node.fx = undefined as unknown as number;
         if (node.fy !== undefined) node.fy = undefined as unknown as number;
         node.x = patch.position.x;
         node.y = patch.position.y;
       }
       if (sim.alpha() < REHEAT_ALPHA) sim.alpha(REHEAT_ALPHA).restart();
+    });
+
+    // 4b. Subscribe to drag lifecycle on the layer. `node:drag-start` puts
+    //     the node in `draggedIds` (so subsequent position updates lock via
+    //     `fx/fy`) and reheats the sim. `node:drag-end` removes it and —
+    //     unless the node is also permanently pinned — clears `fx/fy` so
+    //     forces can move it again. The store's `pinned` flag is never
+    //     touched here; permanent pin-on-release is a separate behaviour's
+    //     concern.
+    this.offDragStart = layer.events.on('node:drag-start', ({ nodeId }) => {
+      const node = this.nodeById.get(nodeId);
+      if (!node) return;
+      this.draggedIds.add(nodeId);
+      const pos = store.getNode(nodeId)?.position;
+      if (pos) {
+        node.fx = pos.x;
+        node.fy = pos.y;
+        node.x = pos.x;
+        node.y = pos.y;
+      }
+      if (sim.alpha() < REHEAT_ALPHA) sim.alpha(REHEAT_ALPHA).restart();
+    });
+    this.offDragEnd = layer.events.on('node:drag-end', ({ nodeId }) => {
+      this.draggedIds.delete(nodeId);
+      const node = this.nodeById.get(nodeId);
+      if (!node) return;
+      if (!this.pinnedIds.has(nodeId)) {
+        node.fx = undefined as unknown as number;
+        node.fy = undefined as unknown as number;
+      }
     });
 
     // 5. Mark run as active and announce `start` after wiring is in place
@@ -222,11 +258,16 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     this.sim = null;
     this.unsubscribe?.();
     this.unsubscribe = null;
+    this.offDragStart?.();
+    this.offDragStart = null;
+    this.offDragEnd?.();
+    this.offDragEnd = null;
     this.nodes = [];
     this.ids = [];
     this.nodeById.clear();
     this.graphNodeById.clear();
     this.pinnedIds.clear();
+    this.draggedIds.clear();
     if (wasRunning) this.events.emit('end', { reason: 'stopped' });
   }
 

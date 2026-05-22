@@ -7,9 +7,18 @@
  *   - `node:update` events fire — anyone listening (server replication,
  *     analytics, animations) sees the move.
  *   - The layer's connector-reroute pass runs naturally on the store flush.
- *   - Pinned-node semantics work: a dragged node automatically becomes
- *     `pinned: true` (configurable) so a subsequent layout pass leaves the
- *     dropped node where the user put it.
+ *
+ * **Doesn't pin during the drag.** The transient hold against an active
+ * physics layout is done via the layer's `node:drag-start` / `node:drag-end`
+ * events — layouts (e.g. `D3ForceLayout` clamping `fx/fy`) subscribe and
+ * manage the lock internally. The store's `GraphNode.pinned` flag is *not*
+ * touched mid-gesture, since that flag is user-data semantics (permanent
+ * pin) and a drag shouldn't silently mutate it.
+ *
+ * **Pin on release is opt-in.** Set `pinOnRelease: true` to call
+ * `store.setPinned(id, true)` on drag-end — useful when you want the user's
+ * placement to survive future layout passes. Off by default; when off, a
+ * released node is free again and the next layout tick may move it.
  *
  * Default `enabled: false` — register, then explicitly enable.
  *
@@ -36,23 +45,19 @@ export interface DragNodeBehaviourOptions extends BehaviourOptions {
    */
   filter?: (id: string) => boolean;
 
-  /**
-   * Pin the node (`store.setPinned(id, true)`) when the drag starts so any
-   * subsequent layout pass leaves the dropped node where the user put it.
-   * Default `true`.
-   */
-  pinWhileDragging?: boolean;
-
-  /**
-   * What to do with the node's `pinned` state on drag end:
-   * - `'keep'` (default) — leave it pinned. Subsequent layouts won't move it.
-   * - `'release'` — clear the pin. The next layout pass may shuffle the node.
-   * - `'restore'` — restore the pre-drag pinned value.
-   */
-  pinOnRelease?: 'keep' | 'release' | 'restore';
-
   /** Cursor applied to the canvas while dragging. Default `'grabbing'`. */
   dragCursor?: string;
+
+  /**
+   * When `true`, set `GraphNode.pinned = true` on the dragged node when
+   * the gesture ends (real drag only — a click that didn't move is a
+   * no-op). The store's pinned flag is read by layouts (e.g.
+   * `D3ForceLayout` writes pinned nodes to d3-force's `fx/fy`) so the
+   * node stays where the user dropped it across future layout passes.
+   * Default `false`. To un-pin a pinned node, call
+   * `graph.store.setPinned(id, false)` explicitly.
+   */
+  pinOnRelease?: boolean;
 
   /**
    * When `true` (the default), dragging a node that is itself a compound
@@ -74,8 +79,8 @@ interface DragState {
   /**
    * Pointer's world position at the gesture's anchoring moment. Captured at
    * pointerdown initially and re-captured on the first real pointermove (the
-   * same instant we lazy-apply the pin) so the gesture's delta is measured
-   * from a *fresh* cursor position — see the `nodePosStart` note.
+   * same instant we emit `node:drag-start`) so the gesture's delta is
+   * measured from a *fresh* cursor position — see the `nodePosStart` note.
    */
   pointerWorldStart: { x: number; y: number };
   /**
@@ -87,16 +92,13 @@ interface DragState {
    * teleport away from the cursor.
    */
   nodePosStart: { x: number; y: number };
-  /** Whether the node was already pinned when the drag began. */
-  readonly wasPinned: boolean;
   /**
-   * Whether the pin has actually been applied yet. We defer pinning to the
-   * first real pointermove so a plain click on a node — which goes through
-   * pointerdown + pointerup with no movement — doesn't churn the renderer
-   * (a `node:update` flush mid-pointer-flow would clobber the in-flight
-   * `shape:click` for the same shape, swallowing the click).
+   * Whether the first real movement has been seen yet. We defer emitting
+   * `node:drag-start` until the first real movement so a plain click on a
+   * node — which goes through pointerdown + pointerup with no movement —
+   * doesn't disturb the layout (a layout might reheat on the start signal).
    */
-  pinApplied: boolean;
+  moved: boolean;
 }
 
 export class DragNodeBehaviour extends Behaviour {
@@ -104,10 +106,9 @@ export class DragNodeBehaviour extends Behaviour {
   private ctxRef: CanvasContext | null = null;
 
   private readonly filter?: (id: string) => boolean;
-  private readonly pinWhileDragging: boolean;
-  private readonly pinOnRelease: 'keep' | 'release' | 'restore';
   private readonly dragCursor: string;
   private readonly groupAware: boolean;
+  private readonly pinOnRelease: boolean;
 
   private state: DragState | null = null;
   private offShapeDown: (() => void) | null = null;
@@ -124,10 +125,9 @@ export class DragNodeBehaviour extends Behaviour {
   constructor(opts: DragNodeBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? ['node+drag'] });
     this.filter = opts.filter;
-    this.pinWhileDragging = opts.pinWhileDragging ?? true;
-    this.pinOnRelease = opts.pinOnRelease ?? 'keep';
     this.dragCursor = opts.dragCursor ?? 'grabbing';
     this.groupAware = opts.groupAware ?? true;
+    this.pinOnRelease = opts.pinOnRelease ?? false;
   }
 
   // ─── Lifecycle ──────────────────────────────────────────────────────────
@@ -189,19 +189,12 @@ export class DragNodeBehaviour extends Behaviour {
     nodePos: { x: number; y: number },
   ): void {
     if (!this.layer) return;
-    const wasPinned = this.layer.store.getNode(id)?.pinned === true;
     this.state = {
       id,
       pointerWorldStart: { x: worldX, y: worldY },
       nodePosStart: { x: nodePos.x, y: nodePos.y },
-      wasPinned,
-      pinApplied: false,
+      moved: false,
     };
-
-    // Note: we deliberately *don't* call `setPinned(...)` here. A
-    // pointerdown that doesn't move (a click) shouldn't pin the node — see
-    // the field comment on `pinApplied`. Pin is applied lazily inside
-    // `onWindowPointerMove` on the first real movement.
 
     // Pause the camera-drag plugin so the world doesn't pan while moving the node.
     this.ctxRef?.camera.viewport.plugins.pause('drag');
@@ -220,9 +213,7 @@ export class DragNodeBehaviour extends Behaviour {
       // `pointercancel` on the document, prematurely ending the drag and
       // (because we paused the camera viewport's drag plugin on startDrag
       // and resume it in endDrag) handing the still-held button off to the
-      // camera-pan plugin mid-gesture. That midpath handoff is what makes
-      // the world appear to "jump" and the dragged node appear to leave
-      // edge / node trails behind it. Capturing keeps every subsequent
+      // camera-pan plugin mid-gesture. Capturing keeps every subsequent
       // pointermove routed to the canvas.
       if (this.capturedPointerId !== null) {
         try {
@@ -238,6 +229,7 @@ export class DragNodeBehaviour extends Behaviour {
 
   private endDrag(): void {
     if (!this.state) return;
+    const { id, moved } = this.state;
 
     window.removeEventListener('pointermove', this.onWindowPointerMove);
     window.removeEventListener('pointerup', this.onWindowPointerUp);
@@ -256,25 +248,21 @@ export class DragNodeBehaviour extends Behaviour {
     }
     this.capturedPointerId = null;
 
-    // Only run the pinOnRelease logic if we actually pinned during this
-    // gesture — a click that never moved should leave the pin state alone.
-    if (this.layer && this.state.pinApplied) {
-      switch (this.pinOnRelease) {
-        case 'release':
-          this.layer.store.setPinned(this.state.id, false);
-          break;
-        case 'restore':
-          this.layer.store.setPinned(this.state.id, this.state.wasPinned);
-          break;
-        case 'keep':
-        default:
-          // Leave whatever pinWhileDragging set in place.
-          break;
-      }
-    }
-
     this.ctxRef?.camera.viewport.plugins.resume('drag');
     this.state = null;
+
+    // Only emit `drag-end` when we actually emitted `drag-start` — a plain
+    // click (pointerdown + pointerup, no movement) is a no-op gesture.
+    if (moved && this.layer) {
+      // Order matters: pin first, then emit drag-end. The layout's
+      // `node:drag-end` handler clears its transient `fx/fy` lock *unless*
+      // the node is now permanently pinned (`pinnedIds.has(id)`), so the
+      // store mutation has to land first to be observed.
+      if (this.pinOnRelease) {
+        this.layer.store.setPinned(id, true);
+      }
+      this.layer.events.emit('node:drag-end', { nodeId: id });
+    }
   }
 
   private readonly onWindowPointerMove = (e: PointerEvent): void => {
@@ -283,26 +271,21 @@ export class DragNodeBehaviour extends Behaviour {
     const world = this.ctxRef.camera.toWorld(screenX, screenY);
 
     // First real pointermove: refresh the gesture anchors against the node's
-    // current store position, so a layout that's been moving the node between
-    // pointerdown and now doesn't leave us measuring deltas from a stale
-    // anchor. After this branch, `nextX/nextY` equals the fresh node position
-    // (delta = 0 on the anchoring move).
-    if (!this.state.pinApplied) {
+    // current store position (so an active layout's per-tick movement doesn't
+    // leave us measuring deltas from a stale anchor) and emit `node:drag-start`
+    // so layouts can clamp the node's transient position.
+    if (!this.state.moved) {
       const fresh = this.layer.store.getNode(this.state.id)?.position;
       if (fresh) this.state.nodePosStart = { x: fresh.x, y: fresh.y };
       this.state.pointerWorldStart = { x: world.x, y: world.y };
+      this.state.moved = true;
+      this.layer.events.emit('node:drag-start', { nodeId: this.state.id });
     }
 
     const dx = world.x - this.state.pointerWorldStart.x;
     const dy = world.y - this.state.pointerWorldStart.y;
     const nextX = this.state.nodePosStart.x + dx;
     const nextY = this.state.nodePosStart.y + dy;
-
-    // Lazy-pin on the first real movement (see the `pinApplied` field comment).
-    if (this.pinWhileDragging && !this.state.pinApplied && !this.state.wasPinned) {
-      this.layer.store.setPinned(this.state.id, true);
-    }
-    this.state.pinApplied = true;
 
     // Group-aware drag: when the moved node is itself a compound group,
     // translate every descendant by the same per-tick delta so the

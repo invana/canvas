@@ -1318,5 +1318,16 @@ export interface GraphLayerEvents {
     updatedEdges: number;
   };
   'positions:updated': { count: number };
+  /**
+   * A user-driven node drag began. Behaviours emitting this signal the
+   * intent to hold a node's position against any physics / layout that
+   * would otherwise move it. Layouts (e.g. `D3ForceLayout`) subscribe and
+   * apply a *transient* lock — they MUST NOT mutate the store's
+   * `GraphNode.pinned` flag in response, since that is reserved for
+   * user-data semantics (permanent pin). The matching `node:drag-end`
+   * releases the transient lock.
+   */
+  'node:drag-start': { nodeId: string };
+  'node:drag-end': { nodeId: string };
   [event: string]: unknown;
 }
