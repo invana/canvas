@@ -10,15 +10,16 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
+  D3ForceLayout,
+  DragNodeBehaviour,
   DragPanBehaviour,
   GraphLayer,
-  D3ForceLayout,
   WheelZoomBehaviour,
 } from '@invana/canvas-react';
 import { lesMiserables } from '@invana/graph-datasets';
 import type { GraphNode } from '@invana/graph';
 
-const meta: Meta = { title: 'Canvas-React/GettingStarted' };
+const meta: Meta = { title: 'canvas-react/GettingStarted' };
 export default meta;
 type Story = StoryObj;
 
@@ -46,6 +47,7 @@ export const GettingStarted: Story = {
         }}
         edge={{ style: { strokeColor: 0xcbd5e1, strokeWidth: 0.5 } }}
       />
+      <DragNodeBehaviour layerId="graph" />
       <D3ForceLayout
         targetLayerId="graph"
         options={{ link: {}, charge: {}, center: { x: 0, y: 0 } }}

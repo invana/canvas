@@ -22,6 +22,9 @@ export type { DragPanBehaviourProps } from './behaviours/DragPanBehaviour';
 export { WheelZoomBehaviour } from './behaviours/WheelZoomBehaviour';
 export type { WheelZoomBehaviourProps } from './behaviours/WheelZoomBehaviour';
 
+export { DragNodeBehaviour } from './behaviours/DragNodeBehaviour';
+export type { DragNodeBehaviourProps } from './behaviours/DragNodeBehaviour';
+
 // ─── Layouts ─────────────────────────────────────────────────────────────
 export { D3ForceLayout } from './layouts/D3ForceLayout';
 export type { D3ForceLayoutProps } from './layouts/D3ForceLayout';

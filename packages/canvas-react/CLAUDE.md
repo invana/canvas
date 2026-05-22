@@ -20,6 +20,7 @@ React bindings for `@invana/canvas`. A declarative `<Canvas>` whose JSX children
 - `<Canvas>` — engine root.
 - `<GraphLayer>` — wraps `@invana/graph` `GraphLayer`. Props: `id`, `data`, `nodeOption`, `edgeOption`. `data` is reactive (calls `layer.setData`); the rest are init-only.
 - `<DragPanBehaviour>` / `<WheelZoomBehaviour>` — wraps the engine behaviours of the same name. Props: `id`, `enabled`.
+- `<DragNodeBehaviour>` — wraps `@invana/graph` `DragNodeBehaviour`. Props: `id`, `layerId` (default `'graph'`), plus the engine option set (`filter`, `pinWhileDragging`, `pinOnRelease`, `dragCursor`, `groupAware`).
 - `<D3ForceLayout>` — wraps `@invana/graph-layout-d3-force` `D3ForceLayout`. Props: `targetLayerId`, plus the layout's own option object. Calls `layout.apply(layer)` on mount; on `end` event optionally calls `camera.fitContent(layer.getBounds(), padding)`.
 
 Not yet wrapped: ElkLayout, MiniMapLayer, DensityContourLayer, BubbleSetsLayer, hover/select/lasso/brush behaviours, DragNodeBehaviour. Same pattern — add files when needed.
