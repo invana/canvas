@@ -1,0 +1,56 @@
+{
+  "name": "@invana/canvas-react-ui-components",
+  "version": "0.0.1",
+  "description": "Style editors, panels, and controls for @invana/canvas-react — design-kit-based React UI for graph visualisation tools.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "typedocOptions": {
+    "entryPoints": [
+      "src/index.ts"
+    ]
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@invana/canvas": "workspace:*",
+    "@invana/canvas-react": "workspace:*",
+    "@invana/graph": "workspace:*",
+    "@invana/ui": "*",
+    "@invana/themes": "*",
+    "pixi.js": "^8.18.1",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@invana/canvas": "workspace:*",
+    "@invana/canvas-react": "workspace:*",
+    "@invana/graph": "workspace:*",
+    "@invana/ui": "github:invana/design-kit#releases/ui",
+    "@invana/themes": "github:invana/design-kit#releases/themes",
+    "@invana/styling": "github:invana/design-kit#releases/styling",
+    "@repo/typescript-config": "workspace:*",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "pixi.js": "^8.18.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsup": "^8.3.5",
+    "typescript": "5.9.2"
+  },
+  "keywords": [
+    "canvas",
+    "react",
+    "ui",
+    "components",
+    "graph",
+    "editor",
+    "design-kit"
+  ],
+  "license": "Apache-2.0"
+}

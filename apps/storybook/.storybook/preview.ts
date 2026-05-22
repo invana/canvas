@@ -1,5 +1,11 @@
 import type { Preview } from '@storybook/react-vite';
 
+// @invana/design-kit stylesheets — tokens first, components second.
+// Imported as JS so Vite resolves the bare specifiers via Node resolution
+// (PostCSS's @import doesn't understand package names).
+import '@invana/themes/styles.css';
+import '@invana/ui/styles.css';
+
 import './global.css';
 
 /** Extracts only the play() function body from a story source string. */
