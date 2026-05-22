@@ -3,7 +3,7 @@ import { action } from 'storybook/actions';
 import { Canvas, DragPanBehaviour } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Events/behaviour:disabled' };
+const meta: Meta = { title: 'canvas/concepts/Events/behaviour:disabled' };
 export default meta;
 type Story = StoryObj;
 

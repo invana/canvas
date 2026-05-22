@@ -11,7 +11,7 @@ import type { CanvasContext, RectSpec, ShapeLabelPlacement } from '@invana/canva
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Decorations/Shapes/Label/Containment' };
+const meta: Meta = { title: 'canvas/concepts/Decorations/Shapes/Label/Containment' };
 export default meta;
 type Story = StoryObj;
 

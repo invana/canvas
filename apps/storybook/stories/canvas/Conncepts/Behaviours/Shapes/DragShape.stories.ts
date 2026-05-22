@@ -11,7 +11,7 @@ import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Behaviours/Shapes/DragShapeBehaviour' };
+const meta: Meta = { title: 'canvas/concepts/Behaviours/Shapes/DragShapeBehaviour' };
 export default meta;
 type Story = StoryObj;
 

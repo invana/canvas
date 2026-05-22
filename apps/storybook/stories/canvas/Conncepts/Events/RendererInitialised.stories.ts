@@ -3,7 +3,7 @@ import { action } from 'storybook/actions';
 import { Canvas } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Events/renderer:initialised' };
+const meta: Meta = { title: 'canvas/concepts/Events/renderer:initialised' };
 export default meta;
 type Story = StoryObj;
 

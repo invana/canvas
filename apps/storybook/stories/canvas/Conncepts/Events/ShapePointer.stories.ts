@@ -10,7 +10,7 @@ import {
 import type { CanvasContext } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Events/shape:pointer*' };
+const meta: Meta = { title: 'canvas/concepts/Events/shape:pointer*' };
 export default meta;
 type Story = StoryObj;
 

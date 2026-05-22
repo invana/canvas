@@ -11,7 +11,7 @@ import type { CanvasContext, DevInfoCorner } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Layers/DevInfoLayer' };
+const meta: Meta = { title: 'canvas/concepts/Layers/DevInfoLayer' };
 export default meta;
 type Story = StoryObj;
 

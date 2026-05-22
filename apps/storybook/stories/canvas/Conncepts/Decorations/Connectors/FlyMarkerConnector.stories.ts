@@ -11,7 +11,7 @@ import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Decorations/Connectors/FlyMarkerConnector' };
+const meta: Meta = { title: 'canvas/concepts/Decorations/Connectors/FlyMarkerConnector' };
 export default meta;
 type Story = StoryObj;
 

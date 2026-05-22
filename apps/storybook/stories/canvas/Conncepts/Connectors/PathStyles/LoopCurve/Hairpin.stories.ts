@@ -8,7 +8,7 @@ import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Connectors/PathStyles/LoopCurve/Hairpin' };
+const meta: Meta = { title: 'canvas/concepts/Connectors/PathStyles/LoopCurve/Hairpin' };
 export default meta;
 type Story = StoryObj;
 

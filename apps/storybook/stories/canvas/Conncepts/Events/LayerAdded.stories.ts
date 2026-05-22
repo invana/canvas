@@ -3,7 +3,7 @@ import { action } from 'storybook/actions';
 import { Canvas, LayersPanelLayer, WorldLayer } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Events/layer:added' };
+const meta: Meta = { title: 'canvas/concepts/Events/layer:added' };
 export default meta;
 type Story = StoryObj;
 

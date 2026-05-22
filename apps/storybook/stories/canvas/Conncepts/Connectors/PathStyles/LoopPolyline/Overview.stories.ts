@@ -6,7 +6,7 @@ import {
 import type { CanvasContext } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Connectors/PathStyles/LoopPolyline/Overview' };
+const meta: Meta = { title: 'canvas/concepts/Connectors/PathStyles/LoopPolyline/Overview' };
 export default meta;
 type Story = StoryObj;
 

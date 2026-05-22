@@ -11,7 +11,7 @@ import type { TogglePlacement } from '@invana/canvas/primitives';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Decorations/Shapes/Toggle' };
+const meta: Meta = { title: 'canvas/concepts/Decorations/Shapes/Toggle' };
 export default meta;
 type Story = StoryObj;
 

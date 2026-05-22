@@ -9,7 +9,7 @@ import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Behaviours/Camera/KeyboardCameraInputBehaviour' };
+const meta: Meta = { title: 'canvas/concepts/Behaviours/Camera/KeyboardCameraInputBehaviour' };
 export default meta;
 type Story = StoryObj;
 

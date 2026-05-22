@@ -7,7 +7,7 @@ import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Connectors/Routers/OneSide' };
+const meta: Meta = { title: 'canvas/concepts/Connectors/Routers/OneSide' };
 export default meta;
 type Story = StoryObj;
 

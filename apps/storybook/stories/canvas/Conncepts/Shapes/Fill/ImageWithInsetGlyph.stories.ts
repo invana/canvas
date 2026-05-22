@@ -10,7 +10,7 @@ import type { CanvasContext, InsetAnchor, ShapeFillLayer } from '@invana/canvas'
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Concepts/Shapes/Fill/ImageWithInsetGlyph' };
+const meta: Meta = { title: 'canvas/concepts/Concepts/Shapes/Fill/ImageWithInsetGlyph' };
 export default meta;
 type Story = StoryObj;
 

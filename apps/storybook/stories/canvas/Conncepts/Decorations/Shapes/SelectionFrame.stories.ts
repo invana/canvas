@@ -11,7 +11,7 @@ import type { SelectionFramePlacement } from '@invana/canvas/primitives';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Decorations/Shapes/SelectionFrame' };
+const meta: Meta = { title: 'canvas/concepts/Decorations/Shapes/SelectionFrame' };
 export default meta;
 type Story = StoryObj;
 

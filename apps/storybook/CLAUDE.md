@@ -103,7 +103,7 @@ import type { Meta, StoryObj } from '@storybook/html-vite';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import { createContainer } from '../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Area/SubArea' };
+const meta: Meta = { title: 'canvas/concepts/Area/SubArea' };
 export default meta;
 type Story = StoryObj;
 

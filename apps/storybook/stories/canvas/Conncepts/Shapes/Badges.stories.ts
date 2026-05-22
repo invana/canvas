@@ -10,7 +10,7 @@ import type { BadgePlacement, CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Concepts/Shapes/Badges' };
+const meta: Meta = { title: 'canvas/concepts/Concepts/Shapes/Badges' };
 export default meta;
 type Story = StoryObj;
 

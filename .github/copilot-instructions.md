@@ -23,7 +23,7 @@ import GUI from 'lil-gui';
 import { createContainer } from '@/div-utils';
 
 const meta: Meta = {
-  title: 'canvas/Concepts/<Styling>/<Theming>',
+  title: 'canvas/concepts/<Styling>/<Theming>',
 };
 
 export default meta;

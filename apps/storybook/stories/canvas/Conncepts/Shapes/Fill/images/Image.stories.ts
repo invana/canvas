@@ -10,7 +10,7 @@ import type { CanvasContext, ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Concepts/Shapes/Fill/Images/Image' };
+const meta: Meta = { title: 'canvas/concepts/Concepts/Shapes/Fill/Images/Image' };
 export default meta;
 type Story = StoryObj;
 

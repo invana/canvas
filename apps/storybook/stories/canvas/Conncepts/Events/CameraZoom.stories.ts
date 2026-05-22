@@ -10,7 +10,7 @@ import {
 import type { CanvasContext } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Events/camera:zoom' };
+const meta: Meta = { title: 'canvas/concepts/Events/camera:zoom' };
 export default meta;
 type Story = StoryObj;
 

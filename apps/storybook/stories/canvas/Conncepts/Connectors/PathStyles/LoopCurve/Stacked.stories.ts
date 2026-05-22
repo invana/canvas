@@ -8,7 +8,7 @@ import type { CanvasContext, LoopCurvePresetName } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Connectors/PathStyles/LoopCurve/Stacked' };
+const meta: Meta = { title: 'canvas/concepts/Connectors/PathStyles/LoopCurve/Stacked' };
 export default meta;
 type Story = StoryObj;
 

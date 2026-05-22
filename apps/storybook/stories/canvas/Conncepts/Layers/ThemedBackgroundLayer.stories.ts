@@ -11,7 +11,7 @@ import type { CanvasContext, ThemedBackgroundMode } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Layers/ThemedBackgroundLayer' };
+const meta: Meta = { title: 'canvas/concepts/Layers/ThemedBackgroundLayer' };
 export default meta;
 type Story = StoryObj;
 

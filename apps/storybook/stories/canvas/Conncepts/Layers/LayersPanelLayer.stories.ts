@@ -12,7 +12,7 @@ import type { CanvasContext, LayersPanelCorner } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Layers/LayersPanelLayer' };
+const meta: Meta = { title: 'canvas/concepts/Layers/LayersPanelLayer' };
 export default meta;
 type Story = StoryObj;
 

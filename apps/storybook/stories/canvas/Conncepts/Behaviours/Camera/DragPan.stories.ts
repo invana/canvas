@@ -9,7 +9,7 @@ import type { CanvasContext, DragModifier } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
-const meta: Meta = { title: 'canvas/Concepts/Behaviours/Camera/DragPanBehaviour' };
+const meta: Meta = { title: 'canvas/concepts/Behaviours/Camera/DragPanBehaviour' };
 export default meta;
 type Story = StoryObj;
 
