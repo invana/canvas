@@ -53,6 +53,11 @@ import {
   type NodeOption,
   type NodeShapeOptions,
   type NodeStyle,
+  type ArcShapeOption,
+  type CircleShapeOption,
+  type RectShapeOption,
+  type RegularPolygonShapeOption,
+  type StarShapeOption,
   type ResolvableEdgeStyle,
   type ResolvableNodeStyle,
 } from './types';
@@ -538,6 +543,26 @@ export class GraphLayer extends WorldLayer<
         if (perNodeOverlay) Object.assign(merged, perNodeOverlay);
       }
     }
+
+    // Apply the unified `style.size` override. Done here (not in `nodeSpec`)
+    // so every consumer of the resolved style — `boundsOfNode`, D3's
+    // collide.radius callback (which reads `style.shape.radius` directly off
+    // a `resolveNodeStyle` result), and ELK's bounds query — observes the
+    // same normalized geometry. Skips shape kinds with no canonical size axis
+    // (polygon, custom) and is a no-op when `size` is undefined.
+    if (merged.size !== undefined) {
+      // Synthesize a default circle shape when `size` is set but no `shape`
+      // was contributed by template / per-node / state overlays — keeps the
+      // contract "setting `size` resizes the node" honest in the no-shape
+      // case (which still flows through `nodeSpec`'s default circle).
+      const baseShape: NodeShapeOptions =
+        merged.shape ?? ({ kind: 'circle', radius: 0 } as NodeShapeOptions);
+      const normalized = normalizeShapeSize(baseShape, merged.size);
+      if (normalized !== baseShape || merged.shape === undefined) {
+        (merged as { shape?: NodeShapeOptions }).shape = normalized;
+      }
+    }
+
     return merged;
   }
 
@@ -1682,6 +1707,53 @@ export class GraphLayer extends WorldLayer<
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
+
+/**
+ * Rewrite a {@link NodeShapeOptions} so its intrinsic size fields express
+ * the unified `style.size` value. Returns the *same* reference for shape
+ * kinds with no canonical size axis (`polygon`, custom) — callers can use
+ * `===` to short-circuit a write.
+ *
+ * Per-kind mapping (see {@link NodeStyle.size} TSDoc):
+ *
+ *   circle / regular-polygon   → radius = size
+ *   rect                       → width = height = 2 * size
+ *   arc                        → outerR = size, innerR scaled proportionally
+ *   star                       → outerRadius = size, innerRadius scaled
+ *   polygon / custom           → passthrough (no normalized size axis)
+ */
+function normalizeShapeSize(shape: NodeShapeOptions, size: number): NodeShapeOptions {
+  // CustomShapeOption widens `kind` to `string & {}`, which intersects the
+  // built-in literal kinds in TS's type system — so a plain `switch` on
+  // `shape.kind` doesn't narrow the spread away from the custom branch.
+  // We dispatch via the literal kind explicitly and re-assert the specific
+  // shape type per branch.
+  switch (shape.kind) {
+    case 'circle':
+      return { ...(shape as CircleShapeOption), radius: size };
+    case 'regular-polygon':
+      return { ...(shape as RegularPolygonShapeOption), radius: size };
+    case 'rect': {
+      const side = size * 2;
+      return { ...(shape as RectShapeOption), width: side, height: side };
+    }
+    case 'arc': {
+      const arc = shape as ArcShapeOption;
+      const ratio = arc.outerR > 0 ? arc.innerR / arc.outerR : 0;
+      return { ...arc, outerR: size, innerR: size * ratio };
+    }
+    case 'star': {
+      const star = shape as StarShapeOption;
+      const ratio = star.outerRadius > 0 ? star.innerRadius / star.outerRadius : 0;
+      return { ...star, outerRadius: size, innerRadius: size * ratio };
+    }
+    default:
+      // `polygon` carries its own vertex array; `custom` is opaque. Neither
+      // has a uniform size axis we can rewrite without ambiguity, so we
+      // leave them alone and signal "no-op" via referential equality.
+      return shape;
+  }
+}
 
 /**
  * Build the effective `NodeOption` by merging the caller's option (if any)

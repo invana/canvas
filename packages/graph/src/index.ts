@@ -118,5 +118,8 @@ export {
   type ParallelEdgeDistributeContext,
   type ParallelEdgeGroup,
   type ParallelEdgePatch,
+  DegreeSizeBehaviour,
+  type DegreeSizeBehaviourOptions,
+  type DegreeSizeScale,
 } from './behaviours';
 

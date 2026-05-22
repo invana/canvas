@@ -1,0 +1,162 @@
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import {
+  DegreeSizeBehaviour,
+  DragNodeBehaviour,
+  GraphLayer,
+} from '@invana/graph';
+import { D3ForceLayout } from '@invana/graph-layout-d3-force';
+import GUI from 'lil-gui';
+import { createContainer, onStoryTeardown } from '../../../div-util';
+
+const meta: Meta = { title: 'canvas/graph/Behaviours/DegreeSize' };
+export default meta;
+type Story = StoryObj;
+
+export const DegreeSize: Story = {
+  render: () => createContainer({ id: 'graph-degree-size' }),
+
+  play: async ({ canvasElement }) => {
+    // Hub-and-spoke graph hardcoded so the degree pattern is readable from
+    // the story source. h1 has degree 9 (8 leaves + 1 inter-hub edge), h2
+    // has degree 7, h3 has degree 5; leaves are degree 1.
+    const nodes = [
+      { id: 'h1' },
+      { id: 'h2' },
+      { id: 'h3' },
+      { id: 'l1' }, { id: 'l2' }, { id: 'l3' }, { id: 'l4' },
+      { id: 'l5' }, { id: 'l6' }, { id: 'l7' }, { id: 'l8' },
+      { id: 'l9' }, { id: 'l10' }, { id: 'l11' }, { id: 'l12' }, { id: 'l13' },
+      { id: 'l14' }, { id: 'l15' }, { id: 'l16' }, { id: 'l17' },
+    ];
+    const edges = [
+      // h1 spokes (out from h1 → degree 8 out, 0 in)
+      { id: 'e1',  source: 'h1', target: 'l1' },
+      { id: 'e2',  source: 'h1', target: 'l2' },
+      { id: 'e3',  source: 'h1', target: 'l3' },
+      { id: 'e4',  source: 'h1', target: 'l4' },
+      { id: 'e5',  source: 'h1', target: 'l5' },
+      { id: 'e6',  source: 'h1', target: 'l6' },
+      { id: 'e7',  source: 'h1', target: 'l7' },
+      { id: 'e8',  source: 'h1', target: 'l8' },
+      // h2 spokes (in to h2 → degree 5 in)
+      { id: 'e9',  source: 'l9',  target: 'h2' },
+      { id: 'e10', source: 'l10', target: 'h2' },
+      { id: 'e11', source: 'l11', target: 'h2' },
+      { id: 'e12', source: 'l12', target: 'h2' },
+      { id: 'e13', source: 'l13', target: 'h2' },
+      // h3 spokes (mixed — l14/l15 in, l16/l17 out → degree 4)
+      { id: 'e14', source: 'l14', target: 'h3' },
+      { id: 'e15', source: 'l15', target: 'h3' },
+      { id: 'e16', source: 'h3',  target: 'l16' },
+      { id: 'e17', source: 'h3',  target: 'l17' },
+      // Inter-hub bridges
+      { id: 'e18', source: 'h1', target: 'h2' },
+      { id: 'e19', source: 'h2', target: 'h3' },
+    ];
+
+    const container = canvasElement.querySelector<HTMLDivElement>('#graph-degree-size')!;
+    const canvas = new Canvas();
+    onStoryTeardown(() => canvas.destroy());
+    await canvas.init({ container, autoResize: true });
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
+
+    // Layer template carries the shared circle + paint. Per-node entries
+    // intentionally omit `shape` / `size`: DegreeSizeBehaviour writes
+    // `style.size`, which `resolveNodeStyle` then folds into the layer-level
+    // circle's `radius` before any consumer reads it.
+    const graph = new GraphLayer({
+      id: 'graph',
+      options: {
+        node: {
+          style: {
+            shape: { kind: 'circle', radius: 8 },
+            bgFill: 0x3b82f6,
+            bgStrokeColor: 0xffffff,
+            bgStrokeWidth: 1.5,
+            labelText: (n) => n.id,
+            labelColor: 0x1f2937,
+            labelFontSize: 11,
+            labelPlacement: 'bottom',
+            labelOffsetY: 4,
+          },
+        },
+        edge: {
+          style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' },
+        },
+      },
+    });
+    canvas.layers.add(graph);
+    graph.setData({ nodes, edges });
+
+    canvas.behaviours.register(
+      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
+    );
+
+    const degreeSize = new DegreeSizeBehaviour({
+      id: 'degree-size',
+      layerId: 'graph',
+      enabled: true,
+      direction: 'both',
+      minSize: 6,
+      maxSize: 36,
+      scale: 'sqrt',
+    });
+    canvas.behaviours.register(degreeSize);
+
+    // D3 force layout — `collide.radius` callback reads the resolved
+    // `style.shape.radius` per node, which `resolveNodeStyle` rewrites from
+    // `style.size`. So when the behaviour bumps a hub's size, D3 collide
+    // automatically gives that hub more room.
+    const layout = new D3ForceLayout({
+      charge: { strength: -240 },
+      link: { distance: 70 },
+      collide: {
+        radius: (node) => {
+          // `resolveNodeStyle` folds `style.size` into the circle's
+          // `radius`, so reading it here picks up the behaviour's writes.
+          const style = graph.resolveNodeStyle(node);
+          const shape = style.shape as { kind: string; radius?: number } | undefined;
+          if (shape?.kind === 'circle' && typeof shape.radius === 'number') {
+            return shape.radius + 4;
+          }
+          return 14;
+        },
+      },
+      center: { x: 0, y: 0 },
+    });
+    void layout.apply(graph);
+
+    const settings = {
+      enabled: true,
+      direction: 'both' as 'in' | 'out' | 'both',
+      minSize: 6,
+      maxSize: 36,
+      scale: 'sqrt' as 'linear' | 'sqrt' | 'log',
+      reRunLayout: () => void layout.apply(graph),
+    };
+    const apply = (): void => {
+      if (settings.enabled) degreeSize.enable();
+      else degreeSize.disable();
+      degreeSize.setOptions({
+        direction: settings.direction,
+        minSize: settings.minSize,
+        maxSize: settings.maxSize,
+        scale: settings.scale,
+      });
+      // Sizes changed → re-run the layout so collision radii catch up.
+      void layout.apply(graph);
+    };
+
+    const gui = new GUI({ title: 'Degree Size' });
+    onStoryTeardown(() => gui.destroy());
+    gui.add(settings, 'enabled').onChange(apply);
+    gui.add(settings, 'direction', ['in', 'out', 'both']).onChange(apply);
+    gui.add(settings, 'minSize', 2, 30, 1).onChange(apply);
+    gui.add(settings, 'maxSize', 8, 80, 1).onChange(apply);
+    gui.add(settings, 'scale', ['linear', 'sqrt', 'log']).onChange(apply);
+    gui.add(settings, 'reRunLayout').name('re-run layout');
+  },
+};

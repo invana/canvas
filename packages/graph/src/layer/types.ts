@@ -839,6 +839,29 @@ export interface NodeStyle {
   readonly shape?: NodeShapeOptions;
 
   /**
+   * Unified normalized size. When set, overrides the resolved `shape`'s
+   * intrinsic size fields at style-resolution time (before the spec reaches
+   * the renderer, `boundsOfNode`, or any layout's bounds query). Per-kind
+   * mapping:
+   *
+   * - `circle` / `regular-polygon` — `shape.radius = size`
+   * - `rect` — `shape.width = shape.height = 2 * size`
+   * - `arc` — `shape.outerR = size` (and `shape.innerR` scaled so its ratio
+   *   to `outerR` is preserved)
+   * - `star` — `shape.outerRadius = size` (and `shape.innerRadius` scaled to
+   *   preserve its ratio)
+   * - `polygon` / custom — no canonical size axis; `size` is ignored
+   *
+   * Honoured uniformly by `boundsOfNode`, `D3ForceLayout` (collide.radius
+   * receives the `GraphNode` and reads the normalized `shape.radius` via
+   * `resolveNodeStyle`), and `ElkLayout` (reads bounds via `boundsOfNode`).
+   * Use this when a single number should drive a node's footprint regardless
+   * of which shape kind it renders as — e.g. degree-based sizing,
+   * data-driven scaling.
+   */
+  readonly size?: number;
+
+  /**
    * Marks this node as a compound group (visual frame drawn behind its
    * descendants). See {@link GroupOptions} for the full contract — autoFit
    * vs userResizable, expanded vs collapsed semantics, header band, edge

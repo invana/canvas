@@ -81,3 +81,9 @@ export type {
   ParallelEdgeGroup,
   ParallelEdgePatch,
 } from './ParallelEdgeBehaviour';
+
+export { DegreeSizeBehaviour } from './DegreeSizeBehaviour';
+export type {
+  DegreeSizeBehaviourOptions,
+  DegreeSizeScale,
+} from './DegreeSizeBehaviour';
