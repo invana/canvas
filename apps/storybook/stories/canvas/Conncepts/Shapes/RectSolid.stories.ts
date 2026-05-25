@@ -3,7 +3,7 @@ import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, PrimitivesRen
 import type { CanvasContext } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/concepts/Concepts/Shapes/RectSolid' };
+const meta: Meta = { title: 'canvas/concepts/Shapes/RectSolid' };
 export default meta;
 type Story = StoryObj;
 

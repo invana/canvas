@@ -10,7 +10,7 @@ import type { CanvasContext, ShapeStroke } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/concepts/Concepts/Shapes/Stroke' };
+const meta: Meta = { title: 'canvas/concepts/Shapes/Stroke' };
 export default meta;
 type Story = StoryObj;
 

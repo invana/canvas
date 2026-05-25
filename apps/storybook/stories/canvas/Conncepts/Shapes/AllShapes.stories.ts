@@ -4,7 +4,7 @@ import type { BadgePlacement, CanvasContext, ShapeFill, ShapeFillLayer, ShapeStr
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/concepts/Concepts/Shapes/AllShapes' };
+const meta: Meta = { title: 'canvas/concepts/Shapes/AllShapes' };
 export default meta;
 type Story = StoryObj;
 
