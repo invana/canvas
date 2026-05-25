@@ -1,4 +1,4 @@
-# CLAUDE.md — packages/canvas-react-ui-components (`@invana/canvas-react-ui-components`)
+# CLAUDE.md — packages/canvas-ui (`@invana/canvas-ui`)
 
 React UI components — style editors, panels, controls — for tools that use `@invana/canvas-react`. Forms are **generated from declarative schemas** with the `@invana/forms` design-kit form-generator; chrome comes from `@invana/forms` / `@invana/ui` so the visual language is consistent across all Invana tools.
 
@@ -81,4 +81,4 @@ Later (each = fields + mapping + engine + editor, same pattern): `EdgeStyleEdito
 
 ## No tests
 
-Per `feedback_no_tests_canvas` — verify via Storybook. New editors must ship with a `.stories.tsx` under `apps/storybook/stories/canvas-react-ui-components/`.
+Per `feedback_no_tests_canvas` — verify via Storybook. New editors must ship with a `.stories.tsx` under `apps/storybook/stories/canvas-ui/`.

@@ -1,5 +1,5 @@
 /**
- * `<NodeStyleEditor>` from `@invana/canvas-react-ui-components` — a
+ * `<NodeStyleEditor>` from `@invana/canvas-ui` — a
  * self-contained style form whose fields are generated from `@invana/forms`
  * `FieldConfig` schemas (the design-kit form-generator).
  *
@@ -23,9 +23,9 @@ import {
   numberToHex,
   styleToForm,
   type NodeStyleFields,
-} from '@invana/canvas-react-ui-components';
+} from '@invana/canvas-ui';
 
-const meta: Meta = { title: 'canvas-react-ui-components/NodeStyleEditor' };
+const meta: Meta = { title: 'canvas-ui/NodeStyleEditor' };
 export default meta;
 type Story = StoryObj;
 

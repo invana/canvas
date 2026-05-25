@@ -1,6 +1,6 @@
-// @invana/canvas-react-ui-components — public API surface
+// @invana/canvas-ui — public API surface
 //
-// Reusable React UI components for tools built on @invana/canvas-react.
+// Reusable, engine-agnostic React UI components for Invana graph tools.
 // Forms are generated from declarative `@invana/forms` field schemas (the
 // design-kit form-generator) rather than hand-authored — see CLAUDE.md. All
 // form chrome comes from `@invana/forms` / `@invana/ui` so every Invana tool

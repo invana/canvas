@@ -38,9 +38,9 @@ importers:
       '@invana/canvas-react':
         specifier: workspace:*
         version: link:../../packages/canvas-react
-      '@invana/canvas-react-ui-components':
+      '@invana/canvas-ui':
         specifier: workspace:*
-        version: link:../../packages/canvas-react-ui-components
+        version: link:../../packages/canvas-ui
       '@invana/graph':
         specifier: workspace:*
         version: link:../../packages/graph
@@ -200,7 +200,7 @@ importers:
         specifier: 5.9.2
         version: 5.9.2
 
-  packages/canvas-react-ui-components:
+  packages/canvas-ui:
     devDependencies:
       '@invana/canvas':
         specifier: workspace:*

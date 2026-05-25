@@ -13,7 +13,7 @@
   "dependencies": {
     "@invana/canvas": "workspace:*",
     "@invana/canvas-react": "workspace:*",
-    "@invana/canvas-react-ui-components": "workspace:*",
+    "@invana/canvas-ui": "workspace:*",
     "@invana/graph": "workspace:*",
     "@invana/styling": "github:invana/design-kit#releases/styling",
     "@invana/themes": "github:invana/design-kit#releases/themes",
