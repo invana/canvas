@@ -34,6 +34,8 @@ export { PolygonShape } from './shapes/PolygonShape';
 export { RegularPolygonShape } from './shapes/RegularPolygonShape';
 export { StarShape } from './shapes/StarShape';
 export { ArcShape } from './shapes/ArcShape';
+export { CompositeShape } from './shapes/CompositeShape';
+export type { CompositeSpec, CompositePart } from './shapes/CompositeShape';
 export { Connector } from './connectors/Connector';
 export { ArrowMarker, arrowMarkerSpec } from './markers/ArrowMarker';
 export type { ArrowMarkerSpec } from './markers/ArrowMarker';
