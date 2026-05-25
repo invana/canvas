@@ -1,7 +1,7 @@
 /**
- * Color conversion helpers. NodeStyle stores colors as 24-bit RGB numbers
- * (`0xRRGGBB`); HTML `<input type="color">` and most web tooling use
- * `#rrggbb` strings. These helpers bridge the two formats.
+ * Colour conversion helpers. `NodeStyle` (and the rest of the engine) stores
+ * colours as 24-bit RGB numbers (`0xRRGGBB`); HTML `<input type="color">` and
+ * the design-kit colour swatch use `#rrggbb` strings. These bridge the two.
  */
 
 export function numberToHex(n: number | undefined): string {

@@ -1,44 +1,38 @@
 // @invana/canvas-react-ui-components — public API surface
 //
 // Reusable React UI components for tools built on @invana/canvas-react.
-// Every primitive is sourced from the @invana/ui design-kit so all Invana
-// tools share one visual language. Only conversion-glue wrappers live in
-// this package (ColorField, NumberField, SliderField, DashArrayField);
-// straight-passthrough controls (Select / Switch / Input) are used from
-// `@invana/ui` directly inside section components — see CLAUDE.md.
+// Forms are generated from declarative `@invana/forms` field schemas (the
+// design-kit form-generator) rather than hand-authored — see CLAUDE.md. All
+// form chrome comes from `@invana/forms` / `@invana/ui` so every Invana tool
+// shares one visual language.
 
 // ─── Node style editor ───────────────────────────────────────────────────
 export {
   NodeStyleEditor,
-  NodeStyleForm,
-  NODE_STYLE_SECTIONS,
-  seedFormFromLayer,
-  commitFormToLayer,
-  dirtyKeys,
+  // field configs + mapping — supply/override the schema, seed (`styleToForm`),
+  // and read edits back (`formToStyle`)
+  nodeStyleFields,
+  geometryFields,
+  BACKGROUND_FIELDS,
+  STROKE_FIELDS,
+  LABEL_FIELDS,
+  styleToForm,
+  formToStyle,
+  defaultShapeFor,
 } from './editors/node-style';
 export type {
   NodeStyleEditorProps,
-  NodeStyleFormProps,
-  NodeStyleFormValue,
-  NodeStyleSectionId,
+  NodeStyleFields,
+  NodeStyleFormState,
+  ShapeKind,
+  StrokeAlignment,
+  StrokeCap,
+  StrokeJoin,
+  LabelPlacement,
 } from './editors/node-style';
 
-// ─── Conversion-glue field primitives ────────────────────────────────────
-// Exported so consumers can compose custom editors with the same
-// number ↔ string / hex ↔ int / [n] ↔ n conversion behaviour the built-in
-// editor uses. Anything that's a thin pass-through (Select, Switch,
-// plain text Input) should be imported from `@invana/ui` directly.
-export {
-  ColorField,
-  NumberField,
-  SliderField,
-  DashArrayField,
-  numberToHex,
-  hexToNumber,
-} from './primitives';
-export type {
-  ColorFieldProps,
-  NumberFieldProps,
-  SliderFieldProps,
-  DashArrayFieldProps,
-} from './primitives';
+// ─── Shared presets + utils ──────────────────────────────────────────────
+// Colour swatch palette shared across editors, and the `0xRRGGBB` ↔ `#rrggbb`
+// helpers that bridge engine colours and the design-kit colour swatch.
+export { COLOR_PRESETS } from './presets/colors';
+export { numberToHex, hexToNumber } from './utils/color';

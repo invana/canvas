@@ -1,46 +1,83 @@
 # CLAUDE.md — packages/canvas-react-ui-components (`@invana/canvas-react-ui-components`)
 
-React UI components — style editors, panels, controls — for tools that use `@invana/canvas-react`. Every primitive comes from the `@invana/ui` design-kit so the visual language is consistent across all Invana tools.
+React UI components — style editors, panels, controls — for tools that use `@invana/canvas-react`. Forms are **generated from declarative schemas** with the `@invana/forms` design-kit form-generator; chrome comes from `@invana/forms` / `@invana/ui` so the visual language is consistent across all Invana tools.
 
-## Pattern
+**Components are headless & engine-agnostic.** They edit a **style object** against a consumer-owned react-hook-form instance and know nothing about where that style comes from or goes — no `Canvas`, no engine, no commit. The consumer seeds the form and reads edits back, then applies the result however it likes (live, behind an Apply button, an undo stack, a preview). Keep it that way: no `@invana/canvas` / `@invana/canvas-react` / `pixi.js` imports — the only `@invana/graph` use is the `NodeStyle` *type*.
 
-Each editor ships in **two flavours**:
+## Package layout
 
-1. **Headless controlled form** — `<XStyleForm value onChange />`. Pure React, no engine awareness. Use this when:
-   - the host is outside any `<Canvas>` tree (centralised inspector targeting multiple canvases),
-   - the host wants custom commit logic (e.g. write to an undo stack),
-   - you're previewing styles without a live engine (screenshot tooling, docs).
+```
+src/
+├─ utils/color.ts        numberToHex / hexToNumber (engine 0xRRGGBB ↔ #rrggbb)
+├─ presets/colors.ts     COLOR_PRESETS — shared swatch palette
+├─ editors/<surface>/    one folder per editable surface (node-style, …)
+│  ├─ <Surface>Editor.tsx
+│  ├─ fields.ts          @invana/forms FieldConfig[] (one array per tab)
+│  ├─ mapping.ts         Partial<NodeStyle> ⇄ flat form fields (styleToForm / formToStyle)
+│  ├─ types.ts
+│  └─ index.ts
+└─ index.ts
+```
 
-2. **Opinionated wrapper** — `<XStyleEditor layerId? canvasRef? nodeId? />`. Wraps the form, owns Apply/Reset/Dirty state, and commits via `layer.options.<x>.style` field-level resolvers + `layer.rerenderAll()`. Resolves its target in this order:
-   - `props.canvasRef?.current` — explicit ref wins,
-   - `useCanvas()` from the surrounding `<Canvas>` context — falls back to whichever canvas owns the editor's React tree,
-   - throws otherwise.
+Shared things (colour utils, presets) live at package level; everything specific to one surface lives in its `editors/<surface>/` folder.
 
-   This is the **multi-canvas-safe** path. Multiple `<Canvas>` instances on the same page each get their own `CanvasContext`, so an editor *inside* a Canvas tree always addresses that Canvas; an editor *outside* every tree must pass `canvasRef` explicitly.
+## Form-generator: fields + mapping, not hand-authored JSX
 
-## Apply model — pending + apply
+Each editable surface is described by data, not bespoke fields:
 
-Edits do **not** stream into the engine. The form buffers them in local state. `Apply` commits; `Reset` restores the last-applied snapshot.
+- **`fields.ts`** — `@invana/forms` `FieldConfig[]` (one array per tab / section). A `FieldConfig` is `{ name, type: 'text'|'number'|'boolean'|'color'|'select'|'icon', label?, options?, min?, max?, step?, presetColors?, … }`. `<FormField.ObjectField control={control} name="style" fields={…} />` renders the whole sub-form. Field `name`s match the form-fields type 1:1, and `<ObjectField name="style">` registers each leaf at the RHF path `style.<name>`.
+- **`mapping.ts`** — the load-bearing bridge (`styleToForm` / `formToStyle`) between the engine's encoding and the flat scalar fields the generator renders. It is **not optional polish**:
+  - colour `number (0xRRGGBB)` ⇄ hex string (the swatch emits `#rrggbb`) — via `utils/color`,
+  - dash tuple `[dash, gap]` ⇄ two number fields,
+  - the shape **discriminated union** ⇄ a `shapeKind` select + per-kind geometry numbers,
+  - `typeof === 'number'` guards so non-colour fills (image / glyph / stacked layers) round-trip as `undefined` and are left untouched.
+- Discriminated unions render via a **watched discriminator → dynamic `fields` array** (see `geometryFields(shapeKind)` driven by `useWatch('style.shapeKind')`). `FieldType` has no array/point type, so `polygon.vertices` and custom shapes stay out of the generated fields (escape hatch / future work).
 
-The commit walks every node in `layer.store.nodes()` and calls `store.updateNode(id, { style: { ...resolveNodeStyle(node), ...formPatch } })`. The spread-before-patch is mandatory: per `feedback_updatenode_replaces_style`, `updateNode`'s `style` patch replaces the prior style wholesale; without spreading the resolved style first, every field the form didn't touch would be wiped.
+Adding a control = one `FieldConfig` in `fields.ts` + one key in the `NodeStyleFields` type + one line each way in `mapping.ts`. No new JSX.
 
-**Known v1 limitation.** `GraphLayer.nodeOption` is **private** with no public setter, and there is **no `rerenderAll()`** method. So we can't edit the layer-level template — only per-node concrete styles. Implication: after Apply, the patched fields no longer flow through layer-level resolvers (e.g. `bgFill: (n) => groupColors[...]`). Resolver-driven styling is overridden by the baked literals. Nodes inserted later still pick up the original template until they are patched. A public `GraphLayer.setNodeOption()` would unlock template-level editing — flagged as a follow-up.
+## The component API — `defaults` + `fields` + `onSubmit`
+
+Each surface ships **one** `<XStyleEditor>` that is a self-contained form:
+
+```tsx
+<NodeStyleEditor
+  defaults={styleToForm(someStyle)}                 // initial values (loaded once)
+  onSubmit={(values) => apply(formToStyle(values))} // your logic — runs on Apply
+  // fields={…}                                      // optional; overrides the schema
+/>
+```
+
+- It **owns** the `useForm` internally, loads `defaults` on mount, renders the schema with `<FormField.ObjectField>` inside `<FormProvider>` (required — `@invana/forms`' leaf fields read `useFormContext()`), tracks edits, and on **Apply** calls `onSubmit(getValues())`.
+- `fields` defaults to the built-in grouped NodeStyle schema (`nodeStyleFields`, which renders Geometry/Background/Stroke/Label as accordion sections). It accepts a `FieldConfig[]` **or** a `(values) => FieldConfig[]` function — the function form is how the geometry inputs vary with the watched `shapeKind`.
+- It holds **no engine reference** and does **no commit** — it just produces values in the shape the `fields` define.
+
+## The consumer owns seed + submit logic
+
+The package gives two pure mappers over `Partial<NodeStyle>`; everything else is the consumer's:
+
+- **Seed**: `styleToForm(someStyle)` → `NodeStyleFields` → pass as `defaults`. (To reload, remount via `key`.)
+- **Submit**: inside `onSubmit(values)`, `formToStyle(values)` → a pruned `Partial<NodeStyle>` (only the fields the form set, safe to spread).
+
+What `onSubmit` does with that style is out of scope here — preview it, store it, push to an undo stack, or apply to a graph. *If* applying to an `@invana/graph` store, spread before patching (per `feedback_updatenode_replaces_style`, `updateNode` replaces `style` wholesale):
+```ts
+store.updateNode(id, { style: { ...resolveNodeStyle(node), ...formToStyle(values) } });
+```
+The Storybook story is the reference — a standalone editor whose `onSubmit` feeds a live preview, no engine.
 
 ## Rules
 
-- **All form chrome comes from `@invana/ui`.** No raw `<input>`, `<select>`, or `<button>` in editor code — wrap design-kit primitives. The one exception is `<ColorField>`, which is a placeholder shim around `<input type="color">` until a real ColorPicker lands in design-kit.
-- **No `pixi.js` imports.** Engine access goes through `@invana/canvas` / `@invana/canvas-react` / `@invana/graph` public types.
-- **No module-level state.** Components must be safe with N concurrent `<Canvas>` instances on one page.
-- **Theme provider is the host's job.** Editors assume `@invana/themes`'s provider is set up at the app root. Storybook stories wire it via a decorator.
-- **Forms are controlled.** Never read engine state mid-form. The wrapper reads it *once* on mount to seed initial values and *once* on Reset.
-- **Apply uses `store.updateNode` per node** — see "Apply model" above. The engine currently has no public layer-template setter, so per-node patching is the only path; switch to template editing if `GraphLayer.setNodeOption()` ever lands.
+- **All form fields come from `@invana/forms`** (`FormField.ObjectField`, `Field.*`); the `Button` comes from `@invana/ui`. No raw `<input>`, `<select>`, or `<button>` in component code.
+- **The component owns its form but nothing else.** It creates the `useForm` from `defaults`, but holds **no engine/layer/commit logic** — output is via the `onSubmit` callback only.
+- **No engine imports.** No `@invana/canvas`, `@invana/canvas-react`, or `pixi.js`. The only `@invana/graph` use is the `NodeStyle` **type** (in `types.ts` / `mapping.ts`).
+- **No module-level state.** Components must be safe with N concurrent instances on one page.
+- **Theme provider is the host's job.** Theming is global CSS tokens — `@invana/themes/styles.css` then `@invana/ui/styles.css` (order matters), wired at the app root. There is **no React `<ThemeProvider>`**; don't introduce one. Storybook wires the stylesheets in `.storybook/preview.ts`.
 
-## Scope (v0)
+## Scope (v1)
 
-- `<NodeStyleForm>` / `<NodeStyleEditor>` — Geometry, Background, Stroke, Label tabs covering the 80% NodeStyle field set. Icon/image/badges/decorations/effects deferred.
-- Primitives: `<ColorField>`, `<NumberField>`, `<SliderField>`, `<SelectField>`, `<SwitchField>`, `<TextField>`, `<DashArrayField>`.
+- `<NodeStyleEditor>` — Geometry (shape-kind select + dynamic per-kind geometry + unified `size`), Background, Stroke, Label sections (accordion) covering the 80% `NodeStyle` field set. Icon / image / badges / decorations / effects deferred.
+- `fields.ts` (`nodeStyleFields`, `geometryFields`, `BACKGROUND_FIELDS`, `STROKE_FIELDS`, `LABEL_FIELDS`) + `mapping.ts` (`styleToForm`, `formToStyle`, `defaultShapeFor`) + shared `presets/colors.ts` (`COLOR_PRESETS`) and `utils/color.ts` are exported for custom hosts.
 
-Later: EdgeStyleEditor, behaviour-config editors, layout-config editors, layer-config editors, plus non-editor components (Inspector, CameraControls, LayerStack, Legend, StatusBar, SearchBox, ContextMenu, ToastHost, AppShell).
+Later (each = fields + mapping + engine + editor, same pattern): `EdgeStyleEditor` (mirror of node — `store.updateEdge` + `resolveEdgeStyle`), canvas/background editor (target `BackgroundLayer.setOptions`), layout-config editors (recreate-and-rerun until `Layout.setOptions` lands), behaviour-config editors (`setOptions` where it exists, else re-register), plus non-editor components (Inspector, CameraControls, LayerStack, Legend, StatusBar, SearchBox, ContextMenu, ToastHost, AppShell). Toolbars are **not** forms — they'll be a separate `@invana/ui`-actions track.
 
 ## No tests
 

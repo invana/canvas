@@ -1,10 +1,23 @@
-export { NodeStyleForm } from './NodeStyleForm';
-export type { NodeStyleFormProps } from './NodeStyleForm';
-
 export { NodeStyleEditor } from './NodeStyleEditor';
 export type { NodeStyleEditorProps } from './NodeStyleEditor';
 
-export type { NodeStyleFormValue, NodeStyleSectionId } from './types';
-export { NODE_STYLE_SECTIONS } from './types';
+export type {
+  NodeStyleFields,
+  NodeStyleFormState,
+  ShapeKind,
+  StrokeAlignment,
+  StrokeCap,
+  StrokeJoin,
+  LabelPlacement,
+} from './types';
 
-export { seedFormFromLayer, commitFormToLayer, dirtyKeys } from './apply';
+// Field configs + mapping — exported so the consumer can supply/override the
+// schema, seed the form (`styleToForm`), and read edits back (`formToStyle`).
+export {
+  nodeStyleFields,
+  geometryFields,
+  BACKGROUND_FIELDS,
+  STROKE_FIELDS,
+  LABEL_FIELDS,
+} from './fields';
+export { styleToForm, formToStyle, defaultShapeFor } from './mapping';

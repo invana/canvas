@@ -12,11 +12,11 @@ export default defineConfig({
   external: [
     'react',
     'react-dom',
-    'pixi.js',
-    '@invana/canvas',
-    '@invana/canvas-react',
+    'react-hook-form',
     '@invana/graph',
     '@invana/ui',
     '@invana/themes',
+    '@invana/styling',
+    '@invana/forms',
   ],
 });

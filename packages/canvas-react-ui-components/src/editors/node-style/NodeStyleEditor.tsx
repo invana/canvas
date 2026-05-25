@@ -1,146 +1,81 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
-import { CanvasContext } from '@invana/canvas-react';
-import type { GraphLayer } from '@invana/graph';
+import { FormField, type FieldConfig } from '@invana/forms';
 import { Button } from '@invana/ui';
+import {
+  FormProvider,
+  useForm,
+  useWatch,
+  type Control,
+  type FieldValues,
+} from 'react-hook-form';
 
-import { NodeStyleForm } from './NodeStyleForm';
-import { commitFormToLayer, dirtyKeys, seedFormFromLayer } from './apply';
-import type { NodeStyleFormValue, NodeStyleSectionId } from './types';
+import { nodeStyleFields } from './fields';
+import type { NodeStyleFields, NodeStyleFormState } from './types';
 
 export interface NodeStyleEditorProps {
   /**
-   * Target graph layer id. Default `'graph'` (matches the default in
-   * `@invana/canvas-react`'s `<GraphLayer>`).
+   * Initial field values, loaded into the form once on mount. Same shape the
+   * form produces (see {@link NodeStyleFields}); seed it from an engine style
+   * with the exported `styleToForm`. Remount (via `key`) to reload.
    */
-  layerId?: string;
+  defaults?: NodeStyleFields;
   /**
-   * Explicit canvas instance. Use this when the editor lives **outside**
-   * any `<Canvas>` tree — e.g. a centralised inspector that addresses one
-   * of several canvases on the page.
-   *
-   * Pass the engine instance directly (typically held in `useState` so the
-   * component re-renders once `<Canvas>` finishes initialising). Passing
-   * `null` while still booting renders a "waiting" placeholder rather
-   * than throwing.
-   *
-   * When omitted, the editor reads the surrounding `CanvasContext`. If
-   * both are supplied, this prop wins.
-   *
-   * Example:
-   * ```tsx
-   * const [canvasA, setCanvasA] = useState<EngineCanvas | null>(null);
-   * <Canvas ref={setCanvasA} autoResize>…</Canvas>
-   * <NodeStyleEditor canvas={canvasA} layerId="graph" />
-   * ```
+   * The form schema. Either a static `FieldConfig[]` or a function of the
+   * current values — the function form lets fields react to other fields (the
+   * built-in default varies the geometry inputs with `shapeKind`). Defaults to
+   * the built-in grouped NodeStyle field set ({@link nodeStyleFields}).
    */
-  canvas?: EngineCanvas | null;
-  /** Initial open tab. */
-  defaultSection?: NodeStyleSectionId;
-  /** Optional header rendered above the tabs. */
-  title?: string;
+  fields?: FieldConfig[] | ((values: NodeStyleFields) => FieldConfig[]);
+  /**
+   * Called with the current values when the user submits. This is where the
+   * consumer puts its logic — map back to a style with `formToStyle` and apply
+   * it wherever (a node, many nodes, an undo stack, …). The component itself
+   * does none of that.
+   */
+  onSubmit: (values: NodeStyleFields) => void;
+  /** Submit button label. Default `'Apply'`. */
+  submitLabel?: string;
 }
 
 /**
- * Opinionated, self-wiring NodeStyle editor.
+ * Self-contained, engine-agnostic style form.
  *
- * - Resolves its target canvas in the order `props.canvas → CanvasContext → waiting placeholder`.
- *   Never throws — a not-yet-initialised canvas just renders a small "Waiting for canvas…"
- *   stub until the prop / context becomes non-null.
- * - Seeds form state from one representative node's resolved style on mount and on canvas swaps.
- * - Apply commits via {@link commitFormToLayer} (per-node `store.updateNode` with the resolved
- *   style spread in).
- * - Reset restores the last-applied snapshot.
+ * Takes `defaults` + `fields`, owns a react-hook-form instance, renders the
+ * schema with `@invana/forms` (each field `group` becomes an accordion
+ * section), and on submit hands the current values to `onSubmit`. It knows
+ * nothing about `Canvas`, layers, or how a style is stored — it just loads the
+ * defaults and tracks the user's edits in the shape the `fields` define.
  *
- * For full headless control (no engine awareness, custom commit) use
- * {@link NodeStyleForm} directly.
+ * The NodeStyle ⇄ form-fields mapping (`styleToForm` / `formToStyle`) is the
+ * consumer's plug-in, used in `defaults` and inside `onSubmit`.
  */
 export function NodeStyleEditor({
-  layerId = 'graph',
-  canvas: canvasProp,
-  defaultSection,
-  title,
+  defaults = {},
+  fields = nodeStyleFields,
+  onSubmit,
+  submitLabel = 'Apply',
 }: NodeStyleEditorProps) {
-  const ctxCanvas = useContext(CanvasContext);
-  const canvas = canvasProp ?? ctxCanvas;
+  const form = useForm<NodeStyleFormState>({ defaultValues: { style: defaults } });
+  const { control, getValues } = form;
 
-  const layer = canvas
-    ? (canvas.layers.get(layerId) as GraphLayer | undefined)
-    : undefined;
+  // Recompute fields from the live values when `fields` is a function (drives
+  // the geometry tab's per-kind numerics off the watched `shapeKind`).
+  const values = useWatch({ control, name: 'style' }) as NodeStyleFields | undefined;
+  const resolvedFields = typeof fields === 'function' ? fields(values ?? {}) : fields;
 
-  const initial = useMemo<NodeStyleFormValue>(
-    () => (layer ? seedFormFromLayer(layer) : {}),
-    [layer],
-  );
-
-  const [snapshot, setSnapshot] = useState<NodeStyleFormValue>(initial);
-  const [value, setValue] = useState<NodeStyleFormValue>(initial);
-
-  // Re-seed when the resolved layer changes (canvas booted, swapped between
-  // canvases on the same page, or layer id changed).
-  useEffect(() => {
-    setSnapshot(initial);
-    setValue(initial);
-  }, [initial]);
-
-  const dirty = useMemo(() => dirtyKeys(value, snapshot), [value, snapshot]);
-  const isDirty = dirty.length > 0;
-
-  const handleApply = useCallback(() => {
-    if (!layer) return;
-    commitFormToLayer(layer, value);
-    setSnapshot(value);
-  }, [layer, value]);
-
-  const handleReset = useCallback(() => {
-    setValue(snapshot);
-  }, [snapshot]);
-
-  if (!canvas) {
-    return (
-      <div style={{ padding: 16, fontSize: 13, opacity: 0.7 }}>
-        Waiting for canvas…
-      </div>
-    );
-  }
-
-  if (!layer) {
-    return (
-      <div style={{ padding: 16, fontSize: 13, opacity: 0.7 }}>
-        No graph layer with id <code>{layerId}</code> on the target canvas.
-      </div>
-    );
-  }
+  // RHF 7.76's `Control<NodeStyleFormState>` isn't assignable to `ObjectField`'s
+  // `Control<any>` (the field-name union is contravariant). Widen at the boundary.
+  const c = control as unknown as Control<FieldValues>;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16 }}>
-      {title ? (
-        <div style={{ fontWeight: 600, fontSize: 14 }}>{title}</div>
-      ) : null}
-
-      <NodeStyleForm value={value} onChange={setValue} defaultSection={defaultSection} />
-
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingTop: 8,
-          borderTop: '1px solid var(--border, #e4e4e7)',
-        }}
-      >
-        <span style={{ fontSize: 12, opacity: 0.7 }}>
-          {isDirty ? `${dirty.length} field${dirty.length === 1 ? '' : 's'} pending` : 'No changes'}
-        </span>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Button variant="outline" onClick={handleReset} disabled={!isDirty}>
-            Reset
-          </Button>
-          <Button onClick={handleApply} disabled={!isDirty}>
-            Apply
-          </Button>
+    // `@invana/forms` leaf fields read `useFormContext()`, so the whole form
+    // must be on context — not just control.
+    <FormProvider {...form}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16 }}>
+        <FormField.ObjectField control={c} name="style" fields={resolvedFields} />
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button onClick={() => onSubmit(getValues('style'))}>{submitLabel}</Button>
         </div>
       </div>
-    </div>
+    </FormProvider>
   );
 }

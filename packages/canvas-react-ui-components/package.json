@@ -18,28 +18,27 @@
     "clean": "rm -rf dist"
   },
   "peerDependencies": {
-    "@invana/canvas": "workspace:*",
-    "@invana/canvas-react": "workspace:*",
     "@invana/graph": "workspace:*",
     "@invana/ui": "*",
     "@invana/themes": "*",
-    "pixi.js": "^8.18.1",
+    "@invana/styling": "*",
+    "@invana/forms": "*",
     "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
+    "react-dom": ">=18.0.0",
+    "react-hook-form": "^7"
   },
   "devDependencies": {
-    "@invana/canvas": "workspace:*",
-    "@invana/canvas-react": "workspace:*",
     "@invana/graph": "workspace:*",
     "@invana/ui": "github:invana/design-kit#releases/ui",
     "@invana/themes": "github:invana/design-kit#releases/themes",
     "@invana/styling": "github:invana/design-kit#releases/styling",
+    "@invana/forms": "github:invana/design-kit#releases/forms",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "pixi.js": "^8.18.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.69.0",
     "tsup": "^8.3.5",
     "typescript": "5.9.2"
   },
