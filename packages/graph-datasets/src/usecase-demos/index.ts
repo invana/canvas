@@ -11,6 +11,7 @@
 //  - microservices   → MicroservicesTopology.stories.ts
 //  - ontology        → KnowledgeGraphExplorer.stories.ts
 //  - citations       → CitationGraph.stories.ts
+//  - invanaCodeKg    → InvanaCodeKnowledgeGraph.stories.ts
 
 export {
   agentTrace,
@@ -72,3 +73,18 @@ export {
   type CoraNodeData,
   type CoraSubject,
 } from './coraDataset';
+
+export {
+  invanaCodeKg,
+  type InvanaCodeCluster,
+  type InvanaCodeComplexity,
+  type InvanaCodeEdge,
+  type InvanaCodeEdgeLabel,
+  type InvanaCodeEdgeProperties,
+  type InvanaCodeKgData,
+  type InvanaCodeNode,
+  type InvanaCodeNodeLabel,
+  type InvanaCodeNodeProperties,
+  type InvanaCodeProject,
+  type InvanaCodeTourStep,
+} from './invanaCodeKg';
