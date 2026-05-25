@@ -11,8 +11,8 @@
  * Exercises: `D3ForceLayout` at real scale (`animate: false`, settle-then-
  * show), field-level resolvers driving fill by entity **type** or by the
  * 8 architectural **clusters** the analyser found, node radius by
- * complexity, `LabelCollisionBehaviour` + `labelMinZoom` to keep 602
- * labels legible, `HoverActivateBehaviour` 1-hop focal emphasis,
+ * complexity, `labelMinZoom` + `LabelResolutionLODBehaviour` to keep 602
+ * labels legible and crisp, `HoverActivateBehaviour` 1-hop focal emphasis,
  * `ClickSelectBehaviour` (shift multi), `DragNodeBehaviour`, a per-type
  * filter, and a `MiniMapLayer`.
  */
@@ -29,6 +29,7 @@ import {
   DragNodeBehaviour,
   GraphLayer,
   HoverActivateBehaviour,
+  LabelResolutionLODBehaviour,
   MiniMapLayer,
   type GraphNode,
   type NodeShapeOptions,
@@ -148,15 +149,16 @@ export const F3Force: Story = {
             bgAlpha: 0.95,
             bgStrokeColor: 0xffffff,
             bgStrokeWidth: 1,
-            // 602 labels would smother the cloud at overview zoom, so they
-            // only switch on past 1.6× — and `LabelCollisionBehaviour`
-            // hides any that still overlap once shown.
+            // 602 labels would smother the cloud at the fitted overview, so
+            // they only switch on once you zoom past 0.6× — a small zoom-in
+            // from the fitted view. `LabelResolutionLODBehaviour` (below)
+            // re-rasters them crisp once you zoom in far enough to read them.
             labelText: (n: GraphNode) => (settings.showLabels ? props(n).name : ''),
             labelColor: 0x64748b, // slate-500 — reads on both light + dark bg
             labelFontSize: 9,
             labelPlacement: 'bottom',
             labelOffsetY: 2,
-            labelMinZoom: 1.6,
+            labelMinZoom: 0.6,
           },
           state: {
             // Sharper amber ring on hover/highlight; force the label visible
@@ -203,6 +205,21 @@ export const F3Force: Story = {
           width: 220,
           height: 160,
         },
+      }),
+    );
+    // Labels appear at 0.6× (via `labelMinZoom` in the node style above);
+    // this re-rasters them at 4× resolution once you zoom past 1.6× so the
+    // text you zoomed in to read stays crisp instead of upsampling-blurry.
+    // It does NOT hide/show labels — only their texture resolution per tier.
+    canvas.behaviours.register(
+      new LabelResolutionLODBehaviour({
+        id: 'label-lod',
+        layerId: 'graph',
+        enabled: true,
+        levels: [
+          { minZoom: 0, multiplier: 1 },
+          { minZoom: 1.6, multiplier: 4 },
+        ],
       }),
     );
 
