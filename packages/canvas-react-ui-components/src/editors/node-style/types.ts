@@ -7,20 +7,47 @@ export type StrokeCap = NonNullable<NodeStyle['bgStrokeCap']>;
 export type StrokeJoin = NonNullable<NodeStyle['bgStrokeJoin']>;
 export type LabelPlacement = NonNullable<NodeStyle['labelPlacement']>;
 
+/** Strip `readonly` (NodeStyle's fields are readonly) so the form holds a
+ * plain mutable value object. Homomorphic — preserves optionality. */
+type Mutable<T> = { -readonly [K in keyof T]: T[K] };
+
 /**
- * Flat form-field shape consumed by `@invana/forms`'s `<ObjectField>`.
- *
- * The form-generator renders scalar leaf inputs, so every field here is a
- * primitive: colours are hex strings (the encoding the design-kit colour
- * swatch emits), the shape discriminated union is decomposed into a
- * `shapeKind` select plus per-kind geometry numbers, and the dash tuple is
- * split into `bgStrokeDashLength` / `bgStrokeDashGap`. The `styleToForm` /
- * `formToStyle` mapping (`mapping.ts`) round-trips between this and the
- * engine's `Partial<NodeStyle>`.
+ * NodeStyle fields the form takes **verbatim** — same name, same type. Derived
+ * from {@link NodeStyle} via `Pick`, so their types track the engine and a
+ * renamed/removed field surfaces here as a compile error (no silent drift).
+ * Add a scalar passthrough control = add its key here.
  */
-export interface NodeStyleFields {
-  // Geometry — shape kind + per-kind numerics (only the relevant ones are
-  // rendered for a given kind; the rest stay undefined and are ignored).
+type NodeStylePassthroughFields = Mutable<
+  Pick<
+    NodeStyle,
+    | 'size'
+    | 'bgAlpha'
+    | 'bgStrokeAlpha'
+    | 'bgStrokeWidth'
+    | 'bgStrokeAlignment'
+    | 'bgStrokeCap'
+    | 'bgStrokeJoin'
+    | 'labelText'
+    | 'labelFontSize'
+    | 'labelPlacement'
+    | 'labelOffsetX'
+    | 'labelOffsetY'
+  >
+>;
+
+/**
+ * Fields whose form encoding deliberately **differs** from {@link NodeStyle},
+ * so they can't be `Pick`ed — `mapping.ts` converts them:
+ *  - `shape` discriminated union → `shapeKind` select + per-kind geometry numbers,
+ *  - colours → hex strings (the design-kit swatch's encoding) not `0xRRGGBB`,
+ *  - the `[dash, gap]` tuple → two number fields,
+ *  - `labelFontWeight` narrowed to `number` (NodeStyle allows `number | string`).
+ *
+ * Drift on the *source* fields is still caught: `styleToForm` reads
+ * `style.shape` / `style.bgFill` / `style.bgStrokeDashArray` / … directly, so a
+ * rename in `NodeStyle` breaks `mapping.ts` at compile time.
+ */
+interface NodeStyleEncodedFields {
   shapeKind?: ShapeKind;
   radius?: number; // circle, regular-polygon
   width?: number; // rect
@@ -30,31 +57,24 @@ export interface NodeStyleFields {
   points?: number; // star
   innerRadius?: number; // star
   outerRadius?: number; // star
-  size?: number;
 
-  // Background
   bgFill?: string; // #rrggbb
-  bgAlpha?: number;
-
-  // Stroke
   bgStrokeColor?: string; // #rrggbb
-  bgStrokeAlpha?: number;
-  bgStrokeWidth?: number;
-  bgStrokeAlignment?: StrokeAlignment;
+  labelColor?: string; // #rrggbb
+
   bgStrokeDashLength?: number;
   bgStrokeDashGap?: number;
-  bgStrokeCap?: StrokeCap;
-  bgStrokeJoin?: StrokeJoin;
 
-  // Label
-  labelText?: string;
-  labelColor?: string; // #rrggbb
-  labelFontSize?: number;
   labelFontWeight?: number;
-  labelPlacement?: LabelPlacement;
-  labelOffsetX?: number;
-  labelOffsetY?: number;
 }
+
+/**
+ * Flat form-field shape the `@invana/forms` generator renders. The passthrough
+ * half is **derived from {@link NodeStyle}**; the rest is re-encoded for scalar
+ * inputs (see {@link NodeStyleEncodedFields}). `styleToForm` / `formToStyle`
+ * (`mapping.ts`) round-trip between this and `Partial<NodeStyle>`.
+ */
+export type NodeStyleFields = NodeStylePassthroughFields & NodeStyleEncodedFields;
 
 /**
  * react-hook-form state shape. `<ObjectField name="style" …>` registers each
