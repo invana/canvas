@@ -29,7 +29,6 @@ import {
   DragNodeBehaviour,
   GraphLayer,
   HoverActivateBehaviour,
-  LabelCollisionBehaviour,
   MiniMapLayer,
   type GraphNode,
   type NodeShapeOptions,
@@ -42,13 +41,14 @@ import {
   type InvanaCodeNodeProperties,
 } from '@invana/graph-datasets/usecase-demos';
 import GUI from 'lil-gui';
-import { createContainer, onStoryTeardown } from '../div-util';
+import { createContainer, onStoryTeardown } from '../../div-util';
 
-const meta: Meta = { title: 'Usecases/Invana Code Knowledge Graph' };
+const meta: Meta = { title: 'Usecases/code-kg' };
 export default meta;
 type Story = StoryObj;
 
-export const InvanaCodeKnowledgeGraph: Story = {
+export const F3Force: Story = {
+  name: 'd3-force',
   render: () => createContainer({ id: 'usecase-invana-code-kg' }),
 
   play: async ({ canvasElement }) => {
@@ -266,9 +266,9 @@ export const InvanaCodeKnowledgeGraph: Story = {
       }),
     );
 
-    canvas.behaviours.register(
-      new LabelCollisionBehaviour({ id: 'label-collision', layerId: 'graph', enabled: true }),
-    );
+    // canvas.behaviours.register(
+    //   new LabelCollisionBehaviour({ id: 'label-collision', layerId: 'graph', enabled: true }),
+    // );
 
     // ── Layout ───────────────────────────────────────────────────────────
     let layout: D3ForceLayout | null = null;
