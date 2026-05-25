@@ -61,7 +61,7 @@ export const Composite: Story = {
         { part: 'label', x: CARD.w - CARD.pad, y: 16, text: f.topRight, anchor: 'right', fontSize: 10, fontWeight: 600, fill: 0xf59e0b },
         // heading + description
         { part: 'label', x: CARD.pad, y: 56, text: f.heading, fontSize: 16, fontWeight: 700, fill: 0xf1f5f9, maxWidth: inner, maxLines: 1, overflow: 'ellipsis' },
-        { part: 'label', x: CARD.pad, y: 86, text: f.description, fontSize: 12, fill: 0x94a3b8, lineHeight: 16, maxWidth: inner, maxLines: 2, overflow: 'ellipsis' },
+        { part: 'label', x: CARD.pad, y: 86, text: f.description, fontSize: 12, fill: 0x94a3b8, lineHeight: 16, align: 'left', maxWidth: inner, maxLines: 2, overflow: 'ellipsis' },
         // footer
         { part: 'label', x: CARD.pad, y: CARD.h - 28, text: f.bottomLeft, fontSize: 11, fontWeight: 500, fill: 0x64748b },
         { part: 'label', x: CARD.w - CARD.pad, y: CARD.h - 28, text: f.bottomRight, anchor: 'right', fontSize: 11, fontWeight: 500, fill: 0x64748b },
