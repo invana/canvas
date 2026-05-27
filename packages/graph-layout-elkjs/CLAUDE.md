@@ -56,3 +56,23 @@ Convenience fields (`algorithm`, `direction`, `nodeSpacing`,
 through via `layoutOptions: Record<string, string>` — keys win over the
 convenience fields. See the [ELK reference](https://eclipse.dev/elk/reference.html)
 for the full catalogue.
+
+## Edge routing
+
+`edgeRouting: 'ORTHOGONAL' | 'POLYLINE' | 'SPLINES'` does two things: it sets
+`elk.edgeRouting`, and (unlike the other convenience fields) it reads ELK's
+computed bend points back out of `result.edges[].sections[0].bendPoints` and
+writes them onto each edge as `style.shape.waypoints` (with `pathType: 'orth'`),
+spreading any prior edge style. The `orth` router then replays them, so edges
+follow ELK's node-avoiding routes instead of cutting across nodes — the way to
+keep edges off nodes at scale (the client-side `manhattan` obstacle router
+can't, see `code-kg` stories).
+
+Coordinate caveat: routing assumes nodes whose `node.position` is their
+**centre** (so the rendered node occupies exactly ELK's node box and bend
+points line up). `circle` is centred natively; `GraphLayer.nodeSpec` centre-fits
+the `composite` shape. Top-left-origin kinds like `rect` would render offset
+from the routes — they'd need the same centre-fit before using `edgeRouting`.
+
+Leaving `edgeRouting` unset keeps the prior behaviour: only node positions are
+written, no edge geometry touched.

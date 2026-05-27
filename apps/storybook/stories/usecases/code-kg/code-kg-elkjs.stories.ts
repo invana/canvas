@@ -4,19 +4,16 @@
  * produced by the `understand-anything` static analyser and shipped as
  * `invanaCodeKg` in `@invana/graph-datasets`. Files, functions, classes,
  * configs and docs are laid out as a layered dependency DAG; `imports`,
- * `contains`, `calls`, `inherits`, … relations are the edges. The same
- * picture a Sourcegraph / CodeSee "repo map" shows, but over an actual
- * codebase rather than a synthetic one.
+ * `contains`, `calls`, `inherits`, … relations are the edges.
  *
- * Identical to the `d3-force` story except the layout: this uses
- * `ElkLayout` (`layered` algorithm) to draw the import graph as a tiered
- * left-to-right DAG. Same data, same styling, same behaviours —
- * field-level resolvers driving fill by entity **type** or by the 8
- * architectural **clusters**, node radius by complexity, `labelMinZoom` +
- * `LabelResolutionLODBehaviour` to keep 602 labels legible and crisp,
- * `HoverActivateBehaviour` 1-hop focal emphasis, `ClickSelectBehaviour`
- * (shift multi), `DragNodeBehaviour`, a per-type filter, and a
- * `MiniMapLayer`.
+ * Every node is rendered as a **composite "card"** (the `kind: 'composite'`
+ * shape from `Canvas/Concepts/Shapes/Composite`) so the card itself surfaces
+ * the node's data — label, complexity, name, summary, file path, line range.
+ * The card's accent bar + border colour come from the active palette (entity
+ * **type** or the 8 architectural **clusters**). Layout is `ElkLayout`
+ * (`layered`); behaviours match the d3-force story — `HoverActivateBehaviour`
+ * 1-hop focal emphasis, `ClickSelectBehaviour` (shift multi),
+ * `DragNodeBehaviour`, a per-type filter, and a `MiniMapLayer`.
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
@@ -31,7 +28,6 @@ import {
   DragNodeBehaviour,
   GraphLayer,
   HoverActivateBehaviour,
-  LabelResolutionLODBehaviour,
   MiniMapLayer,
   type GraphNode,
   type NodeShapeOptions,
@@ -39,7 +35,6 @@ import {
 import { ElkLayout, type ElkDirection } from '@invana/graph-layout-elkjs';
 import {
   invanaCodeKg,
-  type InvanaCodeComplexity,
   type InvanaCodeNodeLabel,
   type InvanaCodeNodeProperties,
 } from '@invana/graph-datasets/usecase-demos';
@@ -50,13 +45,13 @@ const meta: Meta = { title: 'Usecases/code-kg' };
 export default meta;
 type Story = StoryObj;
 
-export const Elkjs: Story = {
-  name: 'elkjs',
+export const ElkjsCards: Story = {
+  name: 'elkjs (composite cards)',
   render: () => createContainer({ id: 'usecase-invana-code-kg-elk' }),
 
   play: async ({ canvasElement }) => {
     // ── Palettes ─────────────────────────────────────────────────────────
-    // Fill by node label / entity kind (default) …
+    // Accent / border colour by node label / entity kind (default) …
     const LABEL_FILL: Record<InvanaCodeNodeLabel, number> = {
       file:     0x3b82f6, // blue
       function: 0x10b981, // emerald
@@ -77,29 +72,30 @@ export const Elkjs: Story = {
     };
     const UNCLUSTERED_FILL = 0x94a3b8; // slate-400 — node in no cluster
 
-    // Node radius by complexity bucket — complex modules read larger.
-    const COMPLEXITY_RADIUS: Record<InvanaCodeComplexity, number> = {
-      simple: 4,
-      moderate: 5.5,
-      complex: 8,
-    };
+    // ── Card geometry (the "node definition" — all field positions here) ──
+    // Same layout as the Composite shape story: an outer rounded frame, a
+    // left accent bar, a header divider, and six text blocks.
+    const CARD = { w: 300, h: 165, pad: 18, radius: 14 };
+    const inner = CARD.w - CARD.pad * 2; // 264
 
     const settings = {
       colorMode: 'type' as 'type' | 'cluster',
-      showLabels: true,
       hoverEmphasis: true,
       edgeAlpha: 0.22,
-      // Per-type filter — thin the 602-node cloud to the layers you care about.
+      // Per-type filter — thin the 602-node graph to the layers you care about.
       includeFile: true,
       includeFunction: true,
       includeClass: true,
       includeConfig: true,
       includeDocument: true,
-      // ELK layered-DAG tuning. ~600 nodes / ~1.3k edges across many import
-      // chains — modest spacing keeps the tiered picture compact.
+      // ELK layered-DAG tuning. Cards are 300×165, fed to ELK via `nodeSize`
+      // below, so these spacings are the *gaps* between cards / layers.
       direction: 'RIGHT' as ElkDirection,
       nodeSpacing: 28,
       layerSpacing: 90,
+      // Reserve a lane between nodes and edges so the manhattan router has
+      // clear channels to thread through — fewer edges forced over cards.
+      edgeNodeSpacing: 24,
     };
 
     // ── Canvas setup ─────────────────────────────────────────────────────
@@ -129,54 +125,73 @@ export const Elkjs: Story = {
       }),
     );
 
-    // Resolvers read the live `settings`, so flipping a GUI control + a
-    // style wipe (`rerenderAll`) re-resolves fill/label without rebuilding.
-    // `label` / `properties` from the dataset are mapped onto GraphNode's
-    // `type` / `data` in `apply()`, so resolvers read `n.type` / `n.data`.
+    // Resolvers read the live `settings`, so flipping a GUI control + a style
+    // wipe (`rerenderAll`) re-resolves the card without rebuilding. `label` /
+    // `properties` from the dataset are mapped onto GraphNode's `type` /
+    // `data` in `apply()`, so resolvers read `n.type` / `n.data`.
     const props = (n: GraphNode): InvanaCodeNodeProperties => n.data as InvanaCodeNodeProperties;
+    const accentOf = (n: GraphNode): number =>
+      settings.colorMode === 'type'
+        ? LABEL_FILL[n.type as InvanaCodeNodeLabel]
+        : CLUSTER_FILL[props(n).cluster ?? ''] ?? UNCLUSTERED_FILL;
+
+    // Build a composite "card" spec from a node's properties. The card body
+    // carries its own `fill` + `stroke` (so we leave `bgFill` unset — a set
+    // `bgFill`/`bgStrokeColor` would override these); the state overlays add
+    // an amber/white ring via `bgStrokeColor` on hover / select.
+    const cardShape = (n: GraphNode): NodeShapeOptions => {
+      const p = props(n);
+      const accent = accentOf(n);
+      return {
+        kind: 'composite',
+        width: CARD.w,
+        height: CARD.h,
+        cornerRadius: CARD.radius,
+        fill: 0x1f2937,
+        stroke: { color: accent, width: 2 },
+        parts: [
+          // left accent bar + header divider
+          { part: 'rect', x: 0, y: CARD.radius, width: 4, height: CARD.h - 2 * CARD.radius, fill: accent },
+          { part: 'line', x: CARD.pad, y: 46, x2: CARD.w - CARD.pad, y2: 46, stroke: { color: 0x374151, width: 1 } },
+          // top tags: entity kind (left) + complexity (right)
+          { part: 'label', x: CARD.pad, y: 16, text: (n.type as string) ?? '', fontSize: 10, fontWeight: 600, fontVariant: 'small-caps', fill: 0x94a3b8 },
+          { part: 'label', x: CARD.w - CARD.pad, y: 16, text: p.complexity, anchor: 'right', fontSize: 10, fontWeight: 600, fill: accent },
+          // heading (name) + description (summary)
+          { part: 'label', x: CARD.pad, y: 56, text: p.name, fontSize: 16, fontWeight: 700, fill: 0xf1f5f9, maxWidth: inner, maxLines: 1, overflow: 'ellipsis' },
+          { part: 'label', x: CARD.pad, y: 86, text: p.summary, fontSize: 12, fill: 0x94a3b8, lineHeight: 16, align: 'left', maxWidth: inner, maxLines: 2, overflow: 'ellipsis' },
+          // footer: file path (left) + line range (right)
+          { part: 'label', x: CARD.pad, y: CARD.h - 28, text: p.filePath, fontSize: 11, fontWeight: 500, fill: 0x64748b, maxWidth: inner - 64, maxLines: 1, overflow: 'ellipsis' },
+          { part: 'label', x: CARD.w - CARD.pad, y: CARD.h - 28, text: p.lineRange ? `L${p.lineRange[0]}–${p.lineRange[1]}` : '', anchor: 'right', fontSize: 11, fontWeight: 500, fill: 0x64748b },
+        ],
+      } as unknown as NodeShapeOptions;
+    };
 
     const graph = new GraphLayer({
       id: 'graph',
       options: {
         node: {
           style: {
-            shape: (n: GraphNode): NodeShapeOptions => ({
-              kind: 'circle',
-              radius: COMPLEXITY_RADIUS[props(n).complexity],
-            }),
-            bgFill: (n: GraphNode) =>
-              settings.colorMode === 'type'
-                ? LABEL_FILL[n.type as InvanaCodeNodeLabel]
-                : CLUSTER_FILL[props(n).cluster ?? ''] ?? UNCLUSTERED_FILL,
-            bgAlpha: 0.95,
-            bgStrokeColor: 0xffffff,
-            bgStrokeWidth: 1,
-            // 602 labels would smother the DAG at the fitted overview, so
-            // they only switch on once you zoom past 0.6× — a small zoom-in
-            // from the fitted view. `LabelResolutionLODBehaviour` (below)
-            // re-rasters them crisp once you zoom in far enough to read them.
-            labelText: (n: GraphNode) => (settings.showLabels ? props(n).name : ''),
-            labelColor: 0x64748b, // slate-500 — reads on both light + dark bg
-            labelFontSize: 9,
-            labelPlacement: 'bottom',
-            labelOffsetY: 2,
-            labelMinZoom: 0.6,
+            // The card IS the node visual — it carries its own fill/stroke and
+            // surfaces the data, so there's no separate GraphLayer label here.
+            shape: cardShape,
           },
           state: {
-            // Sharper amber ring on hover/highlight; force the label visible
-            // so a hovered node is always readable regardless of zoom.
-            highlighted: {
-              bgStrokeColor: 0xfbbf24,
-              bgStrokeWidth: 2.5,
-              labelForceShow: true,
-            },
+            // bgStrokeColor overrides the card's own border for a hover /
+            // select ring; dimmed fades the frame fill of off-focus cards.
+            highlighted: { bgStrokeColor: 0xfbbf24, bgStrokeWidth: 3 },
             selected: { bgStrokeColor: 0xffffff, bgStrokeWidth: 3 },
-            dimmed: { bgAlpha: 0.12 },
+            dimmed: { bgAlpha: 0.25 },
           },
         },
         edge: {
           style: {
-            shape: { pathType: 'straight' },
+            // Right-angle edges. ELK computes node-avoiding routes at layout
+            // time (`edgeRouting: 'ORTHOGONAL'` below) and writes the bend
+            // points back as per-edge `waypoints`; the `orth` router replays
+            // them so edges thread the lanes between cards rather than
+            // crossing them. This base pathType also covers edges before the
+            // first layout settles.
+            shape: { pathType: 'orth' },
             strokeColor: 0x94a3b8,
             strokeWidth: 0.8,
             strokeAlpha: settings.edgeAlpha,
@@ -207,21 +222,6 @@ export const Elkjs: Story = {
           width: 220,
           height: 160,
         },
-      }),
-    );
-    // Labels appear at 0.6× (via `labelMinZoom` in the node style above);
-    // this re-rasters them at 4× resolution once you zoom past 1.6× so the
-    // text you zoomed in to read stays crisp instead of upsampling-blurry.
-    // It does NOT hide/show labels — only their texture resolution per tier.
-    canvas.behaviours.register(
-      new LabelResolutionLODBehaviour({
-        id: 'label-lod',
-        layerId: 'graph',
-        enabled: true,
-        levels: [
-          { minZoom: 0, multiplier: 1 },
-          { minZoom: 1.6, multiplier: 4 },
-        ],
       }),
     );
 
@@ -285,37 +285,41 @@ export const Elkjs: Story = {
       }),
     );
 
-    // canvas.behaviours.register(
-    //   new LabelCollisionBehaviour({ id: 'label-collision', layerId: 'graph', enabled: true }),
-    // );
-
     // ── Layout ───────────────────────────────────────────────────────────
     let layout: ElkLayout | null = null;
     const runLayout = async (): Promise<void> => {
       layout?.stop();
       layout = new ElkLayout({
-        // Layered DAG — tiers the import graph along `direction`. ELK runs
-        // off the main thread and flushes positions once on settle, so the
-        // user sees the laid-out graph appear rather than animating.
+        // Layered DAG — tiers the import graph along `direction`. Feed ELK the
+        // real card dimensions so it leaves room for each 300×165 card instead
+        // of treating nodes as points.
         algorithm: 'layered',
         direction: settings.direction,
         nodeSpacing: settings.nodeSpacing,
         layerSpacing: settings.layerSpacing,
+        edgeNodeSpacing: settings.edgeNodeSpacing,
+        nodeSize: () => ({ width: CARD.w, height: CARD.h }),
+        // ELK routes edges around nodes through the reserved lanes and writes
+        // the bend points back as per-edge waypoints (orth) — so edges don't
+        // overlap the cards. (No per-edge offset needed: cards are centred on
+        // node.position, so they occupy exactly ELK's node box.)
+        edgeRouting: 'ORTHOGONAL',
       });
       layout.events.on('end', ({ reason }) => {
-        if (reason === 'completed') canvas.camera.fitContent(graph.getBounds(), 60);
+        if (reason === 'completed') canvas.camera.fitContent(graph.getBounds(), 80);
       });
       await layout.apply(graph);
     };
     void runLayout();
     onStoryTeardown(() => layout?.stop());
 
-    // Wipe per-instance styles so the layer-template resolvers (fill, label)
-    // re-resolve against the current `settings`.
+    // Wipe per-NODE styles so the card resolver (accent) re-resolves against
+    // the current `settings`. Edge styles are left intact on purpose: ELK
+    // writes each edge's routed `waypoints` into `edge.style.shape`, and
+    // wiping that would drop the routes until the next layout run.
     const rerenderAll = (): void => {
       graph.store.batch(() => {
         for (const n of graph.store.nodes()) graph.store.updateNode(n.id, { style: undefined });
-        for (const e of graph.store.edges()) graph.store.updateEdge(e.id, { style: undefined });
       });
     };
 
@@ -326,11 +330,7 @@ export const Elkjs: Story = {
     const styleFolder = gui.addFolder('Style');
     styleFolder
       .add(settings, 'colorMode', ['type', 'cluster'])
-      .name('colour by')
-      .onChange(rerenderAll);
-    styleFolder
-      .add(settings, 'showLabels')
-      .name('show labels')
+      .name('accent by')
       .onChange(rerenderAll);
     styleFolder
       .add(settings, 'edgeAlpha', 0, 1, 0.01)
@@ -354,8 +354,9 @@ export const Elkjs: Story = {
       .add(settings, 'direction', ['UP', 'DOWN', 'LEFT', 'RIGHT'])
       .name('direction')
       .onChange(() => void runLayout());
-    elkFolder.add(settings, 'nodeSpacing', 4, 80, 1).onFinishChange(() => void runLayout());
-    elkFolder.add(settings, 'layerSpacing', 20, 240, 5).onFinishChange(() => void runLayout());
+    elkFolder.add(settings, 'nodeSpacing', 4, 120, 1).onFinishChange(() => void runLayout());
+    elkFolder.add(settings, 'layerSpacing', 20, 320, 5).onFinishChange(() => void runLayout());
+    elkFolder.add(settings, 'edgeNodeSpacing', 0, 80, 1).name('edge-node gap').onFinishChange(() => void runLayout());
 
     const info = {
       project: invanaCodeKg.project.name,
@@ -368,7 +369,7 @@ export const Elkjs: Story = {
     infoFolder.add(info, 'edges').disable();
 
     gui
-      .add({ fit: () => canvas.camera.fitContent(graph.getBounds(), 60) }, 'fit')
+      .add({ fit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'fit')
       .name('Fit to content');
   },
 };

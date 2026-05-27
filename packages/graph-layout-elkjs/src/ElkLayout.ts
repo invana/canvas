@@ -39,7 +39,7 @@ import ELK, {
 } from 'elkjs/lib/elk.bundled.js';
 
 import { Layout } from '@invana/canvas';
-import type { GraphLayer, GraphNode } from '@invana/graph';
+import type { EdgeStyle, GraphLayer, GraphNode } from '@invana/graph';
 
 import type {
   ElkLayoutOptions,
@@ -140,7 +140,29 @@ export class ElkLayout extends Layout<GraphLayer> {
       buffer[i * 2] = (child.x ?? 0) + size.width / 2;
       buffer[i * 2 + 1] = (child.y ?? 0) + size.height / 2;
     }
-    store.setPositionsBulk(ids, buffer);
+    // 6. When ELK edge routing is on, read back each edge's computed bend
+    //    points and write them as `style.shape.waypoints` (pathType 'orth').
+    //    ELK works in the same coordinate frame as the stored centres, and —
+    //    for centre-origin shapes (circle, and `composite` via GraphLayer's
+    //    centre-fit) — the rendered node occupies exactly ELK's node box, so
+    //    bend points line up with the cards without any per-edge offset.
+    //    Wrapping the position write + edge writes in one batch collapses to a
+    //    single flush, so connectors re-route once against the new layout.
+    if (this.opts.edgeRouting !== undefined) {
+      const routedEdges = (result.edges ?? []) as ElkExtendedEdge[];
+      store.batch(() => {
+        store.setPositionsBulk(ids, buffer);
+        for (const e of routedEdges) {
+          const bends = (e.sections?.[0]?.bendPoints ?? []).map((p) => ({ x: p.x, y: p.y }));
+          const prev = (store.getEdge(e.id)?.style as EdgeStyle | undefined) ?? {};
+          store.updateEdge(e.id, {
+            style: { ...prev, shape: { ...(prev.shape ?? {}), pathType: 'orth', waypoints: bends } },
+          });
+        }
+      });
+    } else {
+      store.setPositionsBulk(ids, buffer);
+    }
 
     this.events.emit('tick', {});
     this.running = false;
@@ -197,6 +219,7 @@ function buildLayoutOptions(opts: ElkLayoutOptions): LayoutOptions {
   }
   if (opts.edgeNodeSpacing !== undefined) out['elk.spacing.edgeNode'] = String(opts.edgeNodeSpacing);
   if (opts.edgeSpacing !== undefined) out['elk.spacing.edgeEdge'] = String(opts.edgeSpacing);
+  if (opts.edgeRouting !== undefined) out['elk.edgeRouting'] = opts.edgeRouting;
   if (opts.padding !== undefined) out['elk.padding'] = formatPadding(opts.padding);
   if (opts.layoutOptions) Object.assign(out, opts.layoutOptions);
   return out;

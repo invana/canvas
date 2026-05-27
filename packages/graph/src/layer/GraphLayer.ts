@@ -718,10 +718,23 @@ export class GraphLayer extends WorldLayer<
       zIndex = (baseZ ?? 0) - 1;
     }
 
+    // The `composite` shape draws its frame from its top-left corner (unlike
+    // `circle`, which is centred at (x,y)). Layouts treat `node.position` as
+    // the node CENTRE, so centre the composite on `pos` by shifting its origin
+    // by -size/2. This keeps the card's bounds, edge-anchor centre, obstacle
+    // box, and drag anchor all consistent with `pos`, and makes the card
+    // occupy exactly the box a layout (e.g. ELK) reserved for it — so routed
+    // edge waypoints line up with the rendered card. Other top-left-origin
+    // kinds (rect) keep their convention; group projection never emits composite.
+    const sc = shape as { kind?: string; width?: number; height?: number };
+    const isComposite = sc.kind === 'composite';
+    const x = isComposite && typeof sc.width === 'number' ? pos.x - sc.width / 2 : pos.x;
+    const y = isComposite && typeof sc.height === 'number' ? pos.y - sc.height / 2 : pos.y;
+
     return {
       ...(shape as unknown as Record<string, unknown>),
-      x: pos.x,
-      y: pos.y,
+      x,
+      y,
       ...(style.bgAlpha !== undefined ? { alpha: style.bgAlpha } : {}),
       ...(fill !== undefined ? { fill } : {}),
       ...(stroke ? { stroke } : {}),

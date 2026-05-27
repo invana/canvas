@@ -89,6 +89,18 @@ export interface ElkLayoutOptions {
   edgeNodeSpacing?: number;
   /** `elk.spacing.edgeEdge` — gap between parallel edges. */
   edgeSpacing?: number;
+  /**
+   * `elk.edgeRouting`. When set, ELK computes node-avoiding edge geometry and
+   * `ElkLayout` writes the resulting bend points back as each edge's
+   * `style.shape.waypoints` (with `pathType: 'orth'`). Leaving it unset keeps
+   * the previous behaviour — only node positions are written, no edge geometry.
+   *
+   * `'ORTHOGONAL'` is the intended value for `layered` graphs. Routing assumes
+   * nodes whose `node.position` is their CENTRE (circle natively; the
+   * `composite` shape via `GraphLayer`'s centre-fit). Top-left-origin shapes
+   * (e.g. `rect`) would render offset from the computed routes.
+   */
+  edgeRouting?: 'ORTHOGONAL' | 'POLYLINE' | 'SPLINES';
   /** `elk.padding` — graph-level padding. */
   padding?: ElkPadding;
 
