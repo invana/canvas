@@ -1611,15 +1611,24 @@ export class PrimitivesRenderer {
     const w = this.camera.toWorld(e.global.x, e.global.y);
     const hit = this.hitTest(w.x, w.y);
 
-    if (hit) {
-      this.events.emit(`${hit.kind}:pointerup`, {
-        id: hit.id, worldX: w.x, worldY: w.y, button: e.button, pointerId: e.pointerId,
-      });
+    if (!hit) {
+      // Right-button release on empty canvas → background context menu.
+      // There's no shape/connector to attribute a pointerup/click to, so this
+      // is the only event the renderer surfaces for an empty-canvas right-click.
+      if (e.button === 2) {
+        this.events.emit('background:contextmenu', { worldX: w.x, worldY: w.y });
+      }
+      this.downHit = null;
+      return;
     }
+
+    this.events.emit(`${hit.kind}:pointerup`, {
+      id: hit.id, worldX: w.x, worldY: w.y, button: e.button, pointerId: e.pointerId,
+    });
 
     const down = this.downHit;
     this.downHit = null;
-    if (!down || !hit) return;
+    if (!down) return;
     if (down.kind !== hit.kind || down.id !== hit.id) return;
     if (down.button !== e.button) return;
 

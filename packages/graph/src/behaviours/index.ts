@@ -41,6 +41,13 @@ export type {
 export { DragNodeBehaviour } from './DragNodeBehaviour';
 export type { DragNodeBehaviourOptions } from './DragNodeBehaviour';
 
+export { ContextMenuBehaviour } from './ContextMenuBehaviour';
+export type {
+  ContextMenuBehaviourOptions,
+  ContextMenuEvent,
+  ContextMenuTargetType,
+} from './ContextMenuBehaviour';
+
 export { CollapseExpandBehaviour, GROUP_TOGGLE_SLOT } from './CollapseExpandBehaviour';
 export type { CollapseExpandBehaviourOptions } from './CollapseExpandBehaviour';
 

@@ -1098,6 +1098,8 @@ export interface PrimitivesRendererEventMap extends EventMap {
   'connector:click':       { id: string; worldX: number; worldY: number; button: number };
   'connector:doubleclick': { id: string; worldX: number; worldY: number; button: number };
   'connector:contextmenu': { id: string; worldX: number; worldY: number };
+  /** Right-button release on empty canvas — no shape/connector was hit. */
+  'background:contextmenu': { worldX: number; worldY: number };
 }
 
 // ─── Label primitives ──────────────────────────────────────────────────────
