@@ -718,18 +718,13 @@ export class GraphLayer extends WorldLayer<
       zIndex = (baseZ ?? 0) - 1;
     }
 
-    // The `composite` shape draws its frame from its top-left corner (unlike
-    // `circle`, which is centred at (x,y)). Layouts treat `node.position` as
-    // the node CENTRE, so centre the composite on `pos` by shifting its origin
-    // by -size/2. This keeps the card's bounds, edge-anchor centre, obstacle
-    // box, and drag anchor all consistent with `pos`, and makes the card
-    // occupy exactly the box a layout (e.g. ELK) reserved for it — so routed
-    // edge waypoints line up with the rendered card. Other top-left-origin
-    // kinds (rect) keep their convention; group projection never emits composite.
-    const sc = shape as { kind?: string; width?: number; height?: number };
-    const isComposite = sc.kind === 'composite';
-    const x = isComposite && typeof sc.width === 'number' ? pos.x - sc.width / 2 : pos.x;
-    const y = isComposite && typeof sc.height === 'number' ? pos.y - sc.height / 2 : pos.y;
+    // Map the canonical `node.position` to the shape's render origin. The
+    // `composite` shape draws from its top-left corner (unlike `circle`,
+    // centred at (x,y)), so it's shifted by -size/2 to sit centred on `pos`.
+    // MUST match the fast-path in `updateNodeShape`, or a position-only update
+    // (layout / drag) would place the card differently than a full rebuild
+    // (add / hover), making it visibly jump. See {@link shapeRenderXY}.
+    const { x, y } = shapeRenderXY(shape, pos);
 
     return {
       ...(shape as unknown as Record<string, unknown>),
@@ -1284,12 +1279,14 @@ export class GraphLayer extends WorldLayer<
     if (nonVisualOnly) return;
 
     // Position-only updates: cheap partial. Connectors anchored to this node
-    // need re-routing too; queue them for the flush-time drain.
+    // need re-routing too; queue them for the flush-time drain. Run the
+    // position through `shapeRenderXY` so the render origin matches the full
+    // `nodeSpec` rebuild — otherwise a `composite` card lands at its raw
+    // top-left here but centred on a rebuild, so it jumps on hover / restyle.
     if ('position' in patch && patch.position && patchKeys.length === 1) {
-      this._renderer.updateShape<BaseShapeSpec>(node.id, {
-        x: patch.position.x,
-        y: patch.position.y,
-      });
+      const shape = (this.resolveNodeStyle(node).shape ?? { kind: 'circle', radius: 10 }) as NodeShapeOptions;
+      const { x, y } = shapeRenderXY(shape, patch.position);
+      this._renderer.updateShape<BaseShapeSpec>(node.id, { x, y });
       this.queueIncidentConnectors(node.id);
       return;
     }
@@ -1720,6 +1717,31 @@ export class GraphLayer extends WorldLayer<
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
+
+/**
+ * Map a node's canonical `position` to the render origin its shape expects.
+ *
+ * Most shapes (`circle`, `regular-polygon`, …) are centred at `(x, y)`, so the
+ * position passes through unchanged. The `composite` shape draws from its
+ * top-left corner, so it's shifted by `-size/2` to sit centred on `position` —
+ * matching how layouts (and edge anchoring / obstacle bounds) treat the
+ * position as the node centre.
+ *
+ * Both the full {@link GraphLayer.nodeSpec} rebuild and the position-only fast
+ * path in `updateNodeShape` route through this, so a `composite` card lands at
+ * the same place whether it's added, dragged, re-laid-out, or re-rendered on
+ * hover — otherwise it visibly jumps between the two paths.
+ */
+function shapeRenderXY(
+  shape: NodeShapeOptions,
+  pos: { x: number; y: number },
+): { x: number; y: number } {
+  const sc = shape as { kind?: string; width?: number; height?: number };
+  if (sc.kind === 'composite' && typeof sc.width === 'number' && typeof sc.height === 'number') {
+    return { x: pos.x - sc.width / 2, y: pos.y - sc.height / 2 };
+  }
+  return { x: pos.x, y: pos.y };
+}
 
 /**
  * Rewrite a {@link NodeShapeOptions} so its intrinsic size fields express

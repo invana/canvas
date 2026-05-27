@@ -140,28 +140,50 @@ export class ElkLayout extends Layout<GraphLayer> {
       buffer[i * 2] = (child.x ?? 0) + size.width / 2;
       buffer[i * 2 + 1] = (child.y ?? 0) + size.height / 2;
     }
-    // 6. When ELK edge routing is on, read back each edge's computed bend
-    //    points and write them as `style.shape.waypoints` (pathType 'orth').
-    //    ELK works in the same coordinate frame as the stored centres, and —
-    //    for centre-origin shapes (circle, and `composite` via GraphLayer's
-    //    centre-fit) — the rendered node occupies exactly ELK's node box, so
-    //    bend points line up with the cards without any per-edge offset.
-    //    Wrapping the position write + edge writes in one batch collapses to a
-    //    single flush, so connectors re-route once against the new layout.
+    // 6a. Apply node positions in their own flush first. This moves the node
+    //     shapes and re-routes every incident connector once against the new
+    //     layout.
+    store.setPositionsBulk(ids, buffer);
+
+    // 6b. When ELK edge routing is on, read back each edge's computed bend
+    //     points and write them as `style.shape.waypoints` (pathType 'orth')
+    //     in a SEPARATE flush. This matters: the edge-style write must NOT
+    //     share a flush with the position write above. A position flush marks
+    //     every incident connector dirty and re-routes them via a plain
+    //     `updateConnector(id, {})` at flush end; bundling the waypoint write
+    //     into that same flush lets that re-route run alongside the
+    //     waypoint-applying `edge:update`, and the routed path doesn't stick.
+    //     Writing waypoints in their own flush (no concurrent node moves)
+    //     mirrors the hover/`rerenderEdge` path that applies cleanly.
+    //
+    //     ELK works in the same coordinate frame as the stored centres, and —
+    //     for centre-origin shapes (circle, and `composite` via GraphLayer's
+    //     centre-fit) — the rendered node occupies exactly ELK's node box, so
+    //     bend points line up with the cards without any per-edge offset.
     if (this.opts.edgeRouting !== undefined) {
       const routedEdges = (result.edges ?? []) as ElkExtendedEdge[];
       store.batch(() => {
-        store.setPositionsBulk(ids, buffer);
         for (const e of routedEdges) {
-          const bends = (e.sections?.[0]?.bendPoints ?? []).map((p) => ({ x: p.x, y: p.y }));
+          // Use the FULL section path — startPoint + bends + endPoint — not
+          // just the interior bends. The start/end points sit on the node
+          // border where ELK's route leaves/enters perpendicularly, so the
+          // `orth` router connects the boundary-anchored endpoints to them
+          // along the edge without inventing a spurious out-and-back corner.
+          // (Passing only interior bends made orth L-bend across a long
+          // misaligned first/last leg → visible "peaks" at both ends.)
+          const section = e.sections?.[0];
+          const waypoints = section
+            ? [section.startPoint, ...(section.bendPoints ?? []), section.endPoint].map((p) => ({
+                x: p.x,
+                y: p.y,
+              }))
+            : [];
           const prev = (store.getEdge(e.id)?.style as EdgeStyle | undefined) ?? {};
           store.updateEdge(e.id, {
-            style: { ...prev, shape: { ...(prev.shape ?? {}), pathType: 'orth', waypoints: bends } },
+            style: { ...prev, shape: { ...(prev.shape ?? {}), pathType: 'orth', waypoints } },
           });
         }
       });
-    } else {
-      store.setPositionsBulk(ids, buffer);
     }
 
     this.events.emit('tick', {});

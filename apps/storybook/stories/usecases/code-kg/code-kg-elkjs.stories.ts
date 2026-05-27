@@ -185,13 +185,13 @@ export const ElkjsCards: Story = {
         },
         edge: {
           style: {
-            // Right-angle edges. ELK computes node-avoiding routes at layout
-            // time (`edgeRouting: 'ORTHOGONAL'` below) and writes the bend
-            // points back as per-edge `waypoints`; the `orth` router replays
-            // them so edges thread the lanes between cards rather than
-            // crossing them. This base pathType also covers edges before the
-            // first layout settles.
-            shape: { pathType: 'orth' },
+            // Obstacle-aware right-angle routing. The renderer auto-collects
+            // every card as an obstacle, and the `manhattan` router A*-routes
+            // each edge around them through the lanes ELK reserved
+            // (`edgeNodeSpacing` below). Avoidance is recomputed every time an
+            // edge routes — including the re-route after the layout moves
+            // nodes — so it holds by default, no per-edge waypoint step.
+            shape: { pathType: 'manhattan' },
             strokeColor: 0x94a3b8,
             strokeWidth: 0.8,
             strokeAlpha: settings.edgeAlpha,
@@ -299,11 +299,8 @@ export const ElkjsCards: Story = {
         layerSpacing: settings.layerSpacing,
         edgeNodeSpacing: settings.edgeNodeSpacing,
         nodeSize: () => ({ width: CARD.w, height: CARD.h }),
-        // ELK routes edges around nodes through the reserved lanes and writes
-        // the bend points back as per-edge waypoints (orth) — so edges don't
-        // overlap the cards. (No per-edge offset needed: cards are centred on
-        // node.position, so they occupy exactly ELK's node box.)
-        edgeRouting: 'ORTHOGONAL',
+        // Reserve lanes between nodes so the manhattan router has clear
+        // channels to thread edges through (set on `settings.edgeNodeSpacing`).
       });
       layout.events.on('end', ({ reason }) => {
         if (reason === 'completed') canvas.camera.fitContent(graph.getBounds(), 80);
@@ -313,13 +310,14 @@ export const ElkjsCards: Story = {
     void runLayout();
     onStoryTeardown(() => layout?.stop());
 
-    // Wipe per-NODE styles so the card resolver (accent) re-resolves against
-    // the current `settings`. Edge styles are left intact on purpose: ELK
-    // writes each edge's routed `waypoints` into `edge.style.shape`, and
-    // wiping that would drop the routes until the next layout run.
+    // Wipe per-instance styles so the layer-template resolvers (card accent,
+    // edge alpha) re-resolve against the current `settings`. The manhattan
+    // router recomputes obstacle avoidance on the re-route, so edges stay
+    // node-avoiding without any per-edge waypoint data to preserve.
     const rerenderAll = (): void => {
       graph.store.batch(() => {
         for (const n of graph.store.nodes()) graph.store.updateNode(n.id, { style: undefined });
+        for (const e of graph.store.edges()) graph.store.updateEdge(e.id, { style: undefined });
       });
     };
 
