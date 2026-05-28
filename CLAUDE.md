@@ -68,6 +68,8 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
 
 ## Global Coding Rules
 
+> **Never `git commit` or `git push` unless I explicitly ask in the *current* message.** Prior-turn approval does **not** carry forward — each commit/push needs a fresh, explicit request from me. Don't commit as a side-effect of finishing a task, and don't offer to commit unprompted. Staging (`git add`) is only ever a step within a commit I asked for.
+
 1. Don't write code unless we discuss and I give a go ahead.
 2. Ask me questions before coding.
 3. All new code goes in the active packages listed above.
