@@ -31,6 +31,28 @@ export type {
   LabelPlacement,
 } from './editors/node-style';
 
+// ─── Toolbars & controls (actions track) ─────────────────────────────────
+// Engine-agnostic, icon-agnostic toolbar pieces + turnkey graph toolbars.
+export {
+  OptionPicker,
+  ZoomControls,
+  MinimapToggle,
+  LockToggle,
+  ClearButton,
+  GraphToolbar,
+  GraphViewControls,
+} from './toolbars';
+export type {
+  ToolbarIcon,
+  OptionPickerProps,
+  ZoomControlsProps,
+  MinimapToggleProps,
+  LockToggleProps,
+  ClearButtonProps,
+  GraphToolbarProps,
+  GraphViewControlsProps,
+} from './toolbars';
+
 // ─── Shared presets + utils ──────────────────────────────────────────────
 // Colour swatch palette shared across editors, and the `0xRRGGBB` ↔ `#rrggbb`
 // helpers that bridge engine colours and the design-kit colour swatch.
