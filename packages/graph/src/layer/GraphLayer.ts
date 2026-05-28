@@ -783,7 +783,12 @@ export class GraphLayer extends WorldLayer<
       ...(shape as unknown as Record<string, unknown>),
       x,
       y,
-      ...(style.bgAlpha !== undefined ? { alpha: style.bgAlpha } : {}),
+      // Always emit `alpha` (default opaque) — same partial-merge reasoning as
+      // `visible` below. A transient state (e.g. `dimmed`, `bgAlpha: 0.25`) sets
+      // it; when that state clears and the base style doesn't pin `bgAlpha`,
+      // omitting the field here would leave the dimmed alpha stuck on the cached
+      // spec. Emitting `1` restores opacity on state removal.
+      alpha: style.bgAlpha ?? 1,
       ...(fill !== undefined ? { fill } : {}),
       ...(stroke ? { stroke } : {}),
       ...(zIndex !== undefined ? { zIndex } : {}),

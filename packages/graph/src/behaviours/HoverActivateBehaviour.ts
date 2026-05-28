@@ -275,6 +275,21 @@ export class HoverActivateBehaviour extends Behaviour {
       () => renderer.events.off('connector:pointerout', onConnOut),
     );
 
+    // When the pointer leaves the canvas entirely (onto a toolbar/panel or out
+    // of the window), the renderer's `globalpointermove` stream stops, so no
+    // `pointerout` fires for the element still under the cursor and the hover
+    // states would stick. Clear on the canvas element's `pointerleave`.
+    const el = ctx.canvasElement;
+    if (el) {
+      const onLeave = (): void => {
+        if (!this.current) return;
+        this.opts.onHoverEnd?.(this.current);
+        this.clearHover();
+      };
+      el.addEventListener('pointerleave', onLeave);
+      this.subs.push(() => el.removeEventListener('pointerleave', onLeave));
+    }
+
     // Camera-zoom subscription is **conditional** — only wired when a
     // `zoomThreshold` is configured. Stories that don't use the zoom-tier
     // pay zero per-zoom cost.

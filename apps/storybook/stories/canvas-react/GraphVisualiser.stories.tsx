@@ -166,11 +166,15 @@ function Visualiser() {
               layerId="graph"
               degree={1}
               state="highlighted"
-              inactiveState="dimmed"
+              // inactiveState="dimmed"
             />
 
-            {/* Selection mode — exactly one enabled at a time. */}
-            <ClickSelectBehaviour layerId="graph" enabled={selectMode === 'click'} multiple degree={1} />
+            {/* Selection mode — exactly one enabled at a time. Brush/Lasso
+                delegate to this ClickSelect (default `clickSelectId:
+                'click-select'`), so its `degree` governs all three. Keep it 0
+                so area-select picks exactly what's enclosed (no neighbour
+                expansion); hover still shows the 1-hop neighbourhood. */}
+            <ClickSelectBehaviour layerId="graph" enabled={selectMode === 'click'} multiple />
             <BrushSelectBehaviour layerId="graph" enabled={selectMode === 'brush'} />
             <LassoSelectBehaviour layerId="graph" enabled={selectMode === 'lasso'} />
 
