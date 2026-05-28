@@ -398,6 +398,59 @@ export class GraphLayer extends WorldLayer<
     });
   }
 
+  // ─── Layer-level template (defaults) ──────────────────────────────────────
+
+  /**
+   * Patch the layer-level node template (`options.node.style`) and re-render
+   * every node so the change takes effect immediately. Use this for global
+   * "apply to all nodes" changes (e.g. a toolbar default-fill picker) instead
+   * of looping `store.updateNode` per node.
+   *
+   * Merge is shallow (top-level): structured fields (`shape`, `decorations`,
+   * `badges`, `effects`) are replaced wholesale — spread the prior value if you
+   * mean to patch a single sub-field. Per-node `style`, active states, and
+   * resolver functions still win over the template at resolve time (see
+   * {@link resolveNodeStyle}). No-op visually if the layer isn't mounted yet,
+   * but the template is still updated so later mounts pick it up.
+   */
+  setNodeDefaults(patch: Partial<NodeStyle>): void {
+    this.nodeOption = {
+      ...this.nodeOption,
+      style: {
+        ...(this.nodeOption?.style ?? {}),
+        ...patch,
+      } as ResolvableNodeStyle<GraphNode>,
+    };
+    for (const node of this.store.nodes()) this.rerenderNode(node.id);
+  }
+
+  /**
+   * Sibling of {@link setNodeDefaults} for the edge template
+   * (`options.edge.style`). Patches the shared edge styling and re-renders
+   * every edge. Same shallow-merge contract — e.g. changing edge "type" means
+   * `setEdgeDefaults({ shape: { ...prevShape, pathType: 'bezier' } })`.
+   */
+  setEdgeDefaults(patch: Partial<EdgeStyle>): void {
+    this.edgeOption = {
+      ...this.edgeOption,
+      style: {
+        ...(this.edgeOption?.style ?? {}),
+        ...patch,
+      } as ResolvableEdgeStyle<GraphEdge>,
+    };
+    for (const edge of this.store.edges()) this.rerenderEdge(edge.id);
+  }
+
+  /** Read-only snapshot of the current node template style (resolved per node at render). */
+  get nodeDefaults(): ResolvableNodeStyle<GraphNode> | undefined {
+    return this.nodeOption?.style;
+  }
+
+  /** Read-only snapshot of the current edge template style. */
+  get edgeDefaults(): ResolvableEdgeStyle<GraphEdge> | undefined {
+    return this.edgeOption?.style;
+  }
+
   // ─── State machinery ────────────────────────────────────────────────────
 
   /**

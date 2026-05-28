@@ -1,10 +1,9 @@
-import { useEffect } from 'react';
 import {
   ContextMenuBehaviour as EngineContextMenuBehaviour,
   type ContextMenuBehaviourOptions,
 } from '@invana/graph';
 
-import { useCanvas } from '../CanvasContext';
+import { useBehaviourRegistration } from './useBehaviourRegistration';
 
 export interface ContextMenuBehaviourProps
   extends Omit<ContextMenuBehaviourOptions, 'id' | 'layerId'> {
@@ -18,8 +17,9 @@ export interface ContextMenuBehaviourProps
  * Declarative wrapper for `@invana/graph` `ContextMenuBehaviour`.
  *
  * Headless — pass `onContextMenu` to receive node/edge/canvas right-click
- * events and render your own menu. Options are init-only; change the
- * component's `key` to recreate.
+ * events and render your own menu. `enabled` is reactive (toggles in place);
+ * other options are init-only — change `id` / `layerId` (or the `key`) to
+ * recreate.
  */
 export function ContextMenuBehaviour({
   id = 'context-menu',
@@ -27,16 +27,11 @@ export function ContextMenuBehaviour({
   enabled = true,
   ...rest
 }: ContextMenuBehaviourProps) {
-  const canvas = useCanvas();
-
-  useEffect(() => {
-    const behaviour = new EngineContextMenuBehaviour({ id, layerId, enabled, ...rest });
-    canvas.behaviours.register(behaviour);
-    return () => {
-      canvas.behaviours.unregister(id);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvas, id, layerId]);
-
+  useBehaviourRegistration(
+    () => new EngineContextMenuBehaviour({ id, layerId, enabled, ...rest }),
+    id,
+    enabled,
+    [id, layerId],
+  );
   return null;
 }

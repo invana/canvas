@@ -48,6 +48,12 @@ export type {
   ContextMenuTargetType,
 } from './ContextMenuBehaviour';
 
+export { CreateNodeBehaviour } from './CreateNodeBehaviour';
+export type { CreateNodeBehaviourOptions } from './CreateNodeBehaviour';
+
+export { DrawEdgeBehaviour } from './DrawEdgeBehaviour';
+export type { DrawEdgeBehaviourOptions } from './DrawEdgeBehaviour';
+
 export { CollapseExpandBehaviour, GROUP_TOGGLE_SLOT } from './CollapseExpandBehaviour';
 export type { CollapseExpandBehaviourOptions } from './CollapseExpandBehaviour';
 

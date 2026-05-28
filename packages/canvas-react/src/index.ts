@@ -15,18 +15,74 @@ export { CanvasContext, useCanvas } from './CanvasContext';
 export { GraphLayer } from './layers/GraphLayer';
 export type { GraphLayerProps } from './layers/GraphLayer';
 
+export { BackgroundLayer } from './layers/BackgroundLayer';
+export type { BackgroundLayerProps } from './layers/BackgroundLayer';
+
+export { MiniMapLayer } from './layers/MiniMapLayer';
+export type { MiniMapLayerProps } from './layers/MiniMapLayer';
+
 // ─── Behaviours ──────────────────────────────────────────────────────────
+// Camera / canvas-scoped
 export { DragPanBehaviour } from './behaviours/DragPanBehaviour';
 export type { DragPanBehaviourProps } from './behaviours/DragPanBehaviour';
 
 export { WheelZoomBehaviour } from './behaviours/WheelZoomBehaviour';
 export type { WheelZoomBehaviourProps } from './behaviours/WheelZoomBehaviour';
 
+export { PinchZoomBehaviour } from './behaviours/PinchZoomBehaviour';
+export type { PinchZoomBehaviourProps } from './behaviours/PinchZoomBehaviour';
+
+export { KeyboardCameraInputBehaviour } from './behaviours/KeyboardCameraInputBehaviour';
+export type { KeyboardCameraInputBehaviourProps } from './behaviours/KeyboardCameraInputBehaviour';
+
+// Graph-scoped
 export { DragNodeBehaviour } from './behaviours/DragNodeBehaviour';
 export type { DragNodeBehaviourProps } from './behaviours/DragNodeBehaviour';
 
 export { ContextMenuBehaviour } from './behaviours/ContextMenuBehaviour';
 export type { ContextMenuBehaviourProps } from './behaviours/ContextMenuBehaviour';
+
+export { CreateNodeBehaviour } from './behaviours/CreateNodeBehaviour';
+export type { CreateNodeBehaviourProps } from './behaviours/CreateNodeBehaviour';
+
+export { DrawEdgeBehaviour } from './behaviours/DrawEdgeBehaviour';
+export type { DrawEdgeBehaviourProps } from './behaviours/DrawEdgeBehaviour';
+
+export { HoverActivateBehaviour } from './behaviours/HoverActivateBehaviour';
+export type { HoverActivateBehaviourProps } from './behaviours/HoverActivateBehaviour';
+
+export { ClickSelectBehaviour } from './behaviours/ClickSelectBehaviour';
+export type { ClickSelectBehaviourProps } from './behaviours/ClickSelectBehaviour';
+
+export { BrushSelectBehaviour } from './behaviours/BrushSelectBehaviour';
+export type { BrushSelectBehaviourProps } from './behaviours/BrushSelectBehaviour';
+
+export { LassoSelectBehaviour } from './behaviours/LassoSelectBehaviour';
+export type { LassoSelectBehaviourProps } from './behaviours/LassoSelectBehaviour';
+
+export { CollapseExpandBehaviour } from './behaviours/CollapseExpandBehaviour';
+export type { CollapseExpandBehaviourProps } from './behaviours/CollapseExpandBehaviour';
+
+export { NodeResizeBehaviour } from './behaviours/NodeResizeBehaviour';
+export type { NodeResizeBehaviourProps } from './behaviours/NodeResizeBehaviour';
+
+export { LabelCollisionBehaviour } from './behaviours/LabelCollisionBehaviour';
+export type { LabelCollisionBehaviourProps } from './behaviours/LabelCollisionBehaviour';
+
+export { LabelResolutionLODBehaviour } from './behaviours/LabelResolutionLODBehaviour';
+export type { LabelResolutionLODBehaviourProps } from './behaviours/LabelResolutionLODBehaviour';
+
+export { NodeSizeLODBehaviour } from './behaviours/NodeSizeLODBehaviour';
+export type { NodeSizeLODBehaviourProps } from './behaviours/NodeSizeLODBehaviour';
+
+export { EdgeSizeLODBehaviour } from './behaviours/EdgeSizeLODBehaviour';
+export type { EdgeSizeLODBehaviourProps } from './behaviours/EdgeSizeLODBehaviour';
+
+export { ParallelEdgeBehaviour } from './behaviours/ParallelEdgeBehaviour';
+export type { ParallelEdgeBehaviourProps } from './behaviours/ParallelEdgeBehaviour';
+
+export { DegreeSizeBehaviour } from './behaviours/DegreeSizeBehaviour';
+export type { DegreeSizeBehaviourProps } from './behaviours/DegreeSizeBehaviour';
 
 // ─── Layouts ─────────────────────────────────────────────────────────────
 export { D3ForceLayout } from './layouts/D3ForceLayout';

@@ -1,10 +1,9 @@
-import { useEffect } from 'react';
 import {
   DragNodeBehaviour as EngineDragNodeBehaviour,
   type DragNodeBehaviourOptions,
 } from '@invana/graph';
 
-import { useCanvas } from '../CanvasContext';
+import { useBehaviourRegistration } from './useBehaviourRegistration';
 
 export interface DragNodeBehaviourProps extends Omit<DragNodeBehaviourOptions, 'id' | 'layerId'> {
   /** Behaviour id; default `'drag-node'`. Changing this remounts the behaviour. */
@@ -16,7 +15,8 @@ export interface DragNodeBehaviourProps extends Omit<DragNodeBehaviourOptions, '
 /**
  * Declarative wrapper for `@invana/graph` `DragNodeBehaviour`.
  *
- * Options are init-only; change the component's `key` to recreate.
+ * `enabled` is reactive (toggles in place). Other options are init-only —
+ * change `id` / `layerId` (or the `key`) to recreate.
  */
 export function DragNodeBehaviour({
   id = 'drag-node',
@@ -24,16 +24,11 @@ export function DragNodeBehaviour({
   enabled = true,
   ...rest
 }: DragNodeBehaviourProps) {
-  const canvas = useCanvas();
-
-  useEffect(() => {
-    const behaviour = new EngineDragNodeBehaviour({ id, layerId, enabled, ...rest });
-    canvas.behaviours.register(behaviour);
-    return () => {
-      canvas.behaviours.unregister(id);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvas, id, layerId]);
-
+  useBehaviourRegistration(
+    () => new EngineDragNodeBehaviour({ id, layerId, enabled, ...rest }),
+    id,
+    enabled,
+    [id, layerId],
+  );
   return null;
 }

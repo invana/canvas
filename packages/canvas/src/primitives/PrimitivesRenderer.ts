@@ -1404,7 +1404,7 @@ export class PrimitivesRenderer {
    *
    * Returns `null` when nothing is hit.
    */
-  hitTest(worldX: number, worldY: number): HitResult | null {
+  hitTest(worldX: number, worldY: number, exclude?: ReadonlySet<string>): HitResult | null {
     const floorWorld = this.hitFloorWorld();
     const candidates = this.hit.query(worldX, worldY, floorWorld);
     if (candidates.length === 0) return null;
@@ -1414,6 +1414,9 @@ export class PrimitivesRenderer {
     const floorSq = floorWorld * floorWorld;
 
     for (const c of candidates) {
+      // Skip excluded ids — e.g. a transient drag preview (rubber-band edge)
+      // that sits under the cursor and would otherwise mask the real target.
+      if (exclude?.has(c.id)) continue;
       const res = this.geometricHit(c.kind, c.id, worldX, worldY);
       if (!res) continue;
       if (res.exact) {
