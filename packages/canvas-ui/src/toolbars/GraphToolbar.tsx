@@ -19,6 +19,13 @@ export interface GraphToolbarProps {
   onClear: () => void;
   clearIcon?: ToolbarIcon;
 
+  /**
+   * Item arrangement. `'spread'` (default) places Layout / Select / Clear in the
+   * `NavHorizontal` left / center / right slots. `'center'` groups all three
+   * together in the center slot.
+   */
+  align?: 'spread' | 'center';
+
   className?: string;
 }
 
@@ -38,28 +45,48 @@ export function GraphToolbar({
   onSelectModeChange,
   onClear,
   clearIcon,
+  align = 'spread',
   className,
 }: GraphToolbarProps) {
+  const layoutPicker = (
+    <OptionPicker
+      label="Layout"
+      value={layout}
+      options={layoutOptions}
+      onChange={onLayoutChange}
+    />
+  );
+  const selectPicker = (
+    <OptionPicker
+      label="Select"
+      value={selectMode}
+      options={selectModeOptions}
+      onChange={onSelectModeChange}
+    />
+  );
+  const clearButton = <ClearButton onClear={onClear} icon={clearIcon} />;
+
+  if (align === 'center') {
+    return (
+      <NavHorizontal
+        className={className}
+        center={
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {layoutPicker}
+            {selectPicker}
+            {clearButton}
+          </div>
+        }
+      />
+    );
+  }
+
   return (
     <NavHorizontal
       className={className}
-      left={
-        <OptionPicker
-          label="Layout"
-          value={layout}
-          options={layoutOptions}
-          onChange={onLayoutChange}
-        />
-      }
-      center={
-        <OptionPicker
-          label="Select"
-          value={selectMode}
-          options={selectModeOptions}
-          onChange={onSelectModeChange}
-        />
-      }
-      right={<ClearButton onClear={onClear} icon={clearIcon} />}
+      left={layoutPicker}
+      center={selectPicker}
+      right={clearButton}
     />
   );
 }

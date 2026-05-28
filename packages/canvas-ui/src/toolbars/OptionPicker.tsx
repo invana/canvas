@@ -38,11 +38,22 @@ export function OptionPicker({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className={className}>
+        {/* `ring-offset-background`: the design-kit Button sets `ring-offset-2`
+            but no offset colour, so the focus ring's 2px offset falls back to
+            Tailwind's default white — a light halo around the open trigger in
+            dark mode. Pin it to the `--color-background` token instead. */}
+        <Button
+          variant="outline"
+          size="sm"
+          className={['ring-offset-background', className].filter(Boolean).join(' ')}
+        >
           {label}: {options[value] ?? value}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align={align}>
+      {/* Force a solid token-driven background: the design-kit's default
+          popover styling is a translucent frosted glass (`bg-popover/80` +
+          backdrop-blur), which reads as transparent over a busy canvas. */}
+      <DropdownMenuContent align={align} style={{ backgroundColor: 'var(--color-popover)' }}>
         <DropdownMenuLabel>{label}</DropdownMenuLabel>
         <DropdownMenuRadioGroup value={value} onValueChange={onChange}>
           {Object.keys(options).map((key) => (

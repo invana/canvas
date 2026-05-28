@@ -1,5 +1,6 @@
 import { NavVertical } from '@invana/ui';
 
+import { FitContentButton } from './FitContentButton';
 import { LockToggle } from './LockToggle';
 import { MinimapToggle } from './MinimapToggle';
 import { ZoomControls } from './ZoomControls';
@@ -10,6 +11,10 @@ export interface GraphViewControlsProps {
   onZoomOut: () => void;
   zoomInIcon: ToolbarIcon;
   zoomOutIcon: ToolbarIcon;
+
+  /** Fit-to-content (zoom-to-extent). Omit both to hide the button. */
+  onFitContent?: () => void;
+  fitContentIcon?: ToolbarIcon;
 
   minimapActive: boolean;
   onToggleMinimap: () => void;
@@ -35,6 +40,8 @@ export function GraphViewControls({
   onZoomOut,
   zoomInIcon,
   zoomOutIcon,
+  onFitContent,
+  fitContentIcon,
   minimapActive,
   onToggleMinimap,
   minimapIcon,
@@ -56,6 +63,9 @@ export function GraphViewControls({
             zoomInIcon={zoomInIcon}
             zoomOutIcon={zoomOutIcon}
           />
+          {onFitContent && fitContentIcon && (
+            <FitContentButton onFitContent={onFitContent} icon={fitContentIcon} />
+          )}
           <MinimapToggle active={minimapActive} onToggle={onToggleMinimap} icon={minimapIcon} />
           <LockToggle
             locked={locked}

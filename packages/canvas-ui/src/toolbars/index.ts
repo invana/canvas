@@ -15,6 +15,8 @@ export { LockToggle } from './LockToggle';
 export type { LockToggleProps } from './LockToggle';
 export { ClearButton } from './ClearButton';
 export type { ClearButtonProps } from './ClearButton';
+export { FitContentButton } from './FitContentButton';
+export type { FitContentButtonProps } from './FitContentButton';
 
 // ─── Turnkey toolbars ──────────────────────────────────────────────────────
 export { GraphToolbar } from './GraphToolbar';

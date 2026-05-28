@@ -5,8 +5,37 @@ import type { Preview } from '@storybook/react-vite';
 // (PostCSS's @import doesn't understand package names).
 import '@invana/themes/styles.css';
 import '@invana/ui/styles.css';
+// The base stylesheets above ship only the *light* `:root` tokens. This adds
+// the `default` theme's dark/light variant tokens (scoped to
+// `[data-theme="default-*"]`). It's unlayered, so it wins over the `@layer
+// theme` `:root` defaults — see `bootstrapOsTheme` below, which flips the
+// attribute from `prefers-color-scheme`.
+import '@invana/styling/themes/default.css';
 
 import './global.css';
+
+/**
+ * Make the `@invana/ui` chrome follow the OS colour scheme. The design-kit
+ * has no `prefers-color-scheme` wiring of its own — it switches themes by
+ * attribute — so we set `data-theme` on `<html>` from the media query and keep
+ * it in sync. CSS custom properties inherit into Radix portals, so popovers /
+ * dropdown menus pick up the dark tokens too. App-level (not per-story); the
+ * listener lives for the iframe session.
+ */
+function bootstrapOsTheme(): void {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  const root = document.documentElement;
+  const apply = (dark: boolean): void => {
+    const variant = dark ? 'default-dark' : 'default-light';
+    root.setAttribute('data-theme', variant);
+    root.classList.remove('theme-default-light', 'theme-default-dark', 'light', 'dark');
+    root.classList.add(`theme-${variant}`, dark ? 'dark' : 'light');
+  };
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  apply(mq.matches);
+  mq.addEventListener('change', (e) => apply(e.matches));
+}
+bootstrapOsTheme();
 
 /** Extracts only the play() function body from a story source string. */
 function extractPlayBody(src: string): string {

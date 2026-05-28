@@ -38,7 +38,7 @@ import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { lesMiserables } from '@invana/graph-datasets';
 import { GraphToolbar, GraphViewControls } from '@invana/canvas-ui';
-import { Lock, LockOpen, Map, Trash2, ZoomIn, ZoomOut } from 'lucide-react';
+import { Lock, LockOpen, Maximize, Map, Trash2, ZoomIn, ZoomOut } from 'lucide-react';
 
 const meta: Meta = { title: 'canvas-react/GraphVisualiser' };
 export default meta;
@@ -93,6 +93,44 @@ function LayoutController({ name }: { name: LayoutName }) {
   return null;
 }
 
+/**
+ * Keeps the graph's theme-dependent colours (node labels + borders, edge
+ * strokes) in sync with the OS `prefers-color-scheme`.
+ *
+ * Why imperative: the `<GraphLayer>` wrapper applies its `node`/`edge` style
+ * props only at mount, so React-state colour changes wouldn't reach existing
+ * nodes. Instead we listen to the media query and call the engine layer's
+ * `setNodeDefaults` / `setEdgeDefaults`, which patch the shared template and
+ * re-render every node/edge in one pass. The group-colour `bgFill` resolver on
+ * the layer template is left untouched — we only patch the keys below.
+ *
+ * (The `BackgroundLayer` follows the same OS signal independently via its own
+ * `mode: 'auto'` + `{ light, dark }` colour pairs.)
+ */
+function ThemeController() {
+  const canvas = useCanvas();
+  useEffect(() => {
+    const layer = canvas.layers.get<EngineGraphLayer>('graph');
+    if (!layer || typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const apply = () => {
+      const dark = mq.matches;
+      layer.setNodeDefaults({
+        labelColor: dark ? 0xe2e8f0 : 0x334155,
+        bgStrokeColor: dark ? 0x0f172a : 0xffffff,
+      });
+      layer.setEdgeDefaults({
+        strokeColor: dark ? 0x475569 : 0xcbd5e1,
+        arrowTargetColor: dark ? 0x475569 : 0xcbd5e1,
+      });
+    };
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, [canvas]);
+  return null;
+}
+
 function Visualiser() {
   const canvasRef = useRef<EngineCanvas>(null);
   const [layout, setLayout] = useState<LayoutName>('d3-force');
@@ -102,6 +140,11 @@ function Visualiser() {
 
   const zoomIn = useCallback(() => canvasRef.current?.camera.zoomAt(1.2), []);
   const zoomOut = useCallback(() => canvasRef.current?.camera.zoomAt(1 / 1.2), []);
+  const fitContent = useCallback(() => {
+    const canvas = canvasRef.current;
+    const layer = canvas?.layers.get<EngineGraphLayer>('graph');
+    if (canvas && layer) canvas.camera.fitContent(layer.getBounds(), 80);
+  }, []);
   const clear = useCallback(() => {
     canvasRef.current?.layers.get<EngineGraphLayer>('graph')?.store.clear();
   }, []);
@@ -117,6 +160,7 @@ function Visualiser() {
         onSelectModeChange={(v) => setSelectMode(v as SelectMode)}
         onClear={clear}
         clearIcon={Trash2}
+        align="center"
       />
 
       <div style={bodyStyle}>
@@ -125,6 +169,8 @@ function Visualiser() {
           onZoomOut={zoomOut}
           zoomInIcon={ZoomIn}
           zoomOutIcon={ZoomOut}
+          onFitContent={fitContent}
+          fitContentIcon={Maximize}
           minimapActive={showMinimap}
           onToggleMinimap={() => setShowMinimap((v) => !v)}
           minimapIcon={Map}
@@ -136,7 +182,15 @@ function Visualiser() {
 
         <div style={hostStyle}>
           <Canvas ref={canvasRef} autoResize>
-            <BackgroundLayer patternType="dots" />
+            {/* mode defaults to 'auto' → fill + dot pattern follow the OS
+                `prefers-color-scheme`. The `{ light, dark }` pairs give the
+                layer an actual dark variant to paint (without them the single
+                light colour shows in both schemes). */}
+            <BackgroundLayer
+              patternType="dots"
+              backgroundColor={{ light: '#f8fafc', dark: '#0f172a' }}
+              color={{ light: '#94a3b8', dark: '#334155' }}
+            />
             <GraphLayer
               id="graph"
               data={lesMiserables}
@@ -144,18 +198,19 @@ function Visualiser() {
                 style: {
                   shape: { kind: 'circle', radius: 8 },
                   bgFill: (n: GraphNode) => PALETTE[groupOf(n) % PALETTE.length]!,
-                  bgStrokeColor: 0xffffff,
+                  // labelColor + bgStrokeColor are theme-driven — see <ThemeController>.
                   bgStrokeWidth: 1.5,
                   labelText: (n: GraphNode) => String(n.id),
-                  labelColor: 0x334155,
                   labelFontSize: 11,
                   labelPlacement: 'bottom',
                   labelOffsetY: 4,
                 },
               }}
-              edge={{ style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' } }}
+              // edge strokeColor is theme-driven — see <ThemeController>.
+              edge={{ style: { strokeWidth: 1, arrowTargetShape: 'none' } }}
             />
             <LayoutController name={layout} />
+            <ThemeController />
 
             {/* Lock view disables pan + node-drag; zoom stays available. */}
             <DragPanBehaviour enabled={!locked} />
