@@ -19,6 +19,7 @@
   },
   "peerDependencies": {
     "@invana/canvas": "workspace:*",
+    "@invana/canvas-ui": "workspace:*",
     "@invana/graph": "workspace:*",
     "@invana/graph-layout-d3-force": "workspace:*",
     "pixi.js": "^8.18.1",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@invana/canvas": "workspace:*",
+    "@invana/canvas-ui": "workspace:*",
     "@invana/graph": "workspace:*",
     "@invana/graph-layout-d3-force": "workspace:*",
     "@repo/typescript-config": "workspace:*",

@@ -87,3 +87,23 @@ export type { DegreeSizeBehaviourProps } from './behaviours/DegreeSizeBehaviour'
 // ─── Layouts ─────────────────────────────────────────────────────────────
 export { D3ForceLayout } from './layouts/D3ForceLayout';
 export type { D3ForceLayoutProps } from './layouts/D3ForceLayout';
+
+// ─── Hooks ───────────────────────────────────────────────────────────────
+// Canvas-aware hooks for building custom toolbars / panels. Resolve the engine
+// from CanvasContext (or an explicit instance) and subscribe to engine events.
+export { useCamera, useZoom, useFitContent, useCanvasEvent } from './hooks';
+export type { UseCameraResult, UseZoomResult, UseFitContentResult } from './hooks';
+
+// ─── Controls (smart presets) ──────────────────────────────────────────────
+// Self-wiring overlays — React Flow's `<Controls>` equivalent.
+export { CanvasControls, CanvasZoomControls } from './controls';
+export type {
+  CanvasControlsProps,
+  CanvasControlsIconSet,
+  CanvasZoomControlsProps,
+} from './controls';
+
+// ─── Layout primitives (re-exported from @invana/canvas-ui) ────────────────
+// Single-import DX: positioned overlay container + control button.
+export { Panel, ControlButton } from '@invana/canvas-ui';
+export type { PanelProps, PanelPosition, ControlButtonProps } from '@invana/canvas-ui';

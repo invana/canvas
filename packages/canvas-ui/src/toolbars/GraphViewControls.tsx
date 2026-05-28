@@ -1,5 +1,7 @@
 import { NavVertical } from '@invana/ui';
 
+import { Panel } from '../layout/Panel';
+import type { PanelPosition } from '../layout/types';
 import { FitContentButton } from './FitContentButton';
 import { LockToggle } from './LockToggle';
 import { MinimapToggle } from './MinimapToggle';
@@ -25,6 +27,8 @@ export interface GraphViewControlsProps {
   lockedIcon: ToolbarIcon;
   unlockedIcon: ToolbarIcon;
 
+  /** Where the rail pins within the canvas host. Default `'top-left'`. */
+  position?: PanelPosition;
   className?: string;
 }
 
@@ -34,6 +38,10 @@ export interface GraphViewControlsProps {
  * are callbacks. Compose the underlying {@link ZoomControls} /
  * {@link MinimapToggle} / {@link LockToggle} primitives directly for a custom
  * arrangement.
+ *
+ * Self-positioning: it wraps itself in a {@link Panel}, so it overlays the
+ * canvas host directly — render it as a child of `<Canvas>` (no hand-rolled
+ * absolute wrapper needed).
  */
 export function GraphViewControls({
   onZoomIn,
@@ -49,32 +57,35 @@ export function GraphViewControls({
   onToggleLock,
   lockedIcon,
   unlockedIcon,
+  position = 'top-left',
   className,
 }: GraphViewControlsProps) {
   return (
-    <NavVertical
-      className={className}
-      top={
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: 4 }}>
-          <ZoomControls
-            orientation="vertical"
-            onZoomIn={onZoomIn}
-            onZoomOut={onZoomOut}
-            zoomInIcon={zoomInIcon}
-            zoomOutIcon={zoomOutIcon}
-          />
-          {onFitContent && fitContentIcon && (
-            <FitContentButton onFitContent={onFitContent} icon={fitContentIcon} />
-          )}
-          <MinimapToggle active={minimapActive} onToggle={onToggleMinimap} icon={minimapIcon} />
-          <LockToggle
-            locked={locked}
-            onToggle={onToggleLock}
-            lockedIcon={lockedIcon}
-            unlockedIcon={unlockedIcon}
-          />
-        </div>
-      }
-    />
+    <Panel position={position} orientation="vertical">
+      <NavVertical
+        className={className}
+        top={
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: 4 }}>
+            <ZoomControls
+              orientation="vertical"
+              onZoomIn={onZoomIn}
+              onZoomOut={onZoomOut}
+              zoomInIcon={zoomInIcon}
+              zoomOutIcon={zoomOutIcon}
+            />
+            {onFitContent && fitContentIcon && (
+              <FitContentButton onFitContent={onFitContent} icon={fitContentIcon} />
+            )}
+            <MinimapToggle active={minimapActive} onToggle={onToggleMinimap} icon={minimapIcon} />
+            <LockToggle
+              locked={locked}
+              onToggle={onToggleLock}
+              lockedIcon={lockedIcon}
+              unlockedIcon={unlockedIcon}
+            />
+          </div>
+        }
+      />
+    </Panel>
   );
 }

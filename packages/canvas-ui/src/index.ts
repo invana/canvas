@@ -39,6 +39,7 @@ export {
   MinimapToggle,
   LockToggle,
   ClearButton,
+  FitContentButton,
   GraphToolbar,
   GraphViewControls,
 } from './toolbars';
@@ -49,9 +50,16 @@ export type {
   MinimapToggleProps,
   LockToggleProps,
   ClearButtonProps,
+  FitContentButtonProps,
   GraphToolbarProps,
   GraphViewControlsProps,
 } from './toolbars';
+
+// ─── Layout primitives (positioning track) ───────────────────────────────
+// Positioned overlay container + control button — the canvas equivalents of
+// React Flow's `<Panel>` / `<ControlButton>`. Engine-agnostic, icon-agnostic.
+export { Panel, ControlButton } from './layout';
+export type { PanelProps, PanelPosition, ControlButtonProps } from './layout';
 
 // ─── Shared presets + utils ──────────────────────────────────────────────
 // Colour swatch palette shared across editors, and the `0xRRGGBB` ↔ `#rrggbb`

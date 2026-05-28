@@ -1,20 +1,22 @@
 /**
  * Graph data **visualiser** — a read-only explorer built from
- * `@invana/canvas-react` wrappers, with two `@invana/canvas-ui` toolbars:
+ * `@invana/canvas-react` wrappers, with two `@invana/canvas-ui` toolbars
+ * rendered as **overlay children** of `<Canvas>` (they self-position via
+ * `<Panel>`, pinning to the canvas host):
  *
- *   - **`<GraphToolbar>`** (top) — layout switcher (Force / ELK layered / ELK
- *     stress), selection-mode dropdown (Click / Brush / Lasso; Click default),
- *     and Clear canvas.
- *   - **`<GraphViewControls>`** (left) — zoom in / out, show-minimap toggle, and
- *     lock-view (disables pan + node-drag).
+ *   - **`<GraphToolbar>`** (top-centre) — layout switcher (Force / ELK layered /
+ *     ELK stress), selection-mode dropdown (Click / Brush / Lasso; Click
+ *     default), and Clear canvas.
+ *   - **`<GraphViewControls>`** (top-left) — zoom in / out, fit-to-content,
+ *     show-minimap toggle, and lock-view (disables pan + node-drag).
  *
- * The toolbars are engine-agnostic (props + callbacks); this story supplies the
- * lucide icons and wires the callbacks to the engine via a `ref` (zoom, clear)
- * and React state (layout, select mode, minimap, lock).
+ * Camera actions are wired through the canvas hooks (`useCamera`,
+ * `useFitContent`) rather than a hand-held `ref`; the clear action reads the
+ * layer from `useCanvas`. App state (layout, select mode, minimap, lock) lives
+ * in the parent and is passed down.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { CSSProperties } from 'react';
+import { useEffect, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
@@ -31,8 +33,9 @@ import {
   PinchZoomBehaviour,
   WheelZoomBehaviour,
   useCanvas,
+  useCamera,
+  useFitContent,
 } from '@invana/canvas-react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
 import type { GraphNode, GraphLayer as EngineGraphLayer } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
@@ -101,11 +104,7 @@ function LayoutController({ name }: { name: LayoutName }) {
  * props only at mount, so React-state colour changes wouldn't reach existing
  * nodes. Instead we listen to the media query and call the engine layer's
  * `setNodeDefaults` / `setEdgeDefaults`, which patch the shared template and
- * re-render every node/edge in one pass. The group-colour `bgFill` resolver on
- * the layer template is left untouched — we only patch the keys below.
- *
- * (The `BackgroundLayer` follows the same OS signal independently via its own
- * `mode: 'auto'` + `{ light, dark }` colour pairs.)
+ * re-render every node/edge in one pass.
  */
 function ThemeController() {
   const canvas = useCanvas();
@@ -131,120 +130,142 @@ function ThemeController() {
   return null;
 }
 
+/** Top-centre toolbar overlay. Clear reads the layer from context; layout/select state come from props. */
+function ToolbarOverlay({
+  layout,
+  onLayoutChange,
+  selectMode,
+  onSelectModeChange,
+}: {
+  layout: LayoutName;
+  onLayoutChange: (v: LayoutName) => void;
+  selectMode: SelectMode;
+  onSelectModeChange: (v: SelectMode) => void;
+}) {
+  const canvas = useCanvas();
+  // `setData` with empty data routes through the batched flush so the painted
+  // shapes are actually torn down (`store.clear()` alone is silent).
+  const clear = () =>
+    canvas.layers.get<EngineGraphLayer>('graph')?.setData({ nodes: [], edges: [] });
+  return (
+    <GraphToolbar
+      layout={layout}
+      layoutOptions={LAYOUT_LABEL}
+      onLayoutChange={(v) => onLayoutChange(v as LayoutName)}
+      selectMode={selectMode}
+      selectModeOptions={SELECT_LABEL}
+      onSelectModeChange={(v) => onSelectModeChange(v as SelectMode)}
+      onClear={clear}
+      clearIcon={Trash2}
+      position="top-center"
+    />
+  );
+}
+
+/** Top-left view-controls overlay. Zoom/fit are wired through the canvas hooks. */
+function ViewControlsOverlay({
+  showMinimap,
+  onToggleMinimap,
+  locked,
+  onToggleLock,
+}: {
+  showMinimap: boolean;
+  onToggleMinimap: () => void;
+  locked: boolean;
+  onToggleLock: () => void;
+}) {
+  const { zoomIn, zoomOut } = useCamera();
+  const { fitContent } = useFitContent('graph');
+  return (
+    <GraphViewControls
+      onZoomIn={() => zoomIn()}
+      onZoomOut={() => zoomOut()}
+      zoomInIcon={ZoomIn}
+      zoomOutIcon={ZoomOut}
+      onFitContent={() => fitContent()}
+      fitContentIcon={Maximize}
+      minimapActive={showMinimap}
+      onToggleMinimap={onToggleMinimap}
+      minimapIcon={Map}
+      locked={locked}
+      onToggleLock={onToggleLock}
+      lockedIcon={Lock}
+      unlockedIcon={LockOpen}
+      position="top-left"
+    />
+  );
+}
+
 function Visualiser() {
-  const canvasRef = useRef<EngineCanvas>(null);
   const [layout, setLayout] = useState<LayoutName>('d3-force');
   const [selectMode, setSelectMode] = useState<SelectMode>('click');
   const [showMinimap, setShowMinimap] = useState(true);
   const [locked, setLocked] = useState(false);
 
-  const zoomIn = useCallback(() => canvasRef.current?.camera.zoomAt(1.2), []);
-  const zoomOut = useCallback(() => canvasRef.current?.camera.zoomAt(1 / 1.2), []);
-  const fitContent = useCallback(() => {
-    const canvas = canvasRef.current;
-    const layer = canvas?.layers.get<EngineGraphLayer>('graph');
-    if (canvas && layer) canvas.camera.fitContent(layer.getBounds(), 80);
-  }, []);
-  const clear = useCallback(() => {
-    canvasRef.current?.layers.get<EngineGraphLayer>('graph')?.store.clear();
-  }, []);
-
   return (
-    <div style={pageStyle}>
-      <GraphToolbar
-        layout={layout}
-        layoutOptions={LAYOUT_LABEL}
-        onLayoutChange={(v) => setLayout(v as LayoutName)}
-        selectMode={selectMode}
-        selectModeOptions={SELECT_LABEL}
-        onSelectModeChange={(v) => setSelectMode(v as SelectMode)}
-        onClear={clear}
-        clearIcon={Trash2}
-        align="center"
-      />
+    <div style={{ height: '100vh' }}>
+      <Canvas autoResize>
+        {/* mode defaults to 'auto' → fill + dot pattern follow the OS
+            `prefers-color-scheme`. The `{ light, dark }` pairs give the layer an
+            actual dark variant to paint. */}
+        <BackgroundLayer
+          patternType="dots"
+          backgroundColor={{ light: '#f8fafc', dark: '#0f172a' }}
+          color={{ light: '#94a3b8', dark: '#334155' }}
+        />
+        <GraphLayer
+          id="graph"
+          data={lesMiserables}
+          node={{
+            style: {
+              shape: { kind: 'circle', radius: 8 },
+              bgFill: (n: GraphNode) => PALETTE[groupOf(n) % PALETTE.length]!,
+              // labelColor + bgStrokeColor are theme-driven — see <ThemeController>.
+              bgStrokeWidth: 1.5,
+              labelText: (n: GraphNode) => String(n.id),
+              labelFontSize: 11,
+              labelPlacement: 'bottom',
+              labelOffsetY: 4,
+            },
+          }}
+          // edge strokeColor is theme-driven — see <ThemeController>.
+          edge={{ style: { strokeWidth: 1, arrowTargetShape: 'none' } }}
+        />
+        <LayoutController name={layout} />
+        <ThemeController />
 
-      <div style={bodyStyle}>
-        <GraphViewControls
-          onZoomIn={zoomIn}
-          onZoomOut={zoomOut}
-          zoomInIcon={ZoomIn}
-          zoomOutIcon={ZoomOut}
-          onFitContent={fitContent}
-          fitContentIcon={Maximize}
-          minimapActive={showMinimap}
+        {/* Lock view disables pan + node-drag; zoom stays available. */}
+        <DragPanBehaviour enabled={!locked} />
+        <DragNodeBehaviour layerId="graph" enabled={!locked} />
+        <WheelZoomBehaviour />
+        <PinchZoomBehaviour />
+        <HoverActivateBehaviour layerId="graph" degree={1} state="highlighted" />
+
+        {/* Selection mode — exactly one enabled at a time. */}
+        <ClickSelectBehaviour layerId="graph" enabled={selectMode === 'click'} multiple />
+        <BrushSelectBehaviour layerId="graph" enabled={selectMode === 'brush'} />
+        <LassoSelectBehaviour layerId="graph" enabled={selectMode === 'lasso'} />
+
+        <LabelResolutionLODBehaviour layerId="graph" />
+        {showMinimap && <MiniMapLayer graphLayerId="graph" />}
+
+        {/* HTML overlays — self-positioning via <Panel>, pinned to the canvas host. */}
+        <ToolbarOverlay
+          layout={layout}
+          onLayoutChange={setLayout}
+          selectMode={selectMode}
+          onSelectModeChange={setSelectMode}
+        />
+        <ViewControlsOverlay
+          showMinimap={showMinimap}
           onToggleMinimap={() => setShowMinimap((v) => !v)}
-          minimapIcon={Map}
           locked={locked}
           onToggleLock={() => setLocked((v) => !v)}
-          lockedIcon={Lock}
-          unlockedIcon={LockOpen}
         />
-
-        <div style={hostStyle}>
-          <Canvas ref={canvasRef} autoResize>
-            {/* mode defaults to 'auto' → fill + dot pattern follow the OS
-                `prefers-color-scheme`. The `{ light, dark }` pairs give the
-                layer an actual dark variant to paint (without them the single
-                light colour shows in both schemes). */}
-            <BackgroundLayer
-              patternType="dots"
-              backgroundColor={{ light: '#f8fafc', dark: '#0f172a' }}
-              color={{ light: '#94a3b8', dark: '#334155' }}
-            />
-            <GraphLayer
-              id="graph"
-              data={lesMiserables}
-              node={{
-                style: {
-                  shape: { kind: 'circle', radius: 8 },
-                  bgFill: (n: GraphNode) => PALETTE[groupOf(n) % PALETTE.length]!,
-                  // labelColor + bgStrokeColor are theme-driven — see <ThemeController>.
-                  bgStrokeWidth: 1.5,
-                  labelText: (n: GraphNode) => String(n.id),
-                  labelFontSize: 11,
-                  labelPlacement: 'bottom',
-                  labelOffsetY: 4,
-                },
-              }}
-              // edge strokeColor is theme-driven — see <ThemeController>.
-              edge={{ style: { strokeWidth: 1, arrowTargetShape: 'none' } }}
-            />
-            <LayoutController name={layout} />
-            <ThemeController />
-
-            {/* Lock view disables pan + node-drag; zoom stays available. */}
-            <DragPanBehaviour enabled={!locked} />
-            <DragNodeBehaviour layerId="graph" enabled={!locked} />
-            <WheelZoomBehaviour />
-            <PinchZoomBehaviour />
-            <HoverActivateBehaviour
-              layerId="graph"
-              degree={1}
-              state="highlighted"
-              // inactiveState="dimmed"
-            />
-
-            {/* Selection mode — exactly one enabled at a time. Brush/Lasso
-                delegate to this ClickSelect (default `clickSelectId:
-                'click-select'`), so its `degree` governs all three. Keep it 0
-                so area-select picks exactly what's enclosed (no neighbour
-                expansion); hover still shows the 1-hop neighbourhood. */}
-            <ClickSelectBehaviour layerId="graph" enabled={selectMode === 'click'} multiple />
-            <BrushSelectBehaviour layerId="graph" enabled={selectMode === 'brush'} />
-            <LassoSelectBehaviour layerId="graph" enabled={selectMode === 'lasso'} />
-
-            <LabelResolutionLODBehaviour layerId="graph" />
-            {showMinimap && <MiniMapLayer graphLayerId="graph" />}
-          </Canvas>
-        </div>
-      </div>
+      </Canvas>
     </div>
   );
 }
-
-const pageStyle: CSSProperties = { display: 'flex', flexDirection: 'column', height: '100vh' };
-const bodyStyle: CSSProperties = { flex: 1, minHeight: 0, display: 'flex' };
-const hostStyle: CSSProperties = { flex: 1, minWidth: 0, position: 'relative' };
 
 export const GraphVisualiser: Story = {
   render: () => <Visualiser />,

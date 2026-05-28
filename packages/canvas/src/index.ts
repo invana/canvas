@@ -54,7 +54,7 @@ export type { DirtySnapshot } from './state/DirtyBatcher';
 
 // ─── Camera ─────────────────────────────────────────────────────────────
 export { Camera } from './camera/Camera';
-export type { CameraOptions } from './camera/Camera';
+export type { CameraOptions, Rect, Point } from './camera/Camera';
 
 // ─── Context ────────────────────────────────────────────────────────────
 export type { CanvasContext } from './context/CanvasContext';
