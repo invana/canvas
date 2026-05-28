@@ -7,8 +7,9 @@
  *   - **`<GraphToolbar>`** (top-centre) — layout switcher (Force / ELK layered /
  *     ELK stress), selection-mode dropdown (Click / Brush / Lasso; Click
  *     default), and Clear canvas.
- *   - **`<GraphViewControls>`** (top-left) — zoom in / out, fit-to-content,
- *     show-minimap toggle, and lock-view (disables pan + node-drag).
+ *   - **`<GraphViewControls>`** (bottom-left) — zoom in / out, fit-to-content,
+ *     show-minimap toggle, and lock-view (disables pan + node-drag), with the
+ *     minimap sitting just to its right (also bottom-left).
  *
  * Camera actions are wired through the canvas hooks (`useCamera`,
  * `useFitContent`) rather than a hand-held `ref`; the clear action reads the
@@ -191,7 +192,7 @@ function ViewControlsOverlay({
       onToggleLock={onToggleLock}
       lockedIcon={Lock}
       unlockedIcon={LockOpen}
-      position="top-left"
+      position="bottom-left"
     />
   );
 }
@@ -247,7 +248,12 @@ function Visualiser() {
         <LassoSelectBehaviour layerId="graph" enabled={selectMode === 'lasso'} />
 
         <LabelResolutionLODBehaviour layerId="graph" />
-        {showMinimap && <MiniMapLayer graphLayerId="graph" />}
+        {/* Minimap sits bottom-left, just right of the view-controls rail and
+            bottom-aligned with it: x clears the rail's width, y matches the
+            rail's 8px Panel offset. */}
+        {showMinimap && (
+          <MiniMapLayer graphLayerId="graph" position="bottom-left" margin={{ x: 64, y: 17 }} />
+        )}
 
         {/* HTML overlays — self-positioning via <Panel>, pinned to the canvas host. */}
         <ToolbarOverlay

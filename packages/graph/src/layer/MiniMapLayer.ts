@@ -66,8 +66,13 @@ export interface MiniMapLayerOptions {
   enableDrag?: boolean;
   /** Anchor corner. Default `'bottom-right'`. */
   position?: MiniMapPosition;
-  /** Distance from the chosen corner, in screen pixels. Default `10`. */
-  margin?: number;
+  /**
+   * Inset from the chosen corner, in screen pixels. Pass a single number for a
+   * symmetric inset, or `{ x, y }` for independent horizontal / vertical insets
+   * (e.g. to bottom-align the minimap with a control rail while clearing its
+   * width). A missing axis on the object form falls back to `10`. Default `10`.
+   */
+  margin?: number | { x?: number; y?: number };
 }
 
 const DEFAULTS: Required<Omit<MiniMapLayerOptions, 'graphLayerId'>> = {
@@ -243,24 +248,27 @@ export class MiniMapLayer extends ScreenLayer<
     if (!this.inner) return;
     const { width, height, position, margin } = this.opts;
     const vp = this.viewportSize();
+    // Resolve symmetric (number) or per-axis ({ x, y }) insets; missing axis → 10.
+    const mx = typeof margin === 'number' ? margin : (margin.x ?? 10);
+    const my = typeof margin === 'number' ? margin : (margin.y ?? 10);
     let x = 0;
     let y = 0;
     switch (position) {
       case 'top-left':
-        x = margin;
-        y = margin;
+        x = mx;
+        y = my;
         break;
       case 'top-right':
-        x = vp.width - width - margin;
-        y = margin;
+        x = vp.width - width - mx;
+        y = my;
         break;
       case 'bottom-left':
-        x = margin;
-        y = vp.height - height - margin;
+        x = mx;
+        y = vp.height - height - my;
         break;
       case 'bottom-right':
-        x = vp.width - width - margin;
-        y = vp.height - height - margin;
+        x = vp.width - width - mx;
+        y = vp.height - height - my;
         break;
     }
     this.inner.position.set(x, y);
