@@ -391,11 +391,65 @@ export class GraphLayer extends WorldLayer<
    * source of truth and the layer just orchestrates store → renderer.
    */
   setData(data: GraphData): void {
+    // Pure wipe — delegate to `clear()` so the renderer teardown, store reset,
+    // and `data:changed` notification all live in one place.
+    if (data.nodes.length === 0 && data.edges.length === 0) {
+      this.clear();
+      return;
+    }
+    // Replace: `store.clear()` is a silent fast-wipe — it emits no per-node
+    // `node:remove` events, so the renderer (which projects those events into
+    // `removeShape` / `removeConnector`) would keep the old shapes painted.
+    // Detach them explicitly first; the new data's `node:add` / `edge:add`
+    // events then repaint on the batch's flush.
+    this.detachAllFromRenderer();
     this.store.batch(() => {
       this.store.clear();
       this.store.addNodesBulk(data.nodes);
       this.store.addEdgesBulk(data.edges);
     });
+  }
+
+  /**
+   * Remove every node and edge — tearing down their rendered shapes /
+   * connectors and notifying full-repaint consumers (e.g. `MiniMapLayer`). The
+   * canonical way to empty the graph; prefer it over
+   * `setData({ nodes: [], edges: [] })`.
+   *
+   * Note the difference from the low-level `graph.store.clear()`: that is a
+   * silent fast-wipe (no events, drops the pending queues), so on its own it
+   * would leave the canvas painted and dependent layers stale. This method
+   * keeps the renderer and store in sync and fires a single `data:changed`
+   * (which `store.clear()` alone never produces, since `doFlush` skips an empty
+   * flush) so consumers update immediately rather than on some later event.
+   */
+  clear(): void {
+    const removedNodes = this.store.nodeCount();
+    const removedEdges = this.store.edgeCount();
+    this.detachAllFromRenderer();
+    this.store.clear();
+    this.events.emit('data:changed', {
+      addedNodes: 0,
+      updatedNodes: 0,
+      removedNodes,
+      addedEdges: 0,
+      updatedEdges: 0,
+      removedEdges,
+    });
+  }
+
+  /**
+   * Drop every shape / connector this layer has mounted on the renderer and
+   * reset transient routing state. Shared by `clear` / `setData`: `store.clear()`
+   * is silent, so it never drives the renderer's event-based removal path —
+   * the layer must detach explicitly.
+   */
+  private detachAllFromRenderer(): void {
+    const renderer = this._renderer;
+    if (!renderer) return;
+    for (const node of this.store.nodes()) renderer.removeShape(node.id);
+    for (const edge of this.store.edges()) renderer.removeConnector(edge.id);
+    this.dirtyConnectors.clear();
   }
 
   // ─── Layer-level template (defaults) ──────────────────────────────────────

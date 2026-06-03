@@ -11,6 +11,8 @@ export interface PanelProps {
   offset?: number;
   /** Gap between children, in px. Default `4`. */
   gap?: number;
+  /** Stacking order, so the overlay sits above canvas content. Default `5`. */
+  zIndex?: number;
   className?: string;
   /** Extra inline styles, merged onto the content wrapper (not the positioner). */
   style?: CSSProperties;
@@ -54,12 +56,13 @@ export function Panel({
   orientation = 'vertical',
   offset = 8,
   gap = 4,
+  zIndex = 5,
   className,
   style,
   children,
 }: PanelProps) {
   return (
-    <div style={{ ...pinStyle(position, offset), pointerEvents: 'none' }}>
+    <div style={{ ...pinStyle(position, offset), zIndex, pointerEvents: 'none' }}>
       <div
         className={className}
         style={{

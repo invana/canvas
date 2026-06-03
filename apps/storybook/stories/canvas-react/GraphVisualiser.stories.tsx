@@ -11,13 +11,14 @@
  *     show-minimap toggle, and lock-view (disables pan + node-drag), with the
  *     minimap sitting just to its right (also bottom-left).
  *
- * Camera actions are wired through the canvas hooks (`useCamera`,
- * `useFitContent`) rather than a hand-held `ref`; the clear action reads the
- * layer from `useCanvas`. App state (layout, select mode, minimap, lock) lives
- * in the parent and is passed down.
+ * The toolbars are `@invana/canvas-ui` components (engine-agnostic, props +
+ * callbacks). `Visualiser` holds an imperative `ref` to the engine and wires
+ * the callbacks (zoom / fit / clear) to it, so the toolbars render directly as
+ * `<Canvas>` children — no per-toolbar wrapper component. App state (layout,
+ * select mode, minimap, lock) lives in the parent and is passed down.
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
@@ -34,9 +35,8 @@ import {
   PinchZoomBehaviour,
   WheelZoomBehaviour,
   useCanvas,
-  useCamera,
-  useFitContent,
 } from '@invana/canvas-react';
+import type { Canvas as EngineCanvas } from '@invana/canvas';
 import type { GraphNode, GraphLayer as EngineGraphLayer } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
@@ -131,81 +131,37 @@ function ThemeController() {
   return null;
 }
 
-/** Top-centre toolbar overlay. Clear reads the layer from context; layout/select state come from props. */
-function ToolbarOverlay({
-  layout,
-  onLayoutChange,
-  selectMode,
-  onSelectModeChange,
-}: {
-  layout: LayoutName;
-  onLayoutChange: (v: LayoutName) => void;
-  selectMode: SelectMode;
-  onSelectModeChange: (v: SelectMode) => void;
-}) {
-  const canvas = useCanvas();
-  // `setData` with empty data routes through the batched flush so the painted
-  // shapes are actually torn down (`store.clear()` alone is silent).
-  const clear = () =>
-    canvas.layers.get<EngineGraphLayer>('graph')?.setData({ nodes: [], edges: [] });
-  return (
-    <GraphToolbar
-      layout={layout}
-      layoutOptions={LAYOUT_LABEL}
-      onLayoutChange={(v) => onLayoutChange(v as LayoutName)}
-      selectMode={selectMode}
-      selectModeOptions={SELECT_LABEL}
-      onSelectModeChange={(v) => onSelectModeChange(v as SelectMode)}
-      onClear={clear}
-      clearIcon={Trash2}
-      position="top-center"
-    />
-  );
-}
-
-/** Top-left view-controls overlay. Zoom/fit are wired through the canvas hooks. */
-function ViewControlsOverlay({
-  showMinimap,
-  onToggleMinimap,
-  locked,
-  onToggleLock,
-}: {
-  showMinimap: boolean;
-  onToggleMinimap: () => void;
-  locked: boolean;
-  onToggleLock: () => void;
-}) {
-  const { zoomIn, zoomOut } = useCamera();
-  const { fitContent } = useFitContent('graph');
-  return (
-    <GraphViewControls
-      onZoomIn={() => zoomIn()}
-      onZoomOut={() => zoomOut()}
-      zoomInIcon={ZoomIn}
-      zoomOutIcon={ZoomOut}
-      onFitContent={() => fitContent()}
-      fitContentIcon={Maximize}
-      minimapActive={showMinimap}
-      onToggleMinimap={onToggleMinimap}
-      minimapIcon={Map}
-      locked={locked}
-      onToggleLock={onToggleLock}
-      lockedIcon={Lock}
-      unlockedIcon={LockOpen}
-      position="bottom-left"
-    />
-  );
-}
-
 function Visualiser() {
+  const canvasRef = useRef<EngineCanvas>(null);
   const [layout, setLayout] = useState<LayoutName>('d3-force');
   const [selectMode, setSelectMode] = useState<SelectMode>('click');
   const [showMinimap, setShowMinimap] = useState(true);
   const [locked, setLocked] = useState(false);
 
+  // Camera / clear actions wired imperatively through the engine ref. Read
+  // `ref.current` at call time — it's the initialised engine by the time any
+  // toolbar button can be clicked (children mount only after init).
+  const zoomIn = useCallback(() => canvasRef.current?.camera.zoomAt(1.2), []);
+  const zoomOut = useCallback(() => canvasRef.current?.camera.zoomAt(1 / 1.2), []);
+  const fitContent = useCallback(() => {
+    const canvas = canvasRef.current;
+    const layer = canvas?.layers.get<EngineGraphLayer>('graph');
+    if (canvas && layer) canvas.camera.fitContent(layer.getBounds(), 80);
+  }, []);
+  // `GraphLayer.clear()` tears down the rendered shapes + store and notifies
+  // dependent layers (minimap) — unlike the silent low-level `store.clear()`.
+  const clear = useCallback(
+    () => canvasRef.current?.layers.get<EngineGraphLayer>('graph')?.clear(),
+    [],
+  );
+
   return (
-    <div style={{ height: '100vh' }}>
-      <Canvas autoResize>
+    // `position: relative` makes this wrapper the positioned ancestor the
+    // toolbars' <Panel>s pin to. The toolbars are rendered as SIBLINGS of
+    // <Canvas> (not children) so their clicks land on real DOM above the pixi
+    // canvas — the same overlay pattern as GraphModeller.
+    <div style={{ height: '100vh', position: 'relative' }}>
+      <Canvas ref={canvasRef} autoResize>
         {/* mode defaults to 'auto' → fill + dot pattern follow the OS
             `prefers-color-scheme`. The `{ light, dark }` pairs give the layer an
             actual dark variant to paint. */}
@@ -242,10 +198,13 @@ function Visualiser() {
         <PinchZoomBehaviour />
         <HoverActivateBehaviour layerId="graph" degree={1} state="highlighted" />
 
-        {/* Selection mode — exactly one enabled at a time. */}
+        {/* Selection mode — exactly one enabled at a time. Brush/Lasso default
+            to `trigger: ['shift']` (shift+drag); since selection mode is an
+            explicit switch here, `trigger={[]}` lets a plain left-drag select.
+            They pause camera pan on pointerdown, so they coexist with DragPan. */}
         <ClickSelectBehaviour layerId="graph" enabled={selectMode === 'click'} multiple />
-        <BrushSelectBehaviour layerId="graph" enabled={selectMode === 'brush'} />
-        <LassoSelectBehaviour layerId="graph" enabled={selectMode === 'lasso'} />
+        <BrushSelectBehaviour layerId="graph" enabled={selectMode === 'brush'} trigger={[]} />
+        <LassoSelectBehaviour layerId="graph" enabled={selectMode === 'lasso'} trigger={[]} />
 
         <LabelResolutionLODBehaviour layerId="graph" />
         {/* Minimap sits bottom-left, just right of the view-controls rail and
@@ -254,21 +213,39 @@ function Visualiser() {
         {showMinimap && (
           <MiniMapLayer graphLayerId="graph" position="bottom-left" margin={{ x: 64, y: 17 }} />
         )}
-
-        {/* HTML overlays — self-positioning via <Panel>, pinned to the canvas host. */}
-        <ToolbarOverlay
-          layout={layout}
-          onLayoutChange={setLayout}
-          selectMode={selectMode}
-          onSelectModeChange={setSelectMode}
-        />
-        <ViewControlsOverlay
-          showMinimap={showMinimap}
-          onToggleMinimap={() => setShowMinimap((v) => !v)}
-          locked={locked}
-          onToggleLock={() => setLocked((v) => !v)}
-        />
       </Canvas>
+
+      {/* Toolbars — engine-agnostic canvas-ui components called directly (no
+          wrapper component), as siblings of <Canvas>. They self-position via
+          <Panel> (pinned to the relative wrapper, above the canvas); their
+          callbacks are wired to the engine ref above. */}
+      <GraphToolbar
+        layout={layout}
+        layoutOptions={LAYOUT_LABEL}
+        onLayoutChange={(v) => setLayout(v as LayoutName)}
+        selectMode={selectMode}
+        selectModeOptions={SELECT_LABEL}
+        onSelectModeChange={(v) => setSelectMode(v as SelectMode)}
+        onClear={clear}
+        clearIcon={Trash2}
+        position="top-center"
+      />
+      <GraphViewControls
+        onZoomIn={zoomIn}
+        onZoomOut={zoomOut}
+        zoomInIcon={ZoomIn}
+        zoomOutIcon={ZoomOut}
+        onFitContent={fitContent}
+        fitContentIcon={Maximize}
+        minimapActive={showMinimap}
+        onToggleMinimap={() => setShowMinimap((v) => !v)}
+        minimapIcon={Map}
+        locked={locked}
+        onToggleLock={() => setLocked((v) => !v)}
+        lockedIcon={Lock}
+        unlockedIcon={LockOpen}
+        position="bottom-left"
+      />
     </div>
   );
 }
