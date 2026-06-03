@@ -1,5 +1,5 @@
 /**
- * `<CanvasControls>` — the self-wiring controls overlay (canvas equivalent of
+ * `<CanvasControlsToolbar>` — the self-wiring controls overlay (canvas equivalent of
  * React Flow's `<Controls>`). Dropped inside `<Canvas>` it pulls the camera from
  * context, so zoom + fit work with **only an `icons` prop** — no callback
  * wiring. This story also shows the controlled lock toggle and an extra
@@ -17,14 +17,14 @@ import {
   WheelZoomBehaviour,
   PinchZoomBehaviour,
   D3ForceLayout,
-  CanvasControls,
+  CanvasControlsToolbar,
   ControlButton,
   useZoom,
 } from '@invana/canvas-react';
 import { lesMiserables } from '@invana/graph-datasets';
 import { Lock, LockOpen, Maximize, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 
-const meta: Meta = { title: 'canvas-react/CanvasControls' };
+const meta: Meta = { title: 'canvas-react/CanvasControlsToolbar' };
 export default meta;
 type Story = StoryObj;
 
@@ -58,7 +58,7 @@ function Demo() {
         <WheelZoomBehaviour />
         <PinchZoomBehaviour />
 
-        <CanvasControls
+        <CanvasControlsToolbar
           icons={{
             zoomIn: ZoomIn,
             zoomOut: ZoomOut,
@@ -70,7 +70,7 @@ function Demo() {
           onToggleLock={() => setLocked((v) => !v)}
         >
           <ResetZoomButton />
-        </CanvasControls>
+        </CanvasControlsToolbar>
       </Canvas>
     </div>
   );

@@ -2,7 +2,7 @@
 
 React UI components — schema-driven **style editors** — for tools that use `@invana/canvas-react`. Forms are **generated from declarative schemas** with the `@invana/forms` design-kit form-generator; chrome comes from `@invana/forms` / `@invana/ui` so the visual language is consistent across all Invana tools.
 
-> **Toolbars / controls + positioning primitives moved to `@invana/canvas-react`.** The actions track (`ZoomControls`, `LockToggle`, `ClearButton`, `OptionPicker`, `Panel`, `ControlButton`, the `CanvasControls` / `GraphToolbar` assemblies) now lives there — dumb building blocks in `canvas-react/src/components/`, assembled toolbars in `canvas-react/src/toolbars/`. This package is now **the editors/forms track only**.
+> **Toolbars / controls + positioning primitives moved to `@invana/canvas-react`.** The actions track (`ZoomControls`, `LockToggle`, `ClearButton`, `OptionPicker`, `Panel`, `ControlButton`, the `CanvasControlsToolbar` / `GraphToolbar` assemblies) now lives there — dumb building blocks in `canvas-react/src/components/`, assembled toolbars in `canvas-react/src/toolbars/`. This package is now **the editors/forms track only**.
 
 **Components are headless & engine-agnostic.** They edit a **style object** against a consumer-owned react-hook-form instance and know nothing about where that style comes from or goes — no `Canvas`, no engine, no commit. The consumer seeds the form and reads edits back, then applies the result however it likes (live, behind an Apply button, an undo stack, a preview). Keep it that way: no `@invana/canvas` / `@invana/canvas-react` / `pixi.js` imports — the only `@invana/graph` use is the `NodeStyle` *type*.
 
@@ -72,7 +72,7 @@ The Storybook story is the reference — a standalone editor whose `onSubmit` fe
 
 ## Toolbars / controls — moved to `@invana/canvas-react`
 
-The actions track no longer lives here. The dumb, engine-agnostic, icon-agnostic building blocks (`ZoomControls`, `LockToggle`, `ClearButton`, `OptionPicker`, `Panel`, `ControlButton`) are in `packages/canvas-react/src/components/`, and the assembled toolbars (`CanvasControls` — self-wiring via the canvas hooks; `GraphToolbar` — callback-driven) are in `packages/canvas-react/src/toolbars/`. See `packages/canvas-react/CLAUDE.md`. Co-locating them with their only consumer (canvas-react) follows the package-boundary preference: don't split for hypothetical reuse.
+The actions track no longer lives here. The dumb, engine-agnostic, icon-agnostic building blocks (`ZoomControls`, `LockToggle`, `ClearButton`, `OptionPicker`, `Panel`, `ControlButton`) are in `packages/canvas-react/src/components/`, and the assembled toolbars (`CanvasControlsToolbar` — self-wiring via the canvas hooks; `GraphToolbar` — callback-driven) are in `packages/canvas-react/src/toolbars/`. See `packages/canvas-react/CLAUDE.md`. Co-locating them with their only consumer (canvas-react) follows the package-boundary preference: don't split for hypothetical reuse.
 
 ## Rules
 

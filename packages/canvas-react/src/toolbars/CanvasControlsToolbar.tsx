@@ -6,7 +6,7 @@ import type { Canvas as EngineCanvas } from '@invana/canvas';
 import { useZoom } from '../hooks/useZoom';
 import { useFitContent } from '../hooks/useFitContent';
 
-export interface CanvasControlsIconSet {
+export interface CanvasControlsToolbarIconSet {
   zoomIn: ToolbarIcon;
   zoomOut: ToolbarIcon;
   fit: ToolbarIcon;
@@ -15,7 +15,7 @@ export interface CanvasControlsIconSet {
   unlocked?: ToolbarIcon;
 }
 
-export interface CanvasControlsProps {
+export interface CanvasControlsToolbarProps {
   /** Where the controls pin within the canvas host. Default `'bottom-left'`. */
   position?: PanelPosition;
   /** Stack direction. Default `'vertical'`. */
@@ -33,7 +33,7 @@ export interface CanvasControlsProps {
   /** Show the fit-to-content button. Default `true`. */
   showFit?: boolean;
   /** Icon components (consumer-supplied — the package stays icon-agnostic). */
-  icons: CanvasControlsIconSet;
+  icons: CanvasControlsToolbarIconSet;
   /**
    * Controlled lock state. Lock is **not** auto-wired (what "locked" disables —
    * pan, node-drag, … — is app policy). Provide both `locked` and
@@ -71,16 +71,16 @@ export interface CanvasControlsProps {
  * // Pattern A — drop inside a <Canvas>, self-wires via context:
  * <Canvas>
  *   <GraphLayer id="graph" data={data} />
- *   <CanvasControls icons={{ zoomIn: ZoomIn, zoomOut: ZoomOut, fit: Maximize }} />
+ *   <CanvasControlsToolbar icons={{ zoomIn: ZoomIn, zoomOut: ZoomOut, fit: Maximize }} />
  * </Canvas>
  *
  * @example
  * // Pattern B — one external controller driving the active canvas:
- * <Toolbar>
- *   <CanvasControls bare canvas={activeCanvas} icons={…} />
- * </Toolbar>
+ * <div className="my-toolbar">
+ *   <CanvasControlsToolbar bare canvas={activeCanvas} icons={…} />
+ * </div>
  */
-export function CanvasControls({
+export function CanvasControlsToolbar({
   position = 'bottom-left',
   orientation = 'vertical',
   fitLayerId = 'graph',
@@ -94,7 +94,7 @@ export function CanvasControls({
   canvas,
   children,
   className,
-}: CanvasControlsProps) {
+}: CanvasControlsToolbarProps) {
   const { zoom, zoomIn, zoomOut } = useZoom(canvas);
   const { fitContent } = useFitContent(fitLayerId, canvas);
 

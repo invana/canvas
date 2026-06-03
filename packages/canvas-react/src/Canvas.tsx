@@ -107,7 +107,7 @@ export const Canvas = forwardRef<EngineCanvas, CanvasProps>(function Canvas(
       ref={hostRef}
       className={className}
       // `position: relative` makes the host the positioned ancestor that child
-      // overlays (`<Panel>`, `<CanvasControls>`, the turnkey toolbars) pin to.
+      // overlays (`<Panel>`, `<CanvasControlsToolbar>`, the turnkey toolbars) pin to.
       style={{ width: '100%', height: '100%', position: 'relative', ...style }}
     >
       {canvas && <CanvasContext.Provider value={canvas}>{children}</CanvasContext.Provider>}

@@ -9,7 +9,7 @@
  *   - **`<GraphToolbar>`** (top-centre, `@invana/canvas-react`) — layout switcher
  *     (Force / ELK layered / ELK stress), selection-mode dropdown (Click / Brush
  *     / Lasso; Click default), and Clear canvas (wired to `GraphLayer.clear()`).
- *   - **`<CanvasControls>`** (bottom-left, `@invana/canvas-react`) — the single
+ *   - **`<CanvasControlsToolbar>`** (bottom-left, `@invana/canvas-react`) — the single
  *     self-wiring view rail: zoom in / out + fit-to-content come from the camera
  *     hooks for free (no wiring); the minimap toggle is a `<ControlButton>` child
  *     and lock-view (disables pan + node-drag) is the controlled lock. The minimap
@@ -22,7 +22,7 @@ import {
   Canvas,
   BackgroundLayer,
   BrushSelectBehaviour,
-  CanvasControls,
+  CanvasControlsToolbar,
   ClickSelectBehaviour,
   ControlButton,
   DragNodeBehaviour,
@@ -142,7 +142,7 @@ function Visualiser() {
   // rendered shapes + store and notifies dependent layers (minimap) — unlike the
   // silent low-level `store.clear()`. Read the engine off the ref at call time;
   // it's initialised by the time any toolbar button can be clicked. Zoom / fit /
-  // lock need no ref — `<CanvasControls>` self-wires them from context.
+  // lock need no ref — `<CanvasControlsToolbar>` self-wires them from context.
   const clear = useCallback(
     () => canvasRef.current?.layers.get<EngineGraphLayer>('graph')?.clear(),
     [],
@@ -219,7 +219,7 @@ function Visualiser() {
         {/* Bottom-left view rail — ONE self-wiring component. Zoom +/- and fit
             come from the camera hooks with no wiring; the minimap toggle is a
             <ControlButton> child; lock is the controlled toggle. */}
-        <CanvasControls
+        <CanvasControlsToolbar
           position="bottom-left"
           icons={{ zoomIn: ZoomIn, zoomOut: ZoomOut, fit: Maximize, locked: Lock, unlocked: LockOpen }}
           locked={locked}
@@ -231,7 +231,7 @@ function Visualiser() {
             active={showMinimap}
             onClick={() => setShowMinimap((v) => !v)}
           />
-        </CanvasControls>
+        </CanvasControlsToolbar>
       </Canvas>
     </div>
   );

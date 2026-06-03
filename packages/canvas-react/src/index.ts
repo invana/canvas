@@ -95,12 +95,13 @@ export { useCamera, useZoom, useFitContent, useCanvasEvent } from './hooks';
 export type { UseCameraResult, UseZoomResult, UseFitContentResult } from './hooks';
 
 // ─── Toolbars ──────────────────────────────────────────────────────────────
-// `CanvasControls` self-wires from context (React Flow's `<Controls>`);
-// `GraphToolbar` is a turnkey layout/select/clear bar.
-export { CanvasControls, GraphToolbar } from './toolbars';
+// `CanvasControlsToolbar` self-wires from context (React Flow's `<Controls>`);
+// `GraphToolbar` is a turnkey layout/select/clear bar. Toolbar components carry
+// the `*Toolbar` suffix.
+export { CanvasControlsToolbar, GraphToolbar } from './toolbars';
 export type {
-  CanvasControlsProps,
-  CanvasControlsIconSet,
+  CanvasControlsToolbarProps,
+  CanvasControlsToolbarIconSet,
   GraphToolbarProps,
 } from './toolbars';
 

@@ -63,6 +63,7 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
 - Community packages: `invana-<domain>-<feature>` (unscoped).
 - No `plugin` / `plugins` in package names — that's an implementation detail.
 - Class suffixes by kind: `*Layer`, `*Behaviour`, `*Layout`, `*Renderer`. (See `architecture-proposal.md` §5.)
+- **Toolbar components** (assembled toolbars in `packages/canvas-react/src/toolbars/`) carry the `*Toolbar` suffix — e.g. `CanvasControlsToolbar`, `GraphToolbar`. The dumb building blocks in `canvas-react/src/components/` (e.g. `ZoomControls`, `Panel`) do **not** — they're components, not toolbars.
 
 ---
 
