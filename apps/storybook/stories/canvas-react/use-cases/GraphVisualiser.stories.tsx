@@ -44,7 +44,7 @@ import { lesMiserables } from '@invana/graph-datasets';
 import { GraphToolbar, GraphViewControls } from '@invana/canvas-ui';
 import { Lock, LockOpen, Maximize, Map, Trash2, ZoomIn, ZoomOut } from 'lucide-react';
 
-const meta: Meta = { title: 'canvas-react/GraphVisualiser' };
+const meta: Meta = { title: 'canvas-react/usecases/GraphVisualiser' };
 export default meta;
 type Story = StoryObj;
 

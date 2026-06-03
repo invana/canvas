@@ -33,7 +33,7 @@ import {
 import type { GraphData, ContextMenuEvent, GraphEdge } from '@invana/graph';
 import { NavHorizontal, NestedMenu, TooltipProvider, type MenuItem } from '@invana/ui';
 
-const meta: Meta = { title: 'canvas-react/GraphModeller' };
+const meta: Meta = { title: 'canvas-react/usecases/GraphModeller' };
 export default meta;
 type Story = StoryObj;
 
