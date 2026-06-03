@@ -94,16 +94,37 @@ export type { D3ForceLayoutProps } from './layouts/D3ForceLayout';
 export { useCamera, useZoom, useFitContent, useCanvasEvent } from './hooks';
 export type { UseCameraResult, UseZoomResult, UseFitContentResult } from './hooks';
 
-// ─── Controls (smart presets) ──────────────────────────────────────────────
-// Self-wiring overlays — React Flow's `<Controls>` equivalent.
-export { CanvasControls, CanvasZoomControls } from './controls';
+// ─── Toolbars ──────────────────────────────────────────────────────────────
+// `CanvasControls` self-wires from context (React Flow's `<Controls>`);
+// `GraphToolbar` is a turnkey layout/select/clear bar.
+export { CanvasControls, GraphToolbar } from './toolbars';
 export type {
   CanvasControlsProps,
   CanvasControlsIconSet,
-  CanvasZoomControlsProps,
-} from './controls';
+  GraphToolbarProps,
+} from './toolbars';
 
-// ─── Layout primitives (re-exported from @invana/canvas-ui) ────────────────
-// Single-import DX: positioned overlay container + control button.
-export { Panel, ControlButton } from '@invana/canvas-ui';
-export type { PanelProps, PanelPosition, ControlButtonProps } from '@invana/canvas-ui';
+// ─── UI components (building blocks) ───────────────────────────────────────
+// Dumb, engine-agnostic, icon-agnostic primitives the toolbars are built from —
+// compose them into custom toolbars. `<Panel>` / `<ControlButton>` are the
+// canvas equivalents of React Flow's `<Panel>` / `<ControlButton>`.
+export {
+  Panel,
+  ControlButton,
+  OptionPicker,
+  ZoomControls,
+  LockToggle,
+  ClearButton,
+  FitContentButton,
+} from './components';
+export type {
+  PanelProps,
+  PanelPosition,
+  ControlButtonProps,
+  OptionPickerProps,
+  ZoomControlsProps,
+  LockToggleProps,
+  ClearButtonProps,
+  FitContentButtonProps,
+  ToolbarIcon,
+} from './components';

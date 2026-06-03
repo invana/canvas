@@ -1,7 +1,7 @@
 /**
  * **Multi-canvas isolation proof.** Two independent `<Canvas>` instances side by
- * side, each with its own `<CanvasControls>` + `<CanvasZoomControls showZoomLevel>`.
- * Because the controls resolve the engine from the instance-scoped
+ * side, each with its own `<CanvasControls>`. Because the controls resolve the
+ * engine from the instance-scoped
  * `CanvasContext` (and each hook keys its subscription on that instance),
  * zooming / fitting / locking in canvas A must leave canvas B's controls and
  * zoom readout untouched — and vice versa. Drive one side and watch the other
@@ -21,7 +21,6 @@ import {
   PinchZoomBehaviour,
   D3ForceLayout,
   CanvasControls,
-  CanvasZoomControls,
 } from '@invana/canvas-react';
 import { lesMiserables } from '@invana/graph-datasets';
 import { Lock, LockOpen, Maximize, ZoomIn, ZoomOut } from 'lucide-react';
@@ -57,12 +56,6 @@ function GraphPane({ fill }: { fill: number }) {
           icons={{ zoomIn: ZoomIn, zoomOut: ZoomOut, fit: Maximize, locked: Lock, unlocked: LockOpen }}
           locked={locked}
           onToggleLock={() => setLocked((v) => !v)}
-        />
-        <CanvasZoomControls
-          position="bottom-right"
-          orientation="horizontal"
-          showZoomLevel
-          icons={{ zoomIn: ZoomIn, zoomOut: ZoomOut }}
         />
       </Canvas>
     </div>

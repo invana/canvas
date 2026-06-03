@@ -1,13 +1,14 @@
 # CLAUDE.md — packages/canvas-ui (`@invana/canvas-ui`)
 
-React UI components — style editors, panels, controls — for tools that use `@invana/canvas-react`. Forms are **generated from declarative schemas** with the `@invana/forms` design-kit form-generator; chrome comes from `@invana/forms` / `@invana/ui` so the visual language is consistent across all Invana tools.
+React UI components — schema-driven **style editors** — for tools that use `@invana/canvas-react`. Forms are **generated from declarative schemas** with the `@invana/forms` design-kit form-generator; chrome comes from `@invana/forms` / `@invana/ui` so the visual language is consistent across all Invana tools.
+
+> **Toolbars / controls + positioning primitives moved to `@invana/canvas-react`.** The actions track (`ZoomControls`, `LockToggle`, `ClearButton`, `OptionPicker`, `Panel`, `ControlButton`, the `CanvasControls` / `GraphToolbar` assemblies) now lives there — dumb building blocks in `canvas-react/src/components/`, assembled toolbars in `canvas-react/src/toolbars/`. This package is now **the editors/forms track only**.
 
 **Components are headless & engine-agnostic.** They edit a **style object** against a consumer-owned react-hook-form instance and know nothing about where that style comes from or goes — no `Canvas`, no engine, no commit. The consumer seeds the form and reads edits back, then applies the result however it likes (live, behind an Apply button, an undo stack, a preview). Keep it that way: no `@invana/canvas` / `@invana/canvas-react` / `pixi.js` imports — the only `@invana/graph` use is the `NodeStyle` *type*.
 
-This package has **two tracks**, both engine-agnostic:
+The single track:
 
 1. **Editors** (`editors/<surface>/`) — form-based; the `defaults` + `fields` + `onSubmit` contract below.
-2. **Toolbars & controls** (`toolbars/`) — the non-form *actions track* (zoom buttons, toggles, option dropdowns, assembled toolbars). These are **props in / callbacks out** (no react-hook-form), and **icon-agnostic**: the consumer passes the icon component (e.g. a `lucide-react` glyph) so this package takes on **no icon dependency**. Same hard rule: no engine imports — every action is a callback the consumer wires to the engine. See the Toolbars section below.
 
 ## Package layout
 
@@ -20,11 +21,6 @@ src/
 │  ├─ fields.ts          @invana/forms FieldConfig[] (one array per tab)
 │  ├─ mapping.ts         Partial<NodeStyle> ⇄ flat form fields (styleToForm / formToStyle)
 │  ├─ types.ts
-│  └─ index.ts
-├─ toolbars/             actions track — primitives + turnkey toolbars (no forms)
-│  ├─ types.ts           ToolbarIcon (consumer-supplied icon component)
-│  ├─ OptionPicker.tsx · ZoomControls.tsx · MinimapToggle.tsx · LockToggle.tsx · ClearButton.tsx
-│  ├─ GraphToolbar.tsx · GraphViewControls.tsx   turnkey, compose the primitives
 │  └─ index.ts
 └─ index.ts
 ```
@@ -74,19 +70,9 @@ store.updateNode(id, { style: { ...resolveNodeStyle(node), ...formToStyle(values
 ```
 The Storybook story is the reference — a standalone editor whose `onSubmit` feeds a live preview, no engine.
 
-## Toolbars & controls (`toolbars/`)
+## Toolbars / controls — moved to `@invana/canvas-react`
 
-Reusable **action** components — toolbars, buttons, toggles, option dropdowns — for graph tools. **This is where toolbar / control UI lives** (not in `apps/*` story code, not in `@invana/canvas-react`). A story or app composes them and wires the callbacks to the engine.
-
-Contract:
-
-- **Engine-agnostic** — no `@invana/canvas` / `@invana/canvas-react` / `pixi.js` imports. Every action is a `() => void` (or `(value) => void`) callback; every piece of state (`active`, `locked`, `value`) is a prop. The consumer owns the engine wiring (`camera.zoomAt`, `store.clear`, behaviour `enabled`, layout switch, …).
-- **Icon-agnostic** — icons are passed in as a `ToolbarIcon` prop (`ComponentType<{ size?; className? }>`), so the package has **no icon dependency**. Consumers pass `lucide-react` glyphs (or any component). Don't `import … from 'lucide-react'` here.
-- **Chrome from `@invana/ui`** — Button / DropdownMenu / NavHorizontal / NavVertical. No raw `<button>`/`<select>`. Active/selected state uses `@invana/ui` Button **variants** (`default` vs `ghost`), not Tailwind utility classes (the host doesn't run Tailwind — only the design-kit's prebuilt CSS is loaded).
-- **Primitives + turnkey** — ship both: small composable pieces (`OptionPicker`, `ZoomControls`, `MinimapToggle`, `LockToggle`, `ClearButton`) for custom layouts, and turnkey assemblies (`GraphToolbar` horizontal, `GraphViewControls` vertical) built from them.
-- No module-level state; safe with N instances.
-
-Reference usage: `apps/storybook/stories/canvas-react/GraphVisualiser.stories.tsx` wires `<GraphToolbar>` + `<GraphViewControls>` to the engine via a `ref` + state.
+The actions track no longer lives here. The dumb, engine-agnostic, icon-agnostic building blocks (`ZoomControls`, `LockToggle`, `ClearButton`, `OptionPicker`, `Panel`, `ControlButton`) are in `packages/canvas-react/src/components/`, and the assembled toolbars (`CanvasControls` — self-wiring via the canvas hooks; `GraphToolbar` — callback-driven) are in `packages/canvas-react/src/toolbars/`. See `packages/canvas-react/CLAUDE.md`. Co-locating them with their only consumer (canvas-react) follows the package-boundary preference: don't split for hypothetical reuse.
 
 ## Rules
 
@@ -101,10 +87,8 @@ Reference usage: `apps/storybook/stories/canvas-react/GraphVisualiser.stories.ts
 - `<NodeStyleEditor>` — Geometry (shape-kind select + dynamic per-kind geometry + unified `size`), Background, Stroke, Label sections (accordion) covering the 80% `NodeStyle` field set. Icon / image / badges / decorations / effects deferred.
 - `fields.ts` (`nodeStyleFields`, `geometryFields`, `BACKGROUND_FIELDS`, `STROKE_FIELDS`, `LABEL_FIELDS`) + `mapping.ts` (`styleToForm`, `formToStyle`, `defaultShapeFor`) + shared `presets/colors.ts` (`COLOR_PRESETS`) and `utils/color.ts` are exported for custom hosts.
 
-- **Toolbars / controls (`toolbars/`)** — the actions track (see section above). Shipped: `OptionPicker`, `ZoomControls`, `MinimapToggle`, `LockToggle`, `ClearButton` primitives + `GraphToolbar` / `GraphViewControls` turnkey toolbars.
-
 Later (each = fields + mapping + engine + editor, same pattern): `EdgeStyleEditor` (mirror of node — `store.updateEdge` + `resolveEdgeStyle`), canvas/background editor (target `BackgroundLayer.setOptions`), layout-config editors (recreate-and-rerun until `Layout.setOptions` lands), behaviour-config editors (`setOptions` where it exists, else re-register), plus more non-form components (Inspector, LayerStack, Legend, StatusBar, SearchBox, ContextMenu, ToastHost, AppShell).
 
 ## No tests
 
-Per `feedback_no_tests_canvas` — verify via Storybook. New editors must ship with a `.stories.tsx` under `apps/storybook/stories/canvas-ui/`.
+Per `feedback_no_tests_canvas` — verify via Storybook. **Don't create or modify stories unless explicitly asked** (root `CLAUDE.md` rule 11); when a story for an editor *is* requested, it goes under `apps/storybook/stories/canvas-ui/`.

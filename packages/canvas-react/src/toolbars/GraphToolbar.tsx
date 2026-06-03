@@ -1,10 +1,7 @@
 import { NavHorizontal } from '@invana/ui';
 
-import { Panel } from '../layout/Panel';
-import type { PanelPosition } from '../layout/types';
-import { ClearButton } from './ClearButton';
-import { OptionPicker } from './OptionPicker';
-import type { ToolbarIcon } from './types';
+import { ClearButton, OptionPicker, Panel } from '../components';
+import type { PanelPosition, ToolbarIcon } from '../components';
 
 export interface GraphToolbarProps {
   /** Layout switcher. */

@@ -8,10 +8,10 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ControlButton } from '@invana/canvas-ui';
+import { ControlButton } from '@invana/canvas-react';
 import { Lock, LockOpen, Magnet, ZoomIn } from 'lucide-react';
 
-const meta: Meta = { title: 'canvas-ui/ControlButton' };
+const meta: Meta = { title: 'canvas-react/ControlButton' };
 export default meta;
 type Story = StoryObj;
 

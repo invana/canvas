@@ -7,11 +7,11 @@
 
 import type { CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Panel, ControlButton } from '@invana/canvas-ui';
-import type { PanelPosition } from '@invana/canvas-ui';
+import { Panel, ControlButton } from '@invana/canvas-react';
+import type { PanelPosition } from '@invana/canvas-react';
 import { Crosshair, Lock, Maximize, ZoomIn, ZoomOut } from 'lucide-react';
 
-const meta: Meta = { title: 'canvas-ui/Panel' };
+const meta: Meta = { title: 'canvas-react/Panel' };
 export default meta;
 type Story = StoryObj;
 

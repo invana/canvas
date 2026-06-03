@@ -8,9 +8,20 @@ React bindings for `@invana/canvas`. A declarative `<Canvas>` whose JSX children
 - Child wrappers (`<GraphLayer>`, `<DragPanBehaviour>`, `<D3ForceLayout>`, …) render `null`. They read the engine from `useCanvas()` and do their imperative work in `useEffect` — register on mount, unregister on cleanup. One wrapper per engine class.
 - `forwardRef` on `<Canvas>` exposes the underlying `Canvas` instance. That's the only surface on the ref; for everything else go through the engine directly (`ref.current.layers.get(...)`, `ref.current.events.tap(...)`).
 
+## UI: hooks + components + toolbars
+
+The control/toolbar UI lives **here** (moved out of `@invana/canvas-ui`, which is now editors-only), in three layers — the React-Flow split:
+
+- **Hooks** (`src/hooks/`) — `useCamera` / `useZoom` / `useFitContent` / `useCanvasEvent`. Resolve the engine from `CanvasContext` **or** an explicit `canvas` arg (`useResolvedCanvas(explicit ?? context)`), so they work from a `<Canvas>` descendant **or** target any instance — multi-canvas-safe.
+- **Components** (`src/components/`) — the dumb building blocks: `Panel`, `ControlButton`, `ZoomControls`, `FitContentButton`, `LockToggle`, `ClearButton`, `OptionPicker` (+ `ToolbarIcon` / `PanelPosition` types). **Engine-agnostic, icon-agnostic** (icons passed as a `ToolbarIcon` prop), props-in / callbacks-out. Chrome from `@invana/ui` (Button / DropdownMenu / Nav\*); no raw `<button>`/`<select>`, no `lucide-react` import here. These import **no** canvas/engine — keep them dumb. The canvas equivalents of React Flow's `<Panel>` / `<ControlButton>`.
+- **Toolbars** (`src/toolbars/`) — assembled from the components. `CanvasControls` **self-wires** zoom/fit/lock from the hooks (React Flow's `<Controls>`; pass `bare` + an explicit `canvas` to drive the active canvas from external chrome). `GraphToolbar` is a callback-driven turnkey (layout/select/clear). New self-wiring controls follow the recipe: consume a hook, render a component inside a `<Panel>`, accept an optional `canvas` prop.
+
+`@invana/ui` is a dependency (the components use its chrome). `@invana/canvas-ui` is **not** a dependency of this package.
+
 ## Rules
 
 - No `pixi.js` imports — wrap engine APIs only.
+- The `src/components/` building blocks stay **dumb**: no `@invana/canvas` / `@invana/canvas-react` / engine imports, no `lucide-react`. Engine wiring belongs in `src/toolbars/` (via the hooks) or the consumer.
 - Wrapper effects key on `id` (and for layouts `targetLayerId`) — those are the "identity" props. Other option changes require unmount/remount; document that on every wrapper.
 - `<Canvas>` must be StrictMode-safe: track a cancelled flag through the init promise so a double-mount in dev tears down the half-initialised engine cleanly.
 - Render order matters. A `<D3ForceLayout targetLayerId="graph">` sibling that runs before its `<GraphLayer id="graph">` mounts won't find the layer. Place layer wrappers before the layouts/behaviours that depend on them in the JSX.

@@ -1,21 +1,19 @@
 /**
  * Graph data **visualiser** — a read-only explorer built from
- * `@invana/canvas-react` wrappers, with two `@invana/canvas-ui` toolbars
- * rendered as **overlay children** of `<Canvas>` (they self-position via
- * `<Panel>`, pinning to the canvas host):
+ * `@invana/canvas-react` wrappers. Every layer, behaviour, and overlay is listed
+ * directly inside `<Canvas>`. App state (layout / select mode / minimap / lock)
+ * lives in `Visualiser` and is passed to the children as props; the only
+ * engine-dependent action, Clear, goes through the `<Canvas>` ref. Two overlays
+ * self-position via `<Panel>`:
  *
- *   - **`<GraphToolbar>`** (top-centre) — layout switcher (Force / ELK layered /
- *     ELK stress), selection-mode dropdown (Click / Brush / Lasso; Click
- *     default), and Clear canvas.
- *   - **`<GraphViewControls>`** (bottom-left) — zoom in / out, fit-to-content,
- *     show-minimap toggle, and lock-view (disables pan + node-drag), with the
- *     minimap sitting just to its right (also bottom-left).
- *
- * The toolbars are `@invana/canvas-ui` components (engine-agnostic, props +
- * callbacks). `Visualiser` holds an imperative `ref` to the engine and wires
- * the callbacks (zoom / fit / clear) to it, so the toolbars render directly as
- * `<Canvas>` children — no per-toolbar wrapper component. App state (layout,
- * select mode, minimap, lock) lives in the parent and is passed down.
+ *   - **`<GraphToolbar>`** (top-centre, `@invana/canvas-react`) — layout switcher
+ *     (Force / ELK layered / ELK stress), selection-mode dropdown (Click / Brush
+ *     / Lasso; Click default), and Clear canvas (wired to `GraphLayer.clear()`).
+ *   - **`<CanvasControls>`** (bottom-left, `@invana/canvas-react`) — the single
+ *     self-wiring view rail: zoom in / out + fit-to-content come from the camera
+ *     hooks for free (no wiring); the minimap toggle is a `<ControlButton>` child
+ *     and lock-view (disables pan + node-drag) is the controlled lock. The minimap
+ *     sits just to its right (also bottom-left).
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -24,10 +22,13 @@ import {
   Canvas,
   BackgroundLayer,
   BrushSelectBehaviour,
+  CanvasControls,
   ClickSelectBehaviour,
+  ControlButton,
   DragNodeBehaviour,
   DragPanBehaviour,
   GraphLayer,
+  GraphToolbar,
   HoverActivateBehaviour,
   LabelResolutionLODBehaviour,
   LassoSelectBehaviour,
@@ -41,7 +42,6 @@ import type { GraphNode, GraphLayer as EngineGraphLayer } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { lesMiserables } from '@invana/graph-datasets';
-import { GraphToolbar, GraphViewControls } from '@invana/canvas-ui';
 import { Lock, LockOpen, Maximize, Map, Trash2, ZoomIn, ZoomOut } from 'lucide-react';
 
 const meta: Meta = { title: 'canvas-react/usecases/GraphVisualiser' };
@@ -138,29 +138,18 @@ function Visualiser() {
   const [showMinimap, setShowMinimap] = useState(true);
   const [locked, setLocked] = useState(false);
 
-  // Camera / clear actions wired imperatively through the engine ref. Read
-  // `ref.current` at call time — it's the initialised engine by the time any
-  // toolbar button can be clicked (children mount only after init).
-  const zoomIn = useCallback(() => canvasRef.current?.camera.zoomAt(1.2), []);
-  const zoomOut = useCallback(() => canvasRef.current?.camera.zoomAt(1 / 1.2), []);
-  const fitContent = useCallback(() => {
-    const canvas = canvasRef.current;
-    const layer = canvas?.layers.get<EngineGraphLayer>('graph');
-    if (canvas && layer) canvas.camera.fitContent(layer.getBounds(), 80);
-  }, []);
-  // `GraphLayer.clear()` tears down the rendered shapes + store and notifies
-  // dependent layers (minimap) — unlike the silent low-level `store.clear()`.
+  // The only engine-dependent action: `GraphLayer.clear()` tears down the
+  // rendered shapes + store and notifies dependent layers (minimap) — unlike the
+  // silent low-level `store.clear()`. Read the engine off the ref at call time;
+  // it's initialised by the time any toolbar button can be clicked. Zoom / fit /
+  // lock need no ref — `<CanvasControls>` self-wires them from context.
   const clear = useCallback(
     () => canvasRef.current?.layers.get<EngineGraphLayer>('graph')?.clear(),
     [],
   );
 
   return (
-    // `position: relative` makes this wrapper the positioned ancestor the
-    // toolbars' <Panel>s pin to. The toolbars are rendered as SIBLINGS of
-    // <Canvas> (not children) so their clicks land on real DOM above the pixi
-    // canvas — the same overlay pattern as GraphModeller.
-    <div style={{ height: '100vh', position: 'relative' }}>
+    <div style={{ height: '100vh' }}>
       <Canvas ref={canvasRef} autoResize>
         {/* mode defaults to 'auto' → fill + dot pattern follow the OS
             `prefers-color-scheme`. The `{ light, dark }` pairs give the layer an
@@ -207,45 +196,43 @@ function Visualiser() {
         <LassoSelectBehaviour layerId="graph" enabled={selectMode === 'lasso'} trigger={[]} />
 
         <LabelResolutionLODBehaviour layerId="graph" />
-        {/* Minimap sits bottom-left, just right of the view-controls rail and
-            bottom-aligned with it: x clears the rail's width, y matches the
-            rail's 8px Panel offset. */}
+        {/* Minimap sits bottom-left, just right of the view rail and bottom-aligned
+            with it: x clears the rail's width, y matches the rail's 8px Panel offset. */}
         {showMinimap && (
           <MiniMapLayer graphLayerId="graph" position="bottom-left" margin={{ x: 64, y: 17 }} />
         )}
-      </Canvas>
 
-      {/* Toolbars — engine-agnostic canvas-ui components called directly (no
-          wrapper component), as siblings of <Canvas>. They self-position via
-          <Panel> (pinned to the relative wrapper, above the canvas); their
-          callbacks are wired to the engine ref above. */}
-      <GraphToolbar
-        layout={layout}
-        layoutOptions={LAYOUT_LABEL}
-        onLayoutChange={(v) => setLayout(v as LayoutName)}
-        selectMode={selectMode}
-        selectModeOptions={SELECT_LABEL}
-        onSelectModeChange={(v) => setSelectMode(v as SelectMode)}
-        onClear={clear}
-        clearIcon={Trash2}
-        position="top-center"
-      />
-      <GraphViewControls
-        onZoomIn={zoomIn}
-        onZoomOut={zoomOut}
-        zoomInIcon={ZoomIn}
-        zoomOutIcon={ZoomOut}
-        onFitContent={fitContent}
-        fitContentIcon={Maximize}
-        minimapActive={showMinimap}
-        onToggleMinimap={() => setShowMinimap((v) => !v)}
-        minimapIcon={Map}
-        locked={locked}
-        onToggleLock={() => setLocked((v) => !v)}
-        lockedIcon={Lock}
-        unlockedIcon={LockOpen}
-        position="bottom-left"
-      />
+        {/* Top-centre toolbar — a turnkey canvas-react toolbar; Clear wired to
+            the graph layer via the canvas ref. Self-positions via its own <Panel>. */}
+        <GraphToolbar
+          layout={layout}
+          layoutOptions={LAYOUT_LABEL}
+          onLayoutChange={(v) => setLayout(v as LayoutName)}
+          selectMode={selectMode}
+          selectModeOptions={SELECT_LABEL}
+          onSelectModeChange={(v) => setSelectMode(v as SelectMode)}
+          onClear={clear}
+          clearIcon={Trash2}
+          position="top-center"
+        />
+
+        {/* Bottom-left view rail — ONE self-wiring component. Zoom +/- and fit
+            come from the camera hooks with no wiring; the minimap toggle is a
+            <ControlButton> child; lock is the controlled toggle. */}
+        <CanvasControls
+          position="bottom-left"
+          icons={{ zoomIn: ZoomIn, zoomOut: ZoomOut, fit: Maximize, locked: Lock, unlocked: LockOpen }}
+          locked={locked}
+          onToggleLock={() => setLocked((v) => !v)}
+        >
+          <ControlButton
+            icon={Map}
+            title="Toggle minimap"
+            active={showMinimap}
+            onClick={() => setShowMinimap((v) => !v)}
+          />
+        </CanvasControls>
+      </Canvas>
     </div>
   );
 }
