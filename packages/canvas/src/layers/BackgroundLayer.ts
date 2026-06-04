@@ -67,9 +67,9 @@ export interface BackgroundLayerOptions {
   color?: BackgroundColor;
   /** Solid-fill colour painted behind the pattern. Same accepted forms as `color`. */
   backgroundColor?: BackgroundColor;
-  /** Dot radius / line thickness, in *texture pixels*. Default `1.5`. */
+  /** Dot radius / line thickness, in *texture pixels*. Default `1`. */
   size?: number;
-  /** Tile cell spacing, in *texture pixels*. Default `30`. */
+  /** Tile cell spacing, in *texture pixels*. Default `12`. */
   spacing?: number;
   /** Pattern alpha 0–1. Default `0.6`. */
   alpha?: number;
@@ -89,10 +89,10 @@ export interface BackgroundLayerOptions {
 const DEFAULTS: Required<BackgroundLayerOptions> = {
   type: 'solid',
   patternType: 'dots',
-  color: '#94a3b8',
+  color: '#6f7b8b',
   backgroundColor: '#f8fafc',
-  size: 1.5,
-  spacing: 30,
+  size: 1,
+  spacing: 12,
   alpha: 0.6,
   followCamera: true,
   mode: 'auto',
