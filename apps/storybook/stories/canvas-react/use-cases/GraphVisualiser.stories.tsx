@@ -11,12 +11,13 @@
  *     / Lasso; Click default), and Clear canvas (wired to `GraphLayer.clear()`).
  *   - **`<CanvasControlsToolbar>`** (bottom-left, `@invana/canvas-react`) — the single
  *     self-wiring view rail: zoom in / out + fit-to-content come from the camera
- *     hooks for free (no wiring); the minimap toggle is a `<ControlButton>` child
+ *     hooks for free (no wiring); the minimap toggle is a `<ControlButton>` child,
+ *     a `<ZoomPicker>` child adds a current-% trigger with a preset / fit dropdown,
  *     and lock-view (disables pan + node-drag) is the controlled lock. The minimap
  *     sits just to its right (also bottom-left).
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
@@ -35,6 +36,7 @@ import {
   MiniMapLayer,
   PinchZoomBehaviour,
   WheelZoomBehaviour,
+  ZoomPicker,
   useCanvas,
 } from '@invana/canvas-react';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
@@ -138,15 +140,9 @@ function Visualiser() {
   const [showMinimap, setShowMinimap] = useState(true);
   const [locked, setLocked] = useState(false);
 
-  // The only engine-dependent action: `GraphLayer.clear()` tears down the
-  // rendered shapes + store and notifies dependent layers (minimap) — unlike the
-  // silent low-level `store.clear()`. Read the engine off the ref at call time;
-  // it's initialised by the time any toolbar button can be clicked. Zoom / fit /
-  // lock need no ref — `<CanvasControlsToolbar>` self-wires them from context.
-  const clear = useCallback(
-    () => canvasRef.current?.layers.get<EngineGraphLayer>('graph')?.clear(),
-    [],
-  );
+  // Zoom / fit / lock / clear need no ref — the toolbars self-wire them from
+  // context (`<CanvasControlsToolbar>` for the view rail, `<GraphToolbar>`'s
+  // `<ClearButton>` for clear via `useClearGraph`).
 
   return (
     <div style={{ height: '100vh' }}>
@@ -199,7 +195,7 @@ function Visualiser() {
         {/* Minimap sits bottom-left, just right of the view rail and bottom-aligned
             with it: x clears the rail's width, y matches the rail's 8px Panel offset. */}
         {showMinimap && (
-          <MiniMapLayer graphLayerId="graph" position="bottom-left" margin={{ x: 64, y: 17 }} />
+          <MiniMapLayer graphLayerId="graph" position="bottom-right" margin={{ x: 20, }} />
         )}
 
         {/* Top-centre toolbar — a turnkey canvas-react toolbar; Clear wired to
@@ -211,7 +207,6 @@ function Visualiser() {
           selectMode={selectMode}
           selectModeOptions={SELECT_LABEL}
           onSelectModeChange={(v) => setSelectMode(v as SelectMode)}
-          onClear={clear}
           clearIcon={Trash2}
           position="top-center"
         />
@@ -220,11 +215,23 @@ function Visualiser() {
             come from the camera hooks with no wiring; the minimap toggle is a
             <ControlButton> child; lock is the controlled toggle. */}
         <CanvasControlsToolbar
-          position="bottom-left"
-          icons={{ zoomIn: ZoomIn, zoomOut: ZoomOut, fit: Maximize, locked: Lock, unlocked: LockOpen }}
+          position="bottom-center"
+          orientation="horizontal"
+          icons={
+            { zoomIn: ZoomIn,
+             zoomOut: ZoomOut, 
+             fit: Maximize, 
+             locked: Lock, 
+             unlocked: LockOpen 
+            }
+          }
           locked={locked}
           onToggleLock={() => setLocked((v) => !v)}
         >
+
+          {/* Self-wiring zoom-level picker: current % trigger + preset dropdown
+              and fit-to-content, all from the camera hooks (no wiring). */}
+          <ZoomPicker layerId="graph" />
           <ControlButton
             icon={Map}
             title="Toggle minimap"

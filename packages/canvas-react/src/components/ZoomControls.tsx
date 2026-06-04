@@ -1,20 +1,26 @@
 import type { ReactNode } from 'react';
 import { Button } from '@invana/ui';
+import type { Canvas as EngineCanvas } from '@invana/canvas';
 
 import type { ToolbarIcon } from './types';
+import { useZoom } from '../hooks/useZoom';
 
 export interface ZoomControlsProps {
-  onZoomIn: () => void;
-  onZoomOut: () => void;
   zoomInIcon: ToolbarIcon;
   zoomOutIcon: ToolbarIcon;
+  /** Explicit canvas instance; defaults to the context canvas. */
+  canvas?: EngineCanvas | null;
+  /**
+   * Show a live `NN%` zoom readout between the two buttons, sourced from the
+   * canvas via {@link useZoom}. Ignored when `zoomLevel` is also provided.
+   * Default `false`.
+   */
+  showLevel?: boolean;
   /** Stack direction. Default `'horizontal'`. */
   orientation?: 'horizontal' | 'vertical';
   /**
-   * Optional live zoom readout rendered **between** the two buttons (e.g.
-   * `'46%'`) — the React-Flow zoom-slider layout. Convention: horizontal reads
-   * `−  level  +` (zoom-out on the left); vertical reads `+  level  −` (zoom-in
-   * on top). Omit for a plain button pair.
+   * Manual zoom readout override rendered **between** the two buttons (e.g.
+   * `'46%'`). Takes precedence over `showLevel`. Omit for a plain button pair.
    */
   zoomLevel?: ReactNode;
   className?: string;
@@ -22,30 +28,33 @@ export interface ZoomControlsProps {
 
 /**
  * A pair of zoom-in / zoom-out icon buttons, optionally with a live zoom
- * readout between them ({@link ZoomControlsProps.zoomLevel}). Engine-agnostic
- * (callbacks only).
+ * readout between them. Self-wiring: hooks into the canvas via {@link useZoom}
+ * — drop inside a `<Canvas>` and it works without any callback wiring.
+ * Pass `onZoomIn` / `onZoomOut` to override the default hook-driven actions.
  */
 export function ZoomControls({
-  onZoomIn,
-  onZoomOut,
+  canvas,
   zoomInIcon: ZoomInIcon,
   zoomOutIcon: ZoomOutIcon,
+  showLevel = false,
   orientation = 'horizontal',
   zoomLevel,
   className,
 }: ZoomControlsProps) {
-  const zoomIn = (
-    <Button variant="ghost" size="icon" title="Zoom in" onClick={onZoomIn}>
+  const { zoom, zoomIn, zoomOut } = useZoom(canvas);
+  const resolvedLevel = zoomLevel != null ? zoomLevel : showLevel ? `${Math.round(zoom * 100)}%` : undefined;
+  const zoomInBtn = (
+    <Button variant="ghost" size="icon" title="Zoom in" onClick={() => zoomIn()}>
       <ZoomInIcon size={16} />
     </Button>
   );
-  const zoomOut = (
-    <Button variant="ghost" size="icon" title="Zoom out" onClick={onZoomOut}>
+  const zoomOutBtn = (
+    <Button variant="ghost" size="icon" title="Zoom out" onClick={() => zoomOut()}>
       <ZoomOutIcon size={16} />
     </Button>
   );
   const level =
-    zoomLevel != null ? (
+    resolvedLevel != null ? (
       <span
         style={{
           fontSize: 12,
@@ -55,7 +64,7 @@ export function ZoomControls({
           minWidth: 36,
         }}
       >
-        {zoomLevel}
+        {resolvedLevel}
       </span>
     ) : null;
 
@@ -72,15 +81,15 @@ export function ZoomControls({
       {/* Horizontal: −  level  + · Vertical: +  level  −  (zoom-in leads). */}
       {orientation === 'horizontal' ? (
         <>
-          {zoomOut}
+          {zoomOutBtn}
           {level}
-          {zoomIn}
+          {zoomInBtn}
         </>
       ) : (
         <>
-          {zoomIn}
+          {zoomInBtn}
           {level}
-          {zoomOut}
+          {zoomOutBtn}
         </>
       )}
     </div>

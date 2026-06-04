@@ -91,8 +91,8 @@ export type { D3ForceLayoutProps } from './layouts/D3ForceLayout';
 // ─── Hooks ───────────────────────────────────────────────────────────────
 // Canvas-aware hooks for building custom toolbars / panels. Resolve the engine
 // from CanvasContext (or an explicit instance) and subscribe to engine events.
-export { useCamera, useZoom, useFitContent, useCanvasEvent } from './hooks';
-export type { UseCameraResult, UseZoomResult, UseFitContentResult } from './hooks';
+export { useCamera, useZoom, useFitContent, useCanvasEvent, useClearGraph } from './hooks';
+export type { UseCameraResult, UseZoomResult, UseFitContentResult, UseClearGraphResult } from './hooks';
 
 // ─── Toolbars ──────────────────────────────────────────────────────────────
 // `CanvasControlsToolbar` self-wires from context (React Flow's `<Controls>`);
@@ -114,6 +114,7 @@ export {
   ControlButton,
   OptionPicker,
   ZoomControls,
+  ZoomPicker,
   LockToggle,
   ClearButton,
   FitContentButton,

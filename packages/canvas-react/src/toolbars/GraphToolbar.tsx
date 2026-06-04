@@ -1,4 +1,5 @@
 import { NavHorizontal } from '@invana/ui';
+import type { Canvas as EngineCanvas } from '@invana/canvas';
 
 import { ClearButton, OptionPicker, Panel } from '../components';
 import type { PanelPosition, ToolbarIcon } from '../components';
@@ -14,9 +15,11 @@ export interface GraphToolbarProps {
   selectModeOptions: Record<string, string>;
   onSelectModeChange: (value: string) => void;
 
-  /** Clear-canvas action. */
-  onClear: () => void;
+  /** Clear button — layer to clear. Default `'graph'`. */
+  clearLayerId?: string;
   clearIcon?: ToolbarIcon;
+  /** Explicit canvas instance; forwarded to the self-wiring {@link ClearButton}. Defaults to context canvas. */
+  canvas?: EngineCanvas | null;
 
   /** Where the toolbar pins within the canvas host. Default `'top-center'`. */
   position?: PanelPosition;
@@ -42,8 +45,9 @@ export function GraphToolbar({
   selectMode,
   selectModeOptions,
   onSelectModeChange,
-  onClear,
+  clearLayerId = 'graph',
   clearIcon,
+  canvas,
   position = 'top-center',
   className,
 }: GraphToolbarProps) {
@@ -65,7 +69,7 @@ export function GraphToolbar({
               options={selectModeOptions}
               onChange={onSelectModeChange}
             />
-            <ClearButton onClear={onClear} icon={clearIcon} />
+            <ClearButton icon={clearIcon} layerId={clearLayerId} canvas={canvas} />
           </div>
         }
       />

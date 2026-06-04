@@ -19,5 +19,7 @@ export { ClearButton } from './ClearButton';
 export type { ClearButtonProps } from './ClearButton';
 export { FitContentButton } from './FitContentButton';
 export type { FitContentButtonProps } from './FitContentButton';
+export { ZoomPicker } from './ZoomPicker';
+export type { ZoomPickerProps } from './ZoomPicker';
 
 export type { ToolbarIcon, PanelPosition } from './types';

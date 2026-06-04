@@ -1,10 +1,8 @@
 import type { ReactNode } from 'react';
+import { NavHorizontal, NavVertical } from '@invana/ui';
 import { Panel, ZoomControls, FitContentButton, LockToggle } from '../components';
 import type { PanelPosition, ToolbarIcon } from '../components';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
-
-import { useZoom } from '../hooks/useZoom';
-import { useFitContent } from '../hooks/useFitContent';
 
 export interface CanvasControlsToolbarIconSet {
   zoomIn: ToolbarIcon;
@@ -25,9 +23,8 @@ export interface CanvasControlsToolbarProps {
   /** Show zoom +/- buttons. Default `true`. */
   showZoom?: boolean;
   /**
-   * Show a live `NN%` zoom readout between the +/- buttons (the React-Flow
-   * zoom-slider look). Driven by {@link useZoom}, so it tracks wheel / pinch /
-   * button zoom. Default `false`.
+   * Show a live `NN%` zoom readout between the +/- buttons. Sourced from the
+   * canvas via the self-wired {@link ZoomControls}. Default `false`.
    */
   showZoomLevel?: boolean;
   /** Show the fit-to-content button. Default `true`. */
@@ -42,15 +39,11 @@ export interface CanvasControlsToolbarProps {
   locked?: boolean;
   onToggleLock?: () => void;
   /**
-   * Render **without** the self-positioning `<Panel>` and the floating-card
-   * chrome (background / border / shadow) — just the bare control row — so it
-   * composes into consumer chrome. This is what lets a *single* external
-   * controller drive whichever canvas is active (draw.io-style): render it
-   * outside the `<Canvas>` trees with `bare` + an explicit `canvas`. Default
-   * `false`. When `false`, `position` pins it inside the canvas host as usual.
+   * Render **without** the self-positioning `<Panel>` — just the bare nav
+   * component — so it composes into consumer chrome. Default `false`.
    */
   bare?: boolean;
-  /** Explicit canvas instance; defaults to the context canvas. */
+  /** Explicit canvas instance; forwarded to each smart component. Defaults to context canvas. */
   canvas?: EngineCanvas | null;
   /** Extra controls appended after the presets — e.g. `<ControlButton>`s. */
   children?: ReactNode;
@@ -58,14 +51,14 @@ export interface CanvasControlsToolbarProps {
 }
 
 /**
- * Self-wiring controls overlay — the canvas equivalent of React Flow's
- * `<Controls>`. Zoom and fit-to-content are pulled from context via
- * {@link useZoom} / {@link useFitContent}, so dropped inside a `<Canvas>` it
- * works with only an `icons` prop (no callback wiring) and is multi-canvas-safe.
+ * Turnkey controls overlay — the canvas equivalent of React Flow's `<Controls>`.
+ * Assembled from self-wiring smart components ({@link ZoomControls},
+ * {@link FitContentButton}) arranged in a {@link NavVertical} or
+ * {@link NavHorizontal} from `@invana/ui`. No hook wiring needed — drop inside
+ * a `<Canvas>` with an `icons` prop and it works.
  *
  * Lock stays **controlled** — pass `locked` + `onToggleLock` to surface it.
- * Append a minimap toggle (or any extra) as `children` — they render after the
- * presets.
+ * Append extra controls as `children`.
  *
  * @example
  * // Pattern A — drop inside a <Canvas>, self-wires via context:
@@ -95,44 +88,23 @@ export function CanvasControlsToolbar({
   children,
   className,
 }: CanvasControlsToolbarProps) {
-  const { zoom, zoomIn, zoomOut } = useZoom(canvas);
-  const { fitContent } = useFitContent(fitLayerId, canvas);
-
   const showLock =
     locked !== undefined && onToggleLock && icons.locked && icons.unlocked;
 
-  const row = (
-    <div
-      className={className}
-      style={{
-        display: 'flex',
-        flexDirection: orientation === 'vertical' ? 'column' : 'row',
-        alignItems: 'center',
-        gap: 4,
-        // The floating-card chrome only applies to the self-positioned overlay;
-        // `bare` drops it so the row inherits the consumer's chrome.
-        ...(bare
-          ? null
-          : {
-              padding: 4,
-              borderRadius: 8,
-              background: 'var(--color-popover)',
-              border: '1px solid var(--color-border)',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
-            }),
-      }}
-    >
+  const controls = (
+    <>
       {showZoom && (
         <ZoomControls
           orientation={orientation}
-          onZoomIn={() => zoomIn()}
-          onZoomOut={() => zoomOut()}
+          canvas={canvas}
           zoomInIcon={icons.zoomIn}
           zoomOutIcon={icons.zoomOut}
-          zoomLevel={showZoomLevel ? `${Math.round(zoom * 100)}%` : undefined}
+          showLevel={showZoomLevel}
         />
       )}
-      {showFit && <FitContentButton onFitContent={() => fitContent()} icon={icons.fit} />}
+      {showFit && (
+        <FitContentButton icon={icons.fit} canvas={canvas} layerId={fitLayerId} />
+      )}
       {showLock && (
         <LockToggle
           locked={locked}
@@ -142,15 +114,22 @@ export function CanvasControlsToolbar({
         />
       )}
       {children}
-    </div>
+    </>
   );
 
-  // Bare: hand back just the row so it sits in consumer chrome (Pattern B).
-  if (bare) return row;
+  const nav =
+    orientation === 'vertical' ? (
+      <NavVertical top={controls} className={className} />
+    ) : (
+      <NavHorizontal left={controls} className={className} />
+    );
+
+  if (bare) return nav;
 
   return (
     <Panel position={position} orientation={orientation}>
-      {row}
+      {nav}
     </Panel>
   );
 }
+
