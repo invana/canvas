@@ -2,7 +2,7 @@ import { NavHorizontal } from '@invana/ui';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
 import { Panel, LayoutPicker, SelectModePicker } from '../components';
-import type { PanelPosition } from '../components';
+import type { PanelPosition, ToolbarIcon } from '../components';
 import type { LayoutFactory } from '../hooks/useLayout';
 
 export interface GraphLayoutToolbarProps {
@@ -14,6 +14,8 @@ export interface GraphLayoutToolbarProps {
   layoutLabels?: Record<string, string>;
   /** Optional select-mode key → label map. Default: identity. */
   selectModeLabels?: Record<string, string>;
+  /** Optional select-mode key → icon map. Shown on the trigger and beside each option. */
+  selectModeIcons?: Record<string, ToolbarIcon>;
   /** Initially-selected layout key. */
   initialLayout?: string;
   /** Initially-active select mode key. */
@@ -38,6 +40,7 @@ export function GraphLayoutToolbar({
   selectModeBehaviourIds,
   layoutLabels,
   selectModeLabels,
+  selectModeIcons,
   initialLayout,
   initialSelectMode,
   layerId,
@@ -61,6 +64,7 @@ export function GraphLayoutToolbar({
             <SelectModePicker
               behaviourIds={selectModeBehaviourIds}
               labels={selectModeLabels}
+              icons={selectModeIcons}
               initial={initialSelectMode}
               canvas={canvas}
             />

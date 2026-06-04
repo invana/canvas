@@ -59,12 +59,15 @@ import {
   Copy,
   Eraser,
   Grid3x3,
+  Lasso,
   Lock,
   LockOpen,
   Maximize,
+  MousePointer2,
   Redo2,
   RefreshCw,
   Scissors,
+  SquareDashedMousePointer,
   Trash2,
   Undo2,
   ZoomIn,
@@ -114,6 +117,12 @@ const SELECT_LABEL: Record<string, string> = {
   click: 'Click select',
   brush: 'Brush select',
   lasso: 'Lasso select',
+};
+// Icon per select mode, shown on the dropdown trigger and beside each option.
+const SELECT_ICONS = {
+  click: MousePointer2,
+  brush: SquareDashedMousePointer,
+  lasso: Lasso,
 };
 
 /**
@@ -217,6 +226,7 @@ function Visualiser() {
               initialLayout="d3-force"
               selectModeBehaviourIds={SELECT_MODE_IDS}
               selectModeLabels={SELECT_LABEL}
+              selectModeIcons={SELECT_ICONS}
               initialSelectMode="click"
             />
             <EditToolbar

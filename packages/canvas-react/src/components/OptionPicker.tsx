@@ -8,6 +8,8 @@ import {
   DropdownMenuTrigger,
 } from '@invana/ui';
 
+import type { ToolbarIcon } from './types';
+
 export interface OptionPickerProps {
   /** Label shown on the trigger and as the menu heading (e.g. `'Layout'`). */
   label: string;
@@ -15,6 +17,12 @@ export interface OptionPickerProps {
   value: string;
   /** Option key → human label. */
   options: Record<string, string>;
+  /**
+   * Optional option key → icon. When present, the active option's icon shows on
+   * the trigger and each option's icon shows beside its label in the menu.
+   * Icon-agnostic — pass a {@link ToolbarIcon} (e.g. a `lucide-react` glyph).
+   */
+  icons?: Record<string, ToolbarIcon>;
   /** Fired with the newly selected key. */
   onChange: (value: string) => void;
   /** Menu alignment relative to the trigger. Default `'start'`. */
@@ -31,10 +39,12 @@ export function OptionPicker({
   label,
   value,
   options,
+  icons,
   onChange,
   align = 'start',
   className,
 }: OptionPickerProps) {
+  const ActiveIcon = icons?.[value];
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -47,7 +57,10 @@ export function OptionPicker({
           size="sm"
           className={['ring-offset-background', className].filter(Boolean).join(' ')}
         >
-          {label}: {options[value] ?? value}
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {ActiveIcon && <ActiveIcon size={16} />}
+            {label}: {options[value] ?? value}
+          </span>
         </Button>
       </DropdownMenuTrigger>
       {/* Force a solid token-driven background: the design-kit's default
@@ -56,11 +69,17 @@ export function OptionPicker({
       <DropdownMenuContent align={align} style={{ backgroundColor: 'var(--color-popover)' }}>
         <DropdownMenuLabel>{label}</DropdownMenuLabel>
         <DropdownMenuRadioGroup value={value} onValueChange={onChange}>
-          {Object.keys(options).map((key) => (
-            <DropdownMenuRadioItem key={key} value={key}>
-              {options[key] ?? key}
-            </DropdownMenuRadioItem>
-          ))}
+          {Object.keys(options).map((key) => {
+            const Icon = icons?.[key];
+            return (
+              <DropdownMenuRadioItem key={key} value={key}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {Icon && <Icon size={14} />}
+                  {options[key] ?? key}
+                </span>
+              </DropdownMenuRadioItem>
+            );
+          })}
         </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
