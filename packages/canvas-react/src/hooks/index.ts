@@ -23,5 +23,7 @@ export { useLayout } from './useLayout';
 export type { ApplicableLayout, LayoutFactory, UseLayoutOptions, UseLayoutResult } from './useLayout';
 export { useSelectMode } from './useSelectMode';
 export type { UseSelectModeOptions, UseSelectModeResult } from './useSelectMode';
+export { useEdgeType, DEFAULT_EDGE_TYPES, DEFAULT_EDGE_TYPE_LABELS } from './useEdgeType';
+export type { UseEdgeTypeOptions, UseEdgeTypeResult } from './useEdgeType';
 export { useLock } from './useLock';
 export type { UseLockOptions, UseLockResult } from './useLock';

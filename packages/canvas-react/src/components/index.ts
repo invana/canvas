@@ -47,5 +47,7 @@ export { LayoutPicker } from './LayoutPicker';
 export type { LayoutPickerProps } from './LayoutPicker';
 export { SelectModePicker } from './SelectModePicker';
 export type { SelectModePickerProps } from './SelectModePicker';
+export { EdgeTypePicker } from './EdgeTypePicker';
+export type { EdgeTypePickerProps } from './EdgeTypePicker';
 
 export type { ToolbarIcon, PanelPosition, TooltipSide } from './types';

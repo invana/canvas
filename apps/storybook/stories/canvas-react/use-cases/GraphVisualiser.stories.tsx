@@ -17,6 +17,9 @@
  *     automatically on mount. Selection is Shift-gated: Shift+click to select
  *     (always on); the switcher arms which Shift+drag gesture is live — Click
  *     (none), Brush, or Lasso. A plain drag always pans.
+ *   - **`<EdgeTypePicker>`** — edge routing switcher (straight / orthogonal /
+ *     curved / rounded / smooth), self-wiring through `useEdgeType`. Re-routes
+ *     every edge at once via the layer's `setEdgeDefaults`.
  *   - **`<EditToolbar>`** — cut / copy / paste / delete selection / clear canvas,
  *     all undoable; reads the selection off the `ClickSelectBehaviour`.
  *   - **`<ViewToolbar>`** — zoom in/out, zoom-level picker, fit-to-content, lock
@@ -36,6 +39,7 @@ import {
   ClickSelectBehaviour,
   DragNodeBehaviour,
   DragPanBehaviour,
+  EdgeTypePicker,
   EditToolbar,
   GraphClipboardProvider,
   GraphHistoryProvider,
@@ -60,7 +64,9 @@ import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { lesMiserables } from '@invana/graph-datasets';
 import {
+  Cable,
   ClipboardPaste,
+  CornerDownRight,
   Copy,
   Eraser,
   Grid3x3,
@@ -68,13 +74,16 @@ import {
   Lock,
   LockOpen,
   Maximize,
+  Minus,
   MousePointer2,
   Redo2,
   RefreshCw,
   Scissors,
+  Spline,
   SquareDashedMousePointer,
   Trash2,
   Undo2,
+  Waypoints,
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
@@ -128,6 +137,17 @@ const SELECT_ICONS = {
   click: MousePointer2,
   brush: SquareDashedMousePointer,
   lasso: Lasso,
+};
+
+// Icon per edge routing type, shown on the <EdgeTypePicker> trigger + options.
+// The picker exposes its default set (straight / orthogonal / curved / rounded /
+// smooth) and re-routes every edge via the layer's `setEdgeDefaults`.
+const EDGE_TYPE_ICONS = {
+  straight: Minus,
+  orth: CornerDownRight,
+  bezier: Spline,
+  rounded: Waypoints,
+  smooth: Cable,
 };
 
 /**
@@ -236,6 +256,10 @@ function Visualiser() {
                 selectModeIcons={SELECT_ICONS}
                 initialSelectMode="click"
               />
+              <Separator orientation="vertical" style={{ alignSelf: 'center', height: 16 }} />
+              {/* Edge routing picker — self-wires to the 'graph' layer and
+                  re-routes every edge (straight / orthogonal / curved / …). */}
+              <EdgeTypePicker layerId="graph" icons={EDGE_TYPE_ICONS} />
               <Separator orientation="vertical" style={{ alignSelf: 'center', height: 16 }} />
               <EditToolbar
                 bare

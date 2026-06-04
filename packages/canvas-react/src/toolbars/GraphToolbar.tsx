@@ -1,7 +1,8 @@
 import { NavHorizontal } from '@invana/ui';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { EdgePathType } from '@invana/graph';
 
-import { ClearButton, OptionPicker, Panel } from '../components';
+import { ClearButton, EdgeTypePicker, OptionPicker, Panel } from '../components';
 import type { PanelPosition, ToolbarIcon } from '../components';
 
 export interface GraphToolbarProps {
@@ -14,6 +15,18 @@ export interface GraphToolbarProps {
   selectMode: string;
   selectModeOptions: Record<string, string>;
   onSelectModeChange: (value: string) => void;
+
+  /**
+   * Self-wiring edge-routing picker (straight / orthogonal / curved …) targeting
+   * this `GraphLayer` id. Default `'graph'`; pass `null` to hide the picker.
+   */
+  edgeTypeLayerId?: string | null;
+  /** Path types the edge picker exposes, in order. Default: straight / orth / bezier / rounded / smooth. */
+  edgeTypes?: readonly EdgePathType[];
+  /** Optional key → label map for the edge picker. */
+  edgeTypeLabels?: Record<string, string>;
+  /** Per-option icons for the edge picker (key → icon component). */
+  edgeTypeIcons?: Record<string, ToolbarIcon>;
 
   /** Clear button — layer to clear. Default `'graph'`. */
   clearLayerId?: string;
@@ -28,10 +41,12 @@ export interface GraphToolbarProps {
 
 /**
  * Turnkey **horizontal** graph toolbar: a layout picker + selection-mode picker
- * + clear action, grouped in a `@invana/ui` `NavHorizontal`. Engine-agnostic —
- * every action is a callback the consumer wires to the engine. Compose the
- * underlying {@link OptionPicker} / {@link ClearButton} primitives directly for
- * a custom arrangement.
+ * + a self-wiring {@link EdgeTypePicker} (edge routing) + clear action, grouped
+ * in a `@invana/ui` `NavHorizontal`. The layout / select pickers are
+ * callback-driven (the consumer wires them to the engine); the edge-type and
+ * clear actions self-wire from their layer id. Compose the underlying
+ * {@link OptionPicker} / {@link EdgeTypePicker} / {@link ClearButton} primitives
+ * directly for a custom arrangement.
  *
  * Self-positioning: it wraps itself in a {@link Panel}, so it overlays the
  * canvas host directly — render it as a child of `<Canvas>` (no hand-rolled
@@ -45,6 +60,10 @@ export function GraphToolbar({
   selectMode,
   selectModeOptions,
   onSelectModeChange,
+  edgeTypeLayerId = 'graph',
+  edgeTypes,
+  edgeTypeLabels,
+  edgeTypeIcons,
   clearLayerId = 'graph',
   clearIcon,
   canvas,
@@ -69,6 +88,15 @@ export function GraphToolbar({
               options={selectModeOptions}
               onChange={onSelectModeChange}
             />
+            {edgeTypeLayerId != null && (
+              <EdgeTypePicker
+                layerId={edgeTypeLayerId}
+                {...(edgeTypes ? { types: edgeTypes } : {})}
+                {...(edgeTypeLabels ? { labels: edgeTypeLabels } : {})}
+                {...(edgeTypeIcons ? { icons: edgeTypeIcons } : {})}
+                canvas={canvas}
+              />
+            )}
             <ClearButton icon={clearIcon} layerId={clearLayerId} canvas={canvas} />
           </div>
         }

@@ -111,6 +111,9 @@ export {
   useGrid,
   useLayout,
   useSelectMode,
+  useEdgeType,
+  DEFAULT_EDGE_TYPES,
+  DEFAULT_EDGE_TYPE_LABELS,
   useLock,
 } from './hooks';
 export type {
@@ -132,6 +135,8 @@ export type {
   LayoutFactory,
   UseSelectModeOptions,
   UseSelectModeResult,
+  UseEdgeTypeOptions,
+  UseEdgeTypeResult,
   UseLockOptions,
   UseLockResult,
 } from './hooks';
@@ -189,6 +194,7 @@ export {
   LockButton,
   LayoutPicker,
   SelectModePicker,
+  EdgeTypePicker,
 } from './components';
 export type {
   PanelProps,
@@ -213,5 +219,6 @@ export type {
   LockButtonProps,
   LayoutPickerProps,
   SelectModePickerProps,
+  EdgeTypePickerProps,
   ToolbarIcon,
 } from './components';
