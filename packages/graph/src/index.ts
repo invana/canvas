@@ -69,6 +69,22 @@ export {
 } from './layer';
 
 export {
+  GraphHistory,
+  type GraphHistoryEventMap,
+  type GraphHistoryOptions,
+  type HistoryEntry,
+  type HistoryOp,
+  type HistoryRecorder,
+} from './history';
+
+export {
+  GraphClipboard,
+  type GraphClipboardEventMap,
+  type GraphClipboardOptions,
+  type PasteResult,
+} from './clipboard';
+
+export {
   HoverActivateBehaviour,
   type HoverActivateBehaviourOptions,
   type HoverableElement,
@@ -76,6 +92,7 @@ export {
   type HoverDirection,
   ClickSelectBehaviour,
   type ClickSelectBehaviourOptions,
+  type ClickSelectEventMap,
   type SelectableElement,
   type SelectableElementType,
   type SelectDirection,

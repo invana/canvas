@@ -1,50 +1,73 @@
 /**
  * Graph data **visualiser** — a read-only explorer built from
- * `@invana/canvas-react` wrappers. Every layer, behaviour, and overlay is listed
- * directly inside `<Canvas>`. App state (layout / select mode / minimap / lock)
- * lives in `Visualiser` and is passed to the children as props; the only
- * engine-dependent action, Clear, goes through the `<Canvas>` ref. Two overlays
- * self-position via `<Panel>`:
+ * `@invana/canvas-react` wrappers. Every layer and behaviour is listed directly
+ * inside `<Canvas>`; the chrome is five self-wiring toolbars, each pinned to a
+ * different edge via its own `<Panel>`. No app state lives in `Visualiser` — the
+ * toolbars drive the engine straight from context (and, for history/clipboard,
+ * from `<GraphHistoryProvider>` / `<GraphClipboardProvider>`):
  *
- *   - **`<GraphToolbar>`** (top-centre, `@invana/canvas-react`) — layout switcher
- *     (Force / ELK layered / ELK stress), selection-mode dropdown (Click / Brush
- *     / Lasso; Click default), and Clear canvas (wired to `GraphLayer.clear()`).
- *   - **`<CanvasControlsToolbar>`** (bottom-left, `@invana/canvas-react`) — the single
- *     self-wiring view rail: zoom in / out + fit-to-content come from the camera
- *     hooks for free (no wiring); the minimap toggle is a `<ControlButton>` child,
- *     a `<ZoomPicker>` child adds a current-% trigger with a preset / fit dropdown,
- *     and lock-view (disables pan + node-drag) is the controlled lock. The minimap
- *     sits just to its right (also bottom-left).
+ *   - **`<HistoryToolbar>`** (top-left) — undo / redo / redraw via `useHistory`.
+ *   - **`<GraphLayoutToolbar>`** (top-centre) — layout switcher (Force / ELK
+ *     layered / ELK stress) + selection-mode switcher (Click / Brush / Lasso),
+ *     self-wiring through `useLayout` (consumer-supplied factories) and
+ *     `useSelectMode` (consumer-supplied behaviour ids). The initial layout is
+ *     applied automatically on mount.
+ *   - **`<EditToolbar>`** (top-right) — cut / copy / paste / delete selection /
+ *     clear canvas, all undoable; reads the selection off the `ClickSelectBehaviour`.
+ *   - **`<ViewToolbar>`** (bottom-left) — zoom in/out, zoom-level picker,
+ *     fit-to-content, lock view (disables pan + node-drag), all from the camera /
+ *     lock hooks.
+ *   - **`<GridToolbar>`** (bottom-centre) — toggles the background grid pattern.
+ *
+ * The minimap sits bottom-right.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
   BackgroundLayer,
   BrushSelectBehaviour,
-  CanvasControlsToolbar,
   ClickSelectBehaviour,
-  ControlButton,
   DragNodeBehaviour,
   DragPanBehaviour,
+  EditToolbar,
+  GraphClipboardProvider,
+  GraphHistoryProvider,
   GraphLayer,
-  GraphToolbar,
+  GraphLayoutToolbar,
+  GridToolbar,
+  HistoryToolbar,
   HoverActivateBehaviour,
   LabelResolutionLODBehaviour,
   LassoSelectBehaviour,
   MiniMapLayer,
   PinchZoomBehaviour,
+  ViewToolbar,
   WheelZoomBehaviour,
-  ZoomPicker,
   useCanvas,
+  type LayoutFactory,
 } from '@invana/canvas-react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
 import type { GraphNode, GraphLayer as EngineGraphLayer } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { lesMiserables } from '@invana/graph-datasets';
-import { Lock, LockOpen, Maximize, Map, Trash2, ZoomIn, ZoomOut } from 'lucide-react';
+import {
+  ClipboardPaste,
+  Copy,
+  Eraser,
+  Grid3x3,
+  Lock,
+  LockOpen,
+  Maximize,
+  Redo2,
+  RefreshCw,
+  Scissors,
+  Trash2,
+  Undo2,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react';
 
 const meta: Meta = { title: 'canvas-react/usecases/GraphVisualiser' };
 export default meta;
@@ -57,47 +80,31 @@ const PALETTE = [
 type LesMisData = { group: number };
 const groupOf = (n: GraphNode): number => (n.data as LesMisData | undefined)?.group ?? 0;
 
-type LayoutName = 'd3-force' | 'elk-layered' | 'elk-stress';
-const LAYOUT_LABEL: Record<LayoutName, string> = {
+// Layout factories — each call produces a fresh instance. Module-level so the
+// reference is stable across renders (keeps `useLayout`'s `applyLayout` stable).
+const LAYOUTS: Record<string, LayoutFactory> = {
+  'd3-force': () =>
+    new D3ForceLayout({
+      charge: { strength: -160 },
+      link: { distance: 56 },
+      collide: { radius: 14 },
+    }),
+  'elk-layered': () => new ElkLayout({ algorithm: 'layered', direction: 'RIGHT' }),
+  'elk-stress': () => new ElkLayout({ algorithm: 'stress' }),
+};
+const LAYOUT_LABEL: Record<string, string> = {
   'd3-force': 'Force (d3)',
   'elk-layered': 'Layered (ELK)',
   'elk-stress': 'Stress (ELK)',
 };
 
-type SelectMode = 'click' | 'brush' | 'lasso';
-const SELECT_LABEL: Record<SelectMode, string> = {
+// Mode key → registered behaviour id. `useSelectMode` enables exactly one.
+const SELECT_MODE_IDS = { click: 'click-select', brush: 'brush-select', lasso: 'lasso-select' };
+const SELECT_LABEL: Record<string, string> = {
   click: 'Click select',
   brush: 'Brush select',
   lasso: 'Lasso select',
 };
-
-/** Applies the chosen layout imperatively and re-fits; re-runs on change. */
-function LayoutController({ name }: { name: LayoutName }) {
-  const canvas = useCanvas();
-  useEffect(() => {
-    const layer = canvas.layers.get<EngineGraphLayer>('graph');
-    if (!layer) return;
-    let cancelled = false;
-    const layout =
-      name === 'd3-force'
-        ? new D3ForceLayout({
-            charge: { strength: -160 },
-            link: { distance: 56 },
-            collide: { radius: 14 },
-          })
-        : name === 'elk-layered'
-          ? new ElkLayout({ algorithm: 'layered', direction: 'RIGHT' })
-          : new ElkLayout({ algorithm: 'stress' });
-    void layout.apply(layer).then(() => {
-      if (!cancelled) canvas.camera.fitContent(layer.getBounds(), 80);
-    });
-    return () => {
-      cancelled = true;
-      (layout as { stop?: () => void }).stop?.();
-    };
-  }, [canvas, name]);
-  return null;
-}
 
 /**
  * Keeps the graph's theme-dependent colours (node labels + borders, edge
@@ -134,24 +141,14 @@ function ThemeController() {
 }
 
 function Visualiser() {
-  const canvasRef = useRef<EngineCanvas>(null);
-  const [layout, setLayout] = useState<LayoutName>('d3-force');
-  const [selectMode, setSelectMode] = useState<SelectMode>('click');
-  const [showMinimap, setShowMinimap] = useState(true);
-  const [locked, setLocked] = useState(false);
-
-  // Zoom / fit / lock / clear need no ref — the toolbars self-wire them from
-  // context (`<CanvasControlsToolbar>` for the view rail, `<GraphToolbar>`'s
-  // `<ClearButton>` for clear via `useClearGraph`).
-
   return (
     <div style={{ height: '100vh' }}>
-      <Canvas ref={canvasRef} autoResize>
-        {/* mode defaults to 'auto' → fill + dot pattern follow the OS
-            `prefers-color-scheme`. The `{ light, dark }` pairs give the layer an
-            actual dark variant to paint. */}
+      <Canvas autoResize>
+        {/* A grid pattern so <GridToolbar> has something to toggle. The
+            `{ light, dark }` pairs follow the OS `prefers-color-scheme`. */}
         <BackgroundLayer
-          patternType="dots"
+          type="pattern"
+          patternType="grid"
           backgroundColor={{ light: '#f8fafc', dark: '#0f172a' }}
           color={{ light: '#94a3b8', dark: '#334155' }}
         />
@@ -173,72 +170,67 @@ function Visualiser() {
           // edge strokeColor is theme-driven — see <ThemeController>.
           edge={{ style: { strokeWidth: 1, arrowTargetShape: 'none' } }}
         />
-        <LayoutController name={layout} />
         <ThemeController />
 
-        {/* Lock view disables pan + node-drag; zoom stays available. */}
-        <DragPanBehaviour enabled={!locked} />
-        <DragNodeBehaviour layerId="graph" enabled={!locked} />
+        {/* Camera + interaction. Pan ('pan') + node-drag ('drag-node') are what
+            <ViewToolbar>'s lock disables (default lock behaviour ids). */}
+        <DragPanBehaviour />
+        <DragNodeBehaviour layerId="graph" />
         <WheelZoomBehaviour />
         <PinchZoomBehaviour />
         <HoverActivateBehaviour layerId="graph" degree={1} state="highlighted" />
 
-        {/* Selection mode — exactly one enabled at a time. Brush/Lasso default
-            to `trigger: ['shift']` (shift+drag); since selection mode is an
-            explicit switch here, `trigger={[]}` lets a plain left-drag select.
-            They pause camera pan on pointerdown, so they coexist with DragPan. */}
-        <ClickSelectBehaviour layerId="graph" enabled={selectMode === 'click'} multiple />
-        <BrushSelectBehaviour layerId="graph" enabled={selectMode === 'brush'} trigger={[]} />
-        <LassoSelectBehaviour layerId="graph" enabled={selectMode === 'lasso'} trigger={[]} />
+        {/* Selection behaviours — registered disabled; <GraphLayoutToolbar>'s
+            select-mode picker (useSelectMode) enables exactly one. Brush/Lasso
+            use `trigger={[]}` so a plain left-drag selects. */}
+        <ClickSelectBehaviour layerId="graph" enabled={false} multiple />
+        <BrushSelectBehaviour layerId="graph" enabled={false} trigger={[]} />
+        <LassoSelectBehaviour layerId="graph" enabled={false} trigger={[]} />
 
         <LabelResolutionLODBehaviour layerId="graph" />
-        {/* Minimap sits bottom-left, just right of the view rail and bottom-aligned
-            with it: x clears the rail's width, y matches the rail's 8px Panel offset. */}
-        {showMinimap && (
-          <MiniMapLayer graphLayerId="graph" position="bottom-right" margin={{ x: 20, }} />
-        )}
+        <MiniMapLayer graphLayerId="graph" position="bottom-right" margin={{ x: 20 }} />
 
-        {/* Top-centre toolbar — a turnkey canvas-react toolbar; Clear wired to
-            the graph layer via the canvas ref. Self-positions via its own <Panel>. */}
-        <GraphToolbar
-          layout={layout}
-          layoutOptions={LAYOUT_LABEL}
-          onLayoutChange={(v) => setLayout(v as LayoutName)}
-          selectMode={selectMode}
-          selectModeOptions={SELECT_LABEL}
-          onSelectModeChange={(v) => setSelectMode(v as SelectMode)}
-          clearIcon={Trash2}
-          position="top-center"
-        />
-
-        {/* Bottom-left view rail — ONE self-wiring component. Zoom +/- and fit
-            come from the camera hooks with no wiring; the minimap toggle is a
-            <ControlButton> child; lock is the controlled toggle. */}
-        <CanvasControlsToolbar
-          position="bottom-center"
-          orientation="horizontal"
-          icons={
-            { zoomIn: ZoomIn,
-             zoomOut: ZoomOut, 
-             fit: Maximize, 
-             locked: Lock, 
-             unlocked: LockOpen 
-            }
-          }
-          locked={locked}
-          onToggleLock={() => setLocked((v) => !v)}
-        >
-
-          {/* Self-wiring zoom-level picker: current % trigger + preset dropdown
-              and fit-to-content, all from the camera hooks (no wiring). */}
-          <ZoomPicker layerId="graph" />
-          <ControlButton
-            icon={Map}
-            title="Toggle minimap"
-            active={showMinimap}
-            onClick={() => setShowMinimap((v) => !v)}
-          />
-        </CanvasControlsToolbar>
+        {/* History + clipboard need their engine objects over the graph store —
+            provided here, consumed by the toolbars below. */}
+        <GraphHistoryProvider layerId="graph">
+          <GraphClipboardProvider layerId="graph">
+            <HistoryToolbar
+              position="top-left"
+              icons={{ undo: Undo2, redo: Redo2, redraw: RefreshCw }}
+            />
+            <GraphLayoutToolbar
+              position="top-center"
+              layouts={LAYOUTS}
+              layoutLabels={LAYOUT_LABEL}
+              initialLayout="d3-force"
+              selectModeBehaviourIds={SELECT_MODE_IDS}
+              selectModeLabels={SELECT_LABEL}
+              initialSelectMode="click"
+            />
+            <EditToolbar
+              position="top-right"
+              icons={{
+                cut: Scissors,
+                copy: Copy,
+                paste: ClipboardPaste,
+                delete: Trash2,
+                clear: Eraser,
+              }}
+            />
+            <ViewToolbar
+              position="bottom-left"
+              orientation="vertical"
+              icons={{
+                zoomIn: ZoomIn,
+                zoomOut: ZoomOut,
+                fit: Maximize,
+                locked: Lock,
+                unlocked: LockOpen,
+              }}
+            />
+            <GridToolbar position="bottom-center" icons={{ grid: Grid3x3 }} />
+          </GraphClipboardProvider>
+        </GraphHistoryProvider>
       </Canvas>
     </div>
   );

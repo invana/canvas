@@ -10,6 +10,14 @@ export { Canvas } from './Canvas';
 export type { CanvasProps } from './Canvas';
 
 export { CanvasContext, useCanvas } from './CanvasContext';
+export { HistoryContext } from './HistoryContext';
+export { ClipboardContext } from './ClipboardContext';
+
+// ─── Providers ─────────────────────────────────────────────────────────────
+// Construct engine-owned `GraphHistory` / `GraphClipboard` over a layer's store
+// and surface them to descendant hooks / buttons via context.
+export { GraphHistoryProvider, GraphClipboardProvider } from './providers';
+export type { GraphHistoryProviderProps, GraphClipboardProviderProps } from './providers';
 
 // ─── Layers ──────────────────────────────────────────────────────────────
 export { GraphLayer } from './layers/GraphLayer';
@@ -91,18 +99,69 @@ export type { D3ForceLayoutProps } from './layouts/D3ForceLayout';
 // ─── Hooks ───────────────────────────────────────────────────────────────
 // Canvas-aware hooks for building custom toolbars / panels. Resolve the engine
 // from CanvasContext (or an explicit instance) and subscribe to engine events.
-export { useCamera, useZoom, useFitContent, useCanvasEvent, useClearGraph } from './hooks';
-export type { UseCameraResult, UseZoomResult, UseFitContentResult, UseClearGraphResult } from './hooks';
+export {
+  useCamera,
+  useZoom,
+  useFitContent,
+  useCanvasEvent,
+  useClearGraph,
+  useSelection,
+  useHistory,
+  useClipboard,
+  useGrid,
+  useLayout,
+  useSelectMode,
+  useLock,
+} from './hooks';
+export type {
+  UseCameraResult,
+  UseZoomResult,
+  UseFitContentResult,
+  UseClearGraphResult,
+  UseSelectionOptions,
+  UseSelectionResult,
+  UseHistoryOptions,
+  UseHistoryResult,
+  UseClipboardOptions,
+  UseClipboardResult,
+  UseGridOptions,
+  UseGridResult,
+  UseLayoutOptions,
+  UseLayoutResult,
+  ApplicableLayout,
+  LayoutFactory,
+  UseSelectModeOptions,
+  UseSelectModeResult,
+  UseLockOptions,
+  UseLockResult,
+} from './hooks';
 
 // ─── Toolbars ──────────────────────────────────────────────────────────────
 // `CanvasControlsToolbar` self-wires from context (React Flow's `<Controls>`);
 // `GraphToolbar` is a turnkey layout/select/clear bar. Toolbar components carry
 // the `*Toolbar` suffix.
-export { CanvasControlsToolbar, GraphToolbar } from './toolbars';
+export {
+  CanvasControlsToolbar,
+  GraphToolbar,
+  HistoryToolbar,
+  EditToolbar,
+  ViewToolbar,
+  GridToolbar,
+  GraphLayoutToolbar,
+} from './toolbars';
 export type {
   CanvasControlsToolbarProps,
   CanvasControlsToolbarIconSet,
   GraphToolbarProps,
+  HistoryToolbarProps,
+  HistoryToolbarIconSet,
+  EditToolbarProps,
+  EditToolbarIconSet,
+  ViewToolbarProps,
+  ViewToolbarIconSet,
+  GridToolbarProps,
+  GridToolbarIconSet,
+  GraphLayoutToolbarProps,
 } from './toolbars';
 
 // ─── UI components (building blocks) ───────────────────────────────────────
@@ -118,6 +177,17 @@ export {
   LockToggle,
   ClearButton,
   FitContentButton,
+  UndoButton,
+  RedoButton,
+  RedrawButton,
+  CutButton,
+  CopyButton,
+  PasteButton,
+  DeleteSelectionButton,
+  GridToggle,
+  LockButton,
+  LayoutPicker,
+  SelectModePicker,
 } from './components';
 export type {
   PanelProps,
@@ -128,5 +198,17 @@ export type {
   LockToggleProps,
   ClearButtonProps,
   FitContentButtonProps,
+  ZoomPickerProps,
+  UndoButtonProps,
+  RedoButtonProps,
+  RedrawButtonProps,
+  CutButtonProps,
+  CopyButtonProps,
+  PasteButtonProps,
+  DeleteSelectionButtonProps,
+  GridToggleProps,
+  LockButtonProps,
+  LayoutPickerProps,
+  SelectModePickerProps,
   ToolbarIcon,
 } from './components';

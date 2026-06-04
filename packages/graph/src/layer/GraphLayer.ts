@@ -439,6 +439,19 @@ export class GraphLayer extends WorldLayer<
   }
 
   /**
+   * Force a full re-render of every node and edge from current store state +
+   * active states. Does **not** mutate data and is **not** undoable — it is a
+   * pure render pass. Use it after an external style/theme change that bypassed
+   * the store (e.g. swapping the renderer's palette) or to recover from a
+   * suspected render desync. For data edits prefer the store mutators, which
+   * re-render the affected items automatically.
+   */
+  redraw(): void {
+    for (const node of this.store.nodes()) this.rerenderNode(node.id);
+    for (const edge of this.store.edges()) this.rerenderEdge(edge.id);
+  }
+
+  /**
    * Drop every shape / connector this layer has mounted on the renderer and
    * reset transient routing state. Shared by `clear` / `setData`: `store.clear()`
    * is silent, so it never drives the renderer's event-based removal path —

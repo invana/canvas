@@ -15,6 +15,7 @@ export type {
 export { ClickSelectBehaviour } from './ClickSelectBehaviour';
 export type {
   ClickSelectBehaviourOptions,
+  ClickSelectEventMap,
   SelectableElement,
   SelectableElementType,
   SelectDirection,

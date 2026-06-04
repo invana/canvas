@@ -22,4 +22,28 @@ export type { FitContentButtonProps } from './FitContentButton';
 export { ZoomPicker } from './ZoomPicker';
 export type { ZoomPickerProps } from './ZoomPicker';
 
+// Self-wiring action buttons (consume the canvas-react hooks, like ClearButton).
+export { UndoButton } from './UndoButton';
+export type { UndoButtonProps } from './UndoButton';
+export { RedoButton } from './RedoButton';
+export type { RedoButtonProps } from './RedoButton';
+export { RedrawButton } from './RedrawButton';
+export type { RedrawButtonProps } from './RedrawButton';
+export { CutButton } from './CutButton';
+export type { CutButtonProps } from './CutButton';
+export { CopyButton } from './CopyButton';
+export type { CopyButtonProps } from './CopyButton';
+export { PasteButton } from './PasteButton';
+export type { PasteButtonProps } from './PasteButton';
+export { DeleteSelectionButton } from './DeleteSelectionButton';
+export type { DeleteSelectionButtonProps } from './DeleteSelectionButton';
+export { GridToggle } from './GridToggle';
+export type { GridToggleProps } from './GridToggle';
+export { LockButton } from './LockButton';
+export type { LockButtonProps } from './LockButton';
+export { LayoutPicker } from './LayoutPicker';
+export type { LayoutPickerProps } from './LayoutPicker';
+export { SelectModePicker } from './SelectModePicker';
+export type { SelectModePickerProps } from './SelectModePicker';
+
 export type { ToolbarIcon, PanelPosition } from './types';

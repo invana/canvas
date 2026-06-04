@@ -28,7 +28,7 @@
  * ```
  */
 
-import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/canvas';
+import { Behaviour, EventEmitter, type BehaviourOptions, type CanvasContext } from '@invana/canvas';
 
 import { GraphLayer } from '../layer/GraphLayer';
 import { ModifierTracker, type ModifierKey } from './ModifierTracker';
@@ -56,6 +56,17 @@ export interface SelectionSnapshot {
   shapeIds: string[];
   connectorIds: string[];
 }
+
+/** Event-map for {@link ClickSelectBehaviour.events}. */
+export type ClickSelectEventMap = {
+  /**
+   * Fired once whenever the selection set is replaced (click, `select*`,
+   * `clearSelection`, or brush/lasso delegation). The non-clobbering complement
+   * to the `onSelectionChange` callback — observers (e.g. the canvas-react
+   * `useSelection` hook) subscribe here instead of hijacking the callback.
+   */
+  'selection:change': SelectionSnapshot;
+};
 
 /** Constructor options for `ClickSelectBehaviour`. */
 export interface ClickSelectBehaviourOptions extends BehaviourOptions {
@@ -160,6 +171,13 @@ function resolveOptions(
 }
 
 export class ClickSelectBehaviour extends Behaviour {
+  /**
+   * Selection event bus. Subscribe to `'selection:change'` for a reactive
+   * snapshot every time the selection set is replaced. Independent of (and
+   * additive to) the `onSelectionChange` option.
+   */
+  readonly events = new EventEmitter<ClickSelectEventMap>();
+
   private layer: GraphLayer | null = null;
   private opts: ResolvedOptions;
 
@@ -442,9 +460,9 @@ export class ClickSelectBehaviour extends Behaviour {
       const target = this.resolveElement(id, type);
       if (target) this.opts.onSelect?.(target);
     }
-    if (this.opts.onSelectionChange) {
-      this.opts.onSelectionChange(this.buildSnapshot());
-    }
+    const snapshot = this.buildSnapshot();
+    if (this.opts.onSelectionChange) this.opts.onSelectionChange(snapshot);
+    this.events.emit('selection:change', snapshot);
   }
 
   /** Expand seeds by `degree` hops (BFS) — same shape as HoverActivate. */
