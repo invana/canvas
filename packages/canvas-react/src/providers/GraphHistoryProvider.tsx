@@ -1,5 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { GraphHistory, type GraphLayer as EngineGraphLayer } from '@invana/graph';
+import {
+  GraphHistory,
+  type GraphLayer as EngineGraphLayer,
+  type HistoryOp,
+  type Vec2,
+} from '@invana/graph';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
 import { useResolvedCanvas } from '../hooks/useResolvedCanvas';
@@ -21,6 +26,10 @@ export interface GraphHistoryProviderProps {
  * `<GraphLayer>` it targets, so the layer (and its store) exist when the effect
  * runs. Descendant `useHistory` / Undo-Redo-Redraw buttons resolve the history
  * from here.
+ *
+ * Node **drags** are captured as one undoable "move" entry per gesture (snapshot
+ * at `node:drag-start`, net change pushed at `node:drag-end`) — reusing
+ * `history.push`, so per-frame writes and layout sim ticks never enter the stack.
  *
  * The history is rebuilt (and its stacks cleared) if `layerId`, `limit`, or the
  * resolved canvas change.
@@ -45,6 +54,44 @@ export function GraphHistoryProvider({
       setHistory(null);
     };
   }, [resolved, layerId, limit]);
+
+  // Capture node drags as one "move" entry per gesture. The dragged node plus
+  // its descendants (group drag) are snapshot at drag-start; the net position
+  // change is pushed at drag-end. No per-frame recording → layout sim writes and
+  // programmatic moves stay out of history.
+  useEffect(() => {
+    if (!history) return;
+    const layer = resolved.layers.get<EngineGraphLayer>(layerId);
+    const store = layer?.store;
+    if (!layer || !store) return;
+
+    let before: Map<string, Vec2> | null = null;
+    const offStart = layer.events.on('node:drag-start', ({ nodeId }) => {
+      const ids = [nodeId, ...store.descendantsOf(nodeId)];
+      before = new Map();
+      for (const id of ids) {
+        const p = store.getPosition(id);
+        if (p) before.set(id, { x: p.x, y: p.y });
+      }
+    });
+    const offEnd = layer.events.on('node:drag-end', () => {
+      const snap = before;
+      before = null;
+      if (!snap) return;
+      const ops: HistoryOp[] = [];
+      for (const [id, from] of snap) {
+        const to = store.getPosition(id);
+        if (to && (to.x !== from.x || to.y !== from.y)) {
+          ops.push({ kind: 'moveNode', id, before: from, after: { x: to.x, y: to.y } });
+        }
+      }
+      if (ops.length > 0) history.push({ ops, label: 'move' });
+    });
+    return () => {
+      offStart();
+      offEnd();
+    };
+  }, [resolved, layerId, history]);
 
   return <HistoryContext.Provider value={history}>{children}</HistoryContext.Provider>;
 }
