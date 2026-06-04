@@ -204,26 +204,33 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     //     forces can move it again. The store's `pinned` flag is never
     //     touched here; permanent pin-on-release is a separate behaviour's
     //     concern.
-    this.offDragStart = layer.events.on('node:drag-start', ({ nodeId }) => {
-      const node = this.nodeById.get(nodeId);
-      if (!node) return;
-      this.draggedIds.add(nodeId);
-      const pos = store.getNode(nodeId)?.position;
-      if (pos) {
-        node.fx = pos.x;
-        node.fy = pos.y;
-        node.x = pos.x;
-        node.y = pos.y;
+    // `nodeIds` carries every primary being dragged (a multi-selection drag
+    // moves them all); fall back to `[nodeId]` for safety. Clamp / release
+    // each one's `fx/fy` independently.
+    this.offDragStart = layer.events.on('node:drag-start', ({ nodeId, nodeIds }) => {
+      for (const id of nodeIds ?? [nodeId]) {
+        const node = this.nodeById.get(id);
+        if (!node) continue;
+        this.draggedIds.add(id);
+        const pos = store.getNode(id)?.position;
+        if (pos) {
+          node.fx = pos.x;
+          node.fy = pos.y;
+          node.x = pos.x;
+          node.y = pos.y;
+        }
       }
       if (sim.alpha() < REHEAT_ALPHA) sim.alpha(REHEAT_ALPHA).restart();
     });
-    this.offDragEnd = layer.events.on('node:drag-end', ({ nodeId }) => {
-      this.draggedIds.delete(nodeId);
-      const node = this.nodeById.get(nodeId);
-      if (!node) return;
-      if (!this.pinnedIds.has(nodeId)) {
-        node.fx = undefined as unknown as number;
-        node.fy = undefined as unknown as number;
+    this.offDragEnd = layer.events.on('node:drag-end', ({ nodeId, nodeIds }) => {
+      for (const id of nodeIds ?? [nodeId]) {
+        this.draggedIds.delete(id);
+        const node = this.nodeById.get(id);
+        if (!node) continue;
+        if (!this.pinnedIds.has(id)) {
+          node.fx = undefined as unknown as number;
+          node.fy = undefined as unknown as number;
+        }
       }
     });
 

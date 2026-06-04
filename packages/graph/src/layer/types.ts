@@ -1349,8 +1349,14 @@ export interface GraphLayerEvents {
    * `GraphNode.pinned` flag in response, since that is reserved for
    * user-data semantics (permanent pin). The matching `node:drag-end`
    * releases the transient lock.
+   *
+   * `nodeId` is the *grabbed* node (the gesture's primary). `nodeIds` is the
+   * full set of primary nodes being dragged together — `[nodeId]` for a plain
+   * single-node drag, or every selected node for a multi-selection drag. Group
+   * descendants are NOT listed here; consumers that care about them expand via
+   * `store.descendantsOf(id)`.
    */
-  'node:drag-start': { nodeId: string };
-  'node:drag-end': { nodeId: string };
+  'node:drag-start': { nodeId: string; nodeIds: readonly string[] };
+  'node:drag-end': { nodeId: string; nodeIds: readonly string[] };
   [event: string]: unknown;
 }

@@ -20,6 +20,12 @@
  * placement to survive future layout passes. Off by default; when off, a
  * released node is free again and the next layout tick may move it.
  *
+ * **Selection-aware.** With `dragSelection` (default on), grabbing a node that
+ * is part of the current selection drags the whole selection together. The
+ * selection is read from the layer's `selectionState` visual state, so it works
+ * with any select behaviour (click / lasso / brush) — this behaviour is not
+ * coupled to a specific one.
+ *
  * Default `enabled: false` — register, then explicitly enable.
  *
  * @example
@@ -72,26 +78,62 @@ export interface DragNodeBehaviourOptions extends BehaviourOptions {
    * is also updated so the declared frame follows the cursor.
    */
   groupAware?: boolean;
+
+  /**
+   * When `true` (the default), grabbing a node that is part of the current
+   * selection drags the **whole selection** together — every selected node
+   * moves by the same delta. Grabbing an unselected node (or a selection of
+   * one) falls back to a plain single-node drag. Set `false` to always drag
+   * just the grabbed node regardless of selection.
+   *
+   * Selection is read from the layer's visual state (see `selectionState`),
+   * so this works uniformly whatever set it — click, lasso, or brush — with
+   * no coupling to a specific select behaviour.
+   */
+  dragSelection?: boolean;
+
+  /**
+   * Name of the layer visual-state that marks a node as selected. Default
+   * `'selected'`, matching `ClickSelectBehaviour`'s default `state`. Only
+   * consulted when `dragSelection` is on. Override if your select behaviour
+   * writes a different state name.
+   */
+  selectionState?: string;
 }
 
 interface DragState {
-  readonly id: string;
+  /** The grabbed node — the gesture's primary, emitted as `nodeId`. */
+  readonly primaryId: string;
+  /**
+   * All *primary* nodes being dragged together — `[primaryId]` for a plain
+   * single-node drag, or the full selection for a multi-selection drag.
+   * Emitted as the `nodeIds` event payload. Group descendants are NOT here;
+   * they're folded into `moveIds` instead.
+   */
+  readonly ids: readonly string[];
   /**
    * Pointer's world position at the gesture's anchoring moment. Captured at
    * pointerdown initially and re-captured on the first real pointermove (the
    * same instant we emit `node:drag-start`) so the gesture's delta is
-   * measured from a *fresh* cursor position — see the `nodePosStart` note.
+   * measured from a *fresh* cursor position — see the `starts` note.
    */
   pointerWorldStart: { x: number; y: number };
   /**
-   * Node's position at the gesture's anchoring moment. Initially set at
-   * pointerdown, then refreshed on the first real pointermove. The refresh
-   * matters when an active layout (e.g. `D3ForceLayout`) is still moving the
-   * node between pointerdown and the first pointermove: without it, deltas
-   * would be measured against a stale anchor and the dragged node would
-   * teleport away from the cursor.
+   * The full set of nodes actually translated each tick: every primary in
+   * `ids` plus the group descendants of any primary that is an expanded
+   * compound group. Computed once on the first real pointermove.
    */
-  nodePosStart: { x: number; y: number };
+  moveIds: readonly string[];
+  /**
+   * Each `moveIds` entry's position at the gesture's anchoring moment,
+   * captured on the first real pointermove. Per-tick targets are
+   * `start + cumulativeDelta`, so reading from a fixed start (rather than the
+   * live position) is correct by construction and never snowballs. Capturing
+   * on first move — not pointerdown — also refreshes the anchor against an
+   * active layout (e.g. `D3ForceLayout`) that may have moved the nodes between
+   * pointerdown and the first move, which would otherwise make them teleport.
+   */
+  starts: Map<string, { x: number; y: number }>;
   /**
    * Whether the first real movement has been seen yet. We defer emitting
    * `node:drag-start` until the first real movement so a plain click on a
@@ -109,6 +151,8 @@ export class DragNodeBehaviour extends Behaviour {
   private readonly dragCursor: string;
   private readonly groupAware: boolean;
   private readonly pinOnRelease: boolean;
+  private readonly dragSelection: boolean;
+  private readonly selectionState: string;
 
   private state: DragState | null = null;
   private offShapeDown: (() => void) | null = null;
@@ -128,6 +172,8 @@ export class DragNodeBehaviour extends Behaviour {
     this.dragCursor = opts.dragCursor ?? 'grabbing';
     this.groupAware = opts.groupAware ?? true;
     this.pinOnRelease = opts.pinOnRelease ?? false;
+    this.dragSelection = opts.dragSelection ?? true;
+    this.selectionState = opts.selectionState ?? 'selected';
   }
 
   // ─── Lifecycle ──────────────────────────────────────────────────────────
@@ -158,10 +204,9 @@ export class DragNodeBehaviour extends Behaviour {
     }): void => {
       if (!this._enabled) return;
       if (this.filter && !this.filter(e.id)) return;
-      const node = layer.store.getNode(e.id);
-      if (!node) return;
+      if (!layer.store.hasNode(e.id)) return;
       this.capturedPointerId = e.pointerId;
-      this.startDrag(e.id, e.worldX, e.worldY, node.position ?? { x: 0, y: 0 });
+      this.startDrag(e.id, e.worldX, e.worldY);
     };
     renderer.events.on('shape:pointerdown', onShapeDown);
     this.offShapeDown = () => renderer.events.off('shape:pointerdown', onShapeDown);
@@ -182,17 +227,34 @@ export class DragNodeBehaviour extends Behaviour {
 
   // ─── Drag flow ──────────────────────────────────────────────────────────
 
-  private startDrag(
-    id: string,
-    worldX: number,
-    worldY: number,
-    nodePos: { x: number; y: number },
-  ): void {
+  /**
+   * Resolve the set of *primary* nodes a gesture on `grabbedId` should drag.
+   * With `dragSelection` on, a grab on a selected node drags every selected
+   * node (filtered by `filter`); otherwise — or for a selection of one — just
+   * the grabbed node. Group descendants are added later, in the first move.
+   */
+  private resolveDragSet(grabbedId: string): readonly string[] {
+    const layer = this.layer;
+    if (!layer || !this.dragSelection) return [grabbedId];
+    if (!layer.hasNodeState(grabbedId, this.selectionState)) return [grabbedId];
+    const selected: string[] = [];
+    for (const id of layer.nodesWithState(this.selectionState)) {
+      if (this.filter && !this.filter(id)) continue;
+      selected.push(id);
+    }
+    // Need more than one to be a multi-drag. `grabbedId` is guaranteed present
+    // — it carries the state and already passed `filter` at pointerdown.
+    return selected.length > 1 ? selected : [grabbedId];
+  }
+
+  private startDrag(grabbedId: string, worldX: number, worldY: number): void {
     if (!this.layer) return;
     this.state = {
-      id,
+      primaryId: grabbedId,
+      ids: this.resolveDragSet(grabbedId),
       pointerWorldStart: { x: worldX, y: worldY },
-      nodePosStart: { x: nodePos.x, y: nodePos.y },
+      moveIds: [],
+      starts: new Map(),
       moved: false,
     };
 
@@ -229,7 +291,7 @@ export class DragNodeBehaviour extends Behaviour {
 
   private endDrag(): void {
     if (!this.state) return;
-    const { id, moved } = this.state;
+    const { primaryId, ids, moved } = this.state;
 
     window.removeEventListener('pointermove', this.onWindowPointerMove);
     window.removeEventListener('pointerup', this.onWindowPointerUp);
@@ -257,74 +319,77 @@ export class DragNodeBehaviour extends Behaviour {
       // Order matters: pin first, then emit drag-end. The layout's
       // `node:drag-end` handler clears its transient `fx/fy` lock *unless*
       // the node is now permanently pinned (`pinnedIds.has(id)`), so the
-      // store mutation has to land first to be observed.
+      // store mutation has to land first to be observed. Pin every primary
+      // (one batched flush), not just the grabbed one.
       if (this.pinOnRelease) {
-        this.layer.store.setPinned(id, true);
+        this.layer.store.batch(() => {
+          for (const id of ids) this.layer!.store.setPinned(id, true);
+        });
       }
-      this.layer.events.emit('node:drag-end', { nodeId: id });
+      this.layer.events.emit('node:drag-end', { nodeId: primaryId, nodeIds: ids });
     }
   }
 
   private readonly onWindowPointerMove = (e: PointerEvent): void => {
     if (!this.state || !this.ctxRef || !this.layer) return;
+    const layer = this.layer;
+    const state = this.state;
     const { screenX, screenY } = this.clientToScreen(e.clientX, e.clientY);
     const world = this.ctxRef.camera.toWorld(screenX, screenY);
 
-    // First real pointermove: refresh the gesture anchors against the node's
-    // current store position (so an active layout's per-tick movement doesn't
-    // leave us measuring deltas from a stale anchor) and emit `node:drag-start`
-    // so layouts can clamp the node's transient position.
-    if (!this.state.moved) {
-      const fresh = this.layer.store.getNode(this.state.id)?.position;
-      if (fresh) this.state.nodePosStart = { x: fresh.x, y: fresh.y };
-      this.state.pointerWorldStart = { x: world.x, y: world.y };
-      this.state.moved = true;
-      this.layer.events.emit('node:drag-start', { nodeId: this.state.id });
-    }
-
-    const dx = world.x - this.state.pointerWorldStart.x;
-    const dy = world.y - this.state.pointerWorldStart.y;
-    const nextX = this.state.nodePosStart.x + dx;
-    const nextY = this.state.nodePosStart.y + dy;
-
-    // Group-aware drag: when the moved node is itself a compound group,
-    // translate every descendant by the same per-tick delta so the
-    // subtree moves together.
+    // First real pointermove: expand the move set and snapshot anchors.
     //
-    // The per-tick delta is computed against the group's **current**
-    // stored position (pre-update), not against `nodePosStart`. Using
-    // `nextX − nodePosStart.x` would be the *cumulative* delta from
-    // drag-start — applied every tick, it snowballs and the descendants
-    // fly off-screen on a small drag. Reading the current position right
-    // before the update gives the correct per-frame increment regardless
-    // of how many ticks have elapsed.
-    if (this.groupAware && this.layer.getGroupRole(this.state.id) === 'expanded') {
-      const layer = this.layer;
-      const current = layer.store.getNode(this.state.id)?.position;
-      const groupDx = nextX - (current?.x ?? this.state.nodePosStart.x);
-      const groupDy = nextY - (current?.y ?? this.state.nodePosStart.y);
-      // Store's `batch` collapses the group + descendant updates into a
-      // single flush so the layer projects them coherently.
-      layer.store.batch(() => {
-        layer.store.setPosition(this.state!.id, { x: nextX, y: nextY });
-        const descIds: string[] = [];
-        const xy: number[] = [];
-        for (const descId of layer.store.descendantsOf(this.state!.id)) {
-          const desc = layer.store.getNode(descId);
-          if (!desc?.position) continue;
-          descIds.push(descId);
-          xy.push(desc.position.x + groupDx, desc.position.y + groupDy);
+    // The move set is every primary in `ids` plus, for any primary that is an
+    // expanded compound group, its descendants — so a group (or a selection of
+    // groups) carries its subtree. Start positions are captured *now*, against
+    // the live store, rather than at pointerdown: an active layout (e.g.
+    // `D3ForceLayout`) may have moved the nodes in between, and anchoring to a
+    // stale position would make them teleport. Emitting `node:drag-start` here
+    // (deferred past a plain click) lets layouts clamp every dragged primary.
+    if (!state.moved) {
+      const moveIds: string[] = [];
+      const seen = new Set<string>();
+      const add = (id: string): void => {
+        if (seen.has(id)) return;
+        const pos = layer.store.getNode(id)?.position;
+        if (!pos) return;
+        seen.add(id);
+        moveIds.push(id);
+        state.starts.set(id, { x: pos.x, y: pos.y });
+      };
+      for (const id of state.ids) {
+        add(id);
+        if (this.groupAware && layer.getGroupRole(id) === 'expanded') {
+          for (const descId of layer.store.descendantsOf(id)) add(descId);
         }
-        if (descIds.length > 0) {
-          layer.store.setPositionsBulk(descIds, new Float32Array(xy));
-        }
+      }
+      state.moveIds = moveIds;
+      state.pointerWorldStart = { x: world.x, y: world.y };
+      state.moved = true;
+      layer.events.emit('node:drag-start', {
+        nodeId: state.primaryId,
+        nodeIds: state.ids,
       });
-      return;
     }
 
-    // Non-silent so the layer's node:update subscriber repaints the shape
-    // *and* queues an incident-edge reroute on the next store flush.
-    this.layer.store.setPosition(this.state.id, { x: nextX, y: nextY });
+    const dx = world.x - state.pointerWorldStart.x;
+    const dy = world.y - state.pointerWorldStart.y;
+
+    // Translate every node in the move set by the cumulative delta from its
+    // captured start. Reading from a fixed start (not the live position) is
+    // correct by construction and never snowballs across ticks. One
+    // `setPositionsBulk` inside a `batch` collapses the whole set into a single
+    // coherent flush — shape repaints plus incident-edge reroutes — and is
+    // non-silent so the layer's `node:update` subscriber runs.
+    const xy = new Float32Array(state.moveIds.length * 2);
+    for (let i = 0; i < state.moveIds.length; i++) {
+      const start = state.starts.get(state.moveIds[i]!)!;
+      xy[i * 2] = start.x + dx;
+      xy[i * 2 + 1] = start.y + dy;
+    }
+    layer.store.batch(() => {
+      layer.store.setPositionsBulk(state.moveIds, xy);
+    });
   };
 
   private readonly onWindowPointerUp = (): void => {

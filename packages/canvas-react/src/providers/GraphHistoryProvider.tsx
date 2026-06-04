@@ -55,10 +55,11 @@ export function GraphHistoryProvider({
     };
   }, [resolved, layerId, limit]);
 
-  // Capture node drags as one "move" entry per gesture. The dragged node plus
-  // its descendants (group drag) are snapshot at drag-start; the net position
-  // change is pushed at drag-end. No per-frame recording → layout sim writes and
-  // programmatic moves stay out of history.
+  // Capture node drags as one "move" entry per gesture. Every dragged primary
+  // (a multi-selection drag moves them all) plus each one's descendants (group
+  // drag) is snapshot at drag-start; the net position change is pushed at
+  // drag-end. No per-frame recording → layout sim writes and programmatic
+  // moves stay out of history.
   useEffect(() => {
     if (!history) return;
     const layer = resolved.layers.get<EngineGraphLayer>(layerId);
@@ -66,8 +67,12 @@ export function GraphHistoryProvider({
     if (!layer || !store) return;
 
     let before: Map<string, Vec2> | null = null;
-    const offStart = layer.events.on('node:drag-start', ({ nodeId }) => {
-      const ids = [nodeId, ...store.descendantsOf(nodeId)];
+    const offStart = layer.events.on('node:drag-start', ({ nodeId, nodeIds }) => {
+      const ids = new Set<string>();
+      for (const primary of nodeIds ?? [nodeId]) {
+        ids.add(primary);
+        for (const desc of store.descendantsOf(primary)) ids.add(desc);
+      }
       before = new Map();
       for (const id of ids) {
         const p = store.getPosition(id);

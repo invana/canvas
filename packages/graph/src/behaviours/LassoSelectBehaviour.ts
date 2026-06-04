@@ -234,16 +234,26 @@ export class LassoSelectBehaviour extends Behaviour {
 
     if (!this._enabled) return;
     if (e.button !== 0) return;
+    // Reject presses on overlaid DOM chrome rather than the canvas itself.
     if (e.target !== this.ctxRef?.canvasElement) return;
 
     const { enable } = this.opts;
     if (typeof enable === 'function' ? !enable(e) : !enable) return;
     if (!this.triggerActive(e)) return;
 
-    this.ctxRef?.camera.viewport.plugins.pause('drag');
-
     const screen = this.screenFromEvent(e);
     const world = this.ctxRef!.camera.toWorld(screen.x, screen.y);
+
+    // Defer to the node-drag behaviour when the press lands on a node. The
+    // `e.target` check above is insufficient on a single-canvas renderer (every
+    // pointer event targets the same <canvas>), so hit-test instead. Pressing a
+    // node — e.g. to drag the current selection — must not begin a fresh lasso.
+    if (this.layer?.getRenderer()?.hitTest(world.x, world.y)?.kind === 'shape') {
+      return;
+    }
+
+    this.ctxRef?.camera.viewport.plugins.pause('drag');
+
     this.dragActive = true;
     this.worldPoints = [{ x: world.x, y: world.y }];
     this.lastScreen = screen;

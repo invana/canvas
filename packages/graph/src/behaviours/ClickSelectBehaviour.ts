@@ -197,6 +197,14 @@ export class ClickSelectBehaviour extends Behaviour {
   /** Pointerdown screen-position — used to distinguish a click from a drag. */
   private pointerDownScreen: { x: number; y: number } | null = null;
 
+  /**
+   * Set once the pointer travels past the click/drag threshold while a button
+   * is held. Used to suppress the synthetic element `click` that fires at the
+   * end of a node drag — without it, dragging a selected node would collapse
+   * the whole selection down to that one node on release.
+   */
+  private pressMoved = false;
+
   constructor(opts: ClickSelectBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? ['pointer+click'] });
     this.opts = resolveOptions(null, opts);
@@ -226,10 +234,14 @@ export class ClickSelectBehaviour extends Behaviour {
 
     const onShapeClick = (e: { id: string }) => {
       this.clickConsumedByElement = true;
+      // A drag (e.g. moving a selected node) ends with a synthetic element
+      // click; ignore it so the gesture doesn't replace the selection.
+      if (this.pressMoved) return;
       this.handleElementClick(e.id, 'shape');
     };
     const onConnClick = (e: { id: string }) => {
       this.clickConsumedByElement = true;
+      if (this.pressMoved) return;
       this.handleElementClick(e.id, 'connector');
     };
     // `background:click` is declared on the canvas event bus but the engine
@@ -243,11 +255,19 @@ export class ClickSelectBehaviour extends Behaviour {
     // after a drag would otherwise clear the just-applied selection.
     const DRAG_VS_CLICK_THRESHOLD_PX = 4;
     const onPointerDown = (e: PointerEvent) => {
+      this.pressMoved = false;
       if (e.button !== 0) {
         this.pointerDownScreen = null;
         return;
       }
       this.pointerDownScreen = { x: e.clientX, y: e.clientY };
+    };
+    const onPointerMove = (e: PointerEvent) => {
+      const down = this.pointerDownScreen;
+      if (!down || this.pressMoved) return;
+      if (Math.hypot(e.clientX - down.x, e.clientY - down.y) > DRAG_VS_CLICK_THRESHOLD_PX) {
+        this.pressMoved = true;
+      }
     };
     const onCanvasClick = (e: MouseEvent) => {
       const down = this.pointerDownScreen;
@@ -272,6 +292,7 @@ export class ClickSelectBehaviour extends Behaviour {
     const el = ctx.canvasElement;
     if (el) {
       el.addEventListener('pointerdown', onPointerDown);
+      el.addEventListener('pointermove', onPointerMove);
       el.addEventListener('click', onCanvasClick);
     }
 
@@ -281,6 +302,7 @@ export class ClickSelectBehaviour extends Behaviour {
       () => {
         if (el) {
           el.removeEventListener('pointerdown', onPointerDown);
+          el.removeEventListener('pointermove', onPointerMove);
           el.removeEventListener('click', onCanvasClick);
         }
       },

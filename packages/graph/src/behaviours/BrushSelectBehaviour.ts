@@ -274,15 +274,26 @@ export class BrushSelectBehaviour extends Behaviour {
     if (typeof enable === 'function' ? !enable(e) : !enable) return;
     if (!this.triggerActive(e)) return;
 
-    // Only activate when the pointer hits the bare canvas — i.e. not on top
-    // of an existing shape, which the pan/drag behaviours will own.
+    // Reject presses that land on overlaid DOM chrome (lil-gui, HTML controls)
+    // rather than the canvas itself.
     const target = e.target;
     if (target !== this.ctxRef?.canvasElement) return;
+
+    const p = this.screenFromEvent(e);
+
+    // Defer to the node-drag behaviour when the press lands on a node. In a
+    // single-canvas renderer every pointer event targets the same <canvas>
+    // element, so the `e.target` check above can't tell a node from the bare
+    // background — a hit-test can. Pressing a node (e.g. to drag the current
+    // selection) must not start a fresh brush on top of it.
+    const world = this.ctxRef?.camera.toWorld(p.x, p.y);
+    if (world && this.layer?.getRenderer()?.hitTest(world.x, world.y)?.kind === 'shape') {
+      return;
+    }
 
     // Pause camera pan so the canvas doesn't move while the brush is drawn.
     this.ctxRef?.camera.viewport.plugins.pause('drag');
 
-    const p = this.screenFromEvent(e);
     this.dragActive = true;
     this.dragStart = p;
     this.dragCurrent = p;
