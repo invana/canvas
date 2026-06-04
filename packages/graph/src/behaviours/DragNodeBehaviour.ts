@@ -99,6 +99,33 @@ export interface DragNodeBehaviourOptions extends BehaviourOptions {
    * writes a different state name.
    */
   selectionState?: string;
+
+  /**
+   * When `true` (the default), a plain (no-modifier) press anywhere inside the
+   * current selection's union bounding box — *including the empty world space
+   * between the selected nodes* — grabs the whole selection and drags it, the
+   * way Figma / PowerPoint let you drag a multi-selection by its body rather
+   * than by a specific item.
+   *
+   * Without this, a selection is only draggable by pressing squarely on one of
+   * the selected nodes; pressing in the gaps does nothing (no shape is hit, so
+   * no drag starts). Off the back of a brush/lasso selection that almost always
+   * reads as "the selection won't move" — hence default on.
+   *
+   * Only meaningful when `dragSelection` is also on. The press must carry no
+   * modifier key (so it never collides with brush / lasso / shift-to-add) and
+   * must not land on a node (those go through the normal per-node path). This
+   * does mean panning the camera by dragging from *inside* the selection box is
+   * no longer possible — drag from outside the box, or set this `false`.
+   */
+  selectionBodyDrag?: boolean;
+
+  /**
+   * Extra world-space padding added around the selection's union bounding box
+   * when testing a press for {@link selectionBodyDrag}. Widens the grab target
+   * so presses just outside the tightest box still catch. Default `0`.
+   */
+  selectionBodyPadding?: number;
 }
 
 interface DragState {
@@ -153,9 +180,12 @@ export class DragNodeBehaviour extends Behaviour {
   private readonly pinOnRelease: boolean;
   private readonly dragSelection: boolean;
   private readonly selectionState: string;
+  private readonly selectionBodyDrag: boolean;
+  private readonly selectionBodyPadding: number;
 
   private state: DragState | null = null;
   private offShapeDown: (() => void) | null = null;
+  private offCanvasDown: (() => void) | null = null;
   private canvasEl: HTMLCanvasElement | null = null;
   private prevCursor: string | null = null;
   /**
@@ -174,6 +204,8 @@ export class DragNodeBehaviour extends Behaviour {
     this.pinOnRelease = opts.pinOnRelease ?? false;
     this.dragSelection = opts.dragSelection ?? true;
     this.selectionState = opts.selectionState ?? 'selected';
+    this.selectionBodyDrag = opts.selectionBodyDrag ?? true;
+    this.selectionBodyPadding = opts.selectionBodyPadding ?? 0;
   }
 
   // ─── Lifecycle ──────────────────────────────────────────────────────────
@@ -210,12 +242,25 @@ export class DragNodeBehaviour extends Behaviour {
     };
     renderer.events.on('shape:pointerdown', onShapeDown);
     this.offShapeDown = () => renderer.events.off('shape:pointerdown', onShapeDown);
+
+    // Figma-style "grab the selection by its body". Empty-space presses never
+    // reach `shape:pointerdown` (the renderer emits nothing for a no-hit
+    // pointerdown), so we listen on the canvas DOM element directly — the same
+    // carve-out `BrushSelectBehaviour` uses for its rubber-band.
+    if (this.selectionBodyDrag && this.canvasEl) {
+      const el = this.canvasEl;
+      const onCanvasDown = (e: PointerEvent): void => this.onCanvasPointerDown(e);
+      el.addEventListener('pointerdown', onCanvasDown);
+      this.offCanvasDown = () => el.removeEventListener('pointerdown', onCanvasDown);
+    }
   }
 
   protected override onDestroy(): void {
     this.endDrag();
     this.offShapeDown?.();
     this.offShapeDown = null;
+    this.offCanvasDown?.();
+    this.offCanvasDown = null;
     this.layer = null;
     this.ctxRef = null;
     this.canvasEl = null;
@@ -237,21 +282,121 @@ export class DragNodeBehaviour extends Behaviour {
     const layer = this.layer;
     if (!layer || !this.dragSelection) return [grabbedId];
     if (!layer.hasNodeState(grabbedId, this.selectionState)) return [grabbedId];
-    const selected: string[] = [];
-    for (const id of layer.nodesWithState(this.selectionState)) {
-      if (this.filter && !this.filter(id)) continue;
-      selected.push(id);
-    }
     // Need more than one to be a multi-drag. `grabbedId` is guaranteed present
     // — it carries the state and already passed `filter` at pointerdown.
+    const selected = this.selectedNodeIds();
     return selected.length > 1 ? selected : [grabbedId];
+  }
+
+  /** Current selection (nodes carrying `selectionState`), filtered by `filter`. */
+  private selectedNodeIds(): string[] {
+    const layer = this.layer;
+    if (!layer) return [];
+    const ids: string[] = [];
+    for (const id of layer.nodesWithState(this.selectionState)) {
+      if (this.filter && !this.filter(id)) continue;
+      ids.push(id);
+    }
+    return ids;
+  }
+
+  /**
+   * World-space union AABB of the given nodes, or `null` if none resolve. Each
+   * node contributes its `boundsOfNode` rect (centre-relative, so offset by the
+   * node's stored position); a node whose shape kind reports no bounds collapses
+   * to a zero-size point at its centre.
+   */
+  private selectionBounds(
+    ids: readonly string[],
+  ): { minX: number; minY: number; maxX: number; maxY: number } | null {
+    const layer = this.layer;
+    if (!layer) return null;
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const id of ids) {
+      const node = layer.store.getNode(id);
+      if (!node) continue;
+      const pos = node.position ?? { x: 0, y: 0 };
+      const local = layer.boundsOfNode(node);
+      const x0 = pos.x + (local?.x ?? 0);
+      const y0 = pos.y + (local?.y ?? 0);
+      const x1 = x0 + (local?.width ?? 0);
+      const y1 = y0 + (local?.height ?? 0);
+      if (x0 < minX) minX = x0;
+      if (y0 < minY) minY = y0;
+      if (x1 > maxX) maxX = x1;
+      if (y1 > maxY) maxY = y1;
+    }
+    if (minX === Infinity) return null;
+    return { minX, minY, maxX, maxY };
+  }
+
+  /**
+   * Selection-body drag entry point (see `selectionBodyDrag`). A plain press on
+   * empty world space that falls inside the selection's union bounds grabs the
+   * whole selection. Presses on a node, with a modifier held, or outside the
+   * bounds are left alone so the per-node / brush / lasso / pan paths win.
+   */
+  private onCanvasPointerDown(e: PointerEvent): void {
+    if (!this._enabled || !this.dragSelection) return;
+    if (e.button !== 0) return;
+    // Any modifier means a brush / lasso / shift-to-add gesture — never a body drag.
+    if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+    // Ignore presses on overlaid DOM chrome (lil-gui, HTML controls).
+    if (e.target !== this.canvasEl) return;
+    // A node press already won the race via `shape:pointerdown` — don't double-start.
+    if (this.state) return;
+
+    const ctx = this.ctxRef;
+    const layer = this.layer;
+    if (!ctx || !layer) return;
+
+    const { screenX, screenY } = this.clientToScreen(e.clientX, e.clientY);
+    const world = ctx.camera.toWorld(screenX, screenY);
+
+    // A press squarely on a node flows through the normal per-node path.
+    if (layer.getRenderer()?.hitTest(world.x, world.y)?.kind === 'shape') return;
+
+    const ids = this.selectedNodeIds();
+    if (ids.length === 0) return;
+    const b = this.selectionBounds(ids);
+    if (!b) return;
+    const pad = this.selectionBodyPadding;
+    if (
+      world.x < b.minX - pad ||
+      world.x > b.maxX + pad ||
+      world.y < b.minY - pad ||
+      world.y > b.maxY + pad
+    ) {
+      return;
+    }
+
+    this.capturedPointerId = e.pointerId;
+    this.beginDrag(ids[0]!, ids, world.x, world.y);
   }
 
   private startDrag(grabbedId: string, worldX: number, worldY: number): void {
     if (!this.layer) return;
+    this.beginDrag(grabbedId, this.resolveDragSet(grabbedId), worldX, worldY);
+  }
+
+  /**
+   * Low-level drag start shared by the per-node path ({@link startDrag}) and the
+   * selection-body path ({@link onCanvasPointerDown}). `primaryId` is the gesture's
+   * emitted primary; `ids` is the full primary set to translate together.
+   */
+  private beginDrag(
+    primaryId: string,
+    ids: readonly string[],
+    worldX: number,
+    worldY: number,
+  ): void {
+    if (!this.layer) return;
     this.state = {
-      primaryId: grabbedId,
-      ids: this.resolveDragSet(grabbedId),
+      primaryId,
+      ids,
       pointerWorldStart: { x: worldX, y: worldY },
       moveIds: [],
       starts: new Map(),
