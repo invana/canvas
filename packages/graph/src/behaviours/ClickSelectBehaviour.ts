@@ -21,7 +21,6 @@
  *     layerId: 'graph',
  *     enabled: true,
  *     multiple: true,
- *     trigger: ['shift'],
  *     degree: 1,
  *   }),
  * );
@@ -92,7 +91,8 @@ export interface ClickSelectBehaviourOptions extends BehaviourOptions {
    * (unmodified) click selects nothing, and a plain left-drag stays a pure
    * pan. With a modifier held, the click selects (replacing the selection, or
    * toggling membership when `multiple` is `true`). Empty array = every click
-   * selects, no modifier needed. Default `['shift']`.
+   * selects, no modifier needed. Default `[]` (plain click selects). Pass
+   * `['shift']` to gate selection behind the Shift key.
    */
   trigger?: SelectModifierKey[];
 
@@ -146,7 +146,7 @@ function resolveOptions(
   const base: ResolvedOptions = prev ?? {
     enable: true,
     multiple: false,
-    trigger: ['shift'],
+    trigger: [],
     degree: 0,
     direction: 'both',
     state: 'selected',
