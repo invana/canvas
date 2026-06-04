@@ -1,7 +1,8 @@
 import { Button } from '@invana/ui';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
-import type { ToolbarIcon } from './types';
+import { Tooltipped } from './Tooltipped';
+import type { ToolbarIcon, TooltipSide } from './types';
 import { useFitContent } from '../hooks/useFitContent';
 
 export interface FitContentButtonProps {
@@ -13,8 +14,10 @@ export interface FitContentButtonProps {
    * Layer id to fit to. Default `'graph'`. Forwarded to {@link useFitContent}.
    */
   layerId?: string;
-  /** Tooltip text. Default `'Fit to content'`. */
+  /** Tooltip text + accessible label. Default `'Fit to content'`. */
   title?: string;
+  /** Side the tooltip is placed on. Default `'top'`. */
+  tooltipSide?: TooltipSide;
   className?: string;
 }
 
@@ -29,12 +32,21 @@ export function FitContentButton({
   canvas,
   layerId = 'graph',
   title = 'Fit to content',
+  tooltipSide,
   className,
 }: FitContentButtonProps) {
   const { fitContent } = useFitContent(layerId, canvas);
   return (
-    <Button variant="ghost" size="icon" title={title} onClick={() => fitContent()} className={className}>
-      <Icon size={16} />
-    </Button>
+    <Tooltipped label={title} side={tooltipSide}>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={title}
+        onClick={() => fitContent()}
+        className={className}
+      >
+        <Icon size={16} />
+      </Button>
+    </Tooltipped>
   );
 }

@@ -2,7 +2,8 @@ import type { ReactNode } from 'react';
 import { Button } from '@invana/ui';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
-import type { ToolbarIcon } from './types';
+import { Tooltipped } from './Tooltipped';
+import type { ToolbarIcon, TooltipSide } from './types';
 import { useZoom } from '../hooks/useZoom';
 
 export interface ZoomControlsProps {
@@ -10,6 +11,8 @@ export interface ZoomControlsProps {
   zoomOutIcon: ToolbarIcon;
   /** Explicit canvas instance; defaults to the context canvas. */
   canvas?: EngineCanvas | null;
+  /** Side the "Zoom in" / "Zoom out" tooltips are placed on. Default `'top'`. */
+  tooltipSide?: TooltipSide;
   /**
    * Show a live `NN%` zoom readout between the two buttons, sourced from the
    * canvas via {@link useZoom}. Ignored when `zoomLevel` is also provided.
@@ -39,19 +42,24 @@ export function ZoomControls({
   showLevel = false,
   orientation = 'horizontal',
   zoomLevel,
+  tooltipSide,
   className,
 }: ZoomControlsProps) {
   const { zoom, zoomIn, zoomOut } = useZoom(canvas);
   const resolvedLevel = zoomLevel != null ? zoomLevel : showLevel ? `${Math.round(zoom * 100)}%` : undefined;
   const zoomInBtn = (
-    <Button variant="ghost" size="icon" title="Zoom in" onClick={() => zoomIn()}>
-      <ZoomInIcon size={16} />
-    </Button>
+    <Tooltipped label="Zoom in" side={tooltipSide}>
+      <Button variant="ghost" size="icon" aria-label="Zoom in" onClick={() => zoomIn()}>
+        <ZoomInIcon size={16} />
+      </Button>
+    </Tooltipped>
   );
   const zoomOutBtn = (
-    <Button variant="ghost" size="icon" title="Zoom out" onClick={() => zoomOut()}>
-      <ZoomOutIcon size={16} />
-    </Button>
+    <Tooltipped label="Zoom out" side={tooltipSide}>
+      <Button variant="ghost" size="icon" aria-label="Zoom out" onClick={() => zoomOut()}>
+        <ZoomOutIcon size={16} />
+      </Button>
+    </Tooltipped>
   );
   const level =
     resolvedLevel != null ? (

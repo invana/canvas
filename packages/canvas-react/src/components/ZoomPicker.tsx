@@ -10,6 +10,8 @@ import {
 } from '@invana/ui';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
+import { Tooltipped } from './Tooltipped';
+import type { TooltipSide } from './types';
 import { useZoom } from '../hooks/useZoom';
 import { useFitContent } from '../hooks/useFitContent';
 
@@ -34,6 +36,10 @@ export interface ZoomPickerProps {
   showFit?: boolean;
   /** Label for the fit action. Default `'Fit / Reset View'`. */
   fitLabel?: string;
+  /** Trigger tooltip content + accessible label. Default `'Zoom level'`. */
+  title?: string;
+  /** Side the trigger tooltip is placed on. Default `'top'`. */
+  tooltipSide?: TooltipSide;
   className?: string;
 }
 
@@ -59,6 +65,8 @@ export function ZoomPicker({
   presets = DEFAULT_PRESETS,
   showFit = true,
   fitLabel = 'Fit / Reset View',
+  title = 'Zoom level',
+  tooltipSide,
   className,
 }: ZoomPickerProps) {
   const { zoom, setZoom } = useZoom(canvas);
@@ -67,11 +75,14 @@ export function ZoomPicker({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className={className}>
-          {currentPct}% ▾
-        </Button>
-      </DropdownMenuTrigger>
+      {/* Tooltip wraps the trigger — see OptionPicker for the asChild nesting. */}
+      <Tooltipped label={title} side={tooltipSide}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" aria-label={title} className={className}>
+            {currentPct}% ▾
+          </Button>
+        </DropdownMenuTrigger>
+      </Tooltipped>
       {/* Force a solid token-driven background: same reasoning as OptionPicker. */}
       <DropdownMenuContent style={{ backgroundColor: 'var(--color-popover)' }}>
         {showFit && (

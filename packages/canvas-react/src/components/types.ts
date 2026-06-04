@@ -8,6 +8,13 @@ import type { ComponentType } from 'react';
  */
 export type ToolbarIcon = ComponentType<{ size?: number | string; className?: string }>;
 
+/**
+ * Side a tooltip is placed on relative to its trigger. Mirrors the Radix /
+ * `@invana/ui` `TooltipContent` `side` prop. A vertical Nav typically wants
+ * `'right'`; a horizontal Nav `'bottom'`.
+ */
+export type TooltipSide = 'top' | 'right' | 'bottom' | 'left';
+
 /** Anchor position for a {@link Panel} within its positioned ancestor. */
 export type PanelPosition =
   | 'top-left'

@@ -1,7 +1,8 @@
 import { Button } from '@invana/ui';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
-import type { ToolbarIcon } from './types';
+import { Tooltipped } from './Tooltipped';
+import type { ToolbarIcon, TooltipSide } from './types';
 import { useClearGraph } from '../hooks/useClearGraph';
 
 export interface ClearButtonProps {
@@ -13,8 +14,10 @@ export interface ClearButtonProps {
    * Layer id to clear. Default `'graph'`. Forwarded to {@link useClearGraph}.
    */
   layerId?: string;
-  /** Button text. Default `'Clear'`. */
+  /** Button text + tooltip content. Default `'Clear'`. */
   label?: string;
+  /** Side the tooltip is placed on. Default `'top'`. */
+  tooltipSide?: TooltipSide;
   className?: string;
 }
 
@@ -28,13 +31,16 @@ export function ClearButton({
   canvas,
   layerId = 'graph',
   label = 'Clear',
+  tooltipSide,
   className,
 }: ClearButtonProps) {
   const { clear } = useClearGraph(layerId, canvas);
   return (
-    <Button variant="outline" size="sm" onClick={() => clear()} className={className}>
-      {Icon ? <Icon size={16} /> : null}
-      {label}
-    </Button>
+    <Tooltipped label={label} side={tooltipSide}>
+      <Button variant="outline" size="sm" onClick={() => clear()} className={className}>
+        {Icon ? <Icon size={16} /> : null}
+        {label}
+      </Button>
+    </Tooltipped>
   );
 }

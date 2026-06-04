@@ -8,10 +8,14 @@ import {
   DropdownMenuTrigger,
 } from '@invana/ui';
 
-import type { ToolbarIcon } from './types';
+import { Tooltipped } from './Tooltipped';
+import type { ToolbarIcon, TooltipSide } from './types';
 
 export interface OptionPickerProps {
-  /** Label shown on the trigger and as the menu heading (e.g. `'Layout'`). */
+  /**
+   * Label shown on the trigger and as the menu heading (e.g. `'Layout'`). Also
+   * the trigger tooltip content unless {@link OptionPickerProps.tooltip} overrides it.
+   */
   label: string;
   /** Currently selected option key. */
   value: string;
@@ -27,6 +31,10 @@ export interface OptionPickerProps {
   onChange: (value: string) => void;
   /** Menu alignment relative to the trigger. Default `'start'`. */
   align?: 'start' | 'center' | 'end';
+  /** Trigger tooltip content. Defaults to {@link OptionPickerProps.label}. */
+  tooltip?: string;
+  /** Side the trigger tooltip is placed on. Default `'top'`. */
+  tooltipSide?: TooltipSide;
   className?: string;
 }
 
@@ -42,27 +50,34 @@ export function OptionPicker({
   icons,
   onChange,
   align = 'start',
+  tooltip,
+  tooltipSide,
   className,
 }: OptionPickerProps) {
   const ActiveIcon = icons?.[value];
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        {/* `ring-offset-background`: the design-kit Button sets `ring-offset-2`
-            but no offset colour, so the focus ring's 2px offset falls back to
-            Tailwind's default white — a light halo around the open trigger in
-            dark mode. Pin it to the `--color-background` token instead. */}
-        <Button
-          variant="outline"
-          size="sm"
-          className={['ring-offset-background', className].filter(Boolean).join(' ')}
-        >
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {ActiveIcon && <ActiveIcon size={16} />}
-            {label}: {options[value] ?? value}
-          </span>
-        </Button>
-      </DropdownMenuTrigger>
+      {/* Tooltip wraps the trigger: `TooltipTrigger asChild` → `DropdownMenuTrigger
+          asChild` → `Button`, all merging onto the one Button. The DropdownMenu
+          context still resolves the trigger regardless of the tooltip wrapper. */}
+      <Tooltipped label={tooltip ?? label} side={tooltipSide}>
+        <DropdownMenuTrigger asChild>
+          {/* `ring-offset-background`: the design-kit Button sets `ring-offset-2`
+              but no offset colour, so the focus ring's 2px offset falls back to
+              Tailwind's default white — a light halo around the open trigger in
+              dark mode. Pin it to the `--color-background` token instead. */}
+          <Button
+            variant="outline"
+            size="sm"
+            className={['ring-offset-background', className].filter(Boolean).join(' ')}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {ActiveIcon && <ActiveIcon size={16} />}
+              {label}: {options[value] ?? value}
+            </span>
+          </Button>
+        </DropdownMenuTrigger>
+      </Tooltipped>
       {/* Force a solid token-driven background: the design-kit's default
           popover styling is a translucent frosted glass (`bg-popover/80` +
           backdrop-blur), which reads as transparent over a busy canvas. */}

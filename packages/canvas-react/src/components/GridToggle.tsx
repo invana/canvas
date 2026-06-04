@@ -1,6 +1,6 @@
 import type { Canvas as EngineCanvas, BackgroundLayerOptions } from '@invana/canvas';
 
-import type { ToolbarIcon } from './types';
+import type { ToolbarIcon, TooltipSide } from './types';
 import { ControlButton } from './ControlButton';
 import { useGrid } from '../hooks/useGrid';
 
@@ -10,6 +10,8 @@ export interface GridToggleProps {
   icon: ToolbarIcon;
   /** Tooltip / accessible label. Default `'Toggle grid'`. */
   title?: string;
+  /** Side the tooltip is placed on. Default `'top'`. */
+  tooltipSide?: TooltipSide;
   /** Id of the `BackgroundLayer` to toggle. Default `'background'`. */
   backgroundLayerId?: string;
   /** Pattern to switch to when shown (e.g. `'grid'`); preserves existing if omitted. */
@@ -26,6 +28,7 @@ export interface GridToggleProps {
 export function GridToggle({
   icon,
   title = 'Toggle grid',
+  tooltipSide,
   backgroundLayerId,
   patternType,
   canvas,
@@ -39,6 +42,7 @@ export function GridToggle({
     <ControlButton
       icon={icon}
       title={title}
+      tooltipSide={tooltipSide}
       onClick={toggleGrid}
       active={showGrid}
       className={className}

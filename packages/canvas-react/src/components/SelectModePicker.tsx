@@ -1,7 +1,7 @@
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
 import { OptionPicker } from './OptionPicker';
-import type { ToolbarIcon } from './types';
+import type { ToolbarIcon, TooltipSide } from './types';
 import { useSelectMode } from '../hooks/useSelectMode';
 
 export interface SelectModePickerProps {
@@ -17,6 +17,8 @@ export interface SelectModePickerProps {
   icons?: Record<string, ToolbarIcon>;
   /** Dropdown alignment. */
   align?: 'start' | 'center' | 'end';
+  /** Side the trigger tooltip is placed on. Default `'top'`. */
+  tooltipSide?: TooltipSide;
   /** Explicit canvas instance; defaults to the context canvas. */
   canvas?: EngineCanvas | null;
   className?: string;
@@ -34,6 +36,7 @@ export function SelectModePicker({
   labels,
   icons,
   align,
+  tooltipSide,
   canvas,
   className,
 }: SelectModePickerProps) {
@@ -50,6 +53,7 @@ export function SelectModePicker({
       icons={icons}
       onChange={setMode}
       align={align}
+      tooltipSide={tooltipSide}
       className={className}
     />
   );

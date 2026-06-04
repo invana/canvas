@@ -1,6 +1,6 @@
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
-import type { ToolbarIcon } from './types';
+import type { ToolbarIcon, TooltipSide } from './types';
 import { ControlButton } from './ControlButton';
 import { useClipboard } from '../hooks/useClipboard';
 
@@ -8,6 +8,8 @@ export interface CutButtonProps {
   icon: ToolbarIcon;
   /** Tooltip / accessible label. Default `'Cut'`. */
   title?: string;
+  /** Side the tooltip is placed on. Default `'top'`. */
+  tooltipSide?: TooltipSide;
   /** Id of the `ClickSelectBehaviour` to read selection from. Default `'click-select'`. */
   clickSelectId?: string;
   /** Explicit canvas instance; defaults to the context canvas. */
@@ -24,6 +26,7 @@ export interface CutButtonProps {
 export function CutButton({
   icon,
   title = 'Cut',
+  tooltipSide,
   clickSelectId,
   canvas,
   className,
@@ -36,6 +39,7 @@ export function CutButton({
     <ControlButton
       icon={icon}
       title={title}
+      tooltipSide={tooltipSide}
       onClick={cut}
       disabled={!hasSelection}
       className={className}

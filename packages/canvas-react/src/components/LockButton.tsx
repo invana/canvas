@@ -1,6 +1,6 @@
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
-import type { ToolbarIcon } from './types';
+import type { ToolbarIcon, TooltipSide } from './types';
 import { LockToggle } from './LockToggle';
 import { useLock } from '../hooks/useLock';
 
@@ -11,6 +11,8 @@ export interface LockButtonProps {
   behaviourIds?: string[];
   /** Initial locked state. Default `false`. */
   initialLocked?: boolean;
+  /** Side the tooltip is placed on. Default `'top'`. */
+  tooltipSide?: TooltipSide;
   /** Explicit canvas instance; defaults to the context canvas. */
   canvas?: EngineCanvas | null;
   className?: string;
@@ -25,6 +27,7 @@ export function LockButton({
   unlockedIcon,
   behaviourIds,
   initialLocked,
+  tooltipSide,
   canvas,
   className,
 }: LockButtonProps) {
@@ -41,6 +44,7 @@ export function LockButton({
       onToggle={toggleLock}
       lockedIcon={lockedIcon}
       unlockedIcon={unlockedIcon}
+      tooltipSide={tooltipSide}
       className={className}
     />
   );

@@ -170,6 +170,7 @@ export type {
 // canvas equivalents of React Flow's `<Panel>` / `<ControlButton>`.
 export {
   Panel,
+  Tooltipped,
   ControlButton,
   OptionPicker,
   ZoomControls,
@@ -192,6 +193,8 @@ export {
 export type {
   PanelProps,
   PanelPosition,
+  TooltippedProps,
+  TooltipSide,
   ControlButtonProps,
   OptionPickerProps,
   ZoomControlsProps,

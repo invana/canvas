@@ -1,6 +1,6 @@
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
-import type { ToolbarIcon } from './types';
+import type { ToolbarIcon, TooltipSide } from './types';
 import { ControlButton } from './ControlButton';
 import { useClipboard } from '../hooks/useClipboard';
 
@@ -8,6 +8,8 @@ export interface DeleteSelectionButtonProps {
   icon: ToolbarIcon;
   /** Tooltip / accessible label. Default `'Delete selection'`. */
   title?: string;
+  /** Side the tooltip is placed on. Default `'top'`. */
+  tooltipSide?: TooltipSide;
   /** Id of the `ClickSelectBehaviour` to read selection from. Default `'click-select'`. */
   clickSelectId?: string;
   /** Explicit canvas instance; defaults to the context canvas. */
@@ -23,6 +25,7 @@ export interface DeleteSelectionButtonProps {
 export function DeleteSelectionButton({
   icon,
   title = 'Delete selection',
+  tooltipSide,
   clickSelectId,
   canvas,
   className,
@@ -35,6 +38,7 @@ export function DeleteSelectionButton({
     <ControlButton
       icon={icon}
       title={title}
+      tooltipSide={tooltipSide}
       onClick={remove}
       disabled={!hasSelection}
       className={className}

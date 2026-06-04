@@ -6,6 +6,8 @@
 
 export { Panel } from './Panel';
 export type { PanelProps } from './Panel';
+export { Tooltipped } from './Tooltipped';
+export type { TooltippedProps } from './Tooltipped';
 export { ControlButton } from './ControlButton';
 export type { ControlButtonProps } from './ControlButton';
 
@@ -46,4 +48,4 @@ export type { LayoutPickerProps } from './LayoutPicker';
 export { SelectModePicker } from './SelectModePicker';
 export type { SelectModePickerProps } from './SelectModePicker';
 
-export type { ToolbarIcon, PanelPosition } from './types';
+export type { ToolbarIcon, PanelPosition, TooltipSide } from './types';

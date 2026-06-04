@@ -1,6 +1,7 @@
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
 import { OptionPicker } from './OptionPicker';
+import type { TooltipSide } from './types';
 import { useLayout, type LayoutFactory } from '../hooks/useLayout';
 
 export interface LayoutPickerProps {
@@ -18,6 +19,8 @@ export interface LayoutPickerProps {
   labels?: Record<string, string>;
   /** Dropdown alignment. */
   align?: 'start' | 'center' | 'end';
+  /** Side the trigger tooltip is placed on. Default `'top'`. */
+  tooltipSide?: TooltipSide;
   /** Explicit canvas instance; defaults to the context canvas. */
   canvas?: EngineCanvas | null;
   className?: string;
@@ -36,6 +39,7 @@ export function LayoutPicker({
   initial,
   labels,
   align,
+  tooltipSide,
   canvas,
   className,
 }: LayoutPickerProps) {
@@ -56,6 +60,7 @@ export function LayoutPicker({
       options={layoutOptions}
       onChange={applyLayout}
       align={align}
+      tooltipSide={tooltipSide}
       className={className}
     />
   );
