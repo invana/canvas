@@ -1,4 +1,4 @@
-import { NavHorizontal } from '@invana/ui';
+import { NavHorizontal, Separator } from '@invana/ui';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
 import { Panel, LayoutPicker, SelectModePicker } from '../components';
@@ -24,6 +24,8 @@ export interface GraphLayoutToolbarProps {
   layerId?: string;
   /** Where the toolbar pins. Default `'top-center'`. */
   position?: PanelPosition;
+  /** Render without the `<Panel>` wrapper (embed in external chrome). Default `false`. */
+  bare?: boolean;
   /** Explicit canvas instance; defaults to the context canvas. */
   canvas?: EngineCanvas | null;
   className?: string;
@@ -45,32 +47,39 @@ export function GraphLayoutToolbar({
   initialSelectMode,
   layerId,
   position = 'top-center',
+  bare = false,
   canvas,
   className,
 }: GraphLayoutToolbarProps) {
+  const nav = (
+    <NavHorizontal
+      className={className}
+      center={
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <LayoutPicker
+            layouts={layouts}
+            labels={layoutLabels}
+            initial={initialLayout}
+            layerId={layerId}
+            canvas={canvas}
+          />
+          <Separator orientation="vertical" style={{ alignSelf: 'center', height: 24 }} />
+          <SelectModePicker
+            behaviourIds={selectModeBehaviourIds}
+            labels={selectModeLabels}
+            icons={selectModeIcons}
+            initial={initialSelectMode}
+            canvas={canvas}
+          />
+        </div>
+      }
+    />
+  );
+
+  if (bare) return nav;
   return (
     <Panel position={position} orientation="horizontal">
-      <NavHorizontal
-        className={className}
-        center={
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <LayoutPicker
-              layouts={layouts}
-              labels={layoutLabels}
-              initial={initialLayout}
-              layerId={layerId}
-              canvas={canvas}
-            />
-            <SelectModePicker
-              behaviourIds={selectModeBehaviourIds}
-              labels={selectModeLabels}
-              icons={selectModeIcons}
-              initial={initialSelectMode}
-              canvas={canvas}
-            />
-          </div>
-        }
-      />
+      {nav}
     </Panel>
   );
 }

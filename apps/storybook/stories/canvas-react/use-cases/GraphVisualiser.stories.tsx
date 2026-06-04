@@ -1,25 +1,28 @@
 /**
  * Graph data **visualiser** — a read-only explorer built from
  * `@invana/canvas-react` wrappers. Every layer and behaviour is listed directly
- * inside `<Canvas>`; the chrome is five self-wiring toolbars, each pinned to a
- * different edge via its own `<Panel>`. No app state lives in `Visualiser` — the
- * toolbars drive the engine straight from context (and, for history/clipboard,
- * from `<GraphHistoryProvider>` / `<GraphClipboardProvider>`):
+ * inside `<Canvas>`; the chrome is **one combined toolbar** pinned top-centre.
+ * Each group is a self-wiring toolbar rendered `bare` (its `Nav*` only, no own
+ * `<Panel>`); a single shared `<Panel position="top-center" orientation="horizontal">`
+ * stacks them side-by-side so they read as one bar of distinct pill-groups. No
+ * app state lives in `Visualiser` — the toolbars drive the engine straight from
+ * context (and, for history/clipboard, from `<GraphHistoryProvider>` /
+ * `<GraphClipboardProvider>`). Left-to-right:
  *
- *   - **`<HistoryToolbar>`** (top-left) — undo / redo / redraw via `useHistory`.
- *   - **`<GraphLayoutToolbar>`** (top-centre) — layout switcher (Force / ELK
- *     layered / ELK stress) + select-mode switcher (Click / Brush / Lasso),
- *     self-wiring through `useLayout` (consumer-supplied factories) and
- *     `useSelectMode` (consumer-supplied behaviour ids). The initial layout is
- *     applied automatically on mount. Selection is Shift-gated: Shift+click to
- *     select (always on); the switcher arms which Shift+drag gesture is live —
- *     Click (none), Brush, or Lasso. A plain drag always pans.
- *   - **`<EditToolbar>`** (top-right) — cut / copy / paste / delete selection /
- *     clear canvas, all undoable; reads the selection off the `ClickSelectBehaviour`.
- *   - **`<ViewToolbar>`** (bottom-left) — zoom in/out, zoom-level picker,
- *     fit-to-content, lock view (disables pan + node-drag), all from the camera /
- *     lock hooks.
- *   - **`<GridToolbar>`** (bottom-centre) — toggles the background grid pattern.
+ *   - **`<HistoryToolbar>`** — undo / redo / redraw via `useHistory`.
+ *   - **`<GraphLayoutToolbar>`** — layout switcher (Force / ELK layered / ELK
+ *     stress) + select-mode switcher (Click / Brush / Lasso), self-wiring
+ *     through `useLayout` (consumer-supplied factories) and `useSelectMode`
+ *     (consumer-supplied behaviour ids). The initial layout is applied
+ *     automatically on mount. Selection is Shift-gated: Shift+click to select
+ *     (always on); the switcher arms which Shift+drag gesture is live — Click
+ *     (none), Brush, or Lasso. A plain drag always pans.
+ *   - **`<EditToolbar>`** — cut / copy / paste / delete selection / clear canvas,
+ *     all undoable; reads the selection off the `ClickSelectBehaviour`.
+ *   - **`<ViewToolbar>`** — zoom in/out, zoom-level picker, fit-to-content, lock
+ *     view (disables pan + node-drag), all from the camera / lock hooks. Forced
+ *     `orientation="horizontal"` so it lays out along the row.
+ *   - **`<GridToolbar>`** — toggles the background grid pattern.
  *
  * The minimap sits bottom-right.
  */
@@ -44,12 +47,14 @@ import {
   LabelResolutionLODBehaviour,
   LassoSelectBehaviour,
   MiniMapLayer,
+  Panel,
   PinchZoomBehaviour,
   ViewToolbar,
   WheelZoomBehaviour,
   useCanvas,
   type LayoutFactory,
 } from '@invana/canvas-react';
+import { Separator } from '@invana/ui';
 import type { GraphNode, GraphLayer as EngineGraphLayer } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
@@ -213,44 +218,51 @@ function Visualiser() {
 
         {/* History + clipboard need their engine objects over the graph store —
             provided here, consumed by the toolbars below. */}
+        {/* One combined toolbar: every group's bare toolbar (Nav only, no
+            <Panel>) stacked side-by-side inside a single top-centre <Panel>, so
+            they read as one bar of distinct pill-groups. */}
         <GraphHistoryProvider layerId="graph">
           <GraphClipboardProvider layerId="graph">
-            <HistoryToolbar
-              position="top-left"
-              icons={{ undo: Undo2, redo: Redo2, redraw: RefreshCw }}
-            />
-            <GraphLayoutToolbar
-              position="top-center"
-              layouts={LAYOUTS}
-              layoutLabels={LAYOUT_LABEL}
-              initialLayout="d3-force"
-              selectModeBehaviourIds={SELECT_MODE_IDS}
-              selectModeLabels={SELECT_LABEL}
-              selectModeIcons={SELECT_ICONS}
-              initialSelectMode="click"
-            />
-            <EditToolbar
-              position="top-right"
-              icons={{
-                cut: Scissors,
-                copy: Copy,
-                paste: ClipboardPaste,
-                delete: Trash2,
-                clear: Eraser,
-              }}
-            />
-            <ViewToolbar
-              position="bottom-left"
-              orientation="vertical"
-              icons={{
-                zoomIn: ZoomIn,
-                zoomOut: ZoomOut,
-                fit: Maximize,
-                locked: Lock,
-                unlocked: LockOpen,
-              }}
-            />
-            <GridToolbar position="bottom-center" icons={{ grid: Grid3x3 }} />
+            <Panel position="top-center" orientation="horizontal" gap={12}>
+              <HistoryToolbar bare icons={{ undo: Undo2, redo: Redo2, redraw: RefreshCw }} />
+              <Separator orientation="vertical" style={{ alignSelf: 'center', height: 16 }} />
+              <GraphLayoutToolbar
+                bare
+                layouts={LAYOUTS}
+                layoutLabels={LAYOUT_LABEL}
+                initialLayout="d3-force"
+                selectModeBehaviourIds={SELECT_MODE_IDS}
+                selectModeLabels={SELECT_LABEL}
+                selectModeIcons={SELECT_ICONS}
+                initialSelectMode="click"
+              />
+              <Separator orientation="vertical" style={{ alignSelf: 'center', height: 16 }} />
+              <EditToolbar
+                bare
+                icons={{
+                  cut: Scissors,
+                  copy: Copy,
+                  paste: ClipboardPaste,
+                  delete: Trash2,
+                  clear: Eraser,
+                }}
+              />
+              <Separator orientation="vertical" style={{ alignSelf: 'center', height: 16 }} />
+              {/* ViewToolbar defaults to vertical — force horizontal for the row. */}
+              <ViewToolbar
+                bare
+                orientation="horizontal"
+                icons={{
+                  zoomIn: ZoomIn,
+                  zoomOut: ZoomOut,
+                  fit: Maximize,
+                  locked: Lock,
+                  unlocked: LockOpen,
+                }}
+              />
+              <Separator orientation="vertical" style={{ alignSelf: 'center', height: 16 }} />
+              <GridToolbar bare icons={{ grid: Grid3x3 }} />
+            </Panel>
           </GraphClipboardProvider>
         </GraphHistoryProvider>
       </Canvas>
