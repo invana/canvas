@@ -8,10 +8,12 @@
  *
  *   - **`<HistoryToolbar>`** (top-left) — undo / redo / redraw via `useHistory`.
  *   - **`<GraphLayoutToolbar>`** (top-centre) — layout switcher (Force / ELK
- *     layered / ELK stress) + selection-mode switcher (Click / Brush / Lasso),
+ *     layered / ELK stress) + select-mode switcher (Click / Brush / Lasso),
  *     self-wiring through `useLayout` (consumer-supplied factories) and
  *     `useSelectMode` (consumer-supplied behaviour ids). The initial layout is
- *     applied automatically on mount.
+ *     applied automatically on mount. Selection is Shift-gated: Shift+click to
+ *     select (always on); the switcher arms which Shift+drag gesture is live —
+ *     Click (none), Brush, or Lasso. A plain drag always pans.
  *   - **`<EditToolbar>`** (top-right) — cut / copy / paste / delete selection /
  *     clear canvas, all undoable; reads the selection off the `ClickSelectBehaviour`.
  *   - **`<ViewToolbar>`** (bottom-left) — zoom in/out, zoom-level picker,
@@ -88,6 +90,9 @@ const LAYOUTS: Record<string, LayoutFactory> = {
       charge: { strength: -160 },
       link: { distance: 56 },
       collide: { radius: 14 },
+      // Snap to the settled layout instead of animating every tick (ELK is
+      // already one-shot, so this makes all three layouts apply instantly).
+      animate: false,
     }),
   'elk-layered': () => new ElkLayout({ algorithm: 'layered', direction: 'RIGHT' }),
   'elk-stress': () => new ElkLayout({ algorithm: 'stress' }),
@@ -98,8 +103,13 @@ const LAYOUT_LABEL: Record<string, string> = {
   'elk-stress': 'Stress (ELK)',
 };
 
-// Mode key → registered behaviour id. `useSelectMode` enables exactly one.
-const SELECT_MODE_IDS = { click: 'click-select', brush: 'brush-select', lasso: 'lasso-select' };
+// Select-mode key → registered behaviour id. `useSelectMode` enables exactly
+// one entry and disables the rest. Brush and lasso are both Shift+drag, so only
+// one can be live. Click-select is always on (Shift+click) and doesn't collide,
+// so its `click` entry maps to an empty id: picking it arms NO drag-select
+// (Shift+drag does nothing, plain drag pans) without disabling click-select —
+// the hook skips ids it can't resolve.
+const SELECT_MODE_IDS = { click: '', brush: 'brush-select', lasso: 'lasso-select' };
 const SELECT_LABEL: Record<string, string> = {
   click: 'Click select',
   brush: 'Brush select',
@@ -180,12 +190,14 @@ function Visualiser() {
         <PinchZoomBehaviour />
         <HoverActivateBehaviour layerId="graph" degree={1} state="highlighted" />
 
-        {/* Selection behaviours — registered disabled; <GraphLayoutToolbar>'s
-            select-mode picker (useSelectMode) enables exactly one. Brush/Lasso
-            use `trigger={[]}` so a plain left-drag selects. */}
-        <ClickSelectBehaviour layerId="graph" enabled={false} multiple />
-        <BrushSelectBehaviour layerId="graph" enabled={false} trigger={[]} />
-        <LassoSelectBehaviour layerId="graph" enabled={false} trigger={[]} />
+        {/* Selection — Shift is the trigger for all three. Shift+click selects
+            (click-select stays on); Shift+drag brushes or lassos. A plain drag
+            stays a pure pan. Click and the drag-selects don't collide (click vs
+            drag), but brush and lasso are both Shift+drag, so <GraphLayoutToolbar>'s
+            select-mode picker (useSelectMode) enables exactly one of them. */}
+        <ClickSelectBehaviour layerId="graph" enabled multiple />
+        <BrushSelectBehaviour layerId="graph" enabled={false} />
+        <LassoSelectBehaviour layerId="graph" enabled={false} />
 
         <LabelResolutionLODBehaviour layerId="graph" />
         <MiniMapLayer graphLayerId="graph" position="bottom-right" margin={{ x: 20 }} />

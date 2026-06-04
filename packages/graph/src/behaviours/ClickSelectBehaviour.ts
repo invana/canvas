@@ -79,13 +79,20 @@ export interface ClickSelectBehaviourOptions extends BehaviourOptions {
    */
   enable?: boolean | ((element: SelectableElement) => boolean);
 
-  /** Allow more than one element selected at a time. Default `false`. */
+  /**
+   * Allow more than one element selected at a time. When `true`, a qualifying
+   * click (see `trigger`) toggles the element in/out of the selection; when
+   * `false` it replaces the selection with the clicked element. Default `false`.
+   */
   multiple?: boolean;
 
   /**
-   * Modifier key(s) that activate multi-select mode when held. Consulted
-   * only when `multiple` is `true`. Empty array = every click extends.
-   * Default `['shift']`.
+   * Modifier key(s) required for a click to affect the selection **at all**.
+   * When non-empty, a click that holds none of these is ignored — a plain
+   * (unmodified) click selects nothing, and a plain left-drag stays a pure
+   * pan. With a modifier held, the click selects (replacing the selection, or
+   * toggling membership when `multiple` is `true`). Empty array = every click
+   * selects, no modifier needed. Default `['shift']`.
    */
   trigger?: SelectModifierKey[];
 
@@ -431,15 +438,19 @@ export class ClickSelectBehaviour extends Behaviour {
     if (typeof enable === 'function' && !enable(target)) return;
 
     const { multiple, trigger } = this.opts;
-    const isMultiKey =
-      multiple && (trigger.length === 0 || ModifierTracker.anyHeld(trigger));
+    // `trigger` gates selection entirely: with a modifier configured, a click
+    // that holds none of them is a no-op (plain click selects nothing; a plain
+    // drag stays a pure pan). Empty `trigger` = every click selects.
+    if (trigger.length > 0 && !ModifierTracker.anyHeld(trigger)) return;
 
-    if (isMultiKey) {
+    if (multiple) {
+      // Toggle membership — extend or shrink the existing selection.
       const next = new Map(this.seeds);
       if (next.has(id)) next.delete(id);
       else next.set(id, type);
       this.applySelection(next, true);
     } else {
+      // Single-select — replace the selection with just this element.
       this.applySelection(new Map([[id, type]]), true);
     }
   }
