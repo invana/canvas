@@ -27,3 +27,8 @@ export { useEdgeType, DEFAULT_EDGE_TYPES, DEFAULT_EDGE_TYPE_LABELS } from './use
 export type { UseEdgeTypeOptions, UseEdgeTypeResult } from './useEdgeType';
 export { useLock } from './useLock';
 export type { UseLockOptions, UseLockResult } from './useLock';
+export { useTool } from './useTool';
+export { useDrawHistory } from './useDrawHistory';
+export type { UseDrawHistoryResult } from './useDrawHistory';
+export { useEntityEditor } from './useEntityEditor';
+export type { UseEntityEditorOptions, EntityEditorTarget } from './useEntityEditor';

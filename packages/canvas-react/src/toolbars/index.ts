@@ -19,3 +19,7 @@ export { GridToolbar } from './GridToolbar';
 export type { GridToolbarProps, GridToolbarIconSet } from './GridToolbar';
 export { GraphLayoutToolbar } from './GraphLayoutToolbar';
 export type { GraphLayoutToolbarProps } from './GraphLayoutToolbar';
+export { ModellerToolbar } from './ModellerToolbar';
+export type { ModellerToolbarProps, ModellerToolbarIconSet } from './ModellerToolbar';
+export { InspectorPanel } from './InspectorPanel';
+export type { InspectorPanelProps } from './InspectorPanel';

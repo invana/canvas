@@ -55,6 +55,9 @@ export type { CreateNodeBehaviourOptions } from './CreateNodeBehaviour';
 export { DrawEdgeBehaviour } from './DrawEdgeBehaviour';
 export type { DrawEdgeBehaviourOptions } from './DrawEdgeBehaviour';
 
+export { EraseBehaviour } from './EraseBehaviour';
+export type { EraseBehaviourOptions, EraseTargetKind, ErasedElement } from './EraseBehaviour';
+
 export { CollapseExpandBehaviour, GROUP_TOGGLE_SLOT } from './CollapseExpandBehaviour';
 export type { CollapseExpandBehaviourOptions } from './CollapseExpandBehaviour';
 

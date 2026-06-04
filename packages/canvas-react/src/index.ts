@@ -12,12 +12,19 @@ export type { CanvasProps } from './Canvas';
 export { CanvasContext, useCanvas } from './CanvasContext';
 export { HistoryContext } from './HistoryContext';
 export { ClipboardContext } from './ClipboardContext';
+export { ToolContext } from './ToolContext';
+export type { GraphTool, ToolContextValue } from './ToolContext';
 
 // ─── Providers ─────────────────────────────────────────────────────────────
 // Construct engine-owned `GraphHistory` / `GraphClipboard` over a layer's store
-// and surface them to descendant hooks / buttons via context.
-export { GraphHistoryProvider, GraphClipboardProvider } from './providers';
-export type { GraphHistoryProviderProps, GraphClipboardProviderProps } from './providers';
+// and surface them to descendant hooks / buttons via context. `GraphToolProvider`
+// holds the active modelling tool (pure React state — no engine reference).
+export { GraphHistoryProvider, GraphClipboardProvider, GraphToolProvider } from './providers';
+export type {
+  GraphHistoryProviderProps,
+  GraphClipboardProviderProps,
+  GraphToolProviderProps,
+} from './providers';
 
 // ─── Layers ──────────────────────────────────────────────────────────────
 export { GraphLayer } from './layers/GraphLayer';
@@ -55,6 +62,9 @@ export type { CreateNodeBehaviourProps } from './behaviours/CreateNodeBehaviour'
 
 export { DrawEdgeBehaviour } from './behaviours/DrawEdgeBehaviour';
 export type { DrawEdgeBehaviourProps } from './behaviours/DrawEdgeBehaviour';
+
+export { EraseBehaviour } from './behaviours/EraseBehaviour';
+export type { EraseBehaviourProps } from './behaviours/EraseBehaviour';
 
 export { HoverActivateBehaviour } from './behaviours/HoverActivateBehaviour';
 export type { HoverActivateBehaviourProps } from './behaviours/HoverActivateBehaviour';
@@ -115,6 +125,9 @@ export {
   DEFAULT_EDGE_TYPES,
   DEFAULT_EDGE_TYPE_LABELS,
   useLock,
+  useTool,
+  useDrawHistory,
+  useEntityEditor,
 } from './hooks';
 export type {
   UseCameraResult,
@@ -139,6 +152,9 @@ export type {
   UseEdgeTypeResult,
   UseLockOptions,
   UseLockResult,
+  UseDrawHistoryResult,
+  UseEntityEditorOptions,
+  EntityEditorTarget,
 } from './hooks';
 
 // ─── Toolbars ──────────────────────────────────────────────────────────────
@@ -153,6 +169,8 @@ export {
   ViewToolbar,
   GridToolbar,
   GraphLayoutToolbar,
+  ModellerToolbar,
+  InspectorPanel,
 } from './toolbars';
 export type {
   CanvasControlsToolbarProps,
@@ -167,6 +185,9 @@ export type {
   GridToolbarProps,
   GridToolbarIconSet,
   GraphLayoutToolbarProps,
+  ModellerToolbarProps,
+  ModellerToolbarIconSet,
+  InspectorPanelProps,
 } from './toolbars';
 
 // ─── UI components (building blocks) ───────────────────────────────────────
@@ -195,6 +216,7 @@ export {
   LayoutPicker,
   SelectModePicker,
   EdgeTypePicker,
+  PropertiesEditor,
 } from './components';
 export type {
   PanelProps,
@@ -220,5 +242,7 @@ export type {
   LayoutPickerProps,
   SelectModePickerProps,
   EdgeTypePickerProps,
+  PropertiesEditorProps,
+  PropertiesEditorValues,
   ToolbarIcon,
 } from './components';
