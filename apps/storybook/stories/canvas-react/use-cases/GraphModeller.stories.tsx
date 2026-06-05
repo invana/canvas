@@ -26,7 +26,7 @@
  * drawing tool.
  */
 
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
@@ -58,10 +58,16 @@ import {
   ModellerToolbar,
   InspectorPanel,
   Panel,
+  useCanvas,
   useTool,
   useDrawHistory,
 } from '@invana/canvas-react';
-import type { GraphData, GraphEdge, NodeShapeOptions } from '@invana/graph';
+import type {
+  GraphData,
+  GraphEdge,
+  NodeShapeOptions,
+  GraphLayer as EngineGraphLayer,
+} from '@invana/graph';
 import { TooltipProvider } from '@invana/ui';
 
 const meta: Meta = { title: 'canvas-react/usecases/GraphModeller' };
@@ -168,13 +174,50 @@ function DrawingTools() {
   );
 }
 
+/**
+ * Keeps the modeller's theme-dependent colours (node borders + edge strokes) in
+ * sync with the OS `prefers-color-scheme`.
+ *
+ * Why imperative: the `<GraphLayer>` wrapper applies its `node`/`edge` style
+ * props only at mount, so React-state colour changes wouldn't reach existing —
+ * or freshly-drawn — nodes. Instead we listen to the media query and call the
+ * engine layer's `setNodeDefaults` / `setEdgeDefaults`, which patch the shared
+ * template and re-render every node/edge in one pass. New nodes dropped by the
+ * Add tool inherit the patched template too. (The node fill + label stay fixed —
+ * a white label inside the solid blue node reads on either theme.)
+ */
+function ThemeController() {
+  const canvas = useCanvas();
+  useEffect(() => {
+    const layer = canvas.layers.get<EngineGraphLayer>('graph');
+    if (!layer || typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const apply = () => {
+      const dark = mq.matches;
+      // Border matches the background so the node reads as separated from the grid.
+      layer.setNodeDefaults({ bgStrokeColor: dark ? 0x0f172a : 0xffffff });
+      layer.setEdgeDefaults({ strokeColor: dark ? 0x475569 : 0xcbd5e1 });
+    };
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, [canvas]);
+  return null;
+}
+
 function Modeller() {
   return (
     <TooltipProvider>
       <GraphToolProvider>
         <div style={hostStyle}>
           <Canvas autoResize>
-            <BackgroundLayer patternType="grid" />
+            {/* The `{ light, dark }` pairs follow the OS `prefers-color-scheme`. */}
+            <BackgroundLayer
+              type="pattern"
+              patternType="grid"
+              backgroundColor={{ light: '#f8fafc', dark: '#0f172a' }}
+              color={{ light: '#94a3b8', dark: '#334155' }}
+            />
             <GraphLayer
               id="graph"
               data={SEED}
@@ -182,15 +225,17 @@ function Modeller() {
                 style: {
                   shape: { kind: 'circle', radius: 22 },
                   bgFill: 0x3b82f6,
-                  bgStrokeColor: 0xffffff,
+                  // bgStrokeColor is theme-driven — see <ThemeController>.
                   bgStrokeWidth: 2,
                   labelColor: 0xf8fafc,
                   labelFontSize: 13,
                   labelPlacement: 'center',
                 },
               }}
-              edge={{ style: { strokeColor: 0x94a3b8, strokeWidth: 2 } }}
+              // edge strokeColor is theme-driven — see <ThemeController>.
+              edge={{ style: { strokeWidth: 2 } }}
             />
+            <ThemeController />
 
             <DragPanBehaviour />
             <WheelZoomBehaviour />
