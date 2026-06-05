@@ -128,6 +128,7 @@ export {
   useTool,
   useDrawHistory,
   useEntityEditor,
+  useContextMenu,
 } from './hooks';
 export type {
   UseCameraResult,
@@ -155,6 +156,8 @@ export type {
   UseDrawHistoryResult,
   UseEntityEditorOptions,
   EntityEditorTarget,
+  ContextMenuState,
+  UseContextMenuResult,
 } from './hooks';
 
 // ─── Toolbars ──────────────────────────────────────────────────────────────
@@ -217,6 +220,7 @@ export {
   SelectModePicker,
   EdgeTypePicker,
   PropertiesEditor,
+  ContextMenuOverlay,
 } from './components';
 export type {
   PanelProps,
@@ -244,5 +248,6 @@ export type {
   EdgeTypePickerProps,
   PropertiesEditorProps,
   PropertiesEditorValues,
+  ContextMenuOverlayProps,
   ToolbarIcon,
 } from './components';

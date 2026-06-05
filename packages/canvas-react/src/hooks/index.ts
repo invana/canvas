@@ -32,3 +32,5 @@ export { useDrawHistory } from './useDrawHistory';
 export type { UseDrawHistoryResult } from './useDrawHistory';
 export { useEntityEditor } from './useEntityEditor';
 export type { UseEntityEditorOptions, EntityEditorTarget } from './useEntityEditor';
+export { useContextMenu } from './useContextMenu';
+export type { ContextMenuState, UseContextMenuResult } from './useContextMenu';

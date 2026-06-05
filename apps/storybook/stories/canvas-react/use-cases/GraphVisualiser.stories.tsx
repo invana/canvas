@@ -30,13 +30,15 @@
  * The minimap sits bottom-right.
  */
 
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
   BackgroundLayer,
   BrushSelectBehaviour,
   ClickSelectBehaviour,
+  ContextMenuBehaviour,
+  ContextMenuOverlay,
   DragNodeBehaviour,
   DragPanBehaviour,
   EdgeTypePicker,
@@ -55,11 +57,21 @@ import {
   PinchZoomBehaviour,
   ViewToolbar,
   WheelZoomBehaviour,
+  useCamera,
   useCanvas,
+  useClipboard,
+  useContextMenu,
+  useFitContent,
+  useSelection,
   type LayoutFactory,
 } from '@invana/canvas-react';
-import { Separator } from '@invana/ui';
-import type { GraphNode, GraphLayer as EngineGraphLayer } from '@invana/graph';
+import { Separator, type MenuItem } from '@invana/ui';
+import type {
+  GraphNode,
+  ContextMenuEvent,
+  ClickSelectBehaviour as EngineClickSelectBehaviour,
+  GraphLayer as EngineGraphLayer,
+} from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { lesMiserables } from '@invana/graph-datasets';
@@ -184,6 +196,178 @@ function ThemeController() {
   return null;
 }
 
+/**
+ * Right-click context menus for the explorer — node / edge / empty-canvas. The
+ * visualiser is read-only, so the actions are **navigation + selection +
+ * annotation** (no graph mutations beyond the existing clipboard), wired through
+ * the explorer's hooks:
+ *
+ *   - **Node** — Zoom to node (`useCamera.fitContent`), Select node, Select
+ *     neighbourhood (`selectMultiple` over `store.neighborsOf` + incident edges),
+ *     Highlight neighbours (`layer.setNodeState('highlighted')`).
+ *   - **Edge** — Zoom to edge, Select edge, Highlight edge + endpoints.
+ *   - **Canvas** — Fit to content (`useFitContent`), Select all, Clear selection
+ *     (`useSelection`), Clear highlights, Copy selection + Paste (`useClipboard`).
+ *
+ * Lives inside `<GraphClipboardProvider>` (so `useClipboard` resolves) and inside
+ * `<Canvas>` (host is `position: relative`) so the overlay anchors at the cursor.
+ */
+function VisualiserContextMenu() {
+  const canvas = useCanvas();
+  const camera = useCamera();
+  const { fitContent } = useFitContent('graph');
+  const { copy, paste, canPaste } = useClipboard();
+  const { clear: clearSelection } = useSelection();
+  const { menu, open, close } = useContextMenu<MenuItem[]>();
+  // Ids currently carrying the transient 'highlighted' state, so "Clear
+  // highlights" can revert exactly what these menus lit (and nothing else).
+  const litRef = useRef<{ nodes: Set<string>; edges: Set<string> }>({
+    nodes: new Set(),
+    edges: new Set(),
+  });
+
+  const onContextMenu = useCallback(
+    (e: ContextMenuEvent): void => {
+      const layer = canvas.layers.get<EngineGraphLayer>('graph');
+      if (!layer) return;
+      const store = layer.store;
+      const select = canvas.behaviours.get<EngineClickSelectBehaviour>('click-select');
+      const lit = litRef.current;
+
+      const highlightNode = (id: string): void => {
+        layer.setNodeState(id, 'highlighted', true);
+        lit.nodes.add(id);
+      };
+      const highlightEdge = (id: string): void => {
+        layer.setEdgeState(id, 'highlighted', true);
+        lit.edges.add(id);
+      };
+      const clearHighlights = (): void => {
+        for (const id of lit.nodes) layer.setNodeState(id, 'highlighted', false);
+        for (const id of lit.edges) layer.setEdgeState(id, 'highlighted', false);
+        lit.nodes.clear();
+        lit.edges.clear();
+      };
+      // Frame the camera on a world rect spanning the given points (+ padding).
+      const zoomTo = (pts: Array<{ x: number; y: number }>): void => {
+        if (!pts.length) return;
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+        for (const p of pts) {
+          minX = Math.min(minX, p.x);
+          minY = Math.min(minY, p.y);
+          maxX = Math.max(maxX, p.x);
+          maxY = Math.max(maxY, p.y);
+        }
+        camera.fitContent(
+          { x: minX, y: minY, width: Math.max(1, maxX - minX), height: Math.max(1, maxY - minY) },
+          160,
+        );
+      };
+
+      let items: MenuItem[];
+      if (e.targetType === 'node' && e.id) {
+        const id = e.id;
+        items = [
+          {
+            id: 'zoom',
+            label: 'Zoom to node',
+            onClick: () => {
+              const n = store.getNode(id);
+              if (n?.position) zoomTo([n.position]);
+              close();
+            },
+          },
+          { id: 'select', label: 'Select node', onClick: () => { select?.select(id, 'shape'); close(); } },
+          {
+            id: 'select-hood',
+            label: 'Select neighbourhood',
+            onClick: () => {
+              const els: Array<{ id: string; type: 'shape' | 'connector' }> = [{ id, type: 'shape' }];
+              for (const nb of store.neighborsOf(id, 'both')) els.push({ id: nb, type: 'shape' });
+              for (const ed of store.edgesOf(id, 'both')) els.push({ id: ed.id, type: 'connector' });
+              select?.selectMultiple(els);
+              close();
+            },
+          },
+          {
+            id: 'highlight',
+            label: 'Highlight neighbours',
+            onClick: () => {
+              highlightNode(id);
+              for (const nb of store.neighborsOf(id, 'both')) highlightNode(nb);
+              for (const ed of store.edgesOf(id, 'both')) highlightEdge(ed.id);
+              close();
+            },
+          },
+        ];
+      } else if (e.targetType === 'edge' && e.id) {
+        const id = e.id;
+        items = [
+          {
+            id: 'zoom',
+            label: 'Zoom to edge',
+            onClick: () => {
+              const ed = store.getEdge(id);
+              const pts = [ed && store.getNode(ed.source)?.position, ed && store.getNode(ed.target)?.position];
+              zoomTo(pts.filter(Boolean) as Array<{ x: number; y: number }>);
+              close();
+            },
+          },
+          { id: 'select', label: 'Select edge', onClick: () => { select?.select(id, 'connector'); close(); } },
+          {
+            id: 'highlight',
+            label: 'Highlight edge',
+            onClick: () => {
+              highlightEdge(id);
+              const ed = store.getEdge(id);
+              if (ed) {
+                highlightNode(ed.source);
+                highlightNode(ed.target);
+              }
+              close();
+            },
+          },
+        ];
+      } else {
+        items = [
+          { id: 'fit', label: 'Fit to content', onClick: () => { fitContent(); close(); } },
+          {
+            id: 'select-all',
+            label: 'Select all',
+            shortcut: '⌘A',
+            onClick: () => {
+              const els: Array<{ id: string; type: 'shape' | 'connector' }> = [];
+              for (const n of store.nodes()) els.push({ id: n.id, type: 'shape' });
+              for (const ed of store.edges()) els.push({ id: ed.id, type: 'connector' });
+              select?.selectMultiple(els);
+              close();
+            },
+          },
+          { id: 'clear-sel', label: 'Clear selection', onClick: () => { clearSelection(); close(); } },
+          { id: 'clear-hl', label: 'Clear highlights', onClick: () => { clearHighlights(); close(); } },
+          { id: 'copy', label: 'Copy selection', shortcut: '⌘C', onClick: () => { copy(); close(); } },
+        ];
+        if (canPaste) {
+          items.push({ id: 'paste', label: 'Paste', shortcut: '⌘V', onClick: () => { paste(); close(); } });
+        }
+      }
+
+      open(e.screen.x, e.screen.y, items);
+    },
+    [canvas, camera, fitContent, copy, paste, canPaste, clearSelection, open, close],
+  );
+
+  return (
+    <>
+      <ContextMenuBehaviour layerId="graph" onContextMenu={onContextMenu} />
+      {menu && <ContextMenuOverlay x={menu.x} y={menu.y} items={menu.items} />}
+    </>
+  );
+}
+
 function Visualiser() {
   return (
     <div style={{ height: '100vh' }}>
@@ -287,6 +471,7 @@ function Visualiser() {
               <Separator orientation="vertical" style={{ alignSelf: 'center', height: 16 }} />
               <GridToolbar bare icons={{ grid: Grid3x3 }} />
             </Panel>
+            <VisualiserContextMenu />
           </GraphClipboardProvider>
         </GraphHistoryProvider>
       </Canvas>

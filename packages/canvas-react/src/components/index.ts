@@ -51,5 +51,7 @@ export { SelectModePicker } from './SelectModePicker';
 export type { SelectModePickerProps } from './SelectModePicker';
 export { EdgeTypePicker } from './EdgeTypePicker';
 export type { EdgeTypePickerProps } from './EdgeTypePicker';
+export { ContextMenuOverlay } from './ContextMenuOverlay';
+export type { ContextMenuOverlayProps } from './ContextMenuOverlay';
 
 export type { ToolbarIcon, PanelPosition, TooltipSide } from './types';
