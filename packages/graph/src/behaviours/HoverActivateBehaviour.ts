@@ -80,6 +80,16 @@ export interface HoverActivateBehaviourOptions extends BehaviourOptions {
   inactiveState?: string;
 
   /**
+   * Lift the active set (the hovered focal element + its N-hop neighbours)
+   * above the rest within its render layer for the duration of the hover, so
+   * unrelated nodes / edges don't paint over the highlighted data. Edges raise
+   * above other edges (still below all nodes); neighbour nodes raise above
+   * other nodes. Reset when the hover clears. Visual-only — restacking doesn't
+   * affect hit-testing. Default `true`.
+   */
+  raiseActive?: boolean;
+
+  /**
    * N-hop neighbour radius. `0` = hovered element only; `1` = direct
    * neighbours + connecting edges; `N` = N-hop. Default `0`.
    */
@@ -149,6 +159,7 @@ interface ResolvedOptions {
   enable: boolean | ((element: HoverableElement) => boolean);
   state: string;
   inactiveState: string | undefined;
+  raiseActive: boolean;
   degree: number;
   direction: HoverDirection;
   zoomThreshold: number | undefined;
@@ -167,6 +178,7 @@ function resolveOptions(
     enable: true,
     state: 'hovered',
     inactiveState: undefined,
+    raiseActive: true,
     degree: 0,
     direction: 'both',
     zoomThreshold: undefined,
@@ -180,6 +192,7 @@ function resolveOptions(
     enable: patch.enable ?? base.enable,
     state: patch.state ?? base.state,
     inactiveState: 'inactiveState' in patch ? patch.inactiveState : base.inactiveState,
+    raiseActive: patch.raiseActive ?? base.raiseActive,
     degree: patch.degree ?? base.degree,
     direction: patch.direction ?? base.direction,
     zoomThreshold:
@@ -232,6 +245,15 @@ export class HoverActivateBehaviour extends Behaviour {
   private appliedScale: number = 1;
   /** Node ids currently scaled via `renderer.scaleShape` — reset on clear. */
   private readonly scaledNodeIds = new Set<string>();
+
+  /**
+   * `gfx.zIndex` written to the active set when `raiseActive` is on. Any value
+   * above the default `0` lifts the element over its untouched peers; `1` is
+   * enough and keeps hover- and selection-raises on the same tier.
+   */
+  private static readonly RAISED_Z_INDEX = 1;
+  /** Ids currently raised via `renderer.raiseShape` / `raiseConnector`. */
+  private readonly raisedIds = new Set<string>();
 
   constructor(opts: HoverActivateBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? ['pointer+hover'] });
@@ -335,11 +357,18 @@ export class HoverActivateBehaviour extends Behaviour {
         patch.zoomedOutState !== this.opts.zoomedOutState) ||
       ('zoomedOutEdgeState' in patch &&
         patch.zoomedOutEdgeState !== this.opts.zoomedOutEdgeState);
+    const raiseChanged =
+      patch.raiseActive !== undefined && patch.raiseActive !== this.opts.raiseActive;
     if (stateChanged) this.clearHover();
     this.opts = resolveOptions(this.opts, patch);
     // Re-pick states / scale if the threshold or scale moved while a hover
     // is active — runtime knob changes (GUI sliders) should swap immediately.
     if (this.current) this.handleCameraZoom();
+    // Toggle raise on/off live for the in-flight hover (e.g. a GUI checkbox).
+    if (this.current && raiseChanged) {
+      if (this.opts.raiseActive) this.applyRaise();
+      else this.resetRaise();
+    }
   }
 
   /** Clear all states applied by the current hover. */
@@ -349,6 +378,7 @@ export class HoverActivateBehaviour extends Behaviour {
       this.activeIds.clear();
       this.inactiveIds.clear();
       this.scaledNodeIds.clear();
+      this.raisedIds.clear();
       this.appliedNodeState = null;
       this.appliedEdgeState = null;
       this.appliedScale = 1;
@@ -391,6 +421,9 @@ export class HoverActivateBehaviour extends Behaviour {
       this.scaledNodeIds.clear();
     }
     this.appliedScale = 1;
+
+    // Drop the active set back to its natural stacking.
+    this.resetRaise();
 
     this.current = null;
     this.appliedNodeState = null;
@@ -453,6 +486,10 @@ export class HoverActivateBehaviour extends Behaviour {
     // (so neighbour shapes are included). State+scale are independent
     // dimensions of the zoom-tier — either, both, or neither may activate.
     if (picked.scale !== 1) this.applyScale(picked.scale);
+
+    // Lift the finalised active set above the rest so unrelated nodes / edges
+    // don't paint over the highlighted data.
+    if (this.opts.raiseActive) this.applyRaise();
 
     this.opts.onHover?.(target);
   }
@@ -544,6 +581,40 @@ export class HoverActivateBehaviour extends Behaviour {
       this.scaledNodeIds.add(id);
     }
     this.appliedScale = scale;
+  }
+
+  /**
+   * Raise the current hovered set (`current` + `activeIds`) above their peers
+   * via `renderer.raiseShape` / `raiseConnector`. `activeIds` is a flat set of
+   * mixed kinds, so each id is dispatched by `hasShape` / `hasConnector`.
+   * Tracked in {@link raisedIds} so {@link resetRaise} restores exactly the
+   * ids we touched.
+   */
+  private applyRaise(): void {
+    const renderer = this.layer?.getRenderer();
+    if (!renderer) return;
+    const z = HoverActivateBehaviour.RAISED_Z_INDEX;
+    const raise = (id: string): void => {
+      if (renderer.hasShape(id)) renderer.raiseShape(id, z);
+      else if (renderer.hasConnector(id)) renderer.raiseConnector(id, z);
+      else return;
+      this.raisedIds.add(id);
+    };
+    if (this.current) raise(this.current.id);
+    for (const id of this.activeIds) raise(id);
+  }
+
+  /** Reset every id raised by {@link applyRaise} back to the default z (0). */
+  private resetRaise(): void {
+    if (this.raisedIds.size === 0) return;
+    const renderer = this.layer?.getRenderer();
+    if (renderer) {
+      for (const id of this.raisedIds) {
+        if (renderer.hasShape(id)) renderer.raiseShape(id, 0);
+        else if (renderer.hasConnector(id)) renderer.raiseConnector(id, 0);
+      }
+    }
+    this.raisedIds.clear();
   }
 
   /**

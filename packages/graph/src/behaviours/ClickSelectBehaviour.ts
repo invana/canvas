@@ -114,6 +114,15 @@ export interface ClickSelectBehaviourOptions extends BehaviourOptions {
    */
   unselectedState?: string;
 
+  /**
+   * Lift the selected set (seeds + degree-expanded neighbours) above the rest
+   * within its render layer, so unrelated nodes / edges don't paint over the
+   * selection. Edges raise above other edges (still below all nodes); nodes
+   * raise above other nodes. Reset when the selection clears. Visual-only —
+   * restacking doesn't affect hit-testing. Default `true`.
+   */
+  raiseActive?: boolean;
+
   /** Clear selection when clicking the empty canvas background. Default `true`. */
   clearOnBackground?: boolean;
 
@@ -133,6 +142,7 @@ interface ResolvedOptions {
   direction: SelectDirection;
   state: string;
   unselectedState: string | undefined;
+  raiseActive: boolean;
   clearOnBackground: boolean;
   onSelect: ((element: SelectableElement) => void) | undefined;
   onDeselect: ((element: SelectableElement) => void) | undefined;
@@ -151,6 +161,7 @@ function resolveOptions(
     direction: 'both',
     state: 'selected',
     unselectedState: undefined,
+    raiseActive: true,
     clearOnBackground: true,
     onSelect: undefined,
     onDeselect: undefined,
@@ -169,6 +180,7 @@ function resolveOptions(
           ? undefined
           : patch.unselectedState
         : base.unselectedState,
+    raiseActive: patch.raiseActive ?? base.raiseActive,
     clearOnBackground: patch.clearOnBackground ?? base.clearOnBackground,
     onSelect: 'onSelect' in patch ? patch.onSelect : base.onSelect,
     onDeselect: 'onDeselect' in patch ? patch.onDeselect : base.onDeselect,
@@ -197,6 +209,15 @@ export class ClickSelectBehaviour extends Behaviour {
   private selected = new Map<string, SelectableElementType>();
   /** Ids currently rendered with the `unselectedState`. */
   private unselectedIds = new Set<string>();
+
+  /**
+   * `gfx.zIndex` written to the selected set when `raiseActive` is on. Any
+   * value above the default `0` lifts the element over its untouched peers;
+   * `1` matches `HoverActivateBehaviour`'s raise tier.
+   */
+  private static readonly RAISED_Z_INDEX = 1;
+  /** Ids currently raised via `renderer.raiseShape` / `raiseConnector`. */
+  private readonly raisedIds = new Set<string>();
 
   /** True when the most recent click already consumed an element. */
   private clickConsumedByElement = false;
@@ -349,16 +370,22 @@ export class ClickSelectBehaviour extends Behaviour {
     const expansionChanged =
       (patch.degree !== undefined && patch.degree !== prev.degree) ||
       (patch.direction !== undefined && patch.direction !== prev.direction);
+    const raiseChanged =
+      patch.raiseActive !== undefined && patch.raiseActive !== prev.raiseActive;
 
     const seedsSnapshot = new Map(this.seeds);
     const hadSelection = this.selected.size > 0;
+    const reapply = hadSelection && (stateChanged || unselChanged || expansionChanged);
 
-    if (hadSelection && (stateChanged || unselChanged || expansionChanged)) {
-      this.clearVisualsOnly();
-    }
+    if (reapply) this.clearVisualsOnly();
     this.opts = resolveOptions(this.opts, patch);
-    if (hadSelection && (stateChanged || unselChanged || expansionChanged)) {
+    if (reapply) {
+      // The full reapply path re-raises through the new opts already.
       this.applySelection(seedsSnapshot, false);
+    } else if (hadSelection && raiseChanged) {
+      // Pure raise toggle on a live selection — apply / reset in place.
+      if (this.opts.raiseActive) this.applyRaise();
+      else this.resetRaise();
     }
   }
 
@@ -480,6 +507,10 @@ export class ClickSelectBehaviour extends Behaviour {
       this.applyUnselected(this.selected);
     }
 
+    // Lift the selected set above the rest so unrelated nodes / edges don't
+    // paint over it.
+    if (this.opts.raiseActive) this.applyRaise();
+
     if (!emitEvents) return;
 
     // Diff and fire callbacks.
@@ -532,6 +563,7 @@ export class ClickSelectBehaviour extends Behaviour {
       this.seeds.clear();
       this.selected.clear();
       this.unselectedIds.clear();
+      this.resetRaise();
       return;
     }
     for (const [id, type] of this.selected) {
@@ -545,9 +577,40 @@ export class ClickSelectBehaviour extends Behaviour {
         this.layer.setEdgeState(id, unsel, false);
       }
     }
+    this.resetRaise();
     this.seeds.clear();
     this.selected.clear();
     this.unselectedIds.clear();
+  }
+
+  /**
+   * Raise the selected set above its peers via `renderer.raiseShape` /
+   * `raiseConnector`. `selected` carries the element type per id, so each is
+   * dispatched directly. Tracked in {@link raisedIds} so {@link resetRaise}
+   * restores exactly the ids we touched.
+   */
+  private applyRaise(): void {
+    const renderer = this.layer?.getRenderer();
+    if (!renderer) return;
+    const z = ClickSelectBehaviour.RAISED_Z_INDEX;
+    for (const [id, type] of this.selected) {
+      if (type === 'shape') renderer.raiseShape(id, z);
+      else renderer.raiseConnector(id, z);
+      this.raisedIds.add(id);
+    }
+  }
+
+  /** Reset every id raised by {@link applyRaise} back to the default z (0). */
+  private resetRaise(): void {
+    if (this.raisedIds.size === 0) return;
+    const renderer = this.layer?.getRenderer();
+    if (renderer) {
+      for (const id of this.raisedIds) {
+        if (renderer.hasShape(id)) renderer.raiseShape(id, 0);
+        else if (renderer.hasConnector(id)) renderer.raiseConnector(id, 0);
+      }
+    }
+    this.raisedIds.clear();
   }
 
   private applyUnselected(selected: Map<string, SelectableElementType>): void {

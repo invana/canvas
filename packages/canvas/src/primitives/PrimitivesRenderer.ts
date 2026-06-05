@@ -319,6 +319,15 @@ export class PrimitivesRenderer {
     // wave) is clipped visually by the overlapping shape.
     this.connectorLayer = new Container();
     this.shapeLayer = new Container();
+    // Sort each sub-layer's children by `gfx.zIndex` so a primitive can be
+    // lifted above its peers within its own layer (see `raiseShape` /
+    // `raiseConnector`). Default `zIndex` is 0, and JS `Array.sort` is stable,
+    // so untouched primitives keep their natural insertion order. Sorting is
+    // confined to each sub-layer — `_container` itself is NOT sortable, so the
+    // connector-below-shape ordering of the two layers is preserved (a raised
+    // edge still sits under every node).
+    this.connectorLayer.sortableChildren = true;
+    this.shapeLayer.sortableChildren = true;
     this._container.addChild(this.connectorLayer);
     this._container.addChild(this.shapeLayer);
     this.registerBuiltins();
@@ -520,6 +529,39 @@ export class PrimitivesRenderer {
     if (!inst) return;
     inst.gfxScale = scale;
     inst.shape.gfx.scale.set(scale, scale);
+  }
+
+  /**
+   * Restack a shape within the shape layer by writing its `gfx.zIndex`. The
+   * shape layer renders with `sortableChildren`, so a higher `zIndex` paints
+   * later (on top of peers with a lower one); `zIndex = 0` (the default)
+   * restores natural insertion order. Use to lift a hovered / selected node
+   * above the rest so unrelated nodes don't draw over it.
+   *
+   * Visual-only: this does NOT touch geometry, transform, or the hit index
+   * (closest-wins hit resolution already consults the spec `zIndex` recorded
+   * at insert). Restacking is confined to the shape layer, so a raised node
+   * still renders above every connector.
+   */
+  raiseShape(id: string, zIndex: number): void {
+    const inst = this.shapeInstances.get(id);
+    if (!inst) return;
+    inst.shape.gfx.zIndex = zIndex;
+  }
+
+  /**
+   * Restack a connector within the connector layer by writing its `gfx.zIndex`
+   * — the connector-side sibling of {@link raiseShape}. A higher `zIndex`
+   * paints later (above peer edges); `zIndex = 0` restores insertion order.
+   * Use to lift a hovered / selected edge above unrelated edges crossing it.
+   *
+   * Confined to the connector layer, which renders below the shape layer, so a
+   * raised edge still sits under every node.
+   */
+  raiseConnector(id: string, zIndex: number): void {
+    const inst = this.connectorInstances.get(id);
+    if (!inst) return;
+    inst.connector.gfx.zIndex = zIndex;
   }
 
   /**
@@ -1389,14 +1431,21 @@ export class PrimitivesRenderer {
   // ─── Hit-testing + pointer router ────────────────────────────────────
 
   /**
-   * Resolve the hit at a world point under closest-wins rules. Two
+   * Resolve the hit at a world point under render-order rules. Two
    * priority bands:
    *
    *   1. **Exact geometric hits** — any candidate whose
    *      `IHitArea.contains` (shapes) or stroke-tolerance polyline
-   *      distance (connectors) covers the cursor. Among these, the
-   *      closest one to its origin wins; equal distances tie-break by
-   *      higher `zIndex`. No "first-match" ambiguity under overlap.
+   *      distance (connectors) covers the cursor. Ranked to match what
+   *      is drawn on top:
+   *        a. higher `zIndex` wins (mirrors visual stacking);
+   *        b. on equal `zIndex`, a shape (node) beats a connector (edge)
+   *           — shapes render above connectors;
+   *        c. on equal `zIndex` *and* same kind, the closest one to its
+   *           origin / polyline wins.
+   *      So a node sitting over an edge takes the hit even when the edge's
+   *      polyline passes nearer the cursor than the node's centre — and an
+   *      edge with an explicitly higher `zIndex` still wins.
    *   2. **Floor fallback** — if NO exact hit, return the closest
    *      candidate whose origin sits within `hitFloorPx` screen pixels
    *      of the cursor. Lets tiny pinpoints stay hoverable in sparse
@@ -1420,10 +1469,17 @@ export class PrimitivesRenderer {
       const res = this.geometricHit(c.kind, c.id, worldX, worldY);
       if (!res) continue;
       if (res.exact) {
+        // Rank to match render order: zIndex first (higher = on top), then
+        // shape-over-connector on a tie (nodes draw above edges), then the
+        // closest origin/polyline within the same kind.
+        const kindRank = c.kind === 'shape' ? 1 : 0;
+        const bestKindRank = bestExact && bestExact.kind === 'shape' ? 1 : 0;
         if (
           bestExact === null ||
-          res.distSq < bestExact.distSq ||
-          (res.distSq === bestExact.distSq && c.zIndex > bestExact.zIndex)
+          c.zIndex > bestExact.zIndex ||
+          (c.zIndex === bestExact.zIndex &&
+            (kindRank > bestKindRank ||
+              (kindRank === bestKindRank && res.distSq < bestExact.distSq)))
         ) {
           bestExact = { kind: c.kind, id: c.id, distSq: res.distSq, zIndex: c.zIndex };
         }
