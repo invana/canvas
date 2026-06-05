@@ -12,9 +12,14 @@
  *   - **Delete** — click a node (cascades its edges) or an edge to erase it
  *                  (Erase on).
  *
- * Selecting a single node or edge (in Select) opens an `InspectorPanel` to edit
- * its **label** and arbitrary **key/value properties** (`data`); Apply commits
- * an undoable update.
+ * Clicking a single node or edge (in Select) opens an `InspectorPanel`. In this
+ * modeller both edit a single **type** field (`InspectorPanel typeAsLabel`) that
+ * also drives the drawn label — in modelling the type *is* what's shown — plus
+ * arbitrary **key/value properties** (`data`); edges add a **Reverse direction**
+ * button. Apply commits an undoable update. The inspector is driven by a dedicated
+ * `ClickInspectBehaviour` (separate from `ClickSelectBehaviour`), so it always
+ * follows the element you last clicked, independent of the selection used for
+ * multi-node drag.
  *
  * The toolbar self-wires from two providers: `GraphToolProvider` holds the
  * active tool + node shape (the behaviours below gate their `enabled` on
@@ -49,6 +54,7 @@ import {
   WheelZoomBehaviour,
   DragNodeBehaviour,
   ClickSelectBehaviour,
+  ClickInspectBehaviour,
   CreateNodeBehaviour,
   DrawEdgeBehaviour,
   EraseBehaviour,
@@ -72,7 +78,7 @@ import type {
   GraphEdge,
   NodeShapeOptions,
   ContextMenuEvent,
-  ClickSelectBehaviour as EngineClickSelectBehaviour,
+  ClickInspectBehaviour as EngineClickInspectBehaviour,
   GraphLayer as EngineGraphLayer,
 } from '@invana/graph';
 import { TooltipProvider, type MenuItem } from '@invana/ui';
@@ -106,7 +112,8 @@ const undirectedPair = (e: GraphEdge): string | null =>
   e.source === e.target ? null : [e.source, e.target].sort().join('::');
 
 const HINTS: Record<string, string> = {
-  select: 'Drag a node to move it · click to select · shift-click to multi-select',
+  select:
+    'Drag a node to move it · click a node or edge to edit it · click empty canvas to clear',
   add: 'Click empty canvas to add a node · pick its shape in the toolbar · Esc to exit',
   connect: 'Drag node→node to connect · release on the same node for a self-loop · Esc to exit',
   delete: 'Click a node (removes its edges) or an edge to erase it · Esc to exit',
@@ -131,7 +138,11 @@ function DrawingTools() {
     <>
       {/* Mode-gated — only `enabled` flips; nothing remounts. */}
       <DragNodeBehaviour layerId="graph" enabled={tool === 'select'} />
-      <ClickSelectBehaviour layerId="graph" enabled={tool === 'select'} multiple />
+      <ClickSelectBehaviour layerId="graph" enabled={tool === 'select'} multiple={false} />
+      {/* Click-to-edit target for the InspectorPanel — a dedicated behaviour so
+          the editor follows the last-clicked node/edge regardless of the
+          (multi-)selection ClickSelect maintains for dragging. */}
+      <ClickInspectBehaviour layerId="graph" enabled={tool === 'select'} />
       <CreateNodeBehaviour
         layerId="graph"
         enabled={tool === 'add'}
@@ -169,9 +180,11 @@ function DrawingTools() {
         nodeKindIcons={{ circle: Circle, rect: Square, diamond: Diamond }}
       />
 
-      {/* Select a single node/edge (Select tool) → edit its label + key/value
-          properties here; Apply commits an undoable update. */}
-      <InspectorPanel layerId="graph" position="top-right" />
+      {/* Click a node/edge (Select tool) → edit its `type` (shown as the drawn
+          label in modelling) + key/value properties; edges add a reverse-direction
+          button. `typeAsLabel` mirrors the type to the label for both. Apply
+          commits an undoable update. Reads the click-inspect target above. */}
+      <InspectorPanel layerId="graph" position="top-right" typeAsLabel />
 
       {/* Contextual hint for the active tool. */}
       <Panel position="bottom-center">
@@ -186,10 +199,12 @@ function DrawingTools() {
  * carrying **real, undoable** edits wired through the modeller's hooks (so the
  * toolbar's Undo / Redo reverse them):
  *
- *   - **Node** — Edit (selects it → opens the `InspectorPanel`), Pin / Unpin
- *     (`store.updateNode`), Add connected node (`upsertNode` + `upsertEdge`,
- *     journalled via `useDrawHistory`), Delete (cascade `removeNode`, journalled).
- *   - **Edge** — Reverse direction (`updateEdge`), Delete (`removeEdge`, journalled).
+ *   - **Node** — Edit (targets it on `ClickInspectBehaviour` → opens the
+ *     `InspectorPanel`), Pin / Unpin (`store.updateNode`), Add connected node
+ *     (`upsertNode` + `upsertEdge`, journalled via `useDrawHistory`), Delete
+ *     (cascade `removeNode`, journalled).
+ *   - **Edge** — Edit (targets it on `ClickInspectBehaviour`), Reverse direction
+ *     (`updateEdge`), Delete (`removeEdge`, journalled).
  *   - **Canvas** — Add node here (`upsertNode` at the cursor, journalled), Fit to
  *     content (`useFitContent`), Clear all (`useClearGraph`, undoable).
  *
@@ -213,7 +228,7 @@ function ModellerContextMenu() {
       const layer = canvas.layers.get<EngineGraphLayer>('graph');
       if (!layer) return;
       const store = layer.store;
-      const select = canvas.behaviours.get<EngineClickSelectBehaviour>('click-select');
+      const inspect = canvas.behaviours.get<EngineClickInspectBehaviour>('click-inspect');
 
       // Drop a fresh node at `pos`, optionally linking it from `fromId`; journal
       // both mutations so Undo removes them.
@@ -243,7 +258,7 @@ function ModellerContextMenu() {
             label: 'Edit properties…',
             onClick: () => {
               setTool('select'); // arm Select so the inspector + drag are live
-              select?.select(id, 'shape');
+              inspect?.setTarget({ kind: 'node', id });
               close();
             },
           },
@@ -284,6 +299,15 @@ function ModellerContextMenu() {
       } else if (e.targetType === 'edge' && e.id) {
         const id = e.id;
         items = [
+          {
+            id: 'edit',
+            label: 'Edit properties…',
+            onClick: () => {
+              setTool('select'); // arm Select so the inspector is live
+              inspect?.setTarget({ kind: 'edge', id });
+              close();
+            },
+          },
           {
             id: 'reverse',
             label: 'Reverse direction',

@@ -72,6 +72,9 @@ export type { HoverActivateBehaviourProps } from './behaviours/HoverActivateBeha
 export { ClickSelectBehaviour } from './behaviours/ClickSelectBehaviour';
 export type { ClickSelectBehaviourProps } from './behaviours/ClickSelectBehaviour';
 
+export { ClickInspectBehaviour } from './behaviours/ClickInspectBehaviour';
+export type { ClickInspectBehaviourProps } from './behaviours/ClickInspectBehaviour';
+
 export { BrushSelectBehaviour } from './behaviours/BrushSelectBehaviour';
 export type { BrushSelectBehaviourProps } from './behaviours/BrushSelectBehaviour';
 
@@ -116,6 +119,7 @@ export {
   useCanvasEvent,
   useClearGraph,
   useSelection,
+  useInspectTarget,
   useHistory,
   useClipboard,
   useGrid,
@@ -137,6 +141,7 @@ export type {
   UseClearGraphResult,
   UseSelectionOptions,
   UseSelectionResult,
+  UseInspectTargetOptions,
   UseHistoryOptions,
   UseHistoryResult,
   UseClipboardOptions,

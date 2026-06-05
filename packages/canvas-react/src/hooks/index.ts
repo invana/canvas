@@ -13,6 +13,8 @@ export { useClearGraph } from './useClearGraph';
 export type { UseClearGraphResult } from './useClearGraph';
 export { useSelection } from './useSelection';
 export type { UseSelectionOptions, UseSelectionResult } from './useSelection';
+export { useInspectTarget } from './useInspectTarget';
+export type { UseInspectTargetOptions } from './useInspectTarget';
 export { useHistory } from './useHistory';
 export type { UseHistoryOptions, UseHistoryResult } from './useHistory';
 export { useClipboard } from './useClipboard';

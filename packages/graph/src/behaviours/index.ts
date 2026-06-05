@@ -23,6 +23,13 @@ export type {
   SelectionSnapshot,
 } from './ClickSelectBehaviour';
 
+export { ClickInspectBehaviour } from './ClickInspectBehaviour';
+export type {
+  ClickInspectBehaviourOptions,
+  ClickInspectEventMap,
+  InspectTarget,
+} from './ClickInspectBehaviour';
+
 export { BrushSelectBehaviour } from './BrushSelectBehaviour';
 export type {
   BrushSelectBehaviourOptions,

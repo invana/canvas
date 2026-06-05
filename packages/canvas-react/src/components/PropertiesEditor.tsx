@@ -5,6 +5,8 @@ import { Button } from '@invana/ui';
 export interface PropertiesEditorValues {
   /** The element's label text. */
   label: string;
+  /** The element's free-form type tag (maps to `node.type` / `edge.type`). Only edited when `showType`. */
+  type?: string;
   /** Arbitrary key/value metadata (maps to `node.data` / `edge.data`). */
   data: Record<string, string>;
 }
@@ -29,6 +31,14 @@ export interface PropertiesEditorProps {
   submitLabel?: string;
   /** Show the label field. Default `true`. */
   showLabel?: boolean;
+  /** Show an editable `type` field above the properties list. Default `false`. */
+  showType?: boolean;
+  /**
+   * When provided, render a "Reverse direction" button in the footer that
+   * invokes this callback immediately (i.e. not on Apply). Used for edges to
+   * swap source/target. Omit for elements that have no direction.
+   */
+  onReverse?: () => void;
   className?: string;
 }
 
@@ -55,9 +65,12 @@ export function PropertiesEditor({
   onSubmit,
   submitLabel = 'Apply',
   showLabel = true,
+  showType = false,
+  onReverse,
   className,
 }: PropertiesEditorProps) {
   const [label, setLabel] = useState(defaults?.label ?? '');
+  const [type, setType] = useState(defaults?.type ?? '');
   const [rows, setRows] = useState<Row[]>(() =>
     Object.entries(defaults?.data ?? {}).map(([k, v]) => ({ k, v })),
   );
@@ -73,7 +86,7 @@ export function PropertiesEditor({
       const key = k.trim();
       if (key) data[key] = v;
     }
-    onSubmit({ label, data });
+    onSubmit(showType ? { label, type, data } : { label, data });
   };
 
   return (
@@ -88,6 +101,18 @@ export function PropertiesEditor({
             value={label}
             placeholder="Label text"
             onChange={(e: ChangeEvent<HTMLInputElement>) => setLabel(e.target.value)}
+          />
+        </label>
+      )}
+
+      {showType && (
+        <label style={fieldStyle}>
+          <span style={captionStyle}>Type</span>
+          <input
+            style={inputStyle}
+            value={type}
+            placeholder="Type tag"
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setType(e.target.value)}
           />
         </label>
       )}
@@ -126,7 +151,18 @@ export function PropertiesEditor({
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: onReverse ? 'space-between' : 'flex-end',
+          alignItems: 'center',
+        }}
+      >
+        {onReverse && (
+          <Button variant="outline" size="sm" onClick={onReverse}>
+            Reverse direction
+          </Button>
+        )}
         <Button onClick={apply}>{submitLabel}</Button>
       </div>
     </div>
