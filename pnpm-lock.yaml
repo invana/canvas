@@ -69,20 +69,23 @@ importers:
         specifier: workspace:*
         version: link:../../packages/graph-layout-elkjs
       '@invana/styling':
-        specifier: github:invana/design-kit#releases/styling
-        version: https://codeload.github.com/invana/design-kit/tar.gz/1c5f03bd18c056c0d52fcee855b9b8a5a64244f7(tailwindcss@4.3.0)
+        specifier: github:invana/design-kit#path:packages/styling&main
+        version: https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/styling(tailwindcss@4.3.0)
       '@invana/themes':
-        specifier: github:invana/design-kit#releases/themes
-        version: https://codeload.github.com/invana/design-kit/tar.gz/baa9ed398231529eb1e78e27702eb3549e5ee2cd(@invana/styling@https://codeload.github.com/invana/design-kit/tar.gz/1c5f03bd18c056c0d52fcee855b9b8a5a64244f7(tailwindcss@4.3.0))(@invana/ui@https://codeload.github.com/invana/design-kit/tar.gz/4dd41f810b068e98b6dd69c37fef068312f10a50(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: github:invana/design-kit#path:packages/themes&main
+        version: https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/themes(@invana/styling@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/styling(tailwindcss@4.3.0))(@invana/ui@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/ui(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@invana/ui':
-        specifier: github:invana/design-kit#releases/ui
-        version: https://codeload.github.com/invana/design-kit/tar.gz/4dd41f810b068e98b6dd69c37fef068312f10a50(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0)
+        specifier: github:invana/design-kit#path:packages/ui&main
+        version: https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/ui(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0)
       d3-delaunay:
         specifier: ^6.0.4
         version: 6.0.4
       lil-gui:
         specifier: ^0.21.0
         version: 0.21.0
+      lucide-react:
+        specifier: ^0.562.0
+        version: 0.562.0(react@18.3.1)
       maplibre-gl:
         specifier: ^4.7.1
         version: 4.7.1
@@ -175,6 +178,9 @@ importers:
       '@invana/graph-layout-d3-force':
         specifier: workspace:*
         version: link:../graph-layout-d3-force
+      '@invana/ui':
+        specifier: github:invana/design-kit#path:packages/ui&main
+        version: https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/ui(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0)
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -202,24 +208,21 @@ importers:
 
   packages/canvas-ui:
     devDependencies:
-      '@invana/canvas':
-        specifier: workspace:*
-        version: link:../canvas
-      '@invana/canvas-react':
-        specifier: workspace:*
-        version: link:../canvas-react
+      '@invana/forms':
+        specifier: github:invana/design-kit#path:packages/forms&main
+        version: https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/forms(@invana/styling@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/styling(tailwindcss@4.3.0))(@invana/ui@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/ui(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1)
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
       '@invana/styling':
-        specifier: github:invana/design-kit#releases/styling
-        version: https://codeload.github.com/invana/design-kit/tar.gz/1c5f03bd18c056c0d52fcee855b9b8a5a64244f7(tailwindcss@4.3.0)
+        specifier: github:invana/design-kit#path:packages/styling&main
+        version: https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/styling(tailwindcss@4.3.0)
       '@invana/themes':
-        specifier: github:invana/design-kit#releases/themes
-        version: https://codeload.github.com/invana/design-kit/tar.gz/baa9ed398231529eb1e78e27702eb3549e5ee2cd(@invana/styling@https://codeload.github.com/invana/design-kit/tar.gz/1c5f03bd18c056c0d52fcee855b9b8a5a64244f7(tailwindcss@4.3.0))(@invana/ui@https://codeload.github.com/invana/design-kit/tar.gz/4dd41f810b068e98b6dd69c37fef068312f10a50(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: github:invana/design-kit#path:packages/themes&main
+        version: https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/themes(@invana/styling@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/styling(tailwindcss@4.3.0))(@invana/ui@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/ui(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@invana/ui':
-        specifier: github:invana/design-kit#releases/ui
-        version: https://codeload.github.com/invana/design-kit/tar.gz/4dd41f810b068e98b6dd69c37fef068312f10a50(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0)
+        specifier: github:invana/design-kit#path:packages/ui&main
+        version: https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/ui(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0)
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -229,15 +232,15 @@ importers:
       '@types/react-dom':
         specifier: ^18.3.1
         version: 18.3.7(@types/react@18.3.29)
-      pixi.js:
-        specifier: ^8.18.1
-        version: 8.18.1
       react:
         specifier: ^18.3.1
         version: 18.3.1
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
+      react-hook-form:
+        specifier: ^7.69.0
+        version: 7.76.0(react@18.3.1)
       tsup:
         specifier: ^8.3.5
         version: 8.5.1(postcss@8.5.12)(tsx@4.21.0)(typescript@5.9.2)(yaml@2.8.3)
@@ -1067,23 +1070,33 @@ packages:
   '@iconify/types@2.0.0':
     resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
 
-  '@invana/styling@https://codeload.github.com/invana/design-kit/tar.gz/1c5f03bd18c056c0d52fcee855b9b8a5a64244f7':
-    resolution: {tarball: https://codeload.github.com/invana/design-kit/tar.gz/1c5f03bd18c056c0d52fcee855b9b8a5a64244f7}
+  '@invana/forms@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/forms':
+    resolution: {path: packages/forms, tarball: https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b}
+    version: 0.0.0
+    peerDependencies:
+      '@invana/styling': workspace:*
+      '@invana/ui': workspace:*
+      react: ^18 || ^19
+      react-dom: ^18 || ^19
+      react-hook-form: ^7
+
+  '@invana/styling@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/styling':
+    resolution: {path: packages/styling, tarball: https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b}
     version: 0.0.0
     peerDependencies:
       tailwindcss: ^4.1.18
 
-  '@invana/themes@https://codeload.github.com/invana/design-kit/tar.gz/baa9ed398231529eb1e78e27702eb3549e5ee2cd':
-    resolution: {tarball: https://codeload.github.com/invana/design-kit/tar.gz/baa9ed398231529eb1e78e27702eb3549e5ee2cd}
+  '@invana/themes@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/themes':
+    resolution: {path: packages/themes, tarball: https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b}
     version: 0.0.0
     peerDependencies:
-      '@invana/styling': 0.0.0
-      '@invana/ui': 0.0.0
+      '@invana/styling': workspace:*
+      '@invana/ui': workspace:*
       react: ^18 || ^19
       react-dom: ^18 || ^19
 
-  '@invana/ui@https://codeload.github.com/invana/design-kit/tar.gz/4dd41f810b068e98b6dd69c37fef068312f10a50':
-    resolution: {tarball: https://codeload.github.com/invana/design-kit/tar.gz/4dd41f810b068e98b6dd69c37fef068312f10a50}
+  '@invana/ui@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/ui':
+    resolution: {path: packages/ui, tarball: https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b}
     version: 0.0.0
     peerDependencies:
       react: ^18 || ^19
@@ -5364,18 +5377,38 @@ snapshots:
 
   '@iconify/types@2.0.0': {}
 
-  '@invana/styling@https://codeload.github.com/invana/design-kit/tar.gz/1c5f03bd18c056c0d52fcee855b9b8a5a64244f7(tailwindcss@4.3.0)':
+  '@invana/forms@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/forms(@invana/styling@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/styling(tailwindcss@4.3.0))(@invana/ui@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/ui(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@invana/styling': https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/styling(tailwindcss@4.3.0)
+      '@invana/ui': https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/ui(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0)
+      '@radix-ui/react-checkbox': 1.3.3(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-label': 2.1.8(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-radio-group': 1.3.8(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-select': 2.2.6(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-slider': 1.3.6(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-slot': 1.2.4(@types/react@18.3.29)(react@18.3.1)
+      '@radix-ui/react-switch': 1.2.6(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      class-variance-authority: 0.7.1
+      lucide-react: 0.562.0(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-hook-form: 7.76.0(react@18.3.1)
+    transitivePeerDependencies:
+      - '@types/react'
+      - '@types/react-dom'
+
+  '@invana/styling@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/styling(tailwindcss@4.3.0)':
     dependencies:
       tailwindcss: 4.3.0
 
-  '@invana/themes@https://codeload.github.com/invana/design-kit/tar.gz/baa9ed398231529eb1e78e27702eb3549e5ee2cd(@invana/styling@https://codeload.github.com/invana/design-kit/tar.gz/1c5f03bd18c056c0d52fcee855b9b8a5a64244f7(tailwindcss@4.3.0))(@invana/ui@https://codeload.github.com/invana/design-kit/tar.gz/4dd41f810b068e98b6dd69c37fef068312f10a50(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@invana/themes@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/themes(@invana/styling@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/styling(tailwindcss@4.3.0))(@invana/ui@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/ui(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@invana/styling': https://codeload.github.com/invana/design-kit/tar.gz/1c5f03bd18c056c0d52fcee855b9b8a5a64244f7(tailwindcss@4.3.0)
-      '@invana/ui': https://codeload.github.com/invana/design-kit/tar.gz/4dd41f810b068e98b6dd69c37fef068312f10a50(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0)
+      '@invana/styling': https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/styling(tailwindcss@4.3.0)
+      '@invana/ui': https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/ui(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@invana/ui@https://codeload.github.com/invana/design-kit/tar.gz/4dd41f810b068e98b6dd69c37fef068312f10a50(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0)':
+  '@invana/ui@https://codeload.github.com/invana/design-kit/tar.gz/1ec30f3745b0073dfc94b44bab07d56040fd0c0b#path:packages/ui(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0)':
     dependencies:
       '@hookform/resolvers': 5.4.0(react-hook-form@7.76.0(react@18.3.1))
       '@radix-ui/react-accordion': 1.2.12(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
