@@ -281,7 +281,7 @@ export class DragNodeBehaviour extends Behaviour {
   private resolveDragSet(grabbedId: string): readonly string[] {
     const layer = this.layer;
     if (!layer || !this.dragSelection) return [grabbedId];
-    if (!layer.hasNodeState(grabbedId, this.selectionState)) return [grabbedId];
+    if (!layer.store.hasNodeState(grabbedId, this.selectionState)) return [grabbedId];
     // Need more than one to be a multi-drag. `grabbedId` is guaranteed present
     // — it carries the state and already passed `filter` at pointerdown.
     const selected = this.selectedNodeIds();
@@ -293,7 +293,7 @@ export class DragNodeBehaviour extends Behaviour {
     const layer = this.layer;
     if (!layer) return [];
     const ids: string[] = [];
-    for (const id of layer.nodesWithState(this.selectionState)) {
+    for (const id of layer.store.nodesWithState(this.selectionState)) {
       if (this.filter && !this.filter(id)) continue;
       ids.push(id);
     }

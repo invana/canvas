@@ -11,7 +11,8 @@
  * `apps/docs/graph/store-plan.md` for the implementation rationale.
  */
 
-import { ColumnStore, EventEmitter } from '@invana/canvas';
+import { ColumnStore, SourceEmitter } from '@invana/canvas';
+import type { CanvasEventBus } from '@invana/canvas';
 
 import { AdjacencyIndex } from './AdjacencyIndex';
 import { FrameFlushScheduler } from './FrameFlushScheduler';
@@ -79,14 +80,32 @@ export class GraphStore {
   private readonly edgeMap: Map<string, GraphEdge> = new Map();
   private readonly childrenIndex: Map<string, Set<string>> = new Map();
 
+  // ─── Interaction state (presence compartment) ───────────────────────────
+  // The *runtime* active-state sets — hover / selected / highlighted toggled by
+  // behaviours and UI. Kept SEPARATE from the cold `states[]` field, which is
+  // the *document* (data-driven) active-state list. The two compartments are
+  // independent: runtime toggles never touch `states[]`, and a data-feed
+  // `updateNode({ states })` never touches these sets (so a feed update can't
+  // wipe a live hover/selection). The renderer reads the **union** of both via
+  // {@link nodeStatesOf}. See `store-owns-state-plan.md` § 0 / § 5.
+  private readonly nodeRuntimeStates: Map<string, Set<string>> = new Map();
+  private readonly edgeRuntimeStates: Map<string, Set<string>> = new Map();
+
   // ─── Indices ────────────────────────────────────────────────────────────
   private readonly outAdj = new AdjacencyIndex();
   private readonly inAdj = new AdjacencyIndex();
   private readonly pending = new PendingEdges();
 
   // ─── Reactivity ─────────────────────────────────────────────────────────
-  /** Public event bus. Subscribe via `store.events.on('node:add', ...)`. */
-  readonly events = new EventEmitter<GraphStoreEventMap>();
+  /**
+   * Public event bus. Subscribe via `store.events.on('node:add', ...)`.
+   *
+   * A `SourceEmitter` (`{ kind: 'store' }`): once the owning layer calls
+   * {@link bindBus} on mount, every emit also publishes a `CanvasEvent` envelope
+   * to the canvas tap channel, so telemetry sees all store mutations
+   * (`store-owns-state-plan.md` § 6).
+   */
+  readonly events: SourceEmitter<GraphStoreEventMap>;
 
   /** Per-flush counters. Reset on `flush()`. */
   private counters = emptyCounters();
@@ -99,6 +118,14 @@ export class GraphStore {
   private pendingEdgeUpdates: Map<string, Partial<GraphEdge>> = new Map();
   private pendingEdgeRemoves: Set<string> = new Set();
   private pendingEdgeOrphans: Set<string> = new Set();
+  /**
+   * Pending runtime-state toggles, keyed by `"<id>\u0000<name>"` so repeated
+   * toggles of the same (id, name) within a flush window collapse to one event.
+   * The emitted `on` is read from live set membership at flush time, so an
+   * add+remove in the same frame nets out correctly.
+   */
+  private pendingNodeStates: Map<string, { id: string; name: string; actor?: string }> = new Map();
+  private pendingEdgeStates: Map<string, { id: string; name: string; actor?: string }> = new Map();
 
   /** Depth of nested `batch()` calls. Flushes only on outermost exit. */
   private batchDepth = 0;
@@ -121,12 +148,27 @@ export class GraphStore {
     this.pendingEdgeTTL = opts.pendingEdgeTTL ?? Infinity;
     const initialCapacity = opts.initialCapacity ?? 256;
 
+    this.events = new SourceEmitter<GraphStoreEventMap>({
+      kind: 'store',
+      id: opts.id ?? 'graph-store',
+    });
+
     this.nodeCols = new ColumnStore(NODE_SCHEMA, { initialCapacity });
     this.edgeCols = new ColumnStore(EDGE_SCHEMA, { initialCapacity });
 
     if (this.flushMode === 'frame') {
       this.flushScheduler = new FrameFlushScheduler(() => this.doFlush());
     }
+  }
+
+  /**
+   * Attach (or detach with `undefined`) the canvas event bus this store's
+   * events forward to. Called by the owning `GraphLayer` on mount/unmount so
+   * store mutations reach the telemetry tap channel (§ 6). Local
+   * `store.events.on(...)` subscribers work with or without a bus.
+   */
+  bindBus(bus: CanvasEventBus | undefined): void {
+    this.events.setBus(bus);
   }
 
   // ─── Public read accessors ──────────────────────────────────────────────
@@ -501,6 +543,7 @@ export class GraphStore {
     // discoverable by id, but the ColumnStore slot is preserved).
     this.nodeMap.delete(id);
     this.nodeCols.remove(id);
+    this.nodeRuntimeStates.delete(id);
 
     this.nodeCols.touch();
     this._version++;
@@ -608,8 +651,198 @@ export class GraphStore {
     this.edgeMap.delete(id);
     this.edgeCols.remove(id);
     this._version++;
+    this.edgeRuntimeStates.delete(id);
     this.enqueueEdgeRemove(id);
     this.scheduleFlushIfNeeded();
+  }
+
+  // ─── Interaction state (presence compartment) ───────────────────────────
+  //
+  // These mutate the *runtime* (presence) compartment only — hover / selected /
+  // highlighted / lineage, toggled by behaviours and UI. They are kept separate
+  // from the document `states[]` field (feed-owned, changed via `updateNode`);
+  // see the field declarations and `store-owns-state-plan.md` § 0 / § 5. Reads
+  // ({@link nodeStatesOf} / {@link hasNodeState} / {@link nodesWithState}) report
+  // the **union** of both compartments — the effective active-state set the
+  // renderer applies. Multi-item callers should wrap writes in {@link batch} so
+  // the N toggles coalesce into a single flush (§ 2.5).
+
+  /**
+   * Add a runtime (presence) state to a node. Idempotent — re-adding an already
+   * active state is a no-op (no event). No-op if the node id is unknown.
+   *
+   * @param id    Node id.
+   * @param name  State name (e.g. `'selected'`, `'highlighted'`, `'lineage'`).
+   * @param _opts Reserved for collaboration — `actor` will tag the change with
+   *   its originating user once presence replication lands (§ 5). Unused today.
+   */
+  addNodeState(id: string, name: string, _opts?: { actor?: string }): void {
+    if (!this.nodeMap.has(id)) return;
+    let set = this.nodeRuntimeStates.get(id);
+    if (set?.has(name)) return;
+    if (!set) {
+      set = new Set();
+      this.nodeRuntimeStates.set(id, set);
+    }
+    set.add(name);
+    this._version++;
+    this.enqueueNodeState(id, name, _opts?.actor);
+    this.scheduleFlushIfNeeded();
+  }
+
+  /**
+   * Remove a runtime (presence) state from a node. No-op if the state isn't
+   * currently active (no event) or the node is unknown.
+   */
+  removeNodeState(id: string, name: string, _opts?: { actor?: string }): void {
+    const set = this.nodeRuntimeStates.get(id);
+    if (!set?.has(name)) return;
+    set.delete(name);
+    if (set.size === 0) this.nodeRuntimeStates.delete(id);
+    this._version++;
+    this.enqueueNodeState(id, name, _opts?.actor);
+    this.scheduleFlushIfNeeded();
+  }
+
+  /**
+   * Toggle a runtime (presence) state on a node — `on ? addNodeState :
+   * removeNodeState`. Convenience for callers (e.g. hover) that compute the
+   * desired membership as a boolean. Default `on = true`.
+   */
+  setNodeState(id: string, name: string, on = true, opts?: { actor?: string }): void {
+    if (on) this.addNodeState(id, name, opts);
+    else this.removeNodeState(id, name, opts);
+  }
+
+  /** Toggle a runtime (presence) state on an edge. See {@link setNodeState}. */
+  setEdgeState(id: string, name: string, on = true, opts?: { actor?: string }): void {
+    if (on) this.addEdgeState(id, name, opts);
+    else this.removeEdgeState(id, name, opts);
+  }
+
+  /**
+   * Strip a runtime (presence) state from every node that carries it, in one
+   * pass — e.g. clearing a transient `'selected'` / `'lineage'` set. Touches the
+   * presence compartment only; a document state of the same name in `states[]`
+   * is unaffected (change those via {@link updateNode}).
+   */
+  clearNodeState(name: string): void {
+    let changed = false;
+    for (const [id, set] of this.nodeRuntimeStates) {
+      if (set.delete(name)) {
+        changed = true;
+        this.enqueueNodeState(id, name);
+        if (set.size === 0) this.nodeRuntimeStates.delete(id);
+      }
+    }
+    if (changed) {
+      this._version++;
+      this.scheduleFlushIfNeeded();
+    }
+  }
+
+  /** Add a runtime (presence) state to an edge. See {@link addNodeState}. */
+  addEdgeState(id: string, name: string, _opts?: { actor?: string }): void {
+    if (!this.edgeMap.has(id)) return;
+    let set = this.edgeRuntimeStates.get(id);
+    if (set?.has(name)) return;
+    if (!set) {
+      set = new Set();
+      this.edgeRuntimeStates.set(id, set);
+    }
+    set.add(name);
+    this._version++;
+    this.enqueueEdgeState(id, name, _opts?.actor);
+    this.scheduleFlushIfNeeded();
+  }
+
+  /** Remove a runtime (presence) state from an edge. See {@link removeNodeState}. */
+  removeEdgeState(id: string, name: string, _opts?: { actor?: string }): void {
+    const set = this.edgeRuntimeStates.get(id);
+    if (!set?.has(name)) return;
+    set.delete(name);
+    if (set.size === 0) this.edgeRuntimeStates.delete(id);
+    this._version++;
+    this.enqueueEdgeState(id, name, _opts?.actor);
+    this.scheduleFlushIfNeeded();
+  }
+
+  /** Strip a runtime (presence) state from every edge. See {@link clearNodeState}. */
+  clearEdgeState(name: string): void {
+    let changed = false;
+    for (const [id, set] of this.edgeRuntimeStates) {
+      if (set.delete(name)) {
+        changed = true;
+        this.enqueueEdgeState(id, name);
+        if (set.size === 0) this.edgeRuntimeStates.delete(id);
+      }
+    }
+    if (changed) {
+      this._version++;
+      this.scheduleFlushIfNeeded();
+    }
+  }
+
+  /**
+   * Effective active states of a node — the **union** of its document `states[]`
+   * (feed-owned) and its runtime presence set. This is what the renderer iterates
+   * to apply state overlays. Returns a fresh array; empty if the node is unknown
+   * or carries no states.
+   */
+  nodeStatesOf(id: string): readonly string[] {
+    const doc = this.nodeMap.get(id)?.states;
+    const runtime = this.nodeRuntimeStates.get(id);
+    if (!runtime || runtime.size === 0) return doc ? [...doc] : [];
+    if (!doc || doc.length === 0) return [...runtime];
+    const out = new Set<string>(doc);
+    for (const name of runtime) out.add(name);
+    return [...out];
+  }
+
+  /** Effective active states of an edge — union of document + presence. */
+  edgeStatesOf(id: string): readonly string[] {
+    const doc = this.edgeMap.get(id)?.states;
+    const runtime = this.edgeRuntimeStates.get(id);
+    if (!runtime || runtime.size === 0) return doc ? [...doc] : [];
+    if (!doc || doc.length === 0) return [...runtime];
+    const out = new Set<string>(doc);
+    for (const name of runtime) out.add(name);
+    return [...out];
+  }
+
+  /** True iff `name` is in a node's effective (document ∪ presence) state set. */
+  hasNodeState(id: string, name: string): boolean {
+    if (this.nodeRuntimeStates.get(id)?.has(name)) return true;
+    return this.nodeMap.get(id)?.states?.includes(name) ?? false;
+  }
+
+  /** True iff `name` is in an edge's effective (document ∪ presence) state set. */
+  hasEdgeState(id: string, name: string): boolean {
+    if (this.edgeRuntimeStates.get(id)?.has(name)) return true;
+    return this.edgeMap.get(id)?.states?.includes(name) ?? false;
+  }
+
+  /**
+   * Ids of every node whose effective (document ∪ presence) state set contains
+   * `name`. Scans live nodes; useful for snapshots / iteration.
+   */
+  *nodesWithState(name: string): IterableIterator<string> {
+    for (const id of this.nodeMap.keys()) {
+      if (this.nodeRuntimeStates.get(id)?.has(name)) {
+        yield id;
+        continue;
+      }
+      if (this.nodeMap.get(id)?.states?.includes(name)) yield id;
+    }
+  }
+
+  /** Edge sibling of {@link nodesWithState}. */
+  *edgesWithState(name: string): IterableIterator<string> {
+    for (const [id, cold] of this.edgeMap) {
+      if (this.edgeRuntimeStates.get(id)?.has(name) || cold.states?.includes(name)) {
+        yield id;
+      }
+    }
   }
 
   // ─── Bulk operations ────────────────────────────────────────────────────
@@ -738,6 +971,8 @@ export class GraphStore {
   clear(): void {
     this.nodeMap.clear();
     this.edgeMap.clear();
+    this.nodeRuntimeStates.clear();
+    this.edgeRuntimeStates.clear();
     this.childrenIndex.clear();
     this.outAdj.clearAll();
     this.inAdj.clearAll();
@@ -751,6 +986,8 @@ export class GraphStore {
     this.pendingEdgeUpdates.clear();
     this.pendingEdgeRemoves.clear();
     this.pendingEdgeOrphans.clear();
+    this.pendingNodeStates.clear();
+    this.pendingEdgeStates.clear();
     this.counters = emptyCounters();
     this.flushScheduler?.cancel();
     this._version++;
@@ -991,6 +1228,16 @@ export class GraphStore {
     this.pendingEdgeOrphans.add(id);
   }
 
+  /** Queue a node runtime-state change, deduped per `(id, name)` per flush. */
+  private enqueueNodeState(id: string, name: string, actor?: string): void {
+    this.pendingNodeStates.set(`${id}\u0000${name}`, { id, name, actor });
+  }
+
+  /** Queue an edge runtime-state change, deduped per `(id, name)` per flush. */
+  private enqueueEdgeState(id: string, name: string, actor?: string): void {
+    this.pendingEdgeStates.set(`${id}\u0000${name}`, { id, name, actor });
+  }
+
   private scheduleFlushIfNeeded(): void {
     if (this.batchDepth > 0) return;
     if (this.flushMode === 'frame') {
@@ -1022,6 +1269,8 @@ export class GraphStore {
     const edgeUpdates = this.pendingEdgeUpdates;
     const edgeRemoves = this.pendingEdgeRemoves;
     const edgeOrphans = this.pendingEdgeOrphans;
+    const nodeStates = this.pendingNodeStates;
+    const edgeStates = this.pendingEdgeStates;
     const counters = this.counters;
     this.pendingNodeAdds = new Set();
     this.pendingNodeUpdates = new Map();
@@ -1030,6 +1279,8 @@ export class GraphStore {
     this.pendingEdgeUpdates = new Map();
     this.pendingEdgeRemoves = new Set();
     this.pendingEdgeOrphans = new Set();
+    this.pendingNodeStates = new Map();
+    this.pendingEdgeStates = new Map();
     this.counters = emptyCounters();
 
     if (
@@ -1039,7 +1290,9 @@ export class GraphStore {
       edgeAdds.size === 0 &&
       edgeUpdates.size === 0 &&
       edgeRemoves.size === 0 &&
-      edgeOrphans.size === 0
+      edgeOrphans.size === 0 &&
+      nodeStates.size === 0 &&
+      edgeStates.size === 0
     ) {
       return;
     }
@@ -1051,6 +1304,25 @@ export class GraphStore {
     for (const [id, patch] of edgeUpdates) this.events.emit('edge:update', { edgeId: id, patch });
     for (const id of edgeRemoves) this.events.emit('edge:remove', { edgeId: id });
     for (const id of edgeOrphans) this.events.emit('edge:orphaned', { edgeId: id });
+    // Runtime-state toggles — `on` read from live membership so an add+remove in
+    // the same flush window nets out correctly. Document `states[]` changes ride
+    // the `node:update` above, not these.
+    for (const { id, name, actor } of nodeStates.values()) {
+      this.events.emit('node:state', {
+        nodeId: id,
+        name,
+        on: this.nodeRuntimeStates.get(id)?.has(name) ?? false,
+        actor,
+      });
+    }
+    for (const { id, name, actor } of edgeStates.values()) {
+      this.events.emit('edge:state', {
+        edgeId: id,
+        name,
+        on: this.edgeRuntimeStates.get(id)?.has(name) ?? false,
+        actor,
+      });
+    }
     this.events.emit('flush', counters);
   }
 

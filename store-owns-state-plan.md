@@ -105,13 +105,17 @@ the store's set instead of the layer `Map`; the overlay-merge precedence
 
 `grep` for `setNodeState|setEdgeState|clearNodeState|clearEdgeState|nodeStates|edgeStates`:
 
-- `behaviours/ClickSelectBehaviour.ts` (`:532/533/600/601/606/607/651/656`)
-- `behaviours/HoverActivateBehaviour.ts` (`:394-656`, many)
-- `behaviours/LassoSelectBehaviour.ts` (`:452/453/466/467`)
-- `behaviours/BrushSelectBehaviour.ts` (`:505/506/523/524`)
-- `behaviours/ContextMenuBehaviour.ts` (`:224/225/236/237`)
+- `behaviours/ClickSelectBehaviour.ts`
+- `behaviours/HoverActivateBehaviour.ts` (many — toggle on/off)
+- `behaviours/LassoSelectBehaviour.ts`
+- `behaviours/BrushSelectBehaviour.ts`
+- `behaviours/ContextMenuBehaviour.ts`
+- `behaviours/DragNodeBehaviour.ts` (`hasNodeState` / `nodesWithState` reads)
 - `layer/GraphLayer.ts` (owner — `setNodeState` etc. + `syncDataDriven*`)
-- stories: `GraphVisualiser.stories.tsx` (highlight loops — the remaining hand-written case)
+- stories: `GraphVisualiser.stories.tsx` (highlight loops); `Graph/Behaviours/DragNode.stories.ts` (`setNodeState`)
+
+All migrated via a mechanical `layer.<method>` → `layer.store.<method>` rename
+(6 behaviours + 2 stories); the layer methods were deleted (D2).
 
 ---
 
@@ -121,39 +125,44 @@ the store's set instead of the layer `Map`; the overlay-merge precedence
 change. `GraphLayer` (and any other subscriber) reacts to that event the same
 way it reacts to `node:update`.
 
-### 2.1 Store: state ownership
+### 2.1 Store: state ownership  ✅ IMPLEMENTED
 
-Add to `GraphStore`:
-
-```ts
-// Live active-state sets — the single source of truth for interaction state.
-private readonly nodeStateSets = new Map<string, Set<string>>();
-private readonly edgeStateSets = new Map<string, Set<string>>();
-
-addNodeState(id: string, name: string): void      // no-op if absent / already set
-removeNodeState(id: string, name: string): void
-clearNodeState(name: string): void                // strip `name` from every node
-hasNodeState(id: string, name: string): boolean
-nodeStatesOf(id: string): readonly string[]        // for resolveNodeStyle
-*nodesWithState(name: string): Iterable<string>    // replaces layer iterator at :603
-// …edge equivalents
-```
-
-- The store's existing `GraphNode.states` field becomes the **initial seed**:
-  on `upsert`, seed `nodeStateSets` from `node.states`. The `Map` is then the
-  authoritative live set; `states` on the cold record is kept in sync (or
-  treated as seed-only — see Decision D1).
-- Each mutator enqueues a change and `scheduleFlushIfNeeded()`, so it rides the
-  existing frame/sync flush machinery — no new scheduler.
-
-### 2.2 Store event
-
-Extend `GraphStoreEventMap` (`store/types.ts:120`):
+Added to `GraphStore` (presence compartment — separate from cold `states[]`):
 
 ```ts
-'node:state': { nodeId: string; name: string; on: boolean };
-'edge:state': { edgeId: string; name: string; on: boolean };
+private readonly nodeRuntimeStates = new Map<string, Set<string>>();
+private readonly edgeRuntimeStates = new Map<string, Set<string>>();
+
+addNodeState(id, name, opts?: { actor? }): void    // no-op if absent / already set
+removeNodeState(id, name, opts?): void
+setNodeState(id, name, on = true, opts?): void      // boolean toggle → add/remove
+clearNodeState(name): void                          // strip from every node's presence set
+hasNodeState(id, name): boolean                     // union (document ∪ presence)
+nodeStatesOf(id): readonly string[]                 // union — for resolveNodeStyle
+*nodesWithState(name): Iterable<string>             // union
+// …edge equivalents (addEdgeState / … / edgeStatesOf / edgesWithState)
 ```
+
+- `states[]` is **not** seeded into the runtime sets (D1: independent
+  compartments). Reads return the union; `clearNodeState` touches presence only.
+- The `setNodeState`/`setEdgeState` boolean toggles were added on top of
+  add/remove so hover-style callers (which compute membership as a bool) read
+  cleanly; they delegate to add/remove. Not back-compat shims — first-class API.
+- Each mutator enqueues a change + `scheduleFlushIfNeeded()`, riding the existing
+  flush machinery — no new scheduler. Runtime sets are cleaned up in
+  `removeNode`/`removeEdge`/`clear`.
+
+### 2.2 Store event  ✅ IMPLEMENTED
+
+Extended `GraphStoreEventMap` (`store/types.ts`):
+
+```ts
+'node:state': { nodeId: string; name: string; on: boolean; actor?: string };
+'edge:state': { edgeId: string; name: string; on: boolean; actor?: string };
+```
+
+`'store'` was added to `EventSourceKind` in `@invana/canvas`
+(`events/CanvasEvent.ts`) so the store's `SourceEmitter` can tag its envelopes.
 
 Emitted from `doFlush()` alongside the existing `node:update` loop
 (`GraphStore.ts:1047-1054`), deduped through the same enqueue/coalesce path

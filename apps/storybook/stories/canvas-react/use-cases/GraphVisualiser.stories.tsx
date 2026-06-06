@@ -196,14 +196,14 @@ function Visualiser() {
   // The visualiser is read-only, so the actions are **navigation + selection +
   // annotation**, each a single engine method off the `canvas` handed in on
   // `ctx`: `layer.focusNodes/​focusEdges` (zoom), `select.selectNeighbourhood/​
-  // selectAll` (selection), `layer.setNodeState`/​`clearNodeState` (highlight —
-  // the layer tracks which ids carry a state, so no manual bookkeeping). Clipboard
-  // cut/copy/paste lives in `<EditToolbar>`.
+  // selectAll` (selection), `layer.highlightNeighbourhood` +
+  // `store.add/clearNodeState` (highlight — interaction state is owned by the
+  // store, so toggles go through `layer.store`; the layer renders as a
+  // subscriber). Clipboard cut/copy/paste lives in `<EditToolbar>`.
 
   const nodeItems = useCallback(({ id, canvas }: GraphNodeMenuContext): MenuItem[] => {
     const layer = canvas.layers.get<EngineGraphLayer>('graph');
     if (!layer) return [];
-    const store = layer.store;
     const select = canvas.behaviours.get<EngineClickSelectBehaviour>('click-select');
     return [
       { id: 'zoom', label: 'Zoom to node', onClick: () => layer.focusNodes([id]) },
@@ -216,11 +216,7 @@ function Visualiser() {
       {
         id: 'highlight',
         label: 'Highlight neighbours',
-        onClick: () => {
-          layer.setNodeState(id, 'highlighted', true);
-          for (const nb of store.neighborsOf(id, 'both')) layer.setNodeState(nb, 'highlighted', true);
-          for (const ed of store.edgesOf(id, 'both')) layer.setEdgeState(ed.id, 'highlighted', true);
-        },
+        onClick: () => layer.highlightNeighbourhood(id),
       },
     ];
   }, []);
@@ -237,12 +233,15 @@ function Visualiser() {
         id: 'highlight',
         label: 'Highlight edge',
         onClick: () => {
-          layer.setEdgeState(id, 'highlighted', true);
-          const ed = store.getEdge(id);
-          if (ed) {
-            layer.setNodeState(ed.source, 'highlighted', true);
-            layer.setNodeState(ed.target, 'highlighted', true);
-          }
+          // One batch → one flush → one paint (§2.5).
+          store.batch(() => {
+            store.addEdgeState(id, 'highlighted');
+            const ed = store.getEdge(id);
+            if (ed) {
+              store.addNodeState(ed.source, 'highlighted');
+              store.addNodeState(ed.target, 'highlighted');
+            }
+          });
         },
       },
     ];
@@ -251,6 +250,7 @@ function Visualiser() {
   const backgroundItems = useCallback(({ canvas }: GraphBackgroundMenuContext): MenuItem[] => {
     const layer = canvas.layers.get<EngineGraphLayer>('graph');
     if (!layer) return [];
+    const store = layer.store;
     const select = canvas.behaviours.get<EngineClickSelectBehaviour>('click-select');
     return [
       { id: 'fit', label: 'Fit to content', onClick: () => canvas.camera.fitContent(layer.getBounds(), 80) },
@@ -260,8 +260,8 @@ function Visualiser() {
         id: 'clear-hl',
         label: 'Clear highlights',
         onClick: () => {
-          layer.clearNodeState('highlighted');
-          layer.clearEdgeState('highlighted');
+          store.clearNodeState('highlighted');
+          store.clearEdgeState('highlighted');
         },
       },
     ];

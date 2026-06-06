@@ -529,8 +529,8 @@ export class ClickSelectBehaviour extends Behaviour {
     this.seeds = new Map(seeds);
     this.selected = new Map(expanded);
     for (const [id, type] of this.selected) {
-      if (type === 'shape') this.layer.setNodeState(id, this.opts.state, true);
-      else this.layer.setEdgeState(id, this.opts.state, true);
+      if (type === 'shape') this.layer.store.setNodeState(id, this.opts.state, true);
+      else this.layer.store.setEdgeState(id, this.opts.state, true);
     }
 
     if (this.opts.unselectedState && this.selected.size > 0) {
@@ -597,14 +597,14 @@ export class ClickSelectBehaviour extends Behaviour {
       return;
     }
     for (const [id, type] of this.selected) {
-      if (type === 'shape') this.layer.setNodeState(id, this.opts.state, false);
-      else this.layer.setEdgeState(id, this.opts.state, false);
+      if (type === 'shape') this.layer.store.setNodeState(id, this.opts.state, false);
+      else this.layer.store.setEdgeState(id, this.opts.state, false);
     }
     const unsel = this.opts.unselectedState;
     if (unsel) {
       for (const id of this.unselectedIds) {
-        this.layer.setNodeState(id, unsel, false);
-        this.layer.setEdgeState(id, unsel, false);
+        this.layer.store.setNodeState(id, unsel, false);
+        this.layer.store.setEdgeState(id, unsel, false);
       }
     }
     this.resetRaise();
@@ -648,12 +648,12 @@ export class ClickSelectBehaviour extends Behaviour {
     if (!unsel || !this.layer) return;
     for (const node of this.layer.store.nodes()) {
       if (selected.has(node.id)) continue;
-      this.layer.setNodeState(node.id, unsel, true);
+      this.layer.store.setNodeState(node.id, unsel, true);
       this.unselectedIds.add(node.id);
     }
     for (const edge of this.layer.store.edges()) {
       if (selected.has(edge.id)) continue;
-      this.layer.setEdgeState(edge.id, unsel, true);
+      this.layer.store.setEdgeState(edge.id, unsel, true);
       this.unselectedIds.add(edge.id);
     }
   }

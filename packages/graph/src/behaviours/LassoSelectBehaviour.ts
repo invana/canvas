@@ -449,8 +449,8 @@ export class LassoSelectBehaviour extends Behaviour {
     }
 
     const { state } = this.opts;
-    for (const sid of enclosedShapes) layer.setNodeState(sid, state, true);
-    for (const cid of enclosedConnectors) layer.setEdgeState(cid, state, true);
+    for (const sid of enclosedShapes) layer.store.setNodeState(sid, state, true);
+    for (const cid of enclosedConnectors) layer.store.setEdgeState(cid, state, true);
     return { shapeIds: [...enclosedShapes], connectorIds: [...enclosedConnectors] };
   }
 
@@ -463,7 +463,7 @@ export class LassoSelectBehaviour extends Behaviour {
       clickSelect.clearSelection();
       return;
     }
-    layer.clearNodeState(this.opts.state);
-    layer.clearEdgeState(this.opts.state);
+    layer.store.clearNodeState(this.opts.state);
+    layer.store.clearEdgeState(this.opts.state);
   }
 }

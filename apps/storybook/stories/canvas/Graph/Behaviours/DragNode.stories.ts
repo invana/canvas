@@ -90,7 +90,7 @@ export const DragNode: Story = {
     // a pin gets an orange stroke (and unpin removes it).
     graph.store.events.on('node:update', ({ nodeId, patch }) => {
       if (!('pinned' in patch)) return;
-      graph.setNodeState(nodeId, 'is-pinned', patch.pinned === true);
+      graph.store.setNodeState(nodeId, 'is-pinned', patch.pinned === true);
     });
 
     void new D3ForceLayout({

@@ -15,7 +15,7 @@
  * can filter without inspecting `source` (e.g. `'layer:graph:node:click'`).
  */
 
-export type EventSourceKind = 'canvas' | 'layer' | 'behaviour' | 'layout';
+export type EventSourceKind = 'canvas' | 'layer' | 'behaviour' | 'layout' | 'store';
 
 export interface EventSource {
   readonly kind: EventSourceKind;

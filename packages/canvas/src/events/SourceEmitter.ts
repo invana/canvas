@@ -39,7 +39,7 @@ import { assertSerialisableInDev } from './assertSerialisable';
 
 export class SourceEmitter<E extends EventMap = EventMap> extends EventEmitter<E> {
   /**
-   * @param source — `{ kind: 'layer' | 'behaviour' | 'layout' | 'canvas', id }`.
+   * @param source — `{ kind: 'layer' | 'behaviour' | 'layout' | 'canvas' | 'store', id }`.
    *   Identity of this emitter; used as the `source` field of each envelope.
    * @param bus — Optional. When present, every `emit()` also publishes a
    *   `CanvasEvent` envelope to this bus's tap channel. Pass `undefined`

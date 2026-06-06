@@ -221,8 +221,8 @@ export class ContextMenuBehaviour extends Behaviour {
     if (!state) return;
     this.clearStatedTarget();
     if (id === null || targetType === 'canvas') return;
-    if (targetType === 'node') this.layer?.setNodeState(id, state, true);
-    else this.layer?.setEdgeState(id, state, true);
+    if (targetType === 'node') this.layer?.store.setNodeState(id, state, true);
+    else this.layer?.store.setEdgeState(id, state, true);
     this.statedTarget = { type: targetType, id };
   }
 
@@ -233,8 +233,8 @@ export class ContextMenuBehaviour extends Behaviour {
       this.statedTarget = null;
       return;
     }
-    if (target.type === 'node') this.layer?.setNodeState(target.id, state, false);
-    else this.layer?.setEdgeState(target.id, state, false);
+    if (target.type === 'node') this.layer?.store.setNodeState(target.id, state, false);
+    else this.layer?.store.setEdgeState(target.id, state, false);
     this.statedTarget = null;
   }
 }

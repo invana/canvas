@@ -6,7 +6,7 @@
  * Layer-scoped: constructed with a target `layerId` referencing a
  * {@link GraphLayer}. Subscribes to that layer's renderer pointer events
  * (`shape:pointerover` / `connector:pointerover`) and drives layer state via
- * `layer.setNodeState` / `layer.setEdgeState`.
+ * `layer.store.setNodeState` / `layer.store.setEdgeState`.
  *
  * Default `enabled: false` — register, then explicitly enable. Matches the
  * project rule that no behaviour auto-activates.
@@ -391,23 +391,23 @@ export class HoverActivateBehaviour extends Behaviour {
     const edgeState = this.appliedEdgeState ?? this.opts.state;
     if (this.current) {
       if (this.current.type === 'shape') {
-        this.layer.setNodeState(this.current.id, nodeState, false);
+        this.layer.store.setNodeState(this.current.id, nodeState, false);
       } else {
-        this.layer.setEdgeState(this.current.id, edgeState, false);
+        this.layer.store.setEdgeState(this.current.id, edgeState, false);
       }
     }
     for (const id of this.activeIds) {
       // Active ids can be either nodes or edges; try both.
-      this.layer.setNodeState(id, nodeState, false);
-      this.layer.setEdgeState(id, edgeState, false);
+      this.layer.store.setNodeState(id, nodeState, false);
+      this.layer.store.setEdgeState(id, edgeState, false);
     }
     this.activeIds.clear();
 
     const inactive = this.opts.inactiveState;
     if (inactive) {
       for (const id of this.inactiveIds) {
-        this.layer.setNodeState(id, inactive, false);
-        this.layer.setEdgeState(id, inactive, false);
+        this.layer.store.setNodeState(id, inactive, false);
+        this.layer.store.setEdgeState(id, inactive, false);
       }
     }
     this.inactiveIds.clear();
@@ -465,17 +465,17 @@ export class HoverActivateBehaviour extends Behaviour {
     this.appliedNodeState = picked.node;
     this.appliedEdgeState = picked.edge;
 
-    if (target.type === 'shape') layer.setNodeState(target.id, picked.node, true);
-    else layer.setEdgeState(target.id, picked.edge, true);
+    if (target.type === 'shape') layer.store.setNodeState(target.id, picked.node, true);
+    else layer.store.setEdgeState(target.id, picked.edge, true);
 
     if (this.opts.degree > 0 && target.type === 'shape') {
       const { nodeIds, edgeIds } = this.collectNeighbours(target.id, this.opts.degree);
       for (const nid of nodeIds) {
-        layer.setNodeState(nid, picked.node, true);
+        layer.store.setNodeState(nid, picked.node, true);
         this.activeIds.add(nid);
       }
       for (const eid of edgeIds) {
-        layer.setEdgeState(eid, picked.edge, true);
+        layer.store.setEdgeState(eid, picked.edge, true);
         this.activeIds.add(eid);
       }
     }
@@ -639,21 +639,21 @@ export class HoverActivateBehaviour extends Behaviour {
 
     if (this.current) {
       if (this.current.type === 'shape' && nodeChanged) {
-        layer.setNodeState(this.current.id, prevNode, false);
-        layer.setNodeState(this.current.id, picked.node, true);
+        layer.store.setNodeState(this.current.id, prevNode, false);
+        layer.store.setNodeState(this.current.id, picked.node, true);
       } else if (this.current.type === 'connector' && edgeChanged) {
-        layer.setEdgeState(this.current.id, prevEdge, false);
-        layer.setEdgeState(this.current.id, picked.edge, true);
+        layer.store.setEdgeState(this.current.id, prevEdge, false);
+        layer.store.setEdgeState(this.current.id, picked.edge, true);
       }
     }
     for (const id of this.activeIds) {
       if (nodeChanged) {
-        layer.setNodeState(id, prevNode, false);
-        layer.setNodeState(id, picked.node, true);
+        layer.store.setNodeState(id, prevNode, false);
+        layer.store.setNodeState(id, picked.node, true);
       }
       if (edgeChanged) {
-        layer.setEdgeState(id, prevEdge, false);
-        layer.setEdgeState(id, picked.edge, true);
+        layer.store.setEdgeState(id, prevEdge, false);
+        layer.store.setEdgeState(id, picked.edge, true);
       }
     }
 
@@ -702,12 +702,12 @@ export class HoverActivateBehaviour extends Behaviour {
     const activeIds = new Set<string>([hoveredId, ...this.activeIds]);
     for (const node of layer.store.nodes()) {
       if (activeIds.has(node.id)) continue;
-      layer.setNodeState(node.id, inactive, true);
+      layer.store.setNodeState(node.id, inactive, true);
       this.inactiveIds.add(node.id);
     }
     for (const edge of layer.store.edges()) {
       if (activeIds.has(edge.id)) continue;
-      layer.setEdgeState(edge.id, inactive, true);
+      layer.store.setEdgeState(edge.id, inactive, true);
       this.inactiveIds.add(edge.id);
     }
   }

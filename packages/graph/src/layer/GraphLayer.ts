@@ -32,7 +32,7 @@ import type {
 } from '@invana/canvas/primitives';
 
 import { GraphStore } from '../store/GraphStore';
-import type { GraphEdge, GraphNode } from '../store/types';
+import type { EdgeDirection, GraphEdge, GraphNode } from '../store/types';
 
 import {
   DEFAULT_EDGE_STATES,
@@ -186,13 +186,16 @@ export class GraphLayer extends WorldLayer<
   private dirtyGroups: Set<string> = new Set();
 
   /**
-   * Visual-state machinery — `id → Set<stateName>`. State styling itself
-   * is declared on the `NodeOption.state` / per-node `state` catalogue;
-   * this map only tracks which states are currently active per item so
-   * the resolver can fold their overlays into the final NodeStyle.
+   * Nodes / edges whose active-state set changed since the last flush — drained
+   * once per flush into `rerenderNode` / `rerenderEdge`. Populated from the
+   * store's `node:state` / `edge:state` events; the dedup + once-per-flush drain
+   * keeps an N-item highlight to ≤1 rebuild per item (mirrors
+   * {@link dirtyConnectors}). State itself is owned by the `GraphStore` (presence
+   * compartment) — the layer holds none, just reads `store.nodeStatesOf` at
+   * render. See `store-owns-state-plan.md` § 0 / § 2.5.
    */
-  private readonly nodeStates: Map<string, Set<string>> = new Map();
-  private readonly edgeStates: Map<string, Set<string>> = new Map();
+  private readonly dirtyStateNodes: Set<string> = new Set();
+  private readonly dirtyStateEdges: Set<string> = new Set();
 
   /**
    * Currently-mounted decoration slot ids per node / edge, so the resolver
@@ -223,7 +226,9 @@ export class GraphLayer extends WorldLayer<
 
   constructor(opts: LayerOptions<GraphLayerOptions>) {
     super(opts);
-    this.store = opts.options.store ?? new GraphStore();
+    // Stamp the store's telemetry source id with the layer id so multiple
+    // graphs are distinguishable on the tap channel (§ 6).
+    this.store = opts.options.store ?? new GraphStore({ id: this.id });
     // v3 G6-aligned layer template — single source of truth for style /
     // state catalogue. Both fields are resolver-aware via the
     // `ResolvableNodeStyle` / `ResolvableEdgeStyle` shape. The canonical
@@ -240,6 +245,9 @@ export class GraphLayer extends WorldLayer<
   }
 
   protected override onMount(ctx: CanvasContext): void {
+    // Route the store's events onto the canvas tap channel so telemetry sees
+    // every data + interaction-state mutation (§ 6). Detached in onUnmount.
+    this.store.bindBus(ctx.events);
     this._renderer = new PrimitivesRenderer({
       container: this.container,
       camera: ctx.camera,
@@ -251,16 +259,15 @@ export class GraphLayer extends WorldLayer<
       ...(ctx.canvasElement ? { canvasElement: ctx.canvasElement } : {}),
     });
 
-    // Initial sync — render anything the store already has, then apply any
-    // data-driven `state` fields the nodes / edges arrived with.
+    // Initial sync — render anything the store already has. Document `states`
+    // fold into the resolved style via `store.nodeStatesOf` at render time, so
+    // there's no separate state-mirror step.
     for (const node of this.store.nodes()) {
       this.installNodeShape(node);
-      this.syncDataDrivenNodeStates(node, undefined);
       if (this.isGroupNode(node)) this.dirtyGroups.add(node.id);
     }
     for (const edge of this.store.edges()) {
       this.installEdgeConnector(edge);
-      this.syncDataDrivenEdgeStates(edge, undefined);
     }
     // Settle every group's auto-fit frame and visibility state in one pass
     // before the first user input — `installNodeShape` iterated linearly,
@@ -276,7 +283,8 @@ export class GraphLayer extends WorldLayer<
         const node = this.store.getNode(nodeId);
         if (!node) return;
         this.installNodeShape(node);
-        this.syncDataDrivenNodeStates(node, undefined);
+        // Document states (`node.states`) are folded in by `resolveNodeStyle`
+        // via `store.nodeStatesOf` at render — no mirror step needed.
         // Inserting a child node may extend an ancestor group's auto-fit
         // bbox; mark the parent chain for recompute. Also re-mark this
         // node if it is itself a group, so its initial frame projects with
@@ -288,10 +296,9 @@ export class GraphLayer extends WorldLayer<
         const node = this.store.getNode(nodeId);
         if (!node) return;
         const wasCollapsed = this.lastCollapsedByGroup.get(nodeId) === true;
+        // `updateNodeShape` re-resolves the style (incl. document `states` via
+        // `store.nodeStatesOf`), so a `states` patch repaints with no mirror.
         this.updateNodeShape(node, patch);
-        if ('states' in patch) {
-          this.syncDataDrivenNodeStates(node, patch.states ?? null);
-        }
         // A position patch on a child propagates up to any auto-fit group
         // ancestor; their frames re-shrink / grow on the next flush.
         if (patch.position && node.parentId) {
@@ -317,7 +324,7 @@ export class GraphLayer extends WorldLayer<
         }
       }),
       s.on('node:remove', ({ nodeId }) => {
-        this.nodeStates.delete(nodeId);
+        this.dirtyStateNodes.delete(nodeId);
         this.nodeDecorationSlots.delete(nodeId);
         this.nodeBadgeSlots.delete(nodeId);
         this._renderer?.removeShape(nodeId);
@@ -334,27 +341,42 @@ export class GraphLayer extends WorldLayer<
         const edge = this.store.getEdge(edgeId);
         if (!edge) return;
         this.installEdgeConnector(edge);
-        this.syncDataDrivenEdgeStates(edge, undefined);
       }),
       s.on('edge:update', ({ edgeId, patch }) => {
         const edge = this.store.getEdge(edgeId);
         if (!edge) return;
         this.updateEdgeConnector(edge, patch);
-        if ('states' in patch) {
-          this.syncDataDrivenEdgeStates(edge, patch.states ?? null);
-        }
       }),
       s.on('edge:remove', ({ edgeId }) => {
-        this.edgeStates.delete(edgeId);
+        this.dirtyStateEdges.delete(edgeId);
         this.edgeDecorationSlots.delete(edgeId);
         this.edgeBadgeSlots.delete(edgeId);
         this._renderer?.removeConnector(edgeId);
+      }),
+      // Runtime (presence) state toggles — mark dirty; the flush handler drains
+      // them once each (dedup), keeping an N-item highlight to one paint (§2.5).
+      s.on('node:state', ({ nodeId }) => {
+        this.dirtyStateNodes.add(nodeId);
+      }),
+      s.on('edge:state', ({ edgeId }) => {
+        this.dirtyStateEdges.add(edgeId);
       }),
       s.on('flush', (counters) => {
         // Groups first — their frames may grow / shrink based on freshly-
         // mutated child positions, which in turn shifts the anchor points
         // every incident connector sees on the next route.
         this.drainDirtyGroups();
+        // Then state-driven re-renders (selected/highlighted/… overlays, which
+        // may change node size) — drained once per dirty id before connectors
+        // reroute, so anchors see the updated geometry.
+        if (this.dirtyStateNodes.size > 0) {
+          for (const nodeId of this.dirtyStateNodes) this.rerenderNode(nodeId);
+          this.dirtyStateNodes.clear();
+        }
+        if (this.dirtyStateEdges.size > 0) {
+          for (const edgeId of this.dirtyStateEdges) this.rerenderEdge(edgeId);
+          this.dirtyStateEdges.clear();
+        }
         if (this.dirtyConnectors.size > 0 && this._renderer) {
           for (const edgeId of this.dirtyConnectors) {
             // Empty partial — triggers recomputeConnectorPath which re-runs
@@ -371,6 +393,7 @@ export class GraphLayer extends WorldLayer<
   protected override onUnmount(): void {
     for (const off of this.subs) off();
     this.subs.length = 0;
+    this.store.bindBus(undefined);
     this._renderer?.destroy();
     this._renderer = undefined;
   }
@@ -518,93 +541,35 @@ export class GraphLayer extends WorldLayer<
     return this.edgeOption?.style;
   }
 
-  // ─── State machinery ────────────────────────────────────────────────────
+  // ─── State sugar ──────────────────────────────────────────────────────────
+  //
+  // Interaction state is owned by the `GraphStore` (presence compartment) — set
+  // it via `layer.store.addNodeState` / `removeNodeState` / `clearNodeState`
+  // (+ edge variants). The layer only adds graph-domain *sugar* that composes
+  // several store writes; the layer itself holds no state.
 
   /**
-   * Toggle a named state on a node. Defaults to `on=true`. Re-renders the
-   * node with the merged state overrides applied. No-op if the node id is
-   * unknown.
+   * Highlight a node together with its neighbours (in `dir`) and incident edges
+   * — adds the runtime state `state` to all of them in a single
+   * {@link GraphStore.batch}, so the whole neighbourhood repaints in one flush.
+   * No-op if the seed id is unknown. Clear with `store.clearNodeState(state)` +
+   * `store.clearEdgeState(state)`.
+   *
+   * @param id    Seed node id.
+   * @param dir   Adjacency direction for neighbours + incident edges. Default `'both'`.
+   * @param state Runtime state name to apply. Default `'highlighted'`.
    */
-  setNodeState(id: string, name: string, on = true): void {
+  highlightNeighbourhood(
+    id: string,
+    dir: EdgeDirection = 'both',
+    state = 'highlighted',
+  ): void {
     if (!this.store.hasNode(id)) return;
-    let set = this.nodeStates.get(id);
-    if (on) {
-      if (set?.has(name)) return;
-      if (!set) {
-        set = new Set();
-        this.nodeStates.set(id, set);
-      }
-      set.add(name);
-    } else {
-      if (!set?.has(name)) return;
-      set.delete(name);
-      if (set.size === 0) this.nodeStates.delete(id);
-    }
-    this.rerenderNode(id);
-  }
-
-  /** Same as {@link setNodeState} for edges. */
-  setEdgeState(id: string, name: string, on = true): void {
-    if (!this.store.hasEdge(id)) return;
-    let set = this.edgeStates.get(id);
-    if (on) {
-      if (set?.has(name)) return;
-      if (!set) {
-        set = new Set();
-        this.edgeStates.set(id, set);
-      }
-      set.add(name);
-    } else {
-      if (!set?.has(name)) return;
-      set.delete(name);
-      if (set.size === 0) this.edgeStates.delete(id);
-    }
-    this.rerenderEdge(id);
-  }
-
-  /** True iff `id` currently carries state `name`. */
-  hasNodeState(id: string, name: string): boolean {
-    return this.nodeStates.get(id)?.has(name) ?? false;
-  }
-
-  hasEdgeState(id: string, name: string): boolean {
-    return this.edgeStates.get(id)?.has(name) ?? false;
-  }
-
-  /**
-   * Remove state `name` from every node that carries it, in one pass. Useful
-   * for clearing a transient selection / hover set without iterating
-   * externally.
-   */
-  clearNodeState(name: string): void {
-    const affected: string[] = [];
-    for (const [id, set] of this.nodeStates) {
-      if (set.delete(name)) {
-        affected.push(id);
-        if (set.size === 0) this.nodeStates.delete(id);
-      }
-    }
-    for (const id of affected) this.rerenderNode(id);
-  }
-
-  clearEdgeState(name: string): void {
-    const affected: string[] = [];
-    for (const [id, set] of this.edgeStates) {
-      if (set.delete(name)) {
-        affected.push(id);
-        if (set.size === 0) this.edgeStates.delete(id);
-      }
-    }
-    for (const id of affected) this.rerenderEdge(id);
-  }
-
-  /** Ids currently carrying state `name`. Useful for snapshots / iteration. */
-  *nodesWithState(name: string): IterableIterator<string> {
-    for (const [id, set] of this.nodeStates) if (set.has(name)) yield id;
-  }
-
-  *edgesWithState(name: string): IterableIterator<string> {
-    for (const [id, set] of this.edgeStates) if (set.has(name)) yield id;
+    this.store.batch(() => {
+      this.store.addNodeState(id, state);
+      for (const nb of this.store.neighborsOf(id, dir)) this.store.addNodeState(nb, state);
+      for (const e of this.store.edgesOf(id, dir)) this.store.addEdgeState(e.id, state);
+    });
   }
 
   // ─── Hit testing (placeholder) ───────────────────────────────────────────
@@ -651,8 +616,8 @@ export class GraphLayer extends WorldLayer<
     }
     Object.assign(merged, (node.style as Partial<NodeStyle> | undefined) ?? {});
 
-    const activeStates = this.nodeStates.get(node.id);
-    if (activeStates && activeStates.size > 0) {
+    const activeStates = this.store.nodeStatesOf(node.id);
+    if (activeStates.length > 0) {
       const perNodeCatalogue = node.state as Readonly<Record<string, NodeStyle>> | undefined;
       for (const name of activeStates) {
         const layerOverlay = this.nodeOption?.state?.[name];
@@ -694,8 +659,8 @@ export class GraphLayer extends WorldLayer<
     }
     Object.assign(merged, (edge.style as Partial<EdgeStyle> | undefined) ?? {});
 
-    const activeStates = this.edgeStates.get(edge.id);
-    if (activeStates && activeStates.size > 0) {
+    const activeStates = this.store.edgeStatesOf(edge.id);
+    if (activeStates.length > 0) {
       const perEdgeCatalogue = edge.state as Readonly<Record<string, EdgeStyle>> | undefined;
       for (const name of activeStates) {
         const layerOverlay = this.edgeOption?.state?.[name];
@@ -1021,57 +986,6 @@ export class GraphLayer extends WorldLayer<
    * which `updateShape` can't safely handle (the `IShape` class is
    * fixed at construction time).
    */
-  /**
-   * Apply a node's data-driven `state` field to the visible state set.
-   *
-   * - `replacement === undefined` is the **insert path**: each name in
-   *   `node.state` is toggled on additively (existing visible states stay).
-   * - `replacement === null` or a `readonly string[]` is the **update path**:
-   *   clear every currently-visible state on this id, then apply `replacement`.
-   *   Replace-on-update means runtime states (e.g. hover) are wiped — the
-   *   data feed is the source of truth at update time.
-   */
-  private syncDataDrivenNodeStates(
-    node: GraphNode,
-    replacement: readonly string[] | null | undefined,
-  ): void {
-    if (replacement === undefined) {
-      // Insert path — only add named states; do not clear.
-      for (const name of node.states ?? []) {
-        this.setNodeState(node.id, name, true);
-      }
-      return;
-    }
-    // Update path — clear current visible set first, then apply replacement.
-    const current = this.nodeStates.get(node.id);
-    if (current && current.size > 0) {
-      for (const name of [...current]) this.setNodeState(node.id, name, false);
-    }
-    if (replacement !== null) {
-      for (const name of replacement) this.setNodeState(node.id, name, true);
-    }
-  }
-
-  /** Sibling of {@link syncDataDrivenNodeStates} for edges. */
-  private syncDataDrivenEdgeStates(
-    edge: GraphEdge,
-    replacement: readonly string[] | null | undefined,
-  ): void {
-    if (replacement === undefined) {
-      for (const name of edge.states ?? []) {
-        this.setEdgeState(edge.id, name, true);
-      }
-      return;
-    }
-    const current = this.edgeStates.get(edge.id);
-    if (current && current.size > 0) {
-      for (const name of [...current]) this.setEdgeState(edge.id, name, false);
-    }
-    if (replacement !== null) {
-      for (const name of replacement) this.setEdgeState(edge.id, name, true);
-    }
-  }
-
   private rerenderNode(id: string): void {
     if (!this._renderer) return;
     const node = this.store.getNode(id);
@@ -1214,8 +1128,8 @@ export class GraphLayer extends WorldLayer<
     }
     pushFrom(node.style as Partial<NodeStyle> | undefined);
 
-    const activeStates = this.nodeStates.get(node.id);
-    if (activeStates && activeStates.size > 0) {
+    const activeStates = this.store.nodeStatesOf(node.id);
+    if (activeStates.length > 0) {
       const perNodeCatalogue = node.state as Readonly<Record<string, NodeStyle>> | undefined;
       for (const name of activeStates) {
         const layerOverlay = this.nodeOption?.state?.[name];
@@ -1254,8 +1168,8 @@ export class GraphLayer extends WorldLayer<
     }
     pushFrom(edge.style as Partial<EdgeStyle> | undefined);
 
-    const activeStates = this.edgeStates.get(edge.id);
-    if (activeStates && activeStates.size > 0) {
+    const activeStates = this.store.edgeStatesOf(edge.id);
+    if (activeStates.length > 0) {
       const perEdgeCatalogue = edge.state as Readonly<Record<string, EdgeStyle>> | undefined;
       for (const name of activeStates) {
         const layerOverlay = this.edgeOption?.state?.[name];
@@ -1349,8 +1263,8 @@ export class GraphLayer extends WorldLayer<
     }
     pushFrom(node.style as Partial<NodeStyle> | undefined);
 
-    const activeStates = this.nodeStates.get(node.id);
-    if (activeStates && activeStates.size > 0) {
+    const activeStates = this.store.nodeStatesOf(node.id);
+    if (activeStates.length > 0) {
       const perNodeCatalogue = node.state as Readonly<Record<string, NodeStyle>> | undefined;
       for (const name of activeStates) {
         const layerOverlay = this.nodeOption?.state?.[name];
@@ -1411,8 +1325,8 @@ export class GraphLayer extends WorldLayer<
     }
     pushFrom(edge.style as Partial<EdgeStyle> | undefined);
 
-    const activeStates = this.edgeStates.get(edge.id);
-    if (activeStates && activeStates.size > 0) {
+    const activeStates = this.store.edgeStatesOf(edge.id);
+    if (activeStates.length > 0) {
       const perEdgeCatalogue = edge.state as Readonly<Record<string, EdgeStyle>> | undefined;
       for (const name of activeStates) {
         const layerOverlay = this.edgeOption?.state?.[name];

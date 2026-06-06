@@ -109,6 +109,14 @@ export interface GraphStoreOptions {
    * capacity avoids early geometric growth on bulk inserts. Default 256.
    */
   initialCapacity?: number;
+
+  /**
+   * Identity for the store's event-source envelopes on the canvas tap channel
+   * (telemetry). Becomes `source.id` on every `{ kind: 'store' }` event the bus
+   * publishes. Default `'graph-store'`; pass the owning layer's id to
+   * disambiguate multiple graphs. See `store-owns-state-plan.md` § 6.
+   */
+  id?: string;
 }
 
 /**
@@ -126,6 +134,16 @@ export type GraphStoreEventMap = {
   'edge:remove': { edgeId: string };
   /** Emitted when a buffered edge is dropped after exceeding `pendingEdgeTTL`. */
   'edge:orphaned': { edgeId: string };
+  /**
+   * A runtime (presence) state was toggled on a node — `on` reflects the
+   * post-change membership of the runtime set. Fired per-toggle on flush,
+   * deduped per `(id, name)` within the flush window. `actor` is reserved for
+   * collaboration (the originating user); `undefined` in single-user mode.
+   * Document `states[]` changes ride `node:update`, not this event.
+   */
+  'node:state': { nodeId: string; name: string; on: boolean; actor?: string };
+  /** Edge sibling of `node:state`. */
+  'edge:state': { edgeId: string; name: string; on: boolean; actor?: string };
   /** Aggregate counts per flush. Fires once per batch / RAF flush. */
   flush: {
     addedNodes: number;

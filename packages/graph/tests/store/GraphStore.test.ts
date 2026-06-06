@@ -395,3 +395,100 @@ describe('GraphStore — pending edge TTL', () => {
     expect(orphanCb).toHaveBeenCalledWith({ edgeId: 'x' });
   });
 });
+
+describe('GraphStore — interaction state (presence compartment)', () => {
+  it('addNodeState toggles presence; nodeStatesOf reflects it', () => {
+    const store = new GraphStore();
+    store.addNode({ id: 'a' });
+    expect(store.nodeStatesOf('a')).toEqual([]);
+    store.addNodeState('a', 'selected');
+    expect(store.hasNodeState('a', 'selected')).toBe(true);
+    expect(store.nodeStatesOf('a')).toEqual(['selected']);
+    store.removeNodeState('a', 'selected');
+    expect(store.hasNodeState('a', 'selected')).toBe(false);
+  });
+
+  it('addNodeState is a no-op on unknown ids and idempotent', () => {
+    const store = new GraphStore({ flushMode: 'frame' });
+    const cb = vi.fn();
+    store.events.on('node:state', cb);
+    store.addNodeState('missing', 'selected'); // unknown → no-op
+    store.addNode({ id: 'a' });
+    store.addNodeState('a', 'selected');
+    store.addNodeState('a', 'selected'); // already set → no event
+    store.flush();
+    expect(cb).toHaveBeenCalledTimes(1);
+    expect(cb).toHaveBeenCalledWith({ nodeId: 'a', name: 'selected', on: true });
+  });
+
+  it('nodeStatesOf unions document states[] with the presence set', () => {
+    const store = new GraphStore();
+    store.addNode({ id: 'a', states: ['error'] }); // document compartment
+    store.addNodeState('a', 'hover'); // presence compartment
+    expect([...store.nodeStatesOf('a')].sort()).toEqual(['error', 'hover']);
+  });
+
+  it('clearNodeState clears presence only, leaving document states[] intact', () => {
+    const store = new GraphStore();
+    store.addNode({ id: 'a', states: ['error'] });
+    store.addNodeState('a', 'hover');
+    store.clearNodeState('hover');
+    expect(store.nodeStatesOf('a')).toEqual(['error']);
+    // A document state of the same name survives clearNodeState.
+    store.addNodeState('b', 'error'); // no node b → no-op, sanity
+    store.addNode({ id: 'c', states: ['error'] });
+    store.clearNodeState('error');
+    expect(store.nodeStatesOf('c')).toEqual(['error']);
+  });
+
+  it('a data-feed updateNode({states}) does not wipe a live presence state', () => {
+    const store = new GraphStore();
+    store.addNode({ id: 'a', states: ['error'] });
+    store.addNodeState('a', 'selected'); // user selection (presence)
+    store.updateNode('a', { states: ['warning'] }); // feed replaces document states
+    expect([...store.nodeStatesOf('a')].sort()).toEqual(['selected', 'warning']);
+  });
+
+  it('coalesces repeated toggles to one event per (id,name) per flush; on reads live membership', () => {
+    const store = new GraphStore({ flushMode: 'frame' });
+    const cb = vi.fn<(p: GraphStoreEventMap['node:state']) => void>();
+    store.events.on('node:state', cb);
+    store.addNode({ id: 'a' });
+    store.flush();
+    cb.mockClear();
+    store.addNodeState('a', 'hover'); // on
+    store.removeNodeState('a', 'hover'); // off — same flush window
+    store.flush();
+    expect(cb).toHaveBeenCalledTimes(1);
+    expect(cb).toHaveBeenCalledWith({ nodeId: 'a', name: 'hover', on: false });
+  });
+
+  it('setNodeState toggles via the boolean convenience', () => {
+    const store = new GraphStore();
+    store.addNode({ id: 'a' });
+    store.setNodeState('a', 'selected', true);
+    expect(store.hasNodeState('a', 'selected')).toBe(true);
+    store.setNodeState('a', 'selected', false);
+    expect(store.hasNodeState('a', 'selected')).toBe(false);
+  });
+
+  it('removeNode drops its presence states and nodesWithState reflects union', () => {
+    const store = new GraphStore();
+    store.addNodesBulk([{ id: 'a' }, { id: 'b', states: ['error'] }]);
+    store.addNodeState('a', 'error');
+    expect([...store.nodesWithState('error')].sort()).toEqual(['a', 'b']);
+    store.removeNode('a');
+    expect([...store.nodesWithState('error')]).toEqual(['b']);
+  });
+
+  it('edge state mirrors node state', () => {
+    const store = new GraphStore();
+    store.addNodesBulk([{ id: 'a' }, { id: 'b' }]);
+    store.addEdge({ id: 'ab', source: 'a', target: 'b' });
+    store.addEdgeState('ab', 'highlighted');
+    expect(store.hasEdgeState('ab', 'highlighted')).toBe(true);
+    expect([...store.edgesWithState('highlighted')]).toEqual(['ab']);
+    store.clearEdgeState('highlighted');
+    expect(store.hasEdgeState('ab', 'highlighted')).toBe(false);
+  });
+});
