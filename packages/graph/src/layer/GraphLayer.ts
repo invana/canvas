@@ -746,6 +746,71 @@ export class GraphLayer extends WorldLayer<
     return this._renderer.boundsOfSpec(this.nodeSpec(node));
   }
 
+  // ─── Viewport framing ─────────────────────────────────────────────────────
+
+  /**
+   * Frame the camera on a set of nodes — fit the viewport to the world-space
+   * box spanning their positions, plus `padding` screen px. Unknown ids are
+   * skipped; a no-op when none resolve or the layer isn't mounted.
+   *
+   * Graph-domain sugar over the geometry-only {@link Camera.fitContent}: it
+   * resolves ids → positions so callers (e.g. a "zoom to node" context-menu
+   * action) don't have to.
+   *
+   * @param ids     Node ids to frame.
+   * @param padding Screen-pixel padding around the fitted box. Default `160`.
+   */
+  focusNodes(ids: Iterable<string>, padding = 160): void {
+    const pts: Array<{ x: number; y: number }> = [];
+    for (const id of ids) {
+      const pos = this.store.getPosition(id);
+      if (pos) pts.push(pos);
+    }
+    this.fitPoints(pts, padding);
+  }
+
+  /**
+   * Frame the camera on a set of edges — fit the viewport to the box spanning
+   * both endpoints of each edge, plus `padding` screen px. Unknown ids (or
+   * edges with an unplaced endpoint) are skipped; a no-op when none resolve or
+   * the layer isn't mounted.
+   *
+   * @param ids     Edge ids to frame.
+   * @param padding Screen-pixel padding around the fitted box. Default `160`.
+   */
+  focusEdges(ids: Iterable<string>, padding = 160): void {
+    const pts: Array<{ x: number; y: number }> = [];
+    for (const id of ids) {
+      const edge = this.store.getEdge(id);
+      if (!edge) continue;
+      const a = this.store.getPosition(edge.source);
+      const b = this.store.getPosition(edge.target);
+      if (a) pts.push(a);
+      if (b) pts.push(b);
+    }
+    this.fitPoints(pts, padding);
+  }
+
+  /** Fit the camera to the AABB spanning `pts` (+ padding). No-op if empty / unmounted. */
+  private fitPoints(pts: ReadonlyArray<{ x: number; y: number }>, padding: number): void {
+    const camera = this.ctx?.camera;
+    if (!camera || pts.length === 0) return;
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const p of pts) {
+      minX = Math.min(minX, p.x);
+      minY = Math.min(minY, p.y);
+      maxX = Math.max(maxX, p.x);
+      maxY = Math.max(maxY, p.y);
+    }
+    camera.fitContent(
+      { x: minX, y: minY, width: Math.max(1, maxX - minX), height: Math.max(1, maxY - minY) },
+      padding,
+    );
+  }
+
   private nodeSpec(node: GraphNode): BaseShapeSpec {
     const style = this.resolveNodeStyle(node);
     let shape: NodeShapeOptions = style.shape ?? { kind: 'circle', radius: 10 };

@@ -583,6 +583,17 @@ export class GraphStore {
     this.scheduleFlushIfNeeded();
   }
 
+  /**
+   * Reverse an edge's direction — swap its `source` and `target`. No-op if the
+   * edge doesn't exist. Routes through {@link updateEdge}, so adjacency indexes
+   * are rewired and an `edge:update` is enqueued like any other re-pointing.
+   */
+  reverseEdge(id: string): void {
+    const cold = this.edgeMap.get(id);
+    if (!cold) return;
+    this.updateEdge(id, { source: cold.target, target: cold.source });
+  }
+
   removeEdge(id: string): void {
     const cold = this.edgeMap.get(id);
     if (!cold) return;

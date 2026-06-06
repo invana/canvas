@@ -454,6 +454,36 @@ export class ClickSelectBehaviour extends Behaviour {
     this.applySelection(new Map(), true);
   }
 
+  /**
+   * Select every node and edge on the target layer. Replaces the current
+   * selection. No-op if the layer isn't mounted.
+   */
+  selectAll(): void {
+    if (!this.layer) return;
+    const store = this.layer.store;
+    const next: Array<{ id: string; type: SelectableElementType }> = [];
+    for (const node of store.nodes()) next.push({ id: node.id, type: 'shape' });
+    for (const edge of store.edges()) next.push({ id: edge.id, type: 'connector' });
+    this.selectMultiple(next);
+  }
+
+  /**
+   * Select a node together with its neighbours (in the given direction) and the
+   * edges incident to it. Replaces the current selection. No-op if the layer
+   * isn't mounted.
+   *
+   * @param id  Seed node id.
+   * @param dir Adjacency direction for neighbours + incident edges. Default `'both'`.
+   */
+  selectNeighbourhood(id: string, dir: 'in' | 'out' | 'both' = 'both'): void {
+    if (!this.layer) return;
+    const store = this.layer.store;
+    const next: Array<{ id: string; type: SelectableElementType }> = [{ id, type: 'shape' }];
+    for (const nb of store.neighborsOf(id, dir)) next.push({ id: nb, type: 'shape' });
+    for (const e of store.edgesOf(id, dir)) next.push({ id: e.id, type: 'connector' });
+    this.selectMultiple(next);
+  }
+
   // ─── Internals ──────────────────────────────────────────────────────────
 
   private handleElementClick(id: string, type: SelectableElementType): void {

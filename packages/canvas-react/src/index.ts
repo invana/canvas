@@ -264,3 +264,24 @@ export type {
   ContextMenuOverlayProps,
   ToolbarIcon,
 } from './components';
+
+// ─── Context menus ───────────────────────────────────────────────────────────
+// Target-scoped right-click menus — one per target (node / edge / background),
+// each wiring a `ContextMenuBehaviour` + `ContextMenuOverlay`. Pass an `items`
+// builder; dismissal + auto-close are handled internally. Compose freely.
+export {
+  GraphNodeContextMenu,
+  GraphEdgeContextMenu,
+  GraphBackgroundContextMenu,
+} from './menus';
+export type {
+  GraphNodeContextMenuProps,
+  GraphNodeMenuContext,
+  GraphEdgeContextMenuProps,
+  GraphEdgeMenuContext,
+  GraphBackgroundContextMenuProps,
+  GraphBackgroundMenuContext,
+  GraphContextMenuCommonProps,
+  GraphContextMenuContext,
+  GraphTargetMenuContext,
+} from './menus';
