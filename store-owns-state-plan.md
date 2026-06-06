@@ -185,7 +185,7 @@ On `GraphLayer` (thin, over the store) or directly on the store:
 
 ```ts
 highlightNeighbourhood(id, dir: EdgeDirection = 'both', state = 'highlighted'): void
-// addNodeState(id, state) + addNodeState(each neighbour) + addEdgeState(each incident edge)
+// store.batch(() => addNodeState(id) + addNodeState(each neighbour) + addEdgeState(each incident edge))
 ```
 
 This is the one piece the working-tree change couldn't express as a single
@@ -193,21 +193,52 @@ call. With it, `GraphVisualiser`'s "Highlight neighbours" / "Highlight edge"
 loops become one method call, matching the already-collapsed `selectAll` /
 `selectNeighbourhood` / `focusNodes` / `reverseEdge`.
 
+**Multi-write producers wrap in `store.batch()`** (see § 2.5) — the sugar does so
+internally, so a caller highlighting an N-node neighbourhood gets one flush.
+
+### 2.5 Render coalescing — `batch()` + layer dirty-set drain
+
+Per-toggle events (D3) mean a producer touching N items emits N `node:state`
+events. Two mechanisms keep that to **one paint and ≤1 spec-rebuild per item**,
+reconciling granular events with render cost:
+
+1. **`store.batch(fn)`** (already exists, `GraphStore.ts:725`) — suppresses
+   flush while `batchDepth > 0`, so N writes coalesce into **one flush → one
+   paint frame**. Every multi-write producer (the sugar, `selectAll`, lineage
+   highlighting, …) wraps its writes in it.
+2. **Layer dirty-set drain** — the layer's `node:state` / `edge:state` handlers
+   must **not** `rerenderNode(id)` synchronously. They add the id to a
+   `dirtyStateNodes` / `dirtyStateEdges` set; the existing `flush` handler drains
+   it once (each unique id rebuilt at most once), exactly mirroring the
+   `dirtyConnectors` drain already at `GraphLayer.ts:358-365`.
+
+Result: render count = unique dirty items per frame, independent of event count.
+Events stay granular (telemetry / collab); rendering is coalesced.
+
+**Known follow-up (not now):** extreme bulk (e.g. `selectAll` over 100k) still
+emits 100k envelopes to the tap. If that profiles hot, add a single
+`node:state-bulk { name, ids[], on }` event for the mass-operation path only — a
+deliberate, narrow revisit of D3, logged here rather than built.
+
 ---
 
 ## 3. Migration steps (ordered, each compiles)
 
-1. **Store core** — add `nodeStateSets`/`edgeStateSets`, the `add/remove/clear/
-   has/iterator` methods, seed from `states` on `upsert`, clean up on remove.
-   No event yet; pure data.
+1. **Store core** — add `nodeRuntimeStates`/`edgeRuntimeStates` (the *presence*
+   compartment, separate from cold `states[]`), the `add/remove/clear/has`
+   methods + `nodeStatesOf` (= `states[]` ∪ runtime set, for the renderer) +
+   `nodesWithState` iterator. No seeding from `states[]` (D1: independent
+   compartments). Clean up the runtime set on remove. No event yet; pure data.
 2. **Store event + bus wiring** — extend `GraphStoreEventMap`; enqueue + emit
    `node:state` / `edge:state` in `doFlush`. Promote `GraphStore.events` to a
    bus-wired `SourceEmitter` (`{ kind:'store', id }`); layer calls
    `store.events.setBus(ctx.events)` in `onMount` so all store mutations reach the
    telemetry tap (§6).
-3. **Layer subscribe + read** — subscribe to the new events → `rerenderNode/Edge`;
-   point `resolveNodeStyle` at `store.nodeStatesOf`. Temporarily keep the old
-   `Map` so nothing breaks mid-migration (removed in step 4).
+3. **Layer subscribe + read** — `node:state`/`edge:state` handlers add the id to
+   a `dirtyStateNodes`/`dirtyStateEdges` set (NOT a synchronous `rerenderNode`);
+   the existing `flush` handler drains them once (§2.5). Point `resolveNodeStyle`
+   at `store.nodeStatesOf`. Temporarily keep the old `Map` so nothing breaks
+   mid-migration (removed in step 4).
 4. **Layer cleanup** — delete `nodeStates`/`edgeStates` `Map`s, `syncDataDriven*`,
    **and** `setNodeState` / `setEdgeState` / `clearNodeState` / `clearEdgeState`
    (D2: store-only — no forwards left behind).
@@ -215,7 +246,8 @@ loops become one method call, matching the already-collapsed `selectAll` /
    `ContextMenu` from `layer.setNodeState` to `store.addNodeState` (via
    `layer.store.` — they already hold a `layer` ref). The `nodesWithState`
    iterator the Lasso/Brush clear paths use moves to the store too.
-6. **Sugar** — add `highlightNeighbourhood` (+ edge variant).
+6. **Sugar** — add `highlightNeighbourhood` (+ edge variant), wrapping its writes
+   in `store.batch()` (§2.5).
 7. **Stories** — collapse `GraphVisualiser` highlight loops to the sugar call;
    verify `GraphModeller` still compiles (it doesn't touch runtime state much).
 8. **TSDoc** — document the new store methods/events and the ownership change;
@@ -229,11 +261,19 @@ warrants (confirm before writing).
 
 ## 4. Decisions to confirm before coding
 
-- **D1 — `states[]` field vs live `Set`. → DECIDED: seed-only.**
-  `GraphNode.states` is read **once** at `upsert` to seed the live `Set`; the
-  `Set` is the sole truth thereafter and runtime toggles never write back to the
-  cold record. The rejected alternative (continuously sync `states[]` on every
-  toggle) is actively harmful — see the collaboration reasoning below.
+- **D1 — `states[]` field vs live `Set`. → DECIDED: two compartments, union at read.**
+  `GraphNode.states` (cold record) stays the **document** active-states list —
+  feed-owned, replaced on `updateNode`, part of `getNode()`, persisted. A
+  **separate** runtime `Set` per id is the **presence** active-states compartment
+  — interaction-owned (hover / selected / highlighted), ephemeral, never
+  persisted. The two are **independent**: the runtime `Set` is *not* seeded from
+  `states[]` and *never* written back to it. **Effective active states =
+  `states[]` ∪ runtime `Set`, computed at read** in `resolveNodeStyle`
+  (`store.nodeStatesOf(id)`). The rejected alternative (fold toggles back into
+  `states[]` — one merged list) is actively harmful: it reclassifies every hover
+  as a document edit and re-introduces the replace-on-update wipe. Keeping them
+  separate is exactly what *kills* the wipe (a feed replacing `states[]` can't
+  touch the runtime `Set`) — see § 5.
 
   This decision is driven by two forward-looking requirements: **near-future
   live collaboration** (presentation / multi-user boards where user A's
@@ -382,3 +422,94 @@ With (a) [+ (b)], one `canvas.events.tap(...)` reconstructs the whole loop —
 timestamped and source-tagged, so interaction→render latency and mutation rates
 are directly measurable. This is the §0 invariant paying off: because every
 change is one store write, the tap sees the complete truth stream.
+
+---
+
+## 7. Domain extensibility (ER diagrams / lineage)
+
+The store must stay **domain-agnostic** so future domains (ER diagrams, lineage
+graphs, …) reuse it without it learning their vocabulary. The litmus test:
+*can the domain be expressed as generic primitives + a wrapper, without the base
+store growing domain fields?* For ER, yes.
+
+### Three ways to extend — preference order
+
+1. **Payload (`data: D`)** — put domain structure (table columns, PK/FK,
+   cardinality) in the opaque `data` of nodes/edges. **No store change.** Covers
+   ~all of ER, because ER data isn't the bulk-numeric data the hot columns exist
+   for.
+2. **Composition wrapper** — for domain-specific *queries/indices*, wrap (don't
+   subclass): `ERStore` holds a `GraphStore`, maintains derived indices by
+   **subscribing to `store.events`**, and delegates the rest. Stays consistent
+   via the same unidirectional event stream this plan builds.
+3. **Subclass for hot columns** — ⚠️ **not cleanly supported today** and **not
+   needed for ER.** `NODE_SCHEMA`/`EDGE_SCHEMA` are module-level `const`s
+   (`GraphStore.ts:33,40`) and internals are `private`, so a subclass can't add
+   typed-array columns without editing `GraphStore`. This contradicts the
+   long-term "`ColumnStore` extensions" vision in `packages/graph/CLAUDE.md`,
+   which is designed but unbuilt. Only revisit (configurable schema + `protected`
+   hooks) if a future domain has genuinely bulk, high-frequency numeric per-item
+   data. ER does not.
+
+**Rule:** ER-specific fields never become first-class store columns — they live
+in `data: D`. The moment the store knows about "columns," it stops being
+reusable for the next domain.
+
+### Modelling choices that make ER work on the same store
+
+- **Columns as child nodes** (`parentId = tableId`) when they need their own
+  identity / interaction / adjacency (e.g. column-level lineage). They then get
+  ids, state, and edges for free. If columns are display-only, leave them in the
+  table's `data` payload + a `CompositeShape` renderer.
+- **Edge `type` is free-form** → traversal filters on `type === 'fk'` /
+  `'lineage'` to follow only the relevant links. Cross-table column edges connect
+  any node ids regardless of `parentId`, so they just work.
+- **State is name-based** → ER state names (`conflict`, `deprecated`,
+  `lineage`, …) need no store change.
+- **Sub-node ports** (an FK anchoring to a specific column row of a composite
+  table) are an **anchor-stage** concern in the connector pipeline, not a store
+  concern — additive (`sourcePort`/`targetPort` on edge style), no store surgery.
+
+### Layering example — column lineage highlight
+
+The recurring question is *where domain logic lives*. Answer: **split by
+concern**, along the same producer/consumer line as everything else.
+
+- **Traversal mechanics → generic, on the store (or a free fn).** A reachability
+  primitive composed from the existing 1-hop `neighborsOf` / `edgesOf`:
+  `*reachable(seed, { dir, maxDepth, edgeFilter })`. Domain-agnostic, reusable.
+- **Domain policy → ER query (free fn or `ERStore` wrapper, public read API
+  only — *not* a subclass).** Supplies the edge filter that defines lineage:
+
+  ```ts
+  function columnLineage(store, columnId, dir = 'both') {
+    const nodes = new Set(), edges = new Set();
+    for (const { node, viaEdge } of store.reachable(columnId, {
+      dir, edgeFilter: (e) => e.type === 'lineage' || e.type === 'fk',
+    })) { nodes.add(node); edges.add(viaEdge); }
+    return { nodes: [...nodes], edges: [...edges] };
+  }
+  ```
+
+- **Interaction → behaviour (producer).** Decides *when* (on column click), runs
+  the query (READ), writes the highlight (WRITE), batched:
+
+  ```ts
+  class ColumnLineageBehaviour {          // PRODUCER — read → write, never renders
+    onColumnClick(columnId) {
+      const { nodes, edges } = columnLineage(store, columnId);   // READ
+      store.batch(() => {                                        // WRITE — one flush
+        store.clearNodeState('lineage'); store.clearEdgeState('lineage');
+        for (const n of nodes) store.addNodeState(n, 'lineage');
+        for (const e of edges) store.addEdgeState(e, 'lineage');
+      });
+    }
+  }
+  ```
+
+**Verdict:** the graph algorithm does **not** belong in the behaviour (reuse /
+testability / data-semantics-belong-with-data), and the interaction trigger does
+**not** belong in the store. Mechanics low (generic store primitive), policy in
+the middle (domain query / `ERStore`), interaction at the top (producer
+behaviour). The same `GraphStore` + the state model in this plan support it
+unchanged.
