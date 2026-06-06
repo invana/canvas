@@ -45,6 +45,8 @@ import {
   Circle,
   Square,
   Diamond,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import {
   Canvas,
@@ -52,6 +54,7 @@ import {
   GraphLayer,
   DragPanBehaviour,
   WheelZoomBehaviour,
+  ResponsiveThemeBehaviour,
   DragNodeBehaviour,
   ClickSelectBehaviour,
   ClickInspectBehaviour,
@@ -66,6 +69,7 @@ import {
   ModellerToolbar,
   InspectorPanel,
   Panel,
+  ThemeToggle,
   useCanvas,
   useTool,
   useDrawHistory,
@@ -118,6 +122,29 @@ const HINTS: Record<string, string> = {
   connect: 'Drag node→node to connect · release on the same node for a self-loop · Esc to exit',
   delete: 'Click a node (removes its edges) or an edge to erase it · Esc to exit',
 };
+
+/**
+ * Flip the `@invana/ui` chrome (toolbar buttons, menus) to match the canvas
+ * theme, so the floating controls stay legible against the canvas instead of
+ * following the OS independently. Mirrors the storybook's own `bootstrapOsTheme`
+ * (`.storybook/preview.ts`), which switches the design-kit by `data-theme`.
+ */
+function applyChromeTheme(dark: boolean): void {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  root.setAttribute('data-theme', dark ? 'default-dark' : 'default-light');
+  root.classList.remove('theme-default-light', 'theme-default-dark', 'light', 'dark');
+  root.classList.add(dark ? 'theme-default-dark' : 'theme-default-light', dark ? 'dark' : 'light');
+}
+
+/** Whether the OS currently prefers a dark colour scheme. */
+function osPrefersDark(): boolean {
+  return (
+    typeof window !== 'undefined'
+    && !!window.matchMedia
+    && window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
+}
 
 /**
  * The drawing behaviours + toolbar. Lives inside both providers so it can read
@@ -179,6 +206,18 @@ function DrawingTools() {
         nodeKinds={{ circle: 'Circle', rect: 'Rectangle', diamond: 'Diamond' }}
         nodeKindIcons={{ circle: Circle, rect: Square, diamond: Diamond }}
       />
+
+      {/* Switch the graph theme (drives <ResponsiveThemeBehaviour>) to test the
+          light/dark node + edge styling without changing the OS appearance. Flips
+          the background grid in lockstep so the whole canvas stays coherent. */}
+      <Panel position="top-left">
+        <ThemeToggle
+          lightIcon={Sun}
+          darkIcon={Moon}
+          backgroundLayerId="background"
+          onChange={(kind) => applyChromeTheme(kind === 'dark')}
+        />
+      </Panel>
 
       {/* Click a node/edge (Select tool) → edit its `type` (shown as the drawn
           label in modelling) + key/value properties; edges add a reverse-direction
@@ -360,38 +399,10 @@ function ModellerContextMenu() {
   );
 }
 
-/**
- * Keeps the modeller's theme-dependent colours (node borders + edge strokes) in
- * sync with the OS `prefers-color-scheme`.
- *
- * Why imperative: the `<GraphLayer>` wrapper applies its `node`/`edge` style
- * props only at mount, so React-state colour changes wouldn't reach existing —
- * or freshly-drawn — nodes. Instead we listen to the media query and call the
- * engine layer's `setNodeDefaults` / `setEdgeDefaults`, which patch the shared
- * template and re-render every node/edge in one pass. New nodes dropped by the
- * Add tool inherit the patched template too. (The node fill + label stay fixed —
- * a white label inside the solid blue node reads on either theme.)
- */
-function ThemeController() {
-  const canvas = useCanvas();
-  useEffect(() => {
-    const layer = canvas.layers.get<EngineGraphLayer>('graph');
-    if (!layer || typeof window === 'undefined' || !window.matchMedia) return;
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const apply = () => {
-      const dark = mq.matches;
-      // Border matches the background so the node reads as separated from the grid.
-      layer.setNodeDefaults({ bgStrokeColor: dark ? 0x0f172a : 0xffffff });
-      layer.setEdgeDefaults({ strokeColor: dark ? 0x475569 : 0xcbd5e1 });
-    };
-    apply();
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
-  }, [canvas]);
-  return null;
-}
-
 function Modeller() {
+  // The theme toggle pins the chrome theme; restore it to the OS preference on
+  // unmount so the pinned theme doesn't leak into the next story.
+  useEffect(() => () => applyChromeTheme(osPrefersDark()), []);
   return (
     <TooltipProvider>
       <GraphToolProvider>
@@ -411,17 +422,25 @@ function Modeller() {
                 style: {
                   shape: { kind: 'circle', radius: 22 },
                   bgFill: 0x3b82f6,
-                  // bgStrokeColor is theme-driven — see <ThemeController>.
+                  // bgStrokeColor is theme-driven — see <ResponsiveThemeBehaviour>.
                   bgStrokeWidth: 2,
                   labelColor: 0xf8fafc,
                   labelFontSize: 13,
                   labelPlacement: 'center',
                 },
               }}
-              // edge strokeColor is theme-driven — see <ThemeController>.
+              // edge strokeColor is theme-driven — see <ResponsiveThemeBehaviour>.
               edge={{ style: { strokeWidth: 2 } }}
             />
-            <ThemeController />
+            {/* Themes node borders + edge strokes to the OS `prefers-color-scheme`.
+                Border matches the background so the node reads as separated from
+                the grid. The node fill + label stay fixed — a white label inside
+                the solid blue node reads on either theme. */}
+            <ResponsiveThemeBehaviour
+              layerId="graph"
+              node={{ light: { bgStrokeColor: 0xffffff }, dark: { bgStrokeColor: 0x0f172a } }}
+              edge={{ light: { strokeColor: 0xcbd5e1 }, dark: { strokeColor: 0x475569 } }}
+            />
 
             <DragPanBehaviour />
             <WheelZoomBehaviour />

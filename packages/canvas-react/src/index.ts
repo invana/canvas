@@ -105,6 +105,9 @@ export type { ParallelEdgeBehaviourProps } from './behaviours/ParallelEdgeBehavi
 export { DegreeSizeBehaviour } from './behaviours/DegreeSizeBehaviour';
 export type { DegreeSizeBehaviourProps } from './behaviours/DegreeSizeBehaviour';
 
+export { ResponsiveThemeBehaviour } from './behaviours/ResponsiveThemeBehaviour';
+export type { ResponsiveThemeBehaviourProps } from './behaviours/ResponsiveThemeBehaviour';
+
 // ─── Layouts ─────────────────────────────────────────────────────────────
 export { D3ForceLayout } from './layouts/D3ForceLayout';
 export type { D3ForceLayoutProps } from './layouts/D3ForceLayout';
@@ -123,6 +126,7 @@ export {
   useHistory,
   useClipboard,
   useGrid,
+  useTheme,
   useLayout,
   useSelectMode,
   useEdgeType,
@@ -148,6 +152,8 @@ export type {
   UseClipboardResult,
   UseGridOptions,
   UseGridResult,
+  UseThemeOptions,
+  UseThemeResult,
   UseLayoutOptions,
   UseLayoutResult,
   ApplicableLayout,
@@ -220,6 +226,7 @@ export {
   PasteButton,
   DeleteSelectionButton,
   GridToggle,
+  ThemeToggle,
   LockButton,
   LayoutPicker,
   SelectModePicker,
@@ -247,6 +254,7 @@ export type {
   PasteButtonProps,
   DeleteSelectionButtonProps,
   GridToggleProps,
+  ThemeToggleProps,
   LockButtonProps,
   LayoutPickerProps,
   SelectModePickerProps,

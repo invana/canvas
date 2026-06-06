@@ -111,3 +111,11 @@ export type {
   DegreeSizeBehaviourOptions,
   DegreeSizeScale,
 } from './DegreeSizeBehaviour';
+
+export { ResponsiveThemeBehaviour } from './ResponsiveThemeBehaviour';
+export type {
+  ResponsiveThemeBehaviourOptions,
+  ThemeKind,
+  ThemeMode,
+  ThemeVariants,
+} from './ResponsiveThemeBehaviour';

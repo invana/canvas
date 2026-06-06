@@ -43,6 +43,8 @@ export { DeleteSelectionButton } from './DeleteSelectionButton';
 export type { DeleteSelectionButtonProps } from './DeleteSelectionButton';
 export { GridToggle } from './GridToggle';
 export type { GridToggleProps } from './GridToggle';
+export { ThemeToggle } from './ThemeToggle';
+export type { ThemeToggleProps } from './ThemeToggle';
 export { LockButton } from './LockButton';
 export type { LockButtonProps } from './LockButton';
 export { LayoutPicker } from './LayoutPicker';

@@ -154,5 +154,10 @@ export {
   DegreeSizeBehaviour,
   type DegreeSizeBehaviourOptions,
   type DegreeSizeScale,
+  ResponsiveThemeBehaviour,
+  type ResponsiveThemeBehaviourOptions,
+  type ThemeKind,
+  type ThemeMode,
+  type ThemeVariants,
 } from './behaviours';
 

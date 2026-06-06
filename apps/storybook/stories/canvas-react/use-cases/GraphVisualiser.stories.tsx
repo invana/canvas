@@ -55,6 +55,8 @@ import {
   MiniMapLayer,
   Panel,
   PinchZoomBehaviour,
+  ResponsiveThemeBehaviour,
+  ThemeToggle,
   ViewToolbar,
   WheelZoomBehaviour,
   useCamera,
@@ -87,12 +89,14 @@ import {
   LockOpen,
   Maximize,
   Minus,
+  Moon,
   MousePointer2,
   Redo2,
   RefreshCw,
   Scissors,
   Spline,
   SquareDashedMousePointer,
+  Sun,
   Trash2,
   Undo2,
   Waypoints,
@@ -163,37 +167,26 @@ const EDGE_TYPE_ICONS = {
 };
 
 /**
- * Keeps the graph's theme-dependent colours (node labels + borders, edge
- * strokes) in sync with the OS `prefers-color-scheme`.
- *
- * Why imperative: the `<GraphLayer>` wrapper applies its `node`/`edge` style
- * props only at mount, so React-state colour changes wouldn't reach existing
- * nodes. Instead we listen to the media query and call the engine layer's
- * `setNodeDefaults` / `setEdgeDefaults`, which patch the shared template and
- * re-render every node/edge in one pass.
+ * Flip the `@invana/ui` chrome (toolbar buttons, menus) to match the canvas
+ * theme, so the floating controls stay legible against the canvas instead of
+ * following the OS independently. Mirrors the storybook's own `bootstrapOsTheme`
+ * (`.storybook/preview.ts`), which switches the design-kit by `data-theme`.
  */
-function ThemeController() {
-  const canvas = useCanvas();
-  useEffect(() => {
-    const layer = canvas.layers.get<EngineGraphLayer>('graph');
-    if (!layer || typeof window === 'undefined' || !window.matchMedia) return;
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const apply = () => {
-      const dark = mq.matches;
-      layer.setNodeDefaults({
-        labelColor: dark ? 0xe2e8f0 : 0x334155,
-        bgStrokeColor: dark ? 0x0f172a : 0xffffff,
-      });
-      layer.setEdgeDefaults({
-        strokeColor: dark ? 0x475569 : 0xcbd5e1,
-        arrowTargetColor: dark ? 0x475569 : 0xcbd5e1,
-      });
-    };
-    apply();
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
-  }, [canvas]);
-  return null;
+function applyChromeTheme(dark: boolean): void {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  root.setAttribute('data-theme', dark ? 'default-dark' : 'default-light');
+  root.classList.remove('theme-default-light', 'theme-default-dark', 'light', 'dark');
+  root.classList.add(dark ? 'theme-default-dark' : 'theme-default-light', dark ? 'dark' : 'light');
+}
+
+/** Whether the OS currently prefers a dark colour scheme. */
+function osPrefersDark(): boolean {
+  return (
+    typeof window !== 'undefined'
+    && !!window.matchMedia
+    && window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
 }
 
 /**
@@ -369,6 +362,9 @@ function VisualiserContextMenu() {
 }
 
 function Visualiser() {
+  // The theme toggle pins the chrome theme; restore it to the OS preference on
+  // unmount so the pinned theme doesn't leak into the next story.
+  useEffect(() => () => applyChromeTheme(osPrefersDark()), []);
   return (
     <div style={{ height: '100vh' }}>
       <Canvas autoResize>
@@ -387,7 +383,7 @@ function Visualiser() {
             style: {
               shape: { kind: 'circle', radius: 8 },
               bgFill: (n: GraphNode) => PALETTE[groupOf(n) % PALETTE.length]!,
-              // labelColor + bgStrokeColor are theme-driven — see <ThemeController>.
+              // labelColor + bgStrokeColor are theme-driven — see <ResponsiveThemeBehaviour>.
               bgStrokeWidth: 1.5,
               labelText: (n: GraphNode) => String(n.id),
               labelFontSize: 11,
@@ -395,10 +391,22 @@ function Visualiser() {
               labelOffsetY: 4,
             },
           }}
-          // edge strokeColor is theme-driven — see <ThemeController>.
+          // edge strokeColor is theme-driven — see <ResponsiveThemeBehaviour>.
           edge={{ style: { strokeWidth: 1, arrowTargetShape: 'none' } }}
         />
-        <ThemeController />
+        {/* Themes node labels + borders and edge strokes/arrows to the OS
+            `prefers-color-scheme`. */}
+        <ResponsiveThemeBehaviour
+          layerId="graph"
+          node={{
+            light: { labelColor: 0x334155, bgStrokeColor: 0xffffff },
+            dark: { labelColor: 0xe2e8f0, bgStrokeColor: 0x0f172a },
+          }}
+          edge={{
+            light: { strokeColor: 0xcbd5e1, arrowTargetColor: 0xcbd5e1 },
+            dark: { strokeColor: 0x475569, arrowTargetColor: 0x475569 },
+          }}
+        />
 
         {/* Camera + interaction. Pan ('pan') + node-drag ('drag-node') are what
             <ViewToolbar>'s lock disables (default lock behaviour ids). */}
@@ -470,6 +478,17 @@ function Visualiser() {
               />
               <Separator orientation="vertical" style={{ alignSelf: 'center', height: 16 }} />
               <GridToolbar bare icons={{ grid: Grid3x3 }} />
+              <Separator orientation="vertical" style={{ alignSelf: 'center', height: 16 }} />
+              {/* Switch the graph theme (drives <ResponsiveThemeBehaviour>) to test
+                  the light/dark styling without changing the OS appearance. Flips
+                  the background layer in lockstep so the whole canvas stays
+                  coherent (otherwise light-on-light labels look invisible). */}
+              <ThemeToggle
+                lightIcon={Sun}
+                darkIcon={Moon}
+                backgroundLayerId="background"
+                onChange={(kind) => applyChromeTheme(kind === 'dark')}
+              />
             </Panel>
             <VisualiserContextMenu />
           </GraphClipboardProvider>
