@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import {
   HoverActivateBehaviour as EngineHoverActivateBehaviour,
   type HoverActivateBehaviourOptions,
 } from '@invana/graph';
 
+import { useCanvas } from '../CanvasContext';
 import { useBehaviourRegistration } from './useBehaviourRegistration';
 
 export interface HoverActivateBehaviourProps
@@ -16,7 +18,11 @@ export interface HoverActivateBehaviourProps
 /**
  * Declarative wrapper for `@invana/graph` `HoverActivateBehaviour`.
  *
- * `enabled` is reactive; other options are init-only — change `id` / `layerId`.
+ * `enabled` **and** `degree` are reactive; all other options are init-only —
+ * change `id` / `layerId` (or the component `key`) to apply them. `degree` is
+ * special-cased so a toolbar can flip neighbour-highlighting on/off live (e.g. a
+ * "magnet" toggle: `degree={1}` lights up 1st-degree neighbours, `degree={0}`
+ * lights up only the hovered element) without remounting the behaviour.
  */
 export function HoverActivateBehaviour({
   id = 'hover',
@@ -30,5 +36,16 @@ export function HoverActivateBehaviour({
     enabled,
     [id, layerId],
   );
+
+  // `degree` is reactive — push live changes through the engine's `setOptions`
+  // instead of forcing a remount. Runs after the register effect (effects fire
+  // top-down), so the behaviour always exists by the time we look it up.
+  const canvas = useCanvas();
+  const { degree } = rest;
+  useEffect(() => {
+    if (degree === undefined) return;
+    canvas.behaviours.get<EngineHoverActivateBehaviour>(id)?.setOptions({ degree });
+  }, [canvas, id, degree]);
+
   return null;
 }

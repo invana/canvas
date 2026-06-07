@@ -44,6 +44,7 @@ import {
   ClickSelectBehaviour,
   ClickViewBehaviour,
   ColorByLabelBehaviour,
+  ControlButton,
   GraphNodeContextMenu,
   GraphEdgeContextMenu,
   GraphBackgroundContextMenu,
@@ -98,6 +99,7 @@ import {
   Lasso,
   Lock,
   LockOpen,
+  Magnet,
   Maximize,
   Minus,
   Moon,
@@ -225,8 +227,18 @@ function EngineBridge({ onReady }: { onReady: (canvas: EngineCanvas | null) => v
  * clipboard providers (over the `'graph'` store) that `<HistoryToolbar>` /
  * `<EditToolbar>` consume — it only mounts once the engine (and thus the layer)
  * is live, so the providers find the store immediately.
+ *
+ * The `magnet` toggle drives the `<HoverActivateBehaviour>`'s neighbour radius:
+ * on → hovering a node lights up its 1st-degree neighbours; off → only the
+ * hovered node lights up.
  */
-function HeaderToolbar() {
+function HeaderToolbar({
+  magnet,
+  onToggleMagnet,
+}: {
+  magnet: boolean;
+  onToggleMagnet: () => void;
+}) {
   return (
     <GraphHistoryProvider layerId="graph">
       <GraphClipboardProvider layerId="graph">
@@ -270,6 +282,16 @@ function HeaderToolbar() {
           />
           <Separator orientation="vertical" style={dividerStyle} />
           <GridToolbar bare icons={{ grid: Grid3x3 }} />
+          <Separator orientation="vertical" style={dividerStyle} />
+          {/* Magnet — toggles the hover behaviour between "neighbours" (degree 1)
+              and "node only" (degree 0). `active` flips the button to the filled
+              variant. */}
+          <ControlButton
+            icon={Magnet}
+            title={magnet ? 'Highlight neighbours: on' : 'Highlight neighbours: off'}
+            active={magnet}
+            onClick={onToggleMagnet}
+          />
         </div>
       </GraphClipboardProvider>
     </GraphHistoryProvider>
@@ -353,6 +375,12 @@ function VisualiserApp() {
   // graph is fully wired; gates the header/footer chrome that depends on it.
   const [engine, setEngine] = useState<EngineCanvas | null>(null);
   const handleReady = useCallback((c: EngineCanvas | null) => setEngine(c), []);
+
+  // Magnet toggle → hover neighbour radius. On (default): hovering a node lights
+  // up its 1st-degree neighbours (degree 1). Off: only the hovered node lights
+  // up (degree 0). Reactive on <HoverActivateBehaviour> — no remount.
+  const [magnet, setMagnet] = useState(true);
+  const toggleMagnet = useCallback(() => setMagnet((m) => !m), []);
 
   // The theme toggle pins the chrome theme; restore it to the OS preference on
   // unmount so the pinned theme doesn't leak into the next story.
@@ -440,7 +468,9 @@ function VisualiserApp() {
       <AppLayoutBase
         header={{
           left: <span style={brandStyle}>Graph Visualiser</span>,
-          center: engine ? <HeaderToolbar /> : null,
+          center: engine ? (
+            <HeaderToolbar magnet={magnet} onToggleMagnet={toggleMagnet} />
+          ) : null,
           right: engine ? (
             <ThemeToggle
               lightIcon={Sun}
@@ -508,7 +538,14 @@ function VisualiserApp() {
             <DragNodeBehaviour layerId="graph" />
             <WheelZoomBehaviour />
             <PinchZoomBehaviour />
-            <HoverActivateBehaviour layerId="graph" degree={1} state="highlighted" />
+            {/* Hover highlighting. `degree` is driven by the header's magnet
+                toggle: 1 = hovered node + 1st-degree neighbours, 0 = hovered
+                node only. Reactive — flips live without remounting. */}
+            <HoverActivateBehaviour
+              layerId="graph"
+              degree={magnet ? 1 : 0}
+              state="highlighted"
+            />
 
             {/* Selection — Shift+click selects; <GraphLayoutToolbar>'s mode picker
                 arms exactly one of brush / lasso (both Shift+drag). */}
