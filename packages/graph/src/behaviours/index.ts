@@ -37,6 +37,12 @@ export type {
   ViewTarget,
 } from './ClickViewBehaviour';
 
+export { ColorByLabelBehaviour, DEFAULT_LABEL_PALETTE } from './ColorByLabelBehaviour';
+export type {
+  ColorByLabelBehaviourOptions,
+  ColorLabelAccessor,
+} from './ColorByLabelBehaviour';
+
 export { BrushSelectBehaviour } from './BrushSelectBehaviour';
 export type {
   BrushSelectBehaviourOptions,

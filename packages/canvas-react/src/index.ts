@@ -76,6 +76,8 @@ export { ClickInspectBehaviour } from './behaviours/ClickInspectBehaviour';
 export type { ClickInspectBehaviourProps } from './behaviours/ClickInspectBehaviour';
 export { ClickViewBehaviour } from './behaviours/ClickViewBehaviour';
 export type { ClickViewBehaviourProps } from './behaviours/ClickViewBehaviour';
+export { ColorByLabelBehaviour } from './behaviours/ColorByLabelBehaviour';
+export type { ColorByLabelBehaviourProps } from './behaviours/ColorByLabelBehaviour';
 
 export { BrushSelectBehaviour } from './behaviours/BrushSelectBehaviour';
 export type { BrushSelectBehaviourProps } from './behaviours/BrushSelectBehaviour';

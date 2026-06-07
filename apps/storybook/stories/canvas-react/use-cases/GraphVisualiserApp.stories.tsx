@@ -43,6 +43,7 @@ import {
   BrushSelectBehaviour,
   ClickSelectBehaviour,
   ClickViewBehaviour,
+  ColorByLabelBehaviour,
   GraphNodeContextMenu,
   GraphEdgeContextMenu,
   GraphBackgroundContextMenu,
@@ -466,7 +467,7 @@ function VisualiserApp() {
               node={{
                 style: {
                   shape: { kind: 'circle', radius: 8 },
-                  bgFill: (n: GraphNode) => PALETTE[groupOf(n) % PALETTE.length]!,
+                  // bgFill is owned by <ColorByLabelBehaviour> below.
                   bgStrokeWidth: 1.5,
                   labelText: (n: GraphNode) => String(n.id),
                   labelFontSize: 11,
@@ -475,6 +476,19 @@ function VisualiserApp() {
                 },
               }}
               edge={{ style: { strokeWidth: 1, arrowTargetShape: 'none' } }}
+            />
+
+            {/* Colour-by-category: a unique colour per distinct label drives node
+                `bgFill` and edge `strokeColor`. The default accessor is each
+                item's `type`; here we colour nodes by their les-mis community (a
+                categorical label) for variety. Registered BEFORE
+                <ResponsiveThemeBehaviour> so the theme's explicit edge styling
+                overrides this behaviour's edge colour, while the node `bgFill`
+                (which the theme doesn't set) stays label-driven. */}
+            <ColorByLabelBehaviour
+              layerId="graph"
+              palette={PALETTE}
+              nodeLabel={(n) => `community-${groupOf(n)}`}
             />
             <ResponsiveThemeBehaviour
               layerId="graph"
