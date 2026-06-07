@@ -1,94 +1,70 @@
 #!/usr/bin/env bash
 #
-# release.sh — lockstep release for the @invana/canvas monorepo.
+# release.sh — cut a lockstep release of all @invana/* packages.
 #
-# Sets EVERY publishable package to one shared version and creates a matching
-# `v<version>` git tag. Pushing that tag triggers .github/workflows/publish.yml,
-# which builds and publishes the packages to npm.
+# All publishable packages share ONE version. This script bumps every
+# publishable package.json under packages/* to the given version, commits,
+# and tags the commit. Pushing the tag triggers the "Publish to npm" GitHub
+# Action (.github/workflows/publish.yml), which builds and publishes to npm.
 #
-# Lockstep (one version for all packages) is deliberate: packages depend on each
-# other via `workspace:*`, which pnpm rewrites to the concrete version at publish
-# time. Shipping every package at the same version keeps those cross-refs valid.
+# Because the version is written into package.json *before* the tag is
+# created on that same commit, the git tag and the published version always
+# match — no drift. Cross-package workspace:* deps are left as-is; pnpm
+# rewrites them to the concrete version at publish time.
 #
 # Usage:
-#   ./release.sh 0.1.0        # explicit version
-#   ./release.sh patch        # bump current patch  (0.0.1 -> 0.0.2)
-#   ./release.sh minor        # bump current minor  (0.0.1 -> 0.1.0)
-#   ./release.sh major        # bump current major  (0.0.1 -> 1.0.0)
+#   ./release.sh 0.0.1
+#   ./release.sh 0.2.0
 #
-# This script does NOT push. It prints the exact push command so you control the
-# moment a publish is triggered.
-
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$ROOT"
-
-die() { echo "error: $*" >&2; exit 1; }
-
-[ $# -eq 1 ] || die "usage: ./release.sh <version|major|minor|patch>"
-ARG="$1"
-
-# --- preflight ---------------------------------------------------------------
-command -v node >/dev/null || die "node not found"
-git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "not a git repo"
-[ -z "$(git status --porcelain)" ] || die "working tree is dirty — commit or stash first"
-
-# Canonical current version = whatever @invana/canvas is at (lockstep => all equal).
-CURRENT="$(node -p "require('./packages/canvas/package.json').version")"
-
-# --- resolve target version --------------------------------------------------
-if [[ "$ARG" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.]+)?$ ]]; then
-  VERSION="$ARG"
-else
-  case "$ARG" in
-    major|minor|patch)
-      VERSION="$(node -e '
-        const [maj,min,pat] = process.argv[1].split(".").map(Number);
-        const t = process.argv[2];
-        const out = t==="major" ? [maj+1,0,0] : t==="minor" ? [maj,min+1,0] : [maj,min,pat+1];
-        console.log(out.join("."));
-      ' "$CURRENT" "$ARG")"
-      ;;
-    *) die "invalid version/bump: '$ARG' (expected semver or major|minor|patch)" ;;
-  esac
+VERSION="${1:-}"
+if [ -z "$VERSION" ]; then
+  echo "Usage: ./release.sh <version>   e.g. ./release.sh 0.0.1"
+  exit 1
 fi
 
-TAG="v$VERSION"
-git rev-parse "$TAG" >/dev/null 2>&1 && die "tag $TAG already exists"
+# Releases are cut from main with a clean working tree.
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+if [ "$BRANCH" != "main" ]; then
+  echo "Error: releases must be cut from 'main' (you are on '$BRANCH')."
+  exit 1
+fi
+if [ -n "$(git status --porcelain)" ]; then
+  echo "Error: working tree is not clean. Commit or stash your changes first."
+  exit 1
+fi
 
-echo "Releasing $CURRENT -> $VERSION  (tag $TAG)"
+if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+  echo "Error: tag v$VERSION already exists."
+  exit 1
+fi
 
-# --- bump every publishable (non-private) package ----------------------------
-CHANGED="$(node -e '
-  const { readFileSync, writeFileSync, readdirSync } = require("fs");
-  const version = process.argv[1];
-  const dirs = readdirSync("packages", { withFileTypes: true })
-    .filter(d => d.isDirectory())
-    .map(d => `packages/${d.name}/package.json`);
-  const changed = [];
-  for (const path of dirs) {
-    let j;
-    try { j = JSON.parse(readFileSync(path, "utf8")); } catch { continue; }
-    if (j.private) continue;            // skip @repo/* internal configs
-    j.version = version;
-    writeFileSync(path, JSON.stringify(j, null, 2) + "\n");
-    changed.push(j.name);
-  }
-  console.error(changed.length + " packages bumped:");
-  for (const n of changed) console.error("  " + n);
-  console.log(changed.join(" "));
-' "$VERSION")"
+echo "Bumping all publishable packages to $VERSION ..."
+# Bump only the version field of each publishable package. The private
+# @repo/* internal configs are excluded — they never publish, so bumping
+# them would just be noise in the release commit. --allow-same-version makes
+# the very first release (packages already at the target version) a no-op
+# instead of an error.
+pnpm -r --filter "./packages/*" --filter "!@repo/*" \
+  exec npm version "$VERSION" --no-git-tag-version --allow-same-version
 
-[ -n "$CHANGED" ] || die "no publishable packages found"
+# Commit only if the bump actually changed anything. On a first release where
+# the packages are already at $VERSION, there is nothing to commit — tag the
+# current commit (which already carries $VERSION) instead.
+if git diff --quiet; then
+  echo "Packages already at $VERSION — tagging current commit."
+else
+  git commit -am "release: v$VERSION"
+fi
 
-# --- commit + tag ------------------------------------------------------------
-git add packages/*/package.json
-git commit -m "chore(release): $TAG"
-git tag -a "$TAG" -m "$TAG"
+# Annotated tag so `git push --follow-tags` will push it (lightweight tags are skipped).
+git tag -a "v$VERSION" -m "v$VERSION"
 
 echo
-echo "✓ committed and tagged $TAG"
+echo "Created tag v$VERSION."
+echo "Push to publish:"
 echo
-echo "Next — push to trigger the npm publish workflow:"
-echo "    git push origin HEAD && git push origin $TAG"
+echo "    git push origin main --follow-tags"
+echo
+echo "The tag push triggers the 'Publish to npm' workflow."
