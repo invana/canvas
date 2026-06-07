@@ -4,8 +4,17 @@
     "outDir": "./dist",
     "rootDir": ".",
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    // `@invana/styling@0.0.4` exposes `./themes.config` as raw, un-compiled
+    // `.ts` (no shipped `.d.ts`), which `@invana/themes`' types import. tsc then
+    // type-checks that source and trips on the package's own latent errors —
+    // and `skipLibCheck` can't suppress a `.ts`. Redirect the specifier to a
+    // local declaration stub (tsc-only; Vite resolves the real module at
+    // runtime). Remove once the dependency ships compiled types.
+    "paths": {
+      "@invana/styling/themes.config": ["./types/styling-themes-config.d.ts"]
+    }
   },
-  "include": ["stories/**/*", ".storybook/**/*", "src/**/*", "vite-env.d.ts"],
+  "include": ["stories/**/*", ".storybook/**/*", "src/**/*", "types/**/*", "vite-env.d.ts"],
   "exclude": ["node_modules", "dist", "storybook-static"]
 }
