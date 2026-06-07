@@ -1,6 +1,6 @@
 {
   "name": "@invana/graph-layout-d3-force",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "D3 force-directed Layout for @invana/graph.",
   "type": "module",
   "main": "./dist/index.js",

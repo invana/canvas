@@ -1,6 +1,6 @@
 {
   "name": "@invana/graph-layer-bubble-sets",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "BubbleSets annotation layer for @invana/graph — smooth contours around named node groups, with edge enclosure and non-member routing.",
   "type": "module",
   "main": "./dist/index.js",
