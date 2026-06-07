@@ -53,6 +53,8 @@ export { LayoutPicker } from './LayoutPicker';
 export type { LayoutPickerProps } from './LayoutPicker';
 export { SelectModePicker } from './SelectModePicker';
 export type { SelectModePickerProps } from './SelectModePicker';
+export { GraphHintBar, DEFAULT_GRAPH_HINTS, DEFAULT_MAGNET_HINTS } from './GraphHintBar';
+export type { GraphHintBarProps } from './GraphHintBar';
 export { EdgeTypePicker } from './EdgeTypePicker';
 export type { EdgeTypePickerProps } from './EdgeTypePicker';
 export { ContextMenuOverlay } from './ContextMenuOverlay';

@@ -54,6 +54,7 @@ import {
   EditToolbar,
   GraphClipboardProvider,
   GraphHistoryProvider,
+  GraphHintBar,
   GraphLayer,
   GraphLayoutToolbar,
   GridToolbar,
@@ -235,9 +236,11 @@ function EngineBridge({ onReady }: { onReady: (canvas: EngineCanvas | null) => v
 function HeaderToolbar({
   magnet,
   onToggleMagnet,
+  onSelectModeChange,
 }: {
   magnet: boolean;
   onToggleMagnet: () => void;
+  onSelectModeChange: (mode: string) => void;
 }) {
   return (
     <GraphHistoryProvider layerId="graph">
@@ -254,6 +257,7 @@ function HeaderToolbar({
             selectModeLabels={SELECT_LABEL}
             selectModeIcons={SELECT_ICONS}
             initialSelectMode="click"
+            onSelectModeChange={onSelectModeChange}
           />
           <Separator orientation="vertical" style={dividerStyle} />
           <EdgeTypePicker layerId="graph" icons={EDGE_TYPE_ICONS} />
@@ -382,6 +386,10 @@ function VisualiserApp() {
   const [magnet, setMagnet] = useState(true);
   const toggleMagnet = useCallback(() => setMagnet((m) => !m), []);
 
+  // Active select mode, lifted out of the header's <GraphLayoutToolbar> so the
+  // footer hint bar (a sibling) can mirror it. Defaults to 'click'.
+  const [selectMode, setSelectMode] = useState('click');
+
   // The theme toggle pins the chrome theme; restore it to the OS preference on
   // unmount so the pinned theme doesn't leak into the next story.
   useEffect(() => () => applyChromeTheme(osPrefersDark()), []);
@@ -469,7 +477,11 @@ function VisualiserApp() {
         header={{
           left: <span style={brandStyle}>Graph Visualiser</span>,
           center: engine ? (
-            <HeaderToolbar magnet={magnet} onToggleMagnet={toggleMagnet} />
+            <HeaderToolbar
+              magnet={magnet}
+              onToggleMagnet={toggleMagnet}
+              onSelectModeChange={setSelectMode}
+            />
           ) : null,
           right: engine ? (
             <ThemeToggle
@@ -582,7 +594,12 @@ function VisualiserApp() {
             <EngineBridge onReady={handleReady} />
           </Canvas>
         }
-        footer={{ left: engine ? <StatusBar /> : null }}
+        footer={{
+          left: engine ? <StatusBar /> : null,
+          // Persistent guidance line — mirrors the current interaction mode +
+          // magnet state so the gesture for whatever's armed is always visible.
+          right: engine ? <GraphHintBar mode={selectMode} magnet={magnet} /> : null,
+        }}
       />
     </CanvasContext.Provider>
   );

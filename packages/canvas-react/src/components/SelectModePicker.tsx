@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
 import { OptionPicker } from './OptionPicker';
@@ -19,6 +20,12 @@ export interface SelectModePickerProps {
   align?: 'start' | 'center' | 'end';
   /** Side the trigger tooltip is placed on. Default `'top'`. */
   tooltipSide?: TooltipSide;
+  /**
+   * Notified with the active mode key — on the initial enabled mode and on every
+   * switch. Lets sibling chrome (e.g. a footer `GraphHintBar`) mirror the mode.
+   * Memoize it (`useCallback`) to avoid re-firing on every render.
+   */
+  onModeChange?: (mode: string) => void;
   /** Explicit canvas instance; defaults to the context canvas. */
   canvas?: EngineCanvas | null;
   className?: string;
@@ -37,6 +44,7 @@ export function SelectModePicker({
   icons,
   align,
   tooltipSide,
+  onModeChange,
   canvas,
   className,
 }: SelectModePickerProps) {
@@ -45,6 +53,13 @@ export function SelectModePicker({
     { ...(initial ? { initial } : {}), ...(labels ? { labels } : {}) },
     canvas,
   );
+
+  // Surface the active mode upward — fires for the initial enabled mode and on
+  // every switch (covers both via the `mode` dependency).
+  useEffect(() => {
+    onModeChange?.(mode);
+  }, [mode, onModeChange]);
+
   return (
     <OptionPicker
       label={label}

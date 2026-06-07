@@ -20,6 +20,11 @@ export interface GraphLayoutToolbarProps {
   initialLayout?: string;
   /** Initially-active select mode key. */
   initialSelectMode?: string;
+  /**
+   * Notified with the active select-mode key — on the initial mode and on every
+   * switch. Lift it (e.g. to drive a footer `GraphHintBar`). Memoize it.
+   */
+  onSelectModeChange?: (mode: string) => void;
   /** Target `GraphLayer` id. Default `'graph'`. */
   layerId?: string;
   /** Where the toolbar pins. Default `'top-center'`. */
@@ -45,6 +50,7 @@ export function GraphLayoutToolbar({
   selectModeIcons,
   initialLayout,
   initialSelectMode,
+  onSelectModeChange,
   layerId,
   position = 'top-center',
   bare = false,
@@ -69,6 +75,7 @@ export function GraphLayoutToolbar({
             labels={selectModeLabels}
             icons={selectModeIcons}
             initial={initialSelectMode}
+            onModeChange={onSelectModeChange}
             canvas={canvas}
           />
         </div>
