@@ -12,6 +12,11 @@
  *   - **Footer** — a live **status bar**: zoom level, camera pan offset, the
  *     pointer's world position, and the currently hovered node / edge.
  *
+ * Clicking a node / edge opens a read-only **property viewer**
+ * (`PropertyViewerPanel`, top-right) showing its label / type / data. It's
+ * driven by a dedicated `ClickViewBehaviour` — its own target, orthogonal to the
+ * `ClickSelectBehaviour` that owns the visual highlight.
+ *
  * ### Why the context is lifted
  *
  * `AppLayoutBase` lays out `header` / `main` / `footer` as siblings, but the
@@ -37,6 +42,7 @@ import {
   BackgroundLayer,
   BrushSelectBehaviour,
   ClickSelectBehaviour,
+  ClickViewBehaviour,
   GraphNodeContextMenu,
   GraphEdgeContextMenu,
   GraphBackgroundContextMenu,
@@ -55,6 +61,7 @@ import {
   LassoSelectBehaviour,
   MiniMapLayer,
   PinchZoomBehaviour,
+  PropertyViewerPanel,
   ResponsiveThemeBehaviour,
   ThemeToggle,
   ViewToolbar,
@@ -63,6 +70,7 @@ import {
   useCanvasEvent,
   useZoom,
   type LayoutFactory,
+  type ViewContext,
   type GraphNodeMenuContext,
   type GraphEdgeMenuContext,
   type GraphBackgroundMenuContext,
@@ -71,6 +79,7 @@ import { AppLayoutBase } from '@invana/themes';
 import { Separator, type MenuItem } from '@invana/ui';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 import type {
+  GraphData,
   GraphNode,
   ClickSelectBehaviour as EngineClickSelectBehaviour,
   GraphLayer as EngineGraphLayer,
@@ -115,6 +124,15 @@ const PALETTE = [
 ] as const;
 type LesMisData = { group: number };
 const groupOf = (n: GraphNode): number => (n.data as LesMisData | undefined)?.group ?? 0;
+
+// Les Misérables ships no `type` — in a graph DB every node/edge carries a label
+// (its "type"), distinct from the drawn `labelText`. Stamp graph-DB-style labels
+// on so the property viewer's Type row has something to show: characters are
+// `Character`, co-occurrence edges are `APPEARS_WITH`.
+const SEED: GraphData = {
+  nodes: lesMiserables.nodes.map((n) => ({ ...n, type: 'Character' })),
+  edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
+};
 
 // Layout factories — each call produces a fresh instance. Module-level so the
 // reference is stable across renders (keeps `useLayout`'s `applyLayout` stable).
@@ -444,7 +462,7 @@ function VisualiserApp() {
             />
             <GraphLayer
               id="graph"
-              data={lesMiserables}
+              data={SEED}
               node={{
                 style: {
                   shape: { kind: 'circle', radius: 8 },
@@ -484,8 +502,24 @@ function VisualiserApp() {
             <BrushSelectBehaviour layerId="graph" enabled={false} />
             <LassoSelectBehaviour layerId="graph" enabled={false} />
 
+            {/* Dedicated click-to-view behaviour for the property viewer — its own
+                target, orthogonal to ClickSelect (which owns the visual highlight),
+                applying no visuals of its own. The `panel` render-prop receives the
+                full ViewContext (kind/node/edge/data + engine handles) and renders
+                the UI: here the read-only <PropertyViewerPanel>; a modeller would
+                pass a form editor instead. */}
+            <ClickViewBehaviour
+              layerId="graph"
+              enabled
+              panel={(ctx: ViewContext) => (
+                <PropertyViewerPanel ctx={ctx} position="top-right" fullHeight />
+              )}
+            />
+
             <LabelResolutionLODBehaviour layerId="graph" />
-            <MiniMapLayer graphLayerId="graph" position="bottom-right" margin={{ x: 20 }} />
+            {/* Bottom-left — clear of the full-height property viewer that docks
+                on the right when an element is clicked. */}
+            <MiniMapLayer graphLayerId="graph" position="bottom-left" margin={{ x: 20 }} />
 
             {/* Right-click menus — each owns its own behaviour + overlay. */}
             <GraphNodeContextMenu items={nodeItems} />

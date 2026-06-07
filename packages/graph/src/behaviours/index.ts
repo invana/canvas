@@ -30,6 +30,13 @@ export type {
   InspectTarget,
 } from './ClickInspectBehaviour';
 
+export { ClickViewBehaviour } from './ClickViewBehaviour';
+export type {
+  ClickViewBehaviourOptions,
+  ClickViewEventMap,
+  ViewTarget,
+} from './ClickViewBehaviour';
+
 export { BrushSelectBehaviour } from './BrushSelectBehaviour';
 export type {
   BrushSelectBehaviourOptions,

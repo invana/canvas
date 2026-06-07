@@ -23,3 +23,5 @@ export { ModellerToolbar } from './ModellerToolbar';
 export type { ModellerToolbarProps, ModellerToolbarIconSet } from './ModellerToolbar';
 export { InspectorPanel } from './InspectorPanel';
 export type { InspectorPanelProps } from './InspectorPanel';
+export { PropertyViewerPanel } from './PropertyViewerPanel';
+export type { PropertyViewerPanelProps } from './PropertyViewerPanel';

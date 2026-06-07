@@ -12,6 +12,8 @@ export { ControlButton } from './ControlButton';
 export type { ControlButtonProps } from './ControlButton';
 export { PropertiesEditor } from './PropertiesEditor';
 export type { PropertiesEditorProps, PropertiesEditorValues } from './PropertiesEditor';
+export { PropertiesViewer } from './PropertiesViewer';
+export type { PropertiesViewerProps, PropertiesViewerRow } from './PropertiesViewer';
 
 export { OptionPicker } from './OptionPicker';
 export type { OptionPickerProps } from './OptionPicker';

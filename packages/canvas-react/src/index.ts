@@ -74,6 +74,8 @@ export type { ClickSelectBehaviourProps } from './behaviours/ClickSelectBehaviou
 
 export { ClickInspectBehaviour } from './behaviours/ClickInspectBehaviour';
 export type { ClickInspectBehaviourProps } from './behaviours/ClickInspectBehaviour';
+export { ClickViewBehaviour } from './behaviours/ClickViewBehaviour';
+export type { ClickViewBehaviourProps } from './behaviours/ClickViewBehaviour';
 
 export { BrushSelectBehaviour } from './behaviours/BrushSelectBehaviour';
 export type { BrushSelectBehaviourProps } from './behaviours/BrushSelectBehaviour';
@@ -123,6 +125,9 @@ export {
   useClearGraph,
   useSelection,
   useInspectTarget,
+  useViewTarget,
+  useViewData,
+  useViewContext,
   useHistory,
   useClipboard,
   useGrid,
@@ -146,6 +151,10 @@ export type {
   UseSelectionOptions,
   UseSelectionResult,
   UseInspectTargetOptions,
+  UseViewTargetOptions,
+  UseViewDataOptions,
+  ViewData,
+  ViewContext,
   UseHistoryOptions,
   UseHistoryResult,
   UseClipboardOptions,
@@ -185,6 +194,7 @@ export {
   GraphLayoutToolbar,
   ModellerToolbar,
   InspectorPanel,
+  PropertyViewerPanel,
 } from './toolbars';
 export type {
   CanvasControlsToolbarProps,
@@ -202,6 +212,7 @@ export type {
   ModellerToolbarProps,
   ModellerToolbarIconSet,
   InspectorPanelProps,
+  PropertyViewerPanelProps,
 } from './toolbars';
 
 // ─── UI components (building blocks) ───────────────────────────────────────
@@ -232,6 +243,7 @@ export {
   SelectModePicker,
   EdgeTypePicker,
   PropertiesEditor,
+  PropertiesViewer,
   ContextMenuOverlay,
 } from './components';
 export type {
@@ -261,6 +273,8 @@ export type {
   EdgeTypePickerProps,
   PropertiesEditorProps,
   PropertiesEditorValues,
+  PropertiesViewerProps,
+  PropertiesViewerRow,
   ContextMenuOverlayProps,
   ToolbarIcon,
 } from './components';
