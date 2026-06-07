@@ -1,6 +1,6 @@
 {
   "name": "@invana/graph-layout-elkjs",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "ELK.js Layout for @invana/graph.",
   "type": "module",
   "main": "./dist/index.js",

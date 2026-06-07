@@ -1,6 +1,6 @@
 {
   "name": "@invana/graph-layer-d3-contour",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Density-contour overlay Layer for @invana/graph, backed by d3-contour.",
   "type": "module",
   "main": "./dist/index.js",
