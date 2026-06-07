@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "description": "Graph layer + behaviours for @invana/canvas — GraphLayer, MiniMapLayer, hover/select/lasso/brush/pan/drag behaviours.",
   "type": "module",
-  "main": "./src/index.js",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "typedocOptions": {
     "entryPoints": [
       "src/index.ts"
@@ -39,5 +39,19 @@
     "edges",
     "visualization"
   ],
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

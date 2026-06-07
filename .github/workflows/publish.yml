@@ -1,0 +1,43 @@
+name: Publish to npm
+
+# Triggered by a version tag pushed via ./release.sh (e.g. v0.1.0).
+# Builds every package (deps first, via turbo) and publishes all non-private
+# workspace packages to npm. pnpm rewrites `workspace:*` cross-deps to the
+# concrete version at pack time, so lockstep versioning keeps them resolvable.
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # required for npm provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build --filter=!@canvas/storybook --filter=!@canvas/docs
+
+      - name: Publish to npm
+        run: pnpm -r publish --access public --no-git-checks --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

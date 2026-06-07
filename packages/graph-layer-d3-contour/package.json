@@ -3,10 +3,12 @@
   "version": "0.0.1",
   "description": "Density-contour overlay Layer for @invana/graph, backed by d3-contour.",
   "type": "module",
-  "main": "./src/index.js",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "typedocOptions": {
-    "entryPoints": ["src/index.ts"]
+    "entryPoints": [
+      "src/index.ts"
+    ]
   },
   "scripts": {
     "build": "tsup",
@@ -32,6 +34,28 @@
     "tsup": "^8.3.5",
     "typescript": "5.9.2"
   },
-  "keywords": ["canvas", "graph", "layer", "d3", "d3-contour", "density", "contour"],
-  "license": "Apache-2.0"
+  "keywords": [
+    "canvas",
+    "graph",
+    "layer",
+    "d3",
+    "d3-contour",
+    "density",
+    "contour"
+  ],
+  "license": "Apache-2.0",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

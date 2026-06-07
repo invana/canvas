@@ -3,10 +3,12 @@
   "version": "0.0.1",
   "description": "D3 force-directed Layout for @invana/graph.",
   "type": "module",
-  "main": "./src/index.js",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "typedocOptions": {
-    "entryPoints": ["src/index.ts"]
+    "entryPoints": [
+      "src/index.ts"
+    ]
   },
   "scripts": {
     "build": "tsup",
@@ -32,6 +34,27 @@
     "typescript": "5.9.2",
     "vitest": "^2.1.8"
   },
-  "keywords": ["canvas", "graph", "layout", "d3", "d3-force", "force-directed"],
-  "license": "Apache-2.0"
+  "keywords": [
+    "canvas",
+    "graph",
+    "layout",
+    "d3",
+    "d3-force",
+    "force-directed"
+  ],
+  "license": "Apache-2.0",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

@@ -3,10 +3,12 @@
   "version": "0.0.1",
   "description": "BubbleSets annotation layer for @invana/graph — smooth contours around named node groups, with edge enclosure and non-member routing.",
   "type": "module",
-  "main": "./src/index.js",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "typedocOptions": {
-    "entryPoints": ["src/index.ts"]
+    "entryPoints": [
+      "src/index.ts"
+    ]
   },
   "scripts": {
     "build": "tsup",
@@ -31,6 +33,29 @@
     "tsup": "^8.3.5",
     "typescript": "5.9.2"
   },
-  "keywords": ["canvas", "graph", "layer", "annotation", "bubblesets", "bubble-sets", "set-cover", "contour"],
-  "license": "Apache-2.0"
+  "keywords": [
+    "canvas",
+    "graph",
+    "layer",
+    "annotation",
+    "bubblesets",
+    "bubble-sets",
+    "set-cover",
+    "contour"
+  ],
+  "license": "Apache-2.0",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

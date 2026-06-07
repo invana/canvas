@@ -3,16 +3,18 @@
   "version": "0.0.1",
   "description": "Example graph datasets for @invana/graph (Les Misérables, scientists org chart, random tree, etc.).",
   "type": "module",
-  "main": "./src/index.js",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.js"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./usecase-demos": {
-      "types": "./src/usecase-demos/index.ts",
-      "default": "./src/usecase-demos/index.js"
+      "types": "./dist/usecase-demos/index.d.ts",
+      "import": "./dist/usecase-demos/index.js",
+      "default": "./dist/usecase-demos/index.js"
     }
   },
   "scripts": {
@@ -29,6 +31,19 @@
     "typescript": "5.9.2",
     "vitest": "^2.1.8"
   },
-  "keywords": ["canvas", "graph", "datasets", "examples", "visualization"],
-  "license": "Apache-2.0"
+  "keywords": [
+    "canvas",
+    "graph",
+    "datasets",
+    "examples",
+    "visualization"
+  ],
+  "license": "Apache-2.0",
+  "module": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }
