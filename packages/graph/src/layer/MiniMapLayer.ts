@@ -34,6 +34,22 @@ import type { GraphNode } from '../store/types';
 /** Anchor corner inside the canvas viewport. */
 export type MiniMapPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
+/**
+ * A minimap-chrome colour. Pass a single `0xRRGGBB` for a fixed colour, or a
+ * `{ light, dark }` pair to swap based on the layer's `mode` — so the minimap
+ * can track the canvas theme the same way {@link BackgroundLayer} does.
+ */
+export type MiniMapColor = number | { light: number; dark: number };
+
+/**
+ * Mode selector for light/dark colour resolution. `'auto'` follows the host's
+ * `prefers-color-scheme` media query; `'light'` / `'dark'` pin explicitly.
+ */
+export type MiniMapMode = 'auto' | 'light' | 'dark';
+
+/** The concrete kind currently resolved after `mode` resolution. */
+export type MiniMapKind = 'light' | 'dark';
+
 /** Constructor options for `MiniMapLayer`. */
 export interface MiniMapLayerOptions {
   /** Required — the `GraphLayer` id this minimap mirrors. */
@@ -43,17 +59,20 @@ export interface MiniMapLayerOptions {
   width?: number;
   /** Minimap height in screen pixels. Default `150`. */
   height?: number;
-  /** Background fill `0xRRGGBB`. Default `0x1a1a2e`. */
-  backgroundColor?: number;
-  /** Border colour `0xRRGGBB`. Default `0x444444`. */
-  borderColor?: number;
+  /**
+   * Background fill. A `0xRRGGBB` or a `{ light, dark }` pair resolved against
+   * `mode` (pass the pair to track the canvas theme). Default `0x1a1a2e`.
+   */
+  backgroundColor?: MiniMapColor;
+  /** Border colour. Same forms as `backgroundColor`. Default `0x444444`. */
+  borderColor?: MiniMapColor;
   /** Border stroke width. Default `1`. */
   borderWidth?: number;
 
-  /** Viewport indicator fill. Default `0x4a90d9`. */
-  viewportFill?: number;
-  /** Viewport indicator stroke. Default `0x2a70b9`. */
-  viewportStroke?: number;
+  /** Viewport indicator fill. Same forms as `backgroundColor`. Default `0x4a90d9`. */
+  viewportFill?: MiniMapColor;
+  /** Viewport indicator stroke. Same forms as `backgroundColor`. Default `0x2a70b9`. */
+  viewportStroke?: MiniMapColor;
   /** Viewport indicator fill alpha 0–1. Default `0.3`. */
   viewportFillAlpha?: number;
   /** Viewport indicator stroke width. Default `2`. */
@@ -65,6 +84,14 @@ export interface MiniMapLayerOptions {
   enableDrag?: boolean;
   /** Anchor corner. Default `'bottom-right'`. */
   position?: MiniMapPosition;
+  /**
+   * How `{ light, dark }` colour variants are resolved. `'auto'` (default)
+   * follows `prefers-color-scheme`; `'light'` / `'dark'` pin explicitly. Has no
+   * effect when every colour is a plain scalar. Flip it (e.g. from a theme
+   * toggle via `useTheme`'s `minimapLayerId`) to swap the minimap chrome in
+   * lockstep with the canvas {@link BackgroundLayer}.
+   */
+  mode?: MiniMapMode;
   /**
    * Inset from the chosen corner, in screen pixels. Pass a single number for a
    * symmetric inset, or `{ x, y }` for independent horizontal / vertical insets
@@ -88,6 +115,7 @@ const DEFAULTS: Required<Omit<MiniMapLayerOptions, 'graphLayerId'>> = {
   enableDrag: true,
   position: 'bottom-right',
   margin: 10,
+  mode: 'auto',
 };
 
 interface Bounds {
@@ -135,6 +163,10 @@ export class MiniMapLayer extends ScreenLayer<
   private offCameraPan: (() => void) | null = null;
   private offCameraZoom: (() => void) | null = null;
 
+  /** `prefers-color-scheme` listener, armed only when `mode: 'auto'` + a themed colour. */
+  private modeMediaQuery: MediaQueryList | null = null;
+  private modeMediaListener: (() => void) | null = null;
+
   constructor(opts: LayerOptions<MiniMapLayerOptions>) {
     super({
       ...opts,
@@ -174,6 +206,7 @@ export class MiniMapLayer extends ScreenLayer<
 
     if (this.opts.enableDrag) this.wireInteractions();
 
+    this.wireModeMediaQuery();
     this.layoutPosition();
     this.repaint();
 
@@ -201,6 +234,7 @@ export class MiniMapLayer extends ScreenLayer<
   }
 
   protected override onUnmount(): void {
+    this.detachModeMediaQuery();
     this.offCameraPan?.();
     this.offCameraZoom?.();
     this.offResize?.();
@@ -231,8 +265,32 @@ export class MiniMapLayer extends ScreenLayer<
 
   setOptions(patch: Partial<Omit<MiniMapLayerOptions, 'graphLayerId'>>): void {
     this.opts = { ...this.opts, ...patch };
+    this.wireModeMediaQuery();
     this.layoutPosition();
     this.repaint();
+  }
+
+  /**
+   * Set the colour-resolution mode. `'auto'` re-arms the `prefers-color-scheme`
+   * listener; `'light'` / `'dark'` pin explicitly. No-op when unchanged. Drive
+   * this from a theme toggle (see `useTheme`'s `minimapLayerId`) so the minimap
+   * chrome flips in lockstep with the canvas {@link BackgroundLayer}.
+   */
+  setMode(mode: MiniMapMode): void {
+    if (this.opts.mode === mode) return;
+    this.opts = { ...this.opts, mode };
+    this.wireModeMediaQuery();
+    this.repaint();
+  }
+
+  /** Current mode setting. */
+  getMode(): MiniMapMode {
+    return this.opts.mode;
+  }
+
+  /** Concrete kind currently resolved after `mode` resolution. */
+  getResolvedKind(): MiniMapKind {
+    return resolveMiniMapKind(this.opts.mode);
   }
 
   // ─── Layout ─────────────────────────────────────────────────────────────
@@ -288,9 +346,12 @@ export class MiniMapLayer extends ScreenLayer<
     if (!g) return;
     const { width, height, backgroundColor, borderColor, borderWidth } = this.opts;
     g.clear();
-    g.rect(0, 0, width, height).fill(backgroundColor);
+    g.rect(0, 0, width, height).fill(this.resolveColor(backgroundColor));
     if (borderWidth > 0) {
-      g.rect(0, 0, width, height).stroke({ color: borderColor, width: borderWidth });
+      g.rect(0, 0, width, height).stroke({
+        color: this.resolveColor(borderColor),
+        width: borderWidth,
+      });
     }
   }
 
@@ -404,9 +465,12 @@ export class MiniMapLayer extends ScreenLayer<
     const h = br.y - tl.y;
     g.clear();
     g.rect(x, y, w, h);
-    g.fill({ color: this.opts.viewportFill, alpha: this.opts.viewportFillAlpha });
+    g.fill({ color: this.resolveColor(this.opts.viewportFill), alpha: this.opts.viewportFillAlpha });
     g.rect(x, y, w, h);
-    g.stroke({ color: this.opts.viewportStroke, width: this.opts.viewportStrokeWidth });
+    g.stroke({
+      color: this.resolveColor(this.opts.viewportStroke),
+      width: this.opts.viewportStrokeWidth,
+    });
   }
 
   // ─── Bounds + projection ────────────────────────────────────────────────
@@ -471,6 +535,50 @@ export class MiniMapLayer extends ScreenLayer<
     this.scale = Math.min(sx, sy) * 0.9;
     this.offsetX = (width - b.width * this.scale) / 2 - b.x * this.scale;
     this.offsetY = (height - b.height * this.scale) / 2 - b.y * this.scale;
+  }
+
+  // ─── Theme colour resolution ────────────────────────────────────────────
+
+  /** Resolve a scalar or `{ light, dark }` colour against the current mode. */
+  private resolveColor(c: MiniMapColor): number {
+    if (typeof c === 'number') return c;
+    return this.getResolvedKind() === 'dark' ? c.dark : c.light;
+  }
+
+  /** True when any themed colour is a `{ light, dark }` pair. */
+  private hasVariantColor(): boolean {
+    const { backgroundColor, borderColor, viewportFill, viewportStroke } = this.opts;
+    return (
+      typeof backgroundColor === 'object' ||
+      typeof borderColor === 'object' ||
+      typeof viewportFill === 'object' ||
+      typeof viewportStroke === 'object'
+    );
+  }
+
+  /**
+   * Listen to `prefers-color-scheme` only while following the system
+   * (`mode: 'auto'`) AND at least one colour is a `{ light, dark }` pair —
+   * otherwise there's nothing to swap. Mirrors `BackgroundLayer`.
+   */
+  private wireModeMediaQuery(): void {
+    if (this.opts.mode !== 'auto' || !this.hasVariantColor()) {
+      this.detachModeMediaQuery();
+      return;
+    }
+    if (this.modeMediaQuery) return;
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    this.modeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    this.modeMediaListener = () => this.repaint();
+    this.modeMediaQuery.addEventListener('change', this.modeMediaListener);
+  }
+
+  private detachModeMediaQuery(): void {
+    if (this.modeMediaQuery && this.modeMediaListener) {
+      this.modeMediaQuery.removeEventListener('change', this.modeMediaListener);
+    }
+    this.modeMediaQuery = null;
+    this.modeMediaListener = null;
   }
 
   private worldToMinimap(wx: number, wy: number): { x: number; y: number } {
@@ -556,3 +664,10 @@ export class MiniMapLayer extends ScreenLayer<
  * minimap places it symmetrically around the node's stored position.
  */
 const FALLBACK_LOCAL_BOUNDS: Rect = { x: -16, y: -16, width: 32, height: 32 };
+
+/** Resolve a {@link MiniMapMode} to a concrete kind, consulting the OS for `'auto'`. */
+function resolveMiniMapKind(mode: MiniMapMode): MiniMapKind {
+  if (mode === 'light' || mode === 'dark') return mode;
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}

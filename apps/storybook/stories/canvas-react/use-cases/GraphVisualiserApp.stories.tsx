@@ -312,6 +312,7 @@ function HeaderToolbarItems({
 function HeaderThemeToggle() {
   const { kind, toggle } = useTheme({
     backgroundLayerId: 'background',
+    minimapLayerId: 'minimap',
     onChange: (k) => applyChromeTheme(k === 'dark'),
   });
   const items: ToolbarItem[] = [
@@ -449,7 +450,11 @@ function VisualiserApp() {
               type="pattern"
               patternType="grid"
               backgroundColor={{ light: '#f8fafc', dark: '#0f172a' }}
-              color={{ light: '#94a3b8', dark: '#334155' }}
+              // Dim grid: lines sit close to the background (slate-200 on near-white,
+              // slate-800 on near-black) so the grid is a faint guide, not a feature
+              // competing with the nodes/edges. Alpha trims it further.
+              color={{ light: '#e2e8f0', dark: '#1e293b' }}
+              alpha={0.5}
             />
             <GraphLayer
               id="graph"
@@ -487,8 +492,13 @@ function VisualiserApp() {
                 dark: { labelColor: 0xe2e8f0, bgStrokeColor: 0x0f172a },
               }}
               edge={{
-                light: { strokeColor: 0xcbd5e1, arrowTargetColor: 0xcbd5e1 },
-                dark: { strokeColor: 0x475569, arrowTargetColor: 0x475569 },
+                // Edges must read against BOTH the page background and the grid
+                // lines (light grid #94a3b8 / dark grid #334155). Slate-600 in
+                // light mode sits clearly darker than the slate-400 grid; slate-500
+                // in dark mode sits clearly lighter than the slate-700 grid — so
+                // the connections stay visible without competing with the nodes.
+                light: { strokeColor: 0x475569, arrowTargetColor: 0x475569 },
+                dark: { strokeColor: 0x64748b, arrowTargetColor: 0x64748b },
               }}
             />
 
@@ -530,7 +540,19 @@ function VisualiserApp() {
             <LabelResolutionLODBehaviour layerId="graph" />
             {/* Bottom-left — clear of the full-height property viewer that docks
                 on the right when an element is clicked. */}
-            <MiniMapLayer graphLayerId="graph" position="bottom-left" margin={{ x: 20 }} />
+            <MiniMapLayer
+              graphLayerId="graph"
+              position="bottom-left"
+              margin={{ x: 20 }}
+              // Theme-aware chrome: background matches the canvas fill, border
+              // matches the grid line colour. `useTheme`'s `minimapLayerId`
+              // (see <HeaderThemeToggle>) flips its mode in lockstep with the
+              // BackgroundLayer, so the minimap reads as a scaled bird's-eye of
+              // the canvas in both themes — the mirrored node/edge colours keep
+              // their contrast instead of sitting on a fixed dark panel.
+              backgroundColor={{ light: 0xf8fafc, dark: 0x0f172a }}
+              borderColor={{ light: 0x94a3b8, dark: 0x334155 }}
+            />
 
             {/* Right-click menus — each owns its own behaviour + overlay. */}
             <GraphNodeContextMenu items={nodeItems} />

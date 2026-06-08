@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Canvas as EngineCanvas, BackgroundLayer } from '@invana/canvas';
 import type {
+  MiniMapLayer,
   ResponsiveThemeBehaviour,
   ThemeKind,
   ThemeMode,
@@ -18,6 +19,13 @@ export interface UseThemeOptions {
    * `prefers-color-scheme`. Omit to leave the background alone.
    */
   backgroundLayerId?: string;
+  /**
+   * Optional id of a `MiniMapLayer` to flip in lockstep. When set, switching the
+   * theme also switches the minimap's `mode`, so its chrome (background / border
+   * / viewport indicator) tracks the canvas instead of staying on its own
+   * `prefers-color-scheme`. Omit to leave the minimap alone.
+   */
+  minimapLayerId?: string;
   /**
    * Called after the theme switches, with the new resolved kind + mode. Use it
    * to flip *app chrome* that lives outside the canvas (e.g. a design-system
@@ -55,7 +63,7 @@ export function useTheme(
   options: UseThemeOptions = {},
   canvas?: EngineCanvas | null,
 ): UseThemeResult {
-  const { behaviourId = 'responsive-theme', backgroundLayerId, onChange } = options;
+  const { behaviourId = 'responsive-theme', backgroundLayerId, minimapLayerId, onChange } = options;
   const resolved = useResolvedCanvas(canvas);
   const [mode, setModeState] = useState<ThemeMode>('auto');
   const [kind, setKindState] = useState<ThemeKind>('light');
@@ -68,6 +76,10 @@ export function useTheme(
     () =>
       backgroundLayerId ? resolved.layers.get<BackgroundLayer>(backgroundLayerId) : undefined,
     [resolved, backgroundLayerId],
+  );
+  const getMinimap = useCallback(
+    () => (minimapLayerId ? resolved.layers.get<MiniMapLayer>(minimapLayerId) : undefined),
+    [resolved, minimapLayerId],
   );
 
   /** Read the live state of whichever target is present. */
@@ -89,12 +101,13 @@ export function useTheme(
     (next: ThemeMode) => {
       getBehaviour()?.setMode(next);
       getBackground()?.setMode(next);
+      getMinimap()?.setMode(next);
       const { mode: m, kind: k } = read();
       setModeState(m);
       setKindState(k);
       onChange?.(k, m);
     },
-    [getBehaviour, getBackground, read, onChange],
+    [getBehaviour, getBackground, getMinimap, read, onChange],
   );
 
   const setMode = useCallback((next: ThemeMode) => applyMode(next), [applyMode]);

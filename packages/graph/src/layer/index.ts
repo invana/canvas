@@ -4,7 +4,13 @@
 
 export { GraphLayer } from './GraphLayer';
 export { MiniMapLayer } from './MiniMapLayer';
-export type { MiniMapLayerOptions, MiniMapPosition } from './MiniMapLayer';
+export type {
+  MiniMapLayerOptions,
+  MiniMapPosition,
+  MiniMapColor,
+  MiniMapMode,
+  MiniMapKind,
+} from './MiniMapLayer';
 export {
   DEFAULT_EDGE_STATES,
   DEFAULT_NODE_STATES,
