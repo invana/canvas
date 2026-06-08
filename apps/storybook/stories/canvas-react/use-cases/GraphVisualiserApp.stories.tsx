@@ -44,21 +44,15 @@ import {
   ClickSelectBehaviour,
   ClickViewBehaviour,
   ColorByLabelBehaviour,
-  ControlButton,
   GraphNodeContextMenu,
   GraphEdgeContextMenu,
   GraphBackgroundContextMenu,
   DragNodeBehaviour,
   DragPanBehaviour,
-  EdgeTypePicker,
-  EditToolbar,
   GraphClipboardProvider,
   GraphHistoryProvider,
   GraphHintBar,
   GraphLayer,
-  GraphLayoutToolbar,
-  GridToolbar,
-  HistoryToolbar,
   HoverActivateBehaviour,
   LabelResolutionLODBehaviour,
   LassoSelectBehaviour,
@@ -66,13 +60,21 @@ import {
   PinchZoomBehaviour,
   PropertyViewerPanel,
   ResponsiveThemeBehaviour,
-  ThemeToggle,
-  ViewToolbar,
+  ToolbarItems,
   WheelZoomBehaviour,
   useCanvas,
   useCanvasEvent,
   useSelection,
   useZoom,
+  useHistorySection,
+  useEditorSection,
+  useViewSection,
+  useLayoutsSection,
+  useStyleEditorSection,
+  useSelectMode,
+  useGrid,
+  useTheme,
+  type ToolbarItem,
   type LayoutFactory,
   type ViewContext,
   type GraphNodeMenuContext,
@@ -80,7 +82,7 @@ import {
   type GraphBackgroundMenuContext,
 } from '@invana/canvas-react';
 import { AppLayoutBase } from '@invana/themes';
-import { Separator, type MenuItem } from '@invana/ui';
+import type { MenuItem } from '@invana/ui';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 import type {
   GraphData,
@@ -107,7 +109,6 @@ import {
   Moon,
   MousePointer2,
   Redo2,
-  RefreshCw,
   Scissors,
   Spline,
   SquareDashedMousePointer,
@@ -242,63 +243,93 @@ function HeaderToolbar({
   onToggleMagnet: () => void;
   onSelectModeChange: (mode: string) => void;
 }) {
+  // The builder hooks read the history / clipboard providers, so item assembly
+  // lives in a child mounted *inside* them.
   return (
     <GraphHistoryProvider layerId="graph">
       <GraphClipboardProvider layerId="graph">
-        <div style={toolbarRowStyle}>
-          <HistoryToolbar bare icons={{ undo: Undo2, redo: Redo2, redraw: RefreshCw }} />
-          <Separator orientation="vertical" style={dividerStyle} />
-          <GraphLayoutToolbar
-            bare
-            layouts={LAYOUTS}
-            layoutLabels={LAYOUT_LABEL}
-            initialLayout="d3-force"
-            selectModeBehaviourIds={SELECT_MODE_IDS}
-            selectModeLabels={SELECT_LABEL}
-            selectModeIcons={SELECT_ICONS}
-            initialSelectMode="click"
-            onSelectModeChange={onSelectModeChange}
-          />
-          <Separator orientation="vertical" style={dividerStyle} />
-          <EdgeTypePicker layerId="graph" icons={EDGE_TYPE_ICONS} />
-          <Separator orientation="vertical" style={dividerStyle} />
-          <EditToolbar
-            bare
-            icons={{
-              cut: Scissors,
-              copy: Copy,
-              paste: ClipboardPaste,
-              clear: Eraser,
-            }}
-          />
-          <Separator orientation="vertical" style={dividerStyle} />
-          <ViewToolbar
-            bare
-            orientation="horizontal"
-            icons={{
-              zoomIn: ZoomIn,
-              zoomOut: ZoomOut,
-              fit: Maximize,
-              locked: Lock,
-              unlocked: LockOpen,
-            }}
-          />
-          <Separator orientation="vertical" style={dividerStyle} />
-          <GridToolbar bare icons={{ grid: Grid3x3 }} />
-          <Separator orientation="vertical" style={dividerStyle} />
-          {/* Magnet — toggles the hover behaviour between "neighbours" (degree 1)
-              and "node only" (degree 0). `active` flips the button to the filled
-              variant. */}
-          <ControlButton
-            icon={Magnet}
-            title={magnet ? 'Highlight neighbours: on' : 'Highlight neighbours: off'}
-            active={magnet}
-            onClick={onToggleMagnet}
-          />
-        </div>
+        <HeaderToolbarItems
+          magnet={magnet}
+          onToggleMagnet={onToggleMagnet}
+          onSelectModeChange={onSelectModeChange}
+        />
       </GraphClipboardProvider>
     </GraphHistoryProvider>
   );
+}
+
+/**
+ * The whole header bar as one data-driven `<ToolbarItems>`. The five named
+ * sections come from section hooks ({@link useHistorySection},
+ * {@link useLayoutsSection}, {@link useEditorSection}, {@link useViewSection},
+ * {@link useStyleEditorSection}); select-mode, grid, and magnet are hand-built
+ * `ToolbarItem`s off the raw hooks — concatenated with `divider`s. The Magnet
+ * toggle flips the hover behaviour between "neighbours" (degree 1) and "node
+ * only" (degree 0).
+ */
+function HeaderToolbarItems({
+  magnet,
+  onToggleMagnet,
+  onSelectModeChange,
+}: {
+  magnet: boolean;
+  onToggleMagnet: () => void;
+  onSelectModeChange: (mode: string) => void;
+}) {
+  // Five named sections.
+  const history = useHistorySection({ icons: { undo: Undo2, redo: Redo2 } });
+  const layouts = useLayoutsSection({ layouts: LAYOUTS, labels: LAYOUT_LABEL, initial: 'd3-force' });
+  const editor = useEditorSection({ icons: { cut: Scissors, copy: Copy, paste: ClipboardPaste, erase: Eraser } });
+  const view = useViewSection({ icons: { zoomIn: ZoomIn, zoomOut: ZoomOut, fit: Maximize, locked: Lock, unlocked: LockOpen } });
+  const style = useStyleEditorSection({ layerId: 'graph', icons: EDGE_TYPE_ICONS });
+
+  // Extras hand-built off the raw hooks (not one of the five sections).
+  const { mode, modeOptions, setMode } = useSelectMode(SELECT_MODE_IDS, { labels: SELECT_LABEL, initial: 'click' });
+  useEffect(() => onSelectModeChange(mode), [mode, onSelectModeChange]);
+  const { showGrid, toggleGrid } = useGrid();
+
+  const div = (key: string): ToolbarItem => ({ type: 'divider', key });
+  const items: ToolbarItem[] = [
+    ...history, div('d1'),
+    ...layouts, div('d2'),
+    { type: 'select', key: 'select-mode', label: 'Select', value: mode, options: modeOptions, icons: SELECT_ICONS, onChange: setMode }, div('d3'),
+    ...style, div('d4'),
+    ...editor, div('d5'),
+    ...view, div('d6'),
+    { type: 'toggle', key: 'grid', icon: Grid3x3, label: 'Toggle grid', active: showGrid, onToggle: toggleGrid }, div('d7'),
+    {
+      type: 'toggle',
+      key: 'magnet',
+      icon: Magnet,
+      label: 'Highlight neighbours: off',
+      activeLabel: 'Highlight neighbours: on',
+      active: magnet,
+      onToggle: onToggleMagnet,
+    },
+  ];
+
+  return <ToolbarItems items={items} orientation="horizontal" />;
+}
+
+/** Header-right theme toggle, hand-built off the raw {@link useTheme} hook. */
+function HeaderThemeToggle() {
+  const { kind, toggle } = useTheme({
+    backgroundLayerId: 'background',
+    onChange: (k) => applyChromeTheme(k === 'dark'),
+  });
+  const items: ToolbarItem[] = [
+    {
+      type: 'toggle',
+      key: 'theme',
+      icon: Sun,
+      activeIcon: Moon,
+      label: 'Switch to dark theme',
+      activeLabel: 'Switch to light theme',
+      active: kind === 'dark',
+      onToggle: toggle,
+    },
+  ];
+  return <ToolbarItems items={items} orientation="horizontal" />;
 }
 
 /** Hovered element descriptor for the status bar. */
@@ -533,14 +564,7 @@ function VisualiserApp() {
               onSelectModeChange={setSelectMode}
             />
           ) : null,
-          right: engine ? (
-            <ThemeToggle
-              lightIcon={Sun}
-              darkIcon={Moon}
-              backgroundLayerId="background"
-              onChange={(kind) => applyChromeTheme(kind === 'dark')}
-            />
-          ) : null,
+          right: engine ? <HeaderThemeToggle /> : null,
         }}
         mainClassName="relative"
         main={
@@ -655,8 +679,6 @@ function VisualiserApp() {
   );
 }
 
-const toolbarRowStyle: CSSProperties = { display: 'flex', alignItems: 'center', gap: 12 };
-const dividerStyle: CSSProperties = { alignSelf: 'center', height: 16 };
 const brandStyle: CSSProperties = { fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' };
 const statusRowStyle: CSSProperties = {
   display: 'flex',

@@ -1,16 +1,11 @@
-import { NavHorizontal, NavVertical } from '@invana/ui';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
-import {
-  Panel,
-  ControlButton,
-  OptionPicker,
-  UndoButton,
-  RedoButton,
-  ClearButton,
-} from '../components';
-import type { PanelPosition, ToolbarIcon, TooltipSide } from '../components';
+import { Panel, ToolbarItems } from '../components';
+import type { PanelPosition, ToolbarIcon, ToolbarItem } from '../components';
 import { useTool } from '../hooks/useTool';
+import { useHistory } from '../hooks/useHistory';
+import { useClipboard } from '../hooks/useClipboard';
+import { useClearGraph } from '../hooks/useClearGraph';
 import type { GraphTool } from '../ToolContext';
 
 /** Icons for the modeller toolbar. The four tool icons are required; the rest gate their controls. */
@@ -22,7 +17,7 @@ export interface ModellerToolbarIconSet {
   /** Required when `showHistory` is on (the default). */
   undo?: ToolbarIcon;
   redo?: ToolbarIcon;
-  /** Eraser icon for the selection-aware clear button. */
+  /** Eraser icon for the selection-aware erase button. */
   clear: ToolbarIcon;
 }
 
@@ -34,17 +29,16 @@ export interface ModellerToolbarProps {
   labels?: Partial<Record<GraphTool, string>>;
   /**
    * Node-kind options for the **Add** tool's shape picker (key → label). The
-   * picker shows only while the Add tool is active. Omit / leave empty to hide
-   * it (e.g. when your `createNode` factory is fixed-shape).
+   * picker shows only while the Add tool is active.
    */
   nodeKinds?: Record<string, string>;
   /** Per-kind icons for the shape picker. */
   nodeKindIcons?: Record<string, ToolbarIcon>;
   /** Show undo / redo (needs `icons.undo` + `icons.redo`). Default `true`. */
   showHistory?: boolean;
-  /** Show the clear-canvas button. Default `true`. */
+  /** Show the erase button. Default `true`. */
   showClear?: boolean;
-  /** Layer the clear button targets. Default `'graph'`. */
+  /** Layer the erase / history actions target. Default `'graph'`. */
   layerId?: string;
   /** Where the toolbar pins. Default `'top-center'`. */
   position?: PanelPosition;
@@ -67,14 +61,11 @@ const DEFAULT_LABELS: Record<GraphTool, string> = {
 
 /**
  * Turnkey **drawing / modeller** toolbar — tool toggles (Select / Add / Connect
- * / Delete) plus an optional Add-tool shape picker, undo/redo, and clear. The
- * canvas equivalent of a drawing app's tool palette.
- *
- * Self-wires the tool toggles through {@link useTool} (requires a
- * `<GraphToolProvider>` ancestor) and the undo/redo/clear actions through their
- * own hooks (a `<GraphHistoryProvider>` makes them live). The consumer still
- * declares the drawing behaviours, gating each one's `enabled` on the active
- * tool — this toolbar owns the *tool state*, not the behaviours.
+ * / Delete) plus an optional Add-tool shape picker, undo/redo, and erase, with
+ * dividers between groups. Tool state self-wires through {@link useTool}
+ * (requires a `<GraphToolProvider>` ancestor); undo/redo/erase through their own
+ * hooks (a `<GraphHistoryProvider>` makes them live). The consumer still
+ * declares the drawing behaviours, gating each on the active tool.
  */
 export function ModellerToolbar({
   icons,
@@ -84,7 +75,7 @@ export function ModellerToolbar({
   nodeKindIcons,
   showHistory = true,
   showClear = true,
-  layerId,
+  layerId = 'graph',
   position = 'top-center',
   orientation = 'horizontal',
   bare = false,
@@ -92,50 +83,59 @@ export function ModellerToolbar({
   className,
 }: ModellerToolbarProps) {
   const { tool, setTool, nodeKind, setNodeKind } = useTool();
-  const tipSide: TooltipSide = orientation === 'vertical' ? 'right' : 'bottom';
-  const label = (t: GraphTool): string => labels?.[t] ?? DEFAULT_LABELS[t];
+  const { undo, redo, canUndo, canRedo } = useHistory({ layerId }, canvas);
+  const { remove, hasSelection } = useClipboard({}, canvas);
+  const { clear } = useClearGraph(layerId, canvas);
 
-  const controls = (
-    <>
-      {tools.map((t) => (
-        <ControlButton
-          key={t}
-          icon={icons[t]}
-          title={label(t)}
-          tooltipSide={tipSide}
-          active={tool === t}
-          onClick={() => setTool(t)}
-        />
-      ))}
-      {tool === 'add' && nodeKinds && Object.keys(nodeKinds).length > 0 && (
-        <OptionPicker
-          label="Shape"
-          value={nodeKind}
-          options={nodeKinds}
-          {...(nodeKindIcons ? { icons: nodeKindIcons } : {})}
-          onChange={setNodeKind}
-          tooltipSide={tipSide}
-        />
-      )}
-      {showHistory && icons.undo && icons.redo && (
-        <>
-          <UndoButton icon={icons.undo} tooltipSide={tipSide} canvas={canvas} />
-          <RedoButton icon={icons.redo} tooltipSide={tipSide} canvas={canvas} />
-        </>
-      )}
-      {showClear && (
-        <ClearButton icon={icons.clear} layerId={layerId} tooltipSide={tipSide} canvas={canvas} />
-      )}
-    </>
-  );
+  const toolItems: ToolbarItem[] = tools.map((t) => ({
+    type: 'toggle',
+    key: t,
+    icon: icons[t],
+    label: labels?.[t] ?? DEFAULT_LABELS[t],
+    active: tool === t,
+    onToggle: () => setTool(t),
+  }));
+  if (tool === 'add' && nodeKinds && Object.keys(nodeKinds).length > 0) {
+    toolItems.push({
+      type: 'select',
+      key: 'node-kind',
+      label: 'Shape',
+      value: nodeKind,
+      options: nodeKinds,
+      icons: nodeKindIcons,
+      onChange: setNodeKind,
+    });
+  }
 
-  const nav =
-    orientation === 'vertical' ? (
-      <NavVertical top={controls} className={className} />
-    ) : (
-      <NavHorizontal left={controls} className={className} />
-    );
+  const groups: ToolbarItem[][] = [toolItems];
+  if (showHistory && icons.undo && icons.redo) {
+    groups.push([
+      { type: 'button', key: 'undo', icon: icons.undo, label: 'Undo', onClick: undo, disabled: !canUndo },
+      { type: 'button', key: 'redo', icon: icons.redo, label: 'Redo', onClick: redo, disabled: !canRedo },
+    ]);
+  }
+  if (showClear) {
+    groups.push([
+      {
+        type: 'button',
+        key: 'erase',
+        icon: icons.clear,
+        label: hasSelection ? 'Erase selection' : 'Clear canvas',
+        ...(hasSelection ? { text: 'Selection' } : {}),
+        onClick: hasSelection ? remove : () => clear(),
+      },
+    ]);
+  }
 
+  // Join non-empty groups with dividers.
+  const items: ToolbarItem[] = [];
+  for (const group of groups) {
+    if (group.length === 0) continue;
+    if (items.length > 0) items.push({ type: 'divider', key: `sep-${items.length}` });
+    items.push(...group);
+  }
+
+  const nav = <ToolbarItems items={items} orientation={orientation} className={className} />;
   if (bare) return nav;
   return (
     <Panel position={position} orientation={orientation}>

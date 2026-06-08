@@ -144,6 +144,11 @@ export {
   useDrawHistory,
   useEntityEditor,
   useContextMenu,
+  useHistorySection,
+  useEditorSection,
+  useViewSection,
+  useLayoutsSection,
+  useStyleEditorSection,
 } from './hooks';
 export type {
   UseCameraResult,
@@ -180,6 +185,12 @@ export type {
   EntityEditorTarget,
   ContextMenuState,
   UseContextMenuResult,
+  UseHistorySectionOptions,
+  UseEditorSectionOptions,
+  UseViewSectionOptions,
+  UseViewSectionIconSet,
+  UseLayoutsSectionOptions,
+  UseStyleEditorSectionOptions,
 } from './hooks';
 
 // ─── Toolbars ──────────────────────────────────────────────────────────────
@@ -218,35 +229,17 @@ export type {
 } from './toolbars';
 
 // ─── UI components (building blocks) ───────────────────────────────────────
-// Dumb, engine-agnostic, icon-agnostic primitives the toolbars are built from —
-// compose them into custom toolbars. `<Panel>` / `<ControlButton>` are the
-// canvas equivalents of React Flow's `<Panel>` / `<ControlButton>`.
+// The toolbar layer is data-driven: the `ToolbarItems` renderer compiles
+// `ToolbarItem[]` (from the builder hooks) straight to `@invana/ui` chrome — no
+// per-control wrapper components. `Panel` positions overlays; `Tooltipped` is
+// the shared tooltip helper; the rest are standalone panels.
 export {
   Panel,
+  ToolbarItems,
   Tooltipped,
-  ControlButton,
-  OptionPicker,
-  ZoomControls,
-  ZoomPicker,
-  LockToggle,
-  ClearButton,
-  FitContentButton,
-  UndoButton,
-  RedoButton,
-  RedrawButton,
-  CutButton,
-  CopyButton,
-  PasteButton,
-  DeleteSelectionButton,
-  GridToggle,
-  ThemeToggle,
-  LockButton,
-  LayoutPicker,
-  SelectModePicker,
   GraphHintBar,
   DEFAULT_GRAPH_HINTS,
   DEFAULT_MAGNET_HINTS,
-  EdgeTypePicker,
   PropertiesEditor,
   PropertiesViewer,
   ContextMenuOverlay,
@@ -254,29 +247,16 @@ export {
 export type {
   PanelProps,
   PanelPosition,
+  ToolbarItemsProps,
+  ToolbarItem,
+  ToolbarButtonItem,
+  ToolbarToggleItem,
+  ToolbarSelectItem,
+  ToolbarDividerItem,
+  ToolbarCustomItem,
   TooltippedProps,
   TooltipSide,
-  ControlButtonProps,
-  OptionPickerProps,
-  ZoomControlsProps,
-  LockToggleProps,
-  ClearButtonProps,
-  FitContentButtonProps,
-  ZoomPickerProps,
-  UndoButtonProps,
-  RedoButtonProps,
-  RedrawButtonProps,
-  CutButtonProps,
-  CopyButtonProps,
-  PasteButtonProps,
-  DeleteSelectionButtonProps,
-  GridToggleProps,
-  ThemeToggleProps,
-  LockButtonProps,
-  LayoutPickerProps,
-  SelectModePickerProps,
   GraphHintBarProps,
-  EdgeTypePickerProps,
   PropertiesEditorProps,
   PropertiesEditorValues,
   PropertiesViewerProps,

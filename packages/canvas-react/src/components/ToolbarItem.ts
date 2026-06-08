@@ -1,0 +1,117 @@
+import type { ReactNode } from 'react';
+
+import type { ToolbarIcon, TooltipSide } from './types';
+
+/**
+ * Fields shared by every {@link ToolbarItem} variant.
+ *
+ * The descriptor model is the data contract between the **section hooks**
+ * (`useHistorySection`, `useViewSection`, …) — or any hand-built array off the
+ * raw hooks — and the {@link ToolbarItems} renderer that compiles them into a
+ * toolbar.
+ * Everything here is engine-agnostic — icons, strings, callbacks, `ReactNode` —
+ * so the type stays a dumb building block (no `@invana/canvas` import).
+ */
+interface ToolbarItemBase {
+  /**
+   * Stable React key for the rendered control. Builder hooks set semantic keys
+   * (e.g. `'undo'`, `'lock'`) so reorders/conditionals stay stable; the renderer
+   * falls back to `` `${type}-${index}` `` when omitted.
+   */
+  key?: string;
+}
+
+/** A plain action button. Rendered as a design-kit ghost `Button`. */
+export interface ToolbarButtonItem extends ToolbarItemBase {
+  type: 'button';
+  /** Icon component (icon-agnostic — e.g. a `lucide-react` glyph). */
+  icon: ToolbarIcon;
+  /** Tooltip content + accessible label. */
+  label: string;
+  /**
+   * Optional visible text shown next to the icon. When set, the button renders
+   * as a labelled `'sm'` button (not icon-only) — e.g. the selection-aware
+   * clear's "Selection" affordance.
+   */
+  text?: string;
+  onClick: () => void;
+  /** Greys the button and blocks the click. Default `false`. */
+  disabled?: boolean;
+  /** Tooltip-side override; otherwise the renderer's `tooltipSide` applies. */
+  tooltipSide?: TooltipSide;
+}
+
+/**
+ * A two-state toggle (lock view, grid, theme, modeller tool, …). Rendered as a
+ * ghost `Button` with the design-kit nav-item active treatment; the icon and
+ * label flip with {@link ToolbarToggleItem.active}.
+ */
+export interface ToolbarToggleItem extends ToolbarItemBase {
+  type: 'toggle';
+  /** Icon shown while inactive (and while active, unless `activeIcon` is set). */
+  icon: ToolbarIcon;
+  /** Icon shown while active. Defaults to `icon` — active styling alone signals state. */
+  activeIcon?: ToolbarIcon;
+  /** Tooltip + label in the inactive state. */
+  label: string;
+  /** Tooltip + label in the active state. Defaults to `label`. */
+  activeLabel?: string;
+  active: boolean;
+  onToggle: () => void;
+  /** Greys the button and blocks the toggle. Default `false`. */
+  disabled?: boolean;
+  tooltipSide?: TooltipSide;
+}
+
+/** A single-select dropdown (layout / select-mode / edge-type / shape / zoom). Rendered as a design-kit `RichSelect`. */
+export interface ToolbarSelectItem extends ToolbarItemBase {
+  type: 'select';
+  /** Trigger label + menu heading (e.g. `'Layout'`). */
+  label: string;
+  /** Currently-selected option key. */
+  value: string;
+  /** Option key → human label. */
+  options: Record<string, string>;
+  /** Optional option key → icon, surfaced on the trigger + beside each option. */
+  icons?: Record<string, ToolbarIcon>;
+  onChange: (value: string) => void;
+  /** Menu alignment relative to the trigger. Default `'start'`. */
+  align?: 'start' | 'center' | 'end';
+  /** Trigger tooltip; defaults to {@link ToolbarSelectItem.label}. */
+  tooltip?: string;
+  tooltipSide?: TooltipSide;
+  /**
+   * Override the trigger content (instead of the default `{label}: {value}`).
+   * Used by the zoom picker to show a live `NN%` even when the current value
+   * isn't one of the preset options.
+   */
+  renderTrigger?: () => ReactNode;
+}
+
+/** A visual group separator. Compiles to a design-kit `Separator` on the cross axis. */
+export interface ToolbarDividerItem extends ToolbarItemBase {
+  type: 'divider';
+}
+
+/**
+ * An escape hatch for arbitrary content that doesn't fit the
+ * button/toggle/select mould — e.g. a live zoom readout, a brand element, or a
+ * consumer's own widget. The renderer calls {@link ToolbarCustomItem.render}
+ * and drops the result inline.
+ */
+export interface ToolbarCustomItem extends ToolbarItemBase {
+  type: 'custom';
+  render: () => ReactNode;
+}
+
+/**
+ * A single declarative toolbar control. Build arrays of these with the builder
+ * hooks (or by hand) and render them with {@link ToolbarItems}; concatenate
+ * arrays with `divider` items between groups to assemble a full toolbar.
+ */
+export type ToolbarItem =
+  | ToolbarButtonItem
+  | ToolbarToggleItem
+  | ToolbarSelectItem
+  | ToolbarDividerItem
+  | ToolbarCustomItem;

@@ -71,7 +71,8 @@ import {
   ModellerToolbar,
   InspectorPanel,
   Panel,
-  ThemeToggle,
+  ToolbarItems,
+  useTheme,
   useTool,
   useDrawHistory,
   useFitContent,
@@ -81,6 +82,7 @@ import type {
   GraphNodeMenuContext,
   GraphEdgeMenuContext,
   GraphBackgroundMenuContext,
+  ToolbarItem,
 } from '@invana/canvas-react';
 import type {
   GraphData,
@@ -158,6 +160,27 @@ function osPrefersDark(): boolean {
  * are mounted here too (rather than in a separate component) because their menu
  * actions need those same tool + history hooks.
  */
+/** Theme toggle, hand-built off the raw {@link useTheme} hook. */
+function ThemeControl() {
+  const { kind, toggle } = useTheme({
+    backgroundLayerId: 'background',
+    onChange: (k) => applyChromeTheme(k === 'dark'),
+  });
+  const items: ToolbarItem[] = [
+    {
+      type: 'toggle',
+      key: 'theme',
+      icon: Sun,
+      activeIcon: Moon,
+      label: 'Switch to dark theme',
+      activeLabel: 'Switch to light theme',
+      active: kind === 'dark',
+      onToggle: toggle,
+    },
+  ];
+  return <ToolbarItems items={items} orientation="horizontal" />;
+}
+
 function DrawingTools() {
   const { tool, nodeKind, setTool } = useTool();
   const draw = useDrawHistory();
@@ -337,12 +360,7 @@ function DrawingTools() {
           light/dark node + edge styling without changing the OS appearance. Flips
           the background grid in lockstep so the whole canvas stays coherent. */}
       <Panel position="top-left">
-        <ThemeToggle
-          lightIcon={Sun}
-          darkIcon={Moon}
-          backgroundLayerId="background"
-          onChange={(kind) => applyChromeTheme(kind === 'dark')}
-        />
+        <ThemeControl />
       </Panel>
 
       {/* Click a node/edge (Select tool) → edit its `type` (shown as the drawn

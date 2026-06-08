@@ -1,8 +1,10 @@
-import { NavHorizontal, Separator } from '@invana/ui';
+import { useEffect } from 'react';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
-import { Panel, LayoutPicker, SelectModePicker } from '../components';
-import type { PanelPosition, ToolbarIcon } from '../components';
+import { Panel, ToolbarItems } from '../components';
+import type { PanelPosition, ToolbarIcon, ToolbarItem } from '../components';
+import { useLayoutsSection } from '../hooks/useLayoutsSection';
+import { useSelectMode } from '../hooks/useSelectMode';
 import type { LayoutFactory } from '../hooks/useLayout';
 
 export interface GraphLayoutToolbarProps {
@@ -22,7 +24,7 @@ export interface GraphLayoutToolbarProps {
   initialSelectMode?: string;
   /**
    * Notified with the active select-mode key — on the initial mode and on every
-   * switch. Lift it (e.g. to drive a footer `GraphHintBar`). Memoize it.
+   * switch. Lift it (e.g. to drive a footer hint bar). Memoize it.
    */
   onSelectModeChange?: (mode: string) => void;
   /** Target `GraphLayer` id. Default `'graph'`. */
@@ -37,10 +39,10 @@ export interface GraphLayoutToolbarProps {
 }
 
 /**
- * Graph controls — layout selector + selection-mode selector. Both self-wire
- * ({@link useLayout} / {@link useSelectMode}), but since layouts live in
- * separate packages and mode-switching toggles consumer-registered behaviours,
- * the consumer supplies the layout factory map and the mode→behaviour-id map.
+ * Graph controls — the **Layouts** section ({@link useLayoutsSection}) plus a
+ * selection-mode picker (built inline off {@link useSelectMode}), separated by a
+ * divider. The consumer supplies the layout factory map and the
+ * mode→behaviour-id map (both live in consumer space, so this can't be turnkey).
  */
 export function GraphLayoutToolbar({
   layouts,
@@ -57,32 +59,30 @@ export function GraphLayoutToolbar({
   canvas,
   className,
 }: GraphLayoutToolbarProps) {
-  const nav = (
-    <NavHorizontal
-      className={className}
-      center={
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <LayoutPicker
-            layouts={layouts}
-            labels={layoutLabels}
-            initial={initialLayout}
-            layerId={layerId}
-            canvas={canvas}
-          />
-          <Separator orientation="vertical" style={{ alignSelf: 'center', height: 24 }} />
-          <SelectModePicker
-            behaviourIds={selectModeBehaviourIds}
-            labels={selectModeLabels}
-            icons={selectModeIcons}
-            initial={initialSelectMode}
-            onModeChange={onSelectModeChange}
-            canvas={canvas}
-          />
-        </div>
-      }
-    />
-  );
+  const layoutItems = useLayoutsSection({
+    layouts,
+    ...(layoutLabels ? { labels: layoutLabels } : {}),
+    ...(initialLayout ? { initial: initialLayout } : {}),
+    ...(layerId ? { layerId } : {}),
+    canvas,
+  });
 
+  const { mode, modeOptions, setMode } = useSelectMode(
+    selectModeBehaviourIds,
+    { ...(initialSelectMode ? { initial: initialSelectMode } : {}), ...(selectModeLabels ? { labels: selectModeLabels } : {}) },
+    canvas,
+  );
+  useEffect(() => {
+    onSelectModeChange?.(mode);
+  }, [mode, onSelectModeChange]);
+
+  const items: ToolbarItem[] = [
+    ...layoutItems,
+    { type: 'divider', key: 'layout-sep' },
+    { type: 'select', key: 'select-mode', label: 'Select', value: mode, options: modeOptions, icons: selectModeIcons, onChange: setMode },
+  ];
+
+  const nav = <ToolbarItems items={items} orientation="horizontal" className={className} />;
   if (bare) return nav;
   return (
     <Panel position={position} orientation="horizontal">

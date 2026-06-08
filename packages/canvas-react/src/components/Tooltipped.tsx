@@ -32,8 +32,8 @@ export interface TooltippedProps {
  *
  * The content background is pinned to `--color-popover` (opaque): the design
  * kit's default tooltip is translucent (`bg-popover/85` + backdrop-blur), which
- * reads as see-through over a busy canvas — same reasoning as the dropdown
- * surfaces in {@link OptionPicker} / {@link ZoomPicker}.
+ * reads as see-through over a busy canvas — same reasoning as the `RichSelect`
+ * dropdown surfaces the {@link ToolbarItems} renderer uses.
  */
 export function Tooltipped({ label, side, delayDuration = 0, children }: TooltippedProps) {
   if (label == null || label === '') return children;

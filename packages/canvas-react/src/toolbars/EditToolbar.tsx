@@ -1,15 +1,15 @@
-import { NavHorizontal, NavVertical } from '@invana/ui';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
-import { Panel, CutButton, CopyButton, PasteButton, ClearButton } from '../components';
+import { Panel, ToolbarItems } from '../components';
 import type { PanelPosition, ToolbarIcon } from '../components';
+import { useEditorSection } from '../hooks/useEditorSection';
 
 export interface EditToolbarIconSet {
   cut: ToolbarIcon;
   copy: ToolbarIcon;
   paste: ToolbarIcon;
   /**
-   * Eraser icon for the selection-aware clear button — deletes the selection
+   * Eraser icon for the selection-aware erase button — deletes the selection
    * when something is selected, otherwise clears the whole canvas.
    */
   clear: ToolbarIcon;
@@ -21,11 +21,11 @@ export interface EditToolbarProps {
   position?: PanelPosition;
   /** Stack direction. Default `'horizontal'`. */
   orientation?: 'horizontal' | 'vertical';
-  /** Show the clear-canvas button. Default `true`. */
+  /** Show the erase button. Default `true`. */
   showClear?: boolean;
   /** Id of the `ClickSelectBehaviour` selection is read from. Default `'click-select'`. */
   clickSelectId?: string;
-  /** Layer that clear / clipboard target. Default `'graph'`. */
+  /** Layer that erase / clipboard target. Default `'graph'`. */
   layerId?: string;
   /** Render without the `<Panel>` wrapper. Default `false`. */
   bare?: boolean;
@@ -35,12 +35,10 @@ export interface EditToolbarProps {
 }
 
 /**
- * Clipboard / edit bar — cut, copy, paste, and a selection-aware erase button
- * (deletes the selection when something is selected, otherwise clears the whole
- * canvas). The clipboard actions self-wire through {@link useClipboard} (require
- * a `<GraphClipboardProvider>` + a `ClickSelectBehaviour`); clear self-wires
- * through {@link useClearGraph}. All edits are undoable when a
- * `<GraphHistoryProvider>` is present.
+ * Editor bar — cut / copy / paste / erase (the {@link useEditorSection}
+ * section). Erase is selection-aware (deletes the selection when something is
+ * selected, otherwise clears the layer). Requires a `<GraphClipboardProvider>` +
+ * `ClickSelectBehaviour`; edits are undoable with a `<GraphHistoryProvider>`.
  */
 export function EditToolbar({
   icons,
@@ -53,29 +51,15 @@ export function EditToolbar({
   canvas,
   className,
 }: EditToolbarProps) {
-  const controls = (
-    <>
-      <CutButton icon={icons.cut} clickSelectId={clickSelectId} canvas={canvas} />
-      <CopyButton icon={icons.copy} clickSelectId={clickSelectId} canvas={canvas} />
-      <PasteButton icon={icons.paste} clickSelectId={clickSelectId} canvas={canvas} />
-      {showClear && (
-        <ClearButton
-          icon={icons.clear}
-          layerId={layerId}
-          clickSelectId={clickSelectId}
-          canvas={canvas}
-        />
-      )}
-    </>
-  );
+  const section = useEditorSection({
+    icons: { cut: icons.cut, copy: icons.copy, paste: icons.paste, erase: icons.clear },
+    ...(clickSelectId ? { clickSelectId } : {}),
+    ...(layerId ? { layerId } : {}),
+    canvas,
+  });
+  const items = showClear ? section : section.filter((i) => i.key !== 'erase');
 
-  const nav =
-    orientation === 'vertical' ? (
-      <NavVertical top={controls} className={className} />
-    ) : (
-      <NavHorizontal left={controls} className={className} />
-    );
-
+  const nav = <ToolbarItems items={items} orientation={orientation} className={className} />;
   if (bare) return nav;
   return (
     <Panel position={position} orientation={orientation}>

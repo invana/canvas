@@ -43,7 +43,6 @@ import {
   GraphBackgroundContextMenu,
   DragNodeBehaviour,
   DragPanBehaviour,
-  EdgeTypePicker,
   EditToolbar,
   GraphClipboardProvider,
   GraphHistoryProvider,
@@ -58,9 +57,12 @@ import {
   Panel,
   PinchZoomBehaviour,
   ResponsiveThemeBehaviour,
-  ThemeToggle,
+  ToolbarItems,
   ViewToolbar,
   WheelZoomBehaviour,
+  useStyleEditorSection,
+  useTheme,
+  type ToolbarItem,
   type LayoutFactory,
   type GraphNodeMenuContext,
   type GraphEdgeMenuContext,
@@ -184,6 +186,33 @@ function osPrefersDark(): boolean {
     && !!window.matchMedia
     && window.matchMedia('(prefers-color-scheme: dark)').matches
   );
+}
+
+/** Edge-routing picker — the Style Editor section ({@link useStyleEditorSection}). */
+function EdgeTypeControl() {
+  const items = useStyleEditorSection({ layerId: 'graph', icons: EDGE_TYPE_ICONS });
+  return <ToolbarItems items={items} orientation="horizontal" />;
+}
+
+/** Theme toggle, hand-built off the raw {@link useTheme} hook. */
+function ThemeControl() {
+  const { kind, toggle } = useTheme({
+    backgroundLayerId: 'background',
+    onChange: (k) => applyChromeTheme(k === 'dark'),
+  });
+  const items: ToolbarItem[] = [
+    {
+      type: 'toggle',
+      key: 'theme',
+      icon: Sun,
+      activeIcon: Moon,
+      label: 'Switch to dark theme',
+      activeLabel: 'Switch to light theme',
+      active: kind === 'dark',
+      onToggle: toggle,
+    },
+  ];
+  return <ToolbarItems items={items} orientation="horizontal" />;
 }
 
 function Visualiser() {
@@ -353,7 +382,7 @@ function Visualiser() {
               <Separator orientation="vertical" style={{ alignSelf: 'center', height: 16 }} />
               {/* Edge routing picker — self-wires to the 'graph' layer and
                   re-routes every edge (straight / orthogonal / curved / …). */}
-              <EdgeTypePicker layerId="graph" icons={EDGE_TYPE_ICONS} />
+              <EdgeTypeControl />
               <Separator orientation="vertical" style={{ alignSelf: 'center', height: 16 }} />
               <EditToolbar
                 bare
@@ -384,12 +413,7 @@ function Visualiser() {
                   the light/dark styling without changing the OS appearance. Flips
                   the background layer in lockstep so the whole canvas stays
                   coherent (otherwise light-on-light labels look invisible). */}
-              <ThemeToggle
-                lightIcon={Sun}
-                darkIcon={Moon}
-                backgroundLayerId="background"
-                onChange={(kind) => applyChromeTheme(kind === 'dark')}
-              />
+              <ThemeControl />
             </Panel>
             {/* Right-click menus — one component per target, each owning its own
                 behaviour + overlay + dismissal. Builders defined in `Visualiser`. */}

@@ -1,8 +1,9 @@
-import { NavHorizontal, NavVertical } from '@invana/ui';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
-import { Panel, UndoButton, RedoButton, RedrawButton } from '../components';
-import type { PanelPosition, ToolbarIcon } from '../components';
+import { Panel, ToolbarItems } from '../components';
+import type { PanelPosition, ToolbarIcon, ToolbarItem } from '../components';
+import { useHistorySection } from '../hooks/useHistorySection';
+import { useHistory } from '../hooks/useHistory';
 
 export interface HistoryToolbarIconSet {
   undo: ToolbarIcon;
@@ -17,9 +18,9 @@ export interface HistoryToolbarProps {
   position?: PanelPosition;
   /** Stack direction. Default `'horizontal'`. */
   orientation?: 'horizontal' | 'vertical';
-  /** Show the redraw button (needs `icons.redraw`). Default `true`. */
+  /** Append a redraw button after undo/redo (needs `icons.redraw`). Default `true`. */
   showRedraw?: boolean;
-  /** Layer the redraw button targets. Default `'graph'`. */
+  /** Layer the history / redraw target. Default `'graph'`. */
   layerId?: string;
   /** Render without the `<Panel>` wrapper (embed in external chrome). Default `false`. */
   bare?: boolean;
@@ -29,8 +30,9 @@ export interface HistoryToolbarProps {
 }
 
 /**
- * Undo / redo / redraw bar. Self-wires through {@link useHistory}; requires a
- * `<GraphHistoryProvider>` ancestor for undo/redo (redraw works regardless).
+ * History bar — undo / redo (the {@link useHistorySection} section) plus an
+ * optional redraw button. Requires a `<GraphHistoryProvider>` ancestor for
+ * undo/redo (redraw works regardless).
  */
 export function HistoryToolbar({
   icons,
@@ -42,23 +44,14 @@ export function HistoryToolbar({
   canvas,
   className,
 }: HistoryToolbarProps) {
-  const controls = (
-    <>
-      <UndoButton icon={icons.undo} canvas={canvas} />
-      <RedoButton icon={icons.redo} canvas={canvas} />
-      {showRedraw && icons.redraw && (
-        <RedrawButton icon={icons.redraw} layerId={layerId} canvas={canvas} />
-      )}
-    </>
-  );
+  const section = useHistorySection({ icons, ...(layerId ? { layerId } : {}), canvas });
+  const { redraw } = useHistory(layerId ? { layerId } : {}, canvas);
+  const items: ToolbarItem[] =
+    showRedraw && icons.redraw
+      ? [...section, { type: 'button', key: 'redraw', icon: icons.redraw, label: 'Redraw', onClick: redraw }]
+      : section;
 
-  const nav =
-    orientation === 'vertical' ? (
-      <NavVertical top={controls} className={className} />
-    ) : (
-      <NavHorizontal left={controls} className={className} />
-    );
-
+  const nav = <ToolbarItems items={items} orientation={orientation} className={className} />;
   if (bare) return nav;
   return (
     <Panel position={position} orientation={orientation}>

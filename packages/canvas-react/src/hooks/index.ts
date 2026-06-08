@@ -44,3 +44,18 @@ export { useEntityEditor } from './useEntityEditor';
 export type { UseEntityEditorOptions, EntityEditorTarget } from './useEntityEditor';
 export { useContextMenu } from './useContextMenu';
 export type { ContextMenuState, UseContextMenuResult } from './useContextMenu';
+
+// Section hooks — each returns the `ToolbarItem[]` for one logical toolbar
+// section (off the raw operation hooks). Concatenate sections with `divider`s
+// and render via `ToolbarItems`; or skip these and hand-build items from the
+// raw hooks for full control.
+export { useHistorySection } from './useHistorySection';
+export type { UseHistorySectionOptions } from './useHistorySection';
+export { useEditorSection } from './useEditorSection';
+export type { UseEditorSectionOptions } from './useEditorSection';
+export { useViewSection } from './useViewSection';
+export type { UseViewSectionOptions, UseViewSectionIconSet } from './useViewSection';
+export { useLayoutsSection } from './useLayoutsSection';
+export type { UseLayoutsSectionOptions } from './useLayoutsSection';
+export { useStyleEditorSection } from './useStyleEditorSection';
+export type { UseStyleEditorSectionOptions } from './useStyleEditorSection';

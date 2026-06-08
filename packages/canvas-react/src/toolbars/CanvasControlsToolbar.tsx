@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
-import { NavHorizontal, NavVertical } from '@invana/ui';
-import { Panel, ZoomControls, FitContentButton, LockToggle } from '../components';
-import type { PanelPosition, ToolbarIcon } from '../components';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
+
+import { Panel, ToolbarItems } from '../components';
+import type { PanelPosition, ToolbarIcon, ToolbarItem } from '../components';
+import { useViewSection } from '../hooks/useViewSection';
 
 export interface CanvasControlsToolbarIconSet {
   zoomIn: ToolbarIcon;
@@ -22,11 +23,6 @@ export interface CanvasControlsToolbarProps {
   fitLayerId?: string;
   /** Show zoom +/- buttons. Default `true`. */
   showZoom?: boolean;
-  /**
-   * Show a live `NN%` zoom readout between the +/- buttons. Sourced from the
-   * canvas via the self-wired {@link ZoomControls}. Default `false`.
-   */
-  showZoomLevel?: boolean;
   /** Show the fit-to-content button. Default `true`. */
   showFit?: boolean;
   /** Icon components (consumer-supplied — the package stays icon-agnostic). */
@@ -43,42 +39,30 @@ export interface CanvasControlsToolbarProps {
    * component — so it composes into consumer chrome. Default `false`.
    */
   bare?: boolean;
-  /** Explicit canvas instance; forwarded to each smart component. Defaults to context canvas. */
+  /** Explicit canvas instance; forwarded to each smart control. Defaults to context canvas. */
   canvas?: EngineCanvas | null;
-  /** Extra controls appended after the presets — e.g. `<ControlButton>`s. */
+  /** Extra controls appended after the presets — any React node. */
   children?: ReactNode;
   className?: string;
 }
 
 /**
  * Turnkey controls overlay — the canvas equivalent of React Flow's `<Controls>`.
- * Assembled from self-wiring smart components ({@link ZoomControls},
- * {@link FitContentButton}) arranged in a {@link NavVertical} or
- * {@link NavHorizontal} from `@invana/ui`. No hook wiring needed — drop inside
- * a `<Canvas>` with an `icons` prop and it works.
- *
- * Lock stays **controlled** — pass `locked` + `onToggleLock` to surface it.
- * Append extra controls as `children`.
+ * Zoom +/- and fit ride the {@link useViewSection} section (its auto-lock is
+ * off); lock stays **controlled** (pass `locked` + `onToggleLock`). Append extra
+ * controls as `children`.
  *
  * @example
- * // Pattern A — drop inside a <Canvas>, self-wires via context:
  * <Canvas>
  *   <GraphLayer id="graph" data={data} />
  *   <CanvasControlsToolbar icons={{ zoomIn: ZoomIn, zoomOut: ZoomOut, fit: Maximize }} />
  * </Canvas>
- *
- * @example
- * // Pattern B — one external controller driving the active canvas:
- * <div className="my-toolbar">
- *   <CanvasControlsToolbar bare canvas={activeCanvas} icons={…} />
- * </div>
  */
 export function CanvasControlsToolbar({
   position = 'bottom-left',
   orientation = 'vertical',
   fitLayerId = 'graph',
   showZoom = true,
-  showZoomLevel = false,
   showFit = true,
   icons,
   locked,
@@ -88,48 +72,37 @@ export function CanvasControlsToolbar({
   children,
   className,
 }: CanvasControlsToolbarProps) {
-  const showLock =
-    locked !== undefined && onToggleLock && icons.locked && icons.unlocked;
-
-  const controls = (
-    <>
-      {showZoom && (
-        <ZoomControls
-          orientation={orientation}
-          canvas={canvas}
-          zoomInIcon={icons.zoomIn}
-          zoomOutIcon={icons.zoomOut}
-          showLevel={showZoomLevel}
-        />
-      )}
-      {showFit && (
-        <FitContentButton icon={icons.fit} canvas={canvas} layerId={fitLayerId} />
-      )}
-      {showLock && (
-        <LockToggle
-          locked={locked}
-          onToggle={onToggleLock}
-          lockedIcon={icons.locked!}
-          unlockedIcon={icons.unlocked!}
-        />
-      )}
-      {children}
-    </>
+  // Zoom + fit only (no auto-lock — this overlay's lock is controlled).
+  const base = useViewSection({
+    icons: { zoomIn: icons.zoomIn, zoomOut: icons.zoomOut, fit: icons.fit },
+    layerId: fitLayerId,
+    canvas,
+  });
+  const items: ToolbarItem[] = base.filter(
+    (i) => (showZoom || (i.key !== 'zoom-in' && i.key !== 'zoom-out')) && (showFit || i.key !== 'fit'),
   );
 
-  const nav =
-    orientation === 'vertical' ? (
-      <NavVertical top={controls} className={className} />
-    ) : (
-      <NavHorizontal left={controls} className={className} />
-    );
+  if (locked !== undefined && onToggleLock && icons.locked && icons.unlocked) {
+    items.push({
+      type: 'toggle',
+      key: 'lock',
+      icon: icons.unlocked,
+      activeIcon: icons.locked,
+      label: 'Lock view',
+      activeLabel: 'Unlock view',
+      active: locked,
+      onToggle: onToggleLock,
+    });
+  }
+  if (children) {
+    items.push({ type: 'custom', key: 'children', render: () => children });
+  }
 
+  const nav = <ToolbarItems items={items} orientation={orientation} className={className} />;
   if (bare) return nav;
-
   return (
     <Panel position={position} orientation={orientation}>
       {nav}
     </Panel>
   );
 }
-

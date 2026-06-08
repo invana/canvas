@@ -1,62 +1,30 @@
-// UI building blocks — the dumb, engine-agnostic, icon-agnostic components the
-// toolbars are assembled from. Props in / callbacks out; no canvas/engine
-// imports (the smart wiring lives in `../toolbars`). Chrome comes from
-// `@invana/ui`. The canvas equivalents of React Flow's `<Panel>` /
-// `<ControlButton>` plus the zoom / fit / lock / clear / option primitives.
+// UI building blocks. The toolbar layer is now data-driven: the `ToolbarItems`
+// renderer compiles `ToolbarItem[]` (produced by the builder hooks) straight to
+// `@invana/ui` chrome — there are no per-control wrapper components anymore.
+// `Panel` positions overlays; `Tooltipped` is the shared tooltip helper;
+// `PropertiesEditor` / `PropertiesViewer` / `GraphHintBar` / `ContextMenuOverlay`
+// are standalone panels, not toolbar controls.
 
 export { Panel } from './Panel';
 export type { PanelProps } from './Panel';
+export { ToolbarItems } from './ToolbarItems';
+export type { ToolbarItemsProps } from './ToolbarItems';
+export type {
+  ToolbarItem,
+  ToolbarButtonItem,
+  ToolbarToggleItem,
+  ToolbarSelectItem,
+  ToolbarDividerItem,
+  ToolbarCustomItem,
+} from './ToolbarItem';
 export { Tooltipped } from './Tooltipped';
 export type { TooltippedProps } from './Tooltipped';
-export { ControlButton } from './ControlButton';
-export type { ControlButtonProps } from './ControlButton';
 export { PropertiesEditor } from './PropertiesEditor';
 export type { PropertiesEditorProps, PropertiesEditorValues } from './PropertiesEditor';
 export { PropertiesViewer } from './PropertiesViewer';
 export type { PropertiesViewerProps, PropertiesViewerRow } from './PropertiesViewer';
-
-export { OptionPicker } from './OptionPicker';
-export type { OptionPickerProps } from './OptionPicker';
-export { ZoomControls } from './ZoomControls';
-export type { ZoomControlsProps } from './ZoomControls';
-export { LockToggle } from './LockToggle';
-export type { LockToggleProps } from './LockToggle';
-export { ClearButton } from './ClearButton';
-export type { ClearButtonProps } from './ClearButton';
-export { FitContentButton } from './FitContentButton';
-export type { FitContentButtonProps } from './FitContentButton';
-export { ZoomPicker } from './ZoomPicker';
-export type { ZoomPickerProps } from './ZoomPicker';
-
-// Self-wiring action buttons (consume the canvas-react hooks, like ClearButton).
-export { UndoButton } from './UndoButton';
-export type { UndoButtonProps } from './UndoButton';
-export { RedoButton } from './RedoButton';
-export type { RedoButtonProps } from './RedoButton';
-export { RedrawButton } from './RedrawButton';
-export type { RedrawButtonProps } from './RedrawButton';
-export { CutButton } from './CutButton';
-export type { CutButtonProps } from './CutButton';
-export { CopyButton } from './CopyButton';
-export type { CopyButtonProps } from './CopyButton';
-export { PasteButton } from './PasteButton';
-export type { PasteButtonProps } from './PasteButton';
-export { DeleteSelectionButton } from './DeleteSelectionButton';
-export type { DeleteSelectionButtonProps } from './DeleteSelectionButton';
-export { GridToggle } from './GridToggle';
-export type { GridToggleProps } from './GridToggle';
-export { ThemeToggle } from './ThemeToggle';
-export type { ThemeToggleProps } from './ThemeToggle';
-export { LockButton } from './LockButton';
-export type { LockButtonProps } from './LockButton';
-export { LayoutPicker } from './LayoutPicker';
-export type { LayoutPickerProps } from './LayoutPicker';
-export { SelectModePicker } from './SelectModePicker';
-export type { SelectModePickerProps } from './SelectModePicker';
 export { GraphHintBar, DEFAULT_GRAPH_HINTS, DEFAULT_MAGNET_HINTS } from './GraphHintBar';
 export type { GraphHintBarProps } from './GraphHintBar';
-export { EdgeTypePicker } from './EdgeTypePicker';
-export type { EdgeTypePickerProps } from './EdgeTypePicker';
 export { ContextMenuOverlay } from './ContextMenuOverlay';
 export type { ContextMenuOverlayProps } from './ContextMenuOverlay';
 

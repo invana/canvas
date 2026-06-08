@@ -1,8 +1,8 @@
-import { NavHorizontal, NavVertical } from '@invana/ui';
 import type { Canvas as EngineCanvas, BackgroundLayerOptions } from '@invana/canvas';
 
-import { Panel, GridToggle } from '../components';
-import type { PanelPosition, ToolbarIcon } from '../components';
+import { Panel, ToolbarItems } from '../components';
+import type { PanelPosition, ToolbarIcon, ToolbarItem } from '../components';
+import { useGrid } from '../hooks/useGrid';
 
 type PatternType = NonNullable<BackgroundLayerOptions['patternType']>;
 
@@ -28,8 +28,8 @@ export interface GridToolbarProps {
 }
 
 /**
- * Grid toggle bar — shows/hides a `BackgroundLayer`'s pattern. Self-wires
- * through {@link useGrid}.
+ * Grid toggle bar — shows/hides a `BackgroundLayer`'s pattern. Built inline off
+ * {@link useGrid} (grid isn't one of the five named toolbar sections).
  */
 export function GridToolbar({
   icons,
@@ -41,22 +41,18 @@ export function GridToolbar({
   canvas,
   className,
 }: GridToolbarProps) {
-  const controls = (
-    <GridToggle
-      icon={icons.grid}
-      backgroundLayerId={backgroundLayerId}
-      patternType={patternType}
-      canvas={canvas}
-    />
+  const { showGrid, toggleGrid } = useGrid(
+    {
+      ...(backgroundLayerId ? { backgroundLayerId } : {}),
+      ...(patternType ? { patternType } : {}),
+    },
+    canvas,
   );
+  const items: ToolbarItem[] = [
+    { type: 'toggle', key: 'grid', icon: icons.grid, label: 'Toggle grid', active: showGrid, onToggle: toggleGrid },
+  ];
 
-  const nav =
-    orientation === 'vertical' ? (
-      <NavVertical top={controls} className={className} />
-    ) : (
-      <NavHorizontal left={controls} className={className} />
-    );
-
+  const nav = <ToolbarItems items={items} orientation={orientation} className={className} />;
   if (bare) return nav;
   return (
     <Panel position={position} orientation={orientation}>
