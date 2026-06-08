@@ -1,7 +1,7 @@
 /**
  * Type-only stub for `@invana/styling/themes.config`.
  *
- * `@invana/styling@0.0.4` maps its `./themes.config` subpath export straight at
+ * `@invana/styling@0.0.6` maps its `./themes.config` subpath export straight at
  * raw, **un-compiled** `src/themes.config.ts` (no shipped `.d.ts`). `tsc` then
  * pulls that source into the program and reports the package's own latent type
  * errors (a `noUncheckedIndexedAccess` slip around line 134) — and because it's

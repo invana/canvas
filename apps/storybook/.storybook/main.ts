@@ -30,9 +30,9 @@ const config: StorybookConfig = {
     return mergeConfig(config, {
       resolve: {
         alias: [
-          // Upstream packaging bug: `@invana/themes@0.0.4`'s `dist/index.js`
+          // Upstream packaging bug: `@invana/themes@0.0.6`'s `dist/index.js`
           // does `import { cn } from '@invana/ui/lib/utils'`, but
-          // `@invana/ui@0.0.4` exposes no `./lib/utils` subpath (no such file,
+          // `@invana/ui@0.0.6` exposes no `./lib/utils` subpath (no such file,
           // and not in its `exports`) — `cn` lives on the package **main**
           // entry. Vite/esbuild respect `exports`, so the dep pre-bundle fails.
           // Redirect the dead subpath to the main entry, which exports `cn`.

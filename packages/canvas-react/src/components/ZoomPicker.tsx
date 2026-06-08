@@ -1,22 +1,18 @@
-import {
-  Button,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@invana/ui';
+import { RichSelect, type RichSelectOption } from '@invana/ui';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
 import { ACTIVE_MENU_ITEM_CLASS } from './ControlButton';
-import { Tooltipped } from './Tooltipped';
 import type { TooltipSide } from './types';
 import { useZoom } from '../hooks/useZoom';
 import { useFitContent } from '../hooks/useFitContent';
 
 const DEFAULT_PRESETS = [25, 50, 75, 100, 125, 150, 200, 300, 400];
+
+/**
+ * Sentinel option value for the fit-to-content action. Never matches a zoom
+ * percentage, so the fit row is never highlighted as the active preset.
+ */
+const FIT_VALUE = '__fit__';
 
 export interface ZoomPickerProps {
   /** Explicit canvas instance; defaults to the context canvas. */
@@ -52,6 +48,12 @@ export interface ZoomPickerProps {
  *
  * The active preset is highlighted automatically based on the live zoom state.
  *
+ * Built on the design-kit `RichSelect`, which owns the outline trigger, chevron,
+ * tooltip, and solid popover surface. The fit action rides as the first option
+ * (a {@link FIT_VALUE} sentinel) and is dispatched in `onChange`; the trigger
+ * always shows the live percentage via `renderValue` even when the current zoom
+ * isn't one of the presets.
+ *
  * @example
  * // In any toolbar — vertical or horizontal:
  * <ZoomPicker layerId="graph" />
@@ -74,41 +76,29 @@ export function ZoomPicker({
   const { fitContent } = useFitContent(layerId, canvas);
   const currentPct = String(Math.round(zoom * 100));
 
+  const options: RichSelectOption[] = [
+    ...(showFit ? [{ value: FIT_VALUE, label: fitLabel }] : []),
+    ...presets.map((pct) => ({ value: String(pct), label: `${pct}%` })),
+  ];
+
   return (
-    <DropdownMenu>
-      {/* Tooltip wraps the trigger — see OptionPicker for the asChild nesting. */}
-      <Tooltipped label={title} side={tooltipSide}>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" aria-label={title} className={className}>
-            {currentPct}% ▾
-          </Button>
-        </DropdownMenuTrigger>
-      </Tooltipped>
-      {/* Force a solid token-driven background: same reasoning as OptionPicker. */}
-      <DropdownMenuContent style={{ backgroundColor: 'var(--color-popover)' }}>
-        {showFit && (
-          <>
-            <DropdownMenuItem onSelect={() => fitContent()}>
-              {fitLabel}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-          </>
-        )}
-        <DropdownMenuRadioGroup
-          value={currentPct}
-          onValueChange={(v) => setZoom(Number(v) / 100)}
-        >
-          {presets.map((pct) => (
-            <DropdownMenuRadioItem
-              key={pct}
-              value={String(pct)}
-              className={String(pct) === currentPct ? ACTIVE_MENU_ITEM_CLASS : undefined}
-            >
-              {pct}%
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <RichSelect
+      options={options}
+      value={currentPct}
+      onChange={(v) => {
+        const next = v as string;
+        if (next === FIT_VALUE) fitContent();
+        else setZoom(Number(next) / 100);
+      }}
+      tooltip={title}
+      tooltipSide={tooltipSide}
+      triggerClassName={className}
+      renderValue={() => <span>{currentPct}%</span>}
+      renderOption={(option, { selected }) => (
+        <span className={selected ? ACTIVE_MENU_ITEM_CLASS : undefined}>
+          {option.label}
+        </span>
+      )}
+    />
   );
 }

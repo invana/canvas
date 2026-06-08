@@ -1,15 +1,6 @@
-import {
-  Button,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from '@invana/ui';
+import { RichSelect, type RichSelectOption } from '@invana/ui';
 
 import { ACTIVE_MENU_ITEM_CLASS } from './ControlButton';
-import { Tooltipped } from './Tooltipped';
 import type { ToolbarIcon, TooltipSide } from './types';
 
 export interface OptionPickerProps {
@@ -43,6 +34,11 @@ export interface OptionPickerProps {
  * A single-select dropdown (radio group). Engine-agnostic — drives a `value` +
  * `onChange`. Used as the **layout switcher** and **selection-mode** picker in
  * {@link GraphToolbar}, and standalone for any single-choice control.
+ *
+ * Thin wrapper over the design-kit `RichSelect`: it owns the outline trigger,
+ * trailing chevron, tooltip, and solid popover surface. We keep the toolbar's
+ * `{label}: {value}` trigger affordance via `renderValue` and the design-kit
+ * selected-item tint ({@link ACTIVE_MENU_ITEM_CLASS}) via `renderOption`.
  */
 export function OptionPicker({
   label,
@@ -55,53 +51,44 @@ export function OptionPicker({
   tooltipSide,
   className,
 }: OptionPickerProps) {
-  const ActiveIcon = icons?.[value];
+  const richOptions: RichSelectOption[] = Object.keys(options).map((key) => ({
+    value: key,
+    label: options[key] ?? key,
+    icon: icons?.[key],
+  }));
+
   return (
-    <DropdownMenu>
-      {/* Tooltip wraps the trigger: `TooltipTrigger asChild` → `DropdownMenuTrigger
-          asChild` → `Button`, all merging onto the one Button. The DropdownMenu
-          context still resolves the trigger regardless of the tooltip wrapper. */}
-      <Tooltipped label={tooltip ?? label} side={tooltipSide}>
-        <DropdownMenuTrigger asChild>
-          {/* `ring-offset-background`: the design-kit Button sets `ring-offset-2`
-              but no offset colour, so the focus ring's 2px offset falls back to
-              Tailwind's default white — a light halo around the open trigger in
-              dark mode. Pin it to the `--color-background` token instead. */}
-          <Button
-            variant="outline"
-            size="sm"
-            className={['ring-offset-background', className].filter(Boolean).join(' ')}
+    <RichSelect
+      options={richOptions}
+      value={value}
+      onChange={(v) => onChange(v as string)}
+      label={label}
+      align={align}
+      tooltip={tooltip ?? label}
+      tooltipSide={tooltipSide}
+      triggerClassName={className}
+      renderValue={(selected) => {
+        const only = selected[0];
+        const ActiveIcon = only?.icon as ToolbarIcon | undefined;
+        return (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {ActiveIcon && <ActiveIcon size={16} />}
+            {label}: {only?.label ?? value}
+          </span>
+        );
+      }}
+      renderOption={(option, { selected }) => {
+        const Icon = option.icon as ToolbarIcon | undefined;
+        return (
+          <span
+            className={selected ? ACTIVE_MENU_ITEM_CLASS : undefined}
+            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
           >
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              {ActiveIcon && <ActiveIcon size={16} />}
-              {label}: {options[value] ?? value}
-            </span>
-          </Button>
-        </DropdownMenuTrigger>
-      </Tooltipped>
-      {/* Force a solid token-driven background: the design-kit's default
-          popover styling is a translucent frosted glass (`bg-popover/80` +
-          backdrop-blur), which reads as transparent over a busy canvas. */}
-      <DropdownMenuContent align={align} style={{ backgroundColor: 'var(--color-popover)' }}>
-        <DropdownMenuLabel>{label}</DropdownMenuLabel>
-        <DropdownMenuRadioGroup value={value} onValueChange={onChange}>
-          {Object.keys(options).map((key) => {
-            const Icon = icons?.[key];
-            return (
-              <DropdownMenuRadioItem
-                key={key}
-                value={key}
-                className={key === value ? ACTIVE_MENU_ITEM_CLASS : undefined}
-              >
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {Icon && <Icon size={14} />}
-                  {options[key] ?? key}
-                </span>
-              </DropdownMenuRadioItem>
-            );
-          })}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+            {Icon && <Icon size={14} />}
+            {option.label}
+          </span>
+        );
+      }}
+    />
   );
 }

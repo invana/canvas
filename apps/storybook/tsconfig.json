@@ -5,7 +5,7 @@
     "rootDir": ".",
     "noEmit": true,
     "jsx": "react-jsx",
-    // `@invana/styling@0.0.4` exposes `./themes.config` as raw, un-compiled
+    // `@invana/styling@0.0.6` exposes `./themes.config` as raw, un-compiled
     // `.ts` (no shipped `.d.ts`), which `@invana/themes`' types import. tsc then
     // type-checks that source and trips on the package's own latent errors —
     // and `skipLibCheck` can't suppress a `.ts`. Redirect the specifier to a
