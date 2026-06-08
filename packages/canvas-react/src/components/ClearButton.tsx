@@ -4,17 +4,24 @@ import type { Canvas as EngineCanvas } from '@invana/canvas';
 import { Tooltipped } from './Tooltipped';
 import type { ToolbarIcon, TooltipSide } from './types';
 import { useClearGraph } from '../hooks/useClearGraph';
+import { useClipboard } from '../hooks/useClipboard';
 
 export interface ClearButtonProps {
-  /** Optional leading icon (e.g. a trash glyph). */
-  icon?: ToolbarIcon;
+  /** Icon component (e.g. an eraser glyph). Consumer-supplied — icon-agnostic. */
+  icon: ToolbarIcon;
   /** Explicit canvas instance; defaults to the context canvas. */
   canvas?: EngineCanvas | null;
   /**
    * Layer id to clear. Default `'graph'`. Forwarded to {@link useClearGraph}.
    */
   layerId?: string;
-  /** Button text + tooltip content. Default `'Clear'`. */
+  /** Id of the `ClickSelectBehaviour` selection is read from. Default `'click-select'`. */
+  clickSelectId?: string;
+  /** Visible text shown next to the icon when something is selected. Default `'Selection'`. */
+  selectionText?: string;
+  /** Tooltip when something is selected. Default `'Clear selection'`. */
+  selectionLabel?: string;
+  /** Tooltip when nothing is selected. Default `'Clear canvas'`. */
   label?: string;
   /** Side the tooltip is placed on. Default `'top'`. */
   tooltipSide?: TooltipSide;
@@ -22,24 +29,46 @@ export interface ClearButtonProps {
 }
 
 /**
- * Labelled action button that clears all nodes and edges from the target layer.
- * Self-wiring: hooks into the canvas via {@link useClearGraph} — drop inside a
- * `<Canvas>` and it works without any callback wiring.
+ * Selection-aware erase button that merges "delete selection" and "clear canvas":
+ *
+ * - **With a selection** → deletes the selected nodes/edges (undoable when a
+ *   `<GraphHistoryProvider>` is present) and renders as eraser + a
+ *   {@link ClearButtonProps.selectionText} label, so it's obvious only the
+ *   selection is erased. Tooltip {@link ClearButtonProps.selectionLabel}.
+ * - **With nothing selected** → clears the whole layer and renders icon-only.
+ *   Tooltip {@link ClearButtonProps.label}.
+ *
+ * Self-wiring: reads the selection via {@link useClipboard} (requires a
+ * `<GraphClipboardProvider>` + a `ClickSelectBehaviour`) and clears via
+ * {@link useClearGraph} — drop inside a `<Canvas>` with no callback wiring.
  */
 export function ClearButton({
   icon: Icon,
   canvas,
   layerId = 'graph',
-  label = 'Clear',
+  clickSelectId,
+  selectionText = 'Selection',
+  selectionLabel = 'Clear selection',
+  label = 'Clear canvas',
   tooltipSide,
   className,
 }: ClearButtonProps) {
   const { clear } = useClearGraph(layerId, canvas);
+  const { remove, hasSelection } = useClipboard(
+    clickSelectId ? { clickSelectId } : {},
+    canvas,
+  );
   return (
-    <Tooltipped label={label} side={tooltipSide}>
-      <Button variant="outline" size="sm" onClick={() => clear()} className={className}>
-        {Icon ? <Icon size={16} /> : null}
-        {label}
+    <Tooltipped label={hasSelection ? selectionLabel : label} side={tooltipSide}>
+      <Button
+        variant="ghost"
+        size={hasSelection ? 'sm' : 'icon'}
+        aria-label={hasSelection ? selectionLabel : label}
+        onClick={hasSelection ? remove : () => clear()}
+        className={className}
+      >
+        <Icon size={16} />
+        {hasSelection ? selectionText : null}
       </Button>
     </Tooltipped>
   );

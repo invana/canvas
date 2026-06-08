@@ -22,8 +22,8 @@ export interface ModellerToolbarIconSet {
   /** Required when `showHistory` is on (the default). */
   undo?: ToolbarIcon;
   redo?: ToolbarIcon;
-  /** Optional leading icon for the Clear button. */
-  clear?: ToolbarIcon;
+  /** Eraser icon for the selection-aware clear button. */
+  clear: ToolbarIcon;
 }
 
 export interface ModellerToolbarProps {

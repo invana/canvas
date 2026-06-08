@@ -20,7 +20,8 @@
  *   - **`<EdgeTypePicker>`** — edge routing switcher (straight / orthogonal /
  *     curved / rounded / smooth), self-wiring through `useEdgeType`. Re-routes
  *     every edge at once via the layer's `setEdgeDefaults`.
- *   - **`<EditToolbar>`** — cut / copy / paste / delete selection / clear canvas,
+ *   - **`<EditToolbar>`** — cut / copy / paste / selection-aware erase (delete
+ *     selection, or clear the whole canvas when nothing is selected),
  *     all undoable; reads the selection off the `ClickSelectBehaviour`.
  *   - **`<ViewToolbar>`** — zoom in/out, zoom-level picker, fit-to-content, lock
  *     view (disables pan + node-drag), all from the camera / lock hooks. Forced
@@ -94,7 +95,6 @@ import {
   Spline,
   SquareDashedMousePointer,
   Sun,
-  Trash2,
   Undo2,
   Waypoints,
   ZoomIn,
@@ -361,7 +361,6 @@ function Visualiser() {
                   cut: Scissors,
                   copy: Copy,
                   paste: ClipboardPaste,
-                  delete: Trash2,
                   clear: Eraser,
                 }}
               />

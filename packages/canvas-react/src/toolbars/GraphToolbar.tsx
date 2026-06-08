@@ -30,7 +30,8 @@ export interface GraphToolbarProps {
 
   /** Clear button — layer to clear. Default `'graph'`. */
   clearLayerId?: string;
-  clearIcon?: ToolbarIcon;
+  /** Eraser icon for the selection-aware clear button. */
+  clearIcon: ToolbarIcon;
   /** Explicit canvas instance; forwarded to the self-wiring {@link ClearButton}. Defaults to context canvas. */
   canvas?: EngineCanvas | null;
 

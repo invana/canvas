@@ -112,7 +112,6 @@ import {
   Spline,
   SquareDashedMousePointer,
   Sun,
-  Trash2,
   Undo2,
   Waypoints,
   ZoomIn,
@@ -269,7 +268,6 @@ function HeaderToolbar({
               cut: Scissors,
               copy: Copy,
               paste: ClipboardPaste,
-              delete: Trash2,
               clear: Eraser,
             }}
           />
