@@ -30,7 +30,6 @@ import type { LayerOptions, Rect } from '@invana/canvas';
 
 import { GraphLayer } from './GraphLayer';
 import type { GraphNode } from '../store/types';
-import type { EdgeStyle, NodeStyle } from './types';
 
 /** Anchor corner inside the canvas viewport. */
 export type MiniMapPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -308,7 +307,11 @@ export class MiniMapLayer extends ScreenLayer<
     // back to a straight endpoint-to-endpoint line only when the renderer
     // isn't available (pre-mount) or hasn't installed the connector yet.
     for (const edge of graph.store.edges()) {
-      const edgeStyle = (edge.style as Partial<EdgeStyle> | undefined) ?? {};
+      // Resolve the *effective* style — same merge the renderer sees — so
+      // colours set via the layer template / resolvers / state overlays
+      // (not just concrete `edge.style`) are mirrored. Reading `edge.style`
+      // raw misses every resolver-driven colour and falls back to grey.
+      const edgeStyle = graph.resolveEdgeStyle(edge);
       const stroke = typeof edgeStyle.strokeColor === 'number' ? edgeStyle.strokeColor : 0x666666;
 
       const polyline = renderer?.getConnectorPolyline(edge.id);
@@ -337,11 +340,12 @@ export class MiniMapLayer extends ScreenLayer<
 
     // Nodes — ask the renderer for the world-space AABB of whatever it
     // actually drew (circle, rect, arc, polygon, star, custom kind). The
-    // minimap paints each shape as a small rect at its true footprint —
-    // geometry-driven, no per-kind switching. Fill colour reads from the
-    // per-node `style.bgFill` when concrete; falls back to a neutral
-    // green-grey for the layer-template / resolver case (the minimap
-    // doesn't run the full style resolution pipeline).
+    // minimap mirrors each shape at its true footprint, drawing a circle for
+    // round shapes and a rect otherwise so the bird's-eye view matches the
+    // canvas silhouette. Fill colour and shape both read from the *resolved*
+    // style (`resolveNodeStyle`) — the same merge the renderer sees — so
+    // layer-template / resolver / state-overlay colours (e.g. colour-by-label)
+    // are mirrored, not just concrete per-node `style.bgFill`.
     for (const node of graph.store.nodes()) {
       const bounds = renderer?.getShapeWorldBounds(node.id) ?? this.fallbackNodeBounds(node);
       if (!bounds) continue;
@@ -350,10 +354,15 @@ export class MiniMapLayer extends ScreenLayer<
       const w = Math.max(2, br.x - tl.x);
       const h = Math.max(2, br.y - tl.y);
 
-      const nodeStyle = (node.style as Partial<NodeStyle> | undefined) ?? {};
+      const nodeStyle = graph.resolveNodeStyle(node);
       const fillColor = typeof nodeStyle.bgFill === 'number' ? nodeStyle.bgFill : 0x4caf50;
+      const kind = (nodeStyle.shape as { kind?: string } | undefined)?.kind;
 
-      g.rect(tl.x, tl.y, w, h).fill(fillColor);
+      if (kind === 'circle') {
+        g.ellipse(tl.x + w / 2, tl.y + h / 2, w / 2, h / 2).fill(fillColor);
+      } else {
+        g.rect(tl.x, tl.y, w, h).fill(fillColor);
+      }
     }
   }
 
