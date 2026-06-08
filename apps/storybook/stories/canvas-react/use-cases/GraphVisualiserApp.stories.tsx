@@ -71,6 +71,7 @@ import {
   WheelZoomBehaviour,
   useCanvas,
   useCanvasEvent,
+  useSelection,
   useZoom,
   type LayoutFactory,
   type ViewContext,
@@ -316,12 +317,24 @@ type HoverInfo = { kind: 'node' | 'edge'; id: string };
 function StatusBar() {
   const canvas = useCanvas();
   const { zoom } = useZoom();
+  const { selectedNodeIds, selectedEdgeIds, count: selectionCount } = useSelection();
   const [pan, setPan] = useState({ x: canvas.camera.x, y: canvas.camera.y });
   const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
   const [hover, setHover] = useState<HoverInfo | null>(null);
+  const [counts, setCounts] = useState({ nodes: 0, edges: 0 });
 
   // Camera translation — re-synced live as the user pans.
   useCanvasEvent('camera:pan', ({ x, y }) => setPan({ x, y }));
+
+  // Rendered node / edge totals — read off the graph store and re-synced on its
+  // `flush` event (one per batched mutation), so the counts track adds/removes.
+  useEffect(() => {
+    const store = canvas.layers.get<EngineGraphLayer>('graph')?.store;
+    if (!store) return;
+    const sync = (): void => setCounts({ nodes: store.nodeCount(), edges: store.edgeCount() });
+    sync();
+    return store.events.on('flush', sync);
+  }, [canvas]);
 
   // Pointer world position — the canvas-wide bus drops high-frequency
   // pointermove, so listen on the pixi canvas element and project to world.
@@ -363,6 +376,24 @@ function StatusBar() {
 
   return (
     <div style={statusRowStyle}>
+      <span>
+        {counts.nodes} nodes and {counts.edges} edges rendered
+      </span>
+      {selectionCount > 0 && (
+        <>
+          <span style={statusSepStyle}>·</span>
+          <span>
+            Selected:{' '}
+            {[
+              selectedNodeIds.length > 0 ? `${selectedNodeIds.length} nodes` : null,
+              selectedEdgeIds.length > 0 ? `${selectedEdgeIds.length} edges` : null,
+            ]
+              .filter(Boolean)
+              .join(', ')}
+          </span>
+        </>
+      )}
+      <span style={statusSepStyle}>·</span>
       <span>Zoom: {Math.round(zoom * 100)}%</span>
       <span style={statusSepStyle}>·</span>
       <span>Pan: {coord(pan)}</span>
