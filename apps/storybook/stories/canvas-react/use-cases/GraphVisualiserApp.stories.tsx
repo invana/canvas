@@ -304,7 +304,7 @@ function HeaderToolbar({
 }
 
 /** Hovered element descriptor for the status bar. */
-type HoverInfo = { kind: 'node' | 'edge'; id: string };
+type HoverInfo = { kind: 'node' | 'edge'; id: string; label: string };
 
 /**
  * The shell footer's live status bar — read-only telemetry off the engine:
@@ -352,12 +352,23 @@ function StatusBar() {
   }, [canvas]);
 
   // Hovered node / edge — raw pointer-hit events off the graph layer's renderer.
+  // The pointer events carry only the id; we resolve the drawn display label
+  // from the store (here it mirrors the node's `labelText` accessor — `id` — but
+  // falls back through common label fields so it stays meaningful on richer data).
   useEffect(() => {
     const layer = canvas.layers.get<EngineGraphLayer>('graph');
     const renderer = layer?.getRenderer();
-    if (!renderer) return;
-    const onShapeOver = (e: { id: string }): void => setHover({ kind: 'node', id: e.id });
-    const onConnOver = (e: { id: string }): void => setHover({ kind: 'edge', id: e.id });
+    const store = layer?.store;
+    if (!renderer || !store) return;
+    const nodeLabel = (id: string): string => {
+      const d = store.getNode(id)?.data as { label?: string; name?: string } | undefined;
+      return d?.label ?? d?.name ?? id;
+    };
+    const edgeLabel = (id: string): string => store.getEdge(id)?.type ?? id;
+    const onShapeOver = (e: { id: string }): void =>
+      setHover({ kind: 'node', id: e.id, label: nodeLabel(e.id) });
+    const onConnOver = (e: { id: string }): void =>
+      setHover({ kind: 'edge', id: e.id, label: edgeLabel(e.id) });
     const onOut = (): void => setHover(null);
     renderer.events.on('shape:pointerover', onShapeOver);
     renderer.events.on('shape:pointerout', onOut);
@@ -379,6 +390,24 @@ function StatusBar() {
       <span>
         {counts.nodes} nodes and {counts.edges} edges rendered
       </span>
+
+      <span style={statusSepStyle}>·</span>
+      <span>Zoom: {Math.round(zoom * 100)}%</span>
+      <span style={statusSepStyle}>·</span>
+      <span>Pan: {coord(pan)}</span>
+      {pointer && (
+        <>
+          <span style={statusSepStyle}>·</span>
+          <span>Pointer: {coord(pointer)}</span>
+        </>
+      )}
+
+      {hover && (
+        <>
+          <span style={statusSepStyle}>·</span>
+          <span>Hovered {`${hover.kind.charAt(0).toUpperCase() + hover.kind.slice(1)} - ${hover.label} [ID: ${hover.id}]`}</span>
+        </>
+      )}
       {selectionCount > 0 && (
         <>
           <span style={statusSepStyle}>·</span>
@@ -393,14 +422,6 @@ function StatusBar() {
           </span>
         </>
       )}
-      <span style={statusSepStyle}>·</span>
-      <span>Zoom: {Math.round(zoom * 100)}%</span>
-      <span style={statusSepStyle}>·</span>
-      <span>Pan: {coord(pan)}</span>
-      <span style={statusSepStyle}>·</span>
-      <span>Pointer: {coord(pointer)}</span>
-      <span style={statusSepStyle}>·</span>
-      <span>Hover: {hover ? `${hover.kind} ${hover.id}` : '—'}</span>
     </div>
   );
 }
