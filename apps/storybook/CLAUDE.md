@@ -123,6 +123,57 @@ export const MyStory: Story = {
 };
 ```
 
+### Graph / layout stories — `GraphCanvas` + serialisable config
+
+**Canonical example: `stories/canvas/graph-layouts/d3-force/Lattice.stories.ts`. Write new graph/layout stories this way.**
+
+The shape is **add everything, then `init()` last**:
+
+1. `const canvas = new GraphCanvas()` (from `@invana/graph`). Register cleanup first.
+2. **Register** layers / behaviours / layouts **by id** (mounting is deferred until `init`). Only *wiring* + non-serialisable bits go in the constructor: ids, `layerId` / `targetLayerId`, resolver functions, and the graph layer's initial content via **`options.initData`** (data is content, not config — it rides on the layer).
+3. Build **one `const canvasOptions`** object — the whole serialisable config keyed by id: `layers` (per-id option bags, e.g. `graph.node.style`), `behaviours` (`{ enabled: true, … }` — `enabled` turns it on), `layouts` (per-id params), and `activeLayout`. No class refs, no functions — pure JSON.
+4. `await canvas.init({ container, autoResize: true, config: canvasOptions })` **last**. It mounts everything, applies the config, and enables behaviours. The `activeLayout` auto-runs against its target once data is present — **don't call `setData`/`layout.apply` for the initial render**.
+5. **lil-gui binds straight to `canvasOptions`** (the config *is* the source of truth) and pushes each change live via `canvas.update({ … })`. Layout/force edits go through `canvas.update({ layouts: { … } })` and re-heat the sim — no rebuild.
+6. **OS dark-mode** = the story-local `SystemThemeBehaviour` (`stories/system-theme.tsx`), registered with a `layerId`; its `light` / `dark` `{ backgroundColor, color }` live in `config.behaviours['system-theme']`. The engine itself is theme-agnostic.
+7. Datasets generators return `GraphNode` / `GraphEdge` directly (e.g. `generateLattice(n)`) — feed `options.initData` with no mapping.
+
+```ts
+const canvas = new GraphCanvas();
+onStoryTeardown(() => canvas.destroy());
+
+const graph = new GraphLayer({ id: 'graph', options: { initData: generateLattice(20) } });
+canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
+canvas.layers.add(graph);
+canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
+canvas.layouts.add(forceLayout);
+
+const canvasOptions = {
+  layers: {
+    bg: { type: 'pattern', patternType: 'dots', backgroundColor: '#0f172a', color: '#475569' },
+    graph: { node: { style: { shape: { kind: 'circle', radius: 3 }, bgFill: 0x60a5fa } },
+             edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 0.8 } } },
+  },
+  behaviours: {
+    pan: { enabled: true },
+    'system-theme': { enabled: true,
+      light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
+      dark:  { backgroundColor: '#0f172a', color: '#475569' } },
+  },
+  layouts: { force: { alpha: 1, link: { distance: 30 }, charge: { strength: -30 } } },
+  activeLayout: 'force',
+};
+await canvas.init({ container, autoResize: true, config: canvasOptions });
+// done — initData loads on mount, the active layout runs itself.
+
+// GUI edits push live:
+gui.addColor(canvasOptions.layers.graph.node.style, 'bgFill')
+   .onChange((v) => canvas.update({ layers: { graph: { node: { style: { bgFill: v } } } } }));
+```
+
+Teardown still applies: `onStoryTeardown(() => canvas.destroy())`, `gui.destroy()`, and `forceLayout.stop()` (the layout instance is kept only for stop).
+
 ## Teardown — every story must register cleanup
 
 Storybook keeps the iframe alive across story switches, so anything a story creates (Canvas, lil-gui panels, ResizeObservers, event listeners, RAF loops) leaks into the next story unless explicitly destroyed. The global `beforeEach` in `.storybook/preview.ts` drains a per-story cleanup queue between stories — your job is to populate that queue.
