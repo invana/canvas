@@ -10,6 +10,7 @@ import {
 } from '@invana/ui';
 import type { Canvas as EngineCanvas } from '@invana/canvas';
 
+import { ACTIVE_MENU_ITEM_CLASS } from './ControlButton';
 import { Tooltipped } from './Tooltipped';
 import type { TooltipSide } from './types';
 import { useZoom } from '../hooks/useZoom';
@@ -98,7 +99,11 @@ export function ZoomPicker({
           onValueChange={(v) => setZoom(Number(v) / 100)}
         >
           {presets.map((pct) => (
-            <DropdownMenuRadioItem key={pct} value={String(pct)}>
+            <DropdownMenuRadioItem
+              key={pct}
+              value={String(pct)}
+              className={String(pct) === currentPct ? ACTIVE_MENU_ITEM_CLASS : undefined}
+            >
               {pct}%
             </DropdownMenuRadioItem>
           ))}

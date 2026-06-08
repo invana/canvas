@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@invana/ui';
 
+import { ACTIVE_MENU_ITEM_CLASS } from './ControlButton';
 import { Tooltipped } from './Tooltipped';
 import type { ToolbarIcon, TooltipSide } from './types';
 
@@ -87,7 +88,11 @@ export function OptionPicker({
           {Object.keys(options).map((key) => {
             const Icon = icons?.[key];
             return (
-              <DropdownMenuRadioItem key={key} value={key}>
+              <DropdownMenuRadioItem
+                key={key}
+                value={key}
+                className={key === value ? ACTIVE_MENU_ITEM_CLASS : undefined}
+              >
                 <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   {Icon && <Icon size={14} />}
                   {options[key] ?? key}

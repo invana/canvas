@@ -1,5 +1,6 @@
 import { Button } from '@invana/ui';
 
+import { ACTIVE_CLASS } from './ControlButton';
 import { Tooltipped } from './Tooltipped';
 import type { ToolbarIcon, TooltipSide } from './types';
 
@@ -16,9 +17,9 @@ export interface LockToggleProps {
 
 /**
  * Toggle button for a "lock view" action (the consumer decides what locking
- * disables — e.g. pan + drag). Shows the locked icon and active styling while
- * locked. The tooltip + accessible label flips with state
- * ("Lock view" / "Unlock view").
+ * disables — e.g. pan + drag). Shows the locked icon and the design-kit
+ * nav-item active styling ({@link ACTIVE_CLASS}) while locked. The tooltip +
+ * accessible label flips with state ("Lock view" / "Unlock view").
  */
 export function LockToggle({
   locked,
@@ -33,11 +34,11 @@ export function LockToggle({
   return (
     <Tooltipped label={label} side={tooltipSide}>
       <Button
-        variant={locked ? 'default' : 'ghost'}
+        variant="ghost"
         size="icon"
         aria-label={label}
         onClick={onToggle}
-        className={className}
+        className={[locked && ACTIVE_CLASS, className].filter(Boolean).join(' ') || undefined}
       >
         <Icon size={16} />
       </Button>
