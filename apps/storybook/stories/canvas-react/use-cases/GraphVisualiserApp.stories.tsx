@@ -60,12 +60,10 @@ import {
   PinchZoomBehaviour,
   PropertyViewerPanel,
   ResponsiveThemeBehaviour,
+  StatusBar,
   ToolbarItems,
   WheelZoomBehaviour,
   useCanvas,
-  useCanvasEvent,
-  useSelection,
-  useZoom,
   useHistorySection,
   useEditorSection,
   useViewSection,
@@ -332,129 +330,6 @@ function HeaderThemeToggle() {
   return <ToolbarItems items={items} orientation="horizontal" />;
 }
 
-/** Hovered element descriptor for the status bar. */
-type HoverInfo = { kind: 'node' | 'edge'; id: string; label: string };
-
-/**
- * The shell footer's live status bar — read-only telemetry off the engine:
- * camera zoom (`useZoom`), pan offset (`camera:pan`), the pointer's world
- * position (a `pointermove` listener on the pixi canvas element projected via
- * `camera.toWorld`), and the hovered node / edge (the graph renderer's
- * `shape:` / `connector:pointerover|out` events). Reads the lifted
- * `CanvasContext`, so it works from the footer (outside `<Canvas>`).
- */
-function StatusBar() {
-  const canvas = useCanvas();
-  const { zoom } = useZoom();
-  const { selectedNodeIds, selectedEdgeIds, count: selectionCount } = useSelection();
-  const [pan, setPan] = useState({ x: canvas.camera.x, y: canvas.camera.y });
-  const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
-  const [hover, setHover] = useState<HoverInfo | null>(null);
-  const [counts, setCounts] = useState({ nodes: 0, edges: 0 });
-
-  // Camera translation — re-synced live as the user pans.
-  useCanvasEvent('camera:pan', ({ x, y }) => setPan({ x, y }));
-
-  // Rendered node / edge totals — read off the graph store and re-synced on its
-  // `flush` event (one per batched mutation), so the counts track adds/removes.
-  useEffect(() => {
-    const store = canvas.layers.get<EngineGraphLayer>('graph')?.store;
-    if (!store) return;
-    const sync = (): void => setCounts({ nodes: store.nodeCount(), edges: store.edgeCount() });
-    sync();
-    return store.events.on('flush', sync);
-  }, [canvas]);
-
-  // Pointer world position — the canvas-wide bus drops high-frequency
-  // pointermove, so listen on the pixi canvas element and project to world.
-  useEffect(() => {
-    const el = canvas.application?.canvas;
-    if (!el) return;
-    const onMove = (e: PointerEvent): void => setPointer(canvas.camera.toWorld(e.offsetX, e.offsetY));
-    const onLeave = (): void => setPointer(null);
-    el.addEventListener('pointermove', onMove);
-    el.addEventListener('pointerleave', onLeave);
-    return () => {
-      el.removeEventListener('pointermove', onMove);
-      el.removeEventListener('pointerleave', onLeave);
-    };
-  }, [canvas]);
-
-  // Hovered node / edge — raw pointer-hit events off the graph layer's renderer.
-  // The pointer events carry only the id; we resolve the drawn display label
-  // from the store (here it mirrors the node's `labelText` accessor — `id` — but
-  // falls back through common label fields so it stays meaningful on richer data).
-  useEffect(() => {
-    const layer = canvas.layers.get<EngineGraphLayer>('graph');
-    const renderer = layer?.getRenderer();
-    const store = layer?.store;
-    if (!renderer || !store) return;
-    const nodeLabel = (id: string): string => {
-      const d = store.getNode(id)?.data as { label?: string; name?: string } | undefined;
-      return d?.label ?? d?.name ?? id;
-    };
-    const edgeLabel = (id: string): string => store.getEdge(id)?.type ?? id;
-    const onShapeOver = (e: { id: string }): void =>
-      setHover({ kind: 'node', id: e.id, label: nodeLabel(e.id) });
-    const onConnOver = (e: { id: string }): void =>
-      setHover({ kind: 'edge', id: e.id, label: edgeLabel(e.id) });
-    const onOut = (): void => setHover(null);
-    renderer.events.on('shape:pointerover', onShapeOver);
-    renderer.events.on('shape:pointerout', onOut);
-    renderer.events.on('connector:pointerover', onConnOver);
-    renderer.events.on('connector:pointerout', onOut);
-    return () => {
-      renderer.events.off('shape:pointerover', onShapeOver);
-      renderer.events.off('shape:pointerout', onOut);
-      renderer.events.off('connector:pointerover', onConnOver);
-      renderer.events.off('connector:pointerout', onOut);
-    };
-  }, [canvas]);
-
-  const coord = (p: { x: number; y: number } | null): string =>
-    p ? `${p.x.toFixed(0)}, ${p.y.toFixed(0)}` : '—';
-
-  return (
-    <div style={statusRowStyle}>
-      <span>
-        {counts.nodes} nodes and {counts.edges} edges rendered
-      </span>
-
-      <span style={statusSepStyle}>·</span>
-      <span>Zoom: {Math.round(zoom * 100)}%</span>
-      <span style={statusSepStyle}>·</span>
-      <span>Pan: {coord(pan)}</span>
-      {pointer && (
-        <>
-          <span style={statusSepStyle}>·</span>
-          <span>Pointer: {coord(pointer)}</span>
-        </>
-      )}
-
-      {hover && (
-        <>
-          <span style={statusSepStyle}>·</span>
-          <span>Hovered {`${hover.kind.charAt(0).toUpperCase() + hover.kind.slice(1)} - ${hover.label} [ID: ${hover.id}]`}</span>
-        </>
-      )}
-      {selectionCount > 0 && (
-        <>
-          <span style={statusSepStyle}>·</span>
-          <span>
-            Selected:{' '}
-            {[
-              selectedNodeIds.length > 0 ? `${selectedNodeIds.length} nodes` : null,
-              selectedEdgeIds.length > 0 ? `${selectedEdgeIds.length} edges` : null,
-            ]
-              .filter(Boolean)
-              .join(', ')}
-          </span>
-        </>
-      )}
-    </div>
-  );
-}
-
 function VisualiserApp() {
   // The live engine, lifted out of <Canvas> by <EngineBridge>. Null until the
   // graph is fully wired; gates the header/footer chrome that depends on it.
@@ -680,16 +555,6 @@ function VisualiserApp() {
 }
 
 const brandStyle: CSSProperties = { fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' };
-const statusRowStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
-  fontSize: 12,
-  fontVariantNumeric: 'tabular-nums',
-  opacity: 0.8,
-  whiteSpace: 'nowrap',
-};
-const statusSepStyle: CSSProperties = { opacity: 0.4 };
 
 export const GraphVisualiserApp: Story = {
   render: () => <VisualiserApp />,

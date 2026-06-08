@@ -25,6 +25,8 @@ export { PropertiesViewer } from './PropertiesViewer';
 export type { PropertiesViewerProps, PropertiesViewerRow } from './PropertiesViewer';
 export { GraphHintBar, DEFAULT_GRAPH_HINTS, DEFAULT_MAGNET_HINTS } from './GraphHintBar';
 export type { GraphHintBarProps } from './GraphHintBar';
+export { StatusBar } from './StatusBar';
+export type { StatusBarProps } from './StatusBar';
 export { ContextMenuOverlay } from './ContextMenuOverlay';
 export type { ContextMenuOverlayProps } from './ContextMenuOverlay';
 
