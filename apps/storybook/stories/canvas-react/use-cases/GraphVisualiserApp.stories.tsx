@@ -34,7 +34,6 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import type { CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
@@ -431,7 +430,7 @@ function VisualiserApp() {
     <CanvasContext.Provider value={engine}>
       <AppLayoutBase
         header={{
-          left: <span style={brandStyle}>Graph Visualiser</span>,
+          left: <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>Graph Visualiser</span>,
           center: engine ? (
             <HeaderToolbar
               magnet={magnet}
@@ -553,8 +552,6 @@ function VisualiserApp() {
     </CanvasContext.Provider>
   );
 }
-
-const brandStyle: CSSProperties = { fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' };
 
 export const GraphVisualiserApp: Story = {
   render: () => <VisualiserApp />,
