@@ -224,8 +224,12 @@ export class GraphLayer extends WorldLayer<
   private nodeOption: NodeOption | undefined;
   private edgeOption: EdgeOption | undefined;
 
+  /** Initial data from `options.initData`, applied once in `onMount`. */
+  private readonly initialData: GraphData | undefined;
+
   constructor(opts: LayerOptions<GraphLayerOptions>) {
     super(opts);
+    this.initialData = opts.options.initData;
     // Stamp the store's telemetry source id with the layer id so multiple
     // graphs are distinguishable on the tap channel (§ 6).
     this.store = opts.options.store ?? new GraphStore({ id: this.id });
@@ -388,6 +392,10 @@ export class GraphLayer extends WorldLayer<
         this.events.emit('data:changed', { ...counters });
       }),
     );
+
+    // Load initial data now that the renderer + subscriptions are live — this
+    // fires `data:changed`, which auto-triggers the active layout.
+    if (this.initialData) this.setData(this.initialData);
   }
 
   protected override onUnmount(): void {
@@ -512,6 +520,9 @@ export class GraphLayer extends WorldLayer<
       } as ResolvableNodeStyle<GraphNode>,
     };
     for (const node of this.store.nodes()) this.rerenderNode(node.id);
+    // Notify mirrors (minimap, etc.) at the *setter* level so direct calls,
+    // `applyOptions` patches, and behaviours that write the template all fire.
+    this.events.emit('style:changed', { scope: 'node' });
   }
 
   /**
@@ -529,6 +540,57 @@ export class GraphLayer extends WorldLayer<
       } as ResolvableEdgeStyle<GraphEdge>,
     };
     for (const edge of this.store.edges()) this.rerenderEdge(edge.id);
+    this.events.emit('style:changed', { scope: 'edge' });
+  }
+
+  /**
+   * Patch the layer-level state *catalogues* (`options.node.state` /
+   * `options.edge.state`) — the named overlays applied while a state is active
+   * (`hover`, `selected`, …). Entries are merged by name (shallow, per the
+   * `setNodeDefaults` contract: declare a full `NodeStyle` / `EdgeStyle` to
+   * replace an entry; spread the prior value to patch one field). Re-renders
+   * every node/edge so active states pick up the new appearance immediately.
+   *
+   * This is the runtime counterpart to the construction-time
+   * `DEFAULT_NODE_STATES` / `DEFAULT_EDGE_STATES` merge — there was no setter
+   * for state overlays before. Used by `GraphCanvas.update()` to live-patch
+   * the state catalogue (e.g. theme the `selected` ring colour).
+   */
+  setStateConfigs(patch: {
+    node?: Record<string, NodeStyle>;
+    edge?: Record<string, EdgeStyle>;
+  }): void {
+    if (patch.node) {
+      this.nodeOption = {
+        ...this.nodeOption,
+        state: { ...(this.nodeOption?.state ?? {}), ...patch.node },
+      };
+    }
+    if (patch.edge) {
+      this.edgeOption = {
+        ...this.edgeOption,
+        state: { ...(this.edgeOption?.state ?? {}), ...patch.edge },
+      };
+    }
+    this.redraw();
+    this.events.emit('style:changed', { scope: 'state' });
+  }
+
+  /**
+   * Live-update entry point. Dispatches a `GraphLayerOptions` slice to the
+   * concrete setters: `node.style` → {@link setNodeDefaults}, `edge.style` →
+   * {@link setEdgeDefaults}, `node.state` / `edge.state` →
+   * {@link setStateConfigs}. Called by `GraphCanvas.update()` per id.
+   */
+  setOptions(patch: Partial<GraphLayerOptions>): void {
+    if (patch.node?.style) this.setNodeDefaults(patch.node.style as Partial<NodeStyle>);
+    if (patch.edge?.style) this.setEdgeDefaults(patch.edge.style as Partial<EdgeStyle>);
+    if (patch.node?.state || patch.edge?.state) {
+      this.setStateConfigs({
+        node: patch.node?.state as Record<string, NodeStyle> | undefined,
+        edge: patch.edge?.state as Record<string, EdgeStyle> | undefined,
+      });
+    }
   }
 
   /** Read-only snapshot of the current node template style (resolved per node at render). */

@@ -15,19 +15,15 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import {
-  DragNodeBehaviour,
-  GraphLayer,
-  type GraphEdge,
-  type GraphNode,
-} from '@invana/graph';
+import { GraphCanvas, DragNodeBehaviour, GraphLayer } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
+import { generateLattice } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
+import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-force/Lattice' };
 export default meta;
@@ -37,189 +33,133 @@ export const Lattice: Story = {
   render: () => createContainer({ id: 'graph-d3-lattice' }),
 
   play: async ({ canvasElement }) => {
-    // ── Lattice data ─────────────────────────────────────────────────────
-    // n × n grid; each node links to (i, j+1) and (i+1, j). Node fill is a
-    // simple 2D gradient so distortions in the final layout are easy to read.
-    const settings = {
-      n: 20,
+    // `nodeSize` sizes the lattice grid (data). Everything else — layer styles,
+    // behaviour flags, force params — lives in `canvasOptions` below.
+    const nodeSize = 20;
+    const graphData = generateLattice(nodeSize);
 
-      // Simulation parameters
-      alpha: 1,
-      alphaMin: 0.001,
-      alphaDecay: 0.0228,
-      velocityDecay: 0.4,
-
-      // forceLink
-      linkDistance: 30,
-      linkStrength: 1,
-      linkIterations: 1,
-
-      // forceManyBody
-      chargeStrength: -30,
-      chargeTheta: 0.9,
-      chargeDistanceMax: Infinity,
-
-      // forceCenter
-      centerX: 0,
-      centerY: 0,
-      centerStrength: 1,
-    };
-
-    type LatticeNodeData = { i: number; j: number };
-    // Captured by the `bgFill` resolver below so the 2D gradient rescales
-    // when the grid is rebuilt at a new size.
-    let gridSize = Math.max(2, Math.floor(settings.n));
-
-    const buildGraphData = (): { nodes: GraphNode<LatticeNodeData>[]; edges: GraphEdge[] } => {
-      const n = Math.max(2, Math.floor(settings.n));
-      gridSize = n;
-      const nodes: GraphNode<LatticeNodeData>[] = [];
-      const edges: GraphEdge[] = [];
-
-      for (let i = 0; i < n; i++) {
-        for (let j = 0; j < n; j++) {
-          nodes.push({ id: `${i},${j}`, data: { i, j } });
-          if (j < n - 1) {
-            edges.push({
-              id: `h-${i}-${j}`,
-              source: `${i},${j}`,
-              target: `${i},${j + 1}`,
-            });
-          }
-          if (i < n - 1) {
-            edges.push({
-              id: `v-${i}-${j}`,
-              source: `${i},${j}`,
-              target: `${i + 1},${j}`,
-            });
-          }
-        }
-      }
-
-      return { nodes, edges };
-    };
-
-    const lerpChannel = (a: number, b: number, t: number): number =>
-      Math.round(a + (b - a) * t);
-
-    // ── Canvas setup ─────────────────────────────────────────────────────
+    // ── Add everything, then init() last ─────────────────────────────────
     const container =
       canvasElement.querySelector<HTMLDivElement>('#graph-d3-lattice')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
+    // 1) Register layers / behaviours / layout by id (mounting is deferred until
+    //    init). Only wiring lives here — all settings are in the config below.
+    const graph = new GraphLayer({ id: 'graph', options: { initData: graphData } });
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
+    canvas.layers.add(graph);
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+    const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
+    canvas.layouts.add(forceLayout);
 
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'pattern',
-          patternType: 'dots',
-          mode: 'auto',
-          backgroundColor: { light: '#f8fafc', dark: '#0f172a' },
-          color: { light: '#94a3b8', dark: '#475569' },
-          size: 1.5,
-          spacing: 24,
-          alpha: 0.85,
-        },
-      }),
-    );
+    // 2) init() last — renderer + ALL settings in one serialisable config,
+    //    keyed by id. Could come from a settings UI or a saved file;
+    //    `canvas.get()` reads it back. `enabled: true` turns a behaviour on.
 
-    const graph = new GraphLayer({
-      id: 'graph',
-      options: {
-        node: {
-          style: {
-            shape: { kind: 'circle', radius: 3 },
-            // 2D gradient: top-left warm → bottom-right cool. Rescales each
-            // rebuild via `gridSize` captured from `buildGraphData`.
-            bgFill: (n: GraphNode) => {
-              const d = n.data as LatticeNodeData;
-              const t = gridSize <= 1 ? 0 : (d.i + d.j) / (2 * (gridSize - 1));
-              const r = lerpChannel(0xf9, 0x38, t);
-              const g = lerpChannel(0x73, 0x82, t);
-              const b = lerpChannel(0x16, 0xf6, t);
-              return (r << 16) | (g << 8) | b;
-            },
+    const canvasOptions = {
+        layers: {
+          bg: {
+            type: 'pattern',
+            patternType: 'dots',
+            backgroundColor: '#0f172a',
+            color: '#475569',
+            size: 1.5,
+            spacing: 24,
+            alpha: 0.85,
+          },
+          graph: {
+            node: { style: { shape: { kind: 'circle', radius: 3 }, bgFill: 0x60a5fa } },
+            edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 0.8, arrowTargetShape: 'none' } },
           },
         },
-        edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 0.8, arrowTargetShape: 'none' } },
-      },
+        behaviours: {
+          pan: { enabled: true },
+          zoom: { enabled: true },
+          'drag-node': { enabled: true },
+          'system-theme': {
+            enabled: true,
+            light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
+            dark: { backgroundColor: '#0f172a', color: '#475569' },
+          },
+        },
+        layouts: { 
+          force: {
+            alpha: 1,
+            alphaMin: 0.001,
+            alphaDecay: 0.0228,
+            velocityDecay: 0.4,
+            link: { distance: 30, strength: 1, iterations: 1 },
+            charge: { strength: -30, theta: 0.9, distanceMax: Infinity },
+            center: { x: 0, y: 0, strength: 1 },
+          },
+        },
+        // Which layout runs — GraphCanvas auto-applies it to its target layer
+        // when data arrives (below) and on any later topology change.
+        activeLayout: 'force',
+      };
+    await canvas.init({
+      container,
+      autoResize: true,
+      config: canvasOptions,
     });
-    canvas.layers.add(graph);
-
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
-
-    let layout: D3ForceLayout | null = null;
-
-    const buildLayout = (): D3ForceLayout =>
-      new D3ForceLayout({
-        alpha: settings.alpha,
-        alphaMin: settings.alphaMin,
-        alphaDecay: settings.alphaDecay,
-        velocityDecay: settings.velocityDecay,
-        link: {
-          distance: settings.linkDistance,
-          strength: settings.linkStrength,
-          iterations: settings.linkIterations,
-        },
-        charge: {
-          strength: settings.chargeStrength,
-          theta: settings.chargeTheta,
-          distanceMax: settings.chargeDistanceMax,
-        },
-        center: {
-          x: settings.centerX,
-          y: settings.centerY,
-          strength: settings.centerStrength,
-        },
-      });
-
-    const run = (): void => {
-      layout?.stop();
-      graph.setData(buildGraphData());
-      layout = buildLayout();
-      void layout.apply(graph);
-    };
-
-    run();
+    // Data was set on the graph layer (options.data); on mount it loads, and the
+    // active 'force' layout auto-runs against it. Nothing else to call.
 
     // ── GUI ──────────────────────────────────────────────────────────────
+    // Controls bind straight to `canvasOptions` (the config is the source of
+    // truth) and push the change live through canvas.update.
     const gui = new GUI({ title: 'D3ForceLayout — Lattice' });
     onStoryTeardown(() => gui.destroy());
-    onStoryTeardown(() => layout?.stop());
+    onStoryTeardown(() => forceLayout.stop());
 
-    const grid = gui.addFolder('Lattice');
-    grid.add(settings, 'n', 4, 40, 1).name('n (grid size)');
+    const node = canvasOptions.layers.graph.node.style;
+    const edge = canvasOptions.layers.graph.edge.style;
+
+    const look = gui.addFolder('Appearance (live — canvas.update)');
+    look.addColor(node, 'bgFill').onChange((v: number) =>
+      canvas.update({ layers: { graph: { node: { style: { bgFill: v } } } } }),
+    );
+    look.add(node.shape, 'radius', 1, 12, 0.5).onChange((v: number) =>
+      canvas.update({ layers: { graph: { node: { style: { shape: { kind: 'circle', radius: v } } } } } }),
+    );
+    look.addColor(edge, 'strokeColor').onChange((v: number) =>
+      canvas.update({ layers: { graph: { edge: { style: { strokeColor: v } } } } }),
+    );
+    look.add(edge, 'strokeWidth', 0.2, 4, 0.1).onChange((v: number) =>
+      canvas.update({ layers: { graph: { edge: { style: { strokeWidth: v } } } } }),
+    );
+
+    // Force-param edits push the whole `settings` back through update(), which
+    // re-heats the running sim. `onFinishChange` so the re-heat fires once per
+    // adjustment, not on every drag tick.
+    const applyForce = (): void => canvas.update({ layouts: { force: canvasOptions.layouts.force } });
 
     const sim = gui.addFolder('Simulation');
-    sim.add(settings, 'alpha', 0, 1, 0.01);
-    sim.add(settings, 'alphaMin', 0.0001, 0.1, 0.0001);
-    sim.add(settings, 'alphaDecay', 0.001, 0.1, 0.001);
-    sim.add(settings, 'velocityDecay', 0, 1, 0.01);
+    sim.add(canvasOptions.layouts.force, 'alpha', 0, 1, 0.01).onFinishChange(applyForce);
+    sim.add(canvasOptions.layouts.force, 'alphaMin', 0.0001, 0.1, 0.0001).onFinishChange(applyForce);
+    sim.add(canvasOptions.layouts.force, 'alphaDecay', 0.001, 0.1, 0.001).onFinishChange(applyForce);
+    sim.add(canvasOptions.layouts.force, 'velocityDecay', 0, 1, 0.01).onFinishChange(applyForce);
 
     const link = gui.addFolder('forceLink');
-    link.add(settings, 'linkDistance', 5, 120, 1).name('distance');
-    link.add(settings, 'linkStrength', 0, 2, 0.01).name('strength');
-    link.add(settings, 'linkIterations', 1, 10, 1).name('iterations');
+    link.add(canvasOptions.layouts.force.link, 'distance', 5, 120, 1).onFinishChange(applyForce);
+    link.add(canvasOptions.layouts.force.link, 'strength', 0, 2, 0.01).onFinishChange(applyForce);
+    link.add(canvasOptions.layouts.force.link, 'iterations', 1, 10, 1).onFinishChange(applyForce);
 
     const charge = gui.addFolder('forceManyBody');
-    charge.add(settings, 'chargeStrength', -300, 0, 1).name('strength');
-    charge.add(settings, 'chargeTheta', 0, 2, 0.05).name('theta');
-    charge.add(settings, 'chargeDistanceMax', 50, 2000, 10).name('distanceMax');
+    charge.add(canvasOptions.layouts.force.charge, 'strength', -300, 0, 1).onFinishChange(applyForce);
+    charge.add(canvasOptions.layouts.force.charge, 'theta', 0, 2, 0.05).onFinishChange(applyForce);
+    charge.add(canvasOptions.layouts.force.charge, 'distanceMax', 50, 2000, 10).onFinishChange(applyForce);
 
     const center = gui.addFolder('forceCenter');
-    center.add(settings, 'centerX', -500, 500, 10).name('x');
-    center.add(settings, 'centerY', -500, 500, 10).name('y');
-    center.add(settings, 'centerStrength', 0, 2, 0.01).name('strength');
+    center.add(canvasOptions.layouts.force.center, 'x', -500, 500, 10).onFinishChange(applyForce);
+    center.add(canvasOptions.layouts.force.center, 'y', -500, 500, 10).onFinishChange(applyForce);
+    center.add(canvasOptions.layouts.force.center, 'strength', 0, 2, 0.01).onFinishChange(applyForce);
 
-    gui.add({ apply: () => run() }, 'apply').name('Apply (rebuild + run)');
-    gui.add({ stop: () => layout?.stop() }, 'stop').name('Stop');
+    gui.add({ stop: () => forceLayout.stop() }, 'stop').name('Stop');
     gui
       .add({ fit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'fit')
       .name('Fit to content');

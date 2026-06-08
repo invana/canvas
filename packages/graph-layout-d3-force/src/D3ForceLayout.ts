@@ -36,7 +36,7 @@ import {
   type SimulationNodeDatum,
 } from 'd3-force';
 
-import { Layout } from '@invana/canvas';
+import { Layout, type LayoutOptions } from '@invana/canvas';
 import type { GraphLayer, GraphNode } from '@invana/graph';
 
 import type { D3ForceLayoutOptions } from './types';
@@ -50,7 +50,9 @@ interface SimLink extends SimulationLinkDatum<SimNode> {}
 const REHEAT_ALPHA = 0.3;
 
 export class D3ForceLayout extends Layout<GraphLayer> {
-  private readonly opts: D3ForceLayoutOptions;
+  private opts: D3ForceLayoutOptions;
+  /** Last layer `apply()` ran against — so `setOptions` can re-heat it live. */
+  private lastLayer: GraphLayer | null = null;
   private sim: Simulation<SimNode, SimLink> | null = null;
   private nodes: SimNode[] = [];
   private ids: string[] = [];
@@ -83,9 +85,19 @@ export class D3ForceLayout extends Layout<GraphLayer> {
    *  once per run, even if called externally after a natural settle. */
   private running = false;
 
-  constructor(opts: D3ForceLayoutOptions = {}) {
-    super();
+  constructor(opts: D3ForceLayoutOptions & LayoutOptions = {}) {
+    super(opts);
     this.opts = opts;
+  }
+
+  /**
+   * Merge a force-options patch (deep, so `{ charge: { strength } }` keeps the
+   * other charge fields) and re-heat the running simulation so the change takes
+   * effect live. Called by `Canvas.update({ layouts: { id: patch } })`.
+   */
+  override setOptions(patch: Partial<D3ForceLayoutOptions>): void {
+    this.opts = mergeDeep(this.opts, patch);
+    if (this.running && this.lastLayer) void this.apply(this.lastLayer);
   }
 
   /**
@@ -95,6 +107,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
    */
   async apply(layer: GraphLayer): Promise<void> {
     this.stop();
+    this.lastLayer = layer;
     const store = layer.store;
 
     // 1. Snapshot store → sim datums.
@@ -365,4 +378,16 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     store.setPositionsBulk(this.ids, buffer);
     this.writing = false;
   }
+}
+
+/** Deep-merge plain objects; arrays / primitives replace. */
+function mergeDeep<T>(base: T, patch: Partial<T>): T {
+  const isObj = (v: unknown): v is Record<string, unknown> =>
+    typeof v === 'object' && v !== null && !Array.isArray(v);
+  if (!isObj(base) || !isObj(patch)) return patch as T;
+  const out: Record<string, unknown> = { ...base };
+  for (const [k, v] of Object.entries(patch)) {
+    out[k] = isObj(v) && isObj(out[k]) ? mergeDeep(out[k], v) : v;
+  }
+  return out as T;
 }

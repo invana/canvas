@@ -18,6 +18,8 @@ export {
   type RandomTreeNode,
 } from './randomTree';
 
+export { generateLattice, type LatticeData } from './lattice';
+
 export {
   flareAsGraph,
   flareHierarchy,

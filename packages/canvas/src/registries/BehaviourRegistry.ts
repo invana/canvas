@@ -18,13 +18,13 @@ import type { CanvasEventBus } from '../events/CanvasEventBus';
 import type { IBehaviour } from '../behaviours/Behaviour';
 
 export interface BehaviourRegistryOptions {
-  getContext: () => CanvasContext;
+  getContext: () => CanvasContext | undefined;
   bus: CanvasEventBus;
 }
 
 export class BehaviourRegistry {
   private readonly behaviours: Map<string, IBehaviour> = new Map();
-  private readonly getContext: () => CanvasContext;
+  private readonly getContext: () => CanvasContext | undefined;
   private readonly bus: CanvasEventBus;
 
   constructor(opts: BehaviourRegistryOptions) {
@@ -37,21 +37,32 @@ export class BehaviourRegistry {
   }
 
   /**
-   * Register a Behaviour. Calls `behaviour.register(ctx)` + fires
-   * `'behaviour:registered'`. If `behaviour.enabled` is `true` at construction
-   * time (the developer opted in via `enabled: true` option), also fires
-   * `'behaviour:enabled'` and runs the conflict-warning check.
-   *
-   * Throws on duplicate id.
+   * Register a Behaviour. Wires it (`behaviour.register(ctx)` + events) now if
+   * the Canvas is initialised; otherwise it's stored and wired later by
+   * `registerAll()` (called by `Canvas.init`). Throws on duplicate id.
    */
   register(behaviour: IBehaviour): void {
     if (this.behaviours.has(behaviour.id)) {
       throw new Error(`BehaviourRegistry: behaviour "${behaviour.id}" already registered`);
     }
-    behaviour.register(this.getContext());
     this.behaviours.set(behaviour.id, behaviour);
-    this.bus.emit('behaviour:registered', { id: behaviour.id });
+    const ctx = this.getContext();
+    if (ctx) this.wire(behaviour, ctx);
+  }
 
+  /** Wire every not-yet-registered behaviour. Called by `Canvas.init` (after layers mount). */
+  registerAll(): void {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    for (const behaviour of this.behaviours.values()) {
+      if (!behaviour.isRegistered) this.wire(behaviour, ctx);
+    }
+  }
+
+  /** `behaviour.register(ctx)` + the registered/enabled events. */
+  private wire(behaviour: IBehaviour, ctx: CanvasContext): void {
+    behaviour.register(ctx);
+    this.bus.emit('behaviour:registered', { id: behaviour.id });
     if (behaviour.enabled) {
       this.bus.emit('behaviour:enabled', { id: behaviour.id });
       this.warnOnShortcutConflict(behaviour);

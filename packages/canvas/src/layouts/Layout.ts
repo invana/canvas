@@ -61,14 +61,41 @@ export type LayoutEvents = {
   end: { reason: LayoutEndReason };
 };
 
+/** Construction options every layout shares (for the `LayoutRegistry`). */
+export interface LayoutOptions {
+  /** Stable id, used to address the layout in a `LayoutRegistry` / config. Default `'layout'`. */
+  id?: string;
+  /** The layer this layout is meant to run against. Informational — `apply(layer)` still takes one explicitly. */
+  targetLayerId?: string;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export abstract class Layout<TLayer extends Layer<any, any, any, any> = Layer<any, any, any, any>> {
+  /** Stable id (registry / config key). */
+  readonly id: string;
+  /** The layer this layout targets, if declared at construction. */
+  readonly targetLayerId?: string;
+
   /**
    * Lifecycle event bus. See class docs for the event vocabulary.
    * Subclasses with richer telemetry can declare their own typed
    * emitter on top (`override readonly events = new EventEmitter<MyEvents>()`).
    */
   readonly events: EventEmitter<LayoutEvents> = new EventEmitter<LayoutEvents>();
+
+  constructor(opts: LayoutOptions = {}) {
+    this.id = opts.id ?? 'layout';
+    this.targetLayerId = opts.targetLayerId;
+  }
+
+  /**
+   * Live-reconfigure. Called by `Canvas.update({ layouts: { id: patch } })`.
+   * Default no-op; iterative layouts (e.g. `D3ForceLayout`) override to merge
+   * the patch and re-heat a running simulation.
+   */
+  setOptions(_patch: unknown): void {
+    /* default no-op */
+  }
 
   /**
    * Run the layout against `layer`. Resolves when the run terminates

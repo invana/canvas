@@ -61,6 +61,8 @@ export interface CanvasGlobalEvents extends EventMap {
   };
   'layer:added': { id: string };
   'layer:removed': { id: string };
+  'layout:added': { id: string };
+  'layout:removed': { id: string };
   'behaviour:registered': { id: string };
   'behaviour:enabled': { id: string };
   'behaviour:disabled': { id: string };
@@ -68,6 +70,8 @@ export interface CanvasGlobalEvents extends EventMap {
   'camera:pan': { x: number; y: number };
   'background:click': { worldX: number; worldY: number };
   'tap:dropped': { type: string; reason: 'excluded' | 'sampled' };
+  /** `Canvas.update()` patched the options; carries the touched ids (serialisable). */
+  'options:change': { changedLayerIds: readonly string[]; changedBehaviourIds: readonly string[] };
 }
 
 export type TapHandler = (event: CanvasEvent) => void;

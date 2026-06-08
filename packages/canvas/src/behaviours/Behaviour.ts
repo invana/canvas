@@ -23,6 +23,8 @@ import type { CanvasContext } from '../context/CanvasContext';
 export interface IBehaviour {
   readonly id: string;
   readonly enabled: boolean;
+  /** `true` once `register(ctx)` has run. Lets the registry skip already-wired behaviours. */
+  readonly isRegistered: boolean;
   readonly scope: 'layer' | 'canvas';
   readonly layerId?: string;
   readonly shortcuts?: readonly string[];
@@ -73,6 +75,10 @@ export abstract class Behaviour implements IBehaviour {
 
   get enabled(): boolean {
     return this._enabled;
+  }
+
+  get isRegistered(): boolean {
+    return this.ctx !== undefined;
   }
 
   /** Called by `BehaviourRegistry.register(behaviour)`. Subscribes to inputs. */

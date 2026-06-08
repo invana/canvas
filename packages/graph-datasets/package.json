@@ -25,7 +25,11 @@
     "clean": "rm -rf dist",
     "test": "vitest run"
   },
+  "peerDependencies": {
+    "@invana/graph": "workspace:*"
+  },
   "devDependencies": {
+    "@invana/graph": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "tsup": "^8.3.5",
     "typescript": "5.9.2",

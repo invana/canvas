@@ -210,10 +210,11 @@ export class MiniMapLayer extends ScreenLayer<
     this.layoutPosition();
     this.repaint();
 
-    // Re-paint when graph data changes or the camera moves.
+    // Re-paint when graph data, style template, or the camera changes.
     this.offCameraPan = ctx.events.on('camera:pan', () => this.repaint());
     this.offCameraZoom = ctx.events.on('camera:zoom', () => this.repaint());
     const offDataChanged = graph.events.on('data:changed', () => this.repaint());
+    const offStyleChanged = graph.events.on('style:changed', () => this.repaint());
 
     if (typeof ResizeObserver !== 'undefined' && ctx.canvasElement) {
       const ro = new ResizeObserver(() => {
@@ -229,6 +230,7 @@ export class MiniMapLayer extends ScreenLayer<
     const prevOffResize = this.offResize;
     this.offResize = () => {
       offDataChanged();
+      offStyleChanged();
       prevOffResize?.();
     };
   }

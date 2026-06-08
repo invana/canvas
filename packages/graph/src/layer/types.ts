@@ -1294,6 +1294,15 @@ export interface GraphLayerOptions {
   store?: import('../store/GraphStore').GraphStore;
 
   /**
+   * Initial graph content (`{ nodes, edges }`), loaded when the layer mounts —
+   * equivalent to calling `setData` right after mount. The *initial* seed only;
+   * the live dataset streams / changes later via `layer.setData(...)` or store
+   * mutations. Content, not style — lives here on the layer, not in the
+   * serialisable canvas config.
+   */
+  initData?: GraphData;
+
+  /**
    * Layer-level node template (G6's `node` field). Carries `style` (base
    * appearance) and `state` (catalogue of named overlays applied while a
    * state in `node.states[]` is active). Resolver-aware: every field on
@@ -1358,5 +1367,15 @@ export interface GraphLayerEvents {
    */
   'node:drag-start': { nodeId: string; nodeIds: readonly string[] };
   'node:drag-end': { nodeId: string; nodeIds: readonly string[] };
+  /**
+   * The layer-level style template changed (node / edge defaults or the state
+   * catalogue) — emitted by `setNodeDefaults` / `setEdgeDefaults` /
+   * `setStateConfigs` (and therefore by any `applyOptions` patch or behaviour
+   * that writes the template, e.g. `ColorByLabelBehaviour`). Distinct from
+   * `data:changed` (topology / positions). Dependents that mirror resolved
+   * styling — e.g. `MiniMapLayer` — subscribe to repaint. See
+   * `unified-canvas-options-plan.md` §7.2.
+   */
+  'style:changed': { scope: 'node' | 'edge' | 'state' };
   [event: string]: unknown;
 }

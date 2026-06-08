@@ -71,6 +71,8 @@ export {
   type StarShapeOption,
 } from './layer';
 
+export { GraphCanvas } from './canvas';
+
 export {
   GraphHistory,
   type GraphHistoryEventMap,

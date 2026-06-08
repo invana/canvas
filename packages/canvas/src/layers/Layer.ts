@@ -45,6 +45,8 @@ export interface ILayer {
   hittable: boolean;
   zIndex: number;
   cullable: boolean;
+  /** `true` between `mount(ctx)` and `unmount()`. Lets the registry skip already-mounted layers. */
+  readonly mounted: boolean;
   mount(ctx: CanvasContext): void;
   unmount(): void;
   flush(): void;

@@ -39,7 +39,9 @@ import { CanvasEventBus } from '../events/CanvasEventBus';
 import { Camera } from '../camera/Camera';
 import { LayerRegistry } from '../registries/LayerRegistry';
 import { BehaviourRegistry } from '../registries/BehaviourRegistry';
+import { LayoutRegistry } from '../registries/LayoutRegistry';
 import type { CanvasContext } from '../context/CanvasContext';
+import { type CanvasConfig, configurable, deepMerge } from './CanvasConfig';
 
 // ─── Options ───────────────────────────────────────────────────────────────
 
@@ -96,6 +98,14 @@ export interface CanvasOptions {
    * accessibility / dev tooling on right-click).
    */
   suppressBrowserContextMenu?: boolean;
+
+  /**
+   * Serialisable visual config applied at the end of `init()` to the
+   * layers/behaviours already added (by id): each slice is pushed to the
+   * instance's `setOptions`, and behaviours with `enabled: true` are turned on.
+   * The single place to set all settings. Pure JSON — see {@link CanvasConfig}.
+   */
+  config?: CanvasConfig;
 }
 
 // ─── Canvas ────────────────────────────────────────────────────────────────
@@ -103,6 +113,9 @@ export interface CanvasOptions {
 export class Canvas {
   readonly id: string;
   readonly options: CanvasOptions;
+
+  /** Serialisable visual config, keyed by instance id. Patched via {@link update}. */
+  private config: CanvasConfig = {};
 
   /**
    * Public surface — populated by `init()` / `initWithStage()`. Accessing
@@ -126,8 +139,9 @@ export class Canvas {
    */
   stage!: Container;
   camera!: Camera;
-  layers!: LayerRegistry;
-  behaviours!: BehaviourRegistry;
+  readonly layers: LayerRegistry;
+  readonly behaviours: BehaviourRegistry;
+  readonly layouts: LayoutRegistry;
   context!: CanvasContext;
 
   private app?: Application;
@@ -138,6 +152,13 @@ export class Canvas {
     this.id = opts.id ?? 'canvas';
     this.options = opts;
     this.events = new CanvasEventBus({ source: { kind: 'canvas', id: this.id } });
+
+    // Registries exist from construction so layers/behaviours can be added
+    // *before* `init()`. `getContext` returns `undefined` until init builds the
+    // context, at which point `init` mounts/wires everything added so far.
+    this.layers = new LayerRegistry({ getContext: () => this.context, bus: this.events });
+    this.behaviours = new BehaviourRegistry({ getContext: () => this.context, bus: this.events });
+    this.layouts = new LayoutRegistry({ bus: this.events });
   }
 
   get isInitialised(): boolean {
@@ -215,6 +236,8 @@ export class Canvas {
       backend: this._detectBackend(),
       capabilities: this._capabilities(),
     });
+
+    this._activate(opts.config);
   }
 
   /**
@@ -234,6 +257,8 @@ export class Canvas {
       backend: 'canvas', // headless == no GPU backend
       capabilities: { headless: true },
     });
+
+    this._activate(this.options.config);
   }
 
   // ─── Tick ────────────────────────────────────────────────────────────────
@@ -273,6 +298,68 @@ export class Canvas {
     this.tickOnce(ticker.deltaMS);
   }
 
+  // ─── Serialisable config ────────────────────────────────────────────────
+
+  /**
+   * Run at the end of `init()`: mount every layer added so far, wire every
+   * behaviour (layers first so behaviour `onRegister` finds them mounted), then
+   * apply the init `config` and enable the behaviours it flags.
+   */
+  private _activate(config?: CanvasConfig): void {
+    this.layers.mountAll();
+    this.behaviours.registerAll();
+    if (!config) return;
+    this.update(config);
+    for (const [id, options] of Object.entries(config.behaviours ?? {})) {
+      if ((options as { enabled?: boolean }).enabled) this.behaviours.setEnabled(id, true);
+    }
+  }
+
+  /**
+   * Apply a JSON config patch. Deep-merges into the held config, then pushes
+   * each layer/behaviour slice to that instance's `setOptions`, resolved by id
+   * (unknown ids no-op — register the instance first). Emits one
+   * `options:change` so observers (e.g. a settings UI) can re-read via {@link get}.
+   *
+   * The config is pure JSON keyed by id — instances themselves are registered
+   * imperatively (`canvas.layers.add(new XLayer({ id }))`).
+   */
+  update(patch: CanvasConfig): void {
+    this.config = deepMerge(this.config, patch) as CanvasConfig;
+
+    for (const [id, options] of Object.entries(patch.layers ?? {})) {
+      configurable(this.layers.get(id))?.setOptions(options);
+    }
+    for (const [id, options] of Object.entries(patch.behaviours ?? {})) {
+      configurable(this.behaviours.get(id))?.setOptions(options);
+    }
+    for (const [id, options] of Object.entries(patch.layouts ?? {})) {
+      this.layouts.get(id)?.setOptions(options);
+    }
+
+    this.events.emit('options:change', {
+      changedLayerIds: Object.keys(patch.layers ?? {}),
+      changedBehaviourIds: Object.keys(patch.behaviours ?? {}),
+    });
+  }
+
+  /** Current serialisable config snapshot — drive a settings UI / save-load from this. */
+  get(): CanvasConfig {
+    return this.config;
+  }
+
+  /**
+   * Run a registered layout against the layer named by its `targetLayerId`.
+   * No-op if the layout or its target layer isn't found. Layouts run against
+   * data, so call this after the target layer has data.
+   */
+  runLayout(id: string): Promise<void> {
+    const layout = this.layouts.get(id);
+    const target = layout?.targetLayerId ? this.layers.get(layout.targetLayerId) : undefined;
+    if (!layout || !target) return Promise.resolve();
+    return layout.apply(target as never);
+  }
+
   // ─── Lifecycle ───────────────────────────────────────────────────────────
 
   /**
@@ -290,6 +377,7 @@ export class Canvas {
     this.app?.ticker.remove(this.tick, this);
     this.layers?.clear();
     this.behaviours?.clear();
+    this.layouts?.clear();
     this.world?.destroy({ children: true });
     this.events.clearTaps();
     this.events.removeAllListeners();
@@ -356,16 +444,9 @@ export class Canvas {
     // who want top-left semantics can `camera.setPosition(0, 0)` after init.
     this.camera.setPosition(screenWidth / 2, screenHeight / 2);
 
-    this.layers = new LayerRegistry({
-      getContext: () => this.context,
-      bus: this.events,
-    });
-    this.behaviours = new BehaviourRegistry({
-      getContext: () => this.context,
-      bus: this.events,
-    });
-
-    // Build the context object now that all dependencies exist.
+    // Build the context object now that all dependencies exist. The registries
+    // were created in the constructor; they pick up this context via their
+    // `getContext` thunk the moment it's assigned here.
     this.context = {
       events: this.events,
       world: this.world,

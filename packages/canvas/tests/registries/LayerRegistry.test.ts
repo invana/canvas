@@ -35,6 +35,7 @@ class FakeLayer implements ILayer {
   unmountCount = 0;
   flushCount = 0;
   pendingValue = false;
+  mounted = false;
 
   constructor(id: string, zIndex = 0) {
     this.id = id;
@@ -43,9 +44,11 @@ class FakeLayer implements ILayer {
 
   mount(_ctx: CanvasContext): void {
     this.mountCount++;
+    this.mounted = true;
   }
   unmount(): void {
     this.unmountCount++;
+    this.mounted = false;
   }
   flush(): void {
     this.flushCount++;

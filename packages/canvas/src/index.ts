@@ -132,7 +132,7 @@ export type {
 
 // ─── Layouts ────────────────────────────────────────────────────────────
 export { Layout } from './layouts/Layout';
-export type { LayoutEvents, LayoutEndReason } from './layouts/Layout';
+export type { LayoutEvents, LayoutEndReason, LayoutOptions } from './layouts/Layout';
 
 // ─── Registries ─────────────────────────────────────────────────────────
 export { LayerRegistry } from './registries/LayerRegistry';
@@ -141,9 +141,13 @@ export type { LayerRegistryOptions } from './registries/LayerRegistry';
 export { BehaviourRegistry } from './registries/BehaviourRegistry';
 export type { BehaviourRegistryOptions } from './registries/BehaviourRegistry';
 
+export { LayoutRegistry } from './registries/LayoutRegistry';
+export type { LayoutRegistryOptions } from './registries/LayoutRegistry';
+
 // ─── Engine ─────────────────────────────────────────────────────────────
 export { Canvas } from './engine/Canvas';
 export type { CanvasOptions } from './engine/Canvas';
+export type { CanvasConfig } from './engine/CanvasConfig';
 
 // ─── Primitives (renderer + base classes + built-ins + types) ──────────
 //

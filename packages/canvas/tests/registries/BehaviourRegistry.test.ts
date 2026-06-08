@@ -29,6 +29,7 @@ class FakeBehaviour implements IBehaviour {
   readonly layerId?: string;
   readonly shortcuts?: readonly string[];
   enabled: boolean;
+  isRegistered = false;
   registerCount = 0;
   destroyCount = 0;
   enableCount = 0;
@@ -48,6 +49,7 @@ class FakeBehaviour implements IBehaviour {
   }
   register(_ctx: CanvasContext): void {
     this.registerCount++;
+    this.isRegistered = true;
   }
   destroy(): void {
     this.destroyCount++;

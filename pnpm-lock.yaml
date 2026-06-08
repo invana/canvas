@@ -310,6 +310,9 @@ importers:
 
   packages/graph-datasets:
     devDependencies:
+      '@invana/graph':
+        specifier: workspace:*
+        version: link:../graph
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config

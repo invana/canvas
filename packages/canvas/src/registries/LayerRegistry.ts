@@ -23,18 +23,18 @@ import type { ILayer } from '../layers/Layer';
 
 export interface LayerRegistryOptions {
   /**
-   * Resolves the `CanvasContext` at the moment of mount. The Canvas creates
-   * its registries before the context object exists, so this thunk lets the
-   * registry defer the context lookup.
+   * Resolves the `CanvasContext` at the moment of mount, or `undefined` before
+   * the Canvas is initialised. Layers added pre-init are stored and mounted
+   * later by `mountAll()`.
    */
-  getContext: () => CanvasContext;
+  getContext: () => CanvasContext | undefined;
   /** Bus for `layer:added` / `layer:removed` events. */
   bus: CanvasEventBus;
 }
 
 export class LayerRegistry {
   private readonly layers: Map<string, ILayer> = new Map();
-  private readonly getContext: () => CanvasContext;
+  private readonly getContext: () => CanvasContext | undefined;
   private readonly bus: CanvasEventBus;
 
   /** Cached z-sorted view; invalidated on add/remove/setZIndex. */
@@ -51,17 +51,28 @@ export class LayerRegistry {
   }
 
   /**
-   * Add a Layer to the canvas. Calls `layer.mount(ctx)` and fires `layer:added`.
-   * Throws if `id` is already registered.
+   * Add a Layer to the canvas. Mounts immediately if the Canvas is initialised;
+   * otherwise the layer waits for `mountAll()` (called by `Canvas.init`). Fires
+   * `layer:added`. Throws if `id` is already registered.
    */
   add(layer: ILayer): void {
     if (this.layers.has(layer.id)) {
       throw new Error(`LayerRegistry: layer "${layer.id}" already registered`);
     }
-    layer.mount(this.getContext());
     this.layers.set(layer.id, layer);
     this.zOrderCache = null;
+    const ctx = this.getContext();
+    if (ctx) layer.mount(ctx);
     this.bus.emit('layer:added', { id: layer.id });
+  }
+
+  /** Mount every not-yet-mounted layer. Called by `Canvas.init` once the context exists. */
+  mountAll(): void {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    for (const layer of this.layers.values()) {
+      if (!layer.mounted) layer.mount(ctx);
+    }
   }
 
   /**
