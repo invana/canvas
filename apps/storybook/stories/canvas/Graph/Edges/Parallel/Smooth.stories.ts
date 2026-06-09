@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   ParallelEdgeBehaviour,
   type EdgeAnchor,
@@ -77,27 +78,38 @@ export const Smooth: Story = {
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-parallel-smooth')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { edge: { style: { strokeColor: 0x64748b, strokeWidth: 2, strokeCap: 'round' } } },
+      options: { initData: { nodes, edges } },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     const parallel = new ParallelEdgeBehaviour({
       id: 'parallel-edges',
       layerId: 'graph',
-      enabled: true,
       spacing: settings.spacing,
     });
     canvas.behaviours.register(parallel);
-    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: { edge: { style: { strokeColor: 0x64748b, strokeWidth: 2, strokeCap: 'round' } } },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'parallel-edges': { enabled: true },
+        'drag-node': { enabled: true },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     const applyShape = () => {
       const style = nodeStyle();

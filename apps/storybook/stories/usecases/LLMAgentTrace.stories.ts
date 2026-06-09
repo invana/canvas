@@ -14,18 +14,20 @@
  * Exercises: `ElkLayout` `layered` `DOWN`, per-kind node shape,
  * state-config-driven styling on `error` / `pending`, animated edge
  * decorations (`flow-particles-connector`, `marching-ants-connector`),
- * edge label resolvers reading per-edge data.
+ * edge label resolvers reading per-edge data. Built the new way:
+ * register layers/behaviours/layout by id, then a single serialisable
+ * `canvasOptions` object, then `init()` last.
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
 import {
   ClickSelectBehaviour,
+  GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
   type EdgeData,
@@ -44,6 +46,7 @@ import {
 } from '@invana/graph-datasets/usecase-demos';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
+import { SystemThemeBehaviour } from '../system-theme';
 
 const meta: Meta = { title: 'Usecases/LLM Agent Trace' };
 export default meta;
@@ -79,105 +82,9 @@ export const LLMAgentTrace: Story = {
       showTokens: true,
     };
 
-    // ── Canvas setup ─────────────────────────────────────────────────────
-    const container = canvasElement.querySelector<HTMLDivElement>('#usecase-agent-trace')!;
-    const canvas = new Canvas();
-    onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'pattern',
-          patternType: 'dots',
-          mode: 'auto',
-          backgroundColor: { light: '#f8fafc', dark: '#0b1220' },
-          color: { light: '#cbd5e1', dark: '#1e293b' },
-          size: 1.2,
-          spacing: 26,
-          alpha: 0.7,
-        },
-      }),
-    );
-
-    const graph = new GraphLayer({
-      id: 'graph',
-      options: {
-        node: {
-          state: {
-            // `error` and `pending` are NOT in DEFAULT_NODE_STATE_CONFIGS
-            // beyond a colour shift, so the story registers richer overlays
-            // here: error grows a thick red stroke and breathes; pending
-            // dims and carries a pulse-ring.
-            error: {
-              bgStrokeColor: STATUS_TINT.error,
-              bgStrokeWidth: 3,
-              effects: { breathing: { amplitude: 0.18, frequencyHz: 1.5 } },
-            },
-            pending: {
-              bgStrokeColor: STATUS_TINT.pending,
-              bgStrokeWidth: 2,
-              bgAlpha: 0.55,
-              decorations: [
-                { id: 'pending-pulse', kind: 'pulse-ring', color: STATUS_TINT.pending, periodMs: 1600, maxRadius: 18 },
-              ],
-            },
-            highlighted: { bgStrokeColor: 0xfbbf24, bgStrokeWidth: 3 },
-            selected:    { bgStrokeColor: 0xffffff, bgStrokeWidth: 4 },
-          },
-        },
-        edge: {
-          style: {
-            shape: { pathType: 'bezier', pathStyleOpts: { axis: 'v', tension: 0.55 } },
-            strokeColor: 0x94a3b8,
-            strokeWidth: 1.4,
-            strokeAlpha: 0.8,
-            arrowTargetShape: 'triangle',
-            arrowTargetSize: 8,
-            arrowTargetColor: 0x94a3b8,
-            labelColor: 0x64748b,
-            labelFontSize: 10,
-            labelBackgroundFill: 0xffffff,
-            labelBackgroundAlpha: 0.85,
-            labelBackgroundPadding: 3,
-            labelBackgroundCornerRadius: 3,
-          },
-          state: {
-            highlighted: { strokeColor: 0xfbbf24, strokeWidth: 2.2, strokeAlpha: 1, arrowTargetColor: 0xfbbf24 },
-          },
-        },
-      },
-    });
-    canvas.layers.add(graph);
-
-    // ── Behaviours ──────────────────────────────────────────────────────
-    canvas.behaviours.register(
-      new HoverActivateBehaviour({
-        id: 'hover',
-        layerId: 'graph',
-        enabled: true,
-        state: 'highlighted',
-        degree: 1,
-        direction: 'both',
-      }),
-    );
-    canvas.behaviours.register(
-      new ClickSelectBehaviour({
-        id: 'select',
-        layerId: 'graph',
-        enabled: true,
-        clearOnBackground: true,
-      }),
-    );
-
-    // ── Project trace → GraphLayer ──────────────────────────────────────
-    let layout: ElkLayout | null = null;
-
-    const loadPreset = async (presetId: string): Promise<void> => {
+    // Build the node/edge arrays for a given preset. Pure data — fed to
+    // `initData` for the first render and to `setData` on GUI swaps.
+    const buildTrace = (presetId: string): { nodes: NodeData<AgentTraceNodeData>[]; edges: EdgeData<AgentTraceEdgeData>[] } => {
       const trace = agentTrace.find((t) => t.id === presetId) ?? agentTrace[0]!;
       // Lookup endpoint statuses so edge styling can read both sides
       // (failure on either end mutes the edge; the success path picks up
@@ -240,49 +147,173 @@ export const LLMAgentTrace: Story = {
         };
       });
 
-      graph.setData({ nodes, edges });
-
-      layout?.stop();
-      layout = new ElkLayout({
-        algorithm: 'layered',
-        direction: 'DOWN',
-        nodeSpacing: 36,
-        layerSpacing: 80,
-        edgeNodeSpacing: 28,
-        edgeSpacing: 18,
-      });
-      layout.events.on('end', ({ reason }) => {
-        if (reason === 'completed') canvas.camera.fitContent(graph.getBounds(), 80);
-      });
-      await layout.apply(graph);
+      return { nodes, edges };
     };
 
-    await loadPreset(settings.preset);
+    // ── Canvas setup ─────────────────────────────────────────────────────
+    const container = canvasElement.querySelector<HTMLDivElement>('#usecase-agent-trace')!;
+    const canvas = new GraphCanvas();
+    onStoryTeardown(() => canvas.destroy());
+
+    // ── Layers ──────────────────────────────────────────────────────────
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
+
+    const graph = new GraphLayer({
+      id: 'graph',
+      options: {
+        initData: buildTrace(settings.preset),
+        node: {
+          state: {
+            // `error` and `pending` are NOT in DEFAULT_NODE_STATE_CONFIGS
+            // beyond a colour shift, so the story registers richer overlays
+            // here: error grows a thick red stroke and breathes; pending
+            // dims and carries a pulse-ring.
+            error: {
+              bgStrokeColor: STATUS_TINT.error,
+              bgStrokeWidth: 3,
+              effects: { breathing: { amplitude: 0.18, frequencyHz: 1.5 } },
+            },
+            pending: {
+              bgStrokeColor: STATUS_TINT.pending,
+              bgStrokeWidth: 2,
+              bgAlpha: 0.55,
+              decorations: [
+                { id: 'pending-pulse', kind: 'pulse-ring', color: STATUS_TINT.pending, periodMs: 1600, maxRadius: 18 },
+              ],
+            },
+            highlighted: { bgStrokeColor: 0xfbbf24, bgStrokeWidth: 3 },
+            selected:    { bgStrokeColor: 0xffffff, bgStrokeWidth: 4 },
+          },
+        },
+        edge: {
+          state: {
+            highlighted: { strokeColor: 0xfbbf24, strokeWidth: 2.2, strokeAlpha: 1, arrowTargetColor: 0xfbbf24 },
+          },
+        },
+      },
+    });
+    canvas.layers.add(graph);
+
+    // ── Behaviours ──────────────────────────────────────────────────────
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(
+      new HoverActivateBehaviour({
+        id: 'hover',
+        layerId: 'graph',
+        state: 'highlighted',
+        degree: 1,
+        direction: 'both',
+      }),
+    );
+    canvas.behaviours.register(
+      new ClickSelectBehaviour({
+        id: 'select',
+        layerId: 'graph',
+        clearOnBackground: true,
+      }),
+    );
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+
+    // ── Layout ──────────────────────────────────────────────────────────
+    // `ElkLayout`'s constructor only types its own ELK params, so the
+    // registry id / target layer are assigned after construction (both are
+    // declared on the base `Layout`). `activeLayout: 'elk'` then resolves
+    // against this id and auto-runs the layout against `'graph'` on mount.
+    const layout = new ElkLayout();
+    Object.assign(layout, { id: 'elk', targetLayerId: 'graph' });
+    layout.events.on('end', ({ reason }) => {
+      if (reason === 'completed') canvas.camera.fitContent(graph.getBounds(), 80);
+    });
+    canvas.layouts.add(layout);
+    onStoryTeardown(() => layout.stop());
+
+    // ── Config ──────────────────────────────────────────────────────────
+    const canvasOptions = {
+      layers: {
+        bg: {
+          type: 'pattern',
+          patternType: 'dots',
+          backgroundColor: '#0b1220',
+          color: '#1e293b',
+          size: 1.2,
+          spacing: 26,
+          alpha: 0.7,
+        },
+        graph: {
+          edge: {
+            style: {
+              shape: { pathType: 'bezier', pathStyleOpts: { axis: 'v', tension: 0.55 } },
+              strokeColor: 0x94a3b8,
+              strokeWidth: 1.4,
+              strokeAlpha: 0.8,
+              arrowTargetShape: 'triangle',
+              arrowTargetSize: 8,
+              arrowTargetColor: 0x94a3b8,
+              labelColor: 0x64748b,
+              labelFontSize: 10,
+              labelBackgroundFill: 0xffffff,
+              labelBackgroundAlpha: 0.85,
+              labelBackgroundPadding: 3,
+              labelBackgroundCornerRadius: 3,
+            },
+          },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        hover: { enabled: true },
+        select: { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc', color: '#cbd5e1' },
+          dark: { backgroundColor: '#0b1220', color: '#1e293b' },
+        },
+      },
+      layouts: {
+        elk: {
+          algorithm: 'layered',
+          direction: 'DOWN',
+          nodeSpacing: 36,
+          layerSpacing: 80,
+          edgeNodeSpacing: 28,
+          edgeSpacing: 18,
+        },
+      },
+      activeLayout: 'elk',
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+
+    // Swap the live dataset to another preset and re-run the layout.
+    const loadPreset = (presetId: string): void => {
+      graph.setData(buildTrace(presetId));
+      void layout.apply(graph);
+    };
 
     // ── GUI ─────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'LLM Agent Trace' });
     onStoryTeardown(() => gui.destroy());
-    onStoryTeardown(() => layout?.stop());
 
     gui
       .add(settings, 'preset', agentTrace.map((t) => t.id))
       .name('preset')
       .onChange((id: string) => {
-        void loadPreset(id);
+        loadPreset(id);
       });
 
     gui
       .add(settings, 'animateActive')
       .name('animate active path')
       .onChange(() => {
-        void loadPreset(settings.preset);
+        loadPreset(settings.preset);
       });
 
     gui
       .add(settings, 'showTokens')
       .name('show token counts')
       .onChange(() => {
-        void loadPreset(settings.preset);
+        loadPreset(settings.preset);
       });
 
     gui

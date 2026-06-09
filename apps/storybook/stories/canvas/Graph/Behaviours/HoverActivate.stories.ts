@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
   type GraphNode,
@@ -35,50 +36,23 @@ export const HoverActivate: Story = {
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-hover-activate')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
+    // Data is content — it rides on the layer via `options.initData`.
     const graph = new GraphLayer({
       id: 'graph',
-      options: {
-        node: {
-          // `hovered` and `dimmed` come from the canonical defaults; this
-          // override just bumps `highlighted` to a sharper orange so the
-          // N-hop neighbour ring is unmistakable in the demo.
-          state: {
-            highlighted: { bgStrokeColor: 0xf97316, bgStrokeWidth: 4 },
-          },
-        },
-        edge: {
-          style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' },
-          state: {
-            highlighted: { strokeColor: 0xf97316, strokeWidth: 2.5 },
-          },
-        },
-      },
+      options: { initData: { nodes, edges: lesMiserables.edges } },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges: lesMiserables.edges });
 
-    void new D3ForceLayout({
-      charge: { strength: -120 },
-      link: { distance: 50 },
-      collide: { radius: 14 },
-      center: { x: 0, y: 0 },
-    }).apply(graph);
-
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
 
     const hover = new HoverActivateBehaviour({
       id: 'hover',
       layerId: 'graph',
-      enabled: true,
       state: 'hovered',
       inactiveState: 'dimmed',
       degree: 1,
@@ -89,6 +63,46 @@ export const HoverActivate: Story = {
       zoomedOutScale: 3,
     });
     canvas.behaviours.register(hover);
+
+    const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
+    canvas.layouts.add(forceLayout);
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            // `hovered` and `dimmed` come from the canonical defaults; this
+            // override just bumps `highlighted` to a sharper orange so the
+            // N-hop neighbour ring is unmistakable in the demo.
+            state: {
+              highlighted: { bgStrokeColor: 0xf97316, bgStrokeWidth: 4 },
+            },
+          },
+          edge: {
+            style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' },
+            state: {
+              highlighted: { strokeColor: 0xf97316, strokeWidth: 2.5 },
+            },
+          },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+        hover: { enabled: true },
+      },
+      layouts: {
+        force: {
+          charge: { strength: -120 },
+          link: { distance: 50 },
+          collide: { radius: 14 },
+          center: { x: 0, y: 0 },
+        },
+      },
+      activeLayout: 'force',
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     // Every option from HoverActivateBehaviourOptions is bound below.
     // `hoveredId` is a read-only display fed by onHover / onHoverEnd.

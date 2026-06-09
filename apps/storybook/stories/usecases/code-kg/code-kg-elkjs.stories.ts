@@ -11,21 +11,21 @@
  * the node's data — label, complexity, name, summary, file path, line range.
  * The card's accent bar + border colour come from the active palette (entity
  * **type** or the 8 architectural **clusters**). Layout is `ElkLayout`
- * (`layered`); behaviours match the d3-force story — `HoverActivateBehaviour`
- * 1-hop focal emphasis, `ClickSelectBehaviour` (shift multi),
- * `DragNodeBehaviour`, a per-type filter, and a `MiniMapLayer`.
+ * (`layered`) registered as the `activeLayout`; behaviours match the d3-force
+ * story — `HoverActivateBehaviour` 1-hop focal emphasis, `ClickSelectBehaviour`
+ * (shift multi), `DragNodeBehaviour`, a per-type filter, and a `MiniMapLayer`.
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
 import {
   ClickSelectBehaviour,
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
   MiniMapLayer,
@@ -40,6 +40,7 @@ import {
 } from '@invana/graph-datasets/usecase-demos';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../div-util';
+import { SystemThemeBehaviour } from '../../system-theme';
 
 const meta: Meta = { title: 'Usecases/code-kg' };
 export default meta;
@@ -98,37 +99,51 @@ export const ElkjsCards: Story = {
       edgeNodeSpacing: 24,
     };
 
+    // ── Data projection ──────────────────────────────────────────────────
+    const includesLabel = (l: InvanaCodeNodeLabel): boolean => {
+      switch (l) {
+        case 'file':     return settings.includeFile;
+        case 'function': return settings.includeFunction;
+        case 'class':    return settings.includeClass;
+        case 'config':   return settings.includeConfig;
+        case 'document': return settings.includeDocument;
+      }
+    };
+
+    // Project (nodes passing the label filter) + (edges whose endpoints both
+    // survive) into GraphNode/GraphEdge, mapping the dataset's property-graph
+    // shape: `label → type`, `properties → data`. Styling comes entirely from
+    // the layer-level resolvers below. The first projection seeds `initData`;
+    // the GUI filter re-projects + swaps the data live via `setData`.
+    const project = () => {
+      const keep = invanaCodeKg.nodes.filter((n) => includesLabel(n.label));
+      const idSet = new Set(keep.map((n) => n.id));
+      const edges = invanaCodeKg.edges.filter(
+        (e) => idSet.has(e.source) && idSet.has(e.target),
+      );
+      return {
+        nodes: keep.map((n) => ({ id: n.id, type: n.label, data: n.properties })),
+        edges: edges.map((e) => ({
+          id: e.id,
+          source: e.source,
+          target: e.target,
+          type: e.label,
+          data: e.properties,
+        })),
+      };
+    };
+
     // ── Canvas setup ─────────────────────────────────────────────────────
     const container = canvasElement.querySelector<HTMLDivElement>(
       '#usecase-invana-code-kg-elk',
     )!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'pattern',
-          patternType: 'dots',
-          mode: 'auto',
-          backgroundColor: { light: '#f8fafc', dark: '#0b1220' },
-          color: { light: '#cbd5e1', dark: '#1e293b' },
-          size: 1.2,
-          spacing: 26,
-          alpha: 0.7,
-        },
-      }),
-    );
 
     // Resolvers read the live `settings`, so flipping a GUI control + a style
-    // wipe (`rerenderAll`) re-resolves the card without rebuilding. `label` /
-    // `properties` from the dataset are mapped onto GraphNode's `type` /
-    // `data` in `apply()`, so resolvers read `n.type` / `n.data`.
+    // wipe (`rerenderAll`) re-resolves the card without rebuilding. Resolvers
+    // read `n.type` / `n.data` (mapped from the dataset's `label` /
+    // `properties` in `project()`).
     const props = (n: GraphNode): InvanaCodeNodeProperties => n.data as InvanaCodeNodeProperties;
     const accentOf = (n: GraphNode): number =>
       settings.colorMode === 'type'
@@ -166,108 +181,35 @@ export const ElkjsCards: Story = {
       } as unknown as NodeShapeOptions;
     };
 
+    // GraphLayer constructor keeps only the non-serialisable bits: `initData`
+    // (content) + the `shape` resolver. Pure literal style fields live in
+    // `canvasOptions.layers.graph` and shallow-merge at init.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: project(),
         node: {
           style: {
             // The card IS the node visual — it carries its own fill/stroke and
             // surfaces the data, so there's no separate GraphLayer label here.
             shape: cardShape,
           },
-          state: {
-            // bgStrokeColor overrides the card's own border for a hover /
-            // select ring; dimmed fades the frame fill of off-focus cards.
-            highlighted: { bgStrokeColor: 0xfbbf24, bgStrokeWidth: 3 },
-            selected: { bgStrokeColor: 0xffffff, bgStrokeWidth: 3 },
-            dimmed: { bgAlpha: 0.25 },
-          },
-        },
-        edge: {
-          style: {
-            // Obstacle-aware right-angle routing. The renderer auto-collects
-            // every card as an obstacle, and the `manhattan` router A*-routes
-            // each edge around them through the lanes ELK reserved
-            // (`edgeNodeSpacing` below). Avoidance is recomputed every time an
-            // edge routes — including the re-route after the layout moves
-            // nodes — so it holds by default, no per-edge waypoint step.
-            shape: { pathType: 'manhattan' },
-            strokeColor: 0x94a3b8,
-            strokeWidth: 0.8,
-            strokeAlpha: settings.edgeAlpha,
-            arrowTargetShape: 'triangle',
-            arrowTargetSize: 5,
-            arrowTargetColor: 0x94a3b8,
-          },
-          state: {
-            highlighted: {
-              strokeColor: 0xfbbf24,
-              strokeWidth: 1.6,
-              strokeAlpha: 0.95,
-              arrowTargetColor: 0xfbbf24,
-            },
-            dimmed: { strokeAlpha: 0.03 },
-          },
         },
       },
     });
+
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
     canvas.layers.add(graph);
+    canvas.layers.add(new MiniMapLayer({ id: 'minimap', options: { graphLayerId: 'graph' } }));
 
-    canvas.layers.add(
-      new MiniMapLayer({
-        id: 'minimap',
-        options: {
-          graphLayerId: 'graph',
-          position: 'bottom-right',
-          width: 220,
-          height: 160,
-        },
-      }),
-    );
-
-    // ── Data projection ──────────────────────────────────────────────────
-    const includesLabel = (l: InvanaCodeNodeLabel): boolean => {
-      switch (l) {
-        case 'file':     return settings.includeFile;
-        case 'function': return settings.includeFunction;
-        case 'class':    return settings.includeClass;
-        case 'config':   return settings.includeConfig;
-        case 'document': return settings.includeDocument;
-      }
-    };
-
-    // Push (nodes passing the label filter) + (edges whose endpoints both
-    // survive) into the layer, mapping the dataset's property-graph shape
-    // onto GraphNode/GraphEdge: `label → type`, `properties → data`.
-    // Styling comes entirely from the layer-level resolvers above.
-    const apply = (): void => {
-      const keep = invanaCodeKg.nodes.filter((n) => includesLabel(n.label));
-      const idSet = new Set(keep.map((n) => n.id));
-      const edges = invanaCodeKg.edges.filter(
-        (e) => idSet.has(e.source) && idSet.has(e.target),
-      );
-      graph.setData({
-        nodes: keep.map((n) => ({ id: n.id, type: n.label, data: n.properties })),
-        edges: edges.map((e) => ({
-          id: e.id,
-          source: e.source,
-          target: e.target,
-          type: e.label,
-          data: e.properties,
-        })),
-      });
-    };
-    apply();
-
-    // ── Behaviours ───────────────────────────────────────────────────────
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
 
     const hover = new HoverActivateBehaviour({
       id: 'hover',
       layerId: 'graph',
-      enabled: true,
       state: 'highlighted',
       // inactiveState: 'dimmed',
       degree: 1,
@@ -279,36 +221,124 @@ export const ElkjsCards: Story = {
       new ClickSelectBehaviour({
         id: 'select',
         layerId: 'graph',
-        enabled: true,
         multiple: true,
         trigger: ['shift'],
       }),
     );
 
     // ── Layout ───────────────────────────────────────────────────────────
-    let layout: ElkLayout | null = null;
-    const runLayout = async (): Promise<void> => {
-      layout?.stop();
-      layout = new ElkLayout({
-        // Layered DAG — tiers the import graph along `direction`. Feed ELK the
-        // real card dimensions so it leaves room for each 300×165 card instead
-        // of treating nodes as points.
-        algorithm: 'layered',
-        direction: settings.direction,
-        nodeSpacing: settings.nodeSpacing,
-        layerSpacing: settings.layerSpacing,
-        edgeNodeSpacing: settings.edgeNodeSpacing,
-        nodeSize: () => ({ width: CARD.w, height: CARD.h }),
-        // Reserve lanes between nodes so the manhattan router has clear
-        // channels to thread edges through (set on `settings.edgeNodeSpacing`).
-      });
-      layout.events.on('end', ({ reason }) => {
-        if (reason === 'completed') canvas.camera.fitContent(graph.getBounds(), 80);
-      });
-      await layout.apply(graph);
+    // Layered DAG — tiers the import graph along `direction`. The `nodeSize`
+    // resolver feeds ELK the real 300×165 card dimensions (so it leaves room
+    // per card instead of treating nodes as points) and stays in the
+    // constructor; the literal spacings live in config. The `activeLayout`
+    // auto-runs on mount.
+    // `ElkLayout`'s constructor takes only `ElkLayoutOptions` (the `nodeSize`
+    // resolver lives here); its `id` / `targetLayerId` come from the base
+    // `Layout` and are assigned after construction so the registry keys it as
+    // `'elk'` and `activeLayout: 'elk'` resolves against the `graph` layer.
+    const layout = Object.assign(
+      new ElkLayout({ nodeSize: () => ({ width: CARD.w, height: CARD.h }) }),
+      { id: 'elk', targetLayerId: 'graph' },
+    );
+    canvas.layouts.add(layout);
+    onStoryTeardown(() => layout.stop());
+    layout.events.on('end', ({ reason }) => {
+      if (reason === 'completed') canvas.camera.fitContent(graph.getBounds(), 80);
+    });
+
+    // ── Serialisable config ──────────────────────────────────────────────
+    const canvasOptions = {
+      layers: {
+        bg: {
+          type: 'pattern',
+          patternType: 'dots',
+          backgroundColor: '#0b1220',
+          color: '#1e293b',
+          size: 1.2,
+          spacing: 26,
+          alpha: 0.7,
+        },
+        graph: {
+          node: {
+            state: {
+              // bgStrokeColor overrides the card's own border for a hover /
+              // select ring; dimmed fades the frame fill of off-focus cards.
+              highlighted: { bgStrokeColor: 0xfbbf24, bgStrokeWidth: 3 },
+              selected: { bgStrokeColor: 0xffffff, bgStrokeWidth: 3 },
+              dimmed: { bgAlpha: 0.25 },
+            },
+          },
+          edge: {
+            style: {
+              // Obstacle-aware right-angle routing. The renderer auto-collects
+              // every card as an obstacle, and the `manhattan` router A*-routes
+              // each edge around them through the lanes ELK reserved
+              // (`edgeNodeSpacing` below). Avoidance is recomputed every time an
+              // edge routes — including the re-route after the layout moves
+              // nodes — so it holds by default, no per-edge waypoint step.
+              shape: { pathType: 'manhattan' },
+              strokeColor: 0x94a3b8,
+              strokeWidth: 0.8,
+              strokeAlpha: settings.edgeAlpha,
+              arrowTargetShape: 'triangle',
+              arrowTargetSize: 5,
+              arrowTargetColor: 0x94a3b8,
+            },
+            state: {
+              highlighted: {
+                strokeColor: 0xfbbf24,
+                strokeWidth: 1.6,
+                strokeAlpha: 0.95,
+                arrowTargetColor: 0xfbbf24,
+              },
+              dimmed: { strokeAlpha: 0.03 },
+            },
+          },
+        },
+        minimap: {
+          position: 'bottom-right',
+          width: 220,
+          height: 160,
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+        hover: { enabled: true },
+        select: { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc', color: '#cbd5e1' },
+          dark: { backgroundColor: '#0b1220', color: '#1e293b' },
+        },
+      },
+      layouts: {
+        elk: {
+          algorithm: 'layered',
+          direction: settings.direction,
+          nodeSpacing: settings.nodeSpacing,
+          layerSpacing: settings.layerSpacing,
+          edgeNodeSpacing: settings.edgeNodeSpacing,
+        },
+      },
+      activeLayout: 'elk',
     };
-    void runLayout();
-    onStoryTeardown(() => layout?.stop());
+
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+
+    // ── Live updates ─────────────────────────────────────────────────────
+    // Re-run ELK with the current layout params (used by the per-type filter
+    // and the ELK-layout GUI controls).
+    const runLayout = (): void => {
+      canvas.update({ layouts: { elk: canvasOptions.layouts.elk } });
+    };
+
+    // Re-project against the current filter, swap the data live, then re-run.
+    const onFilter = (): void => {
+      graph.setData(project());
+      runLayout();
+    };
 
     // Wipe per-instance styles so the layer-template resolvers (card accent,
     // edge alpha) re-resolve against the current `settings`. The manhattan
@@ -331,16 +361,18 @@ export const ElkjsCards: Story = {
       .name('accent by')
       .onChange(rerenderAll);
     styleFolder
-      .add(settings, 'edgeAlpha', 0, 1, 0.01)
+      .add(canvasOptions.layers.graph.edge.style, 'strokeAlpha', 0, 1, 0.01)
       .name('edge alpha')
-      .onChange(rerenderAll);
+      .onChange((v: number) => {
+        settings.edgeAlpha = v;
+        canvas.update({ layers: { graph: { edge: { style: { strokeAlpha: v } } } } });
+      });
     styleFolder
       .add(settings, 'hoverEmphasis')
       .name('hover focal emphasis')
       .onChange((on: boolean) => (on ? hover.enable() : hover.disable()));
 
     const filterFolder = gui.addFolder('Entity types');
-    const onFilter = (): void => { apply(); void runLayout(); };
     filterFolder.add(settings, 'includeFile').name('file').onChange(onFilter);
     filterFolder.add(settings, 'includeFunction').name('function').onChange(onFilter);
     filterFolder.add(settings, 'includeClass').name('class').onChange(onFilter);
@@ -351,10 +383,29 @@ export const ElkjsCards: Story = {
     elkFolder
       .add(settings, 'direction', ['UP', 'DOWN', 'LEFT', 'RIGHT'])
       .name('direction')
-      .onChange(() => void runLayout());
-    elkFolder.add(settings, 'nodeSpacing', 4, 120, 1).onFinishChange(() => void runLayout());
-    elkFolder.add(settings, 'layerSpacing', 20, 320, 5).onFinishChange(() => void runLayout());
-    elkFolder.add(settings, 'edgeNodeSpacing', 0, 80, 1).name('edge-node gap').onFinishChange(() => void runLayout());
+      .onChange((v: ElkDirection) => {
+        canvasOptions.layouts.elk.direction = v;
+        runLayout();
+      });
+    elkFolder
+      .add(settings, 'nodeSpacing', 4, 120, 1)
+      .onFinishChange((v: number) => {
+        canvasOptions.layouts.elk.nodeSpacing = v;
+        runLayout();
+      });
+    elkFolder
+      .add(settings, 'layerSpacing', 20, 320, 5)
+      .onFinishChange((v: number) => {
+        canvasOptions.layouts.elk.layerSpacing = v;
+        runLayout();
+      });
+    elkFolder
+      .add(settings, 'edgeNodeSpacing', 0, 80, 1)
+      .name('edge-node gap')
+      .onFinishChange((v: number) => {
+        canvasOptions.layouts.elk.edgeNodeSpacing = v;
+        runLayout();
+      });
 
     const info = {
       project: invanaCodeKg.project.name,

@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   type EdgeData,
   type NodeData,
@@ -106,53 +107,57 @@ export const EdgeLabels: Story = {
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edge-labels')!;
-    const canvas = new Canvas();
+
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: {
-        node: {
-          style: {
-            shape: { kind: 'circle', radius: 9 },
-            labelFontSize: 11,
-            labelFontWeight: 600,
-            labelColor: 0x475569,
-            labelPlacement: 'left',
-            labelOffsetX: -4,
+      options: { initData: { nodes, edges } },
+    });
+    canvas.layers.add(graph);
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'circle', radius: 9 },
+              labelFontSize: 11,
+              labelFontWeight: 600,
+              labelColor: 0x475569,
+              labelPlacement: 'left',
+              labelOffsetX: -4,
+            },
           },
-        },
-        edge: {
-          style: {
-            strokeColor: 0xcbd5e1,
-            strokeWidth: 1.5,
-            arrowTargetShape: 'triangle',
-            // Shared label styling — per-edge `labelText` supplies the text.
-            labelFontSize: 11,
-            labelFontWeight: 500,
-            labelColor: 0x0f172a,
-            labelPlacement: 'center',
-            labelOffsetY: -8,
-            labelAutoRotate: true,
-            labelKeepUpright: true,
-            labelBackgroundFill: 0xffffff,
-            labelBackgroundStrokeColor: 0xe2e8f0,
-            labelBackgroundStrokeWidth: 1,
-            labelBackgroundCornerRadius: 4,
-            labelBackgroundPadding: 4,
+          edge: {
+            style: {
+              strokeColor: 0xcbd5e1,
+              strokeWidth: 1.5,
+              arrowTargetShape: 'triangle',
+              // Shared label styling — per-edge `labelText` supplies the text.
+              labelFontSize: 11,
+              labelFontWeight: 500,
+              labelColor: 0x0f172a,
+              labelPlacement: 'center',
+              labelOffsetY: -8,
+              labelAutoRotate: true,
+              labelKeepUpright: true,
+              labelBackgroundFill: 0xffffff,
+              labelBackgroundStrokeColor: 0xe2e8f0,
+              labelBackgroundStrokeWidth: 1,
+              labelBackgroundCornerRadius: 4,
+              labelBackgroundPadding: 4,
+            },
           },
         },
       },
-    });
-    canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
-
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true }, 'drag-node': { enabled: true } },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
   },

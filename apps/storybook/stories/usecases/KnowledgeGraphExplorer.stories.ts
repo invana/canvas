@@ -15,13 +15,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
 import {
   ClickSelectBehaviour,
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
   type EdgeData,
@@ -38,6 +38,7 @@ import {
 } from '@invana/graph-datasets/usecase-demos';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
+import { SystemThemeBehaviour } from '../system-theme';
 
 const meta: Meta = { title: 'Usecases/Knowledge Graph Explorer' };
 export default meta;
@@ -71,80 +72,6 @@ export const KnowledgeGraphExplorer: Story = {
       includeLocation: true,
       includeIndustry: true,
     };
-
-    // ── Canvas setup ─────────────────────────────────────────────────────
-    const container = canvasElement.querySelector<HTMLDivElement>('#usecase-ontology')!;
-    const canvas = new Canvas();
-    onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'pattern',
-          patternType: 'dots',
-          mode: 'auto',
-          backgroundColor: { light: '#f8fafc', dark: '#0b1220' },
-          color: { light: '#cbd5e1', dark: '#1e293b' },
-          size: 1.2,
-          spacing: 26,
-          alpha: 0.7,
-        },
-      }),
-    );
-
-    const graph = new GraphLayer({
-      id: 'graph',
-      options: {
-        node: {
-          state: {
-            highlighted: { bgStrokeColor: 0xfbbf24, bgStrokeWidth: 3 },
-            selected:    { bgStrokeColor: 0xffffff, bgStrokeWidth: 4 },
-          },
-        },
-        edge: {
-          state: {
-            highlighted: { strokeColor: 0xfbbf24, strokeWidth: 2.2, strokeAlpha: 1, arrowTargetColor: 0xfbbf24 },
-          },
-        },
-      },
-    });
-    canvas.layers.add(graph);
-
-    // ── Behaviours ──────────────────────────────────────────────────────
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
-    canvas.behaviours.register(
-      new HoverActivateBehaviour({
-        id: 'hover', layerId: 'graph', enabled: true,
-        state: 'highlighted', inactiveState: 'dimmed',
-        degree: 1, direction: 'both',
-      }),
-    );
-    // Track click timestamps per id so a second click on the same node
-    // within 350ms expands its neighbourhood. Avoids reaching into the
-    // private renderer for `shape:doubleclick`.
-    let lastClick: { id: string; t: number } | null = null;
-    canvas.behaviours.register(
-      new ClickSelectBehaviour({
-        id: 'select', layerId: 'graph', enabled: true,
-        multiple: true, trigger: ['shift'],
-        onSelect: (el) => {
-          const now = Date.now();
-          if (lastClick && lastClick.id === el.id && now - lastClick.t < 350) {
-            expandNeighbours(el.id);
-            lastClick = null;
-          } else {
-            lastClick = { id: el.id, t: now };
-          }
-        },
-      }),
-    );
 
     // ── Projection helpers (kept inside play for the code tab) ──────────
     const buildNode = (n: typeof ontology.nodes[number]): NodeData<OntologyNodeData> => ({
@@ -203,8 +130,8 @@ export const KnowledgeGraphExplorer: Story = {
     /** Set of node ids currently exposed to the graph (ignores filter). */
     const exposedIds = new Set<string>(ontology.coreIds);
 
-    /** Push the current (exposedIds ∩ filter) into the graph. */
-    const apply = (): void => {
+    /** Build the current (exposedIds ∩ filter) node/edge content. */
+    const buildData = (): { nodes: NodeData<OntologyNodeData>[]; edges: EdgeData<OntologyEdgeData>[] } => {
       const inGraph = ontology.nodes.filter(
         (n) => exposedIds.has(n.id) && includesKind(n.data.kind),
       );
@@ -212,37 +139,129 @@ export const KnowledgeGraphExplorer: Story = {
       const ins = ontology.edges.filter(
         (e) => idSet.has(e.source) && idSet.has(e.target),
       );
-      graph.setData({
-        nodes: inGraph.map(buildNode),
-        edges: ins.map(buildEdge),
-      });
+      return { nodes: inGraph.map(buildNode), edges: ins.map(buildEdge) };
     };
-    apply();
 
-    // ── Layout ──────────────────────────────────────────────────────────
-    let layout: D3ForceLayout | ElkLayout | null = null;
+    // ── Canvas setup ─────────────────────────────────────────────────────
+    const container = canvasElement.querySelector<HTMLDivElement>('#usecase-ontology')!;
+    const canvas = new GraphCanvas();
+    onStoryTeardown(() => canvas.destroy());
 
-    const runLayout = async (): Promise<void> => {
-      layout?.stop();
-      if (settings.layout === 'force') {
-        layout = new D3ForceLayout({
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
+
+    const graph = new GraphLayer({
+      id: 'graph',
+      options: { initData: buildData() },
+    });
+    canvas.layers.add(graph);
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new HoverActivateBehaviour({ id: 'hover', layerId: 'graph' }));
+
+    // Track click timestamps per id so a second click on the same node
+    // within 350ms expands its neighbourhood. Avoids reaching into the
+    // private renderer for `shape:doubleclick`.
+    let lastClick: { id: string; t: number } | null = null;
+    canvas.behaviours.register(
+      new ClickSelectBehaviour({
+        id: 'select',
+        layerId: 'graph',
+        onSelect: (el) => {
+          const now = Date.now();
+          if (lastClick && lastClick.id === el.id && now - lastClick.t < 350) {
+            expandNeighbours(el.id);
+            lastClick = null;
+          } else {
+            lastClick = { id: el.id, t: now };
+          }
+        },
+      }),
+    );
+
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+
+    // ── Layouts ──────────────────────────────────────────────────────────
+    // Both layouts are registered by id; `activeLayout` selects which runs.
+    // Each settles the camera once it finishes.
+    const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
+    // `ElkLayoutOptions` doesn't expose `id` / `targetLayerId` in its constructor
+    // type, so wire them on the instance (both are read at init time, after
+    // registration) — params live in `canvasOptions.layouts.radial`.
+    const elkLayout = Object.assign(new ElkLayout(), { id: 'radial', targetLayerId: 'graph' });
+    canvas.layouts.add(forceLayout);
+    canvas.layouts.add(elkLayout);
+
+    const canvasOptions = {
+      layers: {
+        bg: {
+          type: 'pattern',
+          patternType: 'dots',
+          backgroundColor: '#f8fafc',
+          color: '#cbd5e1',
+          size: 1.2,
+          spacing: 26,
+          alpha: 0.7,
+        },
+        graph: {
+          node: {
+            state: {
+              highlighted: { bgStrokeColor: 0xfbbf24, bgStrokeWidth: 3 },
+              selected:    { bgStrokeColor: 0xffffff, bgStrokeWidth: 4 },
+            },
+          },
+          edge: {
+            state: {
+              highlighted: { strokeColor: 0xfbbf24, strokeWidth: 2.2, strokeAlpha: 1, arrowTargetColor: 0xfbbf24 },
+            },
+          },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+        hover: { enabled: true, state: 'highlighted', inactiveState: 'dimmed', degree: 1, direction: 'both' },
+        select: { enabled: true, multiple: true, trigger: ['shift'] },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc', color: '#cbd5e1' },
+          dark: { backgroundColor: '#0b1220', color: '#1e293b' },
+        },
+      },
+      layouts: {
+        force: {
           link: { distance: 110 },
           charge: { strength: -260 },
           collide: { radius: 32 },
           center: { x: 0, y: 0 },
-        });
-      } else {
-        layout = new ElkLayout({
+        },
+        radial: {
           algorithm: 'radial',
           nodeSpacing: 40,
-        });
-      }
-      layout.events.on('end', ({ reason }) => {
-        if (reason === 'completed') canvas.camera.fitContent(graph.getBounds(), 80);
-      });
-      await layout.apply(graph);
+        },
+      },
+      activeLayout: 'force',
     };
-    void runLayout();
+
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+    onStoryTeardown(() => { forceLayout.stop(); elkLayout.stop(); });
+
+    const fitOnComplete = ({ reason }: { reason: string }): void => {
+      if (reason === 'completed') canvas.camera.fitContent(graph.getBounds(), 80);
+    };
+    onStoryTeardown(forceLayout.events.on('end', fitOnComplete));
+    onStoryTeardown(elkLayout.events.on('end', fitOnComplete));
+
+    // Push the current (exposedIds ∩ filter) content into the graph and
+    // re-run the active layout so newcomers find their place.
+    const apply = (): void => {
+      graph.setData(buildData());
+    };
+    const relayout = (): void => {
+      canvas.update({ activeLayout: settings.layout });
+    };
 
     // Pull every 1-hop neighbour of `seedId` out of the FULL dataset and
     // expose any that aren't already in the graph; rerun the layout so
@@ -255,19 +274,18 @@ export const KnowledgeGraphExplorer: Story = {
       }
       if (exposedIds.size !== before) {
         apply();
-        void runLayout();
+        relayout();
       }
     }
 
     // ── GUI ─────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'Knowledge Graph Explorer' });
     onStoryTeardown(() => gui.destroy());
-    onStoryTeardown(() => layout?.stop());
 
     gui
       .add(settings, 'layout', ['force', 'radial'])
       .name('layout')
-      .onChange(() => void runLayout());
+      .onChange(() => relayout());
 
     gui
       .add(settings, 'showEdgeLabels')
@@ -275,11 +293,11 @@ export const KnowledgeGraphExplorer: Story = {
       .onChange(apply);
 
     const filterFolder = gui.addFolder('Entity types');
-    filterFolder.add(settings, 'includeCompany').name('Company').onChange(() => { apply(); void runLayout(); });
-    filterFolder.add(settings, 'includePerson').name('Person').onChange(() => { apply(); void runLayout(); });
-    filterFolder.add(settings, 'includeProduct').name('Product').onChange(() => { apply(); void runLayout(); });
-    filterFolder.add(settings, 'includeLocation').name('Location').onChange(() => { apply(); void runLayout(); });
-    filterFolder.add(settings, 'includeIndustry').name('Industry').onChange(() => { apply(); void runLayout(); });
+    filterFolder.add(settings, 'includeCompany').name('Company').onChange(() => { apply(); relayout(); });
+    filterFolder.add(settings, 'includePerson').name('Person').onChange(() => { apply(); relayout(); });
+    filterFolder.add(settings, 'includeProduct').name('Product').onChange(() => { apply(); relayout(); });
+    filterFolder.add(settings, 'includeLocation').name('Location').onChange(() => { apply(); relayout(); });
+    filterFolder.add(settings, 'includeIndustry').name('Industry').onChange(() => { apply(); relayout(); });
 
     gui
       .add(
@@ -288,7 +306,7 @@ export const KnowledgeGraphExplorer: Story = {
             exposedIds.clear();
             for (const id of ontology.coreIds) exposedIds.add(id);
             apply();
-            void runLayout();
+            relayout();
           },
         },
         'collapse',
@@ -300,7 +318,7 @@ export const KnowledgeGraphExplorer: Story = {
           expandAll: () => {
             for (const n of ontology.nodes) exposedIds.add(n.id);
             apply();
-            void runLayout();
+            relayout();
           },
         },
         'expandAll',

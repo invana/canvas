@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphLayer, type GraphNode, type NodeData } from '@invana/graph';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { GraphCanvas, GraphLayer, type GraphNode, type NodeData } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'canvas/graph/Etc/LayerResolver' };
@@ -20,6 +20,10 @@ type Story = StoryObj;
  * Five nodes feed varying `data.group`; every other one carries
  * `states: ['hovered']` so we can compare resting vs. hovered with the
  * layer-level overrides applied.
+ *
+ * The `bgFill` resolver and the `state.hovered` overlay are functions/overlays
+ * that stay in the constructor `options`; the pure-literal style fields move
+ * into `canvasOptions.layers.graph.node.style` and shallow-merge at init.
  */
 export const LayerResolver: Story = {
   render: () => createContainer({ id: 'graph-states-layer-resolver' }),
@@ -28,11 +32,6 @@ export const LayerResolver: Story = {
     const container = canvasElement.querySelector<HTMLDivElement>(
       '#graph-states-layer-resolver',
     )!;
-    const canvas = new Canvas();
-    onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     interface TileData {
       readonly weight: number;
@@ -79,20 +78,18 @@ export const LayerResolver: Story = {
       },
     ];
 
+    const canvas = new GraphCanvas();
+    onStoryTeardown(() => canvas.destroy());
+
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: { nodes, edges: [] },
         node: {
           style: {
             // Resolver: pick fill from data.group per node.
             bgFill: (n: GraphNode) =>
               groupColors[((n.data as TileData | undefined)?.group ?? 0)],
-            bgStrokeColor: 0x1f2937,
-            bgStrokeWidth: 1,
-            labelColor: 0x1f2937,
-            labelPlacement: 'bottom',
-            labelFontSize: 12,
-            labelOffsetY: 8,
           },
           // Override the layer's built-in `hovered` with a v3 overlay — wins
           // over the canonical config for this layer only.
@@ -103,7 +100,27 @@ export const LayerResolver: Story = {
       },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges: [] });
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              bgStrokeColor: 0x1f2937,
+              bgStrokeWidth: 1,
+              labelColor: 0x1f2937,
+              labelPlacement: 'bottom',
+              labelFontSize: 12,
+              labelOffsetY: 8,
+            },
+          },
+        },
+      },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
   },

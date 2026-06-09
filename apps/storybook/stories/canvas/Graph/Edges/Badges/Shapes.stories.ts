@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   type EdgeData,
   type NodeData,
@@ -81,25 +82,26 @@ export const Shapes: Story = {
     const container = canvasElement.querySelector<HTMLDivElement>(
       '#graph-edges-badges-shapes',
     )!;
-    const canvas = new Canvas();
-    onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
+    const canvas = new GraphCanvas();
+    onStoryTeardown(() => canvas.destroy());
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: {
-        edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5, arrowTargetShape: 'none' } },
-      },
+      options: { initData: { nodes, edges } },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
 
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
+    const canvasOptions = {
+      layers: {
+        graph: { edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5, arrowTargetShape: 'none' } } },
+      },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true }, 'drag-node': { enabled: true } },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
   },
 };

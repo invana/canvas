@@ -7,18 +7,21 @@
  *
  * Exercises: `DensityContourFillLayer` + `GraphLayer` composition,
  * pre-positioned data (no layout pass), `HoverActivateBehaviour` with a
- * label-on-hover overlay, `LassoSelectBehaviour`, `MiniMapLayer`.
+ * label-on-hover overlay, `LassoSelectBehaviour`, `MiniMapLayer`. Built
+ * the new way: register layers/behaviours by id, then a single
+ * serialisable `canvasOptions` object, then `init()` last. Node
+ * positions ride on `initData`, so there's no layout.
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
 import {
   ClickSelectBehaviour,
+  GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
   LassoSelectBehaviour,
@@ -61,64 +64,43 @@ export const RAGEmbeddingExplorer: Story = {
       lassoAdditive: false,
     };
 
+    // Pre-positioned chunks — positions ride on `initData`, no layout.
+    const nodes: NodeData<RagEmbeddingsNodeData>[] = ragEmbeddings.nodes.map((p) => ({
+      id: p.id,
+      position: p.position,
+      data: p.data,
+    }));
+
     // ── Canvas setup ─────────────────────────────────────────────────────
     const container = canvasElement.querySelector<HTMLDivElement>('#usecase-rag-embeddings')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
+    // ── Layers ──────────────────────────────────────────────────────────
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
 
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'solid',
-          mode: 'dark',
-          color: { light: '#0b1220', dark: '#0b1220' },
-        },
-      }),
-    );
-
-    // Contour goes first (lowest zIndex) so points paint over it.
+    // Contour goes first (lowest zIndex) so points paint over it. The
+    // cross-layer `graphLayerId` stays in the constructor; the literal
+    // density params live in config.
     const contour = new DensityContourFillLayer({
       id: 'density',
       zIndex: -1,
-      options: {
-        graphLayerId: 'graph',
-        bandwidth: settings.bandwidth,
-        thresholds: settings.thresholds,
-        cellSize: settings.cellSize,
-        fillOpacity: settings.fillOpacity,
-        padding: 80,
-        palette: settings.palette,
-      },
+      options: { graphLayerId: 'graph' },
     });
     canvas.layers.add(contour);
 
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: { nodes, edges: [] },
         node: {
+          // Resolver fields stay in the constructor; literal style fields
+          // live in config and shallow-merge at init.
           style: {
-            shape: { kind: 'circle', radius: 4 },
             bgFill: (n: GraphNode) => CLUSTER_FILL[(n.data as RagEmbeddingsNodeData).cluster],
-            bgAlpha: 0.95,
-            bgStrokeColor: 0x0b1220,
-            bgStrokeWidth: 0.5,
             // By default labels stay hidden until the zoom passes 1.5;
             // hover + selected states force them on regardless.
             labelText: (n: GraphNode) => truncate((n.data as RagEmbeddingsNodeData).text, 36),
-            labelColor: 0xf8fafc,
-            labelFontSize: 10,
-            labelPlacement: 'bottom',
-            labelOffsetY: 4,
-            labelBackgroundFill: 0x111827,
-            labelBackgroundAlpha: 0.8,
-            labelBackgroundPadding: 3,
-            labelBackgroundCornerRadius: 3,
-            labelMinZoom: 1.5,
           },
           state: {
             hovered: {
@@ -143,57 +125,33 @@ export const RAGEmbeddingExplorer: Story = {
     canvas.layers.add(graph);
 
     canvas.layers.add(
-      new MiniMapLayer({
-        id: 'minimap',
-        options: {
-          graphLayerId: 'graph',
-          position: 'bottom-right',
-          width: 220,
-          height: 160,
-          backgroundColor: 0x111827,
-        },
-      }),
+      new MiniMapLayer({ id: 'minimap', options: { graphLayerId: 'graph' } }),
     );
 
-    const nodes: NodeData<RagEmbeddingsNodeData>[] = ragEmbeddings.nodes.map((p) => ({
-      id: p.id,
-      position: p.position,
-      data: p.data,
-    }));
-    graph.setData({ nodes, edges: [] });
-
-    // Contour bootstraps from the initial setData; explicit recompute
-    // costs nothing and guarantees the bands are present before the
-    // camera fits, so the user sees the full picture immediately.
-    contour.recompute();
-    canvas.camera.fitContent(graph.getBounds(), 80);
-
     // ── Behaviours ──────────────────────────────────────────────────────
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(
       new HoverActivateBehaviour({
         id: 'hover',
         layerId: 'graph',
-        enabled: true,
         state: 'hovered',
         // Single-node hover, no neighbour expansion — there are no edges.
         degree: 0,
       }),
     );
-
-    const click = new ClickSelectBehaviour({
-      id: 'select',
-      layerId: 'graph',
-      enabled: true,
-      multiple: true,
-      trigger: ['shift'],
-      clearOnBackground: true,
-    });
-    canvas.behaviours.register(click);
-
+    canvas.behaviours.register(
+      new ClickSelectBehaviour({
+        id: 'select',
+        layerId: 'graph',
+        multiple: true,
+        trigger: ['shift'],
+        clearOnBackground: true,
+      }),
+    );
     const lasso = new LassoSelectBehaviour({
       id: 'lasso',
       layerId: 'graph',
-      enabled: true,
       // Hand selected ids over to the ClickSelect behaviour by sharing the
       // `selected` state name (its default). This is the recommended
       // composition path per the LassoSelectBehaviour docs.
@@ -203,22 +161,67 @@ export const RAGEmbeddingExplorer: Story = {
     });
     canvas.behaviours.register(lasso);
 
+    // ── Config ──────────────────────────────────────────────────────────
+    const canvasOptions = {
+      layers: {
+        bg: { type: 'solid', color: '#0b1220' },
+        density: {
+          bandwidth: settings.bandwidth,
+          thresholds: settings.thresholds,
+          cellSize: settings.cellSize,
+          fillOpacity: settings.fillOpacity,
+          padding: 80,
+          palette: settings.palette,
+        },
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'circle', radius: 4 },
+              bgAlpha: 0.95,
+              bgStrokeColor: 0x0b1220,
+              bgStrokeWidth: 0.5,
+              labelColor: 0xf8fafc,
+              labelFontSize: 10,
+              labelPlacement: 'bottom',
+              labelOffsetY: 4,
+              labelBackgroundFill: 0x111827,
+              labelBackgroundAlpha: 0.8,
+              labelBackgroundPadding: 3,
+              labelBackgroundCornerRadius: 3,
+              labelMinZoom: 1.5,
+            },
+          },
+        },
+        minimap: { position: 'bottom-right', width: 220, height: 160, backgroundColor: 0x111827 },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        hover: { enabled: true },
+        select: { enabled: true },
+        lasso: { enabled: true },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+
+    // Contour bootstraps from the initial data; explicit recompute costs
+    // nothing and guarantees the bands are present before the camera
+    // fits, so the user sees the full picture immediately.
+    contour.recompute();
+    canvas.camera.fitContent(graph.getBounds(), 80);
+
     // ── GUI ─────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'RAG Embedding Explorer' });
     onStoryTeardown(() => gui.destroy());
 
     const contourFolder = gui.addFolder('Density contour');
     const rebuildContour = (): void => {
-      const o = contour.options as unknown as Record<string, unknown>;
-      o.bandwidth = settings.bandwidth;
-      o.thresholds = settings.thresholds;
-      o.cellSize = settings.cellSize;
-      o.fillOpacity = settings.fillOpacity;
+      canvas.update({ layers: { density: canvasOptions.layers.density } });
       contour.recompute();
     };
-    contourFolder.add(settings, 'bandwidth', 8, 80, 1).onChange(rebuildContour);
-    contourFolder.add(settings, 'thresholds', 3, 24, 1).onChange(rebuildContour);
-    contourFolder.add(settings, 'fillOpacity', 0, 1, 0.05).onChange(rebuildContour);
+    contourFolder.add(canvasOptions.layers.density, 'bandwidth', 8, 80, 1).onChange(rebuildContour);
+    contourFolder.add(canvasOptions.layers.density, 'thresholds', 3, 24, 1).onChange(rebuildContour);
+    contourFolder.add(canvasOptions.layers.density, 'fillOpacity', 0, 1, 0.05).onChange(rebuildContour);
 
     const labelsFolder = gui.addFolder('Labels');
     labelsFolder
@@ -231,10 +234,8 @@ export const RAGEmbeddingExplorer: Story = {
         for (const node of graph.store.nodes()) {
           graph.store.updateNode(node.id, { style: undefined });
         }
-        const nodeOpts = graph.options.node;
-        if (nodeOpts?.style) {
-          (nodeOpts.style as { labelMinZoom?: number }).labelMinZoom = on ? 0 : 1.5;
-        }
+        canvasOptions.layers.graph.node.style.labelMinZoom = on ? 0 : 1.5;
+        canvas.update({ layers: { graph: { node: { style: { labelMinZoom: on ? 0 : 1.5 } } } } });
       });
 
     const lassoFolder = gui.addFolder('Lasso');

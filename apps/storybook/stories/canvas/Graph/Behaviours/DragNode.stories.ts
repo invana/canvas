@@ -22,9 +22,10 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   type DragNodeBehaviourOptions,
   type GraphNode,
@@ -59,16 +60,13 @@ export const DragNode: Story = {
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-drag-node')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: { nodes, edges: lesMiserables.edges },
         node: {
           // Custom layer-level state so a pinned node is unmistakable from
           // an un-pinned one. The state is toggled in the `node:update`
@@ -80,11 +78,37 @@ export const DragNode: Story = {
             },
           },
         },
-        edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.8 } },
       },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges: lesMiserables.edges });
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+
+    const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
+    canvas.layouts.add(forceLayout);
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.8 } },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+      },
+      layouts: {
+        force: {
+          charge: { strength: -150 },
+          link: { distance: 55 },
+          collide: { radius: 14 },
+          center: { x: 0, y: 0 },
+        },
+      },
+      activeLayout: 'force',
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     // Mirror the store's `pinned` flag onto the layer's `is-pinned` state so
     // a pin gets an orange stroke (and unpin removes it).
@@ -92,13 +116,6 @@ export const DragNode: Story = {
       if (!('pinned' in patch)) return;
       graph.store.setNodeState(nodeId, 'is-pinned', patch.pinned === true);
     });
-
-    void new D3ForceLayout({
-      charge: { strength: -150 },
-      link: { distance: 55 },
-      collide: { radius: 14 },
-      center: { x: 0, y: 0 },
-    }).apply(graph);
 
     // ─── Behaviour wiring ─────────────────────────────────────────────────
     // The behaviour is rebuilt whenever an option that isn't `enabled` flips,

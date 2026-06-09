@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
-  DragNodeBehaviour, GraphLayer,
+  GraphCanvas, DragNodeBehaviour, GraphLayer,
   type EdgeData, type NodeData,
 } from '@invana/graph';
 import GUI from 'lil-gui';
@@ -74,22 +74,17 @@ export const Stacked: Story = {
 
     interface EdgeMeta { index: number; }
 
+    // ── Add everything, then init() last ─────────────────────────────────
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edge-loop-polyline-stacked')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
+    // The per-edge `shape` / `strokeColor` resolvers read `settings` from the
+    // closure, so they're non-serialisable and stay in the constructor.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        node: {
-          style: {
-            shape: { kind: 'rect', width: NODE_W, height: NODE_H },
-            bgFill: 0x4f7ff5, bgStrokeColor: 0x2563eb, bgStrokeWidth: 0,
-          },
-        },
+        initData: { nodes: [{ id: NODE_ID, position: { x: 0, y: 0 } }] as NodeData[], edges: [] },
         edge: {
           style: {
             // Per-edge ring index drives the geometric growth; `settings`
@@ -127,12 +122,28 @@ export const Stacked: Story = {
       },
     });
     canvas.layers.add(graph);
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
 
-    const nodes: NodeData[] = [{ id: NODE_ID, position: { x: 0, y: 0 } }];
-    graph.setData({ nodes, edges: [] });
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'rect', width: NODE_W, height: NODE_H },
+              bgFill: 0x4f7ff5, bgStrokeColor: 0x2563eb, bgStrokeWidth: 0,
+            },
+          },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     const MAX = 12;
 

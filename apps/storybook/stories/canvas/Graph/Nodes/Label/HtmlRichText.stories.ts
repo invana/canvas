@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import type { ShapeLabelStyle } from '@invana/canvas';
-import { GraphLayer, type NodeData, type NodeStyle } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type NodeData, type NodeStyle } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -55,20 +55,24 @@ export const HtmlRichText: Story = {
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-label-html-rich-text')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: {
-        node: { style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
-      },
+      options: { initData: { nodes, edges: [] } },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges: [] });
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: { node: { style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } } },
+      },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
 
     const ALL_IDS = ['circle', 'rect', 'arc', 'regular-polygon', 'star', 'polygon'];

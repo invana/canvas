@@ -21,9 +21,10 @@
 import 'maplibre-gl/dist/maplibre-gl.css?inline';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DevInfoLayer } from '@invana/canvas';
+import { DevInfoLayer } from '@invana/canvas';
 import {
   EdgeSizeLODBehaviour,
+  GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
   NodeSizeLODBehaviour,
@@ -64,9 +65,8 @@ export const Routes_Story: Story = {
     };
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-maplibre-routes')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
     const map = new MapLayer({
       id: 'map',
@@ -77,77 +77,6 @@ export const Routes_Story: Story = {
       },
     });
     canvas.layers.add(map);
-
-    const graph = new GraphLayer({
-      id: 'graph',
-      zIndex: 10,
-      options: {
-        node: {
-          style: {
-            shape: { kind: 'circle', radius: NODE_DEFAULTS.size / 2 },
-            bgFill: NODE_DEFAULTS.fill,
-            bgStrokeColor: NODE_DEFAULTS.stroke,
-            bgStrokeWidth: NODE_DEFAULTS.strokeWidth,
-            bgAlpha: NODE_DEFAULTS.alpha,
-          },
-          state: {
-            // Hover / dimmed palettes — hovered lights up the airport and
-            // its connected routes (N-hop) in amber; dimmed pushes the
-            // rest back. `'hover-far'` is a custom (non-canonical) state
-            // swapped in via `zoomedOutState` when the camera zooms past
-            // the threshold; bigger node body so it stays visible at
-            // world-level zoom.
-            hovered: {
-              bgFill: 0xfacc15,
-              bgStrokeColor: 0xfacc15,
-              bgStrokeWidth: 1.5,
-              shape: { kind: 'circle', radius: 2.5 },
-            },
-            dimmed: { bgAlpha: 0.15 },
-            'hover-far': {
-              bgFill: 0xfacc15,
-              bgStrokeColor: 0xffffff,
-              bgStrokeWidth: 2,
-              shape: { kind: 'circle', radius: 9 },
-            },
-          },
-        },
-        edge: {
-          style: {
-            shape: { pathType: 'straight' },
-            arrowTargetShape: 'none',
-            strokeColor: EDGE_DEFAULTS.stroke,
-            strokeWidth: EDGE_DEFAULTS.strokeWidth,
-          },
-          state: {
-            hovered: { strokeColor: 0xfacc15, strokeWidth: 1.2, strokeAlpha: 0.95 },
-            dimmed: { strokeAlpha: 0.05 },
-            'hover-far': { strokeColor: 0xfacc15, strokeWidth: 4, strokeAlpha: 1 },
-          },
-        },
-      },
-    });
-    canvas.layers.add(graph);
-
-    // Density overlay between the map and the graph. The contour resolves
-    // `graphLayerId` synchronously at mount, so it must be added AFTER
-    // the graph layer; zIndex still controls paint order, so the contour
-    // sits visually below the nodes and edges.
-    const contour = new DensityContourFillLayer({
-      id: 'density',
-      zIndex: 5,
-      visible: false,
-      options: {
-        graphLayerId: 'graph',
-        bandwidth: 10,
-        thresholds: 8,
-        cellSize: 2,
-        padding: 40,
-        fillOpacity: 0.55,
-        palette: 'inferno',
-      },
-    });
-    canvas.layers.add(contour);
 
     // Project every airport to world coords (mercator pixels at zoom 0)
     // once at setup. Positions are stable across map zoom because the
@@ -200,9 +129,29 @@ export const Routes_Story: Story = {
       pushEdge(c, a);
     }
 
-    graph.setData({ nodes, edges });
+    // Node + edge templates are pure literal → they live entirely in
+    // config; only the content (`initData`) rides on the constructor.
+    const graph = new GraphLayer({
+      id: 'graph',
+      zIndex: 10,
+      options: { initData: { nodes, edges } },
+    });
+    canvas.layers.add(graph);
 
-    canvas.layers.add(new DevInfoLayer({ id: 'dev-info', corner: 'bottom-left', enabled: true }));
+    // Density overlay between the map and the graph. The contour resolves
+    // `graphLayerId` synchronously at mount, so it must be added AFTER
+    // the graph layer; zIndex still controls paint order, so the contour
+    // sits visually below the nodes and edges. `graphLayerId` is a
+    // cross-layer id → stays in the constructor; literal params go to config.
+    const contour = new DensityContourFillLayer({
+      id: 'density',
+      zIndex: 5,
+      visible: false,
+      options: { graphLayerId: 'graph' },
+    });
+    canvas.layers.add(contour);
+
+    canvas.layers.add(new DevInfoLayer({ id: 'dev-info', corner: 'bottom-left' }));
 
     type Region = 'World' | 'North Atlantic' | 'Trans-Pacific' | 'Europe' | 'Asia' | 'North America';
     const PRESETS: Record<Region, { center: [number, number]; zoom: number }> = {
@@ -246,10 +195,10 @@ export const Routes_Story: Story = {
     // Separate behaviours for nodes vs edges — each handles its own
     // RAF coalescing. The browser batches all behaviours' RAF callbacks
     // into the same animation frame, so this is the same per-frame cost
-    // as a single behaviour doing both passes.
+    // as a single behaviour doing both passes. The resolver functions keep
+    // these behaviours' options in the constructor.
     const nodeSizeLOD = new NodeSizeLODBehaviour({
       id: 'node-size-lod',
-      enabled: true,
       layers: [
         {
           layerId: 'graph',
@@ -260,7 +209,6 @@ export const Routes_Story: Story = {
     });
     const edgeSizeLOD = new EdgeSizeLODBehaviour({
       id: 'edge-size-lod',
-      enabled: true,
       layers: [{ layerId: 'graph', strokeWidthPx: () => settings.targetEdgePx }],
     });
     canvas.behaviours.register(nodeSizeLOD);
@@ -277,7 +225,6 @@ export const Routes_Story: Story = {
     const hover = new HoverActivateBehaviour({
       id: 'hover',
       layerId: 'graph',
-      enabled: settings.hoverEnabled,
       state: 'hovered',
       // inactiveState: 'dimmed',
       degree: settings.hoverDegree,
@@ -288,6 +235,72 @@ export const Routes_Story: Story = {
     });
     canvas.behaviours.register(hover);
 
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'circle', radius: NODE_DEFAULTS.size / 2 },
+              bgFill: NODE_DEFAULTS.fill,
+              bgStrokeColor: NODE_DEFAULTS.stroke,
+              bgStrokeWidth: NODE_DEFAULTS.strokeWidth,
+              bgAlpha: NODE_DEFAULTS.alpha,
+            },
+            state: {
+              // Hover / dimmed palettes — hovered lights up the airport and
+              // its connected routes (N-hop) in amber; dimmed pushes the
+              // rest back. `'hover-far'` is a custom (non-canonical) state
+              // swapped in via `zoomedOutState` when the camera zooms past
+              // the threshold; bigger node body so it stays visible at
+              // world-level zoom.
+              hovered: {
+                bgFill: 0xfacc15,
+                bgStrokeColor: 0xfacc15,
+                bgStrokeWidth: 1.5,
+                shape: { kind: 'circle', radius: 2.5 },
+              },
+              dimmed: { bgAlpha: 0.15 },
+              'hover-far': {
+                bgFill: 0xfacc15,
+                bgStrokeColor: 0xffffff,
+                bgStrokeWidth: 2,
+                shape: { kind: 'circle', radius: 9 },
+              },
+            },
+          },
+          edge: {
+            style: {
+              shape: { pathType: 'straight' },
+              arrowTargetShape: 'none',
+              strokeColor: EDGE_DEFAULTS.stroke,
+              strokeWidth: EDGE_DEFAULTS.strokeWidth,
+              strokeAlpha: 1,
+            },
+            state: {
+              hovered: { strokeColor: 0xfacc15, strokeWidth: 1.2, strokeAlpha: 0.95 },
+              dimmed: { strokeAlpha: 0.05 },
+              'hover-far': { strokeColor: 0xfacc15, strokeWidth: 4, strokeAlpha: 1 },
+            },
+          },
+        },
+        density: {
+          bandwidth: 10,
+          thresholds: 8,
+          cellSize: 2,
+          padding: 40,
+          fillOpacity: 0.55,
+          palette: 'inferno',
+        },
+      },
+      behaviours: {
+        'node-size-lod': { enabled: true },
+        'edge-size-lod': { enabled: true },
+        hover: { enabled: true },
+      },
+    };
+
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+
     const gui = new GUI({ title: 'World Routes (Delaunay)' });
     onStoryTeardown(() => gui.destroy());
 
@@ -295,38 +308,28 @@ export const Routes_Story: Story = {
       .name('Fly to')
       .onChange((v: Region) => map.flyTo({ ...PRESETS[v], duration: 1400 }));
 
-    // Per-element restyle through `store.updateNode` / `store.updateEdge`
-    // (not `setData`) — `setData` calls `store.clear()` which wipes data
-    // without emitting `node:remove`, and the subsequent re-add then
-    // throws "id already exists" against the still-mounted shapes.
+    // Restyle nodes / edges by pushing a fresh template into config via
+    // `canvas.update(...)`. The literal style shallow-merges over the
+    // mounted template, so the slider/colour edits propagate to all nodes
+    // and edges.
     const restyleNodes = (): void => {
-      graph.store.batch(() => {
-        for (const n of nodes) {
-          graph.store.updateNode(n.id, {
-            style: {
-              shape: { kind: 'circle', radius: settings.nodeSize / 2 },
-              bgFill: settings.nodeFill,
-              bgStrokeColor: NODE_DEFAULTS.stroke,
-              bgStrokeWidth: NODE_DEFAULTS.strokeWidth,
-              bgAlpha: settings.nodeAlpha,
-            },
-          });
-        }
-      });
+      canvasOptions.layers.graph.node.style = {
+        ...canvasOptions.layers.graph.node.style,
+        shape: { kind: 'circle', radius: settings.nodeSize / 2 },
+        bgFill: settings.nodeFill,
+        bgAlpha: settings.nodeAlpha,
+      };
+      canvas.update({ layers: { graph: { node: { style: canvasOptions.layers.graph.node.style } } } });
     };
 
     const restyleEdges = (): void => {
-      graph.store.batch(() => {
-        for (const e of edges) {
-          graph.store.updateEdge(e.id, {
-            style: {
-              strokeColor: settings.edgeColor,
-              strokeWidth: settings.edgeWidth,
-              strokeAlpha: settings.edgeAlpha,
-            },
-          });
-        }
-      });
+      canvasOptions.layers.graph.edge.style = {
+        ...canvasOptions.layers.graph.edge.style,
+        strokeColor: settings.edgeColor,
+        strokeWidth: settings.edgeWidth,
+        strokeAlpha: settings.edgeAlpha,
+      };
+      canvas.update({ layers: { graph: { edge: { style: canvasOptions.layers.graph.edge.style } } } });
     };
 
     const routeFolder = gui.addFolder('Routes');
@@ -386,7 +389,7 @@ export const Routes_Story: Story = {
       .onChange((v: number) => hover.setOptions({ zoomThreshold: v }));
     // Far-zoom node/edge px sliders dropped — state styling is now
     // layer-template-only and can't be mutated at runtime. The baked-in
-    // `hover-far` overlay (declared in `options.node.state`) covers
+    // `hover-far` overlay (declared in `layers.graph.node.state`) covers
     // the static case.
 
     const densityFolder = gui.addFolder('Density overlay');

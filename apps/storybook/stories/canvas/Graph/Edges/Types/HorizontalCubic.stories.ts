@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   type EdgeData,
   type NodeData,
@@ -61,50 +62,54 @@ export const HorizontalCubic: Story = {
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edge-types-horizontal-cubic')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const graph = new GraphLayer({
-      id: 'graph',
-      options: {
-        node: {
-          style: {
-            shape: { kind: 'circle', radius: 14 },
-            bgFill: 0x4f9cf9,
-            bgStrokeColor: 0x1d4ed8,
-            bgStrokeWidth: 1.5,
+    const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
+    canvas.layers.add(graph);
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'circle', radius: 14 },
+              bgFill: 0x4f9cf9,
+              bgStrokeColor: 0x1d4ed8,
+              bgStrokeWidth: 1.5,
+            },
           },
-        },
-        edge: {
-          style: {
-            strokeColor: 0x94a3b8,
-            strokeWidth: 1.5,
-            arrowTargetShape: 'triangle',
-            labelFontSize: 10,
-            labelFontWeight: 500,
-            labelColor: 0x334155,
-            labelPlacement: 'center',
-            labelAutoRotate: true,
-            labelKeepUpright: true,
-            labelBackgroundFill: 0xffffff,
-            labelBackgroundStrokeColor: 0xe2e8f0,
-            labelBackgroundStrokeWidth: 1,
-            labelBackgroundCornerRadius: 3,
-            labelBackgroundPadding: 3,
+          edge: {
+            style: {
+              strokeColor: 0x94a3b8,
+              strokeWidth: 1.5,
+              arrowTargetShape: 'triangle',
+              labelFontSize: 10,
+              labelFontWeight: 500,
+              labelColor: 0x334155,
+              labelPlacement: 'center',
+              labelAutoRotate: true,
+              labelKeepUpright: true,
+              labelBackgroundFill: 0xffffff,
+              labelBackgroundStrokeColor: 0xe2e8f0,
+              labelBackgroundStrokeWidth: 1,
+              labelBackgroundCornerRadius: 3,
+              labelBackgroundPadding: 3,
+            },
           },
         },
       },
-    });
-    canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+      },
+    };
 
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
-
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
   },
 };

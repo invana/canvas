@@ -1,16 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer } from '@invana/graph';
+import { GraphCanvas, GraphLayer } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
-import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
+import {
+  D3HierarchyLayout,
+  type D3HierarchyLayoutOptions,
+} from '@invana/graph-layout-d3-hierarchy';
 import { flareAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
+import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-hierarchy/Bubble' };
 export default meta;
@@ -40,8 +43,6 @@ export const Bubble: Story = {
 
     // ── Settings ─────────────────────────────────────────────────────────
     const settings = {
-      size: 1000,
-      padding: 3,
       leafStrokeWidth: 0,
       showLabels: true,
       // Initial font size handed to every leaf label. `'inside-center'`
@@ -65,7 +66,9 @@ export const Bubble: Story = {
 
     // ── Build node/edge data from Flare ──────────────────────────────────
     // The full Flare graph — every internal node + every leaf, plus the
-    // parent→child edges D3HierarchyLayout needs to derive the tree.
+    // parent→child edges D3HierarchyLayout needs to derive the tree. The
+    // per-leaf fill / stroke rides on each node's `style`, carried in as
+    // initial content (`options.initData`).
     const buildGraphData = () => {
       const data = flareAsGraph();
 
@@ -92,7 +95,7 @@ export const Bubble: Story = {
             data: {
               // Pack writes the real diameter onto `data.size` once it
               // runs — this is just a placeholder so nodes don't flash at
-              // the default size during the initial setData.
+              // the default size during the initial load.
               size: 0.1,
               name: n.data.name,
               isLeaf,
@@ -121,27 +124,16 @@ export const Bubble: Story = {
 
     // ── Canvas setup ─────────────────────────────────────────────────────
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-bubble')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'solid',
-          color: { light: '#f8fafc', dark: '#0b1220' },
-          mode: 'auto',
-        },
-      }),
-    );
-
+    // The `shape` resolver reads each node's packed `data.size`, so it can't
+    // be serialised — it stays in the constructor. The transparent-edge
+    // literal style goes to config.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: buildGraphData(),
         node: {
           style: {
             shape: (n) => {
@@ -150,29 +142,66 @@ export const Bubble: Story = {
             },
           },
         },
-        edge: {
-          // Bubble chart conveys grouping by enclosure, not links. Edges
-          // are required by the layout (so it can derive the tree) but
-          // rendered fully transparent.
-          style: {
-            strokeColor: 0x000000,
-            strokeWidth: 0,
-            strokeAlpha: 0,
-            arrowTargetShape: 'none',
+      },
+    });
+
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
+    canvas.layers.add(graph);
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+
+    const layout = new D3HierarchyLayout({
+      id: 'hierarchy',
+      targetLayerId: 'graph',
+    } as D3HierarchyLayoutOptions);
+    canvas.layouts.add(layout);
+
+    const canvasOptions = {
+      layers: {
+        bg: { type: 'solid', backgroundColor: '#0b1220' },
+        graph: {
+          edge: {
+            // Bubble chart conveys grouping by enclosure, not links. Edges
+            // are required by the layout (so it can derive the tree) but
+            // rendered fully transparent.
+            style: {
+              strokeColor: 0x000000,
+              strokeWidth: 0,
+              strokeAlpha: 0,
+              arrowTargetShape: 'none',
+            },
           },
         },
       },
-    });
-    canvas.layers.add(graph);
-
-    let layout: D3HierarchyLayout | null = null;
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
+          dark: { backgroundColor: '#0b1220', color: '#475569' },
+        },
+      },
+      layouts: {
+        hierarchy: {
+          mode: 'pack',
+          size: [1000, 1000] as [number, number],
+          padding: 3,
+          // Default value accessor reads `data.value`; default sort is
+          // descending by value. Both match d3's example, so no overrides.
+        },
+      },
+      activeLayout: 'hierarchy',
+    };
 
     /**
      * Centre a label inside every bubble — leaves *and* inner sub-package
      * nodes. The packed diameter is read off `style.shape.radius` —
      * `D3HierarchyLayout` writes the resolved size onto each node's shape
      * spec (see its `store.updateNode(id, { style: { shape: { kind: 'circle',
-     * radius } } })` pack branch), so this has to run *after* `layout.apply()`.
+     * radius } } })` pack branch), so this has to run *after* the layout's
+     * `end` event.
      *
      * `placement: 'inside-center'` carries the containment contract (see
      * [[feedback_label_placement_containment]]) — the LabelDecoration's
@@ -227,37 +256,45 @@ export const Bubble: Story = {
       });
     };
 
-    const run = async (): Promise<void> => {
-      layout?.stop();
-      graph.setData(buildGraphData());
+    // Labels are size-dependent (font scales with packed diameter), so they
+    // have to be attached *after* the layout writes `data.size`. Wire it to
+    // the layout's `end` event, then fit the camera — fires on the initial
+    // auto-run and on every re-heat (`size` / `padding` edits).
+    onStoryTeardown(
+      layout.events.on('end', () => {
+        applyBubbleLabels();
+        canvas.camera.fitContent(graph.getBounds(), 40);
+      }),
+    );
+    onStoryTeardown(() => layout.stop());
 
-      layout = new D3HierarchyLayout({
-        mode: 'pack',
-        size: [settings.size, settings.size],
-        padding: settings.padding,
-        // Default value accessor reads `data.value`; default sort is
-        // descending by value. Both match d3's example, so no overrides.
-      });
-      await layout.apply(graph);
-      // Labels are size-dependent (font scales with packed diameter), so
-      // they have to be attached *after* layout writes `data.size`.
-      applyBubbleLabels();
-      canvas.camera.fitContent(graph.getBounds(), 40);
-    };
-
-    await run();
-    onStoryTeardown(() => layout?.stop());
+    // initData loads on mount; `activeLayout` runs itself once data is present.
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     // ── GUI ──────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'Bubble' });
     onStoryTeardown(() => gui.destroy());
 
     const layoutFolder = gui.addFolder('Layout');
-    layoutFolder.add(settings, 'size', 200, 2000, 50).onChange(run);
-    layoutFolder.add(settings, 'padding', 0, 20, 0.5).onChange(run);
+    layoutFolder
+      .add(canvasOptions.layouts.hierarchy.size, '0', 200, 2000, 50)
+      .name('size')
+      .onChange((v: number) => {
+        canvasOptions.layouts.hierarchy.size[1] = v;
+        canvas.update({ layouts: { hierarchy: canvasOptions.layouts.hierarchy } });
+      });
+    layoutFolder
+      .add(canvasOptions.layouts.hierarchy, 'padding', 0, 20, 0.5)
+      .onChange(() =>
+        canvas.update({ layouts: { hierarchy: canvasOptions.layouts.hierarchy } }),
+      );
 
     const style = gui.addFolder('Style');
-    style.add(settings, 'leafStrokeWidth', 0, 4, 0.5).onChange(run);
+    // Per-leaf stroke rides on node `style`, so a width change re-feeds data;
+    // the topology is unchanged but the styles refresh.
+    style
+      .add(settings, 'leafStrokeWidth', 0, 4, 0.5)
+      .onChange(() => graph.setData(buildGraphData()));
 
     const labels = gui.addFolder('Labels');
     labels.add(settings, 'showLabels').onChange(applyBubbleLabels);

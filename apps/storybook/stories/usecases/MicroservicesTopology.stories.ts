@@ -10,18 +10,20 @@
  * Exercises: per-tier shape + glyph icon, state-config styling by data
  * field (`health`), data-driven edge styling (log-scaled width, banded
  * colour), animated decorations, RPS badge with resolvable label text,
- * GUI-driven "simulate degradation" loop.
+ * GUI-driven "simulate degradation" loop. Built the new way: register
+ * layers/behaviours/layout by id, then a single serialisable
+ * `canvasOptions` object, then `init()` last.
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
 import {
   ClickSelectBehaviour,
+  GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
   MiniMapLayer,
@@ -40,6 +42,7 @@ import {
 } from '@invana/graph-datasets/usecase-demos';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
+import { SystemThemeBehaviour } from '../system-theme';
 
 const meta: Meta = { title: 'Usecases/Microservices Topology' };
 export default meta;
@@ -66,74 +69,7 @@ export const MicroservicesTopology: Story = {
       simulateDegradation: false,
     };
 
-    // ── Canvas setup ─────────────────────────────────────────────────────
-    const container = canvasElement.querySelector<HTMLDivElement>('#usecase-microservices')!;
-    const canvas = new Canvas();
-    onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'pattern',
-          patternType: 'dots',
-          mode: 'auto',
-          backgroundColor: { light: '#f8fafc', dark: '#0b1220' },
-          color: { light: '#cbd5e1', dark: '#1e293b' },
-          size: 1.2,
-          spacing: 26,
-          alpha: 0.7,
-        },
-      }),
-    );
-
-    const graph = new GraphLayer({
-      id: 'graph',
-      options: {
-        node: {
-          state: {
-            // Health states. `healthy` is the implicit default (no
-            // overlay needed). `degraded` and `down` are story-local
-            // state names — registered here so the layer's state
-            // catalogue recognises them when `states` lists them.
-            degraded: {
-              bgStrokeColor: 0xf59e0b,
-              bgStrokeWidth: 3,
-              effects: { breathing: { amplitude: 0.18, frequencyHz: 1.4 } },
-            },
-            down: {
-              bgStrokeColor: 0xdc2626,
-              bgStrokeWidth: 3,
-              bgAlpha: 0.55,
-              decorations: [
-                { id: 'down-pulse', kind: 'pulse-ring', color: 0xdc2626, periodMs: 1200, maxRadius: 20 },
-              ],
-            },
-            highlighted: { bgStrokeColor: 0xfbbf24, bgStrokeWidth: 3 },
-            selected:    { bgStrokeColor: 0xffffff, bgStrokeWidth: 4 },
-          },
-        },
-        edge: {
-          state: {
-            highlighted: { strokeColor: 0xfbbf24, strokeWidth: 2.4, strokeAlpha: 1, arrowTargetColor: 0xfbbf24 },
-          },
-        },
-      },
-    });
-    canvas.layers.add(graph);
-
-    canvas.layers.add(
-      new MiniMapLayer({
-        id: 'minimap',
-        options: { graphLayerId: 'graph', position: 'bottom-right', width: 220, height: 160 },
-      }),
-    );
-
-    // ── Project dataset → GraphLayer ────────────────────────────────────
+    // ── Project dataset → node/edge data (content for `initData`) ────────
     const nodes: NodeData<MicroservicesNodeData>[] = microservices.nodes.map((n) => ({
       id: n.id,
       data: n.data,
@@ -185,36 +121,121 @@ export const MicroservicesTopology: Story = {
       style: buildEdgeStyle(e.data),
     }));
 
-    graph.setData({ nodes, edges });
+    // ── Canvas setup ─────────────────────────────────────────────────────
+    const container = canvasElement.querySelector<HTMLDivElement>('#usecase-microservices')!;
+    const canvas = new GraphCanvas();
+    onStoryTeardown(() => canvas.destroy());
+
+    // ── Layers ──────────────────────────────────────────────────────────
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
+
+    const graph = new GraphLayer({
+      id: 'graph',
+      options: {
+        initData: { nodes, edges },
+        node: {
+          state: {
+            // Health states. `healthy` is the implicit default (no
+            // overlay needed). `degraded` and `down` are story-local
+            // state names — registered here so the layer's state
+            // catalogue recognises them when `states` lists them.
+            degraded: {
+              bgStrokeColor: 0xf59e0b,
+              bgStrokeWidth: 3,
+              effects: { breathing: { amplitude: 0.18, frequencyHz: 1.4 } },
+            },
+            down: {
+              bgStrokeColor: 0xdc2626,
+              bgStrokeWidth: 3,
+              bgAlpha: 0.55,
+              decorations: [
+                { id: 'down-pulse', kind: 'pulse-ring', color: 0xdc2626, periodMs: 1200, maxRadius: 20 },
+              ],
+            },
+            highlighted: { bgStrokeColor: 0xfbbf24, bgStrokeWidth: 3 },
+            selected:    { bgStrokeColor: 0xffffff, bgStrokeWidth: 4 },
+          },
+        },
+        edge: {
+          state: {
+            highlighted: { strokeColor: 0xfbbf24, strokeWidth: 2.4, strokeAlpha: 1, arrowTargetColor: 0xfbbf24 },
+          },
+        },
+      },
+    });
+    canvas.layers.add(graph);
+
+    canvas.layers.add(
+      new MiniMapLayer({ id: 'minimap', options: { graphLayerId: 'graph' } }),
+    );
 
     // ── Behaviours ──────────────────────────────────────────────────────
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(
       new HoverActivateBehaviour({
-        id: 'hover', layerId: 'graph', enabled: true,
+        id: 'hover', layerId: 'graph',
         state: 'highlighted', inactiveState: 'dimmed',
         degree: 1, direction: 'both',
       }),
     );
     canvas.behaviours.register(
       new ClickSelectBehaviour({
-        id: 'select', layerId: 'graph', enabled: true,
+        id: 'select', layerId: 'graph',
         multiple: true, trigger: ['shift'],
       }),
     );
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
 
     // ── Layout ──────────────────────────────────────────────────────────
-    const layout = new ElkLayout({
-      algorithm: 'layered',
-      direction: 'RIGHT',
-      nodeSpacing: 32,
-      layerSpacing: 110,
-      edgeSpacing: 16,
-    });
+    // `ElkLayout`'s constructor types its options as `ElkLayoutOptions`
+    // (the ELK param bag) and doesn't surface the shared `LayoutOptions`
+    // wiring fields. Set `id` / `targetLayerId` on the instance so the
+    // registry keys it as `elk` and the active layout resolves its target.
+    const layout = Object.assign(new ElkLayout(), { id: 'elk', targetLayerId: 'graph' });
     layout.events.on('end', ({ reason }) => {
       if (reason === 'completed') canvas.camera.fitContent(graph.getBounds(), 80);
     });
-    await layout.apply(graph);
+    canvas.layouts.add(layout);
     onStoryTeardown(() => layout.stop());
+
+    // ── Config ──────────────────────────────────────────────────────────
+    const canvasOptions = {
+      layers: {
+        bg: {
+          type: 'pattern',
+          patternType: 'dots',
+          backgroundColor: '#0b1220',
+          color: '#1e293b',
+          size: 1.2,
+          spacing: 26,
+          alpha: 0.7,
+        },
+        minimap: { position: 'bottom-right', width: 220, height: 160 },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        hover: { enabled: true },
+        select: { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc', color: '#cbd5e1' },
+          dark: { backgroundColor: '#0b1220', color: '#1e293b' },
+        },
+      },
+      layouts: {
+        elk: {
+          algorithm: 'layered',
+          direction: 'RIGHT',
+          nodeSpacing: 32,
+          layerSpacing: 110,
+          edgeSpacing: 16,
+        },
+      },
+      activeLayout: 'elk',
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     // ── GUI ─────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'Microservices Topology' });

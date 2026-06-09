@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
-  DragNodeBehaviour, GraphLayer,
+  GraphCanvas, DragNodeBehaviour, GraphLayer,
   type EdgeData, type NodeData,
 } from '@invana/graph';
 import GUI from 'lil-gui';
@@ -109,16 +109,16 @@ export const Cardinals: Story = {
     const settings = { stubLength: 18, gap: 22 };
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edge-loop-polyline-cardinals')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
+    // The edge `shape` resolver reads per-edge `data` for placement and
+    // `settings` from the closure, so it stays in the constructor; the
+    // literal node/edge style fields live in `canvasOptions`.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        node: { style: { bgFill: 0x4f7ff5, bgStrokeColor: 0x2563eb, bgStrokeWidth: 0 } },
+        initData: { nodes, edges },
         edge: {
           style: {
             // Field resolver — reads per-edge `data` for placement and
@@ -137,18 +137,29 @@ export const Cardinals: Story = {
                 },
               };
             },
-            strokeColor: 0x94a3b8,
-            strokeWidth: 1.5,
-            arrowTargetShape: 'triangle',
           },
         },
       },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: { style: { bgFill: 0x4f7ff5, bgStrokeColor: 0x2563eb, bgStrokeWidth: 0 } },
+          edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5, arrowTargetShape: 'triangle' } },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
 
     const rerenderAll = (): void => {

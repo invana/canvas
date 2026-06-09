@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DegreeSizeBehaviour,
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
+  type GraphNode,
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import GUI from 'lil-gui';
@@ -56,49 +58,34 @@ export const DegreeSize: Story = {
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-degree-size')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     // Layer template carries the shared circle + paint. Per-node entries
     // intentionally omit `shape` / `size`: DegreeSizeBehaviour writes
     // `style.size`, which `resolveNodeStyle` then folds into the layer-level
-    // circle's `radius` before any consumer reads it.
+    // circle's `radius` before any consumer reads it. The `labelText` resolver
+    // stays in the constructor; the literal paint moves into config.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: { nodes, edges },
         node: {
           style: {
-            shape: { kind: 'circle', radius: 8 },
-            bgFill: 0x3b82f6,
-            bgStrokeColor: 0xffffff,
-            bgStrokeWidth: 1.5,
             labelText: (n) => n.id,
-            labelColor: 0x1f2937,
-            labelFontSize: 11,
-            labelPlacement: 'bottom',
-            labelOffsetY: 4,
           },
-        },
-        edge: {
-          style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' },
         },
       },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
 
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
 
     const degreeSize = new DegreeSizeBehaviour({
       id: 'degree-size',
       layerId: 'graph',
-      enabled: true,
       direction: 'both',
       minSize: 6,
       maxSize: 36,
@@ -110,24 +97,57 @@ export const DegreeSize: Story = {
     // `style.shape.radius` per node, which `resolveNodeStyle` rewrites from
     // `style.size`. So when the behaviour bumps a hub's size, D3 collide
     // automatically gives that hub more room.
-    const layout = new D3ForceLayout({
-      charge: { strength: -240 },
-      link: { distance: 70 },
-      collide: {
-        radius: (node) => {
-          // `resolveNodeStyle` folds `style.size` into the circle's
-          // `radius`, so reading it here picks up the behaviour's writes.
-          const style = graph.resolveNodeStyle(node);
-          const shape = style.shape as { kind: string; radius?: number } | undefined;
-          if (shape?.kind === 'circle' && typeof shape.radius === 'number') {
-            return shape.radius + 4;
-          }
-          return 14;
+    const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
+    canvas.layouts.add(forceLayout);
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'circle', radius: 8 },
+              bgFill: 0x3b82f6,
+              bgStrokeColor: 0xffffff,
+              bgStrokeWidth: 1.5,
+              labelColor: 0x1f2937,
+              labelFontSize: 11,
+              labelPlacement: 'bottom',
+              labelOffsetY: 4,
+            },
+          },
+          edge: {
+            style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' },
+          },
         },
       },
-      center: { x: 0, y: 0 },
-    });
-    void layout.apply(graph);
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+        'degree-size': { enabled: true },
+      },
+      layouts: {
+        force: {
+          charge: { strength: -240 },
+          link: { distance: 70 },
+          collide: {
+            radius: (node: GraphNode) => {
+              // `resolveNodeStyle` folds `style.size` into the circle's
+              // `radius`, so reading it here picks up the behaviour's writes.
+              const style = graph.resolveNodeStyle(node);
+              const shape = style.shape as { kind: string; radius?: number } | undefined;
+              if (shape?.kind === 'circle' && typeof shape.radius === 'number') {
+                return shape.radius + 4;
+              }
+              return 14;
+            },
+          },
+          center: { x: 0, y: 0 },
+        },
+      },
+      activeLayout: 'force',
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     const settings = {
       enabled: true,
@@ -135,7 +155,7 @@ export const DegreeSize: Story = {
       minSize: 6,
       maxSize: 36,
       scale: 'sqrt' as 'linear' | 'sqrt' | 'log',
-      reRunLayout: () => void layout.apply(graph),
+      reRunLayout: () => void canvas.runLayout('force'),
     };
     const apply = (): void => {
       if (settings.enabled) degreeSize.enable();
@@ -147,7 +167,7 @@ export const DegreeSize: Story = {
         scale: settings.scale,
       });
       // Sizes changed → re-run the layout so collision radii catch up.
-      void layout.apply(graph);
+      void canvas.runLayout('force');
     };
 
     const gui = new GUI({ title: 'Degree Size' });

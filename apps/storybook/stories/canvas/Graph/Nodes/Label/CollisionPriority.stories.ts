@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
+  GraphCanvas,
   GraphLayer,
   LabelCollisionBehaviour,
   type NodeData,
@@ -46,45 +47,43 @@ export const CollisionPriority: Story = {
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-label-collision-priority')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const graph = new GraphLayer({
-      id: 'graph',
-      options: {
-        node: {
-          style: {
-            bgFill: 0x4f9cf9,
-            bgStrokeColor: 0x1d4ed8,
-            labelFontSize: 12,
-            labelFontWeight: 600,
-            labelColor: 0x454545,
-            labelPlacement: 'bottom',
-            labelOffsetY: 4,
-            labelBackgroundFill: 0xffffff,
-            labelBackgroundStrokeColor: 0xcbd5e1,
-            labelBackgroundStrokeWidth: 1,
-            labelBackgroundCornerRadius: 4,
-            labelBackgroundPadding: 4,
+    const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges: [] } } });
+    canvas.layers.add(graph);
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new LabelCollisionBehaviour({ id: 'label-collision', layerId: 'graph' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              bgFill: 0x4f9cf9,
+              bgStrokeColor: 0x1d4ed8,
+              labelFontSize: 12,
+              labelFontWeight: 600,
+              labelColor: 0x454545,
+              labelPlacement: 'bottom',
+              labelOffsetY: 4,
+              labelBackgroundFill: 0xffffff,
+              labelBackgroundStrokeColor: 0xcbd5e1,
+              labelBackgroundStrokeWidth: 1,
+              labelBackgroundCornerRadius: 4,
+              labelBackgroundPadding: 4,
+            },
           },
         },
       },
-    });
-    canvas.layers.add(graph);
-    graph.setData({ nodes, edges: [] });
-
-    canvas.behaviours.register(
-      new LabelCollisionBehaviour({
-        id: 'label-collision',
-        layerId: 'graph',
-        enabled: true,
-        prioritise: 'priority-field',
-      }),
-    );
-
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'label-collision': { enabled: true, prioritise: 'priority-field' },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
 
     const settings = {

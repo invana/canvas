@@ -12,7 +12,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DevInfoLayer,
   DragPanBehaviour,
   LayersPanelLayer,
@@ -20,6 +19,7 @@ import {
 } from '@invana/canvas';
 import {
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   type EdgeData,
   type NodeData,
@@ -27,6 +27,7 @@ import {
 import { BubbleSetsLayer, type BubbleSet } from '@invana/graph-layer-bubble-sets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
+import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layers/bubble-sets/BubbleSetsLayer' };
 export default meta;
@@ -90,53 +91,25 @@ export const BubbleSetsLayer_Story: Story = {
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-bubble-sets')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'pattern',
-          patternType: 'dots',
-          mode: 'auto',
-          backgroundColor: { light: '#f8fafc', dark: '#0f172a' },
-          color: { light: '#94a3b8', dark: '#475569' },
-          size: 1.5,
-          spacing: 24,
-          alpha: 0.85,
-        },
-      }),
-    );
-    canvas.layers.add(new DevInfoLayer({ id: 'dev-info', corner: 'bottom-left', enabled: true }));
+    // Background pattern, concrete colours; OS dark-mode swaps them via the
+    // SystemThemeBehaviour below.
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
+    canvas.layers.add(new DevInfoLayer({ id: 'dev-info', corner: 'bottom-left' }));
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: {
-        node: {
-          style: {
-            shape: { kind: 'circle', radius: 18 },
-            bgStrokeColor: 0xffffff,
-            bgStrokeWidth: 2,
-            labelColor: 0x334155,
-            labelFontSize: 11,
-            labelPlacement: 'bottom',
-            labelOffsetY: 6,
-          },
-        },
-        edge: { style: { strokeColor: 0xb0bec5, strokeWidth: 1 } },
-      },
+      options: { initData: { nodes, edges } },
     });
     canvas.layers.add(graph);
 
     // BubbleSets overlay — added AFTER graph but at a lower zIndex so the
     // nodes and edges paint on top. The layer subscribes to `data:changed`
     // and recomputes automatically; live drags also call `recompute()`
-    // below so the contours track in real time.
+    // below so the contours track in real time. The cross-layer
+    // `graphLayerId` and the `sets` content stay in the constructor.
     const bubbles = new BubbleSetsLayer({
       id: 'bubble-sets',
       zIndex: -1,
@@ -147,28 +120,63 @@ export const BubbleSetsLayer_Story: Story = {
     });
     canvas.layers.add(bubbles);
 
-    canvas.layers.add(
-      new LayersPanelLayer({
-        corner: 'top-left',
-        enabled: true,
-        fontSize: 11,
-        opacity: 0.92,
-        backgroundColor: 'rgba(10,10,10,0.82)',
-        textColor: '#c8d3e0',
-        accentColor: '#4fc3f7',
-      }),
-    );
+    canvas.layers.add(new LayersPanelLayer({ id: 'layers-panel' }));
 
-    graph.setData({ nodes, edges });
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+
+    const canvasOptions = {
+      layers: {
+        bg: {
+          type: 'pattern',
+          patternType: 'dots',
+          backgroundColor: '#0f172a',
+          color: '#475569',
+          size: 1.5,
+          spacing: 24,
+          alpha: 0.85,
+        },
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'circle', radius: 18 },
+              bgStrokeColor: 0xffffff,
+              bgStrokeWidth: 2,
+              labelColor: 0x334155,
+              labelFontSize: 11,
+              labelPlacement: 'bottom',
+              labelOffsetY: 6,
+            },
+          },
+          edge: { style: { strokeColor: 0xb0bec5, strokeWidth: 1 } },
+        },
+        'layers-panel': {
+          corner: 'top-left',
+          enabled: true,
+          fontSize: 11,
+          opacity: 0.92,
+          backgroundColor: 'rgba(10,10,10,0.82)',
+          textColor: '#c8d3e0',
+          accentColor: '#4fc3f7',
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
+          dark: { backgroundColor: '#0f172a', color: '#475569' },
+        },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     // Live recompute during drag — overrides the default debounce, since the
     // dataset is tiny enough that O(n · grid²) is cheap.
-    const dragBehaviour = new DragNodeBehaviour({
-      id: 'drag-node',
-      layerId: 'graph',
-      enabled: true,
-    });
-    canvas.behaviours.register(dragBehaviour);
     graph.events.on('positions:updated', () => bubbles.recompute());
 
     canvas.camera.fitContent(graph.getBounds(), 120);

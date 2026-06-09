@@ -1,17 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DevInfoLayer,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
+import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
 import { h1b2019AsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
+import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-hierarchy/Pack' };
 export default meta;
@@ -152,46 +152,25 @@ export const Pack: Story = {
       };
     };
 
-    // ── Canvas setup ─────────────────────────────────────────────────────
+    // ── Canvas setup — register everything, then init() last ─────────────
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-pack')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'solid',
-          color: { light: '#f8fafc', dark: '#0b1220' },
-          mode: 'auto',
-        },
-      }),
-    );
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
 
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        // Initial content rides on the layer. The per-node circle radius is a
+        // resolver (reads pack's `data.size`), so it stays in the constructor.
+        initData: buildGraphData(),
         node: {
           style: {
             shape: (n) => {
               const size = (n.data as { size?: number } | undefined)?.size ?? 0.1;
               return { kind: 'circle', radius: size / 2 };
             },
-          },
-        },
-        edge: {
-          // Pack conveys hierarchy through enclosure, not links. Edges are
-          // required by the layout (so it can derive the tree) but rendered
-          // fully transparent so only the packed circles read.
-          style: {
-            strokeColor: 0x000000,
-            strokeWidth: 0,
-            strokeAlpha: 0,
-            arrowTargetShape: 'none',
           },
         },
       },
@@ -201,19 +180,57 @@ export const Pack: Story = {
     // Dev overlay — useful here to watch the camera zoom cross the
     // LabelResolutionLODBehaviour's tier threshold (default 1.5×) and to
     // sanity-check node / edge counts after the `minLeafValue` filter.
-    canvas.layers.add(new DevInfoLayer({ id: 'dev', corner: 'top-left' }));
+    canvas.layers.add(new DevInfoLayer({ id: 'dev' }));
 
-    // Registered after the `graph` layer is added — the behaviour resolves
-    // its target layer at register-time, so the layer must exist first.
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+
+    // Registered before init — the behaviour resolves its target layer at
+    // register-time, so the layer must exist first (it does).
     canvas.behaviours.register(
-      new LabelResolutionLODBehaviour({
-        id: 'label-resolution',
-        layerId: 'graph',
-        enabled: true,
-      }),
+      new LabelResolutionLODBehaviour({ id: 'label-resolution', layerId: 'graph' }),
     );
 
-    let layout: D3HierarchyLayout | null = null;
+    // Kept mutable: `D3HierarchyLayout` reads its params at construction
+    // (no live `setOptions`), so each GUI-driven re-layout rebuilds it.
+    let layout = new D3HierarchyLayout({
+      mode: 'pack',
+      size: [settings.size, settings.size],
+      padding: settings.padding,
+    });
+
+    const canvasOptions = {
+      layers: {
+        bg: { type: 'solid', backgroundColor: '#f8fafc' },
+        graph: {
+          // Pack conveys hierarchy through enclosure, not links. Edges are
+          // required by the layout (so it can derive the tree) but rendered
+          // fully transparent so only the packed circles read.
+          edge: {
+            style: {
+              strokeColor: 0x000000,
+              strokeWidth: 0,
+              strokeAlpha: 0,
+              arrowTargetShape: 'none',
+            },
+          },
+        },
+        dev: { corner: 'top-left' },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'label-resolution': { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc' },
+          dark: { backgroundColor: '#0b1220' },
+        },
+      },
+    };
+
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     /**
      * Centre a name label inside every bubble whose packed radius exceeds
@@ -225,7 +242,7 @@ export const Pack: Story = {
      * The packed diameter is read off `style.shape.radius` — `D3HierarchyLayout`
      * writes the resolved size onto each node's shape spec (see its
      * `store.updateNode(id, { style: { shape: { kind: 'circle', radius } } })`
-     * pack branch), so this has to run *after* `layout.apply()`.
+     * pack branch), so this has to run *after* the layout completes.
      *
      * `placement: 'inside-center'` carries the containment contract (see
      * [[feedback_label_placement_containment]]) — the LabelDecoration runs
@@ -274,10 +291,13 @@ export const Pack: Story = {
       });
     };
 
+    // ── Run layout ───────────────────────────────────────────────────────
+    // `D3HierarchyLayout` is one-shot synchronous and not yet wired for the
+    // engine's `activeLayout` auto-run, so we drive it explicitly. The packed
+    // diameters (and hence the in-bubble labels) only exist after it runs.
     const run = async (): Promise<void> => {
-      layout?.stop();
+      layout.stop();
       graph.setData(buildGraphData());
-
       layout = new D3HierarchyLayout({
         mode: 'pack',
         size: [settings.size, settings.size],
@@ -291,33 +311,33 @@ export const Pack: Story = {
     };
 
     await run();
-    onStoryTeardown(() => layout?.stop());
+    onStoryTeardown(() => layout.stop());
 
     // ── GUI ──────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'Pack' });
     onStoryTeardown(() => gui.destroy());
 
     const layoutFolder = gui.addFolder('Layout');
-    layoutFolder.add(settings, 'size', 500, 4000, 100).onChange(run);
-    layoutFolder.add(settings, 'padding', 0, 20, 0.5).onChange(run);
+    layoutFolder.add(settings, 'size', 500, 4000, 100).onChange(() => void run());
+    layoutFolder.add(settings, 'padding', 0, 20, 0.5).onChange(() => void run());
     // Dataset filter — see `settings.minLeafValue` rationale. At 1 the full
     // d3.pack-rollup picture renders (slow first paint, ≈ 50 k objects); the
     // default 10 keeps it under 5 k.
     layoutFolder
       .add(settings, 'minLeafValue', 1, 100, 1)
       .name('min petitions / leaf')
-      .onChange(run);
+      .onChange(() => void run());
 
     const style = gui.addFolder('Style');
-    style.addColor(settings, 'innerFill').onChange(run);
-    style.addColor(settings, 'innerStroke').onChange(run);
-    style.add(settings, 'innerStrokeWidth', 0, 4, 0.5).onChange(run);
-    style.addColor(settings, 'leafFill').onChange(run);
+    style.addColor(settings, 'innerFill').onChange(() => void run());
+    style.addColor(settings, 'innerStroke').onChange(() => void run());
+    style.add(settings, 'innerStrokeWidth', 0, 4, 0.5).onChange(() => void run());
+    style.addColor(settings, 'leafFill').onChange(() => void run());
 
     const labels = gui.addFolder('Labels');
-    labels.add(settings, 'showLabels').onChange(applyLeafLabels);
-    labels.add(settings, 'labelMinRadius', 0, 60, 1).onChange(applyLeafLabels);
-    labels.add(settings, 'maxLabelFontSize', 6, 32, 1).onChange(applyLeafLabels);
+    labels.add(settings, 'showLabels').onChange(() => applyLeafLabels());
+    labels.add(settings, 'labelMinRadius', 0, 60, 1).onChange(() => applyLeafLabels());
+    labels.add(settings, 'maxLabelFontSize', 6, 32, 1).onChange(() => applyLeafLabels());
 
     gui.add({ refit: () => canvas.camera.fitContent(graph.getBounds(), 40) }, 'refit').name('Re-fit camera');
   },

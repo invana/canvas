@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import type { InsetAnchor } from '@invana/canvas';
-import { GraphLayer, type NodeData, type NodeShapeOptions } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type NodeData, type NodeShapeOptions } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -79,21 +79,19 @@ export const Glyph: Story = {
     };
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-nodes-icon-glyph')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
+    // Resolver fields (shape / bgFill / icon / labelText) read live `settings`,
+    // so they stay in the constructor; pure literal style fields move to config.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: { nodes, edges: [] },
         node: {
           style: {
-            shape:         (n) => shapeForType(n.type),
-            bgFill:        () => settings.bgFill,
-            bgStrokeColor: 0x111827,
-            bgStrokeWidth: 1,
+            shape:  (n) => shapeForType(n.type),
+            bgFill: () => settings.bgFill,
             icon: () => ({
               kind: 'glyph',
               char: GLYPHS[settings.glyph]!,
@@ -102,22 +100,38 @@ export const Glyph: Story = {
               anchor: settings.anchor,
             }),
             labelText: (n) => n.type ?? '?',
-            labelFontSize: 12,
-            labelFontWeight: 600,
-            labelColor: 0x454545,
-            labelPlacement: 'bottom',
-            labelOffsetY: 8,
-            labelBackgroundFill: 0xffffff,
-            labelBackgroundStrokeColor: 0xcbd5e1,
-            labelBackgroundStrokeWidth: 1,
-            labelBackgroundCornerRadius: 4,
-            labelBackgroundPadding: 3,
           },
         },
       },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges: [] });
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              bgStrokeColor: 0x111827,
+              bgStrokeWidth: 1,
+              labelFontSize: 12,
+              labelFontWeight: 600,
+              labelColor: 0x454545,
+              labelPlacement: 'bottom',
+              labelOffsetY: 8,
+              labelBackgroundFill: 0xffffff,
+              labelBackgroundStrokeColor: 0xcbd5e1,
+              labelBackgroundStrokeWidth: 1,
+              labelBackgroundCornerRadius: 4,
+              labelBackgroundPadding: 3,
+            },
+          },
+        },
+      },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
 
     const rerenderAll = (): void => {

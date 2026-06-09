@@ -1,16 +1,21 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
+import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
-import { D3HierarchyLayout, type D3HierarchyLayoutMode } from '@invana/graph-layout-d3-hierarchy';
+import {
+  D3HierarchyLayout,
+  type D3HierarchyLayoutMode,
+  type D3HierarchyLayoutOptions,
+} from '@invana/graph-layout-d3-hierarchy';
+import type { LayoutOptions } from '@invana/canvas';
 import { lifeTreeAsGraph, type LifeTreeKingdom } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
+import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-hierarchy/TreeOfLife' };
 export default meta;
@@ -62,8 +67,8 @@ export const TreeOfLife: Story = {
     //
     // We can't bake labels into nodeDefaults here for the same reason as
     // RadialTree: each leaf's text rotation depends on its (x, y) in the
-    // finished radial layout, so the label hint is applied *after*
-    // `layout.apply()`. See {@link applyRadialLabels} below.
+    // finished radial layout, so the label hint is applied *after* the active
+    // layout settles. See {@link applyRadialLabels} below.
     const kingdomOf = new Map<string, LifeTreeKingdom | undefined>();
     const nodeMeta = new Map<string, { name: string; isLeaf: boolean }>();
 
@@ -159,90 +164,130 @@ export const TreeOfLife: Story = {
     };
 
     // ── Canvas setup ─────────────────────────────────────────────────────
+    // Register layers / behaviours / layout by id, build one serialisable
+    // `canvasOptions`, then `init()` last. Per-item node fills + per-edge
+    // strokes ride on `initData`; the literal edge template lives in config.
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-tree-of-life')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'solid',
-          color: { light: '#f8fafc', dark: '#0b1220' },
-          mode: 'auto',
-        },
-      }),
-    );
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: {
-        edge: {
-          style: {
-            strokeColor: UNCLASSIFIED_COLOR,
-            strokeWidth: settings.edgeStrokeWidth,
-            strokeAlpha: settings.edgeAlpha,
-            arrowTargetShape: 'none',
-            shape: {
-              // `step-radial` matches d3's `linkStep` helper.
-              pathType: 'step-radial',
-              sourceAnchor: 'center',
-              targetAnchor: 'center',
-            },
-          },
-        },
-      },
+      options: { initData: buildGraphData() },
     });
+
+    canvas.layers.add(
+      new BackgroundLayer({ id: 'bg', options: { type: 'solid' } }),
+    );
     canvas.layers.add(graph);
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
 
     const labelResolutionLOD = new LabelResolutionLODBehaviour({
       id: 'label-resolution',
       layerId: 'graph',
-      enabled: settings.sharpLabelsOnZoom,
     });
     canvas.behaviours.register(labelResolutionLOD);
 
-    let layout: D3HierarchyLayout | null = null;
+    const layout = new D3HierarchyLayout({
+      id: 'radial',
+      targetLayerId: 'graph',
+    } as D3HierarchyLayoutOptions & LayoutOptions);
+    canvas.layouts.add(layout);
 
-    const run = async (): Promise<void> => {
-      layout?.stop();
-      graph.setData(buildGraphData());
-
-      layout = new D3HierarchyLayout({
-        mode: settings.mode,
-        radius: settings.radius,
-      });
-      await layout.apply(graph);
-      applyRadialLabels();
-      canvas.camera.fitContent(graph.getBounds(), 80);
+    const canvasOptions = {
+      layers: {
+        bg: { type: 'solid', color: '#f8fafc' },
+        graph: {
+          edge: {
+            style: {
+              strokeColor: UNCLASSIFIED_COLOR,
+              strokeWidth: settings.edgeStrokeWidth,
+              strokeAlpha: settings.edgeAlpha,
+              arrowTargetShape: 'none',
+              shape: {
+                // `step-radial` matches d3's `linkStep` helper.
+                pathType: 'step-radial',
+                sourceAnchor: 'center',
+                targetAnchor: 'center',
+              },
+            },
+          },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc', color: '#0f172a' },
+          dark: { backgroundColor: '#0b1220', color: '#e5e7eb' },
+        },
+        'label-resolution': { enabled: settings.sharpLabelsOnZoom },
+      },
+      layouts: {
+        radial: {
+          mode: settings.mode,
+          radius: settings.radius,
+        },
+      },
+      activeLayout: 'radial',
     };
 
-    await run();
-    onStoryTeardown(() => layout?.stop());
+    // Once the active layout settles, attach the rim labels (their rotation
+    // depends on each leaf's final (x, y)) and fit.
+    onStoryTeardown(
+      layout.events.on('end', () => {
+        applyRadialLabels();
+        canvas.camera.fitContent(graph.getBounds(), 80);
+      }),
+    );
+
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+
+    // Rebuild the graph's content from `settings` and reload it. Used by the
+    // GUI controls that change per-item data (node sizes, edge colours).
+    const reloadData = (): void => {
+      graph.setData(buildGraphData());
+    };
 
     // ── GUI ──────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'TreeOfLife' });
     onStoryTeardown(() => gui.destroy());
 
+    const pushLayout = (): void =>
+      canvas.update({ layouts: { radial: canvasOptions.layouts.radial } });
+
     const layoutFolder = gui.addFolder('Layout');
     layoutFolder
       .add(settings, 'mode', ['radial-cluster', 'radial-tree'] satisfies D3HierarchyLayoutMode[])
-      .onChange(run);
-    layoutFolder.add(settings, 'radius', 200, 1200, 10).onChange(run);
+      .onChange((v: D3HierarchyLayoutMode) => {
+        canvasOptions.layouts.radial.mode = v;
+        pushLayout();
+      });
+    layoutFolder.add(settings, 'radius', 200, 1200, 10).onFinishChange((v: number) => {
+      canvasOptions.layouts.radial.radius = v;
+      pushLayout();
+    });
 
+    // Node sizes are baked per-item into the data.
     const style = gui.addFolder('Style');
-    style.add(settings, 'leafNodeSize', 1, 8, 0.5).onChange(run);
-    style.add(settings, 'internalNodeSize', 0, 6, 0.5).onChange(run);
-    style.add(settings, 'edgeStrokeWidth', 0.2, 4, 0.1).onChange(run);
-    style.add(settings, 'edgeAlpha', 0, 1, 0.05).onChange(run);
+    style.add(settings, 'leafNodeSize', 1, 8, 0.5).onChange(reloadData);
+    style.add(settings, 'internalNodeSize', 0, 6, 0.5).onChange(reloadData);
+    style.add(settings, 'edgeStrokeWidth', 0.2, 4, 0.1).onChange((v: number) => {
+      canvasOptions.layers.graph.edge.style.strokeWidth = v;
+      canvas.update({ layers: { graph: { edge: { style: { strokeWidth: v } } } } });
+    });
+    style.add(settings, 'edgeAlpha', 0, 1, 0.05).onChange((v: number) => {
+      canvasOptions.layers.graph.edge.style.strokeAlpha = v;
+      canvas.update({ layers: { graph: { edge: { style: { strokeAlpha: v } } } } });
+    });
 
     const labels = gui.addFolder('Labels');
-    labels.add(settings, 'showLabels').onChange(run);
-    labels.add(settings, 'labelFontSize', 6, 16, 1).onChange(run);
+    labels.add(settings, 'showLabels').onChange(applyRadialLabels);
+    labels.add(settings, 'labelFontSize', 6, 16, 1).onChange(applyRadialLabels);
     labels
       .add(settings, 'sharpLabelsOnZoom')
       .name('Sharp on zoom')

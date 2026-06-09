@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   ContextMenuBehaviour,
   type ContextMenuEvent,
   type ContextMenuTargetType,
+  GraphCanvas,
   GraphLayer,
   type GraphNode,
   type GraphEdge,
@@ -19,7 +20,7 @@ export const ContextMenu: Story = {
   render: () => createContainer({ id: 'graph-context-menu' }),
 
   play: async ({ canvasElement }) => {
-    // ─── Data — literal per-item, shared styling on the layer template ──────
+    // ─── Data — literal per-item; shared styling lives in canvasOptions ──────
     const nodes: GraphNode[] = [
       { id: 'a', position: { x: -160, y: -80 }, data: { label: 'Alpha' }, style: { labelText: 'Alpha' } },
       { id: 'b', position: { x: 0, y: -120 }, data: { label: 'Beta' }, style: { labelText: 'Beta' } },
@@ -38,38 +39,15 @@ export const ContextMenu: Story = {
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-context-menu')!;
     container.style.position = 'relative'; // anchor the absolutely-positioned menu
 
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    const graph = new GraphLayer({
-      id: 'graph',
-      options: {
-        node: {
-          style: {
-            shape: { kind: 'circle', radius: 22 },
-            bgFill: 0x3b82f6,
-            bgStrokeColor: 0xffffff,
-            bgStrokeWidth: 2,
-            labelColor: 0xf8fafc,
-            labelFontSize: 12,
-            labelPlacement: 'center',
-          },
-          // Transient state the behaviour toggles on the right-clicked node.
-          state: { 'context-open': { bgStrokeColor: 0xf97316, bgStrokeWidth: 4 } },
-        },
-        edge: {
-          style: { strokeColor: 0xcbd5e1, strokeWidth: 2, arrowTargetShape: 'none' },
-          state: { 'context-open': { strokeColor: 0xf97316, strokeWidth: 4 } },
-        },
-      },
-    });
+    // Data is content — it rides on the layer via initData.
+    const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
-    canvas.camera.fitContent(graph.getBounds(), 100);
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     // GUI state — declared up front so the menu callbacks below can update it.
     // (`gui` itself is created later and forward-referenced, as in the
@@ -142,14 +120,47 @@ export const ContextMenu: Story = {
       showMenu(e.screen.x, e.screen.y, itemsFor[e.targetType]);
     };
 
+    // state + onContextMenu (function) stay in the constructor; enabled → config.
     const ctxMenu = new ContextMenuBehaviour({
       id: 'context-menu',
       layerId: 'graph',
-      enabled: true,
       state: 'context-open',
       onContextMenu,
     });
     canvas.behaviours.register(ctxMenu);
+
+    // ─── One serialisable config; init() last ────────────────────────────────
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'circle', radius: 22 },
+              bgFill: 0x3b82f6,
+              bgStrokeColor: 0xffffff,
+              bgStrokeWidth: 2,
+              labelColor: 0xf8fafc,
+              labelFontSize: 12,
+              labelPlacement: 'center',
+            },
+            // Transient state the behaviour toggles on the right-clicked node.
+            state: { 'context-open': { bgStrokeColor: 0xf97316, bgStrokeWidth: 4 } },
+          },
+          edge: {
+            style: { strokeColor: 0xcbd5e1, strokeWidth: 2, arrowTargetShape: 'none' },
+            state: { 'context-open': { strokeColor: 0xf97316, strokeWidth: 4 } },
+          },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'context-menu': { enabled: true },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+
+    canvas.camera.fitContent(graph.getBounds(), 100);
 
     // ─── lil-gui ─────────────────────────────────────────────────────────────
     const applyTargets = (): void => {

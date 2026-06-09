@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
-  Canvas, DragPanBehaviour, WheelZoomBehaviour,
+  DragPanBehaviour, WheelZoomBehaviour,
   LOOP_CURVE_PRESETS,
 } from '@invana/canvas';
 import {
-  DragNodeBehaviour, GraphLayer,
+  GraphCanvas, DragNodeBehaviour, GraphLayer,
   type EdgeData, type NodeData,
 } from '@invana/graph';
 import GUI from 'lil-gui';
@@ -31,6 +31,9 @@ type Story = StoryObj;
  * lil-gui wiring follows the field-resolver pattern: per-edge `data`
  * carries the host / angle / pivot; the `shape` resolver reads
  * `settings` from the closure and rebuilds `pathStyleOpts` each render.
+ * Because the resolver is non-serialisable it stays in the layer
+ * constructor `options`; the literal edge/node style lives in
+ * `canvasOptions`.
  */
 export const Ring: Story = {
   render: () => createContainer({ id: 'graph-edge-loop-curve-ring' }),
@@ -125,16 +128,15 @@ export const Ring: Story = {
     const settings = { ...LOOP_CURVE_PRESETS.ring };
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edge-loop-curve-ring')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
+    // The `shape` resolver reads mutable `settings` from the closure, so
+    // it stays in the constructor; the literal style fields go to config.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        node: { style: { bgFill: 0x4f7ff5, bgStrokeColor: 0x2563eb, bgStrokeWidth: 0 } },
+        initData: { nodes, edges },
         edge: {
           style: {
             shape: (edge) => {
@@ -153,18 +155,38 @@ export const Ring: Story = {
                 },
               };
             },
-            strokeColor: 0x94a3b8,
-            strokeWidth: 1.5,
-            arrowTargetShape: 'triangle',
           },
         },
       },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: { bgFill: 0x4f7ff5, bgStrokeColor: 0x2563eb, bgStrokeWidth: 0 },
+          },
+          edge: {
+            style: {
+              strokeColor: 0x94a3b8,
+              strokeWidth: 1.5,
+              arrowTargetShape: 'triangle',
+            },
+          },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+
     canvas.camera.fitContent(graph.getBounds(), 80);
 
     const rerenderAll = (): void => {

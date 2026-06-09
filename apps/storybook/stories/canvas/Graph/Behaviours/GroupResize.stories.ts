@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import GUI from 'lil-gui';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   NodeResizeBehaviour,
   type GraphEdge,
@@ -99,16 +100,15 @@ export const GroupResize: Story = {
     const edges: GraphEdge[] = [];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-group-resize')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    const graph = new GraphLayer({ id: 'graph', options: {} });
+    // Data is content — it rides on the layer via `options.initData`.
+    const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     // Keep the filter on this story: dragging the frame would conflict
     // with the corner-handle gesture (both consume pointerdown on the
@@ -117,7 +117,6 @@ export const GroupResize: Story = {
       new DragNodeBehaviour({
         id: 'drag',
         layerId: 'graph',
-        enabled: true,
         filter: (id) => graph.getGroupRole(id) !== 'expanded',
       }),
     );
@@ -141,6 +140,16 @@ export const GroupResize: Story = {
         minSize: settings.minSize,
       });
     canvas.behaviours.register(buildResize());
+
+    const canvasOptions = {
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        drag: { enabled: true },
+        resize: { enabled: true },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     const reregisterResize = (): void => {
       canvas.behaviours.unregister('resize');

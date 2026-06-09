@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { GraphCanvas, DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -21,7 +21,8 @@ export const Basic: Story = {
 
     // Place each node on a circle, seeded deterministically from its index so
     // the story doesn't depend on a layout running. Each node gets a
-    // fill colour derived from its group.
+    // fill colour derived from its group. Per-item style is *content* — it
+    // rides on `initData`, not the serialisable config.
     const N = lesMiserables.nodes.length;
     const R = 260;
     const nodes: GraphNode[] = lesMiserables.nodes.map((n, i) => {
@@ -39,27 +40,36 @@ export const Basic: Story = {
       };
     });
 
+    // ── Add everything, then init() last ─────────────────────────────────
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-layer-basic')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
+    // Wiring only — ids + initial content. All settings live in the config below.
     const graph = new GraphLayer({
       id: 'graph',
-      options: {
-        edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' } },
-      },
+      options: { initData: { nodes, edges: lesMiserables.edges } },
     });
     canvas.layers.add(graph);
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
 
-    graph.setData({ nodes, edges: lesMiserables.edges });
-
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
+    // The whole serialisable state, keyed by id. No layout — node positions are
+    // static (set above), so the graph renders as laid out the moment data loads.
+    const canvasOptions = {
+      layers: {
+        graph: {
+          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' } },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
   },

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphLayer, type NodeData, type NodeShapeOptions } from '@invana/graph';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { GraphCanvas, GraphLayer, type NodeData, type NodeShapeOptions } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -118,42 +118,55 @@ export const AllShapes: Story = {
     };
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-nodes-all-shapes')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
+    // Resolver fields close over the mutable `settings`, so they stay in the
+    // constructor `options` (functions aren't serialisable). The pure literal
+    // label style fields ride in `canvasOptions.layers.graph` and shallow-merge
+    // with these at init.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: { nodes, edges: [] },
         node: {
-          // Layer-template style — every field is a function of the stored
-          // `GraphNode`. Resolvers fire on every `resolveNodeStyle` pass, so
-          // a slider that mutates `settings` flows to every cell once we
-          // poke the nodes to re-resolve (see `applyResize` below).
           style: {
             shape:         (n) => shapeForType(n.type),
             bgFill:        () => settings.bgFill,
             bgStrokeColor: () => settings.bgStrokeColor,
             bgStrokeWidth: () => settings.bgStrokeWidth,
             labelText:     (n) => n.states?.[0] ?? 'default',
-            labelFontSize: 12,
-            labelFontWeight: 600,
-            labelColor: 0x454545,
-            labelPlacement: 'bottom',
-            labelOffsetY: 6,
-            labelBackgroundFill: 0xffffff,
-            labelBackgroundStrokeColor: 0xcbd5e1,
-            labelBackgroundStrokeWidth: 1,
-            labelBackgroundCornerRadius: 4,
-            labelBackgroundPadding: 3,
           },
         },
       },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges: [] });
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              labelFontSize: 12,
+              labelFontWeight: 600,
+              labelColor: 0x454545,
+              labelPlacement: 'bottom',
+              labelOffsetY: 6,
+              labelBackgroundFill: 0xffffff,
+              labelBackgroundStrokeColor: 0xcbd5e1,
+              labelBackgroundStrokeWidth: 1,
+              labelBackgroundCornerRadius: 4,
+              labelBackgroundPadding: 3,
+            },
+          },
+        },
+      },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
 
     // Force every node to re-resolve its style against the (mutated) layer

@@ -1,16 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
+import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
 import { D3HierarchyLayout, type D3HierarchyLayoutMode } from '@invana/graph-layout-d3-hierarchy';
 import { flareAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
+import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-hierarchy/RadialTree' };
 export default meta;
@@ -62,7 +62,7 @@ export const RadialTree: Story = {
     // Labels can't be baked into `nodeDefaults` at build-time: in a radial
     // layout each node's "outward" direction depends on its final (x, y) —
     // which only the layout knows. So we stash `name` + `isLeaf` for every
-    // id here and project them onto a `label` hint *after* `layout.apply()`
+    // id here and project them onto a `label` hint *after* the layout
     // resolves positions. See {@link applyRadialLabels}.
     const nodeMeta = new Map<string, { name: string; isLeaf: boolean }>();
 
@@ -167,36 +167,21 @@ export const RadialTree: Story = {
       });
     };
 
-    // ── Canvas setup ─────────────────────────────────────────────────────
+    // ── Canvas setup — register everything, then init() last ─────────────
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-radial-tree')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'solid',
-          color: { light: '#f8fafc', dark: '#0b1220' },
-          mode: 'auto',
-        },
-      }),
-    );
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
 
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        node: { style: { shape: { kind: 'circle', radius: settings.nodeSize / 2 } } },
+        // Initial content rides on the layer; per-item depth-colour fills
+        // live on the data rows (see buildGraphData).
+        initData: buildGraphData(),
         edge: {
           style: {
-            strokeColor: 0x94a3b8,
-            strokeWidth: settings.edgeStrokeWidth,
-            strokeAlpha: settings.edgeAlpha,
-            arrowTargetShape: 'none',
             shape: {
               // `bump-radial` matches d3.linkRadial().
               pathType: 'bump-radial',
@@ -210,34 +195,67 @@ export const RadialTree: Story = {
     });
     canvas.layers.add(graph);
 
-    // Registered after the `graph` layer is added — the behaviour resolves
-    // its target layer at register-time, so the layer must exist first.
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+
+    // Registered before init — resolves its target layer at register-time, so
+    // the `graph` layer must exist first (it does).
     const labelResolutionLOD = new LabelResolutionLODBehaviour({
       id: 'label-resolution',
       layerId: 'graph',
-      enabled: settings.sharpLabelsOnZoom,
     });
     canvas.behaviours.register(labelResolutionLOD);
 
-    let layout: D3HierarchyLayout | null = null;
+    // Kept mutable: `D3HierarchyLayout` reads its params at construction
+    // (no live `setOptions`), so each GUI-driven re-layout rebuilds it.
+    let layout = new D3HierarchyLayout({ mode: settings.mode, radius: settings.radius });
 
+    const canvasOptions = {
+      layers: {
+        bg: { type: 'solid', backgroundColor: '#f8fafc' },
+        graph: {
+          node: { style: { shape: { kind: 'circle', radius: settings.nodeSize / 2 } } },
+          edge: {
+            style: {
+              strokeColor: 0x94a3b8,
+              strokeWidth: settings.edgeStrokeWidth,
+              strokeAlpha: settings.edgeAlpha,
+              arrowTargetShape: 'none',
+            },
+          },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'label-resolution': { enabled: settings.sharpLabelsOnZoom },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc' },
+          dark: { backgroundColor: '#0b1220' },
+        },
+      },
+    };
+
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+
+    // ── Run layout ───────────────────────────────────────────────────────
+    // `D3HierarchyLayout` is one-shot synchronous and not yet wired for the
+    // engine's `activeLayout` auto-run, so we drive it explicitly. The
+    // per-leaf labels are position-dependent (each node's rotation = angle
+    // from origin), so they're attached on the layout's `end`.
     const run = async (): Promise<void> => {
-      layout?.stop();
+      layout.stop();
       graph.setData(buildGraphData());
-
-      layout = new D3HierarchyLayout({
-        mode: settings.mode,
-        radius: settings.radius,
-      });
+      layout = new D3HierarchyLayout({ mode: settings.mode, radius: settings.radius });
       await layout.apply(graph);
-      // Labels are position-dependent (each node's rotation = angle from
-      // origin), so they have to be attached *after* layout completes.
       applyRadialLabels();
       canvas.camera.fitContent(graph.getBounds(), 80);
     };
 
     await run();
-    onStoryTeardown(() => layout?.stop());
+    onStoryTeardown(() => layout.stop());
 
     // ── GUI ──────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'RadialTree' });
@@ -246,18 +264,25 @@ export const RadialTree: Story = {
     const layoutFolder = gui.addFolder('Layout');
     layoutFolder
       .add(settings, 'mode', ['radial-tree', 'radial-cluster', 'tree', 'cluster'] satisfies D3HierarchyLayoutMode[])
-      .onChange(run);
-    layoutFolder.add(settings, 'radius', 80, 1200, 10).onChange(run);
+      .onChange(() => void run());
+    layoutFolder.add(settings, 'radius', 80, 1200, 10).onChange(() => void run());
 
     const style = gui.addFolder('Style');
-    style.add(settings, 'nodeSize', 1, 10, 0.5).onChange(run);
-    style.add(settings, 'colorByDepth').onChange(run);
-    style.add(settings, 'edgeStrokeWidth', 0.2, 4, 0.1).onChange(run);
-    style.add(settings, 'edgeAlpha', 0, 1, 0.05).onChange(run);
+    style.add(settings, 'nodeSize', 1, 10, 0.5).onChange((radius: number) => {
+      canvas.update({ layers: { graph: { node: { style: { shape: { kind: 'circle', radius: radius / 2 } } } } } });
+      void run();
+    });
+    style.add(settings, 'colorByDepth').onChange(() => void run());
+    style.add(settings, 'edgeStrokeWidth', 0.2, 4, 0.1).onChange((strokeWidth: number) => {
+      canvas.update({ layers: { graph: { edge: { style: { strokeWidth } } } } });
+    });
+    style.add(settings, 'edgeAlpha', 0, 1, 0.05).onChange((strokeAlpha: number) => {
+      canvas.update({ layers: { graph: { edge: { style: { strokeAlpha } } } } });
+    });
 
     const labels = gui.addFolder('Labels');
-    labels.add(settings, 'showLabels').onChange(run);
-    labels.add(settings, 'labelFontSize', 6, 18, 1).onChange(run);
+    labels.add(settings, 'showLabels').onChange(() => applyRadialLabels());
+    labels.add(settings, 'labelFontSize', 6, 18, 1).onChange(() => applyRadialLabels());
     labels
       .add(settings, 'sharpLabelsOnZoom')
       .name('Sharp on zoom')

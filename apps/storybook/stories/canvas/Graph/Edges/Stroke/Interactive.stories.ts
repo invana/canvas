@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphLayer, type EdgeData, type NodeData } from '@invana/graph';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { GraphCanvas, GraphLayer, type EdgeData, type NodeData } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -20,6 +20,10 @@ type Story = StoryObj;
  * every edge via field-level resolvers on the layer template — the
  * per-edge data only carries `{ id, source, target, style: { shape } }`
  * plus the row label on the source node.
+ *
+ * The stroke channels are resolver functions, so they stay in the layer
+ * constructor `options.edge.style`; the literal node template + the
+ * `arrowTargetShape` literal live in `canvasOptions.layers.graph`.
  *
  * Set both `dash on` and `dash off` to 0 to disable dashing (solid line).
  */
@@ -88,28 +92,15 @@ export const Interactive: Story = {
     };
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edges-stroke-interactive')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        node: {
-          style: {
-            shape: { kind: 'circle', radius: 9 },
-            bgFill: 0xe5e7eb,
-            bgStrokeColor: 0x9ca3af,
-            bgStrokeWidth: 1,
-            labelFontSize: 11,
-            labelFontWeight: 600,
-            labelColor: 0x475569,
-            labelPlacement: 'left',
-            labelOffsetX: -6,
-          },
-        },
+        initData: { nodes, edges },
+        // Stroke channels are resolver functions, so they stay here in the
+        // constructor — only the literal `arrowTargetShape` moves to config.
         edge: {
           style: {
             strokeColor:        () => settings.strokeColor,
@@ -123,13 +114,36 @@ export const Interactive: Story = {
             strokeDashOffset:   () => settings.dashOffset,
             strokeCap:          () => settings.strokeCap,
             strokeJoin:         () => settings.strokeJoin,
-            arrowTargetShape:   'triangle',
           },
         },
       },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'circle', radius: 9 },
+              bgFill: 0xe5e7eb,
+              bgStrokeColor: 0x9ca3af,
+              bgStrokeWidth: 1,
+              labelFontSize: 11,
+              labelFontWeight: 600,
+              labelColor: 0x475569,
+              labelPlacement: 'left',
+              labelOffsetX: -6,
+            },
+          },
+          edge: { style: { arrowTargetShape: 'triangle' } },
+        },
+      },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
 
     // Trigger re-resolve on every edge so resolvers pick up the mutated

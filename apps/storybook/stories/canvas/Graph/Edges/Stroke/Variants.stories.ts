@@ -1,6 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphLayer, type EdgeData, type EdgeShapeOptions, type NodeData } from '@invana/graph';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import {
+  GraphCanvas,
+  GraphLayer,
+  type EdgeData,
+  type EdgeShapeOptions,
+  type NodeData,
+} from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
 const meta: Meta = { title: 'canvas/graph/Edges/Stroke/Variants' };
@@ -25,6 +31,10 @@ type Story = StoryObj;
  *
  * Rows cover every built-in `pathType`: `straight`, `bezier`,
  * `bump-radial`, `smooth`, `rounded`, `orth`, `manhattan`.
+ *
+ * No layout — node positions are static. The node / edge templates are
+ * pure literals, so they live in `canvasOptions.layers.graph`; the data
+ * (including per-edge dash `style`) rides on `options.initData`.
  */
 export const Variants: Story = {
   render: () => createContainer({ id: 'graph-edges-stroke-variants' }),
@@ -146,42 +156,46 @@ export const Variants: Story = {
     }
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edges-stroke-variants')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const graph = new GraphLayer({
-      id: 'graph',
-      options: {
-        node: {
-          style: {
-            shape: { kind: 'circle', radius: 7 },
-            bgFill: 0xe5e7eb,
-            bgStrokeColor: 0x9ca3af,
-            bgStrokeWidth: 1,
-            labelFontSize: 11,
-            labelFontWeight: 600,
-            labelColor: 0x475569,
-            labelPlacement: 'left',
-            labelOffsetX: -6,
+    const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
+    canvas.layers.add(graph);
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'circle', radius: 7 },
+              bgFill: 0xe5e7eb,
+              bgStrokeColor: 0x9ca3af,
+              bgStrokeWidth: 1,
+              labelFontSize: 11,
+              labelFontWeight: 600,
+              labelColor: 0x475569,
+              labelPlacement: 'left',
+              labelOffsetX: -6,
+            },
           },
-        },
-        edge: {
-          style: {
-            strokeColor: 0x1d4ed8,
-            strokeAlpha: 1,
-            strokeWidth: 2,
-            strokeAlignment: 'center',
-            strokeJoin: 'round',
-            arrowTargetShape: 'triangle',
+          edge: {
+            style: {
+              strokeColor: 0x1d4ed8,
+              strokeAlpha: 1,
+              strokeWidth: 2,
+              strokeAlignment: 'center',
+              strokeJoin: 'round',
+              arrowTargetShape: 'triangle',
+            },
           },
         },
       },
-    });
-    canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+
     canvas.camera.fitContent(graph.getBounds(), 80);
   },
 };

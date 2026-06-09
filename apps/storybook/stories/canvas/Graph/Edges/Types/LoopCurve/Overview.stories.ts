@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
-  Canvas, DragPanBehaviour, WheelZoomBehaviour,
+  DragPanBehaviour, WheelZoomBehaviour,
   LOOP_CURVE_PRESETS,
 } from '@invana/canvas';
 import type { LoopCurvePresetName } from '@invana/canvas';
 import {
-  DragNodeBehaviour, GraphLayer,
+  GraphCanvas, DragNodeBehaviour, GraphLayer,
   type EdgeData, type NodeData,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
@@ -133,42 +133,49 @@ export const Overview: Story = {
     }
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edge-loop-curve-overview')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: {
-        node: {
-          style: {
-            shape: { kind: 'rect', width: NODE_W, height: NODE_H },
-            bgFill: 0x4f7ff5,
-            bgStrokeColor: 0x2563eb,
-            bgStrokeWidth: 0,
-            labelFontSize: 11,
-            labelFontWeight: 600,
-            labelColor: 0x0f172a,
-            labelOffsetY: 6,
+      options: { initData: { nodes, edges } },
+    });
+    canvas.layers.add(graph);
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'rect', width: NODE_W, height: NODE_H },
+              bgFill: 0x4f7ff5,
+              bgStrokeColor: 0x2563eb,
+              bgStrokeWidth: 0,
+              labelFontSize: 11,
+              labelFontWeight: 600,
+              labelColor: 0x0f172a,
+              labelOffsetY: 6,
+            },
           },
-        },
-        edge: {
-          style: {
-            strokeColor: 0x94a3b8,
-            strokeWidth: 1.5,
-            arrowTargetShape: 'triangle',
+          edge: {
+            style: {
+              strokeColor: 0x94a3b8,
+              strokeWidth: 1.5,
+              arrowTargetShape: 'triangle',
+            },
           },
         },
       },
-    });
-    canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
-
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
   },

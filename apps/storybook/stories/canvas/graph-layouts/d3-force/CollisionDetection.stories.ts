@@ -14,14 +14,10 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import {
-  BackgroundLayer,
-  Canvas,
-  DragPanBehaviour,
-  WheelZoomBehaviour,
-} from '@invana/canvas';
+import { BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   type GraphEdge,
   type GraphNode,
@@ -29,6 +25,7 @@ import {
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
+import { SystemThemeBehaviour } from '../../../system-theme';
 
 const POINTER_ID = '__pointer__';
 
@@ -120,34 +117,24 @@ export const CollisionDetection: Story = {
     };
 
     // ── Canvas setup ─────────────────────────────────────────────────────
+    // Register everything by id first; `init()` (last) mounts it all,
+    // applies `canvasOptions`, enables behaviours, and auto-runs the active
+    // layout against the graph's `initData`.
     const container =
       canvasElement.querySelector<HTMLDivElement>('#graph-d3-collision')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
 
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'pattern',
-          patternType: 'dots',
-          mode: 'auto',
-          backgroundColor: { light: '#f8fafc', dark: '#0f172a' },
-          color: { light: '#94a3b8', dark: '#475569' },
-          size: 1.5,
-          spacing: 24,
-          alpha: 0.85,
-        },
-      }),
-    );
-
+    // Node template carries resolver functions (`shape`, `bgFill`, `bgAlpha`
+    // all depend on per-node radius / kind and live GUI state) → it stays in
+    // the constructor. The literal edge style goes to config. `initData` is
+    // the layer's content.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: buildGraphData(),
         node: {
           style: {
             // Pointer follows `settings.pointerRadius` live; circles take
@@ -180,48 +167,89 @@ export const CollisionDetection: Story = {
             },
           },
         },
-        edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 0.8, arrowTargetShape: 'none' } },
       },
     });
     canvas.layers.add(graph);
 
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
 
-    let layout: D3ForceLayout | null = null;
+    // Collide `radius` is a per-node resolver, but it rides on the layout's
+    // own param bag (applied via `setOptions`), so it can live in config
+    // with the rest of the force params.
+    const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
+    canvas.layouts.add(forceLayout);
 
-    const buildLayout = (): D3ForceLayout => {
-      return new D3ForceLayout({
-        alpha: settings.alpha,
-        alphaMin: settings.alphaMin,
-        alphaDecay: settings.alphaDecay,
-        velocityDecay: settings.velocityDecay,
-        x: { x: 0, strength: settings.xStrength },
-        y: { y: 0, strength: settings.yStrength },
-        collide: {
-          // Per-node radius — circles use their stored radius; the pointer
-          // node tracks the GUI slider live so collide-and-flee responds.
-          radius: (n) => {
-            const d = n.data as NodeData | undefined;
-            if (!d) return settings.collidePadding;
-            const r = d.kind === 'pointer' ? settings.pointerRadius : d.radius;
-            return r + settings.collidePadding;
-          },
-          strength: settings.collideStrength,
-          iterations: settings.collideIterations,
+    const canvasOptions = {
+      layers: {
+        bg: {
+          type: 'pattern',
+          patternType: 'dots',
+          backgroundColor: '#0f172a',
+          color: '#475569',
+          size: 1.5,
+          spacing: 24,
+          alpha: 0.85,
         },
-      });
+        graph: {
+          edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 0.8, arrowTargetShape: 'none' } },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
+          dark: { backgroundColor: '#0f172a', color: '#475569' },
+        },
+      },
+      layouts: {
+        force: {
+          alpha: settings.alpha,
+          alphaMin: settings.alphaMin,
+          alphaDecay: settings.alphaDecay,
+          velocityDecay: settings.velocityDecay,
+          x: { x: 0, strength: settings.xStrength },
+          y: { y: 0, strength: settings.yStrength },
+          collide: {
+            // Per-node radius — circles use their stored radius; the pointer
+            // node tracks the GUI slider live so collide-and-flee responds.
+            radius: (n: GraphNode) => {
+              const d = n.data as NodeData | undefined;
+              if (!d) return settings.collidePadding;
+              const r = d.kind === 'pointer' ? settings.pointerRadius : d.radius;
+              return r + settings.collidePadding;
+            },
+            padding: settings.collidePadding,
+            strength: settings.collideStrength,
+            iterations: settings.collideIterations,
+          },
+        },
+      },
+      activeLayout: 'force',
     };
 
-    const run = (): void => {
-      layout?.stop();
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+
+    // Rebuild the cloud with the current node-count / radius window, then
+    // push it as fresh data — the topology change auto-reruns the active
+    // layout. Bound to the "Apply" button below.
+    const rebuild = (): void => {
       graph.setData(buildGraphData());
-      layout = buildLayout();
-      void layout.apply(graph);
     };
 
-    run();
+    // Push the current force params live; the layout re-heats on
+    // `setOptions`. Bound to the simulation / force sliders. Mirror the
+    // collide padding into `settings` first so the per-node `radius`
+    // resolver (which closes over `settings`) sees the new value too.
+    const pushLayout = (): void => {
+      settings.collidePadding = canvasOptions.layouts.force.collide.padding;
+      canvas.update({ layouts: { force: canvasOptions.layouts.force } });
+    };
 
     // ── Pointer follower ─────────────────────────────────────────────────
     // Convert screen coords to world coords via the camera, then write the
@@ -247,9 +275,14 @@ export const CollisionDetection: Story = {
     onStoryTeardown(() => container.removeEventListener('pointerleave', onPointerLeave));
 
     // ── GUI ──────────────────────────────────────────────────────────────
+    // GUI binds to `canvasOptions.layouts.force` (the config is the source
+    // of truth). Sim / force edits push live via `pushLayout` on
+    // `onFinishChange` so the sim re-heats once per drag.
     const gui = new GUI({ title: 'D3ForceLayout — CollisionDetection' });
     onStoryTeardown(() => gui.destroy());
-    onStoryTeardown(() => layout?.stop());
+    onStoryTeardown(() => forceLayout.stop());
+
+    const force = canvasOptions.layouts.force;
 
     const data = gui.addFolder('Nodes');
     data.add(settings, 'nodeCount', 10, 1000, 10);
@@ -257,27 +290,30 @@ export const CollisionDetection: Story = {
     data.add(settings, 'maxRadius', 1, 80, 1);
 
     const sim = gui.addFolder('Simulation');
-    sim.add(settings, 'alpha', 0, 1, 0.01);
-    sim.add(settings, 'alphaMin', 0.0001, 0.1, 0.0001);
-    sim.add(settings, 'alphaDecay', 0.001, 0.1, 0.001);
-    sim.add(settings, 'velocityDecay', 0, 1, 0.01);
+    sim.add(force, 'alpha', 0, 1, 0.01).onFinishChange(pushLayout);
+    sim.add(force, 'alphaMin', 0.0001, 0.1, 0.0001).onFinishChange(pushLayout);
+    sim.add(force, 'alphaDecay', 0.001, 0.1, 0.001).onFinishChange(pushLayout);
+    sim.add(force, 'velocityDecay', 0, 1, 0.01).onFinishChange(pushLayout);
 
     const anchor = gui.addFolder('forceX / forceY');
-    anchor.add(settings, 'xStrength', 0, 1, 0.005).name('x.strength');
-    anchor.add(settings, 'yStrength', 0, 1, 0.005).name('y.strength');
+    anchor.add(force.x, 'strength', 0, 1, 0.005).name('x.strength').onFinishChange(pushLayout);
+    anchor.add(force.y, 'strength', 0, 1, 0.005).name('y.strength').onFinishChange(pushLayout);
 
     const collide = gui.addFolder('forceCollide');
-    collide.add(settings, 'collidePadding', 0, 20, 0.5).name('padding');
-    collide.add(settings, 'collideStrength', 0, 1, 0.01).name('strength');
-    collide.add(settings, 'collideIterations', 1, 10, 1).name('iterations');
+    collide.add(force.collide, 'padding', 0, 20, 0.5).name('padding').onFinishChange(pushLayout);
+    collide.add(force.collide, 'strength', 0, 1, 0.01).name('strength').onFinishChange(pushLayout);
+    collide
+      .add(force.collide, 'iterations', 1, 10, 1)
+      .name('iterations')
+      .onFinishChange(pushLayout);
 
     const pointer = gui.addFolder('Pointer');
     pointer.add(settings, 'pointerEnabled').name('enabled');
     pointer.add(settings, 'pointerRadius', 5, 200, 1).name('radius');
     pointer.add(settings, 'pointerVisible').name('show overlay');
 
-    gui.add({ apply: () => run() }, 'apply').name('Apply (rebuild + run)');
-    gui.add({ stop: () => layout?.stop() }, 'stop').name('Stop');
+    gui.add({ apply: () => rebuild() }, 'apply').name('Apply (rebuild + run)');
+    gui.add({ stop: () => forceLayout.stop() }, 'stop').name('Stop');
     gui
       .add({ fit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'fit')
       .name('Fit to content');

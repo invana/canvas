@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
-  DragNodeBehaviour, GraphLayer,
+  DragNodeBehaviour, GraphCanvas, GraphLayer,
   type EdgeData, type NodeData,
 } from '@invana/graph';
 import GUI from 'lil-gui';
@@ -24,7 +24,9 @@ type Story = StoryObj;
  * Implementation note: lil-gui wiring follows the field-resolver
  * pattern from `Stroke/Interactive` — `options.edge.style.shape` is a
  * **function** closing over the `settings` object, so each render reads
- * the latest knob values. `rerenderAll()` calls `updateEdge` with the
+ * the latest knob values. Because the templates are resolver functions
+ * (not literals) they stay in the layer constructor `options`, not in
+ * the serialisable config. `rerenderAll()` calls `updateEdge` with the
  * existing style to force re-resolution.
  */
 export const Playground: Story = {
@@ -64,15 +66,15 @@ export const Playground: Story = {
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edge-loop-polyline-playground')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
+    // Edge templates are field-level resolvers closing over `settings`,
+    // so they live in the constructor `options` — data rides on initData.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: { nodes, edges },
         edge: {
           style: {
             // Field-level resolvers — fire on every render, read the
@@ -105,10 +107,14 @@ export const Playground: Story = {
       },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+
+    const canvasOptions = {
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true }, 'drag-node': { enabled: true } },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 120);
 
     // Force every edge to re-resolve its style. Passing back the existing

@@ -20,9 +20,10 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { BackgroundLayer, Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
   type EdgeData,
@@ -32,6 +33,7 @@ import {
 import { cora, type CoraNodeData } from '@invana/graph-datasets/usecase-demos';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
+import { SystemThemeBehaviour } from '../system-theme';
 
 const meta: Meta = { title: 'Usecases/Cora Subject Bundle' };
 export default meta;
@@ -145,80 +147,101 @@ export const CoraSubjectBundle: Story = {
         },
       }));
 
-    // ── Canvas setup ─────────────────────────────────────────────────────
+    // ── Canvas setup — register everything by id, then init() last ───────
+    // Static positions, so no layout: nodes/edges ride in via initData.
     const container = canvasElement.querySelector<HTMLDivElement>(
       '#usecase-cora-subject-bundle',
     )!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'solid',
-          mode: 'auto',
-          color: { light: '#ffffff', dark: '#0b1220' },
-        },
-      }),
-    );
-
+    // Graph layer: bgFill resolver + initData stay in the constructor;
+    // literal style goes to config.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: { nodes, edges },
         node: {
           style: {
-            shape: { kind: 'circle', radius: settings.nodeRadius },
             bgFill: (n) => {
               const d = n.data as CoraNodeData | undefined;
               return d ? SUBJECT_FILL[d.subject as FocusSubject] : 0x64748b;
             },
-            bgAlpha: 0.95,
-            bgStrokeWidth: 0,
-          },
-          state: {
-            hovered: {
-              bgStrokeColor: 0xfbbf24,
-              bgStrokeWidth: 1.6,
-              shape: { kind: 'circle', radius: settings.nodeRadius + 2 },
-            },
-          },
-        },
-        edge: {
-          style: {
-            shape: { pathType: 'bundle', sourceAnchor: 'center', targetAnchor: 'center' },
-            // bgFill resolver doesn't run on edges — colour is per-edge
-            // restamped in `restyleEdges` since it depends on the
-            // source's subject.
-            strokeWidth: settings.edgeWidth,
-            strokeAlpha: settings.edgeAlpha,
-            arrowTargetShape: 'none',
-          },
-          state: {
-            highlighted: { strokeAlpha: 0.95, strokeWidth: settings.edgeWidth + 0.8 },
           },
         },
       },
     });
-    canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
 
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
+    canvas.layers.add(graph);
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
+      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }),
     );
     canvas.behaviours.register(
       new HoverActivateBehaviour({
         id: 'hover',
         layerId: 'graph',
-        enabled: true,
         state: 'hovered',
         degree: 1,
         direction: 'both',
       }),
     );
+    canvas.behaviours.register(
+      new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }),
+    );
+
+    // ── Serialisable config ─────────────────────────────────────────────
+    const canvasOptions = {
+      layers: {
+        bg: { type: 'solid', backgroundColor: '#0b1220' },
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'circle', radius: settings.nodeRadius },
+              bgAlpha: 0.95,
+              bgStrokeWidth: 0,
+            },
+            state: {
+              hovered: {
+                bgStrokeColor: 0xfbbf24,
+                bgStrokeWidth: 1.6,
+                shape: { kind: 'circle', radius: settings.nodeRadius + 2 },
+              },
+            },
+          },
+          edge: {
+            style: {
+              shape: { pathType: 'bundle', sourceAnchor: 'center', targetAnchor: 'center' },
+              // bgFill resolver doesn't run on edges — colour is per-edge
+              // restamped in `restyleEdges` since it depends on the
+              // source's subject.
+              strokeWidth: settings.edgeWidth,
+              strokeAlpha: settings.edgeAlpha,
+              arrowTargetShape: 'none',
+            },
+            state: {
+              highlighted: { strokeAlpha: 0.95, strokeWidth: settings.edgeWidth + 0.8 },
+            },
+          },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+        hover: { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#ffffff' },
+          dark: { backgroundColor: '#0b1220' },
+        },
+      },
+    };
+
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     // ── Per-edge restyle (β, alpha, width, source-coloured strokes) ─────
     // Edge colour depends on the source node's subject — needs a

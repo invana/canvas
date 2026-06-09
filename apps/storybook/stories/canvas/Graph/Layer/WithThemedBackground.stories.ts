@@ -1,12 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
-  Canvas,
   DragPanBehaviour,
   ThemedBackgroundLayer,
   WheelZoomBehaviour,
 } from '@invana/canvas';
 import type { ThemedBackgroundMode } from '@invana/canvas';
-import { DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
+import { GraphCanvas, DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -43,13 +42,14 @@ export const WithThemedBackground: Story = {
       };
     });
 
+    // ── Add everything, then init() last ─────────────────────────────────
+    // This story demonstrates the `ThemedBackgroundLayer` multi-theme
+    // switcher, so it keeps that layer (rather than the theme-agnostic
+    // BackgroundLayer + SystemThemeBehaviour pattern). Its theme/mode + the
+    // graph's per-theme edge reload are driven imperatively below.
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-themed-bg')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     // ── Themed background first so it sits behind the graph ──────────────
     const themed = new ThemedBackgroundLayer({
@@ -123,13 +123,24 @@ export const WithThemedBackground: Story = {
     const lightEdge = 0xcbd5e1;
     const darkEdge = 0x475569;
 
-    const graph = new GraphLayer({
-      id: 'graph',
-      options: {
-        edge: { style: { strokeWidth: 1, arrowTargetShape: 'none' } },
-      },
-    });
+    const graph = new GraphLayer({ id: 'graph', options: {} });
     canvas.layers.add(graph);
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: { edge: { style: { strokeWidth: 1, arrowTargetShape: 'none' } } },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     const reloadGraphForTheme = (): void => {
       const edgeColor = themed.getResolvedKind() === 'dark' ? darkEdge : lightEdge;
@@ -142,10 +153,6 @@ export const WithThemedBackground: Story = {
 
     // Initial load + react to theme / mode changes.
     reloadGraphForTheme();
-
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
     themed.events.on('theme:switched', () => reloadGraphForTheme());
     themed.events.on('mode:updated', () => reloadGraphForTheme());
 

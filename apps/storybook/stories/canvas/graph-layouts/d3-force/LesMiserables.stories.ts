@@ -11,16 +11,16 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
+  DevInfoLayer,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
+import { GraphCanvas, DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
-import { DevInfoLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
+import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-force/LesMiserables' };
 export default meta;
@@ -41,99 +41,91 @@ export const LesMiserables: Story = {
       data: { group: n.data.group },
     }));
 
+    // ── Add everything, then init() last ─────────────────────────────────
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-d3-force')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'pattern',
-          patternType: 'dots',
-          mode: 'auto',
-          backgroundColor: { light: '#f8fafc', dark: '#0f172a' },
-          color: { light: '#94a3b8', dark: '#475569' },
-          size: 1.5,
-          spacing: 24,
-          alpha: 0.85,
-        },
-      }),
-    );
-    canvas.layers.add(new DevInfoLayer({ id: 'dev-info' }));
-
+    // The `bgFill`-by-group resolver is non-serialisable → it stays in the
+    // constructor. Literal node/edge style lives in `canvasOptions` below.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: { nodes, edges: lesMiserables.edges },
         node: {
           style: {
-            shape: { kind: 'circle', radius: 5 },
             bgFill: (n: GraphNode) =>
               groupColors[(n.data as LesMisNodeData).group % groupColors.length]!,
           },
         },
-        edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.5 } },
       },
     });
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
+    canvas.layers.add(new DevInfoLayer({ id: 'dev-info' }));
     canvas.layers.add(graph);
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+    const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
+    canvas.layouts.add(forceLayout);
 
-    graph.setData({ nodes, edges: lesMiserables.edges });
-
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
-
-    // Matches the Observable example's three forces — `link`, `charge`,
-    // `center` — with only `center` exposed in the GUI. `link` and
-    // `charge` run at d3-force's own defaults.
-    const settings = {
-      centerX: 0,
-      centerY: 0,
+    const canvasOptions = {
+      layers: {
+        bg: {
+          type: 'pattern',
+          patternType: 'dots',
+          backgroundColor: '#0f172a',
+          color: '#475569',
+          size: 1.5,
+          spacing: 24,
+          alpha: 0.85,
+        },
+        graph: {
+          node: { style: { shape: { kind: 'circle', radius: 5 } } },
+          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.5 } },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
+          dark: { backgroundColor: '#0f172a', color: '#475569' },
+        },
+      },
+      // Matches the Observable example's three forces — `link`, `charge`,
+      // `center` — with only `center` exposed in the GUI. `link` and `charge`
+      // run at d3-force's own defaults.
+      layouts: {
+        force: { center: { x: 0, y: 0 } },
+      },
+      activeLayout: 'force',
     };
-
-    let layout: D3ForceLayout = buildLayout();
-
-    function buildLayout(): D3ForceLayout {
-      const next = new D3ForceLayout({
-        link: {},
-        charge: {},
-        center: { x: settings.centerX, y: settings.centerY },
-      });
-      // Fit only after the run settles. `forceCenter` keeps the layout
-      // around (0, 0) during the sim, so the user can pan / zoom / drag
-      // freely while it runs — no per-tick refit fighting their input.
-      // next.events.on('end', () => canvas.camera.fitContent(graph.getBounds(), 80));
-      return next;
-    }
-
-    const run = (): void => {
-      void layout.apply(graph);
-    };
-
-    const reapply = (): void => {
-      layout.stop();
-      layout = buildLayout();
-      run();
-    };
-
-    run();
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+    // initData loads on mount and the active 'force' layout auto-runs against it.
 
     const gui = new GUI({ title: 'D3ForceLayout' });
     onStoryTeardown(() => gui.destroy());
-    onStoryTeardown(() => layout.stop());
+    onStoryTeardown(() => forceLayout.stop());
 
-    gui.add(settings, 'centerX', -1000, 1000, 10).name('center.x');
-    gui.add(settings, 'centerY', -1000, 1000, 10).name('center.y');
+    // Center edits push the whole force config back through update(), which
+    // re-heats the running sim. `onFinishChange` so the re-heat fires once.
+    const applyForce = (): void =>
+      canvas.update({ layouts: { force: canvasOptions.layouts.force } });
 
-    gui.add({ apply: () => reapply() }, 'apply').name('Apply (rebuild + run)');
-    gui.add({ stop: () => layout.stop() }, 'stop').name('Stop');
-    gui.add(
-      { fit: () => canvas.camera.fitContent(graph.getBounds(), 80) },
-      'fit',
-    ).name('Fit to content');
+    gui.add(canvasOptions.layouts.force.center, 'x', -1000, 1000, 10)
+      .name('center.x')
+      .onFinishChange(applyForce);
+    gui.add(canvasOptions.layouts.force.center, 'y', -1000, 1000, 10)
+      .name('center.y')
+      .onFinishChange(applyForce);
+
+    gui.add({ stop: () => forceLayout.stop() }, 'stop').name('Stop');
+    gui
+      .add({ fit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'fit')
+      .name('Fit to content');
   },
 };

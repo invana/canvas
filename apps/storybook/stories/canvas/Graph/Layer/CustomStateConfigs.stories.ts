@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphLayer, type GraphNode } from '@invana/graph';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { GraphCanvas, GraphLayer, type GraphNode } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'canvas/graph/Layer/CustomStateConfigs' };
@@ -67,11 +67,10 @@ export const CustomStateConfigs: Story = {
     };
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-custom-state-configs')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     const labelResolver = (n: GraphNode) => {
       const tile = n.data as TileData;
@@ -98,16 +97,21 @@ export const CustomStateConfigs: Story = {
     };
 
     // Layer A — canonical bundle, no overrides. The first tile renders
-    // its `hover` against the shipped default (white 3-px ring).
+    // its `hover` against the shipped default (white 3-px ring). The
+    // `labelStyle` resolver is non-serialisable → it stays in the
+    // constructor along with the per-layer `initData`.
     const canonicalLayer = new GraphLayer({
       id: 'canonical',
-      options: { node: { style: sharedNodeStyle } },
+      options: {
+        node: { style: sharedNodeStyle },
+        initData: { nodes: [canonicalTile], edges: [] },
+      },
     });
     canvas.layers.add(canonicalLayer);
-    canonicalLayer.setData({ nodes: [canonicalTile], edges: [] });
 
     // Layer B — overrides `hover` and adds two new state names declaratively
-    // via `options.node.state`. The other four tiles live here.
+    // via `options.node.state`. The other four tiles live here. The state
+    // catalogue is the subject of this story, so it stays on the layer.
     const customLayer = new GraphLayer({
       id: 'custom',
       options: {
@@ -119,12 +123,15 @@ export const CustomStateConfigs: Story = {
             escalated: { bgStrokeColor: 0xef4444, bgStrokeWidth: 5, bgFill: 0x7f1d1d },     // NEW state
           },
         },
+        initData: { nodes: [overriddenTile, mentionTile, escalatedTile, stackedTile], edges: [] },
       },
     });
     canvas.layers.add(customLayer);
-    customLayer.setData({
-      nodes: [overriddenTile, mentionTile, escalatedTile, stackedTile],
-      edges: [],
+
+    await canvas.init({
+      container,
+      autoResize: true,
+      config: { behaviours: { pan: { enabled: true }, zoom: { enabled: true } } },
     });
 
     canvas.camera.fitContent(canonicalLayer.getBounds(), 80);

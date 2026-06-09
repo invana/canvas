@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   ClickSelectBehaviour,
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   type GraphNode,
   type SelectModifierKey,
@@ -36,62 +37,75 @@ export const ClickSelect: Story = {
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-click-select')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: {
-        node: {
-          state: {
-            selected: { bgStrokeColor: 0xf97316, bgStrokeWidth: 4 },
-            highlighted: { bgStrokeColor: 0xfacc15, bgStrokeWidth: 4 },
-            muted: { bgAlpha: 0.2 },
-            dimmed: { bgAlpha: 0.45 },
+      options: { initData: { nodes, edges: lesMiserables.edges } },
+    });
+    canvas.layers.add(graph);
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+
+    const click = new ClickSelectBehaviour({ id: 'click-select', layerId: 'graph' });
+    canvas.behaviours.register(click);
+
+    const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
+    canvas.layouts.add(forceLayout);
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            state: {
+              selected: { bgStrokeColor: 0xf97316, bgStrokeWidth: 4 },
+              highlighted: { bgStrokeColor: 0xfacc15, bgStrokeWidth: 4 },
+              muted: { bgAlpha: 0.2 },
+              dimmed: { bgAlpha: 0.45 },
+            },
           },
-        },
-        edge: {
-          style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' },
-          state: {
-            selected: { strokeColor: 0xf97316, strokeWidth: 2.5 },
-            highlighted: { strokeColor: 0xfacc15, strokeWidth: 2.5 },
-            muted: { strokeAlpha: 0.15 },
-            dimmed: { strokeAlpha: 0.4 },
+          edge: {
+            style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' },
+            state: {
+              selected: { strokeColor: 0xf97316, strokeWidth: 2.5 },
+              highlighted: { strokeColor: 0xfacc15, strokeWidth: 2.5 },
+              muted: { strokeAlpha: 0.15 },
+              dimmed: { strokeAlpha: 0.4 },
+            },
           },
         },
       },
-    });
-    canvas.layers.add(graph);
-    graph.setData({ nodes, edges: lesMiserables.edges });
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+        'click-select': {
+          enabled: true,
+          multiple: true,
+          trigger: ['shift'] as SelectModifierKey[],
+          degree: 1,
+          state: 'selected',
+          clearOnBackground: true,
+        },
+      },
+      layouts: {
+        force: {
+          charge: { strength: -120 },
+          link: { distance: 50 },
+          collide: { radius: 14 },
+        },
+      },
+      activeLayout: 'force',
+    };
 
-    canvas.camera.fitContent(graph.getBounds(), 80);
-    void new D3ForceLayout({
-      charge: { strength: -120 },
-      link: { distance: 50 },
-      collide: { radius: 14 },
-    })
-      .apply(graph)
-      .then(() => canvas.camera.fitContent(graph.getBounds(), 80));
-
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+    onStoryTeardown(
+      forceLayout.events.on('end', () => canvas.camera.fitContent(graph.getBounds(), 80)),
     );
-
-    const click = new ClickSelectBehaviour({
-      id: 'click-select',
-      layerId: 'graph',
-      enabled: true,
-      multiple: true,
-      trigger: ['shift'],
-      degree: 1,
-      state: 'selected',
-      clearOnBackground: true,
-    });
-    canvas.behaviours.register(click);
+    canvas.camera.fitContent(graph.getBounds(), 80);
 
     // Every option from ClickSelectBehaviourOptions is bound below. The two
     // read-only counters are updated by `onSelectionChange`.

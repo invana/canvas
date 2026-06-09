@@ -13,12 +13,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
 import {
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   type GraphEdge,
   type GraphNode,
@@ -30,6 +30,7 @@ import {
 } from '@invana/graph-layout-elkjs';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
+import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/elkjs/Layered' };
 export default meta;
@@ -39,17 +40,6 @@ export const Layered: Story = {
   render: () => createContainer({ id: 'graph-elk-layered' }),
 
   play: async ({ canvasElement }) => {
-    // ── Settings ─────────────────────────────────────────────────────────
-    const settings = {
-      algorithm: 'layered' as ElkAlgorithmName,
-      direction: 'RIGHT' as ElkDirection,
-      nodeSpacing: 30,
-      layerSpacing: 80,
-      edgeNodeSpacing: 20,
-      edgeSpacing: 15,
-      padding: 30,
-    };
-
     // ── Data — a small build-pipeline DAG ────────────────────────────────
     // Hand-written so the structure reads clearly: a fan-out from "source",
     // four parallel build legs, two test legs that merge, then a release.
@@ -79,91 +69,107 @@ export const Layered: Story = {
       { id: 'bundle-release', source: 'bundle', target: 'release' },
     ];
 
-    // ── Canvas setup ─────────────────────────────────────────────────────
+    // ── Add everything, then init() last ─────────────────────────────────
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-elk-layered')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
 
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
+    const graph = new GraphLayer({
+      id: 'graph',
+      options: { initData: { nodes, edges } },
+    });
+    canvas.layers.add(graph);
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+
+    // ElkLayout's constructor takes only its own ELK options (no id /
+    // targetLayerId pass-through), so it registers under the default id
+    // 'layout'. The config + activeLayout below key off that id.
+    const elkLayout = new ElkLayout();
+    canvas.layouts.add(elkLayout);
+
+    const canvasOptions = {
+      layers: {
+        bg: {
           type: 'pattern',
           patternType: 'dots',
-          mode: 'auto',
-          backgroundColor: { light: '#f8fafc', dark: '#0f172a' },
-          color: { light: '#94a3b8', dark: '#475569' },
+          backgroundColor: '#0f172a',
+          color: '#475569',
           size: 1.5,
           spacing: 24,
           alpha: 0.85,
         },
-      }),
-    );
-
-    const graph = new GraphLayer({
-      id: 'graph',
-      options: {
-        node: {
-          style: {
-            shape: { kind: 'rect', width: 90, height: 36, cornerRadius: 6 },
-            bgStrokeColor: 0xffffff,
-            bgStrokeWidth: 1.5,
-            labelColor: 0xffffff,
-            labelFontSize: 12,
-            labelFontWeight: 600,
-            labelPlacement: 'center',
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'rect', width: 90, height: 36, cornerRadius: 6 },
+              bgStrokeColor: 0xffffff,
+              bgStrokeWidth: 1.5,
+              labelColor: 0xffffff,
+              labelFontSize: 12,
+              labelFontWeight: 600,
+              labelPlacement: 'center',
+            },
           },
-        },
-        edge: {
-          style: {
-            strokeColor: 0x64748b,
-            strokeWidth: 1.4,
-            arrowTargetShape: 'triangle',
+          edge: {
+            style: {
+              strokeColor: 0x64748b,
+              strokeWidth: 1.4,
+              arrowTargetShape: 'triangle',
+            },
           },
         },
       },
-    });
-    canvas.layers.add(graph);
-
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
-
-    let layout: ElkLayout | null = null;
-
-    const run = async (): Promise<void> => {
-      layout?.stop();
-      graph.setData({ nodes, edges });
-      layout = new ElkLayout({
-        algorithm: settings.algorithm,
-        direction: settings.direction,
-        nodeSpacing: settings.nodeSpacing,
-        layerSpacing: settings.layerSpacing,
-        edgeNodeSpacing: settings.edgeNodeSpacing,
-        edgeSpacing: settings.edgeSpacing,
-        padding: settings.padding,
-      });
-      layout.events.on('end', ({ reason }) => {
-        if (reason === 'completed') {
-          canvas.camera.fitContent(graph.getBounds(), 80);
-        }
-      });
-      await layout.apply(graph);
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
+          dark: { backgroundColor: '#0f172a', color: '#475569' },
+        },
+      },
+      layouts: {
+        layout: {
+          algorithm: 'layered' as ElkAlgorithmName,
+          direction: 'RIGHT' as ElkDirection,
+          nodeSpacing: 30,
+          layerSpacing: 80,
+          edgeNodeSpacing: 20,
+          edgeSpacing: 15,
+          padding: 30,
+        },
+      },
+      activeLayout: 'layout',
     };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+    // initData loads on mount and the active 'elk' layout auto-runs against it.
 
-    void run();
+    // Fit once ELK settles each run.
+    onStoryTeardown(
+      elkLayout.events.on('end', ({ reason }) => {
+        if (reason === 'completed') canvas.camera.fitContent(graph.getBounds(), 80);
+      }),
+    );
 
     // ── GUI ──────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'ElkLayout — Layered' });
     onStoryTeardown(() => gui.destroy());
-    onStoryTeardown(() => layout?.stop());
+    onStoryTeardown(() => elkLayout.stop());
+
+    // Each edit pushes the whole elk param bag back through update(), which
+    // re-runs the layout against the current graph.
+    const applyLayout = (): void =>
+      canvas.update({ layouts: { layout: canvasOptions.layouts.layout } });
 
     gui
-      .add(settings, 'algorithm', [
+      .add(canvasOptions.layouts.layout, 'algorithm', [
         'layered',
         'mrtree',
         'radial',
@@ -174,21 +180,21 @@ export const Layered: Story = {
         'random',
       ])
       .name('algorithm')
-      .onChange(() => void run());
+      .onChange(applyLayout);
     gui
-      .add(settings, 'direction', ['UP', 'DOWN', 'LEFT', 'RIGHT'])
+      .add(canvasOptions.layouts.layout, 'direction', ['UP', 'DOWN', 'LEFT', 'RIGHT'])
       .name('direction')
-      .onChange(() => void run());
+      .onChange(applyLayout);
 
     const spacing = gui.addFolder('Spacing');
-    spacing.add(settings, 'nodeSpacing', 0, 120, 1).onFinishChange(() => void run());
-    spacing.add(settings, 'layerSpacing', 0, 240, 1).onFinishChange(() => void run());
-    spacing.add(settings, 'edgeNodeSpacing', 0, 80, 1).onFinishChange(() => void run());
-    spacing.add(settings, 'edgeSpacing', 0, 60, 1).onFinishChange(() => void run());
-    spacing.add(settings, 'padding', 0, 120, 1).onFinishChange(() => void run());
+    spacing.add(canvasOptions.layouts.layout, 'nodeSpacing', 0, 120, 1).onFinishChange(applyLayout);
+    spacing.add(canvasOptions.layouts.layout, 'layerSpacing', 0, 240, 1).onFinishChange(applyLayout);
+    spacing.add(canvasOptions.layouts.layout, 'edgeNodeSpacing', 0, 80, 1).onFinishChange(applyLayout);
+    spacing.add(canvasOptions.layouts.layout, 'edgeSpacing', 0, 60, 1).onFinishChange(applyLayout);
+    spacing.add(canvasOptions.layouts.layout, 'padding', 0, 120, 1).onFinishChange(applyLayout);
 
-    gui.add({ apply: () => void run() }, 'apply').name('Apply (rebuild + run)');
-    gui.add({ stop: () => layout?.stop() }, 'stop').name('Stop');
+    gui.add({ apply: applyLayout }, 'apply').name('Apply (re-run)');
+    gui.add({ stop: () => elkLayout.stop() }, 'stop').name('Stop');
     gui
       .add({ fit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'fit')
       .name('Fit to content');

@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   ParallelEdgeBehaviour,
   type EdgeAnchor,
@@ -89,27 +90,6 @@ export const ParallelEdge: Story = {
       { id: 'b', position: { x:  240, y:  160 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155 } },
     ];
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#graph-behaviour-parallel-edge')!;
-    const canvas = new Canvas();
-    onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    const graph = new GraphLayer({
-      id: 'graph',
-      options: {
-        edge: {
-          style: {
-            strokeColor: 0x64748b,
-            strokeWidth: 2,
-            strokeCap: 'round',
-          },
-        },
-      },
-    });
-    canvas.layers.add(graph);
-
     // Per-edge style: only the structural shape fields the behaviour cares
     // about reading (pathType, sourceAnchor, targetAnchor, pathStyleOpts).
     // The behaviour adds `waypoints` + anchor offsets on top — those stay
@@ -128,37 +108,60 @@ export const ParallelEdge: Story = {
       },
     });
 
-    const seed = () => {
-      const shape = SHAPES[settings.nodeKind]!;
-      const liveNodes: NodeData[] = nodes.map((n) => ({
-        ...n,
-        style: { ...n.style, shape },
-      }));
-      const style = edgeStyleForCurrentSettings();
-      const edges: EdgeData[] = Array.from({ length: settings.count }, (_, i) => ({
-        id: `e${i}`,
-        source: 'a',
-        target: 'b',
-        style,
-      }));
-      graph.setData({ nodes: liveNodes, edges });
-    };
+    // Build the initial content (data is content, not config): seed the
+    // chosen node shape and `count` parallel edges into `initData`.
+    const initShape = SHAPES[settings.nodeKind]!;
+    const initNodes: NodeData[] = nodes.map((n) => ({
+      ...n,
+      style: { ...n.style, shape: initShape },
+    }));
+    const initEdgeStyle = edgeStyleForCurrentSettings();
+    const initEdges: EdgeData[] = Array.from({ length: settings.count }, (_, i) => ({
+      id: `e${i}`,
+      source: 'a',
+      target: 'b',
+      style: initEdgeStyle,
+    }));
 
-    seed();
+    const container = canvasElement.querySelector<HTMLDivElement>('#graph-behaviour-parallel-edge')!;
+    const canvas = new GraphCanvas();
+    onStoryTeardown(() => canvas.destroy());
+
+    const graph = new GraphLayer({
+      id: 'graph',
+      options: { initData: { nodes: initNodes, edges: initEdges } },
+    });
+    canvas.layers.add(graph);
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     const parallel = new ParallelEdgeBehaviour({
       id: 'parallel-edges',
       layerId: 'graph',
-      enabled: true,
       spacing: settings.spacing,
       basis: 'auto',
       anchorOffset: true,
     });
     canvas.behaviours.register(parallel);
 
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          edge: { style: { strokeColor: 0x64748b, strokeWidth: 2, strokeCap: 'round' } },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'parallel-edges': { enabled: true },
+        'drag-node': { enabled: true },
+      },
+    };
+
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     const applyShape = () => {
       const shape = SHAPES[settings.nodeKind]!;

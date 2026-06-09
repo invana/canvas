@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
+  GraphCanvas,
   GraphLayer,
   type CanonicalStateName,
   type GraphNode,
@@ -36,11 +37,6 @@ export const State: Story = {
 
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-node-state')!;
-    const canvas = new Canvas();
-    onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     interface TileData {
       readonly state: 'default' | CanonicalStateName;
@@ -86,35 +82,55 @@ export const State: Story = {
       },
     ];
 
+    const canvas = new GraphCanvas();
+    onStoryTeardown(() => canvas.destroy());
+
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        // Layer-wide v3 template — every tile renders against these unless it
-        // overrides a field in its own `style` or via an active state.
-        // `labelText` is a resolver that pulls per-tile content from `data`.
+        // Data is content — it rides on `initData`, not config.
+        initData: { nodes, edges: [] },
+        // Layer-wide v3 template — the resolver-bearing fields stay in the
+        // constructor. `labelText` pulls per-tile content from `data`.
         // Canonical state configs are auto-registered (no setNodeStateConfig
         // calls needed). Pass `useDefaultStateConfigs: false` to opt out.
         node: {
           style: {
-            shape: { kind: 'circle', radius: 36 },
-            bgFill: 0x3b82f6,
-            bgStrokeColor: 0xffffff,
-            bgStrokeWidth: 1,
             labelText: (n: GraphNode) => {
               const tile = n.data as TileData | undefined;
               return tile ? `${tile.state}\n${tile.note}` : '';
             },
-            labelColor: 0xefefef,
-            labelFontSize: 12,
-            labelFontWeight: 600,
-            labelPlacement: 'bottom',
-            labelOffsetY: 8,
           },
         },
       },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges: [] });
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+
+    const canvasOptions = {
+      layers: {
+        // Pure-literal template fields live in config; they shallow-merge
+        // with the resolver-bearing `node.style` from the constructor.
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'circle', radius: 36 },
+              bgFill: 0x3b82f6,
+              bgStrokeColor: 0xffffff,
+              bgStrokeWidth: 1,
+              labelColor: 0xefefef,
+              labelFontSize: 12,
+              labelFontWeight: 600,
+              labelPlacement: 'bottom',
+              labelOffsetY: 8,
+            },
+          },
+        },
+      },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 60);
   },

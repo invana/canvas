@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
 import {
+  GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
   LabelResolutionLODBehaviour,
@@ -15,6 +15,7 @@ import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
 import { flareImportsAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
+import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-hierarchy/EdgeBundling' };
 export default meta;
@@ -79,68 +80,94 @@ export const EdgeBundling: Story = {
     const parentOf = new Map<string, string>();
     for (const e of treeEdges) parentOf.set(e.target, e.source);
 
-    // ── Canvas setup ─────────────────────────────────────────────────────
+    // ── Canvas setup — register everything, then init() last ─────────────
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edge-bundling')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'solid',
-          color: { light: '#f8fafc', dark: '#0b1220' },
-          mode: 'auto',
-        },
-      }),
-    );
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: {
-        node: {
-          // Override the canonical `hovered` / `dimmed` defaults with the
-          // brighter orange / heavier fade that reads on a dense bundling
-          // diagram.
-          state: {
-            hovered: { bgFill: 0xf97316, bgStrokeColor: 0xf97316, bgStrokeWidth: 1 },
-            dimmed: { bgAlpha: 0.18 },
-          },
-        },
-        edge: {
-          style: {
-            strokeColor: 0x94a3b8,
-            strokeWidth: settings.edgeStrokeWidth,
-            strokeAlpha: settings.edgeAlpha,
-            arrowTargetShape: 'none',
-            shape: {
-              pathType: 'bundle',
-              // `center` (vs `boundary`) so endpoints sit on the leaf centre.
-              sourceAnchor: 'center',
-              targetAnchor: 'center',
-            },
-          },
-          state: {
-            hovered: { strokeColor: 0xf97316, strokeWidth: 1.5, strokeAlpha: 0.95 },
-            dimmed: { strokeAlpha: 0.08 },
-          },
-        },
-      },
+      // Initial content rides on the layer: leaves start as the tree (the
+      // import edges are swapped in after layout — see applyLabelsAndBundles).
+      options: { initData: { nodes, edges: treeEdges } },
     });
     canvas.layers.add(graph);
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
 
     const labelResolutionLOD = new LabelResolutionLODBehaviour({
       id: 'label-resolution',
       layerId: 'graph',
-      enabled: settings.sharpLabelsOnZoom,
     });
     canvas.behaviours.register(labelResolutionLOD);
 
-    let layout: D3HierarchyLayout | null = null;
+    // Hover resolves its target layer at register-time; the graph layer
+    // already exists above.
+    const hover = new HoverActivateBehaviour({
+      id: 'hover',
+      layerId: 'graph',
+      state: 'hovered',
+      // inactiveState: 'dimmed',
+      degree: settings.hoverDegree,
+      direction: 'both',
+    });
+    canvas.behaviours.register(hover);
+
+    // Kept mutable: `D3HierarchyLayout` reads its params at construction
+    // (no live `setOptions`), so each GUI-driven re-layout rebuilds it.
+    let layout = new D3HierarchyLayout({ mode: 'radial-cluster', radius: settings.radius });
+
+    const canvasOptions = {
+      layers: {
+        bg: { type: 'solid', backgroundColor: '#f8fafc' },
+        graph: {
+          // Override the canonical `hovered` / `dimmed` defaults with the
+          // brighter orange / heavier fade that reads on a dense bundling
+          // diagram.
+          node: {
+            state: {
+              hovered: { bgFill: 0xf97316, bgStrokeColor: 0xf97316, bgStrokeWidth: 1 },
+              dimmed: { bgAlpha: 0.18 },
+            },
+          },
+          edge: {
+            style: {
+              strokeColor: 0x94a3b8,
+              strokeWidth: settings.edgeStrokeWidth,
+              strokeAlpha: settings.edgeAlpha,
+              arrowTargetShape: 'none',
+              shape: {
+                pathType: 'bundle',
+                // `center` (vs `boundary`) so endpoints sit on the leaf centre.
+                sourceAnchor: 'center',
+                targetAnchor: 'center',
+              },
+            },
+            state: {
+              hovered: { strokeColor: 0xf97316, strokeWidth: 1.5, strokeAlpha: 0.95 },
+              dimmed: { strokeAlpha: 0.08 },
+            },
+          },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        hover: { enabled: true },
+        'label-resolution': { enabled: settings.sharpLabelsOnZoom },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc' },
+          dark: { backgroundColor: '#0b1220' },
+        },
+      },
+    };
+
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     /**
      * Walk `leaf` up to the root, collecting ids. Cached per leaf since the
@@ -314,44 +341,30 @@ export const EdgeBundling: Story = {
       });
     };
 
-    // ── Run layout ────────────────────────────────────────────────────────
+    // ── Run layout ───────────────────────────────────────────────────────
+    // `D3HierarchyLayout` is one-shot synchronous and not yet wired for the
+    // engine's `activeLayout` auto-run, so we drive it explicitly. The bundle
+    // waypoints + rim labels are position-dependent, so they're applied after
+    // the layout completes.
     const run = async (): Promise<void> => {
-      layout?.stop();
+      layout.stop();
       ancestorsCache.clear();
       graph.setData({ nodes, edges: treeEdges });
-
-      layout = new D3HierarchyLayout({
-        mode: 'radial-cluster',
-        radius: settings.radius,
-      });
+      layout = new D3HierarchyLayout({ mode: 'radial-cluster', radius: settings.radius });
       await layout.apply(graph);
-
       applyLabelsAndBundles();
       canvas.camera.fitContent(graph.getBounds(), 80);
     };
 
     await run();
-    onStoryTeardown(() => layout?.stop());
-
-    // Hover registers *after* the graph layer is mounted; the behaviour
-    // resolves its target layer at register-time.
-    const hover = new HoverActivateBehaviour({
-      id: 'hover',
-      layerId: 'graph',
-      enabled: true,
-      state: 'hovered',
-      // inactiveState: 'dimmed',
-      degree: settings.hoverDegree,
-      direction: 'both',
-    });
-    canvas.behaviours.register(hover);
+    onStoryTeardown(() => layout.stop());
 
     // ── GUI ──────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'EdgeBundling' });
     onStoryTeardown(() => gui.destroy());
 
     const layoutFolder = gui.addFolder('Layout');
-    layoutFolder.add(settings, 'radius', 200, 900, 10).onChange(run);
+    layoutFolder.add(settings, 'radius', 200, 900, 10).onChange(() => void run());
 
     const curve = gui.addFolder('Curve');
     curve.add(settings, 'beta', 0, 1, 0.01).name('β (bundle tension)').onChange(restyleEdges);
@@ -359,8 +372,8 @@ export const EdgeBundling: Story = {
     curve.add(settings, 'edgeStrokeWidth', 0.2, 3, 0.1).onChange(restyleEdges);
 
     const labels = gui.addFolder('Labels');
-    labels.add(settings, 'showLabels').onChange(run);
-    labels.add(settings, 'labelFontSize', 6, 18, 1).onChange(run);
+    labels.add(settings, 'showLabels').onChange(() => void run());
+    labels.add(settings, 'labelFontSize', 6, 18, 1).onChange(() => void run());
     labels
       .add(settings, 'sharpLabelsOnZoom')
       .name('Sharp on zoom')

@@ -1,17 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DevInfoLayer,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer } from '@invana/graph';
+import { GraphCanvas, GraphLayer } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
 import { D3SankeyLayout } from '@invana/graph-layout-d3-sankey';
+import type { D3SankeyLayoutOptions } from '@invana/graph-layout-d3-sankey';
 import { ukEnergyFlowAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
+import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-sankey/Sankey' };
 export default meta;
@@ -30,13 +31,6 @@ export const Sankey: Story = {
   play: async ({ canvasElement }) => {
     // ── Settings ─────────────────────────────────────────────────────────
     const settings = {
-      // Layout
-      width: 1200,
-      height: 720,
-      nodeWidth: 15,
-      nodePadding: 10,
-      iterations: 6,
-      nodeAlign: 'justify' as 'left' | 'right' | 'center' | 'justify',
       // Style
       linkAlpha: 0.4,
       linkStroke: 0x94a3b8,
@@ -66,53 +60,79 @@ export const Sankey: Story = {
       return palette[idx]!;
     };
 
-    // ── Canvas setup ─────────────────────────────────────────────────────
+    // ── Add everything, then init() last ─────────────────────────────────
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-sankey')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'solid',
-          color: { light: '#ffffff', dark: '#0b1220' },
-          mode: 'auto',
-        },
-      }),
-    );
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: {
-        // The layout overrides shape per node, but the bgFill catches the
-        // case before per-node category styling runs.
-        node: {
-          style: {
-            shape: { kind: 'rect', width: 15, height: 30 },
-            bgFill: 0x64748b,
-          },
-        },
-        edge: {
-          style: {
-            shape: { pathType: 'bump-horizontal' },
-            strokeColor: settings.linkStroke,
-            strokeWidth: 1,
-            strokeAlpha: settings.linkAlpha,
-            arrowTargetShape: 'none',
-          },
-        },
-      },
+      // Data is content → it rides on `initData`. The layout overrides shape
+      // per node; literal base style for nodes/edges lives in `canvasOptions`.
+      options: { initData: ukEnergyFlowAsGraph() },
     });
     canvas.layers.add(graph);
 
     canvas.layers.add(new DevInfoLayer({ id: 'dev', corner: 'top-left' }));
 
-    let layout: D3SankeyLayout | null = null;
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+
+    // `D3SankeyLayout`'s ctor types only its own sankey params, but forwards
+    // the shared `LayoutOptions` wiring (`id` / `targetLayerId`) to the base
+    // `Layout`. The literal carries both; cast past the narrow ctor type so
+    // the registry keys the layout as 'sankey' (matching `activeLayout`).
+    const sankeyLayout = new D3SankeyLayout(
+      { id: 'sankey', targetLayerId: 'graph' } as unknown as D3SankeyLayoutOptions,
+    );
+    canvas.layouts.add(sankeyLayout);
+
+    const canvasOptions = {
+      layers: {
+        bg: { type: 'solid', color: '#0b1220' },
+        graph: {
+          node: {
+            // The layout overrides shape per node, but the bgFill catches the
+            // case before per-node category styling runs.
+            style: {
+              shape: { kind: 'rect', width: 15, height: 30 },
+              bgFill: 0x64748b,
+            },
+          },
+          edge: {
+            style: {
+              shape: { pathType: 'bump-horizontal' },
+              strokeColor: settings.linkStroke,
+              strokeWidth: 1,
+              strokeAlpha: settings.linkAlpha,
+              arrowTargetShape: 'none',
+            },
+          },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#ffffff', color: '#94a3b8' },
+          dark: { backgroundColor: '#0b1220', color: '#475569' },
+        },
+      },
+      layouts: {
+        sankey: {
+          size: [1200, 720] as [number, number],
+          nodeWidth: 15,
+          nodePadding: 10,
+          iterations: 6,
+          nodeAlign: 'justify' as 'left' | 'right' | 'center' | 'justify',
+        },
+      },
+      activeLayout: 'sankey',
+    };
 
     /**
      * Per-node fill + per-node label. d3's example colours each rect by its
@@ -179,39 +199,36 @@ export const Sankey: Story = {
       });
     };
 
-    const run = async (): Promise<void> => {
-      layout?.stop();
-      graph.setData(ukEnergyFlowAsGraph());
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+    // initData loads on mount and the active 'sankey' layout auto-runs.
+    // Re-tint + re-label and fit once the layout settles (positions ready).
+    onStoryTeardown(
+      sankeyLayout.events.on('end', () => {
+        applyNodeStyling();
+        applyEdgeStyling();
+        canvas.camera.fitContent(graph.getBounds(), 80);
+      }),
+    );
 
-      layout = new D3SankeyLayout({
-        size: [settings.width, settings.height],
-        nodeWidth: settings.nodeWidth,
-        nodePadding: settings.nodePadding,
-        iterations: settings.iterations,
-        nodeAlign: settings.nodeAlign,
-      });
-      await layout.apply(graph);
-      applyNodeStyling();
-      applyEdgeStyling();
-      canvas.camera.fitContent(graph.getBounds(), 80);
-    };
-
-    await run();
-    onStoryTeardown(() => layout?.stop());
+    // Pushes the whole sankey param bag back through update() → re-runs the
+    // layout; styling re-applies from the 'end' handler above.
+    const applyLayout = (): void =>
+      canvas.update({ layouts: { sankey: canvasOptions.layouts.sankey } });
 
     // ── GUI ──────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'Sankey' });
     onStoryTeardown(() => gui.destroy());
+    onStoryTeardown(() => sankeyLayout.stop());
 
     const layoutFolder = gui.addFolder('Layout');
-    layoutFolder.add(settings, 'width', 600, 2400, 50).onChange(run);
-    layoutFolder.add(settings, 'height', 400, 1600, 50).onChange(run);
-    layoutFolder.add(settings, 'nodeWidth', 4, 60, 1).onChange(run);
-    layoutFolder.add(settings, 'nodePadding', 0, 40, 1).onChange(run);
-    layoutFolder.add(settings, 'iterations', 1, 32, 1).onChange(run);
+    layoutFolder.add(canvasOptions.layouts.sankey.size, '0', 600, 2400, 50).name('width').onFinishChange(applyLayout);
+    layoutFolder.add(canvasOptions.layouts.sankey.size, '1', 400, 1600, 50).name('height').onFinishChange(applyLayout);
+    layoutFolder.add(canvasOptions.layouts.sankey, 'nodeWidth', 4, 60, 1).onFinishChange(applyLayout);
+    layoutFolder.add(canvasOptions.layouts.sankey, 'nodePadding', 0, 40, 1).onFinishChange(applyLayout);
+    layoutFolder.add(canvasOptions.layouts.sankey, 'iterations', 1, 32, 1).onFinishChange(applyLayout);
     layoutFolder
-      .add(settings, 'nodeAlign', ['justify', 'left', 'right', 'center'])
-      .onChange(run);
+      .add(canvasOptions.layouts.sankey, 'nodeAlign', ['justify', 'left', 'right', 'center'])
+      .onChange(applyLayout);
 
     const style = gui.addFolder('Style');
     style.add(settings, 'linkAlpha', 0, 1, 0.01).onChange(applyEdgeStyling);

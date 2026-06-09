@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphLayer, type GraphEdge, type GraphNode } from '@invana/graph';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { GraphCanvas, GraphLayer, type GraphEdge, type GraphNode } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -33,24 +33,24 @@ export const Streaming: Story = {
   render: () => createContainer({ id: 'graph-streaming' }),
 
   play: async ({ canvasElement }) => {
-    const container = canvasElement.querySelector<HTMLDivElement>('#graph-streaming')!;
-    const canvas = new Canvas();
-    onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
     const palette = [
       0x3b82f6, 0xef4444, 0xf59e0b, 0xeab308, 0x10b981, 0x06b6d4,
       0x8b5cf6, 0xec4899, 0x14b8a6, 0xa3e635,
     ];
 
+    // ── Add everything, then init() last ─────────────────────────────────
+    const container = canvasElement.querySelector<HTMLDivElement>('#graph-streaming')!;
+    const canvas = new GraphCanvas();
+    onStoryTeardown(() => canvas.destroy());
+
+    // The `bgFill`-by-group resolver is non-serialisable → it stays in the
+    // constructor. Literal node/edge style lives in `canvasOptions` below.
+    // Data is seeded + streamed at runtime (below), so there's no `initData`.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
         node: {
           style: {
-            shape: { kind: 'circle', radius: 7 },
             // Resolver — colour follows the node's `data.group`, so a feed
             // only has to push `{ id, position, data: { group } }` and the
             // layer paints it for free. Same data shape covers initial seed,
@@ -59,14 +59,27 @@ export const Streaming: Story = {
               const group = (n.data as { group?: number } | undefined)?.group ?? 0;
               return palette[group % palette.length]!;
             },
-            bgStrokeColor: 0xffffff,
-            bgStrokeWidth: 1,
           },
         },
-        edge: { style: { strokeColor: 0x9ca3af, strokeWidth: 1, arrowTargetShape: 'none' } },
       },
     });
     canvas.layers.add(graph);
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: { style: { shape: { kind: 'circle', radius: 7 }, bgStrokeColor: 0xffffff, bgStrokeWidth: 1 } },
+          edge: { style: { strokeColor: 0x9ca3af, strokeWidth: 1, arrowTargetShape: 'none' } },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     // World extent for random positions. Camera fits this box on first
     // frame so the user sees the whole playground regardless of zoom.

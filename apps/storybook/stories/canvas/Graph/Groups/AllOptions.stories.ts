@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import GUI from 'lil-gui';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
+  GraphCanvas,
   CollapseExpandBehaviour,
   DragNodeBehaviour,
   GraphLayer,
@@ -150,22 +151,20 @@ export const AllOptions: Story = {
 
     const edges: GraphEdge[] = [];
 
+    // ── Add everything, then init() last ─────────────────────────────────
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-all-options')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    const graph = new GraphLayer({ id: 'graph', options: {} });
+    const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     const dragBehaviour = new DragNodeBehaviour({
       id: 'drag',
       layerId: 'graph',
-      enabled: settings.dragEnabled,
       // Skip dragging the expanded frame here — `NodeResize` and drag
       // would race for the same pointer-down otherwise. Toggle the
       // resize behaviour off in the GUI and you can drag the frame.
@@ -175,15 +174,26 @@ export const AllOptions: Story = {
     const collapseBehaviour = new CollapseExpandBehaviour({
       id: 'collapse-expand',
       layerId: 'graph',
-      enabled: settings.collapseEnabled,
     });
     canvas.behaviours.register(collapseBehaviour);
     const resizeBehaviour = new NodeResizeBehaviour({
       id: 'resize',
       layerId: 'graph',
-      enabled: settings.resizeEnabled,
     });
     canvas.behaviours.register(resizeBehaviour);
+
+    // Initial enabled-state comes from `settings.*Enabled`; the GUI toggles
+    // them live via each instance's enable()/disable() below.
+    const canvasOptions = {
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        drag: { enabled: settings.dragEnabled },
+        'collapse-expand': { enabled: settings.collapseEnabled },
+        resize: { enabled: settings.resizeEnabled },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 100);
 

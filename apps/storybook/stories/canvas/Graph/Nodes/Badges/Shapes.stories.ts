@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphLayer, type NodeData, type NodeShapeOptions } from '@invana/graph';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { GraphCanvas, GraphLayer, type NodeData, type NodeShapeOptions } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
 const meta: Meta = { title: 'canvas/graph/Nodes/Badges/Shapes' };
@@ -75,16 +75,18 @@ export const Shapes: Story = {
     const container = canvasElement.querySelector<HTMLDivElement>(
       '#graph-nodes-badges-shapes',
     )!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    const graph = new GraphLayer({ id: 'graph', options: {} });
+    const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges: [] } } });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges: [] });
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+
+    const canvasOptions = {
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
   },

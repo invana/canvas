@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphLayer, type NodeData } from '@invana/graph';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { GraphCanvas, GraphLayer, type NodeData } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'canvas/graph/Etc/BuiltinHover' };
@@ -28,11 +28,8 @@ export const BuiltinHover: Story = {
     const container = canvasElement.querySelector<HTMLDivElement>(
       '#graph-states-builtin-hover',
     )!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     const nodes: NodeData[] = [
       {
@@ -72,12 +69,19 @@ export const BuiltinHover: Story = {
       },
     ];
 
-    const graph = new GraphLayer({
-      id: 'graph',
-      options: {},
-    });
+    // Data is content — it rides on the layer via `initData`.
+    const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges: [] } } });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges: [] });
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+
+    const canvasOptions = {
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
   },

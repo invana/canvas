@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
+  GraphCanvas,
   GraphLayer,
   type CanonicalStateName,
   type GraphNode,
@@ -23,11 +24,6 @@ export const Arrow: Story = {
 
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-node-types-polygon-arrow')!;
-    const canvas = new Canvas();
-    onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     interface TileData {
       readonly state: 'default' | CanonicalStateName;
@@ -42,39 +38,58 @@ export const Arrow: Story = {
       { id: 'n-disabled',    position: { x:  240, y:  90 }, data: { state: 'disabled'    }, states: ['disabled']    },
     ];
 
+    const canvas = new GraphCanvas();
+    onStoryTeardown(() => canvas.destroy());
+
+    // labelText resolver stays in the constructor; literal style goes to config.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: { nodes, edges: [] },
         node: {
           style: {
-            shape: {
-              kind: 'polygon',
-              vertices: [
-                { x: -50, y: -20 },
-                { x:  20, y: -20 },
-                { x:  20, y: -40 },
-                { x:  60, y:   0 },
-                { x:  20, y:  40 },
-                { x:  20, y:  20 },
-                { x: -50, y:  20 },
-              ],
-            },
-            bgFill: 0x3b82f6,
-            bgStrokeColor: 0xffffff,
-            bgStrokeWidth: 0,
-            bgStrokeAlignment: 'outside',
             labelText: (n: GraphNode) => (n.data as TileData | undefined)?.state ?? '',
-            labelColor: 0x0f172a,
-            labelFontSize: 12,
-            labelFontWeight: 600,
-            labelPlacement: 'bottom',
-            labelOffsetY: 18,
           },
         },
       },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges: [] });
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              shape: {
+                kind: 'polygon',
+                vertices: [
+                  { x: -50, y: -20 },
+                  { x:  20, y: -20 },
+                  { x:  20, y: -40 },
+                  { x:  60, y:   0 },
+                  { x:  20, y:  40 },
+                  { x:  20, y:  20 },
+                  { x: -50, y:  20 },
+                ],
+              },
+              bgFill: 0x3b82f6,
+              bgStrokeColor: 0xffffff,
+              bgStrokeWidth: 0,
+              bgStrokeAlignment: 'outside',
+              labelColor: 0x0f172a,
+              labelFontSize: 12,
+              labelFontWeight: 600,
+              labelPlacement: 'bottom',
+              labelOffsetY: 18,
+            },
+          },
+        },
+      },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
   },
 };

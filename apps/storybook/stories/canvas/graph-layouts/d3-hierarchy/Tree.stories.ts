@@ -1,19 +1,21 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
+import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
 import {
   D3HierarchyLayout,
   type CartesianOrientation,
   type D3HierarchyLayoutMode,
+  type D3HierarchyLayoutOptions,
 } from '@invana/graph-layout-d3-hierarchy';
+import type { LayoutOptions } from '@invana/canvas';
 import { flareAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
+import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-hierarchy/Tree' };
 export default meta;
@@ -122,108 +124,155 @@ export const Tree: Story = {
     };
 
     // ── Canvas setup ─────────────────────────────────────────────────────
+    // Register layers / behaviours / layout by id, build one serialisable
+    // `canvasOptions`, then `init()` last. The per-item fill + label fields
+    // ride on `initData`; the literal node/edge template lives in config.
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-tree')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'solid',
-          color: { light: '#f8fafc', dark: '#0b1220' },
-          mode: 'auto',
-        },
-      }),
-    );
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: {
-        node: { style: { shape: { kind: 'circle', radius: settings.nodeRadius } } },
-        edge: {
-          style: {
-            strokeColor: 0x94a3b8,
-            strokeWidth: settings.edgeStrokeWidth,
-            strokeAlpha: settings.edgeAlpha,
-            arrowTargetShape: 'none',
-            // `bezier` with `axis: 'h'` matches d3.linkHorizontal(). Don't
-            // rely on `axis: 'auto'` — for sibling pairs whose parent sits
-            // between them, `dy > dx` flips auto to vertical and produces
-            // wrong-direction S-curves crossing the tree.
-            shape: {
-              pathType: 'bezier',
-              pathStyleOpts: { axis: 'h' },
-              // Centre-anchor so the bezier tangent at each endpoint matches
-              // the node centre rather than the trimmed boundary cut. Nodes
-              // overdraw the inner part of the curve.
-              sourceAnchor: 'center',
-              targetAnchor: 'center',
-            },
-          },
-        },
-      },
+      options: { initData: buildGraphData() },
     });
+
+    canvas.layers.add(
+      new BackgroundLayer({ id: 'bg', options: { type: 'solid' } }),
+    );
     canvas.layers.add(graph);
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
 
     // Registered after the `graph` layer is added — the behaviour resolves
     // its target layer at register-time, so the layer must exist first.
     const labelResolutionLOD = new LabelResolutionLODBehaviour({
       id: 'label-resolution',
       layerId: 'graph',
-      enabled: settings.sharpLabelsOnZoom,
     });
     canvas.behaviours.register(labelResolutionLOD);
 
-    let layout: D3HierarchyLayout | null = null;
+    const layout = new D3HierarchyLayout({
+      id: 'tree',
+      targetLayerId: 'graph',
+    } as D3HierarchyLayoutOptions & LayoutOptions);
+    canvas.layouts.add(layout);
 
-    const run = async (): Promise<void> => {
-      layout?.stop();
-      graph.setData(buildGraphData());
-
-      layout = new D3HierarchyLayout({
-        mode: settings.mode,
-        orientation: settings.orientation,
-        // d3's `tree.nodeSize([dx, dy])` — dx is sibling spacing, dy is
-        // depth spacing. Per-node spacing (vs. a fixed `size` bounding
-        // box) keeps siblings consistently spaced no matter how unbalanced
-        // a subtree is.
-        nodeSize: [settings.siblingSpacing, settings.depthSpacing],
-      });
-      await layout.apply(graph);
-      canvas.camera.fitContent(graph.getBounds(), 20);
+    const canvasOptions = {
+      layers: {
+        bg: { type: 'solid', color: '#f8fafc' },
+        graph: {
+          node: { style: { shape: { kind: 'circle', radius: settings.nodeRadius } } },
+          edge: {
+            style: {
+              strokeColor: 0x94a3b8,
+              strokeWidth: settings.edgeStrokeWidth,
+              strokeAlpha: settings.edgeAlpha,
+              arrowTargetShape: 'none',
+              // `bezier` with `axis: 'h'` matches d3.linkHorizontal(). Don't
+              // rely on `axis: 'auto'` — for sibling pairs whose parent sits
+              // between them, `dy > dx` flips auto to vertical and produces
+              // wrong-direction S-curves crossing the tree.
+              shape: {
+                pathType: 'bezier',
+                pathStyleOpts: { axis: 'h' },
+                // Centre-anchor so the bezier tangent at each endpoint matches
+                // the node centre rather than the trimmed boundary cut. Nodes
+                // overdraw the inner part of the curve.
+                sourceAnchor: 'center',
+                targetAnchor: 'center',
+              },
+            },
+          },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc', color: '#0f172a' },
+          dark: { backgroundColor: '#0b1220', color: '#e5e7eb' },
+        },
+        'label-resolution': { enabled: settings.sharpLabelsOnZoom },
+      },
+      layouts: {
+        tree: {
+          mode: settings.mode,
+          orientation: settings.orientation,
+          // d3's `tree.nodeSize([dx, dy])` — dx is sibling spacing, dy is
+          // depth spacing. Per-node spacing (vs. a fixed `size` bounding
+          // box) keeps siblings consistently spaced no matter how unbalanced
+          // a subtree is.
+          nodeSize: [settings.siblingSpacing, settings.depthSpacing],
+        },
+      },
+      activeLayout: 'tree',
     };
 
-    await run();
-    onStoryTeardown(() => layout?.stop());
+    // Fit once the active layout settles.
+    onStoryTeardown(
+      layout.events.on('end', () => canvas.camera.fitContent(graph.getBounds(), 20)),
+    );
+
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+
+    // Rebuild the graph's content from `settings` and reload it. Used by the
+    // GUI controls that change per-item data (fill ramp, labels).
+    const reloadData = (): void => {
+      graph.setData(buildGraphData());
+    };
 
     // ── GUI ──────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'Tree' });
     onStoryTeardown(() => gui.destroy());
 
+    const pushLayout = (): void =>
+      canvas.update({ layouts: { tree: canvasOptions.layouts.tree } });
+
     const layoutFolder = gui.addFolder('Layout');
     layoutFolder
       .add(settings, 'mode', ['tree', 'cluster'] satisfies D3HierarchyLayoutMode[])
-      .onChange(run);
+      .onChange((v: D3HierarchyLayoutMode) => {
+        canvasOptions.layouts.tree.mode = v;
+        pushLayout();
+      });
     layoutFolder
       .add(settings, 'orientation', ['horizontal', 'vertical'] satisfies CartesianOrientation[])
-      .onChange(run);
-    layoutFolder.add(settings, 'siblingSpacing', 4, 40, 1).onChange(run);
-    layoutFolder.add(settings, 'depthSpacing', 30, 300, 5).onChange(run);
+      .onChange((v: CartesianOrientation) => {
+        canvasOptions.layouts.tree.orientation = v;
+        pushLayout();
+      });
+    layoutFolder.add(settings, 'siblingSpacing', 4, 40, 1).onFinishChange((v: number) => {
+      canvasOptions.layouts.tree.nodeSize = [v, settings.depthSpacing];
+      pushLayout();
+    });
+    layoutFolder.add(settings, 'depthSpacing', 30, 300, 5).onFinishChange((v: number) => {
+      canvasOptions.layouts.tree.nodeSize = [settings.siblingSpacing, v];
+      pushLayout();
+    });
 
     const style = gui.addFolder('Style');
-    style.add(settings, 'nodeRadius', 1, 8, 0.5).onChange(run);
-    style.add(settings, 'colorByDepth').onChange(run);
-    style.add(settings, 'edgeStrokeWidth', 0.2, 4, 0.1).onChange(run);
-    style.add(settings, 'edgeAlpha', 0, 1, 0.05).onChange(run);
+    style.add(settings, 'nodeRadius', 1, 8, 0.5).onChange((v: number) => {
+      canvasOptions.layers.graph.node.style.shape.radius = v;
+      canvas.update({ layers: { graph: { node: { style: { shape: { kind: 'circle', radius: v } } } } } });
+    });
+    // `colorByDepth` rewrites per-item fills baked into the data.
+    style.add(settings, 'colorByDepth').onChange(reloadData);
+    style.add(settings, 'edgeStrokeWidth', 0.2, 4, 0.1).onChange((v: number) => {
+      canvasOptions.layers.graph.edge.style.strokeWidth = v;
+      canvas.update({ layers: { graph: { edge: { style: { strokeWidth: v } } } } });
+    });
+    style.add(settings, 'edgeAlpha', 0, 1, 0.05).onChange((v: number) => {
+      canvasOptions.layers.graph.edge.style.strokeAlpha = v;
+      canvas.update({ layers: { graph: { edge: { style: { strokeAlpha: v } } } } });
+    });
 
+    // `showLabels` / `labelFontSize` are baked per-item into the data.
     const labels = gui.addFolder('Labels');
-    labels.add(settings, 'showLabels').onChange(run);
-    labels.add(settings, 'labelFontSize', 6, 18, 1).onChange(run);
+    labels.add(settings, 'showLabels').onChange(reloadData);
+    labels.add(settings, 'labelFontSize', 6, 18, 1).onChange(reloadData);
     labels
       .add(settings, 'sharpLabelsOnZoom')
       .name('Sharp on zoom')

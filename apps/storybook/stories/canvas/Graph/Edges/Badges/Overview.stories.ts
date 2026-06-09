@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   type EdgeBadgePlacement,
   type EdgeData,
@@ -172,39 +173,44 @@ export const Overview: Story = {
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edges-badges')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
+    const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
+    canvas.layers.add(graph);
 
-    const graph = new GraphLayer({
-      id: 'graph',
-      options: {
-        node: {
-          style: {
-            labelColor: 0x0f172a,
-            labelFontSize: 12,
-            labelFontWeight: 500,
-            labelAlign: 'right',
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              labelColor: 0x0f172a,
+              labelFontSize: 12,
+              labelFontWeight: 500,
+              labelAlign: 'right',
+            },
           },
-        },
-        edge: {
-          style: {
-            strokeColor: 0x94a3b8,
-            strokeWidth: 1.5,
-            arrowTargetShape: 'triangle',
+          edge: {
+            style: {
+              strokeColor: 0x94a3b8,
+              strokeWidth: 1.5,
+              arrowTargetShape: 'triangle',
+            },
           },
         },
       },
-    });
-    canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+      },
+    };
 
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
 
     const placements: EdgeBadgePlacement[] = ['start', 'middle', 'end', 0.25, 0.75];

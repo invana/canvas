@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphLayer, type NodeData, type NodeShapeOptions } from '@invana/graph';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { GraphCanvas, GraphLayer, type NodeData, type NodeShapeOptions } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -82,15 +82,17 @@ export const Stroke: Story = {
     };
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-nodes-stroke')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        // Data is content — rides on `initData`, not config.
+        initData: { nodes, edges: [] },
+        // Every paint/geometry field here is a resolver closed over
+        // `settings`, so the whole `node.style` template stays in the
+        // constructor. Pure-literal label fields move to `canvasOptions`.
         node: {
           style: {
             shape:              (n) => shapeForType(n.type),
@@ -107,22 +109,38 @@ export const Stroke: Story = {
             bgStrokeCap:        () => settings.strokeCap,
             bgStrokeJoin:       () => settings.strokeJoin,
             labelText:          (n) => n.type ?? '?',
-            labelFontSize: 12,
-            labelFontWeight: 600,
-            labelColor: 0x454545,
-            labelPlacement: 'bottom',
-            labelOffsetY: 8,
-            labelBackgroundFill: 0xffffff,
-            labelBackgroundStrokeColor: 0xcbd5e1,
-            labelBackgroundStrokeWidth: 1,
-            labelBackgroundCornerRadius: 4,
-            labelBackgroundPadding: 3,
           },
         },
       },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges: [] });
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+
+    const canvasOptions = {
+      layers: {
+        // Pure-literal label fields shallow-merge with the resolver-bearing
+        // `node.style` declared in the constructor.
+        graph: {
+          node: {
+            style: {
+              labelFontSize: 12,
+              labelFontWeight: 600,
+              labelColor: 0x454545,
+              labelPlacement: 'bottom',
+              labelOffsetY: 8,
+              labelBackgroundFill: 0xffffff,
+              labelBackgroundStrokeColor: 0xcbd5e1,
+              labelBackgroundStrokeWidth: 1,
+              labelBackgroundCornerRadius: 4,
+              labelBackgroundPadding: 3,
+            },
+          },
+        },
+      },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
 
     // Trigger re-resolve on every cell so resolvers pick up the mutated

@@ -14,13 +14,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
 import {
   ClickSelectBehaviour,
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
   MiniMapLayer,
@@ -31,6 +31,7 @@ import {
 import { ElkLayout, type ElkDirection } from '@invana/graph-layout-elkjs';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
+import { SystemThemeBehaviour } from '../system-theme';
 
 const meta: Meta = { title: 'Usecases/Code Knowledge Graph' };
 export default meta;
@@ -123,31 +124,6 @@ export const CodeKnowledgeGraph: Story = {
       hoverEmphasis: true,
     };
 
-    // ── Canvas setup ─────────────────────────────────────────────────────
-    const container = canvasElement.querySelector<HTMLDivElement>('#usecase-code-kg')!;
-    const canvas = new Canvas();
-    onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'pattern',
-          patternType: 'dots',
-          mode: 'auto',
-          backgroundColor: { light: '#f8fafc', dark: '#0f172a' },
-          color: { light: '#cbd5e1', dark: '#334155' },
-          size: 1.2,
-          spacing: 26,
-          alpha: 0.7,
-        },
-      }),
-    );
-
     // Resolver: build a badge bag from each node's data. Coverage colour
     // bands at 80% / 60% match the GitHub Codecov convention. Errors
     // badge only renders when there's actually something to flag.
@@ -187,75 +163,43 @@ export const CodeKnowledgeGraph: Story = {
       return badges;
     };
 
+    // ── Canvas setup — register everything by id, then init() last ───────
+    const container = canvasElement.querySelector<HTMLDivElement>('#usecase-code-kg')!;
+    const canvas = new GraphCanvas();
+    onStoryTeardown(() => canvas.destroy());
+
+    // Graph layer: only resolver fields (bgFill, labelText, badges) and
+    // initData live in the constructor; literal style goes to config.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: { nodes, edges },
         node: {
           style: {
-            shape: { kind: 'rect', width: 168, height: 46, cornerRadius: 8 },
             bgFill: (n: GraphNode) => PKG_FILL[(n.data as CodeNodeData).package],
-            bgStrokeColor: 0xffffff,
-            bgStrokeWidth: 1.5,
             labelText: (n: GraphNode) => n.id,
-            labelColor: 0xffffff,
-            labelFontSize: 12,
-            labelFontWeight: 600,
-            labelPlacement: 'center',
             badges: resolveBadges,
-          },
-          state: {
-            // Sharper highlight ring against the saturated package fills.
-            highlighted: { bgStrokeColor: 0xfbbf24, bgStrokeWidth: 3 },
-            // `selected` is auto-merged via DEFAULT_NODE_STATE_CONFIGS;
-            // override for a thick white ring against the indigo / emerald.
-            selected: { bgStrokeColor: 0xffffff, bgStrokeWidth: 4 },
-          },
-        },
-        edge: {
-          style: {
-            shape: { pathType: 'rounded', pathStyleOpts: { radius: 8 } },
-            strokeColor: 0x94a3b8,
-            strokeWidth: 1.3,
-            strokeAlpha: 0.75,
-            arrowTargetShape: 'triangle',
-            arrowTargetSize: 8,
-            arrowTargetColor: 0x94a3b8,
-          },
-          state: {
-            highlighted: {
-              strokeColor: 0xfbbf24,
-              strokeWidth: 2,
-              strokeAlpha: 1,
-              arrowTargetColor: 0xfbbf24,
-            },
           },
         },
       },
     });
-    canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
 
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
+    canvas.layers.add(graph);
     canvas.layers.add(
-      new MiniMapLayer({
-        id: 'minimap',
-        options: {
-          graphLayerId: 'graph',
-          position: 'bottom-right',
-          width: 220,
-          height: 160,
-        },
-      }),
+      new MiniMapLayer({ id: 'minimap', options: { graphLayerId: 'graph' } }),
     );
 
     // ── Behaviours ──────────────────────────────────────────────────────
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
+      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }),
     );
 
     const hover = new HoverActivateBehaviour({
       id: 'hover',
       layerId: 'graph',
-      enabled: true,
       state: 'highlighted',
       inactiveState: 'dimmed',
       degree: 1,
@@ -267,28 +211,107 @@ export const CodeKnowledgeGraph: Story = {
       new ClickSelectBehaviour({
         id: 'select',
         layerId: 'graph',
-        enabled: true,
         multiple: true,
         trigger: ['shift'],
       }),
     );
 
-    // ── Layout ──────────────────────────────────────────────────────────
-    let layout: ElkLayout | null = null;
-    const run = async (): Promise<void> => {
-      layout?.stop();
-      layout = new ElkLayout({
-        algorithm: 'layered',
-        direction: settings.direction,
-        nodeSpacing: 28,
-        layerSpacing: 90,
-      });
-      layout.events.on('end', ({ reason }) => {
-        if (reason === 'completed') canvas.camera.fitContent(graph.getBounds(), 80);
-      });
-      await layout.apply(graph);
+    canvas.behaviours.register(
+      new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }),
+    );
+
+    // ── Layout — register the ELK layout; activeLayout auto-runs on mount.
+    // `ElkLayout`'s constructor surface is its ELK params only; the engine's
+    // id / target wiring rides on the instance, so set those after construction.
+    const layout = new ElkLayout();
+    Object.assign(layout, { id: 'elk', targetLayerId: 'graph' });
+    layout.events.on('end', ({ reason }) => {
+      if (reason === 'completed') canvas.camera.fitContent(graph.getBounds(), 80);
+    });
+    canvas.layouts.add(layout);
+    onStoryTeardown(() => layout.stop());
+
+    // ── Serialisable config ─────────────────────────────────────────────
+    const canvasOptions = {
+      layers: {
+        bg: {
+          type: 'pattern',
+          patternType: 'dots',
+          backgroundColor: '#0f172a',
+          color: '#334155',
+          size: 1.2,
+          spacing: 26,
+          alpha: 0.7,
+        },
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'rect', width: 168, height: 46, cornerRadius: 8 },
+              bgStrokeColor: 0xffffff,
+              bgStrokeWidth: 1.5,
+              labelColor: 0xffffff,
+              labelFontSize: 12,
+              labelFontWeight: 600,
+              labelPlacement: 'center',
+            },
+            state: {
+              // Sharper highlight ring against the saturated package fills.
+              highlighted: { bgStrokeColor: 0xfbbf24, bgStrokeWidth: 3 },
+              // `selected` is auto-merged via DEFAULT_NODE_STATE_CONFIGS;
+              // override for a thick white ring against the indigo / emerald.
+              selected: { bgStrokeColor: 0xffffff, bgStrokeWidth: 4 },
+            },
+          },
+          edge: {
+            style: {
+              shape: { pathType: 'rounded', pathStyleOpts: { radius: 8 } },
+              strokeColor: 0x94a3b8,
+              strokeWidth: 1.3,
+              strokeAlpha: 0.75,
+              arrowTargetShape: 'triangle',
+              arrowTargetSize: 8,
+              arrowTargetColor: 0x94a3b8,
+            },
+            state: {
+              highlighted: {
+                strokeColor: 0xfbbf24,
+                strokeWidth: 2,
+                strokeAlpha: 1,
+                arrowTargetColor: 0xfbbf24,
+              },
+            },
+          },
+        },
+        minimap: {
+          position: 'bottom-right',
+          width: 220,
+          height: 160,
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+        hover: { enabled: true },
+        select: { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc', color: '#cbd5e1' },
+          dark: { backgroundColor: '#0f172a', color: '#334155' },
+        },
+      },
+      layouts: {
+        elk: {
+          algorithm: 'layered',
+          direction: settings.direction,
+          nodeSpacing: 28,
+          layerSpacing: 90,
+        },
+      },
+      activeLayout: 'elk',
     };
-    void run();
+
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     // Wipe each node's per-instance style so `resolveNodeStyle` re-runs
     // the layer template's resolvers against the live `settings` (the
@@ -302,12 +325,14 @@ export const CodeKnowledgeGraph: Story = {
     // ── GUI ─────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'Code Knowledge Graph' });
     onStoryTeardown(() => gui.destroy());
-    onStoryTeardown(() => layout?.stop());
 
     gui
       .add(settings, 'direction', ['UP', 'DOWN', 'LEFT', 'RIGHT'])
       .name('layout direction')
-      .onChange(() => void run());
+      .onFinishChange((v: ElkDirection) => {
+        canvasOptions.layouts.elk.direction = v;
+        canvas.update({ layouts: { elk: canvasOptions.layouts.elk } });
+      });
 
     gui
       .add(settings, 'showBadges')

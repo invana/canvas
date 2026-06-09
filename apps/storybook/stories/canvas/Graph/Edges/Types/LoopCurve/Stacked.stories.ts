@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
-  Canvas, DragPanBehaviour, WheelZoomBehaviour,
+  DragPanBehaviour, WheelZoomBehaviour,
   LOOP_CURVE_PRESETS,
 } from '@invana/canvas';
 import type { LoopCurvePresetName } from '@invana/canvas';
 import {
-  DragNodeBehaviour, GraphLayer,
+  GraphCanvas, DragNodeBehaviour, GraphLayer,
   type EdgeData, type NodeData,
 } from '@invana/graph';
 import GUI from 'lil-gui';
@@ -33,8 +33,10 @@ type Story = StoryObj;
  *
  * lil-gui wiring follows the field-resolver pattern: per-edge `data`
  * carries the ring index; the `shape` and `strokeColor` resolvers read
- * `settings` from the closure. Changing `count` syncs the edge set;
- * other knobs just call `rerenderAll`.
+ * `settings` from the closure. Because they're non-serialisable they
+ * stay in the layer constructor `options`; the literal edge/node style
+ * lives in `canvasOptions`. Changing `count` syncs the edge set; other
+ * knobs just call `rerenderAll`.
  */
 export const Stacked: Story = {
   render: () => createContainer({ id: 'graph-edge-loop-curve-stacked' }),
@@ -76,21 +78,19 @@ export const Stacked: Story = {
     interface EdgeMeta { index: number; }
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edge-loop-curve-stacked')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
+    const nodes: NodeData[] = [{ id: NODE_ID, position: { x: 0, y: 0 } }];
+
+    // The `shape` + `strokeColor` resolvers read mutable `settings` from
+    // the closure, so they stay in the constructor; the literal style
+    // fields go to config. Edges are count-driven (synced live), so
+    // initData starts with just the node and no edges.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        node: {
-          style: {
-            shape: { kind: 'rect', width: NODE_W, height: NODE_H },
-            bgFill: 0x4f7ff5, bgStrokeColor: 0x2563eb, bgStrokeWidth: 0,
-          },
-        },
+        initData: { nodes, edges: [] },
         edge: {
           style: {
             shape: (edge) => {
@@ -115,19 +115,39 @@ export const Stacked: Story = {
               const { index } = edge.data as EdgeMeta;
               return STACK_COLORS[index % STACK_COLORS.length]!;
             },
-            strokeWidth: 1.5,
-            arrowTargetShape: 'triangle',
           },
         },
       },
     });
     canvas.layers.add(graph);
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
 
-    const nodes: NodeData[] = [{ id: NODE_ID, position: { x: 0, y: 0 } }];
-    graph.setData({ nodes, edges: [] });
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'rect', width: NODE_W, height: NODE_H },
+              bgFill: 0x4f7ff5, bgStrokeColor: 0x2563eb, bgStrokeWidth: 0,
+            },
+          },
+          edge: {
+            style: {
+              strokeWidth: 1.5,
+              arrowTargetShape: 'triangle',
+            },
+          },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     const MAX = 12;
 

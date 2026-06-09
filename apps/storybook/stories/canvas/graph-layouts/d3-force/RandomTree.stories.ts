@@ -1,15 +1,21 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { DragNodeBehaviour, GraphLayer, type GraphEdge, type GraphNode } from '@invana/graph';
+import {
+  DragNodeBehaviour,
+  GraphCanvas,
+  GraphLayer,
+  type GraphEdge,
+  type GraphNode,
+} from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { generateRandomTree } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
+import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-force/RandomTree' };
 export default meta;
@@ -75,30 +81,17 @@ export const RandomTree: Story = {
 
     // ── Canvas setup ─────────────────────────────────────────────────────
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-d3-tree')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'solid',
-          color: { light: '#f8fafc', dark: '#0b1220' },
-          mode: 'auto',
-        },
-      }),
-    );
-
+    // The `bgFill` resolver closes over `maxDepth` so it can't be serialised —
+    // it stays in the constructor; the literal circle shape goes to config.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: buildGraphData(),
         node: {
           style: {
-            shape: { kind: 'circle', radius: 4 },
             // 30° orange (root) → 220° blue (leaves), rescaling per rebuild.
             bgFill: (n: GraphNode) => {
               const depth = (n.data as TreeNodeData).depth;
@@ -107,53 +100,98 @@ export const RandomTree: Story = {
             },
           },
         },
-        edge: { style: { strokeColor: 0x64748b, strokeWidth: 0.8, arrowTargetShape: 'none' } },
       },
     });
+
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
     canvas.layers.add(graph);
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
 
-    let layout: D3ForceLayout | null = null;
+    const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
+    canvas.layouts.add(forceLayout);
 
-    const run = (): void => {
-      layout?.stop();
-      graph.setData(buildGraphData());
-
-      layout = new D3ForceLayout({
-        charge: {
-          strength: settings.chargeStrength,
-          distanceMax: settings.chargeDistanceMax,
+    const canvasOptions = {
+      layers: {
+        bg: { type: 'solid', backgroundColor: '#0b1220' },
+        graph: {
+          node: { style: { shape: { kind: 'circle', radius: 4 } } },
+          edge: { style: { strokeColor: 0x64748b, strokeWidth: 0.8, arrowTargetShape: 'none' } },
         },
-        link: { distance: settings.linkDistance },
-        collide: { radius: settings.collideRadius },
-        center: { x: 0, y: 0 },
-        // Gentle XY anchor keeps the cluster from drifting off-frame
-        // without compressing branch spread.
-        x: { strength: settings.xyAnchorStrength },
-        y: { strength: settings.xyAnchorStrength },
-      });
-      void layout.apply(graph);
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
+          dark: { backgroundColor: '#0b1220', color: '#475569' },
+        },
+      },
+      layouts: {
+        force: {
+          charge: {
+            strength: settings.chargeStrength,
+            distanceMax: settings.chargeDistanceMax,
+          },
+          link: { distance: settings.linkDistance },
+          collide: { radius: settings.collideRadius },
+          center: { x: 0, y: 0 },
+          // Gentle XY anchor keeps the cluster from drifting off-frame
+          // without compressing branch spread.
+          x: { strength: settings.xyAnchorStrength },
+          y: { strength: settings.xyAnchorStrength },
+        },
+      },
+      activeLayout: 'force',
     };
 
-    run();
+    // initData loads on mount; `activeLayout` runs itself once data is present.
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+
+    // Re-feed live data; the topology change re-triggers the active layout.
+    const rebuild = (): void => graph.setData(buildGraphData());
+
+    // Push edited force params back through config; re-heats the sim once.
+    const reheat = (): void =>
+      canvas.update({ layouts: { force: canvasOptions.layouts.force } });
 
     // ── GUI ──────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'RandomTree' });
     onStoryTeardown(() => gui.destroy());
-    onStoryTeardown(() => layout?.stop());
+    onStoryTeardown(() => forceLayout.stop());
 
     const tree = gui.addFolder('Tree');
     tree.add(settings, 'nodeCount', 10, 5000, 10);
 
     const forces = gui.addFolder('Forces');
-    forces.add(settings, 'chargeStrength', -500, 0, 5);
-    forces.add(settings, 'chargeDistanceMax', 20, 600, 5).name('charge.distanceMax');
-    forces.add(settings, 'linkDistance', 5, 100, 1);
-    forces.add(settings, 'collideRadius', 0, 30, 0.5);
-    forces.add(settings, 'xyAnchorStrength', 0, 0.2, 0.005).name('x/y anchor strength');
+    forces
+      .add(canvasOptions.layouts.force.charge, 'strength', -500, 0, 5)
+      .name('chargeStrength')
+      .onFinishChange(reheat);
+    forces
+      .add(canvasOptions.layouts.force.charge, 'distanceMax', 20, 600, 5)
+      .name('charge.distanceMax')
+      .onFinishChange(reheat);
+    forces
+      .add(canvasOptions.layouts.force.link, 'distance', 5, 100, 1)
+      .name('linkDistance')
+      .onFinishChange(reheat);
+    forces
+      .add(canvasOptions.layouts.force.collide, 'radius', 0, 30, 0.5)
+      .name('collideRadius')
+      .onFinishChange(reheat);
+    forces
+      .add(canvasOptions.layouts.force.x, 'strength', 0, 0.2, 0.005)
+      .name('x/y anchor strength')
+      .onFinishChange((v: number) => {
+        canvasOptions.layouts.force.y.strength = v;
+        reheat();
+      });
 
-    gui.add({ rebuild: () => run() }, 'rebuild').name('Rebuild & re-apply');
+    gui.add({ rebuild }, 'rebuild').name('Rebuild & re-apply');
   },
 };

@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   type EdgeData,
-  type GraphEdge,
   type GraphNode,
   type NodeData,
 } from '@invana/graph';
@@ -42,14 +42,6 @@ export const Bundle: Story = {
   render: () => createContainer({ id: 'graph-edge-types-bundle' }),
 
   play: async ({ canvasElement }) => {
-    const settings = {
-      beta: 0.85,
-      edgeAlpha: 0.5,
-      edgeWidth: 1.2,
-      midX: 0,
-      midY: 0,
-    };
-
     // Two clusters of four nodes — left at x = -260, right at x = +260.
     const nodes: NodeData[] = [
       { id: 'L0', position: { x: -260, y: -90 } },
@@ -83,95 +75,95 @@ export const Bundle: Story = {
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edge-types-bundle')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: { nodes, edges },
         node: {
+          // `labelText` is a resolver — it stays in the constructor.
           style: {
-            shape: { kind: 'circle', radius: 9 },
-            bgFill: 0x4f9cf9,
-            bgStrokeColor: 0x1d4ed8,
-            bgStrokeWidth: 1.2,
             labelText: (n: GraphNode) => n.id,
-            labelColor: 0x1e3a8a,
-            labelFontSize: 10,
-            labelPlacement: 'right',
-            labelOffsetX: 12,
-          },
-        },
-        edge: {
-          // Per-edge `shape` overrides supply the `waypoints` and
-          // `pathStyleOpts` (set in `applyWaypoints` below from the
-          // GUI). The defaults here only pick the pathType + anchors.
-          style: {
-            shape: {
-              pathType: 'bundle',
-              // `center` (vs `boundary`) so endpoints sit on the node
-              // centre — the bundle should read as "edges flow from
-              // the dot itself", not from the dot's outer rim.
-              sourceAnchor: 'center',
-              targetAnchor: 'center',
-            },
-            strokeColor: 0x3b82f6,
-            arrowTargetShape: 'none',
           },
         },
       },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
 
-    // ── Re-style edges from `settings` ──────────────────────────────────
-    // The waypoint and β both live inside `edge.style.shape` —
-    // re-stamping each edge's style is the GUI knob's effect.
-    const applyWaypoints = (): void => {
-      const pathStyleOpts = { beta: settings.beta };
-      const waypoints = [{ x: settings.midX, y: settings.midY }];
-      graph.store.batch(() => {
-        for (const e of graph.store.edges() as IterableIterator<GraphEdge>) {
-          graph.store.updateEdge(e.id, {
+    // All 16 edges share the same bundle template — β, alpha, width and
+    // the single midpoint `waypoint` live in the edge style and are tuned
+    // live from the GUI via `canvas.update`. `center` (vs `boundary`)
+    // anchors keep endpoints on the node centre so the bundle reads as
+    // "edges flow from the dot itself", not from the dot's outer rim.
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'circle', radius: 9 },
+              bgFill: 0x4f9cf9,
+              bgStrokeColor: 0x1d4ed8,
+              bgStrokeWidth: 1.2,
+              labelColor: 0x1e3a8a,
+              labelFontSize: 10,
+              labelPlacement: 'right',
+              labelOffsetX: 12,
+            },
+          },
+          edge: {
             style: {
               shape: {
                 pathType: 'bundle',
                 sourceAnchor: 'center',
                 targetAnchor: 'center',
-                pathStyleOpts,
-                waypoints,
+                pathStyleOpts: { beta: 0.85 },
+                waypoints: [{ x: 0, y: 0 }],
               },
               strokeColor: 0x3b82f6,
-              strokeWidth: settings.edgeWidth,
-              strokeAlpha: settings.edgeAlpha,
+              strokeWidth: 1.2,
+              strokeAlpha: 0.5,
               arrowTargetShape: 'none',
             },
-          });
-        }
-      });
+          },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+      },
     };
-    applyWaypoints();
 
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
-
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
 
     // ── GUI ──────────────────────────────────────────────────────────────
+    // Each control mutates the live `canvasOptions` edge style then pushes
+    // the whole edge style through `canvas.update` so all 16 edges restamp.
+    const edgeStyle = canvasOptions.layers.graph.edge.style;
+    const pushEdgeStyle = (): void => {
+      canvas.update({ layers: { graph: { edge: { style: edgeStyle } } } });
+    };
+
     const gui = new GUI({ title: 'Bundle pathStyle' });
     onStoryTeardown(() => gui.destroy());
 
-    gui.add(settings, 'beta', 0, 1, 0.01).name('β (tension)').onChange(applyWaypoints);
-    gui.add(settings, 'edgeAlpha', 0.05, 1, 0.01).name('edge alpha').onChange(applyWaypoints);
-    gui.add(settings, 'edgeWidth', 0.3, 4, 0.1).name('edge width').onChange(applyWaypoints);
+    gui
+      .add(edgeStyle.shape.pathStyleOpts, 'beta', 0, 1, 0.01)
+      .name('β (tension)')
+      .onChange(pushEdgeStyle);
+    gui.add(edgeStyle, 'strokeAlpha', 0.05, 1, 0.01).name('edge alpha').onChange(pushEdgeStyle);
+    gui.add(edgeStyle, 'strokeWidth', 0.3, 4, 0.1).name('edge width').onChange(pushEdgeStyle);
 
     const midpoint = gui.addFolder('Midpoint waypoint');
-    midpoint.add(settings, 'midX', -400, 400, 5).name('x').onChange(applyWaypoints);
-    midpoint.add(settings, 'midY', -300, 300, 5).name('y').onChange(applyWaypoints);
+    const waypoint = edgeStyle.shape.waypoints[0] as { x: number; y: number };
+    midpoint.add(waypoint, 'x', -400, 400, 5).name('x').onChange(pushEdgeStyle);
+    midpoint.add(waypoint, 'y', -300, 300, 5).name('y').onChange(pushEdgeStyle);
 
     gui
       .add({ refit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'refit')

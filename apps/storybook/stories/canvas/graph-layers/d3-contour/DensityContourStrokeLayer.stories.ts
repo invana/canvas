@@ -12,13 +12,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DevInfoLayer,
   DragPanBehaviour,
   LayersPanelLayer,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
+import { DragNodeBehaviour, GraphCanvas, GraphLayer, type GraphNode } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import {
   DENSITY_CONTOUR_PALETTE_NAMES,
@@ -28,6 +27,7 @@ import {
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
+import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layers/d3-contour/DensityContourStrokeLayer' };
 export default meta;
@@ -50,41 +50,26 @@ export const DensityContourStrokeLayer_Story: Story = {
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-density-stroke-lesmis')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
+    // Background pattern, concrete colours; OS dark-mode swaps them via the
+    // SystemThemeBehaviour below.
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
+    canvas.layers.add(new DevInfoLayer({ id: 'dev-info', corner: 'bottom-left' }));
 
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'pattern',
-          patternType: 'dots',
-          mode: 'auto',
-          backgroundColor: { light: '#f8fafc', dark: '#0f172a' },
-          color: { light: '#94a3b8', dark: '#475569' },
-          size: 1.5,
-          spacing: 24,
-          alpha: 0.85,
-        },
-      }),
-    );
-    canvas.layers.add(new DevInfoLayer({ id: 'dev-info', corner: 'bottom-left', enabled: true }));
-
+    // The `bgFill` resolver depends on per-node group, so it stays in the
+    // constructor; the literal node/edge style moves to config.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: { nodes, edges: lesMiserables.edges },
         node: {
           style: {
-            shape: { kind: 'circle', radius: 5 },
             bgFill: (n: GraphNode) =>
               groupColors[(n.data as LesMisNodeData).group % groupColors.length]!,
           },
         },
-        edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.5 } },
       },
     });
     canvas.layers.add(graph);
@@ -94,55 +79,84 @@ export const DensityContourStrokeLayer_Story: Story = {
     // `indexEvery` / `indexMajorWidth` / `indexMinorWidth` sugar (every
     // 5th band heavy at 1 unit, the rest hair-thin at 0.25). With 20
     // thresholds you get the classic topo-map cadence: 4 thin lines
-    // between every pair of heavies.
+    // between every pair of heavies. The cross-layer `graphLayerId` stays
+    // in the constructor; literal params move to config.
     const contour = new DensityContourStrokeLayer({
       id: 'density',
       zIndex: -1,
-      options: {
-        graphLayerId: 'graph',
-        bandwidth: 30,
-        thresholds: 20,
-        cellSize: 4,
-        padding: 80,
-        strokeColor: 0x4682b4,
-        indexEvery: 5,
-        indexMajorWidth: 1,
-        indexMinorWidth: 0.25,
-      },
+      options: { graphLayerId: 'graph' },
     });
     canvas.layers.add(contour);
 
-    canvas.layers.add(
-      new LayersPanelLayer({
-        corner: 'top-left',
-        enabled: true,
-        fontSize: 11,
-        opacity: 0.92,
-        backgroundColor: 'rgba(10,10,10,0.82)',
-        textColor: '#c8d3e0',
-        accentColor: '#4fc3f7',
+    canvas.layers.add(new LayersPanelLayer({ id: 'layers-panel' }));
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+
+    const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
+    canvas.layouts.add(forceLayout);
+
+    const canvasOptions = {
+      layers: {
+        bg: {
+          type: 'pattern',
+          patternType: 'dots',
+          backgroundColor: '#0f172a',
+          color: '#475569',
+          size: 1.5,
+          spacing: 24,
+          alpha: 0.85,
+        },
+        graph: {
+          node: { style: { shape: { kind: 'circle', radius: 5 } } },
+          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.5 } },
+        },
+        density: {
+          bandwidth: 30,
+          thresholds: 20,
+          cellSize: 4,
+          padding: 80,
+          strokeColor: 0x4682b4,
+          indexEvery: 5,
+          indexMajorWidth: 1,
+          indexMinorWidth: 0.25,
+        },
+        'layers-panel': {
+          corner: 'top-left',
+          enabled: true,
+          fontSize: 11,
+          opacity: 0.92,
+          backgroundColor: 'rgba(10,10,10,0.82)',
+          textColor: '#c8d3e0',
+          accentColor: '#4fc3f7',
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
+          dark: { backgroundColor: '#0f172a', color: '#475569' },
+        },
+      },
+      layouts: { force: { link: {}, charge: {}, center: { x: 0, y: 0 } } },
+      activeLayout: 'force',
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+
+    // Settle-fit + contour recompute once the force simulation ends.
+    onStoryTeardown(
+      forceLayout.events.on('end', () => {
+        canvas.camera.fitContent(graph.getBounds(), 100);
+        contour.recompute();
       }),
     );
 
-    graph.setData({ nodes, edges: lesMiserables.edges });
-
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
-
-    const layout = new D3ForceLayout({
-      link: {},
-      charge: {},
-      center: { x: 0, y: 0 },
-    });
-    onStoryTeardown(() => layout.stop());
-
-    layout.events.on('end', () => {
-      canvas.camera.fitContent(graph.getBounds(), 100);
-      contour.recompute();
-    });
-
-    void layout.apply(graph);
+    canvas.camera.fitContent(graph.getBounds(), 100);
 
     // Stroke colour has two forms:
     //  - 'constant' : single 0xRRGGBB for every band (Observable default)

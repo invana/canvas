@@ -1,13 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import {
-  BackgroundLayer,
-  Canvas,
-  DragPanBehaviour,
-  WheelZoomBehaviour,
-} from '@invana/canvas';
+import { BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   CollapseExpandBehaviour,
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   type GraphEdge,
   type GraphNode,
@@ -46,9 +42,9 @@ export const HackerStyle: Story = {
         position: { x: 0, y: 0 },
         style: {
           // Small declared base — autoFit grows the frame around children when
-// expanded; the small size is reused on collapse so the super-node
-// reads as node-sized.
-shape: { kind: 'rect', width: 70, height: 50, cornerRadius: 4 },
+          // expanded; the small size is reused on collapse so the super-node
+          // reads as node-sized.
+          shape: { kind: 'rect', width: 70, height: 50, cornerRadius: 4 },
           bgStrokeColor: NEON_GREEN,
           bgStrokeWidth: 1.5,
           bgStrokeDashArray: [4, 3],
@@ -74,9 +70,9 @@ shape: { kind: 'rect', width: 70, height: 50, cornerRadius: 4 },
         position: { x: 360, y: 0 },
         style: {
           // Small declared base — autoFit grows the frame around children when
-// expanded; the small size is reused on collapse so the super-node
-// reads as node-sized.
-shape: { kind: 'rect', width: 70, height: 50, cornerRadius: 4 },
+          // expanded; the small size is reused on collapse so the super-node
+          // reads as node-sized.
+          shape: { kind: 'rect', width: 70, height: 50, cornerRadius: 4 },
           bgStrokeColor: NEON_CYAN,
           bgStrokeWidth: 1.5,
           bgStrokeDashArray: [4, 3],
@@ -102,9 +98,9 @@ shape: { kind: 'rect', width: 70, height: 50, cornerRadius: 4 },
         position: { x: 720, y: 0 },
         style: {
           // Small declared base — autoFit grows the frame around children when
-// expanded; the small size is reused on collapse so the super-node
-// reads as node-sized.
-shape: { kind: 'rect', width: 70, height: 50, cornerRadius: 4 },
+          // expanded; the small size is reused on collapse so the super-node
+          // reads as node-sized.
+          shape: { kind: 'rect', width: 70, height: 50, cornerRadius: 4 },
           bgStrokeColor: NEON_MAGENTA,
           bgStrokeWidth: 1.5,
           bgStrokeDashArray: [4, 3],
@@ -135,32 +131,38 @@ shape: { kind: 'rect', width: 70, height: 50, cornerRadius: 4 },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-hacker-style')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
     // Dark canvas — the whole aesthetic depends on this. BackgroundLayer
     // is screen-fixed (it inherits ScreenLayer) so it stays put while the
     // camera pans / zooms over the graph above it.
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: { type: 'pattern', patternType: 'dots', backgroundColor: BG, color: 0x1f2937, spacing: 24, size: 1, alpha: 1 },
-      }),
-    );
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
 
-    const graph = new GraphLayer({ id: 'graph', options: {} });
+    // Data is content — it rides on the layer via `initData`.
+    const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
 
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag', layerId: 'graph' }));
     canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag', layerId: 'graph', enabled: true }),
+      new CollapseExpandBehaviour({ id: 'collapse-expand', layerId: 'graph' }),
     );
-    canvas.behaviours.register(
-      new CollapseExpandBehaviour({ id: 'collapse-expand', layerId: 'graph', enabled: true }),
-    );
+
+    const canvasOptions = {
+      layers: {
+        bg: { type: 'pattern', patternType: 'dots', backgroundColor: BG, color: 0x1f2937, spacing: 24, size: 1, alpha: 1 },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        drag: { enabled: true },
+        'collapse-expand': { enabled: true },
+      },
+    };
+
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 120);
   },

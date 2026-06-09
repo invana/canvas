@@ -18,8 +18,9 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DevInfoLayer } from '@invana/canvas';
+import { DevInfoLayer } from '@invana/canvas';
 import {
+  GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
   NodeSizeLODBehaviour,
@@ -53,9 +54,8 @@ export const Airports_Story: Story = {
     } as const;
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-maplibre-airports')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
     // MapLibre owns input — don't register DragPan / WheelZoom behaviours
     // alongside this layer (the pixi canvas is pointer-event-transparent
@@ -70,60 +70,6 @@ export const Airports_Story: Story = {
     });
     canvas.layers.add(map);
 
-    // GraphLayer has to mount before the contour layer — the contour's
-    // `onMount` resolves its `graphLayerId` dependency synchronously and
-    // throws if the graph isn't already registered. zIndex still controls
-    // paint order, so the contour can sit visually below the nodes.
-    const graph = new GraphLayer({
-      id: 'graph',
-      zIndex: 10,
-      options: {
-        node: {
-          style: {
-            shape: { kind: 'circle', radius: NODE_DEFAULTS.size / 2 },
-            bgFill: NODE_DEFAULTS.fill,
-            bgStrokeColor: NODE_DEFAULTS.stroke,
-            bgStrokeWidth: NODE_DEFAULTS.strokeWidth,
-            bgAlpha: NODE_DEFAULTS.alpha,
-          },
-          state: {
-            // Hovered state palette — bright fill + ring on the hovered
-            // airport, everything else dimmed. No edges in this dataset.
-            hovered: {
-              bgFill: 0xfacc15,
-              bgStrokeColor: 0xfacc15,
-              bgStrokeWidth: 1.5,
-              shape: { kind: 'circle', radius: 3 },
-            },
-            dimmed: { bgAlpha: 0.25 },
-          },
-        },
-      },
-    });
-    canvas.layers.add(graph);
-
-    // Density overlay between the map and the airport dots. World-space
-    // contour bands track the camera through MapLayer's transform mirror,
-    // so they pan and zoom with the basemap. Toggle visible from the GUI.
-    const contour = new DensityContourFillLayer({
-      id: 'density',
-      zIndex: 5,
-      visible: false,
-      options: {
-        graphLayerId: 'graph',
-        // World coords are mercator pixels at zoom 0 — the whole world is
-        // 512 units wide. A bandwidth of ~10 reads as "city-cluster scale"
-        // at most basemap zooms.
-        bandwidth: 10,
-        thresholds: 8,
-        cellSize: 2,
-        padding: 40,
-        fillOpacity: 0.55,
-        palette: 'inferno',
-      },
-    });
-    canvas.layers.add(contour);
-
     // Synthesize stable ids from the array index — the source CSV has
     // no id column.
     const nodes: GraphNode[] = airports.map((a, i) => {
@@ -135,9 +81,108 @@ export const Airports_Story: Story = {
       };
     });
 
-    graph.setData({ nodes, edges: [] });
+    // GraphLayer has to mount before the contour layer — the contour's
+    // `onMount` resolves its `graphLayerId` dependency synchronously and
+    // throws if the graph isn't already registered. zIndex still controls
+    // paint order, so the contour can sit visually below the nodes.
+    // Node template is pure literal style → lives entirely in config; only
+    // the content (`initData`) rides on the constructor.
+    const graph = new GraphLayer({
+      id: 'graph',
+      zIndex: 10,
+      options: { initData: { nodes, edges: [] } },
+    });
+    canvas.layers.add(graph);
 
-    canvas.layers.add(new DevInfoLayer({ id: 'dev-info', corner: 'bottom-left', enabled: true }));
+    // Density overlay between the map and the airport dots. World-space
+    // contour bands track the camera through MapLayer's transform mirror,
+    // so they pan and zoom with the basemap. Toggle visible from the GUI.
+    // `graphLayerId` is a cross-layer id → stays in the constructor; the
+    // literal contour params go to config.
+    const contour = new DensityContourFillLayer({
+      id: 'density',
+      zIndex: 5,
+      visible: false,
+      options: { graphLayerId: 'graph' },
+    });
+    canvas.layers.add(contour);
+
+    canvas.layers.add(new DevInfoLayer({ id: 'dev-info', corner: 'bottom-left' }));
+
+    // Pixel-constant marker behaviour — opt-in via the GUI. On enable,
+    // every node's `data.size` is reinterpreted as screen px and rewritten
+    // to `px / scale` on each `camera:zoom`. `MapLayer` bridges its
+    // direct viewport writes to `camera:zoom` so this works under
+    // MapLibre's native zoom gesture too. The `sizePx` getter reads
+    // `settings.targetNodePx` fresh each reflow, so the slider below
+    // updates sizes live without recreating the behaviour. The resolver
+    // functions keep this behaviour's options in the constructor.
+    const nodeSizeLOD = new NodeSizeLODBehaviour({
+      id: 'node-size-lod',
+      layers: [
+        {
+          layerId: 'graph',
+          sizePx: () => settings.targetNodePx,
+          strokeWidthPx: () => settings.targetStrokePx,
+        },
+      ],
+    });
+    canvas.behaviours.register(nodeSizeLOD);
+
+    // Hover-to-activate — highlights the airport under the pointer and
+    // dims the rest. Registered after the graph layer is mounted so the
+    // behaviour can resolve its target at register-time.
+    const hover = new HoverActivateBehaviour({
+      id: 'hover',
+      layerId: 'graph',
+      state: 'hovered',
+      inactiveState: 'dimmed',
+    });
+    canvas.behaviours.register(hover);
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'circle', radius: NODE_DEFAULTS.size / 2 },
+              bgFill: NODE_DEFAULTS.fill,
+              bgStrokeColor: NODE_DEFAULTS.stroke,
+              bgStrokeWidth: NODE_DEFAULTS.strokeWidth,
+              bgAlpha: NODE_DEFAULTS.alpha,
+            },
+            state: {
+              // Hovered state palette — bright fill + ring on the hovered
+              // airport, everything else dimmed. No edges in this dataset.
+              hovered: {
+                bgFill: 0xfacc15,
+                bgStrokeColor: 0xfacc15,
+                bgStrokeWidth: 1.5,
+                shape: { kind: 'circle', radius: 3 },
+              },
+              dimmed: { bgAlpha: 0.25 },
+            },
+          },
+        },
+        density: {
+          // World coords are mercator pixels at zoom 0 — the whole world is
+          // 512 units wide. A bandwidth of ~10 reads as "city-cluster scale"
+          // at most basemap zooms.
+          bandwidth: 10,
+          thresholds: 8,
+          cellSize: 2,
+          padding: 40,
+          fillOpacity: 0.55,
+          palette: 'inferno',
+        },
+      },
+      behaviours: {
+        'node-size-lod': { enabled: true },
+        hover: { enabled: true },
+      },
+    };
+
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     // GUI — fly between continents to show the camera-sync in action, and
     // toggle / tune the density overlay.
@@ -166,38 +211,6 @@ export const Airports_Story: Story = {
       densityPalette: 'inferno' as DensityContourPaletteName,
     };
 
-    // Pixel-constant marker behaviour — opt-in via the GUI. On enable,
-    // every node's `data.size` is reinterpreted as screen px and rewritten
-    // to `px / scale` on each `camera:zoom`. `MapLayer` bridges its
-    // direct viewport writes to `camera:zoom` so this works under
-    // MapLibre's native zoom gesture too. The `defaultPx` getter reads
-    // `settings.targetNodePx` fresh each reflow, so the slider below
-    // updates sizes live without recreating the behaviour.
-    const nodeSizeLOD = new NodeSizeLODBehaviour({
-      id: 'node-size-lod',
-      enabled: true,
-      layers: [
-        {
-          layerId: 'graph',
-          sizePx: () => settings.targetNodePx,
-          strokeWidthPx: () => settings.targetStrokePx,
-        },
-      ],
-    });
-    canvas.behaviours.register(nodeSizeLOD);
-
-    // Hover-to-activate — highlights the airport under the pointer and
-    // dims the rest. Registered after the graph layer is mounted so the
-    // behaviour can resolve its target at register-time.
-    const hover = new HoverActivateBehaviour({
-      id: 'hover',
-      layerId: 'graph',
-      enabled: true,
-      state: 'hovered',
-      inactiveState: 'dimmed',
-    });
-    canvas.behaviours.register(hover);
-
     const gui = new GUI({ title: 'World Airports' });
     onStoryTeardown(() => gui.destroy());
 
@@ -205,27 +218,17 @@ export const Airports_Story: Story = {
       .name('Fly to')
       .onChange((v: Region) => map.flyTo({ ...PRESETS[v], duration: 1400 }));
 
-    // Restyle every node via `store.updateNode(...)` inside a single batch.
-    // We deliberately avoid `setData(...)` here: `setData` calls `clear()`
-    // on the underlying store, which wipes data without emitting
-    // `node:remove` events — the next `addNodesBulk` then tries to
-    // `addShape(id)` against ids the renderer still holds, and throws.
-    // Per-node updates trigger `node:update` → `updateNodeShape`, which
-    // does a clean remove + re-add of each shape with the new spec.
+    // Restyle every node by pushing a fresh node template into config via
+    // `canvas.update(...)`. The literal style shallow-merges over the
+    // mounted template, so the slider/colour edits propagate to all nodes.
     const restyleNodes = (): void => {
-      graph.store.batch(() => {
-        for (const n of nodes) {
-          graph.store.updateNode(n.id, {
-            style: {
-              shape: { kind: 'circle', radius: settings.nodeSize / 2 },
-              bgFill: settings.nodeFill,
-              bgStrokeColor: NODE_DEFAULTS.stroke,
-              bgStrokeWidth: NODE_DEFAULTS.strokeWidth,
-              bgAlpha: settings.nodeAlpha,
-            },
-          });
-        }
-      });
+      canvasOptions.layers.graph.node.style = {
+        ...canvasOptions.layers.graph.node.style,
+        shape: { kind: 'circle', radius: settings.nodeSize / 2 },
+        bgFill: settings.nodeFill,
+        bgAlpha: settings.nodeAlpha,
+      };
+      canvas.update({ layers: { graph: { node: { style: canvasOptions.layers.graph.node.style } } } });
     };
 
     const nodeFolder = gui.addFolder('Node style');

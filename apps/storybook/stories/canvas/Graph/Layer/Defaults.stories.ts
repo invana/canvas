@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
+  GraphCanvas,
   GraphLayer,
   type GraphNode,
   type GraphEdge,
@@ -14,9 +15,10 @@ export default meta;
 type Story = StoryObj;
 
 /**
- * Demonstrates `GraphLayer.setNodeDefaults` / `setEdgeDefaults` — patch the
- * shared layer template and re-render every node/edge in one call (the cheap
- * "apply to all" path a toolbar uses, vs. looping `store.updateNode`).
+ * Demonstrates patching the shared layer template at runtime — push a new
+ * node/edge style through `canvas.update({ layers: { graph: … } })` and every
+ * node/edge re-renders in one call (the cheap "apply to all" path a toolbar
+ * uses, vs. looping `store.updateNode`).
  */
 export const Defaults: Story = {
   render: () => createContainer({ id: 'graph-layer-defaults' }),
@@ -38,26 +40,30 @@ export const Defaults: Story = {
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-layer-defaults')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    const graph = new GraphLayer({
-      id: 'graph',
-      options: {
-        node: { style: { shape: { kind: 'circle', radius: 20 }, bgFill: 0x3b82f6 } },
-        edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 2, arrowTargetShape: 'none' } },
-      },
-    });
+    // Data is content — it rides on the layer via `initData`. Pure-literal
+    // node/edge templates live in the serialisable config below.
+    const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: { style: { shape: { kind: 'circle', radius: 20 }, bgFill: 0x3b82f6 } },
+          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 2, arrowTargetShape: 'none' } },
+        },
+      },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 100);
 
-    // All controls drive the layer-level template, so every node/edge updates
-    // at once — no per-item loop.
+    // All controls drive the layer-level template through `canvas.update`, so
+    // every node/edge updates at once — no per-item loop.
     const settings = {
       'node fill': '#3b82f6',
       'node radius': 20,
@@ -71,16 +77,26 @@ export const Defaults: Story = {
     onStoryTeardown(() => gui.destroy());
     gui
       .addColor(settings, 'node fill')
-      .onChange((v: string) => graph.setNodeDefaults({ bgFill: hex(v) }));
+      .onChange((v: string) =>
+        canvas.update({ layers: { graph: { node: { style: { bgFill: hex(v) } } } } }),
+      );
     gui
       .add(settings, 'node radius', 6, 40, 1)
-      .onChange((v: number) => graph.setNodeDefaults({ shape: { kind: 'circle', radius: v } }));
+      .onChange((v: number) =>
+        canvas.update({
+          layers: { graph: { node: { style: { shape: { kind: 'circle', radius: v } } } } },
+        }),
+      );
     gui
       .addColor(settings, 'edge color')
-      .onChange((v: string) => graph.setEdgeDefaults({ strokeColor: hex(v) }));
+      .onChange((v: string) =>
+        canvas.update({ layers: { graph: { edge: { style: { strokeColor: hex(v) } } } } }),
+      );
     gui
       .add(settings, 'edge width', 0.5, 8, 0.5)
-      .onChange((v: number) => graph.setEdgeDefaults({ strokeWidth: v }));
+      .onChange((v: number) =>
+        canvas.update({ layers: { graph: { edge: { style: { strokeWidth: v } } } } }),
+      );
     gui
       .add(settings, 'edge type', [
         'straight',
@@ -90,6 +106,8 @@ export const Defaults: Story = {
         'rounded',
         'smooth',
       ])
-      .onChange((v: EdgePathType) => graph.setEdgeDefaults({ shape: { pathType: v } }));
+      .onChange((v: EdgePathType) =>
+        canvas.update({ layers: { graph: { edge: { style: { shape: { pathType: v } } } } } }),
+      );
   },
 };

@@ -15,9 +15,9 @@
 import 'maplibre-gl/dist/maplibre-gl.css?inline';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas } from '@invana/canvas';
 import {
   EdgeSizeLODBehaviour,
+  GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
   MiniMapLayer,
@@ -63,22 +63,13 @@ export const GeoAirRoutes: Story = {
 
     // ── Canvas setup ─────────────────────────────────────────────────────
     const container = canvasElement.querySelector<HTMLDivElement>('#usecase-geo-air-routes')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
     // The MapLayer drives the camera; the canvas's own pan / wheel
     // behaviours are NOT registered (MapLibre handles gestures), which
     // matches the maplibre/Routes story precedent.
-
-    const map = new MapLayer({
-      id: 'map',
-      options: {
-        styleUrl: STYLES[settings.basemap],
-        center: [0, 25],
-        zoom: 1.6,
-      },
-    });
+    const map = new MapLayer({ id: 'map', options: {} });
     canvas.layers.add(map);
 
     // ── Curated subset: airports whose name reads as a major hub ────────
@@ -89,7 +80,8 @@ export const GeoAirRoutes: Story = {
     const hubs: readonly Airport[] = airports.filter((a) => HUB_RE.test(a.name));
 
     // Project to world coords; positions are stable across map gestures
-    // because the canvas camera mirrors MapLibre's transform.
+    // because the canvas camera mirrors MapLibre's transform. `project`
+    // is pure mercator math, so it's safe to call before `init()`.
     const points: { id: string; x: number; y: number; name: string }[] = hubs.map((a, i) => {
       const { x, y } = map.project([a.lng, a.lat]);
       return { id: `ap-${i}`, x, y, name: a.name };
@@ -131,72 +123,6 @@ export const GeoAirRoutes: Story = {
       degree.set(e.target, (degree.get(e.target) ?? 0) + 1);
     }
 
-    // ── GraphLayer ──────────────────────────────────────────────────────
-    const graph = new GraphLayer({
-      id: 'graph',
-      zIndex: 10,
-      options: {
-        node: {
-          style: {
-            shape: (n: GraphNode) => ({
-              kind: 'circle',
-              // Scale 1 → 12 degree to 2 → 7 px radius (log-ish curve
-              // keeps the long tail from blowing up).
-              radius: 2 + Math.sqrt((n.data as AirportData).degree) * 1.4,
-            }),
-            bgFill: 0xff6b35,
-            bgStrokeColor: 0xffffff,
-            bgStrokeWidth: 0.6,
-            bgAlpha: 0.92,
-            labelText: (n: GraphNode) => (n.data as AirportData).name,
-            labelColor: 0x111827,
-            labelFontSize: 10,
-            labelPlacement: 'bottom',
-            labelOffsetY: 4,
-            labelBackgroundFill: 0xffffff,
-            labelBackgroundAlpha: 0.85,
-            labelBackgroundPadding: 2,
-            labelBackgroundCornerRadius: 2,
-            // Hide all labels until zoomed past world-view, then collision
-            // takes over (LabelCollisionBehaviour isn't registered here —
-            // the label set is small enough that overlap is rare past
-            // zoom 3).
-            labelMinZoom: 3,
-          },
-          state: {
-            hovered: {
-              bgFill: 0xfacc15,
-              bgStrokeColor: 0xfacc15,
-              bgStrokeWidth: 1.8,
-              labelForceShow: true,
-            },
-            dimmed: { bgAlpha: 0.15 },
-          },
-        },
-        edge: {
-          style: {
-            shape: { pathType: 'bezier', pathStyleOpts: { axis: 'h', tension: 0.35 } },
-            strokeColor: 0x475569,
-            strokeWidth: 0.6,
-            strokeAlpha: settings.edgeAlpha,
-            arrowTargetShape: 'none',
-          },
-          state: {
-            hovered: {
-              strokeColor: 0xfacc15,
-              strokeAlpha: 0.95,
-              strokeWidth: 1.4,
-              decorations: [
-                { id: 'route-glow', kind: 'flow-particles-connector', color: 0xfacc15, count: 3, size: 3, speedPxPerSec: 120 },
-              ],
-            },
-            dimmed: { strokeAlpha: 0.05 },
-          },
-        },
-      },
-    });
-    canvas.layers.add(graph);
-
     const nodes: NodeData<AirportData>[] = points.map((p) => ({
       id: p.id,
       position: { x: p.x, y: p.y },
@@ -208,48 +134,141 @@ export const GeoAirRoutes: Story = {
       target: e.target,
       data: {},
     }));
-    graph.setData({ nodes, edges });
+
+    // ── GraphLayer ──────────────────────────────────────────────────────
+    // Resolver functions (`shape`, `labelText`) stay in the constructor;
+    // the literal style fields live in `canvasOptions.layers.graph`.
+    const graph = new GraphLayer({
+      id: 'graph',
+      zIndex: 10,
+      options: {
+        initData: { nodes, edges },
+        node: {
+          style: {
+            shape: (n: GraphNode) => ({
+              kind: 'circle',
+              // Scale 1 → 12 degree to 2 → 7 px radius (log-ish curve
+              // keeps the long tail from blowing up).
+              radius: 2 + Math.sqrt((n.data as AirportData).degree) * 1.4,
+            }),
+            labelText: (n: GraphNode) => (n.data as AirportData).name,
+          },
+        },
+      },
+    });
+    canvas.layers.add(graph);
 
     // ── Behaviours ──────────────────────────────────────────────────────
     // Pixel-constant node sizing keeps the airport circles legible as
     // the user zooms from world view down to street level.
+    // `layers` carries cross-layer `layerId` wiring, so it stays in the
+    // constructor; only `enabled` lives in config.
     canvas.behaviours.register(
       new NodeSizeLODBehaviour({
-        id: 'node-size-lod', enabled: true,
+        id: 'node-size-lod',
         layers: [{ layerId: 'graph', sizePx: 5, strokeWidthPx: 0.6 }],
       }),
     );
     canvas.behaviours.register(
       new EdgeSizeLODBehaviour({
-        id: 'edge-size-lod', enabled: true,
+        id: 'edge-size-lod',
         layers: [{ layerId: 'graph', strokeWidthPx: 0.6 }],
       }),
     );
 
-    const hover = new HoverActivateBehaviour({
-      id: 'hover', layerId: 'graph', enabled: true,
-      state: 'hovered',
-      inactiveState: 'dimmed',
-      degree: settings.hoverNeighbours,
-      direction: 'both',
-    });
+    const hover = new HoverActivateBehaviour({ id: 'hover', layerId: 'graph' });
     canvas.behaviours.register(hover);
 
     // The MiniMapLayer is added once but its `visible` is toggled by the
     // GUI checkbox. Starts hidden so the basemap reads cleanly on first
-    // load.
+    // load. `graphLayerId` is a cross-layer id, so it stays in the ctor.
     const minimap = new MiniMapLayer({
       id: 'minimap',
       visible: false,
-      options: {
-        graphLayerId: 'graph',
-        position: 'top-right',
-        width: 200,
-        height: 140,
-        backgroundColor: 0x111827,
-      },
+      options: { graphLayerId: 'graph' },
     });
     canvas.layers.add(minimap);
+
+    const canvasOptions = {
+      layers: {
+        map: {
+          styleUrl: STYLES[settings.basemap],
+          center: [0, 25],
+          zoom: 1.6,
+        },
+        graph: {
+          node: {
+            style: {
+              bgFill: 0xff6b35,
+              bgStrokeColor: 0xffffff,
+              bgStrokeWidth: 0.6,
+              bgAlpha: 0.92,
+              labelColor: 0x111827,
+              labelFontSize: 10,
+              labelPlacement: 'bottom',
+              labelOffsetY: 4,
+              labelBackgroundFill: 0xffffff,
+              labelBackgroundAlpha: 0.85,
+              labelBackgroundPadding: 2,
+              labelBackgroundCornerRadius: 2,
+              // Hide all labels until zoomed past world-view, then collision
+              // takes over (LabelCollisionBehaviour isn't registered here —
+              // the label set is small enough that overlap is rare past
+              // zoom 3).
+              labelMinZoom: 3,
+            },
+            state: {
+              hovered: {
+                bgFill: 0xfacc15,
+                bgStrokeColor: 0xfacc15,
+                bgStrokeWidth: 1.8,
+                labelForceShow: true,
+              },
+              dimmed: { bgAlpha: 0.15 },
+            },
+          },
+          edge: {
+            style: {
+              shape: { pathType: 'bezier', pathStyleOpts: { axis: 'h', tension: 0.35 } },
+              strokeColor: 0x475569,
+              strokeWidth: 0.6,
+              strokeAlpha: settings.edgeAlpha,
+              arrowTargetShape: 'none',
+            },
+            state: {
+              hovered: {
+                strokeColor: 0xfacc15,
+                strokeAlpha: 0.95,
+                strokeWidth: 1.4,
+                decorations: [
+                  { id: 'route-glow', kind: 'flow-particles-connector', color: 0xfacc15, count: 3, size: 3, speedPxPerSec: 120 },
+                ],
+              },
+              dimmed: { strokeAlpha: 0.05 },
+            },
+          },
+        },
+        minimap: {
+          position: 'top-right',
+          width: 200,
+          height: 140,
+          backgroundColor: 0x111827,
+        },
+      },
+      behaviours: {
+        'node-size-lod': { enabled: true },
+        'edge-size-lod': { enabled: true },
+        hover: {
+          enabled: true,
+          state: 'hovered',
+          inactiveState: 'dimmed',
+          degree: settings.hoverNeighbours,
+          direction: 'both',
+        },
+      },
+    };
+
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     // ── GUI ─────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'Geo Air Routes' });

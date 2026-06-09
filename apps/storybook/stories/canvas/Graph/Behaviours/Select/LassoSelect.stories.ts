@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   ClickSelectBehaviour,
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   LassoSelectBehaviour,
   type GraphNode,
@@ -36,63 +37,71 @@ export const LassoSelect: Story = {
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-lasso-select')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: {
-        node: { state: { selected: { bgStrokeColor: 0xf97316, bgStrokeWidth: 4 } } },
-        edge: {
-          style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' },
-          state: { selected: { strokeColor: 0xf97316, strokeWidth: 2.5 } },
-        },
-      },
+      options: { initData: { nodes, edges: lesMiserables.edges } },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges: lesMiserables.edges });
 
-    canvas.camera.fitContent(graph.getBounds(), 80);
-    void new D3ForceLayout({
-      charge: { strength: -120 },
-      link: { distance: 50 },
-      collide: { radius: 14 },
-    })
-      .apply(graph)
-      .then(() => canvas.camera.fitContent(graph.getBounds(), 80));
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
 
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
-
-    const click = new ClickSelectBehaviour({
-      id: 'click-select',
-      layerId: 'graph',
-      enabled: true,
-      multiple: true,
-      trigger: ['shift'],
-    });
+    const click = new ClickSelectBehaviour({ id: 'click-select', layerId: 'graph' });
     canvas.behaviours.register(click);
 
-    const lasso = new LassoSelectBehaviour({
-      id: 'lasso-select',
-      layerId: 'graph',
-      enabled: true,
-      trigger: ['shift'],
-      enableElements: ['shape', 'connector'],
-      style: {
-        fill: 0x14b8a6,
-        fillAlpha: 0.12,
-        stroke: 0x14b8a6,
-        strokeWidth: 1.5,
-        strokeDash: [6, 4],
-      },
-    });
+    const lasso = new LassoSelectBehaviour({ id: 'lasso-select', layerId: 'graph' });
     canvas.behaviours.register(lasso);
+
+    const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
+    canvas.layouts.add(forceLayout);
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: { state: { selected: { bgStrokeColor: 0xf97316, bgStrokeWidth: 4 } } },
+          edge: {
+            style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' },
+            state: { selected: { strokeColor: 0xf97316, strokeWidth: 2.5 } },
+          },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+        'click-select': { enabled: true, multiple: true, trigger: ['shift'] },
+        'lasso-select': {
+          enabled: true,
+          trigger: ['shift'],
+          enableElements: ['shape', 'connector'],
+          style: {
+            fill: 0x14b8a6,
+            fillAlpha: 0.12,
+            stroke: 0x14b8a6,
+            strokeWidth: 1.5,
+            strokeDash: [6, 4],
+          },
+        },
+      },
+      layouts: {
+        force: {
+          charge: { strength: -120 },
+          link: { distance: 50 },
+          collide: { radius: 14 },
+        },
+      },
+      activeLayout: 'force',
+    };
+
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+    onStoryTeardown(
+      forceLayout.events.on('end', () => canvas.camera.fitContent(graph.getBounds(), 80)),
+    );
+    canvas.camera.fitContent(graph.getBounds(), 80);
 
     // Every option from LassoSelectBehaviourOptions exposed here.
     const toCss = (n: number): string => `#${n.toString(16).padStart(6, '0')}`;

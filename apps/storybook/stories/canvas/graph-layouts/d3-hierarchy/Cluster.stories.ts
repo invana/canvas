@@ -1,19 +1,21 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
+import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
 import {
   D3HierarchyLayout,
   type CartesianOrientation,
   type D3HierarchyLayoutMode,
+  type D3HierarchyLayoutOptions,
 } from '@invana/graph-layout-d3-hierarchy';
+import type { LayoutOptions } from '@invana/canvas';
 import { flareAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
+import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-hierarchy/Cluster' };
 export default meta;
@@ -25,15 +27,12 @@ export const Cluster: Story = {
   play: async ({ canvasElement }) => {
     // ── Settings ─────────────────────────────────────────────────────────
     const settings = {
-      mode: 'cluster' as D3HierarchyLayoutMode,
-      orientation: 'horizontal' as CartesianOrientation,
       // `nodeSize` (per-node spacing) keeps the dendrogram readable for
       // ~250-node Flare. d3's cluster/2 example uses ~10px between siblings;
       // bumped to 14 here because label-bearing leaves need vertical room
       // to avoid overlapping text.
       siblingSpacing: 14,
       depthSpacing: 160,
-      edgeAlpha: 0.55,
       edgeStrokeWidth: 0.7,
       nodeRadius: 2.5,
       colorByDepth: true,
@@ -65,10 +64,11 @@ export const Cluster: Story = {
 
     // ── Build node/edge data from Flare ──────────────────────────────────
     // Per-item style carries the depth-derived fill and (when enabled) the
-    // flat `label*` fields. The previous version stashed these on `data`,
-    // which `GraphLayer` treats as opaque domain payload — so neither the
-    // fill nor the label ever reached the renderer and the dendrogram came
-    // out as edges only with no visible nodes or text.
+    // flat `label*` fields, riding in as initial content (`options.initData`).
+    // The previous version stashed these on `data`, which `GraphLayer` treats
+    // as opaque domain payload — so neither the fill nor the label ever
+    // reached the renderer and the dendrogram came out as edges only with no
+    // visible nodes or text.
     const buildGraphData = () => {
       const data = flareAsGraph();
       let maxDepth = 0;
@@ -113,84 +113,103 @@ export const Cluster: Story = {
 
     // ── Canvas setup ─────────────────────────────────────────────────────
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-cluster')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'solid',
-          color: { light: '#f8fafc', dark: '#0b1220' },
-          mode: 'auto',
-        },
-      }),
-    );
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: {
-        node: { style: { shape: { kind: 'circle', radius: settings.nodeRadius } } },
-        edge: {
-          style: {
-            strokeColor: 0x94a3b8,
-            strokeWidth: settings.edgeStrokeWidth,
-            strokeAlpha: settings.edgeAlpha,
-            arrowTargetShape: 'none',
-            // `bezier` with `axis: 'h'` matches d3.linkHorizontal() — control
-            // points always pull along the horizontal axis. Don't rely on
-            // `axis: 'auto'` here: in a horizontal cluster, sibling pairs whose
-            // parent sits between them have `dy > dx`, which would flip auto
-            // to vertical and produce wrong-direction S-curves crossing the
-            // tree.
-            shape: {
-              pathType: 'bezier',
-              pathStyleOpts: { axis: 'h' },
-              // Centre-anchor so the tangent at each endpoint matches the node
-              // centre rather than the trimmed boundary cut. Same trick the
-              // RadialTree story uses; nodes draw on top of the curve.
-              sourceAnchor: 'center',
-              targetAnchor: 'center',
+      options: { initData: buildGraphData() },
+    });
+
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
+    canvas.layers.add(graph);
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+
+    // Resolves its target layer at register-time, so the layer must exist
+    // first. Enabled via config (`sharpLabelsOnZoom`), not the constructor.
+    const labelResolutionLOD = new LabelResolutionLODBehaviour({
+      id: 'label-resolution',
+      layerId: 'graph',
+    });
+    canvas.behaviours.register(labelResolutionLOD);
+
+    const layout = new D3HierarchyLayout({
+      id: 'hierarchy',
+      targetLayerId: 'graph',
+    } as D3HierarchyLayoutOptions & LayoutOptions);
+    canvas.layouts.add(layout);
+
+    const canvasOptions = {
+      layers: {
+        bg: { type: 'solid', backgroundColor: '#0b1220' },
+        graph: {
+          node: { style: { shape: { kind: 'circle', radius: settings.nodeRadius } } },
+          edge: {
+            style: {
+              strokeColor: 0x94a3b8,
+              strokeWidth: settings.edgeStrokeWidth,
+              strokeAlpha: 0.55,
+              arrowTargetShape: 'none',
+              // `bezier` with `axis: 'h'` matches d3.linkHorizontal() — control
+              // points always pull along the horizontal axis. Don't rely on
+              // `axis: 'auto'` here: in a horizontal cluster, sibling pairs whose
+              // parent sits between them have `dy > dx`, which would flip auto
+              // to vertical and produce wrong-direction S-curves crossing the
+              // tree.
+              shape: {
+                pathType: 'bezier',
+                pathStyleOpts: { axis: 'h' },
+                // Centre-anchor so the tangent at each endpoint matches the node
+                // centre rather than the trimmed boundary cut. Same trick the
+                // RadialTree story uses; nodes draw on top of the curve.
+                sourceAnchor: 'center',
+                targetAnchor: 'center',
+              },
             },
           },
         },
       },
-    });
-    canvas.layers.add(graph);
-
-    // Registered after the `graph` layer is added — the behaviour resolves
-    // its target layer at register-time, so the layer must exist first.
-    const labelResolutionLOD = new LabelResolutionLODBehaviour({
-      id: 'label-resolution',
-      layerId: 'graph',
-      enabled: settings.sharpLabelsOnZoom,
-    });
-    canvas.behaviours.register(labelResolutionLOD);
-
-    let layout: D3HierarchyLayout | null = null;
-
-    const run = async (): Promise<void> => {
-      layout?.stop();
-      graph.setData(buildGraphData());
-
-      layout = new D3HierarchyLayout({
-        mode: settings.mode,
-        orientation: settings.orientation,
-        // Per-node spacing (`nodeSize`) keeps siblings consistently-spaced
-        // regardless of subtree imbalance — preferred over `size` for
-        // dendrograms with many leaves.
-        nodeSize: [settings.siblingSpacing, settings.depthSpacing],
-      });
-      await layout.apply(graph);
-      canvas.camera.fitContent(graph.getBounds(), 20);
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
+          dark: { backgroundColor: '#0b1220', color: '#475569' },
+        },
+        'label-resolution': { enabled: settings.sharpLabelsOnZoom },
+      },
+      layouts: {
+        hierarchy: {
+          mode: 'cluster' as D3HierarchyLayoutMode,
+          orientation: 'horizontal' as CartesianOrientation,
+          // Per-node spacing (`nodeSize`) keeps siblings consistently-spaced
+          // regardless of subtree imbalance — preferred over `size` for
+          // dendrograms with many leaves.
+          nodeSize: [settings.siblingSpacing, settings.depthSpacing] as [number, number],
+        },
+      },
+      activeLayout: 'hierarchy',
     };
 
-    await run();
-    onStoryTeardown(() => layout?.stop());
+    // Fit the camera once the layout settles — fires on the initial auto-run
+    // and on every re-heat (spacing / mode / orientation edits).
+    onStoryTeardown(
+      layout.events.on('end', () => canvas.camera.fitContent(graph.getBounds(), 20)),
+    );
+    onStoryTeardown(() => layout.stop());
+
+    // initData loads on mount; `activeLayout` runs itself once data is present.
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
+
+    // Re-feed live data for settings that drive per-item style (fill / labels).
+    const rebuildData = (): void => graph.setData(buildGraphData());
+
+    // Push edited layout params back through config; re-runs the layout once.
+    const reapplyLayout = (): void =>
+      canvas.update({ layouts: { hierarchy: canvasOptions.layouts.hierarchy } });
 
     // ── GUI ──────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'Cluster' });
@@ -198,23 +217,47 @@ export const Cluster: Story = {
 
     const layoutFolder = gui.addFolder('Layout');
     layoutFolder
-      .add(settings, 'mode', ['cluster', 'tree'] satisfies D3HierarchyLayoutMode[])
-      .onChange(run);
+      .add(canvasOptions.layouts.hierarchy, 'mode', ['cluster', 'tree'] satisfies D3HierarchyLayoutMode[])
+      .onChange(reapplyLayout);
     layoutFolder
-      .add(settings, 'orientation', ['horizontal', 'vertical'] satisfies CartesianOrientation[])
-      .onChange(run);
-    layoutFolder.add(settings, 'siblingSpacing', 4, 40, 1).onChange(run);
-    layoutFolder.add(settings, 'depthSpacing', 30, 300, 5).onChange(run);
+      .add(canvasOptions.layouts.hierarchy, 'orientation', ['horizontal', 'vertical'] satisfies CartesianOrientation[])
+      .onChange(reapplyLayout);
+    layoutFolder
+      .add(settings, 'siblingSpacing', 4, 40, 1)
+      .onChange((v: number) => {
+        canvasOptions.layouts.hierarchy.nodeSize[0] = v;
+        reapplyLayout();
+      });
+    layoutFolder
+      .add(settings, 'depthSpacing', 30, 300, 5)
+      .onChange((v: number) => {
+        canvasOptions.layouts.hierarchy.nodeSize[1] = v;
+        reapplyLayout();
+      });
 
     const style = gui.addFolder('Style');
-    style.add(settings, 'nodeRadius', 1, 8, 0.5).onChange(run);
-    style.add(settings, 'colorByDepth').onChange(run);
-    style.add(settings, 'edgeStrokeWidth', 0.2, 4, 0.1).onChange(run);
-    style.add(settings, 'edgeAlpha', 0, 1, 0.05).onChange(run);
+    style
+      .add(settings, 'nodeRadius', 1, 8, 0.5)
+      .onChange((v: number) =>
+        canvas.update({
+          layers: { graph: { node: { style: { shape: { kind: 'circle', radius: v } } } } },
+        }),
+      );
+    style.add(settings, 'colorByDepth').onChange(rebuildData);
+    style
+      .add(settings, 'edgeStrokeWidth', 0.2, 4, 0.1)
+      .onChange((v: number) =>
+        canvas.update({ layers: { graph: { edge: { style: { strokeWidth: v } } } } }),
+      );
+    style
+      .add({ edgeAlpha: 0.55 }, 'edgeAlpha', 0, 1, 0.05)
+      .onChange((v: number) =>
+        canvas.update({ layers: { graph: { edge: { style: { strokeAlpha: v } } } } }),
+      );
 
     const labels = gui.addFolder('Labels');
-    labels.add(settings, 'showLabels').onChange(run);
-    labels.add(settings, 'labelFontSize', 6, 18, 1).onChange(run);
+    labels.add(settings, 'showLabels').onChange(rebuildData);
+    labels.add(settings, 'labelFontSize', 6, 18, 1).onChange(rebuildData);
     labels
       .add(settings, 'sharpLabelsOnZoom')
       .name('Sharp on zoom')

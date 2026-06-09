@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
+  GraphCanvas,
   GraphLayer,
   type CanonicalStateName,
   type GraphNode,
@@ -23,11 +24,8 @@ export const Sharp: Story = {
 
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-node-types-rrect-sharp')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     interface TileData {
       readonly state: 'default' | CanonicalStateName;
@@ -42,27 +40,43 @@ export const Sharp: Story = {
       { id: 'n-disabled',    position: { x:  240, y:  90 }, data: { state: 'disabled'    }, states: ['disabled']    },
     ];
 
+    // labelText resolver stays in the constructor; pure literal style goes to config.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
+        initData: { nodes, edges: [] },
         node: {
           style: {
-            shape: { kind: 'rect', width: 140, height: 64, cornerRadius: 0 },
-            bgFill: 0x3b82f6,
-            bgStrokeColor: 0xffffff,
-            bgStrokeWidth: 0,
-            bgStrokeAlignment: 'outside',
             labelText: (n: GraphNode) => (n.data as TileData | undefined)?.state ?? '',
-            labelColor: 0xffffff,
-            labelFontSize: 13,
-            labelFontWeight: 600,
-            labelPlacement: 'center',
           },
         },
       },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges: [] });
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'rect', width: 140, height: 64, cornerRadius: 0 },
+              bgFill: 0x3b82f6,
+              bgStrokeColor: 0xffffff,
+              bgStrokeWidth: 0,
+              bgStrokeAlignment: 'outside',
+              labelColor: 0xffffff,
+              labelFontSize: 13,
+              labelFontWeight: 600,
+              labelPlacement: 'center',
+            },
+          },
+        },
+      },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
   },
 };

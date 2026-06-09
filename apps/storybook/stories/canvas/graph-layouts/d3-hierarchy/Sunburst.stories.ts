@@ -1,17 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
-  Canvas,
   DevInfoLayer,
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
-import type { ShapeLabelStyle } from '@invana/canvas';
+import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
+import type { LayoutOptions, ShapeLabelStyle } from '@invana/canvas';
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
+import type { D3HierarchyLayoutOptions } from '@invana/graph-layout-d3-hierarchy';
 import { flareAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
+import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-hierarchy/Sunburst' };
 export default meta;
@@ -107,8 +108,9 @@ export const Sunburst: Story = {
     };
 
     // Names cached for the post-layout label pass — labels can only be
-    // attached once `apply()` resolves each node's arc (we need the mid-angle
-    // to rotate the text, and the arc width to decide whether to show it).
+    // attached once the active layout resolves each node's arc (we need the
+    // mid-angle to rotate the text, and the arc width to decide whether to
+    // show it).
     interface NodeMeta {
       name: string;
       group: string | undefined;
@@ -225,89 +227,119 @@ export const Sunburst: Story = {
     };
 
     // ── Canvas setup ─────────────────────────────────────────────────────
+    // Register layers / behaviours / layout by id, build one serialisable
+    // `canvasOptions`, then `init()` last. `nodeMeta` is populated by
+    // `buildGraphData()` here so the post-layout label pass can read it.
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-sunburst')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    canvas.layers.add(
-      new BackgroundLayer({
-        id: 'bg',
-        options: {
-          type: 'solid',
-          color: { light: '#f8fafc', dark: '#0b1220' },
-          mode: 'auto',
-        },
-      }),
-    );
+    const initData = buildGraphData();
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: {
-        node: {
-          style: {
-            bgFill: 0xcccccc,
-            bgStrokeColor: settings.strokeColor,
-            bgStrokeWidth: settings.strokeWidth,
-          },
-        },
-        edge: {
-          // Hierarchy is conveyed by ring enclosure, not links. Edges are
-          // required so the layout can derive the tree topology but stay
-          // fully transparent at render time. Same trick as the Pack story.
-          style: {
-            strokeColor: 0x000000,
-            strokeWidth: 0,
-            strokeAlpha: 0,
-            arrowTargetShape: 'none',
-          },
-        },
-      },
+      options: { initData },
     });
-    canvas.layers.add(graph);
 
+    canvas.layers.add(
+      new BackgroundLayer({ id: 'bg', options: { type: 'solid' } }),
+    );
+    canvas.layers.add(graph);
     canvas.layers.add(new DevInfoLayer({ id: 'dev', corner: 'top-left' }));
+
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
 
     const labelResolutionLOD = new LabelResolutionLODBehaviour({
       id: 'label-resolution',
       layerId: 'graph',
-      enabled: settings.sharpLabelsOnZoom,
     });
     canvas.behaviours.register(labelResolutionLOD);
 
-    let layout: D3HierarchyLayout | null = null;
+    // `id` / `targetLayerId` come from the base `LayoutOptions` (how every
+    // layout is addressed in config). D3HierarchyLayout's own options type
+    // doesn't surface them, so widen the literal to include both.
+    const layout = new D3HierarchyLayout(
+      { id: 'sunburst', targetLayerId: 'graph' } as D3HierarchyLayoutOptions &
+        LayoutOptions,
+    );
+    canvas.layouts.add(layout);
 
-    const run = async (): Promise<void> => {
-      layout?.stop();
-      graph.setData(buildGraphData());
-
-      layout = new D3HierarchyLayout({
-        mode: 'sunburst',
-        radius: settings.radius,
-        // Default value accessor reads `data.value`; default sort is
-        // descending by value. Both match d3's example.
-      });
-      await layout.apply(graph);
-      applySunburstLabels();
-      canvas.camera.fitContent(graph.getBounds(), 40);
+    const canvasOptions = {
+      layers: {
+        bg: { type: 'solid', color: '#f8fafc' },
+        graph: {
+          node: {
+            style: {
+              bgFill: 0xcccccc,
+              bgStrokeColor: settings.strokeColor,
+              bgStrokeWidth: settings.strokeWidth,
+            },
+          },
+          // Hierarchy is conveyed by ring enclosure, not links. Edges are
+          // required so the layout can derive the tree topology but stay
+          // fully transparent at render time. Same trick as the Pack story.
+          edge: {
+            style: {
+              strokeColor: 0x000000,
+              strokeWidth: 0,
+              strokeAlpha: 0,
+              arrowTargetShape: 'none',
+            },
+          },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'system-theme': {
+          enabled: true,
+          light: { backgroundColor: '#f8fafc', color: '#0f172a' },
+          dark: { backgroundColor: '#0b1220', color: '#e5e7eb' },
+        },
+        'label-resolution': { enabled: settings.sharpLabelsOnZoom },
+      },
+      layouts: {
+        sunburst: {
+          mode: 'sunburst',
+          radius: settings.radius,
+          // Default value accessor reads `data.value`; default sort is
+          // descending by value. Both match d3's example.
+        },
+      },
+      activeLayout: 'sunburst',
     };
 
-    await run();
-    onStoryTeardown(() => layout?.stop());
+    // Once the active layout resolves the arc geometry, attach labels and
+    // fit. The label pass needs the post-layout `style.shape` on each node.
+    onStoryTeardown(
+      layout.events.on('end', () => {
+        applySunburstLabels();
+        canvas.camera.fitContent(graph.getBounds(), 40);
+      }),
+    );
+
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     // ── GUI ──────────────────────────────────────────────────────────────
     const gui = new GUI({ title: 'Sunburst' });
     onStoryTeardown(() => gui.destroy());
 
     const layoutFolder = gui.addFolder('Layout');
-    layoutFolder.add(settings, 'radius', 120, 1000, 10).onChange(run);
+    layoutFolder.add(canvasOptions.layouts.sunburst, 'radius', 120, 1000, 10).onFinishChange(() =>
+      canvas.update({ layouts: { sunburst: canvasOptions.layouts.sunburst } }),
+    );
 
     const style = gui.addFolder('Style');
-    style.addColor(settings, 'strokeColor').onChange(run);
-    style.add(settings, 'strokeWidth', 0, 4, 0.5).onChange(run);
+    style.addColor(settings, 'strokeColor').onChange((v: number) => {
+      canvasOptions.layers.graph.node.style.bgStrokeColor = v;
+      canvas.update({ layers: { graph: { node: { style: { bgStrokeColor: v } } } } });
+    });
+    style.add(settings, 'strokeWidth', 0, 4, 0.5).onChange((v: number) => {
+      canvasOptions.layers.graph.node.style.bgStrokeWidth = v;
+      canvas.update({ layers: { graph: { node: { style: { bgStrokeWidth: v } } } } });
+    });
 
     const labels = gui.addFolder('Labels');
     labels.add(settings, 'showLabels').onChange(applySunburstLabels);

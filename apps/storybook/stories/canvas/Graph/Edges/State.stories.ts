@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
+  GraphCanvas,
   GraphLayer,
   type CanonicalStateName,
   type EdgeData,
@@ -26,17 +27,15 @@ type Story = StoryObj;
  *   - per-edge: `id`, `source`, `target`, `data`, `style.labelText`, `states`
  *   - layer `edge.style`: everything else (label font/colour/pill/placement)
  *   - `data` is pure user payload; the rendering reads from `style.labelText`
+ *
+ * The node / edge templates are pure literals, so they live in
+ * `canvasOptions.layers.graph`; the data rides on `options.initData`.
  */
 export const State: Story = {
   render: () => createContainer({ id: 'graph-edge-state' }),
 
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edge-state')!;
-    const canvas = new Canvas();
-    onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     interface TileData {
       readonly state: 'default' | CanonicalStateName;
@@ -107,39 +106,48 @@ export const State: Story = {
       },
     ];
 
-    const graph = new GraphLayer({
-      id: 'graph',
-      options: {
-        node: {
-          style: {
-            shape: { kind: 'circle', radius: 10 },
-            bgFill: 0xe5e7eb,
-            bgStrokeColor: 0x9ca3af,
-            bgStrokeWidth: 1,
-          },
-        },
-        edge: {
-          style: {
-            strokeColor: 0x6b7280,
-            strokeWidth: 2,
-            arrowTargetShape: 'triangle',
-            // Shared label styling — per-edge `labelText` supplies the text.
-            labelFontSize: 12,
-            labelFontWeight: 600,
-            labelColor: 0x454545,
-            labelAlign: 'center',
-            labelLineHeight: 16,
-            labelPlacement: 'center',
-            labelOffsetY: 22,
-            labelAutoRotate: false,
-          },
-        },
-        // Canonical state configs are auto-registered. Pass
-        // `useDefaultStateConfigs: false` to opt out.
-      },
-    });
+    const canvas = new GraphCanvas();
+    onStoryTeardown(() => canvas.destroy());
+
+    const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: {
+            style: {
+              shape: { kind: 'circle', radius: 10 },
+              bgFill: 0xe5e7eb,
+              bgStrokeColor: 0x9ca3af,
+              bgStrokeWidth: 1,
+            },
+          },
+          edge: {
+            style: {
+              strokeColor: 0x6b7280,
+              strokeWidth: 2,
+              arrowTargetShape: 'triangle',
+              // Shared label styling — per-edge `labelText` supplies the text.
+              labelFontSize: 12,
+              labelFontWeight: 600,
+              labelColor: 0x454545,
+              labelAlign: 'center',
+              labelLineHeight: 16,
+              labelPlacement: 'center',
+              labelOffsetY: 22,
+              labelAutoRotate: false,
+            },
+          },
+          // Canonical state configs are auto-registered. Pass
+          // `useDefaultStateConfigs: false` to opt out.
+        },
+      },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 60);
   },

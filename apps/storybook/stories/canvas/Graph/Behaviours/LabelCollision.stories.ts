@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
+  GraphCanvas,
   GraphLayer,
   LabelCollisionBehaviour,
   type GraphNode,
@@ -59,37 +60,52 @@ export const LabelCollision: Story = {
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-label-collision')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
+    // Data is content — it rides on the layer via `options.initData`.
     const graph = new GraphLayer({
       id: 'graph',
-      options: {
-        edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' } },
-      },
+      options: { initData: { nodes, edges: lesMiserables.edges } },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges: lesMiserables.edges });
 
-    void new D3ForceLayout({
-      charge: { strength: -160 },
-      link: { distance: 70 },
-      collide: { radius: 22 },
-      center: { x: 0, y: 0 },
-    }).apply(graph);
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     const collision = new LabelCollisionBehaviour({
       id: 'label-collision',
       layerId: 'graph',
-      enabled: true,
       prioritise: 'node-degree',
       flickerGuardMs: 120,
     });
     canvas.behaviours.register(collision);
+
+    const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
+    canvas.layouts.add(forceLayout);
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' } },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'label-collision': { enabled: true },
+      },
+      layouts: {
+        force: {
+          charge: { strength: -160 },
+          link: { distance: 70 },
+          collide: { radius: 22 },
+          center: { x: 0, y: 0 },
+        },
+      },
+      activeLayout: 'force',
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     const settings = { enable: true };
     const apply = (): void => {

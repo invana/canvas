@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
-  Canvas, DragPanBehaviour, WheelZoomBehaviour,
+  DragPanBehaviour, WheelZoomBehaviour,
   LOOP_CURVE_PRESETS,
 } from '@invana/canvas';
 import {
-  DragNodeBehaviour, GraphLayer,
+  DragNodeBehaviour, GraphCanvas, GraphLayer,
   type EdgeData, type NodeData,
 } from '@invana/graph';
 import GUI from 'lil-gui';
@@ -125,16 +125,16 @@ export const Hairpin: Story = {
     const settings = { ...LOOP_CURVE_PRESETS.hairpin };
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edge-loop-curve-hairpin')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
+    // The `shape` resolver reads `settings` from the closure each render,
+    // so it stays in the constructor; the literal stroke / arrow style
+    // moves to config.
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        node: { style: { bgFill: 0x4f7ff5, bgStrokeColor: 0x2563eb, bgStrokeWidth: 0 } },
+        initData: { nodes, edges },
         edge: {
           style: {
             shape: (edge) => {
@@ -153,18 +153,35 @@ export const Hairpin: Story = {
                 },
               };
             },
-            strokeColor: 0x94a3b8,
-            strokeWidth: 1.5,
-            arrowTargetShape: 'triangle',
           },
         },
       },
     });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph', enabled: true }),
-    );
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+
+    const canvasOptions = {
+      layers: {
+        graph: {
+          node: { style: { bgFill: 0x4f7ff5, bgStrokeColor: 0x2563eb, bgStrokeWidth: 0 } },
+          edge: {
+            style: {
+              strokeColor: 0x94a3b8,
+              strokeWidth: 1.5,
+              arrowTargetShape: 'triangle',
+            },
+          },
+        },
+      },
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        'drag-node': { enabled: true },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
 
     const rerenderAll = (): void => {

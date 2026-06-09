@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import GUI from 'lil-gui';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   CollapseExpandBehaviour,
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   type GraphEdge,
   type GraphNode,
@@ -99,26 +100,32 @@ export const CollapseExpand: Story = {
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-collapse-expand')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    const graph = new GraphLayer({ id: 'graph', options: {} });
+    // Data is content — it rides on the layer via initData.
+    const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
 
-    canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag', layerId: 'graph', enabled: true }),
-    );
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag', layerId: 'graph' }));
+
     const collapseExpand = new CollapseExpandBehaviour({
       id: 'collapse-expand',
       layerId: 'graph',
-      enabled: settings.behaviourEnabled,
     });
     canvas.behaviours.register(collapseExpand);
+
+    const canvasOptions = {
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        drag: { enabled: true },
+        'collapse-expand': { enabled: settings.behaviourEnabled },
+      },
+    };
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 100);
 

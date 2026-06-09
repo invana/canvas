@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import GUI from 'lil-gui';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   CollapseExpandBehaviour,
   DragNodeBehaviour,
+  GraphCanvas,
   GraphLayer,
   type GraphEdge,
   type GraphNode,
@@ -121,23 +122,30 @@ export const GroupWithEdges: Story = {
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-group-with-edges')!;
-    const canvas = new Canvas();
+    const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
 
-    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
-    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
-
-    const graph = new GraphLayer({ id: 'graph', options: {} });
+    // Data is content — it rides on the layer via `initData`.
+    const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
     canvas.layers.add(graph);
-    graph.setData({ nodes, edges });
 
+    canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag', layerId: 'graph' }));
     canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag', layerId: 'graph', enabled: true }),
+      new CollapseExpandBehaviour({ id: 'collapse-expand', layerId: 'graph' }),
     );
-    canvas.behaviours.register(
-      new CollapseExpandBehaviour({ id: 'collapse-expand', layerId: 'graph', enabled: true }),
-    );
+
+    const canvasOptions = {
+      behaviours: {
+        pan: { enabled: true },
+        zoom: { enabled: true },
+        drag: { enabled: true },
+        'collapse-expand': { enabled: true },
+      },
+    };
+
+    await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 100);
 
