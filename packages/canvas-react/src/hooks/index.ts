@@ -27,8 +27,6 @@ export { useClipboard } from './useClipboard';
 export type { UseClipboardOptions, UseClipboardResult } from './useClipboard';
 export { useGrid } from './useGrid';
 export type { UseGridOptions, UseGridResult } from './useGrid';
-export { useTheme } from './useTheme';
-export type { UseThemeOptions, UseThemeResult } from './useTheme';
 export { useLayout } from './useLayout';
 export type { ApplicableLayout, LayoutFactory, UseLayoutOptions, UseLayoutResult } from './useLayout';
 export { useSelectMode } from './useSelectMode';

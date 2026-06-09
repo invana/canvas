@@ -1,19 +1,16 @@
 /**
- * Story-only OS dark-mode follow.
+ * Story-only OS dark-mode follow for imperative `play()` stories.
  *
  * The engine is theme-agnostic — it holds one concrete config and knows nothing
- * about light/dark. These helpers are the *external* piece that watches
- * `prefers-color-scheme` and pushes a concrete config patch in:
+ * about light/dark. {@link SystemThemeBehaviour} is the *external* piece:
+ * registered like any behaviour, its `light` / `dark` patches live in the
+ * serialisable `init` config, and it applies them through the context it
+ * already receives on each `prefers-color-scheme` flip.
  *
- * - {@link SystemThemeBehaviour} for imperative `play()` stories — registered
- *   like any behaviour; its `light` / `dark` patches live in the serialisable
- *   `init` config, and it applies them through the context it already receives.
- * - {@link useSystemTheme} for React (`<Canvas>`) stories.
+ * React (`<Canvas>`) stories use `useSystemTheme` from `@invana/canvas-react`.
  */
 
-import { useEffect } from 'react';
-import { Behaviour, type CanvasConfig } from '@invana/canvas';
-import { useCanvas } from '@invana/canvas-react';
+import { Behaviour } from '@invana/canvas';
 
 /** Theme styling applied to the target layer per scheme. */
 export interface ThemeStyle {
@@ -64,10 +61,4 @@ export class SystemThemeBehaviour extends Behaviour {
     (this.ctx?.layers.get(this.layerId) as { setOptions?: (o: unknown) => void } | undefined)
       ?.setOptions?.(style);
   }
-}
-
-/** React stories: `useSystemTheme(lightConfig, darkConfig)`. */
-export function useSystemTheme(light: CanvasConfig, dark: CanvasConfig): void {
-  const canvas = useCanvas();
-  useEffect(() => watchScheme((d) => canvas.update(d ? dark : light)), [canvas, light, dark]);
 }

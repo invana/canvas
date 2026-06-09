@@ -19,10 +19,11 @@ export interface ColorByLabelBehaviourProps
  * and edge `strokeColor`, so the graph reads as coloured-by-category.
  *
  * **Order matters for precedence:** it writes its colours to the layer template
- * once on enable, so any behaviour rendered *after* it that patches the same
- * fields overrides it — place `<ResponsiveThemeBehaviour>` after this one to let
- * theme styling win (per its own docs). `enabled` is reactive; the palette /
- * accessors are init-only — change `id` / `layerId` to recreate.
+ * once on enable, so anything that patches the same fields *after* it wins —
+ * apply theme colours later (a `canvas.update(patch)` from `useSystemTheme` /
+ * the theme toggle) to let theme styling override the label colours. `enabled`
+ * is reactive; the palette / accessors are init-only — change `id` / `layerId`
+ * to recreate.
  */
 export function ColorByLabelBehaviour({
   id = 'color-by-label',
