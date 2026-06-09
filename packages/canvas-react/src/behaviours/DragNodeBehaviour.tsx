@@ -5,30 +5,30 @@ import {
 
 import { useBehaviourRegistration } from './useBehaviourRegistration';
 
-export interface DragNodeBehaviourProps extends Omit<DragNodeBehaviourOptions, 'id' | 'layerId'> {
+export interface DragNodeBehaviourProps extends Omit<DragNodeBehaviourOptions, 'id' | 'targetLayerId'> {
   /** Behaviour id; default `'drag-node'`. Changing this remounts the behaviour. */
   id?: string;
   /** GraphLayer id whose nodes this behaviour drags; default `'graph'`. */
-  layerId?: string;
+  targetLayerId?: string;
 }
 
 /**
  * Declarative wrapper for `@invana/graph` `DragNodeBehaviour`.
  *
  * `enabled` is reactive (toggles in place). Other options are init-only —
- * change `id` / `layerId` (or the `key`) to recreate.
+ * change `id` / `targetLayerId` (or the `key`) to recreate.
  */
 export function DragNodeBehaviour({
   id = 'drag-node',
-  layerId = 'graph',
+  targetLayerId = 'graph',
   enabled = true,
   ...rest
 }: DragNodeBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineDragNodeBehaviour({ id, layerId, enabled, ...rest }),
+    () => new EngineDragNodeBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
-    [id, layerId],
+    [id, targetLayerId],
   );
   return null;
 }

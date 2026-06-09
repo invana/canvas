@@ -27,7 +27,7 @@ import type { GraphEdge } from '../store/types';
 /** Constructor options for `DrawEdgeBehaviour`. */
 export interface DrawEdgeBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour draws edges in. */
-  layerId: string;
+  targetLayerId: string;
 
   /**
    * Allow releasing on the *source* node to create a self-loop. Default
@@ -107,9 +107,9 @@ export class DrawEdgeBehaviour extends Behaviour {
   // ─── Lifecycle ──────────────────────────────────────────────────────────
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
-      throw new Error(`DrawEdgeBehaviour "${this.id}": layer "${this.layerId}" not found.`);
+      throw new Error(`DrawEdgeBehaviour "${this.id}": layer "${this.targetLayerId}" not found.`);
     }
     this.layer = layer;
     this.ctxRef = ctx;

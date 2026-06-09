@@ -130,12 +130,12 @@ export const DataLineage: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(
-      new HoverActivateBehaviour({ id: 'lineage-hover', layerId: 'graph' }),
+      new HoverActivateBehaviour({ id: 'lineage-hover', targetLayerId: 'graph' }),
     );
     canvas.behaviours.register(
-      new ClickSelectBehaviour({ id: 'select', layerId: 'graph' }),
+      new ClickSelectBehaviour({ id: 'select', targetLayerId: 'graph' }),
     );
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
 
     // D3SankeyLayout's options type doesn't surface the shared `id` /
     // `targetLayerId` registry fields, so widen it with `LayoutOptions` at

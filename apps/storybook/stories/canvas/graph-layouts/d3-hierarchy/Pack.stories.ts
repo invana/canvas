@@ -184,12 +184,12 @@ export const Pack: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
 
     // Registered before init — the behaviour resolves its target layer at
     // register-time, so the layer must exist first (it does).
     canvas.behaviours.register(
-      new LabelResolutionLODBehaviour({ id: 'label-resolution', layerId: 'graph' }),
+      new LabelResolutionLODBehaviour({ id: 'label-resolution', targetLayerId: 'graph' }),
     );
 
     // Kept mutable: `D3HierarchyLayout` reads its params at construction

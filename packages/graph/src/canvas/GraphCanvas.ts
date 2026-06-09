@@ -12,7 +12,7 @@
  * // register instances imperatively:
  * gc.layers.add(new BackgroundLayer({ id: 'bg' }));
  * gc.layers.add(new GraphLayer({ id: 'graph', options: { node: { style: { bgFill: tint } } } }));
- * gc.behaviours.register(new HoverActivateBehaviour({ id: 'hover', layerId: 'graph', enabled: true }));
+ * gc.behaviours.register(new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph', enabled: true }));
  *
  * const graph = gc.layer('graph')!;        // typed as GraphLayer
  * graph.setData({ nodes, edges });

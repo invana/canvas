@@ -81,16 +81,9 @@ export const DegreeSize: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
 
-    const degreeSize = new DegreeSizeBehaviour({
-      id: 'degree-size',
-      layerId: 'graph',
-      direction: 'both',
-      minSize: 6,
-      maxSize: 36,
-      scale: 'sqrt',
-    });
+    const degreeSize = new DegreeSizeBehaviour({ id: 'degree-size', targetLayerId: 'graph' });
     canvas.behaviours.register(degreeSize);
 
     // D3 force layout — `collide.radius` callback reads the resolved
@@ -124,7 +117,13 @@ export const DegreeSize: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'drag-node': { enabled: true },
-        'degree-size': { enabled: true },
+        'degree-size': {
+          enabled: true,
+          direction: 'both',
+          minSize: 6,
+          maxSize: 36,
+          scale: 'sqrt',
+        },
       },
       layouts: {
         force: {
@@ -160,11 +159,15 @@ export const DegreeSize: Story = {
     const apply = (): void => {
       if (settings.enabled) degreeSize.enable();
       else degreeSize.disable();
-      degreeSize.setOptions({
-        direction: settings.direction,
-        minSize: settings.minSize,
-        maxSize: settings.maxSize,
-        scale: settings.scale,
+      canvas.update({
+        behaviours: {
+          'degree-size': {
+            direction: settings.direction,
+            minSize: settings.minSize,
+            maxSize: settings.maxSize,
+            scale: settings.scale,
+          },
+        },
       });
       // Sizes changed → re-run the layout so collision radii catch up.
       void canvas.runLayout('force');

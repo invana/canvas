@@ -365,14 +365,14 @@ function DrawingTools() {
   return (
     <>
       {/* Mode-gated — only `enabled` flips; nothing remounts. */}
-      <DragNodeBehaviour layerId="graph" enabled={tool === 'select'} />
-      <ClickSelectBehaviour layerId="graph" enabled={tool === 'select'} multiple={false} />
+      <DragNodeBehaviour targetLayerId="graph" enabled={tool === 'select'} />
+      <ClickSelectBehaviour targetLayerId="graph" enabled={tool === 'select'} multiple={false} />
       {/* Click-to-edit target for the InspectorPanel — a dedicated behaviour so
           the editor follows the last-clicked node/edge regardless of the
           (multi-)selection ClickSelect maintains for dragging. */}
-      <ClickInspectBehaviour layerId="graph" enabled={tool === 'select'} />
+      <ClickInspectBehaviour targetLayerId="graph" enabled={tool === 'select'} />
       <CreateNodeBehaviour
-        layerId="graph"
+        targetLayerId="graph"
         enabled={tool === 'add'}
         createNode={(world) => {
           const n = (seqRef.current += 1);
@@ -385,14 +385,14 @@ function DrawingTools() {
         onNodeCreate={draw.onNodeCreate}
       />
       <DrawEdgeBehaviour
-        layerId="graph"
+        targetLayerId="graph"
         enabled={tool === 'connect'}
         allowSelfLoop
         onEdgeCreate={draw.onEdgeCreate}
       />
-      <EraseBehaviour layerId="graph" enabled={tool === 'delete'} onErase={draw.onErase} />
+      <EraseBehaviour targetLayerId="graph" enabled={tool === 'delete'} onErase={draw.onErase} />
       {/* Fan out edges that share a node pair (drawn either direction). */}
-      <ParallelEdgeBehaviour layerId="graph" spacing={18} groupBy={undirectedPair} />
+      <ParallelEdgeBehaviour targetLayerId="graph" spacing={18} groupBy={undirectedPair} />
 
       <ModellerToolbar
         icons={{

@@ -38,7 +38,7 @@ export type ErasedElement =
 /** Constructor options for `EraseBehaviour`. */
 export interface EraseBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour erases from. */
-  layerId: string;
+  targetLayerId: string;
 
   /** Which element kinds a click removes. Default `'both'`. */
   target?: EraseTargetKind;
@@ -65,9 +65,9 @@ export class EraseBehaviour extends Behaviour {
   // ─── Lifecycle ──────────────────────────────────────────────────────────
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
-      throw new Error(`EraseBehaviour "${this.id}": layer "${this.layerId}" not found.`);
+      throw new Error(`EraseBehaviour "${this.id}": layer "${this.targetLayerId}" not found.`);
     }
     this.layer = layer;
 

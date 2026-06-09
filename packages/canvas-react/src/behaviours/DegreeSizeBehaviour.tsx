@@ -6,30 +6,30 @@ import {
 import { useBehaviourRegistration } from './useBehaviourRegistration';
 
 export interface DegreeSizeBehaviourProps
-  extends Omit<DegreeSizeBehaviourOptions, 'id' | 'layerId'> {
+  extends Omit<DegreeSizeBehaviourOptions, 'id' | 'targetLayerId'> {
   /** Behaviour id; default `'degree-size'`. Changing this remounts the behaviour. */
   id?: string;
   /** GraphLayer id this behaviour drives; default `'graph'`. */
-  layerId?: string;
+  targetLayerId?: string;
 }
 
 /**
  * Declarative wrapper for `@invana/graph` `DegreeSizeBehaviour`
  * (size nodes by in/out degree).
  *
- * `enabled` is reactive; other options are init-only — change `id` / `layerId`.
+ * `enabled` is reactive; other options are init-only — change `id` / `targetLayerId`.
  */
 export function DegreeSizeBehaviour({
   id = 'degree-size',
-  layerId = 'graph',
+  targetLayerId = 'graph',
   enabled = true,
   ...rest
 }: DegreeSizeBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineDegreeSizeBehaviour({ id, layerId, enabled, ...rest }),
+    () => new EngineDegreeSizeBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
-    [id, layerId],
+    [id, targetLayerId],
   );
   return null;
 }

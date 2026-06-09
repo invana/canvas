@@ -53,7 +53,7 @@ export const MiniMap: Story = {
     canvas.layers.add(minimap);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
     const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
     canvas.layouts.add(forceLayout);
 

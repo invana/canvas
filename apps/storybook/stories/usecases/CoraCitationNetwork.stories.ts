@@ -114,34 +114,22 @@ export const CoraCitationNetwork: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }),
+      new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }),
     );
     canvas.behaviours.register(
-      new HoverActivateBehaviour({
-        id: 'hover',
-        layerId: 'graph',
-        state: 'hovered',
-        // `inactiveState: 'dimmed'` would force a per-hover walk over
-        // all 2,708 nodes + 10,556 edges (HoverActivateBehaviour calls
-        // `setNodeState` per item, each triggering a sync `rerenderNode`).
-        // Skip the dim entirely on this dataset — the highlighted
-        // neighbourhood reads fine against the watercolor background
-        // without it.
-        degree: 1,
-        direction: 'both',
-      }),
+      new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph' }),
     );
     canvas.behaviours.register(
-      new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }),
+      new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }),
     );
 
     // const nodeSizeLOD = new NodeSizeLODBehaviour({
     //   id: 'node-size-lod', enabled: settings.pixelConstantSizing,
-    //   layers: [{ layerId: 'graph', sizePx: () => settings.nodeRadius * 2 }],
+    //   layers: [{ targetLayerId: 'graph', sizePx: () => settings.nodeRadius * 2 }],
     // });
     // const edgeSizeLOD = new EdgeSizeLODBehaviour({
     //   id: 'edge-size-lod', enabled: settings.pixelConstantSizing,
-    //   layers: [{ layerId: 'graph', strokeWidthPx: () => settings.edgeWidth }],
+    //   layers: [{ targetLayerId: 'graph', strokeWidthPx: () => settings.edgeWidth }],
     // });
     // canvas.behaviours.register(nodeSizeLOD);
     // canvas.behaviours.register(edgeSizeLOD);
@@ -209,7 +197,18 @@ export const CoraCitationNetwork: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'drag-node': { enabled: true },
-        hover: { enabled: true },
+        hover: {
+          enabled: true,
+          state: 'hovered',
+          // `inactiveState: 'dimmed'` would force a per-hover walk over
+          // all 2,708 nodes + 10,556 edges (HoverActivateBehaviour calls
+          // `setNodeState` per item, each triggering a sync `rerenderNode`).
+          // Skip the dim entirely on this dataset — the highlighted
+          // neighbourhood reads fine against the watercolor background
+          // without it.
+          degree: 1,
+          direction: 'both',
+        },
         'system-theme': {
           enabled: true,
           light: { backgroundColor: '#ffffff' },

@@ -141,30 +141,22 @@ export const CitationGraph: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
     canvas.behaviours.register(
-      new HoverActivateBehaviour({
-        id: 'hover', layerId: 'graph',
-        state: 'hovered', inactiveState: 'dimmed',
-        degree: 1, direction: 'both',
-      }),
+      new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph' }),
     );
     canvas.behaviours.register(
-      new ClickSelectBehaviour({
-        id: 'select', layerId: 'graph',
-        multiple: true, trigger: ['shift'],
-      }),
+      new ClickSelectBehaviour({ id: 'select', targetLayerId: 'graph' }),
     );
     canvas.behaviours.register(
       new BrushSelectBehaviour({
-        id: 'brush', layerId: 'graph',
+        id: 'brush', targetLayerId: 'graph',
         clickSelectId: 'select',
-        enableElements: ['shape'],
       }),
     );
     canvas.behaviours.register(
       new LabelCollisionBehaviour({
-        id: 'label-collision', layerId: 'graph',
+        id: 'label-collision', targetLayerId: 'graph',
         strategy: 'hide',
         flickerGuardMs: 120,
       }),
@@ -235,9 +227,13 @@ export const CitationGraph: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'drag-node': { enabled: true },
-        hover: { enabled: true },
-        select: { enabled: true },
-        brush: { enabled: true },
+        hover: {
+          enabled: true,
+          state: 'hovered', inactiveState: 'dimmed',
+          degree: 1, direction: 'both',
+        },
+        select: { enabled: true, multiple: true, trigger: ['shift'] },
+        brush: { enabled: true, enableElements: ['shape'] },
         'label-collision': { enabled: true },
       },
       layouts: {

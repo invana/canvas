@@ -69,13 +69,13 @@ class TestGraphLayer extends WorldLayer<
 class TestSelectBehaviour extends Behaviour {
   selectedFromBehaviour: string[] = [];
 
-  constructor(opts: { id: string; layerId: string; enabled?: boolean }) {
+  constructor(opts: { id: string; targetLayerId: string; enabled?: boolean }) {
     super({ ...opts, shortcuts: ['click'] });
   }
 
   protected onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<TestGraphLayer>(this.layerId!);
-    if (!layer) throw new Error(`layer "${this.layerId}" not found`);
+    const layer = ctx.layers.get<TestGraphLayer>(this.targetLayerId!);
+    if (!layer) throw new Error(`layer "${this.targetLayerId}" not found`);
     layer.events.on('node:click', ({ id }) => {
       if (!this.enabled) return;
       this.selectedFromBehaviour.push(id);
@@ -157,7 +157,7 @@ describe('Canvas — end-to-end smoke', () => {
 
     const select = new TestSelectBehaviour({
       id: 'select',
-      layerId: 'graph-1',
+      targetLayerId: 'graph-1',
       enabled: true,
     });
     canvas.behaviours.register(select);
@@ -180,7 +180,7 @@ describe('Canvas — end-to-end smoke', () => {
 
     const select = new TestSelectBehaviour({
       id: 'select',
-      layerId: 'graph-1',
+      targetLayerId: 'graph-1',
       // default enabled: false
     });
     canvas.behaviours.register(select);

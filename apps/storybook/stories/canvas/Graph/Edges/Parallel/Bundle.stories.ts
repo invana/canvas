@@ -90,9 +90,9 @@ export const Bundle: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    const parallel = new ParallelEdgeBehaviour({ id: 'parallel-edges', layerId: 'graph' });
+    const parallel = new ParallelEdgeBehaviour({ id: 'parallel-edges', targetLayerId: 'graph' });
     canvas.behaviours.register(parallel);
-    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
 
     const canvasOptions = {
       layers: { graph: { edge: { style: { strokeColor: 0x64748b, strokeWidth: 2, strokeCap: 'round' } } } },
@@ -132,7 +132,7 @@ export const Bundle: Story = {
     gui.add(settings, 'nodeKind', Object.keys(SHAPES)).onChange(applyShape);
     gui.add(settings, 'anchor', [...ANCHORS]).onChange(applyEdgeStyle);
     gui.add(settings, 'count', 1, COUNT_MAX, 1).onChange(applyCount);
-    gui.add(settings, 'spacing', 0, 60, 1).onChange((v: number) => parallel.setOptions({ spacing: v }));
+    gui.add(settings, 'spacing', 0, 60, 1).onChange((v: number) => canvas.update({ behaviours: { 'parallel-edges': { spacing: v } } }));
     gui.add(settings, 'beta', 0, 1, 0.01).onChange(applyEdgeStyle);
 
     canvas.camera.fitContent(graph.getBounds(), 100);

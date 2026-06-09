@@ -132,33 +132,12 @@ export const RAGEmbeddingExplorer: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(
-      new HoverActivateBehaviour({
-        id: 'hover',
-        layerId: 'graph',
-        state: 'hovered',
-        // Single-node hover, no neighbour expansion — there are no edges.
-        degree: 0,
-      }),
+      new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph' }),
     );
     canvas.behaviours.register(
-      new ClickSelectBehaviour({
-        id: 'select',
-        layerId: 'graph',
-        multiple: true,
-        trigger: ['shift'],
-        clearOnBackground: true,
-      }),
+      new ClickSelectBehaviour({ id: 'select', targetLayerId: 'graph' }),
     );
-    const lasso = new LassoSelectBehaviour({
-      id: 'lasso',
-      layerId: 'graph',
-      // Hand selected ids over to the ClickSelect behaviour by sharing the
-      // `selected` state name (its default). This is the recommended
-      // composition path per the LassoSelectBehaviour docs.
-      clickSelectId: 'select',
-      immediately: false,
-      clearOnBackground: false,
-    });
+    const lasso = new LassoSelectBehaviour({ id: 'lasso', targetLayerId: 'graph' });
     canvas.behaviours.register(lasso);
 
     // ── Config ──────────────────────────────────────────────────────────
@@ -197,9 +176,18 @@ export const RAGEmbeddingExplorer: Story = {
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        hover: { enabled: true },
-        select: { enabled: true },
-        lasso: { enabled: true },
+        // Single-node hover, no neighbour expansion — there are no edges.
+        hover: { enabled: true, state: 'hovered', degree: 0 },
+        select: { enabled: true, multiple: true, trigger: ['shift'], clearOnBackground: true },
+        lasso: {
+          enabled: true,
+          // Hand selected ids over to the ClickSelect behaviour by sharing the
+          // `selected` state name (its default). This is the recommended
+          // composition path per the LassoSelectBehaviour docs.
+          clickSelectId: 'select',
+          immediately: false,
+          clearOnBackground: false,
+        },
       },
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
@@ -243,7 +231,7 @@ export const RAGEmbeddingExplorer: Story = {
       .add(settings, 'lassoAdditive')
       .name('additive (else replace)')
       .onChange((additive: boolean) => {
-        lasso.setOptions({ trigger: additive ? [] : ['shift'] });
+        canvas.update({ behaviours: { lasso: { trigger: additive ? [] : ['shift'] } } });
       });
 
     gui

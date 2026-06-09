@@ -10,7 +10,7 @@
  * into the selection set (where a multi-select would leave it with nothing single
  * to show).
  *
- * Layer-scoped: constructed with a target `layerId`. Subscribes to that layer's
+ * Layer-scoped: constructed with a `targetLayerId`. Subscribes to that layer's
  * renderer click events; uses a native DOM `click` listener for the
  * clear-on-background path (the engine doesn't emit `background:click` today),
  * mirroring `ClickSelectBehaviour`.
@@ -20,7 +20,7 @@
  * @example
  * ```ts
  * canvas.behaviours.register(
- *   new ClickInspectBehaviour({ id: 'click-inspect', layerId: 'graph', enabled: true }),
+ *   new ClickInspectBehaviour({ id: 'click-inspect', targetLayerId: 'graph', enabled: true }),
  * );
  * canvas.behaviours.get<ClickInspectBehaviour>('click-inspect')
  *   ?.events.on('inspect:change', (t) => console.log(t)); // { kind, id } | null
@@ -49,7 +49,7 @@ export type ClickInspectEventMap = {
 /** Constructor options for `ClickInspectBehaviour`. */
 export interface ClickInspectBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour reads clicks from. */
-  layerId: string;
+  targetLayerId: string;
 
   /** Clear the inspected element when clicking the empty canvas. Default `true`. */
   clearOnBackground?: boolean;
@@ -90,10 +90,10 @@ export class ClickInspectBehaviour extends Behaviour {
   // ─── Lifecycle ──────────────────────────────────────────────────────────
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
       throw new Error(
-        `ClickInspectBehaviour "${this.id}": layer "${this.layerId}" not found. ` +
+        `ClickInspectBehaviour "${this.id}": layer "${this.targetLayerId}" not found. ` +
           `Add the GraphLayer before registering this behaviour.`,
       );
     }

@@ -109,11 +109,11 @@ export const CollapseExpand: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag', layerId: 'graph' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag', targetLayerId: 'graph' }));
 
     const collapseExpand = new CollapseExpandBehaviour({
       id: 'collapse-expand',
-      layerId: 'graph',
+      targetLayerId: 'graph',
     });
     canvas.behaviours.register(collapseExpand);
 

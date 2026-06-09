@@ -90,13 +90,9 @@ export const Rounded: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
-    const parallel = new ParallelEdgeBehaviour({
-      id: 'parallel-edges',
-      layerId: 'graph',
-      spacing: settings.spacing,
-    });
+    const parallel = new ParallelEdgeBehaviour({ id: 'parallel-edges', targetLayerId: 'graph' });
     canvas.behaviours.register(parallel);
-    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
 
     const canvasOptions = {
       layers: {
@@ -105,7 +101,7 @@ export const Rounded: Story = {
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'parallel-edges': { enabled: true },
+        'parallel-edges': { enabled: true, spacing: settings.spacing },
         'drag-node': { enabled: true },
       },
     };
@@ -138,7 +134,7 @@ export const Rounded: Story = {
     gui.add(settings, 'nodeKind', Object.keys(SHAPES)).onChange(applyShape);
     gui.add(settings, 'anchor', [...ANCHORS]).onChange(applyEdgeStyle);
     gui.add(settings, 'count', 1, COUNT_MAX, 1).onChange(applyCount);
-    gui.add(settings, 'spacing', 0, 30, 1).onChange((v: number) => parallel.setOptions({ spacing: v }));
+    gui.add(settings, 'spacing', 0, 30, 1).onChange((v: number) => canvas.update({ behaviours: { 'parallel-edges': { spacing: v } } }));
     gui.add(settings, 'radius', 0, 40, 1).onChange(applyEdgeStyle);
 
     canvas.camera.fitContent(graph.getBounds(), 100);

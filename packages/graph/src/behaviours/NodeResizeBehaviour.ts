@@ -28,7 +28,7 @@
  * @example
  * ```ts
  * canvas.behaviours.register(
- *   new NodeResizeBehaviour({ id: 'resize', layerId: 'graph', enabled: true }),
+ *   new NodeResizeBehaviour({ id: 'resize', targetLayerId: 'graph', enabled: true }),
  * );
  * ```
  */
@@ -85,7 +85,7 @@ const CIRCLE_HANDLES: SelectionFramePlacement[] = ['right'];
 
 export interface NodeResizeBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour drives. */
-  layerId: string;
+  targetLayerId: string;
   /** Handle outer radius in px. Default `5`. */
   handleRadius?: number;
   /** Handle fill colour. Default `0xffffff`. */
@@ -161,10 +161,10 @@ export class NodeResizeBehaviour extends Behaviour {
   }
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
       throw new Error(
-        `NodeResizeBehaviour "${this.id}": layer "${this.layerId}" not found.`,
+        `NodeResizeBehaviour "${this.id}": layer "${this.targetLayerId}" not found.`,
       );
     }
     if (!layer.getRenderer()) {

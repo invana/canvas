@@ -31,7 +31,7 @@
  * @example
  * ```ts
  * canvas.behaviours.register(
- *   new DragNodeBehaviour({ id: 'drag', layerId: 'graph', enabled: true }),
+ *   new DragNodeBehaviour({ id: 'drag', targetLayerId: 'graph', enabled: true }),
  * );
  * ```
  */
@@ -43,7 +43,7 @@ import { GraphLayer } from '../layer/GraphLayer';
 /** Constructor options for `DragNodeBehaviour`. */
 export interface DragNodeBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id whose nodes this behaviour drags. */
-  layerId: string;
+  targetLayerId: string;
 
   /**
    * Predicate to restrict which node ids are draggable. Returning `false`
@@ -211,10 +211,10 @@ export class DragNodeBehaviour extends Behaviour {
   // ─── Lifecycle ──────────────────────────────────────────────────────────
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
       throw new Error(
-        `DragNodeBehaviour "${this.id}": layer "${this.layerId}" not found.`,
+        `DragNodeBehaviour "${this.id}": layer "${this.targetLayerId}" not found.`,
       );
     }
     this.layer = layer;

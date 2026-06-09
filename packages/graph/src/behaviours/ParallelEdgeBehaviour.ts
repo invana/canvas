@@ -4,7 +4,7 @@
  * per-edge connector pipeline (anchor → router → pathStyle), since each
  * pipeline stage sees only one edge in isolation.
  *
- * Layer-scoped: constructed with a target `layerId` referencing a
+ * Layer-scoped: constructed with a `targetLayerId` referencing a
  * {@link GraphLayer}. Watches the store for edge add/remove and node
  * position changes, groups edges by `groupBy(edge)` (default
  * `${source}::${target}`), and rewrites each group's `style.shape` so its
@@ -36,7 +36,7 @@
  * canvas.behaviours.register(
  *   new ParallelEdgeBehaviour({
  *     id: 'parallel-edges',
- *     layerId: 'graph',
+ *     targetLayerId: 'graph',
  *     enabled: true,
  *     spacing: 12,
  *   }),
@@ -124,7 +124,7 @@ export type ParallelEdgeDistribute = (
 /** Constructor options for {@link ParallelEdgeBehaviour}. */
 export interface ParallelEdgeBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour drives. */
-  layerId: string;
+  targetLayerId: string;
 
   /** Spacing between adjacent ranks in world units. Default `12`. */
   spacing?: number;
@@ -295,10 +295,10 @@ export class ParallelEdgeBehaviour extends Behaviour {
   // ─── Lifecycle ──────────────────────────────────────────────────────────
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
       throw new Error(
-        `ParallelEdgeBehaviour "${this.id}": layer "${this.layerId}" not found. ` +
+        `ParallelEdgeBehaviour "${this.id}": layer "${this.targetLayerId}" not found. ` +
           `Add the GraphLayer before registering this behaviour.`,
       );
     }

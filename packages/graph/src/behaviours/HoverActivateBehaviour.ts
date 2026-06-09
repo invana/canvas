@@ -3,7 +3,7 @@
  * edges (and optionally their N-hop neighbours), with optional dimming of
  * everything else.
  *
- * Layer-scoped: constructed with a target `layerId` referencing a
+ * Layer-scoped: constructed with a `targetLayerId` referencing a
  * {@link GraphLayer}. Subscribes to that layer's renderer pointer events
  * (`shape:pointerover` / `connector:pointerover`) and drives layer state via
  * `layer.store.setNodeState` / `layer.store.setEdgeState`.
@@ -25,7 +25,7 @@
  * canvas.behaviours.register(
  *   new HoverActivateBehaviour({
  *     id: 'hover',
- *     layerId: 'graph',
+ *     targetLayerId: 'graph',
  *     enabled: true,
  *     // state defaults to 'hovered'
  *     inactiveState: 'dimmed',
@@ -56,7 +56,7 @@ export interface HoverableElement {
 /** Constructor options for `HoverActivateBehaviour`. */
 export interface HoverActivateBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour drives. */
-  layerId: string;
+  targetLayerId: string;
 
   /**
    * Per-target enable predicate. `boolean` is a global on/off; a function
@@ -263,10 +263,10 @@ export class HoverActivateBehaviour extends Behaviour {
   // ─── Lifecycle ──────────────────────────────────────────────────────────
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
       throw new Error(
-        `HoverActivateBehaviour "${this.id}": layer "${this.layerId}" not found. ` +
+        `HoverActivateBehaviour "${this.id}": layer "${this.targetLayerId}" not found. ` +
           `Add the GraphLayer before registering this behaviour.`,
       );
     }
@@ -275,7 +275,7 @@ export class HoverActivateBehaviour extends Behaviour {
     const renderer = layer.getRenderer();
     if (!renderer) {
       throw new Error(
-        `HoverActivateBehaviour "${this.id}": target layer "${this.layerId}" is not mounted. ` +
+        `HoverActivateBehaviour "${this.id}": target layer "${this.targetLayerId}" is not mounted. ` +
           `Add the GraphLayer to the canvas before registering this behaviour.`,
       );
     }

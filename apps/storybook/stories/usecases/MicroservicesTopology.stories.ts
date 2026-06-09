@@ -173,19 +173,12 @@ export const MicroservicesTopology: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(
-      new HoverActivateBehaviour({
-        id: 'hover', layerId: 'graph',
-        state: 'highlighted', inactiveState: 'dimmed',
-        degree: 1, direction: 'both',
-      }),
+      new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph' }),
     );
     canvas.behaviours.register(
-      new ClickSelectBehaviour({
-        id: 'select', layerId: 'graph',
-        multiple: true, trigger: ['shift'],
-      }),
+      new ClickSelectBehaviour({ id: 'select', targetLayerId: 'graph' }),
     );
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
 
     // ── Layout ──────────────────────────────────────────────────────────
     // `ElkLayout`'s constructor types its options as `ElkLayoutOptions`
@@ -216,8 +209,12 @@ export const MicroservicesTopology: Story = {
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        hover: { enabled: true },
-        select: { enabled: true },
+        hover: {
+          enabled: true,
+          state: 'highlighted', inactiveState: 'dimmed',
+          degree: 1, direction: 'both',
+        },
+        select: { enabled: true, multiple: true, trigger: ['shift'] },
         'system-theme': {
           enabled: true,
           light: { backgroundColor: '#f8fafc', color: '#cbd5e1' },

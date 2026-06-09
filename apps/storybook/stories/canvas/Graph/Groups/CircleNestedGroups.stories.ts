@@ -107,9 +107,9 @@ export const CircleNestedGroups: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag', layerId: 'graph' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag', targetLayerId: 'graph' }));
     canvas.behaviours.register(
-      new CollapseExpandBehaviour({ id: 'collapse-expand', layerId: 'graph' }),
+      new CollapseExpandBehaviour({ id: 'collapse-expand', targetLayerId: 'graph' }),
     );
 
     const canvasOptions = {

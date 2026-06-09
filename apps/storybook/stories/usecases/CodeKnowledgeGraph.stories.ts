@@ -194,30 +194,18 @@ export const CodeKnowledgeGraph: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }),
+      new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }),
     );
 
-    const hover = new HoverActivateBehaviour({
-      id: 'hover',
-      layerId: 'graph',
-      state: 'highlighted',
-      inactiveState: 'dimmed',
-      degree: 1,
-      direction: 'both',
-    });
+    const hover = new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph' });
     canvas.behaviours.register(hover);
 
     canvas.behaviours.register(
-      new ClickSelectBehaviour({
-        id: 'select',
-        layerId: 'graph',
-        multiple: true,
-        trigger: ['shift'],
-      }),
+      new ClickSelectBehaviour({ id: 'select', targetLayerId: 'graph' }),
     );
 
     canvas.behaviours.register(
-      new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }),
+      new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }),
     );
 
     // ── Layout — register the ELK layout; activeLayout auto-runs on mount.
@@ -292,8 +280,8 @@ export const CodeKnowledgeGraph: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'drag-node': { enabled: true },
-        hover: { enabled: true },
-        select: { enabled: true },
+        hover: { enabled: true, state: 'highlighted', inactiveState: 'dimmed', degree: 1, direction: 'both' },
+        select: { enabled: true, multiple: true, trigger: ['shift'] },
         'system-theme': {
           enabled: true,
           light: { backgroundColor: '#f8fafc', color: '#cbd5e1' },

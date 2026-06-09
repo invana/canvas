@@ -49,31 +49,17 @@ export const BrushSelect: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
-    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
 
     // ClickSelectBehaviour first so Brush can delegate to it for unified
     // selection state. Default `clickSelectId` matches its id below.
-    const click = new ClickSelectBehaviour({
-      id: 'click-select',
-      layerId: 'graph',
-      multiple: true,
-      trigger: ['shift'],
-    });
+    // Only wiring (id + targetLayerId) goes on the constructor; every
+    // serialisable option lives in `canvasOptions.behaviours` below and is
+    // applied by `canvas.init({ config })`.
+    const click = new ClickSelectBehaviour({ id: 'click-select', targetLayerId: 'graph' });
     canvas.behaviours.register(click);
 
-    const brush = new BrushSelectBehaviour({
-      id: 'brush-select',
-      layerId: 'graph',
-      trigger: ['shift'],
-      enableElements: ['shape', 'connector'],
-      style: {
-        fill: 0x1677ff,
-        fillAlpha: 0.12,
-        stroke: 0x1677ff,
-        strokeWidth: 1,
-        strokeDash: [4, 4],
-      },
-    });
+    const brush = new BrushSelectBehaviour({ id: 'brush-select', targetLayerId: 'graph' });
     canvas.behaviours.register(brush);
 
     const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
@@ -93,8 +79,19 @@ export const BrushSelect: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'drag-node': { enabled: true },
-        'click-select': { enabled: true },
-        'brush-select': { enabled: true },
+        'click-select': { enabled: true, multiple: true, trigger: ['shift'] },
+        'brush-select': {
+          enabled: true,
+          trigger: ['shift'],
+          enableElements: ['shape', 'connector'],
+          style: {
+            fill: 0x1677ff,
+            fillAlpha: 0.12,
+            stroke: 0x1677ff,
+            strokeWidth: 1,
+            strokeDash: [4, 4],
+          },
+        },
       },
       layouts: {
         force: {
@@ -142,19 +139,23 @@ export const BrushSelect: Story = {
         settings['trigger (modifier key)'] === 'none'
           ? []
           : [settings['trigger (modifier key)']];
-      brush.setOptions({
-        enableElements,
-        trigger,
-        immediately: settings.immediately,
-        state: settings.state,
-        clearOnBackground: settings.clearOnBackground,
-        style: {
-          fill: parseColor(settings['style.fill']),
-          fillAlpha: settings['style.fillAlpha'],
-          stroke: parseColor(settings['style.stroke']),
-          strokeAlpha: settings['style.strokeAlpha'],
-          strokeWidth: settings['style.strokeWidth'],
-          strokeDash: [settings['style.dashLen'], settings['style.gapLen']],
+      canvas.update({
+        behaviours: {
+          'brush-select': {
+            enableElements,
+            trigger,
+            immediately: settings.immediately,
+            state: settings.state,
+            clearOnBackground: settings.clearOnBackground,
+            style: {
+              fill: parseColor(settings['style.fill']),
+              fillAlpha: settings['style.fillAlpha'],
+              stroke: parseColor(settings['style.stroke']),
+              strokeAlpha: settings['style.strokeAlpha'],
+              strokeWidth: settings['style.strokeWidth'],
+              strokeDash: [settings['style.dashLen'], settings['style.gapLen']],
+            },
+          },
         },
       });
     };

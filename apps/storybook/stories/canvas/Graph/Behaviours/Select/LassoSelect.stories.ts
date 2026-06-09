@@ -48,12 +48,12 @@ export const LassoSelect: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
 
-    const click = new ClickSelectBehaviour({ id: 'click-select', layerId: 'graph' });
+    const click = new ClickSelectBehaviour({ id: 'click-select', targetLayerId: 'graph' });
     canvas.behaviours.register(click);
 
-    const lasso = new LassoSelectBehaviour({ id: 'lasso-select', layerId: 'graph' });
+    const lasso = new LassoSelectBehaviour({ id: 'lasso-select', targetLayerId: 'graph' });
     canvas.behaviours.register(lasso);
 
     const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
@@ -132,19 +132,23 @@ export const LassoSelect: Story = {
         settings['trigger (modifier key)'] === 'none'
           ? []
           : [settings['trigger (modifier key)']];
-      lasso.setOptions({
-        enableElements,
-        trigger,
-        immediately: settings.immediately,
-        state: settings.state,
-        clearOnBackground: settings.clearOnBackground,
-        style: {
-          fill: parseColor(settings['style.fill']),
-          fillAlpha: settings['style.fillAlpha'],
-          stroke: parseColor(settings['style.stroke']),
-          strokeAlpha: settings['style.strokeAlpha'],
-          strokeWidth: settings['style.strokeWidth'],
-          strokeDash: [settings['style.dashLen'], settings['style.gapLen']],
+      canvas.update({
+        behaviours: {
+          'lasso-select': {
+            enableElements,
+            trigger,
+            immediately: settings.immediately,
+            state: settings.state,
+            clearOnBackground: settings.clearOnBackground,
+            style: {
+              fill: parseColor(settings['style.fill']),
+              fillAlpha: settings['style.fillAlpha'],
+              stroke: parseColor(settings['style.stroke']),
+              strokeAlpha: settings['style.strokeAlpha'],
+              strokeWidth: settings['style.strokeWidth'],
+              strokeDash: [settings['style.dashLen'], settings['style.gapLen']],
+            },
+          },
         },
       });
     };

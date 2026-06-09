@@ -75,7 +75,7 @@ export const LabelCollision: Story = {
 
     const collision = new LabelCollisionBehaviour({
       id: 'label-collision',
-      layerId: 'graph',
+      targetLayerId: 'graph',
       prioritise: 'node-degree',
       flickerGuardMs: 120,
     });

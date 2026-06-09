@@ -6,11 +6,11 @@ import {
 import { useBehaviourRegistration } from './useBehaviourRegistration';
 
 export interface ColorByLabelBehaviourProps
-  extends Omit<ColorByLabelBehaviourOptions, 'id' | 'layerId'> {
+  extends Omit<ColorByLabelBehaviourOptions, 'id' | 'targetLayerId'> {
   /** Behaviour id; default `'color-by-label'`. Changing this remounts the behaviour. */
   id?: string;
   /** GraphLayer id this behaviour colours; default `'graph'`. */
-  layerId?: string;
+  targetLayerId?: string;
 }
 
 /**
@@ -22,20 +22,20 @@ export interface ColorByLabelBehaviourProps
  * once on enable, so anything that patches the same fields *after* it wins —
  * apply theme colours later (a `canvas.update(patch)` from `useSystemTheme` /
  * the theme toggle) to let theme styling override the label colours. `enabled`
- * is reactive; the palette / accessors are init-only — change `id` / `layerId`
+ * is reactive; the palette / accessors are init-only — change `id` / `targetLayerId`
  * to recreate.
  */
 export function ColorByLabelBehaviour({
   id = 'color-by-label',
-  layerId = 'graph',
+  targetLayerId = 'graph',
   enabled = true,
   ...rest
 }: ColorByLabelBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineColorByLabelBehaviour({ id, layerId, enabled, ...rest }),
+    () => new EngineColorByLabelBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
-    [id, layerId],
+    [id, targetLayerId],
   );
   return null;
 }

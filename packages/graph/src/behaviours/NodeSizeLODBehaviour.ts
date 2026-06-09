@@ -49,7 +49,7 @@
  *     enabled: true,
  *     layers: [
  *       {
- *         layerId: 'graph',
+ *         targetLayerId: 'graph',
  *         sizePx: 6,          // node diameter in screen px
  *         strokeWidthPx: 1,   // outline width in screen px (omit to leave in world units)
  *       },
@@ -73,7 +73,7 @@ import type { GraphLayer } from '../layer/GraphLayer';
 /** Per-`GraphLayer` config — one entry per layer this behaviour rescales. */
 export interface NodeSizeLODConfig {
   /** Required — the `GraphLayer` whose nodes are rescaled. */
-  layerId: string;
+  targetLayerId: string;
   /**
    * Target body size in screen px for nodes that don't carry a per-node
    * `data.size` override. Falls back to the layer's `nodeDefaults.size`
@@ -130,10 +130,10 @@ export class NodeSizeLODBehaviour extends ElementSizeLODBehaviour {
 
   protected override onResolveTargets(ctx: CanvasContext): void {
     for (const config of this.configs) {
-      const layer = ctx.layers.get<GraphLayer>(config.layerId);
+      const layer = ctx.layers.get<GraphLayer>(config.targetLayerId);
       if (!layer) {
         throw new Error(
-          `NodeSizeLODBehaviour "${this.id}": layer "${config.layerId}" not found in CanvasContext.`,
+          `NodeSizeLODBehaviour "${this.id}": layer "${config.targetLayerId}" not found in CanvasContext.`,
         );
       }
       this.resolved.push({ config, layer });

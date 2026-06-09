@@ -8,11 +8,11 @@ import { useBehaviourRegistration } from './useBehaviourRegistration';
 import { useViewContext, type ViewContext } from '../hooks/useViewContext';
 
 export interface ClickViewBehaviourProps
-  extends Omit<ClickViewBehaviourOptions, 'id' | 'layerId'> {
+  extends Omit<ClickViewBehaviourOptions, 'id' | 'targetLayerId'> {
   /** Behaviour id; default `'click-view'`. Changing this remounts the behaviour. */
   id?: string;
   /** GraphLayer id this behaviour reads clicks from; default `'graph'`. */
-  layerId?: string;
+  targetLayerId?: string;
   /**
    * Viewer UI for the clicked element, as a render-prop. Receives the full
    * {@link ViewContext} — `kind` (`'node' | 'edge'` today, extensible to future
@@ -26,7 +26,7 @@ export interface ClickViewBehaviourProps
    *
    * @example
    * ```tsx
-   * <ClickViewBehaviour layerId="graph" enabled
+   * <ClickViewBehaviour targetLayerId="graph" enabled
    *   panel={(ctx) => <PropertyViewerPanel ctx={ctx} position="top-right" />} />
    * ```
    */
@@ -45,22 +45,22 @@ export interface ClickViewBehaviourProps
  * and every data `kind`. Without `panel` it's a pure behaviour and renders
  * nothing.
  *
- * `enabled` is reactive; other options are init-only — change `id` / `layerId`.
+ * `enabled` is reactive; other options are init-only — change `id` / `targetLayerId`.
  */
 export function ClickViewBehaviour({
   id = 'click-view',
-  layerId = 'graph',
+  targetLayerId = 'graph',
   enabled = true,
   panel,
   ...rest
 }: ClickViewBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineClickViewBehaviour({ id, layerId, enabled, ...rest }),
+    () => new EngineClickViewBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
-    [id, layerId],
+    [id, targetLayerId],
   );
-  return panel ? <ClickViewSurface viewId={id} layerId={layerId} panel={panel} /> : null;
+  return panel ? <ClickViewSurface viewId={id} layerId={targetLayerId} panel={panel} /> : null;
 }
 
 /**

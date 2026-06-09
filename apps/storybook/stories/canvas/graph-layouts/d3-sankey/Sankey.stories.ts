@@ -79,7 +79,7 @@ export const Sankey: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
 
     // `D3SankeyLayout`'s ctor types only its own sankey params, but forwards
     // the shared `LayoutOptions` wiring (`id` / `targetLayerId`) to the base

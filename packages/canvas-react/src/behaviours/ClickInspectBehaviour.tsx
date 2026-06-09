@@ -6,11 +6,11 @@ import {
 import { useBehaviourRegistration } from './useBehaviourRegistration';
 
 export interface ClickInspectBehaviourProps
-  extends Omit<ClickInspectBehaviourOptions, 'id' | 'layerId'> {
+  extends Omit<ClickInspectBehaviourOptions, 'id' | 'targetLayerId'> {
   /** Behaviour id; default `'click-inspect'`. Changing this remounts the behaviour. */
   id?: string;
   /** GraphLayer id this behaviour reads clicks from; default `'graph'`. */
-  layerId?: string;
+  targetLayerId?: string;
 }
 
 /**
@@ -18,19 +18,19 @@ export interface ClickInspectBehaviourProps
  * single node/edge clicked for editing, decoupled from selection. Pair with
  * `<InspectorPanel>` (which reads this behaviour's target by id).
  *
- * `enabled` is reactive; other options are init-only — change `id` / `layerId`.
+ * `enabled` is reactive; other options are init-only — change `id` / `targetLayerId`.
  */
 export function ClickInspectBehaviour({
   id = 'click-inspect',
-  layerId = 'graph',
+  targetLayerId = 'graph',
   enabled = true,
   ...rest
 }: ClickInspectBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineClickInspectBehaviour({ id, layerId, enabled, ...rest }),
+    () => new EngineClickInspectBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
-    [id, layerId],
+    [id, targetLayerId],
   );
   return null;
 }

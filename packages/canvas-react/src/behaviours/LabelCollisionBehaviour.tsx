@@ -6,30 +6,30 @@ import {
 import { useBehaviourRegistration } from './useBehaviourRegistration';
 
 export interface LabelCollisionBehaviourProps
-  extends Omit<LabelCollisionBehaviourOptions, 'id' | 'layerId'> {
+  extends Omit<LabelCollisionBehaviourOptions, 'id' | 'targetLayerId'> {
   /** Behaviour id; default `'label-collision'`. Changing this remounts the behaviour. */
   id?: string;
   /** GraphLayer id this behaviour drives; default `'graph'`. */
-  layerId?: string;
+  targetLayerId?: string;
 }
 
 /**
  * Declarative wrapper for `@invana/graph` `LabelCollisionBehaviour`
  * (hide/show overlapping labels by priority).
  *
- * `enabled` is reactive; other options are init-only — change `id` / `layerId`.
+ * `enabled` is reactive; other options are init-only — change `id` / `targetLayerId`.
  */
 export function LabelCollisionBehaviour({
   id = 'label-collision',
-  layerId = 'graph',
+  targetLayerId = 'graph',
   enabled = true,
   ...rest
 }: LabelCollisionBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineLabelCollisionBehaviour({ id, layerId, enabled, ...rest }),
+    () => new EngineLabelCollisionBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
-    [id, layerId],
+    [id, targetLayerId],
   );
   return null;
 }

@@ -94,14 +94,12 @@ export const ParallelEdgeCustomPolicy: Story = {
 
     const parallel = new ParallelEdgeBehaviour({
       id: 'parallel-edges',
-      layerId: 'graph',
-      spacing: settings.spacing,
-      anchorOffset: false,
+      targetLayerId: 'graph',
       distribute: oneSidedFanout,
     });
     canvas.behaviours.register(parallel);
 
-    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
 
     const canvasOptions = {
       layers: {
@@ -112,7 +110,7 @@ export const ParallelEdgeCustomPolicy: Story = {
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'parallel-edges': { enabled: true },
+        'parallel-edges': { enabled: true, spacing: settings.spacing, anchorOffset: false },
         'drag-node': { enabled: true },
       },
     };
@@ -123,7 +121,7 @@ export const ParallelEdgeCustomPolicy: Story = {
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'flip').onChange(() => parallel.recompute());
     gui.add(settings, 'spacing', 0, 40, 1).onChange((v: number) => {
-      parallel.setOptions({ spacing: v });
+      canvas.update({ behaviours: { 'parallel-edges': { spacing: v } } });
     });
 
     canvas.camera.fitContent(graph.getBounds(), 100);

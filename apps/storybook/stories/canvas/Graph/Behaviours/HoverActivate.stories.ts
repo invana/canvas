@@ -48,20 +48,9 @@ export const HoverActivate: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
 
-    const hover = new HoverActivateBehaviour({
-      id: 'hover',
-      layerId: 'graph',
-      state: 'hovered',
-      inactiveState: 'dimmed',
-      degree: 1,
-      direction: 'both',
-      // At low zoom, multiply each hovered node's gfx.scale so the same
-      // node — original colour, stroke, label — just grows visually.
-      zoomThreshold: 0.4,
-      zoomedOutScale: 3,
-    });
+    const hover = new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph' });
     canvas.behaviours.register(hover);
 
     const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
@@ -90,7 +79,17 @@ export const HoverActivate: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'drag-node': { enabled: true },
-        hover: { enabled: true },
+        hover: {
+          enabled: true,
+          state: 'hovered',
+          inactiveState: 'dimmed',
+          degree: 1,
+          direction: 'both',
+          // At low zoom, multiply each hovered node's gfx.scale so the same
+          // node — original colour, stroke, label — just grows visually.
+          zoomThreshold: 0.4,
+          zoomedOutScale: 3,
+        },
       },
       layouts: {
         force: {
@@ -125,13 +124,17 @@ export const HoverActivate: Story = {
         settings['inactiveState (dim non-hovered)'] === 'none'
           ? undefined
           : settings['inactiveState (dim non-hovered)'];
-      hover.setOptions({
-        state: settings.state,
-        inactiveState: inactive,
-        degree: settings['degree (neighbor hops)'],
-        direction: settings.direction,
-        zoomThreshold: settings.zoomThreshold,
-        zoomedOutScale: settings.zoomedOutScale,
+      canvas.update({
+        behaviours: {
+          hover: {
+            state: settings.state,
+            inactiveState: inactive,
+            degree: settings['degree (neighbor hops)'],
+            direction: settings.direction,
+            zoomThreshold: settings.zoomThreshold,
+            zoomedOutScale: settings.zoomedOutScale,
+          },
+        },
       });
     };
     hover.setOptions({

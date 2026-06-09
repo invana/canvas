@@ -44,7 +44,7 @@ export interface LassoSelectStyle {
 
 /** Constructor options for `LassoSelectBehaviour`. */
 export interface LassoSelectBehaviourOptions extends BehaviourOptions {
-  layerId: string;
+  targetLayerId: string;
   clickSelectId?: string;
 
   enable?: boolean | ((event: PointerEvent) => boolean);
@@ -145,10 +145,10 @@ export class LassoSelectBehaviour extends Behaviour {
   // ─── Lifecycle ──────────────────────────────────────────────────────────
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
       throw new Error(
-        `LassoSelectBehaviour "${this.id}": layer "${this.layerId}" not found.`,
+        `LassoSelectBehaviour "${this.id}": layer "${this.targetLayerId}" not found.`,
       );
     }
     this.layer = layer;

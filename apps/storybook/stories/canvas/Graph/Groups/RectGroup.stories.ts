@@ -159,11 +159,11 @@ export const RectGroup: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag', layerId: 'graph' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag', targetLayerId: 'graph' }));
     canvas.behaviours.register(
-      new CollapseExpandBehaviour({ id: 'collapse-expand', layerId: 'graph' }),
+      new CollapseExpandBehaviour({ id: 'collapse-expand', targetLayerId: 'graph' }),
     );
-    canvas.behaviours.register(new NodeResizeBehaviour({ id: 'resize', layerId: 'graph' }));
+    canvas.behaviours.register(new NodeResizeBehaviour({ id: 'resize', targetLayerId: 'graph' }));
 
     const canvasOptions = {
       behaviours: {

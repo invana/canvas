@@ -157,8 +157,8 @@ export const KnowledgeGraphExplorer: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
-    canvas.behaviours.register(new HoverActivateBehaviour({ id: 'hover', layerId: 'graph' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
+    canvas.behaviours.register(new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph' }));
 
     // Track click timestamps per id so a second click on the same node
     // within 350ms expands its neighbourhood. Avoids reaching into the
@@ -167,7 +167,7 @@ export const KnowledgeGraphExplorer: Story = {
     canvas.behaviours.register(
       new ClickSelectBehaviour({
         id: 'select',
-        layerId: 'graph',
+        targetLayerId: 'graph',
         onSelect: (el) => {
           const now = Date.now();
           if (lastClick && lastClick.id === el.id && now - lastClick.t < 350) {
@@ -180,7 +180,7 @@ export const KnowledgeGraphExplorer: Story = {
       }),
     );
 
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
 
     // ── Layouts ──────────────────────────────────────────────────────────
     // Both layouts are registered by id; `activeLayout` selects which runs.

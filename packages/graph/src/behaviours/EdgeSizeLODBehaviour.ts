@@ -22,7 +22,7 @@
  *   new EdgeSizeLODBehaviour({
  *     id: 'edge-size-lod',
  *     enabled: true,
- *     layers: [{ layerId: 'graph', strokeWidthPx: 0.6 }],
+ *     layers: [{ targetLayerId: 'graph', strokeWidthPx: 0.6 }],
  *   }),
  * );
  * ```
@@ -49,7 +49,7 @@ const DEFAULT_EDGE_SETTLE_MS = 80;
 /** Per-`GraphLayer` config — one entry per layer this behaviour rescales. */
 export interface EdgeSizeLODConfig {
   /** Required — the `GraphLayer` whose edges are rescaled. */
-  layerId: string;
+  targetLayerId: string;
   /**
    * Target stroke width in screen px for edges that don't carry a
    * per-edge `data.strokeWidth` override. Falls back to the layer's
@@ -80,10 +80,10 @@ export class EdgeSizeLODBehaviour extends ElementSizeLODBehaviour {
 
   protected override onResolveTargets(ctx: CanvasContext): void {
     for (const config of this.configs) {
-      const layer = ctx.layers.get<GraphLayer>(config.layerId);
+      const layer = ctx.layers.get<GraphLayer>(config.targetLayerId);
       if (!layer) {
         throw new Error(
-          `EdgeSizeLODBehaviour "${this.id}": layer "${config.layerId}" not found in CanvasContext.`,
+          `EdgeSizeLODBehaviour "${this.id}": layer "${config.targetLayerId}" not found in CanvasContext.`,
         );
       }
       this.resolved.push({ config, layer });

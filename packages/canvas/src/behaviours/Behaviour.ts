@@ -26,7 +26,7 @@ export interface IBehaviour {
   /** `true` once `register(ctx)` has run. Lets the registry skip already-wired behaviours. */
   readonly isRegistered: boolean;
   readonly scope: 'layer' | 'canvas';
-  readonly layerId?: string;
+  readonly targetLayerId?: string;
   readonly shortcuts?: readonly string[];
   register(ctx: CanvasContext): void;
   destroy(): void;
@@ -38,9 +38,9 @@ export interface BehaviourOptions {
   id: string;
   /**
    * Layer-scoped behaviours target a specific Layer by id. Canvas-scoped
-   * behaviours have no `layerId` and `scope: 'canvas'`.
+   * behaviours have no `targetLayerId` and `scope: 'canvas'`.
    */
-  layerId?: string;
+  targetLayerId?: string;
   /** Default `false` — the developer explicitly enables. */
   enabled?: boolean;
   /**
@@ -53,11 +53,11 @@ export interface BehaviourOptions {
 
 export abstract class Behaviour implements IBehaviour {
   readonly id: string;
-  readonly layerId?: string;
+  readonly targetLayerId?: string;
   readonly shortcuts?: readonly string[];
 
   /**
-   * `'layer'` if `layerId` is set, otherwise `'canvas'`. Set automatically
+   * `'layer'` if `targetLayerId` is set, otherwise `'canvas'`. Set automatically
    * from the constructor — subclasses don't need to re-declare.
    */
   readonly scope: 'layer' | 'canvas';
@@ -67,8 +67,8 @@ export abstract class Behaviour implements IBehaviour {
 
   constructor(opts: BehaviourOptions) {
     this.id = opts.id;
-    this.layerId = opts.layerId;
-    this.scope = opts.layerId !== undefined ? 'layer' : 'canvas';
+    this.targetLayerId = opts.targetLayerId;
+    this.scope = opts.targetLayerId !== undefined ? 'layer' : 'canvas';
     this.shortcuts = opts.shortcuts;
     this._enabled = opts.enabled ?? false;
   }

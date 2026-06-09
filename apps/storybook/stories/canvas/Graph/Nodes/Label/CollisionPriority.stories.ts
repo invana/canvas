@@ -54,7 +54,7 @@ export const CollisionPriority: Story = {
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new LabelCollisionBehaviour({ id: 'label-collision', layerId: 'graph' }));
+    canvas.behaviours.register(new LabelCollisionBehaviour({ id: 'label-collision', targetLayerId: 'graph' }));
 
     const canvasOptions = {
       layers: {

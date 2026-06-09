@@ -6,11 +6,11 @@ import {
 import { useBehaviourRegistration } from './useBehaviourRegistration';
 
 export interface CreateNodeBehaviourProps
-  extends Omit<CreateNodeBehaviourOptions, 'id' | 'layerId'> {
+  extends Omit<CreateNodeBehaviourOptions, 'id' | 'targetLayerId'> {
   /** Behaviour id; default `'create-node'`. Changing this remounts the behaviour. */
   id?: string;
   /** GraphLayer id this behaviour adds nodes to; default `'graph'`. */
-  layerId?: string;
+  targetLayerId?: string;
 }
 
 /**
@@ -18,19 +18,19 @@ export interface CreateNodeBehaviourProps
  * canvas to add a node.
  *
  * `enabled` is reactive (toggle it from a tool-mode switch); other options are
- * init-only — change `id` / `layerId` (or the `key`) to recreate.
+ * init-only — change `id` / `targetLayerId` (or the `key`) to recreate.
  */
 export function CreateNodeBehaviour({
   id = 'create-node',
-  layerId = 'graph',
+  targetLayerId = 'graph',
   enabled = true,
   ...rest
 }: CreateNodeBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineCreateNodeBehaviour({ id, layerId, enabled, ...rest }),
+    () => new EngineCreateNodeBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
-    [id, layerId],
+    [id, targetLayerId],
   );
   return null;
 }

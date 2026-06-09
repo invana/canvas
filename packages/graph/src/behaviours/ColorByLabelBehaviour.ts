@@ -36,11 +36,11 @@
  * ```ts
  * // colour by type (default)
  * canvas.behaviours.register(
- *   new ColorByLabelBehaviour({ id: 'color', layerId: 'graph', enabled: true }),
+ *   new ColorByLabelBehaviour({ id: 'color', targetLayerId: 'graph', enabled: true }),
  * );
  * // colour nodes by a custom categorical field, edges left alone
  * new ColorByLabelBehaviour({
- *   id: 'color', layerId: 'graph', enabled: true,
+ *   id: 'color', targetLayerId: 'graph', enabled: true,
  *   colorEdges: false,
  *   nodeLabel: (n) => `community-${(n.data as { group: number }).group}`,
  * });
@@ -69,7 +69,7 @@ export const DEFAULT_LABEL_PALETTE: readonly number[] = [
 /** Constructor options for `ColorByLabelBehaviour`. */
 export interface ColorByLabelBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour colours. */
-  layerId: string;
+  targetLayerId: string;
   /** Colours (0xRRGGBB) cycled per distinct label. Default {@link DEFAULT_LABEL_PALETTE}. */
   palette?: readonly number[];
   /** Per-node label accessor. Default: `node.type`. */
@@ -121,10 +121,10 @@ export class ColorByLabelBehaviour extends Behaviour {
   // ─── Lifecycle ──────────────────────────────────────────────────────────
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
       throw new Error(
-        `ColorByLabelBehaviour "${this.id}": layer "${this.layerId}" not found. ` +
+        `ColorByLabelBehaviour "${this.id}": layer "${this.targetLayerId}" not found. ` +
           `Add the GraphLayer before registering this behaviour.`,
       );
     }

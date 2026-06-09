@@ -5,11 +5,11 @@ import {
 
 import { useBehaviourRegistration } from './useBehaviourRegistration';
 
-export interface DrawEdgeBehaviourProps extends Omit<DrawEdgeBehaviourOptions, 'id' | 'layerId'> {
+export interface DrawEdgeBehaviourProps extends Omit<DrawEdgeBehaviourOptions, 'id' | 'targetLayerId'> {
   /** Behaviour id; default `'draw-edge'`. Changing this remounts the behaviour. */
   id?: string;
   /** GraphLayer id this behaviour draws edges in; default `'graph'`. */
-  layerId?: string;
+  targetLayerId?: string;
 }
 
 /**
@@ -18,19 +18,19 @@ export interface DrawEdgeBehaviourProps extends Omit<DrawEdgeBehaviourOptions, '
  *
  * `enabled` is reactive (toggle it from a tool-mode switch). Don't enable this
  * and `DragNodeBehaviour` at once — both start on node pointer-down. Other
- * options are init-only — change `id` / `layerId` (or the `key`) to recreate.
+ * options are init-only — change `id` / `targetLayerId` (or the `key`) to recreate.
  */
 export function DrawEdgeBehaviour({
   id = 'draw-edge',
-  layerId = 'graph',
+  targetLayerId = 'graph',
   enabled = true,
   ...rest
 }: DrawEdgeBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineDrawEdgeBehaviour({ id, layerId, enabled, ...rest }),
+    () => new EngineDrawEdgeBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
-    [id, layerId],
+    [id, targetLayerId],
   );
   return null;
 }

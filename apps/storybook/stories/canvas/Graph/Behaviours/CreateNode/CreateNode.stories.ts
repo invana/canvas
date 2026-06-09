@@ -34,7 +34,7 @@ export const CreateNode: Story = {
     // createNode / onNodeCreate (functions) stay in the constructor; enabled → config.
     const create = new CreateNodeBehaviour({
       id: 'create-node',
-      layerId: 'graph',
+      targetLayerId: 'graph',
       createNode: (world) => ({
         id: `n${++n}`,
         position: world,

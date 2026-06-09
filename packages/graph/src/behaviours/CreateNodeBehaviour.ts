@@ -23,7 +23,7 @@ import type { GraphNode } from '../store/types';
 /** Constructor options for `CreateNodeBehaviour`. */
 export interface CreateNodeBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour adds nodes to. */
-  layerId: string;
+  targetLayerId: string;
 
   /**
    * Build the node to insert from the click's world position. Return `null`
@@ -66,9 +66,9 @@ export class CreateNodeBehaviour extends Behaviour {
   // ─── Lifecycle ──────────────────────────────────────────────────────────
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
-      throw new Error(`CreateNodeBehaviour "${this.id}": layer "${this.layerId}" not found.`);
+      throw new Error(`CreateNodeBehaviour "${this.id}": layer "${this.targetLayerId}" not found.`);
     }
     this.layer = layer;
     this.ctxRef = ctx;

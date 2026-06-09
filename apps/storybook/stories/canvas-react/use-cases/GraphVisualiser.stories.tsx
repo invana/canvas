@@ -152,7 +152,7 @@ const EDGE_TYPE_ICONS = {
 
 // ── Serialisable config (settings by id) — same shape as the imperative
 // `canvasOptions`. The non-serialisable bits (bgFill/labelText resolvers, the
-// `data`, the cross-layer `graphLayerId`, behaviour `layerId`/`degree`/`multiple`)
+// `data`, the cross-layer `graphLayerId`, behaviour `targetLayerId`/`degree`/`multiple`)
 // ride on the minimal children below. Colours that follow the theme are pushed
 // in via `useSystemTheme` / the theme toggle (see THEME patches). ──────────────
 const CANVAS_OPTIONS: CanvasConfig = {
@@ -363,14 +363,14 @@ function Visualiser() {
 
         {/* Engine behaviours — enabled state comes from CANVAS_OPTIONS. */}
         <DragPanBehaviour id="pan" />
-        <DragNodeBehaviour id="drag-node" layerId="graph" />
+        <DragNodeBehaviour id="drag-node" targetLayerId="graph" />
         <WheelZoomBehaviour id="wheel" />
         <PinchZoomBehaviour id="pinch" />
-        <HoverActivateBehaviour id="hover" layerId="graph" degree={1} state="highlighted" />
-        <ClickSelectBehaviour id="click-select" layerId="graph" multiple />
-        <BrushSelectBehaviour id="brush-select" layerId="graph" />
-        <LassoSelectBehaviour id="lasso-select" layerId="graph" />
-        <LabelResolutionLODBehaviour id="label-lod" layerId="graph" />
+        <HoverActivateBehaviour id="hover" targetLayerId="graph" degree={1} state="highlighted" />
+        <ClickSelectBehaviour id="click-select" targetLayerId="graph" multiple />
+        <BrushSelectBehaviour id="brush-select" targetLayerId="graph" />
+        <LassoSelectBehaviour id="lasso-select" targetLayerId="graph" />
+        <LabelResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
 
         {/* OS dark-mode follow (theme-agnostic engine; external patch). */}
         <SystemTheme />

@@ -201,7 +201,7 @@ export const Routes_Story: Story = {
       id: 'node-size-lod',
       layers: [
         {
-          layerId: 'graph',
+          targetLayerId: 'graph',
           sizePx: () => settings.targetNodePx,
           strokeWidthPx: () => settings.targetNodeStrokePx,
         },
@@ -209,7 +209,7 @@ export const Routes_Story: Story = {
     });
     const edgeSizeLOD = new EdgeSizeLODBehaviour({
       id: 'edge-size-lod',
-      layers: [{ layerId: 'graph', strokeWidthPx: () => settings.targetEdgePx }],
+      layers: [{ targetLayerId: 'graph', strokeWidthPx: () => settings.targetEdgePx }],
     });
     canvas.behaviours.register(nodeSizeLOD);
     canvas.behaviours.register(edgeSizeLOD);
@@ -222,17 +222,7 @@ export const Routes_Story: Story = {
     // MapLibre camera scale (= `2^zoom`) drops to ≤ 4 (world view). The
     // behaviour re-applies on every `camera:zoom`, so dragging the camera
     // across the threshold mid-hover swaps the visuals cleanly.
-    const hover = new HoverActivateBehaviour({
-      id: 'hover',
-      layerId: 'graph',
-      state: 'hovered',
-      // inactiveState: 'dimmed',
-      degree: settings.hoverDegree,
-      direction: 'both',
-      zoomThreshold: settings.hoverZoomThreshold,
-      zoomedOutState: 'hover-far',
-      zoomedOutEdgeState: 'hover-far',
-    });
+    const hover = new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph' });
     canvas.behaviours.register(hover);
 
     const canvasOptions = {
@@ -295,7 +285,16 @@ export const Routes_Story: Story = {
       behaviours: {
         'node-size-lod': { enabled: true },
         'edge-size-lod': { enabled: true },
-        hover: { enabled: true },
+        hover: {
+          enabled: true,
+          state: 'hovered',
+          // inactiveState: 'dimmed',
+          degree: settings.hoverDegree,
+          direction: 'both',
+          zoomThreshold: settings.hoverZoomThreshold,
+          zoomedOutState: 'hover-far',
+          zoomedOutEdgeState: 'hover-far',
+        },
       },
     };
 
@@ -382,11 +381,11 @@ export const Routes_Story: Story = {
     hoverFolder
       .add(settings, 'hoverDegree', 0, 3, 1)
       .name('Neighbour hops')
-      .onChange((n: number) => hover.setOptions({ degree: n }));
+      .onChange((n: number) => canvas.update({ behaviours: { hover: { degree: n } } }));
     hoverFolder
       .add(settings, 'hoverZoomThreshold', 0.25, 64, 0.25)
       .name('Far-zoom threshold')
-      .onChange((v: number) => hover.setOptions({ zoomThreshold: v }));
+      .onChange((v: number) => canvas.update({ behaviours: { hover: { zoomThreshold: v } } }));
     // Far-zoom node/edge px sliders dropped — state styling is now
     // layer-template-only and can't be mutated at runtime. The baked-in
     // `hover-far` overlay (declared in `layers.graph.node.state`) covers

@@ -26,7 +26,7 @@ function makeContext() {
 class FakeBehaviour implements IBehaviour {
   readonly id: string;
   readonly scope: 'layer' | 'canvas';
-  readonly layerId?: string;
+  readonly targetLayerId?: string;
   readonly shortcuts?: readonly string[];
   enabled: boolean;
   isRegistered = false;
@@ -38,13 +38,13 @@ class FakeBehaviour implements IBehaviour {
   constructor(opts: {
     id: string;
     enabled?: boolean;
-    layerId?: string;
+    targetLayerId?: string;
     shortcuts?: readonly string[];
   }) {
     this.id = opts.id;
     this.enabled = opts.enabled ?? false;
-    this.layerId = opts.layerId;
-    this.scope = opts.layerId ? 'layer' : 'canvas';
+    this.targetLayerId = opts.targetLayerId;
+    this.scope = opts.targetLayerId ? 'layer' : 'canvas';
     this.shortcuts = opts.shortcuts;
   }
   register(_ctx: CanvasContext): void {

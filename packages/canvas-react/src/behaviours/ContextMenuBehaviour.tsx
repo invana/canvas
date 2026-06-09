@@ -6,11 +6,11 @@ import {
 import { useBehaviourRegistration } from './useBehaviourRegistration';
 
 export interface ContextMenuBehaviourProps
-  extends Omit<ContextMenuBehaviourOptions, 'id' | 'layerId'> {
+  extends Omit<ContextMenuBehaviourOptions, 'id' | 'targetLayerId'> {
   /** Behaviour id; default `'context-menu'`. Changing this remounts the behaviour. */
   id?: string;
   /** GraphLayer id whose nodes/edges this behaviour watches; default `'graph'`. */
-  layerId?: string;
+  targetLayerId?: string;
 }
 
 /**
@@ -18,20 +18,20 @@ export interface ContextMenuBehaviourProps
  *
  * Headless — pass `onContextMenu` to receive node/edge/canvas right-click
  * events and render your own menu. `enabled` is reactive (toggles in place);
- * other options are init-only — change `id` / `layerId` (or the `key`) to
+ * other options are init-only — change `id` / `targetLayerId` (or the `key`) to
  * recreate.
  */
 export function ContextMenuBehaviour({
   id = 'context-menu',
-  layerId = 'graph',
+  targetLayerId = 'graph',
   enabled = true,
   ...rest
 }: ContextMenuBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineContextMenuBehaviour({ id, layerId, enabled, ...rest }),
+    () => new EngineContextMenuBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
-    [id, layerId],
+    [id, targetLayerId],
   );
   return null;
 }

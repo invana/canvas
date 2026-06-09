@@ -37,7 +37,7 @@
  * canvas.behaviours.register(
  *   new ResponsiveThemeBehaviour({
  *     id: 'theme',
- *     layerId: 'graph',
+ *     targetLayerId: 'graph',
  *     enabled: true,
  *     node: {
  *       light: { bgStrokeColor: 0xffffff },
@@ -84,7 +84,7 @@ export interface ThemeVariants<S> {
 /** Constructor options for `ResponsiveThemeBehaviour`. */
 export interface ResponsiveThemeBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour themes. */
-  layerId: string;
+  targetLayerId: string;
 
   /**
    * How light vs dark is decided. `'auto'` (default) follows the host's
@@ -145,10 +145,10 @@ export class ResponsiveThemeBehaviour extends Behaviour {
   // ─── Lifecycle ──────────────────────────────────────────────────────────
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
       throw new Error(
-        `ResponsiveThemeBehaviour "${this.id}": layer "${this.layerId}" not found. ` +
+        `ResponsiveThemeBehaviour "${this.id}": layer "${this.targetLayerId}" not found. ` +
           `Add the GraphLayer before registering this behaviour.`,
       );
     }

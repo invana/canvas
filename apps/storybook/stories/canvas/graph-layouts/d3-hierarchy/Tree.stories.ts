@@ -143,13 +143,13 @@ export const Tree: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
 
     // Registered after the `graph` layer is added — the behaviour resolves
     // its target layer at register-time, so the layer must exist first.
     const labelResolutionLOD = new LabelResolutionLODBehaviour({
       id: 'label-resolution',
-      layerId: 'graph',
+      targetLayerId: 'graph',
     });
     canvas.behaviours.register(labelResolutionLOD);
 

@@ -31,7 +31,7 @@
  * canvas.behaviours.register(
  *   new LabelResolutionLODBehaviour({
  *     id: 'label-resolution',
- *     layerId: 'graph',
+ *     targetLayerId: 'graph',
  *     enabled: true,
  *     // Defaults: 1× DPR by default, jump to 4× DPR once zoom > 1.5.
  *     // Override for more or fewer tiers.
@@ -59,7 +59,7 @@ export interface LabelResolutionLODTier {
 
 export interface LabelResolutionLODBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour drives. */
-  layerId: string;
+  targetLayerId: string;
 
   /**
    * Base resolution to multiply by the active tier's multiplier. Default
@@ -143,10 +143,10 @@ export class LabelResolutionLODBehaviour extends Behaviour {
   }
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
       throw new Error(
-        `LabelResolutionLODBehaviour "${this.id}": layer "${this.layerId}" not found.`,
+        `LabelResolutionLODBehaviour "${this.id}": layer "${this.targetLayerId}" not found.`,
       );
     }
     this.layer = layer;

@@ -138,7 +138,7 @@ export const DragNode: Story = {
     const buildOptions = (): DragNodeBehaviourOptions => {
       const opts: DragNodeBehaviourOptions = {
         id: 'drag-node',
-        layerId: 'graph',
+        targetLayerId: 'graph',
         enabled: settings.enabled,
         pinOnRelease: settings.pinOnRelease,
         dragCursor: settings.dragCursor,

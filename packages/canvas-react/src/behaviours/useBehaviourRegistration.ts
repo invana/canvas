@@ -8,7 +8,7 @@ import { useCanvas } from '../CanvasContext';
  * effects every wrapper needs:
  *
  * 1. **Register / unregister** keyed on `identity` (the behaviour `id`, plus
- *    `layerId` for layer-scoped behaviours). Construction options are read once
+ *    `targetLayerId` for layer-scoped behaviours). Construction options are read once
  *    via `create()` — change an identity value (or the component `key`) to
  *    recreate with new options.
  * 2. **Reactive `enabled`** — toggles via `canvas.behaviours.setEnabled(id, …)`
@@ -21,7 +21,7 @@ import { useCanvas } from '../CanvasContext';
  * @param create   Factory that constructs the engine behaviour from current props.
  * @param id       Behaviour id (used for unregister + setEnabled).
  * @param enabled  Desired enabled state; reconciled on every change.
- * @param identity Values that force a recreate when changed (e.g. `[id]` or `[id, layerId]`).
+ * @param identity Values that force a recreate when changed (e.g. `[id]` or `[id, targetLayerId]`).
  */
 export function useBehaviourRegistration(
   create: () => IBehaviour,

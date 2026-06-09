@@ -21,7 +21,7 @@
  * canvas.behaviours.register(
  *   new BrushSelectBehaviour({
  *     id: 'brush',
- *     layerId: 'graph',
+ *     targetLayerId: 'graph',
  *     enabled: true,
  *     trigger: ['shift'],
  *     enableElements: ['shape', 'connector'],
@@ -66,7 +66,7 @@ export interface BrushSelectStyle {
 /** Constructor options for `BrushSelectBehaviour`. */
 export interface BrushSelectBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour brushes over. */
-  layerId: string;
+  targetLayerId: string;
   /**
    * Optional `ClickSelectBehaviour` id to delegate to. Default `'click-select'`.
    * If found, the brush hands the merged selection to the click-select layer
@@ -182,10 +182,10 @@ export class BrushSelectBehaviour extends Behaviour {
   // ─── Lifecycle ──────────────────────────────────────────────────────────
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
       throw new Error(
-        `BrushSelectBehaviour "${this.id}": layer "${this.layerId}" not found.`,
+        `BrushSelectBehaviour "${this.id}": layer "${this.targetLayerId}" not found.`,
       );
     }
     this.layer = layer;

@@ -3,7 +3,7 @@
  * edges with optional N-degree neighbour expansion, modifier-driven
  * multi-select, and optional dimming of unselected elements.
  *
- * Layer-scoped: constructed with a target `layerId`. Subscribes to that
+ * Layer-scoped: constructed with a `targetLayerId`. Subscribes to that
  * layer's renderer click events and to the canvas-level `background:click`
  * for clear-on-background behaviour.
  *
@@ -18,7 +18,7 @@
  * canvas.behaviours.register(
  *   new ClickSelectBehaviour({
  *     id: 'select',
- *     layerId: 'graph',
+ *     targetLayerId: 'graph',
  *     enabled: true,
  *     multiple: true,
  *     degree: 1,
@@ -70,7 +70,7 @@ export type ClickSelectEventMap = {
 /** Constructor options for `ClickSelectBehaviour`. */
 export interface ClickSelectBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour drives. */
-  layerId: string;
+  targetLayerId: string;
 
   /**
    * Per-target enable predicate. `boolean` is a global on/off; a function
@@ -241,10 +241,10 @@ export class ClickSelectBehaviour extends Behaviour {
   // ─── Lifecycle ──────────────────────────────────────────────────────────
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
       throw new Error(
-        `ClickSelectBehaviour "${this.id}": layer "${this.layerId}" not found. ` +
+        `ClickSelectBehaviour "${this.id}": layer "${this.targetLayerId}" not found. ` +
           `Add the GraphLayer before registering this behaviour.`,
       );
     }

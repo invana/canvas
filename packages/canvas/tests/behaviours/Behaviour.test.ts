@@ -48,16 +48,16 @@ describe('Behaviour — defaults', () => {
     expect(b.enabled).toBe(false);
   });
 
-  it('scope = "canvas" without layerId', () => {
+  it('scope = "canvas" without targetLayerId', () => {
     const b = new TestBehaviour({ id: 'pan' });
     expect(b.scope).toBe('canvas');
-    expect(b.layerId).toBeUndefined();
+    expect(b.targetLayerId).toBeUndefined();
   });
 
-  it('scope = "layer" when layerId is set', () => {
-    const b = new TestBehaviour({ id: 'select', layerId: 'graph-1' });
+  it('scope = "layer" when targetLayerId is set', () => {
+    const b = new TestBehaviour({ id: 'select', targetLayerId: 'graph-1' });
     expect(b.scope).toBe('layer');
-    expect(b.layerId).toBe('graph-1');
+    expect(b.targetLayerId).toBe('graph-1');
   });
 });
 

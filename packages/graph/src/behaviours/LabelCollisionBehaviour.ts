@@ -26,7 +26,7 @@
  * canvas.behaviours.register(
  *   new LabelCollisionBehaviour({
  *     id: 'label-collision',
- *     layerId: 'graph',
+ *     targetLayerId: 'graph',
  *     enabled: true,
  *     prioritise: 'node-degree',
  *   }),
@@ -77,7 +77,7 @@ export type LabelPriorityResolver =
 
 export interface LabelCollisionBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour drives. */
-  layerId: string;
+  targetLayerId: string;
 
   /** Default `'hide'`. */
   strategy?: LabelCollisionStrategy;
@@ -147,10 +147,10 @@ export class LabelCollisionBehaviour extends Behaviour {
   }
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
       throw new Error(
-        `LabelCollisionBehaviour "${this.id}": layer "${this.layerId}" not found.`,
+        `LabelCollisionBehaviour "${this.id}": layer "${this.targetLayerId}" not found.`,
       );
     }
     this.layer = layer;

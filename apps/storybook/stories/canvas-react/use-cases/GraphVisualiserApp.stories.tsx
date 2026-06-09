@@ -527,7 +527,7 @@ function VisualiserApp() {
                 `bgFill`. Applied via template resolvers (non-serialisable → stays
                 a child); here we colour nodes by their les-mis community. */}
             <ColorByLabelBehaviour
-              layerId="graph"
+              targetLayerId="graph"
               palette={PALETTE}
               nodeLabel={(n) => `community-${groupOf(n)}`}
             />
@@ -538,7 +538,7 @@ function VisualiserApp() {
             {/* Camera + interaction. Pan + node-drag are what <ViewToolbar>'s
                 lock disables. Enabled state comes from APP_OPTIONS. */}
             <DragPanBehaviour id="pan" />
-            <DragNodeBehaviour id="drag-node" layerId="graph" />
+            <DragNodeBehaviour id="drag-node" targetLayerId="graph" />
             <WheelZoomBehaviour id="wheel" />
             <PinchZoomBehaviour id="pinch" />
             {/* Hover highlighting. `degree` is driven by the header's magnet
@@ -546,29 +546,29 @@ function VisualiserApp() {
                 node only. Reactive — flips live without remounting. */}
             <HoverActivateBehaviour
               id="hover"
-              layerId="graph"
+              targetLayerId="graph"
               degree={magnet ? 1 : 0}
               state="highlighted"
             />
 
             {/* Selection — Shift+click selects; the header's mode picker arms
                 exactly one of brush / lasso (both Shift+drag). */}
-            <ClickSelectBehaviour id="click-select" layerId="graph" multiple />
-            <BrushSelectBehaviour id="brush-select" layerId="graph" />
-            <LassoSelectBehaviour id="lasso-select" layerId="graph" />
+            <ClickSelectBehaviour id="click-select" targetLayerId="graph" multiple />
+            <BrushSelectBehaviour id="brush-select" targetLayerId="graph" />
+            <LassoSelectBehaviour id="lasso-select" targetLayerId="graph" />
 
             {/* Dedicated click-to-view behaviour for the property viewer — its own
                 target, orthogonal to ClickSelect. The `panel` render-prop renders
                 the read-only <PropertyViewerPanel>. */}
             <ClickViewBehaviour
               id="click-view"
-              layerId="graph"
+              targetLayerId="graph"
               panel={(ctx: ViewContext) => (
                 <PropertyViewerPanel ctx={ctx} position="top-right" fullHeight />
               )}
             />
 
-            <LabelResolutionLODBehaviour id="label-lod" layerId="graph" />
+            <LabelResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
             {/* Bottom-left — clear of the full-height property viewer that docks
                 on the right when an element is clicked. Colours are theme-driven
                 (APP_LIGHT/APP_DARK via <SystemTheme>). */}

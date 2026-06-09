@@ -39,7 +39,7 @@ export const DrawEdge: Story = {
     // constructor; the behaviour is turned on via `config.behaviours`.
     const draw = new DrawEdgeBehaviour({
       id: 'draw-edge',
-      layerId: 'graph',
+      targetLayerId: 'graph',
       createEdge: (source, target) => ({ id: `e${++e}`, source, target }),
       onEdgeCreate: () => {
         settings.edges += 1;

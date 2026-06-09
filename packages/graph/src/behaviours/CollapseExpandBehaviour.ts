@@ -18,7 +18,7 @@
  * canvas.behaviours.register(
  *   new CollapseExpandBehaviour({
  *     id: 'collapse-expand',
- *     layerId: 'graph',
+ *     targetLayerId: 'graph',
  *     enabled: true,
  *   }),
  * );
@@ -60,7 +60,7 @@ export const GROUP_TOGGLE_SLOT = 'group-toggle';
 
 export interface CollapseExpandBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour drives. */
-  layerId: string;
+  targetLayerId: string;
 }
 
 export class CollapseExpandBehaviour extends Behaviour {
@@ -73,10 +73,10 @@ export class CollapseExpandBehaviour extends Behaviour {
   }
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
       throw new Error(
-        `CollapseExpandBehaviour "${this.id}": layer "${this.layerId}" not found. ` +
+        `CollapseExpandBehaviour "${this.id}": layer "${this.targetLayerId}" not found. ` +
           `Add the GraphLayer before registering this behaviour.`,
       );
     }

@@ -97,11 +97,11 @@ export const EdgeBundling: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
 
     const labelResolutionLOD = new LabelResolutionLODBehaviour({
       id: 'label-resolution',
-      layerId: 'graph',
+      targetLayerId: 'graph',
     });
     canvas.behaviours.register(labelResolutionLOD);
 
@@ -109,11 +109,7 @@ export const EdgeBundling: Story = {
     // already exists above.
     const hover = new HoverActivateBehaviour({
       id: 'hover',
-      layerId: 'graph',
-      state: 'hovered',
-      // inactiveState: 'dimmed',
-      degree: settings.hoverDegree,
-      direction: 'both',
+      targetLayerId: 'graph',
     });
     canvas.behaviours.register(hover);
 
@@ -157,7 +153,13 @@ export const EdgeBundling: Story = {
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        hover: { enabled: true },
+        hover: {
+          enabled: true,
+          state: 'hovered',
+          // inactiveState: 'dimmed',
+          degree: settings.hoverDegree,
+          direction: 'both',
+        },
         'label-resolution': { enabled: settings.sharpLabelsOnZoom },
         'system-theme': {
           enabled: true,
@@ -383,7 +385,7 @@ export const EdgeBundling: Story = {
     interaction
       .add(settings, 'hoverDegree', 1, 4, 1)
       .name('neighbour hops')
-      .onChange((n: number) => hover.setOptions({ degree: n }));
+      .onChange((n: number) => canvas.update({ behaviours: { hover: { degree: n } } }));
 
     gui
       .add({ refit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'refit')

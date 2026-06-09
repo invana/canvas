@@ -2,7 +2,7 @@
  * `ContextMenuBehaviour` — surfaces right-click (context-menu) gestures on
  * nodes, edges, and the empty canvas as a single `onContextMenu` callback.
  *
- * Layer-scoped: constructed with a target `layerId`. Subscribes to that
+ * Layer-scoped: constructed with a `targetLayerId`. Subscribes to that
  * layer's renderer `shape:contextmenu` / `connector:contextmenu` events and to
  * the engine-level `background:contextmenu` (empty-canvas right-click).
  *
@@ -19,7 +19,7 @@
  * canvas.behaviours.register(
  *   new ContextMenuBehaviour({
  *     id: 'context-menu',
- *     layerId: 'graph',
+ *     targetLayerId: 'graph',
  *     enabled: true,
  *     onContextMenu: ({ targetType, id, screen }) => {
  *       showMenu(targetType, id, screen.x, screen.y);
@@ -61,7 +61,7 @@ export interface ContextMenuEvent {
 /** Constructor options for `ContextMenuBehaviour`. */
 export interface ContextMenuBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour drives. */
-  layerId: string;
+  targetLayerId: string;
 
   /**
    * Which targets fire `onContextMenu`. A right-click on a target not in this
@@ -121,10 +121,10 @@ export class ContextMenuBehaviour extends Behaviour {
   // ─── Lifecycle ──────────────────────────────────────────────────────────
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
       throw new Error(
-        `ContextMenuBehaviour "${this.id}": layer "${this.layerId}" not found. ` +
+        `ContextMenuBehaviour "${this.id}": layer "${this.targetLayerId}" not found. ` +
           `Add the GraphLayer before registering this behaviour.`,
       );
     }

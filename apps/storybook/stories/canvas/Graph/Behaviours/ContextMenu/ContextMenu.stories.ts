@@ -120,11 +120,10 @@ export const ContextMenu: Story = {
       showMenu(e.screen.x, e.screen.y, itemsFor[e.targetType]);
     };
 
-    // state + onContextMenu (function) stay in the constructor; enabled → config.
+    // onContextMenu (function) stays in the constructor; `state` → config.
     const ctxMenu = new ContextMenuBehaviour({
       id: 'context-menu',
-      layerId: 'graph',
-      state: 'context-open',
+      targetLayerId: 'graph',
       onContextMenu,
     });
     canvas.behaviours.register(ctxMenu);
@@ -155,7 +154,7 @@ export const ContextMenu: Story = {
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'context-menu': { enabled: true },
+        'context-menu': { enabled: true, state: 'context-open' },
       },
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
@@ -168,7 +167,7 @@ export const ContextMenu: Story = {
       if (settings.node) targets.push('node');
       if (settings.edge) targets.push('edge');
       if (settings.canvas) targets.push('canvas');
-      ctxMenu.setOptions({ targets });
+      canvas.update({ behaviours: { 'context-menu': { targets } } });
     };
 
     const gui = new GUI({ title: 'Context Menu' });

@@ -161,22 +161,22 @@ export const GeoAirRoutes: Story = {
     // ── Behaviours ──────────────────────────────────────────────────────
     // Pixel-constant node sizing keeps the airport circles legible as
     // the user zooms from world view down to street level.
-    // `layers` carries cross-layer `layerId` wiring, so it stays in the
+    // `layers` carries cross-layer `targetLayerId` wiring, so it stays in the
     // constructor; only `enabled` lives in config.
     canvas.behaviours.register(
       new NodeSizeLODBehaviour({
         id: 'node-size-lod',
-        layers: [{ layerId: 'graph', sizePx: 5, strokeWidthPx: 0.6 }],
+        layers: [{ targetLayerId: 'graph', sizePx: 5, strokeWidthPx: 0.6 }],
       }),
     );
     canvas.behaviours.register(
       new EdgeSizeLODBehaviour({
         id: 'edge-size-lod',
-        layers: [{ layerId: 'graph', strokeWidthPx: 0.6 }],
+        layers: [{ targetLayerId: 'graph', strokeWidthPx: 0.6 }],
       }),
     );
 
-    const hover = new HoverActivateBehaviour({ id: 'hover', layerId: 'graph' });
+    const hover = new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph' });
     canvas.behaviours.register(hover);
 
     // The MiniMapLayer is added once but its `visible` is toggled by the
@@ -293,7 +293,7 @@ export const GeoAirRoutes: Story = {
     gui
       .add(settings, 'hoverNeighbours', 0, 3, 1)
       .name('hover hops')
-      .onChange((n: number) => hover.setOptions({ degree: n }));
+      .onChange((n: number) => canvas.update({ behaviours: { hover: { degree: n } } }));
 
     gui
       .add(settings, 'showMiniMap')

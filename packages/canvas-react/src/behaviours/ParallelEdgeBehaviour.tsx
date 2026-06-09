@@ -6,30 +6,30 @@ import {
 import { useBehaviourRegistration } from './useBehaviourRegistration';
 
 export interface ParallelEdgeBehaviourProps
-  extends Omit<ParallelEdgeBehaviourOptions, 'id' | 'layerId'> {
+  extends Omit<ParallelEdgeBehaviourOptions, 'id' | 'targetLayerId'> {
   /** Behaviour id; default `'parallel-edge'`. Changing this remounts the behaviour. */
   id?: string;
   /** GraphLayer id this behaviour drives; default `'graph'`. */
-  layerId?: string;
+  targetLayerId?: string;
 }
 
 /**
  * Declarative wrapper for `@invana/graph` `ParallelEdgeBehaviour`
  * (fan out edges that share the same source/target pair).
  *
- * `enabled` is reactive; other options are init-only — change `id` / `layerId`.
+ * `enabled` is reactive; other options are init-only — change `id` / `targetLayerId`.
  */
 export function ParallelEdgeBehaviour({
   id = 'parallel-edge',
-  layerId = 'graph',
+  targetLayerId = 'graph',
   enabled = true,
   ...rest
 }: ParallelEdgeBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineParallelEdgeBehaviour({ id, layerId, enabled, ...rest }),
+    () => new EngineParallelEdgeBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
-    [id, layerId],
+    [id, targetLayerId],
   );
   return null;
 }

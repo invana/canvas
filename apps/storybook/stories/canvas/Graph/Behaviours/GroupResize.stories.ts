@@ -116,7 +116,7 @@ export const GroupResize: Story = {
     canvas.behaviours.register(
       new DragNodeBehaviour({
         id: 'drag',
-        layerId: 'graph',
+        targetLayerId: 'graph',
         filter: (id) => graph.getGroupRole(id) !== 'expanded',
       }),
     );
@@ -130,7 +130,7 @@ export const GroupResize: Story = {
     const buildResize = () =>
       new NodeResizeBehaviour({
         id: 'resize',
-        layerId: 'graph',
+        targetLayerId: 'graph',
         enabled: settings.enabled,
         handleRadius: settings.handleRadius,
         handleFill: settings.handleFill,

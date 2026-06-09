@@ -128,7 +128,7 @@ export function GraphContextMenuRoot({
     <>
       <ContextMenuBehaviour
         id={id}
-        layerId={layerId}
+        targetLayerId={layerId}
         enabled={enabled}
         targets={[target]}
         state={state}

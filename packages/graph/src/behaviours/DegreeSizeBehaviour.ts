@@ -34,7 +34,7 @@
  * canvas.behaviours.register(
  *   new DegreeSizeBehaviour({
  *     id: 'degree-size',
- *     layerId: 'graph',
+ *     targetLayerId: 'graph',
  *     enabled: true,
  *     direction: 'both',
  *     minSize: 6,
@@ -59,7 +59,7 @@ export type DegreeSizeScale = 'linear' | 'sqrt' | 'log';
 /** Constructor options for `DegreeSizeBehaviour`. */
 export interface DegreeSizeBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour drives. */
-  layerId: string;
+  targetLayerId: string;
 
   /**
    * Edges to count when computing each node's degree.
@@ -183,10 +183,10 @@ export class DegreeSizeBehaviour extends Behaviour {
   // ─── Lifecycle ──────────────────────────────────────────────────────────
 
   protected override onRegister(ctx: CanvasContext): void {
-    const layer = ctx.layers.get<GraphLayer>(this.layerId!);
+    const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
       throw new Error(
-        `DegreeSizeBehaviour "${this.id}": layer "${this.layerId}" not found. ` +
+        `DegreeSizeBehaviour "${this.id}": layer "${this.targetLayerId}" not found. ` +
           `Add the GraphLayer before registering this behaviour.`,
       );
     }

@@ -181,37 +181,25 @@ export const F3Force: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
-    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
     // Labels appear at 0.6× (via `labelMinZoom` in the node style); this
     // re-rasters them at 4× resolution once you zoom past 1.6× so the text you
     // zoomed in to read stays crisp instead of upsampling-blurry. It does NOT
     // hide/show labels — only their texture resolution per tier.
     canvas.behaviours.register(
-      new LabelResolutionLODBehaviour({ id: 'label-lod', layerId: 'graph' }),
+      new LabelResolutionLODBehaviour({ id: 'label-lod', targetLayerId: 'graph' }),
     );
 
-    const hover = new HoverActivateBehaviour({
-      id: 'hover',
-      layerId: 'graph',
-      state: 'highlighted',
-      // inactiveState: 'dimmed',
-      degree: 1,
-      direction: 'both',
-    });
+    const hover = new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph' });
     canvas.behaviours.register(hover);
 
     canvas.behaviours.register(
-      new ClickSelectBehaviour({
-        id: 'select',
-        layerId: 'graph',
-        multiple: true,
-        trigger: ['shift'],
-      }),
+      new ClickSelectBehaviour({ id: 'select', targetLayerId: 'graph' }),
     );
 
     // canvas.behaviours.register(
-    //   new LabelCollisionBehaviour({ id: 'label-collision', layerId: 'graph' }),
+    //   new LabelCollisionBehaviour({ id: 'label-collision', targetLayerId: 'graph' }),
     // );
 
     // ── Layout ───────────────────────────────────────────────────────────
@@ -298,8 +286,8 @@ export const F3Force: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'drag-node': { enabled: true },
-        hover: { enabled: true },
-        select: { enabled: true },
+        hover: { enabled: true, state: 'highlighted', degree: 1, direction: 'both' },
+        select: { enabled: true, multiple: true, trigger: ['shift'] },
         'label-lod': { enabled: true },
         'system-theme': {
           enabled: true,

@@ -27,8 +27,8 @@ function watchScheme(apply: (dark: boolean) => void): () => void {
 }
 
 /**
- * Themes a single layer (the behaviour's `layerId`) responsively. Register it
- * with the target layer — `new SystemThemeBehaviour({ id: 'theme', layerId: 'bg' })`
+ * Themes a single layer (the behaviour's `targetLayerId`) responsively. Register it
+ * with the target layer — `new SystemThemeBehaviour({ id: 'theme', targetLayerId: 'bg' })`
  * — and set its `light` / `dark` styles in the serialisable `init` config
  * (`behaviours: { theme: { enabled: true, light: {...}, dark: {...} } }`). On
  * each OS-scheme flip it pushes the matching style to the layer via `setOptions`.
@@ -57,8 +57,8 @@ export class SystemThemeBehaviour extends Behaviour {
   }
 
   private apply(style: ThemeStyle): void {
-    if (!this.layerId) return;
-    (this.ctx?.layers.get(this.layerId) as { setOptions?: (o: unknown) => void } | undefined)
+    if (!this.targetLayerId) return;
+    (this.ctx?.layers.get(this.targetLayerId) as { setOptions?: (o: unknown) => void } | undefined)
       ?.setOptions?.(style);
   }
 }

@@ -48,9 +48,9 @@ export const ClickSelect: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }));
+    canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
 
-    const click = new ClickSelectBehaviour({ id: 'click-select', layerId: 'graph' });
+    const click = new ClickSelectBehaviour({ id: 'click-select', targetLayerId: 'graph' });
     canvas.behaviours.register(click);
 
     const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
@@ -133,14 +133,18 @@ export const ClickSelect: Story = {
         settings['unselectedState (dim non-selected)'] === 'none'
           ? ''
           : settings['unselectedState (dim non-selected)'];
-      click.setOptions({
-        multiple: settings.multiple,
-        trigger,
-        degree: settings['degree (neighbor hops)'],
-        direction: settings.direction,
-        state: settings.state,
-        unselectedState: unsel,
-        clearOnBackground: settings.clearOnBackground,
+      canvas.update({
+        behaviours: {
+          'click-select': {
+            multiple: settings.multiple,
+            trigger,
+            degree: settings['degree (neighbor hops)'],
+            direction: settings.direction,
+            state: settings.state,
+            unselectedState: unsel,
+            clearOnBackground: settings.clearOnBackground,
+          },
+        },
       });
     };
 

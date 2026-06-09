@@ -6,30 +6,30 @@ import {
 import { useBehaviourRegistration } from './useBehaviourRegistration';
 
 export interface NodeSizeLODBehaviourProps
-  extends Omit<NodeSizeLODBehaviourOptions, 'id' | 'layerId'> {
+  extends Omit<NodeSizeLODBehaviourOptions, 'id' | 'targetLayerId'> {
   /** Behaviour id; default `'node-size-lod'`. Changing this remounts the behaviour. */
   id?: string;
   /** GraphLayer id this behaviour drives; default `'graph'`. */
-  layerId?: string;
+  targetLayerId?: string;
 }
 
 /**
  * Declarative wrapper for `@invana/graph` `NodeSizeLODBehaviour`
  * (rescale node sizes per camera zoom).
  *
- * `enabled` is reactive; other options are init-only — change `id` / `layerId`.
+ * `enabled` is reactive; other options are init-only — change `id` / `targetLayerId`.
  */
 export function NodeSizeLODBehaviour({
   id = 'node-size-lod',
-  layerId = 'graph',
+  targetLayerId = 'graph',
   enabled = true,
   ...rest
 }: NodeSizeLODBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineNodeSizeLODBehaviour({ id, layerId, enabled, ...rest }),
+    () => new EngineNodeSizeLODBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
-    [id, layerId],
+    [id, targetLayerId],
   );
   return null;
 }

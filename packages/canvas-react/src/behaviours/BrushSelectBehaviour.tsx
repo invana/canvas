@@ -6,30 +6,30 @@ import {
 import { useBehaviourRegistration } from './useBehaviourRegistration';
 
 export interface BrushSelectBehaviourProps
-  extends Omit<BrushSelectBehaviourOptions, 'id' | 'layerId'> {
+  extends Omit<BrushSelectBehaviourOptions, 'id' | 'targetLayerId'> {
   /** Behaviour id; default `'brush-select'`. Changing this remounts the behaviour. */
   id?: string;
   /** GraphLayer id this behaviour drives; default `'graph'`. */
-  layerId?: string;
+  targetLayerId?: string;
 }
 
 /**
  * Declarative wrapper for `@invana/graph` `BrushSelectBehaviour`
  * (rectangular rubber-band selection).
  *
- * `enabled` is reactive; other options are init-only — change `id` / `layerId`.
+ * `enabled` is reactive; other options are init-only — change `id` / `targetLayerId`.
  */
 export function BrushSelectBehaviour({
   id = 'brush-select',
-  layerId = 'graph',
+  targetLayerId = 'graph',
   enabled = true,
   ...rest
 }: BrushSelectBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineBrushSelectBehaviour({ id, layerId, enabled, ...rest }),
+    () => new EngineBrushSelectBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
-    [id, layerId],
+    [id, targetLayerId],
   );
   return null;
 }

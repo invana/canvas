@@ -178,19 +178,13 @@ export const CoraSubjectBundle: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(
-      new DragNodeBehaviour({ id: 'drag-node', layerId: 'graph' }),
+      new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }),
     );
     canvas.behaviours.register(
-      new HoverActivateBehaviour({
-        id: 'hover',
-        layerId: 'graph',
-        state: 'hovered',
-        degree: 1,
-        direction: 'both',
-      }),
+      new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph' }),
     );
     canvas.behaviours.register(
-      new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }),
+      new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }),
     );
 
     // ── Serialisable config ─────────────────────────────────────────────
@@ -232,7 +226,7 @@ export const CoraSubjectBundle: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'drag-node': { enabled: true },
-        hover: { enabled: true },
+        hover: { enabled: true, state: 'hovered', degree: 1, direction: 'both' },
         'system-theme': {
           enabled: true,
           light: { backgroundColor: '#ffffff' },

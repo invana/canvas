@@ -164,7 +164,7 @@ export const AllOptions: Story = {
 
     const dragBehaviour = new DragNodeBehaviour({
       id: 'drag',
-      layerId: 'graph',
+      targetLayerId: 'graph',
       // Skip dragging the expanded frame here — `NodeResize` and drag
       // would race for the same pointer-down otherwise. Toggle the
       // resize behaviour off in the GUI and you can drag the frame.
@@ -173,12 +173,12 @@ export const AllOptions: Story = {
     canvas.behaviours.register(dragBehaviour);
     const collapseBehaviour = new CollapseExpandBehaviour({
       id: 'collapse-expand',
-      layerId: 'graph',
+      targetLayerId: 'graph',
     });
     canvas.behaviours.register(collapseBehaviour);
     const resizeBehaviour = new NodeResizeBehaviour({
       id: 'resize',
-      layerId: 'graph',
+      targetLayerId: 'graph',
     });
     canvas.behaviours.register(resizeBehaviour);
 

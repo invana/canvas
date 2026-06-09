@@ -121,7 +121,7 @@ export const Airports_Story: Story = {
       id: 'node-size-lod',
       layers: [
         {
-          layerId: 'graph',
+          targetLayerId: 'graph',
           sizePx: () => settings.targetNodePx,
           strokeWidthPx: () => settings.targetStrokePx,
         },
@@ -132,12 +132,7 @@ export const Airports_Story: Story = {
     // Hover-to-activate — highlights the airport under the pointer and
     // dims the rest. Registered after the graph layer is mounted so the
     // behaviour can resolve its target at register-time.
-    const hover = new HoverActivateBehaviour({
-      id: 'hover',
-      layerId: 'graph',
-      state: 'hovered',
-      inactiveState: 'dimmed',
-    });
+    const hover = new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph' });
     canvas.behaviours.register(hover);
 
     const canvasOptions = {
@@ -178,7 +173,7 @@ export const Airports_Story: Story = {
       },
       behaviours: {
         'node-size-lod': { enabled: true },
-        hover: { enabled: true },
+        hover: { enabled: true, state: 'hovered', inactiveState: 'dimmed' },
       },
     };
 
