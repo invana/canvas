@@ -1,37 +1,24 @@
 /**
- * Graph data **visualiser** — a read-only explorer built from
- * `@invana/canvas-react` wrappers. Every layer and behaviour is listed directly
- * inside `<Canvas>`; the chrome is **one combined toolbar** pinned top-centre.
- * Each group is a self-wiring toolbar rendered `bare` (its `Nav*` only, no own
- * `<Panel>`); a single shared `<Panel position="top-center" orientation="horizontal">`
- * stacks them side-by-side so they read as one bar of distinct pill-groups. No
- * app state lives in `Visualiser` — the toolbars drive the engine straight from
- * context (and, for history/clipboard, from `<GraphHistoryProvider>` /
- * `<GraphClipboardProvider>`). Left-to-right:
+ * Graph data **visualiser** — config-first `@invana/canvas-react`. Every engine
+ * instance is registered by a *minimal* JSX child (id + non-serialisable wiring
+ * only); a single `canvasOptions` object — the same serialisable shape the
+ * imperative stories use — supplies all their settings by id. UI chrome (the
+ * combined toolbar, context menus, history/clipboard providers) stays as
+ * children and drives the engine by id straight from context.
  *
- *   - **`<HistoryToolbar>`** — undo / redo / redraw via `useHistory`.
- *   - **`<GraphLayoutToolbar>`** — layout switcher (Force / ELK layered / ELK
- *     stress) + select-mode switcher (Click / Brush / Lasso), self-wiring
- *     through `useLayout` (consumer-supplied factories) and `useSelectMode`
- *     (consumer-supplied behaviour ids). The initial layout is applied
- *     automatically on mount. Selection is Shift-gated: Shift+click to select
- *     (always on); the switcher arms which Shift+drag gesture is live — Click
- *     (none), Brush, or Lasso. A plain drag always pans.
- *   - **`<EdgeTypePicker>`** — edge routing switcher (straight / orthogonal /
- *     curved / rounded / smooth), self-wiring through `useEdgeType`. Re-routes
- *     every edge at once via the layer's `setEdgeDefaults`.
- *   - **`<EditToolbar>`** — cut / copy / paste / selection-aware erase (delete
- *     selection, or clear the whole canvas when nothing is selected),
- *     all undoable; reads the selection off the `ClickSelectBehaviour`.
- *   - **`<ViewToolbar>`** — zoom in/out, zoom-level picker, fit-to-content, lock
- *     view (disables pan + node-drag), all from the camera / lock hooks. Forced
- *     `orientation="horizontal"` so it lays out along the row.
- *   - **`<GridToolbar>`** — toggles the background grid pattern.
+ * The chrome is **one combined toolbar** pinned top-centre. Each group is a
+ * self-wiring toolbar rendered `bare`; a single shared `<Panel>` stacks them.
+ * Left-to-right: `<HistoryToolbar>`, `<GraphLayoutToolbar>` (layout + select-mode
+ * switcher, driven by `useLayout` factories + `useSelectMode` ids),
+ * `<EdgeTypePicker>`, `<EditToolbar>`, `<ViewToolbar>`, `<GridToolbar>`, and a
+ * theme toggle. The minimap sits bottom-right.
  *
- * The minimap sits bottom-right.
+ * Theming is **external** (the engine is theme-agnostic): node/edge/background
+ * colours are concrete in `canvasOptions`, and `useSystemTheme` + the manual
+ * theme toggle push light/dark patches through `canvas.update()`.
  */
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
@@ -56,12 +43,13 @@ import {
   MiniMapLayer,
   Panel,
   PinchZoomBehaviour,
-  ResponsiveThemeBehaviour,
   ToolbarItems,
   ViewToolbar,
   WheelZoomBehaviour,
+  useGraphCanvasUpdate,
   useStyleEditorSection,
-  useTheme,
+  useSystemTheme,
+  type CanvasConfig,
   type ToolbarItem,
   type LayoutFactory,
   type GraphNodeMenuContext,
@@ -139,8 +127,7 @@ const LAYOUT_LABEL: Record<string, string> = {
 // one entry and disables the rest. Brush and lasso are both Shift+drag, so only
 // one can be live. Click-select is always on (Shift+click) and doesn't collide,
 // so its `click` entry maps to an empty id: picking it arms NO drag-select
-// (Shift+drag does nothing, plain drag pans) without disabling click-select —
-// the hook skips ids it can't resolve.
+// without disabling click-select — the hook skips ids it can't resolve.
 const SELECT_MODE_IDS = { click: '', brush: 'brush-select', lasso: 'lasso-select' };
 const SELECT_LABEL: Record<string, string> = {
   click: 'Click select',
@@ -155,8 +142,6 @@ const SELECT_ICONS = {
 };
 
 // Icon per edge routing type, shown on the <EdgeTypePicker> trigger + options.
-// The picker exposes its default set (straight / orthogonal / curved / rounded /
-// smooth) and re-routes every edge via the layer's `setEdgeDefaults`.
 const EDGE_TYPE_ICONS = {
   straight: Minus,
   orth: CornerDownRight,
@@ -165,11 +150,70 @@ const EDGE_TYPE_ICONS = {
   smooth: Cable,
 };
 
+// ── Serialisable config (settings by id) — same shape as the imperative
+// `canvasOptions`. The non-serialisable bits (bgFill/labelText resolvers, the
+// `data`, the cross-layer `graphLayerId`, behaviour `layerId`/`degree`/`multiple`)
+// ride on the minimal children below. Colours that follow the theme are pushed
+// in via `useSystemTheme` / the theme toggle (see THEME patches). ──────────────
+const CANVAS_OPTIONS: CanvasConfig = {
+  layers: {
+    // Theme-driven colours (backgroundColor/color) are NOT here — they're only
+    // in LIGHT_PATCH/DARK_PATCH, pushed by <SystemTheme>. (The <Canvas> applies
+    // this base config *after* the SystemTheme child effect, so a colour here
+    // would clobber the resolved theme on mount.)
+    background: { type: 'pattern', patternType: 'grid' },
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 8 },
+          bgStrokeWidth: 1.5,
+          labelFontSize: 11,
+          labelPlacement: 'bottom',
+          labelOffsetY: 4,
+        },
+      },
+      edge: { style: { strokeWidth: 1, arrowTargetShape: 'none' } },
+    },
+    minimap: { position: 'bottom-right', margin: { x: 20 } },
+  },
+  behaviours: {
+    pan: { enabled: true },
+    'drag-node': { enabled: true },
+    wheel: { enabled: true },
+    pinch: { enabled: true },
+    hover: { enabled: true },
+    'click-select': { enabled: true },
+    'brush-select': { enabled: false },
+    'lasso-select': { enabled: false },
+    'label-lod': { enabled: true },
+  },
+};
+
+// Light / dark colour patches (node labels + borders, edge strokes/arrows,
+// background) pushed through `canvas.update()` — the theme-agnostic replacement
+// for the old `<ResponsiveThemeBehaviour>`.
+const LIGHT_PATCH: CanvasConfig = {
+  layers: {
+    background: { backgroundColor: '#f8fafc', color: '#94a3b8' },
+    graph: {
+      node: { style: { labelColor: 0x334155, bgStrokeColor: 0xffffff } },
+      edge: { style: { strokeColor: 0xcbd5e1, arrowTargetColor: 0xcbd5e1 } },
+    },
+  },
+};
+const DARK_PATCH: CanvasConfig = {
+  layers: {
+    background: { backgroundColor: '#0f172a', color: '#334155' },
+    graph: {
+      node: { style: { labelColor: 0xe2e8f0, bgStrokeColor: 0x0f172a } },
+      edge: { style: { strokeColor: 0x475569, arrowTargetColor: 0x475569 } },
+    },
+  },
+};
+
 /**
  * Flip the `@invana/ui` chrome (toolbar buttons, menus) to match the canvas
- * theme, so the floating controls stay legible against the canvas instead of
- * following the OS independently. Mirrors the storybook's own `bootstrapOsTheme`
- * (`.storybook/preview.ts`), which switches the design-kit by `data-theme`.
+ * theme, so the floating controls stay legible against the canvas.
  */
 function applyChromeTheme(dark: boolean): void {
   if (typeof document === 'undefined') return;
@@ -188,18 +232,28 @@ function osPrefersDark(): boolean {
   );
 }
 
+/** Follows the OS scheme by pushing the matching colour patch through update(). */
+function SystemTheme() {
+  useSystemTheme(LIGHT_PATCH, DARK_PATCH);
+  return null;
+}
+
 /** Edge-routing picker — the Style Editor section ({@link useStyleEditorSection}). */
 function EdgeTypeControl() {
   const items = useStyleEditorSection({ layerId: 'graph', icons: EDGE_TYPE_ICONS });
   return <ToolbarItems items={items} orientation="horizontal" />;
 }
 
-/** Theme toggle, hand-built off the raw {@link useTheme} hook. */
+/** Manual theme toggle — pushes a light/dark patch via `useGraphCanvasUpdate`. */
 function ThemeControl() {
-  const { kind, toggle } = useTheme({
-    backgroundLayerId: 'background',
-    onChange: (k) => applyChromeTheme(k === 'dark'),
-  });
+  const update = useGraphCanvasUpdate();
+  const [kind, setKind] = useState<'light' | 'dark'>(() => (osPrefersDark() ? 'dark' : 'light'));
+  const toggle = (): void => {
+    const next = kind === 'dark' ? 'light' : 'dark';
+    setKind(next);
+    update(next === 'dark' ? DARK_PATCH : LIGHT_PATCH);
+    applyChromeTheme(next === 'dark');
+  };
   const items: ToolbarItem[] = [
     {
       type: 'toggle',
@@ -220,16 +274,8 @@ function Visualiser() {
   // unmount so the pinned theme doesn't leak into the next story.
   useEffect(() => () => applyChromeTheme(osPrefersDark()), []);
 
-  // Right-click menu item builders for the explorer — one per target, used by
-  // the `<Graph*ContextMenu>` components rendered directly in the tree below.
-  // The visualiser is read-only, so the actions are **navigation + selection +
-  // annotation**, each a single engine method off the `canvas` handed in on
-  // `ctx`: `layer.focusNodes/​focusEdges` (zoom), `select.selectNeighbourhood/​
-  // selectAll` (selection), `layer.highlightNeighbourhood` +
-  // `store.add/clearNodeState` (highlight — interaction state is owned by the
-  // store, so toggles go through `layer.store`; the layer renders as a
-  // subscriber). Clipboard cut/copy/paste lives in `<EditToolbar>`.
-
+  // Right-click menu item builders — one per target, each a single engine
+  // method off the `canvas` handed in on `ctx`, resolved by id.
   const nodeItems = useCallback(({ id, canvas }: GraphNodeMenuContext): MenuItem[] => {
     const layer = canvas.layers.get<EngineGraphLayer>('graph');
     if (!layer) return [];
@@ -298,72 +344,38 @@ function Visualiser() {
 
   return (
     <div style={{ height: '100vh' }}>
-      <Canvas autoResize>
-        {/* A grid pattern so <GridToolbar> has something to toggle. The
-            `{ light, dark }` pairs follow the OS `prefers-color-scheme`. */}
-        <BackgroundLayer
-          type="pattern"
-          patternType="grid"
-          backgroundColor={{ light: '#f8fafc', dark: '#0f172a' }}
-          color={{ light: '#94a3b8', dark: '#334155' }}
-        />
+      {/* Minimal children register the engine instances by id; CANVAS_OPTIONS
+          supplies all their settings. UI chrome stays as children. */}
+      <Canvas autoResize config={CANVAS_OPTIONS}>
+        {/* Engine layers */}
+        <BackgroundLayer id="background" />
         <GraphLayer
           id="graph"
           data={lesMiserables}
           node={{
             style: {
-              shape: { kind: 'circle', radius: 8 },
               bgFill: (n: GraphNode) => PALETTE[groupOf(n) % PALETTE.length]!,
-              // labelColor + bgStrokeColor are theme-driven — see <ResponsiveThemeBehaviour>.
-              bgStrokeWidth: 1.5,
               labelText: (n: GraphNode) => String(n.id),
-              labelFontSize: 11,
-              labelPlacement: 'bottom',
-              labelOffsetY: 4,
             },
           }}
-          // edge strokeColor is theme-driven — see <ResponsiveThemeBehaviour>.
-          edge={{ style: { strokeWidth: 1, arrowTargetShape: 'none' } }}
         />
-        {/* Themes node labels + borders and edge strokes/arrows to the OS
-            `prefers-color-scheme`. */}
-        <ResponsiveThemeBehaviour
-          layerId="graph"
-          node={{
-            light: { labelColor: 0x334155, bgStrokeColor: 0xffffff },
-            dark: { labelColor: 0xe2e8f0, bgStrokeColor: 0x0f172a },
-          }}
-          edge={{
-            light: { strokeColor: 0xcbd5e1, arrowTargetColor: 0xcbd5e1 },
-            dark: { strokeColor: 0x475569, arrowTargetColor: 0x475569 },
-          }}
-        />
+        <MiniMapLayer id="minimap" graphLayerId="graph" />
 
-        {/* Camera + interaction. Pan ('pan') + node-drag ('drag-node') are what
-            <ViewToolbar>'s lock disables (default lock behaviour ids). */}
-        <DragPanBehaviour />
-        <DragNodeBehaviour layerId="graph" />
-        <WheelZoomBehaviour />
-        <PinchZoomBehaviour />
-        <HoverActivateBehaviour layerId="graph" degree={1} state="highlighted" />
+        {/* Engine behaviours — enabled state comes from CANVAS_OPTIONS. */}
+        <DragPanBehaviour id="pan" />
+        <DragNodeBehaviour id="drag-node" layerId="graph" />
+        <WheelZoomBehaviour id="wheel" />
+        <PinchZoomBehaviour id="pinch" />
+        <HoverActivateBehaviour id="hover" layerId="graph" degree={1} state="highlighted" />
+        <ClickSelectBehaviour id="click-select" layerId="graph" multiple />
+        <BrushSelectBehaviour id="brush-select" layerId="graph" />
+        <LassoSelectBehaviour id="lasso-select" layerId="graph" />
+        <LabelResolutionLODBehaviour id="label-lod" layerId="graph" />
 
-        {/* Selection — Shift is the trigger for all three. Shift+click selects
-            (click-select stays on); Shift+drag brushes or lassos. A plain drag
-            stays a pure pan. Click and the drag-selects don't collide (click vs
-            drag), but brush and lasso are both Shift+drag, so <GraphLayoutToolbar>'s
-            select-mode picker (useSelectMode) enables exactly one of them. */}
-        <ClickSelectBehaviour layerId="graph" enabled multiple />
-        <BrushSelectBehaviour layerId="graph" enabled={false} />
-        <LassoSelectBehaviour layerId="graph" enabled={false} />
+        {/* OS dark-mode follow (theme-agnostic engine; external patch). */}
+        <SystemTheme />
 
-        <LabelResolutionLODBehaviour layerId="graph" />
-        <MiniMapLayer graphLayerId="graph" position="bottom-right" margin={{ x: 20 }} />
-
-        {/* History + clipboard need their engine objects over the graph store —
-            provided here, consumed by the toolbars below. */}
-        {/* One combined toolbar: every group's bare toolbar (Nav only, no
-            <Panel>) stacked side-by-side inside a single top-centre <Panel>, so
-            they read as one bar of distinct pill-groups. */}
+        {/* History + clipboard providers + the combined toolbar + context menus. */}
         <GraphHistoryProvider layerId="graph">
           <GraphClipboardProvider layerId="graph">
             <Panel position="top-center" orientation="horizontal" gap={12}>
@@ -380,8 +392,7 @@ function Visualiser() {
                 initialSelectMode="click"
               />
               <Separator orientation="vertical" style={{ alignSelf: 'center', height: 16 }} />
-              {/* Edge routing picker — self-wires to the 'graph' layer and
-                  re-routes every edge (straight / orthogonal / curved / …). */}
+              {/* Edge routing picker — self-wires to the 'graph' layer. */}
               <EdgeTypeControl />
               <Separator orientation="vertical" style={{ alignSelf: 'center', height: 16 }} />
               <EditToolbar
@@ -409,14 +420,10 @@ function Visualiser() {
               <Separator orientation="vertical" style={{ alignSelf: 'center', height: 16 }} />
               <GridToolbar bare icons={{ grid: Grid3x3 }} />
               <Separator orientation="vertical" style={{ alignSelf: 'center', height: 16 }} />
-              {/* Switch the graph theme (drives <ResponsiveThemeBehaviour>) to test
-                  the light/dark styling without changing the OS appearance. Flips
-                  the background layer in lockstep so the whole canvas stays
-                  coherent (otherwise light-on-light labels look invisible). */}
+              {/* Manual light/dark toggle — flips the canvas + chrome together. */}
               <ThemeControl />
             </Panel>
-            {/* Right-click menus — one component per target, each owning its own
-                behaviour + overlay + dismissal. Builders defined in `Visualiser`. */}
+            {/* Right-click menus — one component per target. */}
             <GraphNodeContextMenu items={nodeItems} />
             <GraphEdgeContextMenu items={edgeItems} />
             <GraphBackgroundContextMenu items={backgroundItems} />

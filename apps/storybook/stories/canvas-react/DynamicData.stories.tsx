@@ -1,14 +1,15 @@
 /**
- * Stability test — drives the `<GraphLayer>` `data` prop from React state
- * and switches the active dataset on demand (manual buttons + optional
- * auto-cycle). Exercises:
+ * Stability test — config-first `<Canvas config={canvasOptions}>` whose minimal
+ * children register the classes by id, while the single `config` object holds
+ * all settings (same shape as the imperative `canvasOptions`). Switches the
+ * active dataset on demand (manual buttons + optional auto-cycle). Exercises:
  *
  *   - `<GraphLayer>`'s reactive `data` prop calling `layer.setData(data)`
  *     when the referenced object changes
- *   - `<D3ForceLayout>` remounting via a changing `key` to reseed the
- *     simulation against the new node/edge set
+ *   - `config.activeLayout` auto-running the registered `force` layout — and
+ *     `GraphCanvas` **re-running it on every dataset switch** (topology change),
+ *     so there's no `key`-remount of the layout anymore
  *   - `<Canvas>` lifecycle stability under repeated child reconciliation
- *     (no engine teardown — only the layout remounts)
  */
 
 import { useEffect, useMemo, useState } from 'react';
@@ -20,6 +21,7 @@ import {
   DragPanBehaviour,
   GraphLayer,
   WheelZoomBehaviour,
+  type CanvasConfig,
 } from '@invana/canvas-react';
 import type { GraphData, GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
@@ -70,6 +72,28 @@ const DATASETS = {
 type DatasetName = keyof typeof DATASETS;
 const NAMES = Object.keys(DATASETS) as DatasetName[];
 
+// The whole serialisable state, keyed by id — identical in shape to the
+// imperative stories' `canvasOptions`. Module-level so its identity is stable
+// across renders (the <Canvas> applies it once and re-applies only on change).
+// The `bgFill` resolver is non-serialisable, so it rides on the <GraphLayer>
+// child below; everything serialisable lives here.
+const CANVAS_OPTIONS: CanvasConfig = {
+  layers: {
+    graph: {
+      node: { style: { shape: { kind: 'circle', radius: 6 } } },
+      edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.6 } },
+    },
+  },
+  behaviours: {
+    pan: { enabled: true },
+    zoom: { enabled: true },
+  },
+  layouts: {
+    force: { link: {}, charge: {}, center: { x: 0, y: 0 } },
+  },
+  activeLayout: 'force',
+};
+
 function Demo() {
   const [name, setName] = useState<DatasetName>('ring-10');
   const [auto, setAuto] = useState(false);
@@ -114,26 +138,23 @@ function Demo() {
         </span>
       </div>
       <div style={canvasHostStyle}>
-        <Canvas autoResize>
-          <DragPanBehaviour />
-          <WheelZoomBehaviour />
+        {/* Minimal children register the classes by id; `config` holds all
+            settings. The active 'force' layout auto-runs on mount and re-runs
+            on each dataset switch (topology change) — no `key`-remount. */}
+        <Canvas autoResize config={CANVAS_OPTIONS}>
+          <DragPanBehaviour id="pan" />
+          <WheelZoomBehaviour id="zoom" />
           <GraphLayer
             id="graph"
             data={data}
             node={{
               style: {
-                shape: { kind: 'circle', radius: 6 },
                 bgFill: (n: GraphNode) =>
                   PALETTE[(n.data as { group: number }).group % PALETTE.length]!,
               },
             }}
-            edge={{ style: { strokeColor: 0xcbd5e1, strokeWidth: 0.6 } }}
           />
-          <D3ForceLayout
-            key={name}
-            targetLayerId="graph"
-            options={{ link: {}, charge: {}, center: { x: 0, y: 0 } }}
-          />
+          <D3ForceLayout id="force" targetLayerId="graph" />
         </Canvas>
       </div>
     </div>

@@ -58,11 +58,11 @@ import {
   MiniMapLayer,
   PinchZoomBehaviour,
   PropertyViewerPanel,
-  ResponsiveThemeBehaviour,
   StatusBar,
   ToolbarItems,
   WheelZoomBehaviour,
   useCanvas,
+  useGraphCanvasUpdate,
   useHistorySection,
   useEditorSection,
   useViewSection,
@@ -70,7 +70,8 @@ import {
   useStyleEditorSection,
   useSelectMode,
   useGrid,
-  useTheme,
+  useSystemTheme,
+  type CanvasConfig,
   type ToolbarItem,
   type LayoutFactory,
   type ViewContext,
@@ -177,6 +178,71 @@ const EDGE_TYPE_ICONS = {
   rounded: Waypoints,
   smooth: Cable,
 };
+
+// Serialisable settings by id (same shape as the imperative `canvasOptions`).
+// Non-serialisable / behaviour-owned bits ride on the children: `labelText`
+// resolver + `data` on <GraphLayer>, `bgFill` on <ColorByLabelBehaviour>, the
+// `graphLayerId` + the reactive hover `degree`, the click-view `panel`.
+// Theme-driven colours are NOT here — only in APP_LIGHT/APP_DARK (pushed by
+// <SystemTheme>), since <Canvas> applies this config *after* the SystemTheme
+// child effect and would otherwise clobber the resolved theme on mount.
+const APP_OPTIONS: CanvasConfig = {
+  layers: {
+    background: { type: 'pattern', patternType: 'grid', alpha: 0.5 },
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 8 },
+          bgStrokeWidth: 1.5,
+          labelFontSize: 11,
+          labelPlacement: 'bottom',
+          labelOffsetY: 4,
+        },
+      },
+      edge: { style: { strokeWidth: 1, arrowTargetShape: 'none' } },
+    },
+    minimap: { position: 'bottom-left', margin: { x: 20 } },
+  },
+  behaviours: {
+    pan: { enabled: true },
+    'drag-node': { enabled: true },
+    wheel: { enabled: true },
+    pinch: { enabled: true },
+    hover: { enabled: true },
+    'click-select': { enabled: true },
+    'brush-select': { enabled: false },
+    'lasso-select': { enabled: false },
+    'click-view': { enabled: true },
+    'label-lod': { enabled: true },
+  },
+};
+
+const APP_LIGHT: CanvasConfig = {
+  layers: {
+    background: { backgroundColor: '#f8fafc', color: '#e2e8f0' },
+    graph: {
+      node: { style: { labelColor: 0x334155, bgStrokeColor: 0xffffff } },
+      edge: { style: { strokeColor: 0x475569, arrowTargetColor: 0x475569 } },
+    },
+    minimap: { backgroundColor: 0xf8fafc, borderColor: 0x94a3b8 },
+  },
+};
+const APP_DARK: CanvasConfig = {
+  layers: {
+    background: { backgroundColor: '#0f172a', color: '#1e293b' },
+    graph: {
+      node: { style: { labelColor: 0xe2e8f0, bgStrokeColor: 0x0f172a } },
+      edge: { style: { strokeColor: 0x64748b, arrowTargetColor: 0x64748b } },
+    },
+    minimap: { backgroundColor: 0x0f172a, borderColor: 0x334155 },
+  },
+};
+
+/** Follows the OS scheme by pushing the matching colour patch through update(). */
+function SystemTheme() {
+  useSystemTheme(APP_LIGHT, APP_DARK);
+  return null;
+}
 
 /**
  * Flip the `@invana/ui` chrome (the whole `AppLayoutBase` shell — its
@@ -308,13 +374,16 @@ function HeaderToolbarItems({
   return <ToolbarItems items={items} orientation="horizontal" />;
 }
 
-/** Header-right theme toggle, hand-built off the raw {@link useTheme} hook. */
+/** Header-right theme toggle — pushes a light/dark patch via `useGraphCanvasUpdate`. */
 function HeaderThemeToggle() {
-  const { kind, toggle } = useTheme({
-    backgroundLayerId: 'background',
-    minimapLayerId: 'minimap',
-    onChange: (k) => applyChromeTheme(k === 'dark'),
-  });
+  const update = useGraphCanvasUpdate();
+  const [kind, setKind] = useState<'light' | 'dark'>(() => (osPrefersDark() ? 'dark' : 'light'));
+  const toggle = (): void => {
+    const next = kind === 'dark' ? 'light' : 'dark';
+    setKind(next);
+    update(next === 'dark' ? APP_DARK : APP_LIGHT);
+    applyChromeTheme(next === 'dark');
+  };
   const items: ToolbarItem[] = [
     {
       type: 'toggle',
@@ -442,117 +511,68 @@ function VisualiserApp() {
           right: engine ? <HeaderThemeToggle /> : null,
         }}
         mainClassName="relative"
+        // Minimal children register the classes by id; APP_OPTIONS holds all
+        // settings. Node `bgFill` is owned by <ColorByLabelBehaviour>; the
+        // theme-driven colours follow the OS scheme via <SystemTheme>.
         main={
-          <Canvas autoResize>
-            {/* A grid pattern so <GridToolbar> has something to toggle. The
-                `{ light, dark }` pairs follow the OS `prefers-color-scheme`. */}
-            <BackgroundLayer
-              type="pattern"
-              patternType="grid"
-              backgroundColor={{ light: '#f8fafc', dark: '#0f172a' }}
-              // Dim grid: lines sit close to the background (slate-200 on near-white,
-              // slate-800 on near-black) so the grid is a faint guide, not a feature
-              // competing with the nodes/edges. Alpha trims it further.
-              color={{ light: '#e2e8f0', dark: '#1e293b' }}
-              alpha={0.5}
-            />
+          <Canvas autoResize config={APP_OPTIONS}>
+            <BackgroundLayer id="background" />
             <GraphLayer
               id="graph"
               data={SEED}
-              node={{
-                style: {
-                  shape: { kind: 'circle', radius: 8 },
-                  // bgFill is owned by <ColorByLabelBehaviour> below.
-                  bgStrokeWidth: 1.5,
-                  labelText: (n: GraphNode) => String(n.id),
-                  labelFontSize: 11,
-                  labelPlacement: 'bottom',
-                  labelOffsetY: 4,
-                },
-              }}
-              edge={{ style: { strokeWidth: 1, arrowTargetShape: 'none' } }}
+              node={{ style: { labelText: (n: GraphNode) => String(n.id) } }}
             />
 
             {/* Colour-by-category: a unique colour per distinct label drives node
-                `bgFill` and edge `strokeColor`. The default accessor is each
-                item's `type`; here we colour nodes by their les-mis community (a
-                categorical label) for variety. Registered BEFORE
-                <ResponsiveThemeBehaviour> so the theme's explicit edge styling
-                overrides this behaviour's edge colour, while the node `bgFill`
-                (which the theme doesn't set) stays label-driven. */}
+                `bgFill`. Applied via template resolvers (non-serialisable → stays
+                a child); here we colour nodes by their les-mis community. */}
             <ColorByLabelBehaviour
               layerId="graph"
               palette={PALETTE}
               nodeLabel={(n) => `community-${groupOf(n)}`}
             />
-            <ResponsiveThemeBehaviour
-              layerId="graph"
-              node={{
-                light: { labelColor: 0x334155, bgStrokeColor: 0xffffff },
-                dark: { labelColor: 0xe2e8f0, bgStrokeColor: 0x0f172a },
-              }}
-              edge={{
-                // Edges must read against BOTH the page background and the grid
-                // lines (light grid #94a3b8 / dark grid #334155). Slate-600 in
-                // light mode sits clearly darker than the slate-400 grid; slate-500
-                // in dark mode sits clearly lighter than the slate-700 grid — so
-                // the connections stay visible without competing with the nodes.
-                light: { strokeColor: 0x475569, arrowTargetColor: 0x475569 },
-                dark: { strokeColor: 0x64748b, arrowTargetColor: 0x64748b },
-              }}
-            />
+
+            {/* OS dark-mode follow — external colour patches through update(). */}
+            <SystemTheme />
 
             {/* Camera + interaction. Pan + node-drag are what <ViewToolbar>'s
-                lock disables. */}
-            <DragPanBehaviour />
-            <DragNodeBehaviour layerId="graph" />
-            <WheelZoomBehaviour />
-            <PinchZoomBehaviour />
+                lock disables. Enabled state comes from APP_OPTIONS. */}
+            <DragPanBehaviour id="pan" />
+            <DragNodeBehaviour id="drag-node" layerId="graph" />
+            <WheelZoomBehaviour id="wheel" />
+            <PinchZoomBehaviour id="pinch" />
             {/* Hover highlighting. `degree` is driven by the header's magnet
                 toggle: 1 = hovered node + 1st-degree neighbours, 0 = hovered
                 node only. Reactive — flips live without remounting. */}
             <HoverActivateBehaviour
+              id="hover"
               layerId="graph"
               degree={magnet ? 1 : 0}
               state="highlighted"
             />
 
-            {/* Selection — Shift+click selects; <GraphLayoutToolbar>'s mode picker
-                arms exactly one of brush / lasso (both Shift+drag). */}
-            <ClickSelectBehaviour layerId="graph" enabled multiple />
-            <BrushSelectBehaviour layerId="graph" enabled={false} />
-            <LassoSelectBehaviour layerId="graph" enabled={false} />
+            {/* Selection — Shift+click selects; the header's mode picker arms
+                exactly one of brush / lasso (both Shift+drag). */}
+            <ClickSelectBehaviour id="click-select" layerId="graph" multiple />
+            <BrushSelectBehaviour id="brush-select" layerId="graph" />
+            <LassoSelectBehaviour id="lasso-select" layerId="graph" />
 
             {/* Dedicated click-to-view behaviour for the property viewer — its own
-                target, orthogonal to ClickSelect (which owns the visual highlight),
-                applying no visuals of its own. The `panel` render-prop receives the
-                full ViewContext (kind/node/edge/data + engine handles) and renders
-                the UI: here the read-only <PropertyViewerPanel>; a modeller would
-                pass a form editor instead. */}
+                target, orthogonal to ClickSelect. The `panel` render-prop renders
+                the read-only <PropertyViewerPanel>. */}
             <ClickViewBehaviour
+              id="click-view"
               layerId="graph"
-              enabled
               panel={(ctx: ViewContext) => (
                 <PropertyViewerPanel ctx={ctx} position="top-right" fullHeight />
               )}
             />
 
-            <LabelResolutionLODBehaviour layerId="graph" />
+            <LabelResolutionLODBehaviour id="label-lod" layerId="graph" />
             {/* Bottom-left — clear of the full-height property viewer that docks
-                on the right when an element is clicked. */}
-            <MiniMapLayer
-              graphLayerId="graph"
-              position="bottom-left"
-              margin={{ x: 20 }}
-              // Theme-aware chrome: background matches the canvas fill, border
-              // matches the grid line colour. `useTheme`'s `minimapLayerId`
-              // (see <HeaderThemeToggle>) flips its mode in lockstep with the
-              // BackgroundLayer, so the minimap reads as a scaled bird's-eye of
-              // the canvas in both themes — the mirrored node/edge colours keep
-              // their contrast instead of sitting on a fixed dark panel.
-              backgroundColor={{ light: 0xf8fafc, dark: 0x0f172a }}
-              borderColor={{ light: 0x94a3b8, dark: 0x334155 }}
-            />
+                on the right when an element is clicked. Colours are theme-driven
+                (APP_LIGHT/APP_DARK via <SystemTheme>). */}
+            <MiniMapLayer id="minimap" graphLayerId="graph" />
 
             {/* Right-click menus — each owns its own behaviour + overlay. */}
             <GraphNodeContextMenu items={nodeItems} />

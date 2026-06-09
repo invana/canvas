@@ -45,6 +45,12 @@ export type { UseEntityEditorOptions, EntityEditorTarget } from './useEntityEdit
 export { useContextMenu } from './useContextMenu';
 export type { ContextMenuState, UseContextMenuResult } from './useContextMenu';
 
+// Serialisable-config hooks — patch / read the canvas's `CanvasConfig` by id,
+// and follow OS dark-mode externally (theme-agnostic engine).
+export { useGraphCanvasUpdate } from './useGraphCanvasUpdate';
+export { useGraphCanvasOptions } from './useGraphCanvasOptions';
+export { useSystemTheme } from './useSystemTheme';
+
 // Section hooks — each returns the `ToolbarItem[]` for one logical toolbar
 // section (off the raw operation hooks). Concatenate sections with `divider`s
 // and render via `ToolbarItems`; or skip these and hand-build items from the

@@ -31,7 +31,7 @@
  * drawing tool.
  */
 
-import { useCallback, useContext, useEffect, useRef } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
@@ -54,7 +54,6 @@ import {
   GraphLayer,
   DragPanBehaviour,
   WheelZoomBehaviour,
-  ResponsiveThemeBehaviour,
   DragNodeBehaviour,
   ClickSelectBehaviour,
   ClickInspectBehaviour,
@@ -72,13 +71,15 @@ import {
   InspectorPanel,
   Panel,
   ToolbarItems,
-  useTheme,
+  useGraphCanvasUpdate,
+  useSystemTheme,
   useTool,
   useDrawHistory,
   useFitContent,
   useClearGraph,
 } from '@invana/canvas-react';
 import type {
+  CanvasConfig,
   GraphNodeMenuContext,
   GraphEdgeMenuContext,
   GraphBackgroundMenuContext,
@@ -129,6 +130,53 @@ const HINTS: Record<string, string> = {
   delete: 'Click a node (removes its edges) or an edge to erase it · Esc to exit',
 };
 
+// Serialisable settings by id (same shape as the imperative `canvasOptions`).
+// The always-on camera behaviours live here; the tool-gated drawing behaviours
+// keep their reactive `enabled={tool === …}` on the children below (config
+// can't express a value that tracks React state). Theme-driven colours
+// (node/edge stroke, background) come from the patches + `useSystemTheme`.
+const MODELLER_OPTIONS: CanvasConfig = {
+  layers: {
+    // Theme-driven background colours live only in M_LIGHT/M_DARK (pushed by
+    // <SystemTheme>) — not here, or the base config would clobber the resolved
+    // theme on mount (the <Canvas> applies config after the SystemTheme effect).
+    background: { type: 'pattern', patternType: 'grid' },
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 22 },
+          bgFill: 0x3b82f6,
+          bgStrokeWidth: 2,
+          labelColor: 0xf8fafc,
+          labelFontSize: 13,
+          labelPlacement: 'center',
+        },
+      },
+      edge: { style: { strokeWidth: 2 } },
+    },
+  },
+  behaviours: { pan: { enabled: true }, wheel: { enabled: true } },
+};
+
+const M_LIGHT: CanvasConfig = {
+  layers: {
+    background: { backgroundColor: '#f8fafc', color: '#94a3b8' },
+    graph: { node: { style: { bgStrokeColor: 0xffffff } }, edge: { style: { strokeColor: 0xcbd5e1 } } },
+  },
+};
+const M_DARK: CanvasConfig = {
+  layers: {
+    background: { backgroundColor: '#0f172a', color: '#334155' },
+    graph: { node: { style: { bgStrokeColor: 0x0f172a } }, edge: { style: { strokeColor: 0x475569 } } },
+  },
+};
+
+/** Follows the OS scheme by pushing the matching colour patch through update(). */
+function SystemTheme() {
+  useSystemTheme(M_LIGHT, M_DARK);
+  return null;
+}
+
 /**
  * Flip the `@invana/ui` chrome (toolbar buttons, menus) to match the canvas
  * theme, so the floating controls stay legible against the canvas instead of
@@ -160,12 +208,16 @@ function osPrefersDark(): boolean {
  * are mounted here too (rather than in a separate component) because their menu
  * actions need those same tool + history hooks.
  */
-/** Theme toggle, hand-built off the raw {@link useTheme} hook. */
+/** Manual theme toggle — pushes a light/dark patch via `useGraphCanvasUpdate`. */
 function ThemeControl() {
-  const { kind, toggle } = useTheme({
-    backgroundLayerId: 'background',
-    onChange: (k) => applyChromeTheme(k === 'dark'),
-  });
+  const update = useGraphCanvasUpdate();
+  const [kind, setKind] = useState<'light' | 'dark'>(() => (osPrefersDark() ? 'dark' : 'light'));
+  const toggle = (): void => {
+    const next = kind === 'dark' ? 'light' : 'dark';
+    setKind(next);
+    update(next === 'dark' ? M_DARK : M_LIGHT);
+    applyChromeTheme(next === 'dark');
+  };
   const items: ToolbarItem[] = [
     {
       type: 'toggle',
@@ -356,9 +408,10 @@ function DrawingTools() {
         nodeKindIcons={{ circle: Circle, rect: Square, diamond: Diamond }}
       />
 
-      {/* Switch the graph theme (drives <ResponsiveThemeBehaviour>) to test the
-          light/dark node + edge styling without changing the OS appearance. Flips
-          the background grid in lockstep so the whole canvas stays coherent. */}
+      {/* Switch the graph theme (pushes the M_LIGHT / M_DARK patch through
+          canvas.update) to test the light/dark node + edge styling without
+          changing the OS appearance. Flips the background grid in lockstep so
+          the whole canvas stays coherent. */}
       <Panel position="top-left">
         <ThemeControl />
       </Panel>
@@ -392,43 +445,17 @@ function Modeller() {
     <TooltipProvider>
       <GraphToolProvider>
         <div style={hostStyle}>
-          <Canvas autoResize>
-            {/* The `{ light, dark }` pairs follow the OS `prefers-color-scheme`. */}
-            <BackgroundLayer
-              type="pattern"
-              patternType="grid"
-              backgroundColor={{ light: '#f8fafc', dark: '#0f172a' }}
-              color={{ light: '#94a3b8', dark: '#334155' }}
-            />
-            <GraphLayer
-              id="graph"
-              data={SEED}
-              node={{
-                style: {
-                  shape: { kind: 'circle', radius: 22 },
-                  bgFill: 0x3b82f6,
-                  // bgStrokeColor is theme-driven — see <ResponsiveThemeBehaviour>.
-                  bgStrokeWidth: 2,
-                  labelColor: 0xf8fafc,
-                  labelFontSize: 13,
-                  labelPlacement: 'center',
-                },
-              }}
-              // edge strokeColor is theme-driven — see <ResponsiveThemeBehaviour>.
-              edge={{ style: { strokeWidth: 2 } }}
-            />
-            {/* Themes node borders + edge strokes to the OS `prefers-color-scheme`.
-                Border matches the background so the node reads as separated from
-                the grid. The node fill + label stay fixed — a white label inside
-                the solid blue node reads on either theme. */}
-            <ResponsiveThemeBehaviour
-              layerId="graph"
-              node={{ light: { bgStrokeColor: 0xffffff }, dark: { bgStrokeColor: 0x0f172a } }}
-              edge={{ light: { strokeColor: 0xcbd5e1 }, dark: { strokeColor: 0x475569 } }}
-            />
+          {/* Minimal children register the classes by id; MODELLER_OPTIONS holds
+              all settings. Node/edge stroke + background colours follow the OS
+              scheme via <SystemTheme> (theme-agnostic engine). */}
+          <Canvas autoResize config={MODELLER_OPTIONS}>
+            <BackgroundLayer id="background" />
+            <GraphLayer id="graph" data={SEED} />
+            {/* OS dark-mode follow — external colour patches through update(). */}
+            <SystemTheme />
 
-            <DragPanBehaviour />
-            <WheelZoomBehaviour />
+            <DragPanBehaviour id="pan" />
+            <WheelZoomBehaviour id="wheel" />
 
             {/* History over the graph store — makes every edit (incl. the draw
                 gestures below) undoable via the toolbar's Undo / Redo. */}

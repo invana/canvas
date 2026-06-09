@@ -7,15 +7,29 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react';
-import { Canvas as EngineCanvas, type CanvasOptions } from '@invana/canvas';
+import { type Canvas as EngineCanvas, type CanvasConfig, type CanvasOptions } from '@invana/canvas';
+import { GraphCanvas } from '@invana/graph';
 
 import { CanvasContext } from './CanvasContext';
+import { GraphCanvasContext } from './GraphCanvasContext';
 
-export interface CanvasProps extends Omit<CanvasOptions, 'container'> {
+export interface CanvasProps extends Omit<CanvasOptions, 'container' | 'config'> {
   /**
-   * JSX children — layer / behaviour / layout wrappers. They aren't mounted
-   * until the engine has finished initialising, so child effects can assume
-   * `useCanvas()` returns a live, initialised engine.
+   * Serialisable config keyed by instance id — the same `canvasOptions` shape
+   * the imperative engine uses (`{ layers, behaviours, layouts, activeLayout }`,
+   * settings only, no class refs). The classes are registered by the JSX
+   * `children` (one minimal wrapper per id); this object supplies all their
+   * settings, applied **after** the children register and re-applied when it
+   * changes. `behaviours.<id>.enabled` is authoritative (overrides the wrapper
+   * default). Keep this object stable/memoised; for live edits use
+   * `useGraphCanvasUpdate()`.
+   */
+  config?: CanvasConfig;
+  /**
+   * JSX children — layer / behaviour / layout wrappers, plus UI chrome
+   * (panels, toolbars, providers, context menus). Engine wrappers aren't
+   * mounted until the engine has finished initialising, so child effects can
+   * assume `useCanvas()` / `useGraphCanvas()` return a live, initialised engine.
    */
   children?: ReactNode;
   /** Inline style on the host `<div>`. Defaults to `width: '100%', height: '100%'`. */
@@ -50,11 +64,11 @@ export interface CanvasProps extends Omit<CanvasOptions, 'container'> {
  * ```
  */
 export const Canvas = forwardRef<EngineCanvas, CanvasProps>(function Canvas(
-  { children, style, className, ...engineOpts },
+  { children, style, className, config, ...engineOpts },
   ref,
 ) {
   const hostRef = useRef<HTMLDivElement>(null);
-  const [canvas, setCanvas] = useState<EngineCanvas | null>(null);
+  const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
 
   // Engine options change rarely; we only read them on first init. Capture
   // them in a ref so the init effect runs exactly once (StrictMode aside).
@@ -66,7 +80,9 @@ export const Canvas = forwardRef<EngineCanvas, CanvasProps>(function Canvas(
     if (!container) return;
 
     let cancelled = false;
-    const engine = new EngineCanvas();
+    // `GraphCanvas` (a `Canvas` superset) so `config.activeLayout` auto-runs.
+    // With no layouts/activeLayout it behaves exactly like the base engine.
+    const engine = new GraphCanvas();
 
     void engine
       .init({ container, ...optsRef.current })
@@ -96,6 +112,20 @@ export const Canvas = forwardRef<EngineCanvas, CanvasProps>(function Canvas(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Apply the serialisable `config` AFTER the engine is ready and the JSX
+  // children have registered their instances. React flushes child effects
+  // before this parent effect, so every id named in `config` already exists on
+  // the engine — `update()` fans options to each instance by id (and wires
+  // `activeLayout`). `enabled` is applied authoritatively (the wrapper's
+  // default-enabled is overridden here). Re-runs if `config` changes identity.
+  useEffect(() => {
+    if (!canvas || !config) return;
+    canvas.update(config);
+    for (const [id, opts] of Object.entries(config.behaviours ?? {})) {
+      canvas.behaviours.setEnabled(id, !!(opts as { enabled?: boolean }).enabled);
+    }
+  }, [canvas, config]);
+
   // `ref.current` is typed as `EngineCanvas | null` because React's `Ref<T>`
   // already permits null on `.current`; we surface the live value (null until
   // init resolves, then the initialised engine) with a cast that satisfies
@@ -110,7 +140,11 @@ export const Canvas = forwardRef<EngineCanvas, CanvasProps>(function Canvas(
       // overlays (`<Panel>`, `<CanvasControlsToolbar>`, the turnkey toolbars) pin to.
       style={{ width: '100%', height: '100%', position: 'relative', ...style }}
     >
-      {canvas && <CanvasContext.Provider value={canvas}>{children}</CanvasContext.Provider>}
+      {canvas && (
+        <CanvasContext.Provider value={canvas}>
+          <GraphCanvasContext.Provider value={canvas}>{children}</GraphCanvasContext.Provider>
+        </CanvasContext.Provider>
+      )}
     </div>
   );
 });

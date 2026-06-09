@@ -10,6 +10,10 @@ export { Canvas } from './Canvas';
 export type { CanvasProps } from './Canvas';
 
 export { CanvasContext, useCanvas } from './CanvasContext';
+export { GraphCanvasContext, useGraphCanvas } from './GraphCanvasContext';
+// Re-exported for `<Canvas config={…}>` consumers — the serialisable, id-keyed
+// settings shape (same as the imperative engine's `canvasOptions`).
+export type { CanvasConfig } from '@invana/canvas';
 export { HistoryContext } from './HistoryContext';
 export { ClipboardContext } from './ClipboardContext';
 export { ToolContext } from './ToolContext';
@@ -149,6 +153,9 @@ export {
   useViewSection,
   useLayoutsSection,
   useStyleEditorSection,
+  useGraphCanvasUpdate,
+  useGraphCanvasOptions,
+  useSystemTheme,
 } from './hooks';
 export type {
   UseCameraResult,
