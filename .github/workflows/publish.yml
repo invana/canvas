@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write # create the GitHub Release for the tag
   id-token: write # required for npm provenance
 
 jobs:
@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # full history + tags so git-cliff can build the notes
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v5
@@ -41,3 +43,15 @@ jobs:
         run: pnpm -r publish --access public --no-git-checks --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Notes for the just-pushed tag. --latest = the most recent tag's section
+      # (the version being released); --strip all drops the file header so the
+      # release body is just this version's changes. Config: cliff.toml.
+      - name: Generate release notes
+        run: pnpm exec git-cliff --latest --strip all -o RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          body_path: RELEASE_NOTES.md

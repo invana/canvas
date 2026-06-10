@@ -10,12 +10,14 @@
     "check-types": "turbo run check-types",
     "test": "turbo run test",
     "clean": "turbo run clean && rm -rf node_modules",
+    "changelog": "git-cliff -o CHANGELOG.md",
     "storybook": "pnpm --filter @canvas/storybook dev",
     "docs": "pnpm --filter @canvas/docs build",
     "docs:dev": "pnpm --filter @canvas/docs dev",
     "docs:preview": "pnpm --filter @canvas/docs preview"
   },
   "devDependencies": {
+    "git-cliff": "^2.13.1",
     "prettier": "^3.7.4",
     "turbo": "^2.7.1",
     "typescript": "5.9.2"
