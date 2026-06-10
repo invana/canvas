@@ -66,7 +66,7 @@ import {
   useHistorySection,
   useEditorSection,
   useViewSection,
-  useLayoutsSection,
+  useLayout,
   useStyleEditorSection,
   useSelectMode,
   useGrid,
@@ -106,7 +106,9 @@ import {
   Minus,
   Moon,
   MousePointer2,
+  Play,
   Redo2,
+  RefreshCw,
   Scissors,
   Spline,
   SquareDashedMousePointer,
@@ -145,7 +147,7 @@ const LAYOUTS: Record<string, LayoutFactory> = {
       charge: { strength: -160 },
       link: { distance: 56 },
       collide: { radius: 14 },
-      animate: false,
+      animate: true,
     }),
   'elk-layered': () => new ElkLayout({ algorithm: 'layered', direction: 'RIGHT' }),
   'elk-stress': () => new ElkLayout({ algorithm: 'stress' }),
@@ -339,9 +341,12 @@ function HeaderToolbarItems({
   onToggleMagnet: () => void;
   onSelectModeChange: (mode: string) => void;
 }) {
+  // Live engine — the header only renders once it's live, so this is non-null.
+  const canvas = useCanvas();
+
   // Five named sections.
   const history = useHistorySection({ icons: { undo: Undo2, redo: Redo2 } });
-  const layouts = useLayoutsSection({ layouts: LAYOUTS, labels: LAYOUT_LABEL, initial: 'd3-force' });
+  const { layout, layoutOptions, applyLayout } = useLayout(LAYOUTS, { labels: LAYOUT_LABEL, initial: 'd3-force' });
   const editor = useEditorSection({ icons: { cut: Scissors, copy: Copy, paste: ClipboardPaste, erase: Eraser } });
   const view = useViewSection({ icons: { zoomIn: ZoomIn, zoomOut: ZoomOut, fit: Maximize, locked: Lock, unlocked: LockOpen } });
   const style = useStyleEditorSection({ layerId: 'graph', icons: EDGE_TYPE_ICONS });
@@ -354,7 +359,10 @@ function HeaderToolbarItems({
   const div = (key: string): ToolbarItem => ({ type: 'divider', key });
   const items: ToolbarItem[] = [
     ...history, div('d1'),
-    ...layouts, div('d2'),
+    { type: 'select', key: 'layout', label: 'Layout', value: layout, options: layoutOptions, onChange: applyLayout },
+    { type: 'button', key: 'run-layout', icon: Play, label: 'Run layout', onClick: () => applyLayout(layout) },
+    { type: 'button', key: 'refresh', icon: RefreshCw, label: 'Re-render (re-run layout + repaint)', onClick: () => void canvas.refresh() },
+    div('d2'),
     { type: 'select', key: 'select-mode', label: 'Select', value: mode, options: modeOptions, icons: SELECT_ICONS, onChange: setMode }, div('d3'),
     ...style, div('d4'),
     ...editor, div('d5'),

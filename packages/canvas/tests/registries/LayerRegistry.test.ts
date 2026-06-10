@@ -56,6 +56,7 @@ class FakeLayer implements ILayer {
   hasPending(): boolean {
     return this.pendingValue;
   }
+  redraw(): void {}
 }
 
 // ─── Tests ─────────────────────────────────────────────────────────────────

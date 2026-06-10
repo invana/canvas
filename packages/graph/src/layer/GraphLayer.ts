@@ -477,7 +477,7 @@ export class GraphLayer extends WorldLayer<
    * suspected render desync. For data edits prefer the store mutators, which
    * re-render the affected items automatically.
    */
-  redraw(): void {
+  override redraw(): void {
     for (const node of this.store.nodes()) this.rerenderNode(node.id);
     for (const edge of this.store.edges()) this.rerenderEdge(edge.id);
   }

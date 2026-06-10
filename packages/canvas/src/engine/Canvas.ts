@@ -360,6 +360,30 @@ export class Canvas {
     return layout.apply(target as never);
   }
 
+  /**
+   * Repaint every layer from its current state — calls {@link Layer.redraw} on
+   * each (a no-op for layers that don't override it). A pure render pass:
+   * positions and data are untouched. Use after an external style/theme change
+   * that bypassed the per-layer dirty path, or to recover from a suspected
+   * render desync. For layout re-positioning use {@link runLayout}; for both at
+   * once use {@link refresh}.
+   */
+  redraw(): void {
+    for (const layer of this.layers.byZOrder()) layer.redraw();
+  }
+
+  /**
+   * Full refresh: re-run the active layout (`config.activeLayout`) to
+   * re-position items, then {@link redraw} every layer. The single call behind
+   * a toolbar "re-render" button — re-layout + repaint in one. Resolves once
+   * the layout settles; the layout step is skipped when no `activeLayout` is set.
+   */
+  async refresh(): Promise<void> {
+    const activeLayout = this.config.activeLayout;
+    if (activeLayout) await this.runLayout(activeLayout);
+    this.redraw();
+  }
+
   // ─── Lifecycle ───────────────────────────────────────────────────────────
 
   /**

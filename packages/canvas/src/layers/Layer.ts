@@ -51,6 +51,7 @@ export interface ILayer {
   unmount(): void;
   flush(): void;
   hasPending(): boolean;
+  redraw(): void;
 }
 
 // ─── Constructor options ───────────────────────────────────────────────────
@@ -177,6 +178,18 @@ export abstract class Layer<
     if (!this.dirty.hasPending()) return;
     const snap = this.dirty.flush();
     this.applyDirty(snap);
+  }
+
+  /**
+   * Force a full repaint of this layer from its current state, bypassing the
+   * per-frame dirty path. Base implementation is a no-op — only layers that
+   * mount a renderer override it (e.g. `GraphLayer.redraw` re-renders every
+   * node and edge). Driven by {@link Canvas.redraw}; reach for it after an
+   * external change that sidestepped the normal mutate-and-flush path (theme
+   * swap, palette change) or to recover from a suspected render desync.
+   */
+  redraw(): void {
+    /* default no-op — renderer-backed layers override this */
   }
 
   // ─── Subclass hooks ──────────────────────────────────────────────────────
