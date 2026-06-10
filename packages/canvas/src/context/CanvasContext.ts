@@ -60,4 +60,15 @@ export interface CanvasContext {
    * read this to find a parent element and to attach native DOM listeners.
    */
   readonly canvasElement?: HTMLCanvasElement;
+
+  /**
+   * Show a transient message on the shared canvas message channel — the same
+   * call as `Canvas.showMessage`. Lets layers / behaviours / layouts surface a
+   * status line (e.g. a layout announcing "Running…" on start) without reaching
+   * for the bus directly. `timeout` (ms) auto-clears it.
+   */
+  showMessage(text: string, timeout?: number): void;
+
+  /** Clear the current canvas message. */
+  clearMessage(): void;
 }

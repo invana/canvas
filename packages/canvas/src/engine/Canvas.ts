@@ -384,6 +384,25 @@ export class Canvas {
     this.redraw();
   }
 
+  // ─── Message channel ───────────────────────────────────────────────────────
+
+  /**
+   * Show a transient message on the shared canvas message channel — emits a
+   * `message` event for a status surface (e.g. canvas-react's `CanvasMessageBar`)
+   * to display. Last-write-wins: a newer message replaces the current one. With
+   * `timeout` (ms) the surface auto-clears it after that delay; without, it
+   * stays until replaced or {@link clearMessage}-ed. Reachable from layers /
+   * behaviours / layouts too, via `ctx.showMessage`.
+   */
+  showMessage(text: string, timeout?: number): void {
+    this.events.emit('message', { text, timeout });
+  }
+
+  /** Clear the current canvas message (emits `message` with `text: null`). */
+  clearMessage(): void {
+    this.events.emit('message', { text: null });
+  }
+
   // ─── Lifecycle ───────────────────────────────────────────────────────────
 
   /**
@@ -479,6 +498,8 @@ export class Canvas {
       layers: this.layers,
       behaviours: this.behaviours,
       canvasElement: this.app?.canvas,
+      showMessage: (text, timeout) => this.showMessage(text, timeout),
+      clearMessage: () => this.clearMessage(),
     };
   }
 

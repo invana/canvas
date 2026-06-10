@@ -152,6 +152,7 @@ export {
   useGraphCanvasUpdate,
   useGraphCanvasOptions,
   useSystemTheme,
+  useCanvasMessage,
 } from './hooks';
 export type {
   UseCameraResult,
@@ -192,6 +193,7 @@ export type {
   UseViewSectionIconSet,
   UseLayoutsSectionOptions,
   UseStyleEditorSectionOptions,
+  UseCanvasMessageResult,
 } from './hooks';
 
 // ─── Toolbars ──────────────────────────────────────────────────────────────
@@ -238,10 +240,8 @@ export {
   Panel,
   ToolbarItems,
   Tooltipped,
-  GraphHintBar,
-  DEFAULT_GRAPH_HINTS,
-  DEFAULT_MAGNET_HINTS,
-  StatusBar,
+  CanvasMessageBar,
+  GraphStatusBar,
   PropertiesEditor,
   PropertiesViewer,
   ContextMenuOverlay,
@@ -258,8 +258,8 @@ export type {
   ToolbarCustomItem,
   TooltippedProps,
   TooltipSide,
-  GraphHintBarProps,
-  StatusBarProps,
+  CanvasMessageBarProps,
+  GraphStatusBarProps,
   PropertiesEditorProps,
   PropertiesEditorValues,
   PropertiesViewerProps,

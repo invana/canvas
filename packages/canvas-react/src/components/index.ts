@@ -2,8 +2,8 @@
 // renderer compiles `ToolbarItem[]` (produced by the builder hooks) straight to
 // `@invana/ui` chrome — there are no per-control wrapper components anymore.
 // `Panel` positions overlays; `Tooltipped` is the shared tooltip helper;
-// `PropertiesEditor` / `PropertiesViewer` / `GraphHintBar` / `ContextMenuOverlay`
-// are standalone panels, not toolbar controls.
+// `PropertiesEditor` / `PropertiesViewer` / `CanvasMessageBar` / `GraphStatusBar`
+// / `ContextMenuOverlay` are standalone panels, not toolbar controls.
 
 export { Panel } from './Panel';
 export type { PanelProps } from './Panel';
@@ -23,10 +23,10 @@ export { PropertiesEditor } from './PropertiesEditor';
 export type { PropertiesEditorProps, PropertiesEditorValues } from './PropertiesEditor';
 export { PropertiesViewer } from './PropertiesViewer';
 export type { PropertiesViewerProps, PropertiesViewerRow } from './PropertiesViewer';
-export { GraphHintBar, DEFAULT_GRAPH_HINTS, DEFAULT_MAGNET_HINTS } from './GraphHintBar';
-export type { GraphHintBarProps } from './GraphHintBar';
-export { StatusBar } from './StatusBar';
-export type { StatusBarProps } from './StatusBar';
+export { CanvasMessageBar } from './CanvasMessageBar';
+export type { CanvasMessageBarProps } from './CanvasMessageBar';
+export { GraphStatusBar } from './GraphStatusBar';
+export type { GraphStatusBarProps } from './GraphStatusBar';
 export { ContextMenuOverlay } from './ContextMenuOverlay';
 export type { ContextMenuOverlayProps } from './ContextMenuOverlay';
 

@@ -10,7 +10,7 @@ import { useCanvasEvent } from '../hooks/useCanvasEvent';
 /** Hovered element descriptor surfaced in the status bar. */
 type HoverInfo = { kind: 'node' | 'edge'; id: string; label: string };
 
-export interface StatusBarProps {
+export interface GraphStatusBarProps {
   /** Graph layer id read for counts + hover. Default `'graph'`. */
   layerId?: string;
   /** Id of the `ClickSelectBehaviour` selection is read from. Default `'click-select'`. */
@@ -30,13 +30,13 @@ export interface StatusBarProps {
  * app-shell footer). Sections appear only when they have data (pointer / hover /
  * selection hide when empty).
  */
-export function StatusBar({
+export function GraphStatusBar({
   layerId = 'graph',
   clickSelectId,
   canvas,
   className,
   style,
-}: StatusBarProps) {
+}: GraphStatusBarProps) {
   const resolved = useResolvedCanvas(canvas);
   const { zoom } = useZoom(canvas);
   const { selectedNodeIds, selectedEdgeIds, count: selectionCount } = useSelection(

@@ -33,11 +33,12 @@
  * behaviours already exist — no effect-ordering races.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
   CanvasContext,
+  CanvasMessageBar,
   BackgroundLayer,
   BrushSelectBehaviour,
   ClickSelectBehaviour,
@@ -50,7 +51,6 @@ import {
   DragPanBehaviour,
   GraphClipboardProvider,
   GraphHistoryProvider,
-  GraphHintBar,
   GraphLayer,
   HoverActivateBehaviour,
   LabelResolutionLODBehaviour,
@@ -58,7 +58,7 @@ import {
   MiniMapLayer,
   PinchZoomBehaviour,
   PropertyViewerPanel,
-  StatusBar,
+  GraphStatusBar,
   ToolbarItems,
   WheelZoomBehaviour,
   useCanvas,
@@ -147,7 +147,7 @@ const LAYOUTS: Record<string, LayoutFactory> = {
       charge: { strength: -160 },
       link: { distance: 56 },
       collide: { radius: 14 },
-      animate: true,
+      animate: false,
     }),
   'elk-layered': () => new ElkLayout({ algorithm: 'layered', direction: 'RIGHT' }),
   'elk-stress': () => new ElkLayout({ algorithm: 'stress' }),
@@ -170,6 +170,13 @@ const SELECT_ICONS = {
   click: MousePointer2,
   brush: SquareDashedMousePointer,
   lasso: Lasso,
+};
+// Gesture copy per select mode — pushed to the message channel on a mode switch.
+// App-owned text (not a library default); the channel just displays it.
+const SELECT_HINT: Record<string, string> = {
+  click: 'Click a node or edge to select',
+  brush: 'Hold Shift + drag to select nodes & edges',
+  lasso: 'Hold Shift + drag a lasso around nodes & edges',
 };
 
 // Icon per edge routing type, shown on the <EdgeTypePicker> trigger + options.
@@ -302,22 +309,16 @@ function EngineBridge({ onReady }: { onReady: (canvas: EngineCanvas | null) => v
 function HeaderToolbar({
   magnet,
   onToggleMagnet,
-  onSelectModeChange,
 }: {
   magnet: boolean;
   onToggleMagnet: () => void;
-  onSelectModeChange: (mode: string) => void;
 }) {
   // The builder hooks read the history / clipboard providers, so item assembly
   // lives in a child mounted *inside* them.
   return (
     <GraphHistoryProvider layerId="graph">
       <GraphClipboardProvider layerId="graph">
-        <HeaderToolbarItems
-          magnet={magnet}
-          onToggleMagnet={onToggleMagnet}
-          onSelectModeChange={onSelectModeChange}
-        />
+        <HeaderToolbarItems magnet={magnet} onToggleMagnet={onToggleMagnet} />
       </GraphClipboardProvider>
     </GraphHistoryProvider>
   );
@@ -335,32 +336,52 @@ function HeaderToolbar({
 function HeaderToolbarItems({
   magnet,
   onToggleMagnet,
-  onSelectModeChange,
 }: {
   magnet: boolean;
   onToggleMagnet: () => void;
-  onSelectModeChange: (mode: string) => void;
 }) {
   // Live engine — the header only renders once it's live, so this is non-null.
   const canvas = useCanvas();
 
   // Five named sections.
   const history = useHistorySection({ icons: { undo: Undo2, redo: Redo2 } });
-  const { layout, layoutOptions, applyLayout } = useLayout(LAYOUTS, { labels: LAYOUT_LABEL, initial: 'd3-force' });
+  const { layout, layoutOptions, applyLayout, isRunning } = useLayout(LAYOUTS, { labels: LAYOUT_LABEL, initial: 'd3-force' });
+  // Surface layout progress on the canvas message channel: a sticky "Running…"
+  // while it runs, then a "ready" that auto-clears after 3s. Wired off the
+  // layout's running state — copy lives here, not in the library.
+  const wasRunning = useRef(false);
+  useEffect(() => {
+    const label = LAYOUT_LABEL[layout] ?? layout;
+    if (isRunning && !wasRunning.current) canvas.showMessage(`Running ${label} layout…`);
+    else if (!isRunning && wasRunning.current) canvas.showMessage(`${label} layout ready`, 3000);
+    wasRunning.current = isRunning;
+  }, [isRunning, layout, canvas]);
   const editor = useEditorSection({ icons: { cut: Scissors, copy: Copy, paste: ClipboardPaste, erase: Eraser } });
   const view = useViewSection({ icons: { zoomIn: ZoomIn, zoomOut: ZoomOut, fit: Maximize, locked: Lock, unlocked: LockOpen } });
   const style = useStyleEditorSection({ layerId: 'graph', icons: EDGE_TYPE_ICONS });
 
   // Extras hand-built off the raw hooks (not one of the five sections).
   const { mode, modeOptions, setMode } = useSelectMode(SELECT_MODE_IDS, { labels: SELECT_LABEL, initial: 'click' });
-  useEffect(() => onSelectModeChange(mode), [mode, onSelectModeChange]);
+  // Announce the gesture for the newly-armed select mode + the magnet toggle on
+  // the message channel (skip the initial mount). Same pattern any interaction
+  // would use — the behaviour/handler just calls canvas.showMessage.
+  const firstMode = useRef(true);
+  useEffect(() => {
+    if (firstMode.current) { firstMode.current = false; return; }
+    canvas.showMessage(SELECT_HINT[mode] ?? '', 4000);
+  }, [mode, canvas]);
+  const firstMagnet = useRef(true);
+  useEffect(() => {
+    if (firstMagnet.current) { firstMagnet.current = false; return; }
+    canvas.showMessage(magnet ? 'Hover highlights neighbours' : 'Hover highlights the node only', 2500);
+  }, [magnet, canvas]);
   const { showGrid, toggleGrid } = useGrid();
 
   const div = (key: string): ToolbarItem => ({ type: 'divider', key });
   const items: ToolbarItem[] = [
     ...history, div('d1'),
     { type: 'select', key: 'layout', label: 'Layout', value: layout, options: layoutOptions, onChange: applyLayout },
-    { type: 'button', key: 'run-layout', icon: Play, label: 'Run layout', onClick: () => applyLayout(layout) },
+    { type: 'button', key: 'run-layout', icon: Play, label: 'Run layout', onClick: () => applyLayout(layout), disabled: isRunning },
     { type: 'button', key: 'refresh', icon: RefreshCw, label: 'Re-render (re-run layout + repaint)', onClick: () => void canvas.refresh() },
     div('d2'),
     { type: 'select', key: 'select-mode', label: 'Select', value: mode, options: modeOptions, icons: SELECT_ICONS, onChange: setMode }, div('d3'),
@@ -418,10 +439,6 @@ function VisualiserApp() {
   // up (degree 0). Reactive on <HoverActivateBehaviour> — no remount.
   const [magnet, setMagnet] = useState(true);
   const toggleMagnet = useCallback(() => setMagnet((m) => !m), []);
-
-  // Active select mode, lifted out of the header's <GraphLayoutToolbar> so the
-  // footer hint bar (a sibling) can mirror it. Defaults to 'click'.
-  const [selectMode, setSelectMode] = useState('click');
 
   // The theme toggle pins the chrome theme; restore it to the OS preference on
   // unmount so the pinned theme doesn't leak into the next story.
@@ -502,20 +519,15 @@ function VisualiserApp() {
   }, []);
 
   return (
-    // Lifted context: the engine reaches the header toolbar + footer status bar,
-    // which live in AppLayoutBase's header/footer (siblings of <Canvas>, so
-    // outside its own provider).
+    // Lifted context: the engine reaches the header toolbar + footer status/
+    // message bars, which live in AppLayoutBase's header/footer (siblings of
+    // <Canvas>, outside its own provider). The message channel rides the engine
+    // itself (Canvas.showMessage), so no extra provider is needed.
     <CanvasContext.Provider value={engine}>
       <AppLayoutBase
         header={{
           left: <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>Graph Visualiser</span>,
-          center: engine ? (
-            <HeaderToolbar
-              magnet={magnet}
-              onToggleMagnet={toggleMagnet}
-              onSelectModeChange={setSelectMode}
-            />
-          ) : null,
+          center: engine ? <HeaderToolbar magnet={magnet} onToggleMagnet={toggleMagnet} /> : null,
           right: engine ? <HeaderThemeToggle /> : null,
         }}
         mainClassName="relative"
@@ -593,10 +605,10 @@ function VisualiserApp() {
           </Canvas>
         }
         footer={{
-          left: engine ? <StatusBar /> : null,
-          // Persistent guidance line — mirrors the current interaction mode +
-          // magnet state so the gesture for whatever's armed is always visible.
-          right: engine ? <GraphHintBar mode={selectMode} magnet={magnet} /> : null,
+          left: engine ? <GraphStatusBar /> : null,
+          // The shared message bar — shows whatever was last pushed via
+          // Canvas.showMessage (e.g. the layout "Running… / ready"); empty when idle.
+          right: engine ? <CanvasMessageBar /> : null,
         }}
       />
     </CanvasContext.Provider>

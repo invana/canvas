@@ -72,6 +72,13 @@ export interface CanvasGlobalEvents extends EventMap {
   'tap:dropped': { type: string; reason: 'excluded' | 'sampled' };
   /** `Canvas.update()` patched the options; carries the touched ids (serialisable). */
   'options:change': { changedLayerIds: readonly string[]; changedBehaviourIds: readonly string[] };
+  /**
+   * The shared message channel — anything (a layout's start/end, a behaviour
+   * activating, app code) emits a line for a status surface to display.
+   * `text: null` clears the current message; `timeout` (ms) auto-clears it.
+   * Emit via `Canvas.showMessage` / `ctx.showMessage` rather than by hand.
+   */
+  'message': { text: string | null; timeout?: number };
 }
 
 export type TapHandler = (event: CanvasEvent) => void;

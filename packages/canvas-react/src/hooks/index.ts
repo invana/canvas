@@ -43,6 +43,12 @@ export type { UseEntityEditorOptions, EntityEditorTarget } from './useEntityEdit
 export { useContextMenu } from './useContextMenu';
 export type { ContextMenuState, UseContextMenuResult } from './useContextMenu';
 
+// Canvas-message channel — read + drive the shared footer message line. Backed
+// by the engine's `Canvas.showMessage`, so a push reaches every subscriber and
+// engine code (layouts / behaviours) can emit too.
+export { useCanvasMessage } from './useCanvasMessage';
+export type { UseCanvasMessageResult } from './useCanvasMessage';
+
 // Serialisable-config hooks — patch / read the canvas's `CanvasConfig` by id,
 // and follow OS dark-mode externally (theme-agnostic engine).
 export { useGraphCanvasUpdate } from './useGraphCanvasUpdate';

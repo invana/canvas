@@ -43,7 +43,7 @@ function makeContext() {
   let ctx: CanvasContext;
   const layers = new LayerRegistry({ getContext: () => ctx, bus });
   const behaviours = new BehaviourRegistry({ getContext: () => ctx, bus });
-  ctx = { events: bus, world, stage, camera, layers, behaviours };
+  ctx = { events: bus, world, stage, camera, layers, behaviours, showMessage: () => {}, clearMessage: () => {} };
   return ctx;
 }
 
