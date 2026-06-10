@@ -1,5 +1,5 @@
+import * as canvas from '@invana/canvas';
 import {
-  KeyboardCameraInputBehaviour as EngineKeyboardCameraInputBehaviour,
   type KeyboardCameraInputBehaviourOptions,
 } from '@invana/canvas';
 
@@ -23,7 +23,7 @@ export function KeyboardCameraInputBehaviour({
   ...rest
 }: KeyboardCameraInputBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineKeyboardCameraInputBehaviour({ id, enabled, ...rest }),
+    () => new canvas.KeyboardCameraInputBehaviour({ id, enabled, ...rest }),
     id,
     enabled,
     [id],

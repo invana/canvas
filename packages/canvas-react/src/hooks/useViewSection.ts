@@ -1,4 +1,4 @@
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 
 import type { ToolbarItem } from '../components/ToolbarItem';
 import type { ToolbarIcon } from '../components/types';
@@ -22,7 +22,7 @@ export interface UseViewSectionOptions {
   /** Behaviour ids disabled while locked. Default `['pan', 'drag-node']`. */
   lockBehaviourIds?: string[];
   /** Explicit canvas instance; defaults to the context canvas. */
-  canvas?: EngineCanvas | null;
+  canvas?: Canvas | null;
 }
 
 /**

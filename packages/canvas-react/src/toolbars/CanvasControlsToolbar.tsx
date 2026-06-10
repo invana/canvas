@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 
 import { Panel, ToolbarItems } from '../components';
 import type { PanelPosition, ToolbarIcon, ToolbarItem } from '../components';
@@ -40,7 +40,7 @@ export interface CanvasControlsToolbarProps {
    */
   bare?: boolean;
   /** Explicit canvas instance; forwarded to each smart control. Defaults to context canvas. */
-  canvas?: EngineCanvas | null;
+  canvas?: Canvas | null;
   /** Extra controls appended after the presets — any React node. */
   children?: ReactNode;
   className?: string;

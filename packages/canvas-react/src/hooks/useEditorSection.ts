@@ -1,4 +1,4 @@
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 
 import type { ToolbarItem } from '../components/ToolbarItem';
 import type { ToolbarIcon } from '../components/types';
@@ -13,7 +13,7 @@ export interface UseEditorSectionOptions {
   /** Layer that erase / clipboard target. Default `'graph'`. */
   layerId?: string;
   /** Explicit canvas instance; defaults to the context canvas. */
-  canvas?: EngineCanvas | null;
+  canvas?: Canvas | null;
 }
 
 /**

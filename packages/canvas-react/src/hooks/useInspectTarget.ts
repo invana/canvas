@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 import type { ClickInspectBehaviour, InspectTarget } from '@invana/graph';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
@@ -20,7 +20,7 @@ export interface UseInspectTargetOptions {
  */
 export function useInspectTarget(
   options: UseInspectTargetOptions = {},
-  canvas?: EngineCanvas | null,
+  canvas?: Canvas | null,
 ): InspectTarget | null {
   const { inspectId = 'click-inspect' } = options;
   const resolved = useResolvedCanvas(canvas);

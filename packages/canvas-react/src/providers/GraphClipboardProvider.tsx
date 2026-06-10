@@ -1,10 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import {
   GraphClipboard,
-  type GraphLayer as EngineGraphLayer,
+  type GraphLayer,
   type Vec2,
 } from '@invana/graph';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 
 import { useResolvedCanvas } from '../hooks/useResolvedCanvas';
 import { ClipboardContext } from '../ClipboardContext';
@@ -15,7 +15,7 @@ export interface GraphClipboardProviderProps {
   /** Offset applied to pasted node positions. Forwarded to `GraphClipboard`. */
   pasteOffset?: Vec2;
   /** Explicit canvas instance; defaults to the context canvas. */
-  canvas?: EngineCanvas | null;
+  canvas?: Canvas | null;
   children?: ReactNode;
 }
 
@@ -36,7 +36,7 @@ export function GraphClipboardProvider({
   const [clipboard, setClipboard] = useState<GraphClipboard | null>(null);
 
   useEffect(() => {
-    const layer = resolved.layers.get<EngineGraphLayer>(layerId);
+    const layer = resolved.layers.get<GraphLayer>(layerId);
     const store = layer?.store;
     if (!store) return;
     const instance = new GraphClipboard(store, pasteOffset ? { pasteOffset } : {});

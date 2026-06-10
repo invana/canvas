@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 import { HistoryContext } from '../HistoryContext';
@@ -36,7 +36,7 @@ function hasRedraw(layer: unknown): layer is RedrawableLayer {
  */
 export function useHistory(
   options: UseHistoryOptions = {},
-  canvas?: EngineCanvas | null,
+  canvas?: Canvas | null,
 ): UseHistoryResult {
   const { layerId = 'graph' } = options;
   const resolved = useResolvedCanvas(canvas);

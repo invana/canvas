@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  LabelResolutionLODBehaviour as EngineLabelResolutionLODBehaviour,
   type LabelResolutionLODBehaviourOptions,
 } from '@invana/graph';
 
@@ -26,7 +26,7 @@ export function LabelResolutionLODBehaviour({
   ...rest
 }: LabelResolutionLODBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineLabelResolutionLODBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.LabelResolutionLODBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Canvas as EngineCanvas, BackgroundLayer, BackgroundLayerOptions } from '@invana/canvas';
+import type { Canvas, BackgroundLayer, BackgroundLayerOptions } from '@invana/canvas';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 
@@ -35,7 +35,7 @@ export interface UseGridResult {
  */
 export function useGrid(
   options: UseGridOptions = {},
-  canvas?: EngineCanvas | null,
+  canvas?: Canvas | null,
 ): UseGridResult {
   const { backgroundLayerId = 'background', patternType } = options;
   const resolved = useResolvedCanvas(canvas);

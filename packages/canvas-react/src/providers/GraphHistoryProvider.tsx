@@ -1,11 +1,11 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import {
   GraphHistory,
-  type GraphLayer as EngineGraphLayer,
+  type GraphLayer,
   type HistoryOp,
   type Vec2,
 } from '@invana/graph';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 
 import { useResolvedCanvas } from '../hooks/useResolvedCanvas';
 import { HistoryContext } from '../HistoryContext';
@@ -16,7 +16,7 @@ export interface GraphHistoryProviderProps {
   /** Maximum undo depth. Forwarded to `GraphHistory`. Default `100`. */
   limit?: number;
   /** Explicit canvas instance; defaults to the context canvas. */
-  canvas?: EngineCanvas | null;
+  canvas?: Canvas | null;
   children?: ReactNode;
 }
 
@@ -44,7 +44,7 @@ export function GraphHistoryProvider({
   const [history, setHistory] = useState<GraphHistory | null>(null);
 
   useEffect(() => {
-    const layer = resolved.layers.get<EngineGraphLayer>(layerId);
+    const layer = resolved.layers.get<GraphLayer>(layerId);
     const store = layer?.store;
     if (!store) return;
     const instance = new GraphHistory(store, limit !== undefined ? { limit } : {});
@@ -62,7 +62,7 @@ export function GraphHistoryProvider({
   // moves stay out of history.
   useEffect(() => {
     if (!history) return;
-    const layer = resolved.layers.get<EngineGraphLayer>(layerId);
+    const layer = resolved.layers.get<GraphLayer>(layerId);
     const store = layer?.store;
     if (!layer || !store) return;
 

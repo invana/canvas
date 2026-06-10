@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { Canvas as EngineCanvas, CanvasGlobalEvents } from '@invana/canvas';
+import type { Canvas, CanvasGlobalEvents } from '@invana/canvas';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 
@@ -20,7 +20,7 @@ import { useResolvedCanvas } from './useResolvedCanvas';
 export function useCanvasEvent<E extends keyof CanvasGlobalEvents>(
   event: E,
   handler: (payload: CanvasGlobalEvents[E]) => void,
-  canvas?: EngineCanvas | null,
+  canvas?: Canvas | null,
 ): void {
   const resolved = useResolvedCanvas(canvas);
   const handlerRef = useRef(handler);

@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  ParallelEdgeBehaviour as EngineParallelEdgeBehaviour,
   type ParallelEdgeBehaviourOptions,
 } from '@invana/graph';
 
@@ -26,7 +26,7 @@ export function ParallelEdgeBehaviour({
   ...rest
 }: ParallelEdgeBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineParallelEdgeBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.ParallelEdgeBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

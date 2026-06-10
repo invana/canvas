@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  ClickSelectBehaviour as EngineClickSelectBehaviour,
   type ClickSelectBehaviourOptions,
 } from '@invana/graph';
 
@@ -25,7 +25,7 @@ export function ClickSelectBehaviour({
   ...rest
 }: ClickSelectBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineClickSelectBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.ClickSelectBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

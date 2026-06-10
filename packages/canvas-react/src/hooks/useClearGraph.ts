@@ -1,5 +1,5 @@
 import { useCallback, useContext } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 import { HistoryContext } from '../HistoryContext';
@@ -39,7 +39,7 @@ export interface UseClearGraphResult {
  */
 export function useClearGraph(
   layerId: string,
-  canvas?: EngineCanvas | null,
+  canvas?: Canvas | null,
 ): UseClearGraphResult {
   const resolved = useResolvedCanvas(canvas);
   const history = useContext(HistoryContext);

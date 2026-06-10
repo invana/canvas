@@ -89,9 +89,8 @@ import type {
   GraphData,
   GraphEdge,
   NodeShapeOptions,
-  ClickInspectBehaviour as EngineClickInspectBehaviour,
-  GraphLayer as EngineGraphLayer,
 } from '@invana/graph';
+import type * as graph from '@invana/graph';
 import { TooltipProvider, type MenuItem } from '@invana/ui';
 
 const meta: Meta = { title: 'canvas-react/usecases/GraphModeller' };
@@ -278,10 +277,10 @@ function DrawingTools() {
 
   const nodeItems = useCallback(
     ({ id, canvas }: GraphNodeMenuContext): MenuItem[] => {
-      const layer = canvas.layers.get<EngineGraphLayer>('graph');
+      const layer = canvas.layers.get<graph.GraphLayer>('graph');
       if (!layer) return [];
       const store = layer.store;
-      const inspect = canvas.behaviours.get<EngineClickInspectBehaviour>('click-inspect');
+      const inspect = canvas.behaviours.get<graph.ClickInspectBehaviour>('click-inspect');
       return [
         {
           id: 'edit',
@@ -318,10 +317,10 @@ function DrawingTools() {
 
   const edgeItems = useCallback(
     ({ id, canvas }: GraphEdgeMenuContext): MenuItem[] => {
-      const layer = canvas.layers.get<EngineGraphLayer>('graph');
+      const layer = canvas.layers.get<graph.GraphLayer>('graph');
       if (!layer) return [];
       const store = layer.store;
-      const inspect = canvas.behaviours.get<EngineClickInspectBehaviour>('click-inspect');
+      const inspect = canvas.behaviours.get<graph.ClickInspectBehaviour>('click-inspect');
       return [
         {
           id: 'edit',
@@ -346,7 +345,7 @@ function DrawingTools() {
 
   const backgroundItems = useCallback(
     ({ world, canvas }: GraphBackgroundMenuContext): MenuItem[] => {
-      const layer = canvas.layers.get<EngineGraphLayer>('graph');
+      const layer = canvas.layers.get<graph.GraphLayer>('graph');
       if (!layer) return [];
       return [
         {

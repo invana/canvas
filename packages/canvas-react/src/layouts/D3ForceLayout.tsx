@@ -1,12 +1,12 @@
+import * as d3Force from '@invana/graph-layout-d3-force';
 import { useEffect } from 'react';
-import { D3ForceLayout as EngineD3ForceLayout } from '@invana/graph-layout-d3-force';
-import type { GraphLayer as EngineGraphLayer } from '@invana/graph';
+import type { GraphLayer } from '@invana/graph';
 
 import { useCanvas } from '../CanvasContext';
 
 // The layout package's option type isn't re-exported as a value, so we mirror
 // its shape via the constructor parameter to stay decoupled.
-type D3ForceLayoutCtorOptions = ConstructorParameters<typeof EngineD3ForceLayout>[0];
+type D3ForceLayoutCtorOptions = ConstructorParameters<typeof d3Force.D3ForceLayout>[0];
 
 export interface D3ForceLayoutProps {
   /**
@@ -59,7 +59,7 @@ export function D3ForceLayout({
   const canvas = useCanvas();
 
   useEffect(() => {
-    const layer = canvas.layers.get<EngineGraphLayer>(targetLayerId);
+    const layer = canvas.layers.get<GraphLayer>(targetLayerId);
     if (!layer) {
       // eslint-disable-next-line no-console
       console.warn(
@@ -68,7 +68,7 @@ export function D3ForceLayout({
       return;
     }
 
-    const layout = new EngineD3ForceLayout({
+    const layout = new d3Force.D3ForceLayout({
       ...(options ?? {}),
       ...(id ? { id, targetLayerId } : {}),
     } as D3ForceLayoutCtorOptions);

@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  BrushSelectBehaviour as EngineBrushSelectBehaviour,
   type BrushSelectBehaviourOptions,
 } from '@invana/graph';
 
@@ -26,7 +26,7 @@ export function BrushSelectBehaviour({
   ...rest
 }: BrushSelectBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineBrushSelectBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.BrushSelectBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

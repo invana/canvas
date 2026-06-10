@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  DragNodeBehaviour as EngineDragNodeBehaviour,
   type DragNodeBehaviourOptions,
 } from '@invana/graph';
 
@@ -25,7 +25,7 @@ export function DragNodeBehaviour({
   ...rest
 }: DragNodeBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineDragNodeBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.DragNodeBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

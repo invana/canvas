@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 import type { ClickSelectBehaviour } from '@invana/graph';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
@@ -30,7 +30,7 @@ export interface UseSelectionResult {
  */
 export function useSelection(
   options: UseSelectionOptions = {},
-  canvas?: EngineCanvas | null,
+  canvas?: Canvas | null,
 ): UseSelectionResult {
   const { clickSelectId = 'click-select' } = options;
   const resolved = useResolvedCanvas(canvas);

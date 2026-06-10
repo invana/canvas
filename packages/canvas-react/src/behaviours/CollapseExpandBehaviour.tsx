@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  CollapseExpandBehaviour as EngineCollapseExpandBehaviour,
   type CollapseExpandBehaviourOptions,
 } from '@invana/graph';
 
@@ -26,7 +26,7 @@ export function CollapseExpandBehaviour({
   ...rest
 }: CollapseExpandBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineCollapseExpandBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.CollapseExpandBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

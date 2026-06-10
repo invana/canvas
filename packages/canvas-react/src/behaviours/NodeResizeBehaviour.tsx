@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  NodeResizeBehaviour as EngineNodeResizeBehaviour,
   type NodeResizeBehaviourOptions,
 } from '@invana/graph';
 
@@ -26,7 +26,7 @@ export function NodeResizeBehaviour({
   ...rest
 }: NodeResizeBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineNodeResizeBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.NodeResizeBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

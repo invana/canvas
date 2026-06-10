@@ -1,7 +1,7 @@
 import { useContext } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 import type {
-  GraphLayer as EngineGraphLayer,
+  GraphLayer,
   GraphEdge,
   GraphNode,
   EdgeStyle,
@@ -76,7 +76,7 @@ function toStringMap(data: unknown): Record<string, string> {
  */
 export function useEntityEditor(
   options: UseEntityEditorOptions = {},
-  canvas?: EngineCanvas | null,
+  canvas?: Canvas | null,
 ): EntityEditorTarget | null {
   const { layerId = 'graph', inspectId = 'click-inspect', typeAsLabel = false } = options;
   const resolved = useResolvedCanvas(canvas);
@@ -84,7 +84,7 @@ export function useEntityEditor(
   const single = useInspectTarget({ inspectId }, canvas);
   if (!single) return null;
 
-  const layer = resolved.layers.get<EngineGraphLayer>(layerId);
+  const layer = resolved.layers.get<GraphLayer>(layerId);
   const store = layer?.store;
   if (!layer || !store) return null;
 

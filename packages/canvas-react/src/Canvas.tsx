@@ -7,7 +7,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react';
-import { type Canvas as EngineCanvas, type CanvasConfig, type CanvasOptions } from '@invana/canvas';
+import { type CanvasConfig, type CanvasOptions } from '@invana/canvas';
 import { GraphCanvas } from '@invana/graph';
 
 import { CanvasContext } from './CanvasContext';
@@ -39,21 +39,21 @@ export interface CanvasProps extends Omit<CanvasOptions, 'container' | 'config'>
 }
 
 /**
- * React root for the canvas engine. Renders a sized host `<div>`, creates an
- * `EngineCanvas` once on mount, calls `init({ container, ...opts })`, and
+ * React root for the canvas engine. Renders a sized host `<div>`, creates a
+ * `GraphCanvas` once on mount, calls `init({ container, ...opts })`, and
  * provides the initialised instance to descendants via {@link CanvasContext}.
  *
  * The component is `forwardRef`'d — `ref.current` is the underlying
- * `EngineCanvas` (or `null` until init resolves). Use it as the imperative
+ * `GraphCanvas` (or `null` until init resolves). Use it as the imperative
  * escape hatch: `ref.current?.layers.get(...)`, `ref.current?.events.tap(...)`,
  * `ref.current?.camera.fitContent(...)`.
  *
  * StrictMode-safe: the init promise is guarded by a cancelled flag so a
- * double-mount cleans up the partially-initialised engine.
+ * double-mount cleans up the partially-initialised canvas.
  *
  * @example
  * ```tsx
- * const canvasRef = useRef<EngineCanvas>(null);
+ * const canvasRef = useRef<GraphCanvas>(null);
  *
  * <Canvas ref={canvasRef} autoResize>
  *   <DragPanBehaviour />
@@ -63,7 +63,7 @@ export interface CanvasProps extends Omit<CanvasOptions, 'container' | 'config'>
  * </Canvas>
  * ```
  */
-export const Canvas = forwardRef<EngineCanvas, CanvasProps>(function Canvas(
+export const Canvas = forwardRef<GraphCanvas, CanvasProps>(function Canvas(
   { children, style, className, config, ...engineOpts },
   ref,
 ) {
@@ -81,17 +81,17 @@ export const Canvas = forwardRef<EngineCanvas, CanvasProps>(function Canvas(
 
     let cancelled = false;
     // `GraphCanvas` (a `Canvas` superset) so `config.activeLayout` auto-runs.
-    // With no layouts/activeLayout it behaves exactly like the base engine.
-    const engine = new GraphCanvas();
+    // With no layouts/activeLayout it behaves exactly like the base canvas.
+    const instance = new GraphCanvas();
 
-    void engine
+    void instance
       .init({ container, ...optsRef.current })
       .then(() => {
         if (cancelled) {
-          engine.destroy();
+          instance.destroy();
           return;
         }
-        setCanvas(engine);
+        setCanvas(instance);
       })
       .catch((err: unknown) => {
         if (!cancelled) {
@@ -105,7 +105,7 @@ export const Canvas = forwardRef<EngineCanvas, CanvasProps>(function Canvas(
     return () => {
       cancelled = true;
       setCanvas(null);
-      if (engine.isInitialised) engine.destroy();
+      if (instance.isInitialised) instance.destroy();
     };
     // Init is intentionally one-shot. Reactive props (other than `children`)
     // are not supported in v0 — recreate the <Canvas> with a key to re-init.
@@ -126,11 +126,11 @@ export const Canvas = forwardRef<EngineCanvas, CanvasProps>(function Canvas(
     }
   }, [canvas, config]);
 
-  // `ref.current` is typed as `EngineCanvas | null` because React's `Ref<T>`
+  // `ref.current` is typed as `GraphCanvas | null` because React's `Ref<T>`
   // already permits null on `.current`; we surface the live value (null until
-  // init resolves, then the initialised engine) with a cast that satisfies
+  // init resolves, then the initialised canvas) with a cast that satisfies
   // useImperativeHandle's `R extends T` constraint.
-  useImperativeHandle(ref, () => canvas as EngineCanvas, [canvas]);
+  useImperativeHandle(ref, () => canvas as GraphCanvas, [canvas]);
 
   return (
     <div

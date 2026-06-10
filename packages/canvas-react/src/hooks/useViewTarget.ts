@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 import type { ClickViewBehaviour, ViewTarget } from '@invana/graph';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
@@ -22,7 +22,7 @@ export interface UseViewTargetOptions {
  */
 export function useViewTarget(
   options: UseViewTargetOptions = {},
-  canvas?: EngineCanvas | null,
+  canvas?: Canvas | null,
 ): ViewTarget | null {
   const { viewId = 'click-view' } = options;
   const resolved = useResolvedCanvas(canvas);

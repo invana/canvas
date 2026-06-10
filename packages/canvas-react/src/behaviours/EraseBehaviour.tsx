@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  EraseBehaviour as EngineEraseBehaviour,
   type EraseBehaviourOptions,
 } from '@invana/graph';
 
@@ -27,7 +27,7 @@ export function EraseBehaviour({
   ...rest
 }: EraseBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineEraseBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.EraseBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

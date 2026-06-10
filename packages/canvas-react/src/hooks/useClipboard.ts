@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 import type { ClickSelectBehaviour } from '@invana/graph';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
@@ -39,7 +39,7 @@ export interface UseClipboardResult {
  */
 export function useClipboard(
   options: UseClipboardOptions = {},
-  canvas?: EngineCanvas | null,
+  canvas?: Canvas | null,
 ): UseClipboardResult {
   const { clickSelectId = 'click-select' } = options;
   const resolved = useResolvedCanvas(canvas);

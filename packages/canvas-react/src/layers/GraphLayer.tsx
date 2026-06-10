@@ -1,6 +1,6 @@
+import * as graph from '@invana/graph';
 import { useEffect, useRef } from 'react';
 import {
-  GraphLayer as EngineGraphLayer,
   type GraphData,
   type GraphLayerOptions,
 } from '@invana/graph';
@@ -34,10 +34,10 @@ export interface GraphLayerProps extends Omit<GraphLayerOptions, 'store'> {
  */
 export function GraphLayer({ id = 'graph', data, store, ...rest }: GraphLayerProps) {
   const canvas = useCanvas();
-  const layerRef = useRef<EngineGraphLayer | null>(null);
+  const layerRef = useRef<graph.GraphLayer | null>(null);
 
   useEffect(() => {
-    const layer = new EngineGraphLayer({
+    const layer = new graph.GraphLayer({
       id,
       options: { ...(rest as GraphLayerOptions), ...(store ? { store } : {}) },
     });

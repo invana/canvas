@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Canvas as EngineCanvas, Rect } from '@invana/canvas';
+import type { Canvas, Rect } from '@invana/canvas';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 
@@ -34,7 +34,7 @@ export interface UseFitContentResult {
  */
 export function useFitContent(
   layerId: string,
-  canvas?: EngineCanvas | null,
+  canvas?: Canvas | null,
 ): UseFitContentResult {
   const resolved = useResolvedCanvas(canvas);
   const [hasContent, setHasContent] = useState(() => resolved.layers.has(layerId));

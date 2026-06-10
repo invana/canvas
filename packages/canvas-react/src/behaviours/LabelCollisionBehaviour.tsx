@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  LabelCollisionBehaviour as EngineLabelCollisionBehaviour,
   type LabelCollisionBehaviourOptions,
 } from '@invana/graph';
 
@@ -26,7 +26,7 @@ export function LabelCollisionBehaviour({
   ...rest
 }: LabelCollisionBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineLabelCollisionBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.LabelCollisionBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

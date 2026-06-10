@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 
@@ -29,7 +29,7 @@ export interface UseLockResult {
  */
 export function useLock(
   options: UseLockOptions = {},
-  canvas?: EngineCanvas | null,
+  canvas?: Canvas | null,
 ): UseLockResult {
   const { behaviourIds = DEFAULT_LOCK_IDS, initialLocked = false } = options;
   const resolved = useResolvedCanvas(canvas);

@@ -1,5 +1,5 @@
+import * as canvas from '@invana/canvas';
 import {
-  DragPanBehaviour as EngineDragPanBehaviour,
   type DragPanBehaviourOptions,
 } from '@invana/canvas';
 
@@ -18,7 +18,7 @@ export interface DragPanBehaviourProps extends Omit<DragPanBehaviourOptions, 'id
  */
 export function DragPanBehaviour({ id = 'pan', enabled = true, ...rest }: DragPanBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineDragPanBehaviour({ id, enabled, ...rest }),
+    () => new canvas.DragPanBehaviour({ id, enabled, ...rest }),
     id,
     enabled,
     [id],

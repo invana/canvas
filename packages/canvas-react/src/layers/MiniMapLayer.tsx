@@ -1,5 +1,6 @@
+import * as graph from '@invana/graph';
 import { useEffect, useMemo, useRef } from 'react';
-import { MiniMapLayer as EngineMiniMapLayer, type MiniMapLayerOptions } from '@invana/graph';
+import { type MiniMapLayerOptions } from '@invana/graph';
 
 import { useCanvas } from '../CanvasContext';
 
@@ -26,10 +27,10 @@ export function MiniMapLayer({
   ...options
 }: MiniMapLayerProps) {
   const canvas = useCanvas();
-  const layerRef = useRef<EngineMiniMapLayer | null>(null);
+  const layerRef = useRef<graph.MiniMapLayer | null>(null);
 
   useEffect(() => {
-    const layer = new EngineMiniMapLayer({ id, options: { graphLayerId, ...options } });
+    const layer = new graph.MiniMapLayer({ id, options: { graphLayerId, ...options } });
     canvas.layers.add(layer);
     layerRef.current = layer;
     return () => {

@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
-import {
-  BackgroundLayer as EngineBackgroundLayer,
-  type BackgroundLayerOptions,
-} from '@invana/canvas';
+// Concatenated package-prefix alias (not a `* as canvas` namespace) because the
+// `canvas` engine instance from `useCanvas()` already owns that name here.
+import { BackgroundLayer as CanvasBackgroundLayer, type BackgroundLayerOptions } from '@invana/canvas';
 
 import { useCanvas } from '../CanvasContext';
 
@@ -21,10 +20,10 @@ export interface BackgroundLayerProps extends BackgroundLayerOptions {
  */
 export function BackgroundLayer({ id = 'background', ...options }: BackgroundLayerProps) {
   const canvas = useCanvas();
-  const layerRef = useRef<EngineBackgroundLayer | null>(null);
+  const layerRef = useRef<CanvasBackgroundLayer | null>(null);
 
   useEffect(() => {
-    const layer = new EngineBackgroundLayer({ id, options });
+    const layer = new CanvasBackgroundLayer({ id, options });
     canvas.layers.add(layer);
     layerRef.current = layer;
     return () => {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 
@@ -31,7 +31,7 @@ export interface UseSelectModeResult {
 export function useSelectMode(
   behaviourIds: Record<string, string>,
   options: UseSelectModeOptions = {},
-  canvas?: EngineCanvas | null,
+  canvas?: Canvas | null,
 ): UseSelectModeResult {
   const resolved = useResolvedCanvas(canvas);
   const keys = Object.keys(behaviourIds);

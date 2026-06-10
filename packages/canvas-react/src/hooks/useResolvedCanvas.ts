@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 
 import { CanvasContext } from '../CanvasContext';
 
@@ -14,7 +14,7 @@ import { CanvasContext } from '../CanvasContext';
  * context yields *that* instance; passing an explicit `canvas` targets a
  * specific one. There is no global fallback.
  */
-export function useResolvedCanvas(explicit?: EngineCanvas | null): EngineCanvas {
+export function useResolvedCanvas(explicit?: Canvas | null): Canvas {
   const fromContext = useContext(CanvasContext);
   const canvas = explicit ?? fromContext;
   if (!canvas) {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 import type { GraphLayer, EdgePathType, EdgeShapeOptions } from '@invana/graph';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
@@ -72,7 +72,7 @@ export interface UseEdgeTypeResult {
  */
 export function useEdgeType(
   options: UseEdgeTypeOptions = {},
-  canvas?: EngineCanvas | null,
+  canvas?: Canvas | null,
 ): UseEdgeTypeResult {
   const { layerId = 'graph', initial, types = DEFAULT_EDGE_TYPES, labels } = options;
   const resolved = useResolvedCanvas(canvas);

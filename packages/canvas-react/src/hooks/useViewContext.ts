@@ -1,6 +1,6 @@
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 import type {
-  GraphLayer as EngineGraphLayer,
+  GraphLayer,
   GraphNode,
   GraphEdge,
   GraphStore,
@@ -39,9 +39,9 @@ export interface ViewContext {
   /** Target node id — edges only. */
   target?: string;
   /** The resolved engine canvas. */
-  canvas: EngineCanvas;
+  canvas: Canvas;
   /** The target `GraphLayer`. */
-  layer: EngineGraphLayer;
+  layer: GraphLayer;
   /** The layer's store — write here (spread prior `style`) to edit. */
   store: GraphStore;
   /** Dismiss the viewer (clears the `ClickViewBehaviour` target). */
@@ -56,14 +56,14 @@ export interface ViewContext {
  */
 export function useViewContext(
   options: UseViewDataOptions = {},
-  canvas?: EngineCanvas | null,
+  canvas?: Canvas | null,
 ): ViewContext | null {
   const { layerId = 'graph', viewId = 'click-view' } = options;
   const resolved = useResolvedCanvas(canvas);
   const data = useViewData(options, canvas);
   if (!data) return null;
 
-  const layer = resolved.layers.get<EngineGraphLayer>(layerId);
+  const layer = resolved.layers.get<GraphLayer>(layerId);
   if (!layer) return null;
   const store = layer.store;
   const close = (): void => resolved.behaviours.get<ClickViewBehaviour>(viewId)?.clear();

@@ -1,6 +1,6 @@
+import * as graph from '@invana/graph';
 import type { ReactNode } from 'react';
 import {
-  ClickViewBehaviour as EngineClickViewBehaviour,
   type ClickViewBehaviourOptions,
 } from '@invana/graph';
 
@@ -55,7 +55,7 @@ export function ClickViewBehaviour({
   ...rest
 }: ClickViewBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineClickViewBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.ClickViewBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

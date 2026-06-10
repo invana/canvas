@@ -1,4 +1,4 @@
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 
 import { Panel, PropertiesEditor } from '../components';
 import type { PanelPosition } from '../components';
@@ -25,7 +25,7 @@ export interface InspectorPanelProps {
   /** Render the bare editor without the `<Panel>` wrapper. Default `false`. */
   bare?: boolean;
   /** Explicit canvas instance; defaults to the context canvas. */
-  canvas?: EngineCanvas | null;
+  canvas?: Canvas | null;
   className?: string;
 }
 

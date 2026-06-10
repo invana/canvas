@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { Canvas as EngineCanvas, Rect } from '@invana/canvas';
+import type { Canvas, Rect } from '@invana/canvas';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 
@@ -32,7 +32,7 @@ export interface UseCameraResult {
  *
  * @param canvas Optional explicit instance; defaults to the context canvas.
  */
-export function useCamera(canvas?: EngineCanvas | null): UseCameraResult {
+export function useCamera(canvas?: Canvas | null): UseCameraResult {
   const resolved = useResolvedCanvas(canvas);
 
   return useMemo<UseCameraResult>(() => {

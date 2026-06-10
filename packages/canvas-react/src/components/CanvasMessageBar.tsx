@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 
 import { useCanvasMessage } from '../hooks/useCanvasMessage';
 import type { ToolbarIcon } from './types';
@@ -8,7 +8,7 @@ export interface CanvasMessageBarProps {
   /** Optional leading glyph (consumer-supplied, e.g. a `lucide-react` `Info`). */
   icon?: ToolbarIcon;
   /** Explicit canvas instance; defaults to the context canvas (works from footer chrome). */
-  canvas?: EngineCanvas | null;
+  canvas?: Canvas | null;
   className?: string;
   style?: CSSProperties;
 }

@@ -1,4 +1,4 @@
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 import type { EdgePathType } from '@invana/graph';
 
 import { Panel, ToolbarItems } from '../components';
@@ -35,7 +35,7 @@ export interface GraphToolbarProps {
   /** Eraser icon for the selection-aware erase button. */
   clearIcon: ToolbarIcon;
   /** Explicit canvas instance; forwarded to the self-wiring erase action. Defaults to context canvas. */
-  canvas?: EngineCanvas | null;
+  canvas?: Canvas | null;
 
   /** Where the toolbar pins within the canvas host. Default `'top-center'`. */
   position?: PanelPosition;

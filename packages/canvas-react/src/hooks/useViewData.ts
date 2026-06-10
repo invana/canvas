@@ -1,5 +1,5 @@
-import type { Canvas as EngineCanvas } from '@invana/canvas';
-import type { GraphLayer as EngineGraphLayer } from '@invana/graph';
+import type { Canvas } from '@invana/canvas';
+import type { GraphLayer } from '@invana/graph';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 import { useViewTarget } from './useViewTarget';
@@ -52,14 +52,14 @@ function toStringMap(data: unknown): Record<string, string> {
  */
 export function useViewData(
   options: UseViewDataOptions = {},
-  canvas?: EngineCanvas | null,
+  canvas?: Canvas | null,
 ): ViewData | null {
   const { layerId = 'graph', viewId = 'click-view' } = options;
   const resolved = useResolvedCanvas(canvas);
   const single = useViewTarget({ viewId }, canvas);
   if (!single) return null;
 
-  const layer = resolved.layers.get<EngineGraphLayer>(layerId);
+  const layer = resolved.layers.get<GraphLayer>(layerId);
   const store = layer?.store;
   if (!layer || !store) return null;
 

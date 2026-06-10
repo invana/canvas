@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  ContextMenuBehaviour as EngineContextMenuBehaviour,
   type ContextMenuBehaviourOptions,
 } from '@invana/graph';
 
@@ -28,7 +28,7 @@ export function ContextMenuBehaviour({
   ...rest
 }: ContextMenuBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineContextMenuBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.ContextMenuBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

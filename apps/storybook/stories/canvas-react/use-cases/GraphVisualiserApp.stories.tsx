@@ -26,7 +26,7 @@
  * `CanvasContext.Provider` **above** the whole shell and feed it the engine once
  * it's live — every header / footer control then resolves the same instance.
  *
- * The engine is surfaced by `EngineBridge`, rendered as the **last** `<Canvas>`
+ * The engine is surfaced by `CanvasBridge`, rendered as the **last** `<Canvas>`
  * child: its mount effect runs *after* every layer / behaviour above it has
  * registered, so by the time the header (with its `GraphHistoryProvider` /
  * `GraphClipboardProvider`) and footer mount, the `'graph'` layer and all
@@ -62,6 +62,7 @@ import {
   ToolbarItems,
   WheelZoomBehaviour,
   useCanvas,
+  useGraphCanvas,
   useGraphCanvasUpdate,
   useHistorySection,
   useEditorSection,
@@ -81,13 +82,8 @@ import {
 } from '@invana/canvas-react';
 import { AppLayoutBase } from '@invana/themes';
 import type { MenuItem } from '@invana/ui';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
-import type {
-  GraphData,
-  GraphNode,
-  ClickSelectBehaviour as EngineClickSelectBehaviour,
-  GraphLayer as EngineGraphLayer,
-} from '@invana/graph';
+import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
+import type * as graph from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { lesMiserables } from '@invana/graph-datasets';
@@ -279,14 +275,14 @@ function osPrefersDark(): boolean {
 }
 
 /**
- * Surfaces the live engine from inside `<Canvas>` (where {@link useCanvas} is
- * guaranteed non-null) up to the shell, so the lifted `CanvasContext` can feed
+ * Surfaces the live canvas from inside `<Canvas>` (where {@link useGraphCanvas}
+ * is guaranteed non-null) up to the shell, so the lifted `CanvasContext` can feed
  * header / footer chrome. Rendered as the **last** `<Canvas>` child: its mount
  * effect runs after every layer / behaviour above it has registered, so the
  * lifted engine is only published once the graph is fully wired.
  */
-function EngineBridge({ onReady }: { onReady: (canvas: EngineCanvas | null) => void }) {
-  const canvas = useCanvas();
+function CanvasBridge({ onReady }: { onReady: (canvas: GraphCanvas | null) => void }) {
+  const canvas = useGraphCanvas();
   useEffect(() => {
     onReady(canvas);
     return () => onReady(null);
@@ -429,10 +425,10 @@ function HeaderThemeToggle() {
 }
 
 function VisualiserApp() {
-  // The live engine, lifted out of <Canvas> by <EngineBridge>. Null until the
+  // The live canvas, lifted out of <Canvas> by <CanvasBridge>. Null until the
   // graph is fully wired; gates the header/footer chrome that depends on it.
-  const [engine, setEngine] = useState<EngineCanvas | null>(null);
-  const handleReady = useCallback((c: EngineCanvas | null) => setEngine(c), []);
+  const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
+  const handleReady = useCallback((c: GraphCanvas | null) => setCanvas(c), []);
 
   // Magnet toggle → hover neighbour radius. On (default): hovering a node lights
   // up its 1st-degree neighbours (degree 1). Off: only the hovered node lights
@@ -449,9 +445,9 @@ function VisualiserApp() {
   // read-only, so no structural edits here (clipboard cut/copy/paste lives in
   // <EditToolbar>).
   const nodeItems = useCallback(({ id, canvas }: GraphNodeMenuContext): MenuItem[] => {
-    const layer = canvas.layers.get<EngineGraphLayer>('graph');
+    const layer = canvas.layers.get<graph.GraphLayer>('graph');
     if (!layer) return [];
-    const select = canvas.behaviours.get<EngineClickSelectBehaviour>('click-select');
+    const select = canvas.behaviours.get<graph.ClickSelectBehaviour>('click-select');
     return [
       { id: 'zoom', label: 'Zoom to node', onClick: () => layer.focusNodes([id]) },
       { id: 'select', label: 'Select node', onClick: () => select?.select(id, 'shape') },
@@ -469,10 +465,10 @@ function VisualiserApp() {
   }, []);
 
   const edgeItems = useCallback(({ id, canvas }: GraphEdgeMenuContext): MenuItem[] => {
-    const layer = canvas.layers.get<EngineGraphLayer>('graph');
+    const layer = canvas.layers.get<graph.GraphLayer>('graph');
     if (!layer) return [];
     const store = layer.store;
-    const select = canvas.behaviours.get<EngineClickSelectBehaviour>('click-select');
+    const select = canvas.behaviours.get<graph.ClickSelectBehaviour>('click-select');
     return [
       { id: 'zoom', label: 'Zoom to edge', onClick: () => layer.focusEdges([id]) },
       { id: 'select', label: 'Select edge', onClick: () => select?.select(id, 'connector') },
@@ -495,10 +491,10 @@ function VisualiserApp() {
   }, []);
 
   const backgroundItems = useCallback(({ canvas }: GraphBackgroundMenuContext): MenuItem[] => {
-    const layer = canvas.layers.get<EngineGraphLayer>('graph');
+    const layer = canvas.layers.get<graph.GraphLayer>('graph');
     if (!layer) return [];
     const store = layer.store;
-    const select = canvas.behaviours.get<EngineClickSelectBehaviour>('click-select');
+    const select = canvas.behaviours.get<graph.ClickSelectBehaviour>('click-select');
     return [
       {
         id: 'fit',
@@ -523,12 +519,12 @@ function VisualiserApp() {
     // message bars, which live in AppLayoutBase's header/footer (siblings of
     // <Canvas>, outside its own provider). The message channel rides the engine
     // itself (Canvas.showMessage), so no extra provider is needed.
-    <CanvasContext.Provider value={engine}>
+    <CanvasContext.Provider value={canvas}>
       <AppLayoutBase
         header={{
           left: <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>Graph Visualiser</span>,
-          center: engine ? <HeaderToolbar magnet={magnet} onToggleMagnet={toggleMagnet} /> : null,
-          right: engine ? <HeaderThemeToggle /> : null,
+          center: canvas ? <HeaderToolbar magnet={magnet} onToggleMagnet={toggleMagnet} /> : null,
+          right: canvas ? <HeaderThemeToggle /> : null,
         }}
         mainClassName="relative"
         // Minimal children register the classes by id; APP_OPTIONS holds all
@@ -601,14 +597,14 @@ function VisualiserApp() {
 
             {/* Last child: publishes the live engine to the lifted context only
                 after everything above has registered. */}
-            <EngineBridge onReady={handleReady} />
+            <CanvasBridge onReady={handleReady} />
           </Canvas>
         }
         footer={{
-          left: engine ? <GraphStatusBar /> : null,
+          left: canvas ? <GraphStatusBar /> : null,
           // The shared message bar — shows whatever was last pushed via
           // Canvas.showMessage (e.g. the layout "Running… / ready"); empty when idle.
-          right: engine ? <CanvasMessageBar /> : null,
+          right: canvas ? <CanvasMessageBar /> : null,
         }}
       />
     </CanvasContext.Provider>

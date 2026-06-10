@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  DrawEdgeBehaviour as EngineDrawEdgeBehaviour,
   type DrawEdgeBehaviourOptions,
 } from '@invana/graph';
 
@@ -27,7 +27,7 @@ export function DrawEdgeBehaviour({
   ...rest
 }: DrawEdgeBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineDrawEdgeBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.DrawEdgeBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

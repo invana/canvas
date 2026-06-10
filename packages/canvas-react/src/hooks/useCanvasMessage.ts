@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 
@@ -22,7 +22,7 @@ export interface UseCanvasMessageResult {
  * Resolves the engine from the (lifted) `CanvasContext` or an explicit `canvas`
  * arg — works from a `<Canvas>` descendant or app-shell chrome.
  */
-export function useCanvasMessage(canvas?: EngineCanvas | null): UseCanvasMessageResult {
+export function useCanvasMessage(canvas?: Canvas | null): UseCanvasMessageResult {
   const resolved = useResolvedCanvas(canvas);
   const [message, setMessage] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);

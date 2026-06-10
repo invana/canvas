@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  ClickInspectBehaviour as EngineClickInspectBehaviour,
   type ClickInspectBehaviourOptions,
 } from '@invana/graph';
 
@@ -27,7 +27,7 @@ export function ClickInspectBehaviour({
   ...rest
 }: ClickInspectBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineClickInspectBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.ClickInspectBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

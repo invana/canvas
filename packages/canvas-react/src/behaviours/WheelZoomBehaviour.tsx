@@ -1,5 +1,5 @@
+import * as canvas from '@invana/canvas';
 import {
-  WheelZoomBehaviour as EngineWheelZoomBehaviour,
   type WheelZoomBehaviourOptions,
 } from '@invana/canvas';
 
@@ -22,7 +22,7 @@ export function WheelZoomBehaviour({
   ...rest
 }: WheelZoomBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineWheelZoomBehaviour({ id, enabled, ...rest }),
+    () => new canvas.WheelZoomBehaviour({ id, enabled, ...rest }),
     id,
     enabled,
     [id],

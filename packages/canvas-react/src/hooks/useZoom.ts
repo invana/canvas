@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 
 import { useCamera } from './useCamera';
 import { useResolvedCanvas } from './useResolvedCanvas';
@@ -23,7 +23,7 @@ export interface UseZoomResult {
  *
  * @param canvas Optional explicit instance; defaults to the context canvas.
  */
-export function useZoom(canvas?: EngineCanvas | null): UseZoomResult {
+export function useZoom(canvas?: Canvas | null): UseZoomResult {
   const resolved = useResolvedCanvas(canvas);
   const { zoomIn, zoomOut, setZoom, zoomTo } = useCamera(resolved);
   const [zoom, setZoomState] = useState(() => resolved.camera.scale);

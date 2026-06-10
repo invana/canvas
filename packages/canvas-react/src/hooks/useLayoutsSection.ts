@@ -1,4 +1,4 @@
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 
 import type { ToolbarItem } from '../components/ToolbarItem';
 import { useLayout, type LayoutFactory } from './useLayout';
@@ -19,7 +19,7 @@ export interface UseLayoutsSectionOptions {
   /** Menu alignment. */
   align?: 'start' | 'center' | 'end';
   /** Explicit canvas instance; defaults to the context canvas. */
-  canvas?: EngineCanvas | null;
+  canvas?: Canvas | null;
 }
 
 /**

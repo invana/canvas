@@ -1,5 +1,5 @@
+import * as canvas from '@invana/canvas';
 import {
-  PinchZoomBehaviour as EnginePinchZoomBehaviour,
   type PinchZoomBehaviourOptions,
 } from '@invana/canvas';
 
@@ -22,7 +22,7 @@ export function PinchZoomBehaviour({
   ...rest
 }: PinchZoomBehaviourProps) {
   useBehaviourRegistration(
-    () => new EnginePinchZoomBehaviour({ id, enabled, ...rest }),
+    () => new canvas.PinchZoomBehaviour({ id, enabled, ...rest }),
     id,
     enabled,
     [id],

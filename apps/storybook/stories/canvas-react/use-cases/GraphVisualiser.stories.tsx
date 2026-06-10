@@ -57,11 +57,8 @@ import {
   type GraphBackgroundMenuContext,
 } from '@invana/canvas-react';
 import { Separator, type MenuItem } from '@invana/ui';
-import type {
-  GraphNode,
-  ClickSelectBehaviour as EngineClickSelectBehaviour,
-  GraphLayer as EngineGraphLayer,
-} from '@invana/graph';
+import type { GraphNode } from '@invana/graph';
+import type * as graph from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { lesMiserables } from '@invana/graph-datasets';
@@ -277,9 +274,9 @@ function Visualiser() {
   // Right-click menu item builders — one per target, each a single engine
   // method off the `canvas` handed in on `ctx`, resolved by id.
   const nodeItems = useCallback(({ id, canvas }: GraphNodeMenuContext): MenuItem[] => {
-    const layer = canvas.layers.get<EngineGraphLayer>('graph');
+    const layer = canvas.layers.get<graph.GraphLayer>('graph');
     if (!layer) return [];
-    const select = canvas.behaviours.get<EngineClickSelectBehaviour>('click-select');
+    const select = canvas.behaviours.get<graph.ClickSelectBehaviour>('click-select');
     return [
       { id: 'zoom', label: 'Zoom to node', onClick: () => layer.focusNodes([id]) },
       { id: 'select', label: 'Select node', onClick: () => select?.select(id, 'shape') },
@@ -297,10 +294,10 @@ function Visualiser() {
   }, []);
 
   const edgeItems = useCallback(({ id, canvas }: GraphEdgeMenuContext): MenuItem[] => {
-    const layer = canvas.layers.get<EngineGraphLayer>('graph');
+    const layer = canvas.layers.get<graph.GraphLayer>('graph');
     if (!layer) return [];
     const store = layer.store;
-    const select = canvas.behaviours.get<EngineClickSelectBehaviour>('click-select');
+    const select = canvas.behaviours.get<graph.ClickSelectBehaviour>('click-select');
     return [
       { id: 'zoom', label: 'Zoom to edge', onClick: () => layer.focusEdges([id]) },
       { id: 'select', label: 'Select edge', onClick: () => select?.select(id, 'connector') },
@@ -323,10 +320,10 @@ function Visualiser() {
   }, []);
 
   const backgroundItems = useCallback(({ canvas }: GraphBackgroundMenuContext): MenuItem[] => {
-    const layer = canvas.layers.get<EngineGraphLayer>('graph');
+    const layer = canvas.layers.get<graph.GraphLayer>('graph');
     if (!layer) return [];
     const store = layer.store;
-    const select = canvas.behaviours.get<EngineClickSelectBehaviour>('click-select');
+    const select = canvas.behaviours.get<graph.ClickSelectBehaviour>('click-select');
     return [
       { id: 'fit', label: 'Fit to content', onClick: () => canvas.camera.fitContent(layer.getBounds(), 80) },
       { id: 'select-all', label: 'Select all', shortcut: '⌘A', onClick: () => select?.selectAll() },

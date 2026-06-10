@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  LassoSelectBehaviour as EngineLassoSelectBehaviour,
   type LassoSelectBehaviourOptions,
 } from '@invana/graph';
 
@@ -26,7 +26,7 @@ export function LassoSelectBehaviour({
   ...rest
 }: LassoSelectBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineLassoSelectBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.LassoSelectBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

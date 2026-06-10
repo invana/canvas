@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
-import type { GraphLayer as EngineGraphLayer } from '@invana/graph';
+import type { Canvas } from '@invana/canvas';
+import type { GraphLayer } from '@invana/graph';
 
 import { useResolvedCanvas } from '../hooks/useResolvedCanvas';
 import { useZoom } from '../hooks/useZoom';
@@ -16,7 +16,7 @@ export interface GraphStatusBarProps {
   /** Id of the `ClickSelectBehaviour` selection is read from. Default `'click-select'`. */
   clickSelectId?: string;
   /** Explicit canvas instance; defaults to the context canvas (works from footer chrome). */
-  canvas?: EngineCanvas | null;
+  canvas?: Canvas | null;
   className?: string;
   style?: CSSProperties;
 }
@@ -54,7 +54,7 @@ export function GraphStatusBar({
   // Rendered node / edge totals — read off the graph store and re-synced on its
   // `flush` event (one per batched mutation), so the counts track adds/removes.
   useEffect(() => {
-    const store = resolved.layers.get<EngineGraphLayer>(layerId)?.store;
+    const store = resolved.layers.get<GraphLayer>(layerId)?.store;
     if (!store) return;
     const sync = (): void => setCounts({ nodes: store.nodeCount(), edges: store.edgeCount() });
     sync();
@@ -80,7 +80,7 @@ export function GraphStatusBar({
   // The pointer events carry only the id; resolve the drawn display label from
   // the store (falls back through common label fields so it stays meaningful).
   useEffect(() => {
-    const layer = resolved.layers.get<EngineGraphLayer>(layerId);
+    const layer = resolved.layers.get<GraphLayer>(layerId);
     const renderer = layer?.getRenderer();
     const store = layer?.store;
     if (!renderer || !store) return;

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Canvas as EngineCanvas } from '@invana/canvas';
-import type { GraphLayer as EngineGraphLayer } from '@invana/graph';
+import type { Canvas } from '@invana/canvas';
+import type { GraphLayer } from '@invana/graph';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 
@@ -49,7 +49,7 @@ export interface UseLayoutResult {
 export function useLayout(
   layouts: Record<string, LayoutFactory>,
   options: UseLayoutOptions = {},
-  canvas?: EngineCanvas | null,
+  canvas?: Canvas | null,
 ): UseLayoutResult {
   const { layerId = 'graph', fitPadding = 80 } = options;
   const resolved = useResolvedCanvas(canvas);
@@ -61,7 +61,7 @@ export function useLayout(
   const applyLayout = useCallback(
     (key: string) => {
       const factory = layouts[key];
-      const layer = resolved.layers.get<EngineGraphLayer>(layerId);
+      const layer = resolved.layers.get<GraphLayer>(layerId);
       if (!factory || !layer) return;
       activeRef.current?.stop?.();
       const instance = factory();

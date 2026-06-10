@@ -1,4 +1,4 @@
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 import type { EdgePathType } from '@invana/graph';
 
 import type { ToolbarItem } from '../components/ToolbarItem';
@@ -21,7 +21,7 @@ export interface UseStyleEditorSectionOptions {
   /** Menu alignment. */
   align?: 'start' | 'center' | 'end';
   /** Explicit canvas instance; defaults to the context canvas. */
-  canvas?: EngineCanvas | null;
+  canvas?: Canvas | null;
 }
 
 /**

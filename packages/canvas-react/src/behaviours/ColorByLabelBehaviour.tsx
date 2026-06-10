@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  ColorByLabelBehaviour as EngineColorByLabelBehaviour,
   type ColorByLabelBehaviourOptions,
 } from '@invana/graph';
 
@@ -32,7 +32,7 @@ export function ColorByLabelBehaviour({
   ...rest
 }: ColorByLabelBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineColorByLabelBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.ColorByLabelBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

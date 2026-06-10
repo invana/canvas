@@ -1,6 +1,6 @@
+import * as graph from '@invana/graph';
 import { useEffect } from 'react';
 import {
-  HoverActivateBehaviour as EngineHoverActivateBehaviour,
   type HoverActivateBehaviourOptions,
 } from '@invana/graph';
 
@@ -31,7 +31,7 @@ export function HoverActivateBehaviour({
   ...rest
 }: HoverActivateBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineHoverActivateBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.HoverActivateBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],
@@ -44,7 +44,7 @@ export function HoverActivateBehaviour({
   const { degree } = rest;
   useEffect(() => {
     if (degree === undefined) return;
-    canvas.behaviours.get<EngineHoverActivateBehaviour>(id)?.setOptions({ degree });
+    canvas.behaviours.get<graph.HoverActivateBehaviour>(id)?.setOptions({ degree });
   }, [canvas, id, degree]);
 
   return null;

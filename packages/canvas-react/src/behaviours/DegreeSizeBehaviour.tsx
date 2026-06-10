@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  DegreeSizeBehaviour as EngineDegreeSizeBehaviour,
   type DegreeSizeBehaviourOptions,
 } from '@invana/graph';
 
@@ -26,7 +26,7 @@ export function DegreeSizeBehaviour({
   ...rest
 }: DegreeSizeBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineDegreeSizeBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.DegreeSizeBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

@@ -1,4 +1,4 @@
-import type { Canvas as EngineCanvas } from '@invana/canvas';
+import type { Canvas } from '@invana/canvas';
 
 import { Panel, ToolbarItems } from '../components';
 import type { PanelPosition, ToolbarIcon, ToolbarItem } from '../components';
@@ -47,7 +47,7 @@ export interface ModellerToolbarProps {
   /** Render without the `<Panel>` wrapper (embed in external chrome). Default `false`. */
   bare?: boolean;
   /** Explicit canvas instance; defaults to the context canvas. */
-  canvas?: EngineCanvas | null;
+  canvas?: Canvas | null;
   className?: string;
 }
 

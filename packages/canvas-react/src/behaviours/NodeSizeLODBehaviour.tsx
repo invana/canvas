@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  NodeSizeLODBehaviour as EngineNodeSizeLODBehaviour,
   type NodeSizeLODBehaviourOptions,
 } from '@invana/graph';
 
@@ -26,7 +26,7 @@ export function NodeSizeLODBehaviour({
   ...rest
 }: NodeSizeLODBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineNodeSizeLODBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.NodeSizeLODBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

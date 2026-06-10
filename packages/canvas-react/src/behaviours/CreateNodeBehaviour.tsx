@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  CreateNodeBehaviour as EngineCreateNodeBehaviour,
   type CreateNodeBehaviourOptions,
 } from '@invana/graph';
 
@@ -27,7 +27,7 @@ export function CreateNodeBehaviour({
   ...rest
 }: CreateNodeBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineCreateNodeBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.CreateNodeBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],

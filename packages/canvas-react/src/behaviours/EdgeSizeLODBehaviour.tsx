@@ -1,5 +1,5 @@
+import * as graph from '@invana/graph';
 import {
-  EdgeSizeLODBehaviour as EngineEdgeSizeLODBehaviour,
   type EdgeSizeLODBehaviourOptions,
 } from '@invana/graph';
 
@@ -26,7 +26,7 @@ export function EdgeSizeLODBehaviour({
   ...rest
 }: EdgeSizeLODBehaviourProps) {
   useBehaviourRegistration(
-    () => new EngineEdgeSizeLODBehaviour({ id, targetLayerId, enabled, ...rest }),
+    () => new graph.EdgeSizeLODBehaviour({ id, targetLayerId, enabled, ...rest }),
     id,
     enabled,
     [id, targetLayerId],
