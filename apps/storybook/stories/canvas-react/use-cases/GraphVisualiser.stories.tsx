@@ -92,6 +92,10 @@ const meta: Meta = { title: 'canvas-react/usecases/GraphVisualiser' };
 export default meta;
 type Story = StoryObj;
 
+// "Focus on node" zooms in to at least this scale (never zooms out) so the
+// focused node is comfortably sized; tune to taste.
+const FOCUS_ZOOM = 2;
+
 const PALETTE = [
   0x9ca3af, 0xef4444, 0xf59e0b, 0xeab308, 0x10b981, 0x06b6d4, 0x3b82f6, 0x8b5cf6, 0xec4899,
   0x14b8a6, 0xa3e635,
@@ -278,7 +282,15 @@ function Visualiser() {
     if (!layer) return [];
     const select = canvas.behaviours.get<graph.ClickSelectBehaviour>('click-select');
     return [
-      { id: 'zoom', label: 'Zoom to node', onClick: () => layer.focusNodes([id]) },
+      {
+        id: 'focus',
+        label: 'Focus on node',
+        // Select the node, then focus the camera on it (centre + zoom in).
+        onClick: () => {
+          select?.select(id, 'shape');
+          layer.focusNode(id, { zoom: FOCUS_ZOOM });
+        },
+      },
       { id: 'select', label: 'Select node', onClick: () => select?.select(id, 'shape') },
       {
         id: 'select-hood',
@@ -299,7 +311,15 @@ function Visualiser() {
     const store = layer.store;
     const select = canvas.behaviours.get<graph.ClickSelectBehaviour>('click-select');
     return [
-      { id: 'zoom', label: 'Zoom to edge', onClick: () => layer.focusEdges([id]) },
+      {
+        id: 'focus',
+        label: 'Focus on edge',
+        // Centre + select the edge (no forced zoom — a long edge would clip).
+        onClick: () => {
+          select?.select(id, 'connector');
+          layer.focusEdges([id]);
+        },
+      },
       { id: 'select', label: 'Select edge', onClick: () => select?.select(id, 'connector') },
       {
         id: 'highlight',

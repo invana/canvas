@@ -97,6 +97,10 @@ const meta: Meta = { title: 'canvas-react/usecases/GraphModeller' };
 export default meta;
 type Story = StoryObj;
 
+// "Focus on node" zooms in to at least this scale (never zooms out) so the
+// focused node is comfortably sized; tune to taste.
+const FOCUS_ZOOM = 2;
+
 const SEED: GraphData = {
   nodes: [
     { id: 'a', position: { x: -120, y: -60 }, style: { labelText: 'A' } },
@@ -281,7 +285,19 @@ function DrawingTools() {
       if (!layer) return [];
       const store = layer.store;
       const inspect = canvas.behaviours.get<graph.ClickInspectBehaviour>('click-inspect');
+      const select = canvas.behaviours.get<graph.ClickSelectBehaviour>('click-select');
       return [
+        {
+          id: 'focus',
+          label: 'Focus on node',
+          // Arm select (ClickSelect is tool-gated here) + select the node, then
+          // focus the camera on it (centre + zoom in).
+          onClick: () => {
+            setTool('select');
+            select?.select(id, 'shape');
+            layer.focusNode(id, { zoom: FOCUS_ZOOM });
+          },
+        },
         {
           id: 'edit',
           label: 'Edit properties…',
@@ -321,7 +337,19 @@ function DrawingTools() {
       if (!layer) return [];
       const store = layer.store;
       const inspect = canvas.behaviours.get<graph.ClickInspectBehaviour>('click-inspect');
+      const select = canvas.behaviours.get<graph.ClickSelectBehaviour>('click-select');
       return [
+        {
+          id: 'focus',
+          label: 'Focus on edge',
+          // Arm select, centre + select the edge (no forced zoom — a long edge
+          // would clip).
+          onClick: () => {
+            setTool('select');
+            select?.select(id, 'connector');
+            layer.focusEdges([id]);
+          },
+        },
         {
           id: 'edit',
           label: 'Edit properties…',

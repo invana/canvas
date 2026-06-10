@@ -226,6 +226,20 @@ export class Camera {
     this.bus?.emit('camera:pan', { x: tx, y: ty });
   }
 
+  /**
+   * Centre the viewport on a world-space point — pan so `(worldX, worldY)`
+   * maps to the screen centre, keeping the current zoom. The pan-only
+   * counterpart to {@link fitContent}: use it for "focus" / "go to" actions
+   * that should locate a target without rescaling the view.
+   */
+  centerOn(worldX: number, worldY: number): void {
+    const scale = this.viewport.scale.x;
+    const tx = this._screenWidth / 2 - worldX * scale;
+    const ty = this._screenHeight / 2 - worldY * scale;
+    this.viewport.position.set(tx, ty);
+    this.bus?.emit('camera:pan', { x: tx, y: ty });
+  }
+
   /** Update on viewport resize. Forwards to Viewport so its hit-area + plugin math stays correct. */
   resize(screenWidth: number, screenHeight: number): void {
     this._screenWidth = screenWidth;

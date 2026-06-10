@@ -776,36 +776,56 @@ export class GraphLayer extends WorldLayer<
   // ─── Viewport framing ─────────────────────────────────────────────────────
 
   /**
-   * Frame the camera on a set of nodes — fit the viewport to the world-space
-   * box spanning their positions, plus `padding` screen px. Unknown ids are
-   * skipped; a no-op when none resolve or the layer isn't mounted.
+   * Centre the camera on a set of nodes — pan so the midpoint of their
+   * positions sits at the viewport centre, **without changing zoom**. Unknown
+   * ids are skipped; a no-op when none resolve or the layer isn't mounted.
    *
-   * Graph-domain sugar over the geometry-only {@link Camera.fitContent}: it
-   * resolves ids → positions so callers (e.g. a "zoom to node" context-menu
-   * action) don't have to.
+   * Graph-domain sugar over the geometry-only {@link Camera.centerOn}: it
+   * resolves ids → positions so callers (e.g. a "focus on node" context-menu
+   * action) don't have to. Focus locates a target; zooming stays a separate,
+   * explicit gesture (wheel / pinch / fit-to-content).
    *
-   * @param ids     Node ids to frame.
-   * @param padding Screen-pixel padding around the fitted box. Default `160`.
+   * @param ids Node ids to centre on.
    */
-  focusNodes(ids: Iterable<string>, padding = 160): void {
+  focusNodes(ids: Iterable<string>): void {
     const pts: Array<{ x: number; y: number }> = [];
     for (const id of ids) {
       const pos = this.store.getPosition(id);
       if (pos) pts.push(pos);
     }
-    this.fitPoints(pts, padding);
+    this.centerOnPoints(pts);
   }
 
   /**
-   * Frame the camera on a set of edges — fit the viewport to the box spanning
-   * both endpoints of each edge, plus `padding` screen px. Unknown ids (or
-   * edges with an unplaced endpoint) are skipped; a no-op when none resolve or
-   * the layer isn't mounted.
+   * Centre the camera on a single node, optionally zooming in. Sugar over
+   * {@link focusNodes} for the common "focus on this node" action.
    *
-   * @param ids     Edge ids to frame.
-   * @param padding Screen-pixel padding around the fitted box. Default `160`.
+   * Camera-only: it moves the view, nothing else. Selecting / highlighting the
+   * node is a separate, opt-in concern (a `ClickSelectBehaviour`) the caller
+   * composes — focus stays orthogonal to selection.
+   *
+   * @param id        Node id to centre on.
+   * @param opts.zoom Minimum zoom: the camera zooms *in* to at least this
+   *   scale, but never zooms out (a no-op if already closer). Omit for a pure
+   *   pan at the current zoom.
    */
-  focusEdges(ids: Iterable<string>, padding = 160): void {
+  focusNode(id: string, opts?: { zoom?: number }): void {
+    this.focusNodes([id]);
+    const camera = this.ctx?.camera;
+    if (camera && opts?.zoom !== undefined) {
+      camera.setZoom(Math.max(camera.scale, opts.zoom));
+    }
+  }
+
+  /**
+   * Centre the camera on a set of edges — pan so the midpoint of their
+   * endpoints sits at the viewport centre, **without changing zoom**. Unknown
+   * ids (or edges with an unplaced endpoint) are skipped; a no-op when none
+   * resolve or the layer isn't mounted.
+   *
+   * @param ids Edge ids to centre on.
+   */
+  focusEdges(ids: Iterable<string>): void {
     const pts: Array<{ x: number; y: number }> = [];
     for (const id of ids) {
       const edge = this.store.getEdge(id);
@@ -815,11 +835,11 @@ export class GraphLayer extends WorldLayer<
       if (a) pts.push(a);
       if (b) pts.push(b);
     }
-    this.fitPoints(pts, padding);
+    this.centerOnPoints(pts);
   }
 
-  /** Fit the camera to the AABB spanning `pts` (+ padding). No-op if empty / unmounted. */
-  private fitPoints(pts: ReadonlyArray<{ x: number; y: number }>, padding: number): void {
+  /** Pan the camera to the centre of the AABB spanning `pts`. No-op if empty / unmounted. */
+  private centerOnPoints(pts: ReadonlyArray<{ x: number; y: number }>): void {
     const camera = this.ctx?.camera;
     if (!camera || pts.length === 0) return;
     let minX = Infinity;
@@ -832,10 +852,7 @@ export class GraphLayer extends WorldLayer<
       maxX = Math.max(maxX, p.x);
       maxY = Math.max(maxY, p.y);
     }
-    camera.fitContent(
-      { x: minX, y: minY, width: Math.max(1, maxX - minX), height: Math.max(1, maxY - minY) },
-      padding,
-    );
+    camera.centerOn((minX + maxX) / 2, (minY + maxY) / 2);
   }
 
   private nodeSpec(node: GraphNode): BaseShapeSpec {
