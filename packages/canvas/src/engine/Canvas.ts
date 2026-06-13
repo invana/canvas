@@ -147,6 +147,7 @@ export class Canvas {
   private app?: Application;
   private _isInitialised = false;
   private _onRendererResize?: (w: number, h: number) => void;
+  private _resizeObserver?: ResizeObserver;
 
   constructor(opts: CanvasOptions = {}) {
     this.id = opts.id ?? 'canvas';
@@ -206,10 +207,12 @@ export class Canvas {
       backgroundColor: opts.backgroundColor ?? 0,
       powerPreference: opts.powerPreference ?? 'high-performance',
       hello: opts.hello ?? false,
-      // When `autoResize` is on, let pixi own the resize loop. It polls
-      // `container` on its ticker and calls `renderer.resize()` itself,
-      // which is naturally frame-paced and handles `autoDensity` / DPR.
-      // We just hook the renderer's `resize` event to keep camera in sync.
+      // When `autoResize` is on, point pixi's ResizePlugin at `container` so its
+      // `resize()` reads the element's `clientWidth/clientHeight` and handles
+      // `autoDensity` / DPR. The plugin only re-runs on the *window* `resize`
+      // event though — it never observes the element — so element-only size
+      // changes (e.g. a side panel resizing the canvas host without resizing the
+      // window) are picked up by the `ResizeObserver` wired below instead.
       ...(opts.autoResize ? { resizeTo: container } : {}),
     });
 
@@ -228,6 +231,17 @@ export class Canvas {
         this.camera.resize(w, h);
       };
       this.app.renderer.on('resize', this._onRendererResize);
+
+      // Pixi's ResizePlugin only listens for the window `resize` event, so it
+      // misses element-only size changes (panel drags, flex reflow, programmatic
+      // expand/collapse). Observe the container and queue a pixi resize — which
+      // reads the container's current size and emits the `resize` event the
+      // camera-sync handler above hangs off — on every change. `queueResize`
+      // defers to the next frame and dedupes, so rapid drag ticks coalesce.
+      if (typeof ResizeObserver !== 'undefined') {
+        this._resizeObserver = new ResizeObserver(() => this.app?.queueResize());
+        this._resizeObserver.observe(container);
+      }
     }
 
     this._isInitialised = true;
@@ -417,6 +431,8 @@ export class Canvas {
       this.app.renderer.off('resize', this._onRendererResize);
     }
     this._onRendererResize = undefined;
+    this._resizeObserver?.disconnect();
+    this._resizeObserver = undefined;
     this.app?.ticker.remove(this.tick, this);
     this.layers?.clear();
     this.behaviours?.clear();

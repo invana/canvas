@@ -77,18 +77,26 @@ export function GraphStatusBar({
   }, [resolved]);
 
   // Hovered node / edge — raw pointer-hit events off the graph layer's renderer.
-  // The pointer events carry only the id; resolve the drawn display label from
-  // the store (falls back through common label fields so it stays meaningful).
+  // The pointer events carry only the id; resolve the *drawn* display label
+  // through the layer's own style resolver — the same `labelText` that paints
+  // the node/edge on the canvas — so the status bar always matches what's on
+  // screen instead of second-guessing which data field holds the label. Falls
+  // back to the id (node) / type (edge) when no label resolves.
   useEffect(() => {
     const layer = resolved.layers.get<GraphLayer>(layerId);
     const renderer = layer?.getRenderer();
     const store = layer?.store;
     if (!renderer || !store) return;
     const nodeLabel = (id: string): string => {
-      const d = store.getNode(id)?.data as { label?: string; name?: string } | undefined;
-      return d?.label ?? d?.name ?? id;
+      const node = store.getNode(id);
+      if (!node) return id;
+      return layer.resolveNodeStyle(node).labelText || id;
     };
-    const edgeLabel = (id: string): string => store.getEdge(id)?.type ?? id;
+    const edgeLabel = (id: string): string => {
+      const edge = store.getEdge(id);
+      if (!edge) return id;
+      return layer.resolveEdgeStyle(edge).labelText || edge.type || id;
+    };
     const onShapeOver = (e: { id: string }): void =>
       setHover({ kind: 'node', id: e.id, label: nodeLabel(e.id) });
     const onConnOver = (e: { id: string }): void =>
