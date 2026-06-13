@@ -1,6 +1,6 @@
 {
   "name": "@invana/graph-layout-d3-hierarchy",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "D3 hierarchy (tree / cluster / radial) Layout for @invana/graph.",
   "type": "module",
   "main": "./dist/index.js",
