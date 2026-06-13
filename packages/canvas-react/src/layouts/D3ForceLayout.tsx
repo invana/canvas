@@ -73,7 +73,13 @@ export function D3ForceLayout({
       ...(id ? { id, targetLayerId } : {}),
     } as D3ForceLayoutCtorOptions);
     if (fitPadding != null) {
-      layout.events.on('end', () => {
+      layout.events.on('end', ({ reason }) => {
+        // Only auto-fit on a natural settle. A `'stopped'` end means the run
+        // was cancelled — either by teardown (`layouts.remove` → `stop()` on
+        // unmount, when the layer's container is already gone and `getBounds()`
+        // would throw) or by a superseding `apply()` (whose own `'completed'`
+        // will fit). Fitting here is wrong in both cases.
+        if (reason === 'stopped') return;
         canvas.camera.fitContent(layer.getBounds(), fitPadding);
       });
     }
