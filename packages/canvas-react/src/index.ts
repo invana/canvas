@@ -14,6 +14,20 @@ export { GraphCanvasContext, useGraphCanvas } from './GraphCanvasContext';
 // Re-exported for `<Canvas config={…}>` consumers — the serialisable, id-keyed
 // settings shape (same as the imperative engine's `canvasOptions`).
 export type { CanvasConfig } from '@invana/canvas';
+// Renderer backend capability detection — re-exported from `@invana/canvas` so
+// React consumers can gate a backend toggle / show a "WebGPU unavailable" notice
+// without reaching past the bindings. The engine already auto-resolves the
+// backend (`<Canvas preference>` downgrades off WebGPU on WebKit); these are for
+// UI that wants to reflect that. See `rendererSupport.ts` in `@invana/canvas`.
+export {
+  hasWebGPUApi,
+  hasWebGL,
+  isWebKit,
+  canUseWebGPU,
+  resolveRenderPreference,
+  bestRenderPreference,
+} from '@invana/canvas';
+export type { RenderPreference } from '@invana/canvas';
 export { HistoryContext } from './HistoryContext';
 export { ClipboardContext } from './ClipboardContext';
 export { ToolContext } from './ToolContext';

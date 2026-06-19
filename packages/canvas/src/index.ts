@@ -149,6 +149,17 @@ export { Canvas } from './engine/Canvas';
 export type { CanvasOptions } from './engine/Canvas';
 export type { CanvasConfig } from './engine/CanvasConfig';
 
+// Renderer backend capability detection (WebGPU/WebGL support, WebKit guard).
+export {
+  hasWebGPUApi,
+  hasWebGL,
+  isWebKit,
+  canUseWebGPU,
+  resolveRenderPreference,
+  bestRenderPreference,
+} from './engine/rendererSupport';
+export type { RenderPreference } from './engine/rendererSupport';
+
 // ─── Primitives (renderer + base classes + built-ins + types) ──────────
 //
 // The full primitives surface is also available via the `@invana/canvas/primitives`

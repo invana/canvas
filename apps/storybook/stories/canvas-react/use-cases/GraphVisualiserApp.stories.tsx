@@ -72,6 +72,7 @@ import {
   useSelectMode,
   useGrid,
   useSystemTheme,
+  canUseWebGPU,
   type CanvasConfig,
   type ToolbarItem,
   type LayoutFactory,
@@ -81,7 +82,7 @@ import {
   type GraphBackgroundMenuContext,
 } from '@invana/canvas-react';
 import { AppLayoutBase } from '@invana/themes';
-import type { MenuItem } from '@invana/ui';
+import { ToggleGroup, ToggleGroupItem, type MenuItem } from '@invana/ui';
 import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
 import type * as graph from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
@@ -122,6 +123,12 @@ type Story = StoryObj;
 // "Focus on node" zooms in to at least this scale (never zooms out) so the
 // focused node is comfortably sized; tune to taste.
 const FOCUS_ZOOM = 2;
+
+// PixiJS render backend, switched live from the header toolbar. WebGPU is the
+// default when usable (`canUseWebGPU()`); the engine auto-falls back to WebGL on
+// browsers where WebGPU is broken (WebKit) — see `<Canvas preference>`.
+type CanvasBackend = 'webgl' | 'webgpu';
+const BACKEND_LABEL: Record<CanvasBackend, string> = { webgl: 'WebGL', webgpu: 'WebGPU' };
 
 const PALETTE = [
   0x9ca3af, 0xef4444, 0xf59e0b, 0xeab308, 0x10b981, 0x06b6d4, 0x3b82f6, 0x8b5cf6, 0xec4899,
@@ -309,16 +316,25 @@ function CanvasBridge({ onReady }: { onReady: (canvas: GraphCanvas | null) => vo
 function HeaderToolbar({
   magnet,
   onToggleMagnet,
+  backend,
+  onBackendChange,
 }: {
   magnet: boolean;
   onToggleMagnet: () => void;
+  backend: CanvasBackend;
+  onBackendChange: (backend: CanvasBackend) => void;
 }) {
   // The builder hooks read the history / clipboard providers, so item assembly
   // lives in a child mounted *inside* them.
   return (
     <GraphHistoryProvider layerId="graph">
       <GraphClipboardProvider layerId="graph">
-        <HeaderToolbarItems magnet={magnet} onToggleMagnet={onToggleMagnet} />
+        <HeaderToolbarItems
+          magnet={magnet}
+          onToggleMagnet={onToggleMagnet}
+          backend={backend}
+          onBackendChange={onBackendChange}
+        />
       </GraphClipboardProvider>
     </GraphHistoryProvider>
   );
@@ -336,9 +352,13 @@ function HeaderToolbar({
 function HeaderToolbarItems({
   magnet,
   onToggleMagnet,
+  backend,
+  onBackendChange,
 }: {
   magnet: boolean;
   onToggleMagnet: () => void;
+  backend: CanvasBackend;
+  onBackendChange: (backend: CanvasBackend) => void;
 }) {
   // Live engine — the header only renders once it's live, so this is non-null.
   const canvas = useCanvas();
@@ -390,6 +410,44 @@ function HeaderToolbarItems({
     ...view, div('d6'),
     { type: 'toggle', key: 'grid', icon: Grid3x3, label: 'Toggle grid', active: showGrid, onToggle: toggleGrid }, div('d7'),
     {
+      // Render-backend switcher. Flipping it remounts the <Canvas> (keyed on
+      // `backend`) so pixi re-inits with the chosen renderer. WebGPU is offered
+      // but disabled when the browser can't use it (`canUseWebGPU()` — e.g.
+      // WebKit, where pixi's WebGPU crashes), so the canvas stays on WebGL.
+      type: 'custom',
+      key: 'renderer',
+      render: () => {
+        const webgpuOk = canUseWebGPU();
+        return (
+          <ToggleGroup
+            type="single"
+            size="sm"
+            variant="outline"
+            value={backend}
+            // Radix fires `''` when the active item is re-clicked; ignore that so
+            // a backend is always selected.
+            onValueChange={(v) => v && onBackendChange(v as CanvasBackend)}
+          >
+            {(Object.keys(BACKEND_LABEL) as CanvasBackend[]).map((b) => {
+              const disabled = b === 'webgpu' && !webgpuOk;
+              return (
+                <ToggleGroupItem
+                  key={b}
+                  value={b}
+                  disabled={disabled}
+                  aria-label={BACKEND_LABEL[b]}
+                  title={disabled ? "WebGPU isn't available in this browser" : BACKEND_LABEL[b]}
+                >
+                  {BACKEND_LABEL[b]}
+                </ToggleGroupItem>
+              );
+            })}
+          </ToggleGroup>
+        );
+      },
+    },
+    div('d8'),
+    {
       type: 'toggle',
       key: 'magnet',
       icon: Magnet,
@@ -439,6 +497,11 @@ function VisualiserApp() {
   // up (degree 0). Reactive on <HoverActivateBehaviour> — no remount.
   const [magnet, setMagnet] = useState(true);
   const toggleMagnet = useCallback(() => setMagnet((m) => !m), []);
+
+  // Render backend (PixiJS). Defaults to the most performant the browser can
+  // use — WebGPU when available, else WebGL. Switching it remounts the <Canvas>
+  // (keyed on `backend`) since the renderer is fixed at `Application.init`.
+  const [backend, setBackend] = useState<CanvasBackend>(() => (canUseWebGPU() ? 'webgpu' : 'webgl'));
 
   // The theme toggle pins the chrome theme; restore it to the OS preference on
   // unmount so the pinned theme doesn't leak into the next story.
@@ -543,7 +606,14 @@ function VisualiserApp() {
       <AppLayoutBase
         header={{
           left: <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>Graph Visualiser</span>,
-          center: canvas ? <HeaderToolbar magnet={magnet} onToggleMagnet={toggleMagnet} /> : null,
+          center: canvas ? (
+            <HeaderToolbar
+              magnet={magnet}
+              onToggleMagnet={toggleMagnet}
+              backend={backend}
+              onBackendChange={setBackend}
+            />
+          ) : null,
           right: canvas ? <HeaderThemeToggle /> : null,
         }}
         mainClassName="relative"
@@ -551,7 +621,7 @@ function VisualiserApp() {
         // settings. Node `bgFill` is owned by <ColorByLabelBehaviour>; the
         // theme-driven colours follow the OS scheme via <SystemTheme>.
         main={
-          <Canvas autoResize config={APP_OPTIONS}>
+          <Canvas key={backend} autoResize preference={backend} config={APP_OPTIONS}>
             <BackgroundLayer id="background" />
             <GraphLayer
               id="graph"

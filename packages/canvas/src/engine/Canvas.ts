@@ -42,6 +42,7 @@ import { BehaviourRegistry } from '../registries/BehaviourRegistry';
 import { LayoutRegistry } from '../registries/LayoutRegistry';
 import type { CanvasContext } from '../context/CanvasContext';
 import { type CanvasConfig, configurable, deepMerge } from './CanvasConfig';
+import { resolveRenderPreference } from './rendererSupport';
 
 // ─── Options ───────────────────────────────────────────────────────────────
 
@@ -195,9 +196,13 @@ export class Canvas {
       opts.resolution ??
       (typeof window !== 'undefined' ? window.devicePixelRatio : 1);
 
-    this.app = new Application();
-    await this.app.init({
-      preference: opts.preference ?? 'webgpu',
+    // Resolve the backend before handing it to pixi. `resolveRenderPreference`
+    // downgrades `'webgpu'` → `'webgl'` on browsers where pixi's WebGPU renderer
+    // is broken (WebKit) but advertises support — pixi's own auto-fallback only
+    // covers browsers with *no* WebGPU, so without this the canvas would crash at
+    // render time. See `rendererSupport.ts`.
+    const preference = resolveRenderPreference(opts.preference ?? 'webgpu');
+    const initOpts = {
       width,
       height,
       resolution: dpr,
@@ -214,7 +219,22 @@ export class Canvas {
       // changes (e.g. a side panel resizing the canvas host without resizing the
       // window) are picked up by the `ResizeObserver` wired below instead.
       ...(opts.autoResize ? { resizeTo: container } : {}),
-    });
+    };
+
+    this.app = new Application();
+    try {
+      await this.app.init({ preference, ...initOpts });
+    } catch (err) {
+      // Defense in depth for the case `resolveRenderPreference` can't predict: a
+      // non-WebKit browser that advertises WebGPU but throws *during* init (e.g.
+      // a blocklisted adapter / driver). Tear the half-built app down and retry
+      // once on WebGL. (WebKit's failure is at render time, not init, so it never
+      // reaches here — that's why the preference must be resolved up front.)
+      if (preference !== 'webgpu') throw err;
+      this.app.destroy(true);
+      this.app = new Application();
+      await this.app.init({ preference: 'webgl', ...initOpts });
+    }
 
     this.app.canvas.style.display = 'block';
     container.appendChild(this.app.canvas);
