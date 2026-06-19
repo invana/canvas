@@ -134,6 +134,21 @@ export type {
 export { Layout } from './layouts/Layout';
 export type { LayoutEvents, LayoutEndReason, LayoutOptions } from './layouts/Layout';
 
+export { animatePositions, DEFAULT_POSITION_TRANSITION_MS } from './layouts/animatePositions';
+export type { PositionTransition, PositionTransitionOptions } from './layouts/animatePositions';
+
+// ─── Animation easings (reusable by layouts / effects / consumers) ────────
+export {
+  linear,
+  easeInOutSine,
+  easeOutCubic,
+  easeInOutCubic,
+  easeOutQuad,
+  resolveEasing,
+  EASING_NAMES,
+} from './primitives/animation/easings';
+export type { Easing, EasingName } from './primitives/animation/easings';
+
 // ─── Registries ─────────────────────────────────────────────────────────
 export { LayerRegistry } from './registries/LayerRegistry';
 export type { LayerRegistryOptions } from './registries/LayerRegistry';
