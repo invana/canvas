@@ -74,6 +74,12 @@ export {
 export { GraphCanvas } from './canvas';
 
 export {
+  OneShotPositionLayout,
+  type OneShotLayoutOptions,
+  type LayoutPositions,
+} from './layout/OneShotPositionLayout';
+
+export {
   GraphHistory,
   type GraphHistoryEventMap,
   type GraphHistoryOptions,
