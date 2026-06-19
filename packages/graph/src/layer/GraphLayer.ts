@@ -1045,12 +1045,17 @@ export class GraphLayer extends WorldLayer<
       },
       alpha,
       visible: !isCollapseSelfLoop,
-      ...(arrowTargetShape !== 'none'
-        ? { targetMarker: { kind: 'arrow', fill: arrowTargetColor } }
-        : {}),
-      ...(style.arrowSourceShape && style.arrowSourceShape !== 'none'
-        ? { sourceMarker: { kind: 'arrow', fill: style.arrowSourceColor ?? strokeColor } }
-        : {}),
+      // Always emit the marker keys (as `undefined` when off), never omit them.
+      // `updateConnector` shallow-merges the spec, so an omitted key would keep a
+      // previously-drawn marker — e.g. an edge that first renders with the default
+      // `'triangle'` then re-renders with `'none'` (config/layout applied after the
+      // first paint, as in the sankey story) would otherwise keep its arrowhead.
+      targetMarker:
+        arrowTargetShape !== 'none' ? { kind: 'arrow', fill: arrowTargetColor } : undefined,
+      sourceMarker:
+        style.arrowSourceShape && style.arrowSourceShape !== 'none'
+          ? { kind: 'arrow', fill: style.arrowSourceColor ?? strokeColor }
+          : undefined,
     };
   }
 
