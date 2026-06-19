@@ -71,6 +71,9 @@ importers:
       '@invana/graph-layout-elkjs':
         specifier: workspace:*
         version: link:../../packages/graph-layout-elkjs
+      '@invana/graph-layout-geometric':
+        specifier: workspace:*
+        version: link:../../packages/graph-layout-geometric
       '@invana/styling':
         specifier: ^0.0.6
         version: 0.0.6(tailwindcss@4.3.0)
@@ -493,6 +496,27 @@ importers:
       elkjs:
         specifier: ^0.9.3
         version: 0.9.3
+    devDependencies:
+      '@invana/canvas':
+        specifier: workspace:*
+        version: link:../canvas
+      '@invana/graph':
+        specifier: workspace:*
+        version: link:../graph
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(postcss@8.5.12)(tsx@4.21.0)(typescript@5.9.2)(yaml@2.8.3)
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.15.3)(happy-dom@20.9.0)
+
+  packages/graph-layout-geometric:
     devDependencies:
       '@invana/canvas':
         specifier: workspace:*

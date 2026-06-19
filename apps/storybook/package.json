@@ -26,6 +26,7 @@
     "@invana/graph-layout-d3-hierarchy": "workspace:*",
     "@invana/graph-layout-d3-sankey": "workspace:*",
     "@invana/graph-layout-elkjs": "workspace:*",
+    "@invana/graph-layout-geometric": "workspace:*",
     "d3-delaunay": "^6.0.4",
     "lil-gui": "^0.21.0",
     "lucide-react": "^0.562.0",
