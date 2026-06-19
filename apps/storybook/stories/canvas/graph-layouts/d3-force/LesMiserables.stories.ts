@@ -97,10 +97,13 @@ export const LesMiserables: Story = {
         },
       },
       // Matches the Observable example's three forces — `link`, `charge`,
-      // `center` — with only `center` exposed in the GUI. `link` and `charge`
-      // run at d3-force's own defaults.
+      // `center` — with only `center` exposed in the GUI. A force is only
+      // instantiated when its option key is present, so `link: {}` / `charge: {}`
+      // add those forces while leaving every knob at d3-force's own defaults;
+      // without them the sim runs `forceCenter` alone and the nodes never
+      // spread (they collapse into a tight, unreadable ball).
       layouts: {
-        force: { center: { x: 0, y: 0 } },
+        force: { link: {}, charge: {}, center: { x: 0, y: 0 } },
       },
       activeLayout: 'force',
     };
