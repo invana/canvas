@@ -9,20 +9,27 @@
  * solver once, bulk-writes positions plus per-edge anchor opts, emits
  * `start` → `tick` → `end`, and resolves. No tick loop.
  *
- * The layout writes:
- *  - per node: position (centre of the d3-sankey rect), and into `data`:
- *    `shape: 'rect'`, `size: rectWidth`, `height: rectHeight`.
- *  - per edge: into `data`: `strokeWidth: link.width`,
- *    `pathType: 'bump-horizontal'`, plus per-endpoint anchor opts
- *    (`sourceAnchor: 'edge-port'` with `{ side: 'right', offset }`,
- *    `targetAnchor: 'edge-port'` with `{ side: 'left', offset }`) so the
- *    ribbons attach at the correct y on each rect face.
+ * NOTE: this layout extends `Layout` directly (not `OneShotPositionLayout`).
+ * Its write is a single, tightly-ordered `store.batch` — positions, the solved
+ * rect sizes, and the per-edge `edge-port` ribbon anchors must land in ONE flush
+ * (the anchors are computed against the final rects). It also has no meaningful
+ * position transition (it replaces node geometry + ribbons). Both make the
+ * generic one-shot base a poor fit, so it stays standalone.
  *
- * Pair with `edge: { style: { shape: { pathType: 'bump-horizontal' }, strokeAlpha: 0.5, arrowTargetShape: 'none' } }`
+ * The layout writes:
+ *  - per node: position (centre of the d3-sankey rect), and `style.shape`
+ *    `{ kind: 'rect', width, height }`.
+ *  - per edge: `style.strokeWidth = link.width`, `style.shape.pathType =
+ *    'bump-horizontal'` with per-endpoint `edge-port` anchors, and
+ *    `arrowTargetShape: 'none'` (a ribbon never carries an arrowhead — and at
+ *    flow-proportional widths the default `'triangle'` marker renders as a huge
+ *    wedge).
+ *
+ * Pair with `edge: { style: { shape: { pathType: 'bump-horizontal' }, strokeAlpha: 0.5 } }`
  * on the `GraphLayer` to reproduce d3-sankey's SVG appearance.
  *
  * @example
- * const layout = new D3SankeyLayout({ size: [1200, 720], nodeWidth: 15, nodePadding: 10 });
+ * const layout = new D3SankeyLayout({ id: 'sankey', targetLayerId: 'graph', size: [1200, 720] });
  * await layout.apply(graphLayer);
  */
 
@@ -63,7 +70,9 @@ export class D3SankeyLayout extends Layout<GraphLayer> {
   private running = false;
 
   constructor(opts: D3SankeyLayoutOptions = {}) {
-    super();
+    // Forward `id` / `targetLayerId` to the base `Layout` so the layout can be
+    // registered in a `LayoutRegistry` and driven via `config.activeLayout`.
+    super(opts);
     this.opts = opts;
   }
 
@@ -144,7 +153,8 @@ export class D3SankeyLayout extends Layout<GraphLayer> {
     }
 
     // 4. Mark running, fire start, write positions + per-node + per-edge
-    //    hints in one batch so subscribers see a single coalesced flush.
+    //    hints in ONE batch so subscribers see a single coalesced flush — the
+    //    `edge-port` anchors resolve against the final rects in the same paint.
     this.running = true;
     this.events.emit('start', {});
 
@@ -172,12 +182,14 @@ export class D3SankeyLayout extends Layout<GraphLayer> {
       }
 
       // Per-edge geometry — stroke thickness ∝ flow value (d3-sankey sets
-      // `link.width` from the solver), plus per-endpoint anchor opts
-      // pointing at the right `edge-port`.
+      // `link.width` from the solver), plus per-endpoint anchor opts pointing
+      // at the right `edge-port`. `arrowTargetShape: 'none'` so the ribbon has
+      // no arrowhead (the layer default is `'triangle'`, which at sankey stroke
+      // widths renders as a huge wedge).
       //
-      // `link.y0` is the absolute world-y of the link's centre at the
-      // source's right face; `sourceCentreY` is the rect's centre y. The
-      // `edge-port` anchor receives the delta as its `offset`.
+      // `link.y0` is the absolute world-y of the link's centre at the source's
+      // right face; `src.cy` is the rect's centre y. The `edge-port` anchor
+      // receives the delta as its `offset`.
       for (const link of links) {
         const srcId = typeof link.source === 'string' ? link.source : link.source.id;
         const tgtId = typeof link.target === 'string' ? link.target : link.target.id;
@@ -185,10 +197,8 @@ export class D3SankeyLayout extends Layout<GraphLayer> {
         const tgt = sizes.get(tgtId);
         if (!src || !tgt) continue;
         const linkWidth = link.width ?? 1;
-        const linkY0 = (link.y0 ?? 0) + cy;
-        const linkY1 = (link.y1 ?? 0) + cy;
-        const sourceOffset = linkY0 - src.cy;
-        const targetOffset = linkY1 - tgt.cy;
+        const sourceOffset = (link.y0 ?? 0) + cy - src.cy;
+        const targetOffset = (link.y1 ?? 0) + cy - tgt.cy;
 
         const existing = store.getEdge(link.id);
         if (!existing) continue;
@@ -207,6 +217,7 @@ export class D3SankeyLayout extends Layout<GraphLayer> {
               targetAnchorOpts: { side: 'left', offset: targetOffset },
             },
             strokeWidth: Math.max(1, linkWidth),
+            arrowTargetShape: 'none',
           },
         });
       }

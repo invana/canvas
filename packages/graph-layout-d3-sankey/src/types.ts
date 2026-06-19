@@ -1,3 +1,4 @@
+import type { LayoutOptions } from '@invana/canvas';
 import type { SankeyNodeMinimal, SankeyLinkMinimal } from 'd3-sankey';
 
 /**
@@ -37,8 +38,12 @@ export interface SankeyLinkRef extends SankeyLinkMinimal<SankeyNodeRef, SankeyLi
  * Mirrors `d3-sankey`'s configuration surface 1:1. All fields are optional;
  * defaults follow d3's defaults except `size`, which defaults to
  * `[1000, 600]` so a fresh layout has somewhere to draw.
+ *
+ * Extends {@link LayoutOptions}, so it also accepts `id` / `targetLayerId`
+ * (registry + `config.activeLayout` wiring). Sankey snaps (no position
+ * transition — it replaces node rect sizes + edge ribbons).
  */
-export interface D3SankeyLayoutOptions {
+export interface D3SankeyLayoutOptions extends LayoutOptions {
   /**
    * Viewport size `[width, height]` the layout fills. Translated to
    * `d3.sankey().extent([[0, 0], [width, height]])`. Default `[1000, 600]`.
