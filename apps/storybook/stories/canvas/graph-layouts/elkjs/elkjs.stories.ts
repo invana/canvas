@@ -87,10 +87,10 @@ export const Layered: Story = {
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
     canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
 
-    // ElkLayout's constructor takes only its own ELK options (no id /
-    // targetLayerId pass-through), so it registers under the default id
-    // 'layout'. The config + activeLayout below key off that id.
-    const elkLayout = new ElkLayout();
+    // Register under id 'layout' and target the 'graph' layer, so `activeLayout`
+    // can resolve the layer and auto-run ELK on mount. The config + activeLayout
+    // below key off that id.
+    const elkLayout = new ElkLayout({ id: 'layout', targetLayerId: 'graph' });
     canvas.layouts.add(elkLayout);
 
     const canvasOptions = {

@@ -17,6 +17,7 @@
  * });
  */
 
+import type { OneShotLayoutOptions } from '@invana/graph';
 import type { GraphNode } from '@invana/graph';
 
 /**
@@ -71,8 +72,15 @@ export interface NodeSize {
   height: number;
 }
 
-/** `ElkLayout` constructor options. See top-level module doc. */
-export interface ElkLayoutOptions {
+/**
+ * `ElkLayout` constructor options. See top-level module doc.
+ *
+ * Extends {@link OneShotLayoutOptions}, so it also accepts `id` / `targetLayerId`
+ * (registry + `config.activeLayout` wiring) and `transition` / `transitionEase`
+ * (glide nodes to the ELK result instead of snapping — owned by the shared
+ * `OneShotPositionLayout` base).
+ */
+export interface ElkLayoutOptions extends OneShotLayoutOptions {
   /** `elk.algorithm`. Default: `'layered'`. */
   algorithm?: ElkAlgorithmName;
   /** `elk.direction`. Algorithms that respect direction: `layered`, `mrtree`, ... */

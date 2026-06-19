@@ -38,8 +38,7 @@ import ELK, {
   type LayoutOptions,
 } from 'elkjs/lib/elk.bundled.js';
 
-import { Layout } from '@invana/canvas';
-import type { EdgeStyle, GraphLayer, GraphNode } from '@invana/graph';
+import { OneShotPositionLayout, type GraphLayer, type GraphNode, type EdgeStyle, type LayoutPositions } from '@invana/graph';
 
 import type {
   ElkLayoutOptions,
@@ -50,37 +49,27 @@ import type {
 /** Fallback bounding box when no shape and no override give us a size. */
 const FALLBACK_NODE_SIZE: NodeSize = { width: 40, height: 40 };
 
-export class ElkLayout extends Layout<GraphLayer> {
-  private readonly opts: ElkLayoutOptions;
+export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
   /** Shared ELK instance — `elkjs` is happy to be reused across runs. */
   private readonly elk: ElkInstance;
-  /**
-   * Monotonic run id. Each `apply()` bumps it; the in-flight Promise's
-   * captured value is compared against it on settle to decide whether the
-   * result is still relevant.
-   */
-  private runToken = 0;
-  /** True while a run is in flight — guards `stop()` from emitting twice. */
-  private running = false;
 
   constructor(opts: ElkLayoutOptions = {}) {
-    super();
-    this.opts = opts;
+    // `ElkLayoutOptions` extends `OneShotLayoutOptions`, so `id` / `targetLayerId`
+    // (registry + `config.activeLayout` wiring) and `transition` / `transitionEase`
+    // (snap-or-glide, owned by the base) flow straight through to `super`. ELK-only
+    // fields are read from `this.opts` (owned by the base, merged on `setOptions`).
+    super(opts);
     this.elk = new ELK();
   }
 
   /**
-   * Run ELK against `layer`. Resolves when ELK settles OR the run is
-   * cancelled by `stop()` / a subsequent `apply()`. Even on cancellation
-   * the Promise resolves (never rejects) — the cancel path emits
-   * `end: { reason: 'stopped' }` and resolves cleanly.
+   * Snapshot the store, run ELK (async), and return centre-converted positions.
+   * The base writes them (snap or glide per `transition`) and then calls
+   * {@link onPositionsApplied} with the routed edges. A throw here is surfaced
+   * by the base (emits `end`, rejects the awaited `apply()`); a run superseded
+   * while ELK was in flight is dropped by the base's staleness check.
    */
-  async apply(layer: GraphLayer): Promise<void> {
-    // Cancel any in-flight run before starting a new one. `stop` bumps the
-    // token and emits `end: 'stopped'` for the previous run.
-    this.stop();
-
-    const token = ++this.runToken;
+  protected async computeLayout(layer: GraphLayer): Promise<LayoutPositions<ElkExtendedEdge[] | null> | null> {
     const store = layer.store;
 
     // 1. Snapshot nodes + edges, resolving width/height per node.
@@ -94,7 +83,7 @@ export class ElkLayout extends Layout<GraphLayer> {
       sizes.push(size);
       children.push({ id: n.id, width: size.width, height: size.height });
     }
-    if (children.length === 0) return;
+    if (children.length === 0) return null;
 
     const edges: ElkExtendedEdge[] = [];
     for (const e of store.edges()) {
@@ -106,102 +95,68 @@ export class ElkLayout extends Layout<GraphLayer> {
     const layoutOptions = buildLayoutOptions(this.opts);
     const graph: ElkNode = { id: 'root', layoutOptions, children, edges };
 
-    this.running = true;
-    this.events.emit('start', {});
+    // 3. Dispatch ELK (async).
+    const result = await this.elk.layout(graph);
 
-    // 3. Dispatch. `elk.layout` is async — we capture `token` so a stale
-    //    settle can be ignored cleanly.
-    let result: ElkNode;
-    try {
-      result = await this.elk.layout(graph);
-    } catch (err) {
-      // ELK threw (typically: malformed property bag). If still relevant,
-      // tear down + rethrow so the caller's awaited Promise rejects;
-      // otherwise the cancel path already emitted `end: 'stopped'`.
-      if (token === this.runToken) {
-        this.running = false;
-        this.events.emit('end', { reason: 'completed' });
-        throw err;
-      }
-      return;
-    }
-
-    // 4. Stale settle → nothing to do. The newer run owns the future.
-    if (token !== this.runToken) return;
-
-    // 5. Convert ELK top-left coordinates to canvas centre coordinates
-    //    and bulk-write. Iterate `result.children` (its child order is
-    //    the order we passed in), pairing with `sizes` by index.
+    // 4. Convert ELK top-left coordinates to canvas centre coordinates into the
+    //    target buffer. Iterate `result.children` (its child order is the order
+    //    we passed in), pairing with `sizes` by index.
     const resultChildren = result.children ?? [];
-    const buffer = new Float32Array(resultChildren.length * 2);
+    const target = new Float32Array(resultChildren.length * 2);
     for (let i = 0; i < resultChildren.length; i++) {
       const child = resultChildren[i]!;
       const size = sizes[i]!;
-      buffer[i * 2] = (child.x ?? 0) + size.width / 2;
-      buffer[i * 2 + 1] = (child.y ?? 0) + size.height / 2;
-    }
-    // 6a. Apply node positions in their own flush first. This moves the node
-    //     shapes and re-routes every incident connector once against the new
-    //     layout.
-    store.setPositionsBulk(ids, buffer);
-
-    // 6b. When ELK edge routing is on, read back each edge's computed bend
-    //     points and write them as `style.shape.waypoints` (pathType 'orth')
-    //     in a SEPARATE flush. This matters: the edge-style write must NOT
-    //     share a flush with the position write above. A position flush marks
-    //     every incident connector dirty and re-routes them via a plain
-    //     `updateConnector(id, {})` at flush end; bundling the waypoint write
-    //     into that same flush lets that re-route run alongside the
-    //     waypoint-applying `edge:update`, and the routed path doesn't stick.
-    //     Writing waypoints in their own flush (no concurrent node moves)
-    //     mirrors the hover/`rerenderEdge` path that applies cleanly.
-    //
-    //     ELK works in the same coordinate frame as the stored centres, and —
-    //     for centre-origin shapes (circle, and `composite` via GraphLayer's
-    //     centre-fit) — the rendered node occupies exactly ELK's node box, so
-    //     bend points line up with the cards without any per-edge offset.
-    if (this.opts.edgeRouting !== undefined) {
-      const routedEdges = (result.edges ?? []) as ElkExtendedEdge[];
-      store.batch(() => {
-        for (const e of routedEdges) {
-          // Use the FULL section path — startPoint + bends + endPoint — not
-          // just the interior bends. The start/end points sit on the node
-          // border where ELK's route leaves/enters perpendicularly, so the
-          // `orth` router connects the boundary-anchored endpoints to them
-          // along the edge without inventing a spurious out-and-back corner.
-          // (Passing only interior bends made orth L-bend across a long
-          // misaligned first/last leg → visible "peaks" at both ends.)
-          const section = e.sections?.[0];
-          const waypoints = section
-            ? [section.startPoint, ...(section.bendPoints ?? []), section.endPoint].map((p) => ({
-                x: p.x,
-                y: p.y,
-              }))
-            : [];
-          const prev = (store.getEdge(e.id)?.style as EdgeStyle | undefined) ?? {};
-          store.updateEdge(e.id, {
-            style: { ...prev, shape: { ...(prev.shape ?? {}), pathType: 'orth', waypoints } },
-          });
-        }
-      });
+      target[i * 2] = (child.x ?? 0) + size.width / 2;
+      target[i * 2 + 1] = (child.y ?? 0) + size.height / 2;
     }
 
-    this.events.emit('tick', {});
-    this.running = false;
-    this.events.emit('end', { reason: 'completed' });
+    // Thread routed edges to onPositionsApplied (only when edge routing is on).
+    const meta = this.opts.edgeRouting !== undefined ? ((result.edges ?? []) as ElkExtendedEdge[]) : null;
+    return { ids, positions: target, meta };
   }
 
   /**
-   * Cancel an in-flight run. The current ELK Promise (if any) is left to
-   * settle, but its result is dropped. Positions already in the store are
-   * untouched. No-op when idle.
+   * When ELK edge routing is on, read back each edge's computed bend points and
+   * write them as `style.shape.waypoints` (pathType 'orth') — once node positions
+   * have settled, in their own flush.
+   *
+   * This must NOT share a flush with the position write: a position flush marks
+   * every incident connector dirty and re-routes them via a plain
+   * `updateConnector(id, {})` at flush end; bundling the waypoint write into that
+   * same flush lets that re-route run alongside the waypoint-applying `edge:update`,
+   * and the routed path doesn't stick. A separate flush (no concurrent node moves)
+   * mirrors the hover/`rerenderEdge` path that applies cleanly.
+   *
+   * ELK works in the same coordinate frame as the stored centres, and — for
+   * centre-origin shapes (circle, and `composite` via GraphLayer's centre-fit) —
+   * the rendered node occupies exactly ELK's node box, so bend points line up with
+   * the cards without any per-edge offset.
    */
-  stop(): void {
-    if (!this.running) return;
-    this.running = false;
-    // Bump the token so the in-flight Promise sees itself as stale.
-    this.runToken++;
-    this.events.emit('end', { reason: 'stopped' });
+  protected override onPositionsApplied(layer: GraphLayer, meta: unknown): void {
+    const routedEdges = meta as ElkExtendedEdge[] | null;
+    if (!routedEdges) return;
+    const store = layer.store;
+    store.batch(() => {
+      for (const e of routedEdges) {
+        // Use the FULL section path — startPoint + bends + endPoint — not just
+        // the interior bends. The start/end points sit on the node border where
+        // ELK's route leaves/enters perpendicularly, so the `orth` router connects
+        // the boundary-anchored endpoints to them without inventing a spurious
+        // out-and-back corner. (Interior bends only made orth L-bend across a long
+        // misaligned first/last leg → visible "peaks" at both ends.)
+        const section = e.sections?.[0];
+        const waypoints = section
+          ? [section.startPoint, ...(section.bendPoints ?? []), section.endPoint].map((p) => ({
+              x: p.x,
+              y: p.y,
+            }))
+          : [];
+        const prev = (store.getEdge(e.id)?.style as EdgeStyle | undefined) ?? {};
+        store.updateEdge(e.id, {
+          style: { ...prev, shape: { ...(prev.shape ?? {}), pathType: 'orth', waypoints } },
+        });
+      }
+    });
   }
 }
 
