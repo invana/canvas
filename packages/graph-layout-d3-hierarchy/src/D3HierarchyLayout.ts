@@ -30,10 +30,20 @@ import {
   tree as d3tree,
 } from 'd3-hierarchy';
 
-import { Layout } from '@invana/canvas';
-import type { GraphLayer } from '@invana/graph';
+import { OneShotPositionLayout, type GraphLayer, type LayoutPositions } from '@invana/graph';
 
 import type { D3HierarchyLayoutOptions, D3HierarchyLayoutMode } from './types';
+
+/** Pack-only: per-node circle diameter the layout assigns, applied post-position. */
+type SizeMap = Map<string, number>;
+/** Sunburst-only: per-node arc params, applied post-position. */
+type ArcMap = Map<string, { innerR: number; outerR: number; startAngle: number; endAngle: number }>;
+
+/** Per-run geometry threaded from `computeLayout` to `onPositionsApplied`. */
+interface HierarchyMeta {
+  sizes: SizeMap | null;
+  arcs: ArcMap | null;
+}
 
 interface TreeNode {
   id: string;
@@ -61,23 +71,23 @@ const defaultPackValue = (n: { data?: unknown }): number => {
   return 1;
 };
 
-export class D3HierarchyLayout extends Layout<GraphLayer> {
-  private readonly opts: D3HierarchyLayoutOptions;
-  /** True while a run is active. Guards `stop()` so `end` only fires once. */
-  private running = false;
-
-  constructor(opts: D3HierarchyLayoutOptions = {}) {
-    super();
-    this.opts = opts;
+export class D3HierarchyLayout extends OneShotPositionLayout<D3HierarchyLayoutOptions> {
+  /**
+   * `pack` / `sunburst` replace node *geometry* (circle sizes / arc sectors)
+   * rather than move nodes, so tweening their positions would look wrong — snap
+   * those. Position modes (tree / cluster / radial-*) honour `transition`.
+   */
+  protected override shouldTransition(): boolean {
+    const mode = this.opts.mode ?? DEFAULT_MODE;
+    return mode !== 'pack' && mode !== 'sunburst';
   }
 
   /**
-   * Run the layout against `layer`. Resolves after the single position pass
-   * has been written to the store. Lifecycle events fire in order:
-   * `start` → `tick` (once) → `end`.
+   * Compute positions for the whole snapshot in one pass. The base writes them
+   * (snap or tween), then calls {@link onPositionsApplied} to flush any pack /
+   * sunburst geometry. Lifecycle (`start` → `tick` → `end`) is owned by the base.
    */
-  async apply(layer: GraphLayer): Promise<void> {
-    this.stop();
+  protected computeLayout(layer: GraphLayer): LayoutPositions<HierarchyMeta> | null {
     const store = layer.store;
 
     // 1. Snapshot store → ids + parent/child map. Build TreeNode objects up
@@ -90,7 +100,7 @@ export class D3HierarchyLayout extends Layout<GraphLayer> {
       ids.push(n.id);
       nodeById.set(n.id, { id: n.id, data: n.data });
     }
-    if (ids.length === 0) return;
+    if (ids.length === 0) return null;
 
     // Track parent count per node to validate the snapshot is a tree.
     const parentCount = new Map<string, number>();
@@ -268,10 +278,8 @@ export class D3HierarchyLayout extends Layout<GraphLayer> {
       positions.set(node.data.id, [x + cx, y + cy]);
     });
 
-    // 5. Mark running, fire start, bulk-write, fire tick + end.
-    this.running = true;
-    this.events.emit('start', {});
-
+    // 5. Pack into the position buffer (id order); stash pack/sunburst geometry
+    //    for `onPositionsApplied` (the base writes positions first).
     const buffer = new Float32Array(ids.length * 2);
     for (let i = 0, j = 0; i < ids.length; i++, j += 2) {
       const p = positions.get(ids[i]!);
@@ -280,16 +288,26 @@ export class D3HierarchyLayout extends Layout<GraphLayer> {
         buffer[j + 1] = p[1];
       }
     }
-    if (isPack) {
-      // Pack writes per-node sizes in addition to positions. Wrap both in a
-      // store batch so the renderer sees a single coalesced flush instead of
-      // N separate node:update events firing renders. Size is projected onto
-      // `style.shape` as a circle radius.
+    return {
+      ids,
+      positions: buffer,
+      meta: { sizes: isPack ? sizes : null, arcs: isSunburst ? arcs : null },
+    };
+  }
+
+  /**
+   * Flush pack circle sizes / sunburst arc geometry onto `style.shape` once the
+   * node positions have settled. Each in its own store batch so the renderer
+   * sees a single coalesced flush. No-op for the position-only modes.
+   */
+  protected override onPositionsApplied(layer: GraphLayer, meta: unknown): void {
+    const store = layer.store;
+    const { sizes, arcs } = (meta as HierarchyMeta | undefined) ?? { sizes: null, arcs: null };
+
+    if (sizes) {
+      // Pack: project each diameter onto `style.shape` as a circle radius.
       store.batch(() => {
-        store.setPositionsBulk(ids, buffer);
-        for (const id of ids) {
-          const diameter = sizes.get(id);
-          if (diameter === undefined) continue;
+        for (const [id, diameter] of sizes) {
           const existing = store.getNode(id);
           if (!existing) continue;
           const existingStyle =
@@ -297,23 +315,16 @@ export class D3HierarchyLayout extends Layout<GraphLayer> {
               ? (existing.style as Record<string, unknown>)
               : {};
           store.updateNode(id, {
-            style: {
-              ...existingStyle,
-              shape: { kind: 'circle', radius: diameter / 2 },
-            },
+            style: { ...existingStyle, shape: { kind: 'circle', radius: diameter / 2 } },
           });
         }
       });
-    } else if (isSunburst) {
-      // Sunburst writes arc geometry onto each node's `style.shape`. The
-      // renderer reads the `kind: 'arc'` discriminant + (innerR / outerR /
-      // startAngle / endAngle) to instantiate the right ArcSpec. Wrap in a
-      // batch for the same reason as pack — one coalesced flush.
+    }
+
+    if (arcs) {
+      // Sunburst: the renderer reads the `kind: 'arc'` discriminant + radii/angles.
       store.batch(() => {
-        store.setPositionsBulk(ids, buffer);
-        for (const id of ids) {
-          const arc = arcs.get(id);
-          if (arc === undefined) continue;
+        for (const [id, arc] of arcs) {
           const existing = store.getNode(id);
           if (!existing) continue;
           const existingStyle =
@@ -334,24 +345,7 @@ export class D3HierarchyLayout extends Layout<GraphLayer> {
           });
         }
       });
-    } else {
-      store.setPositionsBulk(ids, buffer);
     }
-    this.events.emit('tick', {});
-
-    if (this.running) {
-      this.running = false;
-      this.events.emit('end', { reason: 'completed' });
-    }
-  }
-
-  /** Cancel a run. The synchronous body of `apply()` rarely yields control
-   *  long enough for this to fire, but it keeps the API contract symmetric
-   *  with iterative layouts. */
-  stop(): void {
-    if (!this.running) return;
-    this.running = false;
-    this.events.emit('end', { reason: 'stopped' });
   }
 
   // ─── internals ────────────────────────────────────────────────────────

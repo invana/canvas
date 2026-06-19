@@ -1,3 +1,4 @@
+import type { OneShotLayoutOptions } from '@invana/graph';
 import type { HierarchyNode } from 'd3-hierarchy';
 
 /**
@@ -57,8 +58,13 @@ export type CartesianOrientation = 'vertical' | 'horizontal';
  * **All options default to `undefined`.** Only `mode` has an internal default
  * (`'radial-tree'`). Anything you omit falls through to d3-hierarchy's own
  * defaults — no setter is called when you don't provide a value.
+ *
+ * Extends {@link OneShotLayoutOptions}, so it also accepts `id` / `targetLayerId`
+ * (for registry / `config.activeLayout` wiring) and `transition` /
+ * `transitionEase` (glide nodes to the computed layout instead of snapping —
+ * vetoed for `pack` / `sunburst`, which replace node geometry rather than move it).
  */
-export interface D3HierarchyLayoutOptions {
+export interface D3HierarchyLayoutOptions extends OneShotLayoutOptions {
   /** Layout mode. Default `'radial-tree'`. */
   mode?: D3HierarchyLayoutMode;
 
