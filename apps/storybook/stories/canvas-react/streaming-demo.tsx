@@ -1,33 +1,38 @@
 /**
- * Streaming / live-append test — config-first `<Canvas config={…}>` setup that
- * **grows** the graph in place: a timer pushes a small chunk of new nodes +
- * edges into the store every few seconds via `layer.store.addData({ nodes,
- * edges })` (the non-destructive append path — it does NOT clear the store).
+ * Shared streaming-demo harness for the two layout stories
+ * (`CyclicLayouts`, `AcyclicLayouts`). Both grow a graph in place — a timer
+ * pushes a small chunk of new nodes + edges into the store every few seconds
+ * via `layer.store.addData({ nodes, edges })` (the non-destructive append path:
+ * it does NOT clear the store) — and both wear the exact same chrome (one
+ * combined toolbar with stream controls, a live stats readout, a layout
+ * switcher, select-mode picker, undo/redo, cut/copy/paste, zoom/fit/lock and a
+ * grid toggle). The ONLY things that differ are:
+ *
+ *   1. the **seed** — a cyclic ring vs. a single-rooted tree — and
+ *   2. the **layout menu** — which `Layout` instances the switcher offers.
+ *
+ * That's why this lives in a plain (non-`.stories`) module the two story files
+ * parameterise: pass `makeSeed` + `extraLayouts` and you get the whole demo.
  *
  *   - `store.addData(...)` flushes once and emits `data:changed`
- *     (`addedNodes > 0`), which `GraphCanvas`'s active-layout wiring projects
- *     into an automatic `runLayout(activeLayout)`.
- *   - For **force** that re-run is incremental (seeded from each node's current
- *     position): placed nodes stay put, the sim only finds room for the new
- *     ones. For **ELK** it's a full one-shot re-layout each chunk.
+ *     (`addedNodes > 0`), which the active-layout wiring projects into an
+ *     automatic `runLayout(activeLayout)`. For **force** that re-run is
+ *     incremental (seeded from each node's current position); one-shot layouts
+ *     (ELK / hierarchy / sankey / geometric) do a full re-layout each chunk.
+ *   - The append goes straight to the store (not through `<GraphLayer data>`,
+ *     which calls the destructive `setData`), so the streaming lives in a small
+ *     `<StreamingFeed>` child that reads the engine from `useCanvas()`.
+ *   - The layout switcher drives `config.activeLayout` via `canvas.update(...)`,
+ *     so whichever layout you pick is the one the stream re-runs on every
+ *     append (the picked layout genuinely takes over, rather than being snapped
+ *     back by a fixed active force layout).
  *
- * The append goes straight to the store (not through `<GraphLayer data>`, which
- * calls the destructive `setData`), so the streaming lives in a small
- * `<StreamingFeed>` child that reads the engine from `useCanvas()`.
- *
- * The whole chrome is **one combined toolbar** pinned top-centre (the old
- * separate header is gone): the stream controls (pause/resume, reset) and a live
- * stats readout sit alongside the standard engine toolbars — a layout switcher,
- * select-mode picker, undo/redo, cut/copy/paste, zoom/fit/lock and a grid
- * toggle. The layout switcher drives `config.activeLayout` via
- * `canvas.update(...)`, so whichever layout you pick is the one the stream
- * re-runs on every append (ELK genuinely takes over, rather than being snapped
- * back by a fixed active force layout).
+ * Every streamed edge carries `data.value = 1` so the sankey layout (which
+ * throws on weightless links) is happy; the other layouts ignore it.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
-import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   BrushSelectBehaviour,
@@ -48,14 +53,15 @@ import {
   ViewToolbar,
   WheelZoomBehaviour,
   useCanvas,
+  useFitContent,
   useGraphCanvasUpdate,
   useSelectMode,
   type CanvasConfig,
   type ToolbarItem,
 } from '@invana/canvas-react';
+import type { Layout } from '@invana/canvas';
 import { Separator } from '@invana/ui';
 import type { GraphData, GraphLayer as GraphLayerEngine, GraphNode } from '@invana/graph';
-import { ElkLayout } from '@invana/graph-layout-elkjs';
 import {
   ClipboardPaste,
   Copy,
@@ -78,31 +84,37 @@ import {
   ZoomOut,
 } from 'lucide-react';
 
-const meta: Meta = { title: 'canvas-react/StreamingData' };
-export default meta;
-type Story = StoryObj;
-
-const PALETTE = [
+/** Node-group colour ramp, shared by both stories' seed generators. */
+export const PALETTE = [
   0x9ca3af, 0xef4444, 0xf59e0b, 0xeab308, 0x10b981, 0x06b6d4, 0x3b82f6, 0x8b5cf6, 0xec4899,
   0x14b8a6, 0xa3e635,
 ] as const;
 
-const LAYER_ID = 'graph';
+/** Id of the single `<GraphLayer>` every layout targets. */
+export const LAYER_ID = 'graph';
+
 const INTERVAL_MS = 2000;
 const CHUNK_SIZE = 10;
 
-/** Small starting graph — a ring the stream then grows outward from. */
-function seedRing(n: number): GraphData {
-  const nodes = Array.from({ length: n }, (_, i) => ({
-    id: `seed${i}`,
-    data: { group: i % PALETTE.length },
-  }));
-  const edges = Array.from({ length: n }, (_, i) => ({
-    id: `seedE${i}`,
-    source: `seed${i}`,
-    target: `seed${(i + 1) % n}`,
-  }));
-  return { nodes, edges };
+/**
+ * Shared glide so every imperatively-registered one-shot layout tweens nodes
+ * from their current spots to the new arrangement instead of teleporting — on
+ * both the layout switch and each streamed re-layout. (Layouts that replace
+ * node *geometry* rather than move nodes — pack / sunburst / sankey — veto the
+ * tween internally and snap.)
+ */
+export const GLIDE = { transition: true, transitionEase: 'easeInOutCubic' } as const;
+
+/**
+ * One switchable layout: its registered `id`, the switcher label, and a factory
+ * that builds the instance. The switcher option map and the `<RegisterLayouts>`
+ * effect both derive from the list a story passes in, so adding a layout is a
+ * single line in that story.
+ */
+export interface LayoutEntry {
+  id: string;
+  label: string;
+  make: () => Layout;
 }
 
 // Module-level, stable identity. All serialisable settings live here; the
@@ -132,14 +144,6 @@ const CANVAS_OPTIONS: CanvasConfig = {
   activeLayout: 'force',
 };
 
-// Layout switcher options (keys = registered layout ids). 'force' is registered
-// by <D3ForceLayout id="force">; the ELK ids by <RegisterElkLayouts>.
-const LAYOUT_OPTIONS: Record<string, string> = {
-  force: 'Force (d3)',
-  'elk-layered': 'Layered (ELK)',
-  'elk-stress': 'Stress (ELK)',
-};
-
 // Select-mode key → registered behaviour id. `useSelectMode` enables exactly one
 // and disables the rest. `click` maps to '' (no drag-select behaviour) — click
 // select is always on and doesn't collide with the Shift+drag brush/lasso pair.
@@ -164,7 +168,10 @@ interface Stats {
 /**
  * Appends `CHUNK_SIZE` new nodes (each wired to a random existing node) every
  * `INTERVAL_MS` while `running`. Reads the engine from context and writes
- * straight to the layer's store — the non-destructive append path.
+ * straight to the layer's store — the non-destructive append path. Because each
+ * new node is freshly minted and gets exactly one incoming edge, the stream
+ * never introduces a cycle on its own: the graph stays cyclic or acyclic purely
+ * according to its seed.
  */
 function StreamingFeed({
   running,
@@ -196,7 +203,9 @@ function StreamingFeed({
         nodes.push({ id, data: { group: n % PALETTE.length } });
         if (pool.length > 0) {
           const parent = pool[Math.floor(Math.random() * pool.length)]!;
-          edges.push({ id: `liveE${n}`, source: parent, target: id });
+          // `data.value` is required by the sankey layout (it throws on a
+          // weightless link); every other layout ignores it.
+          edges.push({ id: `liveE${n}`, source: parent, target: id, data: { value: 1 } });
         }
         pool.push(id);
       }
@@ -221,39 +230,21 @@ function StreamingFeed({
 }
 
 /**
- * Registers the ELK layouts by id so the switcher can make either the active
- * layout. ELK has no `<ElkLayout>` React wrapper yet, so we register imperatively
- * from context (mirrors what the `<D3ForceLayout>` wrapper does for force).
+ * Registers every switchable layout (see {@link LayoutEntry}) by id so the
+ * switcher can make any of them the active layout. These layouts have no React
+ * wrapper yet, so we register imperatively from context (mirrors what the
+ * `<D3ForceLayout>` wrapper does for force). The glide (owned by the shared
+ * `OneShotPositionLayout` base) is cancelled + restarted if a chunk lands
+ * mid-tween.
  */
-function RegisterElkLayouts() {
+function RegisterLayouts({ extraLayouts }: { extraLayouts: readonly LayoutEntry[] }) {
   const canvas = useCanvas();
   useEffect(() => {
-    // `transition` glides nodes from their current spots to the ELK result
-    // instead of teleporting — on both the layout switch and each streamed
-    // re-layout. (Owned by the shared OneShotPositionLayout base; cancelled +
-    // restarted if a chunk lands mid-glide.)
-    const layered = new ElkLayout({
-      id: 'elk-layered',
-      targetLayerId: LAYER_ID,
-      algorithm: 'layered',
-      direction: 'RIGHT',
-      transition: true,
-      transitionEase: 'easeInOutCubic',
-    });
-    const stress = new ElkLayout({
-      id: 'elk-stress',
-      targetLayerId: LAYER_ID,
-      algorithm: 'stress',
-      transition: true,
-      transitionEase: 'easeInOutCubic',
-    });
-    canvas.layouts.add(layered);
-    canvas.layouts.add(stress);
+    for (const entry of extraLayouts) canvas.layouts.add(entry.make());
     return () => {
-      canvas.layouts.remove('elk-layered');
-      canvas.layouts.remove('elk-stress');
+      for (const entry of extraLayouts) canvas.layouts.remove(entry.id);
     };
-  }, [canvas]);
+  }, [canvas, extraLayouts]);
   return null;
 }
 
@@ -301,12 +292,16 @@ function GraphStats({ stats }: { stats: Stats }) {
 
 /**
  * Layout switcher — repoints `config.activeLayout` via `canvas.update(...)`, so
- * the picked layout becomes the one the stream re-runs on every append (ELK
- * persists instead of being snapped back by a fixed active force layout).
+ * the picked layout becomes the one the stream re-runs on every append (the
+ * incoming layout persists instead of being snapped back by the active force
+ * layout). On switch it also **fits the content** once the incoming layout has
+ * settled, so a layout that lands the graph in a different place / extent (ELK
+ * vs. radial-tree vs. sankey, …) is framed instead of left off-screen.
  */
-function LayoutSelect() {
+function LayoutSelect({ options }: { options: Record<string, string> }) {
   const canvas = useCanvas();
   const update = useGraphCanvasUpdate();
+  const { fitContent } = useFitContent(LAYER_ID);
   const [active, setActive] = useState('force');
   const items: ToolbarItem[] = [
     {
@@ -314,17 +309,31 @@ function LayoutSelect() {
       key: 'layout',
       label: 'Layout',
       value: active,
-      options: LAYOUT_OPTIONS,
+      options,
       onChange: (key) => {
         if (key === active) return;
         // Stop the outgoing layout before switching. d3-force keeps a *live*
         // simulation that re-heats on every position write (it listens to the
         // store's `node:update`) — even after it settles. If it isn't stopped it
         // keeps tugging nodes and overrides whatever the incoming layout (e.g.
-        // ELK) just placed, so the streamed-in nodes never settle into the ELK
-        // arrangement. `stop()` kills the sim and detaches that listener;
-        // positions stay in the store for the next layout to seed from.
+        // ELK) just placed, so the streamed-in nodes never settle into the
+        // incoming arrangement. `stop()` kills the sim and detaches that
+        // listener; positions stay in the store for the next layout to seed from.
         (canvas.layouts.get(active) as { stop?: () => void } | undefined)?.stop?.();
+
+        // Fit once the *incoming* layout finishes. Attached before `update(...)`
+        // so a synchronous one-shot run (pack / sunburst / sankey emit `end`
+        // inline) is still caught. One-shot listener: it detaches on the first
+        // `end` so the per-chunk re-layouts that follow don't keep re-fitting,
+        // and we skip a `stopped` end (a rapid re-switch) — only a natural
+        // `completed` settle reframes.
+        const incoming = canvas.layouts.get(key);
+        let off: (() => void) | undefined;
+        off = incoming?.events.on('end', ({ reason }) => {
+          off?.();
+          if (reason === 'completed') fitContent();
+        });
+
         setActive(key);
         update({ activeLayout: key });
       },
@@ -353,14 +362,37 @@ function SelectModeControl() {
   return <ToolbarItems items={items} orientation="horizontal" />;
 }
 
-function Demo() {
+/**
+ * The whole streaming demo, parameterised by the two story files.
+ *
+ * @param makeSeed - builds the starting graph (a ring for the cyclic story, a
+ *   single-rooted tree for the acyclic one). Re-invoked on every reset so a
+ *   fresh graph (and a fresh sim) is created.
+ * @param extraLayouts - the non-force layouts the switcher offers. `force` is
+ *   always present (registered by `<D3ForceLayout id="force">`); these are
+ *   appended after it.
+ */
+export function StreamingDemo({
+  makeSeed,
+  extraLayouts,
+}: {
+  makeSeed: () => GraphData;
+  extraLayouts: readonly LayoutEntry[];
+}) {
   const [running, setRunning] = useState(true);
   const [runId, setRunId] = useState(0);
   const [stats, setStats] = useState<Stats>({ nodes: 0, edges: 0, chunks: 0 });
 
+  // Layout switcher options (keys = registered layout ids). 'force' is the
+  // built-in baseline; the rest come from the story's `extraLayouts`.
+  const layoutOptions = useMemo<Record<string, string>>(
+    () => ({ force: 'Force (d3)', ...Object.fromEntries(extraLayouts.map((l) => [l.id, l.label])) }),
+    [extraLayouts],
+  );
+
   // Stable seed — applied once via <GraphLayer data>; the stream takes over from
-  // there. Re-keyed on reset so a fresh ring (and fresh sim) is created.
-  const seed = useMemo(() => seedRing(6), [runId]);
+  // there. Re-keyed on reset so a fresh graph (and fresh sim) is created.
+  const seed = useMemo(() => makeSeed(), [makeSeed, runId]);
 
   // Stable callbacks so the feed's interval effect doesn't churn each render.
   const onStats = useCallback((s: Stats) => setStats(s), []);
@@ -397,9 +429,9 @@ function Demo() {
         <BrushSelectBehaviour id="brush-select" targetLayerId={LAYER_ID} />
         <LassoSelectBehaviour id="lasso-select" targetLayerId={LAYER_ID} />
 
-        {/* Layouts — force via the wrapper, ELK registered imperatively. */}
+        {/* Layouts — force via the wrapper, the rest registered imperatively. */}
         <D3ForceLayout id="force" targetLayerId={LAYER_ID} />
-        <RegisterElkLayouts />
+        <RegisterLayouts extraLayouts={extraLayouts} />
 
         {/* The live-append driver. */}
         <StreamingFeed running={running} onStats={onStats} />
@@ -412,7 +444,7 @@ function Demo() {
               <Separator orientation="vertical" style={sepStyle} />
               <GraphStats stats={stats} />
               <Separator orientation="vertical" style={sepStyle} />
-              <LayoutSelect />
+              <LayoutSelect options={layoutOptions} />
               <Separator orientation="vertical" style={sepStyle} />
               <SelectModeControl />
               <Separator orientation="vertical" style={sepStyle} />
@@ -447,8 +479,4 @@ const statsTextStyle: CSSProperties = {
   whiteSpace: 'nowrap',
   padding: '0 4px',
   fontVariantNumeric: 'tabular-nums',
-};
-
-export const StreamingData: Story = {
-  render: () => <Demo />,
 };
