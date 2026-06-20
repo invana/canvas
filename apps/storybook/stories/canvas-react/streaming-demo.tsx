@@ -96,6 +96,11 @@ export const LAYER_ID = 'graph';
 const INTERVAL_MS = 2000;
 const CHUNK_SIZE = 10;
 
+/** Base node radius — the circle every node renders as unless a geometry-rewriting
+ *  layout (pack / sunburst) overrides it. Shared by the layer config and the
+ *  on-switch geometry reset so they stay in lockstep. */
+const NODE_RADIUS = 6;
+
 /**
  * Shared glide so every imperatively-registered one-shot layout tweens nodes
  * from their current spots to the new arrangement instead of teleporting — on
@@ -125,7 +130,7 @@ const CANVAS_OPTIONS: CanvasConfig = {
   layers: {
     background: { type: 'pattern', patternType: 'dots', backgroundColor: '#0f172a', color: '#1e293b' },
     graph: {
-      node: { style: { shape: { kind: 'circle', radius: 6 } } },
+      node: { style: { shape: { kind: 'circle', radius: NODE_RADIUS } } },
       edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.6 } },
     },
   },
@@ -157,6 +162,22 @@ const SELECT_ICONS = {
   click: MousePointer2,
   brush: SquareDashedMousePointer,
   lasso: Lasso,
+};
+
+// Edge path-type switcher options (keys = `EdgePathType` ids the renderer
+// understands). Drives `layers.graph.edge.style.shape.pathType` via
+// `canvas.update(...)`, re-routing every edge live. The radial-only
+// (`bump-radial` / `step-radial`) and self-loop (`loop-*`) variants are omitted
+// — they don't suit a general streaming graph.
+const EDGE_TYPE_OPTIONS: Record<string, string> = {
+  straight: 'Straight',
+  bezier: 'Bezier',
+  quadratic: 'Quadratic',
+  smooth: 'Smooth',
+  rounded: 'Rounded',
+  orth: 'Orthogonal',
+  manhattan: 'Manhattan',
+  'bump-horizontal': 'Bump',
 };
 
 interface Stats {
@@ -321,17 +342,44 @@ function LayoutSelect({ options }: { options: Record<string, string> }) {
         // listener; positions stay in the store for the next layout to seed from.
         (canvas.layouts.get(active) as { stop?: () => void } | undefined)?.stop?.();
 
-        // Fit once the *incoming* layout finishes. Attached before `update(...)`
-        // so a synchronous one-shot run (pack / sunburst / sankey emit `end`
-        // inline) is still caught. One-shot listener: it detaches on the first
-        // `end` so the per-chunk re-layouts that follow don't keep re-fitting,
-        // and we skip a `stopped` end (a rapid re-switch) — only a natural
-        // `completed` settle reframes.
+        // Reset per-node geometry baked in by a previous geometry-rewriting
+        // layout. `pack` / `sunburst` write each node's `style.shape` (a sized
+        // disc / an arc sector) straight into the store; a position-only
+        // incoming layout (ELK / force / hierarchy-tree / geometric) never
+        // clears it, so without this the morphed shapes — or, worst case,
+        // near-zero rects — persist and the nodes look wrong or vanish. Stamp
+        // every node back to the base circle before the incoming layout runs.
+        const layer = canvas.layers.get<GraphLayerEngine>(LAYER_ID);
+        if (layer) {
+          const { store } = layer;
+          store.batch(() => {
+            for (const n of store.nodes()) {
+              const style =
+                n.style && typeof n.style === 'object' ? (n.style as Record<string, unknown>) : {};
+              store.updateNode(n.id, {
+                style: { ...style, shape: { kind: 'circle', radius: NODE_RADIUS } },
+              });
+            }
+          });
+        }
+
+        // Fit once the *incoming* layout settles. Attached before `update(...)`
+        // so a synchronous one-shot run (which emits `end` a microtask later) is
+        // still caught. We wait for a `completed` end and **ignore** any
+        // `stopped` ones: a fresh run cancels whatever was mid-flight first
+        // (`Layout.apply()` calls `stop()`, emitting `end{stopped}` before
+        // `start`), and the fast synchronous layouts (hierarchy / geometric) can
+        // surface that stop before their real settle. Detaching on the first
+        // `end` regardless — as we used to — swallowed the fit for exactly those
+        // layouts while the slow async ELK run always reached `completed` first
+        // (hence "only ELK fits"). Detach after the fit so the per-chunk
+        // re-layouts that follow don't keep reframing.
         const incoming = canvas.layouts.get(key);
         let off: (() => void) | undefined;
         off = incoming?.events.on('end', ({ reason }) => {
+          if (reason !== 'completed') return;
           off?.();
-          if (reason === 'completed') fitContent();
+          fitContent();
         });
 
         setActive(key);
@@ -357,6 +405,32 @@ function SelectModeControl() {
       options: modeOptions,
       icons: SELECT_ICONS,
       onChange: setMode,
+    },
+  ];
+  return <ToolbarItems items={items} orientation="horizontal" />;
+}
+
+/**
+ * Edge path-type switcher — sets `layers.{LAYER_ID}.edge.style.shape.pathType`
+ * via `canvas.update(...)`, which deep-merges into the edge template and
+ * re-routes every edge live (the existing `strokeColor` / `strokeWidth` are
+ * preserved). Persists across layout switches and the streamed appends.
+ */
+function EdgeTypeSelect() {
+  const update = useGraphCanvasUpdate();
+  const [type, setType] = useState('straight');
+  const items: ToolbarItem[] = [
+    {
+      type: 'select',
+      key: 'edge-type',
+      label: 'Edge',
+      value: type,
+      options: EDGE_TYPE_OPTIONS,
+      onChange: (key) => {
+        if (key === type) return;
+        setType(key);
+        update({ layers: { [LAYER_ID]: { edge: { style: { shape: { pathType: key } } } } } });
+      },
     },
   ];
   return <ToolbarItems items={items} orientation="horizontal" />;
@@ -445,6 +519,8 @@ export function StreamingDemo({
               <GraphStats stats={stats} />
               <Separator orientation="vertical" style={sepStyle} />
               <LayoutSelect options={layoutOptions} />
+              <Separator orientation="vertical" style={sepStyle} />
+              <EdgeTypeSelect />
               <Separator orientation="vertical" style={sepStyle} />
               <SelectModeControl />
               <Separator orientation="vertical" style={sepStyle} />
