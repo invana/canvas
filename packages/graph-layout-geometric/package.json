@@ -1,6 +1,6 @@
 {
   "name": "@invana/graph-layout-geometric",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Dependency-free geometric layouts (grid / snake / circular) for @invana/graph.",
   "type": "module",
   "main": "./dist/index.js",

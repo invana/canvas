@@ -1,6 +1,6 @@
 {
   "name": "@invana/canvas-ui",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Schema-driven, engine-agnostic React UI components (style editors, panels, controls) for Invana graph tools — built on the @invana/forms design-kit form-generator.",
   "type": "module",
   "main": "./dist/index.js",
