@@ -7,6 +7,19 @@
  * call. There is no iterative simulation — the run emits exactly one
  * `tick` event, immediately followed by `end`.
  *
+ * ## Off-main-thread solve
+ *
+ * The ELK solve runs in a **Web Worker** (`elkjs/lib/elk-worker.min.js` via
+ * the `elk-api` build), created lazily on the first run and reused for the
+ * instance's lifetime. The algorithm is CPU-heavy and super-linear in graph
+ * size; running it on the main thread (as `elk.bundled.js`'s synchronous
+ * "fake worker" does) blocks paint and input for the whole computation — a
+ * multi-second freeze when a one-shot layout re-runs on every streaming
+ * update. The worker keeps the UI responsive while ELK works. Override the
+ * worker construction via {@link ElkLayoutOptions.workerFactory}; when no
+ * `Worker` global exists (Node / SSR / tests) the layout falls back to the
+ * synchronous bundle.
+ *
  * ## Coordinate convention
  *
  * ELK returns top-left corner coordinates for every node. `@invana/graph`
@@ -36,7 +49,7 @@ import ELK, {
   type ElkExtendedEdge,
   type ElkNode,
   type LayoutOptions,
-} from 'elkjs/lib/elk.bundled.js';
+} from 'elkjs/lib/elk-api.js';
 
 import { OneShotPositionLayout, type GraphLayer, type GraphNode, type EdgeStyle, type LayoutPositions } from '@invana/graph';
 
@@ -50,8 +63,14 @@ import type {
 const FALLBACK_NODE_SIZE: NodeSize = { width: 40, height: 40 };
 
 export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
-  /** Shared ELK instance — `elkjs` is happy to be reused across runs. */
-  private readonly elk: ElkInstance;
+  /**
+   * Shared ELK instance — `elkjs` is happy to be reused across runs, and we
+   * keep one worker alive for the layout's lifetime instead of spinning one up
+   * per solve. Created lazily on the first {@link computeLayout} (so a layout
+   * that's registered but never run never spawns a worker), and memoised as a
+   * Promise because the no-worker fallback needs an async dynamic import.
+   */
+  private elkInstance?: Promise<ElkInstance>;
 
   constructor(opts: ElkLayoutOptions = {}) {
     // `ElkLayoutOptions` extends `OneShotLayoutOptions`, so `id` / `targetLayerId`
@@ -59,7 +78,35 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
     // (snap-or-glide, owned by the base) flow straight through to `super`. ELK-only
     // fields are read from `this.opts` (owned by the base, merged on `setOptions`).
     super(opts);
-    this.elk = new ELK();
+  }
+
+  /**
+   * Lazily construct (and memoise) the ELK instance. Prefers the worker-backed
+   * `elk-api` build so the solve stays off the main thread; falls back to the
+   * synchronous `elk.bundled.js` only when no `Worker` global exists or worker
+   * construction throws synchronously (Node / SSR / test runners).
+   */
+  private getElk(): Promise<ElkInstance> {
+    return (this.elkInstance ??= this.createElk());
+  }
+
+  private async createElk(): Promise<ElkInstance> {
+    if (typeof Worker !== 'undefined') {
+      try {
+        const factory = this.opts.workerFactory ?? defaultElkWorkerFactory;
+        // `elk-api`'s ctor calls the factory eagerly, so a thrown worker
+        // construction is caught here and drops us to the sync fallback.
+        return new ELK({ workerFactory: factory });
+      } catch {
+        /* fall through to the synchronous bundle */
+      }
+    }
+    // No Worker (Node / SSR / tests) or worker construction failed: use the
+    // in-process build. Dynamically imported so the 1.6 MB bundle stays out of
+    // the worker-path code chunk. This re-introduces main-thread blocking, but
+    // only where workers don't exist at all.
+    const { default: BundledELK } = await import('elkjs/lib/elk.bundled.js');
+    return new BundledELK();
   }
 
   /**
@@ -95,8 +142,9 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
     const layoutOptions = buildLayoutOptions(this.opts);
     const graph: ElkNode = { id: 'root', layoutOptions, children, edges };
 
-    // 3. Dispatch ELK (async).
-    const result = await this.elk.layout(graph);
+    // 3. Dispatch ELK (async; runs in a worker — see class docs).
+    const elk = await this.getElk();
+    const result = await elk.layout(graph);
 
     // 4. Convert ELK top-left coordinates to canvas centre coordinates into the
     //    target buffer. Iterate `result.children` (its child order is the order
@@ -161,6 +209,19 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
+
+/**
+ * Default Web Worker factory: load elkjs's worker build relative to this
+ * module. The `new Worker(new URL(specifier, import.meta.url))` form is the
+ * web-standard worker pattern that modern bundlers (Vite, webpack 5, Rollup)
+ * statically detect and rewrite to a bundled worker asset. `elk-worker.min.js`
+ * is a classic worker script, hence `{ type: 'classic' }`.
+ */
+function defaultElkWorkerFactory(): Worker {
+  return new Worker(new URL('elkjs/lib/elk-worker.min.js', import.meta.url), {
+    type: 'classic',
+  });
+}
 
 /**
  * Read the resolved shape's local AABB from {@link GraphLayer.boundsOfNode}

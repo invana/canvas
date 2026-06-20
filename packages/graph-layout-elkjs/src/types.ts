@@ -136,4 +136,25 @@ export interface ElkLayoutOptions extends OneShotLayoutOptions {
    * `elk.aspectRatio`, etc.). Later keys win.
    */
   layoutOptions?: Record<string, string>;
+
+  /**
+   * Factory for the Web Worker that runs the ELK solver off the main thread.
+   *
+   * `ElkLayout` runs ELK in a worker by default — the solve is CPU-heavy and
+   * super-linear in graph size, so running it on the main thread freezes the
+   * UI (no paint, no input) for the whole computation. That is especially
+   * visible when a one-shot algorithm re-runs on every streaming update. The
+   * worker keeps the main thread responsive while ELK works.
+   *
+   * The default factory does
+   * `new Worker(new URL('elkjs/lib/elk-worker.min.js', import.meta.url), { type: 'classic' })`,
+   * which modern bundlers (Vite, webpack 5, Rollup) resolve and bundle as a
+   * worker asset. Override this when your bundler needs a different idiom to
+   * locate the worker (e.g. Vite's `new ElkWorker()` from a `?worker` import).
+   *
+   * When no `Worker` global exists (Node, SSR, test runners) or worker
+   * construction throws, `ElkLayout` falls back to the synchronous
+   * `elkjs/lib/elk.bundled.js` build — correct, but main-thread-blocking.
+   */
+  workerFactory?: (url?: string) => Worker;
 }

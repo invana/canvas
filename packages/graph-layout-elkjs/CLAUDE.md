@@ -1,7 +1,8 @@
 # CLAUDE.md — packages/graph-layout-elkjs (`@invana/graph-layout-elkjs`)
 
 [ELK](https://eclipse.dev/elk/) `Layout` for `@invana/graph`. Wraps the
-`elkjs` JS port — no wasm, no worker by default.
+`elkjs` JS port (no wasm). The solve runs **off the main thread in a Web
+Worker** by default — see [Worker](#worker) below.
 
 ```ts
 import { ElkLayout } from '@invana/graph-layout-elkjs';
@@ -31,6 +32,30 @@ call:
 `stop()` (or a second `apply()` call) bumps a monotonic run token. The
 in-flight ELK Promise still settles — `elkjs` has no cancel API — but its
 result is dropped and `end: { reason: 'stopped' }` fires immediately.
+
+## Worker
+
+The ELK solve runs in a **Web Worker** (`elkjs/lib/elk-worker.min.js` via the
+`elk-api` build). The algorithm is CPU-heavy and super-linear in graph size, so
+running it on the main thread — which is what `elk.bundled.js`'s synchronous
+"fake worker" does — freezes paint and input for the whole computation. That
+freeze is most visible when a one-shot layout re-runs on every streaming update
+(`GraphCanvas` re-applies the active layout whenever nodes are added). Moving
+the solve to a worker keeps the UI responsive.
+
+One worker is created **lazily on the first `apply()`** and reused for the
+instance's lifetime — a layout that's registered but never run never spawns a
+worker. The default factory does
+`new Worker(new URL('elkjs/lib/elk-worker.min.js', import.meta.url), { type: 'classic' })`,
+which Vite / webpack 5 / Rollup statically detect and bundle as a worker asset
+(verified: a Storybook production build emits a standalone `elk-worker.min.*.js`).
+Override with `workerFactory` when a bundler needs a different idiom.
+
+When no `Worker` global exists (Node / SSR / test runners) or worker
+construction throws synchronously, `ElkLayout` falls back to the synchronous
+`elk.bundled.js` build (dynamically imported, so it stays out of the worker-path
+chunk) — correct, but main-thread-blocking, which is acceptable where workers
+don't exist at all.
 
 ## Node sizing
 
