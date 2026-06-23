@@ -1,6 +1,6 @@
 /**
  * Shared streaming-demo harness for the two layout stories
- * (`CyclicLayouts`, `AcyclicLayouts`). Both grow a graph in place — a timer
+ * (`CyclicExamples`, `AcyclicExamples`). Both grow a graph in place — a timer
  * pushes a small chunk of new nodes + edges into the store every few seconds
  * via `layer.store.addData({ nodes, edges })` (the non-destructive append path:
  * it does NOT clear the store) — and both wear the exact same chrome, hosted on
@@ -42,7 +42,6 @@ import {
   BrushSelectBehaviour,
   ClickSelectBehaviour,
   D3ForceLayout,
-  DevInfoLayer,
   DragNodeBehaviour,
   DragPanBehaviour,
   EditToolbar,
@@ -553,14 +552,15 @@ export function StreamingDemo({
     <StoryCanvasShell
       config={CANVAS_OPTIONS}
       instanceKey={runId}
+      // The shell's built-in dev overlay (FPS / pointer / zoom) is handy for
+      // watching the per-tick cost as the stream grows the graph — keep it on by
+      // default here (top-left, the shell default — no minimap in this demo).
+      devInfoInitiallyOn
       header={{ center: (canvas) => headerToolbar(canvas) }}
       footer={{ left: (canvas) => (canvas ? <GraphStats stats={stats} /> : null) }}
     >
       {/* Engine layers (layer before the layouts/behaviours that depend on it). */}
       <BackgroundLayer id="background" />
-      {/* Screen-fixed dev overlay — FPS / pointer / zoom; handy for watching the
-          per-tick cost while the stream grows the graph. */}
-      <DevInfoLayer id="dev-info" corner="bottom-right" />
       <GraphLayer
         id={LAYER_ID}
         data={seed}

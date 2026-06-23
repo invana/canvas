@@ -52,6 +52,7 @@ import {
   type ColorByLabelBehaviourProps,
   D3ForceLayout,
   type D3ForceLayoutProps,
+  type DevInfoLayerProps,
   DragNodeBehaviour,
   type DragNodeBehaviourProps,
   DragPanBehaviour,
@@ -159,6 +160,10 @@ export interface StoryGraphAppProps {
   showMiniMap?: boolean;
   /** Extra `<MiniMapLayer>` props. */
   miniMap?: Partial<MiniMapLayerProps>;
+  /** Initial state of the header's dev-overlay toggle. Default false (off). */
+  showDevInfo?: boolean;
+  /** Extra `<DevInfoLayer>` props (e.g. `corner`, `fontSize`). */
+  devInfo?: Partial<DevInfoLayerProps>;
 
   // ── Behaviours ────────────────────────────────────────────────────────────
   /** Granular control of the built-in behaviour set. */
@@ -251,6 +256,8 @@ export function StoryGraphApp({
   background,
   showMiniMap = true,
   miniMap,
+  showDevInfo = false,
+  devInfo,
   behaviours = {},
   forceOptions,
   fitPadding,
@@ -311,6 +318,10 @@ export function StoryGraphApp({
       config={mergedConfig}
       backend={backend}
       onReady={onReady}
+      // The dev-overlay toggle is a built-in shell feature (shown in every story's
+      // header); forward the visualiser's options + initial state.
+      devInfo={devInfo ?? true}
+      devInfoInitiallyOn={showDevInfo}
       header={{
         left:
           headerLeft ?? (

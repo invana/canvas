@@ -10,7 +10,7 @@
  *     cycle is irrelevant.
  *
  * Tree/DAG-only layouts (d3-hierarchy, d3-sankey) can't run here — they need an
- * acyclic, single-rooted graph; see the sibling `AcyclicLayouts` story.
+ * acyclic, single-rooted graph; see the sibling `AcyclicExamples` story.
  *
  * The whole chrome (combined toolbar, stream controls, layout switcher, …) is
  * shared with that story via {@link StreamingDemo}; this file only supplies the
@@ -21,9 +21,9 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { GraphData } from '@invana/graph';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { GeometricLayout } from '@invana/graph-layout-geometric';
-import { GLIDE, LAYER_ID, PALETTE, StreamingDemo, type LayoutEntry } from './streaming-demo';
+import { GLIDE, LAYER_ID, PALETTE, StreamingDemo, type LayoutEntry } from '../streaming-demo';
 
-const meta: Meta = { title: 'canvas-react/CyclicLayouts' };
+const meta: Meta = { title: 'canvas-react/layouts/CyclicExamples' };
 export default meta;
 type Story = StoryObj;
 
@@ -91,6 +91,6 @@ const EXTRA_LAYOUTS: readonly LayoutEntry[] = [
   },
 ];
 
-export const CyclicLayouts: Story = {
+export const CyclicExamples: Story = {
   render: () => <StreamingDemo makeSeed={() => seedRing(6)} extraLayouts={EXTRA_LAYOUTS} />,
 };

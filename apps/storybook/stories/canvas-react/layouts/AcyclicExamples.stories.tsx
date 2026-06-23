@@ -18,7 +18,7 @@
  * position-only layout. (d3-sankey is intentionally absent: a random,
  * unit-weight, ever-growing tree isn't the bounded weighted flow DAG sankey is
  * built for — it collapses the node rects to near-zero and looks broken.)
- * Cyclic graphs live in the sibling `CyclicLayouts` story.
+ * Cyclic graphs live in the sibling `CyclicExamples` story.
  *
  * The whole chrome is shared with that story via {@link StreamingDemo}; this
  * file only supplies the tree seed and the acyclic-capable layout menu.
@@ -29,9 +29,9 @@ import type { GraphData } from '@invana/graph';
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { GeometricLayout } from '@invana/graph-layout-geometric';
-import { GLIDE, LAYER_ID, PALETTE, StreamingDemo, type LayoutEntry } from './streaming-demo';
+import { GLIDE, LAYER_ID, PALETTE, StreamingDemo, type LayoutEntry } from '../streaming-demo';
 
-const meta: Meta = { title: 'canvas-react/AcyclicLayouts' };
+const meta: Meta = { title: 'canvas-react/layouts/AcyclicExamples' };
 export default meta;
 type Story = StoryObj;
 
@@ -125,6 +125,6 @@ const EXTRA_LAYOUTS: readonly LayoutEntry[] = [
   },
 ];
 
-export const AcyclicLayouts: Story = {
+export const AcyclicExamples: Story = {
   render: () => <StreamingDemo makeSeed={() => seedTree(6)} extraLayouts={EXTRA_LAYOUTS} />,
 };
