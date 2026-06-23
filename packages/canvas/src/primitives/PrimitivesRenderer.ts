@@ -232,6 +232,27 @@ export class PrimitivesRenderer {
   private readonly hit = new HitIndex();
 
   /**
+   * Shape ids whose `gfx` was translated via {@link moveShape} since the last
+   * hit-index reflush. `moveShape` skips the per-call rbush update (an O(N)
+   * remove+insert that becomes O(N²) across a full position sweep — same
+   * reasoning as {@link scaleShape}); the stale hit-bboxes are bulk-reindexed
+   * lazily on the next {@link hitTest}, so a layout settle / drag that's never
+   * queried mid-flight pays nothing for hit accuracy.
+   */
+  private readonly movedShapeHits = new Set<string>();
+
+  /**
+   * Connector ids whose path was recomputed (re-routed) since the last
+   * hit-index reflush. The edge analog of {@link movedShapeHits}: during a
+   * layout settle EVERY incident edge re-routes each tick, and a per-edge
+   * `hit.insert` (an O(N) rbush remove+insert) would be O(N²) per frame —
+   * the dominant cost on large graphs. Existing edges defer here and are
+   * bulk-reindexed lazily in {@link flushMovedHits}; only brand-new edges
+   * insert immediately (a deferred bbox-update can't add a missing entry).
+   */
+  private readonly movedConnectorHits = new Set<string>();
+
+  /**
    * Most recently-pushed label rasterisation resolution. `null` until a
    * zoom-LOD behaviour (or the host app) calls `setLabelsResolution`. When
    * non-null, every newly-mounted label decoration inherits this value so
@@ -532,6 +553,49 @@ export class PrimitivesRenderer {
   }
 
   /**
+   * Fast-path position-only move — writes the host `gfx` transform directly,
+   * skipping BOTH the geometry redraw and the decoration re-anchor that
+   * {@link updateShape} performs. This is what `GraphLayer` routes every
+   * layout / drag position write through.
+   *
+   * **Why it's correct to skip both.** A shape's silhouette is traced in
+   * shape-local space and `(spec.x, spec.y)` is applied as the host `gfx`
+   * translation (`ShapeBase.draw`). Decorations (labels, halos, rings, …) are
+   * children of that same `gfx` and anchor to the shape's *local*,
+   * position-independent bounds (`refreshShapeDecorations` reads
+   * `inst.shape.bounds()`, not world position). So a pure translation needs
+   * only `gfx.position.set(x, y)` — it carries the body and every decoration
+   * with it for free, reproducing identical geometry. `updateShape` instead
+   * re-tessellates and re-anchors on every move; profiling a ~500-node force
+   * settle showed the decoration re-anchor alone was ~2.2 ms/tick (~90 % of
+   * the per-move cost) while the translation itself is ~0.05 ms.
+   *
+   * **Hit-bounds are deferred** — like {@link scaleShape}, the per-call rbush
+   * update is skipped (O(N) remove+insert → O(N²) over a full sweep). Moved
+   * ids accumulate in `movedShapeHits` and are bulk-reindexed lazily on the
+   * next {@link hitTest} (or eagerly via {@link reindexScaledShapeHits}).
+   *
+   * Badges are separate shape instances (NOT children of the host `gfx`), so
+   * the transform can't carry them — they're re-anchored here when present.
+   */
+  moveShape(id: string, x: number, y: number): void {
+    const inst = this.shapeInstances.get(id);
+    if (!inst) return;
+    // `inst.spec` and the shape's own `spec` are the SAME object reference
+    // (kept so by the last `draw`), so mutating in place updates what
+    // `bounds()` / `obstacleTest()` / `shapeWorldBounds` read — and avoids a
+    // per-move allocation. Reassigning a fresh spec object would desync the
+    // two refs. `x` / `y` are `readonly` at the type level (a draw-time
+    // contract); this fast path is the sanctioned in-place writer.
+    const pos = inst.spec as { x: number; y: number };
+    pos.x = x;
+    pos.y = y;
+    inst.shape.gfx.position.set(x, y);
+    this.movedShapeHits.add(id);
+    if (this.badges.has(id)) this.reanchorBadges(id);
+  }
+
+  /**
    * Restack a shape within the shape layer by writing its `gfx.zIndex`. The
    * shape layer renders with `sortableChildren`, so a higher `zIndex` paints
    * later (on top of peers with a lower one); `zIndex = 0` (the default)
@@ -588,6 +652,30 @@ export class PrimitivesRenderer {
   }
 
   /**
+   * Flush deferred hit-bbox updates from {@link moveShape} (shapes) and
+   * {@link indexConnector} (re-routed connectors) in a SINGLE rbush rebuild.
+   * Called lazily from {@link hitTest} the first time a query needs accurate
+   * bounds, so a layout settle / drag with no pointer interaction pays nothing
+   * — and when it does pay, it's one O(N log N) `bulkUpdateBoxes`, never the
+   * O(N²) of per-id `remove + insert`.
+   */
+  private flushMovedHits(): void {
+    if (this.movedShapeHits.size === 0 && this.movedConnectorHits.size === 0) return;
+    const updates: Array<{ id: string; rect: Rect }> = [];
+    for (const id of this.movedShapeHits) {
+      const inst = this.shapeInstances.get(id);
+      if (inst) updates.push({ id, rect: this.shapeWorldBounds(inst) });
+    }
+    for (const id of this.movedConnectorHits) {
+      const inst = this.connectorInstances.get(id);
+      if (inst && inst.path.length >= 2) updates.push({ id, rect: this.connectorHitRect(inst) });
+    }
+    this.movedShapeHits.clear();
+    this.movedConnectorHits.clear();
+    this.hit.bulkUpdateBoxes(updates);
+  }
+
+  /**
    * Recompute the path of every connector. Use after a batch of
    * `scaleShape` calls (e.g. one `NodeSizeLODBehaviour` zoom tick) so
    * connectors re-anchor against the freshly-scaled silhouettes — without
@@ -623,6 +711,7 @@ export class PrimitivesRenderer {
     this.hostsWithEffects.delete(inst);
     inst.shape.destroy();
     this.hit.remove(id);
+    this.movedShapeHits.delete(id);
     this.shapeInstances.delete(id);
   }
 
@@ -806,6 +895,7 @@ export class PrimitivesRenderer {
     inst.effects.clear();
     this.connectorHostsWithEffects.delete(inst);
     this.hit.remove(id);
+    this.movedConnectorHits.delete(id);
     inst.connector.destroy();
     this.connectorInstances.delete(id);
   }
@@ -1454,6 +1544,10 @@ export class PrimitivesRenderer {
    * Returns `null` when nothing is hit.
    */
   hitTest(worldX: number, worldY: number, exclude?: ReadonlySet<string>): HitResult | null {
+    // Stale hit-bboxes from deferred moves / re-routes are reindexed once,
+    // here — the first time a query actually needs accurate bounds. A layout
+    // settle / drag that nobody hovers over never pays for it.
+    this.flushMovedHits();
     const floorWorld = this.hitFloorWorld();
     const candidates = this.hit.query(worldX, worldY, floorWorld);
     if (candidates.length === 0) return null;
@@ -1985,6 +2079,8 @@ export class PrimitivesRenderer {
     for (const id of [...this.connectorInstances.keys()]) this.removeConnector(id);
     this.animated.clear();
     this.hit.clear();
+    this.movedShapeHits.clear();
+    this.movedConnectorHits.clear();
     this.events.removeAllListeners();
   }
 
@@ -2164,23 +2260,27 @@ export class PrimitivesRenderer {
   private indexConnector(inst: ConnectorInstance): void {
     if (inst.path.length < 2) {
       this.hit.remove(inst.id);
+      this.movedConnectorHits.delete(inst.id);
       return;
     }
+    // Existing entry → defer the bbox refresh. `hit.insert` does an O(N) rbush
+    // remove+insert; doing that per edge while a settle re-routes thousands of
+    // edges each tick is O(N²). The deferred set is bulk-rebuilt (O(N log N),
+    // once) on the next `hitTest`. A brand-new edge has no entry to update, so
+    // it must insert now to be hittable.
+    if (this.hit.has(inst.id)) {
+      this.movedConnectorHits.add(inst.id);
+      return;
+    }
+    this.hit.insert(inst.id, 'connector', this.connectorHitRect(inst), inst.spec.zIndex ?? 0);
+  }
+
+  /** World-space hit bbox for a connector: its path bounds inflated by half the
+   * stroke width plus a small slop so thin edges stay grabbable. */
+  private connectorHitRect(inst: ConnectorInstance): Rect {
     const bb = pathBounds(inst.path);
-    const sw = inst.spec.stroke?.width ?? 1;
-    const slop = 4;
-    const pad = sw / 2 + slop;
-    this.hit.insert(
-      inst.id,
-      'connector',
-      {
-        x: bb.x - pad,
-        y: bb.y - pad,
-        width: bb.width + pad * 2,
-        height: bb.height + pad * 2,
-      },
-      inst.spec.zIndex ?? 0,
-    );
+    const pad = (inst.spec.stroke?.width ?? 1) / 2 + 4;
+    return { x: bb.x - pad, y: bb.y - pad, width: bb.width + pad * 2, height: bb.height + pad * 2 };
   }
 
   private refreshShapeDecorations(

@@ -1474,7 +1474,11 @@ export class GraphLayer extends WorldLayer<
     if ('position' in patch && patch.position && patchKeys.length === 1) {
       const shape = (this.resolveNodeStyle(node).shape ?? { kind: 'circle', radius: 10 }) as NodeShapeOptions;
       const { x, y } = shapeRenderXY(shape, patch.position);
-      this._renderer.updateShape<BaseShapeSpec>(node.id, { x, y });
+      // Transform-only fast path: moves the node body AND its label / decoration
+      // children in one `gfx.position.set`, skipping the geometry redraw and
+      // decoration re-anchor `updateShape` would do (profiled as ~90% of the
+      // per-tick cost during a force settle). Hit-bounds reindex lazily.
+      this._renderer.moveShape(node.id, x, y);
       this.queueIncidentConnectors(node.id);
       return;
     }

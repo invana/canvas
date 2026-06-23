@@ -39,6 +39,7 @@ import {
   Canvas,
   ClickSelectBehaviour,
   D3ForceLayout,
+  DevInfoLayer,
   DragNodeBehaviour,
   DragPanBehaviour,
   EditToolbar,
@@ -94,7 +95,7 @@ export const PALETTE = [
 export const LAYER_ID = 'graph';
 
 const INTERVAL_MS = 2000;
-const CHUNK_SIZE = 10;
+const CHUNK_SIZE = 50;
 
 /** Base node radius — the circle every node renders as unless a geometry-rewriting
  *  layout (pack / sunburst) overrides it. Shared by the layer config and the
@@ -130,7 +131,19 @@ const CANVAS_OPTIONS: CanvasConfig = {
   layers: {
     background: { type: 'pattern', patternType: 'dots', backgroundColor: '#0f172a', color: '#1e293b' },
     graph: {
-      node: { style: { shape: { kind: 'circle', radius: NODE_RADIUS } } },
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: NODE_RADIUS },
+          // Static node-label styling (serialisable, so it rides in the
+          // config like `shape`). The per-node text itself comes from the
+          // `labelText` resolver on the <GraphLayer> child — a function can't
+          // live in JSON config, so it sits alongside `bgFill` there.
+          labelColor: 0xe2e8f0,
+          labelFontSize: 9,
+          labelPlacement: 'bottom',
+          labelOffsetY: 2,
+        },
+      },
       edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.6 } },
     },
   },
@@ -144,7 +157,18 @@ const CANVAS_OPTIONS: CanvasConfig = {
     'lasso-select': { enabled: false },
   },
   layouts: {
-    force: { link: {}, charge: {}, center: { x: 0, y: 0 } },
+    // `animate: false` runs the force sim to convergence synchronously and
+    // commits the settled positions in one paint — no per-tick re-route /
+    // repaint storm, so a steady high frame rate on large streamed graphs.
+    // `collide` keeps the NODE_RADIUS circles from overlapping; charge + link
+    // distance give the cluster room to spread into a clean arrangement.
+    force: {
+      animate: false,
+      link: { distance: 40 },
+      charge: { strength: -120 },
+      collide: { radius: NODE_RADIUS + 8 },
+      center: { x: 0, y: 0 },
+    },
   },
   activeLayout: 'force',
 };
@@ -484,6 +508,9 @@ export function StreamingDemo({
       <Canvas key={runId} autoResize config={CANVAS_OPTIONS}>
         {/* Engine layers (layer before the layouts/behaviours that depend on it). */}
         <BackgroundLayer id="background" />
+        {/* Screen-fixed dev overlay — FPS / pointer / zoom; handy for watching
+            the per-tick cost while the stream grows the graph. */}
+        <DevInfoLayer id="dev-info" corner="bottom-right" />
         <GraphLayer
           id={LAYER_ID}
           data={seed}
@@ -491,6 +518,9 @@ export function StreamingDemo({
             style: {
               bgFill: (n: GraphNode) =>
                 PALETTE[(n.data as { group: number }).group % PALETTE.length]!,
+              // Per-node label text — the node id (`seed0`, `live42`, …). Static
+              // label styling (colour / size / placement) lives in CANVAS_OPTIONS.
+              labelText: (n: GraphNode) => n.id,
             },
           }}
         />

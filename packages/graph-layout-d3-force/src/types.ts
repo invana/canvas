@@ -42,6 +42,28 @@ export interface D3ForceLayoutOptions {
    */
   animate?: boolean;
 
+  /**
+   * Only with `animate: false`. Alpha the simulation reheats to when a run
+   * starts from a graph that **already has settled positions** (i.e. an
+   * incremental streaming add: most nodes are positioned, a few are new).
+   * A low value keeps the existing layout stable — placed nodes barely move
+   * while new nodes settle in — instead of yanking the whole graph through a
+   * full `alpha = 1` re-layout on every chunk. The first run (no positioned
+   * nodes) ignores this and uses {@link alpha} (or d3's default of `1`).
+   * Default `0.5`.
+   */
+  reheatAlpha?: number;
+
+  /**
+   * Only with `animate: false`. Factory for the Web Worker that runs the
+   * static settle off the main thread (so a multi-hundred-tick convergence
+   * doesn't block paint / input). Defaults to loading this package's bundled
+   * solver worker. When no `Worker` global exists (Node / SSR / tests) or the
+   * factory throws, the layout falls back to solving synchronously on the main
+   * thread — correct, but blocking. Mirror of `ElkLayout`'s `workerFactory`.
+   */
+  workerFactory?: () => Worker;
+
   // ─── Simulation parameters ────────────────────────────────────────────
   /** `simulation.alpha(alpha)`. */
   alpha?: number;

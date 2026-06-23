@@ -57,6 +57,13 @@ export class HitIndex {
     this.entries.delete(id);
   }
 
+  /** True if an entry with this id is currently indexed. Lets callers choose
+   * between an immediate insert (new id) and a deferred bulk bbox refresh
+   * (existing id) — see `PrimitivesRenderer`'s moved-hit deferral. */
+  has(id: string): boolean {
+    return this.entries.has(id);
+  }
+
   /**
    * Query candidates whose bbox intersects a `padWorld`-padded box around
    * `(x, y)`. With `padWorld = 0` (default), this matches the classic

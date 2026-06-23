@@ -63,6 +63,22 @@ export interface CanvasGlobalEvents extends EventMap {
   'layer:removed': { id: string };
   'layout:added': { id: string };
   'layout:removed': { id: string };
+  /**
+   * A layout run started. Emitted by `Canvas.runLayout` when it forwards a
+   * registered layout's own `start` lifecycle event onto the canvas bus, so
+   * every canvas-driven run (`runLayout`, `refresh`, the "Run layout" button,
+   * expand re-layouts) surfaces consistently. `animate` reflects whether the
+   * run animates its settle (iterative layouts) or jumps to final positions;
+   * `nodeCount` / `edgeCount` describe the run size. Subscribe for progress
+   * UIs, telemetry, or layout-activity render policies.
+   */
+  'layout:run:start': { id: string; nodeCount: number; edgeCount: number; animate: boolean };
+  /**
+   * A layout run ended. `reason` distinguishes a natural settle (`'settled'`)
+   * from an external `stop()` / superseding `apply()` (`'stopped'`) or an
+   * aborted run (`'cancelled'`). Always pairs with a preceding `layout:run:start`.
+   */
+  'layout:run:end': { id: string; reason: 'settled' | 'stopped' | 'cancelled' };
   'behaviour:registered': { id: string };
   'behaviour:enabled': { id: string };
   'behaviour:disabled': { id: string };

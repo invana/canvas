@@ -56,7 +56,18 @@ export type LayoutEndReason = 'completed' | 'stopped';
  * subclass-specific event map, not here.
  */
 export type LayoutEvents = {
-  start: Record<string, never>;
+  /**
+   * Run is about to produce positions. Optional run-size / animation metadata
+   * lets a `Canvas.runLayout` bridge forward it onto the canvas bus as
+   * `layout:run:start` without reaching into layer internals. Every field is
+   * optional — a layout that doesn't know (or care) emits `{}`, and the bridge
+   * substitutes `0` / `false`.
+   *
+   *  - `nodeCount` / `edgeCount` — size of the run, for progress UIs / telemetry.
+   *  - `animate` — whether the run animates its settle (iterative force sims)
+   *    vs. jumps straight to final positions; render policies branch on it.
+   */
+  start: { nodeCount?: number; edgeCount?: number; animate?: boolean };
   tick: Record<string, never>;
   end: { reason: LayoutEndReason };
 };

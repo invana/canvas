@@ -391,7 +391,31 @@ export class Canvas {
     const layout = this.layouts.get(id);
     const target = layout?.targetLayerId ? this.layers.get(layout.targetLayerId) : undefined;
     if (!layout || !target) return Promise.resolve();
-    return layout.apply(target as never);
+
+    // Bridge the layout's own (canvas-agnostic) lifecycle events onto the
+    // canvas bus as typed run-lifecycle events. This is the one place that
+    // holds both the layout and the bus, so the Layout contract stays free of
+    // any canvas reference (proposal §2.3). Subscribed before `apply()` —
+    // which emits `start` synchronously — and torn down when the run resolves.
+    const offStart = layout.events.on('start', ({ nodeCount, edgeCount, animate }) => {
+      this.events.emit('layout:run:start', {
+        id: layout.id,
+        nodeCount: nodeCount ?? 0,
+        edgeCount: edgeCount ?? 0,
+        animate: animate ?? false,
+      });
+    });
+    const offEnd = layout.events.on('end', ({ reason }) => {
+      this.events.emit('layout:run:end', {
+        id: layout.id,
+        reason: reason === 'completed' ? 'settled' : 'stopped',
+      });
+    });
+
+    return layout.apply(target as never).finally(() => {
+      offStart();
+      offEnd();
+    });
   }
 
   /**

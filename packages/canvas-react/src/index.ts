@@ -51,6 +51,9 @@ export type { GraphLayerProps } from './layers/GraphLayer';
 export { BackgroundLayer } from './layers/BackgroundLayer';
 export type { BackgroundLayerProps } from './layers/BackgroundLayer';
 
+export { DevInfoLayer } from './layers/DevInfoLayer';
+export type { DevInfoLayerProps } from './layers/DevInfoLayer';
+
 export { MiniMapLayer } from './layers/MiniMapLayer';
 export type { MiniMapLayerProps } from './layers/MiniMapLayer';
 

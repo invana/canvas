@@ -40,6 +40,13 @@ import { Layout, type LayoutOptions } from '@invana/canvas';
 import type { GraphLayer, GraphNode } from '@invana/graph';
 
 import type { D3ForceLayoutOptions } from './types';
+import {
+  solveForces,
+  type ForceSolveInput,
+  type ForceSolveParams,
+  type ForceSolveRequest,
+  type ForceSolveResponse,
+} from './forceSolver';
 
 interface SimNode extends SimulationNodeDatum {
   id: string;
@@ -85,6 +92,22 @@ export class D3ForceLayout extends Layout<GraphLayer> {
    *  once per run, even if called externally after a natural settle. */
   private running = false;
 
+  // ─── `animate: false` static-settle worker ────────────────────────────────
+  /** Lazily-created solver worker, reused for the instance's lifetime. */
+  private worker: Worker | null = null;
+  /** Sticky flag: no `Worker` global, or construction/runtime failed → always
+   *  use the synchronous fallback. */
+  private workerBroken = false;
+  /** Monotonic id for each static solve; bumped on every dispatch and on
+   *  `stop()`, so a worker reply for a superseded run is dropped. */
+  private solveToken = 0;
+  /** In-flight static solves keyed by token. The `input` is retained so a
+   *  worker `onerror` can complete the run via the synchronous fallback. */
+  private pendingSolves = new Map<
+    number,
+    { resolve: (positions: Float32Array) => void; input: ForceSolveInput }
+  >();
+
   constructor(opts: D3ForceLayoutOptions & LayoutOptions = {}) {
     super(opts);
     this.opts = opts;
@@ -105,12 +128,153 @@ export class D3ForceLayout extends Layout<GraphLayer> {
    * naturally OR is cancelled via `stop()` / a second `apply()` call.
    * Lifecycle events (`start` / `tick` / `end`) fire around the run.
    */
-  async apply(layer: GraphLayer): Promise<void> {
+  apply(layer: GraphLayer): Promise<void> {
     this.stop();
     this.lastLayer = layer;
+    return this.opts.animate === false ? this.runStatic(layer) : this.runLive(layer);
+  }
+
+  /**
+   * Static settle (`animate: false`): snapshot the store straight into a flat,
+   * transferable solve input, run it to convergence OFF the main thread in a
+   * Web Worker (synchronous fallback when none), and commit the settled
+   * positions in one paint. Holds NO live-interaction state — `nodeById` /
+   * `pinnedIds` / `draggedIds` belong to {@link runLive}; this path never drags,
+   * pins, or reheats. Snapshot → solve → commit, with nothing to tear down:
+   * a superseding `apply()` calls `stop()`, which owns teardown and the
+   * staleness `end`.
+   */
+  private async runStatic(layer: GraphLayer): Promise<void> {
+    const store = layer.store;
+    const { ids, input } = this.snapshotStatic(store);
+    if (input.count === 0) return;
+
+    this.running = true;
+    this.events.emit('start', {
+      nodeCount: input.count,
+      edgeCount: input.links.length / 2,
+      animate: false,
+    });
+
+    const token = ++this.solveToken;
+    const positions = await this.dispatchSolve(input, token);
+
+    // A newer `apply()` / `stop()` superseded this run while the worker solved
+    // (it bumped `solveToken` and emitted its own `end`) — drop the result.
+    if (token !== this.solveToken) return;
+
+    this.writing = true;
+    store.setPositionsBulk(ids, positions);
+    this.writing = false;
+
+    this.running = false;
+    this.events.emit('tick', {});
+    this.events.emit('end', { reason: 'completed' });
+  }
+
+  /**
+   * Read the store into a transferable {@link ForceSolveInput} using only
+   * locals — no instance maps. `collide.radius` (number or function) is resolved
+   * per node here; un-positioned nodes are left un-`seeded` so the solver
+   * phyllotaxis-scatters them apart. An incremental add (some nodes already
+   * settled) reheats to `reheatAlpha` for stability; the first run uses `alpha`.
+   */
+  private snapshotStatic(store: GraphLayer['store']): { ids: string[]; input: ForceSolveInput } {
+    const nodeList = [...store.nodes()];
+    const count = nodeList.length;
+    const ids: string[] = new Array(count);
+    const positions = new Float32Array(count * 2);
+    const seeded = new Uint8Array(count);
+    const fixed = new Uint8Array(count);
+    const indexOf = new Map<string, number>();
+    let seededCount = 0;
+    for (let i = 0; i < count; i++) {
+      const n = nodeList[i]!;
+      ids[i] = n.id;
+      indexOf.set(n.id, i);
+      const pos = store.getPosition(n.id);
+      if (n.pinned) {
+        // Pinned → a fixed point (fx/fy), still seeded so neighbours feel it.
+        positions[i * 2] = pos?.x ?? 0;
+        positions[i * 2 + 1] = pos?.y ?? 0;
+        seeded[i] = 1;
+        fixed[i] = 1;
+        seededCount++;
+      } else if (pos && (pos.x !== 0 || pos.y !== 0)) {
+        // Real stored position. (0, 0) is the column default; leaving it
+        // un-seeded lets the solver scatter colocated nodes apart.
+        positions[i * 2] = pos.x;
+        positions[i * 2 + 1] = pos.y;
+        seeded[i] = 1;
+        seededCount++;
+      }
+    }
+
+    const edges = [...store.edges()];
+    const linkPairs = new Uint32Array(edges.length * 2);
+    let w = 0;
+    for (const e of edges) {
+      const s = indexOf.get(e.source);
+      const t = indexOf.get(e.target);
+      if (s === undefined || t === undefined) continue;
+      linkPairs[w++] = s;
+      linkPairs[w++] = t;
+    }
+
+    let radii: Float32Array | null = null;
+    const collide = this.opts.collide;
+    if (collide !== undefined) {
+      radii = new Float32Array(count);
+      const r = collide.radius;
+      if (typeof r === 'function') {
+        for (let i = 0; i < count; i++) radii[i] = r(nodeList[i]!);
+      } else {
+        radii.fill(typeof r === 'number' ? r : 1); // d3's default collide radius is 1
+      }
+    }
+
+    const alpha = seededCount === 0 ? this.opts.alpha ?? 1 : this.opts.reheatAlpha ?? 0.5;
+    const params: ForceSolveParams = {
+      link: this.opts.link,
+      charge: this.opts.charge,
+      center: this.opts.center,
+      collide: collide ? { strength: collide.strength, iterations: collide.iterations } : undefined,
+      x: this.opts.x,
+      y: this.opts.y,
+      radial: this.opts.radial,
+      alpha,
+      alphaMin: this.opts.alphaMin,
+      alphaDecay: this.opts.alphaDecay,
+      alphaTarget: this.opts.alphaTarget,
+      velocityDecay: this.opts.velocityDecay,
+    };
+
+    return {
+      ids,
+      input: {
+        count,
+        positions,
+        seeded,
+        fixed,
+        links: w === linkPairs.length ? linkPairs : linkPairs.slice(0, w),
+        radii,
+        params,
+      },
+    };
+  }
+
+  /**
+   * Live settle (`animate: true`): d3 owns the tick loop on the main thread;
+   * positions write back every tick and external nudges (drag, pin flips,
+   * cursor-followers) reheat the running simulation. This is the path that holds
+   * the interactive snapshot — `nodeById` (mirror updates onto the datum),
+   * `pinnedIds` / `draggedIds` (lock `fx/fy`), `graphNodeById` (per-node force
+   * callbacks).
+   */
+  private runLive(layer: GraphLayer): Promise<void> {
     const store = layer.store;
 
-    // 1. Snapshot store → sim datums.
+    // 1. Snapshot store → sim datums + interactive lookup maps.
     this.nodes = [];
     this.ids = [];
     this.nodeById.clear();
@@ -144,7 +308,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
       this.nodeById.set(n.id, node);
       this.graphNodeById.set(n.id, n);
     }
-    if (this.nodes.length === 0) return;
+    if (this.nodes.length === 0) return Promise.resolve();
     this.buffer = new Float32Array(this.nodes.length * 2);
 
     const links: SimLink[] = [];
@@ -152,7 +316,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
       links.push({ source: e.source, target: e.target });
     }
 
-    // 2. Build simulation + apply only options the user provided.
+    // 2. Build the live (`animate: true`) simulation — d3 owns the tick loop.
     const sim = forceSimulation<SimNode, SimLink>(this.nodes);
     this.configureForces(sim, links);
     this.configureSimulation(sim);
@@ -250,7 +414,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     // 5. Mark run as active and announce `start` after wiring is in place
     //    so handlers see a fully-initialised layout.
     this.running = true;
-    this.events.emit('start', {});
+    this.events.emit('start', { nodeCount: this.nodes.length, edgeCount: links.length, animate });
 
     // 6. Resolve on natural settle. The `end` emission happens here (not in
     //    `stop()`) so a natural settle reports `reason: 'completed'`;
@@ -270,10 +434,18 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     });
   }
 
-  /** Cancel an in-flight run. Positions stay in the store. No-op when idle. */
+  /**
+   * Cancel an in-flight run. No-op when idle.
+   *
+   * Bumps {@link solveToken} so an in-flight `animate: false` worker solve,
+   * when it replies, is recognised as stale and dropped (its positions never
+   * reach the store). The `animate: true` live simulation is stopped directly.
+   * The worker itself is kept alive for reuse.
+   */
   stop(): void {
     const wasRunning = this.running;
     this.running = false;
+    this.solveToken++;
     this.sim?.stop();
     this.sim = null;
     this.unsubscribe?.();
@@ -289,6 +461,59 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     this.pinnedIds.clear();
     this.draggedIds.clear();
     if (wasRunning) this.events.emit('end', { reason: 'stopped' });
+  }
+
+  // ─── Static-settle (animate: false) helpers ───────────────────────────────
+
+  /**
+   * Dispatch a static solve to the worker, resolving with the settled
+   * positions. Falls back to a synchronous solve on the main thread when no
+   * worker is available. The `input` is retained (not transferred) so a worker
+   * `onerror` can still complete the run synchronously.
+   */
+  private dispatchSolve(input: ForceSolveInput, token: number): Promise<Float32Array> {
+    const worker = this.getWorker();
+    if (!worker) return Promise.resolve(solveForces(input));
+    return new Promise<Float32Array>((resolve) => {
+      this.pendingSolves.set(token, { resolve, input });
+      worker.postMessage({ token, input } satisfies ForceSolveRequest);
+    });
+  }
+
+  /**
+   * Lazily construct (and memoise) the solver worker. Returns `null` — caller
+   * uses the synchronous fallback — when no `Worker` global exists or
+   * construction throws. A worker runtime error marks it permanently broken and
+   * completes any in-flight solves synchronously.
+   */
+  private getWorker(): Worker | null {
+    if (this.workerBroken) return null;
+    if (this.worker) return this.worker;
+    if (typeof Worker === 'undefined') {
+      this.workerBroken = true;
+      return null;
+    }
+    try {
+      const factory = this.opts.workerFactory ?? defaultForceWorkerFactory;
+      const worker = factory();
+      worker.onmessage = (event: MessageEvent<ForceSolveResponse>) => {
+        const pending = this.pendingSolves.get(event.data.token);
+        if (!pending) return; // superseded / unknown token
+        this.pendingSolves.delete(event.data.token);
+        pending.resolve(event.data.positions);
+      };
+      worker.onerror = () => {
+        this.workerBroken = true;
+        this.worker = null;
+        for (const [, pending] of this.pendingSolves) pending.resolve(solveForces(pending.input));
+        this.pendingSolves.clear();
+      };
+      this.worker = worker;
+      return worker;
+    } catch {
+      this.workerBroken = true;
+      return null;
+    }
   }
 
   // ─── Configuration ─────────────────────────────────────────────────────
@@ -378,6 +603,18 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     store.setPositionsBulk(this.ids, buffer);
     this.writing = false;
   }
+}
+
+/**
+ * Default solver-worker factory: load this package's bundled worker chunk. The
+ * `new Worker(new URL(specifier, import.meta.url))` form is the web-standard
+ * pattern that Vite / webpack 5 / Rollup statically detect and rewrite to a
+ * bundled worker asset (mirrors `ElkLayout`'s factory). `forceSolver.worker.js`
+ * is the second tsup entry (`dist/forceSolver.worker.js`), an ESM module — hence
+ * `{ type: 'module' }`. Override via `D3ForceLayoutOptions.workerFactory`.
+ */
+function defaultForceWorkerFactory(): Worker {
+  return new Worker(new URL('./forceSolver.worker.js', import.meta.url), { type: 'module' });
 }
 
 /** Deep-merge plain objects; arrays / primitives replace. */
