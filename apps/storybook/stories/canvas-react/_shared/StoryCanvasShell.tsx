@@ -78,9 +78,16 @@ export interface StoryCanvasShellProps {
   instanceKey?: string | number;
 
   // ── Chrome slots ────────────────────────────────────────────────────────────
-  /** Header slots. Each is a node or a `(canvas) => node` render fn. */
+  /**
+   * Header slots. Each is a node or a `(canvas) => node` render fn. Omit it (and
+   * set `devInfo={false}`) to drop the header bar entirely — an absent rail
+   * collapses, it isn't rendered empty.
+   */
   header?: { left?: ShellSlot; center?: ShellSlot; right?: ShellSlot };
-  /** Footer slots (node or render fn), or `false` for an empty footer bar. */
+  /**
+   * Footer slots (node or render fn). Omit it or pass `false` to drop the footer
+   * bar entirely — an absent rail collapses, it isn't rendered empty.
+   */
   footer?: { left?: ShellSlot; right?: ShellSlot } | false;
   /** `className` on `AppLayoutBase`'s main. Default `'relative'` (so in-canvas `<Panel>`s anchor to it). */
   mainClassName?: string;
@@ -164,48 +171,81 @@ export function StoryCanvasShell({
   // are omitted (no spurious remounts for stories that use neither).
   const canvasKey = `${backend ?? 'default'}:${instanceKey ?? ''}`;
 
-  const shell = (
-    // Lifted context: header + footer chrome (siblings of <Canvas> inside
-    // AppLayoutBase, outside the canvas's own provider) resolve the live engine.
-    <CanvasContext.Provider value={canvas}>
+  // The <Canvas> subtree — the same body whichever layout (chromed or bare) hosts
+  // it. The internal CanvasBridge stays last so the lifted context publishes only
+  // once every layer / behaviour above it has registered.
+  const canvasBody = (
+    <Canvas key={canvasKey} autoResize preference={backend} config={config}>
+      {children}
+      {/* Screen-fixed dev overlay, mounted only while the header toggle is on
+          (mount/unmount is what shows / hides it). Before the CanvasBridge so the
+          bridge stays the last child. Anchored top-left by default — the minimap
+          sits bottom-left, so the two don't overlap; a story can override via
+          `devInfo={{ corner: … }}`. */}
+      {devInfoEnabled && devInfoOn ? (
+        <DevInfoLayer id="dev-info" corner="top-left" {...devInfoOpts} />
+      ) : null}
+      {/* Last child: publishes the live engine once everything registered. */}
+      <CanvasBridge onReady={handleReady} />
+    </Canvas>
+  );
+
+  // Resolved chrome content. The built-in dev-overlay toggle sits to the left of
+  // any story-provided header.right (theme toggle, etc.), so every story carries it.
+  const headerRight = (
+    <>
+      {devInfoEnabled ? <DevInfoToggleButton on={devInfoOn} onToggle={toggleDevInfo} /> : null}
+      {renderSlot(header?.right, canvas)}
+    </>
+  );
+  const footerSlots = footer !== false && footer != null ? footer : null;
+
+  // Whether each rail has any chrome — computed from *prop presence* (not the
+  // live-canvas-resolved nodes), so the layout shape is stable and never flips
+  // once the engine wires up. A rail with no chrome is omitted entirely (no empty
+  // bar): pass no `header` / `footer` (and `devInfo={false}`) for a chrome-less shell.
+  const hasHeader =
+    devInfoEnabled
+    || !!(header && (header.left !== undefined || header.center !== undefined || header.right !== undefined));
+  const hasFooter = !!footerSlots && (footerSlots.left !== undefined || footerSlots.right !== undefined);
+
+  // Full-chrome stories keep AppLayoutBase verbatim (its NavHorizontal rails,
+  // spacing, tooltips). When a rail is missing we drop to a bare flex column that
+  // renders only the rails that have content — collapsing the empty bar.
+  const body =
+    hasHeader && hasFooter ? (
       <AppLayoutBase
         header={{
           left: renderSlot(header?.left, canvas),
           center: renderSlot(header?.center, canvas),
-          // The built-in dev-overlay toggle sits to the left of any story-provided
-          // header.right (theme toggle, etc.), so every story carries it.
-          right: (
-            <>
-              {devInfoEnabled ? <DevInfoToggleButton on={devInfoOn} onToggle={toggleDevInfo} /> : null}
-              {renderSlot(header?.right, canvas)}
-            </>
-          ),
+          right: headerRight,
         }}
         mainClassName={mainClassName}
-        main={
-          <Canvas key={canvasKey} autoResize preference={backend} config={config}>
-            {children}
-            {/* Screen-fixed dev overlay, mounted only while the header toggle is on
-                (mount/unmount is what shows / hides it). Before the CanvasBridge so
-                the bridge stays the last child. Anchored top-left by default — the
-                minimap sits bottom-left, so the two don't overlap; a story can
-                override via `devInfo={{ corner: … }}`. */}
-            {devInfoEnabled && devInfoOn ? (
-              <DevInfoLayer id="dev-info" corner="top-left" {...devInfoOpts} />
-            ) : null}
-            {/* Last child: publishes the live engine once everything registered. */}
-            <CanvasBridge onReady={handleReady} />
-          </Canvas>
-        }
-        // `AppLayoutBase.footer` is required; render an empty bar when disabled.
-        footer={
-          footer === false
-            ? { left: null, right: null }
-            : { left: renderSlot(footer?.left, canvas), right: renderSlot(footer?.right, canvas) }
-        }
+        main={canvasBody}
+        footer={{ left: renderSlot(footerSlots?.left, canvas), right: renderSlot(footerSlots?.right, canvas) }}
       />
-    </CanvasContext.Provider>
-  );
+    ) : (
+      <div className="flex h-screen flex-col bg-background text-foreground">
+        {hasHeader ? (
+          <div className="flex h-[40px] shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-3">
+            <div className="flex items-center gap-2">{renderSlot(header?.left, canvas)}</div>
+            <div className="flex items-center gap-2">{renderSlot(header?.center, canvas)}</div>
+            <div className="flex items-center gap-2">{headerRight}</div>
+          </div>
+        ) : null}
+        <div className={`w-full flex-1 bg-background ${mainClassName}`}>{canvasBody}</div>
+        {hasFooter ? (
+          <div className="flex h-[25px] shrink-0 items-center justify-between gap-2 border-t border-border bg-background px-3">
+            <div className="flex items-center gap-2">{renderSlot(footerSlots?.left, canvas)}</div>
+            <div className="flex items-center gap-2">{renderSlot(footerSlots?.right, canvas)}</div>
+          </div>
+        ) : null}
+      </div>
+    );
+
+  // Lifted context: header + footer chrome (siblings of <Canvas>, outside the
+  // canvas's own provider) resolve the live engine.
+  const shell = <CanvasContext.Provider value={canvas}>{body}</CanvasContext.Provider>;
 
   return <>{wrap ? wrap(shell) : shell}</>;
 }
