@@ -161,6 +161,18 @@ export class Canvas {
     this.layers = new LayerRegistry({ getContext: () => this.context, bus: this.events });
     this.behaviours = new BehaviourRegistry({ getContext: () => this.context, bus: this.events });
     this.layouts = new LayoutRegistry({ bus: this.events });
+
+    // A layer registered *after* config was already pushed (e.g. a React-mounted
+    // `<MiniMapLayer>` that lands after `<SystemTheme>` has already called
+    // `update()`) would otherwise miss that config — `update()` only reaches
+    // instances registered at call time. Re-apply the accumulated slice on every
+    // `layer:added` so late arrivals adopt the current theme/options. Pre-init
+    // adds carry an empty config so this no-ops there; `_activate`'s `update()`
+    // configures them instead.
+    this.events.on('layer:added', ({ id }) => {
+      const slice = this.config.layers?.[id];
+      if (slice) configurable(this.layers.get(id))?.setOptions(slice);
+    });
   }
 
   get isInitialised(): boolean {

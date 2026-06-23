@@ -238,6 +238,18 @@ export class BackgroundLayer extends ScreenLayer<
     return resolveKind(this.opts.mode);
   }
 
+  /**
+   * The resolved (mode-applied) solid colour currently painted behind the
+   * pattern. Layers that want to match the canvas backdrop read this instead of
+   * re-implementing `{ light, dark }` resolution — e.g. {@link MiniMapLayer}
+   * pointed here via its `backgroundLayerId` mirrors the canvas background so
+   * its chrome never drifts from the real one. Returns a `number` or CSS string
+   * (whichever form the option carried), suitable for any pixi fill.
+   */
+  getResolvedBackgroundColor(): number | string {
+    return this.resolveColor(this.opts.backgroundColor);
+  }
+
   // ─── Internals ──────────────────────────────────────────────────────────
 
   private viewportSize(): { width: number; height: number } {

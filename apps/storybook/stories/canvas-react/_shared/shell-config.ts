@@ -101,7 +101,9 @@ export const APP_LIGHT: CanvasConfig = {
       node: { style: { labelColor: 0x334155, bgStrokeColor: 0xffffff } },
       edge: { style: { strokeColor: 0x475569, arrowTargetColor: 0x475569 } },
     },
-    minimap: { backgroundColor: 0xf8fafc, borderColor: 0x94a3b8 },
+    // Background colour is mirrored from the `background` layer via the
+    // minimap's `backgroundLayerId`; only the border needs a theme colour here.
+    minimap: { borderColor: 0x94a3b8 },
   },
 };
 export const APP_DARK: CanvasConfig = {
@@ -111,7 +113,7 @@ export const APP_DARK: CanvasConfig = {
       node: { style: { labelColor: 0xe2e8f0, bgStrokeColor: 0x0f172a } },
       edge: { style: { strokeColor: 0x64748b, arrowTargetColor: 0x64748b } },
     },
-    minimap: { backgroundColor: 0x0f172a, borderColor: 0x334155 },
+    minimap: { borderColor: 0x334155 },
   },
 };
 

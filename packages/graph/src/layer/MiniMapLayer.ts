@@ -25,7 +25,7 @@
  */
 
 import { Container, FederatedPointerEvent, Graphics } from 'pixi.js';
-import { ScreenLayer, type CanvasContext, type ScreenLayerHit } from '@invana/canvas';
+import { BackgroundLayer, ScreenLayer, type CanvasContext, type ScreenLayerHit } from '@invana/canvas';
 import type { LayerOptions, Rect } from '@invana/canvas';
 
 import { GraphLayer } from './GraphLayer';
@@ -60,8 +60,18 @@ export interface MiniMapLayerOptions {
   /** Minimap height in screen pixels. Default `150`. */
   height?: number;
   /**
-   * Background fill. A `0xRRGGBB` or a `{ light, dark }` pair resolved against
-   * `mode` (pass the pair to track the canvas theme). Default `0x1a1a2e`.
+   * Id of a `BackgroundLayer` to mirror. When set, the minimap paints its
+   * background with that layer's *resolved* colour — so the minimap backdrop
+   * always matches the real canvas background (including theme flips) without
+   * duplicating the colour here. Falls back to {@link backgroundColor} when the
+   * id is unset or the layer can't be resolved. Declared explicitly per the
+   * canvas cross-layer rule — no inference of "the only background layer".
+   */
+  backgroundLayerId?: string;
+  /**
+   * Background fill used when {@link backgroundLayerId} is unset / unresolved. A
+   * `0xRRGGBB` or a `{ light, dark }` pair resolved against `mode`. Default
+   * `0x1a1a2e`.
    */
   backgroundColor?: MiniMapColor;
   /** Border colour. Same forms as `backgroundColor`. Default `0x444444`. */
@@ -101,7 +111,7 @@ export interface MiniMapLayerOptions {
   margin?: number | { x?: number; y?: number };
 }
 
-const DEFAULTS: Required<Omit<MiniMapLayerOptions, 'graphLayerId'>> = {
+const DEFAULTS: Required<Omit<MiniMapLayerOptions, 'graphLayerId' | 'backgroundLayerId'>> = {
   width: 200,
   height: 150,
   backgroundColor: 0x1a1a2e,
@@ -117,6 +127,15 @@ const DEFAULTS: Required<Omit<MiniMapLayerOptions, 'graphLayerId'>> = {
   margin: 10,
   mode: 'auto',
 };
+
+/**
+ * Resolved option bag: everything defaulted, plus the optional
+ * `backgroundLayerId` wiring field (left out of {@link DEFAULTS}, like
+ * `graphLayerId`, because it has no sensible default — it's a cross-layer
+ * reference or nothing).
+ */
+type MiniMapOpts = Required<Omit<MiniMapLayerOptions, 'graphLayerId' | 'backgroundLayerId'>> &
+  Pick<MiniMapLayerOptions, 'backgroundLayerId'>;
 
 interface Bounds {
   x: number;
@@ -136,7 +155,7 @@ export class MiniMapLayer extends ScreenLayer<
   never,
   ScreenLayerHit
 > {
-  private opts: Required<Omit<MiniMapLayerOptions, 'graphLayerId'>>;
+  private opts: MiniMapOpts;
   private readonly graphLayerId: string;
 
   private graph: GraphLayer | null = null;
@@ -175,7 +194,7 @@ export class MiniMapLayer extends ScreenLayer<
       hittable: opts.hittable ?? false,
     });
     this.graphLayerId = opts.options.graphLayerId;
-    this.opts = { ...DEFAULTS, ...opts.options, graphLayerId: undefined } as typeof DEFAULTS;
+    this.opts = { ...DEFAULTS, ...opts.options, graphLayerId: undefined } as MiniMapOpts;
   }
 
   protected createState(): MiniMapState {
@@ -216,6 +235,14 @@ export class MiniMapLayer extends ScreenLayer<
     const offDataChanged = graph.events.on('data:changed', () => this.repaint());
     const offStyleChanged = graph.events.on('style:changed', () => this.repaint());
 
+    // Mirror the referenced background layer's colour: `canvas.update()` (e.g. a
+    // theme flip) emits `options:change` — repaint when the layer we track is in
+    // the changed set so the minimap backdrop follows it.
+    const offOptions = ctx.events.on('options:change', ({ changedLayerIds }) => {
+      const id = this.opts.backgroundLayerId;
+      if (id && changedLayerIds.includes(id)) this.repaint();
+    });
+
     if (typeof ResizeObserver !== 'undefined' && ctx.canvasElement) {
       const ro = new ResizeObserver(() => {
         this.layoutPosition();
@@ -231,6 +258,7 @@ export class MiniMapLayer extends ScreenLayer<
     this.offResize = () => {
       offDataChanged();
       offStyleChanged();
+      offOptions();
       prevOffResize?.();
     };
   }
@@ -346,15 +374,30 @@ export class MiniMapLayer extends ScreenLayer<
   private paintBackground(): void {
     const g = this.bgGfx;
     if (!g) return;
-    const { width, height, backgroundColor, borderColor, borderWidth } = this.opts;
+    const { width, height, borderColor, borderWidth } = this.opts;
     g.clear();
-    g.rect(0, 0, width, height).fill(this.resolveColor(backgroundColor));
+    g.rect(0, 0, width, height).fill(this.resolveBackgroundFill());
     if (borderWidth > 0) {
       g.rect(0, 0, width, height).stroke({
         color: this.resolveColor(borderColor),
         width: borderWidth,
       });
     }
+  }
+
+  /**
+   * The minimap backdrop colour. Mirrors the referenced {@link BackgroundLayer}
+   * (`backgroundLayerId`) when one is wired and resolvable, so the minimap
+   * tracks the canvas background — including theme flips — with no duplicated
+   * colour. Falls back to the `backgroundColor` option otherwise.
+   */
+  private resolveBackgroundFill(): number | string {
+    const id = this.opts.backgroundLayerId;
+    if (id) {
+      const bg = this.ctxRef?.layers.get<BackgroundLayer>(id);
+      if (bg instanceof BackgroundLayer) return bg.getResolvedBackgroundColor();
+    }
+    return this.resolveColor(this.opts.backgroundColor);
   }
 
   private paintWorld(): void {
@@ -371,11 +414,20 @@ export class MiniMapLayer extends ScreenLayer<
     // isn't available (pre-mount) or hasn't installed the connector yet.
     for (const edge of graph.store.edges()) {
       // Resolve the *effective* style — same merge the renderer sees — so
-      // colours set via the layer template / resolvers / state overlays
-      // (not just concrete `edge.style`) are mirrored. Reading `edge.style`
-      // raw misses every resolver-driven colour and falls back to grey.
+      // colours, widths and alphas set via the layer template / resolvers /
+      // state overlays (not just concrete `edge.style`) are mirrored. Reading
+      // `edge.style` raw misses every resolver-driven value.
       const edgeStyle = graph.resolveEdgeStyle(edge);
       const stroke = typeof edgeStyle.strokeColor === 'number' ? edgeStyle.strokeColor : 0x666666;
+      // Faithful scaled-down width: the real world-space stroke width times the
+      // minimap projection scale, so weight-driven thickness differences carry
+      // through. Floored at `MIN_EDGE_WIDTH` so thin edges stay visible at the
+      // minimap's heavy downscale instead of vanishing.
+      const edgeWidth = Math.max(
+        MIN_EDGE_WIDTH,
+        (typeof edgeStyle.strokeWidth === 'number' ? edgeStyle.strokeWidth : 1) * this.scale,
+      );
+      const edgeAlpha = typeof edgeStyle.strokeAlpha === 'number' ? edgeStyle.strokeAlpha : 1;
 
       const polyline = renderer?.getConnectorPolyline(edge.id);
       if (polyline && polyline.length >= 2) {
@@ -385,7 +437,7 @@ export class MiniMapLayer extends ScreenLayer<
           const p = this.worldToMinimap(polyline[i]!.x, polyline[i]!.y);
           g.lineTo(p.x, p.y);
         }
-        g.stroke({ width: 1, color: stroke });
+        g.stroke({ width: edgeWidth, color: stroke, alpha: edgeAlpha });
         continue;
       }
 
@@ -398,7 +450,7 @@ export class MiniMapLayer extends ScreenLayer<
       const p2 = this.worldToMinimap(tp.x, tp.y);
       g.moveTo(p1.x, p1.y);
       g.lineTo(p2.x, p2.y);
-      g.stroke({ width: 1, color: stroke });
+      g.stroke({ width: edgeWidth, color: stroke, alpha: edgeAlpha });
     }
 
     // Nodes — ask the renderer for the world-space AABB of whatever it
@@ -666,6 +718,14 @@ export class MiniMapLayer extends ScreenLayer<
  * minimap places it symmetrically around the node's stored position.
  */
 const FALLBACK_LOCAL_BOUNDS: Rect = { x: -16, y: -16, width: 32, height: 32 };
+
+/**
+ * Lower bound (in minimap-local pixels) for a mirrored edge stroke. The minimap
+ * downscales the whole graph into a small box, so an edge's faithfully-scaled
+ * width (`strokeWidth × scale`) often lands well below a pixel — this floor
+ * keeps every edge visible while still letting heavier edges render thicker.
+ */
+const MIN_EDGE_WIDTH = 0.4;
 
 /** Resolve a {@link MiniMapMode} to a concrete kind, consulting the OS for `'auto'`. */
 function resolveMiniMapKind(mode: MiniMapMode): MiniMapKind {

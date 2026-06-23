@@ -425,7 +425,17 @@ export function StoryGraphApp({
             {labelLod !== false ? (
               <LabelResolutionLODBehaviour id="label-lod" targetLayerId="graph" {...labelLod} />
             ) : null}
-            {showMiniMap ? <MiniMapLayer id="minimap" graphLayerId="graph" {...miniMap} /> : null}
+            {showMiniMap ? (
+              <MiniMapLayer
+                id="minimap"
+                graphLayerId="graph"
+                // Mirror the canvas backdrop — the minimap reads its background
+                // colour straight from the BackgroundLayer, so the theme lives in
+                // one place and the two never drift.
+                backgroundLayerId="background"
+                {...miniMap}
+              />
+            ) : null}
 
             {/* Right-click menus — each owns its own behaviour + overlay. Wrapped
                 in the clipboard provider so any clipboard-backed override resolves. */}
