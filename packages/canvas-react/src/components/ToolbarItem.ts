@@ -26,6 +26,8 @@ export interface ToolbarButtonItem extends ToolbarItemBase {
   type: 'button';
   /** Icon component (icon-agnostic — e.g. a `lucide-react` glyph). */
   icon: ToolbarIcon;
+  /** Optional className applied to the rendered icon (sizing / colour / state tint). */
+  iconClass?: string;
   /** Tooltip content + accessible label. */
   label: string;
   /**
@@ -52,6 +54,8 @@ export interface ToolbarToggleItem extends ToolbarItemBase {
   icon: ToolbarIcon;
   /** Icon shown while active. Defaults to `icon` — active styling alone signals state. */
   activeIcon?: ToolbarIcon;
+  /** Optional className applied to the rendered icon (sizing / colour / state tint). */
+  iconClass?: string;
   /** Tooltip + label in the inactive state. */
   label: string;
   /** Tooltip + label in the active state. Defaults to `label`. */
@@ -74,6 +78,8 @@ export interface ToolbarSelectItem extends ToolbarItemBase {
   options: Record<string, string>;
   /** Optional option key → icon, surfaced on the trigger + beside each option. */
   icons?: Record<string, ToolbarIcon>;
+  /** Optional className applied to the trigger icon. */
+  iconClass?: string;
   onChange: (value: string) => void;
   /** Menu alignment relative to the trigger. Default `'start'`. */
   align?: 'start' | 'center' | 'end';
@@ -115,3 +121,25 @@ export type ToolbarItem =
   | ToolbarSelectItem
   | ToolbarDividerItem
   | ToolbarCustomItem;
+
+/**
+ * Swap the `icon` of `button` / `toggle` items whose {@link ToolbarItemBase.key}
+ * matches a key in `icons`. Partial — unlisted items keep their baked icon. This
+ * is how the turnkey `*Toolbar` components honour their optional `icons` prop
+ * without the section hooks ever taking icons: build items (with baked defaults),
+ * then `applyIconOverrides(items, props.icons)` before rendering.
+ *
+ * Note: only the primary `icon` is overridden (not a toggle's `activeIcon`, nor a
+ * `select`'s per-option `icons`).
+ */
+export function applyIconOverrides(
+  items: ToolbarItem[],
+  icons?: Partial<Record<string, ToolbarIcon>>,
+): ToolbarItem[] {
+  if (!icons) return items;
+  return items.map((item) =>
+    (item.type === 'button' || item.type === 'toggle') && item.key && icons[item.key]
+      ? { ...item, icon: icons[item.key]! }
+      : item,
+  );
+}

@@ -1,17 +1,15 @@
 import type { Canvas, BackgroundLayerOptions } from '@invana/canvas';
+import { Grid3x3 } from 'lucide-react';
 
-import { Panel, ToolbarItems } from '../components';
+import { Panel, ToolbarItems, applyIconOverrides } from '../components';
 import type { PanelPosition, ToolbarIcon, ToolbarItem } from '../components';
 import { useGrid } from '../hooks/useGrid';
 
 type PatternType = NonNullable<BackgroundLayerOptions['patternType']>;
 
-export interface GridToolbarIconSet {
-  grid: ToolbarIcon;
-}
-
 export interface GridToolbarProps {
-  icons: GridToolbarIconSet;
+  /** Override the baked icon, by item key. */
+  icons?: Partial<Record<'grid', ToolbarIcon>>;
   /** Where the toolbar pins. Default `'bottom-right'`. */
   position?: PanelPosition;
   /** Stack direction. Default `'horizontal'`. */
@@ -29,7 +27,8 @@ export interface GridToolbarProps {
 
 /**
  * Grid toggle bar — shows/hides a `BackgroundLayer`'s pattern. Built inline off
- * {@link useGrid} (grid isn't one of the five named toolbar sections).
+ * {@link useGrid} (grid isn't one of the five named toolbar sections). Icon is
+ * baked in (lucide).
  */
 export function GridToolbar({
   icons,
@@ -49,10 +48,12 @@ export function GridToolbar({
     canvas,
   );
   const items: ToolbarItem[] = [
-    { type: 'toggle', key: 'grid', icon: icons.grid, label: 'Toggle grid', active: showGrid, onToggle: toggleGrid },
+    { type: 'toggle', key: 'grid', icon: Grid3x3, label: 'Toggle grid', active: showGrid, onToggle: toggleGrid },
   ];
 
-  const nav = <ToolbarItems items={items} orientation={orientation} className={className} />;
+  const nav = (
+    <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />
+  );
   if (bare) return nav;
   return (
     <Panel position={position} orientation={orientation}>

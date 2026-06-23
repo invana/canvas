@@ -1,13 +1,11 @@
 import type { Canvas } from '@invana/canvas';
+import { ClipboardPaste, Copy, Eraser, Scissors } from 'lucide-react';
 
 import type { ToolbarItem } from '../components/ToolbarItem';
-import type { ToolbarIcon } from '../components/types';
 import { useClipboard } from './useClipboard';
 import { useClearGraph } from './useClearGraph';
 
 export interface UseEditorSectionOptions {
-  /** Icons for cut / copy / paste / erase. */
-  icons: { cut: ToolbarIcon; copy: ToolbarIcon; paste: ToolbarIcon; erase: ToolbarIcon };
   /** Id of the `ClickSelectBehaviour` selection is read from. Default `'click-select'`. */
   clickSelectId?: string;
   /** Layer that erase / clipboard target. Default `'graph'`. */
@@ -25,8 +23,8 @@ export interface UseEditorSectionOptions {
  * `<GraphClipboardProvider>` + `ClickSelectBehaviour`; edits are undoable with a
  * `<GraphHistoryProvider>`.
  */
-export function useEditorSection(options: UseEditorSectionOptions): ToolbarItem[] {
-  const { icons, clickSelectId, layerId = 'graph', canvas } = options;
+export function useEditorSection(options: UseEditorSectionOptions = {}): ToolbarItem[] {
+  const { clickSelectId, layerId = 'graph', canvas } = options;
   const { cut, copy, paste, remove, canPaste, hasSelection } = useClipboard(
     clickSelectId ? { clickSelectId } : {},
     canvas,
@@ -34,13 +32,13 @@ export function useEditorSection(options: UseEditorSectionOptions): ToolbarItem[
   const { clear } = useClearGraph(layerId, canvas);
 
   return [
-    { type: 'button', key: 'cut', icon: icons.cut, label: 'Cut', onClick: cut, disabled: !hasSelection },
-    { type: 'button', key: 'copy', icon: icons.copy, label: 'Copy', onClick: copy, disabled: !hasSelection },
-    { type: 'button', key: 'paste', icon: icons.paste, label: 'Paste', onClick: paste, disabled: !canPaste },
+    { type: 'button', key: 'cut', icon: Scissors, label: 'Cut', onClick: cut, disabled: !hasSelection },
+    { type: 'button', key: 'copy', icon: Copy, label: 'Copy', onClick: copy, disabled: !hasSelection },
+    { type: 'button', key: 'paste', icon: ClipboardPaste, label: 'Paste', onClick: paste, disabled: !canPaste },
     {
       type: 'button',
       key: 'erase',
-      icon: icons.erase,
+      icon: Eraser,
       label: hasSelection ? 'Erase selection' : 'Clear canvas',
       ...(hasSelection ? { text: 'Selection' } : {}),
       onClick: hasSelection ? remove : () => clear(),

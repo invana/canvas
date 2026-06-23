@@ -1,9 +1,19 @@
 import type { Canvas } from '@invana/canvas';
 import type { EdgePathType } from '@invana/graph';
+import { Cable, CornerDownRight, Minus, Spline, Waypoints } from 'lucide-react';
 
 import type { ToolbarItem } from '../components/ToolbarItem';
 import type { ToolbarIcon } from '../components/types';
 import { useEdgeType } from './useEdgeType';
+
+/** Baked (lucide) icon per edge-routing type; override via `options.icons`. */
+const DEFAULT_ICONS: Record<string, ToolbarIcon> = {
+  straight: Minus,
+  orth: CornerDownRight,
+  bezier: Spline,
+  rounded: Waypoints,
+  smooth: Cable,
+};
 
 export interface UseStyleEditorSectionOptions {
   /** Target `GraphLayer` id. Default `'graph'`. */
@@ -16,8 +26,6 @@ export interface UseStyleEditorSectionOptions {
   types?: readonly EdgePathType[];
   /** Optional key → human label map. Default: the built-in path-type labels. */
   labels?: Record<string, string>;
-  /** Per-option icons (key → icon component). */
-  icons?: Record<string, ToolbarIcon>;
   /** Menu alignment. */
   align?: 'start' | 'center' | 'end';
   /** Explicit canvas instance; defaults to the context canvas. */
@@ -31,7 +39,7 @@ export interface UseStyleEditorSectionOptions {
  * edges.
  */
 export function useStyleEditorSection(options: UseStyleEditorSectionOptions = {}): ToolbarItem[] {
-  const { layerId, label = 'Edge', initial, types, labels, icons, align, canvas } = options;
+  const { layerId, label = 'Edge', initial, types, labels, align, canvas } = options;
   const { edgeType, edgeTypeOptions, setEdgeType } = useEdgeType(
     {
       ...(layerId ? { layerId } : {}),
@@ -41,5 +49,5 @@ export function useStyleEditorSection(options: UseStyleEditorSectionOptions = {}
     },
     canvas,
   );
-  return [{ type: 'select', key: 'edge-type', label, value: edgeType, options: edgeTypeOptions, icons, onChange: setEdgeType, align }];
+  return [{ type: 'select', key: 'edge-type', label, value: edgeType, options: edgeTypeOptions, icons: DEFAULT_ICONS, onChange: setEdgeType, align }];
 }

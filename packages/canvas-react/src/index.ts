@@ -9,6 +9,10 @@
 export { Canvas } from './Canvas';
 export type { CanvasProps } from './Canvas';
 
+// ─── Apps (batteries-included compositions) ──────────────────────────────────
+export { GraphCanvasLiteApp } from './apps/GraphCanvasLiteApp';
+export type { GraphCanvasLiteAppProps } from './apps/GraphCanvasLiteApp';
+
 export { CanvasContext, useCanvas } from './CanvasContext';
 export { GraphCanvasContext, useGraphCanvas } from './GraphCanvasContext';
 // Re-exported for `<Canvas config={…}>` consumers — the serialisable, id-keyed
@@ -207,7 +211,6 @@ export type {
   UseHistorySectionOptions,
   UseEditorSectionOptions,
   UseViewSectionOptions,
-  UseViewSectionIconSet,
   UseLayoutsSectionOptions,
   UseStyleEditorSectionOptions,
   UseCanvasMessageResult,
@@ -220,6 +223,8 @@ export type {
 export {
   CanvasControlsToolbar,
   GraphToolbar,
+  GraphControlsToolbar,
+  GraphControlsToolbarLite,
   HistoryToolbar,
   EditToolbar,
   ViewToolbar,
@@ -231,19 +236,15 @@ export {
 } from './toolbars';
 export type {
   CanvasControlsToolbarProps,
-  CanvasControlsToolbarIconSet,
   GraphToolbarProps,
+  GraphControlsToolbarProps,
+  GraphControlsSections,
   HistoryToolbarProps,
-  HistoryToolbarIconSet,
   EditToolbarProps,
-  EditToolbarIconSet,
   ViewToolbarProps,
-  ViewToolbarIconSet,
   GridToolbarProps,
-  GridToolbarIconSet,
   GraphLayoutToolbarProps,
   ModellerToolbarProps,
-  ModellerToolbarIconSet,
   InspectorPanelProps,
   PropertyViewerPanelProps,
 } from './toolbars';
@@ -256,6 +257,7 @@ export type {
 export {
   Panel,
   ToolbarItems,
+  applyIconOverrides,
   Tooltipped,
   CanvasMessageBar,
   GraphStatusBar,

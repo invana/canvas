@@ -1,6 +1,7 @@
 import type { Canvas } from '@invana/canvas';
+import { Eraser, MousePointer2, Plus, Redo2, Spline, Trash2, Undo2 } from 'lucide-react';
 
-import { Panel, ToolbarItems } from '../components';
+import { Panel, ToolbarItems, applyIconOverrides } from '../components';
 import type { PanelPosition, ToolbarIcon, ToolbarItem } from '../components';
 import { useTool } from '../hooks/useTool';
 import { useHistory } from '../hooks/useHistory';
@@ -8,21 +9,9 @@ import { useClipboard } from '../hooks/useClipboard';
 import { useClearGraph } from '../hooks/useClearGraph';
 import type { GraphTool } from '../ToolContext';
 
-/** Icons for the modeller toolbar. The four tool icons are required; the rest gate their controls. */
-export interface ModellerToolbarIconSet {
-  select: ToolbarIcon;
-  add: ToolbarIcon;
-  connect: ToolbarIcon;
-  delete: ToolbarIcon;
-  /** Required when `showHistory` is on (the default). */
-  undo?: ToolbarIcon;
-  redo?: ToolbarIcon;
-  /** Eraser icon for the selection-aware erase button. */
-  clear: ToolbarIcon;
-}
-
 export interface ModellerToolbarProps {
-  icons: ModellerToolbarIconSet;
+  /** Override the baked tool / undo / redo / erase icons, by item key. */
+  icons?: Partial<Record<'select' | 'add' | 'connect' | 'delete' | 'undo' | 'redo' | 'erase', ToolbarIcon>>;
   /** Which tool toggles to show, in order. Default `['select','add','connect','delete']`. */
   tools?: readonly GraphTool[];
   /** Override the tool tooltips / accessible labels. */
@@ -32,9 +21,9 @@ export interface ModellerToolbarProps {
    * picker shows only while the Add tool is active.
    */
   nodeKinds?: Record<string, string>;
-  /** Per-kind icons for the shape picker. */
+  /** Per-kind icons for the shape picker — domain-specific, so supplied by the consumer. */
   nodeKindIcons?: Record<string, ToolbarIcon>;
-  /** Show undo / redo (needs `icons.undo` + `icons.redo`). Default `true`. */
+  /** Show undo / redo. Default `true`. */
   showHistory?: boolean;
   /** Show the erase button. Default `true`. */
   showClear?: boolean;
@@ -58,6 +47,13 @@ const DEFAULT_LABELS: Record<GraphTool, string> = {
   connect: 'Connect',
   delete: 'Delete',
 };
+/** Baked (lucide) icons for the four drawing tools. */
+const TOOL_ICONS: Record<GraphTool, ToolbarIcon> = {
+  select: MousePointer2,
+  add: Plus,
+  connect: Spline,
+  delete: Eraser,
+};
 
 /**
  * Turnkey **drawing / modeller** toolbar — tool toggles (Select / Add / Connect
@@ -65,7 +61,9 @@ const DEFAULT_LABELS: Record<GraphTool, string> = {
  * dividers between groups. Tool state self-wires through {@link useTool}
  * (requires a `<GraphToolProvider>` ancestor); undo/redo/erase through their own
  * hooks (a `<GraphHistoryProvider>` makes them live). The consumer still
- * declares the drawing behaviours, gating each on the active tool.
+ * declares the drawing behaviours, gating each on the active tool. The tool /
+ * undo / redo / erase icons are baked in (lucide); only the per-kind shape-picker
+ * icons (`nodeKindIcons`) are consumer-supplied, since those are domain-specific.
  */
 export function ModellerToolbar({
   icons,
@@ -90,7 +88,7 @@ export function ModellerToolbar({
   const toolItems: ToolbarItem[] = tools.map((t) => ({
     type: 'toggle',
     key: t,
-    icon: icons[t],
+    icon: TOOL_ICONS[t],
     label: labels?.[t] ?? DEFAULT_LABELS[t],
     active: tool === t,
     onToggle: () => setTool(t),
@@ -108,10 +106,10 @@ export function ModellerToolbar({
   }
 
   const groups: ToolbarItem[][] = [toolItems];
-  if (showHistory && icons.undo && icons.redo) {
+  if (showHistory) {
     groups.push([
-      { type: 'button', key: 'undo', icon: icons.undo, label: 'Undo', onClick: undo, disabled: !canUndo },
-      { type: 'button', key: 'redo', icon: icons.redo, label: 'Redo', onClick: redo, disabled: !canRedo },
+      { type: 'button', key: 'undo', icon: Undo2, label: 'Undo', onClick: undo, disabled: !canUndo },
+      { type: 'button', key: 'redo', icon: Redo2, label: 'Redo', onClick: redo, disabled: !canRedo },
     ]);
   }
   if (showClear) {
@@ -119,7 +117,7 @@ export function ModellerToolbar({
       {
         type: 'button',
         key: 'erase',
-        icon: icons.clear,
+        icon: Trash2,
         label: hasSelection ? 'Erase selection' : 'Clear canvas',
         ...(hasSelection ? { text: 'Selection' } : {}),
         onClick: hasSelection ? remove : () => clear(),
@@ -135,7 +133,9 @@ export function ModellerToolbar({
     items.push(...group);
   }
 
-  const nav = <ToolbarItems items={items} orientation={orientation} className={className} />;
+  const nav = (
+    <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />
+  );
   if (bare) return nav;
   return (
     <Panel position={position} orientation={orientation}>

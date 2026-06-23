@@ -192,6 +192,11 @@ export interface StoryGraphAppProps {
   toolbarSections?: ToolbarSections;
   /** Show the footer status + message bars. Default true. */
   showFooter?: boolean;
+  /**
+   * Float the chrome transparently over a full-bleed canvas instead of in-flow
+   * rails (forwarded to {@link StoryCanvasShell}). Default false.
+   */
+  overlay?: boolean;
   /** Show the node/edge/background right-click menus. Default true. */
   showContextMenus?: boolean;
   /** Show the right-side property inspector (opened by clicking an element). Default true. */
@@ -269,6 +274,7 @@ export function StoryGraphApp({
   showToolbar = true,
   toolbarSections,
   showFooter = true,
+  overlay = false,
   showContextMenus = true,
   showInspector = true,
   inspectorPosition = 'top-right',
@@ -317,6 +323,7 @@ export function StoryGraphApp({
     <StoryCanvasShell
       config={mergedConfig}
       backend={backend}
+      overlay={overlay}
       onReady={onReady}
       // The dev-overlay toggle is a built-in shell feature (shown in every story's
       // header); forward the visualiser's options + initial state.

@@ -1,20 +1,14 @@
 import type { ReactNode } from 'react';
 import type { Canvas } from '@invana/canvas';
+import { Lock, LockOpen } from 'lucide-react';
 
-import { Panel, ToolbarItems } from '../components';
+import { Panel, ToolbarItems, applyIconOverrides } from '../components';
 import type { PanelPosition, ToolbarIcon, ToolbarItem } from '../components';
 import { useViewSection } from '../hooks/useViewSection';
 
-export interface CanvasControlsToolbarIconSet {
-  zoomIn: ToolbarIcon;
-  zoomOut: ToolbarIcon;
-  fit: ToolbarIcon;
-  /** Required only when using the controlled `locked` toggle. */
-  locked?: ToolbarIcon;
-  unlocked?: ToolbarIcon;
-}
-
 export interface CanvasControlsToolbarProps {
+  /** Override the baked icons, by item key. */
+  icons?: Partial<Record<'zoom-in' | 'zoom-out' | 'fit' | 'lock', ToolbarIcon>>;
   /** Where the controls pin within the canvas host. Default `'bottom-left'`. */
   position?: PanelPosition;
   /** Stack direction. Default `'vertical'`. */
@@ -25,12 +19,10 @@ export interface CanvasControlsToolbarProps {
   showZoom?: boolean;
   /** Show the fit-to-content button. Default `true`. */
   showFit?: boolean;
-  /** Icon components (consumer-supplied — the package stays icon-agnostic). */
-  icons: CanvasControlsToolbarIconSet;
   /**
    * Controlled lock state. Lock is **not** auto-wired (what "locked" disables —
-   * pan, node-drag, … — is app policy). Provide both `locked` and
-   * `onToggleLock` (plus `icons.locked`/`icons.unlocked`) to render the toggle.
+   * pan, node-drag, … — is app policy). Provide both `locked` and `onToggleLock`
+   * to render the toggle.
    */
   locked?: boolean;
   onToggleLock?: () => void;
@@ -50,21 +42,21 @@ export interface CanvasControlsToolbarProps {
  * Turnkey controls overlay — the canvas equivalent of React Flow's `<Controls>`.
  * Zoom +/- and fit ride the {@link useViewSection} section (its auto-lock is
  * off); lock stays **controlled** (pass `locked` + `onToggleLock`). Append extra
- * controls as `children`.
+ * controls as `children`. Icons are baked in (lucide).
  *
  * @example
  * <Canvas>
  *   <GraphLayer id="graph" data={data} />
- *   <CanvasControlsToolbar icons={{ zoomIn: ZoomIn, zoomOut: ZoomOut, fit: Maximize }} />
+ *   <CanvasControlsToolbar />
  * </Canvas>
  */
 export function CanvasControlsToolbar({
+  icons,
   position = 'bottom-left',
   orientation = 'vertical',
   fitLayerId = 'graph',
   showZoom = true,
   showFit = true,
-  icons,
   locked,
   onToggleLock,
   bare = false,
@@ -73,21 +65,17 @@ export function CanvasControlsToolbar({
   className,
 }: CanvasControlsToolbarProps) {
   // Zoom + fit only (no auto-lock — this overlay's lock is controlled).
-  const base = useViewSection({
-    icons: { zoomIn: icons.zoomIn, zoomOut: icons.zoomOut, fit: icons.fit },
-    layerId: fitLayerId,
-    canvas,
-  });
+  const base = useViewSection({ showLock: false, layerId: fitLayerId, canvas });
   const items: ToolbarItem[] = base.filter(
     (i) => (showZoom || (i.key !== 'zoom-in' && i.key !== 'zoom-out')) && (showFit || i.key !== 'fit'),
   );
 
-  if (locked !== undefined && onToggleLock && icons.locked && icons.unlocked) {
+  if (locked !== undefined && onToggleLock) {
     items.push({
       type: 'toggle',
       key: 'lock',
-      icon: icons.unlocked,
-      activeIcon: icons.locked,
+      icon: LockOpen,
+      activeIcon: Lock,
       label: 'Lock view',
       activeLabel: 'Unlock view',
       active: locked,
@@ -98,7 +86,9 @@ export function CanvasControlsToolbar({
     items.push({ type: 'custom', key: 'children', render: () => children });
   }
 
-  const nav = <ToolbarItems items={items} orientation={orientation} className={className} />;
+  const nav = (
+    <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />
+  );
   if (bare) return nav;
   return (
     <Panel position={position} orientation={orientation}>

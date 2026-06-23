@@ -1,25 +1,17 @@
 import type { Canvas } from '@invana/canvas';
 
-import { Panel, ToolbarItems } from '../components';
+import { Panel, ToolbarItems, applyIconOverrides } from '../components';
 import type { PanelPosition, ToolbarIcon } from '../components';
 import { useViewSection } from '../hooks/useViewSection';
 
-export interface ViewToolbarIconSet {
-  zoomIn: ToolbarIcon;
-  zoomOut: ToolbarIcon;
-  fit: ToolbarIcon;
-  /** Required only when the lock toggle is shown. */
-  locked?: ToolbarIcon;
-  unlocked?: ToolbarIcon;
-}
-
 export interface ViewToolbarProps {
-  icons: ViewToolbarIconSet;
+  /** Override the baked icons, by item key. */
+  icons?: Partial<Record<'zoom-in' | 'zoom-out' | 'fit' | 'lock', ToolbarIcon>>;
   /** Where the toolbar pins. Default `'bottom-left'`. */
   position?: PanelPosition;
   /** Stack direction. Default `'vertical'`. */
   orientation?: 'horizontal' | 'vertical';
-  /** Show the lock toggle (needs `icons.locked` + `icons.unlocked`). Default `true`. */
+  /** Show the lock toggle. Default `true`. */
   showLock?: boolean;
   /** Layer the fit-to-content button targets. Default `'graph'`. */
   layerId?: string;
@@ -35,7 +27,8 @@ export interface ViewToolbarProps {
 /**
  * View bar — zoom in / zoom out / fit-to-content / lock view (the
  * {@link useViewSection} section). Zoom + fit ride the camera hooks; lock
- * disables pan + node drag by default while leaving zoom available.
+ * disables pan + node drag by default while leaving zoom available. Icons are
+ * baked in (lucide).
  */
 export function ViewToolbar({
   icons,
@@ -48,16 +41,16 @@ export function ViewToolbar({
   canvas,
   className,
 }: ViewToolbarProps) {
-  const lockIcons =
-    showLock && icons.locked && icons.unlocked ? { locked: icons.locked, unlocked: icons.unlocked } : {};
   const items = useViewSection({
-    icons: { zoomIn: icons.zoomIn, zoomOut: icons.zoomOut, fit: icons.fit, ...lockIcons },
+    showLock,
     layerId,
     ...(lockBehaviourIds ? { lockBehaviourIds } : {}),
     canvas,
   });
 
-  const nav = <ToolbarItems items={items} orientation={orientation} className={className} />;
+  const nav = (
+    <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />
+  );
   if (bare) return nav;
   return (
     <Panel position={position} orientation={orientation}>

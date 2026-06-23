@@ -1,22 +1,14 @@
 import type { Canvas } from '@invana/canvas';
+import { Lock, LockOpen, Maximize, ZoomIn, ZoomOut } from 'lucide-react';
 
 import type { ToolbarItem } from '../components/ToolbarItem';
-import type { ToolbarIcon } from '../components/types';
 import { useZoom } from './useZoom';
 import { useFitContent } from './useFitContent';
 import { useLock } from './useLock';
 
-export interface UseViewSectionIconSet {
-  zoomIn: ToolbarIcon;
-  zoomOut: ToolbarIcon;
-  fit: ToolbarIcon;
-  /** Required only when the lock toggle is shown. */
-  locked?: ToolbarIcon;
-  unlocked?: ToolbarIcon;
-}
-
 export interface UseViewSectionOptions {
-  icons: UseViewSectionIconSet;
+  /** Include the lock-view toggle. Default `true`. */
+  showLock?: boolean;
   /** Layer the fit-to-content button targets. Default `'graph'`. */
   layerId?: string;
   /** Behaviour ids disabled while locked. Default `['pan', 'drag-node']`. */
@@ -29,11 +21,11 @@ export interface UseViewSectionOptions {
  * **View** toolbar section — zoom in / zoom out / fit-to-content / lock-view
  * {@link ToolbarItem}s built off {@link useZoom} + {@link useFitContent} +
  * {@link useLock}. The lock is a toggle whose icon flips unlocked↔locked
- * (omitted unless both `icons.locked` + `icons.unlocked` are given); locking
- * disables pan + node drag by default while leaving zoom available.
+ * (set `showLock: false` to omit it); locking disables pan + node drag by default
+ * while leaving zoom available. Icons are baked in.
  */
-export function useViewSection(options: UseViewSectionOptions): ToolbarItem[] {
-  const { icons, layerId = 'graph', lockBehaviourIds, canvas } = options;
+export function useViewSection(options: UseViewSectionOptions = {}): ToolbarItem[] {
+  const { showLock = true, layerId = 'graph', lockBehaviourIds, canvas } = options;
   const { zoomIn, zoomOut } = useZoom(canvas);
   const { fitContent } = useFitContent(layerId, canvas);
   const { locked, toggleLock } = useLock(
@@ -42,16 +34,16 @@ export function useViewSection(options: UseViewSectionOptions): ToolbarItem[] {
   );
 
   const items: ToolbarItem[] = [
-    { type: 'button', key: 'zoom-in', icon: icons.zoomIn, label: 'Zoom in', onClick: () => zoomIn() },
-    { type: 'button', key: 'zoom-out', icon: icons.zoomOut, label: 'Zoom out', onClick: () => zoomOut() },
-    { type: 'button', key: 'fit', icon: icons.fit, label: 'Fit to content', onClick: () => fitContent() },
+    { type: 'button', key: 'zoom-in', icon: ZoomIn, label: 'Zoom in', onClick: () => zoomIn() },
+    { type: 'button', key: 'zoom-out', icon: ZoomOut, label: 'Zoom out', onClick: () => zoomOut() },
+    { type: 'button', key: 'fit', icon: Maximize, label: 'Fit to content', onClick: () => fitContent() },
   ];
-  if (icons.locked && icons.unlocked) {
+  if (showLock) {
     items.push({
       type: 'toggle',
       key: 'lock',
-      icon: icons.unlocked,
-      activeIcon: icons.locked,
+      icon: LockOpen,
+      activeIcon: Lock,
       label: 'Lock view',
       activeLabel: 'Unlock view',
       active: locked,

@@ -67,25 +67,12 @@ import { Separator } from '@invana/ui';
 import { StoryCanvasShell } from './_shared';
 import type { GraphData, GraphLayer as GraphLayerEngine, GraphNode } from '@invana/graph';
 import {
-  ClipboardPaste,
-  Copy,
-  Eraser,
-  Grid3x3,
   Lasso,
-  Lock,
-  LockOpen,
-  Maximize,
   MousePointer2,
   Pause,
   Play,
-  Redo2,
-  RefreshCw,
   RotateCcw,
-  Scissors,
   SquareDashedMousePointer,
-  Undo2,
-  ZoomIn,
-  ZoomOut,
 } from 'lucide-react';
 
 /** Node-group colour ramp, shared by both stories' seed generators. */
@@ -523,21 +510,14 @@ export function StreamingDemo({
             <Separator orientation="vertical" style={sepStyle} />
             <SelectModeControl />
             <Separator orientation="vertical" style={sepStyle} />
-            <HistoryToolbar bare icons={{ undo: Undo2, redo: Redo2, redraw: RefreshCw }} />
+            <HistoryToolbar bare />
             <Separator orientation="vertical" style={sepStyle} />
-            <EditToolbar
-              bare
-              icons={{ cut: Scissors, copy: Copy, paste: ClipboardPaste, clear: Eraser }}
-            />
+            <EditToolbar bare />
             <Separator orientation="vertical" style={sepStyle} />
             {/* ViewToolbar defaults to vertical — force horizontal for the row. */}
-            <ViewToolbar
-              bare
-              orientation="horizontal"
-              icons={{ zoomIn: ZoomIn, zoomOut: ZoomOut, fit: Maximize, locked: Lock, unlocked: LockOpen }}
-            />
+            <ViewToolbar bare orientation="horizontal" />
             <Separator orientation="vertical" style={sepStyle} />
-            <GridToolbar bare icons={{ grid: Grid3x3 }} />
+            <GridToolbar bare />
           </div>
         </GraphClipboardProvider>
       </GraphHistoryProvider>

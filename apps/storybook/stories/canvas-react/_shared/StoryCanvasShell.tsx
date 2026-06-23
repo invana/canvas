@@ -91,6 +91,17 @@ export interface StoryCanvasShellProps {
   footer?: { left?: ShellSlot; right?: ShellSlot } | false;
   /** `className` on `AppLayoutBase`'s main. Default `'relative'` (so in-canvas `<Panel>`s anchor to it). */
   mainClassName?: string;
+  /**
+   * Float the chrome **over** a full-bleed canvas instead of laying it out as
+   * in-flow rails. When `true`, the canvas fills the whole viewport and the
+   * header / footer are rendered transparently and absolutely positioned on top
+   * (header pinned top, footer pinned bottom). Absent rails are still omitted
+   * (no `header` → no header element; no/`false` `footer` → no footer element).
+   * The transparent bands let pointer events pass through to the canvas in their
+   * empty areas — only the actual control groups capture clicks — so canvas
+   * pan / zoom keeps working "under" the chrome. Default `false` (in-flow rails).
+   */
+  overlay?: boolean;
 
   // ── Built-in dev overlay ────────────────────────────────────────────────────
   /**
@@ -135,6 +146,7 @@ export function StoryCanvasShell({
   header,
   footer,
   mainClassName = 'relative',
+  overlay = false,
   devInfo = true,
   devInfoInitiallyOn = false,
   wrap,
@@ -209,11 +221,35 @@ export function StoryCanvasShell({
     || !!(header && (header.left !== undefined || header.center !== undefined || header.right !== undefined));
   const hasFooter = !!footerSlots && (footerSlots.left !== undefined || footerSlots.right !== undefined);
 
+  // Overlay mode: the canvas is full-bleed and the chrome floats transparently on
+  // top (header pinned top, footer pinned bottom). Each rail wrapper is
+  // pointer-events:none so its empty areas let canvas pan / zoom through; only the
+  // content groups capture clicks. Absent rails are still omitted entirely.
+  const overlayBody = (
+    <div className="relative h-screen w-full overflow-hidden bg-background text-foreground">
+      <div className={`absolute inset-0 ${mainClassName}`}>{canvasBody}</div>
+      {hasHeader ? (
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex h-[40px] items-center justify-between gap-2 px-3">
+          <div className="pointer-events-auto flex items-center gap-2">{renderSlot(header?.left, canvas)}</div>
+          <div className="pointer-events-auto flex items-center gap-2">{renderSlot(header?.center, canvas)}</div>
+          <div className="pointer-events-auto flex items-center gap-2">{headerRight}</div>
+        </div>
+      ) : null}
+      {hasFooter ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex h-[25px] items-center justify-between gap-2 px-3">
+          <div className="pointer-events-auto flex items-center gap-2">{renderSlot(footerSlots?.left, canvas)}</div>
+          <div className="pointer-events-auto flex items-center gap-2">{renderSlot(footerSlots?.right, canvas)}</div>
+        </div>
+      ) : null}
+    </div>
+  );
+
   // Full-chrome stories keep AppLayoutBase verbatim (its NavHorizontal rails,
   // spacing, tooltips). When a rail is missing we drop to a bare flex column that
   // renders only the rails that have content — collapsing the empty bar.
-  const body =
-    hasHeader && hasFooter ? (
+  const body = overlay ? (
+    overlayBody
+  ) : hasHeader && hasFooter ? (
       <AppLayoutBase
         header={{
           left: renderSlot(header?.left, canvas),

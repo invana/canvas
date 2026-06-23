@@ -26,6 +26,7 @@ function renderButton(
   key: string,
   opts: {
     icon: ToolbarIcon;
+    iconClass?: string;
     label: string;
     text?: string;
     active?: boolean;
@@ -34,7 +35,7 @@ function renderButton(
     tooltipSide: TooltipSide;
   },
 ): ReactNode {
-  const { icon: Icon, label, text, active = false, disabled = false, onClick, tooltipSide } = opts;
+  const { icon: Icon, iconClass, label, text, active = false, disabled = false, onClick, tooltipSide } = opts;
   return (
     <Tooltipped key={key} label={label} side={tooltipSide}>
       <Button
@@ -45,7 +46,7 @@ function renderButton(
         onClick={onClick}
         className={active ? ACTIVE_CLASS : undefined}
       >
-        <Icon size={16} />
+        <Icon size={16} className={iconClass} />
         {text ?? null}
       </Button>
     </Tooltipped>
@@ -78,7 +79,7 @@ function renderSelect(key: string, item: ToolbarSelectItem, tipSide: TooltipSide
               const ActiveIcon = only?.icon as ToolbarIcon | undefined;
               return (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {ActiveIcon && <ActiveIcon size={16} />}
+                  {ActiveIcon && <ActiveIcon size={16} className={item.iconClass} />}
                   {label}: {only?.label ?? value}
                 </span>
               );
@@ -131,6 +132,7 @@ export function ToolbarItems({
         const it: ToolbarButtonItem = item;
         return renderButton(key, {
           icon: it.icon,
+          ...(it.iconClass !== undefined ? { iconClass: it.iconClass } : {}),
           label: it.label,
           ...(it.text !== undefined ? { text: it.text } : {}),
           ...(it.disabled !== undefined ? { disabled: it.disabled } : {}),
@@ -144,6 +146,7 @@ export function ToolbarItems({
         const label = it.active ? it.activeLabel ?? it.label : it.label;
         return renderButton(key, {
           icon: Icon,
+          ...(it.iconClass !== undefined ? { iconClass: it.iconClass } : {}),
           label,
           active: it.active,
           ...(it.disabled !== undefined ? { disabled: it.disabled } : {}),

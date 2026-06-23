@@ -24,25 +24,7 @@ import {
   GraphHistoryProvider,
 } from '@invana/canvas-react';
 import { ToggleGroup, ToggleGroupItem } from '@invana/ui';
-import {
-  ClipboardPaste,
-  Copy,
-  Eraser,
-  Grid3x3,
-  Lock,
-  LockOpen,
-  Magnet,
-  Maximize,
-  Moon,
-  Play,
-  Redo2,
-  RefreshCw,
-  Scissors,
-  Sun,
-  Undo2,
-  ZoomIn,
-  ZoomOut,
-} from 'lucide-react';
+import { Grid3x3, Magnet, Moon, Play, RefreshCw, Sun } from 'lucide-react';
 
 import {
   APP_DARK,
@@ -51,7 +33,6 @@ import {
   BACKEND_LABEL,
   DEFAULT_LAYOUTS,
   DEFAULT_LAYOUT_LABEL,
-  EDGE_TYPE_ICONS,
   SELECT_HINT,
   SELECT_ICONS,
   SELECT_LABEL,
@@ -144,7 +125,7 @@ function HeaderToolbarItems({
   };
 
   // Named sections.
-  const history = useHistorySection({ icons: { undo: Undo2, redo: Redo2 } });
+  const history = useHistorySection();
   // `applyInitial: false` — the active layout is run by <AutoLayoutBridge>, not
   // the picker, so it works even when the toolbar is hidden. The picker applies
   // its own instance on demand.
@@ -162,13 +143,9 @@ function HeaderToolbarItems({
     else if (!isRunning && wasRunning.current) canvas.showMessage(`${label} layout ready`, 3000);
     wasRunning.current = isRunning;
   }, [isRunning, layout, layoutLabel, canvas]);
-  const editor = useEditorSection({
-    icons: { cut: Scissors, copy: Copy, paste: ClipboardPaste, erase: Eraser },
-  });
-  const view = useViewSection({
-    icons: { zoomIn: ZoomIn, zoomOut: ZoomOut, fit: Maximize, locked: Lock, unlocked: LockOpen },
-  });
-  const style = useStyleEditorSection({ layerId, icons: EDGE_TYPE_ICONS });
+  const editor = useEditorSection();
+  const view = useViewSection();
+  const style = useStyleEditorSection({ layerId });
 
   // Extras hand-built off the raw hooks.
   const { mode, modeOptions, setMode } = useSelectMode(SELECT_MODE_IDS, {

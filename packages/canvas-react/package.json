@@ -17,6 +17,10 @@
     "check-types": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
+  "dependencies": {
+    "@invana/themes": "^0.0.6",
+    "lucide-react": "^0.562.0"
+  },
   "peerDependencies": {
     "@invana/canvas": "workspace:*",
     "@invana/ui": "*",
@@ -28,12 +32,14 @@
   },
   "devDependencies": {
     "@invana/canvas": "workspace:*",
+    "@invana/themes": "^0.0.6",
     "@invana/ui": "^0.0.6",
     "@invana/graph": "workspace:*",
     "@invana/graph-layout-d3-force": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "lucide-react": "^0.562.0",
     "pixi.js": "^8.18.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

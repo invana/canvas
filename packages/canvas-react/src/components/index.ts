@@ -9,6 +9,7 @@ export { Panel } from './Panel';
 export type { PanelProps } from './Panel';
 export { ToolbarItems } from './ToolbarItems';
 export type { ToolbarItemsProps } from './ToolbarItems';
+export { applyIconOverrides } from './ToolbarItem';
 export type {
   ToolbarItem,
   ToolbarButtonItem,

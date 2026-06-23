@@ -44,20 +44,7 @@
 
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import {
-  MousePointer2,
-  Plus,
-  Spline,
-  Eraser,
-  Undo2,
-  Redo2,
-  Trash2,
-  Circle,
-  Square,
-  Diamond,
-  Sun,
-  Moon,
-} from 'lucide-react';
+import { Circle, Square, Diamond, Sun, Moon } from 'lucide-react';
 import {
   CanvasMessageBar,
   BackgroundLayer,
@@ -224,20 +211,7 @@ function HistoryBridge({ onReady }: { onReady: (history: GraphHistory | null) =>
  */
 function HeaderToolbar() {
   return (
-    <ModellerToolbar
-      bare
-      icons={{
-        select: MousePointer2,
-        add: Plus,
-        connect: Spline,
-        delete: Eraser,
-        undo: Undo2,
-        redo: Redo2,
-        clear: Trash2,
-      }}
-      nodeKinds={SHAPE_LABELS}
-      nodeKindIcons={SHAPE_ICONS}
-    />
+    <ModellerToolbar bare nodeKinds={SHAPE_LABELS} nodeKindIcons={SHAPE_ICONS} />
   );
 }
 

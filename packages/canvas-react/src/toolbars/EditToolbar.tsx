@@ -1,22 +1,12 @@
 import type { Canvas } from '@invana/canvas';
 
-import { Panel, ToolbarItems } from '../components';
+import { Panel, ToolbarItems, applyIconOverrides } from '../components';
 import type { PanelPosition, ToolbarIcon } from '../components';
 import { useEditorSection } from '../hooks/useEditorSection';
 
-export interface EditToolbarIconSet {
-  cut: ToolbarIcon;
-  copy: ToolbarIcon;
-  paste: ToolbarIcon;
-  /**
-   * Eraser icon for the selection-aware erase button — deletes the selection
-   * when something is selected, otherwise clears the whole canvas.
-   */
-  clear: ToolbarIcon;
-}
-
 export interface EditToolbarProps {
-  icons: EditToolbarIconSet;
+  /** Override the baked icons, by item key. */
+  icons?: Partial<Record<'cut' | 'copy' | 'paste' | 'erase', ToolbarIcon>>;
   /** Where the toolbar pins. Default `'top-left'`. */
   position?: PanelPosition;
   /** Stack direction. Default `'horizontal'`. */
@@ -39,6 +29,7 @@ export interface EditToolbarProps {
  * section). Erase is selection-aware (deletes the selection when something is
  * selected, otherwise clears the layer). Requires a `<GraphClipboardProvider>` +
  * `ClickSelectBehaviour`; edits are undoable with a `<GraphHistoryProvider>`.
+ * Icons are baked in (lucide).
  */
 export function EditToolbar({
   icons,
@@ -52,14 +43,15 @@ export function EditToolbar({
   className,
 }: EditToolbarProps) {
   const section = useEditorSection({
-    icons: { cut: icons.cut, copy: icons.copy, paste: icons.paste, erase: icons.clear },
     ...(clickSelectId ? { clickSelectId } : {}),
     ...(layerId ? { layerId } : {}),
     canvas,
   });
   const items = showClear ? section : section.filter((i) => i.key !== 'erase');
 
-  const nav = <ToolbarItems items={items} orientation={orientation} className={className} />;
+  const nav = (
+    <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />
+  );
   if (bare) return nav;
   return (
     <Panel position={position} orientation={orientation}>

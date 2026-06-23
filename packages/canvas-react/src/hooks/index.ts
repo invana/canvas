@@ -64,7 +64,7 @@ export type { UseHistorySectionOptions } from './useHistorySection';
 export { useEditorSection } from './useEditorSection';
 export type { UseEditorSectionOptions } from './useEditorSection';
 export { useViewSection } from './useViewSection';
-export type { UseViewSectionOptions, UseViewSectionIconSet } from './useViewSection';
+export type { UseViewSectionOptions } from './useViewSection';
 export { useLayoutsSection } from './useLayoutsSection';
 export type { UseLayoutsSectionOptions } from './useLayoutsSection';
 export { useStyleEditorSection } from './useStyleEditorSection';
