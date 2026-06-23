@@ -27,20 +27,21 @@
  *     menu builders; `children` appends extra `<Canvas>` children (a behaviour /
  *     layer / layout a story is demonstrating); `onReady` exposes the live engine.
  *
- * Built on `AppLayoutBase` (`@invana/themes`). The `<Canvas>` lives inside the
- * shell's `main`, so header/footer chrome sits *outside* its `CanvasContext`; a
- * lifted `CanvasContext.Provider` (fed by `CanvasBridge`, the last `<Canvas>`
- * child) gives every control the same live engine.
+ * Built on the generic {@link StoryCanvasShell} core — this preset is just that
+ * shell wired with a graph layer, the built-in behaviour set, the header toolbar,
+ * and the footer status bars. The core owns the universal plumbing (the
+ * `AppLayoutBase` chrome, the `<Canvas>` inside its `main`, and the lifted
+ * `CanvasContext` fed by an internal `CanvasBridge`), so every header / footer
+ * control resolves the same live engine. Stories needing a different shape
+ * (modeller, streaming, dynamic-data) compose {@link StoryCanvasShell} directly.
  */
 
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useCallback, useMemo, useState } from 'react';
 import {
   BackgroundLayer,
   type BackgroundLayerProps,
   BrushSelectBehaviour,
   type BrushSelectBehaviourProps,
-  Canvas,
-  CanvasContext,
   CanvasMessageBar,
   type CanvasConfig,
   ClickSelectBehaviour,
@@ -83,14 +84,14 @@ import {
   type WheelZoomBehaviourProps,
   canUseWebGPU,
 } from '@invana/canvas-react';
-import { AppLayoutBase } from '@invana/themes';
 import type { MenuItem } from '@invana/ui';
 import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
 
 import { ACTIVE_LAYOUT_ID, APP_OPTIONS, type CanvasBackend, FORCE_OPTS, PALETTE } from './shell-config';
-import { AutoLayoutBridge, CanvasBridge, SystemTheme, applyChromeTheme, osPrefersDark } from './shell-bridges';
+import { AutoLayoutBridge, SystemTheme } from './shell-bridges';
 import { defaultBackgroundItems, defaultEdgeItems, defaultNodeItems } from './shell-menus';
 import { HeaderThemeToggle, HeaderToolbar, type ToolbarSections } from './shell-toolbar';
+import { StoryCanvasShell } from './StoryCanvasShell';
 
 /**
  * Per-behaviour control: `false` omits it, `true` / omitted includes it with the
@@ -273,29 +274,16 @@ export function StoryGraphApp({
   backgroundMenu = defaultBackgroundItems,
   children,
 }: StoryGraphAppProps) {
-  // The live canvas, lifted out of <Canvas> by <CanvasBridge>. Null until the
-  // graph is fully wired; gates the header/footer chrome that depends on it.
-  const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
-  const handleReady = useCallback(
-    (c: GraphCanvas | null) => {
-      setCanvas(c);
-      onReady?.(c);
-    },
-    [onReady],
-  );
-
   // Magnet toggle → hover neighbour radius (degree 1 vs 0). Reactive on
   // <HoverActivateBehaviour> — no remount.
   const [magnet, setMagnet] = useState(true);
   const toggleMagnet = useCallback(() => setMagnet((m) => !m), []);
 
-  // Render backend (PixiJS). Switching it remounts the <Canvas> (keyed on `backend`).
+  // Render backend (PixiJS). The shell keys the <Canvas> on it, so switching it
+  // remounts the engine with the chosen renderer.
   const [backend, setBackend] = useState<CanvasBackend>(
     () => preference ?? (canUseWebGPU() ? 'webgpu' : 'webgl'),
   );
-
-  // The theme toggle pins the chrome theme; restore the OS preference on unmount.
-  useEffect(() => () => applyChromeTheme(osPrefersDark()), []);
 
   const mergedConfig = useMemo(() => {
     const merged = deepMerge(APP_OPTIONS, config);
@@ -319,151 +307,144 @@ export function StoryGraphApp({
   const colorBy = resolveBehaviour(colorByLabel);
 
   return (
-    // Lifted context: the engine reaches the header toolbar + footer status /
-    // message bars, which live in AppLayoutBase's header/footer (siblings of
-    // <Canvas>, outside its own provider).
-    <CanvasContext.Provider value={canvas}>
-      <AppLayoutBase
-        header={{
-          left:
-            headerLeft ??
-            (
-              <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>{title}</span>
-            ),
-          center:
-            showToolbar && canvas ? (
-              <HeaderToolbar
-                magnet={magnet}
-                onToggleMagnet={toggleMagnet}
-                backend={backend}
-                onBackendChange={setBackend}
-                layouts={layouts}
-                layoutLabel={layoutLabel}
-                sections={toolbarSections}
-              />
-            ) : null,
-          right: headerRight ?? (canvas ? <HeaderThemeToggle /> : null),
-        }}
-        mainClassName="relative"
-        main={
-          <Canvas key={backend} autoResize preference={backend} config={mergedConfig}>
-            {showBackground ? <BackgroundLayer id="background" {...background} /> : null}
-            <GraphLayer id="graph" data={data} node={{ style: { labelText } }} {...graphLayer} />
+    <StoryCanvasShell
+      config={mergedConfig}
+      backend={backend}
+      onReady={onReady}
+      header={{
+        left:
+          headerLeft ?? (
+            <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>{title}</span>
+          ),
+        center: (canvas) =>
+          showToolbar && canvas ? (
+            <HeaderToolbar
+              magnet={magnet}
+              onToggleMagnet={toggleMagnet}
+              backend={backend}
+              onBackendChange={setBackend}
+              layouts={layouts}
+              layoutLabel={layoutLabel}
+              sections={toolbarSections}
+            />
+          ) : null,
+        right: (canvas) => headerRight ?? (canvas ? <HeaderThemeToggle /> : null),
+      }}
+      // `AppLayoutBase.footer` is required; the shell renders an empty bar when
+      // `footer` is false.
+      footer={
+        showFooter
+          ? {
+              left: (canvas) => footerLeft ?? (canvas ? <GraphStatusBar /> : null),
+              right: (canvas) => footerRight ?? (canvas ? <CanvasMessageBar /> : null),
+            }
+          : false
+      }
+    >
+      {showBackground ? <BackgroundLayer id="background" {...background} /> : null}
+      <GraphLayer id="graph" data={data} node={{ style: { labelText } }} {...graphLayer} />
 
-            {/* Colour-by-category — defaults `nodeLabel` to `node.type`. */}
-            {colorBy !== false ? (
-              <ColorByLabelBehaviour
-                targetLayerId="graph"
-                palette={palette}
-                colorEdges={false}
-                {...(nodeColorLabel ? { nodeLabel: nodeColorLabel } : {})}
-                {...colorBy}
-              />
-            ) : null}
+      {/* Colour-by-category — defaults `nodeLabel` to `node.type`. */}
+      {colorBy !== false ? (
+        <ColorByLabelBehaviour
+          targetLayerId="graph"
+          palette={palette}
+          colorEdges={false}
+          {...(nodeColorLabel ? { nodeLabel: nodeColorLabel } : {})}
+          {...colorBy}
+        />
+      ) : null}
 
-            {/* Active layout — the default config-first d3-force (run by
-                <AutoLayoutBridge>), or a story-supplied replacement. */}
-            {activeLayout !== undefined ? (
-              activeLayout
-            ) : (
-              <D3ForceLayout
-                id={activeLayoutId}
-                targetLayerId="graph"
-                options={forceOptions ?? FORCE_OPTS}
-                {...(fitPadding !== undefined ? { fitPadding } : {})}
-              />
-            )}
-            {autoLayout ? <AutoLayoutBridge data={data} layoutId={activeLayoutId} /> : null}
+      {/* Active layout — the default config-first d3-force (run by
+          <AutoLayoutBridge>), or a story-supplied replacement. */}
+      {activeLayout !== undefined ? (
+        activeLayout
+      ) : (
+        <D3ForceLayout
+          id={activeLayoutId}
+          targetLayerId="graph"
+          options={forceOptions ?? FORCE_OPTS}
+          {...(fitPadding !== undefined ? { fitPadding } : {})}
+        />
+      )}
+      {autoLayout ? <AutoLayoutBridge data={data} layoutId={activeLayoutId} /> : null}
 
-            {/* OS dark-mode follow — external colour patches through update(). */}
-            <SystemTheme />
+      {/* OS dark-mode follow — external colour patches through update(). */}
+      <SystemTheme />
 
-            {/* Camera + interaction. */}
-            {pan !== false ? <DragPanBehaviour id="pan" {...pan} /> : null}
-            {dragNode !== false ? (
-              <DragNodeBehaviour id="drag-node" targetLayerId="graph" {...dragNode} />
-            ) : null}
-            {wheel !== false ? <WheelZoomBehaviour id="wheel" {...wheel} /> : null}
-            {pinch !== false ? <PinchZoomBehaviour id="pinch" {...pinch} /> : null}
-            {hover !== false ? (
-              <HoverActivateBehaviour
-                id="hover"
-                targetLayerId="graph"
-                state="highlighted"
-                degree={magnet ? 1 : 0}
-                {...hover}
-              />
-            ) : null}
+      {/* Camera + interaction. */}
+      {pan !== false ? <DragPanBehaviour id="pan" {...pan} /> : null}
+      {dragNode !== false ? (
+        <DragNodeBehaviour id="drag-node" targetLayerId="graph" {...dragNode} />
+      ) : null}
+      {wheel !== false ? <WheelZoomBehaviour id="wheel" {...wheel} /> : null}
+      {pinch !== false ? <PinchZoomBehaviour id="pinch" {...pinch} /> : null}
+      {hover !== false ? (
+        <HoverActivateBehaviour
+          id="hover"
+          targetLayerId="graph"
+          state="highlighted"
+          degree={magnet ? 1 : 0}
+          {...hover}
+        />
+      ) : null}
 
-            {/* Selection. */}
-            {clickSelect !== false ? (
-              <ClickSelectBehaviour id="click-select" targetLayerId="graph" multiple {...clickSelect} />
-            ) : null}
-            {brushSelect !== false ? (
-              <BrushSelectBehaviour id="brush-select" targetLayerId="graph" {...brushSelect} />
-            ) : null}
-            {lassoSelect !== false ? (
-              <LassoSelectBehaviour id="lasso-select" targetLayerId="graph" {...lassoSelect} />
-            ) : null}
+      {/* Selection. */}
+      {clickSelect !== false ? (
+        <ClickSelectBehaviour id="click-select" targetLayerId="graph" multiple {...clickSelect} />
+      ) : null}
+      {brushSelect !== false ? (
+        <BrushSelectBehaviour id="brush-select" targetLayerId="graph" {...brushSelect} />
+      ) : null}
+      {lassoSelect !== false ? (
+        <LassoSelectBehaviour id="lasso-select" targetLayerId="graph" {...lassoSelect} />
+      ) : null}
 
-            {/* Click-to-view → the right inspector (panel omitted when off). */}
-            {clickView !== false ? (
-              <ClickViewBehaviour
-                id="click-view"
-                targetLayerId="graph"
-                panel={
-                  showInspector
-                    ? (ctx: ViewContext) => (
-                        <PropertyViewerPanel ctx={ctx} position={inspectorPosition} fullHeight />
-                      )
-                    : undefined
-                }
-                {...clickView}
-              />
-            ) : null}
+      {/* Click-to-view → the right inspector (panel omitted when off). */}
+      {clickView !== false ? (
+        <ClickViewBehaviour
+          id="click-view"
+          targetLayerId="graph"
+          panel={
+            showInspector
+              ? (ctx: ViewContext) => (
+                  <PropertyViewerPanel ctx={ctx} position={inspectorPosition} fullHeight />
+                )
+              : undefined
+          }
+          {...clickView}
+        />
+      ) : null}
 
-            {labelLod !== false ? (
-              <LabelResolutionLODBehaviour id="label-lod" targetLayerId="graph" {...labelLod} />
-            ) : null}
-            {showMiniMap ? (
-              <MiniMapLayer
-                id="minimap"
-                graphLayerId="graph"
-                // Mirror the canvas backdrop — the minimap reads its background
-                // colour straight from the BackgroundLayer, so the theme lives in
-                // one place and the two never drift.
-                backgroundLayerId="background"
-                {...miniMap}
-              />
-            ) : null}
+      {labelLod !== false ? (
+        <LabelResolutionLODBehaviour id="label-lod" targetLayerId="graph" {...labelLod} />
+      ) : null}
+      {showMiniMap ? (
+        <MiniMapLayer
+          id="minimap"
+          graphLayerId="graph"
+          // Mirror the canvas backdrop — the minimap reads its background
+          // colour straight from the BackgroundLayer, so the theme lives in
+          // one place and the two never drift.
+          backgroundLayerId="background"
+          {...miniMap}
+        />
+      ) : null}
 
-            {/* Right-click menus — each owns its own behaviour + overlay. Wrapped
-                in the clipboard provider so any clipboard-backed override resolves. */}
-            {showContextMenus ? (
-              <GraphClipboardProvider layerId="graph">
-                <GraphNodeContextMenu items={nodeMenu} />
-                <GraphEdgeContextMenu items={edgeMenu} />
-                <GraphBackgroundContextMenu items={backgroundMenu} />
-              </GraphClipboardProvider>
-            ) : null}
+      {/* Right-click menus — each owns its own behaviour + overlay. Wrapped
+          in the clipboard provider so any clipboard-backed override resolves. */}
+      {showContextMenus ? (
+        <GraphClipboardProvider layerId="graph">
+          <GraphNodeContextMenu items={nodeMenu} />
+          <GraphEdgeContextMenu items={edgeMenu} />
+          <GraphBackgroundContextMenu items={backgroundMenu} />
+        </GraphClipboardProvider>
+      ) : null}
 
-            {/* Story-supplied extra children (behaviour / layer being demonstrated). */}
-            {children}
-
-            {/* Last child: publishes the live engine once everything registered. */}
-            <CanvasBridge onReady={handleReady} />
-          </Canvas>
-        }
-        // `AppLayoutBase.footer` is required; render an empty bar when hidden.
-        footer={
-          showFooter
-            ? {
-                left: footerLeft ?? (canvas ? <GraphStatusBar /> : null),
-                right: footerRight ?? (canvas ? <CanvasMessageBar /> : null),
-              }
-            : { left: null, right: null }
-        }
-      />
-    </CanvasContext.Provider>
+      {/* Story-supplied extra children (behaviour / layer being demonstrated).
+          The shell appends its own <CanvasBridge> after these, so the lifted
+          engine publishes only once every child above has registered. */}
+      {children}
+    </StoryCanvasShell>
   );
 }

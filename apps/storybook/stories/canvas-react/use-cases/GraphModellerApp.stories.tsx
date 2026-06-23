@@ -1,10 +1,10 @@
 /**
- * Graph **modeller, dressed in the app shell** — the same drawing tool as
- * `GraphModeller`, but ported into `@invana/themes`' `AppLayoutBase` (the
- * "appbase" layout built on `@invana/ui`'s `NavHorizontal`), the modeller
- * counterpart of `GraphVisualiserApp`. Instead of floating the drawing toolbar
- * and the per-tool hint over the canvas in `<Panel>`s, the chrome lives in the
- * shell's real header / footer bars:
+ * Graph **modeller, dressed in the app shell** — a full drawing tool built on the
+ * shared, use-case-agnostic `<StoryCanvasShell>` (`../_shared`), the modeller
+ * counterpart of `GraphVisualiserApp`. It's the proof the shell hosts *any* use
+ * case: where the visualiser feeds the shell a read-only graph, this story feeds
+ * it tool-gated drawing behaviours + a `ModellerToolbar`, with the chrome in the
+ * shell's real header / footer bars instead of floating `<Panel>`s:
  *
  *   - **Header** — the `ModellerToolbar` (`bare`): a brand on the left, the tool
  *     row (Select · Add · Connect · Delete + the Add-tool shape picker · undo/redo
@@ -26,18 +26,20 @@
  *
  * `AppLayoutBase` lays out `header` / `main` / `footer` as siblings, but the
  * `<Canvas>` (engine + its `CanvasContext`) lives inside `main`. The header
- * toolbar and footer therefore sit *outside* the `<Canvas>` subtree. The header's
- * `ModellerToolbar` and the in-canvas drawing behaviours must share the **same**
- * `GraphToolProvider` (active tool + node shape) and `GraphHistoryProvider`
- * (undoable edits) — so both providers, plus a `CanvasContext.Provider` fed the
- * engine once it's live, are lifted **above** the whole shell.
+ * toolbar and footer therefore sit *outside* the `<Canvas>` subtree. The shell
+ * already lifts the `CanvasContext` for us (fed by its own `CanvasBridge`), so the
+ * footer status bar resolves the live engine for free. The header's
+ * `ModellerToolbar` and the in-canvas drawing behaviours additionally need the
+ * **same** `GraphToolProvider` (active tool + node shape) and the same undo
+ * history — so this story passes the shell a `wrap` that adds a `GraphToolProvider`
+ * and a lifted `HistoryContext` *above* the whole shell.
  *
- * `GraphHistoryProvider` resolves its store from the (initially-null) lifted
- * context and rebuilds the history once the engine appears; `useDrawHistory`
- * reads history through a ref, so the drawing behaviours — which mount before the
- * engine is published — still journal correctly. The engine is surfaced by
- * `CanvasBridge`, rendered as the **last** `<Canvas>` child, so it publishes only
- * after every layer / behaviour above it has registered.
+ * The actual `GraphHistoryProvider` stays **inside** `<Canvas>` (a shell child) so
+ * it resolves a live engine + store; `<HistoryBridge>` lifts that history up into
+ * the `wrap`'s `HistoryContext` so the header toolbar's Undo / Redo drive the same
+ * instance the in-canvas behaviours journal into. `useDrawHistory` reads history
+ * through a ref, so the drawing behaviours — which mount before the engine is
+ * published — still journal correctly.
  */
 
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
@@ -57,8 +59,6 @@ import {
   Moon,
 } from 'lucide-react';
 import {
-  Canvas,
-  CanvasContext,
   CanvasMessageBar,
   BackgroundLayer,
   GraphLayer,
@@ -96,16 +96,16 @@ import type {
   GraphBackgroundMenuContext,
   ToolbarItem,
 } from '@invana/canvas-react';
-import { AppLayoutBase } from '@invana/themes';
 import type { MenuItem } from '@invana/ui';
 import type {
-  GraphCanvas,
   GraphData,
   GraphEdge,
   GraphHistory,
   NodeShapeOptions,
 } from '@invana/graph';
 import type * as graph from '@invana/graph';
+
+import { StoryCanvasShell, applyChromeTheme, osPrefersDark } from '../_shared';
 
 const meta: Meta = { title: 'canvas-react/usecases/GraphModellerApp' };
 export default meta;
@@ -195,47 +195,6 @@ const M_DARK: CanvasConfig = {
 /** Follows the OS scheme by pushing the matching colour patch through update(). */
 function SystemTheme() {
   useSystemTheme(M_LIGHT, M_DARK);
-  return null;
-}
-
-/**
- * Flip the `@invana/ui` chrome (the whole `AppLayoutBase` shell — its
- * `bg-background` / `border-border` / `text-foreground` tokens, plus the toolbar
- * buttons and menus) to match the canvas theme, so the app stays coherent instead
- * of the shell following the OS independently. Mirrors the storybook's own
- * `bootstrapOsTheme` (`.storybook/preview.ts`), which switches the design-kit by
- * `data-theme`.
- */
-function applyChromeTheme(dark: boolean): void {
-  if (typeof document === 'undefined') return;
-  const root = document.documentElement;
-  root.setAttribute('data-theme', dark ? 'default-dark' : 'default-light');
-  root.classList.remove('theme-default-light', 'theme-default-dark', 'light', 'dark');
-  root.classList.add(dark ? 'theme-default-dark' : 'theme-default-light', dark ? 'dark' : 'light');
-}
-
-/** Whether the OS currently prefers a dark colour scheme. */
-function osPrefersDark(): boolean {
-  return (
-    typeof window !== 'undefined'
-    && !!window.matchMedia
-    && window.matchMedia('(prefers-color-scheme: dark)').matches
-  );
-}
-
-/**
- * Surfaces the live canvas from inside `<Canvas>` (where {@link useGraphCanvas}
- * is guaranteed non-null) up to the shell, so the lifted `CanvasContext` can feed
- * header / footer chrome. Rendered as the **last** `<Canvas>` child: its mount
- * effect runs after every layer / behaviour above it has registered, so the
- * lifted engine is only published once the graph is fully wired.
- */
-function CanvasBridge({ onReady }: { onReady: (canvas: GraphCanvas | null) => void }) {
-  const canvas = useGraphCanvas();
-  useEffect(() => {
-    onReady(canvas);
-    return () => onReady(null);
-  }, [canvas, onReady]);
   return null;
 }
 
@@ -513,75 +472,60 @@ function DrawingTools() {
 }
 
 function ModellerApp() {
-  // The live canvas, lifted out of <Canvas> by <CanvasBridge>. Null until the
-  // graph is fully wired; gates the header/footer chrome that depends on it.
-  const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
-  const handleReady = useCallback((c: GraphCanvas | null) => setCanvas(c), []);
-
   // The undo history, lifted out of the in-<Canvas> <GraphHistoryProvider> by
   // <HistoryBridge>, so the header toolbar's Undo / Redo share the same instance
   // the in-canvas drawing behaviours journal into.
   const [history, setHistory] = useState<GraphHistory | null>(null);
   const handleHistory = useCallback((h: GraphHistory | null) => setHistory(h), []);
 
-  // The theme toggle pins the chrome theme; restore it to the OS preference on
-  // unmount so the pinned theme doesn't leak into the next story.
-  useEffect(() => () => applyChromeTheme(osPrefersDark()), []);
-
+  // The whole modeller is just the generic shell + the right `wrap` and children:
+  // the shell lifts CanvasContext (and its CanvasBridge) for us, so this story
+  // only supplies the modeller-specific pieces. Theme restore-on-unmount is the
+  // shell's default, so no local effect is needed.
   return (
-    // Lifted context + providers reach the header toolbar (a sibling of <Canvas>,
-    // outside its own provider): the engine via CanvasContext, the active tool via
-    // GraphToolProvider (pure state — owns no engine), and the undo history via a
-    // lifted HistoryContext fed by <HistoryBridge>. The actual <GraphHistoryProvider>
-    // stays *inside* <Canvas> (so it resolves a live engine + store); both the
-    // header and the in-canvas behaviours then read the same history. The footer
-    // hint rides the engine itself (Canvas.showMessage), so it needs no provider.
-    <CanvasContext.Provider value={canvas}>
-      <HistoryContext.Provider value={history}>
+    <StoryCanvasShell
+      config={MODELLER_OPTIONS}
+      // Lift the active tool + undo history ABOVE the shell so the header toolbar
+      // (a sibling of <Canvas>, outside its own provider) shares them with the
+      // in-canvas drawing behaviours. GraphToolProvider owns no engine (pure
+      // state); the HistoryContext is fed by <HistoryBridge> from inside <Canvas>.
+      // The footer hint rides the engine itself (Canvas.showMessage) — no provider.
+      wrap={(shell) => (
         <GraphToolProvider>
-          <AppLayoutBase
-            header={{
-              left: <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>Graph Modeller</span>,
-              center: canvas ? <HeaderToolbar /> : null,
-              right: canvas ? <HeaderThemeToggle /> : null,
-            }}
-            mainClassName="relative"
-            // Minimal children register the classes by id; MODELLER_OPTIONS holds
-            // all settings. Node/edge stroke + background colours follow the OS
-            // scheme via <SystemTheme> (theme-agnostic engine).
-            main={
-              <Canvas autoResize config={MODELLER_OPTIONS}>
-                <BackgroundLayer id="background" />
-                <GraphLayer id="graph" data={SEED} />
-                {/* OS dark-mode follow — external colour patches through update(). */}
-                <SystemTheme />
-
-                <DragPanBehaviour id="pan" />
-                <WheelZoomBehaviour id="wheel" />
-
-                {/* History over the graph store — lives inside <Canvas> so it
-                    resolves the live engine. <DrawingTools> reads it directly;
-                    <HistoryBridge> lifts the instance up to the header. */}
-                <GraphHistoryProvider layerId="graph">
-                  <DrawingTools />
-                  <HistoryBridge onReady={handleHistory} />
-                </GraphHistoryProvider>
-
-                {/* Last child: publishes the live engine to the lifted context
-                    only after everything above has registered. */}
-                <CanvasBridge onReady={handleReady} />
-              </Canvas>
-            }
-            footer={{
-              left: canvas ? <GraphStatusBar /> : null,
-              // Shows the active tool's hint (pushed via Canvas.showMessage from
-              // <DrawingTools>); updates as the tool changes.
-              right: canvas ? <CanvasMessageBar /> : null,
-            }}
-          />
+          <HistoryContext.Provider value={history}>{shell}</HistoryContext.Provider>
         </GraphToolProvider>
-      </HistoryContext.Provider>
-    </CanvasContext.Provider>
+      )}
+      header={{
+        left: <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>Graph Modeller</span>,
+        center: (canvas) => (canvas ? <HeaderToolbar /> : null),
+        right: (canvas) => (canvas ? <HeaderThemeToggle /> : null),
+      }}
+      footer={{
+        left: (canvas) => (canvas ? <GraphStatusBar /> : null),
+        // Shows the active tool's hint (pushed via Canvas.showMessage from
+        // <DrawingTools>); updates as the tool changes.
+        right: (canvas) => (canvas ? <CanvasMessageBar /> : null),
+      }}
+    >
+      {/* Minimal children register the classes by id; MODELLER_OPTIONS holds all
+          settings. Node/edge stroke + background colours follow the OS scheme via
+          <SystemTheme> (theme-agnostic engine). */}
+      <BackgroundLayer id="background" />
+      <GraphLayer id="graph" data={SEED} />
+      {/* OS dark-mode follow — external colour patches through update(). */}
+      <SystemTheme />
+
+      <DragPanBehaviour id="pan" />
+      <WheelZoomBehaviour id="wheel" />
+
+      {/* History over the graph store — inside <Canvas> so it resolves the live
+          engine. <DrawingTools> reads it directly; <HistoryBridge> lifts the
+          instance up to the header (via the lifted HistoryContext above). */}
+      <GraphHistoryProvider layerId="graph">
+        <DrawingTools />
+        <HistoryBridge onReady={handleHistory} />
+      </GraphHistoryProvider>
+    </StoryCanvasShell>
   );
 }
 

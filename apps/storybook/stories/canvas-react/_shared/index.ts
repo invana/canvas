@@ -2,6 +2,12 @@
 // graph in the explorer-like chrome (header toolbar + footer stats/message +
 // context menus + inspector) every full-featured story needs.
 
+// Generic, use-case-agnostic host — the universal core every preset/story builds
+// on (visualiser, modeller, streaming, dynamic-data).
+export { StoryCanvasShell } from './StoryCanvasShell';
+export type { StoryCanvasShellProps, ShellSlot } from './StoryCanvasShell';
+
+// Batteries-included visualiser preset, built on the core above.
 export { StoryGraphApp } from './StoryGraphApp';
 export type { StoryGraphAppProps, ShellBehaviours, BehaviourSetting } from './StoryGraphApp';
 export type { ToolbarSections } from './shell-toolbar';

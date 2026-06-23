@@ -3,10 +3,14 @@
  * (`CyclicLayouts`, `AcyclicLayouts`). Both grow a graph in place — a timer
  * pushes a small chunk of new nodes + edges into the store every few seconds
  * via `layer.store.addData({ nodes, edges })` (the non-destructive append path:
- * it does NOT clear the store) — and both wear the exact same chrome (one
- * combined toolbar with stream controls, a live stats readout, a layout
- * switcher, select-mode picker, undo/redo, cut/copy/paste, zoom/fit/lock and a
- * grid toggle). The ONLY things that differ are:
+ * it does NOT clear the store) — and both wear the exact same chrome, hosted on
+ * the shared, use-case-agnostic `<StoryCanvasShell>` (`./_shared`): the combined
+ * streaming toolbar (stream controls, layout switcher, select-mode picker,
+ * edge-type picker, undo/redo, cut/copy/paste, zoom/fit/lock, grid toggle) fills
+ * the shell **header**, the live node/edge/chunk stats sit in the **footer**, and
+ * the engine (layers + behaviours + layouts + the live-append feed) are the
+ * shell's `<Canvas>` children. The ONLY things that differ between the two stories
+ * are:
  *
  *   1. the **seed** — a cyclic ring vs. a single-rooted tree — and
  *   2. the **layout menu** — which `Layout` instances the switcher offers.
@@ -36,7 +40,6 @@ import type { CSSProperties } from 'react';
 import {
   BackgroundLayer,
   BrushSelectBehaviour,
-  Canvas,
   ClickSelectBehaviour,
   D3ForceLayout,
   DevInfoLayer,
@@ -49,7 +52,6 @@ import {
   GridToolbar,
   HistoryToolbar,
   LassoSelectBehaviour,
-  Panel,
   ToolbarItems,
   ViewToolbar,
   WheelZoomBehaviour,
@@ -62,6 +64,8 @@ import {
 } from '@invana/canvas-react';
 import type { Layout } from '@invana/canvas';
 import { Separator } from '@invana/ui';
+
+import { StoryCanvasShell } from './_shared';
 import type { GraphData, GraphLayer as GraphLayerEngine, GraphNode } from '@invana/graph';
 import {
   ClipboardPaste,
@@ -501,84 +505,96 @@ export function StreamingDemo({
     setRunId((r) => r + 1); // remounts the Canvas subtree → fresh store + seqRef
   }, []);
 
+  // The combined streaming toolbar that fills the shell header. It lives outside
+  // <Canvas> (siblings of it, in AppLayoutBase's header) so it resolves the live
+  // engine through the shell's lifted CanvasContext; the history + clipboard
+  // providers wrap it here (rather than in-canvas) so the Undo/Redo + cut/copy/
+  // paste sections find the store. Gated on `canvas` so the providers only mount
+  // once the engine is live.
+  const headerToolbar = (canvas: unknown) =>
+    canvas ? (
+      <GraphHistoryProvider layerId={LAYER_ID}>
+        <GraphClipboardProvider layerId={LAYER_ID}>
+          <div style={rowStyle}>
+            <StreamControls running={running} onToggle={toggle} onReset={reset} />
+            <Separator orientation="vertical" style={sepStyle} />
+            <LayoutSelect options={layoutOptions} />
+            <Separator orientation="vertical" style={sepStyle} />
+            <EdgeTypeSelect />
+            <Separator orientation="vertical" style={sepStyle} />
+            <SelectModeControl />
+            <Separator orientation="vertical" style={sepStyle} />
+            <HistoryToolbar bare icons={{ undo: Undo2, redo: Redo2, redraw: RefreshCw }} />
+            <Separator orientation="vertical" style={sepStyle} />
+            <EditToolbar
+              bare
+              icons={{ cut: Scissors, copy: Copy, paste: ClipboardPaste, clear: Eraser }}
+            />
+            <Separator orientation="vertical" style={sepStyle} />
+            {/* ViewToolbar defaults to vertical — force horizontal for the row. */}
+            <ViewToolbar
+              bare
+              orientation="horizontal"
+              icons={{ zoomIn: ZoomIn, zoomOut: ZoomOut, fit: Maximize, locked: Lock, unlocked: LockOpen }}
+            />
+            <Separator orientation="vertical" style={sepStyle} />
+            <GridToolbar bare icons={{ grid: Grid3x3 }} />
+          </div>
+        </GraphClipboardProvider>
+      </GraphHistoryProvider>
+    ) : null;
+
   return (
-    <div style={hostStyle}>
-      {/* Re-key the whole subtree on reset so the engine, store and the feed's
-          sequence counter all start clean. */}
-      <Canvas key={runId} autoResize config={CANVAS_OPTIONS}>
-        {/* Engine layers (layer before the layouts/behaviours that depend on it). */}
-        <BackgroundLayer id="background" />
-        {/* Screen-fixed dev overlay — FPS / pointer / zoom; handy for watching
-            the per-tick cost while the stream grows the graph. */}
-        <DevInfoLayer id="dev-info" corner="bottom-right" />
-        <GraphLayer
-          id={LAYER_ID}
-          data={seed}
-          node={{
-            style: {
-              bgFill: (n: GraphNode) =>
-                PALETTE[(n.data as { group: number }).group % PALETTE.length]!,
-              // Per-node label text — the node id (`seed0`, `live42`, …). Static
-              // label styling (colour / size / placement) lives in CANVAS_OPTIONS.
-              labelText: (n: GraphNode) => n.id,
-            },
-          }}
-        />
+    // The generic shell hosts the streaming demo: the combined toolbar in the
+    // header, the live node/edge/chunk counts in the footer, and the engine
+    // (layers + behaviours + layouts + the live-append feed) as <Canvas> children.
+    // `instanceKey={runId}` re-keys the <Canvas> on reset so the engine, store and
+    // the feed's sequence counter all start clean.
+    <StoryCanvasShell
+      config={CANVAS_OPTIONS}
+      instanceKey={runId}
+      header={{ center: (canvas) => headerToolbar(canvas) }}
+      footer={{ left: (canvas) => (canvas ? <GraphStats stats={stats} /> : null) }}
+    >
+      {/* Engine layers (layer before the layouts/behaviours that depend on it). */}
+      <BackgroundLayer id="background" />
+      {/* Screen-fixed dev overlay — FPS / pointer / zoom; handy for watching the
+          per-tick cost while the stream grows the graph. */}
+      <DevInfoLayer id="dev-info" corner="bottom-right" />
+      <GraphLayer
+        id={LAYER_ID}
+        data={seed}
+        node={{
+          style: {
+            bgFill: (n: GraphNode) =>
+              PALETTE[(n.data as { group: number }).group % PALETTE.length]!,
+            // Per-node label text — the node id (`seed0`, `live42`, …). Static
+            // label styling (colour / size / placement) lives in CANVAS_OPTIONS.
+            labelText: (n: GraphNode) => n.id,
+          },
+        }}
+      />
 
-        {/* Behaviours — enabled state comes from CANVAS_OPTIONS. */}
-        <DragPanBehaviour id="pan" />
-        <WheelZoomBehaviour id="zoom" />
-        <DragNodeBehaviour id="drag-node" targetLayerId={LAYER_ID} />
-        <ClickSelectBehaviour id="click-select" targetLayerId={LAYER_ID} multiple />
-        <BrushSelectBehaviour id="brush-select" targetLayerId={LAYER_ID} />
-        <LassoSelectBehaviour id="lasso-select" targetLayerId={LAYER_ID} />
+      {/* Behaviours — enabled state comes from CANVAS_OPTIONS. */}
+      <DragPanBehaviour id="pan" />
+      <WheelZoomBehaviour id="zoom" />
+      <DragNodeBehaviour id="drag-node" targetLayerId={LAYER_ID} />
+      <ClickSelectBehaviour id="click-select" targetLayerId={LAYER_ID} multiple />
+      <BrushSelectBehaviour id="brush-select" targetLayerId={LAYER_ID} />
+      <LassoSelectBehaviour id="lasso-select" targetLayerId={LAYER_ID} />
 
-        {/* Layouts — force via the wrapper, the rest registered imperatively. */}
-        <D3ForceLayout id="force" targetLayerId={LAYER_ID} />
-        <RegisterLayouts extraLayouts={extraLayouts} />
+      {/* Layouts — force via the wrapper, the rest registered imperatively. */}
+      <D3ForceLayout id="force" targetLayerId={LAYER_ID} />
+      <RegisterLayouts extraLayouts={extraLayouts} />
 
-        {/* The live-append driver. */}
-        <StreamingFeed running={running} onStats={onStats} />
-
-        {/* History + clipboard providers + the one combined toolbar. */}
-        <GraphHistoryProvider layerId={LAYER_ID}>
-          <GraphClipboardProvider layerId={LAYER_ID}>
-            <Panel position="top-center" orientation="horizontal" gap={12}>
-              <StreamControls running={running} onToggle={toggle} onReset={reset} />
-              <Separator orientation="vertical" style={sepStyle} />
-              <GraphStats stats={stats} />
-              <Separator orientation="vertical" style={sepStyle} />
-              <LayoutSelect options={layoutOptions} />
-              <Separator orientation="vertical" style={sepStyle} />
-              <EdgeTypeSelect />
-              <Separator orientation="vertical" style={sepStyle} />
-              <SelectModeControl />
-              <Separator orientation="vertical" style={sepStyle} />
-              <HistoryToolbar bare icons={{ undo: Undo2, redo: Redo2, redraw: RefreshCw }} />
-              <Separator orientation="vertical" style={sepStyle} />
-              <EditToolbar
-                bare
-                icons={{ cut: Scissors, copy: Copy, paste: ClipboardPaste, clear: Eraser }}
-              />
-              <Separator orientation="vertical" style={sepStyle} />
-              {/* ViewToolbar defaults to vertical — force horizontal for the row. */}
-              <ViewToolbar
-                bare
-                orientation="horizontal"
-                icons={{ zoomIn: ZoomIn, zoomOut: ZoomOut, fit: Maximize, locked: Lock, unlocked: LockOpen }}
-              />
-              <Separator orientation="vertical" style={sepStyle} />
-              <GridToolbar bare icons={{ grid: Grid3x3 }} />
-            </Panel>
-          </GraphClipboardProvider>
-        </GraphHistoryProvider>
-      </Canvas>
-    </div>
+      {/* The live-append driver. */}
+      <StreamingFeed running={running} onStats={onStats} />
+    </StoryCanvasShell>
   );
 }
 
-const hostStyle: CSSProperties = { height: '100vh' };
 const sepStyle: CSSProperties = { alignSelf: 'center', height: 16 };
+const rowStyle: CSSProperties = { display: 'flex', alignItems: 'center', gap: 12 };
 const statsTextStyle: CSSProperties = {
   fontSize: 12,
   color: '#64748b',

@@ -16,7 +16,6 @@ import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
-  Canvas,
   D3ForceLayout,
   DragPanBehaviour,
   GraphLayer,
@@ -25,6 +24,8 @@ import {
 } from '@invana/canvas-react';
 import type { GraphData, GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
+
+import { StoryCanvasShell } from './_shared';
 
 const meta: Meta = { title: 'canvas-react/DynamicData' };
 export default meta;
@@ -114,68 +115,55 @@ function Demo() {
   }, [auto]);
 
   return (
-    <div style={containerStyle}>
-      <div style={toolbarStyle}>
-        {NAMES.map((k) => (
-          <button
-            key={k}
-            onClick={() => setName(k)}
-            style={buttonStyle(name === k)}
-          >
-            {k}
-          </button>
-        ))}
-        <label style={autoLabelStyle}>
-          <input
-            type="checkbox"
-            checked={auto}
-            onChange={(e) => setAuto(e.target.checked)}
-          />
-          Auto-cycle (3s)
-        </label>
-        <span style={countStyle}>
-          {data.nodes.length} nodes · {data.edges.length} edges · {cycles} switches
-        </span>
-      </div>
-      <div style={canvasHostStyle}>
-        {/* Minimal children register the classes by id; `config` holds all
-            settings. The active 'force' layout auto-runs on mount and re-runs
-            on each dataset switch (topology change) — no `key`-remount. */}
-        <Canvas autoResize config={CANVAS_OPTIONS}>
-          <DragPanBehaviour id="pan" />
-          <WheelZoomBehaviour id="zoom" />
-          <GraphLayer
-            id="graph"
-            data={data}
-            node={{
-              style: {
-                bgFill: (n: GraphNode) =>
-                  PALETTE[(n.data as { group: number }).group % PALETTE.length]!,
-              },
-            }}
-          />
-          <D3ForceLayout id="force" targetLayerId="graph" />
-        </Canvas>
-      </div>
-    </div>
+    // The generic shell hosts the switcher: dataset picker + auto-cycle toggle in
+    // the header, live counts in the footer, and the minimal engine children that
+    // register the classes by id (the `config` holds all settings; the active
+    // 'force' layout auto-runs on mount and re-runs on each dataset switch — no
+    // `key`-remount). The header/footer slots don't need the engine, so they're
+    // plain nodes (not `(canvas) => …` render fns).
+    <StoryCanvasShell
+      config={CANVAS_OPTIONS}
+      header={{
+        center: (
+          <div style={rowStyle}>
+            {NAMES.map((k) => (
+              <button key={k} onClick={() => setName(k)} style={buttonStyle(name === k)}>
+                {k}
+              </button>
+            ))}
+            <label style={autoLabelStyle}>
+              <input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} />
+              Auto-cycle (3s)
+            </label>
+          </div>
+        ),
+      }}
+      footer={{
+        left: (
+          <span style={countStyle}>
+            {data.nodes.length} nodes · {data.edges.length} edges · {cycles} switches
+          </span>
+        ),
+      }}
+    >
+      <DragPanBehaviour id="pan" />
+      <WheelZoomBehaviour id="zoom" />
+      <GraphLayer
+        id="graph"
+        data={data}
+        node={{
+          style: {
+            bgFill: (n: GraphNode) =>
+              PALETTE[(n.data as { group: number }).group % PALETTE.length]!,
+          },
+        }}
+      />
+      <D3ForceLayout id="force" targetLayerId="graph" />
+    </StoryCanvasShell>
   );
 }
 
-const containerStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  height: '100vh',
-};
-const toolbarStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
-  padding: '8px 12px',
-  background: '#1f2937',
-  color: '#e5e7eb',
-  fontFamily: 'system-ui, sans-serif',
-  fontSize: 13,
-};
+const rowStyle: CSSProperties = { display: 'flex', alignItems: 'center', gap: 8 };
 const buttonStyle = (active: boolean): CSSProperties => ({
   background: active ? '#3b82f6' : '#374151',
   color: '#fff',
@@ -185,13 +173,13 @@ const buttonStyle = (active: boolean): CSSProperties => ({
   cursor: 'pointer',
 });
 const autoLabelStyle: CSSProperties = {
-  marginLeft: 16,
+  marginLeft: 8,
   display: 'flex',
   alignItems: 'center',
   gap: 6,
+  fontSize: 13,
 };
-const countStyle: CSSProperties = { marginLeft: 'auto', opacity: 0.7 };
-const canvasHostStyle: CSSProperties = { flex: 1, minHeight: 0 };
+const countStyle: CSSProperties = { opacity: 0.7, fontSize: 13, whiteSpace: 'nowrap' };
 
 export const DynamicData: Story = {
   render: () => <Demo />,

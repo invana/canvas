@@ -1,0 +1,164 @@
+/**
+ * `<StoryCanvasShell>` — the **generic, use-case-agnostic host** every
+ * `@invana/canvas-react` story is built on. It owns *only* the concerns shared by
+ * every canvas-react app, and leaves everything domain-specific to its slots and
+ * escape hatches, so the *same* shell drives a read-only visualiser, a drawing
+ * modeller, a live-streaming feed, or a dataset switcher:
+ *
+ *   - **Lifted engine context.** `AppLayoutBase` lays out `header` / `main` /
+ *     `footer` as siblings, but the `<Canvas>` (and its own `CanvasContext`) lives
+ *     *inside* `main`. So the header / footer chrome sits **outside** the canvas
+ *     subtree. This shell lifts a `CanvasContext.Provider` (fed by the internal
+ *     {@link CanvasBridge}, rendered as the **last** `<Canvas>` child) **above**
+ *     `AppLayoutBase`, so every header / footer control resolves the same live
+ *     engine once it's fully wired.
+ *   - **Slots, not hardcoded chrome.** `header.{left,center,right}` and
+ *     `footer.{left,right}` take any node — or a `(canvas) => node` render fn so a
+ *     slot can gate on engine liveness. The `<Canvas>` body is `children`.
+ *   - **`wrap` escape hatch.** A `(shell) => node` wrapper around the whole shell
+ *     (incl. the lifted `CanvasContext`) for arbitrary lifted providers — a
+ *     `GraphToolProvider`, a lifted `HistoryContext` fed by a bridge child, etc.
+ *     This is what lets a modeller's header toolbar and its in-canvas drawing
+ *     behaviours share the same tool + history state.
+ *   - **Remount keying.** `backend` (render-backend switch) and `instanceKey` (an
+ *     explicit reset token, e.g. a streaming demo's run id) both key the
+ *     `<Canvas>`, so flipping either tears the engine down and re-inits it clean.
+ *
+ * The batteries-included visualiser lives in {@link StoryGraphApp}, which is just
+ * this core plus a graph layer, the built-in behaviour set, the header toolbar,
+ * and the footer status bars. Modeller / streaming / dynamic-data stories compose
+ * this core directly with their own children + slots.
+ */
+
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import { Canvas, type CanvasConfig, CanvasContext } from '@invana/canvas-react';
+import { AppLayoutBase } from '@invana/themes';
+import type { GraphCanvas } from '@invana/graph';
+
+import { type CanvasBackend } from './shell-config';
+import { CanvasBridge, applyChromeTheme, osPrefersDark } from './shell-bridges';
+
+/**
+ * A chrome slot: either a static node, or a render fn handed the live engine
+ * (`null` until the graph is fully wired) so the slot can gate on liveness.
+ */
+export type ShellSlot = ReactNode | ((canvas: GraphCanvas | null) => ReactNode);
+
+export interface StoryCanvasShellProps {
+  // ── Canvas ────────────────────────────────────────────────────────────────
+  /** Serialisable config handed to `<Canvas>`. */
+  config?: CanvasConfig;
+  /**
+   * Everything *inside* `<Canvas>`: layers, behaviours, layouts, in-canvas
+   * providers, and any bridge children. The internal {@link CanvasBridge} is
+   * appended automatically as the last child, so the lifted context only
+   * publishes once these have all registered.
+   */
+  children: ReactNode;
+  /**
+   * Render backend (PixiJS). Keys the `<Canvas>` — switching it remounts the
+   * engine so pixi re-inits with the chosen renderer. Omit for the engine
+   * default (no backend switcher).
+   */
+  backend?: CanvasBackend;
+  /**
+   * Explicit reset token folded into the `<Canvas>` key alongside {@link backend}.
+   * Bump it to force a clean remount (fresh engine + store) — e.g. a streaming
+   * demo's "reset" button.
+   */
+  instanceKey?: string | number;
+
+  // ── Chrome slots ────────────────────────────────────────────────────────────
+  /** Header slots. Each is a node or a `(canvas) => node` render fn. */
+  header?: { left?: ShellSlot; center?: ShellSlot; right?: ShellSlot };
+  /** Footer slots (node or render fn), or `false` for an empty footer bar. */
+  footer?: { left?: ShellSlot; right?: ShellSlot } | false;
+  /** `className` on `AppLayoutBase`'s main. Default `'relative'` (so in-canvas `<Panel>`s anchor to it). */
+  mainClassName?: string;
+
+  // ── Extension points ────────────────────────────────────────────────────────
+  /**
+   * Wrap the whole shell (the lifted `CanvasContext` + `AppLayoutBase`) in
+   * arbitrary providers. Use for lifted state the header / footer chrome must
+   * share with in-canvas children — a `GraphToolProvider`, a lifted
+   * `HistoryContext`, etc.
+   */
+  wrap?: (shell: ReactNode) => ReactNode;
+  /** Receives the live engine once every layer / behaviour has registered (or `null`). */
+  onReady?: (canvas: GraphCanvas | null) => void;
+  /**
+   * Restore the OS chrome theme on unmount (so a story that pinned light/dark
+   * doesn't leak its choice into the next story). Default `true`.
+   */
+  restoreThemeOnUnmount?: boolean;
+}
+
+/** Resolve a {@link ShellSlot} against the live engine. */
+function renderSlot(slot: ShellSlot | undefined, canvas: GraphCanvas | null): ReactNode {
+  return typeof slot === 'function' ? (slot as (c: GraphCanvas | null) => ReactNode)(canvas) : slot ?? null;
+}
+
+export function StoryCanvasShell({
+  config,
+  children,
+  backend,
+  instanceKey,
+  header,
+  footer,
+  mainClassName = 'relative',
+  wrap,
+  onReady,
+  restoreThemeOnUnmount = true,
+}: StoryCanvasShellProps) {
+  // The live canvas, lifted out of <Canvas> by <CanvasBridge>. Null until the
+  // graph is fully wired; the chrome slots gate on it.
+  const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
+  const handleReady = useCallback(
+    (c: GraphCanvas | null) => {
+      setCanvas(c);
+      onReady?.(c);
+    },
+    [onReady],
+  );
+
+  // A pinned chrome theme (set by a story's theme toggle) is restored to the OS
+  // preference on unmount so it doesn't bleed into the next story.
+  useEffect(() => {
+    if (!restoreThemeOnUnmount) return;
+    return () => applyChromeTheme(osPrefersDark());
+  }, [restoreThemeOnUnmount]);
+
+  // Remount key — backend switch and/or explicit reset token. Stable when both
+  // are omitted (no spurious remounts for stories that use neither).
+  const canvasKey = `${backend ?? 'default'}:${instanceKey ?? ''}`;
+
+  const shell = (
+    // Lifted context: header + footer chrome (siblings of <Canvas> inside
+    // AppLayoutBase, outside the canvas's own provider) resolve the live engine.
+    <CanvasContext.Provider value={canvas}>
+      <AppLayoutBase
+        header={{
+          left: renderSlot(header?.left, canvas),
+          center: renderSlot(header?.center, canvas),
+          right: renderSlot(header?.right, canvas),
+        }}
+        mainClassName={mainClassName}
+        main={
+          <Canvas key={canvasKey} autoResize preference={backend} config={config}>
+            {children}
+            {/* Last child: publishes the live engine once everything registered. */}
+            <CanvasBridge onReady={handleReady} />
+          </Canvas>
+        }
+        // `AppLayoutBase.footer` is required; render an empty bar when disabled.
+        footer={
+          footer === false
+            ? { left: null, right: null }
+            : { left: renderSlot(footer?.left, canvas), right: renderSlot(footer?.right, canvas) }
+        }
+      />
+    </CanvasContext.Provider>
+  );
+
+  return <>{wrap ? wrap(shell) : shell}</>;
+}
