@@ -7,8 +7,9 @@
  * errors (a `noUncheckedIndexedAccess` slip around line 134) — and because it's
  * a `.ts`, `skipLibCheck` can't suppress them.
  *
- * `@invana/themes`' published `.d.ts` (which `<GraphCanvasLiteApp>` imports for
- * `AppLayoutBase`) only needs the `Theme` / `ThemeVariant` *types* from it. The
+ * `@invana/themes`' published `.d.ts` only needs the `Theme` / `ThemeVariant`
+ * *types* from it. (`GraphCanvasApp` no longer imports `AppLayoutBase` — it owns
+ * its layout — but `@invana/themes` is still a declared dep, so keep this.) The
  * tsconfig `paths`-redirects the specifier to this file (`tsc`-only; the bundler
  * still resolves the real module at runtime), so `tsc` sees these hand-written
  * declarations instead of the broken source. Mirror of the upstream shapes —

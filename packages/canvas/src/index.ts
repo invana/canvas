@@ -163,6 +163,9 @@ export type { LayoutRegistryOptions } from './registries/LayoutRegistry';
 export { Canvas } from './engine/Canvas';
 export type { CanvasOptions } from './engine/Canvas';
 export type { CanvasConfig } from './engine/CanvasConfig';
+// The config-merge the engine itself uses for `update()` — exported so consumers
+// building config (deep-merging defaults under overrides) merge identically.
+export { deepMerge } from './engine/CanvasConfig';
 
 // Renderer backend capability detection (WebGPU/WebGL support).
 export {

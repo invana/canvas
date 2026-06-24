@@ -9,9 +9,21 @@
 export { Canvas } from './Canvas';
 export type { CanvasProps } from './Canvas';
 
-// ─── Apps (batteries-included compositions) ──────────────────────────────────
-export { GraphCanvasLiteApp } from './apps/GraphCanvasLiteApp';
-export type { GraphCanvasLiteAppProps } from './apps/GraphCanvasLiteApp';
+// ─── App (batteries-included composition) ────────────────────────────────────
+// `GraphCanvasApp` — one composable graph app. The header / main / footer
+// regions are an internal detail; configure them through the `header` / `main`
+// / `footer` option bags (+ slots) on `GraphCanvasAppProps` — never by rendering
+// the regions yourself, so the orchestrator's runtime wiring stays private.
+export { GraphCanvasApp } from './apps/GraphCanvasApp';
+export type {
+  GraphCanvasAppProps,
+  GraphCanvasAppControlContext,
+  RegionSlot,
+  ThemeKind,
+  OverlayStyle,
+} from './apps/GraphCanvasApp';
+export type { GraphCanvasAppHeaderOptions } from './apps/GraphCanvasAppHeader';
+export type { GraphCanvasAppFooterOptions } from './apps/GraphCanvasAppFooter';
 
 export { CanvasContext, useCanvas } from './CanvasContext';
 export { GraphCanvasContext, useGraphCanvas } from './GraphCanvasContext';

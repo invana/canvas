@@ -1,26 +1,35 @@
 /**
- * Graph **visualiser, dressed in the app shell** — the read-only explorer ported
- * into `@invana/themes`' `AppLayoutBase`. Instead of floating the controls over
- * the canvas, the chrome lives in the shell's real header / footer bars:
+ * Graph **visualiser** — a read-only explorer, composed as an *arrangement* of
+ * the package's `<GraphCanvasApp>`. The app ships the batteries bundle (graph ·
+ * colour · d3-force · pan/zoom/select/hover) configured entirely through
+ * `config`; this story layers the visualiser chrome on top by composition:
  *
- *   - **Header** — brand (left), the combined canvas toolbar (centre), the
- *     light/dark theme toggle (right).
- *   - **Main** — the `<Canvas>` filling the shell's content area.
- *   - **Footer** — a live status bar (counts / zoom / pan / hover / selection)
- *     plus the shared message line.
- *   - **Right** — a read-only property inspector, opened by clicking a node/edge.
+ *   - **Header** — brand + the full `<GraphControlsToolbar>` (layout · select ·
+ *     style · edit · view · grid · history) + the app's light/dark toggle.
+ *   - **Main** — the `<Canvas>` with the bundle; node labels + community colours
+ *     ride `main.graphLayer` (non-serialisable resolvers — they can't be `config`).
+ *   - **Children** — a minimap and a click-to-open property inspector, dropped in
+ *     like any other layer / behaviour.
  *
- * The whole shell is the reusable `<StoryGraphApp>` helper
- * (`../_shared`) — this story just feeds it data. See that module for the lifted-
- * context + `CanvasBridge` wiring that lets the header / footer chrome (outside
- * the `<Canvas>` subtree) resolve the live engine.
+ * Replaces the old `<StoryGraphApp>` preset: the chrome is now explicit, so the
+ * same `<GraphCanvasApp>` backs this, a widget, or a quick website demo.
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { GraphData, GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
-
-import { StoryGraphApp } from '../_shared';
+import {
+  CanvasMessageBar,
+  ClickViewBehaviour,
+  GraphCanvasApp,
+  GraphControlsToolbar,
+  GraphStatusBar,
+  MiniMapLayer,
+  PropertyViewerPanel,
+  ToolbarItems,
+  type ViewContext,
+} from '@invana/canvas-react';
+import { Moon, Sun } from 'lucide-react';
 
 const meta: Meta = { title: 'canvas-react/usecases/GraphVisualiserApp' };
 export default meta;
@@ -28,8 +37,12 @@ type Story = StoryObj;
 
 export const GraphVisualiserApp: Story = {
   render: () => {
-    type LesMisData = { group: number };
-    const groupOf = (n: GraphNode): number => (n.data as LesMisData | undefined)?.group ?? 0;
+    // Distinct colour per les-mis community.
+    const PALETTE = [
+      0x9ca3af, 0xef4444, 0xf59e0b, 0xeab308, 0x10b981, 0x06b6d4, 0x3b82f6, 0x8b5cf6, 0xec4899,
+      0x14b8a6, 0xa3e635,
+    ];
+    const groupOf = (n: GraphNode): number => (n.data as { group?: number } | undefined)?.group ?? 0;
 
     // Les Misérables ships no `type` — in a graph DB every node/edge carries a
     // label (its "type"). Stamp graph-DB-style labels so the inspector's Type row
@@ -40,13 +53,57 @@ export const GraphVisualiserApp: Story = {
     };
 
     return (
-      <StoryGraphApp
+      <GraphCanvasApp
         data={data}
-        title="Graph Visualiser"
-        // Drawn labels are the character ids; colour the nodes by les-mis community.
-        nodeLabel={(n) => String(n.id)}
-        nodeColorLabel={(n) => `community-${groupOf(n)}`}
-      />
+        header={{
+          title: 'Graph Visualiser',
+          // The header is just slots — a toolbar in `center`, a theme toggle in
+          // `right` (built from the control context the slot render-fn receives).
+          center: <GraphControlsToolbar />,
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme,
+                },
+              ]}
+            />
+          ),
+        }}
+        // All graph settings ride `config` — including the (non-serialisable)
+        // label + community-colour resolvers on `config.layers.graph`. The
+        // bundle's type-based colour behaviour is turned off so `bgFill` wins.
+        config={{
+          behaviours: { color: { enabled: false } },
+          layers: {
+            graph: {
+              node: {
+                style: {
+                  labelText: (n: GraphNode) => String(n.id),
+                  bgFill: (n: GraphNode) => PALETTE[groupOf(n) % PALETTE.length]!,
+                },
+              },
+            },
+          },
+        }}
+        // Footer is just slots too — status bar on the left, message line on the right.
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+      >
+        <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />
+        <ClickViewBehaviour
+          id="click-view"
+          targetLayerId="graph"
+          panel={(ctx: ViewContext) => <PropertyViewerPanel ctx={ctx} position="top-right" fullHeight />}
+        />
+      </GraphCanvasApp>
     );
   },
 };
