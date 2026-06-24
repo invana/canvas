@@ -1,28 +1,28 @@
 // Renderer backend capability detection.
 //
-// PixiJS picks WebGPU-first and "falls back to WebGL automatically" — but that
-// fallback only covers browsers with *no* WebGPU at all. WebKit (desktop Safari
-// and, since they're all WebKit under the hood, every iOS browser) is the broken
-// middle case: it advertises a working WebGPU adapter — `navigator.gpu` is
-// present and `requestAdapter()` resolves — so PixiJS selects WebGPU and only
-// then crashes, at *render* time, inside shader-program setup:
+// We trust WebGPU API presence (`navigator.gpu`) as the signal that WebGPU is
+// usable, mirroring PixiJS's own `isWebGPUSupported()`. If the API is there, we
+// let PixiJS select WebGPU.
+//
+// History: there used to be an extra WebKit (desktop Safari + all iOS browsers)
+// guard here. Older WebKit advertised a working WebGPU adapter but then crashed
+// at *render* time inside shader-program setup:
 //
 //   TypeError: null is not an object (evaluating 'program.layout[groupIndex]')
 //
-// Because the failure is at render time (not during `Application.init()`), it
-// can't be caught with a try/catch around init, and PixiJS's own
-// `isWebGPUSupported()` returns `true` there. The only reliable fix is to not
-// *select* WebGPU on WebKit — see {@link resolveRenderPreference}, which the
-// engine applies in `Canvas.init()`. Revisit the WebKit guard if/when a future
-// Safari renders PixiJS WebGPU cleanly.
+// Because that failure is at render time (not during `Application.init()`), it
+// couldn't be caught with a try/catch around init. We've since removed the guard
+// to let Safari use WebGPU where it works. If the render-time crash resurfaces on
+// a current Safari + PixiJS, reintroduce a WebKit exclusion in {@link canUseWebGPU}
+// (the engine resolves the preference up front in `Canvas.init()` via
+// {@link resolveRenderPreference}, so the gate belongs there).
 
 /** Preferred PixiJS render backend. Mirrors `CanvasOptions.preference`. */
 export type RenderPreference = 'webgpu' | 'webgl' | 'canvas';
 
 /**
  * Whether the WebGPU API surface is present (`navigator.gpu`). Cheap and
- * synchronous, but presence doesn't guarantee a usable renderer — see
- * {@link canUseWebGPU}, which also excludes WebKit.
+ * synchronous. This is the signal {@link canUseWebGPU} gates on.
  */
 export function hasWebGPUApi(): boolean {
   return typeof navigator !== 'undefined' && 'gpu' in navigator;
@@ -48,28 +48,14 @@ export function hasWebGL(): boolean {
 }
 
 /**
- * Whether the browser is WebKit-based (desktop Safari + all iOS browsers), where
- * PixiJS's WebGPU renderer crashes at render time (see module header). UA
- * sniffing is unavoidable: the failure surfaces only while rendering and the
- * WebGPU adapter resolves, so there's nothing to feature-detect up front.
- * Chromium (`Chrome`/`CriOS`/`Edg`/`OPR`) and Firefox (`Firefox`/`FxiOS`) — which
- * carry `Safari` in their UA strings — are excluded.
- */
-export function isWebKit(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  const ua = navigator.userAgent;
-  if (/Chrome|Chromium|CriOS|Edg|OPR|Firefox|FxiOS/.test(ua)) return false;
-  return /Safari/.test(ua) || /iPhone|iPad|iPod/.test(ua);
-}
-
-/**
- * Whether WebGPU can actually be used for rendering here: the API is present
- * *and* the browser isn't WebKit (where PixiJS WebGPU is broken — see
- * {@link isWebKit}). This is what consumers should gate a "use WebGPU" toggle on,
- * not raw `navigator.gpu` presence.
+ * Whether WebGPU can be used for rendering here. Currently equivalent to
+ * {@link hasWebGPUApi} — we trust API presence and let PixiJS select WebGPU. This
+ * is the gate consumers should hang a "use WebGPU" toggle on; if a browser-specific
+ * exclusion ever needs to come back (see module header), add it here so every
+ * consumer and {@link resolveRenderPreference} pick it up at once.
  */
 export function canUseWebGPU(): boolean {
-  return hasWebGPUApi() && !isWebKit();
+  return hasWebGPUApi();
 }
 
 /**

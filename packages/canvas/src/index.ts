@@ -164,11 +164,10 @@ export { Canvas } from './engine/Canvas';
 export type { CanvasOptions } from './engine/Canvas';
 export type { CanvasConfig } from './engine/CanvasConfig';
 
-// Renderer backend capability detection (WebGPU/WebGL support, WebKit guard).
+// Renderer backend capability detection (WebGPU/WebGL support).
 export {
   hasWebGPUApi,
   hasWebGL,
-  isWebKit,
   canUseWebGPU,
   resolveRenderPreference,
   bestRenderPreference,

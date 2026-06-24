@@ -21,12 +21,12 @@ export type { CanvasConfig } from '@invana/canvas';
 // Renderer backend capability detection — re-exported from `@invana/canvas` so
 // React consumers can gate a backend toggle / show a "WebGPU unavailable" notice
 // without reaching past the bindings. The engine already auto-resolves the
-// backend (`<Canvas preference>` downgrades off WebGPU on WebKit); these are for
-// UI that wants to reflect that. See `rendererSupport.ts` in `@invana/canvas`.
+// backend (`<Canvas preference>` downgrades off WebGPU when the API is absent);
+// these are for UI that wants to reflect that. See `rendererSupport.ts` in
+// `@invana/canvas`.
 export {
   hasWebGPUApi,
   hasWebGL,
-  isWebKit,
   canUseWebGPU,
   resolveRenderPreference,
   bestRenderPreference,
