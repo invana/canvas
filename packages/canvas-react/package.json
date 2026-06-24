@@ -18,7 +18,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@invana/themes": "^0.0.6",
+    "@invana/themes": "^0.0.12",
     "lucide-react": "^0.562.0"
   },
   "peerDependencies": {
@@ -32,8 +32,8 @@
   },
   "devDependencies": {
     "@invana/canvas": "workspace:*",
-    "@invana/themes": "^0.0.6",
-    "@invana/ui": "^0.0.6",
+    "@invana/themes": "^0.0.12",
+    "@invana/ui": "^0.0.12",
     "@invana/graph": "workspace:*",
     "@invana/graph-layout-d3-force": "workspace:*",
     "@repo/typescript-config": "workspace:*",
