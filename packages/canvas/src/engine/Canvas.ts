@@ -149,6 +149,8 @@ export class Canvas {
   private _isInitialised = false;
   private _onRendererResize?: (w: number, h: number) => void;
   private _resizeObserver?: ResizeObserver;
+  /** Last message pushed on the message channel; `null` when idle / cleared. */
+  private _currentMessage: string | null = null;
 
   constructor(opts: CanvasOptions = {}) {
     this.id = opts.id ?? 'canvas';
@@ -465,12 +467,26 @@ export class Canvas {
    * behaviours / layouts too, via `ctx.showMessage`.
    */
   showMessage(text: string, timeout?: number): void {
+    this._currentMessage = text;
     this.events.emit('message', { text, timeout });
   }
 
   /** Clear the current canvas message (emits `message` with `text: null`). */
   clearMessage(): void {
+    this._currentMessage = null;
     this.events.emit('message', { text: null });
+  }
+
+  /**
+   * The message currently on the channel, or `null` when idle. Stored so a
+   * status surface that subscribes *after* a message was pushed (e.g. a footer
+   * `CanvasMessageBar` mounting once the engine is ready) can show the current
+   * line instead of missing the one-shot `message` event. Note: a `timeout`ed
+   * message is auto-cleared by the displaying surface, not the engine, so this
+   * keeps reporting it until replaced or {@link clearMessage}-ed.
+   */
+  get currentMessage(): string | null {
+    return this._currentMessage;
   }
 
   // ─── Lifecycle ───────────────────────────────────────────────────────────

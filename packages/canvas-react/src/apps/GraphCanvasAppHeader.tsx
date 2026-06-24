@@ -1,6 +1,8 @@
 /**
  * `<GraphCanvasAppHeader>` — the header rail of {@link GraphCanvasApp}: a
- * `@invana/ui` `NavHorizontal` with three slots — `left` · `center` · `right`.
+ * `@invana/ui` `NavHorizontal` carrying three regions — `left` · `center` ·
+ * `right` — laid out as balanced flex columns so the centre region sits at the
+ * bar's true geometric centre regardless of the left/right widths.
  *
  * There's **no special "toolbar" or "theme toggle"** concept — you compose
  * whatever you want into the slots (a toolbar in `center`, a theme toggle in
@@ -78,12 +80,36 @@ export function GraphCanvasAppHeader({
   const centerNode = center !== undefined && live ? renderSlot(center, ctx) : null;
   const rightNode = right !== undefined && live ? renderSlot(right, ctx) : null;
 
+  // `NavHorizontal`'s `center` slot centers within the *leftover* space between
+  // its left/right slots, so a wide toolbar drifts off-true-centre when the brand
+  // and right cluster have different widths. Instead we compose the three regions
+  // ourselves into a single slot: the left and right columns share equal `flex-1`
+  // (so they balance), while the centre takes its natural width — landing it at
+  // the bar's true geometric centre, and never overflowing into the sides (the
+  // flexible columns shrink via `min-w-0` first).
+  //
+  // Each region's *content* sits in a `shrink-0` group. Header controls are often
+  // `ToolbarItems` (a `w-full` `NavHorizontal`); a content-sized `shrink-0` parent
+  // collapses that `w-full` to its natural width, so multiple controls pack tight
+  // instead of each stretching to fill the flexible column. The right group uses
+  // `ml-auto` (not `justify-end`) to sit flush right — only utilities that the
+  // design-kit's precompiled stylesheet actually ships have any effect here.
+  const bar = (
+    <div className="flex w-full items-center">
+      <div className="flex flex-1 min-w-0 items-center">
+        <div className="flex shrink-0 items-center gap-1 text-foreground">{leftNode}</div>
+      </div>
+      <div className="flex shrink-0 items-center gap-1">{centerNode}</div>
+      <div className="flex flex-1 min-w-0 items-center">
+        <div className="ml-auto flex shrink-0 items-center gap-1">{rightNode}</div>
+      </div>
+    </div>
+  );
+
   return (
     <NavHorizontal
-      className={cx('h-[40px]', overlayBarClass(overlay, 'b'), className)}
-      left={leftNode}
-      center={centerNode}
-      right={rightNode}
+      className={cx('h-[40px] px-3', overlayBarClass(overlay, 'b'), className)}
+      center={bar}
     />
   );
 }

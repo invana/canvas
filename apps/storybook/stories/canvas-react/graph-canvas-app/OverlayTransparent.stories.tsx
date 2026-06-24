@@ -40,12 +40,25 @@ export const OverlayTransparent: Story = {
       position: 'bottom-left',
       margin: { x: 12, y: 33 },
     });
+    // Les Misérables ships no `type` — in a graph DB every node/edge carries a
+    // label (its "type"). Each node's community `group` becomes its type so the
+    // inspector's Type row reflects its real category; edges are `APPEARS_WITH`.
+    const data = {
+      nodes: lesMiserables.nodes.map((n) => ({
+        ...n,
+        type: `Group ${(n.data as { group?: number } | undefined)?.group ?? 0}`,
+      })),
+      edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
+    };
     return (
       // A real consumer mounts the app under its own <ThemeProvider> — the app
       // reads light/dark from it via useTheme() (and throws without one).
       <ThemeProvider>
         <GraphCanvasApp
-          data={lesMiserables}
+          data={data}
+          // Seed the footer's <CanvasMessageBar> — idle until `showMessage` is
+          // called; persists (no timeout) so the channel is visible in the story.
+          onReady={(c) => c?.showMessage('Click a node to inspect it')}
           overlay="transparent"
           header={{
             title: 'Overlay · transparent',

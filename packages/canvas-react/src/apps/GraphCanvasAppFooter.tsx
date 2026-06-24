@@ -60,7 +60,7 @@ export function GraphCanvasAppFooter({
 
   return (
     <NavHorizontal
-      className={cx('h-[25px]', overlayBarClass(overlay, 't'), className)}
+      className={cx('h-[25px] px-3', overlayBarClass(overlay, 't'), className)}
       left={leftNode}
       center={centerNode}
       right={rightNode}

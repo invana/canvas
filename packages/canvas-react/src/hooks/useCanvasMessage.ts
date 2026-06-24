@@ -41,6 +41,10 @@ export function useCanvasMessage(canvas?: Canvas | null): UseCanvasMessageResult
         timer.current = setTimeout(() => setMessage(null), timeout);
       }
     });
+    // The `message` event is one-shot — pick up any message pushed *before* this
+    // subscription (e.g. seeded from `onReady` before the footer bar mounted),
+    // which the engine stores on `currentMessage`.
+    setMessage(resolved.currentMessage);
     return () => {
       clearTimer();
       off();

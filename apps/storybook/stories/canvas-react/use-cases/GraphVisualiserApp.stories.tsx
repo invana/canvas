@@ -48,9 +48,10 @@ export const GraphVisualiserApp: Story = {
 
     // Les Misérables ships no `type` — in a graph DB every node/edge carries a
     // label (its "type"). Stamp graph-DB-style labels so the inspector's Type row
-    // has something to show: characters are `Character`, edges `APPEARS_WITH`.
+    // has something to show: each node's community `group` becomes its type, so
+    // the inspector groups characters by community; edges are `APPEARS_WITH`.
     const data: GraphData = {
-      nodes: lesMiserables.nodes.map((n) => ({ ...n, type: 'Character' })),
+      nodes: lesMiserables.nodes.map((n) => ({ ...n, type: `Group ${groupOf(n)}` })),
       edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
     };
 
@@ -60,6 +61,9 @@ export const GraphVisualiserApp: Story = {
       <ThemeProvider>
         <GraphCanvasApp
           data={data}
+          // Seed the footer's <CanvasMessageBar> — idle until `showMessage` is
+          // called; persists (no timeout) so the channel is visible in the story.
+          onReady={(c) => c?.showMessage('Click a node to inspect it')}
           header={{
             title: 'Graph Visualiser',
             // The header is just slots — a toolbar in `center`, a theme toggle in
