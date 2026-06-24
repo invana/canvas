@@ -79,7 +79,8 @@ import {
   type PanelPosition,
   PinchZoomBehaviour,
   type PinchZoomBehaviourProps,
-  PropertyViewerPanel,
+  ElementDetailViewer,
+  dockCardClassName,
   type ViewContext,
   WheelZoomBehaviour,
   type WheelZoomBehaviourProps,
@@ -426,7 +427,10 @@ export function StoryGraphApp({
           panel={
             showInspector
               ? (ctx: ViewContext) => (
-                  <PropertyViewerPanel ctx={ctx} position={inspectorPosition} fullHeight />
+                  <ElementDetailViewer
+                    ctx={ctx}
+                    className={dockCardClassName(inspectorPosition.includes('left') ? 'left' : 'right')}
+                  />
                 )
               : undefined
           }

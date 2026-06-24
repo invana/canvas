@@ -1,5 +1,5 @@
-import { useState, type ChangeEvent, type CSSProperties } from 'react';
-import { Button } from '@invana/ui';
+import { useState, type ChangeEvent } from 'react';
+import { Button, cn } from '@invana/ui';
 
 /** The values a {@link PropertiesEditor} edits: a label + a flat string→string data map. */
 export interface PropertiesEditorValues {
@@ -39,8 +39,13 @@ export interface PropertiesEditorProps {
    * swap source/target. Omit for elements that have no direction.
    */
   onReverse?: () => void;
+  /** Class on the card — merged over the base card classes via `cn`. */
   className?: string;
 }
+
+/** Shared input classes — design-kit tokens, mirroring the `@invana/ui` field look. */
+const INPUT_CLASS =
+  'h-7 w-full flex-1 rounded-md border border-border bg-background px-2 text-[13px] text-foreground outline-none';
 
 /**
  * Dumb, engine-agnostic editor for an element's **label + key/value
@@ -90,14 +95,19 @@ export function PropertiesEditor({
   };
 
   return (
-    <div className={className} style={cardStyle}>
-      {title && <div style={titleStyle}>{title}</div>}
+    <div
+      className={cn(
+        'flex min-w-[240px] flex-col gap-3 rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-lg',
+        className,
+      )}
+    >
+      {title && <div className="text-[13px] font-semibold">{title}</div>}
 
       {showLabel && (
-        <label style={fieldStyle}>
-          <span style={captionStyle}>Label</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-muted-foreground">Label</span>
           <input
-            style={inputStyle}
+            className={INPUT_CLASS}
             value={label}
             placeholder="Label text"
             onChange={(e: ChangeEvent<HTMLInputElement>) => setLabel(e.target.value)}
@@ -106,10 +116,10 @@ export function PropertiesEditor({
       )}
 
       {showType && (
-        <label style={fieldStyle}>
-          <span style={captionStyle}>Type</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-muted-foreground">Type</span>
           <input
-            style={inputStyle}
+            className={INPUT_CLASS}
             value={type}
             placeholder="Type tag"
             onChange={(e: ChangeEvent<HTMLInputElement>) => setType(e.target.value)}
@@ -117,29 +127,24 @@ export function PropertiesEditor({
         </label>
       )}
 
-      <div style={fieldStyle}>
-        <span style={captionStyle}>Properties</span>
-        {rows.length === 0 && <span style={emptyStyle}>No properties yet.</span>}
+      <div className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium text-muted-foreground">Properties</span>
+        {rows.length === 0 && <span className="text-xs text-muted-foreground">No properties yet.</span>}
         {rows.map((row, i) => (
-          <div key={i} style={rowStyle}>
+          <div key={i} className="flex items-center gap-1.5">
             <input
-              style={inputStyle}
+              className={INPUT_CLASS}
               value={row.k}
               placeholder="key"
               onChange={(e: ChangeEvent<HTMLInputElement>) => setRow(i, { k: e.target.value })}
             />
             <input
-              style={inputStyle}
+              className={INPUT_CLASS}
               value={row.v}
               placeholder="value"
               onChange={(e: ChangeEvent<HTMLInputElement>) => setRow(i, { v: e.target.value })}
             />
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Remove field"
-              onClick={() => removeRow(i)}
-            >
+            <Button variant="ghost" size="icon" aria-label="Remove field" onClick={() => removeRow(i)}>
               ✕
             </Button>
           </div>
@@ -151,13 +156,7 @@ export function PropertiesEditor({
         </div>
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: onReverse ? 'space-between' : 'flex-end',
-          alignItems: 'center',
-        }}
-      >
+      <div className={cn('flex items-center', onReverse ? 'justify-between' : 'justify-end')}>
         {onReverse && (
           <Button variant="outline" size="sm" onClick={onReverse}>
             Reverse direction
@@ -168,33 +167,3 @@ export function PropertiesEditor({
     </div>
   );
 }
-
-const cardStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 12,
-  padding: 12,
-  minWidth: 240,
-  background: 'var(--color-popover)',
-  color: 'var(--color-popover-foreground)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 8,
-  boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
-};
-const titleStyle: CSSProperties = { fontSize: 13, fontWeight: 600, opacity: 0.85 };
-const fieldStyle: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6 };
-const captionStyle: CSSProperties = { fontSize: 12, fontWeight: 500, opacity: 0.8 };
-const rowStyle: CSSProperties = { display: 'flex', gap: 6, alignItems: 'center' };
-const emptyStyle: CSSProperties = { fontSize: 12, opacity: 0.6 };
-const inputStyle: CSSProperties = {
-  flex: 1,
-  width: '100%',
-  height: 28,
-  padding: '0 8px',
-  fontSize: 13,
-  color: 'var(--color-foreground)',
-  background: 'var(--color-background)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 6,
-  outline: 'none',
-};

@@ -4,8 +4,8 @@
  * and {@link ClickInspectBehaviour}.
  *
  * It is the read-only counterpart of `ClickInspectBehaviour`: where that one
- * feeds an editor, this one feeds a **read-only property viewer**
- * (`PropertyViewerPanel`). It deliberately applies **no visual effect** — node /
+ * feeds an editor, this one feeds a **read-only element detail viewer**
+ * (`ElementDetailViewer`). It deliberately applies **no visual effect** — node /
  * edge highlighting is owned by `ClickSelectBehaviour`, which can run alongside
  * this one. This behaviour's only job is to remember the last element clicked
  * (clearing on a background click) and announce it via `view:change`, so a

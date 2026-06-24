@@ -185,6 +185,8 @@ export {
   useGraphCanvasUpdate,
   useGraphCanvasOptions,
   useSystemTheme,
+  useDevTool,
+  useMiniMap,
   useCanvasMessage,
 } from './hooks';
 export type {
@@ -226,6 +228,10 @@ export type {
   UseLayoutsSectionOptions,
   UseStyleEditorSectionOptions,
   UseCanvasMessageResult,
+  UseDevToolOptions,
+  UseDevToolResult,
+  UseMiniMapOptions,
+  UseMiniMapResult,
 } from './hooks';
 
 // ─── Toolbars ──────────────────────────────────────────────────────────────
@@ -244,7 +250,9 @@ export {
   GraphLayoutToolbar,
   ModellerToolbar,
   InspectorPanel,
-  PropertyViewerPanel,
+  ElementDetailViewer,
+  dockCardClassName,
+  ThemeToggle,
 } from './toolbars';
 export type {
   CanvasControlsToolbarProps,
@@ -258,7 +266,8 @@ export type {
   GraphLayoutToolbarProps,
   ModellerToolbarProps,
   InspectorPanelProps,
-  PropertyViewerPanelProps,
+  ElementDetailViewerProps,
+  ThemeToggleProps,
 } from './toolbars';
 
 // ─── UI components (building blocks) ───────────────────────────────────────

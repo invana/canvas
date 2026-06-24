@@ -21,6 +21,10 @@ import './global.css';
  * it in sync. CSS custom properties inherit into Radix portals, so popovers /
  * dropdown menus pick up the dark tokens too. App-level (not per-story); the
  * listener lives for the iframe session.
+ *
+ * Stories that mount `<GraphCanvasApp>` wrap themselves in their own
+ * `<ThemeProvider>` (it reads the theme via `useTheme()`) — Storybook doesn't
+ * provide one globally, so each story owns the real consumer wiring.
  */
 function bootstrapOsTheme(): void {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;

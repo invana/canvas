@@ -25,11 +25,13 @@ import {
   GraphControlsToolbar,
   GraphStatusBar,
   MiniMapLayer,
-  PropertyViewerPanel,
+  ElementDetailViewer,
+  dockCardClassName,
   ToolbarItems,
   type ViewContext,
 } from '@invana/canvas-react';
 import { Moon, Sun } from 'lucide-react';
+import { ThemeProvider } from '@invana/themes';
 
 const meta: Meta = { title: 'canvas-react/usecases/GraphVisualiserApp' };
 export default meta;
@@ -53,57 +55,61 @@ export const GraphVisualiserApp: Story = {
     };
 
     return (
-      <GraphCanvasApp
-        data={data}
-        header={{
-          title: 'Graph Visualiser',
-          // The header is just slots — a toolbar in `center`, a theme toggle in
-          // `right` (built from the control context the slot render-fn receives).
-          center: <GraphControlsToolbar />,
-          right: (ctx) => (
-            <ToolbarItems
-              orientation="horizontal"
-              items={[
-                {
-                  type: 'toggle',
-                  key: 'theme',
-                  icon: Sun,
-                  activeIcon: Moon,
-                  label: 'Switch to dark theme',
-                  activeLabel: 'Switch to light theme',
-                  active: ctx.themeKind === 'dark',
-                  onToggle: ctx.toggleTheme,
-                },
-              ]}
-            />
-          ),
-        }}
-        // All graph settings ride `config` — including the (non-serialisable)
-        // label + community-colour resolvers on `config.layers.graph`. The
-        // bundle's type-based colour behaviour is turned off so `bgFill` wins.
-        config={{
-          behaviours: { color: { enabled: false } },
-          layers: {
-            graph: {
-              node: {
-                style: {
-                  labelText: (n: GraphNode) => String(n.id),
-                  bgFill: (n: GraphNode) => PALETTE[groupOf(n) % PALETTE.length]!,
+      // A real consumer mounts the app under its own <ThemeProvider> — the app
+      // reads light/dark from it via useTheme() (and throws without one).
+      <ThemeProvider>
+        <GraphCanvasApp
+          data={data}
+          header={{
+            title: 'Graph Visualiser',
+            // The header is just slots — a toolbar in `center`, a theme toggle in
+            // `right` (built from the control context the slot render-fn receives).
+            center: <GraphControlsToolbar />,
+            right: (ctx) => (
+              <ToolbarItems
+                orientation="horizontal"
+                items={[
+                  {
+                    type: 'toggle',
+                    key: 'theme',
+                    icon: Sun,
+                    activeIcon: Moon,
+                    label: 'Switch to dark theme',
+                    activeLabel: 'Switch to light theme',
+                    active: ctx.themeKind === 'dark',
+                    onToggle: ctx.toggleTheme,
+                  },
+                ]}
+              />
+            ),
+          }}
+          // All graph settings ride `config` — including the (non-serialisable)
+          // label + community-colour resolvers on `config.layers.graph`. The
+          // bundle's type-based colour behaviour is turned off so `bgFill` wins.
+          config={{
+            behaviours: { color: { enabled: false } },
+            layers: {
+              graph: {
+                node: {
+                  style: {
+                    labelText: (n: GraphNode) => String(n.id),
+                    bgFill: (n: GraphNode) => PALETTE[groupOf(n) % PALETTE.length]!,
+                  },
                 },
               },
             },
-          },
-        }}
-        // Footer is just slots too — status bar on the left, message line on the right.
-        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-      >
-        <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />
-        <ClickViewBehaviour
-          id="click-view"
-          targetLayerId="graph"
-          panel={(ctx: ViewContext) => <PropertyViewerPanel ctx={ctx} position="top-right" fullHeight />}
-        />
-      </GraphCanvasApp>
+          }}
+          // Footer is just slots too — status bar on the left, message line on the right.
+          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        >
+          <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />
+          <ClickViewBehaviour
+            id="click-view"
+            targetLayerId="graph"
+            panel={(ctx: ViewContext) => <ElementDetailViewer ctx={ctx} className={dockCardClassName('right')} />}
+          />
+        </GraphCanvasApp>
+      </ThemeProvider>
     );
   },
 };

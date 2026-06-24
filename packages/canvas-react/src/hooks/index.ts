@@ -54,6 +54,10 @@ export type { UseCanvasMessageResult } from './useCanvasMessage';
 export { useGraphCanvasUpdate } from './useGraphCanvasUpdate';
 export { useGraphCanvasOptions } from './useGraphCanvasOptions';
 export { useSystemTheme } from './useSystemTheme';
+export { useDevTool } from './useDevTool';
+export type { UseDevToolOptions, UseDevToolResult } from './useDevTool';
+export { useMiniMap } from './useMiniMap';
+export type { UseMiniMapOptions, UseMiniMapResult } from './useMiniMap';
 
 // Section hooks — each returns the `ToolbarItem[]` for one logical toolbar
 // section (off the raw operation hooks). Concatenate sections with `divider`s

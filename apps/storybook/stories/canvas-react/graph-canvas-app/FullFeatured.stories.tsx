@@ -3,9 +3,11 @@
  * starting point you extend by composition:
  *
  *   - **Header** — brand · the full `<GraphControlsToolbar>` with a **multi-layout
- *     picker** (force + ELK layered) · light/dark toggle.
+ *     picker** (force + ELK layered) in the centre · a dev-overlay toggle +
+ *     light/dark toggle on the right.
  *   - **Footer** — live status bar + message line.
- *   - **Custom layers** (composed as children) — a minimap and a dev-info overlay.
+ *   - **Custom layers** (composed as children) — a minimap and a dev-info overlay
+ *     (mounted on demand by the header's dev-overlay toggle).
  *   - **Custom behaviours** — a click-to-open property inspector and label
  *     level-of-detail (labels fade out when zoomed far).
  *   - **Context menus** — node + background, composed in.
@@ -19,7 +21,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   CanvasMessageBar,
-  DevInfoLayer,
+  ClickViewBehaviour,
+  dockCardClassName,
+  ElementDetailViewer,
   GraphBackgroundContextMenu,
   type GraphBackgroundMenuContext,
   GraphCanvasApp,
@@ -30,14 +34,16 @@ import {
   GraphStatusBar,
   LabelResolutionLODBehaviour,
   type LayoutFactory,
-  MiniMapLayer,
+  ThemeToggle,
+  useDevTool,
+  useMiniMap,
 } from '@invana/canvas-react';
 import type { GraphNode } from '@invana/graph';
+import { lesMiserables } from '@invana/graph-datasets';
+import { ThemeProvider } from '@invana/themes';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import type { MenuItem } from '@invana/ui';
-
-import { Inspector, lesMisData, ThemeToggle } from '../_demo';
 
 const meta: Meta = { title: 'canvas-react/graph-canvas-app/FullFeatured' };
 export default meta;
@@ -63,47 +69,67 @@ const backgroundMenu = (_ctx: GraphBackgroundMenuContext): MenuItem[] => [
 ];
 
 export const FullFeatured: Story = {
-  render: () => (
-    <GraphCanvasApp
-      data={lesMisData()}
-      config={{
-        layouts: {
-          'graph-force': {
-            charge: { strength: -240 },
-            link: { distance: 70 },
-            collide: { radius: 18 },
-            animate: false,
+  render: () => {
+    const dev = useDevTool({ corner: 'top-left', margin: { x: 12, y: 48 } });
+    const mini = useMiniMap({ backgroundLayerId: 'background', position: 'bottom-left' });
+    return (
+    // A real consumer mounts the app under its own <ThemeProvider> — the app
+    // reads light/dark from it via useTheme() (and throws without one).
+    <ThemeProvider>
+      <GraphCanvasApp
+        data={lesMiserables}
+        config={{
+          layouts: {
+            'graph-force': {
+              charge: { strength: -240 },
+              link: { distance: 70 },
+              collide: { radius: 18 },
+              animate: false,
+            },
           },
-        },
-        // Community colours via a resolver (non-serialisable → still just config);
-        // bundle's type-colour behaviour off so the resolver wins.
-        behaviours: { color: { enabled: false } },
-        layers: {
-          graph: {
-            node: { style: { bgFill: (n: GraphNode) => PALETTE[groupOf(n) % PALETTE.length]! } },
+          // Community colours via a resolver (non-serialisable → still just config);
+          // bundle's type-colour behaviour off so the resolver wins.
+          behaviours: { color: { enabled: false } },
+          layers: {
+            graph: {
+              node: { style: { bgFill: (n: GraphNode) => PALETTE[groupOf(n) % PALETTE.length]! } },
+            },
           },
-        },
-      }}
-      header={{
-        title: 'Graph Canvas App',
-        center: <GraphControlsToolbar layouts={LAYOUTS} layoutLabel={LAYOUT_LABEL} />,
-        right: (ctx) => <ThemeToggle ctx={ctx} />,
-      }}
-      footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-    >
-      {/* Extra layers — beyond the bundle. */}
-      <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />
-      <DevInfoLayer enabled />
+        }}
+        header={{
+          title: 'Graph Canvas App',
+          center: <GraphControlsToolbar layouts={LAYOUTS} layoutLabel={LAYOUT_LABEL} />,
+          right: (ctx) => (
+            <>
+              {mini.button}
+              {dev.button}
+              <ThemeToggle ctx={ctx} />
+            </>
+          ),
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+      >
+        {/* Extra layers — beyond the bundle. */}
+        {mini.layer}
+        {dev.layer}
 
-      {/* Extra behaviours — inspector + label level-of-detail. */}
-      <Inspector />
-      <LabelResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
+        {/* Extra behaviours — click-to-open inspector + label level-of-detail.
+            A full-height right dock; docked layout already bounds the canvas
+            between the rails, so no inset is needed. */}
+        <ClickViewBehaviour
+          id="click-view"
+          targetLayerId="graph"
+          panel={(ctx) => <ElementDetailViewer ctx={ctx} className={dockCardClassName('right')} />}
+        />
+        <LabelResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
 
-      {/* Right-click menus. */}
-      <GraphClipboardProvider layerId="graph">
-        <GraphNodeContextMenu items={nodeMenu} />
-        <GraphBackgroundContextMenu items={backgroundMenu} />
-      </GraphClipboardProvider>
-    </GraphCanvasApp>
-  ),
+        {/* Right-click menus. */}
+        <GraphClipboardProvider layerId="graph">
+          <GraphNodeContextMenu items={nodeMenu} />
+          <GraphBackgroundContextMenu items={backgroundMenu} />
+        </GraphClipboardProvider>
+      </GraphCanvasApp>
+    </ThemeProvider>
+    );
+  },
 };

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { Badge, Button } from '@invana/ui';
+import { Badge, Button, cn } from '@invana/ui';
 
 /** One fixed top-of-card row, e.g. `Label`, `Source`, `Target`. */
 export interface PropertiesViewerRow {
@@ -26,8 +26,17 @@ export interface PropertiesViewerProps {
   emptyText?: string;
   /** When provided, renders a close (✕) button in the header. */
   onClose?: () => void;
+  /**
+   * Class on the card — the positioning / sizing / appearance surface. Merged
+   * over the base card classes via `cn` (so e.g. `h-full rounded-none
+   * overflow-y-auto` turns it into a full-height dock).
+   */
   className?: string;
-  /** Inline styles merged onto the card — e.g. to make it full-height / translucent. */
+  /**
+   * Inline style on the card — the runtime-valued companion to {@link className}.
+   * Use it for placement values a utility class can't express statically, e.g.
+   * insetting a dock below floating chrome (`{ top: 40, bottom: 25 }`).
+   */
   style?: CSSProperties;
 }
 
@@ -37,10 +46,10 @@ export interface PropertiesViewerProps {
  * (no inputs, no Apply, no commit). Props in; it only renders.
  *
  * It holds **no** engine / layer logic — the consumer (see
- * {@link PropertyViewerPanel}) resolves the element to `{ title, subtitle,
+ * {@link ElementDetailViewer}) resolves the element to `{ title, subtitle,
  * badge, rows, data }` and hands it over. Chrome (`Badge`, optional close
- * `Button`) comes from `@invana/ui`; everything else is theme-token-styled
- * markup, mirroring `PropertiesEditor`.
+ * `Button`) comes from `@invana/ui`; everything else is design-kit Tailwind
+ * tokens, mirroring `PropertiesEditor`.
  */
 export function PropertiesViewer({
   title,
@@ -55,13 +64,19 @@ export function PropertiesViewer({
 }: PropertiesViewerProps) {
   const entries = Object.entries(data ?? {});
   return (
-    <div className={className} style={{ ...cardStyle, ...style }}>
+    <div
+      className={cn(
+        'flex min-w-[240px] max-w-80 flex-col gap-3 rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-lg',
+        className,
+      )}
+      {...(style !== undefined ? { style } : {})}
+    >
       {(title || badge || onClose) && (
-        <div style={headerStyle}>
-          <div style={headerTextStyle}>
-            {title && <span style={titleStyle}>{title}</span>}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            {title && <span className="text-[13px] font-semibold">{title}</span>}
             {badge && (
-              <Badge variant="secondary" style={badgeStyle}>
+              <Badge variant="secondary" className="text-[11px]">
                 {badge}
               </Badge>
             )}
@@ -74,74 +89,35 @@ export function PropertiesViewer({
         </div>
       )}
 
-      {subtitle && <div style={subtitleStyle}>{subtitle}</div>}
+      {subtitle && (
+        <div className="-mt-1.5 break-all font-mono text-xs text-muted-foreground">{subtitle}</div>
+      )}
 
       {rows && rows.length > 0 && (
-        <div style={fieldStyle}>
+        <div className="flex flex-col gap-1.5">
           {rows.map((row) => (
-            <div key={row.label} style={kvRowStyle}>
-              <span style={kvKeyStyle}>{row.label}</span>
-              <span style={row.mono ? kvValueMonoStyle : kvValueStyle}>{row.value}</span>
+            <div key={row.label} className="flex items-baseline gap-2 text-[13px]">
+              <span className="shrink-0 grow-0 basis-[38%] break-words text-muted-foreground">
+                {row.label}
+              </span>
+              <span className={cn('flex-1 break-words', row.mono && 'font-mono text-xs')}>
+                {row.value}
+              </span>
             </div>
           ))}
         </div>
       )}
 
-      <div style={fieldStyle}>
-        <span style={captionStyle}>Properties</span>
-        {entries.length === 0 && <span style={emptyStyle}>{emptyText}</span>}
+      <div className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium text-muted-foreground">Properties</span>
+        {entries.length === 0 && <span className="text-xs text-muted-foreground">{emptyText}</span>}
         {entries.map(([k, v]) => (
-          <div key={k} style={kvRowStyle}>
-            <span style={kvKeyStyle}>{k}</span>
-            <span style={kvValueStyle}>{v}</span>
+          <div key={k} className="flex items-baseline gap-2 text-[13px]">
+            <span className="shrink-0 grow-0 basis-[38%] break-words text-muted-foreground">{k}</span>
+            <span className="flex-1 break-words">{v}</span>
           </div>
         ))}
       </div>
     </div>
   );
 }
-
-const cardStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 12,
-  padding: 12,
-  minWidth: 240,
-  maxWidth: 320,
-  background: 'var(--color-popover)',
-  color: 'var(--color-popover-foreground)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 8,
-  boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
-};
-const headerStyle: CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  gap: 8,
-};
-const headerTextStyle: CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 };
-const titleStyle: CSSProperties = { fontSize: 13, fontWeight: 600, opacity: 0.85 };
-const badgeStyle: CSSProperties = { fontSize: 11 };
-const subtitleStyle: CSSProperties = {
-  fontSize: 12,
-  opacity: 0.6,
-  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-  wordBreak: 'break-all',
-  marginTop: -6,
-};
-const fieldStyle: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6 };
-const captionStyle: CSSProperties = { fontSize: 12, fontWeight: 500, opacity: 0.8 };
-const emptyStyle: CSSProperties = { fontSize: 12, opacity: 0.6 };
-const kvRowStyle: CSSProperties = { display: 'flex', gap: 8, alignItems: 'baseline', fontSize: 13 };
-const kvKeyStyle: CSSProperties = {
-  flex: '0 0 38%',
-  opacity: 0.7,
-  wordBreak: 'break-word',
-};
-const kvValueStyle: CSSProperties = { flex: 1, wordBreak: 'break-word' };
-const kvValueMonoStyle: CSSProperties = {
-  ...kvValueStyle,
-  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-  fontSize: 12,
-};

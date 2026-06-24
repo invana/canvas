@@ -19,7 +19,7 @@ export interface ClickViewBehaviourProps
    * data types), the raw entity, resolved display fields, engine handles, and
    * `close()` — so you can render anything: read-only details in a visualiser, a
    * form editor in a modeller. The returned node owns its own placement / chrome
-   * (e.g. `<PropertyViewerPanel>`, which wraps itself in a `<Panel>`).
+   * (e.g. `<ElementDetailViewer>`, which floats itself in a click-through layer).
    *
    * Omit it for a **pure target-tracking behaviour** with no UI (just subscribe
    * to the engine `view:change` event yourself).
@@ -27,7 +27,7 @@ export interface ClickViewBehaviourProps
    * @example
    * ```tsx
    * <ClickViewBehaviour targetLayerId="graph" enabled
-   *   panel={(ctx) => <PropertyViewerPanel ctx={ctx} position="top-right" />} />
+   *   panel={(ctx) => <ElementDetailViewer ctx={ctx} position="top-right" />} />
    * ```
    */
   panel?: (ctx: ViewContext) => ReactNode;

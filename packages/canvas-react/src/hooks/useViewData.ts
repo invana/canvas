@@ -47,7 +47,7 @@ function toStringMap(data: unknown): Record<string, string> {
  *
  * The read-only analogue of {@link useEntityEditor}: no `commit` — it never
  * writes to the store. The view (`<PropertiesViewer>`) and placement
- * (`<Panel>`) are the consumer's — see {@link PropertyViewerPanel} for the
+ * (`<Panel>`) are the consumer's — see {@link ElementDetailViewer} for the
  * turnkey wiring.
  */
 export function useViewData(

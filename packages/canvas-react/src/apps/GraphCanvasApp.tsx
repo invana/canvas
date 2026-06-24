@@ -15,9 +15,15 @@
  * The default one-liner stays trivial; the breadth lives in **`config`** (the
  * single settings surface) plus the `header` / `footer` slot bags. The same
  * component is a full-page app, a Storybook story, and an embeddable widget — it
- * owns its layout (rails / overlay / fill-parent) and a **scoped** theme (no
- * global `document` writes), rather than depending on the viewport-locked
- * `@invana/themes` `AppLayoutBase`.
+ * owns its layout (rails / overlay / fill-parent), rather than depending on the
+ * viewport-locked `@invana/themes` `AppLayoutBase`.
+ *
+ * **Theme.** Light/dark is read from the host's `@invana/themes`
+ * `<ThemeProvider>` (a **required ancestor** — `useTheme()` throws without one):
+ * `isDark` drives the shell classes (scoped to this app's layout root) and the
+ * engine colour patch ({@link ShellThemeSync}). The component does **not**
+ * self-provide a theme, so an app mounts it once under its own provider and the
+ * in-app toggle drives the shared theme.
  *
  * **Lifted context.** The header / footer are siblings of `<Canvas>` (under the
  * layout), outside its `CanvasContext`. The orchestrator publishes the live
@@ -37,6 +43,7 @@ import {
 } from 'react';
 import { deepMerge, type CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData } from '@invana/graph';
+import { useTheme } from '@invana/themes';
 
 import { Canvas } from '../Canvas';
 import { CanvasContext } from '../CanvasContext';
@@ -312,6 +319,9 @@ function AppLayout({
   const rootStyle: CSSProperties = { width: width ?? '100%', height: height ?? '100%', ...style };
 
   if (overlay) {
+    // The canvas stays full-bleed under the floating bars; screen-fixed overlays
+    // (the property dock, dev-info / minimap layers) inset themselves clear of the
+    // chrome via their own explicit props.
     return (
       <div data-theme={dataTheme} className={cx('relative bg-background text-foreground', themeClass, className)} style={rootStyle}>
         <div className="absolute inset-0">{main}</div>
@@ -385,7 +395,12 @@ export interface GraphCanvasAppProps {
   footer?: GraphCanvasAppFooterOptions;
 
   // ── Escape hatches ─────────────────────────────────────────────────────────
-  /** Wrap the whole app (above the lifted context) — hoist providers here. */
+  /**
+   * Wrap the whole app (above the lifted context) — hoist providers here. Note
+   * the required `<ThemeProvider>` must sit *above* `<GraphCanvasApp>` itself
+   * (the component reads `useTheme` before `wrap` runs), so it can't be supplied
+   * through `wrap` — use `wrap` for any *other* providers the chrome consumes.
+   */
   wrap?: (node: ReactNode) => ReactNode;
   /**
    * Extra in-canvas children. With the default bundle they're **appended**; with
@@ -415,12 +430,25 @@ export function GraphCanvasApp({
   // Live engine, lifted out of <Canvas> by Main's ready-bridge.
   const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
 
-  // The app's own light/dark, default light — NOT the OS scheme. The toggle flips
-  // it; the canvas colours follow via <ShellThemeSync> (a `config` patch) and the
-  // shell classes via the scoped layout root. Following the *system* theme is the
-  // host's concern when this is embedded as a widget.
-  const [themeKind, setThemeKind] = useState<ThemeKind>('light');
-  const toggleTheme = useCallback(() => setThemeKind((k) => (k === 'dark' ? 'light' : 'dark')), []);
+  // Theme comes from the host's <ThemeProvider> (a required ancestor — see the
+  // module docs): `isDark` resolves light/dark (including `system` mode, which
+  // follows the OS) and `toggleMode` flips it. The canvas colours follow via
+  // <ShellThemeSync> (a `config` patch) and the shell classes via the scoped
+  // layout root. `useTheme()` already throws without a provider; we rethrow with
+  // an actionable, component-named message so the missing-provider contract is
+  // obvious at the call site rather than buried in a generic library error.
+  let theme: ReturnType<typeof useTheme>;
+  try {
+    theme = useTheme();
+  } catch {
+    throw new Error(
+      '<GraphCanvasApp> must be rendered inside a <ThemeProvider> from ' +
+        '@invana/themes — it reads the active light/dark theme via useTheme(). ' +
+        'Wrap it: <ThemeProvider><GraphCanvasApp … /></ThemeProvider>.',
+    );
+  }
+  const { isDark, toggleMode } = theme;
+  const themeKind: ThemeKind = isDark ? 'dark' : 'light';
 
   const handleReady = useCallback(
     (c: GraphCanvas | null) => {
@@ -431,8 +459,8 @@ export function GraphCanvasApp({
   );
 
   const ctx: GraphCanvasAppControlContext = useMemo(
-    () => ({ canvas, themeKind, toggleTheme }),
-    [canvas, themeKind, toggleTheme],
+    () => ({ canvas, themeKind, toggleTheme: toggleMode }),
+    [canvas, themeKind, toggleMode],
   );
 
   // Bundle on → merge defaults; off → the arrangement owns the whole config.
@@ -474,7 +502,8 @@ export function GraphCanvasApp({
     ) : undefined;
 
   // Lifted context so the header / footer (siblings of <Canvas>) resolve the same
-  // live engine; `wrap` sits outermost so arrangements can hoist providers.
+  // live engine. `wrap` sits outermost — above the lifted context — so an
+  // arrangement can hoist its own providers above header, main, and footer alike.
   const tree = (
     <CanvasContext.Provider value={canvas}>
       <GraphCanvasContext.Provider value={canvas}>

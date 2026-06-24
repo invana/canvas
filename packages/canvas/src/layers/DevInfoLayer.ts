@@ -35,6 +35,12 @@ export type DevInfoCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-r
 export interface DevInfoLayerOptions {
   /** Which corner to anchor the overlay. Default: 'bottom-left' */
   corner?: DevInfoCorner;
+  /**
+   * Inset from the chosen `corner`, in screen pixels. A single number applies to
+   * both axes; `{ x, y }` sets them independently (e.g. bump `y` to clear a top
+   * header bar). Default: 10.
+   */
+  margin?: number | { x?: number; y?: number };
   /** Show the overlay. Can be toggled at runtime via setEnabled(). Default: true */
   enabled?: boolean;
   /** Font size in px. Default: 11 */
@@ -60,6 +66,7 @@ export interface DevInfoLayerCtorOptions extends DevInfoLayerOptions {
 
 const DEFAULT_OPTIONS: Required<DevInfoLayerOptions> = {
   corner: 'bottom-left',
+  margin: 10,
   enabled: true,
   fontSize: 11,
   opacity: 0.92,
@@ -217,13 +224,18 @@ export class DevInfoLayer extends ScreenLayer<DevInfoLayerOptions, DevInfoState>
 
   private _applyStyles(): void {
     if (!this._overlay) return;
-    const { corner, fontSize, opacity, backgroundColor, textColor } = this._opts;
+    const { corner, margin, fontSize, opacity, backgroundColor, textColor } = this._opts;
 
+    // Inset from the chosen corner — `margin` overrides the 10px default so a host
+    // can push the overlay clear of floating chrome (e.g. `corner:'top-left'` with
+    // `margin:{ y: 50 }` to clear a top header bar).
+    const mx = typeof margin === 'number' ? margin : (margin.x ?? 10);
+    const my = typeof margin === 'number' ? margin : (margin.y ?? 10);
     const position: Record<DevInfoCorner, string> = {
-      'top-left': 'top:10px; left:10px;',
-      'top-right': 'top:10px; right:10px;',
-      'bottom-left': 'bottom:10px; left:10px;',
-      'bottom-right': 'bottom:10px; right:10px;',
+      'top-left': `top:${my}px; left:${mx}px;`,
+      'top-right': `top:${my}px; right:${mx}px;`,
+      'bottom-left': `bottom:${my}px; left:${mx}px;`,
+      'bottom-right': `bottom:${my}px; right:${mx}px;`,
     };
 
     this._overlay.style.cssText = [
