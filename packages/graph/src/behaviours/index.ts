@@ -41,6 +41,7 @@ export { HoverElementPreviewBehaviour, resolvePreviewCard } from './HoverElement
 export type {
   HoverElementPreviewBehaviourOptions,
   HoverElementPreviewCardSpec,
+  HoverElementPreviewCardsByType,
   HoverElementPreviewEventMap,
   PreviewCardRow,
   PreviewFieldPath,

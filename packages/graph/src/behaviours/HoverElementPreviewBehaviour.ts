@@ -134,6 +134,30 @@ export interface HoverElementPreviewCardSpec {
   rows?: readonly PreviewRowSpec[];
 }
 
+/**
+ * Per-type card specs — a different card layout keyed by element `type`, all
+ * serializable so a UI can define them (and round-trip via display settings).
+ * The behaviour picks `nodes[type]` / `edges[type]` for the hovered element,
+ * falling back to the behaviour's single `card` spec when a type has no entry.
+ *
+ * @example
+ * ```ts
+ * {
+ *   nodes: {
+ *     person:  { image: { field: 'data.avatar' }, title: { field: 'data.name' } },
+ *     company: { title: { field: 'data.name' }, subtitle: { field: 'data.industry' } },
+ *   },
+ *   edges: { INFLUENCED: { title: { field: 'type' } } },
+ * }
+ * ```
+ */
+export interface HoverElementPreviewCardsByType {
+  /** Card spec per node `type`. */
+  nodes?: Record<string, HoverElementPreviewCardSpec>;
+  /** Card spec per edge `type`. */
+  edges?: Record<string, HoverElementPreviewCardSpec>;
+}
+
 // ─── Resolved (flat, render-ready) card ─────────────────────────────────────
 
 /** A resolved property row — primitive label + value, ready to render. */
@@ -247,8 +271,19 @@ export interface HoverElementPreviewBehaviourOptions extends BehaviourOptions {
    */
   enable?: boolean | ((element: GraphNode | GraphEdge, kind: GraphElementKind) => boolean);
 
-  /** The serializable card template. Default `{}` (header strip only). */
+  /**
+   * The serializable card template — the **fallback** used when no per-type
+   * spec in {@link cards} matches the hovered element. Default `{}`.
+   */
   card?: HoverElementPreviewCardSpec;
+
+  /**
+   * Per-type card specs, keyed by element `type` (`cards.nodes[type]` /
+   * `cards.edges[type]`). Lets a 'person' node and a 'company' node show
+   * different fields. Serializable — define it in a UI / display settings.
+   * Falls back to {@link card} when a type has no entry. Default `{}`.
+   */
+  cards?: HoverElementPreviewCardsByType;
 
   /** Fired when a card becomes visible. */
   onShow?: (snapshot: PreviewSnapshot) => void;
@@ -264,6 +299,7 @@ interface ResolvedOptions {
   interactive: boolean;
   enable: boolean | ((element: GraphNode | GraphEdge, kind: GraphElementKind) => boolean);
   card: HoverElementPreviewCardSpec;
+  cards: HoverElementPreviewCardsByType;
   onShow: ((snapshot: PreviewSnapshot) => void) | undefined;
   onHide: (() => void) | undefined;
 }
@@ -280,6 +316,7 @@ function resolveOptions(
     interactive: true,
     enable: true,
     card: {},
+    cards: {},
     onShow: undefined,
     onHide: undefined,
   };
@@ -291,6 +328,7 @@ function resolveOptions(
     interactive: patch.interactive ?? base.interactive,
     enable: patch.enable ?? base.enable,
     card: patch.card ?? base.card,
+    cards: patch.cards ?? base.cards,
     onShow: 'onShow' in patch ? patch.onShow : base.onShow,
     onHide: 'onHide' in patch ? patch.onHide : base.onHide,
   };
@@ -508,13 +546,20 @@ export class HoverElementPreviewBehaviour extends Behaviour {
   setOptions(patch: Partial<HoverElementPreviewBehaviourOptions>): void {
     const repaint =
       ('card' in patch && patch.card !== this.opts.card) ||
+      ('cards' in patch && patch.cards !== this.opts.cards) ||
       (patch.placement !== undefined && patch.placement !== this.opts.placement);
     this.opts = resolveOptions(this.opts, patch);
     if (repaint && this.shown) {
       // Rebuild the card from the live record with the new spec.
       const snap = this.shown;
       const subject = snap.kind === 'node' ? snap.node : snap.edge;
-      const card = resolvePreviewCard(this.opts.card, subject, snap.id, snap.kind, subject.type);
+      const card = resolvePreviewCard(
+        this.specFor(snap.kind, subject.type),
+        subject,
+        snap.id,
+        snap.kind,
+        subject.type,
+      );
       this.shown = { ...snap, card, placement: this.opts.placement };
       // Re-emit as a full show so consumers re-render content (a `card` change
       // alters the body, not just position).
@@ -657,6 +702,16 @@ export class HoverElementPreviewBehaviour extends Behaviour {
   }
 
   /**
+   * Pick the card spec for a hovered element — its per-type override from
+   * {@link HoverElementPreviewBehaviourOptions.cards} when present, else the
+   * single {@link HoverElementPreviewBehaviourOptions.card} fallback.
+   */
+  private specFor(kind: GraphElementKind, type: string | undefined): HoverElementPreviewCardSpec {
+    const byType = kind === 'node' ? this.opts.cards.nodes : this.opts.cards.edges;
+    return (type !== undefined ? byType?.[type] : undefined) ?? this.opts.card;
+  }
+
+  /**
    * Resolve a hovered id into a full {@link PreviewSnapshot} (live record +
    * anchor + card). Nodes anchor at their centre (stable across pan / zoom);
    * edges anchor at the hover point `(worldX, worldY)`. Returns `null` if the
@@ -682,7 +737,7 @@ export class HoverElementPreviewBehaviour extends Behaviour {
         kind: 'node',
         id,
         node,
-        card: resolvePreviewCard(this.opts.card, node, id, 'node', node.type),
+        card: resolvePreviewCard(this.specFor('node', node.type), node, id, 'node', node.type),
         placement,
         world: { x: world.x, y: world.y },
         screen: { x: s.x, y: s.y },
@@ -696,7 +751,7 @@ export class HoverElementPreviewBehaviour extends Behaviour {
       kind: 'edge',
       id,
       edge,
-      card: resolvePreviewCard(this.opts.card, edge, id, 'edge', edge.type),
+      card: resolvePreviewCard(this.specFor('edge', edge.type), edge, id, 'edge', edge.type),
       placement,
       world: { x: worldX, y: worldY },
       screen: { x: s.x, y: s.y },

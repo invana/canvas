@@ -102,8 +102,18 @@ export function HoverElementPreviewBehaviour({
 
   // Keep reactive options live — the registration effect only captures the
   // options present at mount, so re-sync on every change (cheap + idempotent).
-  const { targets, openDelay, closeDelay, placement, interactive, enable, card, onShow, onHide } =
-    rest;
+  const {
+    targets,
+    openDelay,
+    closeDelay,
+    placement,
+    interactive,
+    enable,
+    card,
+    cards,
+    onShow,
+    onHide,
+  } = rest;
   useEffect(() => {
     canvas.behaviours.get<graph.HoverElementPreviewBehaviour>(id)?.setOptions({
       targets,
@@ -113,6 +123,7 @@ export function HoverElementPreviewBehaviour({
       interactive,
       enable,
       card,
+      cards,
       onShow,
       onHide,
     });
@@ -126,6 +137,7 @@ export function HoverElementPreviewBehaviour({
     interactive,
     enable,
     card,
+    cards,
     onShow,
     onHide,
   ]);

@@ -31,6 +31,25 @@ export type {
   LabelPlacement,
 } from './editors/node-style';
 
+// ─── Hover-preview-card editor ─────────────────────────────────────────────
+// Engine-agnostic form (à la NodeStyleEditor) that produces one serializable
+// `HoverElementPreviewCardSpec` — the per-type card definition. Compose one per
+// node/edge type to build the behaviour's `cards` config from a UI.
+export {
+  HoverPreviewCardEditor,
+  CARD_SCALAR_FIELDS,
+  CARD_ROW_FIELDS,
+  specToForm,
+  formToSpec,
+} from './editors/hover-preview-card';
+export type {
+  HoverPreviewCardEditorProps,
+  CardSpecFields,
+  CardScalarFields,
+  CardRowField,
+  CardImageShape,
+} from './editors/hover-preview-card';
+
 // ─── Preview cards ───────────────────────────────────────────────────────
 // Presentational node / edge hover-preview cards — engine-agnostic props-in UI
 // (only `@invana/ui` chrome). A turnkey (e.g. canvas-react `<HoverElementPreviewBehaviour>`)

@@ -122,6 +122,7 @@ export {
   resolvePreviewCard,
   type HoverElementPreviewBehaviourOptions,
   type HoverElementPreviewCardSpec,
+  type HoverElementPreviewCardsByType,
   type HoverElementPreviewEventMap,
   type PreviewCardRow,
   type PreviewFieldPath,
