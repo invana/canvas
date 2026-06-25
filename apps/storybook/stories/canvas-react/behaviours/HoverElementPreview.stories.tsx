@@ -22,7 +22,7 @@ import {
   GraphLayer,
   WheelZoomBehaviour,
 } from '@invana/canvas-react';
-import type { GraphData, GraphNode, PreviewTarget } from '@invana/graph';
+import type { GraphData, GraphEdge, GraphNode } from '@invana/graph';
 
 const meta: Meta = { title: 'canvas-react/behaviours/HoverElementPreview' };
 export default meta;
@@ -39,11 +39,8 @@ interface PersonData {
   avatar: string;
 }
 interface RelationData {
-  name: string;
   description: string;
   weight: number;
-  from: string;
-  to: string;
 }
 
 const data: GraphData = {
@@ -55,22 +52,22 @@ const data: GraphData = {
     { id: 'katherine', type: 'Person', position: { x: 120, y: 130 }, data: { name: 'Katherine Johnson', role: 'Mathematician', description: 'Orbital-mechanics calculations critical to early US crewed spaceflight.', email: 'katherine@orbit.nasa', score: 0.97, avatar: 'https://i.pravatar.cc/96?img=20' } },
   ],
   edges: [
-    { id: 'ada-alan', source: 'ada', target: 'alan', type: 'INFLUENCED', data: { name: 'INFLUENCED', description: 'Foundational ideas carried forward into modern computing.', weight: 0.7, from: 'Ada Lovelace', to: 'Alan Turing' } },
-    { id: 'alan-grace', source: 'alan', target: 'grace', type: 'COLLABORATED_WITH', data: { name: 'COLLABORATED_WITH', description: 'Worked toward practical, programmable computing.', weight: 0.6, from: 'Alan Turing', to: 'Grace Hopper' } },
-    { id: 'ada-edsger', source: 'ada', target: 'edsger', type: 'INFLUENCED', data: { name: 'INFLUENCED', description: 'Algorithmic rigour and structured thinking.', weight: 0.8, from: 'Ada Lovelace', to: 'Edsger Dijkstra' } },
-    { id: 'edsger-katherine', source: 'edsger', target: 'katherine', type: 'COLLABORATED_WITH', data: { name: 'COLLABORATED_WITH', description: 'Numerical methods for real-world problems.', weight: 0.5, from: 'Edsger Dijkstra', to: 'Katherine Johnson' } },
-    { id: 'grace-katherine', source: 'grace', target: 'katherine', type: 'COLLABORATED_WITH', data: { name: 'COLLABORATED_WITH', description: 'Applied computation at scale.', weight: 0.65, from: 'Grace Hopper', to: 'Katherine Johnson' } },
+    { id: 'ada-alan', source: 'ada', target: 'alan', type: 'INFLUENCED', data: { description: 'Foundational ideas carried forward into modern computing.', weight: 0.7 } },
+    { id: 'alan-grace', source: 'alan', target: 'grace', type: 'COLLABORATED_WITH', data: { description: 'Worked toward practical, programmable computing.', weight: 0.6 } },
+    { id: 'ada-edsger', source: 'ada', target: 'edsger', type: 'INFLUENCED', data: { description: 'Algorithmic rigour and structured thinking.', weight: 0.8 } },
+    { id: 'edsger-katherine', source: 'edsger', target: 'katherine', type: 'COLLABORATED_WITH', data: { description: 'Numerical methods for real-world problems.', weight: 0.5 } },
+    { id: 'grace-katherine', source: 'grace', target: 'katherine', type: 'COLLABORATED_WITH', data: { description: 'Applied computation at scale.', weight: 0.65 } },
   ],
 };
 
 // ─── target → card-props mappers (the only consumer-side glue) ───────────────
 
-function renderNode(target: PreviewTarget) {
-  const d = target.data as PersonData;
+function renderNode(node: GraphNode) {
+  const d = node.data as PersonData;
   // Tags = the node's labels (a Neo4j multi-label `type` split on ':') + its role.
-  const tags = [...(target.type ?? '').split(':').filter(Boolean), d.role];
+  const tags = [...(node.type ?? '').split(':').filter(Boolean), d.role];
   const rows: PreviewCardRow[] = [
-    { label: 'id', value: target.id, mono: true },
+    { label: 'id', value: node.id, mono: true },
     { label: 'Email', value: d.email },
     { label: 'Score', value: `${Math.round(d.score * 100)}%` },
   ];
@@ -79,14 +76,22 @@ function renderNode(target: PreviewTarget) {
   );
 }
 
-function renderEdge(target: PreviewTarget) {
-  const d = target.data as RelationData;
+function renderEdge(edge: GraphEdge) {
+  const d = edge.data as RelationData;
+  // `source` / `target` come straight off the GraphEdge record — no data hack.
   const rows: PreviewCardRow[] = [
-    { label: 'Weight', value: d.weight.toFixed(2) },
-    { label: 'id', value: target.id, mono: true },
+    { label: 'source', value: edge.source, mono: true },
+    { label: 'target', value: edge.target, mono: true },
+    { label: 'weight', value: d.weight.toFixed(2) },
+    { label: 'id', value: edge.id, mono: true },
   ];
   return (
-    <EdgePreviewCard badge={target.type} title={`${d.from} → ${d.to}`} subtitle={d.description} rows={rows} />
+    <EdgePreviewCard
+      badge={edge.type}
+      title={`${edge.source} → ${edge.target}`}
+      subtitle={d.description}
+      rows={rows}
+    />
   );
 }
 

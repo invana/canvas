@@ -7,7 +7,7 @@ import {
   type PreviewRowFormat,
   type PreviewRowSpec,
   type PreviewSnapshot,
-  type PreviewTargetKind,
+  type GraphElementKind,
   type ResolvedPreviewCard,
   GraphCanvas,
   GraphLayer,
@@ -225,7 +225,7 @@ export const HoverElementPreview: Story = {
     let shownSnapshot: PreviewSnapshot | null = null;
 
     const positionCard = (snapshot: PreviewSnapshot): void => {
-      const { x, y } = snapshot.target.screen;
+      const { x, y } = snapshot.screen;
       const gap = settings.gap; // px between the anchor and the card
       const edge = settings.edgeMargin; // px min gap from the container edge
       const cw = card.offsetWidth;
@@ -363,7 +363,7 @@ export const HoverElementPreview: Story = {
       renderCard(snapshot);
       card.style.display = 'block'; // display before measuring so offsetWidth/Height are real
       positionCard(snapshot);
-      settings.showing = `${snapshot.target.kind} "${snapshot.target.id}"`;
+      settings.showing = `${snapshot.kind} "${snapshot.id}"`;
       gui.controllersRecursive().forEach((ctrl) => ctrl.updateDisplay());
     });
     preview.events.on('preview:move', (snapshot) => {
@@ -413,7 +413,7 @@ export const HoverElementPreview: Story = {
           closeDelay: settings.closeDelay,
           placement: settings.placement,
           interactive: settings.interactive,
-          targets: ['node', 'edge'] as PreviewTargetKind[],
+          targets: ['node', 'edge'] as GraphElementKind[],
           card: buildCardSpec(),
         },
       },
@@ -424,7 +424,7 @@ export const HoverElementPreview: Story = {
 
     // ─── lil-gui ─────────────────────────────────────────────────────────────
     const applyTargets = (): void => {
-      const targets: PreviewTargetKind[] = [];
+      const targets: GraphElementKind[] = [];
       if (settings.node) targets.push('node');
       if (settings.edge) targets.push('edge');
       canvas.update({ behaviours: { preview: { targets } } });

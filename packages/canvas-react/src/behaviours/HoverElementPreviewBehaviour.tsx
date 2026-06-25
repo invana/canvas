@@ -7,10 +7,11 @@ import {
 } from 'react';
 import * as graph from '@invana/graph';
 import type {
+  GraphEdge,
+  GraphNode,
   HoverElementPreviewBehaviourOptions,
   PreviewPlacement,
   PreviewSnapshot,
-  PreviewTarget,
 } from '@invana/graph';
 
 import { useCanvas } from '../CanvasContext';
@@ -38,10 +39,10 @@ export interface HoverElementPreviewBehaviourProps
   cardClassName?: string;
   /** Extra inline style merged onto the **default** card surface. */
   cardStyle?: CSSProperties;
-  /** Custom content for a hovered **node** — overrides the default card. */
-  renderNode?: (target: PreviewTarget) => ReactNode;
-  /** Custom content for a hovered **edge** — overrides the default card. */
-  renderEdge?: (target: PreviewTarget) => ReactNode;
+  /** Custom content for a hovered **node** — gets the live `GraphNode`. Overrides the default card. */
+  renderNode?: (node: GraphNode, snapshot: PreviewSnapshot) => ReactNode;
+  /** Custom content for a hovered **edge** — gets the live `GraphEdge` (with `source` / `target`). */
+  renderEdge?: (edge: GraphEdge, snapshot: PreviewSnapshot) => ReactNode;
   /** Custom content for any element — takes precedence over `renderNode` / `renderEdge`. */
   renderCard?: (snapshot: PreviewSnapshot) => ReactNode;
 }
@@ -132,15 +133,15 @@ export function HoverElementPreviewBehaviour({
   const snapshot = useHoverElementPreview({ previewId: id });
   if (!snapshot) return null;
 
-  const { target } = snapshot;
   let content: ReactNode;
   if (renderCard) {
     content = renderCard(snapshot);
+  } else if (snapshot.kind === 'node' && renderNode) {
+    content = renderNode(snapshot.node, snapshot);
+  } else if (snapshot.kind === 'edge' && renderEdge) {
+    content = renderEdge(snapshot.edge, snapshot);
   } else {
-    const custom = target.kind === 'node' ? renderNode : renderEdge;
-    content = custom ? (
-      custom(target)
-    ) : (
+    content = (
       <HoverElementPreviewCard card={snapshot.card} className={cardClassName} style={cardStyle} />
     );
   }
@@ -202,8 +203,7 @@ function PreviewShell({
 }: PreviewShellProps) {
   const canvas = useCanvas();
   const ref = useRef<HTMLDivElement>(null);
-  const { screen } = snapshot.target;
-  const placement = snapshot.placement;
+  const { screen, placement } = snapshot;
 
   useLayoutEffect(() => {
     const el = ref.current;

@@ -50,8 +50,6 @@ export type {
   PreviewRowSpec,
   PreviewSnapshot,
   PreviewSubtitleSpec,
-  PreviewTarget,
-  PreviewTargetKind,
   PreviewTextSpec,
   ResolvedPreviewCard,
 } from './HoverElementPreviewBehaviour';

@@ -11,6 +11,7 @@ export { GraphStore } from './GraphStore';
 export type {
   EdgeDirection,
   GraphEdge,
+  GraphElementKind,
   GraphNode,
   GraphStoreEventMap,
   GraphStoreOptions,

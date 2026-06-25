@@ -10,6 +10,12 @@
  * `states` (plural) is the active-state list.
  */
 
+/**
+ * Which kind of graph element — the canonical `'node' | 'edge'` discriminator,
+ * shared across the graph package instead of each behaviour rolling its own.
+ */
+export type GraphElementKind = 'node' | 'edge';
+
 /** A node in the graph. `id` is unique within a `GraphStore`. */
 export interface GraphNode<D = unknown> {
   /** Stable identity. Must be unique within the store. */

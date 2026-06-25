@@ -5,7 +5,7 @@
  * serializable {@link HoverElementPreviewCardSpec}, and emits `preview:show` /
  * `preview:move` / `preview:hide`. It renders **no UI** — a consumer (a React
  * `HoverElementPreviewCard`, or plain DOM in a story) draws the card from the
- * emitted snapshot and positions it at `target.screen`.
+ * emitted snapshot and positions it at `screen`.
  *
  * This mirrors the headless pattern of {@link ContextMenuBehaviour} (resolve a
  * target + screen coords, emit, let the consumer draw) and the dedicated event
@@ -41,7 +41,7 @@
  *   },
  * });
  * canvas.behaviours.register(preview);
- * preview.events.on('preview:show', ({ card, target }) => drawCard(card, target.screen));
+ * preview.events.on('preview:show', ({ card, screen }) => drawCard(card, screen));
  * preview.events.on('preview:hide', () => hideCard());
  * ```
  */
@@ -54,9 +54,7 @@ import {
 } from '@invana/canvas';
 
 import { GraphLayer } from '../layer/GraphLayer';
-
-/** Which kind of element a preview targets. */
-export type PreviewTargetKind = 'node' | 'edge';
+import type { GraphEdge, GraphElementKind, GraphNode } from '../store/types';
 
 /**
  * Where the card anchors relative to the element — a hint passed through to the
@@ -66,7 +64,7 @@ export type PreviewTargetKind = 'node' | 'edge';
  * the card, so only it knows the card's size and the viewport bounds needed to
  * flip the card inward near a screen corner/edge and clamp it on-screen. The
  * headless behaviour never measures the card, so it can't resolve `'auto'`
- * itself — it emits the anchor (`target.screen`) and the hint, and the
+ * itself — it emits the anchor (`screen`) and the hint, and the
  * consumer's positioner does the collision-aware flip + clamp.
  */
 export type PreviewPlacement =
@@ -152,7 +150,7 @@ export interface PreviewCardRow {
 export interface ResolvedPreviewCard {
   /** Element id (rendered in the header strip). */
   id: string;
-  kind: PreviewTargetKind;
+  kind: GraphElementKind;
   /** Element `type` tag, if any (rendered in the header strip beside the id). */
   type?: string;
   /** Resolved image URL, or `undefined` to skip the avatar column. */
@@ -171,26 +169,28 @@ export interface ResolvedPreviewCard {
 
 // ─── Emitted payloads ───────────────────────────────────────────────────────
 
-/** The element a preview is anchored to, plus its world + screen position. */
-export interface PreviewTarget {
+/**
+ * What `preview:show` / `preview:move` carry — the hovered element + its
+ * resolved card + anchor. Discriminated on `kind`, so `snapshot.node` /
+ * `snapshot.edge` is the properly-typed live `GraphNode` / `GraphEdge` record
+ * (edges expose `source` / `target`, nodes `position`, …), consistent with the
+ * rest of `@invana/graph`. The consumer positions the card at `screen`.
+ */
+export type PreviewSnapshot<DN = unknown, DE = unknown> = {
+  /** Element id (mirrors `node.id` / `edge.id`). */
   id: string;
-  kind: PreviewTargetKind;
-  type?: string;
-  /** Arbitrary user payload from `node.data` / `edge.data`. */
-  data: unknown;
+  /** Resolved, render-ready card. */
+  card: ResolvedPreviewCard;
+  /** Configured placement hint, so the consumer offsets the card consistently. */
+  placement: PreviewPlacement;
   /** Anchor in world (scene) coords — node centre, or the hover point for edges. */
   world: { x: number; y: number };
   /** Anchor in screen (canvas-relative) coords, via `camera.toScreen`. */
   screen: { x: number; y: number };
-}
-
-/** What `preview:show` / `preview:move` carry. */
-export interface PreviewSnapshot {
-  target: PreviewTarget;
-  card: ResolvedPreviewCard;
-  /** Configured placement hint, so the consumer offsets the card consistently. */
-  placement: PreviewPlacement;
-}
+} & (
+  | { kind: 'node'; node: GraphNode<DN> }
+  | { kind: 'edge'; edge: GraphEdge<DE> }
+);
 
 /** Event-map for {@link HoverElementPreviewBehaviour.events}. */
 export type HoverElementPreviewEventMap = {
@@ -211,7 +211,7 @@ export interface HoverElementPreviewBehaviourOptions extends BehaviourOptions {
    * Which kinds fire a preview. A hover on a kind not listed is ignored.
    * Default `['node', 'edge']`.
    */
-  targets?: readonly PreviewTargetKind[];
+  targets?: readonly GraphElementKind[];
 
   /** Dwell, in ms, before a hovered element's card shows. Default `50`. */
   openDelay?: number;
@@ -242,9 +242,10 @@ export interface HoverElementPreviewBehaviourOptions extends BehaviourOptions {
 
   /**
    * Per-target enable predicate. `boolean` is a global on/off; a function runs
-   * per hover and may veto showing a card for that element. Default `true`.
+   * per hover with the live `GraphNode` / `GraphEdge` record (+ its `kind`) and
+   * may veto showing a card for that element. Default `true`.
    */
-  enable?: boolean | ((target: PreviewTarget) => boolean);
+  enable?: boolean | ((element: GraphNode | GraphEdge, kind: GraphElementKind) => boolean);
 
   /** The serializable card template. Default `{}` (header strip only). */
   card?: HoverElementPreviewCardSpec;
@@ -256,12 +257,12 @@ export interface HoverElementPreviewBehaviourOptions extends BehaviourOptions {
 }
 
 interface ResolvedOptions {
-  targets: readonly PreviewTargetKind[];
+  targets: readonly GraphElementKind[];
   openDelay: number;
   closeDelay: number;
   placement: PreviewPlacement;
   interactive: boolean;
-  enable: boolean | ((target: PreviewTarget) => boolean);
+  enable: boolean | ((element: GraphNode | GraphEdge, kind: GraphElementKind) => boolean);
   card: HoverElementPreviewCardSpec;
   onShow: ((snapshot: PreviewSnapshot) => void) | undefined;
   onHide: (() => void) | undefined;
@@ -344,7 +345,7 @@ export function resolvePreviewCard(
   spec: HoverElementPreviewCardSpec,
   subject: unknown,
   id: string,
-  kind: PreviewTargetKind,
+  kind: GraphElementKind,
   type: string | undefined,
 ): ResolvedPreviewCard {
   const imageUrl = spec.image ? toDisplayString(getByPath(subject, spec.image.field)) : undefined;
@@ -396,7 +397,7 @@ export class HoverElementPreviewBehaviour extends Behaviour {
   /** The snapshot currently shown, or `null`. */
   private shown: PreviewSnapshot | null = null;
   /** The target queued by the open timer (awaiting dwell), or `null`. */
-  private pending: PreviewTarget | null = null;
+  private pending: PreviewSnapshot | null = null;
   /**
    * `true` while the pointer rests on an interactive card ({@link holdOpen}).
    * Suppresses every hide path — so a late `shape:pointerout` (fired because the
@@ -510,17 +511,11 @@ export class HoverElementPreviewBehaviour extends Behaviour {
       (patch.placement !== undefined && patch.placement !== this.opts.placement);
     this.opts = resolveOptions(this.opts, patch);
     if (repaint && this.shown) {
-      // Rebuild the snapshot from the live target with the new spec.
-      const { target } = this.shown;
-      const subject = this.subjectFor(target);
-      const card = resolvePreviewCard(
-        this.opts.card,
-        subject,
-        target.id,
-        target.kind,
-        target.type,
-      );
-      this.shown = { target, card, placement: this.opts.placement };
+      // Rebuild the card from the live record with the new spec.
+      const snap = this.shown;
+      const subject = snap.kind === 'node' ? snap.node : snap.edge;
+      const card = resolvePreviewCard(this.opts.card, subject, snap.id, snap.kind, subject.type);
+      this.shown = { ...snap, card, placement: this.opts.placement };
       // Re-emit as a full show so consumers re-render content (a `card` change
       // alters the body, not just position).
       this.events.emit('preview:show', this.shown);
@@ -556,7 +551,7 @@ export class HoverElementPreviewBehaviour extends Behaviour {
 
   private handlePointerOver(
     id: string,
-    kind: PreviewTargetKind,
+    kind: GraphElementKind,
     worldX: number,
     worldY: number,
   ): void {
@@ -568,29 +563,30 @@ export class HoverElementPreviewBehaviour extends Behaviour {
     if (this.held) return;
     if (!this.opts.targets.includes(kind)) return;
 
-    const target = this.resolveTarget(id, kind, worldX, worldY);
-    if (!target) return;
+    const snap = this.resolveSnapshot(id, kind, worldX, worldY);
+    if (!snap) return;
 
     const { enable } = this.opts;
     if (enable === false) return;
-    if (typeof enable === 'function' && !enable(target)) return;
+    const element = snap.kind === 'node' ? snap.node : snap.edge;
+    if (typeof enable === 'function' && !enable(element, kind)) return;
 
     // A new element cancels any pending close — we either switch to it or dwell.
     this.clearCloseTimer();
 
-    if (this.shown && this.shown.target.id === id) return; // already showing this one
+    if (this.shown && this.shown.id === id) return; // already showing this one
     if (this.pending && this.pending.id === id) return; // already dwelling on this one
 
     if (this.shown) {
       // Card is already open on a different element — switch immediately, no dwell.
       this.clearOpenTimer();
       this.pending = null;
-      this.showTarget(target);
+      this.showSnapshot(snap);
       return;
     }
 
     // Nothing shown — start the dwell timer.
-    this.pending = target;
+    this.pending = snap;
     this.clearOpenTimer();
     if (this.opts.openDelay <= 0) {
       this.fireOpen();
@@ -607,7 +603,7 @@ export class HoverElementPreviewBehaviour extends Behaviour {
       return;
     }
     // Start the grace period before hiding the shown card.
-    if (this.shown && this.shown.target.id === id) this.scheduleHide();
+    if (this.shown && this.shown.id === id) this.scheduleHide();
   }
 
   /** Start (or restart) the `closeDelay` grace timer that hides the card. */
@@ -624,27 +620,19 @@ export class HoverElementPreviewBehaviour extends Behaviour {
 
   // ─── Internals ────────────────────────────────────────────────────────────
 
-  /** Mature the dwell timer — show whatever target is pending. */
+  /** Mature the dwell timer — show whatever snapshot is pending. */
   private fireOpen(): void {
     this.openTimer = null;
-    const target = this.pending;
+    const snap = this.pending;
     this.pending = null;
-    if (target) this.showTarget(target);
+    if (snap) this.showSnapshot(snap);
   }
 
-  private showTarget(target: PreviewTarget): void {
+  private showSnapshot(snap: PreviewSnapshot): void {
     this.held = false; // a fresh card isn't held until the pointer enters it
-    const subject = this.subjectFor(target);
-    const card = resolvePreviewCard(
-      this.opts.card,
-      subject,
-      target.id,
-      target.kind,
-      target.type,
-    );
-    this.shown = { target, card, placement: this.opts.placement };
-    this.events.emit('preview:show', this.shown);
-    this.opts.onShow?.(this.shown);
+    this.shown = snap;
+    this.events.emit('preview:show', snap);
+    this.opts.onShow?.(snap);
   }
 
   private hideNow(): void {
@@ -660,68 +648,59 @@ export class HoverElementPreviewBehaviour extends Behaviour {
 
   /** Re-project the shown card's world anchor to screen and emit `preview:move`. */
   private reposition(): void {
-    const snapshot = this.shown;
+    const snap = this.shown;
     const ctx = this.ctx;
-    if (!snapshot || !ctx) return;
-    const screen = ctx.camera.toScreen(snapshot.target.world.x, snapshot.target.world.y);
-    const target: PreviewTarget = { ...snapshot.target, screen: { x: screen.x, y: screen.y } };
-    this.shown = { ...snapshot, target };
+    if (!snap || !ctx) return;
+    const s = ctx.camera.toScreen(snap.world.x, snap.world.y);
+    this.shown = { ...snap, screen: { x: s.x, y: s.y } };
     this.events.emit('preview:move', this.shown);
   }
 
   /**
-   * Resolve a hovered id into a {@link PreviewTarget}. Nodes anchor at their
-   * centre (stable across pan / zoom); edges anchor at the hover point
-   * `(worldX, worldY)`, which has no single centre. Returns `null` if the
+   * Resolve a hovered id into a full {@link PreviewSnapshot} (live record +
+   * anchor + card). Nodes anchor at their centre (stable across pan / zoom);
+   * edges anchor at the hover point `(worldX, worldY)`. Returns `null` if the
    * element vanished between the pointer event and resolution.
    */
-  private resolveTarget(
+  private resolveSnapshot(
     id: string,
-    kind: PreviewTargetKind,
+    kind: GraphElementKind,
     worldX: number,
     worldY: number,
-  ): PreviewTarget | null {
+  ): PreviewSnapshot | null {
     const layer = this.layer;
     const ctx = this.ctx;
     if (!layer || !ctx) return null;
+    const placement = this.opts.placement;
 
     if (kind === 'node') {
       const node = layer.store.getNode(id);
       if (!node) return null;
       const world = node.position ?? layer.store.getPosition(id) ?? { x: worldX, y: worldY };
-      const screen = ctx.camera.toScreen(world.x, world.y);
-      const target: PreviewTarget = {
+      const s = ctx.camera.toScreen(world.x, world.y);
+      return {
+        kind: 'node',
         id,
-        kind,
-        data: node.data,
+        node,
+        card: resolvePreviewCard(this.opts.card, node, id, 'node', node.type),
+        placement,
         world: { x: world.x, y: world.y },
-        screen: { x: screen.x, y: screen.y },
+        screen: { x: s.x, y: s.y },
       };
-      if (node.type !== undefined) target.type = node.type;
-      return target;
     }
 
     const edge = layer.store.getEdge(id);
     if (!edge) return null;
-    const screen = ctx.camera.toScreen(worldX, worldY);
-    const target: PreviewTarget = {
+    const s = ctx.camera.toScreen(worldX, worldY);
+    return {
+      kind: 'edge',
       id,
-      kind,
-      data: edge.data,
+      edge,
+      card: resolvePreviewCard(this.opts.card, edge, id, 'edge', edge.type),
+      placement,
       world: { x: worldX, y: worldY },
-      screen: { x: screen.x, y: screen.y },
+      screen: { x: s.x, y: s.y },
     };
-    if (edge.type !== undefined) target.type = edge.type;
-    return target;
-  }
-
-  /** The store record a target's field paths resolve against. */
-  private subjectFor(target: PreviewTarget): unknown {
-    const layer = this.layer;
-    if (!layer) return undefined;
-    return target.kind === 'node'
-      ? layer.store.getNode(target.id)
-      : layer.store.getEdge(target.id);
   }
 
   private clearOpenTimer(): void {
