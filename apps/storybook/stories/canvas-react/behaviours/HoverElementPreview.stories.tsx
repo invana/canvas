@@ -17,6 +17,7 @@ import { EdgePreviewCard, NodePreviewCard, type PreviewCardRow } from '@invana/c
 import {
   BackgroundLayer,
   Canvas,
+  DragNodeBehaviour,
   DragPanBehaviour,
   HoverElementPreviewBehaviour,
   GraphLayer,
@@ -122,6 +123,7 @@ export const HoverElementPreview: Story = {
 
         <DragPanBehaviour id="pan" enabled />
         <WheelZoomBehaviour id="zoom" enabled />
+        <DragNodeBehaviour targetLayerId="graph" enabled />
 
         {/* The component owns subscription + positioning + hold-open; we supply
             only the card content per kind. Timing uses the behaviour defaults

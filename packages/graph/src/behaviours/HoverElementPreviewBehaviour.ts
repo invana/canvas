@@ -513,6 +513,15 @@ export class HoverElementPreviewBehaviour extends Behaviour {
       };
       el.addEventListener('pointerleave', onLeave);
       this.subs.push(() => el.removeEventListener('pointerleave', onLeave));
+
+      // Hide on a press on the graph (drag / pan / click) — a frozen card while
+      // a node is dragged away reads as a bug; dismiss and re-show on next hover.
+      // A press *inside* an interactive card is a DOM event on the card overlay,
+      // not the canvas element, so selecting text / clicking links there doesn't
+      // dismiss it — only pressing the graph does.
+      const onPointerDown = (): void => this.hideNow();
+      el.addEventListener('pointerdown', onPointerDown);
+      this.subs.push(() => el.removeEventListener('pointerdown', onPointerDown));
     }
   }
 

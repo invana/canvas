@@ -30,12 +30,14 @@ export function HoverElementPreviewCard({ card, className, style }: HoverElement
   const hasIdentity = !!(card.imageUrl || card.title || card.subtitle);
 
   return (
+    // Use design-kit tokens that ship in the prebuilt utilities sheet
+    // (`bg-card` / `text-card-foreground` / `border` / `shadow-xl` / `w-72` —
+    // the same chrome the canvas-ui cards use). The previous `bg-popover/95` +
+    // `backdrop-blur-sm` weren't in the sheet, so the surface rendered
+    // transparent. Padding / radius are inlined (purge-proof, structural).
     <div
-      className={cn(
-        'w-80 rounded-lg border bg-popover/95 p-3 text-popover-foreground shadow-lg backdrop-blur-sm',
-        className,
-      )}
-      style={style}
+      className={cn('w-72 border bg-card text-card-foreground shadow-xl', className)}
+      style={{ padding: 12, borderRadius: 10, ...style }}
     >
       {/* Identity row — image left, title + subtitle right. Optional. */}
       {hasIdentity ? (
@@ -77,7 +79,9 @@ export function HoverElementPreviewCard({ card, className, style }: HoverElement
           divider only shows when there's an identity block above. */}
       {card.rows.length > 0 ? (
         <>
-          {hasIdentity ? <div className="my-2.5 h-px bg-border" /> : null}
+          {hasIdentity ? (
+            <div style={{ height: 1, margin: '10px 0', background: 'hsl(var(--border))' }} />
+          ) : null}
           <div className="flex flex-col gap-0.5">
             {card.rows.map((row) => (
               <div key={row.label} className="flex justify-between gap-3 text-xs">

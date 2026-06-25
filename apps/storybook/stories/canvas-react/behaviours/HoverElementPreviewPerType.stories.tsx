@@ -13,6 +13,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   Canvas,
+  DragNodeBehaviour,
   DragPanBehaviour,
   HoverElementPreviewBehaviour,
   GraphLayer,
@@ -102,6 +103,7 @@ export const HoverElementPreviewPerType: Story = {
 
         <DragPanBehaviour id="pan" enabled />
         <WheelZoomBehaviour id="zoom" enabled />
+        <DragNodeBehaviour targetLayerId="graph" enabled />
 
         {/* Per-type cards — the built-in renderer paints whatever the matched
             spec resolves to. No render-props; everything here is serializable. */}
