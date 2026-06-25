@@ -14,13 +14,17 @@ export interface PanelProps {
   /** Stacking order, so the overlay sits above canvas content. Default `5`. */
   zIndex?: number;
   className?: string;
-  /** Extra inline styles, merged onto the content wrapper (not the positioner). */
+  /** Extra inline styles. See the positioning notes on {@link Panel}. */
   style?: CSSProperties;
   children?: ReactNode;
 }
 
 /** Translate a {@link PanelPosition} + offset into absolute-positioning styles. */
 function pinStyle(position: PanelPosition, offset: number): CSSProperties {
+  // Full-height side dock — flush to the edge, spanning top → bottom.
+  if (position === 'left' || position === 'right') {
+    return { position: 'absolute', top: offset, bottom: offset, [position]: offset };
+  }
   const [vertical, horizontal] = position.split('-') as [
     'top' | 'bottom',
     'left' | 'center' | 'right',
@@ -39,7 +43,9 @@ function pinStyle(position: PanelPosition, offset: number): CSSProperties {
  * A positioned overlay container — the canvas equivalent of React Flow's
  * `<Panel>`. Pins itself to a corner / edge-centre of its **nearest positioned
  * ancestor** (e.g. the `<Canvas>` host, which is `position: relative`), and
- * stacks its children horizontally or vertically.
+ * stacks its children horizontally or vertically. It is a **pure positioner** —
+ * it draws no surface and owns no header / close; wrap content in a
+ * {@link PanelContent} for that chrome.
  *
  * Engine-agnostic and reference-free: it needs no `Canvas` instance — with
  * multiple canvases on one page you simply render one `<Panel>` inside each
@@ -50,6 +56,12 @@ function pinStyle(position: PanelPosition, offset: number): CSSProperties {
  * would otherwise block pan/zoom along that strip). Only the inner content
  * wrapper re-enables `pointerEvents: 'auto'`, so drags that miss the actual
  * controls still reach the canvas underneath.
+ *
+ * **Side docks (`position: 'left' | 'right'`):** the panel spans the full height
+ * and the content wrapper fills it (a {@link PanelContent fill} child then owns
+ * its own scroll). Here `style` is applied to the **positioner** (so
+ * `style={{ top: 40, bottom: 25 }}` insets the dock below floating chrome); for
+ * the other positions `style` lands on the content wrapper.
  */
 export function Panel({
   position = 'top-left',
@@ -61,8 +73,16 @@ export function Panel({
   style,
   children,
 }: PanelProps) {
+  const isSide = position === 'left' || position === 'right';
   return (
-    <div style={{ ...pinStyle(position, offset), zIndex, pointerEvents: 'none' }}>
+    <div
+      style={{
+        ...pinStyle(position, offset),
+        zIndex,
+        pointerEvents: 'none',
+        ...(isSide && style ? style : {}),
+      }}
+    >
       <div
         className={className}
         style={{
@@ -70,7 +90,9 @@ export function Panel({
           flexDirection: orientation === 'vertical' ? 'column' : 'row',
           gap,
           pointerEvents: 'auto',
-          ...style,
+          // A side dock fills the available height; the child manages scroll.
+          ...(isSide ? { height: '100%' } : {}),
+          ...(isSide ? {} : style),
         }}
       >
         {children}

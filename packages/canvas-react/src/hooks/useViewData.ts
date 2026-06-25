@@ -19,21 +19,31 @@ export interface ViewData {
   label: string;
   /** The element's free-form `type` tag, when set. */
   type?: string;
-  /** Current `data` as a flat string map (non-string values are stringified). */
-  data: Record<string, string>;
+  /**
+   * Current `data` as a flat map. Values keep their original type (number,
+   * string, array, object, …) so a viewer can render each property by kind —
+   * `null` / `undefined` entries are dropped. See `PropertyDetailView`.
+   */
+  data: Record<string, unknown>;
   /** Source node id — edges only. */
   source?: string;
   /** Target node id — edges only. */
   target?: string;
 }
 
-/** Coerce an opaque `data` payload into a flat string map for display. */
-function toStringMap(data: unknown): Record<string, string> {
+/**
+ * Shallow-copy an opaque `data` payload into a flat display map, **preserving
+ * each value's type** (only `null` / `undefined` entries are dropped). Type is
+ * kept — not stringified — so a viewer can render numbers, arrays, objects, and
+ * URLs differently. Contrast the editor path's `toStringMap`, which flattens to
+ * strings for text inputs.
+ */
+function toDisplayMap(data: unknown): Record<string, unknown> {
   if (!data || typeof data !== 'object') return {};
-  const out: Record<string, string> = {};
+  const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(data as Record<string, unknown>)) {
     if (v === null || v === undefined) continue;
-    out[k] = typeof v === 'string' ? v : typeof v === 'object' ? JSON.stringify(v) : String(v);
+    out[k] = v;
   }
   return out;
 }
@@ -46,9 +56,8 @@ function toStringMap(data: unknown): Record<string, string> {
  * a `ClickViewBehaviour`, independent of selection).
  *
  * The read-only analogue of {@link useEntityEditor}: no `commit` — it never
- * writes to the store. The view (`<PropertiesViewer>`) and placement
- * (`<Panel>`) are the consumer's — see {@link ElementDetailViewer} for the
- * turnkey wiring.
+ * writes to the store. The view (`<PropertyDetailView>`) and placement are the
+ * consumer's — see `NodeDetailView` / `EdgeDetailView` for the turnkey wiring.
  */
 export function useViewData(
   options: UseViewDataOptions = {},
@@ -67,7 +76,7 @@ export function useViewData(
     const node = store.getNode(single.id);
     if (!node) return null;
     const label = (layer.resolveNodeStyle(node).labelText as string | undefined) ?? '';
-    const result: ViewData = { kind: 'node', id: single.id, label, data: toStringMap(node.data) };
+    const result: ViewData = { kind: 'node', id: single.id, label, data: toDisplayMap(node.data) };
     const type = node.type as string | undefined;
     if (type) result.type = type;
     return result;
@@ -82,7 +91,7 @@ export function useViewData(
     kind: 'edge',
     id: single.id,
     label,
-    data: toStringMap(edge.data),
+    data: toDisplayMap(edge.data),
     source: edge.source,
     target: edge.target,
   };

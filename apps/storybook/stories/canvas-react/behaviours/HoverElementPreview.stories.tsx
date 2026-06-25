@@ -17,11 +17,16 @@ import { ThemeProvider } from '@invana/themes';
 import { EdgePreviewCard, NodePreviewCard, type PreviewCardRow } from '@invana/canvas-ui';
 import {
   BackgroundLayer,
+  ClickViewBehaviour,
   DragNodeBehaviour,
   DragPanBehaviour,
+  EdgeDetailView,
   GraphCanvasApp,
   HoverElementPreviewBehaviour,
   GraphLayer,
+  NodeDetailView,
+  Panel,
+  PanelContent,
   WheelZoomBehaviour,
 } from '@invana/canvas-react';
 import type { GraphData, GraphEdge, GraphNode } from '@invana/graph';
@@ -133,6 +138,21 @@ export const HoverElementPreview: Story = {
             only the card content per kind. Timing uses the behaviour defaults
             (openDelay / closeDelay = 50ms). */}
         <HoverElementPreviewBehaviour targetLayerId="graph" renderNode={renderNode} renderEdge={renderEdge} />
+
+        {/* Click-to-open inspector — a right-side dock. The behaviour just
+            surfaces the clicked element; the <Panel> positions and the
+            <PanelContent> provides the surface + close ✕. */}
+        <ClickViewBehaviour
+          id="click-view"
+          targetLayerId="graph"
+          panel={(ctx) => (
+            <Panel position="right">
+              <PanelContent header={ctx.kind === 'edge' ? "Edge Detail" : "Node Detail" } onClose={ctx.close} fill>
+                {ctx.kind === 'edge' ? <EdgeDetailView ctx={ctx} /> : <NodeDetailView ctx={ctx} />}
+              </PanelContent>
+            </Panel>
+          )}
+        />
       </GraphCanvasApp>
     </ThemeProvider>
   ),

@@ -25,8 +25,10 @@ import {
   GraphControlsToolbar,
   GraphStatusBar,
   MiniMapLayer,
-  ElementDetailViewer,
-  dockCardClassName,
+  EdgeDetailView,
+  NodeDetailView,
+  Panel,
+  PanelContent,
   ToolbarItems,
   type ViewContext,
 } from '@invana/canvas-react';
@@ -110,7 +112,13 @@ export const GraphVisualiserApp: Story = {
           <ClickViewBehaviour
             id="click-view"
             targetLayerId="graph"
-            panel={(ctx: ViewContext) => <ElementDetailViewer ctx={ctx} className={dockCardClassName('right')} />}
+            panel={(ctx: ViewContext) => (
+              <Panel position="right">
+                <PanelContent header={ctx.kind === 'edge' ? 'Edge Detail' : 'Node Detail'} onClose={ctx.close} fill>
+                  {ctx.kind === 'edge' ? <EdgeDetailView ctx={ctx} /> : <NodeDetailView ctx={ctx} />}
+                </PanelContent>
+              </Panel>
+            )}
           />
         </GraphCanvasApp>
       </ThemeProvider>

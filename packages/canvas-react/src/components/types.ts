@@ -15,11 +15,17 @@ export type ToolbarIcon = ComponentType<{ size?: number | string; className?: st
  */
 export type TooltipSide = 'top' | 'right' | 'bottom' | 'left';
 
-/** Anchor position for a {@link Panel} within its positioned ancestor. */
+/**
+ * Anchor position for a {@link Panel} within its positioned ancestor. The
+ * corner / edge-centre values pin a content-sized overlay; `'left'` / `'right'`
+ * make a **full-height side dock** flush to that edge.
+ */
 export type PanelPosition =
   | 'top-left'
   | 'top-center'
   | 'top-right'
   | 'bottom-left'
   | 'bottom-center'
-  | 'bottom-right';
+  | 'bottom-right'
+  | 'left'
+  | 'right';

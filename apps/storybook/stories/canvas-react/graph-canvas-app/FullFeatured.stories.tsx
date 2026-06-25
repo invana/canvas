@@ -22,8 +22,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   CanvasMessageBar,
   ClickViewBehaviour,
-  dockCardClassName,
-  ElementDetailViewer,
+  EdgeDetailView,
+  NodeDetailView,
   GraphBackgroundContextMenu,
   type GraphBackgroundMenuContext,
   GraphCanvasApp,
@@ -33,6 +33,8 @@ import {
   type GraphNodeMenuContext,
   GraphStatusBar,
   LabelResolutionLODBehaviour,
+  Panel,
+  PanelContent,
   type LayoutFactory,
   ThemeToggle,
   useDevTool,
@@ -125,12 +127,19 @@ export const FullFeatured: Story = {
         {dev.layer}
 
         {/* Extra behaviours — click-to-open inspector + label level-of-detail.
-            A full-height right dock; docked layout already bounds the canvas
-            between the rails, so no inset is needed. */}
+            A full-height right-side <Panel> positions a <PanelContent> that owns
+            the surface: its header bar holds the close ✕, its body holds the
+            (bare) detail view. The docked layout already bounds the canvas. */}
         <ClickViewBehaviour
           id="click-view"
           targetLayerId="graph"
-          panel={(ctx) => <ElementDetailViewer ctx={ctx} className={dockCardClassName('right')} />}
+          panel={(ctx) => (
+            <Panel position="right">
+              <PanelContent header={ctx.kind === 'edge' ? 'Edge Detail' : 'Node Detail'} onClose={ctx.close} fill>
+                {ctx.kind === 'edge' ? <EdgeDetailView ctx={ctx} /> : <NodeDetailView ctx={ctx} />}
+              </PanelContent>
+            </Panel>
+          )}
         />
         <LabelResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
 

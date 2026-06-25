@@ -13,11 +13,16 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeProvider } from '@invana/themes';
 import {
   BackgroundLayer,
+  ClickViewBehaviour,
   DragNodeBehaviour,
   DragPanBehaviour,
+  EdgeDetailView,
   GraphCanvasApp,
   HoverElementPreviewBehaviour,
   GraphLayer,
+  NodeDetailView,
+  Panel,
+  PanelContent,
   WheelZoomBehaviour,
 } from '@invana/canvas-react';
 import type { GraphData, GraphNode, HoverElementPreviewCardsByType } from '@invana/graph';
@@ -112,6 +117,21 @@ export const HoverElementPreviewPerType: Story = {
         {/* Per-type cards — the built-in renderer paints whatever the matched
             spec resolves to. No render-props; everything here is serializable. */}
         <HoverElementPreviewBehaviour targetLayerId="graph" cards={cards} />
+
+        {/* Click-to-open inspector — a right-side dock. The behaviour just
+            surfaces the clicked element; the <Panel> positions and the
+            <PanelContent> provides the surface + close ✕. */}
+        <ClickViewBehaviour
+          id="click-view"
+          targetLayerId="graph"
+          panel={(ctx) => (
+            <Panel position="right">
+              <PanelContent header={ctx.kind === 'edge' ? 'Edge Detail' : 'Node Detail'} onClose={ctx.close} fill>
+                {ctx.kind === 'edge' ? <EdgeDetailView ctx={ctx} /> : <NodeDetailView ctx={ctx} />}
+              </PanelContent>
+            </Panel>
+          )}
+        />
       </GraphCanvasApp>
     </ThemeProvider>
   ),

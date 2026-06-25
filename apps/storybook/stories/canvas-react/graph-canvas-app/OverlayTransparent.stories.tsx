@@ -14,8 +14,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   CanvasMessageBar,
   ClickViewBehaviour,
-  dockCardClassName,
-  ElementDetailViewer,
+  EdgeDetailView,
+  NodeDetailView,
+  Panel,
+  PanelContent,
   GraphCanvasApp,
   GraphControlsToolbar,
   GraphStatusBar,
@@ -76,17 +78,18 @@ export const OverlayTransparent: Story = {
           {mini.layer}
           {dev.layer}
 
-          {/* Click-to-open read-only inspector — a full-height right dock, inset
-              below the 40px header + 25px footer via explicit `top` / `bottom`. */}
+          {/* Click-to-open read-only inspector — a full-height right-side <Panel>
+              (its `style` insets it below the floating 40px header + 25px footer)
+              positions a <PanelContent> that owns the surface, header ✕, and body. */}
           <ClickViewBehaviour
             id="click-view"
             targetLayerId="graph"
             panel={(ctx) => (
-              <ElementDetailViewer
-                ctx={ctx}
-                className={dockCardClassName('right')}
-                style={{ top: 40, bottom: 25 }}
-              />
+              <Panel position="right" style={{ top: 40, bottom: 25 }}>
+                <PanelContent header={ctx.kind === 'edge' ? 'Edge Detail' : 'Node Detail'} onClose={ctx.close} fill>
+                  {ctx.kind === 'edge' ? <EdgeDetailView ctx={ctx} /> : <NodeDetailView ctx={ctx} />}
+                </PanelContent>
+              </Panel>
             )}
           />
         </GraphCanvasApp>

@@ -32,8 +32,11 @@ export interface ViewContext {
   label: string;
   /** The element's free-form `type` tag, when set. */
   type?: string;
-  /** Current `data` as a flat string map. */
-  data: Record<string, string>;
+  /**
+   * Current `data` as a flat map — values keep their original type (number,
+   * string, array, object, …) for type-aware rendering. See {@link useViewData}.
+   */
+  data: Record<string, unknown>;
   /** Source node id — edges only. */
   source?: string;
   /** Target node id — edges only. */
