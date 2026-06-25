@@ -10,11 +10,12 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { ThemeProvider } from '@invana/themes';
 import {
   BackgroundLayer,
-  Canvas,
   DragNodeBehaviour,
   DragPanBehaviour,
+  GraphCanvasApp,
   HoverElementPreviewBehaviour,
   GraphLayer,
   WheelZoomBehaviour,
@@ -75,9 +76,12 @@ const cards: HoverElementPreviewCardsByType = {
 // ─── Story ───────────────────────────────────────────────────────────────────
 
 export const HoverElementPreviewPerType: Story = {
+  // Rendered inside the batteries-included `GraphCanvasApp` shell (themed
+  // header/footer + engine). `bundle={false}` lets these children own the graph;
+  // the app must sit under a `<ThemeProvider>`.
   render: () => (
-    <div style={{ height: '100vh' }}>
-      <Canvas>
+    <ThemeProvider storageKey={null}>
+      <GraphCanvasApp data={data} bundle={false} height="100vh">
         <BackgroundLayer id="background" type="pattern" patternType="dots" backgroundColor="#0b1220" color="#1e293b" />
         <GraphLayer
           id="graph"
@@ -108,7 +112,7 @@ export const HoverElementPreviewPerType: Story = {
         {/* Per-type cards — the built-in renderer paints whatever the matched
             spec resolves to. No render-props; everything here is serializable. */}
         <HoverElementPreviewBehaviour targetLayerId="graph" cards={cards} />
-      </Canvas>
-    </div>
+      </GraphCanvasApp>
+    </ThemeProvider>
   ),
 };

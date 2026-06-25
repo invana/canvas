@@ -13,12 +13,13 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { ThemeProvider } from '@invana/themes';
 import { EdgePreviewCard, NodePreviewCard, type PreviewCardRow } from '@invana/canvas-ui';
 import {
   BackgroundLayer,
-  Canvas,
   DragNodeBehaviour,
   DragPanBehaviour,
+  GraphCanvasApp,
   HoverElementPreviewBehaviour,
   GraphLayer,
   WheelZoomBehaviour,
@@ -99,9 +100,12 @@ function renderEdge(edge: GraphEdge) {
 // ─── Story ───────────────────────────────────────────────────────────────────
 
 export const HoverElementPreview: Story = {
+  // `GraphCanvasApp` is the batteries-included shell (themed header/footer +
+  // engine). `bundle={false}` lets these children own the graph; the app must
+  // sit under a `<ThemeProvider>`.
   render: () => (
-    <div style={{ height: '100vh' }}>
-      <Canvas>
+    <ThemeProvider storageKey={null}>
+      <GraphCanvasApp data={data} bundle={false} height="100vh">
         <BackgroundLayer id="background" type="pattern" patternType="dots" backgroundColor="#0b1220" color="#1e293b" />
         <GraphLayer
           id="graph"
@@ -129,7 +133,7 @@ export const HoverElementPreview: Story = {
             only the card content per kind. Timing uses the behaviour defaults
             (openDelay / closeDelay = 50ms). */}
         <HoverElementPreviewBehaviour targetLayerId="graph" renderNode={renderNode} renderEdge={renderEdge} />
-      </Canvas>
-    </div>
+      </GraphCanvasApp>
+    </ThemeProvider>
   ),
 };
