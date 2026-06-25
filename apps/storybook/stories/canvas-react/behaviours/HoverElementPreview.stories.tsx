@@ -119,7 +119,8 @@ export const HoverElementPreview: Story = {
         <WheelZoomBehaviour id="zoom" enabled />
 
         {/* The component owns subscription + positioning + hold-open; we supply
-            only the card content per kind. */}
+            only the card content per kind. Timing uses the behaviour defaults
+            (openDelay / closeDelay = 50ms). */}
         <HoverElementPreviewBehaviour targetLayerId="graph" renderNode={renderNode} renderEdge={renderEdge} />
       </Canvas>
     </div>

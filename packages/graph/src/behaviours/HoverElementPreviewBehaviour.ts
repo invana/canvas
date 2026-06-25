@@ -213,12 +213,12 @@ export interface HoverElementPreviewBehaviourOptions extends BehaviourOptions {
    */
   targets?: readonly PreviewTargetKind[];
 
-  /** Dwell, in ms, before a hovered element's card shows. Default `250`. */
+  /** Dwell, in ms, before a hovered element's card shows. Default `50`. */
   openDelay?: number;
 
   /**
    * Grace period, in ms, after the pointer leaves before the card hides —
-   * smooths jitter when crossing element gaps. Default `120`.
+   * smooths jitter when crossing element gaps. Default `50`.
    */
   closeDelay?: number;
 
@@ -273,8 +273,8 @@ function resolveOptions(
 ): ResolvedOptions {
   const base: ResolvedOptions = prev ?? {
     targets: ['node', 'edge'],
-    openDelay: 250,
-    closeDelay: 120,
+    openDelay: 50,
+    closeDelay: 50,
     placement: 'bottom-right',
     interactive: true,
     enable: true,
