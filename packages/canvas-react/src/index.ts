@@ -113,6 +113,8 @@ export { ClickInspectBehaviour } from './behaviours/ClickInspectBehaviour';
 export type { ClickInspectBehaviourProps } from './behaviours/ClickInspectBehaviour';
 export { ClickViewBehaviour } from './behaviours/ClickViewBehaviour';
 export type { ClickViewBehaviourProps } from './behaviours/ClickViewBehaviour';
+export { HoverElementPreviewBehaviour } from './behaviours/HoverElementPreviewBehaviour';
+export type { HoverElementPreviewBehaviourProps } from './behaviours/HoverElementPreviewBehaviour';
 export { ColorByLabelBehaviour } from './behaviours/ColorByLabelBehaviour';
 export type { ColorByLabelBehaviourProps } from './behaviours/ColorByLabelBehaviour';
 
@@ -162,6 +164,7 @@ export {
   useSelection,
   useInspectTarget,
   useViewTarget,
+  useHoverElementPreview,
   useViewData,
   useViewContext,
   useHistory,
@@ -198,6 +201,7 @@ export type {
   UseSelectionResult,
   UseInspectTargetOptions,
   UseViewTargetOptions,
+  UseHoverElementPreviewOptions,
   UseViewDataOptions,
   ViewData,
   ViewContext,
@@ -285,6 +289,7 @@ export {
   PropertiesEditor,
   PropertiesViewer,
   ContextMenuOverlay,
+  HoverElementPreviewCard,
 } from './components';
 export type {
   PanelProps,
@@ -305,6 +310,7 @@ export type {
   PropertiesViewerProps,
   PropertiesViewerRow,
   ContextMenuOverlayProps,
+  HoverElementPreviewCardProps,
   ToolbarIcon,
 } from './components';
 

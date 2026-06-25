@@ -37,6 +37,25 @@ export type {
   ViewTarget,
 } from './ClickViewBehaviour';
 
+export { HoverElementPreviewBehaviour, resolvePreviewCard } from './HoverElementPreviewBehaviour';
+export type {
+  HoverElementPreviewBehaviourOptions,
+  HoverElementPreviewCardSpec,
+  HoverElementPreviewEventMap,
+  PreviewCardRow,
+  PreviewFieldPath,
+  PreviewImageSpec,
+  PreviewPlacement,
+  PreviewRowFormat,
+  PreviewRowSpec,
+  PreviewSnapshot,
+  PreviewSubtitleSpec,
+  PreviewTarget,
+  PreviewTargetKind,
+  PreviewTextSpec,
+  ResolvedPreviewCard,
+} from './HoverElementPreviewBehaviour';
+
 export { ColorByLabelBehaviour, DEFAULT_LABEL_PALETTE } from './ColorByLabelBehaviour';
 export type {
   ColorByLabelBehaviourOptions,

@@ -30,5 +30,7 @@ export { GraphStatusBar } from './GraphStatusBar';
 export type { GraphStatusBarProps } from './GraphStatusBar';
 export { ContextMenuOverlay } from './ContextMenuOverlay';
 export type { ContextMenuOverlayProps } from './ContextMenuOverlay';
+export { HoverElementPreviewCard } from './HoverElementPreviewCard';
+export type { HoverElementPreviewCardProps } from './HoverElementPreviewCard';
 
 export type { ToolbarIcon, PanelPosition, TooltipSide } from './types';

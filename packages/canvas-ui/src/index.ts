@@ -31,6 +31,17 @@ export type {
   LabelPlacement,
 } from './editors/node-style';
 
+// ─── Preview cards ───────────────────────────────────────────────────────
+// Presentational node / edge hover-preview cards — engine-agnostic props-in UI
+// (only `@invana/ui` chrome). A turnkey (e.g. canvas-react `<HoverElementPreviewBehaviour>`)
+// owns positioning + interactivity and renders these as content.
+export { NodePreviewCard, EdgePreviewCard } from './cards/preview-cards';
+export type {
+  NodePreviewCardProps,
+  EdgePreviewCardProps,
+  PreviewCardRow,
+} from './cards/preview-cards';
+
 // ─── Shared presets + utils ──────────────────────────────────────────────
 // Colour swatch palette shared across editors, and the `0xRRGGBB` ↔ `#rrggbb`
 // helpers that bridge engine colours and the design-kit colour swatch.

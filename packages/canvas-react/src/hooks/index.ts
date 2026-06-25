@@ -17,6 +17,8 @@ export { useInspectTarget } from './useInspectTarget';
 export type { UseInspectTargetOptions } from './useInspectTarget';
 export { useViewTarget } from './useViewTarget';
 export type { UseViewTargetOptions } from './useViewTarget';
+export { useHoverElementPreview } from './useHoverElementPreview';
+export type { UseHoverElementPreviewOptions } from './useHoverElementPreview';
 export { useViewData } from './useViewData';
 export type { UseViewDataOptions, ViewData } from './useViewData';
 export { useViewContext } from './useViewContext';
