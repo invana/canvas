@@ -1,6 +1,6 @@
 # Interface: LifeTreeNode
 
-Defined in: [graph-datasets/src/lifeTree.ts:27](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/lifeTree.ts#L27)
+Defined in: [graph-datasets/src/lifeTree.ts:27](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/lifeTree.ts#L27)
 
 Node shape in the parsed Newick hierarchy.
 
@@ -10,7 +10,7 @@ Node shape in the parsed Newick hierarchy.
 
 > `optional` **children?**: `LifeTreeNode`[]
 
-Defined in: [graph-datasets/src/lifeTree.ts:33](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/lifeTree.ts#L33)
+Defined in: [graph-datasets/src/lifeTree.ts:33](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/lifeTree.ts#L33)
 
 Child clades. Leaves omit this field.
 
@@ -20,7 +20,7 @@ Child clades. Leaves omit this field.
 
 > `optional` **length?**: `number`
 
-Defined in: [graph-datasets/src/lifeTree.ts:31](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/lifeTree.ts#L31)
+Defined in: [graph-datasets/src/lifeTree.ts:31](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/lifeTree.ts#L31)
 
 Branch length to parent (substitution rate). `undefined` on the root.
 
@@ -30,6 +30,6 @@ Branch length to parent (substitution rate). `undefined` on the root.
 
 > **name**: `string`
 
-Defined in: [graph-datasets/src/lifeTree.ts:29](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/lifeTree.ts#L29)
+Defined in: [graph-datasets/src/lifeTree.ts:29](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/lifeTree.ts#L29)
 
 Clade or species name. May be empty for anonymous internal nodes.

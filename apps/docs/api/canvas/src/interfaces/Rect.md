@@ -1,39 +1,35 @@
 # Interface: Rect
 
-Defined in: [canvas/src/primitives/types.ts:30](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L30)
-
-## Extended by
-
-- [`Obstacle`](Obstacle.md)
+Defined in: [canvas/src/camera/Camera.ts:38](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L38)
 
 ## Properties
 
 ### height
 
-> `readonly` **height**: `number`
+> **height**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:34](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L34)
+Defined in: [canvas/src/camera/Camera.ts:42](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L42)
 
 ***
 
 ### width
 
-> `readonly` **width**: `number`
+> **width**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:33](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L33)
+Defined in: [canvas/src/camera/Camera.ts:41](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L41)
 
 ***
 
 ### x
 
-> `readonly` **x**: `number`
+> **x**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:31](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L31)
+Defined in: [canvas/src/camera/Camera.ts:39](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L39)
 
 ***
 
 ### y
 
-> `readonly` **y**: `number`
+> **y**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:32](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L32)
+Defined in: [canvas/src/camera/Camera.ts:40](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L40)

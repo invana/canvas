@@ -1,6 +1,6 @@
 # Interface: RingDecorationStyle
 
-Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:17](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L17)
+Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:17](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L17)
 
 Static ring that traces the host silhouette at a fixed outward offset.
 
@@ -20,7 +20,7 @@ decoration silently clears — same fallback as `GlowDecoration`.
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:27](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L27)
+Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:27](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L27)
 
 Ring alpha, `[0, 1]`. Default `1`.
 
@@ -30,7 +30,7 @@ Ring alpha, `[0, 1]`. Default `1`.
 
 > `readonly` **color**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:18](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L18)
+Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:18](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L18)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:18](https
 
 > `readonly` `optional` **dashArray?**: readonly \[`number`, `number`\]
 
-Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:29](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L29)
+Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:29](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L29)
 
 Dashed ring — `[dashLength, gapLength]` in px. Default solid.
 
@@ -48,7 +48,7 @@ Dashed ring — `[dashLength, gapLength]` in px. Default solid.
 
 > `readonly` `optional` **gap?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:25](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L25)
+Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:25](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L25)
 
 Gap between the host silhouette and the ring's inner edge, px.
 Default `4`. Zero hugs the body; larger values produce a detached ring.
@@ -59,6 +59,6 @@ Default `4`. Zero hugs the body; larger values produce a detached ring.
 
 > `readonly` `optional` **width?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:20](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L20)
+Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:20](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L20)
 
 Ring stroke thickness, px. Default `2`.

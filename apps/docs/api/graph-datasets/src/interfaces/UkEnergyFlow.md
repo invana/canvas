@@ -1,6 +1,6 @@
 # Interface: UkEnergyFlow
 
-Defined in: [graph-datasets/src/uk-energy-flow.ts:43](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/uk-energy-flow.ts#L43)
+Defined in: [graph-datasets/src/uk-energy-flow.ts:43](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/uk-energy-flow.ts#L43)
 
 Original `{nodes, links}` shape (matches d3-sankey's expected input).
 
@@ -10,7 +10,7 @@ Original `{nodes, links}` shape (matches d3-sankey's expected input).
 
 > **links**: [`UkEnergyFlowLink`](UkEnergyFlowLink.md)[]
 
-Defined in: [graph-datasets/src/uk-energy-flow.ts:45](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/uk-energy-flow.ts#L45)
+Defined in: [graph-datasets/src/uk-energy-flow.ts:45](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/uk-energy-flow.ts#L45)
 
 ***
 
@@ -18,4 +18,4 @@ Defined in: [graph-datasets/src/uk-energy-flow.ts:45](https://github.com/invana/
 
 > **nodes**: [`UkEnergyFlowNode`](UkEnergyFlowNode.md)[]
 
-Defined in: [graph-datasets/src/uk-energy-flow.ts:44](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/uk-energy-flow.ts#L44)
+Defined in: [graph-datasets/src/uk-energy-flow.ts:44](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/uk-energy-flow.ts#L44)

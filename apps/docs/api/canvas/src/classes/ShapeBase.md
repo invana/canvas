@@ -1,6 +1,6 @@
 # Abstract Class: ShapeBase\<TSpec\>
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:38](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L38)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:38](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L38)
 
 Base for shapes whose `draw` and `paintInto` share a single silhouette
 trace. Subclasses implement `drawGeometry` (trace path + apply fill +
@@ -29,6 +29,7 @@ halos the silhouette but leaves the glyph alone.
 - [`RegularPolygonShape`](RegularPolygonShape.md)
 - [`StarShape`](StarShape.md)
 - [`ArcShape`](ArcShape.md)
+- [`CompositeShape`](CompositeShape.md)
 - [`ArrowMarker`](ArrowMarker.md)
 
 ## Type Parameters
@@ -47,7 +48,7 @@ halos the silhouette but leaves the glyph alone.
 
 > **new ShapeBase**\<`TSpec`\>(`host`): `ShapeBase`\<`TSpec`\>
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:46](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L46)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:46](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L46)
 
 #### Parameters
 
@@ -69,7 +70,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:46](https://github.com/inva
 
 > `protected` `readonly` **bodyGfx**: `Graphics`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:42](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L42)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:42](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L42)
 
 ***
 
@@ -77,7 +78,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:42](https://github.com/inva
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 Root display object — renderer adds/removes this on the host surface.
 
@@ -95,7 +96,7 @@ Root display object — renderer adds/removes this on the host surface.
 
 > `protected` `readonly` **host**: [`ShapeHostInfo`](../interfaces/ShapeHostInfo.md)
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:46](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L46)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:46](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L46)
 
 ***
 
@@ -103,7 +104,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:46](https://github.com/inva
 
 > `protected` `readonly` **insetViews**: `any`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:43](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L43)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:43](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L43)
 
 ***
 
@@ -111,15 +112,15 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:43](https://github.com/inva
 
 > `protected` **spec**: `TSpec`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:44](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L44)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:44](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L44)
 
 ## Methods
 
 ### boundaryIntersect()
 
-> **boundaryIntersect**(`localFromCenter`): [`Point`](../interfaces/Point.md)
+> **boundaryIntersect**(`localFromCenter`): `Point`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:131](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L131)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:131](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L131)
 
 Default boundary intersection: ray from the shape's geometric centre
 `(0, 0)` toward `localFromCenter`, intersected with a centred AABB
@@ -135,11 +136,11 @@ perimeter snapping. Input and output are both centre-relative.
 
 ##### localFromCenter
 
-[`Point`](../interfaces/Point.md)
+`Point`
 
 #### Returns
 
-[`Point`](../interfaces/Point.md)
+`Point`
 
 #### Implementation of
 
@@ -149,15 +150,15 @@ perimeter snapping. Input and output are both centre-relative.
 
 ### bounds()
 
-> `abstract` **bounds**(): [`Rect`](../interfaces/Rect.md)
+> `abstract` **bounds**(): `Rect`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:102](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L102)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:102](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L102)
 
 Local-space axis-aligned bounding box for hit-testing & decorations.
 
 #### Returns
 
-[`Rect`](../interfaces/Rect.md)
+`Rect`
 
 #### Implementation of
 
@@ -169,7 +170,7 @@ Local-space axis-aligned bounding box for hit-testing & decorations.
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:142](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L142)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:142](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L142)
 
 #### Returns
 
@@ -189,7 +190,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:142](https://github.com/inv
 
 > **draw**(`spec`): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:104](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L104)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:104](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L104)
 
 (Re)paint the shape from the current spec. Called on add and on update.
 
@@ -213,7 +214,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:104](https://github.com/inv
 
 > `abstract` `protected` **drawGeometry**(`g`, `spec`, `style?`): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:96](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L96)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:96](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L96)
 
 Trace the silhouette into `g`, then apply fill + stroke. When `style`
 is supplied, it overrides the spec's fill/stroke (decoration use).
@@ -242,7 +243,7 @@ is supplied, it overrides the spec's fill/stroke (decoration use).
 
 > **getHitArea**(): `IHitArea`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:85](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L85)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:85](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L85)
 
 Hit-test region for this shape, derived from [drawGeometry](#drawgeometry).
 
@@ -276,7 +277,7 @@ coordinates; `true` iff the point is inside the silhouette.
 
 > **paintInto**(`g`, `style?`): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:116](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L116)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:116](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L116)
 
 Decoration entry point — repaint the silhouette into someone else's
 `Graphics` with a style override. The shape uses its own current spec;
@@ -310,9 +311,9 @@ Every shape that extends `ShapeBase` has it for free.
 
 ### visualCenter()
 
-> **visualCenter**(): [`Point`](../interfaces/Point.md)
+> **visualCenter**(): `Point`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:157](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L157)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:157](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L157)
 
 Visual centre — the point inset content with `anchor: 'center'` snaps
 to. Default is the AABB midpoint of `bounds()`, which is correct for
@@ -324,7 +325,7 @@ centroid instead of floating above it.
 
 #### Returns
 
-[`Point`](../interfaces/Point.md)
+`Point`
 
 #### Implementation of
 

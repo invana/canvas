@@ -1,6 +1,6 @@
 # Interface: RouterCtx
 
-Defined in: [canvas/src/primitives/types.ts:86](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L86)
+Defined in: [canvas/src/primitives/types.ts:86](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L86)
 
 Read-only scene context handed to routers that need awareness of other
 shapes — primarily for obstacle-avoidance routing (`manhattan` and
@@ -19,4 +19,4 @@ source/target shapes); callers can override or opt out via
 
 > `readonly` **obstacles**: readonly [`Obstacle`](Obstacle.md)[]
 
-Defined in: [canvas/src/primitives/types.ts:87](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L87)
+Defined in: [canvas/src/primitives/types.ts:87](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L87)

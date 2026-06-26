@@ -2,7 +2,7 @@
 
 > **ConnectorBadgePlacement** = `"start"` \| `"middle"` \| `"end"` \| `number`
 
-Defined in: [canvas/src/primitives/badges/types.ts:73](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/badges/types.ts#L73)
+Defined in: [canvas/src/primitives/badges/types.ts:73](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/badges/types.ts#L73)
 
 Anchor point along a connector host's routed path.
 

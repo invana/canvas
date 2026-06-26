@@ -1,6 +1,6 @@
 # Interface: EdgeShapeOptions
 
-Defined in: [graph/src/layer/types.ts:1042](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1042)
+Defined in: [graph/src/layer/types.ts:1095](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1095)
 
 Structural variant of an edge — the three-stage connector pipeline
 (anchor → router → pathStyle). Variant-specific params live inside
@@ -12,7 +12,7 @@ Structural variant of an edge — the three-stage connector pipeline
 
 > `readonly` `optional` **pathStyleOpts?**: `Readonly`\<`Record`\<`string`, `unknown`\>\>
 
-Defined in: [graph/src/layer/types.ts:1048](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1048)
+Defined in: [graph/src/layer/types.ts:1101](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1101)
 
 ***
 
@@ -20,7 +20,7 @@ Defined in: [graph/src/layer/types.ts:1048](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **pathType?**: [`EdgePathType`](../type-aliases/EdgePathType.md)
 
-Defined in: [graph/src/layer/types.ts:1043](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1043)
+Defined in: [graph/src/layer/types.ts:1096](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1096)
 
 ***
 
@@ -28,7 +28,7 @@ Defined in: [graph/src/layer/types.ts:1043](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **sourceAnchor?**: [`EdgeAnchor`](../type-aliases/EdgeAnchor.md)
 
-Defined in: [graph/src/layer/types.ts:1044](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1044)
+Defined in: [graph/src/layer/types.ts:1097](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1097)
 
 ***
 
@@ -36,7 +36,7 @@ Defined in: [graph/src/layer/types.ts:1044](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **sourceAnchorOpts?**: `Readonly`\<`Record`\<`string`, `unknown`\>\>
 
-Defined in: [graph/src/layer/types.ts:1046](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1046)
+Defined in: [graph/src/layer/types.ts:1099](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1099)
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: [graph/src/layer/types.ts:1046](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **targetAnchor?**: [`EdgeAnchor`](../type-aliases/EdgeAnchor.md)
 
-Defined in: [graph/src/layer/types.ts:1045](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1045)
+Defined in: [graph/src/layer/types.ts:1098](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1098)
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: [graph/src/layer/types.ts:1045](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **targetAnchorOpts?**: `Readonly`\<`Record`\<`string`, `unknown`\>\>
 
-Defined in: [graph/src/layer/types.ts:1047](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1047)
+Defined in: [graph/src/layer/types.ts:1100](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1100)
 
 ***
 
@@ -60,4 +60,4 @@ Defined in: [graph/src/layer/types.ts:1047](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **waypoints?**: readonly `object`[]
 
-Defined in: [graph/src/layer/types.ts:1049](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1049)
+Defined in: [graph/src/layer/types.ts:1102](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1102)

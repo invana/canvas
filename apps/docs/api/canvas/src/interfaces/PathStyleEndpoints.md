@@ -1,6 +1,6 @@
 # Interface: PathStyleEndpoints
 
-Defined in: [canvas/src/primitives/types.ts:141](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L141)
+Defined in: [canvas/src/primitives/types.ts:141](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L141)
 
 Anchor-resolved endpoints handed to a pathStyle alongside the polyline.
 
@@ -16,7 +16,7 @@ instead of in a hard-coded direction. Tangent-agnostic pathStyles (`normal`,
 
 > `readonly` **source**: [`Endpoint`](Endpoint.md)
 
-Defined in: [canvas/src/primitives/types.ts:142](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L142)
+Defined in: [canvas/src/primitives/types.ts:142](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L142)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [canvas/src/primitives/types.ts:142](https://github.com/invana/canva
 
 > `readonly` **target**: [`Endpoint`](Endpoint.md)
 
-Defined in: [canvas/src/primitives/types.ts:143](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L143)
+Defined in: [canvas/src/primitives/types.ts:143](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L143)

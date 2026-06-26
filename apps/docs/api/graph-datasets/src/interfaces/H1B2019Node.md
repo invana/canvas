@@ -1,6 +1,6 @@
 # Interface: H1B2019Node
 
-Defined in: [graph-datasets/src/h1b2019.ts:41](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/h1b2019.ts#L41)
+Defined in: [graph-datasets/src/h1b2019.ts:41](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/h1b2019.ts#L41)
 
 Node shape in the rolled-up H-1B hierarchy. Identical structure to
 [FlareNode](FlareNode.md): leaves carry `value`, inner nodes (root, states, cities)
@@ -12,7 +12,7 @@ carry `children`.
 
 > `optional` **children?**: `H1B2019Node`[]
 
-Defined in: [graph-datasets/src/h1b2019.ts:44](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/h1b2019.ts#L44)
+Defined in: [graph-datasets/src/h1b2019.ts:44](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/h1b2019.ts#L44)
 
 ***
 
@@ -20,7 +20,7 @@ Defined in: [graph-datasets/src/h1b2019.ts:44](https://github.com/invana/canvas/
 
 > **name**: `string`
 
-Defined in: [graph-datasets/src/h1b2019.ts:42](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/h1b2019.ts#L42)
+Defined in: [graph-datasets/src/h1b2019.ts:42](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/h1b2019.ts#L42)
 
 ***
 
@@ -28,4 +28,4 @@ Defined in: [graph-datasets/src/h1b2019.ts:42](https://github.com/invana/canvas/
 
 > `optional` **value?**: `number`
 
-Defined in: [graph-datasets/src/h1b2019.ts:43](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/h1b2019.ts#L43)
+Defined in: [graph-datasets/src/h1b2019.ts:43](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/h1b2019.ts#L43)

@@ -2,7 +2,7 @@
 
 > **resolveField**\<`T`, `I`\>(`v`, `input`): `T`
 
-Defined in: [graph/src/layer/types.ts:70](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L70)
+Defined in: [graph/src/layer/types.ts:78](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L78)
 
 Unwrap a [Resolvable](../type-aliases/Resolvable.md) field for `input`. Static values pass through
 untouched; function values are invoked once with `input` and their return

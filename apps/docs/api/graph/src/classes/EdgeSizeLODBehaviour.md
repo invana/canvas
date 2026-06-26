@@ -1,12 +1,10 @@
 # Class: EdgeSizeLODBehaviour
 
-Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:72](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/EdgeSizeLODBehaviour.ts#L72)
-
-What `BehaviourRegistry` sees.
+Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:72](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/EdgeSizeLODBehaviour.ts#L72)
 
 ## Extends
 
-- [`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md)
+- `ElementSizeLODBehaviour`
 
 ## Constructors
 
@@ -14,7 +12,7 @@ What `BehaviourRegistry` sees.
 
 > **new EdgeSizeLODBehaviour**(`opts`): `EdgeSizeLODBehaviour`
 
-Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:76](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/EdgeSizeLODBehaviour.ts#L76)
+Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:76](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/EdgeSizeLODBehaviour.ts#L76)
 
 #### Parameters
 
@@ -28,7 +26,7 @@ Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:76](https://github.com
 
 #### Overrides
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`constructor`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#constructor)
+`ElementSizeLODBehaviour.constructor`
 
 ## Properties
 
@@ -36,23 +34,23 @@ Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:76](https://github.com
 
 > `protected` **\_enabled**: `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:63](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L63)
+Defined in: canvas/dist/index.d.ts:750
 
 #### Inherited from
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`_enabled`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#_enabled)
+`ElementSizeLODBehaviour._enabled`
 
 ***
 
 ### ctx?
 
-> `protected` `optional` **ctx?**: [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
+> `protected` `optional` **ctx?**: `CanvasContext`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:64](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L64)
+Defined in: canvas/dist/index.d.ts:751
 
 #### Inherited from
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`ctx`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#ctx)
+`ElementSizeLODBehaviour.ctx`
 
 ***
 
@@ -60,23 +58,11 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:64](https://github.com/invana/ca
 
 > `readonly` **id**: `string`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:53](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L53)
+Defined in: canvas/dist/index.d.ts:742
 
 #### Inherited from
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`id`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#id)
-
-***
-
-### layerId?
-
-> `readonly` `optional` **layerId?**: `string`
-
-Defined in: [canvas/src/behaviours/Behaviour.ts:54](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L54)
-
-#### Inherited from
-
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`layerId`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#layerid)
+`ElementSizeLODBehaviour.id`
 
 ***
 
@@ -84,14 +70,14 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:54](https://github.com/invana/ca
 
 > `readonly` **scope**: `"canvas"` \| `"layer"`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:61](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L61)
+Defined in: canvas/dist/index.d.ts:749
 
-`'layer'` if `layerId` is set, otherwise `'canvas'`. Set automatically
+`'layer'` if `targetLayerId` is set, otherwise `'canvas'`. Set automatically
 from the constructor — subclasses don't need to re-declare.
 
 #### Inherited from
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`scope`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#scope)
+`ElementSizeLODBehaviour.scope`
 
 ***
 
@@ -99,11 +85,23 @@ from the constructor — subclasses don't need to re-declare.
 
 > `readonly` `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:55](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L55)
+Defined in: canvas/dist/index.d.ts:744
 
 #### Inherited from
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`shortcuts`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#shortcuts)
+`ElementSizeLODBehaviour.shortcuts`
+
+***
+
+### targetLayerId?
+
+> `readonly` `optional` **targetLayerId?**: `string`
+
+Defined in: canvas/dist/index.d.ts:743
+
+#### Inherited from
+
+`ElementSizeLODBehaviour.targetLayerId`
 
 ## Accessors
 
@@ -113,7 +111,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:55](https://github.com/invana/ca
 
 > **get** **enabled**(): `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:74](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L74)
+Defined in: canvas/dist/index.d.ts:753
 
 ##### Returns
 
@@ -121,7 +119,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:74](https://github.com/invana/ca
 
 #### Inherited from
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`enabled`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#enabled)
+`ElementSizeLODBehaviour.enabled`
 
 ***
 
@@ -131,7 +129,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:74](https://github.com/invana/ca
 
 > **get** `protected` **isEnabled**(): `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:133](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L133)
+Defined in: canvas/dist/index.d.ts:773
 
 Convenience `if (!enabled) return;` for use inside event handlers
 (without rebinding `this` cost).
@@ -142,7 +140,27 @@ Convenience `if (!enabled) return;` for use inside event handlers
 
 #### Inherited from
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`isEnabled`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#isenabled)
+`ElementSizeLODBehaviour.isEnabled`
+
+***
+
+### isRegistered
+
+#### Get Signature
+
+> **get** **isRegistered**(): `boolean`
+
+Defined in: canvas/dist/index.d.ts:754
+
+`true` once `register(ctx)` has run. Lets the registry skip already-wired behaviours.
+
+##### Returns
+
+`boolean`
+
+#### Inherited from
+
+`ElementSizeLODBehaviour.isRegistered`
 
 ## Methods
 
@@ -150,7 +168,7 @@ Convenience `if (!enabled) return;` for use inside event handlers
 
 > `protected` **apply**(`rawScale`): `void`
 
-Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:111](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/EdgeSizeLODBehaviour.ts#L111)
+Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:111](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/EdgeSizeLODBehaviour.ts#L111)
 
 Per-zoom-frame apply: write the screen-px / world-px ratio to every
 managed edge as a render-time stroke multiplier. The renderer's draw
@@ -177,7 +195,7 @@ back-compat; a future revision may remove it.
 
 #### Overrides
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`apply`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#apply)
+`ElementSizeLODBehaviour.apply`
 
 ***
 
@@ -185,7 +203,7 @@ back-compat; a future revision may remove it.
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:89](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L89)
+Defined in: canvas/dist/index.d.ts:758
 
 Called by `BehaviourRegistry.unregister(id)`. Drops subscriptions.
 
@@ -195,7 +213,7 @@ Called by `BehaviourRegistry.unregister(id)`. Drops subscriptions.
 
 #### Inherited from
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`destroy`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#destroy)
+`ElementSizeLODBehaviour.destroy`
 
 ***
 
@@ -203,7 +221,7 @@ Called by `BehaviourRegistry.unregister(id)`. Drops subscriptions.
 
 > **disable**(): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:103](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L103)
+Defined in: canvas/dist/index.d.ts:760
 
 #### Returns
 
@@ -211,7 +229,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:103](https://github.com/invana/c
 
 #### Inherited from
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`disable`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#disable)
+`ElementSizeLODBehaviour.disable`
 
 ***
 
@@ -219,7 +237,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:103](https://github.com/invana/c
 
 > **enable**(): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:97](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L97)
+Defined in: canvas/dist/index.d.ts:759
 
 #### Returns
 
@@ -227,7 +245,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:97](https://github.com/invana/ca
 
 #### Inherited from
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`enable`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#enable)
+`ElementSizeLODBehaviour.enable`
 
 ***
 
@@ -235,7 +253,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:97](https://github.com/invana/ca
 
 > `protected` **onDestroy**(): `void`
 
-Defined in: [canvas/src/behaviours/ElementSizeLODBehaviour.ts:118](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/ElementSizeLODBehaviour.ts#L118)
+Defined in: canvas/dist/index.d.ts:1737
 
 Cleanup on destroy. Default no-op.
 
@@ -245,7 +263,7 @@ Cleanup on destroy. Default no-op.
 
 #### Inherited from
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`onDestroy`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#ondestroy)
+`ElementSizeLODBehaviour.onDestroy`
 
 ***
 
@@ -253,7 +271,7 @@ Cleanup on destroy. Default no-op.
 
 > `protected` **onDisable**(): `void`
 
-Defined in: [canvas/src/behaviours/ElementSizeLODBehaviour.ts:134](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/ElementSizeLODBehaviour.ts#L134)
+Defined in: canvas/dist/index.d.ts:1739
 
 Hook fired on disable.
 
@@ -263,7 +281,7 @@ Hook fired on disable.
 
 #### Inherited from
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`onDisable`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#ondisable)
+`ElementSizeLODBehaviour.onDisable`
 
 ***
 
@@ -271,7 +289,7 @@ Hook fired on disable.
 
 > `protected` **onEnable**(): `void`
 
-Defined in: [canvas/src/behaviours/ElementSizeLODBehaviour.ts:125](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/ElementSizeLODBehaviour.ts#L125)
+Defined in: canvas/dist/index.d.ts:1738
 
 Hook fired when the developer enables the behaviour.
 
@@ -281,7 +299,7 @@ Hook fired when the developer enables the behaviour.
 
 #### Inherited from
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`onEnable`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#onenable)
+`ElementSizeLODBehaviour.onEnable`
 
 ***
 
@@ -289,7 +307,7 @@ Hook fired when the developer enables the behaviour.
 
 > `protected` **onRegister**(`ctx`): `void`
 
-Defined in: [canvas/src/behaviours/ElementSizeLODBehaviour.ts:110](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/ElementSizeLODBehaviour.ts#L110)
+Defined in: canvas/dist/index.d.ts:1736
 
 Subscribe to events / setup any handler resources.
 
@@ -297,7 +315,7 @@ Subscribe to events / setup any handler resources.
 
 ##### ctx
 
-[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
+`CanvasContext`
 
 #### Returns
 
@@ -305,7 +323,7 @@ Subscribe to events / setup any handler resources.
 
 #### Inherited from
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`onRegister`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#onregister)
+`ElementSizeLODBehaviour.onRegister`
 
 ***
 
@@ -313,7 +331,7 @@ Subscribe to events / setup any handler resources.
 
 > `protected` **onReleaseTargets**(): `void`
 
-Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:93](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/EdgeSizeLODBehaviour.ts#L93)
+Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:93](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/EdgeSizeLODBehaviour.ts#L93)
 
 Optional teardown hook — drop layer refs / caches. Default no-op.
 
@@ -323,7 +341,7 @@ Optional teardown hook — drop layer refs / caches. Default no-op.
 
 #### Overrides
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`onReleaseTargets`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#onreleasetargets)
+`ElementSizeLODBehaviour.onReleaseTargets`
 
 ***
 
@@ -331,7 +349,7 @@ Optional teardown hook — drop layer refs / caches. Default no-op.
 
 > `protected` **onResolveTargets**(`ctx`): `void`
 
-Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:81](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/EdgeSizeLODBehaviour.ts#L81)
+Defined in: [graph/src/behaviours/EdgeSizeLODBehaviour.ts:81](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/EdgeSizeLODBehaviour.ts#L81)
 
 Called once on register. Resolve layer references from `ctx.layers`
 and stash them on `this` for later `apply` calls. Throw a descriptive
@@ -342,7 +360,7 @@ error if a required layer isn't present — the canvas guarantees
 
 ##### ctx
 
-[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
+`CanvasContext`
 
 #### Returns
 
@@ -350,7 +368,7 @@ error if a required layer isn't present — the canvas guarantees
 
 #### Overrides
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`onResolveTargets`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#onresolvetargets)
+`ElementSizeLODBehaviour.onResolveTargets`
 
 ***
 
@@ -358,7 +376,7 @@ error if a required layer isn't present — the canvas guarantees
 
 > **reflow**(): `void`
 
-Defined in: [canvas/src/behaviours/ElementSizeLODBehaviour.ts:153](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/ElementSizeLODBehaviour.ts#L153)
+Defined in: canvas/dist/index.d.ts:1748
 
 Force an immediate reflow at the current camera scale. Useful after
 tuning a config knob (e.g. moving a GUI slider that a `NumberOrGetter`
@@ -373,7 +391,7 @@ are always treated as "apply now."
 
 #### Inherited from
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`reflow`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#reflow)
+`ElementSizeLODBehaviour.reflow`
 
 ***
 
@@ -381,7 +399,7 @@ are always treated as "apply now."
 
 > **register**(`ctx`): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:79](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L79)
+Defined in: canvas/dist/index.d.ts:756
 
 Called by `BehaviourRegistry.register(behaviour)`. Subscribes to inputs.
 
@@ -389,7 +407,7 @@ Called by `BehaviourRegistry.register(behaviour)`. Subscribes to inputs.
 
 ##### ctx
 
-[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
+`CanvasContext`
 
 #### Returns
 
@@ -397,4 +415,4 @@ Called by `BehaviourRegistry.register(behaviour)`. Subscribes to inputs.
 
 #### Inherited from
 
-[`ElementSizeLODBehaviour`](../../../canvas/src/classes/ElementSizeLODBehaviour.md).[`register`](../../../canvas/src/classes/ElementSizeLODBehaviour.md#register)
+`ElementSizeLODBehaviour.register`

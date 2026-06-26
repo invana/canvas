@@ -1,6 +1,6 @@
 # Interface: RectShapeOption
 
-Defined in: [graph/src/layer/types.ts:208](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L208)
+Defined in: [graph/src/layer/types.ts:216](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L216)
 
 Rect-shape option. `cornerRadius` is optional; everything else required.
 
@@ -10,7 +10,7 @@ Rect-shape option. `cornerRadius` is optional; everything else required.
 
 > `readonly` `optional` **cornerRadius?**: `number`
 
-Defined in: [graph/src/layer/types.ts:212](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L212)
+Defined in: [graph/src/layer/types.ts:220](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L220)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [graph/src/layer/types.ts:212](https://github.com/invana/canvas/blob
 
 > `readonly` **height**: `number`
 
-Defined in: [graph/src/layer/types.ts:211](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L211)
+Defined in: [graph/src/layer/types.ts:219](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L219)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [graph/src/layer/types.ts:211](https://github.com/invana/canvas/blob
 
 > `readonly` **kind**: `"rect"`
 
-Defined in: [graph/src/layer/types.ts:209](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L209)
+Defined in: [graph/src/layer/types.ts:217](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L217)
 
 ***
 
@@ -34,4 +34,4 @@ Defined in: [graph/src/layer/types.ts:209](https://github.com/invana/canvas/blob
 
 > `readonly` **width**: `number`
 
-Defined in: [graph/src/layer/types.ts:210](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L210)
+Defined in: [graph/src/layer/types.ts:218](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L218)

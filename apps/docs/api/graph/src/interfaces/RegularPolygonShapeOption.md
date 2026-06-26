@@ -1,6 +1,6 @@
 # Interface: RegularPolygonShapeOption
 
-Defined in: [graph/src/layer/types.ts:235](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L235)
+Defined in: [graph/src/layer/types.ts:243](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L243)
 
 Regular n-gon. With `rotation = 0` the first vertex points straight up, so
 a triangle / pentagon / hexagon points up by default. Pass
@@ -12,7 +12,7 @@ a triangle / pentagon / hexagon points up by default. Pass
 
 > `readonly` **kind**: `"regular-polygon"`
 
-Defined in: [graph/src/layer/types.ts:236](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L236)
+Defined in: [graph/src/layer/types.ts:244](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L244)
 
 ***
 
@@ -20,7 +20,7 @@ Defined in: [graph/src/layer/types.ts:236](https://github.com/invana/canvas/blob
 
 > `readonly` **radius**: `number`
 
-Defined in: [graph/src/layer/types.ts:238](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L238)
+Defined in: [graph/src/layer/types.ts:246](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L246)
 
 ***
 
@@ -28,7 +28,7 @@ Defined in: [graph/src/layer/types.ts:238](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **rotation?**: `number`
 
-Defined in: [graph/src/layer/types.ts:239](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L239)
+Defined in: [graph/src/layer/types.ts:247](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L247)
 
 ***
 
@@ -36,4 +36,4 @@ Defined in: [graph/src/layer/types.ts:239](https://github.com/invana/canvas/blob
 
 > `readonly` **sides**: `number`
 
-Defined in: [graph/src/layer/types.ts:237](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L237)
+Defined in: [graph/src/layer/types.ts:245](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L245)

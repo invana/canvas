@@ -1,6 +1,6 @@
 # Class: ResizeHandleDecoration
 
-Defined in: [canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts:74](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts#L74)
+Defined in: [canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts:74](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts#L74)
 
 Small square handle drawn at a configurable anchor on the host shape's
 AABB. Pure visual; emits no events. `GroupResizeBehaviour` (in
@@ -20,7 +20,7 @@ and the renderer will mount each into its own slot.
 
 > **new ResizeHandleDecoration**(`style`): `ResizeHandleDecoration`
 
-Defined in: [canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts:78](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts#L78)
+Defined in: [canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts:78](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts#L78)
 
 #### Parameters
 
@@ -42,7 +42,7 @@ Defined in: [canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts:7
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 #### Inherited from
 
@@ -54,7 +54,7 @@ Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/
 
 > `protected` **host**: [`ShapeDecorationHostInfo`](../interfaces/ShapeDecorationHostInfo.md) = `null`
 
-Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:18](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L18)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:18](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L18)
 
 #### Inherited from
 
@@ -66,7 +66,7 @@ Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:18](https://githu
 
 > `readonly` **style**: [`ResizeHandleDecorationStyle`](../interfaces/ResizeHandleDecorationStyle.md)
 
-Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:17](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L17)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:17](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L17)
 
 #### Inherited from
 
@@ -78,7 +78,7 @@ Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:17](https://githu
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
 
 #### Returns
 
@@ -94,7 +94,7 @@ Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/
 
 > **getLocalHitGeometry**(): [`ResizeHandleHitGeometry`](../interfaces/ResizeHandleHitGeometry.md)
 
-Defined in: [canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts:84](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts#L84)
+Defined in: [canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts:84](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts#L84)
 
 See [ToggleDecoration.getLocalHitGeometry](ToggleDecoration.md#getlocalhitgeometry).
 
@@ -108,7 +108,7 @@ See [ToggleDecoration.getLocalHitGeometry](ToggleDecoration.md#getlocalhitgeomet
 
 > **getOuterExtent**(): `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts:118](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts#L118)
+Defined in: [canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts:118](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts#L118)
 
 #### Returns
 
@@ -120,7 +120,7 @@ Defined in: [canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts:1
 
 > **mount**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:26](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L26)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:26](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L26)
 
 #### Parameters
 
@@ -142,7 +142,7 @@ Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:26](https://githu
 
 > `protected` **repaint**(): `void`
 
-Defined in: [canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts:88](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts#L88)
+Defined in: [canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts:88](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/ResizeHandleDecoration.ts#L88)
 
 Render the decoration based on the current `host`.
 
@@ -160,7 +160,7 @@ Render the decoration based on the current `host`.
 
 > **update**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:33](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L33)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:33](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L33)
 
 #### Parameters
 

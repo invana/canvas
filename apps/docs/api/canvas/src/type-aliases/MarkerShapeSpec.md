@@ -2,7 +2,7 @@
 
 > **MarkerShapeSpec** = `Omit`\<[`BaseShapeSpec`](../interfaces/BaseShapeSpec.md), `"x"` \| `"y"`\> & `object`
 
-Defined in: [canvas/src/primitives/types.ts:491](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L491)
+Defined in: [canvas/src/primitives/types.ts:491](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L491)
 
 A marker spec is any registered shape spec **without** `x` / `y` — the
 connector positions and orients the marker at the polyline endpoint.

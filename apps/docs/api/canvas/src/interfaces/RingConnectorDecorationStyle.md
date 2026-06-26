@@ -1,6 +1,6 @@
 # Interface: RingConnectorDecorationStyle
 
-Defined in: [canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts:18](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts#L18)
+Defined in: [canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts:18](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts#L18)
 
 Static halo-style ring painted underneath a connector's path — a single
 thick stroke tracing the host's routed geometry, behind the host stroke.
@@ -21,7 +21,7 @@ instead — it stacks multiple layers with alpha falloff.
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts:23](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts#L23)
+Defined in: [canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts:23](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts#L23)
 
 Halo alpha, `[0, 1]`. Default `0.6`.
 
@@ -31,7 +31,7 @@ Halo alpha, `[0, 1]`. Default `0.6`.
 
 > `readonly` **color**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts:19](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts#L19)
+Defined in: [canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts:19](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts#L19)
 
 ***
 
@@ -39,7 +39,7 @@ Defined in: [canvas/src/primitives/decorations/connector/RingConnectorDecoration
 
 > `readonly` `optional` **dashArray?**: readonly \[`number`, `number`\]
 
-Defined in: [canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts:25](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts#L25)
+Defined in: [canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts:25](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts#L25)
 
 Dashed band — `[dashLength, gapLength]` in px. Default solid.
 
@@ -49,6 +49,6 @@ Dashed band — `[dashLength, gapLength]` in px. Default solid.
 
 > `readonly` `optional` **width?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts:21](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts#L21)
+Defined in: [canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts:21](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/RingConnectorDecoration.ts#L21)
 
 Halo band thickness in px. Default `6`.

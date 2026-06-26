@@ -1,6 +1,6 @@
 # Class: LayerRegistry
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:35](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L35)
+Defined in: [canvas/src/registries/LayerRegistry.ts:35](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/registries/LayerRegistry.ts#L35)
 
 ## Constructors
 
@@ -8,7 +8,7 @@ Defined in: [canvas/src/registries/LayerRegistry.ts:35](https://github.com/invan
 
 > **new LayerRegistry**(`opts`): `LayerRegistry`
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:43](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L43)
+Defined in: [canvas/src/registries/LayerRegistry.ts:43](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/registries/LayerRegistry.ts#L43)
 
 #### Parameters
 
@@ -28,7 +28,7 @@ Defined in: [canvas/src/registries/LayerRegistry.ts:43](https://github.com/invan
 
 > **get** **size**(): `number`
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:49](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L49)
+Defined in: [canvas/src/registries/LayerRegistry.ts:49](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/registries/LayerRegistry.ts#L49)
 
 Number of registered layers.
 
@@ -42,10 +42,11 @@ Number of registered layers.
 
 > **add**(`layer`): `void`
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:57](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L57)
+Defined in: [canvas/src/registries/LayerRegistry.ts:58](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/registries/LayerRegistry.ts#L58)
 
-Add a Layer to the canvas. Calls `layer.mount(ctx)` and fires `layer:added`.
-Throws if `id` is already registered.
+Add a Layer to the canvas. Mounts immediately if the Canvas is initialised;
+otherwise the layer waits for `mountAll()` (called by `Canvas.init`). Fires
+`layer:added`. Throws if `id` is already registered.
 
 #### Parameters
 
@@ -63,7 +64,7 @@ Throws if `id` is already registered.
 
 > **byZOrder**(): readonly [`ILayer`](../interfaces/ILayer.md)[]
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:101](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L101)
+Defined in: [canvas/src/registries/LayerRegistry.ts:112](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/registries/LayerRegistry.ts#L112)
 
 Iterate layers in z-order (low → high). The Canvas tick walks layers in
 z-order to flush dirty work; rendering order is then determined by
@@ -81,7 +82,7 @@ readonly [`ILayer`](../interfaces/ILayer.md)[]
 
 > **clear**(): `void`
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:128](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L128)
+Defined in: [canvas/src/registries/LayerRegistry.ts:139](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/registries/LayerRegistry.ts#L139)
 
 Tear down every registered layer. Called on Canvas destroy.
 Iteration is over a snapshot so unmount-triggered side effects don't
@@ -97,7 +98,7 @@ corrupt the loop.
 
 > **get**\<`T`\>(`id`): `T`
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:81](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L81)
+Defined in: [canvas/src/registries/LayerRegistry.ts:92](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/registries/LayerRegistry.ts#L92)
 
 Typed get by id. Returns `undefined` if not found.
 
@@ -123,7 +124,7 @@ Typed get by id. Returns `undefined` if not found.
 
 > **has**(`id`): `boolean`
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:85](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L85)
+Defined in: [canvas/src/registries/LayerRegistry.ts:96](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/registries/LayerRegistry.ts#L96)
 
 #### Parameters
 
@@ -141,7 +142,7 @@ Defined in: [canvas/src/registries/LayerRegistry.ts:85](https://github.com/invan
 
 > **list**(): readonly [`ILayer`](../interfaces/ILayer.md)[]
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:90](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L90)
+Defined in: [canvas/src/registries/LayerRegistry.ts:101](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/registries/LayerRegistry.ts#L101)
 
 Snapshot of all layers in insertion order.
 
@@ -151,11 +152,25 @@ readonly [`ILayer`](../interfaces/ILayer.md)[]
 
 ***
 
+### mountAll()
+
+> **mountAll**(): `void`
+
+Defined in: [canvas/src/registries/LayerRegistry.ts:70](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/registries/LayerRegistry.ts#L70)
+
+Mount every not-yet-mounted layer. Called by `Canvas.init` once the context exists.
+
+#### Returns
+
+`void`
+
+***
+
 ### remove()
 
 > **remove**(`id`): `void`
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:71](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L71)
+Defined in: [canvas/src/registries/LayerRegistry.ts:82](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/registries/LayerRegistry.ts#L82)
 
 Remove a Layer. Calls `layer.unmount()` and fires `layer:removed`.
 No-op if `id` isn't registered.
@@ -176,7 +191,7 @@ No-op if `id` isn't registered.
 
 > **setZIndex**(`id`, `zIndex`): `void`
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:113](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/registries/LayerRegistry.ts#L113)
+Defined in: [canvas/src/registries/LayerRegistry.ts:124](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/registries/LayerRegistry.ts#L124)
 
 Update a layer's `zIndex` and propagate to surfaces. Invalidates the
 z-order cache. No-op if the layer isn't registered.

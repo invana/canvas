@@ -1,6 +1,6 @@
 # Interface: LesMiserablesEdge
 
-Defined in: [graph-datasets/src/lesMiserables.ts:36](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/lesMiserables.ts#L36)
+Defined in: [graph-datasets/src/lesMiserables.ts:36](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/lesMiserables.ts#L36)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [graph-datasets/src/lesMiserables.ts:36](https://github.com/invana/c
 
 > **data**: [`LesMiserablesEdgeData`](LesMiserablesEdgeData.md)
 
-Defined in: [graph-datasets/src/lesMiserables.ts:40](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/lesMiserables.ts#L40)
+Defined in: [graph-datasets/src/lesMiserables.ts:40](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/lesMiserables.ts#L40)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [graph-datasets/src/lesMiserables.ts:40](https://github.com/invana/c
 
 > **id**: `string`
 
-Defined in: [graph-datasets/src/lesMiserables.ts:37](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/lesMiserables.ts#L37)
+Defined in: [graph-datasets/src/lesMiserables.ts:37](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/lesMiserables.ts#L37)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [graph-datasets/src/lesMiserables.ts:37](https://github.com/invana/c
 
 > **source**: `string`
 
-Defined in: [graph-datasets/src/lesMiserables.ts:38](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/lesMiserables.ts#L38)
+Defined in: [graph-datasets/src/lesMiserables.ts:38](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/lesMiserables.ts#L38)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [graph-datasets/src/lesMiserables.ts:38](https://github.com/invana/c
 
 > **target**: `string`
 
-Defined in: [graph-datasets/src/lesMiserables.ts:39](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-datasets/src/lesMiserables.ts#L39)
+Defined in: [graph-datasets/src/lesMiserables.ts:39](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/lesMiserables.ts#L39)

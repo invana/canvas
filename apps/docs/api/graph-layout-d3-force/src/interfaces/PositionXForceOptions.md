@@ -1,6 +1,6 @@
 # Interface: PositionXForceOptions
 
-Defined in: [graph-layout-d3-force/src/types.ts:122](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layout-d3-force/src/types.ts#L122)
+Defined in: [graph-layout-d3-force/src/types.ts:144](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-force/src/types.ts#L144)
 
 `forceX` configuration.
 
@@ -10,7 +10,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:122](https://github.com/invana/c
 
 > `optional` **strength?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:126](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layout-d3-force/src/types.ts#L126)
+Defined in: [graph-layout-d3-force/src/types.ts:148](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-force/src/types.ts#L148)
 
 `forceX.strength(s)`.
 
@@ -20,6 +20,6 @@ Defined in: [graph-layout-d3-force/src/types.ts:126](https://github.com/invana/c
 
 > `optional` **x?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:124](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layout-d3-force/src/types.ts#L124)
+Defined in: [graph-layout-d3-force/src/types.ts:146](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-force/src/types.ts#L146)
 
 `forceX.x(x)`.

@@ -2,7 +2,7 @@
 
 > `const` **oneSideRouter**: [`IRouter`](../type-aliases/IRouter.md)
 
-Defined in: [canvas/src/primitives/connectors/routers/oneSide.ts:40](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/connectors/routers/oneSide.ts#L40)
+Defined in: [canvas/src/primitives/connectors/routers/oneSide.ts:40](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/connectors/routers/oneSide.ts#L40)
 
 oneSide router — forces the line to exit the source on a designated side,
 then routes orthogonally to the target. Useful for swimlane / "all on one

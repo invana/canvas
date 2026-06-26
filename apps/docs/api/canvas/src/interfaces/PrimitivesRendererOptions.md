@@ -1,6 +1,6 @@
 # Interface: PrimitivesRendererOptions
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:158](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L158)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:159](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L159)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:158](https://github.com
 
 > `readonly` **camera**: [`Camera`](../classes/Camera.md)
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:160](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L160)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:161](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L161)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:160](https://github.com
 
 > `readonly` `optional` **canvasElement?**: `HTMLCanvasElement`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:179](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L179)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:180](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L180)
 
 Optional DOM `<canvas>` element. Used by `hitMode: 'indexed'` to
 apply `cursor: pointer` on shape/connector hover (Pixi's native
@@ -35,7 +35,7 @@ automatically.
 
 > `readonly` **container**: `Container`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:159](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L159)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:160](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L160)
 
 ***
 
@@ -43,7 +43,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:159](https://github.com
 
 > `readonly` `optional` **hitFloorPx?**: `number`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:191](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L191)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:192](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L192)
 
 Minimum hover/click target in screen pixels — used as a *fallback*
 by hitTest: exact geometric hits always win; only when no
@@ -61,7 +61,7 @@ stories; drop to `0` to forbid the fallback entirely.
 
 > `readonly` `optional` **textureRegistry?**: [`TextureRegistry`](../classes/TextureRegistry.md)
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:166](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L166)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:167](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L167)
 
 Optional shared texture registry. When omitted, the renderer creates an
 internal one — image fills still work (lazy-loaded), but textures are

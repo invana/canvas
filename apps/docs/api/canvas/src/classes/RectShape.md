@@ -1,6 +1,6 @@
 # Class: RectShape
 
-Defined in: [canvas/src/primitives/shapes/RectShape.ts:19](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/RectShape.ts#L19)
+Defined in: [canvas/src/primitives/shapes/RectShape.ts:19](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/RectShape.ts#L19)
 
 Axis-aligned rectangle with optional `cornerRadius`. Anchored at its
 top-left corner in shape-local space; `(spec.x, spec.y)` is the world
@@ -17,7 +17,7 @@ position of that corner. A "square" is just `RectShape` with
 
 > **new RectShape**(`spec`, `host`): `RectShape`
 
-Defined in: [canvas/src/primitives/shapes/RectShape.ts:22](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/RectShape.ts#L22)
+Defined in: [canvas/src/primitives/shapes/RectShape.ts:22](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/RectShape.ts#L22)
 
 #### Parameters
 
@@ -43,7 +43,7 @@ Defined in: [canvas/src/primitives/shapes/RectShape.ts:22](https://github.com/in
 
 > `protected` `readonly` **bodyGfx**: `Graphics`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:42](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L42)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:42](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L42)
 
 #### Inherited from
 
@@ -55,7 +55,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:42](https://github.com/inva
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 Root display object — renderer adds/removes this on the host surface.
 
@@ -69,7 +69,7 @@ Root display object — renderer adds/removes this on the host surface.
 
 > `protected` `readonly` **host**: [`ShapeHostInfo`](../interfaces/ShapeHostInfo.md)
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:46](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L46)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:46](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L46)
 
 #### Inherited from
 
@@ -81,7 +81,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:46](https://github.com/inva
 
 > `protected` `readonly` **insetViews**: `any`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:43](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L43)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:43](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L43)
 
 #### Inherited from
 
@@ -93,7 +93,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:43](https://github.com/inva
 
 > `protected` **spec**: [`RectSpec`](../interfaces/RectSpec.md)
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:44](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L44)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:44](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L44)
 
 #### Inherited from
 
@@ -105,15 +105,15 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:44](https://github.com/inva
 
 > `readonly` `static` **kind**: `"rect"` = `'rect'`
 
-Defined in: [canvas/src/primitives/shapes/RectShape.ts:20](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/RectShape.ts#L20)
+Defined in: [canvas/src/primitives/shapes/RectShape.ts:20](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/RectShape.ts#L20)
 
 ## Methods
 
 ### boundaryIntersect()
 
-> **boundaryIntersect**(`localFromCenter`): [`Point`](../interfaces/Point.md)
+> **boundaryIntersect**(`localFromCenter`): `Point`
 
-Defined in: [canvas/src/primitives/shapes/RectShape.ts:91](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/RectShape.ts#L91)
+Defined in: [canvas/src/primitives/shapes/RectShape.ts:91](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/RectShape.ts#L91)
 
 Silhouette-aware ray exit. For `cornerRadius > 0` the AABB face isn't
 the actual outline — the rendered rect rounds inward at each corner.
@@ -126,11 +126,11 @@ silhouette. For sharp rects this is unchanged from the AABB fallback.
 
 ##### localFromCenter
 
-[`Point`](../interfaces/Point.md)
+`Point`
 
 #### Returns
 
-[`Point`](../interfaces/Point.md)
+`Point`
 
 #### Overrides
 
@@ -140,15 +140,15 @@ silhouette. For sharp rects this is unchanged from the AABB fallback.
 
 ### bounds()
 
-> **bounds**(): [`Rect`](../interfaces/Rect.md)
+> **bounds**(): `Rect`
 
-Defined in: [canvas/src/primitives/shapes/RectShape.ts:60](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/RectShape.ts#L60)
+Defined in: [canvas/src/primitives/shapes/RectShape.ts:60](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/RectShape.ts#L60)
 
 Local-space axis-aligned bounding box for hit-testing & decorations.
 
 #### Returns
 
-[`Rect`](../interfaces/Rect.md)
+`Rect`
 
 #### Overrides
 
@@ -160,7 +160,7 @@ Local-space axis-aligned bounding box for hit-testing & decorations.
 
 > **contains**(`localX`, `localY`): `boolean`
 
-Defined in: [canvas/src/primitives/shapes/RectShape.ts:76](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/RectShape.ts#L76)
+Defined in: [canvas/src/primitives/shapes/RectShape.ts:76](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/RectShape.ts#L76)
 
 #### Parameters
 
@@ -182,7 +182,7 @@ Defined in: [canvas/src/primitives/shapes/RectShape.ts:76](https://github.com/in
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:142](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L142)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:142](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L142)
 
 #### Returns
 
@@ -198,7 +198,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:142](https://github.com/inv
 
 > **draw**(`spec`): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:104](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L104)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:104](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L104)
 
 (Re)paint the shape from the current spec. Called on add and on update.
 
@@ -222,7 +222,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:104](https://github.com/inv
 
 > `protected` **drawGeometry**(`g`, `spec`, `style?`): `void`
 
-Defined in: [canvas/src/primitives/shapes/RectShape.ts:27](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/RectShape.ts#L27)
+Defined in: [canvas/src/primitives/shapes/RectShape.ts:27](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/RectShape.ts#L27)
 
 Trace the silhouette into `g`, then apply fill + stroke. When `style`
 is supplied, it overrides the spec's fill/stroke (decoration use).
@@ -255,7 +255,7 @@ is supplied, it overrides the spec's fill/stroke (decoration use).
 
 > **getHitArea**(): `IHitArea`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:85](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L85)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:85](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L85)
 
 Hit-test region for this shape, derived from [drawGeometry](#drawgeometry).
 
@@ -289,7 +289,7 @@ coordinates; `true` iff the point is inside the silhouette.
 
 > **paintInto**(`g`, `style?`): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:116](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L116)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:116](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L116)
 
 Decoration entry point — repaint the silhouette into someone else's
 `Graphics` with a style override. The shape uses its own current spec;
@@ -323,9 +323,9 @@ Every shape that extends `ShapeBase` has it for free.
 
 ### visualCenter()
 
-> **visualCenter**(): [`Point`](../interfaces/Point.md)
+> **visualCenter**(): `Point`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:157](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L157)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:157](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L157)
 
 Visual centre — the point inset content with `anchor: 'center'` snaps
 to. Default is the AABB midpoint of `bounds()`, which is correct for
@@ -337,7 +337,7 @@ centroid instead of floating above it.
 
 #### Returns
 
-[`Point`](../interfaces/Point.md)
+`Point`
 
 #### Inherited from
 
@@ -347,9 +347,9 @@ centroid instead of floating above it.
 
 ### boundsOf()
 
-> `static` **boundsOf**(`spec`): [`Rect`](../interfaces/Rect.md)
+> `static` **boundsOf**(`spec`): `Rect`
 
-Defined in: [canvas/src/primitives/shapes/RectShape.ts:64](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/RectShape.ts#L64)
+Defined in: [canvas/src/primitives/shapes/RectShape.ts:64](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/RectShape.ts#L64)
 
 #### Parameters
 
@@ -359,7 +359,7 @@ Defined in: [canvas/src/primitives/shapes/RectShape.ts:64](https://github.com/in
 
 #### Returns
 
-[`Rect`](../interfaces/Rect.md)
+`Rect`
 
 ***
 
@@ -367,7 +367,7 @@ Defined in: [canvas/src/primitives/shapes/RectShape.ts:64](https://github.com/in
 
 > `static` **paintInto**(`g`, `spec`, `anchor`, `_angleRad`, `style?`): `void`
 
-Defined in: [canvas/src/primitives/shapes/RectShape.ts:131](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/RectShape.ts#L131)
+Defined in: [canvas/src/primitives/shapes/RectShape.ts:131](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/RectShape.ts#L131)
 
 #### Parameters
 
@@ -381,7 +381,7 @@ Defined in: [canvas/src/primitives/shapes/RectShape.ts:131](https://github.com/i
 
 ##### anchor
 
-[`Point`](../interfaces/Point.md)
+`Point`
 
 ##### \_angleRad
 
@@ -401,7 +401,7 @@ Defined in: [canvas/src/primitives/shapes/RectShape.ts:131](https://github.com/i
 
 > `static` **scaleSpec**(`spec`, `factor`): `Partial`\<[`RectSpec`](../interfaces/RectSpec.md)\>
 
-Defined in: [canvas/src/primitives/shapes/RectShape.ts:68](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/RectShape.ts#L68)
+Defined in: [canvas/src/primitives/shapes/RectShape.ts:68](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/RectShape.ts#L68)
 
 #### Parameters
 

@@ -2,6 +2,6 @@
 
 > **EdgeDirection** = `"in"` \| `"out"` \| `"both"`
 
-Defined in: [graph/src/store/types.ts:141](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/types.ts#L141)
+Defined in: [graph/src/store/types.ts:165](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L165)
 
 Direction of an adjacency / neighbor query.

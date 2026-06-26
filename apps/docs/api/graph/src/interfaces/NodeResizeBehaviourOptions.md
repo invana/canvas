@@ -1,10 +1,10 @@
 # Interface: NodeResizeBehaviourOptions
 
-Defined in: [graph/src/behaviours/NodeResizeBehaviour.ts:86](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/NodeResizeBehaviour.ts#L86)
+Defined in: [graph/src/behaviours/NodeResizeBehaviour.ts:86](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/NodeResizeBehaviour.ts#L86)
 
 ## Extends
 
-- [`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md)
+- `BehaviourOptions`
 
 ## Properties
 
@@ -12,7 +12,7 @@ Defined in: [graph/src/behaviours/NodeResizeBehaviour.ts:86](https://github.com/
 
 > `optional` **dashArray?**: readonly \[`number`, `number`\]
 
-Defined in: [graph/src/behaviours/NodeResizeBehaviour.ts:96](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/NodeResizeBehaviour.ts#L96)
+Defined in: [graph/src/behaviours/NodeResizeBehaviour.ts:96](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/NodeResizeBehaviour.ts#L96)
 
 Dash pattern `[dashLength, gapLength]` in px. Default `[5, 4]`.
 
@@ -22,13 +22,13 @@ Dash pattern `[dashLength, gapLength]` in px. Default `[5, 4]`.
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L43)
+Defined in: canvas/dist/index.d.ts:733
 
 Default `false` — the developer explicitly enables.
 
 #### Inherited from
 
-[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`enabled`](../../../canvas/src/interfaces/BehaviourOptions.md#enabled)
+`BehaviourOptions.enabled`
 
 ***
 
@@ -36,7 +36,7 @@ Default `false` — the developer explicitly enables.
 
 > `optional` **frameColor?**: `number`
 
-Defined in: [graph/src/behaviours/NodeResizeBehaviour.ts:94](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/NodeResizeBehaviour.ts#L94)
+Defined in: [graph/src/behaviours/NodeResizeBehaviour.ts:94](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/NodeResizeBehaviour.ts#L94)
 
 Frame border + handle outline colour. Default `0x6b7fff`.
 
@@ -46,7 +46,7 @@ Frame border + handle outline colour. Default `0x6b7fff`.
 
 > `optional` **framePadding?**: `number`
 
-Defined in: [graph/src/behaviours/NodeResizeBehaviour.ts:98](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/NodeResizeBehaviour.ts#L98)
+Defined in: [graph/src/behaviours/NodeResizeBehaviour.ts:98](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/NodeResizeBehaviour.ts#L98)
 
 Gap between host silhouette and the dashed frame. Default `4`.
 
@@ -56,7 +56,7 @@ Gap between host silhouette and the dashed frame. Default `4`.
 
 > `optional` **handleFill?**: `number`
 
-Defined in: [graph/src/behaviours/NodeResizeBehaviour.ts:92](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/NodeResizeBehaviour.ts#L92)
+Defined in: [graph/src/behaviours/NodeResizeBehaviour.ts:92](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/NodeResizeBehaviour.ts#L92)
 
 Handle fill colour. Default `0xffffff`.
 
@@ -66,7 +66,7 @@ Handle fill colour. Default `0xffffff`.
 
 > `optional` **handleRadius?**: `number`
 
-Defined in: [graph/src/behaviours/NodeResizeBehaviour.ts:90](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/NodeResizeBehaviour.ts#L90)
+Defined in: [graph/src/behaviours/NodeResizeBehaviour.ts:90](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/NodeResizeBehaviour.ts#L90)
 
 Handle outer radius in px. Default `5`.
 
@@ -76,25 +76,11 @@ Handle outer radius in px. Default `5`.
 
 > **id**: `string`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L36)
+Defined in: canvas/dist/index.d.ts:726
 
 #### Inherited from
 
-[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`id`](../../../canvas/src/interfaces/BehaviourOptions.md#id)
-
-***
-
-### layerId
-
-> **layerId**: `string`
-
-Defined in: [graph/src/behaviours/NodeResizeBehaviour.ts:88](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/NodeResizeBehaviour.ts#L88)
-
-Required — the `GraphLayer` id this behaviour drives.
-
-#### Overrides
-
-[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`layerId`](../../../canvas/src/interfaces/BehaviourOptions.md#layerid)
+`BehaviourOptions.id`
 
 ***
 
@@ -102,7 +88,7 @@ Required — the `GraphLayer` id this behaviour drives.
 
 > `optional` **minSize?**: `number`
 
-Defined in: [graph/src/behaviours/NodeResizeBehaviour.ts:100](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/NodeResizeBehaviour.ts#L100)
+Defined in: [graph/src/behaviours/NodeResizeBehaviour.ts:100](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/NodeResizeBehaviour.ts#L100)
 
 Minimum width / height / radius the behaviour allows during drag. Default `20`.
 
@@ -112,7 +98,7 @@ Minimum width / height / radius the behaviour allows during drag. Default `20`.
 
 > `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L49)
+Defined in: canvas/dist/index.d.ts:739
 
 Gesture identifiers this behaviour claims. Used by `BehaviourRegistry`
 for conflict warnings. Format is convention-free (`'shift+drag'`,
@@ -120,4 +106,18 @@ for conflict warnings. Format is convention-free (`'shift+drag'`,
 
 #### Inherited from
 
-[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`shortcuts`](../../../canvas/src/interfaces/BehaviourOptions.md#shortcuts)
+`BehaviourOptions.shortcuts`
+
+***
+
+### targetLayerId
+
+> **targetLayerId**: `string`
+
+Defined in: [graph/src/behaviours/NodeResizeBehaviour.ts:88](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/NodeResizeBehaviour.ts#L88)
+
+Required — the `GraphLayer` id this behaviour drives.
+
+#### Overrides
+
+`BehaviourOptions.targetLayerId`

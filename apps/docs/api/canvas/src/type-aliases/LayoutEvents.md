@@ -2,7 +2,7 @@
 
 > **LayoutEvents** = `object`
 
-Defined in: [canvas/src/layouts/Layout.ts:58](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layouts/Layout.ts#L58)
+Defined in: [canvas/src/layouts/Layout.ts:58](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layouts/Layout.ts#L58)
 
 Lifecycle events fired by every `Layout`.
 
@@ -15,7 +15,7 @@ subclass-specific event map, not here.
 
 > **end**: `object`
 
-Defined in: [canvas/src/layouts/Layout.ts:61](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layouts/Layout.ts#L61)
+Defined in: [canvas/src/layouts/Layout.ts:72](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layouts/Layout.ts#L72)
 
 #### reason
 
@@ -25,9 +25,31 @@ Defined in: [canvas/src/layouts/Layout.ts:61](https://github.com/invana/canvas/b
 
 ### start
 
-> **start**: `Record`\<`string`, `never`\>
+> **start**: `object`
 
-Defined in: [canvas/src/layouts/Layout.ts:59](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layouts/Layout.ts#L59)
+Defined in: [canvas/src/layouts/Layout.ts:70](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layouts/Layout.ts#L70)
+
+Run is about to produce positions. Optional run-size / animation metadata
+lets a `Canvas.runLayout` bridge forward it onto the canvas bus as
+`layout:run:start` without reaching into layer internals. Every field is
+optional — a layout that doesn't know (or care) emits `{}`, and the bridge
+substitutes `0` / `false`.
+
+ - `nodeCount` / `edgeCount` — size of the run, for progress UIs / telemetry.
+ - `animate` — whether the run animates its settle (iterative force sims)
+   vs. jumps straight to final positions; render policies branch on it.
+
+#### animate?
+
+> `optional` **animate?**: `boolean`
+
+#### edgeCount?
+
+> `optional` **edgeCount?**: `number`
+
+#### nodeCount?
+
+> `optional` **nodeCount?**: `number`
 
 ***
 
@@ -35,4 +57,4 @@ Defined in: [canvas/src/layouts/Layout.ts:59](https://github.com/invana/canvas/b
 
 > **tick**: `Record`\<`string`, `never`\>
 
-Defined in: [canvas/src/layouts/Layout.ts:60](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layouts/Layout.ts#L60)
+Defined in: [canvas/src/layouts/Layout.ts:71](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layouts/Layout.ts#L71)

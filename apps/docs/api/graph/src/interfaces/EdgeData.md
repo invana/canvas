@@ -1,6 +1,6 @@
 # Interface: EdgeData\<D\>
 
-Defined in: [graph/src/layer/types.ts:1159](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1159)
+Defined in: [graph/src/layer/types.ts:1212](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1212)
 
 Per-instance edge descriptor — stored by GraphStore, concrete values.
 
@@ -16,7 +16,7 @@ Per-instance edge descriptor — stored by GraphStore, concrete values.
 
 > `readonly` `optional` **data?**: `D`
 
-Defined in: [graph/src/layer/types.ts:1165](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1165)
+Defined in: [graph/src/layer/types.ts:1218](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1218)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [graph/src/layer/types.ts:1165](https://github.com/invana/canvas/blo
 
 > `readonly` **id**: `string`
 
-Defined in: [graph/src/layer/types.ts:1160](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1160)
+Defined in: [graph/src/layer/types.ts:1213](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1213)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [graph/src/layer/types.ts:1160](https://github.com/invana/canvas/blo
 
 > `readonly` **source**: `string`
 
-Defined in: [graph/src/layer/types.ts:1161](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1161)
+Defined in: [graph/src/layer/types.ts:1214](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1214)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [graph/src/layer/types.ts:1161](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **state?**: `Readonly`\<`Record`\<`string`, [`EdgeStyle`](EdgeStyle.md)\>\>
 
-Defined in: [graph/src/layer/types.ts:1167](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1167)
+Defined in: [graph/src/layer/types.ts:1220](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1220)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [graph/src/layer/types.ts:1167](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **states?**: readonly `string`[]
 
-Defined in: [graph/src/layer/types.ts:1168](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1168)
+Defined in: [graph/src/layer/types.ts:1221](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1221)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [graph/src/layer/types.ts:1168](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **style?**: [`EdgeStyle`](EdgeStyle.md)
 
-Defined in: [graph/src/layer/types.ts:1166](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1166)
+Defined in: [graph/src/layer/types.ts:1219](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1219)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [graph/src/layer/types.ts:1166](https://github.com/invana/canvas/blo
 
 > `readonly` **target**: `string`
 
-Defined in: [graph/src/layer/types.ts:1162](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1162)
+Defined in: [graph/src/layer/types.ts:1215](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1215)
 
 ***
 
@@ -72,6 +72,6 @@ Defined in: [graph/src/layer/types.ts:1162](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **type?**: `string`
 
-Defined in: [graph/src/layer/types.ts:1164](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1164)
+Defined in: [graph/src/layer/types.ts:1217](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1217)
 
 Predicate / FK label. Free-form. G6 calls this `type`.

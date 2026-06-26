@@ -1,6 +1,6 @@
 # Interface: StarShapeOption
 
-Defined in: [graph/src/layer/types.ts:246](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L246)
+Defined in: [graph/src/layer/types.ts:254](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L254)
 
 N-pointed star. Classic 5-point star uses
 `{ points: 5, outerRadius: r, innerRadius: r * 0.4 }`.
@@ -11,7 +11,7 @@ N-pointed star. Classic 5-point star uses
 
 > `readonly` **innerRadius**: `number`
 
-Defined in: [graph/src/layer/types.ts:249](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L249)
+Defined in: [graph/src/layer/types.ts:257](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L257)
 
 ***
 
@@ -19,7 +19,7 @@ Defined in: [graph/src/layer/types.ts:249](https://github.com/invana/canvas/blob
 
 > `readonly` **kind**: `"star"`
 
-Defined in: [graph/src/layer/types.ts:247](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L247)
+Defined in: [graph/src/layer/types.ts:255](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L255)
 
 ***
 
@@ -27,7 +27,7 @@ Defined in: [graph/src/layer/types.ts:247](https://github.com/invana/canvas/blob
 
 > `readonly` **outerRadius**: `number`
 
-Defined in: [graph/src/layer/types.ts:250](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L250)
+Defined in: [graph/src/layer/types.ts:258](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L258)
 
 ***
 
@@ -35,7 +35,7 @@ Defined in: [graph/src/layer/types.ts:250](https://github.com/invana/canvas/blob
 
 > `readonly` **points**: `number`
 
-Defined in: [graph/src/layer/types.ts:248](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L248)
+Defined in: [graph/src/layer/types.ts:256](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L256)
 
 ***
 
@@ -43,4 +43,4 @@ Defined in: [graph/src/layer/types.ts:248](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **rotation?**: `number`
 
-Defined in: [graph/src/layer/types.ts:251](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L251)
+Defined in: [graph/src/layer/types.ts:259](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L259)

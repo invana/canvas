@@ -15,6 +15,7 @@
 - [H1B2019GraphNode](interfaces/H1B2019GraphNode.md)
 - [H1B2019Node](interfaces/H1B2019Node.md)
 - [LandTopology](interfaces/LandTopology.md)
+- [LatticeData](interfaces/LatticeData.md)
 - [LesMiserablesData](interfaces/LesMiserablesData.md)
 - [LesMiserablesEdge](interfaces/LesMiserablesEdge.md)
 - [LesMiserablesEdgeData](interfaces/LesMiserablesEdgeData.md)
@@ -57,6 +58,7 @@
 
 - [flareAsGraph](functions/flareAsGraph.md)
 - [flareImportsAsGraph](functions/flareImportsAsGraph.md)
+- [generateLattice](functions/generateLattice.md)
 - [generateRandomTree](functions/generateRandomTree.md)
 - [h1b2019AsGraph](functions/h1b2019AsGraph.md)
 - [lifeTreeAsGraph](functions/lifeTreeAsGraph.md)

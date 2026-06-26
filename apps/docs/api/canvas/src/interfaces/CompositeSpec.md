@@ -1,0 +1,169 @@
+# Interface: CompositeSpec
+
+Defined in: [canvas/src/primitives/shapes/CompositeShape.ts:83](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/CompositeShape.ts#L83)
+
+Spec for a [CompositeShape](../classes/CompositeShape.md). The outer frame is a rounded rect sized
+`width` × `height`, painted from the inherited `fill` / `stroke`. `parts`
+declares ordered child geometry + labels at coordinates relative to the
+composite's top-left origin.
+
+## Extends
+
+- [`BaseShapeSpec`](BaseShapeSpec.md)
+
+## Properties
+
+### alpha?
+
+> `readonly` `optional` **alpha?**: `number`
+
+Defined in: [canvas/src/primitives/types.ts:393](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L393)
+
+#### Inherited from
+
+[`BaseShapeSpec`](BaseShapeSpec.md).[`alpha`](BaseShapeSpec.md#alpha)
+
+***
+
+### cornerRadius?
+
+> `readonly` `optional` **cornerRadius?**: `number`
+
+Defined in: [canvas/src/primitives/shapes/CompositeShape.ts:88](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/CompositeShape.ts#L88)
+
+Outer frame corner radius. Default `0` (sharp).
+
+***
+
+### fill?
+
+> `readonly` `optional` **fill?**: [`ShapeFill`](../type-aliases/ShapeFill.md)
+
+Defined in: [canvas/src/primitives/types.ts:389](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L389)
+
+#### Inherited from
+
+[`BaseShapeSpec`](BaseShapeSpec.md).[`fill`](BaseShapeSpec.md#fill)
+
+***
+
+### height
+
+> `readonly` **height**: `number`
+
+Defined in: [canvas/src/primitives/shapes/CompositeShape.ts:86](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/CompositeShape.ts#L86)
+
+***
+
+### kind
+
+> `readonly` **kind**: `"composite"`
+
+Defined in: [canvas/src/primitives/shapes/CompositeShape.ts:84](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/CompositeShape.ts#L84)
+
+#### Overrides
+
+[`BaseShapeSpec`](BaseShapeSpec.md).[`kind`](BaseShapeSpec.md#kind)
+
+***
+
+### parts
+
+> `readonly` **parts**: readonly [`CompositePart`](../type-aliases/CompositePart.md)[]
+
+Defined in: [canvas/src/primitives/shapes/CompositeShape.ts:90](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/CompositeShape.ts#L90)
+
+Ordered child parts; geometry traced into the body, labels mounted as text.
+
+***
+
+### rotation?
+
+> `readonly` `optional` **rotation?**: `number`
+
+Defined in: [canvas/src/primitives/types.ts:407](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L407)
+
+Container-level rotation in radians, applied around the shape's
+top-left local origin. Composes with effect-driven transform deltas
+— the effect aggregator writes `(spec.rotation ?? 0) + dRot` per frame
+so connector-hosted badges with `autoRotate: true` keep rotating
+smoothly even while a `shake` / `breathing` effect runs on top.
+
+For per-shape geometric rotation (the visible rotation of a regular
+polygon's vertices, a star's points, etc.), use the kind-specific
+`rotation` field on those shape specs — that one rotates the *geometry*
+before it's drawn; this one rotates the *container* after.
+
+#### Inherited from
+
+[`BaseShapeSpec`](BaseShapeSpec.md).[`rotation`](BaseShapeSpec.md#rotation)
+
+***
+
+### stroke?
+
+> `readonly` `optional` **stroke?**: [`ShapeStroke`](ShapeStroke.md)
+
+Defined in: [canvas/src/primitives/types.ts:390](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L390)
+
+#### Inherited from
+
+[`BaseShapeSpec`](BaseShapeSpec.md).[`stroke`](BaseShapeSpec.md#stroke)
+
+***
+
+### visible?
+
+> `readonly` `optional` **visible?**: `boolean`
+
+Defined in: [canvas/src/primitives/types.ts:394](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L394)
+
+#### Inherited from
+
+[`BaseShapeSpec`](BaseShapeSpec.md).[`visible`](BaseShapeSpec.md#visible)
+
+***
+
+### width
+
+> `readonly` **width**: `number`
+
+Defined in: [canvas/src/primitives/shapes/CompositeShape.ts:85](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/CompositeShape.ts#L85)
+
+***
+
+### x
+
+> `readonly` **x**: `number`
+
+Defined in: [canvas/src/primitives/types.ts:387](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L387)
+
+#### Inherited from
+
+[`BaseShapeSpec`](BaseShapeSpec.md).[`x`](BaseShapeSpec.md#x)
+
+***
+
+### y
+
+> `readonly` **y**: `number`
+
+Defined in: [canvas/src/primitives/types.ts:388](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L388)
+
+#### Inherited from
+
+[`BaseShapeSpec`](BaseShapeSpec.md).[`y`](BaseShapeSpec.md#y)
+
+***
+
+### zIndex?
+
+> `readonly` `optional` **zIndex?**: `number`
+
+Defined in: [canvas/src/primitives/types.ts:392](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L392)
+
+Default `0`. Higher = on top. Used for hit-test resolution.
+
+#### Inherited from
+
+[`BaseShapeSpec`](BaseShapeSpec.md).[`zIndex`](BaseShapeSpec.md#zindex)

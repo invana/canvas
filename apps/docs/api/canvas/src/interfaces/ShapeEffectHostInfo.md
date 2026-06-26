@@ -1,6 +1,6 @@
 # Interface: ShapeEffectHostInfo
 
-Defined in: [canvas/src/primitives/types.ts:901](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L901)
+Defined in: [canvas/src/primitives/types.ts:901](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L901)
 
 Information a shape effect receives in `mount` / `update`. No `surface`
 field — effects don't draw, they modulate. The renderer applies the
@@ -10,9 +10,9 @@ effect's `readTransform` / `readStyle` output onto the host gfx each frame.
 
 ### bounds
 
-> `readonly` **bounds**: [`Rect`](Rect.md)
+> `readonly` **bounds**: `Rect`
 
-Defined in: [canvas/src/primitives/types.ts:905](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L905)
+Defined in: [canvas/src/primitives/types.ts:905](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L905)
 
 Local-space axis-aligned bounding box of the host shape.
 
@@ -22,7 +22,7 @@ Local-space axis-aligned bounding box of the host shape.
 
 > `readonly` **hostId**: `string`
 
-Defined in: [canvas/src/primitives/types.ts:902](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L902)
+Defined in: [canvas/src/primitives/types.ts:902](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L902)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [canvas/src/primitives/types.ts:902](https://github.com/invana/canva
 
 > `readonly` **shape**: [`IShape`](IShape.md)
 
-Defined in: [canvas/src/primitives/types.ts:907](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L907)
+Defined in: [canvas/src/primitives/types.ts:907](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L907)
 
 The host shape itself — effects may read shape state but never paint.
 
@@ -40,4 +40,4 @@ The host shape itself — effects may read shape state but never paint.
 
 > `readonly` **slot**: `string`
 
-Defined in: [canvas/src/primitives/types.ts:903](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L903)
+Defined in: [canvas/src/primitives/types.ts:903](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L903)

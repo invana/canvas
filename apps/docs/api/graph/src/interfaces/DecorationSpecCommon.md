@@ -1,6 +1,6 @@
 # Interface: DecorationSpecCommon
 
-Defined in: [graph/src/layer/types.ts:658](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L658)
+Defined in: [graph/src/layer/types.ts:688](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L688)
 
 Common fields on every entry in a `decorations[]` array. The `id` gives
 stable diff identity (state overlays can re-declare the same id to
@@ -13,7 +13,7 @@ state is active). When `id` is absent, identity falls back to `kind + array inde
 
 > `readonly` `optional` **id?**: `string`
 
-Defined in: [graph/src/layer/types.ts:660](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L660)
+Defined in: [graph/src/layer/types.ts:690](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L690)
 
 Stable id for diffing. Optional — falls back to `kind#<index>` when absent.
 
@@ -23,7 +23,7 @@ Stable id for diffing. Optional — falls back to `kind#<index>` when absent.
 
 > `readonly` `optional` **remove?**: `boolean`
 
-Defined in: [graph/src/layer/types.ts:666](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L666)
+Defined in: [graph/src/layer/types.ts:696](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L696)
 
 When `true`, this entry instructs the resolver to drop any earlier-
 precedence decoration with the same `id`. Use it in a state overlay to

@@ -1,6 +1,6 @@
 # Interface: TapOptions
 
-Defined in: [canvas/src/events/CanvasEventBus.ts:75](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/events/CanvasEventBus.ts#L75)
+Defined in: [canvas/src/events/CanvasEventBus.ts:109](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L109)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [canvas/src/events/CanvasEventBus.ts:75](https://github.com/invana/c
 
 > `optional` **exclude?**: readonly `string`[]
 
-Defined in: [canvas/src/events/CanvasEventBus.ts:81](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/events/CanvasEventBus.ts#L81)
+Defined in: [canvas/src/events/CanvasEventBus.ts:115](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L115)
 
 Suffix-matched event-type strings to exclude. Defaults to
 `DEFAULT_TAP_EXCLUDE` (high-frequency noise like `pointermove`,
@@ -20,7 +20,7 @@ Suffix-matched event-type strings to exclude. Defaults to
 
 > `optional` **sampleRate?**: `number`
 
-Defined in: [canvas/src/events/CanvasEventBus.ts:86](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/events/CanvasEventBus.ts#L86)
+Defined in: [canvas/src/events/CanvasEventBus.ts:120](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L120)
 
 0..1. Probability that any given (non-excluded) event is delivered to
 this tap. Default `1` (no sampling). Use for high-volume sinks.

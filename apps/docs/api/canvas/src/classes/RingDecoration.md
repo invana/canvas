@@ -1,6 +1,6 @@
 # Class: RingDecoration
 
-Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:32](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L32)
+Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:32](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L32)
 
 Base for decorations that target shape primitives. Subclass implements
 `repaint`; this base handles the `mount` / `update` lifecycle (attach gfx
@@ -20,7 +20,7 @@ its animation set; a falsy return retires the decoration.
 
 > **new RingDecoration**(`style`): `RingDecoration`
 
-Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:35](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L35)
+Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:35](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L35)
 
 #### Parameters
 
@@ -42,7 +42,7 @@ Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:35](https
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 #### Inherited from
 
@@ -54,7 +54,7 @@ Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/
 
 > `protected` **host**: [`ShapeDecorationHostInfo`](../interfaces/ShapeDecorationHostInfo.md) = `null`
 
-Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:18](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L18)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:18](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L18)
 
 #### Inherited from
 
@@ -66,7 +66,7 @@ Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:18](https://githu
 
 > `readonly` **style**: [`RingDecorationStyle`](../interfaces/RingDecorationStyle.md)
 
-Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:17](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L17)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:17](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L17)
 
 #### Inherited from
 
@@ -78,7 +78,7 @@ Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:17](https://githu
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
 
 #### Returns
 
@@ -94,7 +94,7 @@ Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/
 
 > **getOuterExtent**(): `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:79](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L79)
+Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:79](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L79)
 
 Outer edge of the band: `gap` pushes the silhouette outward, then the
 full stroke width sits past that. Reported so `LabelDecoration` can
@@ -110,7 +110,7 @@ offset outside-placement labels past the ring.
 
 > **mount**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:26](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L26)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:26](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L26)
 
 #### Parameters
 
@@ -132,7 +132,7 @@ Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:26](https://githu
 
 > `protected` **repaint**(): `void`
 
-Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:40](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L40)
+Defined in: [canvas/src/primitives/decorations/shape/RingDecoration.ts:40](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/RingDecoration.ts#L40)
 
 Render the decoration based on the current `host`.
 
@@ -150,7 +150,7 @@ Render the decoration based on the current `host`.
 
 > **update**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:33](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L33)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:33](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L33)
 
 #### Parameters
 

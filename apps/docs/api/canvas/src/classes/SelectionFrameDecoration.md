@@ -1,6 +1,6 @@
 # Class: SelectionFrameDecoration
 
-Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:153](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L153)
+Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:153](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L153)
 
 Selection / transform frame — dashed AABB outline plus round drag
 handles at the four corners and four edge midpoints. Pure visual; the
@@ -21,7 +21,7 @@ handles via `handles` without remounting.
 
 > **new SelectionFrameDecoration**(`style`): `SelectionFrameDecoration`
 
-Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:158](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L158)
+Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:158](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L158)
 
 #### Parameters
 
@@ -43,7 +43,7 @@ Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 #### Inherited from
 
@@ -55,7 +55,7 @@ Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/
 
 > `protected` **host**: [`ShapeDecorationHostInfo`](../interfaces/ShapeDecorationHostInfo.md) = `null`
 
-Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:18](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L18)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:18](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L18)
 
 #### Inherited from
 
@@ -67,7 +67,7 @@ Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:18](https://githu
 
 > `readonly` **style**: [`SelectionFrameDecorationStyle`](../interfaces/SelectionFrameDecorationStyle.md)
 
-Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:17](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L17)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:17](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L17)
 
 #### Inherited from
 
@@ -79,7 +79,7 @@ Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:17](https://githu
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/PrimitiveBase.ts#L18)
 
 #### Returns
 
@@ -95,7 +95,7 @@ Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:18](https://github.com/
 
 > **getLocalHandleHits**(): readonly [`SelectionFrameHandleHit`](../interfaces/SelectionFrameHandleHit.md)[]
 
-Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:169](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L169)
+Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:169](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L169)
 
 Most-recently-computed per-handle hit geometry, in shape-local
 coordinates. Behaviours iterate this array on pointerdown and test
@@ -111,7 +111,7 @@ readonly [`SelectionFrameHandleHit`](../interfaces/SelectionFrameHandleHit.md)[]
 
 > **getOuterExtent**(): `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:274](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L274)
+Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:274](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L274)
 
 #### Returns
 
@@ -123,7 +123,7 @@ Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts
 
 > **mount**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:26](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L26)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:26](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L26)
 
 #### Parameters
 
@@ -145,7 +145,7 @@ Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:26](https://githu
 
 > `protected` **repaint**(): `void`
 
-Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:173](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L173)
+Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:173](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L173)
 
 Render the decoration based on the current `host`.
 
@@ -163,7 +163,7 @@ Render the decoration based on the current `host`.
 
 > **update**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:33](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L33)
+Defined in: [canvas/src/primitives/base/ShapeDecorationBase.ts:33](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeDecorationBase.ts#L33)
 
 #### Parameters
 

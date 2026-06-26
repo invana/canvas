@@ -1,6 +1,6 @@
 # Interface: RevealConnectorDecorationStyle
 
-Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:68](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L68)
+Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:68](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L68)
 
 Connector decoration that progressively reveals the routed path from one
 endpoint to the other — as if the line were being drawn in real time.
@@ -25,7 +25,7 @@ for the lifetime of the decoration.
 
 > `readonly` `optional` **delayMs?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:86](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L86)
+Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:86](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L86)
 
 Wait this many ms after mount before starting the reveal. Default `0`.
 
@@ -35,7 +35,7 @@ Wait this many ms after mount before starting the reveal. Default `0`.
 
 > `readonly` `optional` **direction?**: [`RevealDirection`](../type-aliases/RevealDirection.md)
 
-Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:76](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L76)
+Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:76](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L76)
 
 Sweep direction. Default `'source-to-target'`.
 
@@ -45,7 +45,7 @@ Sweep direction. Default `'source-to-target'`.
 
 > `readonly` `optional` **durationMs?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:70](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L70)
+Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:70](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L70)
 
 Duration of one full source→target sweep in ms. Default `2000`.
 
@@ -55,7 +55,7 @@ Duration of one full source→target sweep in ms. Default `2000`.
 
 > `readonly` `optional` **easing?**: [`RevealEasingName`](../type-aliases/RevealEasingName.md)
 
-Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:74](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L74)
+Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:74](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L74)
 
 Easing curve. Default `'linear'` — constant "pen speed" feels most natural for a drawing reveal.
 
@@ -65,7 +65,7 @@ Easing curve. Default `'linear'` — constant "pen speed" feels most natural for
 
 > `readonly` `optional` **holdAtFull?**: `boolean`
 
-Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:84](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L84)
+Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:84](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L84)
 
 When `repeat` is `false`, hold the fully-drawn state after the cycle
 completes (handing off to the host stroke when `hostStroke: 'hide'`).
@@ -77,7 +77,7 @@ Ignored for infinite / finite-repeat modes. Default `true`.
 
 > `readonly` `optional` **hostStroke?**: [`RevealHostStroke`](../type-aliases/RevealHostStroke.md)
 
-Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:78](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L78)
+Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:78](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L78)
 
 Treatment of the underlying host connector stroke. Default `'hide'`.
 
@@ -87,6 +87,6 @@ Treatment of the underlying host connector stroke. Default `'hide'`.
 
 > `readonly` `optional` **repeat?**: [`RevealRepeat`](../type-aliases/RevealRepeat.md)
 
-Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:72](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L72)
+Defined in: [canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts:72](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/RevealConnectorDecoration.ts#L72)
 
 `false` = one-shot (default), `true` = infinite, or a positive integer cycle count.

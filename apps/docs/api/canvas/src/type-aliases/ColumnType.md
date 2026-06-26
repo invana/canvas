@@ -2,7 +2,7 @@
 
 > **ColumnType** = `"i8"` \| `"u8"` \| `"i16"` \| `"u16"` \| `"i32"` \| `"u32"` \| `"f32"` \| `"f64"`
 
-Defined in: [canvas/src/state/ColumnStore.ts:64](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/state/ColumnStore.ts#L64)
+Defined in: [canvas/src/state/ColumnStore.ts:64](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/state/ColumnStore.ts#L64)
 
 Numeric type tags for typed-array columns. Each maps to a JS TypedArray ctor.
 

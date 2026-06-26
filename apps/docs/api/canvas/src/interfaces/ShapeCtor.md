@@ -1,6 +1,6 @@
 # Interface: ShapeCtor\<TSpec\>
 
-Defined in: [canvas/src/primitives/types.ts:976](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L976)
+Defined in: [canvas/src/primitives/types.ts:976](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L976)
 
 Constructor type for shapes registered via `registerShape`. Optionally
 exposes a `static paintInto` so the shape can also serve as a connector
@@ -18,7 +18,7 @@ marker. Shapes without `paintInto` cannot be used as markers.
 
 > **new ShapeCtor**(`spec`, `host`): [`IShape`](IShape.md)\<`TSpec`\>
 
-Defined in: [canvas/src/primitives/types.ts:977](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L977)
+Defined in: [canvas/src/primitives/types.ts:977](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L977)
 
 #### Parameters
 
@@ -38,9 +38,9 @@ Defined in: [canvas/src/primitives/types.ts:977](https://github.com/invana/canva
 
 ### boundsOf?
 
-> `readonly` `optional` **boundsOf?**: (`spec`) => [`Rect`](Rect.md)
+> `readonly` `optional` **boundsOf?**: (`spec`) => `Rect`
 
-Defined in: [canvas/src/primitives/types.ts:1030](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1030)
+Defined in: [canvas/src/primitives/types.ts:1030](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1030)
 
 Optional static AABB reporter. Returns the shape's bounding box in
 *local* (centre-relative) coordinates — `spec.x` / `spec.y` are
@@ -64,7 +64,7 @@ geometry isn't duplicated.
 
 #### Returns
 
-[`Rect`](Rect.md)
+`Rect`
 
 ***
 
@@ -72,7 +72,7 @@ geometry isn't duplicated.
 
 > `readonly` `optional` **markerInset?**: (`spec`, `strokeWidth?`) => `number`
 
-Defined in: [canvas/src/primitives/types.ts:1014](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1014)
+Defined in: [canvas/src/primitives/types.ts:1014](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1014)
 
 Optional marker-inset reporter. When this shape is used as a connector
 marker, returns how far back from the anchor (along the negative tangent)
@@ -108,7 +108,7 @@ so the trim and the painted marker agree on geometry.
 
 > `readonly` `optional` **paintInto?**: (`g`, `spec`, `anchor`, `angleRad`, `style?`, `strokeWidth?`) => `void`
 
-Defined in: [canvas/src/primitives/types.ts:991](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L991)
+Defined in: [canvas/src/primitives/types.ts:991](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L991)
 
 Optional static paint surface for marker rendering. Connectors call
 this to paint a marker at a polyline endpoint without instantiating
@@ -134,7 +134,7 @@ or omit; the marker shape should fall back to a sensible default.
 
 ##### anchor
 
-[`Point`](Point.md)
+`Point`
 
 ##### angleRad
 
@@ -158,7 +158,7 @@ or omit; the marker shape should fall back to a sensible default.
 
 > `readonly` `optional` **scaleSpec?**: (`spec`, `factor`) => `Partial`\<`TSpec`\>
 
-Defined in: [canvas/src/primitives/types.ts:1050](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1050)
+Defined in: [canvas/src/primitives/types.ts:1050](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1050)
 
 Optional uniform-scale operator. Returns a partial spec that resizes
 the shape's geometry by `factor` while preserving its aspect ratio,

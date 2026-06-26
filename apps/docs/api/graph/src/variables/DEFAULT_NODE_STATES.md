@@ -2,7 +2,7 @@
 
 > `const` **DEFAULT\_NODE\_STATES**: `Readonly`\<`Record`\<[`CanonicalStateName`](../type-aliases/CanonicalStateName.md), [`NodeStyle`](../interfaces/NodeStyle.md)\>\>
 
-Defined in: [graph/src/layer/types.ts:1208](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1208)
+Defined in: [graph/src/layer/types.ts:1261](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1261)
 
 Canonical node-state overlays auto-merged into every `GraphLayer`'s
 `options.node.state` catalogue on construction (unless

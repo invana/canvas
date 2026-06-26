@@ -1,12 +1,10 @@
 # Class: BrushSelectBehaviour
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:159](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L159)
-
-What `BehaviourRegistry` sees.
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:159](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L159)
 
 ## Extends
 
-- [`Behaviour`](../../../canvas/src/classes/Behaviour.md)
+- `Behaviour`
 
 ## Constructors
 
@@ -14,7 +12,7 @@ What `BehaviourRegistry` sees.
 
 > **new BrushSelectBehaviour**(`opts`): `BrushSelectBehaviour`
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:176](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L176)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:176](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L176)
 
 #### Parameters
 
@@ -28,7 +26,7 @@ Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:176](https://github.co
 
 #### Overrides
 
-[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`constructor`](../../../canvas/src/classes/Behaviour.md#constructor)
+`Behaviour.constructor`
 
 ## Properties
 
@@ -36,23 +34,23 @@ Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:176](https://github.co
 
 > `protected` **\_enabled**: `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:63](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L63)
+Defined in: canvas/dist/index.d.ts:750
 
 #### Inherited from
 
-[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`_enabled`](../../../canvas/src/classes/Behaviour.md#_enabled)
+`Behaviour._enabled`
 
 ***
 
 ### ctx?
 
-> `protected` `optional` **ctx?**: [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
+> `protected` `optional` **ctx?**: `CanvasContext`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:64](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L64)
+Defined in: canvas/dist/index.d.ts:751
 
 #### Inherited from
 
-[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`ctx`](../../../canvas/src/classes/Behaviour.md#ctx)
+`Behaviour.ctx`
 
 ***
 
@@ -60,23 +58,11 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:64](https://github.com/invana/ca
 
 > `readonly` **id**: `string`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:53](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L53)
+Defined in: canvas/dist/index.d.ts:742
 
 #### Inherited from
 
-[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`id`](../../../canvas/src/classes/Behaviour.md#id)
-
-***
-
-### layerId?
-
-> `readonly` `optional` **layerId?**: `string`
-
-Defined in: [canvas/src/behaviours/Behaviour.ts:54](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L54)
-
-#### Inherited from
-
-[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`layerId`](../../../canvas/src/classes/Behaviour.md#layerid)
+`Behaviour.id`
 
 ***
 
@@ -84,14 +70,14 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:54](https://github.com/invana/ca
 
 > `readonly` **scope**: `"canvas"` \| `"layer"`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:61](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L61)
+Defined in: canvas/dist/index.d.ts:749
 
-`'layer'` if `layerId` is set, otherwise `'canvas'`. Set automatically
+`'layer'` if `targetLayerId` is set, otherwise `'canvas'`. Set automatically
 from the constructor — subclasses don't need to re-declare.
 
 #### Inherited from
 
-[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`scope`](../../../canvas/src/classes/Behaviour.md#scope)
+`Behaviour.scope`
 
 ***
 
@@ -99,11 +85,23 @@ from the constructor — subclasses don't need to re-declare.
 
 > `readonly` `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:55](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L55)
+Defined in: canvas/dist/index.d.ts:744
 
 #### Inherited from
 
-[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`shortcuts`](../../../canvas/src/classes/Behaviour.md#shortcuts)
+`Behaviour.shortcuts`
+
+***
+
+### targetLayerId?
+
+> `readonly` `optional` **targetLayerId?**: `string`
+
+Defined in: canvas/dist/index.d.ts:743
+
+#### Inherited from
+
+`Behaviour.targetLayerId`
 
 ## Accessors
 
@@ -113,7 +111,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:55](https://github.com/invana/ca
 
 > **get** **enabled**(): `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:74](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L74)
+Defined in: canvas/dist/index.d.ts:753
 
 ##### Returns
 
@@ -121,7 +119,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:74](https://github.com/invana/ca
 
 #### Inherited from
 
-[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`enabled`](../../../canvas/src/classes/Behaviour.md#enabled)
+`Behaviour.enabled`
 
 ***
 
@@ -131,7 +129,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:74](https://github.com/invana/ca
 
 > **get** `protected` **isEnabled**(): `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:133](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L133)
+Defined in: canvas/dist/index.d.ts:773
 
 Convenience `if (!enabled) return;` for use inside event handlers
 (without rebinding `this` cost).
@@ -142,7 +140,27 @@ Convenience `if (!enabled) return;` for use inside event handlers
 
 #### Inherited from
 
-[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`isEnabled`](../../../canvas/src/classes/Behaviour.md#isenabled)
+`Behaviour.isEnabled`
+
+***
+
+### isRegistered
+
+#### Get Signature
+
+> **get** **isRegistered**(): `boolean`
+
+Defined in: canvas/dist/index.d.ts:754
+
+`true` once `register(ctx)` has run. Lets the registry skip already-wired behaviours.
+
+##### Returns
+
+`boolean`
+
+#### Inherited from
+
+`Behaviour.isRegistered`
 
 ***
 
@@ -152,7 +170,7 @@ Convenience `if (!enabled) return;` for use inside event handlers
 
 > **get** **options**(): `Readonly`\<`ResolvedOptions`\>
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:247](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L247)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:247](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L247)
 
 ##### Returns
 
@@ -164,7 +182,7 @@ Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:247](https://github.co
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:89](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L89)
+Defined in: canvas/dist/index.d.ts:758
 
 Called by `BehaviourRegistry.unregister(id)`. Drops subscriptions.
 
@@ -174,7 +192,7 @@ Called by `BehaviourRegistry.unregister(id)`. Drops subscriptions.
 
 #### Inherited from
 
-[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`destroy`](../../../canvas/src/classes/Behaviour.md#destroy)
+`Behaviour.destroy`
 
 ***
 
@@ -182,7 +200,7 @@ Called by `BehaviourRegistry.unregister(id)`. Drops subscriptions.
 
 > **disable**(): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:103](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L103)
+Defined in: canvas/dist/index.d.ts:760
 
 #### Returns
 
@@ -190,7 +208,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:103](https://github.com/invana/c
 
 #### Inherited from
 
-[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`disable`](../../../canvas/src/classes/Behaviour.md#disable)
+`Behaviour.disable`
 
 ***
 
@@ -198,7 +216,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:103](https://github.com/invana/c
 
 > **enable**(): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:97](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L97)
+Defined in: canvas/dist/index.d.ts:759
 
 #### Returns
 
@@ -206,7 +224,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:97](https://github.com/invana/ca
 
 #### Inherited from
 
-[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`enable`](../../../canvas/src/classes/Behaviour.md#enable)
+`Behaviour.enable`
 
 ***
 
@@ -214,7 +232,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:97](https://github.com/invana/ca
 
 > `protected` **onDestroy**(): `void`
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:228](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L228)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:228](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L228)
 
 Cleanup on destroy. Default no-op.
 
@@ -224,7 +242,7 @@ Cleanup on destroy. Default no-op.
 
 #### Overrides
 
-[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`onDestroy`](../../../canvas/src/classes/Behaviour.md#ondestroy)
+`Behaviour.onDestroy`
 
 ***
 
@@ -232,7 +250,7 @@ Cleanup on destroy. Default no-op.
 
 > `protected` **onDisable**(): `void`
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:241](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L241)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:241](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L241)
 
 Hook fired on disable.
 
@@ -242,7 +260,7 @@ Hook fired on disable.
 
 #### Overrides
 
-[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`onDisable`](../../../canvas/src/classes/Behaviour.md#ondisable)
+`Behaviour.onDisable`
 
 ***
 
@@ -250,7 +268,7 @@ Hook fired on disable.
 
 > `protected` **onEnable**(): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:120](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L120)
+Defined in: canvas/dist/index.d.ts:766
 
 Hook fired when the developer enables the behaviour.
 
@@ -260,7 +278,7 @@ Hook fired when the developer enables the behaviour.
 
 #### Inherited from
 
-[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`onEnable`](../../../canvas/src/classes/Behaviour.md#onenable)
+`Behaviour.onEnable`
 
 ***
 
@@ -268,7 +286,7 @@ Hook fired when the developer enables the behaviour.
 
 > `protected` **onRegister**(`ctx`): `void`
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:184](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L184)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:184](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L184)
 
 Subscribe to events / setup any handler resources.
 
@@ -276,7 +294,7 @@ Subscribe to events / setup any handler resources.
 
 ##### ctx
 
-[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
+`CanvasContext`
 
 #### Returns
 
@@ -284,7 +302,7 @@ Subscribe to events / setup any handler resources.
 
 #### Overrides
 
-[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`onRegister`](../../../canvas/src/classes/Behaviour.md#onregister)
+`Behaviour.onRegister`
 
 ***
 
@@ -292,7 +310,7 @@ Subscribe to events / setup any handler resources.
 
 > **register**(`ctx`): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:79](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L79)
+Defined in: canvas/dist/index.d.ts:756
 
 Called by `BehaviourRegistry.register(behaviour)`. Subscribes to inputs.
 
@@ -300,7 +318,7 @@ Called by `BehaviourRegistry.register(behaviour)`. Subscribes to inputs.
 
 ##### ctx
 
-[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
+`CanvasContext`
 
 #### Returns
 
@@ -308,7 +326,7 @@ Called by `BehaviourRegistry.register(behaviour)`. Subscribes to inputs.
 
 #### Inherited from
 
-[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`register`](../../../canvas/src/classes/Behaviour.md#register)
+`Behaviour.register`
 
 ***
 
@@ -316,7 +334,7 @@ Called by `BehaviourRegistry.register(behaviour)`. Subscribes to inputs.
 
 > **setOptions**(`patch`): `void`
 
-Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:251](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L251)
+Defined in: [graph/src/behaviours/BrushSelectBehaviour.ts:251](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/BrushSelectBehaviour.ts#L251)
 
 #### Parameters
 

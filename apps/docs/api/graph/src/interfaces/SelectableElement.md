@@ -1,6 +1,6 @@
 # Interface: SelectableElement
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:47](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L47)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:46](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L46)
 
 Element handed to selection callbacks.
 
@@ -10,7 +10,7 @@ Element handed to selection callbacks.
 
 > `readonly` **data**: `unknown`
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:51](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L51)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:50](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L50)
 
 Arbitrary user payload from `node.data` or `edge.data`.
 
@@ -20,7 +20,7 @@ Arbitrary user payload from `node.data` or `edge.data`.
 
 > `readonly` **id**: `string`
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:48](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L48)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:47](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L47)
 
 ***
 
@@ -28,4 +28,4 @@ Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:48](https://github.com
 
 > `readonly` **type**: [`HoverableElementType`](../type-aliases/HoverableElementType.md)
 
-Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:49](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L49)
+Defined in: [graph/src/behaviours/ClickSelectBehaviour.ts:48](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ClickSelectBehaviour.ts#L48)

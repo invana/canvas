@@ -1,13 +1,10 @@
 # Class: MiniMapLayer
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:100](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L100)
-
-The subset of `Layer` the `LayerRegistry` and `Canvas.tick` interact with.
-Lets the registry stay decoupled from the abstract class implementation.
+Defined in: [graph/src/layer/MiniMapLayer.ts:151](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L151)
 
 ## Extends
 
-- [`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md)\<[`MiniMapLayerOptions`](../interfaces/MiniMapLayerOptions.md), `MiniMapState`, `Record`\<`string`, `never`\>, `never`, [`ScreenLayerHit`](../../../canvas/src/interfaces/ScreenLayerHit.md)\>
+- `ScreenLayer`\<[`MiniMapLayerOptions`](../interfaces/MiniMapLayerOptions.md), `MiniMapState`, `Record`\<`string`, `never`\>, `never`, `ScreenLayerHit`\>
 
 ## Constructors
 
@@ -15,13 +12,13 @@ Lets the registry stay decoupled from the abstract class implementation.
 
 > **new MiniMapLayer**(`opts`): `MiniMapLayer`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:134](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L134)
+Defined in: [graph/src/layer/MiniMapLayer.ts:188](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L188)
 
 #### Parameters
 
 ##### opts
 
-[`LayerOptions`](../../../canvas/src/interfaces/LayerOptions.md)\<[`MiniMapLayerOptions`](../interfaces/MiniMapLayerOptions.md)\>
+`LayerOptions`\<[`MiniMapLayerOptions`](../interfaces/MiniMapLayerOptions.md)\>
 
 #### Returns
 
@@ -29,7 +26,7 @@ Defined in: [graph/src/layer/MiniMapLayer.ts:134](https://github.com/invana/canv
 
 #### Overrides
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`constructor`](../../../canvas/src/classes/ScreenLayer.md#constructor)
+`ScreenLayer< MiniMapLayerOptions, MiniMapState, Record<string, never>, never, ScreenLayerHit >.constructor`
 
 ## Properties
 
@@ -37,27 +34,27 @@ Defined in: [graph/src/layer/MiniMapLayer.ts:134](https://github.com/invana/canv
 
 > `protected` `optional` **\_container?**: `Container`
 
-Defined in: [canvas/src/layers/ScreenLayer.ts:37](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/ScreenLayer.ts#L37)
+Defined in: canvas/dist/index.d.ts:1010
 
 Backing field — assigned in `mount`, cleared in `unmount`.
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`_container`](../../../canvas/src/classes/ScreenLayer.md#_container)
+`ScreenLayer._container`
 
 ***
 
 ### ctx?
 
-> `protected` `optional` **ctx?**: [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
+> `protected` `optional` **ctx?**: `CanvasContext`
 
-Defined in: [canvas/src/layers/Layer.ts:108](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L108)
+Defined in: canvas/dist/index.d.ts:572
 
 Set by `mount(ctx)`; cleared by `unmount()`.
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`ctx`](../../../canvas/src/classes/ScreenLayer.md#ctx)
+`ScreenLayer.ctx`
 
 ***
 
@@ -65,35 +62,35 @@ Set by `mount(ctx)`; cleared by `unmount()`.
 
 > **cullable**: `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:91](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L91)
+Defined in: canvas/dist/index.d.ts:563
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`cullable`](../../../canvas/src/classes/ScreenLayer.md#cullable)
+`ScreenLayer.cullable`
 
 ***
 
 ### dirty
 
-> `readonly` **dirty**: [`DirtyBatcher`](../../../canvas/src/classes/DirtyBatcher.md)\<`never`\>
+> `readonly` **dirty**: `DirtyBatcher`\<`never`\>
 
-Defined in: [canvas/src/layers/Layer.ts:85](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L85)
+Defined in: canvas/dist/index.d.ts:558
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`dirty`](../../../canvas/src/classes/ScreenLayer.md#dirty)
+`ScreenLayer.dirty`
 
 ***
 
 ### events
 
-> `readonly` **events**: [`SourceEmitter`](../../../canvas/src/classes/SourceEmitter.md)\<`Record`\<`string`, `never`\>\>
+> `readonly` **events**: `SourceEmitter`\<`Record`\<`string`, `never`\>\>
 
-Defined in: [canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L84)
+Defined in: canvas/dist/index.d.ts:557
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`events`](../../../canvas/src/classes/ScreenLayer.md#events)
+`ScreenLayer.events`
 
 ***
 
@@ -101,11 +98,11 @@ Defined in: [canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blo
 
 > **hittable**: `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:89](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L89)
+Defined in: canvas/dist/index.d.ts:561
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`hittable`](../../../canvas/src/classes/ScreenLayer.md#hittable)
+`ScreenLayer.hittable`
 
 ***
 
@@ -113,11 +110,11 @@ Defined in: [canvas/src/layers/Layer.ts:89](https://github.com/invana/canvas/blo
 
 > `readonly` **id**: `string`
 
-Defined in: [canvas/src/layers/Layer.ts:81](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L81)
+Defined in: canvas/dist/index.d.ts:554
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`id`](../../../canvas/src/classes/ScreenLayer.md#id)
+`ScreenLayer.id`
 
 ***
 
@@ -125,23 +122,23 @@ Defined in: [canvas/src/layers/Layer.ts:81](https://github.com/invana/canvas/blo
 
 > `readonly` **options**: [`MiniMapLayerOptions`](../interfaces/MiniMapLayerOptions.md)
 
-Defined in: [canvas/src/layers/Layer.ts:82](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L82)
+Defined in: canvas/dist/index.d.ts:555
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`options`](../../../canvas/src/classes/ScreenLayer.md#options)
+`ScreenLayer.options`
 
 ***
 
 ### state
 
-> `readonly` **state**: [`Store`](../../../canvas/src/type-aliases/Store.md)\<`MiniMapState`\>
+> `readonly` **state**: `Store`\<`MiniMapState`\>
 
-Defined in: [canvas/src/layers/Layer.ts:83](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L83)
+Defined in: canvas/dist/index.d.ts:556
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`state`](../../../canvas/src/classes/ScreenLayer.md#state)
+`ScreenLayer.state`
 
 ***
 
@@ -149,11 +146,11 @@ Defined in: [canvas/src/layers/Layer.ts:83](https://github.com/invana/canvas/blo
 
 > **zIndex**: `number`
 
-Defined in: [canvas/src/layers/Layer.ts:90](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L90)
+Defined in: canvas/dist/index.d.ts:562
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`zIndex`](../../../canvas/src/classes/ScreenLayer.md#zindex)
+`ScreenLayer.zIndex`
 
 ## Accessors
 
@@ -163,7 +160,7 @@ Defined in: [canvas/src/layers/Layer.ts:90](https://github.com/invana/canvas/blo
 
 > **get** `protected` **container**(): `Container`
 
-Defined in: [canvas/src/layers/ScreenLayer.ts:45](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/ScreenLayer.ts#L45)
+Defined in: canvas/dist/index.d.ts:1017
 
 Root pixi `Container` for this screen-space layer. Available from
 `onMount(ctx)` for the layer's lifetime. Throws before mount / after unmount.
@@ -176,7 +173,7 @@ Subclass-only — not part of the external layer API.
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`container`](../../../canvas/src/classes/ScreenLayer.md#container)
+`ScreenLayer.container`
 
 ***
 
@@ -184,19 +181,19 @@ Subclass-only — not part of the external layer API.
 
 #### Get Signature
 
-> **get** `protected` **context**(): [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
+> **get** `protected` **context**(): `CanvasContext`
 
-Defined in: [canvas/src/layers/Layer.ts:156](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L156)
+Defined in: canvas/dist/index.d.ts:579
 
 Convenience accessor; throws when called pre-mount.
 
 ##### Returns
 
-[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
+`CanvasContext`
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`context`](../../../canvas/src/classes/ScreenLayer.md#context)
+`ScreenLayer.context`
 
 ***
 
@@ -206,7 +203,7 @@ Convenience accessor; throws when called pre-mount.
 
 > **get** **mounted**(): `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:111](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L111)
+Defined in: canvas/dist/index.d.ts:574
 
 True between `mount` and `unmount`.
 
@@ -216,7 +213,7 @@ True between `mount` and `unmount`.
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`mounted`](../../../canvas/src/classes/ScreenLayer.md#mounted)
+`ScreenLayer.mounted`
 
 ***
 
@@ -226,7 +223,7 @@ True between `mount` and `unmount`.
 
 > **get** **visible**(): `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:98](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L98)
+Defined in: canvas/dist/index.d.ts:569
 
 Whether this layer renders. Setting `false` hides the layer's pixi
 container (via `onVisibleChange`, overridden by `WorldLayer` /
@@ -240,7 +237,7 @@ container (via `onVisibleChange`, overridden by `WorldLayer` /
 
 > **set** **visible**(`value`): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:101](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L101)
+Defined in: canvas/dist/index.d.ts:570
 
 ##### Parameters
 
@@ -254,7 +251,7 @@ Defined in: [canvas/src/layers/Layer.ts:101](https://github.com/invana/canvas/bl
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`visible`](../../../canvas/src/classes/ScreenLayer.md#visible)
+`ScreenLayer.visible`
 
 ## Methods
 
@@ -262,7 +259,7 @@ Defined in: [canvas/src/layers/Layer.ts:101](https://github.com/invana/canvas/bl
 
 > `protected` **applyDirty**(`_snap`): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:189](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L189)
+Defined in: canvas/dist/index.d.ts:602
 
 Translate a dirty snapshot into renderer / pixi commands.
 Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
@@ -271,7 +268,7 @@ Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
 ##### \_snap
 
-[`DirtySnapshot`](../../../canvas/src/interfaces/DirtySnapshot.md)\<`never`\>
+`DirtySnapshot`\<`never`\>
 
 #### Returns
 
@@ -279,7 +276,7 @@ Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`applyDirty`](../../../canvas/src/classes/ScreenLayer.md#applydirty)
+`ScreenLayer.applyDirty`
 
 ***
 
@@ -287,7 +284,7 @@ Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
 > **createContainer**(`label?`): `Container`
 
-Defined in: [canvas/src/layers/ScreenLayer.ts:99](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/ScreenLayer.ts#L99)
+Defined in: canvas/dist/index.d.ts:1033
 
 Create a plain pixi `Container` attached to this layer's root container.
 Useful as a parent for mounted display objects.
@@ -304,7 +301,7 @@ Useful as a parent for mounted display objects.
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`createContainer`](../../../canvas/src/classes/ScreenLayer.md#createcontainer)
+`ScreenLayer.createContainer`
 
 ***
 
@@ -312,7 +309,7 @@ Useful as a parent for mounted display objects.
 
 > **createGraphics**(`label?`): `Graphics`
 
-Defined in: [canvas/src/layers/ScreenLayer.ts:88](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/ScreenLayer.ts#L88)
+Defined in: canvas/dist/index.d.ts:1028
 
 Create a pixi `Graphics` attached to this layer's root container. The
 sanctioned way for layer authors to obtain a `Graphics` for direct
@@ -330,7 +327,7 @@ painting via `@invana/canvas/draw` primitives.
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`createGraphics`](../../../canvas/src/classes/ScreenLayer.md#creategraphics)
+`ScreenLayer.createGraphics`
 
 ***
 
@@ -338,7 +335,7 @@ painting via `@invana/canvas/draw` primitives.
 
 > `protected` **createState**(): `MiniMapState`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:145](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L145)
+Defined in: [graph/src/layer/MiniMapLayer.ts:199](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L199)
 
 Build the initial UI / interaction state. Called once in the constructor.
 
@@ -348,7 +345,7 @@ Build the initial UI / interaction state. Called once in the constructor.
 
 #### Overrides
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`createState`](../../../canvas/src/classes/ScreenLayer.md#createstate)
+`ScreenLayer.createState`
 
 ***
 
@@ -356,7 +353,7 @@ Build the initial UI / interaction state. Called once in the constructor.
 
 > **flush**(): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:174](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L174)
+Defined in: canvas/dist/index.d.ts:586
 
 Called by Canvas tick when `hasPending()` is true. Swaps the dirty
 snapshot, hands it to `applyDirty`. Subclasses normally don't override.
@@ -367,7 +364,37 @@ snapshot, hands it to `applyDirty`. Subclasses normally don't override.
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`flush`](../../../canvas/src/classes/ScreenLayer.md#flush)
+`ScreenLayer.flush`
+
+***
+
+### getMode()
+
+> **getMode**(): [`MiniMapMode`](../type-aliases/MiniMapMode.md)
+
+Defined in: [graph/src/layer/MiniMapLayer.ts:319](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L319)
+
+Current mode setting.
+
+#### Returns
+
+[`MiniMapMode`](../type-aliases/MiniMapMode.md)
+
+***
+
+### getResolvedKind()
+
+> **getResolvedKind**(): [`MiniMapKind`](../type-aliases/MiniMapKind.md)
+
+Defined in: [graph/src/layer/MiniMapLayer.ts:328](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L328)
+
+Concrete kind currently resolved. A pinned `mode` wins; otherwise `'auto'`
+follows the active theme on `ctx.theme` (defaulting to `'light'` before any
+theme is published).
+
+#### Returns
+
+[`MiniMapKind`](../type-aliases/MiniMapKind.md)
 
 ***
 
@@ -375,7 +402,7 @@ snapshot, hands it to `applyDirty`. Subclasses normally don't override.
 
 > **hasPending**(): `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:166](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/Layer.ts#L166)
+Defined in: canvas/dist/index.d.ts:581
 
 Whether `flush()` has work to do this frame.
 
@@ -385,25 +412,25 @@ Whether `flush()` has work to do this frame.
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`hasPending`](../../../canvas/src/classes/ScreenLayer.md#haspending)
+`ScreenLayer.hasPending`
 
 ***
 
 ### hitTest()
 
-> **hitTest**(): [`ScreenLayerHit`](../../../canvas/src/interfaces/ScreenLayerHit.md)
+> **hitTest**(): `ScreenLayerHit`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:217](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L217)
+Defined in: [graph/src/layer/MiniMapLayer.ts:289](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L289)
 
 Hit-test in screen / viewport coordinates. Top-most hit or `null`.
 
 #### Returns
 
-[`ScreenLayerHit`](../../../canvas/src/interfaces/ScreenLayerHit.md)
+`ScreenLayerHit`
 
 #### Overrides
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`hitTest`](../../../canvas/src/classes/ScreenLayer.md#hittest)
+`ScreenLayer.hitTest`
 
 ***
 
@@ -411,13 +438,13 @@ Hit-test in screen / viewport coordinates. Top-most hit or `null`.
 
 > **mount**(`ctx`): `void`
 
-Defined in: [canvas/src/layers/ScreenLayer.ts:56](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/ScreenLayer.ts#L56)
+Defined in: canvas/dist/index.d.ts:1019
 
 #### Parameters
 
 ##### ctx
 
-[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
+`CanvasContext`
 
 #### Returns
 
@@ -425,7 +452,7 @@ Defined in: [canvas/src/layers/ScreenLayer.ts:56](https://github.com/invana/canv
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`mount`](../../../canvas/src/classes/ScreenLayer.md#mount)
+`ScreenLayer.mount`
 
 ***
 
@@ -433,7 +460,7 @@ Defined in: [canvas/src/layers/ScreenLayer.ts:56](https://github.com/invana/canv
 
 > `protected` **onMount**(`ctx`): `void`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:149](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L149)
+Defined in: [graph/src/layer/MiniMapLayer.ts:203](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L203)
 
 Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
@@ -441,7 +468,7 @@ Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
 ##### ctx
 
-[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
+`CanvasContext`
 
 #### Returns
 
@@ -449,7 +476,7 @@ Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
 #### Overrides
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`onMount`](../../../canvas/src/classes/ScreenLayer.md#onmount)
+`ScreenLayer.onMount`
 
 ***
 
@@ -457,7 +484,7 @@ Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
 > `protected` **onUnmount**(): `void`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:199](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L199)
+Defined in: [graph/src/layer/MiniMapLayer.ts:269](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L269)
 
 Domain-specific unmount teardown.
 
@@ -467,7 +494,7 @@ Domain-specific unmount teardown.
 
 #### Overrides
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`onUnmount`](../../../canvas/src/classes/ScreenLayer.md#onunmount)
+`ScreenLayer.onUnmount`
 
 ***
 
@@ -475,7 +502,7 @@ Domain-specific unmount teardown.
 
 > `protected` **onVisibleChange**(`value`): `void`
 
-Defined in: [canvas/src/layers/ScreenLayer.ts:72](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/ScreenLayer.ts#L72)
+Defined in: canvas/dist/index.d.ts:1021
 
 Keep the pixi container in sync when `layer.visible` is toggled.
 
@@ -491,7 +518,30 @@ Keep the pixi container in sync when `layer.visible` is toggled.
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`onVisibleChange`](../../../canvas/src/classes/ScreenLayer.md#onvisiblechange)
+`ScreenLayer.onVisibleChange`
+
+***
+
+### redraw()
+
+> **redraw**(): `void`
+
+Defined in: canvas/dist/index.d.ts:595
+
+Force a full repaint of this layer from its current state, bypassing the
+per-frame dirty path. Base implementation is a no-op — only layers that
+mount a renderer override it (e.g. `GraphLayer.redraw` re-renders every
+node and edge). Driven by [Canvas.redraw](GraphCanvas.md#redraw); reach for it after an
+external change that sidestepped the normal mutate-and-flush path (theme
+swap, palette change) or to recover from a suspected render desync.
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+`ScreenLayer.redraw`
 
 ***
 
@@ -499,9 +549,32 @@ Keep the pixi container in sync when `layer.visible` is toggled.
 
 > **refresh**(): `void`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:224](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L224)
+Defined in: [graph/src/layer/MiniMapLayer.ts:296](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L296)
 
 Force a re-paint. Cheap — call after mutating colours / sizes externally.
+
+#### Returns
+
+`void`
+
+***
+
+### setMode()
+
+> **setMode**(`mode`): `void`
+
+Defined in: [graph/src/layer/MiniMapLayer.ts:312](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L312)
+
+Set the colour-resolution mode. `'auto'` follows the active theme on
+`ctx.theme`; `'light'` / `'dark'` pin explicitly. No-op when unchanged. The
+minimap chrome flips in lockstep with the canvas BackgroundLayer,
+which resolves its kind from the same theme signal.
+
+#### Parameters
+
+##### mode
+
+[`MiniMapMode`](../type-aliases/MiniMapMode.md)
 
 #### Returns
 
@@ -513,7 +586,7 @@ Force a re-paint. Cheap — call after mutating colours / sizes externally.
 
 > **setOptions**(`patch`): `void`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:228](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/MiniMapLayer.ts#L228)
+Defined in: [graph/src/layer/MiniMapLayer.ts:300](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L300)
 
 #### Parameters
 
@@ -531,7 +604,7 @@ Defined in: [graph/src/layer/MiniMapLayer.ts:228](https://github.com/invana/canv
 
 > **setZIndex**(`z`): `void`
 
-Defined in: [canvas/src/layers/ScreenLayer.ts:111](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/ScreenLayer.ts#L111)
+Defined in: canvas/dist/index.d.ts:1039
 
 Update this layer's z-order relative to its peers. Keeps the iteration
 field (`this.zIndex`) and the pixi container's `zIndex` in sync, and
@@ -549,7 +622,7 @@ flips `ctx.stage` into sorted mode so the change renders.
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`setZIndex`](../../../canvas/src/classes/ScreenLayer.md#setzindex)
+`ScreenLayer.setZIndex`
 
 ***
 
@@ -557,7 +630,7 @@ flips `ctx.stage` into sorted mode so the change renders.
 
 > **unmount**(): `void`
 
-Defined in: [canvas/src/layers/ScreenLayer.ts:76](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/layers/ScreenLayer.ts#L76)
+Defined in: canvas/dist/index.d.ts:1022
 
 #### Returns
 
@@ -565,4 +638,4 @@ Defined in: [canvas/src/layers/ScreenLayer.ts:76](https://github.com/invana/canv
 
 #### Inherited from
 
-[`ScreenLayer`](../../../canvas/src/classes/ScreenLayer.md).[`unmount`](../../../canvas/src/classes/ScreenLayer.md#unmount)
+`ScreenLayer.unmount`

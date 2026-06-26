@@ -2,7 +2,7 @@
 
 > **GraphStoreEventMap** = `object`
 
-Defined in: [graph/src/store/types.ts:120](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/types.ts#L120)
+Defined in: [graph/src/store/types.ts:134](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L134)
 
 Event-map shape for `GraphStore.events` (used by `EventEmitter<E>`).
 
@@ -15,7 +15,7 @@ or to `flush` for aggregated per-batch counts.
 
 > **edge:add**: `object`
 
-Defined in: [graph/src/store/types.ts:124](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/types.ts#L124)
+Defined in: [graph/src/store/types.ts:138](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L138)
 
 #### edgeId
 
@@ -27,7 +27,7 @@ Defined in: [graph/src/store/types.ts:124](https://github.com/invana/canvas/blob
 
 > **edge:orphaned**: `object`
 
-Defined in: [graph/src/store/types.ts:128](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/types.ts#L128)
+Defined in: [graph/src/store/types.ts:142](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L142)
 
 Emitted when a buffered edge is dropped after exceeding `pendingEdgeTTL`.
 
@@ -41,7 +41,7 @@ Emitted when a buffered edge is dropped after exceeding `pendingEdgeTTL`.
 
 > **edge:remove**: `object`
 
-Defined in: [graph/src/store/types.ts:126](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/types.ts#L126)
+Defined in: [graph/src/store/types.ts:140](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L140)
 
 #### edgeId
 
@@ -49,11 +49,37 @@ Defined in: [graph/src/store/types.ts:126](https://github.com/invana/canvas/blob
 
 ***
 
+### edge:state
+
+> **edge:state**: `object`
+
+Defined in: [graph/src/store/types.ts:152](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L152)
+
+Edge sibling of `node:state`.
+
+#### actor?
+
+> `optional` **actor?**: `string`
+
+#### edgeId
+
+> **edgeId**: `string`
+
+#### name
+
+> **name**: `string`
+
+#### on
+
+> **on**: `boolean`
+
+***
+
 ### edge:update
 
 > **edge:update**: `object`
 
-Defined in: [graph/src/store/types.ts:125](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/types.ts#L125)
+Defined in: [graph/src/store/types.ts:139](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L139)
 
 #### edgeId
 
@@ -69,7 +95,7 @@ Defined in: [graph/src/store/types.ts:125](https://github.com/invana/canvas/blob
 
 > **flush**: `object`
 
-Defined in: [graph/src/store/types.ts:130](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/types.ts#L130)
+Defined in: [graph/src/store/types.ts:154](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L154)
 
 Aggregate counts per flush. Fires once per batch / RAF flush.
 
@@ -103,7 +129,7 @@ Aggregate counts per flush. Fires once per batch / RAF flush.
 
 > **node:add**: `object`
 
-Defined in: [graph/src/store/types.ts:121](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/types.ts#L121)
+Defined in: [graph/src/store/types.ts:135](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L135)
 
 #### nodeId
 
@@ -115,7 +141,7 @@ Defined in: [graph/src/store/types.ts:121](https://github.com/invana/canvas/blob
 
 > **node:remove**: `object`
 
-Defined in: [graph/src/store/types.ts:123](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/types.ts#L123)
+Defined in: [graph/src/store/types.ts:137](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L137)
 
 #### nodeId
 
@@ -123,11 +149,41 @@ Defined in: [graph/src/store/types.ts:123](https://github.com/invana/canvas/blob
 
 ***
 
+### node:state
+
+> **node:state**: `object`
+
+Defined in: [graph/src/store/types.ts:150](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L150)
+
+A runtime (presence) state was toggled on a node — `on` reflects the
+post-change membership of the runtime set. Fired per-toggle on flush,
+deduped per `(id, name)` within the flush window. `actor` is reserved for
+collaboration (the originating user); `undefined` in single-user mode.
+Document `states[]` changes ride `node:update`, not this event.
+
+#### actor?
+
+> `optional` **actor?**: `string`
+
+#### name
+
+> **name**: `string`
+
+#### nodeId
+
+> **nodeId**: `string`
+
+#### on
+
+> **on**: `boolean`
+
+***
+
 ### node:update
 
 > **node:update**: `object`
 
-Defined in: [graph/src/store/types.ts:122](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/store/types.ts#L122)
+Defined in: [graph/src/store/types.ts:136](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L136)
 
 #### nodeId
 

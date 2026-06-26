@@ -1,10 +1,10 @@
 # Interface: CollapseExpandBehaviourOptions
 
-Defined in: [graph/src/behaviours/CollapseExpandBehaviour.ts:61](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/CollapseExpandBehaviour.ts#L61)
+Defined in: [graph/src/behaviours/CollapseExpandBehaviour.ts:61](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/CollapseExpandBehaviour.ts#L61)
 
 ## Extends
 
-- [`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md)
+- `BehaviourOptions`
 
 ## Properties
 
@@ -12,13 +12,13 @@ Defined in: [graph/src/behaviours/CollapseExpandBehaviour.ts:61](https://github.
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L43)
+Defined in: canvas/dist/index.d.ts:733
 
 Default `false` — the developer explicitly enables.
 
 #### Inherited from
 
-[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`enabled`](../../../canvas/src/interfaces/BehaviourOptions.md#enabled)
+`BehaviourOptions.enabled`
 
 ***
 
@@ -26,25 +26,11 @@ Default `false` — the developer explicitly enables.
 
 > **id**: `string`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L36)
+Defined in: canvas/dist/index.d.ts:726
 
 #### Inherited from
 
-[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`id`](../../../canvas/src/interfaces/BehaviourOptions.md#id)
-
-***
-
-### layerId
-
-> **layerId**: `string`
-
-Defined in: [graph/src/behaviours/CollapseExpandBehaviour.ts:63](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/CollapseExpandBehaviour.ts#L63)
-
-Required — the `GraphLayer` id this behaviour drives.
-
-#### Overrides
-
-[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`layerId`](../../../canvas/src/interfaces/BehaviourOptions.md#layerid)
+`BehaviourOptions.id`
 
 ***
 
@@ -52,7 +38,7 @@ Required — the `GraphLayer` id this behaviour drives.
 
 > `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L49)
+Defined in: canvas/dist/index.d.ts:739
 
 Gesture identifiers this behaviour claims. Used by `BehaviourRegistry`
 for conflict warnings. Format is convention-free (`'shift+drag'`,
@@ -60,4 +46,18 @@ for conflict warnings. Format is convention-free (`'shift+drag'`,
 
 #### Inherited from
 
-[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`shortcuts`](../../../canvas/src/interfaces/BehaviourOptions.md#shortcuts)
+`BehaviourOptions.shortcuts`
+
+***
+
+### targetLayerId
+
+> **targetLayerId**: `string`
+
+Defined in: [graph/src/behaviours/CollapseExpandBehaviour.ts:63](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/CollapseExpandBehaviour.ts#L63)
+
+Required — the `GraphLayer` id this behaviour drives.
+
+#### Overrides
+
+`BehaviourOptions.targetLayerId`

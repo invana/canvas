@@ -1,6 +1,6 @@
 # Interface: CanvasEvent\<TPayload\>
 
-Defined in: [canvas/src/events/CanvasEvent.ts:25](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/events/CanvasEvent.ts#L25)
+Defined in: [canvas/src/events/CanvasEvent.ts:25](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEvent.ts#L25)
 
 ## Type Parameters
 
@@ -14,7 +14,7 @@ Defined in: [canvas/src/events/CanvasEvent.ts:25](https://github.com/invana/canv
 
 > `readonly` **payload**: `TPayload`
 
-Defined in: [canvas/src/events/CanvasEvent.ts:29](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/events/CanvasEvent.ts#L29)
+Defined in: [canvas/src/events/CanvasEvent.ts:29](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEvent.ts#L29)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [canvas/src/events/CanvasEvent.ts:29](https://github.com/invana/canv
 
 > `readonly` **source**: [`EventSource`](EventSource.md)
 
-Defined in: [canvas/src/events/CanvasEvent.ts:28](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/events/CanvasEvent.ts#L28)
+Defined in: [canvas/src/events/CanvasEvent.ts:28](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEvent.ts#L28)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [canvas/src/events/CanvasEvent.ts:28](https://github.com/invana/canv
 
 > `readonly` **timestamp**: `number`
 
-Defined in: [canvas/src/events/CanvasEvent.ts:27](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/events/CanvasEvent.ts#L27)
+Defined in: [canvas/src/events/CanvasEvent.ts:27](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEvent.ts#L27)
 
 ***
 
@@ -38,4 +38,4 @@ Defined in: [canvas/src/events/CanvasEvent.ts:27](https://github.com/invana/canv
 
 > `readonly` **type**: `string`
 
-Defined in: [canvas/src/events/CanvasEvent.ts:26](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/events/CanvasEvent.ts#L26)
+Defined in: [canvas/src/events/CanvasEvent.ts:26](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEvent.ts#L26)

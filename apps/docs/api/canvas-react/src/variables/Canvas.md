@@ -1,0 +1,3 @@
+# Variable: Canvas
+
+> **Canvas**: `any`

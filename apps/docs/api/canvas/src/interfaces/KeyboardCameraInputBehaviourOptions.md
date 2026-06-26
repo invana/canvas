@@ -1,6 +1,6 @@
 # Interface: KeyboardCameraInputBehaviourOptions
 
-Defined in: [canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:43](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L43)
+Defined in: [canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:43](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L43)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:43](https://g
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L43)
+Defined in: [canvas/src/behaviours/Behaviour.ts:45](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L45)
 
 Default `false` — the developer explicitly enables.
 
@@ -26,7 +26,7 @@ Default `false` — the developer explicitly enables.
 
 > **id**: `string`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L36)
+Defined in: [canvas/src/behaviours/Behaviour.ts:38](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L38)
 
 #### Inherited from
 
@@ -38,24 +38,9 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/ca
 
 > `optional` **keymap?**: `Partial`\<[`KeyboardCameraKeymap`](KeyboardCameraKeymap.md)\>
 
-Defined in: [canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:52](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L52)
+Defined in: [canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:52](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L52)
 
 Override individual key groups. Merged with the defaults.
-
-***
-
-### layerId?
-
-> `optional` **layerId?**: `string`
-
-Defined in: [canvas/src/behaviours/Behaviour.ts:41](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L41)
-
-Layer-scoped behaviours target a specific Layer by id. Canvas-scoped
-behaviours have no `layerId` and `scope: 'canvas'`.
-
-#### Inherited from
-
-[`BehaviourOptions`](BehaviourOptions.md).[`layerId`](BehaviourOptions.md#layerid)
 
 ***
 
@@ -63,7 +48,7 @@ behaviours have no `layerId` and `scope: 'canvas'`.
 
 > `optional` **panStep?**: `number`
 
-Defined in: [canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:45](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L45)
+Defined in: [canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:45](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L45)
 
 Pan distance per key press in screen pixels. Default `40`.
 
@@ -73,7 +58,7 @@ Pan distance per key press in screen pixels. Default `40`.
 
 > `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L49)
+Defined in: [canvas/src/behaviours/Behaviour.ts:51](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L51)
 
 Gesture identifiers this behaviour claims. Used by `BehaviourRegistry`
 for conflict warnings. Format is convention-free (`'shift+drag'`,
@@ -85,11 +70,26 @@ for conflict warnings. Format is convention-free (`'shift+drag'`,
 
 ***
 
+### targetLayerId?
+
+> `optional` **targetLayerId?**: `string`
+
+Defined in: [canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L43)
+
+Layer-scoped behaviours target a specific Layer by id. Canvas-scoped
+behaviours have no `targetLayerId` and `scope: 'canvas'`.
+
+#### Inherited from
+
+[`BehaviourOptions`](BehaviourOptions.md).[`targetLayerId`](BehaviourOptions.md#targetlayerid)
+
+***
+
 ### zoomFactor?
 
 > `optional` **zoomFactor?**: `number`
 
-Defined in: [canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:50](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L50)
+Defined in: [canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:50](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L50)
 
 Zoom multiplier per key press. `1.1` = 10% in/out per press.
 Default `1.1`.

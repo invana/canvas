@@ -2,7 +2,7 @@
 
 > **LngLatTuple** = readonly \[`number`, `number`\]
 
-Defined in: [graph-layer-maplibre/src/greatCircle.ts:18](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layer-maplibre/src/greatCircle.ts#L18)
+Defined in: [graph-layer-maplibre/src/greatCircle.ts:18](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-maplibre/src/greatCircle.ts#L18)
 
 Spherical interpolation between two `[lng, lat]` points along the
 great-circle (shortest path on the sphere). Returns `n` evenly-spaced

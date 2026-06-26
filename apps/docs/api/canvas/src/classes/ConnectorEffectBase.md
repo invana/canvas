@@ -1,6 +1,6 @@
 # Abstract Class: ConnectorEffectBase\<TStyle\>
 
-Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:30](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L30)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:30](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L30)
 
 Base for effects that target connector primitives. Mirror of `EffectBase`
 for shape effects — the effect modulates the host connector's style
@@ -43,7 +43,7 @@ decorations draw, effects modulate.
 
 > **new ConnectorEffectBase**\<`TStyle`\>(`style`): `ConnectorEffectBase`\<`TStyle`\>
 
-Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:36](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L36)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:36](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L36)
 
 #### Parameters
 
@@ -61,7 +61,7 @@ Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:36](https://githu
 
 > `protected` **host**: `ConnectorEffectHostInfo` = `null`
 
-Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:34](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L34)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:34](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L34)
 
 ***
 
@@ -69,7 +69,7 @@ Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:34](https://githu
 
 > `readonly` **style**: `TStyle`
 
-Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:33](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L33)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:33](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L33)
 
 #### Implementation of
 
@@ -81,7 +81,7 @@ Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:33](https://githu
 
 > `abstract` `readonly` **target**: [`EffectTarget`](../type-aliases/EffectTarget.md)
 
-Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:31](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L31)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:31](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L31)
 
 #### Implementation of
 
@@ -93,7 +93,7 @@ Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:31](https://githu
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:48](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L48)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:48](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L48)
 
 #### Returns
 
@@ -109,7 +109,7 @@ Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:48](https://githu
 
 > **mount**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:40](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L40)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:40](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L40)
 
 #### Parameters
 
@@ -131,7 +131,7 @@ Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:40](https://githu
 
 > `optional` **readStyle**(): [`StyleOverride`](../interfaces/StyleOverride.md)
 
-Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:56](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L56)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:56](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L56)
 
 #### Returns
 
@@ -147,7 +147,7 @@ Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:56](https://githu
 
 > `optional` **readTransform**(): [`TransformDelta`](../interfaces/TransformDelta.md)
 
-Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:54](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L54)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:54](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L54)
 
 #### Returns
 
@@ -163,7 +163,7 @@ Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:54](https://githu
 
 > `optional` **tick**(`deltaMs`): `boolean`
 
-Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:52](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L52)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:52](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L52)
 
 #### Parameters
 
@@ -185,7 +185,7 @@ Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:52](https://githu
 
 > **update**(`host`): `void`
 
-Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:44](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L44)
+Defined in: [canvas/src/primitives/base/ConnectorEffectBase.ts:44](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ConnectorEffectBase.ts#L44)
 
 #### Parameters
 

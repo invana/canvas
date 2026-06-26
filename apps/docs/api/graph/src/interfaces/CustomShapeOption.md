@@ -1,6 +1,6 @@
 # Interface: CustomShapeOption
 
-Defined in: [graph/src/layer/types.ts:282](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L282)
+Defined in: [graph/src/layer/types.ts:290](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L290)
 
 Escape-hatch variant for shape kinds registered at runtime via
 `canvas.primitives.registerShape(name, ctor)`. The widened `kind` accepts
@@ -26,4 +26,4 @@ this fallback applies.
 
 > `readonly` **kind**: `string` & `object`
 
-Defined in: [graph/src/layer/types.ts:283](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L283)
+Defined in: [graph/src/layer/types.ts:291](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L291)

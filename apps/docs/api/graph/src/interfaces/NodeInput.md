@@ -1,6 +1,6 @@
 # Interface: NodeInput\<D\>
 
-Defined in: [graph/src/layer/types.ts:1003](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1003)
+Defined in: [graph/src/layer/types.ts:1056](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1056)
 
 What the consumer passes to `GraphLayer.setData`. Same shape as
 [NodeData](NodeData.md) but with Resolvable fields — `id` and per-field styles
@@ -19,7 +19,7 @@ holds `NodeData`.
 
 > `readonly` `optional` **data?**: `D`
 
-Defined in: [graph/src/layer/types.ts:1006](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1006)
+Defined in: [graph/src/layer/types.ts:1059](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1059)
 
 ***
 
@@ -27,7 +27,7 @@ Defined in: [graph/src/layer/types.ts:1006](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **id?**: [`ResolvableId`](../type-aliases/ResolvableId.md)\<`D`\>
 
-Defined in: [graph/src/layer/types.ts:1004](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1004)
+Defined in: [graph/src/layer/types.ts:1057](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1057)
 
 ***
 
@@ -35,7 +35,7 @@ Defined in: [graph/src/layer/types.ts:1004](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **parentId?**: `string`
 
-Defined in: [graph/src/layer/types.ts:1012](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1012)
+Defined in: [graph/src/layer/types.ts:1065](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1065)
 
 ***
 
@@ -43,7 +43,7 @@ Defined in: [graph/src/layer/types.ts:1012](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **pinned?**: `boolean`
 
-Defined in: [graph/src/layer/types.ts:1011](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1011)
+Defined in: [graph/src/layer/types.ts:1064](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1064)
 
 ***
 
@@ -51,7 +51,7 @@ Defined in: [graph/src/layer/types.ts:1011](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **position?**: `object`
 
-Defined in: [graph/src/layer/types.ts:1010](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1010)
+Defined in: [graph/src/layer/types.ts:1063](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1063)
 
 #### x
 
@@ -67,7 +67,7 @@ Defined in: [graph/src/layer/types.ts:1010](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **state?**: `Readonly`\<`Record`\<`string`, [`ResolvableNodeStyle`](../type-aliases/ResolvableNodeStyle.md)\<`D`\>\>\>
 
-Defined in: [graph/src/layer/types.ts:1008](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1008)
+Defined in: [graph/src/layer/types.ts:1061](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1061)
 
 ***
 
@@ -75,7 +75,7 @@ Defined in: [graph/src/layer/types.ts:1008](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **states?**: readonly `string`[]
 
-Defined in: [graph/src/layer/types.ts:1009](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1009)
+Defined in: [graph/src/layer/types.ts:1062](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1062)
 
 ***
 
@@ -83,7 +83,7 @@ Defined in: [graph/src/layer/types.ts:1009](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **style?**: [`ResolvableNodeStyle`](../type-aliases/ResolvableNodeStyle.md)\<`D`\>
 
-Defined in: [graph/src/layer/types.ts:1007](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1007)
+Defined in: [graph/src/layer/types.ts:1060](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1060)
 
 ***
 
@@ -91,4 +91,4 @@ Defined in: [graph/src/layer/types.ts:1007](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **type?**: `string`
 
-Defined in: [graph/src/layer/types.ts:1005](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1005)
+Defined in: [graph/src/layer/types.ts:1058](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1058)

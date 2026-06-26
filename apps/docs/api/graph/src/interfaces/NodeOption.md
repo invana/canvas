@@ -1,6 +1,6 @@
 # Interface: NodeOption
 
-Defined in: [graph/src/layer/types.ts:1023](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1023)
+Defined in: [graph/src/layer/types.ts:1076](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1076)
 
 Layer-level node template — G6's `node` field on GraphOptions. Resolvers
 fire every frame against the stored `GraphNode`.
@@ -15,7 +15,7 @@ attachments live on `NodeStyle.decorations` / `NodeStyle.effects`.
 
 > `readonly` `optional` **palette?**: `unknown`
 
-Defined in: [graph/src/layer/types.ts:1029](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1029)
+Defined in: [graph/src/layer/types.ts:1082](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1082)
 
 Reserved for palette-driven theming. Deferred wiring.
 
@@ -25,7 +25,7 @@ Reserved for palette-driven theming. Deferred wiring.
 
 > `readonly` `optional` **state?**: `Readonly`\<`Record`\<`string`, [`ResolvableNodeStyle`](../type-aliases/ResolvableNodeStyle.md)\<[`GraphNode`](GraphNode.md)\>\>\>
 
-Defined in: [graph/src/layer/types.ts:1027](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1027)
+Defined in: [graph/src/layer/types.ts:1080](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1080)
 
 ***
 
@@ -33,7 +33,7 @@ Defined in: [graph/src/layer/types.ts:1027](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **style?**: [`ResolvableNodeStyle`](../type-aliases/ResolvableNodeStyle.md)\<[`GraphNode`](GraphNode.md)\>
 
-Defined in: [graph/src/layer/types.ts:1026](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1026)
+Defined in: [graph/src/layer/types.ts:1079](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1079)
 
 ***
 
@@ -41,6 +41,6 @@ Defined in: [graph/src/layer/types.ts:1026](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **type?**: `string`
 
-Defined in: [graph/src/layer/types.ts:1025](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1025)
+Defined in: [graph/src/layer/types.ts:1078](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1078)
 
 Type tag this template defines (e.g. 'person', 'doc'). Optional.

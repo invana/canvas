@@ -1,6 +1,6 @@
 # Interface: ConnectorLabelStyle
 
-Defined in: [canvas/src/primitives/types.ts:1309](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1309)
+Defined in: [canvas/src/primitives/types.ts:1311](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1311)
 
 Style payload for connector labels.
 
@@ -14,7 +14,7 @@ Style payload for connector labels.
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:1242](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1242)
+Defined in: [canvas/src/primitives/types.ts:1244](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1244)
 
 #### Inherited from
 
@@ -26,7 +26,7 @@ Defined in: [canvas/src/primitives/types.ts:1242](https://github.com/invana/canv
 
 > `readonly` `optional` **autoRotate?**: `boolean`
 
-Defined in: [canvas/src/primitives/types.ts:1318](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1318)
+Defined in: [canvas/src/primitives/types.ts:1320](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1320)
 
 Rotate the label so its baseline follows the path tangent. Default `true`.
 
@@ -36,7 +36,7 @@ Rotate the label so its baseline follows the path tangent. Default `true`.
 
 > `readonly` `optional` **background?**: [`LabelBackground`](LabelBackground.md)
 
-Defined in: [canvas/src/primitives/types.ts:1238](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1238)
+Defined in: [canvas/src/primitives/types.ts:1240](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1240)
 
 #### Inherited from
 
@@ -48,7 +48,7 @@ Defined in: [canvas/src/primitives/types.ts:1238](https://github.com/invana/canv
 
 > `readonly` `optional` **collisionGroup?**: `string`
 
-Defined in: [canvas/src/primitives/types.ts:1256](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1256)
+Defined in: [canvas/src/primitives/types.ts:1258](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1258)
 
 #### Inherited from
 
@@ -60,7 +60,7 @@ Defined in: [canvas/src/primitives/types.ts:1256](https://github.com/invana/canv
 
 > `readonly` **content**: [`LabelContent`](../type-aliases/LabelContent.md)
 
-Defined in: [canvas/src/primitives/types.ts:1237](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1237)
+Defined in: [canvas/src/primitives/types.ts:1239](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1239)
 
 #### Inherited from
 
@@ -72,7 +72,7 @@ Defined in: [canvas/src/primitives/types.ts:1237](https://github.com/invana/canv
 
 > `readonly` `optional` **cursor?**: `string`
 
-Defined in: [canvas/src/primitives/types.ts:1246](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1246)
+Defined in: [canvas/src/primitives/types.ts:1248](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1248)
 
 Cursor on hover when the label container has hit-testing enabled.
 
@@ -86,7 +86,7 @@ Cursor on hover when the label container has hit-testing enabled.
 
 > `readonly` `optional` **forceShow?**: `boolean`
 
-Defined in: [canvas/src/primitives/types.ts:1257](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1257)
+Defined in: [canvas/src/primitives/types.ts:1259](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1259)
 
 #### Inherited from
 
@@ -98,7 +98,7 @@ Defined in: [canvas/src/primitives/types.ts:1257](https://github.com/invana/canv
 
 > `readonly` `optional` **interactive?**: `boolean`
 
-Defined in: [canvas/src/primitives/types.ts:1248](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1248)
+Defined in: [canvas/src/primitives/types.ts:1250](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1250)
 
 Pointer events enabled on the label container. Default `false`.
 
@@ -112,7 +112,7 @@ Pointer events enabled on the label container. Default `false`.
 
 > `readonly` `optional` **keepUpright?**: `boolean`
 
-Defined in: [canvas/src/primitives/types.ts:1323](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1323)
+Defined in: [canvas/src/primitives/types.ts:1325](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1325)
 
 When `autoRotate` is on, flip the label by π if the tangent angle lies in
 (π/2, 3π/2) — keeps reading direction upright. Default `true`.
@@ -123,7 +123,7 @@ When `autoRotate` is on, flip the label by π if the tangent angle lies in
 
 > `readonly` `optional` **minFontSize?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:1264](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1264)
+Defined in: [canvas/src/primitives/types.ts:1266](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1266)
 
 Floor used by the shrink → truncate → hide fit cascade when an
 `inside-*` placement requires the label to stay inside the host shape.
@@ -140,7 +140,7 @@ finally hide. Default `9` (px). Ignored for non-`inside-*` placements.
 
 > `readonly` `optional` **offset?**: `object`
 
-Defined in: [canvas/src/primitives/types.ts:1241](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1241)
+Defined in: [canvas/src/primitives/types.ts:1243](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1243)
 
 Screen-space offset in pixels applied *after* any auto-rotation.
 
@@ -162,7 +162,7 @@ Screen-space offset in pixels applied *after* any auto-rotation.
 
 > `readonly` `optional` **pathOffset?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:1316](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1316)
+Defined in: [canvas/src/primitives/types.ts:1318](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1318)
 
 Distance to shift along the path tangent, in pixels. Positive = toward
 target; negative = toward source. Use this for "pad 24px from source".
@@ -173,7 +173,7 @@ target; negative = toward source. Use this for "pad 24px from source".
 
 > `readonly` `optional` **placement?**: [`ConnectorLabelPlacement`](../type-aliases/ConnectorLabelPlacement.md)
 
-Defined in: [canvas/src/primitives/types.ts:1311](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1311)
+Defined in: [canvas/src/primitives/types.ts:1313](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1313)
 
 Default `'center'`.
 
@@ -183,7 +183,7 @@ Default `'center'`.
 
 > `readonly` `optional` **priority?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:1255](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1255)
+Defined in: [canvas/src/primitives/types.ts:1257](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1257)
 
 Read by `LabelCollisionBehaviour` only — the primitive ignores these.
 `priority` higher wins ties when collision hides overlap. `collisionGroup`
@@ -200,7 +200,7 @@ partitions the collision graph (labels in different groups never compete).
 
 > `readonly` `optional` **visibility?**: [`LabelVisibility`](LabelVisibility.md)
 
-Defined in: [canvas/src/primitives/types.ts:1244](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1244)
+Defined in: [canvas/src/primitives/types.ts:1246](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1246)
 
 Per-label zoom-band LOD; the decoration mounts/unmounts on threshold.
 
@@ -214,7 +214,7 @@ Per-label zoom-band LOD; the decoration mounts/unmounts on threshold.
 
 > `readonly` `optional` **wrap?**: [`LabelWrap`](LabelWrap.md)
 
-Defined in: [canvas/src/primitives/types.ts:1239](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1239)
+Defined in: [canvas/src/primitives/types.ts:1241](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1241)
 
 #### Inherited from
 

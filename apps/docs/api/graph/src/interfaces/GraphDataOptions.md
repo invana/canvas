@@ -1,6 +1,6 @@
 # Interface: GraphDataOptions\<DN, DE\>
 
-Defined in: [graph/src/layer/types.ts:1256](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1256)
+Defined in: [graph/src/layer/types.ts:1309](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1309)
 
 Top-level data input shape for `GraphLayer.setData(opts)`. Carries node /
 edge inputs plus optional layer-wide id resolvers.
@@ -21,7 +21,7 @@ edge inputs plus optional layer-wide id resolvers.
 
 > `readonly` `optional` **edgeIdResolver?**: (`data`) => `string`
 
-Defined in: [graph/src/layer/types.ts:1261](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1261)
+Defined in: [graph/src/layer/types.ts:1314](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1314)
 
 #### Parameters
 
@@ -39,7 +39,7 @@ Defined in: [graph/src/layer/types.ts:1261](https://github.com/invana/canvas/blo
 
 > `readonly` **edges**: readonly [`EdgeInput`](EdgeInput.md)\<`DE`\>[]
 
-Defined in: [graph/src/layer/types.ts:1258](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1258)
+Defined in: [graph/src/layer/types.ts:1311](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1311)
 
 ***
 
@@ -47,7 +47,7 @@ Defined in: [graph/src/layer/types.ts:1258](https://github.com/invana/canvas/blo
 
 > `readonly` `optional` **nodeIdResolver?**: (`data`) => `string`
 
-Defined in: [graph/src/layer/types.ts:1260](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1260)
+Defined in: [graph/src/layer/types.ts:1313](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1313)
 
 Optional layer-wide id resolver applied to nodes that lack an explicit `id`.
 
@@ -67,4 +67,4 @@ Optional layer-wide id resolver applied to nodes that lack an explicit `id`.
 
 > `readonly` **nodes**: readonly [`NodeInput`](NodeInput.md)\<`DN`\>[]
 
-Defined in: [graph/src/layer/types.ts:1257](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L1257)
+Defined in: [graph/src/layer/types.ts:1310](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1310)

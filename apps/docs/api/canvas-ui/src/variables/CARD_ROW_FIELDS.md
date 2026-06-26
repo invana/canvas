@@ -1,0 +1,7 @@
+# Variable: CARD\_ROW\_FIELDS
+
+> `const` **CARD\_ROW\_FIELDS**: `FieldConfig`[]
+
+Defined in: [canvas-ui/src/editors/hover-preview-card/fields.ts:28](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-ui/src/editors/hover-preview-card/fields.ts#L28)
+
+Per-row controls (rendered under each `rows.<i>` ObjectField).

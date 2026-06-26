@@ -1,12 +1,12 @@
 # Interface: ParallelEdgeBehaviourOptions
 
-Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:125](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L125)
+Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:125](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L125)
 
 Constructor options for [ParallelEdgeBehaviour](../classes/ParallelEdgeBehaviour.md).
 
 ## Extends
 
-- [`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md)
+- `BehaviourOptions`
 
 ## Properties
 
@@ -14,7 +14,7 @@ Constructor options for [ParallelEdgeBehaviour](../classes/ParallelEdgeBehaviour
 
 > `optional` **anchorOffset?**: `boolean`
 
-Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:145](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L145)
+Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:145](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L145)
 
 When `true` and an edge uses a port anchor (`'edge-port'` or
 `'silhouette-port'`), the default policy writes
@@ -28,7 +28,7 @@ only writes waypoints. Default `true`.
 
 > `optional` **basis?**: [`ParallelEdgeBasis`](../type-aliases/ParallelEdgeBasis.md)
 
-Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:136](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L136)
+Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:136](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L136)
 
 Basis the default distribution policy uses to translate a rank into a
 waypoint / anchor-offset direction. Default `'auto'`.
@@ -39,7 +39,7 @@ waypoint / anchor-offset direction. Default `'auto'`.
 
 > `optional` **distribute?**: [`ParallelEdgeDistribute`](../type-aliases/ParallelEdgeDistribute.md)
 
-Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:157](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L157)
+Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:157](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L157)
 
 Distribution policy. Default [centeredRanksPolicy](../variables/centeredRanksPolicy.md).
 
@@ -49,13 +49,13 @@ Distribution policy. Default [centeredRanksPolicy](../variables/centeredRanksPol
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L43)
+Defined in: canvas/dist/index.d.ts:733
 
 Default `false` — the developer explicitly enables.
 
 #### Inherited from
 
-[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`enabled`](../../../canvas/src/interfaces/BehaviourOptions.md#enabled)
+`BehaviourOptions.enabled`
 
 ***
 
@@ -63,7 +63,7 @@ Default `false` — the developer explicitly enables.
 
 > `optional` **groupBy?**: (`edge`) => `string`
 
-Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:152](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L152)
+Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:152](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L152)
 
 Group key for an edge. Edges that produce the same key are bundled and
 distributed together. Return `null` to exclude an edge. Default groups
@@ -85,25 +85,11 @@ by directed pair `${source}::${target}`.
 
 > **id**: `string`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L36)
+Defined in: canvas/dist/index.d.ts:726
 
 #### Inherited from
 
-[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`id`](../../../canvas/src/interfaces/BehaviourOptions.md#id)
-
-***
-
-### layerId
-
-> **layerId**: `string`
-
-Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:127](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L127)
-
-Required — the `GraphLayer` id this behaviour drives.
-
-#### Overrides
-
-[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`layerId`](../../../canvas/src/interfaces/BehaviourOptions.md#layerid)
+`BehaviourOptions.id`
 
 ***
 
@@ -111,7 +97,7 @@ Required — the `GraphLayer` id this behaviour drives.
 
 > `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L49)
+Defined in: canvas/dist/index.d.ts:739
 
 Gesture identifiers this behaviour claims. Used by `BehaviourRegistry`
 for conflict warnings. Format is convention-free (`'shift+drag'`,
@@ -119,7 +105,7 @@ for conflict warnings. Format is convention-free (`'shift+drag'`,
 
 #### Inherited from
 
-[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`shortcuts`](../../../canvas/src/interfaces/BehaviourOptions.md#shortcuts)
+`BehaviourOptions.shortcuts`
 
 ***
 
@@ -127,6 +113,20 @@ for conflict warnings. Format is convention-free (`'shift+drag'`,
 
 > `optional` **spacing?**: `number`
 
-Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:130](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L130)
+Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:130](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L130)
 
 Spacing between adjacent ranks in world units. Default `12`.
+
+***
+
+### targetLayerId
+
+> **targetLayerId**: `string`
+
+Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:127](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L127)
+
+Required — the `GraphLayer` id this behaviour drives.
+
+#### Overrides
+
+`BehaviourOptions.targetLayerId`

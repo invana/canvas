@@ -1,6 +1,6 @@
 # Class: PrimitivesRenderer
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:201](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L201)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:202](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L202)
 
 ## Constructors
 
@@ -8,7 +8,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:201](https://github.com
 
 > **new PrimitivesRenderer**(`opts`): `PrimitivesRenderer`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:309](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L309)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:331](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L331)
 
 #### Parameters
 
@@ -26,7 +26,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:309](https://github.com
 
 > `readonly` **camera**: [`Camera`](Camera.md)
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:278](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L278)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:300](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L300)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:278](https://github.com
 
 > `readonly` **events**: [`EventEmitter`](EventEmitter.md)\<[`PrimitivesRendererEventMap`](../interfaces/PrimitivesRendererEventMap.md)\>
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:264](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L264)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:286](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L286)
 
 ## Accessors
 
@@ -44,7 +44,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:264](https://github.com
 
 > **get** **connectorCount**(): `number`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1674](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1674)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1838](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1838)
 
 ##### Returns
 
@@ -58,7 +58,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1674](https://github.co
 
 > **get** **shapeCount**(): `number`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1670](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1670)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1834](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1834)
 
 ##### Returns
 
@@ -70,7 +70,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1670](https://github.co
 
 > **addConnector**\<`TSpec`\>(`id`, `spec`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:587](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L587)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:720](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L720)
 
 #### Type Parameters
 
@@ -98,7 +98,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:587](https://github.com
 
 > **addShape**\<`TSpec`\>(`id`, `spec`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:449](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L449)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:481](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L481)
 
 #### Type Parameters
 
@@ -124,9 +124,9 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:449](https://github.com
 
 ### boundsOfSpec()
 
-> **boundsOfSpec**(`spec`): [`Rect`](../interfaces/Rect.md)
+> **boundsOfSpec**(`spec`): `Rect`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1721](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1721)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1885](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1885)
 
 Local AABB for the registered shape `kind`, derived from `spec` alone
 without instantiating the shape's Pixi `Graphics`. Returns `undefined`
@@ -161,7 +161,7 @@ flow through the same hook.
 
 #### Returns
 
-[`Rect`](../interfaces/Rect.md)
+`Rect`
 
 ***
 
@@ -169,7 +169,7 @@ flow through the same hook.
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1902](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1902)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:2066](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L2066)
 
 #### Returns
 
@@ -179,9 +179,9 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1902](https://github.co
 
 ### getConnectorPolyline()
 
-> **getConnectorPolyline**(`id`): readonly [`Point`](../interfaces/Point.md)[]
+> **getConnectorPolyline**(`id`): readonly `Point`[]
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1784](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1784)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1948](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1948)
 
 Densified polyline of the routed connector's path, in world coordinates,
 or `null` when no connector with that id exists. Returns the same point
@@ -201,7 +201,7 @@ Cheap: only samples the cached `inst.path`; no router invocation.
 
 #### Returns
 
-readonly [`Point`](../interfaces/Point.md)[]
+readonly `Point`[]
 
 ***
 
@@ -209,7 +209,7 @@ readonly [`Point`](../interfaces/Point.md)[]
 
 > **getDecoration**(`id`, `slot`): [`IDecorationBase`](../interfaces/IDecorationBase.md)\<`unknown`, `unknown`\>
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1766](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1766)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1930](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1930)
 
 Currently-mounted decoration instance for shape (or connector) `id` at
 `slot`, or `undefined` when no decoration is attached at that slot.
@@ -242,9 +242,9 @@ treat it as read-only and not mutate the decoration's `style` directly
 
 ### getDecorationWorldBounds()
 
-> **getDecorationWorldBounds**(`targetId`, `slot`): [`Rect`](../interfaces/Rect.md)
+> **getDecorationWorldBounds**(`targetId`, `slot`): `Rect`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1799](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1799)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1963](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1963)
 
 Local-space AABB of a decoration's gfx container in world coordinates
 (origin offset by the host). Returns `null` when no host or slot exists.
@@ -266,7 +266,7 @@ that needs per-decoration screen geometry.
 
 #### Returns
 
-[`Rect`](../interfaces/Rect.md)
+`Rect`
 
 ***
 
@@ -274,7 +274,7 @@ that needs per-decoration screen geometry.
 
 > **getRenderStats**(): [`RenderStats`](../interfaces/RenderStats.md)
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1662](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1662)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1826](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1826)
 
 #### Returns
 
@@ -284,9 +284,9 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1662](https://github.co
 
 ### getShapeCenter()
 
-> **getShapeCenter**(`id`): [`Point`](../interfaces/Point.md)
+> **getShapeCenter**(`id`): `Point`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1871](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1871)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:2035](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L2035)
 
 World-space geometric **centre** of the registered shape's bounding box,
 or `null` when no shape with that id exists. Differs from
@@ -305,7 +305,7 @@ placement, fit-to-content, etc.
 
 #### Returns
 
-[`Point`](../interfaces/Point.md)
+`Point`
 
 ***
 
@@ -313,7 +313,7 @@ placement, fit-to-content, etc.
 
 > **getShapeKind**(`id`): `string`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1693](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1693)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1857](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1857)
 
 Kind of the currently-installed shape with id `id`, or `undefined`
 if no shape with that id exists.
@@ -339,9 +339,9 @@ fixed at construction time).
 
 ### getShapePosition()
 
-> **getShapePosition**(`id`): [`Point`](../interfaces/Point.md)
+> **getShapePosition**(`id`): `Point`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1856](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1856)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:2020](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L2020)
 
 World-space origin `(spec.x, spec.y)` of the registered shape, or `null`
 when no shape with that id exists. Counterpart to `getShapeWorldBounds`;
@@ -356,15 +356,15 @@ offset baseline, anchor for an external overlay, etc.).
 
 #### Returns
 
-[`Point`](../interfaces/Point.md)
+`Point`
 
 ***
 
 ### getShapeWorldBounds()
 
-> **getShapeWorldBounds**(`id`): [`Rect`](../interfaces/Rect.md)
+> **getShapeWorldBounds**(`id`): `Rect`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1845](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1845)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:2009](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L2009)
 
 World-space AABB of the registered shape, or `null` when no shape with
 that id exists. Domain-free read accessor for layer code that needs to
@@ -380,7 +380,7 @@ wants to fit content to a selection, or a debug overlay.
 
 #### Returns
 
-[`Rect`](../interfaces/Rect.md)
+`Rect`
 
 ***
 
@@ -388,7 +388,7 @@ wants to fit content to a selection, or a debug overlay.
 
 > **hasBadge**(`hostId`, `slot`): `boolean`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1070](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1070)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1204](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1204)
 
 #### Parameters
 
@@ -410,7 +410,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1070](https://github.co
 
 > **hasConnector**(`id`): `boolean`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1748](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1748)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1912](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1912)
 
 #### Parameters
 
@@ -428,7 +428,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1748](https://github.co
 
 > **hasShape**(`id`): `boolean`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1678](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1678)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1842](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1842)
 
 #### Parameters
 
@@ -444,18 +444,25 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1678](https://github.co
 
 ### hitTest()
 
-> **hitTest**(`worldX`, `worldY`): [`HitResult`](../interfaces/HitResult.md)
+> **hitTest**(`worldX`, `worldY`, `exclude?`): [`HitResult`](../interfaces/HitResult.md)
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1405](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1405)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1546](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1546)
 
-Resolve the hit at a world point under closest-wins rules. Two
+Resolve the hit at a world point under render-order rules. Two
 priority bands:
 
   1. **Exact geometric hits** — any candidate whose
      `IHitArea.contains` (shapes) or stroke-tolerance polyline
-     distance (connectors) covers the cursor. Among these, the
-     closest one to its origin wins; equal distances tie-break by
-     higher `zIndex`. No "first-match" ambiguity under overlap.
+     distance (connectors) covers the cursor. Ranked to match what
+     is drawn on top:
+       a. higher `zIndex` wins (mirrors visual stacking);
+       b. on equal `zIndex`, a shape (node) beats a connector (edge)
+          — shapes render above connectors;
+       c. on equal `zIndex` *and* same kind, the closest one to its
+          origin / polyline wins.
+     So a node sitting over an edge takes the hit even when the edge's
+     polyline passes nearer the cursor than the node's centre — and an
+     edge with an explicitly higher `zIndex` still wins.
   2. **Floor fallback** — if NO exact hit, return the closest
      candidate whose origin sits within `hitFloorPx` screen pixels
      of the cursor. Lets tiny pinpoints stay hoverable in sparse
@@ -473,9 +480,127 @@ Returns `null` when nothing is hit.
 
 `number`
 
+##### exclude?
+
+`ReadonlySet`\<`string`\>
+
 #### Returns
 
 [`HitResult`](../interfaces/HitResult.md)
+
+***
+
+### moveShape()
+
+> **moveShape**(`id`, `x`, `y`): `void`
+
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:581](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L581)
+
+Fast-path position-only move — writes the host `gfx` transform directly,
+skipping BOTH the geometry redraw and the decoration re-anchor that
+[updateShape](#updateshape) performs. This is what `GraphLayer` routes every
+layout / drag position write through.
+
+**Why it's correct to skip both.** A shape's silhouette is traced in
+shape-local space and `(spec.x, spec.y)` is applied as the host `gfx`
+translation (`ShapeBase.draw`). Decorations (labels, halos, rings, …) are
+children of that same `gfx` and anchor to the shape's *local*,
+position-independent bounds (`refreshShapeDecorations` reads
+`inst.shape.bounds()`, not world position). So a pure translation needs
+only `gfx.position.set(x, y)` — it carries the body and every decoration
+with it for free, reproducing identical geometry. `updateShape` instead
+re-tessellates and re-anchors on every move; profiling a ~500-node force
+settle showed the decoration re-anchor alone was ~2.2 ms/tick (~90 % of
+the per-move cost) while the translation itself is ~0.05 ms.
+
+**Hit-bounds are deferred** — like [scaleShape](#scaleshape), the per-call rbush
+update is skipped (O(N) remove+insert → O(N²) over a full sweep). Moved
+ids accumulate in `movedShapeHits` and are bulk-reindexed lazily on the
+next [hitTest](#hittest) (or eagerly via [reindexScaledShapeHits](#reindexscaledshapehits)).
+
+Badges are separate shape instances (NOT children of the host `gfx`), so
+the transform can't carry them — they're re-anchored here when present.
+
+#### Parameters
+
+##### id
+
+`string`
+
+##### x
+
+`number`
+
+##### y
+
+`number`
+
+#### Returns
+
+`void`
+
+***
+
+### raiseConnector()
+
+> **raiseConnector**(`id`, `zIndex`): `void`
+
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:625](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L625)
+
+Restack a connector within the connector layer by writing its `gfx.zIndex`
+— the connector-side sibling of [raiseShape](#raiseshape). A higher `zIndex`
+paints later (above peer edges); `zIndex = 0` restores insertion order.
+Use to lift a hovered / selected edge above unrelated edges crossing it.
+
+Confined to the connector layer, which renders below the shape layer, so a
+raised edge still sits under every node.
+
+#### Parameters
+
+##### id
+
+`string`
+
+##### zIndex
+
+`number`
+
+#### Returns
+
+`void`
+
+***
+
+### raiseShape()
+
+> **raiseShape**(`id`, `zIndex`): `void`
+
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:610](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L610)
+
+Restack a shape within the shape layer by writing its `gfx.zIndex`. The
+shape layer renders with `sortableChildren`, so a higher `zIndex` paints
+later (on top of peers with a lower one); `zIndex = 0` (the default)
+restores natural insertion order. Use to lift a hovered / selected node
+above the rest so unrelated nodes don't draw over it.
+
+Visual-only: this does NOT touch geometry, transform, or the hit index
+(closest-wins hit resolution already consults the spec `zIndex` recorded
+at insert). Restacking is confined to the shape layer, so a raised node
+still renders above every connector.
+
+#### Parameters
+
+##### id
+
+`string`
+
+##### zIndex
+
+`number`
+
+#### Returns
+
+`void`
 
 ***
 
@@ -483,7 +608,7 @@ Returns `null` when nothing is hit.
 
 > **rasteriseLabel**(`id`, `resolution`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1158](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1158)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1292](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1292)
 
 #### Parameters
 
@@ -505,7 +630,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1158](https://github.co
 
 > **reanchorAllConnectors**(): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:559](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L559)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:691](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L691)
 
 Recompute the path of every connector. Use after a batch of
 `scaleShape` calls (e.g. one `NodeSizeLODBehaviour` zoom tick) so
@@ -529,7 +654,7 @@ a debounce when re-anchoring on a continuous gesture.
 
 > **registerAnchor**(`kind`, `fn`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:411](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L411)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:443](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L443)
 
 #### Parameters
 
@@ -551,7 +676,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:411](https://github.com
 
 > **registerDecoration**\<`TStyle`\>(`kind`, `ctor`, `opts`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:415](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L415)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:447](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L447)
 
 #### Type Parameters
 
@@ -583,7 +708,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:415](https://github.com
 
 > **registerEffect**\<`TStyle`\>(`kind`, `ctor`, `opts`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:436](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L436)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:468](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L468)
 
 Register an effect under a string kind. Effects are domain-free primitives
 that modulate the host shape's transform or style channels each frame
@@ -624,7 +749,7 @@ host kind being targeted.
 
 > **registerPathStyle**(`kind`, `fn`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:407](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L407)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:439](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L439)
 
 #### Parameters
 
@@ -646,7 +771,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:407](https://github.com
 
 > **registerRouter**(`kind`, `fn`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:403](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L403)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:435](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L435)
 
 #### Parameters
 
@@ -668,7 +793,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:403](https://github.com
 
 > **registerShape**\<`TSpec`\>(`kind`, `ctor`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:399](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L399)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:431](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L431)
 
 #### Type Parameters
 
@@ -696,7 +821,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:399](https://github.com
 
 > **reindexScaledShapeHits**(`ids?`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:535](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L535)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:643](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L643)
 
 Bulk re-index hit-test bboxes for shapes — pairs with
 [scaleShape](#scaleshape) (which intentionally skips per-call hit updates).
@@ -725,7 +850,7 @@ hit-test accuracy snaps back the moment the user stops zooming.
 
 > **removeBadge**(`hostId`, `slot`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1061](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1061)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1195](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1195)
 
 #### Parameters
 
@@ -747,7 +872,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1061](https://github.co
 
 > **removeConnector**(`id`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:748](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L748)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:881](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L881)
 
 #### Parameters
 
@@ -765,7 +890,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:748](https://github.com
 
 > **removeShape**(`id`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:565](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L565)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:697](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L697)
 
 #### Parameters
 
@@ -783,7 +908,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:565](https://github.com
 
 > **reRouteAllConnectors**(): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1891](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1891)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:2055](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L2055)
 
 Re-route every registered connector. Useful after a non-endpoint shape
 moves (e.g. an obstacle) and you want connectors that auto-collect
@@ -804,7 +929,7 @@ of edges should prefer a targeted re-route (future).
 
 > **scaleConnectorStroke**(`id`, `scale`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:680](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L680)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:813](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L813)
 
 Fast-path render-time stroke multiplier for a connector — writes
 `inst.strokeWidthScale` and redraws on the cached path.
@@ -841,7 +966,7 @@ rescale, so this is the same shape as `setConnectorStroke`: skip
 
 > **scaleShape**(`id`, `scale`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:516](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L516)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:548](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L548)
 
 Fast-path uniform rescale for a shape — writes the gfx transform
 directly without touching the spec or rebuilding geometry.
@@ -888,7 +1013,7 @@ target body size and stroke width via `scaleShape` alone.
 
 > **scaleShapeSpec**(`spec`, `factor`): `Record`\<`string`, `unknown`\>
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1743](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1743)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1907](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1907)
 
 Uniformly-scaled partial of the registered shape `kind`, with
 geometry params multiplied by `factor`. Aspect ratio, angular
@@ -928,7 +1053,7 @@ LOD writer.
 
 > **setBadge**(`hostId`, `slot`, `options`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1005](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1005)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1139](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1139)
 
 Attach a badge to a host shape. The badge is registered as a real shape
 under id `` `${hostId}:${slot}` `` so it inherits every shape capability —
@@ -966,7 +1091,7 @@ badge (the old badge shape and any of its decorations are destroyed).
 
 > **setConnectorStroke**(`id`, `stroke`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:632](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L632)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:765](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L765)
 
 Fast-path render update for connectors — patches the `stroke` spec
 and redraws on the **existing cached path** without re-running the
@@ -1010,7 +1135,7 @@ the stroke is changing.
 
 > **setDecoration**\<`TStyle`\>(`targetId`, `slot`, `decoration`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:771](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L771)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:905](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L905)
 
 #### Type Parameters
 
@@ -1042,7 +1167,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:771](https://github.com
 
 > **setDecorationVisible**(`targetId`, `slot`, `visible`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1828](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1828)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1992](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1992)
 
 Show / hide a decoration's gfx without destroying it. Used by
 collision-style behaviours that want to suppress overlapping labels for a
@@ -1074,7 +1199,7 @@ No-op when `targetId` / `slot` doesn't resolve.
 
 > **setEffect**\<`TStyle`\>(`targetId`, `slot`, `effect`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:885](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L885)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1019](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1019)
 
 Attach (or detach with `null`) an effect to a shape at the given slot.
 Effects don't draw — they modulate the host shape's transform and/or
@@ -1117,7 +1242,7 @@ hosts are ignored at aggregation time.
 
 > **setLabelsResolution**(`resolution`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1175](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1175)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1309](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1309)
 
 Push a rasterisation resolution to every label decoration (shape + edge)
 currently attached, and remember it so labels mounted later inherit the
@@ -1145,7 +1270,7 @@ is safe and cheap.
 
 > **setLODLevel**(`id`, `level`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1148](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1148)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1282](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1282)
 
 #### Parameters
 
@@ -1167,7 +1292,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1148](https://github.co
 
 > **tickAnimations**(`deltaMs`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1201](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1201)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1335](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L1335)
 
 #### Parameters
 
@@ -1185,7 +1310,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:1201](https://github.co
 
 > **updateConnector**\<`TSpec`\>(`id`, `partial`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:608](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L608)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:741](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L741)
 
 #### Type Parameters
 
@@ -1213,7 +1338,7 @@ Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:608](https://github.com
 
 > **updateShape**\<`TSpec`\>(`id`, `partial`): `void`
 
-Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:480](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/PrimitivesRenderer.ts#L480)
+Defined in: [canvas/src/primitives/PrimitivesRenderer.ts:512](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/PrimitivesRenderer.ts#L512)
 
 #### Type Parameters
 

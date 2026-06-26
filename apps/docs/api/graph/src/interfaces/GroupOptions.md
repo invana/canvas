@@ -1,6 +1,6 @@
 # Interface: GroupOptions
 
-Defined in: [graph/src/layer/types.ts:757](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L757)
+Defined in: [graph/src/layer/types.ts:787](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L787)
 
 Marks a node as a **compound group** — a visual frame drawn behind its
 descendants (children point to it via `parentId`). The presence of this
@@ -29,7 +29,7 @@ Group semantics, in summary:
     collapsed-group ancestor at render time (no mutation to the edge data).
   - The layer synthesises a count badge showing the number of hidden
     descendants. The `+`/`−` toggle is rendered via the
-    ToggleDecorationStyle decoration on the group — wire up
+    [ToggleDecorationStyle](../../../canvas-react/src/variables/Canvas.md) decoration on the group — wire up
     `CollapseExpandBehaviour` to make the toggle clickable.
 
 Nested groups fall out of the `parentId` chain for free: a group node
@@ -45,7 +45,7 @@ shared with tree structures) — no separate group-membership concept.
 
 > `readonly` `optional` **autoFit?**: `boolean`
 
-Defined in: [graph/src/layer/types.ts:763](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L763)
+Defined in: [graph/src/layer/types.ts:793](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L793)
 
 When `true`, the frame's size tracks the bounding box of its direct
 children (computed every flush). When `false`, the declared `width` /
@@ -57,7 +57,7 @@ children (computed every flush). When `false`, the declared `width` /
 
 > `readonly` `optional` **behindChildren?**: `boolean`
 
-Defined in: [graph/src/layer/types.ts:785](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L785)
+Defined in: [graph/src/layer/types.ts:815](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L815)
 
 Frame renders at `style.zIndex − 1` so descendants paint on top. Set to
 `false` to keep the frame at its declared z-index (and let descendants
@@ -69,7 +69,7 @@ paint underneath when their z-index is lower). Default `true`.
 
 > `readonly` `optional` **collapsed?**: `boolean`
 
-Defined in: [graph/src/layer/types.ts:779](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L779)
+Defined in: [graph/src/layer/types.ts:809](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L809)
 
 True = render the group as a collapsed super-node (children hidden,
 +/- toggle shows `+`, count badge shows the hidden descendant count).
@@ -82,7 +82,7 @@ directly via `store.updateNode`. Default `false`.
 
 > `readonly` `optional` **headerHeight?**: `number`
 
-Defined in: [graph/src/layer/types.ts:792](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L792)
+Defined in: [graph/src/layer/types.ts:822](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L822)
 
 Optional header band height (px) added above the children bbox. The
 frame still draws as a single rect / circle — `headerHeight` only
@@ -95,7 +95,7 @@ of children. Default `0`.
 
 > `readonly` `optional` **height?**: `number`
 
-Defined in: [graph/src/layer/types.ts:799](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L799)
+Defined in: [graph/src/layer/types.ts:829](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L829)
 
 Sibling of [width](#width) for `kind: 'rect'`.
 
@@ -105,7 +105,7 @@ Sibling of [width](#width) for `kind: 'rect'`.
 
 > `readonly` `optional` **padding?**: `number`
 
-Defined in: [graph/src/layer/types.ts:772](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L772)
+Defined in: [graph/src/layer/types.ts:802](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L802)
 
 Inset around the children bbox before the frame outline. Default `16`.
 
@@ -115,7 +115,7 @@ Inset around the children bbox before the frame outline. Default `16`.
 
 > `readonly` `optional` **radius?**: `number`
 
-Defined in: [graph/src/layer/types.ts:804](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L804)
+Defined in: [graph/src/layer/types.ts:834](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L834)
 
 Floor (with `autoFit`) or fixed (without) radius. Circle frames only.
 Ignored for rect frames.
@@ -126,12 +126,12 @@ Ignored for rect frames.
 
 > `readonly` `optional` **togglePlacement?**: `any`
 
-Defined in: [graph/src/layer/types.ts:823](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L823)
+Defined in: [graph/src/layer/types.ts:853](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L853)
 
 Where the auto-attached `+` / `−` toggle sits relative to the group's
 frame. Two forms:
 
-- **Keyword** — one of the TogglePlacement aliases
+- **Keyword** — one of the [TogglePlacement](../../../canvas-react/src/variables/Canvas.md) aliases
   (`'bottom'`, `'inside-bottom'`, `'top-right'`, `'bottom-left'`, …).
   Resolved against the host's AABB by the toggle decoration.
 - **Shape-local coords** — `{ x, y }`, an absolute point inside the
@@ -151,7 +151,7 @@ position falls inside or outside the host's hit area.
 
 > `readonly` `optional` **userResizable?**: `boolean`
 
-Defined in: [graph/src/layer/types.ts:770](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L770)
+Defined in: [graph/src/layer/types.ts:800](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L800)
 
 When `true`, `GroupResizeBehaviour` mounts corner / radial handle
 decorations on this group and lets the user drag to resize. Composes
@@ -164,7 +164,7 @@ Default `false`.
 
 > `readonly` `optional` **width?**: `number`
 
-Defined in: [graph/src/layer/types.ts:797](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L797)
+Defined in: [graph/src/layer/types.ts:827](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L827)
 
 Floor (with `autoFit`) or fixed (without) width. Rect frames only.
 Ignored for circle frames.

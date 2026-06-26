@@ -1,12 +1,12 @@
 # Interface: LassoSelectBehaviourOptions
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:46](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L46)
+Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:46](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L46)
 
 Constructor options for `LassoSelectBehaviour`.
 
 ## Extends
 
-- [`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md)
+- `BehaviourOptions`
 
 ## Properties
 
@@ -14,7 +14,7 @@ Constructor options for `LassoSelectBehaviour`.
 
 > `optional` **clearOnBackground?**: `boolean`
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:56](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L56)
+Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:56](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L56)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:56](https://github.com
 
 > `optional` **clickSelectId?**: `string`
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:48](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L48)
+Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:48](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L48)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:48](https://github.com
 
 > `optional` **enable?**: `boolean` \| ((`event`) => `boolean`)
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:50](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L50)
+Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:50](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L50)
 
 ***
 
@@ -38,13 +38,13 @@ Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:50](https://github.com
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L43)
+Defined in: canvas/dist/index.d.ts:733
 
 Default `false` — the developer explicitly enables.
 
 #### Inherited from
 
-[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`enabled`](../../../canvas/src/interfaces/BehaviourOptions.md#enabled)
+`BehaviourOptions.enabled`
 
 ***
 
@@ -52,7 +52,7 @@ Default `false` — the developer explicitly enables.
 
 > `optional` **enableElements?**: [`HoverableElementType`](../type-aliases/HoverableElementType.md)[]
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:51](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L51)
+Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:51](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L51)
 
 ***
 
@@ -60,11 +60,11 @@ Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:51](https://github.com
 
 > **id**: `string`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L36)
+Defined in: canvas/dist/index.d.ts:726
 
 #### Inherited from
 
-[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`id`](../../../canvas/src/interfaces/BehaviourOptions.md#id)
+`BehaviourOptions.id`
 
 ***
 
@@ -72,22 +72,7 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/ca
 
 > `optional` **immediately?**: `boolean`
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:53](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L53)
-
-***
-
-### layerId
-
-> **layerId**: `string`
-
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:47](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L47)
-
-Layer-scoped behaviours target a specific Layer by id. Canvas-scoped
-behaviours have no `layerId` and `scope: 'canvas'`.
-
-#### Overrides
-
-[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`layerId`](../../../canvas/src/interfaces/BehaviourOptions.md#layerid)
+Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:53](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L53)
 
 ***
 
@@ -95,7 +80,7 @@ behaviours have no `layerId` and `scope: 'canvas'`.
 
 > `optional` **onSelect?**: (`snapshot`) => `void`
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:57](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L57)
+Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:57](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L57)
 
 #### Parameters
 
@@ -113,7 +98,7 @@ Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:57](https://github.com
 
 > `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L49)
+Defined in: canvas/dist/index.d.ts:739
 
 Gesture identifiers this behaviour claims. Used by `BehaviourRegistry`
 for conflict warnings. Format is convention-free (`'shift+drag'`,
@@ -121,7 +106,7 @@ for conflict warnings. Format is convention-free (`'shift+drag'`,
 
 #### Inherited from
 
-[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`shortcuts`](../../../canvas/src/interfaces/BehaviourOptions.md#shortcuts)
+`BehaviourOptions.shortcuts`
 
 ***
 
@@ -129,7 +114,7 @@ for conflict warnings. Format is convention-free (`'shift+drag'`,
 
 > `optional` **state?**: `string`
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:54](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L54)
+Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:54](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L54)
 
 ***
 
@@ -137,7 +122,22 @@ Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:54](https://github.com
 
 > `optional` **style?**: [`LassoSelectStyle`](LassoSelectStyle.md)
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:55](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L55)
+Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:55](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L55)
+
+***
+
+### targetLayerId
+
+> **targetLayerId**: `string`
+
+Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:47](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L47)
+
+Layer-scoped behaviours target a specific Layer by id. Canvas-scoped
+behaviours have no `targetLayerId` and `scope: 'canvas'`.
+
+#### Overrides
+
+`BehaviourOptions.targetLayerId`
 
 ***
 
@@ -145,4 +145,4 @@ Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:55](https://github.com
 
 > `optional` **trigger?**: `ModifierKey`[]
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:52](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L52)
+Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:52](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L52)

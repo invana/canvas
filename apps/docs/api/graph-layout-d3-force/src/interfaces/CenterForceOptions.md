@@ -1,6 +1,6 @@
 # Interface: CenterForceOptions
 
-Defined in: [graph-layout-d3-force/src/types.ts:97](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layout-d3-force/src/types.ts#L97)
+Defined in: [graph-layout-d3-force/src/types.ts:119](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-force/src/types.ts#L119)
 
 `forceCenter` configuration.
 
@@ -10,7 +10,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:97](https://github.com/invana/ca
 
 > `optional` **strength?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:103](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layout-d3-force/src/types.ts#L103)
+Defined in: [graph-layout-d3-force/src/types.ts:125](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-force/src/types.ts#L125)
 
 `center.strength(s)`.
 
@@ -20,7 +20,7 @@ Defined in: [graph-layout-d3-force/src/types.ts:103](https://github.com/invana/c
 
 > `optional` **x?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:99](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layout-d3-force/src/types.ts#L99)
+Defined in: [graph-layout-d3-force/src/types.ts:121](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-force/src/types.ts#L121)
 
 `center.x(x)`.
 
@@ -30,6 +30,6 @@ Defined in: [graph-layout-d3-force/src/types.ts:99](https://github.com/invana/ca
 
 > `optional` **y?**: `number`
 
-Defined in: [graph-layout-d3-force/src/types.ts:101](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph-layout-d3-force/src/types.ts#L101)
+Defined in: [graph-layout-d3-force/src/types.ts:123](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-force/src/types.ts#L123)
 
 `center.y(y)`.

@@ -2,7 +2,7 @@
 
 > **ResolvableNodeStyle**\<`D`\> = `{ readonly [K in keyof NodeStyle]?: Resolvable<NonNullable<NodeStyle[K]>, D> }`
 
-Defined in: [graph/src/layer/types.ts:960](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L960)
+Defined in: [graph/src/layer/types.ts:1013](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1013)
 
 Resolver-aware mirror of [NodeStyle](../interfaces/NodeStyle.md). Each field is either a static
 value or `(D) => T`. Two scopes use this generic at different `D`:

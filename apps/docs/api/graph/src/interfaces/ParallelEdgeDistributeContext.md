@@ -1,6 +1,6 @@
 # Interface: ParallelEdgeDistributeContext
 
-Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:105](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L105)
+Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:105](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L105)
 
 Settings the behaviour passes through to a distribution policy.
 
@@ -10,7 +10,7 @@ Settings the behaviour passes through to a distribution policy.
 
 > `readonly` **anchorOffset**: `boolean`
 
-Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:108](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L108)
+Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:108](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L108)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:108](https://github.c
 
 > `readonly` **basis**: [`ParallelEdgeBasis`](../type-aliases/ParallelEdgeBasis.md)
 
-Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:107](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L107)
+Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:107](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L107)
 
 ***
 
@@ -26,4 +26,4 @@ Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:107](https://github.c
 
 > `readonly` **spacing**: `number`
 
-Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:106](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L106)
+Defined in: [graph/src/behaviours/ParallelEdgeBehaviour.ts:106](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ParallelEdgeBehaviour.ts#L106)

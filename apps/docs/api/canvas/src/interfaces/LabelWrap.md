@@ -1,6 +1,6 @@
 # Interface: LabelWrap
 
-Defined in: [canvas/src/primitives/types.ts:1208](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1208)
+Defined in: [canvas/src/primitives/types.ts:1210](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1210)
 
 Wrap / overflow controls. Applies to both plain text and HTML text.
 
@@ -10,7 +10,7 @@ Wrap / overflow controls. Applies to both plain text and HTML text.
 
 > `readonly` `optional` **maxHeight?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:1217](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1217)
+Defined in: [canvas/src/primitives/types.ts:1219](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1219)
 
 Pixel cap on render height. Combined with the text's `lineHeight` (read
 from `LabelContent.lineHeight` or derived from `fontSize`) to derive an
@@ -23,7 +23,7 @@ and `maxLines` are set, the smaller (more restrictive) wins.
 
 > `readonly` `optional` **maxLines?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:1219](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1219)
+Defined in: [canvas/src/primitives/types.ts:1221](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1221)
 
 Cap on rendered lines; lines past this are dropped (after `overflow`).
 
@@ -33,7 +33,7 @@ Cap on rendered lines; lines past this are dropped (after `overflow`).
 
 > `readonly` `optional` **maxWidth?**: `number`
 
-Defined in: [canvas/src/primitives/types.ts:1210](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1210)
+Defined in: [canvas/src/primitives/types.ts:1212](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1212)
 
 Pixel cap on render width. Triggers word-wrap when set.
 
@@ -43,7 +43,7 @@ Pixel cap on render width. Triggers word-wrap when set.
 
 > `readonly` `optional` **overflow?**: `"clip"` \| `"ellipsis"`
 
-Defined in: [canvas/src/primitives/types.ts:1223](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1223)
+Defined in: [canvas/src/primitives/types.ts:1225](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1225)
 
 Truncation policy for content past `maxLines`. Default `'ellipsis'`.
 
@@ -53,6 +53,6 @@ Truncation policy for content past `maxLines`. Default `'ellipsis'`.
 
 > `readonly` `optional` **wordWrap?**: `boolean`
 
-Defined in: [canvas/src/primitives/types.ts:1221](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/types.ts#L1221)
+Defined in: [canvas/src/primitives/types.ts:1223](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/types.ts#L1223)
 
 Enable wrap explicitly; auto-true when `maxWidth` is set.

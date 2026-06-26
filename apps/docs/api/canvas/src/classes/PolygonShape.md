@@ -1,6 +1,6 @@
 # Class: PolygonShape
 
-Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:25](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/PolygonShape.ts#L25)
+Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:25](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/PolygonShape.ts#L25)
 
 Free-form polygon. Vertices are centre-relative — the silhouette is traced
 around the origin in shape-local space and the `gfx` Container translates
@@ -17,7 +17,7 @@ trace returns to the first vertex automatically.
 
 > **new PolygonShape**(`spec`, `host`): `PolygonShape`
 
-Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:28](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/PolygonShape.ts#L28)
+Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:28](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/PolygonShape.ts#L28)
 
 #### Parameters
 
@@ -43,7 +43,7 @@ Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:28](https://github.com
 
 > `protected` `readonly` **bodyGfx**: `Graphics`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:42](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L42)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:42](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L42)
 
 #### Inherited from
 
@@ -55,7 +55,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:42](https://github.com/inva
 
 > `readonly` **gfx**: `Container`
 
-Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
+Defined in: [canvas/src/primitives/base/PrimitiveBase.ts:12](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/PrimitiveBase.ts#L12)
 
 Root display object — renderer adds/removes this on the host surface.
 
@@ -69,7 +69,7 @@ Root display object — renderer adds/removes this on the host surface.
 
 > `protected` `readonly` **host**: [`ShapeHostInfo`](../interfaces/ShapeHostInfo.md)
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:46](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L46)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:46](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L46)
 
 #### Inherited from
 
@@ -81,7 +81,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:46](https://github.com/inva
 
 > `protected` `readonly` **insetViews**: `any`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:43](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L43)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:43](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L43)
 
 #### Inherited from
 
@@ -93,7 +93,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:43](https://github.com/inva
 
 > `protected` **spec**: [`PolygonSpec`](../interfaces/PolygonSpec.md)
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:44](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L44)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:44](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L44)
 
 #### Inherited from
 
@@ -105,15 +105,15 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:44](https://github.com/inva
 
 > `readonly` `static` **kind**: `"polygon"` = `'polygon'`
 
-Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:26](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/PolygonShape.ts#L26)
+Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:26](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/PolygonShape.ts#L26)
 
 ## Methods
 
 ### boundaryIntersect()
 
-> **boundaryIntersect**(`localFromCenter`): [`Point`](../interfaces/Point.md)
+> **boundaryIntersect**(`localFromCenter`): `Point`
 
-Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:93](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/PolygonShape.ts#L93)
+Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:93](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/PolygonShape.ts#L93)
 
 Analytical ray-to-edge intersection. Polygon vertices are already
 centre-relative, so `localFromCenter` shares the same frame as the
@@ -123,11 +123,11 @@ stored vertices.
 
 ##### localFromCenter
 
-[`Point`](../interfaces/Point.md)
+`Point`
 
 #### Returns
 
-[`Point`](../interfaces/Point.md)
+`Point`
 
 #### Overrides
 
@@ -137,15 +137,15 @@ stored vertices.
 
 ### bounds()
 
-> **bounds**(): [`Rect`](../interfaces/Rect.md)
+> **bounds**(): `Rect`
 
-Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:61](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/PolygonShape.ts#L61)
+Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:61](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/PolygonShape.ts#L61)
 
 Local-space axis-aligned bounding box for hit-testing & decorations.
 
 #### Returns
 
-[`Rect`](../interfaces/Rect.md)
+`Rect`
 
 #### Overrides
 
@@ -157,7 +157,7 @@ Local-space axis-aligned bounding box for hit-testing & decorations.
 
 > **contains**(`localX`, `localY`): `boolean`
 
-Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:84](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/PolygonShape.ts#L84)
+Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:84](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/PolygonShape.ts#L84)
 
 #### Parameters
 
@@ -179,7 +179,7 @@ Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:84](https://github.com
 
 > **destroy**(): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:142](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L142)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:142](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L142)
 
 #### Returns
 
@@ -195,7 +195,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:142](https://github.com/inv
 
 > **draw**(`spec`): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:104](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L104)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:104](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L104)
 
 (Re)paint the shape from the current spec. Called on add and on update.
 
@@ -219,7 +219,7 @@ Defined in: [canvas/src/primitives/base/ShapeBase.ts:104](https://github.com/inv
 
 > `protected` **drawGeometry**(`g`, `spec`, `style?`): `void`
 
-Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:33](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/PolygonShape.ts#L33)
+Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:33](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/PolygonShape.ts#L33)
 
 Trace the silhouette into `g`, then apply fill + stroke. When `style`
 is supplied, it overrides the spec's fill/stroke (decoration use).
@@ -252,7 +252,7 @@ is supplied, it overrides the spec's fill/stroke (decoration use).
 
 > **getHitArea**(): `IHitArea`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:85](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L85)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:85](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L85)
 
 Hit-test region for this shape, derived from [drawGeometry](#drawgeometry).
 
@@ -286,7 +286,7 @@ coordinates; `true` iff the point is inside the silhouette.
 
 > **obstacleTest**(): (`worldX`, `worldY`, `inflate`) => `boolean`
 
-Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:103](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/PolygonShape.ts#L103)
+Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:103](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/PolygonShape.ts#L103)
 
 Silhouette obstacle-test for routers. Translates the world point into
 shape-local space and runs an even-odd point-in-polygon test against the
@@ -303,7 +303,7 @@ instead of the AABB, so routes hug concave / angular outlines.
 
 > **paintInto**(`g`, `style?`): `void`
 
-Defined in: [canvas/src/primitives/base/ShapeBase.ts:116](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/base/ShapeBase.ts#L116)
+Defined in: [canvas/src/primitives/base/ShapeBase.ts:116](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/base/ShapeBase.ts#L116)
 
 Decoration entry point — repaint the silhouette into someone else's
 `Graphics` with a style override. The shape uses its own current spec;
@@ -337,9 +337,9 @@ Every shape that extends `ShapeBase` has it for free.
 
 ### visualCenter()
 
-> **visualCenter**(): [`Point`](../interfaces/Point.md)
+> **visualCenter**(): `Point`
 
-Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:80](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/PolygonShape.ts#L80)
+Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:80](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/PolygonShape.ts#L80)
 
 Vertices are authored centre-relative, so the local origin is the
 natural visual centre. Returning `(0, 0)` instead of the AABB midpoint
@@ -349,7 +349,7 @@ leaves empty space on the left of the box).
 
 #### Returns
 
-[`Point`](../interfaces/Point.md)
+`Point`
 
 #### Overrides
 
@@ -359,9 +359,9 @@ leaves empty space on the left of the box).
 
 ### boundsOf()
 
-> `static` **boundsOf**(`spec`): [`Rect`](../interfaces/Rect.md)
+> `static` **boundsOf**(`spec`): `Rect`
 
-Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:65](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/PolygonShape.ts#L65)
+Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:65](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/PolygonShape.ts#L65)
 
 #### Parameters
 
@@ -371,7 +371,7 @@ Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:65](https://github.com
 
 #### Returns
 
-[`Rect`](../interfaces/Rect.md)
+`Rect`
 
 ***
 
@@ -379,7 +379,7 @@ Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:65](https://github.com
 
 > `static` **paintInto**(`g`, `spec`, `anchor`, `angleRad`, `style?`): `void`
 
-Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:123](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/PolygonShape.ts#L123)
+Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:123](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/PolygonShape.ts#L123)
 
 Marker paint surface. Rotates the vertex list by `angleRad`, translates
 to `anchor`, then traces + fills. Only the first solid layer of
@@ -397,7 +397,7 @@ to `anchor`, then traces + fills. Only the first solid layer of
 
 ##### anchor
 
-[`Point`](../interfaces/Point.md)
+`Point`
 
 ##### angleRad
 
@@ -417,7 +417,7 @@ to `anchor`, then traces + fills. Only the first solid layer of
 
 > `static` **scaleSpec**(`spec`, `factor`): `Partial`\<[`PolygonSpec`](../interfaces/PolygonSpec.md)\>
 
-Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:69](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/shapes/PolygonShape.ts#L69)
+Defined in: [canvas/src/primitives/shapes/PolygonShape.ts:69](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/shapes/PolygonShape.ts#L69)
 
 #### Parameters
 

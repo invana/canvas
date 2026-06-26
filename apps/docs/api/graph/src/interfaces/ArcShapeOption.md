@@ -1,6 +1,6 @@
 # Interface: ArcShapeOption
 
-Defined in: [graph/src/layer/types.ts:222](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L222)
+Defined in: [graph/src/layer/types.ts:230](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L230)
 
 Arc (annular sector) shape option. All four geometry params required.
 
@@ -10,7 +10,7 @@ Arc (annular sector) shape option. All four geometry params required.
 
 > `readonly` **endAngle**: `number`
 
-Defined in: [graph/src/layer/types.ts:227](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L227)
+Defined in: [graph/src/layer/types.ts:235](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L235)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [graph/src/layer/types.ts:227](https://github.com/invana/canvas/blob
 
 > `readonly` **innerR**: `number`
 
-Defined in: [graph/src/layer/types.ts:224](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L224)
+Defined in: [graph/src/layer/types.ts:232](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L232)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [graph/src/layer/types.ts:224](https://github.com/invana/canvas/blob
 
 > `readonly` **kind**: `"arc"`
 
-Defined in: [graph/src/layer/types.ts:223](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L223)
+Defined in: [graph/src/layer/types.ts:231](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L231)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [graph/src/layer/types.ts:223](https://github.com/invana/canvas/blob
 
 > `readonly` **outerR**: `number`
 
-Defined in: [graph/src/layer/types.ts:225](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L225)
+Defined in: [graph/src/layer/types.ts:233](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L233)
 
 ***
 
@@ -42,4 +42,4 @@ Defined in: [graph/src/layer/types.ts:225](https://github.com/invana/canvas/blob
 
 > `readonly` **startAngle**: `number`
 
-Defined in: [graph/src/layer/types.ts:226](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L226)
+Defined in: [graph/src/layer/types.ts:234](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L234)

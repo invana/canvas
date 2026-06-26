@@ -2,7 +2,7 @@
 
 > `const` **centerAnchor**: [`IAnchor`](../type-aliases/IAnchor.md)
 
-Defined in: [canvas/src/primitives/connectors/anchors/center.ts:12](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/connectors/anchors/center.ts#L12)
+Defined in: [canvas/src/primitives/connectors/anchors/center.ts:12](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/connectors/anchors/center.ts#L12)
 
 Default anchor — resolves a shape endpoint to the shape's bounding-box
 **centre** in world space. Uses `ref.center` (computed by the renderer

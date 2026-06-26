@@ -1,15 +1,10 @@
 # Interface: ElementSizeLODBehaviourOptions
 
-Defined in: [canvas/src/behaviours/ElementSizeLODBehaviour.ts:59](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/ElementSizeLODBehaviour.ts#L59)
+Defined in: [canvas/src/behaviours/ElementSizeLODBehaviour.ts:59](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/ElementSizeLODBehaviour.ts#L59)
 
 ## Extends
 
 - [`BehaviourOptions`](BehaviourOptions.md)
-
-## Extended by
-
-- [`NodeSizeLODBehaviourOptions`](../../../graph/src/interfaces/NodeSizeLODBehaviourOptions.md)
-- [`EdgeSizeLODBehaviourOptions`](../../../graph/src/interfaces/EdgeSizeLODBehaviourOptions.md)
 
 ## Properties
 
@@ -17,7 +12,7 @@ Defined in: [canvas/src/behaviours/ElementSizeLODBehaviour.ts:59](https://github
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L43)
+Defined in: [canvas/src/behaviours/Behaviour.ts:45](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L45)
 
 Default `false` — the developer explicitly enables.
 
@@ -31,7 +26,7 @@ Default `false` — the developer explicitly enables.
 
 > **id**: `string`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L36)
+Defined in: [canvas/src/behaviours/Behaviour.ts:38](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L38)
 
 #### Inherited from
 
@@ -39,26 +34,11 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:36](https://github.com/invana/ca
 
 ***
 
-### layerId?
-
-> `optional` **layerId?**: `string`
-
-Defined in: [canvas/src/behaviours/Behaviour.ts:41](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L41)
-
-Layer-scoped behaviours target a specific Layer by id. Canvas-scoped
-behaviours have no `layerId` and `scope: 'canvas'`.
-
-#### Inherited from
-
-[`BehaviourOptions`](BehaviourOptions.md).[`layerId`](BehaviourOptions.md#layerid)
-
-***
-
 ### scaleEpsilon?
 
 > `optional` **scaleEpsilon?**: `number`
 
-Defined in: [canvas/src/behaviours/ElementSizeLODBehaviour.ts:67](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/ElementSizeLODBehaviour.ts#L67)
+Defined in: [canvas/src/behaviours/ElementSizeLODBehaviour.ts:67](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/ElementSizeLODBehaviour.ts#L67)
 
 Skip `apply` when the relative scale change since the last applied
 frame is below this threshold (`|scale - lastScale| / lastScale`).
@@ -72,7 +52,7 @@ perceive but a wheel-zoom gesture fires 60×/sec of.
 
 > `optional` **settleMs?**: `number`
 
-Defined in: [canvas/src/behaviours/ElementSizeLODBehaviour.ts:76](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/ElementSizeLODBehaviour.ts#L76)
+Defined in: [canvas/src/behaviours/ElementSizeLODBehaviour.ts:76](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/ElementSizeLODBehaviour.ts#L76)
 
 When `> 0`, switch from per-frame RAF apply to a trailing-edge
 debounce: skip work during a continuous gesture and run one final
@@ -87,7 +67,7 @@ visual drift is preferable to a frame-rate collapse. Default `0`
 
 > `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:49](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/behaviours/Behaviour.ts#L49)
+Defined in: [canvas/src/behaviours/Behaviour.ts:51](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L51)
 
 Gesture identifiers this behaviour claims. Used by `BehaviourRegistry`
 for conflict warnings. Format is convention-free (`'shift+drag'`,
@@ -96,3 +76,18 @@ for conflict warnings. Format is convention-free (`'shift+drag'`,
 #### Inherited from
 
 [`BehaviourOptions`](BehaviourOptions.md).[`shortcuts`](BehaviourOptions.md#shortcuts)
+
+***
+
+### targetLayerId?
+
+> `optional` **targetLayerId?**: `string`
+
+Defined in: [canvas/src/behaviours/Behaviour.ts:43](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L43)
+
+Layer-scoped behaviours target a specific Layer by id. Canvas-scoped
+behaviours have no `targetLayerId` and `scope: 'canvas'`.
+
+#### Inherited from
+
+[`BehaviourOptions`](BehaviourOptions.md).[`targetLayerId`](BehaviourOptions.md#targetlayerid)

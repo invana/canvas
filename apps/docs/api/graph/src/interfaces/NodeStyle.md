@@ -1,6 +1,6 @@
 # Interface: NodeStyle
 
-Defined in: [graph/src/layer/types.ts:837](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L837)
+Defined in: [graph/src/layer/types.ts:867](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L867)
 
 Visual + structural style for a node. Flat-prefixed scalars for orthogonal
 properties (`bgFill`, `bgStrokeWidth`, `labelColor`); polymorphic values
@@ -16,7 +16,7 @@ Per-instance state overlays for a node live at [NodeData.state](NodeData.md#stat
 
 > `readonly` `optional` **badges?**: readonly [`NodeBadge`](NodeBadge.md)[]
 
-Defined in: [graph/src/layer/types.ts:934](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L934)
+Defined in: [graph/src/layer/types.ts:987](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L987)
 
 ***
 
@@ -24,15 +24,15 @@ Defined in: [graph/src/layer/types.ts:934](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **bgAlpha?**: `number`
 
-Defined in: [graph/src/layer/types.ts:872](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L872)
+Defined in: [graph/src/layer/types.ts:925](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L925)
 
 ***
 
 ### bgFill?
 
-> `readonly` `optional` **bgFill?**: [`ShapeFill`](../../../canvas/src/type-aliases/ShapeFill.md)
+> `readonly` `optional` **bgFill?**: `ShapeFill`
 
-Defined in: [graph/src/layer/types.ts:871](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L871)
+Defined in: [graph/src/layer/types.ts:924](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L924)
 
 Accepts every `ShapeFillLayer` kind — `solid` / `image` / `glyph` /
 `svg` / `svg-url` — and arrays for stacked layers. The `image` kind
@@ -45,7 +45,7 @@ doubles as silhouette filler and inset content via its `fit` field
 
 > `readonly` `optional` **bgStrokeAlignment?**: `"center"` \| `"inside"` \| `"outside"`
 
-Defined in: [graph/src/layer/types.ts:876](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L876)
+Defined in: [graph/src/layer/types.ts:929](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L929)
 
 ***
 
@@ -53,7 +53,7 @@ Defined in: [graph/src/layer/types.ts:876](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **bgStrokeAlpha?**: `number`
 
-Defined in: [graph/src/layer/types.ts:874](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L874)
+Defined in: [graph/src/layer/types.ts:927](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L927)
 
 ***
 
@@ -61,7 +61,7 @@ Defined in: [graph/src/layer/types.ts:874](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **bgStrokeCap?**: `"butt"` \| `"round"` \| `"square"`
 
-Defined in: [graph/src/layer/types.ts:879](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L879)
+Defined in: [graph/src/layer/types.ts:932](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L932)
 
 ***
 
@@ -69,7 +69,7 @@ Defined in: [graph/src/layer/types.ts:879](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **bgStrokeColor?**: `number`
 
-Defined in: [graph/src/layer/types.ts:873](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L873)
+Defined in: [graph/src/layer/types.ts:926](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L926)
 
 ***
 
@@ -77,7 +77,7 @@ Defined in: [graph/src/layer/types.ts:873](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **bgStrokeDashArray?**: readonly \[`number`, `number`\]
 
-Defined in: [graph/src/layer/types.ts:877](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L877)
+Defined in: [graph/src/layer/types.ts:930](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L930)
 
 ***
 
@@ -85,7 +85,7 @@ Defined in: [graph/src/layer/types.ts:877](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **bgStrokeDashOffset?**: `number`
 
-Defined in: [graph/src/layer/types.ts:878](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L878)
+Defined in: [graph/src/layer/types.ts:931](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L931)
 
 ***
 
@@ -93,7 +93,7 @@ Defined in: [graph/src/layer/types.ts:878](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **bgStrokeJoin?**: `"round"` \| `"miter"` \| `"bevel"`
 
-Defined in: [graph/src/layer/types.ts:880](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L880)
+Defined in: [graph/src/layer/types.ts:933](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L933)
 
 ***
 
@@ -101,7 +101,7 @@ Defined in: [graph/src/layer/types.ts:880](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **bgStrokeWidth?**: `number`
 
-Defined in: [graph/src/layer/types.ts:875](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L875)
+Defined in: [graph/src/layer/types.ts:928](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L928)
 
 ***
 
@@ -109,7 +109,7 @@ Defined in: [graph/src/layer/types.ts:875](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **decorations?**: readonly `any`[]
 
-Defined in: [graph/src/layer/types.ts:947](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L947)
+Defined in: [graph/src/layer/types.ts:1000](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1000)
 
 Ordered list of decorations attached to the node. Each entry's `kind`
 names a registered canvas decoration; the rest of the entry is that
@@ -126,7 +126,7 @@ with the same id while a state is active.
 
 > `readonly` `optional` **effects?**: [`NodeEffects`](NodeEffects.md)
 
-Defined in: [graph/src/layer/types.ts:950](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L950)
+Defined in: [graph/src/layer/types.ts:1003](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L1003)
 
 ***
 
@@ -134,7 +134,7 @@ Defined in: [graph/src/layer/types.ts:950](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **group?**: [`GroupOptions`](GroupOptions.md)
 
-Defined in: [graph/src/layer/types.ts:851](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L851)
+Defined in: [graph/src/layer/types.ts:904](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L904)
 
 Marks this node as a compound group (visual frame drawn behind its
 descendants). See [GroupOptions](GroupOptions.md) for the full contract — autoFit
@@ -151,7 +151,7 @@ same primitives as regular nodes.
 
 > `readonly` `optional` **icon?**: [`NodeIcon`](../type-aliases/NodeIcon.md)
 
-Defined in: [graph/src/layer/types.ts:883](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L883)
+Defined in: [graph/src/layer/types.ts:936](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L936)
 
 ***
 
@@ -159,7 +159,7 @@ Defined in: [graph/src/layer/types.ts:883](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **image?**: [`NodeImage`](NodeImage.md)
 
-Defined in: [graph/src/layer/types.ts:884](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L884)
+Defined in: [graph/src/layer/types.ts:937](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L937)
 
 ***
 
@@ -167,7 +167,7 @@ Defined in: [graph/src/layer/types.ts:884](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelAlign?**: `"left"` \| `"right"` \| `"center"`
 
-Defined in: [graph/src/layer/types.ts:893](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L893)
+Defined in: [graph/src/layer/types.ts:946](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L946)
 
 ***
 
@@ -175,7 +175,7 @@ Defined in: [graph/src/layer/types.ts:893](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelAlpha?**: `number`
 
-Defined in: [graph/src/layer/types.ts:899](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L899)
+Defined in: [graph/src/layer/types.ts:952](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L952)
 
 ***
 
@@ -183,7 +183,7 @@ Defined in: [graph/src/layer/types.ts:899](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelBackgroundAlpha?**: `number`
 
-Defined in: [graph/src/layer/types.ts:918](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L918)
+Defined in: [graph/src/layer/types.ts:971](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L971)
 
 ***
 
@@ -191,7 +191,7 @@ Defined in: [graph/src/layer/types.ts:918](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelBackgroundCornerRadius?**: `number`
 
-Defined in: [graph/src/layer/types.ts:922](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L922)
+Defined in: [graph/src/layer/types.ts:975](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L975)
 
 ***
 
@@ -199,7 +199,7 @@ Defined in: [graph/src/layer/types.ts:922](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelBackgroundFill?**: `number`
 
-Defined in: [graph/src/layer/types.ts:917](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L917)
+Defined in: [graph/src/layer/types.ts:970](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L970)
 
 ***
 
@@ -207,7 +207,7 @@ Defined in: [graph/src/layer/types.ts:917](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelBackgroundPadding?**: `number`
 
-Defined in: [graph/src/layer/types.ts:921](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L921)
+Defined in: [graph/src/layer/types.ts:974](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L974)
 
 ***
 
@@ -215,7 +215,7 @@ Defined in: [graph/src/layer/types.ts:921](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelBackgroundStrokeColor?**: `number`
 
-Defined in: [graph/src/layer/types.ts:919](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L919)
+Defined in: [graph/src/layer/types.ts:972](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L972)
 
 ***
 
@@ -223,7 +223,7 @@ Defined in: [graph/src/layer/types.ts:919](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelBackgroundStrokeWidth?**: `number`
 
-Defined in: [graph/src/layer/types.ts:920](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L920)
+Defined in: [graph/src/layer/types.ts:973](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L973)
 
 ***
 
@@ -231,7 +231,7 @@ Defined in: [graph/src/layer/types.ts:920](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelCollisionGroup?**: `string`
 
-Defined in: [graph/src/layer/types.ts:912](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L912)
+Defined in: [graph/src/layer/types.ts:965](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L965)
 
 Collision partition — labels in different groups never compete.
 
@@ -241,7 +241,7 @@ Collision partition — labels in different groups never compete.
 
 > `readonly` `optional` **labelColor?**: `number`
 
-Defined in: [graph/src/layer/types.ts:888](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L888)
+Defined in: [graph/src/layer/types.ts:941](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L941)
 
 ***
 
@@ -249,7 +249,7 @@ Defined in: [graph/src/layer/types.ts:888](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelFontFamily?**: `string`
 
-Defined in: [graph/src/layer/types.ts:890](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L890)
+Defined in: [graph/src/layer/types.ts:943](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L943)
 
 ***
 
@@ -257,7 +257,7 @@ Defined in: [graph/src/layer/types.ts:890](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelFontSize?**: `number`
 
-Defined in: [graph/src/layer/types.ts:889](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L889)
+Defined in: [graph/src/layer/types.ts:942](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L942)
 
 ***
 
@@ -265,7 +265,7 @@ Defined in: [graph/src/layer/types.ts:889](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelFontStyle?**: `"normal"` \| `"italic"`
 
-Defined in: [graph/src/layer/types.ts:892](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L892)
+Defined in: [graph/src/layer/types.ts:945](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L945)
 
 ***
 
@@ -273,7 +273,7 @@ Defined in: [graph/src/layer/types.ts:892](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelFontWeight?**: `string` \| `number`
 
-Defined in: [graph/src/layer/types.ts:891](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L891)
+Defined in: [graph/src/layer/types.ts:944](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L944)
 
 ***
 
@@ -281,7 +281,7 @@ Defined in: [graph/src/layer/types.ts:891](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelForceShow?**: `boolean`
 
-Defined in: [graph/src/layer/types.ts:914](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L914)
+Defined in: [graph/src/layer/types.ts:967](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L967)
 
 Bypass collision entirely — label always renders.
 
@@ -291,7 +291,7 @@ Bypass collision entirely — label always renders.
 
 > `readonly` `optional` **labelLetterSpacing?**: `number`
 
-Defined in: [graph/src/layer/types.ts:895](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L895)
+Defined in: [graph/src/layer/types.ts:948](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L948)
 
 ***
 
@@ -299,7 +299,7 @@ Defined in: [graph/src/layer/types.ts:895](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelLineHeight?**: `number`
 
-Defined in: [graph/src/layer/types.ts:894](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L894)
+Defined in: [graph/src/layer/types.ts:947](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L947)
 
 ***
 
@@ -307,7 +307,7 @@ Defined in: [graph/src/layer/types.ts:894](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelMaxZoom?**: `number`
 
-Defined in: [graph/src/layer/types.ts:908](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L908)
+Defined in: [graph/src/layer/types.ts:961](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L961)
 
 Hide the label above this camera zoom level.
 
@@ -317,7 +317,7 @@ Hide the label above this camera zoom level.
 
 > `readonly` `optional` **labelMinFontSize?**: `number`
 
-Defined in: [graph/src/layer/types.ts:900](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L900)
+Defined in: [graph/src/layer/types.ts:953](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L953)
 
 ***
 
@@ -325,7 +325,7 @@ Defined in: [graph/src/layer/types.ts:900](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelMinZoom?**: `number`
 
-Defined in: [graph/src/layer/types.ts:906](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L906)
+Defined in: [graph/src/layer/types.ts:959](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L959)
 
 Hide the label below this camera zoom level.
 
@@ -335,7 +335,7 @@ Hide the label below this camera zoom level.
 
 > `readonly` `optional` **labelOffsetX?**: `number`
 
-Defined in: [graph/src/layer/types.ts:897](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L897)
+Defined in: [graph/src/layer/types.ts:950](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L950)
 
 ***
 
@@ -343,15 +343,15 @@ Defined in: [graph/src/layer/types.ts:897](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelOffsetY?**: `number`
 
-Defined in: [graph/src/layer/types.ts:898](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L898)
+Defined in: [graph/src/layer/types.ts:951](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L951)
 
 ***
 
 ### labelPlacement?
 
-> `readonly` `optional` **labelPlacement?**: [`ShapeLabelPlacement`](../../../canvas/src/type-aliases/ShapeLabelPlacement.md)
+> `readonly` `optional` **labelPlacement?**: `ShapeLabelPlacement`
 
-Defined in: [graph/src/layer/types.ts:896](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L896)
+Defined in: [graph/src/layer/types.ts:949](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L949)
 
 ***
 
@@ -359,7 +359,7 @@ Defined in: [graph/src/layer/types.ts:896](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **labelPriority?**: `number`
 
-Defined in: [graph/src/layer/types.ts:910](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L910)
+Defined in: [graph/src/layer/types.ts:963](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L963)
 
 Collision priority — higher wins when two labels overlap.
 
@@ -369,7 +369,7 @@ Collision priority — higher wins when two labels overlap.
 
 > `readonly` `optional` **labelRotation?**: `number`
 
-Defined in: [graph/src/layer/types.ts:902](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L902)
+Defined in: [graph/src/layer/types.ts:955](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L955)
 
 Radians.
 
@@ -377,9 +377,9 @@ Radians.
 
 ### labelStyle?
 
-> `readonly` `optional` **labelStyle?**: [`ShapeLabelStyle`](../../../canvas/src/interfaces/ShapeLabelStyle.md)
+> `readonly` `optional` **labelStyle?**: `ShapeLabelStyle`
 
-Defined in: [graph/src/layer/types.ts:931](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L931)
+Defined in: [graph/src/layer/types.ts:984](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L984)
 
 Escape hatch — full `ShapeLabelStyle` payload from `@invana/canvas`.
 Use this when the flat `label*` fields don't cover the case (wrap,
@@ -393,7 +393,7 @@ flat fields. Flat label fields are ignored on the same node.
 
 > `readonly` `optional` **labelText?**: `string`
 
-Defined in: [graph/src/layer/types.ts:887](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L887)
+Defined in: [graph/src/layer/types.ts:940](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L940)
 
 ***
 
@@ -401,7 +401,7 @@ Defined in: [graph/src/layer/types.ts:887](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **resizable?**: `boolean`
 
-Defined in: [graph/src/layer/types.ts:862](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L862)
+Defined in: [graph/src/layer/types.ts:915](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L915)
 
 When `true`, `NodeResizeBehaviour` mounts corner-handle decorations on
 this node (rect / circle only) and lets the user drag to resize. The
@@ -417,4 +417,32 @@ drag writes back to `style.shape.width` / `height` / `radius` directly
 
 > `readonly` `optional` **shape?**: [`NodeShapeOptions`](../type-aliases/NodeShapeOptions.md)
 
-Defined in: [graph/src/layer/types.ts:839](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/graph/src/layer/types.ts#L839)
+Defined in: [graph/src/layer/types.ts:869](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L869)
+
+***
+
+### size?
+
+> `readonly` `optional` **size?**: `number`
+
+Defined in: [graph/src/layer/types.ts:892](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L892)
+
+Unified normalized size. When set, overrides the resolved `shape`'s
+intrinsic size fields at style-resolution time (before the spec reaches
+the renderer, `boundsOfNode`, or any layout's bounds query). Per-kind
+mapping:
+
+- `circle` / `regular-polygon` — `shape.radius = size`
+- `rect` — `shape.width = shape.height = 2 * size`
+- `arc` — `shape.outerR = size` (and `shape.innerR` scaled so its ratio
+  to `outerR` is preserved)
+- `star` — `shape.outerRadius = size` (and `shape.innerRadius` scaled to
+  preserve its ratio)
+- `polygon` / custom — no canonical size axis; `size` is ignored
+
+Honoured uniformly by `boundsOfNode`, `D3ForceLayout` (collide.radius
+receives the `GraphNode` and reads the normalized `shape.radius` via
+`resolveNodeStyle`), and `ElkLayout` (reads bounds via `boundsOfNode`).
+Use this when a single number should drive a node's footprint regardless
+of which shape kind it renders as — e.g. degree-based sizing,
+data-driven scaling.

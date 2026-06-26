@@ -1,6 +1,6 @@
 # Interface: FlowParticlesConnectorDecorationStyle
 
-Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:15](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L15)
+Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:15](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L15)
 
 Connector decoration that animates `count` markers travelling along the
 routed path at the same speed, evenly spread in phase. Useful for
@@ -16,7 +16,7 @@ arc-length table is built per repaint and shared across all particles.
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:42](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L42)
+Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:42](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L42)
 
 Overall decoration alpha. Default `1`.
 
@@ -26,7 +26,7 @@ Overall decoration alpha. Default `1`.
 
 > `readonly` **color**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:16](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L16)
+Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:16](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L16)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorD
 
 > `readonly` `optional` **count?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:20](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L20)
+Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:20](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L20)
 
 Number of particles. Clamped to `>= 1`. Default `5`.
 
@@ -44,7 +44,7 @@ Number of particles. Clamped to `>= 1`. Default `5`.
 
 > `readonly` `optional` **loop?**: `boolean`
 
-Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:33](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L33)
+Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:33](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L33)
 
 When `true` (default) particles wrap back to the start after reaching
 the end. Setting this to `false` makes all particles stall at the end
@@ -56,7 +56,7 @@ once they arrive — usually only useful with `count: 1`.
 
 > `readonly` `optional` **markerKind?**: `"circle"` \| `"arrow"` \| `"square"`
 
-Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:18](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L18)
+Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:18](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L18)
 
 Marker silhouette. Default `'circle'`.
 
@@ -66,7 +66,7 @@ Marker silhouette. Default `'circle'`.
 
 > `readonly` `optional` **orientToPath?**: `boolean`
 
-Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:40](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L40)
+Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:40](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L40)
 
 Rotate each marker so its local +x axis points along the local tangent.
 Default `true` for `'arrow'`, `false` for `'circle'` and `'square'`.
@@ -77,7 +77,7 @@ Default `true` for `'arrow'`, `false` for `'circle'` and `'square'`.
 
 > `readonly` `optional` **phase?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:35](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L35)
+Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:35](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L35)
 
 Phase offset applied to every particle in `[0, 1]`. Default `0`.
 
@@ -87,7 +87,7 @@ Phase offset applied to every particle in `[0, 1]`. Default `0`.
 
 > `readonly` `optional` **size?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:22](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L22)
+Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:22](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L22)
 
 Marker size in px. Default `6`.
 
@@ -97,7 +97,7 @@ Marker size in px. Default `6`.
 
 > `readonly` `optional` **speedPxPerSec?**: `number`
 
-Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:27](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L27)
+Defined in: [canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts:27](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/connector/FlowParticlesConnectorDecoration.ts#L27)
 
 Travel speed along the path in px/sec. Negative values reverse direction.
 Default `60`.

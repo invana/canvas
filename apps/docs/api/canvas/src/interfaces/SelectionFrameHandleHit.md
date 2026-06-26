@@ -1,6 +1,6 @@
 # Interface: SelectionFrameHandleHit
 
-Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:136](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L136)
+Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:136](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L136)
 
 Per-handle hit geometry returned by [SelectionFrameDecoration.getLocalHandleHits](../classes/SelectionFrameDecoration.md#getlocalhandlehits).
 `cx` / `cy` are in the host shape's local frame (add the host's spec
@@ -13,7 +13,7 @@ radius + a small floor for coarse pointers).
 
 > `readonly` **cx**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:138](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L138)
+Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:138](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L138)
 
 ***
 
@@ -21,7 +21,7 @@ Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts
 
 > `readonly` **cy**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:139](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L139)
+Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:139](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L139)
 
 ***
 
@@ -29,7 +29,7 @@ Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts
 
 > `readonly` **placement**: [`SelectionFramePlacement`](../type-aliases/SelectionFramePlacement.md)
 
-Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:137](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L137)
+Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:137](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L137)
 
 ***
 
@@ -37,4 +37,4 @@ Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts
 
 > `readonly` **radius**: `number`
 
-Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:140](https://github.com/invana/canvas/blob/1a808c5a9a1fe77fb1c6d5a7dcaf728db16cdbd4/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L140)
+Defined in: [canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts:140](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/decorations/shape/SelectionFrameDecoration.ts#L140)
