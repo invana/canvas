@@ -222,6 +222,9 @@ export {
   type CardStructure,
   type CardRow,
   type CardSlot,
+  type FreeformStructure,
+  type CardElement,
+  type CardElementCommon,
   type NodeStylingTemplate,
   type SlotStyling,
   type LabelStyling,
@@ -233,6 +236,7 @@ export {
   resolveText,
   compileSimple,
   compileCard,
+  compileFreeform,
   BUILT_IN_STRUCTURES,
   BUILT_IN_STYLINGS,
 } from './template';

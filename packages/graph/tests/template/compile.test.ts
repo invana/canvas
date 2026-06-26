@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { compileCard, compileSimple } from '../../src/template/compile';
+import { compileCard, compileFreeform, compileSimple } from '../../src/template/compile';
+import type { FreeformStructure } from '../../src/template/types';
 import { BUILT_IN_STRUCTURES, BUILT_IN_STYLINGS } from '../../src/template/structures';
 import { DEFAULT_THEME } from '../../src/theme/themes';
 import type { CardStructure, SimpleStructure } from '../../src/template/types';
@@ -90,5 +91,51 @@ describe('compileSimple', () => {
       {},
     );
     expect(out2.bgFill).toBe(0x123456);
+  });
+});
+
+describe('compileFreeform', () => {
+  const tpl: FreeformStructure = {
+    name: 'movie',
+    kind: 'freeform',
+    width: 240,
+    height: 140,
+    cornerRadius: 12,
+    bgRole: 'cardBg',
+    elements: [
+      { id: 'bar', type: 'rect', x: 0, y: 0, width: 240, height: 44, fillRole: 'accent' },
+      { id: 'title', type: 'text', x: 16, y: 60, bind: 'data.name', fontSize: 22, fontWeight: 700, colorRole: 'heading' },
+      { id: 'tag', type: 'text', x: 16, y: 14, text: 'movie', uppercase: true, color: 0xffffff },
+      { id: 'div', type: 'line', x: 16, y: 44, x2: 224, y2: 44, colorRole: 'divider' },
+      { id: 'avatar', type: 'image', x: 16, y: 80, size: 40, shape: 'circle' },
+    ],
+  };
+  const movie: GraphNode = { id: 'm', type: 'movie', data: { name: 'Unforgiven' } } as GraphNode;
+  const out = compileFreeform(tpl, movie, PALETTE);
+  const shape = out.shape as { kind: string; width: number; fill: number; parts: Array<Record<string, unknown>> };
+
+  it('produces a composite at the template size with the bg role resolved', () => {
+    expect(shape.kind).toBe('composite');
+    expect(shape.width).toBe(240);
+    expect(shape.fill).toBe(PALETTE.cardBg);
+    expect(out.bgStrokeWidth).toBe(0);
+  });
+
+  it('keeps element absolute coordinates and binds text', () => {
+    const title = shape.parts.find((p) => p.part === 'label' && p.fill === PALETTE.heading);
+    expect(title?.text).toBe('Unforgiven');
+    expect(title?.x).toBe(16);
+    expect(title?.y).toBe(60 + 22); // top + fontSize → baseline
+  });
+
+  it('uppercases + honours a direct (fixed) colour', () => {
+    const tag = shape.parts.find((p) => p.text === 'MOVIE');
+    expect(tag?.fill).toBe(0xffffff);
+  });
+
+  it('emits rect / line / image-placeholder parts', () => {
+    expect(shape.parts.some((p) => p.part === 'rect' && p.fill === PALETTE.accent)).toBe(true);
+    expect(shape.parts.some((p) => p.part === 'line')).toBe(true);
+    expect(shape.parts.some((p) => p.part === 'circle')).toBe(true); // image placeholder
   });
 });

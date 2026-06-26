@@ -4,6 +4,9 @@ export type {
   CardStructure,
   CardRow,
   CardSlot,
+  FreeformStructure,
+  CardElement,
+  CardElementCommon,
   NodeStylingTemplate,
   SlotStyling,
   LabelStyling,
@@ -13,5 +16,5 @@ export type {
   NodeTypeRegistry,
 } from './types';
 export { resolvePath, resolveText } from './bindings';
-export { compileSimple, compileCard } from './compile';
+export { compileSimple, compileCard, compileFreeform } from './compile';
 export { BUILT_IN_STRUCTURES, BUILT_IN_STYLINGS } from './structures';

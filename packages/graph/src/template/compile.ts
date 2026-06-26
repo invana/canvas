@@ -20,8 +20,10 @@ import type { GraphNode } from '../store/types';
 import type { CompositeShapeOption, NodeStyle } from '../layer/types';
 import { resolveText } from './bindings';
 import type {
+  CardElement,
   CardSlot,
   CardStructure,
+  FreeformStructure,
   NodeStylingTemplate,
   SimpleStructure,
   SlotStyling,
@@ -266,4 +268,115 @@ function label(
     maxLines: 1,
     overflow: 'ellipsis',
   };
+}
+
+// ─── Free-form structure (the card designer's output) ───────────────────────
+
+/**
+ * Compile a {@link FreeformStructure} into a `composite` shape. Element
+ * coordinates are already absolute (the designer canvas is 1:1 with the card),
+ * so this is a direct map: bind text to data, resolve every colour role against
+ * the palette, and emit one {@link CompositePart} per element. Self-contained —
+ * no styling/binding template needed.
+ */
+export function compileFreeform(
+  struct: FreeformStructure,
+  node: GraphNode,
+  palette: RolePalette,
+): Partial<NodeStyle> {
+  const bg = color(struct.bgRole, struct.bg, palette) ?? palette.cardBg ?? 0xffffff;
+  const strokeColor = color(struct.strokeRole, struct.stroke, palette);
+  const parts: CompositePart[] = [];
+
+  for (const el of struct.elements) {
+    if (el.hidden) continue;
+    parts.push(...elementToParts(el, node, palette));
+  }
+
+  const shape: CompositeShapeOption = {
+    kind: 'composite',
+    width: struct.width,
+    height: struct.height,
+    cornerRadius: struct.cornerRadius ?? 10,
+    fill: bg,
+    ...(strokeColor !== undefined
+      ? { stroke: { color: strokeColor, width: struct.strokeWidth ?? 1 } }
+      : {}),
+    parts,
+  };
+  return { shape, bgStrokeWidth: 0 };
+}
+
+/** Map one {@link CardElement} to its composite part(s). */
+function elementToParts(el: CardElement, node: GraphNode, palette: RolePalette): CompositePart[] {
+  switch (el.type) {
+    case 'text': {
+      const raw = el.bind ? resolveText(node, el.bind) : (el.text ?? '');
+      const text = el.uppercase ? raw.toUpperCase() : raw;
+      const fill = color(el.colorRole, el.color, palette) ?? palette.foreground ?? 0x111111;
+      const wrap =
+        el.maxWidth !== undefined
+          ? { maxWidth: el.maxWidth, maxLines: el.maxLines ?? 1, overflow: 'ellipsis' as const }
+          : {};
+      return [
+        {
+          part: 'label',
+          x: el.x,
+          y: el.y + (el.fontSize ?? 13),
+          text,
+          anchor: el.anchor ?? 'left',
+          fontSize: el.fontSize ?? 13,
+          fontWeight: el.fontWeight ?? 400,
+          ...(el.fontStyle ? { fontStyle: el.fontStyle } : {}),
+          fill,
+          ...wrap,
+        },
+      ];
+    }
+    case 'rect': {
+      const fill = color(el.fillRole, el.fill, palette);
+      return [
+        {
+          part: 'rect',
+          x: el.x,
+          y: el.y,
+          width: el.width,
+          height: el.height,
+          ...(el.cornerRadius ? { cornerRadius: el.cornerRadius } : {}),
+          ...(fill !== undefined ? { fill } : {}),
+        },
+      ];
+    }
+    case 'circle': {
+      // `x`/`y` are the element's top-left (uniform with the designer canvas);
+      // the composite `circle` part is centre-based.
+      const fill = color(el.fillRole, el.fill, palette);
+      return [
+        {
+          part: 'circle',
+          x: el.x + el.radius,
+          y: el.y + el.radius,
+          radius: el.radius,
+          ...(fill !== undefined ? { fill } : {}),
+        },
+      ];
+    }
+    case 'line': {
+      const stroke = color(el.colorRole, el.color, palette) ?? palette.divider ?? 0xe2e8f0;
+      return [
+        { part: 'line', x: el.x, y: el.y, x2: el.x2, y2: el.y2, stroke: { color: stroke, width: el.strokeWidth ?? 1 } },
+      ];
+    }
+    case 'image': {
+      // No composite image part yet — render a themed placeholder.
+      const fill = palette.divider ?? 0xcccccc;
+      if (el.shape === 'rounded') {
+        return [{ part: 'rect', x: el.x, y: el.y, width: el.size, height: el.size, cornerRadius: 8, fill }];
+      }
+      const r = el.size / 2;
+      return [{ part: 'circle', x: el.x + r, y: el.y + r, radius: r, fill }];
+    }
+    default:
+      return [];
+  }
 }

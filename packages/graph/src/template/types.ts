@@ -22,8 +22,16 @@ import type { NodeShapeOptions } from '../layer/types';
 
 // ─── Structure ──────────────────────────────────────────────────────────────
 
-/** A reusable node skeleton — either a simple shape+label or a composite card. */
-export type NodeStructureTemplate = SimpleStructure | CardStructure;
+/**
+ * A reusable node skeleton:
+ * - {@link SimpleStructure} — one shape + a label (lean path).
+ * - {@link CardStructure} — a composite card auto-laid-out as rows of slots.
+ * - {@link FreeformStructure} — a composite card whose elements are placed at
+ *   absolute coordinates (what the visual **card designer** produces). It's
+ *   self-contained: each element carries its own data binding + colour role, so
+ *   it needs no separate styling/binding template.
+ */
+export type NodeStructureTemplate = SimpleStructure | CardStructure | FreeformStructure;
 
 /** Simple structure: one shape with a single label slot (the lean render path). */
 export interface SimpleStructure {
@@ -62,6 +70,91 @@ export type CardSlot =
   | { slot: string; kind: 'tag' | 'text' }
   | { slot: string; kind: 'image'; shape?: 'circle' | 'rounded'; size?: number }
   | { stack: CardSlot[] };
+
+// ─── Free-form structure (the card designer's output) ───────────────────────
+
+/** Fields shared by every {@link CardElement}: identity, position, visibility. */
+export interface CardElementCommon {
+  id: string;
+  /** Top-left X relative to the card (1:1 with the designer canvas). */
+  x: number;
+  /** Top-left Y relative to the card. */
+  y: number;
+  /** Optional human label shown in the designer's layers list. */
+  label?: string;
+  /** Hidden elements are kept in the template but not drawn (layers eye-toggle). */
+  hidden?: boolean;
+}
+
+/**
+ * One absolutely-positioned element of a {@link FreeformStructure}. Colours are
+ * a **pair** — a `*Role` (themed) or a direct numeric field (fixed). `text`
+ * elements bind their content to a dotted data path via `bind` (falling back to
+ * the literal `text`). Order in `elements[]` is the **z-order** (later = on top).
+ */
+export type CardElement =
+  | (CardElementCommon & {
+      type: 'text';
+      /** Dotted data path bound to this text (e.g. `data.name`). */
+      bind?: string;
+      /** Literal fallback when `bind` is empty / unresolved. */
+      text?: string;
+      fontSize?: number;
+      fontWeight?: number | string;
+      fontStyle?: 'normal' | 'italic';
+      uppercase?: boolean;
+      colorRole?: ColorRole;
+      color?: number;
+      /** Wrap/ellipsis width; omitted = single unbounded line. */
+      maxWidth?: number;
+      maxLines?: number;
+      anchor?: 'left' | 'center' | 'right';
+    })
+  | (CardElementCommon & {
+      type: 'rect';
+      width: number;
+      height: number;
+      cornerRadius?: number;
+      fillRole?: ColorRole;
+      fill?: number;
+    })
+  | (CardElementCommon & { type: 'circle'; radius: number; fillRole?: ColorRole; fill?: number })
+  | (CardElementCommon & {
+      type: 'line';
+      x2: number;
+      y2: number;
+      colorRole?: ColorRole;
+      color?: number;
+      strokeWidth?: number;
+    })
+  | (CardElementCommon & {
+      type: 'image';
+      size: number;
+      shape?: 'circle' | 'rounded';
+      /** Dotted data path for the image source (rendered as a placeholder today). */
+      bind?: string;
+    });
+
+/**
+ * A self-contained composite card placed by absolute coordinates — the JSON the
+ * visual card designer emits. Carries its own background, element list, data
+ * bindings and colour roles, so a node type only needs to reference it by name
+ * (no separate styling/binding template). Compiles straight to the engine's
+ * `composite` shape; themed because every colour is a {@link ColorRole}.
+ */
+export interface FreeformStructure {
+  name: string;
+  kind: 'freeform';
+  width: number;
+  height: number;
+  cornerRadius?: number;
+  bgRole?: ColorRole;
+  bg?: number;
+  strokeRole?: ColorRole;
+  stroke?: number;
+  strokeWidth?: number;
+  elements: CardElement[];
+}
 
 // ─── Styling ──────────────────────────────────────────────────────────────────
 

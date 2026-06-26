@@ -69,7 +69,7 @@ import {
   type RolePalette,
 } from '../theme/roles';
 import { DEFAULT_THEME } from '../theme/themes';
-import { compileCard, compileSimple } from '../template/compile';
+import { compileCard, compileFreeform, compileSimple } from '../template/compile';
 import { BUILT_IN_STRUCTURES, BUILT_IN_STYLINGS } from '../template/structures';
 import type {
   NodeStructureRegistry,
@@ -481,6 +481,9 @@ export class GraphLayer extends WorldLayer<
   private resolveTypeBinding(node: GraphNode, binding: NodeTypeBinding): Partial<NodeStyle> {
     const struct = this.nodeStructures[binding.structure];
     if (!struct) return {};
+    // Free-form templates are self-contained (own bindings + colour roles), so
+    // they ignore the styling/binding split.
+    if (struct.kind === 'freeform') return compileFreeform(struct, node, this.themePalette);
     const styling = this.nodeStylings[binding.styling];
     return struct.kind === 'card'
       ? compileCard(struct, styling, binding.bindings, node, this.themePalette)
