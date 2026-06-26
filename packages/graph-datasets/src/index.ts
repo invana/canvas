@@ -21,6 +21,16 @@ export {
 export { generateLattice, type LatticeData } from './lattice';
 
 export {
+  twitterActivity,
+  generateTwitterActivity,
+  type TwitterGraphData,
+  type TwitterNode,
+  type TwitterEdge,
+  type TwitterNodeLabel,
+  type TwitterDatasetOptions,
+} from './twitter';
+
+export {
   flareAsGraph,
   flareHierarchy,
   type FlareGraphData,
