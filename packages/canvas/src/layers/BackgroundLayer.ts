@@ -27,6 +27,7 @@
 import { Graphics, Texture, TilingSprite } from 'pixi.js';
 
 import type { CanvasContext } from '../context/CanvasContext';
+import type { ResolvedTheme } from '../theme/types';
 import { ScreenLayer, type ScreenLayerHit } from './ScreenLayer';
 import type { LayerOptions } from './Layer';
 
@@ -37,8 +38,10 @@ export type BackgroundType = 'solid' | 'pattern';
 export type BackgroundPatternType = 'dots' | 'grid' | 'lines';
 
 /**
- * Mode selector for light/dark colour resolution. `'auto'` follows the host's
- * `prefers-color-scheme` media query; `'light'` / `'dark'` pin explicitly.
+ * Mode selector for light/dark colour resolution. `'auto'` follows the active
+ * theme published on `ctx.theme` (the canvas no longer reads
+ * `prefers-color-scheme` itself — the domain `ThemeBehaviour` is the sole
+ * publisher); `'light'` / `'dark'` pin explicitly regardless of the theme.
  */
 export type BackgroundMode = 'auto' | 'light' | 'dark';
 
@@ -80,10 +83,22 @@ export interface BackgroundLayerOptions {
   followCamera?: boolean;
   /**
    * How `{ light, dark }` colour variants are resolved. `'auto'` (default)
-   * follows `prefers-color-scheme`; `'light'` / `'dark'` pin explicitly. Has
-   * no effect when both colours are plain scalars.
+   * follows the active theme on `ctx.theme`; `'light'` / `'dark'` pin
+   * explicitly. Has no effect when both colours are plain scalars.
    */
   mode?: BackgroundMode;
+  /**
+   * Palette role read for the solid backdrop colour on `'theme:change'`. When
+   * the published theme's palette carries this role, it overrides
+   * {@link backgroundColor}; otherwise the option stands. Default `'surface'`.
+   */
+  surfaceRole?: string;
+  /**
+   * Palette role read for the pattern (dots / grid / lines) colour on
+   * `'theme:change'`. Falls back to `'stroke'` when the role is absent but
+   * `'stroke'` is present; otherwise {@link color} stands. Default `'divider'`.
+   */
+  patternRole?: string;
 }
 
 const DEFAULTS: Required<BackgroundLayerOptions> = {
@@ -96,6 +111,8 @@ const DEFAULTS: Required<BackgroundLayerOptions> = {
   alpha: 0.6,
   followCamera: true,
   mode: 'auto',
+  surfaceRole: 'surface',
+  patternRole: 'divider',
 };
 
 interface BackgroundLayerState {
@@ -123,8 +140,7 @@ export class BackgroundLayer extends ScreenLayer<
   private resizeObserver: ResizeObserver | null = null;
   private offCameraPan: (() => void) | null = null;
   private offCameraZoom: (() => void) | null = null;
-  private modeMediaQuery: MediaQueryList | null = null;
-  private modeMediaListener: ((e: MediaQueryListEvent) => void) | null = null;
+  private offTheme: (() => void) | null = null;
 
   // Cached camera state used by tile-transform sync.
   private camX = 0;
@@ -155,8 +171,17 @@ export class BackgroundLayer extends ScreenLayer<
     this.camY = ctx.camera.y;
     this.camScale = ctx.camera.scale;
 
+    // Adopt any theme already published before this layer mounted, then paint.
+    this.adoptTheme(ctx.theme.current());
     this.render();
-    this.wireModeMediaQuery();
+
+    // Recolour on every theme switch. The `ThemeBehaviour` is the sole
+    // publisher; we read the resolved kind (for `{ light, dark }` pairs) and
+    // the palette roles for the backdrop / pattern colours.
+    this.offTheme = ctx.events.on('theme:change', (theme) => {
+      this.adoptTheme(theme);
+      if (this.mounted) this.render();
+    });
 
     this.offCameraPan = ctx.events.on('camera:pan', ({ x, y }) => {
       this.camX = x;
@@ -179,7 +204,8 @@ export class BackgroundLayer extends ScreenLayer<
   }
 
   protected override onUnmount(): void {
-    this.detachModeMediaQuery();
+    this.offTheme?.();
+    this.offTheme = null;
     this.offCameraPan?.();
     this.offCameraZoom?.();
     this.offCameraPan = null;
@@ -204,10 +230,7 @@ export class BackgroundLayer extends ScreenLayer<
   /** Merge-update options + re-render. */
   setOptions(changes: Partial<BackgroundLayerOptions>): void {
     this.opts = { ...this.opts, ...changes };
-    if (this.mounted) {
-      this.wireModeMediaQuery();
-      this.render();
-    }
+    if (this.mounted) this.render();
   }
 
   /** Snapshot of the resolved options. */
@@ -222,10 +245,7 @@ export class BackgroundLayer extends ScreenLayer<
   setMode(mode: BackgroundMode): void {
     if (this.opts.mode === mode) return;
     this.opts = { ...this.opts, mode };
-    if (this.mounted) {
-      this.wireModeMediaQuery();
-      this.render();
-    }
+    if (this.mounted) this.render();
   }
 
   /** Current mode setting. */
@@ -233,9 +253,14 @@ export class BackgroundLayer extends ScreenLayer<
     return this.opts.mode;
   }
 
-  /** Concrete kind currently being rendered after mode resolution. */
+  /**
+   * Concrete kind currently being rendered. A pinned `mode` wins; otherwise
+   * `'auto'` follows the active theme on `ctx.theme` (defaulting to `'light'`
+   * when no theme has been published yet).
+   */
   getResolvedKind(): BackgroundKind {
-    return resolveKind(this.opts.mode);
+    if (this.opts.mode === 'light' || this.opts.mode === 'dark') return this.opts.mode;
+    return this.ctx?.theme.current()?.kind ?? 'light';
   }
 
   /**
@@ -343,43 +368,20 @@ export class BackgroundLayer extends ScreenLayer<
     return this.getResolvedKind() === 'dark' ? c.dark : c.light;
   }
 
-  private hasVariantColor(): boolean {
-    return isVariant(this.opts.color) || isVariant(this.opts.backgroundColor);
+  /**
+   * Pull the backdrop / pattern colours out of a published theme's palette
+   * (when the configured roles are present). A `null` theme — or a palette that
+   * omits the roles, as the single-layer `{ light, dark }` shorthand does —
+   * leaves the current options untouched, so explicitly-set colours stand. The
+   * resolved `kind` is read live in `getResolvedKind()`, so `{ light, dark }`
+   * colour pairs follow the theme without any copy here.
+   */
+  private adoptTheme(theme: ResolvedTheme | null): void {
+    if (!theme) return;
+    const { palette } = theme;
+    const surface = palette[this.opts.surfaceRole];
+    if (surface !== undefined) this.opts = { ...this.opts, backgroundColor: surface };
+    const pattern = palette[this.opts.patternRole] ?? palette['stroke'];
+    if (pattern !== undefined) this.opts = { ...this.opts, color: pattern };
   }
-
-  private wireModeMediaQuery(): void {
-    // Only listen when we're actually following the system AND at least one
-    // colour has a `{ light, dark }` shape — avoids wasted listeners.
-    if (this.opts.mode !== 'auto' || !this.hasVariantColor()) {
-      this.detachModeMediaQuery();
-      return;
-    }
-    if (this.modeMediaQuery) return;
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-    this.modeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    this.modeMediaListener = () => {
-      if (this.mounted) this.render();
-    };
-    this.modeMediaQuery.addEventListener('change', this.modeMediaListener);
-  }
-
-  private detachModeMediaQuery(): void {
-    if (this.modeMediaQuery && this.modeMediaListener) {
-      this.modeMediaQuery.removeEventListener('change', this.modeMediaListener);
-    }
-    this.modeMediaQuery = null;
-    this.modeMediaListener = null;
-  }
-}
-
-function isVariant(
-  c: BackgroundColor,
-): c is { light: number | string; dark: number | string } {
-  return typeof c === 'object' && c !== null;
-}
-
-function resolveKind(mode: BackgroundMode): BackgroundKind {
-  if (mode === 'light' || mode === 'dark') return mode;
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return 'light';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }

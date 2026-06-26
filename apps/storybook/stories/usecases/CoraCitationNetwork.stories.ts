@@ -27,13 +27,13 @@ import {
   HoverActivateBehaviour,
   // NodeSizeLODBehaviour,
   type GraphNode,
+  ThemeBehaviour,
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { DensityContourFillLayer } from '@invana/graph-layer-d3-contour';
 import { cora, type CoraNodeData, type CoraSubject } from '@invana/graph-datasets/usecase-demos';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
-import { SystemThemeBehaviour } from '../system-theme';
 
 const meta: Meta = { title: 'Usecases/Cora Citation Network' };
 export default meta;
@@ -120,7 +120,7 @@ export const CoraCitationNetwork: Story = {
       new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph' }),
     );
     canvas.behaviours.register(
-      new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }),
+      new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }),
     );
 
     // const nodeSizeLOD = new NodeSizeLODBehaviour({
@@ -209,8 +209,9 @@ export const CoraCitationNetwork: Story = {
           degree: 1,
           direction: 'both',
         },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#ffffff' },
           dark: { backgroundColor: '#0b1220' },
         },

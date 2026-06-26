@@ -16,13 +16,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import {
-  DragNodeBehaviour,
-  GraphCanvas,
-  GraphLayer,
-  type GraphEdge,
-  type GraphNode,
-} from '@invana/graph';
+import { DragNodeBehaviour, GraphCanvas, GraphLayer, type GraphEdge, type GraphNode, ThemeBehaviour } from '@invana/graph';
 import {
   ElkLayout,
   type ElkAlgorithmName,
@@ -30,7 +24,6 @@ import {
 } from '@invana/graph-layout-elkjs';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
-import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/elkjs/Layered' };
 export default meta;
@@ -85,7 +78,7 @@ export const Layered: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 
     // Register under id 'layout' and target the 'graph' layer, so `activeLayout`
     // can resolve the layer and auto-run ELK on mount. The config + activeLayout
@@ -129,8 +122,9 @@ export const Layered: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'drag-node': { enabled: true },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
           dark: { backgroundColor: '#0f172a', color: '#475569' },
         },

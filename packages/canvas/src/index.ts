@@ -59,6 +59,10 @@ export type { CameraOptions, Rect, Point } from './camera/Camera';
 // ─── Context ────────────────────────────────────────────────────────────
 export type { CanvasContext } from './context/CanvasContext';
 
+// ─── Theme signal ───────────────────────────────────────────────────────
+export type { ResolvedTheme, ThemeState } from './theme/types';
+export { CanvasThemeState } from './theme/CanvasThemeState';
+
 // ─── Layers ─────────────────────────────────────────────────────────────
 export { Layer } from './layers/Layer';
 export type { ILayer, LayerOptions } from './layers/Layer';
@@ -81,16 +85,10 @@ export type {
   BackgroundLayerOptions,
   BackgroundType,
   BackgroundPatternType,
+  BackgroundMode,
+  BackgroundKind,
+  BackgroundColor,
 } from './layers/BackgroundLayer';
-
-export { ThemedBackgroundLayer } from './layers/ThemedBackgroundLayer';
-export type {
-  ThemedBackgroundLayerOptions,
-  ThemedBackgroundLayerEvents,
-  ThemedBackgroundTheme,
-  ThemedBackgroundMode,
-  ThemedBackgroundKind,
-} from './layers/ThemedBackgroundLayer';
 
 export { LayersPanelLayer } from './layers/LayersPanelLayer';
 export type {

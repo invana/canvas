@@ -118,6 +118,9 @@ export type { HoverElementPreviewBehaviourProps } from './behaviours/HoverElemen
 export { ColorByLabelBehaviour } from './behaviours/ColorByLabelBehaviour';
 export type { ColorByLabelBehaviourProps } from './behaviours/ColorByLabelBehaviour';
 
+export { ThemeBehaviour } from './behaviours/ThemeBehaviour';
+export type { ThemeBehaviourProps } from './behaviours/ThemeBehaviour';
+
 export { BrushSelectBehaviour } from './behaviours/BrushSelectBehaviour';
 export type { BrushSelectBehaviourProps } from './behaviours/BrushSelectBehaviour';
 
@@ -187,7 +190,6 @@ export {
   useStyleEditorSection,
   useGraphCanvasUpdate,
   useGraphCanvasOptions,
-  useSystemTheme,
   useDevTool,
   useMiniMap,
   useCanvasMessage,

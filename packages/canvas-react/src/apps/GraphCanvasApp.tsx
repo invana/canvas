@@ -18,12 +18,14 @@
  * owns its layout (rails / overlay / fill-parent), rather than depending on the
  * viewport-locked `@invana/themes` `AppLayoutBase`.
  *
- * **Theme.** Light/dark is read from the host's `@invana/themes`
- * `<ThemeProvider>` (a **required ancestor** — `useTheme()` throws without one):
- * `isDark` drives the shell classes (scoped to this app's layout root) and the
- * engine colour patch ({@link ShellThemeSync}). The component does **not**
- * self-provide a theme, so an app mounts it once under its own provider and the
- * in-app toggle drives the shared theme.
+ * **Theme.** Light/dark + the active family are read from the host's
+ * `@invana/themes` `<ThemeProvider>` (a **required ancestor** — `useTheme()`
+ * throws without one): `isDark` drives the shell classes (scoped to this app's
+ * layout root) while {@link ThemeTemplateSync} pushes the resolved mode + theme
+ * family to the engine's `ThemeBehaviour`, which republishes the palette so
+ * every theme-aware layer recolours. The component does **not** self-provide a
+ * theme, so an app mounts it once under its own provider and the in-app toggle
+ * drives the shared theme.
  *
  * **Lifted context.** The header / footer are siblings of `<Canvas>` (under the
  * layout), outside its `CanvasContext`. The orchestrator publishes the live
@@ -42,7 +44,7 @@ import {
   useState,
 } from 'react';
 import { deepMerge, type CanvasConfig } from '@invana/canvas';
-import type { GraphCanvas, GraphData } from '@invana/graph';
+import { themeFamily, type GraphCanvas, type GraphData } from '@invana/graph';
 import { useTheme } from '@invana/themes';
 
 import { Canvas } from '../Canvas';
@@ -60,6 +62,7 @@ import { ClickSelectBehaviour } from '../behaviours/ClickSelectBehaviour';
 import { BrushSelectBehaviour } from '../behaviours/BrushSelectBehaviour';
 import { LassoSelectBehaviour } from '../behaviours/LassoSelectBehaviour';
 import { ColorByLabelBehaviour } from '../behaviours/ColorByLabelBehaviour';
+import { ThemeBehaviour } from '../behaviours/ThemeBehaviour';
 import { GraphCanvasAppHeader, type GraphCanvasAppHeaderOptions } from './GraphCanvasAppHeader';
 import { GraphCanvasAppFooter, type GraphCanvasAppFooterOptions } from './GraphCanvasAppFooter';
 
@@ -154,26 +157,12 @@ const BASE_CONFIG: CanvasConfig = {
     // Registered but disarmed — the toolbar's select-mode picker arms one at a time.
     'brush-select': { enabled: false },
     'lasso-select': { enabled: false },
-  },
-};
-
-/** Light/dark colour patches pushed on theme change (OS follow + manual toggle). */
-const THEME_LIGHT: CanvasConfig = {
-  layers: {
-    background: { backgroundColor: '#f8fafc', color: '#e2e8f0' },
-    graph: {
-      node: { style: { labelColor: 0x334155, bgStrokeColor: 0xffffff } },
-      edge: { style: { strokeColor: 0x475569, arrowTargetColor: 0x475569 } },
-    },
-  },
-};
-const THEME_DARK: CanvasConfig = {
-  layers: {
-    background: { backgroundColor: '#0f172a', color: '#1e293b' },
-    graph: {
-      node: { style: { labelColor: 0xe2e8f0, bgStrokeColor: 0x0f172a } },
-      edge: { style: { strokeColor: 0x64748b, arrowTargetColor: 0x64748b } },
-    },
+    // The sole theme publisher. Starts following the OS; `ThemeTemplateSync`
+    // immediately pins it to the host theme's resolved mode + family, and the
+    // accent role tracks the design-kit `--color-primary`. The published palette
+    // recolours background, nodes, edges, labels and group frames — every layer
+    // subscribes, so a theme switch repaints the whole canvas, not just the bg.
+    theme: { enabled: true, mode: 'system', active: 'default', accent: 'css-var' },
   },
 };
 
@@ -208,12 +197,18 @@ function CanvasReady({ onReady }: { onReady: (canvas: GraphCanvas | null) => voi
   return null;
 }
 
-/** Pushes the matching light/dark colour patch through `update()` on theme change. */
-function ShellThemeSync({ kind }: { kind: ThemeKind }) {
+/**
+ * Drives the engine `ThemeBehaviour` from the host `@invana/themes` theme: it
+ * pushes the resolved mode (`light`/`dark` — the host already resolved
+ * `system`) and the active theme **family** (matched by name; an unknown family
+ * falls back to `default`). The behaviour republishes the palette and every
+ * theme-aware layer recolours — no per-property patch list here.
+ */
+function ThemeTemplateSync({ active, kind }: { active: string; kind: ThemeKind }) {
   const update = useGraphCanvasUpdate();
   useEffect(() => {
-    update(kind === 'dark' ? THEME_DARK : THEME_LIGHT);
-  }, [update, kind]);
+    update({ behaviours: { theme: { mode: kind, active } } });
+  }, [update, active, kind]);
   return null;
 }
 
@@ -238,6 +233,7 @@ function GraphCanvasAppMain({
   instanceKey,
   onReady,
   themeKind,
+  themeName,
   children,
 }: {
   data: GraphData;
@@ -246,6 +242,7 @@ function GraphCanvasAppMain({
   instanceKey?: string | number;
   onReady: (canvas: GraphCanvas | null) => void;
   themeKind?: ThemeKind;
+  themeName?: string;
   children?: ReactNode;
 }) {
   return (
@@ -263,7 +260,11 @@ function GraphCanvasAppMain({
           <GraphLayer id="graph" data={data} />
           <ColorByLabelBehaviour id="color" targetLayerId="graph" />
           <D3ForceLayout id={ACTIVE_LAYOUT_ID} targetLayerId="graph" />
-          {themeKind ? <ShellThemeSync kind={themeKind} /> : null}
+          {/* The sole theme publisher + a sync that drives its mode/active from
+              the host `<ThemeProvider>`. Every theme-aware layer recolours off
+              the published palette. */}
+          <ThemeBehaviour id="theme" />
+          {themeKind ? <ThemeTemplateSync active={themeName ?? 'default'} kind={themeKind} /> : null}
           <DragPanBehaviour id="pan" />
           <WheelZoomBehaviour id="wheel" />
           <DragNodeBehaviour id="drag-node" targetLayerId="graph" />
@@ -433,8 +434,8 @@ export function GraphCanvasApp({
   // Theme comes from the host's <ThemeProvider> (a required ancestor — see the
   // module docs): `isDark` resolves light/dark (including `system` mode, which
   // follows the OS) and `toggleMode` flips it. The canvas colours follow via
-  // <ShellThemeSync> (a `config` patch) and the shell classes via the scoped
-  // layout root. `useTheme()` already throws without a provider; we rethrow with
+  // <ThemeTemplateSync> (driving the engine `ThemeBehaviour`) and the shell
+  // classes via the scoped layout root. `useTheme()` throws without a provider; we rethrow with
   // an actionable, component-named message so the missing-provider contract is
   // obvious at the call site rather than buried in a generic library error.
   let theme: ReturnType<typeof useTheme>;
@@ -447,8 +448,11 @@ export function GraphCanvasApp({
         'Wrap it: <ThemeProvider><GraphCanvasApp … /></ThemeProvider>.',
     );
   }
-  const { isDark, toggleMode } = theme;
+  const { isDark, toggleMode, theme: themeId } = theme;
   const themeKind: ThemeKind = isDark ? 'dark' : 'light';
+  // The canvas theme family is matched (loosely) to the host theme id; an
+  // unknown family resolves to `default` inside the behaviour.
+  const themeName = themeFamily(themeId);
 
   const handleReady = useCallback(
     (c: GraphCanvas | null) => {
@@ -484,6 +488,7 @@ export function GraphCanvasApp({
       instanceKey={instanceKey}
       onReady={handleReady}
       themeKind={bundle ? themeKind : undefined}
+      themeName={themeName}
     >
       {children}
     </GraphCanvasAppMain>

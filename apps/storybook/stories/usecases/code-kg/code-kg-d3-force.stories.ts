@@ -23,17 +23,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import {
-  ClickSelectBehaviour,
-  DragNodeBehaviour,
-  GraphCanvas,
-  GraphLayer,
-  HoverActivateBehaviour,
-  LabelResolutionLODBehaviour,
-  MiniMapLayer,
-  type GraphNode,
-  type NodeShapeOptions,
-} from '@invana/graph';
+import { ClickSelectBehaviour, DragNodeBehaviour, GraphCanvas, GraphLayer, HoverActivateBehaviour, LabelResolutionLODBehaviour, MiniMapLayer, type GraphNode, type NodeShapeOptions, ThemeBehaviour } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import {
   invanaCodeKg,
@@ -43,7 +33,6 @@ import {
 } from '@invana/graph-datasets/usecase-demos';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../div-util';
-import { SystemThemeBehaviour } from '../../system-theme';
 
 const meta: Meta = { title: 'Usecases/code-kg' };
 export default meta;
@@ -181,7 +170,7 @@ export const F3Force: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
     // Labels appear at 0.6× (via `labelMinZoom` in the node style); this
     // re-rasters them at 4× resolution once you zoom past 1.6× so the text you
@@ -289,8 +278,9 @@ export const F3Force: Story = {
         hover: { enabled: true, state: 'highlighted', degree: 1, direction: 'both' },
         select: { enabled: true, multiple: true, trigger: ['shift'] },
         'label-lod': { enabled: true },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#cbd5e1' },
           dark: { backgroundColor: '#0b1220', color: '#1e293b' },
         },

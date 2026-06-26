@@ -4,7 +4,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphCanvas, GraphLayer } from '@invana/graph';
+import { GraphCanvas, GraphLayer, ThemeBehaviour } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
 import {
   D3HierarchyLayout,
@@ -13,7 +13,6 @@ import {
 import { flareAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
-import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-hierarchy/Bubble' };
 export default meta;
@@ -149,7 +148,7 @@ export const Bubble: Story = {
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 
     const layout = new D3HierarchyLayout({
       id: 'hierarchy',
@@ -177,8 +176,9 @@ export const Bubble: Story = {
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
           dark: { backgroundColor: '#0b1220', color: '#475569' },
         },

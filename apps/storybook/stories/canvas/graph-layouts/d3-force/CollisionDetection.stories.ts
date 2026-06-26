@@ -15,17 +15,10 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import {
-  DragNodeBehaviour,
-  GraphCanvas,
-  GraphLayer,
-  type GraphEdge,
-  type GraphNode,
-} from '@invana/graph';
+import { DragNodeBehaviour, GraphCanvas, GraphLayer, type GraphEdge, type GraphNode, ThemeBehaviour } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
-import { SystemThemeBehaviour } from '../../../system-theme';
 
 const POINTER_ID = '__pointer__';
 
@@ -174,7 +167,7 @@ export const CollisionDetection: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 
     // Collide `radius` is a per-node resolver, but it rides on the layout's
     // own param bag (applied via `setOptions`), so it can live in config
@@ -201,8 +194,9 @@ export const CollisionDetection: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'drag-node': { enabled: true },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
           dark: { backgroundColor: '#0f172a', color: '#475569' },
         },

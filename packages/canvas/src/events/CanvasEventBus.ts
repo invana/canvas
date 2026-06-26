@@ -43,6 +43,7 @@
 
 import { EventEmitter } from './EventEmitter';
 import type { EventMap } from './EventEmitter';
+import type { ResolvedTheme } from '../theme/types';
 import type { CanvasEvent, EventSource } from './CanvasEvent';
 import { isExcludedFromTap, DEFAULT_TAP_EXCLUDE, makeCanvasEvent } from './CanvasEvent';
 import { assertSerialisableInDev } from './assertSerialisable';
@@ -88,6 +89,12 @@ export interface CanvasGlobalEvents extends EventMap {
   'tap:dropped': { type: string; reason: 'excluded' | 'sampled' };
   /** `Canvas.update()` patched the options; carries the touched ids (serialisable). */
   'options:change': { changedLayerIds: readonly string[]; changedBehaviourIds: readonly string[] };
+  /**
+   * The active theme was (re)published via `ctx.theme.set(...)`. The single
+   * publisher is the domain `ThemeBehaviour`; theme-aware layers subscribe and
+   * recolour from the resolved palette. Payload is plain-JSON (numbers/strings).
+   */
+  'theme:change': ResolvedTheme;
   /**
    * The shared message channel — anything (a layout's start/end, a behaviour
    * activating, app code) emits a line for a status surface to display.

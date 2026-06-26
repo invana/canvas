@@ -20,8 +20,9 @@ export interface ColorByLabelBehaviourProps
  *
  * **Order matters for precedence:** it writes its colours to the layer template
  * once on enable, so anything that patches the same fields *after* it wins —
- * apply theme colours later (a `canvas.update(patch)` from `useSystemTheme` /
- * the theme toggle) to let theme styling override the label colours. `enabled`
+ * the `ThemeBehaviour`'s published palette recolours the non-fill fields
+ * (label / border / edge stroke) on every theme change, leaving the label
+ * colour-by-category `bgFill` to this behaviour. `enabled`
  * is reactive; the palette / accessors are init-only — change `id` / `targetLayerId`
  * to recreate.
  */

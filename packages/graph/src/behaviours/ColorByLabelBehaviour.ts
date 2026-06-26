@@ -15,7 +15,7 @@
  * a function of the item, **new nodes/edges are coloured automatically** as they
  * arrive — no per-item loop, no re-apply wiring. The template only sets these
  * specific fields, so other styling (shape, size, label, node border) is
- * untouched; run a `ResponsiveThemeBehaviour` for those alongside.
+ * untouched; run a `ThemeBehaviour` for those alongside.
  *
  * Default `enabled: false` — register, then explicitly enable. On disable it
  * restores whatever those template fields held before (best effort).
@@ -23,14 +23,13 @@
  * **Precedence — applied once, overridable.** It writes its resolvers to the
  * template a single time on enable and never re-applies (the resolvers colour
  * new items automatically). Any behaviour that writes the same template fields
- * *after* it therefore wins. In particular `ResponsiveThemeBehaviour` — which
- * re-applies its `node` / `edge` patches on every theme change — overrides this
- * behaviour for whatever fields it sets, **provided it is registered after**
- * this one (later effect / later in the JSX). So a `ResponsiveThemeBehaviour`
- * `edge.strokeColor` beats this behaviour's edge colour; its node patches
- * (typically `bgStrokeColor`, not `bgFill`) sit alongside the label `bgFill`.
- * Register `ColorByLabelBehaviour` **before** any theme behaviour you want to
- * win.
+ * *after* it therefore wins. In particular `ThemeBehaviour` — whose published
+ * palette drives the layer to re-apply its `node` / `edge` defaults on every
+ * theme change — overrides this behaviour for whatever fields it sets. Its base
+ * recolour touches `labelColor` / `bgStrokeColor` (node) and `strokeColor`
+ * (edge), **not** `bgFill`, so the label colour-by-category fills sit alongside
+ * the theme's border/label colours rather than fighting them. Register
+ * `ColorByLabelBehaviour` and let the theme own the non-fill fields.
  *
  * @example
  * ```ts

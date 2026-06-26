@@ -143,10 +143,5 @@ export type {
   DegreeSizeScale,
 } from './DegreeSizeBehaviour';
 
-export { ResponsiveThemeBehaviour } from './ResponsiveThemeBehaviour';
-export type {
-  ResponsiveThemeBehaviourOptions,
-  ThemeKind,
-  ThemeMode,
-  ThemeVariants,
-} from './ResponsiveThemeBehaviour';
+export { ThemeBehaviour } from './ThemeBehaviour';
+export type { ThemeBehaviourOptions } from './ThemeBehaviour';

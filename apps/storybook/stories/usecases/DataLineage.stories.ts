@@ -26,14 +26,7 @@ import {
   WheelZoomBehaviour,
   type LayoutOptions,
 } from '@invana/canvas';
-import {
-  ClickSelectBehaviour,
-  GraphCanvas,
-  GraphLayer,
-  HoverActivateBehaviour,
-  type EdgeData,
-  type NodeData,
-} from '@invana/graph';
+import { ClickSelectBehaviour, GraphCanvas, GraphLayer, HoverActivateBehaviour, type EdgeData, type NodeData, ThemeBehaviour } from '@invana/graph';
 import {
   D3SankeyLayout,
   type D3SankeyLayoutOptions,
@@ -41,7 +34,6 @@ import {
 import { ukEnergyFlowAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
-import { SystemThemeBehaviour } from '../system-theme';
 
 const meta: Meta = { title: 'Usecases/Data Lineage' };
 export default meta;
@@ -135,7 +127,7 @@ export const DataLineage: Story = {
     canvas.behaviours.register(
       new ClickSelectBehaviour({ id: 'select', targetLayerId: 'graph' }),
     );
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 
     // D3SankeyLayout's options type doesn't surface the shared `id` /
     // `targetLayerId` registry fields, so widen it with `LayoutOptions` at
@@ -205,8 +197,9 @@ export const DataLineage: Story = {
           direction: 'both',
         },
         select: { enabled: true, multiple: true, trigger: ['shift'] },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#ffffff' },
           dark: { backgroundColor: '#0b1220' },
         },

@@ -182,9 +182,8 @@ export class MiniMapLayer extends ScreenLayer<
   private offCameraPan: (() => void) | null = null;
   private offCameraZoom: (() => void) | null = null;
 
-  /** `prefers-color-scheme` listener, armed only when `mode: 'auto'` + a themed colour. */
-  private modeMediaQuery: MediaQueryList | null = null;
-  private modeMediaListener: (() => void) | null = null;
+  /** `theme:change` subscriber — repaints the chrome when the theme flips. */
+  private offTheme: (() => void) | null = null;
 
   constructor(opts: LayerOptions<MiniMapLayerOptions>) {
     super({
@@ -225,9 +224,13 @@ export class MiniMapLayer extends ScreenLayer<
 
     if (this.opts.enableDrag) this.wireInteractions();
 
-    this.wireModeMediaQuery();
     this.layoutPosition();
     this.repaint();
+
+    // Follow the active theme: a flip swaps any `{ light, dark }` chrome colour
+    // and the mirrored background, so repaint. The `ThemeBehaviour` is the sole
+    // `prefers-color-scheme` reader — the minimap just reads `ctx.theme`.
+    this.offTheme = ctx.events.on('theme:change', () => this.repaint());
 
     // Re-paint when graph data, style template, or the camera changes.
     this.offCameraPan = ctx.events.on('camera:pan', () => this.repaint());
@@ -264,7 +267,8 @@ export class MiniMapLayer extends ScreenLayer<
   }
 
   protected override onUnmount(): void {
-    this.detachModeMediaQuery();
+    this.offTheme?.();
+    this.offTheme = null;
     this.offCameraPan?.();
     this.offCameraZoom?.();
     this.offResize?.();
@@ -295,21 +299,19 @@ export class MiniMapLayer extends ScreenLayer<
 
   setOptions(patch: Partial<Omit<MiniMapLayerOptions, 'graphLayerId'>>): void {
     this.opts = { ...this.opts, ...patch };
-    this.wireModeMediaQuery();
     this.layoutPosition();
     this.repaint();
   }
 
   /**
-   * Set the colour-resolution mode. `'auto'` re-arms the `prefers-color-scheme`
-   * listener; `'light'` / `'dark'` pin explicitly. No-op when unchanged. Drive
-   * this from a theme toggle (see `useTheme`'s `minimapLayerId`) so the minimap
-   * chrome flips in lockstep with the canvas {@link BackgroundLayer}.
+   * Set the colour-resolution mode. `'auto'` follows the active theme on
+   * `ctx.theme`; `'light'` / `'dark'` pin explicitly. No-op when unchanged. The
+   * minimap chrome flips in lockstep with the canvas {@link BackgroundLayer},
+   * which resolves its kind from the same theme signal.
    */
   setMode(mode: MiniMapMode): void {
     if (this.opts.mode === mode) return;
     this.opts = { ...this.opts, mode };
-    this.wireModeMediaQuery();
     this.repaint();
   }
 
@@ -318,9 +320,14 @@ export class MiniMapLayer extends ScreenLayer<
     return this.opts.mode;
   }
 
-  /** Concrete kind currently resolved after `mode` resolution. */
+  /**
+   * Concrete kind currently resolved. A pinned `mode` wins; otherwise `'auto'`
+   * follows the active theme on `ctx.theme` (defaulting to `'light'` before any
+   * theme is published).
+   */
   getResolvedKind(): MiniMapKind {
-    return resolveMiniMapKind(this.opts.mode);
+    if (this.opts.mode === 'light' || this.opts.mode === 'dark') return this.opts.mode;
+    return this.ctxRef?.theme.current()?.kind ?? 'light';
   }
 
   // ─── Layout ─────────────────────────────────────────────────────────────
@@ -599,42 +606,6 @@ export class MiniMapLayer extends ScreenLayer<
     return this.getResolvedKind() === 'dark' ? c.dark : c.light;
   }
 
-  /** True when any themed colour is a `{ light, dark }` pair. */
-  private hasVariantColor(): boolean {
-    const { backgroundColor, borderColor, viewportFill, viewportStroke } = this.opts;
-    return (
-      typeof backgroundColor === 'object' ||
-      typeof borderColor === 'object' ||
-      typeof viewportFill === 'object' ||
-      typeof viewportStroke === 'object'
-    );
-  }
-
-  /**
-   * Listen to `prefers-color-scheme` only while following the system
-   * (`mode: 'auto'`) AND at least one colour is a `{ light, dark }` pair —
-   * otherwise there's nothing to swap. Mirrors `BackgroundLayer`.
-   */
-  private wireModeMediaQuery(): void {
-    if (this.opts.mode !== 'auto' || !this.hasVariantColor()) {
-      this.detachModeMediaQuery();
-      return;
-    }
-    if (this.modeMediaQuery) return;
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-    this.modeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    this.modeMediaListener = () => this.repaint();
-    this.modeMediaQuery.addEventListener('change', this.modeMediaListener);
-  }
-
-  private detachModeMediaQuery(): void {
-    if (this.modeMediaQuery && this.modeMediaListener) {
-      this.modeMediaQuery.removeEventListener('change', this.modeMediaListener);
-    }
-    this.modeMediaQuery = null;
-    this.modeMediaListener = null;
-  }
-
   private worldToMinimap(wx: number, wy: number): { x: number; y: number } {
     return {
       x: wx * this.scale + this.offsetX,
@@ -726,10 +697,3 @@ const FALLBACK_LOCAL_BOUNDS: Rect = { x: -16, y: -16, width: 32, height: 32 };
  * keeps every edge visible while still letting heavier edges render thicker.
  */
 const MIN_EDGE_WIDTH = 0.4;
-
-/** Resolve a {@link MiniMapMode} to a concrete kind, consulting the OS for `'auto'`. */
-function resolveMiniMapKind(mode: MiniMapMode): MiniMapKind {
-  if (mode === 'light' || mode === 'dark') return mode;
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return 'light';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}

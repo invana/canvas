@@ -17,7 +17,7 @@ import {
   LayersPanelLayer,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { DragNodeBehaviour, GraphCanvas, GraphLayer, type GraphNode } from '@invana/graph';
+import { DragNodeBehaviour, GraphCanvas, GraphLayer, type GraphNode, ThemeBehaviour } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import {
   DENSITY_CONTOUR_PALETTE_NAMES,
@@ -27,7 +27,6 @@ import {
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
-import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layers/d3-contour/DensityContourStrokeLayer' };
 export default meta;
@@ -54,7 +53,7 @@ export const DensityContourStrokeLayer_Story: Story = {
     onStoryTeardown(() => canvas.destroy());
 
     // Background pattern, concrete colours; OS dark-mode swaps them via the
-    // SystemThemeBehaviour below.
+    // ThemeBehaviour below.
     canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
     canvas.layers.add(new DevInfoLayer({ id: 'dev-info', corner: 'bottom-left' }));
 
@@ -93,7 +92,7 @@ export const DensityContourStrokeLayer_Story: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 
     const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
     canvas.layouts.add(forceLayout);
@@ -137,8 +136,9 @@ export const DensityContourStrokeLayer_Story: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'drag-node': { enabled: true },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
           dark: { backgroundColor: '#0f172a', color: '#475569' },
         },

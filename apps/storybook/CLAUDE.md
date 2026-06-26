@@ -134,7 +134,7 @@ The shape is **add everything, then `init()` last**:
 3. Build **one `const canvasOptions`** object — the whole serialisable config keyed by id: `layers` (per-id option bags, e.g. `graph.node.style`), `behaviours` (`{ enabled: true, … }` — `enabled` turns it on), `layouts` (per-id params), and `activeLayout`. No class refs, no functions — pure JSON.
 4. `await canvas.init({ container, autoResize: true, config: canvasOptions })` **last**. It mounts everything, applies the config, and enables behaviours. The `activeLayout` auto-runs against its target once data is present — **don't call `setData`/`layout.apply` for the initial render**.
 5. **lil-gui binds straight to `canvasOptions`** (the config *is* the source of truth) and pushes each change live via `canvas.update({ … })`. Layout/force edits go through `canvas.update({ layouts: { … } })` and re-heat the sim — no rebuild.
-6. **OS dark-mode** = the story-local `SystemThemeBehaviour` (`stories/system-theme.tsx`), registered with a `layerId`; its `light` / `dark` `{ backgroundColor, color }` live in `config.behaviours['system-theme']`. The engine itself is theme-agnostic.
+6. **OS dark-mode** = `@invana/graph`'s `ThemeBehaviour` in single-layer shorthand: register it with a `targetLayerId` (`'bg'`); its `light` / `dark` `{ backgroundColor, color }` patches live in `config.behaviours.theme`, and the default `mode: 'system'` follows `prefers-color-scheme`. (Drop the `light`/`dark` shorthand and set `active` instead to drive a full named palette across the whole canvas.)
 7. Datasets generators return `GraphNode` / `GraphEdge` directly (e.g. `generateLattice(n)`) — feed `options.initData` with no mapping.
 
 ```ts
@@ -145,7 +145,7 @@ const graph = new GraphLayer({ id: 'graph', options: { initData: generateLattice
 canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
 canvas.layers.add(graph);
 canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
-canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', layerId: 'bg' }));
+canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
 canvas.layouts.add(forceLayout);
 
@@ -157,7 +157,7 @@ const canvasOptions = {
   },
   behaviours: {
     pan: { enabled: true },
-    'system-theme': { enabled: true,
+    theme: { enabled: true, mode: 'system',
       light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
       dark:  { backgroundColor: '#0f172a', color: '#475569' } },
   },

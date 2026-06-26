@@ -36,6 +36,7 @@ import { Application, Container, type EventSystem, type Ticker } from 'pixi.js';
 import { Viewport } from 'pixi-viewport';
 
 import { CanvasEventBus } from '../events/CanvasEventBus';
+import { CanvasThemeState } from '../theme/CanvasThemeState';
 import { Camera } from '../camera/Camera';
 import { LayerRegistry } from '../registries/LayerRegistry';
 import { BehaviourRegistry } from '../registries/BehaviourRegistry';
@@ -145,6 +146,13 @@ export class Canvas {
   readonly layouts: LayoutRegistry;
   context!: CanvasContext;
 
+  /**
+   * The shared theme channel — a single publisher (the domain `ThemeBehaviour`)
+   * sets the resolved theme here and every theme-aware layer recolours from it.
+   * Lives for the whole `Canvas` lifetime (the bus already exists at construct).
+   */
+  private readonly themeState: CanvasThemeState;
+
   private app?: Application;
   private _isInitialised = false;
   private _onRendererResize?: (w: number, h: number) => void;
@@ -156,6 +164,7 @@ export class Canvas {
     this.id = opts.id ?? 'canvas';
     this.options = opts;
     this.events = new CanvasEventBus({ source: { kind: 'canvas', id: this.id } });
+    this.themeState = new CanvasThemeState(this.events);
 
     // Registries exist from construction so layers/behaviours can be added
     // *before* `init()`. `getContext` returns `undefined` until init builds the
@@ -580,6 +589,7 @@ export class Canvas {
     // `getContext` thunk the moment it's assigned here.
     this.context = {
       events: this.events,
+      theme: this.themeState,
       world: this.world,
       stage: this.stage,
       camera: this.camera,

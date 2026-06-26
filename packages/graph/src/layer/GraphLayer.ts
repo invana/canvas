@@ -61,6 +61,26 @@ import {
   type ResolvableEdgeStyle,
   type ResolvableNodeStyle,
 } from './types';
+import {
+  hasAny,
+  paletteToEdgeDefaults,
+  paletteToGroupStyle,
+  paletteToNodeDefaults,
+  type RolePalette,
+} from '../theme/roles';
+import { DEFAULT_THEME } from '../theme/themes';
+import { compileCard, compileSimple } from '../template/compile';
+import { BUILT_IN_STRUCTURES, BUILT_IN_STYLINGS } from '../template/structures';
+import type {
+  NodeStructureRegistry,
+  NodeStylingRegistry,
+  NodeTypeBinding,
+  NodeTypeRegistry,
+} from '../template/types';
+
+/** Fallback palette (default theme, light) used before any theme is published,
+ * so role-based node templates always resolve to concrete numbers. */
+const { categorical: _fallbackCategorical, ...FALLBACK_PALETTE } = DEFAULT_THEME.light;
 
 /**
  * Translate a {@link EdgePathType} shortcut into the canvas `router` +
@@ -224,6 +244,14 @@ export class GraphLayer extends WorldLayer<
   private nodeOption: NodeOption | undefined;
   private edgeOption: EdgeOption | undefined;
 
+  // ─── Per-type structure / styling templates (built-ins ∪ consumer) ────
+  private nodeStructures: NodeStructureRegistry;
+  private nodeStylings: NodeStylingRegistry;
+  private nodeTypes: NodeTypeRegistry | undefined;
+  /** Current resolved palette (role → number), used to resolve per-type
+   * templates. Seeded from the default theme until a theme is published. */
+  private themePalette: RolePalette = FALLBACK_PALETTE;
+
   /** Initial data from `options.initData`, applied once in `onMount`. */
   private readonly initialData: GraphData | undefined;
 
@@ -242,6 +270,11 @@ export class GraphLayer extends WorldLayer<
     const useDefaults = opts.options.useDefaultStates !== false;
     this.nodeOption = mergeNodeOptionWithDefaults(opts.options.node, useDefaults);
     this.edgeOption = mergeEdgeOptionWithDefaults(opts.options.edge, useDefaults);
+
+    // Per-type templates: built-ins first, consumer overrides on top.
+    this.nodeStructures = { ...BUILT_IN_STRUCTURES, ...opts.options.nodeStructureTemplates };
+    this.nodeStylings = { ...BUILT_IN_STYLINGS, ...opts.options.nodeStylingTemplates };
+    this.nodeTypes = opts.options.nodeTypes;
   }
 
   protected createState(): GraphLayerState {
@@ -393,9 +426,65 @@ export class GraphLayer extends WorldLayer<
       }),
     );
 
+    // Recolour from the active theme. The `ThemeBehaviour` is the sole
+    // publisher; we re-resolve the base node/edge defaults + group frames from
+    // its palette so the whole graph stays in sync on every theme switch.
+    this.subs.push(ctx.events.on('theme:change', (theme) => this.applyTheme(theme.palette)));
+    // Adopt any theme already published before this layer mounted.
+    const currentTheme = ctx.theme.current();
+    if (currentTheme) this.applyTheme(currentTheme.palette);
+
     // Load initial data now that the renderer + subscriptions are live — this
     // fires `data:changed`, which auto-triggers the active layout.
     if (this.initialData) this.setData(this.initialData);
+  }
+
+  /**
+   * Apply a resolved theme palette to the layer's base look: node label +
+   * border, edge stroke + arrowheads + labels, and group-frame fills. Only
+   * roles present in the palette are written, so the single-layer shorthand's
+   * empty palette is a no-op. Per-type styling templates (Phase B) layer their
+   * role-based styling on top of this base.
+   */
+  private applyTheme(palette: Readonly<Record<string, number>>): void {
+    // Keep a complete palette (published over the default fallback) so per-type
+    // templates always resolve every role to a number, even from a partial /
+    // empty (shorthand) publish. Set before any re-render reads it.
+    this.themePalette = { ...FALLBACK_PALETTE, ...palette };
+
+    const nodePatch = paletteToNodeDefaults(palette);
+    if (hasAny(nodePatch)) this.setNodeDefaults(nodePatch);
+    const edgePatch = paletteToEdgeDefaults(palette);
+    if (hasAny(edgePatch)) this.setEdgeDefaults(edgePatch);
+
+    const groupPatch = paletteToGroupStyle(palette);
+    if (hasAny(groupPatch)) {
+      for (const node of this.store.nodes()) {
+        if (!this.isGroupNode(node)) continue;
+        const prevStyle = (node.style ?? {}) as NodeStyle;
+        this.store.updateNode(node.id, { style: { ...prevStyle, ...groupPatch } });
+      }
+    }
+
+    // Per-type templates resolve roles → numbers, so a theme switch must
+    // recompile them. `setNodeDefaults` above already re-rendered when it had a
+    // patch; if it didn't (empty palette) but types are configured, redraw.
+    if (this.nodeTypes && !hasAny(nodePatch)) this.redraw();
+  }
+
+  /**
+   * Resolve a per-type binding into a `NodeStyle` fragment. Card structures
+   * compile to a `composite` shape; simple structures to shape + label fields.
+   * All colour roles are resolved against the current palette here, so nothing
+   * role-shaped reaches the renderer. A missing structure yields no fragment.
+   */
+  private resolveTypeBinding(node: GraphNode, binding: NodeTypeBinding): Partial<NodeStyle> {
+    const struct = this.nodeStructures[binding.structure];
+    if (!struct) return {};
+    const styling = this.nodeStylings[binding.styling];
+    return struct.kind === 'card'
+      ? compileCard(struct, styling, binding.bindings, node, this.themePalette)
+      : compileSimple(struct, styling, binding.bindings, node, this.themePalette);
   }
 
   protected override onUnmount(): void {
@@ -591,6 +680,22 @@ export class GraphLayer extends WorldLayer<
         edge: patch.edge?.state as Record<string, EdgeStyle> | undefined,
       });
     }
+
+    // Per-type structure / styling templates + bindings — merge and re-render.
+    let templatesChanged = false;
+    if (patch.nodeStructureTemplates) {
+      this.nodeStructures = { ...this.nodeStructures, ...patch.nodeStructureTemplates };
+      templatesChanged = true;
+    }
+    if (patch.nodeStylingTemplates) {
+      this.nodeStylings = { ...this.nodeStylings, ...patch.nodeStylingTemplates };
+      templatesChanged = true;
+    }
+    if (patch.nodeTypes) {
+      this.nodeTypes = { ...this.nodeTypes, ...patch.nodeTypes };
+      templatesChanged = true;
+    }
+    if (templatesChanged && this.mounted) this.redraw();
   }
 
   /** Read-only snapshot of the current node template style (resolved per node at render). */
@@ -675,6 +780,13 @@ export class GraphLayer extends WorldLayer<
     const merged: Partial<NodeStyle> = {};
     if (this.nodeOption?.style) {
       Object.assign(merged, resolveNodeStyleFields(this.nodeOption.style, node));
+    }
+    // Per-type template (structure + styling + bindings) sits above the layer
+    // template and below per-node style: a node of a bound `type` gets its
+    // card/simple skeleton + role-resolved colours, still overridable per node.
+    if (this.nodeTypes && node.type) {
+      const binding = this.nodeTypes[node.type];
+      if (binding) Object.assign(merged, this.resolveTypeBinding(node, binding));
     }
     Object.assign(merged, (node.style as Partial<NodeStyle> | undefined) ?? {});
 

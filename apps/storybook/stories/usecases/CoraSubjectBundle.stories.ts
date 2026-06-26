@@ -21,19 +21,10 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import {
-  DragNodeBehaviour,
-  GraphCanvas,
-  GraphLayer,
-  HoverActivateBehaviour,
-  type EdgeData,
-  type GraphEdge,
-  type NodeData,
-} from '@invana/graph';
+import { DragNodeBehaviour, GraphCanvas, GraphLayer, HoverActivateBehaviour, type EdgeData, type GraphEdge, type NodeData, ThemeBehaviour } from '@invana/graph';
 import { cora, type CoraNodeData } from '@invana/graph-datasets/usecase-demos';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
-import { SystemThemeBehaviour } from '../system-theme';
 
 const meta: Meta = { title: 'Usecases/Cora Subject Bundle' };
 export default meta;
@@ -184,7 +175,7 @@ export const CoraSubjectBundle: Story = {
       new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph' }),
     );
     canvas.behaviours.register(
-      new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }),
+      new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }),
     );
 
     // ── Serialisable config ─────────────────────────────────────────────
@@ -227,8 +218,9 @@ export const CoraSubjectBundle: Story = {
         zoom: { enabled: true },
         'drag-node': { enabled: true },
         hover: { enabled: true, state: 'hovered', degree: 1, direction: 'both' },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#ffffff' },
           dark: { backgroundColor: '#0b1220' },
         },

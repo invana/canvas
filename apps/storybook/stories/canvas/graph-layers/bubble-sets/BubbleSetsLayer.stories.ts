@@ -17,17 +17,10 @@ import {
   LayersPanelLayer,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import {
-  DragNodeBehaviour,
-  GraphCanvas,
-  GraphLayer,
-  type EdgeData,
-  type NodeData,
-} from '@invana/graph';
+import { DragNodeBehaviour, GraphCanvas, GraphLayer, type EdgeData, type NodeData, ThemeBehaviour } from '@invana/graph';
 import { BubbleSetsLayer, type BubbleSet } from '@invana/graph-layer-bubble-sets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
-import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layers/bubble-sets/BubbleSetsLayer' };
 export default meta;
@@ -95,7 +88,7 @@ export const BubbleSetsLayer_Story: Story = {
     onStoryTeardown(() => canvas.destroy());
 
     // Background pattern, concrete colours; OS dark-mode swaps them via the
-    // SystemThemeBehaviour below.
+    // ThemeBehaviour below.
     canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
     canvas.layers.add(new DevInfoLayer({ id: 'dev-info', corner: 'bottom-left' }));
 
@@ -125,7 +118,7 @@ export const BubbleSetsLayer_Story: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 
     const canvasOptions = {
       layers: {
@@ -166,8 +159,9 @@ export const BubbleSetsLayer_Story: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'drag-node': { enabled: true },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
           dark: { backgroundColor: '#0f172a', color: '#475569' },
         },

@@ -5,14 +5,13 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphCanvas, GraphLayer } from '@invana/graph';
+import { GraphCanvas, GraphLayer, ThemeBehaviour } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
 import { D3SankeyLayout } from '@invana/graph-layout-d3-sankey';
 import type { D3SankeyLayoutOptions } from '@invana/graph-layout-d3-sankey';
 import { ukEnergyFlowAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
-import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-sankey/Sankey' };
 export default meta;
@@ -79,7 +78,7 @@ export const Sankey: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 
     // `D3SankeyLayout`'s ctor types only its own sankey params, but forwards
     // the shared `LayoutOptions` wiring (`id` / `targetLayerId`) to the base
@@ -116,8 +115,9 @@ export const Sankey: Story = {
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#ffffff', color: '#94a3b8' },
           dark: { backgroundColor: '#0b1220', color: '#475569' },
         },

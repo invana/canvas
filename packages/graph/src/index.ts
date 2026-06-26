@@ -41,6 +41,7 @@ export {
   type BadgePlacement,
   type BuiltInNodeShapeOptions,
   type CircleShapeOption,
+  type CompositeShapeOption,
   type CustomShapeOption,
   type EdgeBadge,
   type EdgeBadgePlacement,
@@ -190,10 +191,49 @@ export {
   DegreeSizeBehaviour,
   type DegreeSizeBehaviourOptions,
   type DegreeSizeScale,
-  ResponsiveThemeBehaviour,
-  type ResponsiveThemeBehaviourOptions,
-  type ThemeKind,
-  type ThemeMode,
-  type ThemeVariants,
+  ThemeBehaviour,
+  type ThemeBehaviourOptions,
 } from './behaviours';
+
+// ─── Theme (named palettes + roles) ────────────────────────────────────────
+export {
+  type ColorRole,
+  type Theme,
+  type ThemePalette,
+  type ThemeRegistry,
+  type ThemeMode,
+  type ThemeKind,
+  BUILT_IN_THEMES,
+  DEFAULT_THEME,
+  FOREST_THEME,
+  OCEAN_THEME,
+  GOLD_THEME,
+  ROSE_THEME,
+  MINIMAL_THEME,
+  cssColorToNumber,
+  resolveAccentVar,
+  themeFamily,
+} from './theme';
+
+// ─── Node structure / styling templates ────────────────────────────────────
+export {
+  type NodeStructureTemplate,
+  type SimpleStructure,
+  type CardStructure,
+  type CardRow,
+  type CardSlot,
+  type NodeStylingTemplate,
+  type SlotStyling,
+  type LabelStyling,
+  type NodeTypeBinding,
+  type NodeStructureRegistry,
+  type NodeStylingRegistry,
+  type NodeTypeRegistry,
+  resolvePath,
+  resolveText,
+  compileSimple,
+  compileCard,
+  BUILT_IN_STRUCTURES,
+  BUILT_IN_STYLINGS,
+} from './template';
 

@@ -22,16 +22,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import {
-  ClickSelectBehaviour,
-  DragNodeBehaviour,
-  GraphCanvas,
-  GraphLayer,
-  HoverActivateBehaviour,
-  MiniMapLayer,
-  type GraphNode,
-  type NodeShapeOptions,
-} from '@invana/graph';
+import { ClickSelectBehaviour, DragNodeBehaviour, GraphCanvas, GraphLayer, HoverActivateBehaviour, MiniMapLayer, type GraphNode, type NodeShapeOptions, ThemeBehaviour } from '@invana/graph';
 import { ElkLayout, type ElkDirection } from '@invana/graph-layout-elkjs';
 import {
   invanaCodeKg,
@@ -40,7 +31,6 @@ import {
 } from '@invana/graph-datasets/usecase-demos';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../div-util';
-import { SystemThemeBehaviour } from '../../system-theme';
 
 const meta: Meta = { title: 'Usecases/code-kg' };
 export default meta;
@@ -204,7 +194,7 @@ export const ElkjsCards: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
 
     const hover = new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph' });
@@ -295,8 +285,9 @@ export const ElkjsCards: Story = {
         'drag-node': { enabled: true },
         hover: { enabled: true, state: 'highlighted', degree: 1, direction: 'both' },
         select: { enabled: true, multiple: true, trigger: ['shift'] },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#cbd5e1' },
           dark: { backgroundColor: '#0b1220', color: '#1e293b' },
         },

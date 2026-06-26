@@ -18,16 +18,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import {
-  ClickSelectBehaviour,
-  DragNodeBehaviour,
-  GraphCanvas,
-  GraphLayer,
-  HoverActivateBehaviour,
-  type EdgeData,
-  type NodeData,
-  type NodeShapeOptions,
-} from '@invana/graph';
+import { ClickSelectBehaviour, DragNodeBehaviour, GraphCanvas, GraphLayer, HoverActivateBehaviour, type EdgeData, type NodeData, type NodeShapeOptions, ThemeBehaviour } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import {
@@ -38,7 +29,6 @@ import {
 } from '@invana/graph-datasets/usecase-demos';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
-import { SystemThemeBehaviour } from '../system-theme';
 
 const meta: Meta = { title: 'Usecases/Knowledge Graph Explorer' };
 export default meta;
@@ -180,7 +170,7 @@ export const KnowledgeGraphExplorer: Story = {
       }),
     );
 
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 
     // ── Layouts ──────────────────────────────────────────────────────────
     // Both layouts are registered by id; `activeLayout` selects which runs.
@@ -224,8 +214,9 @@ export const KnowledgeGraphExplorer: Story = {
         'drag-node': { enabled: true },
         hover: { enabled: true, state: 'highlighted', inactiveState: 'dimmed', degree: 1, direction: 'both' },
         select: { enabled: true, multiple: true, trigger: ['shift'] },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#cbd5e1' },
           dark: { backgroundColor: '#0b1220', color: '#1e293b' },
         },

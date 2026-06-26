@@ -24,7 +24,7 @@ The engine. Implements the Layer / Behaviour / Layout / Renderer architecture de
   - **Effects** are a sibling primitive kind to decorations. Decoration = added geometry alongside the host; effect = modulation of the host itself. Two effect targets: `transform` (writes `{dx, dy, dRot, sx, sy}` deltas the renderer composes onto the host gfx each frame — shake, breathing, jiggle) and `style` (writes `{tint, alpha}` overrides — shimmer, color-flash). Effects don't have a `gfx` Container; the renderer aggregates contributions across every effect attached to the same host (transform deltas sum/multiply; style channels are last-writer-wins per channel) and writes the result onto the host's gfx. Effects live in `primitives/effects/{shape,connector}/`. Animated effects opt in via `tick(dt)` just like decorations; static effects only expose `readTransform` / `readStyle`.
   - **Animation** is the per-frame time engine, not a primitive kind. Both animated decorations and effects opt in via `tick(deltaMs): boolean`. The Tween primitive (`primitives/animation/Tween.ts`) provides duration/easing/repeat/yoyo for interpolation; reach for it instead of rolling per-class easing math. Animation also drives camera easing, viewport transitions, drag inertia, layout simulation — anything time-varying.
   - Shape decorations accept an optional `outlinePolyline` per `update()` (parallel to `bounds` + `hostKind`) for true shape-following parallel offset on `polygon` / `path` hosts; falls back to AABB rect when not provided.
-- Built-in layers: `BackgroundLayer`, `ThemedBackgroundLayer` (`WorldLayer`); `DevInfoLayer` (`ScreenLayer`)
+- Built-in layers: `BackgroundLayer` (`ScreenLayer`, recolours from the `ctx.theme` signal); `DevInfoLayer` (`ScreenLayer`)
 - Built-in behaviours (all opt-in — never auto-registered): `DragPanBehaviour`, `WheelZoomBehaviour`, `PinchZoomBehaviour`, `KeyboardCameraInputBehaviour`
 
 ### Picking a layer base — `WorldLayer` vs `ScreenLayer`
@@ -61,7 +61,7 @@ This rule is not enforced by tooling. It's a discipline statement — read it be
 
 ## Subpath exports
 
-- `@invana/canvas` — kernel: `Canvas`, base classes (`Layer`/`WorldLayer`/`ScreenLayer`, `Behaviour`), registries, store, events, surfaces, camera, **plus built-in layers (`DevInfoLayer`, future `BackgroundLayer`, `ThemedBackgroundLayer`) and built-in behaviours (`DragPanBehaviour`, `WheelZoomBehaviour`, `PinchZoomBehaviour`, `KeyboardCameraInputBehaviour`)**. Built-ins live in the same folder as their base class (`src/layers/`, `src/behaviours/`) and are re-exported from `src/index.ts` — no separate "toolkit" bucket.
+- `@invana/canvas` — kernel: `Canvas`, base classes (`Layer`/`WorldLayer`/`ScreenLayer`, `Behaviour`), registries, store, events, surfaces, camera, **plus the engine theme signal (`ResolvedTheme` + `ctx.theme` + `'theme:change'`), built-in layers (`DevInfoLayer`, `BackgroundLayer`) and built-in behaviours (`DragPanBehaviour`, `WheelZoomBehaviour`, `PinchZoomBehaviour`, `KeyboardCameraInputBehaviour`)**. Built-ins live in the same folder as their base class (`src/layers/`, `src/behaviours/`) and are re-exported from `src/index.ts` — no separate "toolkit" bucket.
 - `@invana/canvas/primitives` — `PrimitivesRenderer` + base interfaces + built-in primitives + built-in decorations
 
 ## Rules (carry-over from old `packages/canvas`)

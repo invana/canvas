@@ -9,8 +9,16 @@ import type {
   ShapeLabelPlacement,
   ConnectorLabelPlacement,
   InsetAnchor,
+  CompositePart,
 } from '@invana/canvas';
 import type { Point } from '@invana/canvas/primitives';
+// Type-only (no runtime cycle): the template module declares its shapes in
+// terms of this file's `NodeShapeOptions`; we reference its registries here.
+import type {
+  NodeStructureRegistry,
+  NodeStylingRegistry,
+  NodeTypeRegistry,
+} from '../template/types';
 import type {
   RingDecorationStyle,
   GlowDecorationStyle,
@@ -284,6 +292,25 @@ export interface CustomShapeOption {
 }
 
 /**
+ * Composite "card" shape — a fixed-size rounded body with a `parts[]` list of
+ * rects / circles / lines / labels laid out by the caller (or compiled from a
+ * {@link CardStructure} by the template system). First-class so node *card*
+ * templates are type-safe rather than going through the `as unknown` cast.
+ * Maps 1:1 to the canvas `composite` shape spec; `parts` reuses the engine's
+ * {@link CompositePart} union.
+ */
+export interface CompositeShapeOption {
+  readonly kind: 'composite';
+  readonly width: number;
+  readonly height: number;
+  readonly cornerRadius?: number;
+  readonly fill?: number;
+  readonly fillAlpha?: number;
+  readonly stroke?: { readonly color: number; readonly width?: number; readonly alpha?: number };
+  readonly parts: readonly CompositePart[];
+}
+
+/**
  * Closed union of the six shape kinds that `@invana/canvas` registers out
  * of the box. Exported so internal switch-narrowing sites can target it
  * directly via the {@link isBuiltInNodeShape} type guard.
@@ -307,7 +334,10 @@ export type BuiltInNodeShapeOptions =
  * open-keyed `CustomShapeOption.kind` prevents `switch (shape.kind)` over
  * literals from excluding the custom variant on its own.
  */
-export type NodeShapeOptions = BuiltInNodeShapeOptions | CustomShapeOption;
+export type NodeShapeOptions =
+  | BuiltInNodeShapeOptions
+  | CompositeShapeOption
+  | CustomShapeOption;
 
 /**
  * Type guard separating the typed built-in variants from
@@ -1334,6 +1364,27 @@ export interface GraphLayerOptions {
    * `PrimitivesRendererOptions.hitFloorPx` for details.
    */
   hitFloorPx?: number;
+
+  /**
+   * Reusable node **structure** templates (skeletons: shape / slots / card
+   * rows), keyed by name. Referenced by {@link nodeTypes}. No colours.
+   */
+  nodeStructureTemplates?: NodeStructureRegistry;
+
+  /**
+   * Reusable node **styling** templates (roles + typography), keyed by name.
+   * Referenced by {@link nodeTypes}. Roles resolve to numbers against the
+   * active theme before the renderer; no hex needed (direct colours allowed).
+   */
+  nodeStylingTemplates?: NodeStylingRegistry;
+
+  /**
+   * Per-node-**type** bindings — each maps a node `type` to a structure +
+   * styling template and binds its slots to dotted data paths. A node whose
+   * `type` has a binding is resolved through it (card → composite shape,
+   * simple → shape + label) on top of the layer-level {@link node} template.
+   */
+  nodeTypes?: NodeTypeRegistry;
 }
 
 /**

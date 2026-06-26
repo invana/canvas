@@ -51,11 +51,11 @@ export type { ContextMenuState, UseContextMenuResult } from './useContextMenu';
 export { useCanvasMessage } from './useCanvasMessage';
 export type { UseCanvasMessageResult } from './useCanvasMessage';
 
-// Serialisable-config hooks — patch / read the canvas's `CanvasConfig` by id,
-// and follow OS dark-mode externally (theme-agnostic engine).
+// Serialisable-config hooks — patch / read the canvas's `CanvasConfig` by id.
+// Theming is owned by the engine's `ThemeBehaviour` (the sole publisher); drive
+// it via `canvas.update({ behaviours: { theme: … } })`.
 export { useGraphCanvasUpdate } from './useGraphCanvasUpdate';
 export { useGraphCanvasOptions } from './useGraphCanvasOptions';
-export { useSystemTheme } from './useSystemTheme';
 export { useDevTool } from './useDevTool';
 export type { UseDevToolOptions, UseDevToolResult } from './useDevTool';
 export { useMiniMap } from './useMiniMap';

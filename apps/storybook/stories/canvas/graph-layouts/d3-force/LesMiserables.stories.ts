@@ -15,12 +15,11 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphCanvas, DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
+import { GraphCanvas, DragNodeBehaviour, GraphLayer, type GraphNode, ThemeBehaviour } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
-import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-force/LesMiserables' };
 export default meta;
@@ -66,7 +65,7 @@ export const LesMiserables: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
     const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
     canvas.layouts.add(forceLayout);
 
@@ -90,8 +89,9 @@ export const LesMiserables: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'drag-node': { enabled: true },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
           dark: { backgroundColor: '#0f172a', color: '#475569' },
         },

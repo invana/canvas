@@ -25,17 +25,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import {
-  ClickSelectBehaviour,
-  GraphCanvas,
-  GraphLayer,
-  HoverActivateBehaviour,
-  type EdgeData,
-  type EdgeDecorationSpec,
-  type EdgeStyle,
-  type NodeData,
-  type NodeShapeOptions,
-} from '@invana/graph';
+import { ClickSelectBehaviour, GraphCanvas, GraphLayer, HoverActivateBehaviour, type EdgeData, type EdgeDecorationSpec, type EdgeStyle, type NodeData, type NodeShapeOptions, ThemeBehaviour } from '@invana/graph';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import {
   agentTrace,
@@ -46,7 +36,6 @@ import {
 } from '@invana/graph-datasets/usecase-demos';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
-import { SystemThemeBehaviour } from '../system-theme';
 
 const meta: Meta = { title: 'Usecases/LLM Agent Trace' };
 export default meta;
@@ -203,7 +192,7 @@ export const LLMAgentTrace: Story = {
     canvas.behaviours.register(
       new ClickSelectBehaviour({ id: 'select', targetLayerId: 'graph' }),
     );
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 
     // ── Layout ──────────────────────────────────────────────────────────
     // `ElkLayout`'s constructor only types its own ELK params, so the
@@ -255,8 +244,9 @@ export const LLMAgentTrace: Story = {
         zoom: { enabled: true },
         hover: { enabled: true, state: 'highlighted', degree: 1, direction: 'both' },
         select: { enabled: true, clearOnBackground: true },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#cbd5e1' },
           dark: { backgroundColor: '#0b1220', color: '#1e293b' },
         },

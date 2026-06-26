@@ -4,7 +4,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
+import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
 import {
   D3HierarchyLayout,
   type CartesianOrientation,
@@ -15,7 +15,6 @@ import type { LayoutOptions } from '@invana/canvas';
 import { flareAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
-import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-hierarchy/Tree' };
 export default meta;
@@ -143,7 +142,7 @@ export const Tree: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 
     // Registered after the `graph` layer is added — the behaviour resolves
     // its target layer at register-time, so the layer must exist first.
@@ -190,8 +189,9 @@ export const Tree: Story = {
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#0f172a' },
           dark: { backgroundColor: '#0b1220', color: '#e5e7eb' },
         },

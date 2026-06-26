@@ -50,6 +50,45 @@ export type {
   CardImageShape,
 } from './editors/hover-preview-card';
 
+// ─── Node template editors ────────────────────────────────────────────────
+// Schema-driven editors for the three-layer node model: a `NodeStructureEditor`
+// (per-type binding — structure + styling + the slot→data-field map) and a
+// `NodeStylingEditor` (roles + typography). Both produce pure JSON the host
+// pushes via `canvas.update({ layers: { graph: { … } } })`.
+export {
+  NodeStructureEditor,
+  bindingScalarFields,
+  bindingToForm,
+  formToBinding,
+} from './editors/node-structure';
+export type {
+  NodeStructureEditorProps,
+  NodeStructureFormState,
+  NodeStructureScalarFields,
+  BindingRow,
+} from './editors/node-structure';
+export {
+  NodeStylingEditor,
+  STYLING_SCALAR_FIELDS,
+  SLOT_STYLING_FIELDS,
+  stylingToForm,
+  formToStyling,
+} from './editors/node-styling';
+export type {
+  NodeStylingEditorProps,
+  NodeStylingFormState,
+  NodeStylingScalarFields,
+  SlotStylingRow,
+} from './editors/node-styling';
+// Shared field-schema helpers (colour-role select + the `SlotBindingField`).
+export {
+  COLOR_ROLES,
+  COLOR_ROLE_OPTIONS,
+  SLOT_BINDING_FIELDS,
+  roleField,
+  asRole,
+} from './editors/field-helpers';
+
 // ─── Preview cards ───────────────────────────────────────────────────────
 // Presentational node / edge hover-preview cards — engine-agnostic props-in UI
 // (only `@invana/ui` chrome). A turnkey (e.g. canvas-react `<HoverElementPreviewBehaviour>`)

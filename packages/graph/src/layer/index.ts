@@ -33,6 +33,7 @@ export type {
   BadgePlacement,
   BuiltInNodeShapeOptions,
   CircleShapeOption,
+  CompositeShapeOption,
   CustomShapeOption,
   EdgeBadge,
   EdgeBadgePlacement,

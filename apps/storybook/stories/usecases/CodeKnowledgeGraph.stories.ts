@@ -17,21 +17,10 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import {
-  ClickSelectBehaviour,
-  DragNodeBehaviour,
-  GraphCanvas,
-  GraphLayer,
-  HoverActivateBehaviour,
-  MiniMapLayer,
-  type GraphEdge,
-  type GraphNode,
-  type NodeBadge,
-} from '@invana/graph';
+import { ClickSelectBehaviour, DragNodeBehaviour, GraphCanvas, GraphLayer, HoverActivateBehaviour, MiniMapLayer, type GraphEdge, type GraphNode, type NodeBadge, ThemeBehaviour } from '@invana/graph';
 import { ElkLayout, type ElkDirection } from '@invana/graph-layout-elkjs';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
-import { SystemThemeBehaviour } from '../system-theme';
 
 const meta: Meta = { title: 'Usecases/Code Knowledge Graph' };
 export default meta;
@@ -205,7 +194,7 @@ export const CodeKnowledgeGraph: Story = {
     );
 
     canvas.behaviours.register(
-      new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }),
+      new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }),
     );
 
     // ── Layout — register the ELK layout; activeLayout auto-runs on mount.
@@ -282,8 +271,9 @@ export const CodeKnowledgeGraph: Story = {
         'drag-node': { enabled: true },
         hover: { enabled: true, state: 'highlighted', inactiveState: 'dimmed', degree: 1, direction: 'both' },
         select: { enabled: true, multiple: true, trigger: ['shift'] },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#cbd5e1' },
           dark: { backgroundColor: '#0f172a', color: '#334155' },
         },

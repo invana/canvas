@@ -1,17 +1,27 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
+  BackgroundLayer,
   DragPanBehaviour,
   PrimitivesRenderer,
-  ThemedBackgroundLayer,
   WheelZoomBehaviour,
   WorldLayer,
 } from '@invana/canvas';
-import type { CanvasContext, ThemedBackgroundMode } from '@invana/canvas';
+import type { CanvasContext } from '@invana/canvas';
+import { ThemeBehaviour, BUILT_IN_THEMES, type ThemeMode } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/concepts/Layers/ThemedBackgroundLayer' };
+/**
+ * Themed background via the engine theme signal: a plain {@link BackgroundLayer}
+ * subscribes to `'theme:change'` and recolours its backdrop + grid from the
+ * active palette's `surface` / `divider` roles. The {@link ThemeBehaviour} is
+ * the sole publisher — switch its named theme or mode and the background (and
+ * every other theme-aware layer) recolours. This replaces the former
+ * `ThemedBackgroundLayer`, whose multi-theme logic now lives in the shared
+ * theme signal.
+ */
+const meta: Meta = { title: 'canvas/concepts/Layers/Themed Background' };
 export default meta;
 type Story = StoryObj;
 
@@ -25,24 +35,9 @@ export const ThemedBackground: Story = {
         return {};
       }
       protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
-        this.renderer.addShape('a', {
-          kind: 'circle',
-          x: -120,
-          y: 0,
-          radius: 36,
-          fill: 0x3b82f6,
-        });
-        this.renderer.addShape('b', {
-          kind: 'circle',
-          x: 120,
-          y: 0,
-          radius: 36,
-          fill: 0xf59e0b,
-        });
+        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+        this.renderer.addShape('a', { kind: 'circle', x: -120, y: 0, radius: 36, fill: 0x3b82f6 });
+        this.renderer.addShape('b', { kind: 'circle', x: 120, y: 0, radius: 36, fill: 0xf59e0b });
         this.renderer.addShape('c', {
           kind: 'rect',
           x: 0,
@@ -58,162 +53,37 @@ export const ThemedBackground: Story = {
       }
     }
 
-    const container = canvasElement.querySelector<HTMLDivElement>(
-      '#cvs-themed-background-layer',
-    )!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-themed-background-layer')!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
-    await canvas.init({ container, autoResize: true });
+
+    // A plain pattern background — it recolours itself from the published theme.
+    canvas.layers.add(
+      new BackgroundLayer({
+        id: 'bg',
+        options: { type: 'pattern', patternType: 'grid', size: 1, spacing: 30, alpha: 0.7 },
+      }),
+    );
+    const fixtures = new FixturesLayer({ id: 'fx', options: {} });
+    canvas.layers.add(fixtures);
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
-    const themed = new ThemedBackgroundLayer({
-      id: 'bg',
-      options: {
-        mode: 'auto',
-        defaultTheme: 'graph-paper',
-        themes: [
-          {
-            id: 'graph-paper',
-            label: 'Graph paper',
-            light: {
-              type: 'pattern',
-              patternType: 'grid',
-              backgroundColor: '#f8fafc',
-              color: '#94a3b8',
-              size: 1,
-              spacing: 30,
-              alpha: 0.7,
-              followCamera: true,
-            },
-            dark: {
-              type: 'pattern',
-              patternType: 'grid',
-              backgroundColor: '#0f172a',
-              color: '#334155',
-              size: 1,
-              spacing: 30,
-              alpha: 0.9,
-              followCamera: true,
-            },
-          },
-          {
-            id: 'dots',
-            label: 'Dot field',
-            light: {
-              type: 'pattern',
-              patternType: 'dots',
-              backgroundColor: '#f1f5f9',
-              color: '#94a3b8',
-              size: 1.5,
-              spacing: 24,
-              alpha: 0.85,
-              followCamera: true,
-            },
-            dark: {
-              type: 'pattern',
-              patternType: 'dots',
-              backgroundColor: '#020617',
-              color: '#475569',
-              size: 1.5,
-              spacing: 24,
-              alpha: 0.9,
-              followCamera: true,
-            },
-          },
-          {
-            id: 'flat',
-            label: 'Flat',
-            light: {
-              type: 'solid',
-              backgroundColor: '#ffffff',
-            },
-            dark: {
-              type: 'solid',
-              backgroundColor: '#0a0a0a',
-            },
-          },
-        ],
-      },
-    });
-    canvas.layers.add(themed);
+    // The sole theme publisher. Named-palette path (no single-layer shorthand),
+    // so the background reads `surface` / `divider` straight off the palette.
+    const theme = new ThemeBehaviour({ id: 'theme', enabled: true });
+    canvas.behaviours.register(theme);
 
-    const fixtures = new FixturesLayer({ id: 'fx', options: {} });
-    canvas.layers.add(fixtures);
+    await canvas.init({ container, autoResize: true });
+    canvas.camera.fitContent(fixtures.getBounds(), 80);
 
-    const toCssColor = (c: number | string | { light: number | string; dark: number | string }): string => {
-      if (typeof c === 'number') return `#${c.toString(16).padStart(6, '0')}`;
-      if (typeof c === 'string') return c;
-      return toCssColor(themed.getResolvedKind() === 'dark' ? c.dark : c.light);
-    };
-
-    const initial = themed.getOptions();
-    const settings = {
-      theme: themed.getActiveTheme().id,
-      mode: themed.getMode(),
-      type: initial.type,
-      patternType: initial.patternType,
-      backgroundColor: toCssColor(initial.backgroundColor),
-      color: toCssColor(initial.color),
-      size: initial.size,
-      spacing: initial.spacing,
-      alpha: initial.alpha,
-      followCamera: initial.followCamera,
-    };
-
-    const pushOverrides = (): void => {
-      themed.setOptions({
-        type: settings.type,
-        patternType: settings.patternType,
-        backgroundColor: settings.backgroundColor,
-        color: settings.color,
-        size: settings.size,
-        spacing: settings.spacing,
-        alpha: settings.alpha,
-        followCamera: settings.followCamera,
-      });
-    };
-
-    const gui = new GUI({ title: 'Themed background' });
+    const settings = { theme: 'default', mode: 'system' as ThemeMode };
+    const gui = new GUI({ title: 'Theme' });
     onStoryTeardown(() => gui.destroy());
     gui
-      .add(
-        settings,
-        'theme',
-        themed.getThemes().map((t) => t.id),
-      )
-      .onChange((id: string) => themed.setTheme(id));
-    gui
-      .add(settings, 'mode', ['auto', 'light', 'dark'])
-      .onChange((m: ThemedBackgroundMode) => themed.setMode(m));
-    const styleFolder = gui.addFolder('Style');
-    styleFolder.add(settings, 'type', ['solid', 'pattern']).onChange(pushOverrides);
-    styleFolder
-      .add(settings, 'patternType', ['dots', 'grid', 'lines'])
-      .onChange(pushOverrides);
-    styleFolder.addColor(settings, 'backgroundColor').onChange(pushOverrides);
-    styleFolder.addColor(settings, 'color').onChange(pushOverrides);
-    styleFolder.add(settings, 'size', 0.5, 8, 0.5).onChange(pushOverrides);
-    styleFolder.add(settings, 'spacing', 10, 80, 2).onChange(pushOverrides);
-    styleFolder.add(settings, 'alpha', 0, 1, 0.05).onChange(pushOverrides);
-    styleFolder.add(settings, 'followCamera').onChange(pushOverrides);
-
-    const syncStyleFromLayer = (): void => {
-      const o = themed.getOptions();
-      settings.type = o.type;
-      settings.patternType = o.patternType;
-      settings.backgroundColor = toCssColor(o.backgroundColor);
-      settings.color = toCssColor(o.color);
-      settings.size = o.size;
-      settings.spacing = o.spacing;
-      settings.alpha = o.alpha;
-      settings.followCamera = o.followCamera;
-      styleFolder.controllersRecursive().forEach((c) => c.updateDisplay());
-    };
-    themed.events.on('theme:switched', syncStyleFromLayer);
-    themed.events.on('mode:updated', syncStyleFromLayer);
-
-    canvas.camera.fitContent(fixtures.getBounds(), 80);
+      .add(settings, 'theme', Object.keys(BUILT_IN_THEMES))
+      .onChange((id: string) => theme.setTheme(id));
+    gui.add(settings, 'mode', ['system', 'light', 'dark']).onChange((m: ThemeMode) => theme.setMode(m));
   },
 };

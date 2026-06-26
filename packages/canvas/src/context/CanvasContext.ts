@@ -18,6 +18,7 @@ import type { CanvasEventBus } from '../events/CanvasEventBus';
 import type { Camera } from '../camera/Camera';
 import type { LayerRegistry } from '../registries/LayerRegistry';
 import type { BehaviourRegistry } from '../registries/BehaviourRegistry';
+import type { ThemeState } from '../theme/types';
 
 export interface CanvasContext {
   /** Layer registry — `add / remove / get<T>(id) / list / byZOrder`. */
@@ -35,6 +36,14 @@ export interface CanvasContext {
 
   /** Canvas-wide event bus + telemetry tap channel. */
   readonly events: CanvasEventBus;
+
+  /**
+   * The active theme channel. A single publisher (the domain `ThemeBehaviour`)
+   * calls `theme.set(...)`; theme-aware layers read `theme.current()` and/or
+   * subscribe to the `'theme:change'` event to recolour. `current()` is `null`
+   * until a theme is first published.
+   */
+  readonly theme: ThemeState;
 
   /**
    * The world container — a `pixi-viewport` `Viewport` instance. Camera-

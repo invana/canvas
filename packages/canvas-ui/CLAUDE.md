@@ -4,7 +4,7 @@ React UI components — schema-driven **style editors** — for tools that use `
 
 > **Toolbars / controls + positioning primitives moved to `@invana/canvas-react`.** The actions track (`ZoomControls`, `LockToggle`, `ClearButton`, `OptionPicker`, `Panel`, `ControlButton`, the `CanvasControlsToolbar` / `GraphToolbar` assemblies) now lives there — dumb building blocks in `canvas-react/src/components/`, assembled toolbars in `canvas-react/src/toolbars/`. This package is now **the editors/forms track only**.
 
-**Components are headless & engine-agnostic.** They edit a **style object** against a consumer-owned react-hook-form instance and know nothing about where that style comes from or goes — no `Canvas`, no engine, no commit. The consumer seeds the form and reads edits back, then applies the result however it likes (live, behind an Apply button, an undo stack, a preview). Keep it that way: no `@invana/canvas` / `@invana/canvas-react` / `pixi.js` imports — the only `@invana/graph` use is the `NodeStyle` *type*.
+**Components are headless & engine-agnostic.** They edit a serialisable object (a style, a styling template, a per-type binding) against a consumer-owned react-hook-form instance and know nothing about where it comes from or goes — no `Canvas`, no engine, no commit. The consumer seeds the form and reads edits back, then applies the result however it likes (live, behind an Apply button, an undo stack, a preview). Keep it that way: no `@invana/canvas` / `@invana/canvas-react` / `pixi.js` imports — the only `@invana/graph` use is its **types** (`NodeStyle`, `NodeStylingTemplate`, `NodeTypeBinding`, `ColorRole`, …).
 
 The single track:
 
@@ -78,13 +78,16 @@ The actions track no longer lives here. The dumb, engine-agnostic, icon-agnostic
 
 - **All form fields come from `@invana/forms`** (`FormField.ObjectField`, `Field.*`); the `Button` comes from `@invana/ui`. No raw `<input>`, `<select>`, or `<button>` in component code.
 - **The component owns its form but nothing else.** It creates the `useForm` from `defaults`, but holds **no engine/layer/commit logic** — output is via the `onSubmit` callback only.
-- **No engine imports.** No `@invana/canvas`, `@invana/canvas-react`, or `pixi.js`. The only `@invana/graph` use is the `NodeStyle` **type** (in `types.ts` / `mapping.ts`).
+- **No engine imports.** No `@invana/canvas`, `@invana/canvas-react`, or `pixi.js`. The only `@invana/graph` use is its **types** (e.g. `NodeStyle`, `NodeStylingTemplate`, `NodeTypeBinding`, `ColorRole`) in `types.ts` / `mapping.ts`.
 - **No module-level state.** Components must be safe with N concurrent instances on one page.
 - **Theme provider is the host's job.** Theming is global CSS tokens — `@invana/themes/styles.css` then `@invana/ui/styles.css` (order matters), wired at the app root. There is **no React `<ThemeProvider>`**; don't introduce one. Storybook wires the stylesheets in `.storybook/preview.ts`.
 
 ## Scope (v1)
 
 - `<NodeStyleEditor>` — Geometry (shape-kind select + dynamic per-kind geometry + unified `size`), Background, Stroke, Label sections (accordion) covering the 80% `NodeStyle` field set. Icon / image / badges / decorations / effects deferred.
+- `<NodeStructureEditor>` — one `NodeTypeBinding`: a structure + styling template picker (names supplied by the host) plus the **slot → data-field** map, rendered as `SLOT_BINDING_FIELDS` (`field-helpers.ts`) `useFieldArray` rows. `bindingToForm` / `formToBinding`.
+- `<NodeStylingEditor>` — one `NodeStylingTemplate`: role selects (`roleField` / `COLOR_ROLE_OPTIONS`) + typography for fill / stroke / label, plus a per-slot styling `useFieldArray`. `stylingToForm` / `formToStyling`.
+- `editors/field-helpers.ts` — shared schema bits both template editors compose: the colour-role `select` (`roleField`, `COLOR_ROLE_OPTIONS`, `asRole`) and the `SlotBindingField` (`SLOT_BINDING_FIELDS`).
 - `fields.ts` (`nodeStyleFields`, `geometryFields`, `BACKGROUND_FIELDS`, `STROKE_FIELDS`, `LABEL_FIELDS`) + `mapping.ts` (`styleToForm`, `formToStyle`, `defaultShapeFor`) + shared `presets/colors.ts` (`COLOR_PRESETS`) and `utils/color.ts` are exported for custom hosts.
 
 Later (each = fields + mapping + engine + editor, same pattern): `EdgeStyleEditor` (mirror of node — `store.updateEdge` + `resolveEdgeStyle`), canvas/background editor (target `BackgroundLayer.setOptions`), layout-config editors (recreate-and-rerun until `Layout.setOptions` lands), behaviour-config editors (`setOptions` where it exists, else re-register), plus more non-form components (Inspector, LayerStack, Legend, StatusBar, SearchBox, ContextMenu, ToastHost, AppShell).

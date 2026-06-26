@@ -4,7 +4,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
+import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
 import {
   D3HierarchyLayout,
@@ -15,7 +15,6 @@ import type { LayoutOptions } from '@invana/canvas';
 import { lifeTreeAsGraph, type LifeTreeKingdom } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
-import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-hierarchy/TreeOfLife' };
 export default meta;
@@ -183,7 +182,7 @@ export const TreeOfLife: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 
     const labelResolutionLOD = new LabelResolutionLODBehaviour({
       id: 'label-resolution',
@@ -220,8 +219,9 @@ export const TreeOfLife: Story = {
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#0f172a' },
           dark: { backgroundColor: '#0b1220', color: '#e5e7eb' },
         },

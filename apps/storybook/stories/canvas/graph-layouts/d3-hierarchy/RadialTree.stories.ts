@@ -4,13 +4,12 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour } from '@invana/graph';
+import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
 import { D3HierarchyLayout, type D3HierarchyLayoutMode } from '@invana/graph-layout-d3-hierarchy';
 import { flareAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
-import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-hierarchy/RadialTree' };
 export default meta;
@@ -197,7 +196,7 @@ export const RadialTree: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 
     // Registered before init — resolves its target layer at register-time, so
     // the `graph` layer must exist first (it does).
@@ -230,8 +229,9 @@ export const RadialTree: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'label-resolution': { enabled: settings.sharpLabelsOnZoom },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#f8fafc' },
           dark: { backgroundColor: '#0b1220' },
         },

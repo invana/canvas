@@ -4,18 +4,12 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import {
-  GraphCanvas,
-  GraphLayer,
-  HoverActivateBehaviour,
-  LabelResolutionLODBehaviour,
-} from '@invana/graph';
+import { GraphCanvas, GraphLayer, HoverActivateBehaviour, LabelResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
 import { flareImportsAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
-import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/d3-hierarchy/EdgeBundling' };
 export default meta;
@@ -97,7 +91,7 @@ export const EdgeBundling: Story = {
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 
     const labelResolutionLOD = new LabelResolutionLODBehaviour({
       id: 'label-resolution',
@@ -161,8 +155,9 @@ export const EdgeBundling: Story = {
           direction: 'both',
         },
         'label-resolution': { enabled: settings.sharpLabelsOnZoom },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#f8fafc' },
           dark: { backgroundColor: '#0b1220' },
         },

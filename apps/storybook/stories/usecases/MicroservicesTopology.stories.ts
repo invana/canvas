@@ -21,17 +21,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import {
-  ClickSelectBehaviour,
-  GraphCanvas,
-  GraphLayer,
-  HoverActivateBehaviour,
-  MiniMapLayer,
-  type EdgeData,
-  type EdgeDecorationSpec,
-  type EdgeStyle,
-  type NodeData,
-} from '@invana/graph';
+import { ClickSelectBehaviour, GraphCanvas, GraphLayer, HoverActivateBehaviour, MiniMapLayer, type EdgeData, type EdgeDecorationSpec, type EdgeStyle, type NodeData, ThemeBehaviour } from '@invana/graph';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import {
   microservices,
@@ -42,7 +32,6 @@ import {
 } from '@invana/graph-datasets/usecase-demos';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
-import { SystemThemeBehaviour } from '../system-theme';
 
 const meta: Meta = { title: 'Usecases/Microservices Topology' };
 export default meta;
@@ -178,7 +167,7 @@ export const MicroservicesTopology: Story = {
     canvas.behaviours.register(
       new ClickSelectBehaviour({ id: 'select', targetLayerId: 'graph' }),
     );
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 
     // ── Layout ──────────────────────────────────────────────────────────
     // `ElkLayout`'s constructor types its options as `ElkLayoutOptions`
@@ -215,8 +204,9 @@ export const MicroservicesTopology: Story = {
           degree: 1, direction: 'both',
         },
         select: { enabled: true, multiple: true, trigger: ['shift'] },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#cbd5e1' },
           dark: { backgroundColor: '#0b1220', color: '#1e293b' },
         },

@@ -12,13 +12,12 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, DragNodeBehaviour, GraphLayer, type GraphNode } from '@invana/graph';
+import { GraphCanvas, DragNodeBehaviour, GraphLayer, type GraphNode, ThemeBehaviour } from '@invana/graph';
 import { GeometricLayout, type GeometricLayoutMode } from '@invana/graph-layout-geometric';
 import type { EasingName } from '@invana/canvas';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
-import { SystemThemeBehaviour } from '../../../system-theme';
 
 const meta: Meta = { title: 'canvas/graph-layouts/geometric/Grid' };
 export default meta;
@@ -55,7 +54,7 @@ export const Grid: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
-    canvas.behaviours.register(new SystemThemeBehaviour({ id: 'system-theme', targetLayerId: 'bg' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
     const layout = new GeometricLayout({ id: 'geo', targetLayerId: 'graph' });
     canvas.layouts.add(layout);
 
@@ -79,8 +78,9 @@ export const Grid: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'drag-node': { enabled: true },
-        'system-theme': {
+        theme: {
           enabled: true,
+          mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
           dark: { backgroundColor: '#0f172a', color: '#475569' },
         },
