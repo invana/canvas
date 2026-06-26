@@ -24,6 +24,8 @@ If I ask for "docs", "documentation", or "data model docs" without further quali
 |---|---|---|
 | `packages/canvas` | `@invana/canvas` | engine — `Canvas`, `Layer`, `Behaviour`, `Layout` base classes, `ShapesRenderer`, built-in `BackgroundLayer` / `DevInfoLayer` / `CameraInputBehaviour` |
 | `packages/canvas-react` | `@invana/canvas-react` | React bindings — declarative `<Canvas>` with JSX children mapped to layers, behaviours, layouts via context |
+| `packages/canvas-ui` | `@invana/canvas-ui` | schema-driven editors (NodeStyle / hover-card / node structure + styling templates) + shared form helpers |
+| `packages/canvas-designer` | `@invana/canvas-designer` | opt-in WYSIWYG **node card / template designer** (drag canvas, layers, undo/redo, save/load); emits `FreeformStructure` |
 | `packages/graph` | `@invana/graph` | `GraphLayer`, `MiniMapLayer`, hover/click/lasso/brush/pan/drag behaviours |
 | `packages/graph-layout-d3-force` | `@invana/graph-layout-d3-force` | `D3ForceLayout` (iterative) |
 | `packages/graph-layout-elkjs` | `@invana/graph-layout-elkjs` | `ElkLayout` (one-shot; on `OneShotPositionLayout`) |
