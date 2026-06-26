@@ -22,9 +22,16 @@ export const COLOR_ROLES: readonly ColorRole[] = [
   'hoverRing',
 ];
 
-/** `select` options for a colour role, with an explicit empty `(none)` entry. */
+/**
+ * Sentinel for the "no role" option. The form chrome (Radix `Select`) forbids an
+ * empty-string item value, so the `(none)` choice carries this token instead;
+ * {@link asRole} maps it back to `undefined`.
+ */
+export const NO_ROLE = '__none__';
+
+/** `select` options for a colour role, with an explicit `(none)` entry. */
 export const COLOR_ROLE_OPTIONS: { value: string; label: string }[] = [
-  { value: '', label: '(none)' },
+  { value: NO_ROLE, label: '(none)' },
   ...COLOR_ROLES.map((r) => ({ value: r, label: r })),
 ];
 
@@ -33,9 +40,9 @@ export function roleField(name: string, label: string): FieldConfig {
   return { name, type: 'select', label, options: COLOR_ROLE_OPTIONS };
 }
 
-/** Narrow a form select value back to a `ColorRole` (empty → `undefined`). */
+/** Narrow a form select value back to a `ColorRole` (the `(none)` sentinel → `undefined`). */
 export function asRole(value: string | undefined): ColorRole | undefined {
-  return value ? (value as ColorRole) : undefined;
+  return value && value !== NO_ROLE ? (value as ColorRole) : undefined;
 }
 
 /**

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { FormField } from '@invana/forms';
 import { Button } from '@invana/ui';
 import {
@@ -31,6 +31,12 @@ export interface NodeStructureEditorProps {
    * `canvas.update({ layers: { graph: { nodeTypes } } })`.
    */
   onSubmit: (binding: NodeTypeBinding) => void;
+  /**
+   * Optional **live** callback — fired on every form change with the mapped
+   * binding, for instant-preview hosts. Independent of {@link onSubmit}.
+   * Memoise it to avoid re-subscribing each render.
+   */
+  onChange?: (binding: NodeTypeBinding) => void;
   /** Submit button label. Default `'Apply'`. */
   submitLabel?: string;
 }
@@ -47,16 +53,24 @@ export function NodeStructureEditor({
   structures,
   stylings,
   onSubmit,
+  onChange,
   submitLabel = 'Apply',
 }: NodeStructureEditorProps) {
   const form = useForm<NodeStructureFormState>({ defaultValues: bindingToForm(defaults) });
-  const { control, getValues } = form;
+  const { control, getValues, watch } = form;
   const { fields, append, remove } = useFieldArray({ control, name: 'bindings' });
 
   const scalarFields = useMemo(
     () => bindingScalarFields(structures, stylings),
     [structures, stylings],
   );
+
+  // Live preview: re-map + emit on every change when `onChange` is supplied.
+  useEffect(() => {
+    if (!onChange) return;
+    const sub = watch((values) => onChange(formToBinding(values as NodeStructureFormState)));
+    return () => sub.unsubscribe();
+  }, [watch, onChange]);
 
   // RHF's typed `Control` isn't assignable to ObjectField's `Control<FieldValues>`.
   const c = control as unknown as Control<FieldValues>;

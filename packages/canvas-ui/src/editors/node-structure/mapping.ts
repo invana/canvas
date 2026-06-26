@@ -16,14 +16,14 @@ export function bindingToForm(binding?: NodeTypeBinding): NodeStructureFormState
 /** Read the form back into a `NodeTypeBinding` (drops empty rows). */
 export function formToBinding(values: NodeStructureFormState): NodeTypeBinding {
   const bindings: Record<string, string> = {};
-  for (const row of values.bindings) {
-    const slot = row.slot.trim();
-    const path = row.path.trim();
+  for (const row of values.bindings ?? []) {
+    const slot = (row.slot ?? '').trim();
+    const path = (row.path ?? '').trim();
     if (slot && path) bindings[slot] = path;
   }
   return {
-    structure: values.binding.structure,
-    styling: values.binding.styling,
+    structure: values.binding?.structure ?? '',
+    styling: values.binding?.styling ?? '',
     bindings,
   };
 }

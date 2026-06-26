@@ -70,6 +70,8 @@ export type {
 export {
   NodeStylingEditor,
   STYLING_SCALAR_FIELDS,
+  SIMPLE_STYLING_FIELDS,
+  CARD_STYLING_FIELDS,
   SLOT_STYLING_FIELDS,
   stylingToForm,
   formToStyling,
@@ -80,10 +82,16 @@ export type {
   NodeStylingScalarFields,
   SlotStylingRow,
 } from './editors/node-styling';
+// The free-form **node card designer** moved to its own package,
+// `@invana/canvas-designer` — it's a heavy authoring tool (drag canvas, layers,
+// undo/redo, save/load), so consumers who only render templates don't pull it
+// in. It depends on the shared field helpers below.
+
 // Shared field-schema helpers (colour-role select + the `SlotBindingField`).
 export {
   COLOR_ROLES,
   COLOR_ROLE_OPTIONS,
+  NO_ROLE,
   SLOT_BINDING_FIELDS,
   roleField,
   asRole,
