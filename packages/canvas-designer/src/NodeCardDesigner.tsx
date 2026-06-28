@@ -11,6 +11,7 @@ import { Button } from '@invana/ui';
 import { FormProvider, useForm, type Control, type FieldValues } from 'react-hook-form';
 import type { CardElement, FreeformStructure } from '@invana/graph';
 
+import { CardElementView } from './CardElementView';
 import { CARD_FIELDS, elementFields, NO_BIND } from './fields';
 import {
   applyFormToCard,
@@ -346,133 +347,17 @@ function DesignCanvas({
     >
       {tpl.elements.map((el) =>
         el.hidden ? null : (
-          <ElementView
+          <CardElementView
             key={el.id}
             el={el}
             palette={palette}
             selected={el.id === selectedId}
-            label={el.type === 'text' ? (el.bind ? `{${labelFor(el.bind)}}` : (el.text ?? '')) : ''}
+            text={el.type === 'text' ? (el.bind ? `{${labelFor(el.bind)}}` : (el.text ?? '')) : ''}
             onPointerDown={(e) => onPointerDownEl(e, el)}
           />
         ),
       )}
     </div>
-  );
-}
-
-function ElementView({
-  el,
-  palette,
-  selected,
-  label,
-  onPointerDown,
-}: {
-  el: CardElement;
-  palette: Record<string, number>;
-  selected: boolean;
-  label: string;
-  onPointerDown: (e: PointerEvent) => void;
-}) {
-  const ring = selected ? '0 0 0 2px #3b82f6' : undefined;
-  const common: CSSProperties = { position: 'absolute', cursor: 'move', boxShadow: ring };
-
-  if (el.type === 'text') {
-    return (
-      <div
-        onPointerDown={onPointerDown}
-        style={{
-          ...common,
-          left: el.x,
-          top: el.y,
-          fontSize: el.fontSize ?? 13,
-          fontWeight: (el.fontWeight as number) ?? 400,
-          color: previewColor(el.colorRole, el.color, palette, 0x111111),
-          textTransform: el.uppercase ? 'uppercase' : 'none',
-          whiteSpace: 'nowrap',
-          maxWidth: el.maxWidth || undefined,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          lineHeight: 1,
-        }}
-      >
-        {label || 'Text'}
-      </div>
-    );
-  }
-  if (el.type === 'rect') {
-    return (
-      <div
-        onPointerDown={onPointerDown}
-        style={{
-          ...common,
-          left: el.x,
-          top: el.y,
-          width: el.width,
-          height: el.height,
-          borderRadius: el.cornerRadius ?? 0,
-          background: previewColor(el.fillRole, el.fill, palette, 0x9ca3af),
-        }}
-      />
-    );
-  }
-  if (el.type === 'circle') {
-    return (
-      <div
-        onPointerDown={onPointerDown}
-        style={{
-          ...common,
-          left: el.x,
-          top: el.y,
-          width: el.radius * 2,
-          height: el.radius * 2,
-          borderRadius: '50%',
-          background: previewColor(el.fillRole, el.fill, palette, 0x9ca3af),
-        }}
-      />
-    );
-  }
-  if (el.type === 'image') {
-    return (
-      <div
-        onPointerDown={onPointerDown}
-        style={{
-          ...common,
-          left: el.x,
-          top: el.y,
-          width: el.size,
-          height: el.size,
-          borderRadius: el.shape === 'rounded' ? 8 : '50%',
-          background: previewColor('divider', undefined, palette, 0xcccccc),
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 10,
-          color: '#fff',
-        }}
-      >
-        IMG
-      </div>
-    );
-  }
-  // line
-  const dx = el.x2 - el.x;
-  const dy = el.y2 - el.y;
-  const len = Math.hypot(dx, dy);
-  const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-  return (
-    <div
-      onPointerDown={onPointerDown}
-      style={{
-        ...common,
-        left: el.x,
-        top: el.y,
-        width: len,
-        height: Math.max(el.strokeWidth ?? 1, 2),
-        background: previewColor(el.colorRole, el.color, palette, 0xe2e8f0),
-        transformOrigin: '0 0',
-        transform: `rotate(${angle}deg)`,
-      }}
-    />
   );
 }
 
@@ -544,24 +429,42 @@ const toolbarStyle: CSSProperties = {
   borderBottom: '1px solid var(--border, #e4e4e7)',
 };
 const dividerStyle: CSSProperties = { width: 1, height: 20, background: 'var(--border, #e4e4e7)', margin: '0 4px' };
+// Responsive: the three panels sit side-by-side when there's room and wrap
+// (canvas, then properties) onto new rows when the container is narrow — so the
+// Properties panel is never pushed off-screen.
 const shellStyle: CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '210px 1fr 280px',
+  display: 'flex',
+  flexWrap: 'wrap',
   gap: 12,
-  alignItems: 'start',
+  alignItems: 'flex-start',
   padding: 12,
 };
-const layersStyle: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 8 };
+const layersStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 8,
+  width: 200,
+  flexShrink: 0,
+};
 const canvasWrapStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
+  flex: '2 1 340px',
+  minWidth: 0,
   minHeight: 260,
   padding: 24,
   background: 'var(--muted, #f4f4f5)',
   borderRadius: 8,
+  overflow: 'auto',
 };
-const propsStyle: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6 };
+const propsStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 6,
+  flex: '1 1 280px',
+  minWidth: 260,
+};
 const sectionLabel: CSSProperties = { fontSize: 13, fontWeight: 600 };
 const layerRowStyle = (on: boolean): CSSProperties => ({
   display: 'flex',

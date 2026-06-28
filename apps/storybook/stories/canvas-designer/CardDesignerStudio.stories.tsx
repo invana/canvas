@@ -1,19 +1,15 @@
 /**
- * **Card Designer Studio** — end-users build their own node card, no developer
- * round-trip, on a multi-type social graph (a ~100-node mocked Twitter feed:
+ * **Card Designer Studio** — end-users build their own node cards, no developer
+ * round-trip, on a multi-type social graph (a ~99-node mocked Twitter feed:
  * `User` · `Tweet` · `Comment` · `Hashtag` · `Retweet`, with `POSTED` /
- * `REPLY_TO` / `TAGGED` / `MENTIONS` / `RETWEETED` / `FOLLOWS` edges).
+ * `REPLY_TO` / `TAGGED` / `MENTIONS` / `RETWEETED` / `FOLLOWS` edges). Every
+ * node type renders as its own composite card.
  *
- * The graph is a batteries-included {@link GraphCanvasApp}; the bottom panel is
- * the free-form {@link NodeCardDesigner} editing the **Tweet** card. Drag
- * elements, bind text to data fields, colour by theme role — every edit
- * live-registers the card as the `Tweet` type's structure template, so the real
- * tweet nodes adopt it instantly. Switch themes (header) and every designed card
- * recolours from the palette; the design never changes.
- *
- * Per-type templates: `Tweet` + `User` render as composite cards, the rest as
- * simple labelled circles. All are `FreeformStructure` / built-in templates in
- * `config.layers.graph` — pure JSON, no per-type code.
+ * The full-bleed graph is a {@link GraphCanvasApp}. The **Templates** button
+ * opens a modal listing the node types (live thumbnails via `NodeTemplateList`);
+ * clicking **Edit** opens the single-template `NodeCardDesigner` for that type.
+ * Edits live-register the type's structure template, so its nodes adopt the new
+ * card instantly. Theme + mode (header `RichSelect`s) recolour every card.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
@@ -28,7 +24,7 @@ import {
   RichSelect,
 } from '@invana/ui';
 import { ThemeProvider } from '@invana/themes';
-import { NodeCardDesigner } from '@invana/canvas-designer';
+import { NodeCardDesigner, NodeTemplateList } from '@invana/canvas-designer';
 import { twitterActivity } from '@invana/graph-datasets';
 import {
   BUILT_IN_THEMES,
@@ -49,21 +45,50 @@ const DATA: GraphData = {
   edges: twitterActivity.edges.map((e) => ({ id: e.id, source: e.source, target: e.target, type: e.label })),
 };
 
-// Fields the designer offers for binding the Tweet card.
-const TWEET_FIELDS = [
-  { key: 'data.author', label: 'Author' },
-  { key: 'data.handle', label: 'Handle' },
-  { key: 'data.time', label: 'Time' },
-  { key: 'data.text', label: 'Text' },
-  { key: 'data.stats', label: 'Stats (♥ ↻ 💬)' },
-  { key: 'data.likes', label: 'Likes' },
-  { key: 'data.retweets', label: 'Retweets' },
-  { key: 'data.replies', label: 'Replies' },
-  { key: 'type', label: 'Type' },
-];
+// Fields offered for binding, per node type.
+const FIELDS: Record<string, { key: string; label: string }[]> = {
+  Tweet: [
+    { key: 'data.author', label: 'Author' },
+    { key: 'data.handle', label: 'Handle' },
+    { key: 'data.time', label: 'Time' },
+    { key: 'data.text', label: 'Text' },
+    { key: 'data.stats', label: 'Stats (♥ ↻ 💬)' },
+    { key: 'data.likes', label: 'Likes' },
+    { key: 'data.retweets', label: 'Retweets' },
+    { key: 'data.replies', label: 'Replies' },
+    { key: 'type', label: 'Type' },
+  ],
+  User: [
+    { key: 'data.name', label: 'Name' },
+    { key: 'data.handle', label: 'Handle' },
+    { key: 'data.avatar', label: 'Avatar' },
+    { key: 'data.followers', label: 'Followers' },
+    { key: 'data.bio', label: 'Bio' },
+    { key: 'type', label: 'Type' },
+  ],
+  Comment: [
+    { key: 'data.author', label: 'Author' },
+    { key: 'data.handle', label: 'Handle' },
+    { key: 'data.time', label: 'Time' },
+    { key: 'data.text', label: 'Text' },
+    { key: 'type', label: 'Type' },
+  ],
+  Hashtag: [
+    { key: 'data.tag', label: 'Tag' },
+    { key: 'data.label', label: 'Label (#tag)' },
+    { key: 'data.uses', label: 'Uses' },
+    { key: 'type', label: 'Type' },
+  ],
+  Retweet: [
+    { key: 'data.by', label: 'By' },
+    { key: 'data.label', label: 'Label' },
+    { key: 'data.time', label: 'Time' },
+    { key: 'type', label: 'Type' },
+  ],
+};
 
-// The starter Tweet card the user tweaks.
-const STARTER_TWEET: FreeformStructure = {
+// ─── Card templates — one per node type ─────────────────────────────────────
+const TWEET_CARD: FreeformStructure = {
   name: 'tweetCard',
   kind: 'freeform',
   width: 280,
@@ -80,8 +105,6 @@ const STARTER_TWEET: FreeformStructure = {
     { id: 'stats', type: 'text', x: 16, y: 140, bind: 'data.stats', fontSize: 13, fontWeight: 600, colorRole: 'accent' },
   ],
 };
-
-// A fixed User card (not edited here, just to show a second card type).
 const USER_CARD: FreeformStructure = {
   name: 'userCard',
   kind: 'freeform',
@@ -96,15 +119,76 @@ const USER_CARD: FreeformStructure = {
     { id: 'bio', type: 'text', x: 14, y: 62, bind: 'data.bio', fontSize: 11, colorRole: 'muted', maxWidth: 182 },
   ],
 };
-
-const STRUCTURES: NodeStructureRegistry = { tweetCard: STARTER_TWEET, userCard: USER_CARD };
-const NODE_TYPES: NodeTypeRegistry = {
-  Tweet: { structure: 'tweetCard', styling: '', bindings: {} },
-  User: { structure: 'userCard', styling: '', bindings: {} },
-  Comment: { structure: 'circle', styling: 'circle', bindings: { label: 'data.author' } },
-  Hashtag: { structure: 'circle', styling: 'circle', bindings: { label: 'data.label' } },
-  Retweet: { structure: 'circle', styling: 'circle', bindings: { label: 'data.label' } },
+const COMMENT_CARD: FreeformStructure = {
+  name: 'commentCard',
+  kind: 'freeform',
+  width: 220,
+  height: 84,
+  cornerRadius: 10,
+  bgRole: 'cardBg',
+  elements: [
+    { id: 'bar', type: 'rect', x: 0, y: 0, width: 4, height: 84, fillRole: 'accent' },
+    { id: 'author', type: 'text', x: 14, y: 12, bind: 'data.author', fontSize: 13, fontWeight: 700, colorRole: 'heading', maxWidth: 130 },
+    { id: 'time', type: 'text', x: 206, y: 13, bind: 'data.time', anchor: 'right', fontSize: 10, colorRole: 'muted' },
+    { id: 'text', type: 'text', x: 14, y: 36, bind: 'data.text', fontSize: 12, colorRole: 'foreground', maxWidth: 192, maxLines: 2 },
+  ],
 };
+const HASHTAG_CARD: FreeformStructure = {
+  name: 'hashtagCard',
+  kind: 'freeform',
+  width: 160,
+  height: 56,
+  cornerRadius: 28,
+  bgRole: 'cardBg',
+  elements: [
+    { id: 'tag', type: 'text', x: 18, y: 11, bind: 'data.label', fontSize: 17, fontWeight: 700, colorRole: 'accent', maxWidth: 124 },
+    { id: 'uses', type: 'text', x: 18, y: 34, bind: 'data.uses', fontSize: 10, colorRole: 'muted' },
+  ],
+};
+const RETWEET_CARD: FreeformStructure = {
+  name: 'retweetCard',
+  kind: 'freeform',
+  width: 200,
+  height: 60,
+  cornerRadius: 10,
+  bgRole: 'cardBg',
+  elements: [
+    { id: 'label', type: 'text', x: 14, y: 12, bind: 'data.label', fontSize: 13, fontWeight: 600, colorRole: 'muted', maxWidth: 172 },
+    { id: 'time', type: 'text', x: 14, y: 34, bind: 'data.time', fontSize: 10, colorRole: 'muted' },
+  ],
+};
+
+const TYPE_ORDER = ['Tweet', 'User', 'Comment', 'Hashtag', 'Retweet'];
+const STRUCT_NAME: Record<string, string> = {
+  Tweet: 'tweetCard',
+  User: 'userCard',
+  Comment: 'commentCard',
+  Hashtag: 'hashtagCard',
+  Retweet: 'retweetCard',
+};
+const INITIAL_TEMPLATES: Record<string, FreeformStructure> = {
+  Tweet: TWEET_CARD,
+  User: USER_CARD,
+  Comment: COMMENT_CARD,
+  Hashtag: HASHTAG_CARD,
+  Retweet: RETWEET_CARD,
+};
+// A representative node per type, for the template thumbnails (read by dotted
+// path, so the concrete node shape is widened to a record).
+const SAMPLES: Record<string, Record<string, unknown> | undefined> = Object.fromEntries(
+  TYPE_ORDER.map((t) => [t, DATA.nodes.find((n) => n.type === t) as Record<string, unknown> | undefined]),
+);
+
+const STRUCTURES: NodeStructureRegistry = {
+  tweetCard: TWEET_CARD,
+  userCard: USER_CARD,
+  commentCard: COMMENT_CARD,
+  hashtagCard: HASHTAG_CARD,
+  retweetCard: RETWEET_CARD,
+};
+const NODE_TYPES: NodeTypeRegistry = Object.fromEntries(
+  TYPE_ORDER.map((t) => [t, { structure: STRUCT_NAME[t]!, styling: '', bindings: {} }]),
+);
 
 const THEMES = ['default', 'forest', 'ocean', 'gold', 'rose', 'minimal'];
 const MODES = ['light', 'dark'] as const;
@@ -112,17 +196,13 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const CONFIG = {
   behaviours: {
-    // Card backgrounds come from the template — turn off colour-by-type.
+    // Card backgrounds come from the template; hover's dim hides card text.
     color: { enabled: false },
-    // Hover's `dimmed` state drops non-hovered cards to 25% alpha (their text
-    // looks like it vanishes), so turn it off for a card-heavy graph.
     hover: { enabled: false },
   },
-  layers: {
-    graph: { nodeStructureTemplates: STRUCTURES, nodeTypes: NODE_TYPES },
-  },
+  layers: { graph: { nodeStructureTemplates: STRUCTURES, nodeTypes: NODE_TYPES } },
   layouts: {
-    'graph-force': { charge: { strength: -2600 }, link: { distance: 230 }, collide: { radius: 120 }, animate: false },
+    'graph-force': { charge: { strength: -3200 }, link: { distance: 260 }, collide: { radius: 150 }, animate: false },
   },
 };
 
@@ -131,19 +211,16 @@ function CardDesignerStudio() {
   const [active, setActive] = useState('default');
   const [mode, setMode] = useState<(typeof MODES)[number]>('dark');
   const [open, setOpen] = useState(false);
-  // Last applied design — so reopening the modal resumes where you left off
-  // (kept in a ref so live edits don't re-render the page / canvas app).
-  const lastTpl = useRef<FreeformStructure>(STARTER_TWEET);
+  const [editingType, setEditingType] = useState<string | null>(null);
+  // Live templates per type (ref so live edits don't re-render the canvas app).
+  const templates = useRef<Record<string, FreeformStructure>>(INITIAL_TEMPLATES);
 
-  // Role → hex palette for the active theme/mode, for the designer preview.
   const palette = useMemo(() => {
     const theme = BUILT_IN_THEMES[active] ?? BUILT_IN_THEMES.default!;
     const { categorical: _c, ...roles } = mode === 'dark' ? theme.dark : theme.light;
     return roles as Record<string, number>;
   }, [active, mode]);
 
-  // Push the initial theme once ready (parent effect runs after the app's own
-  // ThemeTemplateSync, so our pick wins and stays while the host theme is fixed).
   useEffect(() => {
     canvas?.update({ behaviours: { theme: { active, mode } } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -158,22 +235,28 @@ function CardDesignerStudio() {
     canvas?.update({ behaviours: { theme: { mode: m } } });
   };
 
-  // Live: re-register the designed Tweet card + keep the Tweet type pointed at it.
+  // Live: re-register the edited type's card + keep the type pointed at it.
   const applyTemplate = useCallback(
-    (tpl: FreeformStructure) => {
-      const pinned: FreeformStructure = { ...tpl, name: 'tweetCard' };
-      lastTpl.current = pinned;
+    (type: string, tpl: FreeformStructure) => {
+      const name = STRUCT_NAME[type]!;
+      const pinned: FreeformStructure = { ...tpl, name };
+      templates.current = { ...templates.current, [type]: pinned };
       canvas?.update({
         layers: {
           graph: {
-            nodeStructureTemplates: { tweetCard: pinned },
-            nodeTypes: { Tweet: { structure: 'tweetCard', styling: '', bindings: {} } },
+            nodeStructureTemplates: { [name]: pinned },
+            nodeTypes: { [type]: { structure: name, styling: '', bindings: {} } },
           },
         },
       });
     },
     [canvas],
   );
+
+  const openTemplates = () => {
+    setEditingType(null);
+    setOpen(true);
+  };
 
   const themeControls = (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -196,8 +279,6 @@ function CardDesignerStudio() {
 
   return (
     <ThemeProvider>
-      {/* Full-bleed canvas; the designer opens in a wide modal so it gets the
-          whole width for its layers · preview · properties panels. */}
       <div style={pageStyle}>
         <GraphCanvasApp
           data={DATA}
@@ -208,7 +289,7 @@ function CardDesignerStudio() {
             right: (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 {themeControls}
-                <Button onClick={() => setOpen(true)}>Design Tweet card</Button>
+                <Button onClick={openTemplates}>Templates</Button>
               </div>
             ),
           }}
@@ -217,16 +298,35 @@ function CardDesignerStudio() {
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent style={dialogContentStyle}>
             <DialogHeader>
-              <DialogTitle>Designer Studio · Tweet card</DialogTitle>
+              <DialogTitle>{editingType ? `Edit ${editingType} card` : 'Node templates'}</DialogTitle>
             </DialogHeader>
-            <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
-              <NodeCardDesigner
-                defaults={lastTpl.current}
-                dataFields={TWEET_FIELDS}
-                palette={palette}
-                onChange={applyTemplate}
-              />
-            </div>
+
+            {editingType ? (
+              <div style={editorWrapStyle}>
+                <div style={{ padding: '4px 0' }}>
+                  <Button variant="ghost" onClick={() => setEditingType(null)}>
+                    ← All templates
+                  </Button>
+                </div>
+                <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+                  <NodeCardDesigner
+                    key={editingType}
+                    defaults={templates.current[editingType]}
+                    dataFields={FIELDS[editingType] ?? []}
+                    palette={palette}
+                    onChange={(tpl) => applyTemplate(editingType, tpl)}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+                <NodeTemplateList
+                  items={TYPE_ORDER.map((t) => ({ type: t, template: templates.current[t]!, sample: SAMPLES[t] }))}
+                  palette={palette}
+                  onEdit={(t) => setEditingType(t)}
+                />
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
@@ -239,7 +339,7 @@ export const CardDesignerStudioStory: Story = {
   render: () => <CardDesignerStudio />,
 };
 
-// ─── Layout — full-bleed canvas + a wide designer modal ─────────────────────
+// ─── Layout ──────────────────────────────────────────────────────────────────
 const pageStyle: CSSProperties = {
   position: 'relative',
   height: '100vh',
@@ -254,3 +354,4 @@ const dialogContentStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
 };
+const editorWrapStyle: CSSProperties = { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 };

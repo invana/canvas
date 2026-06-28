@@ -15,16 +15,24 @@ export const CARD_FIELDS: FieldConfig[] = [
   roleField('bgRole', 'Background role'),
 ];
 
-/** A `bind` select built from the host's data-field schema (+ a static option). */
+/**
+ * A free-text `bind` input for the data path this element reads (e.g.
+ * `data.author`). Free text — not a fixed `select` — so a template can bind to
+ * *any* field on the node, including ones whose names differ between datasets
+ * (`data.authorName`, `data.handle`, …). The host's known fields are surfaced
+ * in the description for discovery; leaving it empty falls back to static text.
+ */
 function bindField(dataFields: { key: string; label: string }[]): FieldConfig {
+  const known = dataFields.map((f) => f.key).join(', ');
+  const example = dataFields[0]?.key ?? 'data.name';
   return {
     name: 'bind',
-    type: 'select',
+    type: 'text',
     label: 'Bind to field',
-    options: [
-      { value: NO_BIND, label: '(static text)' },
-      ...dataFields.map((f) => ({ value: f.key, label: f.label })),
-    ],
+    placeholder: example,
+    description: known
+      ? `Data path, e.g. ${example}. Known fields: ${known}. Empty = static text.`
+      : 'Data path (e.g. data.name). Empty = static text.',
   };
 }
 

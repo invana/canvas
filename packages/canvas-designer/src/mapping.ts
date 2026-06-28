@@ -35,7 +35,7 @@ export function applyFormToCard(tpl: FreeformStructure, v: CardFormState): Freef
 
 export function elementToForm(el: CardElement): ElementFormState {
   const base: ElementFormState = {
-    bind: NO_BIND,
+    bind: '',
     text: '',
     fontSize: 13,
     fontWeight: 400,
@@ -57,7 +57,7 @@ export function elementToForm(el: CardElement): ElementFormState {
     case 'text':
       return {
         ...base,
-        bind: el.bind ?? NO_BIND,
+        bind: el.bind ?? '',
         text: el.text ?? '',
         fontSize: el.fontSize ?? 13,
         fontWeight: typeof el.fontWeight === 'number' ? el.fontWeight : 400,
@@ -84,7 +84,7 @@ export function elementToForm(el: CardElement): ElementFormState {
         colorRole: el.colorRole ?? NO_ROLE,
       };
     case 'image':
-      return { ...base, bind: el.bind ?? NO_BIND, size: el.size, shape: el.shape ?? 'circle' };
+      return { ...base, bind: el.bind ?? '', size: el.size, shape: el.shape ?? 'circle' };
     default:
       return base;
   }
@@ -92,7 +92,8 @@ export function elementToForm(el: CardElement): ElementFormState {
 
 /** Merge element-form edits back onto an element (preserves id + position). */
 export function applyFormToElement(el: CardElement, v: ElementFormState): CardElement {
-  const bind = v.bind && v.bind !== NO_BIND ? v.bind : undefined;
+  const bound = v.bind?.trim();
+  const bind = bound && bound !== NO_BIND ? bound : undefined;
   switch (el.type) {
     case 'text':
       return {
