@@ -29,6 +29,7 @@ working design-of-record documents. Day-to-day API/concept docs live in
 - [store-owns-state-plan.md](./store-owns-state-plan.md) — make `GraphStore` the single owner of interaction state.
 - [store-owns-state-pseudocode.md](./store-owns-state-pseudocode.md) — companion pseudocode for the above.
 - [unified-canvas-options-plan.md](./unified-canvas-options-plan.md) — one declarative, id-addressed `GraphCanvas` options object.
+- [canvas-state-plan.md](./canvas-state-plan.md) — **foundation/umbrella** for `@invana/canvas-state`: the renderer-free reactive state package (one `CanvasState { view, data }` per Canvas; `ReactiveStore` port; telemetry decorator; Yjs collaboration). Sequences the four state docs below at the package level.
 - [reactive-state-store-plan.md](./reactive-state-store-plan.md) — single reactive store (zustand behind a transferable `ReactiveStore` port) for config + interaction state; no UI copies; telemetry decorator; CRDT-ready.
 - [collaborative-state-plan.md](./collaborative-state-plan.md) — near-realtime, multi-user, offline collaboration on top of that store (CRDT doc + presence, PG/Redis, OTel).
 
@@ -36,6 +37,7 @@ working design-of-record documents. Day-to-day API/concept docs live in
 
 - [canvas-react-plan.md](./canvas-react-plan.md) — React entry-point (declarative `<Canvas>`).
 - [graph-canvas-apps-plan.md](./graph-canvas-apps-plan.md) — `GraphCanvasApp` compound component.
+- [designer-studio-plan.md](./designer-studio-plan.md) — **Designer** studio page (sibling of Explorer, on `GraphCanvasApp`); umbrella doc sequencing the state refactor → editor kit → page → telemetry → collaboration.
 - [toolbars-plan.md](./toolbars-plan.md) — reusable toolbar building blocks + assembled toolbars.
 
 ## Engine features

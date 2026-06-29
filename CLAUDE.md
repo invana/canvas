@@ -30,7 +30,8 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
 
 | Path | Package | Role | 3rd-party deps |
 |---|---|---|---|
-| `packages/canvas` | `@invana/canvas` | engine — `Canvas`, `Layer`, `Behaviour`, `Layout` base classes, `ShapesRenderer`, built-in `BackgroundLayer` / `DevInfoLayer` / `LayersPanelLayer` / camera input behaviours. **The only package allowed to import `pixi.js`.** | `pixi.js`, `pixi-viewport`, `immer`, `rbush`, `zustand` |
+| `packages/canvas-state` | `@invana/canvas-state` | **state layer (foundation).** `ReactiveStore<T>` port + adapters (zustand now; Yjs / telemetry later). Owns **one `CanvasState { view, data }` per `Canvas`**, the single source of truth the renderer is a *pure projection* of: **`view`** (`CanvasView` — layers / behaviours / layouts config, `activeLayout`, templates, theme, selection / hover / camera) on the reactive store; **`data`** (`CanvasData` = the graph — nodes incl. **position as a node field**, edges, annotations, query refs). Bulk fields (positions, payloads) are an **internal typed-array detail** of `data` (`ColumnStore` / `GraphStore`, coarse flush), **never** the reactive path. **Renderer-free leaf: zero `@invana` deps, imports no drawing library** — pixi is one adapter. See `docs/canvas-state-plan.md`. | `zustand`, `immer` (later `yjs`) |
+| `packages/canvas` | `@invana/canvas` | engine — `Canvas`, `Layer`, `Behaviour`, `Layout` base classes, `ShapesRenderer`, built-in `BackgroundLayer` / `DevInfoLayer` / `LayersPanelLayer` / camera input behaviours. **The only package allowed to import `pixi.js`.** State lives in `@invana/canvas-state` (its sole `@invana` dep). | `pixi.js`, `pixi-viewport`, `rbush` (dep: `@invana/canvas-state`) |
 | `packages/graph` | `@invana/graph` | graph domain on top of the engine — `GraphLayer`, `MiniMapLayer`, `GraphCanvas`, hover/click/lasso/brush/drag/select/context-menu/etc. behaviours, `OneShotPositionLayout` base | — (peer: `@invana/canvas`) |
 
 #### Layouts (each wraps one algorithm; peer on `@invana/canvas` + `@invana/graph`)
@@ -81,22 +82,25 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
 ### Dependency layering (use when adding/bumping workspace deps)
 
 ```
-@invana/canvas  (no @invana deps; owns pixi)
+@invana/canvas-state  (renderer-free leaf — zero @invana deps, no drawing-lib import; ReactiveStore port + CanvasView/CanvasData state)
+   ▲   (consumed by canvas, graph, canvas-react)
+   │
+@invana/canvas  (owns pixi; its sole @invana dep is canvas-state)
    ▲
-   ├── @invana/graph                         (peer: canvas)
+   ├── @invana/graph                         (peer: canvas; dep: canvas-state)
    │      ▲
    │      ├── graph-layout-*                 (peer: canvas, graph)   — d3-force/elkjs/d3-hierarchy/d3-sankey/geometric
    │      ├── graph-layer-d3-contour         (peer: canvas, graph)
    │      └── graph-layer-bubble-sets        (peer: canvas, graph)
    ├── graph-layer-maplibre                  (peer: canvas only)
-   ├── @invana/canvas-react                  (peer: canvas, graph, ui, graph-layout-d3-force; dep: themes)
+   ├── @invana/canvas-react                  (peer: canvas, graph, ui, graph-layout-d3-force; dep: themes, canvas-state)
    ├── @invana/canvas-ui                     (peer: graph[types-only], ui, themes, styling, forms)
    └── @invana/canvas-designer      (peer: canvas-ui, graph, ui, forms)
 
 @invana/graph-datasets                       (peer: graph)
 ```
 
-Rules implied by this graph: cross-package engine deps are **`peerDependencies`** (+ mirrored in `devDependencies` for local builds), never plain `dependencies` — except `canvas-react`→`@invana/themes` and app deps. Keep all in-repo packages on the **same version** when bumping. A new layout/layer package peers on `@invana/canvas` (+ `@invana/graph` unless it's canvas-only like maplibre) and lists its single algorithm lib as a 3rd-party `dependency`. After adding a package, also add it to `apps/storybook`'s deps if it gets a story.
+Rules implied by this graph: cross-package engine deps are **`peerDependencies`** (+ mirrored in `devDependencies` for local builds), never plain `dependencies` — except `canvas-react`→`@invana/themes`, the foundational **`@invana/canvas-state`** dependency (a normal `dependency`, not a peer — the shared state leaf below the engine), and app deps. Keep all in-repo packages on the **same version** when bumping. A new layout/layer package peers on `@invana/canvas` (+ `@invana/graph` unless it's canvas-only like maplibre) and lists its single algorithm lib as a 3rd-party `dependency`. After adding a package, also add it to `apps/storybook`'s deps if it gets a story.
 
 ### The UI package (`@invana/canvas-ui`) — two tracks, where this is going
 
@@ -179,14 +183,15 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
     - graph node/edge feature → `Graph/Nodes/` or `Graph/Edges/`
 12. **Every new Behaviour, Layer, or Layout ships a settings editor in `@invana/canvas-ui`.** Its constructor options *are* the editable state of the visualisation (long-term we'll call this "state", not "settings" — a bigger refactor, but that's what it is). So whenever you add a behaviour/layer/layout, add a schema-driven editor for it to the editors package (`packages/canvas-ui/src/editors/<surface>/`, following the `fields.ts` + `mapping.ts` + `<Editor>` pattern). This is what exposes the visualisation's state to the **Invana building studio** and to stories — every story should be able to surface those editors in the UI via `GraphCanvasApp`. The editor stays headless/engine-agnostic per `packages/canvas-ui/CLAUDE.md`; the apply path is `useGraphCanvasUpdate().update(...)` → `setOptions` (init-only options remount via the canvas-react wrapper). See `roadmap.md`.
 
-### State architecture — one reactive store, behind a transferable port
+### State architecture — `@invana/canvas-state`: one `CanvasState { view, data }`
 
-Direction (see `docs/reactive-state-store-plan.md` + `docs/collaborative-state-plan.md`):
+All canvas state is owned by **`@invana/canvas-state`** (see `docs/canvas-state-plan.md`, which sequences `docs/reactive-state-store-plan.md` + `docs/store-owns-state-plan.md` + `docs/collaborative-state-plan.md`). Each `Canvas` has **one `CanvasState`**; the renderer is a **pure projection** of it (state changes → re-render). Consumers — the engine, `canvas-react`, the `canvas-ui` editors, the Designer — read/write **through it**, never their own copy.
 
-- **Two compartments, never one store.** *Definition + interaction* state (layers/behaviours/layouts options, `activeLayout`, templates, theme, selection, hover, camera) → the **reactive config store**. *Bulk hot data* (node/edge payloads, positions, streaming) → typed-array `GraphStore`/`ColumnStore`, **never** the reactive store (immer/CRDT would clone at 5–50 ms vs ~10 ns).
-- **Program against a `ReactiveStore<T>` port, not zustand directly.** zustand is one adapter (`packages/canvas/src/state/createConfigStore.ts`) — **no `import … from 'zustand'` outside that adapter**, so the backend stays swappable (valtio / nanostores / Yjs-backed for collaboration).
-- **Writes are declarative patches** (`update(patch, action?)` → maps to `setState` now, a Yjs transaction later). **Reads** go through `subscribe` / `useStore(store, selector)` (React via `useSyncExternalStore`). **UI components never keep their own copy** of canvas state — only ephemeral widget state and editor edit-drafts are local.
-- **Telemetry is a port decorator** (`withTelemetry`), not a zustand middleware — scoped to the config store, never the data layer.
+- **One `CanvasState { view, data }`, not separate data/positions branches.** **`view`** (`CanvasView`) = how the visualisation is defined + viewed (layers / behaviours / layouts config, `activeLayout`, templates, theme, selection / hover / camera). **`data`** (`CanvasData` = the graph) = what is being visualised (nodes, edges, annotations, query refs). **Position is a node field inside `data`** — not a top-level compartment; splitting it out would model a *storage* choice as a *domain* one.
+- **Storage physics is internal to each member, not a third branch.** Small / human-rate state (all of `view`; `data`'s annotations / query refs / counts) → the **reactive store** (immer-backed, observable, syncable). Machine-rate fields (`data`'s node `x`/`y`, bulk payloads, render flags) → **typed-array `ColumnStore` / `GraphStore`**, delivered to the renderer via a **batched, frame-coalesced flush** with targeted per-node re-render — **never** the reactive/immer/CRDT path (which clones at 5–50 ms vs ~10 ns). So the renderer reacts to `CanvasState` at every scale; the engine just routes position churn through the typed-array fast path. **Positions are derived locally by the layout and never synced.** Camera is an **abstract `{ x, y, zoom }` transform**, throttled / ephemeral — not a `pixi-viewport` handle (renderer-agnostic; pixi is one adapter).
+- **Program against the `ReactiveStore<T>` port, not zustand directly.** zustand is one adapter (`packages/canvas-state/src/createConfigStore.ts`) — **no `import … from 'zustand'` outside that adapter** — so the backend stays swappable (valtio / nanostores / Yjs-backed for collaboration). `@invana/canvas-state` imports **no drawing library**.
+- **Writes are declarative patches** (`update(patch, action?)` → `setState` now, a Yjs transaction later; the named `action` powers OTel + CRDT history). **Reads** go through `subscribe` / `useStore(store, selector)` (React via `useSyncExternalStore`). **UI components never keep their own copy** of canvas state — only ephemeral widget state and editor edit-drafts are local.
+- **Telemetry is a port decorator** (`withTelemetry`), not a zustand middleware — transfers across the backend swap; scoped to the `view` reactive store, never the bulk data hot path.
 
 ---
 
