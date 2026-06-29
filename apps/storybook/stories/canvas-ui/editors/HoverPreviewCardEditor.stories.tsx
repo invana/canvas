@@ -13,7 +13,7 @@ import { useState } from 'react';
 import { HoverPreviewCardEditor } from '@invana/canvas-ui';
 import type { HoverElementPreviewCardSpec } from '@invana/graph';
 
-const meta: Meta = { title: 'canvas-ui/HoverPreviewCardEditor' };
+const meta: Meta = { title: 'canvas-ui/editors/HoverPreviewCardEditor' };
 export default meta;
 type Story = StoryObj;
 

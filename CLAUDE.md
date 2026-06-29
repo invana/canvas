@@ -50,7 +50,7 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
 | Path | Package | Role | 3rd-party deps |
 |---|---|---|---|
 | `packages/canvas-react` | `@invana/canvas-react` | React bindings — declarative `<Canvas>` mapping JSX children to layers/behaviours/layouts; hooks; assembled toolbars + dumb components; `GraphCanvasApp` | `lucide-react` (dep: `@invana/themes`) |
-| `packages/canvas-ui` | `@invana/canvas-ui` | schema-driven, **engine-agnostic** editors track (NodeStyle / hover-card / node structure + styling templates + per-behaviour/layer/layout state editors) + shared form helpers. No engine/`pixi` imports; `@invana/graph` used for **types only** | — |
+| `packages/canvas-ui` | `@invana/canvas-ui` | **engine-agnostic** React UI, two folder tracks: `editors/` (schema-driven state editors — NodeStyle / hover-card / node structure+styling + per-behaviour/layer/layout) and `views/` (presentational components — preview cards). No engine/`pixi` imports; `@invana/graph` used for **types only** | — |
 | `packages/canvas-template-designer` | `@invana/canvas-template-designer` | the **Node/Edge template designer** — opt-in WYSIWYG authoring for **composite node templates** (drag canvas, layers, undo/redo, save/load); ships its own default/starter node templates; emits `FreeformStructure` (compiles to the engine `composite` shape). **Node-only today; edge designer planned.** Headless — `@invana/graph` types only | — |
 
 #### Data + shared config
@@ -92,13 +92,19 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
 
 Rules implied by this graph: cross-package engine deps are **`peerDependencies`** (+ mirrored in `devDependencies` for local builds), never plain `dependencies` — except `canvas-react`→`@invana/themes` and app deps. Keep all in-repo packages on the **same version** when bumping. A new layout/layer package peers on `@invana/canvas` (+ `@invana/graph` unless it's canvas-only like maplibre) and lists its single algorithm lib as a 3rd-party `dependency`. After adding a package, also add it to `apps/storybook`'s deps if it gets a story.
 
-### The editors package (`@invana/canvas-ui`) — where this is going
+### The UI package (`@invana/canvas-ui`) — two tracks, where this is going
 
-`canvas-ui` is **the editors track**: schema-driven, engine-agnostic React forms that edit a serialisable object and hand the patch back to the consumer (no engine/`pixi` imports; `@invana/graph` for **types only**). Today it covers node styling — `NodeStyleEditor`, `HoverPreviewCardEditor`, `NodeStructureEditor`, `NodeStylingEditor` — each as an `editors/<surface>/` folder following the **`fields.ts` + `mapping.ts` + `<Editor>`** pattern (`defaults` + `fields` + `onSubmit`).
+`canvas-ui` is engine-agnostic React UI (no engine/`pixi` imports; `@invana/graph` for **types only**), organised as **two folder-level tracks inside one package** — not separate packages (they share deps + the same consumers):
 
-Where it's heading: **an editor for every Behaviour, Layer, and Layout.** A class's constructor options *are* the editable **state of the visualisation** (we'll likely rename "settings"/"options" → "state" — a larger refactor, but that's what it is). `canvas-ui` is where each becomes a UI surface, so the **Invana building studio** and Storybook stories can let users edit live visualisation state — every story should be able to surface these editors via `GraphCanvasApp`. New behaviour/layer/layout ⇒ new `editors/<surface>/` here (root rule 12). The apply path stays `useGraphCanvasUpdate().update(...)` → `setOptions`; init-only options remount via the canvas-react wrapper. Full rationale in `roadmap.md`.
+- **`editors/`** — schema-driven **state editors**: forms that edit a serialisable object and hand the patch back to the consumer. Today: `NodeStyleEditor`, `HoverPreviewCardEditor`, `NodeStructureEditor`, `NodeStylingEditor`, each an `editors/<surface>/` folder on the **`fields.ts` + `mapping.ts` + `<Editor>`** pattern (`defaults` + `fields` + `onSubmit`).
+- **`views/`** — **presentational** components (props in → JSX, no form). Today: `preview-cards.tsx` (`NodePreviewCard` / `EdgePreviewCard`).
+- **`shared/`** — colour utils + presets used by both.
 
-This is also the long-term home for the UI currently in `canvas-react` (see the standing TODO to relocate `canvas-react` components/toolbars into `canvas-ui`); until then, the **dumb components + assembled toolbars live in `canvas-react`**, and `canvas-ui` is editors/forms only.
+Litmus for which track: *does it change state?* → `editors/`; *does it only display state?* → `views/`.
+
+Where the **editors track** is heading: **an editor for every Behaviour, Layer, and Layout.** A class's constructor options *are* the editable **state of the visualisation** (we'll likely rename "settings"/"options" → "state" — a larger refactor, but that's what it is). Each becomes a UI surface here, so the **Invana building studio** and Storybook stories can let users edit live visualisation state — every story should be able to surface these editors via `GraphCanvasApp`. New behaviour/layer/layout ⇒ new `editors/<surface>/` (root rule 12). Apply path stays `useGraphCanvasUpdate().update(...)` → `setOptions`; init-only options remount via the canvas-react wrapper. Full rationale in `roadmap.md`.
+
+Where the **views track** is heading: it's the home for the presentational UI currently in `canvas-react` (standing TODO to relocate `canvas-react`'s dumb components + assembled toolbars into `canvas-ui` `views/` + a `toolbars/` sibling, leaving `canvas-react` as engine-bindings-only). Until then, those **components + toolbars still live in `canvas-react`** and `views/` holds just the preview cards.
 
 ### The card / template stack — three layers, don't conflate them
 

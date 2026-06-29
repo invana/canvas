@@ -1,10 +1,17 @@
 // @invana/canvas-ui — public API surface
 //
-// Reusable, engine-agnostic React UI components for Invana graph tools.
-// Forms are generated from declarative `@invana/forms` field schemas (the
-// design-kit form-generator) rather than hand-authored — see CLAUDE.md. All
-// form chrome comes from `@invana/forms` / `@invana/ui` so every Invana tool
-// shares one visual language.
+// Reusable, engine-agnostic React UI components for Invana graph tools. Two
+// tracks, kept apart as folders (see CLAUDE.md):
+//   • `editors/` — STATE editors: forms (generated from `@invana/forms` field
+//     schemas) that emit a serializable patch via `onSubmit`.
+//   • `views/`   — PRESENTATIONAL components: props in, render out, no form.
+//   • `shared/`  — colour utils / presets used by both.
+// All form chrome comes from `@invana/forms` / `@invana/ui` so every Invana
+// tool shares one visual language.
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Editors
+// ═══════════════════════════════════════════════════════════════════════════
 
 // ─── Node style editor ───────────────────────────────────────────────────
 export {
@@ -97,19 +104,25 @@ export {
   asRole,
 } from './editors/field-helpers';
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Views
+// ═══════════════════════════════════════════════════════════════════════════
+
 // ─── Preview cards ───────────────────────────────────────────────────────
 // Presentational node / edge hover-preview cards — engine-agnostic props-in UI
 // (only `@invana/ui` chrome). A turnkey (e.g. canvas-react `<HoverElementPreviewBehaviour>`)
 // owns positioning + interactivity and renders these as content.
-export { NodePreviewCard, EdgePreviewCard } from './cards/preview-cards';
+export { NodePreviewCard, EdgePreviewCard } from './views/preview-cards';
 export type {
   NodePreviewCardProps,
   EdgePreviewCardProps,
   PreviewCardRow,
-} from './cards/preview-cards';
+} from './views/preview-cards';
 
-// ─── Shared presets + utils ──────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// Shared
+// ═══════════════════════════════════════════════════════════════════════════
 // Colour swatch palette shared across editors, and the `0xRRGGBB` ↔ `#rrggbb`
 // helpers that bridge engine colours and the design-kit colour swatch.
-export { COLOR_PRESETS } from './presets/colors';
-export { numberToHex, hexToNumber } from './utils/color';
+export { COLOR_PRESETS } from './shared/colors';
+export { numberToHex, hexToNumber } from './shared/color';

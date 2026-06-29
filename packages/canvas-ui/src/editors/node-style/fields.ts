@@ -1,6 +1,6 @@
 import type { FieldConfig } from '@invana/forms';
 
-import { COLOR_PRESETS } from '../../presets/colors';
+import { COLOR_PRESETS } from '../../shared/colors';
 import type { NodeStyleFields, ShapeKind } from './types';
 
 /**

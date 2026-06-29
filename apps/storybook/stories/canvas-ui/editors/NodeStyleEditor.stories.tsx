@@ -25,7 +25,7 @@ import {
   type NodeStyleFields,
 } from '@invana/canvas-ui';
 
-const meta: Meta = { title: 'canvas-ui/NodeStyleEditor' };
+const meta: Meta = { title: 'canvas-ui/editors/NodeStyleEditor' };
 export default meta;
 type Story = StoryObj;
 

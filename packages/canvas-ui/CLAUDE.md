@@ -1,14 +1,20 @@
 # CLAUDE.md — packages/canvas-ui (`@invana/canvas-ui`)
 
-React UI components — schema-driven **style editors** — for tools that use `@invana/canvas-react`. Forms are **generated from declarative schemas** with the `@invana/forms` design-kit form-generator; chrome comes from `@invana/forms` / `@invana/ui` so the visual language is consistent across all Invana tools.
+Reusable, engine-agnostic React UI components for tools that use `@invana/canvas-react`. Two tracks, kept apart as **folders inside this one package** — not separate packages (they share deps + consumers, so a package boundary buys nothing):
 
-> **Toolbars / controls + positioning primitives moved to `@invana/canvas-react`.** The actions track (`ZoomControls`, `LockToggle`, `ClearButton`, `OptionPicker`, `Panel`, `ControlButton`, the `CanvasControlsToolbar` / `GraphToolbar` assemblies) now lives there — dumb building blocks in `canvas-react/src/components/`, assembled toolbars in `canvas-react/src/toolbars/`. This package is now **the editors/forms track only**.
+- **`editors/`** — schema-driven **state editors**: forms (generated from `@invana/forms` field schemas) that emit a serialisable patch. *Does it change state? → here.*
+- **`views/`** — **presentational** components: props in, render out, no form. *Does it only display state? → here.*
+
+The litmus test is "does it produce a change to state?". Chrome for both comes from `@invana/forms` / `@invana/ui` so the visual language is consistent across all Invana tools.
+
+> **Toolbars / controls + positioning primitives currently live in `@invana/canvas-react`.** The actions track (`ZoomControls`, `LockToggle`, `ClearButton`, `OptionPicker`, `Panel`, `ControlButton`, the `CanvasControlsToolbar` / `GraphToolbar` assemblies) is there — dumb building blocks in `canvas-react/src/components/`, assembled toolbars in `canvas-react/src/toolbars/`. The standing TODO is to relocate those into this package's `views/` (and a `toolbars/` sibling) so `canvas-react` is engine-bindings-only; until then, `views/` holds just the presentational preview cards.
 
 **Components are headless & engine-agnostic.** They edit a serialisable object (a style, a styling template, a per-type binding) against a consumer-owned react-hook-form instance and know nothing about where it comes from or goes — no `Canvas`, no engine, no commit. The consumer seeds the form and reads edits back, then applies the result however it likes (live, behind an Apply button, an undo stack, a preview). Keep it that way: no `@invana/canvas` / `@invana/canvas-react` / `pixi.js` imports — the only `@invana/graph` use is its **types** (`NodeStyle`, `NodeStylingTemplate`, `NodeTypeBinding`, `ColorRole`, …).
 
-The single track:
+The two tracks:
 
 1. **Editors** (`editors/<surface>/`) — form-based; the `defaults` + `fields` + `onSubmit` contract below.
+2. **Views** (`views/`) — presentational, props-in components (e.g. `preview-cards.tsx`). No form, no mapping; pure display.
 
 > **Every Behaviour / Layer / Layout in the engine has an editor here.** A surface isn't only a node style or template — each behaviour/layer/layout's constructor options are editable **state of the visualisation**, and this package is where that state gets a UI. When a new behaviour/layer/layout lands in `@invana/canvas` / `@invana/graph` / the graph-* packages, add a matching `editors/<surface>/` here so the Invana building studio and the stories (`GraphCanvasApp`) can expose it. Same headless contract — the editor produces a serialisable patch; the consumer applies it via `useGraphCanvasUpdate().update(...)` → `setOptions`. See root `CLAUDE.md` rule 12 and `roadmap.md`.
 
@@ -16,18 +22,23 @@ The single track:
 
 ```
 src/
-├─ utils/color.ts        numberToHex / hexToNumber (engine 0xRRGGBB ↔ #rrggbb)
-├─ presets/colors.ts     COLOR_PRESETS — shared swatch palette
-├─ editors/<surface>/    one folder per editable surface (node-style, …)
-│  ├─ <Surface>Editor.tsx
-│  ├─ fields.ts          @invana/forms FieldConfig[] (one array per tab)
-│  ├─ mapping.ts         Partial<NodeStyle> ⇄ flat form fields (styleToForm / formToStyle)
-│  ├─ types.ts
-│  └─ index.ts
-└─ index.ts
+├─ editors/              STATE editors — forms that emit a serialisable patch
+│  ├─ field-helpers.ts   shared editor schema bits (roleField, SLOT_BINDING_FIELDS)
+│  └─ <surface>/         one folder per editable surface (node-style, …)
+│     ├─ <Surface>Editor.tsx
+│     ├─ fields.ts       @invana/forms FieldConfig[] (one array per tab)
+│     ├─ mapping.ts      Partial<NodeStyle> ⇄ flat form fields (styleToForm / formToStyle)
+│     ├─ types.ts
+│     └─ index.ts
+├─ views/                PRESENTATIONAL components (props in → JSX)
+│  └─ preview-cards.tsx  NodePreviewCard / EdgePreviewCard
+├─ shared/               used by BOTH tracks
+│  ├─ color.ts           numberToHex / hexToNumber (engine 0xRRGGBB ↔ #rrggbb)
+│  └─ colors.ts          COLOR_PRESETS — shared swatch palette
+└─ index.ts              one barrel, sectioned: Editors / Views / Shared
 ```
 
-Shared things (colour utils, presets) live at package level; everything specific to one surface lives in its `editors/<surface>/` folder.
+Cross-cutting helpers (colour utils, presets) live in `shared/`; everything specific to one surface lives in its `editors/<surface>/` folder. Consumers import from the package root, so internal moves between these folders don't change the public surface. **No subpath exports** — the editor/view split is internal organisation, deliberately not exposed at the package surface.
 
 ## Form-generator: fields + mapping, not hand-authored JSX
 
@@ -35,7 +46,7 @@ Each editable surface is described by data, not bespoke fields:
 
 - **`fields.ts`** — `@invana/forms` `FieldConfig[]` (one array per tab / section). A `FieldConfig` is `{ name, type: 'text'|'number'|'boolean'|'color'|'select'|'icon', label?, options?, min?, max?, step?, presetColors?, … }`. `<FormField.ObjectField control={control} name="style" fields={…} />` renders the whole sub-form. Field `name`s match the form-fields type 1:1, and `<ObjectField name="style">` registers each leaf at the RHF path `style.<name>`.
 - **`mapping.ts`** — the load-bearing bridge (`styleToForm` / `formToStyle`) between the engine's encoding and the flat scalar fields the generator renders. It is **not optional polish**:
-  - colour `number (0xRRGGBB)` ⇄ hex string (the swatch emits `#rrggbb`) — via `utils/color`,
+  - colour `number (0xRRGGBB)` ⇄ hex string (the swatch emits `#rrggbb`) — via `shared/color`,
   - dash tuple `[dash, gap]` ⇄ two number fields,
   - the shape **discriminated union** ⇄ a `shapeKind` select + per-kind geometry numbers,
   - `typeof === 'number'` guards so non-colour fills (image / glyph / stacked layers) round-trip as `undefined` and are left untouched.
