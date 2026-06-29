@@ -14,6 +14,12 @@ The plan is to wire up TSDoc + VitePress for automatic API doc generation — cl
 
 If I ask for "docs", "documentation", or "data model docs" without further qualification, ask whether I want a planning/concept doc or to update TSDoc on the source.
 
+### `README.md` vs `roadmap.md` — current essentials vs. detail + status
+
+- **`README.md`** = current essentials only: a **one-line "why"** (purpose, present tense — no "we're building…" / no roadmap), install, the package/workspace structure + responsibilities, and a link to the roadmap. Keep low-level feature detail (e.g. the full layout list) **out** of the README.
+- **`roadmap.md`** = the detailed doc: the why + interaction loop, an **architecture diagram**, and **feature highlight tables with checklists + completion status** (✅ shipped / 🚧 in progress / 📋 planned). All planned/in-progress work and status lives here, never in the README.
+- Design notes and `*-plan.md` live in `docs/` (indexed by `docs/README.md`).
+
 ---
 
 ## Workspace
@@ -51,7 +57,7 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
 |---|---|---|---|
 | `packages/canvas-react` | `@invana/canvas-react` | React bindings — declarative `<Canvas>` mapping JSX children to layers/behaviours/layouts; hooks; assembled toolbars + dumb components; `GraphCanvasApp` | `lucide-react` (dep: `@invana/themes`) |
 | `packages/canvas-ui` | `@invana/canvas-ui` | **engine-agnostic** React UI, two folder tracks: `editors/` (schema-driven state editors — NodeStyle / hover-card / node structure+styling + per-behaviour/layer/layout) and `views/` (presentational components — preview cards). No engine/`pixi` imports; `@invana/graph` used for **types only** | — |
-| `packages/canvas-template-designer` | `@invana/canvas-template-designer` | the **Node/Edge template designer** — opt-in WYSIWYG authoring for **composite node templates** (drag canvas, layers, undo/redo, save/load); ships its own default/starter node templates; emits `FreeformStructure` (compiles to the engine `composite` shape). **Node-only today; edge designer planned.** Headless — `@invana/graph` types only | — |
+| `packages/canvas-designer` | `@invana/canvas-designer` | the **canvas designer** — visual authoring for the visualisation's definition. Today: the **node template** surface (`src/templates/`) — opt-in WYSIWYG composite-card authoring (drag canvas, layers, undo/redo, save/load), emits `FreeformStructure`. **Planned:** studio shell + layout/behaviour/layer designers hosting `@invana/canvas-ui` editors (rule 12). Headless today — `@invana/graph` types only | — |
 
 #### Data + shared config
 
@@ -85,7 +91,7 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
    ├── graph-layer-maplibre                  (peer: canvas only)
    ├── @invana/canvas-react                  (peer: canvas, graph, ui, graph-layout-d3-force; dep: themes)
    ├── @invana/canvas-ui                     (peer: graph[types-only], ui, themes, styling, forms)
-   └── @invana/canvas-template-designer      (peer: canvas-ui, graph, ui, forms)
+   └── @invana/canvas-designer      (peer: canvas-ui, graph, ui, forms)
 
 @invana/graph-datasets                       (peer: graph)
 ```
@@ -112,7 +118,7 @@ Where the **views track** is heading: it's the home for the presentational UI cu
 
 1. **Engine primitive** — `CompositeShape` (the `'composite'` shape kind: a borrowed root silhouette + `parts` + `label` children) in `packages/canvas/src/primitives/shapes/`. **Domain-free** — knows nothing about nodes/graphs; the renderer depends on it, not the reverse. Don't move it or leak graph concepts into it.
 2. **Template model** — `NodeStructureTemplate` (`SimpleStructure` / `CardStructure` / `FreeformStructure`), styling templates, the `compileFreeform` → `CompositeShapeOption` compiler, and runtime fallback defaults (`BUILT_IN_STRUCTURES`) in `packages/graph/src/template/`. `FreeformStructure` is the designer-authored variant; it **compiles down to a `CompositeSpec`** rendered by layer 1.
-3. **Authoring tool** — `@invana/canvas-template-designer` (above). Headless; emits a `FreeformStructure` JSON. **Ships its own default/starter node templates** (pure `FreeformStructure` JSON — distinct from graph's runtime `BUILT_IN_STRUCTURES`, which are different concerns: authoring presets vs runtime fallbacks). **Node-only today; an edge designer is planned.**
+3. **Authoring tool** — `@invana/canvas-designer` (above). Headless; emits a `FreeformStructure` JSON. **Ships its own default/starter node templates** (pure `FreeformStructure` JSON — distinct from graph's runtime `BUILT_IN_STRUCTURES`, which are different concerns: authoring presets vs runtime fallbacks). **Node-only today; an edge designer is planned.**
 
 Flow: designer → `FreeformStructure` → `GraphLayer.nodeStructureTemplates` → `compileFreeform` → `CompositeSpec` → `CompositeShape` renders. No separate templates package for now (single runtime consumer; revisit only if a second one appears).
 
@@ -172,6 +178,15 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
     - layout → `graph-layouts/<flavour>/` (where `<flavour>` is the package name minus the `graph-layout-` prefix — e.g. `@invana/graph-layout-d3-force` → `graph-layouts/d3-force/`). See `apps/storybook/CLAUDE.md` for the full layout-namespacing rule.
     - graph node/edge feature → `Graph/Nodes/` or `Graph/Edges/`
 12. **Every new Behaviour, Layer, or Layout ships a settings editor in `@invana/canvas-ui`.** Its constructor options *are* the editable state of the visualisation (long-term we'll call this "state", not "settings" — a bigger refactor, but that's what it is). So whenever you add a behaviour/layer/layout, add a schema-driven editor for it to the editors package (`packages/canvas-ui/src/editors/<surface>/`, following the `fields.ts` + `mapping.ts` + `<Editor>` pattern). This is what exposes the visualisation's state to the **Invana building studio** and to stories — every story should be able to surface those editors in the UI via `GraphCanvasApp`. The editor stays headless/engine-agnostic per `packages/canvas-ui/CLAUDE.md`; the apply path is `useGraphCanvasUpdate().update(...)` → `setOptions` (init-only options remount via the canvas-react wrapper). See `roadmap.md`.
+
+### State architecture — one reactive store, behind a transferable port
+
+Direction (see `docs/reactive-state-store-plan.md` + `docs/collaborative-state-plan.md`):
+
+- **Two compartments, never one store.** *Definition + interaction* state (layers/behaviours/layouts options, `activeLayout`, templates, theme, selection, hover, camera) → the **reactive config store**. *Bulk hot data* (node/edge payloads, positions, streaming) → typed-array `GraphStore`/`ColumnStore`, **never** the reactive store (immer/CRDT would clone at 5–50 ms vs ~10 ns).
+- **Program against a `ReactiveStore<T>` port, not zustand directly.** zustand is one adapter (`packages/canvas/src/state/createConfigStore.ts`) — **no `import … from 'zustand'` outside that adapter**, so the backend stays swappable (valtio / nanostores / Yjs-backed for collaboration).
+- **Writes are declarative patches** (`update(patch, action?)` → maps to `setState` now, a Yjs transaction later). **Reads** go through `subscribe` / `useStore(store, selector)` (React via `useSyncExternalStore`). **UI components never keep their own copy** of canvas state — only ephemeral widget state and editor edit-drafts are local.
+- **Telemetry is a port decorator** (`withTelemetry`), not a zustand middleware — scoped to the config store, never the data layer.
 
 ---
 
