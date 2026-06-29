@@ -2,6 +2,11 @@
 
 High-performance WebGPU-first canvas rendering engine and visualization toolkit.
 
+## Why
+
+We're building a **data exploration** tool, not a visualization library — a surface for
+making decisions by interacting with your data. See the **[roadmap](./roadmap.md)**.
+
 ## Features
 
 - WebGPU-first with WebGL2 fallback

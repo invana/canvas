@@ -24,7 +24,7 @@ import {
   RichSelect,
 } from '@invana/ui';
 import { ThemeProvider } from '@invana/themes';
-import { NodeCardDesigner, NodeTemplateList } from '@invana/canvas-designer';
+import { NodeCardDesigner, NodeTemplateList } from '@invana/canvas-template-designer';
 import { twitterActivity } from '@invana/graph-datasets';
 import {
   BUILT_IN_THEMES,
@@ -35,7 +35,7 @@ import {
   type NodeTypeRegistry,
 } from '@invana/graph';
 
-const meta: Meta = { title: 'canvas-designer/Card Designer Studio' };
+const meta: Meta = { title: 'canvas-template-designer/Card Designer Studio' };
 export default meta;
 type Story = StoryObj;
 

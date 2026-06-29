@@ -18,26 +18,97 @@ If I ask for "docs", "documentation", or "data model docs" without further quali
 
 ## Workspace
 
-### Active packages (new architecture — all new work here)
+All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `@canvas/*` apps). All new work goes in these — new architecture.
 
-| Path | Package | Description |
+#### Engine core
+
+| Path | Package | Role | 3rd-party deps |
+|---|---|---|---|
+| `packages/canvas` | `@invana/canvas` | engine — `Canvas`, `Layer`, `Behaviour`, `Layout` base classes, `ShapesRenderer`, built-in `BackgroundLayer` / `DevInfoLayer` / `LayersPanelLayer` / camera input behaviours. **The only package allowed to import `pixi.js`.** | `pixi.js`, `pixi-viewport`, `immer`, `rbush`, `zustand` |
+| `packages/graph` | `@invana/graph` | graph domain on top of the engine — `GraphLayer`, `MiniMapLayer`, `GraphCanvas`, hover/click/lasso/brush/drag/select/context-menu/etc. behaviours, `OneShotPositionLayout` base | — (peer: `@invana/canvas`) |
+
+#### Layouts (each wraps one algorithm; peer on `@invana/canvas` + `@invana/graph`)
+
+| Path | Package | Role | 3rd-party deps |
+|---|---|---|---|
+| `packages/graph-layout-d3-force` | `@invana/graph-layout-d3-force` | `D3ForceLayout` (iterative, animated) | `d3-force` |
+| `packages/graph-layout-elkjs` | `@invana/graph-layout-elkjs` | `ElkLayout` (one-shot) | `elkjs` |
+| `packages/graph-layout-d3-hierarchy` | `@invana/graph-layout-d3-hierarchy` | `D3HierarchyLayout` — tree / cluster / radial / pack / sunburst (one-shot) | `d3-hierarchy` |
+| `packages/graph-layout-d3-sankey` | `@invana/graph-layout-d3-sankey` | `D3SankeyLayout` (one-shot) | `d3-sankey` |
+| `packages/graph-layout-geometric` | `@invana/graph-layout-geometric` | `GeometricLayout` — grid / snake / circular (one-shot, dependency-free) | — |
+
+#### Graph overlay layers (peer on `@invana/canvas`; most also on `@invana/graph`)
+
+| Path | Package | Role | 3rd-party deps |
+|---|---|---|---|
+| `packages/graph-layer-d3-contour` | `@invana/graph-layer-d3-contour` | `DensityContourFillLayer` + `DensityContourStrokeLayer` (d3-contour density overlay) | `d3-contour` |
+| `packages/graph-layer-bubble-sets` | `@invana/graph-layer-bubble-sets` | `BubbleSetsLayer` (named-group annotation) | `bubblesets-js` |
+| `packages/graph-layer-maplibre` | `@invana/graph-layer-maplibre` | `MapLayer` — MapLibre GL basemap; projects nodes onto a real world map (peer: `@invana/canvas` only) | `maplibre-gl` |
+
+#### React + UI
+
+| Path | Package | Role | 3rd-party deps |
+|---|---|---|---|
+| `packages/canvas-react` | `@invana/canvas-react` | React bindings — declarative `<Canvas>` mapping JSX children to layers/behaviours/layouts; hooks; assembled toolbars + dumb components; `GraphCanvasApp` | `lucide-react` (dep: `@invana/themes`) |
+| `packages/canvas-ui` | `@invana/canvas-ui` | schema-driven, **engine-agnostic** editors track (NodeStyle / hover-card / node structure + styling templates + per-behaviour/layer/layout state editors) + shared form helpers. No engine/`pixi` imports; `@invana/graph` used for **types only** | — |
+| `packages/canvas-template-designer` | `@invana/canvas-template-designer` | the **Node/Edge template designer** — opt-in WYSIWYG authoring for **composite node templates** (drag canvas, layers, undo/redo, save/load); ships its own default/starter node templates; emits `FreeformStructure` (compiles to the engine `composite` shape). **Node-only today; edge designer planned.** Headless — `@invana/graph` types only | — |
+
+#### Data + shared config
+
+| Path | Package | Role |
 |---|---|---|
-| `packages/canvas` | `@invana/canvas` | engine — `Canvas`, `Layer`, `Behaviour`, `Layout` base classes, `ShapesRenderer`, built-in `BackgroundLayer` / `DevInfoLayer` / `CameraInputBehaviour` |
-| `packages/canvas-react` | `@invana/canvas-react` | React bindings — declarative `<Canvas>` with JSX children mapped to layers, behaviours, layouts via context |
-| `packages/canvas-ui` | `@invana/canvas-ui` | schema-driven editors (NodeStyle / hover-card / node structure + styling templates) + shared form helpers |
-| `packages/canvas-designer` | `@invana/canvas-designer` | opt-in WYSIWYG **node card / template designer** (drag canvas, layers, undo/redo, save/load); emits `FreeformStructure` |
-| `packages/graph` | `@invana/graph` | `GraphLayer`, `MiniMapLayer`, hover/click/lasso/brush/pan/drag behaviours |
-| `packages/graph-layout-d3-force` | `@invana/graph-layout-d3-force` | `D3ForceLayout` (iterative) |
-| `packages/graph-layout-elkjs` | `@invana/graph-layout-elkjs` | `ElkLayout` (one-shot; on `OneShotPositionLayout`) |
-| `packages/graph-layout-d3-hierarchy` | `@invana/graph-layout-d3-hierarchy` | `D3HierarchyLayout` — tree / cluster / radial / pack / sunburst (one-shot) |
-| `packages/graph-layout-geometric` | `@invana/graph-layout-geometric` | `GeometricLayout` — grid / snake / circular (one-shot, dependency-free) |
-| `packages/graph-layer-d3-contour` | `@invana/graph-layer-d3-contour` | `DensityContourLayer` (d3-contour density overlay) |
-| `packages/graph-layer-bubble-sets` | `@invana/graph-layer-bubble-sets` | `BubbleSetsLayer` (named-group annotation; bubblesets-js wrapper) |
-| `packages/graph-datasets` | `@invana/graph-datasets` | sample graph data |
-| `packages/typescript-config` | `@repo/typescript-config` | shared tsconfig |
-| `packages/eslint-config` | `@repo/eslint-config` | shared ESLint |
-| `apps/storybook` | `@canvas/storybook` | stories (port 6006) |
-| `apps/docs` | `@canvas/docs` | VitePress docs + TypeDoc API reference |
+| `packages/graph-datasets` | `@invana/graph-datasets` | sample graph datasets (Les Misérables, scientists org chart, random tree, usecase demos) |
+| `packages/typescript-config` | `@repo/typescript-config` | shared tsconfig (private) |
+| `packages/eslint-config` | `@repo/eslint-config` | shared ESLint (private) |
+
+#### Apps (private, not published)
+
+| Path | Package | Role |
+|---|---|---|
+| `apps/storybook` | `@canvas/storybook` | stories (port 6006) — depends on **every** publishable package |
+| `apps/docs` | `@canvas/docs` | VitePress docs + TypeDoc API reference (port 5173) |
+
+### External `@invana/*` design-kit deps (NOT in this repo)
+
+`@invana/ui`, `@invana/forms`, `@invana/themes`, `@invana/styling` are **published packages from the Invana design kit** (separate repo). They are consumed here as normal registry deps — there are no `packages/ui` / `packages/forms` / etc. folders. `canvas-ui` builds its editors on `@invana/forms` + `@invana/ui`; `canvas-react` pulls `@invana/themes` (+ `@invana/ui`, `@invana/graph` as peers). Don't try to `--filter` or build these locally; bump their versions like any third-party dep.
+
+### Dependency layering (use when adding/bumping workspace deps)
+
+```
+@invana/canvas  (no @invana deps; owns pixi)
+   ▲
+   ├── @invana/graph                         (peer: canvas)
+   │      ▲
+   │      ├── graph-layout-*                 (peer: canvas, graph)   — d3-force/elkjs/d3-hierarchy/d3-sankey/geometric
+   │      ├── graph-layer-d3-contour         (peer: canvas, graph)
+   │      └── graph-layer-bubble-sets        (peer: canvas, graph)
+   ├── graph-layer-maplibre                  (peer: canvas only)
+   ├── @invana/canvas-react                  (peer: canvas, graph, ui, graph-layout-d3-force; dep: themes)
+   ├── @invana/canvas-ui                     (peer: graph[types-only], ui, themes, styling, forms)
+   └── @invana/canvas-template-designer      (peer: canvas-ui, graph, ui, forms)
+
+@invana/graph-datasets                       (peer: graph)
+```
+
+Rules implied by this graph: cross-package engine deps are **`peerDependencies`** (+ mirrored in `devDependencies` for local builds), never plain `dependencies` — except `canvas-react`→`@invana/themes` and app deps. Keep all in-repo packages on the **same version** when bumping. A new layout/layer package peers on `@invana/canvas` (+ `@invana/graph` unless it's canvas-only like maplibre) and lists its single algorithm lib as a 3rd-party `dependency`. After adding a package, also add it to `apps/storybook`'s deps if it gets a story.
+
+### The editors package (`@invana/canvas-ui`) — where this is going
+
+`canvas-ui` is **the editors track**: schema-driven, engine-agnostic React forms that edit a serialisable object and hand the patch back to the consumer (no engine/`pixi` imports; `@invana/graph` for **types only**). Today it covers node styling — `NodeStyleEditor`, `HoverPreviewCardEditor`, `NodeStructureEditor`, `NodeStylingEditor` — each as an `editors/<surface>/` folder following the **`fields.ts` + `mapping.ts` + `<Editor>`** pattern (`defaults` + `fields` + `onSubmit`).
+
+Where it's heading: **an editor for every Behaviour, Layer, and Layout.** A class's constructor options *are* the editable **state of the visualisation** (we'll likely rename "settings"/"options" → "state" — a larger refactor, but that's what it is). `canvas-ui` is where each becomes a UI surface, so the **Invana building studio** and Storybook stories can let users edit live visualisation state — every story should be able to surface these editors via `GraphCanvasApp`. New behaviour/layer/layout ⇒ new `editors/<surface>/` here (root rule 12). The apply path stays `useGraphCanvasUpdate().update(...)` → `setOptions`; init-only options remount via the canvas-react wrapper. Full rationale in `roadmap.md`.
+
+This is also the long-term home for the UI currently in `canvas-react` (see the standing TODO to relocate `canvas-react` components/toolbars into `canvas-ui`); until then, the **dumb components + assembled toolbars live in `canvas-react`**, and `canvas-ui` is editors/forms only.
+
+### The card / template stack — three layers, don't conflate them
+
+"Composite node" spans three cleanly-separated layers. When something needs changing, change it at the right layer:
+
+1. **Engine primitive** — `CompositeShape` (the `'composite'` shape kind: a borrowed root silhouette + `parts` + `label` children) in `packages/canvas/src/primitives/shapes/`. **Domain-free** — knows nothing about nodes/graphs; the renderer depends on it, not the reverse. Don't move it or leak graph concepts into it.
+2. **Template model** — `NodeStructureTemplate` (`SimpleStructure` / `CardStructure` / `FreeformStructure`), styling templates, the `compileFreeform` → `CompositeShapeOption` compiler, and runtime fallback defaults (`BUILT_IN_STRUCTURES`) in `packages/graph/src/template/`. `FreeformStructure` is the designer-authored variant; it **compiles down to a `CompositeSpec`** rendered by layer 1.
+3. **Authoring tool** — `@invana/canvas-template-designer` (above). Headless; emits a `FreeformStructure` JSON. **Ships its own default/starter node templates** (pure `FreeformStructure` JSON — distinct from graph's runtime `BUILT_IN_STRUCTURES`, which are different concerns: authoring presets vs runtime fallbacks). **Node-only today; an edge designer is planned.**
+
+Flow: designer → `FreeformStructure` → `GraphLayer.nodeStructureTemplates` → `compileFreeform` → `CompositeSpec` → `CompositeShape` renders. No separate templates package for now (single runtime consumer; revisit only if a second one appears).
 
 Per-package coding rules → see each package's own `CLAUDE.md`.
 
@@ -94,6 +165,7 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
     - behaviour → `Canvas/Behaviours/` (or `Graph/Behaviours/`)
     - layout → `graph-layouts/<flavour>/` (where `<flavour>` is the package name minus the `graph-layout-` prefix — e.g. `@invana/graph-layout-d3-force` → `graph-layouts/d3-force/`). See `apps/storybook/CLAUDE.md` for the full layout-namespacing rule.
     - graph node/edge feature → `Graph/Nodes/` or `Graph/Edges/`
+12. **Every new Behaviour, Layer, or Layout ships a settings editor in `@invana/canvas-ui`.** Its constructor options *are* the editable state of the visualisation (long-term we'll call this "state", not "settings" — a bigger refactor, but that's what it is). So whenever you add a behaviour/layer/layout, add a schema-driven editor for it to the editors package (`packages/canvas-ui/src/editors/<surface>/`, following the `fields.ts` + `mapping.ts` + `<Editor>` pattern). This is what exposes the visualisation's state to the **Invana building studio** and to stories — every story should be able to surface those editors in the UI via `GraphCanvasApp`. The editor stays headless/engine-agnostic per `packages/canvas-ui/CLAUDE.md`; the apply path is `useGraphCanvasUpdate().update(...)` → `setOptions` (init-only options remount via the canvas-react wrapper). See `roadmap.md`.
 
 ---
 

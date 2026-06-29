@@ -10,6 +10,8 @@ The single track:
 
 1. **Editors** (`editors/<surface>/`) — form-based; the `defaults` + `fields` + `onSubmit` contract below.
 
+> **Every Behaviour / Layer / Layout in the engine has an editor here.** A surface isn't only a node style or template — each behaviour/layer/layout's constructor options are editable **state of the visualisation**, and this package is where that state gets a UI. When a new behaviour/layer/layout lands in `@invana/canvas` / `@invana/graph` / the graph-* packages, add a matching `editors/<surface>/` here so the Invana building studio and the stories (`GraphCanvasApp`) can expose it. Same headless contract — the editor produces a serialisable patch; the consumer applies it via `useGraphCanvasUpdate().update(...)` → `setOptions`. See root `CLAUDE.md` rule 12 and `roadmap.md`.
+
 ## Package layout
 
 ```
@@ -87,9 +89,9 @@ The actions track no longer lives here. The dumb, engine-agnostic, icon-agnostic
 - `<NodeStyleEditor>` — Geometry (shape-kind select + dynamic per-kind geometry + unified `size`), Background, Stroke, Label sections (accordion) covering the 80% `NodeStyle` field set. Icon / image / badges / decorations / effects deferred.
 - `<NodeStructureEditor>` — one `NodeTypeBinding`: a structure + styling template picker (names supplied by the host) plus the **slot → data-field** map, rendered as `SLOT_BINDING_FIELDS` (`field-helpers.ts`) `useFieldArray` rows. `bindingToForm` / `formToBinding`.
 - `<NodeStylingEditor>` — one `NodeStylingTemplate`: role selects (`roleField` / `COLOR_ROLE_OPTIONS`) + typography for fill / stroke / label, plus a per-slot styling `useFieldArray`. `stylingToForm` / `formToStyling`.
-- `editors/field-helpers.ts` — shared schema bits the template editors compose: the colour-role `select` (`roleField`, `COLOR_ROLE_OPTIONS`, `asRole`, `NO_ROLE`) and the `SlotBindingField` (`SLOT_BINDING_FIELDS`). Also reused by `@invana/canvas-designer`, so keep them exported.
+- `editors/field-helpers.ts` — shared schema bits the template editors compose: the colour-role `select` (`roleField`, `COLOR_ROLE_OPTIONS`, `asRole`, `NO_ROLE`) and the `SlotBindingField` (`SLOT_BINDING_FIELDS`). Also reused by `@invana/canvas-template-designer`, so keep them exported.
 
-> The free-form **node card designer** (WYSIWYG drag tool with layers / undo-redo / save-load) lives in its own package, **`@invana/canvas-designer`** — it's heavy authoring tooling, kept opt-in so render-only consumers stay light. It depends on this package's shared field helpers.
+> The free-form **node/edge template designer** (WYSIWYG drag tool with layers / undo-redo / save-load) lives in its own package, **`@invana/canvas-template-designer`** — it's heavy authoring tooling, kept opt-in so render-only consumers stay light. It depends on this package's shared field helpers.
 - `fields.ts` (`nodeStyleFields`, `geometryFields`, `BACKGROUND_FIELDS`, `STROKE_FIELDS`, `LABEL_FIELDS`) + `mapping.ts` (`styleToForm`, `formToStyle`, `defaultShapeFor`) + shared `presets/colors.ts` (`COLOR_PRESETS`) and `utils/color.ts` are exported for custom hosts.
 
 Later (each = fields + mapping + engine + editor, same pattern): `EdgeStyleEditor` (mirror of node — `store.updateEdge` + `resolveEdgeStyle`), canvas/background editor (target `BackgroundLayer.setOptions`), layout-config editors (recreate-and-rerun until `Layout.setOptions` lands), behaviour-config editors (`setOptions` where it exists, else re-register), plus more non-form components (Inspector, LayerStack, Legend, StatusBar, SearchBox, ContextMenu, ToastHost, AppShell).

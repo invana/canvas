@@ -1,7 +1,7 @@
 {
-  "name": "@invana/canvas-designer",
+  "name": "@invana/canvas-template-designer",
   "version": "0.0.7",
-  "description": "Visual authoring tools for @invana/canvas — a free-form node card / template designer (drag canvas, layers, undo/redo, save/load). Optional: rendering free-form templates needs only @invana/graph.",
+  "description": "Node/Edge template designer for @invana/canvas — WYSIWYG authoring of composite node templates (drag canvas, layers, undo/redo, save/load); ships default starter templates. Optional: rendering templates needs only @invana/graph.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
