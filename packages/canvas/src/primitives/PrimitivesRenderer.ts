@@ -39,6 +39,7 @@ import { HitIndex } from '../hit/HitIndex';
 import { ShapeInstance } from '../instancing/ShapeInstance';
 import { ConnectorInstance } from '../instancing/ConnectorInstance';
 import { CircleShape } from './shapes/CircleShape';
+import { EllipseShape } from './shapes/EllipseShape';
 import { RectShape } from './shapes/RectShape';
 import { PolygonShape } from './shapes/PolygonShape';
 import { RegularPolygonShape } from './shapes/RegularPolygonShape';
@@ -357,6 +358,7 @@ export class PrimitivesRenderer {
 
   private registerBuiltins(): void {
     this.registerShape('circle', CircleShape);
+    this.registerShape('ellipse', EllipseShape);
     this.registerShape('rect', RectShape);
     this.registerShape('polygon', PolygonShape);
     this.registerShape('regular-polygon', RegularPolygonShape);
@@ -945,7 +947,7 @@ export class PrimitivesRenderer {
       );
     }
 
-    const z = slotZIndex(slot);
+    const z = slotZIndex(slot, decoration.kind);
     if (shape) {
       const ctor = entry.ctor as ShapeDecorationCtor;
       const deco = new ctor(decoration.style);
@@ -2372,8 +2374,18 @@ const SLOT_Z_TABLE: Readonly<Record<string, number>> = {
 
 const SLOT_Z_DEFAULT = 50;
 
-function slotZIndex(slot: string): number {
-  return SLOT_Z_TABLE[slot] ?? SLOT_Z_DEFAULT;
+/**
+ * Resolve the z-band for a decoration. The `slot` is a caller-chosen mount key
+ * — for sugar methods it equals the well-known band name (`glow`, `ring`,
+ * `label`, …), but for state overlays it is an arbitrary id (e.g.
+ * `canonical-select-halo`) chosen so per-layer overrides can swap/remove a
+ * single decoration. When the slot itself isn't a known band, fall back to the
+ * decoration's `kind` (`glow` → -300, `ring` → -50, …) so a selection halo
+ * still renders *behind* the shape body instead of dropping to the mid-band
+ * default (50) and painting over the host's text/geometry.
+ */
+function slotZIndex(slot: string, kind?: string): number {
+  return SLOT_Z_TABLE[slot] ?? (kind !== undefined ? SLOT_Z_TABLE[kind] : undefined) ?? SLOT_Z_DEFAULT;
 }
 
 /** Stable id mapping `(hostId, slot)` → badge shape id. */

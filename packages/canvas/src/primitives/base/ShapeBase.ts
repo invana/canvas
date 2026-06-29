@@ -90,6 +90,18 @@ export abstract class ShapeBase<TSpec extends BaseShapeSpec>
   }
 
   /**
+   * Update the spec used by {@link paintInto} / {@link bounds} / {@link contains}
+   * **without** drawing this shape's own `gfx`. For *container* shapes (e.g.
+   * {@link CompositeShape}) that compose another shape purely as a silhouette
+   * provider — they trace the borrowed shape into their *own* graphics via
+   * `paintInto`, so the borrowed instance's `gfx` must stay untouched. Regular
+   * rendering goes through {@link draw}, not this.
+   */
+  setGeometrySpec(spec: TSpec): void {
+    this.spec = spec;
+  }
+
+  /**
    * Trace the silhouette into `g`, then apply fill + stroke. When `style`
    * is supplied, it overrides the spec's fill/stroke (decoration use).
    */

@@ -1,11 +1,30 @@
 import { Graphics } from 'pixi.js';
 import { ShapeBase } from '../base/ShapeBase';
+import { CircleShape } from './CircleShape';
+import { EllipseShape } from './EllipseShape';
+import { RectShape } from './RectShape';
+import { PolygonShape } from './PolygonShape';
+import { RegularPolygonShape } from './RegularPolygonShape';
+import { StarShape } from './StarShape';
+import { ArcShape } from './ArcShape';
 import {
   mountLabelContent,
   updateLabelContent,
   type LabelContentView,
 } from '../paint/labelContent';
-import type { BaseShapeSpec, Rect, ShapeHostInfo } from '../types';
+import type {
+  ArcSpec,
+  BaseShapeSpec,
+  CircleSpec,
+  EllipseSpec,
+  PolygonSpec,
+  Rect,
+  RectSpec,
+  RegularPolygonSpec,
+  ShapeHostInfo,
+  ShapePaintStyle,
+  StarSpec,
+} from '../types';
 
 /** Solid stroke for a {@link CompositePart}. */
 interface PartStroke {
@@ -75,27 +94,71 @@ export type CompositePart =
     };
 
 /**
- * Spec for a {@link CompositeShape}. The outer frame is a rounded rect sized
- * `width` × `height`, painted from the inherited `fill` / `stroke`. `parts`
- * declares ordered child geometry + labels at coordinates relative to the
- * composite's top-left origin.
+ * The composite's **root** (background) shape — an ordinary shape spec the
+ * composite borrows for its silhouette. The composite doesn't re-implement any
+ * geometry: it builds a real {@link RectShape} / {@link CircleShape} / … and
+ * delegates fill, stroke, hit-testing and every decoration to it. So a card can
+ * be a rect, circle, polygon, etc. just by changing this. `x`/`y` are ignored —
+ * the composite centres the root in its `width × height` box.
+ */
+export type CompositeRootSpec =
+  | RectSpec
+  | CircleSpec
+  | EllipseSpec
+  | PolygonSpec
+  | RegularPolygonSpec
+  | StarSpec
+  | ArcSpec;
+
+/** Factory per root kind — composite borrows the real shape, no geometry copied. */
+const ROOT_CTORS: Record<
+  string,
+  (spec: CompositeRootSpec, host: ShapeHostInfo) => ShapeBase<CompositeRootSpec>
+> = {
+  rect: (s, h) => new RectShape(s as RectSpec, h) as unknown as ShapeBase<CompositeRootSpec>,
+  circle: (s, h) => new CircleShape(s as CircleSpec, h) as unknown as ShapeBase<CompositeRootSpec>,
+  ellipse: (s, h) => new EllipseShape(s as EllipseSpec, h) as unknown as ShapeBase<CompositeRootSpec>,
+  polygon: (s, h) => new PolygonShape(s as PolygonSpec, h) as unknown as ShapeBase<CompositeRootSpec>,
+  'regular-polygon': (s, h) =>
+    new RegularPolygonShape(s as RegularPolygonSpec, h) as unknown as ShapeBase<CompositeRootSpec>,
+  star: (s, h) => new StarShape(s as StarSpec, h) as unknown as ShapeBase<CompositeRootSpec>,
+  arc: (s, h) => new ArcShape(s as ArcSpec, h) as unknown as ShapeBase<CompositeRootSpec>,
+};
+
+/**
+ * Spec for a {@link CompositeShape}. The body is a {@link root} shape sized to
+ * the `width × height` box (default: a rounded rect from `cornerRadius` / the
+ * inherited `fill` / `stroke`). `parts` declares ordered child geometry + labels
+ * at coordinates relative to the composite's top-left origin.
  */
 export interface CompositeSpec extends BaseShapeSpec {
   readonly kind: 'composite';
   readonly width: number;
   readonly height: number;
-  /** Outer frame corner radius. Default `0` (sharp). */
+  /** Corner radius for the *default* rounded-rect root. Ignored when {@link root} is set. */
   readonly cornerRadius?: number;
+  /**
+   * Background silhouette of the card — any ordinary shape spec (rect / circle /
+   * polygon / regular-polygon / star / arc). Omit for a rounded rectangle built
+   * from `cornerRadius` + the inherited `fill` / `stroke`. The composite centres
+   * it in the box and delegates fill, stroke, hit-testing and decorations to it.
+   */
+  readonly root?: CompositeRootSpec;
   /** Ordered child parts; geometry traced into the body, labels mounted as text. */
   readonly parts: readonly CompositePart[];
 }
 
 /**
- * A container shape: an outer rounded-rect frame plus an ordered list of child
+ * A container shape: a **root** background shape plus an ordered list of child
  * {@link CompositePart}s — `rect` / `circle` / `line` geometry traced into the
  * shared body `Graphics`, and `label` text blocks mounted as Pixi text children
- * — each positioned at a coordinate relative to the composite's top-left origin
- * (so `(spec.x, spec.y)` places the whole composite, like {@link RectShape}).
+ * — each positioned relative to the composite's top-left origin (so
+ * `(spec.x, spec.y)` places the whole composite, like {@link RectShape}).
+ *
+ * The composite owns **no** silhouette geometry of its own: it borrows a real
+ * shape instance ({@link CompositeRootSpec}) and traces it via `paintInto`, so
+ * fill, stroke, hit-testing and every decoration (ring / glow / halo) follow the
+ * root shape automatically — a circular card gets a circular halo for free.
  *
  * Mounting text children mirrors how {@link ShapeBase} mounts glyph / svg /
  * image insets onto the shape's root container; labels here are diffed by
@@ -107,24 +170,65 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
   /** Mounted label displays keyed by their index in `spec.parts`. */
   private readonly labelViews = new Map<number, LabelContentView>();
 
+  /** Borrowed background shape — provides the silhouette geometry. */
+  private rootShape!: ShapeBase<CompositeRootSpec>;
+  private rootKind = '';
+
   constructor(spec: CompositeSpec, host: ShapeHostInfo) {
     super(host);
     this.draw(spec);
   }
 
-  protected drawGeometry(g: Graphics, spec: CompositeSpec): void {
-    // Outer frame.
-    const r = spec.cornerRadius ?? 0;
-    if (r > 0) g.roundRect(0, 0, spec.width, spec.height, r);
-    else g.rect(0, 0, spec.width, spec.height);
-    if (typeof spec.fill === 'number') g.fill({ color: spec.fill, alpha: spec.alpha ?? 1 });
-    if (spec.stroke) {
-      g.stroke({
-        color: spec.stroke.color,
-        width: spec.stroke.width ?? 1,
-        alpha: spec.stroke.alpha ?? 1,
-      });
+  /** The effective root spec: explicit {@link CompositeSpec.root} or a default rect. */
+  private rootSpecOf(spec: CompositeSpec): CompositeRootSpec {
+    if (spec.root) return spec.root;
+    return {
+      kind: 'rect',
+      x: 0,
+      y: 0,
+      width: spec.width,
+      height: spec.height,
+      ...(spec.cornerRadius !== undefined ? { cornerRadius: spec.cornerRadius } : {}),
+      ...(spec.fill !== undefined ? { fill: spec.fill } : {}),
+      ...(spec.stroke !== undefined ? { stroke: spec.stroke } : {}),
+    };
+  }
+
+  /**
+   * Ensure {@link rootShape} matches the current root spec. Rebuilds the
+   * instance only when the kind changes; otherwise refreshes its geometry spec
+   * in place (no redraw of the borrowed instance's own — unused — gfx).
+   */
+  private ensureRoot(spec: CompositeSpec): void {
+    const rootSpec = this.rootSpecOf(spec);
+    if (this.rootShape === undefined || this.rootKind !== rootSpec.kind) {
+      this.rootShape?.destroy();
+      const make = ROOT_CTORS[rootSpec.kind] ?? ROOT_CTORS.rect!;
+      this.rootShape = make(rootSpec, this.host);
+      this.rootKind = rootSpec.kind;
+    } else {
+      this.rootShape.setGeometrySpec(rootSpec);
     }
+  }
+
+  protected drawGeometry(g: Graphics, spec: CompositeSpec, style?: ShapePaintStyle): void {
+    // Delegate the silhouette to the root shape, centred in the card box. The
+    // root traces at its own local origin (rect top-left, circle/poly centred),
+    // so we offset by the difference between the box centre and the root's
+    // bounding-box centre — origin-agnostic, using the root's own `bounds()`.
+    const root = this.rootShape;
+    const b = root.bounds();
+    const ox = spec.width / 2 - (b.x + b.width / 2);
+    const oy = spec.height / 2 - (b.y + b.height / 2);
+
+    g.translateTransform(ox, oy);
+    // `style` present → decoration override (ring/glow/ants trace the silhouette);
+    // absent → normal body paint (fill + stroke from the root spec).
+    root.paintInto(g, style);
+    g.resetTransform();
+
+    // Decoration overrides paint the silhouette only — never the inner parts.
+    if (style) return;
 
     // Geometric sub-parts — each traces its own path, then fills / strokes it.
     for (const p of spec.parts) {
@@ -146,8 +250,9 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
     }
   }
 
-  /** Geometry via the base `draw`, then reconcile the text-label children. */
+  /** Refresh the root shape, geometry via the base `draw`, then the labels. */
   override draw(spec: CompositeSpec): void {
+    this.ensureRoot(spec);
     super.draw(spec); // transform + bodyGfx(drawGeometry) + inset layers
     this.syncLabels(spec);
   }
@@ -216,6 +321,7 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
   override destroy(): void {
     for (const view of this.labelViews.values()) view.display.destroy();
     this.labelViews.clear();
+    this.rootShape?.destroy();
     super.destroy();
   }
 }

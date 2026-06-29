@@ -29,13 +29,14 @@ export type { Easing } from './animation/easings';
 
 // ─── Built-in primitives ──────────────────────────────────────────────────
 export { CircleShape } from './shapes/CircleShape';
+export { EllipseShape } from './shapes/EllipseShape';
 export { RectShape } from './shapes/RectShape';
 export { PolygonShape } from './shapes/PolygonShape';
 export { RegularPolygonShape } from './shapes/RegularPolygonShape';
 export { StarShape } from './shapes/StarShape';
 export { ArcShape } from './shapes/ArcShape';
 export { CompositeShape } from './shapes/CompositeShape';
-export type { CompositeSpec, CompositePart } from './shapes/CompositeShape';
+export type { CompositeSpec, CompositePart, CompositeRootSpec } from './shapes/CompositeShape';
 export { Connector } from './connectors/Connector';
 export { ArrowMarker, arrowMarkerSpec } from './markers/ArrowMarker';
 export type { ArrowMarkerSpec } from './markers/ArrowMarker';
@@ -185,6 +186,7 @@ export type {
 
   BaseShapeSpec,
   CircleSpec,
+  EllipseSpec,
   RectSpec,
   PolygonSpec,
   RegularPolygonSpec,

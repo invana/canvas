@@ -67,16 +67,31 @@ export function applyFill(
   }
 }
 
+/**
+ * Apply the spec's (or decoration override's) stroke to `g`.
+ *
+ * `retrace` re-traces the silhouette and is invoked **only when a stroke will
+ * actually be emitted** — the preceding `applyFill` consumed the fill trace, so
+ * the stroke needs a fresh path. Crucially, when there's *nothing to stroke*
+ * this leaves **no** dangling path behind: a shape used as a {@link
+ * CompositeShape} root draws more geometry into the same `Graphics` afterwards,
+ * and Pixi v8's `g.fill()` fills every un-consumed subpath since the last fill —
+ * so a dangling silhouette trace would get flooded with the next part's colour
+ * (the whole card painting in the accent-bar's blue). Tracing lazily here is
+ * what keeps a stroke-less card body its real fill colour.
+ */
 export function applyStroke(
   g: Graphics,
   spec: BaseShapeSpec,
   style: ShapePaintStyle | undefined,
+  retrace?: () => void,
 ): void {
   if (style?.strokeWidth !== undefined) {
     // Decorations default to `'outside'` alignment so their stroke lives
     // wholly past the silhouette instead of bleeding inward (Pixi's
     // built-in default is center-aligned, which makes a halo's inner band
     // cover the host body — see the `selected` ring + glow regression).
+    retrace?.();
     g.stroke({
       color: style.color ?? 0x000000,
       alpha: style.alpha ?? 1,
@@ -90,6 +105,7 @@ export function applyStroke(
   if (!s) return;
   const width = s.width ?? 1;
   if (width <= 0) return;
+  retrace?.();
   g.stroke({
     color: s.color,
     alpha: s.alpha ?? 1,

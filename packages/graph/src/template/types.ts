@@ -20,6 +20,19 @@ import type { ShapeLabelPlacement } from '@invana/canvas';
 import type { ColorRole } from '../theme/types';
 import type { NodeShapeOptions } from '../layer/types';
 
+/**
+ * Authoring descriptor for a composite card's background silhouette, sized to
+ * fill the card's `width × height` box. This is the *template* concept; the
+ * compiler maps it to a concrete engine root shape ({@link CompositeRootSpec})
+ * — `rect` → rounded rect, `ellipse` → sampled polygon, `regular-polygon` →
+ * n-gon, `polygon` → the given normalised points. Omit for a rounded rectangle.
+ */
+export type CompositeFrame =
+  | { readonly kind: 'rect'; readonly cornerRadius?: number }
+  | { readonly kind: 'ellipse' }
+  | { readonly kind: 'regular-polygon'; readonly sides: number; readonly rotation?: number }
+  | { readonly kind: 'polygon'; readonly points: readonly { readonly x: number; readonly y: number }[] };
+
 // ─── Structure ──────────────────────────────────────────────────────────────
 
 /**
@@ -53,6 +66,12 @@ export interface CardStructure {
   height: number;
   /** Inner padding (default 14). */
   padding?: number;
+  /**
+   * Background silhouette filling the card box. Omit for a rounded rectangle;
+   * set a circle/ellipse, polygon, etc. to make the card that shape (fill,
+   * border and every state decoration follow it).
+   */
+  frame?: CompositeFrame;
   /** Ordered rows, laid out top → bottom. */
   rows: CardRow[];
 }
@@ -148,6 +167,12 @@ export interface FreeformStructure {
   width: number;
   height: number;
   cornerRadius?: number;
+  /**
+   * Background silhouette filling the card box. Omit for a rounded rectangle
+   * (using {@link cornerRadius}); set a circle/ellipse, polygon, etc. to make
+   * the card that shape — fill, border and decorations follow it.
+   */
+  frame?: CompositeFrame;
   bgRole?: ColorRole;
   bg?: number;
   strokeRole?: ColorRole;

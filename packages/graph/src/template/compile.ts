@@ -12,7 +12,7 @@
  * colour, then to a neutral) — nothing role-shaped escapes to the renderer.
  */
 
-import type { CompositePart } from '@invana/canvas';
+import type { CompositePart, CompositeRootSpec } from '@invana/canvas';
 
 import type { ColorRole } from '../theme/types';
 import type { RolePalette } from '../theme/roles';
@@ -23,11 +23,57 @@ import type {
   CardElement,
   CardSlot,
   CardStructure,
+  CompositeFrame,
   FreeformStructure,
   NodeStylingTemplate,
   SimpleStructure,
   SlotStyling,
 } from './types';
+
+/** Solid stroke payload for a composite root shape. */
+type RootStroke = { color: number; width: number };
+
+/**
+ * Map an authoring {@link CompositeFrame} (+ the card box, corner radius, and
+ * resolved fill/stroke) to a concrete engine {@link CompositeRootSpec}. The
+ * engine composite borrows a real shape for its silhouette, so there's no
+ * geometry to duplicate here — only the box-fit policy:
+ *   - `rect`            → rounded rectangle filling the box
+ *   - `ellipse`         → ellipse inscribed in the box
+ *   - `regular-polygon` → n-gon centred in the box (circum-radius = min/2)
+ *   - `polygon`         → the normalised points mapped to centre-relative coords
+ */
+function frameToRoot(
+  frame: CompositeFrame,
+  width: number,
+  height: number,
+  cornerRadius: number,
+  fill: number,
+  stroke: RootStroke | undefined,
+): CompositeRootSpec {
+  const base = { x: 0, y: 0, fill, ...(stroke ? { stroke } : {}) };
+  switch (frame.kind) {
+    case 'rect':
+      return { kind: 'rect', ...base, width, height, cornerRadius };
+    case 'ellipse':
+      return { kind: 'ellipse', ...base, radiusX: width / 2, radiusY: height / 2 };
+    case 'regular-polygon':
+      return {
+        kind: 'regular-polygon',
+        ...base,
+        radius: Math.min(width, height) / 2,
+        sides: frame.sides,
+        ...(frame.rotation !== undefined ? { rotation: frame.rotation } : {}),
+      };
+    case 'polygon':
+      return {
+        kind: 'polygon',
+        ...base,
+        // Normalised [0,1] box points → centre-relative (PolygonSpec convention).
+        vertices: frame.points.map((p) => ({ x: (p.x - 0.5) * width, y: (p.y - 0.5) * height })),
+      };
+  }
+}
 
 /** Resolve a colour pair (role wins, else direct, else `undefined`). */
 function color(
@@ -169,11 +215,16 @@ export function compileCard(
     width,
     height,
     cornerRadius: 10,
+    ...(struct.frame ? { root: frameToRoot(struct.frame, width, height, 10, bg, undefined) } : {}),
     fill: bg,
     parts,
   };
-  // `bgStrokeWidth: 0` stops the layer's base node border from framing the card.
-  return { shape, bgStrokeWidth: 0 };
+  // Express the card background as the node's `bgFill` too (not only the
+  // composite's internal fill). Styling owns the card colour, so this asserts it
+  // at the node level — overriding any layer-wide colour-by-category default,
+  // exactly as `compileSimple` does for simple shapes. `bgStrokeWidth: 0` stops
+  // the layer's base node border from framing the card.
+  return { shape, bgFill: bg, bgStrokeWidth: 0 };
 }
 
 interface RowCursor {
@@ -216,10 +267,28 @@ function layoutRow(
       const size = cell.size ?? 40;
       const cx = x + size / 2;
       const cy = cursor.y + size / 2;
+      // No photo support yet — render a coloured initials disc so the avatar
+      // reads as a person (and stays legible on both light and dark cards),
+      // rather than a near-invisible neutral placeholder.
+      const discFill = palette.accent ?? palette.muted ?? 0xcbd5e1;
       if (cell.shape === 'rounded') {
-        parts.push({ part: 'rect', x, y: cursor.y, width: size, height: size, cornerRadius: 8, fill: palette.divider ?? 0xcccccc });
+        parts.push({ part: 'rect', x, y: cursor.y, width: size, height: size, cornerRadius: 8, fill: discFill });
       } else {
-        parts.push({ part: 'circle', x: cx, y: cy, radius: size / 2, fill: palette.divider ?? 0xcccccc });
+        parts.push({ part: 'circle', x: cx, y: cy, radius: size / 2, fill: discFill });
+      }
+      const initials = initialsOf(resolveText(node, bindings.title));
+      if (initials) {
+        const fontSize = Math.round(size * 0.4);
+        parts.push({
+          part: 'label',
+          x: cx,
+          y: cy - fontSize / 2,
+          text: initials,
+          anchor: 'center',
+          fontSize,
+          fontWeight: 700,
+          fill: 0xffffff,
+        });
       }
       x += size + 10;
       rowHeight = Math.max(rowHeight, size);
@@ -243,6 +312,15 @@ function layoutRow(
 
 function formatText(text: string, uppercase: boolean): string {
   return uppercase ? text.toUpperCase() : text;
+}
+
+/** Initials for an avatar disc: first + last word's leading letter (e.g.
+ * "Tim Berners-Lee" → "TL"), or the first two letters of a single word. */
+function initialsOf(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return '';
+  if (words.length === 1) return words[0]!.slice(0, 2).toUpperCase();
+  return (words[0]![0]! + words[words.length - 1]![0]!).toUpperCase();
 }
 
 /** Build a composite `label` part with single-line ellipsis clipping. */
@@ -293,18 +371,23 @@ export function compileFreeform(
     parts.push(...elementToParts(el, node, palette));
   }
 
+  const rootStroke: RootStroke | undefined =
+    strokeColor !== undefined ? { color: strokeColor, width: struct.strokeWidth ?? 1 } : undefined;
   const shape: CompositeShapeOption = {
     kind: 'composite',
     width: struct.width,
     height: struct.height,
     cornerRadius: struct.cornerRadius ?? 10,
-    fill: bg,
-    ...(strokeColor !== undefined
-      ? { stroke: { color: strokeColor, width: struct.strokeWidth ?? 1 } }
+    ...(struct.frame
+      ? { root: frameToRoot(struct.frame, struct.width, struct.height, struct.cornerRadius ?? 10, bg, rootStroke) }
       : {}),
+    fill: bg,
+    ...(rootStroke ? { stroke: rootStroke } : {}),
     parts,
   };
-  return { shape, bgStrokeWidth: 0 };
+  // Assert the card background at the node level too — styling owns the colour
+  // and wins over any layer-wide colour-by-category default (see `compileCard`).
+  return { shape, bgFill: bg, bgStrokeWidth: 0 };
 }
 
 /** Map one {@link CardElement} to its composite part(s). */

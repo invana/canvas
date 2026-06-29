@@ -55,8 +55,7 @@ export class CircleShape extends ShapeBase<CircleSpec> {
     };
     trace();
     applyFill(g, spec, style, this.host, this.bounds(), trace);
-    trace();
-    applyStroke(g, spec, style);
+    applyStroke(g, spec, style, trace);
   }
 
   bounds(): Rect {

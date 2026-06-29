@@ -10,6 +10,7 @@ import type {
   ConnectorLabelPlacement,
   InsetAnchor,
   CompositePart,
+  CompositeRootSpec,
 } from '@invana/canvas';
 import type { Point } from '@invana/canvas/primitives';
 // Type-only (no runtime cycle): the template module declares its shapes in
@@ -304,6 +305,13 @@ export interface CompositeShapeOption {
   readonly width: number;
   readonly height: number;
   readonly cornerRadius?: number;
+  /**
+   * Background silhouette of the card — a concrete engine root shape (rect /
+   * circle / polygon / regular-polygon / star / arc), centred in the box. Omit
+   * for a rounded rectangle built from `cornerRadius` + `fill` / `stroke`. Fill,
+   * stroke, hit-testing and every decoration follow it.
+   */
+  readonly root?: CompositeRootSpec;
   readonly fill?: number;
   readonly fillAlpha?: number;
   readonly stroke?: { readonly color: number; readonly width?: number; readonly alpha?: number };

@@ -412,6 +412,17 @@ export interface CircleSpec extends BaseShapeSpec {
   readonly radius: number;
 }
 
+/**
+ * Filled / stroked ellipse, centred at `(x, y)` with independent horizontal /
+ * vertical radii. A circle is the `radiusX === radiusY` special case; prefer
+ * {@link CircleSpec} there (cheaper, uniform).
+ */
+export interface EllipseSpec extends BaseShapeSpec {
+  readonly kind: 'ellipse';
+  readonly radiusX: number;
+  readonly radiusY: number;
+}
+
 export interface RectSpec extends BaseShapeSpec {
   readonly kind: 'rect';
   readonly width: number;
