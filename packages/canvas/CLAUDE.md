@@ -1,6 +1,6 @@
 # CLAUDE.md — packages/canvas (`@invana/canvas`)
 
-The engine. Implements the Layer / Behaviour / Layout / Renderer architecture defined in `architecture-proposal.md` (repo root).
+The engine. Implements the Layer / Behaviour / Layout / Renderer architecture defined in `docs/architecture-proposal.md`.
 
 **Status:** skeleton. Built fresh during the architecture rewrite.
 

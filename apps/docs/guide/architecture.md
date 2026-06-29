@@ -9,7 +9,7 @@
 | **Layout** | Pure function: reads layer data, computes positions, writes them back. No registration, no rendering. |
 | **Renderer** | Domain-free drawing surface. The `PrimitivesRenderer` is the one renderer shipped today. |
 
-A long-form rationale lives in `architecture-proposal.md` at the repo root.
+A long-form rationale lives in `docs/architecture-proposal.md` in the repo.
 
 ## The mental model
 

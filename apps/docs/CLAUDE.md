@@ -32,7 +32,7 @@ apps/docs/
 
 ## Editing rules
 
-- **Document only what's exported.** Anything aspirational lives in `packages.md` or `architecture-proposal.md` at repo root — never inside a guide page as if it shipped. If a planned feature creeps into a code example, the example is broken.
+- **Document only what's exported.** Anything aspirational lives in `packages.md` or the repo-root `docs/` design notes (e.g. `docs/architecture-proposal.md`) — never inside a guide page as if it shipped. If a planned feature creeps into a code example, the example is broken.
 - **Code samples must compile against the current exports.** Verify class names, option names, and import paths against `packages/canvas/src/index.ts` and `packages/canvas/src/primitives/index.ts`.
 - **No `/plugins` section.** Built-in primitives are documented inside `primitives.md`; built-in behaviours inside `behaviours.md`. The renderer's five registries are extensible, not "plugins".
 - **Storybook is the canonical live demo surface.** Link to it from the nav rather than duplicating runnable demos inside docs pages.

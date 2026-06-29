@@ -43,3 +43,9 @@ applying changes through `useGraphCanvasUpdate().update(...)` → `setOptions`
 
 Editors turn the visualization's state into something the user steers —
 interaction over illustration, decisions over diagrams.
+
+## Design notes & plans
+
+Detailed design rationale and implementation plans live in [`docs/`](./docs/) (internal,
+not the published docs site). See [`docs/README.md`](./docs/README.md) for the index —
+architecture proposal, data model, state/options, and per-feature plans.

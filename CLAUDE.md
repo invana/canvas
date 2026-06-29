@@ -2,7 +2,7 @@
 
 WebGPU-first canvas rendering engine + graph visualization toolkit. WebGL2 fallback automatic. pnpm + Turbo monorepo.
 
-**Architecture rewrite in progress.** The long-form design rationale lives in `architecture-proposal.md` at repo root. Day-to-day API and concept documentation lives in `apps/docs/` (VitePress) — that's the single source of truth for engine surfaces; consult it before referring back to the proposal. Standalone `*-plan.md` files have been consolidated into `apps/docs/`; don't create new ones. All new code goes in the active packages listed below.
+**Architecture rewrite in progress.** The long-form design rationale lives in `docs/architecture-proposal.md`. Day-to-day API and concept documentation lives in `apps/docs/` (VitePress) — that's the single source of truth for engine surfaces; consult it before referring back to the proposal. Design notes and `*-plan.md` docs live in the repo-root `docs/` folder (internal — **not** part of the VitePress site); `docs/README.md` indexes them and `roadmap.md` is the hub. Put new plans in `docs/`, not at repo root. All new code goes in the active packages listed below.
 
 ### Don't write API docs to `apps/docs/` unless explicitly asked
 
@@ -143,7 +143,7 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
 - Official packages: `@invana/<domain>` for cores, `@invana/<domain>-<feature>` for extensions.
 - Community packages: `invana-<domain>-<feature>` (unscoped).
 - No `plugin` / `plugins` in package names — that's an implementation detail.
-- Class suffixes by kind: `*Layer`, `*Behaviour`, `*Layout`, `*Renderer`. (See `architecture-proposal.md` §5.)
+- Class suffixes by kind: `*Layer`, `*Behaviour`, `*Layout`, `*Renderer`. (See `docs/architecture-proposal.md` §5.)
 - **Toolbar components** (assembled toolbars in `packages/canvas-react/src/toolbars/`) carry the `*Toolbar` suffix — e.g. `CanvasControlsToolbar`, `GraphToolbar`. The dumb building blocks in `canvas-react/src/components/` (e.g. `ZoomControls`, `Panel`) do **not** — they're components, not toolbars.
 
 ---
@@ -157,7 +157,7 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
 3. All new code goes in the active packages listed above.
 4. No `pixi.js` imports outside `packages/canvas` internals.
 5. No direct `new Graphics()` / `new Container()` outside `packages/canvas/src`.
-6. Events go through `canvas.events` (canvas-wide) or `layer.events` (layer-scoped) per `architecture-proposal.md` §2.5 — never raw PixiJS events from outside the engine.
+6. Events go through `canvas.events` (canvas-wide) or `layer.events` (layer-scoped) per `docs/architecture-proposal.md` §2.5 — never raw PixiJS events from outside the engine.
 7. Behaviours don't auto-enable. Every behaviour (hover, select, drag, etc.) must be explicitly registered AND enabled by the developer.
 8. Cross-layer dependencies are declared as explicit `*LayerId` option fields. Don't infer "the only graph layer".
 9. Write TSDoc on all classes, public methods, and non-obvious variables.
