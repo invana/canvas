@@ -1,5 +1,5 @@
 {
-  "name": "@invana/canvas-template-designer",
+  "name": "@invana/canvas-designer",
   "version": "0.0.7",
   "description": "Node/Edge template designer for @invana/canvas — WYSIWYG authoring of composite node templates (drag canvas, layers, undo/redo, save/load); ships default starter templates. Optional: rendering templates needs only @invana/graph.",
   "type": "module",

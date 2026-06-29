@@ -1,8 +1,12 @@
-# CLAUDE.md — packages/canvas-template-designer (`@invana/canvas-template-designer`)
+# CLAUDE.md — packages/canvas-designer (`@invana/canvas-designer`)
 
-The **Node/Edge Designer** — visual authoring for **composite node templates**. **Node-only today; an edge designer is planned** (it would author an edge-template analog the same way). Split out from `@invana/canvas-ui` so it's *opt-in*: most consumers only **render** templates (that needs nothing here — just `@invana/graph`'s `FreeformStructure` + `compileFreeform`); only apps that let end-users **design** their own node cards install this package.
+The **canvas designer** — visual authoring for the visualisation's *definition*. Today it ships one surface: the **node template** designer (in `src/templates/`) — WYSIWYG composite-card authoring that emits `FreeformStructure` JSON. **Planned:** the studio shell + per-surface designers for **layouts / behaviours / layers**, each hosting the matching `@invana/canvas-ui` editor (see root `CLAUDE.md` rule 12 + `roadmap.md`). Kept *opt-in* and split from `@invana/canvas-ui` so render-only consumers stay light — most consumers only **render** templates (just `@invana/graph`'s `FreeformStructure` + `compileFreeform`).
 
-This is one layer of a three-layer stack (see root `CLAUDE.md` → "The card / template stack"): the engine `CompositeShape` primitive (in `@invana/canvas`) ← the `FreeformStructure` template model + `compileFreeform` (in `@invana/graph`) ← **this designer**, which authors `FreeformStructure` JSON. Don't fold graph/engine concerns in here.
+The template surface is one layer of a three-layer stack (see root `CLAUDE.md` → "The card / template stack"): the engine `CompositeShape` primitive (in `@invana/canvas`) ← the `FreeformStructure` template model + `compileFreeform` (in `@invana/graph`) ← **this designer**, which authors `FreeformStructure` JSON. Don't fold graph/engine concerns into the template surface.
+
+## Structure
+
+`src/templates/` is today's surface (the node template designer + its fields/mapping/history). Future surfaces — the studio shell (scene tree + inspector) and `layers/` / `layouts/` / `behaviours/` designers — sit alongside it and host `@invana/canvas-ui` editors. Note: that shell will be **engine-coupled** (it drives a live canvas via `@invana/canvas-react`), unlike the headless template tool below.
 
 ## Scope
 
@@ -17,7 +21,7 @@ This is one layer of a three-layer stack (see root `CLAUDE.md` → "The card / t
 - **Reuse `@invana/canvas-ui`** for shared form chrome + helpers (`roleField`, `asRole`, `NO_ROLE`, `numberToHex`) and `@invana/forms` for the property panels. Don't duplicate them.
 - **Property panels come from `@invana/forms`**; `Button` from `@invana/ui`. The **design canvas** (absolutely-positioned element divs, drag) and the **dense layer-row controls** + the hidden file `<input>` are bespoke tool affordances and may be native elements — that's the one place the "no raw input/button" rule of `canvas-ui` doesn't apply (it's a canvas tool, not a schema form).
 - **No module-level state** — safe with N concurrent instances.
-- **No tests** (per repo convention); verify via Storybook (`canvas-template-designer/Card Designer Studio`). Don't add stories unless asked.
+- **No tests** (per repo convention); verify via Storybook (`canvas-designer/Card Designer Studio`). Don't add stories unless asked.
 
 ## Build
 
