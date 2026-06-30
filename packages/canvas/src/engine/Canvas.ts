@@ -34,6 +34,7 @@
 
 import { Application, Container, type EventSystem, type Ticker } from 'pixi.js';
 import { Viewport } from 'pixi-viewport';
+import { createCanvasStore, type CanvasStore } from '@invana/canvas-store';
 
 import { CanvasEventBus } from '../events/CanvasEventBus';
 import { CanvasThemeState } from '../theme/CanvasThemeState';
@@ -120,6 +121,19 @@ export class Canvas {
   private config: CanvasConfig = {};
 
   /**
+   * The renderer-free kernel (`@invana/canvas-store`) — the observable truth this
+   * engine projects (decision M0). {@link update} **mirrors** config into
+   * `store.view.definition` so readers can subscribe to slices via
+   * `useStore`/`select` instead of the coarse `options:change`; the existing apply
+   * path (deep-merge + `setOptions` fan-out + `options:change`) is unchanged.
+   *
+   * The store also owns `data`, `events`, `theme`, `history`. The engine still uses
+   * its own {@link events}/`themeState` for now — converging onto `store.events`
+   * (decision E1) and moving data ownership onto `store.data` (D7) are later phases.
+   */
+  readonly store: CanvasStore;
+
+  /**
    * Public surface — populated by `init()` / `initWithStage()`. Accessing
    * before init throws (definite-assignment via `!`). Use `isInitialised`
    * to guard if needed.
@@ -165,6 +179,7 @@ export class Canvas {
     this.options = opts;
     this.events = new CanvasEventBus({ source: { kind: 'canvas', id: this.id } });
     this.themeState = new CanvasThemeState(this.events);
+    this.store = createCanvasStore();
 
     // Registries exist from construction so layers/behaviours can be added
     // *before* `init()`. `getContext` returns `undefined` until init builds the
@@ -394,6 +409,23 @@ export class Canvas {
       this.layouts.get(id)?.setOptions(options);
     }
 
+    // M0 — mirror the same patch into the kernel's reactive view (the observable
+    // truth beneath this apply path). Per-id deep-merge so untouched slices keep
+    // reference identity (idle slice-selectors don't wake). Behaviour above is
+    // unchanged; this is purely additive observability.
+    this.store.view.update((s) => {
+      for (const [id, o] of Object.entries(patch.layers ?? {})) {
+        s.definition.layers[id] = deepMerge(s.definition.layers[id] ?? {}, o) as Record<string, unknown>;
+      }
+      for (const [id, o] of Object.entries(patch.behaviours ?? {})) {
+        s.definition.behaviours[id] = deepMerge(s.definition.behaviours[id] ?? {}, o) as Record<string, unknown>;
+      }
+      for (const [id, o] of Object.entries(patch.layouts ?? {})) {
+        s.definition.layouts[id] = deepMerge(s.definition.layouts[id] ?? {}, o) as Record<string, unknown>;
+      }
+      if (patch.activeLayout !== undefined) s.definition.activeLayout = patch.activeLayout;
+    }, 'canvas:update');
+
     this.events.emit('options:change', {
       changedLayerIds: Object.keys(patch.layers ?? {}),
       changedBehaviourIds: Object.keys(patch.behaviours ?? {}),
@@ -589,6 +621,7 @@ export class Canvas {
     // `getContext` thunk the moment it's assigned here.
     this.context = {
       events: this.events,
+      store: this.store,
       theme: this.themeState,
       world: this.world,
       stage: this.stage,

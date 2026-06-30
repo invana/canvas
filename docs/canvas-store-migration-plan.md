@@ -74,14 +74,20 @@ idle-wake + structural sharing · G4 typed-array hot lane · G5 `DirtyBatcher` O
 
 ## Phase 2 — Engine under the store (M0: zero behaviour change)
 
+> **Groundwork already landed (`8fc8f30`):** `@invana/canvas` now depends on the
+> kernel and **re-exports `ColumnStore`/`DirtyBatcher` from `@invana/canvas-store`**
+> (D1) — its own copies are deleted; `@invana/graph`'s `GraphStore` keeps importing
+> them via `@invana/canvas` unchanged. The engine does **not** yet create or use a
+> `CanvasStore` — that's this phase.
+
 The kernel becomes the observable truth *beneath* the existing apply path.
 
-- [ ] `Canvas` constructs/holds a `CanvasStore`; back `Canvas.config` with `view.definition`.
-- [ ] `Canvas.update(patch)` writes the patch **and** runs the existing `setOptions` fan-out; `get()` → `view.getState()`.
-- [ ] One store subscription **re-emits the legacy `options:change`** so every current consumer keeps working untouched.
-- [ ] **Single rAF driver**: set every `data` source to `FlushMode:'manual'`; drain all flushes from one `requestAnimationFrame`.
+- [x] **2.1 — Construct.** `Canvas` creates a `CanvasStore` (`readonly store`) in its constructor → zero behaviour change.
+- [x] **2.3 — Back config with `view.definition`.** `Canvas.update(patch)` **mirrors** the patch into `store.view.definition` (per-id deep-merge, so untouched slices keep identity) *in addition to* the existing deep-merge + `setOptions` fan-out + `options:change` — all unchanged. (Chose mirror over replacing `this.config` for a strictly-additive M0; making `view` the sole source + dropping `this.config` is a later step.)
+- [x] **2.4 — Expose the store.** `canvas.store` (read-only) **and `ctx.store`** on `CanvasContext` — every layer/behaviour/layout receives the kernel at mount/register. (Existing canvas test context stubs updated to the new required field; `canvas` + `graph` type-check clean, 133 canvas tests green.)
+- [ ] **2.2 — Reconcile the event bus (decision E1)** — *deferred, not a prerequisite.* `canvas` has its **own** `CanvasEventBus` (renderer/input/lifecycle) separate from the kernel's (state/scene/data); the two coexist through M0–M2. Converge later: `canvas` adopts `store.events`, folding its event types into the kernel `CanvasGlobalEvents` via declaration merging. Its own revertible commit.
 
-**Packages:** `@invana/canvas` (+ dep on `@invana/canvas-store`). **Gate:** Visualiser/MiniMap byte-identical vs `main`; no per-frame cost added (gate-2 bench). **Revertible:** yes — pure addition under the old path. **Risk:** R1 (Canvas.ts behavioural drift) — keep `options:change` compatible.
+**Packages:** `@invana/canvas`. **Gate:** `canvas` type-checks ✅ + 133 existing tests green ✅; behaviour additive (mirror only). **Verify next:** Visualiser/MiniMap visual parity vs `main` (needs a story run). **Revertible:** yes — addition under the old path.
 
 ---
 
@@ -89,11 +95,19 @@ The kernel becomes the observable truth *beneath* the existing apply path.
 
 `CanvasStore` *owns* the per-source data; layers read/subscribe instead of owning a store.
 
-- [ ] `GraphStore` becomes a `DataSource` subclass **owned by `store.data[id]`**; `GraphLayer` reads/subscribes to `store.data[dataSourceId]` rather than owning its own.
-- [ ] `<GraphLayer data>` / `graphCanvas.setData` route to the owned source (thin sugar over the state write).
-- [ ] `@invana/canvas` **re-exports** the relocated `ColumnStore`/`DirtyBatcher` for back-compat (imports stay valid).
+> **Decision D13 — `GraphStore` ↔ `LayerData`.** Both are now `ColumnStore`-backed
+> bulk stores: the kernel's two-lane `LayerData` and graph's `GraphStore` (which adds
+> adjacency indexes + a pending-edge buffer). They overlap heavily — Phase 3 must pick
+> the canonical `DataSource`: **(a)** `GraphStore` *becomes/extends* the kernel source
+> owned by `store.data[id]` (recommended — least churn, keeps adjacency), or **(b)**
+> `LayerData` absorbs graph's features and `GraphStore` is retired. This is the crux.
 
-**Packages:** `@invana/graph`, `@invana/canvas`. **Gate:** targeted render preserved; data lifecycle tests. **Risk:** Med — data-flow change; the biggest blast-radius item (§10.3).
+- [x] **3.0 — Re-export shim** (`8fc8f30`): `ColumnStore`/`DirtyBatcher` relocated to the kernel; `canvas` re-exports; `GraphStore` unchanged.
+- [ ] **3.1 — Canonical `DataSource` (D13).** `store.data[id]` owns the graph data; `GraphStore` becomes/extends the kernel source. Gate: `GraphStore` unit tests pass.
+- [ ] **3.2 — `GraphLayer` reads/subscribes** `store.data[dataSourceId]` instead of owning a store; `<GraphLayer data>`/`graphCanvas.setData` route to it. Gate: targeted render preserved; graph stories render.
+- [ ] **3.3 — Single rAF driver.** `Canvas` sets every `data` source to `FlushMode:'manual'` and drains `flush()` once/frame. Gate: one flush/frame; no per-frame regression.
+
+**Packages:** `@invana/graph`, `@invana/canvas`. **Risk:** Med–High — biggest blast radius (§10.3); the `GraphStore`↔`LayerData` reconciliation (D13) is the load-bearing call.
 
 ---
 
