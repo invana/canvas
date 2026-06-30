@@ -288,6 +288,8 @@ function layoutRow(
           fontSize,
           fontWeight: 700,
           fill: 0xffffff,
+          maxLines: 1,
+          overflow: 'ellipsis',
         });
       }
       x += size + 10;
