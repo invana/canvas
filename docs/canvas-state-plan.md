@@ -1,4 +1,4 @@
-# Canvas State — Consolidated Plan (`@invana/canvas-state`)
+# Canvas State — Consolidated Plan (`@invana/canvas-core`)
 
 > **Status: DESIGN / ROADMAP — not shipped.** The **single review doc** for the
 > reactive state layer: concepts, data model, architecture, code structure,
@@ -23,7 +23,7 @@
 **One `CanvasState` per `Canvas`** — the single source of truth for everything a canvas
 shows, consumed by React **and** plain-JS/engine code with **no duplicate copies and no
 manual syncing**. The renderer is a **pure projection** of it: state changes → the affected
-projection re-renders (never the whole scene — see §7). Packaged as **`@invana/canvas-state`**,
+projection re-renders (never the whole scene — see §7). Packaged as **`@invana/canvas-core`**,
 a **renderer-free leaf** so the same state survives a renderer swap, a backend swap
 (zustand → Yjs), and powers telemetry over every change.
 
@@ -42,7 +42,7 @@ Principles:
 
 | # | Decision |
 |---|---|
-| C1 | **Dedicated `@invana/canvas-state` package, a renderer-free leaf.** Zero `@invana` deps; imports no drawing library. `@invana/canvas` / `@invana/graph` / `@invana/canvas-react` depend on it. Relaxes the CLAUDE.md "`@invana/canvas` has no `@invana` deps" rule → "…except `@invana/canvas-state`." |
+| C1 | **Dedicated `@invana/canvas-core` package, a renderer-free leaf.** Zero `@invana` deps; imports no drawing library. `@invana/canvas` / `@invana/graph` / `@invana/canvas-react` depend on it. Relaxes the CLAUDE.md "`@invana/canvas` has no `@invana` deps" rule → "…except `@invana/canvas-core`." |
 | C2 | **Renderer-agnostic.** pixi is one adapter; camera is an abstract `{x,y,zoom}`, throttled/ephemeral. |
 | C3 | **One `CanvasState { view, data }`.** `view` = how it's defined+viewed; **`data` = a keyed registry of data layers** (graph / table / geo …). **Position is a node field**; **groups are a keyed many-to-many collection** (bubble-sets / shaped containers), not `parentId`. |
 | C4 | **Renderer = pure projection**, reacting at **every scale** via *targeted* re-render (§7) — never a global repaint. |
@@ -199,7 +199,7 @@ export function createCanvasState(opts?: { telemetry?: TelemetrySink }): CanvasS
 ## 5. Package & file structure
 
 ```
-packages/canvas-state/
+packages/canvas-core/
 ├── package.json                 # deps: zustand, immer (later yjs). NO @invana deps.
 ├── src/
 │   ├── index.ts
@@ -272,7 +272,7 @@ const focusTeam = (g, team) => g.batch('focus-team', () => {
 });
 ```
 
-Built-in ops live on the **domain facade** (`GraphCanvas`, `@invana/graph`); `@invana/canvas-state`
+Built-in ops live on the **domain facade** (`GraphCanvas`, `@invana/graph`); `@invana/canvas-core`
 stays the low-level port. Custom ops are just functions — no registration, no framework.
 
 ### 6.3 History / undo — falls out of the patch stream
@@ -480,10 +480,10 @@ notification flowing, migrate consumers one at a time, then delete the old path.
 | `packages/graph` behaviours (`ClickSelect`/`Hover`/…) | write interaction via `state.view.update` (M2, D3) | refactor | Med — preserve targeted render |
 | `packages/canvas-react` `useGraphCanvasOptions` | replace copy with `useStore` | replace | Low — additive `useStore` first, then swap |
 | `packages/canvas-react` `useGraphCanvasUpdate` | unchanged signature; routes to `view.update` | transparent | Low |
-| New `@invana/canvas-state` package | created (port, adapters, view, data, telemetry) | new | Low |
+| New `@invana/canvas-core` package | created (port, adapters, view, data, telemetry) | new | Low |
 | `CLAUDE.md` dependency layering | add canvas-state leaf; relax "no @invana deps" | docs | Low |
 
-**Packages touched:** new `@invana/canvas-state`; `@invana/canvas` (Canvas.ts + relocations);
+**Packages touched:** new `@invana/canvas-core`; `@invana/canvas` (Canvas.ts + relocations);
 `@invana/graph` (GraphStore subclass + behaviour writes, M2); `@invana/canvas-react` (`useStore`).
 
 ### 10.4 What is explicitly preserved (no regression)
@@ -518,7 +518,7 @@ in the loop.**
 
 **Decided (this session):**
 
-- **D1 — relocate `ColumnStore`/`DirtyBatcher`** into `@invana/canvas-state` (leaf can't depend back
+- **D1 — relocate `ColumnStore`/`DirtyBatcher`** into `@invana/canvas-core` (leaf can't depend back
   on canvas; this is the clean way for it to own the data hot path). `@invana/canvas` re-exports.
 - **D2 — supersede `Store.ts`/`createLayerStore`** with the port + zustand adapter (one wrapper).
 - **D3 — `view.interaction` *owns* selection/hover/states** (M2 migrates `ClickSelectBehaviour`
