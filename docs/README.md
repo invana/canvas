@@ -30,6 +30,7 @@ working design-of-record documents. Day-to-day API/concept docs live in
 - [store-owns-state-pseudocode.md](./store-owns-state-pseudocode.md) — companion pseudocode for the above.
 - [unified-canvas-options-plan.md](./unified-canvas-options-plan.md) — one declarative, id-addressed `GraphCanvas` options object.
 - [canvas-state-plan.md](./canvas-state-plan.md) — **the consolidated review doc** for `@invana/canvas-store`: concepts + data model (`CanvasStore { view, data }`), architecture + code/file structure, performance (the "state → targeted render" wiring), telemetry, collaboration, and the **migration from the existing engine + its impact/blast radius**. Sequences the four state docs below at the package level.
+- [canvas-store-data-event-flow.md](./canvas-store-data-event-flow.md) — **the data hierarchy + flow companion**: the full `CanvasStore { view, data, events }` tree, the data write→trigger→flush→render path (incl. the `FlushMode` trigger), the bus event families + `state:change`/`data:flush` bridges, and the `dataLayerId` pointer + `ctx.self` facade. Tags ✅ built vs 🔧 proposed.
 - [reactive-state-store-plan.md](./reactive-state-store-plan.md) — single reactive store (zustand behind a transferable `ReactiveStore` port) for config + interaction state; no UI copies; telemetry decorator; CRDT-ready.
 - [collaborative-state-plan.md](./collaborative-state-plan.md) — near-realtime, multi-user, offline collaboration on top of that store (CRDT doc + presence, PG/Redis, OTel).
 
@@ -37,6 +38,7 @@ working design-of-record documents. Day-to-day API/concept docs live in
 
 - [event-taxonomy.md](./event-taxonomy.md) — canonical event catalogue + the `<domain>:<subject>:<action>` bus naming scheme (telemetry / realtime / query), and the **state-ownership migration map** that moves all state + events out of the engine into `canvas-store`.
 - [canvas-3-package-architecture.md](./canvas-3-package-architecture.md) — **draft**: target split into `canvas-store` (state + events) / `canvas` (orchestrator) / `canvas-pixijs` (renderer), with one end-to-end example (state + events + telemetry + history + rendering + layout updates) and the phased path (`IRenderer` abstraction gated to Phase 3).
+- [canvas-renderer-split-plan.md](./canvas-renderer-split-plan.md) — **the concrete split plan**: a file census of `packages/canvas/src` (49/117 import pixi) classifying every subsystem as → `canvas-pixijs` (renderer) / stays in `canvas` (orchestrator) / deleted-or-relocated (state machinery) / straddler-split across the `IRenderer` seam, plus the hard parts and phasing (P0–P4). Anchored on the built `DataStore`.
 
 ## React / UI / apps
 

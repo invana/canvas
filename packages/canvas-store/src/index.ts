@@ -31,6 +31,7 @@ export { defaultCanvasView, type CanvasView } from './view/CanvasView';
 
 // ── Data (state) ──────────────────────────────────────────────────────────────
 export { DataStore, type FlushEvent, type Record_ } from './data/DataStore';
+export { scheduleFlush, type FlushMode } from './data/flush';
 export {
   LayerData,
   type NodeRecord,

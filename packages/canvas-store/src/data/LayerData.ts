@@ -8,7 +8,13 @@
  * two-physics split). M0 holds records as plain objects; the typed-array
  * `ColumnStore` backing for `x`/`y` is an internal optimisation that lands later
  * without changing this API.
+ *
+ * **When** the coalesced flush fires is the {@link FlushMode} (default `'microtask'`);
+ * the engine flips its stores to `'manual'` and drains them from one rAF loop. See
+ * `docs/canvas-store-data-event-flow.md` §2.2.
  */
+
+import { scheduleFlush, type FlushMode } from './flush';
 
 export interface NodeRecord {
   id: string;
@@ -96,6 +102,8 @@ export class LayerData {
   private readonly listeners = new Set<(e: LayerFlush) => void>();
   private version = 0;
   private scheduled = false;
+  private flushMode: FlushMode = 'microtask';
+  private cancel: (() => void) | undefined;
 
   // ── subscribe ─────────────────────────────────────────────────────────────
   /** Subscribe to coalesced `flush` deltas. Returns an unsubscribe. */
@@ -103,6 +111,19 @@ export class LayerData {
     void event;
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  }
+
+  /**
+   * Choose **when** a flush fires ({@link FlushMode}). `'manual'` disarms any pending
+   * auto-flush so only an explicit {@link flush} emits — used when the engine drives
+   * every layer's data from one rAF loop.
+   */
+  setFlushMode(mode: FlushMode): void {
+    this.flushMode = mode;
+    if (mode === 'manual' && this.scheduled) {
+      this.cancel?.();
+      this.scheduled = false;
+    }
   }
 
   // ── reads ─────────────────────────────────────────────────────────────────
@@ -251,9 +272,9 @@ export class LayerData {
 
   // ── internals ─────────────────────────────────────────────────────────────
   private schedule(): void {
-    if (this.scheduled) return;
+    if (this.scheduled || this.flushMode === 'manual') return;
     this.scheduled = true;
-    queueMicrotask(() => this.flush());
+    this.cancel = scheduleFlush(this.flushMode, () => this.flush());
   }
 
   private isClean(d: KindDirty): boolean {

@@ -3,6 +3,12 @@
  * No drawing: the left column fires `store.actions.*`; the right column prints the
  * live `view` state, the `data` (layer 'graph'), and the event stream
  * (`state:change` / `data:flush` / `data:intent`). Purely to exercise the kernel.
+ *
+ * Beyond the named-action API it also showcases the **two-physics** model from
+ * `docs/canvas-store-data-event-flow.md`: the data store's **flush trigger**
+ * ({@link FlushMode}) — how a batch of writes coalesces into **one** `data:flush`,
+ * and how `'manual'` mode stages writes until an explicit `flush()` — plus the
+ * `dataLayerId` pointer that lets a second layer **share one data source**.
  */
 
 import { useEffect, useReducer, useRef, useState, type ReactNode } from 'react';
@@ -218,6 +224,18 @@ function Playground(): ReactNode {
           <Btn onClick={() => { const id = pick(ids()); if (id) a.node.remove('graph', id); }}>remove node</Btn>
         </Section>
 
+        <Section title="data triggers (flush physics)">
+          {/* 5 writes in ONE handler → the deferred trigger coalesces them into a SINGLE data:flush (added:5). */}
+          <Btn onClick={() => { for (let i = 0; i < 5; i++) { const id = nextId(); a.node.add('graph', { id, x: rand(), y: rand(), label: id }); } }}>batch add ×5 → 1 flush</Btn>
+          {/* 'manual' stages writes (3 data:node:add intents fire) but emits NO flush until the explicit flush(). */}
+          <Btn onClick={() => {
+            graph.setFlushMode('manual');
+            for (let i = 0; i < 3; i++) { const id = nextId(); a.node.add('graph', { id, x: rand(), y: rand(), label: id }); }
+            graph.flush();                  // ← the one explicit trigger → data:flush { added: 3 }
+            graph.setFlushMode('microtask'); // restore the kernel default
+          }}>manual: stage 3 → flush</Btn>
+        </Section>
+
         <Section title="layout (data positions)">
           <Btn onClick={() => a.positions.apply('graph', graph.nodes().map((n) => ({ id: n.id, x: rand(), y: rand() })))}>run layout</Btn>
           <Btn onClick={() => a.layouts.set('force', { charge: -160 })}>set force</Btn>
@@ -228,6 +246,8 @@ function Playground(): ReactNode {
         <Section title="view — layers">
           <Btn onClick={() => a.layers.setStyle('graph', { node: { radius: radius + 2 } })}>node radius +2</Btn>
           <Btn onClick={() => a.layers.setVisible('graph', !(view.definition.layers['graph']?.visible ?? true))}>toggle visible</Btn>
+          {/* a SECOND layer that points at the SAME source via `dataLayerId` — one data, many projections. */}
+          <Btn onClick={() => a.layers.add('minimap', { type: 'minimap', dataLayerId: 'graph', scale: 0.1 })}>share source → minimap</Btn>
         </Section>
 
         <Section title="view — behaviours">
