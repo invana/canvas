@@ -44,6 +44,9 @@ importers:
       '@invana/canvas-react':
         specifier: workspace:*
         version: link:../../packages/canvas-react
+      '@invana/canvas-store':
+        specifier: workspace:*
+        version: link:../../packages/canvas-store
       '@invana/canvas-ui':
         specifier: workspace:*
         version: link:../../packages/canvas-ui

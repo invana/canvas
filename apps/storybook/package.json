@@ -14,6 +14,7 @@
     "@invana/canvas": "workspace:*",
     "@invana/canvas-designer": "workspace:*",
     "@invana/canvas-react": "workspace:*",
+    "@invana/canvas-store": "workspace:*",
     "@invana/canvas-ui": "workspace:*",
     "@invana/graph": "workspace:*",
     "@invana/styling": "^0.0.12",
