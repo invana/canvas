@@ -343,6 +343,12 @@ export class Canvas {
     if (!this._isInitialised) return;
     // Advance pixi-viewport plugins (decelerate, snap, etc.).
     this.camera.tick(deltaMs);
+    // Drive every registered kernel data source's coalesced flush once per frame —
+    // the single canvas clock (Phase 3.3). Drained BEFORE layers so a source's
+    // delta marks its layer dirty in the same tick. Sources in their own
+    // 'sync'/'frame' mode have usually already drained (flush() no-ops when nothing
+    // is pending); sources the engine has put in 'manual' commit here.
+    for (const id in this.store.data) this.store.data[id]?.flush();
     for (const layer of this.layers.byZOrder()) {
       if (!layer.visible) continue;
       if (layer.hasPending()) layer.flush();
