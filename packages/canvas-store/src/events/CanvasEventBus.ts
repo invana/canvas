@@ -1,3 +1,4 @@
+import type { LayerFlush } from '../data/LayerData';
 import { CANVAS_SOURCE, type CanvasEvent, type EventSource } from './CanvasEvent';
 import { EventEmitter, type Listener } from './EventEmitter';
 
@@ -8,9 +9,47 @@ import { EventEmitter, type Listener } from './EventEmitter';
  * touching the core.
  */
 export interface CanvasGlobalEvents {
-  /** A state-store mutation, bridged onto the bus (see `createCanvasStore`). */
+  // ── coarse aggregate channels (kernel-emitted) ──────────────────────────────
+  /** A `view`-store mutation, bridged onto the bus (see `createCanvasStore`). */
   'state:change': { action?: string; changedPaths: string[] };
+  /** A `layer` data flush (nodes/edges/groups/annotations delta), bridged onto the bus. */
+  'data:flush': { layerId: string; delta: LayerFlush };
+  /** A named data **intent** — one per data action (audit / collab), distinct from the per-frame flush. */
+  'data:intent': { action: string; layerId: string; ids: readonly string[] };
+
+  // ── scene — registry composition (engine-emitted) ───────────────────────────
+  'scene:layer:add': { id: string };
+  'scene:layer:remove': { id: string };
+  'scene:behaviour:register': { id: string };
+  'scene:behaviour:enable': { id: string };
+  'scene:behaviour:disable': { id: string };
+  'scene:layout:add': { id: string };
+  'scene:layout:remove': { id: string };
+
+  // ── input — raw user input on elements (engine-emitted; behaviours consume) ──
+  'input:node:click': { layerId: string; id: string; x: number; y: number };
+  'input:node:hover': { layerId: string; id: string | null };
+  'input:node:drag:start': { layerId: string; id: string };
+  'input:node:drag:end': { layerId: string; id: string };
+  'input:background:contextmenu': { x: number; y: number };
+
+  // ── layout — execution lifecycle (engine-emitted) ───────────────────────────
+  'layout:run:start': { id: string; layerId: string };
+  'layout:run:end': { id: string; layerId: string };
+  'layout:run:tick': { id: string; progress?: number };
+
+  // ── render / canvas — lifecycle (engine-emitted) ────────────────────────────
+  'canvas:renderer:ready': { backend: string };
+  'render:loop:tick': { dt: number };
+  'canvas:message:show': { text: string };
 }
+
+/**
+ * The granular **`<domain>:<subject>:<action>`** types (`view:layer:setStyle`,
+ * `data:node:add`, …) are open-ended — emitted via {@link CanvasEventBus.publish}
+ * (they ride on the tap, keyed by the action label) rather than enumerated here.
+ * The map above types the **finite, engine-emitted** events for `on()`/`emit()`.
+ */
 
 /** Per-tap filters. */
 export interface TapOptions {

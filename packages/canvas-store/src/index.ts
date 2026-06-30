@@ -31,6 +31,17 @@ export { defaultCanvasView, type CanvasView } from './view/CanvasView';
 
 // ── Data (state) ──────────────────────────────────────────────────────────────
 export { DataStore, type FlushEvent, type Record_ } from './data/DataStore';
+export {
+  LayerData,
+  type NodeRecord,
+  type EdgeRecord,
+  type GroupRecord,
+  type AnnotationRecord,
+  type LayerFlush,
+  type NodeDelta,
+  type KindDelta,
+  type GraphInput,
+} from './data/LayerData';
 
 // ── Events ────────────────────────────────────────────────────────────────────
 export { EventEmitter, type Listener } from './events/EventEmitter';
@@ -58,6 +69,9 @@ export {
 
 // ── History ───────────────────────────────────────────────────────────────────
 export { createHistory, type History } from './history/createHistory';
+
+// ── Actions (named, action-typed command API) ─────────────────────────────────
+export { createActions, type CanvasActions } from './actions/createActions';
 
 // ── Kernel façade ─────────────────────────────────────────────────────────────
 export {

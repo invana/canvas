@@ -21,12 +21,27 @@ describe('createCanvasStore', () => {
     expect(core.view.getState().definition.activeLayout).toBe('force');
   });
 
-  it('owns data sources lazily by id', () => {
+  it('owns layer data lazily by id', () => {
     const core = createCanvasStore();
-    const people = core.source('people');
-    people.setData([{ id: 'alice' }, { id: 'bob' }]);
-    expect(core.source('people').size).toBe(2);
+    const people = core.layer('people');
+    people.setData({ nodes: [{ id: 'alice' }, { id: 'bob' }] });
+    expect(core.layer('people').counts.nodes).toBe(2);
     expect(core.data['people']).toBe(people);
+  });
+
+  it('bridges a layer data flush onto the bus as data:flush', () => {
+    const core = createCanvasStore();
+    const seen: CanvasEvent[] = [];
+    core.events.on('data:flush', () => {
+      /* typed listener also fires */
+    });
+    core.events.tap((e) => seen.push(e));
+    core.layer('graph').addNode({ id: 'a' });
+    core.layer('graph').flush();
+    expect(seen).toHaveLength(1);
+    expect(seen[0]!.type).toBe('data:flush');
+    expect(seen[0]!.source).toEqual({ kind: 'data', id: 'graph' });
+    expect((seen[0]!.payload as { layerId: string }).layerId).toBe('graph');
   });
 
   it('bridges state changes onto the event bus tap', () => {
