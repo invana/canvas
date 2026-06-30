@@ -8,7 +8,7 @@ import { withTelemetry, type TelemetrySink } from './telemetry/withTelemetry';
 import { defaultCanvasView, type CanvasView } from './view/CanvasView';
 
 /**
- * `CanvasCore` — the renderer-free kernel, one per `Canvas`. The single hub the
+ * `CanvasStore` — the renderer-free kernel, one per `Canvas`. The single hub the
  * engine writes to *and* subscribes from:
  *
  * - {@link view} — reactive `ReactiveStore<CanvasView>` (config + interaction state).
@@ -20,7 +20,7 @@ import { defaultCanvasView, type CanvasView } from './view/CanvasView';
  * State changes are **bridged onto the bus** (`state:change`), so one `events.tap(…)`
  * sees the whole loop — input → state change → render.
  */
-export interface CanvasCore {
+export interface CanvasStore {
   /** Reactive config + interaction store. */
   readonly view: ReactiveStore<CanvasView>;
   /** Owned data sources keyed by source id. Prefer {@link source} for lazy access. */
@@ -31,15 +31,15 @@ export interface CanvasCore {
   source<R extends Record_ = Record_>(id: string): DataStore<R>;
 }
 
-export interface CreateCanvasCoreOptions {
+export interface CreateCanvasStoreOptions {
   /** Attach a telemetry sink to the view store (one event per `update`). */
   telemetry?: TelemetrySink;
   /** View-store backend. Default `'zustand'`; `'memory'` is dependency-free. */
   backend?: 'zustand' | 'memory';
 }
 
-/** Create a fresh {@link CanvasCore}. */
-export function createCanvasCore(opts: CreateCanvasCoreOptions = {}): CanvasCore {
+/** Create a fresh {@link CanvasStore}. */
+export function createCanvasStore(opts: CreateCanvasStoreOptions = {}): CanvasStore {
   const view =
     opts.backend === 'memory'
       ? createMemoryStore<CanvasView>(defaultCanvasView())

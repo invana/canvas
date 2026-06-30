@@ -3,12 +3,12 @@ import { EventEmitter, type Listener } from './EventEmitter';
 
 /**
  * The canvas-wide event map. Consumers (engine, domain) **augment** this via
- * declaration merging — `declare module '@invana/canvas-core' { interface
+ * declaration merging — `declare module '@invana/canvas-store' { interface
  * CanvasGlobalEvents { 'shape:click': … } }` — so new events are typed without
  * touching the core.
  */
 export interface CanvasGlobalEvents {
-  /** A state-store mutation, bridged onto the bus (see `createCanvasCore`). */
+  /** A state-store mutation, bridged onto the bus (see `createCanvasStore`). */
   'state:change': { action?: string; changedPaths: string[] };
 }
 

@@ -1,4 +1,4 @@
-# Canvas State — Consolidated Plan (`@invana/canvas-core`)
+# Canvas State — Consolidated Plan (`@invana/canvas-store`)
 
 > **Status: DESIGN / ROADMAP — not shipped.** The **single review doc** for the
 > reactive state layer: concepts, data model, architecture, code structure,
@@ -20,16 +20,16 @@
 
 ## 1. Goal & principles
 
-**One `CanvasState` per `Canvas`** — the single source of truth for everything a canvas
+**One `CanvasStore` per `Canvas`** — the single source of truth for everything a canvas
 shows, consumed by React **and** plain-JS/engine code with **no duplicate copies and no
 manual syncing**. The renderer is a **pure projection** of it: state changes → the affected
-projection re-renders (never the whole scene — see §7). Packaged as **`@invana/canvas-core`**,
+projection re-renders (never the whole scene — see §7). Packaged as **`@invana/canvas-store`**,
 a **renderer-free leaf** so the same state survives a renderer swap, a backend swap
 (zustand → Yjs), and powers telemetry over every change.
 
 Principles:
 
-- **One `CanvasState { view, data }`**, not separate data/positions branches; position is a
+- **One `CanvasStore { view, data }`**, not separate data/positions branches; position is a
   node field inside `data`.
 - **Renderer-agnostic.** Imports no drawing library; pixi is one adapter; camera is an
   abstract transform.
@@ -42,16 +42,16 @@ Principles:
 
 | # | Decision |
 |---|---|
-| C1 | **Dedicated `@invana/canvas-core` package, a renderer-free leaf.** Zero `@invana` deps; imports no drawing library. `@invana/canvas` / `@invana/graph` / `@invana/canvas-react` depend on it. Relaxes the CLAUDE.md "`@invana/canvas` has no `@invana` deps" rule → "…except `@invana/canvas-core`." |
+| C1 | **Dedicated `@invana/canvas-store` package, a renderer-free leaf.** Zero `@invana` deps; imports no drawing library. `@invana/canvas` / `@invana/graph` / `@invana/canvas-react` depend on it. Relaxes the CLAUDE.md "`@invana/canvas` has no `@invana` deps" rule → "…except `@invana/canvas-store`." |
 | C2 | **Renderer-agnostic.** pixi is one adapter; camera is an abstract `{x,y,zoom}`, throttled/ephemeral. |
-| C3 | **One `CanvasState { view, data }`.** `view` = how it's defined+viewed; **`data` = a keyed registry of data layers** (graph / table / geo …). **Position is a node field**; **groups are a keyed many-to-many collection** (bubble-sets / shaped containers), not `parentId`. |
+| C3 | **One `CanvasStore { view, data }`.** `view` = how it's defined+viewed; **`data` = a keyed registry of data layers** (graph / table / geo …). **Position is a node field**; **groups are a keyed many-to-many collection** (bubble-sets / shaped containers), not `parentId`. |
 | C4 | **Renderer = pure projection**, reacting at **every scale** via *targeted* re-render (§7) — never a global repaint. |
 | C5 | **`ReactiveStore<T>` port; zustand is one adapter** (`createReactiveStore.ts`, the only zustand importer, lint-enforced). Swappable to valtio/nanostores/Yjs. |
 | C6 | **Writes are declarative patches** `update(patch, action?)`; the named `action` is threaded from day one (no-op today) → powers OTel + CRDT history. |
 | C7 | **Telemetry is a port *decorator* (`withTelemetry`)**, not zustand middleware — survives the backend swap; scoped to `view`, never the data hot path. |
 | C8 | **Migration is strangler, not rewrite** (§10): store goes *under* the existing apply path; the hot render path is never reactified. |
-| C9 | **`CanvasState` owns the per-layer `DataStore`s** (D7) — data is set on `state.data[id]`; layers read/subscribe rather than owning their own store. Single source of truth for save-load/collab; enlarges the migration (`GraphLayer`/`GraphStore` ownership, §10.3). |
-| C10 | **All state manipulation goes through `CanvasState`** (`view` *and* `data`); engine renderers and React components are **pure projections that react** — no imperative side-channel. Data ingestion writes to `state.data[sourceId]` (the owned source), **not** the layer; `<GraphLayer data>` / `graphCanvas.setData` are thin sugar over that state write. |
+| C9 | **`CanvasStore` owns the per-layer `DataStore`s** (D7) — data is set on `state.data[id]`; layers read/subscribe rather than owning their own store. Single source of truth for save-load/collab; enlarges the migration (`GraphLayer`/`GraphStore` ownership, §10.3). |
+| C10 | **All state manipulation goes through `CanvasStore`** (`view` *and* `data`); engine renderers and React components are **pure projections that react** — no imperative side-channel. Data ingestion writes to `state.data[sourceId]` (the owned source), **not** the layer; `<GraphLayer data>` / `graphCanvas.setData` are thin sugar over that state write. |
 | C11 | **Collaboration backend = Yjs/Automerge CRDT** (D6) — a CRDT doc behind the `ReactiveStore` port + **Awareness** for presence; FE & `invana-backend` are peers of the same doc. Data + positions stay off the CRDT (the three-channel split, §9). |
 | C12 | **Developer API = read/update + an operations layer** (§6.1–6.3). `view.read(sel)` / `view.update(recipe\|patch, action)` / `view.batch` are the primitives; `data[id]` mutators for bulk. Built-in **named ops** (`view.layers/behaviours/layouts/selection.*`, `data.addNode/…`, domain sugar on `GraphCanvas`) + **composable user operations** sit on top, all funnelling through `update(patch, action)`. **History/undo** falls out of the patch+inverse stream (immer `produceWithPatches`; Yjs `UndoManager` under collab). |
 
@@ -59,7 +59,7 @@ Principles:
 
 ```ts
 /** One per Canvas — the single source of truth; renderer is a pure projection of it. */
-interface CanvasState {
+interface CanvasStore {
   view: CanvasView;                  // how it's defined + viewed → reactive store (immer · observable · syncable)
   data: Record<string, DataLayer>;   // KEYED data layers (graph / table / geo …) — each typed-array backed (§3.1)
 }
@@ -156,7 +156,7 @@ registry and the ER-extensibility argument in `store-owns-state-plan` §7):
 ## 4. Architecture
 
 ```
-        ┌────────────────────────────── CanvasState ──────────────────────────────┐
+        ┌────────────────────────────── CanvasStore ──────────────────────────────┐
         │  { view: ReactiveStore<CanvasView>,   data: Record<string, DataLayer> }   │  ← single handle
         └─────────────┬──────────────────────────────────────┬─────────────────────┘
                       │ reactive (port)                        │ typed-array (coarse flush)
@@ -184,8 +184,8 @@ export interface ReactiveStore<T> {
 // adapters/zustand/createReactiveStore.ts — THE only `import … from 'zustand'`
 export function createReactiveStore<T extends object>(initial: T): ReactiveStore<T> { /* immer draft stays internal */ }
 
-// CanvasState.ts — the façade
-export function createCanvasState(opts?: { telemetry?: TelemetrySink }): CanvasState {
+// CanvasStore.ts — the façade
+export function createCanvasState(opts?: { telemetry?: TelemetrySink }): CanvasStore {
   let view = createReactiveStore<CanvasView>(defaultCanvasView());
   if (opts?.telemetry) view = withTelemetry(view, opts.telemetry);
   return { view, data: {} };   // data layers registered per-id as sources are added
@@ -199,7 +199,7 @@ export function createCanvasState(opts?: { telemetry?: TelemetrySink }): CanvasS
 ## 5. Package & file structure
 
 ```
-packages/canvas-core/
+packages/canvas-store/
 ├── package.json                 # deps: zustand, immer (later yjs). NO @invana deps.
 ├── src/
 │   ├── index.ts
@@ -209,7 +209,7 @@ packages/canvas-core/
 │   ├── data/        ColumnStore.ts · DataStore.ts · DirtyBatcher.ts   (RELOCATED from canvas)
 │   ├── telemetry/   withTelemetry.ts · TelemetrySink.ts
 │   ├── history/     createHistory.ts (inverse-patch stack via produceWithPatches; Yjs UndoManager adapter)
-│   └── CanvasState.ts
+│   └── CanvasStore.ts
 └── tests/           port-swap proof · deepMerge · telemetry · history · ColumnStore
 ```
 
@@ -221,8 +221,8 @@ domain subclass of `DataStore` (canvas-state stays domain-free). The **named ope
 
 ## 6. How it's consumed
 
-- **Engine.** `Canvas` holds a `CanvasState`. `Canvas.update(patch, action)` → `state.view.update`
-  + the existing `setOptions` fan-out; `Canvas.get()` → `state.view.getState()`. **`CanvasState`
+- **Engine.** `Canvas` holds a `CanvasStore`. `Canvas.update(patch, action)` → `state.view.update`
+  + the existing `setOptions` fan-out; `Canvas.get()` → `state.view.getState()`. **`CanvasStore`
   *owns* the per-layer `DataStore`s** (D7): data is set on `state.data[id]`, and a layer reads /
   subscribes to `state.data[dataLayerId]` rather than owning its own store.
 - **React.** `useStore(state.view, selector)`; editors write `state.view.update(patch, action)`.
@@ -231,7 +231,7 @@ domain subclass of `DataStore` (canvas-state stays domain-free). The **named ope
 
 ### 6.1 Developer API — read / update (the primitive)
 
-The developer surface is **read the state / update the state** over the typed `CanvasState` — no
+The developer surface is **read the state / update the state** over the typed `CanvasStore` — no
 imperative side-channel (C10). Two stores, two write physics:
 
 - **`view`** (reactive, small): `view.read(selector)` · `view.update(recipe | patch, action)` ·
@@ -272,7 +272,7 @@ const focusTeam = (g, team) => g.batch('focus-team', () => {
 });
 ```
 
-Built-in ops live on the **domain facade** (`GraphCanvas`, `@invana/graph`); `@invana/canvas-core`
+Built-in ops live on the **domain facade** (`GraphCanvas`, `@invana/graph`); `@invana/canvas-store`
 stays the low-level port. Custom ops are just functions — no registration, no framework.
 
 ### 6.3 History / undo — falls out of the patch stream
@@ -462,7 +462,7 @@ notification flowing, migrate consumers one at a time, then delete the old path.
 - **M4 — Telemetry decorator** (additive — everything already flows through `update`).
 - **M5 — Yjs adapter** (swap the adapter; same port + Awareness).
 - **Data track (parallel, M0–M1):** **relocate** `ColumnStore` + `DirtyBatcher` into
-  `canvas-state/data` (D1); `@invana/canvas` re-exports for back-compat. **`CanvasState` *owns* the
+  `canvas-state/data` (D1); `@invana/canvas` re-exports for back-compat. **`CanvasStore` *owns* the
   per-layer `DataStore`s** (D7): data is set on `state.data[id]` and `GraphLayer` reads/subscribes to
   it instead of owning a `GraphStore`; `GraphStore` becomes a `DataStore` subclass. **Positions never
   enter the reactive store.**
@@ -475,15 +475,15 @@ notification flowing, migrate consumers one at a time, then delete the old path.
 | `packages/canvas/src/state/ColumnStore.ts`, `DirtyBatcher.ts` | relocate → canvas-state; re-export shim | relocate | Low — re-export keeps imports valid |
 | `packages/canvas/src/state/Store.ts` (`createLayerStore`) | superseded by port + zustand adapter | replace | Low — one zustand wrapper, not two |
 | `packages/canvas/src/engine/CanvasConfig.ts` (`deepMerge`/`configurable`) | move/share patch helpers to canvas-state | relocate | Low |
-| `packages/graph` `GraphStore` | `DataStore` subclass **owned by `CanvasState.data[id]`** (D7), not by the layer; `flush` unchanged | **ownership move** | **Med** — data lifecycle shifts to CanvasState |
-| `packages/graph` `GraphLayer` + `<GraphLayer data>` | reads/subscribes `CanvasState.data[dataLayerId]` instead of owning a store; `setData`/`data` prop routes to the owned store | refactor | Med — data-flow change; targeted render preserved |
+| `packages/graph` `GraphStore` | `DataStore` subclass **owned by `CanvasStore.data[id]`** (D7), not by the layer; `flush` unchanged | **ownership move** | **Med** — data lifecycle shifts to CanvasStore |
+| `packages/graph` `GraphLayer` + `<GraphLayer data>` | reads/subscribes `CanvasStore.data[dataLayerId]` instead of owning a store; `setData`/`data` prop routes to the owned store | refactor | Med — data-flow change; targeted render preserved |
 | `packages/graph` behaviours (`ClickSelect`/`Hover`/…) | write interaction via `state.view.update` (M2, D3) | refactor | Med — preserve targeted render |
 | `packages/canvas-react` `useGraphCanvasOptions` | replace copy with `useStore` | replace | Low — additive `useStore` first, then swap |
 | `packages/canvas-react` `useGraphCanvasUpdate` | unchanged signature; routes to `view.update` | transparent | Low |
-| New `@invana/canvas-core` package | created (port, adapters, view, data, telemetry) | new | Low |
+| New `@invana/canvas-store` package | created (port, adapters, view, data, telemetry) | new | Low |
 | `CLAUDE.md` dependency layering | add canvas-state leaf; relax "no @invana deps" | docs | Low |
 
-**Packages touched:** new `@invana/canvas-core`; `@invana/canvas` (Canvas.ts + relocations);
+**Packages touched:** new `@invana/canvas-store`; `@invana/canvas` (Canvas.ts + relocations);
 `@invana/graph` (GraphStore subclass + behaviour writes, M2); `@invana/canvas-react` (`useStore`).
 
 ### 10.4 What is explicitly preserved (no regression)
@@ -518,7 +518,7 @@ in the loop.**
 
 **Decided (this session):**
 
-- **D1 — relocate `ColumnStore`/`DirtyBatcher`** into `@invana/canvas-core` (leaf can't depend back
+- **D1 — relocate `ColumnStore`/`DirtyBatcher`** into `@invana/canvas-store` (leaf can't depend back
   on canvas; this is the clean way for it to own the data hot path). `@invana/canvas` re-exports.
 - **D2 — supersede `Store.ts`/`createLayerStore`** with the port + zustand adapter (one wrapper).
 - **D3 — `view.interaction` *owns* selection/hover/states** (M2 migrates `ClickSelectBehaviour`
@@ -526,7 +526,7 @@ in the loop.**
 - **D4 — telemetry emits structured *events*** (`{action, changedPaths, patch, ts, actor?}`); the
   app's OTel adapter maps to spans/metrics. Engine stays exporter-agnostic.
 - **D5 — `useStore` lives in `canvas-react`** (canvas-state stays framework-agnostic).
-- **D7 — `CanvasState` *owns* the per-layer `DataStore`s** (not register/reference). Data is set on
+- **D7 — `CanvasStore` *owns* the per-layer `DataStore`s** (not register/reference). Data is set on
   `state.data[id]`; layers read/subscribe. Cleaner single source of truth; **larger blast radius** —
   `GraphLayer`/`<GraphLayer data>` and `GraphStore` ownership change (see §10.3).
 - **D8 — group geometry** recomputes on layout-`end`/drag-settle (throttled for bubble-sets); the
@@ -534,7 +534,7 @@ in the loop.**
 - **D9 — group *membership* syncs** (authored, in the doc); group *geometry* stays derived/local.
 - **D6 — collaboration backend = Yjs/Automerge CRDT** — committed (was deferred). Behind the port +
   Awareness; built through M0–M4, swapped in at M5 (§9).
-- **D10 — all state manipulation goes through `CanvasState`** (C10); renderers/React are pure
+- **D10 — all state manipulation goes through `CanvasStore`** (C10); renderers/React are pure
   projections. Data ingestion writes to `state.data[sourceId]`; existing entry points are sugar.
 - **D11 — the selection *set* lives in `view.interaction.selection`** (not just visual state);
   `ClickSelectBehaviour` becomes a thin writer. Supersedes `store-owns-state-plan` D4 ("visual only").

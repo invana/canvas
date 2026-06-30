@@ -120,12 +120,12 @@ used in tests proves the port is real and the swap is safe.
 
 The "single canvas-state" is the **store**, not necessarily a separate package. Build it as a
 `state/` module **inside `@invana/canvas`** (where `CanvasConfig` + zustand already live; matches
-`unified-canvas-options-plan.md` Q1). Extract to `@invana/canvas-core` **only if** a second
+`unified-canvas-options-plan.md` Q1). Extract to `@invana/canvas-store` **only if** a second
 consumer needs it standalone (e.g. the collaboration server). The consume-API (`useStore` /
 `subscribe`) is identical either way, so extracting later is a move, not a rewrite.
 
 ## Open decisions
 
 1. **Interaction-state ownership** (phase 3): store owns it vs. mirrors `GraphStore` presence.
-2. **Packaging**: `state/` module in `@invana/canvas` now (recommended) vs. `@invana/canvas-core` package.
+2. **Packaging**: `state/` module in `@invana/canvas` now (recommended) vs. `@invana/canvas-store` package.
 3. **Selector/equality API surface** on the port — keep it minimal and adapter-neutral.

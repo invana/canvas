@@ -29,9 +29,13 @@ working design-of-record documents. Day-to-day API/concept docs live in
 - [store-owns-state-plan.md](./store-owns-state-plan.md) — make `GraphStore` the single owner of interaction state.
 - [store-owns-state-pseudocode.md](./store-owns-state-pseudocode.md) — companion pseudocode for the above.
 - [unified-canvas-options-plan.md](./unified-canvas-options-plan.md) — one declarative, id-addressed `GraphCanvas` options object.
-- [canvas-state-plan.md](./canvas-state-plan.md) — **the consolidated review doc** for `@invana/canvas-core`: concepts + data model (`CanvasState { view, data }`), architecture + code/file structure, performance (the "state → targeted render" wiring), telemetry, collaboration, and the **migration from the existing engine + its impact/blast radius**. Sequences the four state docs below at the package level.
+- [canvas-state-plan.md](./canvas-state-plan.md) — **the consolidated review doc** for `@invana/canvas-store`: concepts + data model (`CanvasStore { view, data }`), architecture + code/file structure, performance (the "state → targeted render" wiring), telemetry, collaboration, and the **migration from the existing engine + its impact/blast radius**. Sequences the four state docs below at the package level.
 - [reactive-state-store-plan.md](./reactive-state-store-plan.md) — single reactive store (zustand behind a transferable `ReactiveStore` port) for config + interaction state; no UI copies; telemetry decorator; CRDT-ready.
 - [collaborative-state-plan.md](./collaborative-state-plan.md) — near-realtime, multi-user, offline collaboration on top of that store (CRDT doc + presence, PG/Redis, OTel).
+
+## Architecture (3-package direction)
+
+- [canvas-3-package-architecture.md](./canvas-3-package-architecture.md) — **draft**: target split into `canvas-store` (state + events) / `canvas` (orchestrator) / `canvas-pixijs` (renderer), with one end-to-end example (state + events + telemetry + history + rendering + layout updates) and the phased path (`IRenderer` abstraction gated to Phase 3).
 
 ## React / UI / apps
 

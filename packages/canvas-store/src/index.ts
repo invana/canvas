@@ -1,5 +1,5 @@
 /**
- * `@invana/canvas-core` — the renderer-free kernel: **state** (the `ReactiveStore`
+ * `@invana/canvas-store` — the renderer-free kernel: **state** (the `ReactiveStore`
  * port + view/data stores), **events** (the canvas-wide bus + tap), **telemetry**,
  * and **history**. The engine (`@invana/canvas`) is a pixi renderer that writes to
  * this kernel and subscribes to it to render.
@@ -61,7 +61,7 @@ export { createHistory, type History } from './history/createHistory';
 
 // ── Kernel façade ─────────────────────────────────────────────────────────────
 export {
-  createCanvasCore,
-  type CanvasCore,
-  type CreateCanvasCoreOptions,
-} from './CanvasCore';
+  createCanvasStore,
+  type CanvasStore,
+  type CreateCanvasStoreOptions,
+} from './CanvasStore';

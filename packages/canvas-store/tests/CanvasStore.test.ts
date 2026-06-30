@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
-import { createCanvasCore } from '../src/CanvasCore';
+import { createCanvasStore } from '../src/CanvasStore';
 import type { CanvasEvent } from '../src/events/CanvasEvent';
 import type { TelemetryEvent } from '../src/telemetry/withTelemetry';
 
-describe('createCanvasCore', () => {
+describe('createCanvasStore', () => {
   it('wires view + data + events', () => {
-    const core = createCanvasCore();
+    const core = createCanvasStore();
     expect(core.view.getState().interaction.viewMode).toBe('select');
     expect(core.events).toBeDefined();
     expect(core.data).toEqual({});
   });
 
   it('update reads like a mutation on the view', () => {
-    const core = createCanvasCore();
+    const core = createCanvasStore();
     core.view.update((s) => {
       s.definition.activeLayout = 'force';
       s.definition.layouts['force'] = { charge: -160 };
@@ -22,7 +22,7 @@ describe('createCanvasCore', () => {
   });
 
   it('owns data sources lazily by id', () => {
-    const core = createCanvasCore();
+    const core = createCanvasStore();
     const people = core.source('people');
     people.setData([{ id: 'alice' }, { id: 'bob' }]);
     expect(core.source('people').size).toBe(2);
@@ -30,7 +30,7 @@ describe('createCanvasCore', () => {
   });
 
   it('bridges state changes onto the event bus tap', () => {
-    const core = createCanvasCore();
+    const core = createCanvasStore();
     const seen: CanvasEvent[] = [];
     core.events.tap((e) => seen.push(e));
     core.view.update((s) => {
@@ -44,7 +44,7 @@ describe('createCanvasCore', () => {
 
   it('telemetry sink observes view updates', () => {
     const events: TelemetryEvent[] = [];
-    const core = createCanvasCore({ telemetry: { emit: (e) => events.push(e) } });
+    const core = createCanvasStore({ telemetry: { emit: (e) => events.push(e) } });
     core.view.update((s) => {
       s.interaction.selection = new Set(['alice']);
     }, 'select.set');
