@@ -1,4 +1,5 @@
 import type { LayerFlush } from '../data/LayerData';
+import type { ResolvedTheme } from '../theme/types';
 import { CANVAS_SOURCE, type CanvasEvent, type EventSource } from './CanvasEvent';
 import { EventEmitter, type Listener } from './EventEmitter';
 
@@ -42,6 +43,9 @@ export interface CanvasGlobalEvents {
   'canvas:renderer:ready': { backend: string };
   'render:loop:tick': { dt: number };
   'canvas:message:show': { text: string };
+
+  // ── theme — resolved-theme broadcast (CanvasThemeState.set) ──────────────────
+  'theme:change': ResolvedTheme;
 }
 
 /**

@@ -26,14 +26,18 @@ export { createStoreFromCell } from './port/store-core';
 export { createReactiveStore } from './adapters/zustand/createReactiveStore';
 export { createMemoryStore } from './port/createMemoryStore';
 
+// ── Geometry vocabulary ─────────────────────────────────────────────────────────
+export type { Point, Vec2, Size, Rect, CameraTransform } from './geom/types';
+
 // ── View (state) ──────────────────────────────────────────────────────────────
-export { defaultCanvasView, type CanvasView } from './view/CanvasView';
+export { defaultCanvasView, type CanvasView, type CanvasSceneOptions } from './view/CanvasView';
 
 // ── Data (state) ──────────────────────────────────────────────────────────────
 export { DataStore, type FlushEvent, type Record_ } from './data/DataStore';
 export { scheduleFlush, type FlushMode } from './data/flush';
 export {
   LayerData,
+  NODE_FLAG,
   type NodeRecord,
   type EdgeRecord,
   type GroupRecord,
@@ -42,7 +46,21 @@ export {
   type NodeDelta,
   type KindDelta,
   type GraphInput,
+  type PosSchema,
+  type QueryStatus,
+  type IntentLogEntry,
 } from './data/LayerData';
+// Typed-array hot lane + dirty batching (relocated from the engine — decision D1).
+export {
+  ColumnStore,
+  type ColumnType,
+  type ColumnSchema,
+  type ColumnArray,
+  type ColumnValue,
+  type RowOf,
+  type ColumnStoreOptions,
+} from './data/ColumnStore';
+export { DirtyBatcher, type DirtySnapshot } from './data/DirtyBatcher';
 
 // ── Events ────────────────────────────────────────────────────────────────────
 export { EventEmitter, type Listener } from './events/EventEmitter';
@@ -59,6 +77,10 @@ export {
   type TapOptions,
 } from './events/CanvasEventBus';
 export { SourceEmitter } from './events/SourceEmitter';
+
+// ── Theme (resolved-theme state) ────────────────────────────────────────────────
+export type { ResolvedTheme, ThemeState, ThemeMode, ThemeKind } from './theme/types';
+export { CanvasThemeState } from './theme/CanvasThemeState';
 
 // ── Telemetry ─────────────────────────────────────────────────────────────────
 export {

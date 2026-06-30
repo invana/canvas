@@ -6,6 +6,7 @@ import { changedPaths } from './port/patch';
 import type { ReactiveStore } from './port/types';
 import { LayerData } from './data/LayerData';
 import { withTelemetry, type TelemetrySink } from './telemetry/withTelemetry';
+import { CanvasThemeState } from './theme/CanvasThemeState';
 import { defaultCanvasView, type CanvasView } from './view/CanvasView';
 
 /**
@@ -28,6 +29,8 @@ export interface CanvasStore {
   readonly data: Record<string, LayerData>;
   /** Canvas-wide event bus + tap channel (state:change + data:flush). */
   readonly events: CanvasEventBus;
+  /** Resolved-theme channel (`theme.current()` / `theme.set(...)` → `theme:change`). */
+  readonly theme: CanvasThemeState;
   /** Get (lazily creating) the {@link LayerData} for layer `id`; its flush is bridged onto {@link events}. */
   layer(id: string): LayerData;
   /** Named, action-typed command API (`actions.layers.setStyle`, `actions.camera.zoom`, …). */
@@ -49,6 +52,7 @@ export function createCanvasStore(opts: CreateCanvasStoreOptions = {}): CanvasSt
       : createReactiveStore<CanvasView>(defaultCanvasView());
 
   const events = new CanvasEventBus();
+  const theme = new CanvasThemeState(events);
 
   // VIEW mutations → bus. Always the coarse `state:change` (for "anything changed"
   // subscribers), PLUS — when the action is a taxonomy type (`<domain>:<subject>:<action>`,
@@ -78,5 +82,5 @@ export function createCanvasStore(opts: CreateCanvasStoreOptions = {}): CanvasSt
 
   const actions = createActions(view, layer, events);
 
-  return { view, data, events, layer, actions };
+  return { view, data, events, theme, layer, actions };
 }

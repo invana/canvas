@@ -1,7 +1,7 @@
 import type { LayerData, NodeRecord, EdgeRecord, GroupRecord, AnnotationRecord } from '../data/LayerData';
 import type { CanvasEventBus } from '../events/CanvasEventBus';
 import type { ReactiveStore } from '../port/types';
-import type { CanvasView } from '../view/CanvasView';
+import type { CanvasSceneOptions, CanvasView } from '../view/CanvasView';
 
 /** Loose option/patch bag for the view's per-instance config. */
 type Bag = Record<string, unknown>;
@@ -196,6 +196,52 @@ export function createActions(
     // ── VIEW · theme ──────────────────────────────────────────────────────────
     theme: {
       set: (patch: Bag) => v('view:theme:set', (s) => void (s.definition.theme = { ...s.definition.theme, ...patch })),
+    },
+
+    // ── VIEW · scene (canvas-level definition) ────────────────────────────────
+    scene: {
+      set: (patch: Partial<CanvasSceneOptions>) =>
+        v('view:scene:set', (s) => void (s.definition.canvas = { ...s.definition.canvas, ...patch })),
+      setBackground: (backgroundColor: number) =>
+        v('view:scene:setBackground', (s) => void (s.definition.canvas = { ...s.definition.canvas, backgroundColor })),
+      setZoomLimits: (min: number, max: number) =>
+        v('view:scene:setZoomLimits', (s) => void (s.definition.canvas = { ...s.definition.canvas, zoom: { min, max } })),
+    },
+
+    // ── RUNTIME · layout run status (observable, NOT synced) ───────────────────
+    layoutStatus: {
+      begin: (id: string, animate = false) =>
+        v('view:layout:status:begin', (s) => void (s.runtime.layout = { running: true, activeId: id, animate, progress: animate ? 0 : null })),
+      progress: (progress: number) =>
+        v('view:layout:status:progress', (s) => void (s.runtime.layout = { ...s.runtime.layout, progress })),
+      end: () =>
+        v('view:layout:status:end', (s) => void (s.runtime.layout = { ...s.runtime.layout, running: false, progress: null })),
+    },
+
+    // ── RUNTIME · transient overlay message ───────────────────────────────────
+    message: {
+      show: (text: string) => v('view:message:show', (s) => void (s.runtime.message = text)),
+      clear: () => v('view:message:clear', (s) => void (s.runtime.message = null)),
+    },
+
+    // ── VIEW · focus (highlight-neighbourhood; O(1) set + mode — §7.1B) ────────
+    focus: {
+      set: (ids: Iterable<string>, dim = true) =>
+        v('view:focus:set', (s) => void (s.interaction.focus = { ids: new Set(ids), dim })),
+      clear: () => v('view:focus:clear', (s) => void (s.interaction.focus = null)),
+    },
+
+    // ── VIEW · transient pins (drag/resize gesture locks; NOT data `pinned`) ───
+    transientPins: {
+      add: (ids: Iterable<string>) =>
+        v('view:transientPins:add', (s) => void (s.interaction.transientPins = new Set([...s.interaction.transientPins, ...ids]))),
+      remove: (ids: Iterable<string>) =>
+        v('view:transientPins:remove', (s) => {
+          const next = new Set(s.interaction.transientPins);
+          for (const id of ids) next.delete(id);
+          s.interaction.transientPins = next;
+        }),
+      clear: () => v('view:transientPins:clear', (s) => void (s.interaction.transientPins = new Set())),
     },
   };
 }

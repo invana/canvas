@@ -1,15 +1,27 @@
+import type { CameraTransform, Rect } from '../geom/types';
+
 /**
- * `CanvasView` — the reactive, observable, syncable half of `CanvasState`: how a
- * visualisation is **defined** and **viewed**. Small + human-rate → it lives on a
- * {@link ReactiveStore}. Bulk data (nodes/edges/positions) is the **other** half
- * (`CanvasState.data`, typed-array, never reactive).
+ * `CanvasView` — the reactive, observable, syncable half of `CanvasStore`: how a
+ * visualisation is **defined**, **viewed**, and its small transient **runtime**
+ * status. Small + human-rate → it lives on a {@link ReactiveStore}. Bulk data
+ * (nodes/edges/positions) is the **other** half (`CanvasStore.data`, typed-array,
+ * never reactive).
+ *
+ * Three compartments, three sync physics (see `docs/canvas-state-plan.md` §9):
+ * - **`definition`** — "what it IS": persisted, converges (a CRDT doc later).
+ * - **`interaction`** — "the live view": ephemeral / per-user (Awareness later).
+ * - **`runtime`** — small observable transient status (layout run, message):
+ *   reactive so UIs can react, but **never synced**.
  *
  * Per-instance option bags are intentionally loose (`Record<string, unknown>`) at
- * this layer — the engine and the schema-driven editors give them concrete shape.
+ * this layer — the engine and the schema-driven editors give them concrete shape,
+ * and the kernel stays domain-free (it treats element `style` as opaque).
  */
 export interface CanvasView {
   /** "What the visualisation IS" — persisted, converged (a CRDT doc later). */
   definition: {
+    /** Canvas/scene-level config (background, zoom limits, world bounds, …). */
+    canvas: CanvasSceneOptions;
     /** Layer options keyed by instance id (a rendering layer binds a data source). */
     layers: Record<string, Record<string, unknown>>;
     /** Behaviour options keyed by instance id. `enabled` is explicit (rule 7). */
@@ -20,7 +32,7 @@ export interface CanvasView {
     activeLayout: string | null;
     /** Authored node/edge templates (designer output). */
     templates: unknown[];
-    /** Theme state (mode + family + accent). */
+    /** Theme **config** (registry + active family + mode + accent). The *resolved* theme is derived. */
     theme: Record<string, unknown>;
   };
   /** "The live view onto it" — mostly ephemeral / per-user (Awareness later). */
@@ -29,19 +41,68 @@ export interface CanvasView {
     selection: ReadonlySet<string>;
     /** Hovered element id, or `null`. */
     hover: string | null;
-    /** Visual state sets (highlighted / context-open / …) keyed by state name. */
+    /** Visual state sets (highlighted / context-open / …) keyed by state name (presence overlay). */
     states: Record<string, ReadonlySet<string>>;
     /** Abstract camera transform — renderer-agnostic; throttled/ephemeral. */
-    camera: { x: number; y: number; zoom: number };
+    camera: CameraTransform;
+    /**
+     * Focal-emphasis: the highlight set + whether the rest is dimmed. O(1) to set;
+     * "muted" is a render-time derivation (`dim && !ids.has(id)`), not a per-node
+     * write (see `canvas-state-plan.md` §7.1B). `null` when no focus is active.
+     */
+    focus: { ids: ReadonlySet<string>; dim: boolean } | null;
+    /**
+     * Nodes transiently locked during a drag/resize gesture — held against the
+     * layout for the gesture's duration. **Distinct from data `pinned`** (the
+     * permanent, synced user flag); these are ephemeral and never synced.
+     */
+    transientPins: ReadonlySet<string>;
     /** Active interaction mode. */
     viewMode: string;
   };
+  /** Small observable transient status — reactive (UIs react) but **never synced**. */
+  runtime: {
+    /** Layout run status — drives spinners / a stop control. */
+    layout: {
+      running: boolean;
+      /** The layout id currently executing, or `null`. */
+      activeId: string | null;
+      /** Whether the run animates its settle (force sim) vs jumps to final positions. */
+      animate: boolean;
+      /** 0..1 progress when known (force `alpha`); `null` for one-shot / unknown. */
+      progress: number | null;
+    };
+    /** Transient overlay/status message, or `null`. */
+    message: string | null;
+  };
+}
+
+/**
+ * Canvas/scene-level configuration — the settings that sit *above* individual
+ * layers/behaviours/layouts. Renderer-init options (`preference`, `antialias`,
+ * `resolution`, …) are deliberately **not** here: those belong to the renderer
+ * adapter, not the syncable definition.
+ */
+export interface CanvasSceneOptions {
+  /** Scene background colour (`0xRRGGBB`). */
+  backgroundColor?: number;
+  /** Suppress the browser's native context menu over the canvas. */
+  suppressBrowserContextMenu?: boolean;
+  /** Zoom clamp for the abstract camera. */
+  zoom: { min: number; max: number };
+  /** Initial camera transform applied on load. */
+  initialCamera?: CameraTransform;
+  /** Optional world/scene bounds (for fit-on-load / clamping), or `null`. */
+  worldBounds?: Rect | null;
+  /** Default interaction mode the view starts in. */
+  defaultViewMode?: string;
 }
 
 /** The empty-but-valid initial {@link CanvasView}. */
 export function defaultCanvasView(): CanvasView {
   return {
     definition: {
+      canvas: { zoom: { min: 0.01, max: 100 } },
       layers: {},
       behaviours: {},
       layouts: {},
@@ -54,7 +115,13 @@ export function defaultCanvasView(): CanvasView {
       hover: null,
       states: {},
       camera: { x: 0, y: 0, zoom: 1 },
+      focus: null,
+      transientPins: new Set<string>(),
       viewMode: 'select',
+    },
+    runtime: {
+      layout: { running: false, activeId: null, animate: false, progress: null },
+      message: null,
     },
   };
 }
