@@ -35,6 +35,7 @@ working design-of-record documents. Day-to-day API/concept docs live in
 
 ## Architecture (3-package direction)
 
+- [event-taxonomy.md](./event-taxonomy.md) — canonical event catalogue + the `<domain>:<subject>:<action>` bus naming scheme (telemetry / realtime / query), and the **state-ownership migration map** that moves all state + events out of the engine into `canvas-store`.
 - [canvas-3-package-architecture.md](./canvas-3-package-architecture.md) — **draft**: target split into `canvas-store` (state + events) / `canvas` (orchestrator) / `canvas-pixijs` (renderer), with one end-to-end example (state + events + telemetry + history + rendering + layout updates) and the phased path (`IRenderer` abstraction gated to Phase 3).
 
 ## React / UI / apps

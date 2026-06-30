@@ -53,7 +53,7 @@ Principles:
 | C9 | **`CanvasStore` owns the per-layer `DataStore`s** (D7) — data is set on `state.data[id]`; layers read/subscribe rather than owning their own store. Single source of truth for save-load/collab; enlarges the migration (`GraphLayer`/`GraphStore` ownership, §10.3). |
 | C10 | **All state manipulation goes through `CanvasStore`** (`view` *and* `data`); engine renderers and React components are **pure projections that react** — no imperative side-channel. Data ingestion writes to `state.data[sourceId]` (the owned source), **not** the layer; `<GraphLayer data>` / `graphCanvas.setData` are thin sugar over that state write. |
 | C11 | **Collaboration backend = Yjs/Automerge CRDT** (D6) — a CRDT doc behind the `ReactiveStore` port + **Awareness** for presence; FE & `invana-backend` are peers of the same doc. Data + positions stay off the CRDT (the three-channel split, §9). |
-| C12 | **Developer API = read/update + an operations layer** (§6.1–6.3). `view.read(sel)` / `view.update(recipe\|patch, action)` / `view.batch` are the primitives; `data[id]` mutators for bulk. Built-in **named ops** (`view.layers/behaviours/layouts/selection.*`, `data.addNode/…`, domain sugar on `GraphCanvas`) + **composable user operations** sit on top, all funnelling through `update(patch, action)`. **History/undo** falls out of the patch+inverse stream (immer `produceWithPatches`; Yjs `UndoManager` under collab). |
+| C12 | **Developer API = read/update primitive + a named action layer** (§6.1–6.3). `view.read(sel)` / `view.update(recipe\|patch, action)` / `view.batch` are the primitives; **`store.actions.*`** are the shipped named commands on the kernel (`createActions`): view commands (`layers/behaviours/layouts/camera/selection/templates/theme`) each bake in an action label; data commands (`node/edge/group/annotation/positions`) proxy to `store.layer(id)` **and emit a `data:intent`**. **History/undo** falls out of the patch+inverse stream (immer `produceWithPatches`; Yjs `UndoManager` under collab). |
 
 ## 3. Data model
 
@@ -201,23 +201,26 @@ export function createCanvasState(opts?: { telemetry?: TelemetrySink }): CanvasS
 ```
 packages/canvas-store/
 ├── package.json                 # deps: zustand, immer (later yjs). NO @invana deps.
-├── src/
+├── src/                          # ✅ BUILT (this is the real tree)
 │   ├── index.ts
-│   ├── port/        ReactiveStore.ts · select.ts · createMapStore.ts (test adapter)
-│   ├── adapters/    zustand/createReactiveStore.ts · (later) yjs/
-│   ├── view/        CanvasView.ts · createViewStore.ts · patch.ts (deepMerge, relocated)
-│   ├── data/        ColumnStore.ts · DataStore.ts · DirtyBatcher.ts   (RELOCATED from canvas)
-│   ├── telemetry/   withTelemetry.ts · TelemetrySink.ts
-│   ├── history/     createHistory.ts (inverse-patch stack via produceWithPatches; Yjs UndoManager adapter)
-│   └── CanvasStore.ts
-└── tests/           port-swap proof · deepMerge · telemetry · history · ColumnStore
+│   ├── port/        types.ts (ReactiveStore) · store-core.ts · patch.ts · select.ts · createMemoryStore.ts
+│   ├── adapters/    zustand/createReactiveStore.ts   (the only zustand importer; later yjs/)
+│   ├── view/        CanvasView.ts (defaultCanvasView)
+│   ├── data/        DataStore.ts (generic) · LayerData.ts (graph: nodes/edges/groups/annotations + bulk positions)
+│   ├── events/      EventEmitter.ts · CanvasEvent.ts · CanvasEventBus.ts (tap) · SourceEmitter.ts
+│   ├── telemetry/   withTelemetry.ts (+ TelemetrySink)
+│   ├── history/     createHistory.ts (inverse-patch via produceWithPatches; Yjs UndoManager later)
+│   ├── actions/     createActions.ts (named action API → store.actions.*)
+│   └── CanvasStore.ts            # createCanvasStore() → { view, data, events, layer(id), actions }
+└── tests/           port-parity · select · patch · events · telemetry · history · LayerData · actions · features · end-to-end
 ```
+*(`ColumnStore`/`DirtyBatcher` are the later typed-array backing for `LayerData`'s hot path — D1 relocation, not built yet.)*
 
 React bindings stay **out** (framework-agnostic core). `useStore(store, selector)` lives in
-`@invana/canvas-react` via `useSyncExternalStore`. `GraphStore` stays in `@invana/graph` as a
-domain subclass of `DataStore` (canvas-state stays domain-free). The **named operations** (§6.2 —
-`view.layers/behaviours/layouts/selection.*`, `data.addNode/…`) are **domain sugar on `GraphCanvas`**
-(`@invana/graph`); canvas-state ships only the `read`/`update`/`batch` primitive + generic `history`.
+`@invana/canvas-react` via `useSyncExternalStore`. `GraphStore`/domain data stays in `@invana/graph`
+(canvas-store stays domain-free). The **named action API** (§6.2 — `store.actions.*`) ships **on the
+kernel** (`src/actions/createActions.ts`): generic view + data commands with action labels. Domain
+packages can add typed sugar (e.g. `createNodeTemplate`) on top, but the base commands live here.
 
 ## 6. How it's consumed
 
@@ -248,18 +251,27 @@ view.update(s => { s.layouts.force.charge = -300; }, 'force.charge');  // UPDATE
 data['people'].addNode({ id: 'dave', team: 'eng' });                  // UPDATE data (store mutator)
 ```
 
-### 6.2 Operations — built-in + your reusable ones
+### 6.2 Actions — the named, action-typed command API (built: `store.actions`)
 
-`read` / `update` / `batch` are the **primitive**; **operations** are thin named functions over them.
-Built-in namespaced ops ship; developers compose their own — all funnel through `update(patch,
-action)`, so each names its action (meaningful telemetry / CRDT / history label).
+`read` / `update` / `batch` are the **primitive**; **`store.actions.*`** are the named commands over
+them — **shipped on the kernel** (`createActions`), not just domain sugar. Each view command bakes in
+its **action label**, so telemetry / history / CRDT read as intent; data commands proxy to the layer
+**and emit a `data:intent`** record (one per action, audit/collab). Developers compose their own ops
+on top.
 
 ```ts
-// built-in, namespaced (one-liners over the primitive)
-view.layers('bg').update({ color: 0x0f172a });   view.layers.set('graph', { type: GraphLayer, source: 'people' });
-view.behaviours('hover').enable();               view.layouts('force').tune({ charge: -300 }).run();
-view.selection.set(['alice', 'bob']);
-data.addNode('people', { id: 'dave' });          data.addEdge('people', { source: 'carol', target: 'dave' });
+// VIEW commands — each carries its action label automatically:
+store.actions.layers.setStyle('graph', { node: { radius: 8 } });   // 'layer.setStyle'
+store.actions.behaviours.enable('hover');                          // 'behaviour.enable'
+store.actions.layouts.tune('force', { charge: -300 });             // 'layout.tune'
+store.actions.layouts.run('force');                                // 'layout.run'
+store.actions.camera.zoom(1.5);   store.actions.camera.pan(10, 0); // 'camera.zoom' / 'camera.pan'
+store.actions.selection.set(['alice', 'bob']);                     // 'selection.set'
+store.actions.templates.create({ id: 't1', label: 'Card' });       // 'template.create'
+
+// DATA commands — proxy to store.layer(l) + emit a 'data:intent' record:
+store.actions.node.add('people', { id: 'dave' });
+store.actions.positions.apply('people', layoutResult);             // bulk layout output
 
 // YOUR reusable op — a plain function
 const addPerson = (g, id, team) => g.data.addNode('people', { id, team });
