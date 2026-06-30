@@ -53,6 +53,13 @@ export {
   type RowOf,
   type ColumnStoreOptions,
   type DirtySnapshot,
+  // Data-source contract + flush types — so domain stores (e.g. `@invana/graph`'s
+  // `GraphStore`) can `implements DataSource` and register via `CanvasStore.setSource` (D13).
+  type DataSource,
+  type FlushMode,
+  type LayerFlush,
+  type NodeDelta,
+  type KindDelta,
 } from '@invana/canvas-store';
 
 // ─── Camera ─────────────────────────────────────────────────────────────

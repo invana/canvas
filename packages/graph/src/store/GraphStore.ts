@@ -12,7 +12,7 @@
  */
 
 import { ColumnStore, SourceEmitter } from '@invana/canvas';
-import type { CanvasEventBus } from '@invana/canvas';
+import type { CanvasEventBus, DataSource, FlushMode, LayerFlush } from '@invana/canvas';
 
 import { AdjacencyIndex } from './AdjacencyIndex';
 import { FrameFlushScheduler } from './FrameFlushScheduler';
@@ -65,9 +65,9 @@ function emptyCounters(): FlushCounters {
   };
 }
 
-export class GraphStore {
+export class GraphStore implements DataSource {
   // ─── Options ────────────────────────────────────────────────────────────
-  private readonly flushMode: 'sync' | 'frame';
+  private flushMode: 'sync' | 'frame' | 'manual';
   private readonly unknownEndpoint: 'throw' | 'buffer' | 'drop';
   private readonly pendingEdgeTTL: number;
 
@@ -130,6 +130,9 @@ export class GraphStore {
   /** Depth of nested `batch()` calls. Flushes only on outermost exit. */
   private batchDepth = 0;
   private flushScheduler: FrameFlushScheduler | null = null;
+
+  /** {@link DataSource} flush listeners — fed a {@link LayerFlush} delta projection (D13). */
+  private readonly flushListeners = new Set<(delta: LayerFlush) => void>();
 
   /** Monotonic version counter. Bumps on every mutation including silent. */
   private _version = 0;
@@ -967,6 +970,30 @@ export class GraphStore {
     this.doFlush();
   }
 
+  /**
+   * {@link DataSource} (D13) — subscribe to a coalesced {@link LayerFlush} delta
+   * projected from this store's per-flush changes (position-only updates → `moved`).
+   * Distinct from `events.on('flush', …)` (which carries aggregate counters): this
+   * is what `CanvasStore` bridges onto `data:flush`. Returns an unsubscribe.
+   */
+  onFlush(listener: (delta: LayerFlush) => void): () => void {
+    this.flushListeners.add(listener);
+    return () => this.flushListeners.delete(listener);
+  }
+
+  /**
+   * {@link DataSource} (D13) — set the flush trigger. The engine drives `'manual'`
+   * (its single rAF loop calls {@link flush}); kernel `'frame'`/`'microtask'` both
+   * map to GraphStore's frame scheduler. GraphStore's native `'sync'` is the
+   * constructor default and isn't reachable through this setter.
+   */
+  setFlushMode(mode: FlushMode): void {
+    this.flushMode = mode === 'manual' ? 'manual' : 'frame';
+    if (this.flushMode === 'frame' && !this.flushScheduler) {
+      this.flushScheduler = new FrameFlushScheduler(() => this.doFlush());
+    }
+  }
+
   /** Wipe all data. Cancels any pending flush. */
   clear(): void {
     this.nodeMap.clear();
@@ -1240,6 +1267,7 @@ export class GraphStore {
 
   private scheduleFlushIfNeeded(): void {
     if (this.batchDepth > 0) return;
+    if (this.flushMode === 'manual') return; // engine drives flush() from its rAF loop
     if (this.flushMode === 'frame') {
       this.flushScheduler?.request();
       return;
@@ -1323,6 +1351,37 @@ export class GraphStore {
         actor,
       });
     }
+
+    // DataSource (D13) — project this flush's topology/position deltas into a
+    // LayerFlush for the kernel `data:flush` bridge. Position-only node updates →
+    // `moved`; everything else → `changed`. Pure state toggles (no add/update/
+    // remove) and silent sim-tick position writes don't appear here.
+    if (
+      this.flushListeners.size > 0 &&
+      (nodeAdds.size > 0 ||
+        nodeUpdates.size > 0 ||
+        nodeRemoves.size > 0 ||
+        edgeAdds.size > 0 ||
+        edgeUpdates.size > 0 ||
+        edgeRemoves.size > 0)
+    ) {
+      const moved: string[] = [];
+      const changed: string[] = [];
+      for (const [id, patch] of nodeUpdates) {
+        const keys = Object.keys(patch);
+        if (keys.length === 1 && keys[0] === 'position') moved.push(id);
+        else changed.push(id);
+      }
+      const delta: LayerFlush = {
+        nodes: { added: [...nodeAdds], changed, removed: [...nodeRemoves], moved, movedAll: false },
+        edges: { added: [...edgeAdds], changed: [...edgeUpdates.keys()], removed: [...edgeRemoves] },
+        groups: { added: [], changed: [], removed: [] },
+        annotations: { added: [], changed: [], removed: [] },
+        version: this._version,
+      };
+      for (const l of [...this.flushListeners]) l(delta);
+    }
+
     this.events.emit('flush', counters);
   }
 
