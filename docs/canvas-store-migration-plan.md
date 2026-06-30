@@ -95,17 +95,19 @@ The kernel becomes the observable truth *beneath* the existing apply path.
 
 `CanvasStore` *owns* the per-source data; layers read/subscribe instead of owning a store.
 
-> **Decision D13 — `GraphStore` ↔ `LayerData`.** Both are now `ColumnStore`-backed
-> bulk stores: the kernel's two-lane `LayerData` and graph's `GraphStore` (which adds
-> adjacency indexes + a pending-edge buffer). They overlap heavily — Phase 3 must pick
-> the canonical `DataSource`: **(a)** `GraphStore` *becomes/extends* the kernel source
-> owned by `store.data[id]` (recommended — least churn, keeps adjacency), or **(b)**
-> `LayerData` absorbs graph's features and `GraphStore` is retired. This is the crux.
+> **Decision D13 — resolved: *interface, not inheritance* (option C).** Reading
+> `GraphStore` showed it is **far more mature** than `LayerData` (adjacency,
+> pending-edge buffer, hierarchy index, presence), so subclassing is wrong. The
+> kernel defines a minimal `DataSource` interface; `GraphStore` *implements* it and
+> is *registered* via `store.setSource(id, …)`; `LayerData` stays the default. No
+> merge. Full design + event-model resolution (C1) in
+> [`canvas-store-d13-data-ownership.md`](./canvas-store-d13-data-ownership.md).
 
 - [x] **3.0 — Re-export shim** (`8fc8f30`): `ColumnStore`/`DirtyBatcher` relocated to the kernel; `canvas` re-exports; `GraphStore` unchanged.
-- [ ] **3.1 — Canonical `DataSource` (D13).** `store.data[id]` owns the graph data; `GraphStore` becomes/extends the kernel source. Gate: `GraphStore` unit tests pass.
-- [ ] **3.2 — `GraphLayer` reads/subscribes** `store.data[dataSourceId]` instead of owning a store; `<GraphLayer data>`/`graphCanvas.setData` route to it. Gate: targeted render preserved; graph stories render.
-- [ ] **3.3 — Single rAF driver.** `Canvas` sets every `data` source to `FlushMode:'manual'` and drains `flush()` once/frame. Gate: one flush/frame; no per-frame regression.
+- [x] **3.1a — Kernel `DataSource` interface + registration.** `DataSource` (`onFlush`/`setFlushMode`/`flush`); `CanvasStore.data: Record<string, DataSource>`; `store.setSource(id, src)` + `store.source(id)`; `layer(id)` keeps lazily creating the default `LayerData` (guards if a custom source was registered); the `data:flush` bridge subscribes via `onFlush` (with re-bridge cleanup). `LayerData` gained `onFlush`. *canvas-store types + 112 tests green; canvas types green.*
+- [ ] **3.1b — `GraphStore implements DataSource`.** Add `onFlush` (a `LayerFlush` projection from its pending sets — classify position-only updates as `moved`) + `setFlushMode`. **Wrinkle to resolve:** `GraphStore`'s flush vocabulary is `'sync'|'frame'` vs the kernel `FlushMode` `'frame'|'microtask'|'manual'` — map deliberately (the engine needs `'manual'`). Strictly additive (existing granular events + counters unchanged) so `GraphStore` tests stay green.
+- [ ] **3.2 — `GraphLayer` registers + reads** `ctx.store.setSource(id, store)` instead of owning a private store; `<GraphLayer data>`/`graphCanvas.setData` route to it. Gate: targeted render preserved; **graph stories render (needs visual verification)**.
+- [ ] **3.3 — Single rAF driver.** `Canvas` sets every registered source to `FlushMode:'manual'` and drains `flush()` once/frame. Gate: one flush/frame; no per-frame regression.
 
 **Packages:** `@invana/graph`, `@invana/canvas`. **Risk:** Med–High — biggest blast radius (§10.3); the `GraphStore`↔`LayerData` reconciliation (D13) is the load-bearing call.
 

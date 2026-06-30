@@ -161,6 +161,11 @@ export class LayerData {
     return () => this.listeners.delete(listener);
   }
 
+  /** {@link DataSource} contract — alias for `on('flush', …)`. */
+  onFlush(listener: (e: LayerFlush) => void): () => void {
+    return this.on('flush', listener);
+  }
+
   /**
    * Choose **when** a flush fires ({@link FlushMode}). `'manual'` disarms any pending
    * auto-flush so only an explicit {@link flush} emits — used when the engine drives

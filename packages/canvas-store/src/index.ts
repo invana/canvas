@@ -61,6 +61,7 @@ export {
   type ColumnStoreOptions,
 } from './data/ColumnStore';
 export { DirtyBatcher, type DirtySnapshot } from './data/DirtyBatcher';
+export type { DataSource } from './data/DataSource';
 
 // ── Events ────────────────────────────────────────────────────────────────────
 export { EventEmitter, type Listener } from './events/EventEmitter';
