@@ -39,18 +39,21 @@ export {
 export { createLayerStore } from './state/Store';
 export type { Store, StoreApi, CreateLayerStoreOptions } from './state/Store';
 
-export { ColumnStore } from './state/ColumnStore';
-export type {
-  ColumnType,
-  ColumnSchema,
-  ColumnValue,
-  ColumnArray,
-  RowOf,
-  ColumnStoreOptions,
-} from './state/ColumnStore';
-
-export { DirtyBatcher } from './state/DirtyBatcher';
-export type { DirtySnapshot } from './state/DirtyBatcher';
+// `ColumnStore` + `DirtyBatcher` are owned by the renderer-free kernel
+// (`@invana/canvas-store`, decision D1). Re-exported here for back-compat so
+// existing `@invana/canvas` importers (e.g. `@invana/graph`'s `GraphStore`)
+// keep working unchanged.
+export {
+  ColumnStore,
+  DirtyBatcher,
+  type ColumnType,
+  type ColumnSchema,
+  type ColumnValue,
+  type ColumnArray,
+  type RowOf,
+  type ColumnStoreOptions,
+  type DirtySnapshot,
+} from '@invana/canvas-store';
 
 // ─── Camera ─────────────────────────────────────────────────────────────
 export { Camera } from './camera/Camera';

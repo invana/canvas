@@ -31,7 +31,7 @@ import type { CanvasContext } from '../context/CanvasContext';
 import type { EventMap } from '../events/EventEmitter';
 import { SourceEmitter } from '../events/SourceEmitter';
 import { createLayerStore, type Store } from '../state/Store';
-import { DirtyBatcher, type DirtySnapshot } from '../state/DirtyBatcher';
+import { DirtyBatcher, type DirtySnapshot } from '@invana/canvas-store';
 
 // ─── Minimal interface that registries see ─────────────────────────────────
 

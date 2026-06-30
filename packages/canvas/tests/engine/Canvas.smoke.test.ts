@@ -14,7 +14,7 @@ import { Canvas } from '../../src/engine/Canvas';
 import { WorldLayer } from '../../src/layers/WorldLayer';
 import { Behaviour } from '../../src/behaviours/Behaviour';
 import type { CanvasContext } from '../../src/context/CanvasContext';
-import type { DirtySnapshot } from '../../src/state/DirtyBatcher';
+import type { DirtySnapshot } from '@invana/canvas-store';
 
 // ─── Test types ───────────────────────────────────────────────────────────
 

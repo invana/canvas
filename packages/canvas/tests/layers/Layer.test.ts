@@ -5,7 +5,7 @@ import { Camera } from '../../src/camera/Camera';
 import { LayerRegistry } from '../../src/registries/LayerRegistry';
 import { BehaviourRegistry } from '../../src/registries/BehaviourRegistry';
 import type { CanvasContext } from '../../src/context/CanvasContext';
-import type { DirtySnapshot } from '../../src/state/DirtyBatcher';
+import type { DirtySnapshot } from '@invana/canvas-store';
 import { makeTestScene } from '../_helpers/makeWorld';
 
 type TState = { count: number };

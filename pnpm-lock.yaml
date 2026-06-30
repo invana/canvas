@@ -144,6 +144,9 @@ importers:
 
   packages/canvas:
     dependencies:
+      '@invana/canvas-store':
+        specifier: workspace:*
+        version: link:../canvas-store
       immer:
         specifier: ^11.1.4
         version: 11.1.4
