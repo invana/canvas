@@ -72,9 +72,16 @@ export function createCanvasStore(opts: CreateCanvasStoreOptions = {}): CanvasSt
   // e.g. 'view:layer:setStyle') — the granular event on the tap for telemetry / query.
   view.subscribeChanges((change) => {
     const paths = changedPaths(change.patches);
-    events.emit('state:change', { action: change.action, changedPaths: paths }, { kind: 'store', id: 'view' });
+    // Carry the update's wall-clock cost onto the bus so any tap (tracing / HyperDX)
+    // can attribute time to the mutation without a separate telemetry sink.
+    const payload = {
+      action: change.action,
+      changedPaths: paths,
+      ...(change.durationMs !== undefined ? { durationMs: change.durationMs } : {}),
+    };
+    events.emit('state:change', payload, { kind: 'store', id: 'view' });
     if (change.action && change.action.includes(':')) {
-      events.publish(change.action, { action: change.action, changedPaths: paths }, { kind: 'store', id: 'view' });
+      events.publish(change.action, payload, { kind: 'store', id: 'view' });
     }
   });
 

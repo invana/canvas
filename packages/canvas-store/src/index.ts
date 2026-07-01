@@ -94,6 +94,8 @@ export {
 export {
   createTracingSink,
   createTapTracer,
+  tapAttributes,
+  traceActions,
   createConsoleTracer,
   createCollectorTracer,
   type Tracer,

@@ -11,8 +11,12 @@ import { EventEmitter, type Listener } from './EventEmitter';
  */
 export interface CanvasGlobalEvents {
   // ── coarse aggregate channels (kernel-emitted) ──────────────────────────────
-  /** A `view`-store mutation, bridged onto the bus (see `createCanvasStore`). */
-  'state:change': { action?: string; changedPaths: string[] };
+  /**
+   * A `view`-store mutation, bridged onto the bus (see `createCanvasStore`).
+   * `durationMs` is the update's produce+commit wall-clock cost, when the store
+   * reports it — so a tap can attribute time without a separate telemetry sink.
+   */
+  'state:change': { action?: string; changedPaths: string[]; durationMs?: number };
   /** A `layer` data flush (nodes/edges/groups/annotations delta), bridged onto the bus. */
   'data:flush': { layerId: string; delta: LayerFlush };
   /** A named data **intent** — one per data action (audit / collab), distinct from the per-frame flush. */

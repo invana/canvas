@@ -54,7 +54,11 @@ describe('createCanvasStore', () => {
     expect(seen).toHaveLength(1);
     expect(seen[0]!.type).toBe('state:change');
     expect(seen[0]!.source).toEqual({ kind: 'store', id: 'view' });
-    expect(seen[0]!.payload).toEqual({ action: 'hover.set', changedPaths: ['interaction'] });
+    const payload = seen[0]!.payload as { action?: string; changedPaths: string[]; durationMs?: number };
+    expect(payload.action).toBe('hover.set');
+    expect(payload.changedPaths).toEqual(['interaction']);
+    // The update's produce+commit cost rides on the payload (for taps / tracing).
+    expect(typeof payload.durationMs).toBe('number');
   });
 
   it('telemetry sink observes view updates', () => {

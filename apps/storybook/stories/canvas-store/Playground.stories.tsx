@@ -1,14 +1,25 @@
 /**
  * **canvas-store Playground** — a headless test harness for `@invana/canvas-store`.
- * No drawing: the left column fires `store.actions.*`; the right column prints the
- * live `view` state, the `data` (layer 'graph'), and the event stream
- * (`state:change` / `data:flush` / `data:intent`). Purely to exercise the kernel.
+ * No drawing, **no mocked events**: the left column calls **real methods** on the
+ * kernel — state/view (`camera`, `selection`, `scene`), `layers`, `layouts`,
+ * `behaviours`, and `data` (`node`/`edge`/`group`/`annotation`/`positions`) — and the
+ * events (`state:change` / `data:flush` / `data:intent` / granular / `theme:change`)
+ * flow out of those calls naturally. The right column prints the live `view` state,
+ * the `data` (layer 'graph'), and that event stream.
  *
- * Beyond the named-action API it also showcases the **two-physics** model from
- * `docs/canvas-store-data-event-flow.md`: the data store's **flush trigger**
- * ({@link FlushMode}) — how a batch of writes coalesces into **one** `data:flush`,
- * and how `'manual'` mode stages writes until an explicit `flush()` — plus the
- * `dataLayerId` pointer that lets a second layer **share one data source**.
+ * **Tracing via a DECORATOR → OpenTelemetry.** `traceActions` wraps the command API
+ * so every real method call opens an `action:<group>.<method>` span (with arg
+ * attributes — which node/layer/layout it touched), and {@link createTapTracer} turns
+ * the whole bus stream into child spans that **nest beneath it** — one manipulation =
+ * one causal trace (`action:selection.set → view:selection:set / state:change`), each
+ * span carrying `duration_ms`. Spans print to the console **and** export over OTLP/HTTP
+ * to a generic collector (→ HyperDX) by default (see `./otel.ts`). This is how you
+ * watch the query + canvas-interaction patterns and find bottlenecks live.
+ *
+ * It also showcases the **two-physics** model from
+ * `docs/canvas-store-data-event-flow.md`: a batch of writes coalesces into **one**
+ * `data:flush`, plus the `dataLayerId` pointer that lets a second layer **share one
+ * data source**.
  */
 
 import { useEffect, useReducer, useRef, useState, type ReactNode } from 'react';
@@ -17,14 +28,17 @@ import { Button } from '@invana/ui';
 import {
   createCanvasStore,
   createHistory,
-  createTracingSink,
   createCollectorTracer,
+  createTapTracer,
+  traceActions,
+  type CanvasActions,
   type CanvasEvent,
   type CanvasStore,
   type CollectedSpan,
   type History,
   type LayerFlush,
 } from '@invana/canvas-store';
+import { getCanvasTracer, telemetryInfo } from './otel';
 
 const meta: Meta = { title: 'canvas-store/Playground' };
 export default meta;
@@ -184,26 +198,41 @@ function Btn({ onClick, children }: { onClick: () => void; children: ReactNode }
 
 // ── the playground ────────────────────────────────────────────────────────────
 function Playground(): ReactNode {
-  const ref = useRef<{ store: CanvasStore; history: History; seq: number; spans: CollectedSpan[] } | null>(null);
+  const ref = useRef<{
+    store: CanvasStore;
+    actions: CanvasActions;
+    history: History;
+    seq: number;
+    spans: CollectedSpan[];
+  } | null>(null);
   if (!ref.current) {
-    // TRACING — a collector Tracer wired as the store's telemetry sink. Every `view`
-    // update becomes a span (action name + patch diff + durationMs). A real app passes
-    // an OpenTelemetry tracer here instead: `createTracingSink(trace.getTracer('canvas'))`.
-    const { tracer, spans } = createCollectorTracer();
-    const store = createCanvasStore({ telemetry: createTracingSink(tracer) });
+    // TRACING — one real OpenTelemetry tracer (console + OTLP → collector → HyperDX;
+    // see ./otel.ts) drives BOTH channels: `traceActions` decorates the command API so
+    // every method call opens an `action:<group>.<method>` span, and `createTapTracer`
+    // turns the whole bus stream into child spans that nest beneath it. A second
+    // in-memory collector Tracer feeds the on-screen "traces" overlay.
+    const tracer = getCanvasTracer();
+    const { tracer: collector, spans } = createCollectorTracer();
+    const store = createCanvasStore();
+    // The DECORATOR — the actions API is wrapped so calling a real method (node.add,
+    // camera.zoom, layers.setStyle, layouts.run, behaviours.enable …) is auto-traced.
+    // No per-button wrapping, no faked events: real manipulations trigger real events.
+    const actions = traceActions(store.actions, tracer);
+    createTapTracer(store.events, tracer); // whole bus stream → spans (auto-nest under the action)
+    createTapTracer(store.events, collector); // → overlay
     // seed a tiny graph so edges / groups work immediately (they connect existing nodes)
     store.layer('graph').setData({ nodes: [{ id: 'n0' }, { id: 'n1' }, { id: 'n2' }] });
     store.layer('graph').flush();
-    ref.current = { store, history: createHistory(store.view), seq: 3, spans };
+    ref.current = { store, actions, history: createHistory(store.view), seq: 3, spans };
   }
-  const { store, history, spans } = ref.current;
-  const a = store.actions;
+  const { store, actions: a, history, spans } = ref.current;
   const graph = store.layer('graph');
 
   const [, rerender] = useReducer((x: number) => x + 1, 0);
   const [log, setLog] = useState<CanvasEvent[]>([]);
 
-  // ONE subscription — every kernel update lands here (view + data + intent).
+  // ONE subscription for the UI — every kernel event (state:change / data:flush /
+  // data:intent / granular / theme:change) lands here as it flows from the real calls.
   useEffect(() => {
     return store.events.tap((e) => {
       rerender();
@@ -306,17 +335,6 @@ function Playground(): ReactNode {
             categorical: [0x2e7d32, 0x66bb6a],
           })}>theme.set → theme:change</Btn>
         </Section>
-
-        <Section title="engine reports (scene / input / layout)">
-          <Btn onClick={() => store.events.emit('scene:layer:add', { id: 'graph' })}>scene:layer:add</Btn>
-          <Btn onClick={() => store.events.emit('scene:behaviour:enable', { id: 'hover' })}>scene:behaviour:enable</Btn>
-          <Btn onClick={() => { const id = pick(ids()); if (id) store.events.emit('input:node:click', { layerId: 'graph', id, x: rand(), y: rand() }); }}>input:node:click</Btn>
-          <Btn onClick={() => { const id = pick(ids()); store.events.emit('input:node:hover', { layerId: 'graph', id: id ?? null }); }}>input:node:hover</Btn>
-          <Btn onClick={() => store.events.emit('input:background:contextmenu', { x: rand(), y: rand() })}>input:bg:contextmenu</Btn>
-          <Btn onClick={() => store.events.emit('layout:run:start', { id: 'force', layerId: 'graph' })}>layout:run:start</Btn>
-          <Btn onClick={() => store.events.emit('layout:run:end', { id: 'force', layerId: 'graph' })}>layout:run:end</Btn>
-          <Btn onClick={() => store.events.emit('canvas:renderer:ready', { backend: 'webgpu' })}>canvas:renderer:ready</Btn>
-        </Section>
       </div>
 
       {/* MIDDLE — view (top row) over data (bottom row), each with a heading */}
@@ -351,9 +369,14 @@ function Playground(): ReactNode {
       <div className="flex min-h-0 min-w-0 flex-col border-l border-border" style={{ flex: '1.5 1 0' }}>
         <div className="flex shrink-0 items-center border-b border-border bg-muted/30 px-3 py-1">
           <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">events ({log.length})</span>
-          {/* TRACING — telemetry spans collected from view updates (action + durationMs). */}
-          <span className="ml-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground" title="telemetry sink → spans (createTracingSink)">
-            traces ({spans.length})
+          {/* TRACING — action spans (traceActions decorator) + one span per bus event
+              (createTapTracer), the latter nested under the former. Exported via OTel to
+              the console + (unless disabled) OTLP → collector → HyperDX. */}
+          <span
+            className="ml-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
+            title={`OTel tap tracer → ${telemetryInfo.otlpEnabled ? `OTLP ${telemetryInfo.endpoint}` : 'console only (set VITE_INVANA_TELEMETRY_ENABLED=true to export)'}`}
+          >
+            traces ({spans.length}) · {telemetryInfo.otlpEnabled ? 'OTLP→collector' : 'console'}
             {spans.length > 0
               ? ` · ${spans[spans.length - 1]!.name} ${Number(spans[spans.length - 1]!.attributes['canvas.duration_ms'] ?? 0).toFixed(3)}ms`
               : ''}

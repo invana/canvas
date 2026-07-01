@@ -5,6 +5,7 @@ import {
   createCollectorTracer,
   createTapTracer,
   createTracingSink,
+  traceActions,
 } from '../../src/index';
 
 /** Tracing adapters — TelemetrySink→spans (view updates) + tap→spans (whole loop). */
@@ -47,6 +48,12 @@ describe('tracing — createTapTracer (bus events → spans)', () => {
     const state = spans.find((s) => s.name === 'state:change')!;
     expect(state.attributes['canvas.source.kind']).toBe('store');
     expect(state.attributes['canvas.source.id']).toBe('view');
+    // Enriched attributes: the update's changed paths + its wall-clock cost ride
+    // on the bus payload, so the tap span carries them for dashboards.
+    expect(state.attributes['canvas.changed_paths']).toBe('interaction');
+    expect(typeof state.attributes['canvas.duration_ms']).toBe('number');
+    const granular = spans.find((s) => s.name === 'view:selection:set')!;
+    expect(granular.attributes['canvas.action']).toBe('view:selection:set');
   });
 
   it('honours exclude', () => {
@@ -69,6 +76,54 @@ describe('tracing — createTapTracer (bus events → spans)', () => {
     await new Promise<void>((r) => queueMicrotask(r));
 
     expect(spans.some((s) => s.name === 'data:node:add')).toBe(true);
-    expect(spans.some((s) => s.name === 'data:flush')).toBe(true);
+    const flush = spans.find((s) => s.name === 'data:flush')!;
+    expect(flush).toBeDefined();
+    // The flush span carries the layer + the per-kind delta counts for dashboards.
+    expect(flush.attributes['canvas.layer_id']).toBe('graph');
+    expect(flush.attributes['canvas.flush.nodes_added']).toBe(1);
+    const intent = spans.find((s) => s.name === 'data:node:add')!;
+    expect(intent.attributes['canvas.layer_id']).toBe('graph');
+    expect(intent.attributes['canvas.ids_count']).toBe(1);
+  });
+});
+
+describe('tracing — traceActions (decorator: command API → spans)', () => {
+  it('wraps each action call in a span named <group>.<method>, with arg attributes', () => {
+    const { tracer, spans } = createCollectorTracer(() => 0);
+    const store = createCanvasStore();
+    const a = traceActions(store.actions, tracer);
+
+    a.node.add('graph', { id: 'n1', x: 1, y: 2 }); // real data manipulation
+    a.camera.zoom(1.5); // real view manipulation
+
+    const add = spans.find((s) => s.name === 'action:node.add')!;
+    expect(add).toBeDefined();
+    expect(add.attributes['canvas.arg.0']).toBe('graph'); // layer id
+    expect(add.attributes['canvas.arg.1.id']).toBe('n1'); // record id
+    const zoom = spans.find((s) => s.name === 'action:camera.zoom')!;
+    expect(zoom.attributes['canvas.arg.0']).toBe(1.5);
+  });
+
+  it('nests the mutation ripple: bus spans parent under the active action span', () => {
+    // The collector is flat, but ordering proves the action span opens, the tap span
+    // fires inside it, and the action span ends last (start-active → inner → end).
+    const { tracer, spans } = createCollectorTracer(() => 0);
+    const store = createCanvasStore();
+    createTapTracer(store.events, tracer);
+    const a = traceActions(store.actions, tracer);
+
+    a.selection.set(['x']);
+
+    const names = spans.map((s) => s.name);
+    // state:change (inner, ends first) is recorded before action:selection.set (ends last).
+    expect(names.indexOf('state:change')).toBeLessThan(names.indexOf('action:selection.set'));
+  });
+
+  it('leaves the original actions object untouched', () => {
+    const { tracer } = createCollectorTracer(() => 0);
+    const store = createCanvasStore();
+    const traced = traceActions(store.actions, tracer);
+    expect(traced).not.toBe(store.actions);
+    expect(traced.node).not.toBe(store.actions.node);
   });
 });
