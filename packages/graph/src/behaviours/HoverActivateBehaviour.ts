@@ -317,8 +317,8 @@ export class HoverActivateBehaviour extends Behaviour {
     // pay zero per-zoom cost.
     if (this.opts.zoomThreshold !== undefined) {
       const onZoom = (): void => this.handleCameraZoom();
-      ctx.events.on('camera:zoom', onZoom);
-      this.subs.push(() => ctx.events.off('camera:zoom', onZoom));
+      ctx.events.on('input:camera:zoom', onZoom);
+      this.subs.push(() => ctx.events.off('input:camera:zoom', onZoom));
     }
   }
 

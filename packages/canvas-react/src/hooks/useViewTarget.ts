@@ -44,7 +44,7 @@ export function useViewTarget(
     // UI is nested inside the `<ClickViewBehaviour>` wrapper, whose registration
     // effect (a parent) runs after this child's. Attach as soon as it appears.
     setTarget(null);
-    const offReg = resolved.events.on('behaviour:registered', ({ id }) => {
+    const offReg = resolved.events.on('scene:behaviour:register', ({ id }) => {
       if (id === viewId && attach()) offReg();
     });
     return () => {

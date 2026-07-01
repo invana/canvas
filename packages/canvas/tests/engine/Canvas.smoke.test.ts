@@ -108,7 +108,7 @@ describe('Canvas — end-to-end smoke', () => {
   it('renderer:initialised fires on init', () => {
     const canvas = new Canvas();
     const handler = vi.fn();
-    canvas.events.on('renderer:initialised', handler);
+    canvas.events.on('canvas:renderer:ready', handler);
     canvas.initWithStage(new Container(), 800, 600);
     expect(handler).toHaveBeenCalledWith({
       backend: 'canvas',
@@ -129,17 +129,16 @@ describe('Canvas — end-to-end smoke', () => {
     });
     canvas.layers.add(graph);
 
-    // tap should have seen 'layer:added' (canvas-source envelope)
-    const layerAdded = tapHandler.mock.calls.find(
-      (c) => c[0].type === 'canvas:main:layer:added',
-    );
+    // The kernel bus tap sees the raw event `type` with the source carried
+    // separately on the envelope (no composite `<kind>:<id>:<event>` type).
+    const layerAdded = tapHandler.mock.calls.find((c) => c[0].type === 'scene:layer:add');
     expect(layerAdded).toBeDefined();
     expect(layerAdded![0].payload).toEqual({ id: 'graph-1' });
 
-    // Layer's events forward as 'layer:graph-1:*' envelopes.
+    // A layer's own SourceEmitter forwards onto the tap with its layer source.
     graph.events.emit('node:click', { id: 'n-42' });
     const nodeClick = tapHandler.mock.calls.find(
-      (c) => c[0].type === 'layer:graph-1:node:click',
+      (c) => c[0].type === 'node:click' && c[0].source?.id === 'graph-1',
     );
     expect(nodeClick).toBeDefined();
     expect(nodeClick![0].payload).toEqual({ id: 'n-42' });
@@ -271,7 +270,7 @@ describe('Canvas — end-to-end smoke', () => {
     canvas.camera.setZoom(2);
 
     const zoomEnv = tapHandler.mock.calls.find(
-      (c) => c[0].type.endsWith('camera:zoom'),
+      (c) => c[0].type.endsWith('input:camera:zoom'),
     );
     expect(zoomEnv).toBeDefined();
     expect(zoomEnv![0].payload.scale).toBe(2);

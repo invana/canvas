@@ -4,31 +4,24 @@
 // `primitives-redesign-plan.md` (macro renderer redesign), and
 // `primitives-v0-plan.md` (this v0 slice) at the repo root.
 
-// ─── Events ─────────────────────────────────────────────────────────────
-export { EventEmitter } from './events/EventEmitter';
-export type { EventMap, EventHandler } from './events/EventEmitter';
-
+// ─── Events (the bus + emitters now live in the kernel — @invana/canvas-store) ──
+// The engine converged onto the single kernel bus (`store.events`); its own
+// duplicate event module was deleted. These re-exports keep the public surface
+// (`@invana/canvas`'s `EventEmitter` / `CanvasEventBus` / `CanvasGlobalEvents` …)
+// stable for consumers (graph, canvas-react).
 export {
-  makeCanvasEvent,
-  makeEventType,
-  isExcludedFromTap,
-  DEFAULT_TAP_EXCLUDE,
-} from './events/CanvasEvent';
-export type {
-  CanvasEvent,
-  EventSource,
-  EventSourceKind,
-} from './events/CanvasEvent';
-
-export { CanvasEventBus } from './events/CanvasEventBus';
-export type {
-  CanvasGlobalEvents,
-  TapHandler,
-  TapOptions,
-  CanvasEventBusOptions,
-} from './events/CanvasEventBus';
-
-export { SourceEmitter } from './events/SourceEmitter';
+  EventEmitter,
+  SourceEmitter,
+  CanvasEventBus,
+  type Listener,
+  type EventMap,
+  type CanvasEvent,
+  type EventSource,
+  type EventSourceKind,
+  type CanvasGlobalEvents,
+  type Tap,
+  type TapOptions,
+} from '@invana/canvas-store';
 
 export {
   assertSerialisableInDev,

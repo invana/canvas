@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Behaviour } from '../../src/behaviours/Behaviour';
-import { CanvasEventBus } from '../../src/events/CanvasEventBus';
+import { CanvasEventBus } from '@invana/canvas-store';
 import { Camera } from '../../src/camera/Camera';
 import { LayerRegistry } from '../../src/registries/LayerRegistry';
 import { BehaviourRegistry } from '../../src/registries/BehaviourRegistry';

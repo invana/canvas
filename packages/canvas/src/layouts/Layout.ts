@@ -38,7 +38,7 @@
  * conflates "structure changed" with "positions updated".
  */
 
-import { EventEmitter } from '../events/EventEmitter';
+import { EventEmitter } from '@invana/canvas-store';
 import type { Layer } from '../layers/Layer';
 
 /**

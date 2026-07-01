@@ -31,25 +31,56 @@ export interface CanvasGlobalEvents {
   'scene:layout:add': { id: string };
   'scene:layout:remove': { id: string };
 
-  // ── input — raw user input on elements (engine-emitted; behaviours consume) ──
+  // ── input — raw user input (engine/renderer-emitted; behaviours consume) ─────
   'input:node:click': { layerId: string; id: string; x: number; y: number };
   'input:node:hover': { layerId: string; id: string | null };
   'input:node:drag:start': { layerId: string; id: string };
   'input:node:drag:end': { layerId: string; id: string };
+  'input:background:click': { x: number; y: number };
   'input:background:contextmenu': { x: number; y: number };
+  /**
+   * A pan **gesture** reported by the renderer (drag / keyboard / inertia) —
+   * gesture *intent*, distinct from the resulting `view.interaction.camera` change
+   * (a `state:change`). `x`/`y` are the world-origin offset the camera settled on.
+   */
+  'input:camera:pan': { x: number; y: number };
+  /** A zoom **gesture** reported by the renderer (wheel / pinch). `scale` is the resolved uniform zoom; `center*` the screen pivot. */
+  'input:camera:zoom': { scale: number; centerX: number; centerY: number };
 
   // ── layout — execution lifecycle (engine-emitted) ───────────────────────────
-  'layout:run:start': { id: string; layerId: string };
-  'layout:run:end': { id: string; layerId: string };
+  /** A layout run started. `nodeCount`/`edgeCount`/`animate` describe the run when the producer knows them. */
+  'layout:run:start': {
+    id: string;
+    layerId: string;
+    nodeCount?: number;
+    edgeCount?: number;
+    animate?: boolean;
+  };
+  /** A layout run ended. `reason` distinguishes a natural settle from an external stop / abort. */
+  'layout:run:end': {
+    id: string;
+    layerId: string;
+    reason?: 'settled' | 'stopped' | 'cancelled';
+  };
   'layout:run:tick': { id: string; progress?: number };
 
-  // ── render / canvas — lifecycle (engine-emitted) ────────────────────────────
-  'canvas:renderer:ready': { backend: string };
+  // ── render / canvas — lifecycle (engine/renderer-emitted) ───────────────────
+  'canvas:renderer:ready': { backend: string; capabilities?: Record<string, unknown> };
   'render:loop:tick': { dt: number };
-  'canvas:message:show': { text: string };
+  /** The shared status-message channel. `text: null` clears; `timeout` (ms) auto-clears. */
+  'canvas:message:show': { text: string | null; timeout?: number };
+  /** A tap dropped an event (filtered or sampled out) — diagnostic. */
+  'tap:dropped': { type: string; reason: 'excluded' | 'sampled' };
 
   // ── theme — resolved-theme broadcast (CanvasThemeState.set) ──────────────────
   'theme:change': ResolvedTheme;
+
+  /**
+   * @deprecated Back-compat bridge for the legacy coarse options event. Superseded
+   * by `state:change` + slice subscriptions; removed in migration Phase 6 once no
+   * consumer subscribes. Carries the touched layer/behaviour ids (serialisable).
+   */
+  'options:change': { changedLayerIds: readonly string[]; changedBehaviourIds: readonly string[] };
 }
 
 /**
@@ -90,12 +121,20 @@ export class CanvasEventBus {
     this.rand = opts?.random ?? (() => Math.random());
   }
 
-  /** Subscribe to a typed global event. */
+  /** Subscribe to a typed global event. Returns an unsubscribe fn (or use {@link off}). */
   on<K extends keyof CanvasGlobalEvents>(
     type: K,
     listener: Listener<CanvasGlobalEvents[K]>,
   ): () => void {
     return this.emitter.on(type, listener);
+  }
+
+  /** Remove a previously-registered typed listener (the {@link on} handler by reference). */
+  off<K extends keyof CanvasGlobalEvents>(
+    type: K,
+    listener: Listener<CanvasGlobalEvents[K]>,
+  ): void {
+    this.emitter.off(type, listener);
   }
 
   /** Emit a typed global event — reaches typed listeners and the tap channel. */

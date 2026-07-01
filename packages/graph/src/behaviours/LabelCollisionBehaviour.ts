@@ -164,11 +164,11 @@ export class LabelCollisionBehaviour extends Behaviour {
     // bring previously-out-of-viewport labels into bounds (and vice versa).
     const bus = ctx.events;
     const onCameraChange = (): void => this.schedule();
-    bus.on('camera:zoom', onCameraChange);
-    bus.on('camera:pan', onCameraChange);
+    bus.on('input:camera:zoom', onCameraChange);
+    bus.on('input:camera:pan', onCameraChange);
     this.subs.push(
-      () => bus.off('camera:zoom', onCameraChange),
-      () => bus.off('camera:pan', onCameraChange),
+      () => bus.off('input:camera:zoom', onCameraChange),
+      () => bus.off('input:camera:pan', onCameraChange),
     );
 
     // Initial sweep.

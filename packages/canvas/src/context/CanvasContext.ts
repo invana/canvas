@@ -15,7 +15,7 @@
 
 import type { Container } from 'pixi.js';
 import type { CanvasStore } from '@invana/canvas-store';
-import type { CanvasEventBus } from '../events/CanvasEventBus';
+import type { CanvasEventBus } from '@invana/canvas-store';
 import type { Camera } from '../camera/Camera';
 import type { LayerRegistry } from '../registries/LayerRegistry';
 import type { BehaviourRegistry } from '../registries/BehaviourRegistry';

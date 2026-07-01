@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { DataStore, type FlushEvent } from '../../src/data/DataStore';
-import { LayerData } from '../../src/data/LayerData';
+import { LayerData, type LayerFlush } from '../../src/data/LayerData';
 
 /** Resolve after the flush microtask. */
 const tick = (): Promise<void> => Promise.resolve();
@@ -10,63 +9,63 @@ const macro = (ms = 50): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
 describe('FlushMode', () => {
   it("default 'microtask' defers, then auto-flushes one coalesced delta", async () => {
-    const ds = new DataStore();
-    const seen: FlushEvent[] = [];
-    ds.on('flush', (e) => seen.push(e));
+    const ld = new LayerData();
+    const seen: LayerFlush[] = [];
+    ld.on('flush', (e) => seen.push(e));
 
-    ds.upsert({ id: 'a' });
-    ds.upsert({ id: 'b' });
+    ld.addNode({ id: 'a' });
+    ld.addNode({ id: 'b' });
     expect(seen).toHaveLength(0); // deferred — not fired synchronously
 
     await tick();
     expect(seen).toHaveLength(1); // one flush for the whole batch
-    expect(seen[0]!.added.sort()).toEqual(['a', 'b']);
+    expect(seen[0]!.nodes.added.sort()).toEqual(['a', 'b']);
   });
 
   it("'manual' never auto-flushes — only flush() emits", async () => {
-    const ds = new DataStore();
-    ds.setFlushMode('manual');
-    const seen: FlushEvent[] = [];
-    ds.on('flush', (e) => seen.push(e));
+    const ld = new LayerData();
+    ld.setFlushMode('manual');
+    const seen: LayerFlush[] = [];
+    ld.on('flush', (e) => seen.push(e));
 
-    ds.upsert({ id: 'a' });
-    ds.upsert({ id: 'b' });
+    ld.addNode({ id: 'a' });
+    ld.addNode({ id: 'b' });
     await tick();
     await macro(10);
     expect(seen).toHaveLength(0); // still nothing — no auto-trigger
 
-    ds.flush();
+    ld.flush();
     expect(seen).toHaveLength(1);
-    expect(seen[0]!.added.sort()).toEqual(['a', 'b']);
+    expect(seen[0]!.nodes.added.sort()).toEqual(['a', 'b']);
   });
 
   it("switching to 'manual' disarms a pending auto-flush", async () => {
-    const ds = new DataStore();
-    const seen: FlushEvent[] = [];
-    ds.on('flush', (e) => seen.push(e));
+    const ld = new LayerData();
+    const seen: LayerFlush[] = [];
+    ld.on('flush', (e) => seen.push(e));
 
-    ds.upsert({ id: 'a' }); // arms a microtask flush
-    ds.setFlushMode('manual'); // …which this cancels
+    ld.addNode({ id: 'a' }); // arms a microtask flush
+    ld.setFlushMode('manual'); // …which this cancels
     await tick();
     expect(seen).toHaveLength(0);
 
-    ds.flush();
+    ld.flush();
     expect(seen).toHaveLength(1);
   });
 
   it("'frame' defers then flushes asynchronously (rAF, or microtask fallback in node)", async () => {
-    const ds = new DataStore();
-    const seen: FlushEvent[] = [];
-    ds.on('flush', (e) => seen.push(e));
-    ds.setFlushMode('frame');
+    const ld = new LayerData();
+    const seen: LayerFlush[] = [];
+    ld.on('flush', (e) => seen.push(e));
+    ld.setFlushMode('frame');
 
-    ds.upsert({ id: 'a' });
-    ds.upsert({ id: 'b' });
+    ld.addNode({ id: 'a' });
+    ld.addNode({ id: 'b' });
     expect(seen).toHaveLength(0);
 
     await macro(50);
     expect(seen).toHaveLength(1);
-    expect(seen[0]!.added.sort()).toEqual(['a', 'b']);
+    expect(seen[0]!.nodes.added.sort()).toEqual(['a', 'b']);
   });
 
   it('LayerData honours manual mode the same way', async () => {

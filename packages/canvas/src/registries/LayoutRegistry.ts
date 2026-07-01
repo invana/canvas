@@ -7,7 +7,7 @@
  * one layout at a time, but several may be registered (e.g. a layout picker).
  */
 
-import type { CanvasEventBus } from '../events/CanvasEventBus';
+import type { CanvasEventBus } from '@invana/canvas-store';
 import type { Layout } from '../layouts/Layout';
 
 export interface LayoutRegistryOptions {
@@ -32,7 +32,7 @@ export class LayoutRegistry {
       throw new Error(`LayoutRegistry: layout "${layout.id}" already registered`);
     }
     this.layouts.set(layout.id, layout);
-    this.bus.emit('layout:added', { id: layout.id });
+    this.bus.emit('scene:layout:add', { id: layout.id });
   }
 
   /** Remove a layout, stopping it first if it exposes `stop()`. Fires `layout:removed`. */
@@ -41,7 +41,7 @@ export class LayoutRegistry {
     if (!layout) return;
     (layout as { stop?: () => void }).stop?.();
     this.layouts.delete(id);
-    this.bus.emit('layout:removed', { id });
+    this.bus.emit('scene:layout:remove', { id });
   }
 
   get<T extends Layout = Layout>(id: string): T | undefined {

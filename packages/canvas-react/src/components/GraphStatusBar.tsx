@@ -49,7 +49,7 @@ export function GraphStatusBar({
   const [counts, setCounts] = useState({ nodes: 0, edges: 0 });
 
   // Camera translation — re-synced live as the user pans.
-  useCanvasEvent('camera:pan', ({ x, y }) => setPan({ x, y }), canvas);
+  useCanvasEvent('input:camera:pan', ({ x, y }) => setPan({ x, y }), canvas);
 
   // Rendered node / edge totals — read off the graph store and re-synced on its
   // `flush` event (one per batched mutation), so the counts track adds/removes.

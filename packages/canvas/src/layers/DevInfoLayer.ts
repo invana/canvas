@@ -185,8 +185,8 @@ export class DevInfoLayer extends ScreenLayer<DevInfoLayerOptions, DevInfoState>
     parent.appendChild(div);
 
     // Camera updates → repaint overlay.
-    this._unsubs.push(ctx.events.on('camera:pan', () => this._update()));
-    this._unsubs.push(ctx.events.on('camera:zoom', () => this._update()));
+    this._unsubs.push(ctx.events.on('input:camera:pan', () => this._update()));
+    this._unsubs.push(ctx.events.on('input:camera:zoom', () => this._update()));
 
     // Native pointermove — engine doesn't emit a typed `pointermove` event,
     // so read DOM coords directly and convert via camera.

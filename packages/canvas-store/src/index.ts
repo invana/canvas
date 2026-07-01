@@ -33,7 +33,6 @@ export type { Point, Vec2, Size, Rect, CameraTransform } from './geom/types';
 export { defaultCanvasView, type CanvasView, type CanvasSceneOptions } from './view/CanvasView';
 
 // ── Data (state) ──────────────────────────────────────────────────────────────
-export { DataStore, type FlushEvent, type Record_ } from './data/DataStore';
 export { scheduleFlush, type FlushMode } from './data/flush';
 export {
   LayerData,
@@ -63,8 +62,12 @@ export {
 export { DirtyBatcher, type DirtySnapshot } from './data/DirtyBatcher';
 export type { DataSource } from './data/DataSource';
 
+// ── Renderer seam (types only — implemented by a rendering package, e.g. @invana/renderer-pixijs) ──
+export type { IRenderer, RendererBackend } from './renderer/IRenderer';
+export type { RendererInitOptions } from './renderer/RendererInitOptions';
+
 // ── Events ────────────────────────────────────────────────────────────────────
-export { EventEmitter, type Listener } from './events/EventEmitter';
+export { EventEmitter, type Listener, type EventMap } from './events/EventEmitter';
 export {
   type CanvasEvent,
   type EventSource,

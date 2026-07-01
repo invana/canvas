@@ -34,7 +34,7 @@ export function useCanvasMessage(canvas?: Canvas | null): UseCanvasMessageResult
         timer.current = null;
       }
     };
-    const off = resolved.events.on('message', ({ text, timeout }) => {
+    const off = resolved.events.on('canvas:message:show', ({ text, timeout }) => {
       clearTimer();
       setMessage(text);
       if (text !== null && timeout && timeout > 0) {

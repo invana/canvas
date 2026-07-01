@@ -109,7 +109,7 @@ export abstract class ElementSizeLODBehaviour extends Behaviour {
 
   protected override onRegister(ctx: CanvasContext): void {
     this.onResolveTargets(ctx);
-    this.subs.push(ctx.events.on('camera:zoom', () => this.scheduleReflow()));
+    this.subs.push(ctx.events.on('input:camera:zoom', () => this.scheduleReflow()));
     // Pre-enabled register → apply once now so the first painted frame
     // already shows the rescaled sizes; we don't wait for the next zoom.
     if (this.isEnabled) this.applyAndRemember(ctx.camera.scale);

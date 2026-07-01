@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Layer } from '../../src/layers/Layer';
-import { CanvasEventBus } from '../../src/events/CanvasEventBus';
+import { CanvasEventBus } from '@invana/canvas-store';
 import { Camera } from '../../src/camera/Camera';
 import { LayerRegistry } from '../../src/registries/LayerRegistry';
 import { BehaviourRegistry } from '../../src/registries/BehaviourRegistry';
@@ -64,7 +64,7 @@ describe('Layer — construction', () => {
 
   it('events emitter has the expected source id (kind: layer)', () => {
     const layer = new TestLayer({ id: 'graph-1', options: { initial: 0 } });
-    expect(layer.events.sourceInfo).toEqual({ kind: 'layer', id: 'graph-1' });
+    expect(layer.events.source).toEqual({ kind: 'layer', id: 'graph-1' });
   });
 });
 
@@ -97,7 +97,8 @@ describe('Layer — lifecycle', () => {
     layer.events.emit('tick:done', { count: 5 });
     expect(tapHandler).toHaveBeenCalledTimes(1);
     const env = tapHandler.mock.calls[0]![0];
-    expect(env.type).toBe('layer:a:tick:done');
+    expect(env.type).toBe('tick:done');
+    expect(env.source).toEqual({ kind: 'layer', id: 'a' });
     expect(env.payload).toEqual({ count: 5 });
   });
 

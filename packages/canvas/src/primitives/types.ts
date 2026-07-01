@@ -12,7 +12,7 @@
  */
 
 import type { Container, Graphics, IHitArea } from 'pixi.js';
-import type { EventMap } from '../events/EventEmitter';
+import type { EventMap } from '@invana/canvas-store';
 import type { TextureRegistry } from '../textures/TextureRegistry';
 
 // ─── Geometry primitives ───────────────────────────────────────────────────

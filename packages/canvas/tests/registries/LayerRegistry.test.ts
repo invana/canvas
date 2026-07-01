@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { LayerRegistry } from '../../src/registries/LayerRegistry';
-import { CanvasEventBus } from '../../src/events/CanvasEventBus';
+import { CanvasEventBus } from '@invana/canvas-store';
 import { Camera } from '../../src/camera/Camera';
 import { BehaviourRegistry } from '../../src/registries/BehaviourRegistry';
 import type { ILayer } from '../../src/layers/Layer';
@@ -67,7 +67,7 @@ describe('LayerRegistry — basic CRUD', () => {
     const ctx = makeContext();
     const layer = new FakeLayer('a');
     const handler = vi.fn();
-    ctx.events.on('layer:added', handler);
+    ctx.events.on('scene:layer:add', handler);
 
     ctx.layers.add(layer);
 
@@ -88,7 +88,7 @@ describe('LayerRegistry — basic CRUD', () => {
     const layer = new FakeLayer('a');
     ctx.layers.add(layer);
     const handler = vi.fn();
-    ctx.events.on('layer:removed', handler);
+    ctx.events.on('scene:layer:remove', handler);
 
     ctx.layers.remove('a');
 

@@ -1,4 +1,4 @@
-import type { CanvasEventBus } from '../events/CanvasEventBus';
+import type { CanvasEventBus } from '@invana/canvas-store';
 import type { ResolvedTheme, ThemeState } from './types';
 
 /**

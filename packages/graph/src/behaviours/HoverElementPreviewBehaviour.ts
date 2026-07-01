@@ -492,11 +492,11 @@ export class HoverElementPreviewBehaviour extends Behaviour {
 
     // Reposition the anchored card as the camera moves while it is open.
     const onCameraChange = (): void => this.reposition();
-    ctx.events.on('camera:pan', onCameraChange);
-    ctx.events.on('camera:zoom', onCameraChange);
+    ctx.events.on('input:camera:pan', onCameraChange);
+    ctx.events.on('input:camera:zoom', onCameraChange);
     this.subs.push(
-      () => ctx.events.off('camera:pan', onCameraChange),
-      () => ctx.events.off('camera:zoom', onCameraChange),
+      () => ctx.events.off('input:camera:pan', onCameraChange),
+      () => ctx.events.off('input:camera:zoom', onCameraChange),
     );
 
     // Pointer leaving the canvas entirely (onto chrome / out of window) stops

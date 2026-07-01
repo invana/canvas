@@ -28,7 +28,7 @@
  */
 
 import type { Viewport } from 'pixi-viewport';
-import type { CanvasEventBus } from '../events/CanvasEventBus';
+import type { CanvasEventBus } from '@invana/canvas-store';
 
 export interface Point {
   x: number;
@@ -101,15 +101,15 @@ export class Camera {
     // Direct `.position.set` / `.scale.set` calls from this class don't
     // trigger viewport's 'moved' / 'zoomed', so we don't double-emit.
     this.viewport.on('moved', () => {
-      this.bus?.emit('camera:pan', { x: this.viewport.position.x, y: this.viewport.position.y });
+      this.bus?.emit('input:camera:pan', { x: this.viewport.position.x, y: this.viewport.position.y });
     });
     this.viewport.on('zoomed', () => {
-      this.bus?.emit('camera:zoom', {
+      this.bus?.emit('input:camera:zoom', {
         scale: this.viewport.scale.x,
         centerX: this._screenWidth / 2,
         centerY: this._screenHeight / 2,
       });
-      this.bus?.emit('camera:pan', { x: this.viewport.position.x, y: this.viewport.position.y });
+      this.bus?.emit('input:camera:pan', { x: this.viewport.position.x, y: this.viewport.position.y });
     });
   }
 
@@ -146,7 +146,7 @@ export class Camera {
   setPosition(x: number, y: number): void {
     if (x === this.x && y === this.y) return;
     this.viewport.position.set(x, y);
-    this.bus?.emit('camera:pan', { x, y });
+    this.bus?.emit('input:camera:pan', { x, y });
   }
 
   /** Pan by `(dx, dy)` screen pixels. */
@@ -165,12 +165,12 @@ export class Camera {
     if (next === this.scale) return;
     // `setZoom(scale, true)` keeps the world centre under the screen centre.
     this.viewport.setZoom(next, true);
-    this.bus?.emit('camera:zoom', {
+    this.bus?.emit('input:camera:zoom', {
       scale: next,
       centerX: this._screenWidth / 2,
       centerY: this._screenHeight / 2,
     });
-    this.bus?.emit('camera:pan', { x: this.x, y: this.y });
+    this.bus?.emit('input:camera:pan', { x: this.x, y: this.y });
   }
 
   /**
@@ -194,8 +194,8 @@ export class Camera {
       centerX - before.x * nextScale,
       centerY - before.y * nextScale,
     );
-    this.bus?.emit('camera:zoom', { scale: nextScale, centerX, centerY });
-    this.bus?.emit('camera:pan', { x: this.x, y: this.y });
+    this.bus?.emit('input:camera:zoom', { scale: nextScale, centerX, centerY });
+    this.bus?.emit('input:camera:pan', { x: this.x, y: this.y });
   }
 
   /**
@@ -218,12 +218,12 @@ export class Camera {
     this.viewport.scale.set(next);
     this.viewport.position.set(tx, ty);
 
-    this.bus?.emit('camera:zoom', {
+    this.bus?.emit('input:camera:zoom', {
       scale: next,
       centerX: this._screenWidth / 2,
       centerY: this._screenHeight / 2,
     });
-    this.bus?.emit('camera:pan', { x: tx, y: ty });
+    this.bus?.emit('input:camera:pan', { x: tx, y: ty });
   }
 
   /**
@@ -237,7 +237,7 @@ export class Camera {
     const tx = this._screenWidth / 2 - worldX * scale;
     const ty = this._screenHeight / 2 - worldY * scale;
     this.viewport.position.set(tx, ty);
-    this.bus?.emit('camera:pan', { x: tx, y: ty });
+    this.bus?.emit('input:camera:pan', { x: tx, y: ty });
   }
 
   /** Update on viewport resize. Forwards to Viewport so its hit-area + plugin math stays correct. */

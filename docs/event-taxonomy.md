@@ -105,6 +105,18 @@ subscribers): `state:change` (any `view` mutation) and `data:layer:flush` (per-f
 delta). The granular `<domain>:<subject>:<action>` types are for filtered subscribers
 (telemetry/realtime/query); the coarse ones for the redraw firehose.
 
+> **As-built (renderer-split kernel+seam).** The kernel `CanvasGlobalEvents`
+> (`packages/canvas-store/src/events/CanvasEventBus.ts`) is now the **typed
+> superset** — `@invana/canvas`'s duplicate event map is folded in and its own
+> `events/` bus deleted; the engine emits/subscribes on `store.events`. Newly typed
+> on the kernel map: `input:background:click`, `input:camera:pan` /
+> `input:camera:zoom` (renderer→orchestrator gesture intent), `tap:dropped`, an
+> extended `layout:run:start` / `:end` (adds `nodeCount`/`edgeCount`/`animate` /
+> `reason`), `canvas:renderer:ready` (adds `capabilities`), a nullable
+> `canvas:message:show` (`text: null` clears; `timeout` auto-clears), and a
+> **`@deprecated` `options:change`** bridge (dropped in migration Phase 6). The
+> renderer contract that consumes these is `IRenderer` (`src/renderer/IRenderer.ts`).
+
 ## 4. State-ownership migration — *state entirely owned by `canvas-store`*
 
 Today state is **scattered**: config in `Canvas.config` (plain object), graph data in

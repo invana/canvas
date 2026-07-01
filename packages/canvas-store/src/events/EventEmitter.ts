@@ -2,6 +2,14 @@
 export type Listener<P> = (payload: P) => void;
 
 /**
+ * A string-keyed event map (`{ eventType: payload }`) — the conventional generic
+ * bound for scoped {@link EventEmitter}s (layer / behaviour / domain-store event
+ * channels). `EventEmitter`/`SourceEmitter` accept any `object`; this is the
+ * portable shape most maps use.
+ */
+export type EventMap = Record<string, unknown>;
+
+/**
  * A small typed event emitter over an event map `M` (`{ eventType: payload }`).
  * Renderer-free; the base for {@link SourceEmitter} and the building block under
  * {@link CanvasEventBus}.

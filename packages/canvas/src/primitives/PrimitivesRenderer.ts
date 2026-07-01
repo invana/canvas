@@ -33,7 +33,7 @@
 
 import { Container, type FederatedPointerEvent } from 'pixi.js';
 import type { Camera } from '../camera/Camera';
-import { EventEmitter } from '../events/EventEmitter';
+import { EventEmitter } from '@invana/canvas-store';
 import { TextureRegistry } from '../textures/TextureRegistry';
 import { HitIndex } from '../hit/HitIndex';
 import { ShapeInstance } from '../instancing/ShapeInstance';

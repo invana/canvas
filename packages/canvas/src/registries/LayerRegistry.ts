@@ -7,7 +7,7 @@
  *   - Add / remove (with mount / unmount lifecycle).
  *   - Typed `get<T>(id)`.
  *   - `byZOrder()` iteration — used by the Canvas tick.
- *   - Fires `'layer:added'` / `'layer:removed'` on the bus.
+ *   - Fires `'scene:layer:add'` / `'scene:layer:remove'` on the bus.
  *
  * **Lifecycle wiring**
  *
@@ -18,7 +18,7 @@
  */
 
 import type { CanvasContext } from '../context/CanvasContext';
-import type { CanvasEventBus } from '../events/CanvasEventBus';
+import type { CanvasEventBus } from '@invana/canvas-store';
 import type { ILayer } from '../layers/Layer';
 
 export interface LayerRegistryOptions {
@@ -63,7 +63,7 @@ export class LayerRegistry {
     this.zOrderCache = null;
     const ctx = this.getContext();
     if (ctx) layer.mount(ctx);
-    this.bus.emit('layer:added', { id: layer.id });
+    this.bus.emit('scene:layer:add', { id: layer.id });
   }
 
   /** Mount every not-yet-mounted layer. Called by `Canvas.init` once the context exists. */
@@ -85,7 +85,7 @@ export class LayerRegistry {
     this.layers.delete(id);
     this.zOrderCache = null;
     layer.unmount();
-    this.bus.emit('layer:removed', { id });
+    this.bus.emit('scene:layer:remove', { id });
   }
 
   /** Typed get by id. Returns `undefined` if not found. */

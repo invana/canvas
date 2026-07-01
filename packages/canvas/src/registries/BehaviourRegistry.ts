@@ -5,8 +5,8 @@
  *
  * **Responsibilities**
  *   - `register` / `unregister` (with register / destroy lifecycle).
- *   - `setEnabled(id, enabled)` — toggles + fires `'behaviour:enabled'` /
- *     `'behaviour:disabled'`.
+ *   - `setEnabled(id, enabled)` — toggles + fires `'scene:behaviour:enable'` /
+ *     `'scene:behaviour:disable'`.
  *   - Typed `get<T>(id)`.
  *   - **Gesture-conflict warning**: when two enabled behaviours claim the same
  *     `shortcut`, log a `console.warn`. Doesn't enforce — the developer
@@ -14,7 +14,7 @@
  */
 
 import type { CanvasContext } from '../context/CanvasContext';
-import type { CanvasEventBus } from '../events/CanvasEventBus';
+import type { CanvasEventBus } from '@invana/canvas-store';
 import type { IBehaviour } from '../behaviours/Behaviour';
 
 export interface BehaviourRegistryOptions {
@@ -62,9 +62,9 @@ export class BehaviourRegistry {
   /** `behaviour.register(ctx)` + the registered/enabled events. */
   private wire(behaviour: IBehaviour, ctx: CanvasContext): void {
     behaviour.register(ctx);
-    this.bus.emit('behaviour:registered', { id: behaviour.id });
+    this.bus.emit('scene:behaviour:register', { id: behaviour.id });
     if (behaviour.enabled) {
-      this.bus.emit('behaviour:enabled', { id: behaviour.id });
+      this.bus.emit('scene:behaviour:enable', { id: behaviour.id });
       this.warnOnShortcutConflict(behaviour);
     }
   }
@@ -75,7 +75,7 @@ export class BehaviourRegistry {
     if (!b) return;
     if (b.enabled) {
       b.disable();
-      this.bus.emit('behaviour:disabled', { id });
+      this.bus.emit('scene:behaviour:disable', { id });
     }
     this.behaviours.delete(id);
     b.destroy();
@@ -88,11 +88,11 @@ export class BehaviourRegistry {
     if (b.enabled === enabled) return;
     if (enabled) {
       b.enable();
-      this.bus.emit('behaviour:enabled', { id });
+      this.bus.emit('scene:behaviour:enable', { id });
       this.warnOnShortcutConflict(b);
     } else {
       b.disable();
-      this.bus.emit('behaviour:disabled', { id });
+      this.bus.emit('scene:behaviour:disable', { id });
     }
   }
 

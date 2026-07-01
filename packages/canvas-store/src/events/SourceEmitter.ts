@@ -17,9 +17,9 @@ export class SourceEmitter<M extends object> extends EventEmitter<M> {
     super();
   }
 
-  /** Connect (or disconnect with `null`) this emitter's stream to a bus tap. */
-  setBus(bus: CanvasEventBus | null): void {
-    this.bus = bus;
+  /** Connect (or disconnect with `null`/`undefined`) this emitter's stream to a bus tap. */
+  setBus(bus: CanvasEventBus | null | undefined): void {
+    this.bus = bus ?? null;
   }
 
   override emit<K extends keyof M>(type: K, payload: M[K]): void {
