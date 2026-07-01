@@ -17,8 +17,11 @@ import { Button } from '@invana/ui';
 import {
   createCanvasStore,
   createHistory,
+  createTracingSink,
+  createCollectorTracer,
   type CanvasEvent,
   type CanvasStore,
+  type CollectedSpan,
   type History,
   type LayerFlush,
 } from '@invana/canvas-store';
@@ -181,15 +184,19 @@ function Btn({ onClick, children }: { onClick: () => void; children: ReactNode }
 
 // ── the playground ────────────────────────────────────────────────────────────
 function Playground(): ReactNode {
-  const ref = useRef<{ store: CanvasStore; history: History; seq: number } | null>(null);
+  const ref = useRef<{ store: CanvasStore; history: History; seq: number; spans: CollectedSpan[] } | null>(null);
   if (!ref.current) {
-    const store = createCanvasStore();
+    // TRACING — a collector Tracer wired as the store's telemetry sink. Every `view`
+    // update becomes a span (action name + patch diff + durationMs). A real app passes
+    // an OpenTelemetry tracer here instead: `createTracingSink(trace.getTracer('canvas'))`.
+    const { tracer, spans } = createCollectorTracer();
+    const store = createCanvasStore({ telemetry: createTracingSink(tracer) });
     // seed a tiny graph so edges / groups work immediately (they connect existing nodes)
     store.layer('graph').setData({ nodes: [{ id: 'n0' }, { id: 'n1' }, { id: 'n2' }] });
     store.layer('graph').flush();
-    ref.current = { store, history: createHistory(store.view), seq: 3 };
+    ref.current = { store, history: createHistory(store.view), seq: 3, spans };
   }
-  const { store, history } = ref.current;
+  const { store, history, spans } = ref.current;
   const a = store.actions;
   const graph = store.layer('graph');
 
@@ -278,6 +285,28 @@ function Playground(): ReactNode {
           <Btn onClick={() => history.redo()}>redo</Btn>
         </Section>
 
+        <Section title="scene · runtime · focus (new slices)">
+          <Btn onClick={() => a.scene.setBackground(Math.round(Math.random() * 0xffffff))}>scene:setBackground</Btn>
+          <Btn onClick={() => a.scene.setZoomLimits(0.5, 4)}>scene:setZoomLimits</Btn>
+          <Btn onClick={() => a.layoutStatus.begin('force', true)}>layout:status:begin</Btn>
+          <Btn onClick={() => a.layoutStatus.progress(Math.round(Math.random() * 100) / 100)}>layout:status:progress</Btn>
+          <Btn onClick={() => a.layoutStatus.end()}>layout:status:end</Btn>
+          <Btn onClick={() => a.message.show('Running layout…')}>message:show</Btn>
+          <Btn onClick={() => a.message.clear()}>message:clear</Btn>
+          <Btn onClick={() => { const id = pick(ids()); if (id) a.focus.set([id], true); }}>focus:set</Btn>
+          <Btn onClick={() => a.focus.clear()}>focus:clear</Btn>
+          <Btn onClick={() => { const id = pick(ids()); if (id) a.transientPins.add([id]); }}>transientPins:add</Btn>
+          <Btn onClick={() => a.transientPins.clear()}>transientPins:clear</Btn>
+          {/* RESOLVED theme (store.theme.set) → fires `theme:change` on the bus — distinct
+              from `a.theme.set` above, which only patches the view's theme *config*. */}
+          <Btn onClick={() => store.theme.set({
+            kind: store.theme.current()?.kind === 'dark' ? 'light' : 'dark',
+            name: 'forest',
+            palette: { surface: 0x0b0f0a, foreground: 0xe6f0e6, accent: 0x66bb6a },
+            categorical: [0x2e7d32, 0x66bb6a],
+          })}>theme.set → theme:change</Btn>
+        </Section>
+
         <Section title="engine reports (scene / input / layout)">
           <Btn onClick={() => store.events.emit('scene:layer:add', { id: 'graph' })}>scene:layer:add</Btn>
           <Btn onClick={() => store.events.emit('scene:behaviour:enable', { id: 'hover' })}>scene:behaviour:enable</Btn>
@@ -322,6 +351,13 @@ function Playground(): ReactNode {
       <div className="flex min-h-0 min-w-0 flex-col border-l border-border" style={{ flex: '1.5 1 0' }}>
         <div className="flex shrink-0 items-center border-b border-border bg-muted/30 px-3 py-1">
           <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">events ({log.length})</span>
+          {/* TRACING — telemetry spans collected from view updates (action + durationMs). */}
+          <span className="ml-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground" title="telemetry sink → spans (createTracingSink)">
+            traces ({spans.length})
+            {spans.length > 0
+              ? ` · ${spans[spans.length - 1]!.name} ${Number(spans[spans.length - 1]!.attributes['canvas.duration_ms'] ?? 0).toFixed(3)}ms`
+              : ''}
+          </span>
           {log.length > 0 ? (
             <Button variant="ghost" size="sm" className="ml-auto h-6 px-2 text-xs text-muted-foreground" onClick={() => setLog([])}>
               clear

@@ -39,6 +39,8 @@ export interface StoreChange<T> {
   patches: Patch[];
   /** immer inverse patches (apply to `state` → `prev` — i.e. undo). */
   inverse: Patch[];
+  /** Wall-clock ms the update/batch took (produce + commit) — telemetry / tracing. */
+  durationMs?: number;
 }
 
 type Primitive = string | number | boolean | bigint | symbol | null | undefined;

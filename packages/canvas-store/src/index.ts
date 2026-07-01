@@ -90,6 +90,18 @@ export {
   type TelemetrySink,
   type TelemetryEvent,
 } from './telemetry/withTelemetry';
+// Tracing adapters (dep-free — inject an OpenTelemetry Tracer; it satisfies these).
+export {
+  createTracingSink,
+  createTapTracer,
+  createConsoleTracer,
+  createCollectorTracer,
+  type Tracer,
+  type TraceSpan,
+  type SpanAttributes,
+  type SpanAttrValue,
+  type CollectedSpan,
+} from './telemetry/tracing';
 
 // ── History ───────────────────────────────────────────────────────────────────
 export { createHistory, type History } from './history/createHistory';

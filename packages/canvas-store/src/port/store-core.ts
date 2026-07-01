@@ -3,6 +3,9 @@ import type { Patch } from 'immer';
 import { computeChange } from './patch';
 import type { ReactiveStore, StateCell, StoreChange, Update } from './types';
 
+/** High-resolution clock when available (browser/node); falls back to `Date.now`. */
+const clock = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+
 /**
  * Build a full {@link ReactiveStore} on top of a {@link StateCell}. This is where
  * the change/patch/batch logic lives — shared by every adapter (memory, zustand,
@@ -31,6 +34,7 @@ export function createStoreFromCell<T>(cell: StateCell<T>): ReactiveStore<T> {
 
   function update(u: Update<T>, action?: string): void {
     const prev = getState();
+    const t0 = clock();
     const { next, patches, inverse } = computeChange(prev, u);
     if (next === prev) return; // no-op write — nothing changed
     if (batching) {
@@ -39,7 +43,7 @@ export function createStoreFromCell<T>(cell: StateCell<T>): ReactiveStore<T> {
       batchInverse.unshift(...inverse);
     } else {
       cell.set(next); // fires state listeners with (next, prev)
-      emitChange({ state: next, prev, action, patches, inverse });
+      emitChange({ state: next, prev, action, patches, inverse, durationMs: clock() - t0 });
     }
   }
 
@@ -53,6 +57,7 @@ export function createStoreFromCell<T>(cell: StateCell<T>): ReactiveStore<T> {
     working = batchStart;
     batchPatches = [];
     batchInverse = [];
+    const t0 = clock();
     try {
       run();
     } finally {
@@ -65,6 +70,7 @@ export function createStoreFromCell<T>(cell: StateCell<T>): ReactiveStore<T> {
           action,
           patches: batchPatches,
           inverse: batchInverse,
+          durationMs: clock() - t0,
         });
       }
     }

@@ -13,6 +13,8 @@ export interface TelemetryEvent {
   patches: Patch[];
   /** Timestamp (ms). */
   ts: number;
+  /** Wall-clock ms the update took (produce + commit), when the store reports it. */
+  durationMs?: number;
 }
 
 /** Where telemetry events go. The engine stays exporter-agnostic; the app wires this. */
@@ -40,6 +42,7 @@ export function withTelemetry<T>(
       changedPaths: changedPaths(change.patches),
       patches: change.patches,
       ts: now(),
+      ...(change.durationMs !== undefined ? { durationMs: change.durationMs } : {}),
     });
   });
   return store;
