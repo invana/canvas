@@ -14,6 +14,10 @@
             "dev",
             // "--filter=storybook"
         ],
+        "env": {
+            "VITE_INVANA_TELEMETRY_ENABLED": "true",
+            "VITE_INVANA_TELEMETRY_OTLP_HTTP_ENDPOINT": "http://localhost:4318/v1/traces"
+        },
         "console": "integratedTerminal",
         },
         {

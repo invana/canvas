@@ -74,13 +74,6 @@ export interface CanvasGlobalEvents {
 
   // ── theme — resolved-theme broadcast (CanvasThemeState.set) ──────────────────
   'theme:change': ResolvedTheme;
-
-  /**
-   * @deprecated Back-compat bridge for the legacy coarse options event. Superseded
-   * by `state:change` + slice subscriptions; removed in migration Phase 6 once no
-   * consumer subscribes. Carries the touched layer/behaviour ids (serialisable).
-   */
-  'options:change': { changedLayerIds: readonly string[]; changedBehaviourIds: readonly string[] };
 }
 
 /**

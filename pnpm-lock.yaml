@@ -241,6 +241,9 @@ importers:
 
   packages/canvas-react:
     dependencies:
+      '@invana/canvas-store':
+        specifier: workspace:*
+        version: link:../canvas-store
       '@invana/themes':
         specifier: ^0.0.12
         version: 0.0.12(@invana/styling@0.0.12(tailwindcss@4.3.0))(@invana/ui@0.0.12(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

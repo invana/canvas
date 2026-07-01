@@ -18,6 +18,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@invana/canvas-store": "workspace:*",
     "@invana/themes": "^0.0.12",
     "lucide-react": "^0.562.0"
   },

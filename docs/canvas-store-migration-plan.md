@@ -114,44 +114,64 @@ The kernel becomes the observable truth *beneath* the existing apply path.
 
 ---
 
-## Phase 4 — Granular reads + React binding (M1, D5)
+## Phase 4 — Granular reads + React binding (M1, D5) ✅ DONE
 
-- [ ] `useStore(store, selector)` in `@invana/canvas-react` via `useSyncExternalStore` (+ `select` equality).
-- [ ] Migrate readers **one at a time** off the coarse `options:change` to slice-scoped subscriptions: `useGraphCanvasOptions` (drop the copy anti-pattern), `MiniMapLayer`, the `canvas-ui` editors.
+- [x] `useStore(store, selector, isEqual?)` in `@invana/canvas-react` via `useSyncExternalStore` over the kernel `select` port (`hooks/useStore.ts`). Documents the R4 stability contract (module-scope/`useCallback` selectors returning referentially-stable slices). `@invana/canvas-store` added as a direct dep.
+- [x] Migrated the readers off `options:change`: `useGraphCanvasOptions` now `useStore(canvas.store.view, s => s.definition)` (no copy anti-pattern); `MiniMapLayer` subscribes to its background-layer config slice via `select(ctx.store.view, s => s.definition.layers[bgId])`. (No `canvas-ui` editor consumed `options:change`.) `select`/`ReactiveStore`/`CanvasView` re-exported from `@invana/canvas` so graph layers subscribe without a direct kernel dep.
 
-**Packages:** `@invana/canvas-react`, `@invana/canvas-ui`. **Gate:** idle components don't re-render on unrelated change. **Risk:** R4 (selector instability) — module-scope/`useCallback` selectors.
-
----
-
-## Phase 5 — Fold interaction + camera (M2, D3/D11) + resolve the state model
-
-- [ ] Behaviours write selection/hover/states/camera via `view.update(patch, action)` (the action layer already exists).
-- [ ] Move presence (`GraphStore.nodeRuntimeStates`) → `view.interaction.states`; wire `focus` (highlight-neighbourhood) and `transientPins` (drag locks) — both already in the view shape.
-- [ ] **Resolve the 3-way `states` split** (inventory §11.1): catalogue → `definition.styling`; document flags (`disabled`) → `data`; presence → `interaction.states`. Renderer reads the union.
-
-**Packages:** `@invana/graph`, `@invana/canvas`. **Gate:** `rerenderNode(id)` granularity preserved; hover-sweep over 50k stays one focus update + one dim/frame.
+**Packages:** `@invana/canvas-react`, `@invana/graph`, `@invana/canvas`. **Gate:** idle components don't re-render on unrelated change ✅ (slice equality). Types + tests green across all four packages.
 
 ---
 
-## Phase 6 — Drop the bridge (M3)
+## Phase 5 — Fold interaction + camera (M2, D3/D11) ✅ CORE DONE (landed in slices)
 
-- [ ] Remove the back-compat `options:change` re-emit once no consumer depends on it (confirm via grep + the migrated readers from Phase 4).
+- [x] **Slice A — camera (bidirectional).** `Camera` binds `store.view.interaction.camera` ↔ the pixi viewport: gestures + programmatic mutators push the abstract `{x,y,zoom}` transform in (via `actions.camera.set`); external `actions.camera.*` writes apply back onto the viewport. Loop-guarded (`_syncing` + value-equality); torn down in `Canvas.destroy` via `camera.dispose()`. Story-verified.
+- [x] **Slice B — selection (D11).** `ClickSelectBehaviour` mirrors the semantic selection (nodes + edges) into `view.interaction.selection` at its single `selection:change` point (lasso/brush delegate through it). **Additive** — the behaviour keeps owning the interaction machinery (expansion / dimming / z-raise) and render visuals; the store gets the observable/syncable set.
+- [x] **Slice C — hover.** `HoverActivateBehaviour` mirrors the focal hover id into `view.interaction.hover` at each `this.current` transition. Additive, same as B.
+- [x] **3-way `states` split — RESOLVED.** Catalogue → `definition.styling`; document flags → `data`; **semantic interaction (selection/hover/focus/camera) → `view.interaction`**; **high-cardinality per-node presence → stays in `GraphStore`'s typed lane** (D13 precedent + Invariant #1 + the 50k hover gate — putting per-node presence in immer would regress it). The renderer reads the union.
 
-**Gate:** nothing subscribes to the legacy event. **Revertible:** re-add the one re-emit line.
+**Gate:** `rerenderNode(id)` granularity preserved ✅ (render path untouched — the mirror is additive). Types + tests green across all four packages.
+
+**Remaining polish (optional, not blocking):** wire `focus` (highlight-neighbourhood → `view.interaction.focus`, the O(1) bulk-dim) and `transientPins` (drag locks → `view.interaction.transientPins`) — actions exist; no behaviour writes them yet. Inverting ownership so the renderer reads selection/hover *from* the store (dropping the `GraphStore` 'selected'/'hovered' runtime states) is a deeper follow-up — deferred to avoid destabilising the intricate selection/hover machinery.
 
 ---
 
-## Phase 7 — Telemetry wired (M4)
+## Phase 6 — Drop the bridge (M3) ✅ DONE
 
-- [ ] App wires an OTel adapter to the `TelemetrySink` (`action` → span/metric name, `changedPaths` → attributes, sampling at the sink). Engine stays exporter-agnostic. Additive — everything already flows through `update`.
+- [x] Removed the `options:change` emit (`Canvas.update`) and its `CanvasGlobalEvents` type — both migrated readers (Phase 4) now use `store.view` slices; grep-confirmed no remaining source consumer.
+
+**Gate:** nothing subscribes to the legacy event ✅. **Revertible:** re-add the emit + type.
 
 ---
 
-## Phase 8 — Collaboration (M5)
+## Phase 7 — Telemetry wired (M4) ✅ DONE (engine passthrough)
 
-- [ ] Yjs/Automerge adapter behind the `ReactiveStore` port (`update` → a Yjs txn) + **Awareness** for presence. Consumers unchanged.
-- [ ] Enforce the three-channel split: `definition` → Doc; `interaction` → Awareness; `data` positions/bulk → **never** the CRDT.
+- [x] `Canvas` accepts a `telemetry?: TelemetrySink` option and forwards it to `createCanvasStore({ telemetry })` — one event per `view` mutation (`action` + `changedPaths` + `durationMs`). Engine stays exporter-agnostic; the host app supplies the OTel-backed sink. For the whole event stream, apps also tap `canvas.store.events` (`createTapTracer(canvas.store.events, tracer)`). *(Previously only the Playground story wired a tracer; a real app can now do `new Canvas({ telemetry })`.)*
+
+---
+
+## Phase 8 — Collaboration (M5) ⏸️ DEFERRED (do **not** implement Yjs yet — decided 2026-07-01)
+
+> **Decision:** backend will be **Yjs** (not Automerge) when built; **not now.** The
+> `ReactiveStore` port already makes it a drop-in, so there's no cost to waiting.
+> Revisit when there's a real multi-user requirement. Don't add `yjs` deps or a
+> `createYjsStore` adapter until this is explicitly reopened.
+
+Planned shape (for whenever it's picked up):
+
+- [ ] Yjs adapter behind the `ReactiveStore` port — a **Yjs-backed `StateCell`**
+  (deep-reconcile `set(next)` → granular `Y.Map`/`Y.Array` ops in a `doc.transact`;
+  `observeDeep` → structural-sharing snapshot rebuild → notify), reused through
+  `createStoreFromCell` so patches/history/telemetry are unchanged. Ship as an
+  **optional** dep + a separate subpath entry (`@invana/canvas-store/yjs`) so core
+  consumers don't pull `yjs`. Generic `Set` round-trip needs **tagged** encoding.
+- [ ] Enforce the three-channel split: `definition` → `Y.Doc`; `interaction`
+  (selection/hover/camera — now in `view.interaction`, Phase 5) → **Awareness**;
+  `data` positions/bulk → **never** the CRDT. This is CanvasView-aware routing on
+  top of the generic adapter.
 - [ ] History delegates to Yjs `UndoManager` (same `createHistory` surface).
+- [ ] **Caveat:** can't be validated headlessly — needs a 2nd client. Plan for a
+  two-peer story / test harness before landing.
 
 ---
 
@@ -165,15 +185,20 @@ The kernel becomes the observable truth *beneath* the existing apply path.
 ## Sequencing
 
 ```
-Phase 0 ✅ ─► Phase 1 (kernel fast lane) ─► Phase 2 (engine M0) ─► Phase 3 (data ownership D7)
-                                                   │
-                                                   ├─► Phase 4 (React reads) ─► Phase 6 (drop bridge) ─► Phase 7 (telemetry)
-                                                   └─► Phase 5 (interaction/camera + states split)
-                                                                                                     └─► Phase 8 (collab) ─► Phase 9 (scale)
+Phase 0 ✅ ─► Phase 1 ✅ ─► Phase 2 ✅ (engine M0) ─► Phase 3 ✅ (data ownership D7)
+                                            │
+                                            ├─► Phase 4 ✅ (React reads) ─► Phase 6 ✅ (drop bridge) ─► Phase 7 ✅ (telemetry)
+                                            └─► Phase 5 ✅ core (interaction/camera + states split)
+                                                                                             └─► Phase 8 ⏸️ (collab, deferred) ─► Phase 9 📋 (scale)
 ```
 
-Phase 1 is independent and unblocks confidence in the perf model. Phases 2→3 are the
-load-bearing engine integration. 4 and 5 can proceed in parallel after 3. 6 depends on 4.
+**Status (2026-07-01):** Phases **0–7 done** (+ the renderer **kernel+seam** work:
+`IRenderer`, one bus = `store.events`, `view.definition` as source of truth). **Phase 5
+core done** (camera bidirectional; selection/hover mirrored into `view.interaction`;
+per-node presence stays in `GraphStore`'s typed lane) — its `focus`/`transientPins`
+wiring + ownership-inversion are optional follow-ups. **Phase 8 (Yjs) deferred** by
+decision. **Phase 9 (scale)** remains optional/benchmark-gated. Next renderer step is
+**P2** — extract `@invana/renderer-pixijs` (see `renderer-pixijs-extraction-plan.md`).
 
 ## Cross-cutting decisions — where each is resolved
 

@@ -35,7 +35,12 @@
 
 import { Application, Container, type EventSystem, type Ticker } from 'pixi.js';
 import { Viewport } from 'pixi-viewport';
-import { CanvasEventBus, createCanvasStore, type CanvasStore } from '@invana/canvas-store';
+import {
+  CanvasEventBus,
+  createCanvasStore,
+  type CanvasStore,
+  type TelemetrySink,
+} from '@invana/canvas-store';
 
 import { CanvasThemeState } from '../theme/CanvasThemeState';
 import { Camera } from '../camera/Camera';
@@ -109,6 +114,15 @@ export interface CanvasOptions {
    * The single place to set all settings. Pure JSON — see {@link CanvasConfig}.
    */
   config?: CanvasConfig;
+
+  /**
+   * Optional telemetry sink — receives one {@link TelemetrySink} event per `view`
+   * mutation (`action` + `changedPaths` + `durationMs`). The engine stays
+   * exporter-agnostic (kernel design); a host app supplies an OTel-backed sink.
+   * For the **whole** event stream (input / scene / data / layout), also tap
+   * `canvas.store.events` directly (`createTapTracer(canvas.store.events, tracer)`).
+   */
+  telemetry?: TelemetrySink;
 }
 
 // ─── Canvas ────────────────────────────────────────────────────────────────
@@ -174,7 +188,7 @@ export class Canvas {
     this.options = opts;
     // The kernel owns the one canvas-wide bus; the engine converged onto it
     // (no separate engine bus). `canvas.events` *is* `store.events`.
-    this.store = createCanvasStore();
+    this.store = createCanvasStore(opts.telemetry ? { telemetry: opts.telemetry } : {});
     this.events = this.store.events;
     this.themeState = new CanvasThemeState(this.events);
 
@@ -391,10 +405,11 @@ export class Canvas {
   }
 
   /**
-   * Apply a JSON config patch. Deep-merges into the held config, then pushes
-   * each layer/behaviour slice to that instance's `setOptions`, resolved by id
-   * (unknown ids no-op — register the instance first). Emits one
-   * `options:change` so observers (e.g. a settings UI) can re-read via {@link get}.
+   * Apply a JSON config patch. Writes `store.view.definition` (the source of
+   * truth) and pushes each layer/behaviour slice to that instance's `setOptions`,
+   * resolved by id (unknown ids no-op — register the instance first). Observers
+   * subscribe to `store.view` slices (`useStore` / `select`) or `state:change`
+   * rather than a coarse bus event.
    *
    * The config is pure JSON keyed by id — instances themselves are registered
    * imperatively (`canvas.layers.add(new XLayer({ id }))`).
@@ -425,11 +440,6 @@ export class Canvas {
       }
       if (patch.activeLayout !== undefined) s.definition.activeLayout = patch.activeLayout;
     }, 'canvas:update');
-
-    this.events.emit('options:change', {
-      changedLayerIds: Object.keys(patch.layers ?? {}),
-      changedBehaviourIds: Object.keys(patch.behaviours ?? {}),
-    });
   }
 
   /**
@@ -562,6 +572,7 @@ export class Canvas {
     this.layers?.clear();
     this.behaviours?.clear();
     this.layouts?.clear();
+    this.camera?.dispose();
     this.world?.destroy({ children: true });
     this.events.clearTaps();
     this.events.removeAllListeners();
@@ -619,6 +630,7 @@ export class Canvas {
       screenWidth,
       screenHeight,
       bus: this.events,
+      store: this.store,
     });
 
     // Default the camera so world (0, 0) sits at the centre of the screen.

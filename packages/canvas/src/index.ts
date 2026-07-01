@@ -28,6 +28,18 @@ export {
   findSerialisationViolations,
 } from './events/assertSerialisable';
 
+// ─── Store port (kernel reactive-store reads) ────────────────────────────────
+// Re-exported so layers/behaviours can subscribe to `ctx.store.view` slices
+// without a direct `@invana/canvas-store` dependency (mirrors the events block).
+export {
+  select,
+  shallowEqual,
+  defaultEqual,
+  type Selected,
+  type ReactiveStore,
+  type CanvasView,
+} from '@invana/canvas-store';
+
 // ─── State ──────────────────────────────────────────────────────────────
 export { createLayerStore } from './state/Store';
 export type { Store, StoreApi, CreateLayerStoreOptions } from './state/Store';

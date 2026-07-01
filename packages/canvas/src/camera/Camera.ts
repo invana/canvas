@@ -28,7 +28,7 @@
  */
 
 import type { Viewport } from 'pixi-viewport';
-import type { CanvasEventBus } from '@invana/canvas-store';
+import { select, type CanvasEventBus, type CanvasStore } from '@invana/canvas-store';
 
 export interface Point {
   x: number;
@@ -52,8 +52,15 @@ export interface CameraOptions {
   /** Initial viewport size in CSS pixels. Mirrors the Viewport's own `screenWidth`/`screenHeight` for projection math. */
   screenWidth: number;
   screenHeight: number;
-  /** Optional bus for `camera:zoom` / `camera:pan` events. */
+  /** Optional bus for `input:camera:zoom` / `input:camera:pan` events. */
   bus?: CanvasEventBus;
+  /**
+   * Optional kernel store. When present, the camera keeps
+   * `store.view.interaction.camera` (the abstract `{x,y,zoom}` transform) in sync
+   * with the pixi viewport **both ways** — gestures/mutators push into the store,
+   * and external `actions.camera.*` writes apply to the viewport.
+   */
+  store?: CanvasStore;
   /** Initial uniform scale. Default 1. */
   initialScale?: number;
   /** Initial world-container offset (= where world (0,0) lives in screen pixels). Default (0,0). */
@@ -81,9 +88,17 @@ export class Camera {
   private readonly _minScale: number;
   private readonly _maxScale: number;
 
+  /** Kernel store (optional) — the home of the abstract `interaction.camera` transform. */
+  private readonly store?: CanvasStore;
+  /** Re-entrancy guard so viewport↔store sync never ping-pongs. */
+  private _syncing = false;
+  /** Unsubscribe for the `interaction.camera` slice subscription. */
+  private _offStoreCam?: () => void;
+
   constructor(opts: CameraOptions) {
     this.viewport = opts.viewport;
     this.bus = opts.bus;
+    this.store = opts.store;
     this._screenWidth = opts.screenWidth;
     this._screenHeight = opts.screenHeight;
     this._minScale = opts.minScale ?? 0.01;
@@ -102,6 +117,7 @@ export class Camera {
     // trigger viewport's 'moved' / 'zoomed', so we don't double-emit.
     this.viewport.on('moved', () => {
       this.bus?.emit('input:camera:pan', { x: this.viewport.position.x, y: this.viewport.position.y });
+      this.pushToStore();
     });
     this.viewport.on('zoomed', () => {
       this.bus?.emit('input:camera:zoom', {
@@ -110,7 +126,62 @@ export class Camera {
         centerY: this._screenHeight / 2,
       });
       this.bus?.emit('input:camera:pan', { x: this.viewport.position.x, y: this.viewport.position.y });
+      this.pushToStore();
     });
+
+    // Bidirectional bind to `store.view.interaction.camera`: seed it from the
+    // initial viewport transform, then apply any external `actions.camera.*` write
+    // back onto the viewport (the `_syncing` guard breaks the feedback loop).
+    if (this.store) {
+      this.pushToStore();
+      const cameraSlice = select(this.store.view, (s) => s.interaction.camera);
+      this._offStoreCam = cameraSlice.subscribe(() => this.applyFromStore());
+    }
+  }
+
+  /**
+   * Push the current viewport transform into `store.view.interaction.camera`.
+   * Called from every camera mutation (gesture + programmatic). No-op when the
+   * store already matches or a store→viewport apply is in flight.
+   */
+  private pushToStore(): void {
+    if (!this.store || this._syncing) return;
+    const x = this.viewport.position.x;
+    const y = this.viewport.position.y;
+    const zoom = this.viewport.scale.x;
+    const cur = this.store.view.getState().interaction.camera;
+    if (cur.x === x && cur.y === y && cur.zoom === zoom) return;
+    this._syncing = true;
+    try {
+      this.store.actions.camera.set({ x, y, zoom });
+    } finally {
+      this._syncing = false;
+    }
+  }
+
+  /**
+   * Apply `store.view.interaction.camera` onto the viewport — realises an external
+   * `actions.camera.*` write. No-op when the viewport already matches or a
+   * viewport→store push is in flight. `position.set`/`scale.set` don't fire the
+   * viewport's `moved`/`zoomed`, so this doesn't re-enter.
+   */
+  private applyFromStore(): void {
+    if (!this.store || this._syncing) return;
+    const c = this.store.view.getState().interaction.camera;
+    if (
+      this.viewport.position.x === c.x &&
+      this.viewport.position.y === c.y &&
+      this.viewport.scale.x === c.zoom
+    ) {
+      return;
+    }
+    this._syncing = true;
+    try {
+      this.viewport.scale.set(this.clampScale(c.zoom));
+      this.viewport.position.set(c.x, c.y);
+    } finally {
+      this._syncing = false;
+    }
   }
 
   // ─── Read accessors ──────────────────────────────────────────────────────
@@ -147,6 +218,7 @@ export class Camera {
     if (x === this.x && y === this.y) return;
     this.viewport.position.set(x, y);
     this.bus?.emit('input:camera:pan', { x, y });
+    this.pushToStore();
   }
 
   /** Pan by `(dx, dy)` screen pixels. */
@@ -171,6 +243,7 @@ export class Camera {
       centerY: this._screenHeight / 2,
     });
     this.bus?.emit('input:camera:pan', { x: this.x, y: this.y });
+    this.pushToStore();
   }
 
   /**
@@ -196,6 +269,7 @@ export class Camera {
     );
     this.bus?.emit('input:camera:zoom', { scale: nextScale, centerX, centerY });
     this.bus?.emit('input:camera:pan', { x: this.x, y: this.y });
+    this.pushToStore();
   }
 
   /**
@@ -224,6 +298,7 @@ export class Camera {
       centerY: this._screenHeight / 2,
     });
     this.bus?.emit('input:camera:pan', { x: tx, y: ty });
+    this.pushToStore();
   }
 
   /**
@@ -238,6 +313,7 @@ export class Camera {
     const ty = this._screenHeight / 2 - worldY * scale;
     this.viewport.position.set(tx, ty);
     this.bus?.emit('input:camera:pan', { x: tx, y: ty });
+    this.pushToStore();
   }
 
   /** Update on viewport resize. Forwards to Viewport so its hit-area + plugin math stays correct. */
@@ -279,6 +355,12 @@ export class Camera {
    */
   tick(dt: number): void {
     this.viewport.update(dt);
+  }
+
+  /** Tear down the store subscription. Called by `Canvas.destroy`. */
+  dispose(): void {
+    this._offStoreCam?.();
+    this._offStoreCam = undefined;
   }
 
   private clampScale(scale: number): number {

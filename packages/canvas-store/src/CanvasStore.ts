@@ -57,6 +57,43 @@ export interface CreateCanvasStoreOptions {
   backend?: 'zustand' | 'memory';
 }
 
+/** A callback invoked for **every** {@link CanvasStore} at creation. */
+export type CanvasStoreObserver = (store: CanvasStore) => void;
+
+/**
+ * The observer registry lives on `globalThis` under a `Symbol.for` key so it's a
+ * **true singleton** even if a bundler (e.g. Vite's `optimizeDeps`) instantiates
+ * this module more than once — otherwise a consumer that registers via one copy
+ * (`preview.ts`) would never see stores created through another copy (the engine).
+ */
+const OBSERVERS_KEY = Symbol.for('@invana/canvas-store:storeObservers');
+const globalSlot = globalThis as unknown as {
+  [OBSERVERS_KEY]?: Set<CanvasStoreObserver>;
+};
+const storeObservers: Set<CanvasStoreObserver> = (globalSlot[OBSERVERS_KEY] ??=
+  new Set<CanvasStoreObserver>());
+
+/**
+ * Register a global observer fired for **every** {@link CanvasStore} created via
+ * {@link createCanvasStore} — regardless of how the `Canvas` was constructed
+ * (imperative `new Canvas()`, `<Canvas>`/`GraphCanvasApp`, or a bare
+ * `createCanvasStore()`). The one central seam for cross-cutting instrumentation.
+ *
+ * Opt-in (nothing runs until you register): production is unaffected. The intended
+ * use is dev/observability — e.g. Storybook wires a tracer to *every* story's bus
+ * in one place:
+ *
+ * ```ts
+ * onCanvasStoreCreated((store) => createTapTracer(store.events, getTracer()));
+ * ```
+ *
+ * @returns an unsubscribe function.
+ */
+export function onCanvasStoreCreated(observer: CanvasStoreObserver): () => void {
+  storeObservers.add(observer);
+  return () => storeObservers.delete(observer);
+}
+
 /** Create a fresh {@link CanvasStore}. */
 export function createCanvasStore(opts: CreateCanvasStoreOptions = {}): CanvasStore {
   const view =
@@ -125,5 +162,9 @@ export function createCanvasStore(opts: CreateCanvasStoreOptions = {}): CanvasSt
 
   const actions = createActions(view, layer, events);
 
-  return { view, data, events, theme, setSource, source, layer, actions };
+  const store: CanvasStore = { view, data, events, theme, setSource, source, layer, actions };
+  // Fire global observers (opt-in) — the one place every store, however its
+  // Canvas was constructed, can be instrumented (e.g. Storybook-wide tracing).
+  for (const observe of storeObservers) observe(store);
+  return store;
 }

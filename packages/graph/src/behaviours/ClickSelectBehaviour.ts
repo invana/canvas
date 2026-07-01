@@ -203,6 +203,15 @@ export class ClickSelectBehaviour extends Behaviour {
   /** Subscription disposers. */
   private subs: Array<() => void> = [];
 
+  /**
+   * Kernel store — the semantic selection set is mirrored into
+   * `view.interaction.selection` (D11) so it's observable (`useStore`), tap-able
+   * (telemetry), and syncable (Awareness) without readers touching this behaviour.
+   * The behaviour keeps owning the interaction *machinery* (expansion / dimming /
+   * z-raise) and the render visuals (`GraphStore` runtime states).
+   */
+  private _canvasStore?: CanvasContext['store'];
+
   /** Seed set — ids the user *directly* clicked / passed to `select*`. */
   private seeds = new Map<string, SelectableElementType>();
   /** Expanded set — seeds + degree-expanded neighbours. */
@@ -249,6 +258,7 @@ export class ClickSelectBehaviour extends Behaviour {
       );
     }
     this.layer = layer;
+    this._canvasStore = ctx.store;
 
     const renderer = layer.getRenderer();
     if (!renderer) {
@@ -557,6 +567,12 @@ export class ClickSelectBehaviour extends Behaviour {
     const snapshot = this.buildSnapshot();
     if (this.opts.onSelectionChange) this.opts.onSelectionChange(snapshot);
     this.events.emit('selection:change', snapshot);
+
+    // Mirror the semantic selection (nodes + edges) into the kernel's
+    // `view.interaction.selection` (D11) — the single point every mode reaches
+    // (lasso/brush delegate here). One `set` per change; readers subscribe to the
+    // store slice instead of this behaviour's event.
+    this._canvasStore?.actions.selection.set([...snapshot.shapeIds, ...snapshot.connectorIds]);
   }
 
   /** Expand seeds by `degree` hops (BFS) — same shape as HoverActivate. */

@@ -117,6 +117,8 @@ export { createActions, type CanvasActions } from './actions/createActions';
 // ── Kernel façade ─────────────────────────────────────────────────────────────
 export {
   createCanvasStore,
+  onCanvasStoreCreated,
   type CanvasStore,
+  type CanvasStoreObserver,
   type CreateCanvasStoreOptions,
 } from './CanvasStore';
