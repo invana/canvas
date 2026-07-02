@@ -3,7 +3,7 @@ import { action } from 'storybook/actions';
 import { Canvas, DragPanBehaviour } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/concepts/Events/behaviour:disabled' };
+const meta: Meta = { title: 'canvas/concepts/Events/scene:behaviour:disable' };
 export default meta;
 type Story = StoryObj;
 
@@ -14,7 +14,7 @@ export const BehaviourDisabled: Story = {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-evt-behaviour-disabled')!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
-    canvas.events.on('behaviour:disabled', action('behaviour:disabled'));
+    canvas.events.on('scene:behaviour:disable', action('scene:behaviour:disable'));
     await canvas.init({ container, autoResize: true });
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));

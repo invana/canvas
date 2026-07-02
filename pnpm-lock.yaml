@@ -126,6 +126,9 @@ importers:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
     devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -181,6 +184,9 @@ importers:
         specifier: ^5.0.12
         version: 5.0.12(@types/react@18.3.29)(immer@11.1.4)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
     devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -214,6 +220,9 @@ importers:
       '@invana/ui':
         specifier: ^0.0.12
         version: 0.0.12(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0)
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -263,6 +272,9 @@ importers:
       '@invana/ui':
         specifier: ^0.0.12
         version: 0.0.12(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0)
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -297,6 +309,9 @@ importers:
         specifier: ^5.0.12
         version: 5.0.12(@types/react@18.3.29)(immer@11.1.4)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
     devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -327,6 +342,9 @@ importers:
       '@invana/ui':
         specifier: ^0.0.12
         version: 0.0.12(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.0)
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -393,6 +411,9 @@ importers:
       '@invana/canvas':
         specifier: workspace:*
         version: link:../canvas
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -417,6 +438,9 @@ importers:
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -442,6 +466,9 @@ importers:
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -467,6 +494,9 @@ importers:
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -492,6 +522,9 @@ importers:
       '@invana/canvas':
         specifier: workspace:*
         version: link:../canvas
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -517,6 +550,9 @@ importers:
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -545,6 +581,9 @@ importers:
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -573,6 +612,9 @@ importers:
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -601,6 +643,9 @@ importers:
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -622,6 +667,9 @@ importers:
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config

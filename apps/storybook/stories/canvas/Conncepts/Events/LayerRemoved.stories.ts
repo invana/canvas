@@ -3,7 +3,7 @@ import { action } from 'storybook/actions';
 import { Canvas, LayersPanelLayer, WorldLayer } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/concepts/Events/layer:removed' };
+const meta: Meta = { title: 'canvas/concepts/Events/scene:layer:remove' };
 export default meta;
 type Story = StoryObj;
 
@@ -14,7 +14,7 @@ export const LayerRemoved: Story = {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-evt-layer-removed')!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
-    canvas.events.on('layer:removed', action('layer:removed'));
+    canvas.events.on('scene:layer:remove', action('scene:layer:remove'));
     await canvas.init({ container, autoResize: true });
 
     canvas.layers.add(

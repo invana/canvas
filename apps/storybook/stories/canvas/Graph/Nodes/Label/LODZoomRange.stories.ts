@@ -105,7 +105,7 @@ export const LODZoomRange: Story = {
         graph.store.updateNode(id, { style: { ...prev, labelMaxZoom: settings.zoomedOutMax } });
       }
     });
-    const offZoom = canvas.events.on('camera:zoom', () => {
+    const offZoom = canvas.events.on('input:camera:zoom', () => {
       zoomCtl.value = Number(canvas.camera.scale.toFixed(3));
       liveZoom.updateDisplay();
     });

@@ -161,7 +161,7 @@ export const LayersPanel: Story = {
     }
 
     // Demo-layer add/remove so the user can watch rows appear/disappear
-    // driven by `'layer:added'` / `'layer:removed'`.
+    // driven by `'scene:layer:add'` / `'scene:layer:remove'`.
     let demoCounter = 0;
     const demoLayers: string[] = [];
     const actions = {

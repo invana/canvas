@@ -3,7 +3,7 @@ import { action } from 'storybook/actions';
 import { Canvas, LayersPanelLayer, WorldLayer } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/concepts/Events/layer:added' };
+const meta: Meta = { title: 'canvas/concepts/Events/scene:layer:add' };
 export default meta;
 type Story = StoryObj;
 
@@ -14,7 +14,7 @@ export const LayerAdded: Story = {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-evt-layer-added')!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
-    canvas.events.on('layer:added', action('layer:added'));
+    canvas.events.on('scene:layer:add', action('scene:layer:add'));
     await canvas.init({ container, autoResize: true });
 
     canvas.layers.add(

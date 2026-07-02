@@ -28,6 +28,7 @@
   "devDependencies": {
     "@invana/canvas": "workspace:*",
     "@invana/graph": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/d3-hierarchy": "^3.1.7",
     "tsup": "^8.3.5",

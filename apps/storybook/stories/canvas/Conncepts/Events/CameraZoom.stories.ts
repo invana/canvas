@@ -10,7 +10,7 @@ import {
 import type { CanvasContext } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/concepts/Events/camera:zoom' };
+const meta: Meta = { title: 'canvas/concepts/Events/input:camera:zoom' };
 export default meta;
 type Story = StoryObj;
 
@@ -21,7 +21,7 @@ export const CameraZoom: Story = {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-evt-camera-zoom')!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
-    canvas.events.on('camera:zoom', action('camera:zoom'));
+    canvas.events.on('input:camera:zoom', action('input:camera:zoom'));
     await canvas.init({ container, autoResize: true });
 
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'wheel-zoom', enabled: true }));

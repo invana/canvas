@@ -43,6 +43,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@storybook/addon-docs": "^10.4.0",
     "@storybook/addon-links": "^10.4.0",

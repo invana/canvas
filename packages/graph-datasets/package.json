@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@invana/graph": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "tsup": "^8.3.5",
     "typescript": "5.9.2",

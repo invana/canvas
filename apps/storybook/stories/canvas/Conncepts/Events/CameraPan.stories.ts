@@ -9,7 +9,7 @@ import {
 import type { CanvasContext } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/concepts/Events/camera:pan' };
+const meta: Meta = { title: 'canvas/concepts/Events/input:camera:pan' };
 export default meta;
 type Story = StoryObj;
 
@@ -20,7 +20,7 @@ export const CameraPan: Story = {
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-evt-camera-pan')!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
-    canvas.events.on('camera:pan', action('camera:pan'));
+    canvas.events.on('input:camera:pan', action('input:camera:pan'));
     await canvas.init({ container, autoResize: true });
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));

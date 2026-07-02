@@ -3,7 +3,7 @@ import { action } from 'storybook/actions';
 import { Canvas, DragPanBehaviour, WheelZoomBehaviour, PinchZoomBehaviour } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/concepts/Events/behaviour:registered' };
+const meta: Meta = { title: 'canvas/concepts/Events/scene:behaviour:register' };
 export default meta;
 type Story = StoryObj;
 
@@ -16,7 +16,7 @@ export const BehaviourRegistered: Story = {
     )!;
     const canvas = new Canvas();
     onStoryTeardown(() => canvas.destroy());
-    canvas.events.on('behaviour:registered', action('behaviour:registered'));
+    canvas.events.on('scene:behaviour:register', action('scene:behaviour:register'));
     await canvas.init({ container, autoResize: true });
 
     setTimeout(() => {

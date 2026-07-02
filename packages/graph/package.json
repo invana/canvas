@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@invana/canvas": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "pixi.js": "^8.18.1",
     "tsup": "^8.3.5",
