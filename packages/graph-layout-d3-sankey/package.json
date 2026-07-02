@@ -1,6 +1,6 @@
 {
   "name": "@invana/graph-layout-d3-sankey",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "D3 Sankey Layout for @invana/graph.",
   "type": "module",
   "main": "./dist/index.js",
