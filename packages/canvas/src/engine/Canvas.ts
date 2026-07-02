@@ -6,7 +6,8 @@
  *
  * **What it owns**
  *   - The pixi `Application` (created by `init`) and its `Ticker`.
- *   - The `CanvasEventBus` (typed canvas-wide events + tap channel).
+ *   - The kernel `CanvasStore` (`view`/`data`/`events`/`theme`); `canvas.events`
+ *     *is* the kernel's one canvas-wide `CanvasEventBus` (typed events + tap).
  *   - The `SurfaceManager` (world + screen RenderGroups).
  *   - The `Camera` (pan/zoom/projection).
  *   - The `LayerRegistry` and `BehaviourRegistry`.
@@ -34,8 +35,13 @@
 
 import { Application, Container, type EventSystem, type Ticker } from 'pixi.js';
 import { Viewport } from 'pixi-viewport';
+import {
+  CanvasEventBus,
+  createCanvasStore,
+  type CanvasStore,
+  type TelemetrySink,
+} from '@invana/canvas-store';
 
-import { CanvasEventBus } from '../events/CanvasEventBus';
 import { CanvasThemeState } from '../theme/CanvasThemeState';
 import { Camera } from '../camera/Camera';
 import { LayerRegistry } from '../registries/LayerRegistry';
@@ -108,6 +114,15 @@ export interface CanvasOptions {
    * The single place to set all settings. Pure JSON — see {@link CanvasConfig}.
    */
   config?: CanvasConfig;
+
+  /**
+   * Optional telemetry sink — receives one {@link TelemetrySink} event per `view`
+   * mutation (`action` + `changedPaths` + `durationMs`). The engine stays
+   * exporter-agnostic (kernel design); a host app supplies an OTel-backed sink.
+   * For the **whole** event stream (input / scene / data / layout), also tap
+   * `canvas.store.events` directly (`createTapTracer(canvas.store.events, tracer)`).
+   */
+  telemetry?: TelemetrySink;
 }
 
 // ─── Canvas ────────────────────────────────────────────────────────────────
@@ -116,8 +131,16 @@ export class Canvas {
   readonly id: string;
   readonly options: CanvasOptions;
 
-  /** Serialisable visual config, keyed by instance id. Patched via {@link update}. */
-  private config: CanvasConfig = {};
+  /**
+   * The renderer-free kernel (`@invana/canvas-store`) — the observable truth this
+   * engine projects. **`store.view.definition` is the single source of truth for
+   * serialisable config**: {@link update} writes it and {@link get} reads it (no
+   * parallel `this.config`). Readers subscribe to slices via `useStore`/`select`.
+   *
+   * The store owns `view`, `data`, `events` (the one canvas-wide bus — {@link events}
+   * *is* `store.events`), `theme`, and `history`.
+   */
+  readonly store: CanvasStore;
 
   /**
    * Public surface — populated by `init()` / `initWithStage()`. Accessing
@@ -163,7 +186,10 @@ export class Canvas {
   constructor(opts: CanvasOptions = {}) {
     this.id = opts.id ?? 'canvas';
     this.options = opts;
-    this.events = new CanvasEventBus({ source: { kind: 'canvas', id: this.id } });
+    // The kernel owns the one canvas-wide bus; the engine converged onto it
+    // (no separate engine bus). `canvas.events` *is* `store.events`.
+    this.store = createCanvasStore(opts.telemetry ? { telemetry: opts.telemetry } : {});
+    this.events = this.store.events;
     this.themeState = new CanvasThemeState(this.events);
 
     // Registries exist from construction so layers/behaviours can be added
@@ -180,8 +206,8 @@ export class Canvas {
     // `layer:added` so late arrivals adopt the current theme/options. Pre-init
     // adds carry an empty config so this no-ops there; `_activate`'s `update()`
     // configures them instead.
-    this.events.on('layer:added', ({ id }) => {
-      const slice = this.config.layers?.[id];
+    this.events.on('scene:layer:add', ({ id }) => {
+      const slice = this.store.view.getState().definition.layers[id];
       if (slice) configurable(this.layers.get(id))?.setOptions(slice);
     });
   }
@@ -200,7 +226,7 @@ export class Canvas {
   /**
    * Production init: create a pixi `Application`, mount its canvas into the
    * supplied DOM container, wire the ticker, and emit
-   * `'renderer:initialised'` on the bus.
+   * `'canvas:renderer:ready'` on the bus.
    *
    * The selected backend (and capabilities) flows through the bus event so
    * consumers see which renderer pixi resolved.
@@ -289,7 +315,7 @@ export class Canvas {
 
     this._isInitialised = true;
 
-    this.events.emit('renderer:initialised', {
+    this.events.emit('canvas:renderer:ready', {
       backend: this._detectBackend(),
       capabilities: this._capabilities(),
     });
@@ -310,7 +336,7 @@ export class Canvas {
     }
     this._wireScene(stage, screenWidth, screenHeight);
     this._isInitialised = true;
-    this.events.emit('renderer:initialised', {
+    this.events.emit('canvas:renderer:ready', {
       backend: 'canvas', // headless == no GPU backend
       capabilities: { headless: true },
     });
@@ -328,6 +354,12 @@ export class Canvas {
     if (!this._isInitialised) return;
     // Advance pixi-viewport plugins (decelerate, snap, etc.).
     this.camera.tick(deltaMs);
+    // Drive every registered kernel data source's coalesced flush once per frame —
+    // the single canvas clock (Phase 3.3). Drained BEFORE layers so a source's
+    // delta marks its layer dirty in the same tick. Sources in their own
+    // 'sync'/'frame' mode have usually already drained (flush() no-ops when nothing
+    // is pending); sources the engine has put in 'manual' commit here.
+    for (const id in this.store.data) this.store.data[id]?.flush();
     for (const layer of this.layers.byZOrder()) {
       if (!layer.visible) continue;
       if (layer.hasPending()) layer.flush();
@@ -373,17 +405,16 @@ export class Canvas {
   }
 
   /**
-   * Apply a JSON config patch. Deep-merges into the held config, then pushes
-   * each layer/behaviour slice to that instance's `setOptions`, resolved by id
-   * (unknown ids no-op — register the instance first). Emits one
-   * `options:change` so observers (e.g. a settings UI) can re-read via {@link get}.
+   * Apply a JSON config patch. Writes `store.view.definition` (the source of
+   * truth) and pushes each layer/behaviour slice to that instance's `setOptions`,
+   * resolved by id (unknown ids no-op — register the instance first). Observers
+   * subscribe to `store.view` slices (`useStore` / `select`) or `state:change`
+   * rather than a coarse bus event.
    *
    * The config is pure JSON keyed by id — instances themselves are registered
    * imperatively (`canvas.layers.add(new XLayer({ id }))`).
    */
   update(patch: CanvasConfig): void {
-    this.config = deepMerge(this.config, patch) as CanvasConfig;
-
     for (const [id, options] of Object.entries(patch.layers ?? {})) {
       configurable(this.layers.get(id))?.setOptions(options);
     }
@@ -394,15 +425,35 @@ export class Canvas {
       this.layouts.get(id)?.setOptions(options);
     }
 
-    this.events.emit('options:change', {
-      changedLayerIds: Object.keys(patch.layers ?? {}),
-      changedBehaviourIds: Object.keys(patch.behaviours ?? {}),
-    });
+    // `store.view.definition` is the single source of truth for serialisable
+    // config (no parallel `this.config`). Per-id deep-merge so untouched slices
+    // keep reference identity (idle slice-selectors don't wake).
+    this.store.view.update((s) => {
+      for (const [id, o] of Object.entries(patch.layers ?? {})) {
+        s.definition.layers[id] = deepMerge(s.definition.layers[id] ?? {}, o) as Record<string, unknown>;
+      }
+      for (const [id, o] of Object.entries(patch.behaviours ?? {})) {
+        s.definition.behaviours[id] = deepMerge(s.definition.behaviours[id] ?? {}, o) as Record<string, unknown>;
+      }
+      for (const [id, o] of Object.entries(patch.layouts ?? {})) {
+        s.definition.layouts[id] = deepMerge(s.definition.layouts[id] ?? {}, o) as Record<string, unknown>;
+      }
+      if (patch.activeLayout !== undefined) s.definition.activeLayout = patch.activeLayout;
+    }, 'canvas:update');
   }
 
-  /** Current serialisable config snapshot — drive a settings UI / save-load from this. */
+  /**
+   * Current serialisable config snapshot — drive a settings UI / save-load from
+   * this. Projected from `store.view.definition` (the source of truth).
+   */
   get(): CanvasConfig {
-    return this.config;
+    const d = this.store.view.getState().definition;
+    return {
+      layers: d.layers,
+      behaviours: d.behaviours,
+      layouts: d.layouts,
+      ...(d.activeLayout !== null ? { activeLayout: d.activeLayout } : {}),
+    };
   }
 
   /**
@@ -420,9 +471,11 @@ export class Canvas {
     // holds both the layout and the bus, so the Layout contract stays free of
     // any canvas reference (proposal §2.3). Subscribed before `apply()` —
     // which emits `start` synchronously — and torn down when the run resolves.
+    const layerId = layout.targetLayerId ?? '';
     const offStart = layout.events.on('start', ({ nodeCount, edgeCount, animate }) => {
       this.events.emit('layout:run:start', {
         id: layout.id,
+        layerId,
         nodeCount: nodeCount ?? 0,
         edgeCount: edgeCount ?? 0,
         animate: animate ?? false,
@@ -431,6 +484,7 @@ export class Canvas {
     const offEnd = layout.events.on('end', ({ reason }) => {
       this.events.emit('layout:run:end', {
         id: layout.id,
+        layerId,
         reason: reason === 'completed' ? 'settled' : 'stopped',
       });
     });
@@ -460,7 +514,7 @@ export class Canvas {
    * the layout settles; the layout step is skipped when no `activeLayout` is set.
    */
   async refresh(): Promise<void> {
-    const activeLayout = this.config.activeLayout;
+    const activeLayout = this.store.view.getState().definition.activeLayout;
     if (activeLayout) await this.runLayout(activeLayout);
     this.redraw();
   }
@@ -477,13 +531,13 @@ export class Canvas {
    */
   showMessage(text: string, timeout?: number): void {
     this._currentMessage = text;
-    this.events.emit('message', { text, timeout });
+    this.events.emit('canvas:message:show', { text, timeout });
   }
 
   /** Clear the current canvas message (emits `message` with `text: null`). */
   clearMessage(): void {
     this._currentMessage = null;
-    this.events.emit('message', { text: null });
+    this.events.emit('canvas:message:show', { text: null });
   }
 
   /**
@@ -518,6 +572,7 @@ export class Canvas {
     this.layers?.clear();
     this.behaviours?.clear();
     this.layouts?.clear();
+    this.camera?.dispose();
     this.world?.destroy({ children: true });
     this.events.clearTaps();
     this.events.removeAllListeners();
@@ -575,6 +630,7 @@ export class Canvas {
       screenWidth,
       screenHeight,
       bus: this.events,
+      store: this.store,
     });
 
     // Default the camera so world (0, 0) sits at the centre of the screen.
@@ -589,6 +645,7 @@ export class Canvas {
     // `getContext` thunk the moment it's assigned here.
     this.context = {
       events: this.events,
+      store: this.store,
       theme: this.themeState,
       world: this.world,
       stage: this.stage,

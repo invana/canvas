@@ -46,7 +46,7 @@ export function useHoverElementPreview(
     if (attach()) return () => offs.forEach((off) => off());
 
     setSnapshot(null);
-    const offReg = resolved.events.on('behaviour:registered', ({ id }) => {
+    const offReg = resolved.events.on('scene:behaviour:register', ({ id }) => {
       if (id === previewId && attach()) offReg();
     });
     return () => {

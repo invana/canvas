@@ -2,10 +2,11 @@
 
 ## The why
 
-**We are not a data visualization library. We are a data exploration tool.**
+**We are not a data visualization library. We are a high-performance data investigation
+toolkit for your graphs.**
 
 Visualization libraries render a snapshot and stop. Real understanding doesn't come
-from looking at a picture — it comes from *interacting* with the data: asking a
+from looking at a picture — it comes from *investigating* the data: asking a
 question, filtering, re-laying it out, annotating what you find, and watching the
 view respond. Most graph tooling makes you leave the view to change the question.
 
@@ -26,26 +27,137 @@ Four ways the user acts on data — all without leaving the canvas:
 
 ## Division of responsibility
 
-Canvas is the interactive exploration front-end. **Modelling and analysis execution
+Canvas is the interactive investigation front-end. **Modelling and analysis execution
 live in the backend — [invana-backend](https://github.com/invana/invana)** (queries,
 tasks, pipelines). Canvas drives and reflects them; it does not own them.
 
+## Architecture
+
+Package layering — engine at the base, domain on top, React/UI and apps above
+(cross-package engine deps are `peerDependencies`):
+
+```
+                     apps/storybook   ·   apps/docs
+                                  │
+   ┌──────────────┬───────────────┼────────────────┬────────────────────┐
+   │ canvas-react │   canvas-ui    │ canvas-designer│   graph-datasets    │
+   │ (React bind) │   (editors)    │   (designer)   │     (samples)       │
+   └──────┬───────┴───────┬────────┴───────┬────────┴─────────────────────┘
+          │        graph-layout-*    graph-layer-*
+          │        (force/elk/...)   (contour/bubble-sets/maplibre)
+          └───────────────┴───────────────┘
+                          ▼
+                   @invana/graph        GraphCanvas · GraphLayer · GraphStore · behaviours
+                          │ peer
+                          ▼
+                   @invana/canvas       Canvas · Layer/Behaviour/Layout · Renderer · ColumnStore
+                                        (the only package that touches pixi.js / WebGPU)
+```
+
+Runtime model — one serialisable config is the source of truth; the renderer reads a
+typed-array store for the hot, machine-rate data:
+
+```
+   editors / React hooks
+        │  update(patch)                     get() / options:change ▲
+        ▼                                                           │
+   CanvasConfig ───────────▶ Canvas ──▶ registries: Layers · Behaviours · Layouts
+   {layers,behaviours,                    │
+    layouts,activeLayout}                 ├─ Camera (pixi-viewport)  ├─ EventBus
+                                          └─ Renderer ◀── GraphStore / ColumnStore
+                                                          (positions, streaming — typed arrays, ~10ns writes)
+```
+
+## Feature status
+
+Legend: ✅ shipped · 🚧 in progress · 📋 planned
+
+### Rendering & engine
+| Capability | Status |
+|---|---|
+| WebGPU-first rendering, WebGL2 fallback | ✅ |
+| Shapes — rect / circle / ellipse / polygon / composite, glyph + image fills | ✅ |
+| Connectors — anchors / routers / path styles / markers | ✅ |
+| Decorations (glow / halo / pulse / badge) & effects (shake / breathing / shimmer) | ✅ |
+| Animations — viewport tweens, camera fly-to, easing | ✅ |
+| Serialisable config as single source of truth (`get()` / `update()` / `options:change`) | ✅ |
+| Typed-array `ColumnStore` + streaming feeds (frame-flush, batched events) | ✅ |
+| Light / dark theming via external config patches | ✅ |
+
+### Layouts
+| Layout | Package | Status |
+|---|---|---|
+| Force-directed (live sim) | `graph-layout-d3-force` | ✅ |
+| Layered / tree / radial / stress / box / rect-packing | `graph-layout-elkjs` | ✅ |
+| Tree / cluster / radial / pack / sunburst | `graph-layout-d3-hierarchy` | ✅ |
+| Grid / snake / circular | `graph-layout-geometric` | ✅ |
+| Sankey flow | `graph-layout-d3-sankey` | ✅ |
+| Indented-tree · mind-map · fishbone | (on `OneShotPositionLayout`) | 📋 |
+
+### Layers
+| Layer | Status |
+|---|---|
+| Background · DevInfo · LayersPanel | ✅ |
+| GraphLayer · MiniMapLayer | ✅ |
+| Density contour (fill + stroke) | ✅ |
+| Bubble-sets (group annotation) | ✅ |
+| MapLibre basemap | ✅ |
+
+### Interactions (behaviours)
+| Behaviour | Status |
+|---|---|
+| Camera — drag-pan, wheel-zoom, pinch-zoom, keyboard | ✅ |
+| Select — click, lasso, brush | ✅ |
+| Hover activate + neighbourhood highlight | ✅ |
+| Drag node, node resize, draw edge, create node | ✅ |
+| Context menu, collapse / expand, colour-by-label | ✅ |
+| Hover preview card | ✅ |
+| Level-of-detail (node / edge size, label resolution) | ✅ |
+
+### React & apps
+| Surface | Status |
+|---|---|
+| Declarative `<Canvas>` + child wrappers | ✅ |
+| Hooks — camera / zoom / fit / events, `useGraphCanvasUpdate` / `useGraphCanvasOptions` | ✅ |
+| Components + assembled toolbars | ✅ |
+| `GraphCanvasApp` compound app | ✅ |
+
+### Editors & template authoring
+| Feature | Status |
+|---|---|
+| Node style / styling / structure / hover-card editors (`canvas-ui`) | ✅ |
+| Node template designer — surface 1 of `canvas-designer` | ✅ |
+| An editor for **every** behaviour / layer / layout | 📋 |
+| Edge template designer | 📋 |
+| Whole-canvas designer shell — scene tree + inspector (`canvas-designer`) | 📋 |
+
+### State, observability & collaboration
+| Feature | Status |
+|---|---|
+| Serialisable config + live `update()` + `options:change` events | ✅ |
+| `options` → `state` vocabulary rename | 📋 |
+| OpenTelemetry over state mutations | 📋 |
+| Real-time collaboration (CRDT doc + ephemeral presence) | 📋 |
+| Offline + multi-user (Postgres + Redis sync) | 📋 |
+
 ## What's next
 
-Today, behaviours, layers, and layouts are configured at construction time. To make
-data genuinely *interactive*, their runtime state has to be **editable from the UI**.
+Behaviours, layers, and layouts are configured today through one serialisable config
+(`canvas.update()` / `canvas.get()` / `options:change`). To make data genuinely
+*interactive*, that state needs to be **editable from the UI**:
 
-The next effort: schema-driven **editor components in `@invana/canvas-ui` for every
-behaviour, layer, and layout**, following the pattern the existing `NodeStyleEditor`
-and template editors already establish (`fields.ts` + `mapping.ts` + an `<Editor>`),
-applying changes through `useGraphCanvasUpdate().update(...)` → `setOptions`
-(init-only options remount via the canvas-react wrapper).
+1. **An editor for every behaviour / layer / layout** in `@invana/canvas-ui`, following
+   the `fields.ts` + `mapping.ts` + `<Editor>` pattern the node editors already establish,
+   applied via `useGraphCanvasUpdate().update(...)`.
+2. **OpenTelemetry** over those mutations — every edit becomes a traced, named action.
+3. **Real-time + offline collaboration** — a CRDT document (config / templates /
+   annotations) synced FE↔backend, with ephemeral presence (cursors, idle/away) — so the
+   frontend and `invana-backend` share the exact state of a user's analysis.
 
-Editors turn the visualization's state into something the user steers —
-interaction over illustration, decisions over diagrams.
+Detail in [`docs/collaborative-state-plan.md`](./docs/collaborative-state-plan.md).
 
 ## Design notes & plans
 
 Detailed design rationale and implementation plans live in [`docs/`](./docs/) (internal,
 not the published docs site). See [`docs/README.md`](./docs/README.md) for the index —
-architecture proposal, data model, state/options, and per-feature plans.
+architecture proposal, data model, state/options, collaboration, and per-feature plans.

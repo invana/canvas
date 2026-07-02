@@ -285,6 +285,12 @@ export class GraphLayer extends WorldLayer<
     // Route the store's events onto the canvas tap channel so telemetry sees
     // every data + interaction-state mutation (§ 6). Detached in onUnmount.
     this.store.bindBus(ctx.events);
+    // Register the store as this source on the kernel (D13, Phase 3.2). The store
+    // (which `implements DataSource`) becomes `CanvasStore.data[this.id]`, so the
+    // kernel bridges its `onFlush` onto `data:flush` and a single rAF loop can
+    // drive it. The layer still owns the reference + renders from its granular
+    // events — registration is additive.
+    ctx.store.setSource(this.id, this.store);
     this._renderer = new PrimitivesRenderer({
       container: this.container,
       camera: ctx.camera,

@@ -31,7 +31,7 @@ export function useZoom(canvas?: Canvas | null): UseZoomResult {
   useEffect(() => {
     // Resync immediately in case the resolved instance changed under us.
     setZoomState(resolved.camera.scale);
-    return resolved.events.on('camera:zoom', ({ scale }) => setZoomState(scale));
+    return resolved.events.on('input:camera:zoom', ({ scale }) => setZoomState(scale));
   }, [resolved]);
 
   return { zoom, zoomIn, zoomOut, setZoom, zoomTo };

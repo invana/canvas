@@ -313,26 +313,26 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
     // re-anchor at the viewport centre (their own math), which doesn't
     // match MapLibre's exact transform. We mirror the transform raw, then
     // bridge the resulting camera change onto the canvas event bus below
-    // so behaviours subscribed to `camera:zoom` / `camera:pan` (e.g.
+    // so behaviours subscribed to `input:camera:zoom` / `input:camera:pan` (e.g.
     // `ScreenSizeBehaviour`, `LabelResolutionLODBehaviour`) react to
     // MapLibre-driven pan/zoom too. Without this bridge those listeners
     // are silently never called when the map drives the camera.
     ctx.camera.viewport.scale.set(scale);
     ctx.camera.viewport.position.set(tx, ty);
 
-    // `camera:zoom` only when scale actually changes — most map gestures
+    // `input:camera:zoom` only when scale actually changes — most map gestures
     // are pan-only and the reflow listeners are O(N) over their tracked
     // entities, so we don't want to fire on every move tick during a
     // long pan.
     if (this.lastEmittedScale === null || this.lastEmittedScale !== scale) {
-      ctx.events.emit('camera:zoom', {
+      ctx.events.emit('input:camera:zoom', {
         scale,
         centerX: ctx.camera.screenWidth / 2,
         centerY: ctx.camera.screenHeight / 2,
       });
       this.lastEmittedScale = scale;
     }
-    ctx.events.emit('camera:pan', { x: tx, y: ty });
+    ctx.events.emit('input:camera:pan', { x: tx, y: ty });
 
     this.events.emit('map:move', {
       center: [map.getCenter().lng, map.getCenter().lat],

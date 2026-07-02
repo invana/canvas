@@ -9,7 +9,7 @@
  * events (so the checkboxes are clickable); the layer itself still opts out
  * of engine hit-testing via `hittable: false`.
  *
- * The panel re-renders on `'layer:added'` / `'layer:removed'`. The panel's
+ * The panel re-renders on `'scene:layer:add'` / `'scene:layer:remove'`. The panel's
  * own row is filtered out so the user can't hide it via itself.
  *
  * Headless / offscreen mode: when `ctx.canvasElement` is undefined (i.e.
@@ -184,8 +184,8 @@ export class LayersPanelLayer extends ScreenLayer<LayersPanelLayerOptions, Layer
     parent.appendChild(div);
 
     // Re-render when the layer set changes.
-    this._unsubs.push(ctx.events.on('layer:added', () => this._render()));
-    this._unsubs.push(ctx.events.on('layer:removed', () => this._render()));
+    this._unsubs.push(ctx.events.on('scene:layer:add', () => this._render()));
+    this._unsubs.push(ctx.events.on('scene:layer:remove', () => this._render()));
 
     // Single delegated change listener for all checkboxes.
     this._onChange = (e: Event) => {

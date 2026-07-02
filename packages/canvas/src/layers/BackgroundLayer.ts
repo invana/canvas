@@ -183,12 +183,12 @@ export class BackgroundLayer extends ScreenLayer<
       if (this.mounted) this.render();
     });
 
-    this.offCameraPan = ctx.events.on('camera:pan', ({ x, y }) => {
+    this.offCameraPan = ctx.events.on('input:camera:pan', ({ x, y }) => {
       this.camX = x;
       this.camY = y;
       this.syncTileTransform();
     });
-    this.offCameraZoom = ctx.events.on('camera:zoom', ({ scale }) => {
+    this.offCameraZoom = ctx.events.on('input:camera:zoom', ({ scale }) => {
       // `centerX/centerY` is the screen-space zoom anchor — *not* the
       // world-origin screen position — so we only consume the new scale here.
       // The accompanying `camera:pan` emission (always paired with zoom)

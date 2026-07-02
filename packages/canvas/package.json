@@ -32,6 +32,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@invana/canvas-store": "workspace:*",
     "immer": "^11.1.4",
     "pixi-viewport": "^6.0.3",
     "pixi.js": "^8.18.1",

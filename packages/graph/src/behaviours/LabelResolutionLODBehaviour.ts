@@ -152,8 +152,8 @@ export class LabelResolutionLODBehaviour extends Behaviour {
     this.layer = layer;
 
     const onCameraZoom = (): void => this.apply();
-    ctx.events.on('camera:zoom', onCameraZoom);
-    this.subs.push(() => ctx.events.off('camera:zoom', onCameraZoom));
+    ctx.events.on('input:camera:zoom', onCameraZoom);
+    this.subs.push(() => ctx.events.off('input:camera:zoom', onCameraZoom));
 
     // Re-apply on layer data churn — newly added labels mount with the
     // renderer's tracked resolution automatically, but a one-shot push

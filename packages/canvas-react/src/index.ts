@@ -163,6 +163,7 @@ export {
   useZoom,
   useFitContent,
   useCanvasEvent,
+  useStore,
   useClearGraph,
   useSelection,
   useInspectTarget,

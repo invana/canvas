@@ -25,7 +25,7 @@
  */
 
 import { Container, FederatedPointerEvent, Graphics } from 'pixi.js';
-import { BackgroundLayer, ScreenLayer, type CanvasContext, type ScreenLayerHit } from '@invana/canvas';
+import { BackgroundLayer, ScreenLayer, select, type CanvasContext, type ScreenLayerHit } from '@invana/canvas';
 import type { LayerOptions, Rect } from '@invana/canvas';
 
 import { GraphLayer } from './GraphLayer';
@@ -233,18 +233,18 @@ export class MiniMapLayer extends ScreenLayer<
     this.offTheme = ctx.events.on('theme:change', () => this.repaint());
 
     // Re-paint when graph data, style template, or the camera changes.
-    this.offCameraPan = ctx.events.on('camera:pan', () => this.repaint());
-    this.offCameraZoom = ctx.events.on('camera:zoom', () => this.repaint());
+    this.offCameraPan = ctx.events.on('input:camera:pan', () => this.repaint());
+    this.offCameraZoom = ctx.events.on('input:camera:zoom', () => this.repaint());
     const offDataChanged = graph.events.on('data:changed', () => this.repaint());
     const offStyleChanged = graph.events.on('style:changed', () => this.repaint());
 
-    // Mirror the referenced background layer's colour: `canvas.update()` (e.g. a
-    // theme flip) emits `options:change` — repaint when the layer we track is in
-    // the changed set so the minimap backdrop follows it.
-    const offOptions = ctx.events.on('options:change', ({ changedLayerIds }) => {
-      const id = this.opts.backgroundLayerId;
-      if (id && changedLayerIds.includes(id)) this.repaint();
-    });
+    // Mirror the referenced background layer's colour: subscribe to that layer's
+    // config slice on the reactive store (`store.view.definition.layers[id]`) and
+    // repaint when it changes identity (e.g. a theme flip via `canvas.update()`).
+    const bgId = this.opts.backgroundLayerId;
+    const offOptions = bgId
+      ? select(ctx.store.view, (s) => s.definition.layers[bgId]).subscribe(() => this.repaint())
+      : () => {};
 
     if (typeof ResizeObserver !== 'undefined' && ctx.canvasElement) {
       const ro = new ResizeObserver(() => {

@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import { BehaviourRegistry } from '../../src/registries/BehaviourRegistry';
 import { LayerRegistry } from '../../src/registries/LayerRegistry';
-import { CanvasEventBus } from '../../src/events/CanvasEventBus';
+import { CanvasEventBus } from '@invana/canvas-store';
 import { Camera } from '../../src/camera/Camera';
 import type { IBehaviour } from '../../src/behaviours/Behaviour';
 import type { CanvasContext } from '../../src/context/CanvasContext';
 import { makeTestScene } from '../_helpers/makeWorld';
+import { createCanvasStore } from '@invana/canvas-store';
 
 function makeContext() {
   const bus = new CanvasEventBus();
@@ -19,7 +20,7 @@ function makeContext() {
   let ctx: CanvasContext;
   const layers = new LayerRegistry({ getContext: () => ctx, bus });
   const behaviours = new BehaviourRegistry({ getContext: () => ctx, bus });
-  ctx = { events: bus, world, stage, camera, layers, behaviours, theme: { current: () => null, set: () => {} }, showMessage: () => {}, clearMessage: () => {} };
+  ctx = { events: bus, store: createCanvasStore(), world, stage, camera, layers, behaviours, theme: { current: () => null, set: () => {} }, showMessage: () => {}, clearMessage: () => {} };
   return ctx;
 }
 
@@ -68,7 +69,7 @@ describe('BehaviourRegistry — basic CRUD', () => {
   it('register() calls behaviour.register and fires behaviour:registered', () => {
     const ctx = makeContext();
     const handler = vi.fn();
-    ctx.events.on('behaviour:registered', handler);
+    ctx.events.on('scene:behaviour:register', handler);
     const b = new FakeBehaviour({ id: 'pan' });
     ctx.behaviours.register(b);
     expect(b.registerCount).toBe(1);
@@ -97,7 +98,7 @@ describe('BehaviourRegistry — enable / disable lifecycle', () => {
   it('default-enabled behaviour fires behaviour:enabled on register', () => {
     const ctx = makeContext();
     const handler = vi.fn();
-    ctx.events.on('behaviour:enabled', handler);
+    ctx.events.on('scene:behaviour:enable', handler);
     ctx.behaviours.register(new FakeBehaviour({ id: 'pan', enabled: true }));
     expect(handler).toHaveBeenCalledWith({ id: 'pan' });
   });
@@ -106,8 +107,8 @@ describe('BehaviourRegistry — enable / disable lifecycle', () => {
     const ctx = makeContext();
     const enableH = vi.fn();
     const disableH = vi.fn();
-    ctx.events.on('behaviour:enabled', enableH);
-    ctx.events.on('behaviour:disabled', disableH);
+    ctx.events.on('scene:behaviour:enable', enableH);
+    ctx.events.on('scene:behaviour:disable', disableH);
     ctx.behaviours.register(new FakeBehaviour({ id: 'pan' }));
 
     ctx.behaviours.setEnabled('pan', true);
@@ -119,7 +120,7 @@ describe('BehaviourRegistry — enable / disable lifecycle', () => {
   it('setEnabled is idempotent (no spurious events)', () => {
     const ctx = makeContext();
     const enableH = vi.fn();
-    ctx.events.on('behaviour:enabled', enableH);
+    ctx.events.on('scene:behaviour:enable', enableH);
     ctx.behaviours.register(new FakeBehaviour({ id: 'pan', enabled: true }));
     enableH.mockClear();
     ctx.behaviours.setEnabled('pan', true); // already enabled

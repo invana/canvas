@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Camera, type CameraOptions } from '../../src/camera/Camera';
-import { CanvasEventBus } from '../../src/events/CanvasEventBus';
+import { CanvasEventBus } from '@invana/canvas-store';
 import { makeTestScene } from '../_helpers/makeWorld';
 
 function makeCamera(opts: Partial<CameraOptions> = {}) {
@@ -45,7 +45,7 @@ describe('Camera — pan', () => {
   it('pan() shifts the world container; emits camera:pan', () => {
     const { camera, bus } = makeCamera();
     const handler = vi.fn();
-    bus.on('camera:pan', handler);
+    bus.on('input:camera:pan', handler);
     camera.pan(50, -25);
     expect(camera.x).toBe(50);
     expect(camera.y).toBe(-25);
@@ -55,7 +55,7 @@ describe('Camera — pan', () => {
   it('pan(0, 0) is a no-op (no event)', () => {
     const { camera, bus } = makeCamera();
     const handler = vi.fn();
-    bus.on('camera:pan', handler);
+    bus.on('input:camera:pan', handler);
     camera.pan(0, 0);
     expect(handler).not.toHaveBeenCalled();
   });
@@ -63,7 +63,7 @@ describe('Camera — pan', () => {
   it('setPosition with the same coords is a no-op', () => {
     const { camera, bus } = makeCamera({ initialX: 10, initialY: 20 });
     const handler = vi.fn();
-    bus.on('camera:pan', handler);
+    bus.on('input:camera:pan', handler);
     camera.setPosition(10, 20);
     expect(handler).not.toHaveBeenCalled();
   });
@@ -73,7 +73,7 @@ describe('Camera — zoom', () => {
   it('setZoom() applies absolute scale and emits camera:zoom', () => {
     const { camera, bus } = makeCamera();
     const handler = vi.fn();
-    bus.on('camera:zoom', handler);
+    bus.on('input:camera:zoom', handler);
     camera.setZoom(2);
     expect(camera.scale).toBe(2);
     expect(handler).toHaveBeenCalledWith({ scale: 2, centerX: 400, centerY: 300 });
@@ -104,8 +104,8 @@ describe('Camera — zoom', () => {
     const { camera, bus } = makeCamera();
     const z = vi.fn();
     const p = vi.fn();
-    bus.on('camera:zoom', z);
-    bus.on('camera:pan', p);
+    bus.on('input:camera:zoom', z);
+    bus.on('input:camera:pan', p);
     camera.zoomAt(2, 100, 50);
     expect(z).toHaveBeenCalled();
     expect(p).toHaveBeenCalled();
@@ -167,13 +167,13 @@ describe('Camera — bus interactions reach taps', () => {
     bus.tap(tapHandler);
     camera.setZoom(2);
     expect(tapHandler).toHaveBeenCalled();
-    // Find the camera:zoom envelope (setZoom may also emit camera:pan).
+    // Find the input:camera:zoom envelope (setZoom may also emit input:camera:pan).
     const zoomCall = tapHandler.mock.calls.find(
-      (c) => (c[0] as { type: string }).type === 'canvas:canvas:camera:zoom',
+      (c) => (c[0] as { type: string }).type === 'input:camera:zoom',
     );
     expect(zoomCall).toBeDefined();
     const env = zoomCall![0];
-    expect(env.type).toBe('canvas:canvas:camera:zoom');
+    expect(env.type).toBe('input:camera:zoom');
     expect(env.payload.scale).toBe(2);
   });
 });

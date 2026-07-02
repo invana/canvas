@@ -42,8 +42,8 @@ export function useFitContent(
   useEffect(() => {
     const sync = () => setHasContent(resolved.layers.has(layerId));
     sync();
-    const offAdded = resolved.events.on('layer:added', sync);
-    const offRemoved = resolved.events.on('layer:removed', sync);
+    const offAdded = resolved.events.on('scene:layer:add', sync);
+    const offRemoved = resolved.events.on('scene:layer:remove', sync);
     return () => {
       offAdded();
       offRemoved();

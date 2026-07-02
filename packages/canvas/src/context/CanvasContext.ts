@@ -14,7 +14,8 @@
  */
 
 import type { Container } from 'pixi.js';
-import type { CanvasEventBus } from '../events/CanvasEventBus';
+import type { CanvasStore } from '@invana/canvas-store';
+import type { CanvasEventBus } from '@invana/canvas-store';
 import type { Camera } from '../camera/Camera';
 import type { LayerRegistry } from '../registries/LayerRegistry';
 import type { BehaviourRegistry } from '../registries/BehaviourRegistry';
@@ -36,6 +37,16 @@ export interface CanvasContext {
 
   /** Canvas-wide event bus + telemetry tap channel. */
   readonly events: CanvasEventBus;
+
+  /**
+   * The renderer-free kernel (`@invana/canvas-store`) — `view` (reactive config +
+   * interaction state), `data` (bulk per-source stores), `events`, `theme`,
+   * history. The cross-cutting handle for the state migration: layers
+   * read/subscribe `store.data[id]` + `store.view`; behaviours write interaction
+   * via `store.view.update(...)`. During M0 the engine mirrors its config into
+   * `store.view.definition` (see `Canvas.update`).
+   */
+  readonly store: CanvasStore;
 
   /**
    * The active theme channel. A single publisher (the domain `ThemeBehaviour`)

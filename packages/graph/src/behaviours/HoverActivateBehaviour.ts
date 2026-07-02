@@ -221,6 +221,14 @@ export class HoverActivateBehaviour extends Behaviour {
 
   /** Currently hovered element, or `null`. */
   private current: HoverableElement | null = null;
+
+  /**
+   * Kernel store — the focal hover id is mirrored into `view.interaction.hover`
+   * so it's observable (`useStore`), tap-able, and syncable (Awareness) without
+   * readers touching this behaviour. The behaviour keeps owning the hover
+   * machinery + render visuals (`GraphStore` runtime states).
+   */
+  private _canvasStore?: CanvasContext['store'];
   /** Neighbour ids that received the active state (excluding `current`). */
   private activeIds = new Set<string>();
   /** Element ids that received the inactive state. */
@@ -271,6 +279,7 @@ export class HoverActivateBehaviour extends Behaviour {
       );
     }
     this.layer = layer;
+    this._canvasStore = ctx.store;
 
     const renderer = layer.getRenderer();
     if (!renderer) {
@@ -317,8 +326,8 @@ export class HoverActivateBehaviour extends Behaviour {
     // pay zero per-zoom cost.
     if (this.opts.zoomThreshold !== undefined) {
       const onZoom = (): void => this.handleCameraZoom();
-      ctx.events.on('camera:zoom', onZoom);
-      this.subs.push(() => ctx.events.off('camera:zoom', onZoom));
+      ctx.events.on('input:camera:zoom', onZoom);
+      this.subs.push(() => ctx.events.off('input:camera:zoom', onZoom));
     }
   }
 
@@ -371,10 +380,17 @@ export class HoverActivateBehaviour extends Behaviour {
     }
   }
 
+  /** Mirror the focal hover id into `view.interaction.hover` (D11). */
+  private mirrorHover(id: string | null): void {
+    if (id === null) this._canvasStore?.actions.hover.clear();
+    else this._canvasStore?.actions.hover.set(id);
+  }
+
   /** Clear all states applied by the current hover. */
   clearHover(): void {
     if (!this.layer) {
       this.current = null;
+      this.mirrorHover(null);
       this.activeIds.clear();
       this.inactiveIds.clear();
       this.scaledNodeIds.clear();
@@ -426,6 +442,7 @@ export class HoverActivateBehaviour extends Behaviour {
     this.resetRaise();
 
     this.current = null;
+    this.mirrorHover(null);
     this.appliedNodeState = null;
     this.appliedEdgeState = null;
   }
@@ -461,6 +478,7 @@ export class HoverActivateBehaviour extends Behaviour {
     if (!layer) return;
 
     this.current = target;
+    this.mirrorHover(target.id);
     const picked = this.pickTier();
     this.appliedNodeState = picked.node;
     this.appliedEdgeState = picked.edge;

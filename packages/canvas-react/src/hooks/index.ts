@@ -9,6 +9,7 @@ export type { UseZoomResult } from './useZoom';
 export { useFitContent } from './useFitContent';
 export type { UseFitContentResult } from './useFitContent';
 export { useCanvasEvent } from './useCanvasEvent';
+export { useStore } from './useStore';
 export { useClearGraph } from './useClearGraph';
 export type { UseClearGraphResult } from './useClearGraph';
 export { useSelection } from './useSelection';

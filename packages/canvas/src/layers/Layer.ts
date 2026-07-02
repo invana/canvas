@@ -28,10 +28,10 @@
  */
 
 import type { CanvasContext } from '../context/CanvasContext';
-import type { EventMap } from '../events/EventEmitter';
-import { SourceEmitter } from '../events/SourceEmitter';
+import type { EventMap } from '@invana/canvas-store';
+import { SourceEmitter } from '@invana/canvas-store';
 import { createLayerStore, type Store } from '../state/Store';
-import { DirtyBatcher, type DirtySnapshot } from '../state/DirtyBatcher';
+import { DirtyBatcher, type DirtySnapshot } from '@invana/canvas-store';
 
 // ─── Minimal interface that registries see ─────────────────────────────────
 
@@ -150,7 +150,7 @@ export abstract class Layer<
     if (this.ctx === undefined) return;
     const ctx = this.ctx;
     this.onUnmount(ctx);
-    this.events.setBus(undefined);
+    this.events.setBus(null);
     this.dirty.reset();
     this.ctx = undefined;
   }

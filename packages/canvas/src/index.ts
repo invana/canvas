@@ -4,53 +4,68 @@
 // `primitives-redesign-plan.md` (macro renderer redesign), and
 // `primitives-v0-plan.md` (this v0 slice) at the repo root.
 
-// ─── Events ─────────────────────────────────────────────────────────────
-export { EventEmitter } from './events/EventEmitter';
-export type { EventMap, EventHandler } from './events/EventEmitter';
-
+// ─── Events (the bus + emitters now live in the kernel — @invana/canvas-store) ──
+// The engine converged onto the single kernel bus (`store.events`); its own
+// duplicate event module was deleted. These re-exports keep the public surface
+// (`@invana/canvas`'s `EventEmitter` / `CanvasEventBus` / `CanvasGlobalEvents` …)
+// stable for consumers (graph, canvas-react).
 export {
-  makeCanvasEvent,
-  makeEventType,
-  isExcludedFromTap,
-  DEFAULT_TAP_EXCLUDE,
-} from './events/CanvasEvent';
-export type {
-  CanvasEvent,
-  EventSource,
-  EventSourceKind,
-} from './events/CanvasEvent';
-
-export { CanvasEventBus } from './events/CanvasEventBus';
-export type {
-  CanvasGlobalEvents,
-  TapHandler,
-  TapOptions,
-  CanvasEventBusOptions,
-} from './events/CanvasEventBus';
-
-export { SourceEmitter } from './events/SourceEmitter';
+  EventEmitter,
+  SourceEmitter,
+  CanvasEventBus,
+  type Listener,
+  type EventMap,
+  type CanvasEvent,
+  type EventSource,
+  type EventSourceKind,
+  type CanvasGlobalEvents,
+  type Tap,
+  type TapOptions,
+} from '@invana/canvas-store';
 
 export {
   assertSerialisableInDev,
   findSerialisationViolations,
 } from './events/assertSerialisable';
 
+// ─── Store port (kernel reactive-store reads) ────────────────────────────────
+// Re-exported so layers/behaviours can subscribe to `ctx.store.view` slices
+// without a direct `@invana/canvas-store` dependency (mirrors the events block).
+export {
+  select,
+  shallowEqual,
+  defaultEqual,
+  type Selected,
+  type ReactiveStore,
+  type CanvasView,
+} from '@invana/canvas-store';
+
 // ─── State ──────────────────────────────────────────────────────────────
 export { createLayerStore } from './state/Store';
 export type { Store, StoreApi, CreateLayerStoreOptions } from './state/Store';
 
-export { ColumnStore } from './state/ColumnStore';
-export type {
-  ColumnType,
-  ColumnSchema,
-  ColumnValue,
-  ColumnArray,
-  RowOf,
-  ColumnStoreOptions,
-} from './state/ColumnStore';
-
-export { DirtyBatcher } from './state/DirtyBatcher';
-export type { DirtySnapshot } from './state/DirtyBatcher';
+// `ColumnStore` + `DirtyBatcher` are owned by the renderer-free kernel
+// (`@invana/canvas-store`, decision D1). Re-exported here for back-compat so
+// existing `@invana/canvas` importers (e.g. `@invana/graph`'s `GraphStore`)
+// keep working unchanged.
+export {
+  ColumnStore,
+  DirtyBatcher,
+  type ColumnType,
+  type ColumnSchema,
+  type ColumnValue,
+  type ColumnArray,
+  type RowOf,
+  type ColumnStoreOptions,
+  type DirtySnapshot,
+  // Data-source contract + flush types — so domain stores (e.g. `@invana/graph`'s
+  // `GraphStore`) can `implements DataSource` and register via `CanvasStore.setSource` (D13).
+  type DataSource,
+  type FlushMode,
+  type LayerFlush,
+  type NodeDelta,
+  type KindDelta,
+} from '@invana/canvas-store';
 
 // ─── Camera ─────────────────────────────────────────────────────────────
 export { Camera } from './camera/Camera';

@@ -33,7 +33,7 @@
 
 import { Container, type FederatedPointerEvent } from 'pixi.js';
 import type { Camera } from '../camera/Camera';
-import { EventEmitter } from '../events/EventEmitter';
+import { EventEmitter } from '@invana/canvas-store';
 import { TextureRegistry } from '../textures/TextureRegistry';
 import { HitIndex } from '../hit/HitIndex';
 import { ShapeInstance } from '../instancing/ShapeInstance';
@@ -2328,7 +2328,19 @@ export class PrimitivesRenderer {
       this.animated.delete(deco as AnimatedDecoration);
     }
     if (decoHasSetResolution(deco)) this.labelBearingDecorations.delete(deco);
-    deco.destroy?.();
+    // Best-effort destroy. A label decoration's Pixi `Text` returns its glyph
+    // render-texture to Pixi's *process-shared* `TexturePool` on destroy; when
+    // one `Canvas` is torn down while sibling canvases keep that pool live (e.g.
+    // closing one of several mounted canvases — a "canvas boards" UI), the
+    // size-bucket can be missing and Pixi throws inside `returnTexture`. Teardown
+    // must stay resilient — one decoration's destroy throwing must not abort the
+    // rest of the unmount — so swallow it here. (Deeper fix = per-renderer
+    // texture pool so canvases never share teardown state; tracked separately.)
+    try {
+      deco.destroy?.();
+    } catch {
+      /* teardown is best-effort — see comment above */
+    }
   }
 
   private disposeEffect(fx: IShapeEffect | IConnectorEffect): void {

@@ -17,7 +17,7 @@
 
 import { Container, Graphics } from 'pixi.js';
 import type { CanvasContext } from '../context/CanvasContext';
-import type { EventMap } from '../events/EventEmitter';
+import type { EventMap } from '@invana/canvas-store';
 import { Layer, type LayerOptions } from './Layer';
 
 export interface WorldLayerHit {
