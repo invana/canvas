@@ -1,6 +1,6 @@
 {
   "name": "@invana/graph",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Graph layer + behaviours for @invana/canvas — GraphLayer, MiniMapLayer, hover/select/lasso/brush/pan/drag behaviours.",
   "type": "module",
   "main": "./dist/index.js",
