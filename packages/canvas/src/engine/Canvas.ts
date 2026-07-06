@@ -80,7 +80,17 @@ export interface CanvasOptions {
   /** DOM element pixi mounts its `<canvas>` into. Required by `init()`. */
   container?: HTMLElement;
 
-  /** Preferred backend. Default `'webgpu'`. Pixi falls back via its own logic. */
+  /**
+   * Preferred backend. Default `'webgpu'` (WebGPU-first).
+   *
+   * PixiJS's WebGPU renderer can crash at *render* time on some browser/driver
+   * combinations (a null bind-group during pipeline setup), which no init-time
+   * guard can catch. When that happens the engine halts its render loop and
+   * emits `'canvas:renderer:fallback'` so the host can degrade to WebGL (the
+   * `@invana/canvas-react` `<Canvas>` does this automatically). Pixi's own
+   * auto-fallback still covers browsers with no WebGPU at all; pass `'webgl'`
+   * explicitly to opt out of WebGPU entirely.
+   */
   preference?: 'webgpu' | 'webgl' | 'canvas';
 
   /** Viewport width in CSS pixels. Default = `container.clientWidth`. */
@@ -196,6 +206,12 @@ export class Canvas {
   private _isInitialised = false;
   private _onRendererResize?: (w: number, h: number) => void;
   private _resizeObserver?: ResizeObserver;
+  /**
+   * Set once the WebGPU renderer has crashed at render time and we've halted the
+   * loop + emitted `'canvas:renderer:fallback'`. Guards against repeating the
+   * crash every frame while the host swaps to WebGL.
+   */
+  private _rendererFellBack = false;
   /** Last message pushed on the message channel; `null` when idle / cleared. */
   private _currentMessage: string | null = null;
 
@@ -261,11 +277,12 @@ export class Canvas {
       opts.resolution ??
       (typeof window !== 'undefined' ? window.devicePixelRatio : 1);
 
-    // Resolve the backend before handing it to pixi. `resolveRenderPreference`
-    // downgrades `'webgpu'` → `'webgl'` on browsers where pixi's WebGPU renderer
-    // is broken (WebKit) but advertises support — pixi's own auto-fallback only
-    // covers browsers with *no* WebGPU, so without this the canvas would crash at
-    // render time. See `rendererSupport.ts`.
+    // Resolve the backend before handing it to pixi. Default is `'webgpu'`
+    // (WebGPU-first). `resolveRenderPreference` downgrades to `'webgl'` up front
+    // where WebGPU is unusable; and if the WebGPU renderer instead crashes at
+    // *render* time (uncatchable at init), the render-loop guard below halts the
+    // loop and emits `'canvas:renderer:fallback'` so the host degrades to WebGL.
+    // See `rendererSupport.ts`.
     const preference = resolveRenderPreference(opts.preference ?? 'webgpu');
     const initOpts = {
       width,
@@ -310,6 +327,12 @@ export class Canvas {
 
     this._wireScene(this.app.stage, width, height, this.app.renderer.events);
     this.app.ticker.add(this.tick, this);
+    // Take over the frame render. Pixi's `TickerPlugin` adds `app.render` to the
+    // ticker on init; we remove it and call `app.render()` ourselves at the end
+    // of `tickOnce` (after the per-frame flush), wrapped in try/catch. That's the
+    // only seam that can catch an experimental-WebGPU *render-time* crash — pixi's
+    // own ticker render is out of our try/catch reach. See `_renderFrame`.
+    this.app.ticker.remove(this.app.render, this.app);
 
     if (opts.autoResize) {
       this._onRendererResize = (w, h) => {
@@ -396,6 +419,49 @@ export class Canvas {
         ticker.renderer.tickAnimations(deltaMs);
       }
     }
+    // Render the frame ourselves (pixi's auto-render was removed from the ticker
+    // in `init()`), so a render-time crash is catchable. Headless/test init has
+    // no `app` — nothing to render there.
+    if (this.app) this._renderFrame();
+  }
+
+  /**
+   * Render one frame, guarding against a render-time renderer crash. The
+   * experimental WebGPU backend can throw synchronously inside `renderer.render`
+   * (a null bind-group during pipeline setup); catching it here lets us fall
+   * back to WebGL instead of spraying the same uncaught error every frame.
+   */
+  private _renderFrame(): void {
+    if (!this.app || this._rendererFellBack) return;
+    try {
+      this.app.render();
+    } catch (err) {
+      this._handleRenderError(err);
+    }
+  }
+
+  /**
+   * Recover from a render-time crash. On the experimental WebGPU backend: halt
+   * the render loop and emit `'canvas:renderer:fallback'` **once** so the host
+   * re-inits on WebGL (the `@invana/canvas-react` `<Canvas>` does this
+   * automatically). Any other backend has nowhere to fall back to, so the error
+   * is re-thrown rather than swallowed.
+   */
+  private _handleRenderError(err: unknown): void {
+    if (this._rendererFellBack || this._detectBackend() !== 'webgpu') throw err;
+    this._rendererFellBack = true;
+    // Stop ticking so the crash doesn't repeat while the host swaps backend.
+    this.app?.ticker.remove(this.tick, this);
+    console.warn(
+      '[canvas] WebGPU renderer crashed at render time; ' +
+        'falling back to WebGL. Original error:',
+      err,
+    );
+    this.events.emit('canvas:renderer:fallback', {
+      from: 'webgpu',
+      to: 'webgl',
+      reason: 'render-error',
+    });
   }
 
   /** Pixi ticker callback. Bound via `add(this.tick, this)`. */

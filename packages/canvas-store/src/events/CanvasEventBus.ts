@@ -66,6 +66,13 @@ export interface CanvasGlobalEvents {
 
   // ── render / canvas — lifecycle (engine/renderer-emitted) ───────────────────
   'canvas:renderer:ready': { backend: string; capabilities?: Record<string, unknown> };
+  /**
+   * The active renderer crashed at **render time** and the engine has halted its
+   * render loop. Emitted once (experimental WebGPU only — see
+   * `CanvasOptions.preference`); the consumer should tear the canvas down and
+   * re-init on `to` (WebGL). `reason` is a short diagnostic tag.
+   */
+  'canvas:renderer:fallback': { from: string; to: string; reason?: string };
   'render:loop:tick': { dt: number };
   /** The shared status-message channel. `text: null` clears; `timeout` (ms) auto-clears. */
   'canvas:message:show': { text: string | null; timeout?: number };

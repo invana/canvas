@@ -75,22 +75,39 @@ export const Canvas = forwardRef<GraphCanvas, CanvasProps>(function Canvas(
   const optsRef = useRef(engineOpts);
   optsRef.current = engineOpts;
 
+  // Bumped to force a full re-init (destroy → new engine). Currently driven by
+  // the experimental-WebGPU render-crash fallback below.
+  const [remountNonce, setRemountNonce] = useState(0);
+  // Once the engine reports a WebGPU render crash we pin the backend to WebGL
+  // for every subsequent (re-)init, so we don't crash straight into it again.
+  const forcedPreferenceRef = useRef<'webgl' | undefined>(undefined);
+
   useEffect(() => {
     const container = hostRef.current;
     if (!container) return;
 
     let cancelled = false;
+    let offFallback: (() => void) | undefined;
     // `GraphCanvas` (a `Canvas` superset) so `config.activeLayout` auto-runs.
     // With no layouts/activeLayout it behaves exactly like the base canvas.
     const instance = new GraphCanvas();
+    // Force WebGL after a WebGPU render-crash fallback; otherwise honour the prop.
+    const preference = forcedPreferenceRef.current ?? optsRef.current.preference;
 
     void instance
-      .init({ container, ...optsRef.current })
+      .init({ container, ...optsRef.current, ...(preference ? { preference } : {}) })
       .then(() => {
         if (cancelled) {
           instance.destroy();
           return;
         }
+        // The engine emits this once if the experimental WebGPU renderer crashes
+        // at render time, having already halted its render loop. Pin WebGL and
+        // remount — a clean re-init on the tested single-seed path.
+        offFallback = instance.events.on('canvas:renderer:fallback', () => {
+          forcedPreferenceRef.current = 'webgl';
+          setRemountNonce((n) => n + 1);
+        });
         setCanvas(instance);
       })
       .catch((err: unknown) => {
@@ -104,13 +121,15 @@ export const Canvas = forwardRef<GraphCanvas, CanvasProps>(function Canvas(
 
     return () => {
       cancelled = true;
+      offFallback?.();
       setCanvas(null);
       if (instance.isInitialised) instance.destroy();
     };
-    // Init is intentionally one-shot. Reactive props (other than `children`)
-    // are not supported in v0 — recreate the <Canvas> with a key to re-init.
+    // Init is one-shot per `remountNonce`. Reactive props (other than `children`)
+    // aren't supported — recreate the <Canvas> with a key to re-init; the nonce
+    // is the engine-driven re-init channel (WebGPU→WebGL fallback).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [remountNonce]);
 
   // Apply the serialisable `config` AFTER the engine is ready and the JSX
   // children have registered their instances. React flushes child effects
