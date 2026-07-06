@@ -47,19 +47,20 @@ export interface EraseBehaviourOptions extends BehaviourOptions {
   onErase?: (removed: ErasedElement) => void;
 }
 
-export class EraseBehaviour extends Behaviour {
+export class EraseBehaviour extends Behaviour<EraseBehaviourOptions> {
   private layer: GraphLayer | null = null;
 
-  private readonly target: EraseTargetKind;
-  private readonly onErase?: (removed: ErasedElement) => void;
+  // Both live-read from `_options` (consulted at click-time) so `setOptions` applies.
+  private get target(): EraseTargetKind { return this._options.target ?? 'both'; }
+  private get onErase(): ((removed: ErasedElement) => void) | undefined {
+    return this._options.onErase;
+  }
 
   /** Subscription disposers. */
   private subs: Array<() => void> = [];
 
   constructor(opts: EraseBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? ['pointer+click'] });
-    this.target = opts.target ?? 'both';
-    this.onErase = opts.onErase;
   }
 
   // ─── Lifecycle ──────────────────────────────────────────────────────────

@@ -59,26 +59,20 @@ const DRAFT_EXCLUDE: ReadonlySet<string> = new Set([DRAFT_ID]);
 
 let drawEdgeSeq = 0;
 
-export class DrawEdgeBehaviour extends Behaviour {
+export class DrawEdgeBehaviour extends Behaviour<DrawEdgeBehaviourOptions> {
   private layer: GraphLayer | null = null;
   private ctxRef: CanvasContext | null = null;
   private canvasEl: HTMLCanvasElement | null = null;
 
-  private readonly makeEdge: (source: string, target: string) => GraphEdge | null;
-  private readonly onEdgeCreate?: (edge: GraphEdge) => void;
-  private readonly allowSelfLoop: boolean;
-  private readonly draft: { color: number; width: number; alpha: number; dash: [number, number] };
-
-  private offShapeDown: (() => void) | null = null;
-  private sourceId: string | null = null;
-  private candidateTarget: string | null = null;
-  private capturedPointerId: number | null = null;
-
-  constructor(opts: DrawEdgeBehaviourOptions) {
-    super({ ...opts, shortcuts: opts.shortcuts ?? ['shape+drag'] });
-    this.allowSelfLoop = opts.allowSelfLoop ?? false;
-    this.makeEdge =
-      opts.createEdge ??
+  // All live-read from `_options` (consumed at draw-time) so `setOptions`
+  // applies. `makeEdge` falls back to the built-in id / self-loop factory.
+  private get allowSelfLoop(): boolean { return this._options.allowSelfLoop ?? false; }
+  private get onEdgeCreate(): ((edge: GraphEdge) => void) | undefined {
+    return this._options.onEdgeCreate;
+  }
+  private get makeEdge(): (source: string, target: string) => GraphEdge | null {
+    return (
+      this._options.createEdge ??
       ((source, target) => {
         const id = `e-${Date.now().toString(36)}-${(drawEdgeSeq++).toString(36)}`;
         if (source === target) {
@@ -94,14 +88,26 @@ export class DrawEdgeBehaviour extends Behaviour {
           };
         }
         return { id, source, target };
-      });
-    this.onEdgeCreate = opts.onEdgeCreate;
-    this.draft = {
-      color: opts.draftStyle?.color ?? 0x60a5fa,
-      width: opts.draftStyle?.width ?? 2,
-      alpha: opts.draftStyle?.alpha ?? 0.9,
-      dash: opts.draftStyle?.dash ?? [6, 4],
+      })
+    );
+  }
+  private get draft(): { color: number; width: number; alpha: number; dash: [number, number] } {
+    const s = this._options.draftStyle;
+    return {
+      color: s?.color ?? 0x60a5fa,
+      width: s?.width ?? 2,
+      alpha: s?.alpha ?? 0.9,
+      dash: s?.dash ?? [6, 4],
     };
+  }
+
+  private offShapeDown: (() => void) | null = null;
+  private sourceId: string | null = null;
+  private candidateTarget: string | null = null;
+  private capturedPointerId: number | null = null;
+
+  constructor(opts: DrawEdgeBehaviourOptions) {
+    super({ ...opts, shortcuts: opts.shortcuts ?? ['shape+drag'] });
   }
 
   // ─── Lifecycle ──────────────────────────────────────────────────────────

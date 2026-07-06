@@ -60,11 +60,13 @@ interface DragState {
   readonly shapePosStart: { x: number; y: number };
 }
 
-export class DragShapeBehaviour extends Behaviour {
-  private readonly renderer: PrimitivesRenderer;
-  private readonly filter?: (id: string) => boolean;
-  private readonly reRouteConnectors: boolean;
-  private readonly dragCursor: string;
+export class DragShapeBehaviour extends Behaviour<DragShapeBehaviourOptions> {
+  // The renderer is fixed at construction; the tuning knobs live-read from
+  // `_options` (all consumed at event-time) so `setOptions` takes effect.
+  private get renderer(): PrimitivesRenderer { return this._options.renderer; }
+  private get filter(): ((id: string) => boolean) | undefined { return this._options.filter; }
+  private get reRouteConnectors(): boolean { return this._options.reRouteConnectors ?? true; }
+  private get dragCursor(): string { return this._options.dragCursor ?? 'grabbing'; }
 
   private state: DragState | null = null;
   private offShapeDown?: () => void;
@@ -74,10 +76,6 @@ export class DragShapeBehaviour extends Behaviour {
 
   constructor(opts: DragShapeBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? ['shape+drag'] });
-    this.renderer = opts.renderer;
-    this.filter = opts.filter;
-    this.reRouteConnectors = opts.reRouteConnectors ?? true;
-    this.dragCursor = opts.dragCursor ?? 'grabbing';
   }
 
   protected override onRegister(ctx: CanvasContext): void {

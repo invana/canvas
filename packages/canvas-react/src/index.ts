@@ -321,11 +321,16 @@ export {
   isImageUrl,
   ContextMenuOverlay,
   HoverElementPreviewCard,
+  CanvasSettingsBrowser,
 } from './components';
 export type {
   PanelProps,
   PanelContentProps,
   PanelPosition,
+  CanvasSettingsBrowserProps,
+  SettingsEditorDescriptor,
+  SettingsEditorContext,
+  SettingsSection,
   ToolbarItemsProps,
   ToolbarItem,
   ToolbarButtonItem,

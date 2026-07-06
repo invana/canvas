@@ -51,11 +51,14 @@ function modifierToKeys(modifier: DragModifier): string[] | null {
   }
 }
 
-export class DragPanBehaviour extends Behaviour {
-  private readonly modifier: DragModifier;
-  private readonly mouseButtons: string;
-  private readonly withDecelerate: boolean;
-  private readonly dragCursor: string;
+export class DragPanBehaviour extends Behaviour<DragPanBehaviourOptions> {
+  // Live-read from `_options` so `setOptions` takes effect: event-time reads
+  // (cursor / button / modifier) pick up immediately, and the viewport plugins
+  // are re-armed with the new config in onOptionsChanged.
+  private get modifier(): DragModifier { return this._options.modifier ?? 'none'; }
+  private get mouseButtons(): string { return this._options.mouseButtons ?? 'left'; }
+  private get withDecelerate(): boolean { return this._options.decelerate ?? true; }
+  private get dragCursor(): string { return this._options.dragCursor ?? 'grabbing'; }
 
   /** Canvas the cursor swap targets; `null` on headless / custom stages. */
   private canvasEl: HTMLCanvasElement | null = null;
@@ -66,14 +69,15 @@ export class DragPanBehaviour extends Behaviour {
     const modifier = opts.modifier ?? 'none';
     const gesture = modifier === 'none' ? 'drag' : `${modifier}+drag`;
     super({ ...opts, shortcuts: opts.shortcuts ?? [gesture] });
-    this.modifier = modifier;
-    this.mouseButtons = opts.mouseButtons ?? 'left';
-    this.withDecelerate = opts.decelerate ?? true;
-    this.dragCursor = opts.dragCursor ?? 'grabbing';
   }
 
   protected onRegister(ctx: CanvasContext): void {
     this.canvasEl = ctx.canvasElement ?? null;
+  }
+
+  /** Re-arm the pixi-viewport drag / decelerate plugins with the merged options. */
+  protected override onOptionsChanged(): void {
+    this.reArm();
   }
 
   protected onEnable(): void {
@@ -93,7 +97,9 @@ export class DragPanBehaviour extends Behaviour {
     vp.off('drag-start', this.armCursor);
     this.restoreCursor(); // restore + drop window listeners if disabled mid-gesture
     vp.plugins.remove('drag');
-    if (this.withDecelerate) vp.plugins.remove('decelerate');
+    // Always drop decelerate (not gated on the current flag) so a re-arm after
+    // toggling `decelerate` off cleanly removes the previously-installed plugin.
+    vp.plugins.remove('decelerate');
   }
 
   private readonly onPointerDown = (e: PointerEvent): void => {

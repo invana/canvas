@@ -86,7 +86,7 @@ type ThemePatch = Partial<
   >
 >;
 
-export class ThemeBehaviour extends Behaviour {
+export class ThemeBehaviour extends Behaviour<ThemeBehaviourOptions> {
   private themes: ThemeRegistry;
   private active: string;
   private fallback: string;

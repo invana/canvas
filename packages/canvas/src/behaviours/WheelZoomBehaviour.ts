@@ -27,32 +27,44 @@ export interface WheelZoomBehaviourOptions extends BehaviourOptions {
   smooth?: false | number;
 }
 
-export class WheelZoomBehaviour extends Behaviour {
-  private readonly requireCtrl: boolean;
-  private readonly percent: number;
-  private readonly smooth: false | number;
-
+export class WheelZoomBehaviour extends Behaviour<WheelZoomBehaviourOptions> {
   constructor(opts: WheelZoomBehaviourOptions) {
     const requireCtrl = opts.requireCtrl ?? false;
     const gesture = requireCtrl ? 'ctrl+wheel' : 'wheel';
     super({ ...opts, shortcuts: opts.shortcuts ?? [gesture] });
-    this.requireCtrl = requireCtrl;
-    this.percent = opts.percent ?? 0.1;
-    this.smooth = opts.smooth ?? false;
   }
 
   protected onRegister(_ctx: CanvasContext): void { /* wired on enable */ }
 
   protected onEnable(): void {
     this.ctx!.camera.viewport.wheel({
-      percent: this.percent,
-      smooth: this.smooth,
-      keyToPress: this.requireCtrl ? ['ControlLeft', 'ControlRight'] : undefined,
+      percent: this._options.percent ?? 0.1,
+      smooth: this._options.smooth ?? false,
+      keyToPress: (this._options.requireCtrl ?? false) ? ['ControlLeft', 'ControlRight'] : undefined,
       trackpadPinch: true,
     });
   }
 
   protected onDisable(): void {
     this.ctx!.camera.viewport.plugins.remove('wheel');
+  }
+
+  /**
+   * The pixi-viewport `wheel` plugin reads its config only at install time, so a
+   * live edit means remove-then-reinstall. Re-arm picks up the merged
+   * `this._options`. (`setOptions` / `getOptions` come from the base.)
+   */
+  protected override onOptionsChanged(): void {
+    this.reArm();
+  }
+
+  /** Include the wheel options (beyond the base `enabled`) in a state snapshot. */
+  override serializeDefinition(): Record<string, unknown> {
+    return {
+      ...super.serializeDefinition(),
+      requireCtrl: this._options.requireCtrl ?? false,
+      percent: this._options.percent ?? 0.1,
+      smooth: this._options.smooth ?? false,
+    };
   }
 }

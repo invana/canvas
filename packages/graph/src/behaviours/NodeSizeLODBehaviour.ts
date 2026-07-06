@@ -111,8 +111,9 @@ interface ResolvedTarget {
  */
 const REANCHOR_SETTLE_MS = 80;
 
-export class NodeSizeLODBehaviour extends ElementSizeLODBehaviour {
-  private readonly configs: NodeSizeLODConfig[];
+export class NodeSizeLODBehaviour extends ElementSizeLODBehaviour<NodeSizeLODBehaviourOptions> {
+  /** Live-read from `_options` so `setOptions` applies; `onOptionsChanged` reflows. */
+  private get configs(): NodeSizeLODConfig[] { return this._options.layers; }
   private resolved: ResolvedTarget[] = [];
   /**
    * Pending reanchor timer. The per-frame `scaleShape` fast path is cheap
@@ -125,7 +126,16 @@ export class NodeSizeLODBehaviour extends ElementSizeLODBehaviour {
 
   constructor(opts: NodeSizeLODBehaviourOptions) {
     super(opts);
-    this.configs = opts.layers.slice();
+  }
+
+  /**
+   * Re-write the baseline and re-apply the transform when a live option patch
+   * lands (e.g. a `sizePx` / `strokeWidthPx` slider), so the change shows
+   * without waiting for the next zoom. `reflow()` is overridden here to
+   * `writeBaseline('target')` first.
+   */
+  protected override onOptionsChanged(): void {
+    this.reflow();
   }
 
   protected override onResolveTargets(ctx: CanvasContext): void {

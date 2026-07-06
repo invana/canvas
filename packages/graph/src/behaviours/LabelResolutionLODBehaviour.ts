@@ -90,13 +90,6 @@ export interface LabelResolutionLODBehaviourOptions extends BehaviourOptions {
   hysteresis?: number;
 }
 
-interface ResolvedOptions {
-  baseResolution: number;
-  /** Sorted ascending by `minZoom`. Guaranteed non-empty. */
-  levels: LabelResolutionLODTier[];
-  hysteresis: number;
-}
-
 const DEFAULT_LEVELS: LabelResolutionLODTier[] = [
   // Each tier covers a ~2.5× zoom band so sampling stays ≥ ~1px-per-glyph-
   // px through the whole zoom range. The math: at zoom Z with multiplier M
@@ -108,10 +101,35 @@ const DEFAULT_LEVELS: LabelResolutionLODTier[] = [
   { minZoom: 10, multiplier: 16 },   // 10×+ : sampling 32/Z, headroom for deep zoom
 ];
 
-export class LabelResolutionLODBehaviour extends Behaviour {
+export class LabelResolutionLODBehaviour extends Behaviour<LabelResolutionLODBehaviourOptions> {
   private layer: GraphLayer | null = null;
-  private readonly opts: ResolvedOptions;
   private subs: Array<() => void> = [];
+
+  // Config live-read (and normalised) from `_options` so `setOptions` applies;
+  // `onOptionsChanged` forces a re-evaluation of the active tier.
+  /** Base resolution multiplied by the active tier's multiplier. */
+  private get baseResolution(): number {
+    return (
+      this._options.baseResolution ??
+      (typeof window !== 'undefined' ? window.devicePixelRatio : 1) ??
+      1
+    );
+  }
+  /** Tiers sorted ascending by `minZoom`, guaranteed to cover zoom 0. */
+  private get levels(): LabelResolutionLODTier[] {
+    const raw =
+      this._options.levels && this._options.levels.length > 0
+        ? this._options.levels
+        : DEFAULT_LEVELS;
+    // Sort + defensive-copy so callers can mutate their array after register.
+    const levels = raw.slice().sort((a, b) => a.minZoom - b.minZoom);
+    // First tier must cover zoom 0; if the user didn't supply one, prepend.
+    if (levels[0]!.minZoom > 0) levels.unshift({ minZoom: 0, multiplier: 1 });
+    return levels;
+  }
+  private get hysteresis(): number {
+    return this._options.hysteresis ?? 0.1;
+  }
   /**
    * Index into `opts.levels` of the currently active tier. Re-evaluated
    * on every camera-zoom event; the renderer is only nudged when this
@@ -124,22 +142,6 @@ export class LabelResolutionLODBehaviour extends Behaviour {
 
   constructor(opts: LabelResolutionLODBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? [] });
-    const baseResolution =
-      opts.baseResolution ??
-      (typeof window !== 'undefined' ? window.devicePixelRatio : 1) ??
-      1;
-    const rawLevels = opts.levels && opts.levels.length > 0 ? opts.levels : DEFAULT_LEVELS;
-    // Sort + defensive-copy so callers can mutate their array after register.
-    const levels = rawLevels.slice().sort((a, b) => a.minZoom - b.minZoom);
-    // First tier must cover zoom 0; if the user didn't supply one, prepend.
-    if (levels[0]!.minZoom > 0) {
-      levels.unshift({ minZoom: 0, multiplier: 1 });
-    }
-    this.opts = {
-      baseResolution,
-      levels,
-      hysteresis: opts.hysteresis ?? 0.1,
-    };
   }
 
   protected override onRegister(ctx: CanvasContext): void {
@@ -181,9 +183,22 @@ export class LabelResolutionLODBehaviour extends Behaviour {
     // Restore baseline so disabling the behaviour doesn't leave labels
     // stuck at a stale high resolution.
     const renderer = this.layer?.getRenderer();
-    if (renderer) renderer.setLabelsResolution(this.opts.baseResolution);
-    this.lastPushed = this.opts.baseResolution;
+    if (renderer) renderer.setLabelsResolution(this.baseResolution);
+    this.lastPushed = this.baseResolution;
     this.currentTierIdx = 0;
+  }
+
+  /**
+   * A live `levels` / `baseResolution` / `hysteresis` change must re-evaluate
+   * the active tier and re-push the resolution. Drop the memo (`lastPushed`)
+   * and reset the tier index so {@link apply} climbs the (possibly reshaped)
+   * tier list from scratch instead of early-returning on an unchanged index.
+   */
+  protected override onOptionsChanged(): void {
+    if (!this.isEnabled) return;
+    this.currentTierIdx = 0;
+    this.lastPushed = null;
+    this.apply();
   }
 
   /**
@@ -199,8 +214,8 @@ export class LabelResolutionLODBehaviour extends Behaviour {
     const zoom = this.ctx.camera.scale;
 
     let idx = this.currentTierIdx;
-    const levels = this.opts.levels;
-    const hyst = this.opts.hysteresis;
+    const levels = this.levels;
+    const hyst = this.hysteresis;
     // Climb up: highest tier whose minZoom ≤ zoom wins.
     while (idx + 1 < levels.length && levels[idx + 1]!.minZoom <= zoom) idx++;
     // Climb down with hysteresis: only fall out of tier N when we're a
@@ -209,7 +224,7 @@ export class LabelResolutionLODBehaviour extends Behaviour {
 
     if (idx === this.currentTierIdx && this.lastPushed !== null) return;
     this.currentTierIdx = idx;
-    const next = levels[idx]!.multiplier * this.opts.baseResolution;
+    const next = levels[idx]!.multiplier * this.baseResolution;
     if (this.lastPushed !== null && Math.abs(this.lastPushed - next) < 1e-6) return;
     this.lastPushed = next;
     renderer.setLabelsResolution(next);

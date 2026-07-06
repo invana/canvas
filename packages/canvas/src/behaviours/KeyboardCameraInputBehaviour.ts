@@ -52,19 +52,18 @@ export interface KeyboardCameraInputBehaviourOptions extends BehaviourOptions {
   keymap?: Partial<KeyboardCameraKeymap>;
 }
 
-export class KeyboardCameraInputBehaviour extends Behaviour {
-  private readonly panStep: number;
-  private readonly zoomFactor: number;
-  private readonly keymap: KeyboardCameraKeymap;
+export class KeyboardCameraInputBehaviour extends Behaviour<KeyboardCameraInputBehaviourOptions> {
+  // Live-read from `_options` so `setOptions` takes effect. The keydown handler
+  // is bound once in onEnable but reads these per-event, so no re-arm is needed.
+  private get panStep(): number { return this._options.panStep ?? 40; }
+  private get zoomFactor(): number { return this._options.zoomFactor ?? 1.1; }
+  private get keymap(): KeyboardCameraKeymap { return { ...DEFAULT_KEYMAP, ...this._options.keymap }; }
   private _handler?: (e: KeyboardEvent) => void;
 
   constructor(opts: KeyboardCameraInputBehaviourOptions) {
     const keymap: KeyboardCameraKeymap = { ...DEFAULT_KEYMAP, ...opts.keymap };
     const allKeys = [...new Set(Object.values(keymap).flat())];
     super({ ...opts, shortcuts: opts.shortcuts ?? allKeys });
-    this.panStep = opts.panStep ?? 40;
-    this.zoomFactor = opts.zoomFactor ?? 1.1;
-    this.keymap = keymap;
   }
 
   protected onRegister(_ctx: CanvasContext): void { /* wired on enable */ }

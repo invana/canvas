@@ -69,13 +69,22 @@ interface ResolvedTarget {
   layer: GraphLayer;
 }
 
-export class EdgeSizeLODBehaviour extends ElementSizeLODBehaviour {
-  private readonly configs: EdgeSizeLODConfig[];
+export class EdgeSizeLODBehaviour extends ElementSizeLODBehaviour<EdgeSizeLODBehaviourOptions> {
+  /** Live-read from `_options` so `setOptions` applies; `onOptionsChanged` reflows. */
+  private get configs(): EdgeSizeLODConfig[] { return this._options.layers; }
   private resolved: ResolvedTarget[] = [];
 
   constructor(opts: EdgeSizeLODBehaviourOptions) {
     super({ settleMs: DEFAULT_EDGE_SETTLE_MS, ...opts });
-    this.configs = opts.layers.slice();
+  }
+
+  /**
+   * Re-apply the stroke scaling at the current camera scale when a live option
+   * patch lands (e.g. a `strokeWidthPx` slider), so the change shows without
+   * waiting for the next zoom.
+   */
+  protected override onOptionsChanged(): void {
+    this.reflow();
   }
 
   protected override onResolveTargets(ctx: CanvasContext): void {

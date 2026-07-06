@@ -76,7 +76,9 @@ export interface ElementSizeLODBehaviourOptions extends BehaviourOptions {
   settleMs?: number;
 }
 
-export abstract class ElementSizeLODBehaviour extends Behaviour {
+export abstract class ElementSizeLODBehaviour<
+  TOptions extends ElementSizeLODBehaviourOptions = ElementSizeLODBehaviourOptions,
+> extends Behaviour<TOptions> {
   private readonly subs: Array<() => void> = [];
   /**
    * Pending `requestAnimationFrame` handle. Non-null while a reflow is
@@ -98,13 +100,13 @@ export abstract class ElementSizeLODBehaviour extends Behaviour {
    * epsilon of this value. `null` means "no prior apply, never skip".
    */
   private lastAppliedScale: number | null = null;
-  private readonly scaleEpsilon: number;
-  private readonly settleMs: number;
+  // Live-read from `_options` so `setOptions({ scaleEpsilon, settleMs })` takes
+  // effect on the next scheduled reflow (both are read at schedule/apply time).
+  private get scaleEpsilon(): number { return this._options.scaleEpsilon ?? 0.005; }
+  private get settleMs(): number { return this._options.settleMs ?? 0; }
 
-  constructor(opts: ElementSizeLODBehaviourOptions) {
+  constructor(opts: TOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? [] });
-    this.scaleEpsilon = opts.scaleEpsilon ?? 0.005;
-    this.settleMs = opts.settleMs ?? 0;
   }
 
   protected override onRegister(ctx: CanvasContext): void {

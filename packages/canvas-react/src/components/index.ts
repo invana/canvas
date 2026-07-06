@@ -10,6 +10,13 @@ export { Panel } from './Panel';
 export type { PanelProps } from './Panel';
 export { PanelContent } from './PanelContent';
 export type { PanelContentProps } from './PanelContent';
+export { CanvasSettingsBrowser } from './CanvasSettingsBrowser';
+export type {
+  CanvasSettingsBrowserProps,
+  SettingsEditorDescriptor,
+  SettingsEditorContext,
+  SettingsSection,
+} from './CanvasSettingsBrowser';
 export { ToolbarItems } from './ToolbarItems';
 export type { ToolbarItemsProps } from './ToolbarItems';
 export { applyIconOverrides } from './ToolbarItem';

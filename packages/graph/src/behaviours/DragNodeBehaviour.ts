@@ -170,18 +170,20 @@ interface DragState {
   moved: boolean;
 }
 
-export class DragNodeBehaviour extends Behaviour {
+export class DragNodeBehaviour extends Behaviour<DragNodeBehaviourOptions> {
   private layer: GraphLayer | null = null;
   private ctxRef: CanvasContext | null = null;
 
-  private readonly filter?: (id: string) => boolean;
-  private readonly dragCursor: string;
-  private readonly groupAware: boolean;
-  private readonly pinOnRelease: boolean;
-  private readonly dragSelection: boolean;
-  private readonly selectionState: string;
-  private readonly selectionBodyDrag: boolean;
-  private readonly selectionBodyPadding: number;
+  // Tuning knobs live-read from `_options` (all consumed at event-time in the
+  // drag handlers) so `setOptions` takes effect without a re-arm.
+  private get filter(): ((id: string) => boolean) | undefined { return this._options.filter; }
+  private get dragCursor(): string { return this._options.dragCursor ?? 'grabbing'; }
+  private get groupAware(): boolean { return this._options.groupAware ?? true; }
+  private get pinOnRelease(): boolean { return this._options.pinOnRelease ?? false; }
+  private get dragSelection(): boolean { return this._options.dragSelection ?? true; }
+  private get selectionState(): string { return this._options.selectionState ?? 'selected'; }
+  private get selectionBodyDrag(): boolean { return this._options.selectionBodyDrag ?? true; }
+  private get selectionBodyPadding(): number { return this._options.selectionBodyPadding ?? 0; }
 
   private state: DragState | null = null;
   private offShapeDown: (() => void) | null = null;
@@ -198,14 +200,6 @@ export class DragNodeBehaviour extends Behaviour {
 
   constructor(opts: DragNodeBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? ['node+drag'] });
-    this.filter = opts.filter;
-    this.dragCursor = opts.dragCursor ?? 'grabbing';
-    this.groupAware = opts.groupAware ?? true;
-    this.pinOnRelease = opts.pinOnRelease ?? false;
-    this.dragSelection = opts.dragSelection ?? true;
-    this.selectionState = opts.selectionState ?? 'selected';
-    this.selectionBodyDrag = opts.selectionBodyDrag ?? true;
-    this.selectionBodyPadding = opts.selectionBodyPadding ?? 0;
   }
 
   // ─── Lifecycle ──────────────────────────────────────────────────────────

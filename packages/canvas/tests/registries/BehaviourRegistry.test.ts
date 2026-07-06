@@ -63,6 +63,9 @@ class FakeBehaviour implements IBehaviour {
     this.enabled = false;
     this.disableCount++;
   }
+  setOptions(_changes: Record<string, unknown>): void {
+    /* no-op: this fake doesn't carry options */
+  }
 }
 
 describe('BehaviourRegistry — basic CRUD', () => {

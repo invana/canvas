@@ -23,14 +23,12 @@ export interface PinchZoomBehaviourOptions extends BehaviourOptions {
   percent?: number;
 }
 
-export class PinchZoomBehaviour extends Behaviour {
-  private readonly noDrag: boolean;
-  private readonly percent: number;
+export class PinchZoomBehaviour extends Behaviour<PinchZoomBehaviourOptions> {
+  private get noDrag(): boolean { return this._options.noDrag ?? false; }
+  private get percent(): number { return this._options.percent ?? 0.1; }
 
   constructor(opts: PinchZoomBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? ['pinch'] });
-    this.noDrag = opts.noDrag ?? false;
-    this.percent = opts.percent ?? 0.1;
   }
 
   protected onRegister(_ctx: CanvasContext): void { /* wired on enable */ }
@@ -41,5 +39,10 @@ export class PinchZoomBehaviour extends Behaviour {
 
   protected onDisable(): void {
     this.ctx!.camera.viewport.plugins.remove('pinch');
+  }
+
+  /** Re-arm the pixi-viewport pinch plugin with the merged options. */
+  protected override onOptionsChanged(): void {
+    this.reArm();
   }
 }

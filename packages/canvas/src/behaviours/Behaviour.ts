@@ -32,6 +32,12 @@ export interface IBehaviour {
   destroy(): void;
   enable(): void;
   disable(): void;
+  /**
+   * Merge a serialisable options patch and apply it live. Every behaviour
+   * supports this (the base provides a generic implementation) so the engine's
+   * `canvas.update({ behaviours })` path can retune any behaviour uniformly.
+   */
+  setOptions(changes: Record<string, unknown>): void;
 }
 
 export interface BehaviourOptions {
@@ -51,7 +57,9 @@ export interface BehaviourOptions {
   shortcuts?: readonly string[];
 }
 
-export abstract class Behaviour implements IBehaviour {
+export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOptions>
+  implements IBehaviour
+{
   readonly id: string;
   readonly targetLayerId?: string;
   readonly shortcuts?: readonly string[];
@@ -65,12 +73,21 @@ export abstract class Behaviour implements IBehaviour {
   protected _enabled: boolean;
   protected ctx?: CanvasContext;
 
-  constructor(opts: BehaviourOptions) {
+  /**
+   * The construction options, merged in-place by {@link setOptions}. Named
+   * `_options` (not `options`) so subclasses that expose a bespoke
+   * `get options()` snapshot don't collide with it. Subclasses read their live
+   * config from here (or from fields re-synced in {@link onOptionsChanged}).
+   */
+  protected _options: TOptions;
+
+  constructor(opts: TOptions) {
     this.id = opts.id;
     this.targetLayerId = opts.targetLayerId;
     this.scope = opts.targetLayerId !== undefined ? 'layer' : 'canvas';
     this.shortcuts = opts.shortcuts;
     this._enabled = opts.enabled ?? false;
+    this._options = opts;
   }
 
   get enabled(): boolean {
@@ -113,6 +130,32 @@ export abstract class Behaviour implements IBehaviour {
   }
 
   /**
+   * Merge a serialisable options patch and apply it live. Reflects an `enabled`
+   * change by enabling/disabling, then calls {@link onOptionsChanged} so the
+   * subclass can apply the rest (re-sync cached fields, re-arm a viewport
+   * plugin, recompute). This is the seam the engine's
+   * `canvas.update({ behaviours: { [id]: patch } })` path invokes — so a settings
+   * editor can retune any behaviour without remounting it.
+   *
+   * Subclasses with bespoke apply logic (e.g. clearing selection state on a
+   * mode change) override this and should call `super.setOptions(changes)` first
+   * to keep `_options` — and thus {@link getOptions} — coherent.
+   */
+  setOptions(changes: Partial<TOptions>): void {
+    this._options = { ...this._options, ...changes };
+    if (changes.enabled !== undefined) {
+      if (changes.enabled) this.enable();
+      else this.disable();
+    }
+    this.onOptionsChanged(changes);
+  }
+
+  /** Snapshot of the current (merged) options — seeds a settings editor. */
+  getOptions(): Readonly<TOptions> {
+    return this._options;
+  }
+
+  /**
    * Contribute this behaviour's serialisable config to a canvas-state snapshot
    * (the engine's `DefinitionSerializable` contract). The base implementation
    * captures the explicit `enabled` flag (rule 7). Subclasses with additional
@@ -143,10 +186,37 @@ export abstract class Behaviour implements IBehaviour {
   }
 
   /**
+   * Hook fired after {@link setOptions} merges a patch (and after any `enabled`
+   * toggle is applied). Default no-op. Override to apply an option change live:
+   * a behaviour whose effect is wired in {@link onEnable} (a pixi-viewport
+   * plugin, a DOM listener) re-arms here; one that caches option values in
+   * fields re-syncs them from `this._options` here. `changes` is the raw patch;
+   * `this._options` already holds the merged result.
+   */
+  protected onOptionsChanged(_changes: Partial<TOptions>): void {
+    /* default no-op */
+  }
+
+  /**
    * Convenience `if (!enabled) return;` for use inside event handlers
    * (without rebinding `this` cost).
    */
   protected get isEnabled(): boolean {
     return this._enabled;
+  }
+
+  /**
+   * Re-run {@link onDisable} then {@link onEnable} when the behaviour is live, so
+   * an option change wired at enable-time (a pixi-viewport plugin, a listener
+   * bound with the old config) picks up `this._options`. No-op when disabled or
+   * unregistered (the next {@link onEnable} will read the fresh options anyway).
+   * The idiomatic body of an {@link onOptionsChanged} override for such
+   * behaviours.
+   */
+  protected reArm(): void {
+    if (this._enabled && this.ctx !== undefined) {
+      this.onDisable();
+      this.onEnable();
+    }
   }
 }

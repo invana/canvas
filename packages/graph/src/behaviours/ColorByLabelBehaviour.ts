@@ -86,15 +86,26 @@ export interface ColorByLabelBehaviourOptions extends BehaviourOptions {
 /** Snapshot of a template field so disable can restore it. */
 type Resolvable<T> = T | ((item: never) => T) | undefined;
 
-export class ColorByLabelBehaviour extends Behaviour {
+export class ColorByLabelBehaviour extends Behaviour<ColorByLabelBehaviourOptions> {
   private layer: GraphLayer | null = null;
 
-  private readonly palette: readonly number[];
-  private readonly nodeLabel: ColorLabelAccessor<GraphNode>;
-  private readonly edgeLabel: ColorLabelAccessor<GraphEdge>;
-  private readonly colorNodes: boolean;
-  private readonly colorEdges: boolean;
-  private readonly fallbackColor: number;
+  // Live-read from `_options` so `setOptions` applies. The installed resolvers
+  // close over these getters, and `onOptionsChanged` re-applies so a palette /
+  // accessor / flag change recolours immediately.
+  private get palette(): readonly number[] {
+    return this._options.palette && this._options.palette.length > 0
+      ? this._options.palette
+      : DEFAULT_LABEL_PALETTE;
+  }
+  private get nodeLabel(): ColorLabelAccessor<GraphNode> {
+    return this._options.nodeLabel ?? ((n) => n.type);
+  }
+  private get edgeLabel(): ColorLabelAccessor<GraphEdge> {
+    return this._options.edgeLabel ?? ((e) => e.type);
+  }
+  private get colorNodes(): boolean { return this._options.colorNodes ?? true; }
+  private get colorEdges(): boolean { return this._options.colorEdges ?? true; }
+  private get fallbackColor(): number { return this._options.fallbackColor ?? 0x9ca3af; }
 
   /** label → assigned colour. Grows as new labels are first seen. */
   private readonly colors = new Map<string, number>();
@@ -109,12 +120,6 @@ export class ColorByLabelBehaviour extends Behaviour {
 
   constructor(opts: ColorByLabelBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? [] });
-    this.palette = opts.palette && opts.palette.length > 0 ? opts.palette : DEFAULT_LABEL_PALETTE;
-    this.nodeLabel = opts.nodeLabel ?? ((n) => n.type);
-    this.edgeLabel = opts.edgeLabel ?? ((e) => e.type);
-    this.colorNodes = opts.colorNodes ?? true;
-    this.colorEdges = opts.colorEdges ?? true;
-    this.fallbackColor = opts.fallbackColor ?? 0x9ca3af;
   }
 
   // ─── Lifecycle ──────────────────────────────────────────────────────────
@@ -141,6 +146,26 @@ export class ColorByLabelBehaviour extends Behaviour {
   protected override onDestroy(): void {
     this.restore();
     this.layer = null;
+  }
+
+  /**
+   * Re-apply the colour resolvers when a live option patch lands, so a new
+   * `palette` / accessor / fallback change recolours immediately. Restores the
+   * previously-installed template fields, resets the label→colour assignment
+   * map (so a new palette re-assigns from scratch), then re-installs. A no-op
+   * while disabled — the resolvers aren't installed, and the next enable picks
+   * up the merged `_options`.
+   *
+   * Known limitation: toggling `colorNodes` / `colorEdges` *off* while enabled
+   * relies on the flag-guarded {@link restore}, which won't uninstall a
+   * channel's resolver until the behaviour is disabled.
+   */
+  protected override onOptionsChanged(): void {
+    if (!this.isEnabled || !this.layer) return;
+    this.restore();
+    this.colors.clear();
+    this.nextIndex = 0;
+    this.apply();
   }
 
   // ─── Public API ─────────────────────────────────────────────────────────

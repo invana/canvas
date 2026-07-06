@@ -63,7 +63,7 @@ export interface CollapseExpandBehaviourOptions extends BehaviourOptions {
   targetLayerId: string;
 }
 
-export class CollapseExpandBehaviour extends Behaviour {
+export class CollapseExpandBehaviour extends Behaviour<CollapseExpandBehaviourOptions> {
   private layer: GraphLayer | null = null;
   private ctxRef: CanvasContext | null = null;
   private canvasEl: HTMLCanvasElement | null = null;

@@ -57,7 +57,7 @@ export interface ClickViewBehaviourOptions extends BehaviourOptions {
   clearOnBackground?: boolean;
 }
 
-export class ClickViewBehaviour extends Behaviour {
+export class ClickViewBehaviour extends Behaviour<ClickViewBehaviourOptions> {
   /**
    * View event bus. Subscribe to `'view:change'` for the current single target
    * (or `null`) every time it changes.
@@ -65,7 +65,8 @@ export class ClickViewBehaviour extends Behaviour {
   readonly events = new EventEmitter<ClickViewEventMap>();
 
   private layer: GraphLayer | null = null;
-  private readonly clearOnBackground: boolean;
+  /** Live-read from `_options` (consulted at click-time) so `setOptions` applies. */
+  private get clearOnBackground(): boolean { return this._options.clearOnBackground ?? true; }
 
   /** Subscription disposers. */
   private subs: Array<() => void> = [];
@@ -86,7 +87,6 @@ export class ClickViewBehaviour extends Behaviour {
 
   constructor(opts: ClickViewBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? ['pointer+click'] });
-    this.clearOnBackground = opts.clearOnBackground ?? true;
   }
 
   // ─── Lifecycle ──────────────────────────────────────────────────────────

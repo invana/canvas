@@ -1,208 +1,176 @@
-import { Canvas, BackgroundLayer, GraphLayer, WheelZoomBehaviour, DragPanBehaviour, useCanvas, type GraphLayerProps } from '@invana/canvas-react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+// Engine classes (NOT the canvas-react wrappers) — used for `instanceof` matching
+// against the live bundle instances the app constructs.
+import { BackgroundLayer, WheelZoomBehaviour } from '@invana/canvas';
+import {
+  CanvasMessageBar,
+  CanvasSettingsBrowser,
+  GraphCanvasApp,
+  GraphControlsToolbar,
+  GraphStatusBar,
+  GraphNodeContextMenu,
+  type GraphNodeMenuContext,
+  GraphBackgroundContextMenu,
+  Panel,
+  PanelContent,
+  type LayoutFactory,
+  type SettingsEditorDescriptor,
+  ThemeToggle,
+  useDevTool,
+  useMiniMap,
+} from '@invana/canvas-react';
 import {
   BackgroundLayerEditor,
-  WheelZoomEditor,
-  GeometricLayoutEditor,
   backgroundLayerOptionsToForm,
   backgroundLayerFormToOptions,
+  WheelZoomEditor,
   wheelZoomOptionsToForm,
   wheelZoomFormToOptions,
-  geometricLayoutOptionsToForm,
-  geometricLayoutFormToOptions,
   type BackgroundLayerOptions,
   type WheelZoomOptions,
-  type GeometricLayoutOptions,
 } from '@invana/canvas-ui';
-import type { GraphData, GraphLayer as GraphLayerInstance } from '@invana/graph';
-import { GeometricLayout } from '@invana/graph-layout-geometric';
+import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
-import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useEffect, useState } from 'react';
+import { D3ForceLayout } from '@invana/graph-layout-d3-force';
+import { ElkLayout } from '@invana/graph-layout-elkjs';
+import { ThemeProvider } from '@invana/themes';
+import type { MenuItem } from '@invana/ui';
 
 /**
- * `canvas-ui/editors/Live Settings Editors` — the three Behaviour / Layer /
- * Layout settings editors driving a **live** graph canvas.
+ * `canvas-ui/editors/Live Settings Editors` — the settings editors driving a
+ * **fully-featured** `GraphCanvasApp`, surfaced through a right-side
+ * **file-browser settings panel** (`<CanvasSettingsBrowser>`).
  *
- * Each editor is engine-agnostic: it emits a serialisable options patch on
- * Apply. This story is the *consumer* — it holds the patch in React state and
- * feeds it to the `@invana/canvas-react` children, which project it onto the
- * running canvas:
- *  - **BackgroundLayer** — reactive props → `layer.setOptions` (updates instantly).
- *  - **WheelZoomBehaviour** — options are init-only, so a `key` remount recreates
- *    the behaviour with the new zoom settings.
- *  - **GeometricLayout** — no React wrapper, so an inline runner re-`apply`s the
- *    one-shot layout whenever its options change (nodes re-lay-out + auto-fit).
+ * The browser introspects the app's live bundle — every registered Layer,
+ * Behaviour and Layout — and lists them in a nested accordion (folders =
+ * Layers / Behaviours / Layouts, files = instances). Expanding a row reveals
+ * its schema-driven editor from `@invana/canvas-ui`; the editor emits a
+ * serialisable patch that applies **live** via `canvas.update(...)` →
+ * `setOptions`. Bundle instances without an editor (yet) are still listed with a
+ * "no editor" placeholder — the panel reflects the whole visualisation state,
+ * not just the editable slice.
  *
- * This is the "state level" the editors expose: a class's constructor options
- * *are* the editable state of the visualisation (root CLAUDE.md rule 12).
+ * The editors are **injected** as descriptors (the browser lives in
+ * `@invana/canvas-react`, which can't import the editor package): each closes
+ * over an editor component + its `optionsToForm` / `formToOptions` mapping and
+ * matches its class by `instanceof`. This is exactly how the Invana building
+ * studio would wire the same panel.
  */
 const meta: Meta = { title: 'canvas-ui/editors/Live Settings Editors' };
 export default meta;
 type Story = StoryObj;
 
-// ─── Data ────────────────────────────────────────────────────────────────
-// Les Misérables co-occurrence graph, typed by character group for colour.
-const DATA: GraphData = {
-  nodes: lesMiserables.nodes.map((n) => ({ id: n.id, type: `Group ${n.data.group}` })),
-  edges: lesMiserables.edges.map((e) => ({
-    id: e.id,
-    source: e.source,
-    target: e.target,
-    type: 'APPEARS_WITH',
-  })),
-};
-
-// ─── Initial option state (seeds both the canvas and the editors) ──────────
-const INITIAL_BG: BackgroundLayerOptions = {
-  type: 'pattern',
-  patternType: 'dots',
-  color: '#94a3b8',
-  backgroundColor: '#f8fafc',
-  size: 1,
-  spacing: 24,
-  alpha: 0.6,
-  followCamera: true,
-  mode: 'auto',
-};
-
-const INITIAL_WHEEL: WheelZoomOptions = { requireCtrl: false, percent: 0.1, smooth: false };
-
-const INITIAL_GEO: GeometricLayoutOptions = {
-  mode: 'grid',
-  columnGap: 90,
-  rowGap: 90,
-  center: { x: 0, y: 0 },
-};
-
-// Layer templates passed at GraphLayer construction so nodes render as visible
-// circles with labels — a bare GraphLayer (no node style) draws edges but no
-// node shapes.
-const NODE_OPTION: GraphLayerProps['node'] = {
-  style: {
-    shape: { kind: 'circle', radius: 12 },
-    bgFill: 0x60a5fa,
-    bgStrokeColor: 0xffffff,
-    bgStrokeWidth: 1.5,
-    labelText: (n) => n.id,
-    labelColor: 0x1e293b,
-    labelFontSize: 10,
-    labelPlacement: 'bottom',
-    labelOffsetY: 4,
+// ─── Injected editor descriptors ────────────────────────────────────────────
+// One per editable class. `match` is by engine-class reference (survives
+// minification); `read` seeds the form from the live instance's options; the
+// editor's `onSubmit` maps back to options and `apply`s the patch to the canvas.
+const SETTINGS_REGISTRY: SettingsEditorDescriptor[] = [
+  {
+    section: 'layers',
+    typeLabel: 'Background Layer',
+    match: (i) => i instanceof BackgroundLayer,
+    read: (i) => (i as BackgroundLayer).getOptions() as unknown as Record<string, unknown>,
+    render: ({ options, apply }) => (
+      <BackgroundLayerEditor
+        defaults={backgroundLayerOptionsToForm(options as BackgroundLayerOptions)}
+        onSubmit={(v) => apply(backgroundLayerFormToOptions(v) as Record<string, unknown>)}
+      />
+    ),
   },
-};
-const EDGE_OPTION: GraphLayerProps['edge'] = {
-  style: { strokeColor: 0x94a3b8, strokeWidth: 1 },
-};
+  {
+    section: 'behaviours',
+    typeLabel: 'Wheel Zoom',
+    match: (i) => i instanceof WheelZoomBehaviour,
+    read: (i) => (i as WheelZoomBehaviour).getOptions() as unknown as Record<string, unknown>,
+    render: ({ options, apply }) => (
+      <WheelZoomEditor
+        defaults={wheelZoomOptionsToForm(options as WheelZoomOptions)}
+        onSubmit={(v) => apply(wheelZoomFormToOptions(v) as Record<string, unknown>)}
+      />
+    ),
+  },
+];
 
-/**
- * Inline declarative runner for the one-shot `GeometricLayout` (canvas-react
- * has no wrapper for it). Re-`apply`s the layout — with a fresh instance — every
- * time `options` changes, then fits the view. Must be mounted *after* the target
- * `<GraphLayer>` so the layer exists when the effect runs.
- */
-function GeometricLayoutRunner({
-  layerId,
-  options,
-}: {
-  layerId: string;
-  options: GeometricLayoutOptions;
-}) {
-  const canvas = useCanvas();
-  useEffect(() => {
-    const layer = canvas.layers.get<GraphLayerInstance>(layerId);
-    if (!layer) return;
-    let active = true;
-    // The editor emits `transitionEase` as a free string; the layout narrows it
-    // to `EasingName`. Adapt at the consumer boundary (an unknown ease is ignored).
-    const layout = new GeometricLayout({
-      targetLayerId: layerId,
-      ...options,
-    } as ConstructorParameters<typeof GeometricLayout>[0]);
-    Promise.resolve(layout.apply(layer)).then(() => {
-      if (active) canvas.camera.fitContent(layer.getBounds(), 80);
-    });
-    return () => {
-      active = false;
-      layout.stop?.();
-    };
-  }, [canvas, layerId, options]);
-  return null;
-}
+// Multi-layout picker for the header toolbar — the app's `activeLayout` is
+// `'graph-force'`; selecting one swaps the active layout live.
+const LAYOUTS: Record<string, LayoutFactory> = {
+  'd3-force': () =>
+    new D3ForceLayout({ charge: { strength: -240 }, link: { distance: 70 }, animate: false }),
+  'elk-layered': () => new ElkLayout({ algorithm: 'layered', direction: 'RIGHT' }),
+};
+const LAYOUT_LABEL: Record<string, string> = { 'd3-force': 'Force', 'elk-layered': 'Layered' };
 
-// ─── Styles ────────────────────────────────────────────────────────────────
-const pageStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '360px 1fr',
-  height: '100vh',
-  background: 'var(--background, #fff)',
-  color: 'var(--foreground, #111)',
-};
-const sidebarStyle: React.CSSProperties = {
-  overflowY: 'auto',
-  borderRight: '1px solid var(--border, #e2e8f0)',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 8,
-};
-const sectionHeaderStyle: React.CSSProperties = {
-  margin: 0,
-  padding: '12px 16px 0',
-  fontSize: 12,
-  fontWeight: 600,
-  textTransform: 'uppercase',
-  letterSpacing: 0.4,
-  opacity: 0.7,
-};
-const canvasHostStyle: React.CSSProperties = { position: 'relative', minWidth: 0 };
+const groupOf = (n: GraphNode): number => (n.data as { group?: number } | undefined)?.group ?? 0;
 
-/**
- * The story. Editors live in the sidebar and, on Apply, push a serialisable
- * options patch into React state; the `<Canvas>` children read that state and
- * update the live canvas.
- */
+const nodeMenu = (ctx: GraphNodeMenuContext): MenuItem[] => [
+  { id: 'inspect', label: `Inspect ${ctx.id}`, onClick: () => window.alert(`Node ${ctx.id}`) },
+];
+const backgroundMenu = (): MenuItem[] => [
+  { id: 'about', label: 'Les Misérables co-appearances', onClick: () => window.alert('Demo graph') },
+];
+
 export const LiveSettingsEditors: Story = {
   name: 'Live Settings Editors',
   render: function Render() {
-    const [bgOpts, setBgOpts] = useState<BackgroundLayerOptions>(INITIAL_BG);
-    const [wheelOpts, setWheelOpts] = useState<WheelZoomOptions>(INITIAL_WHEEL);
-    const [wheelKey, setWheelKey] = useState(0);
-    const [geoOpts, setGeoOpts] = useState<GeometricLayoutOptions>(INITIAL_GEO);
+    const dev = useDevTool({ corner: 'top-left', margin: { x: 12, y: 48 } });
+    const mini = useMiniMap({ backgroundLayerId: 'background', position: 'bottom-left' });
+
+    // Les Misérables ships no `type`; give each node its community group as its
+    // type (so the bundle's colour-by-label behaviour tints by community) and
+    // each edge the `APPEARS_WITH` label.
+    const data = {
+      nodes: lesMiserables.nodes.map((n) => ({ ...n, type: `Group ${groupOf(n)}` })),
+      edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
+    };
 
     return (
-      <div style={pageStyle}>
-        <aside style={sidebarStyle}>
-          <h3 style={sectionHeaderStyle}>Layer · BackgroundLayer</h3>
-          <BackgroundLayerEditor
-            defaults={backgroundLayerOptionsToForm(INITIAL_BG)}
-            onSubmit={(v) => setBgOpts(backgroundLayerFormToOptions(v))}
-          />
+      // GraphCanvasApp reads light/dark from a host <ThemeProvider> (and throws
+      // without one).
+      <ThemeProvider>
+        <GraphCanvasApp
+          data={data}
+          onReady={(c) => c?.showMessage('Open the right panel to edit any layer / behaviour / layout')}
+          config={{
+            layouts: {
+              'graph-force': {
+                charge: { strength: -240 },
+                link: { distance: 70 },
+                collide: { radius: 18 },
+                animate: false,
+              },
+            },
+          }}
+          header={{
+            title: 'Live Settings Editors',
+            center: <GraphControlsToolbar layouts={LAYOUTS} layoutLabel={LAYOUT_LABEL} />,
+            right: (ctx) => (
+              <>
+                {mini.button}
+                {dev.button}
+                <ThemeToggle ctx={ctx} />
+              </>
+            ),
+          }}
+          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        >
+          {/* Extra layers — minimap + on-demand dev overlay. */}
+          {mini.layer}
+          {dev.layer}
 
-          <h3 style={sectionHeaderStyle}>Behaviour · WheelZoom</h3>
-          <WheelZoomEditor
-            defaults={wheelZoomOptionsToForm(INITIAL_WHEEL)}
-            onSubmit={(v) => {
-              setWheelOpts(wheelZoomFormToOptions(v));
-              setWheelKey((k) => k + 1); // remount to recreate with new options
-            }}
-          />
+          {/* Right-click menus. */}
+          <GraphNodeContextMenu items={nodeMenu} />
+          <GraphBackgroundContextMenu items={backgroundMenu} />
 
-          <h3 style={sectionHeaderStyle}>Layout · GeometricLayout</h3>
-          <GeometricLayoutEditor
-            defaults={geometricLayoutOptionsToForm(INITIAL_GEO)}
-            onSubmit={(v) => setGeoOpts(geometricLayoutFormToOptions(v))}
-          />
-        </aside>
-
-        <div style={canvasHostStyle}>
-          <Canvas autoResize style={{ width: '100%', height: '100%' }}>
-            <BackgroundLayer id="background" {...bgOpts} />
-            <GraphLayer id="graph" data={DATA} node={NODE_OPTION} edge={EDGE_OPTION} />
-            <DragPanBehaviour id="pan" />
-            <WheelZoomBehaviour key={wheelKey} id="wheel" {...wheelOpts} />
-            <GeometricLayoutRunner layerId="graph" options={geoOpts} />
-          </Canvas>
-        </div>
-      </div>
+          {/* The star: a docked right-side settings browser over the live bundle.
+              A full-height <Panel> positions a <PanelContent> whose scrollable
+              body holds the file-browser accordion. */}
+          <Panel position="right">
+            <PanelContent header="Canvas Settings" fill width={360}>
+              <CanvasSettingsBrowser registry={SETTINGS_REGISTRY} activeLayoutId="graph-force" />
+            </PanelContent>
+          </Panel>
+        </GraphCanvasApp>
+      </ThemeProvider>
     );
   },
 };

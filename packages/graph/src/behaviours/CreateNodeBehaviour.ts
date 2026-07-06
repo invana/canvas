@@ -37,13 +37,25 @@ export interface CreateNodeBehaviourOptions extends BehaviourOptions {
 
 let createNodeSeq = 0;
 
-export class CreateNodeBehaviour extends Behaviour {
+export class CreateNodeBehaviour extends Behaviour<CreateNodeBehaviourOptions> {
   private layer: GraphLayer | null = null;
   private ctxRef: CanvasContext | null = null;
   private canvasEl: HTMLCanvasElement | null = null;
 
-  private readonly makeNode: (world: { x: number; y: number }) => GraphNode | null;
-  private readonly onNodeCreate?: (node: GraphNode) => void;
+  // Both live-read from `_options` (consumed at click-time) so `setOptions`
+  // applies. `makeNode` falls back to the built-in id/position factory.
+  private get makeNode(): (world: { x: number; y: number }) => GraphNode | null {
+    return (
+      this._options.createNode ??
+      ((world) => ({
+        id: `n-${Date.now().toString(36)}-${(createNodeSeq++).toString(36)}`,
+        position: { x: world.x, y: world.y },
+      }))
+    );
+  }
+  private get onNodeCreate(): ((node: GraphNode) => void) | undefined {
+    return this._options.onNodeCreate;
+  }
 
   /** Subscription disposers. */
   private subs: Array<() => void> = [];
@@ -54,13 +66,6 @@ export class CreateNodeBehaviour extends Behaviour {
 
   constructor(opts: CreateNodeBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? ['pointer+click'] });
-    this.makeNode =
-      opts.createNode ??
-      ((world) => ({
-        id: `n-${Date.now().toString(36)}-${(createNodeSeq++).toString(36)}`,
-        position: { x: world.x, y: world.y },
-      }));
-    this.onNodeCreate = opts.onNodeCreate;
   }
 
   // ─── Lifecycle ──────────────────────────────────────────────────────────
