@@ -1,4 +1,4 @@
-import { Canvas, BackgroundLayer, GraphLayer, WheelZoomBehaviour, DragPanBehaviour, useCanvas } from '@invana/canvas-react';
+import { Canvas, BackgroundLayer, GraphLayer, WheelZoomBehaviour, DragPanBehaviour, useCanvas, type GraphLayerProps } from '@invana/canvas-react';
 import {
   BackgroundLayerEditor,
   WheelZoomEditor,
@@ -72,6 +72,26 @@ const INITIAL_GEO: GeometricLayoutOptions = {
   columnGap: 90,
   rowGap: 90,
   center: { x: 0, y: 0 },
+};
+
+// Layer templates passed at GraphLayer construction so nodes render as visible
+// circles with labels — a bare GraphLayer (no node style) draws edges but no
+// node shapes.
+const NODE_OPTION: GraphLayerProps['node'] = {
+  style: {
+    shape: { kind: 'circle', radius: 12 },
+    bgFill: 0x60a5fa,
+    bgStrokeColor: 0xffffff,
+    bgStrokeWidth: 1.5,
+    labelText: (n) => n.id,
+    labelColor: 0x1e293b,
+    labelFontSize: 10,
+    labelPlacement: 'bottom',
+    labelOffsetY: 4,
+  },
+};
+const EDGE_OPTION: GraphLayerProps['edge'] = {
+  style: { strokeColor: 0x94a3b8, strokeWidth: 1 },
 };
 
 /**
@@ -176,7 +196,7 @@ export const LiveSettingsEditors: Story = {
         <div style={canvasHostStyle}>
           <Canvas autoResize style={{ width: '100%', height: '100%' }}>
             <BackgroundLayer id="background" {...bgOpts} />
-            <GraphLayer id="graph" data={DATA} />
+            <GraphLayer id="graph" data={DATA} node={NODE_OPTION} edge={EDGE_OPTION} />
             <DragPanBehaviour id="pan" />
             <WheelZoomBehaviour key={wheelKey} id="wheel" {...wheelOpts} />
             <GeometricLayoutRunner layerId="graph" options={geoOpts} />

@@ -1,4 +1,4 @@
-import { Canvas, GraphLayer, BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour, D3ForceLayout } from '@invana/canvas-react';
+import { Canvas, GraphLayer, BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour, D3ForceLayout, type GraphLayerProps } from '@invana/canvas-react';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphData } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
@@ -51,9 +51,42 @@ const DATA_B: GraphData = {
 
 const EMPTY: GraphData = { nodes: [], edges: [] };
 
-// Config-first force layout: re-runs on every topology change (each re-seed),
-// so nodes re-lay-out and the view re-fits after a swap.
-const CONFIG: CanvasConfig = { activeLayout: 'force' };
+// Layer templates (shared node/edge styling) passed at GraphLayer construction —
+// the resolver applies them to every node/edge. A bare GraphLayer with no node
+// style draws edges but no node shapes, which is why nodes must be styled here
+// (init-time) rather than via a post-mount `config` update.
+const NODE_OPTION: GraphLayerProps['node'] = {
+  style: {
+    shape: { kind: 'circle', radius: 12 },
+    bgFill: 0x60a5fa,
+    bgStrokeColor: 0xffffff,
+    bgStrokeWidth: 1.5,
+    labelText: (n) => n.id,
+    labelColor: 0x1e293b,
+    labelFontSize: 10,
+    labelPlacement: 'bottom',
+    labelOffsetY: 4,
+  },
+};
+const EDGE_OPTION: GraphLayerProps['edge'] = {
+  style: { strokeColor: 0x94a3b8, strokeWidth: 1 },
+};
+
+// Config-first force layout: re-runs on every topology change (each re-seed), so
+// nodes re-lay-out and the view re-fits after a swap. Force tuning mirrors
+// GraphCanvasApp so 77 nodes spread into a readable graph (untuned d3-force
+// clumps them into a hairball).
+const CONFIG: CanvasConfig = {
+  activeLayout: 'force',
+  layouts: {
+    force: {
+      charge: { strength: -160 },
+      link: { distance: 56 },
+      collide: { radius: 14 },
+      animate: false,
+    },
+  },
+};
 
 const btn: React.CSSProperties = {
   padding: '6px 12px',
@@ -115,7 +148,7 @@ export const GraphReseed: Story = {
             style={{ width: '100%', height: '100%' }}
           >
             <BackgroundLayer id="background" />
-            <GraphLayer id="graph" data={data} />
+            <GraphLayer id="graph" data={data} node={NODE_OPTION} edge={EDGE_OPTION} />
             <DragPanBehaviour id="pan" />
             <WheelZoomBehaviour id="wheel" />
             <D3ForceLayout id="force" targetLayerId="graph" />

@@ -327,12 +327,12 @@ export class Canvas {
 
     this._wireScene(this.app.stage, width, height, this.app.renderer.events);
     this.app.ticker.add(this.tick, this);
-    // Take over the frame render. Pixi's `TickerPlugin` adds `app.render` to the
-    // ticker on init; we remove it and call `app.render()` ourselves at the end
-    // of `tickOnce` (after the per-frame flush), wrapped in try/catch. That's the
-    // only seam that can catch an experimental-WebGPU *render-time* crash — pixi's
-    // own ticker render is out of our try/catch reach. See `_renderFrame`.
-    this.app.ticker.remove(this.app.render, this.app);
+    // Pixi drives the frame render on its own ticker as usual — we don't touch
+    // that path. To catch a WebGPU *render-time* crash (uncatchable at init) we
+    // wrap the renderer's `render` method in place with a try/catch that routes
+    // to `_handleRenderError`. Non-invasive: same render path, same timing, only
+    // a guard added. See `_installRenderGuard`.
+    this._installRenderGuard();
 
     if (opts.autoResize) {
       this._onRendererResize = (w, h) => {
@@ -419,39 +419,42 @@ export class Canvas {
         ticker.renderer.tickAnimations(deltaMs);
       }
     }
-    // Render the frame ourselves (pixi's auto-render was removed from the ticker
-    // in `init()`), so a render-time crash is catchable. Headless/test init has
-    // no `app` — nothing to render there.
-    if (this.app) this._renderFrame();
   }
 
   /**
-   * Render one frame, guarding against a render-time renderer crash. The
-   * experimental WebGPU backend can throw synchronously inside `renderer.render`
-   * (a null bind-group during pipeline setup); catching it here lets us fall
-   * back to WebGL instead of spraying the same uncaught error every frame.
+   * Wrap the renderer's `render` method in place with a try/catch so a WebGPU
+   * render-time crash (a null bind-group during pipeline setup, uncatchable at
+   * init) routes to {@link _handleRenderError} instead of throwing uncaught out
+   * of pixi's ticker every frame. Pixi still drives rendering exactly as before —
+   * this only adds a guard, so it can't change what gets drawn.
    */
-  private _renderFrame(): void {
-    if (!this.app || this._rendererFellBack) return;
-    try {
-      this.app.render();
-    } catch (err) {
-      this._handleRenderError(err);
-    }
+  private _installRenderGuard(): void {
+    const renderer = this.app?.renderer;
+    if (!renderer) return;
+    const original = renderer.render.bind(renderer);
+    renderer.render = ((...args: Parameters<typeof original>) => {
+      if (this._rendererFellBack) return undefined as ReturnType<typeof original>;
+      try {
+        return original(...args);
+      } catch (err) {
+        this._handleRenderError(err);
+        return undefined as ReturnType<typeof original>;
+      }
+    }) as typeof renderer.render;
   }
 
   /**
-   * Recover from a render-time crash. On the experimental WebGPU backend: halt
-   * the render loop and emit `'canvas:renderer:fallback'` **once** so the host
-   * re-inits on WebGL (the `@invana/canvas-react` `<Canvas>` does this
-   * automatically). Any other backend has nowhere to fall back to, so the error
-   * is re-thrown rather than swallowed.
+   * Recover from a render-time crash. On WebGPU: halt the render loop and emit
+   * `'canvas:renderer:fallback'` **once** so the host re-inits on WebGL (the
+   * `@invana/canvas-react` `<Canvas>` does this automatically). Any other backend
+   * has nowhere to fall back to, so the error is re-thrown rather than swallowed.
    */
   private _handleRenderError(err: unknown): void {
     if (this._rendererFellBack || this._detectBackend() !== 'webgpu') throw err;
     this._rendererFellBack = true;
-    // Stop ticking so the crash doesn't repeat while the host swaps backend.
-    this.app?.ticker.remove(this.tick, this);
+    // Stop the ticker so pixi's render loop can't re-hit the crash while the host
+    // swaps backend.
+    this.app?.ticker.stop();
     console.warn(
       '[canvas] WebGPU renderer crashed at render time; ' +
         'falling back to WebGL. Original error:',
