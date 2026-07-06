@@ -1,6 +1,6 @@
 {
   "name": "@invana/canvas-store",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Renderer-free kernel for the Invana canvas — state (ReactiveStore port + view/data stores), event bus, telemetry, history. The engine (@invana/canvas) is a pixi renderer over this.",
   "type": "module",
   "main": "./dist/index.js",

@@ -1,6 +1,6 @@
 {
   "name": "@invana/graph-datasets",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Example graph datasets for @invana/graph (Les Misérables, scientists org chart, random tree, etc.).",
   "type": "module",
   "main": "./dist/index.js",

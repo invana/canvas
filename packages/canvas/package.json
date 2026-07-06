@@ -1,6 +1,6 @@
 {
   "name": "@invana/canvas",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "WebGPU-first canvas rendering engine — Layer / Behaviour / Layout architecture (see architecture-proposal.md).",
   "type": "module",
   "main": "./dist/index.js",
