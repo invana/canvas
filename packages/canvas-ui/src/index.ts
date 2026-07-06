@@ -104,6 +104,60 @@ export {
   asRole,
 } from './editors/field-helpers';
 
+// ─── Behaviour / Layer / Layout settings editors ───────────────────────────
+// Schema-driven editors for engine construction options (rule 12). Each is
+// engine-agnostic: it mirrors the class's option shape as a local serialisable
+// patch (no `@invana/canvas` / layout-package import) and the host applies it
+// via `setOptions` (or a layout re-run). The `optionsToForm` / `formToOptions`
+// mappers are aliased per surface since the names repeat across editors.
+
+// WheelZoomBehaviour
+export { WheelZoomEditor, wheelZoomFields } from './editors/wheel-zoom';
+export {
+  optionsToForm as wheelZoomOptionsToForm,
+  formToOptions as wheelZoomFormToOptions,
+} from './editors/wheel-zoom';
+export type {
+  WheelZoomEditorProps,
+  WheelZoomFields,
+  WheelZoomFormState,
+  WheelZoomOptions,
+} from './editors/wheel-zoom';
+
+// BackgroundLayer
+export { BackgroundLayerEditor, backgroundLayerFields } from './editors/background-layer';
+export {
+  optionsToForm as backgroundLayerOptionsToForm,
+  formToOptions as backgroundLayerFormToOptions,
+} from './editors/background-layer';
+export type {
+  BackgroundLayerEditorProps,
+  BackgroundLayerFields,
+  BackgroundLayerFormState,
+  BackgroundLayerOptions,
+  BackgroundType,
+  BackgroundPatternType,
+  BackgroundMode,
+} from './editors/background-layer';
+
+// GeometricLayout
+export {
+  GeometricLayoutEditor,
+  geometricLayoutFields,
+  modeFields,
+} from './editors/geometric-layout';
+export {
+  optionsToForm as geometricLayoutOptionsToForm,
+  formToOptions as geometricLayoutFormToOptions,
+} from './editors/geometric-layout';
+export type {
+  GeometricLayoutEditorProps,
+  GeometricLayoutFields,
+  GeometricLayoutFormState,
+  GeometricLayoutOptions,
+  GeometricLayoutMode,
+} from './editors/geometric-layout';
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Views
 // ═══════════════════════════════════════════════════════════════════════════
