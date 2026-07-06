@@ -59,6 +59,11 @@ export interface ExportSvgOptions {
   background?: string | number | 'transparent' | 'canvas';
   /** World padding around the content bounds (`area: 'content'` only). Default `24`. */
   padding?: number;
+  /**
+   * Force a specific output aspect ratio (width ÷ height). The `viewBox` is
+   * letterboxed to it — grown + re-centred, never cropped. Default: no constraint.
+   */
+  aspectRatio?: number;
   /** Multiplier for the SVG's pixel `width`/`height` attributes (the `viewBox` is unaffected). Default `1`. */
   scale?: number;
 }
@@ -472,7 +477,7 @@ function connectorLabelToSvg(path: Path, style: unknown): string {
  */
 export function exportSVG(canvas: Canvas, opts: ExportSvgOptions = {}): string {
   const area = opts.area ?? 'viewport';
-  const rect = captureRect(canvas, area, opts.padding ?? 24);
+  const rect = captureRect(canvas, area, opts.padding ?? 24, opts.aspectRatio);
   if (!(rect.width > 0) || !(rect.height > 0)) {
     throw new Error('Canvas.exportSVG: nothing to export (empty capture region).');
   }

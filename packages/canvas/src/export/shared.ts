@@ -55,16 +55,34 @@ export function resolveExportBackground(canvas: Canvas, bg: ExportBackground): s
  * - `'content'` — the union bounds of everything in the world container, grown
  *   by `padding` world units.
  * - `'viewport'` — the region currently visible through the camera.
+ *
+ * When `aspectRatio` (width ÷ height) is given, the rect is **letterboxed** to
+ * it — the shorter axis is grown and re-centred so the output matches the ratio
+ * exactly. It only ever expands (never crops), so all content stays visible and
+ * the extra margin is filled by the export background.
  */
-export function captureRect(canvas: Canvas, area: ExportArea, padding = 24): Rect {
+export function captureRect(canvas: Canvas, area: ExportArea, padding = 24, aspectRatio?: number): Rect {
+  let rect: Rect;
   if (area === 'content') {
     const b = canvas.world.getLocalBounds();
-    return {
-      x: b.minX - padding,
-      y: b.minY - padding,
-      width: b.width + padding * 2,
-      height: b.height + padding * 2,
-    };
+    rect = { x: b.minX - padding, y: b.minY - padding, width: b.width + padding * 2, height: b.height + padding * 2 };
+  } else {
+    rect = canvas.camera.getVisibleBounds();
   }
-  return canvas.camera.getVisibleBounds();
+  return aspectRatio && aspectRatio > 0 ? applyAspectRatio(rect, aspectRatio) : rect;
+}
+
+/** Expand `rect` (centred) so `width / height === target`. Never shrinks/crops. */
+function applyAspectRatio(rect: Rect, target: number): Rect {
+  if (!(rect.width > 0) || !(rect.height > 0)) return rect;
+  const current = rect.width / rect.height;
+  if (Math.abs(current - target) < 1e-6) return rect;
+  if (current < target) {
+    // Too tall — widen.
+    const width = rect.height * target;
+    return { x: rect.x - (width - rect.width) / 2, y: rect.y, width, height: rect.height };
+  }
+  // Too wide — heighten.
+  const height = rect.width / target;
+  return { x: rect.x, y: rect.y - (height - rect.height) / 2, width: rect.width, height };
 }

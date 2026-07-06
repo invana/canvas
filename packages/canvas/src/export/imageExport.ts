@@ -46,6 +46,13 @@ export interface ExportImageOptions {
   /** Background fill. Default `'canvas'`. See {@link ExportBackground}. */
   background?: ExportBackground;
   /**
+   * Force a specific output aspect ratio (width ÷ height, e.g. `16/9`, `1`).
+   * The capture region is letterboxed to it — grown + re-centred, never
+   * cropped — with the background filling the added margin. Default: no
+   * constraint (the region's natural ratio).
+   */
+  aspectRatio?: number;
+  /**
    * Resolution multiplier applied on top of the mode's base resolution.
    * Default = `window.devicePixelRatio` (≥ 1). Bump it for a higher-DPI export;
    * the result is clamped by {@link maxSize}.
@@ -95,7 +102,7 @@ function renderToCanvas(canvas: Canvas, opts: ExportImageOptions): HTMLCanvasEle
   // (the world container's own space, pre-camera-transform), which is what
   // `captureRect` returns. `viewport` renders at the on-screen zoom; `content`
   // renders at native 1:1 (× userScale).
-  const r = captureRect(canvas, area, opts.padding ?? 24);
+  const r = captureRect(canvas, area, opts.padding ?? 24, opts.aspectRatio);
   const frame = new Rectangle(r.x, r.y, r.width, r.height);
   let resolution = area === 'content' ? userScale : canvas.camera.scale * userScale;
 
