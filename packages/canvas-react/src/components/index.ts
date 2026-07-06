@@ -38,6 +38,8 @@ export type {
   ExportImageFormatKey,
   ExportImageAreaKey,
 } from './ExportImagePanel';
+export { ExportStatePanel } from './ExportStatePanel';
+export type { ExportStatePanelProps } from './ExportStatePanel';
 export { PropertiesEditor } from './PropertiesEditor';
 export type { PropertiesEditorProps, PropertiesEditorValues } from './PropertiesEditor';
 export { DetailCard } from './DetailCard';

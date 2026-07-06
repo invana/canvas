@@ -13,7 +13,7 @@
  * `apps/docs/graph/events.md` for the event model.
  */
 
-import { PrimitivesRenderer, WorldLayer } from '@invana/canvas';
+import { PrimitivesRenderer, WorldLayer, jsonSafe } from '@invana/canvas';
 import type {
   BaseConnectorSpec,
   BaseShapeSpec,
@@ -547,6 +547,57 @@ export class GraphLayer extends WorldLayer<
       this.store.clear();
       this.store.addNodesBulk(data.nodes);
       this.store.addEdgesBulk(data.edges);
+    });
+  }
+
+  /**
+   * Serialise this layer's graph data — every node (with its live position,
+   * `pinned` flag, style, states and payload) and every edge — to a plain
+   * {@link GraphData} object safe to `JSON.stringify`.
+   *
+   * Implements the engine's structural `DataSerializableLayer` contract, so
+   * `Canvas.exportState()` picks this layer's data up automatically. Round-trips
+   * through {@link importData}.
+   */
+  exportData(): GraphData {
+    return { nodes: [...this.store.nodes()], edges: [...this.store.edges()] };
+  }
+
+  /**
+   * Replace this layer's data from a {@link GraphData} snapshot produced by
+   * {@link exportData} — the import half of the `DataSerializableLayer`
+   * contract. Delegates to {@link setData}, so the renderer teardown/repaint and
+   * dependent-layer notifications all run.
+   */
+  importData(data: GraphData): void {
+    this.setData(data);
+  }
+
+  /**
+   * Contribute this layer's **serialisable config** to a canvas-state snapshot —
+   * the layer-level styling template (`node` / `edge`), the card/structure/
+   * styling template registries, and a couple of scalar options. Implements the
+   * engine's `DefinitionSerializable` contract, so `Canvas.exportState()` picks
+   * it up into `definition.layers[id]` even on a declarative canvas whose options
+   * were passed to the constructor.
+   *
+   * Excludes `store` (a live instance) and `initData` (data is captured
+   * separately, positions and all). The result is passed through {@link jsonSafe},
+   * so **function-valued style resolvers** (e.g. `labelText: (n) => …`) are
+   * dropped — they can't serialise. On import, `setOptions` shallow-merges this
+   * slice, preserving any live resolver the serialised template omitted.
+   */
+  serializeDefinition(): Record<string, unknown> | undefined {
+    return jsonSafe({
+      ...(this.nodeOption ? { node: this.nodeOption } : {}),
+      ...(this.edgeOption ? { edge: this.edgeOption } : {}),
+      ...(this.options.useDefaultStates !== undefined
+        ? { useDefaultStates: this.options.useDefaultStates }
+        : {}),
+      ...(this.options.hitFloorPx !== undefined ? { hitFloorPx: this.options.hitFloorPx } : {}),
+      nodeStructureTemplates: this.nodeStructures,
+      nodeStylingTemplates: this.nodeStylings,
+      nodeTypes: this.nodeTypes,
     });
   }
 

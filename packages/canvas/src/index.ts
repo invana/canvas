@@ -212,6 +212,28 @@ export {
 } from './export/svgExport';
 export type { ExportSvgOptions, SvgExportableLayer } from './export/svgExport';
 
+// Full-state JSON export/import — serialise the canvas's view definition +
+// interaction + per-layer data to a plain document and restore it. `Canvas.
+// exportState` / `Canvas.importState` delegate here; the standalone functions
+// are exported for callers holding a bare `Canvas` in a util.
+export {
+  exportCanvasState,
+  importCanvasState,
+  canvasStateToJSON,
+  downloadCanvasState,
+  importCanvasStateFromFile,
+  jsonSafe,
+  CANVAS_STATE_VERSION,
+} from './export/stateExport';
+export type {
+  CanvasStateSnapshot,
+  CanvasInteractionSnapshot,
+  CanvasStateSource,
+  ImportCanvasStateOptions,
+  DataSerializableLayer,
+  DefinitionSerializable,
+} from './export/stateExport';
+
 // ─── Primitives (renderer + base classes + built-ins + types) ──────────
 //
 // The full primitives surface is also available via the `@invana/canvas/primitives`

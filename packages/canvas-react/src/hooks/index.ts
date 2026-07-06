@@ -10,6 +10,8 @@ export { useFitContent } from './useFitContent';
 export type { UseFitContentResult } from './useFitContent';
 export { useCanvasImageExport } from './useCanvasImageExport';
 export type { UseCanvasImageExportResult, DownloadImageExportOptions } from './useCanvasImageExport';
+export { useCanvasStateJson } from './useCanvasStateJson';
+export type { UseCanvasStateJsonResult, CanvasStateSource } from './useCanvasStateJson';
 export { useCanvasEvent } from './useCanvasEvent';
 export { useStore } from './useStore';
 export { useClearGraph } from './useClearGraph';

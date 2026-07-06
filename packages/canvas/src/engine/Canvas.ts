@@ -56,6 +56,16 @@ import {
   type ExportImageOptions,
 } from '../export/imageExport';
 import { exportSVG, type ExportSvgOptions } from '../export/svgExport';
+import {
+  exportCanvasState,
+  importCanvasState,
+  canvasStateToJSON,
+  downloadCanvasState,
+  importCanvasStateFromFile,
+  type CanvasStateSnapshot,
+  type CanvasStateSource,
+  type ImportCanvasStateOptions,
+} from '../export/stateExport';
 
 // ─── Options ───────────────────────────────────────────────────────────────
 
@@ -613,6 +623,64 @@ export class Canvas {
    */
   exportDataURL(opts: ExportImageOptions = {}): string {
     return exportImageDataURL(this, opts);
+  }
+
+  /**
+   * Serialise the canvas's **full render state** to a plain JSON object — view
+   * definition (scene / layers / behaviours / layouts / templates / theme +
+   * styling), live interaction (selection / hover / camera / focus), and every
+   * data-owning layer's records (nodes / edges with positions). The result is a
+   * pure POJO safe to `JSON.stringify` / persist / diff.
+   *
+   * The state counterpart to {@link export} (which produces an *image*). Restore
+   * with {@link importState}. Delegates to {@link exportCanvasState}.
+   *
+   * @example
+   * const snapshot = canvas.exportState();
+   * await fetch('/scene', { method: 'PUT', body: JSON.stringify(snapshot) });
+   */
+  exportState(): CanvasStateSnapshot {
+    return exportCanvasState(this);
+  }
+
+  /**
+   * Restore the canvas from a {@link CanvasStateSnapshot} produced by
+   * {@link exportState}. Loads each layer's data, pushes the definition to the
+   * registered instances, and restores the live interaction (unless
+   * `skipInteraction`). The canvas's layers/behaviours/layouts must already be
+   * registered under the snapshot's ids — import addresses instances by id, it
+   * does not create them. Delegates to {@link importCanvasState}.
+   */
+  importState(snapshot: CanvasStateSnapshot, opts: ImportCanvasStateOptions = {}): void {
+    importCanvasState(this, snapshot, opts);
+  }
+
+  /**
+   * The current full canvas state as a JSON string (pretty-printed by default).
+   * Sugar over `JSON.stringify(this.exportState(), null, space)`; delegates to
+   * {@link canvasStateToJSON}.
+   */
+  stateToJSON(space: string | number = 2): string {
+    return canvasStateToJSON(this, space);
+  }
+
+  /**
+   * Serialise the full canvas state and trigger a browser download of the
+   * `.json` file. No-op outside a DOM environment. Delegates to
+   * {@link downloadCanvasState}.
+   */
+  downloadState(filename = 'canvas-state.json'): void {
+    downloadCanvasState(this, filename);
+  }
+
+  /**
+   * Restore the canvas from a {@link CanvasStateSnapshot}, a JSON string, or a
+   * picked `File` / `Blob` (e.g. from an `<input type="file">`). Parses the
+   * source then applies it like {@link importState}. Delegates to
+   * {@link importCanvasStateFromFile}.
+   */
+  importStateFrom(source: CanvasStateSource, opts?: ImportCanvasStateOptions): Promise<void> {
+    return importCanvasStateFromFile(this, source, opts);
   }
 
   // ─── Lifecycle ───────────────────────────────────────────────────────────

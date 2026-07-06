@@ -109,6 +109,17 @@ export abstract class Layout<TLayer extends Layer<any, any, any, any> = Layer<an
   }
 
   /**
+   * Contribute this layout's serialisable config to a canvas-state snapshot (the
+   * engine's `DefinitionSerializable` contract). The base captures the wiring
+   * `targetLayerId`; iterative layouts holding tunable params (e.g. force
+   * strengths) should override and spread `super.serializeDefinition()` with a
+   * JSON-safe copy of those params.
+   */
+  serializeDefinition(): Record<string, unknown> | undefined {
+    return this.targetLayerId !== undefined ? { targetLayerId: this.targetLayerId } : undefined;
+  }
+
+  /**
    * Run the layout against `layer`. Resolves when the run terminates
    * (either a natural settle or an external `stop()`).
    *

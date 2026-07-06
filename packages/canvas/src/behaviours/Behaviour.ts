@@ -112,6 +112,16 @@ export abstract class Behaviour implements IBehaviour {
     this.onDisable();
   }
 
+  /**
+   * Contribute this behaviour's serialisable config to a canvas-state snapshot
+   * (the engine's `DefinitionSerializable` contract). The base implementation
+   * captures the explicit `enabled` flag (rule 7). Subclasses with additional
+   * JSON-serialisable options should override and spread `super.serializeDefinition()`.
+   */
+  serializeDefinition(): Record<string, unknown> | undefined {
+    return { enabled: this._enabled };
+  }
+
   // ─── Subclass hooks ──────────────────────────────────────────────────────
 
   /** Subscribe to events / setup any handler resources. */
