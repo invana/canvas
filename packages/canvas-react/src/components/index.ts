@@ -24,20 +24,20 @@ export type {
 export { Tooltipped } from './Tooltipped';
 export type { TooltippedProps } from './Tooltipped';
 export {
-  ExportPanel,
-  EXPORT_FORMAT_OPTIONS,
-  EXPORT_AREA_OPTIONS,
-  EXPORT_BACKGROUND_OPTIONS,
-  EXPORT_SCALE_OPTIONS,
-  EXPORT_RATIO_OPTIONS,
-} from './ExportPanel';
+  ExportImagePanel,
+  EXPORT_IMAGE_FORMAT_OPTIONS,
+  EXPORT_IMAGE_AREA_OPTIONS,
+  EXPORT_IMAGE_BACKGROUND_OPTIONS,
+  EXPORT_IMAGE_SCALE_OPTIONS,
+  EXPORT_IMAGE_RATIO_OPTIONS,
+} from './ExportImagePanel';
 export type {
-  ExportPanelProps,
-  ExportPanelValue,
-  ExportPanelOption,
-  ExportFormatKey,
-  ExportAreaKey,
-} from './ExportPanel';
+  ExportImagePanelProps,
+  ExportImagePanelValue,
+  ExportImagePanelOption,
+  ExportImageFormatKey,
+  ExportImageAreaKey,
+} from './ExportImagePanel';
 export { PropertiesEditor } from './PropertiesEditor';
 export type { PropertiesEditorProps, PropertiesEditorValues } from './PropertiesEditor';
 export { DetailCard } from './DetailCard';

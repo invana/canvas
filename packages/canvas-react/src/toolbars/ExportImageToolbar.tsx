@@ -3,22 +3,22 @@ import type { Canvas } from '@invana/canvas';
 import { Button, HoverCard, HoverCardContent, HoverCardTrigger } from '@invana/ui';
 import { Download, ImageDown } from 'lucide-react';
 
-import { EXPORT_FORMAT_OPTIONS, ExportPanel, Panel } from '../components';
+import { EXPORT_IMAGE_FORMAT_OPTIONS, ExportImagePanel, Panel } from '../components';
 import type {
-  ExportFormatKey,
-  ExportPanelValue,
+  ExportImageFormatKey,
+  ExportImagePanelValue,
   PanelPosition,
   ToolbarIcon,
 } from '../components';
-import { useCanvasExport } from '../hooks/useCanvasExport';
-import type { DownloadExportOptions } from '../hooks/useCanvasExport';
+import { useCanvasImageExport } from '../hooks/useCanvasImageExport';
+import type { DownloadImageExportOptions } from '../hooks/useCanvasImageExport';
 
-// Re-exported for back-compat: `ExportFormatKey` used to be declared here; it now
-// lives with the dumb `ExportPanel` building block.
-export type { ExportFormatKey } from '../components';
+// The image-format union lives with the dumb `ExportImagePanel` building block;
+// re-exported here so the toolbar's props type is self-contained.
+export type { ExportImageFormatKey } from '../components';
 
 /** Fallback settings the menu opens with (overridable via `defaultValue`). */
-const DEFAULT_VALUE: ExportPanelValue = {
+const DEFAULT_VALUE: ExportImagePanelValue = {
   format: 'png',
   area: 'content',
   background: 'canvas',
@@ -26,11 +26,11 @@ const DEFAULT_VALUE: ExportPanelValue = {
   aspectRatio: 0,
 };
 
-export interface ExportToolbarProps {
+export interface ExportImageToolbarProps {
   /** Restrict / reorder the offered formats. Default: all four (PNG/JPG/WebP/SVG). */
-  formats?: ExportFormatKey[];
+  formats?: ExportImageFormatKey[];
   /** Seed the menu's initial settings. Merged over the built-in defaults. */
-  defaultValue?: Partial<ExportPanelValue>;
+  defaultValue?: Partial<ExportImagePanelValue>;
   /** Download filename stem. The area + format extension are appended. Default `'canvas'`. */
   filename?: string;
   /** Trigger tooltip / aria-label + the menu heading. Default `'Export'`. */
@@ -61,16 +61,16 @@ export interface ExportToolbarProps {
 /**
  * Export menu — a single toolbar **nav item** that reveals the full export
  * options on hover. The trigger is a ghost icon button; hovering it opens a
- * hover-card holding an {@link ExportPanel} (format as a horizontal segmented
+ * hover-card holding an {@link ExportImagePanel} (format as a horizontal segmented
  * row, plus area / background / scale / aspect ratio) and a **Save as Image**
- * button that exports the current view via {@link useCanvasExport}.
+ * button that exports the current view via {@link useCanvasImageExport}.
  *
  * Self-wiring: pulls the engine from the `<Canvas>` context (or an explicit
  * `canvas` prop). Raster formats capture through the renderer; `'svg'` emits a
  * true vector document. Pass `bare` to embed the trigger in your own toolbar
  * chrome instead of the built-in `<Panel>`.
  */
-export function ExportToolbar({
+export function ExportImageToolbar({
   formats,
   defaultValue,
   filename = 'canvas',
@@ -84,14 +84,14 @@ export function ExportToolbar({
   bare = false,
   canvas,
   className,
-}: ExportToolbarProps) {
-  const { download } = useCanvasExport(canvas);
-  const [value, setValue] = useState<ExportPanelValue>({ ...DEFAULT_VALUE, ...defaultValue });
+}: ExportImageToolbarProps) {
+  const { download } = useCanvasImageExport(canvas);
+  const [value, setValue] = useState<ExportImagePanelValue>({ ...DEFAULT_VALUE, ...defaultValue });
 
-  const onChange = (patch: Partial<ExportPanelValue>) => setValue((v) => ({ ...v, ...patch }));
+  const onChange = (patch: Partial<ExportImagePanelValue>) => setValue((v) => ({ ...v, ...patch }));
 
   const onSave = () => {
-    const opts: DownloadExportOptions = {
+    const opts: DownloadImageExportOptions = {
       format: value.format,
       area: value.area,
       background: value.background,
@@ -103,7 +103,7 @@ export function ExportToolbar({
   };
 
   const formatOptions = formats
-    ? EXPORT_FORMAT_OPTIONS.filter((f) => formats.includes(f.value))
+    ? EXPORT_IMAGE_FORMAT_OPTIONS.filter((f) => formats.includes(f.value))
     : undefined;
 
   const menu = (
@@ -120,7 +120,7 @@ export function ExportToolbar({
         </Button>
       </HoverCardTrigger>
       <HoverCardContent align={align} className="w-72 max-w-[calc(100vw-1rem)] p-3">
-        <ExportPanel
+        <ExportImagePanel
           value={value}
           onChange={onChange}
           onSave={onSave}

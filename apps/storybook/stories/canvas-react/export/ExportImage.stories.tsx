@@ -1,7 +1,7 @@
 /**
- * Export the canvas as an image via the reusable `<ExportToolbar>` (from
+ * Export the canvas as an image via the reusable `<ExportImageToolbar>` (from
  * `@invana/canvas-react`) — a single toolbar nav item that reveals the full
- * export options on hover and saves through `useCanvasExport` → the engine's
+ * export options on hover and saves through `useCanvasImageExport` → the engine's
  * `Canvas.export`.
  *
  * **Hover the ⬇ button in the app header** to open the export menu (it's wired
@@ -26,8 +26,8 @@
  * `circle`, `rect`, and `arc` node shapes plus labels so the vector serialiser
  * is exercised across kinds.
  *
- * `<ExportToolbar>` is self-wiring (pulls the engine from the `<Canvas>`
- * context); the underlying `<ExportPanel>` is a reusable engine-agnostic
+ * `<ExportImageToolbar>` is self-wiring (pulls the engine from the `<Canvas>`
+ * context); the underlying `<ExportImagePanel>` is a reusable engine-agnostic
  * building block you can drop into any popover / dialog / sheet of your own.
  */
 
@@ -36,7 +36,7 @@ import { ThemeProvider } from '@invana/themes';
 import {
   BackgroundLayer,
   DragPanBehaviour,
-  ExportToolbar,
+  ExportImageToolbar,
   GraphCanvasApp,
   GraphLayer,
   WheelZoomBehaviour,
@@ -86,7 +86,7 @@ export const ExportImage: Story = {
           // just the hover-card trigger (no floating `<Panel>`), so it drops
           // straight into the header as a nav item.
           right: (ctx) => (
-            <ExportToolbar
+            <ExportImageToolbar
               bare
               filename="export"
               defaultValue={{ area: 'content', scale: 2 }}

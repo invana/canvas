@@ -4,14 +4,14 @@ import { Button, ToggleGroup, ToggleGroupItem, cn } from '@invana/ui';
 import type { ToolbarIcon } from './types';
 
 /** Image export formats the panel can offer. */
-export type ExportFormatKey = 'png' | 'jpeg' | 'webp' | 'svg';
+export type ExportImageFormatKey = 'png' | 'jpeg' | 'webp' | 'svg';
 
 /** Capture-area choices. */
-export type ExportAreaKey = 'viewport' | 'content';
+export type ExportImageAreaKey = 'viewport' | 'content';
 
 /** A single labelled choice in one of the panel's segmented rows. */
-export interface ExportPanelOption<T> {
-  /** The value handed back through {@link ExportPanelProps.onChange}. */
+export interface ExportImagePanelOption<T> {
+  /** The value handed back through {@link ExportImagePanelProps.onChange}. */
   value: T;
   /** Human label shown on the segment. */
   label: string;
@@ -23,11 +23,11 @@ export interface ExportPanelOption<T> {
  * `ExportImageOptions` when it actually exports. Kept engine-free so the panel
  * stays a dumb building block.
  */
-export interface ExportPanelValue {
+export interface ExportImagePanelValue {
   /** Output format. `'svg'` is a true vector export; the rest are raster. */
-  format: ExportFormatKey;
+  format: ExportImageFormatKey;
   /** `'viewport'` (WYSIWYG) or `'content'` (the whole graph, off-screen included). */
-  area: ExportAreaKey;
+  area: ExportImageAreaKey;
   /**
    * Background fill. Matches the engine's `ExportBackground`: `'canvas'`,
    * `'transparent'`, or a CSS colour string (e.g. `'#0b1220'`).
@@ -40,7 +40,7 @@ export interface ExportPanelValue {
 }
 
 /** Default format choices, in display order. */
-export const EXPORT_FORMAT_OPTIONS: ExportPanelOption<ExportFormatKey>[] = [
+export const EXPORT_IMAGE_FORMAT_OPTIONS: ExportImagePanelOption<ExportImageFormatKey>[] = [
   { value: 'png', label: 'PNG' },
   { value: 'jpeg', label: 'JPG' },
   { value: 'webp', label: 'WebP' },
@@ -48,13 +48,13 @@ export const EXPORT_FORMAT_OPTIONS: ExportPanelOption<ExportFormatKey>[] = [
 ];
 
 /** Default capture-area choices. */
-export const EXPORT_AREA_OPTIONS: ExportPanelOption<ExportAreaKey>[] = [
+export const EXPORT_IMAGE_AREA_OPTIONS: ExportImagePanelOption<ExportImageAreaKey>[] = [
   { value: 'viewport', label: 'Viewport' },
   { value: 'content', label: 'Content' },
 ];
 
 /** Default background choices (values are valid engine `ExportBackground`s). */
-export const EXPORT_BACKGROUND_OPTIONS: ExportPanelOption<string>[] = [
+export const EXPORT_IMAGE_BACKGROUND_OPTIONS: ExportImagePanelOption<string>[] = [
   { value: 'canvas', label: 'Canvas' },
   { value: 'transparent', label: 'None' },
   { value: '#ffffff', label: 'White' },
@@ -62,10 +62,10 @@ export const EXPORT_BACKGROUND_OPTIONS: ExportPanelOption<string>[] = [
 ];
 
 /** Default raster resolution multipliers. */
-export const EXPORT_SCALE_OPTIONS: number[] = [1, 2, 3, 4, 5];
+export const EXPORT_IMAGE_SCALE_OPTIONS: number[] = [1, 2, 3, 4, 5];
 
 /** Default aspect-ratio choices (`0` = free / natural). */
-export const EXPORT_RATIO_OPTIONS: ExportPanelOption<number>[] = [
+export const EXPORT_IMAGE_RATIO_OPTIONS: ExportImagePanelOption<number>[] = [
   { value: 0, label: 'Free' },
   { value: 1, label: '1:1' },
   { value: 16 / 9, label: '16:9' },
@@ -74,11 +74,11 @@ export const EXPORT_RATIO_OPTIONS: ExportPanelOption<number>[] = [
   { value: 9 / 16, label: '9:16' },
 ];
 
-export interface ExportPanelProps {
+export interface ExportImagePanelProps {
   /** The current settings shown in the panel (controlled). */
-  value: ExportPanelValue;
+  value: ExportImagePanelValue;
   /** Fired with a partial patch whenever a setting changes. Merge into `value`. */
-  onChange: (patch: Partial<ExportPanelValue>) => void;
+  onChange: (patch: Partial<ExportImagePanelValue>) => void;
   /** Fired when the primary "save" button is pressed. */
   onSave: () => void;
   /** Heading above the rows. Pass `null` to hide it. Default `'Export'`. */
@@ -88,15 +88,15 @@ export interface ExportPanelProps {
   /** Optional icon (icon-agnostic — a `ToolbarIcon`) rendered inside the button. */
   saveIcon?: ToolbarIcon;
   /** Override the offered formats (subset / reorder). Default all four. */
-  formats?: ExportPanelOption<ExportFormatKey>[];
+  formats?: ExportImagePanelOption<ExportImageFormatKey>[];
   /** Override the offered capture areas. */
-  areas?: ExportPanelOption<ExportAreaKey>[];
+  areas?: ExportImagePanelOption<ExportImageAreaKey>[];
   /** Override the offered backgrounds. */
-  backgrounds?: ExportPanelOption<string>[];
+  backgrounds?: ExportImagePanelOption<string>[];
   /** Override the offered raster scales. */
   scales?: number[];
   /** Override the offered aspect ratios. */
-  ratios?: ExportPanelOption<number>[];
+  ratios?: ExportImagePanelOption<number>[];
   className?: string;
 }
 
@@ -124,7 +124,7 @@ function Segmented({
   columns,
 }: {
   value: string;
-  options: ExportPanelOption<string>[];
+  options: ExportImagePanelOption<string>[];
   onValueChange: (value: string) => void;
   disabled?: boolean;
   /** Number of grid columns; items past the row count wrap onto the next row. */
@@ -161,34 +161,34 @@ function Segmented({
  * Reusable, engine-agnostic **image-export options panel**. Presents the format
  * as a horizontal segmented row, followed by area / background / scale / aspect
  * ratio, and a primary "Save as Image" button. Fully controlled: it edits a
- * plain {@link ExportPanelValue} and reports every change through `onChange` /
+ * plain {@link ExportImagePanelValue} and reports every change through `onChange` /
  * the save press through `onSave` — it never touches the engine itself.
  *
  * Surface-less by design (no border / shadow): drop it inside a
  * `HoverCardContent`, `PopoverContent`, `PanelContent`, or any container that
- * provides the chrome. The self-wiring {@link ExportToolbar} pairs it with a
- * hover-card trigger and {@link useCanvasExport}; use this component directly
+ * provides the chrome. The self-wiring {@link ExportImageToolbar} pairs it with a
+ * hover-card trigger and {@link useCanvasImageExport}; use this component directly
  * when you need the options elsewhere (a settings sheet, a share dialog, …).
  *
  * The **Scale** row is disabled for `'svg'` (vector output ignores raster scale).
  */
-export function ExportPanel({
+export function ExportImagePanel({
   value,
   onChange,
   onSave,
   title = 'Export',
   saveLabel = 'Save as Image',
   saveIcon: SaveIcon,
-  formats = EXPORT_FORMAT_OPTIONS,
-  areas = EXPORT_AREA_OPTIONS,
-  backgrounds = EXPORT_BACKGROUND_OPTIONS,
-  scales = EXPORT_SCALE_OPTIONS,
-  ratios = EXPORT_RATIO_OPTIONS,
+  formats = EXPORT_IMAGE_FORMAT_OPTIONS,
+  areas = EXPORT_IMAGE_AREA_OPTIONS,
+  backgrounds = EXPORT_IMAGE_BACKGROUND_OPTIONS,
+  scales = EXPORT_IMAGE_SCALE_OPTIONS,
+  ratios = EXPORT_IMAGE_RATIO_OPTIONS,
   className,
-}: ExportPanelProps) {
+}: ExportImagePanelProps) {
   const isSvg = value.format === 'svg';
-  const scaleOptions: ExportPanelOption<string>[] = scales.map((s) => ({ value: String(s), label: `${s}×` }));
-  const ratioOptions: ExportPanelOption<string>[] = ratios.map((r) => ({ value: String(r.value), label: r.label }));
+  const scaleOptions: ExportImagePanelOption<string>[] = scales.map((s) => ({ value: String(s), label: `${s}×` }));
+  const ratioOptions: ExportImagePanelOption<string>[] = ratios.map((r) => ({ value: String(r.value), label: r.label }));
 
   return (
     <div className={cn('flex w-full flex-col gap-3', className)}>
@@ -201,7 +201,7 @@ export function ExportPanel({
           value={value.format}
           options={formats}
           columns={formats.length}
-          onValueChange={(v) => onChange({ format: v as ExportFormatKey })}
+          onValueChange={(v) => onChange({ format: v as ExportImageFormatKey })}
         />
       </Field>
 
@@ -210,7 +210,7 @@ export function ExportPanel({
           value={value.area}
           options={areas}
           columns={areas.length}
-          onValueChange={(v) => onChange({ area: v as ExportAreaKey })}
+          onValueChange={(v) => onChange({ area: v as ExportImageAreaKey })}
         />
       </Field>
 

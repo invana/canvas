@@ -4,16 +4,16 @@ import type { Canvas, ExportImageOptions } from '@invana/canvas';
 import { useResolvedCanvas } from './useResolvedCanvas';
 
 /** Extension of the engine export options with a download filename. */
-export interface DownloadExportOptions extends ExportImageOptions {
+export interface DownloadImageExportOptions extends ExportImageOptions {
   /** File name for the download. Defaults to `canvas.<ext>` for the format. */
   filename?: string;
 }
 
-export interface UseCanvasExportResult {
+export interface UseCanvasImageExportResult {
   /** Export the current view as an image `Blob` (PNG / JPEG / WebP / SVG). */
   toBlob(opts?: ExportImageOptions): Promise<Blob>;
   /** Export, then trigger a browser download of the resulting file. */
-  download(opts?: DownloadExportOptions): Promise<void>;
+  download(opts?: DownloadImageExportOptions): Promise<void>;
 }
 
 /** File extension for a given export format. */
@@ -47,10 +47,10 @@ function triggerDownload(blob: Blob, filename: string): void {
  * `canvas` argument (falls back to the `<Canvas>` context).
  *
  * @example
- * const { download } = useCanvasExport();
+ * const { download } = useCanvasImageExport();
  * <button onClick={() => download({ format: 'png', area: 'content' })}>Save PNG</button>
  */
-export function useCanvasExport(canvas?: Canvas | null): UseCanvasExportResult {
+export function useCanvasImageExport(canvas?: Canvas | null): UseCanvasImageExportResult {
   const resolved = useResolvedCanvas(canvas);
 
   const toBlob = useCallback(
@@ -59,7 +59,7 @@ export function useCanvasExport(canvas?: Canvas | null): UseCanvasExportResult {
   );
 
   const download = useCallback(
-    async (opts: DownloadExportOptions = {}) => {
+    async (opts: DownloadImageExportOptions = {}) => {
       const { filename, ...exportOpts } = opts;
       const blob = await resolved.export(exportOpts);
       triggerDownload(blob, filename ?? `canvas.${extFor(exportOpts.format)}`);
