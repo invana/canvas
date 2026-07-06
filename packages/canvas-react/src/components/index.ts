@@ -23,6 +23,21 @@ export type {
 } from './ToolbarItem';
 export { Tooltipped } from './Tooltipped';
 export type { TooltippedProps } from './Tooltipped';
+export {
+  ExportPanel,
+  EXPORT_FORMAT_OPTIONS,
+  EXPORT_AREA_OPTIONS,
+  EXPORT_BACKGROUND_OPTIONS,
+  EXPORT_SCALE_OPTIONS,
+  EXPORT_RATIO_OPTIONS,
+} from './ExportPanel';
+export type {
+  ExportPanelProps,
+  ExportPanelValue,
+  ExportPanelOption,
+  ExportFormatKey,
+  ExportAreaKey,
+} from './ExportPanel';
 export { PropertiesEditor } from './PropertiesEditor';
 export type { PropertiesEditorProps, PropertiesEditorValues } from './PropertiesEditor';
 export { DetailCard } from './DetailCard';

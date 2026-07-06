@@ -1,84 +1,137 @@
-import type { Canvas, ExportImageOptions } from '@invana/canvas';
-import { Download } from 'lucide-react';
+import { useState } from 'react';
+import type { Canvas } from '@invana/canvas';
+import { Button, HoverCard, HoverCardContent, HoverCardTrigger } from '@invana/ui';
+import { Download, ImageDown } from 'lucide-react';
 
-import { Panel, ToolbarItems, applyIconOverrides } from '../components';
-import type { PanelPosition, ToolbarIcon, ToolbarItem } from '../components';
+import { EXPORT_FORMAT_OPTIONS, ExportPanel, Panel } from '../components';
+import type {
+  ExportFormatKey,
+  ExportPanelValue,
+  PanelPosition,
+  ToolbarIcon,
+} from '../components';
 import { useCanvasExport } from '../hooks/useCanvasExport';
+import type { DownloadExportOptions } from '../hooks/useCanvasExport';
 
-/** Export formats the toolbar can offer. */
-export type ExportFormatKey = 'png' | 'jpeg' | 'webp' | 'svg';
+// Re-exported for back-compat: `ExportFormatKey` used to be declared here; it now
+// lives with the dumb `ExportPanel` building block.
+export type { ExportFormatKey } from '../components';
 
-const FORMAT_LABEL: Record<ExportFormatKey, string> = {
-  png: 'PNG',
-  jpeg: 'JPG',
-  webp: 'WebP',
-  svg: 'SVG',
+/** Fallback settings the menu opens with (overridable via `defaultValue`). */
+const DEFAULT_VALUE: ExportPanelValue = {
+  format: 'png',
+  area: 'content',
+  background: 'canvas',
+  scale: 2,
+  aspectRatio: 0,
 };
 
 export interface ExportToolbarProps {
-  /** Formats to offer, one download button each. Default `['png', 'svg']`. */
+  /** Restrict / reorder the offered formats. Default: all four (PNG/JPG/WebP/SVG). */
   formats?: ExportFormatKey[];
-  /** Capture area for every button. Default `'viewport'`. */
-  area?: ExportImageOptions['area'];
-  /** Background fill for every button. Default `'canvas'`. */
-  background?: ExportImageOptions['background'];
-  /** Resolution multiplier for raster exports. */
-  scale?: number;
-  /** Download filename (without extension — the format's is appended). Default `'canvas'`. */
+  /** Seed the menu's initial settings. Merged over the built-in defaults. */
+  defaultValue?: Partial<ExportPanelValue>;
+  /** Download filename stem. The area + format extension are appended. Default `'canvas'`. */
   filename?: string;
-  /** Override the baked download icon, by format. */
-  icons?: Partial<Record<ExportFormatKey, ToolbarIcon>>;
-  /** Where the toolbar pins. Default `'top-right'`. */
+  /** Trigger tooltip / aria-label + the menu heading. Default `'Export'`. */
+  label?: string;
+  /** Optional visible text beside the trigger icon (renders a labelled button). */
+  triggerText?: string;
+  /** Override the trigger icon (lucide by default). */
+  triggerIcon?: ToolbarIcon;
+  /** Where the toolbar pins (when not `bare`). Default `'top-right'`. */
   position?: PanelPosition;
-  /** Stack direction. Default `'horizontal'`. */
-  orientation?: 'horizontal' | 'vertical';
-  /** Render without the `<Panel>` wrapper (embed in external chrome). Default `false`. */
+  /** Hover-card alignment relative to the trigger. Default `'end'`. */
+  align?: 'start' | 'center' | 'end';
+  /** ms before the card opens on hover. Default `120`. */
+  openDelay?: number;
+  /** ms before it closes after the pointer leaves. Default `200`. */
+  closeDelay?: number;
+  /**
+   * Render just the hover-card trigger (no `<Panel>` wrapper) so it can be
+   * dropped into external chrome — e.g. as a `custom` {@link ToolbarItem} inside
+   * a `NavHorizontal` / `ToolbarItems`. Default `false`.
+   */
   bare?: boolean;
-  /** Explicit canvas instance; defaults to the context canvas. */
+  /** Explicit canvas instance; defaults to the `<Canvas>` context canvas. */
   canvas?: Canvas | null;
   className?: string;
 }
 
 /**
- * Export bar — one download button per configured format (PNG / JPG / WebP /
- * SVG), each saving the current view via {@link useCanvasExport}. Raster
- * formats capture what's on screen through the renderer; `svg` emits a true
- * vector document. Self-wiring: pulls the engine from the `<Canvas>` context
- * (or an explicit `canvas` prop). Icons are baked in (lucide).
+ * Export menu — a single toolbar **nav item** that reveals the full export
+ * options on hover. The trigger is a ghost icon button; hovering it opens a
+ * hover-card holding an {@link ExportPanel} (format as a horizontal segmented
+ * row, plus area / background / scale / aspect ratio) and a **Save as Image**
+ * button that exports the current view via {@link useCanvasExport}.
+ *
+ * Self-wiring: pulls the engine from the `<Canvas>` context (or an explicit
+ * `canvas` prop). Raster formats capture through the renderer; `'svg'` emits a
+ * true vector document. Pass `bare` to embed the trigger in your own toolbar
+ * chrome instead of the built-in `<Panel>`.
  */
 export function ExportToolbar({
-  formats = ['png', 'svg'],
-  area = 'viewport',
-  background = 'canvas',
-  scale,
+  formats,
+  defaultValue,
   filename = 'canvas',
-  icons,
+  label = 'Export',
+  triggerText,
+  triggerIcon: TriggerIcon = Download,
   position = 'top-right',
-  orientation = 'horizontal',
+  align = 'end',
+  openDelay = 120,
+  closeDelay = 200,
   bare = false,
   canvas,
   className,
 }: ExportToolbarProps) {
   const { download } = useCanvasExport(canvas);
+  const [value, setValue] = useState<ExportPanelValue>({ ...DEFAULT_VALUE, ...defaultValue });
 
-  const items: ToolbarItem[] = formats.map((format) => ({
-    type: 'button',
-    key: format,
-    icon: Download,
-    label: `Export ${FORMAT_LABEL[format]}`,
-    text: FORMAT_LABEL[format],
-    onClick: () => {
-      void download({ format, area, background, ...(scale !== undefined ? { scale } : {}), filename });
-    },
-  }));
+  const onChange = (patch: Partial<ExportPanelValue>) => setValue((v) => ({ ...v, ...patch }));
 
-  const nav = (
-    <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />
+  const onSave = () => {
+    const opts: DownloadExportOptions = {
+      format: value.format,
+      area: value.area,
+      background: value.background,
+      scale: value.scale,
+      filename: `${filename}-${value.area}`,
+      ...(value.aspectRatio > 0 ? { aspectRatio: value.aspectRatio } : {}),
+    };
+    void download(opts);
+  };
+
+  const formatOptions = formats
+    ? EXPORT_FORMAT_OPTIONS.filter((f) => formats.includes(f.value))
+    : undefined;
+
+  const menu = (
+    <HoverCard openDelay={openDelay} closeDelay={closeDelay}>
+      <HoverCardTrigger asChild>
+        <Button
+          variant="ghost"
+          size={triggerText ? 'sm' : 'icon'}
+          aria-label={label}
+          className={className}
+        >
+          <TriggerIcon size={16} />
+          {triggerText}
+        </Button>
+      </HoverCardTrigger>
+      <HoverCardContent align={align} className="w-72 max-w-[calc(100vw-1rem)] p-3">
+        <ExportPanel
+          value={value}
+          onChange={onChange}
+          onSave={onSave}
+          title={label}
+          saveIcon={ImageDown}
+          {...(formatOptions ? { formats: formatOptions } : {})}
+        />
+      </HoverCardContent>
+    </HoverCard>
   );
-  if (bare) return nav;
-  return (
-    <Panel position={position} orientation={orientation}>
-      {nav}
-    </Panel>
-  );
+
+  if (bare) return menu;
+  return <Panel position={position}>{menu}</Panel>;
 }
