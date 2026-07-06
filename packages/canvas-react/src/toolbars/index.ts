@@ -27,6 +27,8 @@ export { GraphLayoutToolbar } from './GraphLayoutToolbar';
 export type { GraphLayoutToolbarProps } from './GraphLayoutToolbar';
 export { ModellerToolbar } from './ModellerToolbar';
 export type { ModellerToolbarProps } from './ModellerToolbar';
+export { ExportToolbar } from './ExportToolbar';
+export type { ExportToolbarProps, ExportFormatKey } from './ExportToolbar';
 export { InspectorPanel } from './InspectorPanel';
 export type { InspectorPanelProps } from './InspectorPanel';
 export { dockCardClassName } from './detailView';

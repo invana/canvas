@@ -153,6 +153,17 @@ export class GraphLayer extends WorldLayer<
   }
 
   /**
+   * Vector-SVG projection of this layer's nodes + edges — delegates to the
+   * internal `PrimitivesRenderer.toSVG()`. Consumed by `Canvas.exportSVG`
+   * (duck-typed via the engine's `SvgExportableLayer` contract). Returns `''`
+   * before mount. Coverage caveats (raster-only fills, non-label decorations,
+   * effects) are documented on `PrimitivesRenderer.toSVG`.
+   */
+  toSVG(): string {
+    return this._renderer?.toSVG() ?? '';
+  }
+
+  /**
    * Per-frame tick — delegated to `PrimitivesRenderer.tickAnimations` so
    * animated decorations (`pulse-ring`, `marching-ants`, …) and the
    * viewport-clipped label-resolution sweep advance every frame.

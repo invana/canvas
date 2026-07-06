@@ -50,6 +50,12 @@ import { LayoutRegistry } from '../registries/LayoutRegistry';
 import type { CanvasContext } from '../context/CanvasContext';
 import { type CanvasConfig, configurable, deepMerge } from './CanvasConfig';
 import { resolveRenderPreference } from './rendererSupport';
+import {
+  exportImage,
+  exportImageDataURL,
+  type ExportImageOptions,
+} from '../export/imageExport';
+import { exportSVG, type ExportSvgOptions } from '../export/svgExport';
 
 // ─── Options ───────────────────────────────────────────────────────────────
 
@@ -550,6 +556,63 @@ export class Canvas {
    */
   get currentMessage(): string | null {
     return this._currentMessage;
+  }
+
+  // ─── Export ────────────────────────────────────────────────────────────────
+
+  /**
+   * Export the canvas as a raster image `Blob` (PNG / JPEG / WebP).
+   *
+   * Renders a region of the world container off-screen via the renderer's
+   * `extract` system — `area: 'viewport'` (default) captures what's currently
+   * visible at the on-screen zoom; `area: 'content'` captures the whole diagram
+   * at native scale. Screen overlays (minimap, dev-info) are excluded; the
+   * background is reproduced from the `background` option. See
+   * {@link ExportImageOptions}.
+   *
+   * Rejects if called before {@link init} / in headless mode (no GPU renderer),
+   * or when the capture region is empty. SVG export is a separate API (Phase 2).
+   *
+   * With `format: 'svg'` this returns a vector `image/svg+xml` blob via
+   * {@link exportSVG} instead of a raster extract (see {@link exportSVGString}
+   * for coverage notes).
+   *
+   * @example
+   * const blob = await canvas.export({ format: 'png', area: 'content' });
+   * const url = URL.createObjectURL(blob);
+   */
+  export(opts: ExportImageOptions = {}): Promise<Blob> {
+    if (opts.format === 'svg') {
+      const svg = this.exportSVGString(opts);
+      return Promise.resolve(new Blob([svg], { type: 'image/svg+xml' }));
+    }
+    return exportImage(this, opts);
+  }
+
+  /**
+   * Export the canvas as a **true vector SVG** string — a second projection of
+   * the scene (shape specs + routed connector paths) into scalable markup,
+   * independent of the GPU raster path. Resolution-independent and faithful for
+   * geometric shapes, connectors, solid fills/strokes, composite cards, and
+   * text labels.
+   *
+   * Not represented (use raster {@link export} when these matter): `image` /
+   * `glyph` / `svg` fills, decorations other than labels, effects, and blur /
+   * shadow filters — see `export/svgExport.ts`. Throws when the capture region
+   * is empty. Unlike raster export this works headless (no GPU renderer needed).
+   */
+  exportSVGString(opts: ExportSvgOptions = {}): string {
+    return exportSVG(this, opts);
+  }
+
+  /**
+   * Export the canvas as a `data:` URL — the synchronous counterpart to
+   * {@link export}, handy for `<img src>` / quick previews. Prefer {@link export}
+   * for downloads (a `Blob` URL avoids a large base64 string). Same options and
+   * throw conditions as {@link export}.
+   */
+  exportDataURL(opts: ExportImageOptions = {}): string {
+    return exportImageDataURL(this, opts);
   }
 
   // ─── Lifecycle ───────────────────────────────────────────────────────────

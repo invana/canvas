@@ -190,6 +190,28 @@ export {
 } from './engine/rendererSupport';
 export type { RenderPreference } from './engine/rendererSupport';
 
+// Raster export (viewport / whole-diagram → PNG / JPEG / WebP). `Canvas.export`
+// / `Canvas.exportDataURL` delegate here; the standalone functions are exported
+// for callers holding a bare `Canvas` in a util.
+export { exportImage, exportImageDataURL } from './export/imageExport';
+export type {
+  ExportImageOptions,
+  ExportRasterFormat,
+  ExportArea,
+  ExportBackground,
+} from './export/imageExport';
+
+// True vector SVG export — a second projection of the scene into scalable
+// markup. `Canvas.exportSVGString` / `Canvas.export({ format: 'svg' })` delegate
+// to `exportSVG`; the per-spec serialisers are exported for advanced callers.
+export {
+  exportSVG,
+  shapeSpecToSvg,
+  connectorToSvg,
+  pathToSvgD,
+} from './export/svgExport';
+export type { ExportSvgOptions, SvgExportableLayer } from './export/svgExport';
+
 // ─── Primitives (renderer + base classes + built-ins + types) ──────────
 //
 // The full primitives surface is also available via the `@invana/canvas/primitives`

@@ -8,6 +8,8 @@ export { useZoom } from './useZoom';
 export type { UseZoomResult } from './useZoom';
 export { useFitContent } from './useFitContent';
 export type { UseFitContentResult } from './useFitContent';
+export { useCanvasExport } from './useCanvasExport';
+export type { UseCanvasExportResult, DownloadExportOptions } from './useCanvasExport';
 export { useCanvasEvent } from './useCanvasEvent';
 export { useStore } from './useStore';
 export { useClearGraph } from './useClearGraph';

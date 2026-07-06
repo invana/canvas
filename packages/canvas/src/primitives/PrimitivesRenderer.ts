@@ -38,6 +38,7 @@ import { TextureRegistry } from '../textures/TextureRegistry';
 import { HitIndex } from '../hit/HitIndex';
 import { ShapeInstance } from '../instancing/ShapeInstance';
 import { ConnectorInstance } from '../instancing/ConnectorInstance';
+import { shapeSpecToSvg, connectorToSvg } from '../export/svgExport';
 import { CircleShape } from './shapes/CircleShape';
 import { EllipseShape } from './shapes/EllipseShape';
 import { RectShape } from './shapes/RectShape';
@@ -694,6 +695,32 @@ export class PrimitivesRenderer {
     for (const inst of this.connectorInstances.values()) {
       this.recomputeConnectorPath(inst);
     }
+  }
+
+  /**
+   * Serialise every live shape + connector this renderer holds to an SVG
+   * fragment (no `<svg>` wrapper) in world coordinates — the vector projection
+   * behind {@link Canvas.exportSVG}. Connectors are emitted first (drawn under
+   * shapes), then shapes; each shape/connector's attached `label` decoration is
+   * rendered as `<text>`.
+   *
+   * Coverage caveats (raster export is exact for these) are documented in
+   * `export/svgExport.ts`: `image` / `glyph` / `svg` fills, non-label
+   * decorations, and effects are not represented in the vector output.
+   */
+  toSVG(): string {
+    const out: string[] = [];
+    for (const inst of this.connectorInstances.values()) {
+      if (inst.spec.visible === false) continue;
+      const label = inst.decorations.get('label')?.style;
+      out.push(connectorToSvg(inst.spec, inst.path, inst.strokeWidthScale, label));
+    }
+    for (const inst of this.shapeInstances.values()) {
+      if (inst.spec.visible === false) continue;
+      const label = inst.decorations.get('label')?.style;
+      out.push(shapeSpecToSvg(inst.spec, label));
+    }
+    return out.filter(Boolean).join('');
   }
 
   removeShape(id: string): void {
