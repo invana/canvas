@@ -59,7 +59,7 @@ export function BubbleSetsLayerEditor({
   return (
     <FormProvider {...form}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16 }}>
-        <FormField.ObjectField control={c} name="options" fields={resolvedFields} />
+        <FormField.ObjectField control={c} columns={1} name="options" fields={resolvedFields} />
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button onClick={() => onSubmit(getValues('options'))}>{submitLabel}</Button>
         </div>
