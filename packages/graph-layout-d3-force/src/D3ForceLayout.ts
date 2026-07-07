@@ -115,12 +115,21 @@ export class D3ForceLayout extends Layout<GraphLayer> {
 
   /**
    * Merge a force-options patch (deep, so `{ charge: { strength } }` keeps the
-   * other charge fields) and re-heat the running simulation so the change takes
-   * effect live. Called by `Canvas.update({ layouts: { id: patch } })`.
+   * other charge fields) and re-run the simulation so the change takes effect
+   * live — including a switch of `animate` (live ⇄ static) or a re-heat while the
+   * graph sits idle after its first settle. Re-applies whenever the layout has a
+   * layer to run against (`lastLayer`), matching the one-shot layouts; before the
+   * first `apply()` there's nothing to re-run, so it just stores the patch.
+   * Called by `Canvas.update({ layouts: { id: patch } })`.
    */
   override setOptions(patch: Partial<D3ForceLayoutOptions>): void {
     this.opts = mergeDeep(this.opts, patch);
-    if (this.running && this.lastLayer) void this.apply(this.lastLayer);
+    if (this.lastLayer) void this.apply(this.lastLayer);
+  }
+
+  /** Snapshot of the current (merged) force options — seeds a settings editor. */
+  getOptions(): Readonly<D3ForceLayoutOptions> {
+    return this.opts;
   }
 
   /**
