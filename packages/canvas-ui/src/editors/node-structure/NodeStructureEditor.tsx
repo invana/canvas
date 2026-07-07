@@ -78,7 +78,7 @@ export function NodeStructureEditor({
   return (
     <FormProvider {...form}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 16 }}>
-        <FormField.ObjectField control={c} columns={1} name="binding" fields={scalarFields} />
+        <FormField.ObjectField control={c} columns={1} labelPosition="top" name="binding" fields={scalarFields} />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <span style={{ fontSize: 13, fontWeight: 600 }}>Field mapping</span>
@@ -94,7 +94,7 @@ export function NodeStructureEditor({
               }}
             >
               <div style={{ flex: 1 }}>
-                <FormField.ObjectField control={c} columns={1} name={`bindings.${i}`} fields={SLOT_BINDING_FIELDS} />
+                <FormField.ObjectField control={c} columns={1} labelPosition="top" name={`bindings.${i}`} fields={SLOT_BINDING_FIELDS} />
               </div>
               <Button type="button" variant="ghost" onClick={() => remove(i)}>
                 Remove

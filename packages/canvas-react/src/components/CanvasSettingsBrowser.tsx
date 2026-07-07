@@ -246,7 +246,7 @@ export function CanvasSettingsBrowser({
                             )}
                           </span>
                         </AccordionTrigger>
-                        <AccordionContent>
+                        <AccordionContent className="p-0">
                           {row.descriptor ? (
                             row.descriptor.render({
                               instance: row.instance,

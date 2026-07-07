@@ -71,7 +71,7 @@ export function NodeStyleEditor({
     // must be on context — not just control.
     <FormProvider {...form}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16 }}>
-        <FormField.ObjectField control={c} columns={1} name="style" fields={resolvedFields} />
+        <FormField.ObjectField control={c} columns={1} labelPosition="top" name="style" fields={resolvedFields} />
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button onClick={() => onSubmit(getValues('style'))}>{submitLabel}</Button>
         </div>

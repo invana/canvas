@@ -60,7 +60,7 @@ export function HoverPreviewCardEditor({
     // (not just control) must be on context.
     <FormProvider {...form}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 16 }}>
-        <FormField.ObjectField control={c} columns={1} name="card" fields={CARD_SCALAR_FIELDS} />
+        <FormField.ObjectField control={c} columns={1} labelPosition="top" name="card" fields={CARD_SCALAR_FIELDS} />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <span style={{ fontSize: 13, fontWeight: 600 }}>Rows</span>
@@ -76,7 +76,7 @@ export function HoverPreviewCardEditor({
               }}
             >
               <div style={{ flex: 1 }}>
-                <FormField.ObjectField control={c} columns={1} name={`rows.${i}`} fields={CARD_ROW_FIELDS} />
+                <FormField.ObjectField control={c} columns={1} labelPosition="top" name={`rows.${i}`} fields={CARD_ROW_FIELDS} />
               </div>
               <Button type="button" variant="ghost" onClick={() => remove(i)}>
                 Remove

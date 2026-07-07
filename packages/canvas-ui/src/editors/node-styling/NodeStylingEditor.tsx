@@ -89,7 +89,7 @@ export function NodeStylingEditor({
   return (
     <FormProvider {...form}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 16 }}>
-        <FormField.ObjectField control={c} columns={1} name="styling" fields={scalarFields} />
+        <FormField.ObjectField control={c} columns={1} labelPosition="top" name="styling" fields={scalarFields} />
 
         {showSlots && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -106,7 +106,7 @@ export function NodeStylingEditor({
               }}
             >
               <div style={{ flex: 1 }}>
-                <FormField.ObjectField control={c} columns={1} name={`slots.${i}`} fields={SLOT_STYLING_FIELDS} />
+                <FormField.ObjectField control={c} columns={1} labelPosition="top" name={`slots.${i}`} fields={SLOT_STYLING_FIELDS} />
               </div>
               <Button type="button" variant="ghost" onClick={() => remove(i)}>
                 Remove
