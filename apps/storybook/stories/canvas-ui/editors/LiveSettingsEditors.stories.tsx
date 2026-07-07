@@ -1,7 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-// Engine classes (NOT the canvas-react wrappers) — used for `instanceof` matching
-// against the live bundle instances the app constructs.
-import { BackgroundLayer, WheelZoomBehaviour } from '@invana/canvas';
 import {
   CanvasMessageBar,
   CanvasSettingsBrowser,
@@ -14,27 +11,20 @@ import {
   Panel,
   PanelContent,
   type LayoutFactory,
-  type SettingsEditorDescriptor,
   ThemeToggle,
   useDevTool,
   useMiniMap,
 } from '@invana/canvas-react';
-import {
-  BackgroundLayerEditor,
-  backgroundLayerOptionsToForm,
-  backgroundLayerFormToOptions,
-  WheelZoomEditor,
-  wheelZoomOptionsToForm,
-  wheelZoomFormToOptions,
-  type BackgroundLayerOptions,
-  type WheelZoomOptions,
-} from '@invana/canvas-ui';
 import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { ThemeProvider } from '@invana/themes';
 import type { MenuItem } from '@invana/ui';
+
+// The full editor registry — one descriptor per Behaviour / Layer / Layout
+// editor in `@invana/canvas-ui`, matched to the live bundle by `instanceof`.
+import { ALL_SETTINGS_EDITORS } from './allEditors';
 
 /**
  * `canvas-ui/editors/Live Settings Editors` — the settings editors driving a
@@ -59,37 +49,6 @@ import type { MenuItem } from '@invana/ui';
 const meta: Meta = { title: 'canvas-ui/editors/Live Settings Editors' };
 export default meta;
 type Story = StoryObj;
-
-// ─── Injected editor descriptors ────────────────────────────────────────────
-// One per editable class. `match` is by engine-class reference (survives
-// minification); `read` seeds the form from the live instance's options; the
-// editor's `onSubmit` maps back to options and `apply`s the patch to the canvas.
-const SETTINGS_REGISTRY: SettingsEditorDescriptor[] = [
-  {
-    section: 'layers',
-    typeLabel: 'Background Layer',
-    match: (i) => i instanceof BackgroundLayer,
-    read: (i) => (i as BackgroundLayer).getOptions() as unknown as Record<string, unknown>,
-    render: ({ options, apply }) => (
-      <BackgroundLayerEditor
-        defaults={backgroundLayerOptionsToForm(options as BackgroundLayerOptions)}
-        onSubmit={(v) => apply(backgroundLayerFormToOptions(v) as Record<string, unknown>)}
-      />
-    ),
-  },
-  {
-    section: 'behaviours',
-    typeLabel: 'Wheel Zoom',
-    match: (i) => i instanceof WheelZoomBehaviour,
-    read: (i) => (i as WheelZoomBehaviour).getOptions() as unknown as Record<string, unknown>,
-    render: ({ options, apply }) => (
-      <WheelZoomEditor
-        defaults={wheelZoomOptionsToForm(options as WheelZoomOptions)}
-        onSubmit={(v) => apply(wheelZoomFormToOptions(v) as Record<string, unknown>)}
-      />
-    ),
-  },
-];
 
 // Multi-layout picker for the header toolbar — the app's `activeLayout` is
 // `'graph-force'`; selecting one swaps the active layout live.
@@ -166,7 +125,7 @@ export const LiveSettingsEditors: Story = {
               body holds the file-browser accordion. */}
           <Panel position="right">
             <PanelContent header="Canvas Settings" fill width={360}>
-              <CanvasSettingsBrowser registry={SETTINGS_REGISTRY} activeLayoutId="graph-force" />
+              <CanvasSettingsBrowser registry={ALL_SETTINGS_EDITORS} activeLayoutId="graph-force" />
             </PanelContent>
           </Panel>
         </GraphCanvasApp>
