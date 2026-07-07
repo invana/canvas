@@ -1,16 +1,15 @@
 import type { Preview } from '@storybook/react-vite';
 
-// @invana/design-kit stylesheets — tokens first, components second.
-// Imported as JS so Vite resolves the bare specifiers via Node resolution
-// (PostCSS's @import doesn't understand package names).
+// Design-kit styling via a real Tailwind v4 pass (`./tailwind.css` + the
+// `@tailwindcss/vite` plugin in `main.ts`), instead of the prebuilt
+// `@invana/ui/styles.css`. The kit is source-based and `@invana/forms` ships no
+// CSS, so the utilities its components use (e.g. the Switch's `translate-x-5`
+// and `data-[state]` backgrounds) only exist if we run Tailwind and scan the
+// packages. `@invana/themes/styles.css` still supplies the concrete `:root`
+// token values; `tailwind.css` pulls the `@invana/styling` theme variants and
+// generates the utilities. Mirrors the design-kit repo's own Storybook.
 import '@invana/themes/styles.css';
-import '@invana/ui/styles.css';
-// The base stylesheets above ship only the *light* `:root` tokens. This adds
-// the `default` theme's dark/light variant tokens (scoped to
-// `[data-theme="default-*"]`). It's unlayered, so it wins over the `@layer
-// theme` `:root` defaults — see `bootstrapOsTheme` below, which flips the
-// attribute from `prefers-color-scheme`.
-import '@invana/styling/themes/default.css';
+import './tailwind.css';
 
 import './global.css';
 

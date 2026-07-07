@@ -27,7 +27,16 @@ const config: StorybookConfig = {
   },
   async viteFinal(config) {
     const { mergeConfig } = await import('vite');
+    // Tailwind v4 pass. The design kit ships component *class names* and expects
+    // the consuming app to run Tailwind, scanning those packages to generate the
+    // utilities — `@invana/forms` in particular ships **no** CSS (its `Switch`
+    // uses `translate-x-5` etc.), and `@invana/ui`'s prebuilt CSS doesn't cover
+    // it. Without this pass those utilities are absent, so e.g. the settings-form
+    // Switch toggles state but not appearance. See `.storybook/tailwind.css`;
+    // mirrors the design-kit repo's own Storybook setup.
+    const tailwindcss = (await import('@tailwindcss/vite')).default;
     return mergeConfig(config, {
+      plugins: [tailwindcss()],
       resolve: {
         alias: [
           // Upstream packaging bug: `@invana/themes@0.0.6`'s `dist/index.js`

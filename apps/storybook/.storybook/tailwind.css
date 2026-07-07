@@ -1,0 +1,26 @@
+/*
+ * Storybook Tailwind v4 entry — mirrors the design-kit repo's own Storybook.
+ *
+ * The Invana design kit is source-based, not prebuilt-CSS based: components ship
+ * class *names* and each consuming app runs Tailwind to generate the utilities
+ * (see `@invana/styling/src/index.css`). `@invana/forms` ships **no** CSS at all,
+ * so without this pass its `Switch` (and other controls) toggles state but has no
+ * visual. `@tailwindcss/vite` (wired in `main.ts`) compiles this.
+ *
+ * Content to scan comes from `../tailwind.config.cjs`, which resolves the
+ * `@invana/ui` / `@invana/forms` published **dist** via Node (see that file for
+ * why a bare `@source node_modules/…` can't work under pnpm).
+ */
+
+@import 'tailwindcss';
+@config '../tailwind.config.cjs';
+
+/* Shared design-system theme (extends @theme) + all theme variants. */
+@import '@invana/styling/index.css';
+@import '@invana/styling/themes/default.css';
+@import '@invana/styling/themes/tailwind.css';
+@import '@invana/styling/themes/vite.css';
+/* presets-base registers preset tokens in @theme (generates utilities);
+   presets overrides their values per theme — base MUST come first. */
+@import '@invana/styling/themes/presets-base.css';
+@import '@invana/styling/themes/presets.css';
