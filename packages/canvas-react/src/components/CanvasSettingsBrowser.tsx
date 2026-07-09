@@ -204,7 +204,7 @@ export function CanvasSettingsBrowser({
         {sections.map((section) => {
           const sectionRows = rowsBySection.get(section) ?? [];
           return (
-            <AccordionItem key={section} value={section} className="border-b-0">
+            <AccordionItem key={section} value={section} className="border-b">
               <AccordionTrigger className="py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
                 <span className="flex items-center gap-2">
                   {SECTION_LABEL[section]}
@@ -219,7 +219,11 @@ export function CanvasSettingsBrowser({
                 ) : (
                   <Accordion type="multiple">
                     {sectionRows.map((row) => (
-                      <AccordionItem key={row.id} value={`${section}:${row.id}`}>
+                      <AccordionItem
+                        key={row.id}
+                        value={`${section}:${row.id}`}
+                        className="last:border-b-0"
+                      >
                         <AccordionTrigger className="py-2 hover:no-underline">
                           <span className="flex min-w-0 items-center gap-2">
                             <span className="truncate font-medium">{row.id}</span>
