@@ -307,6 +307,8 @@ export class PrimitivesRenderer {
 
   /** Currently-hovered target. Tracks pointerover/out diffs. */
   private currentHover: { kind: 'shape' | 'connector'; id: string } | null = null;
+  /** Currently-hovered sub-part (shape id + `hitId`). Tracks partover/partout diffs. */
+  private currentPart: { id: string; partId: string } | null = null;
   /** Target captured by a pointerdown — used to gate click emission. */
   private downHit: { kind: 'shape' | 'connector'; id: string; button: number } | null = null;
   /**
@@ -510,6 +512,9 @@ export class PrimitivesRenderer {
     // left in place so `hitTest` can still consult it via
     // `inst.shape.getHitArea().contains(...)`.
     shape.gfx.eventMode = 'none';
+    // Inherit the current label-resolution LOD so a shape with internal text
+    // (composite) mounts crisp instead of at base fidelity until the next tier.
+    if (this.trackedLabelResolution !== null) shape.setLabelResolution?.(this.trackedLabelResolution);
   }
 
   updateShape<TSpec extends BaseShapeSpec>(id: string, partial: Partial<TSpec>): void {
@@ -742,6 +747,8 @@ export class PrimitivesRenderer {
     this.hit.remove(id);
     this.movedShapeHits.delete(id);
     this.shapeInstances.delete(id);
+    // Drop stale sub-part hover if this was the host (no `partout` — it's gone).
+    if (this.currentPart?.id === id) this.currentPart = null;
   }
 
   // ─── Mutation: connectors ───────────────────────────────────────────────
@@ -1341,10 +1348,11 @@ export class PrimitivesRenderer {
     // viewport sweep below.
     if (this.trackedLabelResolution === resolution) return;
     this.trackedLabelResolution = resolution;
-    // No iteration here. The frame-tick sweep (see `tickLabelRasterise`)
-    // picks up the new target and re-rasters only on-screen labels, plus
-    // any that scroll into view later. This bounds the per-frame texture-
-    // regen cost to whatever's visible instead of the full dataset.
+    // Label *decorations* re-raster via the frame-tick sweep (viewport-budgeted
+    // — see the label-bearing decoration set). Shapes with internal text
+    // (composite `label` parts) aren't decorations, so push directly here; the
+    // optional call is a no-op for atomic shapes and composites are few.
+    for (const inst of this.shapeInstances.values()) inst.shape.setLabelResolution?.(resolution);
   }
 
   /**
@@ -1737,6 +1745,11 @@ export class PrimitivesRenderer {
     const hit = this.hitTest(w.x, w.y);
     const prev = this.currentHover;
 
+    // Sub-part hover runs every move (even within the same shape) so moving
+    // between a card's rows fires partout/partover — independent of the
+    // shape-level over/out diffing below.
+    this.updatePartHover(hit, w.x, w.y);
+
     if (hit === null) {
       if (prev) {
         this.events.emit(`${prev.kind}:pointerout`, {
@@ -1772,6 +1785,40 @@ export class PrimitivesRenderer {
     if (!this.canvasElement) return;
     if (this.downHit) return;
     this.canvasElement.style.cursor = hit ? 'pointer' : '';
+  }
+
+  /**
+   * Resolve the `hitId` of the sub-part under a world point for a shape hit, or
+   * `undefined` (not a shape / no `hitTestPart` / no part there). Local
+   * coordinates mirror {@link geometricHit}: `(world − spec.origin) / gfxScale`.
+   * Shared by hover ({@link updatePartHover}) and right-click routing.
+   */
+  private partIdAt(hit: HitResult | null, worldX: number, worldY: number): string | undefined {
+    if (!hit || hit.kind !== 'shape') return undefined;
+    const inst = this.shapeInstances.get(hit.id);
+    if (!inst?.shape.hitTestPart) return undefined;
+    const s = inst.gfxScale || 1;
+    return inst.shape.hitTestPart((worldX - inst.spec.x) / s, (worldY - inst.spec.y) / s);
+  }
+
+  /**
+   * Diff the sub-part under the cursor against {@link currentPart} to emit
+   * `shape:partout` (leaving a part) / `shape:partover` (entering one). Atomic
+   * shapes (no `hitTestPart`) never produce part events.
+   */
+  private updatePartHover(hit: HitResult | null, worldX: number, worldY: number): void {
+    const partId = this.partIdAt(hit, worldX, worldY);
+    const cur = this.currentPart;
+    // Leaving the current part — off the shape, or onto a different part.
+    if (cur && (partId === undefined || cur.id !== hit?.id || cur.partId !== partId)) {
+      this.events.emit('shape:partout', { id: cur.id, partId: cur.partId });
+      this.currentPart = null;
+    }
+    // Entering a part (only when not already tracking one).
+    if (partId !== undefined && hit && this.currentPart === null) {
+      this.events.emit('shape:partover', { id: hit.id, partId, worldX, worldY });
+      this.currentPart = { id: hit.id, partId };
+    }
   }
 
   private routePointerDown(e: FederatedPointerEvent): void {
@@ -1833,9 +1880,16 @@ export class PrimitivesRenderer {
         this.lastLeftClick = { kind: hit.kind, id: hit.id, t: now };
       }
     } else if (e.button === 2) {
-      this.events.emit(`${hit.kind}:contextmenu`, {
-        id: hit.id, worldX: w.x, worldY: w.y,
-      });
+      // Over a hittable sub-part → the part-scoped menu; otherwise the
+      // shape/connector-level menu. Mutually exclusive per right-click.
+      const partId = this.partIdAt(hit, w.x, w.y);
+      if (partId !== undefined) {
+        this.events.emit('shape:partcontextmenu', { id: hit.id, partId, worldX: w.x, worldY: w.y });
+      } else {
+        this.events.emit(`${hit.kind}:contextmenu`, {
+          id: hit.id, worldX: w.x, worldY: w.y,
+        });
+      }
     }
   }
 
@@ -2101,6 +2155,7 @@ export class PrimitivesRenderer {
     for (const fn of this.pointerRouterUnsubs) fn();
     this.pointerRouterUnsubs = [];
     this.currentHover = null;
+    this.currentPart = null;
     this.downHit = null;
     this.lastLeftClick = null;
     this.pointerDown = false;

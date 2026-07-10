@@ -316,6 +316,8 @@ export interface CompositeShapeOption {
   readonly fillAlpha?: number;
   readonly stroke?: { readonly color: number; readonly width?: number; readonly alpha?: number };
   readonly parts: readonly CompositePart[];
+  /** Clip parts to the root silhouette so edge-touching parts follow the rounded corners. */
+  readonly clip?: boolean;
 }
 
 /**

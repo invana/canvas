@@ -728,6 +728,24 @@ export interface IShape<TSpec extends BaseShapeSpec = BaseShapeSpec> {
   /** Optional precise containment in shape-local coordinates. */
   contains?(localX: number, localY: number): boolean;
   /**
+   * Optional **sub-part** hit test in shape-local coordinates: returns the
+   * `hitId` of the topmost interactive sub-part containing the point, or
+   * `undefined`. Shapes composed of many addressable regions (e.g. a
+   * {@link CompositeShape} card with `hitId`-tagged parts) implement this so
+   * the renderer can emit `shape:partover` / `shape:partout`. Omit for atomic
+   * shapes — the renderer simply won't emit part events for them.
+   */
+  hitTestPart?(localX: number, localY: number): string | undefined;
+  /**
+   * Optional — re-rasterise any **internal text** this shape mounts (e.g. a
+   * {@link CompositeShape}'s `label` parts) at the given device resolution, so
+   * it stays crisp when the camera zooms in. The renderer forwards its tracked
+   * label resolution here on mount and whenever the label-resolution LOD
+   * behaviour pushes a new value — the shape counterpart to a `LabelDecoration`'s
+   * `setResolution`. Atomic shapes with no mounted text omit it.
+   */
+  setLabelResolution?(resolution: number): void;
+  /**
    * Optional shape-local "visual centre" — the point inset-content layers
    * with `anchor: 'center'` snap to. Defaults to the AABB midpoint when
    * omitted, which is correct for `CircleShape` and `RectShape` (their
@@ -1101,6 +1119,22 @@ export interface PrimitivesRendererEventMap extends EventMap {
   'shape:click':           { id: string; worldX: number; worldY: number; button: number };
   'shape:doubleclick':     { id: string; worldX: number; worldY: number; button: number };
   'shape:contextmenu':     { id: string; worldX: number; worldY: number };
+  /**
+   * Sub-part pointer transitions — fired only for shapes that implement
+   * {@link IShape.hitTestPart} (e.g. a composite card with `hitId`-tagged
+   * parts). `partId` is the id the shape returned for the point under the
+   * cursor. `partover` fires on entering a part; `partout` on leaving it (to
+   * another part of the same shape, or off the shape entirely).
+   */
+  'shape:partover':        { id: string; partId: string; worldX: number; worldY: number };
+  'shape:partout':         { id: string; partId: string };
+  /**
+   * Right-click over a hittable sub-part. Emitted *instead of*
+   * `shape:contextmenu` when the cursor is over a `hitId`-tagged part, so a
+   * consumer can show a part-scoped menu (e.g. a field row) and reserve the
+   * shape-level menu for the rest of the card.
+   */
+  'shape:partcontextmenu': { id: string; partId: string; worldX: number; worldY: number };
   'connector:pointerover': { id: string; worldX: number; worldY: number };
   'connector:pointerout':  { id: string; worldX: number; worldY: number };
   'connector:pointerdown': { id: string; worldX: number; worldY: number; button: number; pointerId: number };

@@ -241,3 +241,21 @@ export {
   BUILT_IN_STYLINGS,
 } from './template';
 
+// ─── Built-in composite card node types ─────────────────────────────────────
+export {
+  schemaTableCard,
+  type SchemaTableCardOptions,
+  userCard,
+  statCard,
+  taskCard,
+  iconifyUrl,
+  CARD_BG,
+  CARD_STROKE,
+  type SchemaField,
+  type SchemaTableData,
+  type UserCardData,
+  type StatCardData,
+  type TaskTag,
+  type TaskCardData,
+} from './cards';
+

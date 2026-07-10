@@ -8,6 +8,7 @@ import { RegularPolygonShape } from './RegularPolygonShape';
 import { StarShape } from './StarShape';
 import { ArcShape } from './ArcShape';
 import {
+  applyLabelResolution,
   mountLabelContent,
   updateLabelContent,
   type LabelContentView,
@@ -61,6 +62,12 @@ interface PartFill {
  *   mounted into a `size × size` box at `(x, y)`, reusing the engine's
  *   {@link InsetLayer} vocabulary. An optional `background` traces a chip
  *   (e.g. a coloured rounded square) behind the glyph — the type-tag look.
+ *
+ * `rect` / `circle` / `icon` parts may carry a `hitId` to become an addressable
+ * **sub-part**: {@link CompositeShape.hitTestPart} reports the topmost `hitId`
+ * under a point, which the renderer turns into `shape:partover` / `shape:partout`
+ * events (e.g. per-row hover on a table card). A transparent full-row `rect`
+ * with a `hitId` is the idiomatic way to make a whole row hoverable.
  */
 export type CompositePart =
   | ({
@@ -70,12 +77,16 @@ export type CompositePart =
       readonly width: number;
       readonly height: number;
       readonly cornerRadius?: number;
+      /** Marks this rect as an addressable sub-part for {@link CompositeShape.hitTestPart}. */
+      readonly hitId?: string;
     } & PartFill)
   | ({
       readonly part: 'circle';
       readonly x: number;
       readonly y: number;
       readonly radius: number;
+      /** Marks this circle as an addressable sub-part for {@link CompositeShape.hitTestPart}. */
+      readonly hitId?: string;
     } & PartFill)
   | {
       readonly part: 'line';
@@ -117,6 +128,8 @@ export type CompositePart =
         readonly fillAlpha?: number;
         readonly cornerRadius?: number;
       };
+      /** Marks this icon's box as an addressable sub-part for {@link CompositeShape.hitTestPart}. */
+      readonly hitId?: string;
     };
 
 /**
@@ -172,6 +185,14 @@ export interface CompositeSpec extends BaseShapeSpec {
   readonly root?: CompositeRootSpec;
   /** Ordered child parts; geometry traced into the body, labels mounted as text. */
   readonly parts: readonly CompositePart[];
+  /**
+   * Clip the child `parts` (and labels / icons) to the root silhouette. When
+   * `true`, a part that runs to the card edge — a left accent bar, a full-width
+   * header — **follows the rounded corners** instead of poking past them (a
+   * `rect` is square geometry and can't round a corner on its own). Off by
+   * default; decorations (hover ring / halo) are never clipped.
+   */
+  readonly clip?: boolean;
 }
 
 /**
@@ -199,9 +220,19 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
   /** Mounted `icon` inset views keyed by their index in `spec.parts`. */
   private readonly iconViews = new Map<number, InsetContentView>();
 
+  /**
+   * Device resolution for the mounted `label` parts, pushed by the renderer's
+   * label-resolution LOD path ({@link setLabelResolution}). Re-applied to every
+   * label on each {@link syncLabels} so redraws don't reset crisp text to base.
+   */
+  private labelResolution: number | null = null;
+
   /** Borrowed background shape — provides the silhouette geometry. */
   private rootShape!: ShapeBase<CompositeRootSpec>;
   private rootKind = '';
+
+  /** Silhouette mask used when {@link CompositeSpec.clip} is set (else undefined). */
+  private clipMask?: Graphics;
 
   constructor(spec: CompositeSpec, host: ShapeHostInfo) {
     super(host);
@@ -291,6 +322,39 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
     super.draw(spec); // transform + bodyGfx(drawGeometry) + inset layers
     this.syncLabels(spec);
     this.syncIcons(spec);
+    this.ensureClip(spec);
+  }
+
+  /**
+   * Maintain the silhouette clip mask per {@link CompositeSpec.clip}. The mask is
+   * the root shape traced (filled) at the same centred offset {@link drawGeometry}
+   * uses, added as a child of `gfx` and set as `gfx.mask` — so every part /
+   * label / icon is clipped to the card outline while the borrowed silhouette
+   * (and its decorations, which live outside `gfx`) are untouched.
+   */
+  private ensureClip(spec: CompositeSpec): void {
+    if (!spec.clip) {
+      if (this.clipMask) {
+        this.gfx.mask = null;
+        this.clipMask.destroy();
+        this.clipMask = undefined;
+      }
+      return;
+    }
+    if (!this.clipMask) {
+      this.clipMask = new Graphics();
+      this.gfx.addChild(this.clipMask);
+      this.gfx.mask = this.clipMask;
+    }
+    const g = this.clipMask;
+    g.clear();
+    const root = this.rootShape;
+    const b = root.bounds();
+    const ox = spec.width / 2 - (b.x + b.width / 2);
+    const oy = spec.height / 2 - (b.y + b.height / 2);
+    g.translateTransform(ox, oy);
+    root.paintInto(g); // filled silhouette — the mask shape
+    g.resetTransform();
   }
 
   /**
@@ -334,6 +398,10 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
           this.labelViews.set(i, next);
         }
       }
+
+      // Keep crisp text through redraws: re-assert the LOD resolution on the
+      // (possibly freshly mounted) view before measuring / placing it.
+      if (this.labelResolution !== null) applyLabelResolution(view, this.labelResolution);
 
       // Place the (measured) text block at the relative coordinate.
       const w = view.display.width;
@@ -382,7 +450,53 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
   }
 
   bounds(): Rect {
-    return { x: 0, y: 0, width: this.spec.width, height: this.spec.height };
+    return CompositeShape.boundsOf(this.spec);
+  }
+
+  /**
+   * Static AABB from the spec's `width × height` box — the composite's silhouette
+   * fills its box (like {@link RectShape}). Exposed so `PrimitivesRenderer.boundsOfSpec`
+   * can size a composite **without** an instance, which is how layouts (ELK et al.)
+   * read node dimensions. Missing this made every card fall back to the layout's
+   * default size and overlap.
+   */
+  static boundsOf(spec: Pick<CompositeSpec, 'width' | 'height'>): Rect {
+    return { x: 0, y: 0, width: spec.width, height: spec.height };
+  }
+
+  /**
+   * Re-rasterise every mounted `label` part at `resolution` (device pixels per
+   * CSS pixel) and remember it, so subsequent redraws keep the text crisp. The
+   * renderer calls this from its label-resolution LOD path — the composite
+   * counterpart to a `LabelDecoration.setResolution`.
+   */
+  setLabelResolution(resolution: number): void {
+    if (!Number.isFinite(resolution) || resolution <= 0) return;
+    this.labelResolution = resolution;
+    for (const view of this.labelViews.values()) applyLabelResolution(view, resolution);
+  }
+
+  /**
+   * Sub-part hit test — returns the `hitId` of the topmost `hitId`-tagged part
+   * (`rect` / `circle` / `icon`) containing the local point, or `undefined`.
+   * Parts are traced back-to-front, so the search runs in reverse (last drawn =
+   * on top). The renderer calls this to emit `shape:partover` / `shape:partout`.
+   */
+  hitTestPart(localX: number, localY: number): string | undefined {
+    const parts = this.spec.parts;
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i]!;
+      if (p.part === 'rect' && p.hitId !== undefined) {
+        if (localX >= p.x && localX <= p.x + p.width && localY >= p.y && localY <= p.y + p.height) return p.hitId;
+      } else if (p.part === 'circle' && p.hitId !== undefined) {
+        const dx = localX - p.x;
+        const dy = localY - p.y;
+        if (dx * dx + dy * dy <= p.radius * p.radius) return p.hitId;
+      } else if (p.part === 'icon' && p.hitId !== undefined) {
+        if (localX >= p.x && localX <= p.x + p.size && localY >= p.y && localY <= p.y + p.size) return p.hitId;
+      }
+    }
+    return undefined;
   }
 
   override destroy(): void {
@@ -390,6 +504,11 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
     this.labelViews.clear();
     for (const view of this.iconViews.values()) destroyInsetContent(view);
     this.iconViews.clear();
+    if (this.clipMask) {
+      this.gfx.mask = null;
+      this.clipMask.destroy();
+      this.clipMask = undefined;
+    }
     this.rootShape?.destroy();
     super.destroy();
   }

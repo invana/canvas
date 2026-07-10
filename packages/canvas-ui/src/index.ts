@@ -74,6 +74,25 @@ export type {
   NodeStructureScalarFields,
   BindingRow,
 } from './editors/node-structure';
+// `SchemaEditor` — a titled list of typed fields (ER / table-card schema).
+// Edits a `NodeSchema` (label + header colour + fields[{name,type}]) and emits
+// it on Apply; the consumer writes it back to a node's data + redraws.
+export {
+  SchemaEditor,
+  SCHEMA_TYPES,
+  SCHEMA_TYPE_OPTIONS,
+  SCHEMA_META_FIELDS,
+  SCHEMA_FIELD_ROW,
+  schemaToForm,
+  formToSchema,
+} from './editors/schema';
+export type {
+  SchemaEditorProps,
+  NodeSchema,
+  SchemaFieldDef,
+  SchemaEditorFormState,
+  SchemaMetaFields,
+} from './editors/schema';
 export {
   NodeStylingEditor,
   STYLING_SCALAR_FIELDS,
