@@ -12,6 +12,13 @@ import {
   updateLabelContent,
   type LabelContentView,
 } from '../paint/labelContent';
+import {
+  mountInsetContent,
+  updateInsetContent,
+  destroyInsetContent,
+  type InsetLayer,
+  type InsetContentView,
+} from '../paint/insetContentLayer';
 import type {
   ArcSpec,
   BaseShapeSpec,
@@ -50,6 +57,10 @@ interface PartFill {
  * - `'label'` — a text block mounted as a Pixi text child. `anchor` picks
  *   which horizontal edge of the measured block lands at `x` (default left);
  *   `maxWidth` enables word-wrap, `maxLines` + `overflow` drive ellipsis.
+ * - `'icon'` — a small vector inset (icon-font `glyph` / `svg` / `svg-url`)
+ *   mounted into a `size × size` box at `(x, y)`, reusing the engine's
+ *   {@link InsetLayer} vocabulary. An optional `background` traces a chip
+ *   (e.g. a coloured rounded square) behind the glyph — the type-tag look.
  */
 export type CompositePart =
   | ({
@@ -91,6 +102,21 @@ export type CompositePart =
       readonly maxWidth?: number;
       readonly maxLines?: number;
       readonly overflow?: 'clip' | 'ellipsis';
+    }
+  | {
+      readonly part: 'icon';
+      readonly x: number;
+      readonly y: number;
+      /** Side of the square box the icon is mounted into; the glyph scales to fit. */
+      readonly size: number;
+      /** Icon content — the engine's inset vocabulary (glyph / svg / svg-url). */
+      readonly icon: InsetLayer;
+      /** Optional chip traced behind the glyph (the coloured type-tag square). */
+      readonly background?: {
+        readonly fill: number;
+        readonly fillAlpha?: number;
+        readonly cornerRadius?: number;
+      };
     };
 
 /**
@@ -170,6 +196,9 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
   /** Mounted label displays keyed by their index in `spec.parts`. */
   private readonly labelViews = new Map<number, LabelContentView>();
 
+  /** Mounted `icon` inset views keyed by their index in `spec.parts`. */
+  private readonly iconViews = new Map<number, InsetContentView>();
+
   /** Borrowed background shape — provides the silhouette geometry. */
   private rootShape!: ShapeBase<CompositeRootSpec>;
   private rootKind = '';
@@ -245,16 +274,23 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
         g.moveTo(p.x, p.y);
         g.lineTo(p.x2, p.y2);
         g.stroke({ color: p.stroke.color, width: p.stroke.width ?? 1, alpha: p.stroke.alpha ?? 1 });
+      } else if (p.part === 'icon' && p.background) {
+        // Chip behind the glyph; the glyph itself is a Pixi child (syncIcons).
+        const { fill, fillAlpha, cornerRadius } = p.background;
+        if (cornerRadius) g.roundRect(p.x, p.y, p.size, p.size, cornerRadius);
+        else g.rect(p.x, p.y, p.size, p.size);
+        g.fill({ color: fill, alpha: fillAlpha ?? 1 });
       }
-      // 'label' is text, not geometry — handled in syncLabels.
+      // 'label' / 'icon' glyphs are children, not geometry — handled in syncLabels / syncIcons.
     }
   }
 
-  /** Refresh the root shape, geometry via the base `draw`, then the labels. */
+  /** Refresh the root shape, geometry via the base `draw`, then labels + icons. */
   override draw(spec: CompositeSpec): void {
     this.ensureRoot(spec);
     super.draw(spec); // transform + bodyGfx(drawGeometry) + inset layers
     this.syncLabels(spec);
+    this.syncIcons(spec);
   }
 
   /**
@@ -314,6 +350,37 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
     }
   }
 
+  /**
+   * Diff the `icon` parts against the mounted `iconViews`, keyed by part index.
+   * Each glyph/svg is mounted as an inset centred in its own `size × size` box
+   * at the part's `(x, y)` — reusing the same {@link mountInsetContent} pipeline
+   * ShapeBase uses for shape insets (anchor / sizeRatio / async svg-url all
+   * carry over). The chip background, if any, is traced in `drawGeometry`.
+   */
+  private syncIcons(spec: CompositeSpec): void {
+    const seen = new Set<number>();
+    spec.parts.forEach((p, i) => {
+      if (p.part !== 'icon') return;
+      seen.add(i);
+      // Synthetic bounds = the icon box; the inset anchors/scales within it.
+      const box: Rect = { x: p.x, y: p.y, width: p.size, height: p.size };
+      const existing = this.iconViews.get(i);
+      if (existing) {
+        updateInsetContent(existing, p.icon, box);
+      } else {
+        this.iconViews.set(i, mountInsetContent(this.gfx, p.icon, box));
+      }
+    });
+
+    // Destroy icons no longer present in the spec.
+    for (const [i, view] of this.iconViews) {
+      if (!seen.has(i)) {
+        destroyInsetContent(view);
+        this.iconViews.delete(i);
+      }
+    }
+  }
+
   bounds(): Rect {
     return { x: 0, y: 0, width: this.spec.width, height: this.spec.height };
   }
@@ -321,6 +388,8 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
   override destroy(): void {
     for (const view of this.labelViews.values()) view.display.destroy();
     this.labelViews.clear();
+    for (const view of this.iconViews.values()) destroyInsetContent(view);
+    this.iconViews.clear();
     this.rootShape?.destroy();
     super.destroy();
   }
