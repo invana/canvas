@@ -28,6 +28,15 @@ export interface GraphNode<D = unknown> {
   parentId?: string;
   /** Canonical position. Owned by the store; mutated by layouts and drags. */
   position?: { x: number; y: number };
+  /**
+   * Cached **local render bounds** (`width` × `height`), written by the
+   * `GraphLayer` after each render via `GraphStore.setNodeBoundingBox`. Derived
+   * — *not* user input; it's the size the shape's `boundsOf` reported, so
+   * layouts (ELK collide/sizing, force radii) can read a node's footprint
+   * without recomputing its shape spec (which, for a composite card, means
+   * rebuilding every part). `undefined` until the node has rendered once.
+   */
+  boundingBox?: { width: number; height: number };
   /** True iff layouts must not move this node. */
   pinned?: boolean;
   /**

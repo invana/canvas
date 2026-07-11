@@ -21,14 +21,28 @@ import type { GeometricLayoutMode, GeometricLayoutOptions } from './types';
 const DEFAULT_MODE: GeometricLayoutMode = 'grid';
 const DEFAULT_GAP = 60;
 const DEFAULT_CIRCULAR_SPACING = 50;
+/** Padding added around the largest node's footprint when it exceeds the gap. */
+const SIZE_GAP = 24;
 
 export class GeometricLayout extends OneShotPositionLayout<GeometricLayoutOptions> {
   protected computeLayout(layer: GraphLayer): LayoutPositions | null {
     const ids: string[] = [];
+    // Track the largest node footprint from the cached render bounds so the
+    // pitch / spacing grows to fit it — otherwise big nodes (composite cards)
+    // overlap. Additive: for small nodes `maxW/maxH` stay below the gap, so the
+    // configured spacing wins and existing layouts are unchanged.
+    let maxW = 0;
+    let maxH = 0;
     // Exclude explicitly-hidden nodes (unless `includeHidden`) so they don't
     // occupy grid/circle slots; their last positions stay frozen.
     for (const node of layer.store.nodes()) {
-      if (this.shouldPlaceNode(node)) ids.push(node.id);
+      if (!this.shouldPlaceNode(node)) continue;
+      ids.push(node.id);
+      const b = node.boundingBox;
+      if (b) {
+        if (b.width > maxW) maxW = b.width;
+        if (b.height > maxH) maxH = b.height;
+      }
     }
     const n = ids.length;
     if (n === 0) return null;
@@ -43,7 +57,7 @@ export class GeometricLayout extends OneShotPositionLayout<GeometricLayoutOption
       const dir = this.opts.clockwise === false ? -1 : 1;
       // Auto radius: lay the nodes out so neighbours sit ~`nodeSpacing` apart
       // along the circumference (circumference = n * spacing → r = that / 2π).
-      const spacing = this.opts.nodeSpacing ?? DEFAULT_CIRCULAR_SPACING;
+      const spacing = Math.max(this.opts.nodeSpacing ?? DEFAULT_CIRCULAR_SPACING, Math.max(maxW, maxH) + SIZE_GAP);
       const radius = this.opts.radius ?? Math.max(spacing, (n * spacing) / (2 * Math.PI));
       for (let i = 0; i < n; i++) {
         const angle = startAngle + (dir * (2 * Math.PI * i)) / n;
@@ -56,8 +70,11 @@ export class GeometricLayout extends OneShotPositionLayout<GeometricLayoutOption
     // grid / snake — fill a column×row block, centred on the origin.
     const columns = Math.max(1, Math.floor(this.opts.columns ?? Math.ceil(Math.sqrt(n))));
     const rows = Math.ceil(n / columns);
-    const gx = this.opts.columnGap ?? DEFAULT_GAP;
-    const gy = this.opts.rowGap ?? DEFAULT_GAP;
+    // Cell pitch grows to fit the largest node footprint (+ gap) when that
+    // exceeds the configured gap — so cards don't overlap; small nodes keep the
+    // configured gap unchanged.
+    const gx = Math.max(this.opts.columnGap ?? DEFAULT_GAP, maxW + SIZE_GAP);
+    const gy = Math.max(this.opts.rowGap ?? DEFAULT_GAP, maxH + SIZE_GAP);
     const offsetX = ((columns - 1) * gx) / 2;
     const offsetY = ((rows - 1) * gy) / 2;
     const snake = mode === 'snake';

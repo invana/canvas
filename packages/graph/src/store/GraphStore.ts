@@ -241,6 +241,19 @@ export class GraphStore implements DataSource {
     return edge;
   }
 
+  /**
+   * Write a node's cached {@link GraphNode.boundingBox} — the local render size
+   * the `GraphLayer` computed after drawing it. **Silent**: this is a derived
+   * cache, not a data mutation, so it emits no change / flush event and does not
+   * bump {@link version} (avoids a render feedback loop). Unknown ids are a
+   * no-op. Surfaced by {@link getNode} / {@link nodes} so layouts can read a
+   * node's footprint without recomputing its shape spec.
+   */
+  setNodeBoundingBox(id: string, box: { width: number; height: number } | undefined): void {
+    const cold = this.nodeMap.get(id);
+    if (cold) cold.boundingBox = box;
+  }
+
   *nodes(): IterableIterator<GraphNode> {
     for (const id of this.nodeMap.keys()) {
       const node = this.getNode(id);

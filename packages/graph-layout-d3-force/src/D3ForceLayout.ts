@@ -153,6 +153,19 @@ export class D3ForceLayout extends Layout<GraphLayer> {
    * a superseding `apply()` calls `stop()`, which owns teardown and the
    * staleness `end`.
    */
+  /**
+   * Per-node collide radius derived from the node's cached render bounds
+   * ({@link GraphNode.boundingBox}, written by the layer after each draw) —
+   * `max(width, height) / 2`, the tightest circle covering the node's larger
+   * extent so rectangular cards don't overlap on their dominant axis. Falls
+   * back to `1` (d3's default) before the node has rendered once. Used only when
+   * `collide.radius` is unset; an explicit number / function still wins.
+   */
+  private collideRadius(node: GraphNode): number {
+    const b = node.boundingBox;
+    return b ? Math.max(b.width, b.height) / 2 : 1;
+  }
+
   private async runStatic(layer: GraphLayer): Promise<void> {
     const store = layer.store;
     const { ids, input } = this.snapshotStatic(store);
@@ -242,8 +255,11 @@ export class D3ForceLayout extends Layout<GraphLayer> {
       const r = collide.radius;
       if (typeof r === 'function') {
         for (let i = 0; i < count; i++) radii[i] = r(nodeList[i]!);
+      } else if (typeof r === 'number') {
+        radii.fill(r);
       } else {
-        radii.fill(typeof r === 'number' ? r : 1); // d3's default collide radius is 1
+        // Unset → derive each node's radius from its cached render bounds.
+        for (let i = 0; i < count; i++) radii[i] = this.collideRadius(nodeList[i]!);
       }
     }
 
@@ -577,6 +593,13 @@ export class D3ForceLayout extends Layout<GraphLayer> {
         } else {
           force.radius(collide.radius);
         }
+      } else {
+        // Unset → derive each node's radius from its cached render bounds.
+        const refs = this.graphNodeById;
+        force.radius((d) => {
+          const node = refs.get(d.id);
+          return node ? this.collideRadius(node) : 0;
+        });
       }
       if (collide.strength !== undefined) force.strength(collide.strength);
       if (collide.iterations !== undefined) force.iterations(collide.iterations);

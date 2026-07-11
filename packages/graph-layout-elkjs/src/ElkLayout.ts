@@ -244,6 +244,11 @@ function defaultElkWorkerFactory(): Worker {
  * ({ width, height })` to bypass this hook entirely.
  */
 function resolveSizeFromLayer(layer: GraphLayer, node: GraphNode): NodeSize {
+  // Prefer the cached render size — the layer writes `node.boundingBox` after
+  // each draw, so we avoid recomputing the shape spec (rebuilding every part of
+  // a composite card) per node. Falls back to `boundsOfNode` when the node
+  // hasn't rendered yet (first layout pass before mount).
+  if (node.boundingBox) return { width: node.boundingBox.width, height: node.boundingBox.height };
   const local = layer.boundsOfNode(node);
   if (!local) return FALLBACK_NODE_SIZE;
   return { width: local.width, height: local.height };

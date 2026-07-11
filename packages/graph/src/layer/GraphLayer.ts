@@ -1308,7 +1308,7 @@ export class GraphLayer extends WorldLayer<
     // (add / hover), making it visibly jump. See {@link shapeRenderXY}.
     const { x, y } = shapeRenderXY(shape, pos);
 
-    return {
+    const spec = {
       ...(shape as unknown as Record<string, unknown>),
       x,
       y,
@@ -1327,6 +1327,15 @@ export class GraphLayer extends WorldLayer<
       // `visible: false` in place and the node would stay hidden.
       visible: !culled,
     } as BaseShapeSpec;
+
+    // Cache the node's local render size on the store (silent, derived) so
+    // layouts read `node.boundingBox` instead of recomputing this spec — cheap
+    // here since the (possibly composite) spec is already built. Skipped
+    // pre-mount (no renderer) and for group-projected specs (id-keyed anyway).
+    const b = this._renderer?.boundsOfSpec(spec);
+    if (b) this.store.setNodeBoundingBox(node.id, { width: b.width, height: b.height });
+
+    return spec;
   }
 
   /**

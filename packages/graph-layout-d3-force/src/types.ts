@@ -135,10 +135,13 @@ export interface CenterForceOptions {
 /** `forceCollide` configuration. */
 export interface CollideForceOptions {
   /**
-   * `collide.radius(r)`. Either a constant, or a per-node function called
-   * once per node at `apply()` time with the underlying `GraphNode`. Use
-   * the function form when collision sizes vary per node (e.g. read
-   * `node.data.size`).
+   * `collide.radius(r)`. A constant, or a per-node function called once per node
+   * at `apply()` time with the underlying `GraphNode`.
+   *
+   * **Unset (default):** the radius is derived from each node's cached render
+   * bounds — `max(boundingBox.width, boundingBox.height) / 2` — so nodes
+   * (including wide composite cards) don't overlap without hand-tuning. Pass a
+   * number / function to override (e.g. read `node.data.size`).
    */
   radius?: number | ((node: GraphNode) => number);
   /** `collide.strength(s)` in `[0, 1]`. */
