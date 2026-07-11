@@ -29,6 +29,11 @@ import type {
 /** Bit layout for the `flags` column on the node ColumnStore. */
 const FLAG_PINNED = 1 << 0;
 const FLAG_TOMBSTONE = 1 << 1;
+/**
+ * Explicit per-element visibility. Set on the node **and** edge `flags` column.
+ * `1 << 1` is the tombstone bit, so hidden takes `1 << 2`.
+ */
+const FLAG_HIDDEN = 1 << 2;
 
 /** Node hot-field schema. */
 const NODE_SCHEMA = {
@@ -91,6 +96,16 @@ export class GraphStore implements DataSource {
   private readonly nodeRuntimeStates: Map<string, Set<string>> = new Map();
   private readonly edgeRuntimeStates: Map<string, Set<string>> = new Map();
 
+  // ─── Visibility (explicit-hidden indexes) ───────────────────────────────
+  // Ids of elements whose explicit `hidden` flag is set. Kept in lockstep with
+  // the `FLAG_HIDDEN` bit in the `flags` column (the flag is the storage the
+  // renderer/compact read; these sets give O(1) `hiddenNodeCount()` and cheap
+  // `hiddenNodes()` iteration without scanning every element). Effective edge
+  // visibility (edge hidden if an endpoint is hidden) is derived lazily — no
+  // set is maintained for it. See `docs/per-element-visibility-plan.md`.
+  private readonly hiddenNodeIds: Set<string> = new Set();
+  private readonly hiddenEdgeIds: Set<string> = new Set();
+
   // ─── Indices ────────────────────────────────────────────────────────────
   private readonly outAdj = new AdjacencyIndex();
   private readonly inAdj = new AdjacencyIndex();
@@ -126,6 +141,14 @@ export class GraphStore implements DataSource {
    */
   private pendingNodeStates: Map<string, { id: string; name: string; actor?: string }> = new Map();
   private pendingEdgeStates: Map<string, { id: string; name: string; actor?: string }> = new Map();
+  /**
+   * Pending **explicit** visibility changes, keyed by id → latest hidden value.
+   * Coalesced per flush (hide-then-show in one batch nets to the final value)
+   * and emitted as `node:visibility` / `edge:visibility`. Endpoint-driven
+   * (effective) edge hiding produces no entry here.
+   */
+  private pendingNodeVisibility: Map<string, boolean> = new Map();
+  private pendingEdgeVisibility: Map<string, boolean> = new Map();
 
   /** Depth of nested `batch()` calls. Flushes only on outermost exit. */
   private batchDepth = 0;
@@ -206,12 +229,16 @@ export class GraphStore implements DataSource {
     const node: GraphNode<D> = { ...(cold as GraphNode<D>) };
     if (pos) node.position = pos;
     node.pinned = this.isPinned(id);
+    node.hidden = this.isNodeHidden(id);
     return node;
   }
 
   getEdge<D = unknown>(id: string): GraphEdge<D> | undefined {
     const cold = this.edgeMap.get(id);
-    return cold ? ({ ...cold } as GraphEdge<D>) : undefined;
+    if (!cold) return undefined;
+    const edge = { ...cold } as GraphEdge<D>;
+    edge.hidden = this.isEdgeHidden(id);
+    return edge;
   }
 
   *nodes(): IterableIterator<GraphNode> {
@@ -222,7 +249,7 @@ export class GraphStore implements DataSource {
   }
 
   *edges(): IterableIterator<GraphEdge> {
-    for (const cold of this.edgeMap.values()) yield { ...cold };
+    for (const [id, cold] of this.edgeMap) yield { ...cold, hidden: this.isEdgeHidden(id) };
   }
 
   // ─── Adjacency ──────────────────────────────────────────────────────────
@@ -414,6 +441,241 @@ export class GraphStore implements DataSource {
     }
   }
 
+  // ─── Visibility (hide / show) ───────────────────────────────────────────
+  //
+  // First-class per-element visibility. `hide*` / `show*` flip an explicit
+  // `hidden` flag (a bit in the `flags` column, sibling of `pinned`); the
+  // renderer, hit-test, bounds/camera, layout, labels and minimap all cull
+  // effectively-hidden elements. Single ops are usable inside a caller's
+  // `batch()`; bulk ops wrap themselves in one batch → one flush → one paint.
+  //
+  // Effective visibility (the rule consumers keep re-implementing, owned here):
+  //   • a node is effectively hidden iff it is explicitly hidden;
+  //   • an edge is effectively hidden iff it is explicitly hidden OR either
+  //     endpoint is hidden (so hiding a node visually removes its incident
+  //     edges without flagging them — no per-edge event, derived on read).
+  // Hiding an element also clears its runtime (presence) states so no stale
+  // hover/selection points at an invisible element. Topology queries
+  // (`neighborsOf` / `degree` / `nodes()` / `edges()`) stay visibility-blind.
+
+  /** Hide a node. Idempotent; usable inside a caller's `batch()`. */
+  hideNode(id: string): void {
+    if (this.applyNodeHidden(id, true)) this.scheduleFlushIfNeeded();
+  }
+
+  /** Show a node (clear its explicit hidden flag). Idempotent. */
+  showNode(id: string): void {
+    if (this.applyNodeHidden(id, false)) this.scheduleFlushIfNeeded();
+  }
+
+  /** Set a node's explicit hidden flag. Idempotent. */
+  setNodeHidden(id: string, hidden: boolean): void {
+    if (this.applyNodeHidden(id, hidden)) this.scheduleFlushIfNeeded();
+  }
+
+  /** Flip a node's explicit hidden flag. Returns the resulting hidden state. */
+  toggleNodeHidden(id: string): boolean {
+    this.setNodeHidden(id, !this.isNodeHidden(id));
+    return this.isNodeHidden(id);
+  }
+
+  /** True iff the node's **explicit** hidden flag is set (O(1)). */
+  isNodeHidden(id: string): boolean {
+    const slot = this.nodeCols.slot(id);
+    if (slot === undefined) return false;
+    return (this.nodeCols.column('flags')[slot]! & FLAG_HIDDEN) !== 0;
+  }
+
+  /** Effective visibility of a node — live and not explicitly hidden. */
+  isNodeVisible(id: string): boolean {
+    return this.nodeMap.has(id) && !this.isNodeHidden(id);
+  }
+
+  /** Hide many nodes in one batch → one flush. */
+  hideNodes(ids: Iterable<string>): void {
+    this.batch(() => {
+      for (const id of ids) this.hideNode(id);
+    });
+  }
+
+  /** Show many nodes in one batch → one flush. */
+  showNodes(ids: Iterable<string>): void {
+    this.batch(() => {
+      for (const id of ids) this.showNode(id);
+    });
+  }
+
+  /** Set the hidden flag on many nodes in one batch → one flush. */
+  setNodesHidden(ids: Iterable<string>, hidden: boolean): void {
+    this.batch(() => {
+      for (const id of ids) this.setNodeHidden(id, hidden);
+    });
+  }
+
+  /** Ids of every explicitly-hidden node (O(1)-tracked, no scan). */
+  *hiddenNodes(): IterableIterator<string> {
+    for (const id of this.hiddenNodeIds) yield id;
+  }
+
+  /** Count of explicitly-hidden nodes (O(1)). */
+  hiddenNodeCount(): number {
+    return this.hiddenNodeIds.size;
+  }
+
+  /** Hide an edge. Idempotent; usable inside a caller's `batch()`. */
+  hideEdge(id: string): void {
+    if (this.applyEdgeHidden(id, true)) this.scheduleFlushIfNeeded();
+  }
+
+  /** Show an edge (clear its explicit hidden flag). Idempotent. */
+  showEdge(id: string): void {
+    if (this.applyEdgeHidden(id, false)) this.scheduleFlushIfNeeded();
+  }
+
+  /** Set an edge's explicit hidden flag. Idempotent. */
+  setEdgeHidden(id: string, hidden: boolean): void {
+    if (this.applyEdgeHidden(id, hidden)) this.scheduleFlushIfNeeded();
+  }
+
+  /** Flip an edge's explicit hidden flag. Returns the resulting hidden state. */
+  toggleEdgeHidden(id: string): boolean {
+    this.setEdgeHidden(id, !this.isEdgeHidden(id));
+    return this.isEdgeHidden(id);
+  }
+
+  /** True iff the edge's **explicit** hidden flag is set (O(1)). */
+  isEdgeHidden(id: string): boolean {
+    const slot = this.edgeCols.slot(id);
+    if (slot === undefined) return false;
+    return (this.edgeCols.column('flags')[slot]! & FLAG_HIDDEN) !== 0;
+  }
+
+  /**
+   * Effective visibility of an edge — live, not explicitly hidden, and with
+   * **both endpoints visible**. This is the derived rule the renderer/hit-test
+   * consult; hiding a node makes its incident edges return `false` here without
+   * flagging them.
+   */
+  isEdgeVisible(id: string): boolean {
+    const cold = this.edgeMap.get(id);
+    if (!cold) return false;
+    if (this.isEdgeHidden(id)) return false;
+    if (this.isNodeHidden(cold.source)) return false;
+    if (this.isNodeHidden(cold.target)) return false;
+    return true;
+  }
+
+  /** Hide many edges in one batch → one flush. */
+  hideEdges(ids: Iterable<string>): void {
+    this.batch(() => {
+      for (const id of ids) this.hideEdge(id);
+    });
+  }
+
+  /** Show many edges in one batch → one flush. */
+  showEdges(ids: Iterable<string>): void {
+    this.batch(() => {
+      for (const id of ids) this.showEdge(id);
+    });
+  }
+
+  /** Set the hidden flag on many edges in one batch → one flush. */
+  setEdgesHidden(ids: Iterable<string>, hidden: boolean): void {
+    this.batch(() => {
+      for (const id of ids) this.setEdgeHidden(id, hidden);
+    });
+  }
+
+  /** Ids of every explicitly-hidden edge (O(1)-tracked, no scan). */
+  *hiddenEdges(): IterableIterator<string> {
+    for (const id of this.hiddenEdgeIds) yield id;
+  }
+
+  /** Count of explicitly-hidden edges (O(1)). */
+  hiddenEdgeCount(): number {
+    return this.hiddenEdgeIds.size;
+  }
+
+  /** Clear every explicit hidden flag (nodes + edges) in one batch → one flush. */
+  showAllHidden(): void {
+    this.batch(() => {
+      for (const id of [...this.hiddenNodeIds]) this.showNode(id);
+      for (const id of [...this.hiddenEdgeIds]) this.showEdge(id);
+    });
+  }
+
+  /** Hide every node for which `fn` returns true, in one batch → one flush. */
+  hideNodesByPredicate(fn: (node: GraphNode) => boolean): void {
+    this.batch(() => {
+      for (const node of this.nodes()) {
+        if (fn(node)) this.hideNode(node.id);
+      }
+    });
+  }
+
+  /**
+   * Flip a node's `FLAG_HIDDEN` bit + index, clear its runtime states on hide,
+   * bump `version`, and enqueue a `node:visibility` event. Returns whether the
+   * flag actually changed. Shared by the public setters and `updateNode`.
+   */
+  private applyNodeHidden(id: string, hidden: boolean): boolean {
+    const slot = this.nodeCols.slot(id);
+    if (slot === undefined) return false;
+    const flagsCol = this.nodeCols.column('flags');
+    const prev = flagsCol[slot]!;
+    const next = hidden ? prev | FLAG_HIDDEN : prev & ~FLAG_HIDDEN;
+    if (next === prev) return false;
+    flagsCol[slot] = next;
+    if (hidden) this.hiddenNodeIds.add(id);
+    else this.hiddenNodeIds.delete(id);
+    this.nodeCols.touch();
+    this._version++;
+    if (hidden) this.clearNodeRuntimeStatesOf(id);
+    this.enqueueNodeVisibility(id, hidden);
+    return true;
+  }
+
+  /** Edge sibling of {@link applyNodeHidden}. */
+  private applyEdgeHidden(id: string, hidden: boolean): boolean {
+    const slot = this.edgeCols.slot(id);
+    if (slot === undefined) return false;
+    const flagsCol = this.edgeCols.column('flags');
+    const prev = flagsCol[slot]!;
+    const next = hidden ? prev | FLAG_HIDDEN : prev & ~FLAG_HIDDEN;
+    if (next === prev) return false;
+    flagsCol[slot] = next;
+    if (hidden) this.hiddenEdgeIds.add(id);
+    else this.hiddenEdgeIds.delete(id);
+    this.edgeCols.touch();
+    this._version++;
+    if (hidden) this.clearEdgeRuntimeStatesOf(id);
+    this.enqueueEdgeVisibility(id, hidden);
+    return true;
+  }
+
+  /**
+   * Drop every runtime (presence) state on a node — used when hiding so a
+   * re-shown element returns clean (no stale hover/selection/highlight). Emits
+   * `node:state` off events for each cleared name. Does not touch document
+   * `states[]`.
+   */
+  private clearNodeRuntimeStatesOf(id: string): void {
+    const set = this.nodeRuntimeStates.get(id);
+    if (!set || set.size === 0) return;
+    const names = [...set];
+    this.nodeRuntimeStates.delete(id);
+    for (const name of names) this.enqueueNodeState(id, name);
+  }
+
+  /** Edge sibling of {@link clearNodeRuntimeStatesOf}. */
+  private clearEdgeRuntimeStatesOf(id: string): void {
+    const set = this.edgeRuntimeStates.get(id);
+    if (!set || set.size === 0) return;
+    const names = [...set];
+    this.edgeRuntimeStates.delete(id);
+    for (const name of names) this.enqueueEdgeState(id, name);
+  }
+
   // ─── CRUD: nodes ────────────────────────────────────────────────────────
 
   /** Strict add — throws on duplicate. */
@@ -484,6 +746,14 @@ export class GraphStore implements DataSource {
       flagsCol[slot] = patch.pinned ? prev | FLAG_PINNED : prev & ~FLAG_PINNED;
     }
 
+    // Visibility rides its own flag/index/event path so a `hidden` in a data
+    // feed patch behaves exactly like `setNodeHidden` (clears runtime states,
+    // emits `node:visibility`). It also stays in the `node:update` patch below
+    // so generic consumers / the DataSource delta see it.
+    if ('hidden' in patch && patch.hidden !== undefined) {
+      this.applyNodeHidden(id, patch.hidden);
+    }
+
     this.nodeCols.touch();
     this._version++;
     this.enqueueNodeUpdate(id, patch as Partial<GraphNode>);
@@ -547,6 +817,7 @@ export class GraphStore implements DataSource {
     this.nodeMap.delete(id);
     this.nodeCols.remove(id);
     this.nodeRuntimeStates.delete(id);
+    this.hiddenNodeIds.delete(id);
 
     this.nodeCols.touch();
     this._version++;
@@ -623,6 +894,11 @@ export class GraphStore implements DataSource {
     if ('state' in patch) cold.state = patch.state;
     if ('style' in patch) cold.style = patch.style;
 
+    // Visibility rides its own flag/index/event path — see updateNode.
+    if ('hidden' in patch && patch.hidden !== undefined) {
+      this.applyEdgeHidden(id, patch.hidden);
+    }
+
     this.edgeCols.touch();
     this._version++;
     this.enqueueEdgeUpdate(id, patch as Partial<GraphEdge>);
@@ -655,6 +931,7 @@ export class GraphStore implements DataSource {
     this.edgeCols.remove(id);
     this._version++;
     this.edgeRuntimeStates.delete(id);
+    this.hiddenEdgeIds.delete(id);
     this.enqueueEdgeRemove(id);
     this.scheduleFlushIfNeeded();
   }
@@ -1000,6 +1277,8 @@ export class GraphStore implements DataSource {
     this.edgeMap.clear();
     this.nodeRuntimeStates.clear();
     this.edgeRuntimeStates.clear();
+    this.hiddenNodeIds.clear();
+    this.hiddenEdgeIds.clear();
     this.childrenIndex.clear();
     this.outAdj.clearAll();
     this.inAdj.clearAll();
@@ -1015,6 +1294,8 @@ export class GraphStore implements DataSource {
     this.pendingEdgeOrphans.clear();
     this.pendingNodeStates.clear();
     this.pendingEdgeStates.clear();
+    this.pendingNodeVisibility.clear();
+    this.pendingEdgeVisibility.clear();
     this.counters = emptyCounters();
     this.flushScheduler?.cancel();
     this._version++;
@@ -1057,7 +1338,11 @@ export class GraphStore implements DataSource {
       const srcSlot = this.nodeCols.slot(edge.source);
       const dstSlot = this.nodeCols.slot(edge.target);
       if (srcSlot === undefined || dstSlot === undefined) continue;
-      const slot = this.edgeCols.add(id, { srcSlot, dstSlot, flags: 0 });
+      const slot = this.edgeCols.add(id, {
+        srcSlot,
+        dstSlot,
+        flags: this.hiddenEdgeIds.has(id) ? FLAG_HIDDEN : 0,
+      });
       this.outAdj.add(srcSlot, slot);
       this.inAdj.add(dstSlot, slot);
     }
@@ -1078,10 +1363,11 @@ export class GraphStore implements DataSource {
     const slot = this.nodeCols.add(node.id, {
       x: node.position?.x ?? 0,
       y: node.position?.y ?? 0,
-      flags: node.pinned ? FLAG_PINNED : 0,
+      flags: (node.pinned ? FLAG_PINNED : 0) | (node.hidden ? FLAG_HIDDEN : 0),
     });
     this.outAdj.ensureCapacity(slot);
     this.inAdj.ensureCapacity(slot);
+    if (node.hidden) this.hiddenNodeIds.add(node.id);
 
     // Cold payload stored without `position` / `pinned` — those live in columns.
     const cold: GraphNode = { id: node.id };
@@ -1113,9 +1399,14 @@ export class GraphStore implements DataSource {
   }
 
   private installEdge(edge: GraphEdge, srcSlot: number, dstSlot: number): void {
-    const slot = this.edgeCols.add(edge.id, { srcSlot, dstSlot, flags: 0 });
+    const slot = this.edgeCols.add(edge.id, {
+      srcSlot,
+      dstSlot,
+      flags: edge.hidden ? FLAG_HIDDEN : 0,
+    });
     this.outAdj.add(srcSlot, slot);
     this.inAdj.add(dstSlot, slot);
+    if (edge.hidden) this.hiddenEdgeIds.add(edge.id);
 
     const cold: GraphEdge = { id: edge.id, source: edge.source, target: edge.target };
     if (edge.type !== undefined) cold.type = edge.type;
@@ -1265,6 +1556,16 @@ export class GraphStore implements DataSource {
     this.pendingEdgeStates.set(`${id}\u0000${name}`, { id, name, actor });
   }
 
+  /** Queue a node explicit-visibility change; last value per id wins per flush. */
+  private enqueueNodeVisibility(id: string, hidden: boolean): void {
+    this.pendingNodeVisibility.set(id, hidden);
+  }
+
+  /** Queue an edge explicit-visibility change; last value per id wins per flush. */
+  private enqueueEdgeVisibility(id: string, hidden: boolean): void {
+    this.pendingEdgeVisibility.set(id, hidden);
+  }
+
   private scheduleFlushIfNeeded(): void {
     if (this.batchDepth > 0) return;
     if (this.flushMode === 'manual') return; // engine drives flush() from its rAF loop
@@ -1299,6 +1600,8 @@ export class GraphStore implements DataSource {
     const edgeOrphans = this.pendingEdgeOrphans;
     const nodeStates = this.pendingNodeStates;
     const edgeStates = this.pendingEdgeStates;
+    const nodeVisibility = this.pendingNodeVisibility;
+    const edgeVisibility = this.pendingEdgeVisibility;
     const counters = this.counters;
     this.pendingNodeAdds = new Set();
     this.pendingNodeUpdates = new Map();
@@ -1309,6 +1612,8 @@ export class GraphStore implements DataSource {
     this.pendingEdgeOrphans = new Set();
     this.pendingNodeStates = new Map();
     this.pendingEdgeStates = new Map();
+    this.pendingNodeVisibility = new Map();
+    this.pendingEdgeVisibility = new Map();
     this.counters = emptyCounters();
 
     if (
@@ -1320,7 +1625,9 @@ export class GraphStore implements DataSource {
       edgeRemoves.size === 0 &&
       edgeOrphans.size === 0 &&
       nodeStates.size === 0 &&
-      edgeStates.size === 0
+      edgeStates.size === 0 &&
+      nodeVisibility.size === 0 &&
+      edgeVisibility.size === 0
     ) {
       return;
     }
@@ -1351,11 +1658,20 @@ export class GraphStore implements DataSource {
         actor,
       });
     }
+    // Explicit visibility toggles. Only explicit hide/show emit; endpoint-driven
+    // (effective) edge hiding is derived and produces no event here.
+    for (const [id, hidden] of nodeVisibility) {
+      this.events.emit('node:visibility', { nodeId: id, hidden });
+    }
+    for (const [id, hidden] of edgeVisibility) {
+      this.events.emit('edge:visibility', { edgeId: id, hidden });
+    }
 
     // DataSource (D13) — project this flush's topology/position deltas into a
     // LayerFlush for the kernel `data:flush` bridge. Position-only node updates →
-    // `moved`; everything else → `changed`. Pure state toggles (no add/update/
-    // remove) and silent sim-tick position writes don't appear here.
+    // `moved`; everything else → `changed`. Explicit visibility changes count as
+    // `changed` so the projection re-renders the element. Pure state toggles and
+    // silent sim-tick position writes don't appear here.
     if (
       this.flushListeners.size > 0 &&
       (nodeAdds.size > 0 ||
@@ -1363,18 +1679,29 @@ export class GraphStore implements DataSource {
         nodeRemoves.size > 0 ||
         edgeAdds.size > 0 ||
         edgeUpdates.size > 0 ||
-        edgeRemoves.size > 0)
+        edgeRemoves.size > 0 ||
+        nodeVisibility.size > 0 ||
+        edgeVisibility.size > 0)
     ) {
       const moved: string[] = [];
-      const changed: string[] = [];
+      const changedSet = new Set<string>();
       for (const [id, patch] of nodeUpdates) {
         const keys = Object.keys(patch);
         if (keys.length === 1 && keys[0] === 'position') moved.push(id);
-        else changed.push(id);
+        else changedSet.add(id);
       }
+      for (const id of nodeVisibility.keys()) changedSet.add(id);
+      const edgeChangedSet = new Set<string>(edgeUpdates.keys());
+      for (const id of edgeVisibility.keys()) edgeChangedSet.add(id);
       const delta: LayerFlush = {
-        nodes: { added: [...nodeAdds], changed, removed: [...nodeRemoves], moved, movedAll: false },
-        edges: { added: [...edgeAdds], changed: [...edgeUpdates.keys()], removed: [...edgeRemoves] },
+        nodes: {
+          added: [...nodeAdds],
+          changed: [...changedSet],
+          removed: [...nodeRemoves],
+          moved,
+          movedAll: false,
+        },
+        edges: { added: [...edgeAdds], changed: [...edgeChangedSet], removed: [...edgeRemoves] },
         groups: { added: [], changed: [], removed: [] },
         annotations: { added: [], changed: [], removed: [] },
         version: this._version,

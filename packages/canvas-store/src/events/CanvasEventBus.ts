@@ -25,6 +25,12 @@ export interface CanvasGlobalEvents {
   // ── scene — registry composition (engine-emitted) ───────────────────────────
   'scene:layer:add': { id: string };
   'scene:layer:remove': { id: string };
+  /**
+   * A layer's whole-layer `visible` flag changed via `Layer.setVisible`. Lets
+   * dependent layers (e.g. a `MiniMapLayer` mirroring a source graph) react
+   * without polling. `visible` is the post-change value.
+   */
+  'scene:layer:visibilitychange': { id: string; visible: boolean };
   'scene:behaviour:register': { id: string };
   'scene:behaviour:enable': { id: string };
   'scene:behaviour:disable': { id: string };

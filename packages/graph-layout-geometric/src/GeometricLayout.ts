@@ -25,7 +25,11 @@ const DEFAULT_CIRCULAR_SPACING = 50;
 export class GeometricLayout extends OneShotPositionLayout<GeometricLayoutOptions> {
   protected computeLayout(layer: GraphLayer): LayoutPositions | null {
     const ids: string[] = [];
-    for (const n of layer.store.nodes()) ids.push(n.id);
+    // Exclude explicitly-hidden nodes (unless `includeHidden`) so they don't
+    // occupy grid/circle slots; their last positions stay frozen.
+    for (const node of layer.store.nodes()) {
+      if (this.shouldPlaceNode(node)) ids.push(node.id);
+    }
     const n = ids.length;
     if (n === 0) return null;
 

@@ -96,7 +96,10 @@ export class D3HierarchyLayout extends OneShotPositionLayout<D3HierarchyLayoutOp
     //    payload travels along so pack-mode's `value` accessor can read it.
     const ids: string[] = [];
     const nodeById = new Map<string, TreeNode>();
+    // Exclude explicitly-hidden nodes (unless `includeHidden`) — they keep their
+    // frozen positions and drop out of the tree.
     for (const n of store.nodes()) {
+      if (!this.shouldPlaceNode(n)) continue;
       ids.push(n.id);
       nodeById.set(n.id, { id: n.id, data: n.data });
     }
@@ -109,10 +112,15 @@ export class D3HierarchyLayout extends OneShotPositionLayout<D3HierarchyLayoutOp
       const parent = nodeById.get(e.source);
       const child = nodeById.get(e.target);
       if (!parent || !child) {
-        throw new Error(
-          `D3HierarchyLayout: edge "${e.id}" references unknown endpoint(s) (` +
-            `source="${e.source}", target="${e.target}")`,
-        );
+        // A genuinely-unknown endpoint is still an error; an endpoint that was
+        // merely excluded because it's hidden just drops the edge from the tree.
+        if (!store.hasNode(e.source) || !store.hasNode(e.target)) {
+          throw new Error(
+            `D3HierarchyLayout: edge "${e.id}" references unknown endpoint(s) (` +
+              `source="${e.source}", target="${e.target}")`,
+          );
+        }
+        continue;
       }
       parent.children = parent.children ?? [];
       parent.children.push(child);

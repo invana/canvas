@@ -415,6 +415,19 @@ export class GraphLayer extends WorldLayer<
       s.on('edge:state', ({ edgeId }) => {
         this.dirtyStateEdges.add(edgeId);
       }),
+      // Explicit per-element visibility. Re-render the node (its spec now
+      // carries `visible: false`) and cascade to every incident edge, whose
+      // *effective* visibility follows this endpoint (derived — the store fires
+      // no per-edge event). Both drain once via the `flush` handler below.
+      s.on('node:visibility', ({ nodeId }) => {
+        this.dirtyStateNodes.add(nodeId);
+        for (const edge of this.store.edgesOf(nodeId, 'both')) {
+          this.dirtyStateEdges.add(edge.id);
+        }
+      }),
+      s.on('edge:visibility', ({ edgeId }) => {
+        this.dirtyStateEdges.add(edgeId);
+      }),
       s.on('flush', (counters) => {
         // Groups first — their frames may grow / shrink based on freshly-
         // mutated child positions, which in turn shifts the anchor points
@@ -589,6 +602,9 @@ export class GraphLayer extends WorldLayer<
    */
   serializeDefinition(): Record<string, unknown> | undefined {
     return jsonSafe({
+      // Whole-layer visibility so a hidden layer restores hidden. Only emitted
+      // when hidden (default is visible) to keep the definition slice lean.
+      ...(this.visible === false ? { visible: false } : {}),
       ...(this.nodeOption ? { node: this.nodeOption } : {}),
       ...(this.edgeOption ? { edge: this.edgeOption } : {}),
       ...(this.options.useDefaultStates !== undefined
@@ -640,6 +656,18 @@ export class GraphLayer extends WorldLayer<
   override redraw(): void {
     for (const node of this.store.nodes()) this.rerenderNode(node.id);
     for (const edge of this.store.edges()) this.rerenderEdge(edge.id);
+  }
+
+  /**
+   * Keep hit-testing in step with whole-layer visibility. `WorldLayer` hides the
+   * pixi container; graph picking runs through the renderer's own pointer router
+   * (not `layer.hitTest`), so a hidden layer would otherwise stay clickable. Gate
+   * the renderer's `hitTest` so a hidden layer's nodes/edges are non-interactive
+   * too (decision 11 of the visibility plan).
+   */
+  protected override onVisibleChange(value: boolean): void {
+    super.onVisibleChange(value);
+    this._renderer?.setHitTestEnabled(value);
   }
 
   /**
@@ -956,6 +984,136 @@ export class GraphLayer extends WorldLayer<
     return this._renderer.boundsOfSpec(this.nodeSpec(node));
   }
 
+  /**
+   * World-space AABB of everything currently **visible** on this layer — the
+   * "fit to content" rect. Overrides {@link WorldLayer.getBounds} to exclude
+   * effectively-hidden elements deterministically (explicitly-hidden nodes/edges
+   * and collapsed-group descendants), rather than depending on the renderer's
+   * scene-graph bounds semantics for `visible: false` display objects.
+   *
+   * @param opts `includeHidden: true` unions hidden elements back in (default
+   *   `false`). Falls back to the base scene-graph bounds before the renderer
+   *   mounts or when nothing visible is aggregated.
+   */
+  override getBounds(opts?: { includeHidden?: boolean }): Rect {
+    const includeHidden = opts?.includeHidden ?? false;
+    const renderer = this._renderer;
+    if (!renderer) return super.getBounds();
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    let any = false;
+    const union = (r: Rect | null): void => {
+      if (!r) return;
+      any = true;
+      if (r.x < minX) minX = r.x;
+      if (r.y < minY) minY = r.y;
+      if (r.x + r.width > maxX) maxX = r.x + r.width;
+      if (r.y + r.height > maxY) maxY = r.y + r.height;
+    };
+
+    for (const node of this.store.nodes()) {
+      if (!includeHidden && node.hidden === true) continue;
+      if (!includeHidden && this.collapsedAncestor(node.id) !== undefined) continue;
+      union(renderer.getShapeWorldBounds(node.id));
+    }
+    for (const edge of this.store.edges()) {
+      if (!includeHidden && !this.store.isEdgeVisible(edge.id)) continue;
+      const poly = renderer.getConnectorPolyline(edge.id);
+      if (!poly || poly.length === 0) continue;
+      for (const p of poly) union({ x: p.x, y: p.y, width: 0, height: 0 });
+    }
+
+    if (!any) return super.getBounds();
+    return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+  }
+
+  // ─── Visibility (hide / show) ─────────────────────────────────────────────
+  //
+  // Convenience wrappers over the store so callers that already hold the layer
+  // (they call `focusNode` / `focusEdges`) don't reach into the store. The store
+  // owns the effective-visibility rule + events; the renderer culls hidden
+  // elements via the `visible` flag in `nodeSpec` / `edgeSpec`, and the
+  // node-hide path cascades to incident edges through the store's
+  // `node:visibility` handler above.
+
+  /** Hide a node (culls it + its incident edges). Delegates to the store. */
+  hideNode(id: string): void {
+    this.store.hideNode(id);
+  }
+
+  /** Show a previously-hidden node. Delegates to the store. */
+  showNode(id: string): void {
+    this.store.showNode(id);
+  }
+
+  /** Flip a node's hidden flag. Returns the resulting hidden state. */
+  toggleNodeHidden(id: string): boolean {
+    return this.store.toggleNodeHidden(id);
+  }
+
+  /** True iff the node is explicitly hidden. */
+  isNodeHidden(id: string): boolean {
+    return this.store.isNodeHidden(id);
+  }
+
+  /** Effective visibility of a node (live and not explicitly hidden). */
+  isNodeVisible(id: string): boolean {
+    return this.store.isNodeVisible(id);
+  }
+
+  /** Hide many nodes in one batch → one paint. */
+  hideNodes(ids: Iterable<string>): void {
+    this.store.hideNodes(ids);
+  }
+
+  /** Show many nodes in one batch → one paint. */
+  showNodes(ids: Iterable<string>): void {
+    this.store.showNodes(ids);
+  }
+
+  /** Hide an edge. Delegates to the store. */
+  hideEdge(id: string): void {
+    this.store.hideEdge(id);
+  }
+
+  /** Show a previously-hidden edge. Delegates to the store. */
+  showEdge(id: string): void {
+    this.store.showEdge(id);
+  }
+
+  /** Flip an edge's hidden flag. Returns the resulting hidden state. */
+  toggleEdgeHidden(id: string): boolean {
+    return this.store.toggleEdgeHidden(id);
+  }
+
+  /** True iff the edge's explicit hidden flag is set. */
+  isEdgeHidden(id: string): boolean {
+    return this.store.isEdgeHidden(id);
+  }
+
+  /** Effective visibility of an edge (not hidden and both endpoints visible). */
+  isEdgeVisible(id: string): boolean {
+    return this.store.isEdgeVisible(id);
+  }
+
+  /** Hide many edges in one batch → one paint. */
+  hideEdges(ids: Iterable<string>): void {
+    this.store.hideEdges(ids);
+  }
+
+  /** Show many edges in one batch → one paint. */
+  showEdges(ids: Iterable<string>): void {
+    this.store.showEdges(ids);
+  }
+
+  /** Clear every explicit hidden flag (nodes + edges). */
+  showAllHidden(): void {
+    this.store.showAllHidden();
+  }
+
   // ─── Viewport framing ─────────────────────────────────────────────────────
 
   /**
@@ -968,11 +1126,16 @@ export class GraphLayer extends WorldLayer<
    * action) don't have to. Focus locates a target; zooming stays a separate,
    * explicit gesture (wheel / pinch / fit-to-content).
    *
-   * @param ids Node ids to centre on.
+   * @param ids  Node ids to centre on.
+   * @param opts `includeHidden: true` also considers explicitly-hidden nodes
+   *   (default `false` — hidden nodes are skipped so framing tracks what's
+   *   visible).
    */
-  focusNodes(ids: Iterable<string>): void {
+  focusNodes(ids: Iterable<string>, opts?: { includeHidden?: boolean }): void {
+    const includeHidden = opts?.includeHidden ?? false;
     const pts: Array<{ x: number; y: number }> = [];
     for (const id of ids) {
+      if (!includeHidden && this.store.isNodeHidden(id)) continue;
       const pos = this.store.getPosition(id);
       if (pos) pts.push(pos);
     }
@@ -992,8 +1155,8 @@ export class GraphLayer extends WorldLayer<
    *   scale, but never zooms out (a no-op if already closer). Omit for a pure
    *   pan at the current zoom.
    */
-  focusNode(id: string, opts?: { zoom?: number }): void {
-    this.focusNodes([id]);
+  focusNode(id: string, opts?: { zoom?: number; includeHidden?: boolean }): void {
+    this.focusNodes([id], { includeHidden: opts?.includeHidden ?? false });
     const camera = this.ctx?.camera;
     if (camera && opts?.zoom !== undefined) {
       camera.setZoom(Math.max(camera.scale, opts.zoom));
@@ -1006,13 +1169,18 @@ export class GraphLayer extends WorldLayer<
    * ids (or edges with an unplaced endpoint) are skipped; a no-op when none
    * resolve or the layer isn't mounted.
    *
-   * @param ids Edge ids to centre on.
+   * @param ids  Edge ids to centre on.
+   * @param opts `includeHidden: true` also considers effectively-hidden edges
+   *   (default `false` — hidden edges, including those hidden because an
+   *   endpoint is, are skipped).
    */
-  focusEdges(ids: Iterable<string>): void {
+  focusEdges(ids: Iterable<string>, opts?: { includeHidden?: boolean }): void {
+    const includeHidden = opts?.includeHidden ?? false;
     const pts: Array<{ x: number; y: number }> = [];
     for (const id of ids) {
       const edge = this.store.getEdge(id);
       if (!edge) continue;
+      if (!includeHidden && !this.store.isEdgeVisible(id)) continue;
       const a = this.store.getPosition(edge.source);
       const b = this.store.getPosition(edge.target);
       if (a) pts.push(a);
@@ -1054,11 +1222,13 @@ export class GraphLayer extends WorldLayer<
       pos = fitted.pos;
     }
 
-    // Visibility — a node is hidden when any ancestor is a collapsed group.
-    // We still emit a spec (so decorations / size are valid for any incident
-    // edge re-route math against the group node), but with `visible: false`
-    // so PixiJS skips drawing it.
+    // Visibility — a node is culled when any ancestor is a collapsed group, or
+    // when it is explicitly hidden (first-class per-element visibility). We
+    // still emit a spec (so decorations / size are valid for any incident edge
+    // re-route math against the node), but with `visible: false` so the
+    // renderer skips drawing AND hit-testing it.
     const hiddenByGroup = this.collapsedAncestor(node.id) !== undefined;
+    const culled = hiddenByGroup || node.hidden === true;
 
     // Project the resolved style into a `ShapeFill` for the renderer.
     // Layers stack bottom-up:
@@ -1153,9 +1323,9 @@ export class GraphLayer extends WorldLayer<
       ...(zIndex !== undefined ? { zIndex } : {}),
       // Always emit `visible` — the renderer partial-merges patches onto
       // the cached spec, so omitting the field on the "now visible" pass
-      // after a collapse → expand transition would leave the previous
-      // `visible: false` in place and the descendant would stay hidden.
-      visible: !hiddenByGroup,
+      // after a collapse → expand (or show) transition would leave the previous
+      // `visible: false` in place and the node would stay hidden.
+      visible: !culled,
     } as BaseShapeSpec;
   }
 
@@ -1211,6 +1381,12 @@ export class GraphLayer extends WorldLayer<
     const isCollapseSelfLoop =
       sourceShapeId === targetShapeId && edge.source !== edge.target;
 
+    // First-class visibility: an edge is culled when it is a collapse self-loop
+    // OR effectively hidden — explicitly hidden, or either endpoint is hidden
+    // (the store owns the rule; `isEdgeVisible` derives it). Emitting
+    // `visible: false` keeps it out of both drawing and hit-testing.
+    const edgeVisible = !isCollapseSelfLoop && this.store.isEdgeVisible(edge.id);
+
     return {
       kind: 'connector',
       source: { kind: 'shape', shapeId: sourceShapeId, anchor: sourceAnchorSpec },
@@ -1227,7 +1403,7 @@ export class GraphLayer extends WorldLayer<
         ...(style.strokeDashOffset !== undefined ? { dashOffset: style.strokeDashOffset } : {}),
       },
       alpha,
-      visible: !isCollapseSelfLoop,
+      visible: edgeVisible,
       // Always emit the marker keys (as `undefined` when off), never omit them.
       // `updateConnector` shallow-merges the spec, so an omitted key would keep a
       // previously-drawn marker — e.g. an edge that first renders with the default

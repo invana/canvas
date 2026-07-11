@@ -90,14 +90,21 @@ export class D3SankeyLayout extends Layout<GraphLayer> {
     //    string ids work directly via `nodeId`.
     const ids: string[] = [];
     const nodes: SankeyNodeRef[] = [];
+    // Exclude explicitly-hidden nodes (unless `includeHidden`) — frozen, and
+    // links touching them are dropped below.
+    const includeHidden = this.opts.includeHidden === true;
+    const placeable = new Set<string>();
     for (const n of store.nodes()) {
+      if (!includeHidden && n.hidden === true) continue;
       ids.push(n.id);
       nodes.push({ id: n.id });
+      placeable.add(n.id);
     }
     if (ids.length === 0) return;
 
     const links: SankeyLinkRef[] = [];
     for (const e of store.edges()) {
+      if (!placeable.has(e.source) || !placeable.has(e.target)) continue;
       const data = e.data as { value?: unknown } | undefined;
       const value = data && typeof data.value === 'number' ? data.value : undefined;
       if (value === undefined || !Number.isFinite(value) || value <= 0) {

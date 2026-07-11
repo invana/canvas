@@ -419,6 +419,7 @@ export class LassoSelectBehaviour extends Behaviour {
     const enclosedShapes = new Set<string>();
     if (wantShapes) {
       for (const node of layer.store.nodes()) {
+        if (node.hidden === true) continue; // lasso skips hidden nodes
         const pos = node.position ?? { x: 0, y: 0 };
         if (pointInPolygon(pos.x, pos.y, polygon)) enclosedShapes.add(node.id);
       }
@@ -426,6 +427,7 @@ export class LassoSelectBehaviour extends Behaviour {
     const enclosedConnectors = new Set<string>();
     if (wantConnectors) {
       for (const edge of layer.store.edges()) {
+        if (!layer.store.isEdgeVisible(edge.id)) continue; // and hidden edges
         if (enclosedShapes.has(edge.source) && enclosedShapes.has(edge.target)) {
           enclosedConnectors.add(edge.id);
         }

@@ -58,6 +58,9 @@ class FakeLayer implements ILayer {
     return this.pendingValue;
   }
   redraw(): void {}
+  setVisible(visible: boolean): void {
+    this.visible = visible;
+  }
 }
 
 // ─── Tests ─────────────────────────────────────────────────────────────────

@@ -189,7 +189,12 @@ export class D3ForceLayout extends Layout<GraphLayer> {
    * settled) reheats to `reheatAlpha` for stability; the first run uses `alpha`.
    */
   private snapshotStatic(store: GraphLayer['store']): { ids: string[]; input: ForceSolveInput } {
-    const nodeList = [...store.nodes()];
+    // Exclude explicitly-hidden nodes (unless `includeHidden`); their incident
+    // edges drop out below (endpoints missing from `indexOf`).
+    const includeHidden = this.opts.includeHidden === true;
+    const nodeList = includeHidden
+      ? [...store.nodes()]
+      : [...store.nodes()].filter((n) => n.hidden !== true);
     const count = nodeList.length;
     const ids: string[] = new Array(count);
     const positions = new Float32Array(count * 2);
@@ -290,7 +295,10 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     this.graphNodeById.clear();
     this.pinnedIds.clear();
     this.draggedIds.clear();
+    // Exclude explicitly-hidden nodes (unless `includeHidden`) from the live sim.
+    const includeHidden = this.opts.includeHidden === true;
     for (const n of store.nodes()) {
+      if (!includeHidden && n.hidden === true) continue;
       const pos = store.getPosition(n.id);
       const node: SimNode = { id: n.id };
       if (n.pinned) {
@@ -322,6 +330,9 @@ export class D3ForceLayout extends Layout<GraphLayer> {
 
     const links: SimLink[] = [];
     for (const e of store.edges()) {
+      // Drop links to excluded (hidden) nodes — d3-force errors on a link that
+      // references an id absent from the node set.
+      if (!this.nodeById.has(e.source) || !this.nodeById.has(e.target)) continue;
       links.push({ source: e.source, target: e.target });
     }
 

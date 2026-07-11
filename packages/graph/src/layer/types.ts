@@ -1048,6 +1048,13 @@ export interface NodeData<D = unknown> {
   readonly position?: { readonly x: number; readonly y: number };
   readonly pinned?: boolean;
   /**
+   * True iff this node is explicitly hidden — culled from render, hit-test,
+   * bounds, layout, labels and minimap (not merely alpha-0). Sibling of
+   * {@link pinned}. Prefer `graph.hideNode(id)` / `store.setNodeHidden(...)` at
+   * runtime; this field is for authored / serialized data.
+   */
+  readonly hidden?: boolean;
+  /**
    * Logical parent id — the only hierarchy field. Use this for both tree
    * structures AND group/combo membership (the parent is just a regular
    * node that visually represents the group). The store auto-maintains an
@@ -1072,6 +1079,8 @@ export interface NodeInput<D = unknown> {
   readonly states?: readonly string[];
   readonly position?: { readonly x: number; readonly y: number };
   readonly pinned?: boolean;
+  /** Explicitly hidden — see {@link NodeData.hidden}. */
+  readonly hidden?: boolean;
   readonly parentId?: string;
 }
 
@@ -1229,6 +1238,13 @@ export interface EdgeData<D = unknown> {
   readonly style?: EdgeStyle;
   readonly state?: Readonly<Record<string, EdgeStyle>>;
   readonly states?: readonly string[] | null;
+  /**
+   * True iff this edge is explicitly hidden. Note an edge is also *effectively*
+   * hidden when either endpoint is hidden (derived — see `store.isEdgeVisible`).
+   * Prefer `graph.hideEdge(id)` at runtime; this field is for authored /
+   * serialized data.
+   */
+  readonly hidden?: boolean;
 }
 
 /** Resolver-aware input shape for an edge. */
@@ -1241,6 +1257,8 @@ export interface EdgeInput<D = unknown> {
   readonly style?: ResolvableEdgeStyle<D>;
   readonly state?: Readonly<Record<string, ResolvableEdgeStyle<D>>>;
   readonly states?: readonly string[];
+  /** Explicitly hidden — see {@link EdgeData.hidden}. */
+  readonly hidden?: boolean;
 }
 
 /** Layer-level edge template — G6's `edge` field. */

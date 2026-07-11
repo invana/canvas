@@ -472,8 +472,15 @@ export class ClickSelectBehaviour extends Behaviour {
     if (!this.layer) return;
     const store = this.layer.store;
     const next: Array<{ id: string; type: SelectableElementType }> = [];
-    for (const node of store.nodes()) next.push({ id: node.id, type: 'shape' });
-    for (const edge of store.edges()) next.push({ id: edge.id, type: 'connector' });
+    // Skip effectively-hidden elements — you can't select what you can't see.
+    for (const node of store.nodes()) {
+      if (node.hidden === true) continue;
+      next.push({ id: node.id, type: 'shape' });
+    }
+    for (const edge of store.edges()) {
+      if (!store.isEdgeVisible(edge.id)) continue;
+      next.push({ id: edge.id, type: 'connector' });
+    }
     this.selectMultiple(next);
   }
 
@@ -489,8 +496,16 @@ export class ClickSelectBehaviour extends Behaviour {
     if (!this.layer) return;
     const store = this.layer.store;
     const next: Array<{ id: string; type: SelectableElementType }> = [{ id, type: 'shape' }];
-    for (const nb of store.neighborsOf(id, dir)) next.push({ id: nb, type: 'shape' });
-    for (const e of store.edgesOf(id, dir)) next.push({ id: e.id, type: 'connector' });
+    // Skip hidden neighbours + edges so the neighbourhood select mirrors what's
+    // visible.
+    for (const nb of store.neighborsOf(id, dir)) {
+      if (store.isNodeHidden(nb)) continue;
+      next.push({ id: nb, type: 'shape' });
+    }
+    for (const e of store.edgesOf(id, dir)) {
+      if (!store.isEdgeVisible(e.id)) continue;
+      next.push({ id: e.id, type: 'connector' });
+    }
     this.selectMultiple(next);
   }
 
@@ -591,8 +606,12 @@ export class ClickSelectBehaviour extends Behaviour {
       const next: string[] = [];
       for (const u of frontier) {
         for (const e of store.edgesOf(u, direction)) {
+          // Don't expand through hidden edges / into hidden nodes — the
+          // selection tracks the visible graph.
+          if (!store.isEdgeVisible(e.id)) continue;
           if (!expanded.has(e.id)) expanded.set(e.id, 'connector');
           const otherId = e.source === u ? e.target : e.source;
+          if (store.isNodeHidden(otherId)) continue;
           if (!expanded.has(otherId)) {
             expanded.set(otherId, 'shape');
             next.push(otherId);

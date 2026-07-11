@@ -52,6 +52,7 @@ export interface ILayer {
   flush(): void;
   hasPending(): boolean;
   redraw(): void;
+  setVisible(visible: boolean): void;
 }
 
 // ─── Constructor options ───────────────────────────────────────────────────
@@ -105,6 +106,22 @@ export abstract class Layer<
     if (this._visible === value) return;
     this._visible = value;
     this.onVisibleChange(value);
+  }
+
+  /**
+   * Toggle whole-layer visibility, repaint, and announce it. Unlike assigning
+   * `visible` (which only hides the pixi container via {@link onVisibleChange}),
+   * this also forces a {@link redraw} and emits `scene:layer:visibilitychange`
+   * on the canvas bus so dependent layers (minimap) and the render loop react
+   * automatically. No-op if the value is unchanged.
+   */
+  setVisible(visible: boolean): void {
+    if (this._visible === visible) return;
+    this.visible = visible; // runs onVisibleChange (container.visible sync)
+    // Repaint from current state so a re-shown renderer-backed layer restores
+    // its content without waiting for the next mutation.
+    if (visible) this.redraw();
+    this.ctx?.events.emit('scene:layer:visibilitychange', { id: this.id, visible });
   }
 
   /** Set by `mount(ctx)`; cleared by `unmount()`. */

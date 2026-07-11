@@ -124,16 +124,23 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
     const ids: string[] = [];
     const sizes: NodeSize[] = [];
     const children: ElkNode[] = [];
+    // Exclude explicitly-hidden nodes (unless `includeHidden`) — they keep their
+    // frozen positions and don't influence the solve. `placeable` tracks which
+    // ids made it in so incident edges to hidden nodes can be dropped.
+    const placeable = new Set<string>();
     for (const n of store.nodes()) {
+      if (!this.shouldPlaceNode(n)) continue;
       const size = sizeOf(n) ?? FALLBACK_NODE_SIZE;
       ids.push(n.id);
       sizes.push(size);
       children.push({ id: n.id, width: size.width, height: size.height });
+      placeable.add(n.id);
     }
     if (children.length === 0) return null;
 
     const edges: ElkExtendedEdge[] = [];
     for (const e of store.edges()) {
+      if (!placeable.has(e.source) || !placeable.has(e.target)) continue;
       edges.push({ id: e.id, sources: [e.source], targets: [e.target] });
     }
 

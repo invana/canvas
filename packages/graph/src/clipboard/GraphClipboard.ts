@@ -90,11 +90,15 @@ export class GraphClipboard {
   copy(nodeIds: readonly string[], edgeIds: readonly string[] = []): void {
     this.bufferedNodes = [];
     this.bufferedEdges = [];
+    // Skip effectively-hidden elements — you only copy what you can see, so a
+    // paste never silently produces invisible nodes/edges.
     for (const id of nodeIds) {
+      if (this.store.isNodeHidden(id)) continue;
       const node = this.store.getNode(id);
       if (node) this.bufferedNodes.push(node);
     }
     for (const id of edgeIds) {
+      if (!this.store.isEdgeVisible(id)) continue;
       const edge = this.store.getEdge(id);
       if (edge) this.bufferedEdges.push(edge);
     }

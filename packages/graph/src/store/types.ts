@@ -30,6 +30,15 @@ export interface GraphNode<D = unknown> {
   position?: { x: number; y: number };
   /** True iff layouts must not move this node. */
   pinned?: boolean;
+  /**
+   * True iff this node is explicitly hidden. A hidden node is culled from the
+   * render batch, hit-test, bounds/camera, layout, labels and minimap — it is
+   * *not* merely alpha-0. Sibling of {@link pinned}; stored as a bit in the
+   * hot `flags` column, not on the cold record. Hiding a node also makes its
+   * incident edges *effectively* hidden without flagging them (see
+   * `GraphStore.isEdgeVisible`). Default `false`.
+   */
+  hidden?: boolean;
 
   /**
    * Currently-active state names (plural). Each name should match a key in
@@ -75,6 +84,13 @@ export interface GraphEdge<D = unknown> {
   data?: D;
   /** Sibling of {@link GraphNode.states} — currently-active state names. */
   states?: readonly string[] | null;
+  /**
+   * True iff this edge is explicitly hidden. Sibling of {@link GraphNode.hidden}
+   * (stored as a bit in the edge `flags` column). Note an edge is *effectively*
+   * hidden when it is explicitly hidden **or** either endpoint is hidden — see
+   * `GraphStore.isEdgeVisible`. Default `false`.
+   */
+  hidden?: boolean;
   /** Per-instance style. Typed by consumer as `EdgeStyle`. */
   style?: unknown;
   /** Per-instance overlay catalogue. Typed by consumer as `Record<string, EdgeStyle>`. */
@@ -150,6 +166,19 @@ export type GraphStoreEventMap = {
   'node:state': { nodeId: string; name: string; on: boolean; actor?: string };
   /** Edge sibling of `node:state`. */
   'edge:state': { edgeId: string; name: string; on: boolean; actor?: string };
+  /**
+   * A node's **explicit** hidden flag changed. `hidden` is the post-change
+   * value. Fired only for explicit `hideNode`/`showNode`/`setNodeHidden`
+   * changes — the incident-edge cascade emits *nothing* (consumers derive it
+   * via `isEdgeVisible` and react to this event). Deduped per id within the
+   * flush window; bulk ops coalesce into one flush.
+   */
+  'node:visibility': { nodeId: string; hidden: boolean };
+  /**
+   * Edge sibling of `node:visibility` — fired only when an edge's **explicit**
+   * hidden flag changes, never for endpoint-driven (effective) hiding.
+   */
+  'edge:visibility': { edgeId: string; hidden: boolean };
   /** Aggregate counts per flush. Fires once per batch / RAF flush. */
   flush: {
     addedNodes: number;

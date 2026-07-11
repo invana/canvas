@@ -237,6 +237,11 @@ export class MiniMapLayer extends ScreenLayer<
     this.offCameraZoom = ctx.events.on('input:camera:zoom', () => this.repaint());
     const offDataChanged = graph.events.on('data:changed', () => this.repaint());
     const offStyleChanged = graph.events.on('style:changed', () => this.repaint());
+    // Repaint when the mirrored source graph layer's whole-layer visibility is
+    // toggled via `Layer.setVisible`, so the minimap blanks / restores with it.
+    const offSourceVisibility = ctx.events.on('scene:layer:visibilitychange', ({ id }) => {
+      if (id === graph.id) this.repaint();
+    });
 
     // Mirror the referenced background layer's colour: subscribe to that layer's
     // config slice on the reactive store (`store.view.definition.layers[id]`) and
@@ -261,6 +266,7 @@ export class MiniMapLayer extends ScreenLayer<
     this.offResize = () => {
       offDataChanged();
       offStyleChanged();
+      offSourceVisibility();
       offOptions();
       prevOffResize?.();
     };
@@ -420,6 +426,9 @@ export class MiniMapLayer extends ScreenLayer<
     // back to a straight endpoint-to-endpoint line only when the renderer
     // isn't available (pre-mount) or hasn't installed the connector yet.
     for (const edge of graph.store.edges()) {
+      // Skip effectively-hidden edges (explicitly hidden or an endpoint hidden)
+      // so the minimap mirrors what the canvas actually draws.
+      if (!graph.store.isEdgeVisible(edge.id)) continue;
       // Resolve the *effective* style — same merge the renderer sees — so
       // colours, widths and alphas set via the layer template / resolvers /
       // state overlays (not just concrete `edge.style`) are mirrored. Reading
@@ -469,6 +478,8 @@ export class MiniMapLayer extends ScreenLayer<
     // layer-template / resolver / state-overlay colours (e.g. colour-by-label)
     // are mirrored, not just concrete per-node `style.bgFill`.
     for (const node of graph.store.nodes()) {
+      // Skip hidden nodes — culled from the canvas, so culled from the minimap.
+      if (node.hidden === true) continue;
       const bounds = renderer?.getShapeWorldBounds(node.id) ?? this.fallbackNodeBounds(node);
       if (!bounds) continue;
       const tl = this.worldToMinimap(bounds.x, bounds.y);
@@ -571,6 +582,7 @@ export class MiniMapLayer extends ScreenLayer<
       maxY = -Infinity;
     let any = false;
     for (const node of graph.store.nodes()) {
+      if (node.hidden === true) continue;
       const b = renderer?.getShapeWorldBounds(node.id) ?? this.fallbackNodeBounds(node);
       if (!b) continue;
       any = true;

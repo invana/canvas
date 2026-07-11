@@ -22,6 +22,13 @@ import type { GraphNode } from '@invana/graph';
 export interface D3ForceLayoutOptions {
   // ─── Run-loop behaviour ───────────────────────────────────────────────
   /**
+   * Include explicitly-hidden nodes in the simulation. Default `false` — hidden
+   * nodes (and links touching them) are excluded so they don't perturb the
+   * force field, and their last positions stay frozen (never written back).
+   */
+  includeHidden?: boolean;
+
+  /**
    * When `true` (default), positions are written back to the store on
    * every d3-force tick — the renderer animates the simulation as it
    * settles.

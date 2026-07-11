@@ -60,3 +60,4 @@ working design-of-record documents. Day-to-day API/concept docs live in
 
 - [text-labels-plan.md](./text-labels-plan.md) — text labels for nodes & edges.
 - [badges-edges-plan.md](./badges-edges-plan.md) — badges on edges + node parity (draft).
+- [per-element-visibility-plan.md](./per-element-visibility-plan.md) — **first-class per-element hide/show** for nodes & edges (single + batched bulk), a `hidden` flag stored as a `flags`-column bit (sibling of `pinned`) with the effective-visibility rule (edge hidden if an endpoint is) owned by `GraphStore`. Culls from render/hit-test/bounds/camera/layout/labels/minimap (not `alpha 0`), fixing invisible-but-clickable; `node:visibility`/`edge:visibility` events (derived-only incident-edge cascade), serialization round-trip, and `Layer.setVisible` + `scene:layer:visibilitychange` for whole-layer visibility.

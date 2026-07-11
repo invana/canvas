@@ -45,6 +45,13 @@ export interface SankeyLinkRef extends SankeyLinkMinimal<SankeyNodeRef, SankeyLi
  */
 export interface D3SankeyLayoutOptions extends LayoutOptions {
   /**
+   * Include explicitly-hidden nodes in the layout. Default `false` — hidden
+   * nodes (and links touching them) are excluded so they don't take up columns,
+   * and their last positions stay frozen.
+   */
+  includeHidden?: boolean;
+
+  /**
    * Viewport size `[width, height]` the layout fills. Translated to
    * `d3.sankey().extent([[0, 0], [width, height]])`. Default `[1000, 600]`.
    */

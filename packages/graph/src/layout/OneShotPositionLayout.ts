@@ -46,6 +46,12 @@ export interface OneShotLayoutOptions extends LayoutOptions {
    * Default `'easeOutCubic'`. Ignored when `transition` is `false`.
    */
   transitionEase?: EasingName;
+  /**
+   * Include explicitly-hidden nodes in the layout. Default `false` — hidden
+   * nodes are excluded from placement so they don't perturb the visible graph,
+   * and their last positions are left frozen (the layout never writes them).
+   */
+  includeHidden?: boolean;
 }
 
 /**
@@ -126,6 +132,17 @@ export abstract class OneShotPositionLayout<
    * manages cancellation, and fires the lifecycle.
    */
   protected abstract computeLayout(layer: GraphLayer): LayoutPositions | null | Promise<LayoutPositions | null>;
+
+  /**
+   * Whether a node should be placed by this run. Excludes explicitly-hidden
+   * nodes unless {@link OneShotLayoutOptions.includeHidden} is set. Subclasses
+   * call this while snapshotting `layer.store.nodes()` so hidden nodes stay
+   * frozen at their last positions. Edges incident to a skipped node should be
+   * dropped from the layout graph too (both endpoints must be placeable).
+   */
+  protected shouldPlaceNode(node: { hidden?: boolean }): boolean {
+    return this.opts.includeHidden === true || node.hidden !== true;
+  }
 
   /**
    * Hook run once the node positions have settled (immediately when snapping,

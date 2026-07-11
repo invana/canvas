@@ -319,6 +319,12 @@ export class PrimitivesRenderer {
    * `HoverActivateBehaviour` mid-drag.
    */
   private pointerDown = false;
+  /**
+   * When `false`, {@link hitTest} short-circuits to `null` so nothing this
+   * renderer holds is interactive — used to suppress a whole hidden layer's
+   * elements from picking (the owning layer toggles it in `onVisibleChange`).
+   */
+  private hitEnabled = true;
   /** Last left-click time + target — drives double-click detection. */
   private lastLeftClick: { kind: 'shape' | 'connector'; id: string; t: number } | null = null;
   /** Pointer-router subscriptions to clean up on `destroy`. */
@@ -503,7 +509,13 @@ export class PrimitivesRenderer {
     this.shapeLayer.addChild(shape.gfx);
     const inst = new ShapeInstance<TSpec>(id, spec, shape);
     this.shapeInstances.set(id, inst as unknown as ShapeInstance);
-    this.hit.insert(id, 'shape', this.shapeWorldBounds(inst), spec.zIndex ?? 0);
+    // A `visible: false` shape (collapsed-group descendant or explicitly hidden)
+    // is culled from drawing AND kept out of the hit index — so it is never
+    // returned by `hitTest` (no invisible-but-clickable). It re-enters on the
+    // next `updateShape` that flips `visible` back on.
+    if (spec.visible !== false) {
+      this.hit.insert(id, 'shape', this.shapeWorldBounds(inst), spec.zIndex ?? 0);
+    }
     // Per-shape Pixi event dispatch is bypassed — the renderer's global
     // pointer router (see `installPointerRouter`) handles hit-routing
     // via `hitTest`. Disabling `eventMode` on the gfx skips Pixi's
@@ -522,7 +534,14 @@ export class PrimitivesRenderer {
     if (!inst) return;
     inst.spec = { ...inst.spec, ...partial };
     inst.shape.draw(inst.spec);
-    this.hit.update(id, this.shapeWorldBounds(inst), inst.spec.zIndex ?? 0);
+    // Keep the hit index in step with visibility: a now-hidden shape is removed
+    // (so it stops being hittable), a now-visible one is (re-)inserted. `insert`
+    // handles both the "already indexed" and "was hidden" cases idempotently.
+    if (inst.spec.visible === false) {
+      this.hit.remove(id);
+    } else {
+      this.hit.insert(id, 'shape', this.shapeWorldBounds(inst), inst.spec.zIndex ?? 0);
+    }
     if (inst.decorations.size > 0) this.refreshShapeDecorations(inst);
     if (this.badges.has(id)) this.reanchorBadges(id);
   }
@@ -1580,7 +1599,17 @@ export class PrimitivesRenderer {
    *
    * Returns `null` when nothing is hit.
    */
+  /**
+   * Enable / disable all picking for this renderer. When disabled, {@link hitTest}
+   * returns `null` regardless of what's under the cursor — the owning layer flips
+   * this from `onVisibleChange` so a hidden layer's elements aren't clickable.
+   */
+  setHitTestEnabled(enabled: boolean): void {
+    this.hitEnabled = enabled;
+  }
+
   hitTest(worldX: number, worldY: number, exclude?: ReadonlySet<string>): HitResult | null {
+    if (!this.hitEnabled) return null;
     // Stale hit-bboxes from deferred moves / re-routes are reindexed once,
     // here — the first time a query actually needs accurate bounds. A layout
     // settle / drag that nobody hovers over never pays for it.
@@ -2342,7 +2371,9 @@ export class PrimitivesRenderer {
   }
 
   private indexConnector(inst: ConnectorInstance): void {
-    if (inst.path.length < 2) {
+    // A hidden connector (collapse self-loop or effectively-hidden edge) is
+    // culled from drawing and must not be hittable either.
+    if (inst.spec.visible === false || inst.path.length < 2) {
       this.hit.remove(inst.id);
       this.movedConnectorHits.delete(inst.id);
       return;
