@@ -582,7 +582,8 @@ export function LayersPanel({ canvas, onClose }: LayersPanelProps) {
 
   useEffect(() => {
     if (!canvas) return;
-    const store = canvas.layers.get<GraphLayer>('graph')?.store;
+    const graph = canvas.layers.get<GraphLayer>('graph');
+    const store = graph?.store;
     const unsubs: Array<() => void> = [];
     if (store) {
       // Topology + visibility churn → rebuild the tree (counts + eye state).
@@ -596,9 +597,19 @@ export function LayersPanel({ canvas, onClose }: LayersPanelProps) {
       ] as const;
       for (const ev of storeEvents) unsubs.push(store.events.on(ev, scheduleRebuild));
     }
+    // Aggregated per-flush data change on the layer — the reliable "graph
+    // changed" signal that also covers a bulk `setData` / layout run whose
+    // per-node events may have fired before this panel subscribed.
+    if (graph) unsubs.push(graph.events.on('data:changed', scheduleRebuild));
     // Whole-layer visibility toggled anywhere (this panel or elsewhere) → keep
-    // the layer eyes in sync.
+    // the layer eyes in sync; a layer added later → pick it up.
     unsubs.push(canvas.events.on('scene:layer:visibilitychange', scheduleRebuild));
+    unsubs.push(canvas.events.on('scene:layer:add', scheduleRebuild));
+    // Initial pull: the graph's data is usually loaded (and its `node:add`
+    // events already fired) before this effect runs, so re-read the current
+    // store once on mount instead of waiting for the next mutation / a manual
+    // refresh.
+    scheduleRebuild();
     return () => {
       for (const off of unsubs) off();
       if (frameRef.current !== null) {
