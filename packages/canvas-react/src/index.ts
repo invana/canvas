@@ -164,6 +164,7 @@ export {
   useFitContent,
   useCanvasImageExport,
   useCanvasEvent,
+  useGraphEvent,
   useStore,
   useClearGraph,
   useSelection,
@@ -197,6 +198,8 @@ export {
   useCanvasMessage,
 } from './hooks';
 export type {
+  GraphEventMap,
+  UseGraphEventOptions,
   UseCameraResult,
   UseZoomResult,
   UseFitContentResult,

@@ -13,6 +13,8 @@ export type { UseCanvasImageExportResult, DownloadImageExportOptions } from './u
 export { useCanvasStateJson } from './useCanvasStateJson';
 export type { UseCanvasStateJsonResult, CanvasStateSource } from './useCanvasStateJson';
 export { useCanvasEvent } from './useCanvasEvent';
+export { useGraphEvent } from './useGraphEvent';
+export type { GraphEventMap, UseGraphEventOptions } from './useGraphEvent';
 export { useStore } from './useStore';
 export { useClearGraph } from './useClearGraph';
 export type { UseClearGraphResult } from './useClearGraph';

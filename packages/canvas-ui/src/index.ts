@@ -667,6 +667,14 @@ export type {
   PreviewCardRow,
 } from './views/preview-cards';
 
+// ─── Layers panel ──────────────────────────────────────────────────────────
+// Photoshop-style canvas Layers browser over a live `GraphCanvas` — layer
+// visibility eyes + the Graph layer's nodes/edges grouped by type with per-
+// element Hide/Show. Engine-bound (takes a live canvas) but import-clean
+// (`@invana/graph` types only, `@invana/ui` chrome). See its module header.
+export { LayersPanel } from './views/layers-panel';
+export type { LayersPanelProps } from './views/layers-panel';
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Shared
 // ═══════════════════════════════════════════════════════════════════════════
