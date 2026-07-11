@@ -1456,5 +1456,18 @@ export interface GraphLayerEvents {
    * `unified-canvas-options-plan.md` §7.2.
    */
   'style:changed': { scope: 'node' | 'edge' | 'state' };
+  /**
+   * A group **container** was hidden/shown as a unit via `hideGroup(s)` /
+   * `showGroup(s)` / `toggleGroupHidden`. `hidden` is the container's
+   * post-change state; fired once per group whose container actually
+   * transitioned (no-op calls emit nothing). A convenience signal for a
+   * "hidden groups" panel so it needn't filter every member's store
+   * `node:visibility`. It is *not* a cache — read the truth from
+   * `isGroupHidden(id)` / `hiddenGroups()`. Note: hiding a container via the
+   * per-node `hideNode` (which does not sweep the subtree) emits the store's
+   * `node:visibility`, not this — subscribe to both if you must catch every
+   * path, or just derive from `hiddenGroups()` on `node:visibility`.
+   */
+  'group:visibility': { groupId: string; hidden: boolean };
   [event: string]: unknown;
 }

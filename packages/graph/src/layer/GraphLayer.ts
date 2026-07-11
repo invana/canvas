@@ -1114,6 +1114,97 @@ export class GraphLayer extends WorldLayer<
     this.store.showAllHidden();
   }
 
+  // ─── Group visibility (node + parentId subtree) ─────────────────────────────
+  //
+  // A "group" today is a container node (`isGroupNode` / `style.group`) whose
+  // members are its `parentId` descendants — there is no separate groups
+  // collection yet (that's the future bubble-sets model). Unlike {@link hideNode}
+  // (which hides only the node — no parentId cascade, decision 9), the group
+  // methods deliberately hide/show the container **and its whole subtree** so a
+  // group vanishes/returns as a unit. Each call is one batch → one paint;
+  // incident edges auto-hide via the endpoint cascade. `showGroup(s)` reveals the
+  // entire subtree unconditionally (the clean inverse; re-hide specific members
+  // after if needed).
+
+  /** Hide a group node and all its `parentId` descendants. One batch → one paint. */
+  hideGroup(id: string): void {
+    this.hideGroups([id]);
+  }
+
+  /** Show a group node and all its `parentId` descendants. One batch → one paint. */
+  showGroup(id: string): void {
+    this.showGroups([id]);
+  }
+
+  /**
+   * Flip a group's visibility by the container node's state — hides the whole
+   * subtree when it becomes hidden, shows it when it becomes visible. Returns the
+   * resulting hidden state of the group node.
+   */
+  toggleGroupHidden(id: string): boolean {
+    if (this.store.isNodeHidden(id)) {
+      this.showGroup(id);
+      return false;
+    }
+    this.hideGroup(id);
+    return true;
+  }
+
+  /** Hide many groups (each container + its subtree) in one batch → one paint. */
+  hideGroups(ids: Iterable<string>): void {
+    const transitioned: string[] = [];
+    this.store.batch(() => {
+      for (const id of ids) {
+        if (!this.store.isNodeHidden(id)) transitioned.push(id); // container flips hidden
+        this.store.hideNode(id);
+        for (const descendant of this.store.descendantsOf(id)) this.store.hideNode(descendant);
+      }
+    });
+    // Announce group-level toggles after the store flush (post-paint), one per
+    // container that actually changed. Derived from the store — no cache.
+    for (const groupId of transitioned) this.events.emit('group:visibility', { groupId, hidden: true });
+  }
+
+  /** Show many groups (each container + its subtree) in one batch → one paint. */
+  showGroups(ids: Iterable<string>): void {
+    const transitioned: string[] = [];
+    this.store.batch(() => {
+      for (const id of ids) {
+        if (this.store.isNodeHidden(id)) transitioned.push(id); // container flips visible
+        this.store.showNode(id);
+        for (const descendant of this.store.descendantsOf(id)) this.store.showNode(descendant);
+      }
+    });
+    for (const groupId of transitioned) this.events.emit('group:visibility', { groupId, hidden: false });
+  }
+
+  /**
+   * Whether a group container is currently hidden. **Derived** from the
+   * container node's hidden flag (the source of truth), so it can't drift — no
+   * cached group index. `id` should be a group container node id; for a
+   * non-group node this simply reports that node's hidden state.
+   */
+  isGroupHidden(id: string): boolean {
+    return this.store.isNodeHidden(id);
+  }
+
+  /**
+   * Ids of every currently-hidden **group container** — a UI ("hidden groups"
+   * panel) helper so callers don't hand-roll the derivation. Computed on demand
+   * from `store.hiddenNodes()` ∩ group nodes (not a maintained index, so always
+   * correct); recompute it on the store's `node:visibility` event rather than
+   * every render. If your app already tracks its group ids, intersecting them
+   * with `store.hiddenNodes()` is cheaper than this `isGroupNode` scan.
+   */
+  hiddenGroups(): string[] {
+    const out: string[] = [];
+    for (const id of this.store.hiddenNodes()) {
+      const node = this.store.getNode(id);
+      if (node && this.isGroupNode(node)) out.push(id);
+    }
+    return out;
+  }
+
   // ─── Viewport framing ─────────────────────────────────────────────────────
 
   /**

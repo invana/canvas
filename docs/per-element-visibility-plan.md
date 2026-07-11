@@ -175,6 +175,49 @@ incident edges — i.e. it triggers a re-render of the node's incident edges so
 newly effectively-hidden edges are culled (and re-shown edges re-installed). No
 per-edge events are emitted (decision 3); the cascade is a render concern.
 
+### 6.1 Group visibility (`hideGroup(s)` / `showGroup(s)` / `toggleGroupHidden`)
+
+The kinds are kept **explicit** — `hideNodes` / `hideEdges` / `hideGroups` (no
+merged `hideElements`), matching the graph's element kinds and leaving room for
+the future bubble-sets `groups` collection.
+
+A "group" today is a **container node** (`isGroupNode` / `style.group`) whose
+members are its `parentId` descendants — there is no separate groups collection
+yet. Whereas `hideNode` hides **only** that node (no `parentId` cascade —
+decision 9), the group methods deliberately hide/show the container **and its
+whole subtree** so a group vanishes/returns as a unit:
+
+- `hideGroups(ids)` — for each id, hide the node **+ every `store.descendantsOf(id)`**,
+  all in one `store.batch()` → one flush → one paint. Incident edges auto-hide via
+  the endpoint cascade.
+- `showGroups(ids)` — reveal the container + entire subtree **unconditionally**
+  (the clean, stateless inverse; re-hide specific members afterward if needed —
+  no per-group "what did I hide" tracking that would drift as membership changes).
+- `hideGroup` / `showGroup` / `toggleGroupHidden` — singular sugar; toggle keys
+  off the container node's hidden state.
+
+Group methods live on `GraphLayer` (the "group" concept is a layer/render notion);
+the store stays group-unaware, exposing only the `parentId` hierarchy
+(`descendantsOf`) they build on.
+
+**UI helpers (derived, drift-free) + a group event.** For a "hidden groups"
+panel:
+- `isGroupHidden(id)` = the container node's hidden flag (source of truth).
+- `hiddenGroups()` = `store.hiddenNodes()` ∩ group nodes, computed on demand.
+- **`group:visibility { groupId, hidden }`** — a `GraphLayer` event fired once per
+  container that actually transitioned via `hideGroup(s)` / `showGroup(s)` /
+  `toggleGroupHidden` (no-op calls emit nothing). Emitted after the store flush,
+  derived from the container's state — **not** a cache.
+
+Deliberately **no cached hidden-group index** (it would drift when a container is
+hidden via `hideNode` or a member shown via `showNode`). The `group:visibility`
+event is a *convenience notifier*, not a source of truth: it does **not** fire when
+a container is hidden via the per-node `hideNode` (which doesn't sweep the subtree)
+— that path emits the store's `node:visibility`. So a panel either (a) subscribes
+to `group:visibility` for direct group toggles, or (b) subscribes to
+`node:visibility` and recomputes `hiddenGroups()` to catch every path. Truth always
+comes from `isGroupHidden()` / `hiddenGroups()`, never a maintained set.
+
 ## 7. Rendering & interaction integration
 
 Effectively-hidden elements are **culled** (removed from the GPU batch — *not*
