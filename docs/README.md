@@ -24,6 +24,7 @@ working design-of-record documents. Day-to-day API/concept docs live in
 - [data-types-instances.md](./data-types-instances.md) — input vs stored instances (NodeData/NodeOption split, G6-aligned).
 - [data-types-implementation-plan.md](./data-types-implementation-plan.md) — phasing for the data-model migration.
 - [node-edge-options-plan.md](./node-edge-options-plan.md) — **superseded** (data-model layer) by `data-types-instances.md`; render-shape decisions still hold.
+- [node-styling-unification-plan.md](./node-styling-unification-plan.md) — **one tiny semantic node-styling API** (`primaryColor` / `label` / `showLabel` / `size` / `icon` / `shape`) that styles **both** simple shapes and composite/template nodes, hiding the flat `NodeStyle`. Composite = a shape kind extending `CompositeShape` (registered like any shape; explicit w/h, no scalar size); templates take `primaryColor`; content-LOD (semantic zoom) deferred into the template. Phased impl + deferred declarative-template form.
 
 ## State & options
 
