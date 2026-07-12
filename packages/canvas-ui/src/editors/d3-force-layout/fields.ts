@@ -60,6 +60,10 @@ const COLLIDE_FIELDS: FieldConfig[] = [
   { name: 'collideIterations', type: 'number', label: 'Iterations', min: 1, max: 20, step: 1, description: 'Constraint-relaxation passes per tick.' },
 ];
 
+const CLUSTER_FIELDS: FieldConfig[] = [
+  { name: 'clusterStrength', type: 'number', label: 'Strength', min: 0, max: 1, step: 0.01, description: 'Pull `parentId` group members toward their centroid so group frames stay compact. Empty = off. Default 0.2.' },
+];
+
 /**
  * The full D3ForceLayout field set as one grouped `FieldConfig[]` — the default
  * `fields` for `<D3ForceLayoutEditor>`.
@@ -70,4 +74,5 @@ export const d3ForceLayoutFields: FieldConfig[] = [
   ...CHARGE_FIELDS.map(withGroup('Charge force')),
   ...CENTER_FIELDS.map(withGroup('Center force')),
   ...COLLIDE_FIELDS.map(withGroup('Collide force')),
+  ...CLUSTER_FIELDS.map(withGroup('Group cluster')),
 ];

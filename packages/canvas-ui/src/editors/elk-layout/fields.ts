@@ -92,6 +92,10 @@ const NODE_SIZE_FIELDS: FieldConfig[] = [
   { name: 'defaultNodeHeight', type: 'number', label: 'Default node height', min: 1, max: 1000, step: 1, description: 'Fallback height when a node has no resolvable shape. Default 40.' },
 ];
 
+const GROUP_FIELDS: FieldConfig[] = [
+  { name: 'includeGroups', type: 'boolean', label: 'Nest groups', description: 'Lay out `parentId` groups as nested containers — members packed inside the group box (compound layout).' },
+];
+
 const TRANSITION_FIELDS: FieldConfig[] = [
   { name: 'transition', type: 'boolean', label: 'Animate', description: 'Glide nodes to their new positions instead of snapping.' },
   { name: 'transitionEase', type: 'text', label: 'Ease', placeholder: 'e.g. cubic-in-out' },
@@ -112,6 +116,7 @@ export function elkLayoutFields(values: ElkLayoutFields = {}): FieldConfig[] {
     ...spacing.map(withGroup('Spacing')),
     ...EDGE_FIELDS.map(withGroup('Edges')),
     ...NODE_SIZE_FIELDS.map(withGroup('Node size')),
+    ...GROUP_FIELDS.map(withGroup('Groups')),
     ...TRANSITION_FIELDS.map(withGroup('Transition')),
   ];
 }

@@ -121,6 +121,10 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
 
     // 1. Snapshot nodes + edges, resolving width/height per node.
     const sizeOf = this.opts.nodeSize ?? ((n: GraphNode) => resolveSizeFromLayer(layer, n));
+
+    // Compound path — nest `parentId` groups so ELK packs members inside their
+    // container box. Falls through to the flat path when `includeGroups` is off.
+    if (this.opts.includeGroups) return this.computeCompound(store, sizeOf);
     const ids: string[] = [];
     const sizes: NodeSize[] = [];
     const children: ElkNode[] = [];
@@ -168,6 +172,90 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
     // Thread routed edges to onPositionsApplied (only when edge routing is on).
     const meta = this.opts.edgeRouting !== undefined ? ((result.edges ?? []) as ElkExtendedEdge[]) : null;
     return { ids, positions: target, meta };
+  }
+
+  /**
+   * Compound (nested) layout for `parentId` groups — each group node's members
+   * are nested under it as ELK `children`, and ELK packs them inside the group
+   * box (sized to fit + padding). `elk.hierarchyHandling: INCLUDE_CHILDREN` lets
+   * edges cross container boundaries. ELK reports child coordinates **relative to
+   * their parent**, so the result is flattened back to absolute world positions
+   * by accumulating parent offsets. Group container nodes get positions too (the
+   * `GraphLayer`'s `autoFit` then draws a tight frame around the packed members).
+   */
+  private async computeCompound(
+    store: GraphLayer['store'],
+    sizeOf: (n: GraphNode) => NodeSize | undefined,
+  ): Promise<LayoutPositions<ElkExtendedEdge[] | null> | null> {
+    const placeable = new Set<string>();
+    const sizeById = new Map<string, NodeSize>();
+    for (const n of store.nodes()) {
+      if (!this.shouldPlaceNode(n)) continue;
+      placeable.add(n.id);
+      sizeById.set(n.id, sizeOf(n) ?? FALLBACK_NODE_SIZE);
+    }
+    if (placeable.size === 0) return null;
+
+    // Recursively build an ELK node, nesting its placeable children.
+    const buildNode = (id: string): ElkNode => {
+      const size = sizeById.get(id) ?? FALLBACK_NODE_SIZE;
+      const node: ElkNode = { id, width: size.width, height: size.height };
+      const kids: ElkNode[] = [];
+      for (const child of store.childrenOf(id)) {
+        if (placeable.has(child)) kids.push(buildNode(child));
+      }
+      if (kids.length > 0) {
+        node.children = kids;
+        // Size the container to fit its members + padding (the "auto-fit" box).
+        node.layoutOptions = {
+          'elk.padding': '[top=24,left=24,bottom=24,right=24]',
+          'elk.nodeSize.constraints': 'MINIMUM_SIZE',
+        };
+      }
+      return node;
+    };
+
+    // Roots = placeable nodes with no placeable parent.
+    const roots: ElkNode[] = [];
+    for (const n of store.nodes()) {
+      if (!placeable.has(n.id)) continue;
+      if (n.parentId && placeable.has(n.parentId)) continue;
+      roots.push(buildNode(n.id));
+    }
+
+    // Edges reference leaf ids; declared on the root, resolved across levels.
+    const edges: ElkExtendedEdge[] = [];
+    for (const e of store.edges()) {
+      if (!placeable.has(e.source) || !placeable.has(e.target)) continue;
+      edges.push({ id: e.id, sources: [e.source], targets: [e.target] });
+    }
+
+    const graph: ElkNode = {
+      id: 'root',
+      layoutOptions: { ...buildLayoutOptions(this.opts), 'elk.hierarchyHandling': 'INCLUDE_CHILDREN' },
+      children: roots,
+      edges,
+    };
+
+    const elk = await this.getElk();
+    const result = await elk.layout(graph);
+
+    // Flatten the result: accumulate parent offsets → absolute top-left → centre.
+    const ids: string[] = [];
+    const xy: number[] = [];
+    const walk = (node: ElkNode, parentX: number, parentY: number): void => {
+      const absX = parentX + (node.x ?? 0);
+      const absY = parentY + (node.y ?? 0);
+      if (node.id !== 'root') {
+        ids.push(node.id);
+        xy.push(absX + (node.width ?? 0) / 2, absY + (node.height ?? 0) / 2);
+      }
+      for (const child of node.children ?? []) walk(child, absX, absY);
+    };
+    walk(result, 0, 0);
+
+    const meta = this.opts.edgeRouting !== undefined ? ((result.edges ?? []) as ElkExtendedEdge[]) : null;
+    return { ids, positions: new Float32Array(xy), meta };
   }
 
   /**

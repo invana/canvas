@@ -1,2 +1,2 @@
-export { LayersPanel } from './LayersPanel';
-export type { LayersPanelProps } from './LayersPanel';
+export { LayersPanelView } from './LayersPanelView';
+export type { LayersPanelViewProps } from './LayersPanelView';

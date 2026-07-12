@@ -1,4 +1,4 @@
-// LayersPanel — a Photoshop-style canvas Layers browser for a live `GraphCanvas`.
+// LayersPanelView — a Photoshop-style canvas Layers browser for a live `GraphCanvas`.
 // Lists every layer registered on the canvas (background / graph / minimap …) as
 // a file-tree, top layer first. The Graph layer expands into its painted contents
 // grouped by node/edge type with live counts; each type expands into its
@@ -30,7 +30,6 @@ import type {
   GraphStore,
 } from '@invana/graph';
 import {
-  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -41,6 +40,7 @@ import {
 } from '@invana/ui';
 import {
   ArrowRight,
+  Boxes,
   Circle,
   Crosshair,
   Eye,
@@ -51,9 +51,7 @@ import {
   MoreHorizontal,
   MousePointer2,
   Network,
-  RefreshCw,
   Spline,
-  X,
 } from 'lucide-react';
 import type {
   ElementType,
@@ -69,11 +67,9 @@ import {
   useState,
 } from 'react';
 
-export interface LayersPanelProps {
+export interface LayersPanelViewProps {
   /** The live canvas engine (null until `<Canvas>` publishes it). */
   canvas: GraphCanvas | null;
-  /** Called when the panel's close ✕ is clicked. Omit to hide the ✕. */
-  onClose?: () => void;
 }
 
 // "Focus" zooms in to at least this scale (matches the canvas context menu).
@@ -95,6 +91,7 @@ const NAME_KEYS = ['name', 'title', 'label', 'displayName', 'id'];
 type MenuTarget =
   | { kind: 'node'; id: string }
   | { kind: 'edge'; id: string }
+  | { kind: 'group'; id: string }
   | { kind: 'layer'; id: string };
 
 interface RowCtx {
@@ -210,6 +207,9 @@ interface GroupOpts<T> {
   leafIcon: ElementType;
   labelOf: (el: T) => string;
   isHidden: (el: T) => boolean;
+  /** When true (the owning layer is hidden), strike every row regardless of the
+   *  element's own hidden flag. */
+  forceHidden: boolean;
   ctx: RowCtx;
 }
 
@@ -224,7 +224,7 @@ function groupByType<T extends { id: string; type?: string }>(
   entries: Iterable<T>,
   opts: GroupOpts<T>,
 ): { groups: TreeItem[]; total: number } {
-  const { prefix, kind, typeIcon, leafIcon, labelOf, isHidden, ctx } = opts;
+  const { prefix, kind, typeIcon, leafIcon, labelOf, isHidden, forceHidden, ctx } = opts;
   const counts = new Map<string, number>();
   const samples = new Map<string, T[]>();
   let total = 0;
@@ -248,7 +248,7 @@ function groupByType<T extends { id: string; type?: string }>(
       const shown = samples.get(type) ?? [];
       const children: TreeItem[] = shown.map((el) => {
         const id = String(el.id);
-        const hidden = isHidden(el);
+        const hidden = isHidden(el) || forceHidden;
         return {
           id: `${key}:${id}`,
           label: '',
@@ -273,18 +273,32 @@ function groupByType<T extends { id: string; type?: string }>(
       if (remaining > 0) {
         children.push({
           id: `${key}:__more`,
-          label:
-            remaining <= REVEAL_STEP
-              ? `Show ${remaining} more`
-              : `Show ${REVEAL_STEP} more of ${remaining}`,
-          icon: <MoreHorizontal className="h-3 w-3 text-muted-foreground/50" />,
+          label: '',
+          icon: (
+            <RowContent
+              icon={<MoreHorizontal className="h-3 w-3 shrink-0 text-muted-foreground/50" />}
+              label={
+                remaining <= REVEAL_STEP
+                  ? `Show ${remaining} more`
+                  : `Show ${REVEAL_STEP} more of ${remaining}`
+              }
+              muted={forceHidden}
+            />
+          ),
           onClick: () => ctx.onReveal(key),
         });
       }
       return {
         id: key,
-        label: `${type} · ${count}`,
-        icon: <TypeIcon key={type} className="h-3 w-3 text-muted-foreground" />,
+        label: '',
+        icon: (
+          <RowContent
+            key={type}
+            icon={<TypeIcon className="h-3 w-3 shrink-0 text-muted-foreground" />}
+            label={`${type} · ${count}`}
+            muted={forceHidden}
+          />
+        ),
         children,
       };
     });
@@ -302,6 +316,99 @@ const LAYER_META: Record<string, { label: string; icon: ElementType }> = {
 
 // Derive the layer tree from the live canvas. Layer ids are stable, so the
 // TreeView keys off them and preserves each row's expand state across renders.
+// Build the "Groups" section — every container node (`layer.isGroupNode`, i.e.
+// `style.group`) as a row with an eye that hides/shows the whole subtree, each
+// expanding into its direct member nodes. Returns `null` when the graph has no
+// groups (so the section is omitted). `layer` is `GraphLayer` (typed loosely to
+// avoid widening the type-only import surface).
+function buildGroupsSection(
+  layer: GraphLayer,
+  store: GraphStore,
+  ctx: RowCtx,
+  forceHidden: boolean,
+): TreeItem | null {
+  const groupIds: string[] = [];
+  for (const n of store.nodes()) {
+    if (layer.isGroupNode(n)) groupIds.push(String(n.id));
+  }
+  if (groupIds.length === 0) return null;
+  groupIds.sort((a, b) => a.localeCompare(b));
+
+  const groupRows: TreeItem[] = groupIds.map((gid) => {
+    const gnode = store.getNode(gid);
+    const gLabel = elementLabel(gnode?.data, gid);
+    const gHidden = layer.isGroupHidden(gid) || forceHidden;
+    // Member rows — the group's direct `parentId` children.
+    const memberRows: TreeItem[] = [];
+    for (const mid of store.childrenOf(gid)) {
+      const id = String(mid);
+      const m = store.getNode(id);
+      const hidden = store.isNodeHidden(id) || forceHidden;
+      memberRows.push({
+        id: `graph:group:${gid}:member:${id}`,
+        label: '',
+        icon: (
+          <RowContent
+            icon={
+              hidden ? (
+                <EyeOff className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+              ) : (
+                <Circle className="h-3 w-3 shrink-0 text-muted-foreground/70" />
+              )
+            }
+            label={elementLabel(m?.data, id)}
+            muted={hidden}
+            menuTarget={{ kind: 'node', id }}
+          />
+        ),
+        onClick: () => ctx.onLeafClick('node', id),
+      });
+    }
+    return {
+      id: `graph:group:${gid}`,
+      label: '',
+      icon: (
+        <RowContent
+          icon={
+            gHidden ? (
+              <EyeOff className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+            ) : (
+              <Boxes className="h-3 w-3 shrink-0 text-muted-foreground/70" />
+            )
+          }
+          label={gLabel}
+          muted={gHidden}
+          menuTarget={{ kind: 'group', id: gid }}
+          trailing={
+            <VisibilityToggle
+              visible={!gHidden}
+              label={gLabel}
+              onToggle={() => {
+                layer.toggleGroupHidden(gid);
+                ctx.refresh();
+              }}
+            />
+          }
+        />
+      ),
+      children: memberRows.length > 0 ? memberRows : undefined,
+    };
+  });
+
+  return {
+    id: 'graph:groups',
+    label: '',
+    icon: (
+      <RowContent
+        icon={<Boxes className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+        label={`Groups · ${groupIds.length}`}
+        muted={forceHidden}
+      />
+    ),
+    children: groupRows,
+  };
+}
+
 function buildItems(canvas: GraphCanvas | null, ctx: RowCtx): TreeItem[] {
   if (!canvas) return [];
   // Top layer first (byZOrder is low → high), mirroring how layers stack on
@@ -310,11 +417,16 @@ function buildItems(canvas: GraphCanvas | null, ctx: RowCtx): TreeItem[] {
   return layers.map((layer) => {
     const meta = LAYER_META[layer.id] ?? { label: layer.id, icon: Layers };
     const LayerIcon = meta.icon;
-    // The graph layer expands into its painted contents grouped by type.
+    // The graph layer expands into its painted contents grouped by type, plus a
+    // Groups section for container nodes (`style.group`) and their members.
     let children: TreeItem[] | undefined;
     if (layer.id === 'graph') {
-      const store = canvas.layers.get<GraphLayer>('graph')?.store;
-      if (store) {
+      const graphLayer = canvas.layers.get<GraphLayer>('graph');
+      const store = graphLayer?.store;
+      if (store && graphLayer) {
+        // A hidden graph layer strikes every descendant row (the whole subtree
+        // is not painted), regardless of each element's own hidden flag.
+        const forceHidden = !graphLayer.visible;
         const nodes = groupByType(store.nodes(), {
           prefix: 'graph:node',
           kind: 'node',
@@ -322,6 +434,7 @@ function buildItems(canvas: GraphCanvas | null, ctx: RowCtx): TreeItem[] {
           leafIcon: Circle,
           labelOf: (n) => elementLabel(n.data, String(n.id)),
           isHidden: (n) => store.isNodeHidden(String(n.id)),
+          forceHidden,
           ctx,
         });
         const edges = groupByType(store.edges(), {
@@ -331,21 +444,36 @@ function buildItems(canvas: GraphCanvas | null, ctx: RowCtx): TreeItem[] {
           leafIcon: ArrowRight,
           labelOf: (e) => `${e.source} → ${e.target}`,
           isHidden: (e) => store.isEdgeHidden(String(e.id)),
+          forceHidden,
           ctx,
         });
+        const groupsSection = buildGroupsSection(graphLayer, store, ctx, forceHidden);
         children = [
           {
             id: 'graph:nodes',
-            label: `Nodes · ${nodes.total}`,
-            icon: <Circle className="h-3.5 w-3.5 text-muted-foreground" />,
+            label: '',
+            icon: (
+              <RowContent
+                icon={<Circle className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+                label={`Nodes · ${nodes.total}`}
+                muted={forceHidden}
+              />
+            ),
             children: nodes.groups,
           },
           {
             id: 'graph:edges',
-            label: `Edges · ${edges.total}`,
-            icon: <Spline className="h-3.5 w-3.5 text-muted-foreground" />,
+            label: '',
+            icon: (
+              <RowContent
+                icon={<Spline className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+                label={`Edges · ${edges.total}`}
+                muted={forceHidden}
+              />
+            ),
             children: edges.groups,
           },
+          ...(groupsSection ? [groupsSection] : []),
         ];
       }
     }
@@ -465,6 +593,44 @@ function ContextMenuItems({
     );
   }
 
+  if (target.kind === 'group') {
+    const layer = graphRefs(canvas).layer;
+    const gid = target.id;
+    // `isGroupHidden` reports the *container* node's own hidden flag.
+    const gHidden = layer?.isGroupHidden(gid) ?? false;
+    return (
+      <DropdownMenuContent align="start" className="w-52">
+        <DropdownMenuItem onSelect={() => layer?.focusNode(gid, { zoom: FOCUS_ZOOM })}>
+          <Crosshair className="mr-2 h-4 w-4" /> Focus on group
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {gHidden ? (
+          <>
+            {/* Show just the container frame (members unaffected). */}
+            <DropdownMenuItem onSelect={() => { layer?.showNode(gid); refresh(); }}>
+              <Eye className="mr-2 h-4 w-4" /> Show group only
+            </DropdownMenuItem>
+            {/* Show the container + its whole subtree. */}
+            <DropdownMenuItem onSelect={() => { layer?.showGroup(gid); refresh(); }}>
+              <Eye className="mr-2 h-4 w-4" /> Show group + members
+            </DropdownMenuItem>
+          </>
+        ) : (
+          <>
+            {/* Hide just the container frame; members stay visible (no cascade). */}
+            <DropdownMenuItem onSelect={() => { layer?.hideNode(gid); refresh(); }}>
+              <EyeOff className="mr-2 h-4 w-4" /> Hide group only
+            </DropdownMenuItem>
+            {/* Hide the container + its whole subtree, one paint. */}
+            <DropdownMenuItem onSelect={() => { layer?.hideGroup(gid); refresh(); }}>
+              <EyeOff className="mr-2 h-4 w-4" /> Hide group + members
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    );
+  }
+
   const { kind, id } = target;
   const store = graphRefs(canvas).store;
   const hidden =
@@ -502,7 +668,7 @@ function ContextMenuItems({
   );
 }
 
-export function LayersPanel({ canvas, onClose }: LayersPanelProps) {
+export function LayersPanelView({ canvas }: LayersPanelViewProps) {
   // Layers/store are live mutable canvas state, not React state — bumping `rev`
   // re-derives the tree. `rev` is a dependency of the memo below, never read.
   const [rev, bumpRev] = useReducer((n: number) => n + 1, 0);
@@ -601,6 +767,8 @@ export function LayersPanel({ canvas, onClose }: LayersPanelProps) {
     // changed" signal that also covers a bulk `setData` / layout run whose
     // per-node events may have fired before this panel subscribed.
     if (graph) unsubs.push(graph.events.on('data:changed', scheduleRebuild));
+    // Group container hidden/shown as a unit → refresh the Groups section.
+    if (graph) unsubs.push(graph.events.on('group:visibility', scheduleRebuild));
     // Whole-layer visibility toggled anywhere (this panel or elsewhere) → keep
     // the layer eyes in sync; a layer added later → pick it up.
     unsubs.push(canvas.events.on('scene:layer:visibilitychange', scheduleRebuild));
@@ -637,32 +805,7 @@ export function LayersPanel({ canvas, onClose }: LayersPanelProps) {
   // a tall tree scrolls *inside* the panel instead of overflowing past it.
   return (
     <div className="flex h-full flex-col overflow-hidden bg-popover text-popover-foreground">
-      <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
-        <Layers className="h-4 w-4 shrink-0 text-muted-foreground" />
-        <span className="text-sm font-medium">Layers</span>
-        <Button
-          variant="ghost"
-          onClick={bumpRev}
-          title="Refresh layers"
-          aria-label="Refresh layers"
-          className="ml-auto h-6 w-6 p-0"
-        >
-          <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
-        </Button>
-        {onClose && (
-          <Button
-            variant="ghost"
-            onClick={onClose}
-            title="Close"
-            aria-label="Close layers panel"
-            className="h-6 w-6 p-0"
-          >
-            <X className="h-3.5 w-3.5 text-muted-foreground" />
-          </Button>
-        )}
-      </div>
-
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto p-2">
         {items.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center text-muted-foreground">
             <Layers className="h-6 w-6" />

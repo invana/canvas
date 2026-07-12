@@ -18,6 +18,7 @@ export function optionsToForm(o: ElkLayoutOptions = {}): ElkLayoutFields {
     padding: typeof o.padding === 'number' ? o.padding : undefined,
     defaultNodeWidth: o.defaultNodeSize?.width,
     defaultNodeHeight: o.defaultNodeSize?.height,
+    includeGroups: o.includeGroups,
     transition: o.transition,
     transitionEase: o.transitionEase,
   };
@@ -39,6 +40,7 @@ export function formToOptions(f: ElkLayoutFields): ElkLayoutOptions {
   if (f.edgeSpacing !== undefined) out.edgeSpacing = f.edgeSpacing;
   if (f.edgeRouting !== undefined) out.edgeRouting = f.edgeRouting;
   if (f.padding !== undefined) out.padding = f.padding;
+  if (f.includeGroups !== undefined) out.includeGroups = f.includeGroups;
   if (f.transition !== undefined) out.transition = f.transition;
   if (f.transitionEase) out.transitionEase = f.transitionEase;
   if (f.defaultNodeWidth !== undefined || f.defaultNodeHeight !== undefined) {

@@ -50,6 +50,8 @@ export interface ForceSolveParams {
   x?: PositionXForceOptions;
   y?: PositionYForceOptions;
   radial?: RadialForceOptions;
+  /** Group-clustering pull strength (paired with {@link ForceSolveInput.clusters}). */
+  cluster?: { strength?: number };
   alpha?: number;
   alphaMin?: number;
   alphaDecay?: number;
@@ -83,8 +85,63 @@ export interface ForceSolveInput {
   links: Uint32Array;
   /** Per-node collide radius, or `null` when no collide force is configured. */
   radii: Float32Array | null;
+  /**
+   * Per-node group index for the clustering force — nodes sharing an index are
+   * pulled toward their common centroid. `-1` = ungrouped. `null` when no
+   * clustering is configured. See {@link ForceSolveParams.cluster}.
+   */
+  clusters: Int32Array | null;
   /** Force + simulation parameters (function-free). */
   params: ForceSolveParams;
+}
+
+/** Default clustering pull strength when `cluster` is enabled without one. */
+export const DEFAULT_CLUSTER_STRENGTH = 0.2;
+
+/**
+ * A custom d3-force that pulls each grouped node toward its group's centroid.
+ * `clusterOf` maps a node to its group index (`-1` = ungrouped). Generic over
+ * the node datum so the worker (`SolveNode`, keyed by `index`) and the live
+ * sim (`SimNode`, keyed by an attached `cluster` field) share one implementation.
+ * `O(N)` per tick.
+ */
+export function makeClusterForce<N extends SimulationNodeDatum>(
+  clusterOf: (node: N) => number,
+  strength: number,
+): { (alpha: number): void; initialize(nodes: N[]): void } {
+  let nodes: N[] = [];
+  const force = (alpha: number): void => {
+    const centroids = new Map<number, { x: number; y: number; n: number }>();
+    for (const node of nodes) {
+      const c = clusterOf(node);
+      if (c < 0) continue;
+      let acc = centroids.get(c);
+      if (!acc) {
+        acc = { x: 0, y: 0, n: 0 };
+        centroids.set(c, acc);
+      }
+      acc.x += node.x ?? 0;
+      acc.y += node.y ?? 0;
+      acc.n += 1;
+    }
+    if (centroids.size === 0) return;
+    for (const acc of centroids.values()) {
+      acc.x /= acc.n;
+      acc.y /= acc.n;
+    }
+    const k = strength * alpha;
+    for (const node of nodes) {
+      const c = clusterOf(node);
+      if (c < 0) continue;
+      const acc = centroids.get(c)!;
+      node.vx = (node.vx ?? 0) + (acc.x - (node.x ?? 0)) * k;
+      node.vy = (node.vy ?? 0) + (acc.y - (node.y ?? 0)) * k;
+    }
+  };
+  force.initialize = (n: N[]): void => {
+    nodes = n;
+  };
+  return force;
 }
 
 /**
@@ -95,7 +152,7 @@ export interface ForceSolveInput {
  * decayed to `alphaMin`, capped at 1000 for pathological configs.
  */
 export function solveForces(input: ForceSolveInput): Float32Array {
-  const { count, positions, seeded, fixed, links, radii, params } = input;
+  const { count, positions, seeded, fixed, links, radii, clusters, params } = input;
 
   const nodes: SolveNode[] = new Array(count);
   for (let i = 0; i < count; i++) {
@@ -122,7 +179,7 @@ export function solveForces(input: ForceSolveInput): Float32Array {
   }
 
   const sim = forceSimulation<SolveNode>(nodes).stop();
-  configureForces(sim, linkObjs, radii, params);
+  configureForces(sim, linkObjs, radii, clusters, params);
   configureSimulation(sim, params);
 
   const decay = 1 - sim.alphaDecay();
@@ -144,9 +201,10 @@ function configureForces(
   sim: Simulation<SolveNode, SolveLink>,
   links: SolveLink[],
   radii: Float32Array | null,
+  clusters: Int32Array | null,
   params: ForceSolveParams,
 ): void {
-  const { link, charge, center, collide, x, y, radial } = params;
+  const { link, charge, center, collide, x, y, radial, cluster } = params;
 
   if (link !== undefined) {
     const force = forceLink<SolveNode, SolveLink>(links);
@@ -198,6 +256,17 @@ function configureForces(
     const force = forceRadial<SolveNode>(radial.radius, radial.x ?? 0, radial.y ?? 0);
     if (radial.strength !== undefined) force.strength(radial.strength);
     sim.force('radial', force);
+  }
+
+  // Group clustering — pull nodes toward their group centroid (keyed by index).
+  if (clusters && cluster !== undefined) {
+    sim.force(
+      'cluster',
+      makeClusterForce<SolveNode>(
+        (n) => clusters[n.index] ?? -1,
+        cluster.strength ?? DEFAULT_CLUSTER_STRENGTH,
+      ),
+    );
   }
 }
 

@@ -29,6 +29,7 @@ export function optionsToForm(o: D3ForceLayoutOptions = {}): D3ForceLayoutFields
     collideRadius: typeof o.collide?.radius === 'number' ? o.collide.radius : undefined,
     collideStrength: o.collide?.strength,
     collideIterations: o.collide?.iterations,
+    clusterStrength: o.cluster?.strength,
   };
 }
 
@@ -84,6 +85,11 @@ export function formToOptions(f: D3ForceLayoutFields): D3ForceLayoutOptions {
       ...(f.collideStrength !== undefined ? { strength: f.collideStrength } : {}),
       ...(f.collideIterations !== undefined ? { iterations: f.collideIterations } : {}),
     };
+  }
+
+  // A set strength enables clustering; empty leaves `cluster` undefined (off).
+  if (f.clusterStrength !== undefined) {
+    out.cluster = { strength: f.clusterStrength };
   }
 
   return out;

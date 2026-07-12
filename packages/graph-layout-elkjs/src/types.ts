@@ -81,6 +81,15 @@ export interface NodeSize {
  * `OneShotPositionLayout` base).
  */
 export interface ElkLayoutOptions extends OneShotLayoutOptions {
+  /**
+   * Lay out `parentId` **groups** as true nested containers — a compound layout.
+   * When `true`, each group node's members are nested under it in the ELK graph
+   * and ELK packs them *inside* the group box (sized to fit + padding), so the
+   * group renders as one crisp contained cluster (`elk.hierarchyHandling:
+   * INCLUDE_CHILDREN`). Default `false` — a flat layout that ignores `parentId`.
+   */
+  includeGroups?: boolean;
+
   /** `elk.algorithm`. Default: `'layered'`. */
   algorithm?: ElkAlgorithmName;
   /** `elk.direction`. Algorithms that respect direction: `layered`, `mrtree`, ... */

@@ -50,6 +50,8 @@ export interface ElkLayoutOptions {
   /** `elk.padding` — symmetric graph padding (per-side object form omitted). */
   padding?: number;
   defaultNodeSize?: { width?: number; height?: number };
+  /** Lay out `parentId` groups as nested containers (compound layout). */
+  includeGroups?: boolean;
   transition?: boolean;
   transitionEase?: string;
 }
@@ -70,6 +72,7 @@ export interface ElkLayoutFields {
   padding?: number;
   defaultNodeWidth?: number;
   defaultNodeHeight?: number;
+  includeGroups?: boolean;
   transition?: boolean;
   transitionEase?: string;
 }

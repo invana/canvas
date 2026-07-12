@@ -1,20 +1,16 @@
 /**
  * **Hide / show driven by a live UI panel.** The flagship demo of first-class
- * per-element + whole-layer visibility feeding a React component:
+ * per-element + whole-layer visibility feeding React UI:
  *
- *   - **`<LayersPanel>`** docked left — a Photoshop-style layers browser over the
- *     live `GraphCanvas`. Each layer row has a visibility eye (`layer.setVisible`);
- *     the Graph layer expands into its nodes/edges by type; right-click any
- *     element → Focus · Select · **Hide/Show** (`store.setNodeHidden` /
- *     `setEdgeHidden` — hiding a node auto-hides its incident edges via the
- *     store's derived cascade). The panel refreshes off the `node:visibility` /
- *     `edge:visibility` / `scene:layer:visibilitychange` events.
- *   - **Header "Hide selected"** — `useSelection()` → one `store.batch(...)` that
- *     hides the selected nodes + edges in a single flush → single paint.
- *   - **Footer hidden count + "Show all"** — a `useGraphEvent('node:visibility')`
- *     / `('edge:visibility')` consumer that recomputes on change, not per render.
+ *   - a right-docked **`<TabbedPanel>`** whose **Layers** tab hosts the
+ *     `@invana/canvas-ui` **`<LayersPanelView>`** (layer eyes + nodes/edges by
+ *     type + right-click Hide/Show), and whose **Hidden** tab lists the currently
+ *     hidden elements with per-item + "Show all" restore,
+ *   - a header **"Hide selected"** button — `useSelection()` → one
+ *     `store.batch(...)` that hides the selected nodes + edges in a single paint.
  *
- * Everything past `data` is composition — no bespoke app props.
+ * The Hidden tab recomputes on the store's `node:visibility` / `edge:visibility`
+ * stream via `useGraphEvent` — on change, not per render.
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
@@ -25,25 +21,17 @@ import {
   useGraphEvent,
   useSelection,
 } from '@invana/canvas-react';
-import { LayersPanel } from '@invana/canvas-ui';
+import { LayersPanelView } from '@invana/canvas-ui';
 import type { GraphLayer, GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
+import { TabbedPanel, type TabConfig } from '@invana/ui';
+import { EyeOff, Layers } from 'lucide-react';
 import { useState } from 'react';
 
 const meta: Meta = { title: 'canvas-react/visibility/HideShowLayersPanel' };
 export default meta;
 type Story = StoryObj;
-
-/** Docks the ported `LayersPanel` on the left, wired to the live engine. */
-function LayersPanelDock() {
-  const canvas = useGraphCanvas();
-  return (
-    <Panel position="left">
-      <LayersPanel canvas={canvas} />
-    </Panel>
-  );
-}
 
 /** Header button — hide the current selection (nodes + edges) in one paint. */
 function HideSelectedButton() {
@@ -71,33 +59,86 @@ function HideSelectedButton() {
   );
 }
 
-/** Footer — live hidden count (recomputed only on visibility change) + Show all. */
-function HiddenStatus() {
+/** The "Hidden" tab — lists explicitly-hidden elements, restore per-item or all.
+ *  Recomputes on the store's visibility stream (on change, not per render). */
+function HiddenTab() {
   const canvas = useGraphCanvas();
   const [, bump] = useState(0);
-  const read = () => {
-    const s = canvas.layers.get<GraphLayer>('graph')?.store;
-    return { nodes: s?.hiddenNodeCount() ?? 0, edges: s?.hiddenEdgeCount() ?? 0 };
-  };
-  // Recompute on change, not every render — the useGraphEvent hook subscribes to
-  // the store's visibility stream and re-renders this component when it fires.
   useGraphEvent('node:visibility', () => bump((n) => n + 1));
   useGraphEvent('edge:visibility', () => bump((n) => n + 1));
-  const { nodes, edges } = read();
+
+  const store = canvas.layers.get<GraphLayer>('graph')?.store;
+  const nodes = store ? [...store.hiddenNodes()] : [];
+  const edges = store ? [...store.hiddenEdges()] : [];
+  const empty = nodes.length === 0 && edges.length === 0;
+
   return (
-    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-      <span>
-        Hidden: {nodes} node(s) · {edges} edge(s)
-      </span>
-      <button
-        type="button"
-        disabled={nodes + edges === 0}
-        onClick={() => canvas.layers.get<GraphLayer>('graph')?.showAllHidden()}
-        className="rounded border border-border px-2 py-0.5 disabled:opacity-40"
-      >
-        Show all
-      </button>
+    <div className="flex h-full flex-col gap-2 overflow-y-auto p-2 text-sm">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-muted-foreground">
+          {nodes.length} node(s) · {edges.length} edge(s)
+        </span>
+        <button
+          type="button"
+          disabled={empty}
+          onClick={() => store?.showAllHidden()}
+          className="rounded border border-border px-2 py-0.5 disabled:opacity-40"
+        >
+          Show all
+        </button>
+      </div>
+      {empty ? (
+        <p className="text-muted-foreground">Nothing hidden — right-click an element in Layers → Hide.</p>
+      ) : (
+        <ul className="flex flex-col gap-0.5">
+          {nodes.map((id) => (
+            <li key={`n:${id}`}>
+              <button
+                type="button"
+                onClick={() => store?.showNode(id)}
+                className="w-full truncate rounded px-2 py-1 text-left hover:bg-accent"
+                title={`Show node ${id}`}
+              >
+                node · {id}
+              </button>
+            </li>
+          ))}
+          {edges.map((id) => (
+            <li key={`e:${id}`}>
+              <button
+                type="button"
+                onClick={() => store?.showEdge(id)}
+                className="w-full truncate rounded px-2 py-1 text-left hover:bg-accent"
+                title={`Show edge ${id}`}
+              >
+                edge · {id}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
+  );
+}
+
+/** Right-docked TabbedPanel — the LayersPanelView is one tab; Hidden is another. */
+function VisibilityTabbedPanel() {
+  const canvas = useGraphCanvas();
+  const tabs: TabConfig[] = [
+    { value: 'layers', label: 'Layers', icon: Layers, content: <LayersPanelView canvas={canvas} /> },
+    { value: 'hidden', label: 'Hidden', icon: EyeOff, content: <HiddenTab /> },
+  ];
+  return (
+    <Panel position="right">
+      <div className="h-full w-80 border-l border-border bg-popover">
+        <TabbedPanel
+          tabs={tabs}
+          defaultTab="layers"
+          className="flex h-full flex-col overflow-hidden"
+          bodyClassName="min-h-0 flex-1 overflow-hidden"
+        />
+      </div>
+    </Panel>
   );
 }
 
@@ -105,7 +146,7 @@ const groupOf = (n: GraphNode): number => (n.data as { group?: number } | undefi
 
 export const HideShowLayersPanel: Story = {
   render: () => {
-    // Give every node/edge a `type` so the LayersPanel groups them meaningfully.
+    // Give every node/edge a `type` so the LayersPanelView groups them meaningfully.
     const data = {
       nodes: lesMiserables.nodes.map((n) => ({ ...n, type: `Group ${groupOf(n)}` })),
       edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
@@ -114,11 +155,10 @@ export const HideShowLayersPanel: Story = {
       <ThemeProvider>
         <GraphCanvasApp
           data={data}
-          onReady={(c) => c?.showMessage('Right-click an element to Hide/Show · toggle a layer eye')}
+          onReady={(c) => c?.showMessage('Right-click an element to Hide/Show · Layers / Hidden tabs on the right')}
           header={{ title: 'Visibility', right: <HideSelectedButton /> }}
-          footer={{ left: <HiddenStatus /> }}
         >
-          <LayersPanelDock />
+          <VisibilityTabbedPanel />
         </GraphCanvasApp>
       </ThemeProvider>
     );

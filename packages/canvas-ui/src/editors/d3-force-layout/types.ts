@@ -49,6 +49,8 @@ export interface D3ForceLayoutOptions {
   center?: { x?: number; y?: number; strength?: number };
   /** `forceCollide` — prevents overlap. Only the constant `radius` is editable. */
   collide?: { radius?: number; strength?: number; iterations?: number };
+  /** Group-clustering pull — keeps `parentId` group members together. */
+  cluster?: { strength?: number };
 }
 
 /**
@@ -82,6 +84,8 @@ export interface D3ForceLayoutFields {
   collideRadius?: number;
   collideStrength?: number;
   collideIterations?: number;
+  // cluster (parentId group cohesion)
+  clusterStrength?: number;
 }
 
 /** react-hook-form state — leaves register under `options.<field>`. */

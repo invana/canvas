@@ -42,6 +42,8 @@ import type { GraphLayer, GraphNode } from '@invana/graph';
 import type { D3ForceLayoutOptions } from './types';
 import {
   solveForces,
+  makeClusterForce,
+  DEFAULT_CLUSTER_STRENGTH,
   type ForceSolveInput,
   type ForceSolveParams,
   type ForceSolveRequest,
@@ -50,6 +52,8 @@ import {
 
 interface SimNode extends SimulationNodeDatum {
   id: string;
+  /** Group index for the clustering force (`cluster` option). Unset = ungrouped. */
+  cluster?: number;
 }
 interface SimLink extends SimulationLinkDatum<SimNode> {}
 
@@ -195,6 +199,44 @@ export class D3ForceLayout extends Layout<GraphLayer> {
   }
 
   /**
+   * Assign each placed node a cluster group index for the `cluster` force: a
+   * **member** (its `parentId` is placed) → that parent's group; a **container**
+   * (has ≥1 placed child) → its own id. Ungrouped nodes are absent from the map.
+   * Returns `null` when clustering is off or nothing groups. Shared by the live
+   * and static paths (both build a placed-id set).
+   */
+  private clusterIndices(
+    store: GraphLayer['store'],
+    placed: Set<string>,
+  ): Map<string, number> | null {
+    if (!this.opts.cluster) return null;
+    const byGroup = new Map<string, number>();
+    const out = new Map<string, number>();
+    for (const id of placed) {
+      const node = store.getNode(id);
+      let key: string | undefined;
+      if (node?.parentId && placed.has(node.parentId)) {
+        key = node.parentId;
+      } else {
+        for (const child of store.childrenOf(id)) {
+          if (placed.has(child)) {
+            key = id;
+            break;
+          }
+        }
+      }
+      if (key === undefined) continue;
+      let ci = byGroup.get(key);
+      if (ci === undefined) {
+        ci = byGroup.size;
+        byGroup.set(key, ci);
+      }
+      out.set(id, ci);
+    }
+    return out.size > 0 ? out : null;
+  }
+
+  /**
    * Read the store into a transferable {@link ForceSolveInput} using only
    * locals — no instance maps. `collide.radius` (number or function) is resolved
    * per node here; un-positioned nodes are left un-`seeded` so the solver
@@ -263,6 +305,18 @@ export class D3ForceLayout extends Layout<GraphLayer> {
       }
     }
 
+    // Group clustering — resolve each node's group index into a transferable
+    // typed array (null when clustering is off / nothing groups).
+    let clusters: Int32Array | null = null;
+    const clusterMap = this.clusterIndices(store, new Set(ids));
+    if (clusterMap) {
+      clusters = new Int32Array(count).fill(-1);
+      for (let i = 0; i < count; i++) {
+        const ci = clusterMap.get(ids[i]!);
+        if (ci !== undefined) clusters[i] = ci;
+      }
+    }
+
     const alpha = seededCount === 0 ? this.opts.alpha ?? 1 : this.opts.reheatAlpha ?? 0.5;
     const params: ForceSolveParams = {
       link: this.opts.link,
@@ -272,6 +326,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
       x: this.opts.x,
       y: this.opts.y,
       radial: this.opts.radial,
+      cluster: this.opts.cluster,
       alpha,
       alphaMin: this.opts.alphaMin,
       alphaDecay: this.opts.alphaDecay,
@@ -288,6 +343,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
         fixed,
         links: w === linkPairs.length ? linkPairs : linkPairs.slice(0, w),
         radii,
+        clusters,
         params,
       },
     };
@@ -343,6 +399,15 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     }
     if (this.nodes.length === 0) return Promise.resolve();
     this.buffer = new Float32Array(this.nodes.length * 2);
+
+    // Tag each grouped node with its cluster index for the `cluster` force.
+    const clusterMap = this.clusterIndices(store, new Set(this.nodeById.keys()));
+    if (clusterMap) {
+      for (const [id, sim] of this.nodeById) {
+        const ci = clusterMap.get(id);
+        if (ci !== undefined) sim.cluster = ci;
+      }
+    }
 
     const links: SimLink[] = [];
     for (const e of store.edges()) {
@@ -555,7 +620,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
   // ─── Configuration ─────────────────────────────────────────────────────
 
   private configureForces(sim: Simulation<SimNode, SimLink>, links: SimLink[]): void {
-    const { link, charge, center, collide, x, y, radial } = this.opts;
+    const { link, charge, center, collide, x, y, radial, cluster } = this.opts;
 
     if (link !== undefined) {
       const force = forceLink<SimNode, SimLink>(links).id((d) => d.id);
@@ -624,6 +689,18 @@ export class D3ForceLayout extends Layout<GraphLayer> {
       const force = forceRadial<SimNode>(radial.radius, radial.x ?? 0, radial.y ?? 0);
       if (radial.strength !== undefined) force.strength(radial.strength);
       sim.force('radial', force);
+    }
+
+    // Group clustering — pull nodes toward their group centroid (SimNode.cluster
+    // is tagged in `runLive`). Shares the solver's implementation.
+    if (cluster !== undefined) {
+      sim.force(
+        'cluster',
+        makeClusterForce<SimNode>(
+          (n) => n.cluster ?? -1,
+          cluster.strength ?? DEFAULT_CLUSTER_STRENGTH,
+        ),
+      );
     }
   }
 

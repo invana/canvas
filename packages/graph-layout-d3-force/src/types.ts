@@ -29,6 +29,19 @@ export interface D3ForceLayoutOptions {
   includeHidden?: boolean;
 
   /**
+   * Keep `parentId` **group** members together — a lightweight clustering force
+   * that, each tick, pulls every node in a group (and the group container node)
+   * toward that group's centroid. Cheap (`O(N)` per tick) and complementary to
+   * the other forces: it stops group members scattering across the graph, so an
+   * `autoFit` group frame stays compact instead of ballooning.
+   *
+   * Omit to disable (default). `strength` is the per-tick pull fraction toward
+   * the centroid, alpha-scaled like d3's own forces (default `0.2`; higher =
+   * tighter clusters). Not a container layout — for true nested boxes use ELK.
+   */
+  cluster?: { strength?: number };
+
+  /**
    * When `true` (default), positions are written back to the store on
    * every d3-force tick — the renderer animates the simulation as it
    * settles.
