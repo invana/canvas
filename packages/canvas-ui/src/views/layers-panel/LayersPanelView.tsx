@@ -45,6 +45,7 @@ import {
   Crosshair,
   Eye,
   EyeOff,
+  Frame,
   Image as ImageIcon,
   Layers,
   Map as MapIcon,
@@ -200,6 +201,50 @@ function VisibilityToggle({
   );
 }
 
+/**
+ * Generic row-trailing icon button (a `role="button"` span, for the same
+ * nested-interactive reason as {@link VisibilityToggle}). Used for the group
+ * row's two side-by-side CTAs — `muted` dims the icon to signal a hidden state.
+ */
+function IconToggle({
+  icon: Icon,
+  muted,
+  ariaLabel,
+  title,
+  onToggle,
+}: {
+  icon: ElementType;
+  muted: boolean;
+  ariaLabel: string;
+  title: string;
+  onToggle: () => void;
+}) {
+  return (
+    <span
+      role="button"
+      tabIndex={0}
+      aria-label={ariaLabel}
+      title={title}
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          onToggle();
+        }
+      }}
+      className={`grid h-5 w-5 shrink-0 place-items-center rounded hover:bg-accent ${
+        muted ? 'text-muted-foreground/60' : 'text-foreground'
+      }`}
+    >
+      <Icon className="h-3.5 w-3.5" />
+    </span>
+  );
+}
+
 interface GroupOpts<T> {
   prefix: string;
   kind: 'node' | 'edge';
@@ -337,7 +382,25 @@ function buildGroupsSection(
   const groupRows: TreeItem[] = groupIds.map((gid) => {
     const gnode = store.getNode(gid);
     const gLabel = elementLabel(gnode?.data, gid);
-    const gHidden = layer.isGroupHidden(gid) || forceHidden;
+    // Two independent visibility axes for a group:
+    //  · frameHidden — the container node itself (its silhouette/frame).
+    //  · allHidden   — frame AND every member hidden (the whole group is gone).
+    // "Hide group only" toggles the frame; "Hide group + members" toggles the
+    // whole subtree. Tracking both lets the two CTAs show distinct states — e.g.
+    // frame hidden but members still visible.
+    const frameHidden = layer.isGroupHidden(gid);
+    let allHidden = frameHidden;
+    if (frameHidden) {
+      for (const descId of store.descendantsOf(gid)) {
+        if (!store.isNodeHidden(descId)) {
+          allHidden = false;
+          break;
+        }
+      }
+    }
+    const frameMuted = frameHidden || forceHidden;
+    const allMuted = allHidden || forceHidden;
+    const gHidden = frameHidden || forceHidden;
     // Member rows — the group's direct `parentId` children.
     const memberRows: TreeItem[] = [];
     for (const mid of store.childrenOf(gid)) {
@@ -380,14 +443,32 @@ function buildGroupsSection(
           muted={gHidden}
           menuTarget={{ kind: 'group', id: gid }}
           trailing={
-            <VisibilityToggle
-              visible={!gHidden}
-              label={gLabel}
-              onToggle={() => {
-                layer.toggleGroupHidden(gid);
-                ctx.refresh();
-              }}
-            />
+            <span className="flex items-center gap-0.5">
+              {/* Frame only — hides/shows just the container; members stay. */}
+              <IconToggle
+                icon={Frame}
+                muted={frameMuted}
+                ariaLabel={`${frameHidden ? 'Show' : 'Hide'} ${gLabel} group frame only`}
+                title={frameHidden ? 'Show group frame' : 'Hide group frame only'}
+                onToggle={() => {
+                  if (frameHidden) layer.showNode(gid);
+                  else layer.hideNode(gid);
+                  ctx.refresh();
+                }}
+              />
+              {/* Group + members — hides/shows the whole subtree. */}
+              <IconToggle
+                icon={allMuted ? EyeOff : Eye}
+                muted={allMuted}
+                ariaLabel={`${allHidden ? 'Show' : 'Hide'} ${gLabel} group and members`}
+                title={allHidden ? 'Show group + members' : 'Hide group + members'}
+                onToggle={() => {
+                  if (allHidden) layer.showGroup(gid);
+                  else layer.hideGroup(gid);
+                  ctx.refresh();
+                }}
+              />
+            </span>
           }
         />
       ),
