@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/usecase-demos/index.ts'],
+  entry: ['src/index.ts', 'src/usecase-demos/index.ts', 'src/game-of-thrones/index.ts'],
   format: ['esm'],
   dts: true,
   clean: true,

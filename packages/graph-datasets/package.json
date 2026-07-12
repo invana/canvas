@@ -15,6 +15,11 @@
       "types": "./dist/usecase-demos/index.d.ts",
       "import": "./dist/usecase-demos/index.js",
       "default": "./dist/usecase-demos/index.js"
+    },
+    "./game-of-thrones": {
+      "types": "./dist/game-of-thrones/index.d.ts",
+      "import": "./dist/game-of-thrones/index.js",
+      "default": "./dist/game-of-thrones/index.js"
     }
   },
   "scripts": {
