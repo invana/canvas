@@ -26,9 +26,9 @@
     "@invana/graph-layout-d3-sankey": "workspace:*",
     "@invana/graph-layout-elkjs": "workspace:*",
     "@invana/graph-layout-geometric": "workspace:*",
-    "@invana/styling": "^0.0.12",
-    "@invana/themes": "^0.0.12",
-    "@invana/ui": "^0.0.12",
+    "@invana/styling": "^0.0.14",
+    "@invana/themes": "^0.0.14",
+    "@invana/ui": "^0.0.14",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.203.0",
     "@opentelemetry/resources": "^2.0.0",
@@ -43,7 +43,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@invana/forms": "^0.0.12",
+    "@invana/forms": "^0.0.14",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@storybook/addon-docs": "^10.4.0",
