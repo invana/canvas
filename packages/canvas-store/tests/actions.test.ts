@@ -10,7 +10,7 @@ import { createCanvasStore, createHistory, type TelemetryEvent } from '../src/in
 describe('actions — named, action-typed command API', () => {
   it('view commands carry their action label + drive state', () => {
     const telemetry: TelemetryEvent[] = [];
-    const store = createCanvasStore({ telemetry: { emit: (e) => telemetry.push(e) } });
+    const store = createCanvasStore({ telemetry: { sink: { emit: (e) => telemetry.push(e) } } });
     const a = store.actions;
 
     // layers

@@ -63,7 +63,7 @@ describe('createCanvasStore', () => {
 
   it('telemetry sink observes view updates', () => {
     const events: TelemetryEvent[] = [];
-    const core = createCanvasStore({ telemetry: { emit: (e) => events.push(e) } });
+    const core = createCanvasStore({ telemetry: { sink: { emit: (e) => events.push(e) } } });
     core.view.update((s) => {
       s.interaction.selection = new Set(['alice']);
     }, 'select.set');

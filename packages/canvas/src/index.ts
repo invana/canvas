@@ -175,6 +175,10 @@ export type { LayoutRegistryOptions } from './registries/LayoutRegistry';
 // ─── Engine ─────────────────────────────────────────────────────────────
 export { Canvas } from './engine/Canvas';
 export type { CanvasOptions } from './engine/Canvas';
+// Frame-performance recorder exposed via `canvas.frames`. Frame data *types*
+// (`FrameTick` / `FrameStats` / `InteractionKind`) come from `@invana/canvas-store`.
+export { FrameMeter } from './engine/FrameMeter';
+export { InteractionTracker } from './engine/InteractionTracker';
 export type { CanvasConfig } from './engine/CanvasConfig';
 // The config-merge the engine itself uses for `update()` — exported so consumers
 // building config (deep-merging defaults under overrides) merge identically.

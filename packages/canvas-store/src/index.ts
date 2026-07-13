@@ -107,6 +107,46 @@ export {
   type SpanAttrValue,
   type CollectedSpan,
 } from './telemetry/tracing';
+// Metrics adapters (dep-free — inject an OpenTelemetry Meter; it satisfies these).
+// Turn the engine's per-frame stream into OTel histograms/counters + gesture spans.
+export {
+  createFrameMetrics,
+  createInteractionTracer,
+  createConsoleMeter,
+  type Meter,
+  type Histogram,
+  type Counter,
+  type MetricAttributes,
+  type FrameMetricsOptions,
+  type InteractionTracerOptions,
+} from './telemetry/metrics';
+// Logging adapters (dep-free — inject a Logger; console default ships built in).
+export {
+  createLogBridge,
+  createConsoleLogger,
+  createCollectorLogger,
+  type Logger,
+  type LogLevel,
+  type LogRecord,
+  type LogAttributes,
+} from './telemetry/logging';
+// Unified telemetry config + engine-agnostic wiring (the on/off toggle surface).
+export {
+  wireTelemetry,
+  type CanvasTelemetryConfig,
+  type TelemetryTarget,
+} from './telemetry/config';
+
+// ── Performance (frame observability contract) ──────────────────────────────────
+// Vendor-neutral shape of the engine's per-frame signal (the `render:loop:tick`
+// event payload). The engine measures; an app-side adapter maps to OTel.
+export type {
+  InteractionKind,
+  FramePhase,
+  FramePhaseTimings,
+  FrameTick,
+  FrameStats,
+} from './perf/frame';
 
 // ── History ───────────────────────────────────────────────────────────────────
 export { createHistory, type History } from './history/createHistory';

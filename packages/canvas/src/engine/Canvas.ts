@@ -39,11 +39,13 @@ import {
   CanvasEventBus,
   createCanvasStore,
   type CanvasStore,
-  type TelemetrySink,
+  type CanvasTelemetryConfig,
 } from '@invana/canvas-store';
 
 import { CanvasThemeState } from '../theme/CanvasThemeState';
 import { Camera } from '../camera/Camera';
+import { FrameMeter } from './FrameMeter';
+import { InteractionTracker } from './InteractionTracker';
 import { LayerRegistry } from '../registries/LayerRegistry';
 import { BehaviourRegistry } from '../registries/BehaviourRegistry';
 import { LayoutRegistry } from '../registries/LayoutRegistry';
@@ -66,6 +68,10 @@ import {
   type CanvasStateSource,
   type ImportCanvasStateOptions,
 } from '../export/stateExport';
+
+/** High-resolution clock for per-frame timing; falls back to `Date.now` off-DOM. */
+const perfNow = (): number =>
+  typeof performance !== 'undefined' ? performance.now() : Date.now();
 
 // ─── Options ───────────────────────────────────────────────────────────────
 
@@ -142,13 +148,18 @@ export interface CanvasOptions {
   config?: CanvasConfig;
 
   /**
-   * Optional telemetry sink — receives one {@link TelemetrySink} event per `view`
-   * mutation (`action` + `changedPaths` + `durationMs`). The engine stays
-   * exporter-agnostic (kernel design); a host app supplies an OTel-backed sink.
-   * For the **whole** event stream (input / scene / data / layout), also tap
-   * `canvas.store.events` directly (`createTapTracer(canvas.store.events, tracer)`).
+   * Telemetry to emit — independently toggle `traces` / `metrics` / `logging`
+   * (see {@link CanvasTelemetryConfig}). Each stream `true` uses the dep-free
+   * console adapter, so `telemetry: { traces: true, metrics: true }` works with
+   * zero extra installs; inject a real port (or use the opt-in
+   * `@invana/canvas-telemetry-otel` package) to export to OTLP / HyperDX. The
+   * engine + kernel stay vendor-free — the exporter lives outside.
+   *
+   * `metrics` covers the per-frame FPS / phase stream the engine emits on
+   * `render:loop:tick` (see {@link frames}); `traces` covers view-mutation,
+   * event-bus, and per-gesture interaction spans.
    */
-  telemetry?: TelemetrySink;
+  telemetry?: CanvasTelemetryConfig;
 }
 
 // ─── Canvas ────────────────────────────────────────────────────────────────
@@ -215,6 +226,18 @@ export class Canvas {
   /** Last message pushed on the message channel; `null` when idle / cleared. */
   private _currentMessage: string | null = null;
 
+  /**
+   * Per-frame performance recorder — FPS + per-phase CPU breakdown for the last
+   * N frames. Fed from {@link tickOnce}; read via {@link frames}. Always on (a
+   * ring-buffer write per frame is near-free); an OTel adapter opts in by tapping
+   * the `render:loop:tick` event this emits.
+   */
+  private readonly _frames = new FrameMeter();
+  /** Attributes each frame to the active gesture so {@link _frames} can tag it. */
+  private readonly _interactions: InteractionTracker;
+  /** `performance.now()` at the previous frame — for the true (unclamped) frame time. */
+  private _lastFrameTs = 0;
+
   constructor(opts: CanvasOptions = {}) {
     this.id = opts.id ?? 'canvas';
     this.options = opts;
@@ -223,6 +246,9 @@ export class Canvas {
     this.store = createCanvasStore(opts.telemetry ? { telemetry: opts.telemetry } : {});
     this.events = this.store.events;
     this.themeState = new CanvasThemeState(this.events);
+    // Frame attribution reads the same bus; the meter (a field initialiser) is
+    // fed per frame in `tickOnce`. Both always-on and near-free.
+    this._interactions = new InteractionTracker(this.events);
 
     // Registries exist from construction so layers/behaviours can be added
     // *before* `init()`. `getContext` returns `undefined` until init builds the
@@ -391,14 +417,26 @@ export class Canvas {
    */
   tickOnce(deltaMs = 16): void {
     if (!this._isInitialised) return;
+    // Frame timing: bracket each CPU phase with performance.now() so the meter
+    // can report where the frame went (camera / dataFlush / layers). GPU render is
+    // pixi's own pass, outside this tick, so it shows up as the `dt - cpuMs` remainder.
+    const t0 = perfNow();
+    // True (unclamped) inter-frame time. Pixi's `deltaMs` is floored at ~100ms
+    // (ticker `minFPS`), so it under-reports big freezes (a 250ms layout stall
+    // reads as 100ms) — measure the real gap ourselves. Fall back to the passed
+    // delta on the first frame / when `tickOnce` is driven synchronously (tests).
+    const dt = this._lastFrameTs > 0 && t0 - this._lastFrameTs > 0.5 ? t0 - this._lastFrameTs : deltaMs;
+    this._lastFrameTs = t0;
     // Advance pixi-viewport plugins (decelerate, snap, etc.).
     this.camera.tick(deltaMs);
+    const t1 = perfNow();
     // Drive every registered kernel data source's coalesced flush once per frame —
     // the single canvas clock (Phase 3.3). Drained BEFORE layers so a source's
     // delta marks its layer dirty in the same tick. Sources in their own
     // 'sync'/'frame' mode have usually already drained (flush() no-ops when nothing
     // is pending); sources the engine has put in 'manual' commit here.
     for (const id in this.store.data) this.store.data[id]?.flush();
+    const t2 = perfNow();
     for (const layer of this.layers.byZOrder()) {
       if (!layer.visible) continue;
       if (layer.hasPending()) layer.flush();
@@ -419,6 +457,27 @@ export class Canvas {
         ticker.renderer.tickAnimations(deltaMs);
       }
     }
+    const t3 = perfNow();
+
+    // Record + broadcast the frame. One small object per frame; the ring write
+    // is amortised O(1). Consumers (OTel adapter, HUD) tap `render:loop:tick`
+    // or pull from `this.frames`.
+    const tick = this._frames.sample({
+      ts: t0,
+      dt,
+      phases: { camera: t1 - t0, dataFlush: t2 - t1, layers: t3 - t2 },
+      interaction: this._interactions.current(t0),
+    });
+    this.events.emit('render:loop:tick', tick);
+  }
+
+  /**
+   * Frame-performance recorder — instantaneous + windowed FPS and the per-phase
+   * CPU breakdown for the last N frames. Read it for a HUD (`canvas.frames.stats()`)
+   * or subscribe to the per-frame `render:loop:tick` event for streaming.
+   */
+  get frames(): FrameMeter {
+    return this._frames;
   }
 
   /**
@@ -768,6 +827,7 @@ export class Canvas {
     this._onRendererResize = undefined;
     this._resizeObserver?.disconnect();
     this._resizeObserver = undefined;
+    this._interactions.dispose();
     this.app?.ticker.remove(this.tick, this);
     this.layers?.clear();
     this.behaviours?.clear();

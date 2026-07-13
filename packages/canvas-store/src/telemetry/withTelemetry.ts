@@ -29,14 +29,15 @@ export const NoopSink: TelemetrySink = { emit: () => {} };
  * Attach telemetry to a {@link ReactiveStore} — a **port decorator**, not a zustand
  * middleware, so it survives a backend swap (zustand → Yjs) and is scoped to this
  * (view) store, never the bulk data hot path. One event per change, carrying the
- * action label + the patch diff. Returns the same store for chaining.
+ * action label + the patch diff. Returns an **unsubscribe** so the caller can
+ * detach the sink (e.g. when tearing telemetry down).
  */
 export function withTelemetry<T>(
   store: ReactiveStore<T>,
   sink: TelemetrySink,
   now: () => number = () => Date.now(),
-): ReactiveStore<T> {
-  store.subscribeChanges((change) => {
+): () => void {
+  return store.subscribeChanges((change) => {
     sink.emit({
       action: change.action ?? 'update',
       changedPaths: changedPaths(change.patches),
@@ -45,5 +46,4 @@ export function withTelemetry<T>(
       ...(change.durationMs !== undefined ? { durationMs: change.durationMs } : {}),
     });
   });
-  return store;
 }

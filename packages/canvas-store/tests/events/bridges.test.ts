@@ -116,7 +116,7 @@ describe('bridges — the unified stream + telemetry', () => {
 
   it('telemetry sink + bus coexist (one telemetry event per view update)', () => {
     const telemetry: TelemetryEvent[] = [];
-    const store = createCanvasStore({ telemetry: { emit: (e) => telemetry.push(e) } });
+    const store = createCanvasStore({ telemetry: { sink: { emit: (e) => telemetry.push(e) } } });
     let stateChanges = 0;
     store.events.on('state:change', () => stateChanges++);
 

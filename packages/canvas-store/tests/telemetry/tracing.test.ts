@@ -12,7 +12,7 @@ import {
 describe('tracing — createTracingSink (view updates → spans)', () => {
   it('emits one action-named span per update, with diff + duration attributes', () => {
     const { tracer, spans } = createCollectorTracer(() => 0);
-    const store = createCanvasStore({ telemetry: createTracingSink(tracer) });
+    const store = createCanvasStore({ telemetry: { sink: createTracingSink(tracer) } });
 
     store.actions.hover.set('n1');
     store.actions.layers.add('graph', { type: 'graph' });
@@ -27,7 +27,7 @@ describe('tracing — createTracingSink (view updates → spans)', () => {
 
   it('a span prefix is applied', () => {
     const { tracer, spans } = createCollectorTracer(() => 0);
-    const store = createCanvasStore({ telemetry: createTracingSink(tracer, { prefix: 'canvas.' }) });
+    const store = createCanvasStore({ telemetry: { sink: createTracingSink(tracer, { prefix: 'canvas.' }) } });
     store.actions.camera.zoom(1.5);
     expect(spans[0]!.name).toBe('canvas.view:camera:zoom');
   });

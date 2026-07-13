@@ -14,14 +14,16 @@ import {
   useGraphCanvas,
   useMiniMap,
 } from '@invana/canvas-react';
+import { wireTelemetry } from '@invana/canvas-store';
 import { LayersPanelView } from '@invana/canvas-ui';
+import { otelTelemetry } from '@invana/canvas-telemetry-otel';
 import { gameOfThrones } from '@invana/graph-datasets/game-of-thrones';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { GeometricLayout } from '@invana/graph-layout-geometric';
 import { ThemeProvider } from '@invana/themes';
 import { Button, TabbedPanel, type MenuItem, type TabConfig } from '@invana/ui';
 import { Info, Layers } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 /**
  * `canvas-ui/views/LayersPanelView` — the `@invana/canvas-ui` **LayersPanelView** driving
@@ -148,6 +150,25 @@ export const LayersPanelStory: Story = {
     const mini = useMiniMap({ backgroundLayerId: 'background', position: 'bottom-left' });
     const [layersOpen, setLayersOpen] = useState(true);
 
+    // OpenTelemetry for this canvas — traces + metrics (FPS) + logging to the
+    // OTLP collector (→ HyperDX) under service `invana-canvas`. `otelTelemetry`
+    // (from `@invana/canvas-telemetry-otel`) builds the exporter-backed
+    // `CanvasTelemetryConfig`; `wireTelemetry` attaches every enabled stream to
+    // the live canvas in `onReady`. This is exactly how any app enables it —
+    // `new Canvas({ telemetry: otelTelemetry({...}) })` — shown wired at the
+    // story level. Built once per mount; disposed when the canvas tears down.
+    const telemetry = useMemo(
+      () =>
+        otelTelemetry({
+          serviceName: 'invana-canvas',
+          traces: true,
+          metrics: true,
+          logging: 'info',
+        }),
+      [],
+    );
+    const disposeTelemetry = useRef<(() => void) | null>(null);
+
     // The ENTIRE Game of Thrones graph, loaded 1:1 — every vertex and every
     // edge, with only the property-graph → `GraphNode`/`GraphEdge` rename
     // (`label → type`, `properties → data`). No filtering, no thresholds, no
@@ -171,11 +192,23 @@ export const LayersPanelStory: Story = {
       <ThemeProvider>
         <GraphCanvasApp
           data={data}
-          onReady={(c) =>
-            c?.showMessage(
-              `Loaded the full Game of Thrones graph — ${gameOfThrones.meta.nodeCount} nodes / ${gameOfThrones.meta.edgeCount} edges · switch layout in the toolbar`,
-            )
-          }
+          onReady={(c) => {
+            if (c) {
+              // Attach telemetry to the live engine's store + bus. Zoom / drag /
+              // hover now stream FPS metrics + per-gesture spans to HyperDX.
+              disposeTelemetry.current = wireTelemetry(
+                { view: c.store.view, events: c.events },
+                telemetry,
+              );
+              c.showMessage(
+                `Loaded the full Game of Thrones graph — ${gameOfThrones.meta.nodeCount} nodes / ${gameOfThrones.meta.edgeCount} edges · telemetry → HyperDX (service invana-canvas)`,
+              );
+            } else {
+              // Canvas torn down — detach the telemetry subscriptions.
+              disposeTelemetry.current?.();
+              disposeTelemetry.current = null;
+            }
+          }}
           header={{
             title: 'Game of Thrones · Full graph',
             // `applyInitialLayout` runs the first layout (grid) on mount — the

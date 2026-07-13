@@ -1,4 +1,5 @@
 import type { LayerFlush } from '../data/LayerData';
+import type { FrameTick } from '../perf/frame';
 import type { ResolvedTheme } from '../theme/types';
 import { CANVAS_SOURCE, type CanvasEvent, type EventSource } from './CanvasEvent';
 import { EventEmitter, type Listener } from './EventEmitter';
@@ -79,7 +80,13 @@ export interface CanvasGlobalEvents {
    * re-init on `to` (WebGL). `reason` is a short diagnostic tag.
    */
   'canvas:renderer:fallback': { from: string; to: string; reason?: string };
-  'render:loop:tick': { dt: number };
+  /**
+   * One measured engine frame — emitted once per `Canvas.tickOnce`. Carries the
+   * inter-frame period, per-phase CPU breakdown, and the attributed
+   * {@link InteractionKind}, so a tap can drive an FPS trace + attribute dips to
+   * the gesture that caused them. See {@link FrameTick}.
+   */
+  'render:loop:tick': FrameTick;
   /** The shared status-message channel. `text: null` clears; `timeout` (ms) auto-clears. */
   'canvas:message:show': { text: string | null; timeout?: number };
   /** A tap dropped an event (filtered or sampled out) — diagnostic. */

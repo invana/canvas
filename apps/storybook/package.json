@@ -17,6 +17,7 @@
     "@invana/canvas-store": "workspace:*",
     "@invana/canvas-ui": "workspace:*",
     "@invana/graph": "workspace:*",
+    "@invana/canvas-telemetry-otel": "workspace:*",
     "@invana/graph-datasets": "workspace:*",
     "@invana/graph-layer-bubble-sets": "workspace:*",
     "@invana/graph-layer-d3-contour": "workspace:*",

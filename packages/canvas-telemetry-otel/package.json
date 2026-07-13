@@ -1,0 +1,69 @@
+{
+  "name": "@invana/canvas-telemetry-otel",
+  "version": "0.0.11",
+  "description": "OpenTelemetry (OTLP/HTTP) adapter for @invana/canvas telemetry — traces, metrics (FPS), and logs to HyperDX or any OTel collector.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typedocOptions": {
+    "entryPoints": [
+      "src/index.ts"
+    ]
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@invana/canvas-store": "workspace:*"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/api-logs": "^0.203.0",
+    "@opentelemetry/exporter-logs-otlp-http": "^0.203.0",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.203.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.203.0",
+    "@opentelemetry/resources": "^2.0.0",
+    "@opentelemetry/sdk-logs": "^0.203.0",
+    "@opentelemetry/sdk-metrics": "^2.0.0",
+    "@opentelemetry/sdk-trace-base": "^2.0.0",
+    "@opentelemetry/sdk-trace-web": "^2.0.0",
+    "@opentelemetry/semantic-conventions": "^1.30.0"
+  },
+  "devDependencies": {
+    "@invana/canvas-store": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "tsup": "^8.3.5",
+    "typescript": "5.9.2"
+  },
+  "keywords": [
+    "canvas",
+    "telemetry",
+    "opentelemetry",
+    "otlp",
+    "hyperdx",
+    "observability",
+    "fps",
+    "metrics",
+    "traces"
+  ],
+  "license": "Apache-2.0",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

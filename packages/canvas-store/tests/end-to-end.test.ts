@@ -19,7 +19,7 @@ type NodeStyle = { radius: number };
 describe('end-to-end — a setting update drives renderer + a React-like subscriber', () => {
   it('layer/behaviour/layout settings react; targeted; telemetry + history fall out', () => {
     const telemetry: TelemetryEvent[] = [];
-    const store = createCanvasStore({ telemetry: { emit: (e) => telemetry.push(e) } });
+    const store = createCanvasStore({ telemetry: { sink: { emit: (e) => telemetry.push(e) } } });
     const history = createHistory(store.view);
     const graph = store.layer('graph');
 

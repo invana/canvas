@@ -6,7 +6,7 @@ import { changedPaths } from './port/patch';
 import type { ReactiveStore } from './port/types';
 import { LayerData } from './data/LayerData';
 import type { DataSource } from './data/DataSource';
-import { withTelemetry, type TelemetrySink } from './telemetry/withTelemetry';
+import { wireTelemetry, type CanvasTelemetryConfig } from './telemetry/config';
 import { CanvasThemeState } from './theme/CanvasThemeState';
 import { defaultCanvasView, type CanvasView } from './view/CanvasView';
 
@@ -51,8 +51,13 @@ export interface CanvasStore {
 }
 
 export interface CreateCanvasStoreOptions {
-  /** Attach a telemetry sink to the view store (one event per `update`). */
-  telemetry?: TelemetrySink;
+  /**
+   * Telemetry to emit — independently toggle `traces` / `metrics` / `logging`
+   * (see {@link CanvasTelemetryConfig}). `true` per stream uses the dep-free
+   * console adapter; inject a real port for OTLP/HyperDX export via the opt-in
+   * `@invana/canvas-telemetry-otel` package. Omitted → no telemetry.
+   */
+  telemetry?: CanvasTelemetryConfig;
   /** View-store backend. Default `'zustand'`; `'memory'` is dependency-free. */
   backend?: 'zustand' | 'memory';
 }
@@ -122,7 +127,10 @@ export function createCanvasStore(opts: CreateCanvasStoreOptions = {}): CanvasSt
     }
   });
 
-  if (opts.telemetry) withTelemetry(view, opts.telemetry);
+  // Attach whichever telemetry streams the config enables (traces / metrics /
+  // logging). Lives for the store's lifetime — the returned disposer is only
+  // needed if telemetry is torn down independently, which the kernel doesn't do.
+  if (opts.telemetry) wireTelemetry({ view, events }, opts.telemetry);
 
   const data: Record<string, DataSource> = {};
   const unbridge: Record<string, () => void> = {};

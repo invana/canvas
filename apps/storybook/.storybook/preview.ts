@@ -13,9 +13,6 @@ import './tailwind.css';
 
 import './global.css';
 
-import { createTapTracer, onCanvasStoreCreated } from '@invana/canvas-store';
-import { getCanvasTracer, telemetryInfo } from '../stories/canvas-store/otel';
-
 /**
  * Make the `@invana/ui` chrome follow the OS colour scheme. The design-kit
  * has no `prefers-color-scheme` wiring of its own — it switches themes by
@@ -43,34 +40,10 @@ function bootstrapOsTheme(): void {
 }
 bootstrapOsTheme();
 
-/**
- * Telemetry for **every** story. `onCanvasStoreCreated` (kernel) fires for every
- * `CanvasStore` at construction — the single chokepoint every `Canvas` funnels
- * through, whether a story hand-rolls `new Canvas()`/`new GraphCanvas()` or uses
- * `<Canvas>` / `<GraphCanvasApp>`. So this one registration traces all ~285
- * stories with no per-story edits.
- *
- * `createTapTracer` turns every bus event into a span — including the
- * `state:change` events that carry the mutation's `action` label + `durationMs` —
- * so the full flow (input · scene · data flush · view mutations · layout · render)
- * is captured. Spans print to the console and export over OTLP/HTTP → the
- * collector (→ HyperDX) when enabled (`VITE_INVANA_TELEMETRY_ENABLED !== 'false'`;
- * endpoint via `VITE_INVANA_TELEMETRY_OTLP_HTTP_ENDPOINT`). The tap is torn down
- * with the canvas (`destroy()` → `events.clearTaps()`), so it doesn't leak across
- * stories.
- *
- * NB: the `canvas-store/Playground` story wires its own tracer too, so its spans
- * are duplicated — harmless.
- */
-const storyTracer = getCanvasTracer();
-onCanvasStoreCreated((store) => {
-  createTapTracer(store.events, storyTracer);
-});
-console.info(
-  `[storybook telemetry] tracing every story's canvas → ${
-    telemetryInfo.otlpEnabled ? telemetryInfo.endpoint : 'console only'
-  }`,
-);
+// Telemetry is wired per-consumer, not globally here — see
+// `stories/canvas-ui/views/LayersPanelView.stories.tsx` for the canonical
+// `otelTelemetry(...)` + `wireTelemetry(...)` wiring on a live canvas. (The
+// `canvas-store/Playground` story wires its own tracer via `stories/canvas-store/otel.ts`.)
 
 /** Extracts only the play() function body from a story source string. */
 function extractPlayBody(src: string): string {
