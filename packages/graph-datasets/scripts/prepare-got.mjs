@@ -213,6 +213,74 @@ for (const [key, shared] of coScenes) {
   );
 }
 
+// ── Derive the graph schema (meta-graph / ontology) ──────────────────────
+// Introspect the emitted nodes/edges so the schema can never drift from the
+// data: per vertex/relation kind we record its count, the primitive type of
+// each property (unioned across records → e.g. `string | null`), and — for
+// edges — the observed `{ source, target }` endpoint label-pairs.
+
+/** Relation labels whose direction is not meaningful (symmetric networks). */
+const UNDIRECTED = new Set(['co_appears_with']);
+
+/** Compact primitive type name for a JSON value. */
+const typeOf = (value) =>
+  value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value;
+
+/** Sorted type union with `null` kept last for readability (`string | null`). */
+const unionType = (set) => {
+  const rest = [...set].filter((t) => t !== 'null').sort();
+  return [...rest, ...(set.has('null') ? ['null'] : [])].join(' | ');
+};
+
+/** Accumulate `{ key → Set<typeString> }` for one record's property bag. */
+const collectProps = (props, into) => {
+  for (const [k, v] of Object.entries(props)) {
+    if (!into.has(k)) into.set(k, new Set());
+    into.get(k).add(typeOf(v));
+  }
+};
+
+/** Materialise a `{ key → Set }` map into a `{ key: "type union" }` object. */
+const propTypes = (map) =>
+  Object.fromEntries([...map].map(([k, set]) => [k, unionType(set)]));
+
+const labelOf = new Map(nodes.map((n) => [n.id, n.label])); // id → vertex label
+
+const nodeAgg = new Map(); // label → { count, props }
+for (const n of nodes) {
+  if (!nodeAgg.has(n.label)) nodeAgg.set(n.label, { count: 0, props: new Map() });
+  const a = nodeAgg.get(n.label);
+  a.count += 1;
+  collectProps(n.properties, a.props);
+}
+
+const edgeAgg = new Map(); // label → { count, endpoints, props }
+for (const e of edges) {
+  if (!edgeAgg.has(e.label)) edgeAgg.set(e.label, { count: 0, endpoints: new Set(), props: new Map() });
+  const a = edgeAgg.get(e.label);
+  a.count += 1;
+  a.endpoints.add(`${labelOf.get(e.source)}>${labelOf.get(e.target)}`);
+  collectProps(e.properties, a.props);
+}
+
+const schema = {
+  nodeTypes: [...nodeAgg].map(([label, a]) => ({
+    label,
+    count: a.count,
+    properties: propTypes(a.props),
+  })),
+  edgeTypes: [...edgeAgg].map(([label, a]) => ({
+    label,
+    count: a.count,
+    directed: !UNDIRECTED.has(label),
+    endpoints: [...a.endpoints].sort().map((pair) => {
+      const [source, target] = pair.split('>');
+      return { source, target };
+    }),
+    properties: propTypes(a.props),
+  })),
+};
+
 // ── Emit ─────────────────────────────────────────────────────────────────
 const out = {
   meta: {
@@ -226,6 +294,7 @@ const out = {
     sourceRepo: SOURCE_REPO,
     nodeCount: nodes.length,
     edgeCount: edges.length,
+    schema,
   },
   nodes,
   edges,

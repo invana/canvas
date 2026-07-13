@@ -162,6 +162,48 @@ export interface GotEdge {
   readonly properties: GotEdgeProperties;
 }
 
+/** One vertex kind in the {@link GotSchema} — its label, tally, and property types. */
+export interface GotNodeTypeSchema {
+  readonly label: GotNodeLabel;
+  /** Number of vertices carrying this label. */
+  readonly count: number;
+  /**
+   * Property key → primitive type string, unioned across every vertex of this
+   * kind (`'string'`, `'number'`, `'string | null'`, …).
+   */
+  readonly properties: Readonly<Record<string, string>>;
+}
+
+/** A permitted `{ source → target }` vertex pairing for a relation kind. */
+export interface GotEndpointSchema {
+  readonly source: GotNodeLabel;
+  readonly target: GotNodeLabel;
+}
+
+/** One relation kind in the {@link GotSchema} — its endpoints, tally, and property types. */
+export interface GotEdgeTypeSchema {
+  readonly label: GotEdgeLabel;
+  /** Number of edges carrying this label. */
+  readonly count: number;
+  /** `false` for symmetric networks (`co_appears_with`); `true` otherwise. */
+  readonly directed: boolean;
+  /** Every `{ source, target }` label-pair observed for this relation. */
+  readonly endpoints: readonly GotEndpointSchema[];
+  /** Property key → primitive type string; `{}` for the structural relations. */
+  readonly properties: Readonly<Record<string, string>>;
+}
+
+/**
+ * The graph schema (meta-graph / ontology) — the vertex and relation kinds the
+ * dataset contains, each with counts, property types, and (for edges) endpoint
+ * constraints. Derived by the generator from the emitted data, so it always
+ * matches {@link GameOfThronesData.nodes} / `.edges`.
+ */
+export interface GotSchema {
+  readonly nodeTypes: readonly GotNodeTypeSchema[];
+  readonly edgeTypes: readonly GotEdgeTypeSchema[];
+}
+
 /** Self-describing provenance + counts baked into the JSON by the generator. */
 export interface GotMeta {
   readonly name: string;
@@ -172,6 +214,8 @@ export interface GotMeta {
   readonly sourceRepo: string;
   readonly nodeCount: number;
   readonly edgeCount: number;
+  /** The graph's meta-graph — vertex/relation kinds, their property types + endpoints. */
+  readonly schema: GotSchema;
 }
 
 /** The full dataset: provenance + the property graph. */
