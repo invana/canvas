@@ -895,6 +895,29 @@ export class PrimitivesRenderer {
   }
 
   /**
+   * True iff re-rendering connector `id` with `next` would leave its **geometry**
+   * unchanged — everything but the `stroke` matches the current spec. Lets a
+   * state-only re-render (hover / select highlight) take the `setConnectorStroke`
+   * fast path and skip the re-route + hit-reindex a full `updateConnector` does.
+   *
+   * Conservative: it compares the whole spec **minus `stroke`**, so any real
+   * geometry / marker / router change (or an unknown edge, or a key-order
+   * mismatch) returns `false` and the caller does the full update — it can never
+   * green-light a stale-geometry fast path.
+   */
+  connectorGeometryUnchanged(id: string, next: BaseConnectorSpec): boolean {
+    const inst = this.connectorInstances.get(id);
+    if (!inst) return false;
+    return this.strippedStrokeKey(inst.spec) === this.strippedStrokeKey(next);
+  }
+
+  /** Stable-ish key of a connector spec with `stroke` removed (geometry only). */
+  private strippedStrokeKey(spec: BaseConnectorSpec): string {
+    const { stroke: _stroke, ...geometry } = spec as BaseConnectorSpec & { stroke?: unknown };
+    return JSON.stringify(geometry);
+  }
+
+  /**
    * Re-route the path for `inst`, trim by aggregated decoration end-padding,
    * redraw the connector body + markers on the trimmed path, and refresh
    * any attached decorations against the new path. Called whenever the

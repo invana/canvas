@@ -447,7 +447,8 @@ export class GraphLayer extends WorldLayer<
           this.dirtyStateNodes.clear();
         }
         if (this.dirtyStateEdges.size > 0) {
-          for (const edgeId of this.dirtyStateEdges) this.rerenderEdge(edgeId);
+          // State-only re-render (hover / select) — enables the stroke fast-path.
+          for (const edgeId of this.dirtyStateEdges) this.rerenderEdge(edgeId, true);
           this.dirtyStateEdges.clear();
         }
         if (this.dirtyConnectors.size > 0 && this._renderer) {
@@ -1579,19 +1580,50 @@ export class GraphLayer extends WorldLayer<
    * state-driven full-spec replacement. The fresh spec carries the new
    * "base" stroke width; the multiplier applies on top at draw time.
    */
-  private rerenderEdge(id: string): void {
+  private rerenderEdge(id: string, stateOnly = false): void {
     if (!this._renderer) return;
     const edge = this.store.getEdge(id);
     if (!edge) return;
     const spec = this.edgeSpec(edge);
     if (this._renderer.hasConnector(id)) {
-      this._renderer.updateConnector(id, spec);
+      // Hover / select fast-path (G): a state-only re-render whose geometry is
+      // unchanged and whose new stroke is plain `color` + `width` just needs a
+      // stroke redraw on the cached path — skip the re-route + hit-reindex that
+      // `updateConnector` does. Any dash / alignment / alpha / marker / routing
+      // difference fails a guard and falls back to the full update, so this can
+      // never render stale. Meaningful under degree-hover (many incident edges).
+      const stroke = (spec as { stroke?: Record<string, unknown> }).stroke;
+      if (
+        stateOnly &&
+        this.strokeIsPlain(stroke) &&
+        this._renderer.connectorGeometryUnchanged(id, spec)
+      ) {
+        this._renderer.setConnectorStroke(id, {
+          color: stroke!.color as number,
+          width: stroke!.width as number,
+        });
+      } else {
+        this._renderer.updateConnector(id, spec);
+      }
     } else {
       this._renderer.addConnector(id, spec);
     }
     this.syncEdgeLabel(id);
     this.syncEdgeDecorations(id);
     this.syncEdgeBadges(id);
+  }
+
+  /**
+   * True iff a connector stroke is representable by the `setConnectorStroke`
+   * fast path — carries a numeric `color` + `width` and nothing else (no dash /
+   * alignment). Anything richer must go through the full re-render.
+   */
+  private strokeIsPlain(stroke: Record<string, unknown> | undefined): boolean {
+    if (!stroke || typeof stroke.color !== 'number' || typeof stroke.width !== 'number') {
+      return false;
+    }
+    for (const k in stroke) if (k !== 'color' && k !== 'width') return false;
+    return true;
   }
 
   private drainDirtyConnectors(): void {
