@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { CanvasConfig } from '@invana/canvas';
+import type { CanvasConfig, Rect } from '@invana/canvas';
 import {
   CanvasMessageBar,
   DegreeSizeBehaviour,
@@ -12,11 +12,21 @@ import {
   type LayoutFactory,
   Panel,
   ThemeToggle,
+  IconLODBehaviour,
+  TextLODBehaviour,
   useDevTool,
   useGraphCanvas,
+  useGraphCanvasUpdate,
   useMiniMap,
 } from '@invana/canvas-react';
-import { LayersPanelView } from '@invana/canvas-ui';
+import {
+  ContentLODEditor,
+  contentLODFormToOptions,
+  contentLODOptionsToForm,
+  type ContentLODOptions,
+  LayersPanelView,
+  textLODFields,
+} from '@invana/canvas-ui';
 import type { NodeIcon } from '@invana/graph';
 import { wikipediaDataViz, type WdvNodeLabel } from '@invana/graph-datasets/wikipedia-dataviz';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
@@ -29,6 +39,7 @@ import {
   Cpu,
   File,
   GraduationCap,
+  Eye,
   Info,
   Landmark,
   Layers,
@@ -54,8 +65,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
  * `Method`, `Chart type`, `Technology`, `Tool`, `Person`, `List`,
  * `Organization`, `Company`) wired by ~5.4k directed `links_to` hyperlinks. No
  * synthetic grouping; the panel browses the graph by its real node/edge types.
- * The default bundle colours nodes by `type` (one hue per tag) and lays them out
- * with a one-shot d3-force pass that fits to content on completion. Two extras
+ * The default bundle colours nodes by `type` (one hue per tag). Nodes render at
+ * the dataset's **precomputed ForceAtlas2 positions** (no layout runs on load —
+ * a synchronous force pass at this scale froze the UI). Two extras
  * layer on top: a **per-tag icon** (Lucide from `lucide-react`, inlined as a
  * `data:` URI on the graph layer template, resolved by `type`) and a
  * **`DegreeSizeBehaviour`** that scales each node by its
@@ -73,15 +85,12 @@ const meta: Meta = { title: 'canvas-ui/views/LayersPanelView' };
 export default meta;
 type Story = StoryObj;
 
-// Multi-layout picker for the header toolbar. d3-force is first — matching the
-// bundle's own active layout, which runs on mount and frames the graph — so the
-// picker's initial selection reflects what's actually on screen. Grid / circular
-// are instant O(n) re-layouts. `applyInitialLayout` is intentionally OFF: the
-// bundle's active force layout already does the initial placement + fit; a second
-// initial layout here would fight it.
+// On-demand re-layout picker for the header toolbar. Nothing runs on load (the
+// graph opens at its precomputed positions); these are opt-in. `applyInitialLayout`
+// stays OFF so the initial cartography isn't clobbered.
 const LAYOUTS: Record<string, LayoutFactory> = {
-  // Force is comfortable at this scale (~2k nodes / ~5.4k edges). Non-animated:
-  // runs the simulation to completion off-frame, then snaps to final positions.
+  // Force re-layout (~2k nodes / ~5.4k edges). Non-animated → runs to completion
+  // synchronously, so it briefly blocks — fine as a deliberate, user-clicked action.
   'd3-force': () =>
     new D3ForceLayout({ charge: { strength: -160 }, link: { distance: 56 }, animate: false }),
   grid: () => new GeometricLayout({ mode: 'grid', columnGap: 70, rowGap: 70 }),
@@ -128,31 +137,44 @@ const TAG_ICON: Record<WdvNodeLabel, NodeIcon> = {
   unknown: tagIcon(File),
 };
 
-// Config overrides deep-merged over the bundle defaults:
-//   - `icon` — a per-tag icon on the graph layer's node template, resolved
-//     against each stored node by its `type`. `CanvasConfig.layers` is an
-//     untyped bag, so the resolver rides through verbatim — merging with the
-//     bundle's shape/label style, its ColorByLabel fill, and the DegreeSize
-//     size (four orthogonal channels, none clobbering another).
-//   - `labelMinZoom` — hide the ~2k node labels until the camera zooms past 1.5×.
-//     The renderer enforces this per label with no LOD behaviour, so at the
-//     packed overview zoom (where labels are an unreadable smear anyway) zero
-//     `Text` objects render — pixi's priciest primitive — keeping pan/zoom fast;
-//     labels fade in only once you zoom in to inspect individual pages.
+// The one config override deep-merged over the bundle defaults: a per-tag `icon`
+// on the graph layer's node template, resolved against each stored node by its
+// `type`. `CanvasConfig.layers` is an untyped bag, so the resolver rides through
+// verbatim — merging with the bundle's shape/label style, its ColorByLabel fill,
+// and the DegreeSize size (four orthogonal channels, none clobbering another).
+// Zoom-visibility (hiding labels/icons at overview) is NOT here — it's the
+// TextLOD / IconLOD behaviours' job, kept off the render path (see below).
 // Module-level so the reference stays stable across re-renders.
 const CONFIG: CanvasConfig = {
+  // Disable the bundle's auto-run force layout — the nodes ship with precomputed
+  // positions, and a synchronous force pass on ~2k nodes blocks the UI on load.
+  // `'none'` matches no registered layout, so the engine's layout step no-ops.
+  activeLayout: 'none',
   layers: {
     graph: {
       node: {
         style: {
           icon: (node: { type?: string }) =>
             TAG_ICON[(node.type ?? 'unknown') as WdvNodeLabel] ?? TAG_ICON.unknown,
-          labelMinZoom: 1.5,
+          // The page title lives in `data.name`; wire it to the label text so
+          // nodes actually get a label (the bundle only styles labels, it never
+          // supplies the text). Hidden below 1.5× by TextLODBehaviour.
+          labelText: (node: { data?: { name?: string } }) => node.data?.name ?? '',
         },
       },
     },
   },
 };
+
+// Initial zoom bands for the split content-LOD behaviours — the single source
+// each behaviour and its editor read, so they start in sync. Text (node labels
+// + composite text) hides below 1.5×; icons hide below 1×. Edits in the
+// Visibility tab push to each behaviour via setOptions.
+// Text hides below 1.5×, BUT the top 3% most-connected pages keep their labels
+// at every zoom (relative centrality, so it adapts to any graph). Icons hide
+// below 1×.
+const TEXT_LOD: ContentLODOptions = { minZoom: 1.5, alwaysShowTop: 0.03 };
+const ICON_LOD: ContentLODOptions = { minZoom: 1 };
 
 const nodeMenu = (ctx: GraphNodeMenuContext): MenuItem[] => [
   { id: 'inspect', label: `Inspect ${ctx.id}`, onClick: () => window.alert(`Page ${ctx.id}`) },
@@ -209,10 +231,47 @@ function AboutTab() {
         (<code>DegreeSizeBehaviour</code>, sqrt-scaled) — so hubs read big and typed at a glance.
       </p>
       <p>
-        Node <strong className="text-foreground">labels</strong> stay hidden at the packed overview
-        (an unreadable smear at ~2k nodes) and fade in past 1.5× zoom
-        (<code>labelMinZoom</code>) — keeping pan/zoom fast until you zoom in to read individual pages.
+Node <strong className="text-foreground">text</strong> (labels + composite text, past 1.5×) and{' '}
+        <strong className="text-foreground">icons</strong> (past 1×) stay hidden at the packed
+        overview — an unreadable smear at ~2k nodes — and reveal as you zoom in, via the opt-in,
+        per-kind <code>TextLODBehaviour</code> / <code>IconLODBehaviour</code> (off the render path;
+        toggle only on a zoom threshold crossing) — except the{' '}
+        <strong className="text-foreground">top 3% most-connected pages</strong>, whose labels persist
+        at every zoom (<code>alwaysShowTop</code>, a relative degree-centrality cut). Keeps pan/zoom
+        fast while the hubs stay legible. Tweak each band live in the{' '}
+        <strong className="text-foreground">Visibility</strong> tab.
       </p>
+    </div>
+  );
+}
+
+/**
+ * Live editors for the split content-LOD behaviours — one `@invana/canvas-ui`
+ * `ContentLODEditor` per behaviour (Text · Icon), each wired to its running
+ * instance. Editing a band + Apply pushes through
+ * `useGraphCanvasUpdate().update({ behaviours: { '<id>': … } })` → that
+ * behaviour's `setOptions`, so it re-gates at the new band without a remount.
+ * Seeded from {@link TEXT_LOD} / {@link ICON_LOD} so they open in sync.
+ */
+function VisibilityLODTab() {
+  const update = useGraphCanvasUpdate();
+  // `CanvasConfig.behaviours` is an untyped bag; the options object rides through
+  // verbatim to the target behaviour's `setOptions`.
+  const applyTo = (id: string) => (values: ContentLODOptions) =>
+    update({ behaviours: { [id]: contentLODFormToOptions(values) as unknown as Record<string, unknown> } });
+  return (
+    <div className="h-full overflow-y-auto">
+      <ContentLODEditor
+        title="Text — node labels + composite text"
+        fields={textLODFields}
+        defaults={contentLODOptionsToForm(TEXT_LOD)}
+        onSubmit={applyTo('text-lod')}
+      />
+      <ContentLODEditor
+        title="Icons"
+        defaults={contentLODOptionsToForm(ICON_LOD)}
+        onSubmit={applyTo('icon-lod')}
+      />
     </div>
   );
 }
@@ -223,6 +282,7 @@ function LayersPanelDock() {
   const canvas = useGraphCanvas();
   const tabs: TabConfig[] = [
     { value: 'layers', label: 'Layers', icon: Layers, content: <LayersPanelView canvas={canvas} /> },
+    { value: 'visibility', label: 'Visibility', icon: Eye, content: <VisibilityLODTab /> },
     { value: 'about', label: 'About', icon: Info, content: <AboutTab /> },
   ];
   return (
@@ -247,15 +307,22 @@ export const WikipediaDataViz: Story = {
     const [layersOpen, setLayersOpen] = useState(true);
 
     // The ENTIRE Wikipedia data-viz graph, loaded 1:1 — every page and every
-    // hyperlink, with only the property-graph → `GraphNode`/`GraphEdge` rename
-    // (`label → type`, `properties → data`). No filtering, no thresholds, no
-    // synthetic groups. The panel browses it by its real node/edge types; the
-    // bundle's ColorByLabelBehaviour tints each of the eleven tag types. Memoised
-    // so re-renders (e.g. toggling the panel) don't rebuild the ~2k nodes /
-    // ~5.4k edges and re-trigger the active layout.
+    // hyperlink, with the property-graph → `GraphNode`/`GraphEdge` rename
+    // (`label → type`, `properties → data`) plus the dataset's **precomputed
+    // ForceAtlas2 positions** (`data.x` / `data.y`) mapped to `position`. Those
+    // positions are the whole point of this cartography, and using them means
+    // **no layout runs on load** — a synchronous force pass over ~2k nodes /
+    // ~5.4k edges is what was freezing the UI (it can't be interrupted). The
+    // toolbar can still re-layout on demand. Memoised so panel toggles don't
+    // rebuild the graph.
     const data = useMemo(
       () => ({
-        nodes: wikipediaDataViz.nodes.map((n) => ({ id: n.id, type: n.label, data: n.properties })),
+        nodes: wikipediaDataViz.nodes.map((n) => ({
+          id: n.id,
+          type: n.label,
+          data: n.properties,
+          position: { x: n.properties.x, y: n.properties.y },
+        })),
         edges: wikipediaDataViz.edges.map((e) => ({
           id: e.id,
           source: e.source,
@@ -276,6 +343,19 @@ export const WikipediaDataViz: Story = {
               c.showMessage(
                 `Loaded the full Wikipedia data-viz cartography — ${wikipediaDataViz.meta.nodeCount} nodes / ${wikipediaDataViz.meta.edgeCount} edges (sigma.js demo)`,
               );
+              // No layout runs (precomputed positions), so nothing auto-frames the
+              // camera. Fit once the graph has painted (retry next frame if the
+              // bounds aren't ready yet).
+              const fit = (): boolean => {
+                const layer = c.layers.get('graph') as { getBounds?(): Rect } | undefined;
+                const b = layer?.getBounds?.();
+                if (b && b.width > 0 && b.height > 0) {
+                  c.camera.fitContent(b, 60);
+                  return true;
+                }
+                return false;
+              };
+              if (!fit()) requestAnimationFrame(() => void fit());
             }
           }}
           header={{
@@ -296,10 +376,24 @@ export const WikipediaDataViz: Story = {
           {mini.layer}
           {dev.layer}
 
-          {/* Size every node by its degree (incident-edge count). sqrt curve
-              dampens the hub long-tail; writes per-node `style.size`, which the
-              renderer, bounds, and force-collide all read. */}
-          <DegreeSizeBehaviour targetLayerId="graph" direction="both" minSize={10} maxSize={42} scale="sqrt" />
+          {/* Size every node by its degree (incident-edge count). The dataset is
+              a power law (median degree 3, max 73), so `linear` + a wide 6→56
+              range keeps the low-degree mass small and lets the hubs genuinely
+              dominate (sqrt/log would dampen them into the pack). Writes per-node
+              `style.size`, which the renderer, bounds, and force-collide read. */}
+          <DegreeSizeBehaviour targetLayerId="graph" direction="both" minSize={6} maxSize={56} scale="linear" />
+
+          {/* Content zoom-LOD — split per kind so text and icons gate
+              independently. Both hide the ~2k pieces at the packed overview
+              (unreadable there) and reveal past their bands, keeping pan/zoom
+              fast. Opt-in, off the render path: they toggle only on a threshold
+              crossing. TextLOD covers node labels AND composite internal text. */}
+          <TextLODBehaviour
+            targetLayerId="graph"
+            minZoom={TEXT_LOD.minZoom}
+            alwaysShowTop={TEXT_LOD.alwaysShowTop}
+          />
+          <IconLODBehaviour targetLayerId="graph" minZoom={ICON_LOD.minZoom} />
 
           {/* Right-click menus. */}
           <GraphNodeContextMenu items={nodeMenu} />
