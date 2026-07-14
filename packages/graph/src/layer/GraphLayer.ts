@@ -271,7 +271,13 @@ export class GraphLayer extends WorldLayer<
     this.initialData = opts.options.initData;
     // Stamp the store's telemetry source id with the layer id so multiple
     // graphs are distinguishable on the tap channel (§ 6).
-    this.store = opts.options.store ?? new GraphStore({ id: this.id });
+    // Frame-coalesced flush (F): a rendered graph doesn't need a synchronous
+    // paint per mutation — during drag / streaming, 120 Hz pointermove churn
+    // would otherwise trigger 120 flush+paints/sec. `'frame'` collapses them to
+    // one flush per rAF. (GraphStore's own default stays `'sync'` — direct-
+    // construction unit tests are unaffected; a caller can still pass their own
+    // `store`.) Trade-off: graph updates land on the next frame, not synchronously.
+    this.store = opts.options.store ?? new GraphStore({ id: this.id, flushMode: 'frame' });
     // v3 G6-aligned layer template — single source of truth for style /
     // state catalogue. Both fields are resolver-aware via the
     // `ResolvableNodeStyle` / `ResolvableEdgeStyle` shape. The canonical
