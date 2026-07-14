@@ -57,6 +57,10 @@ working design-of-record documents. Day-to-day API/concept docs live in
 - [designer-studio-plan.md](./designer-studio-plan.md) — **Designer** studio page (sibling of Explorer, on `GraphCanvasApp`); umbrella doc sequencing the state refactor → editor kit → page → telemetry → collaboration.
 - [toolbars-plan.md](./toolbars-plan.md) — reusable toolbar building blocks + assembled toolbars.
 
+## Performance & scale
+
+- [large-graph-performance-plan.md](./large-graph-performance-plan.md) — **rendering perf on large, crowded graphs** (the ~5k-node / ~28.6k-edge "hairball"): the symptom, the telemetry-measured root cause (no viewport culling + one `Graphics` per edge → ~110k display objects re-rendered every frame; the `layers` phase dominates pan/drag/layout; loose edge bboxes make hover hit-test expensive), the **zoom-regime framing** (culling wins zoomed-in; batching + LOD win zoomed-out; neither is universal), the render options (A culling · B edge batching · C zoom-LOD · D cache path samples · E gate edge hit-test by zoom · F frame-coalesced flush · G hover fast-path), and — for **hovering the *right* edge in a crowd** — the edge-pick **correctness** analysis (nearest-wins is technically right but flickers / is ambiguous / invisible when edges are near-coincident) with its own options (H segment-level hit index · I stable nearest + hysteresis · J node-incidence bias · K node-hover-first · L ambiguity picker) and the "reliable-when-separable, graceful-when-not" stance. Recommended phasing: cheap standalone wins + edge-pick stability first → segment index → culling → batching/LOD. Companion to the `feat/canvas-telemetry-otel` observability work.
+
 ## Engine features
 
 - [text-labels-plan.md](./text-labels-plan.md) — text labels for nodes & edges.
