@@ -227,6 +227,13 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
    */
   private labelResolution: number | null = null;
 
+  /**
+   * Whether the mounted `label` parts are hidden. Persists across
+   * {@link syncLabels} (re-applied per redraw, like {@link labelResolution}) so a
+   * text zoom-LOD toggle survives updates. Driven by {@link setTextVisible}.
+   */
+  private textHidden = false;
+
   /** Borrowed background shape — provides the silhouette geometry. */
   private rootShape!: ShapeBase<CompositeRootSpec>;
   private rootKind = '';
@@ -407,6 +414,10 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
       const w = view.display.width;
       const dx = p.anchor === 'right' ? -w : p.anchor === 'center' ? -w / 2 : 0;
       view.display.position.set(p.x + dx, p.y);
+
+      // Re-assert the persistent text-visibility flag so a zoom-LOD hide
+      // survives this redraw / re-mount.
+      view.display.visible = !this.textHidden;
     });
 
     // Destroy labels no longer present in the spec.
@@ -474,6 +485,18 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
     if (!Number.isFinite(resolution) || resolution <= 0) return;
     this.labelResolution = resolution;
     for (const view of this.labelViews.values()) applyLabelResolution(view, resolution);
+  }
+
+  /**
+   * Show / hide every mounted `label` part — the composite's internal text.
+   * A pure `.visible` flip; the flag persists so a later redraw keeps text
+   * hidden ({@link syncLabels} re-asserts it). This is the `IShape.setTextVisible`
+   * hook the renderer's text zoom-LOD path drives, so a `TextLODBehaviour` gates
+   * composite text the same way it gates a simple node's `'label'` decoration.
+   */
+  setTextVisible(visible: boolean): void {
+    this.textHidden = !visible;
+    for (const view of this.labelViews.values()) view.display.visible = visible;
   }
 
   /**

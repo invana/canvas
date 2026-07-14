@@ -43,6 +43,18 @@ export abstract class ShapeBase<TSpec extends BaseShapeSpec>
   protected readonly insetViews = new Map<number, InsetContentView>();
   protected spec!: TSpec;
 
+  /**
+   * When true, inset-content (`glyph` / `svg` / `svg-url` icon) views are
+   * hidden. Persists across {@link draw} so a zoom-visibility toggle survives
+   * later repaints. Driven by {@link setInsetContentVisible}.
+   */
+  private iconHidden = false;
+  /**
+   * When true, `image` silhouette-fill layers are skipped when painting the
+   * body. Persists across {@link draw}. Driven by {@link setImageFillVisible}.
+   */
+  private imageHidden = false;
+
   constructor(protected readonly host: ShapeHostInfo) {
     super();
     this.gfx.sortableChildren = true;
@@ -121,12 +133,44 @@ export abstract class ShapeBase<TSpec extends BaseShapeSpec>
     this.gfx.visible = spec.visible ?? true;
     this.gfx.zIndex = spec.zIndex ?? 0;
     this.bodyGfx.clear();
-    this.drawGeometry(this.bodyGfx, spec);
+    this.drawGeometry(this.bodyGfx, this.bodyPaintSpec(spec));
     this.syncInsetLayers(spec);
   }
 
   paintInto(g: Graphics, style?: ShapePaintStyle): void {
     this.drawGeometry(g, this.spec, style);
+  }
+
+  /**
+   * Toggle inset-content (`glyph` / `svg` / `svg-url` icon) visibility. A pure
+   * `.visible` flip on the inset containers — no repaint. The flag persists, so
+   * a later {@link draw} keeps icons hidden until re-shown. Zoom-visibility LOD
+   * uses this to drop icons at low zoom without touching the body.
+   */
+  setInsetContentVisible(visible: boolean): void {
+    this.iconHidden = !visible;
+    for (const view of this.insetViews.values()) view.gfx.visible = visible;
+  }
+
+  /**
+   * Toggle the silhouette `image` fill. Unlike icons, an image is painted
+   * *into* the body, so hiding it repaints the body with `image` layers
+   * stripped (solid fills / borders / other layers untouched). The flag
+   * persists across {@link draw}. No-op when the state is unchanged.
+   */
+  setImageFillVisible(visible: boolean): void {
+    if (this.imageHidden === !visible) return;
+    this.imageHidden = !visible;
+    if (this.spec !== undefined) {
+      this.bodyGfx.clear();
+      this.drawGeometry(this.bodyGfx, this.bodyPaintSpec(this.spec));
+    }
+  }
+
+  /** Spec used to paint the body — strips `image` fill layers while hidden. */
+  private bodyPaintSpec(spec: TSpec): TSpec {
+    if (!this.imageHidden) return spec;
+    return { ...spec, fill: fillWithoutImages(spec.fill) } as TSpec;
   }
 
   /**
@@ -199,7 +243,28 @@ export abstract class ShapeBase<TSpec extends BaseShapeSpec>
         this.insetViews.delete(index);
       }
     }
+
+    // Keep freshly mounted / updated views in step with the persistent
+    // icon-visibility flag — a zoom-LOD toggle must survive redraws.
+    if (this.iconHidden) {
+      for (const view of this.insetViews.values()) view.gfx.visible = false;
+    }
   }
+}
+
+/**
+ * Return `fill` with any `image` silhouette layers removed; `solid` fills and
+ * inset content (`glyph` / `svg` / `svg-url`) are untouched. Returns the input
+ * unchanged when it has no image layers so callers can cheaply detect a no-op.
+ */
+function fillWithoutImages(fill: ShapeFill | undefined): ShapeFill | undefined {
+  if (fill === undefined || typeof fill === 'number') return fill;
+  const arr: ReadonlyArray<ShapeFillLayer> = Array.isArray(fill)
+    ? fill
+    : [fill as ShapeFillLayer];
+  const kept = arr.filter((l) => l.kind !== 'image');
+  if (kept.length === arr.length) return fill;
+  return kept.length === 0 ? undefined : kept.length === 1 ? kept[0] : kept;
 }
 
 /**

@@ -788,6 +788,21 @@ export interface IShape<TSpec extends BaseShapeSpec = BaseShapeSpec> {
   setLODLevel?(level: number): void;
   /** Optional label-rasterization hook. Only meaningful for text-bearing shapes. */
   setLabelResolution?(resolution: number): void;
+  /**
+   * Optional content-visibility hooks used by zoom-visibility LOD; the renderer
+   * feature-detects each.
+   * - `setInsetContentVisible` — flip inset icons (`glyph` / `svg` / `svg-url`)
+   *   on/off (`ShapeBase`).
+   * - `setImageFillVisible` — show/hide the silhouette `image` fill, repainting
+   *   the body (`ShapeBase`).
+   * - `setTextVisible` — show/hide the shape's **internal** text (e.g. a
+   *   `CompositeShape`'s `label` parts). Simple shapes carry no internal text —
+   *   their label is a `'label'` decoration handled by the renderer — so they
+   *   omit this.
+   */
+  setInsetContentVisible?(visible: boolean): void;
+  setImageFillVisible?(visible: boolean): void;
+  setTextVisible?(visible: boolean): void;
   destroy(): void;
 }
 

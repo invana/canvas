@@ -580,6 +580,39 @@ export class PrimitivesRenderer {
   }
 
   /**
+   * Show / hide a shape's **text** — both the external `'label'` decoration
+   * (simple nodes) *and* any internal text the shape mounts (e.g. a
+   * `CompositeShape`'s `label` parts, via the optional `setTextVisible` hook).
+   * Gives text zoom-LOD a single entry point that covers atomic and composite
+   * nodes alike; the companion trio is {@link setShapeIconVisible} /
+   * {@link setShapeImageVisible}. No-op for the pieces a shape doesn't have.
+   */
+  setShapeTextVisible(id: string, visible: boolean): void {
+    const inst = this.shapeInstances.get(id);
+    if (!inst) return;
+    if (inst.decorations.has('label')) this.setDecorationVisible(id, 'label', visible);
+    inst.shape.setTextVisible?.(visible);
+  }
+
+  /**
+   * Show / hide a shape's **inset icon** content (`glyph` / `svg` / `svg-url`).
+   * Pure `.visible` flip — no repaint. Persists across redraws. No-op for
+   * shapes that don't carry inset content.
+   */
+  setShapeIconVisible(id: string, visible: boolean): void {
+    this.shapeInstances.get(id)?.shape.setInsetContentVisible?.(visible);
+  }
+
+  /**
+   * Show / hide a shape's silhouette **image** fill. Repaints the body with the
+   * `image` layer stripped / restored. Persists across redraws. No-op for
+   * shapes without an image fill.
+   */
+  setShapeImageVisible(id: string, visible: boolean): void {
+    this.shapeInstances.get(id)?.shape.setImageFillVisible?.(visible);
+  }
+
+  /**
    * Fast-path position-only move — writes the host `gfx` transform directly,
    * skipping BOTH the geometry redraw and the decoration re-anchor that
    * {@link updateShape} performs. This is what `GraphLayer` routes every
@@ -1354,7 +1387,7 @@ export class PrimitivesRenderer {
    * Push a rasterisation resolution to every label decoration (shape + edge)
    * currently attached, and remember it so labels mounted later inherit the
    * same fidelity. Driven by zoom-aware behaviours
-   * (see `@invana/graph` / `LabelResolutionLODBehaviour`): when the camera
+   * (see `@invana/graph` / `TextResolutionLODBehaviour`): when the camera
    * zooms past a threshold, push `dpr * zoom` to re-rasterise glyphs sharp.
    *
    * Idempotent: Pixi internally short-circuits `Text.resolution` writes when
