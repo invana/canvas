@@ -446,18 +446,18 @@ export type {
   ThemeOptions,
 } from './editors/theme';
 
-// DegreeSizeBehaviour
-export { DegreeSizeEditor, degreeSizeFields } from './editors/degree-size';
+// NodeCentralityBehaviour
+export { NodeCentralityEditor, nodeCentralityFields } from './editors/node-centrality';
 export {
-  optionsToForm as degreeSizeOptionsToForm,
-  formToOptions as degreeSizeFormToOptions,
-} from './editors/degree-size';
+  optionsToForm as nodeCentralityOptionsToForm,
+  formToOptions as nodeCentralityFormToOptions,
+} from './editors/node-centrality';
 export type {
-  DegreeSizeEditorProps,
-  DegreeSizeFields,
-  DegreeSizeFormState,
-  DegreeSizeOptions,
-} from './editors/degree-size';
+  NodeCentralityEditorProps,
+  NodeCentralityFields,
+  NodeCentralityFormState,
+  NodeCentralityOptions,
+} from './editors/node-centrality';
 
 // Content-LOD behaviours (TextLODBehaviour / IconLODBehaviour / ImageLODBehaviour)
 // share one option shape (a { minZoom, maxZoom } zoom band), so one editor serves
@@ -511,31 +511,31 @@ export type {
   TextResolutionLODOptions,
 } from './editors/text-resolution-lod';
 
-// NodeSizeLODBehaviour
-export { NodeSizeLODEditor, nodeSizeLodFields } from './editors/node-size-lod';
+// NodeScaleLODBehaviour
+export { NodeScaleLODEditor, nodeScaleLodFields } from './editors/node-scale-lod';
 export {
-  optionsToForm as nodeSizeLodOptionsToForm,
-  formToOptions as nodeSizeLodFormToOptions,
-} from './editors/node-size-lod';
+  optionsToForm as nodeScaleLodOptionsToForm,
+  formToOptions as nodeScaleLodFormToOptions,
+} from './editors/node-scale-lod';
 export type {
-  NodeSizeLODEditorProps,
-  NodeSizeLODFields,
-  NodeSizeLODFormState,
-  NodeSizeLODOptions,
-} from './editors/node-size-lod';
+  NodeScaleLODEditorProps,
+  NodeScaleLODFields,
+  NodeScaleLODFormState,
+  NodeScaleLODOptions,
+} from './editors/node-scale-lod';
 
-// EdgeSizeLODBehaviour
-export { EdgeSizeLODEditor, edgeSizeLodFields } from './editors/edge-size-lod';
+// EdgeScaleLODBehaviour
+export { EdgeScaleLODEditor, edgeScaleLodFields } from './editors/edge-scale-lod';
 export {
-  optionsToForm as edgeSizeLodOptionsToForm,
-  formToOptions as edgeSizeLodFormToOptions,
-} from './editors/edge-size-lod';
+  optionsToForm as edgeScaleLodOptionsToForm,
+  formToOptions as edgeScaleLodFormToOptions,
+} from './editors/edge-scale-lod';
 export type {
-  EdgeSizeLODEditorProps,
-  EdgeSizeLODFields,
-  EdgeSizeLODFormState,
-  EdgeSizeLODOptions,
-} from './editors/edge-size-lod';
+  EdgeScaleLODEditorProps,
+  EdgeScaleLODFields,
+  EdgeScaleLODFormState,
+  EdgeScaleLODOptions,
+} from './editors/edge-scale-lod';
 
 // LabelCollisionBehaviour
 export { LabelCollisionEditor, labelCollisionFields } from './editors/label-collision';

@@ -8,50 +8,50 @@ import {
   type FieldValues,
 } from 'react-hook-form';
 
-import { edgeSizeLodFields } from './fields';
-import type { EdgeSizeLODFields, EdgeSizeLODFormState } from './types';
+import { nodeCentralityFields } from './fields';
+import type { NodeCentralityFields, NodeCentralityFormState } from './types';
 
-export interface EdgeSizeLODEditorProps {
+export interface NodeCentralityEditorProps {
   /**
    * Initial field values, loaded into the form once on mount. Seed it from a
    * behaviour's options with the exported `optionsToForm`. Remount (via `key`)
    * to reload.
    */
-  defaults?: EdgeSizeLODFields;
+  defaults?: NodeCentralityFields;
   /**
    * The form schema. Either a static `FieldConfig[]` or a function of the
-   * current values. Defaults to {@link edgeSizeLodFields}.
+   * current values. Defaults to {@link nodeCentralityFields}.
    */
-  fields?: FieldConfig[] | ((values: EdgeSizeLODFields) => FieldConfig[]);
+  fields?: FieldConfig[] | ((values: NodeCentralityFields) => FieldConfig[]);
   /**
    * Called with the current values on submit. Map back to an options patch with
    * `formToOptions` and apply it however you like (`behaviour.setOptions`, an
    * undo stack, …). The component does none of that.
    */
-  onSubmit: (values: EdgeSizeLODFields) => void;
+  onSubmit: (values: NodeCentralityFields) => void;
   /** Submit button label. Default `'Apply'`. */
   submitLabel?: string;
 }
 
 /**
- * Self-contained, engine-agnostic settings form for `EdgeSizeLODBehaviour`.
+ * Self-contained, engine-agnostic settings form for `NodeCentralityBehaviour`.
  *
  * Owns a react-hook-form instance seeded by `defaults`, renders the schema with
  * `@invana/forms`, and hands the current values to `onSubmit`. It holds no
- * engine reference and does no commit — the `EdgeSizeLODBehaviourOptions ⇄
+ * engine reference and does no commit — the `NodeCentralityBehaviourOptions ⇄
  * form-fields` mapping (`optionsToForm` / `formToOptions`) is the consumer's plug-in.
  */
-export function EdgeSizeLODEditor({
+export function NodeCentralityEditor({
   defaults = {},
-  fields = edgeSizeLodFields,
+  fields = nodeCentralityFields,
   onSubmit,
   submitLabel = 'Apply',
-}: EdgeSizeLODEditorProps) {
-  const form = useForm<EdgeSizeLODFormState>({ defaultValues: { options: defaults } });
+}: NodeCentralityEditorProps) {
+  const form = useForm<NodeCentralityFormState>({ defaultValues: { options: defaults } });
   const { control, getValues } = form;
 
   // Recompute fields from the live values when `fields` is a function.
-  const values = useWatch({ control, name: 'options' }) as EdgeSizeLODFields | undefined;
+  const values = useWatch({ control, name: 'options' }) as NodeCentralityFields | undefined;
   const resolvedFields = typeof fields === 'function' ? fields(values ?? {}) : fields;
 
   // Widen at the boundary — RHF's typed Control isn't assignable to ObjectField's

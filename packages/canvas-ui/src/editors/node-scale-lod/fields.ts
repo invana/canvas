@@ -1,8 +1,8 @@
 import type { FieldConfig } from '@invana/forms';
 
 /**
- * `@invana/forms` field schema for the NodeSizeLODBehaviour editor. Field
- * `name`s match the keys of `NodeSizeLODFields` 1:1 so the generator's
+ * `@invana/forms` field schema for the NodeScaleLODBehaviour editor. Field
+ * `name`s match the keys of `NodeScaleLODFields` 1:1 so the generator's
  * `options.<name>` paths line up with `mapping.ts`.
  *
  * The per-layer `layers[]` config array (target layer + `sizePx` /
@@ -10,7 +10,7 @@ import type { FieldConfig } from '@invana/forms';
  * identity-bearing array with no `FieldType`, edited elsewhere and left
  * untouched by this form.
  */
-export const nodeSizeLodFields: FieldConfig[] = [
+export const nodeScaleLodFields: FieldConfig[] = [
   {
     name: 'scaleEpsilon',
     type: 'number',

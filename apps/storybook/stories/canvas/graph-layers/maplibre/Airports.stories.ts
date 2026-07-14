@@ -23,7 +23,7 @@ import {
   GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
-  NodeSizeLODBehaviour,
+  NodeScaleLODBehaviour,
   type GraphNode,
 } from '@invana/graph';
 import { MapLayer } from '@invana/graph-layer-maplibre';
@@ -117,8 +117,8 @@ export const Airports_Story: Story = {
     // `settings.targetNodePx` fresh each reflow, so the slider below
     // updates sizes live without recreating the behaviour. The resolver
     // functions keep this behaviour's options in the constructor.
-    const nodeSizeLOD = new NodeSizeLODBehaviour({
-      id: 'node-size-lod',
+    const nodeScaleLOD = new NodeScaleLODBehaviour({
+      id: 'node-scale-lod',
       layers: [
         {
           targetLayerId: 'graph',
@@ -127,7 +127,7 @@ export const Airports_Story: Story = {
         },
       ],
     });
-    canvas.behaviours.register(nodeSizeLOD);
+    canvas.behaviours.register(nodeScaleLOD);
 
     // Hover-to-activate — highlights the airport under the pointer and
     // dims the rest. Registered after the graph layer is mounted so the
@@ -172,7 +172,7 @@ export const Airports_Story: Story = {
         },
       },
       behaviours: {
-        'node-size-lod': { enabled: true },
+        'node-scale-lod': { enabled: true },
         hover: { enabled: true, state: 'hovered', inactiveState: 'dimmed' },
       },
     };
@@ -236,8 +236,8 @@ export const Airports_Story: Story = {
       .add(settings, 'screenConstant')
       .name('Enable')
       .onChange((v: boolean) => {
-        if (v) nodeSizeLOD.enable();
-        else nodeSizeLOD.disable();
+        if (v) nodeScaleLOD.enable();
+        else nodeScaleLOD.disable();
       });
     screenFolder
       .add(settings, 'targetNodePx', 1, 24, 0.5)
@@ -246,13 +246,13 @@ export const Airports_Story: Story = {
         // Reflow only matters while enabled. Off → originals are already
         // restored; turning it on later will pick up the slider value
         // from the closure.
-        if (settings.screenConstant) nodeSizeLOD.reflow();
+        if (settings.screenConstant) nodeScaleLOD.reflow();
       });
     screenFolder
       .add(settings, 'targetStrokePx', 0, 5, 0.1)
       .name('Stroke px')
       .onChange(() => {
-        if (settings.screenConstant) nodeSizeLOD.reflow();
+        if (settings.screenConstant) nodeScaleLOD.reflow();
       });
 
     const hoverFolder = gui.addFolder('Hover');

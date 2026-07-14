@@ -16,12 +16,12 @@ import 'maplibre-gl/dist/maplibre-gl.css?inline';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
-  EdgeSizeLODBehaviour,
+  EdgeScaleLODBehaviour,
   GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
   MiniMapLayer,
-  NodeSizeLODBehaviour,
+  NodeScaleLODBehaviour,
   type EdgeData,
   type GraphNode,
   type NodeData,
@@ -164,14 +164,14 @@ export const GeoAirRoutes: Story = {
     // `layers` carries cross-layer `targetLayerId` wiring, so it stays in the
     // constructor; only `enabled` lives in config.
     canvas.behaviours.register(
-      new NodeSizeLODBehaviour({
-        id: 'node-size-lod',
+      new NodeScaleLODBehaviour({
+        id: 'node-scale-lod',
         layers: [{ targetLayerId: 'graph', sizePx: 5, strokeWidthPx: 0.6 }],
       }),
     );
     canvas.behaviours.register(
-      new EdgeSizeLODBehaviour({
-        id: 'edge-size-lod',
+      new EdgeScaleLODBehaviour({
+        id: 'edge-scale-lod',
         layers: [{ targetLayerId: 'graph', strokeWidthPx: 0.6 }],
       }),
     );
@@ -256,8 +256,8 @@ export const GeoAirRoutes: Story = {
         },
       },
       behaviours: {
-        'node-size-lod': { enabled: true },
-        'edge-size-lod': { enabled: true },
+        'node-scale-lod': { enabled: true },
+        'edge-scale-lod': { enabled: true },
         hover: {
           enabled: true,
           state: 'hovered',

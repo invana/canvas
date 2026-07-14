@@ -552,7 +552,7 @@ export class PrimitivesRenderer {
    *
    * `updateShape` rebuilds the underlying Pixi geometry (Graphics.clear()
    * + retrace) on every call, which dominates the cost when something
-   * like `NodeSizeLODBehaviour` rewrites thousands of node sizes per
+   * like `NodeScaleLODBehaviour` rewrites thousands of node sizes per
    * camera-zoom frame. `scaleShape` skips all of that: the geometry on
    * the GPU is unchanged, only its transform changes.
    *
@@ -696,7 +696,7 @@ export class PrimitivesRenderer {
    * touches every shape instance. Either way the rbush tree is rebuilt
    * once via `clear + load` rather than N × `remove + insert`.
    *
-   * Call on gesture settle (e.g. inside `NodeSizeLODBehaviour`'s
+   * Call on gesture settle (e.g. inside `NodeScaleLODBehaviour`'s
    * trailing-edge `flushReanchor`) so mid-gesture frames stay cheap and
    * hit-test accuracy snaps back the moment the user stops zooming.
    */
@@ -737,7 +737,7 @@ export class PrimitivesRenderer {
 
   /**
    * Recompute the path of every connector. Use after a batch of
-   * `scaleShape` calls (e.g. one `NodeSizeLODBehaviour` zoom tick) so
+   * `scaleShape` calls (e.g. one `NodeScaleLODBehaviour` zoom tick) so
    * connectors re-anchor against the freshly-scaled silhouettes — without
    * this, edges remain anchored to the pre-scale bounds and visibly fall
    * short of the smaller shape.
@@ -886,7 +886,7 @@ export class PrimitivesRenderer {
    * Fast-path render-time stroke multiplier for a connector — writes
    * `inst.strokeWidthScale` and redraws on the cached path.
    *
-   * `EdgeSizeLODBehaviour` uses this each `camera:zoom` frame to keep
+   * `EdgeScaleLODBehaviour` uses this each `camera:zoom` frame to keep
    * spec stroke widths pixel-constant across zoom. Critically, it does
    * **not** touch `spec.stroke.width`: the canonical spec stays as the
    * caller authored it, so a downstream `setConnectorStroke` (or a state-
@@ -1723,7 +1723,7 @@ export class PrimitivesRenderer {
       // doesn't move under a uniform scale-about-origin).
       const distSq = dx * dx + dy * dy;
       // The shape's geometric `hitArea` operates in its *local* frame
-      // — i.e. before `gfx.scale` is applied. `NodeSizeLODBehaviour`
+      // — i.e. before `gfx.scale` is applied. `NodeScaleLODBehaviour`
       // (and `HoverActivateBehaviour.zoomedOutScale`) write `gfx.scale`
       // to inflate visuals without rebuilding geometry, so we must
       // divide world-space deltas by `gfxScale` before consulting
@@ -2044,7 +2044,7 @@ export class PrimitivesRenderer {
    * partial with paint channels (`fill` / `stroke`) and position
    * (`x` / `y`) themselves.
    *
-   * Used by `NodeSizeLODBehaviour` to rewrite shape size as the
+   * Used by `NodeScaleLODBehaviour` to rewrite shape size as the
    * camera zooms, without switching over a closed kind enum. Shapes
    * that don't implement `scaleSpec` are simply skipped by the
    * LOD writer.

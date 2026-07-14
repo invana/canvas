@@ -871,7 +871,7 @@ export class GraphLayer extends WorldLayer<
    * and every active state's layer + per-node overlay. Object.assign order
    * encodes precedence (later wins).
    *
-   * Exposed publicly so behaviours (NodeSizeLODBehaviour, label collision,
+   * Exposed publicly so behaviours (NodeScaleLODBehaviour, label collision,
    * minimap, etc.) can read the same effective style the renderer sees,
    * without duplicating the merge logic.
    */
@@ -1523,7 +1523,7 @@ export class GraphLayer extends WorldLayer<
    *
    * Prefers `renderer.updateShape` (instance-preserving) over the
    * `removeShape + addShape` fallback so the renderer's per-instance
-   * state — `gfxScale` (written by `NodeSizeLODBehaviour`), attached
+   * state — `gfxScale` (written by `NodeScaleLODBehaviour`), attached
    * decorations, badges, effects — survives a state toggle. Falls back
    * to remove+add only when the rebuilt spec has a different `kind`,
    * which `updateShape` can't safely handle (the `IShape` class is
@@ -1569,7 +1569,7 @@ export class GraphLayer extends WorldLayer<
    * Re-render a single edge from its current data + active state stack.
    *
    * Always uses `renderer.updateConnector` so `inst.strokeWidthScale`
-   * (written by `EdgeSizeLODBehaviour` as `1/cameraScale`) survives the
+   * (written by `EdgeScaleLODBehaviour` as `1/cameraScale`) survives the
    * state-driven full-spec replacement. The fresh spec carries the new
    * "base" stroke width; the multiplier applies on top at draw time.
    */
@@ -2354,7 +2354,7 @@ export class GraphLayer extends WorldLayer<
   private updateEdgeConnector(edge: GraphEdge, _patch: Partial<GraphEdge>): void {
     if (!this._renderer) return;
     // Prefer `updateConnector` (instance-preserving — keeps `strokeWidthScale`
-    // from `EdgeSizeLODBehaviour`, attached decorations, effects). The
+    // from `EdgeScaleLODBehaviour`, attached decorations, effects). The
     // underlying `recomputeConnectorPath` rebuilds the routed geometry,
     // so router / pathStyle / marker changes still apply cleanly.
     const spec = this.edgeSpec(edge);

@@ -1,5 +1,5 @@
 /**
- * `ElementSizeLODBehaviour` — abstract base for zoom-driven "keep this
+ * `ElementScaleLODBehaviour` — abstract base for zoom-driven "keep this
  * element at a fixed screen-pixel size" behaviours.
  *
  * Sits in the same family as `TextResolutionLODBehaviour`: both react
@@ -56,7 +56,7 @@ export function resolveNumberOrGetter(v: NumberOrGetter | undefined): number | u
   return typeof v === 'function' ? v() : v;
 }
 
-export interface ElementSizeLODBehaviourOptions extends BehaviourOptions {
+export interface ElementScaleLODBehaviourOptions extends BehaviourOptions {
   /**
    * Skip `apply` when the relative scale change since the last applied
    * frame is below this threshold (`|scale - lastScale| / lastScale`).
@@ -76,8 +76,8 @@ export interface ElementSizeLODBehaviourOptions extends BehaviourOptions {
   settleMs?: number;
 }
 
-export abstract class ElementSizeLODBehaviour<
-  TOptions extends ElementSizeLODBehaviourOptions = ElementSizeLODBehaviourOptions,
+export abstract class ElementScaleLODBehaviour<
+  TOptions extends ElementScaleLODBehaviourOptions = ElementScaleLODBehaviourOptions,
 > extends Behaviour<TOptions> {
   private readonly subs: Array<() => void> = [];
   /**

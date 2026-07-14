@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { CanvasConfig, Rect } from '@invana/canvas';
 import {
   CanvasMessageBar,
-  DegreeSizeBehaviour,
+  NodeCentralityBehaviour,
   GraphBackgroundContextMenu,
   GraphCanvasApp,
   GraphControlsToolbar,
@@ -70,7 +70,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
  * a synchronous force pass at this scale froze the UI). Two extras
  * layer on top: a **per-tag icon** (Lucide from `lucide-react`, inlined as a
  * `data:` URI on the graph layer template, resolved by `type`) and a
- * **`DegreeSizeBehaviour`** that scales each node by its
+ * **`NodeCentralityBehaviour`** that scales each node by its
  * connection count — so tag reads three ways at once (colour · icon · degree).
  *
  * The view is one tab of a right-docked `<TabbedPanel>` (Layers · About). It
@@ -141,7 +141,7 @@ const TAG_ICON: Record<WdvNodeLabel, NodeIcon> = {
 // on the graph layer's node template, resolved against each stored node by its
 // `type`. `CanvasConfig.layers` is an untyped bag, so the resolver rides through
 // verbatim — merging with the bundle's shape/label style, its ColorByLabel fill,
-// and the DegreeSize size (four orthogonal channels, none clobbering another).
+// and the NodeCentrality size (four orthogonal channels, none clobbering another).
 // Zoom-visibility (hiding labels/icons at overview) is NOT here — it's the
 // TextLOD / IconLOD behaviours' job, kept off the render path (see below).
 // Module-level so the reference stays stable across re-renders.
@@ -228,7 +228,7 @@ function AboutTab() {
         <strong className="text-foreground">colour</strong> (bundle{' '}
         <code>ColorByLabelBehaviour</code>), an <strong className="text-foreground">icon</strong>{' '}
         (Lucide, from <code>lucide-react</code>), and <strong className="text-foreground">size by degree</strong>{' '}
-        (<code>DegreeSizeBehaviour</code>, sqrt-scaled) — so hubs read big and typed at a glance.
+        (<code>NodeCentralityBehaviour</code>, sqrt-scaled) — so hubs read big and typed at a glance.
       </p>
       <p>
 Node <strong className="text-foreground">text</strong> (labels + composite text, past 1.5×) and{' '}
@@ -381,7 +381,7 @@ export const WikipediaDataViz: Story = {
               range keeps the low-degree mass small and lets the hubs genuinely
               dominate (sqrt/log would dampen them into the pack). Writes per-node
               `style.size`, which the renderer, bounds, and force-collide read. */}
-          <DegreeSizeBehaviour targetLayerId="graph" direction="both" minSize={6} maxSize={56} scale="linear" />
+          <NodeCentralityBehaviour targetLayerId="graph" direction="both" minSize={6} maxSize={56} scale="linear" />
 
           {/* Content zoom-LOD — split per kind so text and icons gate
               independently. Both hide the ~2k pieces at the packed overview

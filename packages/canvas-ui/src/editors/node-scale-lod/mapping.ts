@@ -1,12 +1,12 @@
-import type { NodeSizeLODFields, NodeSizeLODOptions } from './types';
+import type { NodeScaleLODFields, NodeScaleLODOptions } from './types';
 
 /**
- * Map a `NodeSizeLODBehaviourOptions`-shaped patch to the flat
- * {@link NodeSizeLODFields} the `@invana/forms` generator renders. Both fields
+ * Map a `NodeScaleLODBehaviourOptions`-shaped patch to the flat
+ * {@link NodeScaleLODFields} the `@invana/forms` generator renders. Both fields
  * are numbers, so this is a straight pass-through. `layers[]` is dropped (not
  * modelled in the form).
  */
-export function optionsToForm(o: NodeSizeLODOptions = {}): NodeSizeLODFields {
+export function optionsToForm(o: NodeScaleLODOptions = {}): NodeScaleLODFields {
   return {
     scaleEpsilon: o.scaleEpsilon,
     settleMs: o.settleMs,
@@ -15,12 +15,12 @@ export function optionsToForm(o: NodeSizeLODOptions = {}): NodeSizeLODFields {
 
 /**
  * Inverse of {@link optionsToForm}: fold the flat fields back to a serialisable
- * {@link NodeSizeLODOptions} patch. Only fields the form actually set are
+ * {@link NodeScaleLODOptions} patch. Only fields the form actually set are
  * included (no `undefined` keys), so the result is safe to spread over the
  * behaviour's current options on `setOptions` — leaving `layers[]` untouched.
  */
-export function formToOptions(f: NodeSizeLODFields): NodeSizeLODOptions {
-  const out: NodeSizeLODOptions = {};
+export function formToOptions(f: NodeScaleLODFields): NodeScaleLODOptions {
+  const out: NodeScaleLODOptions = {};
   if (f.scaleEpsilon !== undefined) out.scaleEpsilon = f.scaleEpsilon;
   if (f.settleMs !== undefined) out.settleMs = f.settleMs;
   return out;

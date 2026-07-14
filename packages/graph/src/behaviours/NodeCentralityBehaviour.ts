@@ -1,5 +1,5 @@
 /**
- * `DegreeSizeBehaviour` — sizes nodes by their connection count.
+ * `NodeCentralityBehaviour` — sizes nodes by their connection count.
  *
  * For each node, counts incident edges in the configured `direction`
  * (`'in'` / `'out'` / `'both'`), normalizes against the max observed degree,
@@ -34,8 +34,8 @@
  * @example
  * ```ts
  * canvas.behaviours.register(
- *   new DegreeSizeBehaviour({
- *     id: 'degree-size',
+ *   new NodeCentralityBehaviour({
+ *     id: 'node-centrality',
  *     targetLayerId: 'graph',
  *     enabled: true,
  *     direction: 'both',
@@ -56,10 +56,10 @@ import type { NodeStyle } from '../layer/types';
 import type { EdgeDirection } from '../store/types';
 
 /** Scaling curve used to map raw degree → output size. */
-export type DegreeSizeScale = 'linear' | 'sqrt' | 'log';
+export type NodeCentralityScale = 'linear' | 'sqrt' | 'log';
 
-/** Constructor options for `DegreeSizeBehaviour`. */
-export interface DegreeSizeBehaviourOptions extends BehaviourOptions {
+/** Constructor options for `NodeCentralityBehaviour`. */
+export interface NodeCentralityBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour drives. */
   targetLayerId: string;
 
@@ -91,7 +91,7 @@ export interface DegreeSizeBehaviourOptions extends BehaviourOptions {
    * - `'log'`    — size = min + (max - min) * log1p(degree) / log1p(maxDegree)
    *                aggressive dampening; better for power-law graphs
    */
-  scale?: DegreeSizeScale;
+  scale?: NodeCentralityScale;
 
   /**
    * Optional override. When provided, supersedes `minSize` / `maxSize` /
@@ -105,13 +105,13 @@ interface ResolvedOptions {
   direction: EdgeDirection;
   minSize: number;
   maxSize: number;
-  scale: DegreeSizeScale;
+  scale: NodeCentralityScale;
   sizeFn: ((degree: number, maxDegree: number) => number) | undefined;
 }
 
 function resolveOptions(
   prev: ResolvedOptions | null,
-  patch: Partial<DegreeSizeBehaviourOptions>,
+  patch: Partial<NodeCentralityBehaviourOptions>,
 ): ResolvedOptions {
   const base: ResolvedOptions = prev ?? {
     direction: 'both',
@@ -154,7 +154,7 @@ function mapDegreeToSize(degree: number, maxDegree: number, opts: ResolvedOption
   return opts.minSize + (opts.maxSize - opts.minSize) * eased;
 }
 
-export class DegreeSizeBehaviour extends Behaviour {
+export class NodeCentralityBehaviour extends Behaviour {
   /** Bound target layer — resolved in `onRegister`. */
   private layer: GraphLayer | null = null;
 
@@ -177,7 +177,7 @@ export class DegreeSizeBehaviour extends Behaviour {
   /** Re-entrancy guard — set while writing patches so our own emits no-op. */
   private patching = false;
 
-  constructor(opts: DegreeSizeBehaviourOptions) {
+  constructor(opts: NodeCentralityBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? [] });
     this.opts = resolveOptions(null, opts);
   }
@@ -188,7 +188,7 @@ export class DegreeSizeBehaviour extends Behaviour {
     const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
       throw new Error(
-        `DegreeSizeBehaviour "${this.id}": layer "${this.targetLayerId}" not found. ` +
+        `NodeCentralityBehaviour "${this.id}": layer "${this.targetLayerId}" not found. ` +
           `Add the GraphLayer before registering this behaviour.`,
       );
     }
@@ -244,7 +244,7 @@ export class DegreeSizeBehaviour extends Behaviour {
    * Runtime option update. Re-runs `applyAll()` immediately if enabled so
    * GUI slider changes are visible without an extra call.
    */
-  setOptions(patch: Partial<DegreeSizeBehaviourOptions>): void {
+  setOptions(patch: Partial<NodeCentralityBehaviourOptions>): void {
     this.opts = resolveOptions(this.opts, patch);
     if (this.isEnabled) this.applyAll();
   }

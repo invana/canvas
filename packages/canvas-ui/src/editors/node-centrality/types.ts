@@ -1,46 +1,46 @@
 /**
- * Types for the DegreeSizeBehaviour editor.
+ * Types for the NodeCentralityBehaviour editor.
  *
- * Engine-agnostic by design: `@invana/graph` (where `DegreeSizeBehaviour` and
+ * Engine-agnostic by design: `@invana/graph` (where `NodeCentralityBehaviour` and
  * its options live) is **not** imported for its runtime — canvas-ui mirrors the
- * editable option shape here as {@link DegreeSizeOptions}, a plain serialisable
+ * editable option shape here as {@link NodeCentralityOptions}, a plain serialisable
  * patch the consumer applies via `setOptions`. The mirror is structural, not
- * derived, so keep it in sync with `DegreeSizeBehaviourOptions` by hand.
+ * derived, so keep it in sync with `NodeCentralityBehaviourOptions` by hand.
  */
 
 /** Which incident edges are counted toward a node's degree. */
-export type DegreeSizeDirection = 'in' | 'out' | 'both';
+export type NodeCentralityDirection = 'in' | 'out' | 'both';
 
 /** Curve mapping normalized degree (0..1) → a size between min and max. */
-export type DegreeSizeScale = 'linear' | 'sqrt' | 'log';
+export type NodeCentralityScale = 'linear' | 'sqrt' | 'log';
 
 /**
- * The subset of `DegreeSizeBehaviourOptions` this editor produces — a
+ * The subset of `NodeCentralityBehaviourOptions` this editor produces — a
  * serialisable patch. The `sizeFn` callback override and the base
  * `id` / `targetLayerId` / `enabled` / `shortcuts` fields are out of scope;
  * only the user-tunable scalars round-trip.
  */
-export interface DegreeSizeOptions {
+export interface NodeCentralityOptions {
   /** Edges counted per node: `'in'`, `'out'`, or `'both'` (default). */
-  direction?: DegreeSizeDirection;
+  direction?: NodeCentralityDirection;
   /** Output `style.size` for a degree-0 node. Default `8`. */
   minSize?: number;
   /** Output `style.size` for the max-degree node. Default `32`. */
   maxSize?: number;
   /** Curve applied to normalized degree. Default `'sqrt'`. */
-  scale?: DegreeSizeScale;
+  scale?: NodeCentralityScale;
 }
 
 /**
  * Flat form-field shape the `@invana/forms` generator renders. Matches
- * {@link DegreeSizeOptions} 1:1 — all scalar / enum, no re-encoding needed.
+ * {@link NodeCentralityOptions} 1:1 — all scalar / enum, no re-encoding needed.
  */
-export type DegreeSizeFields = DegreeSizeOptions;
+export type NodeCentralityFields = NodeCentralityOptions;
 
 /**
  * react-hook-form state shape. `<ObjectField name="options" …>` registers each
  * leaf under `options.<field>`, so the form's values nest under an `options` key.
  */
-export interface DegreeSizeFormState {
-  options: DegreeSizeFields;
+export interface NodeCentralityFormState {
+  options: NodeCentralityFields;
 }

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
-  DegreeSizeBehaviour,
+  NodeCentralityBehaviour,
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
@@ -11,12 +11,12 @@ import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'canvas/graph/Behaviours/DegreeSize' };
+const meta: Meta = { title: 'canvas/graph/Behaviours/NodeCentrality' };
 export default meta;
 type Story = StoryObj;
 
-export const DegreeSize: Story = {
-  render: () => createContainer({ id: 'graph-degree-size' }),
+export const NodeCentrality: Story = {
+  render: () => createContainer({ id: 'graph-node-centrality' }),
 
   play: async ({ canvasElement }) => {
     // Hub-and-spoke graph hardcoded so the degree pattern is readable from
@@ -57,12 +57,12 @@ export const DegreeSize: Story = {
       { id: 'e19', source: 'h2', target: 'h3' },
     ];
 
-    const container = canvasElement.querySelector<HTMLDivElement>('#graph-degree-size')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#graph-node-centrality')!;
     const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
 
     // Layer template carries the shared circle + paint. Per-node entries
-    // intentionally omit `shape` / `size`: DegreeSizeBehaviour writes
+    // intentionally omit `shape` / `size`: NodeCentralityBehaviour writes
     // `style.size`, which `resolveNodeStyle` then folds into the layer-level
     // circle's `radius` before any consumer reads it. The `labelText` resolver
     // stays in the constructor; the literal paint moves into config.
@@ -83,8 +83,8 @@ export const DegreeSize: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
 
-    const degreeSize = new DegreeSizeBehaviour({ id: 'degree-size', targetLayerId: 'graph' });
-    canvas.behaviours.register(degreeSize);
+    const nodeCentrality = new NodeCentralityBehaviour({ id: 'node-centrality', targetLayerId: 'graph' });
+    canvas.behaviours.register(nodeCentrality);
 
     // D3 force layout — `collide.radius` callback reads the resolved
     // `style.shape.radius` per node, which `resolveNodeStyle` rewrites from
@@ -117,7 +117,7 @@ export const DegreeSize: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'drag-node': { enabled: true },
-        'degree-size': {
+        'node-centrality': {
           enabled: true,
           direction: 'both',
           minSize: 6,
@@ -157,11 +157,11 @@ export const DegreeSize: Story = {
       reRunLayout: () => void canvas.runLayout('force'),
     };
     const apply = (): void => {
-      if (settings.enabled) degreeSize.enable();
-      else degreeSize.disable();
+      if (settings.enabled) nodeCentrality.enable();
+      else nodeCentrality.disable();
       canvas.update({
         behaviours: {
-          'degree-size': {
+          'node-centrality': {
             direction: settings.direction,
             minSize: settings.minSize,
             maxSize: settings.maxSize,
@@ -173,7 +173,7 @@ export const DegreeSize: Story = {
       void canvas.runLayout('force');
     };
 
-    const gui = new GUI({ title: 'Degree Size' });
+    const gui = new GUI({ title: 'Node Centrality' });
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'enabled').onChange(apply);
     gui.add(settings, 'direction', ['in', 'out', 'both']).onChange(apply);

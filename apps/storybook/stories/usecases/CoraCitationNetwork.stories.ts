@@ -21,11 +21,11 @@ import {
 } from '@invana/canvas';
 import {
   DragNodeBehaviour,
-  // EdgeSizeLODBehaviour,
+  // EdgeScaleLODBehaviour,
   GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
-  // NodeSizeLODBehaviour,
+  // NodeScaleLODBehaviour,
   type GraphNode,
   ThemeBehaviour,
 } from '@invana/graph';
@@ -123,16 +123,16 @@ export const CoraCitationNetwork: Story = {
       new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }),
     );
 
-    // const nodeSizeLOD = new NodeSizeLODBehaviour({
-    //   id: 'node-size-lod', enabled: settings.pixelConstantSizing,
+    // const nodeScaleLOD = new NodeScaleLODBehaviour({
+    //   id: 'node-scale-lod', enabled: settings.pixelConstantSizing,
     //   layers: [{ targetLayerId: 'graph', sizePx: () => settings.nodeRadius * 2 }],
     // });
-    // const edgeSizeLOD = new EdgeSizeLODBehaviour({
-    //   id: 'edge-size-lod', enabled: settings.pixelConstantSizing,
+    // const edgeScaleLOD = new EdgeScaleLODBehaviour({
+    //   id: 'edge-scale-lod', enabled: settings.pixelConstantSizing,
     //   layers: [{ targetLayerId: 'graph', strokeWidthPx: () => settings.edgeWidth }],
     // });
-    // canvas.behaviours.register(nodeSizeLOD);
-    // canvas.behaviours.register(edgeSizeLOD);
+    // canvas.behaviours.register(nodeScaleLOD);
+    // canvas.behaviours.register(edgeScaleLOD);
 
     // ── Layout — register the force layout; activeLayout auto-runs on mount.
     const layout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
@@ -263,21 +263,21 @@ export const CoraCitationNetwork: Story = {
     //   .name('edge width (px)')
     //   .onChange(() => {
     //     rerenderAll();
-    //     if (settings.pixelConstantSizing) edgeSizeLOD.reflow();
+    //     if (settings.pixelConstantSizing) edgeScaleLOD.reflow();
     //   });
     // styleFolder
     //   .add(settings, 'nodeRadius', 0.5, 6, 0.1)
     //   .name('node radius (px)')
     //   .onChange(() => {
     //     rerenderAll();
-    //     if (settings.pixelConstantSizing) nodeSizeLOD.reflow();
+    //     if (settings.pixelConstantSizing) nodeScaleLOD.reflow();
     //   });
     // styleFolder
     //   .add(settings, 'pixelConstantSizing')
     //   .name('px-constant sizing')
     //   .onChange((on: boolean) => {
-    //     if (on) { nodeSizeLOD.enable(); edgeSizeLOD.enable(); }
-    //     else    { nodeSizeLOD.disable(); edgeSizeLOD.disable(); }
+    //     if (on) { nodeScaleLOD.enable(); edgeScaleLOD.enable(); }
+    //     else    { nodeScaleLOD.disable(); edgeScaleLOD.disable(); }
     //   });
 
     // Re-heat the sim once on each finished force edit. The charge /

@@ -8,50 +8,50 @@ import {
   type FieldValues,
 } from 'react-hook-form';
 
-import { degreeSizeFields } from './fields';
-import type { DegreeSizeFields, DegreeSizeFormState } from './types';
+import { edgeScaleLodFields } from './fields';
+import type { EdgeScaleLODFields, EdgeScaleLODFormState } from './types';
 
-export interface DegreeSizeEditorProps {
+export interface EdgeScaleLODEditorProps {
   /**
    * Initial field values, loaded into the form once on mount. Seed it from a
    * behaviour's options with the exported `optionsToForm`. Remount (via `key`)
    * to reload.
    */
-  defaults?: DegreeSizeFields;
+  defaults?: EdgeScaleLODFields;
   /**
    * The form schema. Either a static `FieldConfig[]` or a function of the
-   * current values. Defaults to {@link degreeSizeFields}.
+   * current values. Defaults to {@link edgeScaleLodFields}.
    */
-  fields?: FieldConfig[] | ((values: DegreeSizeFields) => FieldConfig[]);
+  fields?: FieldConfig[] | ((values: EdgeScaleLODFields) => FieldConfig[]);
   /**
    * Called with the current values on submit. Map back to an options patch with
    * `formToOptions` and apply it however you like (`behaviour.setOptions`, an
    * undo stack, …). The component does none of that.
    */
-  onSubmit: (values: DegreeSizeFields) => void;
+  onSubmit: (values: EdgeScaleLODFields) => void;
   /** Submit button label. Default `'Apply'`. */
   submitLabel?: string;
 }
 
 /**
- * Self-contained, engine-agnostic settings form for `DegreeSizeBehaviour`.
+ * Self-contained, engine-agnostic settings form for `EdgeScaleLODBehaviour`.
  *
  * Owns a react-hook-form instance seeded by `defaults`, renders the schema with
  * `@invana/forms`, and hands the current values to `onSubmit`. It holds no
- * engine reference and does no commit — the `DegreeSizeBehaviourOptions ⇄
+ * engine reference and does no commit — the `EdgeScaleLODBehaviourOptions ⇄
  * form-fields` mapping (`optionsToForm` / `formToOptions`) is the consumer's plug-in.
  */
-export function DegreeSizeEditor({
+export function EdgeScaleLODEditor({
   defaults = {},
-  fields = degreeSizeFields,
+  fields = edgeScaleLodFields,
   onSubmit,
   submitLabel = 'Apply',
-}: DegreeSizeEditorProps) {
-  const form = useForm<DegreeSizeFormState>({ defaultValues: { options: defaults } });
+}: EdgeScaleLODEditorProps) {
+  const form = useForm<EdgeScaleLODFormState>({ defaultValues: { options: defaults } });
   const { control, getValues } = form;
 
   // Recompute fields from the live values when `fields` is a function.
-  const values = useWatch({ control, name: 'options' }) as DegreeSizeFields | undefined;
+  const values = useWatch({ control, name: 'options' }) as EdgeScaleLODFields | undefined;
   const resolvedFields = typeof fields === 'function' ? fields(values ?? {}) : fields;
 
   // Widen at the boundary — RHF's typed Control isn't assignable to ObjectField's

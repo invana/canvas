@@ -149,7 +149,7 @@ export interface HoverActivateBehaviourOptions extends BehaviourOptions {
    * just *grow visually* at low zoom (so it stands out against ~1 px
    * background dots) while keeping its original colour, stroke, and label.
    *
-   * Multiplies the existing `gfx.scale`, so if `NodeSizeLODBehaviour` is
+   * Multiplies the existing `gfx.scale`, so if `NodeScaleLODBehaviour` is
    * also active it will overwrite the multiplier on the next zoom frame —
    * prefer `zoomedOutState` with a bigger `size` in that case. For stories
    * without an LOD behaviour, this is the cleanest "scale on hover" knob.
@@ -567,7 +567,7 @@ export class HoverActivateBehaviour extends Behaviour {
    * dimensions may change as the camera crosses the threshold:
    *
    * - State names — swap via {@link swapStates} (state-config-driven
-   *   restyle, composes with `NodeSizeLODBehaviour`).
+   *   restyle, composes with `NodeScaleLODBehaviour`).
    * - Scale multiplier — re-apply via {@link applyScale} (`gfx.scale`
    *   write, does NOT compose with LOD).
    *

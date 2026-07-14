@@ -112,17 +112,17 @@ export type {
 export { TextResolutionLODBehaviour } from './TextResolutionLODBehaviour';
 export type { TextResolutionLODBehaviourOptions } from './TextResolutionLODBehaviour';
 
-export { NodeSizeLODBehaviour } from './NodeSizeLODBehaviour';
+export { NodeScaleLODBehaviour } from './NodeScaleLODBehaviour';
 export type {
-  NodeSizeLODBehaviourOptions,
-  NodeSizeLODConfig,
-} from './NodeSizeLODBehaviour';
+  NodeScaleLODBehaviourOptions,
+  NodeScaleLODConfig,
+} from './NodeScaleLODBehaviour';
 
-export { EdgeSizeLODBehaviour } from './EdgeSizeLODBehaviour';
+export { EdgeScaleLODBehaviour } from './EdgeScaleLODBehaviour';
 export type {
-  EdgeSizeLODBehaviourOptions,
-  EdgeSizeLODConfig,
-} from './EdgeSizeLODBehaviour';
+  EdgeScaleLODBehaviourOptions,
+  EdgeScaleLODConfig,
+} from './EdgeScaleLODBehaviour';
 
 export {
   ParallelEdgeBehaviour,
@@ -137,11 +137,11 @@ export type {
   ParallelEdgePatch,
 } from './ParallelEdgeBehaviour';
 
-export { DegreeSizeBehaviour } from './DegreeSizeBehaviour';
+export { NodeCentralityBehaviour } from './NodeCentralityBehaviour';
 export type {
-  DegreeSizeBehaviourOptions,
-  DegreeSizeScale,
-} from './DegreeSizeBehaviour';
+  NodeCentralityBehaviourOptions,
+  NodeCentralityScale,
+} from './NodeCentralityBehaviour';
 
 export type {
   ContentLODBehaviourOptions,

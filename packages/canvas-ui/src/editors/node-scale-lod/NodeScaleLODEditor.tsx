@@ -8,50 +8,50 @@ import {
   type FieldValues,
 } from 'react-hook-form';
 
-import { nodeSizeLodFields } from './fields';
-import type { NodeSizeLODFields, NodeSizeLODFormState } from './types';
+import { nodeScaleLodFields } from './fields';
+import type { NodeScaleLODFields, NodeScaleLODFormState } from './types';
 
-export interface NodeSizeLODEditorProps {
+export interface NodeScaleLODEditorProps {
   /**
    * Initial field values, loaded into the form once on mount. Seed it from a
    * behaviour's options with the exported `optionsToForm`. Remount (via `key`)
    * to reload.
    */
-  defaults?: NodeSizeLODFields;
+  defaults?: NodeScaleLODFields;
   /**
    * The form schema. Either a static `FieldConfig[]` or a function of the
-   * current values. Defaults to {@link nodeSizeLodFields}.
+   * current values. Defaults to {@link nodeScaleLodFields}.
    */
-  fields?: FieldConfig[] | ((values: NodeSizeLODFields) => FieldConfig[]);
+  fields?: FieldConfig[] | ((values: NodeScaleLODFields) => FieldConfig[]);
   /**
    * Called with the current values on submit. Map back to an options patch with
    * `formToOptions` and apply it however you like (`behaviour.setOptions`, an
    * undo stack, …). The component does none of that.
    */
-  onSubmit: (values: NodeSizeLODFields) => void;
+  onSubmit: (values: NodeScaleLODFields) => void;
   /** Submit button label. Default `'Apply'`. */
   submitLabel?: string;
 }
 
 /**
- * Self-contained, engine-agnostic settings form for `NodeSizeLODBehaviour`.
+ * Self-contained, engine-agnostic settings form for `NodeScaleLODBehaviour`.
  *
  * Owns a react-hook-form instance seeded by `defaults`, renders the schema with
  * `@invana/forms`, and hands the current values to `onSubmit`. It holds no
- * engine reference and does no commit — the `NodeSizeLODBehaviourOptions ⇄
+ * engine reference and does no commit — the `NodeScaleLODBehaviourOptions ⇄
  * form-fields` mapping (`optionsToForm` / `formToOptions`) is the consumer's plug-in.
  */
-export function NodeSizeLODEditor({
+export function NodeScaleLODEditor({
   defaults = {},
-  fields = nodeSizeLodFields,
+  fields = nodeScaleLodFields,
   onSubmit,
   submitLabel = 'Apply',
-}: NodeSizeLODEditorProps) {
-  const form = useForm<NodeSizeLODFormState>({ defaultValues: { options: defaults } });
+}: NodeScaleLODEditorProps) {
+  const form = useForm<NodeScaleLODFormState>({ defaultValues: { options: defaults } });
   const { control, getValues } = form;
 
   // Recompute fields from the live values when `fields` is a function.
-  const values = useWatch({ control, name: 'options' }) as NodeSizeLODFields | undefined;
+  const values = useWatch({ control, name: 'options' }) as NodeScaleLODFields | undefined;
   const resolvedFields = typeof fields === 'function' ? fields(values ?? {}) : fields;
 
   // Widen at the boundary — RHF's typed Control isn't assignable to ObjectField's

@@ -135,13 +135,13 @@ export type {
 } from './behaviours/KeyboardCameraInputBehaviour';
 
 export {
-  ElementSizeLODBehaviour,
+  ElementScaleLODBehaviour,
   resolveNumberOrGetter,
-} from './behaviours/ElementSizeLODBehaviour';
+} from './behaviours/ElementScaleLODBehaviour';
 export type {
-  ElementSizeLODBehaviourOptions,
+  ElementScaleLODBehaviourOptions,
   NumberOrGetter,
-} from './behaviours/ElementSizeLODBehaviour';
+} from './behaviours/ElementScaleLODBehaviour';
 
 // ─── Layouts ────────────────────────────────────────────────────────────
 export { Layout } from './layouts/Layout';

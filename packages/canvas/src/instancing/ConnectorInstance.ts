@@ -27,7 +27,7 @@ export class ConnectorInstance<TSpec extends BaseConnectorSpec = BaseConnectorSp
 
   /**
    * Render-time multiplier applied to `spec.stroke.width` at draw time.
-   * Defaults to `1` (no extra scale). Written by `EdgeSizeLODBehaviour`
+   * Defaults to `1` (no extra scale). Written by `EdgeScaleLODBehaviour`
    * to `1 / cameraScale` so spec stroke widths render as pixel-constant
    * regardless of camera zoom — symmetric with `ShapeInstance.gfxScale`.
    *

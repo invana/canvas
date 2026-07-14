@@ -4,7 +4,7 @@ import type { SettingsEditorDescriptor, SettingsSection } from '@invana/canvas-r
 // Engine classes — matched by `instanceof` so a descriptor only lights up when
 // that class is actually registered on the canvas (survives minified builds).
 import { BackgroundLayer, DevInfoLayer, DragPanBehaviour, PinchZoomBehaviour, KeyboardCameraInputBehaviour, WheelZoomBehaviour, DragShapeBehaviour } from '@invana/canvas';
-import { MiniMapLayer, DragNodeBehaviour, HoverActivateBehaviour, ClickSelectBehaviour, ClickInspectBehaviour, ClickViewBehaviour, HoverElementPreviewBehaviour, BrushSelectBehaviour, LassoSelectBehaviour, CreateNodeBehaviour, DrawEdgeBehaviour, EraseBehaviour, NodeResizeBehaviour, CollapseExpandBehaviour, ColorByLabelBehaviour, ThemeBehaviour, DegreeSizeBehaviour, ContextMenuBehaviour, TextResolutionLODBehaviour, NodeSizeLODBehaviour, EdgeSizeLODBehaviour, ParallelEdgeBehaviour, LabelCollisionBehaviour } from '@invana/graph';
+import { MiniMapLayer, DragNodeBehaviour, HoverActivateBehaviour, ClickSelectBehaviour, ClickInspectBehaviour, ClickViewBehaviour, HoverElementPreviewBehaviour, BrushSelectBehaviour, LassoSelectBehaviour, CreateNodeBehaviour, DrawEdgeBehaviour, EraseBehaviour, NodeResizeBehaviour, CollapseExpandBehaviour, ColorByLabelBehaviour, ThemeBehaviour, NodeCentralityBehaviour, ContextMenuBehaviour, TextResolutionLODBehaviour, NodeScaleLODBehaviour, EdgeScaleLODBehaviour, ParallelEdgeBehaviour, LabelCollisionBehaviour } from '@invana/graph';
 import { DensityContourFillLayer, DensityContourStrokeLayer } from '@invana/graph-layer-d3-contour';
 import { BubbleSetsLayer } from '@invana/graph-layer-bubble-sets';
 import { MapLayer } from '@invana/graph-layer-maplibre';
@@ -97,21 +97,21 @@ import {
   ThemeEditor,
   themeOptionsToForm,
   themeFormToOptions,
-  DegreeSizeEditor,
-  degreeSizeOptionsToForm,
-  degreeSizeFormToOptions,
+  NodeCentralityEditor,
+  nodeCentralityOptionsToForm,
+  nodeCentralityFormToOptions,
   ContextMenuEditor,
   contextMenuOptionsToForm,
   contextMenuFormToOptions,
   TextResolutionLODEditor,
   textResolutionLodOptionsToForm,
   textResolutionLodFormToOptions,
-  NodeSizeLODEditor,
-  nodeSizeLodOptionsToForm,
-  nodeSizeLodFormToOptions,
-  EdgeSizeLODEditor,
-  edgeSizeLodOptionsToForm,
-  edgeSizeLodFormToOptions,
+  NodeScaleLODEditor,
+  nodeScaleLodOptionsToForm,
+  nodeScaleLodFormToOptions,
+  EdgeScaleLODEditor,
+  edgeScaleLodOptionsToForm,
+  edgeScaleLodFormToOptions,
   ParallelEdgeEditor,
   parallelEdgeOptionsToForm,
   parallelEdgeFormToOptions,
@@ -198,11 +198,11 @@ export const ALL_SETTINGS_EDITORS: SettingsEditorDescriptor[] = [
   make('behaviours', 'Collapse / Expand', (i) => i instanceof CollapseExpandBehaviour, CollapseExpandEditor, collapseExpandOptionsToForm, collapseExpandFormToOptions),
   make('behaviours', 'Color by Label', (i) => i instanceof ColorByLabelBehaviour, ColorByLabelEditor, colorByLabelOptionsToForm, colorByLabelFormToOptions),
   make('behaviours', 'Theme', (i) => i instanceof ThemeBehaviour, ThemeEditor, themeOptionsToForm, themeFormToOptions),
-  make('behaviours', 'Degree Size', (i) => i instanceof DegreeSizeBehaviour, DegreeSizeEditor, degreeSizeOptionsToForm, degreeSizeFormToOptions),
+  make('behaviours', 'Degree Size', (i) => i instanceof NodeCentralityBehaviour, NodeCentralityEditor, nodeCentralityOptionsToForm, nodeCentralityFormToOptions),
   make('behaviours', 'Context Menu', (i) => i instanceof ContextMenuBehaviour, ContextMenuEditor, contextMenuOptionsToForm, contextMenuFormToOptions),
   make('behaviours', 'Label Resolution LOD', (i) => i instanceof TextResolutionLODBehaviour, TextResolutionLODEditor, textResolutionLodOptionsToForm, textResolutionLodFormToOptions),
-  make('behaviours', 'Node Size LOD', (i) => i instanceof NodeSizeLODBehaviour, NodeSizeLODEditor, nodeSizeLodOptionsToForm, nodeSizeLodFormToOptions),
-  make('behaviours', 'Edge Size LOD', (i) => i instanceof EdgeSizeLODBehaviour, EdgeSizeLODEditor, edgeSizeLodOptionsToForm, edgeSizeLodFormToOptions),
+  make('behaviours', 'Node Size LOD', (i) => i instanceof NodeScaleLODBehaviour, NodeScaleLODEditor, nodeScaleLodOptionsToForm, nodeScaleLodFormToOptions),
+  make('behaviours', 'Edge Size LOD', (i) => i instanceof EdgeScaleLODBehaviour, EdgeScaleLODEditor, edgeScaleLodOptionsToForm, edgeScaleLodFormToOptions),
   make('behaviours', 'Parallel Edge', (i) => i instanceof ParallelEdgeBehaviour, ParallelEdgeEditor, parallelEdgeOptionsToForm, parallelEdgeFormToOptions),
   make('behaviours', 'Label Collision', (i) => i instanceof LabelCollisionBehaviour, LabelCollisionEditor, labelCollisionOptionsToForm, labelCollisionFormToOptions),
   make('layouts', 'D3 Force', (i) => i instanceof D3ForceLayout, D3ForceLayoutEditor, d3ForceLayoutOptionsToForm, d3ForceLayoutFormToOptions),

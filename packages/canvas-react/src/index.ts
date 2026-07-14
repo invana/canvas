@@ -139,17 +139,17 @@ export type { LabelCollisionBehaviourProps } from './behaviours/LabelCollisionBe
 export { TextResolutionLODBehaviour } from './behaviours/TextResolutionLODBehaviour';
 export type { TextResolutionLODBehaviourProps } from './behaviours/TextResolutionLODBehaviour';
 
-export { NodeSizeLODBehaviour } from './behaviours/NodeSizeLODBehaviour';
-export type { NodeSizeLODBehaviourProps } from './behaviours/NodeSizeLODBehaviour';
+export { NodeScaleLODBehaviour } from './behaviours/NodeScaleLODBehaviour';
+export type { NodeScaleLODBehaviourProps } from './behaviours/NodeScaleLODBehaviour';
 
-export { EdgeSizeLODBehaviour } from './behaviours/EdgeSizeLODBehaviour';
-export type { EdgeSizeLODBehaviourProps } from './behaviours/EdgeSizeLODBehaviour';
+export { EdgeScaleLODBehaviour } from './behaviours/EdgeScaleLODBehaviour';
+export type { EdgeScaleLODBehaviourProps } from './behaviours/EdgeScaleLODBehaviour';
 
 export { ParallelEdgeBehaviour } from './behaviours/ParallelEdgeBehaviour';
 export type { ParallelEdgeBehaviourProps } from './behaviours/ParallelEdgeBehaviour';
 
-export { DegreeSizeBehaviour } from './behaviours/DegreeSizeBehaviour';
-export type { DegreeSizeBehaviourProps } from './behaviours/DegreeSizeBehaviour';
+export { NodeCentralityBehaviour } from './behaviours/NodeCentralityBehaviour';
+export type { NodeCentralityBehaviourProps } from './behaviours/NodeCentralityBehaviour';
 export { TextLODBehaviour } from './behaviours/TextLODBehaviour';
 export type { TextLODBehaviourProps } from './behaviours/TextLODBehaviour';
 export { IconLODBehaviour } from './behaviours/IconLODBehaviour';

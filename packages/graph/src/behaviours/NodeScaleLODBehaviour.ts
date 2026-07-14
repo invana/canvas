@@ -1,8 +1,8 @@
 /**
- * `NodeSizeLODBehaviour` — keep `GraphLayer` node bodies (and their
+ * `NodeScaleLODBehaviour` — keep `GraphLayer` node bodies (and their
  * outline strokes) at a fixed screen-pixel size across camera zoom.
  *
- * Concrete subclass of `ElementSizeLODBehaviour` — that base owns the
+ * Concrete subclass of `ElementScaleLODBehaviour` — that base owns the
  * RAF coalescing, `camera:zoom` subscription, and enable/disable
  * lifecycle. This class only knows how to rescale graph nodes.
  *
@@ -23,7 +23,7 @@
  * way to opt the stroke out of the transform while keeping the body in
  * — the two are coupled by the single scale factor.
  *
- * Pair with {@link EdgeSizeLODBehaviour} when you also want pixel-constant
+ * Pair with {@link EdgeScaleLODBehaviour} when you also want pixel-constant
  * edge strokes. They're independent behaviours; their RAF callbacks
  * batch into the same animation frame, so registering both has the same
  * per-frame cost as one monolith doing both passes.
@@ -41,11 +41,11 @@
  *
  * @example
  * ```ts
- * import { NodeSizeLODBehaviour } from '@invana/graph';
+ * import { NodeScaleLODBehaviour } from '@invana/graph';
  *
  * canvas.behaviours.register(
- *   new NodeSizeLODBehaviour({
- *     id: 'node-size-lod',
+ *   new NodeScaleLODBehaviour({
+ *     id: 'node-scale-lod',
  *     enabled: true,
  *     layers: [
  *       {
@@ -60,10 +60,10 @@
  */
 
 import {
-  ElementSizeLODBehaviour,
+  ElementScaleLODBehaviour,
   resolveNumberOrGetter,
   type CanvasContext,
-  type ElementSizeLODBehaviourOptions,
+  type ElementScaleLODBehaviourOptions,
   type NumberOrGetter,
   type PrimitivesRenderer,
 } from '@invana/canvas';
@@ -71,7 +71,7 @@ import {
 import type { GraphLayer } from '../layer/GraphLayer';
 
 /** Per-`GraphLayer` config — one entry per layer this behaviour rescales. */
-export interface NodeSizeLODConfig {
+export interface NodeScaleLODConfig {
   /** Required — the `GraphLayer` whose nodes are rescaled. */
   targetLayerId: string;
   /**
@@ -92,28 +92,28 @@ export interface NodeSizeLODConfig {
   strokeWidthPx?: NumberOrGetter;
 }
 
-export interface NodeSizeLODBehaviourOptions extends ElementSizeLODBehaviourOptions {
+export interface NodeScaleLODBehaviourOptions extends ElementScaleLODBehaviourOptions {
   /** One config per `GraphLayer` to drive. */
-  layers: NodeSizeLODConfig[];
+  layers: NodeScaleLODConfig[];
 }
 
 interface ResolvedTarget {
-  config: NodeSizeLODConfig;
+  config: NodeScaleLODConfig;
   layer: GraphLayer;
 }
 
 /**
  * Trailing-edge debounce for the reanchor pass — see
- * {@link NodeSizeLODBehaviour.apply}. Picked to match
- * {@link EdgeSizeLODBehaviour}'s `DEFAULT_EDGE_SETTLE_MS = 80`: short
+ * {@link NodeScaleLODBehaviour.apply}. Picked to match
+ * {@link EdgeScaleLODBehaviour}'s `DEFAULT_EDGE_SETTLE_MS = 80`: short
  * enough to feel "instant on release", long enough that a fling never
  * fires it mid-gesture.
  */
 const REANCHOR_SETTLE_MS = 80;
 
-export class NodeSizeLODBehaviour extends ElementSizeLODBehaviour<NodeSizeLODBehaviourOptions> {
+export class NodeScaleLODBehaviour extends ElementScaleLODBehaviour<NodeScaleLODBehaviourOptions> {
   /** Live-read from `_options` so `setOptions` applies; `onOptionsChanged` reflows. */
-  private get configs(): NodeSizeLODConfig[] { return this._options.layers; }
+  private get configs(): NodeScaleLODConfig[] { return this._options.layers; }
   private resolved: ResolvedTarget[] = [];
   /**
    * Pending reanchor timer. The per-frame `scaleShape` fast path is cheap
@@ -124,7 +124,7 @@ export class NodeSizeLODBehaviour extends ElementSizeLODBehaviour<NodeSizeLODBeh
    */
   private reanchorTimer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(opts: NodeSizeLODBehaviourOptions) {
+  constructor(opts: NodeScaleLODBehaviourOptions) {
     super(opts);
   }
 
@@ -143,7 +143,7 @@ export class NodeSizeLODBehaviour extends ElementSizeLODBehaviour<NodeSizeLODBeh
       const layer = ctx.layers.get<GraphLayer>(config.targetLayerId);
       if (!layer) {
         throw new Error(
-          `NodeSizeLODBehaviour "${this.id}": layer "${config.targetLayerId}" not found in CanvasContext.`,
+          `NodeScaleLODBehaviour "${this.id}": layer "${config.targetLayerId}" not found in CanvasContext.`,
         );
       }
       this.resolved.push({ config, layer });
@@ -287,7 +287,7 @@ export class NodeSizeLODBehaviour extends ElementSizeLODBehaviour<NodeSizeLODBeh
     layer: GraphLayer,
     renderer: PrimitivesRenderer,
     mode: 'target' | 'worldUnit',
-    config: NodeSizeLODConfig,
+    config: NodeScaleLODConfig,
   ): void {
     const sizePxFallback = resolveNumberOrGetter(config.sizePx);
     const strokePxFallback = resolveNumberOrGetter(config.strokeWidthPx);

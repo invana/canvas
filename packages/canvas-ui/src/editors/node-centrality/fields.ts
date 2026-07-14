@@ -1,12 +1,12 @@
 import type { FieldConfig } from '@invana/forms';
 
 /**
- * `@invana/forms` field schema for the DegreeSizeBehaviour editor. Field
- * `name`s match the keys of `DegreeSizeFields` 1:1 so the generator's
+ * `@invana/forms` field schema for the NodeCentralityBehaviour editor. Field
+ * `name`s match the keys of `NodeCentralityFields` 1:1 so the generator's
  * `options.<name>` paths line up with `mapping.ts`. Static — none of the
  * inputs depend on another field's value.
  */
-export const degreeSizeFields: FieldConfig[] = [
+export const nodeCentralityFields: FieldConfig[] = [
   {
     name: 'direction',
     type: 'select',

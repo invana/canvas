@@ -29,7 +29,7 @@ export class ShapeInstance<TSpec extends BaseShapeSpec = BaseShapeSpec> {
    * The spec's geometry (`radius` / `width` / `height`) describes the
    * shape in unscaled local units; `gfxScale` is the *visual* multiplier
    * the renderer applies on top, used by behaviours like
-   * `NodeSizeLODBehaviour` to keep shapes pixel-constant across camera
+   * `NodeScaleLODBehaviour` to keep shapes pixel-constant across camera
    * zoom without rebuilding geometry every frame.
    *
    * Anchor / obstacle / endpoint-centre computations multiply the local

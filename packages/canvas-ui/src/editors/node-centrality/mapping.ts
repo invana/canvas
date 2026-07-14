@@ -1,11 +1,11 @@
-import type { DegreeSizeFields, DegreeSizeOptions } from './types';
+import type { NodeCentralityFields, NodeCentralityOptions } from './types';
 
 /**
- * Map a `DegreeSizeBehaviourOptions`-shaped patch to the flat
- * {@link DegreeSizeFields} the `@invana/forms` generator renders. All fields
+ * Map a `NodeCentralityBehaviourOptions`-shaped patch to the flat
+ * {@link NodeCentralityFields} the `@invana/forms` generator renders. All fields
  * are scalar / enum, so this is a straight pass-through.
  */
-export function optionsToForm(o: DegreeSizeOptions = {}): DegreeSizeFields {
+export function optionsToForm(o: NodeCentralityOptions = {}): NodeCentralityFields {
   return {
     direction: o.direction,
     minSize: o.minSize,
@@ -16,12 +16,12 @@ export function optionsToForm(o: DegreeSizeOptions = {}): DegreeSizeFields {
 
 /**
  * Inverse of {@link optionsToForm}: fold the flat fields back to a serialisable
- * {@link DegreeSizeOptions} patch. Only fields the form actually set are
+ * {@link NodeCentralityOptions} patch. Only fields the form actually set are
  * included (no `undefined` keys), so the result is safe to spread over the
  * behaviour's current options on `setOptions`.
  */
-export function formToOptions(f: DegreeSizeFields): DegreeSizeOptions {
-  const out: DegreeSizeOptions = {};
+export function formToOptions(f: NodeCentralityFields): NodeCentralityOptions {
+  const out: NodeCentralityOptions = {};
   if (f.direction !== undefined) out.direction = f.direction;
   if (f.minSize !== undefined) out.minSize = f.minSize;
   if (f.maxSize !== undefined) out.maxSize = f.maxSize;

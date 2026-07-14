@@ -23,11 +23,11 @@ import 'maplibre-gl/dist/maplibre-gl.css?inline';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DevInfoLayer } from '@invana/canvas';
 import {
-  EdgeSizeLODBehaviour,
+  EdgeScaleLODBehaviour,
   GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
-  NodeSizeLODBehaviour,
+  NodeScaleLODBehaviour,
   type GraphEdge,
   type GraphNode,
 } from '@invana/graph';
@@ -197,8 +197,8 @@ export const Routes_Story: Story = {
     // into the same animation frame, so this is the same per-frame cost
     // as a single behaviour doing both passes. The resolver functions keep
     // these behaviours' options in the constructor.
-    const nodeSizeLOD = new NodeSizeLODBehaviour({
-      id: 'node-size-lod',
+    const nodeScaleLOD = new NodeScaleLODBehaviour({
+      id: 'node-scale-lod',
       layers: [
         {
           targetLayerId: 'graph',
@@ -207,12 +207,12 @@ export const Routes_Story: Story = {
         },
       ],
     });
-    const edgeSizeLOD = new EdgeSizeLODBehaviour({
-      id: 'edge-size-lod',
+    const edgeScaleLOD = new EdgeScaleLODBehaviour({
+      id: 'edge-scale-lod',
       layers: [{ targetLayerId: 'graph', strokeWidthPx: () => settings.targetEdgePx }],
     });
-    canvas.behaviours.register(nodeSizeLOD);
-    canvas.behaviours.register(edgeSizeLOD);
+    canvas.behaviours.register(nodeScaleLOD);
+    canvas.behaviours.register(edgeScaleLOD);
 
     // Hover-to-activate — highlights the airport under the pointer plus
     // its N-hop neighbour airports and connecting Delaunay routes, and
@@ -283,8 +283,8 @@ export const Routes_Story: Story = {
         },
       },
       behaviours: {
-        'node-size-lod': { enabled: true },
-        'edge-size-lod': { enabled: true },
+        'node-scale-lod': { enabled: true },
+        'edge-scale-lod': { enabled: true },
         hover: {
           enabled: true,
           state: 'hovered',
@@ -347,30 +347,30 @@ export const Routes_Story: Story = {
       .name('Enable')
       .onChange((v: boolean) => {
         if (v) {
-          nodeSizeLOD.enable();
-          edgeSizeLOD.enable();
+          nodeScaleLOD.enable();
+          edgeScaleLOD.enable();
         } else {
-          nodeSizeLOD.disable();
-          edgeSizeLOD.disable();
+          nodeScaleLOD.disable();
+          edgeScaleLOD.disable();
         }
       });
     screenFolder
       .add(settings, 'targetNodePx', 1, 24, 0.5)
       .name('Node px')
       .onChange(() => {
-        if (settings.screenConstant) nodeSizeLOD.reflow();
+        if (settings.screenConstant) nodeScaleLOD.reflow();
       });
     screenFolder
       .add(settings, 'targetNodeStrokePx', 0, 5, 0.1)
       .name('Node stroke px')
       .onChange(() => {
-        if (settings.screenConstant) nodeSizeLOD.reflow();
+        if (settings.screenConstant) nodeScaleLOD.reflow();
       });
     screenFolder
       .add(settings, 'targetEdgePx', 0.1, 5, 0.1)
       .name('Edge px')
       .onChange(() => {
-        if (settings.screenConstant) edgeSizeLOD.reflow();
+        if (settings.screenConstant) edgeScaleLOD.reflow();
       });
 
     const hoverFolder = gui.addFolder('Hover');

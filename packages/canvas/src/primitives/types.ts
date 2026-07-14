@@ -1085,7 +1085,7 @@ export interface ShapeCtor<TSpec extends BaseShapeSpec = BaseShapeSpec> {
    * inner/outer ratio, an arc's angular sweep, a polygon's vertex
    * topology) is preserved.
    *
-   * Used by `NodeSizeLODBehaviour` to rewrite shape size as the camera
+   * Used by `NodeScaleLODBehaviour` to rewrite shape size as the camera
    * zooms, without switching over a closed kind enum. Shapes that don't
    * implement this expose `undefined` from
    * {@link PrimitivesRenderer.scaleShapeSpec}; the LOD behaviour skips

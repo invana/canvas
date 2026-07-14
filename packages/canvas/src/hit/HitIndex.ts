@@ -99,7 +99,7 @@ export class HitIndex {
    *
    * Per-id `update(...)` does `remove + insert`, and rbush's `remove(item)`
    * is a linear tree walk — so updating thousands of entries one at a time
-   * is O(N²). When a behaviour like `NodeSizeLODBehaviour` rescales every
+   * is O(N²). When a behaviour like `NodeScaleLODBehaviour` rescales every
    * node on each camera-zoom frame, the per-id path floors fps even at
    * modest graph sizes.
    *
