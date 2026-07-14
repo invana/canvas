@@ -109,8 +109,8 @@ export type {
   LabelPriorityResolver,
 } from './LabelCollisionBehaviour';
 
-export { LabelResolutionLODBehaviour } from './LabelResolutionLODBehaviour';
-export type { LabelResolutionLODBehaviourOptions } from './LabelResolutionLODBehaviour';
+export { TextResolutionLODBehaviour } from './TextResolutionLODBehaviour';
+export type { TextResolutionLODBehaviourOptions } from './TextResolutionLODBehaviour';
 
 export { NodeSizeLODBehaviour } from './NodeSizeLODBehaviour';
 export type {
@@ -142,6 +142,17 @@ export type {
   DegreeSizeBehaviourOptions,
   DegreeSizeScale,
 } from './DegreeSizeBehaviour';
+
+export type {
+  ContentLODBehaviourOptions,
+  ZoomBand,
+} from './ContentLODBehaviour';
+export { TextLODBehaviour } from './TextLODBehaviour';
+export type { TextLODBehaviourOptions } from './TextLODBehaviour';
+export { IconLODBehaviour } from './IconLODBehaviour';
+export type { IconLODBehaviourOptions } from './IconLODBehaviour';
+export { ImageLODBehaviour } from './ImageLODBehaviour';
+export type { ImageLODBehaviourOptions } from './ImageLODBehaviour';
 
 export { ThemeBehaviour } from './ThemeBehaviour';
 export type { ThemeBehaviourOptions } from './ThemeBehaviour';

@@ -1,5 +1,5 @@
 /**
- * `LabelResolutionLODBehaviour` — re-rasterise label glyphs at higher
+ * `TextResolutionLODBehaviour` — re-rasterise label glyphs at higher
  * resolution as the camera zooms in, so text stays crisp instead of
  * sampling-blurry when the user inspects nodes up close.
  *
@@ -29,7 +29,7 @@
  * @example
  * ```ts
  * canvas.behaviours.register(
- *   new LabelResolutionLODBehaviour({
+ *   new TextResolutionLODBehaviour({
  *     id: 'label-resolution',
  *     targetLayerId: 'graph',
  *     enabled: true,
@@ -50,14 +50,14 @@ import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/ca
 import { GraphLayer } from '../layer/GraphLayer';
 
 /** One discrete LOD tier. Highest `minZoom` ≤ current zoom wins. */
-export interface LabelResolutionLODTier {
+export interface TextResolutionLODTier {
   /** Camera zoom (`canvas.camera.scale`) at which this tier becomes active. */
   minZoom: number;
   /** Multiplier applied to `baseResolution` while this tier is active. */
   multiplier: number;
 }
 
-export interface LabelResolutionLODBehaviourOptions extends BehaviourOptions {
+export interface TextResolutionLODBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour drives. */
   targetLayerId: string;
 
@@ -79,7 +79,7 @@ export interface LabelResolutionLODBehaviourOptions extends BehaviourOptions {
    * `[{ minZoom: 0, multiplier: 1 }, { minZoom: 1.5, multiplier: 4 }]` —
    * one threshold, one re-raster.
    */
-  levels?: LabelResolutionLODTier[];
+  levels?: TextResolutionLODTier[];
 
   /**
    * Hysteresis applied to *downward* tier changes. After crossing UP into
@@ -90,7 +90,7 @@ export interface LabelResolutionLODBehaviourOptions extends BehaviourOptions {
   hysteresis?: number;
 }
 
-const DEFAULT_LEVELS: LabelResolutionLODTier[] = [
+const DEFAULT_LEVELS: TextResolutionLODTier[] = [
   // Each tier covers a ~2.5× zoom band so sampling stays ≥ ~1px-per-glyph-
   // px through the whole zoom range. The math: at zoom Z with multiplier M
   // and DPR=2, glyph-texture sampling per displayed pixel = (M * 2) / Z.
@@ -101,7 +101,7 @@ const DEFAULT_LEVELS: LabelResolutionLODTier[] = [
   { minZoom: 10, multiplier: 16 },   // 10×+ : sampling 32/Z, headroom for deep zoom
 ];
 
-export class LabelResolutionLODBehaviour extends Behaviour<LabelResolutionLODBehaviourOptions> {
+export class TextResolutionLODBehaviour extends Behaviour<TextResolutionLODBehaviourOptions> {
   private layer: GraphLayer | null = null;
   private subs: Array<() => void> = [];
 
@@ -116,7 +116,7 @@ export class LabelResolutionLODBehaviour extends Behaviour<LabelResolutionLODBeh
     );
   }
   /** Tiers sorted ascending by `minZoom`, guaranteed to cover zoom 0. */
-  private get levels(): LabelResolutionLODTier[] {
+  private get levels(): TextResolutionLODTier[] {
     const raw =
       this._options.levels && this._options.levels.length > 0
         ? this._options.levels
@@ -140,7 +140,7 @@ export class LabelResolutionLODBehaviour extends Behaviour<LabelResolutionLODBeh
   /** Last resolution actually pushed to the renderer. */
   private lastPushed: number | null = null;
 
-  constructor(opts: LabelResolutionLODBehaviourOptions) {
+  constructor(opts: TextResolutionLODBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? [] });
   }
 
@@ -148,7 +148,7 @@ export class LabelResolutionLODBehaviour extends Behaviour<LabelResolutionLODBeh
     const layer = ctx.layers.get<GraphLayer>(this.targetLayerId!);
     if (!layer) {
       throw new Error(
-        `LabelResolutionLODBehaviour "${this.id}": layer "${this.targetLayerId}" not found.`,
+        `TextResolutionLODBehaviour "${this.id}": layer "${this.targetLayerId}" not found.`,
       );
     }
     this.layer = layer;

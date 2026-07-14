@@ -459,6 +459,32 @@ export type {
   DegreeSizeOptions,
 } from './editors/degree-size';
 
+// Content-LOD behaviours (TextLODBehaviour / IconLODBehaviour / ImageLODBehaviour)
+// share one option shape (a { minZoom, maxZoom } zoom band), so one editor serves
+// all three. `ContentLODEditor` is the canonical component; the per-behaviour
+// names alias it for discoverability + the per-behaviour editor convention.
+export {
+  ContentLODEditor,
+  ContentLODEditor as TextLODEditor,
+  ContentLODEditor as IconLODEditor,
+  ContentLODEditor as ImageLODEditor,
+  contentLODFields,
+  textLODFields,
+} from './editors/content-lod';
+export {
+  optionsToForm as contentLODOptionsToForm,
+  formToOptions as contentLODFormToOptions,
+} from './editors/content-lod';
+export type {
+  ContentLODEditorProps,
+  ContentLODEditorProps as TextLODEditorProps,
+  ContentLODEditorProps as IconLODEditorProps,
+  ContentLODEditorProps as ImageLODEditorProps,
+  ContentLODFields,
+  ContentLODFormState,
+  ContentLODOptions,
+} from './editors/content-lod';
+
 // ParallelEdgeBehaviour
 export { ParallelEdgeEditor, parallelEdgeFields } from './editors/parallel-edge';
 export {
@@ -472,18 +498,18 @@ export type {
   ParallelEdgeOptions,
 } from './editors/parallel-edge';
 
-// LabelResolutionLODBehaviour
-export { LabelResolutionLODEditor, labelResolutionLodFields } from './editors/label-resolution-lod';
+// TextResolutionLODBehaviour
+export { TextResolutionLODEditor, textResolutionLodFields } from './editors/text-resolution-lod';
 export {
-  optionsToForm as labelResolutionLodOptionsToForm,
-  formToOptions as labelResolutionLodFormToOptions,
-} from './editors/label-resolution-lod';
+  optionsToForm as textResolutionLodOptionsToForm,
+  formToOptions as textResolutionLodFormToOptions,
+} from './editors/text-resolution-lod';
 export type {
-  LabelResolutionLODEditorProps,
-  LabelResolutionLODFields,
-  LabelResolutionLODFormState,
-  LabelResolutionLODOptions,
-} from './editors/label-resolution-lod';
+  TextResolutionLODEditorProps,
+  TextResolutionLODFields,
+  TextResolutionLODFormState,
+  TextResolutionLODOptions,
+} from './editors/text-resolution-lod';
 
 // NodeSizeLODBehaviour
 export { NodeSizeLODEditor, nodeSizeLodFields } from './editors/node-size-lod';

@@ -1,15 +1,15 @@
 /**
- * Types for the LabelResolutionLODBehaviour editor.
+ * Types for the TextResolutionLODBehaviour editor.
  *
- * Engine-agnostic: `@invana/graph` (home of `LabelResolutionLODBehaviour` and
+ * Engine-agnostic: `@invana/graph` (home of `TextResolutionLODBehaviour` and
  * its options) is **not** imported for its runtime — the editable option shape
- * is mirrored here as {@link LabelResolutionLODOptions}, a serialisable patch
+ * is mirrored here as {@link TextResolutionLODOptions}, a serialisable patch
  * the consumer applies via `setOptions`. Keep it in sync with
- * `LabelResolutionLODBehaviourOptions` by hand.
+ * `TextResolutionLODBehaviourOptions` by hand.
  */
 
 /**
- * The subset of `LabelResolutionLODBehaviourOptions` this editor produces — a
+ * The subset of `TextResolutionLODBehaviourOptions` this editor produces — a
  * serialisable patch. Only the scalar knobs round-trip.
  *
  * **`levels[]` is omitted on purpose.** The discrete `{ minZoom, multiplier }`
@@ -18,7 +18,7 @@
  * `setOptions`. The base `id` / `targetLayerId` / `enabled` / `shortcuts` are
  * likewise out of scope.
  */
-export interface LabelResolutionLODOptions {
+export interface TextResolutionLODOptions {
   /**
    * Base resolution multiplied by the active tier's multiplier. Default
    * `window.devicePixelRatio`.
@@ -33,14 +33,14 @@ export interface LabelResolutionLODOptions {
 
 /**
  * Flat form-field shape the `@invana/forms` generator renders. Matches
- * {@link LabelResolutionLODOptions} 1:1 — both fields are numbers.
+ * {@link TextResolutionLODOptions} 1:1 — both fields are numbers.
  */
-export type LabelResolutionLODFields = LabelResolutionLODOptions;
+export type TextResolutionLODFields = TextResolutionLODOptions;
 
 /**
  * react-hook-form state shape. `<ObjectField name="options" …>` registers each
  * leaf under `options.<field>`, so the form's values nest under an `options` key.
  */
-export interface LabelResolutionLODFormState {
-  options: LabelResolutionLODFields;
+export interface TextResolutionLODFormState {
+  options: TextResolutionLODFields;
 }

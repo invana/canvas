@@ -314,7 +314,7 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
     // match MapLibre's exact transform. We mirror the transform raw, then
     // bridge the resulting camera change onto the canvas event bus below
     // so behaviours subscribed to `input:camera:zoom` / `input:camera:pan` (e.g.
-    // `ScreenSizeBehaviour`, `LabelResolutionLODBehaviour`) react to
+    // `ScreenSizeBehaviour`, `TextResolutionLODBehaviour`) react to
     // MapLibre-driven pan/zoom too. Without this bridge those listeners
     // are silently never called when the map drives the camera.
     ctx.camera.viewport.scale.set(scale);

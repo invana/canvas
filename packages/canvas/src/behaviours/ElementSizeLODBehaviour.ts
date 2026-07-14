@@ -2,7 +2,7 @@
  * `ElementSizeLODBehaviour` — abstract base for zoom-driven "keep this
  * element at a fixed screen-pixel size" behaviours.
  *
- * Sits in the same family as `LabelResolutionLODBehaviour`: both react
+ * Sits in the same family as `TextResolutionLODBehaviour`: both react
  * to `camera:zoom`, both adapt how some kind of entity renders as the
  * camera scale changes. This base owns the shared plumbing — event
  * subscription, RAF coalescing of bursts, enable/disable lifecycle —

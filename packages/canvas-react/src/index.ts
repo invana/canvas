@@ -136,8 +136,8 @@ export type { NodeResizeBehaviourProps } from './behaviours/NodeResizeBehaviour'
 export { LabelCollisionBehaviour } from './behaviours/LabelCollisionBehaviour';
 export type { LabelCollisionBehaviourProps } from './behaviours/LabelCollisionBehaviour';
 
-export { LabelResolutionLODBehaviour } from './behaviours/LabelResolutionLODBehaviour';
-export type { LabelResolutionLODBehaviourProps } from './behaviours/LabelResolutionLODBehaviour';
+export { TextResolutionLODBehaviour } from './behaviours/TextResolutionLODBehaviour';
+export type { TextResolutionLODBehaviourProps } from './behaviours/TextResolutionLODBehaviour';
 
 export { NodeSizeLODBehaviour } from './behaviours/NodeSizeLODBehaviour';
 export type { NodeSizeLODBehaviourProps } from './behaviours/NodeSizeLODBehaviour';
@@ -150,6 +150,12 @@ export type { ParallelEdgeBehaviourProps } from './behaviours/ParallelEdgeBehavi
 
 export { DegreeSizeBehaviour } from './behaviours/DegreeSizeBehaviour';
 export type { DegreeSizeBehaviourProps } from './behaviours/DegreeSizeBehaviour';
+export { TextLODBehaviour } from './behaviours/TextLODBehaviour';
+export type { TextLODBehaviourProps } from './behaviours/TextLODBehaviour';
+export { IconLODBehaviour } from './behaviours/IconLODBehaviour';
+export type { IconLODBehaviourProps } from './behaviours/IconLODBehaviour';
+export { ImageLODBehaviour } from './behaviours/ImageLODBehaviour';
+export type { ImageLODBehaviourProps } from './behaviours/ImageLODBehaviour';
 
 // ─── Layouts ─────────────────────────────────────────────────────────────
 export { D3ForceLayout } from './layouts/D3ForceLayout';

@@ -8,50 +8,50 @@ import {
   type FieldValues,
 } from 'react-hook-form';
 
-import { labelResolutionLodFields } from './fields';
-import type { LabelResolutionLODFields, LabelResolutionLODFormState } from './types';
+import { textResolutionLodFields } from './fields';
+import type { TextResolutionLODFields, TextResolutionLODFormState } from './types';
 
-export interface LabelResolutionLODEditorProps {
+export interface TextResolutionLODEditorProps {
   /**
    * Initial field values, loaded into the form once on mount. Seed it from a
    * behaviour's options with the exported `optionsToForm`. Remount (via `key`)
    * to reload.
    */
-  defaults?: LabelResolutionLODFields;
+  defaults?: TextResolutionLODFields;
   /**
    * The form schema. Either a static `FieldConfig[]` or a function of the
-   * current values. Defaults to {@link labelResolutionLodFields}.
+   * current values. Defaults to {@link textResolutionLodFields}.
    */
-  fields?: FieldConfig[] | ((values: LabelResolutionLODFields) => FieldConfig[]);
+  fields?: FieldConfig[] | ((values: TextResolutionLODFields) => FieldConfig[]);
   /**
    * Called with the current values on submit. Map back to an options patch with
    * `formToOptions` and apply it however you like (`behaviour.setOptions`, an
    * undo stack, …). The component does none of that.
    */
-  onSubmit: (values: LabelResolutionLODFields) => void;
+  onSubmit: (values: TextResolutionLODFields) => void;
   /** Submit button label. Default `'Apply'`. */
   submitLabel?: string;
 }
 
 /**
- * Self-contained, engine-agnostic settings form for `LabelResolutionLODBehaviour`.
+ * Self-contained, engine-agnostic settings form for `TextResolutionLODBehaviour`.
  *
  * Owns a react-hook-form instance seeded by `defaults`, renders the schema with
  * `@invana/forms`, and hands the current values to `onSubmit`. It holds no
- * engine reference and does no commit — the `LabelResolutionLODBehaviourOptions ⇄
+ * engine reference and does no commit — the `TextResolutionLODBehaviourOptions ⇄
  * form-fields` mapping (`optionsToForm` / `formToOptions`) is the consumer's plug-in.
  */
-export function LabelResolutionLODEditor({
+export function TextResolutionLODEditor({
   defaults = {},
-  fields = labelResolutionLodFields,
+  fields = textResolutionLodFields,
   onSubmit,
   submitLabel = 'Apply',
-}: LabelResolutionLODEditorProps) {
-  const form = useForm<LabelResolutionLODFormState>({ defaultValues: { options: defaults } });
+}: TextResolutionLODEditorProps) {
+  const form = useForm<TextResolutionLODFormState>({ defaultValues: { options: defaults } });
   const { control, getValues } = form;
 
   // Recompute fields from the live values when `fields` is a function.
-  const values = useWatch({ control, name: 'options' }) as LabelResolutionLODFields | undefined;
+  const values = useWatch({ control, name: 'options' }) as TextResolutionLODFields | undefined;
   const resolvedFields = typeof fields === 'function' ? fields(values ?? {}) : fields;
 
   // Widen at the boundary — RHF's typed Control isn't assignable to ObjectField's
