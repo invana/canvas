@@ -89,6 +89,21 @@ export class HitIndex {
     });
   }
 
+  /**
+   * All entries whose bbox intersects `rect` (world coords). Powers viewport
+   * culling — query the camera's visible bounds to get the on-screen working
+   * set. Conservative for loose bboxes (e.g. connectors): may over-return, never
+   * under-returns, so nothing on-screen is missed.
+   */
+  searchRect(rect: Rect): HitEntry[] {
+    return this.tree.search({
+      minX: rect.x,
+      minY: rect.y,
+      maxX: rect.x + rect.width,
+      maxY: rect.y + rect.height,
+    });
+  }
+
   clear(): void {
     this.tree.clear();
     this.entries.clear();

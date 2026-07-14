@@ -613,6 +613,42 @@ export class PrimitivesRenderer {
   }
 
   /**
+   * **Viewport culling.** Toggle `renderable` on every *indexed* shape /
+   * connector by whether its bbox intersects `visibleBounds` (grown by
+   * `padWorld` so elements don't pop at the screen edge during a pan). Off-screen
+   * elements are then skipped by Pixi's render pass — the working set drops
+   * sharply when zoomed in, which is where it matters. Reuses the same rbush that
+   * backs hit-testing (`searchRect`), so it's conservative for loose connector
+   * bboxes: it may keep an off-screen edge, but never culls an on-screen one.
+   *
+   * Elements not in the hit index (hidden / non-hittable) are left untouched.
+   * Cheap enough to run once per camera-move frame; it buys nothing for the
+   * fully zoomed-out hairball (everything's on screen — that needs batching).
+   */
+  cull(visibleBounds: Rect, padWorld = 0): void {
+    const rect: Rect = {
+      x: visibleBounds.x - padWorld,
+      y: visibleBounds.y - padWorld,
+      width: visibleBounds.width + 2 * padWorld,
+      height: visibleBounds.height + 2 * padWorld,
+    };
+    const visible = new Set<string>();
+    for (const e of this.hit.searchRect(rect)) visible.add(e.id);
+    for (const [id, inst] of this.shapeInstances) {
+      if (this.hit.has(id)) inst.shape.gfx.renderable = visible.has(id);
+    }
+    for (const [id, inst] of this.connectorInstances) {
+      if (this.hit.has(id)) inst.connector.gfx.renderable = visible.has(id);
+    }
+  }
+
+  /** Undo culling — restore `renderable` on every shape / connector. */
+  uncull(): void {
+    for (const inst of this.shapeInstances.values()) inst.shape.gfx.renderable = true;
+    for (const inst of this.connectorInstances.values()) inst.connector.gfx.renderable = true;
+  }
+
+  /**
    * Fast-path position-only move — writes the host `gfx` transform directly,
    * skipping BOTH the geometry redraw and the decoration re-anchor that
    * {@link updateShape} performs. This is what `GraphLayer` routes every

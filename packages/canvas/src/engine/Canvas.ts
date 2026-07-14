@@ -44,6 +44,7 @@ import {
 
 import { CanvasThemeState } from '../theme/CanvasThemeState';
 import { Camera } from '../camera/Camera';
+import type { Rect } from '../primitives/types';
 import { FrameMeter } from './FrameMeter';
 import { InteractionTracker } from './InteractionTracker';
 import { LayerRegistry } from '../registries/LayerRegistry';
@@ -72,6 +73,13 @@ import {
 /** High-resolution clock for per-frame timing; falls back to `Date.now` off-DOM. */
 const perfNow = (): number =>
   typeof performance !== 'undefined' ? performance.now() : Date.now();
+
+/**
+ * Viewport-cull margin as a fraction of the larger visible dimension. A buffer
+ * so shapes just past the screen edge are already rendered before a pan brings
+ * them in — trades a little culling reach for no pop-in.
+ */
+const CULL_PAD_FRACTION = 0.15;
 
 // ─── Options ───────────────────────────────────────────────────────────────
 
@@ -237,6 +245,8 @@ export class Canvas {
   private readonly _interactions: InteractionTracker;
   /** `performance.now()` at the previous frame — for the true (unclamped) frame time. */
   private _lastFrameTs = 0;
+  /** Rounded visible-bounds key from the last cull — re-cull only when it changes. */
+  private _lastCullKey = '';
 
   constructor(opts: CanvasOptions = {}) {
     this.id = opts.id ?? 'canvas';
@@ -437,6 +447,17 @@ export class Canvas {
     // is pending); sources the engine has put in 'manual' commit here.
     for (const id in this.store.data) this.store.data[id]?.flush();
     const t2 = perfNow();
+    // Viewport culling — recompute the on-screen working set only when the
+    // camera actually moved (rounded visible-bounds key), so a still graph pays
+    // nothing. Off-screen shapes/connectors get `renderable = false` and skip
+    // Pixi's render pass; the pad keeps a margin so elements don't pop at the
+    // edge mid-pan. Per-layer, gated by the `cullable` flag.
+    const visBounds = this.camera.getVisibleBounds();
+    const cullKey = `${Math.round(visBounds.x)},${Math.round(visBounds.y)},${Math.round(visBounds.width)},${Math.round(visBounds.height)}`;
+    const cameraMoved = cullKey !== this._lastCullKey;
+    if (cameraMoved) this._lastCullKey = cullKey;
+    const cullPad = Math.max(visBounds.width, visBounds.height) * CULL_PAD_FRACTION;
+
     for (const layer of this.layers.byZOrder()) {
       if (!layer.visible) continue;
       if (layer.hasPending()) layer.flush();
@@ -448,7 +469,10 @@ export class Canvas {
       const ticker = (
         layer as unknown as {
           tickAnimations?: (dt: number) => void;
-          renderer?: { tickAnimations?: (dt: number) => void };
+          renderer?: {
+            tickAnimations?: (dt: number) => void;
+            cull?: (bounds: Rect, pad?: number) => void;
+          };
         }
       );
       if (ticker.tickAnimations) {
@@ -456,6 +480,7 @@ export class Canvas {
       } else if (ticker.renderer?.tickAnimations) {
         ticker.renderer.tickAnimations(deltaMs);
       }
+      if (cameraMoved && layer.cullable) ticker.renderer?.cull?.(visBounds, cullPad);
     }
     const t3 = perfNow();
 
@@ -564,6 +589,14 @@ export class Canvas {
     }
     for (const [id, options] of Object.entries(patch.behaviours ?? {})) {
       configurable(this.behaviours.get(id))?.setOptions(options);
+      // Honour a runtime `enabled` toggle explicitly: route it through the
+      // registry (fires `scene:behaviour:enable`/`disable` + gesture-conflict
+      // bookkeeping), mirroring `_activate`. The base `Behaviour.setOptions`
+      // seam applies `enabled` too, but several behaviours override `setOptions`
+      // without calling `super`, so relying on that alone silently drops the
+      // toggle — the engine applies it here so `update` is authoritative.
+      const enabled = (options as { enabled?: boolean }).enabled;
+      if (enabled !== undefined) this.behaviours.setEnabled(id, enabled);
     }
     for (const [id, options] of Object.entries(patch.layouts ?? {})) {
       this.layouts.get(id)?.setOptions(options);
