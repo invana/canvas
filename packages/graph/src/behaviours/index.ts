@@ -153,6 +153,8 @@ export { IconLODBehaviour } from './IconLODBehaviour';
 export type { IconLODBehaviourOptions } from './IconLODBehaviour';
 export { ImageLODBehaviour } from './ImageLODBehaviour';
 export type { ImageLODBehaviourOptions } from './ImageLODBehaviour';
+export { EdgeLODBehaviour } from './EdgeLODBehaviour';
+export type { EdgeLODBehaviourOptions, EdgeLODKeepBy } from './EdgeLODBehaviour';
 
 export { ThemeBehaviour } from './ThemeBehaviour';
 export type { ThemeBehaviourOptions } from './ThemeBehaviour';

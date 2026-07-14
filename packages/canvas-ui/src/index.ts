@@ -504,6 +504,20 @@ export type {
   ContentLODOptions,
 } from './editors/content-lod';
 
+// EdgeLODBehaviour (thin edges below a zoom threshold)
+export { EdgeLODEditor, edgeLODFields } from './editors/edge-lod';
+export {
+  optionsToForm as edgeLODOptionsToForm,
+  formToOptions as edgeLODFormToOptions,
+} from './editors/edge-lod';
+export type {
+  EdgeLODEditorProps,
+  EdgeLODFields,
+  EdgeLODFormState,
+  EdgeLODKeepBy,
+  EdgeLODOptions,
+} from './editors/edge-lod';
+
 // ParallelEdgeBehaviour
 export { ParallelEdgeEditor, parallelEdgeFields } from './editors/parallel-edge';
 export {

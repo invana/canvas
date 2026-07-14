@@ -156,6 +156,8 @@ export { IconLODBehaviour } from './behaviours/IconLODBehaviour';
 export type { IconLODBehaviourProps } from './behaviours/IconLODBehaviour';
 export { ImageLODBehaviour } from './behaviours/ImageLODBehaviour';
 export type { ImageLODBehaviourProps } from './behaviours/ImageLODBehaviour';
+export { EdgeLODBehaviour } from './behaviours/EdgeLODBehaviour';
+export type { EdgeLODBehaviourProps } from './behaviours/EdgeLODBehaviour';
 
 // ─── Layouts ─────────────────────────────────────────────────────────────
 export { D3ForceLayout } from './layouts/D3ForceLayout';

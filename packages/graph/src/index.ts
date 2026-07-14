@@ -199,6 +199,9 @@ export {
   type IconLODBehaviourOptions,
   ImageLODBehaviour,
   type ImageLODBehaviourOptions,
+  EdgeLODBehaviour,
+  type EdgeLODBehaviourOptions,
+  type EdgeLODKeepBy,
   ThemeBehaviour,
   type ThemeBehaviourOptions,
 } from './behaviours';

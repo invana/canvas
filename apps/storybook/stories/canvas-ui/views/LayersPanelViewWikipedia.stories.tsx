@@ -12,6 +12,7 @@ import {
   type LayoutFactory,
   Panel,
   ThemeToggle,
+  EdgeLODBehaviour,
   IconLODBehaviour,
   TextLODBehaviour,
   useDevTool,
@@ -24,6 +25,10 @@ import {
   contentLODFormToOptions,
   contentLODOptionsToForm,
   type ContentLODOptions,
+  EdgeLODEditor,
+  edgeLODFormToOptions,
+  edgeLODOptionsToForm,
+  type EdgeLODOptions,
   LayersPanelView,
   textLODFields,
 } from '@invana/canvas-ui';
@@ -175,6 +180,9 @@ const CONFIG: CanvasConfig = {
 // below 1×.
 const TEXT_LOD: ContentLODOptions = { minZoom: 1.5, alwaysShowTop: 0.03 };
 const ICON_LOD: ContentLODOptions = { minZoom: 1 };
+// Below 0.6× zoom the 5.4k edges merge into a blob — thin them to the top 25%
+// by degree (keep the backbone), so the zoomed-out view is far cheaper to draw.
+const EDGE_LOD: EdgeLODOptions = { minZoom: 0.6, keepFraction: 0.25, keepBy: 'degree' };
 
 const nodeMenu = (ctx: GraphNodeMenuContext): MenuItem[] => [
   { id: 'inspect', label: `Inspect ${ctx.id}`, onClick: () => window.alert(`Page ${ctx.id}`) },
@@ -272,6 +280,12 @@ function VisibilityLODTab() {
         title="Icons"
         defaults={contentLODOptionsToForm(ICON_LOD)}
         onSubmit={applyTo('icon-lod')}
+      />
+      <EdgeLODEditor
+        defaults={edgeLODOptionsToForm(EDGE_LOD)}
+        onSubmit={(values) =>
+          update({ behaviours: { 'edge-lod': edgeLODFormToOptions(values) as unknown as Record<string, unknown> } })
+        }
       />
     </div>
   );
@@ -404,6 +418,17 @@ export const WikipediaDataViz: Story = {
             alwaysShowTop={TEXT_LOD.alwaysShowTop}
           />
           <IconLODBehaviour targetLayerId="graph" minZoom={ICON_LOD.minZoom} />
+
+          {/* Edge zoom-LOD (perf plan Phase 2 C) — thin the 5.4k edges to the
+              degree-backbone below 0.6× so the zoomed-out hairball is cheap to
+              draw. Reuses the edge-hidden flag (drops from render + hit index),
+              so it composes with the viewport culler. */}
+          <EdgeLODBehaviour
+            targetLayerId="graph"
+            minZoom={EDGE_LOD.minZoom}
+            keepFraction={EDGE_LOD.keepFraction}
+            keepBy={EDGE_LOD.keepBy}
+          />
 
           {/* Right-click menus. */}
           <GraphNodeContextMenu items={nodeMenu} />
