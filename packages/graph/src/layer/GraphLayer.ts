@@ -342,6 +342,16 @@ export class GraphLayer extends WorldLayer<
       s.on('node:add', ({ nodeId }) => {
         const node = this.store.getNode(nodeId);
         if (!node) return;
+        // Frame-coalesced flush (`flushMode: 'frame'`) buffers the initial
+        // data's `node:add` events and replays them on the first post-mount
+        // flush — *after* onMount's initial-sync loop already installed those
+        // nodes. Skip the duplicate so `addShape` doesn't throw on the re-add.
+        if (this._renderer?.hasShape(nodeId)) {
+          console.debug(
+            `[graph] node:add for "${nodeId}" skipped — shape already installed (expected once per node on the initial frame-flush replay; a later duplicate may indicate a double add).`,
+          );
+          return;
+        }
         this.installNodeShape(node);
         // Document states (`node.states`) are folded in by `resolveNodeStyle`
         // via `store.nodeStatesOf` at render — no mirror step needed.
@@ -400,6 +410,14 @@ export class GraphLayer extends WorldLayer<
       s.on('edge:add', ({ edgeId }) => {
         const edge = this.store.getEdge(edgeId);
         if (!edge) return;
+        // See the `node:add` guard: frame-flush replays the initial data's
+        // buffered `edge:add`s after onMount already installed them.
+        if (this._renderer?.hasConnector(edgeId)) {
+          console.debug(
+            `[graph] edge:add for "${edgeId}" skipped — connector already installed (expected once per edge on the initial frame-flush replay; a later duplicate may indicate a double add).`,
+          );
+          return;
+        }
         this.installEdgeConnector(edge);
       }),
       s.on('edge:update', ({ edgeId, patch }) => {
@@ -1006,6 +1024,15 @@ export class GraphLayer extends WorldLayer<
     const includeHidden = opts?.includeHidden ?? false;
     const renderer = this._renderer;
     if (!renderer) return super.getBounds();
+
+    // Bounds are read from the renderer's *projected* shape positions, but with
+    // `flushMode: 'frame'` the store buffers position writes until the next rAF.
+    // A one-shot layout that writes final positions then fires `end` →
+    // `camera.fitContent(layer.getBounds())` synchronously would otherwise read
+    // the *pre-layout* (stacked) bounds and fit to a near-zero box → runaway
+    // zoom. Drain pending mutations first so bounds reflect the authoritative
+    // store state (no-op when nothing is pending).
+    this.store.flush();
 
     let minX = Infinity;
     let minY = Infinity;
