@@ -20,6 +20,11 @@
       "types": "./dist/game-of-thrones/index.d.ts",
       "import": "./dist/game-of-thrones/index.js",
       "default": "./dist/game-of-thrones/index.js"
+    },
+    "./wikipedia-dataviz": {
+      "types": "./dist/wikipedia-dataviz/index.d.ts",
+      "import": "./dist/wikipedia-dataviz/index.js",
+      "default": "./dist/wikipedia-dataviz/index.js"
     }
   },
   "scripts": {
