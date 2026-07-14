@@ -232,9 +232,16 @@ export class MiniMapLayer extends ScreenLayer<
     // `prefers-color-scheme` reader — the minimap just reads `ctx.theme`.
     this.offTheme = ctx.events.on('theme:change', () => this.repaint());
 
-    // Re-paint when graph data, style template, or the camera changes.
-    this.offCameraPan = ctx.events.on('input:camera:pan', () => this.repaint());
-    this.offCameraZoom = ctx.events.on('input:camera:zoom', () => this.repaint());
+    // Camera pan/zoom only move the viewport rectangle — the world projection is
+    // derived from the graph's *bounds* (not the camera), so there is nothing to
+    // re-project. Repaint just the indicator: a full `repaint()` here re-resolves
+    // every edge/node style and redraws the whole minimap on *every* camera event
+    // (O(V+E) per frame), which tanks FPS while panning / zooming a large graph.
+    // The world layers stay current via the data / style / theme / resize
+    // subscriptions below.
+    this.offCameraPan = ctx.events.on('input:camera:pan', () => this.paintViewportIndicator());
+    this.offCameraZoom = ctx.events.on('input:camera:zoom', () => this.paintViewportIndicator());
+    // Re-paint the world when graph data or the style template changes.
     const offDataChanged = graph.events.on('data:changed', () => this.repaint());
     const offStyleChanged = graph.events.on('style:changed', () => this.repaint());
     // Repaint when the mirrored source graph layer's whole-layer visibility is

@@ -20,7 +20,9 @@
  * Lifecycle:
  *   - `onEnable()`        — snapshot prior per-node `style.size`, compute,
  *                           apply.
- *   - on store changes    — recompute and reapply (microtask-debounced).
+ *   - on topology change  — recompute and reapply (microtask-debounced). Only
+ *                           node/edge add/remove trigger this — never `flush`
+ *                           (which fires on every render, incl. hover/drag).
  *   - `onDisable()`       — restore the snapshotted prior `style.size`
  *                           values, clear snapshot.
  *
@@ -192,17 +194,24 @@ export class DegreeSizeBehaviour extends Behaviour {
     }
     this.layer = layer;
 
-    // Recompute whenever the topology changes. We deliberately skip
-    // `'node:update'` to avoid feedback loops — our own `updateNode` writes
-    // would re-trigger us. `flush` covers bulk insertions; the granular
-    // events cover live mutations after the initial setData.
+    // Recompute only on genuine topology changes — degree depends on the
+    // node/edge set, nothing else. We deliberately skip two event kinds:
+    //   - `'node:update'` — our own `updateNode` size writes emit it; listening
+    //     would feed back into us.
+    //   - `'flush'` — it fires on *every* render projection, including hover /
+    //     drag / camera state changes. Subscribing to it made an unrelated
+    //     hover recompute + rewrite every node, and those writes flush again →
+    //     a self-sustaining loop that freezes on a large graph.
+    // The granular add/remove events already cover bulk `setData` (the store
+    // emits them per id at flush time), and `onEnable` runs an initial
+    // `applyAll` for data present before this behaviour subscribed — so nothing
+    // relies on the broad `flush` signal.
     const schedule = (): void => this.scheduleRecompute();
     this.subs.push(
       layer.store.events.on('node:add', schedule),
       layer.store.events.on('node:remove', schedule),
       layer.store.events.on('edge:add', schedule),
       layer.store.events.on('edge:remove', schedule),
-      layer.store.events.on('flush', schedule),
     );
   }
 
