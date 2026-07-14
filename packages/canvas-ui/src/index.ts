@@ -13,6 +13,25 @@
 // Editors
 // ═══════════════════════════════════════════════════════════════════════════
 
+// ─── Canvas settings panel ─────────────────────────────────────────────────
+// One JSON-driven panel over the whole canvas definition (all layers /
+// behaviours / layouts + their settings). Resolves each instance's form from the
+// built-in schema registry (`kind` → fields + engine⇄form mappers) and hands
+// edits back as engine-shaped patches. Supersedes the per-surface editors as the
+// delivery vehicle; the `*Fields` / `optionsToForm` / `formToOptions` exports
+// below feed its registry.
+export {
+  CanvasSettingsPanelView,
+  DEFAULT_CANVAS_SETTINGS_SCHEMAS,
+} from './editors/canvas-settings-panel';
+export type {
+  CanvasSettingsPanelViewProps,
+  SettingsSchemaEntry,
+  CanvasSettingsDefinition,
+  CanvasSettingsInstance,
+  SettingsSection,
+} from './editors/canvas-settings-panel';
+
 // ─── Node style editor ───────────────────────────────────────────────────
 export {
   NodeStyleEditor,

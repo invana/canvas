@@ -1,7 +1,7 @@
+import { useEffect, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   CanvasMessageBar,
-  CanvasSettingsBrowser,
   GraphCanvasApp,
   GraphControlsToolbar,
   GraphStatusBar,
@@ -12,9 +12,16 @@ import {
   PanelContent,
   type LayoutFactory,
   ThemeToggle,
+  useCanvas,
   useDevTool,
+  useGraphCanvasUpdate,
   useMiniMap,
 } from '@invana/canvas-react';
+import {
+  CanvasSettingsPanelView,
+  type CanvasSettingsDefinition,
+  type SettingsSection,
+} from '@invana/canvas-ui';
 import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
@@ -22,29 +29,25 @@ import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { ThemeProvider } from '@invana/themes';
 import type { MenuItem } from '@invana/ui';
 
-// The full editor registry — one descriptor per Behaviour / Layer / Layout
-// editor in `@invana/canvas-ui`, matched to the live bundle by `instanceof`.
-import { ALL_SETTINGS_EDITORS } from './allEditors';
+import { toSettingsInstance } from './liveCanvasDefinition';
 
 /**
- * `canvas-ui/editors/Live Settings Editors` — the settings editors driving a
- * **fully-featured** `GraphCanvasApp`, surfaced through a right-side
- * **file-browser settings panel** (`<CanvasSettingsBrowser>`).
+ * `canvas-ui/editors/Live Settings Editors` — a **fully-featured** `GraphCanvasApp`
+ * whose whole visualisation state is edited through a right-side
+ * **`<CanvasSettingsPanelView>`** (from `@invana/canvas-ui`).
  *
- * The browser introspects the app's live bundle — every registered Layer,
- * Behaviour and Layout — and lists them in a nested accordion (folders =
- * Layers / Behaviours / Layouts, files = instances). Expanding a row reveals
- * its schema-driven editor from `@invana/canvas-ui`; the editor emits a
- * serialisable patch that applies **live** via `canvas.update(...)` →
- * `setOptions`. Bundle instances without an editor (yet) are still listed with a
- * "no editor" placeholder — the panel reflects the whole visualisation state,
- * not just the editable slice.
+ * A small `<LiveCanvasSettingsPanel>` introspects the app's live bundle — every
+ * registered Layer, Behaviour and Layout — maps each instance to the panel's
+ * JSON definition (`kind` + current engine-shaped `settings`), and renders the
+ * panel. Every edit applies **live** via `canvas.update(...)` → `setOptions`;
+ * toggling a behaviour enables/disables it, and picking a layout makes it active.
+ * Instances whose class the registry doesn't recognise still list with a "no
+ * editor" placeholder — the panel reflects the whole state, not just the editable
+ * slice.
  *
- * The editors are **injected** as descriptors (the browser lives in
- * `@invana/canvas-react`, which can't import the editor package): each closes
- * over an editor component + its `optionsToForm` / `formToOptions` mapping and
- * matches its class by `instanceof`. This is exactly how the Invana building
- * studio would wire the same panel.
+ * The introspection ↔ panel bridge lives here (in the story) because the panel is
+ * engine-agnostic (`@invana/canvas-ui` can't import the engine) — this is exactly
+ * how the Invana building studio would wire it.
  */
 const meta: Meta = { title: 'canvas-ui/editors/Live Settings Editors' };
 export default meta;
@@ -67,6 +70,53 @@ const nodeMenu = (ctx: GraphNodeMenuContext): MenuItem[] => [
 const backgroundMenu = (): MenuItem[] => [
   { id: 'about', label: 'Les Misérables co-appearances', onClick: () => window.alert('Demo graph') },
 ];
+
+/**
+ * Introspects the live canvas into a {@link CanvasSettingsDefinition} and renders
+ * the panel, wiring every edit back through `canvas.update(...)`. Must be a
+ * descendant of `<GraphCanvasApp>` so `useCanvas()` resolves.
+ */
+function LiveCanvasSettingsPanel({ activeLayoutId }: { activeLayoutId: string }) {
+  const canvas = useCanvas();
+  const update = useGraphCanvasUpdate();
+  const [definition, setDefinition] = useState<CanvasSettingsDefinition>({});
+
+  // Snapshot the bundle once after mount (the panel is a later child than the
+  // instances it inspects, so their registration effects have already run).
+  useEffect(() => {
+    setDefinition({
+      layers: canvas.layers.list().map((i) => toSettingsInstance(i, 'layers')),
+      behaviours: canvas.behaviours.list().map((i) => toSettingsInstance(i, 'behaviours')),
+      layouts: canvas.layouts.list().map((i) => toSettingsInstance(i, 'layouts')),
+      activeLayoutId,
+    });
+  }, [canvas, activeLayoutId]);
+
+  return (
+    <CanvasSettingsPanelView
+      definition={definition}
+      // The docked <PanelContent> already supplies the "Canvas Settings" header +
+      // scroll, so flatten the panel's own card chrome + title here.
+      title={null}
+      className="border-0 bg-transparent shadow-none"
+      onChange={(section: SettingsSection, id, patch) => update({ [section]: { [id]: patch } })}
+      onToggle={(section: SettingsSection, id, enabled) => {
+        update({ [section]: { [id]: { enabled } } });
+        // Reflect the toggle in the panel's own state.
+        setDefinition((d) => ({
+          ...d,
+          [section]: (d[section] ?? []).map((inst) =>
+            inst.id === id ? { ...inst, enabled } : inst,
+          ),
+        }));
+      }}
+      onActiveLayoutChange={(id) => {
+        update({ activeLayout: id });
+        setDefinition((d) => ({ ...d, activeLayoutId: id }));
+      }}
+    />
+  );
+}
 
 export const LiveSettingsEditors: Story = {
   name: 'Live Settings Editors',
@@ -120,12 +170,12 @@ export const LiveSettingsEditors: Story = {
           <GraphNodeContextMenu items={nodeMenu} />
           <GraphBackgroundContextMenu items={backgroundMenu} />
 
-          {/* The star: a docked right-side settings browser over the live bundle.
-              A full-height <Panel> positions a <PanelContent> whose scrollable
-              body holds the file-browser accordion. */}
+          {/* The star: a docked right-side canvas settings panel over the live
+              bundle. A full-height <Panel> positions a <PanelContent> whose
+              scrollable body holds the JSON-driven settings panel. */}
           <Panel position="right">
             <PanelContent header="Canvas Settings" fill width={360}>
-              <CanvasSettingsBrowser registry={ALL_SETTINGS_EDITORS} activeLayoutId="graph-force" />
+              <LiveCanvasSettingsPanel activeLayoutId="graph-force" />
             </PanelContent>
           </Panel>
         </GraphCanvasApp>
