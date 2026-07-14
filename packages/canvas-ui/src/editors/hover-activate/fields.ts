@@ -7,6 +7,13 @@ import type { FieldConfig } from '@invana/forms';
  */
 export const hoverActivateFields: FieldConfig[] = [
   {
+    name: 'hoverEdges',
+    type: 'boolean',
+    label: 'Hover edges',
+    description:
+      'Whether hovering directly over an edge activates it. Off = nodes only (a hovered node’s connecting edges still light up via degree).',
+  },
+  {
     name: 'state',
     type: 'text',
     label: 'Active state',

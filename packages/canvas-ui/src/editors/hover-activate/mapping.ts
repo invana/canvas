@@ -7,6 +7,7 @@ import type { HoverActivateFields, HoverActivateOptions } from './types';
  */
 export function optionsToForm(o: HoverActivateOptions = {}): HoverActivateFields {
   return {
+    hoverEdges: o.hoverEdges,
     state: o.state,
     inactiveState: o.inactiveState,
     raiseActive: o.raiseActive,
@@ -27,6 +28,7 @@ export function optionsToForm(o: HoverActivateOptions = {}): HoverActivateFields
  */
 export function formToOptions(f: HoverActivateFields): HoverActivateOptions {
   const out: HoverActivateOptions = {};
+  if (f.hoverEdges !== undefined) out.hoverEdges = f.hoverEdges;
   if (f.state !== undefined) out.state = f.state;
   if (f.inactiveState !== undefined) out.inactiveState = f.inactiveState;
   if (f.raiseActive !== undefined) out.raiseActive = f.raiseActive;

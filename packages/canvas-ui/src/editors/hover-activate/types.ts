@@ -18,6 +18,7 @@ export type HoverDirection = 'in' | 'out' | 'both';
  * only the user-tunable scalars / enums round-trip.
  */
 export interface HoverActivateOptions {
+  hoverEdges?: boolean;
   state?: string;
   inactiveState?: string;
   raiseActive?: boolean;
@@ -35,6 +36,7 @@ export interface HoverActivateOptions {
  * 1:1 to {@link HoverActivateOptions}.
  */
 export interface HoverActivateFields {
+  hoverEdges?: boolean;
   state?: string;
   inactiveState?: string;
   raiseActive?: boolean;

@@ -65,6 +65,20 @@ export interface HoverActivateBehaviourOptions extends BehaviourOptions {
   enable?: boolean | ((element: HoverableElement) => boolean);
 
   /**
+   * Whether hovering **directly** over an edge activates it. When `false` (the
+   * default) the behaviour ignores `connector:pointerover` entirely, so only
+   * nodes drive the hover. Neighbour-edge highlighting is unaffected: a hovered
+   * node's connecting edges still light up when `degree > 0` (that path is
+   * governed by `degree`, not this flag). Set `true` to also activate edges
+   * under the pointer.
+   *
+   * Equivalent to `enable: (el) => el.type !== 'connector'`, but a discoverable
+   * first-class flag (and surfaced in the settings editor). Toggling it off
+   * while an edge is hovered releases that edge immediately.
+   */
+  hoverEdges?: boolean;
+
+  /**
    * State name applied to the hovered focal element (and its N-hop
    * neighbours when `degree > 0`). Default `'hovered'` — matches the
    * canonical state catalogue auto-merged into every `GraphLayer`. Pass
@@ -157,6 +171,7 @@ export interface HoverActivateBehaviourOptions extends BehaviourOptions {
 
 interface ResolvedOptions {
   enable: boolean | ((element: HoverableElement) => boolean);
+  hoverEdges: boolean;
   state: string;
   inactiveState: string | undefined;
   raiseActive: boolean;
@@ -176,6 +191,7 @@ function resolveOptions(
 ): ResolvedOptions {
   const base: ResolvedOptions = prev ?? {
     enable: true,
+    hoverEdges: false,
     state: 'hovered',
     inactiveState: undefined,
     raiseActive: true,
@@ -190,6 +206,7 @@ function resolveOptions(
   };
   return {
     enable: patch.enable ?? base.enable,
+    hoverEdges: patch.hoverEdges ?? base.hoverEdges,
     state: patch.state ?? base.state,
     inactiveState: 'inactiveState' in patch ? patch.inactiveState : base.inactiveState,
     raiseActive: patch.raiseActive ?? base.raiseActive,
@@ -370,6 +387,9 @@ export class HoverActivateBehaviour extends Behaviour {
       patch.raiseActive !== undefined && patch.raiseActive !== this.opts.raiseActive;
     if (stateChanged) this.clearHover();
     this.opts = resolveOptions(this.opts, patch);
+    // Turning edge-hover off mid-hover on an edge releases it right away; the
+    // guards below then see no `current` and no-op.
+    if (!this.opts.hoverEdges && this.current?.type === 'connector') this.clearHover();
     // Re-pick states / scale if the threshold or scale moved while a hover
     // is active — runtime knob changes (GUI sliders) should swap immediately.
     if (this.current) this.handleCameraZoom();
@@ -451,6 +471,10 @@ export class HoverActivateBehaviour extends Behaviour {
 
   private handlePointerOver(id: string, type: HoverableElementType): void {
     if (!this._enabled) return;
+    // Edge hover can be switched off wholesale — ignore connector pointer-overs
+    // before any resolution work. Node hover (and neighbour-edge highlighting
+    // via `degree`) is untouched.
+    if (type === 'connector' && !this.opts.hoverEdges) return;
     const target = this.resolveElement(id, type);
     if (!target) return;
 
