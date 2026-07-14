@@ -53,7 +53,7 @@ import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/ca
 
 import { GraphLayer } from '../layer/GraphLayer';
 import type { NodeStyle } from '../layer/types';
-import type { EdgeDirection } from '../store/types';
+import type { EdgeDirection, GraphEdge } from '../store/types';
 
 /** Scaling curve used to map raw degree → output size. */
 export type NodeCentralityScale = 'linear' | 'sqrt' | 'log';
@@ -101,6 +101,23 @@ export interface NodeCentralityBehaviourOptions extends BehaviourOptions {
   sizeFn?: (degree: number, maxDegree: number) => number;
 
   /**
+   * **Weighted degree.** Numeric field name in each edge's `data` to sum
+   * instead of counting edges — e.g. `'weight'`, `'sharedScenes'`. A node's
+   * "degree" becomes the SUM of that field over its incident edges (respecting
+   * {@link direction}); a non-numeric / missing value counts as `0`. Omit for a
+   * raw edge count (default). {@link weightBy} takes precedence when both are set.
+   */
+  weightKey?: string;
+
+  /**
+   * **Weighted degree — code escape hatch.** Per-edge weight accessor; when
+   * provided the node's "degree" is the SUM of `weightBy(edge)` over its
+   * incident edges (respecting {@link direction}). Supersedes {@link weightKey}.
+   * Not editor-exposed (function). Omit for a raw edge count.
+   */
+  weightBy?: (edge: GraphEdge) => number;
+
+  /**
    * Also scale the **label** with the node: when set (`> 0`), each node's
    * `labelFontSize` is written as `clamp(size × labelScale, labelMinSize,
    * labelMaxSize)`, so a bigger (more central) node gets a bigger label. Omit
@@ -122,6 +139,8 @@ interface ResolvedOptions {
   maxSize: number;
   scale: NodeCentralityScale;
   sizeFn: ((degree: number, maxDegree: number) => number) | undefined;
+  weightKey: string | undefined;
+  weightBy: ((edge: GraphEdge) => number) | undefined;
   labelScale: number;
   labelMinSize: number;
   labelMaxSize: number;
@@ -137,6 +156,8 @@ function resolveOptions(
     maxSize: 32,
     scale: 'sqrt',
     sizeFn: undefined,
+    weightKey: undefined,
+    weightBy: undefined,
     labelScale: 0,
     labelMinSize: 8,
     labelMaxSize: 40,
@@ -147,6 +168,8 @@ function resolveOptions(
     maxSize: patch.maxSize ?? base.maxSize,
     scale: patch.scale ?? base.scale,
     sizeFn: 'sizeFn' in patch ? patch.sizeFn : base.sizeFn,
+    weightKey: 'weightKey' in patch ? patch.weightKey : base.weightKey,
+    weightBy: 'weightBy' in patch ? patch.weightBy : base.weightBy,
     labelScale: patch.labelScale ?? base.labelScale,
     labelMinSize: patch.labelMinSize ?? base.labelMinSize,
     labelMaxSize: patch.labelMaxSize ?? base.labelMaxSize,
@@ -316,11 +339,15 @@ export class NodeCentralityBehaviour extends Behaviour {
     // First pass — collect (id, degree) and find maxDegree. Single iteration
     // over store.nodes(); inDegree/outDegree are O(1) lookups on the
     // adjacency index.
+    // Weighted degree (sum of an edge-weight field/fn) when configured; else the
+    // O(1) raw incident-edge count off the adjacency index.
+    const weighted = this.opts.weightBy !== undefined || this.opts.weightKey !== undefined;
     const degrees: Array<{ id: string; degree: number; style: NodeStyle | undefined }> = [];
     let maxDegree = 0;
     for (const node of store.nodes()) {
-      const degree =
-        direction === 'in'
+      const degree = weighted
+        ? this.weightedDegree(store, node.id, direction)
+        : direction === 'in'
           ? store.inDegree(node.id)
           : direction === 'out'
             ? store.outDegree(node.id)
@@ -360,6 +387,34 @@ export class NodeCentralityBehaviour extends Behaviour {
     } finally {
       this.patching = false;
     }
+  }
+
+  /**
+   * Weighted degree — the SUM of the configured edge weight over a node's
+   * incident edges in `direction`. O(edges-of-node); the whole pass is O(E).
+   */
+  private weightedDegree(
+    store: GraphLayer['store'],
+    id: string,
+    direction: EdgeDirection,
+  ): number {
+    let sum = 0;
+    for (const edge of store.edgesOf(id, direction)) sum += this.weightOf(edge);
+    return sum;
+  }
+
+  /**
+   * One edge's weight: `weightBy` fn wins; else `data[weightKey]` (a non-numeric
+   * / missing value counts as `0`). Only called when weighting is configured.
+   */
+  private weightOf(edge: GraphEdge): number {
+    const { weightBy, weightKey } = this.opts;
+    if (weightBy) return weightBy(edge);
+    if (weightKey !== undefined) {
+      const v = (edge.data as Record<string, unknown> | undefined)?.[weightKey];
+      return typeof v === 'number' && Number.isFinite(v) ? v : 0;
+    }
+    return 1;
   }
 
   /**

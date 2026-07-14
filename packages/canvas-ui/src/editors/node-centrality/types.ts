@@ -29,6 +29,8 @@ export interface NodeCentralityOptions {
   maxSize?: number;
   /** Curve applied to normalized degree. Default `'sqrt'`. */
   scale?: NodeCentralityScale;
+  /** Numeric edge-`data` field to sum for weighted degree (e.g. `'weight'`). Blank = raw count. */
+  weightKey?: string;
   /** Scale the label with the node: labelFontSize = clamp(size × this, …). 0/blank = off. */
   labelScale?: number;
   /** Lower clamp for the scaled label font. Default `8`. */

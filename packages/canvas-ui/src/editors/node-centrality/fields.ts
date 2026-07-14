@@ -46,6 +46,12 @@ export const nodeCentralityFields: FieldConfig[] = [
     ],
   },
   {
+    name: 'weightKey',
+    type: 'text',
+    label: 'Weight field',
+    description: 'Numeric edge-data field to sum for weighted degree (e.g. "weight"). Blank = raw edge count.',
+  },
+  {
     name: 'labelScale',
     type: 'number',
     label: 'Label scale',

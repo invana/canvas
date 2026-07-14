@@ -11,6 +11,7 @@ export function optionsToForm(o: NodeCentralityOptions = {}): NodeCentralityFiel
     minSize: o.minSize,
     maxSize: o.maxSize,
     scale: o.scale,
+    weightKey: o.weightKey,
     labelScale: o.labelScale,
     labelMinSize: o.labelMinSize,
     labelMaxSize: o.labelMaxSize,
@@ -29,6 +30,7 @@ export function formToOptions(f: NodeCentralityFields): NodeCentralityOptions {
   if (f.minSize !== undefined) out.minSize = f.minSize;
   if (f.maxSize !== undefined) out.maxSize = f.maxSize;
   if (f.scale !== undefined) out.scale = f.scale;
+  if (f.weightKey !== undefined) out.weightKey = f.weightKey;
   if (f.labelScale !== undefined) out.labelScale = f.labelScale;
   if (f.labelMinSize !== undefined) out.labelMinSize = f.labelMinSize;
   if (f.labelMaxSize !== undefined) out.labelMaxSize = f.labelMaxSize;
