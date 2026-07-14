@@ -159,8 +159,25 @@ function InstanceEditor({
   const form = useForm({ defaultValues: { opts: initial } });
   const values = form.watch('opts');
 
-  const emit = () =>
-    onChange?.(entry.toOptions(form.getValues('opts')) as Record<string, unknown>);
+  // Baseline of the last-emitted engine options. We emit only the keys that
+  // actually changed since then, so fields the user never touched (seeded to
+  // schema defaults — numbers default to `min`, i.e. 0) don't clobber the
+  // engine's own defaults. `toOptions` still maps the WHOLE form each time, so
+  // compound outputs (nested `style` objects, `enableElements` arrays) stay
+  // correct; we diff top-level keys against the last mapping.
+  const lastMappedRef = useRef<Record<string, unknown>>(
+    entry.toOptions(initial) as Record<string, unknown>,
+  );
+  const emit = () => {
+    const mapped = entry.toOptions(form.getValues('opts')) as Record<string, unknown>;
+    const last = lastMappedRef.current;
+    const patch: Record<string, unknown> = {};
+    for (const key of Object.keys(mapped)) {
+      if (JSON.stringify(mapped[key]) !== JSON.stringify(last[key])) patch[key] = mapped[key];
+    }
+    lastMappedRef.current = mapped;
+    if (Object.keys(patch).length > 0) onChange?.(patch);
+  };
 
   // Live mode: map + emit on every field change. A ref keeps the subscription
   // stable while always calling the latest callback.

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   CanvasMessageBar,
@@ -14,12 +14,13 @@ import {
   ThemeToggle,
   useCanvas,
   useDevTool,
-  useGraphCanvasUpdate,
+  useGraphCanvasOptions,
   useMiniMap,
 } from '@invana/canvas-react';
 import {
   CanvasSettingsPanelView,
   type CanvasSettingsDefinition,
+  type CanvasSettingsInstance,
   type SettingsSection,
 } from '@invana/canvas-ui';
 import type { GraphNode } from '@invana/graph';
@@ -29,7 +30,7 @@ import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { ThemeProvider } from '@invana/themes';
 import type { MenuItem } from '@invana/ui';
 
-import { toSettingsInstance } from './liveCanvasDefinition';
+import { resolveKind, readOptions } from './liveCanvasDefinition';
 
 /**
  * `canvas-ui/editors/Live Settings Editors` — a **fully-featured** `GraphCanvasApp`
@@ -72,25 +73,79 @@ const backgroundMenu = (): MenuItem[] => [
 ];
 
 /**
- * Introspects the live canvas into a {@link CanvasSettingsDefinition} and renders
- * the panel, wiring every edit back through `canvas.update(...)`. Must be a
- * descendant of `<GraphCanvasApp>` so `useCanvas()` resolves.
+ * Renders the settings panel over the live canvas — both **reading and writing
+ * through `@invana/canvas-store`** so it and the header's Select picker are two
+ * views of one source of truth:
+ *
+ * - `useGraphCanvasOptions()` reads `store.view.definition` **reactively** — the
+ *   panel re-renders whenever any layer/behaviour/layout config changes, from
+ *   anywhere (the header's Select switch, other UI, or the engine).
+ * - Every edit / toggle / layout pick writes via that hook's `update` →
+ *   `canvas.update(...)`, which updates the store definition AND applies to the
+ *   instances. So flipping a tool in the header updates the panel and vice-versa,
+ *   with no event wiring.
+ *
+ * The instance **list** (id + `kind`) comes from the live registries once — the
+ * store keeps options keyed by id but is domain-free (no class/kind), so we
+ * resolve `kind` by `instanceof` here. Must be a `<GraphCanvasApp>` descendant.
  */
-function LiveCanvasSettingsPanel({ activeLayoutId }: { activeLayoutId: string }) {
+function LiveCanvasSettingsPanel() {
   const canvas = useCanvas();
-  const update = useGraphCanvasUpdate();
-  const [definition, setDefinition] = useState<CanvasSettingsDefinition>({});
+  const [options, update] = useGraphCanvasOptions();
 
-  // Snapshot the bundle once after mount (the panel is a later child than the
-  // instances it inspects, so their registration effects have already run).
+  // The registered instances (id + kind). Captured in an effect — the panel is a
+  // later child than the bundle it inspects, so the registration effects have
+  // already run by the time this fires (reading during render would see an empty
+  // registry). Their *settings* + *enabled* then come reactively from `options`.
+  const [instances, setInstances] = useState<{
+    layers: { id: string; kind?: string; inst: unknown }[];
+    behaviours: { id: string; kind?: string; inst: unknown }[];
+    layouts: { id: string; kind?: string; inst: unknown }[];
+  }>({ layers: [], behaviours: [], layouts: [] });
+
   useEffect(() => {
-    setDefinition({
-      layers: canvas.layers.list().map((i) => toSettingsInstance(i, 'layers')),
-      behaviours: canvas.behaviours.list().map((i) => toSettingsInstance(i, 'behaviours')),
-      layouts: canvas.layouts.list().map((i) => toSettingsInstance(i, 'layouts')),
-      activeLayoutId,
+    const map = (list: readonly { id: string }[]) =>
+      list.map((i) => ({ id: i.id, kind: resolveKind(i), inst: i as unknown }));
+    setInstances({
+      layers: map(canvas.layers.list()),
+      behaviours: map(canvas.behaviours.list()),
+      layouts: map(canvas.layouts.list()),
     });
-  }, [canvas, activeLayoutId]);
+  }, [canvas]);
+
+  // Merge the stable instance list with the reactive store definition. Settings =
+  // the instance's full options as a base, with the store's serialisable slice
+  // (the reactive, authoritative part) layered on top; `enabled` reads from the
+  // store, falling back to the live instance until the store carries it.
+  const definition: CanvasSettingsDefinition = useMemo(() => {
+    const build = (
+      list: { id: string; kind?: string; inst: unknown }[],
+      bag: Record<string, Record<string, unknown>> | undefined,
+      withEnabled: boolean,
+    ): CanvasSettingsInstance[] =>
+      list.map(({ id, kind, inst }) => {
+        const stored = bag?.[id];
+        return {
+          id,
+          kind: kind ?? (inst as object).constructor.name,
+          settings: { ...readOptions(inst), ...(stored ?? {}) },
+          ...(withEnabled
+            ? {
+                enabled:
+                  (stored as { enabled?: boolean } | undefined)?.enabled ??
+                  (inst as { enabled?: boolean }).enabled,
+              }
+            : {}),
+        };
+      });
+
+    return {
+      layers: build(instances.layers, options.layers, false),
+      behaviours: build(instances.behaviours, options.behaviours, true),
+      layouts: build(instances.layouts, options.layouts, false),
+      activeLayoutId: options.activeLayout ?? undefined,
+    };
+  }, [instances, options]);
 
   return (
     <CanvasSettingsPanelView
@@ -100,20 +155,8 @@ function LiveCanvasSettingsPanel({ activeLayoutId }: { activeLayoutId: string })
       title={null}
       className="border-0 bg-transparent shadow-none"
       onChange={(section: SettingsSection, id, patch) => update({ [section]: { [id]: patch } })}
-      onToggle={(section: SettingsSection, id, enabled) => {
-        update({ [section]: { [id]: { enabled } } });
-        // Reflect the toggle in the panel's own state.
-        setDefinition((d) => ({
-          ...d,
-          [section]: (d[section] ?? []).map((inst) =>
-            inst.id === id ? { ...inst, enabled } : inst,
-          ),
-        }));
-      }}
-      onActiveLayoutChange={(id) => {
-        update({ activeLayout: id });
-        setDefinition((d) => ({ ...d, activeLayoutId: id }));
-      }}
+      onToggle={(section: SettingsSection, id, enabled) => update({ [section]: { [id]: { enabled } } })}
+      onActiveLayoutChange={(id) => update({ activeLayout: id })}
     />
   );
 }
@@ -175,7 +218,7 @@ export const LiveSettingsEditors: Story = {
               scrollable body holds the JSON-driven settings panel. */}
           <Panel position="right">
             <PanelContent header="Canvas Settings" fill width={360}>
-              <LiveCanvasSettingsPanel activeLayoutId="graph-force" />
+              <LiveCanvasSettingsPanel />
             </PanelContent>
           </Panel>
         </GraphCanvasApp>

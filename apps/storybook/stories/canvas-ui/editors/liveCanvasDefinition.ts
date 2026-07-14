@@ -1,5 +1,3 @@
-import type { CanvasSettingsInstance, SettingsSection } from '@invana/canvas-ui';
-
 // Engine classes — matched by `instanceof` so a `kind` is resolved only when that
 // class is actually registered on the canvas (survives minified builds).
 import {
@@ -110,19 +108,4 @@ export function readOptions(instance: unknown): Record<string, unknown> {
   const options = (instance as { options?: unknown }).options;
   if (options && typeof options === 'object') return { ...(options as Record<string, unknown>) };
   return {};
-}
-
-/** Turn one live instance into a `CanvasSettingsInstance` for the panel. */
-export function toSettingsInstance(
-  instance: unknown,
-  section: SettingsSection,
-): CanvasSettingsInstance {
-  return {
-    id: (instance as { id: string }).id,
-    kind: resolveKind(instance) ?? (instance as object).constructor.name,
-    // Behaviours carry an on/off toggle; layers/layouts don't here.
-    enabled:
-      section === 'behaviours' ? (instance as { enabled?: boolean }).enabled : undefined,
-    settings: readOptions(instance),
-  };
 }
