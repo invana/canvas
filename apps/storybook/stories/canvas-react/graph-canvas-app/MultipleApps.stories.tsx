@@ -27,7 +27,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import {
   GraphCanvasApp,
-  LabelResolutionLODBehaviour,
+  TextResolutionLODBehaviour,
   useLayout,
   type LayoutFactory,
 } from '@invana/canvas-react';
@@ -272,7 +272,7 @@ export const MultipleApps: Story = {
           <ApplyLayout factory={p.factory} />
           {/* Re-rasterise labels at higher resolution as the view zooms in, so
               the baked text texture stays crisp instead of scaling up blurry. */}
-          <LabelResolutionLODBehaviour targetLayerId="graph" />
+          <TextResolutionLODBehaviour targetLayerId="graph" />
         </GraphCanvasApp>
       ))}
     </AppGrid>

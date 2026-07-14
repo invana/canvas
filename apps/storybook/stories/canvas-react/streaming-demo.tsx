@@ -53,7 +53,7 @@ import {
   GridToolbar,
   HistoryToolbar,
   LabelCollisionBehaviour,
-  LabelResolutionLODBehaviour,
+  TextResolutionLODBehaviour,
   LassoSelectBehaviour,
   ToolbarItems,
   ViewToolbar,
@@ -712,7 +712,7 @@ export function StreamingDemo({
             overlap (keep the highest-degree nodes' labels), and re-rasterise the
             survivors at higher resolution when zoomed in so they stay crisp. */}
         <LabelCollisionBehaviour id="label-collision" targetLayerId={LAYER_ID} prioritise="node-degree" />
-        <LabelResolutionLODBehaviour id="label-resolution" targetLayerId={LAYER_ID} />
+        <TextResolutionLODBehaviour id="label-resolution" targetLayerId={LAYER_ID} />
 
         {/* Layouts — force via the wrapper, the rest registered imperatively. */}
         <D3ForceLayout id="force" targetLayerId={LAYER_ID} />

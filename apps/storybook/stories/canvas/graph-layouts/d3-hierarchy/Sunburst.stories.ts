@@ -5,7 +5,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
+import { GraphCanvas, GraphLayer, TextResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
 import type { LayoutOptions, ShapeLabelStyle } from '@invana/canvas';
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
 import type { D3HierarchyLayoutOptions } from '@invana/graph-layout-d3-hierarchy';
@@ -250,7 +250,7 @@ export const Sunburst: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 
-    const labelResolutionLOD = new LabelResolutionLODBehaviour({
+    const labelResolutionLOD = new TextResolutionLODBehaviour({
       id: 'label-resolution',
       targetLayerId: 'graph',
     });

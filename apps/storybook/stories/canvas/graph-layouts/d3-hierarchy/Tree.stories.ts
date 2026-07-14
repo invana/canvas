@@ -4,7 +4,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
+import { GraphCanvas, GraphLayer, TextResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
 import {
   D3HierarchyLayout,
   type CartesianOrientation,
@@ -146,7 +146,7 @@ export const Tree: Story = {
 
     // Registered after the `graph` layer is added — the behaviour resolves
     // its target layer at register-time, so the layer must exist first.
-    const labelResolutionLOD = new LabelResolutionLODBehaviour({
+    const labelResolutionLOD = new TextResolutionLODBehaviour({
       id: 'label-resolution',
       targetLayerId: 'graph',
     });

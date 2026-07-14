@@ -4,7 +4,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
+import { GraphCanvas, GraphLayer, TextResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
 import { D3HierarchyLayout, type D3HierarchyLayoutMode } from '@invana/graph-layout-d3-hierarchy';
 import { flareAsGraph } from '@invana/graph-datasets';
@@ -200,7 +200,7 @@ export const RadialTree: Story = {
 
     // Registered before init — resolves its target layer at register-time, so
     // the `graph` layer must exist first (it does).
-    const labelResolutionLOD = new LabelResolutionLODBehaviour({
+    const labelResolutionLOD = new TextResolutionLODBehaviour({
       id: 'label-resolution',
       targetLayerId: 'graph',
     });

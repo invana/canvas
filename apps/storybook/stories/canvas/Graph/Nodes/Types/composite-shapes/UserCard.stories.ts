@@ -15,7 +15,7 @@ import {
   GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
-  LabelResolutionLODBehaviour,
+  TextResolutionLODBehaviour,
   userCard,
   type GraphNode,
   type UserCardData,
@@ -48,7 +48,7 @@ export const UserCard: Story = {
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph', enabled: true }));
     canvas.behaviours.register(new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph', enabled: true }));
     canvas.behaviours.register(new ClickSelectBehaviour({ id: 'select', targetLayerId: 'graph', enabled: true }));
-    canvas.behaviours.register(new LabelResolutionLODBehaviour({ id: 'label-lod', targetLayerId: 'graph', enabled: true }));
+    canvas.behaviours.register(new TextResolutionLODBehaviour({ id: 'label-lod', targetLayerId: 'graph', enabled: true }));
 
     await canvas.init({ container, autoResize: true });
     const graph = canvas.layers.get('graph') as GraphLayer;

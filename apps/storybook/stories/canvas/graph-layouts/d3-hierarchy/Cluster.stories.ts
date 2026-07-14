@@ -4,7 +4,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
+import { GraphCanvas, GraphLayer, TextResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
 import {
   D3HierarchyLayout,
   type CartesianOrientation,
@@ -40,7 +40,7 @@ export const Cluster: Story = {
       // Zoom-aware label sharpness: bumps Pixi's Text resolution once the
       // camera zooms past a threshold so glyph textures don't sample-blur.
       // Tier-based to avoid frame stutter on every zoom step — see
-      // `LabelResolutionLODBehaviour`.
+      // `TextResolutionLODBehaviour`.
       sharpLabelsOnZoom: true,
     };
 
@@ -128,7 +128,7 @@ export const Cluster: Story = {
 
     // Resolves its target layer at register-time, so the layer must exist
     // first. Enabled via config (`sharpLabelsOnZoom`), not the constructor.
-    const labelResolutionLOD = new LabelResolutionLODBehaviour({
+    const labelResolutionLOD = new TextResolutionLODBehaviour({
       id: 'label-resolution',
       targetLayerId: 'graph',
     });

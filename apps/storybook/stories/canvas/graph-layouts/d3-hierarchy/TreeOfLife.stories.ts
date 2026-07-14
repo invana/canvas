@@ -4,7 +4,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
+import { GraphCanvas, GraphLayer, TextResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
 import {
   D3HierarchyLayout,
@@ -184,7 +184,7 @@ export const TreeOfLife: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 
-    const labelResolutionLOD = new LabelResolutionLODBehaviour({
+    const labelResolutionLOD = new TextResolutionLODBehaviour({
       id: 'label-resolution',
       targetLayerId: 'graph',
     });

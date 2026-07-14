@@ -12,7 +12,7 @@
  * show) registered as the `activeLayout`, field-level resolvers driving fill
  * by entity **type** or by the 8 architectural **clusters** the analyser
  * found, node radius by complexity, `labelMinZoom` +
- * `LabelResolutionLODBehaviour` to keep 602 labels legible and crisp,
+ * `TextResolutionLODBehaviour` to keep 602 labels legible and crisp,
  * `HoverActivateBehaviour` 1-hop focal emphasis, `ClickSelectBehaviour`
  * (shift multi), `DragNodeBehaviour`, a per-type filter, and a `MiniMapLayer`.
  */
@@ -23,7 +23,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { ClickSelectBehaviour, DragNodeBehaviour, GraphCanvas, GraphLayer, HoverActivateBehaviour, LabelResolutionLODBehaviour, MiniMapLayer, type GraphNode, type NodeShapeOptions, ThemeBehaviour } from '@invana/graph';
+import { ClickSelectBehaviour, DragNodeBehaviour, GraphCanvas, GraphLayer, HoverActivateBehaviour, TextResolutionLODBehaviour, MiniMapLayer, type GraphNode, type NodeShapeOptions, ThemeBehaviour } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import {
   invanaCodeKg,
@@ -156,7 +156,7 @@ export const F3Force: Story = {
                 : CLUSTER_FILL[props(n).cluster ?? ''] ?? UNCLUSTERED_FILL,
             // 602 labels would smother the cloud at the fitted overview, so
             // they only switch on once you zoom past 0.6× — a small zoom-in
-            // from the fitted view. `LabelResolutionLODBehaviour` (below)
+            // from the fitted view. `TextResolutionLODBehaviour` (below)
             // re-rasters them crisp once you zoom in far enough to read them.
             labelText: (n: GraphNode) => (settings.showLabels ? props(n).name : ''),
           },
@@ -177,7 +177,7 @@ export const F3Force: Story = {
     // zoomed in to read stays crisp instead of upsampling-blurry. It does NOT
     // hide/show labels — only their texture resolution per tier.
     canvas.behaviours.register(
-      new LabelResolutionLODBehaviour({ id: 'label-lod', targetLayerId: 'graph' }),
+      new TextResolutionLODBehaviour({ id: 'label-lod', targetLayerId: 'graph' }),
     );
 
     const hover = new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph' });

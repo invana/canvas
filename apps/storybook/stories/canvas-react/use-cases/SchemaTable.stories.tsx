@@ -31,7 +31,7 @@ import {
   GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
-  LabelResolutionLODBehaviour,
+  TextResolutionLODBehaviour,
   ThemeBehaviour,
   type CompositeShapeOption,
   type GraphEdge,
@@ -290,7 +290,7 @@ export const SchemaTable: Story = {
     // Keep the composite's label parts crisp when zoomed in — re-rasterises the
     // card text at higher device resolution per zoom tier (composite labels opt
     // into this via `CompositeShape.setLabelResolution`).
-    canvas.behaviours.register(new LabelResolutionLODBehaviour({ id: 'label-lod', targetLayerId: 'graph' }));
+    canvas.behaviours.register(new TextResolutionLODBehaviour({ id: 'label-lod', targetLayerId: 'graph' }));
     canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
 
     const elkLayout = new ElkLayout({ id: 'layout', targetLayerId: 'graph' });

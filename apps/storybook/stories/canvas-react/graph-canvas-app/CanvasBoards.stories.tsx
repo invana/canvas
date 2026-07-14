@@ -32,7 +32,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import {
   GraphCanvasApp,
-  LabelResolutionLODBehaviour,
+  TextResolutionLODBehaviour,
   useLayout,
   type LayoutFactory,
 } from '@invana/canvas-react';
@@ -196,7 +196,7 @@ function CanvasBoard({ template }: { template: BoardTemplate }): ReactNode {
       }}
     >
       <ApplyLayout factory={template.factory} />
-      <LabelResolutionLODBehaviour targetLayerId="graph" />
+      <TextResolutionLODBehaviour targetLayerId="graph" />
     </GraphCanvasApp>
   );
 }

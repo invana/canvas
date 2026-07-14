@@ -5,7 +5,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, LabelResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
+import { GraphCanvas, GraphLayer, TextResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
 import { h1b2019AsGraph } from '@invana/graph-datasets';
@@ -177,7 +177,7 @@ export const Pack: Story = {
     canvas.layers.add(graph);
 
     // Dev overlay — useful here to watch the camera zoom cross the
-    // LabelResolutionLODBehaviour's tier threshold (default 1.5×) and to
+    // TextResolutionLODBehaviour's tier threshold (default 1.5×) and to
     // sanity-check node / edge counts after the `minLeafValue` filter.
     canvas.layers.add(new DevInfoLayer({ id: 'dev' }));
 
@@ -188,7 +188,7 @@ export const Pack: Story = {
     // Registered before init — the behaviour resolves its target layer at
     // register-time, so the layer must exist first (it does).
     canvas.behaviours.register(
-      new LabelResolutionLODBehaviour({ id: 'label-resolution', targetLayerId: 'graph' }),
+      new TextResolutionLODBehaviour({ id: 'label-resolution', targetLayerId: 'graph' }),
     );
 
     // Kept mutable: `D3HierarchyLayout` reads its params at construction

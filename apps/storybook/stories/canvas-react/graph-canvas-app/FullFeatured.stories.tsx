@@ -32,7 +32,7 @@ import {
   GraphNodeContextMenu,
   type GraphNodeMenuContext,
   GraphStatusBar,
-  LabelResolutionLODBehaviour,
+  TextResolutionLODBehaviour,
   Panel,
   PanelContent,
   type LayoutFactory,
@@ -141,7 +141,7 @@ export const FullFeatured: Story = {
             </Panel>
           )}
         />
-        <LabelResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
+        <TextResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
 
         {/* Right-click menus. */}
         <GraphClipboardProvider layerId="graph">
