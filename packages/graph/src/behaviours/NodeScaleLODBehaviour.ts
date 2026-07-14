@@ -2,6 +2,14 @@
  * `NodeScaleLODBehaviour` — keep `GraphLayer` node bodies (and their
  * outline strokes) at a fixed screen-pixel size across camera zoom.
  *
+ * Two modes, per layer config:
+ * - **Uniform** (default) — every node is driven to the same `sizePx` screen
+ *   size. Simple and legible, but flattens per-node sizing.
+ * - **Relative** (`preserveRelativeSize: true`) — each node keeps its *resolved*
+ *   size (e.g. from `NodeCentralityBehaviour`, so hubs stay bigger than leaves)
+ *   and is only made **zoom-invariant**. This composes with centrality sizing
+ *   instead of overriding it.
+ *
  * Concrete subclass of `ElementScaleLODBehaviour` — that base owns the
  * RAF coalescing, `camera:zoom` subscription, and enable/disable
  * lifecycle. This class only knows how to rescale graph nodes.
@@ -90,6 +98,17 @@ export interface NodeScaleLODConfig {
    * explicit value just changes what that pixel target is.
    */
   strokeWidthPx?: NumberOrGetter;
+
+  /**
+   * **Preserve relative sizes.** By default this behaviour drives every node
+   * to a *uniform* `sizePx` screen size, which flattens any per-node sizing
+   * (e.g. from `NodeCentralityBehaviour`). Set this `true` to instead keep each
+   * node's *resolved* (natural) size — hubs stay bigger than leaves — and only
+   * make it **zoom-invariant** (constant screen size across camera scale). So
+   * it composes with centrality sizing instead of overriding it. `sizePx` /
+   * `strokeWidthPx` are ignored in this mode. Default `false`.
+   */
+  preserveRelativeSize?: boolean;
 }
 
 export interface NodeScaleLODBehaviourOptions extends ElementScaleLODBehaviourOptions {
@@ -289,8 +308,12 @@ export class NodeScaleLODBehaviour extends ElementScaleLODBehaviour<NodeScaleLOD
     mode: 'target' | 'worldUnit',
     config: NodeScaleLODConfig,
   ): void {
-    const sizePxFallback = resolveNumberOrGetter(config.sizePx);
-    const strokePxFallback = resolveNumberOrGetter(config.strokeWidthPx);
+    // In `preserveRelativeSize` mode the per-node natural size IS the baseline
+    // (factor 1), so hubs stay bigger than leaves; the per-frame counter-scale
+    // then just makes them zoom-invariant. `sizePx` / `strokeWidthPx` are ignored.
+    const preserveRelative = config.preserveRelativeSize === true;
+    const sizePxFallback = preserveRelative ? undefined : resolveNumberOrGetter(config.sizePx);
+    const strokePxFallback = preserveRelative ? undefined : resolveNumberOrGetter(config.strokeWidthPx);
 
     for (const node of layer.store.nodes()) {
       // Read the *currently effective* NodeStyle — what the renderer would
