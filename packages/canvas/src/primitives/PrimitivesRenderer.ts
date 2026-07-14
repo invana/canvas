@@ -131,6 +131,7 @@ import type {
   Obstacle,
   Path,
   Point,
+  Polyline,
   PrimitivesRendererEventMap,
   Rect,
   RegisterDecorationOptions,
@@ -912,6 +913,7 @@ export class PrimitivesRenderer {
     inst.path = srcPad > 0 || tgtPad > 0
       ? trimPathEnds(rawPath, srcPad, tgtPad)
       : rawPath;
+    inst.sampledPolyline = null; // path changed → drop the memoised hit-test polyline
     this.drawConnectorInstance(inst);
     this.indexConnector(inst);
     if (inst.decorations.size > 0) this.refreshConnectorDecorations(inst);
@@ -1771,7 +1773,7 @@ export class PrimitivesRenderer {
     }
     const inst = this.connectorInstances.get(id);
     if (!inst) return null;
-    const poly = samplePath(inst.path);
+    const poly = this.sampledConnectorPolyline(inst);
     const distSq = distanceToPolylineSq(poly, worldX, worldY);
     const exact = distSq <= this.connectorHitToleranceSq(inst);
     return { exact, distSq };
@@ -2129,7 +2131,17 @@ export class PrimitivesRenderer {
   getConnectorPolyline(id: string): readonly Point[] | null {
     const inst = this.connectorInstances.get(id);
     if (!inst) return null;
-    return samplePath(inst.path);
+    return this.sampledConnectorPolyline(inst);
+  }
+
+  /**
+   * Densified polyline of a connector's routed path, memoised on the instance
+   * ({@link ConnectorInstance.sampledPolyline}) and cleared on re-route. Hover
+   * hit-testing runs this per candidate on every `pointermove`; caching turns a
+   * dense-graph resample storm into one sample per edge per re-route.
+   */
+  private sampledConnectorPolyline(inst: ConnectorInstance): Polyline {
+    return (inst.sampledPolyline ??= samplePath(inst.path));
   }
 
   /**

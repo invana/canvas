@@ -12,6 +12,7 @@ import type {
   IConnectorDecoration,
   IConnectorEffect,
   Path,
+  Polyline,
 } from '../primitives/types';
 
 export class ConnectorInstance<TSpec extends BaseConnectorSpec = BaseConnectorSpec> {
@@ -24,6 +25,14 @@ export class ConnectorInstance<TSpec extends BaseConnectorSpec = BaseConnectorSp
   readonly effects = new Map<string, IConnectorEffect>();
   /** Last router-resolved path. Reused by decoration update + hit-testing. */
   path: Path = [];
+
+  /**
+   * Memoised densified polyline of {@link path} — the form hit-testing needs
+   * (`samplePath` is otherwise re-run per candidate on every `pointermove`, the
+   * hover cost on a dense graph). `null` = stale; the renderer recomputes it
+   * lazily and clears it whenever {@link path} is re-routed.
+   */
+  sampledPolyline: Polyline | null = null;
 
   /**
    * Render-time multiplier applied to `spec.stroke.width` at draw time.
