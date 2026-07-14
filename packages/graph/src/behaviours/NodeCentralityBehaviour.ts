@@ -99,6 +99,21 @@ export interface NodeCentralityBehaviourOptions extends BehaviourOptions {
    * degree across the layer. Returns the literal `style.size` to write.
    */
   sizeFn?: (degree: number, maxDegree: number) => number;
+
+  /**
+   * Also scale the **label** with the node: when set (`> 0`), each node's
+   * `labelFontSize` is written as `clamp(size × labelScale, labelMinSize,
+   * labelMaxSize)`, so a bigger (more central) node gets a bigger label. Omit
+   * or `0` to leave labels untouched. Simple-node labels only — composite
+   * internal text is template-owned.
+   */
+  labelScale?: number;
+
+  /** Lower clamp for the scaled label font. Default `8`. */
+  labelMinSize?: number;
+
+  /** Upper clamp for the scaled label font. Default `40`. */
+  labelMaxSize?: number;
 }
 
 interface ResolvedOptions {
@@ -107,6 +122,9 @@ interface ResolvedOptions {
   maxSize: number;
   scale: NodeCentralityScale;
   sizeFn: ((degree: number, maxDegree: number) => number) | undefined;
+  labelScale: number;
+  labelMinSize: number;
+  labelMaxSize: number;
 }
 
 function resolveOptions(
@@ -119,6 +137,9 @@ function resolveOptions(
     maxSize: 32,
     scale: 'sqrt',
     sizeFn: undefined,
+    labelScale: 0,
+    labelMinSize: 8,
+    labelMaxSize: 40,
   };
   return {
     direction: patch.direction ?? base.direction,
@@ -126,7 +147,15 @@ function resolveOptions(
     maxSize: patch.maxSize ?? base.maxSize,
     scale: patch.scale ?? base.scale,
     sizeFn: 'sizeFn' in patch ? patch.sizeFn : base.sizeFn,
+    labelScale: patch.labelScale ?? base.labelScale,
+    labelMinSize: patch.labelMinSize ?? base.labelMinSize,
+    labelMaxSize: patch.labelMaxSize ?? base.labelMaxSize,
   };
+}
+
+/** Clamp `v` into `[min, max]`. */
+function clamp(v: number, min: number, max: number): number {
+  return v < min ? min : v > max ? max : v;
 }
 
 /**
@@ -164,12 +193,12 @@ export class NodeCentralityBehaviour extends Behaviour {
   private readonly subs: Array<() => void> = [];
 
   /**
-   * Snapshot of each touched node's prior `style.size`, captured on the
-   * first write to that node. `undefined` means the node had no `size`
-   * field before — restore by writing `undefined`. Cleared on `disable` /
-   * `destroy`.
+   * Snapshot of each touched node's prior `style.size` **and**
+   * `style.labelFontSize`, captured on the first write to that node. A field
+   * being `undefined` means the node had none before — restore by writing
+   * `undefined`. Cleared on `disable` / `destroy`.
    */
-  private readonly prior = new Map<string, number | undefined>();
+  private readonly prior = new Map<string, { size?: number; labelFontSize?: number }>();
 
   /** Microtask debounce flag — coalesces bursts of store events. */
   private recomputeScheduled = false;
@@ -308,16 +337,24 @@ export class NodeCentralityBehaviour extends Behaviour {
     // our own `'node:update'` flushes from re-triggering `scheduleRecompute`
     // mid-batch (we don't listen to `'node:update'` anyway, but `'flush'`
     // does fire after a batched write).
+    const { labelScale, labelMinSize, labelMaxSize } = this.opts;
     this.patching = true;
     try {
       for (const { id, degree, style } of degrees) {
         const size = mapDegreeToSize(degree, maxDegree, this.opts);
         if (!this.prior.has(id)) {
-          this.prior.set(id, style?.size);
+          this.prior.set(id, { size: style?.size, labelFontSize: style?.labelFontSize });
         }
         const prevStyle: NodeStyle = (style ?? {}) as NodeStyle;
+        // Label font: scale with the node when `labelScale` is on; otherwise
+        // restore whatever the node had before we first touched it (so toggling
+        // the option off un-scales cleanly).
+        const labelFontSize =
+          labelScale > 0
+            ? clamp(size * labelScale, labelMinSize, labelMaxSize)
+            : this.prior.get(id)!.labelFontSize;
         store.updateNode(id, {
-          style: { ...prevStyle, size },
+          style: { ...prevStyle, size, labelFontSize },
         });
       }
     } finally {
@@ -325,7 +362,10 @@ export class NodeCentralityBehaviour extends Behaviour {
     }
   }
 
-  /** Restore each touched node's prior `style.size` and clear the snapshot. */
+  /**
+   * Restore each touched node's prior `style.size` + `style.labelFontSize` and
+   * clear the snapshot. A field that was `undefined` before is dropped again.
+   */
   private revertAll(): void {
     const layer = this.layer;
     if (!layer || this.prior.size === 0) {
@@ -335,15 +375,20 @@ export class NodeCentralityBehaviour extends Behaviour {
     const store = layer.store;
     this.patching = true;
     try {
-      for (const [id, prevSize] of this.prior) {
+      for (const [id, prev] of this.prior) {
         const node = store.getNode(id);
         if (!node) continue;
         const prevStyle: NodeStyle = (node.style ?? {}) as NodeStyle;
-        // Build a fresh style object that omits `size` when prevSize was
-        // undefined; otherwise restore the prior numeric value.
-        const { size: _drop, ...rest } = prevStyle as NodeStyle & { size?: number };
-        const restored: NodeStyle =
-          prevSize === undefined ? (rest as NodeStyle) : ({ ...rest, size: prevSize } as NodeStyle);
+        // Strip both fields, then re-add whichever had a prior value — so a
+        // field the node never had is left absent rather than pinned to a value.
+        const { size: _dropSize, labelFontSize: _dropFont, ...rest } = prevStyle as NodeStyle & {
+          size?: number;
+          labelFontSize?: number;
+        };
+        const restored: NodeStyle = { ...(rest as NodeStyle) };
+        if (prev.size !== undefined) (restored as NodeStyle & { size?: number }).size = prev.size;
+        if (prev.labelFontSize !== undefined)
+          (restored as NodeStyle & { labelFontSize?: number }).labelFontSize = prev.labelFontSize;
         store.updateNode(id, { style: restored });
       }
     } finally {

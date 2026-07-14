@@ -45,4 +45,28 @@ export const nodeCentralityFields: FieldConfig[] = [
       { value: 'log', label: 'Logarithmic' },
     ],
   },
+  {
+    name: 'labelScale',
+    type: 'number',
+    label: 'Label scale',
+    min: 0,
+    step: 0.05,
+    description: 'Grow the label with the node: labelFontSize = size × this (clamped). 0 = off.',
+  },
+  {
+    name: 'labelMinSize',
+    type: 'number',
+    label: 'Label min size',
+    min: 0,
+    step: 1,
+    description: 'Lower clamp for the scaled label font. Default 8.',
+  },
+  {
+    name: 'labelMaxSize',
+    type: 'number',
+    label: 'Label max size',
+    min: 0,
+    step: 1,
+    description: 'Upper clamp for the scaled label font. Default 40.',
+  },
 ];

@@ -227,8 +227,9 @@ function AboutTab() {
         Each of the eleven tag types reads three ways at once:{' '}
         <strong className="text-foreground">colour</strong> (bundle{' '}
         <code>ColorByLabelBehaviour</code>), an <strong className="text-foreground">icon</strong>{' '}
-        (Lucide, from <code>lucide-react</code>), and <strong className="text-foreground">size by degree</strong>{' '}
-        (<code>NodeCentralityBehaviour</code>, sqrt-scaled) — so hubs read big and typed at a glance.
+        (Lucide, from <code>lucide-react</code>), and <strong className="text-foreground">size by centrality</strong>{' '}
+        (<code>NodeCentralityBehaviour</code>, linear 6→56, with <code>labelScale</code> so a hub&apos;s{' '}
+        label grows with it) — so hubs read big and typed at a glance.
       </p>
       <p>
 Node <strong className="text-foreground">text</strong> (labels + composite text, past 1.5×) and{' '}
@@ -381,7 +382,16 @@ export const WikipediaDataViz: Story = {
               range keeps the low-degree mass small and lets the hubs genuinely
               dominate (sqrt/log would dampen them into the pack). Writes per-node
               `style.size`, which the renderer, bounds, and force-collide read. */}
-          <NodeCentralityBehaviour targetLayerId="graph" direction="both" minSize={6} maxSize={56} scale="linear" />
+          <NodeCentralityBehaviour
+            targetLayerId="graph"
+            direction="both"
+            minSize={6}
+            maxSize={56}
+            scale="linear"
+            labelScale={0.4}
+            labelMinSize={9}
+            labelMaxSize={24}
+          />
 
           {/* Content zoom-LOD — split per kind so text and icons gate
               independently. Both hide the ~2k pieces at the packed overview

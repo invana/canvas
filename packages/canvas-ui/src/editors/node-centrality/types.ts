@@ -29,6 +29,12 @@ export interface NodeCentralityOptions {
   maxSize?: number;
   /** Curve applied to normalized degree. Default `'sqrt'`. */
   scale?: NodeCentralityScale;
+  /** Scale the label with the node: labelFontSize = clamp(size × this, …). 0/blank = off. */
+  labelScale?: number;
+  /** Lower clamp for the scaled label font. Default `8`. */
+  labelMinSize?: number;
+  /** Upper clamp for the scaled label font. Default `40`. */
+  labelMaxSize?: number;
 }
 
 /**
