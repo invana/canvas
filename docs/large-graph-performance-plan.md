@@ -188,13 +188,13 @@ Grouped by lever. Each notes which **regime** it addresses, rough **effort**, an
 
 ### Edge-pick **correctness** in a crowd (§5b)
 
-| # | Option | Solves | What / how | Effort |
-|---|---|---|---|---|
-| H | **Segment-level hit index** | ambiguity + cost | Index each edge by its polyline **segments** (tight bboxes) or a coarse grid, so rbush candidates are edges *physically near* the point — not every long edge whose loose box crosses the region. Makes "nearest" meaningful **and** cheap. | med |
-| I | **Stable nearest + hysteresis** | flicker | Pick nearest-within-tolerance, but keep the current hovered edge unless another is closer by a margin → the highlight locks on instead of jittering on sub-pixel moves. | low |
-| J | **Node-incidence bias** | wrong edge | Near a node, prefer edges **incident to that node** (they separate near their endpoints, where you aim) — makes "trace an edge from a node" reliable in the bundle. | low |
-| K | **Node-hover-first affordance** | ambiguity | Make *hover node → highlight incident edges* (already in `HoverActivateBehaviour`) the primary path; direct edge hover is secondary + zoom-gated. UX policy, not new geometry. | low |
-| L | **Ambiguity picker** | ambiguity | When several edges are genuinely tied under the cursor, surface a small list ("3 edges here …") instead of silently guessing. Optional, heavier UX. | med |
+| # | Option | Solves | What / how | Effort | Status |
+|---|---|---|---|---|---|
+| H | **Segment-level hit index** | ambiguity + cost | Index each edge by its polyline **segments** (tight bboxes) or a coarse grid, so rbush candidates are edges *physically near* the point — not every long edge whose loose box crosses the region. Makes "nearest" meaningful **and** cheap. | med | 📋 |
+| I | **Stable nearest + hysteresis** | flicker | Pick nearest-within-tolerance, but keep the current hovered edge unless another is closer by a margin → the highlight locks on instead of jittering on sub-pixel moves. | low | ✅ `pickHover` in `PrimitivesRenderer` (hover path only; `hoverHysteresisPx`, default 5) |
+| J | **Node-incidence bias** | wrong edge | Near a node, prefer edges **incident to that node** (they separate near their endpoints, where you aim) — makes "trace an edge from a node" reliable in the bundle. | low | ✅ `pickHover` reframed geometrically (endpoint ≈ node centre, so the renderer stays domain-free; `hoverNodeIncidencePx`, default 20) |
+| K | **Node-hover-first affordance** | ambiguity | Make *hover node → highlight incident edges* (already in `HoverActivateBehaviour`) the primary path; direct edge hover is secondary + zoom-gated. UX policy, not new geometry. | low | ✅ already in place — `HoverActivateBehaviour` (degree) highlights incident edges on node hover; `hoverEdges: false` default makes direct edge hover opt-in |
+| L | **Ambiguity picker** | ambiguity | When several edges are genuinely tied under the cursor, surface a small list ("3 edges here …") instead of silently guessing. Optional, heavier UX. | med | 📋 |
 
 ### Discarded / non-issues
 - **Per-frame jank attribution span** (`canvas.frame.jank`) — built then removed:
@@ -213,7 +213,9 @@ The order should track the regime that hurts most, but a good default:
 the low-effort edge-pick correctness fixes **I + J + K** (stable pick + node
 bias + node-hover-first). These remove the hover jank, smooth drag, and stop the
 edge-hover flicker with small, localized changes. Do these first regardless of
-regime — low risk, immediate. **Status: F ✅ shipped; D / E / G / I / J / K still open.**
+regime — low risk, immediate. **Status: D / F / G / I / J / K ✅ shipped; E open
+(largely subsumed by `EdgeLODBehaviour`, which drops thinned edges from the hit
+index).**
 
 **Phase 0.5 — edge-pick correctness (H, optionally L).** The segment-level hit
 index (H) is the structural fix that makes "nearest edge" both cheap and *right*

@@ -193,6 +193,25 @@ export interface PrimitivesRendererOptions {
    * stories; drop to `0` to forbid the fallback entirely.
    */
   readonly hitFloorPx?: number;
+  /**
+   * Hover **hysteresis** margin in screen pixels (edge-pick correctness I).
+   * On the hover path only, the currently-hovered element of the same kind
+   * is kept until a new candidate is closer by *more* than this many pixels
+   * — so a sub-pixel jitter between two near-equidistant edges doesn't
+   * flicker the highlight. Click / drag picking ignores this entirely.
+   * Default `5`; `0` disables the stickiness.
+   */
+  readonly hoverHysteresisPx?: number;
+  /**
+   * Hover **node-incidence** radius in screen pixels (edge-pick correctness
+   * J). When the hover winner is a connector and the cursor also sits within
+   * this many pixels of a shape's centre, an edge *incident to that shape*
+   * (an endpoint at the node) is preferred over an unrelated edge merely
+   * passing through — incident edges separate near their shared endpoint,
+   * where you aim. Purely geometric (endpoint-at-node), so the renderer stays
+   * domain-free. Default `20`; `0` disables the bias.
+   */
+  readonly hoverNodeIncidencePx?: number;
 }
 
 /**
@@ -201,6 +220,12 @@ export interface PrimitivesRendererOptions {
  * lowering it.
  */
 const DEFAULT_HIT_FLOOR_PX = 6;
+
+/** Default for {@link PrimitivesRendererOptions.hoverHysteresisPx}. */
+const DEFAULT_HOVER_HYSTERESIS_PX = 5;
+
+/** Default for {@link PrimitivesRendererOptions.hoverNodeIncidencePx}. */
+const DEFAULT_HOVER_NODE_INCIDENCE_PX = 20;
 
 export class PrimitivesRenderer {
   private readonly shapeRegistry = new Map<string, ShapeCtor>();
@@ -303,6 +328,10 @@ export class PrimitivesRenderer {
   readonly camera: Camera;
   private readonly textureRegistry: TextureRegistry;
   private readonly hitFloorPx: number;
+  /** Hover hysteresis margin in screen px (edge-pick I). See the option's TSDoc. */
+  private readonly hoverHysteresisPx: number;
+  /** Hover node-incidence radius in screen px (edge-pick J). See the option's TSDoc. */
+  private readonly hoverNodeIncidencePx: number;
   /** DOM canvas element used by the router for cursor styling. */
   private readonly canvasElement: HTMLCanvasElement | null;
 
@@ -344,6 +373,8 @@ export class PrimitivesRenderer {
     this.camera = opts.camera;
     this.textureRegistry = opts.textureRegistry ?? new TextureRegistry();
     this.hitFloorPx = opts.hitFloorPx ?? DEFAULT_HIT_FLOOR_PX;
+    this.hoverHysteresisPx = opts.hoverHysteresisPx ?? DEFAULT_HOVER_HYSTERESIS_PX;
+    this.hoverNodeIncidencePx = opts.hoverNodeIncidencePx ?? DEFAULT_HOVER_NODE_INCIDENCE_PX;
     this.canvasElement = opts.canvasElement ?? null;
     // Insertion order = render order in Pixi. Adding the connector layer
     // first then the shape layer puts shapes on top — so any connector
@@ -1802,6 +1833,152 @@ export class PrimitivesRenderer {
     return { exact, distSq };
   }
 
+  /** {@link hoverHysteresisPx} in world units at the current camera scale. */
+  private hoverHysteresisWorld(): number {
+    return this.hoverHysteresisPx / Math.max(this.camera.scale, 1e-6);
+  }
+
+  /** {@link hoverNodeIncidencePx} in world units at the current camera scale. */
+  private hoverIncidenceWorld(): number {
+    return this.hoverNodeIncidencePx / Math.max(this.camera.scale, 1e-6);
+  }
+
+  /**
+   * Hover-specific pick: {@link hitTest}'s winner, refined by two hover-only
+   * heuristics that make tracing an edge out of a dense bundle reliable.
+   * **Click / drag picking deliberately stays on the raw {@link hitTest}** — a
+   * press must resolve exactly what is under the cursor, with no memory of the
+   * last hover — so this method is called only from {@link routePointerMove}.
+   *
+   * - **Node-incidence bias (J).** When the raw winner is a connector but the
+   *   cursor also sits within {@link hoverNodeIncidencePx} of a shape's centre,
+   *   an edge *incident to that shape* (an endpoint at the node) is preferred
+   *   over an unrelated edge merely passing through the region. Incident edges
+   *   fan out and separate near their shared endpoint — where you aim. The test
+   *   is purely geometric (endpoint ≈ node centre), so the renderer stays
+   *   domain-free; it never inspects graph adjacency.
+   * - **Hysteresis (I).** The currently-hovered element of the *same kind* is
+   *   kept unless the new winner is closer by more than {@link hoverHysteresisPx}
+   *   — and only while the old target is still genuinely under the cursor — so a
+   *   sub-pixel jitter between two near-equidistant edges doesn't flicker the
+   *   highlight.
+   *
+   * Falls back to identical behaviour to {@link hitTest} when both margins are
+   * `0` or nothing nearby qualifies.
+   */
+  private pickHover(worldX: number, worldY: number): HitResult | null {
+    if (!this.hitEnabled) return null;
+    this.flushMovedHits();
+    const floorWorld = this.hitFloorWorld();
+    const incidenceWorld = this.hoverIncidenceWorld();
+    // Widen the bbox query enough to also see the nearby shape centres the
+    // incidence bias needs — otherwise a node whose centre is just outside the
+    // hit-floor pad is invisible to the pick and the bias can't fire.
+    const candidates = this.hit.query(worldX, worldY, Math.max(floorWorld, incidenceWorld));
+    if (candidates.length === 0) return null;
+
+    const floorSq = floorWorld * floorWorld;
+    const incidenceSq = incidenceWorld * incidenceWorld;
+
+    let bestExact: { kind: 'shape' | 'connector'; id: string; distSq: number; zIndex: number } | null = null;
+    let bestFloor: { kind: 'shape' | 'connector'; id: string; distSq: number } | null = null;
+    // Shape centres within the incidence radius of the cursor — the candidate
+    // "nearby nodes" the incidence bias measures edge endpoints against.
+    const nearbyCentres: Array<{ x: number; y: number }> = [];
+    // Exact connector hits + their two endpoints, for the incidence test.
+    const exactConnectors: Array<{ id: string; distSq: number; ax: number; ay: number; bx: number; by: number }> = [];
+
+    for (const c of candidates) {
+      if (c.kind === 'shape') {
+        const inst = this.shapeInstances.get(c.id);
+        if (!inst) continue;
+        const dx = worldX - inst.spec.x;
+        const dy = worldY - inst.spec.y;
+        const distSq = dx * dx + dy * dy;
+        if (distSq <= incidenceSq) nearbyCentres.push({ x: inst.spec.x, y: inst.spec.y });
+        const s = inst.gfxScale || 1;
+        if (inst.shape.getHitArea().contains(dx / s, dy / s)) {
+          const bestKindRank = bestExact && bestExact.kind === 'shape' ? 1 : 0;
+          if (
+            bestExact === null ||
+            c.zIndex > bestExact.zIndex ||
+            (c.zIndex === bestExact.zIndex && (1 > bestKindRank || (1 === bestKindRank && distSq < bestExact.distSq)))
+          ) {
+            bestExact = { kind: 'shape', id: c.id, distSq, zIndex: c.zIndex };
+          }
+        } else if (distSq <= floorSq && (bestFloor === null || distSq < bestFloor.distSq)) {
+          bestFloor = { kind: 'shape', id: c.id, distSq };
+        }
+      } else {
+        const inst = this.connectorInstances.get(c.id);
+        if (!inst) continue;
+        const poly = this.sampledConnectorPolyline(inst);
+        const distSq = distanceToPolylineSq(poly, worldX, worldY);
+        if (distSq <= this.connectorHitToleranceSq(inst) && poly.length >= 2) {
+          const a = poly[0]!;
+          const b = poly[poly.length - 1]!;
+          exactConnectors.push({ id: c.id, distSq, ax: a.x, ay: a.y, bx: b.x, by: b.y });
+          const bestKindRank = bestExact && bestExact.kind === 'shape' ? 1 : 0;
+          if (
+            bestExact === null ||
+            c.zIndex > bestExact.zIndex ||
+            (c.zIndex === bestExact.zIndex && (0 > bestKindRank || (0 === bestKindRank && distSq < bestExact.distSq)))
+          ) {
+            bestExact = { kind: 'connector', id: c.id, distSq, zIndex: c.zIndex };
+          }
+        } else if (distSq <= floorSq && (bestFloor === null || distSq < bestFloor.distSq)) {
+          bestFloor = { kind: 'connector', id: c.id, distSq };
+        }
+      }
+    }
+
+    const base = bestExact ?? bestFloor;
+    if (!base) return null;
+    let win: { kind: 'shape' | 'connector'; id: string; distSq: number } = {
+      kind: base.kind,
+      id: base.id,
+      distSq: base.distSq,
+    };
+
+    // (J) Node-incidence bias — only when the winner is an edge, we have a
+    // nearby node, and the winning edge is *not* incident to it.
+    if (win.kind === 'connector' && nearbyCentres.length > 0 && exactConnectors.length > 0) {
+      const isIncident = (e: { ax: number; ay: number; bx: number; by: number }): boolean =>
+        nearbyCentres.some(
+          (n) =>
+            (e.ax - n.x) * (e.ax - n.x) + (e.ay - n.y) * (e.ay - n.y) <= incidenceSq ||
+            (e.bx - n.x) * (e.bx - n.x) + (e.by - n.y) * (e.by - n.y) <= incidenceSq,
+        );
+      const winnerIncident = exactConnectors.some((e) => e.id === win.id && isIncident(e));
+      if (!winnerIncident) {
+        let bestInc: { id: string; distSq: number } | null = null;
+        for (const e of exactConnectors) {
+          if (isIncident(e) && (bestInc === null || e.distSq < bestInc.distSq)) {
+            bestInc = { id: e.id, distSq: e.distSq };
+          }
+        }
+        if (bestInc) win = { kind: 'connector', id: bestInc.id, distSq: bestInc.distSq };
+      }
+    }
+
+    // (I) Hysteresis — keep the current same-kind hover unless the new winner is
+    // closer by more than the margin, and only while the old target is still a
+    // genuine hit under the cursor (re-probed here). Cross-kind moves (edge→node)
+    // switch immediately so landing on a node always wins.
+    const cur = this.currentHover;
+    if (cur && cur.kind === win.kind && cur.id !== win.id) {
+      const curHit = this.geometricHit(cur.kind, cur.id, worldX, worldY);
+      if (curHit && (curHit.exact || curHit.distSq <= floorSq)) {
+        const margin = this.hoverHysteresisWorld();
+        if (Math.sqrt(win.distSq) + margin >= Math.sqrt(curHit.distSq)) {
+          return { kind: cur.kind, id: cur.id };
+        }
+      }
+    }
+
+    return { kind: win.kind, id: win.id };
+  }
+
   /**
    * Attach a single `globalpointer*` listener trio to the renderer's
    * container. Pixi's *global* pointer events fire on every move /
@@ -1865,7 +2042,9 @@ export class PrimitivesRenderer {
     // target and fires `pointerover` / `pointerout` normally.
     if (this.pointerDown) return;
     const w = this.camera.toWorld(e.global.x, e.global.y);
-    const hit = this.hitTest(w.x, w.y);
+    // Hover uses the refined pick (hysteresis + node-incidence bias); click /
+    // drag stay on the raw hitTest in routePointerDown / routePointerUp.
+    const hit = this.pickHover(w.x, w.y);
     const prev = this.currentHover;
 
     // Sub-part hover runs every move (even within the same shape) so moving
