@@ -174,17 +174,17 @@ independently.
 ## 6. Options we're exploring
 
 Grouped by lever. Each notes which **regime** it addresses, rough **effort**, and
-**status** (all 📋 planned today).
+**status** (✅ shipped / 📋 planned).
 
-| # | Option | Regime | What / how | Effort |
-|---|---|---|---|---|
-| A | **Viewport culling** | zoomed-in | Each frame (throttled), query the existing `HitIndex` rbush against `camera.getVisibleBounds()`; toggle `renderable` off for shapes/connectors outside it. (Alt: Pixi v8 `Culler` + `cullableChildren`.) | med |
-| B | **Edge batching / instancing** | zoomed-out | Draw all edges as **one** batched geometry / GPU-instanced draw instead of ~28.6k separate `Graphics`. The only lever when everything is visible. | high |
-| C | **Zoom-based edge LOD / aggregation** | zoomed-out | Below a zoom threshold, stop drawing every edge (they merge into a sub-pixel blob): sample/thin, fade, or render an aggregate **density** layer instead. | med |
-| D | **Cache edge path samples** | hover | Memoise `samplePath` on the `ConnectorInstance`; invalidate on re-route. Kills the per-frame resampling in hit-test. | low |
-| E | **Gate edge hit-test by zoom** | crowded | Below a zoom threshold, hit-test **nodes only** — per-edge picking is meaningless when edges overlap a pixel. | low |
-| F | **Frame-coalesced flush** | drag | Default the graph store (or drag path) to `flushMode: 'frame'` so `pointermove` churn collapses to one flush/rAF. | low |
-| G | **Hover highlight fast-path** | hover | A hover highlight only changes stroke colour/width, not geometry — redraw on the cached path (`setConnectorStroke`) instead of a full `updateConnector` re-route. | low |
+| # | Option | Regime | What / how | Effort | Status |
+|---|---|---|---|---|---|
+| A | **Viewport culling** | zoomed-in | Each frame (throttled), query the existing `HitIndex` rbush against `camera.getVisibleBounds()`; toggle `renderable` off for shapes/connectors outside it. (Alt: Pixi v8 `Culler` + `cullableChildren`.) | med | ✅ `HitIndex.searchRect` + `PrimitivesRenderer.cull` driven from `Canvas.tickOnce` on camera move |
+| B | **Edge batching / instancing** | zoomed-out | Draw all edges as **one** batched geometry / GPU-instanced draw instead of ~28.6k separate `Graphics`. The only lever when everything is visible. | high | 📋 deferred — measure C+culling first |
+| C | **Zoom-based edge LOD / aggregation** | zoomed-out | Below a zoom threshold, stop drawing every edge (they merge into a sub-pixel blob): sample/thin, fade, or render an aggregate **density** layer instead. | med | ✅ `EdgeLODBehaviour` (thin to `keepFraction` by sample/weight/degree) |
+| D | **Cache edge path samples** | hover | Memoise `samplePath` on the `ConnectorInstance`; invalidate on re-route. Kills the per-frame resampling in hit-test. | low | 📋 |
+| E | **Gate edge hit-test by zoom** | crowded | Below a zoom threshold, hit-test **nodes only** — per-edge picking is meaningless when edges overlap a pixel. | low | 📋 (partly subsumed: `EdgeLODBehaviour` drops thinned edges from the hit index too) |
+| F | **Frame-coalesced flush** | drag | Default the graph store (or drag path) to `flushMode: 'frame'` so `pointermove` churn collapses to one flush/rAF. | low | ✅ `GraphLayer` builds its store with `flushMode: 'frame'` |
+| G | **Hover highlight fast-path** | hover | A hover highlight only changes stroke colour/width, not geometry — redraw on the cached path (`setConnectorStroke`) instead of a full `updateConnector` re-route. | low | 📋 |
 
 ### Edge-pick **correctness** in a crowd (§5b)
 
@@ -213,21 +213,27 @@ The order should track the regime that hurts most, but a good default:
 the low-effort edge-pick correctness fixes **I + J + K** (stable pick + node
 bias + node-hover-first). These remove the hover jank, smooth drag, and stop the
 edge-hover flicker with small, localized changes. Do these first regardless of
-regime — low risk, immediate.
+regime — low risk, immediate. **Status: F ✅ shipped; D / E / G / I / J / K still open.**
 
 **Phase 0.5 — edge-pick correctness (H, optionally L).** The segment-level hit
 index (H) is the structural fix that makes "nearest edge" both cheap and *right*
 in a crowd; the ambiguity picker (L) is the optional graceful fallback. Land when
-reliable edge hover in dense areas matters.
+reliable edge hover in dense areas matters. **Status: 📋 open.**
 
-**Phase 1 — viewport culling (A).** The biggest win for **zoomed-in** interaction
-(the drag/hover-in screenshots). Reuses the rbush we already maintain.
+**Phase 1 — viewport culling (A). ✅ shipped.** The biggest win for **zoomed-in**
+interaction (the drag/hover-in screenshots). Reuses the rbush we already maintain.
 
 **Phase 2 — edge batching + LOD (B + C).** The real fix for the **zoomed-out
-hairball** (the dense screenshot), where culling can't help. Larger change to the
-connector renderer; do it when the zoomed-out case is the priority.
+hairball** (the dense screenshot), where culling can't help. **Status: C ✅ shipped
+(`EdgeLODBehaviour`); B deferred** — measure whether C + culling suffice before the
+larger connector-renderer rewrite.
 
 If the **zoomed-out hairball** is the primary pain, swap Phase 1 and Phase 2.
+
+> **Also shipped alongside these:** a node-content zoom-LOD family —
+> `TextLODBehaviour` / `IconLODBehaviour` / `ImageLODBehaviour` (hide labels /
+> icons / image fills by zoom band) and `NodeCentralityBehaviour` (size + label +
+> weighted-degree). These cut per-node render cost the same way C cuts per-edge.
 
 ---
 
