@@ -51,6 +51,16 @@ import type { EdgeStyle, NodeStyle } from '../layer/types';
  */
 const VIEWPORT_PAD = 0.2;
 
+/**
+ * Minimum gap between collision passes while a gesture streams events. The pass
+ * still runs on the leading edge and once more on the trailing edge (settle), so
+ * the final state is always correct; in between it runs at most ~11 Hz instead
+ * of once per frame — labels shift while panning/zooming anyway, so a slightly
+ * stale hide-set mid-gesture is imperceptible. Mirrors the settle convention the
+ * scale-LOD behaviours use.
+ */
+const COLLISION_THROTTLE_MS = 90;
+
 /** rbush item — a label's AABB in world space. */
 interface LabelBBox {
   minX: number;
@@ -163,6 +173,10 @@ export class LabelCollisionBehaviour extends Behaviour {
 
   /** Coalesce repeated triggers within a single frame. */
   private scheduled = false;
+  /** `performance.now()` of the last pass — throttles passes during a gesture. */
+  private lastRunAt = 0;
+  /** Pending trailing-edge pass (settle), or `null`. */
+  private trailingTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(opts: LabelCollisionBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? [] });
@@ -208,6 +222,10 @@ export class LabelCollisionBehaviour extends Behaviour {
   protected override onDestroy(): void {
     for (const off of this.subs) off();
     this.subs.length = 0;
+    if (this.trailingTimer !== null) {
+      clearTimeout(this.trailingTimer);
+      this.trailingTimer = null;
+    }
     this.lastFlip.clear();
     this.lastVisible.clear();
     this.layer = null;
@@ -219,6 +237,13 @@ export class LabelCollisionBehaviour extends Behaviour {
   }
 
   protected override onDisable(): void {
+    // Cancel any pending trailing pass and reset the throttle so a re-enable
+    // runs immediately.
+    if (this.trailingTimer !== null) {
+      clearTimeout(this.trailingTimer);
+      this.trailingTimer = null;
+    }
+    this.lastRunAt = 0;
     // Restore every previously-hidden label so the visual state is clean.
     if (!this.layer) return;
     const r = this.layer.getRenderer();
@@ -228,12 +253,34 @@ export class LabelCollisionBehaviour extends Behaviour {
     this.lastFlip.clear();
   }
 
-  /** Coalesce repeated triggers within a microtask. Cheap; runs at most once per frame. */
+  /**
+   * Throttle passes during a gesture: run on the leading edge, then at most once
+   * per {@link COLLISION_THROTTLE_MS} while events keep streaming, with a
+   * guaranteed trailing pass after they stop (settle). Off a gesture (a lone
+   * flush / the first event) this runs immediately.
+   */
   private schedule(): void {
-    if (!this.enabled || this.scheduled) return;
+    if (!this.enabled) return;
+    const elapsed = performance.now() - this.lastRunAt;
+    if (this.lastRunAt === 0 || elapsed >= COLLISION_THROTTLE_MS) {
+      this.runSoon();
+    } else if (this.trailingTimer === null) {
+      // Within the throttle window — defer to its boundary. One pending timer
+      // (not reset per event) gives both mid-gesture updates and a final settle.
+      this.trailingTimer = setTimeout(() => {
+        this.trailingTimer = null;
+        this.runSoon();
+      }, COLLISION_THROTTLE_MS - elapsed);
+    }
+  }
+
+  /** Coalesce a single pass into a microtask; stamps `lastRunAt`. */
+  private runSoon(): void {
+    if (this.scheduled) return;
     this.scheduled = true;
     queueMicrotask(() => {
       this.scheduled = false;
+      this.lastRunAt = performance.now();
       this.runPass();
     });
   }
