@@ -113,12 +113,15 @@ export {
   createFrameMetrics,
   createInteractionTracer,
   createConsoleMeter,
+  createHttpMeter,
   type Meter,
   type Histogram,
   type Counter,
   type MetricAttributes,
   type FrameMetricsOptions,
   type InteractionTracerOptions,
+  type HttpMeterOptions,
+  type HttpMetricRecord,
 } from './telemetry/metrics';
 // Logging adapters (dep-free — inject a Logger; console default ships built in).
 export {

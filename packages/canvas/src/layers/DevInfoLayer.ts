@@ -26,6 +26,8 @@
  * ```
  */
 
+import type { FrameTick } from '@invana/canvas-store';
+
 import { ScreenLayer, type ScreenLayerHit } from './ScreenLayer';
 
 // ─── Public types ────────────────────────────────────────────────────────────
@@ -98,6 +100,10 @@ export class DevInfoLayer extends ScreenLayer<DevInfoLayerOptions, DevInfoState>
   private _fps = 0;
   private _frameCount = 0;
   private _lastFpsTimestamp = 0;
+
+  // Latest per-frame timing sample (from the `render:loop:tick` bus event) — the
+  // CPU phase breakdown that tells you whether a slow frame is CPU- or GPU-bound.
+  private _tick: FrameTick | null = null;
 
   constructor(opts: DevInfoLayerCtorOptions = {}) {
     const { id, zIndex, ...rest } = opts;
@@ -187,6 +193,11 @@ export class DevInfoLayer extends ScreenLayer<DevInfoLayerOptions, DevInfoState>
     // Camera updates → repaint overlay.
     this._unsubs.push(ctx.events.on('input:camera:pan', () => this._update()));
     this._unsubs.push(ctx.events.on('input:camera:zoom', () => this._update()));
+
+    // Capture the latest frame timing for the perf breakdown. Store only — the
+    // overlay repaints on camera / pointer moves and the 500ms FPS bucket, so we
+    // don't force a DOM write every frame (which would itself skew the numbers).
+    this._unsubs.push(ctx.events.on('render:loop:tick', (tick: FrameTick) => (this._tick = tick)));
 
     // Native pointermove — engine doesn't emit a typed `pointermove` event,
     // so read DOM coords directly and convert via camera.
@@ -329,6 +340,22 @@ export class DevInfoLayer extends ScreenLayer<DevInfoLayerOptions, DevInfoState>
       sep,
       header('Performance'),
       row('fps', String(this._fps)),
+      // Per-frame timing breakdown. `frame` = real inter-frame time; `cpu` = sum
+      // of the tick phases; `gpu≈` = the remainder (frame − cpu), i.e. pixi's GPU
+      // pass + browser compositing. A slow frame with high `layers` is CPU-bound
+      // (culling / layer work); a slow frame with low `cpu` but high `gpu≈` is
+      // GPU-bound (too many draw calls → needs batching / more aggressive LOD).
+      ...(this._tick
+        ? [
+            row('frame', `${this._tick.dt.toFixed(1)} ms`),
+            row('cpu', `${this._tick.cpuMs.toFixed(1)} ms`),
+            row('gpu≈', `${Math.max(0, this._tick.dt - this._tick.cpuMs).toFixed(1)} ms`),
+            row('· camera', `${this._tick.phases.camera.toFixed(1)} ms`),
+            row('· dataFlush', `${this._tick.phases.dataFlush.toFixed(1)} ms`),
+            row('· layers', `${this._tick.phases.layers.toFixed(1)} ms`),
+            row('gesture', this._tick.interaction),
+          ]
+        : []),
     ];
 
     this._overlay.innerHTML = lines.join('\n');

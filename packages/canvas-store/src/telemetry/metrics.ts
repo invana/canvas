@@ -203,3 +203,82 @@ export function createConsoleMeter(
     },
   };
 }
+
+/** One buffered metric record shipped by {@link createHttpMeter}. */
+export interface HttpMetricRecord {
+  /** Instrument name, e.g. `canvas.frame.phase`. */
+  name: string;
+  /** Recorded value (histogram) or increment (counter). */
+  value: number;
+  /** Bounded-cardinality attributes, e.g. `{ interaction, phase }`. */
+  attrs: MetricAttributes;
+}
+
+/** Options for {@link createHttpMeter}. */
+export interface HttpMeterOptions {
+  /** Max time (ms) a record waits before its batch is POSTed. Default `1000`. */
+  batchMs?: number;
+  /** Force a flush once the buffer reaches this many records. Default `600`. */
+  maxBatch?: number;
+}
+
+/**
+ * A dep-free {@link Meter} that **batches every record and POSTs it as JSON** to
+ * an HTTP endpoint — the local counterpart to the OTLP exporter. Where
+ * `createConsoleMeter` prints and the OTLP meter ships aggregated protobuf to a
+ * collector, this ships the **raw per-record stream** (`[{ name, value, attrs }]`)
+ * to any plain HTTP sink, so a lightweight collector can write it to a file for
+ * offline inspection with **no OpenTelemetry backend required**.
+ *
+ * Wire it through the normal telemetry config —
+ * `telemetry: { metrics: { meter: createHttpMeter('http://localhost:4319/metrics') } }`
+ * — so it rides the exact same {@link createFrameMetrics} path as OTLP; only the
+ * destination differs.
+ *
+ * Fire-and-forget (`fetch` failures are swallowed) and self-scheduling (a single
+ * `setTimeout` per batch window, cleared when the stream goes idle — no leaked
+ * interval). No-ops gracefully where `fetch` / timers are unavailable.
+ */
+export function createHttpMeter(endpoint: string, opts: HttpMeterOptions = {}): Meter {
+  const batchMs = opts.batchMs ?? 1000;
+  const maxBatch = opts.maxBatch ?? 600;
+  const post =
+    typeof fetch === 'function'
+      ? (records: HttpMetricRecord[]): void => {
+          void fetch(endpoint, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(records),
+          }).catch(() => {});
+        }
+      : (): void => {};
+
+  let buffer: HttpMetricRecord[] = [];
+  let scheduled = false;
+  const flush = (): void => {
+    scheduled = false;
+    if (buffer.length === 0) return;
+    const batch = buffer;
+    buffer = [];
+    post(batch);
+  };
+  const schedule = (): void => {
+    if (scheduled || typeof setTimeout !== 'function') return;
+    scheduled = true;
+    setTimeout(flush, batchMs);
+  };
+  const push = (name: string, value: number, attrs: MetricAttributes): void => {
+    buffer.push({ name, value, attrs });
+    if (buffer.length >= maxBatch) flush();
+    else schedule();
+  };
+
+  return {
+    createHistogram(name) {
+      return { record: (value, attributes = {}) => push(name, value, attributes) };
+    },
+    createCounter(name) {
+      return { add: (value, attributes = {}) => push(name, value, attributes) };
+    },
+  };
+}

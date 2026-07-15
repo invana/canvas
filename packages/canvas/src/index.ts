@@ -67,6 +67,20 @@ export {
   type KindDelta,
 } from '@invana/canvas-store';
 
+// Telemetry config + dep-free reference meters (kernel-owned). Re-exported so
+// `new Canvas({ telemetry })` consumers can pick a sink (console for a quick
+// debug view, HTTP for a local collector) without a direct
+// `@invana/canvas-store` dependency. A real OTLP meter comes from the opt-in
+// `@invana/canvas-telemetry-otel` package.
+export {
+  createConsoleMeter,
+  createHttpMeter,
+  type CanvasTelemetryConfig,
+  type Meter,
+  type HttpMeterOptions,
+  type HttpMetricRecord,
+} from '@invana/canvas-store';
+
 // ─── Camera ─────────────────────────────────────────────────────────────
 export { Camera } from './camera/Camera';
 export type { CameraOptions, Rect, Point } from './camera/Camera';
