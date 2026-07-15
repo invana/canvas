@@ -46,7 +46,7 @@ import { useMemo, useRef, useState } from 'react';
  * edges following via the derived cascade). Click **Layers** in the header to
  * open / close the docked tabbed panel.
  */
-const meta: Meta = { title: 'canvas-ui/views/LayersPanelView' };
+const meta: Meta = { title: 'canvas-ui/views/LayersPanelView/Game of Thrones' };
 export default meta;
 type Story = StoryObj;
 
@@ -144,7 +144,7 @@ function LayersPanelDock() {
 }
 
 export const LayersPanelStory: Story = {
-  name: 'LayersPanelView',
+  name: 'Game of Thrones',
   render: function Render() {
     const dev = useDevTool({ corner: 'top-left', margin: { x: 12, y: 48 } });
     const mini = useMiniMap({ backgroundLayerId: 'background', position: 'bottom-left' });
