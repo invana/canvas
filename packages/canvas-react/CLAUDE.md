@@ -4,9 +4,13 @@ React bindings for `@invana/canvas`. A declarative `<Canvas>` whose JSX children
 
 ## Pattern
 
-- `<Canvas>` — owns the engine instance. Renders a sized `<div>`, runs `await new Canvas().init(...)` inside `useEffect`, then provides the initialised `Canvas` via `CanvasContext`. Cleanup calls `canvas.destroy()`. Child components are not mounted until the engine is ready, so `useCanvas()` is always non-null inside them.
+- **Two roots, one per engine class** — `<Canvas>` and `<GraphCanvas>`. They share one lifecycle hook (`useCanvasEngine` + `CanvasHost` in `useCanvasEngine.tsx`: StrictMode-safe `init`, WebGPU→WebGL crash fallback, `config` apply, ref forwarding, sized host `<div>`) and differ **only** in the engine class they instantiate and the contexts they provide:
+  - `<Canvas>` — owns a base **`Canvas`** (`@invana/canvas`); provides **`CanvasContext`** only (read via `useCanvas()`). For non-graph canvases. Base layer/behaviour/layout wrappers work under it; no graph context, no `config.activeLayout` auto-run.
+  - `<GraphCanvas>` — owns a **`GraphCanvas`** (`@invana/graph`, a strict `Canvas` superset); provides **`CanvasContext` + `GraphCanvasContext`** (so `useCanvas()` **and** `useGraphCanvas()` / `useGraphCanvasUpdate()` / `useGraphCanvasOptions()` work), and `config.activeLayout` auto-runs. This is the graph root; **`GraphCanvasApp` builds on it** (it imports it as `GraphCanvasRoot` to avoid clashing with the engine `GraphCanvas` type used in its `onReady` signatures).
+  - Child components aren't mounted until the engine is ready, so `useCanvas()` (and, under `<GraphCanvas>`, `useGraphCanvas()`) are always non-null inside them. Cleanup calls `canvas.destroy()`.
+  - **Why the split (and why two contexts):** most wrappers (`<GraphLayer>`, `<D3ForceLayout>`, behaviours, minimap, background) read `useCanvas()` — base API only — so they work under either root. Only the graph hooks/toolbars read `useGraphCanvas()`, so they need `<GraphCanvas>`. The context a component reads is what gates which root(s) it works under.
 - Child wrappers (`<GraphLayer>`, `<DragPanBehaviour>`, `<D3ForceLayout>`, …) render `null`. They read the engine from `useCanvas()` and do their imperative work in `useEffect` — register on mount, unregister on cleanup. One wrapper per engine class.
-- `forwardRef` on `<Canvas>` exposes the underlying `Canvas` instance. That's the only surface on the ref; for everything else go through the engine directly (`ref.current.layers.get(...)`, `ref.current.events.tap(...)`).
+- `forwardRef` on each root exposes the underlying engine instance (`Canvas` / `GraphCanvas`). That's the only surface on the ref; for everything else go through the engine directly (`ref.current.layers.get(...)`, `ref.current.events.tap(...)`).
 
 ## UI: hooks + components + toolbars
 
@@ -29,7 +33,7 @@ The control/toolbar UI lives **here** (moved out of `@invana/canvas-ui`, which i
 
 ## Scope (v0)
 
-- `<Canvas>` — engine root.
+- `<Canvas>` — base engine root (`Canvas`). `<GraphCanvas>` — graph engine root (`GraphCanvas`, both contexts + `activeLayout`). Shared lifecycle in `useCanvasEngine.tsx`.
 - `<GraphLayer>` — wraps `@invana/graph` `GraphLayer`. Props: `id`, `data`, `nodeOption`, `edgeOption`. `data` is reactive (calls `layer.setData`); the rest are init-only.
 - `<DragPanBehaviour>` / `<WheelZoomBehaviour>` — wraps the engine behaviours of the same name. Props: `id`, `enabled`.
 - `<DragNodeBehaviour>` — wraps `@invana/graph` `DragNodeBehaviour`. Props: `id`, `layerId` (default `'graph'`), plus the engine option set (`filter`, `pinWhileDragging`, `pinOnRelease`, `dragCursor`, `groupAware`).

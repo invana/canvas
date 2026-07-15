@@ -1,4 +1,4 @@
-import { Canvas, GraphLayer, BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour, D3ForceLayout, type GraphLayerProps } from '@invana/canvas-react';
+import { GraphCanvas, GraphLayer, BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour, D3ForceLayout, type GraphLayerProps } from '@invana/canvas-react';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphData } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
@@ -140,7 +140,7 @@ export const GraphReseed: Story = {
         </div>
 
         <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
-          <Canvas
+          <GraphCanvas
             key={forceWebGL ? 'webgl' : 'default'}
             preference={forceWebGL ? 'webgl' : undefined}
             autoResize
@@ -152,7 +152,7 @@ export const GraphReseed: Story = {
             <DragPanBehaviour id="pan" />
             <WheelZoomBehaviour id="wheel" />
             <D3ForceLayout id="force" targetLayerId="graph" />
-          </Canvas>
+          </GraphCanvas>
         </div>
       </div>
     );

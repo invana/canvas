@@ -8,6 +8,9 @@
 
 export { Canvas } from './Canvas';
 export type { CanvasProps } from './Canvas';
+export { GraphCanvas } from './GraphCanvas';
+export type { GraphCanvasProps } from './GraphCanvas';
+export type { CanvasRootProps } from './useCanvasEngine';
 
 // ─── App (batteries-included composition) ────────────────────────────────────
 // `GraphCanvasApp` — one composable graph app. The header / main / footer

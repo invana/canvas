@@ -43,11 +43,14 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { deepMerge, type CanvasConfig } from '@invana/canvas';
+import { deepMerge, type CanvasConfig, type CanvasTelemetryConfig } from '@invana/canvas';
 import { themeFamily, type GraphCanvas, type GraphData } from '@invana/graph';
 import { useTheme } from '@invana/themes';
 
-import { Canvas } from '../Canvas';
+// Aliased: the engine type `GraphCanvas` (from `@invana/graph`) is used in this
+// file's public signatures (`onReady`), so the React root component takes a
+// distinct local name.
+import { GraphCanvas as GraphCanvasRoot } from '../GraphCanvas';
 import { CanvasContext } from '../CanvasContext';
 import { GraphCanvasContext, useGraphCanvas } from '../GraphCanvasContext';
 import { useGraphCanvasUpdate } from '../hooks';
@@ -232,6 +235,7 @@ function GraphCanvasAppMain({
   bundle,
   instanceKey,
   onReady,
+  telemetry,
   themeKind,
   themeName,
   children,
@@ -241,6 +245,7 @@ function GraphCanvasAppMain({
   bundle: boolean;
   instanceKey?: string | number;
   onReady: (canvas: GraphCanvas | null) => void;
+  telemetry?: CanvasTelemetryConfig;
   themeKind?: ThemeKind;
   themeName?: string;
   children?: ReactNode;
@@ -249,7 +254,7 @@ function GraphCanvasAppMain({
     // The `<Canvas>` host fills its parent (`100%/100%`); the layout's main cell
     // bounds it. Keyed on instanceKey so a reset remounts the engine. The render
     // backend is the engine's own setting — auto-resolved unless set in `config`.
-    <Canvas key={instanceKey} autoResize config={config}>
+    <GraphCanvasRoot key={instanceKey} autoResize config={config} telemetry={telemetry}>
       {bundle ? (
         <>
           {/* Every class registers by id; ALL its options come from `config`
@@ -282,7 +287,7 @@ function GraphCanvasAppMain({
 
       {/* Last child: publishes the live engine to the lifted context. */}
       <CanvasReady onReady={onReady} />
-    </Canvas>
+    </GraphCanvasRoot>
   );
 }
 
@@ -364,6 +369,22 @@ export interface GraphCanvasAppProps {
   instanceKey?: string | number;
   /** Receives the live engine once every layer / behaviour has registered (or `null`). */
   onReady?: (canvas: GraphCanvas | null) => void;
+  /**
+   * Push per-frame performance metrics — FPS / frame-time / the CPU **phase
+   * breakdown** (`camera` / `dataFlush` / `layers`) + dropped frames — to a
+   * telemetry sink. Wires the kernel's `createFrameMetrics` speed-trace through
+   * `new Canvas({ telemetry })`. `{ metrics: { meter } }` ships to a real backend
+   * (OTLP → HyperDX via `@invana/canvas-telemetry-otel`, or `createHttpMeter`
+   * for a local collector); `{ metrics: true }` prints to the console. See
+   * {@link debug} for the shortcut.
+   */
+  telemetry?: CanvasTelemetryConfig;
+  /**
+   * Debug shortcut: `true` turns on **console** performance metrics — equivalent
+   * to `telemetry={{ metrics: true }}`. An explicit {@link telemetry} always wins,
+   * so pass that (e.g. an OTLP meter) to ship the same metrics to a backend.
+   */
+  debug?: boolean;
 
   // ── Layout / sizing / theme ────────────────────────────────────────────────
   /**
@@ -416,6 +437,8 @@ export function GraphCanvasApp({
   bundle = true,
   instanceKey,
   onReady,
+  telemetry: telemetryProp,
+  debug,
   overlay = false,
   showHeader = true,
   showFooter,
@@ -462,6 +485,11 @@ export function GraphCanvasApp({
     [onReady],
   );
 
+  // Debug shortcut → console performance metrics, unless an explicit telemetry
+  // config is given (which always wins — e.g. an OTLP meter for a real backend).
+  const telemetry: CanvasTelemetryConfig | undefined =
+    telemetryProp ?? (debug ? { metrics: true } : undefined);
+
   const ctx: GraphCanvasAppControlContext = useMemo(
     () => ({ canvas, themeKind, toggleTheme: toggleMode }),
     [canvas, themeKind, toggleMode],
@@ -487,6 +515,7 @@ export function GraphCanvasApp({
       bundle={bundle}
       instanceKey={instanceKey}
       onReady={handleReady}
+      telemetry={telemetry}
       themeKind={bundle ? themeKind : undefined}
       themeName={themeName}
     >
