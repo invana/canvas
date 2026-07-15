@@ -471,6 +471,10 @@ importers:
         version: 8.50.0(eslint@9.39.1(jiti@2.7.0))(typescript@5.9.2)
 
   packages/graph:
+    dependencies:
+      rbush:
+        specifier: ^4.0.1
+        version: 4.0.1
     devDependencies:
       '@invana/canvas':
         specifier: workspace:*
@@ -481,6 +485,9 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
+      '@types/rbush':
+        specifier: ^4.0.0
+        version: 4.0.0
       pixi.js:
         specifier: ^8.18.1
         version: 8.18.1

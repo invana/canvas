@@ -19,6 +19,9 @@
     "test": "vitest run",
     "bench": "vitest bench --run"
   },
+  "dependencies": {
+    "rbush": "^4.0.1"
+  },
   "peerDependencies": {
     "@invana/canvas": "workspace:*",
     "pixi.js": "^8.18.1"
@@ -27,6 +30,7 @@
     "@invana/canvas": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@types/rbush": "^4.0.0",
     "pixi.js": "^8.18.1",
     "tsup": "^8.3.5",
     "tsx": "^4.21.0",

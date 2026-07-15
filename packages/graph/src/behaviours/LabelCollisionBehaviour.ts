@@ -2,13 +2,17 @@
  * `LabelCollisionBehaviour` — hides overlapping node / edge labels via a
  * greedy priority-sorted sweep so dense graphs stay legible.
  *
- * Strategy: each pass collects every label's world-space AABB, sorts the
- * label set by `priority` (configurable resolver — `priority` field on the
- * style, node-degree, or a custom callback), and walks high-to-low. A label
- * is **shown** if its AABB doesn't overlap any label already shown in the
- * same `collisionGroup`; otherwise it's hidden for this frame. Labels with
- * `forceShow: true` skip the check entirely (use for hovered / selected
- * elements).
+ * Strategy: each pass collects the world-space AABB of every label **inside the
+ * current viewport** (off-screen labels are skipped — they're culled and unseen),
+ * sorts that set by `priority` (configurable resolver — `priority` field on the
+ * style, node-degree, or a custom callback), and walks high-to-low. A label is
+ * **shown** if its AABB doesn't overlap any label already shown in the same
+ * `collisionGroup`; otherwise it's hidden for this frame. Overlap is tested
+ * against an **rbush spatial index** per group (an already-shown label is
+ * inserted into its group's index), so the pass is `O(n log n)` rather than the
+ * `O(n²)` of a pairwise scan — the difference between smooth and janky pan/zoom
+ * on dense graphs. Labels with `forceShow: true` skip the check entirely (use
+ * for hovered / selected elements).
  *
  * Default groups partition node labels and edge labels — a node label never
  * loses to an edge label of higher priority.
@@ -35,9 +39,32 @@
  */
 
 import { Behaviour, type BehaviourOptions, type CanvasContext, type Rect } from '@invana/canvas';
+import RBush from 'rbush';
 
 import { GraphLayer } from '../layer/GraphLayer';
 import type { EdgeStyle, NodeStyle } from '../layer/types';
+
+/**
+ * Fraction of the viewport, per axis, that the collision pass reaches beyond the
+ * visible bounds. A small margin so a label straddling the edge is resolved
+ * before it fully scrolls in (no pop), without processing the whole world.
+ */
+const VIEWPORT_PAD = 0.2;
+
+/** rbush item — a label's AABB in world space. */
+interface LabelBBox {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+}
+
+const toBBox = (b: Rect): LabelBBox => ({
+  minX: b.x,
+  minY: b.y,
+  maxX: b.x + b.width,
+  maxY: b.y + b.height,
+});
 
 /** Subset of label settings the collision pass needs — pulled from a
  * resolved {@link NodeStyle} / {@link EdgeStyle} via flat label fields or
@@ -122,6 +149,8 @@ interface LabelRecord {
 
 export class LabelCollisionBehaviour extends Behaviour {
   private layer: GraphLayer | null = null;
+  /** Camera — read for the visible world bounds each pass (viewport-scoping). */
+  private camera: CanvasContext['camera'] | null = null;
   private opts: ResolvedOptions;
 
   /** Last-flip timestamp per label id (perf.now()). */
@@ -154,6 +183,7 @@ export class LabelCollisionBehaviour extends Behaviour {
       );
     }
     this.layer = layer;
+    this.camera = ctx.camera;
 
     // Recompute on data churn — labels appear / disappear / move when the
     // store emits a flush after a batch of node / edge inserts or updates.
@@ -181,6 +211,7 @@ export class LabelCollisionBehaviour extends Behaviour {
     this.lastFlip.clear();
     this.lastVisible.clear();
     this.layer = null;
+    this.camera = null;
   }
 
   protected override onEnable(): void {
@@ -208,9 +239,10 @@ export class LabelCollisionBehaviour extends Behaviour {
   }
 
   /**
-   * Walk every label, sort by priority, greedy-hide overlaps within the
-   * same `collisionGroup`. Mutates label `gfx.visible`; doesn't touch
-   * decoration state otherwise.
+   * Collect the in-viewport labels, sort by priority, and greedy-hide overlaps
+   * within each `collisionGroup` using a per-group rbush index. Mutates label
+   * `gfx.visible` via `setDecorationVisible`; doesn't touch decoration state
+   * otherwise.
    */
   private runPass(): void {
     if (!this.enabled) return;
@@ -218,6 +250,19 @@ export class LabelCollisionBehaviour extends Behaviour {
     if (!layer) return;
     const renderer = layer.getRenderer();
     if (!renderer) return;
+
+    // Viewport-scope: skip labels outside the padded visible bounds. They're
+    // culled and unseen, so resolving them wastes the whole pass on dense
+    // graphs; `inView` accepts everything when no camera bounds are available.
+    const view = this.camera?.getVisibleBounds();
+    const padX = view ? view.width * VIEWPORT_PAD : 0;
+    const padY = view ? view.height * VIEWPORT_PAD : 0;
+    const inView = (b: Rect): boolean =>
+      !view ||
+      (b.x < view.x + view.width + padX &&
+        b.x + b.width > view.x - padX &&
+        b.y < view.y + view.height + padY &&
+        b.y + b.height > view.y - padY);
 
     const records: LabelRecord[] = [];
 
@@ -227,6 +272,7 @@ export class LabelCollisionBehaviour extends Behaviour {
       if (settings === undefined) continue;
       const b = renderer.getDecorationWorldBounds(node.id, 'label');
       if (!b || b.width === 0 || b.height === 0) continue;
+      if (!inView(b)) continue;
       records.push({
         kind: 'node',
         id: node.id,
@@ -243,6 +289,7 @@ export class LabelCollisionBehaviour extends Behaviour {
       if (settings === undefined) continue;
       const b = renderer.getDecorationWorldBounds(edge.id, 'label');
       if (!b || b.width === 0 || b.height === 0) continue;
+      if (!inView(b)) continue;
       records.push({
         kind: 'edge',
         id: edge.id,
@@ -255,16 +302,19 @@ export class LabelCollisionBehaviour extends Behaviour {
 
     records.sort((a, b) => b.priority - a.priority);
 
-    const shownByGroup = new Map<string, LabelRecord[]>();
+    // Already-shown labels per group, indexed spatially — an overlap test is an
+    // rbush `collides` query (O(log n)) instead of scanning the whole group.
+    const shownByGroup = new Map<string, RBush<LabelBBox>>();
     const now = performance.now();
 
     for (const rec of records) {
+      const box = toBBox(rec.bounds);
       let show: boolean;
       if (rec.forceShow) {
         show = true;
       } else {
-        const group = shownByGroup.get(rec.group);
-        show = !group || !group.some((r) => intersects(r.bounds, rec.bounds));
+        const index = shownByGroup.get(rec.group);
+        show = !index || !index.collides(box);
       }
 
       // Hysteresis: don't flip again if we just flipped recently.
@@ -277,12 +327,12 @@ export class LabelCollisionBehaviour extends Behaviour {
       }
 
       if (show) {
-        let g = shownByGroup.get(rec.group);
-        if (!g) {
-          g = [];
-          shownByGroup.set(rec.group, g);
+        let index = shownByGroup.get(rec.group);
+        if (!index) {
+          index = new RBush<LabelBBox>();
+          shownByGroup.set(rec.group, index);
         }
-        g.push(rec);
+        index.insert(box);
       }
 
       if (this.lastVisible.get(rec.id) !== show) {
@@ -316,16 +366,5 @@ export class LabelCollisionBehaviour extends Behaviour {
     for (const _ of this.layer.store.edgesOf(nodeId, 'both')) n++;
     return n;
   }
-}
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function intersects(a: Rect, b: Rect): boolean {
-  return (
-    a.x < b.x + b.width &&
-    a.x + a.width > b.x &&
-    a.y < b.y + b.height &&
-    a.y + a.height > b.y
-  );
 }
 
