@@ -570,14 +570,24 @@ export function GraphCanvasApp({
       <GraphCanvasContext.Provider value={canvas}>
         <div
           data-theme={dataTheme}
-          className={cx('bg-background text-foreground', themeClass, className)}
+          // `overflow-hidden`: the app shell must never paint outside its own box.
+          // `AppLayoutV2` is `h-screen` by default (we force `h-full`), and its
+          // resizable panels can momentarily overshoot; without this clip an
+          // embedder that doesn't clip its own slot (e.g. an absolutely-positioned
+          // board) shows the spill. Bounds the canvas + panels to the app rect.
+          className={cx('bg-background text-foreground overflow-hidden', themeClass, className)}
           style={rootStyle}
         >
           <AppLayoutV2
             className="h-full"
             header={headerNav}
             footer={footerNav}
-            mainSection={{ content: mainNode }}
+            // `AppLayoutV2` wraps the main region in an `overflow-auto` container
+            // (built for scrollable editor content). The canvas manages its own
+            // pan/zoom, so clip here (`overflow-hidden`, exact `h-full w-full`):
+            // otherwise a trackpad wheel/pinch the viewport doesn't fully swallow —
+            // or a sub-pixel canvas overflow — scrolls the whole shell instead.
+            mainSection={{ content: <div className="h-full w-full overflow-hidden">{mainNode}</div> }}
             rightSection={rightSection}
             bottomSection={bottomSection}
             bottomSpan={bottomSpan}
