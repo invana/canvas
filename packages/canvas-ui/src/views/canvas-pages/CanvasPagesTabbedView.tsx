@@ -48,6 +48,11 @@ export interface CanvasPage {
   icon?: ElementType;
   /** Disable selecting this tab. */
   disabled?: boolean;
+  /** Extra classes for *this* tab button (win over the built-ins via
+   *  tailwind-merge) — e.g. a per-page accent. */
+  tabClassName?: string;
+  /** Inline styles for *this* tab button — e.g. a custom brand colour. */
+  tabStyle?: CSSProperties;
 }
 
 /**
@@ -124,6 +129,12 @@ export interface CanvasPagesTabbedViewProps {
   headerClassName?: string;
   /** Extra classes on the body. */
   bodyClassName?: string;
+  /** Extra classes applied to *every* tab button (win over the built-ins via
+   *  tailwind-merge). Per-page `CanvasPage.tabClassName` layers on top of this. */
+  tabClassName?: string;
+  /** Extra classes applied to the **active** tab only — override the default
+   *  folder-tab look (e.g. a different accent colour). */
+  activeTabClassName?: string;
 }
 
 // The active tab's actions dropdown. The caret trigger is a `role="button"` span
@@ -192,12 +203,18 @@ function Tab({
   onSelect,
   menuItems,
   menuLabel,
+  className,
+  activeClassName,
 }: {
   page: CanvasPage;
   active: boolean;
   onSelect: () => void;
   menuItems?: CanvasPageMenuItem[];
   menuLabel: string;
+  /** View-level classes for every tab (`tabClassName`). */
+  className?: string;
+  /** View-level classes for the active tab (`activeTabClassName`). */
+  activeClassName?: string;
 }) {
   const Icon = page.icon;
   return (
@@ -207,6 +224,7 @@ function Tab({
       aria-selected={active}
       disabled={page.disabled}
       onClick={onSelect}
+      style={page.tabStyle}
       className={cn(
         // `shrink-0` so tabs keep their intrinsic width and the strip scrolls
         // horizontally when they overflow, rather than compressing.
@@ -218,6 +236,11 @@ function Tab({
         // the active tab 1px so its open bottom punches through that line (the
         // classic folder-tab notch). Rounded top corners + primary text/border.
         active && 'mb-[-1px] rounded-t-md border border-b-0 border-primary text-primary',
+        // Consumer overrides — ordered so they win via tailwind-merge: view-level
+        // (all tabs), then per-page, then the active-only view class.
+        className,
+        page.tabClassName,
+        active && activeClassName,
       )}
     >
       {Icon ? <Icon className="h-3.5 w-3.5 shrink-0" /> : null}
@@ -313,6 +336,8 @@ export function CanvasPagesTabbedView({
   className,
   headerClassName,
   bodyClassName,
+  tabClassName,
+  activeTabClassName,
 }: CanvasPagesTabbedViewProps) {
   const activePage = pages.find((p) => p.id === activeId);
   const activeIndex = pages.findIndex((p) => p.id === activeId);
@@ -373,6 +398,8 @@ export function CanvasPagesTabbedView({
               onSelect={() => onSelect(page.id)}
               menuItems={pageMenuItems}
               menuLabel={menuLabel}
+              className={tabClassName}
+              activeClassName={activeTabClassName}
             />
           ))}
         </div>
