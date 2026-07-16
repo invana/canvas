@@ -21,9 +21,10 @@ export { GraphCanvasApp } from './apps/GraphCanvasApp';
 export type {
   GraphCanvasAppProps,
   GraphCanvasAppControlContext,
+  GraphCanvasAppSectionOptions,
   RegionSlot,
   ThemeKind,
-  OverlayStyle,
+  BottomSpan,
 } from './apps/GraphCanvasApp';
 export type { GraphCanvasAppHeaderOptions } from './apps/GraphCanvasAppHeader';
 export type { GraphCanvasAppFooterOptions } from './apps/GraphCanvasAppFooter';

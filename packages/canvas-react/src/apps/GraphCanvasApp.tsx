@@ -1,22 +1,26 @@
 /**
  * `<GraphCanvasApp>` — one composable, batteries-included graph application.
  *
- * A thin orchestrator that owns the engine + app shell, with three
- * replaceable regions ({@link GraphCanvasAppHeader} · {@link GraphCanvasAppMain}
- * · {@link GraphCanvasAppFooter}) and its own layout. Everything lives in this
- * one module — the regions share the baked defaults/helpers below, so co-locating
- * them avoids an import cycle.
+ * A thin orchestrator that owns the engine and drives the `@invana/themes`
+ * **`AppLayoutV2`** shell: a **header** rail, a **main** canvas region, an
+ * optional **footer** rail, and two optional resizable/collapsible side regions —
+ * a **`right`** section (settings / detail / editors) and a **`bottom`** section
+ * (data tables). There is deliberately **no left rail** — a single-canvas graph
+ * app doesn't need nav/file-tree chrome.
  *
  * ```tsx
- * <GraphCanvasApp data={graph} />                          // lean explorer
- * <GraphCanvasApp data={graph} style={{ height: 400 }} />  // bounded widget
+ * <GraphCanvasApp data={graph} />                                 // lean explorer
+ * <GraphCanvasApp data={graph} style={{ height: 400 }} />         // bounded widget
+ * <GraphCanvasApp data={graph} right={{ content: <Inspector/> }}/>// right panel
+ * <GraphCanvasApp data={graph} bottom={{ content: <Table/> }} />  // bottom table
  * ```
  *
  * The default one-liner stays trivial; the breadth lives in **`config`** (the
- * single settings surface) plus the `header` / `footer` slot bags. The same
- * component is a full-page app, a Storybook story, and an embeddable widget — it
- * owns its layout (rails / overlay / fill-parent), rather than depending on the
- * viewport-locked `@invana/themes` `AppLayoutBase`.
+ * single settings surface) plus the `header` / `footer` / `right` / `bottom` slot
+ * bags. `AppLayoutV2` is viewport-height by default (`h-screen`); the orchestrator
+ * wraps it in its **own sized, theme-scoped root** and forces `h-full` so the same
+ * component works as a full-page app, a Storybook story, **and** a bounded /
+ * embeddable widget (`width` / `height` / `style`) — not just fill-the-viewport.
  *
  * **Theme.** Light/dark + the active family are read from the host's
  * `@invana/themes` `<ThemeProvider>` (a **required ancestor** — `useTheme()`
@@ -27,12 +31,12 @@
  * theme, so an app mounts it once under its own provider and the in-app toggle
  * drives the shared theme.
  *
- * **Lifted context.** The header / footer are siblings of `<Canvas>` (under the
- * layout), outside its `CanvasContext`. The orchestrator publishes the live
- * engine — fed by Main's ready-bridge — up to a lifted `CanvasContext` /
- * `GraphCanvasContext` wrapping the whole layout, so every control resolves the
- * same instance. **`wrap`** sits *outermost* (above that lifted context) so an
- * arrangement can hoist providers above header, main, and footer alike.
+ * **Lifted context.** The header / footer / side regions are siblings of
+ * `<Canvas>` (under the layout), outside its `CanvasContext`. The orchestrator
+ * publishes the live engine — fed by Main's ready-bridge — up to a lifted
+ * `CanvasContext` / `GraphCanvasContext` wrapping the whole layout, so every
+ * control resolves the same instance. **`wrap`** sits *outermost* (above that
+ * lifted context) so an arrangement can hoist providers above every region alike.
  */
 
 import {
@@ -45,7 +49,7 @@ import {
 } from 'react';
 import { deepMerge, type CanvasConfig, type CanvasTelemetryConfig } from '@invana/canvas';
 import { themeFamily, type GraphCanvas, type GraphData } from '@invana/graph';
-import { useTheme } from '@invana/themes';
+import { AppLayoutV2, useTheme, type BottomSpan, type SectionConfig } from '@invana/themes';
 
 // Aliased: the engine type `GraphCanvas` (from `@invana/graph`) is used in this
 // file's public signatures (`onReady`), so the React root component takes a
@@ -66,20 +70,17 @@ import { BrushSelectBehaviour } from '../behaviours/BrushSelectBehaviour';
 import { LassoSelectBehaviour } from '../behaviours/LassoSelectBehaviour';
 import { ColorByLabelBehaviour } from '../behaviours/ColorByLabelBehaviour';
 import { ThemeBehaviour } from '../behaviours/ThemeBehaviour';
-import { GraphCanvasAppHeader, type GraphCanvasAppHeaderOptions } from './GraphCanvasAppHeader';
-import { GraphCanvasAppFooter, type GraphCanvasAppFooterOptions } from './GraphCanvasAppFooter';
+import { buildHeaderNav, type GraphCanvasAppHeaderOptions } from './GraphCanvasAppHeader';
+import { buildFooterNav, type GraphCanvasAppFooterOptions } from './GraphCanvasAppFooter';
+
+// Re-export the layout's bottom-span union so consumers can type the `bottomSpan`
+// prop without reaching into `@invana/themes` directly.
+export type { BottomSpan } from '@invana/themes';
 
 // ─── Cross-cutting types ──────────────────────────────────────────────────────
 
 /** Light / dark colour scheme for the shell + engine theme patches. */
 export type ThemeKind = 'light' | 'dark';
-
-/**
- * How the floating chrome paints when `overlay` is on:
- * - `'blur'` — translucent + backdrop-blur (a glass bar; controls stay legible).
- * - `'transparent'` — fully see-through; only the controls themselves paint.
- */
-export type OverlayStyle = 'blur' | 'transparent';
 
 /**
  * The live state the orchestrator owns and threads to header controls — a custom
@@ -103,6 +104,58 @@ export interface GraphCanvasAppControlContext {
  * Providing the slot **replaces** that region's default content (no append).
  */
 export type RegionSlot = ReactNode | ((ctx: GraphCanvasAppControlContext) => ReactNode);
+
+/**
+ * Config for one of the app's **resizable side regions** (`right` / `bottom`) —
+ * an `AppLayoutV2` section. `content` is the panel body (a node or a render-fn
+ * handed the live {@link GraphCanvasAppControlContext}); the size fields drive the
+ * initial / min / max split (percent numbers or CSS sizes) and `collapsible` lets
+ * the drag handle collapse it. Providing the bag mounts the region; omitting it
+ * (the default) hides it and the canvas takes the space.
+ */
+export interface GraphCanvasAppSectionOptions {
+  /** Panel body — a node, or `(ctx) => node` (note `ctx.canvas` may be `null` before ready). */
+  content?: RegionSlot;
+  /** Initial size of the panel (percent number, or a CSS size string). */
+  defaultSize?: number | string;
+  /** Minimum size the drag handle allows. */
+  minSize?: number | string;
+  /** Maximum size the drag handle allows. */
+  maxSize?: number | string;
+  /** Allow the drag handle to fully collapse the panel. Default `true`. */
+  collapsible?: boolean;
+  /** Class on the panel body wrapper. */
+  className?: string;
+}
+
+/** Resolve a {@link RegionSlot} against the control context (side regions). */
+function resolveSlot(slot: RegionSlot | undefined, ctx: GraphCanvasAppControlContext): ReactNode {
+  return typeof slot === 'function'
+    ? (slot as (c: GraphCanvasAppControlContext) => ReactNode)(ctx)
+    : (slot ?? null);
+}
+
+/**
+ * Map a public {@link GraphCanvasAppSectionOptions} bag → the layout's
+ * {@link SectionConfig}, resolving the slot and defaulting `collapsible` on. Its
+ * body is wrapped in a `h-full` div only when a `className` is supplied (else the
+ * layout's own panel wrapper is enough). Returns `undefined` when no bag is given
+ * so the region stays unmounted.
+ */
+function toSection(
+  bag: GraphCanvasAppSectionOptions | undefined,
+  ctx: GraphCanvasAppControlContext,
+): SectionConfig | undefined {
+  if (!bag) return undefined;
+  const body = resolveSlot(bag.content, ctx);
+  return {
+    content: bag.className ? <div className={cx('h-full', bag.className)}>{body}</div> : body,
+    defaultSize: bag.defaultSize,
+    minSize: bag.minSize,
+    maxSize: bag.maxSize,
+    collapsible: bag.collapsible ?? true,
+  };
+}
 
 // ─── Baked defaults (the opinionated graph bundle) ────────────────────────────
 
@@ -291,61 +344,6 @@ function GraphCanvasAppMain({
   );
 }
 
-// ─── Layout ───────────────────────────────────────────────────────────────────
-
-/**
- * The app shell — a thin flex-column (or overlay) that `GraphCanvasApp`
- * renders instead of the viewport-locked `AppLayoutBase`. Fills its parent by
- * default; the `flex-1 min-h-0` main cell bounds the `100%`-height `<Canvas>`;
- * the light/dark theme classes live on **this** root only — scoped to the app,
- * never the document, and never OS-driven.
- */
-function AppLayout({
-  header,
-  main,
-  footer,
-  overlay,
-  themeKind,
-  width,
-  height,
-  style,
-  className,
-}: {
-  header?: ReactNode;
-  main: ReactNode;
-  footer?: ReactNode;
-  overlay: boolean;
-  themeKind: ThemeKind;
-  width?: number | string;
-  height?: number | string;
-  style?: CSSProperties;
-  className?: string;
-}) {
-  const { dataTheme, className: themeClass } = shellThemeAttrs(themeKind);
-  const rootStyle: CSSProperties = { width: width ?? '100%', height: height ?? '100%', ...style };
-
-  if (overlay) {
-    // The canvas stays full-bleed under the floating bars; screen-fixed overlays
-    // (the property dock, dev-info / minimap layers) inset themselves clear of the
-    // chrome via their own explicit props.
-    return (
-      <div data-theme={dataTheme} className={cx('relative bg-background text-foreground', themeClass, className)} style={rootStyle}>
-        <div className="absolute inset-0">{main}</div>
-        {header ? <div className="absolute inset-x-0 top-0 z-10">{header}</div> : null}
-        {footer ? <div className="absolute inset-x-0 bottom-0 z-10">{footer}</div> : null}
-      </div>
-    );
-  }
-
-  return (
-    <div data-theme={dataTheme} className={cx('flex flex-col bg-background text-foreground', themeClass, className)} style={rootStyle}>
-      {header ? <div className="shrink-0">{header}</div> : null}
-      <div className="relative min-h-0 flex-1">{main}</div>
-      {footer ? <div className="shrink-0">{footer}</div> : null}
-    </div>
-  );
-}
-
 // ─── Orchestrator ─────────────────────────────────────────────────────────────
 
 export interface GraphCanvasAppProps {
@@ -387,12 +385,6 @@ export interface GraphCanvasAppProps {
   debug?: boolean;
 
   // ── Layout / sizing / theme ────────────────────────────────────────────────
-  /**
-   * Float the header / footer over a full-bleed canvas instead of in-flow rails.
-   * `true` (= `'blur'`) gives a glass bar; `'transparent'` is fully see-through;
-   * `false` (default) docks them as solid rails. See {@link OverlayStyle}.
-   */
-  overlay?: boolean | OverlayStyle;
   /** Show the header rail (a brand shows even with no other slots). Default `true`. */
   showHeader?: boolean;
   /**
@@ -413,8 +405,29 @@ export interface GraphCanvasAppProps {
   // ── Chrome slot bags ───────────────────────────────────────────────────────
   /** Header region — `title` + `left` / `center` / `right` slots. */
   header?: GraphCanvasAppHeaderOptions;
-  /** Footer region — `left` / `center` / `right` slots. */
+  /** Footer region — `left` / `center` / `right` slots. Auto-shown when given. */
   footer?: GraphCanvasAppFooterOptions;
+
+  // ── Side regions (resizable / collapsible `AppLayoutV2` sections) ───────────
+  /**
+   * The **right** region — a resizable/collapsible panel beside the canvas, the
+   * natural home for settings / node-edge detail / editors. Omit to hide it (the
+   * canvas takes the width). There is no left region by design.
+   */
+  right?: GraphCanvasAppSectionOptions;
+  /**
+   * The **bottom** region — a resizable/collapsible panel under the canvas, e.g. a
+   * data table projecting the graph's `DataStore`. Omit to hide it. Spans per
+   * {@link bottomSpan}.
+   */
+  bottom?: GraphCanvasAppSectionOptions;
+  /**
+   * Which columns the {@link bottom} panel spans: `'main-right'` (default — under
+   * the canvas **and** the right panel), `'main'` (canvas only; right panel full
+   * height beside it), or `'full'` (entire width). `'left-main'` is also accepted
+   * but equals `'main'` here since there's no left region.
+   */
+  bottomSpan?: BottomSpan;
 
   // ── Escape hatches ─────────────────────────────────────────────────────────
   /**
@@ -439,7 +452,6 @@ export function GraphCanvasApp({
   onReady,
   telemetry: telemetryProp,
   debug,
-  overlay = false,
   showHeader = true,
   showFooter,
   width,
@@ -448,6 +460,9 @@ export function GraphCanvasApp({
   className,
   header,
   footer,
+  right,
+  bottom,
+  bottomSpan = 'main-right',
   wrap,
   children,
 }: GraphCanvasAppProps) {
@@ -523,35 +538,51 @@ export function GraphCanvasApp({
     </GraphCanvasAppMain>
   );
 
-  // Resolve `overlay` → a paint style (`true` = glass), or `undefined` for docked.
-  const overlayStyle: OverlayStyle | undefined = overlay === true ? 'blur' : overlay || undefined;
+  // `AppLayoutV2.header` is required — when hidden, hand it a display-`hidden`
+  // bar rather than omitting it. When shown, the header builder folds the slot
+  // bag (+ the default brand) into the balanced `NavHorizontal` bar.
+  const headerNav = showHeader
+    ? buildHeaderNav(header ?? {}, ctx)
+    : { className: 'hidden' as const };
+  // Footer is auto: shown when a `footer` bag is given, unless `showFooter` forces
+  // it. When hidden, hand `AppLayoutV2` a display-`hidden` bar rather than letting
+  // it fall back to an empty 25px rail (its `footer ?? {…}` default always paints).
+  const footerNav = (showFooter ?? footer !== undefined)
+    ? buildFooterNav(footer ?? {}, ctx)
+    : { className: 'hidden' };
 
-  const headerNode = showHeader ? (
-    <GraphCanvasAppHeader ctx={ctx} overlay={overlayStyle} {...header} />
-  ) : undefined;
-  // Footer is auto: shown when a `footer` bag is given, unless `showFooter` forces it.
-  const footerNode =
-    (showFooter ?? footer !== undefined) ? (
-      <GraphCanvasAppFooter ctx={ctx} overlay={overlayStyle} {...footer} />
-    ) : undefined;
+  // Map the side-region bags → `AppLayoutV2` sections (undefined ⇒ region hidden).
+  const rightSection = toSection(right, ctx);
+  const bottomSection = toSection(bottom, ctx);
 
-  // Lifted context so the header / footer (siblings of <Canvas>) resolve the same
-  // live engine. `wrap` sits outermost — above the lifted context — so an
-  // arrangement can hoist its own providers above header, main, and footer alike.
+  // `AppLayoutV2` is `h-screen` by default; wrap it in our own sized, theme-scoped
+  // root and force `h-full` (tailwind-merge lets the later `h-full` win) so the
+  // app also works bounded / embedded, not just full-viewport. Theme classes live
+  // on **this** root only — scoped to the app, never the document or the OS.
+  const { dataTheme, className: themeClass } = shellThemeAttrs(themeKind);
+  const rootStyle: CSSProperties = { width: width ?? '100%', height: height ?? '100%', ...style };
+
+  // Lifted context so every region (siblings of <Canvas>) resolves the same live
+  // engine. `wrap` sits outermost — above the lifted context — so an arrangement
+  // can hoist its own providers above every region alike.
   const tree = (
     <CanvasContext.Provider value={canvas}>
       <GraphCanvasContext.Provider value={canvas}>
-        <AppLayout
-          overlay={overlayStyle !== undefined}
-          themeKind={themeKind}
-          width={width}
-          height={height}
-          style={style}
-          className={className}
-          header={headerNode}
-          main={mainNode}
-          footer={footerNode}
-        />
+        <div
+          data-theme={dataTheme}
+          className={cx('bg-background text-foreground', themeClass, className)}
+          style={rootStyle}
+        >
+          <AppLayoutV2
+            className="h-full"
+            header={headerNav}
+            footer={footerNav}
+            mainSection={{ content: mainNode }}
+            rightSection={rightSection}
+            bottomSection={bottomSection}
+            bottomSpan={bottomSpan}
+          />
+        </div>
       </GraphCanvasContext.Provider>
     </CanvasContext.Provider>
   );

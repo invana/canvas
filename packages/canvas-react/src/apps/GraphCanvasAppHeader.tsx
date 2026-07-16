@@ -1,31 +1,25 @@
 /**
- * `<GraphCanvasAppHeader>` — the header rail of {@link GraphCanvasApp}: a
- * `@invana/ui` `NavHorizontal` carrying three regions — `left` · `center` ·
- * `right` — laid out as balanced flex columns so the centre region sits at the
- * bar's true geometric centre regardless of the left/right widths.
+ * Header rail builder for {@link GraphCanvasApp}. Produces the `NavHorizontalProps`
+ * handed to `AppLayoutV2.header` — a `@invana/ui` `NavHorizontal` carrying three
+ * regions (`left` · `center` · `right`) composed into **one balanced bar** so the
+ * centre sits at the bar's true geometric centre regardless of the side widths.
  *
- * There's **no special "toolbar" or "theme toggle"** concept — you compose
- * whatever you want into the slots (a toolbar in `center`, a theme toggle in
- * `right`, …). A slot may be a node or a render-fn handed the live
- * {@link GraphCanvasAppControlContext} (engine + theme), so a control built in a
- * slot can drive the app. `title` is just a convenience for the default `left`.
+ * `AppLayoutV2` renders the `NavHorizontal` itself, so this is a *builder* (props
+ * in → `NavHorizontalProps` out), not a component — that's why the shell can't
+ * double-wrap a `NavHorizontal` inside another.
  *
- * Shared types are imported **type-only** from `./GraphCanvasApp` — erased at
- * runtime, so the regions stay split with no cycle.
+ * There's **no** baked "toolbar" / "theme toggle" concept — compose whatever you
+ * want into the slots (a toolbar in `center`, a theme toggle in `right`, …). A
+ * slot may be a node or a render-fn handed the live
+ * {@link GraphCanvasAppControlContext}, so a control built in a slot can drive the
+ * app. `title` is a convenience default for `left`. Shared types are imported
+ * **type-only** from `./GraphCanvasApp` (erased at runtime → no import cycle).
  */
 
 import { type ReactNode } from 'react';
-import { NavHorizontal } from '@invana/ui';
+import type { NavHorizontalProps } from '@invana/ui';
 
-import type { GraphCanvasAppControlContext, OverlayStyle, RegionSlot } from './GraphCanvasApp';
-
-/** Bar background for the (optional) overlay style, or the docked-rail default. */
-export function overlayBarClass(overlay: OverlayStyle | undefined, edge: 'b' | 't'): string {
-  // Glass keeps the border to read as a distinct bar; transparent drops it.
-  if (overlay === 'blur') return `bg-background/70 backdrop-blur-md border-${edge} border-border`;
-  if (overlay === 'transparent') return ''; // fully see-through; only the controls paint
-  return `border-${edge} border-border bg-background`;
-}
+import type { GraphCanvasAppControlContext, RegionSlot } from './GraphCanvasApp';
 
 /** Resolve a {@link RegionSlot} against the control context. */
 function renderSlot(slot: RegionSlot | undefined, ctx: GraphCanvasAppControlContext): ReactNode {
@@ -53,20 +47,16 @@ export interface GraphCanvasAppHeaderOptions {
   className?: string;
 }
 
-export function GraphCanvasAppHeader({
-  ctx,
-  overlay,
-  title = 'Graph',
-  left,
-  center,
-  right,
-  className,
-}: GraphCanvasAppHeaderOptions & {
-  /** Live control context — injected by the orchestrator. */
-  ctx: GraphCanvasAppControlContext;
-  /** Overlay bar style when floating over the canvas (undefined = docked rail). */
-  overlay?: OverlayStyle;
-}) {
+/**
+ * Build the `NavHorizontalProps` for the header rail: the three region slots
+ * composed into a single **balanced-columns** `center` bar (so a wide centre
+ * toolbar lands at true centre), plus the rail's height / padding / border class.
+ * Handed straight to `AppLayoutV2.header`.
+ */
+export function buildHeaderNav(
+  { title = 'Graph', left, center, right, className }: GraphCanvasAppHeaderOptions,
+  ctx: GraphCanvasAppControlContext,
+): NavHorizontalProps {
   // `center` / `right` typically hold engine-bound controls, so render them only
   // once the engine is live; `left` (the brand) shows immediately.
   const live = ctx.canvas != null;
@@ -80,7 +70,7 @@ export function GraphCanvasAppHeader({
   const centerNode = center !== undefined && live ? renderSlot(center, ctx) : null;
   const rightNode = right !== undefined && live ? renderSlot(right, ctx) : null;
 
-  // `NavHorizontal`'s `center` slot centers within the *leftover* space between
+  // `NavHorizontal`'s own `center` slot centers within the *leftover* space between
   // its left/right slots, so a wide toolbar drifts off-true-centre when the brand
   // and right cluster have different widths. Instead we compose the three regions
   // ourselves into a single slot: the left and right columns share equal `flex-1`
@@ -106,10 +96,8 @@ export function GraphCanvasAppHeader({
     </div>
   );
 
-  return (
-    <NavHorizontal
-      className={cx('h-[40px] px-3', overlayBarClass(overlay, 'b'), className)}
-      center={bar}
-    />
-  );
+  return {
+    center: bar,
+    className: cx('h-[40px] px-3 border-b border-border bg-background', className),
+  };
 }

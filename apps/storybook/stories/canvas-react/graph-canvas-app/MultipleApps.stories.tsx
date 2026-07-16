@@ -56,7 +56,11 @@ function AppGrid({ children }: { children: ReactNode }): ReactNode {
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
           gridTemplateRows: '1fr 1fr',
-          gap: 1,
+          // Padding around the grid + a matching gap gutter, so the four apps are
+          // evenly spaced from each other and from the edges (not butted together).
+          gap: 12,
+          padding: 12,
+          boxSizing: 'border-box',
           width: '100%',
           height: '100vh',
           background: 'var(--border, #e2e8f0)',
