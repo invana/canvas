@@ -734,6 +734,19 @@ export type {
 export { LayersPanelView } from './views/layers-panel';
 export type { LayersPanelViewProps } from './views/layers-panel';
 
+// ─── Canvas pages tab strip ──────────────────────────────────────────────────
+// A tab strip over independent "pages" (boards), styled like `@invana/ui`'s
+// `TabbedPanel` but with per-tab **edit** + **close** controls revealed on hover.
+// Presentational + engine-agnostic; keeps inactive pages mounted (state kept) by
+// default so a canvas per page survives tab switches. See its module header.
+export { CanvasPagesTabbedView } from './views/canvas-pages';
+export type {
+  CanvasHeaderAction,
+  CanvasPage,
+  CanvasPageMenuItem,
+  CanvasPagesTabbedViewProps,
+} from './views/canvas-pages';
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Shared
 // ═══════════════════════════════════════════════════════════════════════════

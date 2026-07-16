@@ -1,9 +1,11 @@
 /**
- * **Canvas Boards** — multiple independent canvases in one **tab panel**. Each tab
- * is a fully self-contained `<GraphCanvasApp>` with its **own engine instance and
- * its own state** (config, camera, layout positions, selection) — boards share
- * nothing but the host `<ThemeProvider>`. You can **add** boards, **switch**
- * between them, and **delete** them.
+ * **Canvas Boards** — multiple independent canvases in one **tab panel**, built on
+ * `@invana/canvas-ui`'s `CanvasPagesTabbedView` (Bootstrap `nav-tabs` styling; the
+ * active tab exposes a caret dropdown of host-supplied actions). Each tab is a
+ * fully self-contained `<GraphCanvasApp>` with its **own engine instance and its
+ * own state** (config, camera, layout positions, selection) — boards share nothing
+ * but the host `<ThemeProvider>`. You can **add** boards, **switch** between them,
+ * and — from the active tab's caret — **rename**, **duplicate**, or **remove** one.
  *
  * **State is retained across switches.** Every board stays *mounted* — the inactive
  * ones are hidden (not destroyed), each kept at full size and absolutely stacked,
@@ -27,7 +29,7 @@
  * `docs/graph-canvas-apps-plan.md`).
  */
 
-import { useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import {
@@ -36,6 +38,13 @@ import {
   useLayout,
   type LayoutFactory,
 } from '@invana/canvas-react';
+import {
+  CanvasPagesTabbedView,
+  type CanvasHeaderAction,
+  type CanvasPage,
+  type CanvasPageMenuItem,
+} from '@invana/canvas-ui';
+import { Copy, Info, Pencil, Settings, Trash2 } from 'lucide-react';
 import type { EdgeStyle, GraphData, GraphNode, NodeStyle } from '@invana/graph';
 import { ThemeProvider } from '@invana/themes';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
@@ -206,67 +215,20 @@ function CanvasBoard({ template }: { template: BoardTemplate }): ReactNode {
 interface Board {
   id: number;
   templateIndex: number;
-}
-
-/** One tab button — active gets the primary tint; carries a delete affordance. */
-function TabButton({
-  label,
-  active,
-  onSelect,
-  onDelete,
-}: {
-  label: string;
-  active: boolean;
-  onSelect: () => void;
-  onDelete?: () => void;
-}): ReactNode {
-  const style: CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 6,
-    padding: '6px 10px',
-    borderRadius: 6,
-    border: '1px solid var(--border, #e2e8f0)',
-    cursor: 'pointer',
-    fontSize: 13,
-    color: active ? 'var(--primary, #2563eb)' : 'var(--muted-foreground, #64748b)',
-    background: active ? 'color-mix(in srgb, var(--primary, #2563eb) 12%, transparent)' : 'transparent',
-    borderColor: active ? 'color-mix(in srgb, var(--primary, #2563eb) 30%, transparent)' : 'var(--border, #e2e8f0)',
-  };
-  return (
-    <span style={style} onClick={onSelect} role="tab" aria-selected={active}>
-      {label}
-      {onDelete ? (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          aria-label={`Delete ${label}`}
-          title="Delete this canvas"
-          style={{
-            border: 'none',
-            background: 'transparent',
-            cursor: 'pointer',
-            color: 'inherit',
-            lineHeight: 1,
-            padding: 0,
-            fontSize: 14,
-          }}
-        >
-          ×
-        </button>
-      ) : null}
-    </span>
-  );
+  /** Optional user-renamed title; falls back to the template's title. */
+  title?: string;
 }
 
 /**
- * The boards shell — a tab bar over a stack of canvases. Boards stay mounted; the
- * active one is shown, the rest hidden (state preserved). `+` adds a board cycling
- * through {@link TEMPLATES}; `×` deletes one (unmounting its canvas → engine torn
- * down), keeping at least one board.
+ * The boards shell — `@invana/canvas-ui`'s {@link CanvasPagesTabbedView} over a
+ * stack of canvases. Each board maps to one page whose `content` is its own
+ * `<GraphCanvasApp>`. The view keeps every page mounted and hides the inactive
+ * ones (`keepMounted`, its default), so a board keeps its camera / layout /
+ * selection across tab switches. `+` (`onAdd`) adds a board cycling through
+ * {@link TEMPLATES}; the **active tab's caret** opens the `pageMenuItems` dropdown
+ * — here **Rename**, **Duplicate**, and **Remove** (destructive, and disabled on
+ * the last remaining board so the strip always keeps one). Remove unmounts the
+ * board's canvas, tearing the engine down.
  */
 function CanvasBoards(): ReactNode {
   const nextId = useRef(2);
@@ -275,6 +237,8 @@ function CanvasBoards(): ReactNode {
     { id: 1, templateIndex: 1 },
   ]);
   const [activeId, setActiveId] = useState(0);
+
+  const titleOf = (b: Board): string => b.title ?? TEMPLATES[b.templateIndex]!.title;
 
   const addBoard = (): void => {
     const id = nextId.current++;
@@ -292,78 +256,78 @@ function CanvasBoards(): ReactNode {
     });
   };
 
+  const renameBoard = (id: number): void => {
+    setBoards((bs) =>
+      bs.map((b) => {
+        if (b.id !== id) return b;
+        const next = window.prompt('Rename board', titleOf(b));
+        return next && next.trim() ? { ...b, title: next.trim() } : b;
+      }),
+    );
+  };
+
+  // Clone a board (same template + title) right after it, and activate the copy.
+  const duplicateBoard = (id: number): void => {
+    const src = boards.find((b) => b.id === id);
+    if (!src) return;
+    const newId = nextId.current++;
+    setBoards((bs) => {
+      const at = bs.findIndex((b) => b.id === id);
+      const copy: Board = { id: newId, templateIndex: src.templateIndex, title: `${titleOf(src)} copy` };
+      return [...bs.slice(0, at + 1), copy, ...bs.slice(at + 1)];
+    });
+    setActiveId(newId);
+  };
+
+  // Boards → pages. `content` is each board's own independent `<GraphCanvasApp>`;
+  // the tab strip keeps them all mounted (state preserved) and shows the active.
+  const pages: CanvasPage[] = boards.map((b) => ({
+    id: String(b.id),
+    title: titleOf(b),
+    content: <CanvasBoard template={TEMPLATES[b.templateIndex]!} />,
+  }));
+
+  // The active tab's dropdown actions. Each `onSelect` gets the active page id;
+  // "Remove" is destructive and disabled while only one board remains.
+  const pageMenuItems: CanvasPageMenuItem[] = [
+    { id: 'rename', label: 'Rename', icon: Pencil, onSelect: (id) => renameBoard(Number(id)) },
+    { id: 'duplicate', label: 'Duplicate', icon: Copy, onSelect: (id) => duplicateBoard(Number(id)) },
+    {
+      id: 'remove',
+      label: 'Remove',
+      icon: Trash2,
+      destructive: true,
+      separatorBefore: true,
+      disabled: boards.length <= 1,
+      onSelect: (id) => deleteBoard(Number(id)),
+    },
+  ];
+
+  // Strip-level extra buttons in the right cluster (left of the pager / +).
+  const headerActions: CanvasHeaderAction[] = [
+    { id: 'settings', label: 'Settings', icon: Settings, onClick: () => window.alert('Settings') },
+    { id: 'about', label: 'About', icon: Info, onClick: () => window.alert('Canvas Boards demo') },
+  ];
+
   return (
     <ThemeProvider>
       <div
         style={{
-          display: 'flex',
-          flexDirection: 'column',
           width: '100%',
           height: '100vh',
           background: 'var(--background, #fff)',
           color: 'var(--foreground, #0f172a)',
         }}
       >
-        {/* Tab bar */}
-        <div
-          style={{
-            flex: '0 0 auto',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: 8,
-            borderBottom: '1px solid var(--border, #e2e8f0)',
-          }}
-          role="tablist"
-        >
-          {boards.map((b) => (
-            <TabButton
-              key={b.id}
-              label={TEMPLATES[b.templateIndex]!.title}
-              active={b.id === activeId}
-              onSelect={() => setActiveId(b.id)}
-              onDelete={boards.length > 1 ? () => deleteBoard(b.id) : undefined}
-            />
-          ))}
-          <button
-            type="button"
-            onClick={addBoard}
-            aria-label="New board"
-            style={{
-              marginLeft: 4,
-              padding: '6px 10px',
-              borderRadius: 6,
-              border: '1px dashed var(--border, #cbd5e1)',
-              background: 'transparent',
-              color: 'var(--muted-foreground, #64748b)',
-              cursor: 'pointer',
-              fontSize: 13,
-            }}
-          >
-            + New board
-          </button>
-        </div>
-
-        {/* Board stack — every board mounted; inactive ones hidden (state kept). */}
-        <div style={{ position: 'relative', flex: '1 1 auto', minHeight: 0 }}>
-          {boards.map((b) => {
-            const active = b.id === activeId;
-            return (
-              <div
-                key={b.id}
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  visibility: active ? 'visible' : 'hidden',
-                  pointerEvents: active ? 'auto' : 'none',
-                  zIndex: active ? 1 : 0,
-                }}
-              >
-                <CanvasBoard template={TEMPLATES[b.templateIndex]!} />
-              </div>
-            );
-          })}
-        </div>
+        <CanvasPagesTabbedView
+          pages={pages}
+          activeId={String(activeId)}
+          onSelect={(id) => setActiveId(Number(id))}
+          onAdd={addBoard}
+          headerActions={headerActions}
+          pageMenuItems={pageMenuItems}
+          addLabel="New board"
+        />
       </div>
     </ThemeProvider>
   );
