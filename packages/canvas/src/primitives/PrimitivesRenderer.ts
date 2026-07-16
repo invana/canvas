@@ -325,6 +325,25 @@ export class PrimitivesRenderer {
   private readonly connectorLayer: Container;
   /** Shape sub-layer — rendered above `connectorLayer`. */
   private readonly shapeLayer: Container;
+  /**
+   * Overlay sub-layer — rendered **above both** the connector and shape layers.
+   * A raised element (hovered / selected) is reparented here by
+   * {@link raiseShape} / {@link raiseConnector} so the highlighted set floats
+   * over *all* unrelated content — crucially, a highlighted **edge** paints over
+   * non-highlighted nodes (impossible while it stays in `connectorLayer`, which
+   * is always under `shapeLayer`). Within the overlay, raised shapes still sort
+   * above raised connectors (see `OVERLAY_SHAPE_Z` / `OVERLAY_CONNECTOR_Z`), so
+   * a hovered node stays on top of its own incident edges.
+   */
+  private readonly overlayLayer: Container;
+  /** zIndex band for a raised connector inside {@link overlayLayer}. */
+  private static readonly OVERLAY_CONNECTOR_Z = 0;
+  /**
+   * zIndex band for a raised shape inside {@link overlayLayer} — far above the
+   * connector band so any raised node sorts over any raised edge (a hovered node
+   * stays on top of its own incident edges within the floated set).
+   */
+  private static readonly OVERLAY_SHAPE_Z = 1_000_000;
   readonly camera: Camera;
   private readonly textureRegistry: TextureRegistry;
   private readonly hitFloorPx: number;
@@ -391,8 +410,13 @@ export class PrimitivesRenderer {
     // edge still sits under every node).
     this.connectorLayer.sortableChildren = true;
     this.shapeLayer.sortableChildren = true;
+    this.overlayLayer = new Container();
+    this.overlayLayer.sortableChildren = true;
     this._container.addChild(this.connectorLayer);
     this._container.addChild(this.shapeLayer);
+    // Added last → renders on top of both sub-layers. Holds the raised
+    // (hovered / selected) set so highlighted edges paint over unrelated nodes.
+    this._container.addChild(this.overlayLayer);
     this.registerBuiltins();
     this.installPointerRouter();
   }
@@ -724,36 +748,50 @@ export class PrimitivesRenderer {
   }
 
   /**
-   * Restack a shape within the shape layer by writing its `gfx.zIndex`. The
-   * shape layer renders with `sortableChildren`, so a higher `zIndex` paints
-   * later (on top of peers with a lower one); `zIndex = 0` (the default)
-   * restores natural insertion order. Use to lift a hovered / selected node
-   * above the rest so unrelated nodes don't draw over it.
+   * Raise a shape into the {@link overlayLayer} (above *all* connectors and
+   * shapes) or drop it back to its home {@link shapeLayer}. `zIndex !== 0`
+   * lifts it — reparented to the overlay at a z above raised connectors so a
+   * hovered node stays over its own edges; `zIndex === 0` returns it to the
+   * shape layer at natural order. Use to lift a hovered / selected node so
+   * unrelated content doesn't draw over the highlighted set.
    *
-   * Visual-only: this does NOT touch geometry, transform, or the hit index
-   * (closest-wins hit resolution already consults the spec `zIndex` recorded
-   * at insert). Restacking is confined to the shape layer, so a raised node
-   * still renders above every connector.
+   * Visual-only: does NOT touch geometry, transform, or the hit index
+   * (closest-wins hit resolution consults the spec `zIndex` recorded at insert).
+   * Reparenting is safe across redraws — updates mutate the existing `gfx` in
+   * place and never re-add it to a layer.
    */
   raiseShape(id: string, zIndex: number): void {
     const inst = this.shapeInstances.get(id);
     if (!inst) return;
-    inst.shape.gfx.zIndex = zIndex;
+    const gfx = inst.shape.gfx;
+    if (zIndex === 0) {
+      gfx.zIndex = 0;
+      if (gfx.parent !== this.shapeLayer) this.shapeLayer.addChild(gfx);
+    } else {
+      gfx.zIndex = PrimitivesRenderer.OVERLAY_SHAPE_Z + zIndex;
+      if (gfx.parent !== this.overlayLayer) this.overlayLayer.addChild(gfx);
+    }
   }
 
   /**
-   * Restack a connector within the connector layer by writing its `gfx.zIndex`
-   * — the connector-side sibling of {@link raiseShape}. A higher `zIndex`
-   * paints later (above peer edges); `zIndex = 0` restores insertion order.
-   * Use to lift a hovered / selected edge above unrelated edges crossing it.
-   *
-   * Confined to the connector layer, which renders below the shape layer, so a
-   * raised edge still sits under every node.
+   * Raise a connector into the {@link overlayLayer} (above unrelated nodes) or
+   * drop it back to its home {@link connectorLayer} — the connector-side sibling
+   * of {@link raiseShape}. `zIndex !== 0` lifts the edge to the overlay, *below*
+   * raised shapes but above every non-raised node, so a hovered edge is no
+   * longer occluded by unrelated shapes; `zIndex === 0` returns it to the
+   * connector layer at natural order.
    */
   raiseConnector(id: string, zIndex: number): void {
     const inst = this.connectorInstances.get(id);
     if (!inst) return;
-    inst.connector.gfx.zIndex = zIndex;
+    const gfx = inst.connector.gfx;
+    if (zIndex === 0) {
+      gfx.zIndex = 0;
+      if (gfx.parent !== this.connectorLayer) this.connectorLayer.addChild(gfx);
+    } else {
+      gfx.zIndex = PrimitivesRenderer.OVERLAY_CONNECTOR_Z + zIndex;
+      if (gfx.parent !== this.overlayLayer) this.overlayLayer.addChild(gfx);
+    }
   }
 
   /**
