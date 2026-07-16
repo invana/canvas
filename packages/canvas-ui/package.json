@@ -29,11 +29,11 @@
     "react-hook-form": "^7"
   },
   "devDependencies": {
-    "@invana/forms": "^0.0.16",
+    "@invana/forms": "^0.0.17",
     "@invana/graph": "workspace:*",
-    "@invana/styling": "^0.0.16",
-    "@invana/themes": "^0.0.16",
-    "@invana/ui": "^0.0.16",
+    "@invana/styling": "^0.0.17",
+    "@invana/themes": "^0.0.17",
+    "@invana/ui": "^0.0.17",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "^18.3.12",
