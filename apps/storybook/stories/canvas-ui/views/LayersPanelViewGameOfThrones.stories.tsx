@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   CanvasMessageBar,
+  EdgeLODBehaviour,
   GraphBackgroundContextMenu,
   GraphCanvasApp,
   GraphControlsToolbar,
@@ -228,6 +229,14 @@ export const LayersPanelStory: Story = {
           {/* Extra layers — minimap + on-demand dev overlay. */}
           {mini.layer}
           {dev.layer}
+
+          {/* Zoomed-out perf lever: below 0.5x zoom the ~29k edges merge into a
+              sub-pixel blob yet the renderer still draws every one (viewport
+              culling can't help — everything is on screen). EdgeLODBehaviour
+              thins them to the top 10% by degree below the threshold and
+              restores them all above it, so the fit-the-whole-graph view costs a
+              fraction to draw while the zoomed-in view is untouched. */}
+          <EdgeLODBehaviour minZoom={0.5} keepFraction={0.1} keepBy="degree" />
 
           {/* Right-click menus. */}
           <GraphNodeContextMenu items={nodeMenu} />
