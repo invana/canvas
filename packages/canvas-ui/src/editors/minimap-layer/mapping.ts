@@ -36,6 +36,11 @@ export function optionsToForm(o: MiniMapLayerOptions = {}): MiniMapLayerFields {
     viewportStroke: colorToField(o.viewportStroke),
     viewportFillAlpha: o.viewportFillAlpha,
     viewportStrokeWidth: o.viewportStrokeWidth,
+    // Mask is on by default (matches the engine's `MiniMapLayer` default), so an
+    // unseeded editor shows it enabled rather than unchecked.
+    maskEnabled: o.maskEnabled ?? true,
+    maskColor: colorToField(o.maskColor),
+    maskAlpha: o.maskAlpha,
     padding: o.padding,
     enableDrag: o.enableDrag,
     position: o.position,
@@ -62,6 +67,9 @@ export function formToOptions(f: MiniMapLayerFields): MiniMapLayerOptions {
   if (f.viewportStroke) out.viewportStroke = hexToNumber(f.viewportStroke);
   if (f.viewportFillAlpha !== undefined) out.viewportFillAlpha = f.viewportFillAlpha;
   if (f.viewportStrokeWidth !== undefined) out.viewportStrokeWidth = f.viewportStrokeWidth;
+  if (f.maskEnabled !== undefined) out.maskEnabled = f.maskEnabled;
+  if (f.maskColor) out.maskColor = hexToNumber(f.maskColor);
+  if (f.maskAlpha !== undefined) out.maskAlpha = f.maskAlpha;
   if (f.padding !== undefined) out.padding = f.padding;
   if (f.enableDrag !== undefined) out.enableDrag = f.enableDrag;
   if (f.position !== undefined) out.position = f.position;

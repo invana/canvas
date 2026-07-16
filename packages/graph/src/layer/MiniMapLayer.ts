@@ -88,6 +88,22 @@ export interface MiniMapLayerOptions {
   /** Viewport indicator stroke width. Default `2`. */
   viewportStrokeWidth?: number;
 
+  /**
+   * Dim everything *outside* the viewport rectangle with a translucent overlay,
+   * spotlighting the currently-visible region. Drawn above the mirrored world
+   * (so out-of-view nodes/edges are dimmed) and clipped to the minimap box.
+   * Default `true` — set `false` for the classic un-masked minimap.
+   */
+  maskEnabled?: boolean;
+  /**
+   * Out-of-viewport mask overlay colour. Same forms as {@link backgroundColor}
+   * (`0xRRGGBB` or a `{ light, dark }` pair resolved against `mode`). Default
+   * `0x000000`.
+   */
+  maskColor?: MiniMapColor;
+  /** Out-of-viewport mask alpha 0–1. Default `0.5`. */
+  maskAlpha?: number;
+
   /** World-space padding around node bounds. Default `20`. */
   padding?: number;
   /** Whether dragging the minimap pans the main camera. Default `true`. */
@@ -121,6 +137,9 @@ const DEFAULTS: Required<Omit<MiniMapLayerOptions, 'graphLayerId' | 'backgroundL
   viewportStroke: 0x2a70b9,
   viewportFillAlpha: 0.3,
   viewportStrokeWidth: 2,
+  maskEnabled: true,
+  maskColor: 0x000000,
+  maskAlpha: 0.5,
   padding: 20,
   enableDrag: true,
   position: 'bottom-right',
@@ -543,6 +562,9 @@ export class MiniMapLayer extends ScreenLayer<
     const w = br.x - tl.x;
     const h = br.y - tl.y;
     g.clear();
+    // Dim the out-of-viewport region first so the mask sits below the indicator
+    // fill / stroke but above the mirrored world beneath (worldGfx).
+    this.paintMask(g, x, y, w, h);
     g.rect(x, y, w, h);
     g.fill({ color: this.resolveColor(this.opts.viewportFill), alpha: this.opts.viewportFillAlpha });
     g.rect(x, y, w, h);
@@ -550,6 +572,32 @@ export class MiniMapLayer extends ScreenLayer<
       color: this.resolveColor(this.opts.viewportStroke),
       width: this.opts.viewportStrokeWidth,
     });
+  }
+
+  /**
+   * Paint the out-of-viewport mask: a translucent overlay covering the minimap
+   * box everywhere *except* the viewport rectangle `(x, y, w, h)`, spotlighting
+   * the visible region. Drawn as four border rects (top / bottom / left /
+   * right) around the viewport rect, each clamped to the minimap box — avoids
+   * fill-rule/hole subtleties and never bleeds past the minimap edge even when
+   * the viewport rect extends beyond it. No-op when disabled or fully
+   * transparent.
+   */
+  private paintMask(g: Graphics, x: number, y: number, w: number, h: number): void {
+    if (!this.opts.maskEnabled || this.opts.maskAlpha <= 0) return;
+    const W = this.opts.width;
+    const H = this.opts.height;
+    // Clamp the viewport rect to the minimap box so the mask covers exactly the
+    // complement of the *visible-within-minimap* region.
+    const cx0 = Math.max(0, Math.min(W, x));
+    const cy0 = Math.max(0, Math.min(H, y));
+    const cx1 = Math.max(0, Math.min(W, x + w));
+    const cy1 = Math.max(0, Math.min(H, y + h));
+    if (cy0 > 0) g.rect(0, 0, W, cy0); // above
+    if (cy1 < H) g.rect(0, cy1, W, H - cy1); // below
+    if (cx0 > 0) g.rect(0, cy0, cx0, cy1 - cy0); // left of viewport
+    if (cx1 < W) g.rect(cx1, cy0, W - cx1, cy1 - cy0); // right of viewport
+    g.fill({ color: this.resolveColor(this.opts.maskColor), alpha: this.opts.maskAlpha });
   }
 
   // ─── Bounds + projection ────────────────────────────────────────────────

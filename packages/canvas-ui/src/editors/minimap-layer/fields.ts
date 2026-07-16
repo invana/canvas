@@ -52,6 +52,12 @@ const VIEWPORT_FIELDS: FieldConfig[] = [
   { name: 'viewportStrokeWidth', type: 'number', label: 'Viewport stroke width', min: 0, step: 0.5 },
 ];
 
+const MASK_FIELDS: FieldConfig[] = [
+  { name: 'maskEnabled', type: 'boolean', label: 'Enable mask', description: 'Dim everything outside the viewport rectangle, spotlighting the visible region. Default on.' },
+  { name: 'maskColor', type: 'color', label: 'Mask color', presetColors: [...COLOR_PRESETS], description: 'Out-of-viewport overlay colour. Default #000000.' },
+  { name: 'maskAlpha', type: 'number', label: 'Mask alpha', min: 0, max: 1, step: 0.05, description: 'Out-of-viewport overlay alpha 0–1. Default 0.5.' },
+];
+
 const withGroup =
   (group: string) =>
   (f: FieldConfig): FieldConfig => ({ ...f, group });
@@ -65,4 +71,5 @@ export const miniMapLayerFields: FieldConfig[] = [
   ...LAYOUT_FIELDS.map(withGroup('Layout')),
   ...CHROME_FIELDS.map(withGroup('Chrome')),
   ...VIEWPORT_FIELDS.map(withGroup('Viewport')),
+  ...MASK_FIELDS.map(withGroup('Mask')),
 ];

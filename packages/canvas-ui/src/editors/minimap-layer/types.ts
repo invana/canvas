@@ -44,6 +44,13 @@ export interface MiniMapLayerOptions {
   viewportFillAlpha?: number;
   /** Viewport indicator stroke width. Default `2`. */
   viewportStrokeWidth?: number;
+  /** Dim everything *outside* the viewport rectangle with a translucent overlay,
+   *  spotlighting the visible region. Default `true`. */
+  maskEnabled?: boolean;
+  /** Out-of-viewport mask overlay colour as `0xRRGGBB`. Default `0x000000`. */
+  maskColor?: number;
+  /** Out-of-viewport mask alpha 0–1. Default `0.5`. */
+  maskAlpha?: number;
   /** World-space padding around node bounds. Default `20`. */
   padding?: number;
   /** Whether dragging the minimap pans the main camera. Default `true`. */
@@ -58,14 +65,14 @@ export interface MiniMapLayerOptions {
 
 /**
  * Flat form-field shape the `@invana/forms` generator renders. Identical to
- * {@link MiniMapLayerOptions} except the four chrome colours are `#rrggbb`
+ * {@link MiniMapLayerOptions} except the chrome / mask colours are `#rrggbb`
  * strings (what the colour swatch emits); `mapping.ts` bridges them to/from the
  * engine's `0xRRGGBB` numbers.
  */
 export interface MiniMapLayerFields
   extends Omit<
     MiniMapLayerOptions,
-    'backgroundColor' | 'borderColor' | 'viewportFill' | 'viewportStroke'
+    'backgroundColor' | 'borderColor' | 'viewportFill' | 'viewportStroke' | 'maskColor'
   > {
   /** Background fill as `#rrggbb`. */
   backgroundColor?: string;
@@ -75,6 +82,8 @@ export interface MiniMapLayerFields
   viewportFill?: string;
   /** Viewport indicator stroke as `#rrggbb`. */
   viewportStroke?: string;
+  /** Out-of-viewport mask overlay colour as `#rrggbb`. */
+  maskColor?: string;
 }
 
 /**
