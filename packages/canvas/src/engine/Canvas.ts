@@ -53,6 +53,7 @@ import { LayoutRegistry } from '../registries/LayoutRegistry';
 import type { CanvasContext } from '../context/CanvasContext';
 import { type CanvasConfig, configurable, deepMerge } from './CanvasConfig';
 import { resolveRenderPreference } from './rendererSupport';
+import { acquireSharedTexturePool, releaseSharedTexturePool } from './sharedTexturePool';
 import {
   exportImage,
   exportImageDataURL,
@@ -223,6 +224,8 @@ export class Canvas {
 
   private app?: Application;
   private _isInitialised = false;
+  /** True once this canvas has acquired the shared TexturePool (real `init` only). */
+  private _holdsSharedTexturePool = false;
   private _onRendererResize?: (w: number, h: number) => void;
   private _resizeObserver?: ResizeObserver;
   /**
@@ -307,6 +310,15 @@ export class Canvas {
     const container = opts.container;
     if (!container) throw new Error(`Canvas "${this.id}": init() requires a container element`);
 
+    // Take ownership of pixi's shared TexturePool before the renderer spins up,
+    // so that destroying any one canvas can't clear the pool out from under
+    // other live canvases (multi-canvas pages, story/route remounts). Balanced
+    // by `releaseSharedTexturePool()` in `destroy()`. See `sharedTexturePool.ts`.
+    // Done before `app.init` so the WebGPU→WebGL retry's `app.destroy()` below
+    // is already covered.
+    acquireSharedTexturePool();
+    this._holdsSharedTexturePool = true;
+
     const width = opts.width ?? container.clientWidth;
     const height = opts.height ?? container.clientHeight;
     const dpr =
@@ -339,19 +351,28 @@ export class Canvas {
       ...(opts.autoResize ? { resizeTo: container } : {}),
     };
 
-    this.app = new Application();
     try {
-      await this.app.init({ preference, ...initOpts });
-    } catch (err) {
-      // Defense in depth for the case `resolveRenderPreference` can't predict: a
-      // non-WebKit browser that advertises WebGPU but throws *during* init (e.g.
-      // a blocklisted adapter / driver). Tear the half-built app down and retry
-      // once on WebGL. (WebKit's failure is at render time, not init, so it never
-      // reaches here — that's why the preference must be resolved up front.)
-      if (preference !== 'webgpu') throw err;
-      this.app.destroy(true);
       this.app = new Application();
-      await this.app.init({ preference: 'webgl', ...initOpts });
+      try {
+        await this.app.init({ preference, ...initOpts });
+      } catch (err) {
+        // Defense in depth for the case `resolveRenderPreference` can't predict: a
+        // non-WebKit browser that advertises WebGPU but throws *during* init (e.g.
+        // a blocklisted adapter / driver). Tear the half-built app down and retry
+        // once on WebGL. (WebKit's failure is at render time, not init, so it never
+        // reaches here — that's why the preference must be resolved up front.)
+        if (preference !== 'webgpu') throw err;
+        this.app.destroy(true);
+        this.app = new Application();
+        await this.app.init({ preference: 'webgl', ...initOpts });
+      }
+    } catch (err) {
+      // Renderer init failed outright — the engine never becomes initialised, so
+      // `destroy()` won't run. Balance the shared-pool acquire here before
+      // propagating, or we'd leak the ref-count and leave the pool detached.
+      releaseSharedTexturePool();
+      this._holdsSharedTexturePool = false;
+      throw err;
     }
 
     this.app.canvas.style.display = 'block';
@@ -874,6 +895,12 @@ export class Canvas {
       // Pixi destroys the renderer + canvas + ticker.
       this.app.destroy(true, { children: true });
       this.app = undefined;
+    }
+    // Release our hold on the shared TexturePool *after* the renderer is gone —
+    // the last live canvas clears the pool here (see `sharedTexturePool.ts`).
+    if (this._holdsSharedTexturePool) {
+      releaseSharedTexturePool();
+      this._holdsSharedTexturePool = false;
     }
     this._isInitialised = false;
   }
