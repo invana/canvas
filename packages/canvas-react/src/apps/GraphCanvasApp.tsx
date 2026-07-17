@@ -172,6 +172,9 @@ const ACTIVE_LAYOUT_ID = 'graph-force';
  */
 const BASE_CONFIG: CanvasConfig = {
   activeLayout: ACTIVE_LAYOUT_ID,
+  // Centre the graph once on load (engine one-shot). Consumers opt out with
+  // `config={{ fitOnLoad: false }}`.
+  fitOnLoad: true,
   layers: {
     background: { type: 'pattern', patternType: 'grid', alpha: 0.5 },
     graph: {
@@ -317,7 +320,10 @@ function GraphCanvasAppMain({
           <BackgroundLayer id="background" />
           <GraphLayer id="graph" data={data} />
           <ColorByLabelBehaviour id="color" targetLayerId="graph" />
-          <D3ForceLayout id={ACTIVE_LAYOUT_ID} targetLayerId="graph" />
+          {/* fitPadding={null} disables the wrapper's own end-fit — the engine's
+              `config.fitOnLoad` one-shot is the single fitter (and centres even
+              when no layout runs). */}
+          <D3ForceLayout id={ACTIVE_LAYOUT_ID} targetLayerId="graph" fitPadding={null} />
           {/* The sole theme publisher + a sync that drives its mode/active from
               the host `<ThemeProvider>`. Every theme-aware layer recolours off
               the published palette. */}
@@ -354,6 +360,9 @@ export interface GraphCanvasAppProps {
    * styles, behaviour options, resolver functions, force params, the active
    * layout, which behaviours are `enabled`, … — deep-merged over the baked bundle
    * defaults (or used as-is when `bundle` is `false`). Keep the reference stable.
+   *
+   * Includes the engine's `fitOnLoad` (default `true` here via the bundle) —
+   * centre the graph once on load. Set `config={{ fitOnLoad: false }}` to opt out.
    */
   config?: CanvasConfig;
   /**
