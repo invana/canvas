@@ -211,10 +211,11 @@ export function GraphControlsToolbarLite(props: GraphControlsToolbarProps): Reac
   };
 
   const groups: ToolbarItem[][] = [];
-  if (s.layout) groups.push(c.layout);
   if (s.selectMode) groups.push(c.select);
   if (s.view) groups.push(c.view);
   if (s.grid) groups.push(c.grid);
+  // Layout picker + run sits at the far right of the bar.
+  if (s.layout) groups.push(c.layout);
 
   const items = applyIconOverrides(assemble(groups, props.extraItems, canvas), props.icons);
   return <ToolbarItems items={items} orientation={props.orientation ?? 'horizontal'} className={props.className} />;
@@ -241,12 +242,13 @@ function GraphControlsToolbarFullBody(props: GraphControlsToolbarProps): ReactNo
 
   const groups: ToolbarItem[][] = [];
   if (s.history) groups.push(history);
-  if (s.layout) groups.push(segmentSelects(c.layout));
   if (s.selectMode) groups.push(segmentSelects(c.select));
   if (s.style) groups.push(c.style);
   if (s.edit) groups.push(editor);
   if (s.view) groups.push(c.view);
   if (s.grid) groups.push(c.grid);
+  // Layout picker + run sits at the far right of the bar.
+  if (s.layout) groups.push(segmentSelects(c.layout));
 
   const items = applyIconOverrides(assemble(groups, props.extraItems, canvas), props.icons);
   return <ToolbarItems items={items} orientation={props.orientation ?? 'horizontal'} className={props.className} />;
