@@ -75,7 +75,7 @@ export type { UseMiniMapOptions, UseMiniMapResult } from './useMiniMap';
 export { useHistorySection } from './useHistorySection';
 export type { UseHistorySectionOptions } from './useHistorySection';
 export { useEditorSection } from './useEditorSection';
-export type { UseEditorSectionOptions } from './useEditorSection';
+export type { UseEditorSectionOptions, EditorItemKey } from './useEditorSection';
 export { useViewSection } from './useViewSection';
 export type { UseViewSectionOptions } from './useViewSection';
 export { useLayoutsSection } from './useLayoutsSection';

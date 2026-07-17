@@ -11,7 +11,7 @@
  *     + run, zoom / fit / lock, select-mode, grid. No history / clipboard, so no
  *     providers are mounted.
  *   - **`GraphControlsToolbar`** (full) — the lite set plus undo/redo, the
- *     edge-routing style editor, and cut/copy/paste/erase. It self-wraps the
+ *     edge-routing style editor, and erase/clear. It self-wraps the
  *     `GraphHistoryProvider` + `GraphClipboardProvider` those sections need.
  *
  * Both share one core, so they never drift. Each item carries its own (lucide)
@@ -82,7 +82,7 @@ export interface GraphControlsSections {
   selectMode?: boolean;
   /** Edge-routing style editor (full only). */
   style?: boolean;
-  /** Cut / copy / paste / erase (full only). */
+  /** Erase / clear (full only). */
   edit?: boolean;
   /** Zoom in / out · fit · lock. */
   view?: boolean;
@@ -112,12 +112,7 @@ export interface GraphControlsToolbarProps {
       | 'undo'
       | 'redo'
       | 'run-layout'
-      | 'cut'
-      | 'copy'
-      | 'paste'
       | 'erase'
-      | 'zoom-in'
-      | 'zoom-out'
       | 'fit'
       | 'lock'
       | 'grid',
@@ -161,7 +156,7 @@ function useControlSections(props: GraphControlsToolbarProps) {
     initial: 'click',
   });
   const style = useStyleEditorSection({ layerId });
-  const view = useViewSection();
+  const view = useViewSection({ showZoom: false });
   const { showGrid, toggleGrid } = useGrid();
 
   return {
@@ -221,7 +216,7 @@ export function GraphControlsToolbarLite(props: GraphControlsToolbarProps): Reac
 function GraphControlsToolbarFullBody(props: GraphControlsToolbarProps): ReactNode {
   const canvas = useGraphCanvas();
   const history = useHistorySection();
-  const editor = useEditorSection();
+  const editor = useEditorSection({ items: ['erase'] });
   const c = useControlSections(props);
   const s: Required<GraphControlsSections> = {
     history: true,

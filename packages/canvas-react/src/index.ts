@@ -249,6 +249,7 @@ export type {
   UseContextMenuResult,
   UseHistorySectionOptions,
   UseEditorSectionOptions,
+  EditorItemKey,
   UseViewSectionOptions,
   UseLayoutsSectionOptions,
   UseStyleEditorSectionOptions,

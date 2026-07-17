@@ -5,6 +5,9 @@ import type { ToolbarItem } from '../components/ToolbarItem';
 import { useClipboard } from './useClipboard';
 import { useClearGraph } from './useClearGraph';
 
+/** The editor items this section can render, in canonical order. */
+export type EditorItemKey = 'cut' | 'copy' | 'paste' | 'erase';
+
 export interface UseEditorSectionOptions {
   /** Id of the `ClickSelectBehaviour` selection is read from. Default `'click-select'`. */
   clickSelectId?: string;
@@ -12,6 +15,12 @@ export interface UseEditorSectionOptions {
   layerId?: string;
   /** Explicit canvas instance; defaults to the context canvas. */
   canvas?: Canvas | null;
+  /**
+   * Which items to include, in canonical (cut · copy · paste · erase) order.
+   * Default: all four. Pass e.g. `['erase']` for an erase-only bar (no
+   * clipboard) — cut/copy/paste are simply omitted.
+   */
+  items?: EditorItemKey[];
 }
 
 /**
@@ -21,21 +30,22 @@ export interface UseEditorSectionOptions {
  * — it deletes the selection (with a "Selection" label) when something is
  * selected, otherwise clears the whole layer. Requires a
  * `<GraphClipboardProvider>` + `ClickSelectBehaviour`; edits are undoable with a
- * `<GraphHistoryProvider>`.
+ * `<GraphHistoryProvider>`. Restrict the set via {@link UseEditorSectionOptions.items}
+ * — e.g. `items: ['erase']` for an erase-only bar with no clipboard controls.
  */
 export function useEditorSection(options: UseEditorSectionOptions = {}): ToolbarItem[] {
-  const { clickSelectId, layerId = 'graph', canvas } = options;
+  const { clickSelectId, layerId = 'graph', canvas, items } = options;
   const { cut, copy, paste, remove, canPaste, hasSelection } = useClipboard(
     clickSelectId ? { clickSelectId } : {},
     canvas,
   );
   const { clear } = useClearGraph(layerId, canvas);
 
-  return [
-    { type: 'button', key: 'cut', icon: Scissors, label: 'Cut', onClick: cut, disabled: !hasSelection },
-    { type: 'button', key: 'copy', icon: Copy, label: 'Copy', onClick: copy, disabled: !hasSelection },
-    { type: 'button', key: 'paste', icon: ClipboardPaste, label: 'Paste', onClick: paste, disabled: !canPaste },
-    {
+  const all: Record<EditorItemKey, ToolbarItem> = {
+    cut: { type: 'button', key: 'cut', icon: Scissors, label: 'Cut', onClick: cut, disabled: !hasSelection },
+    copy: { type: 'button', key: 'copy', icon: Copy, label: 'Copy', onClick: copy, disabled: !hasSelection },
+    paste: { type: 'button', key: 'paste', icon: ClipboardPaste, label: 'Paste', onClick: paste, disabled: !canPaste },
+    erase: {
       type: 'button',
       key: 'erase',
       icon: Eraser,
@@ -43,5 +53,8 @@ export function useEditorSection(options: UseEditorSectionOptions = {}): Toolbar
       ...(hasSelection ? { text: 'Selection' } : {}),
       onClick: hasSelection ? remove : () => clear(),
     },
-  ];
+  };
+
+  const keys = items ?? (['cut', 'copy', 'paste', 'erase'] as EditorItemKey[]);
+  return keys.map((k) => all[k]);
 }
