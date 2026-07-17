@@ -87,6 +87,15 @@ export interface ToolbarSelectItem extends ToolbarItemBase {
   tooltip?: string;
   tooltipSide?: TooltipSide;
   /**
+   * Show only the section {@link label} (+ active icon) on the collapsed trigger,
+   * not the selected option's label — so the trigger reads `Select` instead of
+   * `Select: Click select`. Use when the per-option icon already conveys the
+   * choice (e.g. the select-mode picker) and repeating the option name on the
+   * trigger is noise. The open dropdown still lists full option labels. Ignored
+   * when {@link renderTrigger} is provided.
+   */
+  triggerLabelOnly?: boolean;
+  /**
    * Override the trigger content (instead of the default `{label}: {value}`).
    * Used by the zoom picker to show a live `NN%` even when the current value
    * isn't one of the preset options.

@@ -165,7 +165,7 @@ function useControlSections(props: GraphControlsToolbarProps) {
       { type: 'button', key: 'run-layout', icon: Play, label: 'Run layout', onClick: () => applyLayout(layout), disabled: isRunning },
     ] as ToolbarItem[],
     select: [
-      { type: 'select', key: 'select-mode', label: 'Select', value: mode, options: modeOptions, icons: { click: MousePointer2, brush: SquareDashedMousePointer, lasso: Lasso }, onChange: setMode },
+      { type: 'select', key: 'select-mode', label: 'Select', value: mode, options: modeOptions, icons: { click: MousePointer2, brush: SquareDashedMousePointer, lasso: Lasso }, onChange: setMode, triggerLabelOnly: true },
     ] as ToolbarItem[],
     style,
     view,

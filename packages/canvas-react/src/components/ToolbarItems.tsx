@@ -55,7 +55,7 @@ function renderButton(
 
 /** Render a `select` item as a design-kit `RichSelect` (was `OptionPicker`). */
 function renderSelect(key: string, item: ToolbarSelectItem, tipSide: TooltipSide): ReactNode {
-  const { label, value, options, icons, onChange, align = 'start', tooltip, renderTrigger } = item;
+  const { label, value, options, icons, onChange, align = 'start', tooltip, renderTrigger, triggerLabelOnly } = item;
   const richOptions: RichSelectOption[] = Object.keys(options).map((k) => ({
     value: k,
     label: options[k] ?? k,
@@ -80,7 +80,7 @@ function renderSelect(key: string, item: ToolbarSelectItem, tipSide: TooltipSide
               return (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   {ActiveIcon && <ActiveIcon size={16} className={item.iconClass} />}
-                  {label}: {only?.label ?? value}
+                  {triggerLabelOnly ? label : `${label}: ${only?.label ?? value}`}
                 </span>
               );
             }

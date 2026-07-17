@@ -49,5 +49,5 @@ export function useStyleEditorSection(options: UseStyleEditorSectionOptions = {}
     },
     canvas,
   );
-  return [{ type: 'select', key: 'edge-type', label, value: edgeType, options: edgeTypeOptions, icons: DEFAULT_ICONS, onChange: setEdgeType, align }];
+  return [{ type: 'select', key: 'edge-type', label, value: edgeType, options: edgeTypeOptions, icons: DEFAULT_ICONS, onChange: setEdgeType, align, triggerLabelOnly: true }];
 }
