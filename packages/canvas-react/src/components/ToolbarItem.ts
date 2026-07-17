@@ -81,6 +81,21 @@ export interface ToolbarSelectItem extends ToolbarItemBase {
   /** Optional className applied to the trigger icon. */
   iconClass?: string;
   onChange: (value: string) => void;
+  /**
+   * How to render the picker. `'dropdown'` (default) is the collapsed
+   * `RichSelect` trigger + menu. `'segmented'` lays every option out inline as a
+   * single-select `ToggleGroup` (the B / I / U style) — good for a small, always
+   * in-view option set. Segmented items show their per-option icon when present
+   * (icon-only, full label on hover) and fall back to the option label text
+   * otherwise; {@link triggerLabelOnly} / {@link renderTrigger} don't apply.
+   */
+  display?: 'dropdown' | 'segmented';
+  /**
+   * Extra classes for the `'segmented'` group container. Segments are
+   * borderless by default (the ghost toggle variant); pass border utilities here
+   * to opt back into a bordered/outlined segmented control.
+   */
+  className?: string;
   /** Menu alignment relative to the trigger. Default `'start'`. */
   align?: 'start' | 'center' | 'end';
   /** Trigger tooltip; defaults to {@link ToolbarSelectItem.label}. */

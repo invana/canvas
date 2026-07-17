@@ -1,8 +1,8 @@
 import { Fragment, type ReactNode } from 'react';
-import { Button, NavHorizontal, NavVertical, RichSelect, Separator, type RichSelectOption } from '@invana/ui';
+import { Button, NavHorizontal, NavVertical, RichSelect, Separator, ToggleGroup, ToggleGroupItem, type RichSelectOption } from '@invana/ui';
 
 import { Tooltipped } from './Tooltipped';
-import { ACTIVE_CLASS, ACTIVE_MENU_ITEM_CLASS } from './styles';
+import { ACTIVE_CLASS, ACTIVE_MENU_ITEM_CLASS, ACTIVE_SEGMENT_STYLE } from './styles';
 import type { ToolbarIcon, TooltipSide } from './types';
 import type { ToolbarButtonItem, ToolbarItem, ToolbarSelectItem, ToolbarToggleItem } from './ToolbarItem';
 
@@ -102,6 +102,47 @@ function renderSelect(key: string, item: ToolbarSelectItem, tipSide: TooltipSide
 }
 
 /**
+ * Render a `select` item as a segmented single-select `ToggleGroup` (the
+ * B / I / U style) instead of a dropdown. Each option becomes a
+ * `ToggleGroupItem`: its per-option icon when present (icon-only, full label on
+ * hover via {@link Tooltipped}), otherwise the option label text. The active
+ * segment carries the design-kit toggle's own on-state styling.
+ */
+function renderSegmented(key: string, item: ToolbarSelectItem, tipSide: TooltipSide): ReactNode {
+  const { label, value, options, icons, onChange, tooltip } = item;
+  const side = item.tooltipSide ?? tipSide;
+  return (
+    <ToggleGroup
+      key={key}
+      type="single"
+      value={value}
+      // Ignore the empty deselect emitted when clicking the active segment.
+      onValueChange={(v) => v && onChange(v)}
+      size="sm"
+      aria-label={tooltip ?? label}
+      className={item.className}
+    >
+      {Object.keys(options).map((k) => {
+        const optLabel = options[k] ?? k;
+        const Icon = icons?.[k] as ToolbarIcon | undefined;
+        return (
+          <Tooltipped key={k} label={optLabel} side={side}>
+            <ToggleGroupItem
+              value={k}
+              size="sm"
+              aria-label={optLabel}
+              style={k === value ? ACTIVE_SEGMENT_STYLE : undefined}
+            >
+              {Icon ? <Icon size={16} className={item.iconClass} /> : optLabel}
+            </ToggleGroupItem>
+          </Tooltipped>
+        );
+      })}
+    </ToggleGroup>
+  );
+}
+
+/**
  * Data-driven toolbar renderer — the single building block every `*Toolbar`
  * preset is assembled from. Compiles a {@link ToolbarItem}[] into design-kit
  * chrome (`@invana/ui` `Button` / `RichSelect` / `Separator`, with a shared
@@ -109,7 +150,8 @@ function renderSelect(key: string, item: ToolbarSelectItem, tipSide: TooltipSide
  *
  * - `button` → a ghost `Button` (icon-only, or icon + `text`), with `disabled`.
  * - `toggle` → a ghost `Button` with the nav-item `active` treatment; icon/label flip.
- * - `select` → a `RichSelect` dropdown (optionally with a custom `renderTrigger`).
+ * - `select` → a `RichSelect` dropdown, or a segmented `ToggleGroup` when
+ *   `display: 'segmented'` (optionally with a custom `renderTrigger`).
  * - `divider` → a cross-axis `Separator`.
  * - `custom` → the item's own `render()` output.
  *
@@ -155,7 +197,9 @@ export function ToolbarItems({
         });
       }
       case 'select':
-        return renderSelect(key, item, tipSide);
+        return item.display === 'segmented'
+          ? renderSegmented(key, item, tipSide)
+          : renderSelect(key, item, tipSide);
       case 'divider':
         return (
           <Separator

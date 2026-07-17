@@ -175,6 +175,16 @@ function useControlSections(props: GraphControlsToolbarProps) {
   };
 }
 
+/**
+ * Re-render the `select` items in a group as segmented `ToggleGroup`s (leaving
+ * any sibling buttons — e.g. layout's "Run" — untouched). The full toolbar uses
+ * this so Layout / Select read as always-in-view segmented pickers, while the
+ * lite toolbar keeps the compact dropdowns.
+ */
+function segmentSelects(items: ToolbarItem[]): ToolbarItem[] {
+  return items.map((it) => (it.type === 'select' ? { ...it, display: 'segmented' as const } : it));
+}
+
 /** Join non-empty groups with dividers (no leading / trailing / doubled dividers). */
 function assemble(
   groups: ToolbarItem[][],
@@ -231,8 +241,8 @@ function GraphControlsToolbarFullBody(props: GraphControlsToolbarProps): ReactNo
 
   const groups: ToolbarItem[][] = [];
   if (s.history) groups.push(history);
-  if (s.layout) groups.push(c.layout);
-  if (s.selectMode) groups.push(c.select);
+  if (s.layout) groups.push(segmentSelects(c.layout));
+  if (s.selectMode) groups.push(segmentSelects(c.select));
   if (s.style) groups.push(c.style);
   if (s.edit) groups.push(editor);
   if (s.view) groups.push(c.view);
