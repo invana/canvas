@@ -24,6 +24,14 @@ export interface CanvasConfig {
    * auto-runs it when the target layer's data changes.
    */
   activeLayout?: string;
+  /**
+   * Fit the camera to content **once on load**, so the drawing is centred when it
+   * first appears — independent of any layout. The engine fits the union of its
+   * world layers' bounds once, after the viewport has its real size and (when an
+   * {@link activeLayout} is set) that layout has settled. Default `false`
+   * (opt-in). Init-only: read when the canvas initialises.
+   */
+  fitOnLoad?: boolean;
 }
 
 /** Narrow an instance to one exposing `setOptions`. */

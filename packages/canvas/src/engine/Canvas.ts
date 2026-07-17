@@ -251,6 +251,7 @@ export class Canvas {
   /** Rounded visible-bounds key from the last cull — re-cull only when it changes. */
   private _lastCullKey = '';
 
+
   constructor(opts: CanvasOptions = {}) {
     this.id = opts.id ?? 'canvas';
     this.options = opts;
@@ -416,6 +417,9 @@ export class Canvas {
       capabilities: this._capabilities(),
     });
 
+    // Note: fit-on-load is armed inside `update()` (the universal config-apply
+    // path), not here — the React root omits `config` from `init()` and applies it
+    // via `update()` afterwards, so arming here would miss it.
     this._activate(opts.config);
   }
 
@@ -515,6 +519,71 @@ export class Canvas {
       interaction: this._interactions.current(t0),
     });
     this.events.emit('render:loop:tick', tick);
+  }
+
+  /**
+   * Fit the camera to all content — zoom + centre so every world layer's content
+   * fits the viewport (the "zoom to extent" action; the same
+   * `camera.fitContent` the Fit toolbar button calls, over the union of layers).
+   * No-op when there's nothing with real extent to fit.
+   *
+   * @param padding Screen-px margin around the content. Default `80`.
+   */
+  fitView(padding = 80): void {
+    const rect = this._contentBounds();
+    if (rect) this.camera.fitContent(rect, padding);
+  }
+
+  /**
+   * Arm `config.fitOnLoad`: fit the view once, at the right moment. When an
+   * `activeLayout` is configured, wait for it to settle (final node positions)
+   * via a one-shot `layout:run:end`; otherwise fit on the next frame. The extra
+   * frame lets a just-loaded scene flush before {@link fitView} reads its bounds.
+   * (A dangling listener, if the layout never settles, is cleared by `destroy`'s
+   * `removeAllListeners` — no per-instance bookkeeping needed.)
+   */
+  private _armFitOnLoad(): void {
+    const fit = (): void => {
+      requestAnimationFrame(() => this.fitView());
+    };
+    if (this.store.view.getState().definition.activeLayout) {
+      const off = this.events.on('layout:run:end', ({ reason }) => {
+        if (reason !== 'settled') return;
+        off();
+        fit();
+      });
+    } else {
+      fit();
+    }
+  }
+
+  /**
+   * Union of the world layers' content bounds (screen-fixed layers are excluded —
+   * they don't pan/zoom). Returns `null` when nothing has real extent yet.
+   *
+   * World layers are detected by duck-typing on `getBounds` (a `WorldLayer`-only
+   * method — screen layers don't have it) rather than `instanceof WorldLayer`,
+   * which is unreliable when a bundler serves a domain package (e.g.
+   * `@invana/graph`'s `GraphLayer`) a *separate copy* of the base class.
+   */
+  private _contentBounds(): Rect | null {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    let any = false;
+    for (const layer of this.layers.byZOrder()) {
+      const getBounds = (layer as { getBounds?: () => Rect }).getBounds;
+      if (typeof getBounds !== 'function') continue;
+      const r = getBounds.call(layer);
+      if (!r || (r.width <= 0 && r.height <= 0)) continue;
+      any = true;
+      if (r.x < minX) minX = r.x;
+      if (r.y < minY) minY = r.y;
+      if (r.x + r.width > maxX) maxX = r.x + r.width;
+      if (r.y + r.height > maxY) maxY = r.y + r.height;
+    }
+    return any ? { x: minX, y: minY, width: maxX - minX, height: maxY - minY } : null;
   }
 
   /**
@@ -638,6 +707,11 @@ export class Canvas {
       }
       if (patch.activeLayout !== undefined) s.definition.activeLayout = patch.activeLayout;
     }, 'canvas:update');
+
+    // Fit-on-load is a config setting applied here (works whether config arrives at
+    // `init` or via a later `update` — the React root does the latter). `true` arms
+    // the one-shot centre-on-load; `false` disarms it.
+    if (patch.fitOnLoad === true) this._armFitOnLoad();
   }
 
   /**
