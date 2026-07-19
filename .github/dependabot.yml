@@ -1,0 +1,12 @@
+version: 2
+updates:
+  # Keep the SHA-pinned GitHub Actions current. Without this, actions pinned to
+  # a commit SHA (publish.yml / deploy-storybook.yml) never receive upstream
+  # security fixes. Dependabot bumps the SHA and updates the trailing `# vN`.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

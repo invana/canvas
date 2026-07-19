@@ -5,12 +5,11 @@ node_modules
 .pnp
 .pnp.js
 
-# Local env files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Local env files — ignore every .env variant so a stray .env.production /
+# .env.staging (no `.local` suffix) can't be committed. turbo.json lists
+# `.env*` as build inputs, so these are expected to exist locally.
+.env*
+!.env.example
 
 # Testing
 coverage

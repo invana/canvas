@@ -15,36 +15,46 @@
 | A2 | **Medium** — ✅ **FIXED 2026-07-19** | `javascript:` URL XSS via `hints`-forced `url` renderer (bypasses `isSafeHref`) | `canvas-react/src/components/propertyRenderers.tsx:336,126` |
 | A3 | **Medium** — ✅ **FIXED 2026-07-19** | Arbitrary image/icon/SVG URLs from node data are fetched (exfil / SSRF) | `graph`, `canvas` texture + hover paths |
 | D1 | **Critical** (dev-only) — ✅ **FIXED** | `vitest` <3.2.6 UI-server arbitrary file read/exec | dev dependency |
-| D2 | **High** (dev-only) — ⚠️ **PARTIAL** | `vite` / `rollup` / `esbuild` / `ws` / `@xmldom/xmldom` etc. — 21 high advisories | tooling deps |
+| D2 | **High** (dev-only) — ✅ **FIXED** (residual: vitepress vite-5, dev/docs only) | `vite` / `rollup` / `esbuild` / `ws` / `@xmldom/xmldom` / minimatch / picomatch etc. — 21 high advisories | tooling deps |
 | D3 | **Moderate** (shipped) — ✅ **FIXED** | `@opentelemetry/core` DoS — affects a **published** package | `canvas-telemetry-otel` |
-| S1 | **Medium** | GitHub Actions pinned by tag, not SHA, around `NPM_TOKEN` | `.github/workflows/*.yml` |
-| S2 | **Medium** | Long-lived `NPM_TOKEN` instead of OIDC trusted publishing | `publish.yml:45` |
-| S3 | **Medium** | pnpm 9 runs dependency install scripts unrestricted | `package.json` / workspace |
+| S1 | **Medium** — ✅ **FIXED** | GitHub Actions pinned by tag, not SHA, around `NPM_TOKEN` | `.github/workflows/*.yml` |
+| S2 | **Medium** — ⚠️ **GROUNDWORK** (needs npm-side config) | Long-lived `NPM_TOKEN` instead of OIDC trusted publishing | `publish.yml` |
+| S3 | **Medium** — ✅ **FIXED** | pnpm 9 runs dependency install scripts unrestricted | `package.json` / workspace |
 | A4/A5 | Low — ✅ **FIXED** | Unvalidated image `src` in cards; missing `rel="noopener"` branch; `deepMerge` `__proto__` (unbounded template element count still open) | various |
-| S4–S6 | Low/Info | `.gitignore` env coverage; `workflow_dispatch` publish; `private`+`publishConfig` contradiction | config |
+| S4–S6 | Low/Info — ✅ **FIXED** | `.gitignore` env coverage; `workflow_dispatch` publish; `private`+`publishConfig` contradiction | config |
 
 No critical or high **source** findings; no secrets; no supply-chain compromise.
 
 ### Remediation status (updated 2026-07-19)
 
-All source findings (A1–A5) and the shipped-code dependency finding (D3) are fixed and verified; the dependency criticals/highs are cleared except for lint/build/docs-only tooling that cannot be forced without breaking a major.
+Every source finding (A1–A5), the shipped-code dependency finding (D3), and all six CI/supply-chain findings (S1–S6) are addressed. The dependency audit is reduced to a small set of dev/build/docs-only advisories that are genuinely unfixable without shipping a pre-release or breaking ESLint (detailed below).
 
-**Applied fixes**
+**Pass 1 — source + first-round deps**
 - **A1** — `__proto__`/`constructor`/`prototype` guard added to `applyDeepPartial` (+ the copy-based `deepMerge`/`mergeDeep` siblings). Runtime-verified: a `{"k":{"__proto__":{…}}}` patch no longer touches `Object.prototype`.
-- **A2** — `LinkValue` now re-checks `isSafeHref` and falls back to plain text; `rel="noopener noreferrer"` applied unconditionally (A5). `ImageValue` re-checks `isImageUrl`.
-- **A3/A5** — `HoverElementPreviewCard` (canvas-react) and `NodePreviewCard` (canvas-ui) now gate `<img src>` behind an `https:`/`data:image` scheme check.
-- **D1** — `vitest` `^2.1.8` → `^3.2.6` across 9 packages. Suites re-run green (canvas-store 116, graph 96).
-- **D3** — `canvas-telemetry-otel` `@opentelemetry/*` bumped (`resources`/`sdk-*` → `^2.9.0`, experimental exporters → `^0.220.0`), pulling patched `@opentelemetry/core` 2.9.0 into the **published** package. Required a one-line API fix (`SimpleLogRecordProcessor` now takes `{ exporter }`). Package builds clean.
-- **D2 (partial)** — `pnpm-workspace.yaml` `overrides` force patched `ws`, `@xmldom/xmldom`, `flatted`, `linkify-it`, `markdown-it`, `rollup`; `turbo` → `^2.10.5`; storybook `vite` → `^7.3.5` + its OTel deps bumped. Cleared the vitest critical and 12 of 21 highs.
+- **A2** — `LinkValue` re-checks `isSafeHref` and falls back to plain text; `rel="noopener noreferrer"` unconditional (A5). `ImageValue` re-checks `isImageUrl`.
+- **A3/A5** — `HoverElementPreviewCard` (canvas-react) and `NodePreviewCard` (canvas-ui) gate `<img src>` behind an `https:`/`data:image` scheme check.
+- **D1** — `vitest` `^2.1.8` → `^3.2.6` across packages (clears the critical). Real suites re-run green (canvas-store 116, graph 96).
+- **D3** — `canvas-telemetry-otel` `@opentelemetry/*` bumped (`resources`/`sdk-*` → `^2.9.0`, experimental exporters → `^0.220.0`), pulling patched `@opentelemetry/core` 2.9.0 into the **published** package. One-line API fix (`SimpleLogRecordProcessor` now takes `{ exporter }`). Builds clean.
 
-**Audit delta:** critical **1 → 0**, high **21 → 9**, moderate **17 → 11**, low **2 → 1**.
+**Pass 2 — CI/supply-chain hardening + residual deps**
+- **S1** — every third-party GitHub Action in `publish.yml` / `deploy-storybook.yml` pinned to a full commit SHA (was mutable tags); added `.github/dependabot.yml` (github-actions, weekly) to keep the SHAs current.
+- **S2** — `publish.yml` documents the OIDC Trusted-Publishing migration (id-token + `--provenance` already wired). Token **not** removed: completing the switch needs a one-time trusted-publisher config on npmjs.com — until then removing `NPM_TOKEN` would break releases. See the `TODO(security S2)` in the workflow.
+- **S3** — `packageManager` → `pnpm@10.34.5` (pnpm 10 blocks dependency lifecycle scripts by default); `pnpm-workspace.yaml` `onlyBuiltDependencies: [esbuild]` re-allows only the one dep that needs a build script. Shrinks the arbitrary-code-on-install surface, including in the token-holding CI job.
+- **S4** — `.gitignore` now ignores all `.env*` (was only `.env*.local`), matching turbo's `.env*` build inputs.
+- **S5** — the `publish`/release steps are guarded `if: startsWith(github.ref, 'refs/tags/v')`, so a `workflow_dispatch` on a branch can build but never publishes unreviewed code.
+- **S6** — removed the contradictory `publishConfig.access: public` from the `private` `@repo/typescript-config`.
+- **Residual deps cleared** — on pnpm 10, version-scoped overrides bump the ReDoS leaves to a patched **patch** within each major (no breaking-major jump): `minimatch` 3.1.5 / 9.0.9 / 10.2.5, `picomatch` 2.3.2 / 4.0.5, `brace-expansion` 1.1.16 / 2.1.2 / 5.0.7, `js-yaml` 4.3.0. This is what the earlier pnpm 9 could not apply.
 
-**Residual (all dev/build/lint/docs tooling — ships in no published package; accepted):**
-- `minimatch` (6 high) / `picomatch` (2 high) — ReDoS reachable only via glob patterns, which here come from ESLint config + build tooling (developer-authored, not attacker input). Multiple majors coexist in the tree; a single override can't patch all without a breaking major (`picomatch@4` would break `micromatch@4`, which pins picomatch 2). pnpm's major-scoped override keys were not honoured by the installed pnpm. Clears only via an ESLint-toolchain major bump.
-- `vite` (1 high, 2 mod) + `esbuild` (1 mod) — from `apps/docs` (vitepress 1.6 is pinned to vite 5); dev-server / docs-build only. Clears via vitepress 2 (separate major upgrade).
-- `js-yaml` / `ajv` / `brace-expansion` (moderate) — ESLint, lint-time. `@babel/core` (low) — storybook build.
+**Audit delta:** critical **1 → 0**, high **21 → 1**, moderate **17 → 4**, low **2 → 1**.
 
-**Note:** the installed pnpm is newer than the pinned `packageManager: pnpm@9.0.0` and no longer reads the `pnpm.overrides` field from `package.json` — overrides now live in `pnpm-workspace.yaml`. The stale `pnpm` field was removed from the root `package.json`. (Relates to S3 — a pnpm-version alignment / install-script-allowlist pass is still open.)
+**Residual (all dev/build/docs tooling — ships in no published package; genuinely blocked):**
+- `vite` (1 high, 2 mod) + `esbuild` (1 mod) — from `apps/docs`: **vitepress 1.6 is pinned to vite 5**, and vitepress 2 is still `alpha` (`2.0.0-alpha.18`). Docs-site build only. Not fixed — will not ship an alpha to the docs pipeline; revisit when vitepress 2 is stable.
+- `ajv` (1 mod) — ESLint's `ajv@6.12.6` is the newest 6.x; the fix exists only in ajv 8, which ESLint can't consume. Lint-time only.
+- `@babel/core` (1 low) — Storybook's docgen; arbitrary source-map read only when compiling attacker-controlled code (not the case here).
+
+**Verification (pnpm 10):** `check-types` 17/17, `build` 16/16, `lint` 0 errors, real test suites pass. (`pnpm test` also reports "No test files found" in 6 packages that carry a `test` script but ship no tests — a pre-existing harness quirk, unrelated to these changes.)
+
+**Note on pnpm:** `packageManager` is now `pnpm@10.34.5`. Local dev should use pnpm 10 (via corepack) — the lockfile stays `lockfileVersion 9.0`, so it remains readable, but a `pnpm 9` install may cause lockfile churn. The stale `pnpm` field was removed from the root `package.json`; overrides + settings live in `pnpm-workspace.yaml`.
 
 ---
 

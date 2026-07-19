@@ -2,14 +2,32 @@ packages:
   - "apps/*"
   - "packages/*"
 
+# Only these dependencies may run install/build lifecycle scripts (pnpm 10+
+# blocks all others by default). esbuild's postinstall links its platform
+# binary and is required; nothing else in the tree needs a build script.
+# Security S3: shrinks the arbitrary-code-on-install surface, incl. in CI.
+onlyBuiltDependencies:
+  - esbuild
+
 # Security remediation (2026-07-19): force patched versions of vulnerable
 # transitive dev/build-tooling deps flagged by `pnpm audit`. All are
-# non-shipped (build/lint/docs/test toolchain). Single-major-line ranges only,
-# so no consumer is forced across a breaking major. See SECURITY-AUDIT-2026-07-19.md.
+# non-shipped (build/lint/docs/test toolchain). See SECURITY-AUDIT-2026-07-19.md.
 overrides:
+  # Single-major in the tree — plain range, no consumer crosses a major.
   ws: ">=8.21.1"
   "@xmldom/xmldom": ">=0.8.13 <0.9.0"
   flatted: ">=3.4.2"
   linkify-it: ">=5.0.1 <6"
   markdown-it: ">=14.2.0"
   rollup: ">=4.59.0"
+  js-yaml: ">=4.2.0 <5"
+  # Multiple majors coexist (ESLint + build tooling); scope each to its major
+  # so the fix is a backward-compatible patch bump, never a breaking major.
+  # (Requires pnpm 10's version-scoped override keys — hence the pnpm bump.)
+  "minimatch@3": ">=3.1.4 <4"
+  "minimatch@9": ">=9.0.7 <10"
+  "picomatch@2": ">=2.3.2 <3"
+  "picomatch@4": ">=4.0.4 <5"
+  "brace-expansion@1": ">=1.1.13 <2"
+  "brace-expansion@2": ">=2.0.3 <3"
+  "brace-expansion@5": ">=5.0.6 <6"
