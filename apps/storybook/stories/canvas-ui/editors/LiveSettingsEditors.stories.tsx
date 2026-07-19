@@ -1,17 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   CanvasMessageBar,
   GraphCanvasApp,
   GraphControlsToolbar,
   GraphStatusBar,
+  GraphCanvasContext,
   GraphNodeContextMenu,
   type GraphNodeMenuContext,
   GraphBackgroundContextMenu,
-  Panel,
-  PanelContent,
   type LayoutFactory,
   ThemeToggle,
+  ToolbarItems,
   useCanvas,
   useDevTool,
   useGraphCanvasOptions,
@@ -29,6 +29,7 @@ import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { ThemeProvider } from '@invana/themes';
 import type { MenuItem } from '@invana/ui';
+import { Settings } from 'lucide-react';
 
 import { resolveKind, readOptions } from './liveCanvasDefinition';
 
@@ -89,14 +90,16 @@ const backgroundMenu = (): MenuItem[] => [
  * store keeps options keyed by id but is domain-free (no class/kind), so we
  * resolve `kind` by `instanceof` here. Must be a `<GraphCanvasApp>` descendant.
  */
-function LiveCanvasSettingsPanel() {
+function LiveCanvasSettingsPanelInner() {
   const canvas = useCanvas();
   const [options, update] = useGraphCanvasOptions();
 
-  // The registered instances (id + kind). Captured in an effect — the panel is a
-  // later child than the bundle it inspects, so the registration effects have
-  // already run by the time this fires (reading during render would see an empty
-  // registry). Their *settings* + *enabled* then come reactively from `options`.
+  // The registered instances (id + kind). Captured in an effect keyed on
+  // `canvas` — from the `right` region this reads the lifted-context engine,
+  // which only turns non-null once `<CanvasReady>` (the bundle's last child)
+  // fires, i.e. after every layer/behaviour/layout has registered, so the
+  // registries are already populated. Their *settings* + *enabled* then come
+  // reactively from `options`.
   const [instances, setInstances] = useState<{
     layers: { id: string; kind?: string; inst: unknown }[];
     behaviours: { id: string; kind?: string; inst: unknown }[];
@@ -150,9 +153,9 @@ function LiveCanvasSettingsPanel() {
   return (
     <CanvasSettingsPanelView
       definition={definition}
-      // The docked <PanelContent> already supplies the "Canvas Settings" header +
-      // scroll, so flatten the panel's own card chrome + title here.
-      title={null}
+      // The `right` region already wraps content in an `overflow-auto bg-card`
+      // panel, so keep the view's own "Canvas Settings" heading but flatten its
+      // inner Card chrome (no nested card-in-card / double background).
       className="border-0 bg-transparent shadow-none"
       onChange={(section: SettingsSection, id, patch) => update({ [section]: { [id]: patch } })}
       onToggle={(section: SettingsSection, id, enabled) => update({ [section]: { [id]: { enabled } } })}
@@ -161,11 +164,28 @@ function LiveCanvasSettingsPanel() {
   );
 }
 
+/**
+ * Gate for the panel: the `right` region renders under `GraphCanvasApp`'s
+ * **lifted** `CanvasContext`, which is `null` until Main's ready-bridge publishes
+ * the engine — unlike an in-`<Canvas>` child, which only mounts once ready. The
+ * inner panel's engine hooks (`useCanvas` / `useGraphCanvasOptions`) throw on a
+ * null canvas, so hold rendering until the lifted context turns non-null.
+ */
+function LiveCanvasSettingsPanel() {
+  const canvas = useContext(GraphCanvasContext);
+  if (!canvas) return null;
+  return <LiveCanvasSettingsPanelInner />;
+}
+
 export const LiveSettingsEditors: Story = {
   name: 'Live Settings Editors',
   render: function Render() {
     const dev = useDevTool({ corner: 'top-left', margin: { x: 12, y: 48 } });
     const mini = useMiniMap({ backgroundLayerId: 'background', position: 'bottom-left' });
+    // The settings panel is toggled from the header — mounting the `right` region
+    // when open, unmounting it (canvas reclaims the width) when closed. Open by
+    // default so the editors are visible on load.
+    const [settingsOpen, setSettingsOpen] = useState(true);
 
     // Les Misérables ships no `type`; give each node its community group as its
     // type (so the bundle's colour-by-label behaviour tints by community) and
@@ -199,11 +219,42 @@ export const LiveSettingsEditors: Story = {
               <>
                 {mini.button}
                 {dev.button}
+                {/* Settings toggle — shows / hides the docked right panel. */}
+                <ToolbarItems
+                  orientation="horizontal"
+                  items={[
+                    {
+                      type: 'toggle',
+                      key: 'settings',
+                      icon: Settings,
+                      label: 'Settings: hidden',
+                      activeLabel: 'Settings: shown',
+                      active: settingsOpen,
+                      onToggle: () => setSettingsOpen((v) => !v),
+                    },
+                  ]}
+                />
                 <ThemeToggle ctx={ctx} />
               </>
             ),
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+          // The star: the app's own docked, resizable `right` region hosts the
+          // JSON-driven settings panel over the live bundle (same wiring as
+          // FullFeatured's inspector). The region supplies the `overflow-auto
+          // bg-card` chrome + scroll; the panel renders its own heading. Its
+          // content is rendered inside the lifted Canvas/GraphCanvas contexts, so
+          // <LiveCanvasSettingsPanel>'s engine hooks resolve the live instance.
+          right={
+            settingsOpen
+              ? {
+                  content: <LiveCanvasSettingsPanel />,
+                  defaultSize: '360px',
+                  maxSize: '460px',
+                  collapsible: true,
+                }
+              : undefined
+          }
         >
           {/* Extra layers — minimap + on-demand dev overlay. */}
           {mini.layer}
@@ -212,15 +263,6 @@ export const LiveSettingsEditors: Story = {
           {/* Right-click menus. */}
           <GraphNodeContextMenu items={nodeMenu} />
           <GraphBackgroundContextMenu items={backgroundMenu} />
-
-          {/* The star: a docked right-side canvas settings panel over the live
-              bundle. A full-height <Panel> positions a <PanelContent> whose
-              scrollable body holds the JSON-driven settings panel. */}
-          <Panel position="right">
-            <PanelContent header="Canvas Settings" fill width={360}>
-              <LiveCanvasSettingsPanel />
-            </PanelContent>
-          </Panel>
         </GraphCanvasApp>
       </ThemeProvider>
     );
