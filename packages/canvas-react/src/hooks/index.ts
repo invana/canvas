@@ -38,6 +38,7 @@ export { useGrid } from './useGrid';
 export type { UseGridOptions, UseGridResult } from './useGrid';
 export { useLayout } from './useLayout';
 export type { ApplicableLayout, LayoutFactory, UseLayoutOptions, UseLayoutResult } from './useLayout';
+export { useLayoutRunning } from './useLayoutRunning';
 export { useSelectMode } from './useSelectMode';
 export type { UseSelectModeOptions, UseSelectModeResult } from './useSelectMode';
 export { useEdgeType, DEFAULT_EDGE_TYPES, DEFAULT_EDGE_TYPE_LABELS } from './useEdgeType';

@@ -3,6 +3,7 @@ import type { Canvas } from '@invana/canvas';
 import type { GraphLayer } from '@invana/graph';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
+import { useLayoutRunning } from './useLayoutRunning';
 
 /** Minimal structural shape of a layout instance the hook can apply + stop. */
 export interface ApplicableLayout {
@@ -40,7 +41,13 @@ export interface UseLayoutResult {
    * one-shot layout without `stop()` it just clears the running flag.
    */
   stopLayout: () => void;
-  /** True while a layout's `apply` promise is in flight. */
+  /**
+   * True while **any** layout is running on the canvas — this hook's own
+   * `applyLayout` call *or* an engine-driven run (notably the initial
+   * `config.activeLayout` load run, still settling). Read from the reactive
+   * `runtime.layout.running` state OR the local `apply` promise, so a run/stop
+   * control stays consistent with what the engine is actually doing.
+   */
   isRunning: boolean;
 }
 
@@ -62,8 +69,12 @@ export function useLayout(
   const resolved = useResolvedCanvas(canvas);
   const keys = Object.keys(layouts);
   const [layout, setLayout] = useState(options.initial ?? keys[0] ?? '');
-  const [isRunning, setRunning] = useState(false);
+  const [localRunning, setRunning] = useState(false);
   const activeRef = useRef<ApplicableLayout | null>(null);
+  // Engine-wide run status (source of truth) — true while the load-time active
+  // layout is still settling, which this hook's local flag can't see.
+  const engineRunning = useLayoutRunning(canvas);
+  const isRunning = localRunning || engineRunning;
 
   const applyLayout = useCallback(
     (key: string) => {
@@ -89,12 +100,17 @@ export function useLayout(
   );
 
   const stopLayout = useCallback(() => {
+    // Stop this hook's own applied instance (if any)…
     const instance = activeRef.current;
-    if (!instance) return;
-    activeRef.current = null; // supersede: the pending `apply` promise no-ops on resolve
-    instance.stop?.();
+    if (instance) {
+      activeRef.current = null; // supersede: the pending `apply` promise no-ops on resolve
+      instance.stop?.();
+    }
+    // …and the engine's in-flight active layout (e.g. the load-time run), which
+    // this hook didn't apply. Its `end`/`stopped` clears `runtime.layout.running`.
+    resolved.stopLayout();
     setRunning(false);
-  }, []);
+  }, [resolved]);
 
   // Apply the initial layout once, as soon as the target layer is mounted.
   const didInit = useRef(false);

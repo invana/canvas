@@ -223,10 +223,17 @@ function configureForces(
     sim.force('charge', force);
   }
 
+  // Centering. Explicit `center` wins; otherwise, when no positional anchor is
+  // configured (`center`/`x`/`y`/`radial`), default to a `forceCenter` at the
+  // origin so the centroid stays put and the layout can't drift off-axis.
+  // Mirrors the live path in D3ForceLayout so animate:true / animate:false
+  // produce the same anchored result.
   if (center !== undefined) {
     const force = forceCenter<SolveNode>(center.x ?? 0, center.y ?? 0);
     if (center.strength !== undefined) force.strength(center.strength);
     sim.force('center', force);
+  } else if (x === undefined && y === undefined && radial === undefined) {
+    sim.force('center', forceCenter<SolveNode>(0, 0));
   }
 
   // Collide is added whenever a per-node radius array was supplied (the main

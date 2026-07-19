@@ -178,7 +178,7 @@ export const Standalone: Story = {
 // `'graph-force'`; selecting one swaps the active layout live.
 const LAYOUTS: Record<string, LayoutFactory> = {
   'd3-force': () =>
-    new D3ForceLayout({ charge: { strength: -240 }, link: { distance: 70 }, animate: false }),
+    new D3ForceLayout({ charge: { strength: -240 }, link: { distance: 70 }, animate: true }),
   'elk-layered': () => new ElkLayout({ algorithm: 'layered', direction: 'RIGHT' }),
 };
 const LAYOUT_LABEL: Record<string, string> = { 'd3-force': 'Force', 'elk-layered': 'Layered' };
@@ -335,7 +335,9 @@ export const LiveSettingsEditors: Story = {
                 charge: { strength: -240 },
                 link: { distance: 70 },
                 collide: { radius: 18 },
-                animate: false,
+                // Live, animated settle by default — the settings panel's
+                // "Animate" toggle starts on and the Run button flips to Stop.
+                animate: true,
               },
             },
           }}

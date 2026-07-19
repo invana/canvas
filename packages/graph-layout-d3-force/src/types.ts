@@ -101,7 +101,12 @@ export interface D3ForceLayoutOptions {
   link?: LinkForceOptions;
   /** `forceManyBody` — n-body charge (negative = repulsion). */
   charge?: ChargeForceOptions;
-  /** `forceCenter` — translates the cluster's centroid to `(x, y)`. */
+  /**
+   * `forceCenter` — translates the graph's centroid to `(x, y)`. When omitted
+   * **and** no other positional anchor (`x`/`y`/`radial`) is set, the layout
+   * defaults to a `forceCenter` at the origin so the simulation can't drift
+   * off-axis; set this (or `x`/`y`/`radial`) to override that default anchor.
+   */
   center?: CenterForceOptions;
   /** `forceCollide` — prevents overlap. */
   collide?: CollideForceOptions;

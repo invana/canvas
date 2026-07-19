@@ -248,6 +248,9 @@ export class Canvas {
   private readonly _interactions: InteractionTracker;
   /** `performance.now()` at the previous frame — for the true (unclamped) frame time. */
   private _lastFrameTs = 0;
+  /** Guards {@link _armAutoFit} against attaching duplicate follow listeners
+   *  when `config.fitOnLoad: true` is applied more than once. */
+  private _autoFitArmed = false;
   /** Rounded visible-bounds key from the last cull — re-cull only when it changes. */
   private _lastCullKey = '';
 
@@ -535,26 +538,58 @@ export class Canvas {
   }
 
   /**
-   * Arm `config.fitOnLoad`: fit the view once, at the right moment. When an
-   * `activeLayout` is configured, wait for it to settle (final node positions)
-   * via a one-shot `layout:run:end`; otherwise fit on the next frame. The extra
-   * frame lets a just-loaded scene flush before {@link fitView} reads its bounds.
-   * (A dangling listener, if the layout never settles, is cleared by `destroy`'s
-   * `removeAllListeners` — no per-instance bookkeeping needed.)
+   * Arm `config.fitOnLoad`: keep the view framed on the graph as its layout
+   * runs. With no `activeLayout`, this is a single fit on the next frame (the
+   * extra frame lets a just-loaded scene flush before {@link fitView} reads its
+   * bounds).
+   *
+   * With an `activeLayout`, the layout owns the positions, so we frame it around
+   * every **run**. An **animated** layout keeps expanding as it settles, so a
+   * single end-fit would frame an intermediate (smaller) state and leave nodes
+   * spilling outside once the graph grows — so we *follow* the run: re-fit
+   * (throttled — a live sim ticks every frame) on each `layout:run:tick`, then an
+   * exact fit on `layout:run:end`/`settled`. A static layout ticks ~once then
+   * ends, degrading to the same single settle-fit.
+   *
+   * Scope is the **active layout's `runLayout` calls** — the initial load and
+   * engine re-runs (topology change / {@link refresh}). Gating on the layout id
+   * (not on catching `start`) means we still follow a run already in flight when
+   * arming lands. Crucially, the bridged `layout:run:*` events only flow while a
+   * `runLayout` is in flight (torn down on settle); a live **drag** / hover /
+   * `setOptions` re-heat re-`apply()`s the layout *directly*, without
+   * re-bridging, so it never reaches the bus and the camera stays put during
+   * interaction. Listeners live for the canvas lifetime (cleared by `destroy`'s
+   * `removeAllListeners`); {@link _autoFitArmed} keeps a repeated
+   * `fitOnLoad: true` from attaching duplicates.
    */
-  private _armFitOnLoad(): void {
+  private _armAutoFit(): void {
+    if (this._autoFitArmed) return;
+    this._autoFitArmed = true;
+
     const fit = (): void => {
       requestAnimationFrame(() => this.fitView());
     };
-    if (this.store.view.getState().definition.activeLayout) {
-      const off = this.events.on('layout:run:end', ({ reason }) => {
-        if (reason !== 'settled') return;
-        off();
-        fit();
-      });
-    } else {
+    const activeLayout = (): string | null | undefined =>
+      this.store.view.getState().definition.activeLayout;
+    if (!activeLayout()) {
       fit();
+      return;
     }
+
+    // Throttle the follow-fits so a per-frame animated sim doesn't call
+    // `fitContent` every tick; each run's final settle-fit is always exact.
+    const THROTTLE_MS = 100;
+    let lastFit = 0;
+    this.events.on('layout:run:tick', ({ id }) => {
+      if (id !== activeLayout()) return;
+      const now = performance.now();
+      if (now - lastFit < THROTTLE_MS) return;
+      lastFit = now;
+      fit();
+    });
+    this.events.on('layout:run:end', ({ id, reason }) => {
+      if (id === activeLayout() && reason === 'settled') fit();
+    });
   }
 
   /**
@@ -710,8 +745,8 @@ export class Canvas {
 
     // Fit-on-load is a config setting applied here (works whether config arrives at
     // `init` or via a later `update` — the React root does the latter). `true` arms
-    // the one-shot centre-on-load; `false` disarms it.
-    if (patch.fitOnLoad === true) this._armFitOnLoad();
+    // the auto-fitter (frames the graph on load and follows each active-layout run).
+    if (patch.fitOnLoad === true) this._armAutoFit();
   }
 
   /**
@@ -745,6 +780,9 @@ export class Canvas {
     // which emits `start` synchronously — and torn down when the run resolves.
     const layerId = layout.targetLayerId ?? '';
     const offStart = layout.events.on('start', ({ nodeCount, edgeCount, animate }) => {
+      // Reactive run-status (source of truth for any "is a layout running?" UI —
+      // toolbars read `runtime.layout.running`), then the bus event.
+      this.store.actions.layoutStatus.begin(layout.id, animate ?? false);
       this.events.emit('layout:run:start', {
         id: layout.id,
         layerId,
@@ -754,17 +792,42 @@ export class Canvas {
       });
     });
     const offEnd = layout.events.on('end', ({ reason }) => {
+      this.store.actions.layoutStatus.end();
       this.events.emit('layout:run:end', {
         id: layout.id,
         layerId,
         reason: reason === 'completed' ? 'settled' : 'stopped',
       });
     });
+    // Bridge per-tick progress too, so consumers can follow an animated settle
+    // (e.g. fit-on-load re-frames the growing graph). High-frequency for a live
+    // sim — subscribe sparingly and throttle.
+    const offTick = layout.events.on('tick', () => {
+      this.events.emit('layout:run:tick', { id: layout.id });
+    });
 
     return layout.apply(target as never).finally(() => {
       offStart();
       offEnd();
+      offTick();
     });
+  }
+
+  /**
+   * Cancel the layout run that's currently in flight, if any. Reads the running
+   * layout id from the reactive run-status (`runtime.layout.activeId`, written by
+   * {@link runLayout}) and calls its optional `stop()` — which settles the run,
+   * emits `end` (`reason: 'stopped'`), and clears `runtime.layout.running` back
+   * through the same bridge. No-op when nothing is running or the layout has no
+   * `stop()`. This is the engine-level counterpart a "Stop layout" control calls
+   * to halt the active (e.g. load-time) layout, distinct from any layout a UI
+   * applied out-of-band.
+   */
+  stopLayout(): void {
+    const id = this.store.view.getState().runtime.layout.activeId;
+    if (!id) return;
+    const layout = this.layouts.get(id) as { stop?: () => void } | undefined;
+    layout?.stop?.();
   }
 
   /**

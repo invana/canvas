@@ -639,10 +639,19 @@ export class D3ForceLayout extends Layout<GraphLayer> {
       sim.force('charge', force);
     }
 
+    // Centering. An explicit `center` wins. Otherwise, when the config gives no
+    // positional anchor at all (`center`/`x`/`y`/`radial`), default to a
+    // `forceCenter` at the origin: it recentres the centroid every tick, so the
+    // simulation can't translate off-screen. Without it, disconnected
+    // components and asymmetric forces impart a net momentum that (with
+    // `velocityDecay < 1`) drifts the whole graph steadily along an axis — the
+    // classic "the layout slides sideways while it animates" artifact.
     if (center !== undefined) {
       const force = forceCenter<SimNode>(center.x ?? 0, center.y ?? 0);
       if (center.strength !== undefined) force.strength(center.strength);
       sim.force('center', force);
+    } else if (x === undefined && y === undefined && radial === undefined) {
+      sim.force('center', forceCenter<SimNode>(0, 0));
     }
 
     if (collide !== undefined) {
