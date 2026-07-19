@@ -84,14 +84,14 @@ importers:
         specifier: workspace:*
         version: link:../../packages/graph-layout-geometric
       '@invana/styling':
-        specifier: ^0.0.18
-        version: 0.0.18(tailwindcss@4.3.2)
+        specifier: ^0.0.19
+        version: 0.0.19(tailwindcss@4.3.2)
       '@invana/themes':
-        specifier: ^0.0.18
-        version: 0.0.18(@invana/styling@0.0.18(tailwindcss@4.3.2))(@invana/ui@0.0.18(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^0.0.19
+        version: 0.0.19(@invana/styling@0.0.19(tailwindcss@4.3.2))(@invana/ui@0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@invana/ui':
-        specifier: ^0.0.18
-        version: 0.0.18(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
+        specifier: ^0.0.19
+        version: 0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
       '@opentelemetry/api':
         specifier: ^1.9.0
         version: 1.9.1
@@ -130,8 +130,8 @@ importers:
         version: 18.3.1(react@18.3.1)
     devDependencies:
       '@invana/forms':
-        specifier: ^0.0.18
-        version: 0.0.18(@invana/styling@0.0.18(tailwindcss@4.3.2))(@invana/ui@0.0.18(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.81.0(react@18.3.1))(react@18.3.1)
+        specifier: ^0.0.19
+        version: 0.0.19(@invana/styling@0.0.19(tailwindcss@4.3.2))(@invana/ui@0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.81.0(react@18.3.1))(react@18.3.1)
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
@@ -221,14 +221,14 @@ importers:
         specifier: workspace:*
         version: link:../canvas-ui
       '@invana/forms':
-        specifier: ^0.0.18
-        version: 0.0.18(@invana/styling@0.0.18(tailwindcss@4.3.2))(@invana/ui@0.0.18(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1)
+        specifier: ^0.0.19
+        version: 0.0.19(@invana/styling@0.0.19(tailwindcss@4.3.2))(@invana/ui@0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1)
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
       '@invana/ui':
-        specifier: ^0.0.18
-        version: 0.0.18(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
+        specifier: ^0.0.19
+        version: 0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
@@ -263,8 +263,8 @@ importers:
         specifier: workspace:*
         version: link:../canvas-store
       '@invana/themes':
-        specifier: ^0.0.18
-        version: 0.0.18(@invana/styling@0.0.18(tailwindcss@4.3.2))(@invana/ui@0.0.18(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^0.0.19
+        version: 0.0.19(@invana/styling@0.0.19(tailwindcss@4.3.2))(@invana/ui@0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       lucide-react:
         specifier: ^0.562.0
         version: 0.562.0(react@18.3.1)
@@ -279,8 +279,8 @@ importers:
         specifier: workspace:*
         version: link:../graph-layout-d3-force
       '@invana/ui':
-        specifier: ^0.0.18
-        version: 0.0.18(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
+        specifier: ^0.0.19
+        version: 0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
@@ -389,20 +389,20 @@ importers:
   packages/canvas-ui:
     devDependencies:
       '@invana/forms':
-        specifier: ^0.0.18
-        version: 0.0.18(@invana/styling@0.0.18(tailwindcss@4.3.2))(@invana/ui@0.0.18(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1)
+        specifier: ^0.0.19
+        version: 0.0.19(@invana/styling@0.0.19(tailwindcss@4.3.2))(@invana/ui@0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1)
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
       '@invana/styling':
-        specifier: ^0.0.18
-        version: 0.0.18(tailwindcss@4.3.2)
+        specifier: ^0.0.19
+        version: 0.0.19(tailwindcss@4.3.2)
       '@invana/themes':
-        specifier: ^0.0.18
-        version: 0.0.18(@invana/styling@0.0.18(tailwindcss@4.3.2))(@invana/ui@0.0.18(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^0.0.19
+        version: 0.0.19(@invana/styling@0.0.19(tailwindcss@4.3.2))(@invana/ui@0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@invana/ui':
-        specifier: ^0.0.18
-        version: 0.0.18(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
+        specifier: ^0.0.19
+        version: 0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
@@ -1317,30 +1317,30 @@ packages:
   '@iconify/types@2.0.0':
     resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
 
-  '@invana/forms@0.0.18':
-    resolution: {integrity: sha512-vtWiVY349HDDv+R83N+vVvcvWA52Zku727IY5viNkePeJid+soAtjfXQoqyeC6kqugmeTiOCDbB6ezakwzLxwg==}
+  '@invana/forms@0.0.19':
+    resolution: {integrity: sha512-+ufZBiQR1KbfBHAwO+VWJpfmIdAby624qrPpEi+Qm3gNfRV2BZERKTzgzeZKFPUStzdIGVZhlGyxBkFn2bqZsg==}
     peerDependencies:
-      '@invana/styling': 0.0.18
-      '@invana/ui': 0.0.18
+      '@invana/styling': 0.0.19
+      '@invana/ui': 0.0.19
       react: ^18 || ^19
       react-dom: ^18 || ^19
       react-hook-form: ^7
 
-  '@invana/styling@0.0.18':
-    resolution: {integrity: sha512-7o3rq8UyIzIJzh4l8pgYwKWt/IGxPsXQK7Dk6+EfAdTG8acZJP0VETgarubxB/28zIBVwwtdWM/2HFB/9hSLlg==}
+  '@invana/styling@0.0.19':
+    resolution: {integrity: sha512-CRGxvtGQEYQKJv6VPpbIiTJ9s4mOey2CyQQdOJ6uIfdmYlX2Iqc4t9E0HxkdYKxly23uC7hB+ABwXSYOqWFRTg==}
     peerDependencies:
       tailwindcss: ^4.1.18
 
-  '@invana/themes@0.0.18':
-    resolution: {integrity: sha512-5m40lICc1/hYFPC3FRmmLVOMf6QyNh3EZ4K8k3nbI4Wb7PDsf7WkvYXn2c4NZ3wpOIEeU3Sh9leu5hfZksJIpg==}
+  '@invana/themes@0.0.19':
+    resolution: {integrity: sha512-pN9XJ28gdUrb6/rpz4dXyjnHF6Iou5UKF1Ht2Af/rDCVDygM46NWwPr9JD5HNYvxqOWF97EkFj91nARBxq1N1A==}
     peerDependencies:
-      '@invana/styling': 0.0.18
-      '@invana/ui': 0.0.18
+      '@invana/styling': 0.0.19
+      '@invana/ui': 0.0.19
       react: ^18 || ^19
       react-dom: ^18 || ^19
 
-  '@invana/ui@0.0.18':
-    resolution: {integrity: sha512-hH8nCRH4JPesdVyBAAa+T6aAw/GlY08nHIBKWR5HYVnZzQvBerOKOayhQoSKsZvPZi2o2lO/QkvgIppXnbUHdA==}
+  '@invana/ui@0.0.19':
+    resolution: {integrity: sha512-6CJRDCH/husWFBT3hytdKfKgg5gbHzR6ce5SPleFW/MPe6uC/XYDoDQzIfnIAbsMvLe9cT4/QDYrSJPy6juvsg==}
     peerDependencies:
       react: ^18 || ^19
       react-dom: ^18 || ^19
@@ -5998,10 +5998,10 @@ snapshots:
 
   '@iconify/types@2.0.0': {}
 
-  '@invana/forms@0.0.18(@invana/styling@0.0.18(tailwindcss@4.3.2))(@invana/ui@0.0.18(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1)':
+  '@invana/forms@0.0.19(@invana/styling@0.0.19(tailwindcss@4.3.2))(@invana/ui@0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@invana/styling': 0.0.18(tailwindcss@4.3.2)
-      '@invana/ui': 0.0.18(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
+      '@invana/styling': 0.0.19(tailwindcss@4.3.2)
+      '@invana/ui': 0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
       '@radix-ui/react-checkbox': 1.3.7(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-label': 2.1.11(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-radio-group': 1.4.3(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -6018,10 +6018,10 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
-  '@invana/forms@0.0.18(@invana/styling@0.0.18(tailwindcss@4.3.2))(@invana/ui@0.0.18(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.81.0(react@18.3.1))(react@18.3.1)':
+  '@invana/forms@0.0.19(@invana/styling@0.0.19(tailwindcss@4.3.2))(@invana/ui@0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.81.0(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@invana/styling': 0.0.18(tailwindcss@4.3.2)
-      '@invana/ui': 0.0.18(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
+      '@invana/styling': 0.0.19(tailwindcss@4.3.2)
+      '@invana/ui': 0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
       '@radix-ui/react-checkbox': 1.3.7(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-label': 2.1.11(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-radio-group': 1.4.3(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -6038,18 +6038,18 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
-  '@invana/styling@0.0.18(tailwindcss@4.3.2)':
+  '@invana/styling@0.0.19(tailwindcss@4.3.2)':
     dependencies:
       tailwindcss: 4.3.2
 
-  '@invana/themes@0.0.18(@invana/styling@0.0.18(tailwindcss@4.3.2))(@invana/ui@0.0.18(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@invana/themes@0.0.19(@invana/styling@0.0.19(tailwindcss@4.3.2))(@invana/ui@0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@invana/styling': 0.0.18(tailwindcss@4.3.2)
-      '@invana/ui': 0.0.18(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
+      '@invana/styling': 0.0.19(tailwindcss@4.3.2)
+      '@invana/ui': 0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@invana/ui@0.0.18(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)':
+  '@invana/ui@0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)':
     dependencies:
       '@hookform/resolvers': 5.4.0(react-hook-form@7.81.0(react@18.3.1))
       '@radix-ui/react-accordion': 1.2.16(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
