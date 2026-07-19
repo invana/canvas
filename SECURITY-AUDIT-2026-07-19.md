@@ -17,7 +17,7 @@
 | D1 | **Critical** (dev-only) — ✅ **FIXED** | `vitest` <3.2.6 UI-server arbitrary file read/exec | dev dependency |
 | D2 | **High** (dev-only) — ✅ **FIXED** (residual: vitepress vite-5, dev/docs only) | `vite` / `rollup` / `esbuild` / `ws` / `@xmldom/xmldom` / minimatch / picomatch etc. — 21 high advisories | tooling deps |
 | D3 | **Moderate** (shipped) — ✅ **FIXED** | `@opentelemetry/core` DoS — affects a **published** package | `canvas-telemetry-otel` |
-| S1 | **Medium** — ✅ **FIXED** | GitHub Actions pinned by tag, not SHA, around `NPM_TOKEN` | `.github/workflows/*.yml` |
+| S1 | **Medium** — ⚠️ **PARTIAL** (tags + Dependabot, not SHA — by preference) | GitHub Actions pinned by tag, not SHA, around `NPM_TOKEN` | `.github/workflows/*.yml` |
 | S2 | **Medium** — ⚠️ **GROUNDWORK** (needs npm-side config) | Long-lived `NPM_TOKEN` instead of OIDC trusted publishing | `publish.yml` |
 | S3 | **Medium** — ✅ **FIXED** | pnpm 9 runs dependency install scripts unrestricted | `package.json` / workspace |
 | A4/A5 | Low — ✅ **FIXED** | Unvalidated image `src` in cards; missing `rel="noopener"` branch; `deepMerge` `__proto__` (unbounded template element count still open) | various |
@@ -37,7 +37,7 @@ Every source finding (A1–A5), the shipped-code dependency finding (D3), and al
 - **D3** — `canvas-telemetry-otel` `@opentelemetry/*` bumped (`resources`/`sdk-*` → `^2.9.0`, experimental exporters → `^0.220.0`), pulling patched `@opentelemetry/core` 2.9.0 into the **published** package. One-line API fix (`SimpleLogRecordProcessor` now takes `{ exporter }`). Builds clean.
 
 **Pass 2 — CI/supply-chain hardening + residual deps**
-- **S1** — every third-party GitHub Action in `publish.yml` / `deploy-storybook.yml` pinned to a full commit SHA (was mutable tags); added `.github/dependabot.yml` (github-actions, weekly) to keep the SHAs current.
+- **S1** — kept the third-party GitHub Actions on **version tags** (`@v5`, `@v6`) by preference, with `.github/dependabot.yml` (github-actions, weekly) opening reviewable PRs for new versions. Note: tags are mutable, so this is weaker than SHA-pinning against a tag-retargeting attack on the `NPM_TOKEN` job — the residual risk is accepted in exchange for readable/maintainable workflows.
 - **S2** — `publish.yml` documents the OIDC Trusted-Publishing migration (id-token + `--provenance` already wired). Token **not** removed: completing the switch needs a one-time trusted-publisher config on npmjs.com — until then removing `NPM_TOKEN` would break releases. See the `TODO(security S2)` in the workflow.
 - **S3** — `packageManager` → `pnpm@10.34.5` (pnpm 10 blocks dependency lifecycle scripts by default); `pnpm-workspace.yaml` `onlyBuiltDependencies: [esbuild]` re-allows only the one dep that needs a build script. Shrinks the arbitrary-code-on-install surface, including in the token-holding CI job.
 - **S4** — `.gitignore` now ignores all `.env*` (was only `.env*.local`), matching turbo's `.env*` build inputs.

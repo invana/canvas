@@ -1,8 +1,7 @@
 version: 2
 updates:
-  # Keep the SHA-pinned GitHub Actions current. Without this, actions pinned to
-  # a commit SHA (publish.yml / deploy-storybook.yml) never receive upstream
-  # security fixes. Dependabot bumps the SHA and updates the trailing `# vN`.
+  # Keep the GitHub Actions used in publish.yml / deploy-storybook.yml current,
+  # so new major tags (and their upstream security fixes) land via a reviewable PR.
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
