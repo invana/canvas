@@ -19,7 +19,7 @@
   "devDependencies": {
     "git-cliff": "^2.13.1",
     "prettier": "^3.7.4",
-    "turbo": "^2.7.1",
+    "turbo": "^2.10.5",
     "typescript": "5.9.2"
   },
   "packageManager": "pnpm@9.0.0",

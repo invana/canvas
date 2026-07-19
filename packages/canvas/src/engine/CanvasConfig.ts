@@ -57,6 +57,10 @@ export function deepMerge(base: unknown, patch: unknown): unknown {
   if (!isPlainObject(base) || !isPlainObject(patch)) return patch;
   const out: Record<string, unknown> = { ...base };
   for (const [k, v] of Object.entries(patch)) {
+    // Skip prototype-polluting keys — this merge runs on untrusted imported
+    // config (see importState). Copy-based, so pollution stays local, but the
+    // guard keeps a corrupted merge result from ever forming.
+    if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
     out[k] = isPlainObject(v) && isPlainObject(out[k]) ? deepMerge(out[k], v) : v;
   }
   return out;

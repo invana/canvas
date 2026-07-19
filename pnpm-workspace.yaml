@@ -1,3 +1,15 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# Security remediation (2026-07-19): force patched versions of vulnerable
+# transitive dev/build-tooling deps flagged by `pnpm audit`. All are
+# non-shipped (build/lint/docs/test toolchain). Single-major-line ranges only,
+# so no consumer is forced across a breaking major. See SECURITY-AUDIT-2026-07-19.md.
+overrides:
+  ws: ">=8.21.1"
+  "@xmldom/xmldom": ">=0.8.13 <0.9.0"
+  flatted: ">=3.4.2"
+  linkify-it: ">=5.0.1 <6"
+  markdown-it: ">=14.2.0"
+  rollup: ">=4.59.0"

@@ -744,6 +744,8 @@ function mergeDeep<T>(base: T, patch: Partial<T>): T {
   if (!isObj(base) || !isObj(patch)) return patch as T;
   const out: Record<string, unknown> = { ...base };
   for (const [k, v] of Object.entries(patch)) {
+    // Skip prototype-polluting keys from untrusted option patches.
+    if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
     out[k] = isObj(v) && isObj(out[k]) ? mergeDeep(out[k], v) : v;
   }
   return out as T;

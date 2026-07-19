@@ -124,11 +124,18 @@ function NumberValue({ value }: { value: number }): ReactNode {
 }
 
 function LinkValue({ href }: { href: string }): ReactNode {
+  // Re-validate the scheme here, not just at renderer selection: the `hint`
+  // path (resolvePropertyRenderer) can force-select the `url` renderer without
+  // running its `match` (= isSafeHref), so an attacker-controlled
+  // `javascript:` value in node data could otherwise reach `href`. React does
+  // not block dangerous href schemes at runtime — fall back to plain text.
+  if (!isSafeHref(href)) return <span className="break-all">{href}</span>;
   const external = /^https?:/i.test(href.trim());
   return (
     <a
       href={href}
-      {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      {...(external ? { target: '_blank' } : {})}
+      rel="noopener noreferrer"
       className="break-all text-primary hover:underline"
     >
       {href}
@@ -138,6 +145,10 @@ function LinkValue({ href }: { href: string }): ReactNode {
 }
 
 function ImageValue({ url }: { url: string }): ReactNode {
+  // Defensive re-check for the `image` hint path (mirrors LinkValue): only emit
+  // an <img src>/<a href> for a validated image URL; otherwise render as text
+  // so a non-image / unsafe-scheme value can't beacon or open a bad link.
+  if (!isImageUrl(url)) return <span className="break-all">{url}</span>;
   return (
     <a href={url} target="_blank" rel="noopener noreferrer">
       <img

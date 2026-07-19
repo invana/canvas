@@ -17,6 +17,17 @@ export interface PreviewCardRow {
   mono?: boolean;
 }
 
+/**
+ * Only allow an `<img src>` for an `https:` / `data:image/` URL. Card image URLs
+ * come from node data (untrusted), so an arbitrary `http:`/other-scheme URL is
+ * rejected to avoid tracking-pixel exfiltration and SSRF-style beaconing to
+ * attacker-controlled hosts. Local helper (this package takes no engine deps).
+ */
+function isSafeImageSrc(s: string): boolean {
+  const t = s.trim();
+  return /^data:image\//i.test(t) || /^https:\/\//i.test(t);
+}
+
 function PreviewRow({ label, value, mono }: PreviewCardRow) {
   return (
     <div className="flex justify-between gap-3 text-xs">
@@ -63,7 +74,7 @@ export function NodePreviewCard({
     <Card className={cn('w-72 shadow-xl', className)}>
       <CardHeader className="space-y-2">
         <div className="flex items-start gap-3">
-          {image ? (
+          {image && isSafeImageSrc(image) ? (
             <img
               src={image}
               alt=""

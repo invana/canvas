@@ -15,12 +15,25 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
 }
 
 /**
+ * Keys that must never be written from an untrusted patch. Merging in place
+ * means a recursive step into `__proto__` / `constructor` / `prototype` escapes
+ * the immer draft onto the real prototype chain, so an object-form patch parsed
+ * from untrusted JSON (`{"k":{"__proto__":{…}}}`) would pollute
+ * `Object.prototype` globally. Skipping these keys closes that.
+ */
+const FORBIDDEN_MERGE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+/**
  * Deep-merge `patch` into a mutable `draft` in place: plain objects merge
  * field-by-field; everything else (arrays, sets, maps, functions, primitives,
  * class instances) **replaces**. Mirrors the engine's `deepMerge` semantics.
+ *
+ * Prototype-polluting keys ({@link FORBIDDEN_MERGE_KEYS}) are skipped — this is
+ * the store's public write path (`update(patch)`) and receives untrusted input.
  */
 export function applyDeepPartial(draft: Record<string, unknown>, patch: Record<string, unknown>): void {
   for (const [k, v] of Object.entries(patch)) {
+    if (FORBIDDEN_MERGE_KEYS.has(k)) continue;
     const cur = draft[k];
     if (isPlainObject(v) && isPlainObject(cur)) applyDeepPartial(cur, v);
     else draft[k] = v;

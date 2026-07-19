@@ -12,6 +12,17 @@ export interface HoverElementPreviewCardProps {
 }
 
 /**
+ * Only render an `<img src>` for an `https:` / `data:image/` URL. `card.imageUrl`
+ * is resolved from node data (untrusted), so other schemes are rejected to avoid
+ * tracking-pixel exfiltration and SSRF-style beaconing to attacker-controlled
+ * hosts (an arbitrary `http://internal…` in an Electron packaging).
+ */
+function isSafeImageSrc(s: string): boolean {
+  const t = s.trim();
+  return /^data:image\//i.test(t) || /^https:\/\//i.test(t);
+}
+
+/**
  * Dumb, data-driven preview card — the **default content** for
  * `HoverElementPreviewBehaviour`. Identity-card layout: image (left) / title +
  * subtitle (right) → property rows (`id` / `type` first, auto) below a divider.
@@ -25,9 +36,10 @@ export interface HoverElementPreviewCardProps {
  * the resolved-card *type* is imported).
  */
 export function HoverElementPreviewCard({ card, className, style }: HoverElementPreviewCardProps) {
+  const imageUrl = card.imageUrl && isSafeImageSrc(card.imageUrl) ? card.imageUrl : undefined;
   // The identity block (image / title / subtitle) is optional — `id` / `type`
   // live in the rows, so an element with none of these renders rows only.
-  const hasIdentity = !!(card.imageUrl || card.title || card.subtitle);
+  const hasIdentity = !!(imageUrl || card.title || card.subtitle);
 
   return (
     // Use design-kit tokens that ship in the prebuilt utilities sheet
@@ -42,9 +54,9 @@ export function HoverElementPreviewCard({ card, className, style }: HoverElement
       {/* Identity row — image left, title + subtitle right. Optional. */}
       {hasIdentity ? (
         <div className="flex items-start gap-2.5">
-          {card.imageUrl ? (
+          {imageUrl ? (
             <img
-              src={card.imageUrl}
+              src={imageUrl}
               alt=""
               className={cn(
                 'h-12 w-12 shrink-0 bg-muted object-cover',

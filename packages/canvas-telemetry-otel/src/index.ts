@@ -140,7 +140,11 @@ export function otelTelemetry(opts: OtelTelemetryOptions = {}): CanvasTelemetryC
     if (!otelLogger) {
       const provider = new LoggerProvider({
         resource,
-        processors: [new SimpleLogRecordProcessor(new OTLPLogExporter({ url: `${base}/v1/logs`, headers }))],
+        processors: [
+          new SimpleLogRecordProcessor({
+            exporter: new OTLPLogExporter({ url: `${base}/v1/logs`, headers }),
+          }),
+        ],
       });
       otelLogger = provider.getLogger(serviceName);
     }
