@@ -8,8 +8,9 @@
  *   - **Footer** — live status bar + message line.
  *   - **Custom layers** (composed as children) — a minimap and a dev-info overlay
  *     (mounted on demand by the header's dev-overlay toggle).
- *   - **Custom behaviours** — a click-to-open property inspector and label
- *     level-of-detail (labels fade out when zoomed far).
+ *   - **Custom behaviours** — a click-to-inspect that drives the **docked right
+ *     section** (via `<ClickViewBehaviour onClick={…}>` → state → `right`, no
+ *     floating panel) and label level-of-detail (labels fade when zoomed far).
  *   - **Context menus** — node + background, composed in.
  *   - **Custom settings** — community colours via a `bgFill` resolver on
  *     `config.layers.graph`, looser force in `config.layouts['graph-force']`.
@@ -18,6 +19,7 @@
  * (extra layers / behaviours / menus) — no bespoke app props.
  */
 
+import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   CanvasMessageBar,
@@ -33,9 +35,8 @@ import {
   type GraphNodeMenuContext,
   GraphStatusBar,
   TextResolutionLODBehaviour,
-  Panel,
-  PanelContent,
   type LayoutFactory,
+  type ViewContext,
   ThemeToggle,
   useDevTool,
   useMiniMap,
@@ -74,6 +75,9 @@ export const FullFeatured: Story = {
   render: () => {
     const dev = useDevTool({ corner: 'top-left', margin: { x: 12, y: 48 } });
     const mini = useMiniMap({ backgroundLayerId: 'background', position: 'bottom-left' });
+    // The clicked node/edge (or null on a background click) — drives the docked
+    // right section below, fed by <ClickViewBehaviour onClick={…}>.
+    const [view, setView] = useState<ViewContext | null>(null);
     // Les Misérables ships no `type` — in a graph DB every node/edge carries a
     // label (its "type"). Each node's community `group` becomes its type so the
     // inspector's Type row reflects its real category; edges are `APPEARS_WITH`.
@@ -121,26 +125,37 @@ export const FullFeatured: Story = {
           ),
         }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        // The docked right region is **hidden by default** and only mounts once
+        // you click a node/edge (see <ClickViewBehaviour onClick> below): omitting
+        // the `right` bag hides it and the canvas reclaims the width; a background
+        // click clears the selection → `undefined` → the region unmounts again.
+        right={
+          view
+            ? {
+                content:
+                  view.kind === 'edge' ? <EdgeDetailView ctx={view} /> : <NodeDetailView ctx={view} />,
+                // Pin the inspector to exactly 320px: default = min = max, so the
+                // panel opens at 320 and the editor absorbs the rest of the width.
+                // (react-resizable-panels scales a lone `defaultSize` up to fill the
+                // row — pinning all three is the only way to hold an exact width.)
+                // It closes via a background click (clears `view` → region unmounts).
+                defaultSize: '320px',
+                // minSize: '0px',
+                maxSize: '320px',
+                collapsible: false,
+              }
+            : undefined
+        }
       >
         {/* Extra layers — beyond the bundle. */}
         {mini.layer}
         {dev.layer}
 
-        {/* Extra behaviours — click-to-open inspector + label level-of-detail.
-            A full-height right-side <Panel> positions a <PanelContent> that owns
-            the surface: its header bar holds the close ✕, its body holds the
-            (bare) detail view. The docked layout already bounds the canvas. */}
-        <ClickViewBehaviour
-          id="click-view"
-          targetLayerId="graph"
-          panel={(ctx) => (
-            <Panel position="right">
-              <PanelContent header={ctx.kind === 'edge' ? 'Edge Detail' : 'Node Detail'} onClose={ctx.close} fill>
-                {ctx.kind === 'edge' ? <EdgeDetailView ctx={ctx} /> : <NodeDetailView ctx={ctx} />}
-              </PanelContent>
-            </Panel>
-          )}
-        />
+        {/* Extra behaviours — click-to-inspect + label level-of-detail. Instead
+            of a floating <Panel>, `onClick` reports the clicked element (or null
+            on a background click); the story stashes it in state and renders the
+            detail view in the docked `right` region above. */}
+        <ClickViewBehaviour id="click-view" targetLayerId="graph" onClick={setView} />
         <TextResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
 
         {/* Right-click menus. */}
