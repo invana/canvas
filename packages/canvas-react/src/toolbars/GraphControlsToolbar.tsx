@@ -32,7 +32,7 @@
 import { type ReactNode } from 'react';
 import type { GraphCanvas } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
-import { Grid3x3, Lasso, MousePointer2, Play, SquareDashedMousePointer } from 'lucide-react';
+import { Grid3x3, Lasso, MousePointer2, Play, Square, SquareDashedMousePointer } from 'lucide-react';
 
 import { useGraphCanvas } from '../GraphCanvasContext';
 import { GraphClipboardProvider, GraphHistoryProvider } from '../providers';
@@ -145,7 +145,7 @@ function useControlSections(props: GraphControlsToolbarProps) {
   const layouts = props.layouts ?? DEFAULT_LAYOUTS;
   const layoutLabel = props.layoutLabel ?? DEFAULT_LAYOUT_LABEL;
 
-  const { layout, layoutOptions, applyLayout, isRunning } = useLayout(layouts, {
+  const { layout, layoutOptions, applyLayout, stopLayout, isRunning } = useLayout(layouts, {
     layerId,
     labels: layoutLabel,
     initial: Object.keys(layouts)[0],
@@ -162,7 +162,13 @@ function useControlSections(props: GraphControlsToolbarProps) {
   return {
     layout: [
       { type: 'select', key: 'layout', label: 'Layout', value: layout, options: layoutOptions, onChange: applyLayout },
-      { type: 'button', key: 'run-layout', icon: Play, label: 'Run layout', onClick: () => applyLayout(layout), disabled: isRunning },
+      // Engine-agnostic run/stop toggle: while any layout is applying (a live
+      // d3-force sim, an async ELK solve, …) the button flips to Stop and
+      // cancels the run via the layout's `stop()`; otherwise it (re-)runs the
+      // selected layout.
+      isRunning
+        ? { type: 'button', key: 'run-layout', icon: Square, iconClass: 'fill-current', label: 'Stop layout', onClick: stopLayout }
+        : { type: 'button', key: 'run-layout', icon: Play, label: 'Run layout', onClick: () => applyLayout(layout) },
     ] as ToolbarItem[],
     select: [
       { type: 'select', key: 'select-mode', label: 'Select', value: mode, options: modeOptions, icons: { click: MousePointer2, brush: SquareDashedMousePointer, lasso: Lasso }, onChange: setMode, triggerLabelOnly: true },

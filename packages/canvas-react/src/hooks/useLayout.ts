@@ -33,6 +33,13 @@ export interface UseLayoutResult {
   layoutOptions: Record<string, string>;
   /** Apply the layout registered under `key`, then fit the view. */
   applyLayout: (key: string) => void;
+  /**
+   * Cancel the in-flight layout run (calls the active instance's `stop()`, if it
+   * has one) and clear {@link isRunning}. No-op when nothing is running. For an
+   * animated d3-force this halts the live simulation where it stands; for a
+   * one-shot layout without `stop()` it just clears the running flag.
+   */
+  stopLayout: () => void;
   /** True while a layout's `apply` promise is in flight. */
   isRunning: boolean;
 }
@@ -81,6 +88,14 @@ export function useLayout(
     [layouts, resolved, layerId, fitPadding],
   );
 
+  const stopLayout = useCallback(() => {
+    const instance = activeRef.current;
+    if (!instance) return;
+    activeRef.current = null; // supersede: the pending `apply` promise no-ops on resolve
+    instance.stop?.();
+    setRunning(false);
+  }, []);
+
   // Apply the initial layout once, as soon as the target layer is mounted.
   const didInit = useRef(false);
   const applyInitial = options.applyInitial ?? true;
@@ -94,5 +109,5 @@ export function useLayout(
   const layoutOptions =
     options.labels ?? Object.fromEntries(keys.map((k) => [k, k]));
 
-  return { layout, layoutOptions, applyLayout, isRunning };
+  return { layout, layoutOptions, applyLayout, stopLayout, isRunning };
 }

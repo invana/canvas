@@ -54,8 +54,10 @@ type Story = StoryObj;
 
 // Module-scoped so the references stay stable across renders.
 const LAYOUTS: Record<string, LayoutFactory> = {
+  // `animate: true` — a live, interactive settle so the toolbar's Run button
+  // flips to Stop while the simulation runs (click Stop to halt it in place).
   'd3-force': () =>
-    new D3ForceLayout({ charge: { strength: -240 }, link: { distance: 70 }, animate: false }),
+    new D3ForceLayout({ charge: { strength: -240 }, link: { distance: 70 }, animate: true }),
   'elk-layered': () => new ElkLayout({ algorithm: 'layered', direction: 'RIGHT' }),
 };
 const LAYOUT_LABEL: Record<string, string> = { 'd3-force': 'Force', 'elk-layered': 'Layered' };
