@@ -118,7 +118,11 @@ export interface GraphCanvasAppSectionOptions {
   content?: RegionSlot;
   /** Initial size of the panel (percent number, or a CSS size string). */
   defaultSize?: number | string;
-  /** Minimum size the drag handle allows. */
+  /**
+   * Minimum size the drag handle allows (percent number, or a CSS size string).
+   * Defaults to `'0px'` — the panel can shrink all the way — instead of the
+   * layout's built-in per-region minimum. Set it to impose a floor.
+   */
   minSize?: number | string;
   /** Maximum size the drag handle allows. */
   maxSize?: number | string;
@@ -151,7 +155,9 @@ function toSection(
   return {
     content: bag.className ? <div className={cx('h-full', bag.className)}>{body}</div> : body,
     defaultSize: bag.defaultSize,
-    minSize: bag.minSize,
+    // Default the floor to 0 (panel can shrink fully) rather than the layout's
+    // built-in per-region minimum; a consumer-set `minSize` overrides it.
+    minSize: bag.minSize ?? '0px',
     maxSize: bag.maxSize,
     collapsible: bag.collapsible ?? true,
   };

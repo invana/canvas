@@ -63,6 +63,24 @@ export interface ClickViewBehaviourProps
    * ```
    */
   onView?: (ctx: ViewContext | null) => void;
+  /**
+   * Alias of {@link onView} — same signature and change-based firing (fires when
+   * the clicked element *changes*; `null` on a background click). Provided as the
+   * more familiar name for the common "click an element → drive my own UI" flow —
+   * e.g. open a **docked right-side section** with `<NodeDetailView>` /
+   * `<EdgeDetailView>` instead of the `panel` render-prop's floating overlay. If
+   * both are given, `onView` wins.
+   *
+   * @example
+   * ```tsx
+   * const [sel, setSel] = useState<ViewContext | null>(null);
+   * <ClickViewBehaviour onClick={setSel} />
+   * // …in GraphCanvasApp's right region:
+   * right={{ content: sel && (sel.kind === 'edge'
+   *   ? <EdgeDetailView ctx={sel} /> : <NodeDetailView ctx={sel} />) }}
+   * ```
+   */
+  onClick?: (ctx: ViewContext | null) => void;
 }
 
 /**
@@ -86,6 +104,7 @@ export function ClickViewBehaviour({
   enabled = true,
   panel,
   onView,
+  onClick,
   ...rest
 }: ClickViewBehaviourProps) {
   useBehaviourRegistration(
@@ -94,13 +113,15 @@ export function ClickViewBehaviour({
     enabled,
     [id, targetLayerId],
   );
+  // `onClick` is a friendlier alias of `onView`; `onView` wins if both are given.
+  const notify = onView ?? onClick;
   // Mount the subscription surface if either consumer hook is present.
-  return panel || onView ? (
+  return panel || notify ? (
     <ClickViewSurface
       viewId={id}
       layerId={targetLayerId}
       {...(panel ? { panel } : {})}
-      {...(onView ? { onView } : {})}
+      {...(notify ? { onView: notify } : {})}
     />
   ) : null;
 }
