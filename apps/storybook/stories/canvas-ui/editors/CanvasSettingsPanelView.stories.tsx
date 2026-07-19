@@ -131,6 +131,8 @@ function StandaloneDemo() {
         />
       </div>
 
+      {/* The last emitted patch and the full definition each get their own
+          column, side by side (not stacked). */}
       <div style={colStyle}>
         <div style={labelStyle}>Live → canvas.update()</div>
         <pre style={preStyle}>
@@ -142,6 +144,9 @@ function StandaloneDemo() {
               )})`
             : '// edit any field to see the engine-shaped patch'}
         </pre>
+      </div>
+
+      <div style={colStyle}>
         <div style={labelStyle}>Definition document</div>
         <pre style={preStyle}>{JSON.stringify(definition, null, 2)}</pre>
       </div>
@@ -401,10 +406,10 @@ const colStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: 8,
-  width: 360,
-  minWidth: 0,
-  overflow: 'auto',
+  flex: 1,
+  minWidth: 320,
   maxHeight: '100%',
+  overflow: 'hidden',
 };
 
 const labelStyle: CSSProperties = { fontWeight: 600, fontSize: 13 };
@@ -416,5 +421,7 @@ const preStyle: CSSProperties = {
   lineHeight: 1.5,
   background: 'var(--muted, #f4f4f5)',
   borderRadius: 8,
+  flex: 1,
+  minHeight: 0,
   overflow: 'auto',
 };
