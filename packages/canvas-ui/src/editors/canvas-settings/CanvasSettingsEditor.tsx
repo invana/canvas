@@ -8,6 +8,8 @@ import {
   Button,
   Card,
   CardContent,
+  PanelStack,
+  type PanelStackSection,
   cn,
 } from '@invana/ui';
 import { Input, SettingsPanel, Switch, type FieldConfig } from '@invana/forms';
@@ -24,7 +26,7 @@ import type {
   SettingsSection,
 } from './types';
 
-export interface CanvasSettingsPanelViewProps {
+export interface CanvasSettingsEditorProps {
   /**
    * The canvas settings to browse + edit — every registered layer / behaviour /
    * layout with its `kind` + current engine-shaped `settings`.
@@ -232,21 +234,26 @@ function InstanceEditor({
 }
 
 /**
- * `CanvasSettingsPanelView` — a **file-browser-style settings panel** for a whole
- * canvas definition. It takes the serialisable set of registered layers /
- * behaviours / layouts + their settings, lists them in a nested accordion
- * (folders = sections, files = instances), and expands each row **in place** to a
- * schema-driven `SettingsPanel`. Edits are handed back as engine-shaped patches
- * via {@link CanvasSettingsPanelViewProps.onChange | onChange} for the host to
- * apply (typically live through `canvas.update(...)`).
+ * `CanvasSettingsEditor` — a **file-browser-style settings panel** for a whole
+ * canvas definition. The three sections (Layers / Behaviours / Layouts) are a
+ * `PanelStack` — the VS-Code "view container": collapsible, resizable panels
+ * whose headers stay visible. Each section's body lists its instances (files);
+ * expanding a row reveals a schema-driven `SettingsPanel` **in place**. Edits are
+ * handed back as engine-shaped patches via
+ * {@link CanvasSettingsEditorProps.onChange | onChange} for the host to apply
+ * (typically live through `canvas.update(...)`).
+ *
+ * **Sizing:** the `PanelStack` fills its parent's height, so mount this in a
+ * sized container (a fixed-height sidebar, a flex/grid track, `h-full`) — not one
+ * that sizes to its content.
  *
  * Engine-agnostic: the schema + engine⇄form mapping for each `kind` comes from
- * the injected {@link CanvasSettingsPanelViewProps.schemas | schemas} registry
+ * the injected {@link CanvasSettingsEditorProps.schemas | schemas} registry
  * (default {@link DEFAULT_CANVAS_SETTINGS_SCHEMAS}); the panel never imports the
  * engine. Instances whose `kind` isn't in the registry are still listed with a
  * "no editor" placeholder, so the panel reflects the whole definition honestly.
  */
-export function CanvasSettingsPanelView({
+export function CanvasSettingsEditor({
   definition,
   schemas = DEFAULT_CANVAS_SETTINGS_SCHEMAS,
   applyMode = 'live',
@@ -255,7 +262,7 @@ export function CanvasSettingsPanelView({
   onToggle,
   onActiveLayoutChange,
   className,
-}: CanvasSettingsPanelViewProps) {
+}: CanvasSettingsEditorProps) {
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
 
@@ -282,9 +289,135 @@ export function CanvasSettingsPanelView({
         ),
     );
 
+  // The file-browser body for one section — the list of instances, each an
+  // expandable row (VS Code explorer files under a folder). Rendered as a
+  // `PanelStack` section's `content` below.
+  const renderSectionItems = (sectionId: SettingsSection, items: CanvasSettingsInstance[]): ReactNode =>
+    items.length === 0 ? (
+      <p className="px-2 py-1 text-xs italic text-muted-foreground">None registered</p>
+    ) : (
+      // One expandable instance per row, with a tree-style indentation guide line.
+      <div className="ml-2 border-l pl-2">
+        <Accordion
+          type="multiple"
+          value={openRows[sectionId] ?? []}
+          onValueChange={(v) => setOpenRows((s) => ({ ...s, [sectionId]: v }))}
+        >
+          {items.map((inst) => {
+            const entry = schemas[inst.kind];
+            const rowValue = `${sectionId}:${inst.id}`;
+            // Layers + behaviours toggle on/off; layouts use "active".
+            const toggleable = sectionId !== 'layouts' && inst.enabled !== undefined;
+            const rowOff = toggleable && inst.enabled === false;
+            const isActive = sectionId === 'layouts' && inst.id === definition.activeLayoutId;
+
+            return (
+              <AccordionItem key={inst.id} value={rowValue} className="last:border-b-0">
+                <div className="flex items-center gap-2">
+                  {toggleable && (
+                    <Switch
+                      checked={inst.enabled !== false}
+                      onCheckedChange={(v) => {
+                        onToggle?.(sectionId, inst.id, v);
+                        if (!v)
+                          setOpenRows((s) => ({
+                            ...s,
+                            [sectionId]: (s[sectionId] ?? []).filter((val) => val !== rowValue),
+                          }));
+                      }}
+                      aria-label={`Toggle ${inst.id}`}
+                      className="ml-1 shrink-0"
+                    />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <AccordionTrigger
+                      disabled={rowOff}
+                      className={cn('py-2 hover:no-underline', CHEVRON_RIGHT, rowOff && 'opacity-50')}
+                    >
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className="truncate font-medium">{inst.id}</span>
+                        <span className="truncate text-xs text-muted-foreground">
+                          {inst.typeLabel ?? entry?.typeLabel ?? inst.kind}
+                        </span>
+                        {isActive && (
+                          <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
+                            active
+                          </Badge>
+                        )}
+                        {!entry && (
+                          <Badge variant="outline" className="px-1.5 py-0 text-[10px] opacity-60">
+                            no editor
+                          </Badge>
+                        )}
+                      </span>
+                    </AccordionTrigger>
+                  </div>
+                </div>
+                <AccordionContent className="p-0">
+                  <div className="ml-2 border-l pl-2">
+                    {/* Layouts: offer activation for the non-active ones. */}
+                    {sectionId === 'layouts' && !isActive && onActiveLayoutChange && (
+                      <div className="px-3 pt-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onActiveLayoutChange(inst.id)}
+                        >
+                          Make active
+                        </Button>
+                      </div>
+                    )}
+                    {entry ? (
+                      <InstanceEditor
+                        entry={entry}
+                        instance={inst}
+                        applyMode={applyMode}
+                        onChange={(patch) => onChange?.(sectionId, inst.id, patch)}
+                      />
+                    ) : (
+                      <p className="px-3 py-2 text-xs italic text-muted-foreground">
+                        No settings editor registered for {inst.kind}.
+                      </p>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
+        </Accordion>
+      </div>
+    );
+
+  // Map the three folders → `PanelStack` sections. Each is a collapsible,
+  // resizable panel in the VS-Code "view container" stack; its body is the
+  // file-browser list. A search query that hides every instance in a section
+  // drops that section from the stack.
+  const sections: PanelStackSection[] = SECTIONS.map((section) => {
+    const sectionMatches = q !== '' && section.label.toLowerCase().includes(q);
+    const items = instancesBySection[section.id].filter(
+      (inst) => !q || sectionMatches || instanceHaystack(inst, schemas[inst.kind]).includes(q),
+    );
+    return { section, items };
+  })
+    .filter(({ items }) => !q || items.length > 0)
+    .map(({ section, items }) => ({
+      id: section.id,
+      title: (
+        <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {section.label}
+          <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
+            {instancesBySection[section.id].length}
+          </Badge>
+        </span>
+      ),
+      content: renderSectionItems(section.id, items),
+    }));
+
   return (
-    <Card className={cn('w-full', className)}>
-      <CardContent className="flex flex-col gap-1 p-2">
+    // `PanelStack` fills its parent's height, so the card is a full-height flex
+    // column and the stack takes the remaining space under the title + search.
+    <Card className={cn('flex h-full w-full flex-col', className)}>
+      <CardContent className="flex min-h-0 flex-1 flex-col gap-1 p-2">
         {title != null && <h2 className="px-1 py-1 text-base font-semibold">{title}</h2>}
 
         <div className="relative mb-1 px-1">
@@ -297,151 +430,15 @@ export function CanvasSettingsPanelView({
           />
         </div>
 
-        {/* Folders: Layers / Behaviours / Layouts */}
-        <Accordion type="multiple" defaultValue={SECTIONS.map((s) => s.id)}>
-          {SECTIONS.map((section) => {
-            const sectionMatches = q !== '' && section.label.toLowerCase().includes(q);
-            const items = instancesBySection[section.id].filter(
-              (inst) => !q || sectionMatches || instanceHaystack(inst, schemas[inst.kind]).includes(q),
-            );
-            if (q && items.length === 0) return null;
-
-            return (
-              <AccordionItem key={section.id} value={section.id} className="border-b">
-                <AccordionTrigger
-                  className={cn(
-                    'px-1 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline',
-                    CHEVRON_RIGHT,
-                  )}
-                >
-                  <span className="flex items-center gap-2">
-                    {section.label}
-                    <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
-                      {instancesBySection[section.id].length}
-                    </Badge>
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="pb-1">
-                  {items.length === 0 ? (
-                    <p className="px-2 py-1 text-xs italic text-muted-foreground">None registered</p>
-                  ) : (
-                    // Files: one expandable instance per row, with a tree-style
-                    // indentation guide line (VS Code explorer).
-                    <div className="ml-2 border-l pl-2">
-                      <Accordion
-                        type="multiple"
-                        value={openRows[section.id] ?? []}
-                        onValueChange={(v) => setOpenRows((s) => ({ ...s, [section.id]: v }))}
-                      >
-                        {items.map((inst) => {
-                          const entry = schemas[inst.kind];
-                          const rowValue = `${section.id}:${inst.id}`;
-                          // Layers + behaviours toggle on/off; layouts use "active".
-                          const toggleable = section.id !== 'layouts' && inst.enabled !== undefined;
-                          const rowOff = toggleable && inst.enabled === false;
-                          const isActive = section.id === 'layouts' && inst.id === definition.activeLayoutId;
-
-                          return (
-                            <AccordionItem
-                              key={inst.id}
-                              value={rowValue}
-                              className="last:border-b-0"
-                            >
-                              <div className="flex items-center gap-2">
-                                {toggleable && (
-                                  <Switch
-                                    checked={inst.enabled !== false}
-                                    onCheckedChange={(v) => {
-                                      onToggle?.(section.id, inst.id, v);
-                                      if (!v)
-                                        setOpenRows((s) => ({
-                                          ...s,
-                                          [section.id]: (s[section.id] ?? []).filter(
-                                            (val) => val !== rowValue,
-                                          ),
-                                        }));
-                                    }}
-                                    aria-label={`Toggle ${inst.id}`}
-                                    className="ml-1 shrink-0"
-                                  />
-                                )}
-                                <div className="min-w-0 flex-1">
-                                  <AccordionTrigger
-                                    disabled={rowOff}
-                                    className={cn(
-                                      'py-2 hover:no-underline',
-                                      CHEVRON_RIGHT,
-                                      rowOff && 'opacity-50',
-                                    )}
-                                  >
-                                    <span className="flex min-w-0 items-center gap-2">
-                                      <span className="truncate font-medium">{inst.id}</span>
-                                      <span className="truncate text-xs text-muted-foreground">
-                                        {inst.typeLabel ?? entry?.typeLabel ?? inst.kind}
-                                      </span>
-                                      {isActive && (
-                                        <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
-                                          active
-                                        </Badge>
-                                      )}
-                                      {!entry && (
-                                        <Badge
-                                          variant="outline"
-                                          className="px-1.5 py-0 text-[10px] opacity-60"
-                                        >
-                                          no editor
-                                        </Badge>
-                                      )}
-                                    </span>
-                                  </AccordionTrigger>
-                                </div>
-                              </div>
-                              <AccordionContent className="p-0">
-                                <div className="ml-2 border-l pl-2">
-                                  {/* Layouts: offer activation for the non-active ones. */}
-                                  {section.id === 'layouts' &&
-                                    !isActive &&
-                                    onActiveLayoutChange && (
-                                      <div className="px-3 pt-2">
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={() => onActiveLayoutChange(inst.id)}
-                                        >
-                                          Make active
-                                        </Button>
-                                      </div>
-                                    )}
-                                  {entry ? (
-                                    <InstanceEditor
-                                      entry={entry}
-                                      instance={inst}
-                                      applyMode={applyMode}
-                                      onChange={(patch) => onChange?.(section.id, inst.id, patch)}
-                                    />
-                                  ) : (
-                                    <p className="px-3 py-2 text-xs italic text-muted-foreground">
-                                      No settings editor registered for {inst.kind}.
-                                    </p>
-                                  )}
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                          );
-                        })}
-                      </Accordion>
-                    </div>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
-            );
-          })}
-        </Accordion>
-
-        {noMatches && (
+        {noMatches ? (
           <p className="px-2 py-6 text-center text-sm italic text-muted-foreground">
             No settings match “{query.trim()}”.
           </p>
+        ) : (
+          // Folders: Layers / Behaviours / Layouts — a resizable, collapsible stack.
+          <div className="min-h-0 flex-1">
+            <PanelStack sections={sections} />
+          </div>
         )}
       </CardContent>
     </Card>

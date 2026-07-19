@@ -1,5 +1,5 @@
 /**
- * `<CanvasSettingsPanelView>` from `@invana/canvas-ui` — one JSON-driven settings
+ * `<CanvasSettingsEditor>` from `@invana/canvas-ui` — one JSON-driven settings
  * panel over a whole canvas definition. It takes the serialisable set of
  * registered **layers / behaviours / layouts** + their settings, lists them in a
  * file-browser accordion (folders = sections, files = instances), and expands each
@@ -18,7 +18,7 @@
 import { useContext, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
-  CanvasSettingsPanelView,
+  CanvasSettingsEditor,
   type CanvasSettingsDefinition,
   type CanvasSettingsInstance,
   type SettingsSection,
@@ -50,7 +50,7 @@ import { Settings } from 'lucide-react';
 
 import { resolveKind, readOptions } from './liveCanvasDefinition';
 
-const meta: Meta = { title: 'canvas-ui/editors/CanvasSettingsPanelView' };
+const meta: Meta = { title: 'canvas-ui/editors/CanvasSettingsEditor' };
 export default meta;
 type Story = StoryObj;
 
@@ -114,16 +114,23 @@ function StandaloneDemo() {
     }));
   };
 
-  const toggle = (section: SettingsSection, id: string, enabled: boolean) =>
+  // Enable/disable is an `{ enabled }` patch a live host applies via
+  // `canvas.update({ [section]: { [id]: { enabled } } })` — log it like any other
+  // edit AND flip the instance's `enabled` in the running definition.
+  const toggle = (section: SettingsSection, id: string, enabled: boolean) => {
+    setLastPatch({ section, id, patch: { enabled } });
     setDefinition((d) => ({
       ...d,
       [section]: (d[section] ?? []).map((inst) => (inst.id === id ? { ...inst, enabled } : inst)),
     }));
+  };
 
   return (
     <div style={pageStyle}>
-      <div style={{ width: 380 }}>
-        <CanvasSettingsPanelView
+      {/* Flex + full-height so the panel's PanelStack (which fills its parent)
+          has a definite height to occupy. */}
+      <div style={{ width: 380, display: 'flex', minHeight: 0 }}>
+        <CanvasSettingsEditor
           definition={definition}
           onChange={applyPatch}
           onToggle={toggle}
@@ -263,7 +270,7 @@ function LiveCanvasSettingsPanelInner() {
   }, [instances, options]);
 
   return (
-    <CanvasSettingsPanelView
+    <CanvasSettingsEditor
       definition={definition}
       // The `right` region already wraps content in an `overflow-auto bg-card`
       // panel, so keep the view's own "Canvas Settings" heading but flatten its
@@ -292,7 +299,7 @@ function LiveCanvasSettingsPanel() {
 /**
  * A **fully-featured** `<GraphCanvasApp>` whose whole visualisation state is edited
  * through the app's docked, resizable `right` region hosting a
- * `<CanvasSettingsPanelView>`. A header settings toggle mounts / unmounts the
+ * `<CanvasSettingsEditor>`. A header settings toggle mounts / unmounts the
  * region. The introspection ↔ panel bridge lives here (in the story) because the
  * panel is engine-agnostic (`@invana/canvas-ui` can't import the engine) — this is
  * exactly how the Invana building studio would wire it.
@@ -392,7 +399,7 @@ export const LiveSettingsEditors: Story = {
 
 const pageStyle: CSSProperties = {
   display: 'flex',
-  alignItems: 'flex-start',
+  alignItems: 'stretch',
   gap: 16,
   height: '100vh',
   padding: 16,

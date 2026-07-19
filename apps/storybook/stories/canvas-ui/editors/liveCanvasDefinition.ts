@@ -44,7 +44,7 @@ import { D3SankeyLayout } from '@invana/graph-layout-d3-sankey';
 import { GeometricLayout } from '@invana/graph-layout-geometric';
 
 /**
- * Maps a live engine instance to a `CanvasSettingsPanelView` registry `kind` by
+ * Maps a live engine instance to a `CanvasSettingsEditor` registry `kind` by
  * class. The `kind` strings match `DEFAULT_CANVAS_SETTINGS_SCHEMAS` in
  * `@invana/canvas-ui`, so the panel resolves each instance's schema + mappers.
  */

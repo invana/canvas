@@ -2,7 +2,7 @@
 // / Layout `kind`, bundling its `@invana/forms` field schema with the
 // engine⇄form mappers that already live in each `editors/<surface>/` folder.
 //
-// `CanvasSettingsPanelView` reads a canvas definition keyed by these `kind`
+// `CanvasSettingsEditor` reads a canvas definition keyed by these `kind`
 // strings and, per instance, uses the entry to (a) seed the form from the
 // instance's engine-shaped settings (`toForm`), (b) render the schema, and (c)
 // map edits back to an engine-shaped patch (`toOptions`).
@@ -217,7 +217,7 @@ import {
 } from '../geometric-layout/mapping';
 
 /**
- * One registry entry: everything `CanvasSettingsPanelView` needs to render + wire
+ * One registry entry: everything `CanvasSettingsEditor` needs to render + wire
  * one instance's settings form. Bundles the display label, the `@invana/forms`
  * field schema (static array or a `(values) => FieldConfig[]` function for the
  * conditional schemas), and the two pure mappers that bridge the engine's option
@@ -246,7 +246,7 @@ export interface SettingsSchemaEntry {
  * The built-in schema registry keyed by `kind`. Covers every Behaviour / Layer /
  * Layout that ships an editor in `@invana/canvas-ui` — the same coverage the
  * live `ALL_SETTINGS_EDITORS` descriptor list carries. Hosts can pass a superset
- * / subset via `CanvasSettingsPanelView`'s `schemas` prop.
+ * / subset via `CanvasSettingsEditor`'s `schemas` prop.
  */
 export const DEFAULT_CANVAS_SETTINGS_SCHEMAS: Record<string, SettingsSchemaEntry> = {
   // Layers

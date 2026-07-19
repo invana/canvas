@@ -1,4 +1,4 @@
-// Public types for `CanvasSettingsPanelView` — the JSON shape it edits and the
+// Public types for `CanvasSettingsEditor` — the JSON shape it edits and the
 // callbacks it emits. The panel is engine-agnostic: it takes a serialisable
 // definition of the visualisation's layers / behaviours / layouts + their
 // settings, and hands edits back as engine-shaped patches for the host to apply
