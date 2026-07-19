@@ -217,7 +217,6 @@ export const LiveSettingsEditors: Story = {
             center: <GraphControlsToolbar layouts={LAYOUTS} layoutLabel={LAYOUT_LABEL} />,
             right: (ctx) => (
               <>
-                {mini.button}
                 {dev.button}
                 {/* Settings toggle — shows / hides the docked right panel. */}
                 <ToolbarItems
