@@ -56,6 +56,7 @@ working design-of-record documents. Day-to-day API/concept docs live in
 - [graph-canvas-apps-plan.md](./graph-canvas-apps-plan.md) — `GraphCanvasApp` compound component.
 - [designer-studio-plan.md](./designer-studio-plan.md) — **Designer** studio page (sibling of Explorer, on `GraphCanvasApp`); umbrella doc sequencing the state refactor → editor kit → page → telemetry → collaboration.
 - [toolbars-plan.md](./toolbars-plan.md) — reusable toolbar building blocks + assembled toolbars.
+- [node-style-live-binding-plan.md](./node-style-live-binding-plan.md) — **store-bound node-style editing**: a `useNodeStyleEditor(nodeId)` hook + `<GraphNodeStyleEditor>` drop-in (canvas-react) that seed a headless canvas-ui editor from `resolveNodeStyle`, stay reactive via `useGraphEvent('node:update')`, and write back live via `updateNode` (raw-`style` spread, history-coalesced) — so editors reflect the canvas and auto-sync without hand-wired `onSubmit`/`updateNode`. Also fixes the "Size shows 0" symptom (unset `size` override) by dropping raw `size` from the Simple basics tier. Live-vs-Apply, the wholesale-style footgun, and why `useStore` can't read nodes.
 
 ## Performance & scale
 
