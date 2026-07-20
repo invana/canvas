@@ -158,15 +158,22 @@ export class D3ForceLayout extends Layout<GraphLayer> {
    * staleness `end`.
    */
   /**
-   * Per-node collide radius derived from the node's cached render bounds
-   * ({@link GraphNode.boundingBox}, written by the layer after each draw) —
+   * Per-node collide radius derived from the node's render footprint —
    * `max(width, height) / 2`, the tightest circle covering the node's larger
-   * extent so rectangular cards don't overlap on their dominant axis. Falls
-   * back to `1` (d3's default) before the node has rendered once. Used only when
+   * extent so rectangular / composite cards don't overlap on their dominant axis.
+   *
+   * Size comes from {@link GraphLayer.boundsOfNode}, which computes the shape's
+   * bounds **on demand** from its geometry spec (`boundsOf`) — a pure
+   * calculation that does *not* need the node to have rendered yet. That matters
+   * for the very first run: the active layout initialises `forceCollide` (which
+   * reads + caches each radius **once**) before the frame-coalesced flush has
+   * drawn anything, so the cached `GraphNode.boundingBox` is still empty and
+   * every card would otherwise fall back to `1` and settle overlapping. Order:
+   * on-demand bounds → cached `boundingBox` → `1` (d3's default). Used only when
    * `collide.radius` is unset; an explicit number / function still wins.
    */
   private collideRadius(node: GraphNode): number {
-    const b = node.boundingBox;
+    const b = this.lastLayer?.boundsOfNode(node) ?? node.boundingBox;
     return b ? Math.max(b.width, b.height) / 2 : 1;
   }
 
@@ -434,44 +441,61 @@ export class D3ForceLayout extends Layout<GraphLayer> {
       this.events.emit('tick', {});
     });
 
-    // 4. External writes (drag, cursor-follower, etc.) → mirror onto sim,
-    //    reheat. Nodes that are either permanently pinned (`pinnedIds`,
-    //    user-data semantics) or transiently locked by an in-flight drag
-    //    (`draggedIds`, signalled by `node:drag-start` / `node:drag-end`
-    //    on the layer's events) write to `fx/fy` so the simulation can't
-    //    push them away from the supplied position. Otherwise the update
-    //    flows into `x/y` and the next force tick may move the node.
+    // 4. External writes (drag, cursor-follower, pin flips) → mirror onto the
+    //    sim + reheat. Only **locked** nodes are honoured: permanently pinned
+    //    (`pinnedIds`, user-data semantics) or transiently held by an in-flight
+    //    drag (`draggedIds`, from `node:drag-start` / `node:drag-end` on the
+    //    layer's events). Their position writes to `fx/fy` so forces can't push
+    //    them off the supplied point.
     //
-    //    Pin patches are tracked live so a mid-run flip (e.g. a feed
-    //    enabling `pinned: true` on a node) takes effect on the next
-    //    `node:update` without needing a fresh `apply()`.
+    //    A **free** node's position `node:update` is deliberately ignored while
+    //    the sim runs — it's a stale echo of our own per-tick `writeBack`. The
+    //    store re-emits our bulk write back to us *asynchronously*, on the
+    //    frame-coalesced flush (GraphLayer forces `flushMode: 'frame'`), long
+    //    after the synchronous `writing` guard has reset. Acting on those echoes
+    //    would (a) stomp the sim's just-computed position with the older flushed
+    //    one — fighting `collide`, so nodes never separate — and (b) reheat on
+    //    every flush, so α never decays to `alphaMin` and the run never ends.
+    //    While the sim runs it OWNS every free node's position; genuine external
+    //    nudges arrive via the locked path (drag / pin), not as free writes.
+    //
+    //    Pin patches are tracked live so a mid-run flip takes effect on the next
+    //    `node:update` without a fresh `apply()`.
     this.unsubscribe = store.events.on('node:update', ({ nodeId, patch }) => {
       if (this.writing) return;
       const node = this.nodeById.get(nodeId);
       if (!node) return;
 
       if ('pinned' in patch) {
-        if (patch.pinned) this.pinnedIds.add(nodeId);
-        else this.pinnedIds.delete(nodeId);
+        if (patch.pinned) {
+          this.pinnedIds.add(nodeId);
+        } else {
+          this.pinnedIds.delete(nodeId);
+          // Unpinned mid-run and not mid-drag → release the fixed point so
+          // forces move it again (the free-node path below no longer clears
+          // `fx/fy`). Reheat so it actually starts moving.
+          if (!this.draggedIds.has(nodeId) && node.fx !== undefined) {
+            node.fx = undefined as unknown as number;
+            node.fy = undefined as unknown as number;
+            if (sim.alpha() < REHEAT_ALPHA) sim.alpha(REHEAT_ALPHA).restart();
+          }
+        }
       }
 
       if (!patch.position) return;
-      const locked =
-        this.pinnedIds.has(nodeId) || this.draggedIds.has(nodeId);
-      if (locked) {
-        node.fx = patch.position.x;
-        node.fy = patch.position.y;
-        // Mirror onto `x/y` so rendered position matches before the next
-        // force tick — `forceCenter`/`forceX`/`forceY` read `x/y`.
-        node.x = patch.position.x;
-        node.y = patch.position.y;
-      } else {
-        // Free node: ensure no stale `fx/fy` are holding it.
-        if (node.fx !== undefined) node.fx = undefined as unknown as number;
-        if (node.fy !== undefined) node.fy = undefined as unknown as number;
-        node.x = patch.position.x;
-        node.y = patch.position.y;
-      }
+      // Free node → sim-owned; ignore the echo (see block comment above).
+      if (!this.pinnedIds.has(nodeId) && !this.draggedIds.has(nodeId)) return;
+
+      const { x, y } = patch.position;
+      // No-op echo (e.g. a stationary pinned node re-emitting its fixed
+      // position each flush) → don't reheat, or the run never settles.
+      if (node.fx === x && node.fy === y) return;
+      node.fx = x;
+      node.fy = y;
+      // Mirror onto `x/y` so the rendered position matches before the next force
+      // tick — `forceCenter`/`forceX`/`forceY` read `x/y`.
+      node.x = x;
+      node.y = y;
       if (sim.alpha() < REHEAT_ALPHA) sim.alpha(REHEAT_ALPHA).restart();
     });
 

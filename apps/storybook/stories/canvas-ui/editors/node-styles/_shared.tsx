@@ -23,7 +23,7 @@ import {
   type GraphNodeMenuContext,
   type LayoutFactory,
 } from '@invana/canvas-react';
-import { D3ForceLayout } from '@invana/graph-layout-d3-force';
+import { D3ForceLayout, type D3ForceLayoutOptions } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { ThemeProvider } from '@invana/themes';
 import type { MenuItem } from '@invana/ui';
@@ -123,8 +123,22 @@ export function SelectPrompt({ text }: { text: string }) {
 
 // ─── App harness ───────────────────────────────────────────────────────────────
 
+/**
+ * The one force config, shared by the initial `activeLayout` run (`config.layouts`
+ * below) and the toolbar's re-run factory — so "Run layout" reproduces exactly the
+ * settings that first laid the graph out, rather than a divergent hardcoded copy.
+ *
+ * No `link.distance`: the link force is on (edges pull connected nodes together)
+ * but its length isn't pinned, so the sim is free to move nodes around until they
+ * settle. `collide: {}` leaves the radius unset, so the engine derives it per node
+ * from the node's *rendered bounds* (`max(width, height) / 2`) — which is what makes
+ * non-circular shapes (the wide composite cards) spread apart without overlap
+ * instead of stacking. `animate: true` shows the settle.
+ */
+const FORCE_OPTS = { charge: { strength: -400 }, link: {}, collide: {}, animate: true } satisfies D3ForceLayoutOptions;
+
 const LAYOUTS: Record<string, LayoutFactory> = {
-  'd3-force': () => new D3ForceLayout({ charge: { strength: -260 }, link: { distance: 120 }, animate: false }),
+  'd3-force': () => new D3ForceLayout(FORCE_OPTS),
   'elk-layered': () => new ElkLayout({ algorithm: 'layered', direction: 'RIGHT' }),
 };
 const LAYOUT_LABEL: Record<string, string> = { 'd3-force': 'Force', 'elk-layered': 'Layered' };
@@ -158,8 +172,9 @@ export interface LiveStyleEditorAppProps {
 /**
  * The reusable live harness: a full `<GraphCanvasApp>` with a header toggle that
  * docks `panel` into the resizable `right` region. Colour-by-label is disabled
- * so per-node style edits stick; the layout is a static settle so the graph
- * holds still while editing.
+ * so per-node style edits stick. The d3-force layout animates its settle with an
+ * auto-derived collide radius (`collide: {}` → `max(w, h) / 2` from each node's
+ * render bounds), so the wide composite cards spread apart instead of stacking.
  */
 export function LiveStyleEditorApp({ title, message, data, panel }: LiveStyleEditorAppProps) {
   const dev = useDevTool({ corner: 'top-left', margin: { x: 12, y: 48 } });
@@ -173,9 +188,7 @@ export function LiveStyleEditorApp({ title, message, data, panel }: LiveStyleEdi
         onReady={(c) => c?.showMessage(message)}
         config={{
           behaviours: { color: { enabled: false } },
-          layouts: {
-            'graph-force': { charge: { strength: -260 }, link: { distance: 120 }, collide: { radius: 30 }, animate: false },
-          },
+          layouts: { 'graph-force': FORCE_OPTS },
         }}
         header={{
           title,
