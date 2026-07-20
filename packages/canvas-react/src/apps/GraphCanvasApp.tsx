@@ -199,8 +199,14 @@ const BASE_CONFIG: CanvasConfig = {
   layouts: {
     [ACTIVE_LAYOUT_ID]: {
       charge: { strength: -160 },
-      link: { distance: 56 },
-      collide: { radius: 14 },
+      // Link force on, but no fixed `distance` — a hardcoded length pulls large
+      // nodes / composite cards to a center gap smaller than their own width, so
+      // they overlap. Let collision set the spacing instead.
+      link: {},
+      // Size-aware collision: leave `radius` unset so `D3ForceLayout` derives it
+      // per node from the render footprint (`max(width, height) / 2`). A fixed
+      // radius treats every node as one disc size, so anything bigger overlaps.
+      collide: {},
       animate: false,
     },
   },

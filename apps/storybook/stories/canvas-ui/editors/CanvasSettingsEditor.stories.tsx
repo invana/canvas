@@ -333,8 +333,11 @@ export const LiveSettingsEditors: Story = {
             layouts: {
               'graph-force': {
                 charge: { strength: -240 },
-                link: { distance: 70 },
-                collide: { radius: 18 },
+                // No fixed link distance / collide radius — let collision derive
+                // each node's radius from its render bounds so nodes of any size
+                // don't overlap (see GraphCanvasApp BASE_CONFIG).
+                link: {},
+                collide: {},
                 // Live, animated settle by default — the settings panel's
                 // "Animate" toggle starts on and the Run button flips to Stop.
                 animate: true,
