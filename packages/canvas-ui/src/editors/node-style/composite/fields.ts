@@ -17,7 +17,16 @@ import type { CompositePartKind, CompositeRootKind, CompositeScalarFields } from
 
 // ─── Body ──────────────────────────────────────────────────────────────────
 
-const BODY_FIELDS: FieldConfig[] = [
+/** The card body fill colour — the composite editor's sole **Basics** control
+ * (see {@link basicCompositeFields}). */
+const BODY_FILL_FIELD: FieldConfig = {
+  name: 'fill',
+  type: 'color',
+  label: 'Card color',
+  presetColors: [...COLOR_PRESETS],
+};
+
+const BODY_SIZE_FIELDS: FieldConfig[] = [
   { name: 'width', type: 'number', label: 'Width', min: 0, max: 1000, step: 1 },
   { name: 'height', type: 'number', label: 'Height', min: 0, max: 1000, step: 1 },
   {
@@ -29,7 +38,9 @@ const BODY_FIELDS: FieldConfig[] = [
     step: 1,
     description: 'Rounds the default rounded-rect body. Ignored when a Root shape is set.',
   },
-  { name: 'fill', type: 'color', label: 'Fill color', presetColors: [...COLOR_PRESETS] },
+];
+
+const BODY_PAINT_FIELDS: FieldConfig[] = [
   { name: 'fillAlpha', type: 'number', label: 'Fill alpha', min: 0, max: 1, step: 0.01 },
   { name: 'strokeColor', type: 'color', label: 'Stroke color', presetColors: [...COLOR_PRESETS] },
   { name: 'strokeWidth', type: 'number', label: 'Stroke width', min: 0, max: 50, step: 0.5 },
@@ -41,6 +52,13 @@ const BODY_FIELDS: FieldConfig[] = [
     description: 'Edge-touching parts (accent bar, header) follow the rounded corners.',
   },
 ];
+
+/** Body controls **beyond** the fill colour — all **Advanced**. */
+const BODY_ADVANCED_FIELDS: FieldConfig[] = [...BODY_SIZE_FIELDS, ...BODY_PAINT_FIELDS];
+
+/** The full body field set (fill in its original slot) — kept for the
+ * back-compat {@link compositeScalarFields} export. */
+const BODY_FIELDS: FieldConfig[] = [...BODY_SIZE_FIELDS, BODY_FILL_FIELD, ...BODY_PAINT_FIELDS];
 
 // ─── Root silhouette (discriminated by rootKind) ─────────────────────────────
 
@@ -89,9 +107,33 @@ const withGroup =
   (f: FieldConfig): FieldConfig => ({ ...f, group });
 
 /**
- * The composite body + root field set as one grouped `FieldConfig[]` — the
- * default scalar `fields` for `<CompositeNodeStyleEditor>`. Renders **Body** and
- * **Root** as accordion sections; the Root numerics vary with `rootKind`.
+ * The **Basics** scalar field set — the single card body fill colour, shown
+ * up-front and ungrouped. Everything else (body size / stroke / clip, the root
+ * silhouette) lives in {@link advancedCompositeScalarFields}. A function of the
+ * values for symmetry with the advanced set.
+ */
+export function basicCompositeFields(_values: CompositeScalarFields = {}): FieldConfig[] {
+  return [BODY_FILL_FIELD];
+}
+
+/**
+ * The **Advanced** scalar field set — everything beyond the body fill, grouped
+ * into **Body** (size + paint) and **Root** (silhouette) accordion sections; the
+ * Root numerics vary with `rootKind`. Rendered inside the editor's collapsed
+ * "Advanced settings" disclosure, above the parts list.
+ */
+export function advancedCompositeScalarFields(values: CompositeScalarFields = {}): FieldConfig[] {
+  return [
+    ...BODY_ADVANCED_FIELDS.map(withGroup('Body')),
+    ...rootFields(values.rootKind).map(withGroup('Root')),
+  ];
+}
+
+/**
+ * The composite body + root field set as one grouped `FieldConfig[]` — basics
+ * (fill) folded back into the Body group. Retained as the `fields`-override /
+ * back-compat export; the default editor render is the two-tier basics +
+ * collapsed-advanced layout.
  */
 export function compositeScalarFields(values: CompositeScalarFields = {}): FieldConfig[] {
   return [

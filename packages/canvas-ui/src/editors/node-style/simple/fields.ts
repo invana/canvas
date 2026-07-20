@@ -65,16 +65,19 @@ export function geometryFields(kind: ShapeKind | undefined): FieldConfig[] {
   return [SHAPE_KIND_FIELD, ...geometry, SIZE_FIELD];
 }
 
-export const BACKGROUND_FIELDS: FieldConfig[] = [
-  {
-    name: 'bgFill',
-    type: 'color',
-    label: 'Fill color',
-    presetColors: [...COLOR_PRESETS],
-    description: 'Solid color. Use the engine API directly for stacked / image / glyph fills.',
-  },
-  { name: 'bgAlpha', type: 'number', label: 'Fill alpha', min: 0, max: 1, step: 0.01 },
-];
+/** The solid fill colour — a **Basics** control (see {@link basicNodeStyleFields}). */
+const BG_FILL_FIELD: FieldConfig = {
+  name: 'bgFill',
+  type: 'color',
+  label: 'Fill color',
+  presetColors: [...COLOR_PRESETS],
+  description: 'Solid color. Use the engine API directly for stacked / image / glyph fills.',
+};
+
+/** Fill alpha — an **Advanced** control (see {@link advancedNodeStyleFields}). */
+const BG_ALPHA_FIELD: FieldConfig = { name: 'bgAlpha', type: 'number', label: 'Fill alpha', min: 0, max: 1, step: 0.01 };
+
+export const BACKGROUND_FIELDS: FieldConfig[] = [BG_FILL_FIELD, BG_ALPHA_FIELD];
 
 export const STROKE_FIELDS: FieldConfig[] = [
   { name: 'bgStrokeColor', type: 'color', label: 'Stroke color', presetColors: [...COLOR_PRESETS] },
@@ -158,10 +161,38 @@ const withGroup =
   (f: FieldConfig): FieldConfig => ({ ...f, group });
 
 /**
- * The full NodeStyle field set as one grouped `FieldConfig[]` — the default
- * `fields` for `<NodeStyleEditor>`. `@invana/forms` renders each `group` as an
- * accordion section. Geometry numerics vary with the current `shapeKind`
- * (the discriminated union), so this is a function of the live values.
+ * The **Basics** field set — the 80% controls shown up-front, ungrouped (no
+ * accordion): the shape kind, the fill colour, and the unified `size`. Detailed
+ * per-kind geometry, alpha, stroke and label live in
+ * {@link advancedNodeStyleFields}. Kept a function of the live values for
+ * symmetry with the advanced set (and future value-dependent basics).
+ */
+export function basicNodeStyleFields(_values: NodeStyleFields = {}): FieldConfig[] {
+  return [SHAPE_KIND_FIELD, BG_FILL_FIELD, SIZE_FIELD];
+}
+
+/**
+ * The **Advanced** field set — everything beyond the basics, grouped so
+ * `@invana/forms` renders each `group` as an accordion section: per-kind
+ * Geometry numerics (varying with `shapeKind`), Background alpha, the full
+ * Stroke controls, and the full Label controls. Rendered inside the editor's
+ * collapsed "Advanced settings" disclosure.
+ */
+export function advancedNodeStyleFields(values: NodeStyleFields = {}): FieldConfig[] {
+  const geometry = values.shapeKind ? (GEOMETRY_BY_KIND[values.shapeKind] ?? []) : [];
+  return [
+    ...geometry.map(withGroup('Geometry')),
+    ...[BG_ALPHA_FIELD].map(withGroup('Background')),
+    ...STROKE_FIELDS.map(withGroup('Stroke')),
+    ...LABEL_FIELDS.map(withGroup('Label')),
+  ];
+}
+
+/**
+ * The full NodeStyle field set as one grouped `FieldConfig[]` — basics followed
+ * by the advanced groups. Retained as the `fields`-override / back-compat
+ * export; the default editor render is the two-tier basics + collapsed-advanced
+ * layout (see {@link basicNodeStyleFields} / {@link advancedNodeStyleFields}).
  */
 export function nodeStyleFields(values: NodeStyleFields = {}): FieldConfig[] {
   return [

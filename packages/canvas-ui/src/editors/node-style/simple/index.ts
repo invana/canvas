@@ -15,6 +15,8 @@ export type {
 // schema, seed the form (`styleToForm`), and read edits back (`formToStyle`).
 export {
   nodeStyleFields,
+  basicNodeStyleFields,
+  advancedNodeStyleFields,
   geometryFields,
   BACKGROUND_FIELDS,
   STROKE_FIELDS,

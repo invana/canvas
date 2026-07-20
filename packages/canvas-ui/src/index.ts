@@ -42,8 +42,11 @@ export {
   SimpleNodeStyleEditor,
   CompositeNodeStyleEditor,
   // simple: field configs + mapping — supply/override the schema, seed
-  // (`styleToForm`), and read edits back (`formToStyle`)
+  // (`styleToForm`), and read edits back (`formToStyle`). `basic*`/`advanced*`
+  // are the two-tier default split (basics vs. the collapsed advanced set).
   nodeStyleFields,
+  basicNodeStyleFields,
+  advancedNodeStyleFields,
   geometryFields,
   BACKGROUND_FIELDS,
   STROKE_FIELDS,
@@ -53,6 +56,8 @@ export {
   defaultShapeFor,
   // composite: field configs + mapping (`compositeToForm` / `formToComposite`)
   compositeScalarFields,
+  basicCompositeFields,
+  advancedCompositeScalarFields,
   rootFields,
   partRowFields,
   compositeToForm,

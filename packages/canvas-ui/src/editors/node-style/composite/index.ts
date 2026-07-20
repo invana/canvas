@@ -12,5 +12,11 @@ export type {
 
 // Field configs + mapping — supply/override the schema, seed the form
 // (`compositeToForm`), and read edits back (`formToComposite`).
-export { compositeScalarFields, rootFields, partRowFields } from './fields';
+export {
+  compositeScalarFields,
+  basicCompositeFields,
+  advancedCompositeScalarFields,
+  rootFields,
+  partRowFields,
+} from './fields';
 export { compositeToForm, formToComposite } from './mapping';

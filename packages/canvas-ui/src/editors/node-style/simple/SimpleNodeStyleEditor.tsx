@@ -8,7 +8,8 @@ import {
   type FieldValues,
 } from 'react-hook-form';
 
-import { nodeStyleFields } from './fields';
+import { AdvancedSection } from '../../_shared/AdvancedSection';
+import { advancedNodeStyleFields, basicNodeStyleFields } from './fields';
 import type { NodeStyleFields, NodeStyleFormState } from './types';
 
 export interface SimpleNodeStyleEditorProps {
@@ -19,10 +20,12 @@ export interface SimpleNodeStyleEditorProps {
    */
   defaults?: NodeStyleFields;
   /**
-   * The form schema. Either a static `FieldConfig[]` or a function of the
-   * current values — the function form lets fields react to other fields (the
-   * built-in default varies the geometry inputs with `shapeKind`). Defaults to
-   * the built-in grouped NodeStyle field set ({@link nodeStyleFields}).
+   * Optional schema **override**. Either a static `FieldConfig[]` or a function
+   * of the current values (the function form lets fields react to other fields).
+   * When supplied, it replaces the built-in layout with a single flat
+   * `ObjectField`. When **omitted** (the default), the editor renders its
+   * two-tier layout: a Basics tier (shape / fill / size) plus a collapsed
+   * "Advanced settings" disclosure holding the rest.
    */
   fields?: FieldConfig[] | ((values: NodeStyleFields) => FieldConfig[]);
   /**
@@ -52,28 +55,53 @@ export interface SimpleNodeStyleEditorProps {
  */
 export function SimpleNodeStyleEditor({
   defaults = {},
-  fields = nodeStyleFields,
+  fields,
   onSubmit,
   submitLabel = 'Apply',
 }: SimpleNodeStyleEditorProps) {
   const form = useForm<NodeStyleFormState>({ defaultValues: { style: defaults } });
   const { control, getValues } = form;
 
-  // Recompute fields from the live values when `fields` is a function (drives
-  // the geometry tab's per-kind numerics off the watched `shapeKind`).
-  const values = useWatch({ control, name: 'style' }) as NodeStyleFields | undefined;
-  const resolvedFields = typeof fields === 'function' ? fields(values ?? {}) : fields;
+  // Recompute fields from the live values — the per-kind geometry numerics (in
+  // the advanced tier) key off the watched `shapeKind` (in the basics tier).
+  const values = (useWatch({ control, name: 'style' }) as NodeStyleFields | undefined) ?? {};
 
   // RHF 7.76's `Control<NodeStyleFormState>` isn't assignable to `ObjectField`'s
   // `Control<any>` (the field-name union is contravariant). Widen at the boundary.
   const c = control as unknown as Control<FieldValues>;
+
+  // Custom schema override → single flat form. Default → two-tier basics +
+  // collapsed advanced. Both `ObjectField`s share the `style` namespace but
+  // render disjoint field-name sets, so no leaf registers twice.
+  const override = typeof fields === 'function' ? fields(values) : fields;
 
   return (
     // `@invana/forms` leaf fields read `useFormContext()`, so the whole form
     // must be on context — not just control.
     <FormProvider {...form}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16 }}>
-        <FormField.ObjectField control={c} columns={1} labelPosition="top" name="style" fields={resolvedFields} />
+        {override ? (
+          <FormField.ObjectField control={c} columns={1} labelPosition="top" name="style" fields={override} />
+        ) : (
+          <>
+            <FormField.ObjectField
+              control={c}
+              columns={1}
+              labelPosition="top"
+              name="style"
+              fields={basicNodeStyleFields(values)}
+            />
+            <AdvancedSection>
+              <FormField.ObjectField
+                control={c}
+                columns={1}
+                labelPosition="top"
+                name="style"
+                fields={advancedNodeStyleFields(values)}
+              />
+            </AdvancedSection>
+          </>
+        )}
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button onClick={() => onSubmit(getValues('style'))}>{submitLabel}</Button>
         </div>

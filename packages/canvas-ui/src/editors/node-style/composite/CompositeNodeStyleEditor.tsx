@@ -8,7 +8,8 @@ import {
   type Control,
   type FieldValues,
 } from 'react-hook-form';
-import { compositeScalarFields, partRowFields } from './fields';
+import { AdvancedSection } from '../../_shared/AdvancedSection';
+import { advancedCompositeScalarFields, basicCompositeFields, partRowFields } from './fields';
 import { compositeToForm } from './mapping';
 import type { CompositeFormState, CompositeScalarFields } from './types';
 
@@ -21,10 +22,13 @@ export interface CompositeNodeStyleEditorProps {
    */
   defaults?: CompositeFormState;
   /**
-   * The **body + root** scalar schema. A static `FieldConfig[]` or a function of
-   * the current scalar values — the function form varies the Root geometry with
-   * `rootKind`. Defaults to the built-in grouped {@link compositeScalarFields}.
-   * (The per-part controls are always the built-in dynamic {@link partRowFields}.)
+   * Optional **body + root** scalar schema **override**. A static `FieldConfig[]`
+   * or a function of the current scalar values. When supplied, it replaces the
+   * built-in layout with a single flat scalar `ObjectField`. When **omitted**
+   * (the default), the editor renders its two-tier layout: a Basics tier (the
+   * body fill colour) plus a collapsed "Advanced settings" disclosure holding the
+   * rest of the body/root fields and the parts list. (The per-part controls are
+   * always the built-in dynamic {@link partRowFields}.)
    */
   fields?: FieldConfig[] | ((values: CompositeScalarFields) => FieldConfig[]);
   /**
@@ -53,7 +57,7 @@ export interface CompositeNodeStyleEditorProps {
  */
 export function CompositeNodeStyleEditor({
   defaults,
-  fields = compositeScalarFields,
+  fields,
   onSubmit,
   submitLabel = 'Apply',
 }: CompositeNodeStyleEditorProps) {
@@ -63,56 +67,89 @@ export function CompositeNodeStyleEditor({
 
   // Recompute the body/root schema from live values (drives the Root numerics
   // off the watched `rootKind`), and read each row's kind for its part schema.
-  const scalarValues = useWatch({ control, name: 'composite' }) as CompositeScalarFields | undefined;
-  const resolvedScalarFields =
-    typeof fields === 'function' ? fields(scalarValues ?? {}) : fields;
+  const scalarValues = (useWatch({ control, name: 'composite' }) as CompositeScalarFields | undefined) ?? {};
   const partsValues = useWatch({ control, name: 'parts' }) as CompositeFormState['parts'] | undefined;
 
   // RHF's typed `Control` isn't assignable to ObjectField's `Control<FieldValues>`.
   const c = control as unknown as Control<FieldValues>;
 
+  // Custom scalar-schema override → single flat scalar form. Default → two-tier
+  // basics + collapsed advanced. Both scalar `ObjectField`s share the `composite`
+  // namespace but render disjoint field-name sets, so no leaf registers twice.
+  const override = typeof fields === 'function' ? fields(scalarValues) : fields;
+
+  // The ordered parts list (Add / Remove) — always advanced content.
+  const partsBlock = (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <span style={{ fontSize: 13, fontWeight: 600 }}>Parts</span>
+      {partFields.map((f, i) => (
+        <div
+          key={f.id}
+          style={{
+            display: 'flex',
+            gap: 8,
+            alignItems: 'flex-start',
+            paddingTop: i ? 8 : 0,
+            borderTop: i ? '1px solid var(--border)' : undefined,
+          }}
+        >
+          <div style={{ flex: 1 }}>
+            <FormField.ObjectField
+              control={c}
+              columns={1}
+              labelPosition="top"
+              name={`parts.${i}`}
+              fields={partRowFields(partsValues?.[i]?.part)}
+            />
+          </div>
+          <Button type="button" variant="ghost" onClick={() => remove(i)}>
+            Remove
+          </Button>
+        </div>
+      ))}
+      <div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => append({ part: 'label', x: 12, y: 12, text: '' })}
+        >
+          + Add part
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <FormProvider {...form}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 16 }}>
-        <FormField.ObjectField control={c} columns={1} labelPosition="top" name="composite" fields={resolvedScalarFields} />
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Parts</span>
-          {partFields.map((f, i) => (
-            <div
-              key={f.id}
-              style={{
-                display: 'flex',
-                gap: 8,
-                alignItems: 'flex-start',
-                paddingTop: i ? 8 : 0,
-                borderTop: i ? '1px solid var(--border)' : undefined,
-              }}
-            >
-              <div style={{ flex: 1 }}>
+        {override ? (
+          <>
+            <FormField.ObjectField control={c} columns={1} labelPosition="top" name="composite" fields={override} />
+            {partsBlock}
+          </>
+        ) : (
+          <>
+            <FormField.ObjectField
+              control={c}
+              columns={1}
+              labelPosition="top"
+              name="composite"
+              fields={basicCompositeFields(scalarValues)}
+            />
+            <AdvancedSection>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 8 }}>
                 <FormField.ObjectField
                   control={c}
                   columns={1}
                   labelPosition="top"
-                  name={`parts.${i}`}
-                  fields={partRowFields(partsValues?.[i]?.part)}
+                  name="composite"
+                  fields={advancedCompositeScalarFields(scalarValues)}
                 />
+                {partsBlock}
               </div>
-              <Button type="button" variant="ghost" onClick={() => remove(i)}>
-                Remove
-              </Button>
-            </div>
-          ))}
-          <div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => append({ part: 'label', x: 12, y: 12, text: '' })}
-            >
-              + Add part
-            </Button>
-          </div>
-        </div>
+            </AdvancedSection>
+          </>
+        )}
 
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button onClick={() => onSubmit(getValues())}>{submitLabel}</Button>
