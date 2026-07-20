@@ -1,6 +1,6 @@
 import type { NodeStyle } from '@invana/graph';
 
-import { hexToNumber, numberToHex } from '../../shared/color';
+import { hexToNumber, numberToHex } from '../../../shared/color';
 import type { NodeStyleFields, ShapeKind } from './types';
 
 /**

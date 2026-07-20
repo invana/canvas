@@ -1,23 +1,11 @@
+// Node style editors. `NodeStyleEditor` is the dispatcher: it renders the
+// full-spec **simple** editor (`SimpleNodeStyleEditor`, flat `NodeStyle`) or the
+// full-spec **composite** editor (`CompositeNodeStyleEditor`, a
+// `CompositeShapeOption`) based on the `kind` prop. Both variants — and their
+// field configs + mappers (`styleToForm`/`formToStyle`,
+// `compositeToForm`/`formToComposite`) — are re-exported for standalone use.
 export { NodeStyleEditor } from './NodeStyleEditor';
 export type { NodeStyleEditorProps } from './NodeStyleEditor';
 
-export type {
-  NodeStyleFields,
-  NodeStyleFormState,
-  ShapeKind,
-  StrokeAlignment,
-  StrokeCap,
-  StrokeJoin,
-  LabelPlacement,
-} from './types';
-
-// Field configs + mapping — exported so the consumer can supply/override the
-// schema, seed the form (`styleToForm`), and read edits back (`formToStyle`).
-export {
-  nodeStyleFields,
-  geometryFields,
-  BACKGROUND_FIELDS,
-  STROKE_FIELDS,
-  LABEL_FIELDS,
-} from './fields';
-export { styleToForm, formToStyle, defaultShapeFor } from './mapping';
+export * from './simple';
+export * from './composite';

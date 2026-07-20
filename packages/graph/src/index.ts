@@ -73,6 +73,11 @@ export {
   type StarShapeOption,
 } from './layer';
 
+// Composite-card part / root specs — re-exported from the engine so composite
+// node editors (e.g. `@invana/canvas-ui`) can type a `CompositeShapeOption`'s
+// `parts` / `root` without importing `@invana/canvas` directly.
+export type { CompositePart, CompositeRootSpec } from '@invana/canvas';
+
 export { GraphCanvas } from './canvas';
 
 export {

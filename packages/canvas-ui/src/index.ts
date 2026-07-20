@@ -32,11 +32,17 @@ export type {
   SettingsSection,
 } from './editors/canvas-settings';
 
-// ─── Node style editor ───────────────────────────────────────────────────
+// ─── Node style editors ──────────────────────────────────────────────────
+// `NodeStyleEditor` dispatches on the `kind` prop to the full-spec **simple**
+// editor (flat `NodeStyle`) or the full-spec **composite** editor (a
+// `CompositeShapeOption`). Both variants + their field configs + mappers are
+// exported for standalone use.
 export {
   NodeStyleEditor,
-  // field configs + mapping — supply/override the schema, seed (`styleToForm`),
-  // and read edits back (`formToStyle`)
+  SimpleNodeStyleEditor,
+  CompositeNodeStyleEditor,
+  // simple: field configs + mapping — supply/override the schema, seed
+  // (`styleToForm`), and read edits back (`formToStyle`)
   nodeStyleFields,
   geometryFields,
   BACKGROUND_FIELDS,
@@ -45,9 +51,17 @@ export {
   styleToForm,
   formToStyle,
   defaultShapeFor,
+  // composite: field configs + mapping (`compositeToForm` / `formToComposite`)
+  compositeScalarFields,
+  rootFields,
+  partRowFields,
+  compositeToForm,
+  formToComposite,
 } from './editors/node-style';
 export type {
   NodeStyleEditorProps,
+  SimpleNodeStyleEditorProps,
+  CompositeNodeStyleEditorProps,
   NodeStyleFields,
   NodeStyleFormState,
   ShapeKind,
@@ -55,7 +69,30 @@ export type {
   StrokeCap,
   StrokeJoin,
   LabelPlacement,
+  CompositeFormState,
+  CompositeScalarFields,
+  CompositePartRow,
+  CompositeRootKind,
+  CompositePartKind,
+  CompositeIconKind,
 } from './editors/node-style';
+
+// ─── Node style overview editor ────────────────────────────────────────────
+// A minimal colour-only editor that recolours a node. `recolorNodeStyle` turns
+// the chosen colour into the right patch for a simple shape (`bgFill`) or a
+// composite card (body + accent parts), so one control works for both kinds.
+export {
+  NodeStyleOverviewEditor,
+  nodeStyleOverviewFields,
+  colorToForm,
+  formToColor,
+  recolorNodeStyle,
+} from './editors/node-style-overview';
+export type {
+  NodeStyleOverviewEditorProps,
+  NodeStyleOverviewFields,
+  NodeStyleOverviewFormState,
+} from './editors/node-style-overview';
 
 // ─── Hover-preview-card editor ─────────────────────────────────────────────
 // Engine-agnostic form (à la NodeStyleEditor) that produces one serializable
