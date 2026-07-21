@@ -7,8 +7,12 @@
 > stories were relocated **as-is (D-ii)** — they still import `@invana/canvas-ui`
 > chrome to trigger the export, so re-authoring them to demo the capability
 > directly (**D-i**) remains a recommended follow-up. (3) `GraphReseed` was
-> subsequently **deleted** (not kept), so `canvas-react/` retains just `Canvas`
-> and `GraphCanvas`.
+> subsequently **deleted** (not kept). (4) `Canvas` and `GraphCanvas` were each
+> **split into a one-story-per-file folder** (`Canvas/WithTelemetry` +
+> `Canvas/WithoutTelemetry`; same for `GraphCanvas/`) to honour the
+> one-story-per-file rule — so `canvas-react/` holds two component folders, not two
+> flat files. Each story file is **fully self-contained** (data + tree inline, no
+> shared helper) so the "Show code"/source reader sees the complete implementation.
 
 **Goal.** The `canvas-react/` Storybook namespace currently mixes true headless
 bindings with stories whose real subject is the **UI kit** (`@invana/canvas-ui`),
@@ -119,8 +123,12 @@ was a false positive — it renders a canvas-ui streaming demo; see group B.
 
 ```
 canvas-react/
-├── Canvas.stories.tsx
-└── GraphCanvas.stories.tsx
+├── Canvas/
+│   ├── WithTelemetry.stories.tsx     (self-contained)
+│   └── WithoutTelemetry.stories.tsx  (self-contained)
+└── GraphCanvas/
+    ├── WithTelemetry.stories.tsx     (self-contained)
+    └── WithoutTelemetry.stories.tsx  (self-contained)
 ```
 
 Emptied folders removed: `graph-canvas-app/`, `behaviours/`, `export/`,

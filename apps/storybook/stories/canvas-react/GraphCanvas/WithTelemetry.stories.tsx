@@ -9,6 +9,7 @@ import {
   type GraphLayerProps,
 } from '@invana/canvas-react';
 import type { CanvasConfig, CanvasTelemetryConfig } from '@invana/canvas';
+import { otelTelemetry } from '@invana/canvas-telemetry-otel';
 import type { GraphData } from '@invana/graph';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
@@ -17,24 +18,26 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
  * by `@invana/graph`'s `GraphCanvas`, a strict `Canvas` superset). It provides
  * **both** `CanvasContext` *and* `GraphCanvasContext`, and **auto-runs
  * `config.activeLayout`** — so with no positions in the data, the `<D3ForceLayout>`
- * places the nodes for you (the base `<Canvas>` story, by contrast, needs explicit
+ * places the nodes for you (the base `<Canvas>` stories, by contrast, need explicit
  * positions). `GraphCanvasApp` is built on this same root.
  *
- * **Telemetry (two variants).** `WithTelemetry` passes `telemetry={{ traces,
- * metrics, logging }}`; `WithoutTelemetry` omits it (same scene, streams off —
- * the kernel's no-op path). Identical wiring to the base `Canvas` story — the
- * streams live in the shared kernel, so both roots behave the same. In the
- * `WithTelemetry` variant, with the console adapters:
- * - **Logging** (`console.info`, `[canvas]` prefix) shows by default.
- * - **Traces** + **Metrics** use `console.debug` → enable **“Verbose”** to see
- *   `span …` (mutation + per-gesture spans — and here also the **layout** gesture
- *   span as force settles) and `metric canvas.frame.…`.
- * - **On-screen metrics**: the `<DevInfoLayer>` overlay (live FPS + phases).
+ * **This variant — telemetry on, shipped to a server URL.** `telemetry` is built by
+ * `otelTelemetry({ endpoint })` from `@invana/canvas-telemetry-otel` — the `endpoint`
+ * is your **telemetry server URL** (an OTLP/HTTP collector base, e.g. HyperDX; the
+ * adapter appends `/v1/{traces,metrics,logs}`). Compare with the sibling
+ * `WithoutTelemetry` story (prop omitted → the kernel's no-op path).
  *
- * For a real backend swap `true` for an injected port, e.g.
- * `otelTelemetry({ traces: true, metrics: true, logging: 'info' })` (OTLP → HyperDX).
+ * **How the URL is passed.** A URL never goes on `CanvasTelemetryConfig` directly —
+ * you wrap it in a port; `otelTelemetry` turns `endpoint` into OTLP exporters for
+ * all three streams. (Metrics-only, dep-free alternative:
+ * `telemetry={{ metrics: { meter: createHttpMeter('http://…/metrics') } }}`.)
+ *
+ * **To verify** (no collector needed): `console: true` mirrors spans to the console
+ * — enable **“Verbose”** to see `span …` (including the **layout** gesture span as
+ * force settles). The `<DevInfoLayer>` overlay shows live FPS. With a collector at
+ * `TELEMETRY_URL`, traces + metrics + logs land there.
  */
-const meta: Meta = { title: 'canvas-react/GraphCanvas' };
+const meta: Meta = { title: 'canvas-react/GraphCanvas/WithTelemetry' };
 export default meta;
 type Story = StoryObj;
 
@@ -93,15 +96,28 @@ const CONFIG: CanvasConfig = {
   },
 };
 
-// All three telemetry streams via the dep-free console adapters.
-const TELEMETRY: CanvasTelemetryConfig = { traces: true, metrics: true, logging: 'info' };
+// ── Your telemetry server URL ────────────────────────────────────────────────
+// The OTLP/HTTP **base** URL of your collector (OTel collector / HyperDX). The
+// adapter appends `/v1/traces`, `/v1/metrics`, `/v1/logs`. Point this at your own
+// server; the default local collector port is 4318.
+// Build the telemetry config from the URL: `otelTelemetry` wraps it in real OTLP
+// exporters for traces + metrics + logs. `console: true` also mirrors spans to the
+// browser console so this story is observable without a running collector.
+// (For a dep-free, metrics-only sink instead: `createHttpMeter(TELEMETRY_URL)`.)
+const TELEMETRY: CanvasTelemetryConfig = otelTelemetry({
+  endpoint: 'http://localhost:4318',
+  serviceName: 'invana-canvas',
+  traces: true,
+  metrics: true,
+  logging: 'info',
+  console: true,
+});
 
-// One scene, parameterised by the telemetry prop — the only thing that differs
-// between the two variants. `undefined` = no telemetry (the kernel's no-op path).
-function Scene({ telemetry }: { telemetry?: CanvasTelemetryConfig }) {
-  return (
+export const WithTelemetry: Story = {
+  name: 'GraphCanvas + telemetry',
+  render: () => (
     <div style={{ width: '100%', height: '100vh' }}>
-      <GraphCanvas autoResize config={CONFIG} telemetry={telemetry}>
+      <GraphCanvas autoResize config={CONFIG} telemetry={TELEMETRY}>
         <BackgroundLayer id="bg" type="pattern" patternType="dots" backgroundColor="#f8fafc" color="#cbd5e1" />
         {/* GraphLayer must be declared before the layout that targets it. */}
         <GraphLayer id="graph" data={DATA} node={NODE} edge={EDGE} />
@@ -111,15 +127,5 @@ function Scene({ telemetry }: { telemetry?: CanvasTelemetryConfig }) {
         <DevInfoLayer id="dev" corner="top-left" />
       </GraphCanvas>
     </div>
-  );
-}
-
-export const WithTelemetry: Story = {
-  name: 'GraphCanvas + telemetry',
-  render: () => <Scene telemetry={TELEMETRY} />,
-};
-
-export const WithoutTelemetry: Story = {
-  name: 'GraphCanvas · no telemetry',
-  render: () => <Scene />,
+  ),
 };

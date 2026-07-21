@@ -8,6 +8,7 @@ import {
   type GraphLayerProps,
 } from '@invana/canvas-react';
 import type { CanvasTelemetryConfig } from '@invana/canvas';
+import { otelTelemetry } from '@invana/canvas-telemetry-otel';
 import type { GraphData } from '@invana/graph';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
@@ -16,29 +17,26 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
  * `@invana/canvas`'s `Canvas`). It provides only `CanvasContext`, so base
  * layer/behaviour wrappers work but there is **no `activeLayout` auto-run** —
  * nodes render at the `position` you give them. Compare with the sibling
- * `canvas-react/GraphCanvas` story, which auto-runs a force layout.
+ * `canvas-react/GraphCanvas` stories, which auto-run a force layout.
  *
- * **Telemetry (two variants).** `WithTelemetry` passes `telemetry={{ traces,
- * metrics, logging }}`; `WithoutTelemetry` omits the prop entirely — same scene,
- * so you can compare the console/overhead with the streams on vs. off (off = the
- * kernel's no-op path, zero telemetry cost). The `telemetry` config wires all
- * three kernel streams through `new Canvas({ telemetry })`, here with the dep-free
- * **console** adapters (no backend needed). To verify the `WithTelemetry` variant:
- * - **Logging** (`console.info`) shows in the console **by default** — mount /
- *   lifecycle lines prefixed `[canvas]`.
- * - **Traces** + **Metrics** use `console.debug` — enable **“Verbose”** in the
- *   devtools console to see `span …` (view-mutation + per-gesture spans; pan /
- *   zoom to trigger) and `metric canvas.frame.…={…}` (the per-frame speed trace;
- *   high volume — enable briefly).
- * - **Metrics on-screen**: the `<DevInfoLayer>` overlay shows live FPS + the CPU
- *   phase breakdown (`camera` / `dataFlush` / `layers`) — the same numbers the
- *   metrics stream records, without the console noise.
+ * **This variant — telemetry on, shipped to a server URL.** `telemetry` here is
+ * built by `otelTelemetry({ endpoint })` from `@invana/canvas-telemetry-otel` — the
+ * `endpoint` is your **telemetry server URL** (an OTLP/HTTP collector base, e.g.
+ * HyperDX; the adapter appends `/v1/{traces,metrics,logs}`). This is how you point
+ * the canvas at a real backend. Compare with the sibling `WithoutTelemetry` story
+ * (prop omitted → the kernel's no-op path, zero telemetry cost).
  *
- * Swap `true` for an injected port to ship to a real backend, e.g.
- * `otelTelemetry({ metrics: true })` (OTLP → HyperDX) or
- * `{ metrics: { meter: createHttpMeter('http://localhost:4319/metrics') } }`.
+ * **How the URL is passed.** A URL never goes on `CanvasTelemetryConfig` directly —
+ * you wrap it in a port. `otelTelemetry` does that for you: `endpoint` → OTLP
+ * exporters for all three streams. (Metrics-only, dep-free alternative:
+ * `telemetry={{ metrics: { meter: createHttpMeter('http://…/metrics') } }}`.)
+ *
+ * **To verify** (no collector needed to see it work): `console: true` mirrors spans
+ * to the browser console — enable **“Verbose”** to see `span …`. The `<DevInfoLayer>`
+ * overlay shows live FPS regardless. With a collector running at `TELEMETRY_URL`,
+ * traces + metrics + logs land there.
  */
-const meta: Meta = { title: 'canvas-react/Canvas' };
+const meta: Meta = { title: 'canvas-react/Canvas/WithTelemetry' };
 export default meta;
 type Story = StoryObj;
 
@@ -79,15 +77,28 @@ const NODE: GraphLayerProps['node'] = {
 };
 const EDGE: GraphLayerProps['edge'] = { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5 } };
 
-// All three telemetry streams via the dep-free console adapters.
-const TELEMETRY: CanvasTelemetryConfig = { traces: true, metrics: true, logging: 'info' };
+// ── Your telemetry server URL ────────────────────────────────────────────────
+// The OTLP/HTTP **base** URL of your collector (OTel collector / HyperDX). The
+// adapter appends `/v1/traces`, `/v1/metrics`, `/v1/logs`. Point this at your own
+// server; the default local collector port is 4318.
+// Build the telemetry config from the URL: `otelTelemetry` wraps it in real OTLP
+// exporters for traces + metrics + logs. `console: true` also mirrors spans to the
+// browser console so this story is observable without a running collector.
+// (For a dep-free, metrics-only sink instead: `createHttpMeter(TELEMETRY_URL)`.)
+const TELEMETRY: CanvasTelemetryConfig = otelTelemetry({
+  endpoint: 'http://localhost:4318',
+  serviceName: 'invana-canvas',
+  traces: true,
+  metrics: true,
+  logging: 'info',
+  console: true,
+});
 
-// One scene, parameterised by the telemetry prop — the only thing that differs
-// between the two variants. `undefined` = no telemetry (the kernel's no-op path).
-function Scene({ telemetry }: { telemetry?: CanvasTelemetryConfig }) {
-  return (
+export const WithTelemetry: Story = {
+  name: 'Canvas (base) + telemetry',
+  render: () => (
     <div style={{ width: '100%', height: '100vh' }}>
-      <Canvas autoResize telemetry={telemetry}>
+      <Canvas autoResize telemetry={TELEMETRY}>
         <BackgroundLayer id="bg" type="pattern" patternType="dots" backgroundColor="#f8fafc" color="#cbd5e1" />
         <GraphLayer id="graph" data={DATA} node={NODE} edge={EDGE} />
         <DragPanBehaviour id="pan" />
@@ -95,15 +106,5 @@ function Scene({ telemetry }: { telemetry?: CanvasTelemetryConfig }) {
         <DevInfoLayer id="dev" corner="top-left" />
       </Canvas>
     </div>
-  );
-}
-
-export const WithTelemetry: Story = {
-  name: 'Canvas (base) + telemetry',
-  render: () => <Scene telemetry={TELEMETRY} />,
-};
-
-export const WithoutTelemetry: Story = {
-  name: 'Canvas (base) · no telemetry',
-  render: () => <Scene />,
+  ),
 };

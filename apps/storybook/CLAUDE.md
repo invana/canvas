@@ -7,7 +7,7 @@ Storybook for the new architecture. The sidebar mirrors the seven core engine co
 Storybook runs on the React framework (`@storybook/react-vite`). Story files are `.stories.ts` or `.stories.tsx` and import `Meta` / `StoryObj` from `@storybook/react-vite`. Two authoring shapes coexist:
 
 1. **Imperative / `play`-based** — the existing engine, graph, layout, and decoration stories. `render()` returns `createContainer(...)` (defined in `stories/div-util.tsx` — it returns a React element rendering a sized `<div>` with a stable id), and the `play({ canvasElement })` function queries the container by id and drives the engine imperatively. No changes from the pre-React-framework pattern; `play` runs against the same DOM shape.
-2. **Declarative React** — stories for `@invana/canvas-react`. `render()` returns the React tree directly (`<Canvas><GraphLayer/>…</Canvas>`). No `play`. No `onStoryTeardown` either — the `<Canvas>` effect cleanup tears the engine down on unmount.
+2. **Declarative React** — stories for `@invana/canvas-react`. `render()` returns the React tree directly (`<Canvas><GraphLayer/>…</Canvas>`). No `play`. No `onStoryTeardown` either — the `<Canvas>` effect cleanup tears the engine down on unmount. **Still one story per file** (see Rules below) — variants split into a folder of one-story files, each **self-contained** (full data + tree inline, no shared helper module); don't stack multiple exports in one file.
 
 When in doubt: engine + graph stories follow shape (1). Anything under `canvas-react/*` follows shape (2).
 
@@ -75,7 +75,8 @@ In storybook this means:
 Rules:
 
 - Story files: `<Name>.stories.ts`. Title format: `'<Package>/<Area>/<Subarea>'` mirroring the filesystem path exactly.
-- **One story per file.** Each `.stories.ts` exports exactly one named story.
+- **One story per file — no exceptions, including declarative `canvas-react` stories.** Each `.stories.ts(x)` exports **exactly one** named story. **Variants ship as separate files, never as extra exports in one file:** a component with two demos (e.g. `Canvas` with telemetry on vs. off) becomes a **folder** of one-story files — `canvas-react/Canvas/WithTelemetry.stories.tsx` + `canvas-react/Canvas/WithoutTelemetry.stories.tsx`, titles `canvas-react/Canvas/WithTelemetry` etc. (mirroring the folder path).
+- **Every story file is self-contained — show the full implementation inline.** A developer reading (or copying from) one story file must see **everything** needed to reproduce it: the data, the styling, the config, and the complete React tree, all in that file. **Do NOT extract shared setup into a helper module** (no `scene.tsx` exporting a `*Scene` component, no shared data module) — that hides the implementation the story is meant to teach. **Accept the duplication** across sibling variant files; the story is documentation first, DRY second. (Declarative stories keep their data as module-level consts in the same file and inline the tree in `render`; imperative `play` stories keep everything inside `play` per "Writing a story" above.) `canvas-react/Canvas/WithTelemetry.stories.tsx` is the reference.
 - No raw `pixi.js` imports inside stories — go through `@invana/canvas` / `@invana/graph` public API.
 
 ## Shapes & Renderer stories
