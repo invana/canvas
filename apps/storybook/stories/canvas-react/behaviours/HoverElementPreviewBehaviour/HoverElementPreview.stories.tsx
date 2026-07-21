@@ -1,30 +1,37 @@
 /**
- * `<HoverElementPreview>` for `@invana/canvas-react` — hover preview with **custom**
- * node / edge cards.
+ * `<HoverElementPreviewBehaviour>` for `@invana/canvas-react` — headless hover
+ * preview over a bare `<Canvas>` root, with **custom** node / edge cards.
  *
- * The turnkey owns **all** the wiring — subscription, anchoring (measure → flip
- * → clamp), and the interactive hold-open behaviour. To render bespoke cards,
- * supply `renderNode` / `renderEdge`; the card components are pure UI and never
- * deal with positioning or hold/release.
+ * The behaviour owns **all** the wiring — subscription, anchoring (measure → flip
+ * → clamp), and the interactive hold-open behaviour. You supply the card content
+ * per kind via `renderNode` / `renderEdge`; that content never deals with
+ * positioning or hold/release.
  *
- * The cards here are `@invana/canvas-ui`'s presentational `NodePreviewCard` /
- * `EdgePreviewCard` (design-kit chrome). The story only maps `target.data` → the
+ * This is a **canvas-react** story, so the scene stays bare — no `GraphCanvasApp`,
+ * no header/footer/panels. The one canvas-ui touch is the render-prop **content**:
+ * the presentational `NodePreviewCard` / `EdgePreviewCard`, which is exactly how a
+ * consumer wires the headless behaviour. The story only maps `target.data` → the
  * card props.
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ThemeProvider } from '@invana/themes';
 import { EdgePreviewCard, NodePreviewCard, type PreviewCardRow } from '@invana/canvas-ui';
-import { BackgroundLayer, ClickViewBehaviour, DragNodeBehaviour, DragPanBehaviour, GraphLayer, WheelZoomBehaviour } from '@invana/canvas-react';
-import { HoverElementPreviewBehaviour } from '@invana/canvas-ui';
-import { EdgeDetailView, GraphCanvasApp, NodeDetailView, Panel, PanelContent } from '@invana/canvas-ui';
+import {
+  BackgroundLayer,
+  Canvas,
+  DragNodeBehaviour,
+  DragPanBehaviour,
+  GraphLayer,
+  HoverElementPreviewBehaviour,
+  WheelZoomBehaviour,
+} from '@invana/canvas-react';
 import type { GraphData, GraphEdge, GraphNode } from '@invana/graph';
 
-const meta: Meta = { title: 'canvas-ui/behaviours/HoverElementPreview' };
+const meta: Meta = { title: 'canvas-react/behaviours/HoverElementPreviewBehaviour' };
 export default meta;
 type Story = StoryObj;
 
-// ─── Data ────────────────────────────────────────────────────────────────────
+// ─── Data — explicit positions (the base <Canvas> runs no layout) ────────────
 
 interface PersonData {
   name: string;
@@ -94,13 +101,10 @@ function renderEdge(edge: GraphEdge) {
 // ─── Story ───────────────────────────────────────────────────────────────────
 
 export const HoverElementPreview: Story = {
-  // `GraphCanvasApp` is the batteries-included shell (themed header/footer +
-  // engine). `bundle={false}` lets these children own the graph; the app must
-  // sit under a `<ThemeProvider>`.
   render: () => (
-    <ThemeProvider storageKey={null}>
-      <GraphCanvasApp data={data} bundle={false} height="100vh">
-        <BackgroundLayer id="background" type="pattern" patternType="dots" backgroundColor="#0b1220" color="#1e293b" />
+    <div style={{ width: '100%', height: '100vh' }}>
+      <Canvas autoResize>
+        <BackgroundLayer id="background" type="pattern" patternType="dots" backgroundColor="#f8fafc" color="#cbd5e1" />
         <GraphLayer
           id="graph"
           data={data}
@@ -123,26 +127,11 @@ export const HoverElementPreview: Story = {
         <WheelZoomBehaviour id="zoom" enabled />
         <DragNodeBehaviour targetLayerId="graph" enabled />
 
-        {/* The component owns subscription + positioning + hold-open; we supply
+        {/* The behaviour owns subscription + positioning + hold-open; we supply
             only the card content per kind. Timing uses the behaviour defaults
             (openDelay / closeDelay = 50ms). */}
         <HoverElementPreviewBehaviour targetLayerId="graph" renderNode={renderNode} renderEdge={renderEdge} />
-
-        {/* Click-to-open inspector — a right-side dock. The behaviour just
-            surfaces the clicked element; the <Panel> positions and the
-            <PanelContent> provides the surface + close ✕. */}
-        <ClickViewBehaviour
-          id="click-view"
-          targetLayerId="graph"
-          panel={(ctx) => (
-            <Panel position="right">
-              <PanelContent header={ctx.kind === 'edge' ? "Edge Detail" : "Node Detail" } onClose={ctx.close} fill>
-                {ctx.kind === 'edge' ? <EdgeDetailView ctx={ctx} /> : <NodeDetailView ctx={ctx} />}
-              </PanelContent>
-            </Panel>
-          )}
-        />
-      </GraphCanvasApp>
-    </ThemeProvider>
+      </Canvas>
+    </div>
   ),
 };

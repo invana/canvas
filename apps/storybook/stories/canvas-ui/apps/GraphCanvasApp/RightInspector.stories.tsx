@@ -23,7 +23,7 @@ import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
 
-const meta: Meta = { title: 'canvas-ui/graph-canvas-app/RightInspector' };
+const meta: Meta = { title: 'canvas-ui/apps/GraphCanvasApp/RightInspector' };
 export default meta;
 type Story = StoryObj;
 

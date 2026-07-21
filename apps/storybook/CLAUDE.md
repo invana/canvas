@@ -11,9 +11,17 @@ Storybook runs on the React framework (`@storybook/react-vite`). Story files are
 
 When in doubt: engine + graph stories follow shape (1). Anything under `canvas-react/*` follows shape (2).
 
+### `canvas-react/*` stories stay headless and minimal
+
+A `canvas-react/*` story exists to show the **raw binding layer**, so keep it as small as possible: mount a **bare `<Canvas>` / `<GraphCanvas>` root** and compose only **canvas-react** wrappers (layers, behaviours, layouts) as children — the component(s) under test and nothing more. `canvas-react/Canvas/Basic.stories.tsx` is the model.
+
+- **No `@invana/canvas-ui` app chrome.** No `GraphCanvasApp`, no header / footer, no toolbars, connected panels, editors, or detail-views wrapping the scene. The engine root is the whole scene; the sized host `<div>` is the only wrapper.
+- **The story owns the tree, not a canvas-ui shell.** If a demo needs the batteries-included app shell, toolbars, editors, or connected panels *around* the canvas, it is a **canvas-ui** story (e.g. under `canvas-ui/apps/GraphCanvasApp/`), **not** a canvas-react one — put it there instead.
+- **Exception — canvas-ui preview cards as render-prop *content*.** A story *may* import canvas-ui's presentational preview cards (`NodePreviewCard` / `EdgePreviewCard` / `HoverElementPreviewCard`) and pass them as a behaviour's `renderNode` / `renderEdge` / `renderCard` content. That's exactly how a consumer wires the headless behaviour, and it's confined to the **story** — the canvas-react *package* still never imports canvas-ui. This covers render-prop **content only**; the scene around it stays bare (still no app shell, panels, or toolbars).
+
 ## Styling — no hand-rolled CSS (root rule 13)
 
-**Never write manual CSS in a story** — no inline `style={{…}}` objects, no `CSSProperties` consts, no raw CSS for static presentation. Wrap demo layout/chrome in **`@invana/ui` components** (`Card`/`CardHeader`/`CardContent`, `Separator`, `Badge`, `Button`, …) and use **Tailwind design-token utility classes** via `className` (`flex`, `flex-col`, `gap-4`, `p-4`, `bg-card`, `text-muted-foreground`, `text-xs`, …) — the design-kit Tailwind theme is wired into Storybook (`.storybook/preview.ts`), so utilities work. `stories/canvas-ui/editors/CanvasSettingsEditor.stories.tsx` (its `Standalone` two-column layout) is the reference.
+**Never write manual CSS in a story** — no inline `style={{…}}` objects, no `CSSProperties` consts, no raw CSS for static presentation. Wrap demo layout/chrome in **`@invana/ui` components** (`Card`/`CardHeader`/`CardContent`, `Separator`, `Badge`, `Button`, …) and use **Tailwind design-token utility classes** via `className` (`flex`, `flex-col`, `gap-4`, `p-4`, `bg-card`, `text-muted-foreground`, `text-xs`, …) — the design-kit Tailwind theme is wired into Storybook (`.storybook/preview.ts`), so utilities work. `stories/canvas-ui/editors/CanvasSettingsEditor/CanvasSettingsEditor.stories.tsx` (its `Standalone` two-column layout) is the reference.
 
 The **only** inline `style` allowed is a genuinely dynamic runtime value Tailwind can't express (a computed colour, a cursor/absolute coordinate, a prop-driven pixel size). **Exempt** (structural / engine-demo tooling, not chrome): `createContainer(...)` in `stories/div-util.tsx` sizes the canvas-host `<div>`, and imperative engine stories drive settings through a **lil-gui** panel — those stay as-is. This rule targets the React/UI framing *around* components (columns, panels, spacing, labels), not the canvas surface or lil-gui.
 

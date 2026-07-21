@@ -17,7 +17,7 @@ import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
 
-const meta: Meta = { title: 'canvas-ui/graph-canvas-app/EmbeddedWidget' };
+const meta: Meta = { title: 'canvas-ui/apps/GraphCanvasApp/EmbeddedWidget' };
 export default meta;
 type Story = StoryObj;
 

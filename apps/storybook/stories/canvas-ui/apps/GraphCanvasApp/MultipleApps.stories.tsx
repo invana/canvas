@@ -34,7 +34,7 @@ import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
 import { GeometricLayout } from '@invana/graph-layout-geometric';
 
-const meta: Meta = { title: 'canvas-ui/graph-canvas-app/MultipleApps' };
+const meta: Meta = { title: 'canvas-ui/apps/GraphCanvasApp/MultipleApps' };
 export default meta;
 type Story = StoryObj;
 

@@ -22,7 +22,7 @@ import { GraphCanvasApp } from '@invana/canvas-ui';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
 
-const meta: Meta = { title: 'canvas-ui/graph-canvas-app/NoChrome' };
+const meta: Meta = { title: 'canvas-ui/apps/GraphCanvasApp/NoChrome' };
 export default meta;
 type Story = StoryObj;
 
