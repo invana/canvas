@@ -35,7 +35,7 @@ import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { GeometricLayout } from '@invana/graph-layout-geometric';
 
-const meta: Meta = { title: 'canvas-react/usecases/Simple And Composite Nodes' };
+const meta: Meta = { title: 'Usecases/Simple And Composite Nodes' };
 export default meta;
 type Story = StoryObj;
 

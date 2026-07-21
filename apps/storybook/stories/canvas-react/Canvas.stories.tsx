@@ -18,9 +18,12 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
  * nodes render at the `position` you give them. Compare with the sibling
  * `canvas-react/GraphCanvas` story, which auto-runs a force layout.
  *
- * **Telemetry.** `telemetry={{ traces, metrics, logging }}` wires all three
- * kernel streams through `new Canvas({ telemetry })`, here with the dep-free
- * **console** adapters (no backend needed). To verify:
+ * **Telemetry (two variants).** `WithTelemetry` passes `telemetry={{ traces,
+ * metrics, logging }}`; `WithoutTelemetry` omits the prop entirely — same scene,
+ * so you can compare the console/overhead with the streams on vs. off (off = the
+ * kernel's no-op path, zero telemetry cost). The `telemetry` config wires all
+ * three kernel streams through `new Canvas({ telemetry })`, here with the dep-free
+ * **console** adapters (no backend needed). To verify the `WithTelemetry` variant:
  * - **Logging** (`console.info`) shows in the console **by default** — mount /
  *   lifecycle lines prefixed `[canvas]`.
  * - **Traces** + **Metrics** use `console.debug` — enable **“Verbose”** in the
@@ -79,11 +82,12 @@ const EDGE: GraphLayerProps['edge'] = { style: { strokeColor: 0x94a3b8, strokeWi
 // All three telemetry streams via the dep-free console adapters.
 const TELEMETRY: CanvasTelemetryConfig = { traces: true, metrics: true, logging: 'info' };
 
-export const Base: Story = {
-  name: 'Canvas (base) + telemetry',
-  render: () => (
+// One scene, parameterised by the telemetry prop — the only thing that differs
+// between the two variants. `undefined` = no telemetry (the kernel's no-op path).
+function Scene({ telemetry }: { telemetry?: CanvasTelemetryConfig }) {
+  return (
     <div style={{ width: '100%', height: '100vh' }}>
-      <Canvas autoResize telemetry={TELEMETRY}>
+      <Canvas autoResize telemetry={telemetry}>
         <BackgroundLayer id="bg" type="pattern" patternType="dots" backgroundColor="#f8fafc" color="#cbd5e1" />
         <GraphLayer id="graph" data={DATA} node={NODE} edge={EDGE} />
         <DragPanBehaviour id="pan" />
@@ -91,5 +95,15 @@ export const Base: Story = {
         <DevInfoLayer id="dev" corner="top-left" />
       </Canvas>
     </div>
-  ),
+  );
+}
+
+export const WithTelemetry: Story = {
+  name: 'Canvas (base) + telemetry',
+  render: () => <Scene telemetry={TELEMETRY} />,
+};
+
+export const WithoutTelemetry: Story = {
+  name: 'Canvas (base) · no telemetry',
+  render: () => <Scene />,
 };

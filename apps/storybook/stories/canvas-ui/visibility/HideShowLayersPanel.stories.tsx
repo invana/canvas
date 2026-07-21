@@ -24,7 +24,7 @@ import { TabbedPanel, type TabConfig } from '@invana/ui';
 import { EyeOff, Layers } from 'lucide-react';
 import { useState } from 'react';
 
-const meta: Meta = { title: 'canvas-react/visibility/HideShowLayersPanel' };
+const meta: Meta = { title: 'canvas-ui/visibility/HideShowLayersPanel' };
 export default meta;
 type Story = StoryObj;
 

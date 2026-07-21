@@ -23,7 +23,7 @@ import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { GeometricLayout } from '@invana/graph-layout-geometric';
 import { GLIDE, LAYER_ID, PALETTE, StreamingDemo, type LayoutEntry } from '../streaming-demo';
 
-const meta: Meta = { title: 'canvas-react/layouts/CyclicExamples' };
+const meta: Meta = { title: 'canvas-ui/layouts/CyclicExamples' };
 export default meta;
 type Story = StoryObj;
 

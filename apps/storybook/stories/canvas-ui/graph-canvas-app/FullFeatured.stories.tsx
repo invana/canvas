@@ -30,7 +30,7 @@ import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import type { MenuItem } from '@invana/ui';
 
-const meta: Meta = { title: 'canvas-react/graph-canvas-app/FullFeatured' };
+const meta: Meta = { title: 'canvas-ui/graph-canvas-app/FullFeatured' };
 export default meta;
 type Story = StoryObj;
 

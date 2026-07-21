@@ -20,9 +20,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
  * places the nodes for you (the base `<Canvas>` story, by contrast, needs explicit
  * positions). `GraphCanvasApp` is built on this same root.
  *
- * **Telemetry.** Identical wiring to the base `Canvas` story — the streams live
- * in the shared kernel, so both roots behave the same. `telemetry={{ traces,
- * metrics, logging }}` with the console adapters:
+ * **Telemetry (two variants).** `WithTelemetry` passes `telemetry={{ traces,
+ * metrics, logging }}`; `WithoutTelemetry` omits it (same scene, streams off —
+ * the kernel's no-op path). Identical wiring to the base `Canvas` story — the
+ * streams live in the shared kernel, so both roots behave the same. In the
+ * `WithTelemetry` variant, with the console adapters:
  * - **Logging** (`console.info`, `[canvas]` prefix) shows by default.
  * - **Traces** + **Metrics** use `console.debug` → enable **“Verbose”** to see
  *   `span …` (mutation + per-gesture spans — and here also the **layout** gesture
@@ -94,11 +96,12 @@ const CONFIG: CanvasConfig = {
 // All three telemetry streams via the dep-free console adapters.
 const TELEMETRY: CanvasTelemetryConfig = { traces: true, metrics: true, logging: 'info' };
 
-export const Graph: Story = {
-  name: 'GraphCanvas + telemetry',
-  render: () => (
+// One scene, parameterised by the telemetry prop — the only thing that differs
+// between the two variants. `undefined` = no telemetry (the kernel's no-op path).
+function Scene({ telemetry }: { telemetry?: CanvasTelemetryConfig }) {
+  return (
     <div style={{ width: '100%', height: '100vh' }}>
-      <GraphCanvas autoResize config={CONFIG} telemetry={TELEMETRY}>
+      <GraphCanvas autoResize config={CONFIG} telemetry={telemetry}>
         <BackgroundLayer id="bg" type="pattern" patternType="dots" backgroundColor="#f8fafc" color="#cbd5e1" />
         {/* GraphLayer must be declared before the layout that targets it. */}
         <GraphLayer id="graph" data={DATA} node={NODE} edge={EDGE} />
@@ -108,5 +111,15 @@ export const Graph: Story = {
         <DevInfoLayer id="dev" corner="top-left" />
       </GraphCanvas>
     </div>
-  ),
+  );
+}
+
+export const WithTelemetry: Story = {
+  name: 'GraphCanvas + telemetry',
+  render: () => <Scene telemetry={TELEMETRY} />,
+};
+
+export const WithoutTelemetry: Story = {
+  name: 'GraphCanvas · no telemetry',
+  render: () => <Scene />,
 };

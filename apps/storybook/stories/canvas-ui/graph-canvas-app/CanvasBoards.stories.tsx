@@ -47,7 +47,7 @@ import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
 
-const meta: Meta = { title: 'canvas-react/graph-canvas-app/CanvasBoards' };
+const meta: Meta = { title: 'canvas-ui/graph-canvas-app/CanvasBoards' };
 export default meta;
 type Story = StoryObj;
 

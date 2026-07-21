@@ -44,7 +44,7 @@ import {
   type ThemeMode,
 } from '@invana/graph';
 
-const meta: Meta = { title: 'canvas-react/node-templates/Template Studio' };
+const meta: Meta = { title: 'canvas-ui/node-templates/Template Studio' };
 export default meta;
 type Story = StoryObj;
 

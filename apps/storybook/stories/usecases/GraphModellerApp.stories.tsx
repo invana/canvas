@@ -60,7 +60,7 @@ import type {
 import type * as graph from '@invana/graph';
 import { ThemeProvider, useTheme } from '@invana/themes';
 
-const meta: Meta = { title: 'canvas-react/usecases/GraphModellerApp' };
+const meta: Meta = { title: 'Usecases/GraphModellerApp' };
 export default meta;
 type Story = StoryObj;
 

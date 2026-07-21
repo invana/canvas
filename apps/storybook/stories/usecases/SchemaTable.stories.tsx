@@ -40,9 +40,9 @@ import {
 import { SchemaEditor, type NodeSchema } from '@invana/canvas-ui';
 import { ElkLayout, type ElkDirection } from '@invana/graph-layout-elkjs';
 import GUI from 'lil-gui';
-import { createContainer, onStoryTeardown } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../div-util';
 
-const meta: Meta = { title: 'canvas-react/usecases/Schema Table' };
+const meta: Meta = { title: 'Usecases/Schema Table' };
 export default meta;
 type Story = StoryObj;
 

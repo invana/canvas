@@ -33,7 +33,7 @@ import { BackgroundLayer, DragNodeBehaviour, DragPanBehaviour, GraphLayer, Wheel
 import { ClearCanvasToolbar, ExportStateToolbar, GraphCanvasApp } from '@invana/canvas-ui';
 import type { GraphData, GraphNode } from '@invana/graph';
 
-const meta: Meta = { title: 'canvas-react/export/ExportState' };
+const meta: Meta = { title: 'canvas-store/Export/ExportState' };
 export default meta;
 type Story = StoryObj;
 

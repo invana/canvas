@@ -23,7 +23,7 @@ import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
 
-const meta: Meta = { title: 'canvas-react/graph-canvas-app/CustomComposition' };
+const meta: Meta = { title: 'canvas-ui/graph-canvas-app/CustomComposition' };
 export default meta;
 type Story = StoryObj;
 

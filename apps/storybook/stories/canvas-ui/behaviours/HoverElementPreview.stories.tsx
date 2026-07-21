@@ -20,7 +20,7 @@ import { HoverElementPreviewBehaviour } from '@invana/canvas-ui';
 import { EdgeDetailView, GraphCanvasApp, NodeDetailView, Panel, PanelContent } from '@invana/canvas-ui';
 import type { GraphData, GraphEdge, GraphNode } from '@invana/graph';
 
-const meta: Meta = { title: 'canvas-react/behaviours/HoverElementPreview' };
+const meta: Meta = { title: 'canvas-ui/behaviours/HoverElementPreview' };
 export default meta;
 type Story = StoryObj;
 
