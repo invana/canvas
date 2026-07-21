@@ -38,6 +38,7 @@ export interface CreateNodeBehaviourOptions extends BehaviourOptions {
 let createNodeSeq = 0;
 
 export class CreateNodeBehaviour extends Behaviour<CreateNodeBehaviourOptions> {
+  override readonly kind = 'create-node';
   private layer: GraphLayer | null = null;
   private ctxRef: CanvasContext | null = null;
   private canvasEl: HTMLCanvasElement | null = null;

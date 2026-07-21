@@ -61,6 +61,8 @@ interface DragState {
 }
 
 export class DragShapeBehaviour extends Behaviour<DragShapeBehaviourOptions> {
+  override readonly kind = 'drag-shape';
+
   // The renderer is fixed at construction; the tuning knobs live-read from
   // `_options` (all consumed at event-time) so `setOptions` takes effect.
   private get renderer(): PrimitivesRenderer { return this._options.renderer; }

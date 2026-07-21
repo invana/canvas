@@ -420,6 +420,7 @@ export function resolvePreviewCard(
 // ─── Behaviour ──────────────────────────────────────────────────────────────
 
 export class HoverElementPreviewBehaviour extends Behaviour {
+  override readonly kind = 'hover-element-preview';
   /**
    * Preview event bus. Subscribe to `'preview:show'` / `'preview:move'` /
    * `'preview:hide'` to render and position the card.

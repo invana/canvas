@@ -190,6 +190,7 @@ function resolveOptions(
 }
 
 export class ClickSelectBehaviour extends Behaviour {
+  override readonly kind = 'click-select';
   /**
    * Selection event bus. Subscribe to `'selection:change'` for a reactive
    * snapshot every time the selection set is replaced. Independent of (and

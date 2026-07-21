@@ -227,6 +227,22 @@ const DEFAULT_HOVER_HYSTERESIS_PX = 5;
 /** Default for {@link PrimitivesRendererOptions.hoverNodeIncidencePx}. */
 const DEFAULT_HOVER_NODE_INCIDENCE_PX = 20;
 
+/**
+ * Max number of segment boxes a single connector is split into for the hit
+ * index (edge-pick correctness H). Caps the rbush entry-count multiplier: an
+ * edge indexes as at most this many boxes, so a 5k-edge graph stays bounded.
+ */
+const CONNECTOR_HIT_MAX_BOXES = 8;
+
+/**
+ * Target arc length (world units) per connector hit box. An edge shorter than
+ * this indexes as a single loose AABB (no change); longer edges split into
+ * `ceil(len / this)` boxes, capped at {@link CONNECTOR_HIT_MAX_BOXES}. Tuned
+ * for the pixel-ish coordinate ranges these datasets use; graphs in tiny
+ * normalized ranges simply fall back to one box per edge.
+ */
+const CONNECTOR_HIT_SPLIT_LEN = 80;
+
 export class PrimitivesRenderer {
   private readonly shapeRegistry = new Map<string, ShapeCtor>();
   private readonly routerRegistry = new Map<string, IRouter>();
@@ -807,12 +823,12 @@ export class PrimitivesRenderer {
    * hit-test accuracy snaps back the moment the user stops zooming.
    */
   reindexScaledShapeHits(ids?: Iterable<string>): void {
-    const updates: Array<{ id: string; rect: Rect }> = [];
+    const updates: Array<{ id: string; rects: Rect[] }> = [];
     const sourceIds: Iterable<string> = ids ?? this.shapeInstances.keys();
     for (const id of sourceIds) {
       const inst = this.shapeInstances.get(id);
       if (!inst) continue;
-      updates.push({ id, rect: this.shapeWorldBounds(inst) });
+      updates.push({ id, rects: [this.shapeWorldBounds(inst)] });
     }
     this.hit.bulkUpdateBoxes(updates);
   }
@@ -827,14 +843,14 @@ export class PrimitivesRenderer {
    */
   private flushMovedHits(): void {
     if (this.movedShapeHits.size === 0 && this.movedConnectorHits.size === 0) return;
-    const updates: Array<{ id: string; rect: Rect }> = [];
+    const updates: Array<{ id: string; rects: Rect[] }> = [];
     for (const id of this.movedShapeHits) {
       const inst = this.shapeInstances.get(id);
-      if (inst) updates.push({ id, rect: this.shapeWorldBounds(inst) });
+      if (inst) updates.push({ id, rects: [this.shapeWorldBounds(inst)] });
     }
     for (const id of this.movedConnectorHits) {
       const inst = this.connectorInstances.get(id);
-      if (inst && inst.path.length >= 2) updates.push({ id, rect: this.connectorHitRect(inst) });
+      if (inst && inst.path.length >= 2) updates.push({ id, rects: this.connectorHitBoxes(inst) });
     }
     this.movedShapeHits.clear();
     this.movedConnectorHits.clear();
@@ -2708,7 +2724,7 @@ export class PrimitivesRenderer {
       this.movedConnectorHits.add(inst.id);
       return;
     }
-    this.hit.insert(inst.id, 'connector', this.connectorHitRect(inst), inst.spec.zIndex ?? 0);
+    this.hit.insert(inst.id, 'connector', this.connectorHitBoxes(inst), inst.spec.zIndex ?? 0);
   }
 
   /** World-space hit bbox for a connector: its path bounds inflated by half the
@@ -2717,6 +2733,76 @@ export class PrimitivesRenderer {
     const bb = pathBounds(inst.path);
     const pad = (inst.spec.stroke?.width ?? 1) / 2 + 4;
     return { x: bb.x - pad, y: bb.y - pad, width: bb.width + pad * 2, height: bb.height + pad * 2 };
+  }
+
+  /**
+   * World-space hit **boxes** for a connector — the segment-level hit index
+   * (edge-pick correctness H). A single loose AABB over a long diagonal edge
+   * makes that edge a candidate for every point in a huge empty box; splitting
+   * the sampled polyline into up to {@link CONNECTOR_HIT_MAX_BOXES} tight boxes
+   * (cut at equal arc-length, so straight diagonals subdivide and curves — which
+   * `samplePath` already densifies — get one box per run) keeps the candidate
+   * set to edges *physically near* the cursor, making "nearest" cheaper and more
+   * meaningful in a bundle. Short edges collapse to one box (identical to
+   * {@link connectorHitRect}), so nothing regresses.
+   */
+  private connectorHitBoxes(inst: ConnectorInstance): Rect[] {
+    const poly = this.sampledConnectorPolyline(inst);
+    const pad = (inst.spec.stroke?.width ?? 1) / 2 + 4;
+    if (poly.length < 2) return [this.connectorHitRect(inst)];
+
+    // Total arc length + per-segment lengths.
+    let total = 0;
+    const segLen: number[] = [];
+    for (let i = 0; i < poly.length - 1; i++) {
+      const a = poly[i]!;
+      const b = poly[i + 1]!;
+      const l = Math.hypot(b.x - a.x, b.y - a.y);
+      segLen.push(l);
+      total += l;
+    }
+    // One box below the split threshold — same loose AABB as before.
+    const n = Math.min(CONNECTOR_HIT_MAX_BOXES, Math.max(1, Math.ceil(total / CONNECTOR_HIT_SPLIT_LEN)));
+    if (n <= 1 || total === 0) return [this.connectorHitRect(inst)];
+
+    const step = total / n;
+    const rects: Rect[] = [];
+    let boundary = step; // next arc-length cut
+    let acc = 0; // arc length at the current segment's start point
+    let minX = poly[0]!.x;
+    let minY = poly[0]!.y;
+    let maxX = minX;
+    let maxY = minY;
+    const expand = (x: number, y: number): void => {
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    };
+    const flush = (): void => {
+      rects.push({ x: minX - pad, y: minY - pad, width: maxX - minX + pad * 2, height: maxY - minY + pad * 2 });
+    };
+    for (let i = 0; i < poly.length - 1; i++) {
+      const a = poly[i]!;
+      const b = poly[i + 1]!;
+      const l = segLen[i]!;
+      // Cut this segment wherever an arc-length boundary falls inside it, so a
+      // long straight run still yields several boxes hugging the line.
+      while (l > 0 && rects.length < n - 1 && boundary <= acc + l + 1e-9) {
+        const t = (boundary - acc) / l;
+        const cx = a.x + (b.x - a.x) * t;
+        const cy = a.y + (b.y - a.y) * t;
+        expand(cx, cy);
+        flush();
+        minX = maxX = cx;
+        minY = maxY = cy;
+        boundary += step;
+      }
+      expand(b.x, b.y);
+      acc += l;
+    }
+    flush();
+    return rects;
   }
 
   private refreshShapeDecorations(

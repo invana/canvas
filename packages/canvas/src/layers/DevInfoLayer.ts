@@ -84,6 +84,8 @@ interface DevInfoState {
 }
 
 export class DevInfoLayer extends ScreenLayer<DevInfoLayerOptions, DevInfoState> {
+  override readonly kind = 'dev-info-layer';
+
   private _opts: Required<DevInfoLayerOptions>;
   private _overlay: HTMLDivElement | null = null;
 

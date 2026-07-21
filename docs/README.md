@@ -52,6 +52,7 @@ working design-of-record documents. Day-to-day API/concept docs live in
 
 ## React / UI / apps
 
+- [ui-consolidation-plan.md](./ui-consolidation-plan.md) — **the headless-vs-pixels re-split** of `@invana/canvas-react` + `@invana/canvas-ui`: canvas-react becomes the **headless binding layer** (roots, contexts, null-rendering wrappers, store hooks — never imports `@invana/ui`), canvas-ui becomes the **React UI kit** (components, toolbars, menus, editors, views, `GraphCanvasApp`) built on canvas-react's hooks so it couples to `canvas-store` and is live by default. Dependency flips to **canvas-ui → canvas-react**; the 23 `@invana/ui` files + all pixels move out of canvas-react; editors keep a **controlled inner + connected wrapper** (packages the per-consumer `SettingsPanel` bridge once). Move manifest + 8-phase migration (P0 instructions → P7 connected wrappers).
 - [canvas-react-plan.md](./canvas-react-plan.md) — React entry-point (declarative `<Canvas>`).
 - [graph-canvas-apps-plan.md](./graph-canvas-apps-plan.md) — `GraphCanvasApp` compound component.
 - [designer-studio-plan.md](./designer-studio-plan.md) — **Designer** studio page (sibling of Explorer, on `GraphCanvasApp`); umbrella doc sequencing the state refactor → editor kit → page → telemetry → collaboration.

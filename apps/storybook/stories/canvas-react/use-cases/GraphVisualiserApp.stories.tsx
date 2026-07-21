@@ -18,20 +18,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { GraphData, GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
-import {
-  CanvasMessageBar,
-  ClickViewBehaviour,
-  GraphCanvasApp,
-  GraphControlsToolbar,
-  GraphStatusBar,
-  MiniMapLayer,
-  EdgeDetailView,
-  NodeDetailView,
-  Panel,
-  PanelContent,
-  ToolbarItems,
-  type ViewContext,
-} from '@invana/canvas-react';
+import { ClickViewBehaviour, MiniMapLayer, type ViewContext } from '@invana/canvas-react';
+import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, EdgeDetailView, NodeDetailView, Panel, PanelContent, ToolbarItems } from '@invana/canvas-ui';
 import { Moon, Sun } from 'lucide-react';
 import { ThemeProvider } from '@invana/themes';
 

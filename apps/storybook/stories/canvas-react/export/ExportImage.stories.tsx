@@ -33,14 +33,8 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeProvider } from '@invana/themes';
-import {
-  BackgroundLayer,
-  DragPanBehaviour,
-  ExportImageToolbar,
-  GraphCanvasApp,
-  GraphLayer,
-  WheelZoomBehaviour,
-} from '@invana/canvas-react';
+import { BackgroundLayer, DragPanBehaviour, GraphLayer, WheelZoomBehaviour } from '@invana/canvas-react';
+import { ExportImageToolbar, GraphCanvasApp } from '@invana/canvas-ui';
 import type { GraphData, GraphNode } from '@invana/graph';
 
 const meta: Meta = { title: 'canvas-react/export/ExportImage' };

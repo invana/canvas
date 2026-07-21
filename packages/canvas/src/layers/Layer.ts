@@ -83,6 +83,17 @@ export abstract class Layer<
 > implements ILayer
 {
   readonly id: string;
+
+  /**
+   * Stable **class kind** — a minification-safe discriminator matching the
+   * `@invana/canvas-ui` settings-editor registry key (e.g. `'background-layer'`,
+   * `'minimap-layer'`). Distinct from {@link id} (the per-instance key): all
+   * `BackgroundLayer` instances share `kind: 'background-layer'`. Concrete layers
+   * set it as a class field; left `undefined` on any that haven't, so consumers
+   * fall back (e.g. to the class name). Lets domain-free tooling resolve an
+   * instance's editor without an `instanceof` ladder.
+   */
+  readonly kind?: string;
   readonly options: TOptions;
   readonly state: Store<TState>;
   readonly events: SourceEmitter<TEvents>;

@@ -61,6 +61,7 @@ interface SimLink extends SimulationLinkDatum<SimNode> {}
 const REHEAT_ALPHA = 0.3;
 
 export class D3ForceLayout extends Layout<GraphLayer> {
+  override readonly kind = 'd3-force-layout';
   private opts: D3ForceLayoutOptions;
   /** Last layer `apply()` ran against — so `setOptions` can re-heat it live. */
   private lastLayer: GraphLayer | null = null;

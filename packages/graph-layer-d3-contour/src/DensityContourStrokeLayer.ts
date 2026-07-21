@@ -33,6 +33,7 @@ function resolveStops(
 }
 
 export class DensityContourStrokeLayer extends DensityContourLayerBase<DensityContourStrokeLayerOptions> {
+  override readonly kind = 'density-contour-stroke-layer';
   protected paintDensity(
     g: Graphics,
     density: ContourMultiPolygon[],

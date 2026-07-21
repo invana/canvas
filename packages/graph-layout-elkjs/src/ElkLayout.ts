@@ -63,6 +63,7 @@ import type {
 const FALLBACK_NODE_SIZE: NodeSize = { width: 40, height: 40 };
 
 export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
+  override readonly kind = 'elk-layout';
   /**
    * Shared ELK instance — `elkjs` is happy to be reused across runs, and we
    * keep one worker alive for the layout's lifetime instead of spinning one up

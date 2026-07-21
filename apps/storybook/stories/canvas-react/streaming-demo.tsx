@@ -37,35 +37,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
-import {
-  BackgroundLayer,
-  BrushSelectBehaviour,
-  ClickSelectBehaviour,
-  D3ForceLayout,
-  DevInfoLayer,
-  DragNodeBehaviour,
-  DragPanBehaviour,
-  EditToolbar,
-  GraphCanvasApp,
-  GraphClipboardProvider,
-  GraphHistoryProvider,
-  GraphLayer,
-  GridToolbar,
-  HistoryToolbar,
-  LabelCollisionBehaviour,
-  TextResolutionLODBehaviour,
-  LassoSelectBehaviour,
-  ToolbarItems,
-  ViewToolbar,
-  WheelZoomBehaviour,
-  useCanvas,
-  useFitContent,
-  useGraphCanvasUpdate,
-  useSelectMode,
-  type CanvasConfig,
-  type GraphCanvasAppControlContext,
-  type ToolbarItem,
-} from '@invana/canvas-react';
+import { BackgroundLayer, BrushSelectBehaviour, ClickSelectBehaviour, D3ForceLayout, DevInfoLayer, DragNodeBehaviour, DragPanBehaviour, GraphClipboardProvider, GraphHistoryProvider, GraphLayer, LabelCollisionBehaviour, TextResolutionLODBehaviour, LassoSelectBehaviour, WheelZoomBehaviour, useCanvas, useFitContent, useGraphCanvasUpdate, useSelectMode, type CanvasConfig } from '@invana/canvas-react';
+import { EditToolbar, GraphCanvasApp, GridToolbar, HistoryToolbar, ToolbarItems, ViewToolbar, type GraphCanvasAppControlContext, type ToolbarItem } from '@invana/canvas-ui';
 import type { Layout } from '@invana/canvas';
 import { Separator } from '@invana/ui';
 import { ThemeProvider, useTheme } from '@invana/themes';

@@ -104,6 +104,7 @@ function resolveOptions(
 }
 
 export class ContextMenuBehaviour extends Behaviour {
+  override readonly kind = 'context-menu';
   private layer: GraphLayer | null = null;
   private opts: ResolvedOptions;
 

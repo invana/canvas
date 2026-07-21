@@ -174,6 +174,7 @@ export class MiniMapLayer extends ScreenLayer<
   never,
   ScreenLayerHit
 > {
+  override readonly kind = 'minimap-layer';
   private opts: MiniMapOpts;
   private readonly graphLayerId: string;
 

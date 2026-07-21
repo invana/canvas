@@ -132,6 +132,8 @@ export class BackgroundLayer extends ScreenLayer<
   never,
   ScreenLayerHit
 > {
+  override readonly kind = 'background-layer';
+
   private opts: Required<BackgroundLayerOptions>;
   private tiling: TilingSprite | null = null;
   private patternTexture: Texture | null = null;

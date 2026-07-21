@@ -60,6 +60,7 @@ const DRAFT_EXCLUDE: ReadonlySet<string> = new Set([DRAFT_ID]);
 let drawEdgeSeq = 0;
 
 export class DrawEdgeBehaviour extends Behaviour<DrawEdgeBehaviourOptions> {
+  override readonly kind = 'draw-edge';
   private layer: GraphLayer | null = null;
   private ctxRef: CanvasContext | null = null;
   private canvasEl: HTMLCanvasElement | null = null;

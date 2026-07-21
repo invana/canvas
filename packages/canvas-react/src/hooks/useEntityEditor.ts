@@ -11,7 +11,7 @@ import type {
 import { useResolvedCanvas } from './useResolvedCanvas';
 import { useInspectTarget } from './useInspectTarget';
 import { HistoryContext } from '../HistoryContext';
-import type { PropertiesEditorValues } from '../components/PropertiesEditor';
+import type { PropertiesEditorValues } from '../uiModel';
 
 export interface UseEntityEditorOptions {
   /** GraphLayer to read/write. Default `'graph'`. */

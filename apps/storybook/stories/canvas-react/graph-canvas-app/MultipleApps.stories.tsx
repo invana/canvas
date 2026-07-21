@@ -25,12 +25,8 @@
 import { Children, type ReactNode, useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import {
-  GraphCanvasApp,
-  TextResolutionLODBehaviour,
-  useLayout,
-  type LayoutFactory,
-} from '@invana/canvas-react';
+import { TextResolutionLODBehaviour, useLayout, type LayoutFactory } from '@invana/canvas-react';
+import { GraphCanvasApp } from '@invana/canvas-ui';
 import type { EdgeStyle, GraphData, GraphNode, NodeStyle } from '@invana/graph';
 import { ThemeProvider } from '@invana/themes';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';

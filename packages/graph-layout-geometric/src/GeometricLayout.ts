@@ -25,6 +25,7 @@ const DEFAULT_CIRCULAR_SPACING = 50;
 const SIZE_GAP = 24;
 
 export class GeometricLayout extends OneShotPositionLayout<GeometricLayoutOptions> {
+  override readonly kind = 'geometric-layout';
   protected computeLayout(layer: GraphLayer): LayoutPositions | null {
     const ids: string[] = [];
     // Track the largest node footprint from the cached render bounds so the

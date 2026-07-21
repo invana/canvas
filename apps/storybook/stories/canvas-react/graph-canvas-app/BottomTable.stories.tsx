@@ -15,13 +15,7 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import {
-  CanvasMessageBar,
-  GraphCanvasApp,
-  GraphControlsToolbar,
-  GraphStatusBar,
-  ThemeToggle,
-} from '@invana/canvas-react';
+import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, ThemeToggle } from '@invana/canvas-ui';
 import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';

@@ -87,6 +87,7 @@ type ThemePatch = Partial<
 >;
 
 export class ThemeBehaviour extends Behaviour<ThemeBehaviourOptions> {
+  override readonly kind = 'theme';
   private themes: ThemeRegistry;
   private active: string;
   private fallback: string;

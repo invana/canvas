@@ -5,8 +5,14 @@
  * both. Hit-testing returns candidates in indeterminate order; the renderer
  * resolves topmost-by-zIndex.
  *
- * Per-id slot map keeps `update(id, ...)` O(log n) — we hold onto the
- * inserted entry so we can remove it before re-inserting the new bbox.
+ * **One id → one *or many* boxes.** Shapes index as a single bbox; a connector
+ * may index as several tight **segment boxes** (edge-pick correctness H) so a
+ * long diagonal edge isn't a candidate for every point inside its huge loose
+ * AABB — only points genuinely near the line. The per-id `entries` map holds
+ * the full box list for that id so `update` / `remove` stay O(boxes). Query
+ * results are **deduped by id**, so a caller still sees each element once
+ * regardless of how many boxes back it — the renderer's candidate loop is
+ * unchanged.
  */
 
 import RBush from 'rbush';
@@ -24,36 +30,65 @@ export interface HitEntry {
   maxY: number;
 }
 
+/** Build a single rbush entry from a world rect. */
+function toEntry(id: string, kind: HitEntry['kind'], zIndex: number, rect: Rect): HitEntry {
+  return {
+    id,
+    kind,
+    zIndex,
+    minX: rect.x,
+    minY: rect.y,
+    maxX: rect.x + rect.width,
+    maxY: rect.y + rect.height,
+  };
+}
+
+/** Collapse rbush hits to one entry per id (first wins — all share id/kind/zIndex). */
+function dedupeById(raw: HitEntry[]): HitEntry[] {
+  if (raw.length <= 1) return raw;
+  const seen = new Set<string>();
+  const out: HitEntry[] = [];
+  for (const e of raw) {
+    if (seen.has(e.id)) continue;
+    seen.add(e.id);
+    out.push(e);
+  }
+  return out;
+}
+
 export class HitIndex {
   private readonly tree = new RBush<HitEntry>();
-  private readonly entries = new Map<string, HitEntry>();
+  /** id → its indexed box(es). Shapes hold one; connectors may hold several. */
+  private readonly entries = new Map<string, HitEntry[]>();
 
-  insert(id: string, kind: HitEntry['kind'], rect: Rect, zIndex: number): void {
+  /**
+   * Index `id` under one bbox (shapes) or several (connector segment boxes).
+   * Replaces any existing boxes for the id.
+   */
+  insert(id: string, kind: HitEntry['kind'], rect: Rect | readonly Rect[], zIndex: number): void {
     this.remove(id);
-    const entry: HitEntry = {
-      id,
-      kind,
-      zIndex,
-      minX: rect.x,
-      minY: rect.y,
-      maxX: rect.x + rect.width,
-      maxY: rect.y + rect.height,
-    };
-    this.tree.insert(entry);
-    this.entries.set(id, entry);
+    const rects = Array.isArray(rect) ? rect : [rect as Rect];
+    if (rects.length === 0) return;
+    const list: HitEntry[] = [];
+    for (const r of rects) {
+      const entry = toEntry(id, kind, zIndex, r);
+      this.tree.insert(entry);
+      list.push(entry);
+    }
+    this.entries.set(id, list);
   }
 
-  /** Update the bbox + zIndex for an existing entry. No-op if unknown. */
-  update(id: string, rect: Rect, zIndex: number): void {
+  /** Update the bbox(es) + zIndex for an existing entry. No-op if unknown. */
+  update(id: string, rect: Rect | readonly Rect[], zIndex: number): void {
     const prev = this.entries.get(id);
-    if (!prev) return;
-    this.insert(id, prev.kind, rect, zIndex);
+    if (!prev || prev.length === 0) return;
+    this.insert(id, prev[0]!.kind, rect, zIndex);
   }
 
   remove(id: string): void {
     const prev = this.entries.get(id);
     if (!prev) return;
-    this.tree.remove(prev);
+    for (const e of prev) this.tree.remove(e);
     this.entries.delete(id);
   }
 
@@ -81,12 +116,14 @@ export class HitIndex {
    * isn't the final answer (e.g. a circle inside its bbox).
    */
   query(x: number, y: number, padWorld: number = 0): HitEntry[] {
-    return this.tree.search({
-      minX: x - padWorld,
-      minY: y - padWorld,
-      maxX: x + padWorld,
-      maxY: y + padWorld,
-    });
+    return dedupeById(
+      this.tree.search({
+        minX: x - padWorld,
+        minY: y - padWorld,
+        maxX: x + padWorld,
+        maxY: y + padWorld,
+      }),
+    );
   }
 
   /**
@@ -96,12 +133,14 @@ export class HitIndex {
    * under-returns, so nothing on-screen is missed.
    */
   searchRect(rect: Rect): HitEntry[] {
-    return this.tree.search({
-      minX: rect.x,
-      minY: rect.y,
-      maxX: rect.x + rect.width,
-      maxY: rect.y + rect.height,
-    });
+    return dedupeById(
+      this.tree.search({
+        minX: rect.x,
+        minY: rect.y,
+        maxX: rect.x + rect.width,
+        maxY: rect.y + rect.height,
+      }),
+    );
   }
 
   clear(): void {
@@ -118,31 +157,36 @@ export class HitIndex {
    * node on each camera-zoom frame, the per-id path floors fps even at
    * modest graph sizes.
    *
-   * This path swaps the cached entry's bbox in place (the tree still holds
-   * the same reference, so we can mutate the four bbox fields directly),
-   * then rebuilds the tree once via `clear + load`. Bulk-loading is
-   * `O(N log N)` total — for 3k entries, ~10× faster than the per-id
-   * variant. zIndex is left untouched.
+   * This path replaces the cached box list for each touched id in the map,
+   * then rebuilds the tree once via `clear + load` over the flattened entries.
+   * Bulk-loading is `O(N log N)` total — for 3k entries, ~10× faster than the
+   * per-id variant. Each id's kind + zIndex are carried over from its prior
+   * boxes (an id that changed box *count* — e.g. a re-routed connector whose
+   * segment split changed — is handled since we rebuild its list wholesale).
    *
    * Use when many entries change in the same logical tick (zoom settle,
    * bulk position update). For single-shape edits, prefer {@link update}.
    */
-  bulkUpdateBoxes(updates: Iterable<{ id: string; rect: Rect }>): void {
+  bulkUpdateBoxes(updates: Iterable<{ id: string; rects: readonly Rect[] }>): void {
     let touched = false;
     for (const u of updates) {
-      const entry = this.entries.get(u.id);
-      if (!entry) continue;
-      entry.minX = u.rect.x;
-      entry.minY = u.rect.y;
-      entry.maxX = u.rect.x + u.rect.width;
-      entry.maxY = u.rect.y + u.rect.height;
+      const prev = this.entries.get(u.id);
+      if (!prev || prev.length === 0) continue;
+      const { kind, zIndex } = prev[0]!;
+      this.entries.set(
+        u.id,
+        u.rects.map((r) => toEntry(u.id, kind, zIndex, r)),
+      );
       touched = true;
     }
     if (!touched) return;
     this.tree.clear();
-    this.tree.load([...this.entries.values()]);
+    const all: HitEntry[] = [];
+    for (const list of this.entries.values()) all.push(...list);
+    this.tree.load(all);
   }
 
+  /** Number of indexed ids (not boxes — a multi-box connector counts once). */
   get size(): number {
     return this.entries.size;
   }

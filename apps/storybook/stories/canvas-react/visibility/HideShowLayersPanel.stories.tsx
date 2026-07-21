@@ -14,13 +14,8 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import {
-  GraphCanvasApp,
-  Panel,
-  useGraphCanvas,
-  useGraphEvent,
-  useSelection,
-} from '@invana/canvas-react';
+import { useGraphCanvas, useGraphEvent, useSelection } from '@invana/canvas-react';
+import { GraphCanvasApp, Panel } from '@invana/canvas-ui';
 import { LayersPanelView } from '@invana/canvas-ui';
 import type { GraphLayer, GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';

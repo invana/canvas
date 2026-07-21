@@ -294,9 +294,6 @@ importers:
       '@invana/graph-layout-d3-force':
         specifier: workspace:*
         version: link:../graph-layout-d3-force
-      '@invana/ui':
-        specifier: ^0.0.19
-        version: 0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
@@ -404,12 +401,21 @@ importers:
 
   packages/canvas-ui:
     devDependencies:
+      '@invana/canvas':
+        specifier: workspace:*
+        version: link:../canvas
+      '@invana/canvas-react':
+        specifier: workspace:*
+        version: link:../canvas-react
       '@invana/forms':
         specifier: ^0.0.19
         version: 0.0.19(@invana/styling@0.0.19(tailwindcss@4.3.2))(@invana/ui@0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1)
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
+      '@invana/graph-layout-d3-force':
+        specifier: workspace:*
+        version: link:../graph-layout-d3-force
       '@invana/styling':
         specifier: ^0.0.19
         version: 0.0.19(tailwindcss@4.3.2)

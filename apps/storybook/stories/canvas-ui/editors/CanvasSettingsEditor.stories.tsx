@@ -15,31 +15,16 @@
  *   `canvas.update(...)`.
  */
 
-import { useContext, useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   CanvasSettingsEditor,
+  CanvasSettingsPanel,
   type CanvasSettingsDefinition,
-  type CanvasSettingsInstance,
   type SettingsSection,
 } from '@invana/canvas-ui';
-import {
-  CanvasMessageBar,
-  GraphCanvasApp,
-  GraphControlsToolbar,
-  GraphStatusBar,
-  GraphCanvasContext,
-  GraphNodeContextMenu,
-  type GraphNodeMenuContext,
-  GraphBackgroundContextMenu,
-  type LayoutFactory,
-  ThemeToggle,
-  ToolbarItems,
-  useCanvas,
-  useDevTool,
-  useGraphCanvasOptions,
-  useMiniMap,
-} from '@invana/canvas-react';
+import type { LayoutFactory } from '@invana/canvas-react';
+import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, GraphNodeContextMenu, type GraphNodeMenuContext, GraphBackgroundContextMenu, ThemeToggle, ToolbarItems, useDevTool, useMiniMap } from '@invana/canvas-ui';
 import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
@@ -47,8 +32,6 @@ import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { ThemeProvider } from '@invana/themes';
 import type { MenuItem } from '@invana/ui';
 import { Settings } from 'lucide-react';
-
-import { resolveKind, readOptions } from './liveCanvasDefinition';
 
 const meta: Meta = { title: 'canvas-ui/editors/CanvasSettingsEditor' };
 export default meta;
@@ -193,116 +176,13 @@ const backgroundMenu = (): MenuItem[] => [
 ];
 
 /**
- * Renders the settings panel over the live canvas — both **reading and writing
- * through `@invana/canvas-store`** so it and the header's Select picker are two
- * views of one source of truth:
- *
- * - `useGraphCanvasOptions()` reads `store.view.definition` **reactively** — the
- *   panel re-renders whenever any layer/behaviour/layout config changes, from
- *   anywhere (the header's Select switch, other UI, or the engine).
- * - Every edit / toggle / layout pick writes via that hook's `update` →
- *   `canvas.update(...)`, which updates the store definition AND applies to the
- *   instances. So flipping a tool in the header updates the panel and vice-versa,
- *   with no event wiring.
- *
- * The instance **list** (id + `kind`) comes from the live registries once — the
- * store keeps options keyed by id but is domain-free (no class/kind), so we
- * resolve `kind` by `instanceof` here. Must be a `<GraphCanvasApp>` descendant.
- */
-function LiveCanvasSettingsPanelInner() {
-  const canvas = useCanvas();
-  const [options, update] = useGraphCanvasOptions();
-
-  // The registered instances (id + kind). Captured in an effect keyed on
-  // `canvas` — from the `right` region this reads the lifted-context engine,
-  // which only turns non-null once `<CanvasReady>` (the bundle's last child)
-  // fires, i.e. after every layer/behaviour/layout has registered, so the
-  // registries are already populated. Their *settings* + *enabled* then come
-  // reactively from `options`.
-  const [instances, setInstances] = useState<{
-    layers: { id: string; kind?: string; inst: unknown }[];
-    behaviours: { id: string; kind?: string; inst: unknown }[];
-    layouts: { id: string; kind?: string; inst: unknown }[];
-  }>({ layers: [], behaviours: [], layouts: [] });
-
-  useEffect(() => {
-    const map = (list: readonly { id: string }[]) =>
-      list.map((i) => ({ id: i.id, kind: resolveKind(i), inst: i as unknown }));
-    setInstances({
-      layers: map(canvas.layers.list()),
-      behaviours: map(canvas.behaviours.list()),
-      layouts: map(canvas.layouts.list()),
-    });
-  }, [canvas]);
-
-  // Merge the stable instance list with the reactive store definition. Settings =
-  // the instance's full options as a base, with the store's serialisable slice
-  // (the reactive, authoritative part) layered on top; `enabled` reads from the
-  // store, falling back to the live instance until the store carries it.
-  const definition: CanvasSettingsDefinition = useMemo(() => {
-    const build = (
-      list: { id: string; kind?: string; inst: unknown }[],
-      bag: Record<string, Record<string, unknown>> | undefined,
-      withEnabled: boolean,
-    ): CanvasSettingsInstance[] =>
-      list.map(({ id, kind, inst }) => {
-        const stored = bag?.[id];
-        return {
-          id,
-          kind: kind ?? (inst as object).constructor.name,
-          settings: { ...readOptions(inst), ...(stored ?? {}) },
-          ...(withEnabled
-            ? {
-                enabled:
-                  (stored as { enabled?: boolean } | undefined)?.enabled ??
-                  (inst as { enabled?: boolean }).enabled,
-              }
-            : {}),
-        };
-      });
-
-    return {
-      layers: build(instances.layers, options.layers, false),
-      behaviours: build(instances.behaviours, options.behaviours, true),
-      layouts: build(instances.layouts, options.layouts, false),
-      activeLayoutId: options.activeLayout ?? undefined,
-    };
-  }, [instances, options]);
-
-  return (
-    <CanvasSettingsEditor
-      definition={definition}
-      // The `right` region already wraps content in an `overflow-auto bg-card`
-      // panel, so keep the view's own "Canvas Settings" heading but flatten its
-      // inner Card chrome (no nested card-in-card / double background).
-      className="border-0 bg-transparent shadow-none"
-      onChange={(section: SettingsSection, id, patch) => update({ [section]: { [id]: patch } })}
-      onToggle={(section: SettingsSection, id, enabled) => update({ [section]: { [id]: { enabled } } })}
-      onActiveLayoutChange={(id) => update({ activeLayout: id })}
-    />
-  );
-}
-
-/**
- * Gate for the panel: the `right` region renders under `GraphCanvasApp`'s
- * **lifted** `CanvasContext`, which is `null` until Main's ready-bridge publishes
- * the engine — unlike an in-`<Canvas>` child, which only mounts once ready. The
- * inner panel's engine hooks (`useCanvas` / `useGraphCanvasOptions`) throw on a
- * null canvas, so hold rendering until the lifted context turns non-null.
- */
-function LiveCanvasSettingsPanel() {
-  const canvas = useContext(GraphCanvasContext);
-  if (!canvas) return null;
-  return <LiveCanvasSettingsPanelInner />;
-}
-
-/**
  * A **fully-featured** `<GraphCanvasApp>` whose whole visualisation state is edited
- * through the app's docked, resizable `right` region hosting a
- * `<CanvasSettingsEditor>`. A header settings toggle mounts / unmounts the
- * region. The introspection ↔ panel bridge lives here (in the story) because the
- * panel is engine-agnostic (`@invana/canvas-ui` can't import the engine) — this is
- * exactly how the Invana building studio would wire it.
+ * through the app's docked, resizable `right` region hosting the store-connected
+ * `<CanvasSettingsPanel>` (from `@invana/canvas-ui`). A header settings toggle
+ * mounts / unmounts the region. There is **no bridge to write** — the panel finds
+ * the canvas via context, introspects the registries, resolves each instance's
+ * editor by its `kind`, and applies every edit through `@invana/canvas-store`.
+ * This is exactly how the Invana building studio would drop it in.
  */
 export const LiveSettingsEditors: Story = {
   name: 'Live Settings Editors',
@@ -370,16 +250,15 @@ export const LiveSettingsEditors: Story = {
             ),
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          // The star: the app's own docked, resizable `right` region hosts the
-          // JSON-driven settings panel over the live bundle (same wiring as
-          // FullFeatured's inspector). The region supplies the `overflow-auto
-          // bg-card` chrome + scroll; the panel renders its own heading. Its
-          // content is rendered inside the lifted Canvas/GraphCanvas contexts, so
-          // <LiveCanvasSettingsPanel>'s engine hooks resolve the live instance.
+          // The star: the app's docked, resizable `right` region hosts the
+          // store-connected `<CanvasSettingsPanel>` over the live bundle. The
+          // region supplies the `overflow-auto bg-card` chrome + scroll; the panel
+          // flattens its own inner card (className) and renders inside the lifted
+          // Canvas/GraphCanvas contexts, so it binds to this canvas with no props.
           right={
             settingsOpen
               ? {
-                  content: <LiveCanvasSettingsPanel />,
+                  content: <CanvasSettingsPanel className="border-0 bg-transparent shadow-none" />,
                   defaultSize: '360px',
                   maxSize: '460px',
                   collapsible: true,

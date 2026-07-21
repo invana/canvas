@@ -18,7 +18,10 @@
     "clean": "rm -rf dist"
   },
   "peerDependencies": {
+    "@invana/canvas": "workspace:*",
+    "@invana/canvas-react": "workspace:*",
     "@invana/graph": "workspace:*",
+    "@invana/graph-layout-d3-force": "workspace:*",
     "@invana/ui": "*",
     "@invana/themes": "*",
     "@invana/styling": "*",
@@ -29,8 +32,11 @@
     "react-hook-form": "^7"
   },
   "devDependencies": {
+    "@invana/canvas": "workspace:*",
+    "@invana/canvas-react": "workspace:*",
     "@invana/forms": "^0.0.19",
     "@invana/graph": "workspace:*",
+    "@invana/graph-layout-d3-force": "workspace:*",
     "@invana/styling": "^0.0.19",
     "@invana/themes": "^0.0.19",
     "@invana/ui": "^0.0.19",

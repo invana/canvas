@@ -171,6 +171,7 @@ interface DragState {
 }
 
 export class DragNodeBehaviour extends Behaviour<DragNodeBehaviourOptions> {
+  override readonly kind = 'drag-node';
   private layer: GraphLayer | null = null;
   private ctxRef: CanvasContext | null = null;
 

@@ -27,6 +27,7 @@ function resolveStops(
 }
 
 export class DensityContourFillLayer extends DensityContourLayerBase<DensityContourFillLayerOptions> {
+  override readonly kind = 'density-contour-fill-layer';
   protected paintDensity(
     g: Graphics,
     density: ContourMultiPolygon[],

@@ -190,7 +190,7 @@ Grouped by lever. Each notes which **regime** it addresses, rough **effort**, an
 
 | # | Option | Solves | What / how | Effort | Status |
 |---|---|---|---|---|---|
-| H | **Segment-level hit index** | ambiguity + cost | Index each edge by its polyline **segments** (tight bboxes) or a coarse grid, so rbush candidates are edges *physically near* the point — not every long edge whose loose box crosses the region. Makes "nearest" meaningful **and** cheap. | med | 📋 |
+| H | **Segment-level hit index** | ambiguity + cost | Index each edge by its polyline **segments** (tight bboxes) or a coarse grid, so rbush candidates are edges *physically near* the point — not every long edge whose loose box crosses the region. Makes "nearest" meaningful **and** cheap. | med | 🚧 **implemented, pending measurement** — `HitIndex` is now multi-box-per-id (`query`/`searchRect` dedupe by id); connectors split into ≤`CONNECTOR_HIT_MAX_BOXES` (8) arc-length boxes (`connectorHitBoxes`), short edges collapse to one loose AABB (no regression). Trades ≤8× rbush entries on curved/long edges for a tighter candidate set. **Not yet profiled** — verify the pick-cost win outweighs the larger tree before trusting/committing |
 | I | **Stable nearest + hysteresis** | flicker | Pick nearest-within-tolerance, but keep the current hovered edge unless another is closer by a margin → the highlight locks on instead of jittering on sub-pixel moves. | low | ✅ `pickHover` in `PrimitivesRenderer` (hover path only; `hoverHysteresisPx`, default 5) |
 | J | **Node-incidence bias** | wrong edge | Near a node, prefer edges **incident to that node** (they separate near their endpoints, where you aim) — makes "trace an edge from a node" reliable in the bundle. | low | ✅ `pickHover` reframed geometrically (endpoint ≈ node centre, so the renderer stays domain-free; `hoverNodeIncidencePx`, default 20) |
 | K | **Node-hover-first affordance** | ambiguity | Make *hover node → highlight incident edges* (already in `HoverActivateBehaviour`) the primary path; direct edge hover is secondary + zoom-gated. UX policy, not new geometry. | low | ✅ already in place — `HoverActivateBehaviour` (degree) highlights incident edges on node hover; `hoverEdges: false` default makes direct edge hover opt-in |
@@ -217,7 +217,7 @@ regime — low risk, immediate. **Status: D / F / G / I / J / K ✅ shipped; E o
 (largely subsumed by `EdgeLODBehaviour`, which drops thinned edges from the hit
 index).**
 
-**Phase 0.5 — edge-pick correctness (H, optionally L).** The segment-level hit
+**Phase 0.5 — edge-pick correctness (H 🚧 implemented, pending measurement; optionally L).** The segment-level hit
 index (H) is the structural fix that makes "nearest edge" both cheap and *right*
 in a crowd; the ambiguity picker (L) is the optional graceful fallback. Land when
 reliable edge hover in dense areas matters. **Status: 📋 open.**

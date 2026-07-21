@@ -46,45 +46,10 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Circle, Square, Diamond, Sun, Moon } from 'lucide-react';
-import {
-  CanvasMessageBar,
-  BackgroundLayer,
-  GraphLayer,
-  DragPanBehaviour,
-  WheelZoomBehaviour,
-  DragNodeBehaviour,
-  ClickSelectBehaviour,
-  ClickInspectBehaviour,
-  CreateNodeBehaviour,
-  DrawEdgeBehaviour,
-  EraseBehaviour,
-  ParallelEdgeBehaviour,
-  GraphNodeContextMenu,
-  GraphEdgeContextMenu,
-  GraphBackgroundContextMenu,
-  GraphCanvasApp,
-  GraphHistoryProvider,
-  GraphToolProvider,
-  HistoryContext,
-  ModellerToolbar,
-  InspectorPanel,
-  GraphStatusBar,
-  ToolbarItems,
-  useGraphCanvas,
-  useGraphCanvasUpdate,
-  useTool,
-  useDrawHistory,
-  useFitContent,
-  useClearGraph,
-} from '@invana/canvas-react';
-import type {
-  CanvasConfig,
-  GraphCanvasAppControlContext,
-  GraphNodeMenuContext,
-  GraphEdgeMenuContext,
-  GraphBackgroundMenuContext,
-  ToolbarItem,
-} from '@invana/canvas-react';
+import { BackgroundLayer, GraphLayer, DragPanBehaviour, WheelZoomBehaviour, DragNodeBehaviour, ClickSelectBehaviour, ClickInspectBehaviour, CreateNodeBehaviour, DrawEdgeBehaviour, EraseBehaviour, ParallelEdgeBehaviour, GraphHistoryProvider, GraphToolProvider, HistoryContext, useGraphCanvas, useGraphCanvasUpdate, useTool, useDrawHistory, useFitContent, useClearGraph } from '@invana/canvas-react';
+import { CanvasMessageBar, GraphNodeContextMenu, GraphEdgeContextMenu, GraphBackgroundContextMenu, GraphCanvasApp, ModellerToolbar, InspectorPanel, GraphStatusBar, ToolbarItems } from '@invana/canvas-ui';
+import type { CanvasConfig } from '@invana/canvas-react';
+import type { GraphCanvasAppControlContext, GraphNodeMenuContext, GraphEdgeMenuContext, GraphBackgroundMenuContext, ToolbarItem } from '@invana/canvas-ui';
 import type { MenuItem } from '@invana/ui';
 import type {
   GraphData,

@@ -207,6 +207,7 @@ function mapDegreeToSize(degree: number, maxDegree: number, opts: ResolvedOption
 }
 
 export class NodeCentralityBehaviour extends Behaviour {
+  override readonly kind = 'degree-size';
   /** Bound target layer — resolved in `onRegister`. */
   private layer: GraphLayer | null = null;
 

@@ -64,10 +64,10 @@ export type { UseCanvasMessageResult } from './useCanvasMessage';
 // it via `canvas.update({ behaviours: { theme: … } })`.
 export { useGraphCanvasUpdate } from './useGraphCanvasUpdate';
 export { useGraphCanvasOptions } from './useGraphCanvasOptions';
-export { useDevTool } from './useDevTool';
-export type { UseDevToolOptions, UseDevToolResult } from './useDevTool';
-export { useMiniMap } from './useMiniMap';
-export type { UseMiniMapOptions, UseMiniMapResult } from './useMiniMap';
+// `useResolvedCanvas` — resolve the engine from an explicit instance or context.
+// Re-exported so `@invana/canvas-ui` (headless-vs-pixels split) can resolve the
+// canvas the same way the bindings do.
+export { useResolvedCanvas } from './useResolvedCanvas';
 
 // Section hooks — each returns the `ToolbarItem[]` for one logical toolbar
 // section (off the raw operation hooks). Concatenate sections with `divider`s

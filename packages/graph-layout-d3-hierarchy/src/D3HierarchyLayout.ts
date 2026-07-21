@@ -72,6 +72,7 @@ const defaultPackValue = (n: { data?: unknown }): number => {
 };
 
 export class D3HierarchyLayout extends OneShotPositionLayout<D3HierarchyLayoutOptions> {
+  override readonly kind = 'd3-hierarchy-layout';
   /**
    * `pack` / `sunburst` replace node *geometry* (circle sizes / arc sectors)
    * rather than move nodes, so tweening their positions would look wrong — snap

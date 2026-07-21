@@ -157,6 +157,7 @@ function resolveOptions(
 const DRAG_THRESHOLD = 3;
 
 export class BrushSelectBehaviour extends Behaviour {
+  override readonly kind = 'brush-select';
   private readonly clickSelectId: string;
   private opts: ResolvedOptions;
 

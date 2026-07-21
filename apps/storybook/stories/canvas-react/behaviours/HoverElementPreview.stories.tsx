@@ -15,20 +15,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeProvider } from '@invana/themes';
 import { EdgePreviewCard, NodePreviewCard, type PreviewCardRow } from '@invana/canvas-ui';
-import {
-  BackgroundLayer,
-  ClickViewBehaviour,
-  DragNodeBehaviour,
-  DragPanBehaviour,
-  EdgeDetailView,
-  GraphCanvasApp,
-  HoverElementPreviewBehaviour,
-  GraphLayer,
-  NodeDetailView,
-  Panel,
-  PanelContent,
-  WheelZoomBehaviour,
-} from '@invana/canvas-react';
+import { BackgroundLayer, ClickViewBehaviour, DragNodeBehaviour, DragPanBehaviour, GraphLayer, WheelZoomBehaviour } from '@invana/canvas-react';
+import { HoverElementPreviewBehaviour } from '@invana/canvas-ui';
+import { EdgeDetailView, GraphCanvasApp, NodeDetailView, Panel, PanelContent } from '@invana/canvas-ui';
 import type { GraphData, GraphEdge, GraphNode } from '@invana/graph';
 
 const meta: Meta = { title: 'canvas-react/behaviours/HoverElementPreview' };

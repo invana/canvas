@@ -88,6 +88,17 @@ export abstract class Layout<TLayer extends Layer<any, any, any, any> = Layer<an
   readonly targetLayerId?: string;
 
   /**
+   * Stable **class kind** — a minification-safe discriminator matching the
+   * `@invana/canvas-ui` settings-editor registry key (e.g. `'d3-force-layout'`,
+   * `'elk-layout'`). Distinct from {@link id} (the per-instance key): all
+   * `D3ForceLayout` instances share `kind: 'd3-force-layout'`. Concrete layouts
+   * set it as a class field; left `undefined` on any that haven't, so consumers
+   * fall back (e.g. to the class name). Lets domain-free tooling resolve an
+   * instance's editor without an `instanceof` ladder.
+   */
+  readonly kind?: string;
+
+  /**
    * Lifecycle event bus. See class docs for the event vocabulary.
    * Subclasses with richer telemetry can declare their own typed
    * emitter on top (`override readonly events = new EventEmitter<MyEvents>()`).

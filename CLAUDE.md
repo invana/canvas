@@ -2,6 +2,10 @@
 
 WebGPU-first canvas rendering engine + graph visualization toolkit. WebGL2 fallback automatic. pnpm + Turbo monorepo.
 
+### Where instructions live (keep this file lean)
+
+This root `CLAUDE.md` holds only **monorepo-wide** concerns: the workspace map (one-line package roles), the dependency layering, the global coding rules, and cross-cutting architecture (the kernel). **Package- and app-specific rules live in that package's own `CLAUDE.md`** (`packages/<x>/CLAUDE.md`, `apps/<x>/CLAUDE.md`) — don't grow this file with detail that belongs to one package. When adding guidance, ask: *true across the repo?* → here; *about one package/app?* → its `CLAUDE.md`. Reference the package doc from here with a one-liner instead of inlining it.
+
 **Architecture rewrite in progress.** The long-form design rationale lives in `docs/architecture-proposal.md`. Day-to-day API and concept documentation lives in `apps/docs/` (VitePress) — that's the single source of truth for engine surfaces; consult it before referring back to the proposal. Design notes and `*-plan.md` docs live in the repo-root `docs/` folder (internal — **not** part of the VitePress site); `docs/README.md` indexes them and `roadmap.md` is the hub. Put new plans in `docs/`, not at repo root. All new code goes in the active packages listed below.
 
 ### Don't write API docs to `apps/docs/` unless explicitly asked
@@ -56,8 +60,8 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
 
 | Path | Package | Role | 3rd-party deps |
 |---|---|---|---|
-| `packages/canvas-react` | `@invana/canvas-react` | React bindings — declarative `<Canvas>` mapping JSX children to layers/behaviours/layouts; hooks; assembled toolbars + dumb components; `GraphCanvasApp` | `lucide-react` (dep: `@invana/themes`) |
-| `packages/canvas-ui` | `@invana/canvas-ui` | **engine-agnostic** React UI, two folder tracks: `editors/` (schema-driven state editors — NodeStyle / hover-card / node structure+styling + per-behaviour/layer/layout) and `views/` (presentational components — preview cards). No engine/`pixi` imports; `@invana/graph` used for **types only** | — |
+| `packages/canvas-react` | `@invana/canvas-react` | **headless React binding layer** — declarative `<Canvas>` / `<GraphCanvas>` roots, contexts, null-rendering layer/behaviour/layout wrappers, and store/engine hooks. Renders **no application UI**; **never imports `@invana/ui`**. See its `CLAUDE.md`. 🚧 UI still migrating out per `docs/ui-consolidation-plan.md`. | `lucide-react` (dep: `@invana/themes`) |
+| `packages/canvas-ui` | `@invana/canvas-ui` | **the React UI kit** — all pixels (components, toolbars, menus, editors, views, `GraphCanvasApp`) built **on** canvas-react's hooks, so it couples to `@invana/canvas-store` and is **live by default**. Owns `@invana/ui`; pixi never enters. See its `CLAUDE.md`. | — |
 | `packages/canvas-designer` | `@invana/canvas-designer` | the **canvas designer** — visual authoring for the visualisation's definition. Today: the **node template** surface (`src/templates/`) — opt-in WYSIWYG composite-card authoring (drag canvas, layers, undo/redo, save/load), emits `FreeformStructure`. **Planned:** studio shell + layout/behaviour/layer designers hosting `@invana/canvas-ui` editors (rule 12). Headless today — `@invana/graph` types only | — |
 
 #### Data + shared config
@@ -77,7 +81,7 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
 
 ### External `@invana/*` design-kit deps (NOT in this repo)
 
-`@invana/ui`, `@invana/forms`, `@invana/themes`, `@invana/styling` are **published packages from the Invana design kit** (separate repo). They are consumed here as normal registry deps — there are no `packages/ui` / `packages/forms` / etc. folders. `canvas-ui` builds its editors on `@invana/forms` + `@invana/ui`; `canvas-react` pulls `@invana/themes` (+ `@invana/ui`, `@invana/graph` as peers). Don't try to `--filter` or build these locally; bump their versions like any third-party dep.
+`@invana/ui`, `@invana/forms`, `@invana/themes`, `@invana/styling` are **published packages from the Invana design kit** (separate repo). They are consumed here as normal registry deps — there are no `packages/ui` / `packages/forms` / etc. folders. `canvas-ui` builds its UI on `@invana/forms` + `@invana/ui`; `canvas-react` pulls `@invana/themes` (+ `@invana/graph` as a peer) but — as the headless layer — **not** `@invana/ui`. Don't try to `--filter` or build these locally; bump their versions like any third-party dep.
 
 ### Dependency layering (use when adding/bumping workspace deps)
 
@@ -93,28 +97,29 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
    │      ├── graph-layer-d3-contour         (peer: canvas, graph)
    │      └── graph-layer-bubble-sets        (peer: canvas, graph)
    ├── graph-layer-maplibre                  (peer: canvas only)
-   ├── @invana/canvas-react                  (peer: canvas, graph, ui, graph-layout-d3-force; dep: themes, canvas-store)
-   ├── @invana/canvas-ui                     (peer: graph[types-only], ui, themes, styling, forms)
-   └── @invana/canvas-designer      (peer: canvas-ui, graph, ui, forms)
+   └── @invana/canvas-react                  (HEADLESS bindings — peer: canvas, graph, graph-layout-d3-force; dep: themes, canvas-store; NO @invana/ui)
+          ▲
+          └── @invana/canvas-ui              (the React UI KIT / all pixels — peer: canvas-react, canvas[types], graph[types], graph-layout-d3-force, ui, themes, styling, forms)
+                 ▲
+                 └── @invana/canvas-designer (peer: canvas-ui, graph, ui, forms)
 
 @invana/graph-datasets                       (peer: graph)
 ```
 
+> 🚧 The **canvas-react → canvas-ui** re-split (headless vs pixels; UI moving out of canvas-react, dep direction flipping to canvas-ui → canvas-react) is **in progress** — see `docs/ui-consolidation-plan.md`. The graph above shows the **target**; some UI still physically sits in canvas-react until the phased move completes.
+
 Rules implied by this graph: cross-package engine deps are **`peerDependencies`** (+ mirrored in `devDependencies` for local builds), never plain `dependencies` — except `canvas-react`→`@invana/themes`, the foundational **`@invana/canvas-store`** dependency (a normal `dependency`, not a peer — the shared kernel below the engine), and app deps. Keep all in-repo packages on the **same version** when bumping. A new layout/layer package peers on `@invana/canvas` (+ `@invana/graph` unless it's canvas-only like maplibre) and lists its single algorithm lib as a 3rd-party `dependency`. After adding a package, also add it to `apps/storybook`'s deps if it gets a story.
 
-### The UI package (`@invana/canvas-ui`) — two tracks, where this is going
+### The two React packages — headless bindings vs the UI kit
 
-`canvas-ui` is engine-agnostic React UI (no engine/`pixi` imports; `@invana/graph` for **types only**), organised as **two folder-level tracks inside one package** — not separate packages (they share deps + the same consumers):
+The split axis is **headless vs pixels** (the React Flow split). Detailed rules live in each package's `CLAUDE.md`; the one-line litmus for any React file:
 
-- **`editors/`** — schema-driven **state editors**: forms that edit a serialisable object and hand the patch back to the consumer. Today: `NodeStyleEditor`, `HoverPreviewCardEditor`, `NodeStructureEditor`, `NodeStylingEditor`, each an `editors/<surface>/` folder on the **`fields.ts` + `mapping.ts` + `<Editor>`** pattern (`defaults` + `fields` + `onSubmit`).
-- **`views/`** — **presentational** components (props in → JSX, no form). Today: `preview-cards.tsx` (`NodePreviewCard` / `EdgePreviewCard`).
-- **`shared/`** — colour utils + presets used by both.
+> **Draws UI the user sees?** → `@invana/canvas-ui`. **Adapts the engine to React *without* drawing UI** (renders `null`, provides a context, or is a hook)? → `@invana/canvas-react`.
 
-Litmus for which track: *does it change state?* → `editors/`; *does it only display state?* → `views/`.
+- **`@invana/canvas-react`** — headless bindings only: roots, contexts, null-rendering wrappers, store/engine hooks. Never imports `@invana/ui`, draws no application UI. See `packages/canvas-react/CLAUDE.md`.
+- **`@invana/canvas-ui`** — the UI kit: `components/` · `toolbars/` · `menus/` · `panels/` (store-connected) · `editors/` (schema editors, controlled + connected wrappers) · `views/` (presentational) · `apps/` (`GraphCanvasApp`) · `hooks/` (UI-only turnkey). Built on canvas-react's hooks, so it couples to `canvas-store` and is live by default. See `packages/canvas-ui/CLAUDE.md`.
 
-Where the **editors track** is heading: **an editor for every Behaviour, Layer, and Layout.** A class's constructor options *are* the editable **state of the visualisation** (we'll likely rename "settings"/"options" → "state" — a larger refactor, but that's what it is). Each becomes a UI surface here, so the **Invana building studio** and Storybook stories can let users edit live visualisation state — every story should be able to surface these editors via `GraphCanvasApp`. New behaviour/layer/layout ⇒ new `editors/<surface>/` (root rule 12). Apply path stays `useGraphCanvasUpdate().update(...)` → `setOptions`; init-only options remount via the canvas-react wrapper. Full rationale in `roadmap.md`.
-
-Where the **views track** is heading: it's the home for the presentational UI currently in `canvas-react` (standing TODO to relocate `canvas-react`'s dumb components + assembled toolbars into `canvas-ui` `views/` + a `toolbars/` sibling, leaving `canvas-react` as engine-bindings-only). Until then, those **components + toolbars still live in `canvas-react`** and `views/` holds just the preview cards.
+New behaviour/layer/layout ⇒ still ships a schema editor in `canvas-ui/editors/<surface>/` (root rule 12). Full plan + move manifest: `docs/ui-consolidation-plan.md`.
 
 ### The card / template stack — three layers, don't conflate them
 
@@ -154,7 +159,7 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
 - Community packages: `invana-<domain>-<feature>` (unscoped).
 - No `plugin` / `plugins` in package names — that's an implementation detail.
 - Class suffixes by kind: `*Layer`, `*Behaviour`, `*Layout`, `*Renderer`. (See `docs/architecture-proposal.md` §5.)
-- **Toolbar components** (assembled toolbars in `packages/canvas-react/src/toolbars/`) carry the `*Toolbar` suffix — e.g. `CanvasControlsToolbar`, `GraphToolbar`. The dumb building blocks in `canvas-react/src/components/` (e.g. `ZoomControls`, `Panel`) do **not** — they're components, not toolbars.
+- **Toolbar components** (assembled toolbars in `packages/canvas-ui/src/toolbars/`) carry the `*Toolbar` suffix — e.g. `CanvasControlsToolbar`, `GraphToolbar`. The dumb building blocks in `canvas-ui/src/components/` (e.g. `ZoomControls`, `Panel`) do **not** — they're components, not toolbars. (Both live in `@invana/canvas-ui`, the UI kit — see `docs/ui-consolidation-plan.md`; some still physically in `canvas-react` mid-migration.)
 
 ---
 
@@ -181,7 +186,7 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
     - behaviour → `Canvas/Behaviours/` (or `Graph/Behaviours/`)
     - layout → `graph-layouts/<flavour>/` (where `<flavour>` is the package name minus the `graph-layout-` prefix — e.g. `@invana/graph-layout-d3-force` → `graph-layouts/d3-force/`). See `apps/storybook/CLAUDE.md` for the full layout-namespacing rule.
     - graph node/edge feature → `Graph/Nodes/` or `Graph/Edges/`
-12. **Every new Behaviour, Layer, or Layout ships a settings editor in `@invana/canvas-ui`.** Its constructor options *are* the editable state of the visualisation (long-term we'll call this "state", not "settings" — a bigger refactor, but that's what it is). So whenever you add a behaviour/layer/layout, add a schema-driven editor for it to the editors package (`packages/canvas-ui/src/editors/<surface>/`, following the `fields.ts` + `mapping.ts` + `<Editor>` pattern). This is what exposes the visualisation's state to the **Invana building studio** and to stories — every story should be able to surface those editors in the UI via `GraphCanvasApp`. The editor stays headless/engine-agnostic per `packages/canvas-ui/CLAUDE.md`; the apply path is `useGraphCanvasUpdate().update(...)` → `setOptions` (init-only options remount via the canvas-react wrapper). See `roadmap.md`.
+12. **Every new Behaviour, Layer, or Layout ships a settings editor in `@invana/canvas-ui`.** Its constructor options *are* the editable state of the visualisation (long-term we'll call this "state", not "settings" — a bigger refactor, but that's what it is). So whenever you add a behaviour/layer/layout, add a schema-driven editor for it to the editors package (`packages/canvas-ui/src/editors/<surface>/`, following the `fields.ts` + `mapping.ts` + `<Editor>` pattern). **The class must also declare `override readonly kind = '<surface>'`** — a stable, minification-safe discriminator matching its editor's registry key (the base `Behaviour`/`Layer`/`Layout` declare `readonly kind?: string`). That's what lets domain-free tooling (`CanvasSettingsPanel`) resolve an instance's editor without an `instanceof` map. This is what exposes the visualisation's state to the **Invana building studio** and to stories — every story should be able to surface those editors in the UI via `GraphCanvasApp`. The **controlled** editor stays a pure form (state in → patch out); a thin **connected wrapper** does the store wiring so consumers drop it in with no bridge — apply path `useGraphCanvasUpdate().update(...)` → `setOptions` (init-only options remount via the canvas-react wrapper). See `packages/canvas-ui/CLAUDE.md`, `docs/ui-consolidation-plan.md`, and `roadmap.md`.
 
 ### Kernel architecture — `@invana/canvas-store`: `CanvasStore { view, data, events }`
 

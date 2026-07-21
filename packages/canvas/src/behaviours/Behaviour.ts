@@ -65,6 +65,17 @@ export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOpt
   readonly shortcuts?: readonly string[];
 
   /**
+   * Stable **class kind** — a minification-safe discriminator matching the
+   * `@invana/canvas-ui` settings-editor registry key (e.g. `'drag-pan'`,
+   * `'wheel-zoom'`). Distinct from {@link id} (the per-instance key): all
+   * `DragPanBehaviour` instances share `kind: 'drag-pan'`. Concrete behaviours
+   * set it as a class field; left `undefined` on any that haven't, so consumers
+   * fall back (e.g. to the class name). Lets domain-free tooling resolve an
+   * instance's editor without an `instanceof` ladder.
+   */
+  readonly kind?: string;
+
+  /**
    * `'layer'` if `targetLayerId` is set, otherwise `'canvas'`. Set automatically
    * from the constructor — subclasses don't need to re-declare.
    */

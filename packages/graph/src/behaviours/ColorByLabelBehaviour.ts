@@ -87,6 +87,7 @@ export interface ColorByLabelBehaviourOptions extends BehaviourOptions {
 type Resolvable<T> = T | ((item: never) => T) | undefined;
 
 export class ColorByLabelBehaviour extends Behaviour<ColorByLabelBehaviourOptions> {
+  override readonly kind = 'color-by-label';
   private layer: GraphLayer | null = null;
 
   // Live-read from `_options` so `setOptions` applies. The installed resolvers

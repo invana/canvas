@@ -1,6 +1,6 @@
 import type { Canvas } from '@invana/canvas';
 
-import type { ToolbarItem } from '../components/ToolbarItem';
+import type { ToolbarItem } from '../uiModel';
 import { useLayout, type LayoutFactory } from './useLayout';
 
 export interface UseLayoutsSectionOptions {

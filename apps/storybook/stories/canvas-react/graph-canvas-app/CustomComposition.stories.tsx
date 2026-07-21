@@ -17,19 +17,8 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import {
-  BackgroundLayer,
-  CanvasMessageBar,
-  D3ForceLayout,
-  DragNodeBehaviour,
-  DragPanBehaviour,
-  GraphCanvasApp,
-  GraphLayer,
-  GraphStatusBar,
-  HoverActivateBehaviour,
-  TextResolutionLODBehaviour,
-  WheelZoomBehaviour,
-} from '@invana/canvas-react';
+import { BackgroundLayer, D3ForceLayout, DragNodeBehaviour, DragPanBehaviour, GraphLayer, HoverActivateBehaviour, TextResolutionLODBehaviour, WheelZoomBehaviour } from '@invana/canvas-react';
+import { CanvasMessageBar, GraphCanvasApp, GraphStatusBar } from '@invana/canvas-ui';
 import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';

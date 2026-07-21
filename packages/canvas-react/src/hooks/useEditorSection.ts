@@ -1,7 +1,7 @@
 import type { Canvas } from '@invana/canvas';
 import { ClipboardPaste, Copy, Eraser, Scissors } from 'lucide-react';
 
-import type { ToolbarItem } from '../components/ToolbarItem';
+import type { ToolbarItem } from '../uiModel';
 import { useClipboard } from './useClipboard';
 import { useClearGraph } from './useClearGraph';
 

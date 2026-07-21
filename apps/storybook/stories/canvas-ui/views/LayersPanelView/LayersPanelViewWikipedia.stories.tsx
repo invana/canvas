@@ -1,25 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { CanvasConfig, Rect } from '@invana/canvas';
-import {
-  CanvasMessageBar,
-  NodeCentralityBehaviour,
-  GraphBackgroundContextMenu,
-  GraphCanvasApp,
-  GraphControlsToolbar,
-  GraphNodeContextMenu,
-  type GraphNodeMenuContext,
-  GraphStatusBar,
-  type LayoutFactory,
-  Panel,
-  ThemeToggle,
-  EdgeLODBehaviour,
-  IconLODBehaviour,
-  TextLODBehaviour,
-  useDevTool,
-  useGraphCanvas,
-  useGraphCanvasUpdate,
-  useMiniMap,
-} from '@invana/canvas-react';
+import { NodeCentralityBehaviour, type LayoutFactory, EdgeLODBehaviour, IconLODBehaviour, TextLODBehaviour, useGraphCanvas, useGraphCanvasUpdate } from '@invana/canvas-react';
+import { CanvasMessageBar, GraphBackgroundContextMenu, GraphCanvasApp, GraphControlsToolbar, GraphNodeContextMenu, type GraphNodeMenuContext, GraphStatusBar, Panel, ThemeToggle, useDevTool, useMiniMap } from '@invana/canvas-ui';
 import {
   ContentLODEditor,
   contentLODFormToOptions,

@@ -144,6 +144,7 @@ interface DragState {
 }
 
 export class NodeResizeBehaviour extends Behaviour {
+  override readonly kind = 'node-resize';
   private layer: GraphLayer | null = null;
   private ctxRef: CanvasContext | null = null;
   private canvasEl: HTMLCanvasElement | null = null;

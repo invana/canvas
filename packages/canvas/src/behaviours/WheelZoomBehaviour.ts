@@ -28,6 +28,8 @@ export interface WheelZoomBehaviourOptions extends BehaviourOptions {
 }
 
 export class WheelZoomBehaviour extends Behaviour<WheelZoomBehaviourOptions> {
+  override readonly kind = 'wheel-zoom';
+
   constructor(opts: WheelZoomBehaviourOptions) {
     const requireCtrl = opts.requireCtrl ?? false;
     const gesture = requireCtrl ? 'ctrl+wheel' : 'wheel';

@@ -70,6 +70,7 @@ interface ResolvedTarget {
 }
 
 export class EdgeScaleLODBehaviour extends ElementScaleLODBehaviour<EdgeScaleLODBehaviourOptions> {
+  override readonly kind = 'edge-size-lod';
   /** Live-read from `_options` so `setOptions` applies; `onOptionsChanged` reflows. */
   private get configs(): EdgeScaleLODConfig[] { return this._options.layers; }
   private resolved: ResolvedTarget[] = [];

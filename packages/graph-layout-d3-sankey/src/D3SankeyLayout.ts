@@ -65,6 +65,7 @@ function pickAlign(name: D3SankeyNodeAlign | undefined): (typeof NODE_ALIGN_FNS)
 }
 
 export class D3SankeyLayout extends Layout<GraphLayer> {
+  override readonly kind = 'd3-sankey-layout';
   private readonly opts: D3SankeyLayoutOptions;
   /** True while a run is active. Guards `stop()` so `end` only fires once. */
   private running = false;

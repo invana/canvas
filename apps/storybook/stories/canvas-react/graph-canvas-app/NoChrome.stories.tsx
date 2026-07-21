@@ -17,7 +17,8 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { ColorByLabelBehaviour, GraphCanvasApp } from '@invana/canvas-react';
+import { ColorByLabelBehaviour } from '@invana/canvas-react';
+import { GraphCanvasApp } from '@invana/canvas-ui';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
 

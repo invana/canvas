@@ -52,6 +52,8 @@ function modifierToKeys(modifier: DragModifier): string[] | null {
 }
 
 export class DragPanBehaviour extends Behaviour<DragPanBehaviourOptions> {
+  override readonly kind = 'drag-pan';
+
   // Live-read from `_options` so `setOptions` takes effect: event-time reads
   // (cursor / button / modifier) pick up immediately, and the viewport plugins
   // are re-armed with the new config in onOptionsChanged.

@@ -2,8 +2,8 @@ import type { Canvas } from '@invana/canvas';
 import type { EdgePathType } from '@invana/graph';
 import { Cable, CornerDownRight, Minus, Spline, Waypoints } from 'lucide-react';
 
-import type { ToolbarItem } from '../components/ToolbarItem';
-import type { ToolbarIcon } from '../components/types';
+import type { ToolbarItem } from '../uiModel';
+import type { ToolbarIcon } from '../uiModel';
 import { useEdgeType } from './useEdgeType';
 
 /** Baked (lucide) icon per edge-routing type; override via `options.icons`. */

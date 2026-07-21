@@ -32,12 +32,8 @@
 import { useRef, useState, type ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import {
-  GraphCanvasApp,
-  TextResolutionLODBehaviour,
-  useLayout,
-  type LayoutFactory,
-} from '@invana/canvas-react';
+import { TextResolutionLODBehaviour, useLayout, type LayoutFactory } from '@invana/canvas-react';
+import { GraphCanvasApp } from '@invana/canvas-ui';
 import {
   CanvasPagesTabbedView,
   type CanvasHeaderAction,

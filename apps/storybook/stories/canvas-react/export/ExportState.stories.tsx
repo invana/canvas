@@ -29,16 +29,8 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeProvider } from '@invana/themes';
-import {
-  BackgroundLayer,
-  ClearCanvasToolbar,
-  DragNodeBehaviour,
-  DragPanBehaviour,
-  ExportStateToolbar,
-  GraphCanvasApp,
-  GraphLayer,
-  WheelZoomBehaviour,
-} from '@invana/canvas-react';
+import { BackgroundLayer, DragNodeBehaviour, DragPanBehaviour, GraphLayer, WheelZoomBehaviour } from '@invana/canvas-react';
+import { ClearCanvasToolbar, ExportStateToolbar, GraphCanvasApp } from '@invana/canvas-ui';
 import type { GraphData, GraphNode } from '@invana/graph';
 
 const meta: Meta = { title: 'canvas-react/export/ExportState' };

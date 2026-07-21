@@ -58,6 +58,7 @@ export interface ClickViewBehaviourOptions extends BehaviourOptions {
 }
 
 export class ClickViewBehaviour extends Behaviour<ClickViewBehaviourOptions> {
+  override readonly kind = 'click-view';
   /**
    * View event bus. Subscribe to `'view:change'` for the current single target
    * (or `null`) every time it changes.

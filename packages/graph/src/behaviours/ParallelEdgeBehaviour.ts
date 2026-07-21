@@ -276,6 +276,7 @@ export const centeredRanksPolicy: ParallelEdgeDistribute = (group, ctx) => {
 };
 
 export class ParallelEdgeBehaviour extends Behaviour {
+  override readonly kind = 'parallel-edge';
   /** Bound target layer — resolved in `onRegister`. */
   private layer: GraphLayer | null = null;
 

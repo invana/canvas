@@ -48,6 +48,7 @@ export interface EraseBehaviourOptions extends BehaviourOptions {
 }
 
 export class EraseBehaviour extends Behaviour<EraseBehaviourOptions> {
+  override readonly kind = 'erase';
   private layer: GraphLayer | null = null;
 
   // Both live-read from `_options` (consulted at click-time) so `setOptions` applies.

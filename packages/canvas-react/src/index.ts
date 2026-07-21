@@ -12,23 +12,6 @@ export { GraphCanvas } from './GraphCanvas';
 export type { GraphCanvasProps } from './GraphCanvas';
 export type { CanvasRootProps } from './useCanvasEngine';
 
-// ─── App (batteries-included composition) ────────────────────────────────────
-// `GraphCanvasApp` — one composable graph app. The header / main / footer
-// regions are an internal detail; configure them through the `header` / `main`
-// / `footer` option bags (+ slots) on `GraphCanvasAppProps` — never by rendering
-// the regions yourself, so the orchestrator's runtime wiring stays private.
-export { GraphCanvasApp } from './apps/GraphCanvasApp';
-export type {
-  GraphCanvasAppProps,
-  GraphCanvasAppControlContext,
-  GraphCanvasAppSectionOptions,
-  RegionSlot,
-  ThemeKind,
-  BottomSpan,
-} from './apps/GraphCanvasApp';
-export type { GraphCanvasAppHeaderOptions } from './apps/GraphCanvasAppHeader';
-export type { GraphCanvasAppFooterOptions } from './apps/GraphCanvasAppFooter';
-
 export { CanvasContext, useCanvas } from './CanvasContext';
 export { GraphCanvasContext, useGraphCanvas } from './GraphCanvasContext';
 // Re-exported for `<Canvas config={…}>` consumers — the serialisable, id-keyed
@@ -117,8 +100,11 @@ export { ClickInspectBehaviour } from './behaviours/ClickInspectBehaviour';
 export type { ClickInspectBehaviourProps } from './behaviours/ClickInspectBehaviour';
 export { ClickViewBehaviour } from './behaviours/ClickViewBehaviour';
 export type { ClickViewBehaviourProps } from './behaviours/ClickViewBehaviour';
-export { HoverElementPreviewBehaviour } from './behaviours/HoverElementPreviewBehaviour';
-export type { HoverElementPreviewBehaviourProps } from './behaviours/HoverElementPreviewBehaviour';
+// `HoverElementPreviewBehaviour` renders an `@invana/ui`-based preview card, so it
+// is UI, not a headless binding — it lives in `@invana/canvas-ui`. The shared
+// `useBehaviourRegistration` lifecycle hook (exported below) lets that moved
+// wrapper register its engine behaviour the same way the in-package wrappers do.
+export { useBehaviourRegistration } from './behaviours/useBehaviourRegistration';
 export { ColorByLabelBehaviour } from './behaviours/ColorByLabelBehaviour';
 export type { ColorByLabelBehaviourProps } from './behaviours/ColorByLabelBehaviour';
 
@@ -205,8 +191,8 @@ export {
   useStyleEditorSection,
   useGraphCanvasUpdate,
   useGraphCanvasOptions,
-  useDevTool,
-  useMiniMap,
+  useCanvasStateJson,
+  useResolvedCanvas,
   useCanvasMessage,
 } from './hooks';
 export type {
@@ -254,147 +240,4 @@ export type {
   UseLayoutsSectionOptions,
   UseStyleEditorSectionOptions,
   UseCanvasMessageResult,
-  UseDevToolOptions,
-  UseDevToolResult,
-  UseMiniMapOptions,
-  UseMiniMapResult,
 } from './hooks';
-
-// ─── Toolbars ──────────────────────────────────────────────────────────────
-// `CanvasControlsToolbar` self-wires from context (React Flow's `<Controls>`);
-// `GraphToolbar` is a turnkey layout/select/clear bar. Toolbar components carry
-// the `*Toolbar` suffix.
-export {
-  CanvasControlsToolbar,
-  GraphToolbar,
-  GraphControlsToolbar,
-  GraphControlsToolbarLite,
-  HistoryToolbar,
-  EditToolbar,
-  ViewToolbar,
-  GridToolbar,
-  GraphLayoutToolbar,
-  ModellerToolbar,
-  ExportImageToolbar,
-  ExportStateToolbar,
-  ClearCanvasToolbar,
-  InspectorPanel,
-  NodeDetailView,
-  EdgeDetailView,
-  dockCardClassName,
-  ThemeToggle,
-} from './toolbars';
-export type {
-  CanvasControlsToolbarProps,
-  GraphToolbarProps,
-  GraphControlsToolbarProps,
-  GraphControlsSections,
-  HistoryToolbarProps,
-  EditToolbarProps,
-  ViewToolbarProps,
-  GridToolbarProps,
-  GraphLayoutToolbarProps,
-  ModellerToolbarProps,
-  ExportImageToolbarProps,
-  ExportImageFormatKey,
-  ExportStateToolbarProps,
-  ClearCanvasToolbarProps,
-  InspectorPanelProps,
-  NodeDetailViewProps,
-  EdgeDetailViewProps,
-  BaseDetailViewProps,
-  ThemeToggleProps,
-} from './toolbars';
-
-// ─── UI components (building blocks) ───────────────────────────────────────
-// The toolbar layer is data-driven: the `ToolbarItems` renderer compiles
-// `ToolbarItem[]` (from the builder hooks) straight to `@invana/ui` chrome — no
-// per-control wrapper components. `Panel` positions overlays; `Tooltipped` is
-// the shared tooltip helper; the rest are standalone panels.
-export {
-  Panel,
-  PanelContent,
-  ToolbarItems,
-  applyIconOverrides,
-  Tooltipped,
-  ExportImagePanel,
-  EXPORT_IMAGE_FORMAT_OPTIONS,
-  EXPORT_IMAGE_AREA_OPTIONS,
-  EXPORT_IMAGE_BACKGROUND_OPTIONS,
-  EXPORT_IMAGE_SCALE_OPTIONS,
-  EXPORT_IMAGE_RATIO_OPTIONS,
-  ExportStatePanel,
-  CanvasMessageBar,
-  GraphStatusBar,
-  PropertiesEditor,
-  DetailCard,
-  PropertyDetailView,
-  EdgeEndpoints,
-  defaultPropertyRenderers,
-  resolvePropertyRenderer,
-  renderPropertyValue,
-  isSafeHref,
-  isImageUrl,
-  ContextMenuOverlay,
-  HoverElementPreviewCard,
-  CanvasSettingsBrowser,
-} from './components';
-export type {
-  PanelProps,
-  PanelContentProps,
-  PanelPosition,
-  CanvasSettingsBrowserProps,
-  SettingsEditorDescriptor,
-  SettingsEditorContext,
-  SettingsSection,
-  ToolbarItemsProps,
-  ToolbarItem,
-  ToolbarButtonItem,
-  ToolbarToggleItem,
-  ToolbarSelectItem,
-  ToolbarDividerItem,
-  ToolbarCustomItem,
-  TooltippedProps,
-  TooltipSide,
-  ExportImagePanelProps,
-  ExportImagePanelValue,
-  ExportImagePanelOption,
-  ExportImageAreaKey,
-  ExportStatePanelProps,
-  CanvasMessageBarProps,
-  GraphStatusBarProps,
-  PropertiesEditorProps,
-  PropertiesEditorValues,
-  DetailCardProps,
-  DetailRow,
-  PropertyDetailViewProps,
-  EdgeEndpointsProps,
-  EdgeEndpoint,
-  PropertyRenderer,
-  PropertyRenderContext,
-  PropertyKind,
-  ContextMenuOverlayProps,
-  HoverElementPreviewCardProps,
-  ToolbarIcon,
-} from './components';
-
-// ─── Context menus ───────────────────────────────────────────────────────────
-// Target-scoped right-click menus — one per target (node / edge / background),
-// each wiring a `ContextMenuBehaviour` + `ContextMenuOverlay`. Pass an `items`
-// builder; dismissal + auto-close are handled internally. Compose freely.
-export {
-  GraphNodeContextMenu,
-  GraphEdgeContextMenu,
-  GraphBackgroundContextMenu,
-} from './menus';
-export type {
-  GraphNodeContextMenuProps,
-  GraphNodeMenuContext,
-  GraphEdgeContextMenuProps,
-  GraphEdgeMenuContext,
-  GraphBackgroundContextMenuProps,
-  GraphBackgroundMenuContext,
-  GraphContextMenuCommonProps,
-  GraphContextMenuContext,
-  GraphTargetMenuContext,
-} from './menus';

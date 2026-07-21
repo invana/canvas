@@ -44,6 +44,7 @@ export class BubbleSetsLayer extends WorldLayer<
   never,
   WorldLayerHit
 > {
+  override readonly kind = 'bubble-sets-layer';
   private readonly graphLayerId: string;
   private sets: BubbleSet[];
 

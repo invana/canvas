@@ -20,20 +20,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeProvider, useTheme } from '@invana/themes';
 import { RichSelect } from '@invana/ui';
-import {
-  ClickViewBehaviour,
-  EdgeDetailView,
-  GraphCanvasApp,
-  GraphControlsToolbar,
-  HoverElementPreviewBehaviour,
-  NodeDetailView,
-  Panel,
-  PanelContent,
-  ThemeToggle,
-  useMiniMap,
-  type GraphCanvasAppControlContext,
-  type LayoutFactory,
-} from '@invana/canvas-react';
+import { ClickViewBehaviour, type LayoutFactory } from '@invana/canvas-react';
+import { HoverElementPreviewBehaviour } from '@invana/canvas-ui';
+import { EdgeDetailView, GraphCanvasApp, GraphControlsToolbar, NodeDetailView, Panel, PanelContent, ThemeToggle, useMiniMap, type GraphCanvasAppControlContext } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type {
   FreeformStructure,

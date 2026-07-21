@@ -17,16 +17,8 @@
 
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import {
-  ClickViewBehaviour,
-  EdgeDetailView,
-  GraphCanvasApp,
-  GraphControlsToolbar,
-  NodeDetailView,
-  PanelContent,
-  ThemeToggle,
-  type ViewContext,
-} from '@invana/canvas-react';
+import { ClickViewBehaviour, type ViewContext } from '@invana/canvas-react';
+import { EdgeDetailView, GraphCanvasApp, GraphControlsToolbar, NodeDetailView, PanelContent, ThemeToggle } from '@invana/canvas-ui';
 import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';

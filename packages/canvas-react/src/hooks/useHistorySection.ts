@@ -1,7 +1,7 @@
 import type { Canvas } from '@invana/canvas';
 import { Redo2, Undo2 } from 'lucide-react';
 
-import type { ToolbarItem } from '../components/ToolbarItem';
+import type { ToolbarItem } from '../uiModel';
 import { useHistory } from './useHistory';
 
 export interface UseHistorySectionOptions {

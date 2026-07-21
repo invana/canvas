@@ -119,6 +119,7 @@ function pointInPolygon(
 }
 
 export class LassoSelectBehaviour extends Behaviour {
+  override readonly kind = 'lasso-select';
   private readonly clickSelectId: string;
   private opts: ResolvedOptions;
 

@@ -1,6 +1,10 @@
 # CLAUDE.md — packages/canvas-react (`@invana/canvas-react`)
 
-React bindings for `@invana/canvas`. A declarative `<Canvas>` whose JSX children map to engine layers, behaviours, and layouts via React context — no custom reconciler.
+**The headless React binding layer for `@invana/canvas`.** A declarative `<Canvas>` whose JSX children map to engine layers, behaviours, and layouts via React context — no custom reconciler — plus the hooks that expose engine/store state reactively. **It renders no application UI and never imports `@invana/ui`.** ≈ React Flow's headless core (`<ReactFlow>`, `useReactFlow`, `useNodes`); the pixels live in `@invana/canvas-ui`, which is built on top of these bindings.
+
+> 🚧 **Migration in progress** (`docs/ui-consolidation-plan.md`). This package historically also held UI (components, toolbars, menus, `GraphCanvasApp`); those are moving to `@invana/canvas-ui` on the **headless-vs-pixels** axis, and the dependency direction is flipping to **canvas-ui → canvas-react**. The rules below describe the **target** (headless-only); some UI still physically lives here until the phased move lands. **Don't add new UI here** — new pixels go to `canvas-ui`.
+
+**Litmus for anything landing here:** it renders `null` (an engine wrapper), provides a context, or is a hook. If it draws UI the user sees, it belongs in `@invana/canvas-ui`.
 
 ## Pattern
 
@@ -12,21 +16,24 @@ React bindings for `@invana/canvas`. A declarative `<Canvas>` whose JSX children
 - Child wrappers (`<GraphLayer>`, `<DragPanBehaviour>`, `<D3ForceLayout>`, …) render `null`. They read the engine from `useCanvas()` and do their imperative work in `useEffect` — register on mount, unregister on cleanup. One wrapper per engine class.
 - `forwardRef` on each root exposes the underlying engine instance (`Canvas` / `GraphCanvas`). That's the only surface on the ref; for everything else go through the engine directly (`ref.current.layers.get(...)`, `ref.current.events.tap(...)`).
 
-## UI: hooks + components + toolbars
+## Hooks (`src/hooks/`) — the reactive seam
 
-The control/toolbar UI lives **here** (moved out of `@invana/canvas-ui`, which is now editors-only), in three layers — the React-Flow split:
+Hooks are the headless heart of this package: they turn engine/store state into reactive React values that `@invana/canvas-ui` builds its UI on.
 
-- **Hooks** (`src/hooks/`) — `useCamera` / `useZoom` / `useFitContent` / `useCanvasEvent`. Resolve the engine from `CanvasContext` **or** an explicit `canvas` arg (`useResolvedCanvas(explicit ?? context)`), so they work from a `<Canvas>` descendant **or** target any instance — multi-canvas-safe.
-- **Components** (`src/components/`) — the dumb building blocks: `Panel`, `Tooltipped`, `ControlButton`, `ZoomControls`, `FitContentButton`, `LockToggle`, `ClearButton`, `OptionPicker` (+ `ToolbarIcon` / `PanelPosition` / `TooltipSide` types). **Engine-agnostic, icon-agnostic** (icons passed as a `ToolbarIcon` prop), props-in / callbacks-out. Chrome from `@invana/ui` (Button / DropdownMenu / Tooltip / Nav\*); no raw `<button>`/`<select>`, no `lucide-react` import here. These import **no** canvas/engine — keep them dumb. The canvas equivalents of React Flow's `<Panel>` / `<ControlButton>`. **Tooltips:** every interactive control surfaces its `title` / `label` as a real `@invana/ui` (Radix) tooltip via the shared `Tooltipped` wrapper (self-contained `TooltipProvider`), with an optional `tooltipSide` prop — so the controls read well dropped into a `NavHorizontal` / `NavVertical` slot. **Styling:** default to the design-kit look — the `@invana/ui` chrome plus its Tailwind design tokens (`primary`, `accent`, …). Assume the design-kit Tailwind theme is present; don't write components that avoid Tailwind. For **active / selected / toggled** toolbar buttons reuse the design-kit sidebar nav-item treatment via the shared `ACTIVE_CLASS` (`bg-primary/15 text-primary ring-1 ring-primary/25`) layered over a `'ghost'` Button — a subtle primary tint + icon + ring, **not** a solid `'default'`-variant fill. For the **selected item inside a dropdown/radio picker** use the lighter `ACTIVE_MENU_ITEM_CLASS` (`text-primary font-medium`) on the active `DropdownMenuRadioItem` instead — the tint + ring read as heavy in a menu list. Both are exported from `ControlButton`; don't reintroduce per-component active styles.
-- **Toolbars** (`src/toolbars/`) — assembled from the components; **named with the `*Toolbar` suffix**. `CanvasControlsToolbar` **self-wires** zoom/fit/lock from the hooks (React Flow's `<Controls>`; pass `bare` + an explicit `canvas` to drive the active canvas from external chrome). `GraphToolbar` is a callback-driven turnkey (layout/select/clear). New self-wiring toolbars follow the recipe: consume a hook, render a component inside a `<Panel>`, accept an optional `canvas` prop, and end the name in `Toolbar`.
+- **Store hooks** — `useStore(store, selector)` (a `useSyncExternalStore` slice over a kernel `ReactiveStore`), `useGraphCanvasOptions` / `useGraphCanvasUpdate` (read/patch `store.view.definition`). This is the coupling mechanism: UI reads through these and reflects store changes instantly.
+- **Engine hooks** — `useCamera` / `useZoom` / `useFitContent` / `useSelection` / `useLayout` / `useCanvasEvent` / `useGraphEvent` / … Resolve the engine from `CanvasContext` **or** an explicit `canvas` arg (`useResolvedCanvas(explicit ?? context)`), so they work from a `<Canvas>` descendant **or** target any instance — multi-canvas-safe.
 
-`@invana/ui` is a dependency (the components use its chrome). `@invana/canvas-ui` is **not** a dependency of this package.
+Hooks may return data, callbacks, and **null-rendering** engine wrappers (e.g. a `<DevInfoLayer>` element), but **not** pixels. A turnkey hook that hands back a button (`useDevTool` / `useMiniMap`) is UI → it lives in `@invana/canvas-ui` and imports the layer-wrapper back from here.
+
+## No application UI here
+
+Components, toolbars, menus, and `GraphCanvasApp` are **pixels** → `@invana/canvas-ui`. Their design-kit styling rules (`@invana/ui` chrome, Tailwind tokens, `ACTIVE_CLASS` / `ACTIVE_MENU_ITEM_CLASS` active treatments, `Tooltipped`, the `*Toolbar` recipe) now live in `packages/canvas-ui/CLAUDE.md`. During the migration some of these files are still physically here; treat that as debt to move, not a pattern to extend.
 
 ## Rules
 
-- No `pixi.js` imports — wrap engine APIs only.
-- The `src/components/` building blocks stay **dumb**: no `@invana/canvas` / `@invana/canvas-react` / engine imports, no `lucide-react`. Engine wiring belongs in `src/toolbars/` (via the hooks) or the consumer.
-- **Default to design-kit styling.** UI components use `@invana/ui` chrome + its Tailwind design tokens; the design-kit Tailwind theme is assumed available (don't engineer around its absence). Active/selected/toggled buttons = the shared `ACTIVE_CLASS` nav-item treatment over a `'ghost'` Button, not a solid fill; selected dropdown-menu items = `ACTIVE_MENU_ITEM_CLASS`. Reuse both (exported from `ControlButton`) rather than hand-rolling per-component active styles.
+- **No `pixi.js` imports** — wrap engine APIs only.
+- **No `@invana/ui` import, and no application UI.** Everything here renders `null`, provides a context, or is a hook. Draws pixels? → `@invana/canvas-ui`.
+- **No `@invana/canvas-ui` dependency** (that would cycle — the dependency runs canvas-ui → canvas-react, not back).
 - Wrapper effects key on `id` (and for layouts `targetLayerId`) — those are the "identity" props. Other option changes require unmount/remount; document that on every wrapper.
 - `<Canvas>` must be StrictMode-safe: track a cancelled flag through the init promise so a double-mount in dev tears down the half-initialised engine cleanly.
 - Render order matters. A `<D3ForceLayout targetLayerId="graph">` sibling that runs before its `<GraphLayer id="graph">` mounts won't find the layer. Place layer wrappers before the layouts/behaviours that depend on them in the JSX.

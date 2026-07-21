@@ -228,6 +228,7 @@ function resolveOptions(
 }
 
 export class HoverActivateBehaviour extends Behaviour {
+  override readonly kind = 'hover-activate';
   /** Bound target layer — resolved in `onRegister`. */
   private layer: GraphLayer | null = null;
 

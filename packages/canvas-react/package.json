@@ -24,7 +24,6 @@
   },
   "peerDependencies": {
     "@invana/canvas": "workspace:*",
-    "@invana/ui": "*",
     "@invana/graph": "workspace:*",
     "@invana/graph-layout-d3-force": "workspace:*",
     "pixi.js": "^8.18.1",
@@ -36,7 +35,6 @@
     "@invana/graph": "workspace:*",
     "@invana/graph-layout-d3-force": "workspace:*",
     "@invana/themes": "^0.0.19",
-    "@invana/ui": "^0.0.19",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "^18.3.12",

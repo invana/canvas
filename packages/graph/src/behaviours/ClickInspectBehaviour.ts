@@ -56,6 +56,7 @@ export interface ClickInspectBehaviourOptions extends BehaviourOptions {
 }
 
 export class ClickInspectBehaviour extends Behaviour<ClickInspectBehaviourOptions> {
+  override readonly kind = 'click-inspect';
   /**
    * Inspection event bus. Subscribe to `'inspect:change'` for the current
    * single target (or `null`) every time it changes.

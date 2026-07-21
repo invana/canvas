@@ -1,7 +1,7 @@
 import type { Canvas } from '@invana/canvas';
 import { Lock, LockOpen, Maximize, ZoomIn, ZoomOut } from 'lucide-react';
 
-import type { ToolbarItem } from '../components/ToolbarItem';
+import type { ToolbarItem } from '../uiModel';
 import { useZoom } from './useZoom';
 import { useFitContent } from './useFitContent';
 import { useLock } from './useLock';

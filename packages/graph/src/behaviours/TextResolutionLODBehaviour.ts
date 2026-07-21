@@ -102,6 +102,7 @@ const DEFAULT_LEVELS: TextResolutionLODTier[] = [
 ];
 
 export class TextResolutionLODBehaviour extends Behaviour<TextResolutionLODBehaviourOptions> {
+  override readonly kind = 'label-resolution-lod';
   private layer: GraphLayer | null = null;
   private subs: Array<() => void> = [];
 

@@ -21,26 +21,8 @@
 
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import {
-  CanvasMessageBar,
-  ClickViewBehaviour,
-  EdgeDetailView,
-  NodeDetailView,
-  GraphBackgroundContextMenu,
-  type GraphBackgroundMenuContext,
-  GraphCanvasApp,
-  GraphClipboardProvider,
-  GraphControlsToolbar,
-  GraphNodeContextMenu,
-  type GraphNodeMenuContext,
-  GraphStatusBar,
-  TextResolutionLODBehaviour,
-  type LayoutFactory,
-  type ViewContext,
-  ThemeToggle,
-  useDevTool,
-  useMiniMap,
-} from '@invana/canvas-react';
+import { ClickViewBehaviour, GraphClipboardProvider, TextResolutionLODBehaviour, type LayoutFactory, type ViewContext } from '@invana/canvas-react';
+import { CanvasMessageBar, EdgeDetailView, NodeDetailView, GraphBackgroundContextMenu, type GraphBackgroundMenuContext, GraphCanvasApp, GraphControlsToolbar, GraphNodeContextMenu, type GraphNodeMenuContext, GraphStatusBar, ThemeToggle, useDevTool, useMiniMap } from '@invana/canvas-ui';
 import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';

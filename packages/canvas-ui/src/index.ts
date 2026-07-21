@@ -1,13 +1,11 @@
 // @invana/canvas-ui — public API surface
 //
-// Reusable, engine-agnostic React UI components for Invana graph tools. Two
-// tracks, kept apart as folders (see CLAUDE.md):
-//   • `editors/` — STATE editors: forms (generated from `@invana/forms` field
-//     schemas) that emit a serializable patch via `onSubmit`.
-//   • `views/`   — PRESENTATIONAL components: props in, render out, no form.
-//   • `shared/`  — colour utils / presets used by both.
-// All form chrome comes from `@invana/forms` / `@invana/ui` so every Invana
-// tool shares one visual language.
+// The React UI kit for @invana/canvas, built on @invana/canvas-react's hooks so
+// it couples to @invana/canvas-store and is live by default. Folder tracks (see
+// CLAUDE.md): components/ (dumb blocks) · toolbars/ · menus/ · panels/ (store-
+// connected) · editors/ (schema state editors) · views/ (presentational) ·
+// apps/ (GraphCanvasApp) · hooks/ (turnkey) · behaviours/ (UI-rendering wrappers).
+// All chrome comes from @invana/forms / @invana/ui for one visual language.
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Editors
@@ -31,6 +29,15 @@ export type {
   CanvasSettingsInstance,
   SettingsSection,
 } from './editors/canvas-settings';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Panels (store-connected)
+// ═══════════════════════════════════════════════════════════════════════════
+// Self-wiring smart panels: drop into a <Canvas>/<GraphCanvas>/GraphCanvasApp
+// subtree and they bind to that canvas via context (multi-canvas safe), reading
+// and writing @invana/canvas-store through @invana/canvas-react hooks — no props.
+// `CanvasSettingsPanel` packages the introspection↔CanvasSettingsEditor bridge.
+export { CanvasSettingsPanel, type CanvasSettingsPanelProps } from './panels/canvas-settings';
 
 // ─── Node style editors ──────────────────────────────────────────────────
 // `NodeStyleEditor` dispatches on the `kind` prop to the full-spec **simple**
@@ -796,3 +803,180 @@ export type {
 // helpers that bridge engine colours and the design-kit colour swatch.
 export { COLOR_PRESETS } from './shared/colors';
 export { numberToHex, hexToNumber } from './shared/color';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Application UI (moved from @invana/canvas-react)
+// ═══════════════════════════════════════════════════════════════════════════
+// The pixels: the `GraphCanvasApp` shell, assembled toolbars, dumb building-block
+// components, context menus, and the two turnkey UI hooks. All built on
+// `@invana/canvas-react`'s headless hooks/context.
+
+// ─── App (batteries-included composition) ────────────────────────────────────
+export { GraphCanvasApp } from './apps';
+export type {
+  GraphCanvasAppProps,
+  GraphCanvasAppControlContext,
+  GraphCanvasAppSectionOptions,
+  RegionSlot,
+  ThemeKind,
+  BottomSpan,
+  GraphCanvasAppHeaderOptions,
+  GraphCanvasAppFooterOptions,
+} from './apps';
+
+// ─── Toolbars ──────────────────────────────────────────────────────────────
+// `CanvasControlsToolbar` self-wires from context (React Flow's `<Controls>`);
+// `GraphToolbar` is a turnkey layout/select/clear bar. Toolbar components carry
+// the `*Toolbar` suffix.
+export {
+  CanvasControlsToolbar,
+  GraphToolbar,
+  GraphControlsToolbar,
+  GraphControlsToolbarLite,
+  HistoryToolbar,
+  EditToolbar,
+  ViewToolbar,
+  GridToolbar,
+  GraphLayoutToolbar,
+  ModellerToolbar,
+  ExportImageToolbar,
+  ExportStateToolbar,
+  ClearCanvasToolbar,
+  InspectorPanel,
+  NodeDetailView,
+  EdgeDetailView,
+  dockCardClassName,
+  ThemeToggle,
+} from './toolbars';
+export type {
+  CanvasControlsToolbarProps,
+  GraphToolbarProps,
+  GraphControlsToolbarProps,
+  GraphControlsSections,
+  HistoryToolbarProps,
+  EditToolbarProps,
+  ViewToolbarProps,
+  GridToolbarProps,
+  GraphLayoutToolbarProps,
+  ModellerToolbarProps,
+  ExportImageToolbarProps,
+  ExportImageFormatKey,
+  ExportStateToolbarProps,
+  ClearCanvasToolbarProps,
+  InspectorPanelProps,
+  NodeDetailViewProps,
+  EdgeDetailViewProps,
+  BaseDetailViewProps,
+  ThemeToggleProps,
+} from './toolbars';
+
+// ─── UI components (building blocks) ───────────────────────────────────────
+// The toolbar layer is data-driven: the `ToolbarItems` renderer compiles
+// `ToolbarItem[]` (from the builder hooks) straight to `@invana/ui` chrome — no
+// per-control wrapper components. `Panel` positions overlays; `Tooltipped` is
+// the shared tooltip helper; the rest are standalone panels.
+export {
+  Panel,
+  PanelContent,
+  ToolbarItems,
+  applyIconOverrides,
+  Tooltipped,
+  ExportImagePanel,
+  EXPORT_IMAGE_FORMAT_OPTIONS,
+  EXPORT_IMAGE_AREA_OPTIONS,
+  EXPORT_IMAGE_BACKGROUND_OPTIONS,
+  EXPORT_IMAGE_SCALE_OPTIONS,
+  EXPORT_IMAGE_RATIO_OPTIONS,
+  ExportStatePanel,
+  CanvasMessageBar,
+  GraphStatusBar,
+  PropertiesEditor,
+  DetailCard,
+  PropertyDetailView,
+  EdgeEndpoints,
+  defaultPropertyRenderers,
+  resolvePropertyRenderer,
+  renderPropertyValue,
+  isSafeHref,
+  isImageUrl,
+  ContextMenuOverlay,
+  HoverElementPreviewCard,
+  CanvasSettingsBrowser,
+} from './components';
+export type {
+  PanelProps,
+  PanelContentProps,
+  PanelPosition,
+  CanvasSettingsBrowserProps,
+  SettingsEditorDescriptor,
+  SettingsEditorContext,
+  // `CanvasSettingsBrowser`'s section shape — aliased to avoid colliding with the
+  // `CanvasSettingsEditor` `SettingsSection` exported above.
+  SettingsSection as CanvasSettingsBrowserSection,
+  ToolbarItemsProps,
+  ToolbarItem,
+  ToolbarButtonItem,
+  ToolbarToggleItem,
+  ToolbarSelectItem,
+  ToolbarDividerItem,
+  ToolbarCustomItem,
+  TooltippedProps,
+  TooltipSide,
+  ExportImagePanelProps,
+  ExportImagePanelValue,
+  ExportImagePanelOption,
+  ExportImageAreaKey,
+  ExportStatePanelProps,
+  CanvasMessageBarProps,
+  GraphStatusBarProps,
+  PropertiesEditorProps,
+  PropertiesEditorValues,
+  DetailCardProps,
+  DetailRow,
+  PropertyDetailViewProps,
+  EdgeEndpointsProps,
+  EdgeEndpoint,
+  PropertyRenderer,
+  PropertyRenderContext,
+  PropertyKind,
+  ContextMenuOverlayProps,
+  HoverElementPreviewCardProps,
+  ToolbarIcon,
+} from './components';
+
+// ─── Context menus ───────────────────────────────────────────────────────────
+// Target-scoped right-click menus — one per target (node / edge / background),
+// each wiring a `ContextMenuBehaviour` + `ContextMenuOverlay`. Pass an `items`
+// builder; dismissal + auto-close are handled internally. Compose freely.
+export {
+  GraphNodeContextMenu,
+  GraphEdgeContextMenu,
+  GraphBackgroundContextMenu,
+} from './menus';
+export type {
+  GraphNodeContextMenuProps,
+  GraphNodeMenuContext,
+  GraphEdgeContextMenuProps,
+  GraphEdgeMenuContext,
+  GraphBackgroundContextMenuProps,
+  GraphBackgroundMenuContext,
+  GraphContextMenuCommonProps,
+  GraphContextMenuContext,
+  GraphTargetMenuContext,
+} from './menus';
+
+// ─── Behaviours that render UI ───────────────────────────────────────────────
+// `HoverElementPreviewBehaviour` registers the engine hover behaviour AND renders
+// the (moved) `HoverElementPreviewCard` — so it is pixels, not a headless binding,
+// and lives here. It registers via `useBehaviourRegistration` re-exported from
+// `@invana/canvas-react`.
+export { HoverElementPreviewBehaviour } from './behaviours/HoverElementPreviewBehaviour';
+export type { HoverElementPreviewBehaviourProps } from './behaviours/HoverElementPreviewBehaviour';
+
+// ─── Turnkey UI hooks ──────────────────────────────────────────────────────
+// A hook that hands back a rendered button is UI, so it lives here and imports
+// its null-rendering layer wrapper back from `@invana/canvas-react`.
+export { useDevTool } from './hooks/useDevTool';
+export type { UseDevToolOptions, UseDevToolResult } from './hooks/useDevTool';
+export { useMiniMap } from './hooks/useMiniMap';
+export type { UseMiniMapOptions, UseMiniMapResult } from './hooks/useMiniMap';

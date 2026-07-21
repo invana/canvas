@@ -14,7 +14,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { GraphCanvasApp } from '@invana/canvas-react';
+import { GraphCanvasApp } from '@invana/canvas-ui';
 import {
   Button,
   Dialog,

@@ -53,6 +53,8 @@ export interface KeyboardCameraInputBehaviourOptions extends BehaviourOptions {
 }
 
 export class KeyboardCameraInputBehaviour extends Behaviour<KeyboardCameraInputBehaviourOptions> {
+  override readonly kind = 'keyboard-camera';
+
   // Live-read from `_options` so `setOptions` takes effect. The keydown handler
   // is bound once in onEnable but reads these per-event, so no re-arm is needed.
   private get panStep(): number { return this._options.panStep ?? 40; }

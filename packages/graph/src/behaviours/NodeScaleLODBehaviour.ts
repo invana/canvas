@@ -131,6 +131,7 @@ interface ResolvedTarget {
 const REANCHOR_SETTLE_MS = 80;
 
 export class NodeScaleLODBehaviour extends ElementScaleLODBehaviour<NodeScaleLODBehaviourOptions> {
+  override readonly kind = 'node-size-lod';
   /** Live-read from `_options` so `setOptions` applies; `onOptionsChanged` reflows. */
   private get configs(): NodeScaleLODConfig[] { return this._options.layers; }
   private resolved: ResolvedTarget[] = [];

@@ -64,6 +64,7 @@ export interface CollapseExpandBehaviourOptions extends BehaviourOptions {
 }
 
 export class CollapseExpandBehaviour extends Behaviour<CollapseExpandBehaviourOptions> {
+  override readonly kind = 'collapse-expand';
   private layer: GraphLayer | null = null;
   private ctxRef: CanvasContext | null = null;
   private canvasEl: HTMLCanvasElement | null = null;

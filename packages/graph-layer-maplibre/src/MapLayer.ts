@@ -77,6 +77,7 @@ const WORLD_SIZE = 512;
 const DEFAULT_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 
 export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEvents> {
+  override readonly kind = 'map-layer';
   private map: maplibregl.Map | null = null;
   private mapContainer: HTMLDivElement | null = null;
   private ownsMapContainer = false;

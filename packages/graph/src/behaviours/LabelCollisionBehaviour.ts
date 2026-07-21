@@ -158,6 +158,7 @@ interface LabelRecord {
 }
 
 export class LabelCollisionBehaviour extends Behaviour {
+  override readonly kind = 'label-collision';
   private layer: GraphLayer | null = null;
   /** Camera — read for the visible world bounds each pass (viewport-scoping). */
   private camera: CanvasContext['camera'] | null = null;

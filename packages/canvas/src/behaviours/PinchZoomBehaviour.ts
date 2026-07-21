@@ -24,6 +24,8 @@ export interface PinchZoomBehaviourOptions extends BehaviourOptions {
 }
 
 export class PinchZoomBehaviour extends Behaviour<PinchZoomBehaviourOptions> {
+  override readonly kind = 'pinch-zoom';
+
   private get noDrag(): boolean { return this._options.noDrag ?? false; }
   private get percent(): number { return this._options.percent ?? 0.1; }
 

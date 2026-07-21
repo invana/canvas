@@ -6,23 +6,8 @@
 
 import { useContext, useState, type ReactNode } from 'react';
 import type { CompositeShapeOption, GraphData, GraphLayer, NodeStyle } from '@invana/graph';
-import {
-  CanvasMessageBar,
-  GraphBackgroundContextMenu,
-  GraphCanvasApp,
-  GraphCanvasContext,
-  GraphControlsToolbar,
-  GraphNodeContextMenu,
-  GraphStatusBar,
-  ThemeToggle,
-  ToolbarItems,
-  useCanvas,
-  useDevTool,
-  useMiniMap,
-  useSelection,
-  type GraphNodeMenuContext,
-  type LayoutFactory,
-} from '@invana/canvas-react';
+import { GraphCanvasContext, useCanvas, useSelection, type LayoutFactory } from '@invana/canvas-react';
+import { CanvasMessageBar, GraphBackgroundContextMenu, GraphCanvasApp, GraphControlsToolbar, GraphNodeContextMenu, GraphStatusBar, ThemeToggle, ToolbarItems, useDevTool, useMiniMap, type GraphNodeMenuContext } from '@invana/canvas-ui';
 import { D3ForceLayout, type D3ForceLayoutOptions } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { ThemeProvider } from '@invana/themes';
