@@ -20,9 +20,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeProvider, useTheme } from '@invana/themes';
 import { RichSelect } from '@invana/ui';
-import { ClickViewBehaviour, type LayoutFactory } from '@invana/canvas-react';
-import { HoverElementPreviewBehaviour } from '@invana/canvas-ui';
-import { EdgeDetailView, GraphCanvasApp, GraphControlsToolbar, NodeDetailView, Panel, PanelContent, ThemeToggle, useMiniMap, type GraphCanvasAppControlContext } from '@invana/canvas-ui';
+import { ClickViewBehaviour, HoverElementPreviewBehaviour, type LayoutFactory } from '@invana/canvas-react';
+import { EdgeDetailView, GraphCanvasApp, GraphControlsToolbar, HoverElementPreviewCard, NodeDetailView, Panel, PanelContent, ThemeToggle, useMiniMap, type GraphCanvasAppControlContext } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type {
   FreeformStructure,
@@ -210,7 +209,12 @@ export const SimpleAndCompositeNodes: Story = {
 
           {/* Dwell over a node → a per-type preview card (distinct from the
               bundle's `HoverActivateBehaviour`, which only highlights). */}
-          <HoverElementPreviewBehaviour targetLayerId="graph" placement="auto" cards={HOVER_CARDS} />
+          <HoverElementPreviewBehaviour
+            targetLayerId="graph"
+            placement="auto"
+            cards={HOVER_CARDS}
+            renderCard={(snapshot) => <HoverElementPreviewCard card={snapshot.card} />}
+          />
 
           {/* Click a node / edge → read-only properties dock on the right. The
               behaviour tracks the clicked element (decoupled from selection) and

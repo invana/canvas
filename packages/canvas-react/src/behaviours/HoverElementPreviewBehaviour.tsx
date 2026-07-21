@@ -2,7 +2,6 @@ import {
   useEffect,
   useLayoutEffect,
   useRef,
-  type CSSProperties,
   type ReactNode,
 } from 'react';
 import * as graph from '@invana/graph';
@@ -14,9 +13,9 @@ import type {
   PreviewSnapshot,
 } from '@invana/graph';
 
-import { useCanvas, useHoverElementPreview, useBehaviourRegistration } from '@invana/canvas-react';
-
-import { HoverElementPreviewCard } from '../components/HoverElementPreviewCard';
+import { useCanvas } from '../CanvasContext';
+import { useHoverElementPreview } from '../hooks/useHoverElementPreview';
+import { useBehaviourRegistration } from './useBehaviourRegistration';
 
 export interface HoverElementPreviewBehaviourProps
   extends Omit<HoverElementPreviewBehaviourOptions, 'id' | 'targetLayerId'> {
@@ -34,27 +33,25 @@ export interface HoverElementPreviewBehaviourProps
   edgeMargin?: number;
   /** Stacking order of the card. Default `1000`. */
   zIndex?: number;
-  /** Extra classes merged onto the **default** card surface. */
-  cardClassName?: string;
-  /** Extra inline style merged onto the **default** card surface. */
-  cardStyle?: CSSProperties;
-  /** Custom content for a hovered **node** — gets the live `GraphNode`. Overrides the default card. */
+  /** Content for a hovered **node** — gets the live `GraphNode`. */
   renderNode?: (node: GraphNode, snapshot: PreviewSnapshot) => ReactNode;
-  /** Custom content for a hovered **edge** — gets the live `GraphEdge` (with `source` / `target`). */
+  /** Content for a hovered **edge** — gets the live `GraphEdge` (with `source` / `target`). */
   renderEdge?: (edge: GraphEdge, snapshot: PreviewSnapshot) => ReactNode;
-  /** Custom content for any element — takes precedence over `renderNode` / `renderEdge`. */
+  /** Content for any element — takes precedence over `renderNode` / `renderEdge`. */
   renderCard?: (snapshot: PreviewSnapshot) => ReactNode;
 }
 
 /**
- * Declarative, batteries-included hover preview for `@invana/canvas-react`.
+ * Declarative, **headless** hover preview for `@invana/canvas-react`.
  *
- * Registers `@invana/graph`'s `HoverElementPreviewBehaviour` **and** renders a
- * card for the hovered node / edge — subscription, anchoring (measure → flip →
- * clamp), and the interactive hold-open behaviour are all owned here. The card
- * content is "simply UI": by default the built-in {@link HoverElementPreviewCard},
- * or supply your own via `renderNode` / `renderEdge` (or `renderCard`); your
- * component never deals with positioning or hold/release.
+ * Registers `@invana/graph`'s `HoverElementPreviewBehaviour` and owns the engine
+ * glue — subscription, anchoring (measure → flip → clamp), and the interactive
+ * hold-open behaviour — then renders **only the content you supply** via
+ * `renderNode` / `renderEdge` (or `renderCard`) inside the positioned shell. It
+ * draws **no card of its own** and imports no `@invana/ui`: with no render-prop
+ * matching the hovered element it renders `null`. For a batteries-included
+ * default card, use `@invana/canvas-ui`'s `HoverElementPreviewBehaviour`, which
+ * wraps this and supplies the default card.
  *
  * All options except `id` / `targetLayerId` are reactive (synced via
  * `setOptions`); `id` / `targetLayerId` are identity — change them (or `key`) to
@@ -62,14 +59,10 @@ export interface HoverElementPreviewBehaviourProps
  * directly instead.
  *
  * ```tsx
- * // Default card from the serializable spec:
- * <HoverElementPreviewBehaviour targetLayerId="graph" card={settings.preview.card} />
- *
- * // Custom node / edge cards (e.g. from @invana/canvas-ui):
  * <HoverElementPreviewBehaviour
  *   targetLayerId="graph"
- *   renderNode={(t) => <NodePreviewCard … />}
- *   renderEdge={(t) => <EdgePreviewCard … />}
+ *   renderNode={(node) => <NodePreviewCard title={node.id} … />}
+ *   renderEdge={(edge) => <EdgePreviewCard title={`${edge.source} → ${edge.target}`} … />}
  * />
  * ```
  */
@@ -82,8 +75,6 @@ export function HoverElementPreviewBehaviour({
   offsetY,
   edgeMargin,
   zIndex,
-  cardClassName,
-  cardStyle,
   renderNode,
   renderEdge,
   renderCard,
@@ -152,9 +143,9 @@ export function HoverElementPreviewBehaviour({
   } else if (snapshot.kind === 'edge' && renderEdge) {
     content = renderEdge(snapshot.edge, snapshot);
   } else {
-    content = (
-      <HoverElementPreviewCard card={snapshot.card} className={cardClassName} style={cardStyle} />
-    );
+    // Headless: no default card — the consumer (or the canvas-ui wrapper) owns
+    // the pixels. Nothing to draw for this element.
+    return null;
   }
   if (!content) return null;
 

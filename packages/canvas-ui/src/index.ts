@@ -965,13 +965,10 @@ export type {
   GraphTargetMenuContext,
 } from './menus';
 
-// ─── Behaviours that render UI ───────────────────────────────────────────────
-// `HoverElementPreviewBehaviour` registers the engine hover behaviour AND renders
-// the (moved) `HoverElementPreviewCard` — so it is pixels, not a headless binding,
-// and lives here. It registers via `useBehaviourRegistration` re-exported from
-// `@invana/canvas-react`.
-export { HoverElementPreviewBehaviour } from './behaviours/HoverElementPreviewBehaviour';
-export type { HoverElementPreviewBehaviourProps } from './behaviours/HoverElementPreviewBehaviour';
+// The hover-preview **behaviour** is headless and lives in `@invana/canvas-react`
+// (`HoverElementPreviewBehaviour`). This package contributes only the **card** it
+// renders — `HoverElementPreviewCard` (exported above). Wire it in as a render-
+// prop: `<HoverElementPreviewBehaviour renderCard={(s) => <HoverElementPreviewCard card={s.card} />} />`.
 
 // ─── Turnkey UI hooks ──────────────────────────────────────────────────────
 // A hook that hands back a rendered button is UI, so it lives here and imports

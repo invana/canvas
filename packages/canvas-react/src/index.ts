@@ -100,10 +100,13 @@ export { ClickInspectBehaviour } from './behaviours/ClickInspectBehaviour';
 export type { ClickInspectBehaviourProps } from './behaviours/ClickInspectBehaviour';
 export { ClickViewBehaviour } from './behaviours/ClickViewBehaviour';
 export type { ClickViewBehaviourProps } from './behaviours/ClickViewBehaviour';
-// `HoverElementPreviewBehaviour` renders an `@invana/ui`-based preview card, so it
-// is UI, not a headless binding — it lives in `@invana/canvas-ui`. The shared
-// `useBehaviourRegistration` lifecycle hook (exported below) lets that moved
-// wrapper register its engine behaviour the same way the in-package wrappers do.
+// Headless hover preview: registers the engine behaviour + owns anchoring /
+// hold-open, and renders **only** the content supplied via `renderNode` /
+// `renderEdge` / `renderCard` (no default card, no `@invana/ui`). For the
+// design-kit card, pass `@invana/canvas-ui`'s `HoverElementPreviewCard` as a
+// render-prop: `renderCard={(s) => <HoverElementPreviewCard card={s.card} />}`.
+export { HoverElementPreviewBehaviour } from './behaviours/HoverElementPreviewBehaviour';
+export type { HoverElementPreviewBehaviourProps } from './behaviours/HoverElementPreviewBehaviour';
 export { useBehaviourRegistration } from './behaviours/useBehaviourRegistration';
 export { ColorByLabelBehaviour } from './behaviours/ColorByLabelBehaviour';
 export type { ColorByLabelBehaviourProps } from './behaviours/ColorByLabelBehaviour';

@@ -34,7 +34,6 @@ src/
 ├─ views/        presentational (preview cards, layers panel, canvas pages) — props in → JSX
 ├─ apps/         GraphCanvasApp (+ header/footer)
 ├─ hooks/        UI-only turnkey hooks (useDevTool, useMiniMap — button = pixels, layer re-imported from canvas-react)
-├─ behaviours/   UI-rendering behaviour wrappers (a wrapper that registers an engine behaviour AND renders a React card, e.g. HoverElementPreviewBehaviour → the preview card). Headless-vs-pixels puts these here, not in canvas-react.
 └─ shared/       colour utils + presets used across tracks
 ```
 
