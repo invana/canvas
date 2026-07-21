@@ -558,14 +558,22 @@ export class MiniMapLayer extends ScreenLayer<
     const vis = ctx.camera.getVisibleBounds();
     const tl = this.worldToMinimap(vis.x, vis.y);
     const br = this.worldToMinimap(vis.x + vis.width, vis.y + vis.height);
-    const x = tl.x;
-    const y = tl.y;
-    const w = br.x - tl.x;
-    const h = br.y - tl.y;
     g.clear();
     // Dim the out-of-viewport region first so the mask sits below the indicator
-    // fill / stroke but above the mirrored world beneath (worldGfx).
-    this.paintMask(g, x, y, w, h);
+    // fill / stroke but above the mirrored world beneath (worldGfx). `paintMask`
+    // already clamps its own rects to the box.
+    this.paintMask(g, tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+    // Clamp the indicator rect to the minimap box. The projection is fit to the
+    // graph bounds and isn't re-fit on every camera event (pan/zoom repaint only
+    // this indicator, not the world) — so an un-clamped rect bleeds past the box
+    // edge whenever the camera pans beyond the graph. Clamp both fill and stroke.
+    const W = this.opts.width;
+    const H = this.opts.height;
+    const x = Math.max(0, Math.min(W, tl.x));
+    const y = Math.max(0, Math.min(H, tl.y));
+    const w = Math.max(0, Math.min(W, br.x)) - x;
+    const h = Math.max(0, Math.min(H, br.y)) - y;
+    if (w <= 0 || h <= 0) return; // viewport lies entirely outside the minimap box
     g.rect(x, y, w, h);
     g.fill({ color: this.resolveColor(this.opts.viewportFill), alpha: this.opts.viewportFillAlpha });
     g.rect(x, y, w, h);
