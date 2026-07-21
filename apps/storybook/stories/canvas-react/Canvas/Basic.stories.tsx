@@ -11,16 +11,18 @@ import type { GraphData } from '@invana/graph';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 /**
- * `canvas-react/Canvas` with **telemetry off** — the `telemetry` prop is omitted
- * entirely, so `new Canvas()` takes the kernel's no-op path and attaches **zero**
- * streams (no console output, no telemetry cost). Same scene as the sibling
- * `WithTelemetry` story; the only difference is the missing prop — enabling
- * telemetry is purely opt-in (there is no env/dev auto-toggle).
+ * `canvas-react/Canvas` — **the minimal base canvas.** `<Canvas>` is the raw
+ * React root: it runs **no layout**, so every node renders at the explicit
+ * `position` you give it. This story is the smallest useful scene — a graph
+ * layer over a dotted background, with **pan** (`DragPanBehaviour`) and **zoom**
+ * (`WheelZoomBehaviour`) wired up and a live-FPS `<DevInfoLayer>` overlay.
  *
- * The `<DevInfoLayer>` overlay still shows live FPS — it reads the engine's own
- * frame timing, independent of the telemetry config.
+ * No `telemetry` prop → `new Canvas()` takes the kernel's no-op path (zero
+ * streams, zero cost). See the sibling `WithTelemetry` story to stream to a
+ * collector, and `Advanced` for hover / select / drag-node / minimap on top of
+ * this same base.
  */
-const meta: Meta = { title: 'canvas-react/Canvas/WithoutTelemetry' };
+const meta: Meta = { title: 'canvas-react/Canvas/Basic' };
 export default meta;
 type Story = StoryObj;
 
@@ -58,8 +60,7 @@ const NODE: GraphLayerProps['node'] = {
 };
 const EDGE: GraphLayerProps['edge'] = { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5 } };
 
-export const WithoutTelemetry: Story = {
-  name: 'Canvas (base) · no telemetry',
+export const Basic: Story = {
   render: () => (
     <div style={{ width: '100%', height: '100vh' }}>
       {/* No `telemetry` prop → no streams attached (the kernel's no-op path). */}

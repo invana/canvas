@@ -13,22 +13,25 @@ import type { GraphData } from '@invana/graph';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 /**
- * `canvas-react/GraphCanvas` with **telemetry off** — the `telemetry` prop is
- * omitted entirely, so the shared kernel attaches **zero** streams (no console
- * output, no telemetry cost). Same scene as the sibling `WithTelemetry` story; the
- * only difference is the missing prop — enabling telemetry is purely opt-in (there
- * is no env/dev auto-toggle).
+ * `canvas-react/GraphCanvas` — **the graph root, minimal.** `<GraphCanvas>`
+ * (backed by `@invana/graph`'s `GraphCanvas`, a strict `Canvas` superset)
+ * provides **both** `CanvasContext` *and* `GraphCanvasContext`, and **auto-runs
+ * `config.activeLayout`** — so the data carries **no positions** and the
+ * `<D3ForceLayout>` places every node for you (the base `<Canvas>` stories, by
+ * contrast, need explicit positions).
  *
- * The `<GraphCanvas>` still auto-runs `config.activeLayout` (the force layout) and
- * the `<DevInfoLayer>` overlay still shows live FPS — both are independent of the
- * telemetry config.
+ * This is the smallest useful graph scene: a force layout over a dotted
+ * background with pan + zoom and a live-FPS overlay. No `telemetry` prop → the
+ * kernel's no-op path. See `WithTelemetry` to stream to a collector and
+ * `Advanced` for hover / select / drag-node / minimap + tuned layout on top.
  */
-const meta: Meta = { title: 'canvas-react/GraphCanvas/WithoutTelemetry' };
+const meta: Meta = { title: 'canvas-react/GraphCanvas/Basic' };
 export default meta;
 type Story = StoryObj;
 
-// Plain `{ nodes, edges }` JSON, NO positions — <GraphCanvas> auto-runs the force
-// layout (config below) to compute every node's position from the topology alone.
+// ── How you pass the data: plain `{ nodes, edges }` JSON, NO positions ───────
+// <GraphCanvas> auto-runs `config.activeLayout` (below), so the force layout
+// computes every node's position — you just describe the topology.
 const DATA: GraphData = {
   nodes: [
     { id: 'hub', type: 'Hub' },
@@ -67,8 +70,8 @@ const NODE: GraphLayerProps['node'] = {
 };
 const EDGE: GraphLayerProps['edge'] = { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5 } };
 
-// `activeLayout` is the field <GraphCanvas> auto-runs. The id 'force' matches the
-// <D3ForceLayout id="force"> registered below.
+// `activeLayout` is the field <GraphCanvas> auto-runs (a base <Canvas> ignores it).
+// The id 'force' matches the <D3ForceLayout id="force"> registered below.
 const CONFIG: CanvasConfig = {
   activeLayout: 'force',
   layouts: {
@@ -81,8 +84,7 @@ const CONFIG: CanvasConfig = {
   },
 };
 
-export const WithoutTelemetry: Story = {
-  name: 'GraphCanvas · no telemetry',
+export const Basic: Story = {
   render: () => (
     <div style={{ width: '100%', height: '100vh' }}>
       {/* No `telemetry` prop → no streams attached (the kernel's no-op path). */}

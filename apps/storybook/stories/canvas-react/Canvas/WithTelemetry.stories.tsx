@@ -23,7 +23,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
  * built by `otelTelemetry({ endpoint })` from `@invana/canvas-telemetry-otel` — the
  * `endpoint` is your **telemetry server URL** (an OTLP/HTTP collector base, e.g.
  * HyperDX; the adapter appends `/v1/{traces,metrics,logs}`). This is how you point
- * the canvas at a real backend. Compare with the sibling `WithoutTelemetry` story
+ * the canvas at a real backend. Compare with the sibling `Basic` story
  * (prop omitted → the kernel's no-op path, zero telemetry cost).
  *
  * **How the URL is passed.** A URL never goes on `CanvasTelemetryConfig` directly —
@@ -95,7 +95,7 @@ const TELEMETRY: CanvasTelemetryConfig = otelTelemetry({
 });
 
 export const WithTelemetry: Story = {
-  name: 'Canvas (base) + telemetry',
+  name: 'WithTelemetry',
   render: () => (
     <div style={{ width: '100%', height: '100vh' }}>
       <Canvas autoResize telemetry={TELEMETRY}>
