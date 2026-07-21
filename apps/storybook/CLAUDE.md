@@ -11,11 +11,19 @@ Storybook runs on the React framework (`@storybook/react-vite`). Story files are
 
 When in doubt: engine + graph stories follow shape (1). Anything under `canvas-react/*` follows shape (2).
 
+## Styling — no hand-rolled CSS (root rule 13)
+
+**Never write manual CSS in a story** — no inline `style={{…}}` objects, no `CSSProperties` consts, no raw CSS for static presentation. Wrap demo layout/chrome in **`@invana/ui` components** (`Card`/`CardHeader`/`CardContent`, `Separator`, `Badge`, `Button`, …) and use **Tailwind design-token utility classes** via `className` (`flex`, `flex-col`, `gap-4`, `p-4`, `bg-card`, `text-muted-foreground`, `text-xs`, …) — the design-kit Tailwind theme is wired into Storybook (`.storybook/preview.ts`), so utilities work. `stories/canvas-ui/editors/CanvasSettingsEditor.stories.tsx` (its `Standalone` two-column layout) is the reference.
+
+The **only** inline `style` allowed is a genuinely dynamic runtime value Tailwind can't express (a computed colour, a cursor/absolute coordinate, a prop-driven pixel size). **Exempt** (structural / engine-demo tooling, not chrome): `createContainer(...)` in `stories/div-util.tsx` sizes the canvas-host `<div>`, and imperative engine stories drive settings through a **lil-gui** panel — those stay as-is. This rule targets the React/UI framing *around* components (columns, panels, spacing, labels), not the canvas surface or lil-gui.
+
 ## Conventions
 
-Storybook top-level namespacing follows package names. Stories from `@invana/canvas` live under `stories/Canvas/...`; `@invana/graph` stories under `stories/Graph/...`; `@invana/canvas-react` stories under `stories/canvas-react/...` (lowercase, matching the `graph-layouts/<flavour>/` convention for non-core packages); etc.
+**Storybook top-level namespacing follows package names — each package owns its own top-level sidebar node; a package's stories never nest under another package's namespace.** So `@invana/canvas` stories live under `stories/canvas/...`, `@invana/graph` under `stories/graph/...`, `@invana/canvas-react` under `stories/canvas-react/...`, `@invana/canvas-ui` under `stories/canvas-ui/...`, `@invana/canvas-store` under `stories/canvas-store/...`, `@invana/canvas-designer` under `stories/canvas-designer/...`. The layout and layer packages keep a *grouped* parent (`stories/graph-layouts/<flavour>/...`, `stories/graph-layers/<name>/...`) — see below — but that group is itself a **top-level** sibling of `canvas` and `graph`, not a child of `canvas`. The `title` field mirrors the folder path exactly, so the sidebar tree matches the filesystem tree. (`usecases/` is the one deliberate exception: cross-package demo apps that belong to no single package.)
 
-Inside each package namespace, the seven core engine concepts each get a folder:
+> Don't nest `graph`, `graph-layouts`, or `graph-layers` (or any other package) under `canvas/` — they're separate packages and get separate top-level nodes.
+
+Inside the `@invana/canvas` namespace, the seven core engine concepts each get a folder (`canvas/Concepts/...`):
 
 - `Canvas/Concepts/Shapes/...`      — shape primitives (rectangle, circle, polygon, glyph / icon fills, image fills). In a graph context these are the **nodes**.
 - `Canvas/Connectors/...`  — connector pipeline: `Anchors/`, `Routers/`, `PathStyles/`, `ConnectorTypes/`.
@@ -43,7 +51,9 @@ apps/storybook/stories/graph-layouts/
 └── elkjs/             ← @invana/graph-layout-elkjs (future)
 ```
 
-Title fields match the path exactly: `title: 'canvas/graph-layouts/<flavour>/<Name>'` — e.g. `'canvas/graph-layouts/d3-force/Lattice'`, `'canvas/graph-layouts/d3-hierarchy/Sunburst'`. The sidebar then groups all layout flavours under one `graph-layouts` node with one child per layout package, instead of scattering them as siblings of `Canvas` and `Graph`.
+Title fields match the path exactly: `title: 'graph-layouts/<flavour>/<Name>'` — e.g. `'graph-layouts/d3-force/Lattice'`, `'graph-layouts/d3-hierarchy/Sunburst'`. The sidebar then groups all layout flavours under one top-level `graph-layouts` node (a sibling of `canvas` and `graph`) with one child per layout package, instead of scattering them as siblings under `canvas`.
+
+The layer packages (`@invana/graph-layer-*`) follow the same shape under a top-level `graph-layers/<name>/...` group — `title: 'graph-layers/d3-contour/DensityContourFillLayer'`, `'graph-layers/maplibre/Airports'`, etc.
 
 When adding a new layout package `@invana/graph-layout-<X>`, create `apps/storybook/stories/graph-layouts/<X>/` and write the story titles as `graph-layouts/<X>/<Name>`. Don't put layout-package stories under `Graph/Layer/`, `Canvas/Layers/`, or a flat `graph-layouts-<X>/` folder — those are the wrong neighbours.
 
@@ -125,7 +135,7 @@ export const MyStory: Story = {
 
 ### Graph / layout stories — `GraphCanvas` + serialisable config
 
-**Canonical example: `stories/canvas/graph-layouts/d3-force/Lattice.stories.ts`. Write new graph/layout stories this way.**
+**Canonical example: `stories/graph-layouts/d3-force/Lattice.stories.ts`. Write new graph/layout stories this way.**
 
 The shape is **add everything, then `init()` last**:
 
