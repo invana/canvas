@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { cn } from '@invana/ui';
 import type { Canvas } from '@invana/canvas';
 
 import { useCanvasMessage } from '@invana/canvas-react';
@@ -26,18 +27,12 @@ export function CanvasMessageBar({ icon: Icon, canvas, className, style }: Canva
   if (message === null) return null;
 
   return (
-    <div style={{ ...rowStyle, ...style }} className={className}>
+    <div
+      className={cn('flex items-center gap-1.5 whitespace-nowrap text-xs opacity-80', className)}
+      style={style}
+    >
       {Icon ? <Icon size={13} /> : null}
       <span>{message}</span>
     </div>
   );
 }
-
-const rowStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 6,
-  fontSize: 12,
-  opacity: 0.8,
-  whiteSpace: 'nowrap',
-};

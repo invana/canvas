@@ -55,13 +55,10 @@ export function PropertyDetailView({
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
       {title && (
-        // Full-bleed section bar: negative inline margins cancel the card's p-3
-        // (the named `-mx-3` isn't in the prebuilt utility sheet), `px-3` keeps
-        // the text aligned with the rows.
-        <div
-          className="bg-muted px-3 py-1 font-medium uppercase text-muted-foreground"
-          style={{ marginLeft: '-10px', marginRight: '-10px' }}
-        >
+        // Full-bleed section bar: negative horizontal margins (`-mx-2.5`) cancel
+        // the card's padding so the muted band reaches both edges, while `px-3`
+        // keeps the text aligned with the rows.
+        <div className="-mx-2.5 bg-muted px-3 py-1 font-medium uppercase text-muted-foreground">
           {title}
         </div>
       )}

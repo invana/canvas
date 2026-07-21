@@ -74,26 +74,24 @@ export function SchemaEditor({
 
   return (
     <FormProvider {...form}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 16 }}>
+      <div className="flex flex-col gap-4 p-4">
         <FormField.ObjectField control={c} columns={1} labelPosition="top" name="meta" fields={metaFields} />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Fields</span>
+        <div className="flex flex-col gap-2">
+          <span className="text-[13px] font-semibold">Fields</span>
           {fields.map((f, i) => (
             <div
               key={f.id}
+              className="flex gap-2 items-start"
               style={{
-                display: 'flex',
-                gap: 8,
-                alignItems: 'flex-start',
                 paddingTop: i ? 8 : 0,
                 borderTop: i ? '1px solid var(--border)' : undefined,
               }}
             >
-              <div style={{ flex: 1 }}>
+              <div className="flex-1">
                 <FormField.ObjectField control={c} columns={2} labelPosition="top" name={`fields.${i}`} fields={fieldRowFields} />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div className="flex flex-col gap-0.5">
                 <Button type="button" variant="ghost" size="sm" disabled={i === 0} onClick={() => move(i, i - 1)} aria-label="Move up">
                   ↑
                 </Button>
@@ -113,7 +111,7 @@ export function SchemaEditor({
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div className="flex justify-end">
           <Button onClick={() => onSubmit(formToSchema(getValues()))}>{submitLabel}</Button>
         </div>
       </div>

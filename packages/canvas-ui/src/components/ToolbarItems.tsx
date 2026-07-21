@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
-import { Button, NavHorizontal, NavVertical, RichSelect, Separator, ToggleGroup, ToggleGroupItem, type RichSelectOption } from '@invana/ui';
+import { Button, NavHorizontal, NavVertical, RichSelect, Separator, ToggleGroup, ToggleGroupItem, cn, type RichSelectOption } from '@invana/ui';
 
 import { Tooltipped } from './Tooltipped';
 import { ACTIVE_CLASS, ACTIVE_MENU_ITEM_CLASS, ACTIVE_SEGMENT_STYLE } from './styles';
@@ -78,7 +78,7 @@ function renderSelect(key: string, item: ToolbarSelectItem, tipSide: TooltipSide
               const only = selected[0];
               const ActiveIcon = only?.icon as ToolbarIcon | undefined;
               return (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span className="flex items-center gap-1.5">
                   {ActiveIcon && <ActiveIcon size={16} className={item.iconClass} />}
                   {triggerLabelOnly ? label : `${label}: ${only?.label ?? value}`}
                 </span>
@@ -88,10 +88,7 @@ function renderSelect(key: string, item: ToolbarSelectItem, tipSide: TooltipSide
       renderOption={(option, { selected }) => {
         const Icon = option.icon as ToolbarIcon | undefined;
         return (
-          <span
-            className={selected ? ACTIVE_MENU_ITEM_CLASS : undefined}
-            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-          >
+          <span className={cn('flex items-center gap-1.5', selected && ACTIVE_MENU_ITEM_CLASS)}>
             {Icon && <Icon size={14} />}
             {option.label}
           </span>
@@ -205,11 +202,7 @@ export function ToolbarItems({
           <Separator
             key={key}
             orientation={orientation === 'vertical' ? 'horizontal' : 'vertical'}
-            style={
-              orientation === 'vertical'
-                ? { width: 24, alignSelf: 'center' }
-                : { height: 24, alignSelf: 'center' }
-            }
+            className={orientation === 'vertical' ? 'w-6 self-center' : 'h-6 self-center'}
           />
         );
       case 'custom':

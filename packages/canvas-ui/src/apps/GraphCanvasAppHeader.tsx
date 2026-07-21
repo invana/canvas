@@ -65,7 +65,7 @@ export function buildHeaderNav(
     left !== undefined ? (
       renderSlot(left, ctx)
     ) : (
-      <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>{title}</span>
+      <span className="text-[13px] font-semibold whitespace-nowrap">{title}</span>
     );
   const centerNode = center !== undefined && live ? renderSlot(center, ctx) : null;
   const rightNode = right !== undefined && live ? renderSlot(right, ctx) : null;

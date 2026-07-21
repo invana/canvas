@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import { cn } from '@invana/ui';
 import type { Canvas } from '@invana/canvas';
 import type { GraphLayer } from '@invana/graph';
 
@@ -118,25 +119,31 @@ export function GraphStatusBar({
     p ? `${p.x.toFixed(0)}, ${p.y.toFixed(0)}` : '—';
 
   return (
-    <div style={{ ...statusRowStyle, ...style }} className={className}>
+    <div
+      className={cn(
+        'flex items-center gap-2 whitespace-nowrap text-xs tabular-nums opacity-80',
+        className,
+      )}
+      style={style}
+    >
       <span>
         {counts.nodes} nodes and {counts.edges} edges rendered
       </span>
 
-      <span style={statusSepStyle}>·</span>
+      <span className="opacity-40">·</span>
       <span>Zoom: {Math.round(zoom * 100)}%</span>
-      <span style={statusSepStyle}>·</span>
+      <span className="opacity-40">·</span>
       <span>Pan: {coord(pan)}</span>
       {pointer && (
         <>
-          <span style={statusSepStyle}>·</span>
+          <span className="opacity-40">·</span>
           <span>Pointer: {coord(pointer)}</span>
         </>
       )}
 
       {hover && (
         <>
-          <span style={statusSepStyle}>·</span>
+          <span className="opacity-40">·</span>
           <span>
             Hovered {`${hover.kind.charAt(0).toUpperCase() + hover.kind.slice(1)} - ${hover.label} [ID: ${hover.id}]`}
           </span>
@@ -144,7 +151,7 @@ export function GraphStatusBar({
       )}
       {selectionCount > 0 && (
         <>
-          <span style={statusSepStyle}>·</span>
+          <span className="opacity-40">·</span>
           <span>
             Selected:{' '}
             {[
@@ -159,14 +166,3 @@ export function GraphStatusBar({
     </div>
   );
 }
-
-const statusRowStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
-  fontSize: 12,
-  fontVariantNumeric: 'tabular-nums',
-  opacity: 0.8,
-  whiteSpace: 'nowrap',
-};
-const statusSepStyle: CSSProperties = { opacity: 0.4 };

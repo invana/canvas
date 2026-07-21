@@ -113,14 +113,7 @@ export function isImageUrl(s: string): boolean {
 // ─── Value components (own their hooks: expand state, image fallback) ────────
 
 function NumberValue({ value }: { value: number }): ReactNode {
-  return (
-    <span
-      className="block w-full text-right font-mono"
-      style={{ fontVariantNumeric: 'tabular-nums' }}
-    >
-      {String(value)}
-    </span>
-  );
+  return <span className="block w-full text-right font-mono tabular-nums">{String(value)}</span>;
 }
 
 function LinkValue({ href }: { href: string }): ReactNode {

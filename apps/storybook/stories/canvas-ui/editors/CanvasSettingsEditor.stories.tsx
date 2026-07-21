@@ -15,7 +15,7 @@
  *   `canvas.update(...)`.
  */
 
-import { useState, type CSSProperties } from 'react';
+import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   CanvasSettingsEditor,
@@ -30,7 +30,7 @@ import { lesMiserables } from '@invana/graph-datasets';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { ThemeProvider } from '@invana/themes';
-import type { MenuItem } from '@invana/ui';
+import { Card, CardContent, CardHeader, CardTitle, type MenuItem } from '@invana/ui';
 import { Settings } from 'lucide-react';
 
 const meta: Meta = { title: 'canvas-ui/editors/CanvasSettingsEditor' };
@@ -109,10 +109,10 @@ function StandaloneDemo() {
   };
 
   return (
-    <div style={pageStyle}>
-      {/* Flex + full-height so the panel's PanelStack (which fills its parent)
-          has a definite height to occupy. */}
-      <div style={{ width: 380, display: 'flex', minHeight: 0 }}>
+    <div className="flex items-stretch gap-4 h-screen p-4 bg-background text-foreground">
+      {/* Fixed-width editor column; flex + min-h-0 so the panel's PanelStack
+          (which fills its parent) has a definite height to occupy. */}
+      <div className="flex w-[380px] min-h-0">
         <CanvasSettingsEditor
           definition={definition}
           onChange={applyPatch}
@@ -121,25 +121,35 @@ function StandaloneDemo() {
         />
       </div>
 
-      {/* The last emitted patch and the full definition each get their own
+      {/* The last emitted patch and the full definition each get their own card
           column, side by side (not stacked). */}
-      <div style={colStyle}>
-        <div style={labelStyle}>Live → canvas.update()</div>
-        <pre style={preStyle}>
-          {lastPatch
-            ? `canvas.update(${JSON.stringify(
-                { [lastPatch.section]: { [lastPatch.id]: lastPatch.patch } },
-                null,
-                2,
-              )})`
-            : '// edit any field to see the engine-shaped patch'}
-        </pre>
-      </div>
+      <Card className="flex flex-col flex-1 min-w-[320px] overflow-hidden">
+        <CardHeader>
+          <CardTitle className="text-sm">Live → canvas.update()</CardTitle>
+        </CardHeader>
+        <CardContent className="flex-1 min-h-0 overflow-auto">
+          <pre className="m-0 font-mono text-xs leading-relaxed whitespace-pre-wrap">
+            {lastPatch
+              ? `canvas.update(${JSON.stringify(
+                  { [lastPatch.section]: { [lastPatch.id]: lastPatch.patch } },
+                  null,
+                  2,
+                )})`
+              : '// edit any field to see the engine-shaped patch'}
+          </pre>
+        </CardContent>
+      </Card>
 
-      <div style={colStyle}>
-        <div style={labelStyle}>Definition document</div>
-        <pre style={preStyle}>{JSON.stringify(definition, null, 2)}</pre>
-      </div>
+      <Card className="flex flex-col flex-1 min-w-[320px] overflow-hidden">
+        <CardHeader>
+          <CardTitle className="text-sm">Definition document</CardTitle>
+        </CardHeader>
+        <CardContent className="flex-1 min-h-0 overflow-auto">
+          <pre className="m-0 font-mono text-xs leading-relaxed whitespace-pre-wrap">
+            {JSON.stringify(definition, null, 2)}
+          </pre>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -279,40 +289,3 @@ export const LiveSettingsEditors: Story = {
   },
 };
 
-// ─── Layout (Standalone) ──────────────────────────────────────────────────────
-
-const pageStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'stretch',
-  gap: 16,
-  height: '100vh',
-  padding: 16,
-  boxSizing: 'border-box',
-  fontFamily: 'system-ui, -apple-system, sans-serif',
-  background: 'var(--background, #fff)',
-  color: 'var(--foreground, #111)',
-};
-
-const colStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 8,
-  flex: 1,
-  minWidth: 320,
-  maxHeight: '100%',
-  overflow: 'hidden',
-};
-
-const labelStyle: CSSProperties = { fontWeight: 600, fontSize: 13 };
-
-const preStyle: CSSProperties = {
-  margin: 0,
-  padding: 12,
-  fontSize: 12,
-  lineHeight: 1.5,
-  background: 'var(--muted, #f4f4f5)',
-  borderRadius: 8,
-  flex: 1,
-  minHeight: 0,
-  overflow: 'auto',
-};

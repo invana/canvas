@@ -52,10 +52,10 @@ export function ContentLODEditor({
 
   return (
     <FormProvider {...form}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16 }}>
+      <div className="flex flex-col gap-3 p-4">
         {title ? <strong>{title}</strong> : null}
         <FormField.ObjectField control={c} columns={2} labelPosition="top" name="options" fields={fields} />
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div className="flex justify-end">
           <Button onClick={() => onSubmit(getValues('options'))}>{submitLabel}</Button>
         </div>
       </div>

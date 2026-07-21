@@ -80,20 +80,18 @@ export function CompositeNodeStyleEditor({
 
   // The ordered parts list (Add / Remove) — always advanced content.
   const partsBlock = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <span style={{ fontSize: 13, fontWeight: 600 }}>Parts</span>
+    <div className="flex flex-col gap-2">
+      <span className="text-[13px] font-semibold">Parts</span>
       {partFields.map((f, i) => (
         <div
           key={f.id}
+          className="flex gap-2 items-start"
           style={{
-            display: 'flex',
-            gap: 8,
-            alignItems: 'flex-start',
             paddingTop: i ? 8 : 0,
             borderTop: i ? '1px solid var(--border)' : undefined,
           }}
         >
-          <div style={{ flex: 1 }}>
+          <div className="flex-1">
             <FormField.ObjectField
               control={c}
               columns={1}
@@ -121,7 +119,7 @@ export function CompositeNodeStyleEditor({
 
   return (
     <FormProvider {...form}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 16 }}>
+      <div className="flex flex-col gap-4 p-4">
         {override ? (
           <>
             <FormField.ObjectField control={c} columns={1} labelPosition="top" name="composite" fields={override} />
@@ -137,7 +135,7 @@ export function CompositeNodeStyleEditor({
               fields={basicCompositeFields(scalarValues)}
             />
             <AdvancedSection>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 8 }}>
+              <div className="flex flex-col gap-4 pt-2">
                 <FormField.ObjectField
                   control={c}
                   columns={1}
@@ -151,7 +149,7 @@ export function CompositeNodeStyleEditor({
           </>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div className="flex justify-end">
           <Button onClick={() => onSubmit(getValues())}>{submitLabel}</Button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { cn } from '@invana/ui';
+import { Separator, cn } from '@invana/ui';
 import type { ResolvedPreviewCard } from '@invana/graph';
 
 export interface HoverElementPreviewCardProps {
@@ -42,14 +42,15 @@ export function HoverElementPreviewCard({ card, className, style }: HoverElement
   const hasIdentity = !!(imageUrl || card.title || card.subtitle);
 
   return (
-    // Use design-kit tokens that ship in the prebuilt utilities sheet
-    // (`bg-card` / `text-card-foreground` / `border` / `shadow-xl` / `w-72` —
-    // the same chrome the canvas-ui cards use). The previous `bg-popover/95` +
-    // `backdrop-blur-sm` weren't in the sheet, so the surface rendered
-    // transparent. Padding / radius are inlined (purge-proof, structural).
+    // Design-kit tokens + Tailwind utilities (`bg-card` / `text-card-foreground`
+    // / `border` / `shadow-xl` / `w-72` / `p-3` / `rounded-[10px]`) — the same
+    // chrome the other canvas-ui cards use.
     <div
-      className={cn('w-72 border bg-card text-card-foreground shadow-xl', className)}
-      style={{ padding: 12, borderRadius: 10, ...style }}
+      className={cn(
+        'w-72 rounded-[10px] border bg-card p-3 text-card-foreground shadow-xl',
+        className,
+      )}
+      style={style}
     >
       {/* Identity row — image left, title + subtitle right. Optional. */}
       {hasIdentity ? (
@@ -91,9 +92,7 @@ export function HoverElementPreviewCard({ card, className, style }: HoverElement
           divider only shows when there's an identity block above. */}
       {card.rows.length > 0 ? (
         <>
-          {hasIdentity ? (
-            <div style={{ height: 1, margin: '10px 0', background: 'hsl(var(--border))' }} />
-          ) : null}
+          {hasIdentity ? <Separator className="my-2.5" /> : null}
           <div className="flex flex-col gap-0.5">
             {card.rows.map((row) => (
               <div key={row.label} className="flex justify-between gap-3 text-xs">

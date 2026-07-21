@@ -79,7 +79,7 @@ export function SimpleNodeStyleEditor({
     // `@invana/forms` leaf fields read `useFormContext()`, so the whole form
     // must be on context — not just control.
     <FormProvider {...form}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16 }}>
+      <div className="flex flex-col gap-3 p-4">
         {override ? (
           <FormField.ObjectField control={c} columns={1} labelPosition="top" name="style" fields={override} />
         ) : (
@@ -102,7 +102,7 @@ export function SimpleNodeStyleEditor({
             </AdvancedSection>
           </>
         )}
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div className="flex justify-end">
           <Button onClick={() => onSubmit(getValues('style'))}>{submitLabel}</Button>
         </div>
       </div>

@@ -59,23 +59,21 @@ export function HoverPreviewCardEditor({
     // `@invana/forms` leaf fields read `useFormContext()`, so the whole form
     // (not just control) must be on context.
     <FormProvider {...form}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 16 }}>
+      <div className="flex flex-col gap-4 p-4">
         <FormField.ObjectField control={c} columns={1} labelPosition="top" name="card" fields={CARD_SCALAR_FIELDS} />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Rows</span>
+        <div className="flex flex-col gap-2">
+          <span className="text-[13px] font-semibold">Rows</span>
           {fields.map((f, i) => (
             <div
               key={f.id}
+              className="flex gap-2 items-start"
               style={{
-                display: 'flex',
-                gap: 8,
-                alignItems: 'flex-start',
                 paddingTop: i ? 8 : 0,
                 borderTop: i ? '1px solid var(--border)' : undefined,
               }}
             >
-              <div style={{ flex: 1 }}>
+              <div className="flex-1">
                 <FormField.ObjectField control={c} columns={1} labelPosition="top" name={`rows.${i}`} fields={CARD_ROW_FIELDS} />
               </div>
               <Button type="button" variant="ghost" onClick={() => remove(i)}>
@@ -94,7 +92,7 @@ export function HoverPreviewCardEditor({
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div className="flex justify-end">
           <Button onClick={() => onSubmit(formToSpec(getValues()))}>{submitLabel}</Button>
         </div>
       </div>

@@ -427,15 +427,21 @@ export function CanvasPagesTabbedView({
         {keepMounted
           ? pages.map((page) => {
               const active = page.id === activeId;
+              // Static box lives on `className`; the active-driven visibility /
+              // interactivity / stacking stay inline (runtime state).
               const style: CSSProperties = {
-                position: 'absolute',
-                inset: 0,
                 visibility: active ? 'visible' : 'hidden',
                 pointerEvents: active ? 'auto' : 'none',
                 zIndex: active ? 1 : 0,
               };
               return (
-                <div key={page.id} role="tabpanel" aria-hidden={!active} style={style}>
+                <div
+                  key={page.id}
+                  role="tabpanel"
+                  aria-hidden={!active}
+                  className="absolute inset-0"
+                  style={style}
+                >
                   {page.content}
                 </div>
               );

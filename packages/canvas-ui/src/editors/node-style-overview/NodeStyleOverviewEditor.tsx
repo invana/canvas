@@ -68,10 +68,10 @@ export function NodeStyleOverviewEditor({
 
   return (
     <FormProvider {...form}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16 }}>
+      <div className="flex flex-col gap-3 p-4">
         <FormField.ObjectField control={c} columns={1} labelPosition="top" name="overview" fields={fields} />
         {onSubmit && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <div className="flex justify-end">
             <Button onClick={() => onSubmit(getValues('overview'))}>{submitLabel}</Button>
           </div>
         )}
