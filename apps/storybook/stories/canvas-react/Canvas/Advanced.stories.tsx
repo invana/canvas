@@ -2,7 +2,6 @@ import {
   Canvas,
   GraphLayer,
   BackgroundLayer,
-  DevInfoLayer,
   MiniMapLayer,
   DragPanBehaviour,
   WheelZoomBehaviour,
@@ -25,8 +24,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
  * - `MiniMapLayer` — an overview inset mirroring the `graph` layer.
  *
  * Every behaviour is registered **explicitly** and targets the `graph` layer by
- * an explicit `targetLayerId` (never inferred). The `<DevInfoLayer>` shows live
- * FPS. No `telemetry` prop → the kernel's no-op path.
+ * an explicit `targetLayerId` (never inferred). No `telemetry` prop → the
+ * kernel's no-op path.
  */
 const meta: Meta = { title: 'canvas-react/Canvas/Advanced' };
 export default meta;
@@ -97,7 +96,6 @@ export const Advanced: Story = {
           backgroundLayerId="bg"
           borderColor={0xcbd5e1}
         />
-        <DevInfoLayer id="dev" corner="top-left" />
       </Canvas>
     </div>
   ),

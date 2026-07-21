@@ -2,7 +2,6 @@ import {
   Canvas,
   GraphLayer,
   BackgroundLayer,
-  DevInfoLayer,
   DragPanBehaviour,
   WheelZoomBehaviour,
   type GraphLayerProps,
@@ -15,7 +14,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
  * React root: it runs **no layout**, so every node renders at the explicit
  * `position` you give it. This story is the smallest useful scene — a graph
  * layer over a dotted background, with **pan** (`DragPanBehaviour`) and **zoom**
- * (`WheelZoomBehaviour`) wired up and a live-FPS `<DevInfoLayer>` overlay.
+ * (`WheelZoomBehaviour`) wired up.
  *
  * No `telemetry` prop → `new Canvas()` takes the kernel's no-op path (zero
  * streams, zero cost). See the sibling `WithTelemetry` story to stream to a
@@ -69,7 +68,6 @@ export const Basic: Story = {
         <GraphLayer id="graph" data={DATA} node={NODE} edge={EDGE} />
         <DragPanBehaviour id="pan" />
         <WheelZoomBehaviour id="wheel" />
-        <DevInfoLayer id="dev" corner="top-left" />
       </Canvas>
     </div>
   ),

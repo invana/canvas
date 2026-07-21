@@ -2,7 +2,6 @@ import {
   GraphCanvas,
   GraphLayer,
   BackgroundLayer,
-  DevInfoLayer,
   DragPanBehaviour,
   WheelZoomBehaviour,
   D3ForceLayout,
@@ -34,8 +33,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
  *
  * **To verify** (no collector needed): `console: true` mirrors spans to the console
  * — enable **“Verbose”** to see `span …` (including the **layout** gesture span as
- * force settles). The `<DevInfoLayer>` overlay shows live FPS. With a collector at
- * `TELEMETRY_URL`, traces + metrics + logs land there.
+ * force settles). With a collector at `TELEMETRY_URL`, traces + metrics + logs
+ * land there.
  */
 const meta: Meta = { title: 'canvas-react/GraphCanvas/WithTelemetry' };
 export default meta;
@@ -124,7 +123,6 @@ export const WithTelemetry: Story = {
         <D3ForceLayout id="force" targetLayerId="graph" />
         <DragPanBehaviour id="pan" />
         <WheelZoomBehaviour id="wheel" />
-        <DevInfoLayer id="dev" corner="top-left" />
       </GraphCanvas>
     </div>
   ),

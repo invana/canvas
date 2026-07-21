@@ -2,7 +2,6 @@ import {
   Canvas,
   GraphLayer,
   BackgroundLayer,
-  DevInfoLayer,
   DragPanBehaviour,
   WheelZoomBehaviour,
   type GraphLayerProps,
@@ -32,9 +31,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
  * `telemetry={{ metrics: { meter: createHttpMeter('http://…/metrics') } }}`.)
  *
  * **To verify** (no collector needed to see it work): `console: true` mirrors spans
- * to the browser console — enable **“Verbose”** to see `span …`. The `<DevInfoLayer>`
- * overlay shows live FPS regardless. With a collector running at `TELEMETRY_URL`,
- * traces + metrics + logs land there.
+ * to the browser console — enable **“Verbose”** to see `span …`. With a collector
+ * running at `TELEMETRY_URL`, traces + metrics + logs land there.
  */
 const meta: Meta = { title: 'canvas-react/Canvas/WithTelemetry' };
 export default meta;
@@ -103,7 +101,6 @@ export const WithTelemetry: Story = {
         <GraphLayer id="graph" data={DATA} node={NODE} edge={EDGE} />
         <DragPanBehaviour id="pan" />
         <WheelZoomBehaviour id="wheel" />
-        <DevInfoLayer id="dev" corner="top-left" />
       </Canvas>
     </div>
   ),

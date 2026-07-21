@@ -2,7 +2,6 @@ import {
   GraphCanvas,
   GraphLayer,
   BackgroundLayer,
-  DevInfoLayer,
   MiniMapLayer,
   DragPanBehaviour,
   WheelZoomBehaviour,
@@ -121,7 +120,6 @@ export const Advanced: Story = {
           backgroundLayerId="bg"
           borderColor={0xcbd5e1}
         />
-        <DevInfoLayer id="dev" corner="top-left" />
       </GraphCanvas>
     </div>
   ),

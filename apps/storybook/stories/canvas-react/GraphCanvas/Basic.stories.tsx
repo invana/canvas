@@ -2,7 +2,6 @@ import {
   GraphCanvas,
   GraphLayer,
   BackgroundLayer,
-  DevInfoLayer,
   DragPanBehaviour,
   WheelZoomBehaviour,
   D3ForceLayout,
@@ -21,8 +20,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
  * contrast, need explicit positions).
  *
  * This is the smallest useful graph scene: a force layout over a dotted
- * background with pan + zoom and a live-FPS overlay. No `telemetry` prop → the
- * kernel's no-op path. See `WithTelemetry` to stream to a collector and
+ * background with pan + zoom. No `telemetry` prop → the kernel's no-op path.
+ * See `WithTelemetry` to stream to a collector and
  * `Advanced` for hover / select / drag-node / minimap + tuned layout on top.
  */
 const meta: Meta = { title: 'canvas-react/GraphCanvas/Basic' };
@@ -95,7 +94,6 @@ export const Basic: Story = {
         <D3ForceLayout id="force" targetLayerId="graph" />
         <DragPanBehaviour id="pan" />
         <WheelZoomBehaviour id="wheel" />
-        <DevInfoLayer id="dev" corner="top-left" />
       </GraphCanvas>
     </div>
   ),
