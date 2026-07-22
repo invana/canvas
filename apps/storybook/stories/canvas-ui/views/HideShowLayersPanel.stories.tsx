@@ -14,17 +14,17 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useGraphCanvas, useGraphEvent, useSelection } from '@invana/canvas-react';
-import { GraphCanvasApp, Panel } from '@invana/canvas-ui';
+import { GraphCanvasContext, useGraphCanvas, useGraphEvent, useSelection } from '@invana/canvas-react';
+import { GraphCanvasApp } from '@invana/canvas-ui';
 import { LayersPanelView } from '@invana/canvas-ui';
 import type { GraphLayer, GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
 import { TabbedPanel, type TabConfig } from '@invana/ui';
 import { EyeOff, Layers } from 'lucide-react';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 
-const meta: Meta = { title: 'canvas-ui/visibility/HideShowLayersPanel' };
+const meta: Meta = { title: 'canvas-ui/views/HideShowLayersPanel' };
 export default meta;
 type Story = StoryObj;
 
@@ -116,24 +116,28 @@ function HiddenTab() {
   );
 }
 
-/** Right-docked TabbedPanel — the LayersPanelView is one tab; Hidden is another. */
+/**
+ * The docked right-region body — a TabbedPanel whose Layers tab hosts the
+ * `LayersPanelView` and whose Hidden tab lists hidden elements. It renders inside
+ * `GraphCanvasApp`'s resizable `right` section (a **sibling** of `<Canvas>`, under
+ * the lifted context), so it guards for the canvas being `null` before the engine
+ * is ready — `useGraphCanvas()` throws on null, so read the context directly. The
+ * section supplies the resizable container; the panel just fills it.
+ */
 function VisibilityTabbedPanel() {
-  const canvas = useGraphCanvas();
+  const canvas = useContext(GraphCanvasContext);
+  if (!canvas) return null;
   const tabs: TabConfig[] = [
     { value: 'layers', label: 'Layers', icon: Layers, content: <LayersPanelView canvas={canvas} /> },
     { value: 'hidden', label: 'Hidden', icon: EyeOff, content: <HiddenTab /> },
   ];
   return (
-    <Panel position="right">
-      <div className="h-full w-80 border-l border-border bg-popover">
-        <TabbedPanel
-          tabs={tabs}
-          defaultTab="layers"
-          className="flex h-full flex-col overflow-hidden"
-          bodyClassName="min-h-0 flex-1 overflow-hidden"
-        />
-      </div>
-    </Panel>
+    <TabbedPanel
+      tabs={tabs}
+      defaultTab="layers"
+      className="flex h-full flex-col overflow-hidden bg-card"
+      bodyClassName="min-h-0 flex-1 overflow-hidden"
+    />
   );
 }
 
@@ -152,9 +156,9 @@ export const HideShowLayersPanel: Story = {
           data={data}
           onReady={(c) => c?.showMessage('Right-click an element to Hide/Show · Layers / Hidden tabs on the right')}
           header={{ title: 'Visibility', right: <HideSelectedButton /> }}
-        >
-          <VisibilityTabbedPanel />
-        </GraphCanvasApp>
+          // Docked into the app's resizable `right` region — no floating Panel.
+          right={{ content: <VisibilityTabbedPanel />, defaultSize: '340px', maxSize: '460px', collapsible: true }}
+        />
       </ThemeProvider>
     );
   },

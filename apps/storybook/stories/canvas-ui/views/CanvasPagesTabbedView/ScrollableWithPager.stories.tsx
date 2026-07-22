@@ -11,7 +11,8 @@
 import { useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { CanvasPagesTabbedView, type CanvasPage } from '@invana/canvas-ui';
-import { DemoFrame, DemoPanel, hueFor } from './canvas-pages-demo';
+import { ThemeProvider } from '@invana/themes';
+import { DemoBoard, DemoFrame, hueFor } from './canvas-pages-demo';
 
 const meta: Meta = { title: 'canvas-ui/views/CanvasPagesTabbedView/ScrollableWithPager' };
 export default meta;
@@ -38,13 +39,24 @@ function ScrollableDemo() {
   const pages: CanvasPage[] = items.map((x) => ({
     id: x.id,
     title: x.title,
-    content: <DemoPanel title={x.title} hue={hueFor(Number(x.id))} />,
+    content: <DemoBoard title={x.title} hue={hueFor(Number(x.id))} />,
   }));
 
   return (
-    <DemoFrame>
-      <CanvasPagesTabbedView pages={pages} activeId={activeId} onSelect={setActiveId} onAdd={add} addLabel="New page" />
-    </DemoFrame>
+    <ThemeProvider>
+      <DemoFrame>
+        {/* A dozen-plus boards: mount only the active one so the strip doesn't
+            spin up a live engine / GPU context per tab. */}
+        <CanvasPagesTabbedView
+          pages={pages}
+          activeId={activeId}
+          onSelect={setActiveId}
+          onAdd={add}
+          addLabel="New page"
+          keepMounted={false}
+        />
+      </DemoFrame>
+    </ThemeProvider>
   );
 }
 

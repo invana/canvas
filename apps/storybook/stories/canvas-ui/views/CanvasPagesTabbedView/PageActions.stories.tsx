@@ -18,7 +18,8 @@ import {
   type CanvasPageMenuItem,
 } from '@invana/canvas-ui';
 import { Copy, Pencil, Trash2 } from 'lucide-react';
-import { DemoFrame, DemoPanel, hueFor } from './canvas-pages-demo';
+import { ThemeProvider } from '@invana/themes';
+import { DemoBoard, DemoFrame, hueFor } from './canvas-pages-demo';
 
 const meta: Meta = { title: 'canvas-ui/views/CanvasPagesTabbedView/PageActions' };
 export default meta;
@@ -73,7 +74,7 @@ function PageActionsDemo() {
   const pages: CanvasPage[] = items.map((x) => ({
     id: x.id,
     title: x.title,
-    content: <DemoPanel title={x.title} hue={x.hue} />,
+    content: <DemoBoard title={x.title} hue={x.hue} />,
   }));
 
   const pageMenuItems: CanvasPageMenuItem[] = [
@@ -91,14 +92,16 @@ function PageActionsDemo() {
   ];
 
   return (
-    <DemoFrame>
-      <CanvasPagesTabbedView
-        pages={pages}
-        activeId={activeId}
-        onSelect={setActiveId}
-        pageMenuItems={pageMenuItems}
-      />
-    </DemoFrame>
+    <ThemeProvider>
+      <DemoFrame>
+        <CanvasPagesTabbedView
+          pages={pages}
+          activeId={activeId}
+          onSelect={setActiveId}
+          pageMenuItems={pageMenuItems}
+        />
+      </DemoFrame>
+    </ThemeProvider>
   );
 }
 

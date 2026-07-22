@@ -1,28 +1,15 @@
 /**
- * `<CanvasSettingsEditor>` from `@invana/canvas-ui` — one JSON-driven settings
- * panel over a whole canvas definition. It takes the serialisable set of
- * registered **layers / behaviours / layouts** + their settings, lists them in a
- * file-browser accordion (folders = sections, files = instances), and expands each
- * row in place to a schema-driven `SettingsPanel`.
- *
- * Two stories:
- *
- * - **Standalone** — a static `CanvasSettingsDefinition` in, and every edit logged
- *   to the side as the engine-shaped patch a host would apply via
- *   `canvas.update({ [section]: { [id]: patch } })`. No engine anywhere.
- * - **Live Settings Editors** — the panel docked into a real `<GraphCanvasApp>`'s
- *   `right` region, introspecting the live bundle and applying every edit live via
- *   `canvas.update(...)`.
+ * `<CanvasSettingsPanel>` from `@invana/canvas-ui` — one JSON-driven settings
+ * panel over a whole canvas definition, docked into a real `<GraphCanvasApp>`'s
+ * `right` region. It introspects the live bundle's registered **layers /
+ * behaviours / layouts**, lists them in a file-browser accordion (folders =
+ * sections, files = instances), expands each row in place to a schema-driven
+ * `SettingsPanel`, and applies every edit live via `canvas.update(...)`.
  */
 
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import {
-  CanvasSettingsEditor,
-  CanvasSettingsPanel,
-  type CanvasSettingsDefinition,
-  type SettingsSection,
-} from '@invana/canvas-ui';
+import { CanvasSettingsPanel } from '@invana/canvas-ui';
 import type { LayoutFactory } from '@invana/canvas-react';
 import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, GraphNodeContextMenu, type GraphNodeMenuContext, GraphBackgroundContextMenu, ThemeToggle, ToolbarItems, useDevTool, useMiniMap } from '@invana/canvas-ui';
 import type { GraphNode } from '@invana/graph';
@@ -30,140 +17,12 @@ import { lesMiserables } from '@invana/graph-datasets';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { ThemeProvider } from '@invana/themes';
-import { Card, CardContent, CardHeader, CardTitle, type MenuItem } from '@invana/ui';
+import type { MenuItem } from '@invana/ui';
 import { Settings } from 'lucide-react';
 
 const meta: Meta = { title: 'canvas-ui/editors/CanvasSettingsEditor' };
 export default meta;
 type Story = StoryObj;
-
-// ─── Standalone ──────────────────────────────────────────────────────────────
-
-/**
- * A seed definition — the shape a host builds by introspecting a live canvas
- * (`kind` per instance, current engine-shaped `settings`, `enabled` for
- * layers / behaviours, and the active layout id).
- */
-const INITIAL_DEFINITION: CanvasSettingsDefinition = {
-  layers: [
-    {
-      id: 'background',
-      kind: 'background-layer',
-      settings: {
-        type: 'pattern',
-        patternType: 'dots',
-        backgroundColor: 0x0f172a,
-        color: 0x334155,
-        size: 1.5,
-        spacing: 24,
-        alpha: 0.6,
-        followCamera: true,
-      },
-    },
-    { id: 'minimap', kind: 'minimap-layer', settings: { position: 'bottom-right', width: 240, height: 160, enableDrag: true } },
-    { id: 'graph-density', kind: 'density-contour-fill-layer', settings: { bandwidth: 40, thresholds: 8, palette: 'viridis' } },
-  ],
-  behaviours: [
-    { id: 'pan', kind: 'drag-pan', enabled: true, settings: { modifier: 'none', decelerate: true } },
-    { id: 'zoom', kind: 'wheel-zoom', enabled: true, settings: { requireCtrl: true, percent: 0.15, smooth: true, smoothFrames: 24 } },
-    { id: 'drag', kind: 'drag-node', enabled: true, settings: { pinOnRelease: true, groupAware: true } },
-    { id: 'hover', kind: 'hover-activate', enabled: false, settings: { degree: 1, direction: 'both' } },
-    { id: 'brush', kind: 'brush-select', enabled: true, settings: { enableElements: ['shape'], style: { fill: 0x3b82f6, fillAlpha: 0.1 } } },
-  ],
-  layouts: [
-    { id: 'force', kind: 'd3-force-layout', settings: { linkDistance: 90, chargeStrength: -300, animate: true } },
-    { id: 'elk', kind: 'elk-layout', settings: { algorithm: 'layered', direction: 'RIGHT', nodeSpacing: 40, layerSpacing: 60 } },
-  ],
-  activeLayoutId: 'force',
-};
-
-function StandaloneDemo() {
-  const [definition, setDefinition] = useState(INITIAL_DEFINITION);
-  const [lastPatch, setLastPatch] = useState<{
-    section: SettingsSection;
-    id: string;
-    patch: Record<string, unknown>;
-  } | null>(null);
-
-  // Mirror a live host: fold each edit into the running definition and log the
-  // patch a canvas would receive.
-  const applyPatch = (section: SettingsSection, id: string, patch: Record<string, unknown>) => {
-    setLastPatch({ section, id, patch });
-    setDefinition((d) => ({
-      ...d,
-      [section]: (d[section] ?? []).map((inst) =>
-        inst.id === id ? { ...inst, settings: { ...(inst.settings ?? {}), ...patch } } : inst,
-      ),
-    }));
-  };
-
-  // Enable/disable is an `{ enabled }` patch a live host applies via
-  // `canvas.update({ [section]: { [id]: { enabled } } })` — log it like any other
-  // edit AND flip the instance's `enabled` in the running definition.
-  const toggle = (section: SettingsSection, id: string, enabled: boolean) => {
-    setLastPatch({ section, id, patch: { enabled } });
-    setDefinition((d) => ({
-      ...d,
-      [section]: (d[section] ?? []).map((inst) => (inst.id === id ? { ...inst, enabled } : inst)),
-    }));
-  };
-
-  return (
-    <div className="flex items-stretch gap-4 h-screen p-4 bg-background text-foreground">
-      {/* Fixed-width editor column; flex + min-h-0 so the panel's PanelStack
-          (which fills its parent) has a definite height to occupy. */}
-      <div className="flex w-[380px] min-h-0">
-        <CanvasSettingsEditor
-          definition={definition}
-          onChange={applyPatch}
-          onToggle={toggle}
-          onActiveLayoutChange={(id) => setDefinition((d) => ({ ...d, activeLayoutId: id }))}
-        />
-      </div>
-
-      {/* The last emitted patch and the full definition each get their own card
-          column, side by side (not stacked). */}
-      <Card className="flex flex-col flex-1 min-w-[320px] overflow-hidden">
-        <CardHeader>
-          <CardTitle className="text-sm">Live → canvas.update()</CardTitle>
-        </CardHeader>
-        <CardContent className="flex-1 min-h-0 overflow-auto">
-          <pre className="m-0 font-mono text-xs leading-relaxed whitespace-pre-wrap">
-            {lastPatch
-              ? `canvas.update(${JSON.stringify(
-                  { [lastPatch.section]: { [lastPatch.id]: lastPatch.patch } },
-                  null,
-                  2,
-                )})`
-              : '// edit any field to see the engine-shaped patch'}
-          </pre>
-        </CardContent>
-      </Card>
-
-      <Card className="flex flex-col flex-1 min-w-[320px] overflow-hidden">
-        <CardHeader>
-          <CardTitle className="text-sm">Definition document</CardTitle>
-        </CardHeader>
-        <CardContent className="flex-1 min-h-0 overflow-auto">
-          <pre className="m-0 font-mono text-xs leading-relaxed whitespace-pre-wrap">
-            {JSON.stringify(definition, null, 2)}
-          </pre>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-/**
- * Fully **standalone** — a static `CanvasSettingsDefinition` in, and every edit
- * logged as the engine-shaped patch a host would apply. No engine anywhere. Each
- * instance's `settings` are in the engine's option shape; the panel maps them to
- * the flat form via the built-in registry (`kind` → fields + mappers) and maps
- * edits back on the way out.
- */
-export const Standalone: Story = {
-  render: () => <StandaloneDemo />,
-};
 
 // ─── Live Settings Editors ─────────────────────────────────────────────────────
 

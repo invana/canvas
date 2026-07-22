@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { EdgeLODBehaviour, type LayoutFactory, useGraphCanvas } from '@invana/canvas-react';
-import { CanvasMessageBar, GraphBackgroundContextMenu, GraphCanvasApp, GraphControlsToolbar, GraphNodeContextMenu, type GraphNodeMenuContext, GraphStatusBar, Panel, ThemeToggle, useDevTool, useMiniMap } from '@invana/canvas-ui';
+import { EdgeLODBehaviour, GraphCanvasContext, type LayoutFactory } from '@invana/canvas-react';
+import { CanvasMessageBar, GraphBackgroundContextMenu, GraphCanvasApp, GraphControlsToolbar, GraphNodeContextMenu, type GraphNodeMenuContext, GraphStatusBar, ThemeToggle, useDevTool, useMiniMap } from '@invana/canvas-ui';
 import { wireTelemetry } from '@invana/canvas-store';
 import { LayersPanelView } from '@invana/canvas-ui';
 import { otelTelemetry } from '@invana/canvas-telemetry-otel';
@@ -10,7 +10,7 @@ import { GeometricLayout } from '@invana/graph-layout-geometric';
 import { ThemeProvider } from '@invana/themes';
 import { Button, TabbedPanel, type MenuItem, type TabConfig } from '@invana/ui';
 import { Info, Layers } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useContext, useMemo, useRef, useState } from 'react';
 
 /**
  * `canvas-ui/views/LayersPanelView` — the `@invana/canvas-ui` **LayersPanelView** driving
@@ -108,25 +108,29 @@ function AboutTab() {
   );
 }
 
-/** Right-docked TabbedPanel — the LayersPanelView is one tab. Closing is owned by
- *  the header “Layers” toggle button (the view itself is chrome-free). */
+/**
+ * The docked right-region body — a TabbedPanel whose Layers tab hosts the
+ * `LayersPanelView`. Closing is owned by the header “Layers” toggle (the view
+ * itself is chrome-free). It renders inside `GraphCanvasApp`'s resizable `right`
+ * section (a **sibling** of `<Canvas>`, under the lifted context), so it guards
+ * for the canvas being `null` before the engine is ready (`useGraphCanvas()`
+ * throws on null — read the context directly). The section is the resizable
+ * container; the panel just fills it.
+ */
 function LayersPanelDock() {
-  const canvas = useGraphCanvas();
+  const canvas = useContext(GraphCanvasContext);
+  if (!canvas) return null;
   const tabs: TabConfig[] = [
     { value: 'layers', label: 'Layers', icon: Layers, content: <LayersPanelView canvas={canvas} /> },
     { value: 'about', label: 'About', icon: Info, content: <AboutTab /> },
   ];
   return (
-    <Panel position="right">
-      <div className="h-full w-80 border-l border-border bg-popover">
-        <TabbedPanel
-          tabs={tabs}
-          defaultTab="layers"
-          className="flex h-full flex-col overflow-hidden"
-          bodyClassName="min-h-0 flex-1 overflow-hidden"
-        />
-      </div>
-    </Panel>
+    <TabbedPanel
+      tabs={tabs}
+      defaultTab="layers"
+      className="flex h-full flex-col overflow-hidden bg-card"
+      bodyClassName="min-h-0 flex-1 overflow-hidden"
+    />
   );
 }
 
@@ -211,6 +215,14 @@ export const LayersPanelStory: Story = {
             ),
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+          // The star: the canvas-ui LayersPanelView, docked into the app's
+          // resizable `right` region (no floating Panel), toggled by the header
+          // “Layers” button — omit the bag to hide it and reclaim the width.
+          right={
+            layersOpen
+              ? { content: <LayersPanelDock />, defaultSize: '320px', maxSize: '460px', collapsible: true }
+              : undefined
+          }
         >
           {/* Extra layers — minimap + on-demand dev overlay. */}
           {mini.layer}
@@ -227,10 +239,6 @@ export const LayersPanelStory: Story = {
           {/* Right-click menus. */}
           <GraphNodeContextMenu items={nodeMenu} />
           <GraphBackgroundContextMenu items={backgroundMenu} />
-
-          {/* The star: the canvas-ui LayersPanelView, docked right, toggled by the
-              header “Layers” button. */}
-          {layersOpen && <LayersPanelDock />}
         </GraphCanvasApp>
       </ThemeProvider>
     );
