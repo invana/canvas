@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
+import remarkGfm from 'remark-gfm';
 import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
@@ -13,7 +14,12 @@ const config: StorybookConfig = {
       name: getAbsolutePath('@storybook/addon-docs'),
       options: {
         mdxPluginOptions: {
-          mdxCompileOptions: {},
+          // Enable GitHub-flavoured markdown so pipe tables, strikethrough,
+          // etc. in `.mdx` docs (e.g. the Welcome page's package tables) render
+          // — MDX v3 does not include GFM by default.
+          mdxCompileOptions: {
+            remarkPlugins: [remarkGfm],
+          },
         },
       },
     },
