@@ -4,6 +4,106 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # @invana/canvas — Storybook
 
-This storybook is being rebuilt against the new architecture (Layer / Behaviour / Layout / Renderer — see `architecture-proposal.md` at repo root).
+WebGPU-first canvas rendering engine + graph visualization toolkit (WebGL2 fallback automatic), built as a pnpm + Turbo monorepo.
 
-The full inventory of stories from the previous storybook is preserved at `migration-storybook-inventory.md`. Each entry is a checklist item to port.
+This storybook is being rebuilt against the new architecture (Layer / Behaviour / Layout / Renderer — see `architecture-proposal.md` at repo root). The full inventory of stories from the previous storybook is preserved at `migration-storybook-inventory.md`; each entry is a checklist item to port.
+
+## Packages
+
+### Engine core
+
+| Package | Role |
+|---|---|
+| `@invana/canvas-store` | Renderer-free **kernel** (foundation). One `CanvasStore { view, data, events }` per `Canvas` — the reactive hub for config/interaction state, the graph data, and the event bus, plus telemetry + history. Zero `@invana` deps, imports no drawing library. |
+| `@invana/canvas` | The **pixi renderer** over `canvas-store` — `Canvas`, `Layer`, `Behaviour`, `Layout`, `ShapesRenderer`, built-in layers/behaviours. Projects kernel state → pixi and feeds pixi input → the store. The only package allowed to import `pixi.js`. |
+| `@invana/graph` | Graph domain on top of the engine — `GraphLayer`, `MiniMapLayer`, `GraphCanvas`, hover/click/lasso/brush/drag/select/context-menu behaviours, `OneShotPositionLayout` base. |
+
+### Layouts (each wraps one algorithm)
+
+| Package | Role |
+|---|---|
+| `@invana/graph-layout-d3-force` | `D3ForceLayout` — iterative, animated force-directed layout. |
+| `@invana/graph-layout-elkjs` | `ElkLayout` — one-shot ELK layered layout. |
+| `@invana/graph-layout-d3-hierarchy` | `D3HierarchyLayout` — tree / cluster / radial / pack / sunburst (one-shot). |
+| `@invana/graph-layout-d3-sankey` | `D3SankeyLayout` — Sankey flow diagram (one-shot). |
+| `@invana/graph-layout-geometric` | `GeometricLayout` — grid / snake / circular (one-shot, dependency-free). |
+
+### Graph overlay layers
+
+| Package | Role |
+|---|---|
+| `@invana/graph-layer-d3-contour` | `DensityContourFillLayer` + `DensityContourStrokeLayer` — d3-contour density overlay. |
+| `@invana/graph-layer-bubble-sets` | `BubbleSetsLayer` — named-group annotation. |
+| `@invana/graph-layer-maplibre` | `MapLayer` — MapLibre GL basemap; projects nodes onto a real world map. |
+
+### React + UI
+
+| Package | Role |
+|---|---|
+| `@invana/canvas-react` | **Headless React binding layer** — declarative `<Canvas>` / `<GraphCanvas>` roots, contexts, null-rendering layer/behaviour/layout wrappers, and store/engine hooks. Renders no application UI; never imports `@invana/ui`. |
+| `@invana/canvas-ui` | **The React UI kit** — all pixels (components, toolbars, menus, editors, views, `GraphCanvasApp`) built on canvas-react's hooks. Owns `@invana/ui`; pixi never enters. |
+| `@invana/canvas-designer` | **The canvas designer** — visual authoring for the visualisation's definition. Today: the node template surface (opt-in WYSIWYG composite-card authoring), emits `FreeformStructure`. |
+
+### Data + shared config
+
+| Package | Role |
+|---|---|
+| `@invana/graph-datasets` | Sample graph datasets (Les Misérables, scientists org chart, random tree, usecase demos). |
+| `@repo/typescript-config` | Shared tsconfig (private). |
+| `@repo/eslint-config` | Shared ESLint config (private). |
+
+### Apps (private, not published)
+
+| Package | Role |
+|---|---|
+| `@canvas/storybook` | Stories (port 6006) — depends on every publishable package. |
+| `@canvas/docs` | VitePress docs + TypeDoc API reference (port 5173). |
+
+### External design-kit deps (separate repo)
+
+`@invana/ui`, `@invana/forms`, `@invana/themes`, and `@invana/styling` are published packages from the Invana design kit — consumed here as normal registry deps, not folders in this monorepo.
+
+## Architecture
+
+A `Canvas` is a renderer that draws a stack of **Layers**. State lives in the renderer-free kernel (`@invana/canvas-store`) as one `CanvasStore { view, data, events }`; the renderer is a **pure projection** of that state — state changes in, re-render out. On top of the layers, **Behaviours** handle interaction and **Layouts** compute node positions. All three are declared by `id` and configured through a single serialisable options bag.
+
+### The three composable concepts
+
+| Concept | What it is | Lifecycle & examples |
+|---|---|---|
+| **Layer** | *What is drawn.* A stacked, independently-configured slice of the scene the renderer paints. Cross-layer references are explicit `*LayerId` option fields — never inferred. | Added to `canvas.layers` by `id`. Built-ins: `BackgroundLayer`, `GraphLayer`, `MiniMapLayer`, `DevInfoLayer`. Overlays ship as separate packages (`graph-layer-*`). |
+| **Behaviour** | *How the user interacts.* Registrable input/reaction units. They **never auto-enable** — each must be explicitly registered **and** enabled by the developer. | Registered on `canvas.behaviours` by `id`, turned on via `{ enabled: true }`. Examples: `DragPanBehaviour`, `WheelZoomBehaviour`, hover / click / lasso / brush / select / drag / context-menu, `ThemeBehaviour`. |
+| **Layout** | *Where the nodes go.* An algorithm that assigns positions to a target layer's nodes. Positions are a data-source field, derived locally and never synced. | Added to `canvas.layouts` by `id` with a `targetLayerId`. The `activeLayout` auto-runs once data is present. Each algorithm is its own `graph-layout-*` package (force, elkjs, hierarchy, sankey, geometric). |
+
+### Wiring model
+
+Everything is declared by `id`, then configured with one serialisable options object — no class refs, no functions in config:
+
+```
+canvas.layers.add(...)         →  config.layers      { [id]: optionBag }
+canvas.behaviours.register(...) →  config.behaviours  { [id]: { enabled, ... } }
+canvas.layouts.add(...)        →  config.layouts     { [id]: params }  + config.activeLayout
+await canvas.init({ container, config })   // mount everything, apply config, enable behaviours
+```
+
+Runtime edits flow back through `canvas.update({ ... })` (a declarative patch), which writes to the store; the renderer re-projects. Because a class's constructor options **are** the editable state of the visualisation, every Behaviour / Layer / Layout also ships a schema-driven **settings editor** in `@invana/canvas-ui`, so the studio and stories can edit that state live.
+
+### Dependency layering
+
+```
+@invana/canvas-store  (renderer-free KERNEL — store + events + telemetry + history)
+   ▲   consumed by canvas, graph, canvas-react
+   │
+@invana/canvas  (the pixi renderer over the kernel; owns pixi)
+   ▲
+   ├── @invana/graph                 (graph domain)
+   │      ├── graph-layout-*          (force / elkjs / hierarchy / sankey / geometric)
+   │      ├── graph-layer-d3-contour
+   │      └── graph-layer-bubble-sets
+   ├── graph-layer-maplibre           (canvas-only)
+   └── @invana/canvas-react           (HEADLESS bindings — no @invana/ui)
+          ▲
+          └── @invana/canvas-ui       (the React UI kit / all pixels)
+                 ▲
+                 └── @invana/canvas-designer
+```
