@@ -804,6 +804,37 @@ export type {
   CanvasPagesTabbedViewProps,
 } from './views/canvas-pages';
 
+// ─── Schema view ─────────────────────────────────────────────────────────────
+// The graph's *schema* (its node/edge types + connectivity), derived live from a
+// source `GraphCanvas` and rendered by `SchemaViewer` as an interactive metagraph
+// in a nested engine instance — simple discs or composite ER **table** cards, with
+// a top `SchemaToolbar` (nodes · layout · edges · fit). Engine-bound (takes a live
+// canvas). The `deriveSchema` core + `useDerivedSchema` hook are reusable standalone.
+export {
+  SchemaViewer,
+  useDerivedSchema,
+  deriveSchema,
+  schemaSignature,
+  schemaToMetaGraph,
+  typeColor,
+  defaultNodeTypeOf,
+  defaultEdgeTypeOf,
+} from './views/schema';
+export type {
+  SchemaViewerProps,
+  UseDerivedSchemaOptions,
+  GraphSchema,
+  SchemaNodeType,
+  SchemaEdgeType,
+  SchemaEdgeConnection,
+  SchemaProperty,
+  SchemaMetaGraphOptions,
+  DeriveSchemaOptions,
+  SchemaNodeMode,
+  SchemaLayoutKind,
+  SchemaEdgeRouting,
+} from './views/schema';
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Shared
 // ═══════════════════════════════════════════════════════════════════════════
@@ -838,6 +869,8 @@ export type {
 // the `*Toolbar` suffix.
 export {
   CanvasControlsToolbar,
+  CanvasToolbar,
+  SchemaToolbar,
   GraphToolbar,
   GraphControlsToolbar,
   GraphControlsToolbarLite,
@@ -860,6 +893,9 @@ export {
 } from './toolbars';
 export type {
   CanvasControlsToolbarProps,
+  CanvasToolbarProps,
+  SchemaToolbarProps,
+  SchemaToolbarSections,
   GraphToolbarProps,
   GraphControlsToolbarProps,
   GraphControlsSections,
