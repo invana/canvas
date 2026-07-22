@@ -25,7 +25,7 @@ Keep the `@invana/canvas-ui` sidebar simple: **every canvas-ui story is either a
 
 - `canvas-ui/apps/…`    — composed batteries-included app shells (`GraphCanvasApp/…`).
 - `canvas-ui/editors/…` — schema-driven settings editors and editor showcases (`CanvasSettingsEditor`, `node-styles/…`, `HoverPreviewCardEditor`, `Template Studio`).
-- `canvas-ui/views/…`   — presentational / store-connected views and panels (`CanvasPagesTabbedView/…`, `LayersPanelView/…`, `HideShowLayersPanel`).
+- `canvas-ui/views/…`   — presentational / store-connected views and panels (`CanvasPagesTabbedView/…`, `LayersPanelView/…`, `HiddenElementsView`).
 
 Titles mirror the path (`canvas-ui/<bucket>/<Name>`). When a new canvas-ui story doesn't obviously fit, ask "is its subject an editor form or a view?" and file it accordingly — a composed studio that exists to demo editors is an **editor** story, not its own category.
 

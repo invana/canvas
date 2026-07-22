@@ -788,8 +788,8 @@ export type { LayersPanelViewProps } from './views/layers-panel';
 // + "Show all" restore — the companion to `LayersPanelView` (which hides) and to
 // `GraphContextMenu`'s Hide action. Engine-bound (takes a live canvas) but
 // import-clean (`@invana/graph` types only, `@invana/ui` chrome).
-export { HiddenElementsView } from './views/hidden-elements';
-export type { HiddenElementsViewProps } from './views/hidden-elements';
+export { CanvasFiltersView } from './views/canvas-filters';
+export type { CanvasFiltersViewProps } from './views/canvas-filters';
 
 // ─── Canvas pages tab strip ──────────────────────────────────────────────────
 // A tab strip over independent "pages" (boards), styled like `@invana/ui`'s

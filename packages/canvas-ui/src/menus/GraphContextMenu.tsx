@@ -36,7 +36,7 @@ export interface GraphContextMenuProps extends GraphContextMenuCommonProps {
  * non-null lifted `GraphCanvasContext`) with **zero config** and every node/edge
  * gets a sensible menu: **Focus** (fit the element in view), **Select** (add it to
  * the selection), and **Hide/Show** (first-class visibility — restore it from
- * {@link HiddenElementsView}).
+ * {@link CanvasFiltersView}).
  *
  * ```tsx
  * <GraphCanvas data={graph}>
