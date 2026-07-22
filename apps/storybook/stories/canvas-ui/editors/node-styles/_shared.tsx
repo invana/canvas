@@ -7,7 +7,7 @@
 import { useContext, useState, type ReactNode } from 'react';
 import type { CompositeShapeOption, GraphData, GraphLayer, NodeStyle } from '@invana/graph';
 import { GraphCanvasContext, useCanvas, useSelection, type LayoutFactory } from '@invana/canvas-react';
-import { CanvasMessageBar, GraphBackgroundContextMenu, GraphCanvasApp, GraphControlsToolbar, GraphNodeContextMenu, GraphStatusBar, ThemeToggle, ToolbarItems, useDevTool, useMiniMap, type GraphNodeMenuContext } from '@invana/canvas-ui';
+import { CanvasMessageBar, DevInfoToggleButton, GraphBackgroundContextMenu, GraphCanvasApp, GraphControlsToolbar, GraphNodeContextMenu, GraphStatusBar, MiniMapToggleButton, ThemeToggle, ToolbarItems, type GraphNodeMenuContext } from '@invana/canvas-ui';
 import { D3ForceLayout, type D3ForceLayoutOptions } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { ThemeProvider } from '@invana/themes';
@@ -162,8 +162,6 @@ export interface LiveStyleEditorAppProps {
  * render bounds), so the wide composite cards spread apart instead of stacking.
  */
 export function LiveStyleEditorApp({ title, message, data, panel }: LiveStyleEditorAppProps) {
-  const dev = useDevTool({ corner: 'top-left', margin: { x: 12, y: 48 } });
-  const mini = useMiniMap({ backgroundLayerId: 'background', position: 'bottom-left' });
   const [open, setOpen] = useState(true);
 
   return (
@@ -180,7 +178,8 @@ export function LiveStyleEditorApp({ title, message, data, panel }: LiveStyleEdi
           center: <GraphControlsToolbar layouts={LAYOUTS} layoutLabel={LAYOUT_LABEL} />,
           right: (ctx) => (
             <>
-              {dev.button}
+              <MiniMapToggleButton backgroundLayerId="background" position="bottom-left" />
+              <DevInfoToggleButton corner="top-left" margin={{ x: 12, y: 48 }} />
               <ToolbarItems
                 orientation="horizontal"
                 items={[
@@ -202,8 +201,6 @@ export function LiveStyleEditorApp({ title, message, data, panel }: LiveStyleEdi
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         right={open ? { content: <PanelGate>{panel}</PanelGate>, defaultSize: '360px', maxSize: '460px', collapsible: true } : undefined}
       >
-        {mini.layer}
-        {dev.layer}
         <GraphNodeContextMenu items={nodeMenu} />
         <GraphBackgroundContextMenu items={backgroundMenu} />
       </GraphCanvasApp>

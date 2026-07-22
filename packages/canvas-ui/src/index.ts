@@ -855,6 +855,8 @@ export {
   EdgeDetailView,
   dockCardClassName,
   ThemeToggle,
+  MiniMapToggleButton,
+  DevInfoToggleButton,
 } from './toolbars';
 export type {
   CanvasControlsToolbarProps,
@@ -876,6 +878,8 @@ export type {
   EdgeDetailViewProps,
   BaseDetailViewProps,
   ThemeToggleProps,
+  MiniMapToggleButtonProps,
+  DevInfoToggleButtonProps,
 } from './toolbars';
 
 // ─── UI components (building blocks) ───────────────────────────────────────
@@ -982,10 +986,7 @@ export type {
 // renders — `HoverElementPreviewCard` (exported above). Wire it in as a render-
 // prop: `<HoverElementPreviewBehaviour renderCard={(s) => <HoverElementPreviewCard card={s.card} />} />`.
 
-// ─── Turnkey UI hooks ──────────────────────────────────────────────────────
-// A hook that hands back a rendered button is UI, so it lives here and imports
-// its null-rendering layer wrapper back from `@invana/canvas-react`.
-export { useDevTool } from './hooks/useDevTool';
-export type { UseDevToolOptions, UseDevToolResult } from './hooks/useDevTool';
-export { useMiniMap } from './hooks/useMiniMap';
-export type { UseMiniMapOptions, UseMiniMapResult } from './hooks/useMiniMap';
+// The turnkey minimap / dev-overlay toggles are now single self-wiring button
+// components — `MiniMapToggleButton` / `DevInfoToggleButton` in `./toolbars`
+// (each renders its own screen-fixed layer from wherever it's dropped), so there
+// is no separate `useMiniMap` / `useDevTool` hook to place a `.layer` node.

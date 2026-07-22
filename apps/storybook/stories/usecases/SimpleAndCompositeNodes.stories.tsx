@@ -21,7 +21,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeProvider, useTheme } from '@invana/themes';
 import { RichSelect } from '@invana/ui';
 import { ClickViewBehaviour, HoverElementPreviewBehaviour, type LayoutFactory } from '@invana/canvas-react';
-import { EdgeDetailView, GraphCanvasApp, GraphControlsToolbar, HoverElementPreviewCard, NodeDetailView, Panel, PanelContent, ThemeToggle, useMiniMap, type GraphCanvasAppControlContext } from '@invana/canvas-ui';
+import { EdgeDetailView, GraphCanvasApp, GraphControlsToolbar, HoverElementPreviewCard, MiniMapToggleButton, NodeDetailView, Panel, PanelContent, ThemeToggle, type GraphCanvasAppControlContext } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type {
   FreeformStructure,
@@ -116,7 +116,6 @@ function ThemeControls({ ctx }: { ctx: GraphCanvasAppControlContext }) {
 export const SimpleAndCompositeNodes: Story = {
   render: () => {
     // A viewport-fixed minimap of the graph, toggled from a header button.
-    const mini = useMiniMap({ backgroundLayerId: 'background', position: 'bottom-right' });
 
     const data: GraphData = {
       nodes: [
@@ -199,14 +198,12 @@ export const SimpleAndCompositeNodes: Story = {
             center: <GraphControlsToolbar layouts={LAYOUTS} layoutLabel={LAYOUT_LABEL} />,
             right: (ctx) => (
               <>
-                {mini.button}
+                <MiniMapToggleButton backgroundLayerId="background" position="bottom-right" />
                 <ThemeControls ctx={ctx} />
               </>
             ),
           }}
         >
-          {mini.layer}
-
           {/* Dwell over a node → a per-type preview card (distinct from the
               bundle's `HoverActivateBehaviour`, which only highlights). */}
           <HoverElementPreviewBehaviour

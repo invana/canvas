@@ -61,16 +61,23 @@ import type {
 } from 'react';
 import {
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useReducer,
   useRef,
   useState,
 } from 'react';
+import { GraphCanvasContext } from '@invana/canvas-react';
 
 export interface LayersPanelViewProps {
-  /** The live canvas engine (null until `<Canvas>` publishes it). */
-  canvas: GraphCanvas | null;
+  /**
+   * The live canvas engine. **Optional** — omit it inside a `<GraphCanvas>` /
+   * `GraphCanvasApp` tree and the panel binds to the nearest one via
+   * `GraphCanvasContext` (rendering empty until the engine is ready). Pass it
+   * explicitly to target a specific instance from outside that subtree.
+   */
+  canvas?: GraphCanvas | null;
 }
 
 // "Focus" zooms in to at least this scale (matches the canvas context menu).
@@ -749,7 +756,14 @@ function ContextMenuItems({
   );
 }
 
-export function LayersPanelView({ canvas }: LayersPanelViewProps) {
+export function LayersPanelView({ canvas: explicit }: LayersPanelViewProps) {
+  // Self-wiring: bind to an explicit `canvas` if given, else the nearest
+  // `<GraphCanvas>` / `GraphCanvasApp` via context (null until the engine is
+  // ready — the panel simply renders empty). `useContext` runs unconditionally
+  // so the `??` can't short-circuit a hook.
+  const contextCanvas = useContext(GraphCanvasContext);
+  const canvas = explicit ?? contextCanvas;
+
   // Layers/store are live mutable canvas state, not React state — bumping `rev`
   // re-derives the tree. `rev` is a dependency of the memo below, never read.
   const [rev, bumpRev] = useReducer((n: number) => n + 1, 0);

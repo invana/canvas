@@ -43,3 +43,7 @@ export { EdgeDetailView } from './EdgeDetailView';
 export type { EdgeDetailViewProps } from './EdgeDetailView';
 export { ThemeToggle } from './ThemeToggle';
 export type { ThemeToggleProps } from './ThemeToggle';
+export { MiniMapToggleButton } from './MiniMapToggleButton';
+export type { MiniMapToggleButtonProps } from './MiniMapToggleButton';
+export { DevInfoToggleButton } from './DevInfoToggleButton';
+export type { DevInfoToggleButtonProps } from './DevInfoToggleButton';

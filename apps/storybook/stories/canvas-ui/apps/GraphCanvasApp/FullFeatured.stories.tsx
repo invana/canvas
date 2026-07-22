@@ -22,7 +22,7 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ClickViewBehaviour, GraphClipboardProvider, TextResolutionLODBehaviour, type LayoutFactory, type ViewContext } from '@invana/canvas-react';
-import { CanvasMessageBar, EdgeDetailView, NodeDetailView, GraphBackgroundContextMenu, type GraphBackgroundMenuContext, GraphCanvasApp, GraphControlsToolbar, GraphNodeContextMenu, type GraphNodeMenuContext, GraphStatusBar, ThemeToggle, useDevTool, useMiniMap } from '@invana/canvas-ui';
+import { CanvasMessageBar, DevInfoToggleButton, EdgeDetailView, NodeDetailView, GraphBackgroundContextMenu, type GraphBackgroundMenuContext, GraphCanvasApp, GraphControlsToolbar, GraphNodeContextMenu, type GraphNodeMenuContext, GraphStatusBar, MiniMapToggleButton, ThemeToggle } from '@invana/canvas-ui';
 import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
@@ -57,8 +57,6 @@ const backgroundMenu = (_ctx: GraphBackgroundMenuContext): MenuItem[] => [
 
 export const FullFeatured: Story = {
   render: () => {
-    const dev = useDevTool({ corner: 'top-left', margin: { x: 12, y: 48 } });
-    const mini = useMiniMap({ backgroundLayerId: 'background', position: 'bottom-left' });
     // The clicked node/edge (or null on a background click) — drives the docked
     // right section below, fed by <ClickViewBehaviour onClick={…}>.
     const [view, setView] = useState<ViewContext | null>(null);
@@ -102,8 +100,8 @@ export const FullFeatured: Story = {
           center: <GraphControlsToolbar layouts={LAYOUTS} layoutLabel={LAYOUT_LABEL} />,
           right: (ctx) => (
             <>
-              {mini.button}
-              {dev.button}
+              <MiniMapToggleButton backgroundLayerId="background" position="bottom-left" />
+              <DevInfoToggleButton corner="top-left" margin={{ x: 12, y: 48 }} />
               <ThemeToggle ctx={ctx} />
             </>
           ),
@@ -131,9 +129,6 @@ export const FullFeatured: Story = {
             : undefined
         }
       >
-        {/* Extra layers — beyond the bundle. */}
-        {mini.layer}
-        {dev.layer}
 
         {/* Extra behaviours — click-to-inspect + label level-of-detail. Instead
             of a floating <Panel>, `onClick` reports the clicked element (or null

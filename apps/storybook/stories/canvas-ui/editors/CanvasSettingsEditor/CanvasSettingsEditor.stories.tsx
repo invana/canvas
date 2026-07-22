@@ -11,7 +11,7 @@ import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { CanvasSettingsPanel } from '@invana/canvas-ui';
 import type { LayoutFactory } from '@invana/canvas-react';
-import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, GraphNodeContextMenu, type GraphNodeMenuContext, GraphBackgroundContextMenu, ThemeToggle, ToolbarItems, useDevTool, useMiniMap } from '@invana/canvas-ui';
+import { CanvasMessageBar, DevInfoToggleButton, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, GraphNodeContextMenu, type GraphNodeMenuContext, GraphBackgroundContextMenu, MiniMapToggleButton, ThemeToggle, ToolbarItems } from '@invana/canvas-ui';
 import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
@@ -56,8 +56,6 @@ const backgroundMenu = (): MenuItem[] => [
 export const LiveSettingsEditors: Story = {
   name: 'Live Settings Editors',
   render: function Render() {
-    const dev = useDevTool({ corner: 'top-left', margin: { x: 12, y: 48 } });
-    const mini = useMiniMap({ backgroundLayerId: 'background', position: 'bottom-left' });
     // The settings panel is toggled from the header — mounting the `right` region
     // when open, unmounting it (canvas reclaims the width) when closed. Open by
     // default so the editors are visible on load.
@@ -98,7 +96,8 @@ export const LiveSettingsEditors: Story = {
             center: <GraphControlsToolbar layouts={LAYOUTS} layoutLabel={LAYOUT_LABEL} />,
             right: (ctx) => (
               <>
-                {dev.button}
+                <MiniMapToggleButton backgroundLayerId="background" position="bottom-left" />
+                <DevInfoToggleButton corner="top-left" margin={{ x: 12, y: 48 }} />
                 {/* Settings toggle — shows / hides the docked right panel. */}
                 <ToolbarItems
                   orientation="horizontal"
@@ -135,9 +134,6 @@ export const LiveSettingsEditors: Story = {
               : undefined
           }
         >
-          {/* Extra layers — minimap + on-demand dev overlay. */}
-          {mini.layer}
-          {dev.layer}
 
           {/* Right-click menus. */}
           <GraphNodeContextMenu items={nodeMenu} />
