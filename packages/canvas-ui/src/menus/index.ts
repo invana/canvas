@@ -2,6 +2,9 @@
 // `ContextMenuBehaviour` + `ContextMenuOverlay` into a single declarative
 // component. One per target (node / edge / background); compose freely.
 
+export { GraphContextMenu } from './GraphContextMenu';
+export type { GraphContextMenuProps } from './GraphContextMenu';
+
 export { GraphNodeContextMenu } from './GraphNodeContextMenu';
 export type { GraphNodeContextMenuProps, GraphNodeMenuContext } from './GraphNodeContextMenu';
 

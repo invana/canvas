@@ -4,124 +4,38 @@
  *
  *   - a right-docked **`<TabbedPanel>`** whose **Layers** tab hosts the
  *     `@invana/canvas-ui` **`<LayersPanelView>`** (layer eyes + nodes/edges by
- *     type + right-click Hide/Show), and whose **Hidden** tab lists the currently
- *     hidden elements with per-item + "Show all" restore,
- *   - a header **"Hide selected"** button — `useSelection()` → one
- *     `store.batch(...)` that hides the selected nodes + edges in a single paint.
+ *     type + right-click Hide/Show), and whose **Hidden** tab hosts the
+ *     **`<HiddenElementsView>`** — the reusable list of currently-hidden elements
+ *     with per-item + "Show all" restore,
+ *   - the full **`<GraphControlsToolbar>`** in the header (layout · zoom/fit ·
+ *     **select-mode** · grid · …) so you can marquee/lasso-select, and
+ *   - the standard **`<GraphContextMenu>`** — right-click any node/edge for
+ *     Focus · Select · **Hide/Show**, zero config.
  *
- * The Hidden tab recomputes on the store's `node:visibility` / `edge:visibility`
- * stream via `useGraphEvent` — on change, not per render.
+ * Both `HiddenElementsView` and `GraphContextMenu` recompute off the store's
+ * `node:visibility` / `edge:visibility` stream — on change, not per render.
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { GraphCanvasContext, useGraphCanvas, useGraphEvent, useSelection } from '@invana/canvas-react';
-import { GraphCanvasApp } from '@invana/canvas-ui';
-import { LayersPanelView } from '@invana/canvas-ui';
-import type { GraphLayer, GraphNode } from '@invana/graph';
+import { GraphCanvasContext } from '@invana/canvas-react';
+import { GraphCanvasApp, GraphContextMenu, GraphControlsToolbar, HiddenElementsView, LayersPanelView } from '@invana/canvas-ui';
+import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
 import { TabbedPanel, type TabConfig } from '@invana/ui';
 import { EyeOff, Layers } from 'lucide-react';
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 
 const meta: Meta = { title: 'canvas-ui/views/HideShowLayersPanel' };
 export default meta;
 type Story = StoryObj;
 
-/** Header button — hide the current selection (nodes + edges) in one paint. */
-function HideSelectedButton() {
-  const canvas = useGraphCanvas();
-  const { selectedNodeIds, selectedEdgeIds, clear } = useSelection();
-  const total = selectedNodeIds.length + selectedEdgeIds.length;
-  return (
-    <button
-      type="button"
-      disabled={total === 0}
-      onClick={() => {
-        const layer = canvas.layers.get<GraphLayer>('graph');
-        if (!layer) return;
-        // One batch → one flush → one paint for the whole mixed selection.
-        layer.store.batch(() => {
-          layer.hideNodes(selectedNodeIds);
-          layer.hideEdges(selectedEdgeIds);
-        });
-        clear();
-      }}
-      className="rounded border border-border px-2 py-1 text-sm disabled:opacity-40"
-    >
-      Hide selected ({total})
-    </button>
-  );
-}
-
-/** The "Hidden" tab — lists explicitly-hidden elements, restore per-item or all.
- *  Recomputes on the store's visibility stream (on change, not per render). */
-function HiddenTab() {
-  const canvas = useGraphCanvas();
-  const [, bump] = useState(0);
-  useGraphEvent('node:visibility', () => bump((n) => n + 1));
-  useGraphEvent('edge:visibility', () => bump((n) => n + 1));
-
-  const store = canvas.layers.get<GraphLayer>('graph')?.store;
-  const nodes = store ? [...store.hiddenNodes()] : [];
-  const edges = store ? [...store.hiddenEdges()] : [];
-  const empty = nodes.length === 0 && edges.length === 0;
-
-  return (
-    <div className="flex h-full flex-col gap-2 overflow-y-auto p-2 text-sm">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-muted-foreground">
-          {nodes.length} node(s) · {edges.length} edge(s)
-        </span>
-        <button
-          type="button"
-          disabled={empty}
-          onClick={() => store?.showAllHidden()}
-          className="rounded border border-border px-2 py-0.5 disabled:opacity-40"
-        >
-          Show all
-        </button>
-      </div>
-      {empty ? (
-        <p className="text-muted-foreground">Nothing hidden — right-click an element in Layers → Hide.</p>
-      ) : (
-        <ul className="flex flex-col gap-0.5">
-          {nodes.map((id) => (
-            <li key={`n:${id}`}>
-              <button
-                type="button"
-                onClick={() => store?.showNode(id)}
-                className="w-full truncate rounded px-2 py-1 text-left hover:bg-accent"
-                title={`Show node ${id}`}
-              >
-                node · {id}
-              </button>
-            </li>
-          ))}
-          {edges.map((id) => (
-            <li key={`e:${id}`}>
-              <button
-                type="button"
-                onClick={() => store?.showEdge(id)}
-                className="w-full truncate rounded px-2 py-1 text-left hover:bg-accent"
-                title={`Show edge ${id}`}
-              >
-                edge · {id}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
 /**
  * The docked right-region body — a TabbedPanel whose Layers tab hosts the
- * `LayersPanelView` and whose Hidden tab lists hidden elements. It renders inside
- * `GraphCanvasApp`'s resizable `right` section (a **sibling** of `<Canvas>`, under
- * the lifted context), so it guards for the canvas being `null` before the engine
- * is ready — `useGraphCanvas()` throws on null, so read the context directly. The
+ * `LayersPanelView` and whose Hidden tab hosts the `HiddenElementsView`. It
+ * renders inside `GraphCanvasApp`'s resizable `right` section (a **sibling** of
+ * `<Canvas>`, under the lifted context), so it guards for the canvas being `null`
+ * before the engine is ready — read the context directly and bail to `null`. The
  * section supplies the resizable container; the panel just fills it.
  */
 function VisibilityTabbedPanel() {
@@ -129,12 +43,12 @@ function VisibilityTabbedPanel() {
   if (!canvas) return null;
   const tabs: TabConfig[] = [
     { value: 'layers', label: 'Layers', icon: Layers, content: <LayersPanelView canvas={canvas} /> },
-    { value: 'hidden', label: 'Hidden', icon: EyeOff, content: <HiddenTab /> },
+    { value: 'hidden', label: 'Hidden', icon: EyeOff, content: <HiddenElementsView canvas={canvas} /> },
   ];
   return (
     <TabbedPanel
       tabs={tabs}
-      defaultTab="layers"
+      defaultTab="hidden"
       className="flex h-full flex-col overflow-hidden bg-card"
       bodyClassName="min-h-0 flex-1 overflow-hidden"
     />
@@ -155,10 +69,36 @@ export const HideShowLayersPanel: Story = {
         <GraphCanvasApp
           data={data}
           onReady={(c) => c?.showMessage('Right-click an element to Hide/Show · Layers / Hidden tabs on the right')}
-          header={{ title: 'Visibility', right: <HideSelectedButton /> }}
+          // The full graph toolbar — the select-mode picker (click / brush / lasso)
+          // lets you select before hiding via the right-click menu.
+          header={{ title: 'HiddenElementsView', center: <GraphControlsToolbar /> }}
           // Docked into the app's resizable `right` region — no floating Panel.
           right={{ content: <VisibilityTabbedPanel />, defaultSize: '340px', maxSize: '460px', collapsible: true }}
-        />
+        >
+          {/* Standard right-click menu (Focus · Select · Hide/Show) — a sibling of
+              the bundle, resolved from the <Canvas> context. `nodeItems`/`edgeItems`
+              receive `(ctx, defaults)`: spread `defaults` to keep the standard
+              items and add your own around them. */}
+          <GraphContextMenu
+            nodeItems={(ctx, defaults) => [
+              ...defaults,
+              {
+                id: 'inspect',
+                label: `Inspect ${ctx.id}`,
+                // eslint-disable-next-line no-alert
+                onClick: () => window.alert(`Node ${ctx.id}\n${JSON.stringify(ctx.data)}`),
+              },
+            ]}
+            edgeItems={(ctx, defaults) => [
+              ...defaults,
+              {
+                id: 'log-edge',
+                label: 'Log edge to console',
+                onClick: () => console.log('edge', ctx.id, ctx.data),
+              },
+            ]}
+          />
+        </GraphCanvasApp>
       </ThemeProvider>
     );
   },

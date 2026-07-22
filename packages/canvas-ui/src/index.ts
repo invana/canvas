@@ -783,6 +783,14 @@ export type {
 export { LayersPanelView } from './views/layers-panel';
 export type { LayersPanelViewProps } from './views/layers-panel';
 
+// ─── Hidden elements ─────────────────────────────────────────────────────────
+// A live list of the elements explicitly hidden on a `GraphCanvas`, with per-item
+// + "Show all" restore — the companion to `LayersPanelView` (which hides) and to
+// `GraphContextMenu`'s Hide action. Engine-bound (takes a live canvas) but
+// import-clean (`@invana/graph` types only, `@invana/ui` chrome).
+export { HiddenElementsView } from './views/hidden-elements';
+export type { HiddenElementsViewProps } from './views/hidden-elements';
+
 // ─── Canvas pages tab strip ──────────────────────────────────────────────────
 // A tab strip over independent "pages" (boards), styled like `@invana/ui`'s
 // `TabbedPanel` but with per-tab **edit** + **close** controls revealed on hover.
@@ -945,15 +953,19 @@ export type {
 } from './components';
 
 // ─── Context menus ───────────────────────────────────────────────────────────
-// Target-scoped right-click menus — one per target (node / edge / background),
-// each wiring a `ContextMenuBehaviour` + `ContextMenuOverlay`. Pass an `items`
-// builder; dismissal + auto-close are handled internally. Compose freely.
+// `GraphContextMenu` — the standard, zero-config right-click menu (node + edge:
+// Focus · Select · Hide/Show), the menu equivalent of the default settings panel.
+// Beneath it, the target-scoped primitives — one per target (node / edge /
+// background), each wiring a `ContextMenuBehaviour` + `ContextMenuOverlay`; pass an
+// `items` builder when the standard set doesn't fit. Compose freely.
 export {
+  GraphContextMenu,
   GraphNodeContextMenu,
   GraphEdgeContextMenu,
   GraphBackgroundContextMenu,
 } from './menus';
 export type {
+  GraphContextMenuProps,
   GraphNodeContextMenuProps,
   GraphNodeMenuContext,
   GraphEdgeContextMenuProps,
