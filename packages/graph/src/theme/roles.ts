@@ -22,13 +22,15 @@ export function hasAny(patch: object): boolean {
 
 /**
  * Base node template recolour: label text follows `foreground`; the node's
- * cut-out border ring follows `surface` so nodes read cleanly against the
- * backdrop (mirrors the old `THEME_LIGHT/DARK` node patch).
+ * border follows the `stroke` role — a visible rim that contrasts with the
+ * fill in both light (`0xcbd5e1`) and dark (`0x475569`), rather than the
+ * `surface` (backdrop) cut-out ring, so a node reads as outlined regardless of
+ * whether its `bgFill` is a category colour or the neutral default.
  */
 export function paletteToNodeDefaults(p: RolePalette): Partial<NodeStyle> {
   const out: Record<string, number> = {};
   if (p.foreground !== undefined) out.labelColor = p.foreground;
-  if (p.surface !== undefined) out.bgStrokeColor = p.surface;
+  if (p.stroke !== undefined) out.bgStrokeColor = p.stroke;
   return out as Partial<NodeStyle>;
 }
 

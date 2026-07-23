@@ -151,19 +151,16 @@ export class ColorByLabelBehaviour extends Behaviour<ColorByLabelBehaviourOption
 
   /**
    * Re-apply the colour resolvers when a live option patch lands, so a new
-   * `palette` / accessor / fallback change recolours immediately. Restores the
-   * previously-installed template fields, resets the label→colour assignment
-   * map (so a new palette re-assigns from scratch), then re-installs. A no-op
-   * while disabled — the resolvers aren't installed, and the next enable picks
-   * up the merged `_options`.
-   *
-   * Known limitation: toggling `colorNodes` / `colorEdges` *off* while enabled
-   * relies on the flag-guarded {@link restore}, which won't uninstall a
-   * channel's resolver until the behaviour is disabled.
+   * `palette` / accessor / flag change recolours immediately. Resets the
+   * label→colour assignment map (so a new palette re-assigns from scratch) and
+   * re-syncs each channel to its current flag — installing the resolver when the
+   * channel is on, uninstalling it (restoring the base) when off. So toggling
+   * `colorNodes` / `colorEdges` off *while enabled* now reverts that channel
+   * immediately. A no-op while disabled — the resolvers aren't installed, and the
+   * next enable picks up the merged `_options`.
    */
   protected override onOptionsChanged(): void {
     if (!this.isEnabled || !this.layer) return;
-    this.restore();
     this.colors.clear();
     this.nextIndex = 0;
     this.apply();
@@ -190,46 +187,68 @@ export class ColorByLabelBehaviour extends Behaviour<ColorByLabelBehaviourOption
 
   // ─── Internals ──────────────────────────────────────────────────────────
 
-  /** Install the colour resolvers on the layer template (snapshotting priors). */
-  private apply(): void {
-    const layer = this.layer;
-    if (!layer || this.applied) return;
-
-    if (this.colorNodes) {
-      this.priorNodeBgFill = layer.nodeDefaults?.bgFill;
+  /**
+   * Sync the node channel to `on`. When on, snapshot the current base `bgFill`
+   * — but only when a resolver isn't *already* installed, so we never snapshot
+   * our own function, and we re-capture a layer default (`bgFill`) applied
+   * *after* we first enabled (the snapshot taken at enable-time can predate the
+   * config). Then install the colour resolver. When off, put the snapshot back
+   * if our resolver is installed.
+   *
+   * Guarding on "is a resolver currently installed" (`typeof === 'function'`)
+   * rather than a cached flag is what keeps the base snapshot correct across
+   * re-applies and cleanly uninstalls a channel toggled off while enabled. The
+   * template stores resolver functions (`ResolvableNodeStyle`), but the
+   * `setNodeDefaults` param is the concrete `NodeStyle`, so cast the patch.
+   */
+  private syncNode(layer: GraphLayer, on: boolean): void {
+    const current = layer.nodeDefaults?.bgFill;
+    const installed = typeof current === 'function';
+    if (on) {
+      if (!installed) this.priorNodeBgFill = current;
       const bgFill = (n: GraphNode): number => this.colorForLabel(this.nodeLabel(n));
-      // The template stores resolver functions (`ResolvableNodeStyle`), but the
-      // `setNodeDefaults` param is the concrete `NodeStyle`, so cast the patch.
       layer.setNodeDefaults({ bgFill } as unknown as Partial<NodeStyle>);
+    } else if (installed) {
+      layer.setNodeDefaults({ bgFill: this.priorNodeBgFill } as unknown as Partial<NodeStyle>);
     }
+  }
 
-    if (this.colorEdges) {
-      this.priorEdgeStroke = layer.edgeDefaults?.strokeColor;
-      this.priorEdgeArrow = layer.edgeDefaults?.arrowTargetColor;
+  /** Sibling of {@link syncNode} for the edge channel (`strokeColor` + `arrowTargetColor`). */
+  private syncEdge(layer: GraphLayer, on: boolean): void {
+    const installed = typeof layer.edgeDefaults?.strokeColor === 'function';
+    if (on) {
+      if (!installed) {
+        this.priorEdgeStroke = layer.edgeDefaults?.strokeColor;
+        this.priorEdgeArrow = layer.edgeDefaults?.arrowTargetColor;
+      }
       const colour = (e: GraphEdge): number => this.colorForLabel(this.edgeLabel(e));
       layer.setEdgeDefaults({
         strokeColor: colour,
         arrowTargetColor: colour,
       } as unknown as Partial<EdgeStyle>);
-    }
-
-    this.applied = true;
-  }
-
-  /** Put the snapshotted template fields back. */
-  private restore(): void {
-    const layer = this.layer;
-    if (!layer || !this.applied) return;
-
-    if (this.colorNodes) {
-      layer.setNodeDefaults({ bgFill: this.priorNodeBgFill } as unknown as Partial<NodeStyle>);
-    }
-    if (this.colorEdges) {
+    } else if (installed) {
       layer.setEdgeDefaults({
         strokeColor: this.priorEdgeStroke,
         arrowTargetColor: this.priorEdgeArrow,
       } as unknown as Partial<EdgeStyle>);
     }
+  }
+
+  /** Install the colour resolvers for the enabled channels. */
+  private apply(): void {
+    const layer = this.layer;
+    if (!layer) return;
+    this.syncNode(layer, this.colorNodes);
+    this.syncEdge(layer, this.colorEdges);
+    this.applied = true;
+  }
+
+  /** Put the snapshotted template fields back (uninstall both channels). */
+  private restore(): void {
+    const layer = this.layer;
+    if (!layer || !this.applied) return;
+    this.syncNode(layer, false);
+    this.syncEdge(layer, false);
     this.applied = false;
   }
 }

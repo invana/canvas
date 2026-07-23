@@ -1459,7 +1459,13 @@ export class GraphLayer extends WorldLayer<
       // omitting the field here would leave the dimmed alpha stuck on the cached
       // spec. Emitting `1` restores opacity on state removal.
       alpha: style.bgAlpha ?? 1,
-      ...(fill !== undefined ? { fill } : {}),
+      // Always emit `fill` — same partial-merge reasoning as `alpha` above and
+      // `visible` below. The renderer merges patches onto the cached spec, so
+      // omitting the field when `fill` resolves to `undefined` (a style clearing
+      // `bgFill` — e.g. a colour-by-label behaviour restoring on disable) would
+      // leave the previously-painted fill stuck on the cached spec. Emitting
+      // `undefined` lets `applyFill` clear it back to an unfilled silhouette.
+      fill,
       ...(stroke ? { stroke } : {}),
       ...(zIndex !== undefined ? { zIndex } : {}),
       // Always emit `visible` — the renderer partial-merges patches onto

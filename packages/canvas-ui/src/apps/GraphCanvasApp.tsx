@@ -195,6 +195,11 @@ export const BASE_CONFIG: CanvasConfig = {
       node: {
         style: {
           shape: { kind: 'circle', radius: 8 },
+          // Neutral default fill so nodes stay visible when nothing tints them
+          // (e.g. the `color` behaviour is off). The colour-by-label behaviour
+          // overrides `bgFill` per category while enabled, and restores to this
+          // default on disable.
+          bgFill: 0x94a3b8,
           bgStrokeWidth: 1.5,
           labelFontSize: 11,
           labelPlacement: 'bottom',
