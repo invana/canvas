@@ -5,10 +5,6 @@
 
 export { CanvasControlsToolbar } from './CanvasControlsToolbar';
 export type { CanvasControlsToolbarProps } from './CanvasControlsToolbar';
-// `CanvasToolbar` is the inline, header-slot sibling of `CanvasControlsToolbar`
-// (horizontal + bare by default) — zoom / fit / lock in a toolbar row.
-export { CanvasToolbar } from './CanvasToolbar';
-export type { CanvasToolbarProps } from './CanvasToolbar';
 // `SchemaToolbar` — the schema metagraph's control bar (nodes · layout · edges · fit).
 export { SchemaToolbar } from './SchemaToolbar';
 export type { SchemaToolbarProps, SchemaToolbarSections } from './SchemaToolbar';

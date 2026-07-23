@@ -822,6 +822,7 @@ export {
 } from './views/schema';
 export type {
   SchemaViewerProps,
+  SchemaViewerBaseProps,
   UseDerivedSchemaOptions,
   GraphSchema,
   SchemaNodeType,
@@ -831,7 +832,6 @@ export type {
   SchemaMetaGraphOptions,
   DeriveSchemaOptions,
   SchemaNodeMode,
-  SchemaLayoutKind,
   SchemaEdgeRouting,
 } from './views/schema';
 
@@ -851,7 +851,8 @@ export { numberToHex, hexToNumber } from './shared/color';
 // `@invana/canvas-react`'s headless hooks/context.
 
 // ─── App (batteries-included composition) ────────────────────────────────────
-export { GraphCanvasApp } from './apps';
+export { GraphCanvasApp, CanvasThemeSync } from './apps';
+export type { CanvasThemeSyncProps } from './apps';
 export type {
   GraphCanvasAppProps,
   GraphCanvasAppControlContext,
@@ -869,7 +870,6 @@ export type {
 // the `*Toolbar` suffix.
 export {
   CanvasControlsToolbar,
-  CanvasToolbar,
   SchemaToolbar,
   GraphToolbar,
   GraphControlsToolbar,
@@ -893,7 +893,6 @@ export {
 } from './toolbars';
 export type {
   CanvasControlsToolbarProps,
-  CanvasToolbarProps,
   SchemaToolbarProps,
   SchemaToolbarSections,
   GraphToolbarProps,

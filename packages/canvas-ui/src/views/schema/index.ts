@@ -5,7 +5,7 @@
 // standalone.
 
 export { SchemaViewer } from './SchemaViewer';
-export type { SchemaViewerProps } from './SchemaViewer';
+export type { SchemaViewerProps, SchemaViewerBaseProps } from './SchemaViewer';
 
 // Derivation core + reactive hook — reusable without the view.
 export { useDerivedSchema } from './useDerivedSchema';
@@ -27,6 +27,5 @@ export type {
   SchemaMetaGraphOptions,
   DeriveSchemaOptions,
   SchemaNodeMode,
-  SchemaLayoutKind,
   SchemaEdgeRouting,
 } from './schema';

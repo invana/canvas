@@ -33,6 +33,7 @@ import type {
 
 import { GraphStore } from '../store/GraphStore';
 import type { EdgeDirection, GraphEdge, GraphNode } from '../store/types';
+import type { GraphSchema } from '../schema/types';
 
 import {
   DEFAULT_EDGE_STATES,
@@ -179,6 +180,21 @@ export class GraphLayer extends WorldLayer<
 
   /** Data source. Either supplied by the caller or self-created. */
   readonly store: GraphStore;
+
+  /**
+   * The **authoritative** schema for this graph, if a data source declared one
+   * (delegates to {@link GraphStore.schema}) — typically the full DB schema behind
+   * a connected canvas, a superset of what's loaded. `undefined` when none is set;
+   * resolve `layer.schema ?? deriveSchema(layer.store)` for authoritative-else-observed.
+   */
+  get schema(): GraphSchema | undefined {
+    return this.store.schema;
+  }
+
+  /** Set/clear the authoritative schema (delegates to {@link GraphStore.setSchema}). */
+  setSchema(schema: GraphSchema | undefined): void {
+    this.store.setSchema(schema);
+  }
 
   /** Subscription disposers, called in `onUnmount`. */
   private subs: Array<() => void> = [];

@@ -1,37 +1,31 @@
 /**
  * `<SchemaToolbar>` — the turnkey control bar for the schema metagraph
- * (`SchemaViewer`), the schema-view analogue of `GraphControlsToolbar`. Four
+ * (`SchemaViewer`), the schema-view analogue of `GraphControlsToolbar`. Up to four
  * groups, assembled into one data-driven `<ToolbarItems>`:
  *
  *   1. **Nodes** — Simple discs ⇄ composite ER **Table** cards.
- *   2. **Layout** — Hierarchical (ELK) ⇄ Force (d3).
+ *   2. **Layout** — a picker over the **injected** layouts (rendered only when
+ *      `layoutOptions` is supplied — the viewer stays layout-package-agnostic).
  *   3. **Edges** — connector routing: Straight · Orthogonal · Curved.
  *   4. **Fit** — fit the metagraph to view.
  *
  * Groups 1–3 are **controlled** (value in → `onChange` out) — the `SchemaViewer`
  * owns that state because it drives what the metagraph renders. **Fit self-wires**
- * from context (the inner schema canvas) via {@link useViewSection}, so the
- * toolbar must render inside the schema `<GraphCanvas>` (or be handed an explicit
- * `canvas`). Renders a **bare** `<ToolbarItems>` meant to drop into a header slot.
+ * from context (the schema canvas) via {@link useViewSection}, so the toolbar must
+ * render inside the schema `<GraphCanvas>` (or be handed an explicit `canvas`).
+ * Renders a **bare** `<ToolbarItems>` meant to drop into a header slot.
  */
 
 import type { Canvas } from '@invana/canvas';
-import { CornerDownRight, Minus, Share2, Spline, Table as TableIcon, Circle, Workflow } from 'lucide-react';
+import { CornerDownRight, Minus, Spline, Table as TableIcon, Circle } from 'lucide-react';
 
 import { ToolbarItems, applyIconOverrides } from '../components';
 import type { ToolbarIcon, ToolbarItem } from '../components';
 import { useViewSection } from '@invana/canvas-react';
-import type {
-  SchemaEdgeRouting,
-  SchemaLayoutKind,
-  SchemaNodeMode,
-} from '../views/schema/schema';
+import type { SchemaEdgeRouting, SchemaNodeMode } from '../views/schema/schema';
 
 const NODE_LABELS: Record<SchemaNodeMode, string> = { simple: 'Simple', table: 'Table' };
 const NODE_ICONS: Record<SchemaNodeMode, ToolbarIcon> = { simple: Circle, table: TableIcon };
-
-const LAYOUT_ICONS: Record<SchemaLayoutKind, ToolbarIcon> = { elk: Workflow, force: Share2 };
-const DEFAULT_LAYOUT_LABELS: Record<SchemaLayoutKind, string> = { elk: 'Hierarchical', force: 'Force' };
 
 const EDGE_LABELS: Record<SchemaEdgeRouting, string> = {
   straight: 'Straight',
@@ -48,7 +42,7 @@ const EDGE_ICONS: Record<SchemaEdgeRouting, ToolbarIcon> = {
 export interface SchemaToolbarSections {
   /** Simple ⇄ Table node mode. */
   nodes?: boolean;
-  /** Layout picker. */
+  /** Layout picker (also requires `layoutOptions` to be supplied). */
   layout?: boolean;
   /** Edge routing picker. */
   edges?: boolean;
@@ -60,15 +54,20 @@ export interface SchemaToolbarProps {
   /** Current node-render mode. */
   nodeMode: SchemaNodeMode;
   onNodeModeChange: (mode: SchemaNodeMode) => void;
-  /** Current layout. */
-  layout: SchemaLayoutKind;
-  onLayoutChange: (layout: SchemaLayoutKind) => void;
-  /** Labels for the layout options. Default `{ elk: 'Hierarchical', force: 'Force' }`. */
-  layoutLabels?: Record<SchemaLayoutKind, string>;
+  /**
+   * Layout picker: the selected key, the change handler, and the option labels
+   * (`{ key: label }`). The layout section renders **only** when `layoutOptions`
+   * is non-empty — so a viewer with no injected layouts shows no picker.
+   */
+  layout?: string;
+  onLayoutChange?: (layout: string) => void;
+  layoutOptions?: Record<string, string>;
+  /** Optional per-layout icons for the segmented picker. */
+  layoutIcons?: Record<string, ToolbarIcon>;
   /** Current edge routing. */
   edgeRouting: SchemaEdgeRouting;
   onEdgeRoutingChange: (routing: SchemaEdgeRouting) => void;
-  /** Schema layer id the Fit button targets. Default `'schema'`. */
+  /** Graph layer id the Fit button targets. Default `'graph'`. */
   layerId?: string;
   /** Subtract sections from the default set. */
   sections?: SchemaToolbarSections;
@@ -76,7 +75,7 @@ export interface SchemaToolbarProps {
   icons?: Partial<Record<'fit', ToolbarIcon>>;
   /** Bar orientation. Default `'horizontal'`. */
   orientation?: 'horizontal' | 'vertical';
-  /** Explicit canvas for Fit; defaults to the context (inner schema) canvas. */
+  /** Explicit canvas for Fit; defaults to the context (schema) canvas. */
   canvas?: Canvas | null;
   className?: string;
 }
@@ -97,10 +96,11 @@ export function SchemaToolbar({
   onNodeModeChange,
   layout,
   onLayoutChange,
-  layoutLabels = DEFAULT_LAYOUT_LABELS,
+  layoutOptions,
+  layoutIcons,
   edgeRouting,
   onEdgeRoutingChange,
-  layerId = 'schema',
+  layerId = 'graph',
   sections,
   icons,
   orientation = 'horizontal',
@@ -132,20 +132,23 @@ export function SchemaToolbar({
         },
       ]
     : [];
-  const layoutGroup: ToolbarItem[] = s.layout
-    ? [
-        {
-          type: 'select',
-          key: 'schema-layout',
-          label: 'Layout',
-          value: layout,
-          options: layoutLabels,
-          icons: LAYOUT_ICONS,
-          display: 'segmented',
-          onChange: (v) => onLayoutChange(v as SchemaLayoutKind),
-        },
-      ]
-    : [];
+  // Layout section only when injected layouts are available.
+  const hasLayouts = !!layoutOptions && Object.keys(layoutOptions).length > 0;
+  const layoutGroup: ToolbarItem[] =
+    s.layout && hasLayouts && layout !== undefined && onLayoutChange
+      ? [
+          {
+            type: 'select',
+            key: 'schema-layout',
+            label: 'Layout',
+            value: layout,
+            options: layoutOptions,
+            ...(layoutIcons ? { icons: layoutIcons } : {}),
+            display: 'segmented',
+            onChange: onLayoutChange,
+          },
+        ]
+      : [];
   const edgeGroup: ToolbarItem[] = s.edges
     ? [
         {

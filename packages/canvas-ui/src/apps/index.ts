@@ -4,6 +4,10 @@
 // `GraphCanvasAppProps` — never by rendering the regions yourself, so the
 // orchestrator's runtime wiring stays private.
 export { GraphCanvasApp } from './GraphCanvasApp';
+// Reusable host-theme → engine-`ThemeBehaviour` bridge; drop inside any canvas
+// (incl. nested) whose rendered theme should follow the app's light/dark toggle.
+export { CanvasThemeSync } from './CanvasThemeSync';
+export type { CanvasThemeSyncProps } from './CanvasThemeSync';
 export type {
   GraphCanvasAppProps,
   GraphCanvasAppControlContext,

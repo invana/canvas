@@ -289,3 +289,18 @@ export {
   type TaskCardData,
 } from './cards';
 
+
+// Schema — the graph's metagraph value + the observed (loaded-data) source
+// (`deriveSchema`). The authoritative source is `GraphStore.setSchema` / `.schema`.
+export {
+  deriveSchema,
+  schemaSignature,
+  defaultNodeTypeOf,
+  defaultEdgeTypeOf,
+  type GraphSchema,
+  type SchemaNodeType,
+  type SchemaEdgeType,
+  type SchemaEdgeConnection,
+  type SchemaProperty,
+  type DeriveSchemaOptions,
+} from './schema';

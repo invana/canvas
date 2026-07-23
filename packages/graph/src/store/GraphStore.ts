@@ -14,6 +14,7 @@
 import { ColumnStore, SourceEmitter } from '@invana/canvas';
 import type { CanvasEventBus, DataSource, FlushMode, LayerFlush } from '@invana/canvas';
 
+import type { GraphSchema } from '../schema/types';
 import { AdjacencyIndex } from './AdjacencyIndex';
 import { FrameFlushScheduler } from './FrameFlushScheduler';
 import { PendingEdges } from './PendingEdges';
@@ -122,6 +123,9 @@ export class GraphStore implements DataSource {
    */
   readonly events: SourceEmitter<GraphStoreEventMap>;
 
+  /** Authoritative schema declared by a data source (Neo4j, …); see {@link setSchema}. */
+  private _schema?: GraphSchema;
+
   /** Per-flush counters. Reset on `flush()`. */
   private counters = emptyCounters();
 
@@ -202,6 +206,27 @@ export class GraphStore implements DataSource {
   /** Monotonic counter. Bumps on every mutation including silent position writes. */
   get version(): number {
     return this._version;
+  }
+
+  /**
+   * The **authoritative** schema declared for this graph (e.g. the full Neo4j DB
+   * schema behind a connected canvas), or `undefined` when none is set. It is
+   * typically a *superset* of what's loaded — for the schema of the *loaded* data
+   * use `deriveSchema(store)`. The common resolution is `store.schema ??
+   * deriveSchema(store)` (authoritative wins).
+   */
+  get schema(): GraphSchema | undefined {
+    return this._schema;
+  }
+
+  /**
+   * Set (or clear with `undefined`) the authoritative schema. Called by a data
+   * source that *knows* its schema independent of loaded records — a Neo4j /
+   * GraphQL / ontology adapter. Emits `'schema'` so reactive consumers re-read.
+   */
+  setSchema(schema: GraphSchema | undefined): void {
+    this._schema = schema;
+    this.events.emit('schema', { authoritative: schema != null });
   }
 
   /** Number of live (non-tombstoned) nodes. */

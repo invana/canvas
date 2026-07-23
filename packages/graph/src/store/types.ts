@@ -166,6 +166,13 @@ export type GraphStoreEventMap = {
   /** Emitted when a buffered edge is dropped after exceeding `pendingEdgeTTL`. */
   'edge:orphaned': { edgeId: string };
   /**
+   * The **authoritative** schema was set/cleared via `setSchema` (e.g. a Neo4j
+   * adapter declaring the full DB schema). `authoritative` is whether one is now
+   * set. The payload intentionally omits the schema value (kept out of this map
+   * to avoid a type cycle); read it from `store.schema`.
+   */
+  schema: { authoritative: boolean };
+  /**
    * A runtime (presence) state was toggled on a node — `on` reflects the
    * post-change membership of the runtime set. Fired per-toggle on flush,
    * deduped per `(id, name)` within the flush window. `actor` is reserved for

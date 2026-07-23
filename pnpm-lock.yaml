@@ -416,9 +416,6 @@ importers:
       '@invana/graph-layout-d3-force':
         specifier: workspace:*
         version: link:../graph-layout-d3-force
-      '@invana/graph-layout-elkjs':
-        specifier: workspace:*
-        version: link:../graph-layout-elkjs
       '@invana/styling':
         specifier: ^0.0.19
         version: 0.0.19(tailwindcss@4.3.2)

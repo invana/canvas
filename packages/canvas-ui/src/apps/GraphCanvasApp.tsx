@@ -48,7 +48,7 @@ import {
   useState,
 } from 'react';
 import { deepMerge, type CanvasConfig, type CanvasTelemetryConfig } from '@invana/canvas';
-import { themeFamily, type GraphCanvas, type GraphData } from '@invana/graph';
+import type { GraphCanvas, GraphData } from '@invana/graph';
 import { AppLayoutV2, useTheme, type BottomSpan, type SectionConfig } from '@invana/themes';
 
 // Aliased: the engine type `GraphCanvas` (from `@invana/graph`) is used in this
@@ -57,7 +57,6 @@ import { AppLayoutV2, useTheme, type BottomSpan, type SectionConfig } from '@inv
 import { GraphCanvas as GraphCanvasRoot } from '@invana/canvas-react';
 import { CanvasContext } from '@invana/canvas-react';
 import { GraphCanvasContext, useGraphCanvas } from '@invana/canvas-react';
-import { useGraphCanvasUpdate } from '@invana/canvas-react';
 import { BackgroundLayer } from '@invana/canvas-react';
 import { GraphLayer } from '@invana/canvas-react';
 import { D3ForceLayout } from '@invana/canvas-react';
@@ -72,6 +71,7 @@ import { ColorByLabelBehaviour } from '@invana/canvas-react';
 import { ThemeBehaviour } from '@invana/canvas-react';
 import { buildHeaderNav, type GraphCanvasAppHeaderOptions } from './GraphCanvasAppHeader';
 import { buildFooterNav, type GraphCanvasAppFooterOptions } from './GraphCanvasAppFooter';
+import { CanvasThemeSync } from './CanvasThemeSync';
 
 // Re-export the layout's bottom-span union so consumers can type the `bottomSpan`
 // prop without reaching into `@invana/themes` directly.
@@ -268,21 +268,6 @@ function CanvasReady({ onReady }: { onReady: (canvas: GraphCanvas | null) => voi
   return null;
 }
 
-/**
- * Drives the engine `ThemeBehaviour` from the host `@invana/themes` theme: it
- * pushes the resolved mode (`light`/`dark` — the host already resolved
- * `system`) and the active theme **family** (matched by name; an unknown family
- * falls back to `default`). The behaviour republishes the palette and every
- * theme-aware layer recolours — no per-property patch list here.
- */
-function ThemeTemplateSync({ active, kind }: { active: string; kind: ThemeKind }) {
-  const update = useGraphCanvasUpdate();
-  useEffect(() => {
-    update({ behaviours: { theme: { mode: kind, active } } });
-  }, [update, active, kind]);
-  return null;
-}
-
 // ─── Region: Main ─────────────────────────────────────────────────────────────
 
 /**
@@ -304,8 +289,6 @@ function GraphCanvasAppMain({
   instanceKey,
   onReady,
   telemetry,
-  themeKind,
-  themeName,
   children,
 }: {
   data: GraphData;
@@ -314,8 +297,6 @@ function GraphCanvasAppMain({
   instanceKey?: string | number;
   onReady: (canvas: GraphCanvas | null) => void;
   telemetry?: CanvasTelemetryConfig;
-  themeKind?: ThemeKind;
-  themeName?: string;
   children?: ReactNode;
 }) {
   return (
@@ -336,11 +317,11 @@ function GraphCanvasAppMain({
               `config.fitOnLoad` one-shot is the single fitter (and centres even
               when no layout runs). */}
           <D3ForceLayout id={ACTIVE_LAYOUT_ID} targetLayerId="graph" fitPadding={null} />
-          {/* The sole theme publisher + a sync that drives its mode/active from
-              the host `<ThemeProvider>`. Every theme-aware layer recolours off
-              the published palette. */}
+          {/* The sole theme publisher + the shared host-theme sync that drives its
+              mode/active from the host `<ThemeProvider>`. Every theme-aware layer
+              recolours off the published palette. */}
           <ThemeBehaviour id="theme" />
-          {themeKind ? <ThemeTemplateSync active={themeName ?? 'default'} kind={themeKind} /> : null}
+          <CanvasThemeSync />
           <DragPanBehaviour id="pan" />
           <WheelZoomBehaviour id="wheel" />
           <DragNodeBehaviour id="drag-node" targetLayerId="graph" />
@@ -507,11 +488,8 @@ export function GraphCanvasApp({
         'Wrap it: <ThemeProvider><GraphCanvasApp … /></ThemeProvider>.',
     );
   }
-  const { isDark, toggleMode, theme: themeId } = theme;
+  const { isDark, toggleMode } = theme;
   const themeKind: ThemeKind = isDark ? 'dark' : 'light';
-  // The canvas theme family is matched (loosely) to the host theme id; an
-  // unknown family resolves to `default` inside the behaviour.
-  const themeName = themeFamily(themeId);
 
   const handleReady = useCallback(
     (c: GraphCanvas | null) => {
@@ -552,8 +530,6 @@ export function GraphCanvasApp({
       instanceKey={instanceKey}
       onReady={handleReady}
       telemetry={telemetry}
-      themeKind={bundle ? themeKind : undefined}
-      themeName={themeName}
     >
       {children}
     </GraphCanvasAppMain>
