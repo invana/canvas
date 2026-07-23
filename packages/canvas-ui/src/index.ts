@@ -927,6 +927,13 @@ export type {
   DevInfoToggleButtonProps,
 } from './toolbars';
 
+// ─── Hooks (UI-only turnkey) ─────────────────────────────────────────────────
+// `useSidePanels` — an activity-bar controller for `GraphCanvasApp` side panels:
+// pass panel descriptors, get the shared toolbar `items` + the active panel's
+// `region` (one panel docked at a time). Keeps the shell panel-agnostic.
+export { useSidePanels } from './hooks';
+export type { SidePanelDef, UseSidePanelsOptions, UseSidePanelsResult } from './hooks';
+
 // ─── UI components (building blocks) ───────────────────────────────────────
 // The toolbar layer is data-driven: the `ToolbarItems` renderer compiles
 // `ToolbarItem[]` (from the builder hooks) straight to `@invana/ui` chrome — no

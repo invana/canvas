@@ -1,30 +1,43 @@
 /**
  * **Structured find-in-canvas.** A right-docked **`<FindInCanvasViewPanel>`** over
  * the **Wikipedia data-viz cartography** (~2k pages / ~5.4k hyperlinks, precomputed
- * ForceAtlas2 positions): build one or more field filters — **id** / **label** /
- * any **property** (`name`, `clusterLabel`, `url`, …), each `contains` or `equals`
- * — AND-combined, and get the matching nodes and edges as a live list. Click a
+ * ForceAtlas2 positions): build a field filter — **id** / **label** / any
+ * **property** (`name`, `clusterLabel`, `url`, …) with `contains` / `equals` /
+ * numeric operators — and get the matching nodes and edges as a live list. Click a
  * result to **focus + select** it (the camera frames the element and the app-wide
- * `ClickSelectBehaviour` selects it — the same mechanism as the context-menu
- * "Select"); it never hides or filters the canvas.
+ * `ClickSelectBehaviour` selects it); it never hides or filters the canvas.
  *
- * The panel discovers its property-field options straight from the loaded data
- * (here `name` / `url` / `cluster` / `clusterLabel` / `score` on the pages), and
- * both the options and the results recompute off the store's topology/data stream.
- * Try `label` `equals` `Tool`, or `name` `contains` `gephi`, or flip the scope to
- * **Edges** and search the `links_to` ids.
+ * **One shared header toolbar** drives the side panels via `useSidePanels`: it
+ * turns the panel descriptors into the toggle `items` (spread into a single
+ * `<ToolbarItems>`, not a bar each) and the active panel's `region`. At most one
+ * panel occupies the resizable `right` region at a time (activity-bar style) —
+ * toggling one on swaps the dock, toggling it off drops the region so the canvas
+ * reclaims the space.
+ *
+ * The find panel discovers its property-field options straight from the loaded
+ * data (`name` / `url` / `cluster` / `clusterLabel` / `score`). Try `label`
+ * `equals` `Tool`, or `name` `contains` `gephi`, or flip the scope to **Edges**.
+ * The filters panel lists elements you've hidden (right-click → Hide).
  *
  * The store honours the pages' precomputed positions (mapped to `position`), so
- * `activeLayout: 'none'` no-ops the layout step and the cartography stands. The
- * standard **`<GraphContextMenu>`** (Focus · Select · Hide/Show) and the full
- * **`<GraphControlsToolbar>`** round out the app shell.
+ * `activeLayout: 'none'` no-ops the layout step and the cartography stands.
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { Rect } from '@invana/canvas';
-import { GraphCanvasApp, GraphContextMenu, GraphControlsToolbar, FindInCanvasViewPanel } from '@invana/canvas-ui';
+import type { GraphCanvas } from '@invana/graph';
+import {
+  GraphCanvasApp,
+  GraphContextMenu,
+  GraphControlsToolbar,
+  ToolbarItems,
+  FindInCanvasViewPanel,
+  CanvasFiltersViewPanel,
+  useSidePanels,
+} from '@invana/canvas-ui';
 import { wikipediaDataViz } from '@invana/graph-datasets/wikipedia-dataviz';
 import { ThemeProvider } from '@invana/themes';
+import { Filter, Search } from 'lucide-react';
+import { useCallback, useMemo } from 'react';
 
 const meta: Meta = { title: 'canvas-ui/view-panels/FindInCanvasViewPanel' };
 export default meta;
@@ -33,60 +46,70 @@ type Story = StoryObj;
 export const FindInCanvasViewPanelStory: Story = {
   name: 'FindInCanvasViewPanel',
   render: () => {
+    // The shared activity-bar: descriptors → toggle `items` + the active `region`,
+    // one panel docked at a time. `render` is handed the live engine.
+    const dock = useSidePanels(
+      [
+        { id: 'filters', icon: Filter, label: 'Filters', render: (c) => <CanvasFiltersViewPanel canvas={c} /> },
+        { id: 'find', icon: Search, label: 'Find', render: (c) => <FindInCanvasViewPanel canvas={c} /> },
+      ],
+      { defaultOpenId: 'find', section: { defaultSize: '360px', maxSize: '480px' } },
+    );
+
     // Map the property graph → GraphNode/GraphEdge (label→type, properties→data)
-    // and pin each page at its precomputed ForceAtlas2 position. `data` carries
-    // the searchable properties (name / url / cluster / clusterLabel / score),
-    // which the panel surfaces as `prop:*` filter fields.
-    const data = {
-      nodes: wikipediaDataViz.nodes.map((n) => ({
-        id: n.id,
-        type: n.label,
-        data: n.properties,
-        position: { x: n.properties.x, y: n.properties.y },
-      })),
-      edges: wikipediaDataViz.edges.map((e) => ({
-        id: e.id,
-        source: e.source,
-        target: e.target,
-        type: e.label,
-      })),
-    };
+    // and pin each page at its precomputed ForceAtlas2 position. Memoised so
+    // toggling a panel (a re-render) keeps a stable identity and never reloads the
+    // engine.
+    const data = useMemo(
+      () => ({
+        nodes: wikipediaDataViz.nodes.map((n) => ({
+          id: n.id,
+          type: n.label,
+          data: n.properties,
+          position: { x: n.properties.x, y: n.properties.y },
+        })),
+        edges: wikipediaDataViz.edges.map((e) => ({
+          id: e.id,
+          source: e.source,
+          target: e.target,
+          type: e.label,
+        })),
+      }),
+      [],
+    );
+
+    // Positions ship with the data — `'none'` no-ops the layout step so the
+    // cartography stands. Memoised for the same stable-identity reason as `data`.
+    const config = useMemo(() => ({ activeLayout: 'none' }), []);
+
+    const onReady = useCallback((c: GraphCanvas | null) => {
+      if (!c) return;
+      // `fitView` frames the union of every world layer's bounds (no manual
+      // getBounds) — the same fitter as the Fit button. One frame later so the
+      // just-loaded scene has flushed its bounds. (The engine's own `fitOnLoad`
+      // does exactly this, but our truthy `'none'` activeLayout keeps it from
+      // arming — it waits for a layout run that never happens.)
+      requestAnimationFrame(() => c.fitView(60));
+      c.showMessage('Toggle Find / Filters from the header · right-click an element to Hide it');
+    }, []);
+
     return (
       <ThemeProvider>
         <GraphCanvasApp
           data={data}
-          // Positions ship with the data — `'none'` matches no registered layout,
-          // so the engine's layout step no-ops on load and the cartography stands.
-          config={{ activeLayout: 'none' }}
-          onReady={(c) => {
-            if (!c) return;
-            // No layout runs, so nothing frames the camera — fit once the graph has
-            // painted (retry next frame if the bounds aren't ready yet).
-            const fit = (): boolean => {
-              const b = (c.layers.get('graph') as { getBounds?(): Rect } | undefined)?.getBounds?.();
-              if (b && b.width > 0 && b.height > 0) {
-                c.camera.fitContent(b, 60);
-                return true;
-              }
-              return false;
-            };
-            if (!fit()) requestAnimationFrame(() => void fit());
-            c.showMessage('Build a filter on the right · click a match to focus & select it');
+          config={config}
+          onReady={onReady}
+          header={{
+            title: 'FindInCanvasViewPanel',
+            center: <GraphControlsToolbar />,
+            // One shared toolbar — both panel toggles as items, not a bar each.
+            right: <ToolbarItems orientation="horizontal" items={dock.items} />,
           }}
-          header={{ title: 'FindInCanvasViewPanel', center: <GraphControlsToolbar /> }}
-          // Docked into the app's resizable `right` region — no floating Panel.
-          // `content` is a render-fn handed the live control context, so the view
-          // gets the engine straight from `ctx.canvas` (null until it's ready —
-          // `FindInCanvasViewPanel` handles that itself). No context-reading wrapper.
-          right={{
-            content: ({ canvas }) => <FindInCanvasViewPanel canvas={canvas} />,
-            defaultSize: '360px',
-            maxSize: '480px',
-            collapsible: true,
-          }}
+          // The active panel docks into the app's resizable `right` region (or none).
+          right={dock.region}
         >
-          {/* Standard right-click menu (Focus · Select · Hide/Show) — a sibling of
-              the bundle, resolved from the <Canvas> context. */}
+          {/* Standard right-click menu (Focus · Select · Hide/Show) — Hide feeds
+              the Filters panel. */}
           <GraphContextMenu />
         </GraphCanvasApp>
       </ThemeProvider>
