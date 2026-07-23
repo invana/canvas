@@ -13,14 +13,24 @@
  * enforces it); with `schema` set, no canvas is needed.
  */
 
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { GraphCanvasApp, GraphControlsToolbar, SchemaViewPanel, ThemeToggle } from '@invana/canvas-ui';
-import type { GraphSchema } from '@invana/graph';
+import { DevInfoLayer, MiniMapLayer } from '@invana/canvas-react';
+import {
+  CanvasMessageBar,
+  GraphCanvasApp,
+  GraphControlsToolbar,
+  GraphStatusBar,
+  SchemaViewPanel,
+  ToolbarItems,
+  useSidePanels,
+} from '@invana/canvas-ui';
+import type { GraphCanvas, GraphSchema } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { ontology } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
+import { Gauge, Map, Moon, PanelRightClose, PanelRightOpen, Sun } from 'lucide-react';
 
 const meta: Meta = { title: 'canvas-ui/view-panels/SchemaViewPanel/CustomSchema' };
 export default meta;
@@ -94,27 +104,88 @@ export const CustomSchema: Story = {
     );
     const layoutLabels = useMemo(() => ({ elk: 'Hierarchical', force: 'Force' }), []);
 
+    // The header toggle + docked region. The panel renders the explicit `schema`
+    // (so `canvas` must not be passed — the union type enforces it), so `render`
+    // ignores the engine.
+    const dock = useSidePanels(
+      [
+        {
+          id: 'schema',
+          icon: PanelRightOpen,
+          activeIcon: PanelRightClose,
+          label: 'Schema',
+          render: () => (
+            <SchemaViewPanel schema={schema} layouts={layouts} layoutLabels={layoutLabels} defaultLayout="elk" />
+          ),
+        },
+      ],
+      { defaultOpenId: 'schema', section: { defaultSize: '440px', maxSize: '600px' } },
+    );
+
+    // Screen-fixed overlays driven as toolbar items (own their on-state; the
+    // layers render as GraphCanvasApp children below, gated on it).
+    const [minimapOn, setMinimapOn] = useState(true);
+    const [devOn, setDevOn] = useState(false);
+
+    const onReady = useCallback(
+      (c: GraphCanvas | null) => c?.showMessage('Right panel shows an explicit schema (superset of the loaded graph)'),
+      [],
+    );
+
     return (
       <ThemeProvider>
         <GraphCanvasApp
           data={data}
-          onReady={(c) => c?.showMessage('Right panel shows an explicit schema (superset of the loaded graph)')}
+          onReady={onReady}
           header={{
             title: 'SchemaViewPanel · custom',
             center: <GraphControlsToolbar />,
-            right: (ctx) => <ThemeToggle ctx={ctx} />,
-          }}
-          right={{
-            // The docked panel ignores the app's engine — it renders the explicit
-            // `schema` (so `canvas` must not be passed; the union type enforces it).
-            content: () => (
-              <SchemaViewPanel schema={schema} layouts={layouts} layoutLabels={layoutLabels} defaultLayout="elk" />
+            // One shared toolbar — the schema toggle plus minimap / dev-overlay /
+            // theme, all as items.
+            right: (ctx) => (
+              <ToolbarItems
+                orientation="horizontal"
+                items={[
+                  ...dock.items,
+                  {
+                    type: 'toggle',
+                    key: 'minimap',
+                    icon: Map,
+                    label: 'Minimap: off',
+                    activeLabel: 'Minimap: on',
+                    active: minimapOn,
+                    onToggle: () => setMinimapOn((v) => !v),
+                  },
+                  {
+                    type: 'toggle',
+                    key: 'devinfo',
+                    icon: Gauge,
+                    label: 'Dev overlay: off',
+                    activeLabel: 'Dev overlay: on',
+                    active: devOn,
+                    onToggle: () => setDevOn((v) => !v),
+                  },
+                  {
+                    type: 'toggle',
+                    key: 'theme',
+                    icon: Sun,
+                    activeIcon: Moon,
+                    label: 'Switch to dark theme',
+                    activeLabel: 'Switch to light theme',
+                    active: ctx.themeKind === 'dark',
+                    onToggle: ctx.toggleTheme,
+                  },
+                ]}
+              />
             ),
-            defaultSize: '440px',
-            maxSize: '600px',
-            collapsible: true,
           }}
-        />
+          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+          right={dock.region}
+        >
+          {/* Screen-fixed overlays driven by the header toggle items above. */}
+          {minimapOn && <MiniMapLayer backgroundLayerId="background" position="bottom-left" />}
+          {devOn && <DevInfoLayer enabled corner="top-left" margin={{ x: 12, y: 48 }} />}
+        </GraphCanvasApp>
       </ThemeProvider>
     );
   },

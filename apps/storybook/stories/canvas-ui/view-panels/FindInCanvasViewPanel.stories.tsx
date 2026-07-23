@@ -24,11 +24,14 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { DevInfoLayer, MiniMapLayer } from '@invana/canvas-react';
 import type { GraphCanvas } from '@invana/graph';
 import {
+  CanvasMessageBar,
   GraphCanvasApp,
   GraphContextMenu,
   GraphControlsToolbar,
+  GraphStatusBar,
   ToolbarItems,
   FindInCanvasViewPanel,
   CanvasFiltersViewPanel,
@@ -36,8 +39,8 @@ import {
 } from '@invana/canvas-ui';
 import { wikipediaDataViz } from '@invana/graph-datasets/wikipedia-dataviz';
 import { ThemeProvider } from '@invana/themes';
-import { Filter, Search } from 'lucide-react';
-import { useCallback, useMemo } from 'react';
+import { Filter, Gauge, Map, Moon, Search, Sun } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 
 const meta: Meta = { title: 'canvas-ui/view-panels/FindInCanvasViewPanel' };
 export default meta;
@@ -55,6 +58,11 @@ export const FindInCanvasViewPanelStory: Story = {
       ],
       { defaultOpenId: 'find', section: { defaultSize: '360px', maxSize: '480px' } },
     );
+
+    // Screen-fixed overlays driven as toolbar items (own their on-state; the
+    // layers render as GraphCanvasApp children below, gated on it).
+    const [minimapOn, setMinimapOn] = useState(true);
+    const [devOn, setDevOn] = useState(false);
 
     // Map the property graph → GraphNode/GraphEdge (label→type, properties→data)
     // and pin each page at its precomputed ForceAtlas2 position. Memoised so
@@ -102,12 +110,53 @@ export const FindInCanvasViewPanelStory: Story = {
           header={{
             title: 'FindInCanvasViewPanel',
             center: <GraphControlsToolbar />,
-            // One shared toolbar — both panel toggles as items, not a bar each.
-            right: <ToolbarItems orientation="horizontal" items={dock.items} />,
+            // One shared toolbar — the panel toggles plus minimap / dev-overlay /
+            // theme, all as items.
+            right: (ctx) => (
+              <ToolbarItems
+                orientation="horizontal"
+                items={[
+                  ...dock.items,
+                  {
+                    type: 'toggle',
+                    key: 'minimap',
+                    icon: Map,
+                    label: 'Minimap: off',
+                    activeLabel: 'Minimap: on',
+                    active: minimapOn,
+                    onToggle: () => setMinimapOn((v) => !v),
+                  },
+                  {
+                    type: 'toggle',
+                    key: 'devinfo',
+                    icon: Gauge,
+                    label: 'Dev overlay: off',
+                    activeLabel: 'Dev overlay: on',
+                    active: devOn,
+                    onToggle: () => setDevOn((v) => !v),
+                  },
+                  {
+                    type: 'toggle',
+                    key: 'theme',
+                    icon: Sun,
+                    activeIcon: Moon,
+                    label: 'Switch to dark theme',
+                    activeLabel: 'Switch to light theme',
+                    active: ctx.themeKind === 'dark',
+                    onToggle: ctx.toggleTheme,
+                  },
+                ]}
+              />
+            ),
           }}
+          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           // The active panel docks into the app's resizable `right` region (or none).
           right={dock.region}
         >
+          {/* Screen-fixed overlays driven by the header toggle items above. */}
+          {minimapOn && <MiniMapLayer backgroundLayerId="background" position="bottom-left" />}
+          {devOn && <DevInfoLayer enabled corner="top-left" margin={{ x: 12, y: 48 }} />}
+
           {/* Standard right-click menu (Focus · Select · Hide/Show) — Hide feeds
               the Filters panel. */}
           <GraphContextMenu />

@@ -13,8 +13,10 @@ import type { GraphCanvasAppControlContext, GraphCanvasAppSectionOptions } from 
 export interface SidePanelDef {
   /** Stable id — the toggle key + the "which panel is open" discriminator. */
   id: string;
-  /** Toggle icon shown in the shared toolbar. */
+  /** Toggle icon shown in the shared toolbar (inactive, and active unless {@link activeIcon}). */
   icon: ToolbarIcon;
+  /** Icon while the panel is open — an open/close flip (e.g. `PanelRightOpen` ⇄ `PanelRightClose`). */
+  activeIcon?: ToolbarIcon;
   /**
    * Toggle label. The item flips `"<label>: hidden"` ⇄ `"<label>: shown"` with the
    * open-state (a `ToolbarItems` toggle convention); pass `activeLabel` to override.
@@ -84,6 +86,7 @@ export function useSidePanels(panels: SidePanelDef[], options: UseSidePanelsOpti
     type: 'toggle',
     key: p.id,
     icon: p.icon,
+    ...(p.activeIcon ? { activeIcon: p.activeIcon } : {}),
     label: `${p.label}: hidden`,
     activeLabel: p.activeLabel ?? `${p.label}: shown`,
     active: openId === p.id,

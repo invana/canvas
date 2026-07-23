@@ -13,14 +13,24 @@
  * right cluster carries a schema-panel toggle + theme switcher.
  */
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { GraphCanvasApp, GraphControlsToolbar, SchemaViewPanel, ThemeToggle, ToolbarItems } from '@invana/canvas-ui';
+import { DevInfoLayer, MiniMapLayer } from '@invana/canvas-react';
+import type { GraphCanvas } from '@invana/graph';
+import {
+  CanvasMessageBar,
+  GraphCanvasApp,
+  GraphControlsToolbar,
+  GraphStatusBar,
+  SchemaViewPanel,
+  ToolbarItems,
+  useSidePanels,
+} from '@invana/canvas-ui';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { ontology } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
-import { PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { Gauge, Map, Moon, PanelRightClose, PanelRightOpen, Sun } from 'lucide-react';
 
 const meta: Meta = { title: 'canvas-ui/view-panels/SchemaViewPanel/CanvasDerived' };
 export default meta;
@@ -29,10 +39,6 @@ type Story = StoryObj;
 export const CanvasDerived: Story = {
   // name: 'Canvas-derived schema',
   render: () => {
-    // `showSchema` mounts/unmounts the right region — `GraphCanvasApp`'s control
-    // context (handed to header slots) exposes the theme but not region visibility.
-    const [showSchema, setShowSchema] = useState(true);
-
     // Map the knowledge graph → GraphNode/GraphEdge, promoting each element's
     // `data.kind` to its `type` — that single field drives both the app's
     // colour-by-type behaviour AND the schema's bucketing. Memoised so the panel
@@ -63,48 +69,89 @@ export const CanvasDerived: Story = {
     );
     const layoutLabels = useMemo(() => ({ elk: 'Hierarchical', force: 'Force' }), []);
 
+    // The header toggle + docked region for the schema panel (icon flips
+    // open ⇄ close). `render` passes the live engine — the panel derives its
+    // schema from the loaded store.
+    const dock = useSidePanels(
+      [
+        {
+          id: 'schema',
+          icon: PanelRightOpen,
+          activeIcon: PanelRightClose,
+          label: 'Schema',
+          render: (c) => (
+            <SchemaViewPanel canvas={c} layouts={layouts} layoutLabels={layoutLabels} defaultLayout="elk" />
+          ),
+        },
+      ],
+      { defaultOpenId: 'schema', section: { defaultSize: '420px', maxSize: '560px' } },
+    );
+
+    // Screen-fixed overlays driven as toolbar items (own their on-state; the
+    // layers render as GraphCanvasApp children below, gated on it).
+    const [minimapOn, setMinimapOn] = useState(true);
+    const [devOn, setDevOn] = useState(false);
+
+    const onReady = useCallback(
+      (c: GraphCanvas | null) =>
+        c?.showMessage('Schema derived from the loaded graph · switch Nodes / Layout / Edges in its toolbar'),
+      [],
+    );
+
     return (
       <ThemeProvider>
         <GraphCanvasApp
           data={data}
-          onReady={(c) => c?.showMessage('Schema derived from the loaded graph · switch Nodes / Layout / Edges in its toolbar')}
+          onReady={onReady}
           header={{
             title: 'SchemaViewPanel · derived',
             center: <GraphControlsToolbar />,
+            // One shared toolbar — the schema toggle plus minimap / dev-overlay /
+            // theme, all as items.
             right: (ctx) => (
-              <div className="flex items-center gap-1">
-                <ToolbarItems
-                  orientation="horizontal"
-                  items={[
-                    {
-                      type: 'toggle',
-                      key: 'schema-panel',
-                      icon: PanelRightOpen,
-                      activeIcon: PanelRightClose,
-                      label: 'Show schema',
-                      activeLabel: 'Hide schema',
-                      active: showSchema,
-                      onToggle: () => setShowSchema((v) => !v),
-                    },
-                  ]}
-                />
-                <ThemeToggle ctx={ctx} />
-              </div>
+              <ToolbarItems
+                orientation="horizontal"
+                items={[
+                  ...dock.items,
+                  {
+                    type: 'toggle',
+                    key: 'minimap',
+                    icon: Map,
+                    label: 'Minimap: off',
+                    activeLabel: 'Minimap: on',
+                    active: minimapOn,
+                    onToggle: () => setMinimapOn((v) => !v),
+                  },
+                  {
+                    type: 'toggle',
+                    key: 'devinfo',
+                    icon: Gauge,
+                    label: 'Dev overlay: off',
+                    activeLabel: 'Dev overlay: on',
+                    active: devOn,
+                    onToggle: () => setDevOn((v) => !v),
+                  },
+                  {
+                    type: 'toggle',
+                    key: 'theme',
+                    icon: Sun,
+                    activeIcon: Moon,
+                    label: 'Switch to dark theme',
+                    activeLabel: 'Switch to light theme',
+                    active: ctx.themeKind === 'dark',
+                    onToggle: ctx.toggleTheme,
+                  },
+                ]}
+              />
             ),
           }}
-          right={
-            showSchema
-              ? {
-                  content: ({ canvas }) => (
-                    <SchemaViewPanel canvas={canvas} layouts={layouts} layoutLabels={layoutLabels} defaultLayout="elk" />
-                  ),
-                  defaultSize: '420px',
-                  maxSize: '560px',
-                  collapsible: true,
-                }
-              : undefined
-          }
-        />
+          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+          right={dock.region}
+        >
+          {/* Screen-fixed overlays driven by the header toggle items above. */}
+          {minimapOn && <MiniMapLayer backgroundLayerId="background" position="bottom-left" />}
+          {devOn && <DevInfoLayer enabled corner="top-left" margin={{ x: 12, y: 48 }} />}
+        </GraphCanvasApp>
       </ThemeProvider>
     );
   },

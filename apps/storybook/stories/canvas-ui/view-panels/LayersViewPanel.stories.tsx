@@ -1,27 +1,25 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { CanvasConfig, Rect } from '@invana/canvas';
-import { EdgeLODBehaviour, type LayoutFactory } from '@invana/canvas-react';
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
+import { DevInfoLayer, EdgeLODBehaviour, MiniMapLayer, type LayoutFactory } from '@invana/canvas-react';
+import type { GraphCanvas, GraphData } from '@invana/graph';
 import {
   CanvasMessageBar,
-  DevInfoToggleButton,
   GraphBackgroundContextMenu,
   GraphCanvasApp,
   GraphControlsToolbar,
   GraphNodeContextMenu,
   GraphStatusBar,
   LayersViewPanel,
-  MiniMapToggleButton,
-  ThemeToggle,
   ToolbarItems,
+  useSidePanels,
 } from '@invana/canvas-ui';
 import { gameOfThrones } from '@invana/graph-datasets/game-of-thrones';
 import { wikipediaDataViz } from '@invana/graph-datasets/wikipedia-dataviz';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { GeometricLayout } from '@invana/graph-layout-geometric';
 import { ThemeProvider } from '@invana/themes';
-import { Layers } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Gauge, Layers, Map, Moon, Sun } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 
 /**
  * `canvas-ui/view-panels/LayersViewPanel` — the `@invana/canvas-ui` **LayersViewPanel**
@@ -103,16 +101,44 @@ const DATASETS: Record<DatasetId, DatasetDef> = {
   },
 };
 
-export const LayersPanel: Story = {
+export const LayersViewPanelStory: Story = {
   name: 'LayersViewPanel',
   render: function Render() {
     const [datasetId, setDatasetId] = useState<DatasetId>('wikipedia');
-    const [layersOpen, setLayersOpen] = useState(true);
     const ds = DATASETS[datasetId];
+
+    // The header toggle + docked region for the LayersViewPanel (self-wiring — it
+    // reads the app context, so `render` ignores the passed canvas).
+    const dock = useSidePanels(
+      [{ id: 'layers', icon: Layers, label: 'Layers', render: () => <LayersViewPanel /> }],
+      { defaultOpenId: 'layers', section: { defaultSize: '320px', maxSize: '460px' } },
+    );
+
+    // The minimap / dev-overlay are screen-fixed layers, so we drive them as plain
+    // toolbar toggle *items* (not the turnkey `*ToggleButton`s): own the on-state
+    // here and render the layer as a `GraphCanvasApp` child gated on it (below).
+    const [minimapOn, setMinimapOn] = useState(true);
+    const [devOn, setDevOn] = useState(false);
 
     // Build the graph once per dataset. The whole app is keyed on `datasetId`
     // below, so switching remounts a fresh engine with the new data + config.
     const data = useMemo(() => DATASETS[datasetId].build(), [datasetId]);
+
+    // Memoised per dataset so toggling the panel (a re-render) doesn't re-fire it.
+    const onReady = useCallback(
+      (c: GraphCanvas | null) => {
+        if (!c) return;
+        const d = DATASETS[datasetId];
+        c.showMessage(
+          `Loaded ${d.label} — ${d.meta.nodeCount.toLocaleString()} nodes / ${d.meta.edgeCount.toLocaleString()} edges`,
+        );
+        // The precomputed-position dataset runs no layout, so nothing frames the
+        // camera — `fitView` fits the union of world-layer bounds, one frame later
+        // so the scene has flushed its bounds.
+        if (d.fitOnReady) requestAnimationFrame(() => c.fitView(60));
+      },
+      [datasetId],
+    );
 
     return (
       <ThemeProvider>
@@ -120,26 +146,7 @@ export const LayersPanel: Story = {
           key={datasetId}
           data={data}
           config={ds.config}
-          onReady={(c) => {
-            if (!c) return;
-            c.showMessage(
-              `Loaded ${ds.label} — ${ds.meta.nodeCount.toLocaleString()} nodes / ${ds.meta.edgeCount.toLocaleString()} edges`,
-            );
-            // The precomputed-position dataset runs no layout, so nothing frames
-            // the camera — fit once the graph has painted (retry next frame if the
-            // bounds aren't ready yet).
-            if (ds.fitOnReady) {
-              const fit = (): boolean => {
-                const b = (c.layers.get('graph') as { getBounds?(): Rect } | undefined)?.getBounds?.();
-                if (b && b.width > 0 && b.height > 0) {
-                  c.camera.fitContent(b, 60);
-                  return true;
-                }
-                return false;
-              };
-              if (!fit()) requestAnimationFrame(() => void fit());
-            }
-          }}
+          onReady={onReady}
           header={{
             // Title + the dataset dropdown (a `select` ToolbarItem — its trigger
             // reads `Dataset: <current>`, so it doubles as the loaded-dataset
@@ -169,37 +176,56 @@ export const LayersPanel: Story = {
                 applyInitialLayout={ds.applyInitialLayout}
               />
             ),
+            // One shared toolbar — Layers (from `useSidePanels`), the minimap /
+            // dev-overlay layer toggles, and the theme toggle, all as `items`.
             right: (ctx) => (
-              <>
-                <ToolbarItems
-                  orientation="horizontal"
-                  items={[
-                    {
-                      type: 'toggle',
-                      key: 'layers',
-                      icon: Layers,
-                      label: 'Layers: hidden',
-                      activeLabel: 'Layers: shown',
-                      active: layersOpen,
-                      onToggle: () => setLayersOpen((o) => !o),
-                    },
-                  ]}
-                />
-                <MiniMapToggleButton backgroundLayerId="background" position="bottom-left" />
-                <DevInfoToggleButton corner="top-left" margin={{ x: 12, y: 48 }} />
-                <ThemeToggle ctx={ctx} />
-              </>
+              <ToolbarItems
+                orientation="horizontal"
+                items={[
+                  ...dock.items,
+                  {
+                    type: 'toggle',
+                    key: 'minimap',
+                    icon: Map,
+                    label: 'Minimap: off',
+                    activeLabel: 'Minimap: on',
+                    active: minimapOn,
+                    onToggle: () => setMinimapOn((v) => !v),
+                  },
+                  {
+                    type: 'toggle',
+                    key: 'devinfo',
+                    icon: Gauge,
+                    label: 'Dev overlay: off',
+                    activeLabel: 'Dev overlay: on',
+                    active: devOn,
+                    onToggle: () => setDevOn((v) => !v),
+                  },
+                  {
+                    type: 'toggle',
+                    key: 'theme',
+                    icon: Sun,
+                    activeIcon: Moon,
+                    label: 'Switch to dark theme',
+                    activeLabel: 'Switch to light theme',
+                    active: ctx.themeKind === 'dark',
+                    onToggle: ctx.toggleTheme,
+                  },
+                ]}
+              />
             ),
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           // The star: the LayersViewPanel, docked into the app's resizable `right`
           // region, toggled by the header “Layers” button.
-          right={
-            layersOpen
-              ? { content: <LayersViewPanel />, defaultSize: '320px', maxSize: '460px', collapsible: true }
-              : undefined
-          }
+          right={dock.region}
         >
+          {/* Screen-fixed overlays driven by the header toggle items above — they
+              render correctly from anywhere under the canvas context, so they live
+              here as GraphCanvasApp children, gated on their own state. */}
+          {minimapOn && <MiniMapLayer backgroundLayerId="background" position="bottom-left" />}
+          {devOn && <DevInfoLayer enabled corner="top-left" margin={{ x: 12, y: 48 }} />}
+
           {/* Edge zoom-LOD — below 0.5× thin the edges to the top 15% by degree
               (keep the backbone), so the zoomed-out hairball is cheap to draw. */}
           <EdgeLODBehaviour targetLayerId="graph" minZoom={0.5} keepFraction={0.15} keepBy="degree" />
