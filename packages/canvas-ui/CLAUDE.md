@@ -33,7 +33,7 @@ src/
 │     └─ index.ts
 ├─ view-panels/  presentational *ViewPanel surfaces (SchemaViewPanel, LayersViewPanel, CanvasFiltersViewPanel, CanvasPagesViewPanel, preview cards) — props in → JSX
 ├─ apps/         GraphCanvasApp (+ header/footer)
-├─ hooks/        UI-only turnkey hooks (useDevTool, useMiniMap — button = pixels, layer re-imported from canvas-react)
+├─ hooks/        UI-only turnkey hooks (useSidePanels — activity-bar for GraphCanvasApp side panels: descriptors → shared-toolbar `items` + active-panel `region`, one docked at a time; useDevTool, useMiniMap)
 └─ shared/       colour utils + presets used across tracks
 ```
 
