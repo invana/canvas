@@ -27,7 +27,7 @@ export default meta;
 type Story = StoryObj;
 
 export const CustomSchema: Story = {
-  name: 'Custom schema',
+  // name: 'Custom schema',
   render: () => {
     // The loaded graph (a subset) — the schema panel is independent of it.
     const data = useMemo(

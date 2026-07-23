@@ -812,6 +812,7 @@ export type {
 // canvas). The `deriveSchema` core + `useDerivedSchema` hook are reusable standalone.
 export {
   SchemaViewer,
+  SCHEMA_METAGRAPH_LAYER_ID,
   useDerivedSchema,
   deriveSchema,
   schemaSignature,
@@ -851,7 +852,7 @@ export { numberToHex, hexToNumber } from './shared/color';
 // `@invana/canvas-react`'s headless hooks/context.
 
 // ─── App (batteries-included composition) ────────────────────────────────────
-export { GraphCanvasApp, CanvasThemeSync } from './apps';
+export { GraphCanvasApp, CanvasThemeSync, graphCanvasAppBaseConfig } from './apps';
 export type { CanvasThemeSyncProps } from './apps';
 export type {
   GraphCanvasAppProps,

@@ -9,7 +9,8 @@
  *
  * Its **`<SchemaToolbar>`** switches Nodes (Simple discs ⇄ ER **Table** cards) ·
  * Layout (Hierarchical/ELK ⇄ Force) · Edges (Straight · Orthogonal · Curved) ·
- * Fit. The header's right cluster carries a schema-panel toggle + theme switcher.
+ * Fit. Hover a type to highlight its 1st-degree neighbours (built in). The header's
+ * right cluster carries a schema-panel toggle + theme switcher.
  */
 
 import { useMemo, useState } from 'react';
@@ -26,7 +27,7 @@ export default meta;
 type Story = StoryObj;
 
 export const CanvasDerived: Story = {
-  name: 'Canvas-derived schema',
+  // name: 'Canvas-derived schema',
   render: () => {
     // `showSchema` mounts/unmounts the right region — `GraphCanvasApp`'s control
     // context (handed to header slots) exposes the theme but not region visibility.

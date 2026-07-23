@@ -4,7 +4,7 @@
 // `../../toolbars`). The `deriveSchema` core + `useDerivedSchema` hook are reusable
 // standalone.
 
-export { SchemaViewer } from './SchemaViewer';
+export { SchemaViewer, SCHEMA_METAGRAPH_LAYER_ID } from './SchemaViewer';
 export type { SchemaViewerProps, SchemaViewerBaseProps } from './SchemaViewer';
 
 // Derivation core + reactive hook — reusable without the view.

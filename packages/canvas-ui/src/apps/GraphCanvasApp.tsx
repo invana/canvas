@@ -175,8 +175,16 @@ const ACTIVE_LAYOUT_ID = 'graph-force';
  * (styles, resolver functions, force params, behaviour options, which are
  * enabled, the active layout, …) — there are no bespoke app props for any of it.
  * Theme colours are pushed separately by the in-app light/dark toggle.
+ *
+ * **Exported as `graphCanvasAppBaseConfig`** so you can define shared defaults
+ * once and reuse them across canvases — `deepMerge(graphCanvasAppBaseConfig, {…})`
+ * → pass as `config` to any `<GraphCanvasApp>`. Note it's keyed by the bundle's
+ * ids (`graph` · `hover` · `graph-force` · …), so it only applies to a canvas that
+ * registers those same ids (i.e. the app bundle) — a differently-composed
+ * `<GraphCanvas>` needs config keyed by *its* ids. Treat as read-only (merge,
+ * don't mutate).
  */
-const BASE_CONFIG: CanvasConfig = {
+export const BASE_CONFIG: CanvasConfig = {
   activeLayout: ACTIVE_LAYOUT_ID,
   // Centre the graph once on load (engine one-shot). Consumers opt out with
   // `config={{ fitOnLoad: false }}`.
@@ -228,7 +236,7 @@ const BASE_CONFIG: CanvasConfig = {
     // Registered but disarmed — the toolbar's select-mode picker arms one at a time.
     'brush-select': { enabled: false },
     'lasso-select': { enabled: false },
-    // The sole theme publisher. Starts following the OS; `ThemeTemplateSync`
+    // The sole theme publisher. Starts following the OS; `CanvasThemeSync`
     // immediately pins it to the host theme's resolved mode + family, and the
     // accent role tracks the design-kit `--color-primary`. The published palette
     // recolours background, nodes, edges, labels and group frames — every layer

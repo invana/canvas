@@ -16,14 +16,17 @@
 // packages) to enable the toolbar's layout picker; with none, the metagraph shows
 // at its seeded positions.
 
-import { useEffect, useMemo, useState } from 'react';
-import type { GraphCanvas, GraphData, GraphSchema } from '@invana/graph';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+// The engine `GraphCanvas` (a *type* — the live instance) clashes by name with the
+// canvas-react `<GraphCanvas>` *component*; alias the type so the JSX reads naturally.
+import type { GraphCanvas as GraphCanvasInstance, GraphData, GraphSchema } from '@invana/graph';
 import {
   BackgroundLayer,
   DragNodeBehaviour,
   DragPanBehaviour,
-  GraphCanvas as GraphCanvasRoot,
+  GraphCanvas,
   GraphLayer,
+  HoverActivateBehaviour,
   ParallelEdgeBehaviour,
   TextResolutionLODBehaviour,
   ThemeBehaviour,
@@ -45,11 +48,16 @@ import {
   type SchemaNodeMode,
 } from './schema';
 
-const INNER_LAYER_ID = 'schema';
+/**
+ * The id of the metagraph layer inside `SchemaViewer`. Target it from extra
+ * behaviours/layers passed as `children` — e.g.
+ * `<HoverActivateBehaviour targetLayerId={SCHEMA_METAGRAPH_LAYER_ID} />`.
+ */
+export const SCHEMA_METAGRAPH_LAYER_ID = 'schema';
 
 /**
  * Applies + re-applies an injected layout to the metagraph. Mounted inside
- * `<GraphCanvasRoot>` so `useLayout` resolves the inner canvas. Keyed by the
+ * `<GraphCanvas>` so `useLayout` resolves the inner canvas. Keyed by the
  * parent on `<layout>:<nodeMode>:<edgeRouting>:<sig>`, so any change that rewrites
  * the data (a pure `setData` wipe) re-solves.
  */
@@ -62,7 +70,7 @@ function SchemaLayoutRunner({
   layout: string;
   fitPadding: number;
 }) {
-  useLayout(layouts, { layerId: INNER_LAYER_ID, initial: layout, applyInitial: true, fitPadding });
+  useLayout(layouts, { layerId: SCHEMA_METAGRAPH_LAYER_ID, initial: layout, applyInitial: true, fitPadding });
   return null;
 }
 
@@ -88,6 +96,13 @@ export interface SchemaViewerBaseProps extends UseDerivedSchemaOptions {
   showToolbar?: boolean;
   /** Auto-fit padding (screen px) after an injected layout. Default `60`. */
   fitPadding?: number;
+  /**
+   * Extra canvas-react children mounted inside the metagraph's `<GraphCanvas>` —
+   * behaviours, layers, overlays. Target the metagraph layer via
+   * {@link SCHEMA_METAGRAPH_LAYER_ID} (e.g.
+   * `<HoverActivateBehaviour targetLayerId={SCHEMA_METAGRAPH_LAYER_ID} />`).
+   */
+  children?: ReactNode;
   /** Extra classes on the root. */
   className?: string;
 }
@@ -105,7 +120,7 @@ export type SchemaViewerProps = SchemaViewerBaseProps &
   (
     | {
         /** The source canvas whose schema is shown (null until `<Canvas>` publishes it). */
-        canvas: GraphCanvas | null;
+        canvas: GraphCanvasInstance | null;
         schema?: never;
       }
     | {
@@ -136,6 +151,7 @@ export function SchemaViewer({
   defaultEdgeRouting = 'straight',
   showToolbar = true,
   fitPadding = 60,
+  children,
   className,
 }: SchemaViewerProps) {
   // `canvas` and `schema` are mutually exclusive (see the props type). Warn if a
@@ -181,7 +197,7 @@ export function SchemaViewer({
 
   return (
     <div className={`relative h-full w-full ${className ?? ''}`}>
-      <GraphCanvasRoot autoResize className="h-full w-full">
+      <GraphCanvas autoResize className="h-full w-full">
         {/* Themed grid background + the sole theme publisher, bridged to the host
             app theme by the shared `CanvasThemeSync`. Before the graph layer so it
             renders behind it. */}
@@ -189,13 +205,19 @@ export function SchemaViewer({
         <ThemeBehaviour id="theme" mode="system" active="default" accent="css-var" />
         <CanvasThemeSync />
 
-        <GraphLayer id={INNER_LAYER_ID} data={meta} />
+        <GraphLayer id={SCHEMA_METAGRAPH_LAYER_ID} data={meta} />
         <WheelZoomBehaviour id="wheel" />
         <DragPanBehaviour id="pan" />
-        <DragNodeBehaviour id="drag-node" targetLayerId={INNER_LAYER_ID} />
-        {/* Fan parallel edge-types apart; keep labels crisp on zoom. */}
-        <ParallelEdgeBehaviour id="parallel-edge" targetLayerId={INNER_LAYER_ID} spacing={44} />
-        <TextResolutionLODBehaviour id="label-lod" targetLayerId={INNER_LAYER_ID} />
+        <DragNodeBehaviour id="drag-node" targetLayerId={SCHEMA_METAGRAPH_LAYER_ID} />
+        {/* Fan parallel edge-types apart; keep labels crisp on zoom; hover a type to
+            highlight its 1st-degree neighbours (yellow `highlighted` state). */}
+        <ParallelEdgeBehaviour id="parallel-edge" targetLayerId={SCHEMA_METAGRAPH_LAYER_ID} spacing={44} />
+        <TextResolutionLODBehaviour id="label-lod" targetLayerId={SCHEMA_METAGRAPH_LAYER_ID} />
+        <HoverActivateBehaviour id="hover" targetLayerId={SCHEMA_METAGRAPH_LAYER_ID} state="highlighted" degree={1} />
+
+        {/* Consumer extras — behaviours / layers targeting the metagraph layer
+            (`SCHEMA_METAGRAPH_LAYER_ID`). Mounted after the graph layer. */}
+        {children}
 
         {/* Injected layouts → the viewer drives them. Keyed so a data rewrite
             (node-mode / edge-routing / structure change) re-solves. */}
@@ -219,14 +241,14 @@ export function SchemaViewer({
               layoutIcons={layoutIcons}
               edgeRouting={edgeRouting}
               onEdgeRoutingChange={setEdgeRouting}
-              layerId={INNER_LAYER_ID}
+              layerId={SCHEMA_METAGRAPH_LAYER_ID}
             />
           </Panel>
         ) : null}
 
         {/* Standard zoom controls (fit lives in the SchemaToolbar). */}
-        <CanvasControlsToolbar position="bottom-left" showFit={false} fitLayerId={INNER_LAYER_ID} />
-      </GraphCanvasRoot>
+        <CanvasControlsToolbar position="bottom-left" showFit={false} fitLayerId={SCHEMA_METAGRAPH_LAYER_ID} />
+      </GraphCanvas>
     </div>
   );
 }
