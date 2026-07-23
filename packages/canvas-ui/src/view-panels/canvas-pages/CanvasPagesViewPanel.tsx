@@ -1,4 +1,4 @@
-// CanvasPagesTabbedView — a tab strip over a set of "pages" (boards), styled like
+// CanvasPagesViewPanel — a tab strip over a set of "pages" (boards), styled like
 // a Bootstrap `nav-tabs` folder-tab bar. The active tab exposes a **dropdown of
 // developer-supplied actions** (rename / duplicate / remove / …) via a caret,
 // instead of a fixed set of inline icons — the consumer decides what a page can
@@ -97,7 +97,7 @@ export interface CanvasHeaderAction {
   disabled?: boolean;
 }
 
-export interface CanvasPagesTabbedViewProps {
+export interface CanvasPagesViewPanelProps {
   /** The pages, in tab order. */
   pages: CanvasPage[];
   /** Id of the active page. */
@@ -322,7 +322,7 @@ function PagerControls({
  * the page list + active id and applies the reported intents. See the module
  * header for `keepMounted` semantics.
  */
-export function CanvasPagesTabbedView({
+export function CanvasPagesViewPanel({
   pages,
   activeId,
   onSelect,
@@ -338,7 +338,7 @@ export function CanvasPagesTabbedView({
   bodyClassName,
   tabClassName,
   activeTabClassName,
-}: CanvasPagesTabbedViewProps) {
+}: CanvasPagesViewPanelProps) {
   const activePage = pages.find((p) => p.id === activeId);
   const activeIndex = pages.findIndex((p) => p.id === activeId);
 

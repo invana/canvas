@@ -1,5 +1,5 @@
 /**
- * **Canvas-derived schema.** A right-docked **`<SchemaViewer canvas={…}>`** over a
+ * **Canvas-derived schema.** A right-docked **`<SchemaViewPanel canvas={…}>`** over a
  * small **company knowledge graph** (company · person · product · location ·
  * industry): it derives the *schema* — which node types exist, how many of each,
  * which edge types connect which, and each type's property keys — **straight from
@@ -15,14 +15,14 @@
 
 import { useMemo, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { GraphCanvasApp, GraphControlsToolbar, SchemaViewer, ThemeToggle, ToolbarItems } from '@invana/canvas-ui';
+import { GraphCanvasApp, GraphControlsToolbar, SchemaViewPanel, ThemeToggle, ToolbarItems } from '@invana/canvas-ui';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { ontology } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 
-const meta: Meta = { title: 'canvas-ui/views/SchemaViewer/CanvasDerived' };
+const meta: Meta = { title: 'canvas-ui/view-panels/SchemaViewPanel/CanvasDerived' };
 export default meta;
 type Story = StoryObj;
 
@@ -51,7 +51,7 @@ export const CanvasDerived: Story = {
       [],
     );
 
-    // Inject the layouts — the consumer owns the layout packages; `SchemaViewer`
+    // Inject the layouts — the consumer owns the layout packages; `SchemaViewPanel`
     // imports none. ELK (layered) is the default (a schema reads best as a hierarchy).
     const layouts = useMemo(
       () => ({
@@ -69,7 +69,7 @@ export const CanvasDerived: Story = {
           data={data}
           onReady={(c) => c?.showMessage('Schema derived from the loaded graph · switch Nodes / Layout / Edges in its toolbar')}
           header={{
-            title: 'SchemaViewer · derived',
+            title: 'SchemaViewPanel · derived',
             center: <GraphControlsToolbar />,
             right: (ctx) => (
               <div className="flex items-center gap-1">
@@ -96,7 +96,7 @@ export const CanvasDerived: Story = {
             showSchema
               ? {
                   content: ({ canvas }) => (
-                    <SchemaViewer canvas={canvas} layouts={layouts} layoutLabels={layoutLabels} defaultLayout="elk" />
+                    <SchemaViewPanel canvas={canvas} layouts={layouts} layoutLabels={layoutLabels} defaultLayout="elk" />
                   ),
                   defaultSize: '420px',
                   maxSize: '560px',

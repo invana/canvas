@@ -1,6 +1,6 @@
 # CLAUDE.md — packages/canvas-ui (`@invana/canvas-ui`)
 
-**The React UI kit for `@invana/canvas`.** Everything the user sees and clicks — components, toolbars, menus, panels, editors, views, and the `GraphCanvasApp` shell — built **on** `@invana/canvas-react`'s hooks/context. Because the UI reads/writes `@invana/canvas-store` through those hooks, it's **live by default**: a store change reflects in the UI with no manual wiring. ≈ React Flow's batteries UI (`<Controls>`, `<MiniMap>`, `<Panel>`, `<NodeToolbar>`) over the headless core.
+**The React UI kit for `@invana/canvas`.** Everything the user sees and clicks — components, toolbars, menus, panels, editors, view panels, and the `GraphCanvasApp` shell — built **on** `@invana/canvas-react`'s hooks/context. Because the UI reads/writes `@invana/canvas-store` through those hooks, it's **live by default**: a store change reflects in the UI with no manual wiring. ≈ React Flow's batteries UI (`<Controls>`, `<MiniMap>`, `<Panel>`, `<NodeToolbar>`) over the headless core.
 
 **Split axis (with `@invana/canvas-react`) = headless vs pixels.** If it draws UI the user sees, it belongs here. If it renders `null` / provides a context / is a hook, it belongs in canvas-react. The dependency runs **one direction: canvas-ui → canvas-react** (never re-exported back — that would cycle).
 
@@ -31,13 +31,15 @@ src/
 │     ├─ mapping.ts            engine encoding ⇄ flat form fields
 │     ├─ types.ts
 │     └─ index.ts
-├─ views/        presentational (preview cards, layers panel, canvas pages) — props in → JSX
+├─ view-panels/  presentational *ViewPanel surfaces (SchemaViewPanel, LayersViewPanel, CanvasFiltersViewPanel, CanvasPagesViewPanel, preview cards) — props in → JSX
 ├─ apps/         GraphCanvasApp (+ header/footer)
 ├─ hooks/        UI-only turnkey hooks (useDevTool, useMiniMap — button = pixels, layer re-imported from canvas-react)
 └─ shared/       colour utils + presets used across tracks
 ```
 
 One barrel (`index.ts`), sectioned. The folder split is internal organisation — **no subpath exports**; consumers import from the package root, so internal moves don't change the public surface.
+
+**Naming standard — `view-panels/` surfaces carry the `*ViewPanel` suffix.** Every presentational / store-connected view in `view-panels/` is a `*ViewPanel` (`SchemaViewPanel`, `LayersViewPanel`, `CanvasFiltersViewPanel`, `CanvasPagesViewPanel`), one folder per surface, with matching `*ViewPanelProps`. It's the counterpart to the `*Toolbar` / `*Editor` suffixes — a stable, greppable name for "a dockable content surface". (`preview-cards.tsx` is the exception: `NodePreviewCard` / `EdgePreviewCard` are render-prop *content*, not dockable panels.)
 
 ## Two component flavours: dumb vs connected
 
@@ -88,7 +90,7 @@ store.updateNode(id, { style: { ...resolveNodeStyle(node), ...formToStyle(values
 ## Design-kit styling (all components)
 
 - **Chrome from `@invana/ui` / fields from `@invana/forms`.** No raw `<input>` / `<select>` / `<button>` in component code. Editors: `FormField.ObjectField`, `Field.*`; `Button` from `@invana/ui`.
-- **No hand-rolled CSS (root rule 13).** No inline `style={{…}}` / `CSSProperties` consts for *static* presentation — use `@invana/ui` components (`Card`, `Separator`, `Badge`, …) + Tailwind design-token classes via `className` (`flex gap-4 p-4 bg-card text-muted-foreground`). Inline `style` is allowed **only** for a dynamic runtime value Tailwind can't express (computed colour, cursor coordinate, prop-driven pixel size). `views/preview-cards.tsx` is the reference.
+- **No hand-rolled CSS (root rule 13).** No inline `style={{…}}` / `CSSProperties` consts for *static* presentation — use `@invana/ui` components (`Card`, `Separator`, `Badge`, …) + Tailwind design-token classes via `className` (`flex gap-4 p-4 bg-card text-muted-foreground`). Inline `style` is allowed **only** for a dynamic runtime value Tailwind can't express (computed colour, cursor coordinate, prop-driven pixel size). `view-panels/preview-cards.tsx` is the reference.
 - **Default to the design-kit look** — `@invana/ui` chrome + its Tailwind design tokens (`primary`, `accent`, …). Assume the design-kit Tailwind theme is present; don't engineer around its absence.
 - **Active / selected / toggled** toolbar buttons: reuse the shared `ACTIVE_CLASS` (`bg-primary/15 text-primary ring-1 ring-primary/25`) over a `'ghost'` Button — a subtle tint + ring, **not** a solid `'default'` fill. For the selected item inside a dropdown/radio picker use the lighter `ACTIVE_MENU_ITEM_CLASS` (`text-primary font-medium`) on the active `DropdownMenuRadioItem`. Both exported from `ControlButton`; don't hand-roll per-component active styles.
 - **Tooltips:** every interactive control surfaces its `title`/`label` as a real `@invana/ui` (Radix) tooltip via the shared `Tooltipped` wrapper (self-contained `TooltipProvider`), with an optional `tooltipSide` prop.

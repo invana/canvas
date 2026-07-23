@@ -1,5 +1,5 @@
 /**
- * `<CanvasPagesTabbedView>` from `@invana/canvas-ui` — the baseline: a Bootstrap
+ * `<CanvasPagesViewPanel>` from `@invana/canvas-ui` — the baseline: a Bootstrap
  * `nav-tabs` strip over independent pages. Click a tab to switch; the active tab
  * is the boxed folder tab (border on top / left / right, open bottom).
  *
@@ -15,11 +15,11 @@
 
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { CanvasPagesTabbedView, type CanvasPage } from '@invana/canvas-ui';
+import { CanvasPagesViewPanel, type CanvasPage } from '@invana/canvas-ui';
 import { ThemeProvider } from '@invana/themes';
 import { DemoBoard, DemoFrame, hueFor } from './canvas-pages-demo';
 
-const meta: Meta = { title: 'canvas-ui/views/CanvasPagesTabbedView/Basic' };
+const meta: Meta = { title: 'canvas-ui/view-panels/CanvasPagesViewPanel/Basic' };
 export default meta;
 type Story = StoryObj;
 
@@ -35,7 +35,7 @@ function BasicDemo() {
   return (
     <ThemeProvider>
       <DemoFrame>
-        <CanvasPagesTabbedView pages={pages} activeId={activeId} onSelect={setActiveId} />
+        <CanvasPagesViewPanel pages={pages} activeId={activeId} onSelect={setActiveId} />
       </DemoFrame>
     </ThemeProvider>
   );

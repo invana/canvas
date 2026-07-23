@@ -1,6 +1,6 @@
 /**
  * **Custom (externally-sourced) schema.** A right-docked
- * **`<SchemaViewer schema={…}>`** rendering an **explicit `GraphSchema`** — *not*
+ * **`<SchemaViewPanel schema={…}>`** rendering an **explicit `GraphSchema`** — *not*
  * derived from the loaded graph. This is the Neo4j / GraphQL / ontology case: the
  * data source knows its **full schema** (all labels, relationship types, property
  * keys), which is a *superset* of what's actually loaded in the canvas.
@@ -9,20 +9,20 @@
  * shows a richer authored schema — with types the graph doesn't contain
  * (**investor**, **award**), a self-loop (**competes_with**), a multi-target edge
  * (**received**: company→award *and* person→award), and parallel person→company
- * edges. `SchemaViewer` takes `schema` **or** `canvas`, never both (the type
+ * edges. `SchemaViewPanel` takes `schema` **or** `canvas`, never both (the type
  * enforces it); with `schema` set, no canvas is needed.
  */
 
 import { useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { GraphCanvasApp, GraphControlsToolbar, SchemaViewer, ThemeToggle } from '@invana/canvas-ui';
+import { GraphCanvasApp, GraphControlsToolbar, SchemaViewPanel, ThemeToggle } from '@invana/canvas-ui';
 import type { GraphSchema } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { ontology } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 
-const meta: Meta = { title: 'canvas-ui/views/SchemaViewer/CustomSchema' };
+const meta: Meta = { title: 'canvas-ui/view-panels/SchemaViewPanel/CustomSchema' };
 export default meta;
 type Story = StoryObj;
 
@@ -100,7 +100,7 @@ export const CustomSchema: Story = {
           data={data}
           onReady={(c) => c?.showMessage('Right panel shows an explicit schema (superset of the loaded graph)')}
           header={{
-            title: 'SchemaViewer · custom',
+            title: 'SchemaViewPanel · custom',
             center: <GraphControlsToolbar />,
             right: (ctx) => <ThemeToggle ctx={ctx} />,
           }}
@@ -108,7 +108,7 @@ export const CustomSchema: Story = {
             // The docked panel ignores the app's engine — it renders the explicit
             // `schema` (so `canvas` must not be passed; the union type enforces it).
             content: () => (
-              <SchemaViewer schema={schema} layouts={layouts} layoutLabels={layoutLabels} defaultLayout="elk" />
+              <SchemaViewPanel schema={schema} layouts={layouts} layoutLabels={layoutLabels} defaultLayout="elk" />
             ),
             defaultSize: '440px',
             maxSize: '600px',

@@ -10,11 +10,11 @@
 
 import { useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { CanvasPagesTabbedView, type CanvasPage } from '@invana/canvas-ui';
+import { CanvasPagesViewPanel, type CanvasPage } from '@invana/canvas-ui';
 import { ThemeProvider } from '@invana/themes';
 import { DemoBoard, DemoFrame, hueFor } from './canvas-pages-demo';
 
-const meta: Meta = { title: 'canvas-ui/views/CanvasPagesTabbedView/ScrollableWithPager' };
+const meta: Meta = { title: 'canvas-ui/view-panels/CanvasPagesViewPanel/ScrollableWithPager' };
 export default meta;
 type Story = StoryObj;
 
@@ -47,7 +47,7 @@ function ScrollableDemo() {
       <DemoFrame>
         {/* A dozen-plus boards: mount only the active one so the strip doesn't
             spin up a live engine / GPU context per tab. */}
-        <CanvasPagesTabbedView
+        <CanvasPagesViewPanel
           pages={pages}
           activeId={activeId}
           onSelect={setActiveId}

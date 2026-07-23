@@ -1,4 +1,4 @@
-// LayersPanelView — a Photoshop-style canvas Layers browser for a live `GraphCanvas`.
+// LayersViewPanel — a Photoshop-style canvas Layers browser for a live `GraphCanvas`.
 // Lists every layer registered on the canvas (background / graph / minimap …) as
 // a file-tree, top layer first. The Graph layer expands into its painted contents
 // grouped by node/edge type with live counts; each type expands into its
@@ -70,7 +70,7 @@ import {
 } from 'react';
 import { GraphCanvasContext } from '@invana/canvas-react';
 
-export interface LayersPanelViewProps {
+export interface LayersViewPanelProps {
   /**
    * The live canvas engine. **Optional** — omit it inside a `<GraphCanvas>` /
    * `GraphCanvasApp` tree and the panel binds to the nearest one via
@@ -756,7 +756,7 @@ function ContextMenuItems({
   );
 }
 
-export function LayersPanelView({ canvas: explicit }: LayersPanelViewProps) {
+export function LayersViewPanel({ canvas: explicit }: LayersViewPanelProps) {
   // Self-wiring: bind to an explicit `canvas` if given, else the nearest
   // `<GraphCanvas>` / `GraphCanvasApp` via context (null until the engine is
   // ready — the panel simply renders empty). `useContext` runs unconditionally

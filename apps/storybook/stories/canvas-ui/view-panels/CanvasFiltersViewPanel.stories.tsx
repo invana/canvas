@@ -4,7 +4,7 @@
  * data-viz cartography** (~2k pages / ~5.4k hyperlinks, precomputed ForceAtlas2
  * positions):
  *
- *   - a right-docked **`<CanvasFiltersView>`** — the reusable list of
+ *   - a right-docked **`<CanvasFiltersViewPanel>`** — the reusable list of
  *     currently-hidden elements with per-item + "Show all" restore. The story
  *     **authors a few meaningful pages + links as `hidden: true`** (the graph
  *     tools *Gephi* · *Cytoscape* · *Graphviz*, the *Graph theory* field, and the
@@ -17,23 +17,23 @@
  *     Focus · Select · **Hide/Show**, zero config.
  *
  * The store honours the authored `hidden` flag while it ingests the data, so no
- * imperative `hideNodes` / `hideEdges` calls are needed. Both `CanvasFiltersView`
+ * imperative `hideNodes` / `hideEdges` calls are needed. Both `CanvasFiltersViewPanel`
  * and `GraphContextMenu` recompute off the store's `node:visibility` /
  * `edge:visibility` stream — on change, not per render.
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { Rect } from '@invana/canvas';
-import { GraphCanvasApp, GraphContextMenu, GraphControlsToolbar, CanvasFiltersView } from '@invana/canvas-ui';
+import { GraphCanvasApp, GraphContextMenu, GraphControlsToolbar, CanvasFiltersViewPanel } from '@invana/canvas-ui';
 import { wikipediaDataViz } from '@invana/graph-datasets/wikipedia-dataviz';
 import { ThemeProvider } from '@invana/themes';
 
-const meta: Meta = { title: 'canvas-ui/views/CanvasFiltersView' };
+const meta: Meta = { title: 'canvas-ui/view-panels/CanvasFiltersViewPanel' };
 export default meta;
 type Story = StoryObj;
 
 // Meaningful elements to open hidden — recognisable data-viz pages (node ids are
-// the page slugs, so they read cleanly in the CanvasFiltersView) and two links
+// the page slugs, so they read cleanly in the CanvasFiltersViewPanel) and two links
 // between well-known *visible* pages (so they list as explicitly hidden edges).
 const HIDDEN_PAGES = new Set(['gephi', 'cytoscape', 'graphviz', 'graph theory']);
 const HIDDEN_LINKS = new Set([
@@ -41,8 +41,8 @@ const HIDDEN_LINKS = new Set([
   'e1554', // Social network analysis → Network science
 ]);
 
-export const CanvasFiltersViewStory: Story = {
-  name: 'CanvasFiltersView',
+export const CanvasFiltersViewPanelStory: Story = {
+  name: 'CanvasFiltersViewPanel',
   render: () => {
     // Map the property graph → GraphNode/GraphEdge (label→type, properties→data),
     // pin each page at its precomputed ForceAtlas2 position, and flag the chosen
@@ -87,13 +87,13 @@ export const CanvasFiltersViewStory: Story = {
           }}
           // The full graph toolbar — the select-mode picker (click / brush / lasso)
           // lets you select before hiding via the right-click menu.
-          header={{ title: 'CanvasFiltersView', center: <GraphControlsToolbar /> }}
+          header={{ title: 'CanvasFiltersViewPanel', center: <GraphControlsToolbar /> }}
           // Docked into the app's resizable `right` region — no floating Panel.
           // `content` is a render-fn handed the live control context, so the view
           // gets the engine straight from `ctx.canvas` (null until it's ready —
-          // `CanvasFiltersView` handles that itself). No context-reading wrapper.
+          // `CanvasFiltersViewPanel` handles that itself). No context-reading wrapper.
           right={{
-            content: ({ canvas }) => <CanvasFiltersView canvas={canvas} />,
+            content: ({ canvas }) => <CanvasFiltersViewPanel canvas={canvas} />,
             defaultSize: '340px',
             maxSize: '460px',
             collapsible: true,

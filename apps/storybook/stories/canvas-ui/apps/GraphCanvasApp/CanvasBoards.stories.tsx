@@ -1,6 +1,6 @@
 /**
  * **Canvas Boards** — multiple independent canvases in one **tab panel**, built on
- * `@invana/canvas-ui`'s `CanvasPagesTabbedView` (Bootstrap `nav-tabs` styling; the
+ * `@invana/canvas-ui`'s `CanvasPagesViewPanel` (Bootstrap `nav-tabs` styling; the
  * active tab exposes a caret dropdown of host-supplied actions). Each tab is a
  * fully self-contained `<GraphCanvasApp>` with its **own engine instance and its
  * own state** (config, camera, layout positions, selection) — boards share nothing
@@ -35,7 +35,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { TextResolutionLODBehaviour, useLayout, type LayoutFactory } from '@invana/canvas-react';
 import { GraphCanvasApp } from '@invana/canvas-ui';
 import {
-  CanvasPagesTabbedView,
+  CanvasPagesViewPanel,
   type CanvasHeaderAction,
   type CanvasPage,
   type CanvasPageMenuItem,
@@ -216,7 +216,7 @@ interface Board {
 }
 
 /**
- * The boards shell — `@invana/canvas-ui`'s {@link CanvasPagesTabbedView} over a
+ * The boards shell — `@invana/canvas-ui`'s {@link CanvasPagesViewPanel} over a
  * stack of canvases. Each board maps to one page whose `content` is its own
  * `<GraphCanvasApp>`. The view keeps every page mounted and hides the inactive
  * ones (`keepMounted`, its default), so a board keeps its camera / layout /
@@ -315,7 +315,7 @@ function CanvasBoards(): ReactNode {
           color: 'var(--foreground, #0f172a)',
         }}
       >
-        <CanvasPagesTabbedView
+        <CanvasPagesViewPanel
           pages={pages}
           activeId={String(activeId)}
           onSelect={(id) => setActiveId(Number(id))}

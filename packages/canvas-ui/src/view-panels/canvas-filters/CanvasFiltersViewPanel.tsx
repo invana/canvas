@@ -1,5 +1,5 @@
-// CanvasFiltersView — a managed "parking" list of elements you've set aside on a
-// `GraphCanvas`. The natural companion to `LayersPanelView`: that panel hides
+// CanvasFiltersViewPanel — a managed "parking" list of elements you've set aside on a
+// `GraphCanvas`. The natural companion to `LayersViewPanel`: that panel hides
 // elements (right-click → Hide); this view collects them and lets you manage each.
 //
 // Three per-row actions, deliberately distinct:
@@ -17,7 +17,7 @@
 // set: it absorbs anything newly hidden (via the visibility stream), keeps items
 // that were toggled back to visible, and drops items removed from the graph.
 //
-// Like `LayersPanelView` it takes a *live* `GraphCanvas` and drives visibility on
+// Like `LayersViewPanel` it takes a *live* `GraphCanvas` and drives visibility on
 // it, staying within the package's import rules — `@invana/graph` is imported for
 // **types only** and all chrome is `@invana/ui`. Visibility runs through the
 // first-class API (`layer.showNode` / `layer.hideNode` / `layer.showEdge` /
@@ -29,7 +29,7 @@ import { Button } from '@invana/ui';
 import { ArrowRight, Circle, Crosshair, Eye, EyeOff, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-export interface CanvasFiltersViewProps {
+export interface CanvasFiltersViewPanelProps {
   /** The live canvas engine (null until `<Canvas>` publishes it). */
   canvas: GraphCanvas | null;
   /** GraphLayer id whose hidden elements this view lists. Default `'graph'`. */
@@ -59,12 +59,12 @@ interface Parked {
  * list automatically. Renders a compact empty state when nothing is parked. Drop
  * it into a panel / tab and hand it the live `canvas`.
  */
-export function CanvasFiltersView({
+export function CanvasFiltersViewPanel({
   canvas,
   layerId = 'graph',
   focusZoom = 2,
   selectBehaviourId = 'click-select',
-}: CanvasFiltersViewProps) {
+}: CanvasFiltersViewPanelProps) {
   const layer = canvas?.layers.get<GraphLayer>(layerId) ?? undefined;
   const store = layer?.store;
   const select =

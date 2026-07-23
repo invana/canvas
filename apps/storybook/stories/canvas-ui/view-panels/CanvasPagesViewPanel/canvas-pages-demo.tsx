@@ -1,4 +1,4 @@
-// Shared demo helpers for the CanvasPagesTabbedView stories. Not a story file
+// Shared demo helpers for the CanvasPagesViewPanel stories. Not a story file
 // (no `.stories` suffix) so Storybook doesn't pick it up. The view is engine-
 // agnostic, but its real-world content is one `<GraphCanvasApp>` per page (the
 // CanvasBoards pattern), so these stories drive it with an actual board — a small

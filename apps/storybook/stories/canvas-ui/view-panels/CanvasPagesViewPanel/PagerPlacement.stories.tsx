@@ -10,11 +10,11 @@
 
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { CanvasPagesTabbedView, type CanvasPage } from '@invana/canvas-ui';
+import { CanvasPagesViewPanel, type CanvasPage } from '@invana/canvas-ui';
 import { ThemeProvider } from '@invana/themes';
 import { DemoBoard, DemoFrame, hueFor } from './canvas-pages-demo';
 
-const meta: Meta = { title: 'canvas-ui/views/CanvasPagesTabbedView/PagerPlacement' };
+const meta: Meta = { title: 'canvas-ui/view-panels/CanvasPagesViewPanel/PagerPlacement' };
 export default meta;
 type Story = StoryObj;
 
@@ -28,7 +28,7 @@ function Strip({ position }: { position: 'start' | 'end' }) {
   const [activeId, setActiveId] = useState('0');
   return (
     <DemoFrame>
-      <CanvasPagesTabbedView
+      <CanvasPagesViewPanel
         pages={pages}
         activeId={activeId}
         onSelect={setActiveId}

@@ -1,11 +1,11 @@
 // Schema view — the graph's metagraph (node/edge types + connectivity) derived
-// from a live source canvas, rendered as an interactive metagraph (`SchemaViewer`)
+// from a live source canvas, rendered as an interactive metagraph (`SchemaViewPanel`)
 // with a `SchemaToolbar` (nodes · layout · edges · fit; the toolbar lives in
 // `../../toolbars`). The `deriveSchema` core + `useDerivedSchema` hook are reusable
 // standalone.
 
-export { SchemaViewer, SCHEMA_METAGRAPH_LAYER_ID } from './SchemaViewer';
-export type { SchemaViewerProps, SchemaViewerBaseProps } from './SchemaViewer';
+export { SchemaViewPanel, SCHEMA_METAGRAPH_LAYER_ID } from './SchemaViewPanel';
+export type { SchemaViewPanelProps, SchemaViewPanelBaseProps } from './SchemaViewPanel';
 
 // Derivation core + reactive hook — reusable without the view.
 export { useDerivedSchema } from './useDerivedSchema';

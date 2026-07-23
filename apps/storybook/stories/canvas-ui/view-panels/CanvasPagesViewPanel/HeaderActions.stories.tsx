@@ -9,7 +9,7 @@
 import { useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
-  CanvasPagesTabbedView,
+  CanvasPagesViewPanel,
   type CanvasHeaderAction,
   type CanvasPage,
 } from '@invana/canvas-ui';
@@ -17,7 +17,7 @@ import { Info, Settings } from 'lucide-react';
 import { ThemeProvider } from '@invana/themes';
 import { DemoBoard, DemoFrame, hueFor } from './canvas-pages-demo';
 
-const meta: Meta = { title: 'canvas-ui/views/CanvasPagesTabbedView/HeaderActions' };
+const meta: Meta = { title: 'canvas-ui/view-panels/CanvasPagesViewPanel/HeaderActions' };
 export default meta;
 type Story = StoryObj;
 
@@ -49,13 +49,13 @@ function HeaderActionsDemo() {
 
   const headerActions: CanvasHeaderAction[] = [
     { id: 'settings', label: 'Settings', icon: Settings, onClick: () => window.alert('Settings') },
-    { id: 'about', label: 'About', icon: Info, onClick: () => window.alert('CanvasPagesTabbedView demo') },
+    { id: 'about', label: 'About', icon: Info, onClick: () => window.alert('CanvasPagesViewPanel demo') },
   ];
 
   return (
     <ThemeProvider>
       <DemoFrame>
-        <CanvasPagesTabbedView
+        <CanvasPagesViewPanel
           pages={pages}
           activeId={activeId}
           onSelect={setActiveId}

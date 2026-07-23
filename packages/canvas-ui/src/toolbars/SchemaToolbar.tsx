@@ -1,6 +1,6 @@
 /**
  * `<SchemaToolbar>` — the turnkey control bar for the schema metagraph
- * (`SchemaViewer`), the schema-view analogue of `GraphControlsToolbar`. Up to four
+ * (`SchemaViewPanel`), the schema-view analogue of `GraphControlsToolbar`. Up to four
  * groups, assembled into one data-driven `<ToolbarItems>`:
  *
  *   1. **Nodes** — Simple discs ⇄ composite ER **Table** cards.
@@ -9,7 +9,7 @@
  *   3. **Edges** — connector routing: Straight · Orthogonal · Curved.
  *   4. **Fit** — fit the metagraph to view.
  *
- * Groups 1–3 are **controlled** (value in → `onChange` out) — the `SchemaViewer`
+ * Groups 1–3 are **controlled** (value in → `onChange` out) — the `SchemaViewPanel`
  * owns that state because it drives what the metagraph renders. **Fit self-wires**
  * from context (the schema canvas) via {@link useViewSection}, so the toolbar must
  * render inside the schema `<GraphCanvas>` (or be handed an explicit `canvas`).
@@ -22,7 +22,7 @@ import { CornerDownRight, Minus, Spline, Table as TableIcon, Circle } from 'luci
 import { ToolbarItems, applyIconOverrides } from '../components';
 import type { ToolbarIcon, ToolbarItem } from '../components';
 import { useViewSection } from '@invana/canvas-react';
-import type { SchemaEdgeRouting, SchemaNodeMode } from '../views/schema/schema';
+import type { SchemaEdgeRouting, SchemaNodeMode } from '../view-panels/schema/schema';
 
 const NODE_LABELS: Record<SchemaNodeMode, string> = { simple: 'Simple', table: 'Table' };
 const NODE_ICONS: Record<SchemaNodeMode, ToolbarIcon> = { simple: Circle, table: TableIcon };
@@ -88,7 +88,7 @@ function assemble(groups: ToolbarItem[][]): ToolbarItem[] {
 
 /**
  * The schema metagraph's control bar — node mode · layout · edge routing · fit.
- * Controlled for the first three (the `SchemaViewer` owns them); Fit self-wires.
+ * Controlled for the first three (the `SchemaViewPanel` owns them); Fit self-wires.
  * Render inside the schema `<GraphCanvas>` so Fit resolves the right instance.
  */
 export function SchemaToolbar({

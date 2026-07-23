@@ -13,7 +13,7 @@
 import { useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
-  CanvasPagesTabbedView,
+  CanvasPagesViewPanel,
   type CanvasPage,
   type CanvasPageMenuItem,
 } from '@invana/canvas-ui';
@@ -21,7 +21,7 @@ import { Copy, Pencil, Trash2 } from 'lucide-react';
 import { ThemeProvider } from '@invana/themes';
 import { DemoBoard, DemoFrame, hueFor } from './canvas-pages-demo';
 
-const meta: Meta = { title: 'canvas-ui/views/CanvasPagesTabbedView/PageActions' };
+const meta: Meta = { title: 'canvas-ui/view-panels/CanvasPagesViewPanel/PageActions' };
 export default meta;
 type Story = StoryObj;
 
@@ -94,7 +94,7 @@ function PageActionsDemo() {
   return (
     <ThemeProvider>
       <DemoFrame>
-        <CanvasPagesTabbedView
+        <CanvasPagesViewPanel
           pages={pages}
           activeId={activeId}
           onSelect={setActiveId}

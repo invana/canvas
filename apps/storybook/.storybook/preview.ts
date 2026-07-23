@@ -41,7 +41,7 @@ function bootstrapOsTheme(): void {
 bootstrapOsTheme();
 
 // Telemetry is wired per-consumer, not globally here — see
-// `stories/canvas-ui/views/LayersPanelView.stories.tsx` for the canonical
+// `stories/canvas-ui/view-panels/LayersViewPanel.stories.tsx` for the canonical
 // `otelTelemetry(...)` + `wireTelemetry(...)` wiring on a live canvas. (The
 // `canvas-store/Playground` story wires its own tracer via `stories/canvas-store/otel.ts`.)
 

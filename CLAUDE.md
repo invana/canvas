@@ -61,7 +61,7 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
 | Path | Package | Role | 3rd-party deps |
 |---|---|---|---|
 | `packages/canvas-react` | `@invana/canvas-react` | **headless React binding layer** — declarative `<Canvas>` / `<GraphCanvas>` roots, contexts, null-rendering layer/behaviour/layout wrappers, and store/engine hooks. Renders **no application UI**; **never imports `@invana/ui`**. See its `CLAUDE.md`. 🚧 UI still migrating out per `docs/ui-consolidation-plan.md`. | `lucide-react` (dep: `@invana/themes`) |
-| `packages/canvas-ui` | `@invana/canvas-ui` | **the React UI kit** — all pixels (components, toolbars, menus, editors, views, `GraphCanvasApp`) built **on** canvas-react's hooks, so it couples to `@invana/canvas-store` and is **live by default**. Owns `@invana/ui`; pixi never enters. See its `CLAUDE.md`. | — |
+| `packages/canvas-ui` | `@invana/canvas-ui` | **the React UI kit** — all pixels (components, toolbars, menus, editors, view panels, `GraphCanvasApp`) built **on** canvas-react's hooks, so it couples to `@invana/canvas-store` and is **live by default**. Owns `@invana/ui`; pixi never enters. See its `CLAUDE.md`. | — |
 | `packages/canvas-designer` | `@invana/canvas-designer` | the **canvas designer** — visual authoring for the visualisation's definition. Today: the **node template** surface (`src/templates/`) — opt-in WYSIWYG composite-card authoring (drag canvas, layers, undo/redo, save/load), emits `FreeformStructure`. **Planned:** studio shell + layout/behaviour/layer designers hosting `@invana/canvas-ui` editors (rule 12). Headless today — `@invana/graph` types only | — |
 
 #### Data + shared config
@@ -117,7 +117,7 @@ The split axis is **headless vs pixels** (the React Flow split). Detailed rules 
 > **Draws UI the user sees?** → `@invana/canvas-ui`. **Adapts the engine to React *without* drawing UI** (renders `null`, provides a context, or is a hook)? → `@invana/canvas-react`.
 
 - **`@invana/canvas-react`** — headless bindings only: roots, contexts, null-rendering wrappers, store/engine hooks. Never imports `@invana/ui`, draws no application UI. See `packages/canvas-react/CLAUDE.md`.
-- **`@invana/canvas-ui`** — the UI kit: `components/` · `toolbars/` · `menus/` · `panels/` (store-connected) · `editors/` (schema editors, controlled + connected wrappers) · `views/` (presentational) · `apps/` (`GraphCanvasApp`) · `hooks/` (UI-only turnkey). Built on canvas-react's hooks, so it couples to `canvas-store` and is live by default. See `packages/canvas-ui/CLAUDE.md`.
+- **`@invana/canvas-ui`** — the UI kit: `components/` · `toolbars/` · `menus/` · `panels/` (store-connected) · `editors/` (schema editors, controlled + connected wrappers) · `view-panels/` (presentational `*ViewPanel` surfaces) · `apps/` (`GraphCanvasApp`) · `hooks/` (UI-only turnkey). Built on canvas-react's hooks, so it couples to `canvas-store` and is live by default. See `packages/canvas-ui/CLAUDE.md`.
 
 New behaviour/layer/layout ⇒ still ships a schema editor in `canvas-ui/editors/<surface>/` (root rule 12). Full plan + move manifest: `docs/ui-consolidation-plan.md`.
 

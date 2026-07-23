@@ -10,7 +10,7 @@ import {
   GraphControlsToolbar,
   GraphNodeContextMenu,
   GraphStatusBar,
-  LayersPanelView,
+  LayersViewPanel,
   MiniMapToggleButton,
   ThemeToggle,
   ToolbarItems,
@@ -24,7 +24,7 @@ import { Layers } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 /**
- * `canvas-ui/views/LayersPanelView` — the `@invana/canvas-ui` **LayersPanelView**
+ * `canvas-ui/view-panels/LayersViewPanel` — the `@invana/canvas-ui` **LayersViewPanel**
  * docked into a `GraphCanvasApp`. It introspects the app's live scene — every
  * registered layer, and the Graph layer's painted nodes/edges grouped by type —
  * as a file-tree: toggle a layer's eye to hide/show it, right-click any element
@@ -39,7 +39,7 @@ import { useMemo, useState } from 'react';
  * - **Game of Thrones** (~5k vertices / ~29k edges) has no positions, so it
  *   opens on a **grid** (the only layout that places this many nodes instantly).
  */
-const meta: Meta = { title: 'canvas-ui/views/LayersPanelView' };
+const meta: Meta = { title: 'canvas-ui/view-panels/LayersViewPanel' };
 export default meta;
 type Story = StoryObj;
 
@@ -104,7 +104,7 @@ const DATASETS: Record<DatasetId, DatasetDef> = {
 };
 
 export const LayersPanel: Story = {
-  name: 'LayersPanelView',
+  name: 'LayersViewPanel',
   render: function Render() {
     const [datasetId, setDatasetId] = useState<DatasetId>('wikipedia');
     const [layersOpen, setLayersOpen] = useState(true);
@@ -146,7 +146,7 @@ export const LayersPanel: Story = {
             // label). `left` renders immediately, so the switch is always live.
             left: (
               <>
-                <span className="text-[13px] font-semibold whitespace-nowrap mr-3">LayersPanelView</span>
+                <span className="text-[13px] font-semibold whitespace-nowrap mr-3">LayersViewPanel</span>
                 <ToolbarItems
                   orientation="horizontal"
                   items={[
@@ -192,11 +192,11 @@ export const LayersPanel: Story = {
             ),
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          // The star: the LayersPanelView, docked into the app's resizable `right`
+          // The star: the LayersViewPanel, docked into the app's resizable `right`
           // region, toggled by the header “Layers” button.
           right={
             layersOpen
-              ? { content: <LayersPanelView />, defaultSize: '320px', maxSize: '460px', collapsible: true }
+              ? { content: <LayersViewPanel />, defaultSize: '320px', maxSize: '460px', collapsible: true }
               : undefined
           }
         >

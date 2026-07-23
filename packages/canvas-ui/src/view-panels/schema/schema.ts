@@ -1,5 +1,5 @@
 // Schema **rendering** helpers — compile a `GraphSchema` into the metagraph
-// `GraphData` the `SchemaViewer` draws (simple discs or composite ER tables, with
+// `GraphData` the `SchemaViewPanel` draws (simple discs or composite ER tables, with
 // the chosen edge routing baked in). The schema **value** + its derivation live in
 // `@invana/graph` (`deriveSchema`, `GraphSchema`, …); this file is view-only.
 
@@ -86,7 +86,7 @@ function tableNodeStyle(t: SchemaNodeType): NodeStyle {
 }
 
 /**
- * Compile a {@link GraphSchema} into the `GraphData` the `SchemaViewer`'s canvas
+ * Compile a {@link GraphSchema} into the `GraphData` the `SchemaViewPanel`'s canvas
  * renders: one node per node-type (a simple disc or a composite ER table, per
  * `nodeMode`) and one edge per connection pair (routed per `edgeRouting`, labelled
  * by edge type). Connections whose endpoints aren't present as node-types are

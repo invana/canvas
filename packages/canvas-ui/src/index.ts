@@ -768,50 +768,50 @@ export type {
 // Presentational node / edge hover-preview cards — engine-agnostic props-in UI
 // (only `@invana/ui` chrome). A turnkey (e.g. canvas-react `<HoverElementPreviewBehaviour>`)
 // owns positioning + interactivity and renders these as content.
-export { NodePreviewCard, EdgePreviewCard } from './views/preview-cards';
+export { NodePreviewCard, EdgePreviewCard } from './view-panels/preview-cards';
 export type {
   NodePreviewCardProps,
   EdgePreviewCardProps,
   PreviewCardRow,
-} from './views/preview-cards';
+} from './view-panels/preview-cards';
 
 // ─── Layers panel ──────────────────────────────────────────────────────────
 // Photoshop-style canvas Layers browser over a live `GraphCanvas` — layer
 // visibility eyes + the Graph layer's nodes/edges grouped by type with per-
 // element Hide/Show. Engine-bound (takes a live canvas) but import-clean
 // (`@invana/graph` types only, `@invana/ui` chrome). See its module header.
-export { LayersPanelView } from './views/layers-panel';
-export type { LayersPanelViewProps } from './views/layers-panel';
+export { LayersViewPanel } from './view-panels/layers';
+export type { LayersViewPanelProps } from './view-panels/layers';
 
 // ─── Hidden elements ─────────────────────────────────────────────────────────
 // A live list of the elements explicitly hidden on a `GraphCanvas`, with per-item
-// + "Show all" restore — the companion to `LayersPanelView` (which hides) and to
+// + "Show all" restore — the companion to `LayersViewPanel` (which hides) and to
 // `GraphContextMenu`'s Hide action. Engine-bound (takes a live canvas) but
 // import-clean (`@invana/graph` types only, `@invana/ui` chrome).
-export { CanvasFiltersView } from './views/canvas-filters';
-export type { CanvasFiltersViewProps } from './views/canvas-filters';
+export { CanvasFiltersViewPanel } from './view-panels/canvas-filters';
+export type { CanvasFiltersViewPanelProps } from './view-panels/canvas-filters';
 
 // ─── Canvas pages tab strip ──────────────────────────────────────────────────
 // A tab strip over independent "pages" (boards), styled like `@invana/ui`'s
 // `TabbedPanel` but with per-tab **edit** + **close** controls revealed on hover.
 // Presentational + engine-agnostic; keeps inactive pages mounted (state kept) by
 // default so a canvas per page survives tab switches. See its module header.
-export { CanvasPagesTabbedView } from './views/canvas-pages';
+export { CanvasPagesViewPanel } from './view-panels/canvas-pages';
 export type {
   CanvasHeaderAction,
   CanvasPage,
   CanvasPageMenuItem,
-  CanvasPagesTabbedViewProps,
-} from './views/canvas-pages';
+  CanvasPagesViewPanelProps,
+} from './view-panels/canvas-pages';
 
 // ─── Schema view ─────────────────────────────────────────────────────────────
 // The graph's *schema* (its node/edge types + connectivity), derived live from a
-// source `GraphCanvas` and rendered by `SchemaViewer` as an interactive metagraph
+// source `GraphCanvas` and rendered by `SchemaViewPanel` as an interactive metagraph
 // in a nested engine instance — simple discs or composite ER **table** cards, with
 // a top `SchemaToolbar` (nodes · layout · edges · fit). Engine-bound (takes a live
 // canvas). The `deriveSchema` core + `useDerivedSchema` hook are reusable standalone.
 export {
-  SchemaViewer,
+  SchemaViewPanel,
   SCHEMA_METAGRAPH_LAYER_ID,
   useDerivedSchema,
   deriveSchema,
@@ -820,10 +820,10 @@ export {
   typeColor,
   defaultNodeTypeOf,
   defaultEdgeTypeOf,
-} from './views/schema';
+} from './view-panels/schema';
 export type {
-  SchemaViewerProps,
-  SchemaViewerBaseProps,
+  SchemaViewPanelProps,
+  SchemaViewPanelBaseProps,
   UseDerivedSchemaOptions,
   GraphSchema,
   SchemaNodeType,
@@ -834,7 +834,7 @@ export type {
   DeriveSchemaOptions,
   SchemaNodeMode,
   SchemaEdgeRouting,
-} from './views/schema';
+} from './view-panels/schema';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Shared

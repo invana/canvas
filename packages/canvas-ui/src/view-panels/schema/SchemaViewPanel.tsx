@@ -1,4 +1,4 @@
-// SchemaViewer — the graph's *schema* rendered as a live metagraph in its own
+// SchemaViewPanel — the graph's *schema* rendered as a live metagraph in its own
 // nested `<GraphCanvas>`. It reads a **source** `GraphCanvas`, derives the schema
 // (reactive — updates as data loads), compiles it to metagraph `GraphData`, and
 // projects that into an inner engine instance.
@@ -49,7 +49,7 @@ import {
 } from './schema';
 
 /**
- * The id of the metagraph layer inside `SchemaViewer`. Target it from extra
+ * The id of the metagraph layer inside `SchemaViewPanel`. Target it from extra
  * behaviours/layers passed as `children` — e.g.
  * `<HoverActivateBehaviour targetLayerId={SCHEMA_METAGRAPH_LAYER_ID} />`.
  */
@@ -74,8 +74,8 @@ function SchemaLayoutRunner({
   return null;
 }
 
-/** Shared `SchemaViewer` props — everything except the mutually-exclusive source. */
-export interface SchemaViewerBaseProps extends UseDerivedSchemaOptions {
+/** Shared `SchemaViewPanel` props — everything except the mutually-exclusive source. */
+export interface SchemaViewPanelBaseProps extends UseDerivedSchemaOptions {
   /**
    * Injected layout factories (`{ key: () => new SomeLayout() }`) — the consumer
    * owns the layout packages. Supplying this shows the layout picker. Omit to show
@@ -108,7 +108,7 @@ export interface SchemaViewerBaseProps extends UseDerivedSchemaOptions {
 }
 
 /**
- * `SchemaViewer` props — provide **exactly one** schema source (they're mutually
+ * `SchemaViewPanel` props — provide **exactly one** schema source (they're mutually
  * exclusive; the type enforces it and a dev warning fires at runtime if both are
  * passed):
  * - **`canvas`** — derive/read the schema from a live source canvas (its
@@ -116,7 +116,7 @@ export interface SchemaViewerBaseProps extends UseDerivedSchemaOptions {
  * - **`schema`** — render an explicit, externally-sourced schema (e.g. a fetched
  *   Neo4j / GraphQL / ontology schema); no canvas needed.
  */
-export type SchemaViewerProps = SchemaViewerBaseProps &
+export type SchemaViewPanelProps = SchemaViewPanelBaseProps &
   (
     | {
         /** The source canvas whose schema is shown (null until `<Canvas>` publishes it). */
@@ -137,7 +137,7 @@ export type SchemaViewerProps = SchemaViewerBaseProps &
  * standard zoom controls. Shows a compact empty state until the source graph has
  * data. Drop it into a panel / tab and hand it the live source `canvas`.
  */
-export function SchemaViewer({
+export function SchemaViewPanel({
   canvas,
   schema: explicitSchema,
   layerId = 'graph',
@@ -153,7 +153,7 @@ export function SchemaViewer({
   fitPadding = 60,
   children,
   className,
-}: SchemaViewerProps) {
+}: SchemaViewPanelProps) {
   // `canvas` and `schema` are mutually exclusive (see the props type). Warn if a
   // JS consumer (bypassing the types) passes both; `schema` then wins.
   const bothPassed = canvas !== undefined && explicitSchema !== undefined;
@@ -161,7 +161,7 @@ export function SchemaViewer({
     if (bothPassed) {
       // eslint-disable-next-line no-console
       console.warn(
-        '[SchemaViewer] Pass either `canvas` (derive/read the schema from a live canvas) or ' +
+        '[SchemaViewPanel] Pass either `canvas` (derive/read the schema from a live canvas) or ' +
           '`schema` (render a provided one) — not both. `schema` takes precedence.',
       );
     }
