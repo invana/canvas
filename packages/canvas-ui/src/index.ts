@@ -791,6 +791,15 @@ export type { LayersViewPanelProps } from './view-panels/layers';
 export { CanvasFiltersViewPanel } from './view-panels/canvas-filters';
 export type { CanvasFiltersViewPanelProps } from './view-panels/canvas-filters';
 
+// ─── Find in canvas ──────────────────────────────────────────────────────────
+// A structured search over a `GraphCanvas`: AND-combined field filters (id /
+// label / any property, contains / equals) → a live list of matching nodes and
+// edges; a result click **focuses + selects** it (non-destructive locate, never a
+// hide). Engine-bound (takes a live canvas), import-clean (`@invana/graph` types
+// only, `@invana/ui` + `@invana/forms` chrome).
+export { FindInCanvasViewPanel } from './view-panels/find-in-canvas';
+export type { FindInCanvasViewPanelProps } from './view-panels/find-in-canvas';
+
 // ─── Canvas pages tab strip ──────────────────────────────────────────────────
 // A tab strip over independent "pages" (boards), styled like `@invana/ui`'s
 // `TabbedPanel` but with per-tab **edit** + **close** controls revealed on hover.
