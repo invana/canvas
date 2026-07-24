@@ -5,20 +5,38 @@
  * behaviours / layouts**, lists them in a file-browser accordion (folders =
  * sections, files = instances), expands each row in place to a schema-driven
  * `SettingsPanel`, and applies every edit live via `canvas.update(...)`.
+ *
+ * Docked via **`useSidePanels`** (the activity-bar controller): its descriptor
+ * becomes the header toggle item and, while open, the resizable `right` region —
+ * toggling swaps the dock in/out without reloading the canvas. `data`, `config`,
+ * and `onReady` are **memoised**, so collapsing / expanding the settings (a
+ * re-render) keeps their identity stable and never reloads the engine — the
+ * view-panel standard (see `FindInCanvasViewPanel.stories.tsx`).
  */
 
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { CanvasSettingsPanel } from '@invana/canvas-ui';
+import { DevInfoLayer, MiniMapLayer } from '@invana/canvas-react';
 import type { LayoutFactory } from '@invana/canvas-react';
-import { CanvasMessageBar, DevInfoToggleButton, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, GraphNodeContextMenu, type GraphNodeMenuContext, GraphBackgroundContextMenu, MiniMapToggleButton, ThemeToggle, ToolbarItems } from '@invana/canvas-ui';
-import type { GraphNode } from '@invana/graph';
+import {
+  CanvasMessageBar,
+  CanvasSettingsPanel,
+  GraphBackgroundContextMenu,
+  GraphCanvasApp,
+  GraphControlsToolbar,
+  GraphNodeContextMenu,
+  type GraphNodeMenuContext,
+  GraphStatusBar,
+  ToolbarItems,
+  useSidePanels,
+} from '@invana/canvas-ui';
+import type { GraphCanvas, GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { ThemeProvider } from '@invana/themes';
 import type { MenuItem } from '@invana/ui';
-import { Settings } from 'lucide-react';
+import { Gauge, Map, Moon, Settings, Sun } from 'lucide-react';
 
 const meta: Meta = { title: 'canvas-ui/editors/CanvasSettingsEditor' };
 export default meta;
@@ -56,18 +74,62 @@ const backgroundMenu = (): MenuItem[] => [
 export const LiveSettingsEditors: Story = {
   name: 'Live Settings Editors',
   render: function Render() {
-    // The settings panel is toggled from the header — mounting the `right` region
-    // when open, unmounting it (canvas reclaims the width) when closed. Open by
-    // default so the editors are visible on load.
-    const [settingsOpen, setSettingsOpen] = useState(true);
+    // The settings panel docks through the activity-bar controller: its descriptor
+    // becomes the header toggle + (while open) the resizable `right` region. Open
+    // by default so the editors are visible on load. The panel finds the canvas
+    // via context — flatten its inner card so the region supplies chrome + scroll.
+    const dock = useSidePanels(
+      [
+        {
+          id: 'settings',
+          icon: Settings,
+          label: 'Settings',
+          render: () => <CanvasSettingsPanel className="border-0 bg-transparent shadow-none" />,
+        },
+      ],
+      { defaultOpenId: 'settings', section: { defaultSize: '360px', maxSize: '460px' } },
+    );
+
+    // Screen-fixed overlays driven as toolbar items (own their on-state; the
+    // layers render as GraphCanvasApp children below, gated on it).
+    const [minimapOn, setMinimapOn] = useState(true);
+    const [devOn, setDevOn] = useState(false);
 
     // Les Misérables ships no `type`; give each node its community group as its
-    // type (so the bundle's colour-by-label behaviour tints by community) and
-    // each edge the `APPEARS_WITH` label.
-    const data = {
-      nodes: lesMiserables.nodes.map((n) => ({ ...n, type: `Group ${groupOf(n)}` })),
-      edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
-    };
+    // type (so the bundle's colour-by-label behaviour tints by community) and each
+    // edge the `APPEARS_WITH` label. Memoised so toggling the panel (a re-render)
+    // keeps a stable identity and never reloads the engine.
+    const data = useMemo(
+      () => ({
+        nodes: lesMiserables.nodes.map((n) => ({ ...n, type: `Group ${groupOf(n)}` })),
+        edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
+      }),
+      [],
+    );
+
+    // Memoised for the same stable-identity reason as `data`.
+    const config = useMemo(
+      () => ({
+        layouts: {
+          'graph-force': {
+            charge: { strength: -240 },
+            // No fixed link distance / collide radius — let collision derive each
+            // node's radius from its render bounds so nodes of any size don't
+            // overlap (see GraphCanvasApp BASE_CONFIG).
+            link: {},
+            collide: {},
+            // Live, animated settle by default — the settings panel's "Animate"
+            // toggle starts on and the Run button flips to Stop.
+            animate: true,
+          },
+        },
+      }),
+      [],
+    );
+
+    const onReady = useCallback((c: GraphCanvas | null) => {
+      c?.showMessage('Open the right panel to edit any layer / behaviour / layout');
+    }, []);
 
     return (
       // GraphCanvasApp reads light/dark from a host <ThemeProvider> (and throws
@@ -75,65 +137,57 @@ export const LiveSettingsEditors: Story = {
       <ThemeProvider>
         <GraphCanvasApp
           data={data}
-          onReady={(c) => c?.showMessage('Open the right panel to edit any layer / behaviour / layout')}
-          config={{
-            layouts: {
-              'graph-force': {
-                charge: { strength: -240 },
-                // No fixed link distance / collide radius — let collision derive
-                // each node's radius from its render bounds so nodes of any size
-                // don't overlap (see GraphCanvasApp BASE_CONFIG).
-                link: {},
-                collide: {},
-                // Live, animated settle by default — the settings panel's
-                // "Animate" toggle starts on and the Run button flips to Stop.
-                animate: true,
-              },
-            },
-          }}
+          config={config}
+          onReady={onReady}
           header={{
             title: 'Live Settings Editors',
             center: <GraphControlsToolbar layouts={LAYOUTS} layoutLabel={LAYOUT_LABEL} />,
+            // One shared toolbar — the settings toggle plus minimap / dev-overlay /
+            // theme, all as items.
             right: (ctx) => (
-              <>
-                <MiniMapToggleButton backgroundLayerId="background" position="bottom-left" />
-                <DevInfoToggleButton corner="top-left" margin={{ x: 12, y: 48 }} />
-                {/* Settings toggle — shows / hides the docked right panel. */}
-                <ToolbarItems
-                  orientation="horizontal"
-                  items={[
-                    {
-                      type: 'toggle',
-                      key: 'settings',
-                      icon: Settings,
-                      label: 'Settings: hidden',
-                      activeLabel: 'Settings: shown',
-                      active: settingsOpen,
-                      onToggle: () => setSettingsOpen((v) => !v),
-                    },
-                  ]}
-                />
-                <ThemeToggle ctx={ctx} />
-              </>
+              <ToolbarItems
+                orientation="horizontal"
+                items={[
+                  ...dock.items,
+                  {
+                    type: 'toggle',
+                    key: 'minimap',
+                    icon: Map,
+                    label: 'Minimap: off',
+                    activeLabel: 'Minimap: on',
+                    active: minimapOn,
+                    onToggle: () => setMinimapOn((v) => !v),
+                  },
+                  {
+                    type: 'toggle',
+                    key: 'devinfo',
+                    icon: Gauge,
+                    label: 'Dev overlay: off',
+                    activeLabel: 'Dev overlay: on',
+                    active: devOn,
+                    onToggle: () => setDevOn((v) => !v),
+                  },
+                  {
+                    type: 'toggle',
+                    key: 'theme',
+                    icon: Sun,
+                    activeIcon: Moon,
+                    label: 'Switch to dark theme',
+                    activeLabel: 'Switch to light theme',
+                    active: ctx.themeKind === 'dark',
+                    onToggle: ctx.toggleTheme,
+                  },
+                ]}
+              />
             ),
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          // The star: the app's docked, resizable `right` region hosts the
-          // store-connected `<CanvasSettingsPanel>` over the live bundle. The
-          // region supplies the `overflow-auto bg-card` chrome + scroll; the panel
-          // flattens its own inner card (className) and renders inside the lifted
-          // Canvas/GraphCanvas contexts, so it binds to this canvas with no props.
-          right={
-            settingsOpen
-              ? {
-                  content: <CanvasSettingsPanel className="border-0 bg-transparent shadow-none" />,
-                  defaultSize: '360px',
-                  maxSize: '460px',
-                  collapsible: true,
-                }
-              : undefined
-          }
+          // The active panel docks into the app's resizable `right` region (or none).
+          right={dock.region}
         >
+          {/* Screen-fixed overlays driven by the header toggle items above. */}
+          {minimapOn && <MiniMapLayer backgroundLayerId="background" position="bottom-left" />}
+          {devOn && <DevInfoLayer enabled corner="top-left" margin={{ x: 12, y: 48 }} />}
 
           {/* Right-click menus. */}
           <GraphNodeContextMenu items={nodeMenu} />
@@ -143,4 +197,3 @@ export const LiveSettingsEditors: Story = {
     );
   },
 };
-
