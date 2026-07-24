@@ -1,6 +1,6 @@
 import type { FieldConfig } from '@invana/forms';
 
-import { roleField } from '../../field-helpers';
+import { roleField } from '../../editors/field-helpers';
 
 /**
  * `@invana/forms` schemas for {@link NodeStylingEditorPanel}. Scalars map 1:1 to

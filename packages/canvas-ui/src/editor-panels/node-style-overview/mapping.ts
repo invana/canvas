@@ -1,6 +1,6 @@
 import type { CompositePart, CompositeShapeOption, NodeStyle } from '@invana/graph';
 
-import { hexToNumber, numberToHex } from '../../../shared/color';
+import { hexToNumber, numberToHex } from '../../shared/color';
 import type { NodeStyleOverviewFields } from './types';
 
 /** Seed the form from an engine colour (`0xRRGGBB` → `#rrggbb`). Non-numeric

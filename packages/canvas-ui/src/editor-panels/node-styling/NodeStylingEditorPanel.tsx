@@ -10,7 +10,7 @@ import {
 } from 'react-hook-form';
 import type { NodeStylingTemplate } from '@invana/graph';
 
-import { NO_ROLE } from '../../field-helpers';
+import { NO_ROLE } from '../../editors/field-helpers';
 import {
   CARD_STYLING_FIELDS,
   SIMPLE_STYLING_FIELDS,

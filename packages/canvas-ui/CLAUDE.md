@@ -23,23 +23,22 @@ src/
 ├─ toolbars/     assembled *Toolbar (CanvasControlsToolbar, GraphToolbar, InspectorPanel…)
 ├─ menus/        context menus (GraphNodeContextMenu…)
 ├─ panels/       store-connected smart panels (CanvasSettingsPanel, status bars, detail views)
-├─ editors/      schema state-editors (controlled) + their connected wrappers
+├─ editors/      per-instance schema state-editors — ONE folder per editable engine surface
 │  ├─ field-helpers.ts   shared editor schema bits (roleField, SLOT_BINDING_FIELDS)
 │  ├─ _shared/           shared editor sub-components (AdvancedSection…)
 │  ├─ layers/            one folder per Layer surface (background-layer, minimap-layer, map-layer…)
 │  ├─ layouts/           one folder per Layout surface (d3-force-layout, elk-layout…)
-│  ├─ behaviours/        one folder per Behaviour surface (drag-pan, click-select, *-lod…)
-│  └─ editor-panels/     high-level / non-1:1 editors — the whole-canvas aggregate
-│                        (canvas-settings) + graph-domain template editors that edit
-│                        template JSON, not one instance (node-style{,/simple,/composite},
-│                        node-style-overview, node-styling, node-structure, schema,
-│                        hover-preview-card)
+│  └─ behaviours/        one folder per Behaviour surface (drag-pan, click-select, *-lod…)
 │     └─ <surface>/      each surface folder holds:
 │        ├─ <Surface>EditorPanel.tsx   controlled form (defaults/fields/onSubmit)
 │        ├─ fields.ts             @invana/forms FieldConfig[] (one array per tab)
 │        ├─ mapping.ts            engine encoding ⇄ flat form fields
 │        ├─ types.ts
 │        └─ index.ts
+├─ editor-panels/ high-level / non-1:1 editors (NOT one-per-instance) — the whole-canvas
+│                 aggregate (canvas-settings) + graph-domain template editors that edit
+│                 template JSON, not one engine instance (node-style{,/simple,/composite},
+│                 node-style-overview, node-styling, node-structure, schema, hover-preview-card)
 ├─ view-panels/  presentational *ViewPanel surfaces (SchemaViewPanel, LayersViewPanel, CanvasFiltersViewPanel, CanvasPagesViewPanel, preview cards) — props in → JSX
 ├─ apps/         GraphCanvasApp (+ header/footer)
 ├─ hooks/        UI-only turnkey hooks (useSidePanels — activity-bar for GraphCanvasApp side panels: descriptors → shared-toolbar `items` + active-panel `region`, one docked at a time; useDevTool, useMiniMap)
@@ -115,7 +114,7 @@ store.updateNode(id, { style: { ...resolveNodeStyle(node), ...formToStyle(values
 - **No module-level / shared mutable state.** Every component must be safe with N concurrent canvases on one page. No singleton store, no global "current canvas".
 - **`@invana/canvas-react` stays a peer dependency** (single, deduped instance) so the context object is shared between the host's root and this package's consumers — a duplicate copy silently breaks `useCanvas()`.
 - **Theme is global CSS tokens**, wired at the host app root — `@invana/themes/styles.css` then `@invana/ui/styles.css` (order matters). There is **no React `<ThemeProvider>`** in this package; don't add one. Storybook wires the stylesheets in `.storybook/preview.ts`.
-- New Behaviour / Layer / Layout ⇒ new `editors/<category>/<surface>/` where `<category>` is `behaviours` / `layers` / `layouts` (root rule 12). High-level / non-1:1 editors (the whole-canvas aggregate, graph-domain template editors) live in `editors/editor-panels/`.
+- New Behaviour / Layer / Layout ⇒ new `editors/<category>/<surface>/` where `<category>` is `behaviours` / `layers` / `layouts` (root rule 12). High-level / non-1:1 editors (the whole-canvas aggregate, graph-domain template editors) live in the top-level `editor-panels/` (a sibling of `editors/`, not nested under it).
 
 ## No tests
 

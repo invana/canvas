@@ -1,6 +1,6 @@
 import type { LabelStyling, NodeStylingTemplate, SlotStyling } from '@invana/graph';
 
-import { asRole, NO_ROLE } from '../../field-helpers';
+import { asRole, NO_ROLE } from '../../editors/field-helpers';
 import type { NodeStylingFormState } from './types';
 
 /** Seed the form from a `NodeStylingTemplate` (use as `defaults`). */

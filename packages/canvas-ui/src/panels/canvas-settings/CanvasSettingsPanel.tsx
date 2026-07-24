@@ -6,7 +6,7 @@ import {
   type CanvasSettingsDefinition,
   type CanvasSettingsInstance,
   type SettingsSection,
-} from '../../editors/editor-panels/canvas-settings';
+} from '../../editor-panels/canvas-settings';
 
 /**
  * Best-effort read of a live instance's current options, for seeding the panel.

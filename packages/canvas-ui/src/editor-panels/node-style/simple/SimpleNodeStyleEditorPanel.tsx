@@ -8,7 +8,7 @@ import {
   type FieldValues,
 } from 'react-hook-form';
 
-import { AdvancedSection } from '../../../_shared/AdvancedSection';
+import { AdvancedSection } from '../../../editors/_shared/AdvancedSection';
 import { advancedNodeStyleFields, basicNodeStyleFields } from './fields';
 import type { NodeStyleFields, NodeStyleFormState } from './types';
 

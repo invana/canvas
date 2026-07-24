@@ -1,6 +1,6 @@
 import type { CompositePart, CompositeRootSpec, CompositeShapeOption } from '@invana/graph';
 
-import { hexToNumber, numberToHex } from '../../../../shared/color';
+import { hexToNumber, numberToHex } from '../../../shared/color';
 import type {
   CompositeFormState,
   CompositePartRow,

@@ -21,14 +21,14 @@
 export {
   CanvasSettingsEditorPanel,
   DEFAULT_CANVAS_SETTINGS_SCHEMAS,
-} from './editors/editor-panels/canvas-settings';
+} from './editor-panels/canvas-settings';
 export type {
   CanvasSettingsEditorPanelProps,
   SettingsSchemaEntry,
   CanvasSettingsDefinition,
   CanvasSettingsInstance,
   SettingsSection,
-} from './editors/editor-panels/canvas-settings';
+} from './editor-panels/canvas-settings';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Panels (store-connected)
@@ -69,7 +69,7 @@ export {
   partRowFields,
   compositeToForm,
   formToComposite,
-} from './editors/editor-panels/node-style';
+} from './editor-panels/node-style';
 export type {
   NodeStyleEditorPanelProps,
   SimpleNodeStyleEditorPanelProps,
@@ -87,7 +87,7 @@ export type {
   CompositeRootKind,
   CompositePartKind,
   CompositeIconKind,
-} from './editors/editor-panels/node-style';
+} from './editor-panels/node-style';
 
 // ─── Node style overview editor ────────────────────────────────────────────
 // A minimal colour-only editor that recolours a node. `recolorNodeStyle` turns
@@ -99,12 +99,12 @@ export {
   colorToForm,
   formToColor,
   recolorNodeStyle,
-} from './editors/editor-panels/node-style-overview';
+} from './editor-panels/node-style-overview';
 export type {
   NodeStyleOverviewEditorPanelProps,
   NodeStyleOverviewFields,
   NodeStyleOverviewFormState,
-} from './editors/editor-panels/node-style-overview';
+} from './editor-panels/node-style-overview';
 
 // ─── Hover-preview-card editor ─────────────────────────────────────────────
 // Engine-agnostic form (à la NodeStyleEditorPanel) that produces one serializable
@@ -116,14 +116,14 @@ export {
   CARD_ROW_FIELDS,
   specToForm,
   formToSpec,
-} from './editors/editor-panels/hover-preview-card';
+} from './editor-panels/hover-preview-card';
 export type {
   HoverPreviewCardEditorPanelProps,
   CardSpecFields,
   CardScalarFields,
   CardRowField,
   CardImageShape,
-} from './editors/editor-panels/hover-preview-card';
+} from './editor-panels/hover-preview-card';
 
 // ─── Node template editors ────────────────────────────────────────────────
 // Schema-driven editors for the three-layer node model: a `NodeStructureEditorPanel`
@@ -135,13 +135,13 @@ export {
   bindingScalarFields,
   bindingToForm,
   formToBinding,
-} from './editors/editor-panels/node-structure';
+} from './editor-panels/node-structure';
 export type {
   NodeStructureEditorPanelProps,
   NodeStructureFormState,
   NodeStructureScalarFields,
   BindingRow,
-} from './editors/editor-panels/node-structure';
+} from './editor-panels/node-structure';
 // `SchemaEditorPanel` — a titled list of typed fields (ER / table-card schema).
 // Edits a `NodeSchema` (label + header colour + fields[{name,type}]) and emits
 // it on Apply; the consumer writes it back to a node's data + redraws.
@@ -153,14 +153,14 @@ export {
   SCHEMA_FIELD_ROW,
   schemaToForm,
   formToSchema,
-} from './editors/editor-panels/schema';
+} from './editor-panels/schema';
 export type {
   SchemaEditorPanelProps,
   NodeSchema,
   SchemaFieldDef,
   SchemaEditorFormState,
   SchemaMetaFields,
-} from './editors/editor-panels/schema';
+} from './editor-panels/schema';
 export {
   NodeStylingEditorPanel,
   STYLING_SCALAR_FIELDS,
@@ -169,13 +169,13 @@ export {
   SLOT_STYLING_FIELDS,
   stylingToForm,
   formToStyling,
-} from './editors/editor-panels/node-styling';
+} from './editor-panels/node-styling';
 export type {
   NodeStylingEditorPanelProps,
   NodeStylingFormState,
   NodeStylingScalarFields,
   SlotStylingRow,
-} from './editors/editor-panels/node-styling';
+} from './editor-panels/node-styling';
 // The free-form **node/edge template designer** moved to its own package,
 // `@invana/canvas-designer` — it's a heavy authoring tool (drag canvas, layers,
 // undo/redo, save/load), so consumers who only render templates don't pull it

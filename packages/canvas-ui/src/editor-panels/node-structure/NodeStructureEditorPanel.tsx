@@ -10,7 +10,7 @@ import {
 } from 'react-hook-form';
 import type { NodeTypeBinding } from '@invana/graph';
 
-import { SLOT_BINDING_FIELDS } from '../../field-helpers';
+import { SLOT_BINDING_FIELDS } from '../../editors/field-helpers';
 import { bindingScalarFields } from './fields';
 import { bindingToForm, formToBinding } from './mapping';
 import type { NodeStructureFormState } from './types';

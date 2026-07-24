@@ -1,6 +1,6 @@
 import type { FieldConfig } from '@invana/forms';
 
-import { COLOR_PRESETS } from '../../../shared/colors';
+import { COLOR_PRESETS } from '../../shared/colors';
 
 /**
  * `@invana/forms` field schemas for {@link SchemaEditorPanel}. `meta` (title + header

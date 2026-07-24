@@ -8,7 +8,7 @@ import {
   type Control,
   type FieldValues,
 } from 'react-hook-form';
-import { AdvancedSection } from '../../../_shared/AdvancedSection';
+import { AdvancedSection } from '../../../editors/_shared/AdvancedSection';
 import { advancedCompositeScalarFields, basicCompositeFields, partRowFields } from './fields';
 import { compositeToForm } from './mapping';
 import type { CompositeFormState, CompositeScalarFields } from './types';

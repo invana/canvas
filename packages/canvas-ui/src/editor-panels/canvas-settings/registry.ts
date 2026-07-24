@@ -16,205 +16,205 @@ import type { FieldConfig } from '@invana/forms';
 import type { SettingsSection } from './types';
 
 // ── Layers ────────────────────────────────────────────────────────────────
-import { backgroundLayerFields } from '../../layers/background-layer/fields';
+import { backgroundLayerFields } from '../../editors/layers/background-layer/fields';
 import {
   optionsToForm as backgroundLayerToForm,
   formToOptions as backgroundLayerToOptions,
-} from '../../layers/background-layer/mapping';
-import { devInfoLayerFields } from '../../layers/dev-info-layer/fields';
+} from '../../editors/layers/background-layer/mapping';
+import { devInfoLayerFields } from '../../editors/layers/dev-info-layer/fields';
 import {
   optionsToForm as devInfoLayerToForm,
   formToOptions as devInfoLayerToOptions,
-} from '../../layers/dev-info-layer/mapping';
-import { miniMapLayerFields } from '../../layers/minimap-layer/fields';
+} from '../../editors/layers/dev-info-layer/mapping';
+import { miniMapLayerFields } from '../../editors/layers/minimap-layer/fields';
 import {
   optionsToForm as miniMapLayerToForm,
   formToOptions as miniMapLayerToOptions,
-} from '../../layers/minimap-layer/mapping';
-import { densityContourFillLayerFields } from '../../layers/density-contour-fill-layer/fields';
+} from '../../editors/layers/minimap-layer/mapping';
+import { densityContourFillLayerFields } from '../../editors/layers/density-contour-fill-layer/fields';
 import {
   optionsToForm as densityContourFillLayerToForm,
   formToOptions as densityContourFillLayerToOptions,
-} from '../../layers/density-contour-fill-layer/mapping';
-import { densityContourStrokeLayerFields } from '../../layers/density-contour-stroke-layer/fields';
+} from '../../editors/layers/density-contour-fill-layer/mapping';
+import { densityContourStrokeLayerFields } from '../../editors/layers/density-contour-stroke-layer/fields';
 import {
   optionsToForm as densityContourStrokeLayerToForm,
   formToOptions as densityContourStrokeLayerToOptions,
-} from '../../layers/density-contour-stroke-layer/mapping';
-import { bubbleSetsLayerFields } from '../../layers/bubble-sets-layer/fields';
+} from '../../editors/layers/density-contour-stroke-layer/mapping';
+import { bubbleSetsLayerFields } from '../../editors/layers/bubble-sets-layer/fields';
 import {
   optionsToForm as bubbleSetsLayerToForm,
   formToOptions as bubbleSetsLayerToOptions,
-} from '../../layers/bubble-sets-layer/mapping';
-import { mapLayerFields } from '../../layers/map-layer/fields';
+} from '../../editors/layers/bubble-sets-layer/mapping';
+import { mapLayerFields } from '../../editors/layers/map-layer/fields';
 import {
   optionsToForm as mapLayerToForm,
   formToOptions as mapLayerToOptions,
-} from '../../layers/map-layer/mapping';
+} from '../../editors/layers/map-layer/mapping';
 
 // ── Behaviours ──────────────────────────────────────────────────────────────
-import { dragPanFields } from '../../behaviours/drag-pan/fields';
+import { dragPanFields } from '../../editors/behaviours/drag-pan/fields';
 import {
   optionsToForm as dragPanToForm,
   formToOptions as dragPanToOptions,
-} from '../../behaviours/drag-pan/mapping';
-import { pinchZoomFields } from '../../behaviours/pinch-zoom/fields';
+} from '../../editors/behaviours/drag-pan/mapping';
+import { pinchZoomFields } from '../../editors/behaviours/pinch-zoom/fields';
 import {
   optionsToForm as pinchZoomToForm,
   formToOptions as pinchZoomToOptions,
-} from '../../behaviours/pinch-zoom/mapping';
-import { keyboardCameraFields } from '../../behaviours/keyboard-camera/fields';
+} from '../../editors/behaviours/pinch-zoom/mapping';
+import { keyboardCameraFields } from '../../editors/behaviours/keyboard-camera/fields';
 import {
   optionsToForm as keyboardCameraToForm,
   formToOptions as keyboardCameraToOptions,
-} from '../../behaviours/keyboard-camera/mapping';
-import { wheelZoomFields } from '../../behaviours/wheel-zoom/fields';
+} from '../../editors/behaviours/keyboard-camera/mapping';
+import { wheelZoomFields } from '../../editors/behaviours/wheel-zoom/fields';
 import {
   optionsToForm as wheelZoomToForm,
   formToOptions as wheelZoomToOptions,
-} from '../../behaviours/wheel-zoom/mapping';
-import { dragShapeFields } from '../../behaviours/drag-shape/fields';
+} from '../../editors/behaviours/wheel-zoom/mapping';
+import { dragShapeFields } from '../../editors/behaviours/drag-shape/fields';
 import {
   optionsToForm as dragShapeToForm,
   formToOptions as dragShapeToOptions,
-} from '../../behaviours/drag-shape/mapping';
-import { dragNodeFields } from '../../behaviours/drag-node/fields';
+} from '../../editors/behaviours/drag-shape/mapping';
+import { dragNodeFields } from '../../editors/behaviours/drag-node/fields';
 import {
   optionsToForm as dragNodeToForm,
   formToOptions as dragNodeToOptions,
-} from '../../behaviours/drag-node/mapping';
-import { hoverActivateFields } from '../../behaviours/hover-activate/fields';
+} from '../../editors/behaviours/drag-node/mapping';
+import { hoverActivateFields } from '../../editors/behaviours/hover-activate/fields';
 import {
   optionsToForm as hoverActivateToForm,
   formToOptions as hoverActivateToOptions,
-} from '../../behaviours/hover-activate/mapping';
-import { clickSelectFields } from '../../behaviours/click-select/fields';
+} from '../../editors/behaviours/hover-activate/mapping';
+import { clickSelectFields } from '../../editors/behaviours/click-select/fields';
 import {
   optionsToForm as clickSelectToForm,
   formToOptions as clickSelectToOptions,
-} from '../../behaviours/click-select/mapping';
-import { clickInspectFields } from '../../behaviours/click-inspect/fields';
+} from '../../editors/behaviours/click-select/mapping';
+import { clickInspectFields } from '../../editors/behaviours/click-inspect/fields';
 import {
   optionsToForm as clickInspectToForm,
   formToOptions as clickInspectToOptions,
-} from '../../behaviours/click-inspect/mapping';
-import { clickViewFields } from '../../behaviours/click-view/fields';
+} from '../../editors/behaviours/click-inspect/mapping';
+import { clickViewFields } from '../../editors/behaviours/click-view/fields';
 import {
   optionsToForm as clickViewToForm,
   formToOptions as clickViewToOptions,
-} from '../../behaviours/click-view/mapping';
-import { hoverElementPreviewFields } from '../../behaviours/hover-element-preview/fields';
+} from '../../editors/behaviours/click-view/mapping';
+import { hoverElementPreviewFields } from '../../editors/behaviours/hover-element-preview/fields';
 import {
   optionsToForm as hoverElementPreviewToForm,
   formToOptions as hoverElementPreviewToOptions,
-} from '../../behaviours/hover-element-preview/mapping';
-import { brushSelectFields } from '../../behaviours/brush-select/fields';
+} from '../../editors/behaviours/hover-element-preview/mapping';
+import { brushSelectFields } from '../../editors/behaviours/brush-select/fields';
 import {
   optionsToForm as brushSelectToForm,
   formToOptions as brushSelectToOptions,
-} from '../../behaviours/brush-select/mapping';
-import { lassoSelectFields } from '../../behaviours/lasso-select/fields';
+} from '../../editors/behaviours/brush-select/mapping';
+import { lassoSelectFields } from '../../editors/behaviours/lasso-select/fields';
 import {
   optionsToForm as lassoSelectToForm,
   formToOptions as lassoSelectToOptions,
-} from '../../behaviours/lasso-select/mapping';
-import { createNodeFields } from '../../behaviours/create-node/fields';
+} from '../../editors/behaviours/lasso-select/mapping';
+import { createNodeFields } from '../../editors/behaviours/create-node/fields';
 import {
   optionsToForm as createNodeToForm,
   formToOptions as createNodeToOptions,
-} from '../../behaviours/create-node/mapping';
-import { drawEdgeFields } from '../../behaviours/draw-edge/fields';
+} from '../../editors/behaviours/create-node/mapping';
+import { drawEdgeFields } from '../../editors/behaviours/draw-edge/fields';
 import {
   optionsToForm as drawEdgeToForm,
   formToOptions as drawEdgeToOptions,
-} from '../../behaviours/draw-edge/mapping';
-import { eraseFields } from '../../behaviours/erase/fields';
+} from '../../editors/behaviours/draw-edge/mapping';
+import { eraseFields } from '../../editors/behaviours/erase/fields';
 import {
   optionsToForm as eraseToForm,
   formToOptions as eraseToOptions,
-} from '../../behaviours/erase/mapping';
-import { nodeResizeFields } from '../../behaviours/node-resize/fields';
+} from '../../editors/behaviours/erase/mapping';
+import { nodeResizeFields } from '../../editors/behaviours/node-resize/fields';
 import {
   optionsToForm as nodeResizeToForm,
   formToOptions as nodeResizeToOptions,
-} from '../../behaviours/node-resize/mapping';
-import { collapseExpandFields } from '../../behaviours/collapse-expand/fields';
+} from '../../editors/behaviours/node-resize/mapping';
+import { collapseExpandFields } from '../../editors/behaviours/collapse-expand/fields';
 import {
   optionsToForm as collapseExpandToForm,
   formToOptions as collapseExpandToOptions,
-} from '../../behaviours/collapse-expand/mapping';
-import { colorByLabelFields } from '../../behaviours/color-by-label/fields';
+} from '../../editors/behaviours/collapse-expand/mapping';
+import { colorByLabelFields } from '../../editors/behaviours/color-by-label/fields';
 import {
   optionsToForm as colorByLabelToForm,
   formToOptions as colorByLabelToOptions,
-} from '../../behaviours/color-by-label/mapping';
-import { themeFields } from '../../behaviours/theme/fields';
+} from '../../editors/behaviours/color-by-label/mapping';
+import { themeFields } from '../../editors/behaviours/theme/fields';
 import {
   optionsToForm as themeToForm,
   formToOptions as themeToOptions,
-} from '../../behaviours/theme/mapping';
-import { nodeCentralityFields } from '../../behaviours/node-centrality/fields';
+} from '../../editors/behaviours/theme/mapping';
+import { nodeCentralityFields } from '../../editors/behaviours/node-centrality/fields';
 import {
   optionsToForm as nodeCentralityToForm,
   formToOptions as nodeCentralityToOptions,
-} from '../../behaviours/node-centrality/mapping';
-import { contextMenuFields } from '../../behaviours/context-menu/fields';
+} from '../../editors/behaviours/node-centrality/mapping';
+import { contextMenuFields } from '../../editors/behaviours/context-menu/fields';
 import {
   optionsToForm as contextMenuToForm,
   formToOptions as contextMenuToOptions,
-} from '../../behaviours/context-menu/mapping';
-import { textResolutionLodFields } from '../../behaviours/text-resolution-lod/fields';
+} from '../../editors/behaviours/context-menu/mapping';
+import { textResolutionLodFields } from '../../editors/behaviours/text-resolution-lod/fields';
 import {
   optionsToForm as textResolutionLodToForm,
   formToOptions as textResolutionLodToOptions,
-} from '../../behaviours/text-resolution-lod/mapping';
-import { nodeScaleLodFields } from '../../behaviours/node-scale-lod/fields';
+} from '../../editors/behaviours/text-resolution-lod/mapping';
+import { nodeScaleLodFields } from '../../editors/behaviours/node-scale-lod/fields';
 import {
   optionsToForm as nodeScaleLodToForm,
   formToOptions as nodeScaleLodToOptions,
-} from '../../behaviours/node-scale-lod/mapping';
-import { edgeScaleLodFields } from '../../behaviours/edge-scale-lod/fields';
+} from '../../editors/behaviours/node-scale-lod/mapping';
+import { edgeScaleLodFields } from '../../editors/behaviours/edge-scale-lod/fields';
 import {
   optionsToForm as edgeScaleLodToForm,
   formToOptions as edgeScaleLodToOptions,
-} from '../../behaviours/edge-scale-lod/mapping';
-import { parallelEdgeFields } from '../../behaviours/parallel-edge/fields';
+} from '../../editors/behaviours/edge-scale-lod/mapping';
+import { parallelEdgeFields } from '../../editors/behaviours/parallel-edge/fields';
 import {
   optionsToForm as parallelEdgeToForm,
   formToOptions as parallelEdgeToOptions,
-} from '../../behaviours/parallel-edge/mapping';
-import { labelCollisionFields } from '../../behaviours/label-collision/fields';
+} from '../../editors/behaviours/parallel-edge/mapping';
+import { labelCollisionFields } from '../../editors/behaviours/label-collision/fields';
 import {
   optionsToForm as labelCollisionToForm,
   formToOptions as labelCollisionToOptions,
-} from '../../behaviours/label-collision/mapping';
+} from '../../editors/behaviours/label-collision/mapping';
 
 // ── Layouts ───────────────────────────────────────────────────────────────
-import { d3ForceLayoutFields } from '../../layouts/d3-force-layout/fields';
+import { d3ForceLayoutFields } from '../../editors/layouts/d3-force-layout/fields';
 import {
   optionsToForm as d3ForceLayoutToForm,
   formToOptions as d3ForceLayoutToOptions,
-} from '../../layouts/d3-force-layout/mapping';
-import { elkLayoutFields } from '../../layouts/elk-layout/fields';
+} from '../../editors/layouts/d3-force-layout/mapping';
+import { elkLayoutFields } from '../../editors/layouts/elk-layout/fields';
 import {
   optionsToForm as elkLayoutToForm,
   formToOptions as elkLayoutToOptions,
-} from '../../layouts/elk-layout/mapping';
-import { d3HierarchyLayoutFields } from '../../layouts/d3-hierarchy-layout/fields';
+} from '../../editors/layouts/elk-layout/mapping';
+import { d3HierarchyLayoutFields } from '../../editors/layouts/d3-hierarchy-layout/fields';
 import {
   optionsToForm as d3HierarchyLayoutToForm,
   formToOptions as d3HierarchyLayoutToOptions,
-} from '../../layouts/d3-hierarchy-layout/mapping';
-import { d3SankeyLayoutFields } from '../../layouts/d3-sankey-layout/fields';
+} from '../../editors/layouts/d3-hierarchy-layout/mapping';
+import { d3SankeyLayoutFields } from '../../editors/layouts/d3-sankey-layout/fields';
 import {
   optionsToForm as d3SankeyLayoutToForm,
   formToOptions as d3SankeyLayoutToOptions,
-} from '../../layouts/d3-sankey-layout/mapping';
-import { geometricLayoutFields } from '../../layouts/geometric-layout/fields';
+} from '../../editors/layouts/d3-sankey-layout/mapping';
+import { geometricLayoutFields } from '../../editors/layouts/geometric-layout/fields';
 import {
   optionsToForm as geometricLayoutToForm,
   formToOptions as geometricLayoutToOptions,
-} from '../../layouts/geometric-layout/mapping';
+} from '../../editors/layouts/geometric-layout/mapping';
 
 /**
  * One registry entry: everything `CanvasSettingsEditorPanel` needs to render + wire

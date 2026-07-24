@@ -1,4 +1,4 @@
-import { hexToNumber, numberToHex } from '../../../shared/color';
+import { hexToNumber, numberToHex } from '../../shared/color';
 import type { NodeSchema, SchemaEditorFormState } from './types';
 
 /** Seed the form from a {@link NodeSchema} (use as `defaults`). */
