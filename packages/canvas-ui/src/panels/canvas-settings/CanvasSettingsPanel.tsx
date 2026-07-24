@@ -2,11 +2,11 @@ import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { CanvasContext, useCanvas, useGraphCanvasOptions } from '@invana/canvas-react';
 
 import {
-  CanvasSettingsEditor,
+  CanvasSettingsEditorPanel,
   type CanvasSettingsDefinition,
   type CanvasSettingsInstance,
   type SettingsSection,
-} from '../../editors/canvas-settings';
+} from '../../editors/editor-panels/canvas-settings';
 
 /**
  * Best-effort read of a live instance's current options, for seeding the panel.
@@ -43,7 +43,7 @@ export interface CanvasSettingsPanelProps {
   /** Extra classes for the editor (e.g. to flatten card chrome in a docked region). */
   className?: string;
   /**
-   * Map a live layer/behaviour/layout instance to its `CanvasSettingsEditor`
+   * Map a live layer/behaviour/layout instance to its `CanvasSettingsEditorPanel`
    * registry `kind`. Defaults to `instance.kind ?? constructor.name`; pass a
    * class-based (`instanceof`) resolver for minified builds.
    */
@@ -57,7 +57,7 @@ type Introspected = { id: string; kind?: string; inst: unknown };
  * inside a `<Canvas>` / `<GraphCanvas>` / `GraphCanvasApp` subtree and it binds to
  * that canvas via context (multi-canvas safe), reads the live definition, and
  * applies every edit through `@invana/canvas-store`. The packaged form of the
- * introspection ↔ {@link CanvasSettingsEditor} bridge, so consumers never
+ * introspection ↔ {@link CanvasSettingsEditorPanel} bridge, so consumers never
  * hand-wire one.
  *
  * - reads `store.view.definition` **reactively** via `useGraphCanvasOptions`, so
@@ -143,7 +143,7 @@ function CanvasSettingsPanelInner({
   }, [instances, options]);
 
   return (
-    <CanvasSettingsEditor
+    <CanvasSettingsEditorPanel
       definition={definition}
       className={className}
       onChange={(section: SettingsSection, id, patch) => update({ [section]: { [id]: patch } })}

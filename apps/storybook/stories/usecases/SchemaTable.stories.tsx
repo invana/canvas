@@ -17,7 +17,7 @@
  *   band. No pointer math.
  * - *Right-click editing* — right-click a **row** → a per-field menu (change
  *   type / delete / add) via `shape:partcontextmenu`; right-click the **header**
- *   → the table menu (`shape:contextmenu`) → the reusable `<SchemaEditor>`
+ *   → the table menu (`shape:contextmenu`) → the reusable `<SchemaEditorPanel>`
  *   panel (`@invana/canvas-ui`) for bulk add / remove / reorder / retype. Edits
  *   write back to the node's `data` and `redraw()`.
  */
@@ -37,7 +37,7 @@ import {
   type GraphEdge,
   type GraphNode,
 } from '@invana/graph';
-import { SchemaEditor, type NodeSchema } from '@invana/canvas-ui';
+import { SchemaEditorPanel, type NodeSchema } from '@invana/canvas-ui';
 import { ElkLayout, type ElkDirection } from '@invana/graph-layout-elkjs';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../div-util';
@@ -347,7 +347,7 @@ export const SchemaTable: Story = {
     onStoryTeardown(() => renderer.events.off('shape:partover', onPartOver));
     onStoryTeardown(() => renderer.events.off('shape:partout', onPartOut));
 
-    // ── Right-click editing — table menu + per-field menu + SchemaEditor ──
+    // ── Right-click editing — table menu + per-field menu + SchemaEditorPanel ──
     // Suppress the browser's native menu over the canvas.
     const onNativeCtx = (e: MouseEvent) => e.preventDefault();
     container.addEventListener('contextmenu', onNativeCtx);
@@ -372,7 +372,7 @@ export const SchemaTable: Story = {
       patchData(id, { label: s.label || cur.label, header: s.headerColor ?? cur.header, fields: s.fields.length ? s.fields : cur.fields });
     };
 
-    // React overlay mounted over the canvas — menus + the SchemaEditor panel,
+    // React overlay mounted over the canvas — menus + the SchemaEditorPanel panel,
     // positioned from engine world coords via `camera.toScreen`.
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
@@ -462,7 +462,7 @@ export const SchemaTable: Story = {
                 <span>Edit schema</span>
                 <button style={{ background: 'transparent', border: 0, color: '#94a3b8', cursor: 'pointer', fontSize: 14 }} onClick={() => setPanel(null)}>✕</button>
               </div>
-              <SchemaEditor
+              <SchemaEditorPanel
                 key={panel.nodeId}
                 defaults={schemaOf(panel.nodeId)}
                 onSubmit={(s) => {

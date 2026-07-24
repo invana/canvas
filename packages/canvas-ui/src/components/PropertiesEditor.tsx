@@ -22,7 +22,7 @@ export interface PropertiesEditorProps {
   title?: string;
   /**
    * Initial values, loaded into local state **once** on mount (same as
-   * `NodeStyleEditor`). To reload for a different element, remount via `key`.
+   * `NodeStyleEditorPanel`). To reload for a different element, remount via `key`.
    */
   defaults?: Partial<PropertiesEditorValues>;
   /** Called with the edited values when the user clicks Apply. */
@@ -50,7 +50,7 @@ const INPUT_CLASS =
 /**
  * Dumb, engine-agnostic editor for an element's **label + key/value
  * properties** — the canvas counterpart of `@invana/canvas-ui`'s
- * `NodeStyleEditor`, but for arbitrary `data` rather than visual style (which
+ * `NodeStyleEditorPanel`, but for arbitrary `data` rather than visual style (which
  * `@invana/forms`' fixed field types can't express as a dynamic list).
  *
  * Props in / `onSubmit` out: it owns the row state, lets the user add / remove /

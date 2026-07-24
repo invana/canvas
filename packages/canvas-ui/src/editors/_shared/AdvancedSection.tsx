@@ -20,8 +20,8 @@ export interface AdvancedSectionProps {
  * `Accordion` and takes no form/engine state; the advanced controls are passed
  * as `children`.
  *
- * Used by the node-style editors ({@link SimpleNodeStyleEditor} /
- * {@link CompositeNodeStyleEditor}) to gate everything beyond colour / shape /
+ * Used by the node-style editors ({@link SimpleNodeStyleEditorPanel} /
+ * {@link CompositeNodeStyleEditorPanel}) to gate everything beyond colour / shape /
  * size. `type="single"` + `collapsible` so it toggles open/closed on its own.
  */
 export function AdvancedSection({

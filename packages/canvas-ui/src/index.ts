@@ -19,16 +19,16 @@
 // delivery vehicle; the `*Fields` / `optionsToForm` / `formToOptions` exports
 // below feed its registry.
 export {
-  CanvasSettingsEditor,
+  CanvasSettingsEditorPanel,
   DEFAULT_CANVAS_SETTINGS_SCHEMAS,
-} from './editors/canvas-settings';
+} from './editors/editor-panels/canvas-settings';
 export type {
-  CanvasSettingsEditorProps,
+  CanvasSettingsEditorPanelProps,
   SettingsSchemaEntry,
   CanvasSettingsDefinition,
   CanvasSettingsInstance,
   SettingsSection,
-} from './editors/canvas-settings';
+} from './editors/editor-panels/canvas-settings';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Panels (store-connected)
@@ -36,18 +36,18 @@ export type {
 // Self-wiring smart panels: drop into a <Canvas>/<GraphCanvas>/GraphCanvasApp
 // subtree and they bind to that canvas via context (multi-canvas safe), reading
 // and writing @invana/canvas-store through @invana/canvas-react hooks — no props.
-// `CanvasSettingsPanel` packages the introspection↔CanvasSettingsEditor bridge.
+// `CanvasSettingsPanel` packages the introspection↔CanvasSettingsEditorPanel bridge.
 export { CanvasSettingsPanel, type CanvasSettingsPanelProps } from './panels/canvas-settings';
 
 // ─── Node style editors ──────────────────────────────────────────────────
-// `NodeStyleEditor` dispatches on the `kind` prop to the full-spec **simple**
+// `NodeStyleEditorPanel` dispatches on the `kind` prop to the full-spec **simple**
 // editor (flat `NodeStyle`) or the full-spec **composite** editor (a
 // `CompositeShapeOption`). Both variants + their field configs + mappers are
 // exported for standalone use.
 export {
-  NodeStyleEditor,
-  SimpleNodeStyleEditor,
-  CompositeNodeStyleEditor,
+  NodeStyleEditorPanel,
+  SimpleNodeStyleEditorPanel,
+  CompositeNodeStyleEditorPanel,
   // simple: field configs + mapping — supply/override the schema, seed
   // (`styleToForm`), and read edits back (`formToStyle`). `basic*`/`advanced*`
   // are the two-tier default split (basics vs. the collapsed advanced set).
@@ -69,11 +69,11 @@ export {
   partRowFields,
   compositeToForm,
   formToComposite,
-} from './editors/node-style';
+} from './editors/editor-panels/node-style';
 export type {
-  NodeStyleEditorProps,
-  SimpleNodeStyleEditorProps,
-  CompositeNodeStyleEditorProps,
+  NodeStyleEditorPanelProps,
+  SimpleNodeStyleEditorPanelProps,
+  CompositeNodeStyleEditorPanelProps,
   NodeStyleFields,
   NodeStyleFormState,
   ShapeKind,
@@ -87,95 +87,95 @@ export type {
   CompositeRootKind,
   CompositePartKind,
   CompositeIconKind,
-} from './editors/node-style';
+} from './editors/editor-panels/node-style';
 
 // ─── Node style overview editor ────────────────────────────────────────────
 // A minimal colour-only editor that recolours a node. `recolorNodeStyle` turns
 // the chosen colour into the right patch for a simple shape (`bgFill`) or a
 // composite card (body + accent parts), so one control works for both kinds.
 export {
-  NodeStyleOverviewEditor,
+  NodeStyleOverviewEditorPanel,
   nodeStyleOverviewFields,
   colorToForm,
   formToColor,
   recolorNodeStyle,
-} from './editors/node-style-overview';
+} from './editors/editor-panels/node-style-overview';
 export type {
-  NodeStyleOverviewEditorProps,
+  NodeStyleOverviewEditorPanelProps,
   NodeStyleOverviewFields,
   NodeStyleOverviewFormState,
-} from './editors/node-style-overview';
+} from './editors/editor-panels/node-style-overview';
 
 // ─── Hover-preview-card editor ─────────────────────────────────────────────
-// Engine-agnostic form (à la NodeStyleEditor) that produces one serializable
+// Engine-agnostic form (à la NodeStyleEditorPanel) that produces one serializable
 // `HoverElementPreviewCardSpec` — the per-type card definition. Compose one per
 // node/edge type to build the behaviour's `cards` config from a UI.
 export {
-  HoverPreviewCardEditor,
+  HoverPreviewCardEditorPanel,
   CARD_SCALAR_FIELDS,
   CARD_ROW_FIELDS,
   specToForm,
   formToSpec,
-} from './editors/hover-preview-card';
+} from './editors/editor-panels/hover-preview-card';
 export type {
-  HoverPreviewCardEditorProps,
+  HoverPreviewCardEditorPanelProps,
   CardSpecFields,
   CardScalarFields,
   CardRowField,
   CardImageShape,
-} from './editors/hover-preview-card';
+} from './editors/editor-panels/hover-preview-card';
 
 // ─── Node template editors ────────────────────────────────────────────────
-// Schema-driven editors for the three-layer node model: a `NodeStructureEditor`
+// Schema-driven editors for the three-layer node model: a `NodeStructureEditorPanel`
 // (per-type binding — structure + styling + the slot→data-field map) and a
-// `NodeStylingEditor` (roles + typography). Both produce pure JSON the host
+// `NodeStylingEditorPanel` (roles + typography). Both produce pure JSON the host
 // pushes via `canvas.update({ layers: { graph: { … } } })`.
 export {
-  NodeStructureEditor,
+  NodeStructureEditorPanel,
   bindingScalarFields,
   bindingToForm,
   formToBinding,
-} from './editors/node-structure';
+} from './editors/editor-panels/node-structure';
 export type {
-  NodeStructureEditorProps,
+  NodeStructureEditorPanelProps,
   NodeStructureFormState,
   NodeStructureScalarFields,
   BindingRow,
-} from './editors/node-structure';
-// `SchemaEditor` — a titled list of typed fields (ER / table-card schema).
+} from './editors/editor-panels/node-structure';
+// `SchemaEditorPanel` — a titled list of typed fields (ER / table-card schema).
 // Edits a `NodeSchema` (label + header colour + fields[{name,type}]) and emits
 // it on Apply; the consumer writes it back to a node's data + redraws.
 export {
-  SchemaEditor,
+  SchemaEditorPanel,
   SCHEMA_TYPES,
   SCHEMA_TYPE_OPTIONS,
   SCHEMA_META_FIELDS,
   SCHEMA_FIELD_ROW,
   schemaToForm,
   formToSchema,
-} from './editors/schema';
+} from './editors/editor-panels/schema';
 export type {
-  SchemaEditorProps,
+  SchemaEditorPanelProps,
   NodeSchema,
   SchemaFieldDef,
   SchemaEditorFormState,
   SchemaMetaFields,
-} from './editors/schema';
+} from './editors/editor-panels/schema';
 export {
-  NodeStylingEditor,
+  NodeStylingEditorPanel,
   STYLING_SCALAR_FIELDS,
   SIMPLE_STYLING_FIELDS,
   CARD_STYLING_FIELDS,
   SLOT_STYLING_FIELDS,
   stylingToForm,
   formToStyling,
-} from './editors/node-styling';
+} from './editors/editor-panels/node-styling';
 export type {
-  NodeStylingEditorProps,
+  NodeStylingEditorPanelProps,
   NodeStylingFormState,
   NodeStylingScalarFields,
   SlotStylingRow,
-} from './editors/node-styling';
+} from './editors/editor-panels/node-styling';
 // The free-form **node/edge template designer** moved to its own package,
 // `@invana/canvas-designer` — it's a heavy authoring tool (drag canvas, layers,
 // undo/redo, save/load), so consumers who only render templates don't pull it
@@ -199,40 +199,40 @@ export {
 // mappers are aliased per surface since the names repeat across editors.
 
 // WheelZoomBehaviour
-export { WheelZoomEditor, wheelZoomFields } from './editors/wheel-zoom';
+export { WheelZoomEditorPanel, wheelZoomFields } from './editors/behaviours/wheel-zoom';
 export {
   optionsToForm as wheelZoomOptionsToForm,
   formToOptions as wheelZoomFormToOptions,
-} from './editors/wheel-zoom';
+} from './editors/behaviours/wheel-zoom';
 export type {
-  WheelZoomEditorProps,
+  WheelZoomEditorPanelProps,
   WheelZoomFields,
   WheelZoomFormState,
   WheelZoomOptions,
-} from './editors/wheel-zoom';
+} from './editors/behaviours/wheel-zoom';
 
 // BackgroundLayer
-export { BackgroundLayerEditor, backgroundLayerFields } from './editors/background-layer';
+export { BackgroundLayerEditorPanel, backgroundLayerFields } from './editors/layers/background-layer';
 export {
   optionsToForm as backgroundLayerOptionsToForm,
   formToOptions as backgroundLayerFormToOptions,
-} from './editors/background-layer';
+} from './editors/layers/background-layer';
 export type {
-  BackgroundLayerEditorProps,
+  BackgroundLayerEditorPanelProps,
   BackgroundLayerFields,
   BackgroundLayerFormState,
   BackgroundLayerOptions,
   BackgroundType,
   BackgroundPatternType,
   BackgroundMode,
-} from './editors/background-layer';
+} from './editors/layers/background-layer';
 
 // GeometricLayout
 export {
-  GeometricLayoutEditor,
+  GeometricLayoutEditorPanel,
   geometricLayoutFields,
   modeFields,
-} from './editors/geometric-layout';
+} from './editors/layouts/geometric-layout';
 
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -242,523 +242,523 @@ export {
 // ─────────────────────────────────────────────────────────────────────────
 
 // DragPanBehaviour
-export { DragPanEditor, dragPanFields } from './editors/drag-pan';
+export { DragPanEditorPanel, dragPanFields } from './editors/behaviours/drag-pan';
 export {
   optionsToForm as dragPanOptionsToForm,
   formToOptions as dragPanFormToOptions,
-} from './editors/drag-pan';
+} from './editors/behaviours/drag-pan';
 export type {
-  DragPanEditorProps,
+  DragPanEditorPanelProps,
   DragPanFields,
   DragPanFormState,
   DragPanOptions,
-} from './editors/drag-pan';
+} from './editors/behaviours/drag-pan';
 
 // PinchZoomBehaviour
-export { PinchZoomEditor, pinchZoomFields } from './editors/pinch-zoom';
+export { PinchZoomEditorPanel, pinchZoomFields } from './editors/behaviours/pinch-zoom';
 export {
   optionsToForm as pinchZoomOptionsToForm,
   formToOptions as pinchZoomFormToOptions,
-} from './editors/pinch-zoom';
+} from './editors/behaviours/pinch-zoom';
 export type {
-  PinchZoomEditorProps,
+  PinchZoomEditorPanelProps,
   PinchZoomFields,
   PinchZoomFormState,
   PinchZoomOptions,
-} from './editors/pinch-zoom';
+} from './editors/behaviours/pinch-zoom';
 
 // KeyboardCameraInputBehaviour
-export { KeyboardCameraEditor, keyboardCameraFields } from './editors/keyboard-camera';
+export { KeyboardCameraEditorPanel, keyboardCameraFields } from './editors/behaviours/keyboard-camera';
 export {
   optionsToForm as keyboardCameraOptionsToForm,
   formToOptions as keyboardCameraFormToOptions,
-} from './editors/keyboard-camera';
+} from './editors/behaviours/keyboard-camera';
 export type {
-  KeyboardCameraEditorProps,
+  KeyboardCameraEditorPanelProps,
   KeyboardCameraFields,
   KeyboardCameraFormState,
   KeyboardCameraOptions,
-} from './editors/keyboard-camera';
+} from './editors/behaviours/keyboard-camera';
 
 // DragShapeBehaviour
-export { DragShapeEditor, dragShapeFields } from './editors/drag-shape';
+export { DragShapeEditorPanel, dragShapeFields } from './editors/behaviours/drag-shape';
 export {
   optionsToForm as dragShapeOptionsToForm,
   formToOptions as dragShapeFormToOptions,
-} from './editors/drag-shape';
+} from './editors/behaviours/drag-shape';
 export type {
-  DragShapeEditorProps,
+  DragShapeEditorPanelProps,
   DragShapeFields,
   DragShapeFormState,
   DragShapeOptions,
-} from './editors/drag-shape';
+} from './editors/behaviours/drag-shape';
 
 // DevInfoLayer
-export { DevInfoLayerEditor, devInfoLayerFields } from './editors/dev-info-layer';
+export { DevInfoLayerEditorPanel, devInfoLayerFields } from './editors/layers/dev-info-layer';
 export {
   optionsToForm as devInfoLayerOptionsToForm,
   formToOptions as devInfoLayerFormToOptions,
-} from './editors/dev-info-layer';
+} from './editors/layers/dev-info-layer';
 export type {
-  DevInfoLayerEditorProps,
+  DevInfoLayerEditorPanelProps,
   DevInfoLayerFields,
   DevInfoLayerFormState,
   DevInfoLayerOptions,
-} from './editors/dev-info-layer';
+} from './editors/layers/dev-info-layer';
 
 // ClickSelectBehaviour
-export { ClickSelectEditor, clickSelectFields } from './editors/click-select';
+export { ClickSelectEditorPanel, clickSelectFields } from './editors/behaviours/click-select';
 export {
   optionsToForm as clickSelectOptionsToForm,
   formToOptions as clickSelectFormToOptions,
-} from './editors/click-select';
+} from './editors/behaviours/click-select';
 export type {
-  ClickSelectEditorProps,
+  ClickSelectEditorPanelProps,
   ClickSelectFields,
   ClickSelectFormState,
   ClickSelectOptions,
-} from './editors/click-select';
+} from './editors/behaviours/click-select';
 
 // ClickInspectBehaviour
-export { ClickInspectEditor, clickInspectFields } from './editors/click-inspect';
+export { ClickInspectEditorPanel, clickInspectFields } from './editors/behaviours/click-inspect';
 export {
   optionsToForm as clickInspectOptionsToForm,
   formToOptions as clickInspectFormToOptions,
-} from './editors/click-inspect';
+} from './editors/behaviours/click-inspect';
 export type {
-  ClickInspectEditorProps,
+  ClickInspectEditorPanelProps,
   ClickInspectFields,
   ClickInspectFormState,
   ClickInspectOptions,
-} from './editors/click-inspect';
+} from './editors/behaviours/click-inspect';
 
 // ClickViewBehaviour
-export { ClickViewEditor, clickViewFields } from './editors/click-view';
+export { ClickViewEditorPanel, clickViewFields } from './editors/behaviours/click-view';
 export {
   optionsToForm as clickViewOptionsToForm,
   formToOptions as clickViewFormToOptions,
-} from './editors/click-view';
+} from './editors/behaviours/click-view';
 export type {
-  ClickViewEditorProps,
+  ClickViewEditorPanelProps,
   ClickViewFields,
   ClickViewFormState,
   ClickViewOptions,
-} from './editors/click-view';
+} from './editors/behaviours/click-view';
 
 // BrushSelectBehaviour
-export { BrushSelectEditor, brushSelectFields } from './editors/brush-select';
+export { BrushSelectEditorPanel, brushSelectFields } from './editors/behaviours/brush-select';
 export {
   optionsToForm as brushSelectOptionsToForm,
   formToOptions as brushSelectFormToOptions,
-} from './editors/brush-select';
+} from './editors/behaviours/brush-select';
 export type {
-  BrushSelectEditorProps,
+  BrushSelectEditorPanelProps,
   BrushSelectFields,
   BrushSelectFormState,
   BrushSelectOptions,
-} from './editors/brush-select';
+} from './editors/behaviours/brush-select';
 
 // LassoSelectBehaviour
-export { LassoSelectEditor, lassoSelectFields } from './editors/lasso-select';
+export { LassoSelectEditorPanel, lassoSelectFields } from './editors/behaviours/lasso-select';
 export {
   optionsToForm as lassoSelectOptionsToForm,
   formToOptions as lassoSelectFormToOptions,
-} from './editors/lasso-select';
+} from './editors/behaviours/lasso-select';
 export type {
-  LassoSelectEditorProps,
+  LassoSelectEditorPanelProps,
   LassoSelectFields,
   LassoSelectFormState,
   LassoSelectOptions,
-} from './editors/lasso-select';
+} from './editors/behaviours/lasso-select';
 
 // HoverActivateBehaviour
-export { HoverActivateEditor, hoverActivateFields } from './editors/hover-activate';
+export { HoverActivateEditorPanel, hoverActivateFields } from './editors/behaviours/hover-activate';
 export {
   optionsToForm as hoverActivateOptionsToForm,
   formToOptions as hoverActivateFormToOptions,
-} from './editors/hover-activate';
+} from './editors/behaviours/hover-activate';
 export type {
-  HoverActivateEditorProps,
+  HoverActivateEditorPanelProps,
   HoverActivateFields,
   HoverActivateFormState,
   HoverActivateOptions,
-} from './editors/hover-activate';
+} from './editors/behaviours/hover-activate';
 
 // HoverElementPreviewBehaviour
-export { HoverElementPreviewEditor, hoverElementPreviewFields } from './editors/hover-element-preview';
+export { HoverElementPreviewEditorPanel, hoverElementPreviewFields } from './editors/behaviours/hover-element-preview';
 export {
   optionsToForm as hoverElementPreviewOptionsToForm,
   formToOptions as hoverElementPreviewFormToOptions,
-} from './editors/hover-element-preview';
+} from './editors/behaviours/hover-element-preview';
 export type {
-  HoverElementPreviewEditorProps,
+  HoverElementPreviewEditorPanelProps,
   HoverElementPreviewFields,
   HoverElementPreviewFormState,
   HoverElementPreviewOptions,
-} from './editors/hover-element-preview';
+} from './editors/behaviours/hover-element-preview';
 
 // DragNodeBehaviour
-export { DragNodeEditor, dragNodeFields } from './editors/drag-node';
+export { DragNodeEditorPanel, dragNodeFields } from './editors/behaviours/drag-node';
 export {
   optionsToForm as dragNodeOptionsToForm,
   formToOptions as dragNodeFormToOptions,
-} from './editors/drag-node';
+} from './editors/behaviours/drag-node';
 export type {
-  DragNodeEditorProps,
+  DragNodeEditorPanelProps,
   DragNodeFields,
   DragNodeFormState,
   DragNodeOptions,
-} from './editors/drag-node';
+} from './editors/behaviours/drag-node';
 
 // NodeResizeBehaviour
-export { NodeResizeEditor, nodeResizeFields } from './editors/node-resize';
+export { NodeResizeEditorPanel, nodeResizeFields } from './editors/behaviours/node-resize';
 export {
   optionsToForm as nodeResizeOptionsToForm,
   formToOptions as nodeResizeFormToOptions,
-} from './editors/node-resize';
+} from './editors/behaviours/node-resize';
 export type {
-  NodeResizeEditorProps,
+  NodeResizeEditorPanelProps,
   NodeResizeFields,
   NodeResizeFormState,
   NodeResizeOptions,
-} from './editors/node-resize';
+} from './editors/behaviours/node-resize';
 
 // CollapseExpandBehaviour
-export { CollapseExpandEditor, collapseExpandFields } from './editors/collapse-expand';
+export { CollapseExpandEditorPanel, collapseExpandFields } from './editors/behaviours/collapse-expand';
 export {
   optionsToForm as collapseExpandOptionsToForm,
   formToOptions as collapseExpandFormToOptions,
-} from './editors/collapse-expand';
+} from './editors/behaviours/collapse-expand';
 export type {
-  CollapseExpandEditorProps,
+  CollapseExpandEditorPanelProps,
   CollapseExpandFields,
   CollapseExpandFormState,
   CollapseExpandOptions,
-} from './editors/collapse-expand';
+} from './editors/behaviours/collapse-expand';
 
 // CreateNodeBehaviour
-export { CreateNodeEditor, createNodeFields } from './editors/create-node';
+export { CreateNodeEditorPanel, createNodeFields } from './editors/behaviours/create-node';
 export {
   optionsToForm as createNodeOptionsToForm,
   formToOptions as createNodeFormToOptions,
-} from './editors/create-node';
+} from './editors/behaviours/create-node';
 export type {
-  CreateNodeEditorProps,
+  CreateNodeEditorPanelProps,
   CreateNodeFields,
   CreateNodeFormState,
   CreateNodeOptions,
-} from './editors/create-node';
+} from './editors/behaviours/create-node';
 
 // DrawEdgeBehaviour
-export { DrawEdgeEditor, drawEdgeFields } from './editors/draw-edge';
+export { DrawEdgeEditorPanel, drawEdgeFields } from './editors/behaviours/draw-edge';
 export {
   optionsToForm as drawEdgeOptionsToForm,
   formToOptions as drawEdgeFormToOptions,
-} from './editors/draw-edge';
+} from './editors/behaviours/draw-edge';
 export type {
-  DrawEdgeEditorProps,
+  DrawEdgeEditorPanelProps,
   DrawEdgeFields,
   DrawEdgeFormState,
   DrawEdgeOptions,
-} from './editors/draw-edge';
+} from './editors/behaviours/draw-edge';
 
 // EraseBehaviour
-export { EraseEditor, eraseFields } from './editors/erase';
+export { EraseEditorPanel, eraseFields } from './editors/behaviours/erase';
 export {
   optionsToForm as eraseOptionsToForm,
   formToOptions as eraseFormToOptions,
-} from './editors/erase';
+} from './editors/behaviours/erase';
 export type {
-  EraseEditorProps,
+  EraseEditorPanelProps,
   EraseFields,
   EraseFormState,
   EraseOptions,
-} from './editors/erase';
+} from './editors/behaviours/erase';
 
 // ContextMenuBehaviour
-export { ContextMenuEditor, contextMenuFields } from './editors/context-menu';
+export { ContextMenuEditorPanel, contextMenuFields } from './editors/behaviours/context-menu';
 export {
   optionsToForm as contextMenuOptionsToForm,
   formToOptions as contextMenuFormToOptions,
-} from './editors/context-menu';
+} from './editors/behaviours/context-menu';
 export type {
-  ContextMenuEditorProps,
+  ContextMenuEditorPanelProps,
   ContextMenuFields,
   ContextMenuFormState,
   ContextMenuOptions,
-} from './editors/context-menu';
+} from './editors/behaviours/context-menu';
 
 // ColorByLabelBehaviour
-export { ColorByLabelEditor, colorByLabelFields } from './editors/color-by-label';
+export { ColorByLabelEditorPanel, colorByLabelFields } from './editors/behaviours/color-by-label';
 export {
   optionsToForm as colorByLabelOptionsToForm,
   formToOptions as colorByLabelFormToOptions,
-} from './editors/color-by-label';
+} from './editors/behaviours/color-by-label';
 export type {
-  ColorByLabelEditorProps,
+  ColorByLabelEditorPanelProps,
   ColorByLabelFields,
   ColorByLabelFormState,
   ColorByLabelOptions,
-} from './editors/color-by-label';
+} from './editors/behaviours/color-by-label';
 
 // ThemeBehaviour
-export { ThemeEditor, themeFields } from './editors/theme';
+export { ThemeEditorPanel, themeFields } from './editors/behaviours/theme';
 export {
   optionsToForm as themeOptionsToForm,
   formToOptions as themeFormToOptions,
-} from './editors/theme';
+} from './editors/behaviours/theme';
 export type {
-  ThemeEditorProps,
+  ThemeEditorPanelProps,
   ThemeFields,
   ThemeFormState,
   ThemeOptions,
-} from './editors/theme';
+} from './editors/behaviours/theme';
 
 // NodeCentralityBehaviour
-export { NodeCentralityEditor, nodeCentralityFields } from './editors/node-centrality';
+export { NodeCentralityEditorPanel, nodeCentralityFields } from './editors/behaviours/node-centrality';
 export {
   optionsToForm as nodeCentralityOptionsToForm,
   formToOptions as nodeCentralityFormToOptions,
-} from './editors/node-centrality';
+} from './editors/behaviours/node-centrality';
 export type {
-  NodeCentralityEditorProps,
+  NodeCentralityEditorPanelProps,
   NodeCentralityFields,
   NodeCentralityFormState,
   NodeCentralityOptions,
-} from './editors/node-centrality';
+} from './editors/behaviours/node-centrality';
 
 // Content-LOD behaviours (TextLODBehaviour / IconLODBehaviour / ImageLODBehaviour)
 // share one option shape (a { minZoom, maxZoom } zoom band), so one editor serves
-// all three. `ContentLODEditor` is the canonical component; the per-behaviour
+// all three. `ContentLODEditorPanel` is the canonical component; the per-behaviour
 // names alias it for discoverability + the per-behaviour editor convention.
 export {
-  ContentLODEditor,
-  ContentLODEditor as TextLODEditor,
-  ContentLODEditor as IconLODEditor,
-  ContentLODEditor as ImageLODEditor,
+  ContentLODEditorPanel,
+  ContentLODEditorPanel as TextLODEditorPanel,
+  ContentLODEditorPanel as IconLODEditorPanel,
+  ContentLODEditorPanel as ImageLODEditorPanel,
   contentLODFields,
   textLODFields,
-} from './editors/content-lod';
+} from './editors/behaviours/content-lod';
 export {
   optionsToForm as contentLODOptionsToForm,
   formToOptions as contentLODFormToOptions,
-} from './editors/content-lod';
+} from './editors/behaviours/content-lod';
 export type {
-  ContentLODEditorProps,
-  ContentLODEditorProps as TextLODEditorProps,
-  ContentLODEditorProps as IconLODEditorProps,
-  ContentLODEditorProps as ImageLODEditorProps,
+  ContentLODEditorPanelProps,
+  ContentLODEditorPanelProps as TextLODEditorPanelProps,
+  ContentLODEditorPanelProps as IconLODEditorPanelProps,
+  ContentLODEditorPanelProps as ImageLODEditorPanelProps,
   ContentLODFields,
   ContentLODFormState,
   ContentLODOptions,
-} from './editors/content-lod';
+} from './editors/behaviours/content-lod';
 
 // EdgeLODBehaviour (thin edges below a zoom threshold)
-export { EdgeLODEditor, edgeLODFields } from './editors/edge-lod';
+export { EdgeLODEditorPanel, edgeLODFields } from './editors/behaviours/edge-lod';
 export {
   optionsToForm as edgeLODOptionsToForm,
   formToOptions as edgeLODFormToOptions,
-} from './editors/edge-lod';
+} from './editors/behaviours/edge-lod';
 export type {
-  EdgeLODEditorProps,
+  EdgeLODEditorPanelProps,
   EdgeLODFields,
   EdgeLODFormState,
   EdgeLODKeepBy,
   EdgeLODOptions,
-} from './editors/edge-lod';
+} from './editors/behaviours/edge-lod';
 
 // ParallelEdgeBehaviour
-export { ParallelEdgeEditor, parallelEdgeFields } from './editors/parallel-edge';
+export { ParallelEdgeEditorPanel, parallelEdgeFields } from './editors/behaviours/parallel-edge';
 export {
   optionsToForm as parallelEdgeOptionsToForm,
   formToOptions as parallelEdgeFormToOptions,
-} from './editors/parallel-edge';
+} from './editors/behaviours/parallel-edge';
 export type {
-  ParallelEdgeEditorProps,
+  ParallelEdgeEditorPanelProps,
   ParallelEdgeFields,
   ParallelEdgeFormState,
   ParallelEdgeOptions,
-} from './editors/parallel-edge';
+} from './editors/behaviours/parallel-edge';
 
 // TextResolutionLODBehaviour
-export { TextResolutionLODEditor, textResolutionLodFields } from './editors/text-resolution-lod';
+export { TextResolutionLODEditorPanel, textResolutionLodFields } from './editors/behaviours/text-resolution-lod';
 export {
   optionsToForm as textResolutionLodOptionsToForm,
   formToOptions as textResolutionLodFormToOptions,
-} from './editors/text-resolution-lod';
+} from './editors/behaviours/text-resolution-lod';
 export type {
-  TextResolutionLODEditorProps,
+  TextResolutionLODEditorPanelProps,
   TextResolutionLODFields,
   TextResolutionLODFormState,
   TextResolutionLODOptions,
-} from './editors/text-resolution-lod';
+} from './editors/behaviours/text-resolution-lod';
 
 // NodeScaleLODBehaviour
-export { NodeScaleLODEditor, nodeScaleLodFields } from './editors/node-scale-lod';
+export { NodeScaleLODEditorPanel, nodeScaleLodFields } from './editors/behaviours/node-scale-lod';
 export {
   optionsToForm as nodeScaleLodOptionsToForm,
   formToOptions as nodeScaleLodFormToOptions,
-} from './editors/node-scale-lod';
+} from './editors/behaviours/node-scale-lod';
 export type {
-  NodeScaleLODEditorProps,
+  NodeScaleLODEditorPanelProps,
   NodeScaleLODFields,
   NodeScaleLODFormState,
   NodeScaleLODOptions,
-} from './editors/node-scale-lod';
+} from './editors/behaviours/node-scale-lod';
 
 // EdgeScaleLODBehaviour
-export { EdgeScaleLODEditor, edgeScaleLodFields } from './editors/edge-scale-lod';
+export { EdgeScaleLODEditorPanel, edgeScaleLodFields } from './editors/behaviours/edge-scale-lod';
 export {
   optionsToForm as edgeScaleLodOptionsToForm,
   formToOptions as edgeScaleLodFormToOptions,
-} from './editors/edge-scale-lod';
+} from './editors/behaviours/edge-scale-lod';
 export type {
-  EdgeScaleLODEditorProps,
+  EdgeScaleLODEditorPanelProps,
   EdgeScaleLODFields,
   EdgeScaleLODFormState,
   EdgeScaleLODOptions,
-} from './editors/edge-scale-lod';
+} from './editors/behaviours/edge-scale-lod';
 
 // LabelCollisionBehaviour
-export { LabelCollisionEditor, labelCollisionFields } from './editors/label-collision';
+export { LabelCollisionEditorPanel, labelCollisionFields } from './editors/behaviours/label-collision';
 export {
   optionsToForm as labelCollisionOptionsToForm,
   formToOptions as labelCollisionFormToOptions,
-} from './editors/label-collision';
+} from './editors/behaviours/label-collision';
 export type {
-  LabelCollisionEditorProps,
+  LabelCollisionEditorPanelProps,
   LabelCollisionFields,
   LabelCollisionFormState,
   LabelCollisionOptions,
-} from './editors/label-collision';
+} from './editors/behaviours/label-collision';
 
 // MiniMapLayer
-export { MiniMapLayerEditor, miniMapLayerFields } from './editors/minimap-layer';
+export { MiniMapLayerEditorPanel, miniMapLayerFields } from './editors/layers/minimap-layer';
 export {
   optionsToForm as miniMapLayerOptionsToForm,
   formToOptions as miniMapLayerFormToOptions,
-} from './editors/minimap-layer';
+} from './editors/layers/minimap-layer';
 export type {
-  MiniMapLayerEditorProps,
+  MiniMapLayerEditorPanelProps,
   MiniMapLayerFields,
   MiniMapLayerFormState,
   MiniMapLayerOptions,
-} from './editors/minimap-layer';
+} from './editors/layers/minimap-layer';
 
 // D3ForceLayout
-export { D3ForceLayoutEditor, d3ForceLayoutFields } from './editors/d3-force-layout';
+export { D3ForceLayoutEditorPanel, d3ForceLayoutFields } from './editors/layouts/d3-force-layout';
 export {
   optionsToForm as d3ForceLayoutOptionsToForm,
   formToOptions as d3ForceLayoutFormToOptions,
-} from './editors/d3-force-layout';
+} from './editors/layouts/d3-force-layout';
 export type {
-  D3ForceLayoutEditorProps,
+  D3ForceLayoutEditorPanelProps,
   D3ForceLayoutFields,
   D3ForceLayoutFormState,
   D3ForceLayoutOptions,
-} from './editors/d3-force-layout';
+} from './editors/layouts/d3-force-layout';
 
 // ElkLayout
-export { ElkLayoutEditor, elkLayoutFields } from './editors/elk-layout';
+export { ElkLayoutEditorPanel, elkLayoutFields } from './editors/layouts/elk-layout';
 export {
   optionsToForm as elkLayoutOptionsToForm,
   formToOptions as elkLayoutFormToOptions,
-} from './editors/elk-layout';
+} from './editors/layouts/elk-layout';
 export type {
-  ElkLayoutEditorProps,
+  ElkLayoutEditorPanelProps,
   ElkLayoutFields,
   ElkLayoutFormState,
   ElkLayoutOptions,
-} from './editors/elk-layout';
+} from './editors/layouts/elk-layout';
 
 // D3HierarchyLayout
-export { D3HierarchyLayoutEditor, d3HierarchyLayoutFields } from './editors/d3-hierarchy-layout';
+export { D3HierarchyLayoutEditorPanel, d3HierarchyLayoutFields } from './editors/layouts/d3-hierarchy-layout';
 export {
   optionsToForm as d3HierarchyLayoutOptionsToForm,
   formToOptions as d3HierarchyLayoutFormToOptions,
-} from './editors/d3-hierarchy-layout';
+} from './editors/layouts/d3-hierarchy-layout';
 export type {
-  D3HierarchyLayoutEditorProps,
+  D3HierarchyLayoutEditorPanelProps,
   D3HierarchyLayoutFields,
   D3HierarchyLayoutFormState,
   D3HierarchyLayoutOptions,
-} from './editors/d3-hierarchy-layout';
+} from './editors/layouts/d3-hierarchy-layout';
 
 // D3SankeyLayout
-export { D3SankeyLayoutEditor, d3SankeyLayoutFields } from './editors/d3-sankey-layout';
+export { D3SankeyLayoutEditorPanel, d3SankeyLayoutFields } from './editors/layouts/d3-sankey-layout';
 export {
   optionsToForm as d3SankeyLayoutOptionsToForm,
   formToOptions as d3SankeyLayoutFormToOptions,
-} from './editors/d3-sankey-layout';
+} from './editors/layouts/d3-sankey-layout';
 export type {
-  D3SankeyLayoutEditorProps,
+  D3SankeyLayoutEditorPanelProps,
   D3SankeyLayoutFields,
   D3SankeyLayoutFormState,
   D3SankeyLayoutOptions,
-} from './editors/d3-sankey-layout';
+} from './editors/layouts/d3-sankey-layout';
 
 // DensityContourFillLayer
-export { DensityContourFillLayerEditor, densityContourFillLayerFields } from './editors/density-contour-fill-layer';
+export { DensityContourFillLayerEditorPanel, densityContourFillLayerFields } from './editors/layers/density-contour-fill-layer';
 export {
   optionsToForm as densityContourFillLayerOptionsToForm,
   formToOptions as densityContourFillLayerFormToOptions,
-} from './editors/density-contour-fill-layer';
+} from './editors/layers/density-contour-fill-layer';
 export type {
-  DensityContourFillLayerEditorProps,
+  DensityContourFillLayerEditorPanelProps,
   DensityContourFillLayerFields,
   DensityContourFillLayerFormState,
   DensityContourFillLayerOptions,
-} from './editors/density-contour-fill-layer';
+} from './editors/layers/density-contour-fill-layer';
 
 // DensityContourStrokeLayer
-export { DensityContourStrokeLayerEditor, densityContourStrokeLayerFields } from './editors/density-contour-stroke-layer';
+export { DensityContourStrokeLayerEditorPanel, densityContourStrokeLayerFields } from './editors/layers/density-contour-stroke-layer';
 export {
   optionsToForm as densityContourStrokeLayerOptionsToForm,
   formToOptions as densityContourStrokeLayerFormToOptions,
-} from './editors/density-contour-stroke-layer';
+} from './editors/layers/density-contour-stroke-layer';
 export type {
-  DensityContourStrokeLayerEditorProps,
+  DensityContourStrokeLayerEditorPanelProps,
   DensityContourStrokeLayerFields,
   DensityContourStrokeLayerFormState,
   DensityContourStrokeLayerOptions,
-} from './editors/density-contour-stroke-layer';
+} from './editors/layers/density-contour-stroke-layer';
 
 // BubbleSetsLayer
-export { BubbleSetsLayerEditor, bubbleSetsLayerFields } from './editors/bubble-sets-layer';
+export { BubbleSetsLayerEditorPanel, bubbleSetsLayerFields } from './editors/layers/bubble-sets-layer';
 export {
   optionsToForm as bubbleSetsLayerOptionsToForm,
   formToOptions as bubbleSetsLayerFormToOptions,
-} from './editors/bubble-sets-layer';
+} from './editors/layers/bubble-sets-layer';
 export type {
-  BubbleSetsLayerEditorProps,
+  BubbleSetsLayerEditorPanelProps,
   BubbleSetsLayerFields,
   BubbleSetsLayerFormState,
   BubbleSetsLayerOptions,
-} from './editors/bubble-sets-layer';
+} from './editors/layers/bubble-sets-layer';
 
 // MapLayer
-export { MapLayerEditor, mapLayerFields } from './editors/map-layer';
+export { MapLayerEditorPanel, mapLayerFields } from './editors/layers/map-layer';
 export {
   optionsToForm as mapLayerOptionsToForm,
   formToOptions as mapLayerFormToOptions,
-} from './editors/map-layer';
+} from './editors/layers/map-layer';
 export type {
-  MapLayerEditorProps,
+  MapLayerEditorPanelProps,
   MapLayerFields,
   MapLayerFormState,
   MapLayerOptions,
-} from './editors/map-layer';
+} from './editors/layers/map-layer';
 export {
   optionsToForm as geometricLayoutOptionsToForm,
   formToOptions as geometricLayoutFormToOptions,
-} from './editors/geometric-layout';
+} from './editors/layouts/geometric-layout';
 export type {
-  GeometricLayoutEditorProps,
+  GeometricLayoutEditorPanelProps,
   GeometricLayoutFields,
   GeometricLayoutFormState,
   GeometricLayoutOptions,
   GeometricLayoutMode,
-} from './editors/geometric-layout';
+} from './editors/layouts/geometric-layout';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Views
@@ -975,7 +975,7 @@ export type {
   SettingsEditorDescriptor,
   SettingsEditorContext,
   // `CanvasSettingsBrowser`'s section shape — aliased to avoid colliding with the
-  // `CanvasSettingsEditor` `SettingsSection` exported above.
+  // `CanvasSettingsEditorPanel` `SettingsSection` exported above.
   SettingsSection as CanvasSettingsBrowserSection,
   ToolbarItemsProps,
   ToolbarItem,

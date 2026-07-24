@@ -25,12 +25,21 @@ src/
 ├─ panels/       store-connected smart panels (CanvasSettingsPanel, status bars, detail views)
 ├─ editors/      schema state-editors (controlled) + their connected wrappers
 │  ├─ field-helpers.ts   shared editor schema bits (roleField, SLOT_BINDING_FIELDS)
-│  └─ <surface>/         one folder per editable surface
-│     ├─ <Surface>Editor.tsx   controlled form (defaults/fields/onSubmit)
-│     ├─ fields.ts             @invana/forms FieldConfig[] (one array per tab)
-│     ├─ mapping.ts            engine encoding ⇄ flat form fields
-│     ├─ types.ts
-│     └─ index.ts
+│  ├─ _shared/           shared editor sub-components (AdvancedSection…)
+│  ├─ layers/            one folder per Layer surface (background-layer, minimap-layer, map-layer…)
+│  ├─ layouts/           one folder per Layout surface (d3-force-layout, elk-layout…)
+│  ├─ behaviours/        one folder per Behaviour surface (drag-pan, click-select, *-lod…)
+│  └─ editor-panels/     high-level / non-1:1 editors — the whole-canvas aggregate
+│                        (canvas-settings) + graph-domain template editors that edit
+│                        template JSON, not one instance (node-style{,/simple,/composite},
+│                        node-style-overview, node-styling, node-structure, schema,
+│                        hover-preview-card)
+│     └─ <surface>/      each surface folder holds:
+│        ├─ <Surface>EditorPanel.tsx   controlled form (defaults/fields/onSubmit)
+│        ├─ fields.ts             @invana/forms FieldConfig[] (one array per tab)
+│        ├─ mapping.ts            engine encoding ⇄ flat form fields
+│        ├─ types.ts
+│        └─ index.ts
 ├─ view-panels/  presentational *ViewPanel surfaces (SchemaViewPanel, LayersViewPanel, CanvasFiltersViewPanel, CanvasPagesViewPanel, preview cards) — props in → JSX
 ├─ apps/         GraphCanvasApp (+ header/footer)
 ├─ hooks/        UI-only turnkey hooks (useSidePanels — activity-bar for GraphCanvasApp side panels: descriptors → shared-toolbar `items` + active-panel `region`, one docked at a time; useDevTool, useMiniMap)
@@ -39,7 +48,9 @@ src/
 
 One barrel (`index.ts`), sectioned. The folder split is internal organisation — **no subpath exports**; consumers import from the package root, so internal moves don't change the public surface.
 
-**Naming standard — `view-panels/` surfaces carry the `*ViewPanel` suffix.** Every presentational / store-connected view in `view-panels/` is a `*ViewPanel` (`SchemaViewPanel`, `LayersViewPanel`, `CanvasFiltersViewPanel`, `CanvasPagesViewPanel`), one folder per surface, with matching `*ViewPanelProps`. It's the counterpart to the `*Toolbar` / `*Editor` suffixes — a stable, greppable name for "a dockable content surface". (`preview-cards.tsx` is the exception: `NodePreviewCard` / `EdgePreviewCard` are render-prop *content*, not dockable panels.)
+**Naming standard — `view-panels/` surfaces carry the `*ViewPanel` suffix.** Every presentational / store-connected view in `view-panels/` is a `*ViewPanel` (`SchemaViewPanel`, `LayersViewPanel`, `CanvasFiltersViewPanel`, `CanvasPagesViewPanel`), one folder per surface, with matching `*ViewPanelProps`. It's the counterpart to the `*Toolbar` / `*EditorPanel` suffixes — a stable, greppable name for "a dockable content surface". (`preview-cards.tsx` is the exception: `NodePreviewCard` / `EdgePreviewCard` are render-prop *content*, not dockable panels.)
+
+**Naming standard — `editors/` surfaces carry the `*EditorPanel` suffix.** Every controlled editor in `editors/<surface>/` is a `*EditorPanel` (`CanvasSettingsEditorPanel`, `NodeStyleEditorPanel`, `HoverPreviewCardEditorPanel`, …), file basename matching the component, with matching `*EditorPanelProps`. It sits alongside the `*ViewPanel` / `*Toolbar` suffixes. (The store-connected wrapper that packages an editor's bridge keeps its own `*Panel` name — e.g. `CanvasSettingsPanel` wraps `CanvasSettingsEditorPanel`.)
 
 ## Two component flavours: dumb vs connected
 
@@ -76,11 +87,11 @@ Adding a control = one `FieldConfig` + one key in the fields type + one line eac
 
 Each surface ships a **controlled** editor and (where it edits live state) a **connected** wrapper:
 
-- **Controlled** `<XEditor>` — a self-contained form: owns `useForm`, loads `defaults` on mount, renders the schema inside `<FormProvider>`, and on **Apply** calls `onSubmit(getValues())`. Holds **no engine reference, does no commit** — pure `defaults`/`fields`/`onSubmit` (or `definition`/`onChange` for the aggregate `CanvasSettingsEditor`). Testable/standalone in Storybook, no engine.
+- **Controlled** `<XEditorPanel>` — a self-contained form: owns `useForm`, loads `defaults` on mount, renders the schema inside `<FormProvider>`, and on **Apply** calls `onSubmit(getValues())`. Holds **no engine reference, does no commit** — pure `defaults`/`fields`/`onSubmit` (or `definition`/`onChange` for the aggregate `CanvasSettingsEditorPanel`). Testable/standalone in Storybook, no engine.
   ```tsx
-  <NodeStyleEditor defaults={styleToForm(style)} onSubmit={(v) => apply(formToStyle(v))} />
+  <NodeStyleEditorPanel defaults={styleToForm(style)} onSubmit={(v) => apply(formToStyle(v))} />
   ```
-- **Connected** wrapper — a thin engine-aware component that seeds the controlled editor from the live store (canvas-react hooks) and writes patches back with `useGraphCanvasUpdate().update(...)`. Drop it in with no props → live. This packages the per-consumer bridge **once** (e.g. `<CanvasSettingsPanel/>` = the store-wired `CanvasSettingsEditor`). See `node-style-live-binding-plan.md` for the `useNodeStyleEditor` precedent.
+- **Connected** wrapper — a thin engine-aware component that seeds the controlled editor from the live store (canvas-react hooks) and writes patches back with `useGraphCanvasUpdate().update(...)`. Drop it in with no props → live. This packages the per-consumer bridge **once** (e.g. `<CanvasSettingsPanel/>` = the store-wired `CanvasSettingsEditorPanel`). See `node-style-live-binding-plan.md` for the `useNodeStyleEditor` precedent.
 
 When applying to a graph store, spread before patching (`updateNode` replaces `style` wholesale):
 ```ts
@@ -104,7 +115,7 @@ store.updateNode(id, { style: { ...resolveNodeStyle(node), ...formToStyle(values
 - **No module-level / shared mutable state.** Every component must be safe with N concurrent canvases on one page. No singleton store, no global "current canvas".
 - **`@invana/canvas-react` stays a peer dependency** (single, deduped instance) so the context object is shared between the host's root and this package's consumers — a duplicate copy silently breaks `useCanvas()`.
 - **Theme is global CSS tokens**, wired at the host app root — `@invana/themes/styles.css` then `@invana/ui/styles.css` (order matters). There is **no React `<ThemeProvider>`** in this package; don't add one. Storybook wires the stylesheets in `.storybook/preview.ts`.
-- New Behaviour / Layer / Layout ⇒ new `editors/<surface>/` (root rule 12).
+- New Behaviour / Layer / Layout ⇒ new `editors/<category>/<surface>/` where `<category>` is `behaviours` / `layers` / `layouts` (root rule 12). High-level / non-1:1 editors (the whole-canvas aggregate, graph-domain template editors) live in `editors/editor-panels/`.
 
 ## No tests
 

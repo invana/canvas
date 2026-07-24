@@ -4,7 +4,7 @@ import type { ColorRole } from '@invana/graph';
 /**
  * Shared field-schema helpers for the node template editors — the colour-role
  * select and the `SlotBindingField` (slot name → dotted data path). Kept at
- * package level because both `NodeStructureEditor` and `NodeStylingEditor`
+ * package level because both `NodeStructureEditorPanel` and `NodeStylingEditorPanel`
  * compose them.
  */
 

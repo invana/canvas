@@ -11,8 +11,8 @@
  *     (`default/forest/ocean/gold/rose/minimal`) pushed live through the engine
  *     `ThemeBehaviour` (connected `update`). One switch recolours background,
  *     cards, circles, edges, labels — structure + styling never change.
- *   - **Live editors** — `<NodeStylingEditor>` edits the IdCard's roles +
- *     typography; `<NodeStructureEditor>` edits the `person` binding (structure
+ *   - **Live editors** — `<NodeStylingEditorPanel>` edits the IdCard's roles +
+ *     typography; `<NodeStructureEditorPanel>` edits the `person` binding (structure
  *     + styling + the slot→data-field map). Each Apply pushes a
  *     `update({ layers: { graph: { … } } })` and the graph re-resolves.
  *
@@ -30,8 +30,8 @@ import {
   GraphCanvasApp,
   GraphControlsToolbar,
   GraphStatusBar,
-  NodeStylingEditor,
-  NodeStructureEditor,
+  NodeStylingEditorPanel,
+  NodeStructureEditorPanel,
   ThemeToggle,
 } from '@invana/canvas-ui';
 import {
@@ -157,7 +157,7 @@ function StudioEditors() {
           <CardTitle className="text-sm">IdCard styling</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <NodeStylingEditor defaults={BUILT_IN_STYLINGS.idCard} onSubmit={applyStyling} />
+          <NodeStylingEditorPanel defaults={BUILT_IN_STYLINGS.idCard} onSubmit={applyStyling} />
         </CardContent>
       </Card>
 
@@ -166,7 +166,7 @@ function StudioEditors() {
           <CardTitle className="text-sm">person binding</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <NodeStructureEditor
+          <NodeStructureEditorPanel
             defaults={PERSON_BINDING}
             structures={structureNames}
             stylings={stylingNames}
