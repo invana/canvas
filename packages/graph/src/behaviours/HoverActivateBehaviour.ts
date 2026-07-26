@@ -632,19 +632,77 @@ export class HoverActivateBehaviour extends Behaviour {
    * mixed kinds, so each id is dispatched by `hasShape` / `hasConnector`.
    * Tracked in {@link raisedIds} so {@link resetRaise} restores exactly the
    * ids we touched.
+   *
+   * **Expanded group frames raise their contents instead of themselves** — see
+   * {@link raiseGroupContents}.
    */
   private applyRaise(): void {
     const renderer = this.layer?.getRenderer();
     if (!renderer) return;
     const z = HoverActivateBehaviour.RAISED_Z_INDEX;
     const raise = (id: string): void => {
-      if (renderer.hasShape(id)) renderer.raiseShape(id, z);
-      else if (renderer.hasConnector(id)) renderer.raiseConnector(id, z);
-      else return;
+      if (renderer.hasShape(id)) {
+        if (this.isExpandedGroup(id)) {
+          this.raiseGroupContents(id, z);
+          return;
+        }
+        renderer.raiseShape(id, z);
+      } else if (renderer.hasConnector(id)) {
+        renderer.raiseConnector(id, z);
+      } else return;
       this.raisedIds.add(id);
     };
     if (this.current) raise(this.current.id);
     for (const id of this.activeIds) raise(id);
+  }
+
+  /**
+   * Lift what an expanded group *contains* — its descendants (recursive, so a
+   * nested group brings its whole subtree) plus the edges with both ends inside
+   * it — rather than the frame itself.
+   *
+   * Two reasons the frame stays put:
+   *
+   * - **It can't be lifted correctly.** The renderer's overlay sorts every
+   *   raised shape far above every raised connector, so a lifted frame paints
+   *   over its own members' edges — the arrows inside it vanish. No z-index
+   *   avoids that; the bands are fixed.
+   * - **Lifting a backdrop is meaningless.** A frame is the container behind
+   *   its members; floating it above unrelated content while its contents stay
+   *   behind isn't what "raise this element" means for a group.
+   *
+   * Left alone, the frame keeps its `behindChildren` z in the shape layer, so
+   * the lifted members and their lifted edges both sit above it. A *collapsed*
+   * group never reaches here — it renders as an ordinary node with nothing
+   * inside to cover, and raises normally.
+   */
+  private raiseGroupContents(groupId: string, z: number): void {
+    const layer = this.layer;
+    const renderer = layer?.getRenderer();
+    if (!layer || !renderer) return;
+    const memberIds = new Set<string>([groupId, ...layer.store.descendantsOf(groupId)]);
+    for (const id of memberIds) {
+      if (id === groupId || !renderer.hasShape(id)) continue;
+      renderer.raiseShape(id, z);
+      this.raisedIds.add(id);
+      // Only the group's *internal* wiring — an edge leaving the group belongs
+      // as much to the other end, and lifting it would drag half of an
+      // unrelated stage's arrow over the top.
+      for (const edge of layer.store.edgesOf(id, 'both')) {
+        if (!memberIds.has(edge.source) || !memberIds.has(edge.target)) continue;
+        if (!renderer.hasConnector(edge.id)) continue;
+        renderer.raiseConnector(edge.id, z);
+        this.raisedIds.add(edge.id);
+      }
+    }
+  }
+
+  /** True for a group node that is currently expanded (i.e. drawn as a frame). */
+  private isExpandedGroup(id: string): boolean {
+    const layer = this.layer;
+    const node = layer?.store.getNode(id);
+    if (!layer || !node) return false;
+    return layer.isGroupNode(node) && !layer.isCollapsedGroup(node);
   }
 
   /** Reset every id raised by {@link applyRaise} back to the default z (0). */
