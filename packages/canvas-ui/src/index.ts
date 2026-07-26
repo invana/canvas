@@ -11,33 +11,26 @@
 // Editors
 // ═══════════════════════════════════════════════════════════════════════════
 
-// ─── Canvas settings editor ────────────────────────────────────────────────
-// One JSON-driven editor over the whole canvas definition (all layers /
-// behaviours / layouts + their settings). Resolves each instance's form from the
-// built-in schema registry (`kind` → fields + engine⇄form mappers) and hands
-// edits back as engine-shaped patches. Supersedes the per-surface editors as the
-// delivery vehicle; the `*Fields` / `optionsToForm` / `formToOptions` exports
-// below feed its registry.
+// ═══════════════════════════════════════════════════════════════════════════
+// Canvas settings editor panel
+// ═══════════════════════════════════════════════════════════════════════════
+// One JSON-driven, store-connected editor panel over the whole canvas definition
+// (all layers / behaviours / layouts + their settings). Takes the live engine as
+// a required `canvas` prop, introspects the live registries, resolves each
+// instance's form from the built-in schema registry (`kind` → fields + engine⇄
+// form mappers), and applies every edit via `canvas.update(...)`. The `*Fields` /
+// `optionsToForm` / `formToOptions` exports below feed its registry.
 export {
   CanvasSettingsEditorPanel,
+  type CanvasSettingsEditorPanelProps,
   DEFAULT_CANVAS_SETTINGS_SCHEMAS,
 } from './editor-panels/canvas-settings';
 export type {
-  CanvasSettingsEditorPanelProps,
   SettingsSchemaEntry,
   CanvasSettingsDefinition,
   CanvasSettingsInstance,
   SettingsSection,
 } from './editor-panels/canvas-settings';
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Panels (store-connected)
-// ═══════════════════════════════════════════════════════════════════════════
-// Self-wiring smart panels: drop into a <Canvas>/<GraphCanvas>/GraphCanvasApp
-// subtree and they bind to that canvas via context (multi-canvas safe), reading
-// and writing @invana/canvas-store through @invana/canvas-react hooks — no props.
-// `CanvasSettingsPanel` packages the introspection↔CanvasSettingsEditorPanel bridge.
-export { CanvasSettingsPanel, type CanvasSettingsPanelProps } from './panels/canvas-settings';
 
 // ─── Node style editors ──────────────────────────────────────────────────
 // `NodeStyleEditorPanel` dispatches on the `kind` prop to the full-spec **simple**

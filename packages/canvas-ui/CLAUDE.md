@@ -22,7 +22,6 @@ src/
 ├─ components/   dumb building blocks — Panel, ToolbarItems, Tooltipped, ControlButton, OptionPicker…
 ├─ toolbars/     assembled *Toolbar (CanvasControlsToolbar, GraphToolbar, InspectorPanel…)
 ├─ menus/        context menus (GraphNodeContextMenu…)
-├─ panels/       store-connected smart panels (CanvasSettingsPanel, status bars, detail views)
 ├─ editors/      per-instance schema state-editors — ONE folder per editable engine surface
 │  ├─ field-helpers.ts   shared editor schema bits (roleField, SLOT_BINDING_FIELDS)
 │  ├─ _shared/           shared editor sub-components (AdvancedSection…)
@@ -35,10 +34,11 @@ src/
 │        ├─ mapping.ts            engine encoding ⇄ flat form fields
 │        ├─ types.ts
 │        └─ index.ts
-├─ editor-panels/ high-level / non-1:1 editors (NOT one-per-instance) — the whole-canvas
-│                 aggregate (canvas-settings) + graph-domain template editors that edit
-│                 template JSON, not one engine instance (node-style{,/simple,/composite},
-│                 node-style-overview, node-styling, node-structure, schema, hover-preview-card)
+├─ editor-panels/ high-level / non-1:1 editors (NOT one-per-instance): the whole-canvas
+│                 store-connected settings editor (canvas-settings → CanvasSettingsEditorPanel)
+│                 + graph-domain template editors that edit template JSON, not one engine
+│                 instance (node-style{,/simple,/composite}, node-style-overview,
+│                 node-styling, node-structure, schema, hover-preview-card)
 ├─ view-panels/  presentational *ViewPanel surfaces (SchemaViewPanel, LayersViewPanel, CanvasFiltersViewPanel, CanvasPagesViewPanel, preview cards) — props in → JSX
 ├─ apps/         GraphCanvasApp (+ header/footer)
 ├─ hooks/        UI-only turnkey hooks (useSidePanels — activity-bar for GraphCanvasApp side panels: descriptors → shared-toolbar `items` + active-panel `region`, one docked at a time; useDevTool, useMiniMap)
@@ -49,12 +49,12 @@ One barrel (`index.ts`), sectioned. The folder split is internal organisation �
 
 **Naming standard — `view-panels/` surfaces carry the `*ViewPanel` suffix.** Every presentational / store-connected view in `view-panels/` is a `*ViewPanel` (`SchemaViewPanel`, `LayersViewPanel`, `CanvasFiltersViewPanel`, `CanvasPagesViewPanel`), one folder per surface, with matching `*ViewPanelProps`. It's the counterpart to the `*Toolbar` / `*EditorPanel` suffixes — a stable, greppable name for "a dockable content surface". (`preview-cards.tsx` is the exception: `NodePreviewCard` / `EdgePreviewCard` are render-prop *content*, not dockable panels.)
 
-**Naming standard — `editors/` surfaces carry the `*EditorPanel` suffix.** Every controlled editor in `editors/<surface>/` is a `*EditorPanel` (`CanvasSettingsEditorPanel`, `NodeStyleEditorPanel`, `HoverPreviewCardEditorPanel`, …), file basename matching the component, with matching `*EditorPanelProps`. It sits alongside the `*ViewPanel` / `*Toolbar` suffixes. (The store-connected wrapper that packages an editor's bridge keeps its own `*Panel` name — e.g. `CanvasSettingsPanel` wraps `CanvasSettingsEditorPanel`.)
+**Naming standard — `editors/` surfaces carry the `*EditorPanel` suffix.** Every controlled editor in `editors/<surface>/` is a `*EditorPanel` (`NodeStyleEditorPanel`, `HoverPreviewCardEditorPanel`, …), file basename matching the component, with matching `*EditorPanelProps`. It sits alongside the `*ViewPanel` / `*Toolbar` suffixes. An editor may be **store-connected** and still carry the `*EditorPanel` name — e.g. `CanvasSettingsEditorPanel` (in `editor-panels/`) is a single component that takes the live engine as a **required `canvas` prop** (view-panel style, not context self-wiring), reads defaults from `store.view.definition`, and writes edits back via `canvas.update(...)`; it validates `canvas` and renders a fallback until ready, so no controlled/connected split. The suffix marks "an editor surface", not "engine-free".
 
 ## Two component flavours: dumb vs connected
 
 - **Dumb building blocks** (`components/`) — props-in / callbacks-out, **engine-agnostic**, icon-agnostic (icons via a `ToolbarIcon` prop). No hooks, no store. `Panel`, `ToolbarItems`, `Tooltipped`, `ControlButton`, `OptionPicker`. The canvas equivalents of React Flow's `<Panel>` / `<ControlButton>`. Keep them dumb — they're the reusable primitives everything else composes.
-- **Connected components** (`toolbars/`, `panels/`, `menus/`, `apps/`, connected editor wrappers) — **self-wiring**: they read live state via canvas-react hooks and write via `useGraphCanvasUpdate().update(...)`. Drop them in with no props and they're live. `CanvasControlsToolbar` self-wires zoom/fit/lock; `<CanvasSettingsPanel/>` reads the whole definition and applies edits. This is where the store coupling lives — so the consumer never hand-writes a bridge.
+- **Connected components** (`toolbars/`, `menus/`, `apps/`, `editor-panels/`, connected editor wrappers) — **self-wiring**: they read live state via canvas-react hooks and write via `useGraphCanvasUpdate().update(...)`. Drop them in with no props and they're live. `CanvasControlsToolbar` self-wires zoom/fit/lock; the status bars read live selection/zoom. This is where the store coupling lives — so the consumer never hand-writes a bridge. (A store-connected surface may instead take the engine as an explicit `canvas` prop — the view panels and `CanvasSettingsEditorPanel` do — when it's handed the engine by a region's `content` fn rather than resolving context itself.)
 
 ## Self-wiring: zero-config via context (and multiple canvases on one page)
 
@@ -63,7 +63,7 @@ The point of the connected components is that a consumer drops them into a canva
 - **Resolution is by React context.** A connected component reads the active engine from `CanvasContext` / `GraphCanvasContext` (provided by canvas-react's `<Canvas>` / `<GraphCanvas>` root, and by `GraphCanvasApp`). Rendered anywhere inside that subtree it auto-binds — no `canvas` prop, no wiring:
   ```tsx
   <GraphCanvas data={graph}>
-    <CanvasSettingsPanel />   {/* live, zero config */}
+    <CanvasControlsToolbar />   {/* live, zero config — resolves the canvas from context */}
   </GraphCanvas>
   ```
 - **Multiple apps on one page are safe — because context is per-provider, not global.** Each `<Canvas>` / `<GraphCanvas>` / `GraphCanvasApp` owns its own provider subtree, so a connected component binds to the **nearest enclosing** root. Two graphs side by side each get their own scoped context and their panels target the right instance automatically. This holds **only** while resolution stays context-based:
@@ -86,11 +86,11 @@ Adding a control = one `FieldConfig` + one key in the fields type + one line eac
 
 Each surface ships a **controlled** editor and (where it edits live state) a **connected** wrapper:
 
-- **Controlled** `<XEditorPanel>` — a self-contained form: owns `useForm`, loads `defaults` on mount, renders the schema inside `<FormProvider>`, and on **Apply** calls `onSubmit(getValues())`. Holds **no engine reference, does no commit** — pure `defaults`/`fields`/`onSubmit` (or `definition`/`onChange` for the aggregate `CanvasSettingsEditorPanel`). Testable/standalone in Storybook, no engine.
+- **Controlled** `<XEditorPanel>` — a self-contained form: owns `useForm`, loads `defaults` on mount, renders the schema inside `<FormProvider>`, and on **Apply** calls `onSubmit(getValues())`. Holds **no engine reference, does no commit** — pure `defaults`/`fields`/`onSubmit`. Testable/standalone in Storybook, no engine.
   ```tsx
   <NodeStyleEditorPanel defaults={styleToForm(style)} onSubmit={(v) => apply(formToStyle(v))} />
   ```
-- **Connected** wrapper — a thin engine-aware component that seeds the controlled editor from the live store (canvas-react hooks) and writes patches back with `useGraphCanvasUpdate().update(...)`. Drop it in with no props → live. This packages the per-consumer bridge **once** (e.g. `<CanvasSettingsPanel/>` = the store-wired `CanvasSettingsEditorPanel`). See `node-style-live-binding-plan.md` for the `useNodeStyleEditor` precedent.
+- **Connected** wrapper — a thin engine-aware component that seeds the controlled editor from the live store (canvas-react hooks) and writes patches back with `useGraphCanvasUpdate().update(...)`. Drop it in with no props → live. This packages the per-consumer bridge **once**. (The whole-canvas `<CanvasSettingsEditorPanel/>` goes further — it folds the introspection, form rendering, and store wiring into a single component that takes the live engine as a required `canvas` prop, rather than a controlled-editor + wrapper pair.) See `node-style-live-binding-plan.md` for the `useNodeStyleEditor` precedent.
 
 When applying to a graph store, spread before patching (`updateNode` replaces `style` wholesale):
 ```ts
@@ -109,7 +109,7 @@ store.updateNode(id, { style: { ...resolveNodeStyle(node), ...formToStyle(values
 ## Rules
 
 - **No `pixi.js`; no `@invana/canvas` beyond types.** Reach the engine only through `@invana/canvas-react` hooks/context. `@invana/canvas-store` and `@invana/graph` are **types-only**.
-- **Dumb blocks stay dumb** (`components/`): no hooks, no store, no engine — props in / callbacks out. Store wiring lives in the connected components (`toolbars/`, `panels/`, `menus/`, `apps/`, connected editor wrappers).
+- **Dumb blocks stay dumb** (`components/`): no hooks, no store, no engine — props in / callbacks out. Store wiring lives in the connected components (`toolbars/`, `menus/`, `apps/`, `editor-panels/`, connected editor wrappers).
 - **Connected components resolve the canvas via context, never a global.** `useResolvedCanvas(props.canvas ?? context)`; optional `canvas` prop for out-of-tree targeting. This is what makes multiple canvases on one page work — see the self-wiring section.
 - **No module-level / shared mutable state.** Every component must be safe with N concurrent canvases on one page. No singleton store, no global "current canvas".
 - **`@invana/canvas-react` stays a peer dependency** (single, deduped instance) so the context object is shared between the host's root and this package's consumers — a duplicate copy silently breaks `useCanvas()`.

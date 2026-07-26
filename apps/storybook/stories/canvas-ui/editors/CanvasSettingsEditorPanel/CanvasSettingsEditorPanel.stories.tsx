@@ -1,5 +1,5 @@
 /**
- * `<CanvasSettingsPanel>` from `@invana/canvas-ui` — one JSON-driven settings
+ * `<CanvasSettingsEditorPanel>` from `@invana/canvas-ui` — one JSON-driven settings
  * panel over a whole canvas definition, docked into a real `<GraphCanvasApp>`'s
  * `right` region. It introspects the live bundle's registered **layers /
  * behaviours / layouts**, lists them in a file-browser accordion (folders =
@@ -20,7 +20,7 @@ import { DevInfoLayer, MiniMapLayer } from '@invana/canvas-react';
 import type { LayoutFactory } from '@invana/canvas-react';
 import {
   CanvasMessageBar,
-  CanvasSettingsPanel,
+  CanvasSettingsEditorPanel,
   GraphBackgroundContextMenu,
   GraphCanvasApp,
   GraphControlsToolbar,
@@ -65,26 +65,30 @@ const backgroundMenu = (): MenuItem[] => [
 /**
  * A **fully-featured** `<GraphCanvasApp>` whose whole visualisation state is edited
  * through the app's docked, resizable `right` region hosting the store-connected
- * `<CanvasSettingsPanel>` (from `@invana/canvas-ui`). A header settings toggle
- * mounts / unmounts the region. There is **no bridge to write** — the panel finds
- * the canvas via context, introspects the registries, resolves each instance's
- * editor by its `kind`, and applies every edit through `@invana/canvas-store`.
- * This is exactly how the Invana building studio would drop it in.
+ * `<CanvasSettingsEditorPanel>` (from `@invana/canvas-ui`). A header settings toggle
+ * mounts / unmounts the region. There is **no bridge to write** — it's handed the
+ * live engine as its required `canvas` prop (from the region's `content` fn),
+ * introspects the registries, resolves each instance's editor by its `kind`, and
+ * applies every edit through `@invana/canvas-store`. This is exactly how the
+ * Invana building studio would drop it in.
  */
 export const LiveSettingsEditors: Story = {
   name: 'Live Settings Editors',
   render: function Render() {
     // The settings panel docks through the activity-bar controller: its descriptor
     // becomes the header toggle + (while open) the resizable `right` region. Open
-    // by default so the editors are visible on load. The panel finds the canvas
-    // via context — flatten its inner card so the region supplies chrome + scroll.
+    // by default so the editors are visible on load. The region's `content` fn
+    // hands the live engine to the panel's `canvas` prop; the flattened card lets
+    // the region supply chrome + scroll.
     const dock = useSidePanels(
       [
         {
           id: 'settings',
           icon: Settings,
           label: 'Settings',
-          render: () => <CanvasSettingsPanel className="border-0 bg-transparent shadow-none" />,
+          render: (canvas) => (
+            <CanvasSettingsEditorPanel canvas={canvas} className="border-0 bg-transparent shadow-none" />
+          ),
         },
       ],
       { defaultOpenId: 'settings', section: { defaultSize: '360px', maxSize: '460px' } },

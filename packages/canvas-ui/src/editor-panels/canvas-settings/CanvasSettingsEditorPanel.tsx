@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -15,49 +15,53 @@ import {
 import { Input, SettingsPanel, Switch, type FieldConfig } from '@invana/forms';
 import { useForm } from 'react-hook-form';
 import { Search } from 'lucide-react';
+import { useStore } from '@invana/canvas-react';
+import type { CanvasConfig, CanvasView } from '@invana/canvas';
+import type { GraphCanvas } from '@invana/graph';
 
-import {
-  DEFAULT_CANVAS_SETTINGS_SCHEMAS,
-  type SettingsSchemaEntry,
-} from './registry';
-import type {
-  CanvasSettingsDefinition,
-  CanvasSettingsInstance,
-  SettingsSection,
-} from './types';
+import { DEFAULT_CANVAS_SETTINGS_SCHEMAS, type SettingsSchemaEntry } from './registry';
+import type { CanvasSettingsDefinition, CanvasSettingsInstance, SettingsSection } from './types';
 
-export interface CanvasSettingsEditorPanelProps {
-  /**
-   * The canvas settings to browse + edit — every registered layer / behaviour /
-   * layout with its `kind` + current engine-shaped `settings`.
-   */
-  definition: CanvasSettingsDefinition;
-  /**
-   * The schema registry (`kind` → fields + mappers). Defaults to
-   * {@link DEFAULT_CANVAS_SETTINGS_SCHEMAS} — the full built-in coverage. Pass a
-   * superset to register custom kinds, or a subset to narrow it.
-   */
-  schemas?: Record<string, SettingsSchemaEntry>;
-  /**
-   * `'live'` (default) applies every field edit immediately via {@link onChange};
-   * `'manual'` batches edits behind a per-row **Apply** button.
-   */
-  applyMode?: 'live' | 'manual';
-  /** Panel heading. Default `'Canvas Settings'`. */
-  title?: ReactNode;
-  /**
-   * An instance's settings changed. `patch` is an **engine-shaped** options patch
-   * (mapped from the form via the registry entry's `toOptions`) — apply it with
-   * `canvas.update({ [section]: { [id]: patch } })`.
-   */
-  onChange?: (section: SettingsSection, id: string, patch: Record<string, unknown>) => void;
-  /** A layer / behaviour row's enable toggle flipped. */
-  onToggle?: (section: SettingsSection, id: string, enabled: boolean) => void;
-  /** A layout row was made active. */
-  onActiveLayoutChange?: (id: string) => void;
-  /** Extra classes merged onto the outer `Card`. */
-  className?: string;
+/** Selects the serialisable config slice (the source of truth) from the view store. */
+const selectDefinition = (s: CanvasView) => s.definition;
+
+/** One introspected registry instance: its id + resolved `kind` + the live instance. */
+type Introspected = { id: string; kind?: string; inst: unknown };
+
+// ─── Store introspection helpers ────────────────────────────────────────────
+
+/**
+ * Best-effort read of a live instance's current options, for seeding the panel.
+ * Generic — **no engine imports**: prefers `getOptions()`, falls back to
+ * `.options`, else `{}`.
+ */
+function readOptions(instance: unknown): Record<string, unknown> {
+  const getOptions = (instance as { getOptions?: () => unknown }).getOptions;
+  if (typeof getOptions === 'function') {
+    const opts = getOptions.call(instance);
+    if (opts && typeof opts === 'object') return { ...(opts as Record<string, unknown>) };
+  }
+  const options = (instance as { options?: unknown }).options;
+  if (options && typeof options === 'object') return { ...(options as Record<string, unknown>) };
+  return {};
 }
+
+/**
+ * Default `kind` resolver: an instance's own stable `kind` field (every engine
+ * Behaviour/Layer/Layout exposes one, matching this package's settings-schema
+ * registry key), falling back to the constructor name.
+ *
+ * The `kind` field is minification-safe, so this default is production-safe for
+ * all built-in surfaces. The `constructor.name` fallback only ever applies to a
+ * custom class that hasn't set `kind` (unreliable when minified — give such a
+ * class a `kind`, or pass an explicit `resolveKind`). Resolution stays here (not
+ * an `instanceof` map) so this UI kit imports no engine classes.
+ */
+const defaultResolveKind = (instance: unknown): string | undefined =>
+  (instance as { kind?: string }).kind ??
+  (instance as { constructor?: { name?: string } }).constructor?.name;
+
+// ─── Rendering helpers ───────────────────────────────────────────────────────
 
 /** The sections rendered, in order. */
 const SECTIONS: { id: SettingsSection; label: string }[] = [
@@ -233,36 +237,161 @@ function InstanceEditor({
   );
 }
 
+// ─── The panel ───────────────────────────────────────────────────────────────
+
+export interface CanvasSettingsEditorPanelProps {
+  /**
+   * The live engine to edit — **required**. Pass it explicitly (e.g. from a
+   * `GraphCanvasApp` region's `content: (ctx) => …ctx.canvas`). `null` until the
+   * engine is ready; the panel renders a fallback while it is.
+   */
+  canvas: GraphCanvas | null;
+  /** Extra classes merged onto the outer `Card` (e.g. to flatten chrome in a docked region). */
+  className?: string;
+  /**
+   * Map a live layer/behaviour/layout instance to its settings-schema registry
+   * `kind`. Defaults to `instance.kind ?? constructor.name`; pass a class-based
+   * (`instanceof`) resolver for minified builds.
+   */
+  resolveKind?: (instance: unknown) => string | undefined;
+  /**
+   * The schema registry (`kind` → fields + mappers). Defaults to
+   * {@link DEFAULT_CANVAS_SETTINGS_SCHEMAS} — the full built-in coverage. Pass a
+   * superset to register custom kinds, or a subset to narrow it.
+   */
+  schemas?: Record<string, SettingsSchemaEntry>;
+  /**
+   * `'live'` (default) applies every field edit immediately; `'manual'` batches
+   * edits behind a per-row **Apply** button.
+   */
+  applyMode?: 'live' | 'manual';
+  /** Panel heading. Default `'Canvas Settings'`; pass `null` to omit. */
+  title?: ReactNode;
+}
+
 /**
- * `CanvasSettingsEditorPanel` — a **file-browser-style settings panel** for a whole
- * canvas definition. The three sections (Layers / Behaviours / Layouts) are a
- * `PanelStack` — the VS-Code "view container": collapsible, resizable panels
- * whose headers stay visible. Each section's body lists its instances (files);
- * expanding a row reveals a schema-driven `SettingsPanel` **in place**. Edits are
- * handed back as engine-shaped patches via
- * {@link CanvasSettingsEditorPanelProps.onChange | onChange} for the host to apply
- * (typically live through `canvas.update(...)`).
+ * Store-connected canvas settings panel over a whole canvas definition. Pass the
+ * live engine as the **required `canvas` prop** (e.g. from a `GraphCanvasApp`
+ * region's `content: (ctx) => <CanvasSettingsEditorPanel canvas={ctx.canvas} />`).
+ * It reads the settings from `store.view.definition` and writes every edit back
+ * via `canvas.update(...)` — no bridge to hand-wire.
+ *
+ * A **file-browser-style** panel: the three sections (Layers / Behaviours /
+ * Layouts) are a `PanelStack` (the VS-Code "view container": collapsible,
+ * resizable panels whose headers stay visible). Each section lists its live
+ * instances (files); expanding a row reveals that instance's schema-driven form
+ * **in place** and every edit maps to an engine-shaped patch applied via
+ * `canvas.update(...)`.
+ *
+ * This is a thin **validation guard**: `canvas` is required, so if it's missing
+ * (or not ready yet) it renders a fallback and the real work runs in
+ * {@link CanvasSettingsEditorPanelContent} with a guaranteed-live canvas — which
+ * lets the body read the store with the plain reactive `useStore`, no null-safety
+ * plumbing.
  *
  * **Sizing:** the `PanelStack` fills its parent's height, so mount this in a
- * sized container (a fixed-height sidebar, a flex/grid track, `h-full`) — not one
- * that sizes to its content.
- *
- * Engine-agnostic: the schema + engine⇄form mapping for each `kind` comes from
- * the injected {@link CanvasSettingsEditorPanelProps.schemas | schemas} registry
- * (default {@link DEFAULT_CANVAS_SETTINGS_SCHEMAS}); the panel never imports the
- * engine. Instances whose `kind` isn't in the registry are still listed with a
- * "no editor" placeholder, so the panel reflects the whole definition honestly.
+ * sized container (a fixed-height sidebar, a flex/grid track, `h-full`).
  */
-export function CanvasSettingsEditorPanel({
-  definition,
+export function CanvasSettingsEditorPanel({ canvas, className, ...rest }: CanvasSettingsEditorPanelProps) {
+  if (!canvas) {
+    return (
+      <Card className={cn('flex h-full w-full items-center justify-center', className)}>
+        <p className="p-4 text-sm text-muted-foreground">Failed to load — no canvas.</p>
+      </Card>
+    );
+  }
+  return <CanvasSettingsEditorPanelContent canvas={canvas} className={className} {...rest} />;
+}
+
+/**
+ * The panel body — runs only with a guaranteed-live `canvas`. Reads
+ * `store.view.definition` reactively via {@link useStore} (the source of truth,
+ * so it re-renders on any config change from this panel, other UI, or the
+ * engine), and writes edits / toggles / layout picks back via `canvas.update(...)`.
+ *
+ * The instance **list** (id + `kind`) is introspected from the live registries
+ * once per canvas — the store is domain-free (no class/kind), so `kind` is
+ * resolved from each instance (see {@link CanvasSettingsEditorPanelProps.resolveKind});
+ * the schema + engine⇄form mapping per `kind` comes from {@link CanvasSettingsEditorPanelProps.schemas}.
+ * An instance whose `kind` isn't in the registry is still listed with a "no
+ * editor" placeholder, so the panel reflects the whole definition honestly.
+ */
+function CanvasSettingsEditorPanelContent({
+  canvas,
+  className,
+  resolveKind = defaultResolveKind,
   schemas = DEFAULT_CANVAS_SETTINGS_SCHEMAS,
   applyMode = 'live',
   title = 'Canvas Settings',
-  onChange,
-  onToggle,
-  onActiveLayoutChange,
-  className,
-}: CanvasSettingsEditorPanelProps) {
+}: CanvasSettingsEditorPanelProps & { canvas: GraphCanvas }) {
+  // The source of truth: `store.view.definition`, read reactively. Plain
+  // `useStore` — the guard above guarantees a non-null canvas here.
+  const config = useStore(canvas.store.view, selectDefinition);
+
+  // Write path → the store.
+  const update = useCallback((patch: CanvasConfig) => canvas.update(patch), [canvas]);
+
+  // Keep the resolver in a ref so an inline `resolveKind` prop doesn't re-run the
+  // introspection effect every render.
+  const resolveKindRef = useRef(resolveKind);
+  resolveKindRef.current = resolveKind;
+
+  const [instances, setInstances] = useState<{
+    layers: Introspected[];
+    behaviours: Introspected[];
+    layouts: Introspected[];
+  }>({ layers: [], behaviours: [], layouts: [] });
+
+  useEffect(() => {
+    const map = (list: readonly { id: string }[]): Introspected[] =>
+      list.map((i) => ({ id: i.id, kind: resolveKindRef.current(i), inst: i as unknown }));
+    setInstances({
+      layers: map(canvas.layers.list()),
+      behaviours: map(canvas.behaviours.list()),
+      layouts: map(canvas.layouts.list()),
+    });
+  }, [canvas]);
+
+  // Merge the stable instance list with the reactive store definition: the
+  // instance's full options as a base, the store's serialisable slice on top;
+  // `enabled` reads from the store, falling back to the live instance.
+  const definition: CanvasSettingsDefinition = useMemo(() => {
+    const build = (
+      list: Introspected[],
+      bag: Record<string, Record<string, unknown>> | undefined,
+      withEnabled: boolean,
+    ): CanvasSettingsInstance[] =>
+      list.map(({ id, kind, inst }) => {
+        const stored = bag?.[id];
+        return {
+          id,
+          kind: kind ?? (inst as object).constructor.name,
+          settings: { ...readOptions(inst), ...(stored ?? {}) },
+          ...(withEnabled
+            ? {
+                enabled:
+                  (stored as { enabled?: boolean } | undefined)?.enabled ??
+                  (inst as { enabled?: boolean }).enabled,
+              }
+            : {}),
+        };
+      });
+
+    return {
+      layers: build(instances.layers, config.layers, false),
+      behaviours: build(instances.behaviours, config.behaviours, true),
+      layouts: build(instances.layouts, config.layouts, false),
+      activeLayoutId: config.activeLayout ?? undefined,
+    };
+  }, [instances, config]);
+
+  // Apply paths → the store.
+  const applyChange = (section: SettingsSection, id: string, patch: Record<string, unknown>) =>
+    update({ [section]: { [id]: patch } });
+  const applyToggle = (section: SettingsSection, id: string, enabled: boolean) =>
+    update({ [section]: { [id]: { enabled } } });
+  const applyActiveLayout = (id: string) => update({ activeLayout: id });
+
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
 
@@ -270,14 +399,11 @@ export function CanvasSettingsEditorPanel({
   // force-collapsed when its instance is toggled off.
   const [openRows, setOpenRows] = useState<Record<string, string[]>>({});
 
-  const instancesBySection = useMemo(() => {
-    const map: Record<SettingsSection, CanvasSettingsInstance[]> = {
-      layers: definition.layers ?? [],
-      behaviours: definition.behaviours ?? [],
-      layouts: definition.layouts ?? [],
-    };
-    return map;
-  }, [definition]);
+  const instancesBySection: Record<SettingsSection, CanvasSettingsInstance[]> = {
+    layers: definition.layers ?? [],
+    behaviours: definition.behaviours ?? [],
+    layouts: definition.layouts ?? [],
+  };
 
   const noMatches =
     q !== '' &&
@@ -318,7 +444,7 @@ export function CanvasSettingsEditorPanel({
                     <Switch
                       checked={inst.enabled !== false}
                       onCheckedChange={(v) => {
-                        onToggle?.(sectionId, inst.id, v);
+                        applyToggle(sectionId, inst.id, v);
                         if (!v)
                           setOpenRows((s) => ({
                             ...s,
@@ -356,13 +482,9 @@ export function CanvasSettingsEditorPanel({
                 <AccordionContent className="p-0">
                   <div className="ml-2 border-l pl-2">
                     {/* Layouts: offer activation for the non-active ones. */}
-                    {sectionId === 'layouts' && !isActive && onActiveLayoutChange && (
+                    {sectionId === 'layouts' && !isActive && (
                       <div className="px-3 pt-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => onActiveLayoutChange(inst.id)}
-                        >
+                        <Button size="sm" variant="outline" onClick={() => applyActiveLayout(inst.id)}>
                           Make active
                         </Button>
                       </div>
@@ -372,7 +494,7 @@ export function CanvasSettingsEditorPanel({
                         entry={entry}
                         instance={inst}
                         applyMode={applyMode}
-                        onChange={(patch) => onChange?.(sectionId, inst.id, patch)}
+                        onChange={(patch) => applyChange(sectionId, inst.id, patch)}
                       />
                     ) : (
                       <p className="px-3 py-2 text-xs italic text-muted-foreground">
