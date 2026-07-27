@@ -9,10 +9,13 @@
  *
  *   - **Stages → auto-fitting group frames.** Each numbered stage (1 · Data
  *     Sources … 8 · Learning) plus Memory / Audit / Reversibility is a *group
- *     node* (`style.group`): a pastel rect drawn behind its `parentId` members
- *     (`autoFit: true` → the frame wraps its children, `headerHeight` keeps the
- *     tab band clear), with the stage title on an `inside-top-left` label
- *     wearing a white `labelBackground*` pill — the folder tab.
+ *     node* (`style.group`): a pastel `tabbed-rect` drawn behind its `parentId`
+ *     members (`autoFit: true` → the frame wraps its children; `headerHeight`
+ *     is the folder tab above them). The stage title is an ordinary
+ *     `inside-center` label — a `tabbed-rect` routes every `inside-*` placement
+ *     into its tab, since the body belongs to the boxes it frames, and the tab
+ *     auto-sizes to the title. So a stage carries **no** label offsets and no
+ *     background pill: the tab is real geometry, not a floated chip.
  *   - **Items → plain rect nodes.** Every box is a `rect` shape with a centred
  *     `labelText`; multi-line captions are plain `\n`s in that string, so no
  *     composite card / resolver is needed. The white fill + grey border + label
@@ -28,7 +31,9 @@
  * A `rect` node's `position` is its **top-left** corner (only `composite` is
  * centre-shifted), and an auto-fitting frame lands at
  * `childrenBBox.min − padding − headerHeight`, which is what each group's
- * `position` repeats so a *collapsed* stage stays put.
+ * `position` repeats so a *collapsed* stage stays put. On a `tabbed-rect` that
+ * top-left is the top of the **tab**, and `shape.height` describes the body
+ * alone — so the footprint is identical to the plain-rect version it replaced.
  *
  * Two engine details this story has to respect, both easy to trip over:
  *
@@ -56,10 +61,11 @@ type Story = StoryObj;
 export const InvanaArchitecture: Story = {
   render: () => {
     // Stage frames. `position` = the frame's top-left (children bbox − 14 pad −
-    // 28 header); `shape.width/height` is the auto-fit *floor*, which doubles as
-    // the size a stage collapses to. `labelOffsetX/Y` pull the tab back to the
-    // corner: `inside-*` placements anchor at `0.15 × min(w, h)` from the edge,
-    // so the offset is `wanted − inset` for that frame's rendered size.
+    // 28 tab); `shape.width/height` is the auto-fit *floor*, which doubles as
+    // the size a stage collapses to. `tabWidth` here is only the pre-measure
+    // fallback — the layer overwrites it with the title's measured width once
+    // the renderer is up, which is why every stage reads identically no matter
+    // how long its title is.
     //
     // The stage tint rides on a **state overlay** (`states: ['stage']`), not on
     // `style`: publishing a palette rewrites every group node's `style.bgFill` /
@@ -76,21 +82,21 @@ export const InvanaArchitecture: Story = {
             state: { stage: { bgFill: 0xf5f3ff, bgStrokeColor: 0xa1a1aa } },
             position: { x: 1202, y: 84 },
             style: {
-              shape: { kind: 'rect', width: 130, height: 36, cornerRadius: 6 },
+              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
               bgStrokeWidth: 1,
-              group: { autoFit: true, padding: 14, headerHeight: 28, behindChildren: true, togglePlacement: 'top-right' },
+              group: {
+                autoFit: true,
+                padding: 14,
+                headerHeight: 28,
+                tabSkew: 12,
+                behindChildren: true,
+                togglePlacement: 'top-right',
+              },
               labelText: '5 · Simulation Layer — weigh it first',
-              labelPlacement: 'inside-top-left',
-              labelOffsetX: -13,
-              labelOffsetY: -15,
+              labelPlacement: 'inside-center',
               labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
-              labelBackgroundFill: 0xffffff,
-              labelBackgroundStrokeColor: 0xa1a1aa,
-              labelBackgroundStrokeWidth: 1,
-              labelBackgroundCornerRadius: 3,
-              labelBackgroundPadding: 4,
             },
           },
           {
@@ -99,21 +105,21 @@ export const InvanaArchitecture: Story = {
             state: { stage: { bgFill: 0xfefce8, bgStrokeColor: 0xa1a1aa } },
             position: { x: 792, y: 210 },
             style: {
-              shape: { kind: 'rect', width: 130, height: 36, cornerRadius: 6 },
+              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
               bgStrokeWidth: 1,
-              group: { autoFit: true, padding: 14, headerHeight: 28, behindChildren: true, togglePlacement: 'top-right' },
+              group: {
+                autoFit: true,
+                padding: 14,
+                headerHeight: 28,
+                tabSkew: 12,
+                behindChildren: true,
+                togglePlacement: 'top-right',
+              },
               labelText: 'Memory',
-              labelPlacement: 'inside-top-left',
-              labelOffsetX: -14,
-              labelOffsetY: -16,
+              labelPlacement: 'inside-center',
               labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
-              labelBackgroundFill: 0xffffff,
-              labelBackgroundStrokeColor: 0xa1a1aa,
-              labelBackgroundStrokeWidth: 1,
-              labelBackgroundCornerRadius: 3,
-              labelBackgroundPadding: 4,
             },
           },
           {
@@ -122,21 +128,21 @@ export const InvanaArchitecture: Story = {
             state: { stage: { bgFill: 0xf0fdfa, bgStrokeColor: 0xa1a1aa } },
             position: { x: 1242, y: 260 },
             style: {
-              shape: { kind: 'rect', width: 130, height: 36, cornerRadius: 6 },
+              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
               bgStrokeWidth: 1,
-              group: { autoFit: true, padding: 14, headerHeight: 28, behindChildren: true, togglePlacement: 'top-right' },
+              group: {
+                autoFit: true,
+                padding: 14,
+                headerHeight: 28,
+                tabSkew: 12,
+                behindChildren: true,
+                togglePlacement: 'top-right',
+              },
               labelText: '4 · Decision Runtime — decide',
-              labelPlacement: 'inside-top-left',
-              labelOffsetX: -7,
-              labelOffsetY: -9,
+              labelPlacement: 'inside-center',
               labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
-              labelBackgroundFill: 0xffffff,
-              labelBackgroundStrokeColor: 0xa1a1aa,
-              labelBackgroundStrokeWidth: 1,
-              labelBackgroundCornerRadius: 3,
-              labelBackgroundPadding: 4,
             },
           },
           {
@@ -145,21 +151,21 @@ export const InvanaArchitecture: Story = {
             state: { stage: { bgFill: 0xfff7ed, bgStrokeColor: 0xa1a1aa } },
             position: { x: 16, y: 288 },
             style: {
-              shape: { kind: 'rect', width: 130, height: 36, cornerRadius: 6 },
+              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
               bgStrokeWidth: 1,
-              group: { autoFit: true, padding: 14, headerHeight: 28, behindChildren: true, togglePlacement: 'top-right' },
+              group: {
+                autoFit: true,
+                padding: 14,
+                headerHeight: 28,
+                tabSkew: 12,
+                behindChildren: true,
+                togglePlacement: 'top-right',
+              },
               labelText: '8 · Learning Layer — learn',
-              labelPlacement: 'inside-top-left',
-              labelOffsetX: -4,
-              labelOffsetY: -6,
+              labelPlacement: 'inside-center',
               labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
-              labelBackgroundFill: 0xffffff,
-              labelBackgroundStrokeColor: 0xa1a1aa,
-              labelBackgroundStrokeWidth: 1,
-              labelBackgroundCornerRadius: 3,
-              labelBackgroundPadding: 4,
             },
           },
           {
@@ -168,21 +174,21 @@ export const InvanaArchitecture: Story = {
             state: { stage: { bgFill: 0xfefce8, bgStrokeColor: 0xa1a1aa } },
             position: { x: 1518, y: 372 },
             style: {
-              shape: { kind: 'rect', width: 130, height: 36, cornerRadius: 6 },
+              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
               bgStrokeWidth: 1,
-              group: { autoFit: true, padding: 14, headerHeight: 28, behindChildren: true, togglePlacement: 'top-right' },
+              group: {
+                autoFit: true,
+                padding: 14,
+                headerHeight: 28,
+                tabSkew: 12,
+                behindChildren: true,
+                togglePlacement: 'top-right',
+              },
               labelText: '7 · Observe',
-              labelPlacement: 'inside-top-left',
-              labelOffsetX: -4,
-              labelOffsetY: -6,
+              labelPlacement: 'inside-center',
               labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
-              labelBackgroundFill: 0xffffff,
-              labelBackgroundStrokeColor: 0xa1a1aa,
-              labelBackgroundStrokeWidth: 1,
-              labelBackgroundCornerRadius: 3,
-              labelBackgroundPadding: 4,
             },
           },
           {
@@ -191,21 +197,21 @@ export const InvanaArchitecture: Story = {
             state: { stage: { bgFill: 0xf4f4f5, bgStrokeColor: 0xa1a1aa } },
             position: { x: 1818, y: 392 },
             style: {
-              shape: { kind: 'rect', width: 130, height: 36, cornerRadius: 6 },
+              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
               bgStrokeWidth: 1,
-              group: { autoFit: true, padding: 14, headerHeight: 28, behindChildren: true, togglePlacement: 'top-right' },
+              group: {
+                autoFit: true,
+                padding: 14,
+                headerHeight: 28,
+                tabSkew: 12,
+                behindChildren: true,
+                togglePlacement: 'top-right',
+              },
               labelText: 'Audit Layer',
-              labelPlacement: 'inside-top-left',
-              labelOffsetX: -13,
-              labelOffsetY: -15,
+              labelPlacement: 'inside-center',
               labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
-              labelBackgroundFill: 0xffffff,
-              labelBackgroundStrokeColor: 0xa1a1aa,
-              labelBackgroundStrokeWidth: 1,
-              labelBackgroundCornerRadius: 3,
-              labelBackgroundPadding: 4,
             },
           },
           {
@@ -214,21 +220,21 @@ export const InvanaArchitecture: Story = {
             state: { stage: { bgFill: 0xecfdf5, bgStrokeColor: 0xa1a1aa } },
             position: { x: 1192, y: 476 },
             style: {
-              shape: { kind: 'rect', width: 130, height: 36, cornerRadius: 6 },
+              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
               bgStrokeWidth: 1,
-              group: { autoFit: true, padding: 14, headerHeight: 28, behindChildren: true, togglePlacement: 'top-right' },
+              group: {
+                autoFit: true,
+                padding: 14,
+                headerHeight: 28,
+                tabSkew: 12,
+                behindChildren: true,
+                togglePlacement: 'top-right',
+              },
               labelText: '3 · Context Layer — define the system',
-              labelPlacement: 'inside-top-left',
-              labelOffsetX: -17,
-              labelOffsetY: -19,
+              labelPlacement: 'inside-center',
               labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
-              labelBackgroundFill: 0xffffff,
-              labelBackgroundStrokeColor: 0xa1a1aa,
-              labelBackgroundStrokeWidth: 1,
-              labelBackgroundCornerRadius: 3,
-              labelBackgroundPadding: 4,
             },
           },
           {
@@ -237,21 +243,21 @@ export const InvanaArchitecture: Story = {
             state: { stage: { bgFill: 0xeef2ff, bgStrokeColor: 0xa1a1aa } },
             position: { x: 210, y: 494 },
             style: {
-              shape: { kind: 'rect', width: 130, height: 36, cornerRadius: 6 },
+              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
               bgStrokeWidth: 1,
-              group: { autoFit: true, padding: 14, headerHeight: 28, behindChildren: true, togglePlacement: 'top-right' },
+              group: {
+                autoFit: true,
+                padding: 14,
+                headerHeight: 28,
+                tabSkew: 12,
+                behindChildren: true,
+                togglePlacement: 'top-right',
+              },
               labelText: '1 · Data Sources',
-              labelPlacement: 'inside-top-left',
-              labelOffsetX: -28,
-              labelOffsetY: -30,
+              labelPlacement: 'inside-center',
               labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
-              labelBackgroundFill: 0xffffff,
-              labelBackgroundStrokeColor: 0xa1a1aa,
-              labelBackgroundStrokeWidth: 1,
-              labelBackgroundCornerRadius: 3,
-              labelBackgroundPadding: 4,
             },
           },
           {
@@ -260,21 +266,21 @@ export const InvanaArchitecture: Story = {
             state: { stage: { bgFill: 0xf4f4f5, bgStrokeColor: 0xa1a1aa } },
             position: { x: 1818, y: 562 },
             style: {
-              shape: { kind: 'rect', width: 130, height: 36, cornerRadius: 6 },
+              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
               bgStrokeWidth: 1,
-              group: { autoFit: true, padding: 14, headerHeight: 28, behindChildren: true, togglePlacement: 'top-right' },
+              group: {
+                autoFit: true,
+                padding: 14,
+                headerHeight: 28,
+                tabSkew: 12,
+                behindChildren: true,
+                togglePlacement: 'top-right',
+              },
               labelText: 'Reversibility Layer',
-              labelPlacement: 'inside-top-left',
-              labelOffsetX: -11,
-              labelOffsetY: -13,
+              labelPlacement: 'inside-center',
               labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
-              labelBackgroundFill: 0xffffff,
-              labelBackgroundStrokeColor: 0xa1a1aa,
-              labelBackgroundStrokeWidth: 1,
-              labelBackgroundCornerRadius: 3,
-              labelBackgroundPadding: 4,
             },
           },
           {
@@ -283,21 +289,21 @@ export const InvanaArchitecture: Story = {
             state: { stage: { bgFill: 0xecfeff, bgStrokeColor: 0xa1a1aa } },
             position: { x: 498, y: 660 },
             style: {
-              shape: { kind: 'rect', width: 130, height: 36, cornerRadius: 6 },
+              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
               bgStrokeWidth: 1,
-              group: { autoFit: true, padding: 14, headerHeight: 28, behindChildren: true, togglePlacement: 'top-right' },
+              group: {
+                autoFit: true,
+                padding: 14,
+                headerHeight: 28,
+                tabSkew: 12,
+                behindChildren: true,
+                togglePlacement: 'top-right',
+              },
               labelText: '2 · Ingestion',
-              labelPlacement: 'inside-top-left',
-              labelOffsetX: -13,
-              labelOffsetY: -15,
+              labelPlacement: 'inside-center',
               labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
-              labelBackgroundFill: 0xffffff,
-              labelBackgroundStrokeColor: 0xa1a1aa,
-              labelBackgroundStrokeWidth: 1,
-              labelBackgroundCornerRadius: 3,
-              labelBackgroundPadding: 4,
             },
           },
           {
@@ -306,21 +312,21 @@ export const InvanaArchitecture: Story = {
             state: { stage: { bgFill: 0xfef2f2, bgStrokeColor: 0xa1a1aa } },
             position: { x: 1518, y: 722 },
             style: {
-              shape: { kind: 'rect', width: 130, height: 36, cornerRadius: 6 },
+              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
               bgStrokeWidth: 1,
-              group: { autoFit: true, padding: 14, headerHeight: 28, behindChildren: true, togglePlacement: 'top-right' },
+              group: {
+                autoFit: true,
+                padding: 14,
+                headerHeight: 28,
+                tabSkew: 12,
+                behindChildren: true,
+                togglePlacement: 'top-right',
+              },
               labelText: '6 · Action — act, reversibly',
-              labelPlacement: 'inside-top-left',
-              labelOffsetX: -11,
-              labelOffsetY: -13,
+              labelPlacement: 'inside-center',
               labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
-              labelBackgroundFill: 0xffffff,
-              labelBackgroundStrokeColor: 0xa1a1aa,
-              labelBackgroundStrokeWidth: 1,
-              labelBackgroundCornerRadius: 3,
-              labelBackgroundPadding: 4,
             },
           },
 

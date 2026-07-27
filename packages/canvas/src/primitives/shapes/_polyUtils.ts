@@ -193,6 +193,110 @@ export function rayPolygonIntersection(
   return hit;
 }
 
+/**
+ * One vertex of a {@link roundedPolygonOutline} input ring: a corner point
+ * plus the fillet radius to apply there. `r <= 0` keeps the corner sharp.
+ */
+export interface RoundedCorner extends Point {
+  readonly r: number;
+}
+
+/**
+ * Densify a closed corner ring into a polyline, replacing each corner that
+ * carries `r > 0` with a tangent circular fillet.
+ *
+ * Works for **convex and concave** corners alike — the fillet centre is
+ * placed along the corner's interior bisector, which flips side with the
+ * corner's turn direction automatically. That's what lets a silhouette with
+ * re-entrant corners (a folder's tab shoulder, a callout's notch) round its
+ * outer corners while leaving the re-entrant ones sharp.
+ *
+ * The requested radius is clamped so a fillet can never consume more than
+ * half of either adjacent edge, so authored radii larger than the geometry
+ * degrade gracefully instead of self-intersecting. Arcs are sampled at
+ * roughly one vertex per 2 px of arc length (min 2 segments), matching the
+ * density `sampleRectOutline` uses for rounded rects.
+ *
+ * Output winds in the same direction as the input ring, starting at the
+ * first corner (or the start of its fillet when it has one).
+ */
+export function roundedPolygonOutline(
+  corners: ReadonlyArray<RoundedCorner>,
+): Point[] {
+  const n = corners.length;
+  if (n < 3) return corners.map((c) => ({ x: c.x, y: c.y }));
+
+  const out: Point[] = [];
+  for (let i = 0; i < n; i++) {
+    const p = corners[i]!;
+    const prev = corners[(i + n - 1) % n]!;
+    const next = corners[(i + 1) % n]!;
+
+    // Unit vectors from the corner toward each neighbour.
+    const v1x = prev.x - p.x;
+    const v1y = prev.y - p.y;
+    const v2x = next.x - p.x;
+    const v2y = next.y - p.y;
+    const l1 = Math.hypot(v1x, v1y);
+    const l2 = Math.hypot(v2x, v2y);
+    if (p.r <= 0 || l1 < 1e-9 || l2 < 1e-9) {
+      out.push({ x: p.x, y: p.y });
+      continue;
+    }
+    const u1x = v1x / l1;
+    const u1y = v1y / l1;
+    const u2x = v2x / l2;
+    const u2y = v2y / l2;
+
+    // Interior half-angle at the corner. Collinear neighbours (θ ≈ π, a
+    // straight run) and 180° spikes (θ ≈ 0) have no well-defined fillet.
+    const cosT = Math.max(-1, Math.min(1, u1x * u2x + u1y * u2y));
+    const theta = Math.acos(cosT);
+    if (theta < 1e-6 || Math.PI - theta < 1e-6) {
+      out.push({ x: p.x, y: p.y });
+      continue;
+    }
+    const half = theta / 2;
+
+    // Tangent distance from the corner, clamped to half of each adjacent
+    // edge so neighbouring fillets can't overlap. The effective radius is
+    // recovered from the clamped distance.
+    const tangent = Math.min(p.r / Math.tan(half), l1 / 2, l2 / 2);
+    const radius = tangent * Math.tan(half);
+    if (radius < 1e-6) {
+      out.push({ x: p.x, y: p.y });
+      continue;
+    }
+
+    // Fillet centre sits along the bisector at `radius / sin(half)`.
+    let bx = u1x + u2x;
+    let by = u1y + u2y;
+    const bl = Math.hypot(bx, by);
+    if (bl < 1e-9) {
+      out.push({ x: p.x, y: p.y });
+      continue;
+    }
+    bx /= bl;
+    by /= bl;
+    const cx = p.x + bx * (radius / Math.sin(half));
+    const cy = p.y + by * (radius / Math.sin(half));
+
+    const a1 = Math.atan2(p.y + u1y * tangent - cy, p.x + u1x * tangent - cx);
+    const a2 = Math.atan2(p.y + u2y * tangent - cy, p.x + u2x * tangent - cx);
+    // Take the minor arc — the fillet never sweeps more than π.
+    let delta = a2 - a1;
+    while (delta > Math.PI) delta -= 2 * Math.PI;
+    while (delta < -Math.PI) delta += 2 * Math.PI;
+
+    const steps = Math.max(2, Math.ceil((Math.abs(delta) * radius) / 2));
+    for (let s = 0; s <= steps; s++) {
+      const a = a1 + delta * (s / steps);
+      out.push({ x: cx + Math.cos(a) * radius, y: cy + Math.sin(a) * radius });
+    }
+  }
+  return out;
+}
+
 // ─── Internals ─────────────────────────────────────────────────────────────
 
 function signedArea(vertices: ReadonlyArray<Point>): number {

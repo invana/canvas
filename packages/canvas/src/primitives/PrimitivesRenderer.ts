@@ -42,11 +42,13 @@ import { shapeSpecToSvg, connectorToSvg } from '../export/svgExport';
 import { CircleShape } from './shapes/CircleShape';
 import { EllipseShape } from './shapes/EllipseShape';
 import { RectShape } from './shapes/RectShape';
+import { TabbedRectShape } from './shapes/TabbedRectShape';
 import { PolygonShape } from './shapes/PolygonShape';
 import { RegularPolygonShape } from './shapes/RegularPolygonShape';
 import { StarShape } from './shapes/StarShape';
 import { ArcShape } from './shapes/ArcShape';
 import { CompositeShape } from './shapes/CompositeShape';
+import { measureLabelContent } from './paint/labelContent';
 import { Connector } from './connectors/Connector';
 import { straightRouter } from './connectors/routers/straight';
 import { orthRouter } from './connectors/routers/orth';
@@ -126,6 +128,8 @@ import type {
   IShapeDecoration,
   IShapeEffect,
   IConnectorEffect,
+  LabelContent,
+  LabelWrap,
   ConnectorEffectCtor,
   ConnectorEffectHostInfo,
   Obstacle,
@@ -441,6 +445,7 @@ export class PrimitivesRenderer {
     this.registerShape('circle', CircleShape);
     this.registerShape('ellipse', EllipseShape);
     this.registerShape('rect', RectShape);
+    this.registerShape('tabbed-rect', TabbedRectShape);
     this.registerShape('polygon', PolygonShape);
     this.registerShape('regular-polygon', RegularPolygonShape);
     this.registerShape('star', StarShape);
@@ -2489,6 +2494,22 @@ export class PrimitivesRenderer {
       x: inst.spec.x + b.x + b.width / 2,
       y: inst.spec.y + b.y + b.height / 2,
     };
+  }
+
+  /**
+   * Text extent `content` would occupy if mounted as a `label` decoration,
+   * or `null` for content this can't measure statically (`html-text`).
+   *
+   * Nothing is mounted, drawn or cached — this is a pure query against the
+   * same font resolution the renderer uses, so a domain layer can size
+   * geometry **around** a label (a tab, a header band, a chip) before that
+   * label exists, without importing a drawing library to do it.
+   */
+  measureLabel(
+    content: LabelContent,
+    wrap?: LabelWrap,
+  ): { width: number; height: number } | null {
+    return measureLabelContent(content, wrap);
   }
 
   /**

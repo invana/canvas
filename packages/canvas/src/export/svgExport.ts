@@ -36,6 +36,7 @@ import type {
   CircleSpec,
   EllipseSpec,
   RectSpec,
+  TabbedRectSpec,
   PolygonSpec,
   RegularPolygonSpec,
   StarSpec,
@@ -49,6 +50,7 @@ import type {
   LabelContent,
 } from '../primitives/types';
 import type { CompositeSpec, CompositePart } from '../primitives/shapes/CompositeShape';
+import { tabbedRectOutline, tabbedRectFoldLine } from '../primitives/shapes/TabbedRectShape';
 import { hexToCss, resolveExportBackground, captureRect, type ExportArea } from './shared';
 
 /** Options for {@link Canvas.exportSVG} (a subset of the raster options). */
@@ -212,6 +214,27 @@ export function shapeSpecToSvg(spec: BaseShapeSpec, labelStyle?: unknown): strin
     case 'rect': {
       const s = spec as RectSpec;
       body = `<rect ${attrs({ x: s.x, y: s.y, width: s.width, height: s.height, rx: s.cornerRadius || undefined, ...paint })}/>`;
+      break;
+    }
+    case 'tabbed-rect': {
+      const s = spec as TabbedRectSpec;
+      // The folder outline is already a polyline (fillets sampled as
+      // segments), so it exports exactly as the renderer draws it.
+      const pts = tabbedRectOutline(s).map((v) => ({ x: v.x + s.x, y: v.y + s.y }));
+      body = `<polygon ${attrs({ points: pointsAttr(pts), ...paint })}/>`;
+      // The fold line closing the tab's base is interior geometry, so it
+      // rides as a separate stroked segment rather than part of the outline.
+      const fold = tabbedRectFoldLine(s);
+      if (fold && s.stroke) {
+        body += `<line ${attrs({
+          x1: fold[0].x + s.x,
+          y1: fold[0].y + s.y,
+          x2: fold[1].x + s.x,
+          y2: fold[1].y + s.y,
+          ...strokePaint(s.stroke),
+          fill: 'none',
+        })}/>`;
+      }
       break;
     }
     case 'polygon': {

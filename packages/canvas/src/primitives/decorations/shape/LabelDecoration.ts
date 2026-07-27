@@ -108,9 +108,15 @@ export class LabelDecoration extends ShapeDecorationBase<ShapeLabelStyle> {
     // → hide cascade against the placement-specific inner-box budget before
     // measuring. Outside placements and `'center'` skip this and size freely.
     const placement = this.style.placement ?? 'bottom';
+    // A shape with internal structure may redirect this placement at one of
+    // its sub-regions (a tab, a header band) instead of its outer AABB. That
+    // box governs both the fit budget below and the anchor math further down,
+    // so the label is measured against the region it will actually occupy.
+    const anchorOverride = host.shape.labelAnchorBox?.(placement);
+    const placementBox = anchorOverride ?? host.bounds;
     let hidden = false;
     if (isInsidePlacement(placement)) {
-      const box = innerBoxFor(placement, host.bounds);
+      const box = innerBoxFor(placement, placementBox);
       const minFontSize = this.style.minFontSize ?? 9;
       const result = fitInsideBox(this.contentView, this.style.content, this.style.wrap, box, minFontSize);
       hidden = result.hidden;
@@ -146,8 +152,15 @@ export class LabelDecoration extends ShapeDecorationBase<ShapeLabelStyle> {
     // visibly mis-place a centred label.
     const offsetX = this.style.offset?.x ?? 0;
     const offsetY = this.style.offset?.y ?? 0;
+    // An explicit `labelAnchorBox` for this placement is the more specific
+    // statement — it names the region this label belongs in — so it wins over
+    // the shape's general-purpose visual centre. Without this, a shape that
+    // routes `inside-center` at a sub-region would still be overruled here and
+    // the label would land on the silhouette's centre of mass instead.
     const visualCenter =
-      (placement === 'center' || placement === 'inside-center') && host.shape.visualCenter
+      anchorOverride === undefined &&
+      (placement === 'center' || placement === 'inside-center') &&
+      host.shape.visualCenter
         ? host.shape.visualCenter()
         : undefined;
     // For outside placements (top / bottom / left / right / corners), inflate
@@ -158,8 +171,8 @@ export class LabelDecoration extends ShapeDecorationBase<ShapeLabelStyle> {
     // the shape it's meant to sit inside.
     const anchorBounds =
       host.outerDecorationExtent > 0 && isOutsidePlacement(placement)
-        ? inflateRect(host.bounds, host.outerDecorationExtent)
-        : host.bounds;
+        ? inflateRect(placementBox, host.outerDecorationExtent)
+        : placementBox;
     const { ax, ay, alignDx, alignDy } = anchorAndAlign(
       anchorBounds,
       placement,

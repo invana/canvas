@@ -31,6 +31,7 @@ export type { Easing } from './animation/easings';
 export { CircleShape } from './shapes/CircleShape';
 export { EllipseShape } from './shapes/EllipseShape';
 export { RectShape } from './shapes/RectShape';
+export { TabbedRectShape } from './shapes/TabbedRectShape';
 export { PolygonShape } from './shapes/PolygonShape';
 export { RegularPolygonShape } from './shapes/RegularPolygonShape';
 export { StarShape } from './shapes/StarShape';
@@ -188,6 +189,8 @@ export type {
   CircleSpec,
   EllipseSpec,
   RectSpec,
+  TabbedRectSpec,
+  TabAlign,
   PolygonSpec,
   RegularPolygonSpec,
   StarSpec,

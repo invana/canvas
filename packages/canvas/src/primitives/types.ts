@@ -431,6 +431,85 @@ export interface RectSpec extends BaseShapeSpec {
 }
 
 /**
+ * Where a {@link TabbedRectSpec}'s tab sits along the body's top edge.
+ * `'left'` / `'right'` measure {@link TabbedRectSpec.tabOffset} in from that
+ * side; `'center'` ignores the offset and splits the remainder evenly.
+ */
+export type TabAlign = 'left' | 'center' | 'right';
+
+/**
+ * Rectangle carrying a smaller raised **tab** on its top edge, traced as one
+ * continuous silhouette — the "folder" outline. Fill and stroke run around
+ * body and tab together, so it reads as a single object rather than a rect
+ * with a badge stuck on it.
+ *
+ * Anchored at the **top-left of the full AABB**, i.e. the top-left of the
+ * tab band — so `(spec.x, spec.y)` is the topmost point of the silhouette,
+ * `height` describes the *body* only, and `bounds().height` is
+ * `tabHeight + height`. The body spans `y ∈ [tabHeight, tabHeight + height]`
+ * across the full `width`; the tab spans `tabHeight` above it, inset
+ * horizontally per {@link tabAlign} / {@link tabOffset}.
+ *
+ * A tab as wide as the body degenerates to a plain rect of the combined
+ * height; that's a valid (if pointless) spec, not an error.
+ */
+export interface TabbedRectSpec extends BaseShapeSpec {
+  readonly kind: 'tabbed-rect';
+  /** Width of the body — also the AABB width; the tab never exceeds it. */
+  readonly width: number;
+  /** Height of the **body alone**, excluding {@link tabHeight}. */
+  readonly height: number;
+  /** Width of the raised tab. Clamped to `width`. */
+  readonly tabWidth: number;
+  /** Height of the raised tab, added above the body. */
+  readonly tabHeight: number;
+  /** Fillet applied to the body's outer corners. Default `0` (sharp). */
+  readonly cornerRadius?: number;
+  /**
+   * Fillet applied to the tab's two top corners. Defaults to
+   * {@link cornerRadius} so a uniformly-rounded folder needs one field.
+   * The two re-entrant "shoulder" corners where the tab meets the body
+   * always stay sharp — rounding them reads as a dent, not a fold.
+   */
+  readonly tabCornerRadius?: number;
+  /** Which side the tab hugs. Default `'left'`. */
+  readonly tabAlign?: TabAlign;
+  /**
+   * Distance from the {@link tabAlign} edge to the tab. Default `0` — the
+   * tab is flush with that side, which merges its outer edge into the
+   * body's and produces the classic folder profile. Ignored when
+   * `tabAlign: 'center'`.
+   */
+  readonly tabOffset?: number;
+  /**
+   * Horizontal run of the tab's **angled** side, in px. Default `0` (a
+   * square tab). A non-zero value tapers the tab inward toward its top,
+   * which is what separates a folder tab from a box parked on a rectangle.
+   *
+   * The lean is always on the side facing the rest of the frame — the right
+   * edge for `tabAlign: 'left'`, the left edge for `'right'`, and both for
+   * `'center'`. A side flush with the body's own edge can't lean, since the
+   * two edges have merged.
+   *
+   * {@link tabWidth} measures the tab at its **base**, so the skew eats into
+   * the top edge rather than widening the footprint. Clamped so the slants
+   * can never consume more than half the tab.
+   */
+  readonly tabSkew?: number;
+  /**
+   * Draw the tab's bottom border — the fold line across the tab's base where
+   * it meets the body. Default `true`; set `false` for an open profile where
+   * the tab flows into the body with no seam.
+   *
+   * It's interior geometry, painted only on the shape's own pass: a
+   * decoration borrowing this silhouette (glow, halo, marching ants) traces
+   * the outline alone. It's also skipped when the spec carries no stroke —
+   * it's a border, with no colour of its own to fall back on.
+   */
+  readonly tabDivider?: boolean;
+}
+
+/**
  * Free-form polygon. `vertices` are centre-relative — the silhouette is
  * traced around the origin, then translated to `(x, y)`. Closed implicitly:
  * the last vertex connects back to the first. Use this for arbitrary
@@ -755,6 +834,23 @@ export interface IShape<TSpec extends BaseShapeSpec = BaseShapeSpec> {
    * sits on the visual centroid instead of floating above it.
    */
   visualCenter?(): Point;
+  /**
+   * Optional shape-local box a `label` decoration should anchor against for
+   * the given `placement`, overriding the shape's AABB. Return `undefined`
+   * to keep the default (the full AABB).
+   *
+   * This lets a shape with internal structure direct labels at the *region*
+   * that placement names, rather than at the silhouette's outer box —
+   * `TabbedRectShape` sends every `inside-*` placement into its tab, since
+   * its body interior belongs to the content it frames. Because the
+   * inside-placement inset is proportional to the anchor box, routing the
+   * label to a small fixed region also decouples its position from how
+   * large the rest of the shape grows.
+   *
+   * Applies to both the anchor math and the `inside-*` fit cascade, so a
+   * label targeted at a sub-region is also budgeted against it.
+   */
+  labelAnchorBox?(placement: ShapeLabelPlacement): Rect | undefined;
   /**
    * Optional analytical boundary-intersection in shape-local coordinates,
    * **relative to the shape's geometric centre** (NOT its `(0, 0)` origin).

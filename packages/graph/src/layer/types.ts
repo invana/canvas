@@ -221,6 +221,45 @@ export interface RectShapeOption {
   readonly cornerRadius?: number;
 }
 
+/**
+ * Rectangle carrying a raised tab on its top edge — the "folder" outline,
+ * drawn as one continuous silhouette. Its natural use is a **group frame**:
+ * the tab is where the group's title goes, so the frame's contents are never
+ * crowded by its own label. See {@link GroupOptions.tabWidth}.
+ *
+ * `height` describes the **body only**; the rendered node is
+ * `tabHeight + height` tall and its `position` is the top of the *tab*.
+ * A node label with an `inside-top*` placement is routed into the tab
+ * automatically; every other `inside-*` placement stays in the body.
+ */
+export interface TabbedRectShapeOption {
+  readonly kind: 'tabbed-rect';
+  readonly width: number;
+  /** Height of the body alone, excluding {@link tabHeight}. */
+  readonly height: number;
+  /**
+   * Width of the tab. On a group frame this is normally left to
+   * {@link GroupOptions.tabWidth}'s auto-sizing rather than authored.
+   */
+  readonly tabWidth: number;
+  /** Height of the tab, added above the body. */
+  readonly tabHeight: number;
+  readonly cornerRadius?: number;
+  /** Fillet on the tab's top corners. Defaults to {@link cornerRadius}. */
+  readonly tabCornerRadius?: number;
+  /** Which side the tab hugs. Default `'left'`. */
+  readonly tabAlign?: 'left' | 'center' | 'right';
+  /** Gap between the {@link tabAlign} edge and the tab. Default `0`. */
+  readonly tabOffset?: number;
+  /**
+   * Horizontal run of the tab's angled side. Default `0` (square tab). The
+   * lean falls on the side facing the rest of the frame.
+   */
+  readonly tabSkew?: number;
+  /** Draw the fold line closing the tab's base. Default `true`. */
+  readonly tabDivider?: boolean;
+}
+
 /** Circle-shape option. */
 export interface CircleShapeOption {
   readonly kind: 'circle';
@@ -327,6 +366,7 @@ export interface CompositeShapeOption {
  */
 export type BuiltInNodeShapeOptions =
   | RectShapeOption
+  | TabbedRectShapeOption
   | CircleShapeOption
   | ArcShapeOption
   | RegularPolygonShapeOption
@@ -824,12 +864,45 @@ export interface GroupOptions {
    */
   readonly behindChildren?: boolean;
   /**
-   * Optional header band height (px) added above the children bbox. The
-   * frame still draws as a single rect / circle — `headerHeight` only
-   * shifts the auto-fit recompute so the label area at the top stays clear
-   * of children. Default `0`.
+   * Height (px) of the band reserved above the children bbox for the
+   * group's title. Default `0`.
+   *
+   * How it *draws* depends on the frame's shape kind:
+   *
+   * - `kind: 'rect'` / `'circle'` — nothing is drawn. The band only shifts
+   *   the auto-fit recompute so a label placed at the top doesn't collide
+   *   with the children underneath it.
+   * - `kind: 'tabbed-rect'` — the band becomes the frame's **tab**: it's
+   *   the folder's title flag, sitting above the body rather than inside
+   *   it, and the title renders in it.
    */
   readonly headerHeight?: number;
+  /**
+   * Width of a `tabbed-rect` frame's tab. Ignored by other shape kinds.
+   *
+   * Leave it unset (the default) to **auto-size the tab to the title** —
+   * the layer measures the group's resolved `labelText` in its resolved
+   * font and adds `2 × tabPadding`. That's what keeps a row of frames with
+   * differently-sized titles looking consistent without per-frame tuning.
+   * Set it to pin every tab to the same width instead.
+   */
+  readonly tabWidth?: number;
+  /**
+   * Horizontal breathing room between the title and each end of an
+   * auto-sized tab. Default `10`. Ignored when {@link tabWidth} is set.
+   */
+  readonly tabPadding?: number;
+  /** Which side of the frame the tab hugs. Default `'left'`. */
+  readonly tabAlign?: 'left' | 'center' | 'right';
+  /** Gap between the {@link tabAlign} edge and the tab. Default `0`. */
+  readonly tabOffset?: number;
+  /**
+   * Horizontal run of the tab's angled side — the taper that reads as a
+   * folder tab rather than a box. Default `0` (square). The auto-sizing in
+   * {@link tabWidth} adds this on top of the measured title, so leaning the
+   * tab never squeezes the text.
+   */
+  readonly tabSkew?: number;
   /**
    * Floor (with `autoFit`) or fixed (without) width. Rect frames only.
    * Ignored for circle frames.

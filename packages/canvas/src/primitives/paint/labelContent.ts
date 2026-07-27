@@ -9,7 +9,7 @@
  * if we recreated on every update.
  */
 
-import { Text, HTMLText, type TextStyleOptions } from 'pixi.js';
+import { Text, HTMLText, CanvasTextMetrics, TextStyle, type TextStyleOptions } from 'pixi.js';
 import type { LabelContent, LabelWrap } from '../types';
 
 export type LabelTextDisplay = Text | HTMLText;
@@ -79,6 +79,31 @@ export function updateLabelContent(
 export function applyLabelResolution(view: LabelContentView, resolution: number): void {
   if (resolution <= 0 || !Number.isFinite(resolution)) return;
   (view.display as unknown as { resolution: number }).resolution = resolution;
+}
+
+/**
+ * Measure `content` **without mounting it** — no display object is created,
+ * nothing is added to the scene, and the result is not cached.
+ *
+ * Uses the same {@link textStyleFor} the renderer would, so the numbers match
+ * what a `label` decoration will actually occupy. That's what makes it safe
+ * for sizing geometry *around* a label (a tab, a header band, a pill) before
+ * the label exists.
+ *
+ * `html-text` content is not measured — laying out HTML requires a real
+ * `HTMLText` instance and a style resolve pass. Returns `null` there so
+ * callers fall back to an authored size rather than a fabricated one.
+ */
+export function measureLabelContent(
+  content: LabelContent,
+  wrap?: LabelWrap,
+): { width: number; height: number } | null {
+  if (content.kind !== 'text') return null;
+  const metrics = CanvasTextMetrics.measureText(
+    content.text,
+    new TextStyle(textStyleFor(content, withDerivedMaxLines(wrap))),
+  );
+  return { width: metrics.width, height: metrics.height };
 }
 
 // ─── Style builders ────────────────────────────────────────────────────────

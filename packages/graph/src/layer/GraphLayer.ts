@@ -57,6 +57,7 @@ import {
   type ArcShapeOption,
   type CircleShapeOption,
   type RectShapeOption,
+  type TabbedRectShapeOption,
   type RegularPolygonShapeOption,
   type StarShapeOption,
   type ResolvableEdgeStyle,
@@ -1363,6 +1364,14 @@ export class GraphLayer extends WorldLayer<
       pos = fitted.pos;
     }
 
+    // Size a folder frame's tab to its title. Deliberately outside the
+    // `!collapsed` branch above: a collapsed group skips the auto-fit
+    // projection entirely, but it still draws a tab and still needs the
+    // title to fit in it.
+    if (shape.kind === 'tabbed-rect') {
+      shape = this.sizeTabToLabel(shape as TabbedRectShapeOption, style, group);
+    }
+
     // Visibility — a node is culled when any ancestor is a collapsed group, or
     // when it is explicitly hidden (first-class per-element visibility). We
     // still emit a spec (so decorations / size are valid for any incident edge
@@ -2241,6 +2250,12 @@ export class GraphLayer extends WorldLayer<
    * For `kind: 'rect'`: `pos` becomes top-left of the framed area; size is
    * `max(declared, childrenAABB) + 2 · padding (+ headerHeight on y)`.
    *
+   * For `kind: 'tabbed-rect'`: same, except `headerHeight` becomes the
+   * **tab** above the body rather than dead space inside it. The body wraps
+   * the children bbox on its own, so `pos` still lands at
+   * `childrenBBox.min − padding − tabHeight` and the overall footprint is
+   * unchanged — the header band is simply drawn now instead of implied.
+   *
    * For `kind: 'circle'`: `pos` becomes the AABB centroid; `radius` is
    * `max(declared, AABB half-diagonal) + padding`. The half-diagonal is
    * the smallest enclosing-circle approximation that's still cheap
@@ -2281,6 +2296,32 @@ export class GraphLayer extends WorldLayer<
       const out: NodeShapeOptions = { ...rectShape, width, height };
       return { shape: out, pos: nextPos };
     }
+    if (shape.kind === 'tabbed-rect') {
+      const tabbed = shape as TabbedRectShapeOption;
+      let width = group.width ?? tabbed.width;
+      // `height` on a tabbed rect is the body alone, so the header band is
+      // NOT added to it — it's the separate `tabHeight` above.
+      let height = group.height ?? tabbed.height;
+      let nextPos = pos;
+      if (bbox) {
+        width = Math.max(width ?? 0, bbox.maxX - bbox.minX) + 2 * padding;
+        height = Math.max(height ?? 0, bbox.maxY - bbox.minY) + 2 * padding;
+        nextPos = { x: bbox.minX - padding, y: bbox.minY - padding - header };
+      } else {
+        width = Math.max(width ?? 0, 1);
+        height = Math.max(height ?? 0, 1);
+      }
+      const out: NodeShapeOptions = {
+        ...tabbed,
+        width,
+        height,
+        ...(header > 0 ? { tabHeight: header } : {}),
+        ...(group.tabAlign !== undefined ? { tabAlign: group.tabAlign } : {}),
+        ...(group.tabOffset !== undefined ? { tabOffset: group.tabOffset } : {}),
+        ...(group.tabSkew !== undefined ? { tabSkew: group.tabSkew } : {}),
+      };
+      return { shape: out, pos: nextPos };
+    }
     if (shape.kind === 'circle') {
       const circleShape = shape as { kind: 'circle'; radius: number };
       let radius = group.radius ?? circleShape.radius;
@@ -2302,6 +2343,46 @@ export class GraphLayer extends WorldLayer<
     }
     // Non-fit-aware shape kind — pass through.
     return { shape, pos };
+  }
+
+  /**
+   * Resolve a `tabbed-rect`'s `tabWidth` from the node's title so the tab
+   * is exactly as wide as the text it carries, plus `group.tabPadding` on
+   * each side.
+   *
+   * An explicit `group.tabWidth` (or, with no `group` at all, whatever the
+   * shape already declares) wins — auto-sizing only fills a gap. Measurement
+   * needs the renderer's font resolution, so pre-mount the declared width
+   * stands; the first post-mount render re-projects with the real number.
+   *
+   * Why measure at all: a frame that auto-fits its children changes size as
+   * the graph changes, and a fixed tab either clips a long title or leaves a
+   * short one swimming. Deriving the tab from the text is what lets a set of
+   * frames with unrelated titles stay visually consistent with no per-frame
+   * numbers in the data.
+   */
+  private sizeTabToLabel(
+    shape: TabbedRectShapeOption,
+    style: NodeStyle,
+    group: GroupOptions | undefined,
+  ): TabbedRectShapeOption {
+    const declared = group?.tabWidth;
+    if (declared !== undefined) return { ...shape, tabWidth: declared };
+
+    const labelStyle = style.labelStyle ?? buildShapeLabelStyle(style);
+    const measured = labelStyle
+      ? this._renderer?.measureLabel(labelStyle.content, labelStyle.wrap)
+      : undefined;
+    if (!measured) return shape;
+
+    const pad = group?.tabPadding ?? 10;
+    // The slant tapers the tab's *top* edge, so its run has to be added on
+    // top of the text budget — otherwise leaning the tab would push the
+    // title into the taper. A centred tab leans on both sides.
+    const skew = shape.tabSkew ?? 0;
+    const slantSides = (shape.tabAlign ?? 'left') === 'center' ? 2 : 1;
+    const width = measured.width + 2 * pad + skew * slantSides;
+    return { ...shape, tabWidth: Math.min(shape.width, width) };
   }
 
   /**
