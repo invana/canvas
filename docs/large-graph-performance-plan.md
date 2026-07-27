@@ -8,6 +8,20 @@ cause**, the **options we're exploring**, and the **order to do them in**.
 Companion to the telemetry work (branch `feat/canvas-telemetry-otel`) that we used
 to *measure* all of this — see "How we measured it" below.
 
+> **Scope note — this doc is about *steady state*.** Everything below assumes the
+> graph is already mounted and asks what each frame costs. The disjoint problem —
+> the seconds-long freeze while ~25k elements are *installed* into the renderer on
+> load — is [`large-graph-load-pipeline-plan.md`](./large-graph-load-pipeline-plan.md).
+> None of the levers here touch it: culling toggles `renderable` on instances that
+> already exist, and frame-coalesced flush changes when a flush runs, not how much
+> one flush does.
+>
+> Both docs sit on top of [`render-pipeline-plan.md`](./render-pipeline-plan.md) —
+> the render-intent queue + cost classes + frame budget. Several options below are
+> really *class policies* in that model (G "hover fast-path" **is** the `restyle`
+> class; E "gate hit-test by zoom" is adjacent), so check there before
+> implementing one twice.
+
 ---
 
 ## 1. Symptom
