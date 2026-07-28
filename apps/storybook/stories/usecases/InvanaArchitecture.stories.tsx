@@ -10,7 +10,7 @@
  *
  *   - **Stages → auto-fitting group frames.** Each numbered stage (1 · Data
  *     Sources … 8 · Learning) plus Memory / Audit / Reversibility is a *group
- *     node* (`style.group`): a pastel `tabbed-rect` drawn behind its `parentId`
+ *     node* (`style.group`): a tinted `tabbed-rect` drawn behind its `parentId`
  *     members (`autoFit: true` → the frame wraps its children; `headerHeight`
  *     is the folder tab above them). The stage title is an ordinary
  *     `inside-center` label — a `tabbed-rect` routes every `inside-*` placement
@@ -19,13 +19,22 @@
  *     background pill: the tab is real geometry, not a floated chip.
  *   - **Items → plain rect nodes.** Every box is a `rect` shape with a centred
  *     `labelText`; multi-line captions are plain `\n`s in that string, so no
- *     composite card / resolver is needed. The white fill + grey border + label
- *     font live **once** on the layer template (`layers.graph.node.style`); a
- *     node only carries what differs — its id, `parentId`, position, box size
- *     and caption.
+ *     composite card is needed.
  *   - **The learning loop → labelled edges.** The numbered flow (1→9) is thin
  *     smooth arrows; the feedback / side links (ranked strategies, recall
  *     episodes, decision log, compensating inverse) are dashed.
+ *
+ * **Styling is by node *type*, not per node.** Every node declares
+ * `type: 'stage' | 'box'`, and the whole look lives once on the layer template
+ * (`layers.graph.node.style`), whose fields are **resolvers** — `GraphLayer`
+ * runs each one against the `GraphNode` at render, so `shape`, `group` and the
+ * label fields branch on `node.type`. A node therefore carries only what is
+ * genuinely its own: id, `parentId`, position, caption, and (for a box) its
+ * `data: { w, h }` — box geometry is diagram *content*, so it rides on the data
+ * payload the shape resolver reads, not on a per-node style block.
+ *
+ * A per-instance override is still just a per-node `style` field (it resolves
+ * above the template); this diagram simply doesn't need one.
  *
  * **Positions are authored, not laid out** (`activeLayout: ''`) — the arrangement
  * *is* the diagram, so every box carries the coordinate it has in the source.
@@ -34,7 +43,7 @@
  * `childrenBBox.min − padding − headerHeight`, which is what each group's
  * `position` repeats so a *collapsed* stage stays put. On a `tabbed-rect` that
  * top-left is the top of the **tab**, and `shape.height` describes the body
- * alone — so the footprint is identical to the plain-rect version it replaced.
+ * alone.
  *
  * **Light / dark comes from the theme, in two halves.** `GraphCanvasApp` already
  * mounts the sole theme publisher (`ThemeBehaviour`) plus `CanvasThemeSync`, so
@@ -50,11 +59,12 @@
  *   - **Box fill + edge-label pill** — patched on the layer template
  *     (`bgFill` / `labelBackgroundFill`): white on light, near-black on dark, so
  *     a box always reads as a card sitting *on* its stage tint.
- *   - **Stage tints** — each frame carries **two** overlays in its `state`
- *     catalogue, `stage` (pastel) and `stageDark` (the same hue at card depth),
- *     each with its own frame border + title colour. The handler only flips
- *     which one is active in `states`. Authored `states` are independent of the
- *     runtime hover/selection states, so the flip can't disturb them.
+ *   - **Stage tints** — one `STAGE_TINT` map keyed by group id, read by the two
+ *     layer-level state overlays `stage` (pastel) and `stageDark` (the same hue
+ *     at card depth), each carrying its own frame border + title colour. A stage
+ *     node just names which one is active in `states`, and the handler flips it.
+ *     Authored `states` are independent of the runtime hover/selection states, so
+ *     the flip can't disturb them.
  *
  * One more engine detail, easy to trip over: `bgFill` always wins over a shape's
  * own `fill`, so the box fill is set as `bgFill` on the layer template —
@@ -69,6 +79,7 @@ import type {
   GraphEdge,
   GraphLayer,
   GraphNode,
+  NodeShapeOptions,
   ThemeBehaviour,
 } from '@invana/graph';
 import { CollapseExpandBehaviour, MiniMapLayer } from '@invana/canvas-react';
@@ -82,527 +93,378 @@ type Story = StoryObj;
 
 export const InvanaArchitecture: Story = {
   render: () => {
-    // Stage frames. `position` = the frame's top-left (children bbox − 14 pad −
-    // 28 tab); `shape.width/height` is the auto-fit *floor*, which doubles as
-    // the size a stage collapses to. `tabWidth` here is only the pre-measure
-    // fallback — the layer overwrites it with the title's measured width once
-    // the renderer is up, which is why every stage reads identically no matter
-    // how long its title is.
+    // Two node types, and nothing else about the look lives here:
     //
-    // The stage tint rides on a **state overlay** (`states: ['stage']`), not on
-    // `style`: publishing a palette rewrites every group node's `style.bgFill` /
-    // `style.bgStrokeColor` from the theme's `cardBg` / `divider` roles, so a
-    // tint written to `style` is painted over the moment a theme lands. State
-    // overlays resolve *above* `style`, so these survive a theme flip.
-    //
-    // Each stage therefore declares the *pair* — `stage` (light) and `stageDark`
-    // — carrying its fill, frame border and title colour; `onReady` flips which
-    // one is active whenever the theme changes. Nothing else about a stage is
-    // theme-dependent.
+    //   - `stage` — a group frame. `position` is the frame's top-left (children
+    //     bbox − 14 pad − 28 tab), which is also where a *collapsed* stage
+    //     stays. `states: ['stage']` names the active tint overlay; the
+    //     `theme:change` handler swaps it for `stageDark`.
+    //   - `box`  — an item. `data: { w, h }` is its footprint, read by the
+    //     template's `shape` resolver; `parentId` puts it inside a stage.
     const data: GraphData = useMemo(
       () => ({
         nodes: [
           // ── Stage frames ────────────────────────────────────────────────
           {
             id: 'simulation',
+            type: 'stage',
             states: ['stage'],
-            state: {
-              stage: { bgFill: 0xf5f3ff, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
-              stageDark: { bgFill: 0x231f35, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
-            },
             position: { x: 1202, y: 84 },
-            style: {
-              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
-              bgStrokeWidth: 1,
-              group: {
-                autoFit: true,
-                padding: 14,
-                headerHeight: 28,
-                tabSkew: 12,
-                behindChildren: true,
-                togglePlacement: 'top-right',
-              },
-              labelText: '5 · Simulation Layer — weigh it first',
-              labelPlacement: 'inside-center',
-              labelFontSize: 11,
-              labelFontWeight: 600,
-            },
+            style: { labelText: '5 · Simulation Layer — weigh it first' },
           },
           {
             id: 'memory',
+            type: 'stage',
             states: ['stage'],
-            state: {
-              stage: { bgFill: 0xfefce8, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
-              stageDark: { bgFill: 0x322d18, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
-            },
             position: { x: 792, y: 210 },
-            style: {
-              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
-              bgStrokeWidth: 1,
-              group: {
-                autoFit: true,
-                padding: 14,
-                headerHeight: 28,
-                tabSkew: 12,
-                behindChildren: true,
-                togglePlacement: 'top-right',
-              },
-              labelText: 'Memory',
-              labelPlacement: 'inside-center',
-              labelFontSize: 11,
-              labelFontWeight: 600,
-            },
+            style: { labelText: 'Memory' },
           },
           {
             id: 'decision',
+            type: 'stage',
             states: ['stage'],
-            state: {
-              stage: { bgFill: 0xf0fdfa, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
-              stageDark: { bgFill: 0x13302c, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
-            },
             position: { x: 1242, y: 260 },
-            style: {
-              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
-              bgStrokeWidth: 1,
-              group: {
-                autoFit: true,
-                padding: 14,
-                headerHeight: 28,
-                tabSkew: 12,
-                behindChildren: true,
-                togglePlacement: 'top-right',
-              },
-              labelText: '4 · Decision Runtime — decide',
-              labelPlacement: 'inside-center',
-              labelFontSize: 11,
-              labelFontWeight: 600,
-            },
+            style: { labelText: '4 · Decision Runtime — decide' },
           },
           {
             id: 'learning',
+            type: 'stage',
             states: ['stage'],
-            state: {
-              stage: { bgFill: 0xfff7ed, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
-              stageDark: { bgFill: 0x33261a, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
-            },
             position: { x: 16, y: 288 },
-            style: {
-              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
-              bgStrokeWidth: 1,
-              group: {
-                autoFit: true,
-                padding: 14,
-                headerHeight: 28,
-                tabSkew: 12,
-                behindChildren: true,
-                togglePlacement: 'top-right',
-              },
-              labelText: '8 · Learning Layer — learn',
-              labelPlacement: 'inside-center',
-              labelFontSize: 11,
-              labelFontWeight: 600,
-            },
+            style: { labelText: '8 · Learning Layer — learn' },
           },
           {
             id: 'observe',
+            type: 'stage',
             states: ['stage'],
-            state: {
-              stage: { bgFill: 0xfefce8, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
-              stageDark: { bgFill: 0x322d18, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
-            },
             position: { x: 1518, y: 372 },
-            style: {
-              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
-              bgStrokeWidth: 1,
-              group: {
-                autoFit: true,
-                padding: 14,
-                headerHeight: 28,
-                tabSkew: 12,
-                behindChildren: true,
-                togglePlacement: 'top-right',
-              },
-              labelText: '7 · Observe',
-              labelPlacement: 'inside-center',
-              labelFontSize: 11,
-              labelFontWeight: 600,
-            },
+            style: { labelText: '7 · Observe' },
           },
           {
             id: 'audit',
+            type: 'stage',
             states: ['stage'],
-            state: {
-              stage: { bgFill: 0xf4f4f5, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
-              stageDark: { bgFill: 0x27272a, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
-            },
             position: { x: 1818, y: 392 },
-            style: {
-              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
-              bgStrokeWidth: 1,
-              group: {
-                autoFit: true,
-                padding: 14,
-                headerHeight: 28,
-                tabSkew: 12,
-                behindChildren: true,
-                togglePlacement: 'top-right',
-              },
-              labelText: 'Audit Layer',
-              labelPlacement: 'inside-center',
-              labelFontSize: 11,
-              labelFontWeight: 600,
-            },
+            style: { labelText: 'Audit Layer' },
           },
           {
             id: 'context',
+            type: 'stage',
             states: ['stage'],
-            state: {
-              stage: { bgFill: 0xecfdf5, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
-              stageDark: { bgFill: 0x143024, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
-            },
             position: { x: 1192, y: 476 },
-            style: {
-              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
-              bgStrokeWidth: 1,
-              group: {
-                autoFit: true,
-                padding: 14,
-                headerHeight: 28,
-                tabSkew: 12,
-                behindChildren: true,
-                togglePlacement: 'top-right',
-              },
-              labelText: '3 · Context Layer — define the system',
-              labelPlacement: 'inside-center',
-              labelFontSize: 11,
-              labelFontWeight: 600,
-            },
+            style: { labelText: '3 · Context Layer — define the system' },
           },
           {
             id: 'data-sources',
+            type: 'stage',
             states: ['stage'],
-            state: {
-              stage: { bgFill: 0xeef2ff, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
-              stageDark: { bgFill: 0x1e2440, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
-            },
             position: { x: 210, y: 494 },
-            style: {
-              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
-              bgStrokeWidth: 1,
-              group: {
-                autoFit: true,
-                padding: 14,
-                headerHeight: 28,
-                tabSkew: 12,
-                behindChildren: true,
-                togglePlacement: 'top-right',
-              },
-              labelText: '1 · Data Sources',
-              labelPlacement: 'inside-center',
-              labelFontSize: 11,
-              labelFontWeight: 600,
-            },
+            style: { labelText: '1 · Data Sources' },
           },
           {
             id: 'reversibility',
+            type: 'stage',
             states: ['stage'],
-            state: {
-              stage: { bgFill: 0xf4f4f5, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
-              stageDark: { bgFill: 0x27272a, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
-            },
             position: { x: 1818, y: 562 },
-            style: {
-              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
-              bgStrokeWidth: 1,
-              group: {
-                autoFit: true,
-                padding: 14,
-                headerHeight: 28,
-                tabSkew: 12,
-                behindChildren: true,
-                togglePlacement: 'top-right',
-              },
-              labelText: 'Reversibility Layer',
-              labelPlacement: 'inside-center',
-              labelFontSize: 11,
-              labelFontWeight: 600,
-            },
+            style: { labelText: 'Reversibility Layer' },
           },
           {
             id: 'ingestion',
+            type: 'stage',
             states: ['stage'],
-            state: {
-              stage: { bgFill: 0xecfeff, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
-              stageDark: { bgFill: 0x122e33, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
-            },
             position: { x: 498, y: 660 },
-            style: {
-              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
-              bgStrokeWidth: 1,
-              group: {
-                autoFit: true,
-                padding: 14,
-                headerHeight: 28,
-                tabSkew: 12,
-                behindChildren: true,
-                togglePlacement: 'top-right',
-              },
-              labelText: '2 · Ingestion',
-              labelPlacement: 'inside-center',
-              labelFontSize: 11,
-              labelFontWeight: 600,
-            },
+            style: { labelText: '2 · Ingestion' },
           },
           {
             id: 'action',
+            type: 'stage',
             states: ['stage'],
-            state: {
-              stage: { bgFill: 0xfef2f2, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
-              stageDark: { bgFill: 0x351f1f, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
-            },
             position: { x: 1518, y: 722 },
-            style: {
-              shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
-              bgStrokeWidth: 1,
-              group: {
-                autoFit: true,
-                padding: 14,
-                headerHeight: 28,
-                tabSkew: 12,
-                behindChildren: true,
-                togglePlacement: 'top-right',
-              },
-              labelText: '6 · Action — act, reversibly',
-              labelPlacement: 'inside-center',
-              labelFontSize: 11,
-              labelFontWeight: 600,
-            },
+            style: { labelText: '6 · Action — act, reversibly' },
           },
 
           // ── 5 · Simulation Layer ────────────────────────────────────────
           {
             id: 'sim-strategy',
+            type: 'box',
             parentId: 'simulation',
+            data: { w: 142, h: 28 },
             position: { x: 1216, y: 126 },
-            style: { shape: { kind: 'rect', width: 142, height: 28, cornerRadius: 3 }, labelText: 'Strategy Generation' },
+            style: { labelText: 'Strategy Generation' },
           },
           {
             id: 'sim-model',
+            type: 'box',
             parentId: 'simulation',
+            data: { w: 136, h: 40 },
             position: { x: 1216, y: 184 },
-            style: { shape: { kind: 'rect', width: 136, height: 40, cornerRadius: 3 }, labelText: 'Forward Model /\nDomain Simulator' },
+            style: { labelText: 'Forward Model /\nDomain Simulator' },
           },
           {
             id: 'sim-score',
+            type: 'box',
             parentId: 'simulation',
+            data: { w: 130, h: 40 },
             position: { x: 1518, y: 184 },
-            style: { shape: { kind: 'rect', width: 130, height: 40, cornerRadius: 3 }, labelText: 'Performance &\nImpact Scoring' },
+            style: { labelText: 'Performance &\nImpact Scoring' },
           },
 
           // ── Memory ─────────────────────────────────────────────────────
           {
             id: 'mem-episodes',
+            type: 'box',
             parentId: 'memory',
+            data: { w: 130, h: 40 },
             position: { x: 806, y: 252 },
-            style: { shape: { kind: 'rect', width: 130, height: 40, cornerRadius: 3 }, labelText: 'Experience /\nEpisode Store' },
+            style: { labelText: 'Experience /\nEpisode Store' },
           },
           {
             id: 'mem-weights',
+            type: 'box',
             parentId: 'memory',
+            data: { w: 130, h: 40 },
             position: { x: 806, y: 318 },
-            style: { shape: { kind: 'rect', width: 130, height: 40, cornerRadius: 3 }, labelText: 'Updated Policy &\nStrategy Weights' },
+            style: { labelText: 'Updated Policy &\nStrategy Weights' },
           },
 
           // ── 4 · Decision Runtime ───────────────────────────────────────
           {
             id: 'dec-policy',
+            type: 'box',
             parentId: 'decision',
+            data: { w: 62, h: 28 },
             position: { x: 1256, y: 330 },
-            style: { shape: { kind: 'rect', width: 62, height: 28, cornerRadius: 3 }, labelText: 'Policy' },
+            style: { labelText: 'Policy' },
           },
           {
             id: 'dec-agents',
+            type: 'box',
             parentId: 'decision',
+            data: { w: 150, h: 40 },
             position: { x: 1518, y: 314 },
-            style: { shape: { kind: 'rect', width: 150, height: 40, cornerRadius: 3 }, labelText: 'AI Assistants / Agents\n(LLM + tools)' },
+            style: { labelText: 'AI Assistants / Agents\n(LLM + tools)' },
           },
           {
             id: 'dec-gates',
+            type: 'box',
             parentId: 'decision',
+            data: { w: 148, h: 52 },
             position: { x: 1828, y: 302 },
-            style: {
-              shape: { kind: 'rect', width: 148, height: 52, cornerRadius: 3 },
-              labelText: 'Confidence &\nApproval Gates\n(human-in-the-loop)',
-            },
+            style: { labelText: 'Confidence &\nApproval Gates\n(human-in-the-loop)' },
           },
 
           // ── 8 · Learning Layer ─────────────────────────────────────────
           {
             id: 'lrn-reward',
+            type: 'box',
             parentId: 'learning',
+            data: { w: 152, h: 40 },
             position: { x: 30, y: 330 },
-            style: { shape: { kind: 'rect', width: 152, height: 40, cornerRadius: 3 }, labelText: 'Reward Computation\n(predicted vs actual)' },
+            style: { labelText: 'Reward Computation\n(predicted vs actual)' },
           },
           {
             id: 'lrn-credit',
+            type: 'box',
             parentId: 'learning',
+            data: { w: 132, h: 28 },
             position: { x: 272, y: 336 },
-            style: { shape: { kind: 'rect', width: 132, height: 28, cornerRadius: 3 }, labelText: 'Credit Assignment' },
+            style: { labelText: 'Credit Assignment' },
           },
           {
             id: 'lrn-reinforced',
+            type: 'box',
             parentId: 'learning',
+            data: { w: 146, h: 28 },
             position: { x: 514, y: 336 },
-            style: { shape: { kind: 'rect', width: 146, height: 28, cornerRadius: 3 }, labelText: 'Reinforced Learnings' },
+            style: { labelText: 'Reinforced Learnings' },
           },
 
           // ── 7 · Observe ────────────────────────────────────────────────
           {
             id: 'obs-outcome',
+            type: 'box',
             parentId: 'observe',
+            data: { w: 150, h: 40 },
             position: { x: 1532, y: 414 },
-            style: { shape: { kind: 'rect', width: 150, height: 40, cornerRadius: 3 }, labelText: 'Outcome collection\n(back from the world)' },
+            style: { labelText: 'Outcome collection\n(back from the world)' },
           },
 
           // ── Audit Layer ────────────────────────────────────────────────
           {
             id: 'aud-lineage',
+            type: 'box',
             parentId: 'audit',
+            data: { w: 146, h: 28 },
             position: { x: 1832, y: 434 },
-            style: { shape: { kind: 'rect', width: 146, height: 28, cornerRadius: 3 }, labelText: 'Provenance & Lineage' },
+            style: { labelText: 'Provenance & Lineage' },
           },
           {
             id: 'aud-log',
+            type: 'box',
             parentId: 'audit',
+            data: { w: 146, h: 40 },
             position: { x: 1832, y: 490 },
-            style: { shape: { kind: 'rect', width: 146, height: 40, cornerRadius: 3 }, labelText: 'Append-only\nDecision Log' },
+            style: { labelText: 'Append-only\nDecision Log' },
           },
 
           // ── 3 · Context Layer ──────────────────────────────────────────
           {
             id: 'ctx-obj',
+            type: 'box',
             parentId: 'context',
+            data: { w: 158, h: 40 },
             position: { x: 1206, y: 518 },
-            style: { shape: { kind: 'rect', width: 158, height: 40, cornerRadius: 3 }, labelText: "Objectives & Rewards\n(what 'good' means)" },
+            style: { labelText: "Objectives & Rewards\n(what 'good' means)" },
           },
           {
             id: 'ctx-ontology',
+            type: 'box',
             parentId: 'context',
+            data: { w: 158, h: 52 },
             position: { x: 1206, y: 588 },
-            style: {
-              shape: { kind: 'rect', width: 158, height: 52, cornerRadius: 3 },
-              labelText: 'Ontology\n(entities · relationships\n· rules · constraints)',
-            },
+            style: { labelText: 'Ontology\n(entities · relationships\n· rules · constraints)' },
           },
           {
             id: 'ctx-kg',
+            type: 'box',
             parentId: 'context',
+            data: { w: 138, h: 40 },
             position: { x: 1518, y: 590 },
-            style: { shape: { kind: 'rect', width: 138, height: 40, cornerRadius: 3 }, labelText: 'Knowledge Graph\n(live world state)' },
+            style: { labelText: 'Knowledge Graph\n(live world state)' },
           },
 
           // ── 1 · Data Sources ───────────────────────────────────────────
           {
             id: 'ds-apis',
+            type: 'box',
             parentId: 'data-sources',
+            data: { w: 122, h: 28 },
             position: { x: 274, y: 536 },
-            style: { shape: { kind: 'rect', width: 122, height: 28, cornerRadius: 3 }, labelText: 'APIs & Services' },
+            style: { labelText: 'APIs & Services' },
           },
           {
             id: 'ds-db',
+            type: 'box',
             parentId: 'data-sources',
+            data: { w: 122, h: 40 },
             position: { x: 274, y: 590 },
-            style: { shape: { kind: 'rect', width: 122, height: 40, cornerRadius: 3 }, labelText: 'Databases\n(SQL / NoSQL)' },
+            style: { labelText: 'Databases\n(SQL / NoSQL)' },
           },
           {
             id: 'ds-graph',
+            type: 'box',
             parentId: 'data-sources',
+            data: { w: 222, h: 40 },
             position: { x: 224, y: 658 },
-            style: { shape: { kind: 'rect', width: 222, height: 40, cornerRadius: 3 }, labelText: 'Graph DBs\n(Neo4j · JanusGraph · ArcadeDB)' },
+            style: { labelText: 'Graph DBs\n(Neo4j · JanusGraph · ArcadeDB)' },
           },
           {
             id: 'ds-files',
+            type: 'box',
             parentId: 'data-sources',
+            data: { w: 122, h: 28 },
             position: { x: 274, y: 726 },
-            style: { shape: { kind: 'rect', width: 122, height: 28, cornerRadius: 3 }, labelText: 'Files & Documents' },
+            style: { labelText: 'Files & Documents' },
           },
           {
             id: 'ds-streams',
+            type: 'box',
             parentId: 'data-sources',
+            data: { w: 122, h: 40 },
             position: { x: 274, y: 780 },
-            style: { shape: { kind: 'rect', width: 122, height: 40, cornerRadius: 3 }, labelText: 'Event Streams\n(Kafka · queues)' },
+            style: { labelText: 'Event Streams\n(Kafka · queues)' },
           },
           {
             id: 'ds-sensors',
+            type: 'box',
             parentId: 'data-sources',
+            data: { w: 170, h: 28 },
             position: { x: 250, y: 848 },
-            style: { shape: { kind: 'rect', width: 170, height: 28, cornerRadius: 3 }, labelText: 'Sensors / IoT / Telemetry' },
+            style: { labelText: 'Sensors / IoT / Telemetry' },
           },
 
           // ── Reversibility Layer ────────────────────────────────────────
           {
             id: 'rev-state',
+            type: 'box',
             parentId: 'reversibility',
+            data: { w: 146, h: 28 },
             position: { x: 1832, y: 604 },
-            style: { shape: { kind: 'rect', width: 146, height: 28, cornerRadius: 3 }, labelText: 'Event-sourced State' },
+            style: { labelText: 'Event-sourced State' },
           },
           {
             id: 'rev-undo',
+            type: 'box',
             parentId: 'reversibility',
+            data: { w: 146, h: 28 },
             position: { x: 1832, y: 660 },
-            style: { shape: { kind: 'rect', width: 146, height: 28, cornerRadius: 3 }, labelText: 'Undo / Rollback' },
+            style: { labelText: 'Undo / Rollback' },
           },
 
           // ── 2 · Ingestion ──────────────────────────────────────────────
           {
             id: 'in-etl',
+            type: 'box',
             parentId: 'ingestion',
+            data: { w: 132, h: 28 },
             position: { x: 520, y: 706 },
-            style: { shape: { kind: 'rect', width: 132, height: 28, cornerRadius: 3 }, labelText: 'Connectors & ETL' },
+            style: { labelText: 'Connectors & ETL' },
           },
           {
             id: 'in-schema',
+            type: 'box',
             parentId: 'ingestion',
+            data: { w: 128, h: 28 },
             position: { x: 808, y: 706 },
-            style: { shape: { kind: 'rect', width: 128, height: 28, cornerRadius: 3 }, labelText: 'Schema Mapping' },
+            style: { labelText: 'Schema Mapping' },
           },
           {
             id: 'in-entity',
+            type: 'box',
             parentId: 'ingestion',
+            data: { w: 128, h: 40 },
             position: { x: 1222, y: 702 },
-            style: { shape: { kind: 'rect', width: 128, height: 40, cornerRadius: 3 }, labelText: 'Entity Resolution\n& Dedup' },
+            style: { labelText: 'Entity Resolution\n& Dedup' },
           },
           {
             id: 'in-cdc',
+            type: 'box',
             parentId: 'ingestion',
+            data: { w: 148, h: 40 },
             position: { x: 512, y: 760 },
-            style: { shape: { kind: 'rect', width: 148, height: 40, cornerRadius: 3 }, labelText: 'Change Data Capture\n(streaming)' },
+            style: { labelText: 'Change Data Capture\n(streaming)' },
           },
 
           // ── 6 · Action ─────────────────────────────────────────────────
           {
             id: 'act-exec',
+            type: 'box',
             parentId: 'action',
+            data: { w: 138, h: 28 },
             position: { x: 1532, y: 764 },
-            style: { shape: { kind: 'rect', width: 138, height: 28, cornerRadius: 3 }, labelText: 'Action Executor' },
+            style: { labelText: 'Action Executor' },
           },
           {
             id: 'act-effectors',
+            type: 'box',
             parentId: 'action',
+            data: { w: 152, h: 28 },
             position: { x: 1828, y: 764 },
-            style: { shape: { kind: 'rect', width: 152, height: 28, cornerRadius: 3 }, labelText: 'Effectors → real systems' },
+            style: { labelText: 'Effectors → real systems' },
           },
           {
             id: 'act-inverse',
+            type: 'box',
             parentId: 'action',
+            data: { w: 152, h: 28 },
             position: { x: 1828, y: 820 },
-            style: { shape: { kind: 'rect', width: 152, height: 28, cornerRadius: 3 }, labelText: 'Compensating Inverse' },
+            style: { labelText: 'Compensating Inverse' },
           },
         ] satisfies GraphNode[],
 
         // Solid = the numbered loop; dashed (`strokeDashArray`) = the feedback /
         // side links. Everything else about an edge — colour, weight, arrowhead,
-        // smooth path, label font + white pill — is on the layer template.
+        // smooth path, label font + pill — is on the layer template.
         edges: [
           // 1 · sources → ingestion
           { id: 'e-apis-etl', source: 'ds-apis', target: 'in-etl' },
@@ -665,8 +527,25 @@ export const InvanaArchitecture: Story = {
       [],
     );
 
-    const config = useMemo(
-      () => ({
+    const config = useMemo(() => {
+      // The one place a stage's colour is authored: hue per group id, in both
+      // modes. The two state overlays below read it, so adding a stage is an id
+      // + a tint pair — no per-node style block anywhere.
+      const STAGE_TINT: Record<string, { light: number; dark: number }> = {
+        simulation: { light: 0xf5f3ff, dark: 0x231f35 },
+        memory: { light: 0xfefce8, dark: 0x322d18 },
+        decision: { light: 0xf0fdfa, dark: 0x13302c },
+        learning: { light: 0xfff7ed, dark: 0x33261a },
+        observe: { light: 0xfefce8, dark: 0x322d18 },
+        audit: { light: 0xf4f4f5, dark: 0x27272a },
+        context: { light: 0xecfdf5, dark: 0x143024 },
+        'data-sources': { light: 0xeef2ff, dark: 0x1e2440 },
+        reversibility: { light: 0xf4f4f5, dark: 0x27272a },
+        ingestion: { light: 0xecfeff, dark: 0x122e33 },
+        action: { light: 0xfef2f2, dark: 0x351f1f },
+      };
+
+      return {
         // Positions are authored — no layout runs. `fitOnLoad` (on by default)
         // frames the diagram once the first paint lands.
         activeLayout: '',
@@ -675,27 +554,75 @@ export const InvanaArchitecture: Story = {
           // from the published palette's `surface` role, which is the page
           // backdrop in both modes. Pinning a colour here would freeze it.
           graph: {
-            // Every box shares this look; a node only overrides its box size +
-            // caption. `bgFill` (not the shape's own `fill`) is what the
-            // renderer paints, and it must be set here or the app's default
-            // slate node fill wins.
+            // The whole node look, by type. `GraphLayer` resolves every template
+            // field against the `GraphNode` before rendering, so a field that
+            // differs between a stage frame and a box is a `(node) => …` branch
+            // rather than 43 per-node style blocks.
             //
-            // The colours below are the *light* values, and they're only the
-            // pre-theme seed: `bgStrokeColor` / `labelColor` are re-published by
+            // The colours here are the *light* values, and only the pre-theme
+            // seed: `bgStrokeColor` / `labelColor` are re-published by
             // `GraphLayer` from the palette's `stroke` / `foreground` roles, and
             // `bgFill` is patched per mode by the `theme:change` handler in
-            // `onReady` (the palette has no "box fill" role to read).
+            // `onReady` (the palette has no "box fill" role to read). `bgFill`
+            // (not the shape's own `fill`) is what the renderer paints, and it
+            // must be set here or the app's default slate node fill wins.
             node: {
               style: {
-                shape: { kind: 'rect', width: 130, height: 28, cornerRadius: 3 },
+                // A stage is a folder silhouette whose body auto-fits its
+                // children; `width`/`height` are the auto-fit *floor*, which
+                // doubles as the size a stage collapses to, and `tabWidth` is
+                // only the pre-measure fallback — the layer overwrites it with
+                // the title's measured width once the renderer is up. A box is
+                // a plain rect sized from its own `data`.
+                shape: (node: GraphNode): NodeShapeOptions => {
+                  if (node.type === 'stage') {
+                    return { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 };
+                  }
+                  const box = node.data as { w: number; h: number };
+                  return { kind: 'rect', width: box.w, height: box.h, cornerRadius: 3 };
+                },
+                // Only a stage is a group: the frame sits behind its `parentId`
+                // members, wraps them, and carries the collapse toggle.
+                group: (node: GraphNode) =>
+                  node.type === 'stage'
+                    ? {
+                        autoFit: true,
+                        padding: 14,
+                        headerHeight: 28,
+                        tabSkew: 12,
+                        behindChildren: true,
+                        togglePlacement: 'top-right',
+                      }
+                    : undefined,
                 bgFill: 0xffffff,
                 bgStrokeColor: 0x9ca3af,
                 bgStrokeWidth: 1,
-                labelPlacement: 'center',
+                // A stage title goes in the tab (`inside-*` is routed there) and
+                // reads as a heading; a box caption is centred in the box.
+                labelPlacement: (node: GraphNode) => (node.type === 'stage' ? 'inside-center' : 'center'),
+                labelFontWeight: (node: GraphNode) => (node.type === 'stage' ? 600 : 400),
                 labelAlign: 'center',
                 labelColor: 0x111827,
                 labelFontSize: 11,
                 labelLineHeight: 14,
+              },
+              // The stage tint rides on a **state overlay**, not on `style`:
+              // publishing a palette rewrites every group node's `style.bgFill` /
+              // `style.bgStrokeColor` from the theme's `cardBg` / `divider`
+              // roles, so a tint written to `style` is painted over the moment a
+              // theme lands. State overlays resolve *above* `style`, so these
+              // survive a theme flip — `onReady` just swaps which name is active.
+              state: {
+                stage: {
+                  bgFill: (node: GraphNode) => STAGE_TINT[node.id]?.light ?? 0xf4f4f5,
+                  bgStrokeColor: 0xa1a1aa,
+                  labelColor: 0x27272a,
+                },
+                stageDark: {
+                  bgFill: (node: GraphNode) => STAGE_TINT[node.id]?.dark ?? 0x27272a,
+                  bgStrokeColor: 0x52525b,
+                  labelColor: 0xe4e4e7,
+                },
               },
             },
             edge: {
@@ -734,9 +661,8 @@ export const InvanaArchitecture: Story = {
           // toggle is in. Using the `light`/`dark` *shorthand* here would publish
           // an empty palette instead, and nothing on the page would recolour.
         },
-      }),
-      [],
-    );
+      };
+    }, []);
 
     const onReady = useCallback((canvas: GraphCanvas | null) => {
       if (!canvas) return;
@@ -773,14 +699,14 @@ export const InvanaArchitecture: Story = {
       // `BackgroundLayer` and `GraphLayer` recolour themselves off the published
       // palette (page backdrop, label text, node borders, arrows), so all that's
       // left is the diagram's own colours: the box fill, the edge-label pill,
-      // and which of each stage's two tint overlays is active.
+      // and which of the two stage-tint overlays is active.
       const applyThemeKind = (kind: 'light' | 'dark'): void => {
         const dark = kind === 'dark';
         canvas.update({
           layers: {
             graph: {
-              // Shallow-merged over the layer template, so the theme's own
-              // `labelColor` / `bgStrokeColor` patches survive.
+              // Shallow-merged over the layer template, so the type resolvers
+              // and the theme's own `labelColor` / `bgStrokeColor` survive.
               node: { style: { bgFill: dark ? 0x18181b : 0xffffff } },
               edge: { style: { labelBackgroundFill: dark ? 0x18181b : 0xffffff } },
             },
@@ -788,7 +714,7 @@ export const InvanaArchitecture: Story = {
         });
         const want = dark ? 'stageDark' : 'stage';
         for (const node of graph.store.nodes()) {
-          if (!node.states?.some((s) => s === 'stage' || s === 'stageDark')) continue;
+          if (node.type !== 'stage') continue;
           graph.store.updateNode(node.id, { states: [want] });
         }
       };
