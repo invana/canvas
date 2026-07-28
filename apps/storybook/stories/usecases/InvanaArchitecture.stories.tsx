@@ -1,9 +1,10 @@
 /**
  * **Invana — end-to-end architecture** — the "build systems that learn" diagram
  * rebuilt as a live graph on `<GraphCanvasApp>`, styled to match the source
- * diagram one-to-one: a white page, pastel stage frames with a folder tab at the
- * top-left, white boxes with a centred 1–3 line caption, and thin grey arrows
- * carrying the numbered flow.
+ * diagram one-to-one: tinted stage frames with a folder tab at the top-left,
+ * plain boxes with a centred 1–3 line caption, and thin grey arrows carrying the
+ * numbered flow. The whole page reads in **both light and dark** — see the
+ * theming note below.
  *
  * It maps the diagram onto three engine primitives:
  *
@@ -35,20 +36,41 @@
  * top-left is the top of the **tab**, and `shape.height` describes the body
  * alone — so the footprint is identical to the plain-rect version it replaced.
  *
- * Two engine details this story has to respect, both easy to trip over:
+ * **Light / dark comes from the theme, in two halves.** `GraphCanvasApp` already
+ * mounts the sole theme publisher (`ThemeBehaviour`) plus `CanvasThemeSync`, so
+ * the header's sun/moon toggle publishes the `default` palette's light **or**
+ * dark variant onto the engine. `BackgroundLayer` (page backdrop ← `surface`)
+ * and `GraphLayer` (label text ← `foreground`, node borders ← `stroke`, arrows +
+ * edge labels ← `muted` / `foreground`) recolour themselves off it — that's the
+ * background + text half, and it costs this story nothing.
  *
- *   1. `bgFill` always wins over a shape's own `fill`, so the white box fill is
- *      set as `bgFill` on the layer template — otherwise `GraphCanvasApp`'s
- *      default slate `bgFill: 0x94a3b8` paints every box.
- *   2. The `theme` behaviour's `light` / `dark` shorthand publishes an **empty**
- *      palette, which is what keeps role-based recolour from repainting these
- *      hand-picked pastel frames when the app theme flips. The page stays white
- *      in both modes; the app chrome around it still themes.
+ * The palette has no role for the diagram's *own* colours, so the story owns the
+ * other half and re-applies it on every `'theme:change'` (see `onReady`):
+ *
+ *   - **Box fill + edge-label pill** — patched on the layer template
+ *     (`bgFill` / `labelBackgroundFill`): white on light, near-black on dark, so
+ *     a box always reads as a card sitting *on* its stage tint.
+ *   - **Stage tints** — each frame carries **two** overlays in its `state`
+ *     catalogue, `stage` (pastel) and `stageDark` (the same hue at card depth),
+ *     each with its own frame border + title colour. The handler only flips
+ *     which one is active in `states`. Authored `states` are independent of the
+ *     runtime hover/selection states, so the flip can't disturb them.
+ *
+ * One more engine detail, easy to trip over: `bgFill` always wins over a shape's
+ * own `fill`, so the box fill is set as `bgFill` on the layer template —
+ * otherwise `GraphCanvasApp`'s default slate `bgFill: 0x94a3b8` paints every box.
  */
 
 import { useCallback, useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { GraphCanvas, GraphData, GraphEdge, GraphLayer, GraphNode } from '@invana/graph';
+import type {
+  GraphCanvas,
+  GraphData,
+  GraphEdge,
+  GraphLayer,
+  GraphNode,
+  ThemeBehaviour,
+} from '@invana/graph';
 import { CollapseExpandBehaviour, MiniMapLayer } from '@invana/canvas-react';
 import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, ToolbarItems } from '@invana/canvas-ui';
 import { ThemeProvider } from '@invana/themes';
@@ -72,6 +94,11 @@ export const InvanaArchitecture: Story = {
     // `style.bgStrokeColor` from the theme's `cardBg` / `divider` roles, so a
     // tint written to `style` is painted over the moment a theme lands. State
     // overlays resolve *above* `style`, so these survive a theme flip.
+    //
+    // Each stage therefore declares the *pair* — `stage` (light) and `stageDark`
+    // — carrying its fill, frame border and title colour; `onReady` flips which
+    // one is active whenever the theme changes. Nothing else about a stage is
+    // theme-dependent.
     const data: GraphData = useMemo(
       () => ({
         nodes: [
@@ -79,7 +106,10 @@ export const InvanaArchitecture: Story = {
           {
             id: 'simulation',
             states: ['stage'],
-            state: { stage: { bgFill: 0xf5f3ff, bgStrokeColor: 0xa1a1aa } },
+            state: {
+              stage: { bgFill: 0xf5f3ff, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
+              stageDark: { bgFill: 0x231f35, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
+            },
             position: { x: 1202, y: 84 },
             style: {
               shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
@@ -94,7 +124,6 @@ export const InvanaArchitecture: Story = {
               },
               labelText: '5 · Simulation Layer — weigh it first',
               labelPlacement: 'inside-center',
-              labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
             },
@@ -102,7 +131,10 @@ export const InvanaArchitecture: Story = {
           {
             id: 'memory',
             states: ['stage'],
-            state: { stage: { bgFill: 0xfefce8, bgStrokeColor: 0xa1a1aa } },
+            state: {
+              stage: { bgFill: 0xfefce8, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
+              stageDark: { bgFill: 0x322d18, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
+            },
             position: { x: 792, y: 210 },
             style: {
               shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
@@ -117,7 +149,6 @@ export const InvanaArchitecture: Story = {
               },
               labelText: 'Memory',
               labelPlacement: 'inside-center',
-              labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
             },
@@ -125,7 +156,10 @@ export const InvanaArchitecture: Story = {
           {
             id: 'decision',
             states: ['stage'],
-            state: { stage: { bgFill: 0xf0fdfa, bgStrokeColor: 0xa1a1aa } },
+            state: {
+              stage: { bgFill: 0xf0fdfa, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
+              stageDark: { bgFill: 0x13302c, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
+            },
             position: { x: 1242, y: 260 },
             style: {
               shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
@@ -140,7 +174,6 @@ export const InvanaArchitecture: Story = {
               },
               labelText: '4 · Decision Runtime — decide',
               labelPlacement: 'inside-center',
-              labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
             },
@@ -148,7 +181,10 @@ export const InvanaArchitecture: Story = {
           {
             id: 'learning',
             states: ['stage'],
-            state: { stage: { bgFill: 0xfff7ed, bgStrokeColor: 0xa1a1aa } },
+            state: {
+              stage: { bgFill: 0xfff7ed, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
+              stageDark: { bgFill: 0x33261a, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
+            },
             position: { x: 16, y: 288 },
             style: {
               shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
@@ -163,7 +199,6 @@ export const InvanaArchitecture: Story = {
               },
               labelText: '8 · Learning Layer — learn',
               labelPlacement: 'inside-center',
-              labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
             },
@@ -171,7 +206,10 @@ export const InvanaArchitecture: Story = {
           {
             id: 'observe',
             states: ['stage'],
-            state: { stage: { bgFill: 0xfefce8, bgStrokeColor: 0xa1a1aa } },
+            state: {
+              stage: { bgFill: 0xfefce8, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
+              stageDark: { bgFill: 0x322d18, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
+            },
             position: { x: 1518, y: 372 },
             style: {
               shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
@@ -186,7 +224,6 @@ export const InvanaArchitecture: Story = {
               },
               labelText: '7 · Observe',
               labelPlacement: 'inside-center',
-              labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
             },
@@ -194,7 +231,10 @@ export const InvanaArchitecture: Story = {
           {
             id: 'audit',
             states: ['stage'],
-            state: { stage: { bgFill: 0xf4f4f5, bgStrokeColor: 0xa1a1aa } },
+            state: {
+              stage: { bgFill: 0xf4f4f5, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
+              stageDark: { bgFill: 0x27272a, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
+            },
             position: { x: 1818, y: 392 },
             style: {
               shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
@@ -209,7 +249,6 @@ export const InvanaArchitecture: Story = {
               },
               labelText: 'Audit Layer',
               labelPlacement: 'inside-center',
-              labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
             },
@@ -217,7 +256,10 @@ export const InvanaArchitecture: Story = {
           {
             id: 'context',
             states: ['stage'],
-            state: { stage: { bgFill: 0xecfdf5, bgStrokeColor: 0xa1a1aa } },
+            state: {
+              stage: { bgFill: 0xecfdf5, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
+              stageDark: { bgFill: 0x143024, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
+            },
             position: { x: 1192, y: 476 },
             style: {
               shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
@@ -232,7 +274,6 @@ export const InvanaArchitecture: Story = {
               },
               labelText: '3 · Context Layer — define the system',
               labelPlacement: 'inside-center',
-              labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
             },
@@ -240,7 +281,10 @@ export const InvanaArchitecture: Story = {
           {
             id: 'data-sources',
             states: ['stage'],
-            state: { stage: { bgFill: 0xeef2ff, bgStrokeColor: 0xa1a1aa } },
+            state: {
+              stage: { bgFill: 0xeef2ff, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
+              stageDark: { bgFill: 0x1e2440, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
+            },
             position: { x: 210, y: 494 },
             style: {
               shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
@@ -255,7 +299,6 @@ export const InvanaArchitecture: Story = {
               },
               labelText: '1 · Data Sources',
               labelPlacement: 'inside-center',
-              labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
             },
@@ -263,7 +306,10 @@ export const InvanaArchitecture: Story = {
           {
             id: 'reversibility',
             states: ['stage'],
-            state: { stage: { bgFill: 0xf4f4f5, bgStrokeColor: 0xa1a1aa } },
+            state: {
+              stage: { bgFill: 0xf4f4f5, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
+              stageDark: { bgFill: 0x27272a, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
+            },
             position: { x: 1818, y: 562 },
             style: {
               shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
@@ -278,7 +324,6 @@ export const InvanaArchitecture: Story = {
               },
               labelText: 'Reversibility Layer',
               labelPlacement: 'inside-center',
-              labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
             },
@@ -286,7 +331,10 @@ export const InvanaArchitecture: Story = {
           {
             id: 'ingestion',
             states: ['stage'],
-            state: { stage: { bgFill: 0xecfeff, bgStrokeColor: 0xa1a1aa } },
+            state: {
+              stage: { bgFill: 0xecfeff, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
+              stageDark: { bgFill: 0x122e33, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
+            },
             position: { x: 498, y: 660 },
             style: {
               shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
@@ -301,7 +349,6 @@ export const InvanaArchitecture: Story = {
               },
               labelText: '2 · Ingestion',
               labelPlacement: 'inside-center',
-              labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
             },
@@ -309,7 +356,10 @@ export const InvanaArchitecture: Story = {
           {
             id: 'action',
             states: ['stage'],
-            state: { stage: { bgFill: 0xfef2f2, bgStrokeColor: 0xa1a1aa } },
+            state: {
+              stage: { bgFill: 0xfef2f2, bgStrokeColor: 0xa1a1aa, labelColor: 0x27272a },
+              stageDark: { bgFill: 0x351f1f, bgStrokeColor: 0x52525b, labelColor: 0xe4e4e7 },
+            },
             position: { x: 1518, y: 722 },
             style: {
               shape: { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 },
@@ -324,7 +374,6 @@ export const InvanaArchitecture: Story = {
               },
               labelText: '6 · Action — act, reversibly',
               labelPlacement: 'inside-center',
-              labelColor: 0x27272a,
               labelFontSize: 11,
               labelFontWeight: 600,
             },
@@ -622,12 +671,20 @@ export const InvanaArchitecture: Story = {
         // frames the diagram once the first paint lands.
         activeLayout: '',
         layers: {
-          background: { type: 'solid', backgroundColor: '#ffffff' },
+          // No `background` entry — the app's `BackgroundLayer` recolours itself
+          // from the published palette's `surface` role, which is the page
+          // backdrop in both modes. Pinning a colour here would freeze it.
           graph: {
             // Every box shares this look; a node only overrides its box size +
             // caption. `bgFill` (not the shape's own `fill`) is what the
             // renderer paints, and it must be set here or the app's default
             // slate node fill wins.
+            //
+            // The colours below are the *light* values, and they're only the
+            // pre-theme seed: `bgStrokeColor` / `labelColor` are re-published by
+            // `GraphLayer` from the palette's `stroke` / `foreground` roles, and
+            // `bgFill` is patched per mode by the `theme:change` handler in
+            // `onReady` (the palette has no "box fill" role to read).
             node: {
               style: {
                 shape: { kind: 'rect', width: 130, height: 28, cornerRadius: 3 },
@@ -651,6 +708,9 @@ export const InvanaArchitecture: Story = {
                 labelColor: 0x3f3f46,
                 labelFontSize: 10,
                 labelAutoRotate: false,
+                // Same story as the node `bgFill` — the light seed, re-patched
+                // per mode in `onReady` so a flow label never sits in a white
+                // pill on a dark page.
                 labelBackgroundFill: 0xffffff,
                 labelBackgroundPadding: 2,
               },
@@ -669,13 +729,10 @@ export const InvanaArchitecture: Story = {
           // and the engine refuses the second claimant, so selection stands down
           // for the +/− toggles.
           'click-select': { enabled: false },
-          // The light/dark shorthand publishes an *empty* palette, so the theme
-          // never repaints these pastel frames. The page stays white in both
-          // modes (the app chrome around it still themes).
-          theme: {
-            light: { backgroundColor: '#ffffff', color: '#e4e4e7' },
-            dark: { backgroundColor: '#ffffff', color: '#e4e4e7' },
-          },
+          // No `theme` entry: the app's own `ThemeBehaviour` + `CanvasThemeSync`
+          // already publish the `default` palette for whichever mode the header
+          // toggle is in. Using the `light`/`dark` *shorthand* here would publish
+          // an empty palette instead, and nothing on the page would recolour.
         },
       }),
       [],
@@ -711,6 +768,39 @@ export const InvanaArchitecture: Story = {
       // sink behind their frame once you've hovered it.
       renderer.events.on('shape:pointerout', raiseLabelledEdges);
       renderer.events.on('connector:pointerout', raiseLabelledEdges);
+
+      // ── The half of light/dark the palette can't express ─────────────────
+      // `BackgroundLayer` and `GraphLayer` recolour themselves off the published
+      // palette (page backdrop, label text, node borders, arrows), so all that's
+      // left is the diagram's own colours: the box fill, the edge-label pill,
+      // and which of each stage's two tint overlays is active.
+      const applyThemeKind = (kind: 'light' | 'dark'): void => {
+        const dark = kind === 'dark';
+        canvas.update({
+          layers: {
+            graph: {
+              // Shallow-merged over the layer template, so the theme's own
+              // `labelColor` / `bgStrokeColor` patches survive.
+              node: { style: { bgFill: dark ? 0x18181b : 0xffffff } },
+              edge: { style: { labelBackgroundFill: dark ? 0x18181b : 0xffffff } },
+            },
+          },
+        });
+        const want = dark ? 'stageDark' : 'stage';
+        for (const node of graph.store.nodes()) {
+          if (!node.states?.some((s) => s === 'stage' || s === 'stageDark')) continue;
+          graph.store.updateNode(node.id, { states: [want] });
+        }
+      };
+      // Authored `states` are separate from the runtime hover/selection states,
+      // so re-writing them can't clear a live hover. The layer subscribed at
+      // mount, so this handler always runs *after* its palette recolour.
+      canvas.events.on('theme:change', (theme) => applyThemeKind(theme.kind));
+      // The app's `CanvasThemeSync` pins the mode before `onReady` fires, so the
+      // first publish has already happened — seed from the current resolved kind
+      // rather than waiting for the next flip.
+      const themeBehaviour = canvas.behaviours.get('theme') as ThemeBehaviour | undefined;
+      applyThemeKind(themeBehaviour?.getResolvedKind() ?? 'light');
 
       canvas.showMessage('Hover a stage to raise it · click − to collapse it · drag to move it');
     }, []);
