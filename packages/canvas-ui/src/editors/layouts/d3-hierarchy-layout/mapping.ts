@@ -18,6 +18,7 @@ export function optionsToForm(o: D3HierarchyLayoutOptions = {}): D3HierarchyLayo
     centerX: o.center?.x,
     centerY: o.center?.y,
     padding: o.padding,
+    includeGroups: o.includeGroups,
     transition: o.transition,
     transitionEase: o.transitionEase,
   };
@@ -37,6 +38,7 @@ export function formToOptions(f: D3HierarchyLayoutFields): D3HierarchyLayoutOpti
   if (f.radius !== undefined) out.radius = f.radius;
   if (f.orientation !== undefined) out.orientation = f.orientation;
   if (f.padding !== undefined) out.padding = f.padding;
+  if (f.includeGroups !== undefined) out.includeGroups = f.includeGroups;
   if (f.transition !== undefined) out.transition = f.transition;
   if (f.transitionEase) out.transitionEase = f.transitionEase;
   if (f.sizeWidth !== undefined && f.sizeHeight !== undefined) {

@@ -87,6 +87,28 @@ export {
 } from './layout/OneShotPositionLayout';
 
 export {
+  SubgraphPositionLayout,
+  type LayoutSubgraph,
+  type SubgraphLayoutOptions,
+} from './layout/SubgraphPositionLayout';
+
+export {
+  buildGroupForest,
+  collectLayoutEdges,
+  collectPlaceableNodes,
+  effectiveLayoutEndpoint,
+  groupInsets,
+  groupSizeFloor,
+  isMergedEdgeId,
+  isPlaceableNode,
+  resolveNodeSize,
+  type GroupForestNode,
+  type GroupInsets,
+  type LayoutEdge,
+  type LayoutNodeSize,
+} from './layout/groups';
+
+export {
   GraphHistory,
   type GraphHistoryEventMap,
   type GraphHistoryOptions,

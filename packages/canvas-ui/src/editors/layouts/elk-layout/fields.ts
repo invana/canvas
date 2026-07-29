@@ -93,7 +93,7 @@ const NODE_SIZE_FIELDS: FieldConfig[] = [
 ];
 
 const GROUP_FIELDS: FieldConfig[] = [
-  { name: 'includeGroups', type: 'boolean', label: 'Nest groups', description: 'Lay out `parentId` groups as nested containers — members packed inside the group box (compound layout).' },
+  { name: 'includeGroups', type: 'boolean', label: 'Nest groups', description: 'Default on. Groups become nested containers with their members packed inside the frame; plain parent/child trees are unaffected.' },
 ];
 
 const TRANSITION_FIELDS: FieldConfig[] = [

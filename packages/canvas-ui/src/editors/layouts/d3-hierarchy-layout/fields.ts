@@ -91,6 +91,21 @@ const isCartesian = (mode?: D3HierarchyLayoutMode) => mode === 'tree' || mode ==
 const isRadial = (mode?: D3HierarchyLayoutMode) =>
   mode === 'radial-tree' || mode === 'radial-cluster';
 
+/**
+ * Group nesting. Hidden for `pack` / `sunburst`: those modes assign node
+ * geometry (circle radii, arc sectors) rather than only positions, so they
+ * can't be run once per group and the layout ignores the option.
+ */
+const GROUP_FIELDS: FieldConfig[] = [
+  {
+    name: 'includeGroups',
+    type: 'boolean',
+    label: 'Nest groups',
+    description:
+      'Lay each group out as its own subtree, then place the whole group as one box. Each group must contain a single subtree.',
+  },
+];
+
 /** Per-mode geometry fields for the current mode. */
 function modeFields(mode?: D3HierarchyLayoutMode): FieldConfig[] {
   if (isCartesian(mode)) return [ORIENTATION_FIELD, ...SIZE_FIELDS];
@@ -110,6 +125,9 @@ export function d3HierarchyLayoutFields(
   return [
     ...[MODE_FIELD, ROOT_FIELD, ...modeFields(values.mode)].map(withGroup('Layout')),
     ...POSITION_FIELDS.map(withGroup('Position')),
+    ...(values.mode === 'pack' || values.mode === 'sunburst'
+      ? []
+      : GROUP_FIELDS.map(withGroup('Groups'))),
     ...TRANSITION_FIELDS.map(withGroup('Transition')),
   ];
 }

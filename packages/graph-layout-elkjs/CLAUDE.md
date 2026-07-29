@@ -57,6 +57,36 @@ construction throws synchronously, `ElkLayout` falls back to the synchronous
 chunk) — correct, but main-thread-blocking, which is acceptable where workers
 don't exist at all.
 
+## Compound groups (`includeGroups`, default **on**)
+
+A **group** is a node whose resolved style carries `group` (`GraphLayer.isGroupNode`).
+Its members nest under it in the ELK graph, so ELK packs them inside the container
+box and the frame the layer draws is the box ELK computed.
+
+- **`parentId` alone is not a group.** It's the shared hierarchy field — it carries
+  plain trees too — so only a *group node* nests. An ordinary parent/child tree lays
+  out flat, exactly as it did before.
+- **Container insets come from the group**, not a constant: `GroupOptions.padding`
+  (default `16`) on all sides plus `headerHeight` on top, so a title band or a
+  `tabbed-rect` tab gets reserved space instead of being packed into.
+- **`autoFit` containers are handed no size.** Their stored width/height is the
+  *previous* frame's computed fit; feeding that back as a `MINIMUM_SIZE` floor would
+  let the frame grow but never shrink. A fixed-size group (`autoFit: false`) does get
+  its declared size as the floor.
+- **Collapsed groups are leaves.** The frame is placed as the single node the
+  renderer draws; its members are excluded and keep their frozen positions. Their
+  edges are re-pointed at the frame (mirroring `GraphLayer.effectiveEndpoint`) rather
+  than dropped, so a collapsed group still feels the pull of its members' edges.
+  Several edges collapsing onto the same pair merge into one — merged ids are skipped
+  by the `edgeRouting` write-back, since they address no single stored edge.
+- **Nested groups** fall out of the recursion; each level reads its own insets.
+- **`elk.hierarchyHandling: INCLUDE_CHILDREN`** (edges routed *across* container
+  boundaries) is applied only for algorithms that honour it — `layered` today.
+  Others still nest; they just solve each container separately.
+
+There is **one** code path: with `includeGroups: false`, or on a graph with no
+groups, the builder produces exactly the flat graph it always did.
+
 ## Node sizing
 
 ELK needs concrete `width × height` for every node. By default `ElkLayout`

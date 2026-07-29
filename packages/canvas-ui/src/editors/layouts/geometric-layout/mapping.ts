@@ -17,6 +17,7 @@ export function optionsToForm(o: GeometricLayoutOptions = {}): GeometricLayoutFi
     clockwise: o.clockwise,
     centerX: o.center?.x,
     centerY: o.center?.y,
+    includeGroups: o.includeGroups,
     transition: o.transition,
     transitionEase: o.transitionEase,
   };
@@ -39,6 +40,7 @@ export function formToOptions(f: GeometricLayoutFields): GeometricLayoutOptions 
   if (f.nodeSpacing !== undefined) out.nodeSpacing = f.nodeSpacing;
   if (f.startAngle !== undefined) out.startAngle = f.startAngle;
   if (f.clockwise !== undefined) out.clockwise = f.clockwise;
+  if (f.includeGroups !== undefined) out.includeGroups = f.includeGroups;
   if (f.transition !== undefined) out.transition = f.transition;
   if (f.transitionEase) out.transitionEase = f.transitionEase;
   if (f.centerX !== undefined || f.centerY !== undefined) {

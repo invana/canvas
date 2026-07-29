@@ -82,11 +82,26 @@ export interface NodeSize {
  */
 export interface ElkLayoutOptions extends OneShotLayoutOptions {
   /**
-   * Lay out `parentId` **groups** as true nested containers — a compound layout.
-   * When `true`, each group node's members are nested under it in the ELK graph
-   * and ELK packs them *inside* the group box (sized to fit + padding), so the
-   * group renders as one crisp contained cluster (`elk.hierarchyHandling:
-   * INCLUDE_CHILDREN`). Default `false` — a flat layout that ignores `parentId`.
+   * Lay **groups** out as true nested containers — a compound layout. Each
+   * group's members are nested under it in the ELK graph and ELK packs them
+   * *inside* the group box, sized from the group's own `padding` /
+   * `headerHeight`, so the group renders as one crisp contained cluster.
+   *
+   * A "group" here means what it means everywhere else in the engine: a node
+   * whose resolved style carries `group` (`GraphLayer.isGroupNode`). A plain
+   * `parentId` **tree** is *not* a group and lays out flat — `parentId` is the
+   * shared hierarchy field, so nesting on it alone would box up ordinary trees.
+   * A **collapsed** group is laid out as the single node the renderer draws in
+   * its members' place; the members themselves keep their frozen positions.
+   *
+   * Default `true`. It costs nothing on a graph without groups — the compound
+   * builder degenerates to exactly the flat graph — so pass `false` only to
+   * force group members to be placed as ordinary free-floating nodes.
+   *
+   * Note that `elk.hierarchyHandling: INCLUDE_CHILDREN` (edges routed across
+   * container boundaries) is applied only for algorithms that honour it —
+   * `layered` today. Other algorithms still nest, but solve each container
+   * separately.
    */
   includeGroups?: boolean;
 

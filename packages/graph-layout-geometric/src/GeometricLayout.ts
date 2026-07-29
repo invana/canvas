@@ -4,17 +4,23 @@
  * no external libraries and no edge/topology analysis — every node is placed by
  * its position in store iteration order.
  *
- * One-shot: extends {@link OneShotPositionLayout}, so it only implements
- * `computeLayout()` (a single position pass). The base owns `transition` /
- * `transitionEase` (these are pure position moves, so they glide by default),
- * cancellation, and the `start` / `tick` / `end` lifecycle.
+ * One-shot: extends {@link SubgraphPositionLayout}, so it only implements
+ * `computeSubgraphLayout()` (a single position pass over whatever node set it's
+ * handed). The base owns `transition` / `transitionEase` (these are pure
+ * position moves, so they glide by default), cancellation, the `start` / `tick`
+ * / `end` lifecycle — and, via `includeGroups`, running this layout once per
+ * group so members are packed inside their frame.
+ *
+ * Having no topology analysis makes this the most forgiving group layout in the
+ * set: any node set can be gridded or circled, so a group's members always have
+ * a solution no matter how they connect.
  *
  * @example
  * const layout = new GeometricLayout({ mode: 'circular', radius: 300 });
  * await layout.apply(graphLayer);
  */
 
-import { OneShotPositionLayout, type GraphLayer, type LayoutPositions } from '@invana/graph';
+import { SubgraphPositionLayout, type LayoutPositions, type LayoutSubgraph } from '@invana/graph';
 
 import type { GeometricLayoutMode, GeometricLayoutOptions } from './types';
 
@@ -24,26 +30,21 @@ const DEFAULT_CIRCULAR_SPACING = 50;
 /** Padding added around the largest node's footprint when it exceeds the gap. */
 const SIZE_GAP = 24;
 
-export class GeometricLayout extends OneShotPositionLayout<GeometricLayoutOptions> {
+export class GeometricLayout extends SubgraphPositionLayout<GeometricLayoutOptions> {
   override readonly kind = 'geometric-layout';
-  protected computeLayout(layer: GraphLayer): LayoutPositions | null {
-    const ids: string[] = [];
-    // Track the largest node footprint from the cached render bounds so the
-    // pitch / spacing grows to fit it — otherwise big nodes (composite cards)
-    // overlap. Additive: for small nodes `maxW/maxH` stay below the gap, so the
-    // configured spacing wins and existing layouts are unchanged.
+  protected computeSubgraphLayout(sub: LayoutSubgraph): LayoutPositions | null {
+    const ids = [...sub.ids];
+    // Track the largest node footprint so the pitch / spacing grows to fit it —
+    // otherwise big nodes (composite cards) overlap. Additive: for small nodes
+    // `maxW/maxH` stay below the gap, so the configured spacing wins and
+    // existing layouts are unchanged. Under `includeGroups` a nested group's
+    // footprint is its computed box, so a frame gets a cell that fits it.
     let maxW = 0;
     let maxH = 0;
-    // Exclude explicitly-hidden nodes (unless `includeHidden`) so they don't
-    // occupy grid/circle slots; their last positions stay frozen.
-    for (const node of layer.store.nodes()) {
-      if (!this.shouldPlaceNode(node)) continue;
-      ids.push(node.id);
-      const b = node.boundingBox;
-      if (b) {
-        if (b.width > maxW) maxW = b.width;
-        if (b.height > maxH) maxH = b.height;
-      }
+    for (const id of ids) {
+      const size = sub.sizeOf(id);
+      if (size.width > maxW) maxW = size.width;
+      if (size.height > maxH) maxH = size.height;
     }
     const n = ids.length;
     if (n === 0) return null;

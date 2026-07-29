@@ -36,7 +36,7 @@
  * A per-instance override is still just a per-node `style` field (it resolves
  * above the template); this diagram simply doesn't need one.
  *
- * **Positions are authored, not laid out** (`activeLayout: ''`) — the arrangement
+ * **Positions are authored by default** (`activeLayout: ''`) — the arrangement
  * *is* the diagram, so every box carries the coordinate it has in the source.
  * A `rect` node's `position` is its **top-left** corner (only `composite` is
  * centre-shifted), and an auto-fitting frame lands at
@@ -44,6 +44,30 @@
  * `position` repeats so a *collapsed* stage stays put. On a `tabbed-rect` that
  * top-left is the top of the **tab**, and `shape.height` describes the body
  * alone.
+ *
+ * **…and the header's Layout picker runs a real layout over the same graph.**
+ * This diagram is the most demanding group case in the repo — eleven frames,
+ * members inside them, and edges that cross frame boundaries — so it doubles as
+ * the place to see what each layout does with groups:
+ *
+ *   - **Authored** — the snapshot above, restored verbatim. The story keeps every
+ *     node's original coordinate at `onReady` and writes it back on switch, so
+ *     returning here always rebuilds the diagram rather than leaving the graph
+ *     wherever the last solver dropped it.
+ *   - **Force** — `D3ForceLayout` with `cluster`, which pulls each frame's members
+ *     toward their shared centroid. It is *attraction, not containment*: members
+ *     stay loose and the frames stretch to follow them. Run as a static settle
+ *     (`animate: false`) so the diagram doesn't wander for seconds.
+ *   - **ELK** — `ElkLayout` in `layered` mode, the only engine here with **native
+ *     containment**: each stage becomes a real compound container, members are
+ *     packed inside it, and `elk.hierarchyHandling: INCLUDE_CHILDREN` routes the
+ *     cross-stage edges around the boxes instead of through them. Frame insets
+ *     come from each group's own `padding` / `headerHeight`, so the tab keeps its
+ *     28px band.
+ *
+ * Collapse a stage (the − toggle) before switching: a collapsed group is laid out
+ * as the single node the renderer draws, and its hidden members keep their frozen
+ * positions instead of reserving empty space inside the box.
  *
  * **Light / dark comes from the theme, in two halves.** `GraphCanvasApp` already
  * mounts the sole theme publisher (`ThemeBehaviour`) plus `CanvasThemeSync`, so
@@ -71,7 +95,7 @@
  * otherwise `GraphCanvasApp`'s default slate `bgFill: 0x94a3b8` paints every box.
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type {
   GraphCanvas,
@@ -82,10 +106,12 @@ import type {
   NodeShapeOptions,
   ThemeBehaviour,
 } from '@invana/graph';
+import { D3ForceLayout } from '@invana/graph-layout-d3-force';
+import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { CollapseExpandBehaviour, MiniMapLayer } from '@invana/canvas-react';
 import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, ToolbarItems } from '@invana/canvas-ui';
 import { ThemeProvider } from '@invana/themes';
-import { Moon, Sun } from 'lucide-react';
+import { Atom, LayoutDashboard, Moon, Network, Sun } from 'lucide-react';
 
 const meta: Meta = { title: 'Usecases/InvanaArchitecture' };
 export default meta;
@@ -93,6 +119,38 @@ type Story = StoryObj;
 
 export const InvanaArchitecture: Story = {
   render: () => {
+    // Which layout the header picker is on. `'authored'` isn't a registered
+    // layout — it's the absence of one (`activeLayout: ''`) plus a rewrite of the
+    // positions the data shipped with, held in `authoredRef` below.
+    const [layoutMode, setLayoutMode] = useState<'authored' | 'force' | 'elk'>('authored');
+    // The live engine, captured at `onReady` so the picker (which renders in the
+    // header, outside the canvas subtree) can drive it without a context read.
+    const canvasRef = useRef<GraphCanvas | null>(null);
+    // The diagram's own coordinates, snapshotted before any solver has touched
+    // them. Without this, "Authored" could only mean "stop laying out", which
+    // would leave the graph wherever ELK or the force sim happened to end.
+    const authoredRef = useRef<{ ids: string[]; xy: Float32Array } | null>(null);
+
+    const applyLayout = useCallback((next: 'authored' | 'force' | 'elk') => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      setLayoutMode(next);
+
+      if (next !== 'authored') {
+        canvas.update({ activeLayout: next });
+        return;
+      }
+      // Back to the diagram. Clear the active layout first so nothing re-runs on
+      // the writes below, and stop the force sim explicitly — it's iterative, so
+      // un-wiring it doesn't halt a settle that's already in flight.
+      canvas.update({ activeLayout: '' });
+      canvas.layout<D3ForceLayout>('force')?.stop();
+      const authored = authoredRef.current;
+      const graph = canvas.layers.get('graph') as GraphLayer | undefined;
+      if (authored && graph) graph.store.setPositionsBulk(authored.ids, authored.xy);
+      canvas.fitView(60);
+    }, []);
+
     // Two node types, and nothing else about the look lives here:
     //
     //   - `stage` — a group frame. `position` is the frame's top-left (children
@@ -728,7 +786,60 @@ export const InvanaArchitecture: Story = {
       const themeBehaviour = canvas.behaviours.get('theme') as ThemeBehaviour | undefined;
       applyThemeKind(themeBehaviour?.getResolvedKind() ?? 'light');
 
-      canvas.showMessage('Hover a stage to raise it · click − to collapse it · drag to move it');
+      // ── The layout picker's three modes ──────────────────────────────────
+      canvasRef.current = canvas;
+
+      // Snapshot the authored coordinates before anything can move them. Note
+      // this reads the *store*, not the data literal, so it also captures where
+      // each auto-fit frame settled once its children mounted.
+      const authoredIds: string[] = [];
+      const authoredXY: number[] = [];
+      for (const node of graph.store.nodes()) {
+        const p = graph.store.getPosition(node.id);
+        authoredIds.push(node.id);
+        authoredXY.push(p?.x ?? 0, p?.y ?? 0);
+      }
+      authoredRef.current = { ids: authoredIds, xy: new Float32Array(authoredXY) };
+
+      // Registered after `init`, which is the same thing canvas-react's layout
+      // wrappers do from their mount effect — `canvas.update({ activeLayout })`
+      // re-wires and runs whichever id is named.
+      //
+      // Force clusters group members toward a shared centroid; that's attraction,
+      // not containment, so the frames stretch to follow rather than boxing their
+      // contents. Static (`animate: false`) because a diagram this size takes a
+      // visible few seconds to stop wandering otherwise.
+      const force = new D3ForceLayout({
+        id: 'force',
+        targetLayerId: 'graph',
+        animate: false,
+        cluster: { strength: 0.4 },
+        charge: { strength: -1200 },
+        link: { distance: 120 },
+        collide: {},
+        center: { x: 0, y: 0 },
+      });
+      // ELK is the one engine here with native containment: each stage becomes a
+      // real compound node. `includeGroups` defaults on, and the frame insets come
+      // from each group's own `padding` / `headerHeight` — so the tab keeps its
+      // band instead of having members packed into it. Edge routing is left unset
+      // deliberately: turning it on writes orthogonal waypoints into every edge's
+      // stored style, which would outlive a switch back to the authored diagram
+      // and replace its smooth arrows.
+      const elk = new ElkLayout({
+        id: 'elk',
+        targetLayerId: 'graph',
+        algorithm: 'layered',
+        direction: 'RIGHT',
+        nodeSpacing: 32,
+        layerSpacing: 90,
+      });
+      for (const layout of [force, elk]) {
+        canvas.layouts.add(layout);
+        layout.events.on('end', () => canvas.fitView(60));
+      }
+
+      canvas.showMessage('Hover a stage to raise it · click − to collapse it · switch Layout in the header');
     }, []);
 
     return (
@@ -746,6 +857,16 @@ export const InvanaArchitecture: Story = {
               <ToolbarItems
                 orientation="horizontal"
                 items={[
+                  {
+                    type: 'select',
+                    key: 'layout',
+                    label: 'Layout',
+                    value: layoutMode,
+                    display: 'segmented',
+                    options: { authored: 'Authored', force: 'Force', elk: 'ELK' },
+                    icons: { authored: LayoutDashboard, force: Atom, elk: Network },
+                    onChange: (v) => applyLayout(v as 'authored' | 'force' | 'elk'),
+                  },
                   {
                     type: 'toggle',
                     key: 'theme',

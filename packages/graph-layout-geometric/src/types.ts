@@ -1,4 +1,4 @@
-import type { OneShotLayoutOptions } from '@invana/graph';
+import type { SubgraphLayoutOptions } from '@invana/graph';
 
 /**
  * Geometric layout mode.
@@ -21,7 +21,7 @@ export type GeometricLayoutMode = 'grid' | 'snake' | 'circular';
  * Every field is optional with a sensible default; nodes are placed in store
  * iteration order.
  */
-export interface GeometricLayoutOptions extends OneShotLayoutOptions {
+export interface GeometricLayoutOptions extends SubgraphLayoutOptions {
   /** Layout mode. Default `'grid'`. */
   mode?: GeometricLayoutMode;
 

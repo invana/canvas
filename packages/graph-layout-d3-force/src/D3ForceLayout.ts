@@ -37,7 +37,7 @@ import {
 } from 'd3-force';
 
 import { Layout, type LayoutOptions } from '@invana/canvas';
-import type { GraphLayer, GraphNode } from '@invana/graph';
+import { isPlaceableNode, type GraphLayer, type GraphNode } from '@invana/graph';
 
 import type { D3ForceLayoutOptions } from './types';
 import {
@@ -180,7 +180,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
 
   private async runStatic(layer: GraphLayer): Promise<void> {
     const store = layer.store;
-    const { ids, input } = this.snapshotStatic(store);
+    const { ids, input } = this.snapshotStatic(layer);
     if (input.count === 0) return;
 
     this.running = true;
@@ -208,24 +208,34 @@ export class D3ForceLayout extends Layout<GraphLayer> {
 
   /**
    * Assign each placed node a cluster group index for the `cluster` force: a
-   * **member** (its `parentId` is placed) → that parent's group; a **container**
-   * (has ≥1 placed child) → its own id. Ungrouped nodes are absent from the map.
-   * Returns `null` when clustering is off or nothing groups. Shared by the live
-   * and static paths (both build a placed-id set).
+   * **member** (its parent is a placed group) → that group; a **container**
+   * (a placed group with ≥1 placed child) → its own id. Ungrouped nodes are
+   * absent from the map. Returns `null` when clustering is off or nothing
+   * groups. Shared by the live and static paths (both build a placed-id set).
+   *
+   * Only nodes whose resolved style carries `group` count as containers.
+   * `parentId` is the shared hierarchy field — it carries plain trees too — so
+   * clustering on it alone would drag every parent's children into a blob and
+   * fight whatever structure the tree was expressing.
    */
   private clusterIndices(
-    store: GraphLayer['store'],
+    layer: GraphLayer,
     placed: Set<string>,
   ): Map<string, number> | null {
     if (!this.opts.cluster) return null;
+    const store = layer.store;
+    const isGroup = (id: string): boolean => {
+      const node = store.getNode(id);
+      return node ? layer.isGroupNode(node) : false;
+    };
     const byGroup = new Map<string, number>();
     const out = new Map<string, number>();
     for (const id of placed) {
       const node = store.getNode(id);
       let key: string | undefined;
-      if (node?.parentId && placed.has(node.parentId)) {
+      if (node?.parentId && placed.has(node.parentId) && isGroup(node.parentId)) {
         key = node.parentId;
-      } else {
+      } else if (isGroup(id)) {
         for (const child of store.childrenOf(id)) {
           if (placed.has(child)) {
             key = id;
@@ -251,13 +261,13 @@ export class D3ForceLayout extends Layout<GraphLayer> {
    * phyllotaxis-scatters them apart. An incremental add (some nodes already
    * settled) reheats to `reheatAlpha` for stability; the first run uses `alpha`.
    */
-  private snapshotStatic(store: GraphLayer['store']): { ids: string[]; input: ForceSolveInput } {
-    // Exclude explicitly-hidden nodes (unless `includeHidden`); their incident
-    // edges drop out below (endpoints missing from `indexOf`).
+  private snapshotStatic(layer: GraphLayer): { ids: string[]; input: ForceSolveInput } {
+    const store = layer.store;
+    // Exclude explicitly-hidden nodes and collapsed-group members (unless
+    // `includeHidden`); their incident edges drop out below (endpoints missing
+    // from `indexOf`).
     const includeHidden = this.opts.includeHidden === true;
-    const nodeList = includeHidden
-      ? [...store.nodes()]
-      : [...store.nodes()].filter((n) => n.hidden !== true);
+    const nodeList = [...store.nodes()].filter((n) => isPlaceableNode(layer, n, includeHidden));
     const count = nodeList.length;
     const ids: string[] = new Array(count);
     const positions = new Float32Array(count * 2);
@@ -316,7 +326,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     // Group clustering — resolve each node's group index into a transferable
     // typed array (null when clustering is off / nothing groups).
     let clusters: Int32Array | null = null;
-    const clusterMap = this.clusterIndices(store, new Set(ids));
+    const clusterMap = this.clusterIndices(layer, new Set(ids));
     if (clusterMap) {
       clusters = new Int32Array(count).fill(-1);
       for (let i = 0; i < count; i++) {
@@ -375,10 +385,13 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     this.graphNodeById.clear();
     this.pinnedIds.clear();
     this.draggedIds.clear();
-    // Exclude explicitly-hidden nodes (unless `includeHidden`) from the live sim.
+    // Exclude explicitly-hidden nodes and the members of collapsed groups
+    // (unless `includeHidden`) from the live sim — the latter are hidden
+    // derivedly, so a plain `hidden` check would simulate invisible nodes and
+    // let them push the visible graph around.
     const includeHidden = this.opts.includeHidden === true;
     for (const n of store.nodes()) {
-      if (!includeHidden && n.hidden === true) continue;
+      if (!isPlaceableNode(layer, n, includeHidden)) continue;
       const pos = store.getPosition(n.id);
       const node: SimNode = { id: n.id };
       if (n.pinned) {
@@ -409,7 +422,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     this.buffer = new Float32Array(this.nodes.length * 2);
 
     // Tag each grouped node with its cluster index for the `cluster` force.
-    const clusterMap = this.clusterIndices(store, new Set(this.nodeById.keys()));
+    const clusterMap = this.clusterIndices(layer, new Set(this.nodeById.keys()));
     if (clusterMap) {
       for (const [id, sim] of this.nodeById) {
         const ci = clusterMap.get(id);

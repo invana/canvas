@@ -1,4 +1,4 @@
-import type { OneShotLayoutOptions } from '@invana/graph';
+import type { SubgraphLayoutOptions } from '@invana/graph';
 import type { HierarchyNode } from 'd3-hierarchy';
 
 /**
@@ -64,7 +64,7 @@ export type CartesianOrientation = 'vertical' | 'horizontal';
  * `transitionEase` (glide nodes to the computed layout instead of snapping —
  * vetoed for `pack` / `sunburst`, which replace node geometry rather than move it).
  */
-export interface D3HierarchyLayoutOptions extends OneShotLayoutOptions {
+export interface D3HierarchyLayoutOptions extends SubgraphLayoutOptions {
   /** Layout mode. Default `'radial-tree'`. */
   mode?: D3HierarchyLayoutMode;
 

@@ -40,6 +40,15 @@ const POSITION_FIELDS: FieldConfig[] = [
   { name: 'centerY', type: 'number', label: 'Center Y', min: -10000, max: 10000, step: 10 },
 ];
 
+const GROUP_FIELDS: FieldConfig[] = [
+  {
+    name: 'includeGroups',
+    type: 'boolean',
+    label: 'Nest groups',
+    description: 'Lay each group out among its own members, then place the whole group as one box.',
+  },
+];
+
 const TRANSITION_FIELDS: FieldConfig[] = [
   { name: 'transition', type: 'boolean', label: 'Animate', description: 'Glide nodes to their new positions instead of snapping.' },
   { name: 'transitionEase', type: 'text', label: 'Ease', placeholder: 'e.g. cubic-in-out' },
@@ -67,6 +76,7 @@ export function geometricLayoutFields(values: GeometricLayoutFields = {}): Field
   return [
     ...modeFields(values.mode).map(withGroup('Layout')),
     ...POSITION_FIELDS.map(withGroup('Position')),
+    ...GROUP_FIELDS.map(withGroup('Groups')),
     ...TRANSITION_FIELDS.map(withGroup('Transition')),
   ];
 }

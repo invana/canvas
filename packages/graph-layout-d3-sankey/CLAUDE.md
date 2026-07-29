@@ -28,3 +28,14 @@ Pair with `edge: { style: { shape: { pathType: 'bump-horizontal' }, strokeAlpha:
 in the `GraphLayer` for a faithful reproduction of d3-sankey's SVG output. The
 ribbons are stroked horizontal cubic beziers — same approach d3-sankey takes
 in SVG, with the `'edge-port'` anchor handling per-link y stacking.
+
+## Groups — not supported, by design
+
+This layout is **group-unaware**, and deliberately stays that way. A sankey places
+every node in a flow column derived from the link DAG and sizes it from the flow
+passing through it; there is no coordinate freedom left for a container to occupy,
+so "pack these nodes into a box" has no meaning here. A group frame in the store is
+simply ignored (it carries no links, so it contributes no flow).
+
+If a diagram needs both flow columns and containers, that's a composition of two
+layouts, not an option on this one.

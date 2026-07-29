@@ -18,7 +18,9 @@ export function optionsToForm(o: ElkLayoutOptions = {}): ElkLayoutFields {
     padding: typeof o.padding === 'number' ? o.padding : undefined,
     defaultNodeWidth: o.defaultNodeSize?.width,
     defaultNodeHeight: o.defaultNodeSize?.height,
-    includeGroups: o.includeGroups,
+    // Defaults to on in the layout, so an untouched config must show checked —
+    // `undefined` would render the toggle off and misreport what ELK will do.
+    includeGroups: o.includeGroups ?? true,
     transition: o.transition,
     transitionEase: o.transitionEase,
   };

@@ -35,6 +35,7 @@ export interface GeometricLayoutOptions {
   clockwise?: boolean;
   // common
   center?: { x?: number; y?: number };
+  includeGroups?: boolean;
   transition?: boolean;
   transitionEase?: string;
 }
@@ -55,6 +56,7 @@ export interface GeometricLayoutFields {
   clockwise?: boolean;
   centerX?: number;
   centerY?: number;
+  includeGroups?: boolean;
   transition?: boolean;
   transitionEase?: string;
 }

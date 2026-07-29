@@ -11,6 +11,24 @@ await layout.apply(graphLayer);
 
 A `Layout` reads `layer.data`, computes positions, writes them back. It does not register with the canvas, render, or subscribe to input (proposal §2.3).
 
+## Groups — attraction, not containment
+
+`cluster: { strength }` pulls every member of a group (and the frame itself) toward
+that group's centroid each tick. It is **not** a container layout: members stay
+loose and can drift outside the frame. For true nested boxes use `ElkLayout`
+(native compound) or a `SubgraphPositionLayout` with `includeGroups` — this layout
+is iterative, so laying each group out separately would mean N nested simulations.
+
+Two rules it shares with the rest of the layouts:
+
+- **Only real groups cluster.** A group is a node whose resolved style carries
+  `group` (`GraphLayer.isGroupNode`). `parentId` alone is the shared hierarchy
+  field, so clustering on it would drag every tree parent's children into a blob.
+- **Collapsed-group members are excluded** from both the live and the static
+  snapshot (via `isPlaceableNode`). Collapse-hiding is derived, never stored, so a
+  plain `hidden` check used to simulate invisible nodes and let them push the
+  visible graph around.
+
 ## `animate: true` vs `animate: false`
 
 Two distinct execution models — pick per use case:

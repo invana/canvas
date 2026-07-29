@@ -51,6 +51,7 @@ export interface D3HierarchyLayoutOptions {
   center?: { x?: number; y?: number };
   /** Pack-only: padding between sibling circles. */
   padding?: number;
+  includeGroups?: boolean;
   transition?: boolean;
   transitionEase?: string;
 }
@@ -72,6 +73,7 @@ export interface D3HierarchyLayoutFields {
   centerX?: number;
   centerY?: number;
   padding?: number;
+  includeGroups?: boolean;
   transition?: boolean;
   transitionEase?: string;
 }

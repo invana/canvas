@@ -30,7 +30,12 @@ import {
   tree as d3tree,
 } from 'd3-hierarchy';
 
-import { OneShotPositionLayout, type GraphLayer, type LayoutPositions } from '@invana/graph';
+import {
+  SubgraphPositionLayout,
+  type GraphLayer,
+  type LayoutPositions,
+  type LayoutSubgraph,
+} from '@invana/graph';
 
 import type { D3HierarchyLayoutOptions, D3HierarchyLayoutMode } from './types';
 
@@ -71,7 +76,7 @@ const defaultPackValue = (n: { data?: unknown }): number => {
   return 1;
 };
 
-export class D3HierarchyLayout extends OneShotPositionLayout<D3HierarchyLayoutOptions> {
+export class D3HierarchyLayout extends SubgraphPositionLayout<D3HierarchyLayoutOptions> {
   override readonly kind = 'd3-hierarchy-layout';
   /**
    * `pack` / `sunburst` replace node *geometry* (circle sizes / arc sectors)
@@ -84,52 +89,67 @@ export class D3HierarchyLayout extends OneShotPositionLayout<D3HierarchyLayoutOp
   }
 
   /**
-   * Compute positions for the whole snapshot in one pass. The base writes them
-   * (snap or tween), then calls {@link onPositionsApplied} to flush any pack /
-   * sunburst geometry. Lifecycle (`start` → `tick` → `end`) is owned by the base.
+   * `pack` / `sunburst` can't be run per group: their real output is the
+   * per-node geometry threaded through the run's `meta` (circle radii, arc
+   * sectors), and there is no meaningful way to merge that across one run per
+   * group. They fall back to a single flat run — an `autoFit` frame still wraps
+   * whatever its members occupy, it just isn't packed into a box.
    */
-  protected computeLayout(layer: GraphLayer): LayoutPositions<HierarchyMeta> | null {
-    const store = layer.store;
+  protected override canRecurseGroups(): boolean {
+    const mode = this.opts.mode ?? DEFAULT_MODE;
+    return mode !== 'pack' && mode !== 'sunburst';
+  }
 
-    // 1. Snapshot store → ids + parent/child map. Build TreeNode objects up
-    //    front (one per node) so we can stitch them by reference instead of
-    //    looking ids up during the recursive build. The original `data`
-    //    payload travels along so pack-mode's `value` accessor can read it.
+  /**
+   * Compute positions for one subgraph — the whole graph for a flat run, or a
+   * single group's members when `includeGroups` nests them. The base writes the
+   * result (snap or tween), then calls {@link onPositionsApplied} to flush any
+   * pack / sunburst geometry. Lifecycle (`start` → `tick` → `end`) is the base's.
+   */
+  protected computeSubgraphLayout(sub: LayoutSubgraph): LayoutPositions<HierarchyMeta> | null {
+    // 1. Snapshot → ids + parent/child map. Build TreeNode objects up front (one
+    //    per node) so we can stitch them by reference instead of looking ids up
+    //    during the recursive build. The original `data` payload travels along
+    //    so pack-mode's `value` accessor can read it.
+    //
+    //    Group frames are excluded when they aren't participating as boxes: a
+    //    frame carries no edges of its own, so the edge-derived tree would read
+    //    it as a second root and the whole run would throw. Under
+    //    `includeGroups` a group *is* a box at its level and its edges are the
+    //    lifted edges of its members, so it stays in.
+    //
+    //    Note this asks whether the run is *actually* recursing, not just what
+    //    the option says: `pack` / `sunburst` veto recursion, so with
+    //    `includeGroups: true` they still get one flat run — and would then be
+    //    handed frames that have no place in an edge-derived tree.
+    const recursing = this.opts.includeGroups === true && this.canRecurseGroups();
+    const dropFrames = !recursing;
     const ids: string[] = [];
     const nodeById = new Map<string, TreeNode>();
-    // Exclude explicitly-hidden nodes (unless `includeHidden`) — they keep their
-    // frozen positions and drop out of the tree.
-    for (const n of store.nodes()) {
-      if (!this.shouldPlaceNode(n)) continue;
-      ids.push(n.id);
-      nodeById.set(n.id, { id: n.id, data: n.data });
+    for (const id of sub.ids) {
+      if (dropFrames && sub.isGroup(id)) continue;
+      ids.push(id);
+      nodeById.set(id, { id, data: sub.dataOf(id) });
     }
     if (ids.length === 0) return null;
 
     // Track parent count per node to validate the snapshot is a tree.
     const parentCount = new Map<string, number>();
     for (const id of ids) parentCount.set(id, 0);
-    for (const e of store.edges()) {
+    for (const e of sub.edges) {
       const parent = nodeById.get(e.source);
       const child = nodeById.get(e.target);
-      if (!parent || !child) {
-        // A genuinely-unknown endpoint is still an error; an endpoint that was
-        // merely excluded because it's hidden just drops the edge from the tree.
-        if (!store.hasNode(e.source) || !store.hasNode(e.target)) {
-          throw new Error(
-            `D3HierarchyLayout: edge "${e.id}" references unknown endpoint(s) (` +
-              `source="${e.source}", target="${e.target}")`,
-          );
-        }
-        continue;
-      }
+      // The subgraph guarantees both endpoints are in `sub.ids`, so a miss here
+      // means the endpoint was dropped as a group frame — that edge simply
+      // doesn't describe tree structure.
+      if (!parent || !child) continue;
       parent.children = parent.children ?? [];
       parent.children.push(child);
       parentCount.set(e.target, (parentCount.get(e.target) ?? 0) + 1);
     }
 
     // 2. Determine root.
-    const root = this.resolveRoot(ids, parentCount, nodeById);
+    const root = this.resolveRoot(ids, parentCount, nodeById, recursing, sub.groupId);
 
     // 3. Build d3 hierarchy + run the chosen layout.
     const mode = this.opts.mode ?? DEFAULT_MODE;
@@ -359,18 +379,51 @@ export class D3HierarchyLayout extends OneShotPositionLayout<D3HierarchyLayoutOp
 
   // ─── internals ────────────────────────────────────────────────────────
 
+  /**
+   * Find the tree's root, validating that the snapshot is a tree at all.
+   *
+   * `groupId` names the group whose members are being laid out, when this run is
+   * one level of a `includeGroups` recursion. It only affects the error text —
+   * but it's the difference between "your graph isn't a tree" and "*this* group
+   * isn't a subtree", and the latter is the only one a caller can act on.
+   *
+   * Failing loudly is deliberate. A group whose members don't form a subtree
+   * has no tidy-tree solution, and quietly falling back to some other
+   * arrangement inside one box — while every other box is a tree — produces a
+   * picture whose inconsistency is much harder to diagnose than an error naming
+   * the group.
+   */
   private resolveRoot(
     ids: string[],
     parentCount: Map<string, number>,
     nodeById: Map<string, TreeNode>,
+    recursing: boolean,
+    groupId?: string,
   ): TreeNode {
+    const scope = groupId === undefined ? '' : ` in group "${groupId}"`;
     if (this.opts.rootId !== undefined) {
       const node = nodeById.get(this.opts.rootId);
       if (!node) {
+        // Under `includeGroups` each level holds only its own siblings, so one
+        // globally-configured `rootId` can only ever belong to one of them —
+        // every other level finds its own root instead of failing. Without
+        // recursion the id names the whole graph's root, so a miss is a real
+        // configuration error and still throws.
+        if (recursing) return this.findSingleRoot(ids, parentCount, nodeById, scope);
         throw new Error(`D3HierarchyLayout: rootId "${this.opts.rootId}" not found`);
       }
       return node;
     }
+    return this.findSingleRoot(ids, parentCount, nodeById, scope);
+  }
+
+  /** The parentless node, if there is exactly one. See {@link resolveRoot}. */
+  private findSingleRoot(
+    ids: string[],
+    parentCount: Map<string, number>,
+    nodeById: Map<string, TreeNode>,
+    scope: string,
+  ): TreeNode {
     let rootId: string | null = null;
     let multipleRoots = false;
     for (const id of ids) {
@@ -384,18 +437,21 @@ export class D3HierarchyLayout extends OneShotPositionLayout<D3HierarchyLayoutOp
     }
     if (rootId === null) {
       throw new Error(
-        'D3HierarchyLayout: no root found — the snapshot has no node without an incoming edge (cycle?)',
+        `D3HierarchyLayout: no root found${scope} — every node has an incoming edge (cycle?)`,
       );
     }
     if (multipleRoots) {
       throw new Error(
-        'D3HierarchyLayout: snapshot has more than one root. Pass `rootId` to disambiguate.',
+        `D3HierarchyLayout: more than one root${scope}.` +
+          (scope
+            ? ' A group laid out with `includeGroups` must contain a single subtree — its members need one parentless node and edges reaching all the others.'
+            : ' Pass `rootId` to disambiguate.'),
       );
     }
     for (const [id, count] of parentCount) {
       if (id !== rootId && count !== 1) {
         throw new Error(
-          `D3HierarchyLayout: node "${id}" has ${count} parents — input must be a tree (each non-root node has exactly one parent).`,
+          `D3HierarchyLayout: node "${id}" has ${count} parents${scope} — input must be a tree (each non-root node has exactly one parent).`,
         );
       }
     }
