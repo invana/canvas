@@ -246,6 +246,15 @@ export class GraphLayer extends WorldLayer<
   private readonly dirtyStateEdges: Set<string> = new Set();
 
   /**
+   * Edges whose install was deferred because an endpoint shape wasn't on the
+   * renderer yet — see {@link endpointShapesInstalled}. Retried on the next
+   * flush (after node adds / re-renders have installed the shapes) and re-
+   * deferred if the endpoint is still missing, so an install can never throw
+   * and can never be silently lost.
+   */
+  private readonly deferredEdgeInstalls: Set<string> = new Set();
+
+  /**
    * Currently-mounted decoration slot ids per node / edge, so the resolver
    * can diff (mount new / dispose removed / replace changed) against the
    * previous render's set. Slot ids are synthesized from `spec.id` or
@@ -444,6 +453,7 @@ export class GraphLayer extends WorldLayer<
       }),
       s.on('edge:remove', ({ edgeId }) => {
         this.dirtyStateEdges.delete(edgeId);
+        this.deferredEdgeInstalls.delete(edgeId);
         this.edgeDecorationSlots.delete(edgeId);
         this.edgeBadgeSlots.delete(edgeId);
         this._renderer?.removeConnector(edgeId);
@@ -486,6 +496,15 @@ export class GraphLayer extends WorldLayer<
           for (const edgeId of this.dirtyStateEdges) this.rerenderEdge(edgeId, true);
           this.dirtyStateEdges.clear();
         }
+        // Edges deferred because an endpoint shape was missing — by now the
+        // node adds / re-renders above have installed the shapes, so retry.
+        // Iterate a snapshot (and clear first) so a still-missing endpoint
+        // re-defers to the *next* flush instead of spinning in this loop.
+        if (this.deferredEdgeInstalls.size > 0) {
+          const retry = [...this.deferredEdgeInstalls];
+          this.deferredEdgeInstalls.clear();
+          for (const edgeId of retry) this.rerenderEdge(edgeId);
+        }
         if (this.dirtyConnectors.size > 0 && this._renderer) {
           for (const edgeId of this.dirtyConnectors) {
             // Empty partial — triggers recomputeConnectorPath which re-runs
@@ -508,7 +527,19 @@ export class GraphLayer extends WorldLayer<
 
     // Load initial data now that the renderer + subscriptions are live — this
     // fires `data:changed`, which auto-triggers the active layout.
-    if (this.initialData) this.setData(this.initialData);
+    //
+    // Flush it synchronously: the store is frame-coalesced, so without this the
+    // `node:add` / `edge:add` events sit buffered until the next rAF and the
+    // renderer holds *nothing* when `onMount` returns. `Canvas._activate` applies
+    // the init config immediately after mounting, and a config carrying only
+    // `edge.style` (no `node.style`) would then re-render every edge against
+    // shapes that don't exist yet. Flushing here installs nodes-then-edges (the
+    // store emits every `node:add` before any `edge:add`) so the config always
+    // lands on a fully-painted layer.
+    if (this.initialData) {
+      this.setData(this.initialData);
+      this.store.flush();
+    }
   }
 
   /**
@@ -724,6 +755,9 @@ export class GraphLayer extends WorldLayer<
     for (const node of this.store.nodes()) renderer.removeShape(node.id);
     for (const edge of this.store.edges()) renderer.removeConnector(edge.id);
     this.dirtyConnectors.clear();
+    // Pending retries refer to the data being detached — the incoming payload's
+    // own `edge:add`s install its edges.
+    this.deferredEdgeInstalls.clear();
   }
 
   // ─── Layer-level template (defaults) ──────────────────────────────────────
@@ -1643,6 +1677,13 @@ export class GraphLayer extends WorldLayer<
     const edge = this.store.getEdge(id);
     if (!edge) return;
     const spec = this.edgeSpec(edge);
+    if (!this._renderer.hasConnector(id) && !this.endpointShapesInstalled(spec)) {
+      // Nothing to update and nothing safe to add — defer (see
+      // `endpointShapesInstalled`). Skip the label / decoration / badge sync
+      // below too: those attach to a connector that doesn't exist yet.
+      this.deferredEdgeInstalls.add(id);
+      return;
+    }
     if (this._renderer.hasConnector(id)) {
       // Hover / select fast-path (G): a state-only re-render whose geometry is
       // unchanged and whose new stroke is plain `color` + `width` just needs a
@@ -1684,6 +1725,31 @@ export class GraphLayer extends WorldLayer<
     return true;
   }
 
+  /**
+   * True iff both endpoint shapes of a built connector spec are already
+   * installed on the renderer.
+   *
+   * `PrimitivesRenderer.addConnector` routes eagerly and **throws** on an
+   * unknown endpoint shape, so every add site checks this first. A `false`
+   * means "not yet" — the edge goes into {@link deferredEdgeInstalls} and is
+   * retried on the next flush, never dropped. This keeps the invariant *a
+   * connector is only added once both endpoint shapes exist* independent of the
+   * order style / data / config writes happen to arrive in (e.g. a layer-level
+   * `edge.style` patch landing before the node shapes are painted).
+   *
+   * Note it checks the **spec's** endpoint ids, not `edge.source` / `edge.target`
+   * — a collapsed group ancestor substitutes for a hidden descendant
+   * (see {@link effectiveEndpoint}).
+   */
+  private endpointShapesInstalled(spec: BaseConnectorSpec): boolean {
+    const renderer = this._renderer;
+    if (!renderer) return false;
+    for (const end of [spec.source, spec.target]) {
+      if (end.kind === 'shape' && !renderer.hasShape(end.shapeId)) return false;
+    }
+    return true;
+  }
+
   private drainDirtyConnectors(): void {
     if (this.dirtyConnectors.size === 0 || !this._renderer) return;
     for (const edgeId of this.dirtyConnectors) {
@@ -1703,7 +1769,12 @@ export class GraphLayer extends WorldLayer<
 
   private installEdgeConnector(edge: GraphEdge): void {
     if (!this._renderer) return;
-    this._renderer.addConnector(edge.id, this.edgeSpec(edge));
+    const spec = this.edgeSpec(edge);
+    if (!this.endpointShapesInstalled(spec)) {
+      this.deferredEdgeInstalls.add(edge.id);
+      return;
+    }
+    this._renderer.addConnector(edge.id, spec);
     this.syncEdgeLabel(edge.id);
     this.syncEdgeDecorations(edge.id);
     this.syncEdgeBadges(edge.id);
