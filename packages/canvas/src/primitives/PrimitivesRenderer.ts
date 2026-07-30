@@ -347,23 +347,18 @@ export class PrimitivesRenderer {
   private readonly shapeLayer: Container;
   /**
    * Overlay sub-layer — rendered **above both** the connector and shape layers.
-   * A raised element (hovered / selected) is reparented here by
-   * {@link raiseShape} / {@link raiseConnector} so the highlighted set floats
-   * over *all* unrelated content — crucially, a highlighted **edge** paints over
-   * non-highlighted nodes (impossible while it stays in `connectorLayer`, which
-   * is always under `shapeLayer`). Within the overlay, raised shapes still sort
-   * above raised connectors (see `OVERLAY_SHAPE_Z` / `OVERLAY_CONNECTOR_Z`), so
-   * a hovered node stays on top of its own incident edges.
+   * A raised element is reparented here by {@link setRaised} so the lifted set
+   * floats over *all* unrelated content — crucially, a lifted **edge** paints
+   * over non-lifted nodes, impossible while it stays in `connectorLayer` (which
+   * is always under `shapeLayer`). Within the overlay, lifted shapes still sort
+   * above lifted connectors, so a lifted node stays on top of its own edges.
    */
   private readonly overlayLayer: Container;
-  /** zIndex band for a raised connector inside {@link overlayLayer}. */
-  private static readonly OVERLAY_CONNECTOR_Z = 0;
   /**
-   * zIndex band for a raised shape inside {@link overlayLayer} — far above the
-   * connector band so any raised node sorts over any raised edge (a hovered node
-   * stays on top of its own incident edges within the floated set).
+   * The set {@link setRaised} currently has lifted — the renderer's mirror of
+   * its own overlay, so the next call knows what to drop back.
    */
-  private static readonly OVERLAY_SHAPE_Z = 1_000_000;
+  private raisedIds: ReadonlySet<string> = new Set();
   readonly camera: Camera;
   private readonly textureRegistry: TextureRegistry;
   private readonly hitFloorPx: number;
@@ -422,8 +417,8 @@ export class PrimitivesRenderer {
     this.connectorLayer = new Container();
     this.shapeLayer = new Container();
     // Sort each sub-layer's children by `gfx.zIndex` so a primitive can be
-    // lifted above its peers within its own layer (see `raiseShape` /
-    // `raiseConnector`). Default `zIndex` is 0, and JS `Array.sort` is stable,
+    // lifted above its peers within its own layer (see `setRaised`). Default
+    // `zIndex` is 0, and JS `Array.sort` is stable,
     // so untouched primitives keep their natural insertion order. Sorting is
     // confined to each sub-layer — `_container` itself is NOT sortable, so the
     // connector-below-shape ordering of the two layers is preserved (a raised
@@ -769,51 +764,49 @@ export class PrimitivesRenderer {
   }
 
   /**
-   * Raise a shape into the {@link overlayLayer} (above *all* connectors and
-   * shapes) or drop it back to its home {@link shapeLayer}. `zIndex !== 0`
-   * lifts it — reparented to the overlay at a z above raised connectors so a
-   * hovered node stays over its own edges; `zIndex === 0` returns it to the
-   * shape layer at natural order. Use to lift a hovered / selected node so
-   * unrelated content doesn't draw over the highlighted set.
+   * Declare the **complete set** of elements that should be lifted above their
+   * peers — shapes and connectors alike. The renderer diffs against what it
+   * already has lifted, reparenting newcomers into the overlay and dropping
+   * everything absent from `ids` back to its home layer.
    *
-   * Visual-only: does NOT touch geometry, transform, or the hit index
-   * (closest-wins hit resolution consults the spec `zIndex` recorded at insert).
-   * Reparenting is safe across redraws — updates mutate the existing `gfx` in
-   * place and never re-add it to a layer.
+   * This is the whole raise API: one call, whole-set semantics. It is
+   * deliberately *not* a pair of `raise(id)` / `lower(id)` primitives, because
+   * those make every caller keep a private ledger of what it touched — and two
+   * callers lifting overlapping sets then lower each other's elements, or
+   * strand elements in the overlay when one of them stops running. Handing over
+   * the full set makes lifting a projection the renderer reconciles, so the
+   * only thing a caller has to get right is *what should be up right now*.
+   *
+   * Purely visual: geometry, transforms and the hit index are untouched
+   * (closest-wins hit resolution reads the spec `zIndex` recorded at insert).
+   * Reparenting survives redraws — updates mutate the existing `gfx` in place
+   * and never re-add it to a layer.
    */
-  raiseShape(id: string, zIndex: number): void {
-    const inst = this.shapeInstances.get(id);
-    if (!inst) return;
-    const gfx = inst.shape.gfx;
-    if (zIndex === 0) {
-      gfx.zIndex = 0;
-      if (gfx.parent !== this.shapeLayer) this.shapeLayer.addChild(gfx);
-    } else {
-      gfx.zIndex = PrimitivesRenderer.OVERLAY_SHAPE_Z + zIndex;
-      if (gfx.parent !== this.overlayLayer) this.overlayLayer.addChild(gfx);
-    }
+  setRaised(ids: Iterable<string>): void {
+    const next = new Set(ids);
+    for (const id of this.raisedIds) if (!next.has(id)) this.setLifted(id, false);
+    for (const id of next) this.setLifted(id, true);
+    this.raisedIds = next;
   }
 
   /**
-   * Raise a connector into the {@link overlayLayer} (above unrelated nodes) or
-   * drop it back to its home {@link connectorLayer} — the connector-side sibling
-   * of {@link raiseShape}. `zIndex !== 0` lifts the edge to the overlay, *below*
-   * raised shapes but above every non-raised node, so a hovered edge is no
-   * longer occluded by unrelated shapes; `zIndex === 0` returns it to the
-   * connector layer at natural order.
+   * Move one element between its home layer and {@link overlayLayer}.
+   *
+   * The two z values are the only ordering the overlay needs: a lifted shape
+   * (`1`) sorts above a lifted connector (`0`), so a raised node still covers
+   * its own raised edges. Everything else about paint order is decided by the
+   * layers themselves.
    */
-  raiseConnector(id: string, zIndex: number): void {
-    const inst = this.connectorInstances.get(id);
-    if (!inst) return;
-    const gfx = inst.connector.gfx;
-    if (zIndex === 0) {
-      gfx.zIndex = 0;
-      if (gfx.parent !== this.connectorLayer) this.connectorLayer.addChild(gfx);
-    } else {
-      gfx.zIndex = PrimitivesRenderer.OVERLAY_CONNECTOR_Z + zIndex;
-      if (gfx.parent !== this.overlayLayer) this.overlayLayer.addChild(gfx);
-    }
+  private setLifted(id: string, lifted: boolean): void {
+    const shape = this.shapeInstances.get(id);
+    const gfx = shape ? shape.shape.gfx : this.connectorInstances.get(id)?.connector.gfx;
+    if (!gfx) return;
+    const home = shape ? this.shapeLayer : this.connectorLayer;
+    const parent = lifted ? this.overlayLayer : home;
+    gfx.zIndex = lifted ? (shape ? 1 : 0) : 0;
+    if (gfx.parent !== parent) parent.addChild(gfx);
   }
+
 
   /**
    * Bulk re-index hit-test bboxes for shapes — pairs with

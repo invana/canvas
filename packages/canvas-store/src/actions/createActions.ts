@@ -178,6 +178,23 @@ export function createActions(
       set: (id: string) => v('view:hover:set', (s) => void (s.interaction.hover = id)),
       clear: () => v('view:hover:clear', (s) => void (s.interaction.hover = null)),
     },
+    /**
+     * Paint-order lift, per source. `source` is the id of whatever is asking
+     * (a behaviour id) — each owns its own set, so a hover lift and a selection
+     * lift coexist and either can be dropped without disturbing the other.
+     * The renderer projects the union; see `CanvasView.interaction.raised`.
+     */
+    raise: {
+      set: (source: string, ids: Iterable<string>) =>
+        v('view:raise:set', (s) => void (s.interaction.raised = { ...s.interaction.raised, [source]: new Set(ids) })),
+      clear: (source: string) =>
+        v('view:raise:clear', (s) => {
+          if (!(source in s.interaction.raised)) return;
+          const next = { ...s.interaction.raised };
+          delete next[source];
+          s.interaction.raised = next;
+        }),
+    },
 
     // ── VIEW · templates (e.g. node templates) ────────────────────────────────
     templates: {

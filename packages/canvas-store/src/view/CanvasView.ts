@@ -43,6 +43,24 @@ export interface CanvasView {
     hover: string | null;
     /** Visual state sets (highlighted / context-open / …) keyed by state name (presence overlay). */
     states: Record<string, ReadonlySet<string>>;
+    /**
+     * Elements lifted above their peers, keyed by the **source** that lifted
+     * them (a behaviour id) — so independent sources (hover, selection, …)
+     * never clobber each other's set, and each can be cleared on its own.
+     *
+     * The renderer projects the union of every source onto its own paint order
+     * and lowers anything absent from it. That single projection is what keeps
+     * the lift honest: a raise is *derived from state*, not a side effect, so
+     * it self-corrects when the state that motivated it changes (an element
+     * stops being hovered, a frame opens and becomes a backdrop, …). Before,
+     * each behaviour reparented display objects imperatively and tracked what
+     * it had touched privately — nothing could reconcile them, so a stale lift
+     * outranked the whole scene until that behaviour happened to run again.
+     *
+     * Ids only: the kernel stays domain-free. What an id *means* (a frame
+     * lifting its contents instead of itself, say) is the renderer's business.
+     */
+    raised: Record<string, ReadonlySet<string>>;
     /** Abstract camera transform — renderer-agnostic; throttled/ephemeral. */
     camera: CameraTransform;
     /**
@@ -114,6 +132,7 @@ export function defaultCanvasView(): CanvasView {
       selection: new Set<string>(),
       hover: null,
       states: {},
+      raised: {},
       camera: { x: 0, y: 0, zoom: 1 },
       focus: null,
       transientPins: new Set<string>(),

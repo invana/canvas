@@ -731,27 +731,22 @@ export const InvanaArchitecture: Story = {
       // ── Keep the flow labels readable ───────────────────────────────────
       // An edge label is part of its connector, and connectors paint *below*
       // every shape — so a label that lands over a stage frame is covered by it
-      // ("recall past episodes" disappearing into the Decision frame). Raising
-      // a labelled connector reparents it to the overlay, above every
-      // non-raised node, which is how the source diagram reads.
+      // ("recall past episodes" disappearing into the Decision frame). Lifting a
+      // labelled connector floats it above every non-lifted node, which is how
+      // the source diagram reads.
+      //
+      // Declared once, as this story's own **source** in `interaction.raised`:
+      // lifts are per-source and the renderer projects their union, so the hover
+      // behaviour's lift composes with this one instead of cancelling it. (It
+      // used to need re-asserting after every `pointerout`, because the hover
+      // behaviour lowered whatever it had raised without knowing this story had
+      // raised some of the same edges.)
       const labelledEdges = new Set<string>();
-      const raiseLabelledEdges = (): void => {
-        for (const id of labelledEdges) {
-          if (renderer.hasConnector(id)) renderer.raiseConnector(id, 1);
-        }
-      };
       for (const edge of graph.store.edges()) {
         if (graph.resolveEdgeStyle(edge).labelText === undefined) continue;
         labelledEdges.add(edge.id);
       }
-      raiseLabelledEdges();
-      // `HoverActivateBehaviour` lifts a hovered stage's internal edges and
-      // drops them back to z 0 on release — it has no way to know some of them
-      // were already lifted by this story. Re-assert after each hover so the
-      // two labels that live *inside* a stage ("shapes", "4 · simulate") don't
-      // sink behind their frame once you've hovered it.
-      renderer.events.on('shape:pointerout', raiseLabelledEdges);
-      renderer.events.on('connector:pointerout', raiseLabelledEdges);
+      canvas.store.actions.raise.set('labelled-edges', labelledEdges);
 
       // ── The half of light/dark the palette can't express ─────────────────
       // `BackgroundLayer` and `GraphLayer` recolour themselves off the published

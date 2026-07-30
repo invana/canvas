@@ -38,6 +38,7 @@
 import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/canvas';
 
 import { GraphLayer } from '../layer/GraphLayer';
+import { COLLAPSED_STATE } from '../layer/types';
 
 /** Element kind for hover targets. */
 export type HoverableElementType = 'shape' | 'connector';
@@ -272,14 +273,6 @@ export class HoverActivateBehaviour extends Behaviour {
   /** Node ids currently scaled via `renderer.scaleShape` — reset on clear. */
   private readonly scaledNodeIds = new Set<string>();
 
-  /**
-   * `gfx.zIndex` written to the active set when `raiseActive` is on. Any value
-   * above the default `0` lifts the element over its untouched peers; `1` is
-   * enough and keeps hover- and selection-raises on the same tier.
-   */
-  private static readonly RAISED_Z_INDEX = 1;
-  /** Ids currently raised via `renderer.raiseShape` / `raiseConnector`. */
-  private readonly raisedIds = new Set<string>();
 
   constructor(opts: HoverActivateBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? ['pointer+hover'] });
@@ -322,6 +315,26 @@ export class HoverActivateBehaviour extends Behaviour {
       () => renderer.events.off('shape:pointerout', onShapeOut),
       () => renderer.events.off('connector:pointerover', onConnOver),
       () => renderer.events.off('connector:pointerout', onConnOut),
+      // A frame opening or closing changes what a hover over it should lift
+      // (itself vs its contents), and the pointer doesn't have to move for that
+      // to happen — a collapse toggle fires under a stationary cursor. Re-resolve.
+      layer.store.events.on('node:state', ({ name }) => {
+        if (name === COLLAPSED_STATE && this.opts.raiseActive && this.current) this.applyRaise();
+      }),
+      // Project the *shared* lift state onto the renderer: every source's ids,
+      // not just this behaviour's. Reconciling the union in one call is what
+      // lets hover and selection lift overlapping sets without lowering each
+      // other's elements. Idempotent, so it's harmless that a sibling
+      // behaviour projects the same state too — whichever is registered keeps
+      // the renderer honest.
+      ctx.store.view.subscribe((state, prev) => {
+        if (state.interaction.raised === prev.interaction.raised) return;
+        const union = new Set<string>();
+        for (const ids of Object.values(state.interaction.raised)) {
+          for (const id of ids) union.add(id);
+        }
+        layer.getRenderer()?.setRaised(union);
+      }),
     );
 
     // When the pointer leaves the canvas entirely (onto a toolbar/panel or out
@@ -415,7 +428,7 @@ export class HoverActivateBehaviour extends Behaviour {
       this.activeIds.clear();
       this.inactiveIds.clear();
       this.scaledNodeIds.clear();
-      this.raisedIds.clear();
+      this.resetRaise();
       this.appliedNodeState = null;
       this.appliedEdgeState = null;
       this.appliedScale = 1;
@@ -627,33 +640,66 @@ export class HoverActivateBehaviour extends Behaviour {
   }
 
   /**
-   * Raise the current hovered set (`current` + `activeIds`) above their peers
-   * via `renderer.raiseShape` / `raiseConnector`. `activeIds` is a flat set of
-   * mixed kinds, so each id is dispatched by `hasShape` / `hasConnector`.
-   * Tracked in {@link raisedIds} so {@link resetRaise} restores exactly the
-   * ids we touched.
+   * Publish what this hover should lift, under this behaviour's own id in
+   * `view.interaction.raised`.
    *
-   * **Expanded group frames raise their contents instead of themselves** — see
-   * {@link raiseGroupContents}.
+   * This is where the *policy* lives: the hovered set (`current` +
+   * `activeIds`) is resolved through {@link collectRaiseTargets} into the
+   * elements that actually rise. The layer's projection is mechanical — it
+   * lifts exactly the ids published here and lowers the rest — so anything
+   * clever about *what* rises has to be decided before it's written to state.
    */
   private applyRaise(): void {
-    const renderer = this.layer?.getRenderer();
-    if (!renderer) return;
-    const z = HoverActivateBehaviour.RAISED_Z_INDEX;
-    const raise = (id: string): void => {
-      if (renderer.hasShape(id)) {
-        if (this.isExpandedGroup(id)) {
-          this.raiseGroupContents(id, z);
-          return;
-        }
-        renderer.raiseShape(id, z);
-      } else if (renderer.hasConnector(id)) {
-        renderer.raiseConnector(id, z);
-      } else return;
-      this.raisedIds.add(id);
-    };
-    if (this.current) raise(this.current.id);
-    for (const id of this.activeIds) raise(id);
+    const store = this._canvasStore;
+    if (!store) return;
+    const ids = new Set<string>();
+    if (this.current) this.collectRaiseTargets(this.current.id, ids);
+    for (const id of this.activeIds) this.collectRaiseTargets(id, ids);
+    store.actions.raise.set(this.id, ids);
+  }
+
+  /**
+   * Resolve one hovered id into the elements that should rise with it,
+   * accumulating into `out`.
+   *
+   * Everything lifts itself, except an **expanded group frame**, which lifts
+   * what it *contains* — its whole subtree plus the edges with both ends
+   * inside it. Two reasons the frame stays put:
+   *
+   * - **It can't be lifted correctly.** The renderer's overlay sorts every
+   *   raised shape above every raised connector, so a lifted frame paints over
+   *   its own members' edges — the arrows inside it vanish. No z-index avoids
+   *   that; the bands are fixed.
+   * - **Lifting a backdrop is meaningless.** A frame is the container behind
+   *   its members; floating it above unrelated content while its contents stay
+   *   behind isn't what "raise this element" means for a group.
+   *
+   * Left alone, the frame keeps its `behindChildren` z in the shape layer, so
+   * the lifted members and their lifted edges both sit above it. A *collapsed*
+   * frame is an ordinary node with nothing inside to cover, so it lifts itself
+   * — which is why {@link onCollapseFlip} re-runs this: a lifted collapsed
+   * frame that opens must re-resolve to "lift its contents", or it stays
+   * stranded on top of the children it just revealed.
+   */
+  private collectRaiseTargets(id: string, out: Set<string>): void {
+    const layer = this.layer;
+    if (!layer) return;
+    const node = layer.store.getNode(id);
+    if (!node || !layer.isGroupNode(node) || layer.isCollapsedGroup(node)) {
+      out.add(id);
+      return;
+    }
+    const memberIds = new Set<string>([id, ...layer.store.descendantsOf(id)]);
+    for (const memberId of memberIds) {
+      if (memberId === id) continue;
+      out.add(memberId);
+      // Only the group's *internal* wiring — an edge leaving the group belongs
+      // as much to the other end, and lifting it would drag half of an
+      // unrelated stage's arrow over the top.
+      for (const edge of layer.store.edgesOf(memberId, 'both')) {
+        if (memberIds.has(edge.source) && memberIds.has(edge.target)) out.add(edge.id);
+      }
+    }
   }
 
   /**
@@ -676,46 +722,9 @@ export class HoverActivateBehaviour extends Behaviour {
    * group never reaches here — it renders as an ordinary node with nothing
    * inside to cover, and raises normally.
    */
-  private raiseGroupContents(groupId: string, z: number): void {
-    const layer = this.layer;
-    const renderer = layer?.getRenderer();
-    if (!layer || !renderer) return;
-    const memberIds = new Set<string>([groupId, ...layer.store.descendantsOf(groupId)]);
-    for (const id of memberIds) {
-      if (id === groupId || !renderer.hasShape(id)) continue;
-      renderer.raiseShape(id, z);
-      this.raisedIds.add(id);
-      // Only the group's *internal* wiring — an edge leaving the group belongs
-      // as much to the other end, and lifting it would drag half of an
-      // unrelated stage's arrow over the top.
-      for (const edge of layer.store.edgesOf(id, 'both')) {
-        if (!memberIds.has(edge.source) || !memberIds.has(edge.target)) continue;
-        if (!renderer.hasConnector(edge.id)) continue;
-        renderer.raiseConnector(edge.id, z);
-        this.raisedIds.add(edge.id);
-      }
-    }
-  }
-
-  /** True for a group node that is currently expanded (i.e. drawn as a frame). */
-  private isExpandedGroup(id: string): boolean {
-    const layer = this.layer;
-    const node = layer?.store.getNode(id);
-    if (!layer || !node) return false;
-    return layer.isGroupNode(node) && !layer.isCollapsedGroup(node);
-  }
-
-  /** Reset every id raised by {@link applyRaise} back to the default z (0). */
+  /** Drop this behaviour's paint-order lift; other sources keep theirs. */
   private resetRaise(): void {
-    if (this.raisedIds.size === 0) return;
-    const renderer = this.layer?.getRenderer();
-    if (renderer) {
-      for (const id of this.raisedIds) {
-        if (renderer.hasShape(id)) renderer.raiseShape(id, 0);
-        else if (renderer.hasConnector(id)) renderer.raiseConnector(id, 0);
-      }
-    }
-    this.raisedIds.clear();
+    this._canvasStore?.actions.raise.clear(this.id);
   }
 
   /**

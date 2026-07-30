@@ -220,15 +220,6 @@ export class ClickSelectBehaviour extends Behaviour {
   /** Ids currently rendered with the `unselectedState`. */
   private unselectedIds = new Set<string>();
 
-  /**
-   * `gfx.zIndex` written to the selected set when `raiseActive` is on. Any
-   * value above the default `0` lifts the element over its untouched peers;
-   * `1` matches `HoverActivateBehaviour`'s raise tier.
-   */
-  private static readonly RAISED_Z_INDEX = 1;
-  /** Ids currently raised via `renderer.raiseShape` / `raiseConnector`. */
-  private readonly raisedIds = new Set<string>();
-
   /** True when the most recent click already consumed an element. */
   private clickConsumedByElement = false;
 
@@ -270,6 +261,22 @@ export class ClickSelectBehaviour extends Behaviour {
     }
 
     ModifierTracker.attach();
+
+    // Project the *shared* lift state onto the renderer — the union of every
+    // source's ids, so a selection lift and a hover lift reconcile in one call
+    // instead of lowering each other's elements. Idempotent; a sibling
+    // behaviour projecting the same state is harmless, and having each raiser
+    // carry the wiring means the projection exists whenever any of them does.
+    this.subs.push(
+      ctx.store.view.subscribe((state, prev) => {
+        if (state.interaction.raised === prev.interaction.raised) return;
+        const union = new Set<string>();
+        for (const ids of Object.values(state.interaction.raised)) {
+          for (const id of ids) union.add(id);
+        }
+        layer.getRenderer()?.setRaised(union);
+      }),
+    );
 
     const onShapeClick = (e: { id: string }) => {
       this.clickConsumedByElement = true;
@@ -650,33 +657,22 @@ export class ClickSelectBehaviour extends Behaviour {
   }
 
   /**
-   * Raise the selected set above its peers via `renderer.raiseShape` /
-   * `raiseConnector`. `selected` carries the element type per id, so each is
-   * dispatched directly. Tracked in {@link raisedIds} so {@link resetRaise}
-   * restores exactly the ids we touched.
+   * Publish the selected set as this behaviour's paint-order lift, under its
+   * own id in `view.interaction.raised`.
+   *
+   * Intent only — no renderer calls. `GraphLayer`'s projection applies the
+   * union of every source and lowers whatever leaves it, so a selection lift
+   * can't strand elements on top of the scene the way the old per-behaviour
+   * bookkeeping could (it only lowered on the *next* selection change, and
+   * knew nothing about lifts other sources had applied to the same ids).
    */
   private applyRaise(): void {
-    const renderer = this.layer?.getRenderer();
-    if (!renderer) return;
-    const z = ClickSelectBehaviour.RAISED_Z_INDEX;
-    for (const [id, type] of this.selected) {
-      if (type === 'shape') renderer.raiseShape(id, z);
-      else renderer.raiseConnector(id, z);
-      this.raisedIds.add(id);
-    }
+    this._canvasStore?.actions.raise.set(this.id, this.selected.keys());
   }
 
-  /** Reset every id raised by {@link applyRaise} back to the default z (0). */
+  /** Drop this behaviour's paint-order lift; other sources keep theirs. */
   private resetRaise(): void {
-    if (this.raisedIds.size === 0) return;
-    const renderer = this.layer?.getRenderer();
-    if (renderer) {
-      for (const id of this.raisedIds) {
-        if (renderer.hasShape(id)) renderer.raiseShape(id, 0);
-        else if (renderer.hasConnector(id)) renderer.raiseConnector(id, 0);
-      }
-    }
-    this.raisedIds.clear();
+    this._canvasStore?.actions.raise.clear(this.id);
   }
 
   private applyUnselected(selected: Map<string, SelectableElementType>): void {
