@@ -43,11 +43,11 @@ import {
 import { ThemeProvider } from '@invana/themes';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'Usecases/code-kg' };
+const meta: Meta = { title: 'usecases/domains/code-kg/DotsForce' };
 export default meta;
 type Story = StoryObj;
 
-export const F3Force: Story = {
+export const DotsForce: Story = {
   name: 'd3-force',
   render: function Render() {
     const ALL_LABELS: InvanaCodeNodeLabel[] = ['file', 'function', 'class', 'config', 'document'];

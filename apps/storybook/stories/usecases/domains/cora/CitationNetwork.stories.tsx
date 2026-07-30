@@ -37,11 +37,11 @@ import { cora, type CoraNodeData, type CoraSubject } from '@invana/graph-dataset
 import { ThemeProvider } from '@invana/themes';
 import { Layers, Moon, Settings, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'Usecases/Cora Citation Network' };
+const meta: Meta = { title: 'usecases/domains/cora/CitationNetwork' };
 export default meta;
 type Story = StoryObj;
 
-export const CoraCitationNetwork: Story = {
+export const CitationNetwork: Story = {
   render: function Render() {
     // One colour per Cora subject — the story's own palette, so the bundle's
     // colour-by-type behaviour stays off in `config`.

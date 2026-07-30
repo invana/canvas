@@ -113,11 +113,11 @@ import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar,
 import { ThemeProvider } from '@invana/themes';
 import { Atom, LayoutDashboard, Moon, Network, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'Usecases/InvanaArchitecture' };
+const meta: Meta = { title: 'usecases/domains/invana-architecture/EndToEnd' };
 export default meta;
 type Story = StoryObj;
 
-export const InvanaArchitecture: Story = {
+export const EndToEnd: Story = {
   render: () => {
     // Which layout the header picker is on. `'authored'` isn't a registered
     // layout — it's the absence of one (`activeLayout: ''`) plus a rewrite of the

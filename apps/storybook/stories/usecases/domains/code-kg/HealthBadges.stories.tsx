@@ -34,11 +34,11 @@ import type { ElkDirection } from '@invana/graph-layout-elkjs';
 import { ThemeProvider } from '@invana/themes';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'Usecases/Code Knowledge Graph' };
+const meta: Meta = { title: 'usecases/domains/code-kg/HealthBadges' };
 export default meta;
 type Story = StoryObj;
 
-export const CodeKnowledgeGraph: Story = {
+export const HealthBadges: Story = {
   render: function Render() {
     // A synthetic codebase — 4 feature packages + `shared`, 18 modules. Each
     // node carries plain data; every visual field (fill, badges) is resolved

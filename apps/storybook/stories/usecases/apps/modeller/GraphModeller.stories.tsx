@@ -1,7 +1,7 @@
 /**
  * Graph **modeller, dressed in the app shell** — a full drawing tool composed as
  * an *arrangement* of `<GraphCanvasApp>` (`bundle={false}`), the modeller
- * counterpart of `GraphVisualiserApp`. It's the proof the app hosts *any* use
+ * counterpart of `apps/visualiser/GraphVisualiser`. It's the proof the app hosts *any* use
  * case: where the visualiser feeds the batteries bundle a read-only graph, this
  * story turns the bundle off and feeds tool-gated drawing behaviours + a
  * `ModellerToolbar` as `children`, with the chrome in the app's header / footer
@@ -60,7 +60,7 @@ import type {
 import type * as graph from '@invana/graph';
 import { ThemeProvider, useTheme } from '@invana/themes';
 
-const meta: Meta = { title: 'Usecases/GraphModellerApp' };
+const meta: Meta = { title: 'usecases/apps/modeller/GraphModeller' };
 export default meta;
 type Story = StoryObj;
 
@@ -485,6 +485,6 @@ function ModellerApp() {
   );
 }
 
-export const GraphModellerApp: Story = {
+export const GraphModeller: Story = {
   render: () => <ModellerApp />,
 };

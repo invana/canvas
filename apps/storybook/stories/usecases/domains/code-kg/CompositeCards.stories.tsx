@@ -44,11 +44,11 @@ import {
 import { ThemeProvider } from '@invana/themes';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'Usecases/code-kg' };
+const meta: Meta = { title: 'usecases/domains/code-kg/CompositeCards' };
 export default meta;
 type Story = StoryObj;
 
-export const ElkjsCards: Story = {
+export const CompositeCards: Story = {
   name: 'elkjs (composite cards)',
   render: function Render() {
     const ALL_LABELS: InvanaCodeNodeLabel[] = ['file', 'function', 'class', 'config', 'document'];

@@ -39,11 +39,11 @@ import {
 import { ThemeProvider } from '@invana/themes';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'Usecases/RAG Embedding Explorer' };
+const meta: Meta = { title: 'usecases/domains/rag-embeddings/EmbeddingExplorer' };
 export default meta;
 type Story = StoryObj;
 
-export const RAGEmbeddingExplorer: Story = {
+export const EmbeddingExplorer: Story = {
   render: function Render() {
     // One colour per source cluster — the story's own palette, so the bundle's
     // colour-by-type behaviour stays off in `config`.

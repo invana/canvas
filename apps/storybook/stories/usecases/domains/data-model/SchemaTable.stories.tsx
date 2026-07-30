@@ -59,7 +59,7 @@ import { Button, Card } from '@invana/ui';
 import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'Usecases/Schema Table' };
+const meta: Meta = { title: 'usecases/domains/data-model/SchemaTable' };
 export default meta;
 type Story = StoryObj;
 

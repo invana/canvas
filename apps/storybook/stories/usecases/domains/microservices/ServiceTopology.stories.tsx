@@ -42,11 +42,11 @@ import {
 import { ThemeProvider } from '@invana/themes';
 import { Activity, Map, Moon, Settings, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'Usecases/Microservices Topology' };
+const meta: Meta = { title: 'usecases/domains/microservices/ServiceTopology' };
 export default meta;
 type Story = StoryObj;
 
-export const MicroservicesTopology: Story = {
+export const ServiceTopology: Story = {
   render: function Render() {
     const [minimapOn, setMinimapOn] = useState(true);
     const [simulateOn, setSimulateOn] = useState(false);

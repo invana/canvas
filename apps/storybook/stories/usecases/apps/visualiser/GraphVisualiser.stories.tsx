@@ -23,11 +23,11 @@ import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar,
 import { Moon, Sun } from 'lucide-react';
 import { ThemeProvider } from '@invana/themes';
 
-const meta: Meta = { title: 'Usecases/GraphVisualiserApp' };
+const meta: Meta = { title: 'usecases/apps/visualiser/GraphVisualiser' };
 export default meta;
 type Story = StoryObj;
 
-export const GraphVisualiserApp: Story = {
+export const GraphVisualiser: Story = {
   render: () => {
     // Distinct colour per les-mis community.
     const PALETTE = [

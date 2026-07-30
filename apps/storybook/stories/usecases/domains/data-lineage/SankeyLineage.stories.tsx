@@ -40,11 +40,11 @@ import { ukEnergyFlowAsGraph } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'Usecases/Data Lineage' };
+const meta: Meta = { title: 'usecases/domains/data-lineage/SankeyLineage' };
 export default meta;
 type Story = StoryObj;
 
-export const DataLineage: Story = {
+export const SankeyLineage: Story = {
   render: function Render() {
     const [volumeFormat, setVolumeFormat] = useState<'raw' | 'k' | 'M'>('k');
 

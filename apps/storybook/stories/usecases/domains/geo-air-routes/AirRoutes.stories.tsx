@@ -49,11 +49,11 @@ import { Delaunay } from 'd3-delaunay';
 import { ThemeProvider } from '@invana/themes';
 import { Map as MapIcon, Moon, Settings, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'Usecases/Geo Air Routes' };
+const meta: Meta = { title: 'usecases/domains/geo-air-routes/AirRoutes' };
 export default meta;
 type Story = StoryObj;
 
-export const GeoAirRoutes: Story = {
+export const AirRoutes: Story = {
   render: function Render() {
     // OpenFreeMap (no key required) — three styles cover the most-asked-for
     // basemap modes for a graph overlay.

@@ -47,9 +47,23 @@ The **only** inline `style` allowed is a genuinely dynamic runtime value Tailwin
 
 ## Conventions
 
-**Storybook top-level namespacing follows package names — each package owns its own top-level sidebar node; a package's stories never nest under another package's namespace.** So `@invana/canvas` stories live under `stories/canvas/...`, `@invana/graph` under `stories/graph/...`, `@invana/canvas-react` under `stories/canvas-react/...`, `@invana/canvas-ui` under `stories/canvas-ui/...`, `@invana/canvas-store` under `stories/canvas-store/...`, `@invana/canvas-designer` under `stories/canvas-designer/...`. The layout and layer packages keep a *grouped* parent (`stories/graph-layouts/<flavour>/...`, `stories/graph-layers/<name>/...`) — see below — but that group is itself a **top-level** sibling of `canvas` and `graph`, not a child of `canvas`. The `title` field mirrors the folder path exactly, so the sidebar tree matches the filesystem tree. (`usecases/` is the one deliberate exception: cross-package demo apps that belong to no single package.)
+**Storybook top-level namespacing follows package names — each package owns its own top-level sidebar node; a package's stories never nest under another package's namespace.** So `@invana/canvas` stories live under `stories/canvas/...`, `@invana/graph` under `stories/graph/...`, `@invana/canvas-react` under `stories/canvas-react/...`, `@invana/canvas-ui` under `stories/canvas-ui/...`, `@invana/canvas-store` under `stories/canvas-store/...`, `@invana/canvas-designer` under `stories/canvas-designer/...`. The layout and layer packages keep a *grouped* parent (`stories/graph-layouts/<flavour>/...`, `stories/graph-layers/<name>/...`) — see below — but that group is itself a **top-level** sibling of `canvas` and `graph`, not a child of `canvas`. The `title` field mirrors the folder path exactly, so the sidebar tree matches the filesystem tree. (`usecases/` is the one deliberate exception: cross-package demo apps that belong to no single package — see its own two-bucket rule below.)
 
 > Don't nest `graph`, `graph-layouts`, or `graph-layers` (or any other package) under `canvas/` — they're separate packages and get separate top-level nodes.
+
+### `usecases/` has exactly two buckets: `apps/` and `domains/`
+
+- **`usecases/apps/<surface>/`** — the **product surfaces** (`modeller` · `visualiser` · `designer`). A story here is about *the tool*; its dataset is a prop. Model it, explore it, style it.
+- **`usecases/domains/<domain>/`** — the **verticals** (`code-kg` · `cora` · `microservices` · …). A story here is about *the picture a domain needs*; `GraphCanvasApp` is a given. Several styling / layout configs of one dataset are **sibling files in that domain's folder** — e.g. `domains/code-kg/{DotsForce,CompositeCards,HealthBadges}`.
+
+**Don't add a third bucket.** An engine-capability demo wearing a use-case costume is **not** a use case — it belongs under the owning package's namespace (`graph/Nodes/…`, `canvas/Concepts/…`). Titles are lowercase and mirror the path exactly (`usecases/domains/code-kg/DotsForce`).
+
+Two neighbouring namespaces are deliberately distinct:
+
+- `usecases/apps/` vs **`canvas-ui/apps/GraphCanvasApp/`** — the latter teaches the *component's API* (regions, chrome slots, `bundle={false}`, `keepMounted`); the former shows a *tool built with it*.
+- `usecases/apps/designer/` vs **`canvas-designer/`** — the latter is stories for the `@invana/canvas-designer` package's own authoring surfaces; the former imports none of that package's code (it's `GraphCanvasApp` + `CanvasSettingsEditorPanel`, both canvas-ui). If canvas-designer ships its planned studio shell, the designer use case moves there and the namespace rule takes over.
+
+Full taxonomy + move manifest: [`docs/usecases-storybook-taxonomy-plan.md`](../../docs/usecases-storybook-taxonomy-plan.md).
 
 Inside the `@invana/canvas` namespace, the seven core engine concepts each get a folder (`canvas/Concepts/...`):
 

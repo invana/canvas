@@ -13,7 +13,7 @@
  * live layer / behaviour state.
  *
  * For the *dense* full-Cora view (no bundling — additive bezier overlap), see
- * `CoraCitationNetwork.stories.tsx`. For the pathType mechanics on a
+ * the sibling `CitationNetwork.stories.tsx`. For the pathType mechanics on a
  * stripped-down example, see `Graph/Edges/Types/Bundle.stories.ts`.
  *
  * Exercises: `bundle` pathStyle with explicit `waypoints` derived from an
@@ -39,11 +39,11 @@ import { cora, type CoraNodeData } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'Usecases/Cora Subject Bundle' };
+const meta: Meta = { title: 'usecases/domains/cora/SubjectBundle' };
 export default meta;
 type Story = StoryObj;
 
-export const CoraSubjectBundle: Story = {
+export const SubjectBundle: Story = {
   render: function Render() {
     const dock = useSidePanels(
       [

@@ -40,11 +40,11 @@ import {
 import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'Usecases/LLM Agent Trace' };
+const meta: Meta = { title: 'usecases/domains/llm-agent-trace/AgentTrace' };
 export default meta;
 type Story = StoryObj;
 
-export const LLMAgentTrace: Story = {
+export const AgentTrace: Story = {
   render: function Render() {
     const [presetId, setPresetId] = useState(agentTrace[0]!.id);
 

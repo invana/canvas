@@ -43,7 +43,7 @@ import {
 import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'Usecases/Citation Graph' };
+const meta: Meta = { title: 'usecases/domains/citations/CitationGraph' };
 export default meta;
 type Story = StoryObj;
 

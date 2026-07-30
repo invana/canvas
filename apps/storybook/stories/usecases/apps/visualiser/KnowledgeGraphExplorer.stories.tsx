@@ -39,7 +39,7 @@ import {
 import { ThemeProvider } from '@invana/themes';
 import { Maximize2, Moon, RotateCcw, Settings, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'Usecases/Knowledge Graph Explorer' };
+const meta: Meta = { title: 'usecases/apps/visualiser/KnowledgeGraphExplorer' };
 export default meta;
 type Story = StoryObj;
 

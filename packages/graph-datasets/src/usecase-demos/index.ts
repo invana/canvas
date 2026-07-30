@@ -1,17 +1,17 @@
 // @invana/graph-datasets/usecase-demos — synthetic datasets for the
-// Storybook `Usecases/` showcase folder. Kept separate from the root
+// Storybook `usecases/` showcase folder. Kept separate from the root
 // `@invana/graph-datasets` export so the "real" datasets (Les Misérables,
 // Flare, UK Energy, etc.) and the synthetic demo-only ones don't share
 // a namespace.
 //
 // Dataset modules are added as each usecase ships:
 //
-//  - agentTrace      → LLMAgentTrace.stories.ts
-//  - ragEmbeddings   → RAGEmbeddingExplorer.stories.ts
-//  - microservices   → MicroservicesTopology.stories.ts
-//  - ontology        → KnowledgeGraphExplorer.stories.ts
-//  - citations       → CitationGraph.stories.ts
-//  - invanaCodeKg    → InvanaCodeKnowledgeGraph.stories.ts
+//  - agentTrace      → usecases/domains/llm-agent-trace/AgentTrace
+//  - ragEmbeddings   → usecases/domains/rag-embeddings/EmbeddingExplorer
+//  - microservices   → usecases/domains/microservices/ServiceTopology
+//  - ontology        → usecases/apps/visualiser/KnowledgeGraphExplorer
+//  - citations       → usecases/domains/citations/CitationGraph
+//  - invanaCodeKg    → usecases/domains/code-kg/{DotsForce,CompositeCards}
 
 export {
   agentTrace,
