@@ -638,6 +638,19 @@ export type {
   MiniMapLayerOptions,
 } from './editors/layers/minimap-layer';
 
+// GraphLegendLayer
+export { GraphLegendLayerEditorPanel, graphLegendLayerFields } from './editors/layers/graph-legend-layer';
+export {
+  optionsToForm as graphLegendLayerOptionsToForm,
+  formToOptions as graphLegendLayerFormToOptions,
+} from './editors/layers/graph-legend-layer';
+export type {
+  GraphLegendLayerEditorPanelProps,
+  GraphLegendLayerFields,
+  GraphLegendLayerFormState,
+  GraphLegendLayerOptions,
+} from './editors/layers/graph-legend-layer';
+
 // D3ForceLayout
 export { D3ForceLayoutEditorPanel, d3ForceLayoutFields } from './editors/layouts/d3-force-layout';
 export {

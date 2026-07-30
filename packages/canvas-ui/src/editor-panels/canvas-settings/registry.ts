@@ -31,6 +31,11 @@ import {
   optionsToForm as miniMapLayerToForm,
   formToOptions as miniMapLayerToOptions,
 } from '../../editors/layers/minimap-layer/mapping';
+import { graphLegendLayerFields } from '../../editors/layers/graph-legend-layer/fields';
+import {
+  optionsToForm as graphLegendLayerToForm,
+  formToOptions as graphLegendLayerToOptions,
+} from '../../editors/layers/graph-legend-layer/mapping';
 import { densityContourFillLayerFields } from '../../editors/layers/density-contour-fill-layer/fields';
 import {
   optionsToForm as densityContourFillLayerToForm,
@@ -253,6 +258,7 @@ export const DEFAULT_CANVAS_SETTINGS_SCHEMAS: Record<string, SettingsSchemaEntry
   'background-layer': { section: 'layers', typeLabel: 'Background Layer', fields: backgroundLayerFields, toForm: backgroundLayerToForm, toOptions: backgroundLayerToOptions },
   'dev-info-layer': { section: 'layers', typeLabel: 'Dev Info Layer', fields: devInfoLayerFields, toForm: devInfoLayerToForm, toOptions: devInfoLayerToOptions },
   'minimap-layer': { section: 'layers', typeLabel: 'Mini-map Layer', fields: miniMapLayerFields, toForm: miniMapLayerToForm, toOptions: miniMapLayerToOptions },
+  'graph-legend-layer': { section: 'layers', typeLabel: 'Graph Legend Layer', fields: graphLegendLayerFields, toForm: graphLegendLayerToForm, toOptions: graphLegendLayerToOptions },
   'density-contour-fill-layer': { section: 'layers', typeLabel: 'Density Contour Fill', fields: densityContourFillLayerFields, toForm: densityContourFillLayerToForm, toOptions: densityContourFillLayerToOptions },
   'density-contour-stroke-layer': { section: 'layers', typeLabel: 'Density Contour Stroke', fields: densityContourStrokeLayerFields, toForm: densityContourStrokeLayerToForm, toOptions: densityContourStrokeLayerToOptions },
   'bubble-sets-layer': { section: 'layers', typeLabel: 'Bubble Sets Layer', fields: bubbleSetsLayerFields, toForm: bubbleSetsLayerToForm, toOptions: bubbleSetsLayerToOptions },

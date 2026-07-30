@@ -11,6 +11,19 @@ export type {
   MiniMapMode,
   MiniMapKind,
 } from './MiniMapLayer';
+export { GraphLegendLayer } from './GraphLegendLayer';
+export type {
+  GraphLegendLayerOptions,
+  GraphLegendPosition,
+  GraphLegendColor,
+  GraphLegendMode,
+  GraphLegendKind,
+  GraphLegendCountMode,
+  GraphLegendSort,
+  GraphLegendRow,
+  GraphLegendRowKind,
+  GraphLegendLayerEvents,
+} from './GraphLegendLayer';
 export {
   COLLAPSED_STATE,
   DEFAULT_EDGE_STATES,

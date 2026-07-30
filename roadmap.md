@@ -98,7 +98,7 @@ Legend: ✅ shipped · 🚧 in progress · 📋 planned
 | Layer | Status |
 |---|---|
 | Background · DevInfo · LayersPanel | ✅ |
-| GraphLayer · MiniMapLayer | ✅ |
+| GraphLayer · MiniMapLayer · GraphLegendLayer | ✅ |
 | Density contour (fill + stroke) | ✅ |
 | Bubble-sets (group annotation) | ✅ |
 | MapLibre basemap | ✅ |
