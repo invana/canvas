@@ -451,16 +451,39 @@ export type TabAlign = 'left' | 'center' | 'right';
  * horizontally per {@link tabAlign} / {@link tabOffset}.
  *
  * A tab as wide as the body degenerates to a plain rect of the combined
- * height; that's a valid (if pointless) spec, not an error.
+ * height; that's a valid (if pointless) spec, not an error. `height: 0` is
+ * the other degenerate end and a useful one — see {@link TabbedRectSpec.height}.
  */
 export interface TabbedRectSpec extends BaseShapeSpec {
   readonly kind: 'tabbed-rect';
   /** Width of the body — also the AABB width; the tab never exceeds it. */
   readonly width: number;
-  /** Height of the **body alone**, excluding {@link tabHeight}. */
+  /**
+   * Height of the **body alone**, excluding {@link tabHeight}.
+   *
+   * `0` (or less) draws the **tab by itself** — a closed folder. The tab's
+   * base becomes an exterior edge (so it takes a fillet and loses the fold
+   * line), the tab is free to lean even when flush with the body's former
+   * edges, and `bounds().height` is just `tabHeight`. Anything anchored to
+   * the silhouette (labels, edges, decorations) follows the tab.
+   */
   readonly height: number;
-  /** Width of the raised tab. Clamped to `width`. */
-  readonly tabWidth: number;
+  /**
+   * Width of the raised tab, measured at its base. Clamped to {@link width}
+   * while a body is present; on a bodyless folder (`height <= 0`) the tab is
+   * the whole silhouette, so it sizes freely and *becomes* the AABB width.
+   *
+   * Omit to leave it unresolved — it then falls back to `width` (a full-width
+   * tab), and `ShapeCtor.fitToContent` sizes it to the title the caller
+   * measures. Set it to pin the tab and opt out of that fitting.
+   */
+  readonly tabWidth?: number;
+  /**
+   * Horizontal breathing room between the tab's content and each of its ends,
+   * used when `ShapeCtor.fitToContent` sizes the tab. Default `10`. Ignored
+   * when {@link tabWidth} is pinned.
+   */
+  readonly tabPadding?: number;
   /** Height of the raised tab, added above the body. */
   readonly tabHeight: number;
   /** Fillet applied to the body's outer corners. Default `0` (sharp). */
@@ -1188,6 +1211,40 @@ export interface ShapeCtor<TSpec extends BaseShapeSpec = BaseShapeSpec> {
    * those nodes.
    */
   readonly scaleSpec?: (spec: Omit<TSpec, 'x' | 'y'>, factor: number) => Partial<TSpec>;
+  /**
+   * Optional **minimal form** operator — the smallest version of this
+   * silhouette that still identifies it, as a partial spec to merge over the
+   * original. `TabbedRectShape` returns a bodyless folder (its tab alone);
+   * a shape with no meaningful reduced form omits this and callers keep the
+   * spec as-is.
+   *
+   * Purely geometric, like {@link scaleSpec} — the shape decides what "as
+   * small as this still reads" means for its own geometry, and knows nothing
+   * about *why* a caller wants it. Container frames (`@invana/graph`'s group
+   * nodes) use it to render a collapsed frame without switching over a closed
+   * kind enum, so a shape registered at runtime via `registerShape` defines
+   * its own collapsed look for free.
+   *
+   * Exposed to callers as {@link PrimitivesRenderer.collapsedShapeSpec}.
+   */
+  readonly collapsedOf?: (spec: Omit<TSpec, 'x' | 'y'>) => Partial<TSpec>;
+  /**
+   * Optional **fit-to-content** operator. Given the size of the content the
+   * shape is carrying (a measured label, an image, …), returns the geometry
+   * partial that accommodates it — `TabbedRectShape` widens its tab to the
+   * title it holds.
+   *
+   * The split is deliberate: the **caller measures** (it owns the label and
+   * the font resolution), the **shape decides** what that measurement does to
+   * its geometry. So no caller needs to know that a folder has a tab, or how
+   * padding and taper factor into its width.
+   *
+   * Exposed to callers as {@link PrimitivesRenderer.fitShapeSpecToContent}.
+   */
+  readonly fitToContent?: (
+    spec: Omit<TSpec, 'x' | 'y'>,
+    content: { readonly width: number; readonly height: number },
+  ) => Partial<TSpec>;
 }
 
 export type ShapeDecorationCtor<TStyle = unknown> = new (style: TStyle) => IShapeDecoration<TStyle>;

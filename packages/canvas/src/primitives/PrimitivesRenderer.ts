@@ -2353,6 +2353,39 @@ export class PrimitivesRenderer {
     return Ctor?.scaleSpec?.(spec as never, factor) as Record<string, unknown> | undefined;
   }
 
+  /**
+   * The registered shape's **minimal form** — the smallest version of the
+   * silhouette that still identifies it — as a partial spec to merge over
+   * `spec`. `undefined` when the kind isn't registered or its ctor doesn't
+   * implement `collapsedOf`; callers then keep the spec unchanged.
+   *
+   * Container frames (`@invana/graph` group nodes) render a collapsed frame
+   * through this instead of switching over a closed kind enum, so a runtime-
+   * registered shape brings its own collapsed look. See
+   * `ShapeCtor.collapsedOf` for the contract.
+   */
+  collapsedShapeSpec(spec: { readonly kind: string }): Record<string, unknown> | undefined {
+    const Ctor = this.shapeRegistry.get(spec.kind);
+    return Ctor?.collapsedOf?.(spec as never) as Record<string, unknown> | undefined;
+  }
+
+  /**
+   * Geometry partial that fits the registered shape around `content` — the
+   * measured size of what it carries (typically its label). `undefined` when
+   * the kind isn't registered or its ctor doesn't implement `fitToContent`.
+   *
+   * The caller measures and the shape decides: pair this with
+   * {@link measureLabel} so no caller needs to know how a given silhouette
+   * turns a text size into geometry. See `ShapeCtor.fitToContent`.
+   */
+  fitShapeSpecToContent(
+    spec: { readonly kind: string },
+    content: { readonly width: number; readonly height: number },
+  ): Record<string, unknown> | undefined {
+    const Ctor = this.shapeRegistry.get(spec.kind);
+    return Ctor?.fitToContent?.(spec as never, content) as Record<string, unknown> | undefined;
+  }
+
   hasConnector(id: string): boolean {
     return this.connectorInstances.has(id);
   }

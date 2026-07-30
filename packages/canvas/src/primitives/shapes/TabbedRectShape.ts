@@ -39,6 +39,11 @@ import type {
  *   `placement: 'inside-center'` puts the title on the tab, independent of
  *   how large the body grows — which is what makes an auto-sized frame's
  *   title stay put.
+ *
+ * `height: 0` draws the **tab by itself** — the closed folder. The tab's base
+ * becomes the outline's bottom edge (filleted, no fold line), the taper still
+ * applies, and bounds / label box / edge anchors all collapse onto the tab.
+ * That's the silhouette a collapsed container frame renders as.
  */
 export class TabbedRectShape extends ShapeBase<TabbedRectSpec> {
   static readonly kind = 'tabbed-rect';
@@ -100,7 +105,46 @@ export class TabbedRectShape extends ShapeBase<TabbedRectSpec> {
   }
 
   static boundsOf(spec: Omit<TabbedRectSpec, 'x' | 'y'>): Rect {
+    // Bodyless (`height <= 0`): the tab *is* the silhouette, so it's also the
+    // footprint — the declared body width describes a rectangle that isn't
+    // being drawn. Everything positioned against the AABB (the label box,
+    // decorations, edge anchors) therefore lands on the tab.
+    if (spec.height <= 0) {
+      return { x: 0, y: 0, width: tabWidthOf(spec), height: spec.tabHeight };
+    }
     return { x: 0, y: 0, width: spec.width, height: spec.tabHeight + spec.height };
+  }
+
+  /**
+   * The folder, closed: body gone, tab kept. `width` is deliberately left
+   * alone — {@link boundsOf} already reports the tab as the footprint once
+   * the body is gone, so rewriting it would double-apply.
+   */
+  static collapsedOf(_spec: Omit<TabbedRectSpec, 'x' | 'y'>): Partial<TabbedRectSpec> {
+    return { height: 0 };
+  }
+
+  /**
+   * Size the tab to the content it carries — the title.
+   *
+   * The taper eats into the tab's top edge, so the slant's run is added on top
+   * of the text budget; otherwise leaning the tab would push the title into
+   * the taper. A centred tab leans on both sides.
+   *
+   * The clamp to `width` applies **only while there's a body**: a tab can't
+   * outgrow the rectangle it sits on, but a closed folder is nothing *but* its
+   * tab, so it sizes to the whole title rather than ellipsising it. Returns
+   * nothing when {@link TabbedRectSpec.tabWidth} is pinned.
+   */
+  static fitToContent(
+    spec: Omit<TabbedRectSpec, 'x' | 'y'>,
+    content: { readonly width: number; readonly height: number },
+  ): Partial<TabbedRectSpec> {
+    if (spec.tabWidth !== undefined) return {};
+    const pad = spec.tabPadding ?? 10;
+    const slantSides = (spec.tabAlign ?? 'left') === 'center' ? 2 : 1;
+    const fitted = content.width + 2 * pad + (spec.tabSkew ?? 0) * slantSides;
+    return { tabWidth: spec.height <= 0 ? fitted : Math.min(spec.width, fitted) };
   }
 
   static scaleSpec(
@@ -110,8 +154,9 @@ export class TabbedRectShape extends ShapeBase<TabbedRectSpec> {
     return {
       width: spec.width * factor,
       height: spec.height * factor,
-      tabWidth: spec.tabWidth * factor,
       tabHeight: spec.tabHeight * factor,
+      ...(spec.tabWidth !== undefined ? { tabWidth: spec.tabWidth * factor } : {}),
+      ...(spec.tabPadding !== undefined ? { tabPadding: spec.tabPadding * factor } : {}),
       ...(spec.cornerRadius !== undefined ? { cornerRadius: spec.cornerRadius * factor } : {}),
       ...(spec.tabCornerRadius !== undefined
         ? { tabCornerRadius: spec.tabCornerRadius * factor }
@@ -125,12 +170,14 @@ export class TabbedRectShape extends ShapeBase<TabbedRectSpec> {
    * The body's midpoint, not the AABB's — the tab band shifts the AABB
    * centre upward by `tabHeight / 2`, which would float a centred glyph or
    * label off the rectangle the eye reads as the object.
+   *
+   * With no body (`height <= 0`) the tab *is* the object, so its own midpoint
+   * is the answer.
    */
   override visualCenter(): Point {
-    return {
-      x: this.spec.width / 2,
-      y: this.spec.tabHeight + this.spec.height / 2,
-    };
+    const { width, height, tabHeight } = this.spec;
+    if (height <= 0) return { x: tabWidthOf(this.spec) / 2, y: tabHeight / 2 };
+    return { x: width / 2, y: tabHeight + height / 2 };
   }
 
   contains(localX: number, localY: number): boolean {
@@ -144,15 +191,18 @@ export class TabbedRectShape extends ShapeBase<TabbedRectSpec> {
    * AABB centre line, shifting the body's top edge down by `tabHeight / 2`.
    *
    * Excluding the tab is deliberate — a connector should terminate on the
-   * container's body, not on the little title flag above it.
+   * container's body, not on the little title flag above it. The one exception
+   * is a bodyless spec (`height <= 0`, the closed folder): with no body to aim
+   * at, the tab band becomes the target.
    */
   override boundaryIntersect(localFromCenter: Point): Point | null {
     const { width, height, tabHeight } = this.spec;
-    const halfW = width / 2;
+    const halfW = (height <= 0 ? tabWidthOf(this.spec) : width) / 2;
     // AABB centre is at y = (tabHeight + height) / 2 in local space; the
-    // body spans local y ∈ [tabHeight, tabHeight + height].
-    const bodyTop = (tabHeight - height) / 2;
-    const bodyBottom = (tabHeight + height) / 2;
+    // body spans local y ∈ [tabHeight, tabHeight + height]. Bodyless: the AABB
+    // is the tab band, already centred on it.
+    const bodyTop = height <= 0 ? -tabHeight / 2 : (tabHeight - height) / 2;
+    const bodyBottom = height <= 0 ? tabHeight / 2 : (tabHeight + height) / 2;
 
     const dx = localFromCenter.x;
     const dy = localFromCenter.y;
@@ -215,8 +265,9 @@ export class TabbedRectShape extends ShapeBase<TabbedRectSpec> {
     if (verts.length < 3) return;
     // Outline coordinates are AABB-origin-relative; markers anchor on the
     // centre, so re-base to the AABB midpoint before rotating into place.
-    const cx = spec.width / 2;
-    const cy = (spec.tabHeight + spec.height) / 2;
+    const box = TabbedRectShape.boundsOf(spec);
+    const cx = box.width / 2;
+    const cy = box.height / 2;
     const cos = Math.cos(angleRad);
     const sin = Math.sin(angleRad);
     const placed = verts.map((v) => {
@@ -255,12 +306,19 @@ interface TabbedRectGeometry {
   tabTopRight: number;
   flushLeft: boolean;
   flushRight: boolean;
+  /**
+   * `true` when `spec.height <= 0` and the silhouette is the tab alone — the
+   * closed folder. `left` / `right` / `bottom` describe the tab, and there is
+   * no fold line. See {@link bodylessGeometryOf}.
+   */
+  bodyless: boolean;
 }
 
 function geometryOf(
   spec: Omit<TabbedRectSpec, 'x' | 'y'>,
   inset: number,
 ): TabbedRectGeometry | null {
+  if (spec.height <= 0) return bodylessGeometryOf(spec, inset);
   const totalH = spec.tabHeight + spec.height;
   const left = inset;
   const right = spec.width - inset;
@@ -271,7 +329,7 @@ function geometryOf(
 
   const x0 = tabXOf(spec);
   const tabLeft = Math.max(left, x0 + inset);
-  const tabRight = Math.min(right, x0 + Math.min(spec.tabWidth, spec.width) - inset);
+  const tabRight = Math.min(right, x0 + tabWidthOf(spec) - inset);
   if (tabRight <= tabLeft) return null;
 
   // The tab leans away from the side it hugs, so the angled edge is always
@@ -303,12 +361,81 @@ function geometryOf(
     tabTopRight: tabRight - (slantRight ? skew : 0),
     flushLeft,
     flushRight,
+    bodyless: false,
   };
+}
+
+/**
+ * Geometry for a **bodyless** spec (`height <= 0`) — the closed folder: the
+ * silhouette is the tab and nothing else.
+ *
+ * Two things flip relative to {@link geometryOf}'s main path, both because the
+ * tab's base stops being an interior fold and becomes the outline's bottom edge:
+ *
+ * - The inset pulls that edge **up** (`tabHeight − inset`) instead of pushing
+ *   the body's top edge down, so a decoration borrowing this silhouette insets
+ *   uniformly rather than growing downward.
+ * - The tab may **lean on either side regardless of flushness**. In the main
+ *   path a side flush with the body's edge can't slant (it merges into it);
+ *   with no body there's nothing to merge with, so a tab spanning the full
+ *   declared width still gets its taper — which is what keeps a collapsed
+ *   frame reading as a folder rather than a plain rounded rect.
+ */
+function bodylessGeometryOf(
+  spec: Omit<TabbedRectSpec, 'x' | 'y'>,
+  inset: number,
+): TabbedRectGeometry | null {
+  const tabTop = inset;
+  const base = spec.tabHeight - inset;
+  const tabLeft = inset;
+  const tabRight = tabWidthOf(spec) - inset;
+  if (base <= tabTop || tabRight <= tabLeft) return null;
+
+  const align = spec.tabAlign ?? 'left';
+  const slantLeft = align === 'right' || align === 'center';
+  const slantRight = align === 'left' || align === 'center';
+  const sides = (slantLeft ? 1 : 0) + (slantRight ? 1 : 0);
+  const skew =
+    sides === 0
+      ? 0
+      : Math.max(0, Math.min(spec.tabSkew ?? 0, (tabRight - tabLeft) / (2 * sides)));
+
+  return {
+    left: tabLeft,
+    right: tabRight,
+    bottom: base,
+    tabTop,
+    // No fold to sit on: the shoulder *is* the outline's bottom edge, which
+    // keeps `labelAnchorBox` (tabTop → shoulder) spanning the whole tab.
+    shoulder: base,
+    tabLeft,
+    tabRight,
+    tabTopLeft: tabLeft + (slantLeft ? skew : 0),
+    tabTopRight: tabRight - (slantRight ? skew : 0),
+    flushLeft: true,
+    flushRight: true,
+    bodyless: true,
+  };
+}
+
+/**
+ * Resolved tab width: the declared {@link TabbedRectSpec.tabWidth}, falling
+ * back to the body's width when it's left unset (a full-width tab).
+ *
+ * Clamped to the body while there is one — a tab can't outgrow the rectangle
+ * it sits on. A bodyless folder's tab *is* the silhouette, so it sizes freely.
+ */
+function tabWidthOf(spec: Omit<TabbedRectSpec, 'x' | 'y'>): number {
+  const declared = spec.tabWidth ?? spec.width;
+  return spec.height <= 0 ? declared : Math.min(declared, spec.width);
 }
 
 /** Left edge of the tab's base in shape-local space, resolved from `tabAlign`. */
 function tabXOf(spec: Omit<TabbedRectSpec, 'x' | 'y'>): number {
-  const tabW = Math.min(spec.tabWidth, spec.width);
+  // Bodyless: the tab is the whole footprint, so it starts at the origin —
+  // there's no body left for it to be aligned against or offset from.
+  if (spec.height <= 0) return 0;
+  const tabW = tabWidthOf(spec);
   const offset = spec.tabOffset ?? 0;
   switch (spec.tabAlign ?? 'left') {
     case 'center':
@@ -357,7 +484,7 @@ function foldLineOf(
 ): [Point, Point] | undefined {
   if (spec.tabDivider === false) return undefined;
   const geo = geometryOf(spec, inset);
-  if (!geo) return undefined;
+  if (!geo || geo.bodyless) return undefined;
   return [
     { x: geo.tabLeft, y: geo.shoulder },
     { x: geo.tabRight, y: geo.shoulder },
@@ -375,6 +502,13 @@ function outlineOf(spec: Omit<TabbedRectSpec, 'x' | 'y'>, inset: number): Point[
   const corners: RoundedCorner[] = [];
   corners.push({ x: geo.tabTopLeft, y: tabTop, r: tr });
   corners.push({ x: geo.tabTopRight, y: tabTop, r: tr });
+  // Closed folder — the tab's base closes the outline, so there are no
+  // shoulders to turn and the body's fillet applies to its two bottom corners.
+  if (geo.bodyless) {
+    corners.push({ x: tabRight, y: bottom, r });
+    corners.push({ x: tabLeft, y: bottom, r });
+    return roundedPolygonOutline(corners);
+  }
   if (geo.flushRight) {
     // Tab reaches the body's right edge — the tab's leaning (or vertical)
     // side runs straight into the body's side, one convex bend.
