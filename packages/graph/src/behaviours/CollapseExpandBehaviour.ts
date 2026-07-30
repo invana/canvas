@@ -164,17 +164,27 @@ export class CollapseExpandBehaviour extends Behaviour<CollapseExpandBehaviourOp
    * rest of the prior style. Per `feedback_updatenode_replaces_style` the
    * store replaces `style` wholesale on update — the spread keeps every
    * other field intact.
+   *
+   * The *current* state is read from the layer's resolved style, not from
+   * the per-node patch: `group` (and `group.collapsed` with it) is just as
+   * likely to come from the layer-level `node.style.group` template — a
+   * group that starts collapsed there would otherwise need two clicks to
+   * open, since the per-node `collapsed` reads `undefined` on the first one.
+   * The *write* stays a minimal one-field patch; `GraphLayer.resolveNodeStyle`
+   * merges `group` field-by-field so the template's shared frame options
+   * (`autoFit`, `padding`, `togglePlacement`, …) survive the toggle.
    */
   private toggleCollapsed(nodeId: string): void {
     const layer = this.layer;
     if (!layer) return;
     const node = layer.store.getNode(nodeId);
     if (!node) return;
+    const isCollapsed = layer.isCollapsedGroup(node);
     const priorStyle = (node.style ?? {}) as NodeStyle;
     const priorGroup = (priorStyle.group ?? {}) as GroupOptions;
     const nextStyle: NodeStyle = {
       ...priorStyle,
-      group: { ...priorGroup, collapsed: !priorGroup.collapsed },
+      group: { ...priorGroup, collapsed: !isCollapsed },
     };
     layer.store.updateNode(nodeId, { style: nextStyle });
   }

@@ -954,16 +954,16 @@ export class GraphLayer extends WorldLayer<
   resolveNodeStyle(node: GraphNode): Partial<NodeStyle> {
     const merged: Partial<NodeStyle> = {};
     if (this.nodeOption?.style) {
-      Object.assign(merged, resolveNodeStyleFields(this.nodeOption.style, node));
+      assignNodeStyle(merged, resolveNodeStyleFields(this.nodeOption.style, node));
     }
     // Per-type template (structure + styling + bindings) sits above the layer
     // template and below per-node style: a node of a bound `type` gets its
     // card/simple skeleton + role-resolved colours, still overridable per node.
     if (this.nodeTypes && node.type) {
       const binding = this.nodeTypes[node.type];
-      if (binding) Object.assign(merged, this.resolveTypeBinding(node, binding));
+      if (binding) assignNodeStyle(merged, this.resolveTypeBinding(node, binding));
     }
-    Object.assign(merged, (node.style as Partial<NodeStyle> | undefined) ?? {});
+    assignNodeStyle(merged, (node.style as Partial<NodeStyle> | undefined) ?? {});
 
     const activeStates = this.store.nodeStatesOf(node.id);
     if (activeStates.length > 0) {
@@ -971,10 +971,10 @@ export class GraphLayer extends WorldLayer<
       for (const name of activeStates) {
         const layerOverlay = this.nodeOption?.state?.[name];
         if (layerOverlay) {
-          Object.assign(merged, resolveNodeStyleFields(layerOverlay, node));
+          assignNodeStyle(merged, resolveNodeStyleFields(layerOverlay, node));
         }
         const perNodeOverlay = perNodeCatalogue?.[name];
-        if (perNodeOverlay) Object.assign(merged, perNodeOverlay);
+        if (perNodeOverlay) assignNodeStyle(merged, perNodeOverlay);
       }
     }
 
@@ -2607,6 +2607,39 @@ export class GraphLayer extends WorldLayer<
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
+
+/**
+ * Merge one style contribution onto the accumulator in
+ * {@link GraphLayer.resolveNodeStyle}, with **`group` merged field-by-field**
+ * instead of replaced wholesale.
+ *
+ * Every other `NodeStyle` field stays last-write-wins — that's the documented
+ * per-field precedence, and it's right for the polymorphic values (`shape` is a
+ * discriminated union; replacing `icon` / `image` / `labelStyle` piecemeal would
+ * produce nonsense).
+ *
+ * `group` is the exception because it's an *option bag*, not a value: the shared
+ * frame options (`autoFit`, `padding`, `headerHeight`, `togglePlacement`,
+ * `behindChildren`, …) almost always come from the layer template, while a
+ * *single* field — `collapsed` — is patched per node by
+ * `CollapseExpandBehaviour`. Under a wholesale overwrite the first toggle
+ * reduced the resolved group to `{ collapsed }` alone, so re-expanding drew a
+ * bare declared-size frame with no auto-fit and moved the toggle back to its
+ * default placement. Field-level merge keeps a one-field patch a one-field patch.
+ *
+ * An explicit `group: undefined` still clears the frame — that's how a
+ * layer-level resolver says "this node isn't a group" (`(node) => node.type ===
+ * 'stage' ? {…} : undefined`).
+ */
+function assignNodeStyle(target: Partial<NodeStyle>, contribution: Partial<NodeStyle>): void {
+  const priorGroup = target.group;
+  Object.assign(target, contribution);
+  if (priorGroup && 'group' in contribution && contribution.group) {
+    // `group` is `readonly` on the public type; `merged` is this function's
+    // private accumulator, so writing through the mutable view is safe.
+    (target as { group?: GroupOptions }).group = { ...priorGroup, ...contribution.group };
+  }
+}
 
 /**
  * Map a node's canonical `position` to the render origin its shape expects.
