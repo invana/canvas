@@ -12,6 +12,7 @@ export type {
   MiniMapKind,
 } from './MiniMapLayer';
 export {
+  COLLAPSED_STATE,
   DEFAULT_EDGE_STATES,
   DEFAULT_NODE_STATES,
   isBuiltInNodeShape,

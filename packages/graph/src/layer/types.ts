@@ -204,7 +204,34 @@ export type CanonicalStateName =
   /** Complement of the focal-emphasis set — pushed back so `selected` + `highlighted` pop. Transient. NOT `disabled` — that's a data flag. */
   | 'dimmed'
   /** Data flag: "not interactive". Sticky; owned by the data feed. Visually similar to `dimmed` but semantically distinct (data, not interaction). */
-  | 'disabled';
+  | 'disabled'
+  /**
+   * A container frame ({@link GroupOptions}) is closed: its descendants are
+   * hidden and incident edges re-route to it. Sticky; toggled by
+   * `CollapseExpandBehaviour` or authored on the node's `states[]` to start
+   * closed. Overlay `state.collapsed` to say what *this* node looks like when
+   * closed — see {@link COLLAPSED_STATE}.
+   */
+  | 'collapsed';
+
+/**
+ * The state name that closes a container frame — {@link CanonicalStateName}'s
+ * `'collapsed'`, named so callers don't hardcode the string.
+ *
+ * Collapse is **interaction state, not styling**: the truth lives in the
+ * store's presence set (`store.setNodeState(id, COLLAPSED_STATE, true)`) or
+ * the node's document `states[]`, never in `style`. Two things follow, and
+ * they're the point of modelling it this way:
+ *
+ * - **Every node describes its own closed look**, through the same overlay
+ *   catalogue as `hovered` / `selected` — `state.collapsed` on the node, on
+ *   the layer template, or on a per-type template. Nothing about a closed
+ *   frame is hardcoded in the layer.
+ * - Geometry has a sensible default with no authoring: the resolved shape's
+ *   own minimal form (`ShapeCtor.collapsedOf` — a `tabbed-rect` closes to its
+ *   tab). An overlay that declares its own `shape` opts out of it.
+ */
+export const COLLAPSED_STATE = 'collapsed';
 
 // ───────────────────────────────────────────────────────────────────────────
 // v3 — G6-aligned types (NodeData / NodeInput / NodeOption + edge mirror)
@@ -805,7 +832,13 @@ export interface NodeEffects {
  *
  * Group semantics, in summary:
  *
- * - **Expanded state** (`collapsed !== true`):
+ * Whether a frame is open or closed is **not** part of these options — it's
+ * the {@link COLLAPSED_STATE} node state (`store.setNodeState(id,
+ * 'collapsed')`, or `states: ['collapsed']` in the data to start closed).
+ * These options describe the frame itself; the state describes its condition,
+ * and `state.collapsed` overlays describe how it looks in that condition.
+ *
+ * - **Expanded** (the `collapsed` state absent):
  *   - The node renders behind its children (z-index pushed underneath when
  *     `behindChildren !== false`) and is **non-hittable** — pointer events
  *     pass through the frame to the canvas background. The frame is a pure
@@ -817,15 +850,20 @@ export interface NodeEffects {
  *   - With `autoFit: false`, the layer uses the declared `width` / `height`
  *     / `radius` literally; children may visually leak outside.
  *
- * - **Collapsed state** (`collapsed === true`):
+ * - **Collapsed** (the {@link COLLAPSED_STATE} state active):
  *   - The node renders as a normal interactive node (`hittable: true`,
  *     default z-order). All descendants are hidden from the renderer; edges
  *     pointing at a hidden descendant are re-routed to the nearest visible
  *     collapsed-group ancestor at render time (no mutation to the edge data).
- *   - The layer synthesises a count badge showing the number of hidden
- *     descendants. The `+`/`−` toggle is rendered via the
- *     {@link ToggleDecorationStyle} decoration on the group — wire up
- *     `CollapseExpandBehaviour` to make the toggle clickable.
+ *   - Auto-fit is skipped and the resolved shape closes to its own minimal
+ *     form (`ShapeCtor.collapsedOf` — a `tabbed-rect` becomes its tab; a
+ *     `rect` / `circle` has none and keeps its declared size). Author
+ *     `state.collapsed.shape` to describe the closed silhouette yourself
+ *     instead — declaring a shape there opts out of the minimal form.
+ *   - The `+`/`−` toggle is rendered via the {@link ToggleDecorationStyle}
+ *     decoration on the group — wire up `CollapseExpandBehaviour` to make the
+ *     toggle clickable. A count of the hidden descendants is available too,
+ *     opt-in via {@link GroupOptions.showCollapsedCount}.
  *
  * Nested groups fall out of the `parentId` chain for free: a group node
  * whose own `parentId` points at another group becomes a sub-group; the
@@ -851,12 +889,15 @@ export interface GroupOptions {
   /** Inset around the children bbox before the frame outline. Default `16`. */
   readonly padding?: number;
   /**
-   * True = render the group as a collapsed super-node (children hidden,
-   * +/- toggle shows `+`, count badge shows the hidden descendant count).
-   * Toggle through `CollapseExpandBehaviour` or by updating this field
-   * directly via `store.updateNode`. Default `false`.
+   * Show a badge with the number of hidden descendants while collapsed.
+   * Default `false`.
+   *
+   * Off by default because the badge is placed `inside-center`, and on a
+   * `tabbed-rect` inside placements route into the **tab** — so the count
+   * lands on top of the group's own title. Turn it on for frames whose title
+   * is elsewhere (or absent).
    */
-  readonly collapsed?: boolean;
+  readonly showCollapsedCount?: boolean;
   /**
    * Frame renders at `style.zIndex − 1` so descendants paint on top. Set to
    * `false` to keep the frame at its declared z-index (and let descendants
@@ -880,9 +921,10 @@ export interface GroupOptions {
   /**
    * Width of a `tabbed-rect` frame's tab. Ignored by other shape kinds.
    *
-   * Leave it unset (the default) to **auto-size the tab to the title** —
-   * the layer measures the group's resolved `labelText` in its resolved
-   * font and adds `2 × tabPadding`. That's what keeps a row of frames with
+   * Leave it unset (the default) to **auto-size the tab to the title** — the
+   * layer measures the group's resolved `labelText` in its resolved font and
+   * hands the size to the shape, which decides what to do with it
+   * (`ShapeCtor.fitToContent`). That's what keeps a row of frames with
    * differently-sized titles looking consistent without per-frame tuning.
    * Set it to pin every tab to the same width instead.
    */
@@ -1386,6 +1428,11 @@ export const DEFAULT_NODE_STATES: Readonly<Record<CanonicalStateName, NodeStyle>
 },
   dimmed:      { bgAlpha: 0.25 },
   disabled:    { bgFill: 0x9ca3af, bgAlpha: 0.6 },
+  // Deliberately empty: a closed frame's *geometry* default is the resolved
+  // shape's own minimal form (`ShapeCtor.collapsedOf`), which no static style
+  // could express — it differs per silhouette. This entry exists so consumers
+  // can override `state.collapsed` like any other canonical state.
+  collapsed:   {},
 };
 
 /**
@@ -1399,6 +1446,8 @@ export const DEFAULT_EDGE_STATES: Readonly<Record<CanonicalStateName, EdgeStyle>
   highlighted: { strokeColor: 0xfde68a, strokeWidth: 2 },
   dimmed:      { strokeAlpha: 0.2 },
   disabled:    { strokeColor: 0x9ca3af, strokeAlpha: 0.6, arrowTargetShape: 'none' },
+  // Edges are never containers; the state exists on the shared canonical union.
+  collapsed:   {},
 };
 
 // ─── GraphDataOptions ──────────────────────────────────────────────────────

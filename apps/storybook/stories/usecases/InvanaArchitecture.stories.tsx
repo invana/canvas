@@ -627,14 +627,14 @@ export const InvanaArchitecture: Story = {
             node: {
               style: {
                 // A stage is a folder silhouette whose body auto-fits its
-                // children; `width`/`height` are the auto-fit *floor*, which
-                // doubles as the size a stage collapses to, and `tabWidth` is
-                // only the pre-measure fallback — the layer overwrites it with
-                // the title's measured width once the renderer is up. A box is
-                // a plain rect sized from its own `data`.
+                // children; `width`/`height` are the auto-fit *floor*. No
+                // `tabWidth`: leaving it unset is what lets the tab size itself
+                // to the title (`ShapeCtor.fitToContent`), and it's why a
+                // collapsed stage — which is nothing *but* its tab — shows its
+                // whole name. A box is a plain rect sized from its own `data`.
                 shape: (node: GraphNode): NodeShapeOptions => {
                   if (node.type === 'stage') {
-                    return { kind: 'tabbed-rect', width: 130, height: 36, tabWidth: 130, tabHeight: 28, cornerRadius: 6 };
+                    return { kind: 'tabbed-rect', width: 130, height: 36, tabHeight: 28, cornerRadius: 6 };
                   }
                   const box = node.data as { w: number; h: number };
                   return { kind: 'rect', width: box.w, height: box.h, cornerRadius: 3 };

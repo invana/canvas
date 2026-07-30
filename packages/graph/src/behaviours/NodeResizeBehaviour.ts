@@ -232,7 +232,9 @@ export class NodeResizeBehaviour extends Behaviour {
     if (!this.layer) return null;
     const style = this.layer.resolveNodeStyle(node);
     const group = style.group;
-    if (group?.userResizable && !group.collapsed) return 'group';
+    // A closed frame isn't resizable — its geometry is the collapsed form, not
+    // the declared one, so a drag would write sizes nothing is reading.
+    if (group?.userResizable && !this.layer.isCollapsedGroup(node)) return 'group';
     if (style.resizable) {
       const kind = style.shape?.kind;
       if (kind === 'rect' || kind === 'circle') return 'shape';

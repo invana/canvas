@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import GUI from 'lil-gui';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
+  COLLAPSED_STATE,
   CollapseExpandBehaviour,
   DragNodeBehaviour,
   GraphCanvas,
@@ -94,7 +95,6 @@ export const RectGroup: Story = {
             padding: settings.padding,
             headerHeight: settings.headerHeight,
             behindChildren: settings.behindChildren,
-            collapsed: settings.collapsed,
             userResizable: settings.userResizable,
           },
           labelText: 'Group A',
@@ -193,7 +193,6 @@ export const RectGroup: Story = {
         padding: settings.padding,
         headerHeight: settings.headerHeight,
         behindChildren: settings.behindChildren,
-        collapsed: settings.collapsed,
         userResizable: settings.userResizable,
         width: settings.width,
         height: settings.height,
@@ -213,6 +212,9 @@ export const RectGroup: Story = {
           group,
         },
       });
+      // Open / closed is a node *state*, not a group option — same channel the
+      // `+` / `−` toggle writes to.
+      graph.store.setNodeState('group-a', COLLAPSED_STATE, settings.collapsed);
     };
 
     const gui = new GUI({ title: 'Group options' });

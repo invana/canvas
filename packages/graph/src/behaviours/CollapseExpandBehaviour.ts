@@ -29,7 +29,7 @@ import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/ca
 import type { ToggleHitGeometry } from '@invana/canvas/primitives';
 
 import { GraphLayer } from '../layer/GraphLayer';
-import type { GroupOptions, NodeStyle } from '../layer/types';
+import { COLLAPSED_STATE } from '../layer/types';
 
 /**
  * Duck-typed gate for the toggle decoration instance — checks for the
@@ -160,32 +160,31 @@ export class CollapseExpandBehaviour extends Behaviour<CollapseExpandBehaviourOp
   }
 
   /**
-   * Flip `style.group.collapsed` via `store.updateNode`, preserving the
-   * rest of the prior style. Per `feedback_updatenode_replaces_style` the
-   * store replaces `style` wholesale on update — the spread keeps every
-   * other field intact.
+   * Flip the {@link COLLAPSED_STATE} state on the group.
    *
-   * The *current* state is read from the layer's resolved style, not from
-   * the per-node patch: `group` (and `group.collapsed` with it) is just as
-   * likely to come from the layer-level `node.style.group` template — a
-   * group that starts collapsed there would otherwise need two clicks to
-   * open, since the per-node `collapsed` reads `undefined` on the first one.
-   * The *write* stays a minimal one-field patch; `GraphLayer.resolveNodeStyle`
-   * merges `group` field-by-field so the template's shared frame options
-   * (`autoFit`, `padding`, `togglePlacement`, …) survive the toggle.
+   * Collapse is interaction state, so the write goes to the store's presence
+   * set — the same channel as `hovered` / `selected` — and never to `style`.
+   * The visual consequences follow from the state: `GraphLayer` hides the
+   * descendants, closes the silhouette to its minimal form, and applies
+   * whatever `state.collapsed` overlay the node (or its template) declares.
+   *
+   * The one wrinkle is the document `states[]`: `nodeStatesOf` is the *union*
+   * of the feed's states and the runtime set, so a node authored as
+   * `states: ['collapsed']` would stay closed forever if we only cleared the
+   * runtime flag. Opening therefore strips the document state too — the user's
+   * click wins over the feed's initial condition.
    */
   private toggleCollapsed(nodeId: string): void {
     const layer = this.layer;
     if (!layer) return;
     const node = layer.store.getNode(nodeId);
     if (!node) return;
-    const isCollapsed = layer.isCollapsedGroup(node);
-    const priorStyle = (node.style ?? {}) as NodeStyle;
-    const priorGroup = (priorStyle.group ?? {}) as GroupOptions;
-    const nextStyle: NodeStyle = {
-      ...priorStyle,
-      group: { ...priorGroup, collapsed: !isCollapsed },
-    };
-    layer.store.updateNode(nodeId, { style: nextStyle });
+    const open = layer.isCollapsedGroup(node);
+    layer.store.setNodeState(nodeId, COLLAPSED_STATE, !open, { actor: this.id });
+    if (open && node.states?.includes(COLLAPSED_STATE)) {
+      layer.store.updateNode(nodeId, {
+        states: node.states.filter((s) => s !== COLLAPSED_STATE),
+      });
+    }
   }
 }

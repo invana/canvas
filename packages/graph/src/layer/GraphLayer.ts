@@ -36,6 +36,7 @@ import type { EdgeDirection, GraphEdge, GraphNode } from '../store/types';
 import type { GraphSchema } from '../schema/types';
 
 import {
+  COLLAPSED_STATE,
   DEFAULT_EDGE_STATES,
   DEFAULT_NODE_STATES,
   resolveField,
@@ -391,7 +392,6 @@ export class GraphLayer extends WorldLayer<
       s.on('node:update', ({ nodeId, patch }) => {
         const node = this.store.getNode(nodeId);
         if (!node) return;
-        const wasCollapsed = this.lastCollapsedByGroup.get(nodeId) === true;
         // `updateNodeShape` re-resolves the style (incl. document `states` via
         // `store.nodeStatesOf`), so a `states` patch repaints with no mirror.
         this.updateNodeShape(node, patch);
@@ -408,15 +408,12 @@ export class GraphLayer extends WorldLayer<
         if ('parentId' in patch && node.parentId) {
           this.markGroupAncestorsDirty(node.parentId);
         }
-        // A group's own style patch (collapsed flip, padding change, size
-        // change) re-projects this group; if collapsed changed, descendants'
-        // visibility and incident-edge endpoints need a refresh too.
+        // A group's own style patch (padding change, size change, a document
+        // `states` patch that opens or closes it) re-projects this group.
+        // `syncGroupCollapse` catches the open/closed flip in either path.
         if (this.isGroupNode(node)) {
           this.dirtyGroups.add(node.id);
-          const isNowCollapsed = this.isCollapsedGroup(node);
-          if (wasCollapsed !== isNowCollapsed) {
-            this.refreshDescendantsAndIncidentEdges(node.id);
-          }
+          this.syncGroupCollapse(node);
         }
       }),
       s.on('node:remove', ({ nodeId }) => {
@@ -460,8 +457,16 @@ export class GraphLayer extends WorldLayer<
       }),
       // Runtime (presence) state toggles — mark dirty; the flush handler drains
       // them once each (dedup), keeping an N-item highlight to one paint (§2.5).
-      s.on('node:state', ({ nodeId }) => {
+      s.on('node:state', ({ nodeId, name }) => {
         this.dirtyStateNodes.add(nodeId);
+        // Collapse is a state like any other visually, but it also changes the
+        // *structure* of what's rendered: descendants appear / disappear and
+        // incident edges re-route. Route it through the group machinery.
+        if (name !== COLLAPSED_STATE) return;
+        const node = this.store.getNode(nodeId);
+        if (!node || !this.isGroupNode(node)) return;
+        this.dirtyGroups.add(nodeId);
+        this.syncGroupCollapse(node);
       }),
       s.on('edge:state', ({ edgeId }) => {
         this.dirtyStateEdges.add(edgeId);
@@ -1392,19 +1397,28 @@ export class GraphLayer extends WorldLayer<
     // Collapsed groups skip the recompute and project as a regular node;
     // children are hidden separately via the `visible: false` branch below.
     const group = style.group;
-    if (group && !group.collapsed) {
+    const collapsedFrame = group !== undefined && this.isCollapsedGroup(node);
+    if (group && !collapsedFrame) {
       const fitted = this.projectGroupShape(node.id, shape, group, pos);
       shape = fitted.shape;
       pos = fitted.pos;
     }
 
-    // Size a folder frame's tab to its title. Deliberately outside the
-    // `!collapsed` branch above: a collapsed group skips the auto-fit
-    // projection entirely, but it still draws a tab and still needs the
-    // title to fit in it.
-    if (shape.kind === 'tabbed-rect') {
-      shape = this.sizeTabToLabel(shape as TabbedRectShapeOption, style, group);
+    // A closed frame takes its silhouette's own minimal form — the shape
+    // decides what "closed" looks like for its geometry (a `tabbed-rect`
+    // becomes its tab; a `rect` has no reduced form and keeps its size). The
+    // node can describe the closed look itself instead: a `state.collapsed`
+    // overlay declaring a `shape` has already won the style resolution above,
+    // and opts out of the minimal form entirely.
+    if (collapsedFrame && !this.collapsedOverlayDeclaresShape(node)) {
+      const minimal = this._renderer?.collapsedShapeSpec(shape);
+      if (minimal) shape = { ...shape, ...minimal } as NodeShapeOptions;
     }
+
+    // Fit the silhouette around its own title — a folder frame widens its tab
+    // to the text it carries. The layer measures (it owns the label + font);
+    // the shape decides what the measurement does to its geometry.
+    shape = this.fitShapeToLabel(shape, style);
 
     // Visibility — a node is culled when any ancestor is a collapsed group, or
     // when it is explicitly hidden (first-class per-element visibility). We
@@ -1480,7 +1494,7 @@ export class GraphLayer extends WorldLayer<
     // interactive node.
     const baseZ = (style as { zIndex?: number }).zIndex;
     let zIndex: number | undefined = baseZ;
-    if (group && !group.collapsed && group.behindChildren !== false) {
+    if (group && !collapsedFrame && group.behindChildren !== false) {
       zIndex = (baseZ ?? 0) - 1;
     }
 
@@ -1657,10 +1671,10 @@ export class GraphLayer extends WorldLayer<
     this.syncGroupSyntheticDecorations(id);
     // Anchors of incident connectors point to this shape — re-route in
     // either branch since the shape's bounds may have changed (size
-    // hint shift, kind change, etc.).
-    for (const edge of this.store.edgesOf(id, 'both')) {
-      this.dirtyConnectors.add(edge.id);
-    }
+    // hint shift, kind change, etc.). Goes through `queueIncidentConnectors`
+    // so a *collapsed group* also re-routes the edges of its hidden subtree,
+    // which terminate on this shape via `effectiveEndpoint`.
+    this.queueIncidentConnectors(id);
     this.drainDirtyConnectors();
   }
 
@@ -2174,10 +2188,16 @@ export class GraphLayer extends WorldLayer<
     return style.group !== undefined;
   }
 
-  /** True when this group node's resolved style carries `group.collapsed === true`. */
+  /**
+   * True when this node is a group frame **and** the {@link COLLAPSED_STATE}
+   * state is active on it — from the store's presence set (what
+   * `CollapseExpandBehaviour` toggles) or the node's document `states[]`
+   * (how a feed authors "starts closed"). Collapse is interaction state, not
+   * styling, so it is never read off `style`.
+   */
   isCollapsedGroup(node: GraphNode): boolean {
-    const style = this.resolveNodeStyle(node);
-    return style.group?.collapsed === true;
+    if (!this.isGroupNode(node)) return false;
+    return this.store.nodeStatesOf(node.id).includes(COLLAPSED_STATE);
   }
 
   /**
@@ -2243,6 +2263,25 @@ export class GraphLayer extends WorldLayer<
       if (!cur.parentId) break;
       cur = this.store.getNode(cur.parentId);
     }
+  }
+
+  /**
+   * Detect an open ↔ closed flip on a group and cascade it.
+   *
+   * The {@link COLLAPSED_STATE} state can arrive through either door — the
+   * store's presence set (`setNodeState`, what the toggle uses) or a document
+   * `states[]` patch from the feed — so both event handlers funnel here rather
+   * than duplicating the comparison. {@link lastCollapsedByGroup} holds the
+   * previously-projected value; the events themselves don't carry it.
+   *
+   * Idempotent: called with no change, it does nothing.
+   */
+  private syncGroupCollapse(node: GraphNode): void {
+    const was = this.lastCollapsedByGroup.get(node.id) === true;
+    const now = this.isCollapsedGroup(node);
+    if (was === now) return;
+    this.lastCollapsedByGroup.set(node.id, now);
+    this.refreshDescendantsAndIncidentEdges(node.id);
   }
 
   /**
@@ -2390,6 +2429,11 @@ export class GraphLayer extends WorldLayer<
         ...(group.tabAlign !== undefined ? { tabAlign: group.tabAlign } : {}),
         ...(group.tabOffset !== undefined ? { tabOffset: group.tabOffset } : {}),
         ...(group.tabSkew !== undefined ? { tabSkew: group.tabSkew } : {}),
+        // Pinning `tabWidth` opts the tab out of fitting itself to the title;
+        // leaving it unset is what enables the fit. `tabPadding` is the fit's
+        // breathing room — both are read by the shape, not by the layer.
+        ...(group.tabWidth !== undefined ? { tabWidth: group.tabWidth } : {}),
+        ...(group.tabPadding !== undefined ? { tabPadding: group.tabPadding } : {}),
       };
       return { shape: out, pos: nextPos };
     }
@@ -2417,43 +2461,47 @@ export class GraphLayer extends WorldLayer<
   }
 
   /**
-   * Resolve a `tabbed-rect`'s `tabWidth` from the node's title so the tab
-   * is exactly as wide as the text it carries, plus `group.tabPadding` on
-   * each side.
+   * Let the resolved shape size itself around its own title.
    *
-   * An explicit `group.tabWidth` (or, with no `group` at all, whatever the
-   * shape already declares) wins — auto-sizing only fills a gap. Measurement
-   * needs the renderer's font resolution, so pre-mount the declared width
-   * stands; the first post-mount render re-projects with the real number.
+   * The layer measures — it owns the label content and the renderer's font
+   * resolution — and hands the size to `ShapeCtor.fitToContent`, which is
+   * where the geometry decision lives. A `tabbed-rect` widens its tab; shapes
+   * that don't implement the hook are returned untouched. No kind check here,
+   * so a shape registered at runtime fits its own content the same way.
    *
    * Why measure at all: a frame that auto-fits its children changes size as
    * the graph changes, and a fixed tab either clips a long title or leaves a
    * short one swimming. Deriving the tab from the text is what lets a set of
    * frames with unrelated titles stay visually consistent with no per-frame
-   * numbers in the data.
+   * numbers in the data. Pre-mount there's no renderer to measure with, so the
+   * declared geometry stands and the first post-mount render re-projects.
    */
-  private sizeTabToLabel(
-    shape: TabbedRectShapeOption,
-    style: NodeStyle,
-    group: GroupOptions | undefined,
-  ): TabbedRectShapeOption {
-    const declared = group?.tabWidth;
-    if (declared !== undefined) return { ...shape, tabWidth: declared };
-
+  private fitShapeToLabel(shape: NodeShapeOptions, style: NodeStyle): NodeShapeOptions {
+    const renderer = this._renderer;
+    if (!renderer) return shape;
     const labelStyle = style.labelStyle ?? buildShapeLabelStyle(style);
-    const measured = labelStyle
-      ? this._renderer?.measureLabel(labelStyle.content, labelStyle.wrap)
-      : undefined;
+    if (!labelStyle) return shape;
+    const measured = renderer.measureLabel(labelStyle.content, labelStyle.wrap);
     if (!measured) return shape;
+    const fitted = renderer.fitShapeSpecToContent(shape, measured);
+    return fitted ? ({ ...shape, ...fitted } as NodeShapeOptions) : shape;
+  }
 
-    const pad = group?.tabPadding ?? 10;
-    // The slant tapers the tab's *top* edge, so its run has to be added on
-    // top of the text budget — otherwise leaning the tab would push the
-    // title into the taper. A centred tab leans on both sides.
-    const skew = shape.tabSkew ?? 0;
-    const slantSides = (shape.tabAlign ?? 'left') === 'center' ? 2 : 1;
-    const width = measured.width + 2 * pad + skew * slantSides;
-    return { ...shape, tabWidth: Math.min(shape.width, width) };
+  /**
+   * True when this node's `collapsed` overlay declares its own `shape` — in
+   * which case the author is describing the closed silhouette themselves and
+   * the resolved shape's minimal form ({@link ShapeCtor.collapsedOf}) is
+   * skipped.
+   *
+   * Checks the catalogues for *presence* rather than resolving them: a
+   * layer-template entry may be a resolver function, and only whether the
+   * field was contributed matters here. Both the layer-level and per-node
+   * catalogues count, mirroring the normal overlay precedence.
+   */
+  private collapsedOverlayDeclaresShape(node: GraphNode): boolean {
+    if (this.nodeOption?.state?.[COLLAPSED_STATE]?.shape !== undefined) return true;
+    const perNode = node.state as Readonly<Record<string, NodeStyle>> | undefined;
+    return perNode?.[COLLAPSED_STATE]?.shape !== undefined;
   }
 
   /**
@@ -2493,11 +2541,10 @@ export class GraphLayer extends WorldLayer<
         const node = this.store.getNode(id);
         if (!node) continue;
         this.rerenderNode(id);
-        // Mark the group's incident edges dirty — the frame may have
-        // moved or resized, shifting where boundary anchors land.
-        for (const edge of this.store.edgesOf(id, 'both')) {
-          this.dirtyConnectors.add(edge.id);
-        }
+        // Mark the frame's incident edges dirty — it may have moved or
+        // resized, shifting where boundary anchors land. While collapsed that
+        // includes the hidden subtree's edges, which now terminate here.
+        this.queueIncidentConnectors(id);
         // Propagate the size change up to the parent group, if any.
         if (node.parentId) {
           const parent = this.store.getNode(node.parentId);
@@ -2527,8 +2574,9 @@ export class GraphLayer extends WorldLayer<
   /**
    * Project the synthetic group-only decorations onto the renderer:
    * - the `+` / `−` toggle button at the group's bottom anchor; and
-   * - a centred count badge (label decoration) when the group is
-   *   collapsed, showing the number of hidden descendants.
+   * - a centred count badge (label decoration) when the group is collapsed
+   *   *and* opted into `group.showCollapsedCount`, showing the number of
+   *   hidden descendants.
    *
    * Called on every node lifecycle event for group nodes. Cleared
    * automatically when `style.group` goes away (the slots get `null` so
@@ -2546,7 +2594,7 @@ export class GraphLayer extends WorldLayer<
       this.lastCollapsedByGroup.delete(id);
       return;
     }
-    const isCollapsed = group.collapsed === true;
+    const isCollapsed = this.isCollapsedGroup(node);
     this.lastCollapsedByGroup.set(id, isCollapsed);
     // Toggle button — present on every group, glyph mirrors collapsed state.
     // Placement is configurable via `group.togglePlacement`: a keyword
@@ -2569,7 +2617,10 @@ export class GraphLayer extends WorldLayer<
         ...placementStyle,
       },
     });
-    if (isCollapsed) {
+    // Hidden-descendant count — opt-in (`showCollapsedCount`). Off by default
+    // because `inside-center` routes into a `tabbed-rect`'s tab, landing the
+    // number on top of the group's own title.
+    if (isCollapsed && group.showCollapsedCount === true) {
       let count = 0;
       for (const _ of this.store.descendantsOf(id)) count++;
       this._renderer.setDecoration(id, 'group-count', {
@@ -2620,12 +2671,12 @@ export class GraphLayer extends WorldLayer<
  *
  * `group` is the exception because it's an *option bag*, not a value: the shared
  * frame options (`autoFit`, `padding`, `headerHeight`, `togglePlacement`,
- * `behindChildren`, …) almost always come from the layer template, while a
- * *single* field — `collapsed` — is patched per node by
- * `CollapseExpandBehaviour`. Under a wholesale overwrite the first toggle
- * reduced the resolved group to `{ collapsed }` alone, so re-expanding drew a
- * bare declared-size frame with no auto-fit and moved the toggle back to its
- * default placement. Field-level merge keeps a one-field patch a one-field patch.
+ * `behindChildren`, …) almost always come from the layer template, while
+ * *individual* fields get patched per node — `NodeResizeBehaviour` writes
+ * `group.width` / `group.height` on drag, a state overlay might tweak
+ * `padding`. Under a wholesale overwrite the first such patch reduced the
+ * resolved group to that one field, so the frame lost auto-fit and every other
+ * shared option. Field-level merge keeps a one-field patch a one-field patch.
  *
  * An explicit `group: undefined` still clears the frame — that's how a
  * layer-level resolver says "this node isn't a group" (`(node) => node.type ===

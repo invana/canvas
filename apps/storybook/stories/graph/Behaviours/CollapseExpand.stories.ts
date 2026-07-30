@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import GUI from 'lil-gui';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
+  COLLAPSED_STATE,
   CollapseExpandBehaviour,
   DragNodeBehaviour,
   GraphCanvas,
@@ -139,15 +140,11 @@ export const CollapseExpand: Story = {
           : settings.togglePlacement;
       const priorGroup = (priorStyle.group ?? {}) as GroupOptions;
       graph.store.updateNode('group-a', {
-        style: {
-          ...priorStyle,
-          group: {
-            ...priorGroup,
-            collapsed: settings.collapsed,
-            togglePlacement,
-          },
-        },
+        style: { ...priorStyle, group: { ...priorGroup, togglePlacement } },
       });
+      // Open / closed is a node *state*, not a style field — the same channel
+      // the toggle button writes to.
+      graph.store.setNodeState('group-a', COLLAPSED_STATE, settings.collapsed);
     };
 
     const gui = new GUI({ title: 'CollapseExpand' });
