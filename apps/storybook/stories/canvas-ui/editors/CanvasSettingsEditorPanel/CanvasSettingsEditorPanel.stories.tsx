@@ -72,8 +72,8 @@ const backgroundMenu = (): MenuItem[] => [
  * applies every edit through `@invana/canvas-store`. This is exactly how the
  * Invana building studio would drop it in.
  */
-export const LiveSettingsEditors: Story = {
-  name: 'Live Settings Editors',
+export const CanvasSettingsEditorPanelStory: Story = {
+  name: 'CanvasSettingsEditorPanel',
   render: function Render() {
     // The settings panel docks through the activity-bar controller: its descriptor
     // becomes the header toggle + (while open) the resizable `right` region. Open
