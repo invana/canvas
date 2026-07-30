@@ -291,9 +291,21 @@ importers:
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
+      '@invana/graph-layer-d3-contour':
+        specifier: workspace:*
+        version: link:../graph-layer-d3-contour
+      '@invana/graph-layer-maplibre':
+        specifier: workspace:*
+        version: link:../graph-layer-maplibre
       '@invana/graph-layout-d3-force':
         specifier: workspace:*
         version: link:../graph-layout-d3-force
+      '@invana/graph-layout-d3-sankey':
+        specifier: workspace:*
+        version: link:../graph-layout-d3-sankey
+      '@invana/graph-layout-elkjs':
+        specifier: workspace:*
+        version: link:../graph-layout-elkjs
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config

@@ -63,6 +63,7 @@
 import { Layer, type CanvasContext, type LayerOptions } from '@invana/canvas';
 import maplibregl from 'maplibre-gl';
 
+import { projectLngLat, unprojectWorld } from './mercator';
 import type {
   LngLat,
   MapLayerEvents,
@@ -70,9 +71,6 @@ import type {
   MapLayerState,
   WorldPoint,
 } from './types';
-
-/** Width/height in world units of the whole earth at our reference zoom (= MapLibre tile size at zoom 0). */
-const WORLD_SIZE = 512;
 
 const DEFAULT_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 
@@ -129,12 +127,9 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
    *   graphLayer.setData({ nodes: [{ id, position: { x, y }, ... }], ... });
    */
   project(lngLat: LngLat): WorldPoint {
-    const [lng, lat] = lngLat;
-    const clampedLat = Math.max(-85.05112878, Math.min(85.05112878, lat));
-    const sin = Math.sin((clampedLat * Math.PI) / 180);
-    const x = ((lng + 180) / 360) * WORLD_SIZE;
-    const y = (0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI)) * WORLD_SIZE;
-    return { x, y };
+    // Delegates to the free function so callers without a layer instance (a
+    // React tree shaping `data` before the layer mounts) get identical results.
+    return projectLngLat(lngLat);
   }
 
   /**
@@ -142,10 +137,37 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
    * for hit-testing or reporting the geographic location under a cursor.
    */
   unproject(world: WorldPoint): [number, number] {
-    const lng = (world.x / WORLD_SIZE) * 360 - 180;
-    const n = Math.PI - 2 * Math.PI * (world.y / WORLD_SIZE);
-    const lat = (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
-    return [lng, lat];
+    return unprojectWorld(world);
+  }
+
+  /**
+   * Apply a config patch — the seam `canvas.update({ layers: { [id]: … } })`
+   * (and therefore the settings editors + the React wrapper) drives. Merges
+   * over the current options, then pushes the live-changeable ones to MapLibre:
+   * `styleUrl` swaps the basemap, `center` / `zoom` jump the view, `minZoom` /
+   * `maxZoom` re-clamp it.
+   *
+   * Mount-time-only fields (`mountTarget`, `passInputToMap`) are stored but not
+   * re-applied — remove and re-add the layer to change those.
+   */
+  setOptions(patch: Partial<MapLayerOptions>): void {
+    // `options` is declared readonly on the base `Layer` (construction-time
+    // config); mutate in place so every reader sees one object.
+    Object.assign(this.options, patch);
+    const map = this.map;
+    if (!map) return;
+
+    if (patch.styleUrl !== undefined) map.setStyle(patch.styleUrl as string);
+    if (patch.minZoom !== undefined) map.setMinZoom(patch.minZoom);
+    if (patch.maxZoom !== undefined) map.setMaxZoom(patch.maxZoom);
+    // One `jumpTo` for the view so a combined centre + zoom patch is a single
+    // move (and a single camera sync), not two.
+    if (patch.center !== undefined || patch.zoom !== undefined) {
+      map.jumpTo({
+        ...(patch.center ? { center: [patch.center[0], patch.center[1]] } : {}),
+        ...(patch.zoom !== undefined ? { zoom: patch.zoom } : {}),
+      });
+    }
   }
 
   /** Pan/zoom the basemap to a new view. Camera follows automatically via `move`. */

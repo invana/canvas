@@ -9,5 +9,7 @@ export type {
   WorldPoint,
 } from './types';
 
+export { WORLD_SIZE, projectLngLat, unprojectWorld } from './mercator';
+
 export { greatCircleSamples } from './greatCircle';
 export type { LngLatTuple } from './greatCircle';

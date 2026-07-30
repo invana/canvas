@@ -60,6 +60,17 @@ export type { DevInfoLayerProps } from './layers/DevInfoLayer';
 export { MiniMapLayer } from './layers/MiniMapLayer';
 export type { MiniMapLayerProps } from './layers/MiniMapLayer';
 
+// Overlay layers from the `@invana/graph-layer-*` packages. Each imports its own
+// (optional-peer) package, so a consumer only installs the ones it renders.
+export { DensityContourFillLayer } from './layers/DensityContourFillLayer';
+export type { DensityContourFillLayerProps } from './layers/DensityContourFillLayer';
+
+export { DensityContourStrokeLayer } from './layers/DensityContourStrokeLayer';
+export type { DensityContourStrokeLayerProps } from './layers/DensityContourStrokeLayer';
+
+export { MapLayer } from './layers/MapLayer';
+export type { MapLayerProps } from './layers/MapLayer';
+
 // ─── Behaviours ──────────────────────────────────────────────────────────
 // Camera / canvas-scoped
 export { DragPanBehaviour } from './behaviours/DragPanBehaviour';
@@ -155,6 +166,12 @@ export type { EdgeLODBehaviourProps } from './behaviours/EdgeLODBehaviour';
 // ─── Layouts ─────────────────────────────────────────────────────────────
 export { D3ForceLayout } from './layouts/D3ForceLayout';
 export type { D3ForceLayoutProps } from './layouts/D3ForceLayout';
+
+export { ElkLayout } from './layouts/ElkLayout';
+export type { ElkLayoutProps } from './layouts/ElkLayout';
+
+export { D3SankeyLayout } from './layouts/D3SankeyLayout';
+export type { D3SankeyLayoutProps } from './layouts/D3SankeyLayout';
 
 // ─── Hooks ───────────────────────────────────────────────────────────────
 // Canvas-aware hooks for building custom toolbars / panels. Resolve the engine

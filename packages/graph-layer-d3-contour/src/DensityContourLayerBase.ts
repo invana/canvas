@@ -101,9 +101,26 @@ export abstract class DensityContourLayerBase<
   }
 
   /**
-   * Force an immediate recompute. Useful in `recompute: 'manual'` mode, or
-   * to refresh the overlay after externally mutating options that don't
-   * have setters yet.
+   * Apply a config patch — the seam `canvas.update({ layers: { [id]: … } })`
+   * (and therefore the settings editors + the React wrapper) drives. Merges
+   * over the current options and repaints, so appearance fields (`bandwidth`,
+   * `thresholds`, `cellSize`, `padding`, the subclass's fill / stroke fields)
+   * are live-editable.
+   *
+   * `graphLayerId` is identity, not appearance — it's read once on mount, so
+   * patching it here has no effect; re-add the layer to retarget it.
+   */
+  setOptions(patch: Partial<TOpt>): void {
+    // `options` is declared readonly on the base `Layer` (construction-time
+    // config); mutate in place rather than reassigning so every reader —
+    // including the in-flight paint — sees one object.
+    Object.assign(this.options, patch);
+    this.scheduleRecompute();
+  }
+
+  /**
+   * Force an immediate recompute — e.g. in `recompute: 'manual'` mode, or after
+   * a layout moved node positions without changing the data.
    */
   recompute(): void {
     this.computeAndPaint();
