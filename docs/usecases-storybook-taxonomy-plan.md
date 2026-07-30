@@ -14,8 +14,9 @@
 >    (`usecases/SimpleAndCompositeNodes`) so it doesn't strand a capital-`U`
 >    sidebar node, and is the one story in neither bucket. Resolve §5, then
 >    delete or re-home it.
-> 3. **`apps/designer/StyleDesigner` is not written** — the folder is empty and
->    exists only in this plan (§6). Follow-up pass.
+> 3. **`apps/designer/StyleDesigner` is written** (§6) — verified live in
+>    Storybook: all three tabs render, styling previews per keystroke, the preset
+>    switch reframes and reloads the form both ways, no console errors.
 > 4. Renames beyond the manifest: `packages/graph-datasets/src/usecase-demos/index.ts`
 >    header comment (dataset → story pointers) and one cross-reference in each
 >    of `GraphModeller` / `SubjectBundle`. Historical `docs/*-plan.md` mentions
@@ -235,25 +236,51 @@ Pick one before executing:
 
 ---
 
-## 6. `apps/designer/StyleDesigner` — sketch (follow-up pass)
+## 6. `apps/designer/StyleDesigner` — as built
 
-Not part of the move; recorded so the empty folder has a spec.
+The brief widened during implementation: not just "dock the settings editor" but
+**edit node styling *and* node templates**. So the panel is a three-tab designer
+over the node-template model rather than a single settings pane.
 
-- `<GraphCanvasApp>` over `invanaCodeKg` (`@invana/graph-datasets`) — the same
-  602-entity graph the two `domains/code-kg/` stories use, so the designer and
-  the presets it switches between are visibly the same data.
-- **Right region:** `<CanvasSettingsEditorPanel>`, docked via `useSidePanels`,
-  so every registered layer / behaviour / layout surface is editable live
-  (root rule 12 — the constructor options *are* the visualisation's state).
-- **Header:** a preset switch — `dots` (d3-force, tiny circles) ⇄ `cards`
-  (ELK layered, composite cards) — pushing a whole style config through
-  `useGraphCanvasUpdate().update(...)`. The point of the story is that the two
-  `domains/code-kg/` pictures are one dataset plus two config values, and that
-  a user can travel between them with the editor rather than a code change.
-- Memoise `data` / `onReady` so a panel toggle never reloads the engine.
+- **Sample** — a **44-node slice** of `invanaCodeKg` (one architectural cluster,
+  swappable from the header), not the full 602. A designer needs a preview loop
+  that repaints in a frame; 602 composite cards doesn't. Same dataset as
+  `domains/code-kg/*`, so the tie the taxonomy wanted still holds.
+- **Templates tab** — `<NodeStructureEditorPanel>` over the picked type's
+  `NodeTypeBinding` (structure · styling · slot→data-path map). **Apply-gated:**
+  a structure swap changes the node's *size*, so it wants a settled relayout, not
+  one per character.
+- **Styling tab** — `<NodeStylingEditorPanel>` over the styling template's roles
+  + typography, wired **live** through `onChange`. Styling is a repaint, never a
+  relayout, so per-keystroke is safe — and it's what makes it feel like a tool.
+- **Canvas tab** — `<CanvasSettingsEditorPanel>` for layers · behaviours ·
+  layouts (root rule 12).
+- **Preset switch** — `cards` (`idCard`) ⇄ `dots` (`circle`) across every type.
+  This resolves the old open question: the preset **writes bindings directly**;
+  no "style preset" concept was invented. Both presets share one slot→field map
+  (`title`/`subtitle` + `label`) since a structure ignores slots it doesn't
+  declare, so the switch only ever flips `structure` + `styling`.
+- `config` is memoised **stable** (seed values only); every later edit is an
+  imperative `canvas.update(...)`, so no edit hands the app a new `config`
+  identity mid-design.
 
-Open: whether the preset switch writes config directly or drives a named
-"style preset" concept that doesn't exist yet. Resolve when writing it.
+Two things this cost, worth remembering:
+
+1. **Reframing after a preset needs `refresh()`, not `fitView()`.** A bare
+   `update({ layouts })` re-heats the sim **directly, off-bus by design**
+   (`Canvas._armAutoFit`'s docblock is explicit: only `runLayout` bridges the
+   `layout:run:*` events that `fitOnLoad`'s follow-fit listens on). A `fitView`
+   scheduled beside the update races the settle and frames a collapsed graph —
+   observed as a max-zoom clamp to 200%. `refresh()` goes through `runLayout`, so
+   the engine's own follow-fit frames it exactly.
+2. **The structure editor's `key` must carry the binding, not just the type.**
+   `defaults` loads once per mount, so with `key={editingType}` a preset switch
+   rewrote every binding underneath a form still displaying the old one. Key is
+   `` `${editingType}:${structure}` ``.
+
+**Camera state persists across reloads.** While testing, a bad fit left zoom at
+200% and a *fresh* page load restored it — worth knowing before diagnosing a
+framing bug that looks like it happens at load.
 
 ---
 
