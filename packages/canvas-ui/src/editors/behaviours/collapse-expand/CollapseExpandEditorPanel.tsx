@@ -20,8 +20,7 @@ export interface CollapseExpandEditorPanelProps {
   defaults?: CollapseExpandFields;
   /**
    * The form schema. Either a static `FieldConfig[]` or a function of the
-   * current values. Defaults to {@link collapseExpandFields} (empty — the
-   * behaviour has no tunable options).
+   * current values. Defaults to {@link collapseExpandFields}.
    */
   fields?: FieldConfig[] | ((values: CollapseExpandFields) => FieldConfig[]);
   /**
@@ -38,10 +37,9 @@ export interface CollapseExpandEditorPanelProps {
  * Self-contained, engine-agnostic settings form for `CollapseExpandBehaviour`.
  *
  * Owns a react-hook-form instance seeded by `defaults`, renders the schema with
- * `@invana/forms`, and hands the current values to `onSubmit`. The behaviour has
- * no tunable options, so the default schema is empty — the editor exists for
- * symmetry with the rest of the behaviour editors (rule 12). It holds no engine
- * reference and does no commit.
+ * `@invana/forms`, and hands the current values to `onSubmit`. It holds no
+ * engine reference and does no commit — map the values back with
+ * `formToOptions` and apply them yourself.
  */
 export function CollapseExpandEditorPanel({
   defaults = {},

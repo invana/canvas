@@ -2,28 +2,37 @@
  * Types for the CollapseExpandBehaviour editor.
  *
  * Engine-agnostic: the editable option shape is mirrored **structurally** here.
- * `CollapseExpandBehaviourOptions` carries **only** the base fields
- * (`id` / `targetLayerId` / `enabled` / `shortcuts`), all of which are out of
- * scope for the state editor — so this behaviour has **no user-tunable
- * settings**. The editor is still shipped for symmetry (rule 12: every
- * behaviour gets an editor) and renders an empty field set; add fields here if
- * the behaviour ever gains serialisable options.
+ * Of `CollapseExpandBehaviourOptions`, `doubleClickToToggle` and
+ * `centerOnToggle` are the tunable visualisation state — the base fields
+ * (`id` / `targetLayerId` / `enabled` / `shortcuts`) are out of scope for the
+ * state editor.
  */
 
 /**
  * The serialisable subset of `CollapseExpandBehaviourOptions` this editor
- * produces. Intentionally **empty** — the behaviour exposes no tunable options
- * beyond the omitted base fields.
+ * produces.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface CollapseExpandOptions {}
+export interface CollapseExpandOptions {
+  /**
+   * Double-clicking a group frame toggles it, as well as its `+` / `−` button.
+   * Engine default `true`.
+   */
+  readonly doubleClickToToggle?: boolean;
+  /**
+   * Pan the camera to centre a frame after it opens or closes. Engine default
+   * `true`.
+   */
+  readonly centerOnToggle?: boolean;
+}
 
 /**
- * Flat form-field shape the `@invana/forms` generator renders. Empty — mirrors
- * {@link CollapseExpandOptions}.
+ * Flat form-field shape the `@invana/forms` generator renders. Mirrors
+ * {@link CollapseExpandOptions} 1:1 — there's no encoding difference to bridge.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface CollapseExpandFields {}
+export interface CollapseExpandFields {
+  doubleClickToToggle?: boolean;
+  centerOnToggle?: boolean;
+}
 
 /**
  * react-hook-form state shape. `<ObjectField name="options" …>` registers each
