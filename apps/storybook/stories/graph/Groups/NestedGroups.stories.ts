@@ -22,7 +22,8 @@ type Story = StoryObj;
  * around them, so dragging `node1` outward correctly grows both frames
  * in one pass.
  */
-export const NestedGroups: Story = {
+export const NestedGroupsStory: Story = {
+  name: 'NestedGroups',
   render: () => createContainer({ id: 'graph-nested-groups' }),
 
   play: async ({ canvasElement }) => {

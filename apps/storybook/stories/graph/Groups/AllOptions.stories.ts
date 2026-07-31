@@ -66,7 +66,8 @@ const LABEL_PLACEMENTS: ShapeLabelPlacement[] = [
  * Three child circles live inside the group so autoFit, collapse, and
  * resize all have something visible to act on.
  */
-export const AllOptions: Story = {
+export const AllOptionsStory: Story = {
+  name: 'AllOptions',
   render: () => createContainer({ id: 'graph-all-options' }),
 
   play: async ({ canvasElement }) => {

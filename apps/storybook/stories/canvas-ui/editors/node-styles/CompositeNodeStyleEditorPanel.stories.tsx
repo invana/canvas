@@ -15,7 +15,7 @@ import {
 
 import { COMPOSITE_DATA, LiveStyleEditorApp, SelectPrompt, useSelectedNode } from './_shared';
 
-const meta: Meta = { title: 'canvas-ui/editors/node-styles' };
+const meta: Meta = { title: 'canvas-ui/editors/node-styles/CompositeNodeStyleEditorPanel' };
 export default meta;
 type Story = StoryObj;
 
@@ -37,7 +37,7 @@ function Panel() {
   );
 }
 
-export const Composite: Story = {
+export const CompositeNodeStyleEditorPanelStory: Story = {
   name: 'CompositeNodeStyleEditorPanel',
   render: () => (
     <LiveStyleEditorApp

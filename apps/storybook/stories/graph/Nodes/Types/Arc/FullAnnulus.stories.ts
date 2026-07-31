@@ -21,7 +21,8 @@ type Story = StoryObj;
  *
  * State is supplied data-driven via each node's `states` field.
  */
-export const FullAnnulus: Story = {
+export const FullAnnulusStory: Story = {
+  name: 'FullAnnulus',
   render: () => createContainer({ id: 'graph-node-types-arc-full-annulus' }),
 
   play: async ({ canvasElement }) => {

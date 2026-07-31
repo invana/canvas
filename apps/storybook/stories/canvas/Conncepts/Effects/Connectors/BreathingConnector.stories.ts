@@ -23,7 +23,8 @@ type Story = StoryObj;
  * whatever the path resolves to. Toggle `enabled` to verify the renderer
  * cleanly restores the connector's baseline alpha on removal.
  */
-export const BreathingConnector: Story = {
+export const BreathingConnectorStory: Story = {
+  name: 'BreathingConnector',
   render: () => createContainer({ id: 'cvs-effect-breathing-connector' }),
 
   play: async ({ canvasElement }) => {

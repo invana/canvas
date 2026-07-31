@@ -21,7 +21,8 @@ const meta: Meta = { title: 'graph/Behaviours/HoverElementPreview/HoverElementPr
 export default meta;
 type Story = StoryObj;
 
-export const HoverElementPreview: Story = {
+export const HoverElementPreviewStory: Story = {
+  name: 'HoverElementPreview',
   render: () => createContainer({ id: 'graph-element-preview' }),
 
   play: async ({ canvasElement }) => {

@@ -138,9 +138,18 @@ Rules:
   };
   ```
 
-  So: **file `<Subject>.stories.ts` · title `…/<Subject>` · `export const <Subject>Story` · `name: '<Subject>'`** — all four agree, and `<Subject>` is the class/component name in full (`GraphLegendLayer`, not `GraphLegend`). The `Story` suffix on the export is what keeps it from shadowing the imported class; keep it even where there'd be no collision, so every file reads the same. Variant files use the variant as the subject (`WithTelemetry.stories.tsx` → title `…/WithTelemetry`, `export const WithTelemetryStory`, `name: 'WithTelemetry'`).
+  So, two rules that always hold:
 
-  > Several older stories still nest (`BackgroundLayer ▸ Background`, `DevInfoLayer ▸ Dev Info`, `LayersPanelLayer ▸ …`). They predate this rule — normalise one when you're already editing it, and don't copy their shape into a new file.
+  1. **`name` === the title's last segment.** This is the only thing that makes the leaf flat. Set it explicitly and never rely on the export name start-casing into a match.
+  2. **The export identifier is `<FileStem>Story`.** Once `name` is explicit the identifier is invisible to the sidebar, so it exists only to be unambiguous: deriving it from the file stem keeps it greppable, and the `Story` suffix stops it shadowing an imported class of the same name (`export const GraphLegendLayer` shadowed the imported `GraphLegendLayer`, so `new GraphLegendLayer(...)` in `play` resolved to the story object — `TS2351`, and the whole Storybook failed to load). Keep the suffix even where there'd be no collision, so every file reads the same.
+
+  **The title's last segment does NOT have to equal the file name** — it's the label, and a deliberate label wins. `Events/CameraPan.stories.ts` is titled `canvas/concepts/Events/input:camera:pan` so the sidebar reads the actual event name; `Behaviours/Camera/DragPan.stories.ts` is titled `…/DragPanBehaviour` so it reads the class. Both are right. Set `name` to that segment and leave the title alone.
+
+  **Every file needs a title no other file uses.** Two files sharing one title produce two stories under it, and neither can collapse — so a shared title gains a segment: four `canvas-ui/editors/node-styles/*.stories.tsx` files went from one `node-styles` node holding four stories to `node-styles/<PanelName>` each, preserving the folder and giving four leaves.
+
+  Variant files follow the same shape: `WithTelemetry.stories.tsx` → title `…/WithTelemetry`, `export const WithTelemetryStory`, `name: 'WithTelemetry'`.
+
+  > All 320 story files were normalised to this in one pass (2026-07-31) — there are no nested stragglers left to copy from. If you add a file, follow the shape; `tsc` catches the duplicate-`name` mistake but nothing catches a nested leaf, so eyeball the sidebar.
 - **Every story file is self-contained — show the full implementation inline.** A developer reading (or copying from) one story file must see **everything** needed to reproduce it: the data, the styling, the config, and the complete React tree, all in that file. **Do NOT extract shared setup into a helper module** (no `scene.tsx` exporting a `*Scene` component, no shared data module) — that hides the implementation the story is meant to teach. **Accept the duplication** across sibling variant files; the story is documentation first, DRY second. `canvas-react/Canvas/WithTelemetry.stories.tsx` is the reference.
 - **All story code lives in the one story function — no extra components, no module-level story logic (unless I explicitly ask).** Everything goes in the story's own render function: for **declarative React** stories that's `render()` (put `useState`, effects, event handlers, and the data — via `useMemo` when it must stay a stable reference so a re-render doesn't reload the engine — **right inside `render`**); for **imperative** stories that's `play` (per "Writing a story"). **Do not create a `*Demo` / `*Scene` / any wrapper or sub-component** in a story file, and don't hoist story data/config/handlers to module scope — a stateful, interactive story is still one `render` function. The only module-level things are the `meta`, the single `Story` export, and imports. (This supersedes the older "keep data as module-level consts" guidance — inline it in `render`, memoised.) Add a helper component **only** when I explicitly ask for one.
 - No raw `pixi.js` imports inside stories — go through `@invana/canvas` / `@invana/graph` public API.
@@ -250,6 +259,33 @@ gui.addColor(canvasOptions.layers.graph.node.style, 'bgFill')
 ```
 
 Teardown still applies: `onStoryTeardown(() => canvas.destroy())`, `gui.destroy()`, and `forceLayout.stop()` (the layout instance is kept only for stop).
+
+### Layer / behaviour stories — the whole option surface, and round-trip the API
+
+**Canonical example: `stories/canvas/Conncepts/Layers/GraphLegendLayer.stories.ts`.** Same skeleton as above, plus four things that make a story a *complete* surface for one class rather than a screenshot of it:
+
+1. **Expose every field of the class's `*Options` interface** — in `canvasOptions` under that instance's id, *and* as a lil-gui control. A reader should be able to reach every documented option without editing the file. Mark it (`// Every option from GraphLegendLayerOptions exposed here.`) so the next person knows to extend it when the class gains an option, and group families into `gui.addFolder(...)` once the flat list gets long.
+2. **One `push()` helper** so each control is a single line and the config stays the source of truth:
+   ```ts
+   const lg = canvasOptions.layers.legend;
+   const push = (patch: Record<string, unknown>): void => canvas.update({ layers: { legend: patch } });
+   gui.add(lg, 'showCounts').onChange((v: boolean) => push({ showCounts: v }));
+   ```
+3. **Drive the class's own public API — never reach around it.** Where a control exercises behaviour rather than config, call the method the consumer would call (`legend.setTypeHidden('node', type, hide)`), not the layer it delegates to (`graph.store.hideNodes(ids)`). Reaching around the seam demos plumbing the class is supposed to own, and it silently skips the state the class keeps.
+4. **Round-trip the class's events back into the panel**, so the GUI can't desync from an interaction performed *in* the canvas — and subscribe through `onStoryTeardown`, since `.on()` returns its unsubscriber:
+   ```ts
+   onStoryTeardown(
+     legend.events.on('type:visibility', ({ type, hidden }) => {
+       filters[type] = hidden;
+       controllers[type]?.updateDisplay();   // lil-gui: re-read the bound object
+     }),
+   );
+   ```
+   Closing that loop — GUI → API → event → GUI — is what proves the surface is two-way. A one-way story looks fine and hides a broken or missing event.
+
+**Data:** hardcode literal `GraphNode[]` / `GraphEdge[]` when the *shape* of the data is the subject (types, labels, per-item styling — as the legend story does, where the node/edge `type` values *are* the demo); reach for a dataset generator only when volume is the subject. Per-item entries carry only what differs — shared styling belongs on the layer template (`options.node.style`).
+
+**No hint `<div>`s in new stories.** Some older stories append an absolutely-positioned hint with inline `cssText` (e.g. `MiniMap.stories.ts`) — that's hand-rolled CSS (root rule 13) and predates this note. Put the affordance where the user already looks: a lil-gui control name, or the component's own tooltip (the legend renders `title="Click to hide Person"` on interactive rows).
 
 ## Teardown — every story must register cleanup
 

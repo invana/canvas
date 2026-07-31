@@ -43,7 +43,8 @@ const meta: Meta = { title: 'usecases/domains/cora/SubjectBundle' };
 export default meta;
 type Story = StoryObj;
 
-export const SubjectBundle: Story = {
+export const SubjectBundleStory: Story = {
+  name: 'SubjectBundle',
   render: function Render() {
     const dock = useSidePanels(
       [

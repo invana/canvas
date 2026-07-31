@@ -48,7 +48,8 @@ const TOGGLE_PLACEMENTS: TogglePlacement[] = [
  * - **Toggle button** — `togglePlacement` keyword or raw `{ x, y }`
  *   coords (`'custom'` mode uses the slider values).
  */
-export const CollapseExpand: Story = {
+export const CollapseExpandStory: Story = {
+  name: 'CollapseExpand',
   render: () => createContainer({ id: 'graph-collapse-expand' }),
 
   play: async ({ canvasElement }) => {

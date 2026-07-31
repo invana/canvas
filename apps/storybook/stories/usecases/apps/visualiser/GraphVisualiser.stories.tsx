@@ -27,7 +27,8 @@ const meta: Meta = { title: 'usecases/apps/visualiser/GraphVisualiser' };
 export default meta;
 type Story = StoryObj;
 
-export const GraphVisualiser: Story = {
+export const GraphVisualiserStory: Story = {
+  name: 'GraphVisualiser',
   render: () => {
     // Distinct colour per les-mis community.
     const PALETTE = [

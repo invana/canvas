@@ -14,7 +14,8 @@ const meta: Meta = { title: 'canvas/concepts/Events/shape:pointer*' };
 export default meta;
 type Story = StoryObj;
 
-export const ShapePointer: Story = {
+export const ShapePointerStory: Story = {
+  name: 'shape:pointer*',
   render: () => createContainer({ id: 'cvs-evt-shape-pointer' }),
 
   play: async ({ canvasElement }) => {

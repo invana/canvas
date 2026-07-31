@@ -19,7 +19,7 @@ import {
 
 import { LiveStyleEditorApp, MIXED_DATA, SelectPrompt, useSelectedNode } from './_shared';
 
-const meta: Meta = { title: 'canvas-ui/editors/node-styles' };
+const meta: Meta = { title: 'canvas-ui/editors/node-styles/NodeStyleEditorPanel' };
 export default meta;
 type Story = StoryObj;
 
@@ -52,7 +52,7 @@ function Panel() {
   );
 }
 
-export const Dispatcher: Story = {
+export const NodeStyleEditorPanelStory: Story = {
   name: 'NodeStyleEditorPanel',
   render: () => (
     <LiveStyleEditorApp

@@ -16,7 +16,8 @@ type Story = StoryObj;
  * designated side, then routes orthogonally to the target. Useful for
  * swimlane / "all on one side" diagrams. All settings are in the gui.
  */
-export const OneSide: Story = {
+export const OneSideStory: Story = {
+  name: 'OneSide',
   render: () => createContainer({ id: 'cvs-prim-router-one-side' }),
 
   play: async ({ canvasElement }) => {

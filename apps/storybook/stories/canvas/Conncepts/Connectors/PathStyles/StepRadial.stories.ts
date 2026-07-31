@@ -23,7 +23,8 @@ type Story = StoryObj;
  * the shapes to see how angles / radii are recomputed against the configured
  * centre.
  */
-export const StepRadial: Story = {
+export const StepRadialStory: Story = {
+  name: 'StepRadial',
   render: () => createContainer({ id: 'cvs-prim-pathstyle-step-radial' }),
 
   play: async ({ canvasElement }) => {

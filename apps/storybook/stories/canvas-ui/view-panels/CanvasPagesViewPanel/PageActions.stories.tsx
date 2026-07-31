@@ -105,4 +105,5 @@ function PageActionsDemo() {
   );
 }
 
-export const PageActions: Story = { name: 'PageActions', render: () => <PageActionsDemo /> };
+export const PageActionsStory: Story = {
+  name: 'PageActions', render: () => <PageActionsDemo /> };

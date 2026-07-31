@@ -53,7 +53,8 @@ const meta: Meta = { title: 'usecases/domains/geo-air-routes/AirRoutes' };
 export default meta;
 type Story = StoryObj;
 
-export const AirRoutes: Story = {
+export const AirRoutesStory: Story = {
+  name: 'AirRoutes',
   render: function Render() {
     // OpenFreeMap (no key required) — three styles cover the most-asked-for
     // basemap modes for a graph overlay.

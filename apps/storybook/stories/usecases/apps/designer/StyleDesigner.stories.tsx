@@ -78,8 +78,8 @@ const meta: Meta = { title: 'usecases/apps/designer/StyleDesigner' };
 export default meta;
 type Story = StoryObj;
 
-export const StyleDesigner: Story = {
-  name: 'Style Designer',
+export const StyleDesignerStory: Story = {
+  name: 'StyleDesigner',
   render: function Render() {
     /** The analyser's entity kinds — one `NodeTypeBinding` per kind is what the Templates tab edits. */
     const TYPES: InvanaCodeNodeLabel[] = ['file', 'function', 'class', 'config', 'document'];

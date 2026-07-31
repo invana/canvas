@@ -246,7 +246,8 @@ const PANELS: {
   },
 ];
 
-export const MultipleApps: Story = {
+export const MultipleAppsStory: Story = {
+  name: 'MultipleApps',
   render: () => (
     <AppGrid>
       {PANELS.map((p) => (

@@ -31,7 +31,8 @@ type Story = StoryObj;
  * The flip toggle inverts the offset sign so you can watch the same policy
  * fan to the opposite side.
  */
-export const ParallelEdgeCustomPolicy: Story = {
+export const ParallelEdgeCustomPolicyStory: Story = {
+  name: 'ParallelEdgeCustomPolicy',
   render: () => createContainer({ id: 'graph-behaviour-parallel-edge-custom' }),
 
   play: async ({ canvasElement }) => {

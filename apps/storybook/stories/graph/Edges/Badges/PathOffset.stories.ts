@@ -28,7 +28,8 @@ type Story = StoryObj;
  * `'start'` / `'end'` apply automatically — useful for fine-tuning, not a
  * replacement for the named anchors.
  */
-export const PathOffset: Story = {
+export const PathOffsetStory: Story = {
+  name: 'PathOffset',
   render: () => createContainer({ id: 'graph-edges-badges-pathoffset' }),
 
   play: async ({ canvasElement }) => {

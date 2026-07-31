@@ -63,7 +63,8 @@ const meta: Meta = { title: 'usecases/domains/data-model/SchemaTable' };
 export default meta;
 type Story = StoryObj;
 
-export const SchemaTable: Story = {
+export const SchemaTableStory: Story = {
+  name: 'SchemaTable',
   render: function Render() {
     // ── The schema each node carries ─────────────────────────────────────
     interface Field {

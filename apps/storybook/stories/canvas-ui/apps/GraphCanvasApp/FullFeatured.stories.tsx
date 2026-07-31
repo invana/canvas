@@ -55,7 +55,8 @@ const backgroundMenu = (_ctx: GraphBackgroundMenuContext): MenuItem[] => [
   { id: 'about', label: 'Les Misérables co-appearances', onClick: () => window.alert('Demo graph') },
 ];
 
-export const FullFeatured: Story = {
+export const FullFeaturedStory: Story = {
+  name: 'FullFeatured',
   render: () => {
     // The clicked node/edge (or null on a background click) — drives the docked
     // right section below, fed by <ClickViewBehaviour onClick={…}>.

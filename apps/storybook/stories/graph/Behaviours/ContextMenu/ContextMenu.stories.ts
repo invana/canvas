@@ -16,7 +16,8 @@ const meta: Meta = { title: 'graph/Behaviours/ContextMenu/ContextMenu' };
 export default meta;
 type Story = StoryObj;
 
-export const ContextMenu: Story = {
+export const ContextMenuStory: Story = {
+  name: 'ContextMenu',
   render: () => createContainer({ id: 'graph-context-menu' }),
 
   play: async ({ canvasElement }) => {

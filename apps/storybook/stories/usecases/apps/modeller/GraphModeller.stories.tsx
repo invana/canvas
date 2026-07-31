@@ -485,6 +485,7 @@ function ModellerApp() {
   );
 }
 
-export const GraphModeller: Story = {
+export const GraphModellerStory: Story = {
+  name: 'GraphModeller',
   render: () => <ModellerApp />,
 };

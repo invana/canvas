@@ -16,7 +16,8 @@ const meta: Meta = { title: 'graph/Layer/MiniMap' };
 export default meta;
 type Story = StoryObj;
 
-export const MiniMap: Story = {
+export const MiniMapStory: Story = {
+  name: 'MiniMap',
   render: () => createContainer({ id: 'graph-minimap' }),
 
   play: async ({ canvasElement }) => {

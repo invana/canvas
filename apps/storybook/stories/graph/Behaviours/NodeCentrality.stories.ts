@@ -15,7 +15,8 @@ const meta: Meta = { title: 'graph/Behaviours/NodeCentrality' };
 export default meta;
 type Story = StoryObj;
 
-export const NodeCentrality: Story = {
+export const NodeCentralityStory: Story = {
+  name: 'NodeCentrality',
   render: () => createContainer({ id: 'graph-node-centrality' }),
 
   play: async ({ canvasElement }) => {

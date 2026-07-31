@@ -46,7 +46,8 @@ const meta: Meta = { title: 'usecases/domains/microservices/ServiceTopology' };
 export default meta;
 type Story = StoryObj;
 
-export const ServiceTopology: Story = {
+export const ServiceTopologyStory: Story = {
+  name: 'ServiceTopology',
   render: function Render() {
     const [minimapOn, setMinimapOn] = useState(true);
     const [simulateOn, setSimulateOn] = useState(false);

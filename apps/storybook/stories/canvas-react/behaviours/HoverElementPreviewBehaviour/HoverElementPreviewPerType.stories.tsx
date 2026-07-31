@@ -24,7 +24,7 @@ import {
 } from '@invana/canvas-react';
 import type { GraphData, GraphEdge, GraphNode } from '@invana/graph';
 
-const meta: Meta = { title: 'canvas-react/behaviours/HoverElementPreviewBehaviour' };
+const meta: Meta = { title: 'canvas-react/behaviours/HoverElementPreviewBehaviour/HoverElementPreviewPerType' };
 export default meta;
 type Story = StoryObj;
 
@@ -98,8 +98,8 @@ function renderEdge(edge: GraphEdge) {
 
 // ─── Story ───────────────────────────────────────────────────────────────────
 
-export const HoverElementPreviewPerType: Story = {
-  name: 'PerType',
+export const HoverElementPreviewPerTypeStory: Story = {
+  name: 'HoverElementPreviewPerType',
   render: () => (
     <div style={{ width: '100%', height: '100vh' }}>
       <Canvas autoResize>

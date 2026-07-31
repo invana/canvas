@@ -30,7 +30,8 @@ type Story = StoryObj;
  * serves SVG with CORS enabled and the icons have plain `path` data
  * the engine's extractor handles cleanly.
  */
-export const SvgUrl: Story = {
+export const SvgUrlStory: Story = {
+  name: 'SvgUrl',
   render: () => createContainer({ id: 'graph-nodes-image-svg-url' }),
 
   play: async ({ canvasElement }) => {

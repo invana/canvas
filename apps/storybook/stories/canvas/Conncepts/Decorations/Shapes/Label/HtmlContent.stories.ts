@@ -25,7 +25,8 @@ type Story = StoryObj;
  * inline highlight, and a multi-line snippet. Edit the raw HTML or tweak
  * `defaultFontSize` / `defaultFill` to see live changes.
  */
-export const HtmlContent: Story = {
+export const HtmlContentStory: Story = {
+  name: 'HtmlContent',
   render: () => createContainer({ id: 'cvs-prim-label-html' }),
 
   play: async ({ canvasElement }) => {

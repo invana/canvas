@@ -7,7 +7,8 @@ const meta: Meta = { title: 'canvas/concepts/Events/canvas:renderer:ready' };
 export default meta;
 type Story = StoryObj;
 
-export const RendererInitialised: Story = {
+export const RendererInitialisedStory: Story = {
+  name: 'canvas:renderer:ready',
   render: () => createContainer({ id: 'cvs-evt-renderer-init' }),
 
   play: async ({ canvasElement }) => {

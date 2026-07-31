@@ -36,7 +36,8 @@ const meta: Meta = { title: 'canvas-ui/view-panels/SchemaViewPanel/CustomSchema'
 export default meta;
 type Story = StoryObj;
 
-export const CustomSchema: Story = {
+export const CustomSchemaStory: Story = {
+  name: 'CustomSchema',
   // name: 'Custom schema',
   render: () => {
     // The loaded graph (a subset) — the schema panel is independent of it.

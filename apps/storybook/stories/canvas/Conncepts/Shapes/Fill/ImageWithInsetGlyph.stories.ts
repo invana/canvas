@@ -26,7 +26,8 @@ type Story = StoryObj;
  * The lil-gui panel lets you move the inset glyph to any of the five anchors and
  * resize it independently of the image underneath.
  */
-export const ImageWithInsetGlyph: Story = {
+export const ImageWithInsetGlyphStory: Story = {
+  name: 'ImageWithInsetGlyph',
   render: () => createContainer({ id: 'cvs-prim-image-with-inset-glyph' }),
 
   play: async ({ canvasElement }) => {

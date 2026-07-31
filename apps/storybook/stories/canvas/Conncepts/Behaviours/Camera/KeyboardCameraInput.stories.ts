@@ -13,7 +13,8 @@ const meta: Meta = { title: 'canvas/concepts/Behaviours/Camera/KeyboardCameraInp
 export default meta;
 type Story = StoryObj;
 
-export const KeyboardCameraInput: Story = {
+export const KeyboardCameraInputStory: Story = {
+  name: 'KeyboardCameraInputBehaviour',
   render: () => createContainer({ id: 'cvs-behaviour-keyboard-camera' }),
 
   play: async ({ canvasElement }) => {

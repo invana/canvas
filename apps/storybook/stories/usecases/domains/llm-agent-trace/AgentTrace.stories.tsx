@@ -44,7 +44,8 @@ const meta: Meta = { title: 'usecases/domains/llm-agent-trace/AgentTrace' };
 export default meta;
 type Story = StoryObj;
 
-export const AgentTrace: Story = {
+export const AgentTraceStory: Story = {
+  name: 'AgentTrace',
   render: function Render() {
     const [presetId, setPresetId] = useState(agentTrace[0]!.id);
 

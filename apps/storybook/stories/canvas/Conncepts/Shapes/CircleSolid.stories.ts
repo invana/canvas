@@ -7,7 +7,8 @@ const meta: Meta = { title: 'canvas/concepts/Shapes/CircleSolid' };
 export default meta;
 type Story = StoryObj;
 
-export const CircleSolid: Story = {
+export const CircleSolidStory: Story = {
+  name: 'CircleSolid',
   render: () => createContainer({ id: 'cvs-prim-circle-solid' }),
 
   play: async ({ canvasElement }) => {

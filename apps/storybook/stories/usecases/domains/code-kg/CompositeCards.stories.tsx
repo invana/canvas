@@ -48,8 +48,8 @@ const meta: Meta = { title: 'usecases/domains/code-kg/CompositeCards' };
 export default meta;
 type Story = StoryObj;
 
-export const CompositeCards: Story = {
-  name: 'elkjs (composite cards)',
+export const CompositeCardsStory: Story = {
+  name: 'CompositeCards',
   render: function Render() {
     const ALL_LABELS: InvanaCodeNodeLabel[] = ['file', 'function', 'class', 'config', 'document'];
 

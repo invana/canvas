@@ -24,7 +24,8 @@ type Story = StoryObj;
  * stub legs joined by a perpendicular bridge. Drag either endpoint to see
  * the router re-bridge around the fixed waypoint.
  */
-export const OrthogonalLineWithControlPoints: Story = {
+export const OrthogonalLineWithControlPointsStory: Story = {
+  name: 'OrthogonalLineWithControlPoints',
   render: () => createContainer({ id: 'graph-edge-types-orth-cp' }),
 
   play: async ({ canvasElement }) => {

@@ -7,7 +7,8 @@ const meta: Meta = { title: 'canvas/concepts/Events/scene:behaviour:register' };
 export default meta;
 type Story = StoryObj;
 
-export const BehaviourRegistered: Story = {
+export const BehaviourRegisteredStory: Story = {
+  name: 'scene:behaviour:register',
   render: () => createContainer({ id: 'cvs-evt-behaviour-registered' }),
 
   play: async ({ canvasElement }) => {

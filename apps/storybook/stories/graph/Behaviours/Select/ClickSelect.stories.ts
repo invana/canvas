@@ -17,7 +17,8 @@ const meta: Meta = { title: 'graph/Behaviours/Select/ClickSelect' };
 export default meta;
 type Story = StoryObj;
 
-export const ClickSelect: Story = {
+export const ClickSelectStory: Story = {
+  name: 'ClickSelect',
   render: () => createContainer({ id: 'graph-click-select' }),
 
   play: async ({ canvasElement }) => {

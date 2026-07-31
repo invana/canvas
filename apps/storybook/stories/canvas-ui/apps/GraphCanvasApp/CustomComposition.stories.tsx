@@ -34,7 +34,8 @@ const DATA = {
   edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
 };
 
-export const CustomComposition: Story = {
+export const CustomCompositionStory: Story = {
+  name: 'CustomComposition',
   render: () => (
     // A real consumer mounts the app under its own <ThemeProvider>. With `bundle`
     // off there's no engine ThemeBehaviour, so the canvas colours are fixed here

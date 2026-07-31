@@ -21,7 +21,8 @@ type Story = StoryObj;
  * `paintInto` — here demonstrated on `circle` and `rect`. Set
  * `speedPxPerSec` to a negative value to reverse the march direction.
  */
-export const MarchingAnts: Story = {
+export const MarchingAntsStory: Story = {
+  name: 'MarchingAnts',
   render: () => createContainer({ id: 'cvs-deco-marching-ants' }),
 
   play: async ({ canvasElement }) => {

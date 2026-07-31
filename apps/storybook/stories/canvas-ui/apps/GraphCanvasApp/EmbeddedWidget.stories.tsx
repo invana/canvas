@@ -28,7 +28,8 @@ const DATA = {
   edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
 };
 
-export const EmbeddedWidget: Story = {
+export const EmbeddedWidgetStory: Story = {
+  name: 'EmbeddedWidget',
   render: () => (
     // A real consumer mounts the app under its own <ThemeProvider>. Here the page
     // itself is theme-scoped so the surrounding article + the widget share tokens.

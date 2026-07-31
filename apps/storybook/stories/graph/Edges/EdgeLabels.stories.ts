@@ -25,7 +25,8 @@ type Story = StoryObj;
  * re-routing — `autoRotate` + `keepUpright` on the layer-level labelStyle
  * apply uniformly across all path styles.
  */
-export const EdgeLabels: Story = {
+export const EdgeLabelsStory: Story = {
+  name: 'EdgeLabels',
   render: () => createContainer({ id: 'graph-edge-labels' }),
 
   play: async ({ canvasElement }) => {

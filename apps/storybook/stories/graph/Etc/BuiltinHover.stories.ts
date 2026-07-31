@@ -21,7 +21,8 @@ type Story = StoryObj;
  * - `style.bgFill`, `style.bgStrokeColor`, `style.bgStrokeWidth` — paint
  * - `style.labelText`, `style.labelColor`, `style.labelPlacement` — label
  */
-export const BuiltinHover: Story = {
+export const BuiltinHoverStory: Story = {
+  name: 'BuiltinHover',
   render: () => createContainer({ id: 'graph-states-builtin-hover' }),
 
   play: async ({ canvasElement }) => {

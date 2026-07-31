@@ -46,7 +46,8 @@ const TOGGLE_PLACEMENTS: TogglePlacement[] = [
  * the GUI's `userResizable` flag actually mounts the selection-frame
  * handles, and the toggle button responds to clicks.
  */
-export const RectGroup: Story = {
+export const RectGroupStory: Story = {
+  name: 'RectGroup',
   render: () => createContainer({ id: 'graph-rect-group' }),
 
   play: async ({ canvasElement }) => {

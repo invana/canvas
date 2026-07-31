@@ -22,7 +22,8 @@ type Story = StoryObj;
  * path resolves to. The marker silhouette (`circle` / `square` / `arrow`)
  * is configurable, as are speed, size, phase, loop, and orientation.
  */
-export const FlyMarkerConnector: Story = {
+export const FlyMarkerConnectorStory: Story = {
+  name: 'FlyMarkerConnector',
   render: () => createContainer({ id: 'cvs-deco-fly-marker-connector' }),
 
   play: async ({ canvasElement }) => {

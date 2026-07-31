@@ -14,7 +14,8 @@ const meta: Meta = { title: 'canvas/concepts/Behaviours/Camera/WheelZoomBehaviou
 export default meta;
 type Story = StoryObj;
 
-export const WheelZoom: Story = {
+export const WheelZoomStory: Story = {
+  name: 'WheelZoomBehaviour',
   render: () => createContainer({ id: 'cvs-behaviour-wheel-zoom' }),
 
   play: async ({ canvasElement }) => {

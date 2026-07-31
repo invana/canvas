@@ -21,7 +21,8 @@ type Story = StoryObj;
  * because FA 6 Free Solid lives there; weight 400 preloads only the
  * Regular face.
  */
-export const FontAwesome: Story = {
+export const FontAwesomeStory: Story = {
+  name: 'FontAwesome',
   render: () => createContainer({ id: 'graph-nodes-icon-fa' }),
 
   play: async ({ canvasElement }) => {

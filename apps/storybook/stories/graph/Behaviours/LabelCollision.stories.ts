@@ -25,7 +25,8 @@ type Story = StoryObj;
  * Priority is resolved via `'node-degree'` by default, so well-connected
  * characters keep their labels visible longest as overlap pressure rises.
  */
-export const LabelCollision: Story = {
+export const LabelCollisionStory: Story = {
+  name: 'LabelCollision',
   render: () => createContainer({ id: 'graph-label-collision' }),
 
   play: async ({ canvasElement }) => {

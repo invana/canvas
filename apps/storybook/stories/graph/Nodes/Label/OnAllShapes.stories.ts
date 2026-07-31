@@ -20,7 +20,8 @@ type Story = StoryObj;
  * math: if a regression breaks anchoring for any silhouette, the row
  * makes it immediately obvious.
  */
-export const OnAllShapes: Story = {
+export const OnAllShapesStory: Story = {
+  name: 'OnAllShapes',
   render: () => createContainer({ id: 'graph-label-on-all-shapes' }),
 
   play: async ({ canvasElement }) => {

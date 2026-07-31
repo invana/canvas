@@ -26,7 +26,8 @@ type Story = StoryObj;
  * mid-line tag changes — try toggling it on a diagonal connector to see
  * whether the result reads in your use case.
  */
-export const HtmlContent: Story = {
+export const HtmlContentStory: Story = {
+  name: 'HtmlContent',
   render: () => createContainer({ id: 'cvs-cdeco-label-html' }),
 
   play: async ({ canvasElement }) => {

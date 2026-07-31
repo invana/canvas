@@ -25,7 +25,8 @@ type Story = StoryObj;
  * that stay in the constructor `options`; the pure-literal style fields move
  * into `canvasOptions.layers.graph.node.style` and shallow-merge at init.
  */
-export const LayerResolver: Story = {
+export const LayerResolverStory: Story = {
+  name: 'LayerResolver',
   render: () => createContainer({ id: 'graph-states-layer-resolver' }),
 
   play: async ({ canvasElement }) => {

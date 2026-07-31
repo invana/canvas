@@ -64,7 +64,8 @@ const bottomTable = (
   </div>
 );
 
-export const BottomTable: Story = {
+export const BottomTableStory: Story = {
+  name: 'BottomTable',
   render: () => (
     // A real consumer mounts the app under its own <ThemeProvider>.
     <ThemeProvider>

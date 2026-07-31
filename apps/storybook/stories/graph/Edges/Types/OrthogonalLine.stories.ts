@@ -23,7 +23,8 @@ type Story = StoryObj;
  * the elbow is visible. Drag either endpoint to confirm the elbow snaps
  * to the new chord and the segments stay axis-aligned.
  */
-export const OrthogonalLine: Story = {
+export const OrthogonalLineStory: Story = {
+  name: 'OrthogonalLine',
   render: () => createContainer({ id: 'graph-edge-types-orth' }),
 
   play: async ({ canvasElement }) => {

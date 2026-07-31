@@ -7,7 +7,8 @@ const meta: Meta = { title: 'canvas/concepts/Events/scene:layer:remove' };
 export default meta;
 type Story = StoryObj;
 
-export const LayerRemoved: Story = {
+export const LayerRemovedStory: Story = {
+  name: 'scene:layer:remove',
   render: () => createContainer({ id: 'cvs-evt-layer-removed' }),
 
   play: async ({ canvasElement }) => {

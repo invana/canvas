@@ -24,7 +24,8 @@ type Story = StoryObj;
  * largest inner box holds the longest, then star with its concave
  * geometry hits "hide" earliest).
  */
-export const InsideFitCascade: Story = {
+export const InsideFitCascadeStory: Story = {
+  name: 'InsideFitCascade',
   render: () => createContainer({ id: 'graph-label-inside-fit-cascade' }),
 
   play: async ({ canvasElement }) => {

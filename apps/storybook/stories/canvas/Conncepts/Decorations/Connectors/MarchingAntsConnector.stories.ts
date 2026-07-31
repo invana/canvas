@@ -21,7 +21,8 @@ type Story = StoryObj;
  * router using both `normal` and `bezier` pathStyles to show that the
  * march follows whatever curve the path resolves to.
  */
-export const MarchingAntsConnector: Story = {
+export const MarchingAntsConnectorStory: Story = {
+  name: 'MarchingAntsConnector',
   render: () => createContainer({ id: 'cvs-deco-marching-ants-connector' }),
 
   play: async ({ canvasElement }) => {

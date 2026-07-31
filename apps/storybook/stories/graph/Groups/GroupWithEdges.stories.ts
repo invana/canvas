@@ -30,7 +30,8 @@ type Story = StoryObj;
  * `CollapseExpandBehaviour` is wired up so you can collapse either
  * group and watch the cross edge re-route to the surviving super-node.
  */
-export const GroupWithEdges: Story = {
+export const GroupWithEdgesStory: Story = {
+  name: 'GroupWithEdges',
   render: () => createContainer({ id: 'graph-group-with-edges' }),
 
   play: async ({ canvasElement }) => {

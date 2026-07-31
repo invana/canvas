@@ -23,7 +23,8 @@ type Story = StoryObj;
  * connector remains visible afterward. Hit "Replay" to detach the effect
  * and re-attach it so the fade plays again.
  */
-export const FadeInConnector: Story = {
+export const FadeInConnectorStory: Story = {
+  name: 'FadeInConnector',
   render: () => createContainer({ id: 'cvs-effect-fade-in-connector' }),
 
   play: async ({ canvasElement }) => {

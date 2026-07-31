@@ -9,7 +9,7 @@ import { SimpleNodeStyleEditorPanel, formToStyle, styleToForm, type NodeStyleFie
 
 import { LiveStyleEditorApp, SIMPLE_DATA, SelectPrompt, useSelectedNode } from './_shared';
 
-const meta: Meta = { title: 'canvas-ui/editors/node-styles' };
+const meta: Meta = { title: 'canvas-ui/editors/node-styles/SimpleNodeStyleEditorPanel' };
 export default meta;
 type Story = StoryObj;
 
@@ -28,7 +28,7 @@ function Panel() {
   );
 }
 
-export const Simple: Story = {
+export const SimpleNodeStyleEditorPanelStory: Story = {
   name: 'SimpleNodeStyleEditorPanel',
   render: () => (
     <LiveStyleEditorApp

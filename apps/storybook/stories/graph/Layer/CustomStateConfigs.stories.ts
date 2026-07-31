@@ -23,7 +23,8 @@ type Story = StoryObj;
  * canonical bundle, so matching names win and unmatched names register as
  * fresh states.
  */
-export const CustomStateConfigs: Story = {
+export const CustomStateConfigsStory: Story = {
+  name: 'CustomStateConfigs',
   render: () => createContainer({ id: 'graph-custom-state-configs' }),
 
   play: async ({ canvasElement }) => {

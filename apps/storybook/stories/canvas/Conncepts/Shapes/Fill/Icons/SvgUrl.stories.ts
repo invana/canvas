@@ -25,7 +25,8 @@ type Story = StoryObj;
  * any icon library. The capability has nothing to do with curated icon
  * packs; this story just shows that *any* CORS-friendly SVG URL works.
  */
-export const SvgUrl: Story = {
+export const SvgUrlStory: Story = {
+  name: 'SvgUrl',
   render: () => createContainer({ id: 'cvs-prim-icons-svg' }),
 
   play: async ({ canvasElement }) => {

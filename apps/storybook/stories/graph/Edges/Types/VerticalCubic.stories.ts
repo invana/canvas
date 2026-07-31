@@ -24,7 +24,8 @@ type Story = StoryObj;
  * One child per canonical edge state, so the colour-coded state overlays
  * read against the vertical-cubic geometry.
  */
-export const VerticalCubic: Story = {
+export const VerticalCubicStory: Story = {
+  name: 'VerticalCubic',
   render: () => createContainer({ id: 'graph-edge-types-vertical-cubic' }),
 
   play: async ({ canvasElement }) => {

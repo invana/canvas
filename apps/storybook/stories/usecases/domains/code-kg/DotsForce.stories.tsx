@@ -47,8 +47,8 @@ const meta: Meta = { title: 'usecases/domains/code-kg/DotsForce' };
 export default meta;
 type Story = StoryObj;
 
-export const DotsForce: Story = {
-  name: 'd3-force',
+export const DotsForceStory: Story = {
+  name: 'DotsForce',
   render: function Render() {
     const ALL_LABELS: InvanaCodeNodeLabel[] = ['file', 'function', 'class', 'config', 'document'];
 

@@ -66,7 +66,8 @@ const data: GraphData = {
   ],
 };
 
-export const ExportImage: Story = {
+export const ExportImageStory: Story = {
+  name: 'ExportImage',
   render: () => (
     <ThemeProvider defaultMode="dark" storageKey={null}>
       <GraphCanvasApp

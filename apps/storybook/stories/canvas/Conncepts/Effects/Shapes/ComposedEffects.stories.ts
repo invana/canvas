@@ -25,7 +25,8 @@ type Story = StoryObj;
  * removing an effect cleanly reverts its contribution (no stuck jitter,
  * no stuck scale).
  */
-export const ComposedEffects: Story = {
+export const ComposedEffectsStory: Story = {
+  name: 'ComposedEffects',
   render: () => createContainer({ id: 'cvs-effects-composed' }),
 
   play: async ({ canvasElement }) => {

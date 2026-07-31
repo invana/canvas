@@ -23,7 +23,8 @@ type Story = StoryObj;
  * phase-distributed across one period for a steady rhythm. Demonstrated
  * on both a straight `normal` path and a `bezier`-styled path.
  */
-export const RippleConnector: Story = {
+export const RippleConnectorStory: Story = {
+  name: 'RippleConnector',
   render: () => createContainer({ id: 'cvs-deco-ripple-connector' }),
 
   play: async ({ canvasElement }) => {

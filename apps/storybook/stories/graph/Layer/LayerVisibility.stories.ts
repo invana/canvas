@@ -24,7 +24,8 @@ const meta: Meta = { title: 'graph/Layer/LayerVisibility' };
 export default meta;
 type Story = StoryObj;
 
-export const LayerVisibility: Story = {
+export const LayerVisibilityStory: Story = {
+  name: 'LayerVisibility',
   render: () => createContainer({ id: 'graph-layer-visibility' }),
 
   play: async ({ canvasElement }) => {

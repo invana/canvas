@@ -113,7 +113,8 @@ function ThemeControls({ ctx }: { ctx: GraphCanvasAppControlContext }) {
   );
 }
 
-export const SimpleAndCompositeNodes: Story = {
+export const SimpleAndCompositeNodesStory: Story = {
+  name: 'SimpleAndCompositeNodes',
   render: () => {
     // A viewport-fixed minimap of the graph, toggled from a header button.
 

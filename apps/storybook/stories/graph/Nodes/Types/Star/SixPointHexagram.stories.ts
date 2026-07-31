@@ -20,7 +20,8 @@ type Story = StoryObj;
  * interaction states (`hovered`, `selected`, `highlighted`, `dimmed`,
  * `disabled`).
  */
-export const SixPointHexagram: Story = {
+export const SixPointHexagramStory: Story = {
+  name: 'SixPointHexagram',
   render: () => createContainer({ id: 'graph-node-types-star-6-hexagram' }),
 
   play: async ({ canvasElement }) => {

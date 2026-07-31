@@ -18,7 +18,7 @@ import { useCanvas } from '@invana/canvas-react';
 
 import { LiveStyleEditorApp, MIXED_DATA } from './_shared';
 
-const meta: Meta = { title: 'canvas-ui/editors/node-styles' };
+const meta: Meta = { title: 'canvas-ui/editors/node-styles/NodeStyleOverviewEditorPanel' };
 export default meta;
 type Story = StoryObj;
 
@@ -65,7 +65,7 @@ function Panel() {
   );
 }
 
-export const Overview: Story = {
+export const NodeStyleOverviewEditorPanelStory: Story = {
   name: 'NodeStyleOverviewEditorPanel',
   render: () => (
     <LiveStyleEditorApp

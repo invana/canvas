@@ -7,7 +7,8 @@ const meta: Meta = { title: 'canvas/concepts/Events/scene:layer:add' };
 export default meta;
 type Story = StoryObj;
 
-export const LayerAdded: Story = {
+export const LayerAddedStory: Story = {
+  name: 'scene:layer:add',
   render: () => createContainer({ id: 'cvs-evt-layer-added' }),
 
   play: async ({ canvasElement }) => {

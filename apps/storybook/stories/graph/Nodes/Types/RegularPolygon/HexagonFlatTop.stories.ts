@@ -20,7 +20,8 @@ type Story = StoryObj;
  * five canonical interaction states (`hovered`, `selected`,
  * `highlighted`, `dimmed`, `disabled`).
  */
-export const HexagonFlatTop: Story = {
+export const HexagonFlatTopStory: Story = {
+  name: 'HexagonFlatTop',
   render: () => createContainer({ id: 'graph-node-types-regpoly-hex-flat' }),
 
   play: async ({ canvasElement }) => {

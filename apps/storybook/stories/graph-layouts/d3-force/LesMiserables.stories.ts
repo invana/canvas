@@ -25,7 +25,8 @@ const meta: Meta = { title: 'graph-layouts/d3-force/LesMiserables' };
 export default meta;
 type Story = StoryObj;
 
-export const LesMiserables: Story = {
+export const LesMiserablesStory: Story = {
+  name: 'LesMiserables',
   render: () => createContainer({ id: 'graph-d3-force' }),
 
   play: async ({ canvasElement }) => {

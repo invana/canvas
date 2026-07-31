@@ -22,7 +22,8 @@ type Story = StoryObj;
  * Stroked with `strokeWidth = link.value`, it doubles as a Sankey ribbon.
  * Try cranking `strokeWidth` in the gui below.
  */
-export const BumpHorizontal: Story = {
+export const BumpHorizontalStory: Story = {
+  name: 'BumpHorizontal',
   render: () => createContainer({ id: 'cvs-prim-pathstyle-bump-horizontal' }),
 
   play: async ({ canvasElement }) => {

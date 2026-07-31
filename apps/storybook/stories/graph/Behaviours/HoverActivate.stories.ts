@@ -16,7 +16,8 @@ const meta: Meta = { title: 'graph/Behaviours/HoverActivate' };
 export default meta;
 type Story = StoryObj;
 
-export const HoverActivate: Story = {
+export const HoverActivateStory: Story = {
+  name: 'HoverActivate',
   render: () => createContainer({ id: 'graph-hover-activate' }),
 
   play: async ({ canvasElement }) => {

@@ -26,7 +26,8 @@ type Story = StoryObj;
  * the perimeter. Drag the shapes; the ports follow. Drag the offset
  * sliders to watch each endpoint walk around the silhouette.
  */
-export const SilhouettePort: Story = {
+export const SilhouettePortStory: Story = {
+  name: 'SilhouettePort',
   render: () => createContainer({ id: 'cvs-prim-anchor-silhouette-port' }),
 
   play: async ({ canvasElement }) => {

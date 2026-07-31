@@ -20,7 +20,8 @@ type Story = StoryObj;
  * concurrent rings are phase-distributed so the visual rhythm stays
  * steady regardless of cycle length.
  */
-export const PulseRing: Story = {
+export const PulseRingStory: Story = {
+  name: 'PulseRing',
   render: () => createContainer({ id: 'cvs-deco-pulse-ring' }),
 
   play: async ({ canvasElement }) => {

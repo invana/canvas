@@ -20,7 +20,8 @@ type Story = StoryObj;
  * interaction states (`hovered`, `selected`, `highlighted`, `dimmed`,
  * `disabled`).
  */
-export const EightPointSparkle: Story = {
+export const EightPointSparkleStory: Story = {
+  name: 'EightPointSparkle',
   render: () => createContainer({ id: 'graph-node-types-star-8-sparkle' }),
 
   play: async ({ canvasElement }) => {

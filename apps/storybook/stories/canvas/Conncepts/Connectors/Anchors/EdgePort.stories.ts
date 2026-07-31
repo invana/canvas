@@ -23,7 +23,8 @@ type Story = StoryObj;
  * tables with per-row ports, BPMN sequence flows, …). Drag the rects in
  * the gui or with the mouse to see the ports follow.
  */
-export const EdgePort: Story = {
+export const EdgePortStory: Story = {
+  name: 'EdgePort',
   render: () => createContainer({ id: 'cvs-prim-anchor-edge-port' }),
 
   play: async ({ canvasElement }) => {

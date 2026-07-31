@@ -117,7 +117,8 @@ const meta: Meta = { title: 'usecases/domains/invana-architecture/EndToEnd' };
 export default meta;
 type Story = StoryObj;
 
-export const EndToEnd: Story = {
+export const EndToEndStory: Story = {
+  name: 'EndToEnd',
   render: () => {
     // Which layout the header picker is on. `'authored'` isn't a registered
     // layout — it's the absence of one (`activeLayout: ''`) plus a rewrite of the

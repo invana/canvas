@@ -22,7 +22,8 @@ type Story = StoryObj;
  *
  * State is supplied data-driven via each node's `states` field.
  */
-export const DonutWedge: Story = {
+export const DonutWedgeStory: Story = {
+  name: 'DonutWedge',
   render: () => createContainer({ id: 'graph-node-types-arc-donut-wedge' }),
 
   play: async ({ canvasElement }) => {

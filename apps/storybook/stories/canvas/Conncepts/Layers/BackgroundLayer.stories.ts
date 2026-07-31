@@ -15,7 +15,8 @@ const meta: Meta = { title: 'canvas/concepts/Layers/BackgroundLayer' };
 export default meta;
 type Story = StoryObj;
 
-export const Background: Story = {
+export const BackgroundLayerStory: Story = {
+  name: 'BackgroundLayer',
   render: () => createContainer({ id: 'cvs-background-layer' }),
 
   play: async ({ canvasElement }) => {

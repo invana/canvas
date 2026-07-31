@@ -27,7 +27,8 @@ type Story = StoryObj;
  * the way through (the renderer paints all connectors below all shapes;
  * a translucent group still occludes whatever the fill paints over).
  */
-export const HackerStyle: Story = {
+export const HackerStyleStory: Story = {
+  name: 'HackerStyle',
   render: () => createContainer({ id: 'graph-hacker-style' }),
 
   play: async ({ canvasElement }) => {

@@ -23,7 +23,8 @@ type Story = StoryObj;
  * mode with `GroupResizeBehaviour` (see `Graph/Behaviours/GroupResize`)
  * to give the developer manual sizing handles instead.
  */
-export const FixedSizeGroup: Story = {
+export const FixedSizeGroupStory: Story = {
+  name: 'FixedSizeGroup',
   render: () => createContainer({ id: 'graph-fixed-size-group' }),
 
   play: async ({ canvasElement }) => {

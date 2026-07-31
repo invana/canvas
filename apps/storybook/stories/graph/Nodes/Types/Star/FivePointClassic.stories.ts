@@ -19,7 +19,8 @@ type Story = StoryObj;
  * `default` plus the five canonical interaction states (`hovered`,
  * `selected`, `highlighted`, `dimmed`, `disabled`).
  */
-export const FivePointClassic: Story = {
+export const FivePointClassicStory: Story = {
+  name: 'FivePointClassic',
   render: () => createContainer({ id: 'graph-node-types-star-5-classic' }),
 
   play: async ({ canvasElement }) => {

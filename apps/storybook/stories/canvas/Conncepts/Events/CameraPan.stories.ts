@@ -13,7 +13,8 @@ const meta: Meta = { title: 'canvas/concepts/Events/input:camera:pan' };
 export default meta;
 type Story = StoryObj;
 
-export const CameraPan: Story = {
+export const CameraPanStory: Story = {
+  name: 'input:camera:pan',
   render: () => createContainer({ id: 'cvs-evt-camera-pan' }),
 
   play: async ({ canvasElement }) => {

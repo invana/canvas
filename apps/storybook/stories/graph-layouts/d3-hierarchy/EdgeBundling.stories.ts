@@ -15,7 +15,8 @@ const meta: Meta = { title: 'graph-layouts/d3-hierarchy/EdgeBundling' };
 export default meta;
 type Story = StoryObj;
 
-export const EdgeBundling: Story = {
+export const EdgeBundlingStory: Story = {
+  name: 'EdgeBundling',
   render: () => createContainer({ id: 'graph-edge-bundling' }),
 
   play: async ({ canvasElement }) => {

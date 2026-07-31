@@ -39,7 +39,8 @@ const meta: Meta = { title: 'graph/Behaviours/DragNode' };
 export default meta;
 type Story = StoryObj;
 
-export const DragNode: Story = {
+export const DragNodeStory: Story = {
+  name: 'DragNode',
   render: () => createContainer({ id: 'graph-drag-node' }),
 
   play: async ({ canvasElement }) => {

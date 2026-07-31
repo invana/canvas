@@ -26,7 +26,8 @@ type Story = StoryObj;
  * inside `play`. Deleting this file removes Font Awesome from the codebase
  * entirely.
  */
-export const FontAwesome: Story = {
+export const FontAwesomeStory: Story = {
+  name: 'FontAwesome',
   render: () => createContainer({ id: 'cvs-prim-icons-fa' }),
 
   play: async ({ canvasElement }) => {

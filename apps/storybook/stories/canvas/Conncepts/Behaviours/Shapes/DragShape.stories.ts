@@ -15,7 +15,8 @@ const meta: Meta = { title: 'canvas/concepts/Behaviours/Shapes/DragShapeBehaviou
 export default meta;
 type Story = StoryObj;
 
-export const DragShape: Story = {
+export const DragShapeStory: Story = {
+  name: 'DragShapeBehaviour',
   render: () => createContainer({ id: 'cvs-behaviour-drag-shape' }),
 
   play: async ({ canvasElement }) => {

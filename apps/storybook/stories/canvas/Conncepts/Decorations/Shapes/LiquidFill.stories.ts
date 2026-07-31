@@ -25,7 +25,8 @@ type Story = StoryObj;
  * per-frame cost). Toggle **highlight** to add a glossy meniscus band on
  * the surface.
  */
-export const LiquidFill: Story = {
+export const LiquidFillStory: Story = {
+  name: 'LiquidFill',
   render: () => createContainer({ id: 'cvs-deco-liquid-fill' }),
 
   play: async ({ canvasElement }) => {

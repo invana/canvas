@@ -33,7 +33,8 @@ const ALL_HANDLES: SelectionFramePlacement[] = [
  * with full fill / stroke / corner-radius control. Powers the
  * `NodeResizeBehaviour` look in `@invana/graph` and works on any shape.
  */
-export const SelectionFrame: Story = {
+export const SelectionFrameStory: Story = {
+  name: 'SelectionFrame',
   render: () => createContainer({ id: 'cvs-deco-selection-frame' }),
 
   play: async ({ canvasElement }) => {

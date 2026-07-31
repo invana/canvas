@@ -25,7 +25,8 @@ const meta: Meta = { title: 'graph/Layer/NodeEdgeVisibility' };
 export default meta;
 type Story = StoryObj;
 
-export const NodeEdgeVisibility: Story = {
+export const NodeEdgeVisibilityStory: Story = {
+  name: 'NodeEdgeVisibility',
   render: () => createContainer({ id: 'graph-node-edge-visibility' }),
 
   play: async ({ canvasElement }) => {

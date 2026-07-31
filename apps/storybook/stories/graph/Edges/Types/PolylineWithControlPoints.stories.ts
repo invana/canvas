@@ -25,7 +25,8 @@ type Story = StoryObj;
  * thumbnail size. Drag either endpoint to confirm the waypoint stays fixed
  * in world space while the legs re-route.
  */
-export const PolylineWithControlPoints: Story = {
+export const PolylineWithControlPointsStory: Story = {
+  name: 'PolylineWithControlPoints',
   render: () => createContainer({ id: 'graph-edge-types-polyline-cp' }),
 
   play: async ({ canvasElement }) => {

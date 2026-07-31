@@ -22,7 +22,8 @@ type Story = StoryObj;
  * All node style lives in the data arrays and rides on `options.initData`;
  * the layer template is empty so there's no `layers.graph` config entry.
  */
-export const PerNodeOverride: Story = {
+export const PerNodeOverrideStory: Story = {
+  name: 'PerNodeOverride',
   render: () => createContainer({ id: 'graph-states-per-node-override' }),
 
   play: async ({ canvasElement }) => {

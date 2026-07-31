@@ -40,7 +40,8 @@ type Story = StoryObj;
  * Drag node `a` or `b` to confirm the behaviour re-fans live as endpoints
  * move.
  */
-export const ParallelEdge: Story = {
+export const ParallelEdgeStory: Story = {
+  name: 'ParallelEdge',
   render: () => createContainer({ id: 'graph-behaviour-parallel-edge' }),
 
   play: async ({ canvasElement }) => {

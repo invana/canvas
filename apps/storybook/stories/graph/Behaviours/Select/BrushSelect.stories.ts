@@ -17,7 +17,8 @@ const meta: Meta = { title: 'graph/Behaviours/Select/BrushSelect' };
 export default meta;
 type Story = StoryObj;
 
-export const BrushSelect: Story = {
+export const BrushSelectStory: Story = {
+  name: 'BrushSelect',
   render: () => createContainer({ id: 'graph-brush-select' }),
 
   play: async ({ canvasElement }) => {

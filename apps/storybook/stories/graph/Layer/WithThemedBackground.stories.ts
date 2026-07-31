@@ -17,7 +17,8 @@ const meta: Meta = { title: 'graph/Layer/WithThemedBackground' };
 export default meta;
 type Story = StoryObj;
 
-export const WithThemedBackground: Story = {
+export const WithThemedBackgroundStory: Story = {
+  name: 'WithThemedBackground',
   render: () => createContainer({ id: 'graph-themed-bg' }),
 
   play: async ({ canvasElement }) => {

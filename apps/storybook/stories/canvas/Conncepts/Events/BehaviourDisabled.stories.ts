@@ -7,7 +7,8 @@ const meta: Meta = { title: 'canvas/concepts/Events/scene:behaviour:disable' };
 export default meta;
 type Story = StoryObj;
 
-export const BehaviourDisabled: Story = {
+export const BehaviourDisabledStory: Story = {
+  name: 'scene:behaviour:disable',
   render: () => createContainer({ id: 'cvs-evt-behaviour-disabled' }),
 
   play: async ({ canvasElement }) => {

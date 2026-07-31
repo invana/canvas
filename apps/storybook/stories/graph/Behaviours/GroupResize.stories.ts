@@ -29,7 +29,8 @@ type Story = StoryObj;
  * options re-register the behaviour live so you can see the selection-
  * frame restyle without reloading the story.
  */
-export const GroupResize: Story = {
+export const GroupResizeStory: Story = {
+  name: 'GroupResize',
   render: () => createContainer({ id: 'graph-group-resize' }),
 
   play: async ({ canvasElement }) => {

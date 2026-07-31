@@ -22,7 +22,8 @@ type Story = StoryObj;
  * to animate brightness; the geometry only repaints once per style change,
  * so animated pulse is essentially free.
  */
-export const GlowConnector: Story = {
+export const GlowConnectorStory: Story = {
+  name: 'GlowConnector',
   render: () => createContainer({ id: 'cvs-deco-glow-connector' }),
 
   play: async ({ canvasElement }) => {

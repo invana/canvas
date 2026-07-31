@@ -15,7 +15,8 @@ const meta: Meta = { title: 'graph-layouts/d3-hierarchy/RadialTree' };
 export default meta;
 type Story = StoryObj;
 
-export const RadialTree: Story = {
+export const RadialTreeStory: Story = {
+  name: 'RadialTree',
   render: () => createContainer({ id: 'graph-radial-tree' }),
 
   play: async ({ canvasElement }) => {

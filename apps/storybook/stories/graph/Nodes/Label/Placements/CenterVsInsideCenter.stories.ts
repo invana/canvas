@@ -25,7 +25,8 @@ type Story = StoryObj;
  * Grow `text` length and shrink shape size via the GUI to watch only the
  * top row spill out while the bottom row shrinks / truncates / hides.
  */
-export const CenterVsInsideCenter: Story = {
+export const CenterVsInsideCenterStory: Story = {
+  name: 'CenterVsInsideCenter',
   render: () => createContainer({ id: 'graph-label-center-vs-inside-center' }),
 
   play: async ({ canvasElement }) => {

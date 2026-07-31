@@ -20,7 +20,8 @@ const meta: Meta = { title: 'graph-layouts/d3-hierarchy/TreeOfLife' };
 export default meta;
 type Story = StoryObj;
 
-export const TreeOfLife: Story = {
+export const TreeOfLifeStory: Story = {
+  name: 'TreeOfLife',
   render: () => createContainer({ id: 'graph-tree-of-life' }),
 
   play: async ({ canvasElement }) => {

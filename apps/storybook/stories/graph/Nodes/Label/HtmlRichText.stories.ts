@@ -20,7 +20,8 @@ type Story = StoryObj;
  * to a canvas), so reserve it for tens to a couple of hundred labels —
  * not for graph-wide use.
  */
-export const HtmlRichText: Story = {
+export const HtmlRichTextStory: Story = {
+  name: 'HtmlRichText',
   render: () => createContainer({ id: 'graph-label-html-rich-text' }),
 
   play: async ({ canvasElement }) => {

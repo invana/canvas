@@ -14,7 +14,8 @@ const meta: Meta = { title: 'graph-layouts/d3-force/RandomTree' };
 export default meta;
 type Story = StoryObj;
 
-export const RandomTree: Story = {
+export const RandomTreeStory: Story = {
+  name: 'RandomTree',
   render: () => createContainer({ id: 'graph-d3-tree' }),
 
   play: async ({ canvasElement }) => {

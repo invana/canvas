@@ -30,7 +30,8 @@ type Story = StoryObj;
  * orientations and confirm the keepUpright flip kicks in at the ±90°
  * threshold.
  */
-export const AutoRotate: Story = {
+export const AutoRotateStory: Story = {
+  name: 'AutoRotate',
   render: () => createContainer({ id: 'graph-edges-badges-autorotate' }),
 
   play: async ({ canvasElement }) => {

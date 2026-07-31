@@ -20,7 +20,8 @@ const meta: Meta = { title: 'graph/Groups/GroupVisibility' };
 export default meta;
 type Story = StoryObj;
 
-export const GroupVisibility: Story = {
+export const GroupVisibilityStory: Story = {
+  name: 'GroupVisibility',
   render: () => createContainer({ id: 'graph-group-visibility' }),
 
   play: async ({ canvasElement }) => {

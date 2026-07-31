@@ -9,7 +9,8 @@ export default meta;
 type Story = StoryObj;
 
 /** Drag from one node to another to draw an edge (dashed rubber-band preview). */
-export const DrawEdge: Story = {
+export const DrawEdgeStory: Story = {
+  name: 'DrawEdge',
   render: () => createContainer({ id: 'graph-draw-edge' }),
 
   play: async ({ canvasElement }) => {

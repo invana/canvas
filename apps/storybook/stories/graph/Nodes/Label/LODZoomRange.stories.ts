@@ -21,7 +21,8 @@ type Story = StoryObj;
  * Scroll-wheel to zoom; watch each row's labels mount / unmount at its
  * threshold. Current zoom is shown in the GUI.
  */
-export const LODZoomRange: Story = {
+export const LODZoomRangeStory: Story = {
+  name: 'LODZoomRange',
   render: () => createContainer({ id: 'graph-label-lod-zoom-range' }),
 
   play: async ({ canvasElement }) => {

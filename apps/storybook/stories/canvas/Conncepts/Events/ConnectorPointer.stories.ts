@@ -14,7 +14,8 @@ const meta: Meta = { title: 'canvas/concepts/Events/connector:pointer*' };
 export default meta;
 type Story = StoryObj;
 
-export const ConnectorPointer: Story = {
+export const ConnectorPointerStory: Story = {
+  name: 'connector:pointer*',
   render: () => createContainer({ id: 'cvs-evt-connector-pointer' }),
 
   play: async ({ canvasElement }) => {

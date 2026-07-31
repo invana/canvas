@@ -27,7 +27,8 @@ type Story = StoryObj;
  * each slot to confirm removal cleanly restores the baseline (alpha back to
  * 1, ants gone, particles gone).
  */
-export const ComposedEffects: Story = {
+export const ComposedEffectsStory: Story = {
+  name: 'ComposedEffects',
   render: () => createContainer({ id: 'cvs-effects-composed-connector' }),
 
   play: async ({ canvasElement }) => {

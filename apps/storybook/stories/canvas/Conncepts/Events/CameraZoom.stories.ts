@@ -14,7 +14,8 @@ const meta: Meta = { title: 'canvas/concepts/Events/input:camera:zoom' };
 export default meta;
 type Story = StoryObj;
 
-export const CameraZoom: Story = {
+export const CameraZoomStory: Story = {
+  name: 'input:camera:zoom',
   render: () => createContainer({ id: 'cvs-evt-camera-zoom' }),
 
   play: async ({ canvasElement }) => {

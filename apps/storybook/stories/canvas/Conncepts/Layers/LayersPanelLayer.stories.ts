@@ -16,7 +16,8 @@ const meta: Meta = { title: 'canvas/concepts/Layers/LayersPanelLayer' };
 export default meta;
 type Story = StoryObj;
 
-export const LayersPanel: Story = {
+export const LayersPanelLayerStory: Story = {
+  name: 'LayersPanelLayer',
   render: () => createContainer({ id: 'cvs-layers-panel-layer' }),
 
   play: async ({ canvasElement }) => {

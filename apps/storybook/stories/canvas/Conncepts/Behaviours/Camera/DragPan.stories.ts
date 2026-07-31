@@ -13,7 +13,8 @@ const meta: Meta = { title: 'canvas/concepts/Behaviours/Camera/DragPanBehaviour'
 export default meta;
 type Story = StoryObj;
 
-export const DragPan: Story = {
+export const DragPanStory: Story = {
+  name: 'DragPanBehaviour',
   render: () => createContainer({ id: 'cvs-behaviour-drag-pan' }),
 
   play: async ({ canvasElement }) => {

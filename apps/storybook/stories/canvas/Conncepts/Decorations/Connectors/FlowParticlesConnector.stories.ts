@@ -22,7 +22,8 @@ type Story = StoryObj;
  * and a `bezier`-styled path so you can see the particles follow whatever
  * curve the path resolves to.
  */
-export const FlowParticlesConnector: Story = {
+export const FlowParticlesConnectorStory: Story = {
+  name: 'FlowParticlesConnector',
   render: () => createContainer({ id: 'cvs-deco-flow-particles-connector' }),
 
   play: async ({ canvasElement }) => {

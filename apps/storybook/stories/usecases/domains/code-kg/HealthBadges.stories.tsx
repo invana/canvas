@@ -38,7 +38,8 @@ const meta: Meta = { title: 'usecases/domains/code-kg/HealthBadges' };
 export default meta;
 type Story = StoryObj;
 
-export const HealthBadges: Story = {
+export const HealthBadgesStory: Story = {
+  name: 'HealthBadges',
   render: function Render() {
     // A synthetic codebase — 4 feature packages + `shared`, 18 modules. Each
     // node carries plain data; every visual field (fill, badges) is resolved

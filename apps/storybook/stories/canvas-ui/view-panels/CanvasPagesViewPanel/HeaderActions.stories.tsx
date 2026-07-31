@@ -67,4 +67,5 @@ function HeaderActionsDemo() {
   );
 }
 
-export const HeaderActions: Story = { name: 'HeaderActions', render: () => <HeaderActionsDemo /> };
+export const HeaderActionsStory: Story = {
+  name: 'HeaderActions', render: () => <HeaderActionsDemo /> };

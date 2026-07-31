@@ -24,7 +24,8 @@ const meta: Meta = { title: 'canvas-ui/apps/GraphCanvasApp/SideRegions' };
 export default meta;
 type Story = StoryObj;
 
-export const SideRegions: Story = {
+export const SideRegionsStory: Story = {
+  name: 'SideRegions',
   render: () => {
     // Les Misérables ships no `type` — in a graph DB every node/edge carries a
     // label (its "type"). Each node's community `group` becomes its type; edges

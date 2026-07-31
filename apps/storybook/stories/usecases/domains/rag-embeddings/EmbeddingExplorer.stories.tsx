@@ -43,7 +43,8 @@ const meta: Meta = { title: 'usecases/domains/rag-embeddings/EmbeddingExplorer' 
 export default meta;
 type Story = StoryObj;
 
-export const EmbeddingExplorer: Story = {
+export const EmbeddingExplorerStory: Story = {
+  name: 'EmbeddingExplorer',
   render: function Render() {
     // One colour per source cluster — the story's own palette, so the bundle's
     // colour-by-type behaviour stays off in `config`.

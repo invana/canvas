@@ -21,7 +21,8 @@ type Story = StoryObj;
  *   offsetX / offsetY / rotationDeg sliders fan out to all six tweak
  *   nodes. Sliders start at 0 so the first nudge produces visible motion.
  */
-export const OffsetAndRotation: Story = {
+export const OffsetAndRotationStory: Story = {
+  name: 'OffsetAndRotation',
   render: () => createContainer({ id: 'graph-label-offset-rotation' }),
 
   play: async ({ canvasElement }) => {

@@ -22,7 +22,8 @@ type Story = StoryObj;
  *
  * State is supplied data-driven via each node's `states` field.
  */
-export const PieSlice: Story = {
+export const PieSliceStory: Story = {
+  name: 'PieSlice',
   render: () => createContainer({ id: 'graph-node-types-arc-pie-slice' }),
 
   play: async ({ canvasElement }) => {

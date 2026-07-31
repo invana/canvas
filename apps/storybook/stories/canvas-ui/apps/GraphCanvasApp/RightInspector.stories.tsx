@@ -77,7 +77,8 @@ function RightInspectorApp() {
   );
 }
 
-export const RightInspector: Story = {
+export const RightInspectorStory: Story = {
+  name: 'RightInspector',
   render: () => (
     // A real consumer mounts the app under its own <ThemeProvider>.
     <ThemeProvider>

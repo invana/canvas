@@ -20,7 +20,8 @@ type Story = StoryObj;
  * plus the five canonical interaction states (`hovered`, `selected`,
  * `highlighted`, `dimmed`, `disabled`).
  */
-export const HexagonPointyTop: Story = {
+export const HexagonPointyTopStory: Story = {
+  name: 'HexagonPointyTop',
   render: () => createContainer({ id: 'graph-node-types-regpoly-hex-pointy' }),
 
   play: async ({ canvasElement }) => {

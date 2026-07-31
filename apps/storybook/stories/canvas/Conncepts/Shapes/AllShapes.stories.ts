@@ -8,7 +8,8 @@ const meta: Meta = { title: 'canvas/concepts/Shapes/AllShapes' };
 export default meta;
 type Story = StoryObj;
 
-export const AllShapes: Story = {
+export const AllShapesStory: Story = {
+  name: 'AllShapes',
   render: () => createContainer({ id: 'cvs-all-shapes' }),
 
   play: async ({ canvasElement }) => {

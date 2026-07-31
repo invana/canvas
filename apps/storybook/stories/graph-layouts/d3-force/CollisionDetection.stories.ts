@@ -33,7 +33,8 @@ const meta: Meta = { title: 'graph-layouts/d3-force/CollisionDetection' };
 export default meta;
 type Story = StoryObj;
 
-export const CollisionDetection: Story = {
+export const CollisionDetectionStory: Story = {
+  name: 'CollisionDetection',
   render: () => createContainer({ id: 'graph-d3-collision' }),
 
   play: async ({ canvasElement }) => {

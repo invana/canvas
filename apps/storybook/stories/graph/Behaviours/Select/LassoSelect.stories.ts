@@ -17,7 +17,8 @@ const meta: Meta = { title: 'graph/Behaviours/Select/LassoSelect' };
 export default meta;
 type Story = StoryObj;
 
-export const LassoSelect: Story = {
+export const LassoSelectStory: Story = {
+  name: 'LassoSelect',
   render: () => createContainer({ id: 'graph-lasso-select' }),
 
   play: async ({ canvasElement }) => {

@@ -15,7 +15,8 @@ const meta: Meta = { title: 'canvas/concepts/Layers/DevInfoLayer' };
 export default meta;
 type Story = StoryObj;
 
-export const DevInfo: Story = {
+export const DevInfoLayerStory: Story = {
+  name: 'DevInfoLayer',
   render: () => createContainer({ id: 'cvs-dev-info-layer' }),
 
   play: async ({ canvasElement }) => {

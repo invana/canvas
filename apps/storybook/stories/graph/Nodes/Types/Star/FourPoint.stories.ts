@@ -18,7 +18,8 @@ type Story = StoryObj;
  * across the resting `default` plus the five canonical interaction states
  * (`hovered`, `selected`, `highlighted`, `dimmed`, `disabled`).
  */
-export const FourPoint: Story = {
+export const FourPointStory: Story = {
+  name: 'FourPoint',
   render: () => createContainer({ id: 'graph-node-types-star-4-point' }),
 
   play: async ({ canvasElement }) => {

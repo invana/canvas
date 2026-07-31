@@ -18,7 +18,8 @@ type Story = StoryObj;
  * - row 2: per-edge `state.hovered` override → orange ring on hover
  * - row 3: per-edge `state.selected` with dashed pattern
  */
-export const EdgeTransitions: Story = {
+export const EdgeTransitionsStory: Story = {
+  name: 'EdgeTransitions',
   render: () => createContainer({ id: 'graph-states-edge-transitions' }),
 
   play: async ({ canvasElement }) => {

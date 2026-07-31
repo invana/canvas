@@ -33,7 +33,8 @@ type Story = StoryObj;
  * - **pinned-star** / **pinned-polygon** — `collisionGroup: 'pinned'`
  *   (their own group; never compete with the rest).
  */
-export const CollisionPriority: Story = {
+export const CollisionPriorityStory: Story = {
+  name: 'CollisionPriority',
   render: () => createContainer({ id: 'graph-label-collision-priority' }),
 
   play: async ({ canvasElement }) => {

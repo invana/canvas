@@ -44,7 +44,8 @@ const meta: Meta = { title: 'usecases/domains/data-lineage/SankeyLineage' };
 export default meta;
 type Story = StoryObj;
 
-export const SankeyLineage: Story = {
+export const SankeyLineageStory: Story = {
+  name: 'SankeyLineage',
   render: function Render() {
     const [volumeFormat, setVolumeFormat] = useState<'raw' | 'k' | 'M'>('k');
 

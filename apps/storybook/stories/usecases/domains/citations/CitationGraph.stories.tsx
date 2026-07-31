@@ -47,7 +47,8 @@ const meta: Meta = { title: 'usecases/domains/citations/CitationGraph' };
 export default meta;
 type Story = StoryObj;
 
-export const CitationGraph: Story = {
+export const CitationGraphStory: Story = {
+  name: 'CitationGraph',
   render: function Render() {
     // One colour per research topic — the story's own palette, so the bundle's
     // colour-by-type behaviour is turned off in `config` below.

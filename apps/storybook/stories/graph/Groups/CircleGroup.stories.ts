@@ -21,7 +21,8 @@ type Story = StoryObj;
  * enclosing radius via half-diagonal of the children AABB + padding —
  * cheap, monotonic, and good enough for most cluster overlays.
  */
-export const CircleGroup: Story = {
+export const CircleGroupStory: Story = {
+  name: 'CircleGroup',
   render: () => createContainer({ id: 'graph-circle-group' }),
 
   play: async ({ canvasElement }) => {

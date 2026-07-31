@@ -18,7 +18,8 @@ type Story = StoryObj;
  * endpoints directly via the gui or programmatically. All settings are in
  * the gui.
  */
-export const PointEndpoints: Story = {
+export const PointEndpointsStory: Story = {
+  name: 'PointEndpoints',
   render: () => createContainer({ id: 'cvs-prim-connector-point-endpoints' }),
 
   play: async ({ canvasElement }) => {

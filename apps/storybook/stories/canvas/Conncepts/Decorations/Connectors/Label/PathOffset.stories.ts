@@ -25,7 +25,8 @@ type Story = StoryObj;
  * composes with `placement` — the t-anchored point is the *origin*, and
  * `pathOffset` slides it along the local tangent from there.
  */
-export const PathOffset: Story = {
+export const PathOffsetStory: Story = {
+  name: 'PathOffset',
   render: () => createContainer({ id: 'cvs-cdeco-label-pathoffset' }),
 
   play: async ({ canvasElement }) => {

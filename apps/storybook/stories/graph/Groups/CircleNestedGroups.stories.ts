@@ -21,7 +21,8 @@ type Story = StoryObj;
  * but the auto-fit math reaches the smallest enclosing circle via the
  * AABB half-diagonal + padding.
  */
-export const CircleNestedGroups: Story = {
+export const CircleNestedGroupsStory: Story = {
+  name: 'CircleNestedGroups',
   render: () => createContainer({ id: 'graph-circle-nested-groups' }),
 
   play: async ({ canvasElement }) => {

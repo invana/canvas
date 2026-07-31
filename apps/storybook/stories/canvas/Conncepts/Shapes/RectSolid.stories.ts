@@ -7,7 +7,8 @@ const meta: Meta = { title: 'canvas/concepts/Shapes/RectSolid' };
 export default meta;
 type Story = StoryObj;
 
-export const RectSolid: Story = {
+export const RectSolidStory: Story = {
+  name: 'RectSolid',
   render: () => createContainer({ id: 'cvs-prim-rect-solid' }),
 
   play: async ({ canvasElement }) => {

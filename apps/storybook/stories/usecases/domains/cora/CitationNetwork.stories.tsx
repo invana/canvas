@@ -41,7 +41,8 @@ const meta: Meta = { title: 'usecases/domains/cora/CitationNetwork' };
 export default meta;
 type Story = StoryObj;
 
-export const CitationNetwork: Story = {
+export const CitationNetworkStory: Story = {
+  name: 'CitationNetwork',
   render: function Render() {
     // One colour per Cora subject — the story's own palette, so the bundle's
     // colour-by-type behaviour stays off in `config`.

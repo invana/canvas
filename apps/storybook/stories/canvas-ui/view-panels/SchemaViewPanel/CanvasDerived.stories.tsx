@@ -36,7 +36,8 @@ const meta: Meta = { title: 'canvas-ui/view-panels/SchemaViewPanel/CanvasDerived
 export default meta;
 type Story = StoryObj;
 
-export const CanvasDerived: Story = {
+export const CanvasDerivedStory: Story = {
+  name: 'CanvasDerived',
   // name: 'Canvas-derived schema',
   render: () => {
     // Map the knowledge graph → GraphNode/GraphEdge, promoting each element's

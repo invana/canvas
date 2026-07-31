@@ -14,7 +14,8 @@ const meta: Meta = { title: 'canvas/concepts/Behaviours/Camera/PinchZoomBehaviou
 export default meta;
 type Story = StoryObj;
 
-export const PinchZoom: Story = {
+export const PinchZoomStory: Story = {
+  name: 'PinchZoomBehaviour',
   render: () => createContainer({ id: 'cvs-behaviour-pinch-zoom' }),
 
   play: async ({ canvasElement }) => {

@@ -26,7 +26,8 @@ const meta: Meta = { title: 'canvas-ui/apps/GraphCanvasApp/NoChrome' };
 export default meta;
 type Story = StoryObj;
 
-export const NoChrome: Story = {
+export const NoChromeStory: Story = {
+  name: 'NoChrome',
   render: () => (
     // A real consumer mounts the app under its own <ThemeProvider> — the app
     // reads light/dark from it via useTheme() (and throws without one).

@@ -23,7 +23,8 @@ type Story = StoryObj;
  * over, so a slider change re-flows the new value to every cell once we
  * poke each node into a re-resolve.
  */
-export const AllShapes: Story = {
+export const AllShapesStory: Story = {
+  name: 'AllShapes',
   render: () => createContainer({ id: 'graph-nodes-all-shapes' }),
 
   play: async ({ canvasElement }) => {

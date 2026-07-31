@@ -43,7 +43,8 @@ const meta: Meta = { title: 'usecases/apps/visualiser/KnowledgeGraphExplorer' };
 export default meta;
 type Story = StoryObj;
 
-export const KnowledgeGraphExplorer: Story = {
+export const KnowledgeGraphExplorerStory: Story = {
+  name: 'KnowledgeGraphExplorer',
   render: function Render() {
     const ALL_KINDS: OntologyEntityKind[] = ['company', 'person', 'product', 'location', 'industry'];
 

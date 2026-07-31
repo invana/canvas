@@ -32,7 +32,8 @@ type Story = StoryObj;
  * `straight + smooth` (with waypoints). Tweak the GUI controls and click
  * "Replay" to restart the animation on every edge at once.
  */
-export const RevealConnector: Story = {
+export const RevealConnectorStory: Story = {
+  name: 'RevealConnector',
   render: () => createContainer({ id: 'cvs-deco-reveal-connector' }),
 
   play: async ({ canvasElement }) => {

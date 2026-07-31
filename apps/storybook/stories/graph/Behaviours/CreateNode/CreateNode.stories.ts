@@ -9,7 +9,8 @@ export default meta;
 type Story = StoryObj;
 
 /** Click empty canvas to add a node (drag still pans — only a click creates). */
-export const CreateNode: Story = {
+export const CreateNodeStory: Story = {
+  name: 'CreateNode',
   render: () => createContainer({ id: 'graph-create-node' }),
 
   play: async ({ canvasElement }) => {
