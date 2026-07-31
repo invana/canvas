@@ -51,6 +51,8 @@ The **only** inline `style` allowed is a genuinely dynamic runtime value Tailwin
 
 > Don't nest `graph`, `graph-layouts`, or `graph-layers` (or any other package) under `canvas/` — they're separate packages and get separate top-level nodes.
 
+**One deliberate exception — `GraphLegendLayer`.** Its story is filed by *concept* (it's a layer) rather than by owning package: `canvas/concepts/Layers/GraphLegendLayer`, alongside `BackgroundLayer` / `DevInfoLayer` / `LayersPanelLayer`, even though the class ships in `@invana/graph`. **`MiniMapLayer` still sits at `graph/Layer/MiniMap`**, so the two graph-domain layers are currently filed differently — if a third graph layer gets a story, decide which wins and move the odd one out rather than adding a third pattern.
+
 ### `usecases/` has exactly two buckets: `apps/` and `domains/`
 
 - **`usecases/apps/<surface>/`** — the **product surfaces** (`modeller` · `visualiser` · `designer`). A story here is about *the tool*; its dataset is a prop. Model it, explore it, style it.
@@ -118,6 +120,27 @@ Rules:
 
 - Story files: `<Name>.stories.ts`. Title format: `'<Package>/<Area>/<Subarea>'` mirroring the filesystem path exactly.
 - **One story per file — no exceptions, including declarative `canvas-react` stories.** Each `.stories.ts(x)` exports **exactly one** named story. **Variants ship as separate files, never as extra exports in one file:** a component with two demos (e.g. `Canvas` with telemetry on vs. off) becomes a **folder** of one-story files — `canvas-react/Canvas/WithTelemetry.stories.tsx` + `canvas-react/Canvas/WithoutTelemetry.stories.tsx`, titles `canvas-react/Canvas/WithTelemetry` etc. (mirroring the folder path).
+
+- **The single story is named for its subject, and the sidebar must show ONE FLAT LEAF — never a component node wrapping a single child.** Since every file holds exactly one story, the sidebar should read like the filesystem: a `GraphLegendLayer` leaf, not `GraphLegendLayer ▸ Graph Legend`. That nested "table" shape is a bug, not a style choice — fix it, don't ship it.
+
+  Storybook only collapses a one-story file when the story's **display name equals the title's last segment**. It start-cases the export name (`DevInfo` → `"Dev Info"`), so an export named after a *shortened* subject silently nests: title `canvas/concepts/Layers/DevInfoLayer` + `export const DevInfo` → `"Dev Info"` ≠ `"DevInfoLayer"` → nested. The fix is an explicit `name`:
+
+  ```ts
+  const meta: Meta = { title: 'canvas/concepts/Layers/GraphLegendLayer' };  // last segment = the subject
+  export default meta;
+
+  // Export is `<Subject>Story` — the bare `GraphLegendLayer` would collide with
+  // the imported class. `name` matches the title's last segment → one flat leaf.
+  export const GraphLegendLayerStory: Story = {
+    name: 'GraphLegendLayer',
+    render: () => createContainer({ id: 'cvs-graph-legend-layer' }),
+    play: async ({ canvasElement }) => { /* … */ },
+  };
+  ```
+
+  So: **file `<Subject>.stories.ts` · title `…/<Subject>` · `export const <Subject>Story` · `name: '<Subject>'`** — all four agree, and `<Subject>` is the class/component name in full (`GraphLegendLayer`, not `GraphLegend`). The `Story` suffix on the export is what keeps it from shadowing the imported class; keep it even where there'd be no collision, so every file reads the same. Variant files use the variant as the subject (`WithTelemetry.stories.tsx` → title `…/WithTelemetry`, `export const WithTelemetryStory`, `name: 'WithTelemetry'`).
+
+  > Several older stories still nest (`BackgroundLayer ▸ Background`, `DevInfoLayer ▸ Dev Info`, `LayersPanelLayer ▸ …`). They predate this rule — normalise one when you're already editing it, and don't copy their shape into a new file.
 - **Every story file is self-contained — show the full implementation inline.** A developer reading (or copying from) one story file must see **everything** needed to reproduce it: the data, the styling, the config, and the complete React tree, all in that file. **Do NOT extract shared setup into a helper module** (no `scene.tsx` exporting a `*Scene` component, no shared data module) — that hides the implementation the story is meant to teach. **Accept the duplication** across sibling variant files; the story is documentation first, DRY second. `canvas-react/Canvas/WithTelemetry.stories.tsx` is the reference.
 - **All story code lives in the one story function — no extra components, no module-level story logic (unless I explicitly ask).** Everything goes in the story's own render function: for **declarative React** stories that's `render()` (put `useState`, effects, event handlers, and the data — via `useMemo` when it must stay a stable reference so a re-render doesn't reload the engine — **right inside `render`**); for **imperative** stories that's `play` (per "Writing a story"). **Do not create a `*Demo` / `*Scene` / any wrapper or sub-component** in a story file, and don't hoist story data/config/handlers to module scope — a stateful, interactive story is still one `render` function. The only module-level things are the `meta`, the single `Story` export, and imports. (This supersedes the older "keep data as module-level consts" guidance — inline it in `render`, memoised.) Add a helper component **only** when I explicitly ask for one.
 - No raw `pixi.js` imports inside stories — go through `@invana/canvas` / `@invana/graph` public API.

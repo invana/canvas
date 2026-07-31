@@ -11,14 +11,19 @@ import {
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import GUI from 'lil-gui';
-import { createContainer, onStoryTeardown } from '../../div-util';
+import { createContainer, onStoryTeardown } from '../../../div-util';
 
-const meta: Meta = { title: 'graph/Layer/GraphLegend' };
+const meta: Meta = { title: 'canvas/concepts/Layers/GraphLegendLayer' };
 export default meta;
 type Story = StoryObj;
 
-export const GraphLegend: Story = {
-  render: () => createContainer({ id: 'graph-legend' }),
+// One story per file: the export is `<Subject>Story` (the bare `GraphLegendLayer`
+// would collide with the imported class) and `name` matches the title's last
+// segment, so the sidebar shows a single `GraphLegendLayer` leaf rather than a
+// component node wrapping one child.
+export const GraphLegendLayerStory: Story = {
+  name: 'GraphLegendLayer',
+  render: () => createContainer({ id: 'cvs-graph-legend-layer' }),
 
   play: async ({ canvasElement }) => {
     // Four node types and four edge types — the legend keys on `type`, so the
@@ -62,7 +67,7 @@ export const GraphLegend: Story = {
     ];
 
     // ── Add everything, then init() last ─────────────────────────────────
-    const container = canvasElement.querySelector<HTMLDivElement>('#graph-legend')!;
+    const container = canvasElement.querySelector<HTMLDivElement>('#cvs-graph-legend-layer')!;
     const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
 
