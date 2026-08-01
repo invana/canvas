@@ -79,7 +79,7 @@ number in the other.
 `edge.data`*. `ColorByBehaviour`'s default is `node.type`, which is at the item
 root, not in `data` — so `*ValueKey` is a **root-relative dot path**
 (`'type'`, `'data.riskScore'`, `'data.meta.tier'`). Documented on the option, and
-worth a follow-up to align `weightKey` the same way (§9.4).
+worth a follow-up to align `weightKey` the same way (§10.4).
 
 ### 2.3 Per-kind vs shared — the rule
 
@@ -91,7 +91,7 @@ different units. That gives a clean line:
 | | Options | Why |
 |---|---|---|
 | **Per-kind** | `nodeValueKey`/`edgeValueKey`, `nodeValueBy`/`edgeValueBy`, `nodeDomain`/`edgeDomain`, `nodeThresholds`/`edgeThresholds` | Expressed in the data's units. A single `domain` shared between node risk `[0,1]` and edge latency `[0,250]` is not a compromise — it's meaningless. |
-| **Shared** | `mode`, `scale`, `bins`, `palette`, `valueColors`, `colorStops`, `fallbackColor` | Shape and appearance, no units. Sharing them is what makes one instance colour both channels coherently. |
+| **Shared** | `mode`, `scale`, `bins`, `palette`, `valueColors`, `maxCategories`, `colorStops`, `fallbackColor` | Shape and appearance, no units. Sharing them is what makes one instance colour both channels coherently. |
 
 **This is the change designing-options-first bought.** The parent RFC's §4.1.2
 sketch had a single `domain: [number, number]`. Writing the interface out against
@@ -204,6 +204,24 @@ export interface ColorByBehaviourOptions extends BehaviourOptions {
    */
   valueColors?: Readonly<Record<string, number>>;
 
+  /**
+   * **Cardinality cap.** Values beyond the first `maxCategories` distinct ones
+   * (in first-appearance order) share {@link fallbackColor} and collapse into a
+   * single `other` legend row. Default `24`.
+   *
+   * A guard against colouring by a high-cardinality field — `nodeValueKey: 'id'`
+   * is legal and yields one distinct value *per node*, which cycles the palette
+   * into meaninglessness and grows a legend row per item. Capping makes the
+   * truncation **visible** (`other (317)`) instead of silently lying, which is
+   * what unbounded palette cycling already does today.
+   *
+   * Values pinned by {@link valueColors} are always honoured and **do not count
+   * against the cap** — an explicit choice is never truncated.
+   *
+   * Set to `Infinity` to disable.
+   */
+  maxCategories?: number;
+
   // ─── mode: 'range' ────────────────────────────────────────────────────
 
   /**
@@ -266,8 +284,9 @@ Every default lives in `resolveOptions` (§2.7), stated once.
 | `fallbackColor` | `0x9ca3af` | unchanged |
 | `palette` | `DEFAULT_CATEGORY_PALETTE` | the current 12-colour palette, renamed |
 | `valueColors` | `{}` | |
+| `maxCategories` | `24` | `Infinity` disables; pinned values don't count |
 | `scale` | `'linear'` | |
-| `colorStops` | `DEFAULT_RANGE_STOPS` | sequential single-hue; see §3.4 |
+| `colorStops` | `DEFAULT_RANGE_STOPS` | sequential single-hue; see §3.5 |
 | `nodeDomain` / `edgeDomain` | — | unset → auto-scan |
 | `bins` | `5` | |
 | `nodeThresholds` / `edgeThresholds` | — | unset |
@@ -291,6 +310,7 @@ interface ResolvedOptions {
   fallbackColor: number;
   palette: readonly number[];
   valueColors: Readonly<Record<string, number>>;
+  maxCategories: number;
   scale: ColorByScale;
   colorStops: readonly number[];
   nodeDomain: readonly [number, number] | undefined;
@@ -335,6 +355,7 @@ editor's `fields` function implements (§7), and belongs in the class TSDoc.
 | `colorNodes` / `colorEdges` / `fallbackColor` | ✅ | ✅ | ✅ | ✅ |
 | `palette` | ✅ | — | — | — |
 | `valueColors` | ✅ | — | — | — |
+| `maxCategories` | ✅ | — | — | — |
 | `colorStops` | — | ✅ | ✅ sampled per bucket | ✅ sampled per bucket |
 | `nodeDomain` / `edgeDomain` | — | ✅ | ✅ | — (edges are explicit) |
 | `bins` | — | — | ✅ | — |
@@ -348,7 +369,33 @@ through an editor must not destroy the settings of the mode you're not on.
 
 ## 3. Semantics
 
-### 3.1 Value extraction
+### 3.1 What you can colour by
+
+`*ValueKey` is a **root-relative dot path over the stored record**
+(`GraphNode` / `GraphEdge`, `store/types.ts:20,83`), so it reaches every field on
+the item — not just `data`.
+
+| Path | Node | Edge | Mode | Notes |
+|---|:--:|:--:|---|---|
+| `type` | ✅ | ✅ | category | **the default.** Optional on the record (`type?`), so untyped items get `fallbackColor` |
+| `data.…` | ✅ | ✅ | either | `D = unknown`, arbitrary depth — `data.status`, `data.risk`, `data.meta.tier`. The main case |
+| `id` | ✅ | ✅ | category | legal, but **one distinct value per item** — the case `maxCategories` exists for |
+| `parentId` | ✅ | — | category | colour by group / combo membership |
+| `source` / `target` | — | ✅ | category | colour edges by endpoint |
+| `pinned` / `hidden` | ✅ | `hidden` | category | booleans → `'true'` / `'false'` |
+| `states` | ✅ | ✅ | category | an **array** → `String()` joins it (`'hover,selected'`) |
+| `position.x` / `position.y` | ✅ | — | range | numeric; derived, and rewritten by every layout |
+| `boundingBox.width` / `.height` | ✅ | — | range | numeric; `undefined` until the item has rendered once |
+| `style.…`, `state.…` | ✅ | ✅ | either | typed `unknown` on the record. `style.shape.kind` (`'rect'`/`'circle'`/`'arc'`) works |
+
+> ⚠️ **There is no `kind` field on a node or edge.** `GraphElementKind`
+> (`store/types.ts:17`) is the package-wide `'node' | 'edge'` discriminator used
+> on events — it is never stored per item, and it would be redundant anyway:
+> which channel you are configuring *is* node-vs-edge. `Behaviour.kind` is the
+> unrelated editor-registry discriminator. If you want the **shape** kind, that's
+> `style.shape.kind`.
+
+### 3.2 Value extraction and coercion
 
 ```
 nodeValueBy present?  → nodeValueBy(node)
@@ -356,27 +403,44 @@ otherwise             → readPath(node, nodeValueKey)
 ```
 
 `readPath` walks a dot path from the item root, returning `undefined` on any
-missing segment. It is a small local helper, not a dependency.
+missing segment. A small local helper, not a dependency.
 
-- **`'category'`** — the value is coerced to a string. `null` / `undefined` /
-  `''` → `fallbackColor`.
-- **`'range'`** — the value must be a finite number. `null`, `undefined`, `NaN`,
-  `Infinity`, and non-numeric strings → `fallbackColor`. (A numeric *string* is
-  deliberately **not** coerced: silent coercion hides a mis-typed path, and the
-  grey fallback makes it visible.)
+**`'category'` — `String(value)`, uniformly.** `null` / `undefined` / `''` →
+`fallbackColor`; everything else stringifies. So booleans give `'true'` / `'false'`,
+numbers give `'42'`, and arrays join (`states` → `'hover,selected'`).
 
-### 3.2 Category mapping
+> **Accepted cost:** objects all stringify to `'[object Object]'` and therefore
+> share one colour — including a mis-typed path that lands on `data` or
+> `position`. The uniform rule was chosen over per-type special-casing for its
+> simplicity; the diagnostic is that *everything* collapsing to one colour is
+> itself a loud symptom, and `getLegend()` will show the single
+> `[object Object]` row. Revisit if it bites (§10.6).
+
+**`'range'` — a finite number, no coercion.** `null`, `undefined`, `NaN`,
+`Infinity`, booleans, objects, and numeric *strings* all → `fallbackColor`. A
+numeric string is deliberately not coerced: silent coercion hides a mis-typed
+path, and grey makes it visible.
+
+### 3.3 Category mapping
 
 ```
-valueColors[value]  ??  assignFromPalette(value)
+valueColors[value]        → pinned colour   (never capped)
+else  count < maxCategories → assignFromPalette(value)
+else                        → fallbackColor, counted into `other`
 ```
 
 `assignFromPalette` keeps today's behaviour exactly: first sight of a value takes
-the next palette colour and remembers it, cycling when values outrun colours.
-The assignment map resets when options change (as it does today), so a new
-palette re-assigns from scratch.
+the next palette colour and remembers it, cycling when values outrun colours. The
+assignment map resets when options change (as it does today), so a new palette —
+or a new `maxCategories` — re-assigns from scratch.
 
-### 3.3 Range mapping
+The cap counts **distinct values assigned from the palette**, in first-appearance
+order. Values pinned by `valueColors` are always honoured and never counted, so
+raising the cap can never demote an explicit choice. Overflow values are tallied
+so `getLegend()` can emit a single `other (N)` row (§6) — the truncation is
+stated, not silent.
+
+### 3.4 Range mapping
 
 ```ts
 // continuous
@@ -398,7 +462,7 @@ unit-style reasoning is easier and the call site stays branch-light"*).
 Degenerate cases resolve without branching at the call site: `hi === lo` → the
 first stop; empty `colorStops` → `fallbackColor`; one stop → that stop.
 
-### 3.4 Interpolation
+### 3.5 Interpolation
 
 Hand-rolled sRGB channel lerp — roughly twenty lines, **no new dependency**
 (parent RFC D7; `@invana/graph` has zero 3rd-party deps by design).
@@ -477,7 +541,9 @@ So the behaviour publishes what a legend should draw:
 
 ```ts
 export type ColorByLegendSection =
-  | { kind: 'categories'; field: string; entries: { value: string; color: number }[] }
+  | { kind: 'categories'; field: string; entries: { value: string; color: number }[];
+      /** Values beyond `maxCategories`, collapsed. Absent when nothing was capped. */
+      other?: { count: number; color: number } }
   | { kind: 'bins';       field: string; bins: { from: number; to: number; color: number }[] }
   | { kind: 'gradient';   field: string; domain: [number, number]; stops: readonly number[] };
 
@@ -497,10 +563,12 @@ source sections from it — an explicit id per root rule 8, never "the only colo
 behaviour".
 
 ```text
- Nodes (by data.risk)          Nodes (by data.latencyMs)
-  ●  0.0–0.2       12           [████▓▓▒▒░░]
-  ●  0.2–0.5        8            0 ──────── 250
-  ●  0.5–1.0        3
+ categories             bins                     gradient
+ Nodes (by data.status) Nodes (by data.risk)     Nodes (by data.latencyMs)
+  ●  active        12    ●  0.0–0.2       12      [████▓▓▒▒░░]
+  ●  failed         8    ●  0.2–0.5        8       0 ──────── 250
+  ●  pending        3    ●  0.5–1.0        3
+  ●  other (317)         ← the maxCategories overflow row (§3.3)
 ```
 
 ---
@@ -520,7 +588,7 @@ The function implements §2.8 directly:
 
 ```
 always            → mode, nodeValueKey, edgeValueKey, colorNodes, colorEdges, fallbackColor
-mode 'category'   → + valueColors (map editor), palette (swatch array)
+mode 'category'   → + valueColors (map editor), palette (swatch array), maxCategories
 mode 'range'      → + scale, colorStops
   scale continuous  → + nodeDomain[min,max], edgeDomain[min,max]   (blank = auto)
   scale 'quantile'  → + bins, nodeDomain, edgeDomain
@@ -595,7 +663,8 @@ Sequenced so each step is independently reviewable:
 1. **Options + resolve, no behaviour change.** Land `ColorByBehaviourOptions`,
    `resolveOptions`, the rename and aliases. `mode: 'category'` reproduces
    today's behaviour exactly; the only new capability is `nodeValueKey`.
-2. **Category upgrades.** `valueColors`, palette rename.
+2. **Category upgrades.** `valueColors`, `maxCategories` + the `other` tally,
+   palette rename.
 3. **Range mode.** Scales, stops, lerp, bucketing — with explicit
    `nodeDomain`/`edgeDomain` only.
 4. **Auto-domain.** The `data:changed` subscription, coalescing, re-entrancy
@@ -611,7 +680,7 @@ Steps 1–3 are useful on their own; 4–6 are what make it studio-editable.
 
 ## 10. Open items
 
-1. **`DEFAULT_RANGE_STOPS` values.** A sequential single-hue ramp (§3.4) — the
+1. **`DEFAULT_RANGE_STOPS` values.** A sequential single-hue ramp (§3.5) — the
    specific three stops still to pick.
 2. **Theme `ColorRole` stops.** `colorStops` could accept `ColorRole` names
    resolved through the theme palette, the way `template/compile.ts` does, so
@@ -624,3 +693,14 @@ Steps 1–3 are useful on their own; 4–6 are what make it studio-editable.
 5. **`valueColors` across both channels.** Currently shared and compared as
    strings. If a node type and an edge type ever collide by name and want
    different colours, this needs splitting per-kind — no case study asks for it.
+6. **Object values collapse to `'[object Object]'`** under the uniform
+   `String(value)` rule (§3.2) — every object-valued field, and every mis-typed
+   path landing on `data` / `position`, shares one colour. Accepted for
+   simplicity. If it bites, the smallest fix is treating a non-primitive as
+   `fallbackColor` (making the mistake grey and obvious) rather than adding
+   per-type coercion. Revisit with evidence, not speculatively.
+7. **Should `maxCategories` overflow use `fallbackColor`,** or a distinct
+   "other" colour? Sharing `fallbackColor` means capped values are
+   indistinguishable from missing ones. Both are "not meaningfully coloured", so
+   sharing is defensible and keeps the option count down — but the legend `other`
+   row exists precisely because the two want telling apart.
