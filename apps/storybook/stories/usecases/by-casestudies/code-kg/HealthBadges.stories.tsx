@@ -53,7 +53,7 @@ interface InvanaCodeNodeProperties {
   readonly errors?: number;
 }
 
-const meta: Meta = { title: 'usecases/domains/code-kg/HealthBadges' };
+const meta: Meta = { title: 'usecases/by-casestudies/code-kg/HealthBadges' };
 export default meta;
 type Story = StoryObj;
 

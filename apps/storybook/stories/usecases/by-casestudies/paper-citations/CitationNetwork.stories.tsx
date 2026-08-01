@@ -50,7 +50,7 @@ interface PaperNodeData {
   readonly subject: PaperSubject;
 }
 
-const meta: Meta = { title: 'usecases/domains/paper-citations/CitationNetwork' };
+const meta: Meta = { title: 'usecases/by-casestudies/paper-citations/CitationNetwork' };
 export default meta;
 type Story = StoryObj;
 

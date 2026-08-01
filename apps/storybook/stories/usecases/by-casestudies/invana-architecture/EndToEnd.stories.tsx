@@ -116,7 +116,7 @@ import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar,
 import { ThemeProvider } from '@invana/themes';
 import { Atom, LayoutDashboard, Moon, Network, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'usecases/domains/invana-architecture/EndToEnd' };
+const meta: Meta = { title: 'usecases/by-casestudies/invana-architecture/EndToEnd' };
 export default meta;
 type Story = StoryObj;
 

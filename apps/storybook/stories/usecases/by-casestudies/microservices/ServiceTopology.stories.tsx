@@ -47,7 +47,7 @@ interface MicroservicesEdgeData {
   readonly errorRate: number;
 }
 
-const meta: Meta = { title: 'usecases/domains/microservices/ServiceTopology' };
+const meta: Meta = { title: 'usecases/by-casestudies/microservices/ServiceTopology' };
 export default meta;
 type Story = StoryObj;
 

@@ -40,7 +40,7 @@ import { ukEnergyFlowAsGraph } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'usecases/domains/data-lineage/SankeyLineage' };
+const meta: Meta = { title: 'usecases/by-casestudies/data-lineage/SankeyLineage' };
 export default meta;
 type Story = StoryObj;
 

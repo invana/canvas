@@ -45,7 +45,7 @@ interface RagEmbeddingsNodeData {
   readonly source: string;
 }
 
-const meta: Meta = { title: 'usecases/domains/rag-embeddings/EmbeddingExplorer' };
+const meta: Meta = { title: 'usecases/by-casestudies/rag-embeddings/EmbeddingExplorer' };
 export default meta;
 type Story = StoryObj;
 

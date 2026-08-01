@@ -1,6 +1,7 @@
 # RFC — `casestudies/`: the five case studies, their data, and the analyst's story
 
-**Status:** 📋 proposed — nothing moved, nothing written.
+**Status:** 🚧 in progress — the namespace split (§6) and the dataset audit
+(§5.4) have landed; the five case studies are not written yet.
 **Decisions locked:** folder name `casestudies/` (§6) · dataset licence policy (§3).
 **Scope:** `apps/storybook/stories/` (namespace move + new stories) and the
 datasets that feed them.
@@ -15,7 +16,7 @@ renames and re-charters the `domains` half.
 
 ## 1. Why
 
-`usecases/domains/` holds 13 stories named after a *dataset*:
+`usecases/domains/` held 13 stories named after a *dataset*:
 `cora/CitationNetwork`, `geo-air-routes/AirRoutes`, `microservices/ServiceTopology`.
 Each demonstrates the engine over interesting data. None is something a buyer
 recognises as *their own job*. "Cora Citation Network" is not a pitch.
@@ -342,7 +343,7 @@ from?*
 **The explainability moment.** Explainability applied to our own industry, which
 makes it the most credible demo we can hand a technical buyer.
 
-**Stories.** `casestudies/ai-traces/{AgentRunTrace,RetrievalProvenance,DataLineage}`
+**Stories.** `usecases/by-casestudies/ai-traces/{AgentRunTrace,RetrievalProvenance,DataLineage}`
 
 ---
 
@@ -434,7 +435,7 @@ rather than being argued.
 
 Consumers repointed: `LayersViewPanel`, `FindInCanvasViewPanel`,
 `CanvasFiltersViewPanel`, and the two `cora/` stories (moved to
-`usecases/domains/paper-citations/`).
+`usecases/by-casestudies/paper-citations/`).
 
 #### ⚠️ Asserted provenance — ✅ verified 2026-08-02
 
@@ -503,58 +504,95 @@ copyrightable as a list of class names.
 
 ## 6. The namespace move
 
-### D1 — 🔒 LOCKED — `casestudies/`, a new top-level sibling of `usecases/`
+### D1 — 🔒 LOCKED (revised 2026-08-02) — two buckets **inside** `usecases/`
+
+✅ **Executed.** The move landed; titles, `apps/storybook/CLAUDE.md` and this
+manifest are updated.
 
 ```
-stories/
-  usecases/          ← the product surfaces (unchanged): GraphModeller · GraphVisualiser · CanvasDesigner
-  casestudies/       ← NEW: one folder per case study
+stories/usecases/
+  tools/                    ← the product surfaces: GraphModeller · GraphVisualiser · CanvasDesigner
+  by-casestudies/           ← the verticals: one folder per case study
     financial-crime/ · attack-paths/ · target-discovery/ · supply-risk/ · ai-traces/
-    …the migrated domains…
+    …plus the 13 migrated domain folders, until each is rewritten…
+  SimpleAndCompositeNodes   ← known orphan; engine-capability demo in neither bucket
 ```
 
-With `domains/` gone, `usecases/` holds three stories about *tools* — a coherent
-bucket that shouldn't also nest the verticals. Plural, lowercase, path-mirroring
-per `apps/storybook/CLAUDE.md`.
+**Revision from the first draft.** D1 originally made `casestudies/` a *top-level
+sibling* of `usecases/`. It's now nested, and the tools get their own `tools/`
+bucket rather than sitting loose in the root — so `usecases/` reads as two
+symmetrical halves (*the tools we ship* · *the problems they solve*) instead of
+three files and a folder.
 
-### D2 — Migration manifest (13 stories; nothing re-authored in the move)
+**`SimpleAndCompositeNodes` stays put as an acknowledged orphan.** Its subject is
+an engine capability, not a use case, and it holds the repo's only
+ellipse-composite-frame demo — so it can't simply be deleted (this is the
+unresolved §5 carried over from
+[`usecases-storybook-taxonomy-plan.md`](./usecases-storybook-taxonomy-plan.md)).
+Re-home that coverage first, then move it.
+
+### D1a — Grow `by-casestudies/`, don't migrate into it
+
+The 13 folders under `by-casestudies/` today are **dataset demos**, named after
+what they show rather than a decision anyone has to defend. The bar this RFC
+exists to raise (§1) is not met by any of them yet.
+
+So the five case studies are **authored one at a time**, and a dataset demo is
+absorbed into one only when it has actually been rewritten as a beat of that
+narrative — never as a bulk move. `ABSORB` rows in D2 are *destinations*, not a
+migration to run in one pass. A folder that says "case study" while holding a
+dataset demo violates its own charter, and "rewrite it later" reliably means
+never.
+
+Order: **CS5 first** — three of its four datasets already ship, so it's the
+cheapest way to find out whether the three-beat folder shape reads well before
+four more commit to it.
+
+### D2 — Destination manifest (13 stories)
 
 | Today | Disposition | New home |
 |---|---|---|
-| `domains/llm-agent-trace/AgentTrace` | **ABSORB** → CS5 | `casestudies/ai-traces/AgentRunTrace` |
-| `domains/rag-embeddings/EmbeddingExplorer` | **ABSORB** → CS5 | `casestudies/ai-traces/RetrievalProvenance` |
-| `domains/data-lineage/SankeyLineage` | **ABSORB** → CS5 | `casestudies/ai-traces/DataLineage` |
-| `domains/microservices/ServiceTopology` | **ABSORB** → CS2 | `casestudies/attack-paths/ServiceTopology` |
-| `domains/geo-air-routes/AirRoutes` | **ABSORB** → CS4 | `casestudies/supply-risk/NetworkFlow` |
-| `domains/paper-citations/CitationNetwork` | MOVE as-is | `casestudies/citations/CitationNetwork` |
-| `domains/paper-citations/SubjectBundle` | MOVE as-is | `casestudies/citations/SubjectBundle` |
-| `domains/citations/CitationGraph` | MOVE as-is (merge with `cora/`) | `casestudies/citations/CitationGraph` |
-| `domains/code-kg/DotsForce` | MOVE as-is | `casestudies/code-intel/DotsForce` |
-| `domains/code-kg/CompositeCards` | MOVE as-is | `casestudies/code-intel/CompositeCards` |
-| `domains/code-kg/HealthBadges` | MOVE as-is | `casestudies/code-intel/HealthBadges` |
-| `domains/invana-architecture/EndToEnd` | **RE-HOME** — our own architecture, a marketing demo, not a vertical | open (§7 Q2) |
-| `domains/data-model/SchemaTable` | **RE-HOME** — an ER diagram is a template/engine capability | open (§7 Q2) |
+| `by-casestudies/llm-agent-trace/AgentTrace` | **ABSORB** → CS5 | `usecases/by-casestudies/ai-traces/AgentRunTrace` |
+| `by-casestudies/rag-embeddings/EmbeddingExplorer` | **ABSORB** → CS5 | `usecases/by-casestudies/ai-traces/RetrievalProvenance` |
+| `by-casestudies/data-lineage/SankeyLineage` | **ABSORB** → CS5 | `usecases/by-casestudies/ai-traces/DataLineage` |
+| `by-casestudies/microservices/ServiceTopology` | **ABSORB** → CS2 | `usecases/by-casestudies/attack-paths/ServiceTopology` |
+| `by-casestudies/geo-air-routes/AirRoutes` | **ABSORB** → CS4 | `usecases/by-casestudies/supply-risk/NetworkFlow` |
+| `by-casestudies/paper-citations/CitationNetwork` | MOVE as-is | `usecases/by-casestudies/citations/CitationNetwork` |
+| `by-casestudies/paper-citations/SubjectBundle` | MOVE as-is | `usecases/by-casestudies/citations/SubjectBundle` |
+| `by-casestudies/citations/CitationGraph` | MOVE as-is (merge with `cora/`) | `usecases/by-casestudies/citations/CitationGraph` |
+| `by-casestudies/code-kg/DotsForce` | MOVE as-is | `usecases/by-casestudies/code-intel/DotsForce` |
+| `by-casestudies/code-kg/CompositeCards` | MOVE as-is | `usecases/by-casestudies/code-intel/CompositeCards` |
+| `by-casestudies/code-kg/HealthBadges` | MOVE as-is | `usecases/by-casestudies/code-intel/HealthBadges` |
+| `by-casestudies/invana-architecture/EndToEnd` | **RE-HOME** — our own architecture, a marketing demo, not a vertical | open (§7 Q2) |
+| `by-casestudies/data-model/SchemaTable` | **RE-HOME** — an ER diagram is a template/engine capability | open (§7 Q2) |
 
-"ABSORB" = the file moves now and is rewritten later as a beat of its case study;
-the move pass changes only path, `title`, and export name.
+**Read this as destinations, not a batch job** (D1a). *ABSORB* = when that case
+study is authored, this demo is rewritten as one of its beats and moves then.
+*MOVE as-is* = a pure folder rename, safe to do any time. *RE-HOME* = leaves
+`usecases/` entirely once §7 Q2 is answered.
+
+Still pending from this table: the `citations/` merge (three citation stories
+across two folders), the `code-kg/` → `code-intel/` rename, and both RE-HOMEs.
 
 ### D3 — Phasing
 
-- **Phase A — mechanical.** `git mv` the 11 movers, rewrite `title:` + export
-  names, update `apps/storybook/CLAUDE.md`. `check-types` gate. **Independent of
-  everything else — can land immediately.**
-- **Phase B — data.** T1 audit, then T2 (air-routes) and T4 (generators).
+- **Phase A — the bucket split.** ✅ **done 2026-08-02.** `tools/` +
+  `by-casestudies/` created, 16 stories moved with `git mv`, titles rewritten,
+  `apps/storybook/CLAUDE.md` updated, `check-types` clean. Export names were
+  unaffected — they key off the file name, not the path.
+- **Phase B — data.** §5.4 audit ✅ done; T2 (adopt the Apache-2.0 air-routes
+  graph) and T4 (generator framework) remain.
 - **Phase C — engine.** See [`new-behaviours-rfc.md`](./new-behaviours-rfc.md).
-- **Phase D — the five.** CS5 → CS2 → CS4 → CS1 → CS3.
-- **Phase E — re-home** the two non-verticals.
-
----
+  The minimum unlock is P1 + P2 + B1 + B2.
+- **Phase D — the five, one at a time.** CS5 → CS2 → CS4 → CS1 → CS3, per D1a.
+- **Phase E — the leftovers.** The `citations/` merge, `code-kg/` →
+  `code-intel/`, and the two RE-HOMEs (§7 Q2).
 
 ## 7. Open questions
 
-1. **Does `usecases/` survive** as the home of the three product surfaces, or
-   become `products/` now that its name contrasts with nothing? *(Recommend
-   rename in Phase A — "usecases" holding only tools is the misleading label.)*
+1. ~~**Does `usecases/` survive?**~~ ✅ **Resolved 2026-08-02** — it survives,
+   with the tools moved into `usecases/tools/` so the node reads as two
+   symmetrical halves alongside `usecases/by-casestudies/`. See D1.
 2. **Where do `invana-architecture` and `data-model` go?** Candidates:
    `graph/Nodes/SchemaTable` for the ER diagram (it demos the composite-shape
    resolver), a new `showcase/` node, or delete `invana-architecture` if the deck

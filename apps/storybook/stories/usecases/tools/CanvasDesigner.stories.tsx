@@ -5,7 +5,7 @@
  * resizable `right` region as a three-tab designer.
  *
  * The sample is a 44-entity slice of the **real** Invana code knowledge graph
- * (`invanaCodeKg`, the same analyser output behind `usecases/domains/code-kg/*`),
+ * (`invanaCodeKg`, the same analyser output behind `usecases/by-casestudies/code-kg/*`),
  * narrowed to one architectural cluster so every edit repaints in a frame — a
  * designer needs a fast preview loop, not 602 cards. The header's **cluster**
  * picker swaps the working set.
@@ -77,7 +77,7 @@ import { Moon, Sun } from 'lucide-react';
 /** The code-KG node kinds this story styles. */
 type InvanaCodeNodeLabel = 'file' | 'function' | 'class' | 'config' | 'document';
 
-const meta: Meta = { title: 'usecases/CanvasDesigner' };
+const meta: Meta = { title: 'usecases/tools/CanvasDesigner' };
 export default meta;
 type Story = StoryObj;
 

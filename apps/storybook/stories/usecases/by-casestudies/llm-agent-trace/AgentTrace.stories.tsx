@@ -42,7 +42,7 @@ import { Moon, Settings, Sun } from 'lucide-react';
 type AgentTraceNodeKind = 'llm' | 'tool' | 'decision' | 'output';
 type AgentTraceStatus = 'success' | 'error' | 'pending';
 
-const meta: Meta = { title: 'usecases/domains/llm-agent-trace/AgentTrace' };
+const meta: Meta = { title: 'usecases/by-casestudies/llm-agent-trace/AgentTrace' };
 export default meta;
 type Story = StoryObj;
 

@@ -49,7 +49,7 @@ import { Delaunay } from 'd3-delaunay';
 import { ThemeProvider } from '@invana/themes';
 import { Map as MapIcon, Moon, Settings, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'usecases/domains/geo-air-routes/AirRoutes' };
+const meta: Meta = { title: 'usecases/by-casestudies/geo-air-routes/AirRoutes' };
 export default meta;
 type Story = StoryObj;
 

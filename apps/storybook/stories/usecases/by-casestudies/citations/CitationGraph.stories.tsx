@@ -50,7 +50,7 @@ interface CitationsNodeData {
   readonly citationsCount: number;
 }
 
-const meta: Meta = { title: 'usecases/domains/citations/CitationGraph' };
+const meta: Meta = { title: 'usecases/by-casestudies/citations/CitationGraph' };
 export default meta;
 type Story = StoryObj;
 

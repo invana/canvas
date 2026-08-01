@@ -11,16 +11,17 @@
 //
 // Dataset modules are added as each usecase ships:
 //
-//  - agentTrace          → usecases/domains/llm-agent-trace/AgentTrace
-//  - ragEmbeddings       → usecases/domains/rag-embeddings/EmbeddingExplorer
-//  - microservices       → usecases/domains/microservices/ServiceTopology
+//  - agentTrace          → usecases/by-casestudies/llm-agent-trace/AgentTrace
+//  - ragEmbeddings       → usecases/by-casestudies/rag-embeddings/EmbeddingExplorer
+//  - microservices       → usecases/by-casestudies/microservices/ServiceTopology
 //  - ontology            → canvas-ui/view-panels/SchemaViewPanel/{CanvasDerived,CustomSchema}
-//  - citations           → usecases/domains/citations/CitationGraph
-//  - invanaCodeKg        → usecases/domains/code-kg/{DotsForce,CompositeCards,HealthBadges}
-//  - starSchema          → usecases/domains/data-model/SchemaTable
-//  - invanaArchitecture  → usecases/domains/invana-architecture/EndToEnd
+//  - citations           → usecases/by-casestudies/citations/CitationGraph
+//  - invanaCodeKg        → usecases/by-casestudies/code-kg/{DotsForce,CompositeCards,HealthBadges}
+//  - starSchema          → usecases/by-casestudies/data-model/SchemaTable
+//  - invanaArchitecture  → usecases/by-casestudies/invana-architecture/EndToEnd
 //  - computingPioneers   → usecases/SimpleAndCompositeNodes
-//  - modellerSeed        → usecases/GraphModeller
+//  - modellerSeed        → usecases/tools/GraphModeller
+//  - paperCitations      → usecases/by-casestudies/paper-citations/{CitationNetwork,SubjectBundle}
 
 // ── settings — one recommended look per dataset ──────────────────────────────
 export { settings as agentTraceSettings } from './agent-trace/data';
