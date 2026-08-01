@@ -4,8 +4,8 @@ export default defineConfig({
   entry: [
     'src/index.ts',
     'src/usecase-demos/index.ts',
-    'src/game-of-thrones/index.ts',
-    'src/wikipedia-dataviz/index.ts',
+    'src/epic-saga/index.ts',
+    'src/topic-cartography/index.ts',
   ],
   format: ['esm'],
   dts: true,

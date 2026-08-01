@@ -10,7 +10,13 @@
  * example.
  *
  * Source: W. Härdle (1991), *Smoothing Techniques with Implementation in S*,
- * New York: Springer. Public domain; bundled with R as `datasets::faithful`.
+ * New York: Springer; the same 272 observations R bundles as
+ * `datasets::faithful`.
+ *
+ * Licence position: the payload is **272 pairs of numbers** — physical
+ * measurements of a geyser, which carry no copyright. (R's `datasets` *package*
+ * is GPL-2, but that covers the package, not the observations.) Cleared under
+ * the dataset licence policy (`docs/casestudies-rfc.md` §3).
  *
  * The exported `oldFaithful` is a nodes-only `GraphData` ready for
  * `GraphLayer.setData()` — each point becomes a node positioned at

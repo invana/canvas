@@ -8,7 +8,16 @@
  * structurally-rich force-directed layout demo.
  *
  * Source: Donald E. Knuth, *The Stanford GraphBase: A Platform for
- * Combinatorial Computing*, 1993. Adapted from the D3.js examples.
+ * Combinatorial Computing*, 1993 (`jean.dat`), reshaped here from the D3.js
+ * examples' derived JSON.
+ *
+ * Licence position: Knuth publishes the SGB sources as **public domain**, with
+ * a request — not a licence condition — that the canonical files not be altered
+ * ("may be freely copied but please do not change it in any way"). That request
+ * is about keeping the *SGB distribution* identical worldwide; it doesn't reach
+ * a downstream reshaping of the co-occurrence counts, which are facts in any
+ * case. Cleared under the dataset licence policy
+ * (`docs/casestudies-rfc.md` §3).
  *
  * Export shape is structurally compatible with `GraphData` from
  * `@invana/graph` — pass it straight to `graph.setData()`.

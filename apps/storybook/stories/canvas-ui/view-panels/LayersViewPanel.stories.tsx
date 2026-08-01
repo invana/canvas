@@ -13,8 +13,8 @@ import {
   ToolbarItems,
   useSidePanels,
 } from '@invana/canvas-ui';
-import { gameOfThrones } from '@invana/graph-datasets/game-of-thrones';
-import { wikipediaDataViz } from '@invana/graph-datasets/wikipedia-dataviz';
+import { epicSaga } from '@invana/graph-datasets/epic-saga';
+import { topicCartography } from '@invana/graph-datasets/topic-cartography';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { GeometricLayout } from '@invana/graph-layout-geometric';
 import { ThemeProvider } from '@invana/themes';
@@ -32,9 +32,9 @@ import { useCallback, useMemo, useState } from 'react';
  * A **Dataset** dropdown after the title swaps which graph is loaded — the two
  * flagship demo datasets share one identical shell, so only the data and the
  * initial layout differ:
- * - **Wikipedia data-viz** (~2k pages / ~5.4k links) ships **precomputed
+ * - **Topic cartography** (~2k pages / ~5.4k links) ships **precomputed
  *   ForceAtlas2 positions**, so it opens with no layout run.
- * - **Game of Thrones** (~5k vertices / ~29k edges) has no positions, so it
+ * - **Epic Saga** (~5k vertices / ~29k edges) has no positions, so it
  *   opens on a **grid** (the only layout that places this many nodes instantly).
  */
 const meta: Meta = { title: 'canvas-ui/view-panels/LayersViewPanel' };
@@ -60,7 +60,7 @@ interface DatasetDef {
   meta: { nodeCount: number; edgeCount: number };
   /** Load the dataset 1:1 with the property-graph → GraphNode/GraphEdge rename. */
   build: () => GraphData;
-  /** Config override merged over the bundle defaults (Wikipedia pins positions). */
+  /** Config override merged over the bundle defaults (the cartography pins positions). */
   config?: CanvasConfig;
   /** Run the first layout (grid) on mount — for the position-less dataset. */
   applyInitialLayout: boolean;
@@ -71,14 +71,14 @@ interface DatasetDef {
 // The two datasets, each self-contained. Everything else in the story is shared.
 const DATASETS: Record<DatasetId, DatasetDef> = {
   wikipedia: {
-    label: 'Wikipedia data-viz',
-    meta: wikipediaDataViz.meta,
+    label: 'Topic cartography',
+    meta: topicCartography.meta,
     build: () => ({
-      nodes: wikipediaDataViz.nodes.map((n) => ({
+      nodes: topicCartography.nodes.map((n) => ({
         ...n,
         position: { x: n.data.x, y: n.data.y },
       })),
-      edges: wikipediaDataViz.edges,
+      edges: topicCartography.edges,
     }),
     // Precomputed ForceAtlas2 positions ship with the data — `'none'` matches no
     // registered layout, so the engine's layout step no-ops on load.
@@ -87,11 +87,11 @@ const DATASETS: Record<DatasetId, DatasetDef> = {
     fitOnReady: true,
   },
   got: {
-    label: 'Game of Thrones',
-    meta: gameOfThrones.meta,
+    label: 'Epic Saga',
+    meta: epicSaga.meta,
     build: () => ({
-      nodes: gameOfThrones.nodes,
-      edges: gameOfThrones.edges,
+      nodes: epicSaga.nodes,
+      edges: epicSaga.edges,
     }),
     // No positions — grid places ~5k nodes instantly on mount.
     applyInitialLayout: true,

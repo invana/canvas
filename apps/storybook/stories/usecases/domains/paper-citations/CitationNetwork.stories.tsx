@@ -1,10 +1,10 @@
 /**
- * **Cora citation network** — the canonical ML benchmark dataset, 2,708 papers
+ * **paper citation network** — the canonical ML benchmark dataset, 2,708 papers
  * with 10,556 `CITES` edges, rendered as a force-directed graph with tiny dots
  * and translucent bezier ribbons. The dense overlay of low-alpha curves produces
  * the "watercolor" effect that lets the cluster topology read at a glance — the
  * same picture style as the Connected-Papers / Gephi force-atlas screenshots
- * people share for Cora.
+ * people share for Paper-citations.
  *
  * Composed from `<GraphCanvasApp>`: the bundle brings background · graph ·
  * d3-force · pan / zoom / drag / hover, and the story feeds it a subject-colour
@@ -33,12 +33,12 @@ import {
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
-import { cora } from '@invana/graph-datasets/usecase-demos';
+import { paperCitations } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Layers, Moon, Settings, Sun } from 'lucide-react';
 
-/** Cora's subject areas + the payload each paper node carries. */
-type CoraSubject =
+/** Paper-citations's subject areas + the payload each paper node carries. */
+type PaperSubject =
   | 'Neural_Networks'
   | 'Rule_Learning'
   | 'Reinforcement_Learning'
@@ -46,20 +46,20 @@ type CoraSubject =
   | 'Theory'
   | 'Genetic_Algorithms'
   | 'Case_Based';
-interface CoraNodeData {
-  readonly subject: CoraSubject;
+interface PaperNodeData {
+  readonly subject: PaperSubject;
 }
 
-const meta: Meta = { title: 'usecases/domains/cora/CitationNetwork' };
+const meta: Meta = { title: 'usecases/domains/paper-citations/CitationNetwork' };
 export default meta;
 type Story = StoryObj;
 
 export const CitationNetworkStory: Story = {
   name: 'CitationNetwork',
   render: function Render() {
-    // One colour per Cora subject — the story's own palette, so the bundle's
+    // One colour per Paper-citations subject — the story's own palette, so the bundle's
     // colour-by-type behaviour stays off in `config`.
-    const SUBJECT_FILL: Record<CoraSubject, number> = {
+    const SUBJECT_FILL: Record<PaperSubject, number> = {
       Neural_Networks: 0x2563eb, // blue
       Rule_Learning: 0xdc2626, // red
       Reinforcement_Learning: 0xf59e0b, // amber
@@ -94,8 +94,8 @@ export const CitationNetworkStory: Story = {
     // reloading 2.7k nodes on every re-render would be very visible here.
     const data: GraphData = useMemo(
       () => ({
-        nodes: cora.nodes.map((n) => ({ ...n, type: (n.data as CoraNodeData).subject })),
-        edges: cora.edges.map((e) => ({ ...e })),
+        nodes: paperCitations.nodes.map((n) => ({ ...n, type: (n.data as PaperNodeData).subject })),
+        edges: paperCitations.edges.map((e) => ({ ...e })),
       }),
       [],
     );
@@ -120,7 +120,7 @@ export const CitationNetworkStory: Story = {
           graph: {
             node: {
               style: {
-                bgFill: (n: GraphNode) => SUBJECT_FILL[(n.data as CoraNodeData).subject] ?? DEFAULT_FILL,
+                bgFill: (n: GraphNode) => SUBJECT_FILL[(n.data as PaperNodeData).subject] ?? DEFAULT_FILL,
                 shape: { kind: 'circle', radius: 10 },
                 bgAlpha: 0.95,
                 // No stroke at base scale — keeps the dots reading as pinpoints
@@ -179,7 +179,7 @@ export const CitationNetworkStory: Story = {
     );
 
     const onReady = useCallback((c: GraphCanvas | null) => {
-      c?.showMessage(`${cora.nodes.length} papers · ${cora.edges.length} citations`);
+      c?.showMessage(`${paperCitations.nodes.length} papers · ${paperCitations.edges.length} citations`);
     }, []);
 
     return (
@@ -189,7 +189,7 @@ export const CitationNetworkStory: Story = {
           config={config}
           onReady={onReady}
           header={{
-            title: 'Cora Citation Network',
+            title: 'Paper-citations Citation Network',
             center: <GraphControlsToolbar />,
             right: (ctx) => (
               <ToolbarItems

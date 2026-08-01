@@ -1,7 +1,7 @@
 /**
  * **Hide / show driven by a live UI panel.** A header-toggled, right-docked
  * **`<CanvasFiltersViewPanel>`** — the reusable list of currently-hidden elements
- * with per-item + "Show all" restore — over the **Wikipedia data-viz cartography**
+ * with per-item + "Show all" restore — over the **Topic cartography cartography**
  * (~2k pages / ~5.4k hyperlinks, precomputed ForceAtlas2 positions).
  *
  * The story **authors a few meaningful pages + links as `hidden: true`** (the graph
@@ -31,7 +31,7 @@ import {
   CanvasFiltersViewPanel,
   useSidePanels,
 } from '@invana/canvas-ui';
-import { wikipediaDataViz } from '@invana/graph-datasets/wikipedia-dataviz';
+import { topicCartography } from '@invana/graph-datasets/topic-cartography';
 import { ThemeProvider } from '@invana/themes';
 import { Filter, Gauge, Map, Moon, Sun } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
@@ -63,12 +63,12 @@ export const CanvasFiltersViewPanelStory: Story = {
       const hiddenPages = new Set(['gephi', 'cytoscape', 'graphviz', 'graph theory']);
       const hiddenLinks = new Set(['e2913', 'e1554']); // Info-viz → Data-viz, SNA → Network science
       return {
-        nodes: wikipediaDataViz.nodes.map((n) => ({
+        nodes: topicCartography.nodes.map((n) => ({
           ...n,
           position: { x: n.data.x, y: n.data.y },
           hidden: hiddenPages.has(n.id),
         })),
-        edges: wikipediaDataViz.edges.map((e) => ({ ...e, hidden: hiddenLinks.has(e.id) })),
+        edges: topicCartography.edges.map((e) => ({ ...e, hidden: hiddenLinks.has(e.id) })),
       };
     }, []);
 

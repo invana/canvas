@@ -1,9 +1,13 @@
 /**
- * The classic **Tree of Life** — a small phylogenetic tree of 145 prokaryote +
- * eukaryote species partitioned into the three top-level kingdoms (Bacteria,
- * Eukaryota, Archaea). It's the dataset behind d3's
- * [Tree of Life](https://observablehq.com/@d3/tree-of-life) example, sourced
- * from Ciccarelli et al. (2006).
+ * **Life tree** — a synthetic phylogeny of 145 species partitioned into the
+ * three domains of life (Bacteria, Eukaryota, Archaea): a deep, unbalanced,
+ * three-way hierarchy for the radial / cluster / tidy-tree layouts.
+ *
+ * **Generated, not stored.** Built at import time by
+ * {@link generateLifeTreeNewick} from a fixed seed — see that file for why the
+ * previous source (Ciccarelli et al. 2006, via d3's Tree of Life) was replaced.
+ * The three domain names are universal taxonomic ranks; every genus and species
+ * below them is invented.
  *
  * Two shapes are exposed:
  *  - `lifeTreeHierarchy` — the parsed Newick tree as a `{name, length, children?}`
@@ -21,7 +25,7 @@
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphEdge, GraphNode } from '@invana/graph';
 
-import { LIFE_TREE_NEWICK } from './newick';
+import { generateLifeTreeNewick } from './generator';
 
 /** The three domains of life. Set on every node beneath a top-level clade. */
 type LifeTreeKingdom = 'Bacteria' | 'Eukaryota' | 'Archaea';
@@ -100,7 +104,7 @@ function parseNewick(text: string): LifeTreeNode {
 }
 
 /** The parsed Tree of Life as a nested hierarchy. Computed once. */
-export const lifeTreeHierarchy: LifeTreeNode = parseNewick(LIFE_TREE_NEWICK);
+export const lifeTreeHierarchy: LifeTreeNode = parseNewick(generateLifeTreeNewick());
 
 /**
  * Flatten {@link lifeTreeHierarchy} to a `{nodes, edges}` shape compatible

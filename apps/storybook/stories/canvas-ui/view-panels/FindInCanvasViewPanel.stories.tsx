@@ -1,6 +1,6 @@
 /**
  * **Structured find-in-canvas.** A right-docked **`<FindInCanvasViewPanel>`** over
- * the **Wikipedia data-viz cartography** (~2k pages / ~5.4k hyperlinks, precomputed
+ * the **Topic cartography cartography** (~2k pages / ~5.4k hyperlinks, precomputed
  * ForceAtlas2 positions): build a field filter — **id** / **label** / any
  * **property** (`name`, `clusterLabel`, `url`, …) with `contains` / `equals` /
  * numeric operators — and get the matching nodes and edges as a live list. Click a
@@ -37,7 +37,7 @@ import {
   CanvasFiltersViewPanel,
   useSidePanels,
 } from '@invana/canvas-ui';
-import { wikipediaDataViz } from '@invana/graph-datasets/wikipedia-dataviz';
+import { topicCartography } from '@invana/graph-datasets/topic-cartography';
 import { ThemeProvider } from '@invana/themes';
 import { Filter, Gauge, Map, Moon, Search, Sun } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
@@ -70,11 +70,11 @@ export const FindInCanvasViewPanelStory: Story = {
     // engine.
     const data = useMemo(
       () => ({
-        nodes: wikipediaDataViz.nodes.map((n) => ({
+        nodes: topicCartography.nodes.map((n) => ({
           ...n,
           position: { x: n.data.x, y: n.data.y },
         })),
-        edges: wikipediaDataViz.edges,
+        edges: topicCartography.edges,
       }),
       [],
     );

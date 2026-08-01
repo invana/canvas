@@ -16,15 +16,15 @@
       "import": "./dist/usecase-demos/index.js",
       "default": "./dist/usecase-demos/index.js"
     },
-    "./game-of-thrones": {
-      "types": "./dist/game-of-thrones/index.d.ts",
-      "import": "./dist/game-of-thrones/index.js",
-      "default": "./dist/game-of-thrones/index.js"
+    "./epic-saga": {
+      "types": "./dist/epic-saga/index.d.ts",
+      "import": "./dist/epic-saga/index.js",
+      "default": "./dist/epic-saga/index.js"
     },
-    "./wikipedia-dataviz": {
-      "types": "./dist/wikipedia-dataviz/index.d.ts",
-      "import": "./dist/wikipedia-dataviz/index.js",
-      "default": "./dist/wikipedia-dataviz/index.js"
+    "./topic-cartography": {
+      "types": "./dist/topic-cartography/index.d.ts",
+      "import": "./dist/topic-cartography/index.js",
+      "default": "./dist/topic-cartography/index.js"
     }
   },
   "scripts": {

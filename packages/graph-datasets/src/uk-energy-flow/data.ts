@@ -8,8 +8,15 @@
  *
  * Source: DECC 2050 Pathways (UK Department of Energy and Climate Change),
  * via Tom Counsell's d3-sankey example used since 2012. Reproduced from
- * `https://bost.ocks.org/mike/sankey/energy.json`. Distributed by the
- * original author under the same MIT terms as `d3-sankey`.
+ * `https://bost.ocks.org/mike/sankey/energy.json`, which ships as
+ * `test/energy.json` inside [`d3/d3-sankey`](https://github.com/d3/d3-sankey)
+ * — a **BSD-3-Clause** repository (an earlier revision of this comment said
+ * MIT; d3-sankey is BSD-3-Clause and d3 itself is ISC).
+ *
+ * Licence position: the payload is **48 node labels and 68 flow quantities** —
+ * measurements, which carry no copyright of their own — distributed inside a
+ * permissively-licensed repository. Cleared under the dataset licence policy
+ * (`docs/casestudies-rfc.md` §3).
  *
  * Two shapes are exposed:
  *  - `ukEnergyFlow` — the original `{nodes:[{name}], links:[{source,target,value}]}`

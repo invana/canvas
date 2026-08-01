@@ -1,7 +1,7 @@
 /**
- * **Cora — subject-bundled subset** — a lightweight (~75-node) slice of the Cora
+ * **Subject-bundled subset** — a lightweight (~75-node) slice of the paper
  * citation network demonstrating `pathType: 'bundle'` over a flat graph, dressed
- * in the `<GraphCanvasApp>` shell. Cora has no hierarchy of its own, so bundling
+ * in the `<GraphCanvasApp>` shell. Paper-citations has no hierarchy of its own, so bundling
  * has nothing to ride on by default. Here the `subject` field plays the role of
  * "cluster": nodes are hand-positioned in three regions (one per subject) and
  * every cross-subject edge routes through both regions' centroids as bundle
@@ -12,7 +12,7 @@
  * The header's **Settings** toggle docks `<CanvasSettingsEditorPanel>` for the
  * live layer / behaviour state.
  *
- * For the *dense* full-Cora view (no bundling — additive bezier overlap), see
+ * For the *dense* full-Paper-citations view (no bundling — additive bezier overlap), see
  * the sibling `CitationNetwork.stories.tsx`. For the pathType mechanics on a
  * stripped-down example, see `Graph/Edges/Types/Bundle.stories.ts`.
  *
@@ -35,16 +35,16 @@ import {
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
-import { cora } from '@invana/graph-datasets/usecase-demos';
+import { paperCitations } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
 
-/** The payload each Cora paper node carries. */
-interface CoraNodeData {
+/** The payload each Paper-citations paper node carries. */
+interface PaperNodeData {
   readonly subject: string;
 }
 
-const meta: Meta = { title: 'usecases/domains/cora/SubjectBundle' };
+const meta: Meta = { title: 'usecases/domains/paper-citations/SubjectBundle' };
 export default meta;
 type Story = StoryObj;
 
@@ -69,7 +69,7 @@ export const SubjectBundleStory: Story = {
     // scatter, and each edge's bundle route. Memoised so a panel toggle (a
     // re-render) never hands the app a new `data` identity and re-seeds it.
     const { data, subjectFill } = useMemo(() => {
-      // Three of Cora's seven subjects — a triangle of clusters reads cleaner
+      // Three of the seven subjects — a triangle of clusters reads cleaner
       // than a row, and 3 inter-cluster channels (NN↔RL, NN↔GA, RL↔GA) is
       // enough to show the bundling without crowding.
       const FOCUS_SUBJECTS = [
@@ -101,9 +101,9 @@ export const SubjectBundleStory: Story = {
 
       // Take the first PER_SUBJECT papers per focus subject.
       const focusSet = new Set<string>(FOCUS_SUBJECTS);
-      const buckets = new Map<FocusSubject, (typeof cora.nodes)[number][]>();
+      const buckets = new Map<FocusSubject, (typeof paperCitations.nodes)[number][]>();
       for (const s of FOCUS_SUBJECTS) buckets.set(s, []);
-      for (const n of cora.nodes) {
+      for (const n of paperCitations.nodes) {
         if (!focusSet.has(n.data.subject)) continue;
         const bucket = buckets.get(n.data.subject as FocusSubject)!;
         if (bucket.length < PER_SUBJECT) bucket.push(n);
@@ -127,7 +127,7 @@ export const SubjectBundleStory: Story = {
       }
 
       const subjectById = new Map<string, FocusSubject>();
-      for (const n of nodes) subjectById.set(n.id, (n.data as CoraNodeData).subject as FocusSubject);
+      for (const n of nodes) subjectById.set(n.id, (n.data as PaperNodeData).subject as FocusSubject);
 
       // Intra-cluster edges go direct (no waypoints); inter-cluster ones route
       // through both centroids, so every edge sharing a cluster pair bundles
@@ -139,7 +139,7 @@ export const SubjectBundleStory: Story = {
       };
 
       const ids = new Set(nodes.map((n) => n.id));
-      const edges: GraphData['edges'] = cora.edges
+      const edges: GraphData['edges'] = paperCitations.edges
         .filter((e) => ids.has(e.source) && ids.has(e.target))
         .map((e) => ({
           id: e.id,
@@ -182,7 +182,7 @@ export const SubjectBundleStory: Story = {
           graph: {
             node: {
               style: {
-                bgFill: (n: GraphNode) => subjectFill[(n.data as CoraNodeData).subject] ?? 0x64748b,
+                bgFill: (n: GraphNode) => subjectFill[(n.data as PaperNodeData).subject] ?? 0x64748b,
                 shape: { kind: 'circle', radius: 4 },
                 bgAlpha: 0.95,
                 bgStrokeWidth: 0,
@@ -230,7 +230,7 @@ export const SubjectBundleStory: Story = {
           config={config}
           onReady={onReady}
           header={{
-            title: 'Cora — Subject Bundle',
+            title: 'Paper-citations — Subject Bundle',
             center: <GraphControlsToolbar />,
             right: (ctx) => (
               <ToolbarItems
