@@ -23,228 +23,25 @@
  */
 
 import type { CanvasConfig } from '@invana/canvas';
-import type { GraphEdge, GraphNode } from '@invana/graph';
+import type { NodeStructureRegistry, NodeStylingRegistry, NodeTypeRegistry } from '@invana/graph';
 
-interface TwitterDatasetOptions {
-  users?: number;
-  tweets?: number;
-  comments?: number;
-  hashtags?: number;
-  retweets?: number;
-  /** PRNG seed — same seed → same graph. Default `42`. */
-  seed?: number;
-}
+import {
+  EDGE_GENERATORS,
+  NODE_GENERATORS,
+  runGenerators,
+  type TwitterDatasetOptions,
+} from './generators';
 
-// ─── Content pools ───────────────────────────────────────────────────────────
-const HANDLES = [
-  'ada', 'grace', 'linus', 'margaret', 'dijkstra', 'turing', 'hopper', 'knuth',
-  'lovelace', 'berners_lee', 'ritchie', 'thompson', 'carmack', 'norvig', 'hinton',
-  'lecun', 'karpathy', 'swyx', 'dhh', 'gvanrossum',
-];
-const NAMES = [
-  'Ada Lovelace', 'Grace Hopper', 'Linus Torvalds', 'Margaret Hamilton', 'Edsger Dijkstra',
-  'Alan Turing', 'Admiral Hopper', 'Donald Knuth', 'Augusta Ada', 'Tim Berners-Lee',
-  'Dennis Ritchie', 'Ken Thompson', 'John Carmack', 'Peter Norvig', 'Geoffrey Hinton',
-  'Yann LeCun', 'Andrej Karpathy', 'Shawn Wang', 'David H. H.', 'Guido van Rossum',
-];
-const BIOS = [
-  'building things on the internet', 'opinions are my own', 'ship it 🚀',
-  'computer scientist · coffee', 'making software less terrible', 'ex-everything',
-];
-const TAGS = [
-  'webgpu', 'typescript', 'graphs', 'dataviz', 'opensource', 'rustlang',
-  'ai', 'compilers', 'pixijs', 'react', 'devtools', 'algorithms',
-];
-const TWEETS = [
-  'Just shipped a WebGPU renderer that does 1M nodes at 60fps. Wild times.',
-  'Hot take: the best graph layout is the one your users can actually read.',
-  'TypeScript discriminated unions are the unsung hero of clean code.',
-  'Spent all day on a bug. It was a missing await. It is always a missing await.',
-  'New blog post: building a node card designer from scratch. Link below 👇',
-  'Force-directed layouts feel like magic until you have 10k edges.',
-  'Refactored 2k lines into 400. Deleted code is the best code.',
-  'Theming via roles → one switch recolours the whole canvas. So satisfying.',
-  'Why is timezone handling still this hard in 2024?',
-  'Open-sourced our template engine today. PRs welcome!',
-  'The composite shape primitive turned out way more reusable than expected.',
-  'Reminder: premature optimization is the root of all 2am debugging.',
-];
-const COMMENTS = [
-  'this is incredible work 🔥', 'how does it handle very large graphs?',
-  'finally someone said it', 'bookmarking for later', 'love the API design',
-  'does it support custom shapes?', 'the demo is buttery smooth', 'star ⭐ added',
-  'what about accessibility?', 'underrated thread', 'commenting to find later', 'pure gold',
-];
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-/** Deterministic PRNG (mulberry32). */
-function mulberry32(seed: number): () => number {
-  let s = seed;
-  return () => {
-    s = (s + 0x6d2b79f5) | 0;
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-const DAY = 86_400_000;
-const WINDOW_END = Date.UTC(2024, 2, 8); // fixed instant → stable labels
-const WINDOW_START = WINDOW_END - 7 * DAY;
-
-function shortTime(ts: number): string {
-  const d = new Date(ts);
-  const hh = String(d.getUTCHours()).padStart(2, '0');
-  const mm = String(d.getUTCMinutes()).padStart(2, '0');
-  return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${hh}:${mm}`;
-}
-
-/** Build the mocked Twitter activity graph (~100 nodes by default). */
+/**
+ * Build the mocked Twitter activity graph (~100 nodes by default) by running the
+ * per-type generators in `./generators` — one spec per node type and per edge
+ * type, each property produced by its own `*_func`.
+ */
 export function generateTwitterActivity(opts: TwitterDatasetOptions = {}) {
-  const { users = 18, tweets = 34, comments = 26, hashtags = 12, retweets = 10, seed = 42 } = opts;
-  const rnd = mulberry32(seed);
-  const int = (n: number) => Math.floor(rnd() * n);
-  const pick = <T>(arr: readonly T[]): T => arr[int(arr.length)]!;
-
-  const nodes: (GraphNode & {
-    data: Record<string, string | number | boolean>;
-  })[] = [];
-  const edges: GraphEdge[] = [];
-  let eid = 0;
-  const link = (source: string, target: string, type: string): void => {
-    edges.push({ id: `e${eid++}`, type, source, target });
-  };
-
-  // Users
-  const userIds: string[] = [];
-  for (let i = 0; i < users; i++) {
-    const handle = `@${HANDLES[i % HANDLES.length]}${i >= HANDLES.length ? i : ''}`;
-    const id = `u${i}`;
-    nodes.push({
-      id,
-      type: 'User',
-      data: {
-        name: NAMES[i % NAMES.length]!,
-        handle,
-        avatar: handle,
-        followers: 120 + int(90_000),
-        verified: rnd() < 0.25,
-        bio: pick(BIOS),
-      },
-    });
-    userIds.push(id);
-  }
-  // Follows (1–3 per user)
-  for (const u of userIds) {
-    const n = 1 + int(3);
-    for (let k = 0; k < n; k++) {
-      const other = pick(userIds);
-      if (other !== u) link(u, other, 'FOLLOWS');
-    }
-  }
-
-  const propsOf = (id: string) =>
-    nodes.find((n) => n.id === id)!.data as {
-      name: string;
-      handle: string;
-      avatar: string;
-    };
-
-  // Hashtags
-  const tagIds: string[] = [];
-  for (let i = 0; i < hashtags; i++) {
-    const tag = TAGS[i % TAGS.length]!;
-    const id = `h${i}`;
-    nodes.push({
-      id,
-      type: 'Hashtag',
-      data: { tag, label: `#${tag}`, uses: 1 + int(60) },
-    });
-    tagIds.push(id);
-  }
-
-  // Tweets (time-ordered across the window)
-  const tweetIds: string[] = [];
-  for (let i = 0; i < tweets; i++) {
-    const authorId = pick(userIds);
-    const a = propsOf(authorId);
-    const ts = WINDOW_START + Math.floor((i / tweets) * 7 * DAY) + int(Math.floor(DAY * 0.3));
-    const likes = int(800);
-    const rts = int(160);
-    const replies = int(80);
-    const id = `t${i}`;
-    nodes.push({
-      id,
-      type: 'Tweet',
-      data: {
-        text: pick(TWEETS),
-        author: a.name,
-        handle: a.handle,
-        avatar: a.avatar,
-        time: shortTime(ts),
-        ts,
-        likes,
-        retweets: rts,
-        replies,
-        stats: `♥ ${likes} · ↻ ${rts} · 💬 ${replies}`,
-      },
-    });
-    tweetIds.push(id);
-    link(authorId, id, 'POSTED');
-    const nTags = 1 + int(2);
-    for (let k = 0; k < nTags; k++) link(id, pick(tagIds), 'TAGGED');
-    if (rnd() < 0.4) link(id, pick(userIds), 'MENTIONS');
-  }
-
-  // Comments (replies to tweets)
-  for (let i = 0; i < comments; i++) {
-    const authorId = pick(userIds);
-    const a = propsOf(authorId);
-    const tweet = pick(tweetIds);
-    const ts = WINDOW_START + int(7 * DAY);
-    const id = `c${i}`;
-    nodes.push({
-      id,
-      type: 'Comment',
-      data: {
-        text: pick(COMMENTS),
-        author: a.name,
-        handle: a.handle,
-        time: shortTime(ts),
-        ts,
-      },
-    });
-    link(authorId, id, 'WROTE');
-    link(id, tweet, 'REPLY_TO');
-  }
-
-  // Retweets
-  for (let i = 0; i < retweets; i++) {
-    const byId = pick(userIds);
-    const a = propsOf(byId);
-    const tweet = pick(tweetIds);
-    const ts = WINDOW_START + int(7 * DAY);
-    const id = `r${i}`;
-    nodes.push({
-      id,
-      type: 'Retweet',
-      data: { by: a.handle, label: `RT ${a.handle}`, time: shortTime(ts), ts },
-    });
-    link(byId, id, 'RETWEETED');
-    link(id, tweet, 'OF');
-  }
-
-  // Drop any orphan nodes (no incident edge) so the graph is fully connected
-  // for layout — e.g. a hashtag that happened never to be tagged.
-  const connected = new Set<string>();
-  for (const e of edges) {
-    connected.add(e.source);
-    connected.add(e.target);
-  }
-  return { nodes: nodes.filter((n) => connected.has(n.id)), edges };
+  return runGenerators(NODE_GENERATORS, EDGE_GENERATORS, opts);
 }
 
-/** Default ~100-node Twitter activity graph (seed 42). */
+/** The default instance — 18 users, 34 tweets, 26 comments, 12 hashtags, 10 retweets. */
 export const twitterActivity = generateTwitterActivity();
 
 /** {@link twitterActivity} as the engine-ready value `<GraphCanvasApp data>` takes. */
@@ -291,6 +88,211 @@ export const settings: CanvasConfig = {
   },
   behaviours: {
     color: { enabled: true, colorEdges: false },
+    hover: { enabled: true, state: 'highlighted', degree: 1 },
+  },
+};
+
+// ─── Card variant ────────────────────────────────────────────────────────────
+
+/**
+ * The three types that carry real content, as composite cards. Structures are
+ * pure skeletons — rows of slots, no colour — so they theme through
+ * {@link cardStylings} and bind to the data through {@link cardNodeTypes}.
+ *
+ * Slot values resolve through a **single dotted path each** (`data.likes`), so a
+ * count renders as a bare number: there's no formatting or concatenation step
+ * between the store and the card.
+ */
+const cardStructures: NodeStructureRegistry = {
+  /** A tweet: type tag · author row · body · the three engagement counts. */
+  tweetCard: {
+    name: 'tweetCard',
+    kind: 'card',
+    width: 260,
+    height: 156,
+    rows: [
+      { slots: [{ slot: 'type', kind: 'tag' }] },
+      { divider: true },
+      {
+        slots: [
+          { slot: 'avatar', kind: 'image', shape: 'circle', size: 34 },
+          { stack: [{ slot: 'author', kind: 'text' }, { slot: 'handle', kind: 'text' }] },
+        ],
+      },
+      { slots: [{ slot: 'text', kind: 'text' }] },
+      {
+        slots: [
+          { slot: 'likes', kind: 'text' },
+          { slot: 'retweets', kind: 'text' },
+          { slot: 'replies', kind: 'text' },
+        ],
+      },
+    ],
+  },
+  /** An account: type tag · avatar beside name / handle · follower count. */
+  userCard: {
+    name: 'userCard',
+    kind: 'card',
+    width: 220,
+    height: 124,
+    rows: [
+      { slots: [{ slot: 'type', kind: 'tag' }] },
+      { divider: true },
+      {
+        slots: [
+          { slot: 'avatar', kind: 'image', shape: 'circle', size: 40 },
+          { stack: [{ slot: 'title', kind: 'text' }, { slot: 'subtitle', kind: 'text' }] },
+        ],
+      },
+      { slots: [{ slot: 'followers', kind: 'text' }] },
+    ],
+  },
+  /** A reply: no avatar, just who said what and when — deliberately slimmer. */
+  commentCard: {
+    name: 'commentCard',
+    kind: 'card',
+    width: 220,
+    height: 112,
+    rows: [
+      { slots: [{ slot: 'type', kind: 'tag' }] },
+      { divider: true },
+      // Author over timestamp, not beside it: side-by-side splits the row evenly
+      // and the date ends up ellipsised to `Mar…`.
+      { slots: [{ stack: [{ slot: 'author', kind: 'text' }, { slot: 'time', kind: 'text' }] }] },
+      { slots: [{ slot: 'text', kind: 'text' }] },
+    ],
+  },
+};
+
+/**
+ * Colour + type scale for the three cards, entirely in theme roles — so the
+ * cards follow a light/dark switch with no per-node work. The body text is the
+ * only `foreground` slot; everything secondary is `muted`, which is what keeps a
+ * wall of cards readable at low zoom.
+ */
+const cardStylings: NodeStylingRegistry = {
+  tweetCard: {
+    name: 'tweetCard',
+    bgRole: 'cardBg',
+    accentRole: 'accent',
+    slots: {
+      type: { colorRole: 'accent', fontSize: 10, fontWeight: 700, uppercase: true },
+      author: { colorRole: 'heading', fontSize: 14, fontWeight: 700 },
+      handle: { colorRole: 'muted', fontSize: 11 },
+      text: { colorRole: 'foreground', fontSize: 12 },
+      likes: { colorRole: 'muted', fontSize: 11, fontWeight: 600 },
+      retweets: { colorRole: 'muted', fontSize: 11, fontWeight: 600 },
+      replies: { colorRole: 'muted', fontSize: 11, fontWeight: 600 },
+      divider: { colorRole: 'divider' },
+    },
+  },
+  userCard: {
+    name: 'userCard',
+    bgRole: 'cardBg',
+    accentRole: 'accent',
+    slots: {
+      type: { colorRole: 'muted', fontSize: 10, fontWeight: 600, uppercase: true },
+      title: { colorRole: 'heading', fontSize: 15, fontWeight: 700 },
+      subtitle: { colorRole: 'muted', fontSize: 12 },
+      followers: { colorRole: 'accent', fontSize: 11, fontWeight: 600 },
+      divider: { colorRole: 'divider' },
+    },
+  },
+  commentCard: {
+    name: 'commentCard',
+    bgRole: 'cardBg',
+    accentRole: 'muted',
+    slots: {
+      type: { colorRole: 'muted', fontSize: 10, fontWeight: 600, uppercase: true },
+      author: { colorRole: 'heading', fontSize: 12, fontWeight: 700 },
+      time: { colorRole: 'muted', fontSize: 11 },
+      text: { colorRole: 'foreground', fontSize: 12 },
+      divider: { colorRole: 'divider' },
+    },
+  },
+};
+
+/**
+ * Type → structure + styling + slot bindings. `Hashtag` and `Retweet` are left
+ * off deliberately: they carry a label and a count, not a record, so they keep
+ * the plain marks from {@link settings} and give the graph something small to
+ * read between the cards.
+ */
+const cardNodeTypes: NodeTypeRegistry = {
+  Tweet: {
+    structure: 'tweetCard',
+    styling: 'tweetCard',
+    bindings: {
+      type: 'type',
+      avatar: 'data.avatar',
+      author: 'data.author',
+      handle: 'data.handle',
+      text: 'data.text',
+      likes: 'data.likes',
+      retweets: 'data.retweets',
+      replies: 'data.replies',
+    },
+  },
+  User: {
+    structure: 'userCard',
+    styling: 'userCard',
+    bindings: {
+      type: 'type',
+      avatar: 'data.avatar',
+      title: 'data.name',
+      subtitle: 'data.handle',
+      followers: 'data.followers',
+    },
+  },
+  Comment: {
+    structure: 'commentCard',
+    styling: 'commentCard',
+    bindings: { type: 'type', author: 'data.author', time: 'data.time', text: 'data.text' },
+  },
+};
+
+/**
+ * The same graph as {@link settings}, drawn as **composite cards** — a tweet
+ * card, a user id-card and a slimmer comment card, with hashtags and retweets
+ * left as compact marks.
+ *
+ * Everything here is still pure JSON: structures are slot skeletons, stylings
+ * are theme roles, and each slot binds to a dotted data path. That's the whole
+ * template stack, so this doubles as the fixture for the node-template editors.
+ *
+ * Three things differ from the plain look, and all three follow from card size:
+ *
+ * 1. **The force layout is opened right up** — a 260×156 card needs an order of
+ *    magnitude more room than a 7px dot, so charge, link distance and the
+ *    collision radius all grow. Without that the cards stack into a pile.
+ * 2. **Colour-by-type is off.** The styling templates own colour now; leaving
+ *    the behaviour on would repaint every card body with its type colour.
+ * 3. **Edges thin out** — at card scale the links are connective tissue, not the
+ *    subject, so they lose their arrowheads' visual weight.
+ */
+export const cardSettings: CanvasConfig = {
+  activeLayout: 'graph-force',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      nodeStructureTemplates: cardStructures,
+      nodeStylingTemplates: cardStylings,
+      nodeTypes: cardNodeTypes,
+      // The fallback for the two un-carded types (Hashtag · Retweet).
+      node: { style: { shape: { kind: 'circle', radius: 9 }, bgStrokeWidth: 1.5, labelFontSize: 11 } },
+      edge: { style: { strokeWidth: 1, strokeAlpha: 0.45, arrowTargetShape: 'triangle', arrowTargetSize: 5 } },
+    },
+  },
+  layouts: {
+    'graph-force': {
+      charge: { strength: -1600 },
+      link: { distance: 260 },
+      collide: { radius: 150 },
+      animate: false,
+    },
+  },
+  behaviours: {
+    color: { enabled: false },
     hover: { enabled: true, state: 'highlighted', degree: 1 },
   },
 };

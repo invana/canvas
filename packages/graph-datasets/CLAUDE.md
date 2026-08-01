@@ -135,6 +135,27 @@ positions are the data (`old-faithful`, `rag-embeddings`, `air-routes`,
 `invana-architecture`, `wikipedia-dataviz`) sets `activeLayout: ''` and says so —
 running a solver over it would destroy the picture.
 
+### Settings variants
+
+`settings` is the dataset's *default* look, but a dataset may export **additional
+named `CanvasConfig`s** when the same graph has a genuinely different reading —
+not a tweak of the first. `twitter` is the reference: `settings` draws dots and
+links (what a force layout demo wants), `cardSettings` draws tweets, accounts and
+replies as **composite cards** via `nodeStructureTemplates` +
+`nodeStylingTemplates` + `nodeTypes`.
+
+- **Name it `<variant>Settings`**, re-exported from the barrel as
+  `<dataset><Variant>Settings` (`twitterActivityCardSettings`).
+- **Still pure JSON.** The whole template stack is serialisable — structures are
+  slot skeletons, stylings are theme roles, and each slot binds to a **dotted data
+  path** (`data.likes`). One path per slot, so a slot renders a single field
+  verbatim; there's no formatting or concatenation step.
+- **Say what changes and why** in its TSDoc. A card variant almost always has to
+  open the force layout up (a 260×156 card needs far more room than a 7px dot)
+  and turn colour-by-type **off**, since the styling templates own colour.
+- **Earn it.** Two configs that differ by a fill colour are one config; keep the
+  bar at "a different picture of the same data".
+
 ## Adding a dataset
 
 1. `src/<name>/data.ts` — the engine-ready value (`data`, plus a legacy-named

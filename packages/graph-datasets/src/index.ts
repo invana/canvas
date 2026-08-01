@@ -25,6 +25,8 @@ export { settings as lesMiserablesSettings } from './les-miserables/data';
 export { settings as randomTreeSettings } from './random-tree/data';
 export { settings as latticeSettings } from './lattice/data';
 export { settings as twitterActivitySettings } from './twitter/data';
+// A second look for the same graph — tweets / accounts / replies as composite cards.
+export { cardSettings as twitterActivityCardSettings } from './twitter/data';
 export { settings as flareSettings } from './flare/data';
 export { settings as flareImportsSettings } from './flare-imports/data';
 export { settings as h1b2019Settings } from './h1b2019/data';
