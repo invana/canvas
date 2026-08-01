@@ -6,12 +6,31 @@
 //
 // Dataset modules are added as each usecase ships:
 //
-//  - agentTrace      → usecases/domains/llm-agent-trace/AgentTrace
-//  - ragEmbeddings   → usecases/domains/rag-embeddings/EmbeddingExplorer
-//  - microservices   → usecases/domains/microservices/ServiceTopology
-//  - ontology        → usecases/apps/visualiser/KnowledgeGraphExplorer
-//  - citations       → usecases/domains/citations/CitationGraph
-//  - invanaCodeKg    → usecases/domains/code-kg/{DotsForce,CompositeCards}
+//  - agentTrace          → usecases/domains/llm-agent-trace/AgentTrace
+//  - ragEmbeddings       → usecases/domains/rag-embeddings/EmbeddingExplorer
+//  - microservices       → usecases/domains/microservices/ServiceTopology
+//  - ontology            → usecases/apps/visualiser/KnowledgeGraphExplorer
+//  - citations           → usecases/domains/citations/CitationGraph
+//  - invanaCodeKg        → usecases/domains/code-kg/{DotsForce,CompositeCards,HealthBadges}
+//  - starSchema          → usecases/domains/data-model/SchemaTable
+//  - invanaArchitecture  → usecases/domains/invana-architecture/EndToEnd
+//  - computingPioneers   → usecases/SimpleAndCompositeNodes
+//  - modellerSeed        → usecases/apps/modeller/GraphModeller
+
+// ── settings — one recommended look per dataset ──────────────────────────────
+export { settings as agentTraceSettings } from './agent-trace/settings';
+export { settings as ragEmbeddingsSettings } from './rag-embeddings/settings';
+export { settings as microservicesSettings } from './microservices/settings';
+export { settings as ontologySettings } from './ontology/settings';
+export { settings as citationsSettings } from './citations/settings';
+export { settings as coraSettings } from './cora/settings';
+export { settings as computingPioneersSettings } from './computing-pioneers/settings';
+export { settings as invanaArchitectureSettings } from './invana-architecture/settings';
+export { settings as modellerSeedSettings } from './modeller-seed/settings';
+export { settings as starSchemaSettings } from './star-schema/settings';
+export { settings as invanaCodeKgSettings } from './invana-code-kg/settings';
+
+// ── data ─────────────────────────────────────────────────────────────────────
 
 export {
   agentTrace,
@@ -23,7 +42,7 @@ export {
   type AgentTraceNodeData,
   type AgentTraceNodeKind,
   type AgentTraceStatus,
-} from './agentTrace';
+} from './agent-trace/data';
 
 export {
   ragEmbeddings,
@@ -31,7 +50,7 @@ export {
   type RagEmbeddingsData,
   type RagEmbeddingsNode,
   type RagEmbeddingsNodeData,
-} from './ragEmbeddings';
+} from './rag-embeddings/data';
 
 export {
   microservices,
@@ -42,7 +61,7 @@ export {
   type MicroservicesNode,
   type MicroservicesNodeData,
   type MicroservicesTier,
-} from './microservices';
+} from './microservices/data';
 
 export {
   ontology,
@@ -53,7 +72,7 @@ export {
   type OntologyEntityKind,
   type OntologyNode,
   type OntologyNodeData,
-} from './ontology';
+} from './ontology/data';
 
 export {
   citations,
@@ -63,7 +82,7 @@ export {
   type CitationsNode,
   type CitationsNodeData,
   type CitationsTopic,
-} from './citations';
+} from './citations/data';
 
 export {
   cora,
@@ -72,7 +91,48 @@ export {
   type CoraNode,
   type CoraNodeData,
   type CoraSubject,
-} from './coraDataset';
+} from './cora/data';
+
+export {
+  computingPioneers,
+  type ComputingPioneersData,
+  type ComputingPioneersEdge,
+  type ComputingPioneersEdgeType,
+  type ComputingPioneersNode,
+  type ComputingPioneersNodeType,
+  type ComputingPioneersNodeData,
+} from './computing-pioneers/data';
+
+export {
+  invanaArchitecture,
+  type InvanaArchitectureData,
+  type InvanaArchitectureEdge,
+  type InvanaArchitectureEdgeType,
+  type InvanaArchitectureEdgeData,
+  type InvanaArchitectureNode,
+  type InvanaArchitectureNodeType,
+  type InvanaArchitectureNodeData,
+} from './invana-architecture/data';
+
+export {
+  modellerSeed,
+  type ModellerSeedData,
+  type ModellerSeedEdge,
+  type ModellerSeedNode,
+  } from './modeller-seed/data';
+
+export {
+  starSchema,
+  type StarSchemaData,
+  type StarSchemaEdge,
+  type StarSchemaEdgeType,
+  type StarSchemaEdgeData,
+  type StarSchemaField,
+  type StarSchemaFieldType,
+  type StarSchemaNode,
+  type StarSchemaNodeType,
+  type StarSchemaNodeData,
+} from './star-schema/data';
 
 export {
   invanaCodeKg,
@@ -87,4 +147,4 @@ export {
   type InvanaCodeNodeProperties,
   type InvanaCodeProject,
   type InvanaCodeTourStep,
-} from './invanaCodeKg';
+} from './invana-code-kg/data';

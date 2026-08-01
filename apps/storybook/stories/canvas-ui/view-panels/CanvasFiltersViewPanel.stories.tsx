@@ -64,19 +64,11 @@ export const CanvasFiltersViewPanelStory: Story = {
       const hiddenLinks = new Set(['e2913', 'e1554']); // Info-viz → Data-viz, SNA → Network science
       return {
         nodes: wikipediaDataViz.nodes.map((n) => ({
-          id: n.id,
-          type: n.label,
-          data: n.properties,
-          position: { x: n.properties.x, y: n.properties.y },
+          ...n,
+          position: { x: n.data.x, y: n.data.y },
           hidden: hiddenPages.has(n.id),
         })),
-        edges: wikipediaDataViz.edges.map((e) => ({
-          id: e.id,
-          source: e.source,
-          target: e.target,
-          type: e.label,
-          hidden: hiddenLinks.has(e.id),
-        })),
+        edges: wikipediaDataViz.edges.map((e) => ({ ...e, hidden: hiddenLinks.has(e.id) })),
       };
     }, []);
 

@@ -149,13 +149,13 @@ export const StyleDesignerStory: Story = {
     // `label → type`, `properties → data`, narrowed to the picked cluster. A new
     // identity re-seeds the graph and re-runs the force layout.
     const data: GraphData = useMemo(() => {
-      const keep = invanaCodeKg.nodes.filter((n) => n.properties.cluster === cluster);
+      const keep = invanaCodeKg.nodes.filter((n) => n.data.cluster === cluster);
       const idSet = new Set(keep.map((n) => n.id));
       return {
-        nodes: keep.map((n) => ({ id: n.id, type: n.label, data: n.properties })),
+        nodes: keep,
         edges: invanaCodeKg.edges
           .filter((e) => idSet.has(e.source) && idSet.has(e.target))
-          .map((e) => ({ id: e.id, source: e.source, target: e.target, type: e.label, data: e.properties })),
+          .map((e) => e),
       };
     }, [cluster]);
 

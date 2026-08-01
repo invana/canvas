@@ -14,9 +14,9 @@
 // The mapping, once, here (never at runtime):
 //   node.key                 → id
 //   node.tag                 → label   (the entity-kind discriminator)
-//   node.label               → properties.name
+//   node.label               → data.name
 //   node.URL/cluster/x/y/... → properties.{url, cluster, clusterLabel, x, y, score}
-//   [source, target]         → edge { id, label:'links_to', source, target }
+//   [source, target]         → edge { id, type:'links_to', source, target }
 //
 // Run via `node scripts/prepare-wikipedia-dataviz.mjs` from packages/graph-datasets.
 // The script is idempotent (no timestamps in the output → stable diffs).
@@ -52,8 +52,8 @@ const clusterLabel = new Map(clusters.map((c) => [c.key, c.clusterLabel]));
 // ── Nodes: one Wikipedia page each, discriminated by its `tag` ────────────
 const nodes = raw.nodes.map((n) => ({
   id: n.key,
-  label: n.tag ?? 'unknown',
-  properties: {
+  type: n.tag ?? 'unknown',
+  data: {
     name: n.label,
     url: n.URL,
     cluster: n.cluster,
@@ -79,10 +79,10 @@ for (const [source, target] of raw.edges) {
   seen.add(key);
   edges.push({
     id: `e${edges.length}`,
-    label: 'links_to',
+    type: 'links_to',
     source,
     target,
-    properties: {},
+    data: {},
   });
 }
 
@@ -117,20 +117,20 @@ const collectProps = (props, into) => {
 const propTypes = (map) =>
   Object.fromEntries([...map].map(([k, set]) => [k, unionType(set)]));
 
-const labelOf = new Map(nodes.map((n) => [n.id, n.label])); // id → vertex label
+const labelOf = new Map(nodes.map((n) => [n.id, n.type])); // id → vertex type
 
 const nodeAgg = new Map(); // label → { count, props }
 for (const n of nodes) {
-  if (!nodeAgg.has(n.label)) nodeAgg.set(n.label, { count: 0, props: new Map() });
-  const a = nodeAgg.get(n.label);
+  if (!nodeAgg.has(n.type)) nodeAgg.set(n.type, { count: 0, props: new Map() });
+  const a = nodeAgg.get(n.type);
   a.count += 1;
   collectProps(n.properties, a.props);
 }
 
 const edgeAgg = new Map(); // label → { count, endpoints, props }
 for (const e of edges) {
-  if (!edgeAgg.has(e.label)) edgeAgg.set(e.label, { count: 0, endpoints: new Set(), props: new Map() });
-  const a = edgeAgg.get(e.label);
+  if (!edgeAgg.has(e.type)) edgeAgg.set(e.type, { count: 0, endpoints: new Set(), props: new Map() });
+  const a = edgeAgg.get(e.type);
   a.count += 1;
   a.endpoints.add(`${labelOf.get(e.source)}>${labelOf.get(e.target)}`);
   collectProps(e.properties, a.props);
@@ -142,7 +142,7 @@ const schema = {
     .map(([label, a]) => ({
       label,
       count: a.count,
-      properties: propTypes(a.props),
+      data: propTypes(a.props),
     })),
   edgeTypes: [...edgeAgg].map(([label, a]) => ({
     label,
@@ -152,7 +152,7 @@ const schema = {
       const [source, target] = pair.split('>');
       return { source, target };
     }),
-    properties: propTypes(a.props),
+    data: propTypes(a.props),
   })),
 };
 
@@ -185,7 +185,7 @@ writeFileSync(OUT_FILE, JSON.stringify(out));
 
 const byLabel = (arr) =>
   Object.entries(
-    arr.reduce((acc, x) => ((acc[x.label] = (acc[x.label] ?? 0) + 1), acc), {}),
+    arr.reduce((acc, x) => ((acc[x.type] = (acc[x.type] ?? 0) + 1), acc), {}),
   )
     .sort((a, b) => b[1] - a[1])
     .map(([k, v]) => `${k}:${v}`)

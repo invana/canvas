@@ -30,6 +30,7 @@ import type {
   NodeStructureRegistry,
   NodeTypeRegistry,
 } from '@invana/graph';
+import { computingPioneers } from '@invana/graph-datasets/usecase-demos';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { GeometricLayout } from '@invana/graph-layout-geometric';
@@ -118,28 +119,12 @@ export const SimpleAndCompositeNodesStory: Story = {
   render: () => {
     // A viewport-fixed minimap of the graph, toggled from a header button.
 
+    // `label → type`, `properties → data` — the standard dataset mapping. The
+    // three labels (Person · Organization · Concept) are what the structure
+    // registry below keys off, and each carries a different property subset.
     const data: GraphData = {
-      nodes: [
-        { id: 'ada', type: 'Person', data: { name: 'Ada Lovelace', role: 'Mathematician', avatar: 'ada' } },
-        { id: 'alan', type: 'Person', data: { name: 'Alan Turing', role: 'Computer Scientist', avatar: 'alan' } },
-        { id: 'grace', type: 'Person', data: { name: 'Grace Hopper', role: 'Rear Admiral', avatar: 'grace' } },
-        { id: 'tim', type: 'Person', data: { name: 'Tim Berners-Lee', role: 'Engineer', avatar: 'tim' } },
-        { id: 'cambridge', type: 'Organization', data: { name: 'Univ. of Cambridge', founded: 'est. 1209' } },
-        { id: 'cern', type: 'Organization', data: { name: 'CERN', founded: 'est. 1954' } },
-        { id: 'ae', type: 'Concept', data: { name: 'Analytical Engine' } },
-        { id: 'tm', type: 'Concept', data: { name: 'Turing Machine' } },
-        { id: 'cobol', type: 'Concept', data: { name: 'COBOL' } },
-        { id: 'www', type: 'Concept', data: { name: 'World Wide Web' } },
-      ],
-      edges: [
-        { id: 'e1', source: 'ada', target: 'ae', type: 'DESIGNED' },
-        { id: 'e2', source: 'alan', target: 'tm', type: 'DESCRIBED' },
-        { id: 'e3', source: 'grace', target: 'cobol', type: 'CREATED' },
-        { id: 'e4', source: 'tim', target: 'www', type: 'INVENTED' },
-        { id: 'e5', source: 'alan', target: 'cambridge', type: 'STUDIED_AT' },
-        { id: 'e6', source: 'tim', target: 'cern', type: 'WORKED_AT' },
-        { id: 'e7', source: 'ada', target: 'alan', type: 'INFLUENCED' },
-      ],
+      nodes: computingPioneers.nodes,
+      edges: computingPioneers.edges,
     };
 
     // An elliptical composite card. `frame: { kind: 'ellipse' }` makes the card

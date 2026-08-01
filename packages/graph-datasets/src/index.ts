@@ -1,6 +1,32 @@
 // @invana/graph-datasets — public API surface
 //
-// Example datasets used by storybook stories and tests.
+// Every dataset is a **folder** holding `data.ts` (what to draw, as `CanvasData`)
+// and `settings.ts` (how it should look, as `CanvasSettings`). This barrel
+// re-exports both halves per dataset under matching names — `lesMiserables` +
+// `lesMiserablesSettings` — so a consumer wires a complete visualisation with:
+//
+//   import { lesMiserables, lesMiserablesSettings } from '@invana/graph-datasets';
+//   <GraphCanvasApp data={lesMiserables} config={lesMiserablesSettings} />
+//
+// The two big graphs (Game of Thrones, Wikipedia data-viz) keep their own
+// subpath entries so they stay out of this bundle.
+
+export type { CanvasData, CanvasSettings } from './types';
+
+// ── settings — one recommended look per dataset ──────────────────────────────
+export { settings as lesMiserablesSettings } from './les-miserables/settings';
+export { settings as randomTreeSettings } from './random-tree/settings';
+export { settings as latticeSettings } from './lattice/settings';
+export { settings as twitterActivitySettings } from './twitter/settings';
+export { settings as flareSettings } from './flare/settings';
+export { settings as flareImportsSettings } from './flare-imports/settings';
+export { settings as h1b2019Settings } from './h1b2019/settings';
+export { settings as lifeTreeSettings } from './life-tree/settings';
+export { settings as ukEnergyFlowSettings } from './uk-energy-flow/settings';
+export { settings as oldFaithfulSettings } from './old-faithful/settings';
+export { settings as airportsSettings } from './air-routes/settings';
+
+// ── data ─────────────────────────────────────────────────────────────────────
 
 export {
   lesMiserables,
@@ -9,16 +35,16 @@ export {
   type LesMiserablesEdgeData,
   type LesMiserablesNode,
   type LesMiserablesNodeData,
-} from './lesMiserables';
+} from './les-miserables/data';
 
 export {
   generateRandomTree,
   type RandomTreeData,
   type RandomTreeEdge,
   type RandomTreeNode,
-} from './randomTree';
+} from './random-tree/data';
 
-export { generateLattice, type LatticeData } from './lattice';
+export { generateLattice, type LatticeData } from './lattice/data';
 
 export {
   twitterActivity,
@@ -28,7 +54,7 @@ export {
   type TwitterEdge,
   type TwitterNodeLabel,
   type TwitterDatasetOptions,
-} from './twitter';
+} from './twitter/data';
 
 export {
   flareAsGraph,
@@ -37,14 +63,14 @@ export {
   type FlareGraphEdge,
   type FlareGraphNode,
   type FlareNode,
-} from './flare';
+} from './flare/data';
 
 export {
   flareImportsAsGraph,
   type FlareImportEdge,
   type FlareImportsGraphData,
   type FlareImportsOptions,
-} from './flare-imports';
+} from './flare-imports/data';
 
 export {
   h1b2019AsGraph,
@@ -53,7 +79,7 @@ export {
   type H1B2019GraphEdge,
   type H1B2019GraphNode,
   type H1B2019Node,
-} from './h1b2019';
+} from './h1b2019/data';
 
 export {
   lifeTreeAsGraph,
@@ -63,7 +89,7 @@ export {
   type LifeTreeGraphNode,
   type LifeTreeKingdom,
   type LifeTreeNode,
-} from './lifeTree';
+} from './life-tree/data';
 
 export {
   ukEnergyFlow,
@@ -74,7 +100,7 @@ export {
   type UkEnergyFlowGraphData,
   type UkEnergyFlowGraphEdge,
   type UkEnergyFlowGraphNode,
-} from './uk-energy-flow';
+} from './uk-energy-flow/data';
 
 export {
   oldFaithful,
@@ -82,11 +108,11 @@ export {
   type OldFaithfulNode,
   type OldFaithfulNodeData,
   type OldFaithfulPoint,
-} from './oldFaithful';
+} from './old-faithful/data';
 
 export {
   airports,
   landTopology,
   type Airport,
   type LandTopology,
-} from './air-routes';
+} from './air-routes/data';

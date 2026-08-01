@@ -75,12 +75,10 @@ const DATASETS: Record<DatasetId, DatasetDef> = {
     meta: wikipediaDataViz.meta,
     build: () => ({
       nodes: wikipediaDataViz.nodes.map((n) => ({
-        id: n.id,
-        type: n.label,
-        data: n.properties,
-        position: { x: n.properties.x, y: n.properties.y },
+        ...n,
+        position: { x: n.data.x, y: n.data.y },
       })),
-      edges: wikipediaDataViz.edges.map((e) => ({ id: e.id, source: e.source, target: e.target, type: e.label })),
+      edges: wikipediaDataViz.edges,
     }),
     // Precomputed ForceAtlas2 positions ship with the data — `'none'` matches no
     // registered layout, so the engine's layout step no-ops on load.
@@ -92,8 +90,8 @@ const DATASETS: Record<DatasetId, DatasetDef> = {
     label: 'Game of Thrones',
     meta: gameOfThrones.meta,
     build: () => ({
-      nodes: gameOfThrones.nodes.map((n) => ({ id: n.id, type: n.label, data: n.properties })),
-      edges: gameOfThrones.edges.map((e) => ({ id: e.id, source: e.source, target: e.target, type: e.label })),
+      nodes: gameOfThrones.nodes,
+      edges: gameOfThrones.edges,
     }),
     // No positions — grid places ~5k nodes instantly on mount.
     applyInitialLayout: true,

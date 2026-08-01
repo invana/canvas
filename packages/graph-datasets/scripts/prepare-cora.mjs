@@ -11,7 +11,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const DATA = resolve(HERE, '../src/usecase-demos/cora-dataset');
+const DATA = resolve(HERE, '../src/usecase-demos/cora');
 
 /**
  * Single-pass CSV row parser that handles quoted fields with embedded
@@ -53,9 +53,13 @@ const { header: nodeHeader, rows: nodeRows } = readCsv(resolve(DATA, 'nodes.csv'
 const ID_COL      = nodeHeader.indexOf('nodeId');
 const SUBJECT_COL = nodeHeader.indexOf('subject');
 
+// Emitted in the engine-ready `CanvasData` shape: the subject is both the
+// node's `type` (so a colour-by-type behaviour partitions the network with no
+// consumer wiring) and its `data.subject` (so a card / legend can read it).
 const nodes = nodeRows.map((r) => ({
   id: r[ID_COL],
-  subject: r[SUBJECT_COL],
+  type: r[SUBJECT_COL],
+  data: { subject: r[SUBJECT_COL] },
 }));
 
 // ── Edges ───────────────────────────────────────────────────────────────
@@ -79,7 +83,7 @@ const cleanEdges = edges.filter((e) => idSet.has(e.source) && idSet.has(e.target
 const out = { nodes, edges: cleanEdges };
 writeFileSync(resolve(DATA, 'cora.json'), JSON.stringify(out));
 
-const subjects = new Set(nodes.map((n) => n.subject));
+const subjects = new Set(nodes.map((n) => n.type));
 console.log(
   `Wrote cora.json — ${nodes.length} nodes, ${cleanEdges.length} edges, ` +
     `${subjects.size} subjects: ${[...subjects].join(', ')}`,

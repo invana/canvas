@@ -81,18 +81,18 @@ export const CompositeCardsStory: Story = {
     // `label → type`, `properties → data`, thinned to the picked entity types.
     // A new identity re-seeds the graph and re-runs ELK.
     const data: GraphData = useMemo(() => {
-      const keep = invanaCodeKg.nodes.filter((n) => labels.has(n.label));
+      const keep = invanaCodeKg.nodes.filter((n) => labels.has(n.type));
       const idSet = new Set(keep.map((n) => n.id));
       return {
-        nodes: keep.map((n) => ({ id: n.id, type: n.label, data: n.properties })),
+        nodes: keep,
         edges: invanaCodeKg.edges
           .filter((e) => idSet.has(e.source) && idSet.has(e.target))
-          .map((e) => ({ id: e.id, source: e.source, target: e.target, type: e.label, data: e.properties })),
+          .map((e) => e),
       };
     }, [labels]);
 
     const config: CanvasConfig = useMemo(() => {
-      // Accent / border colour by node label / entity kind …
+      // Accent / border colour by node type / entity kind …
       const LABEL_FILL: Record<InvanaCodeNodeLabel, number> = {
         file: 0x3b82f6, // blue
         function: 0x10b981, // emerald

@@ -55,6 +55,7 @@ import type {
   GraphNode,
 } from '@invana/graph';
 import type { ElkDirection } from '@invana/graph-layout-elkjs';
+import { starSchema } from '@invana/graph-datasets/usecase-demos';
 import { Button, Card } from '@invana/ui';
 import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
@@ -67,14 +68,17 @@ export const SchemaTableStory: Story = {
   name: 'SchemaTable',
   render: function Render() {
     // ── The schema each node carries ─────────────────────────────────────
+    // A mutable mirror of the dataset's node properties: every menu action here
+    // adds / removes / retypes a column, so the story owns editable copies
+    // rather than the dataset's readonly records.
     interface Field {
       name: string;
       type: string;
     }
     interface TableData {
-      label: string;
+      name: string; // table name, e.g. 'Dim_Customer'
       icon: string; // iconify id, e.g. 'lucide/table'
-      header: number; // header band colour
+      headerColor: number; // header band colour
       fields: Field[];
     }
 
@@ -107,78 +111,16 @@ export const SchemaTableStory: Story = {
     );
 
     // ── Data — a star schema: three dimensions + one fact table ──────────
+    // The dataset is already engine-ready; the only thing copied is the field
+    // list, deep-cloned into the mutable `TableData` above so the editing paths
+    // below can splice it without writing through to the shared dataset.
     const data: GraphData = useMemo(
       () => ({
-        nodes: [
-          {
-            id: 'dim_customer',
-            type: 'Dimension',
-            data: {
-              label: 'Dim_Customer',
-              icon: 'lucide/users',
-              header: 0x2563eb,
-              fields: [
-                { name: 'CustomerId', type: 'integer' },
-                { name: 'CustomerName', type: 'string' },
-                { name: 'Phone', type: 'string' },
-                { name: 'RegistrationDate', type: 'date' },
-                { name: 'TotalCustomers', type: 'integer' },
-                { name: 'NorthAmerica', type: 'boolean' },
-              ],
-            } satisfies TableData,
-          },
-          {
-            id: 'dim_date',
-            type: 'Dimension',
-            data: {
-              label: 'Dim_Date',
-              icon: 'lucide/calendar',
-              header: 0x2563eb,
-              fields: [
-                { name: 'DateId', type: 'integer' },
-                { name: 'Date', type: 'date' },
-                { name: 'Month', type: 'string' },
-                { name: 'Year', type: 'integer' },
-              ],
-            } satisfies TableData,
-          },
-          {
-            id: 'dim_supplier',
-            type: 'Dimension',
-            data: {
-              label: 'Dim_Supplier',
-              icon: 'lucide/truck',
-              header: 0x2563eb,
-              fields: [
-                { name: 'SupplierId', type: 'integer' },
-                { name: 'CompanyName', type: 'string' },
-                { name: 'Phone', type: 'string' },
-              ],
-            } satisfies TableData,
-          },
-          {
-            id: 'fact_order',
-            type: 'Fact',
-            data: {
-              label: 'Fact_Customer_Order',
-              icon: 'lucide/sigma',
-              header: 0x7c3aed,
-              fields: [
-                { name: 'OrderId', type: 'integer' },
-                { name: 'CustomerId', type: 'integer' },
-                { name: 'DateId', type: 'integer' },
-                { name: 'SupplierId', type: 'integer' },
-                { name: 'Quantity', type: 'integer' },
-                { name: 'Profit', type: 'number' },
-              ],
-            } satisfies TableData,
-          },
-        ],
-        edges: [
-          { id: 'f-customer', source: 'fact_order', target: 'dim_customer', type: 'REFERENCES' },
-          { id: 'f-date', source: 'fact_order', target: 'dim_date', type: 'REFERENCES' },
-          { id: 'f-supplier', source: 'fact_order', target: 'dim_supplier', type: 'REFERENCES' },
-        ],
+        nodes: starSchema.nodes.map((n) => ({
+          ...n,
+          data: { ...n.data, fields: n.data.fields.map((f) => ({ ...f })) } satisfies TableData,
+        })),
+        edges: starSchema.edges,
       }),
       [],
     );
@@ -273,8 +215,8 @@ export const SchemaTableStory: Story = {
 
         // Header band — a rect with only its TOP corners rounded (a full
         // rounded rect + a square rect over the bottom `RADIUS` strip).
-        parts.push({ part: 'rect', x: 0, y: 0, width: WIDTH, height: HEADER_H, cornerRadius: RADIUS, fill: d.header });
-        parts.push({ part: 'rect', x: 0, y: HEADER_H - RADIUS, width: WIDTH, height: RADIUS, fill: d.header });
+        parts.push({ part: 'rect', x: 0, y: 0, width: WIDTH, height: HEADER_H, cornerRadius: RADIUS, fill: d.headerColor });
+        parts.push({ part: 'rect', x: 0, y: HEADER_H - RADIUS, width: WIDTH, height: RADIUS, fill: d.headerColor });
 
         // Header icon — a Lucide glyph via the `icon` part's `svg-url` (iconify).
         const iconBox = 20;
@@ -292,7 +234,7 @@ export const SchemaTableStory: Story = {
           part: 'label',
           x: titleX,
           y: (HEADER_H - 14) / 2,
-          text: d.label,
+          text: d.name,
           fontSize: 14,
           fontWeight: 700,
           fill: 0xffffff,
@@ -425,8 +367,8 @@ export const SchemaTableStory: Story = {
                 defaults={((): NodeSchema => {
                   const d = dataOf(editing)!;
                   return {
-                    label: d.label,
-                    headerColor: d.header,
+                    label: d.name,
+                    headerColor: d.headerColor,
                     fields: d.fields.map((f) => ({ name: f.name, type: f.type })),
                   };
                 })()}
@@ -434,8 +376,8 @@ export const SchemaTableStory: Story = {
                   const cur = dataOf(editing);
                   if (!cur) return;
                   patchData(editing, {
-                    label: s.label || cur.label,
-                    header: s.headerColor ?? cur.header,
+                    name: s.label || cur.name,
+                    headerColor: s.headerColor ?? cur.headerColor,
                     fields: s.fields.length ? s.fields : cur.fields,
                   });
                   setEditing(null);

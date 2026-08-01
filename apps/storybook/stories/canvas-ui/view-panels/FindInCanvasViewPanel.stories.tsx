@@ -64,24 +64,17 @@ export const FindInCanvasViewPanelStory: Story = {
     const [minimapOn, setMinimapOn] = useState(true);
     const [devOn, setDevOn] = useState(false);
 
-    // Map the property graph → GraphNode/GraphEdge (label→type, properties→data)
-    // and pin each page at its precomputed ForceAtlas2 position. Memoised so
+    // Pin each page at its precomputed ForceAtlas2 position; everything else
+    // about the dataset is already engine-ready. Memoised so
     // toggling a panel (a re-render) keeps a stable identity and never reloads the
     // engine.
     const data = useMemo(
       () => ({
         nodes: wikipediaDataViz.nodes.map((n) => ({
-          id: n.id,
-          type: n.label,
-          data: n.properties,
-          position: { x: n.properties.x, y: n.properties.y },
+          ...n,
+          position: { x: n.data.x, y: n.data.y },
         })),
-        edges: wikipediaDataViz.edges.map((e) => ({
-          id: e.id,
-          source: e.source,
-          target: e.target,
-          type: e.label,
-        })),
+        edges: wikipediaDataViz.edges,
       }),
       [],
     );

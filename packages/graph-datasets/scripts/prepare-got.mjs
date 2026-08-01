@@ -57,9 +57,11 @@ for (const g of groups) for (const c of g.characters) charHouse.set(c, g.name);
 
 const nodes = [];
 const edges = [];
-const node = (id, label, properties) => nodes.push({ id, label, properties });
+// Emitted in the engine-ready `CanvasData` shape: `type` + `data`, not the old
+// `label` + `properties` property-graph records.
+const node = (id, label, properties) => nodes.push({ id, type: label, data: properties });
 const edge = (id, label, source, target, properties) =>
-  edges.push({ id, label, source, target, properties });
+  edges.push({ id, type: label, source, target, data: properties });
 
 // ── Houses ──────────────────────────────────────────────────────────────
 for (const g of groups) {
@@ -244,20 +246,20 @@ const collectProps = (props, into) => {
 const propTypes = (map) =>
   Object.fromEntries([...map].map(([k, set]) => [k, unionType(set)]));
 
-const labelOf = new Map(nodes.map((n) => [n.id, n.label])); // id → vertex label
+const labelOf = new Map(nodes.map((n) => [n.id, n.type])); // id → vertex type
 
 const nodeAgg = new Map(); // label → { count, props }
 for (const n of nodes) {
-  if (!nodeAgg.has(n.label)) nodeAgg.set(n.label, { count: 0, props: new Map() });
-  const a = nodeAgg.get(n.label);
+  if (!nodeAgg.has(n.type)) nodeAgg.set(n.type, { count: 0, props: new Map() });
+  const a = nodeAgg.get(n.type);
   a.count += 1;
   collectProps(n.properties, a.props);
 }
 
 const edgeAgg = new Map(); // label → { count, endpoints, props }
 for (const e of edges) {
-  if (!edgeAgg.has(e.label)) edgeAgg.set(e.label, { count: 0, endpoints: new Set(), props: new Map() });
-  const a = edgeAgg.get(e.label);
+  if (!edgeAgg.has(e.type)) edgeAgg.set(e.type, { count: 0, endpoints: new Set(), props: new Map() });
+  const a = edgeAgg.get(e.type);
   a.count += 1;
   a.endpoints.add(`${labelOf.get(e.source)}>${labelOf.get(e.target)}`);
   collectProps(e.properties, a.props);
@@ -267,7 +269,7 @@ const schema = {
   nodeTypes: [...nodeAgg].map(([label, a]) => ({
     label,
     count: a.count,
-    properties: propTypes(a.props),
+    data: propTypes(a.props),
   })),
   edgeTypes: [...edgeAgg].map(([label, a]) => ({
     label,
@@ -277,7 +279,7 @@ const schema = {
       const [source, target] = pair.split('>');
       return { source, target };
     }),
-    properties: propTypes(a.props),
+    data: propTypes(a.props),
   })),
 };
 
@@ -305,7 +307,7 @@ writeFileSync(OUT_FILE, JSON.stringify(out));
 
 const byLabel = (arr) =>
   Object.entries(
-    arr.reduce((acc, x) => ((acc[x.label] = (acc[x.label] ?? 0) + 1), acc), {}),
+    arr.reduce((acc, x) => ((acc[x.type] = (acc[x.type] ?? 0) + 1), acc), {}),
   )
     .map(([k, v]) => `${k}:${v}`)
     .join(', ');

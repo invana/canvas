@@ -58,20 +58,16 @@ import type {
   NodeShapeOptions,
 } from '@invana/graph';
 import type * as graph from '@invana/graph';
+import { modellerSeed } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider, useTheme } from '@invana/themes';
 
 const meta: Meta = { title: 'usecases/apps/modeller/GraphModeller' };
 export default meta;
 type Story = StoryObj;
 
-const SEED: GraphData = {
-  nodes: [
-    { id: 'a', position: { x: -120, y: -60 }, style: { labelText: 'A' } },
-    { id: 'b', position: { x: 120, y: -60 }, style: { labelText: 'B' } },
-    { id: 'c', position: { x: 0, y: 90 }, style: { labelText: 'C' } },
-  ],
-  edges: [{ id: 'a-b', source: 'a', target: 'b' }],
-};
+// The starting board — engine-ready as shipped. Seed nodes are deliberately
+// untyped: the modeller's inspector is what gives a node its `type`.
+const SEED: GraphData = modellerSeed;
 
 /** Node shapes the Add tool can drop, keyed by the picker's option key. */
 const SHAPES: Record<string, NodeShapeOptions> = {

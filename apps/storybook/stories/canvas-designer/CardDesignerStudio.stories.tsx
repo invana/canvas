@@ -41,8 +41,8 @@ type Story = StoryObj;
 
 // ─── Data — map the property-graph dataset onto GraphData (label→type) ──────
 const DATA: GraphData = {
-  nodes: twitterActivity.nodes.map((n) => ({ id: n.id, type: n.label, data: n.properties })),
-  edges: twitterActivity.edges.map((e) => ({ id: e.id, source: e.source, target: e.target, type: e.label })),
+  nodes: twitterActivity.nodes,
+  edges: twitterActivity.edges,
 };
 
 // Fields offered for binding, per node type.

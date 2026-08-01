@@ -30,8 +30,10 @@
  * runs each one against the `GraphNode` at render, so `shape`, `group` and the
  * label fields branch on `node.type`. A node therefore carries only what is
  * genuinely its own: id, `parentId`, position, caption, and (for a box) its
- * `data: { w, h }` — box geometry is diagram *content*, so it rides on the data
- * payload the shape resolver reads, not on a per-node style block.
+ * `width` / `height` — box geometry is diagram *content*, so it rides on the
+ * data payload the shape resolver reads, not on a per-node style block. All of
+ * that is the `invanaArchitecture` dataset (`@invana/graph-datasets`); the story
+ * maps it and owns only the look.
  *
  * A per-instance override is still just a per-node `style` field (it resolves
  * above the template); this diagram simply doesn't need one.
@@ -108,6 +110,7 @@ import type {
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
+import { invanaArchitecture } from '@invana/graph-datasets/usecase-demos';
 import { CollapseExpandBehaviour, MiniMapLayer } from '@invana/canvas-react';
 import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, ToolbarItems } from '@invana/canvas-ui';
 import { ThemeProvider } from '@invana/themes';
@@ -152,436 +155,37 @@ export const EndToEndStory: Story = {
       canvas.fitView(60);
     }, []);
 
-    // Two node types, and nothing else about the look lives here:
+    // The dataset is engine-ready, and three of its fields are diagram
+    // *content* rather than styling, so they ride on the node itself:
     //
-    //   - `stage` — a group frame. `position` is the frame's top-left (children
-    //     bbox − 14 pad − 28 tab), which is also where a *collapsed* stage
-    //     stays. `states: ['stage']` names the active tint overlay; the
-    //     `theme:change` handler swaps it for `stageDark`.
-    //   - `box`  — an item. `data: { w, h }` is its footprint, read by the
-    //     template's `shape` resolver; `parentId` puts it inside a stage.
+    //   - `position`. For a `box` that's its top-left; for a `stage` it's the
+    //     frame's top-left (children bbox − 14 pad − 28 tab), which is also
+    //     where a *collapsed* stage stays.
+    //   - `parentId`, which puts a box inside its frame.
+    //   - `style.labelText`, the caption.
+    //
+    // `states: ['stage']` names the active tint overlay; the `theme:change`
+    // handler swaps it for `stageDark`. Box footprints (`data.width` /
+    // `data.height`) ride on the data payload the shape resolver reads.
     const data: GraphData = useMemo(
       () => ({
-        nodes: [
-          // ── Stage frames ────────────────────────────────────────────────
-          {
-            id: 'simulation',
-            type: 'stage',
-            states: ['stage'],
-            position: { x: 1202, y: 84 },
-            style: { labelText: '5 · Simulation Layer — weigh it first' },
-          },
-          {
-            id: 'memory',
-            type: 'stage',
-            states: ['stage'],
-            position: { x: 792, y: 210 },
-            style: { labelText: 'Memory' },
-          },
-          {
-            id: 'decision',
-            type: 'stage',
-            states: ['stage'],
-            position: { x: 1242, y: 260 },
-            style: { labelText: '4 · Decision Runtime — decide' },
-          },
-          {
-            id: 'learning',
-            type: 'stage',
-            states: ['stage'],
-            position: { x: 16, y: 288 },
-            style: { labelText: '8 · Learning Layer — learn' },
-          },
-          {
-            id: 'observe',
-            type: 'stage',
-            states: ['stage'],
-            position: { x: 1518, y: 372 },
-            style: { labelText: '7 · Observe' },
-          },
-          {
-            id: 'audit',
-            type: 'stage',
-            states: ['stage'],
-            position: { x: 1818, y: 392 },
-            style: { labelText: 'Audit Layer' },
-          },
-          {
-            id: 'context',
-            type: 'stage',
-            states: ['stage'],
-            position: { x: 1192, y: 476 },
-            style: { labelText: '3 · Context Layer — define the system' },
-          },
-          {
-            id: 'data-sources',
-            type: 'stage',
-            states: ['stage'],
-            position: { x: 210, y: 494 },
-            style: { labelText: '1 · Data Sources' },
-          },
-          {
-            id: 'reversibility',
-            type: 'stage',
-            states: ['stage'],
-            position: { x: 1818, y: 562 },
-            style: { labelText: 'Reversibility Layer' },
-          },
-          {
-            id: 'ingestion',
-            type: 'stage',
-            states: ['stage'],
-            position: { x: 498, y: 660 },
-            style: { labelText: '2 · Ingestion' },
-          },
-          {
-            id: 'action',
-            type: 'stage',
-            states: ['stage'],
-            position: { x: 1518, y: 722 },
-            style: { labelText: '6 · Action — act, reversibly' },
-          },
+        // Nodes arrive engine-ready: position, parentId, caption and the
+        // `stage` tint state are all on the dataset.
+        nodes: invanaArchitecture.nodes as GraphNode[],
 
-          // ── 5 · Simulation Layer ────────────────────────────────────────
-          {
-            id: 'sim-strategy',
-            type: 'box',
-            parentId: 'simulation',
-            data: { w: 142, h: 28 },
-            position: { x: 1216, y: 126 },
-            style: { labelText: 'Strategy Generation' },
+        // Solid = the numbered loop; `dashed` = the feedback / side links —
+        // the only thing the story translates, since `strokeDashArray` is a
+        // *look*, not data. Everything else about an edge — colour, weight,
+        // arrowhead, smooth path, label font + pill — is on the layer template.
+        edges: invanaArchitecture.edges.map((e) => ({
+          id: e.id,
+          source: e.source,
+          target: e.target,
+          style: {
+            ...(e.data.caption !== undefined ? { labelText: e.data.caption } : {}),
+            ...(e.data.dashed ? { strokeDashArray: [5, 4] } : {}),
           },
-          {
-            id: 'sim-model',
-            type: 'box',
-            parentId: 'simulation',
-            data: { w: 136, h: 40 },
-            position: { x: 1216, y: 184 },
-            style: { labelText: 'Forward Model /\nDomain Simulator' },
-          },
-          {
-            id: 'sim-score',
-            type: 'box',
-            parentId: 'simulation',
-            data: { w: 130, h: 40 },
-            position: { x: 1518, y: 184 },
-            style: { labelText: 'Performance &\nImpact Scoring' },
-          },
-
-          // ── Memory ─────────────────────────────────────────────────────
-          {
-            id: 'mem-episodes',
-            type: 'box',
-            parentId: 'memory',
-            data: { w: 130, h: 40 },
-            position: { x: 806, y: 252 },
-            style: { labelText: 'Experience /\nEpisode Store' },
-          },
-          {
-            id: 'mem-weights',
-            type: 'box',
-            parentId: 'memory',
-            data: { w: 130, h: 40 },
-            position: { x: 806, y: 318 },
-            style: { labelText: 'Updated Policy &\nStrategy Weights' },
-          },
-
-          // ── 4 · Decision Runtime ───────────────────────────────────────
-          {
-            id: 'dec-policy',
-            type: 'box',
-            parentId: 'decision',
-            data: { w: 62, h: 28 },
-            position: { x: 1256, y: 330 },
-            style: { labelText: 'Policy' },
-          },
-          {
-            id: 'dec-agents',
-            type: 'box',
-            parentId: 'decision',
-            data: { w: 150, h: 40 },
-            position: { x: 1518, y: 314 },
-            style: { labelText: 'AI Assistants / Agents\n(LLM + tools)' },
-          },
-          {
-            id: 'dec-gates',
-            type: 'box',
-            parentId: 'decision',
-            data: { w: 148, h: 52 },
-            position: { x: 1828, y: 302 },
-            style: { labelText: 'Confidence &\nApproval Gates\n(human-in-the-loop)' },
-          },
-
-          // ── 8 · Learning Layer ─────────────────────────────────────────
-          {
-            id: 'lrn-reward',
-            type: 'box',
-            parentId: 'learning',
-            data: { w: 152, h: 40 },
-            position: { x: 30, y: 330 },
-            style: { labelText: 'Reward Computation\n(predicted vs actual)' },
-          },
-          {
-            id: 'lrn-credit',
-            type: 'box',
-            parentId: 'learning',
-            data: { w: 132, h: 28 },
-            position: { x: 272, y: 336 },
-            style: { labelText: 'Credit Assignment' },
-          },
-          {
-            id: 'lrn-reinforced',
-            type: 'box',
-            parentId: 'learning',
-            data: { w: 146, h: 28 },
-            position: { x: 514, y: 336 },
-            style: { labelText: 'Reinforced Learnings' },
-          },
-
-          // ── 7 · Observe ────────────────────────────────────────────────
-          {
-            id: 'obs-outcome',
-            type: 'box',
-            parentId: 'observe',
-            data: { w: 150, h: 40 },
-            position: { x: 1532, y: 414 },
-            style: { labelText: 'Outcome collection\n(back from the world)' },
-          },
-
-          // ── Audit Layer ────────────────────────────────────────────────
-          {
-            id: 'aud-lineage',
-            type: 'box',
-            parentId: 'audit',
-            data: { w: 146, h: 28 },
-            position: { x: 1832, y: 434 },
-            style: { labelText: 'Provenance & Lineage' },
-          },
-          {
-            id: 'aud-log',
-            type: 'box',
-            parentId: 'audit',
-            data: { w: 146, h: 40 },
-            position: { x: 1832, y: 490 },
-            style: { labelText: 'Append-only\nDecision Log' },
-          },
-
-          // ── 3 · Context Layer ──────────────────────────────────────────
-          {
-            id: 'ctx-obj',
-            type: 'box',
-            parentId: 'context',
-            data: { w: 158, h: 40 },
-            position: { x: 1206, y: 518 },
-            style: { labelText: "Objectives & Rewards\n(what 'good' means)" },
-          },
-          {
-            id: 'ctx-ontology',
-            type: 'box',
-            parentId: 'context',
-            data: { w: 158, h: 52 },
-            position: { x: 1206, y: 588 },
-            style: { labelText: 'Ontology\n(entities · relationships\n· rules · constraints)' },
-          },
-          {
-            id: 'ctx-kg',
-            type: 'box',
-            parentId: 'context',
-            data: { w: 138, h: 40 },
-            position: { x: 1518, y: 590 },
-            style: { labelText: 'Knowledge Graph\n(live world state)' },
-          },
-
-          // ── 1 · Data Sources ───────────────────────────────────────────
-          {
-            id: 'ds-apis',
-            type: 'box',
-            parentId: 'data-sources',
-            data: { w: 122, h: 28 },
-            position: { x: 274, y: 536 },
-            style: { labelText: 'APIs & Services' },
-          },
-          {
-            id: 'ds-db',
-            type: 'box',
-            parentId: 'data-sources',
-            data: { w: 122, h: 40 },
-            position: { x: 274, y: 590 },
-            style: { labelText: 'Databases\n(SQL / NoSQL)' },
-          },
-          {
-            id: 'ds-graph',
-            type: 'box',
-            parentId: 'data-sources',
-            data: { w: 222, h: 40 },
-            position: { x: 224, y: 658 },
-            style: { labelText: 'Graph DBs\n(Neo4j · JanusGraph · ArcadeDB)' },
-          },
-          {
-            id: 'ds-files',
-            type: 'box',
-            parentId: 'data-sources',
-            data: { w: 122, h: 28 },
-            position: { x: 274, y: 726 },
-            style: { labelText: 'Files & Documents' },
-          },
-          {
-            id: 'ds-streams',
-            type: 'box',
-            parentId: 'data-sources',
-            data: { w: 122, h: 40 },
-            position: { x: 274, y: 780 },
-            style: { labelText: 'Event Streams\n(Kafka · queues)' },
-          },
-          {
-            id: 'ds-sensors',
-            type: 'box',
-            parentId: 'data-sources',
-            data: { w: 170, h: 28 },
-            position: { x: 250, y: 848 },
-            style: { labelText: 'Sensors / IoT / Telemetry' },
-          },
-
-          // ── Reversibility Layer ────────────────────────────────────────
-          {
-            id: 'rev-state',
-            type: 'box',
-            parentId: 'reversibility',
-            data: { w: 146, h: 28 },
-            position: { x: 1832, y: 604 },
-            style: { labelText: 'Event-sourced State' },
-          },
-          {
-            id: 'rev-undo',
-            type: 'box',
-            parentId: 'reversibility',
-            data: { w: 146, h: 28 },
-            position: { x: 1832, y: 660 },
-            style: { labelText: 'Undo / Rollback' },
-          },
-
-          // ── 2 · Ingestion ──────────────────────────────────────────────
-          {
-            id: 'in-etl',
-            type: 'box',
-            parentId: 'ingestion',
-            data: { w: 132, h: 28 },
-            position: { x: 520, y: 706 },
-            style: { labelText: 'Connectors & ETL' },
-          },
-          {
-            id: 'in-schema',
-            type: 'box',
-            parentId: 'ingestion',
-            data: { w: 128, h: 28 },
-            position: { x: 808, y: 706 },
-            style: { labelText: 'Schema Mapping' },
-          },
-          {
-            id: 'in-entity',
-            type: 'box',
-            parentId: 'ingestion',
-            data: { w: 128, h: 40 },
-            position: { x: 1222, y: 702 },
-            style: { labelText: 'Entity Resolution\n& Dedup' },
-          },
-          {
-            id: 'in-cdc',
-            type: 'box',
-            parentId: 'ingestion',
-            data: { w: 148, h: 40 },
-            position: { x: 512, y: 760 },
-            style: { labelText: 'Change Data Capture\n(streaming)' },
-          },
-
-          // ── 6 · Action ─────────────────────────────────────────────────
-          {
-            id: 'act-exec',
-            type: 'box',
-            parentId: 'action',
-            data: { w: 138, h: 28 },
-            position: { x: 1532, y: 764 },
-            style: { labelText: 'Action Executor' },
-          },
-          {
-            id: 'act-effectors',
-            type: 'box',
-            parentId: 'action',
-            data: { w: 152, h: 28 },
-            position: { x: 1828, y: 764 },
-            style: { labelText: 'Effectors → real systems' },
-          },
-          {
-            id: 'act-inverse',
-            type: 'box',
-            parentId: 'action',
-            data: { w: 152, h: 28 },
-            position: { x: 1828, y: 820 },
-            style: { labelText: 'Compensating Inverse' },
-          },
-        ] satisfies GraphNode[],
-
-        // Solid = the numbered loop; dashed (`strokeDashArray`) = the feedback /
-        // side links. Everything else about an edge — colour, weight, arrowhead,
-        // smooth path, label font + pill — is on the layer template.
-        edges: [
-          // 1 · sources → ingestion
-          { id: 'e-apis-etl', source: 'ds-apis', target: 'in-etl' },
-          { id: 'e-db-etl', source: 'ds-db', target: 'in-etl' },
-          { id: 'e-graph-etl', source: 'ds-graph', target: 'in-etl' },
-          { id: 'e-files-etl', source: 'ds-files', target: 'in-etl' },
-          { id: 'e-streams-cdc', source: 'ds-streams', target: 'in-cdc' },
-          { id: 'e-sensors-cdc', source: 'ds-sensors', target: 'in-cdc' },
-          // 2 · ingestion chain → the knowledge graph
-          { id: 'e-etl-schema', source: 'in-etl', target: 'in-schema' },
-          { id: 'e-schema-entity', source: 'in-schema', target: 'in-entity' },
-          { id: 'e-entity-kg', source: 'in-entity', target: 'ctx-kg', style: { labelText: '2 · normalize → graph' } },
-          { id: 'e-cdc-kg', source: 'in-cdc', target: 'ctx-kg' },
-          // 3 · context → the runtime
-          { id: 'e-ontology-kg', source: 'ctx-ontology', target: 'ctx-kg', style: { labelText: 'shapes', strokeDashArray: [5, 4] } },
-          { id: 'e-kg-agents', source: 'ctx-kg', target: 'dec-agents', style: { labelText: '3 · grounded context' } },
-          // 4 · simulate before acting
-          { id: 'e-weights-strategy', source: 'mem-weights', target: 'sim-strategy', style: { labelText: 'reweight strategies' } },
-          { id: 'e-strategy-score', source: 'sim-strategy', target: 'sim-score' },
-          { id: 'e-score-model', source: 'sim-score', target: 'sim-model', style: { labelText: '4 · simulate' } },
-          { id: 'e-score-agents', source: 'sim-score', target: 'dec-agents', style: { labelText: 'ranked strategies' } },
-          { id: 'e-policy-agents', source: 'dec-policy', target: 'dec-agents', style: { strokeDashArray: [5, 4] } },
-          { id: 'e-agents-gates', source: 'dec-agents', target: 'dec-gates' },
-          // 5–6 · act, reversibly → observe
-          { id: 'e-agents-exec', source: 'dec-agents', target: 'act-exec', style: { labelText: '5 · approved action', strokeDashArray: [5, 4] } },
-          { id: 'e-exec-effectors', source: 'act-exec', target: 'act-effectors' },
-          { id: 'e-exec-inverse', source: 'act-exec', target: 'act-inverse' },
-          {
-            id: 'e-effectors-observe',
-            source: 'act-effectors',
-            target: 'obs-outcome',
-            style: { labelText: '6 · real-world effects', strokeDashArray: [5, 4] },
-          },
-          // 7–8 · learn from the outcome
-          { id: 'e-observe-reward', source: 'obs-outcome', target: 'lrn-reward', style: { labelText: '7' } },
-          { id: 'e-reward-credit', source: 'lrn-reward', target: 'lrn-credit' },
-          { id: 'e-credit-reinforced', source: 'lrn-credit', target: 'lrn-reinforced' },
-          { id: 'e-reinforced-memory', source: 'lrn-reinforced', target: 'mem-episodes', style: { labelText: '8 · store outcome' } },
-          // 9 · memory feeds the runtime back
-          {
-            id: 'e-weights-policy',
-            source: 'mem-weights',
-            target: 'dec-policy',
-            style: { labelText: '9 · update policy — learn from mistakes' },
-          },
-          {
-            id: 'e-episodes-agents',
-            source: 'mem-episodes',
-            target: 'dec-agents',
-            style: { labelText: 'recall past episodes', strokeDashArray: [5, 4] },
-          },
-          { id: 'e-weights-objectives', source: 'mem-weights', target: 'ctx-obj', style: { labelText: 'refine objectives' } },
-          // side layers — everything is logged and undoable
-          { id: 'e-agents-lineage', source: 'dec-agents', target: 'aud-lineage', style: { strokeDashArray: [5, 4] } },
-          { id: 'e-agents-log', source: 'dec-agents', target: 'aud-log', style: { strokeDashArray: [5, 4] } },
-          { id: 'e-exec-state', source: 'act-exec', target: 'rev-state', style: { strokeDashArray: [5, 4] } },
-          { id: 'e-inverse-undo', source: 'act-inverse', target: 'rev-undo', style: { strokeDashArray: [5, 4] } },
-        ] satisfies GraphEdge[],
+        })) satisfies GraphEdge[],
       }),
       [],
     );
@@ -637,8 +241,8 @@ export const EndToEndStory: Story = {
                   if (node.type === 'stage') {
                     return { kind: 'tabbed-rect', width: 130, height: 36, tabHeight: 28, cornerRadius: 6 };
                   }
-                  const box = node.data as { w: number; h: number };
-                  return { kind: 'rect', width: box.w, height: box.h, cornerRadius: 3 };
+                  const box = node.data as { width: number; height: number };
+                  return { kind: 'rect', width: box.width, height: box.height, cornerRadius: 3 };
                 },
                 // Only a stage is a group: the frame sits behind its `parentId`
                 // members, wraps them, and carries the collapse toggle.

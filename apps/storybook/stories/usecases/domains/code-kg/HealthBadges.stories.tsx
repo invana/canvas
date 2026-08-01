@@ -1,10 +1,16 @@
 /**
- * **Code Knowledge Graph** — Sourcegraph-Cody / Cursor / Augment-style code
- * intelligence overview, composed from `<GraphCanvasApp>`. Modules across
- * feature packages are drawn as a hierarchical DAG (`<ElkLayout>` `layered`,
- * pointed at by `config.activeLayout`); edges encode `imports`. Per-module test
- * coverage and error counts ride along as node **badges** resolved from each
- * node's data, so the picture doubles as a code-health dashboard.
+ * **Code Knowledge Graph — health badges** — Sourcegraph-Cody / Cursor /
+ * Augment-style code intelligence overview, composed from `<GraphCanvasApp>`.
+ * The same real `invanaCodeKg` graph its two siblings render (`DotsForce`,
+ * `CompositeCards`), narrowed to the **file-level import DAG**: 242 source files
+ * and the 590 `imports` between them, laid out by `<ElkLayout>` `layered`
+ * (pointed at by `config.activeLayout`).
+ *
+ * Per-file test coverage and error counts ride along as node **badges** resolved
+ * from each node's data, so the picture doubles as a code-health dashboard.
+ * (Those two fields are the dataset's one synthetic pair — see
+ * `InvanaCodeNodeProperties.coverage`.) Fills come from the analyser's eight
+ * architectural clusters, so the badge colours read against a stable backdrop.
  *
  * The header's **direction** picker re-runs ELK through
  * `config.layouts.elk.direction`, and **Settings** docks
@@ -31,6 +37,7 @@ import {
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode, NodeBadge } from '@invana/graph';
 import type { ElkDirection } from '@invana/graph-layout-elkjs';
+import { invanaCodeKg, type InvanaCodeNodeProperties } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
 
@@ -41,24 +48,19 @@ type Story = StoryObj;
 export const HealthBadgesStory: Story = {
   name: 'HealthBadges',
   render: function Render() {
-    // A synthetic codebase — 4 feature packages + `shared`, 18 modules. Each
-    // node carries plain data; every visual field (fill, badges) is resolved
-    // from it by the layer template below, so the entries stay readable.
-    type CodePkg = 'auth' | 'billing' | 'search' | 'payments' | 'shared';
-    interface CodeNodeData {
-      package: CodePkg;
-      file: string;
-      coverage: number; // 0–100
-      errors: number;
-    }
-
-    const PKG_FILL: Record<CodePkg, number> = {
-      auth: 0x6366f1, // indigo
-      billing: 0x10b981, // emerald
-      search: 0xf59e0b, // amber
-      payments: 0xec4899, // pink
-      shared: 0x64748b, // slate
+    // Fill by the analyser's eight architectural clusters — the dataset's own
+    // grouping, and the closest thing it has to "which package is this in".
+    const CLUSTER_FILL: Record<string, number> = {
+      'layer:graph-connectors': 0x2563eb, // blue
+      'layer:modeller': 0x8b5cf6, // violet
+      'layer:engine-domain': 0x10b981, // emerald
+      'layer:engine-platform': 0x14b8a6, // teal
+      'layer:studio-ui': 0xf59e0b, // amber
+      'layer:studio-data': 0xec4899, // pink
+      'layer:studio-types': 0xef4444, // red
+      'layer:config': 0x64748b, // slate
     };
+    const UNCLUSTERED_FILL = 0x94a3b8; // slate-400 — file in no cluster
 
     const [direction, setDirection] = useState<ElkDirection>('RIGHT');
     const [minimapOn, setMinimapOn] = useState(true);
@@ -77,72 +79,25 @@ export const HealthBadgesStory: Story = {
       { section: { defaultSize: '360px', maxSize: '460px' } },
     );
 
-    const data: GraphData = useMemo(
-      () => ({
-        nodes: [
-          { id: 'AuthService',      type: 'auth',     data: { package: 'auth',     file: 'auth/AuthService.ts',          coverage: 89,  errors: 0 } },
-          { id: 'TokenStore',       type: 'auth',     data: { package: 'auth',     file: 'auth/TokenStore.ts',           coverage: 76,  errors: 0 } },
-          { id: 'OAuthProvider',    type: 'auth',     data: { package: 'auth',     file: 'auth/OAuthProvider.ts',        coverage: 54,  errors: 2 } },
-          { id: 'PasswordHasher',   type: 'auth',     data: { package: 'auth',     file: 'auth/PasswordHasher.ts',       coverage: 92,  errors: 0 } },
-          { id: 'SessionManager',   type: 'auth',     data: { package: 'auth',     file: 'auth/SessionManager.ts',       coverage: 71,  errors: 0 } },
-          { id: 'BillingEngine',    type: 'billing',  data: { package: 'billing',  file: 'billing/BillingEngine.ts',     coverage: 83,  errors: 1 } },
-          { id: 'InvoiceGenerator', type: 'billing',  data: { package: 'billing',  file: 'billing/InvoiceGenerator.ts',  coverage: 67,  errors: 0 } },
-          { id: 'TaxCalculator',    type: 'billing',  data: { package: 'billing',  file: 'billing/TaxCalculator.ts',     coverage: 95,  errors: 0 } },
-          { id: 'SearchIndex',      type: 'search',   data: { package: 'search',   file: 'search/SearchIndex.ts',        coverage: 58,  errors: 3 } },
-          { id: 'QueryParser',      type: 'search',   data: { package: 'search',   file: 'search/QueryParser.ts',        coverage: 79,  errors: 0 } },
-          { id: 'RankingEngine',    type: 'search',   data: { package: 'search',   file: 'search/RankingEngine.ts',      coverage: 41,  errors: 0 } },
-          { id: 'PaymentProcessor', type: 'payments', data: { package: 'payments', file: 'payments/PaymentProcessor.ts', coverage: 88,  errors: 0 } },
-          { id: 'StripeAdapter',    type: 'payments', data: { package: 'payments', file: 'payments/StripeAdapter.ts',    coverage: 72,  errors: 0 } },
-          { id: 'RefundService',    type: 'payments', data: { package: 'payments', file: 'payments/RefundService.ts',    coverage: 65,  errors: 1 } },
-          { id: 'Logger',           type: 'shared',   data: { package: 'shared',   file: 'shared/Logger.ts',             coverage: 100, errors: 0 } },
-          { id: 'EventBus',         type: 'shared',   data: { package: 'shared',   file: 'shared/EventBus.ts',           coverage: 91,  errors: 0 } },
-          { id: 'Database',         type: 'shared',   data: { package: 'shared',   file: 'shared/Database.ts',           coverage: 87,  errors: 0 } },
-          { id: 'ConfigLoader',     type: 'shared',   data: { package: 'shared',   file: 'shared/ConfigLoader.ts',       coverage: 100, errors: 0 } },
-        ],
-        edges: [
-          // auth
-          { id: 'e1', source: 'AuthService', target: 'TokenStore', type: 'IMPORTS' },
-          { id: 'e2', source: 'AuthService', target: 'SessionManager', type: 'IMPORTS' },
-          { id: 'e3', source: 'AuthService', target: 'Database', type: 'IMPORTS' },
-          { id: 'e4', source: 'AuthService', target: 'Logger', type: 'IMPORTS' },
-          { id: 'e5', source: 'OAuthProvider', target: 'AuthService', type: 'IMPORTS' },
-          { id: 'e6', source: 'OAuthProvider', target: 'TokenStore', type: 'IMPORTS' },
-          { id: 'e7', source: 'SessionManager', target: 'Database', type: 'IMPORTS' },
-          { id: 'e8', source: 'SessionManager', target: 'EventBus', type: 'IMPORTS' },
-          { id: 'e9', source: 'PasswordHasher', target: 'ConfigLoader', type: 'IMPORTS' },
-          // billing
-          { id: 'e10', source: 'BillingEngine', target: 'Database', type: 'IMPORTS' },
-          { id: 'e11', source: 'BillingEngine', target: 'InvoiceGenerator', type: 'IMPORTS' },
-          { id: 'e12', source: 'BillingEngine', target: 'TaxCalculator', type: 'IMPORTS' },
-          { id: 'e13', source: 'BillingEngine', target: 'EventBus', type: 'IMPORTS' },
-          { id: 'e14', source: 'BillingEngine', target: 'Logger', type: 'IMPORTS' },
-          { id: 'e15', source: 'InvoiceGenerator', target: 'TaxCalculator', type: 'IMPORTS' },
-          { id: 'e16', source: 'InvoiceGenerator', target: 'Logger', type: 'IMPORTS' },
-          // payments
-          { id: 'e17', source: 'PaymentProcessor', target: 'StripeAdapter', type: 'IMPORTS' },
-          { id: 'e18', source: 'PaymentProcessor', target: 'BillingEngine', type: 'IMPORTS' },
-          { id: 'e19', source: 'PaymentProcessor', target: 'EventBus', type: 'IMPORTS' },
-          { id: 'e20', source: 'PaymentProcessor', target: 'Logger', type: 'IMPORTS' },
-          { id: 'e21', source: 'RefundService', target: 'PaymentProcessor', type: 'IMPORTS' },
-          { id: 'e22', source: 'RefundService', target: 'BillingEngine', type: 'IMPORTS' },
-          { id: 'e23', source: 'StripeAdapter', target: 'ConfigLoader', type: 'IMPORTS' },
-          { id: 'e24', source: 'StripeAdapter', target: 'Logger', type: 'IMPORTS' },
-          // search
-          { id: 'e25', source: 'SearchIndex', target: 'Database', type: 'IMPORTS' },
-          { id: 'e26', source: 'SearchIndex', target: 'Logger', type: 'IMPORTS' },
-          { id: 'e27', source: 'QueryParser', target: 'ConfigLoader', type: 'IMPORTS' },
-          { id: 'e28', source: 'RankingEngine', target: 'SearchIndex', type: 'IMPORTS' },
-        ],
-      }),
-      [],
-    );
+    // The dataset is engine-ready; this only narrows it to the file-level import
+    // DAG — `file` entities, and the `imports` between two of them. (Every
+    // `imports` edge in the dataset is already file→file.)
+    const data: GraphData = useMemo(() => {
+      const files = new Set(invanaCodeKg.nodes.filter((n) => n.type === 'file').map((n) => n.id));
+      return {
+        nodes: invanaCodeKg.nodes.filter((n) => files.has(n.id)),
+        edges: invanaCodeKg.edges.filter(
+          (e) => e.type === 'imports' && files.has(e.source) && files.has(e.target),
+        ),
+      };
+    }, []);
 
     const config: CanvasConfig = useMemo(
       () => ({
         // The ELK layout mounted as a child below owns the arrangement.
         activeLayout: 'elk',
         behaviours: {
-          // Package colours come from the `bgFill` resolver below.
+          // Cluster colours come from the `bgFill` resolver below.
           color: { enabled: false },
           hover: { enabled: true, state: 'highlighted', inactiveState: 'dimmed', degree: 1, direction: 'both' },
           'click-select': { enabled: true, multiple: true, trigger: ['shift'] },
@@ -152,16 +107,19 @@ export const HealthBadgesStory: Story = {
           graph: {
             node: {
               style: {
-                bgFill: (n: GraphNode) => PKG_FILL[(n.data as CodeNodeData).package],
-                labelText: (n: GraphNode) => n.id,
+                bgFill: (n: GraphNode) =>
+                  CLUSTER_FILL[(n.data as InvanaCodeNodeProperties).cluster ?? ''] ?? UNCLUSTERED_FILL,
+                labelText: (n: GraphNode) => (n.data as InvanaCodeNodeProperties).name,
                 // Coverage colour bands at 80 % / 60 % follow the Codecov
                 // convention; the errors badge only renders when there's
-                // something to flag.
+                // something to flag. Both fields are optional on the dataset —
+                // a file with no coverage figure simply shows no coverage pill.
                 badges: (n: GraphNode): readonly NodeBadge[] => {
-                  const d = n.data as CodeNodeData;
-                  const coverageFill = d.coverage >= 80 ? 0x16a34a : d.coverage >= 60 ? 0xd97706 : 0xdc2626;
-                  const badges: NodeBadge[] = [
-                    {
+                  const d = n.data as InvanaCodeNodeProperties;
+                  const badges: NodeBadge[] = [];
+                  if (d.coverage !== undefined) {
+                    const coverageFill = d.coverage >= 80 ? 0x16a34a : d.coverage >= 60 ? 0xd97706 : 0xdc2626;
+                    badges.push({
                       id: 'coverage',
                       placement: 'top-right',
                       origin: 'center',
@@ -172,9 +130,9 @@ export const HealthBadgesStory: Story = {
                       labelText: `${d.coverage}%`,
                       labelColor: 0xffffff,
                       labelFontSize: 10,
-                    },
-                  ];
-                  if (d.errors > 0) {
+                    });
+                  }
+                  if ((d.errors ?? 0) > 0) {
                     badges.push({
                       id: 'errors',
                       placement: 'top-left',
@@ -183,7 +141,7 @@ export const HealthBadgesStory: Story = {
                       fill: 0xdc2626,
                       strokeColor: 0xffffff,
                       strokeWidth: 1.5,
-                      labelText: String(d.errors),
+                      labelText: String(d.errors ?? 0),
                       labelColor: 0xffffff,
                       labelFontSize: 11,
                     });
@@ -199,7 +157,7 @@ export const HealthBadgesStory: Story = {
                 labelPlacement: 'center',
               },
               state: {
-                // Sharper highlight ring against the saturated package fills.
+                // Sharper highlight ring against the saturated cluster fills.
                 highlighted: { bgStrokeColor: 0xfbbf24, bgStrokeWidth: 3 },
                 selected: { bgStrokeColor: 0xffffff, bgStrokeWidth: 4 },
               },
@@ -230,7 +188,7 @@ export const HealthBadgesStory: Story = {
           elk: { algorithm: 'layered', direction, nodeSpacing: 28, layerSpacing: 90 },
         },
       }),
-      // PKG_FILL is a render-local literal the config closes over once.
+      // CLUSTER_FILL is a render-local literal the config closes over once.
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [direction],
     );
