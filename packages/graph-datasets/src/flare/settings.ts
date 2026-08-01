@@ -7,9 +7,9 @@
  * force sim. Leaves and branches are the same mark — depth is carried by position.
  */
 
-import type { CanvasSettings } from '../types';
+import type { CanvasConfig } from '@invana/canvas';
 
-export const settings: CanvasSettings = {
+export const settings: CanvasConfig = {
   activeLayout: 'layout',
   fitOnLoad: true,
   layers: {

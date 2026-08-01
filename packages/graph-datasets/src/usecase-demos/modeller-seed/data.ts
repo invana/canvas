@@ -13,7 +13,7 @@
  * <GraphCanvasApp data={modellerSeed} config={modellerSeedSettings} />
  */
 
-import type { CanvasData } from '../../types';
+import type { GraphData } from '@invana/graph';
 
 /**
  * A seed node. Deliberately **untyped** — the modeller's user is the one who
@@ -50,4 +50,4 @@ export const modellerSeed: ModellerSeedData = {
 };
 
 /** {@link modellerSeed} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: CanvasData = modellerSeed as unknown as CanvasData;
+export const data: GraphData = modellerSeed as unknown as GraphData;

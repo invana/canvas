@@ -25,7 +25,7 @@
  * invanaCodeKg.clusters, invanaCodeKg.tour, invanaCodeKg.project
  */
 
-import type { CanvasData } from '../../types';
+import type { GraphData } from '@invana/graph';
 
 import raw from './knowledge-graph.json';
 
@@ -152,6 +152,6 @@ export const invanaCodeKg = raw as unknown as InvanaCodeKgData;
 /**
  * The graph half of {@link invanaCodeKg} as the engine-ready value `setData` /
  * `<GraphCanvasApp>` take. Same arrays — the clusters / tour / project metadata
- * is simply not part of `CanvasData`.
+ * is simply not part of `GraphData`.
  */
-export const data: CanvasData = invanaCodeKg as unknown as CanvasData;
+export const data: GraphData = invanaCodeKg as unknown as GraphData;

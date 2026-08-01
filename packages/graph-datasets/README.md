@@ -10,8 +10,8 @@ pnpm add @invana/graph-datasets
 ## A dataset is a folder
 
 Every dataset lives in `src/<name>/` and ships **two halves** — `data.ts` (what to draw, as
-`CanvasData`) and `settings.ts` (how it should look, as `CanvasConfig`) — so a complete
-visualisation is two props and no glue:
+`@invana/graph`'s `GraphData`) and `settings.ts` (how it should look, as `@invana/canvas`'s
+`CanvasConfig`) — so a complete visualisation is two props and no glue:
 
 ```tsx
 import { lesMiserables, lesMiserablesSettings } from '@invana/graph-datasets';

@@ -31,7 +31,7 @@
  * graphLayer.setData(h1b2019AsGraph());
  */
 
-import type { CanvasData } from '../types';
+import type { GraphData } from '@invana/graph';
 
 import h1bJson from './h1b2019.json';
 
@@ -156,4 +156,4 @@ export function h1b2019AsGraph(): H1B2019GraphData {
 }
 
 /** The flattened H-1B hierarchy, engine-ready. Same value as {@link h1b2019AsGraph}(). */
-export const data: CanvasData = h1b2019AsGraph() as unknown as CanvasData;
+export const data: GraphData = h1b2019AsGraph() as unknown as GraphData;

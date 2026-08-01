@@ -8,9 +8,9 @@
  * until the user classifies them.
  */
 
-import type { CanvasSettings } from '../../types';
+import type { CanvasConfig } from '@invana/canvas';
 
-export const settings: CanvasSettings = {
+export const settings: CanvasConfig = {
   activeLayout: '',
   fitOnLoad: false,
   layers: {

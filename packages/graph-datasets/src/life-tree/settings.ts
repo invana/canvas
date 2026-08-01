@@ -2,14 +2,14 @@
  * Recommended look for the **tree of life** phylogeny.
  *
  * A phylogeny is read radially — every clade fans from a common root — so this
- * expects a hierarchical layout under the id `layout` in `radial` mode. Branch
+ * expects a hierarchical layout under the id `layout` in `radial-tree` mode. Branch
  * lengths live on `data.length`; the layout, not these settings, decides whether to
  * honour them.
  */
 
-import type { CanvasSettings } from '../types';
+import type { CanvasConfig } from '@invana/canvas';
 
-export const settings: CanvasSettings = {
+export const settings: CanvasConfig = {
   activeLayout: 'layout',
   fitOnLoad: true,
   layers: {
@@ -27,6 +27,6 @@ export const settings: CanvasSettings = {
       },
     },
   },
-  layouts: { layout: { mode: 'radial', radius: 460 } },
+  layouts: { layout: { mode: 'radial-tree', radius: 460 } },
   behaviours: { color: { enabled: false } },
 };

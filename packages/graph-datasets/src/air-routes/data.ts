@@ -22,7 +22,7 @@
  */
 
 import airportsData from './airports.json';
-import type { CanvasData } from '../types';
+import type { GraphData } from '@invana/graph';
 
 import landData from './land-50m.json';
 
@@ -82,7 +82,7 @@ export const landTopology: LandTopology = landData as unknown as LandTopology;
  * `data`, and it's the consumer's map projection that turns them into world
  * coordinates.
  */
-export const data: CanvasData = {
+export const data: GraphData = {
   nodes: airports.map((airport, i) => ({ id: `ap-${i}`, type: 'airport', data: airport })),
   edges: [],
 };

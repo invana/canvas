@@ -7,9 +7,9 @@
  * citing paper to the older one it cites, so arrowheads stay on.
  */
 
-import type { CanvasSettings } from '../../types';
+import type { CanvasConfig } from '@invana/canvas';
 
-export const settings: CanvasSettings = {
+export const settings: CanvasConfig = {
   activeLayout: 'graph-force',
   fitOnLoad: true,
   layers: {

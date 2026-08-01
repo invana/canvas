@@ -29,7 +29,7 @@
  * // ... then swap to importEdges and render with `pathType: 'bundle'`.
  */
 
-import type { CanvasData } from '../types';
+import type { GraphData } from '@invana/graph';
 
 import { flareAsGraph, type FlareGraphNode, type FlareGraphEdge } from '../flare/data';
 
@@ -161,4 +161,4 @@ function mulberry32(seed: number): () => number {
 }
 
 /** The Flare import network, engine-ready. Same value as {@link flareImportsAsGraph}(). */
-export const data: CanvasData = flareImportsAsGraph() as unknown as CanvasData;
+export const data: GraphData = flareImportsAsGraph() as unknown as GraphData;

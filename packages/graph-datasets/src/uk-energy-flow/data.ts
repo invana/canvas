@@ -24,7 +24,7 @@
  * graphLayer.setData(ukEnergyFlowAsGraph());
  */
 
-import type { CanvasData } from '../types';
+import type { GraphData } from '@invana/graph';
 
 import ukEnergyFlowJson from './uk-energy-flow.json';
 
@@ -114,4 +114,4 @@ export function ukEnergyFlowAsGraph(): UkEnergyFlowGraphData {
 }
 
 /** The UK energy flow as a graph, engine-ready. Same value as {@link ukEnergyFlowAsGraph}(). */
-export const data: CanvasData = ukEnergyFlowAsGraph() as unknown as CanvasData;
+export const data: GraphData = ukEnergyFlowAsGraph() as unknown as GraphData;

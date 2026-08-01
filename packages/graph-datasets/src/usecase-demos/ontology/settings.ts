@@ -7,9 +7,9 @@
  * meaning.
  */
 
-import type { CanvasSettings } from '../../types';
+import type { CanvasConfig } from '@invana/canvas';
 
-export const settings: CanvasSettings = {
+export const settings: CanvasConfig = {
   activeLayout: 'graph-force',
   fitOnLoad: true,
   layers: {

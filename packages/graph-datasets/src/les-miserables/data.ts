@@ -18,7 +18,7 @@
  * graph.setData(lesMiserables);
  */
 
-import type { CanvasData } from '../types';
+import type { GraphData } from '@invana/graph';
 
 export interface LesMiserablesNodeData {
   /** Co-occurrence cluster (0–10). Used for colour-by-group in stories. */
@@ -399,4 +399,4 @@ const edges: LesMiserablesEdge[] = rawEdges.map((e) => ({
 export const lesMiserables: LesMiserablesData = { nodes, edges };
 
 /** {@link lesMiserables} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: CanvasData = lesMiserables as unknown as CanvasData;
+export const data: GraphData = lesMiserables as unknown as GraphData;

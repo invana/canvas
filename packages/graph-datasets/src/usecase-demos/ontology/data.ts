@@ -11,7 +11,7 @@
  * unfold the products, locations, and industries by clicking.
  */
 
-import type { CanvasData } from '../../types';
+import type { GraphData } from '@invana/graph';
 
 /** Entity kind — drives shape and palette in the story. */
 export type OntologyEntityKind = 'company' | 'person' | 'product' | 'location' | 'industry';
@@ -159,4 +159,4 @@ const coreIds: readonly string[] = [
 export const ontology: OntologyData = { nodes, edges, coreIds };
 
 /** {@link ontology} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: CanvasData = ontology as unknown as CanvasData;
+export const data: GraphData = ontology as unknown as GraphData;

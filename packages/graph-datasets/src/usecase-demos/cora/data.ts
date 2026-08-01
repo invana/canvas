@@ -19,7 +19,7 @@
  * <GraphCanvasApp data={cora} config={coraSettings} />
  */
 
-import type { CanvasData } from '../../types';
+import type { GraphData } from '@invana/graph';
 
 import raw from './cora.json';
 
@@ -61,4 +61,4 @@ export interface CoraData {
 export const cora = raw as unknown as CoraData;
 
 /** {@link cora} as the engine-ready value `setData` / `<GraphCanvasApp>` take. */
-export const data: CanvasData = cora as unknown as CanvasData;
+export const data: GraphData = cora as unknown as GraphData;

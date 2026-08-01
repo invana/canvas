@@ -29,7 +29,7 @@
  * <GraphCanvasApp data={invanaArchitecture} config={invanaArchitectureSettings} />
  */
 
-import type { CanvasData } from '../../types';
+import type { GraphData } from '@invana/graph';
 
 /** Node type — a group frame, or an item inside one. */
 export type InvanaArchitectureNodeType = 'stage' | 'box';
@@ -202,4 +202,4 @@ export const invanaArchitecture: InvanaArchitectureData = {
 };
 
 /** {@link invanaArchitecture} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: CanvasData = invanaArchitecture as unknown as CanvasData;
+export const data: GraphData = invanaArchitecture as unknown as GraphData;

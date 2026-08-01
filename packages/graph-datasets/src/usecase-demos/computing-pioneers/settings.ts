@@ -11,9 +11,9 @@
  * distance and collision are all scaled up to keep them from overlapping.
  */
 
-import type { CanvasSettings } from '../../types';
+import type { CanvasConfig } from '@invana/canvas';
 
-export const settings: CanvasSettings = {
+export const settings: CanvasConfig = {
   activeLayout: 'graph-force',
   fitOnLoad: true,
   layouts: {

@@ -22,7 +22,7 @@
  * const data = generateTwitterActivity({ users: 24, tweets: 50 });
  */
 
-import type { CanvasData } from '../types';
+import type { GraphData } from '@invana/graph';
 
 export type TwitterNodeLabel = 'User' | 'Tweet' | 'Comment' | 'Hashtag' | 'Retweet';
 
@@ -249,4 +249,4 @@ export function generateTwitterActivity(opts: TwitterDatasetOptions = {}): Twitt
 export const twitterActivity: TwitterGraphData = generateTwitterActivity();
 
 /** {@link twitterActivity} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: CanvasData = twitterActivity as unknown as CanvasData;
+export const data: GraphData = twitterActivity as unknown as GraphData;

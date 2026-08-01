@@ -17,7 +17,7 @@
  *     preferential attachment.
  */
 
-import type { CanvasData } from '../../types';
+import type { GraphData } from '@invana/graph';
 
 const TOPICS = [
   'transformers',
@@ -189,4 +189,4 @@ function buildDataset(): CitationsData {
 export const citations: CitationsData = buildDataset();
 
 /** {@link citations} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: CanvasData = citations as unknown as CanvasData;
+export const data: GraphData = citations as unknown as GraphData;

@@ -14,7 +14,7 @@
  * graphLayer.setData(flareAsGraph());
  */
 
-import type { CanvasData } from '../types';
+import type { GraphData } from '@invana/graph';
 
 import flareJson from './flare.json';
 
@@ -133,4 +133,4 @@ export function flareAsGraph(): FlareGraphData {
 }
 
 /** The flattened Flare hierarchy, engine-ready. Same value as {@link flareAsGraph}(). */
-export const data: CanvasData = flareAsGraph() as unknown as CanvasData;
+export const data: GraphData = flareAsGraph() as unknown as GraphData;

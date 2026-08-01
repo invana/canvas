@@ -19,7 +19,7 @@
  * <GraphCanvasApp data={starSchema} config={starSchemaSettings} />
  */
 
-import type { CanvasData } from '../../types';
+import type { GraphData } from '@invana/graph';
 
 /** Node type — a table's role in the star. */
 export type StarSchemaNodeType = 'Dimension' | 'Fact';
@@ -152,4 +152,4 @@ export const starSchema: StarSchemaData = {
 };
 
 /** {@link starSchema} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: CanvasData = starSchema as unknown as CanvasData;
+export const data: GraphData = starSchema as unknown as GraphData;

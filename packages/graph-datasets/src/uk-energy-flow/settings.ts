@@ -7,9 +7,9 @@
  * is what keeps a ribbon flush against its bar.
  */
 
-import type { CanvasSettings } from '../types';
+import type { CanvasConfig } from '@invana/canvas';
 
-export const settings: CanvasSettings = {
+export const settings: CanvasConfig = {
   activeLayout: 'layout',
   fitOnLoad: true,
   layers: {
@@ -27,7 +27,10 @@ export const settings: CanvasSettings = {
         style: {
           strokeAlpha: 0.4,
           arrowTargetShape: 'none',
-          shape: { pathType: 'sankey', sourceAnchor: 'edge-port', targetAnchor: 'edge-port' },
+          // `bump-horizontal` is the ribbon curve (there is no `'sankey'`
+          // pathType — see `EdgePathType`); `edge-port` anchors are what keep a
+          // ribbon flush against its bar's face.
+          shape: { pathType: 'bump-horizontal', sourceAnchor: 'edge-port', targetAnchor: 'edge-port' },
         },
       },
     },

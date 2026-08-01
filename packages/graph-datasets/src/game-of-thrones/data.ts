@@ -28,7 +28,7 @@
  * <GraphCanvasApp data={gameOfThrones} config={gameOfThronesSettings} />
  */
 
-import type { CanvasData } from '../types';
+import type { GraphData } from '@invana/graph';
 
 import raw from './game-of-thrones.json';
 
@@ -227,4 +227,4 @@ export interface GameOfThronesData {
 export const gameOfThrones = raw as unknown as GameOfThronesData;
 
 /** {@link gameOfThrones} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: CanvasData = gameOfThrones as unknown as CanvasData;
+export const data: GraphData = gameOfThrones as unknown as GraphData;

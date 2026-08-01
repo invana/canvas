@@ -13,7 +13,7 @@
  * carries no positions.
  */
 
-import type { CanvasData } from '../../types';
+import type { GraphData } from '@invana/graph';
 
 /** What the node represents in the agent's execution graph. */
 export type AgentTraceNodeKind = 'llm' | 'tool' | 'decision' | 'output';
@@ -164,4 +164,4 @@ export const agentTrace: readonly AgentTraceData[] = [
  * The first trace (`refundQuery`) as the engine-ready value
  * `<GraphCanvasApp data>` takes — the default of the three in {@link agentTrace}.
  */
-export const data: CanvasData = agentTrace[0] as unknown as CanvasData;
+export const data: GraphData = agentTrace[0] as unknown as GraphData;

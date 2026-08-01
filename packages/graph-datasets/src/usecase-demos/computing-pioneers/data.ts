@@ -17,7 +17,7 @@
  * <GraphCanvasApp data={computingPioneers} config={computingPioneersSettings} />
  */
 
-import type { CanvasData } from '../../types';
+import type { GraphData } from '@invana/graph';
 
 /** Node type — the entity kind. Drives which node structure renders it. */
 export type ComputingPioneersNodeType = 'Person' | 'Organization' | 'Concept';
@@ -94,4 +94,4 @@ export const computingPioneers: ComputingPioneersData = {
 };
 
 /** {@link computingPioneers} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: CanvasData = computingPioneers as unknown as CanvasData;
+export const data: GraphData = computingPioneers as unknown as GraphData;

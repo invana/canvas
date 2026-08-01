@@ -11,7 +11,7 @@
  * `DensityContourFillLayer` to bring the cluster topology forward.
  */
 
-import type { CanvasData } from '../../types';
+import type { GraphData } from '@invana/graph';
 
 const CLUSTER_NAMES = ['auth', 'billing', 'search', 'infra', 'ml'] as const;
 export type RagEmbeddingsCluster = (typeof CLUSTER_NAMES)[number];
@@ -196,4 +196,4 @@ function buildDataset(): RagEmbeddingsData {
 export const ragEmbeddings: RagEmbeddingsData = buildDataset();
 
 /** {@link ragEmbeddings} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: CanvasData = ragEmbeddings as unknown as CanvasData;
+export const data: GraphData = ragEmbeddings as unknown as GraphData;

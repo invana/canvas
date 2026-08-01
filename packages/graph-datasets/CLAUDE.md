@@ -9,14 +9,17 @@ Every dataset lives in its own folder under `src/` (kebab-case, e.g. `les-misera
 
 ```
 src/<dataset>/
-├── data.ts       → export const data: CanvasData      — what to draw
-├── settings.ts   → export const settings: CanvasSettings — how it should look
+├── data.ts       → export const data: GraphData      — what to draw
+├── settings.ts   → export const settings: CanvasConfig — how it should look
 └── <dataset>.json (optional — the on-disk serialisation for JSON-backed sets)
 ```
 
-Both types are defined in `src/types.ts`: `CanvasData` is `@invana/graph`'s
-`GraphData`, `CanvasSettings` is `@invana/canvas`'s `CanvasConfig`. So a consumer
-wires a complete visualisation with two imports and no glue:
+Both halves are typed with the **engine's own types, imported directly** — data is
+`@invana/graph`'s `GraphData`, settings are `@invana/canvas`'s `CanvasConfig`.
+**This package declares no type aliases for them** (the former `CanvasData` /
+`CanvasSettings` in `src/types.ts` are gone): a rename adds a second name for one
+concept and hides which package owns it. So a consumer wires a complete
+visualisation with two imports and no glue:
 
 ```tsx
 import { lesMiserables, lesMiserablesSettings } from '@invana/graph-datasets';
@@ -36,8 +39,9 @@ Don't invent a per-dataset record shape, and don't ship a runtime mapper that
 reshapes foreign JSON on import.
 
 ```ts
-interface CanvasDataNode<D = unknown> { id: string; type?: string; data?: D; position?: {x,y}; … }
-interface CanvasDataEdge<D = unknown> { id: string; type?: string; source: string; target: string; data?: D; }
+// `@invana/graph`'s GraphNode / GraphEdge — the records `GraphData` holds.
+interface GraphNode<D = unknown> { id: string; type?: string; data?: D; position?: {x,y}; … }
+interface GraphEdge<D = unknown> { id: string; type?: string; source: string; target: string; data?: D; }
 ```
 
 - **`type`** — the entity / relation kind (`'file'`, `'imports'`, `'company'`, …).

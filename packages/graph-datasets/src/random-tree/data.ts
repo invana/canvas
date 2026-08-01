@@ -14,7 +14,7 @@
  * const tree = generateRandomTree(500);
  */
 
-import type { CanvasData } from '../types';
+import type { GraphData } from '@invana/graph';
 
 export interface RandomTreeNode {
   index: number;
@@ -43,4 +43,4 @@ export const generateRandomTree = (numNodes: number): RandomTreeData => {
  * A 120-node random tree — the default instance. Call
  * {@link generateRandomTree} for a different size.
  */
-export const data: CanvasData = generateRandomTree(120) as unknown as CanvasData;
+export const data: GraphData = generateRandomTree(120) as unknown as GraphData;

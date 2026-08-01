@@ -23,7 +23,7 @@
  * graph.setData(oldFaithful);
  */
 
-import type { CanvasData } from '../types';
+import type { GraphData } from '@invana/graph';
 
 export interface OldFaithfulPoint {
   /** Eruption duration in minutes. */
@@ -119,4 +119,4 @@ export const oldFaithful: OldFaithfulGraphData = {
 };
 
 /** {@link oldFaithful} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: CanvasData = oldFaithful as unknown as CanvasData;
+export const data: GraphData = oldFaithful as unknown as GraphData;

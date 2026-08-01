@@ -18,7 +18,7 @@
  * graphLayer.setData(lifeTreeAsGraph());
  */
 
-import type { CanvasData } from '../types';
+import type { GraphData } from '@invana/graph';
 
 import { LIFE_TREE_NEWICK } from './newick';
 
@@ -223,4 +223,4 @@ export function lifeTreeAsGraph(): LifeTreeGraphData {
 }
 
 /** The flattened tree of life, engine-ready. Same value as {@link lifeTreeAsGraph}(). */
-export const data: CanvasData = lifeTreeAsGraph() as unknown as CanvasData;
+export const data: GraphData = lifeTreeAsGraph() as unknown as GraphData;

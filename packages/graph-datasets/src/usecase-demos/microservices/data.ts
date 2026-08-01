@@ -10,7 +10,7 @@
  * to see the styled states.
  */
 
-import type { CanvasData } from '../../types';
+import type { GraphData } from '@invana/graph';
 
 /** Coarse architectural tier — drives icon choice in the story. */
 export type MicroservicesTier = 'gateway' | 'api' | 'logic' | 'data' | 'external';
@@ -146,4 +146,4 @@ const edges: MicroservicesEdge[] = [
 export const microservices: MicroservicesData = { nodes, edges };
 
 /** {@link microservices} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: CanvasData = microservices as unknown as CanvasData;
+export const data: GraphData = microservices as unknown as GraphData;

@@ -7,9 +7,9 @@
  * turns them on for the depth it cares about.
  */
 
-import type { CanvasSettings } from '../types';
+import type { CanvasConfig } from '@invana/canvas';
 
-export const settings: CanvasSettings = {
+export const settings: CanvasConfig = {
   activeLayout: 'layout',
   fitOnLoad: true,
   layers: {
@@ -18,6 +18,6 @@ export const settings: CanvasSettings = {
       edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 0.6, strokeAlpha: 0.35, arrowTargetShape: 'none' } },
     },
   },
-  layouts: { layout: { mode: 'radial', radius: 520 } },
+  layouts: { layout: { mode: 'radial-tree', radius: 520 } },
   behaviours: { color: { enabled: false } },
 };

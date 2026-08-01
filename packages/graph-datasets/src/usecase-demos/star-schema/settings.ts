@@ -11,9 +11,9 @@
  * rather than a flow.
  */
 
-import type { CanvasSettings } from '../../types';
+import type { CanvasConfig } from '@invana/canvas';
 
-export const settings: CanvasSettings = {
+export const settings: CanvasConfig = {
   activeLayout: 'layout',
   fitOnLoad: true,
   layers: {

@@ -13,9 +13,7 @@
  * graph.setData(generateLattice(20));
  */
 
-import type { CanvasData } from '../types';
-
-import type { GraphEdge, GraphNode } from '@invana/graph';
+import type { GraphData, GraphEdge, GraphNode } from '@invana/graph';
 
 export interface LatticeData {
   nodes: GraphNode[];
@@ -42,4 +40,4 @@ export const generateLattice = (n: number): LatticeData => {
  * A 20×20 lattice — the default instance, for consumers that just want the
  * dataset rather than a specific size. Call {@link generateLattice} for others.
  */
-export const data: CanvasData = generateLattice(20) as unknown as CanvasData;
+export const data: GraphData = generateLattice(20) as unknown as GraphData;

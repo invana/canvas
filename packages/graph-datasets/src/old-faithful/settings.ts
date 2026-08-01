@@ -7,9 +7,9 @@
  * of `short` / `long` on `data`, not as a `type`, so colour-by-type is off.
  */
 
-import type { CanvasSettings } from '../types';
+import type { CanvasConfig } from '@invana/canvas';
 
-export const settings: CanvasSettings = {
+export const settings: CanvasConfig = {
   activeLayout: '',
   fitOnLoad: true,
   layers: {

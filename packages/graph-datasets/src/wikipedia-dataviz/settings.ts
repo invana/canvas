@@ -8,9 +8,9 @@
  * tags; the 24 finer topic clusters live on `data.cluster` for a custom resolver.
  */
 
-import type { CanvasSettings } from '../types';
+import type { CanvasConfig } from '@invana/canvas';
 
-export const settings: CanvasSettings = {
+export const settings: CanvasConfig = {
   activeLayout: '',
   fitOnLoad: true,
   layers: {

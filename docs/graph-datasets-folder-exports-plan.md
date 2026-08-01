@@ -13,8 +13,8 @@ Make every dataset folder a **self-contained module with a fixed export contract
 
 ```
 src/<dataset>/
-├── data.ts       export const data: CanvasData           ← the only value name
-│                 export function <name>(opts): CanvasData ← optional generator
+├── data.ts       export const data: GraphData           ← the only value name
+│                 export function <name>(opts): GraphData ← optional generator
 ├── settings.ts   export const settings: CanvasConfig      ← the only value name
 ├── index.ts      export * from './data'; export * from './settings';
 └── <extras>.ts   hierarchy / topology / meta / traces — the non-graph payloads
@@ -38,14 +38,14 @@ and turns each folder into its own package entry point.
 | Fact | Detail |
 |---|---|
 | Dataset folders | **24** — 13 at `src/`, 11 under `src/usecase-demos/` |
-| `data.ts` exporting `data: CanvasData` | 24 / 24 ✅ |
-| …of which are a laundered re-cast | **23 / 24** — `export const data: CanvasData = <legacy> as unknown as CanvasData` (only `air-routes` authors `data` directly) |
-| `settings.ts` exporting `settings` | 24 / 24 ✅, typed `CanvasSettings` (a local alias of `@invana/canvas`'s `CanvasConfig`) |
+| `data.ts` exporting `data: GraphData` | 24 / 24 ✅ |
+| …of which are a laundered re-cast | **23 / 24** — `export const data: GraphData = <legacy> as unknown as GraphData` (only `air-routes` authors `data` directly) |
+| `settings.ts` exporting `settings` | 24 / 24 ✅, typed `CanvasConfig` (a local alias of `@invana/canvas`'s `CanvasConfig`) |
 | Public surface | flat aliased barrels — `src/index.ts` (`lesMiserables`, `lesMiserablesSettings`, …) + `src/usecase-demos/index.ts`, plus 2 subpath entries (`game-of-thrones`, `wikipedia-dataviz`) |
 | `index.ts` inside a folder | 2 / 24 (only the two subpath datasets) |
 | Consumers | **63 storybook files**, ~120 import sites; plus generated TypeDoc pages under `apps/docs/api/graph-datasets/` |
 
-The `as unknown as CanvasData` cast is load-bearing in two different ways, and only one of
+The `as unknown as GraphData` cast is load-bearing in two different ways, and only one of
 them is benign:
 
 - **Benign (21 datasets)** — the per-dataset interfaces mark record fields `readonly`
@@ -61,42 +61,24 @@ them is benign:
 | D1 | **Per-dataset subpath imports** — `@invana/graph-datasets/<dataset>` resolves to `{ data, settings }` | uniform names, no aliasing, tree-shakes by construction; all 63 consumer files change |
 | D2 | **Delete the legacy value exports** (`lesMiserables`, `cora`, `flareAsGraph`, …) | `data` is the only value; the laundering casts go with them. Breaking; storybook migrates in the same change |
 | D3 | **Non-graph payloads get their own file in the folder** (`hierarchy.ts`, `topology.ts`, `meta.ts`, `traces.ts`) | `data.ts` stays strictly about the graph; d3-hierarchy / sankey / maplibre stories keep their inputs |
-| D4 | **`data.ts` may also export a generator** — but it must be typed to return `CanvasData` | the parameterised builders (`generateLattice`, `generateRandomTree`, `generateTwitterActivity`, `flareImportsAsGraph`) stay put; their bespoke `*GraphData` return types are replaced by `CanvasData` |
-| D5 | **Settings are typed `CanvasConfig`** (imported from `@invana/canvas`), not a local alias | drops the `CanvasSettings` indirection |
+| D4 | **`data.ts` may also export a generator** — but it must be typed to return `GraphData` | the parameterised builders (`generateLattice`, `generateRandomTree`, `generateTwitterActivity`, `flareImportsAsGraph`) stay put; their bespoke `*GraphData` return types are replaced by `GraphData` |
+| D5 | **Both halves use the engine's own types, imported directly** — `GraphData` from `@invana/graph`, `CanvasConfig` from `@invana/canvas` | no in-package aliases for either half |
 
-## 4. Type layer — `src/types.ts`
+## 4. Type layer — no `src/types.ts`
 
-```ts
-import type { GraphData, GraphNode, GraphEdge } from '@invana/graph';
+**Done (2026-08-01), and it went further than this section originally proposed.** `src/types.ts`
+and both of its aliases (`CanvasData = GraphData`, `CanvasSettings = CanvasConfig`) are
+**deleted**; every `data.ts` imports `GraphData` from `@invana/graph` and every `settings.ts`
+imports `CanvasConfig` from `@invana/canvas`. The root barrel re-exports no types at all — a
+consumer that needs them takes them from the package that owns them. This resolves Q3 in §10
+(the recommendation there — keep `CanvasData` — was **not** taken).
 
-/** What to draw — engine-ready, exactly what `setData` / `<GraphCanvasApp data>` take. */
-export type CanvasData = GraphData;
-
-/** A node record, narrowable per dataset: `CanvasDataNode<PersonData, 'person'|'company'>`. */
-export interface CanvasDataNode<D = unknown, T extends string = string>
-  extends Omit<GraphNode<D>, 'type'> { type?: T }
-
-/** An edge record, same narrowing. `id` is required here (GraphEdge allows it optional). */
-export interface CanvasDataEdge<D = unknown, T extends string = string>
-  extends Omit<GraphEdge<D>, 'type'> { id: string; type?: T }
-```
-
-Three changes vs today:
-
-1. **Delete `export type CanvasSettings = CanvasConfig`** (D5). Each `settings.ts` imports
-   `CanvasConfig` from `@invana/canvas` directly.
-2. **Add `CanvasDataNode` / `CanvasDataEdge`.** `packages/graph-datasets/CLAUDE.md` already
-   documents these as the authoring primitives — they don't exist in code yet. Adding them
-   is what lets a dataset narrow `type` to its own string-literal union *and* stay assignable
-   to `CanvasData` with **no cast**.
-3. Per-dataset interfaces are rewritten as extensions of these (`interface CoraNode extends
-   CanvasDataNode<CoraNodeData, CoraSubject> {}`), which means **dropping `readonly` from the
-   record fields** they redeclare. `readonly` stays on the payload (`data`) interfaces and on
-   the extras — those aren't assigned into `GraphData`.
-
-> Naming note: the two halves end up asymmetric — the in-package alias `CanvasData` for the
-> data, and the engine's own `CanvasConfig` for the settings. That's deliberate per D5; the
-> alternative (use `GraphData` directly too, deleting `types.ts`'s alias) is Q3 in §10.
+What that leaves open: the per-dataset **narrowing helpers** this section wanted to add
+(`type`-narrowed node / edge records, so a dataset's string-literal union stays assignable
+with no cast) now have no in-package home. Two options when that work happens — extend
+`@invana/graph`'s `GraphNode` / `GraphEdge` inline per dataset, or push generic narrowing into
+`@invana/graph` itself so every consumer benefits. Decide then; don't reintroduce a
+`types.ts` of aliases to hang them off.
 
 ## 5. Two latent bugs the casts are hiding
 
@@ -104,7 +86,7 @@ Both surface the moment the double cast is removed, and both are shipping today:
 
 | File | Problem |
 |---|---|
-| `src/flare-imports/data.ts:164` | `FlareImportsGraphData` is `{ nodes, treeEdges, importEdges }` — it has **no `edges` field**. `data` is cast to `CanvasData` anyway, so `data.edges` is `undefined` at runtime. Any consumer passing it to `setData` gets an edgeless graph. |
+| `src/flare-imports/data.ts:164` | `FlareImportsGraphData` is `{ nodes, treeEdges, importEdges }` — it has **no `edges` field**. `data` is cast to `GraphData` anyway, so `data.edges` is `undefined` at runtime. Any consumer passing it to `setData` gets an edgeless graph. |
 | `src/usecase-demos/rag-embeddings/data.ts:199` | `RagEmbeddingsData` is `{ nodes }` only — same story, `data.edges` is `undefined`. |
 | `src/random-tree/data.ts:33` | All 119 generated edges are `{ source, target }` with **no `id`** — the package's own authoring rule ("`id` is required on edges too… don't synthesise them at runtime") is violated by the generator. Stamp `e0`, `e1`, … in the generator. |
 
@@ -115,7 +97,7 @@ Fix as part of the migration:
   story needs to style them apart anyway. The split arrays stay available from the generator's
   return value if a consumer genuinely needs them separated.
 - **rag-embeddings** — `data` becomes `{ nodes, edges: [] }`. It's a projection scatter; it has
-  no edges by design, and `CanvasData` requires the array to exist.
+  no edges by design, and `GraphData` requires the array to exist.
 
 ## 6. Per-dataset manifest (24)
 
@@ -127,15 +109,15 @@ Fix as part of the migration:
 |---|---|---|---|---|
 | `air-routes` | `/air-routes` | — (already authors `data`) | `sources.ts` ← `airports`, `landTopology` | — |
 | `flare` | `/flare` | `flareAsGraph` → private | `hierarchy.ts` ← `flareHierarchy` | — |
-| `flare-imports` | `/flare-imports` | — | — | `flareImportsAsGraph(opts): CanvasData` **+ §5 fix** |
+| `flare-imports` | `/flare-imports` | — | — | `flareImportsAsGraph(opts): GraphData` **+ §5 fix** |
 | `game-of-thrones` | `/game-of-thrones` *(exists)* | `gameOfThrones` → delete | `meta.ts` ← `meta` (`GotMeta`) | — |
 | `h1b2019` | `/h1b2019` | `h1b2019AsGraph` → private | `hierarchy.ts` ← `h1b2019Hierarchy` | — |
-| `lattice` | `/lattice` | — | — | `generateLattice(n): CanvasData` |
+| `lattice` | `/lattice` | — | — | `generateLattice(n): GraphData` |
 | `les-miserables` | `/les-miserables` | `lesMiserables` → delete | — | — |
 | `life-tree` | `/life-tree` | `lifeTreeAsGraph` → private | `hierarchy.ts` ← `lifeTreeHierarchy` (`newick.ts` stays) | — |
 | `old-faithful` | `/old-faithful` | `oldFaithful` → delete | — | — |
-| `random-tree` | `/random-tree` | — | — | `generateRandomTree(n): CanvasData` |
-| `twitter` | `/twitter` | `twitterActivity` → delete | — | `generateTwitterActivity(opts): CanvasData` |
+| `random-tree` | `/random-tree` | — | — | `generateRandomTree(n): GraphData` |
+| `twitter` | `/twitter` | `twitterActivity` → delete | — | `generateTwitterActivity(opts): GraphData` |
 | `uk-energy-flow` | `/uk-energy-flow` | `ukEnergyFlowAsGraph` → private | `sankey.ts` ← `ukEnergyFlow` (the node/link source form) | — |
 | `wikipedia-dataviz` | `/wikipedia-dataviz` *(exists)* | `wikipediaDataViz` → delete | `meta.ts` ← `meta` (clusters · tags · schema) | — |
 
@@ -143,7 +125,7 @@ Fix as part of the migration:
 
 | Folder | Subpath | Legacy exports | Extras file (D3) |
 |---|---|---|---|
-| `agent-trace` | `/usecase-demos/agent-trace` | `agentTrace` (3 presets) | `traces.ts` ← `traces: CanvasData[]`; `data = traces[0]` |
+| `agent-trace` | `/usecase-demos/agent-trace` | `agentTrace` (3 presets) | `traces.ts` ← `traces: GraphData[]`; `data = traces[0]` |
 | `citations` | `…/citations` | `citations` → delete | — |
 | `computing-pioneers` | `…/computing-pioneers` | `computingPioneers` → delete | — |
 | `cora` | `…/cora` | `cora` → delete | — |
@@ -176,9 +158,10 @@ entry: ['src/index.ts', 'src/*/index.ts', 'src/usecase-demos/*/index.ts'],
 splitting: true,
 ```
 
-**Root barrel `src/index.ts`** — shrinks to the type surface only (`CanvasData`,
-`CanvasDataNode`, `CanvasDataEdge`). No dataset values; importing a dataset means importing
-its subpath. `src/usecase-demos/index.ts` is deleted (its only job was namespacing).
+**Root barrel `src/index.ts`** — with the aliases gone (§4) it re-exports **no types**, so it
+either disappears entirely or survives only if the narrowing helpers land somewhere here. No
+dataset values either way; importing a dataset means importing its subpath.
+`src/usecase-demos/index.ts` is deleted (its only job was namespacing).
 
 ## 8. Consumer migration (63 storybook files)
 
@@ -206,8 +189,8 @@ added or removed.
 
 | Phase | Work | Gate |
 |---|---|---|
-| **P0** | `src/types.ts` — drop `CanvasSettings`, add `CanvasDataNode` / `CanvasDataEdge` | `check-types` clean (nothing consumes them yet) |
-| **P1** | All 24 `data.ts` — promote `data` to the authored value, delete legacy aliases + casts, drop `readonly` on record fields, extract extras (§6), fix the two §5 bugs | **zero `as unknown as CanvasData` left in `src/`** — grep is the check |
+| **P0** | ~~`src/types.ts`~~ — **done differently (2026-08-01): the file and both aliases are deleted; `data.ts` imports `GraphData`, `settings.ts` imports `CanvasConfig`** (§4). Narrowing helpers deferred | `check-types` clean |
+| **P1** | All 24 `data.ts` — promote `data` to the authored value, delete legacy aliases + casts, drop `readonly` on record fields, extract extras (§6), fix the two §5 bugs | **zero `as unknown as GraphData` left in `src/`** — grep is the check |
 | **P2** | All 24 `settings.ts` — retype to `CanvasConfig` | `check-types` |
 | **P3** | 24 × `index.ts`; `package.json` exports wildcard; tsup globs + splitting; root barrel → types-only; delete `usecase-demos/index.ts` | `pnpm --filter @invana/graph-datasets build`, then a resolution smoke check on 3 subpaths (root, nested, big-graph) |
 | **P4** | 63 storybook files | `pnpm check-types`, storybook builds, spot-render the heavy stories |
@@ -229,11 +212,10 @@ Phases P1–P4 are one breaking change and should land as one commit — the pac
    (`/star-schema` not `/usecase-demos/star-schema`); keeping it preserves the distinction at
    a cost of one path segment. *Recommendation: keep the nesting* — the distinction is real
    and the churn is avoidable.
-2. **Does the root subpath (`.`) stay?** Types-only as proposed, or delete it entirely so
-   every import is a dataset subpath and the types come from `@invana/canvas` /
-   `@invana/graph`? *Recommendation: keep it types-only* — `CanvasDataNode` has to live
-   somewhere importable for dataset authors.
-3. **Keep the `CanvasData` alias at all,** or have datasets import `GraphData` from
-   `@invana/graph` directly (deleting `types.ts`'s data alias, symmetric with D5's treatment
-   of settings)? *Recommendation: keep `CanvasData`* — it's the name the package's docs and
-   CLAUDE.md are written around, and it keeps datasets one import away from the engine.
+2. **Does the root subpath (`.`) stay?** With no types left to export (Q3 below), it has
+   nothing to carry unless the narrowing helpers land in it — so the live options are "delete
+   it, every import is a dataset subpath" or "keep it for helpers that don't exist yet".
+3. ~~**Keep the `CanvasData` alias at all?**~~ **Resolved 2026-08-01: no.** `src/types.ts` and
+   both aliases are deleted — `data.ts` imports `GraphData` from `@invana/graph`,
+   `settings.ts` imports `CanvasConfig` from `@invana/canvas`. One name per concept, and the
+   owning package is visible at the import site.

@@ -34,7 +34,7 @@
  * <GraphCanvasApp data={wikipediaDataViz} config={wikipediaDataVizSettings} />
  */
 
-import type { CanvasData } from '../types';
+import type { GraphData } from '@invana/graph';
 
 import raw from './wikipedia-dataviz.json';
 
@@ -192,4 +192,4 @@ export interface WikipediaDataVizData {
 export const wikipediaDataViz = raw as unknown as WikipediaDataVizData;
 
 /** {@link wikipediaDataViz} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: CanvasData = wikipediaDataViz as unknown as CanvasData;
+export const data: GraphData = wikipediaDataViz as unknown as GraphData;

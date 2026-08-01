@@ -1,17 +1,17 @@
 // @invana/graph-datasets — public API surface
 //
-// Every dataset is a **folder** holding `data.ts` (what to draw, as `CanvasData`)
-// and `settings.ts` (how it should look, as `CanvasSettings`). This barrel
-// re-exports both halves per dataset under matching names — `lesMiserables` +
-// `lesMiserablesSettings` — so a consumer wires a complete visualisation with:
+// Every dataset is a **folder** holding `data.ts` (what to draw — `@invana/graph`'s
+// `GraphData`, authored in the shape `GraphLayer.setData` takes) and `settings.ts`
+// (how it should look — `@invana/canvas`'s `CanvasConfig`, pure serialisable JSON
+// keyed by the `<GraphCanvasApp>` bundle's ids). This barrel re-exports both halves
+// per dataset under matching names — `lesMiserables` + `lesMiserablesSettings` — so
+// a consumer wires a complete visualisation with:
 //
 //   import { lesMiserables, lesMiserablesSettings } from '@invana/graph-datasets';
 //   <GraphCanvasApp data={lesMiserables} config={lesMiserablesSettings} />
 //
 // The two big graphs (Game of Thrones, Wikipedia data-viz) keep their own
 // subpath entries so they stay out of this bundle.
-
-export type { CanvasData, CanvasSettings } from './types';
 
 // ── settings — one recommended look per dataset ──────────────────────────────
 export { settings as lesMiserablesSettings } from './les-miserables/settings';
