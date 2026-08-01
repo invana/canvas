@@ -14,7 +14,7 @@
 >    (`usecases/SimpleAndCompositeNodes`) so it doesn't strand a capital-`U`
 >    sidebar node, and is the one story in neither bucket. Resolve §5, then
 >    delete or re-home it.
-> 3. **`apps/designer/StyleDesigner` is written** (§6) — verified live in
+> 3. **`apps/designer/CanvasDesigner` is written** (§6) — verified live in
 >    Storybook: all three tabs render, styling previews per keystroke, the preset
 >    switch reframes and reloads the form both ways, no console errors.
 > 4. Renames beyond the manifest: `packages/graph-datasets/src/usecase-demos/index.ts`
@@ -36,6 +36,15 @@
 >    `usecases/` story shows, and the last `usecases/` consumer of the
 >    `ontology` dataset (still used by the `SchemaViewPanel` stories). Re-home
 >    the expansion pattern into `GraphVisualiser` if it's worth keeping.
+> 7. **`apps/` itself is gone (2026-08-01)** — continuing note 5 one level up:
+>    with `KnowledgeGraphExplorer` deleted, the bucket held three stories and no
+>    structure, so the three product surfaces now sit **in the root of
+>    `usecases/`** — `usecases/{CanvasDesigner,GraphModeller,GraphVisualiser}`.
+>    `domains/` stays a folder (it groups per-domain variants), so the sidebar
+>    reads: three product surfaces at the top, `domains ▸ <domain> ▸ <Story>`
+>    beneath. `StyleDesigner` was renamed **`CanvasDesigner`** in the same pass
+>    (§6 and the §3 manifest below still show the old name and the `apps/…`
+>    paths — they record what was true then).
 
 **Goal.** `stories/usecases/` has grown to 17 flat stories with one ad-hoc
 sub-folder (`code-kg/`). Every one of them is now composed from
@@ -61,7 +70,7 @@ Every story keeps its subject; nothing is re-authored in this pass.
    an 11-of-17 dumping ground.
 2. **`apps/designer/` is a live style-editing app**, a peer of modeller and
    visualiser — *not* a bucket for node-rendering showcases. It is a **new
-   story** (`StyleDesigner`), written in a follow-up pass: `<GraphCanvasApp>`
+   story** (`CanvasDesigner`), written in a follow-up pass: `<GraphCanvasApp>`
    over `invanaCodeKg`, `<CanvasSettingsEditorPanel>` docked right, a header
    preset switch between the dots and cards configs. The trio reads
    **modeller · visualiser · designer** — model it, explore it, style it.
@@ -101,14 +110,14 @@ user would open?* First → `canvas-ui/`, second → `usecases/apps/`.
   **`@invana/canvas-designer` package**: the WYSIWYG node-template authoring
   surface that emits a `FreeformStructure`. Package-owned, per the namespace
   rule.
-- `usecases/apps/designer/StyleDesigner` — a **use case** that imports no
+- `usecases/apps/designer/CanvasDesigner` — a **use case** that imports no
   `@invana/canvas-designer` code at all. It's `GraphCanvasApp` +
   `CanvasSettingsEditorPanel` (both `@invana/canvas-ui`), showing the *style a
   visualisation* surface as a product.
 
 They converge later: root `CLAUDE.md` has `@invana/canvas-designer` growing a
 studio shell that hosts the `@invana/canvas-ui` editors. **If that shell ships,
-`StyleDesigner` should move to `canvas-designer/`** — at that point it would be
+`CanvasDesigner` should move to `canvas-designer/`** — at that point it would be
 demoing package-owned code, and the namespace rule takes over. Until then it is
 a composed use case and stays here.
 
@@ -125,7 +134,7 @@ apps/storybook/stories/usecases/
 │   │   ├── GraphVisualiser.stories.tsx
 │   │   └── KnowledgeGraphExplorer.stories.tsx
 │   └── designer/
-│       └── StyleDesigner.stories.tsx        ← NEW, follow-up pass
+│       └── CanvasDesigner.stories.tsx        ← NEW, follow-up pass
 └── domains/                                 ← verticals
     ├── code-kg/
     │   ├── DotsForce.stories.tsx            real dataset · d3-force · tiny circles
@@ -166,7 +175,7 @@ column says otherwise (the export name is the sidebar leaf label).
 | `GraphModellerApp.stories.tsx` | `Usecases/GraphModellerApp` | `apps/modeller/GraphModeller.stories.tsx` | `usecases/apps/modeller/GraphModeller` | export `GraphModellerApp` → `GraphModeller` (the `App` suffix is redundant under `apps/`) |
 | `GraphVisualiserApp.stories.tsx` | `Usecases/GraphVisualiserApp` | `apps/visualiser/GraphVisualiser.stories.tsx` | `usecases/apps/visualiser/GraphVisualiser` | export `GraphVisualiserApp` → `GraphVisualiser` |
 | `KnowledgeGraphExplorer.stories.tsx` | `Usecases/Knowledge Graph Explorer` | `apps/visualiser/KnowledgeGraphExplorer.stories.tsx` | `usecases/apps/visualiser/KnowledgeGraphExplorer` | expand-on-double-click explorer — a visualiser variant |
-| — | — | `apps/designer/StyleDesigner.stories.tsx` | `usecases/apps/designer/StyleDesigner` | **NEW** — follow-up pass, see §6 |
+| — | — | `apps/designer/CanvasDesigner.stories.tsx` | `usecases/apps/designer/CanvasDesigner` | **NEW** — follow-up pass, see §6 |
 
 ### → `usecases/domains/`
 
@@ -193,7 +202,7 @@ column says otherwise (the export name is the sidebar leaf label).
 | `SimpleAndCompositeNodes.stories.tsx` | **Delete** from `usecases/` — engine capability, not a use case. **Blocked on §5:** two of its subjects are not covered elsewhere. |
 
 **Totals:** 17 files today → 16 moved/renamed, 1 deleted, 1 new (deferred) = 16
-after this pass, 17 once `StyleDesigner` lands.
+after this pass, 17 once `CanvasDesigner` lands.
 
 ---
 
@@ -251,7 +260,7 @@ Pick one before executing:
 
 ---
 
-## 6. `apps/designer/StyleDesigner` — as built
+## 6. `apps/designer/CanvasDesigner` — as built
 
 The brief widened during implementation: not just "dock the settings editor" but
 **edit node styling *and* node templates**. So the panel is a three-tab designer

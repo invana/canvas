@@ -20,7 +20,7 @@
 //  - starSchema          → usecases/domains/data-model/SchemaTable
 //  - invanaArchitecture  → usecases/domains/invana-architecture/EndToEnd
 //  - computingPioneers   → usecases/SimpleAndCompositeNodes
-//  - modellerSeed        → usecases/apps/GraphModeller
+//  - modellerSeed        → usecases/GraphModeller
 
 // ── settings — one recommended look per dataset ──────────────────────────────
 export { settings as agentTraceSettings } from './agent-trace/data';

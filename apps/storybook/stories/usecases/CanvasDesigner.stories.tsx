@@ -1,5 +1,5 @@
 /**
- * **Style Designer** — the third product surface, beside the modeller (draw the
+ * **Canvas Designer** — the third product surface, beside the modeller (draw the
  * graph) and the visualiser (explore it): **design how the graph looks**. Built
  * on `<GraphCanvasApp>` with the node-template stack docked into the app's
  * resizable `right` region as a three-tab designer.
@@ -77,12 +77,12 @@ import { Moon, Sun } from 'lucide-react';
 /** The code-KG node kinds this story styles. */
 type InvanaCodeNodeLabel = 'file' | 'function' | 'class' | 'config' | 'document';
 
-const meta: Meta = { title: 'usecases/apps/StyleDesigner' };
+const meta: Meta = { title: 'usecases/CanvasDesigner' };
 export default meta;
 type Story = StoryObj;
 
-export const StyleDesignerStory: Story = {
-  name: 'StyleDesigner',
+export const CanvasDesignerStory: Story = {
+  name: 'CanvasDesigner',
   render: function Render() {
     /** The analyser's entity kinds — one `NodeTypeBinding` per kind is what the Templates tab edits. */
     const TYPES: InvanaCodeNodeLabel[] = ['file', 'function', 'class', 'config', 'document'];
@@ -265,7 +265,7 @@ export const StyleDesignerStory: Story = {
           config={config}
           onReady={onReady}
           header={{
-            title: 'Style Designer',
+            title: 'Canvas Designer',
             center: <GraphControlsToolbar />,
             right: (ctx) => (
               <ToolbarItems

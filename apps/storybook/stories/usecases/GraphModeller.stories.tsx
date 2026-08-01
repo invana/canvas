@@ -61,7 +61,7 @@ import type * as graph from '@invana/graph';
 import { modellerSeed } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider, useTheme } from '@invana/themes';
 
-const meta: Meta = { title: 'usecases/apps/GraphModeller' };
+const meta: Meta = { title: 'usecases/GraphModeller' };
 export default meta;
 type Story = StoryObj;
 

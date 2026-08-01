@@ -53,17 +53,17 @@ The **only** inline `style` allowed is a genuinely dynamic runtime value Tailwin
 
 **One deliberate exception — `GraphLegendLayer`.** Its story is filed by *concept* (it's a layer) rather than by owning package: `canvas/concepts/Layers/GraphLegendLayer`, alongside `BackgroundLayer` / `DevInfoLayer` / `LayersPanelLayer`, even though the class ships in `@invana/graph`. **`MiniMapLayer` still sits at `graph/Layer/MiniMap`**, so the two graph-domain layers are currently filed differently — if a third graph layer gets a story, decide which wins and move the odd one out rather than adding a third pattern.
 
-### `usecases/` has exactly two buckets: `apps/` and `domains/`
+### `usecases/` — the product surfaces sit in the root, verticals live under `domains/`
 
-- **`usecases/apps/`** — the **product surfaces** (`GraphModeller` · `GraphVisualiser` · `StyleDesigner`). A story here is about *the tool*; its dataset is a prop. Model it, explore it, style it. **Flat — one file, one story, directly in `apps/`**; no per-surface subfolder (`apps/modeller/`, `apps/visualiser/`), so the sidebar reads `usecases ▸ apps ▸ <Tool>`. **One story per surface** — a second take on the same tool is a variant of that story, not a new file; `KnowledgeGraphExplorer` was deleted as a redundant second visualiser.
+- **`usecases/<Tool>`** — the **product surfaces** (`GraphModeller` · `GraphVisualiser` · `CanvasDesigner`), **directly in the root of `usecases/`** — no `apps/` bucket, no per-surface subfolder. A story here is about *the tool*; its dataset is a prop. Model it, explore it, style it. The sidebar reads `usecases ▸ <Tool>`. **One story per surface** — a second take on the same tool is a variant of that story, not a new file; `KnowledgeGraphExplorer` was deleted as a redundant second visualiser.
 - **`usecases/domains/<domain>/`** — the **verticals** (`code-kg` · `cora` · `microservices` · …). A story here is about *the picture a domain needs*; `GraphCanvasApp` is a given. Several styling / layout configs of one dataset are **sibling files in that domain's folder** — e.g. `domains/code-kg/{DotsForce,CompositeCards,HealthBadges}`.
 
-**Don't add a third bucket.** An engine-capability demo wearing a use-case costume is **not** a use case — it belongs under the owning package's namespace (`graph/Nodes/…`, `canvas/Concepts/…`). Titles are lowercase and mirror the path exactly (`usecases/domains/code-kg/DotsForce`).
+**`domains/` is the only folder under `usecases/`.** An engine-capability demo wearing a use-case costume is **not** a use case — it belongs under the owning package's namespace (`graph/Nodes/…`, `canvas/Concepts/…`). Titles are lowercase and mirror the path exactly (`usecases/GraphVisualiser`, `usecases/domains/code-kg/DotsForce`).
 
 Two neighbouring namespaces are deliberately distinct:
 
-- `usecases/apps/` vs **`canvas-ui/apps/GraphCanvasApp/`** — the latter teaches the *component's API* (regions, chrome slots, `bundle={false}`, `keepMounted`); the former shows a *tool built with it*.
-- `usecases/apps/StyleDesigner` vs **`canvas-designer/`** — the latter is stories for the `@invana/canvas-designer` package's own authoring surfaces; the former imports none of that package's code (it's `GraphCanvasApp` + `CanvasSettingsEditorPanel`, both canvas-ui). If canvas-designer ships its planned studio shell, the designer use case moves there and the namespace rule takes over.
+- `usecases/<Tool>` vs **`canvas-ui/apps/GraphCanvasApp/`** — the latter teaches the *component's API* (regions, chrome slots, `bundle={false}`, `keepMounted`); the former shows a *tool built with it*.
+- `usecases/CanvasDesigner` vs **`canvas-designer/`** — the latter is stories for the `@invana/canvas-designer` package's own authoring surfaces; the former imports none of that package's code (it's `GraphCanvasApp` + `CanvasSettingsEditorPanel`, both canvas-ui). If canvas-designer ships its planned studio shell, the designer use case moves there and the namespace rule takes over.
 
 Full taxonomy + move manifest: [`docs/usecases-storybook-taxonomy-plan.md`](../../docs/usecases-storybook-taxonomy-plan.md).
 
