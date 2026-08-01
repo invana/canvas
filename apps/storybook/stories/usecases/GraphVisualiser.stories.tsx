@@ -72,15 +72,8 @@ export const GraphVisualiserStory: Story = {
      *
      * `layout` names the layout class this dataset's settings expect under the
      * id `layout`; `null` means it rides the bundle's own `graph-force`.
-     * `nodeStyle` is the per-dataset, non-serialisable styling that can't live
-     * in a settings JSON.
      */
     const datasets = useMemo(() => {
-      // Distinct colour per les-mis community.
-      const PALETTE = [
-        0x9ca3af, 0xef4444, 0xf59e0b, 0xeab308, 0x10b981, 0x06b6d4, 0x3b82f6, 0x8b5cf6, 0xec4899,
-        0x14b8a6, 0xa3e635,
-      ];
       const groupOf = (n: GraphNode): number =>
         (n.data as { group?: number } | undefined)?.group ?? 0;
 
@@ -99,10 +92,18 @@ export const GraphVisualiserStory: Story = {
             nodes: lesMiserables.nodes.map((n) => ({ ...n, type: `Group ${groupOf(n)}` })),
             edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
           } as GraphData,
-          settings: lesMiserablesSettings,
+          // The dataset ships `color: { enabled: false }` — correctly, since Les
+          // Mis has no `type` of its own. This story just gave every node one, so
+          // colour-by-type earns its keep here: the bundle's `color` behaviour
+          // paints a colour per community with no resolver of our own.
+          settings: {
+            ...lesMiserablesSettings,
+            behaviours: {
+              ...lesMiserablesSettings.behaviours,
+              color: { enabled: true, colorEdges: false },
+            },
+          },
           layout: null,
-          // The community palette — a resolver, so it can't ride `settings`.
-          nodeStyle: { bgFill: (n: GraphNode) => PALETTE[groupOf(n) % PALETTE.length]! },
         },
         {
           id: 'twitter',
@@ -199,7 +200,6 @@ export const GraphVisualiserStory: Story = {
                 ...graph.node?.style,
                 labelText: (n: GraphNode) =>
                   String((n.data as { name?: string } | undefined)?.name ?? n.id),
-                ...active.nodeStyle,
               },
             },
           },
