@@ -566,18 +566,66 @@ export class Canvas {
     if (this._autoFitArmed) return;
     this._autoFitArmed = true;
 
+    /**
+     * Fit, then fit again once the data actually reaches the renderer.
+     *
+     * A layout writes positions to the **store**; the store is frame-coalesced,
+     * so the renderer only learns them on its next flush — which lands *after*
+     * the `layout:run:end` that triggers this fit. Fitting once therefore
+     * measures shapes still sitting where they were first drawn (typically all
+     * stacked at the origin) and frames a box the size of a single node: the
+     * runaway zoom that reads as "the graph didn't render".
+     *
+     * Waiting a fixed number of frames doesn't fix it — the box is *stably
+     * wrong* until the flush lands, so any "it stopped changing" test ends the
+     * watch on the bad value. The flush itself is the signal, so listen for it:
+     * `data:flush` is emitted per layer delta on this same bus, and one arrives
+     * exactly when the positions have been projected. We re-fit on the first
+     * flush after each fit request, which also covers the two cases a frame
+     * count misses — the first `run:end` of a graph often precedes any position
+     * write, and a superseded run ends `'stopped'`, which this arm ignores.
+     *
+     * One-shot isn't enough: the flush carrying the positions can land *before*
+     * a listener attached at fit time, and the first flush after a fit isn't
+     * necessarily the one with the moves. So each fit request opens a
+     * {@link FLUSH_WATCH_MS} window and every flush inside it re-fits, throttled
+     * — a live sim flushes per frame and must not drive `fitContent` at 60 Hz.
+     */
+    const FLUSH_WATCH_MS = 1_000;
+    const FLUSH_THROTTLE_MS = 100;
+    let watchUntil = 0;
+    let lastFlushFit = 0;
+    // One lifetime listener, gated by `watchUntil` — cheaper than subscribing
+    // and unsubscribing per fit, and it cannot miss a flush that lands between
+    // the two. Throttled so a live sim (which flushes every frame) can't turn
+    // this into a 60 Hz `fitContent`.
+    this.events.on('data:flush', () => {
+      const now = performance.now();
+      if (now > watchUntil || now - lastFlushFit < FLUSH_THROTTLE_MS) return;
+      lastFlushFit = now;
+      requestAnimationFrame(() => this.fitView());
+    });
     const fit = (): void => {
+      watchUntil = performance.now() + FLUSH_WATCH_MS;
       requestAnimationFrame(() => this.fitView());
     };
     const activeLayout = (): string | null | undefined =>
       this.store.view.getState().definition.activeLayout;
-    if (!activeLayout()) {
-      fit();
-      return;
-    }
 
-    // Throttle the follow-fits so a per-frame animated sim doesn't call
-    // `fitContent` every tick; each run's final settle-fit is always exact.
+    // Fit now — right for a canvas with no layout, and harmless otherwise (the
+    // run-driven fits below supersede it).
+    fit();
+
+    // **Always** subscribe, even when there is no `activeLayout` yet. Arming
+    // happens on the `update()` that carries `fitOnLoad`, and that patch can
+    // land before the one naming `activeLayout` — a React root applies config
+    // after mount, so at arm time the definition routinely still reads `null`.
+    // Returning early there (as this did) threw the subscriptions away for the
+    // canvas's whole life: the layout then ran, emitted a perfectly good
+    // `layout:run:end` / `settled`, and nobody was listening. All that survived
+    // was the one-shot fit above, measured before the layout had written
+    // anything — a box the size of a single node, i.e. the runaway zoom. The
+    // listeners re-read `activeLayout()` per event, so late assignment is fine.
     const THROTTLE_MS = 100;
     let lastFit = 0;
     this.events.on('layout:run:tick', ({ id }) => {
