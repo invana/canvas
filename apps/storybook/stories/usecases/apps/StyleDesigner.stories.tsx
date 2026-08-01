@@ -74,7 +74,7 @@ import { ThemeProvider } from '@invana/themes';
 import { TabbedPanel } from '@invana/ui';
 import { Moon, Sun } from 'lucide-react';
 
-const meta: Meta = { title: 'usecases/apps/designer/StyleDesigner' };
+const meta: Meta = { title: 'usecases/apps/StyleDesigner' };
 export default meta;
 type Story = StoryObj;
 

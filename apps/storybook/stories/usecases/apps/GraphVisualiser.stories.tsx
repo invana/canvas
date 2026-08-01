@@ -23,7 +23,7 @@ import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar,
 import { Moon, Sun } from 'lucide-react';
 import { ThemeProvider } from '@invana/themes';
 
-const meta: Meta = { title: 'usecases/apps/visualiser/GraphVisualiser' };
+const meta: Meta = { title: 'usecases/apps/GraphVisualiser' };
 export default meta;
 type Story = StoryObj;
 

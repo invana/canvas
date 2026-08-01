@@ -21,6 +21,21 @@
 >    header comment (dataset → story pointers) and one cross-reference in each
 >    of `GraphModeller` / `SubjectBundle`. Historical `docs/*-plan.md` mentions
 >    of the old paths were left alone — they record what was true then.
+> 5. **`apps/` was flattened afterwards (2026-08-01)** — the per-surface folders
+>    (`apps/modeller/`, `apps/visualiser/`, `apps/designer/`) are gone; the four
+>    stories sit directly in `apps/` and their titles dropped the surface
+>    segment (`usecases/apps/GraphVisualiser`, …). One file, one story, one flat
+>    leaf. `visualiser/` holding two stories was what made the extra level look
+>    like structure it wasn't. `domains/` keeps its per-domain folders (note 1),
+>    since several of those genuinely hold sibling variants. The §3 manifest
+>    below records the original 2026-07-31 paths.
+> 6. **`KnowledgeGraphExplorer` was deleted (2026-08-01)** — redundant with
+>    `GraphVisualiser`; both are the same tool (a read-only explorer over
+>    `GraphCanvasApp`), so `apps/` is now one story per surface. What went with
+>    it: the expand-on-double-click 1-hop growth pattern, which no other
+>    `usecases/` story shows, and the last `usecases/` consumer of the
+>    `ontology` dataset (still used by the `SchemaViewPanel` stories). Re-home
+>    the expansion pattern into `GraphVisualiser` if it's worth keeping.
 
 **Goal.** `stories/usecases/` has grown to 17 flat stories with one ad-hoc
 sub-folder (`code-kg/`). Every one of them is now composed from

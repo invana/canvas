@@ -9,13 +9,13 @@
 //  - agentTrace          → usecases/domains/llm-agent-trace/AgentTrace
 //  - ragEmbeddings       → usecases/domains/rag-embeddings/EmbeddingExplorer
 //  - microservices       → usecases/domains/microservices/ServiceTopology
-//  - ontology            → usecases/apps/visualiser/KnowledgeGraphExplorer
+//  - ontology            → canvas-ui/view-panels/SchemaViewPanel/{CanvasDerived,CustomSchema}
 //  - citations           → usecases/domains/citations/CitationGraph
 //  - invanaCodeKg        → usecases/domains/code-kg/{DotsForce,CompositeCards,HealthBadges}
 //  - starSchema          → usecases/domains/data-model/SchemaTable
 //  - invanaArchitecture  → usecases/domains/invana-architecture/EndToEnd
 //  - computingPioneers   → usecases/SimpleAndCompositeNodes
-//  - modellerSeed        → usecases/apps/modeller/GraphModeller
+//  - modellerSeed        → usecases/apps/GraphModeller
 
 // ── settings — one recommended look per dataset ──────────────────────────────
 export { settings as agentTraceSettings } from './agent-trace/settings';
