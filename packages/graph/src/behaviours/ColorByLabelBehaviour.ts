@@ -118,6 +118,17 @@ export class ColorByLabelBehaviour extends Behaviour<ColorByLabelBehaviourOption
   private priorNodeBgFill: Resolvable<NodeStyle['bgFill']> = undefined;
   private priorEdgeStroke: Resolvable<EdgeStyle['strokeColor']> = undefined;
   private priorEdgeArrow: Resolvable<EdgeStyle['arrowTargetColor']> = undefined;
+  /**
+   * The exact resolver instances this behaviour installed, so `restore` can tell
+   * **its own** function from a consumer's. Identity, not `typeof === 'function'`:
+   * a consumer's `bgFill: (n) => …` is also a function, and treating it as ours
+   * meant disabling this behaviour overwrote their fill with a snapshot taken
+   * before their config was ever applied — usually `undefined`, which renders a
+   * node with no fill at all.
+   */
+  private installedNodeBgFill: Resolvable<NodeStyle['bgFill']> = undefined;
+  /** Stroke alone identifies the edge channel — both fields install together. */
+  private installedEdgeStroke: Resolvable<EdgeStyle['strokeColor']> = undefined;
 
   constructor(opts: ColorByLabelBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? [] });
@@ -188,49 +199,63 @@ export class ColorByLabelBehaviour extends Behaviour<ColorByLabelBehaviourOption
   // ─── Internals ──────────────────────────────────────────────────────────
 
   /**
-   * Sync the node channel to `on`. When on, snapshot the current base `bgFill`
-   * — but only when a resolver isn't *already* installed, so we never snapshot
-   * our own function, and we re-capture a layer default (`bgFill`) applied
-   * *after* we first enabled (the snapshot taken at enable-time can predate the
-   * config). Then install the colour resolver. When off, put the snapshot back
-   * if our resolver is installed.
+   * Sync the node channel to `on`. When on, snapshot whatever base `bgFill` the
+   * template currently carries — unless *our own* resolver is what's sitting
+   * there, so we never snapshot ourselves — then install the colour resolver.
+   * When off, put the snapshot back, but **only if our resolver is still the
+   * installed one**.
    *
-   * Guarding on "is a resolver currently installed" (`typeof === 'function'`)
-   * rather than a cached flag is what keeps the base snapshot correct across
-   * re-applies and cleanly uninstalls a channel toggled off while enabled. The
-   * template stores resolver functions (`ResolvableNodeStyle`), but the
+   * The guard is identity (`current === this.installedNodeBgFill`), not
+   * `typeof current === 'function'`. A consumer's own `bgFill: (n) => …` is a
+   * function too, and the old test claimed it as ours: disabling this behaviour
+   * then wrote the pre-config snapshot (usually `undefined`) over the
+   * consumer's resolver, leaving every node with no fill — invisible shapes with
+   * visible labels. Identity also covers the ordering case the old comment was
+   * reaching for: when a config lands *after* we enabled, the template no longer
+   * holds our function, so we leave it alone instead of clobbering it.
+   *
+   * The template stores resolver functions (`ResolvableNodeStyle`), but the
    * `setNodeDefaults` param is the concrete `NodeStyle`, so cast the patch.
    */
   private syncNode(layer: GraphLayer, on: boolean): void {
     const current = layer.nodeDefaults?.bgFill;
-    const installed = typeof current === 'function';
+    const ours = this.installedNodeBgFill !== undefined && current === this.installedNodeBgFill;
     if (on) {
-      if (!installed) this.priorNodeBgFill = current;
+      if (!ours) this.priorNodeBgFill = current;
       const bgFill = (n: GraphNode): number => this.colorForLabel(this.nodeLabel(n));
+      this.installedNodeBgFill = bgFill as Resolvable<NodeStyle['bgFill']>;
       layer.setNodeDefaults({ bgFill } as unknown as Partial<NodeStyle>);
-    } else if (installed) {
+    } else if (ours) {
       layer.setNodeDefaults({ bgFill: this.priorNodeBgFill } as unknown as Partial<NodeStyle>);
+      this.installedNodeBgFill = undefined;
     }
   }
 
-  /** Sibling of {@link syncNode} for the edge channel (`strokeColor` + `arrowTargetColor`). */
+  /**
+   * Sibling of {@link syncNode} for the edge channel (`strokeColor` +
+   * `arrowTargetColor`), with the same identity guard — a consumer's own stroke
+   * resolver is never mistaken for ours and restored over.
+   */
   private syncEdge(layer: GraphLayer, on: boolean): void {
-    const installed = typeof layer.edgeDefaults?.strokeColor === 'function';
+    const current = layer.edgeDefaults?.strokeColor;
+    const ours = this.installedEdgeStroke !== undefined && current === this.installedEdgeStroke;
     if (on) {
-      if (!installed) {
+      if (!ours) {
         this.priorEdgeStroke = layer.edgeDefaults?.strokeColor;
         this.priorEdgeArrow = layer.edgeDefaults?.arrowTargetColor;
       }
       const colour = (e: GraphEdge): number => this.colorForLabel(this.edgeLabel(e));
+      this.installedEdgeStroke = colour as Resolvable<EdgeStyle['strokeColor']>;
       layer.setEdgeDefaults({
         strokeColor: colour,
         arrowTargetColor: colour,
       } as unknown as Partial<EdgeStyle>);
-    } else if (installed) {
+    } else if (ours) {
       layer.setEdgeDefaults({
         strokeColor: this.priorEdgeStroke,
         arrowTargetColor: this.priorEdgeArrow,
       } as unknown as Partial<EdgeStyle>);
+      this.installedEdgeStroke = undefined;
     }
   }
 
